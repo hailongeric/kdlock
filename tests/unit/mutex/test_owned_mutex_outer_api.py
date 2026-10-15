@@ -11,17 +11,6 @@ def check_mode(preflight):
                     (ROOT/'include/kd_owned_mutex_direct.h').read_text(), flags=re.M)
     header = '#define KD_OWNED_MUTEX_PREFLIGHT ' + str(int(preflight)) + '\n' + header
     fixture = (ROOT/'tests/unit/mutex/mutex_outer_api_fixture.c').read_text()
-    # Reuse the destructive GPR/stack oracle, with the actual owned header and
-    # owned endpoints. It tests the same ABI contract, not a copy of that header.
-    fixture = fixture.replace('kd_mutex_', 'kd_owned_mutex_')
-    fixture = fixture.replace('kd_hotlock_mutex_entry', 'kd_hotlock_owned_mutex_entry')
-    fixture = fixture.replace('KD_MUTEX_', 'KD_OWNED_MUTEX_')
-    fixture = fixture.replace('struct mutex', 'struct kd_mutex')
-    fixture = fixture.replace('mutex_unlock(', 'kd_owned_mutex_outer_unlock_v1(')
-    fixture = fixture.replace('#include "outer_api.h"',
-                              '#define kd_mutex_unlock kd_owned_mutex_unlock_v1\n'
-                              '#include "outer_api.h"')
-    fixture = fixture.replace('untouched Linux owner', 'untouched owned mutex owner')
     if preflight:
         # The ordinary call owns the once-only observation, including capture
         # attempts. Mode 4 acquires through C without ever entering capture asm.

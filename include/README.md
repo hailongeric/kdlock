@@ -11,7 +11,6 @@ assembly and the Python translator. Helpers used only inside a backend live unde
 | Spin queue and ticket | [kd_spinlock.h](kd_spinlock.h), [kd_spin_entry.h](kd_spin_entry.h), [qspinlock_i.h](qspinlock_i.h) | Reusable nodes, stable continuation and exact native borrowing |
 | Owned mutex | [kd_mutex.h](kd_mutex.h), [kd_owned_mutex_direct.h](kd_owned_mutex_direct.h) | KD-only 32-byte object, private OSQ/sleeping, outer cookie with default ABI2 or opt-in ABI4 |
 | Owned late capture | [kd_owned_mutex_cabi.h](kd_owned_mutex_cabi.h) | ABI4 eight-word record and fixed nine-byte caller stub; allocated after failed local acquisition |
-| Legacy mutex | [kd_mutex_legacy.h](kd_mutex_legacy.h), [kd_mutex_direct.h](kd_mutex_direct.h) | Original Linux mutex, blocking waits, ABI2 and opaque outer cookie |
 | Read-write lock | [kd_rwlock.h](kd_rwlock.h) | 128-byte object, 64-byte alignment; local readers, native fast writers and ABI3 JIT writers |
 | Frames and controls | [kd_exec.h](kd_exec.h), [kd_call.h](kd_call.h), [kd_lock.h](kd_lock.h) | Logical state, held-lock ledger, source CALL and final ACK |
 | Registry and execution | [exe.h](exe.h), [exe_info.h](exe_info.h), [kd_jit_batch.h](kd_jit_batch.h) | Backend/ABI/layout identity, readiness and distinct wrapper/C results |
@@ -46,7 +45,7 @@ never be passed to Linux mutex APIs; matching size and offsets do not permit
 mixed waiters. Compile-time checks require the same size, alignment and field
 offsets as the captured non-RT `struct mutex`; this preserves embedding geometry,
 without adding public fields or proving identical cache traffic. See the [owned protocol](../docs/design/mutex_implementation.md#kd-owned-implementation-experimental)
-and [c01 caller](../workload_modules/spin_cacheline/scenario.h).
+and [c01 caller](../workload_modules/mutex_cacheline/module.c).
 
 The opt-in `KD_OWNED_MUTEX_CABI=1` outer caller uses ordinary C register
 preservation and internal ABI4. Prepare it with
@@ -71,16 +70,6 @@ object or caller ABI. See the
 [owned policy contract](../docs/design/mutex_implementation.md#conditional-origin-readiness-and-bounded-numa-selection)
 for the claim and parking rules; matching provider/translator image identities
 remain required.
-
-Legacy mutex outer callers pair `KD_MUTEX_OUTER_LOCK/UNLOCK` with one opaque
-`kd_mutex_outer_cookie` per acquisition. Do not copy, modify, transfer or reuse it
-before its matching same-task unlock. The native CAS saves an exact owner; contended
-KD entry saves zero. Nested translated operations use `KD_MUTEX_DIRECT_LOCK/UNLOCK`;
-prepare uses `kd_mutex_prepare(..., KD_ENTRY_ABI_MUTEX_CLOBBER_V1)`.
-Mutex acquisition may sleep uninterruptibly after bounded polling; migration
-remains pinned while a queued waiter sleeps. Delegated images requiring origin-CPU
-GS storage are refused. [Ownership](../docs/design/locking.md#mutex-outer-direct)
-explains the routing.
 
 Rwlock readers pair `kd_read_lock/unlock`; explicitly native writers pair
 `kd_write_lock/unlock`. Delegating writers use `KD_RWLOCK_DIRECT_WRITE_LOCK/UNLOCK`

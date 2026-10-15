@@ -55,8 +55,8 @@ A combiner can execute several simple root requests in one C loop. For each
 request, preparation checks the image layout, ABI, packet state and whether the
 request is eligible for this simple path. It then writes the wrapper metadata
 once. One source lease covers the batch, but each request still needs a readiness
-check. Legacy and clobber entries share the loop while keeping their different
-completion checks.
+check. Full-context spin and clobber entries share the loop while keeping their
+different completion checks.
 
 For an ABI3 rwlock root, the combiner waits for readers and acquires the writer
 byte in native code before entering JIT. A nested virtual spin request inherits
@@ -93,7 +93,7 @@ A lock is called **hot** when sampled contention makes it eligible for delegatio
 These measurements are approximate. They never decide who owns a lock or when a
 request can be freed.
 
-Spin, legacy mutex and owned ABI2 each maintain a separate per-CPU table with
+Spin and owned ABI2 each maintain a separate per-CPU table with
 256 buckets and 256 records.
 Records match the full lock address. Hash collisions form chains; they do not evict
 existing records. If the table is full, an unknown lock stays native. A lookup does
@@ -111,8 +111,8 @@ heat policy or reader delegation.
 | Spin MCS publication | Count only real publications; at `>=1024`, compare `(entries >> 10) < spin_entry_ratio_limit` |
 | Spin CPU gate | Default ratio limit 2; after comparison clear both counters and sample time; interval must be `<40000000000` TSC ticks |
 | Spin lock gate | At `>=512` records, interval must be `<1250000000` TSC ticks |
-| Legacy mutex / owned ABI2 CPU gate | Independent entry/contention counters; at `>=1024` contentions compare `(entries >> 10) < limit`, reset both, then sample time; each limit defaults to 256 |
-| Legacy mutex / owned ABI2 lock gate | The 1025th record checks an interval `<2500000000` TSC ticks |
+| Owned mutex ABI2 CPU gate | Independent entry/contention counters; at `>=1024` contentions compare `(entries >> 10) < limit`, reset both, then sample time; the limit defaults to 256 |
+| Owned mutex ABI2 lock gate | The 1025th record checks an interval `<2500000000` TSC ticks |
 | Owned ABI4 | No heat samples or ratio gate; local acquisition must fail before delegation eligibility checks |
 
 At 1024 MCS publications, the default ratio accepts 1024..2047 acquisitions and
@@ -120,11 +120,11 @@ rejects 2048. The first window participates. Limit 0 disables only the ratio;
 it does not bypass CPU/lock heat, queue eligibility, context or JIT validation.
 Supported nonzero values are powers of two of at least 2.
 
-Legacy `mutex_entry_ratio_limit` and owned ABI2 `owned_mutex_entry_ratio_limit`
-are separate read-only powers of two from 2 through 256, both defaulting to 256,
+Owned ABI2 `owned_mutex_entry_ratio_limit` is a read-only power of two
+from 2 through 256, defaulting to 256,
 with the same CPU time bound as spin. Successful acquisitions count entries
-without touching shadow/task/translation state. Their pinned contention samplers
-skip address-table work while the CPU is cold between comparison points. These
+without touching task/translation state. The pinned contention sampler
+skips address-table work while the CPU is cold between comparison points. These
 rules do not apply to ABI4's local-first path.
 
 For spin sampling, a hot native MCS queue head also saves the current tail and checks
@@ -184,7 +184,7 @@ length, requirements, entry ABI and generation. An interrupted or invalid privat
 upload returns its block. A published version stays resident until terminal
 session drain and provider teardown; replacement never overwrites it. Exhaustion
 refuses the replacement and preserves the previous image. Registration alone
-reserves no owned code block. Legacy spin/mutex uploads retain their existing
+reserves no owned code block. Spin/rwlock uploads retain their existing
 in-place lifetime limitation.
 
 An owned frame binds one descriptor before dispatch and keeps it through every

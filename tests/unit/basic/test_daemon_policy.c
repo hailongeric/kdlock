@@ -48,10 +48,12 @@ static pid_t observed_wait(pid_t child, int *status, int options,
 
 static void test_compiler_launch(void)
 {
+	for (unsigned int abi = 0; abi <= 4; abi++)
+		assert(!kd_entry_abi_valid(2, abi));
 	char root[] = "/tmp/kdlock-compiler-launch.XXXXXX";
 	char session_path[] = "/tmp/kdlock-compiler-session.XXXXXX";
 	struct kd_exe_info exe = { .pid = 0, .tgid = 42, .RIP = 0x1234 };
-	const char *kinds[] = { "unknown", "spin", "mutex" };
+	const char *kinds[] = { "unknown", "spin", "unknown" };
 	struct daemon_config cfg = { .mode = MODE_V1 };
 	int original_dir = open(".", O_RDONLY | O_DIRECTORY);
 	FILE *script;
@@ -82,7 +84,7 @@ static void test_compiler_launch(void)
 			assert(!mkdir("0x1234/42", 0700));
 		assert(compile_entry(&cfg, &exe) == -1);
 
-		for (int kind = KD_EXE_LOCK_UNKNOWN; kind <= KD_EXE_LOCK_MUTEX;
+		for (int kind = KD_EXE_LOCK_UNKNOWN; kind <= 2;
 		     kind++) {
 			exe.lock_kind = kind;
 			for (int code = 0; code <= 2; code++) {
@@ -131,7 +133,8 @@ static void test_metrics_contract(void)
 {
 	struct daemon_config cfg = { .mode = MODE_V2 };
 	char *argv[] = { "daemon", "--metrics", "--quiet", NULL };
-	struct kd_exe_info exe = { .RIP = 0x1234, .lock_kind = KD_EXE_LOCK_MUTEX };
+	struct kd_exe_info exe = { .RIP = 0x1234, .lock_kind = KD_EXE_LOCK_OWNED_MUTEX,
+		.entry_abi = KD_ENTRY_ABI_MUTEX_CLOBBER_V1 };
 	struct rusage usage = { 0 };
 	uint64_t value;
 
@@ -152,7 +155,8 @@ static void test_metrics_contract(void)
 static void test_chunk_session(void)
 {
 	char root[] = "/tmp/kdlock-chunk-session.XXXXXX";
-	struct kd_exe_info exe = { .pid = 0, .RIP = 0x1234, .lock_kind = KD_EXE_LOCK_MUTEX };
+	struct kd_exe_info exe = { .pid = 0, .RIP = 0x1234, .lock_kind = KD_EXE_LOCK_OWNED_MUTEX,
+		.entry_abi = KD_ENTRY_ABI_MUTEX_CLOBBER_V1 };
 	struct daemon_config cfg = { .mode = MODE_V1 };
 	unsigned char image[MAX_PAYLOAD * 2 + 17], chunk[MAX_PAYLOAD];
 	int original_dir = open(".", O_RDONLY | O_DIRECTORY);
@@ -219,7 +223,8 @@ static void test_chunk_session(void)
 int main(void)
 {
 	char path[] = "/tmp/kdlock-daemon-policy.XXXXXX";
-	struct kd_exe_info exe = { .pid = 0, .RIP = 0x1234, .lock_kind = KD_EXE_LOCK_MUTEX };
+	struct kd_exe_info exe = { .pid = 0, .RIP = 0x1234, .lock_kind = KD_EXE_LOCK_OWNED_MUTEX,
+		.entry_abi = KD_ENTRY_ABI_MUTEX_CLOBBER_V1 };
 	struct kd_recv_pkt packet;
 	int result = -1;
 	int fd;

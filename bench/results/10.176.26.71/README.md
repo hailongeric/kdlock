@@ -7,6 +7,22 @@ Current commands and accepted-provider status live in the
 [project guide](../../../docs/PROJECT_GUIDE.md) and
 [performance status](../../../docs/PERFORMANCE.md).
 
+New runs use exactly CPUs 0–63: node 0 has CPUs 0–31 and node 1 has CPUs 32–63,
+with no extra vCPUs or unused spare CPU. Earlier 66-vCPU reports below are
+historical evidence, not instructions for new runs; retain their recorded
+topology rather than relabeling them as 64-vCPU results.
+
+## Owned-only mutex verification
+
+The [removal receipt](tests/remove-mutex-legacy-20261015/validation.json) records
+builds, basic/affected tests, live task/scheduler probes and ABI2/ABI4 JIT checks
+with FULL continuations, owner ACKs and complete drain. It contains no new
+performance comparison.
+
+The [commit check](tests/remove-mutex-legacy-20261015/commit-check-20261016.json)
+records fresh basic/affected checks and builds against the isolated staged
+source, plus the documentation audit. The earlier live evidence remains separate.
+
 ## Current owned-protocol optimization
 
 The [origin claims and bounded NUMA study](bench/mutex_owned/20261015-origin/README.md)

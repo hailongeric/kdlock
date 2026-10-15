@@ -195,10 +195,10 @@ class ClobberEntryTests(unittest.TestCase):
         self.assertEqual(self.generate('48833c2400740748c7c00100000048890424c3')[2],2)
 
     def test_contract_identity_matches_backend(self):
-        mutex_symbols = {"kd_mutex_lock_clobber_v1": 0x5000,
-                         "kd_mutex_unlock_clobber_v1": 0x6000}
-        for abi, kind, expected in ((1, 'mutex', 2), (2, 'spin', 2), (2, 'mutex', 0),
-                                    (3, 'mutex', 2), (3, 'spin', 0)):
+        mutex_symbols = OWNED_SYMBOLS
+        for abi, kind, expected in ((1, 'mutex-owned', 2), (2, 'spin', 2),
+                                    (2, 'mutex-owned', 0), (2, 'mutex', 2),
+                                    (3, 'mutex-owned', 2), (3, 'spin', 0)):
             self.assertEqual(render('c3', abi=abi, lock_kind=kind,
                                     kernel_symbols=SYMBOLS | mutex_symbols,
                                     return_status=True, muted=True)[2], expected)
@@ -206,30 +206,24 @@ class ClobberEntryTests(unittest.TestCase):
             self.assertEqual(render(code, abi=3, kernel_symbols=SYMBOLS,
                                     return_status=True, muted=True)[2],
                              0 if code.startswith('488b45') else 2)
-            self.assertEqual(render(code, abi=2, lock_kind='mutex',
+            self.assertEqual(render(code, abi=2, lock_kind='mutex-owned',
                                     kernel_symbols=mutex_symbols, return_status=True,
                                     muted=True)[2], 0 if code.startswith('488b45') else 2)
 
-    def test_direct_mutex_unlock_bounds_abi2_and_bridge_remains_known(self):
-        # Both identities bound admission, while COMPLETE targets the explicit
-        # module endpoint. A bridge alias still leaves through generic FULL.
-        symbols = {"kd_mutex_lock_clobber_v1": 0x5000,
-                   "kd_mutex_unlock_clobber_v1": 0x6000,
-                   "kd_mutex_direct_lock_clobber_v1": 0x7000,
-                   "kd_mutex_direct_unlock_clobber_v1": 0x8000}
-        for target in (0x6000, 0x8000):
-            code = bytes.fromhex('48c7c7009000004889e648c7c2191000004889e9')
-            code += b'\xe8' + (target - 0x1019).to_bytes(4, 'little', signed=True)
-            code += bytes.fromhex('64488b042500000000c3')
-            asm, _, status = render(code.hex(), abi=2, lock_kind='mutex',
-                                    kernel_symbols=symbols, return_status=True, muted=True)
-            self.assertEqual(status, 0)
-            self.assertEqual(b'clobber_complete' in asm, target == 0x8000)
+    def test_owned_direct_unlock_bounds_abi2(self):
+        target = OWNED_SYMBOLS['kd_owned_mutex_direct_unlock_clobber_v1']
+        code = bytes.fromhex('48c7c7009000004889e648c7c2191000004889e9')
+        code += b'\xe8' + (target - 0x1019).to_bytes(4, 'little', signed=True)
+        code += bytes.fromhex('64488b042500000000c3')
+        asm, log, status = render(code.hex(), abi=2, lock_kind='mutex-owned',
+                                 kernel_symbols=OWNED_SYMBOLS, return_status=True, muted=True)
+        self.assertEqual(status, 0, log)
+        self.assertIn(b'clobber_complete', asm)
 
     def test_contended_mutex_symbol_is_an_abi2_control_boundary(self):
-        symbols = {"kd_mutex_direct_lock_clobber_v1": 0x5000,
-                   "kd_mutex_direct_contended_clobber_v1": 0x6000,
-                   "kd_mutex_direct_unlock_clobber_v1": 0x7000}
+        symbols = OWNED_SYMBOLS | {"kd_owned_mutex_direct_lock_clobber_v1": 0x5000,
+                   "kd_owned_mutex_direct_contended_clobber_v1": 0x6000,
+                   "kd_owned_mutex_direct_unlock_clobber_v1": 0x7000}
         code = bytes.fromhex('48c7c700910000')
         for target in (0x6000, 0x7000):
             ip = 0x1000 + len(code) + 3 + 7 + 3 + 5
@@ -244,20 +238,20 @@ class ClobberEntryTests(unittest.TestCase):
         code += bytes.fromhex('4889e9')
         code += b'\xe8' + (0x7000-0x1000-len(code)-5).to_bytes(4, 'little', signed=True)
         code += b'\xc3'
-        _, log, status = render(code.hex(), abi=2, lock_kind='mutex',
+        _, log, status = render(code.hex(), abi=2, lock_kind='mutex-owned',
                                 kernel_symbols=symbols, return_status=True, muted=True)
         self.assertEqual(status, 0, log)
 
     def test_outer_mutex_return_endpoint_is_not_a_nested_void_control(self):
-        symbols = {"kd_mutex_direct_lock_clobber_v1": 0x5000,
-                   "kd_mutex_outer_contended_clobber_v1": 0x6000,
-                   "kd_mutex_direct_unlock_clobber_v1": 0x7000}
+        symbols = OWNED_SYMBOLS | {"kd_owned_mutex_direct_lock_clobber_v1": 0x5000,
+                   "kd_owned_mutex_outer_contended_clobber_v1": 0x6000,
+                   "kd_owned_mutex_direct_unlock_clobber_v1": 0x7000}
         # Root starts after the CALL; a CALL inside an image would need a
         # return-valued acquisition model, which the old nested service lacks.
         code = bytes.fromhex('48c7c7009100004889e648c7c2191000004889e9')
         code += b'\xe8' + (0x6000-0x1019).to_bytes(4, 'little', signed=True)
         code += bytes.fromhex('eb0231c048890424c3')
-        _, log, status = render(code.hex(), abi=2, lock_kind='mutex',
+        _, log, status = render(code.hex(), abi=2, lock_kind='mutex-owned',
                                 kernel_symbols=symbols, return_status=True)
         self.assertEqual(status, 2, log)
         self.assertIn('outer-only mutex entry', log)

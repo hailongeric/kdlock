@@ -95,10 +95,15 @@ def main():
                'kd_spin_unlock_clobber_v1': 0x4000,
                'kd_spin_direct_native_unlock': 0x6000,
                'kd_spin_lock': 0x5000,
-               'kd_mutex_lock_clobber_v1': 0x3200,
-               'kd_mutex_unlock_clobber_v1': 0x4200,
-               'kd_mutex_direct_lock_clobber_v1': 0x3300,
-               'kd_mutex_direct_unlock_clobber_v1': 0x4000}
+               'kd_owned_mutex_lock_v1': 0x5000,
+               'kd_owned_mutex_unlock_v1': 0x6000,
+               'kd_owned_mutex_direct_lock_clobber_v1': 0x3300,
+               'kd_owned_mutex_direct_contended_clobber_v1': 0x3400,
+               'kd_owned_mutex_outer_contended_clobber_v1': 0x3500,
+               'kd_owned_mutex_outer_prepared_clobber_v1': 0x3600,
+               'kd_owned_mutex_outer_preflight_v1': 0x3700,
+               'kd_owned_mutex_outer_unlock_v1': 0x6100,
+               'kd_owned_mutex_direct_unlock_clobber_v1': 0x4000}
     # Each failed prerequisite must reconstruct exactly one CALL, including
     # immutable endpoint mismatch, disabled completion, and all three words.
     cases = [(False, failure, abi) for abi in (1, 2, 3) for failure in range(7)]
@@ -144,13 +149,9 @@ def main():
         # The fixture endpoints are separate per backend; overlapping symbols
         # would make the admission backend intentionally ambiguous.
         selected = {k:v for k,v in symbols.items() if
-                    (k.startswith('kd_mutex') if abi == 2 else k.startswith('kd_spin'))}
-        if abi == 2:
-            selected['mutex_unlock'] = 0x6000
-            if native:
-                selected['mutex_lock'] = 0x5000
+                    (k.startswith('kd_owned_mutex') if abi == 2 else k.startswith('kd_spin'))}
         assembly, log, status = render(code.hex(), kernel_symbols=selected, abi=abi,
-                                       lock_kind='mutex' if abi == 2 else 'spin',
+                                       lock_kind='mutex-owned' if abi == 2 else 'spin',
                                        body_witness=True, return_status=True)
         assert status == 0, log
         if not native and abi in (1, 3):

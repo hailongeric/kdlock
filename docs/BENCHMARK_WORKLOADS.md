@@ -23,7 +23,7 @@ same selected counters under one lock. The bodies contain explicit updates:
 | `c08` | Increment counters 0–7 | 512 bytes |
 | `c16` | Increment counters 0–15 | 1,024 bytes |
 
-These sizes apply to spin, legacy mutex and rwlock cacheline cases. The
+These sizes apply to spin, Native/TCLock mutex and rwlock cacheline cases. The
 experimental [owned-v1 mutex runner](../bench/tclock_compare/README.md#workloads-and-backends)
 currently supports only plain c01 for performance comparisons.
 
@@ -134,8 +134,8 @@ Examples:
 
 - `ofd-tail-n128-v64`: query the last of 128 installed lock ranges. `v64` does
   not specify a 64-byte range; each installed range is one byte.
-- `pipebytes-query-n16-t08-r0-kdlock`: eight workers query a pipe containing 16
-  buffers, in the first KD repetition.
+- `pipebytes-query-n16-t08-r0-native`: eight workers query a pipe containing 16
+  buffers, in the first Native repetition.
 - `utsname-host-n20-v64`: 20% hostname updates and 80% `uname()` reads, with
   fixed 64-byte names. Worker count is a separate field.
 
@@ -165,8 +165,9 @@ between acquisition and release.
 The kernel paths below describe selected helpers in the captured Linux 6.1.159
 source. Matched Native/TCLock/KD runs substitute the indicated function only for
 the bound benchmark object and reproduce its relevant body in an adapter.
-Stock runs retain the original body. Pipe and seek cases use KD's legacy mutex
-interface on the kernel-owned object; they do not support `owned-v1`. The
+Stock runs retain the original body. Pipe and seek mutex cases support Stock,
+Native and TCLock controls. KD-owned mutexes require their own storage and cannot
+replace these kernel-owned objects. The
 [runner contract](../bench/real_api/README.md#contract-and-comparison-limits)
 defines allowed consumers and source/instrumentation differences. These are
 syscall microbenchmarks on controlled objects, not complete application workloads.
@@ -505,7 +506,7 @@ The decisive constraints are:
 
 - **Lock protocol and callers.** A private KD lock cannot exclude fault, exec,
   exit or other native users of the real rwsem. KD mutexes are exclusive, with
-  different storage and ownership rules; neither mutex backend supplies mmap's
+  different storage and ownership rules; the KD mutex does not supply mmap's
   concurrent readers, killable waits, trylock, downgrade and release/reacquire
   semantics. A new backend or an audited cooperating adapter would be required.
 - **Execution context.** Allocation, page faults, scheduling, nested MM locks,

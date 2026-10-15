@@ -16,7 +16,6 @@ SYMBOLS = {
     name: 0x2000000 + index * 0x1000
     for index, name in enumerate((
         "kd_spin_lock_clobber_v1", "kd_spin_unlock_clobber_v1",
-        "kd_mutex_lock_clobber_v1", "kd_mutex_unlock_clobber_v1",
         "kd_owned_mutex_lock_v1", "kd_owned_mutex_unlock_v1",
         "kd_owned_mutex_outer_unlock_v1", "kd_owned_mutex_direct_lock_clobber_v1",
         "kd_owned_mutex_direct_contended_clobber_v1",
@@ -26,8 +25,8 @@ SYMBOLS = {
         "kd_owned_mutex_outer_lock_cabi_v2", "kd_owned_mutex_outer_unlock_cabi_v2",
     ))
 }
-ENTRIES = (("spin", 0), ("spin", 1), ("spin", 3), ("mutex", 0),
-           ("mutex", 2), ("mutex-owned", 2), ("mutex-owned", 4))
+ENTRIES = (("spin", 0), ("spin", 1), ("spin", 3),
+           ("mutex-owned", 2), ("mutex-owned", 4))
 CORE = {
     "cli": "fa", "sti": "fb", "stac": "0f01cb", "clac": "0f01ca",
     "rdmsr": "0f32", "wrmsr": "0f30", "pushfq": "9c", "popfq": "9d",

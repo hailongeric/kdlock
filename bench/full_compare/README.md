@@ -1,13 +1,15 @@
 # Complete spin, mutex and rwlock reports
 
 The [full benchmark driver](../../tools/vm/README.md#complete-164-worker-comparison)
-runs one-cacheline and RCUHT payloads under KDLock, TCLock and Linux Native
-at 22 worker counts: 1–8 in steps of one, then 12–64 in steps of four.
-Three rounds produce 1,584 timed sessions by default. Explicitly opting into
-multi-cacheline payloads restores the historical 3,960-session matrix.
+plans one-cacheline and RCUHT payloads under TCLock and Linux Native, plus
+KD spin, rwlock and c01 mutex cases, at 22 worker counts: 1–8 in steps of one,
+then 12–64 in steps of four. Three rounds select 1,518 timed sessions by default.
+Explicitly opting into multi-cacheline payloads selects 3,762 sessions. Execution
+at 64 workers still requires the collector-sharing support described below.
 The driver owns execution and drain;
 [`export.py`](export.py) reads saved evidence without executing benchmark code.
-This all-lock driver retains the legacy mutex default. The current owned ABI4
+The all-lock driver uses owned ABI2 for KD c01, with Native/TCLock only for
+other mutex payloads. The current owned ABI4
 c01 profile uses the [dedicated command](../tclock_compare/README.md#owned-c01-full-grid)
 and its [198-sample report/auditor](../results/10.176.26.71/bench/mutex_owned/20261014-full-grid/README.md),
 separately from the all-lock c01/hash matrix.
@@ -42,7 +44,11 @@ For Git publication, trim Matplotlib's trailing SVG whitespace in the guest
 and check that SVG elements and path tokens match. Preserve the original
 generated SVGs in the raw archive and retain a normalization receipt.
 
-The complete 64-worker run uses the documented temporary 66-vCPU layout.
-Collector vCPU 65 is distinct from every worker, but it shares physical host
-core 63 with the last worker and QEMU services at 64 workers. Preserve that
-limitation and the frozen source, topology and governor when publishing results.
+All new runs use exactly CPUs 0–63: NUMA node 0 has CPUs 0–31 and node 1 has
+CPUs 32–63, pinned to the matching host cores. Do not add extra vCPUs or an
+unused spare CPU. At 64 workers, the collector must share CPU 63 with the last
+worker and QEMU services; the current driver needs collector-sharing support
+before that point can run. See the [placement and runner limitation](../../tools/vm/README.md#complete-164-worker-comparison).
+Historical 66-vCPU reports retain their original topology and physical
+collector contention. Preserve frozen source, topology and governor when
+publishing results; those reports do not describe the new required placement.

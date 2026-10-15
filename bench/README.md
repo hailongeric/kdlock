@@ -53,8 +53,8 @@ The complete grid is
 Individual runners retain shorter defaults; use explicit placement and worker
 counts for a comparison. Follow the [complete driver](../tools/vm/README.md#complete-164-worker-comparison)
 and its [offline exporter](full_compare/README.md) for the full c01/hash matrix.
-That driver retains the legacy mutex default. The owned c01 profile has its own
-explicit command above and does not support the full driver's hash payload.
+That driver uses owned KD mutexes for c01 and Native/TCLock for other mutex
+payloads. The ABI4/reuse-32 c01 profile has its own explicit command above.
 
 Retain best peak and whole-run throughput, minimum/median/maximum/spread across
 rounds, returned JIT/delegation counts, each worker's and NUMA node's progress,

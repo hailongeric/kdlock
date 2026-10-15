@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: GPL-2.0
-/* Included by kd_hotlock.c. Owned objects have an independent exact-key heat
- * history; these observations never grant ownership or retire queued work. */
+/*
+ * Included by kd_hotlock.c. Owned objects have an independent exact-key heat
+ * history; these observations never grant ownership or retire queued work.
+ */
 struct kd_owned_hotlock_cpu {
 	struct kd_hotlock_table table;
 	unsigned int hot;
@@ -12,7 +14,7 @@ static DEFINE_PER_CPU(unsigned long, kd_owned_contentions);
 static unsigned int owned_mutex_entry_ratio_limit = 256;
 module_param(owned_mutex_entry_ratio_limit, uint, 0444);
 MODULE_PARM_DESC(owned_mutex_entry_ratio_limit,
-	"Owned mutex exclusive entry ratio; power of two from 2 through 256");
+		 "Owned mutex exclusive entry ratio; power of two from 2 through 256");
 
 bool kd_hotlock_record_owned_mutex_pinned(unsigned long address)
 {
@@ -30,7 +32,8 @@ bool kd_hotlock_record_owned_mutex_pinned(unsigned long address)
 	t->rate_samples = this_cpu_read(kd_owned_contentions);
 	if (t->rate_samples >= KD_HOTLOCK_CHECK_INTERVAL) {
 		bool was_hot = cpu->hot;
-		bool ratio = (this_cpu_read(kd_hotlock_owned_mutex_entries) >> 10) <
+		bool ratio = (this_cpu_read(kd_hotlock_owned_mutex_entries) >>
+			      10) <
 			owned_mutex_entry_ratio_limit;
 		unsigned int i;
 
@@ -38,7 +41,7 @@ bool kd_hotlock_record_owned_mutex_pinned(unsigned long address)
 		this_cpu_write(kd_owned_contentions, 0);
 		now = rdtsc_ordered();
 		cpu->hot = ratio && now >= t->rate_begin &&
-			now - t->rate_begin < KD_HOTLOCK_CPU_WINDOW;
+			   now - t->rate_begin < KD_HOTLOCK_CPU_WINDOW;
 		t->rate_begin = now;
 		t->rate_samples = 0;
 		if (!was_hot || !cpu->hot)
@@ -59,7 +62,7 @@ bool kd_hotlock_record_owned_mutex_pinned(unsigned long address)
 		if (t->rate_samples)
 			now = rdtsc_ordered();
 		slot->hot = now >= slot->begin &&
-			now - slot->begin < KD_HOTLOCK_INITIAL_WINDOW;
+			    now - slot->begin < KD_HOTLOCK_INITIAL_WINDOW;
 		slot->begin = now;
 		slot->count = 0;
 	}
@@ -75,15 +78,18 @@ static int kd_owned_hotlock_init(void)
 	unsigned long now;
 	int cpu;
 
-	if (owned_mutex_entry_ratio_limit < 2 || owned_mutex_entry_ratio_limit > 256 ||
-	    (owned_mutex_entry_ratio_limit & (owned_mutex_entry_ratio_limit - 1)))
+	if (owned_mutex_entry_ratio_limit < 2 ||
+	    owned_mutex_entry_ratio_limit > 256 ||
+	    (owned_mutex_entry_ratio_limit &
+	     (owned_mutex_entry_ratio_limit - 1)))
 		return -EINVAL;
 	kd_owned_heat = alloc_percpu(struct kd_owned_hotlock_cpu);
 	if (!kd_owned_heat)
 		return -ENOMEM;
 	now = rdtsc_ordered();
 	for_each_possible_cpu(cpu) {
-		struct kd_owned_hotlock_cpu *local = per_cpu_ptr(kd_owned_heat, cpu);
+		struct kd_owned_hotlock_cpu *local =
+			per_cpu_ptr(kd_owned_heat, cpu);
 
 		memset(local, 0, sizeof(*local));
 		local->table.rate_begin = now;
@@ -100,14 +106,17 @@ static void kd_owned_hotlock_exit(void)
 
 	if (hotlock_stats && kd_owned_heat)
 		for_each_possible_cpu(cpu) {
-			struct kd_owned_hotlock_cpu *local = per_cpu_ptr(kd_owned_heat, cpu);
+			struct kd_owned_hotlock_cpu *local =
+				per_cpu_ptr(kd_owned_heat, cpu);
 
 			for (i = 0; i < local->table.used; i++) {
-				struct kd_hotlock_entry *slot = &local->table.entries[i];
+				struct kd_hotlock_entry *slot =
+					&local->table.entries[i];
 
 				pr_info("kd_hotlock owned: cpu=%d address=%lx count=%u cpu_hot=%u lock_hot=%u entry_ratio_limit=%u role=DONE\n",
-					cpu, slot->address, slot->count, local->hot,
-					slot->hot, owned_mutex_entry_ratio_limit);
+					cpu, slot->address, slot->count,
+					local->hot, slot->hot,
+					owned_mutex_entry_ratio_limit);
 			}
 		}
 	free_percpu(kd_owned_heat);

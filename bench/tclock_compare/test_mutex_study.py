@@ -12,7 +12,11 @@ import run
 
 
 def samples(threads, arm, rate=100, peak=120, jit=1):
-    return [dict(threads=threads, arm=arm, repeat=r, mutex_entry_ratio_limit=2,
+    return [dict(threads=threads, arm=arm, repeat=r, owned_mutex_entry_ratio_limit=2,
+                 mutex_implementation='owned-v1', registry_lock_kind=3, entry_abi=2,
+                 caller_abi='clobber', caller_shell='owned_mutex_outer_cookie',
+                 cookie_storage='owned_acquisition_local', owned_queue_policy='finite_fifo',
+                 mutex_wait_counter_scope='owned_delegate_waits',
                  mutex_routing='adaptive', mutex_acceptance='adaptive-performance',
                  jit_bodies=jit if arm == 'kdlock' else 0,
                  measurement=dict(completed=rate, wall_ns=1000000000,
@@ -62,7 +66,7 @@ class AcceptanceTests(unittest.TestCase):
     def test_owned_candidate_keeps_implementation_and_threshold_identity(self):
         for row in self.candidate:
             if row['arm'] == 'kdlock':
-                row.update(mutex_implementation='owned-v1', mutex_entry_ratio_limit=None,
+                row.update(mutex_implementation='owned-v1',
                            owned_mutex_entry_ratio_limit=4, registry_lock_kind=3, entry_abi=2,
                            caller_abi='clobber', caller_shell='owned_mutex_outer_cookie',
                            cookie_storage='owned_acquisition_local', owned_queue_policy='finite_fifo',
@@ -85,14 +89,14 @@ class AcceptanceTests(unittest.TestCase):
         self.candidate[0].update(owned_mutex_refill=False, owned_queue_policy='finite_fifo')
         with self.assertRaisesRegex(Failure, 'one queue policy'):
             evaluate(self.baseline, self.candidate)
-        self.candidate[0]['mutex_implementation'] = 'legacy'
+        self.candidate[0]['mutex_implementation'] = 'removed'
         with self.assertRaisesRegex(Failure, 'one mutex implementation'):
             evaluate(self.baseline, self.candidate)
 
     def test_preflight_candidates_and_zero_gate_are_not_pooled(self):
         for row in self.candidate:
             if row['arm'] == 'kdlock':
-                row.update(mutex_implementation='owned-v1', mutex_entry_ratio_limit=None,
+                row.update(mutex_implementation='owned-v1',
                     owned_mutex_entry_ratio_limit=4, registry_lock_kind=3, entry_abi=2,
                     caller_abi='clobber', caller_shell='owned_mutex_outer_cookie',
                     cookie_storage='owned_acquisition_local', owned_queue_policy='finite_fifo',
@@ -112,7 +116,7 @@ class AcceptanceTests(unittest.TestCase):
     def test_explicit_capture_first_and_implicit_gate_remain_separate(self):
         for row in self.candidate:
             if row['arm'] == 'kdlock':
-                row.update(mutex_implementation='owned-v1', mutex_entry_ratio_limit=None,
+                row.update(mutex_implementation='owned-v1',
                            owned_mutex_entry_ratio_limit=4, registry_lock_kind=3, entry_abi=2,
                            caller_abi='clobber', caller_shell='owned_mutex_outer_cookie',
                            cookie_storage='owned_acquisition_local', owned_queue_policy='finite_fifo',
@@ -137,7 +141,7 @@ class AcceptanceTests(unittest.TestCase):
     def test_queued_preflight_candidates_are_not_pooled(self):
         for row in self.candidate:
             if row['arm'] == 'kdlock':
-                row.update(mutex_implementation='owned-v1', mutex_entry_ratio_limit=None,
+                row.update(mutex_implementation='owned-v1',
                     owned_mutex_entry_ratio_limit=4, registry_lock_kind=3, entry_abi=2,
                     caller_abi='clobber', caller_shell='owned_mutex_outer_cookie',
                     cookie_storage='owned_acquisition_local', owned_queue_policy='finite_fifo',
@@ -234,7 +238,9 @@ class OwnedEvidenceTests(unittest.TestCase):
         self.temporary = tempfile.TemporaryDirectory()
         self.addCleanup(self.temporary.cleanup)
         self.folder = Path(self.temporary.name)
-        self.log = 'kd_owned_mutex: bodies=9 batches=2 refusals=0 early_releases=0\n'
+        self.log = ('kd_owned_mutex: bodies=9 batches=2 refusals=0 early_releases=0\n'
+                    'kd_mutex tasks: active_tasks=0 task_alloc_failure=0 task_reroutes=0\n'
+                    'kd_native stats: started=2 completed=2 unlocks=4\n')
         (self.folder/'kernel.log').write_text(self.log)
         run.write_json(self.folder/'drain.counts.json', dict(active=0))
         self.record = dict(arm='kdlock', lock_kind='mutex', threads=4,
@@ -243,7 +249,7 @@ class OwnedEvidenceTests(unittest.TestCase):
             cookie_storage='owned_acquisition_local', owned_queue_policy='finite_fifo',
             mutex_wait_counter_scope='owned_delegate_waits', mutex_routing='adaptive',
             mutex_acceptance='adaptive-performance', mutex_spin_limit=4096,
-            mutex_entry_ratio_limit=None, owned_mutex_entry_ratio_limit=256,
+            owned_mutex_entry_ratio_limit=256,
             spin_entry_ratio_limit=2, spin_prefetch=2, mutex_wait_mode='blocking',
             jit_bodies=5, execution_class='JIT', jit_acceptance='PASS',
             layout=dict(lock_bytes=32, line_bytes=64, lock_addr=4096, data_addr=8192),
@@ -251,11 +257,23 @@ class OwnedEvidenceTests(unittest.TestCase):
             parameters=dict(bench_quiet='Y', jit_timing='N', bench_lock_addr='4096',
                 spin_entry_ratio_limit='2', spin_prefetch='2', spin_delegate='Y',
                 owned_mutex_spin_limit='4096', owned_mutex_entry_ratio_limit='256',
-                owned_mutex_self_route='N', mutex_native_route='N',
-                owned_mutex_native_after_control='0'),
-            owned_observations=dict(bodies=9, batches=2, refusals=0, early_releases=0))
+                owned_mutex_self_route='N', owned_mutex_native_after_control='0'),
+            owned_observations=dict(bodies=9, batches=2, refusals=0, early_releases=0),
+            retired=dict(state=2, modules=0, frames=0, writers=0))
 
-    def test_owned_jit_and_self_classification_and_legacy_compatibility(self):
+    def test_owned_retirement_requires_task_and_owner_ack_drain(self):
+        for before, after in (('active_tasks=0', 'active_tasks=1'),
+                              ('completed=2', 'completed=1'),
+                              ('kd_native stats:', 'missing stats:')):
+            (self.folder/'kernel.log').write_text(self.log.replace(before, after))
+            with self.assertRaisesRegex(Failure, 'did not drain'):
+                require_owned_evidence(self.record, self.folder)
+        (self.folder/'kernel.log').write_text(self.log)
+        self.record['retired']['frames'] = 1
+        with self.assertRaisesRegex(Failure, 'did not drain'):
+            require_owned_evidence(self.record, self.folder)
+
+    def test_owned_jit_and_self_classification_and_required_identity(self):
         require_owned_evidence(self.record, self.folder)
         self.record.update(owned_mutex_refill=True, owned_queue_policy='bounded_fifo_refill')
         self.record['parameters']['owned_mutex_refill'] = 'Y'
@@ -266,8 +284,9 @@ class OwnedEvidenceTests(unittest.TestCase):
         self.record.update(owned_mutex_refill=True)
         self.record.update(jit_bodies=0, execution_class='KD_SELF', jit_acceptance='ADAPTIVE_SELF')
         require_owned_evidence(self.record, self.folder)
-        require_owned_evidence({}, Path('/unused'))
-        require_owned_evidence(dict(mutex_implementation='legacy'), Path('/unused'))
+        for record in ({}, dict(mutex_implementation='removed')):
+            with self.assertRaisesRegex(Failure, 'owned mutex implementation required'):
+                require_owned_evidence(record, Path('/unused'))
 
     def test_owned_cabi_requires_matching_published_abi_and_stage_readback(self):
         spec, = run.make_plan(Namespace(cachelines=[1], threads=[4], repeats=1,

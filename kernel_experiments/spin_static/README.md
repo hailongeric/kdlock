@@ -3,8 +3,8 @@
 Authorized on 2026-09-15 as an independent recovery-guest source/build. The original
 kernel and captured baseline remain preserved. This is the historical ancestor of
 [spin-clobber](../spin_clobber/README.md) and
-[mutex-clobber](../mutex_clobber/README.md); current providers require both clobber
-interfaces and cannot be built for this static-only interface.
+[mutex-clobber](../mutex_clobber/README.md); current providers require the spin clobber
+interface and cannot be built for this static-only interface.
 
 [guest-kernel.patch](guest-kernel.patch) changes the captured spin selector and
 callbacks to static calls without changing the `(lock,rsp,rip)` callback or two-word

@@ -179,11 +179,11 @@ static struct kprobe owned_slow_probe = { .symbol_name = "kd_owned_mutex_lock_sl
 static struct kprobe owned_wait_probe = { .symbol_name = "kd_owned_mutex_lock_self_wait", .pre_handler = native_entry };
 static struct kprobe *owned_probes[] = { &unlock_probe, &owned_entry_probe, &owned_slow_probe, &owned_wait_probe };
 static struct kretprobe admission_probe = {
-	.kp.symbol_name = "kd_hotlock_record_mutex_pinned", .maxactive = 128,
+	.kp.symbol_name = "kd_hotlock_record_owned_mutex_pinned", .maxactive = 128,
 	.entry_handler = admission_entry, .handler = admission_return,
 };
 static struct kretprobe batch_probe = {
-	.kp.symbol_name = "kd_mutex_run_combiner", .maxactive = 128,
+	.kp.symbol_name = "kd_owned_mutex_run_batch", .maxactive = 128,
 	.data_size = sizeof(struct batch_sample), .entry_handler = batch_entry, .handler = batch_return,
 };
 
@@ -207,16 +207,12 @@ static int __init profile_init(void)
 	int ret;
 
 	if (!target_lock || (kd && (!success_counter || spin)) ||
-	    (owned && !kd) || ((preflight || local_first) && !owned) ||
+	    (owned != kd) || ((preflight || local_first) && !owned) ||
 	    (preflight && local_first))
 		return -EINVAL;
 	counts = alloc_percpu(struct profile_counts);
 	if (!counts)
 		return -ENOMEM;
-	if (owned) {
-		admission_probe.kp.symbol_name = "kd_hotlock_record_owned_mutex_pinned";
-		batch_probe.kp.symbol_name = "kd_owned_mutex_run_batch";
-	}
 	if (spin)
 		slow_probe.symbol_name = "native_queued_spin_lock_slowpath";
 	else {

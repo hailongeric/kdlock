@@ -18,21 +18,13 @@ static int is_end_point(unsigned long addr)
 static bool kd_is_owned_lock_call(unsigned long ip)
 {
 	return ip == owned_mutex_lock_addr || ip == owned_direct_lock_addr ||
-		ip == owned_contended_lock_addr;
+	       ip == owned_contended_lock_addr;
 }
 
 static bool kd_is_owned_unlock_call(unsigned long ip)
 {
 	return ip == owned_mutex_unlock_addr || ip == owned_outer_unlock_addr ||
-		ip == owned_direct_unlock_addr || ip == owned_cabi_unlock_addr;
-}
-
-static bool kd_is_legacy_mutex_call(unsigned long ip)
-{
-	return ip == mutex_lock_addr || ip == clobber_mutex_lock_addr ||
-		ip == direct_mutex_lock_addr || ip == contended_mutex_lock_addr ||
-		ip == mutex_unlock_addr || ip == clobber_mutex_unlock_addr ||
-		ip == direct_mutex_unlock_addr;
+	       ip == owned_direct_unlock_addr || ip == owned_cabi_unlock_addr;
 }
 
 static int is_outer_lock_unlock(struct kd_regs *regs,
@@ -45,8 +37,6 @@ static int is_outer_lock_unlock(struct kd_regs *regs,
 	if (regs->ip != raw_spin_unlock_addr &&
 	    regs->ip != clobber_spin_unlock_addr &&
 	    regs->ip != cold_spin_unlock_addr &&
-	    regs->ip != mutex_unlock_addr && regs->ip != clobber_mutex_unlock_addr &&
-	    regs->ip != direct_mutex_unlock_addr &&
 	    !kd_is_owned_unlock_call(regs->ip))
 		return 0;
 	if (!outer_lock_addr)
@@ -84,10 +74,12 @@ static int finish_acquired_spin_call(struct kd_exec_frame *frame,
 	unsigned long base, end, return_ip, lock;
 	unsigned int index;
 
-	/* Only the local post-acquisition EIO boundary can use this path. A
+	/*
+	 * Only the local post-acquisition EIO boundary can use this path. A
 	 * generic ACQUIRED tag is insufficient: partial ledger publication,
 	 * remote requests, a changed CALL word or another owner stay fail-stop.
-	 * Nothing is undone and B must never be acquired a second time. */
+	 * Nothing is undone and B must never be acquired a second time.
+	 */
 	if (result != -EIO || !frame || frame->mutex_backend ||
 	    !kd_exec_frame_can_borrow_locks(frame) ||
 	    frame->logical_task == current ||
@@ -159,9 +151,11 @@ static int kd_mutex_stack_prepare(struct kd_exec_frame *frame,
 {
 	unsigned long base, end, return_ip;
 
-	/* The waiter cannot retire its kernel stack before this delegated request
+	/*
+	 * The waiter cannot retire its kernel stack before this delegated request
 	 * completes. Bound every read to that stack, not the combiner's shadow
-	 * stack, and do not infer that the range is private to the waiter. */
+	 * stack, and do not infer that the range is private to the waiter.
+	 */
 	if (!kd_exec_frame_can_borrow_locks(frame) || !frame->mutex_backend ||
 	    frame->logical_task == current)
 		return -EINVAL;
@@ -177,8 +171,10 @@ static int kd_mutex_stack_prepare(struct kd_exec_frame *frame,
 		return -EINVAL;
 	frame->control_call = saved->call;
 	if (end - regs->sp - sizeof(return_ip) < sizeof(saved->bytes)) {
-		/* No control side effect yet: use the real PENDING packet, not a
-		 * fabricated allocation failure or an entry replay. */
+		/*
+		 * No control side effect yet: use the real PENDING packet, not a
+		 * fabricated allocation failure or an entry replay.
+		 */
 		kd_exec_frame_save_continuation(frame, regs);
 		atomic64_inc(&kd_mutex_stack_unavailable);
 		pr_warn_ratelimited(
@@ -203,8 +199,10 @@ static int kd_mutex_stack_finish(struct kd_exec_frame *frame,
 	const struct kd_call_state *call = &frame->control_call;
 	bool forced;
 
-	/* Compare after the real operation, never restore its writes. A changed
-	 * CALL token or post-CALL packet is not an authorized native continuation. */
+	/*
+	 * Compare after the real operation, never restore its writes. A changed
+	 * CALL token or post-CALL packet is not an authorized native continuation.
+	 */
 	if (call->phase != KD_CALL_COMPLETE ||
 	    call->target != saved->call.target ||
 	    call->stack != saved->call.stack ||
@@ -215,7 +213,8 @@ static int kd_mutex_stack_finish(struct kd_exec_frame *frame,
 	    return_ip != call->return_ip ||
 	    copy_from_kernel_nofault(after, (void *)regs->sp, sizeof(after)))
 		return -EINVAL;
-	forced = frame->owned_mutex &&
+	forced =
+		frame->owned_mutex &&
 		unlikely(READ_ONCE(kd_owned_mutex_native_after_control) == 1) &&
 		cmpxchg(&kd_owned_mutex_native_after_control, 1, 0) == 1;
 	if (!memcmp(saved->bytes, after, sizeof(after)) && !forced) {
@@ -243,26 +242,27 @@ static int handle_known_mutex_call(struct kd_exec_frame *frame,
 	struct kd_mutex_call_stack saved;
 	int ret;
 
-	/* ABI4 synthetic entry defines the borrowed acquisition cookie as zero.
-	 * A bad cookie must not gain permission merely by reaching a known CALL. */
+	/*
+	 * ABI4 synthetic entry defines the borrowed acquisition cookie as zero.
+	 * A bad cookie must not gain permission merely by reaching a known CALL.
+	 */
 	if (regs->ip == owned_cabi_unlock_addr && regs->si)
 		return -EINVAL;
 
-	/* Final outer completion does not resume this JIT, so needs no memory
-	 * preservation check. All other local mutex controls use one checkpoint. */
-	if ((regs->ip == mutex_unlock_addr || regs->ip == clobber_mutex_unlock_addr ||
-	     regs->ip == direct_mutex_unlock_addr || kd_is_owned_unlock_call(regs->ip)) && regs->di == outer_lock_addr &&
+	/*
+	 * Final outer completion does not resume this JIT, so needs no memory
+	 * preservation check. All other local mutex controls use one checkpoint.
+	 */
+	if (kd_is_owned_unlock_call(regs->ip) &&
+	    regs->di == outer_lock_addr &&
 	    !kd_exec_frame_has_unreleased_nested(frame))
 		return KD_EXE_KNOWN_OUTER_UNLOCK;
 	ret = kd_mutex_stack_prepare(frame, regs, &saved);
 	if (ret)
 		return ret;
-	if (regs->ip == mutex_lock_addr || regs->ip == clobber_mutex_lock_addr ||
-	    regs->ip == direct_mutex_lock_addr || regs->ip == contended_mutex_lock_addr ||
-	    kd_is_owned_lock_call(regs->ip)) {
-		ret = frame->owned_mutex ?
-			kd_owned_mutex_jit_nested_lock_ctx((struct kd_mutex *)regs->di, regs, frame) :
-			kd_mutex_jit_nested_lock_ctx((struct mutex *)regs->di, regs, frame);
+	if (kd_is_owned_lock_call(regs->ip)) {
+		ret = kd_owned_mutex_jit_nested_lock_ctx(
+			(struct kd_mutex *)regs->di, regs, frame);
 		ret = finish_known_lock_call(frame, regs, ret);
 	} else {
 		frame->control_call.phase = KD_CALL_ENTERED;
@@ -271,11 +271,8 @@ static int handle_known_mutex_call(struct kd_exec_frame *frame,
 			ret = kd_exec_frame_record_event(
 				frame, KD_EXEC_EVENT_OUTER_UNLOCK, regs);
 		} else {
-			ret = frame->owned_mutex ?
-				kd_owned_mutex_jit_nested_unlock_ctx((struct kd_mutex *)regs->di, frame) :
-				kd_mutex_jit_nested_unlock_ctx((struct mutex *)regs->di, frame);
-			if (!ret)
-				kd_mutex_note_nested_jit();
+			ret = kd_owned_mutex_jit_nested_unlock_ctx(
+				(struct kd_mutex *)regs->di, frame);
 		}
 		if (ret)
 			return ret;
@@ -300,52 +297,43 @@ static int handle_known_call(struct kd_regs *regs,
 	if (frame)
 		frame->control_call.phase = KD_CALL_NONE;
 
-	/* The outer-only return-valued entry is not a nested void lock service.
-	 * Admission rejects it; retain the same boundary in generic recovery. */
-	if (regs->ip == outer_mutex_lock_addr || regs->ip == owned_outer_lock_addr ||
-	    regs->ip == owned_prepared_lock_addr || regs->ip == owned_cabi_lock_addr)
+	/*
+	 * The outer-only return-valued entry is not a nested void lock service.
+	 * Admission rejects it; retain the same boundary in generic recovery.
+	 */
+	if (regs->ip == owned_outer_lock_addr ||
+	    regs->ip == owned_prepared_lock_addr ||
+	    regs->ip == owned_cabi_lock_addr)
 		return -EOPNOTSUPP;
 
-	/* Owned and legacy mutex controls are different object types despite
-	 * matching owner offsets. Reject mixed calls before any side effect. */
-	if (frame && ((frame->owned_mutex && kd_is_legacy_mutex_call(regs->ip)) ||
-	    (!frame->owned_mutex && (kd_is_owned_lock_call(regs->ip) ||
-				    kd_is_owned_unlock_call(regs->ip)))))
-		return -EOPNOTSUPP;
-	if (frame && frame->owned_mutex &&
-	    (kd_is_owned_lock_call(regs->ip) || kd_is_owned_unlock_call(regs->ip)))
+	/* Backend-specific ledgers cannot represent mixed spin/mutex nesting. */
+	if (kd_is_owned_lock_call(regs->ip) || kd_is_owned_unlock_call(regs->ip)) {
+		if (!frame || !frame->owned_mutex)
+			return -EOPNOTSUPP;
 		return handle_known_mutex_call(frame, regs, outer_lock_addr);
-
-	/* Backend-specific lock stacks cannot represent mixed spin/mutex nesting.
-	 * In particular, never enter a sleeping mutex service from a spin frame. */
-	if (frame &&
-	    ((frame->mutex_backend && ((regs->ip == raw_spin_lock_addr ||
-		     regs->ip == clobber_spin_lock_addr ||
-		     regs->ip == pinned_spin_lock_addr) ||
-				       (regs->ip == raw_spin_unlock_addr ||
-		     regs->ip == clobber_spin_unlock_addr ||
-		     regs->ip == cold_spin_unlock_addr))) ||
-	     (!frame->mutex_backend && mutex_lock_addr && mutex_unlock_addr &&
-	      (regs->ip == mutex_lock_addr || regs->ip == clobber_mutex_lock_addr ||
-	       regs->ip == direct_mutex_lock_addr || regs->ip == contended_mutex_lock_addr ||
-	       regs->ip == mutex_unlock_addr ||
-	       regs->ip == clobber_mutex_unlock_addr || regs->ip == direct_mutex_unlock_addr))))
+	}
+	if (frame && frame->mutex_backend &&
+	    (regs->ip == raw_spin_lock_addr || regs->ip == clobber_spin_lock_addr ||
+	     regs->ip == pinned_spin_lock_addr || regs->ip == raw_spin_unlock_addr ||
+	     regs->ip == clobber_spin_unlock_addr || regs->ip == cold_spin_unlock_addr))
 		return -EOPNOTSUPP;
 
 	if ((regs->ip == raw_spin_lock_addr ||
-		     regs->ip == clobber_spin_lock_addr ||
-		     regs->ip == pinned_spin_lock_addr)) {
+	     regs->ip == clobber_spin_lock_addr ||
+	     regs->ip == pinned_spin_lock_addr)) {
 		ret = kd_spin_jit_nested_lock_ctx((raw_spinlock_t *)regs->di,
 						  regs, frame);
 		return finish_known_lock_call(frame, regs, ret);
 	}
 
 	if ((regs->ip == raw_spin_unlock_addr ||
-		     regs->ip == clobber_spin_unlock_addr ||
-		     regs->ip == cold_spin_unlock_addr)) {
+	     regs->ip == clobber_spin_unlock_addr ||
+	     regs->ip == cold_spin_unlock_addr)) {
 		if (regs->di == outer_lock_addr) {
-			/* An early outer unlock is a real OOO release.  Keep executing
-			 * until every nested lock has released, then finish A once. */
+			/*
+			 * An early outer unlock is a real OOO release.  Keep executing
+			 * until every nested lock has released, then finish A once.
+			 */
 			if (frame &&
 			    kd_exec_frame_has_unreleased_nested(frame)) {
 				ret = kd_spin_jit_outer_unlock_ooo_ctx(
@@ -363,20 +351,13 @@ static int handle_known_call(struct kd_regs *regs,
 		return ret ? ret : advance_and_save_continuation(frame, regs);
 	}
 
-	if (!mutex_lock_addr || !mutex_unlock_addr)
-		return 0;
-
-	if (regs->ip != mutex_lock_addr && regs->ip != clobber_mutex_lock_addr &&
-	    regs->ip != direct_mutex_lock_addr && regs->ip != contended_mutex_lock_addr &&
-	    regs->ip != mutex_unlock_addr &&
-	    regs->ip != clobber_mutex_unlock_addr && regs->ip != direct_mutex_unlock_addr)
-		return 0;
-
-	return handle_known_mutex_call(frame, regs, outer_lock_addr);
+	return 0;
 }
 
-/* Include control classification, blocking and nested execution, but not the
- * backend's later original-waiter native suffix/ACK wait after dispatch exits. */
+/*
+ * Include control classification, blocking and nested execution, but not the
+ * backend's later original-waiter native suffix/ACK wait after dispatch exits.
+ */
 static int kd_jit_timed_control(struct kd_regs *regs, unsigned long outer)
 {
 	u64 start = kd_jit_timing_start();

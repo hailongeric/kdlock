@@ -52,8 +52,6 @@ static int calls, known_calls, known_result, errors, warnings, checks, failures;
 static unsigned int registry_lookups, readiness_acquires, current_frame_reads;
 static bool source_open = true;
 static struct kd_regs last_wrapper_output;
-static unsigned long direct_mutex_lock_addr = 0x4130;
-static unsigned long direct_mutex_unlock_addr = 0x4140;
 static unsigned long owned_direct_lock_addr = 0x4150;
 static unsigned long owned_direct_unlock_addr = 0x4160;
 static unsigned long owned_cabi_lock_addr = 0x4170, owned_cabi_unlock_addr = 0x4180;
@@ -263,18 +261,17 @@ struct kd_exec_frame *kd_exec_current_frame(void)
 #include "hostcall_code.h"
 #include "timing_code.h"
 #pragma GCC diagnostic pop
-/* Owned descriptor and claim races execute in test_owned_images. This fixture
- * covers legacy generic/ACK routes; an unexpected owned lookup must refuse. */
+/* Immutable descriptor/claim races are checked by test_owned_images. */
+static struct kd_jit_image mutex_image;
 const struct kd_jit_image *kd_image_current(const struct kd_exe_info *exe)
 {
-	(void)exe;
-	CHECK(false);
-	return NULL;
+	CHECK(exe == mutex_image.entry);
+	return &mutex_image;
 }
 void kd_image_report(struct kd_exe_info *exe, const struct kd_jit_image *image,
 		     int status, unsigned long target, unsigned long from)
 {
-	CHECK(!image);
+	CHECK(!image || image == &mutex_image);
 	exe->tgt_addr = target;
 	exe->jump_from = from;
 	kd_exe_publish_status(exe, status);

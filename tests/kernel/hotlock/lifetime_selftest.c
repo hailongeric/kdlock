@@ -1,18 +1,19 @@
 /* SPDX-License-Identifier: GPL-2.0 */
 /* Real provider calls with a held KD object while the local hash table fills, and an
- * original mutex sleeper forced to another CPU after admission returned.
+ * owned mutex sleeper forced to another CPU after admission returned.
  * This is an ownership/migration test, not an actual JIT body witness. */
 #include <linux/completion.h>
 #include <linux/delay.h>
 #include <linux/kthread.h>
 #include <linux/cpu.h>
 #include "kd_lock.h"
+#include "kd_owned_mutex_internal.h"
 #include "kd_spinlock.h"
 
 static bool hotlock_lifetime_selftest;
 module_param(hotlock_lifetime_selftest, bool, 0444);
 static struct {
- struct mutex mutex;
+ struct kd_mutex mutex;
  struct completion entered, done;
  int before_cpu, after_cpu;
  bool balanced;
@@ -23,13 +24,16 @@ static int kd_hot_test_waiter(void *unused)
  unsigned int pins = preempt_count();
  (void)unused;
  kd_hot_test.before_cpu = raw_smp_processor_id();
- kd_hotlock_record_mutex((unsigned long)&kd_hot_test.mutex);
+ preempt_disable();
+ kd_hotlock_owned_mutex_entry();
+ kd_hotlock_record_owned_mutex_pinned((unsigned long)&kd_hot_test.mutex);
+ preempt_enable();
  kd_hot_test.balanced = pins == preempt_count();
  complete(&kd_hot_test.entered);
- kd_origin_mutex_lock(&kd_hot_test.mutex);
+ kd_owned_mutex_lock_self(&kd_hot_test.mutex);
  kd_hot_test.after_cpu = raw_smp_processor_id();
  kd_hot_test.balanced &= pins == preempt_count();
- kd_origin_mutex_unlock(&kd_hot_test.mutex, _RET_IP_);
+ kd_owned_mutex_release(&kd_hot_test.mutex);
  complete(&kd_hot_test.done);
  set_current_state(TASK_INTERRUPTIBLE);
  while (!kthread_should_stop()) {
@@ -58,7 +62,7 @@ int kd_hotlock_lifetime_check(void)
  for (i = 0; i < 2 * KD_HOTLOCK_SPIN_MCS_INTERVAL; i++)
   kd_hotlock_record_spin_mcs_pinned();
  for (i = 0; i < KD_HOTLOCK_SPIN_SAMPLE_TARGET; i++) kd_hotlock_record_spin(address);
- t = &this_cpu_ptr(kd_hotlock_cpu)->tables[0];
+ t = &this_cpu_ptr(kd_hotlock_cpu)->table;
  if (!kd_hotlock_find(t, address)) ret = -EUCLEAN;
  /* Fill with distinct identities and try one more. A full exact table must
   * preserve the held lock's entry, its owner and the physical lock word. */
@@ -74,13 +78,13 @@ int kd_hotlock_lifetime_check(void)
  if (atomic_read(&lock.val)) ret = -EUCLEAN;
  pr_info("kd_hotlock role: type=spin address=%lx role=DONE word=%x\n", address, atomic_read(&lock.val));
  if (ret) return ret;
- mutex_init(&kd_hot_test.mutex);
+ kd_mutex_init(&kd_hot_test.mutex);
  init_completion(&kd_hot_test.entered);
  init_completion(&kd_hot_test.done);
- kd_origin_mutex_lock(&kd_hot_test.mutex);
+ kd_owned_mutex_lock_self(&kd_hot_test.mutex);
  worker = kthread_create(kd_hot_test_waiter, NULL, "kd-hot-migrate");
  if (IS_ERR(worker)) {
-  kd_origin_mutex_unlock(&kd_hot_test.mutex, _RET_IP_);
+  kd_owned_mutex_release(&kd_hot_test.mutex);
   return PTR_ERR(worker);
  }
  ret = set_cpus_allowed_ptr(worker, cpumask_of(1));
@@ -90,7 +94,7 @@ int kd_hotlock_lifetime_check(void)
  for (i = 0; i < 5000 && !(READ_ONCE(worker->__state) & TASK_UNINTERRUPTIBLE); i++) msleep(1);
  if (i == 5000) ret = -ETIMEDOUT;
  if (!ret) ret = set_cpus_allowed_ptr(worker, cpumask_of(2));
- kd_origin_mutex_unlock(&kd_hot_test.mutex, _RET_IP_);
+ kd_owned_mutex_release(&kd_hot_test.mutex);
  if (!wait_for_completion_timeout(&kd_hot_test.done, 5 * HZ)) ret = -ETIMEDOUT;
  kthread_stop(worker);
  if (!kd_hot_test.balanced || kd_hot_test.before_cpu != 1 || kd_hot_test.after_cpu != 2) ret = -EUCLEAN;

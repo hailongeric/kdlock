@@ -9,8 +9,8 @@ class ContextCaseSupport:
     @staticmethod
     def mutex_calls(base, count):
         return (
-            b"".join(
-                b"\xe8" + struct.pack("<i", 0x3000 - (base + 5 * i + 5))
+            bytes.fromhex("4889df") + b"".join(
+                b"\xe8" + struct.pack("<i", 0x3000 - (base + 3 + 5 * i + 5))
                 for i in range(count)
             )
             + b"\xc3"

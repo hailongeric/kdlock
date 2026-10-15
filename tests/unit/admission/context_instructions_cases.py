@@ -44,8 +44,8 @@ class ContextInstructionsCases(ContextCaseSupport):
                     self.assertIn(b"0x12345678", parent.lower())
 
 
-    def test_gs_access_uses_origin_base_only_for_spin(self):
-        for kind in ("spin", "mutex"):
+    def test_owned_gs_requires_origin_audit(self):
+        for kind in ("spin", "mutex-owned"):
             for raw in (
                 "65488b042528000000c3",
                 "654889042528000000c3",
@@ -54,12 +54,12 @@ class ContextInstructionsCases(ContextCaseSupport):
             ):
                 with self.subTest(kind=kind, raw=raw):
                     assembly, log, status = render(
-                        raw, lock_kind=kind, return_status=True
+                        "31c031ff" + raw, lock_kind=kind, return_status=True
                     )
-                    if kind == 'mutex':
+                    if kind == 'mutex-owned':
                         self.assertEqual(status, context_policy.NATIVE_ONLY_EXIT, log)
                         self.assertFalse(assembly)
-                        self.assertIn('mutex cannot delegate origin-CPU GS storage', log)
+                        self.assertIn('CPU-number audit bounds/build mismatch', log)
                         continue
                     self.assertEqual(status, 0, log)
                     self.assertIn(b"Stack_RGS", assembly)
@@ -67,7 +67,7 @@ class ContextInstructionsCases(ContextCaseSupport):
 
 
     def test_current_task_uses_logical_task_despite_known_symbol(self):
-        for kind in ("spin", "mutex"):
+        for kind in ("spin", "mutex-owned"):
             assembly, log, status = render(
                 "65488b042528000000c3", lock_kind=kind,
                 kernel_symbols={"current_task": 0x28},
@@ -299,7 +299,7 @@ class ContextInstructionsCases(ContextCaseSupport):
 
 
     def test_foreign_lock_references_need_no_visible_outer_unlock(self):
-        for kind, symbol in (("spin", "mutex_lock"), ("mutex", "_raw_spin_lock")):
+        for kind, symbol in (("spin", "kd_owned_mutex_lock_v1"), ("mutex-owned", "_raw_spin_lock")):
             for raw in ("e8fb1f0000c3", "e9fb1f0000", "48c7c000300000c3"):
                 with self.subTest(kind=kind, raw=raw):
                     log = self.assert_rejected(
@@ -310,9 +310,9 @@ class ContextInstructionsCases(ContextCaseSupport):
 
 
     def test_matching_lock_backends_still_admitted(self):
-        for kind, symbol in (("spin", "_raw_spin_lock"), ("mutex", "mutex_lock")):
+        for kind, symbol in (("spin", "_raw_spin_lock"), ("mutex-owned", "kd_owned_mutex_lock_v1")):
             assembly, _, status = render(
-                "e8fb1f0000c3",
+                "4889dfe8f81f0000c3",
                 lock_kind=kind,
                 kernel_symbols={symbol: 0x3000},
                 return_status=True,
@@ -322,10 +322,10 @@ class ContextInstructionsCases(ContextCaseSupport):
 
 
     def test_lexical_lock_capacity_boundary(self):
-        symbols = {"mutex_lock": 0x3000}
+        symbols = {"kd_owned_mutex_lock_v1": 0x3000}
         assembly, _, status = render(
             self.mutex_calls(0x1000, 7).hex(),
-            lock_kind="mutex",
+            lock_kind="mutex-owned",
             kernel_symbols=symbols,
             return_status=True,
         )
@@ -333,7 +333,7 @@ class ContextInstructionsCases(ContextCaseSupport):
         self.assertTrue(assembly)
         log = self.assert_rejected(
             self.mutex_calls(0x1000, 8).hex(),
-            lock_kind="mutex",
+            lock_kind="mutex-owned",
             kernel_symbols=symbols,
         )
         self.assertIn("excessive lexical lock nesting", log)
@@ -349,8 +349,8 @@ class ContextInstructionsCases(ContextCaseSupport):
         assembly, _, status = render(
             "",
             regions=regions,
-            lock_kind="mutex",
-            kernel_symbols={"mutex_lock": 0x3000},
+            lock_kind="mutex-owned",
+            kernel_symbols={"kd_owned_mutex_lock_v1": 0x3000},
             return_status=True,
         )
         self.assertEqual(status, 0)
@@ -371,7 +371,7 @@ class ContextInstructionsCases(ContextCaseSupport):
             (bytes.fromhex("e8fb0f0000c3"), 0x2000, [0x2000]),
         ]
         log = self.assert_rejected(
-            "", regions=regions, kernel_symbols={"mutex_lock": 0x3000}
+            "", regions=regions, kernel_symbols={"kd_owned_mutex_lock_v1": 0x3000}
         )
         self.assertIn('rip="0x2000"', log)
 

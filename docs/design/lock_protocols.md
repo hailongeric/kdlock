@@ -19,7 +19,6 @@ execution details. KD's nested ownership, recovery and ACK contract remains in
 | KD spin | Explicit four-byte `kd_spinlock_t` | Caller or combiner running translated code | Pinned polling | KD native variants only; no Linux/TCLock mixing |
 | Linux Native mutex | Original `struct mutex` | Its actual Linux owner | Optimistic spinning and sleeping | Ordinary compatible Linux APIs |
 | TCLock mutex | Separate `struct komb_mutex` | Caller or combiner on the waiter's real stack | Polling, scheduling and parking | Not supported |
-| KD legacy mutex | Original Linux mutex plus a private scheduling gate | Actual Linux owner executes JIT, or services a borrowed native suffix | Bounded spin followed by blocking; migration stays pinned | Original Linux mutex callers remain excluded by that same mutex |
 | KD owned mutex | KD-owned 32-byte owner/OSQ/tagged FIFO object | SELF caller or physical owner running JIT at an explicit outer unlock | Private optimistic spinning/sleeping; delegated waiters use bounded polling then sleep | No mixing with Linux or TCLock APIs |
 | Linux Native rwlock | Linux `rwlock_t` / queued rwlock | Each reader or writer executes its own body | Concurrent readers; spinning reader/writer admission | Ordinary compatible Linux rwlock APIs |
 | TCLock rwlock | Separate `struct komb_rwlock` count and gate | Readers run locally; queued writer bodies may run on a borrowed waiter stack | Pinned polling and upstream gate delegation | TCLock rwlock pairs only |
@@ -28,8 +27,7 @@ execution details. KD's nested ownership, recovery and ACK contract remains in
 A queue-head notification tells a waiter it may try to acquire the lock. It does
 not mean the waiter owns the lock or that its body has run. A completion
 notification tells the original caller that its body has already run and must be
-skipped. For KD legacy mutex, the scheduling gate and the original Linux mutex are
-separate: the executor must own the Linux mutex before running a body.
+skipped.
 The owned mutex has one ownership authority and no original mutex or shadow
 gate; see its [protocol and API](mutex_implementation.md#kd-owned-implementation-experimental).
 
@@ -192,54 +190,6 @@ with owner ACKs. The [implementation and flowcharts](mutex_implementation.md#own
 define the detailed state transitions and optional reuse allowance. A matching
 layout does not permit mixed Linux/KD waiters or APIs.
 
-## KD legacy mutex
-
-The outer benchmark uses `KD_MUTEX_OUTER_LOCK/UNLOCK`. A successful caller-side
-acquire CAS on the original Linux owner bypasses admission, shadow/task
-records and translation. Its lexical cookie holds the exact native owner
-result; matching unlock calls the original Linux function. The cookie belongs
-to that acquisition and cannot be copied, transferred or reused.
-
-On contention the provider checks its separate mutex heat policy, source
-admission, target comm and active task routing. A native fallback before any
-KD acquisition reference returns an exact native result. A queued acquisition
-returns route zero, including local native fallbacks that still need KD-aware
-unlock routing. General `KD_MUTEX_DIRECT_LOCK/UNLOCK` and bridge entries keep
-their void ABI and are also used by translated nested control calls.
-
-An eligible acquisition holds an exact task routing reference, finds the
-original-address shadow, and reserves a CPU-local node/stack. A delegation
-follower retains its migration pin and moves off its caller stack. It uses
-bounded polling then an RCU wait slot and uninterruptible sleep. Delegated
-legacy mutex images refuse origin-CPU GS storage. Owned mutexes use the
-[conditional claim protocol](mutex_implementation.md#conditional-origin-readiness-and-bounded-numa-selection)
-for their separately audited subset; no spin-only mutex policy remains.
-A queue head first takes the private gate, then acquires the original
-Linux mutex as `current`; only that physical owner executes/releases bodies.
-It may enable preemption while sleeping for the original mutex or nested B,
-while retaining its CPU reservation and frame ownership.
-
-The combiner uses bounded NUMA selection, a default 1024-body limit and a source
-lease covering the batch. At most 64 fully linked remote nodes can be deferred;
-they take priority by the 128-body local cohort boundary. A small remote cohort
-is serviced on the current owner; larger cohorts receive physical handoff.
-Deferred nodes rejoin before any exit publishes a wake. A terminal ABI2/MINIMAL
-node can also be delegated when no detached chain would be stranded.
-Before waking any committed node, the batch retires its queue publication:
-retain its successor, or CAS the exact tail to zero; a lost CAS requires the
-publisher's delayed successor link before node reuse. An unstarted refusal
-retains its tail/node and receives physical handoff. Legacy/FULL terminal
-nodes retain that handoff path.
-
-Normal COMPLETE validates and retires the frame, then release-publishes
-completion; the waiter restores IP/SP/BP after logical unlock. A FULL exit
-materializes recovery state once. For a native suffix, the waiter resumes
-with progressed state while the original physical owner remains responsible
-for mutex release and services unlock/ACK messages. Early A release and
-nested B ownership retain the explicit ledger; there is no Linux owner
-transfer to the logical waiter. Final ACK/frame retirement precede dropping
-the enclosing source lease. Physical mutex release precedes opening its gate.
-
 ## Linux Native rwlock
 
 The workload calls Linux `read_lock/unlock` and `write_lock/unlock` on its own
@@ -306,6 +256,6 @@ counts are separate from payload correctness. TCLock spin and rwlock delegation
 counts remain unmeasured. KD rwlock JIT share uses completed writes as its
 denominator. Performance acceptance, failed candidates and remaining gaps live in
 [performance status](../PERFORMANCE.md) and the
-[machine result indexes](../../bench/results/README.md). Current blocking-only
-mutex verification is [recorded separately](../../bench/results/10.176.26.71/tests/mutex-blocking-only-20261012/validation.json).
+[machine result indexes](../../bench/results/README.md). Current owned mutex
+verification is [recorded separately](../VALIDATION.md#owned-only-mutex-verification).
 Frozen reports retain the implementation, policy and topology used by each run.

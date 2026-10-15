@@ -10,8 +10,7 @@ KD provides three kinds of lock:
 - **Spinlock:** uses KD's own four-byte lock object.
 - **Mutex:** the experimental `struct kd_mutex` owns its 32-byte owner, spin queue
   and waiter list, using ported optimistic spinning and sleeping. Its protocol
-  makes no Linux mutex calls on that object. The legacy backend remains available
-  for existing workloads and comparisons.
+  makes no Linux mutex calls on that object.
 - **Read-write lock:** lets readers run concurrently on their own CPUs. Writers
   can run locally or delegate through the spin JIT engine.
 

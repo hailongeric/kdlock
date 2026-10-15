@@ -56,8 +56,13 @@ runs on one NUMA node separate from runs spanning nodes. The collector samples
 progress on its own CPU, which must be online, available and outside every worker
 set. Its built-in default is CPU 38, as used in the recorded 40-vCPU runs.
 
-The commands below explicitly use collector CPU 63 for the current 64-vCPU
-destination, with 32 cores per NUMA node. Its earlier 60-vCPU
+All new runs use exactly CPUs 0–63, with NUMA node 0 on 0–31 and node 1 on
+32–63, pinned to the same-numbered host cores. Do not add extra vCPUs or an
+unused spare CPU. The commands below use collector CPU 63 outside worker
+cohorts. At 64 workers the collector must share CPU 63; the current runner needs
+support for that overlap before execution. See the
+[placement limitation](../../tools/vm/README.md#complete-164-worker-comparison).
+The earlier 60-vCPU
 [migration checks](../README.md#vm-migration-validation) remain separate; recheck
 the live topology and snapshot before each new run. Default workers remain the
 prefixes of CPUs 0..35. On the current destination, 32 workers fit in node 0 and

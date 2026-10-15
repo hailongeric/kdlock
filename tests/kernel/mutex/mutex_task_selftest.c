@@ -8,6 +8,7 @@
 #include <linux/kthread.h>
 
 #include "kd_exec.h"
+#include "kd_owned_mutex_internal.h"
 #include "kd_segment.h"
 
 static bool kd_task_test_enabled;
@@ -16,7 +17,7 @@ static int kd_task_test_cpus[3] = { 0, 1, 2 };
 module_param_array_named(mutex_task_cpus, kd_task_test_cpus, int, NULL, 0444);
 
 static struct {
-	struct mutex locks[2];
+	struct kd_mutex locks[2];
 	struct kd_exec_frame frame;
 	struct kd_exec_outer_unlock outer_hook;
 	struct task_struct *workers[3];
@@ -87,14 +88,14 @@ static unsigned int kd_task_refs(struct task_struct *task)
 static int kd_task_release_outer(struct kd_exec_frame *frame,
 				 struct kd_exec_outer_unlock *hook)
 {
-	struct mutex *lock = &kd_task_test.locks[0];
+	struct kd_mutex *lock = &kd_task_test.locks[0];
 
 	/* There is no queue batch in this probe. Use its callback slot solely to
 	 * release real A when the production event handler observes early A unlock. */
 	KD_TASK_REQUIRE(frame == &kd_task_test.frame &&
 			hook == &kd_task_test.outer_hook);
-	KD_TASK_REQUIRE(kd_origin_mutex_owned(lock, current));
-	kd_origin_mutex_unlock(lock, _RET_IP_);
+	KD_TASK_REQUIRE(kd_owned_mutex_owned(lock, current));
+	kd_owned_mutex_release(lock);
 	return 0;
 }
 
@@ -105,24 +106,26 @@ static void kd_task_owner(void)
 	unsigned long locks[] = { (unsigned long)&kd_task_test.locks[0],
 				  (unsigned long)&kd_task_test.locks[1] };
 	enum kd_exec_lock_kind kinds[] = { KD_EXEC_LOCK_QUEUE_OWNER,
-					   KD_EXEC_LOCK_NATIVE };
+					   KD_EXEC_LOCK_OWNED };
 	void *nodes[] = { NULL, &kd_task_test.locks[1] };
 	s64 failures = KD_MUTEX_STAT_READ(kd_mutex_task_failures);
 
 	kd_task_wait(&kd_task_test.waiter_ready, false);
-	kd_origin_mutex_lock(&kd_task_test.locks[0]);
-	kd_origin_mutex_lock(&kd_task_test.locks[1]);
+	kd_owned_mutex_lock_self(&kd_task_test.locks[0]);
+	kd_mutex_lock(&kd_task_test.locks[1]);
+	KD_TASK_CHECK(kd_task_refs(current) == 1 && kd_mutex_task_count() == 1);
 	/* Allocation refusal must not publish routing or acquire a task record.
-	 * Two successful gets share one entry; the non-final put keeps it alive. */
+	 * B retains the physical owner's acquisition reference. Two successful
+	 * waiter gets share a separate entry; the non-final put keeps it alive. */
 	WRITE_ONCE(kd_mutex_task_fail_once, 1);
 	KD_TASK_REQUIRE(!kd_mutex_task_get(waiter));
 	KD_TASK_CHECK(!kd_mutex_task_active(waiter) &&
-		      !kd_mutex_task_count());
+		      kd_mutex_task_count() == 1);
 	KD_TASK_CHECK(KD_MUTEX_STAT_READ(kd_mutex_task_failures) == failures + 1);
 	KD_TASK_REQUIRE(kd_mutex_task_get(waiter));
 	KD_TASK_REQUIRE(kd_mutex_task_get(waiter));
 	KD_TASK_CHECK(kd_task_refs(waiter) == 2 &&
-		      kd_mutex_task_count() == 1);
+		      kd_mutex_task_count() == 2);
 	kd_mutex_task_put(waiter);
 	KD_TASK_CHECK(kd_task_refs(waiter) == 1);
 	smp_store_release(&kd_task_test.published, true);
@@ -140,6 +143,7 @@ static void kd_task_owner(void)
 	frame->held_lock_depth = 2;
 	frame->state = KD_EXEC_FRAME_RUNNING;
 	frame->mutex_backend = true;
+	frame->owned_mutex = true;
 	kd_task_test.outer_hook.release = kd_task_release_outer;
 	frame->outer_unlock_hook = &kd_task_test.outer_hook;
 	/* kd_task_round zeroed the ordinary native frame and routing fields.
@@ -166,11 +170,12 @@ static void kd_task_owner(void)
 		      kd_task_test.outer_first);
 	if (!kd_task_test.outer_hook.released) {
 		KD_TASK_REQUIRE(
-			kd_origin_mutex_owned(&kd_task_test.locks[0], current));
-		kd_origin_mutex_unlock(&kd_task_test.locks[0], _RET_IP_);
+			kd_owned_mutex_owned(&kd_task_test.locks[0], current));
+		kd_owned_mutex_release(&kd_task_test.locks[0]);
 	}
-	KD_TASK_CHECK(!mutex_is_locked(&kd_task_test.locks[0]) &&
-		      !mutex_is_locked(&kd_task_test.locks[1]));
+	KD_TASK_CHECK(!kd_mutex_is_locked(&kd_task_test.locks[0]) &&
+		      !kd_mutex_is_locked(&kd_task_test.locks[1]));
+	KD_TASK_CHECK(!kd_task_refs(current));
 	/* Evict while the reader still pins the inactive identity. Cache
 	 * retention must not replace the proof of actual RCU reclamation. */
 	kd_task_wait(&kd_task_test.reader_zero, false);
@@ -206,13 +211,13 @@ static void kd_task_waiter(void)
 	kd_task_wait(&kd_task_test.native_ready, false);
 	KD_TASK_CHECK(kd_mutex_task_reroute(current) &&
 		      kd_task_refs(current) == 1);
-	KD_TASK_CHECK(kd_origin_mutex_owned(&kd_task_test.locks[0], owner) &&
-		      kd_origin_mutex_owned(&kd_task_test.locks[1], owner));
+	KD_TASK_CHECK(kd_owned_mutex_owned(&kd_task_test.locks[0], owner) &&
+		      kd_owned_mutex_owned(&kd_task_test.locks[1], owner));
 	KD_TASK_REQUIRE(kd_exec_native_unlock(
 		(unsigned long)&kd_task_test.locks[first], true));
 	kd_task_test.acks++;
-	KD_TASK_CHECK(!mutex_is_locked(&kd_task_test.locks[first]));
-	KD_TASK_CHECK(kd_origin_mutex_owned(&kd_task_test.locks[last], owner));
+	KD_TASK_CHECK(!kd_mutex_is_locked(&kd_task_test.locks[first]));
+	KD_TASK_CHECK(kd_owned_mutex_owned(&kd_task_test.locks[last], owner));
 	KD_TASK_CHECK(kd_mutex_task_reroute(current) &&
 		      kd_task_refs(current) == 1);
 	KD_TASK_CHECK(atomic_read(&kd_mutex_task_test_frees) ==
@@ -229,11 +234,11 @@ static void kd_task_waiter(void)
 		      kd_task_test.frees_before);
 	KD_TASK_CHECK(!kd_exec_native_unlock(
 		(unsigned long)&kd_task_test.locks[last], true));
-	KD_TASK_CHECK(!mutex_is_locked(&kd_task_test.locks[1]));
+	KD_TASK_CHECK(!kd_mutex_is_locked(&kd_task_test.locks[1]));
 	KD_TASK_CHECK(
 		kd_task_test.outer_first ?
-			!mutex_is_locked(&kd_task_test.locks[0]) :
-			kd_origin_mutex_owned(&kd_task_test.locks[0], owner));
+			!kd_mutex_is_locked(&kd_task_test.locks[0]) :
+			kd_owned_mutex_owned(&kd_task_test.locks[0], owner));
 	smp_store_release(&kd_task_test.waiter_done, true);
 }
 
@@ -316,7 +321,7 @@ static int kd_task_round(bool outer_first, bool registry_stress)
 	kd_task_test.registry_stress = registry_stress;
 	kd_task_test.frees_before = atomic_read(&kd_mutex_task_test_frees);
 	for (i = 0; i < ARRAY_SIZE(kd_task_test.locks); i++)
-		mutex_init(&kd_task_test.locks[i]);
+		kd_mutex_init(&kd_task_test.locks[i]);
 	init_completion(&kd_task_test.start);
 	for (i = 0; i < ARRAY_SIZE(kd_task_test.workers); i++) {
 		struct task_struct *worker;
@@ -355,6 +360,12 @@ static int kd_task_round(bool outer_first, bool registry_stress)
 		KD_TASK_CHECK(kd_mutex_tasks_idle());
 		kd_mutex_tasks_purge();
 	}
+	if (!registry_stress) {
+		/* The owned nested acquisition also cached its physical owner's
+		 * task entry. Reclaim both identities before another probe/load. */
+		KD_TASK_CHECK(kd_mutex_tasks_idle());
+		kd_mutex_tasks_purge();
+	}
 	/* Drain the production callback before observing its count, reusing the
 	 * fixture, or returning an init error that can unload this module's text. */
 	rcu_barrier();
@@ -372,7 +383,7 @@ static int kd_task_round(bool outer_first, bool registry_stress)
 	KD_TASK_CHECK(kd_task_test.acks == 2 && kd_mutex_tasks_idle());
 	KD_TASK_CHECK(!kd_mutex_task_count());
 	KD_TASK_CHECK(atomic_read(&kd_mutex_task_test_frees) ==
-		      kd_task_test.frees_before + 1);
+		      kd_task_test.frees_before + 2);
 	pr_info("kd_mutex task selftest round: order=%s acks=%u deferred_frees=%u failures=%d jit_bodies=0\n",
 		outer_first ? "A-B" : "B-A", kd_task_test.acks,
 		atomic_read(&kd_mutex_task_test_frees) -
@@ -412,7 +423,7 @@ int kd_mutex_task_selftest(void)
 	if (!ret)
 		ret = kd_task_round(true, false);
 	if (!ret)
-		pr_info("kd_mutex task selftest: cpus=%d,%d,%d orders=2 acks=4 deferred_frees=2 failures=0 jit_bodies=0\n",
+		pr_info("kd_mutex task selftest: cpus=%d,%d,%d orders=2 acks=4 deferred_frees=4 failures=0 jit_bodies=0\n",
 			kd_task_test_cpus[0], kd_task_test_cpus[1],
 			kd_task_test_cpus[2]);
 out:

@@ -35,7 +35,7 @@ inputs; stop callers, retire sources and unload before changing builds.
 
 ## Source organization
 
-`kd_spin_runtime.c` includes `kd_exec.c`, `exe.c`, `kd_spinlock.c`, `kd_mutex.c`,
+`kd_spin_runtime.c` includes `kd_exec.c`, `exe.c`, `kd_spinlock.c`,
 then `owned_mutex/delegation.c` in declaration order. This keeps execution helpers
 visible for inlining. Kbuild links only the combined object; the five included
 files remain separate for reading.
@@ -46,7 +46,6 @@ files remain separate for reading.
 | [kd_rwlock.h](../include/kd_rwlock.h) and `spin/{direct,combiner,execute,restore}.inc` | Reader/count protocol and ABI3 writer admission, refusal/retry and completion over the spin backend |
 | `spin/ticket_*.inc` via [kd_spin_entry.c](kd_spin_entry.c) | Exact acquisition generation, root borrowing and final retirement |
 | [owned_mutex](owned_mutex/) | Independent 32-byte object, Linux-derived SELF/OSQ, ABI4 leaf entry and late capture, guarded FIFO and outer-unlock delegation |
-| [mutex](mutex/) via [kd_mutex.c](kd_mutex.c) | Legacy original mutex acquisition, shadow queue, terminal batch, pinned waiter and restore |
 | [lock](lock/) via [kd_lock.c](kd_lock.c) | Direct/bridge mutex routes and nested spin/mutex control CALLs |
 | [execution](execution/) | Registry, wrapper preparation, frame/ledger, control/services, native and remote ACK |
 | [kd_source.c](kd_source.c), [sys.c](sys.c) | Text pins, device session, capabilities, publication and retirement |
@@ -64,15 +63,12 @@ include those files too. Shared APIs live in [include](../include/README.md).
 
 | Setting | Default and meaning |
 | --- | --- |
-| `KDLOCK_NUMA` build variable | 1; spin/legacy-mutex local grouping and CPU-node stack allocation; owned selection uses its separate `owned_mutex_numa` option |
+| `KDLOCK_NUMA` build variable | 1; spin local grouping and CPU-node stack allocation; owned selection uses its separate `owned_mutex_numa` option |
 | `KDLOCK_SPIN_BATCH` build variable | 1024, allowed 1..1024 bodies; separate scan budget uses the same initial value |
-| Legacy mutex batch | Uses `KDLOCK_SPIN_BATCH` (default 1,024) with bounded NUMA selection and remote-cohort handoff |
 | Owned mutex batch | Same total body cap; finite FIFO snapshot at explicit outer unlock, stopping at SELF/handoff boundaries |
 | `spin_delegate` | Enabled; false selects native KD spin/rwlock-writer self-execution |
 | `spin_prefetch` | 2; producer hints. Modes 0/1 select off/consumer lookup |
 | `spin_entry_ratio_limit` | 2; 0 disables only the ratio filter |
-| `mutex_entry_ratio_limit` | Legacy: 256; read-only power of two from 2 through 256, exclusive `(entries >> 10)` bound per 1,024 failed native attempts |
-| `mutex_native_route` | Legacy: false; read-only diagnostic control routing new acquisitions through Linux after admission sampling |
 | `owned_mutex_entry_ratio_limit` | Owned ABI2: independent limit 256 with the same ratio/cadence; ABI4 does not use heat admission |
 | `owned_mutex_reuse_spins` | 0; allowed 0/8/32/128, one allowance after observing an unflagged release per optimistic OSQ turn; the measured ABI4 profile selects 32 |
 | `owned_mutex_self_route` | False; read-only diagnostic control selecting only KD-owned SELF acquisition |
@@ -83,24 +79,21 @@ include those files too. Shared APIs live in [include](../include/README.md).
 | `owned_mutex_protocol` | Getter-only identity `linux_local_first_v1`; guarded owner release is mandatory |
 | `hotlock_stats` | Optional final approximate observation totals |
 | `target_process` | Task comm eligible for direct mutex delegation |
-| `mutex_spin_limit`, `owned_mutex_spin_limit` | Separate delegation-result polling limits, both 4096; 0 parks immediately, maximum 1048576; neither limits SELF owner optimism |
-| `mutex_wait_stats`, `owned_mutex_wait_stats` | Read-only result schedule/wake observations; legacy also reports gate waits, owned reports zero in that field and does not count SELF sleeps |
+| `owned_mutex_spin_limit` | Delegation-result polling limit 4096; 0 parks immediately, maximum 1048576; does not limit SELF owner optimism |
+| `owned_mutex_wait_stats` | Two read-only delegated-result counters: schedule calls and wakes; SELF sleeps are not counted |
 
 Blocking result waits recheck completion after one jiffy if their batched wake
 has not arrived. This permits a completed caller to make progress while a later
-translated body delays the flush. Gate waits use ordinary wait-queue notification.
+translated body delays the flush.
 
-KD mutexes always support blocking; load with `insmod kdlock_km.ko`. The
-`mutex_blocking` selector has been removed. Owned SELF acquisition uses its own
-Linux-style optimistic spin/sleep protocol; the legacy backend retains the original
-Linux mutex owner. Published delegates retain their reserved stack and migration
-pin while sleeping after bounded result polling. Legacy mutexes refuse
-translations requiring origin-CPU GS storage. Owned mutexes can opt into the
-audited bounded subset with an exclusive origin-readiness claim; a parked origin
-is ineligible. See the [policy contract](../docs/design/mutex_implementation.md#conditional-origin-readiness-and-bounded-numa-selection).
+KD mutexes support blocking. SELF acquisition uses Linux-style optimistic
+spinning and sleeping. Published delegates retain their reserved stack and
+migration pin while sleeping after bounded result polling. Audited origin-CPU GS
+access requires an exclusive origin-readiness claim; a parked origin is ineligible.
+See the [policy contract](../docs/design/mutex_implementation.md#conditional-origin-readiness-and-bounded-numa-selection).
 
 Owned uploads publish immutable image descriptors, binding a frame to one code
-generation through completion and native continuations. Legacy image families
+generation through completion and native continuations. Spin/rwlock images
 retain in-place publication. The
 [publication guide](../docs/JIT_EXECUTION.md#owned-image-publication-protocol-2)
 defines staging, capability checks, pool exhaustion and teardown.

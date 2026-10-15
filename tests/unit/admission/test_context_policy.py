@@ -91,7 +91,7 @@ class JitPhaseTests(unittest.TestCase):
             cases = (self.call(target) + b'\xc3',
                      b'\x48\xb8' + struct.pack('<Q', target) + b'\xc3',
                      b'\xe9' + struct.pack('<i', target - 0x1000 - 5))
-            for kind in ('mutex-owned', 'mutex', 'spin'):
+            for kind in ('mutex-owned', 'spin'):
                 for raw in cases:
                     with self.subTest(endpoint=endpoint, kind=kind, raw=raw.hex()):
                         assembly, log, status = render(raw.hex(), kernel_symbols=controls,
@@ -103,7 +103,7 @@ class JitPhaseTests(unittest.TestCase):
                         self.assertIn(endpoint, log)
         for missing in ('kd_owned_mutex_outer_preflight_v1',
                         'kd_owned_mutex_outer_prepared_clobber_v1'):
-            controls = {name: 0x7000000+i*0x100 for i, name in enumerate(names) if name != missing}
+            controls = {name: 0 if name == missing else 0x7000000+i*0x100 for i, name in enumerate(names)}
             assembly, log, status = render('c3', kernel_symbols=controls,
                 lock_kind='mutex-owned', abi=2, return_status=True)
             self.assertEqual(status, 2, log)

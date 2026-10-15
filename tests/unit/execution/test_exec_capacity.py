@@ -94,7 +94,7 @@ def production():
     )
     hook = read_source((ROOT / "kernel_module/kd_lock.c"))
     for marker in (
-        "int kd_mutex_jit_abort_cleanup(struct kd_exec_frame *frame)",
+        "int kd_owned_mutex_jit_abort_cleanup(struct kd_exec_frame *frame)",
         "int kd_spin_jit_abort_cleanup(struct kd_exec_frame *frame)",
     ):
         code += definition(hook, marker)
@@ -190,13 +190,10 @@ def main():
         "void kd_exec_frame_prepare(struct kd_exec_frame *frame, unsigned long entry_ip,",
         "int kd_exec_frame_bind(struct kd_exec_frame *frame, unsigned int lock_depth,",
     ))
-    extra += definition(read_source(ROOT / "include/kd_mutex_legacy.h"), "struct kd_mutex_legacy_gate {").rstrip() + ";\n"
     for marker in ("int kd_exec_frame_prepare_mutex_complex(struct kd_exec_frame *frame)",
                    "struct kd_exec_frame *kd_exec_frame_push_mutex_root(",
-                   "struct kd_exec_frame *kd_exec_frame_push_mutex_batch(",
                    "struct kd_exec_frame *kd_exec_frame_push_owned_mutex_batch(",
                    "int kd_exec_frame_retire_mutex_root(struct kd_exec_frame *frame,",
-                   "int kd_exec_frame_retire_mutex_batch(struct kd_exec_frame *frame,",
                    "int kd_exec_frame_retire_owned_mutex_batch(struct kd_exec_frame *frame,"):
         extra += definition(source, marker) + "\n"
     extra += "\n#undef this_cpu_ptr\n#define this_cpu_ptr(p) (p)\n"
@@ -213,10 +210,6 @@ def main():
         ),
         "owned-constructor-admits-invalid-abi": (
             "!kd_entry_abi_mutex_reduced(entry_abi) ||",
-            "false ||",
-        ),
-        "legacy-constructor-allows-abi4": (
-            "(entry_abi == KD_ENTRY_ABI_OWNED_MUTEX_CABI_V2 && !owned) ||",
             "false ||",
         ),
         "owned-constructor-ignores-owner": (

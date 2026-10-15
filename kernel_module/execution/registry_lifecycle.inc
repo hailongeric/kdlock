@@ -18,9 +18,11 @@ struct kd_exe_info *kd_get_exe(unsigned int pid, unsigned long ip)
 	for (probes = 0; probes < KD_MAX_EXE; probes++) {
 		struct kd_exe_info *exe = &kd_exes[pos];
 
-		/* Published keys are immutable until controlled module teardown.
+		/*
+		 * Published keys are immutable until controlled module teardown.
 		 * Pair with initial UNINIT publication before comparing their fields.
-		 * An UNUSED result is only a candidate, not a registered entry. */
+		 * An UNUSED result is only a candidate, not a registered entry.
+		 */
 		if (smp_load_acquire(&exe->status_code) == KD_EXE_UNUSED ||
 		    (READ_ONCE(exe->pid) == pid && READ_ONCE(exe->RIP) == ip))
 			return exe;
@@ -49,18 +51,22 @@ bool kd_exe_publish_status(struct kd_exe_info *exe, int status)
 	}
 }
 
-/* Fold this publication check into each spin dispatch; keep the external
- * entry for other callers. The acquire and source-close check are unchanged. */
+/*
+ * Fold this publication check into each spin dispatch; keep the external
+ * entry for other callers. The acquire and source-close check are unchanged.
+ */
 __always_inline __gnu_inline
 bool kd_exe_entry_is_ready(const struct kd_exe_info *exe, unsigned int pid,
 			   unsigned long ip)
 {
 	if (!exe || !ip || !kd_source_is_open())
 		return false;
-	/* Pair with code upload/status publication on every dispatch, including
+	/*
+	 * Pair with code upload/status publication on every dispatch, including
 	 * when the caller resolved this stable slot before acquiring its frame.
 	 * Source closing or a later miss/native-only status invalidates readiness;
-	 * the slot itself is not reused until controlled provider teardown. */
+	 * the slot itself is not reused until controlled provider teardown.
+	 */
 	if (smp_load_acquire(&exe->status_code) != KD_EXE_NORMAL)
 		return false;
 	return READ_ONCE(exe->pid) == pid && READ_ONCE(exe->RIP) == ip &&
@@ -86,8 +92,10 @@ int kd_exe_init(void)
 	kd_jit_timing_reset();
 	/* Resolve unlock function addresses dynamically */
 	end_point_count = 0;
-	/* Direct APIs are linked into this provider; kallsyms need not expose a
-	 * module's symbols while its init function is still running. */
+	/*
+	 * Direct APIs are linked into this provider; kallsyms need not expose a
+	 * module's symbols while its init function is still running.
+	 */
 	raw_spin_lock_addr = (unsigned long)kd_spin_lock;
 	raw_spin_unlock_addr = (unsigned long)kd_spin_unlock;
 	end_points[end_point_count] = raw_spin_unlock_addr;
@@ -100,38 +108,28 @@ int kd_exe_init(void)
 	pinned_spin_lock_addr = (unsigned long)kd_spin_lock_pinned_clobber_v1;
 	cold_spin_unlock_addr = (unsigned long)kd_spin_direct_native_unlock;
 	end_points[end_point_count++] = cold_spin_unlock_addr;
-	mutex_lock_addr = kallsyms_lookup_name("mutex_lock");
-	mutex_unlock_addr = kallsyms_lookup_name("mutex_unlock");
-	end_points[end_point_count] = mutex_unlock_addr;
-	if (mutex_unlock_addr)
-		end_point_count++;
-	clobber_mutex_lock_addr = kallsyms_lookup_name("kd_mutex_lock_clobber_v1");
-	clobber_mutex_unlock_addr = kallsyms_lookup_name("kd_mutex_unlock_clobber_v1");
-	if (clobber_mutex_unlock_addr)
-		end_points[end_point_count++] = clobber_mutex_unlock_addr;
-	direct_mutex_lock_addr = (unsigned long)kd_mutex_direct_lock_clobber_v1;
-	contended_mutex_lock_addr = (unsigned long)kd_mutex_direct_contended_clobber_v1;
-	outer_mutex_lock_addr = (unsigned long)kd_mutex_outer_contended_clobber_v1;
-	direct_mutex_unlock_addr = (unsigned long)kd_mutex_direct_unlock_clobber_v1;
-	end_points[end_point_count++] = direct_mutex_unlock_addr;
 	owned_mutex_lock_addr = (unsigned long)kd_owned_mutex_lock_v1;
 	owned_mutex_unlock_addr = (unsigned long)kd_owned_mutex_unlock_v1;
 	owned_outer_unlock_addr = (unsigned long)kd_owned_mutex_outer_unlock_v1;
-	owned_direct_lock_addr = (unsigned long)kd_owned_mutex_direct_lock_clobber_v1;
-	owned_contended_lock_addr = (unsigned long)kd_owned_mutex_direct_contended_clobber_v1;
-	owned_outer_lock_addr = (unsigned long)kd_owned_mutex_outer_contended_clobber_v1;
-	owned_prepared_lock_addr = (unsigned long)kd_owned_mutex_outer_prepared_clobber_v1;
-	owned_direct_unlock_addr = (unsigned long)kd_owned_mutex_direct_unlock_clobber_v1;
+	owned_direct_lock_addr =
+		(unsigned long)kd_owned_mutex_direct_lock_clobber_v1;
+	owned_contended_lock_addr =
+		(unsigned long)kd_owned_mutex_direct_contended_clobber_v1;
+	owned_outer_lock_addr =
+		(unsigned long)kd_owned_mutex_outer_contended_clobber_v1;
+	owned_prepared_lock_addr =
+		(unsigned long)kd_owned_mutex_outer_prepared_clobber_v1;
+	owned_direct_unlock_addr =
+		(unsigned long)kd_owned_mutex_direct_unlock_clobber_v1;
 	owned_cabi_lock_addr = (unsigned long)kd_owned_mutex_outer_lock_cabi_v2;
-	owned_cabi_unlock_addr = (unsigned long)kd_owned_mutex_outer_unlock_cabi_v2;
+	owned_cabi_unlock_addr =
+		(unsigned long)kd_owned_mutex_outer_unlock_cabi_v2;
 	end_points[end_point_count++] = owned_cabi_unlock_addr;
 	end_points[end_point_count++] = owned_mutex_unlock_addr;
 	end_points[end_point_count++] = owned_outer_unlock_addr;
 	end_points[end_point_count++] = owned_direct_unlock_addr;
 	for (i = 0; i < end_point_count; i++)
 		KD_PR_INFO("end_point[%d] = %lx", i, end_points[i]);
-	if (mutex_lock_addr)
-		KD_PR_INFO("mutex_lock addr = %lx", mutex_lock_addr);
 
 	atomic64_set(&kd_hostcall_exits, 0);
 	atomic64_set(&kd_hostcall_executed, 0);

@@ -6,7 +6,99 @@ import tempfile
 from pathlib import Path
 from source_text import ROOT
 from test_spin_shadow import definition
-from test_mutex_wait_clobber import FIXTURE
+FIXTURE = r'''
+
+#include <assert.h>
+#include <stdbool.h>
+#include <stddef.h>
+#include <stdint.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
+typedef struct { unsigned long opaque[3]; } wait_queue_head_t;
+typedef uint8_t u8;
+typedef uint16_t u16;
+typedef uint32_t u32;
+typedef struct { int counter; } atomic_t;
+#define noinline __attribute__((noinline))
+#define notrace
+#define __always_inline inline __attribute__((always_inline))
+#define READ_ONCE(x) (x)
+#define WRITE_ONCE(x,v) ((x)=(v))
+#define BUG_ON(x) assert(!(x))
+#define this_cpu_ptr(x) (x)
+#define this_cpu_inc(x) (++(x))
+#define atomic64_inc(x) (++*(x))
+#define UNWIND_HINT(a,b,c,d) ""
+#define ASM_CALL_CONSTRAINT "+r"(current_stack_pointer)
+register unsigned long current_stack_pointer asm("rsp");
+#include "exe_info.h"
+#include "types.h"
+static void *current;
+static int mode, entered, after_bridge, released, task_put;
+static struct kd_owned_mutex_node node;
+static unsigned char shadow[KD_OWNED_MUTEX_SHADOW_STACK_SIZE] __attribute__((aligned(16)));
+static void preempt_enable(void) {}
+static void migrate_enable(void) {}
+static void kd_mutex_task_put(void *p) { assert(p==current); task_put++; }
+static void kd_owned_mutex_unreserve(struct kd_owned_mutex_node *n) {
+    assert(n==&node); released++; memset(n, 0xaf, sizeof(*n));
+}
+static void jump_to_saved_regs(struct kd_regs *p) { (void)p; abort(); }
+static void jump_to_saved_regs_in_cs(struct kd_regs *p) { (void)p; abort(); }
+static __attribute__((__noinline__,noipa)) int
+kd_owned_mutex_wait_on_stack(struct kd_mutex *lock, struct kd_owned_mutex_node *n) {
+    unsigned long physical;
+    asm volatile("mov %%rsp,%0":"=r"(physical));
+    assert(lock==(void *)0x1230 && n==&node);
+    assert(physical>(unsigned long)shadow && physical<(unsigned long)(shadow+sizeof(shadow)));
+    entered++;
+    if (mode==2) return 2;
+    n->packet_state=KD_PACKET_COMPLETE;
+    n->outcome=KD_OWNED_MUTEX_COMPLETE;
+    /* Remote JIT may use the lent stack down through all hook frames. */
+    for (unsigned long *p=(void *)n->rsp; p<(unsigned long *)n->regs.sp; p++)
+        *p=0xdeadbeef;
+    return 3;
+}
+void kd_owned_mutex_resume_cabi(const struct kd_owned_mutex_cabi_state *p) { (void)p; abort(); }
+#include "clobber.inc"
+static __attribute__((__noinline__,noipa,used)) void
+bridge(struct kd_mutex *lock, unsigned long sp, unsigned long ip, unsigned long bp) {
+    memset(&node, 0xa5, sizeof(node));
+    node.entry_abi=KD_ENTRY_ABI_MUTEX_CLOBBER_V1;
+    node.packet_state=KD_PACKET_MINIMAL;
+    node.outcome=KD_OWNED_MUTEX_QUEUED;
+    node.regs.sp=sp; node.regs.ip=ip; node.regs.bp=bp;
+    node.shadow_stack_ptr=(unsigned long)(shadow+sizeof(shadow));
+    int result=kd_owned_mutex_clobber_wait(lock,&node);
+    assert(result==2 && mode==2);
+    after_bridge++;
+}
+static unsigned long input[16];
+static __attribute__((__noinline__,noipa)) unsigned long run(void) {
+    unsigned long a=input[0],b=input[1],c=input[2],d=input[3];
+    unsigned long e=input[4],f=input[5],g=input[6],h=input[7];
+    unsigned long slots[8]; memcpy(slots,input+8,sizeof(slots));
+    void *lock=(void *)0x1230; unsigned long sp,ip,bp;
+    asm volatile("mov %%rsp,%%rsi\nlea 1f(%%rip),%%rdx\nmov %%rbp,%%rcx\ncall bridge\n1:"
+       : "+D"(lock),"=S"(sp),"=d"(ip),"=c"(bp),ASM_CALL_CONSTRAINT
+       : : "rax","rbx","r8","r9","r10","r11","r12","r13","r14","r15","cc","memory");
+    unsigned long total=a+b+c+d+e+f+g+h;
+    for (int i=0;i<8;i++) total+=slots[i];
+    return total;
+}
+int main(void) {
+    for (int round=0;round<32;round++) {
+        unsigned long expected=0;
+        for (int i=0;i<16;i++) expected+=(input[i]=round*111+i);
+        mode=2; assert(run()==expected);
+        mode=3; assert(run()==expected);
+    }
+    assert(entered==64 && after_bridge==32 && released==32 && task_put==32);
+    puts("[PASS] production owned mutex stack switch: 32 intact returns, 32 destroyed-frame minimal resumes");
+}
+'''
 
 
 EXECUTOR = r'''
@@ -59,21 +151,7 @@ def main():
                         'struct kd_owned_mutex_waiter {')+';\n'
     types += definition(source, 'struct kd_owned_mutex_node {')+';\n'
     types += definition(source, 'struct kd_owned_mutex_executor {')+';\n'
-    fixture = FIXTURE.replace('kd_mutex_', 'kd_owned_mutex_')
-    fixture = fixture.replace('KD_MUTEX_', 'KD_OWNED_MUTEX_')
-    fixture = fixture.replace('struct kd_owned_mutex_legacy_gate', 'struct kd_mutex')
-    fixture = fixture.replace('kd_owned_mutex_release_node', 'kd_owned_mutex_unreserve')
-    fixture = fixture.replace('kd_owned_mutex_task_put', 'kd_mutex_task_put')
-    fixture = fixture.replace('kd_owned_mutex_lock_slowpath', 'kd_owned_mutex_wait_on_stack')
-    fixture = fixture.replace('static struct { struct kd_owned_mutex_node *resume_node; } kd_owned_mutex_shadows;\n', '')
-    fixture = fixture.replace('static unsigned long kd_owned_mutex_jit_resume_count;\n', '')
-    fixture = fixture.replace('    assert(kd_owned_mutex_jit_resume_count==32);\n', '')
-    fixture = fixture.replace('n->completed=1;', 'n->outcome=KD_OWNED_MUTEX_COMPLETE;')
-    fixture = fixture.replace('node.native_resume=false; node.completed=0;',
-                              'node.outcome=KD_OWNED_MUTEX_QUEUED;')
-    fixture = fixture.replace('#include "clobber.inc"',
-                              'void kd_owned_mutex_resume_cabi(const struct kd_owned_mutex_cabi_state *p) '
-                              '{ (void)p; abort(); }\n#include "clobber.inc"')
+    fixture = FIXTURE
     fixture = fixture.replace('int main(void) {', EXECUTOR+'\nint main(void) {\n'
                               '    for(int i=0;i<32;i++) check_executor();\n'
                               '    assert(executor_calls==32);')

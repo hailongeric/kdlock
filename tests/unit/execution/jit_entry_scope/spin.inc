@@ -300,13 +300,17 @@ static void check_clobber_identity(void)
 	CHECK(calls == 0 && !active.executed);
 	active.entry_abi = entry->entry_abi = code[45] = KD_ENTRY_ABI_MUTEX_CLOBBER_V1;
 	active.mutex_backend = true;
+	active.owned_mutex = true;
+	entry->lock_kind = KD_EXE_LOCK_OWNED_MUTEX;
+	mutex_image = (struct kd_jit_image){ .entry = entry, .entry_abi = 2, .code = code };
+	active.image = &mutex_image;
 	active.spin_simple = false;
 	active.jit_lock_depth = 1;
 	active.outer_lock_index = 0;
 	active.jit_lock_released[0] = false;
 	CHECK(kd_jit_image_matches(entry, &active));
 	kd_jit_prepare_clobber(&call, &active, code);
-	CHECK(call.complete && call.unlock == direct_mutex_unlock_addr);
+	CHECK(call.complete && call.unlock == owned_direct_unlock_addr);
 	CHECK(call.entry_abi == 2 && call.regs == kd_exec_frame_regs(&active));
 	active.jit_lock_depth = 2;
 	CHECK(!kd_jit_minimal_complete_allowed(&active));

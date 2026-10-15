@@ -162,6 +162,6 @@ Synthetic production-code fixtures check modeled transitions and exactly-once
 behavior; they do not establish every live remote/native schedule. Ordinary native
 controls, actual JIT, context refusals and returned-body evidence remain separate.
 Known pinned-waiter dependencies, dynamic-address guards, general flags repair
-and immutable versions for legacy image families remain open or deferred in
+and immutable versions for spin/rwlock image families remain open or deferred in
 [TODO](../TODO.md). Owned frames retain an immutable descriptor for their entire
 execution and continuation.

@@ -60,7 +60,7 @@ diff --git a/include/utils.h b/include/utils.h
 diff --git a/kernel_module/Makefile b/kernel_module/Makefile
 --- a/kernel_module/Makefile
 +++ b/kernel_module/Makefile
-@@ -18,6 +18,7 @@
+@@ -22,6 +22,7 @@
  
  kdlock_km-objs := \
  	kd_main.o \
@@ -71,7 +71,7 @@ diff --git a/kernel_module/Makefile b/kernel_module/Makefile
 diff --git a/kernel_module/exe.c b/kernel_module/exe.c
 --- a/kernel_module/exe.c
 +++ b/kernel_module/exe.c
-@@ -128,7 +128,7 @@
+@@ -172,7 +172,7 @@
  	if (!pending && !kd_exe_entry_is_ready(exe, 0, entry_ip)) {
  		if (!exe)
  			return KD_EXE_NO_RUN;
@@ -83,25 +83,25 @@ diff --git a/kernel_module/exe.c b/kernel_module/exe.c
 diff --git a/kernel_module/execution/native.inc b/kernel_module/execution/native.inc
 --- a/kernel_module/execution/native.inc
 +++ b/kernel_module/execution/native.inc
-@@ -83,7 +83,7 @@
+@@ -89,7 +89,7 @@
  		raw_spin_unlock_irqrestore(&kd_native_lock, flags);
  	}
  	atomic64_inc(&kd_native_started);
 -	pr_info("kd_native begin: task=%d outer=%lx entry=%lx ip=%lx sp=%lx held=%u mutex=%u cpu=%u outer_released=%u remaining=%u\n",
 +	KD_PR_ROUTINE("kd_native begin: task=%d outer=%lx entry=%lx ip=%lx sp=%lx held=%u mutex=%u cpu=%u outer_released=%u remaining=%u\n",
  		frame->logical_task->pid, frame->outer_lock_addr,
- 		frame->entry_ip, kd_exec_frame_regs(frame)->ip, kd_exec_frame_regs(frame)->sp,
- 		frame->jit_lock_depth - frame->outer_lock_index, mutex,
-@@ -143,7 +143,7 @@
- 	}
- 	/* The executor's completion log may follow its release-store. Observe
- 	 * acknowledgment on the waiter, using only its still-live stack data. */
+ 		frame->entry_ip, kd_exec_frame_regs(frame)->ip,
+ 		kd_exec_frame_regs(frame)->sp,
+@@ -180,7 +180,7 @@
+ 	 * The executor's completion log may follow its release-store. Observe
+ 	 * acknowledgment on the waiter, using only its still-live stack data.
+ 	 */
 -	pr_info("kd_native ack: task=%d lock=%lx mutex=%u last_spin=%u\n",
 +	KD_PR_ROUTINE("kd_native ack: task=%d lock=%lx mutex=%u last_spin=%u\n",
  		current->pid, request.lock_addr, mutex, request.spin_last);
  	return true;
  }
-@@ -161,7 +161,7 @@
+@@ -198,7 +198,7 @@
  		return ret;
  	atomic64_inc(&kd_native_completed);
  	/* Capture identity was established before NATIVE_READY; retirement follows. */
@@ -125,20 +125,20 @@ diff --git a/kernel_module/execution/remote.inc b/kernel_module/execution/remote
 diff --git a/kernel_module/execution/wrapper_entry.inc b/kernel_module/execution/wrapper_entry.inc
 --- a/kernel_module/execution/wrapper_entry.inc
 +++ b/kernel_module/execution/wrapper_entry.inc
-@@ -100,7 +100,8 @@
+@@ -108,7 +108,8 @@
  static void kd_exe_note_body(unsigned long entry_ip, unsigned long outer_lock_addr,
  			     unsigned long witness)
  {
--	KD_PR_INFO("JIT body witness: entry=%lx lock=%lx body=%lu\n",
+-	KD_PR_INFO("JIT body witness: entry=%lx lock=%lx body=%lu\n", entry_ip,
 +	kd_bench_note_body(outer_lock_addr);
-+	KD_PR_ROUTINE("JIT body witness: entry=%lx lock=%lx body=%lu\n",
- 		   entry_ip, outer_lock_addr, witness);
++	KD_PR_ROUTINE("JIT body witness: entry=%lx lock=%lx body=%lu\n", entry_ip,
+ 		   outer_lock_addr, witness);
  }
  
 diff --git a/kernel_module/kd_exec.c b/kernel_module/kd_exec.c
 --- a/kernel_module/kd_exec.c
 +++ b/kernel_module/kd_exec.c
-@@ -17,6 +17,7 @@
+@@ -20,6 +20,7 @@
  
  #include "exe.h"
  #include "kd_exec.h"
@@ -146,78 +146,22 @@ diff --git a/kernel_module/kd_exec.c b/kernel_module/kd_exec.c
  #include "kd_source.h"
  #include "kd_lock.h"
  #include "kd_spinlock.h"
-diff --git a/kernel_module/kd_mutex.c b/kernel_module/kd_mutex.c
---- a/kernel_module/kd_mutex.c
-+++ b/kernel_module/kd_mutex.c
-@@ -45,9 +45,10 @@
- #ifdef DSM_DEBUG
- #define mutex_debug(fmt, ...)                                                \
- 	({                                                                   \
--		printk(KERN_INFO "[%d] [%d] kd_mutex (%s) lock(%px): " fmt,  \
--		       smp_processor_id(), current->pid, __func__,           \
--		       lock, ##__VA_ARGS__);                                 \
-+		if (!kd_bench_quiet)                                        \
-+			printk(KERN_INFO "[%d] [%d] kd_mutex (%s) lock(%px): " fmt, \
-+			       smp_processor_id(), current->pid, __func__,         \
-+			       lock, ##__VA_ARGS__);                               \
- 	})
- #else
- #define mutex_debug(fmt, ...)
-@@ -214,7 +215,7 @@
- 			/* Identify the unstarted request and the stable reservation mask.
- 			 * A missing stack can also refuse a node, so only a full mask
- 			 * establishes actual per-CPU slot exhaustion. */
--			KD_PR_DEBUG(
-+			KD_PR_DEBUG_ALWAYS(
- 				"mutex node fallback: task=%d entry=%lx lock=%lx cpu=%u slots=%lx\n",
- 				current->pid, ret_addr, lock->origin_mutex_addr,
- 				smp_processor_id(),
 diff --git a/kernel_module/spin/restore.inc b/kernel_module/spin/restore.inc
 --- a/kernel_module/spin/restore.inc
 +++ b/kernel_module/spin/restore.inc
-@@ -205,7 +205,7 @@
+@@ -214,7 +214,7 @@
  	struct kd_spin_ref ref = node->execution->frame.spin_origin;
  
  	if (node->execution->result == KD_SPIN_RES_RETRY)
 -		KD_PR_INFO("spin JIT retry resume: node=%px cpu=%d ip=%lx\n",
 +		KD_PR_ROUTINE("spin JIT retry resume: node=%px cpu=%d ip=%lx\n",
- 				   node, node->cpuid, node->execution->frame.regs_ref->ip);
+ 			   node, node->cpuid,
+ 			   node->execution->frame.regs_ref->ip);
  	if (mode == 2) {
- 		BUG_ON(kd_spin_entry_mark_native(&ref));
-diff --git a/kernel_module/mutex/combiner.inc b/kernel_module/mutex/combiner.inc
---- a/kernel_module/mutex/combiner.inc
-+++ b/kernel_module/mutex/combiner.inc
-@@ -34,7 +34,7 @@
- 		remaining += !frame->jit_lock_released[i];
- 	/* A native successor can run as soon as L opens. Log release intent
- 	 * before that point, as on the spin path; the observer proves progress. */
--	pr_info("kd_mutex outer release: task=%d owner=%d owner_task=%lx outer=%lx next_task=%d remaining=%u\n",
-+	KD_PR_ROUTINE("kd_mutex outer release: task=%d owner=%d owner_task=%lx outer=%lx next_task=%d remaining=%u\n",
- 		frame->logical_task->pid, current->pid, (unsigned long)current,
- 		frame->outer_lock_addr,
- 		batch->next ? batch->next->task_struct_ptr->pid : 0, remaining);
-@@ -126,7 +126,7 @@
- 		 * Identify the unexecuted request so a busy refusal cannot be
- 		 * mistaken for missing translation or a progressed JIT failure. */
- 		this_cpu_inc(kd_mutex_context_busy_count);
--		KD_PR_DEBUG(
-+		KD_PR_DEBUG_ALWAYS(
- 			"mutex JIT context busy: task=%d waiter=%d entry=%lx lock=%lx cpu=%u\n",
- 			current->pid, curr_node->task_struct_ptr->pid,
- 			curr_node->regs.ip, lock->origin_mutex_addr,
-@@ -261,7 +261,7 @@
- 	}
- 
- 	this_cpu_inc(kd_mutex_jit_failure_count);
--	KD_PR_DEBUG("mutex JIT delegation failed: %d\n", ret_flag);
-+	KD_PR_DEBUG_ALWAYS("mutex JIT delegation failed: %d\n", ret_flag);
- 	return ret_flag;
- }
- #pragma GCC pop_options
 diff --git a/kernel_module/spin/combiner.inc b/kernel_module/spin/combiner.inc
 --- a/kernel_module/spin/combiner.inc
 +++ b/kernel_module/spin/combiner.inc
-@@ -99,7 +99,7 @@
+@@ -106,7 +106,7 @@
  	for (i = frame->outer_lock_index; i < frame->jit_lock_depth; i++)
  		remaining += !frame->jit_lock_released[i];
  	/* Log before L opens: a native successor may run immediately afterward. */
@@ -226,37 +170,37 @@ diff --git a/kernel_module/spin/combiner.inc b/kernel_module/spin/combiner.inc
  		frame->logical_task->pid, current->pid, (unsigned long)current,
  		raw_smp_processor_id(), frame->outer_lock_addr,
  		next->execution ? next->execution->frame.logical_task->pid : 0,
-@@ -261,7 +261,7 @@
+@@ -389,7 +389,7 @@
  			return;
  		}
  		if (exe_flag == KD_EXE_RUN_ERROR) {
 -			print_debug("run error\n");
 +			print_debug_always("run error\n");
- 			/* No JIT body ran. Keep the packet queued and uncompleted until
+ 			/*
+ 			 * No JIT body ran. Keep the packet queued and uncompleted until
  			 * it acquires the lock. Native packets may need ret4; virtual
- 			 * packets use the ordinary acquired return to their parent. */
 diff --git a/kernel_module/spin/execute.inc b/kernel_module/spin/execute.inc
 --- a/kernel_module/spin/execute.inc
 +++ b/kernel_module/spin/execute.inc
-@@ -127,7 +127,7 @@
+@@ -136,7 +136,7 @@
  			       frame->logical_task ||
  		       smp_load_acquire(&frame->resume_target->remote_result) !=
  			       KD_EXEC_REMOTE_WAITING);
 -		pr_info("kd_remote start: task=%d cpu=%u entry=%lx ip=%lx outer=%lx parent_outer=%lx owner_task=%lx\n",
 +		KD_PR_ROUTINE("kd_remote start: task=%d cpu=%u entry=%lx ip=%lx outer=%lx parent_outer=%lx owner_task=%lx\n",
  			frame->logical_pid, raw_smp_processor_id(),
- 			frame->entry_ip, kd_exec_frame_regs(frame)->ip, frame->outer_lock_addr,
- 			frame->resume_target->outer_lock_addr,
-@@ -247,7 +247,7 @@
- 	curr_node->execution->result = curr_node->execution->frame.spin_kind == KD_SPIN_CONT_ROOT &&
- 		ret_flag != KD_EXE_RUN_TO_UNLOCK ? KD_SPIN_RES_RETRY : KD_SPIN_RES_QUEUED;
+ 			frame->entry_ip, kd_exec_frame_regs(frame)->ip,
+ 			frame->outer_lock_addr,
+@@ -282,7 +282,7 @@
+ 			KD_SPIN_RES_RETRY :
+ 			KD_SPIN_RES_QUEUED;
  	if (curr_node->execution->result == KD_SPIN_RES_RETRY)
 -		KD_PR_INFO(
 +		KD_PR_ROUTINE(
  			"spin JIT retry regs: node=%px cpu=%d ip=%lx failed_ip=%lx\n",
- 			curr_node, curr_node->cpuid, curr_node->execution->frame.regs_ref->ip,
- 			ret_flag == KD_EXE_RUN_TO_UNLOCK ?
-@@ -273,7 +273,7 @@
+ 			curr_node, curr_node->cpuid,
+ 			curr_node->execution->frame.regs_ref->ip,
+@@ -310,7 +310,7 @@
  		KD_PR_DEBUG("delegation ok lock=%px depth=%u\n", lock,
  			    kd_spin_lock_stack_depth(ptr));
  	} else {

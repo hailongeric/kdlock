@@ -24,8 +24,10 @@ bool kd_exec_frame_can_borrow_locks(const struct kd_exec_frame *frame)
 #include "../../tests/kernel/execution/exec_relay_exit_probe.c"
 #endif
 
-/* Publish borrowing only for a validated continuation packet. This registers
- * unlock routing; it neither transfers Linux ownership nor jumps to source. */
+/*
+ * Publish borrowing only for a validated continuation packet. This registers
+ * unlock routing; it neither transfers Linux ownership nor jumps to source.
+ */
 int kd_exec_native_begin(struct kd_exec_frame *frame, bool mutex)
 {
 	unsigned long flags;
@@ -37,13 +39,15 @@ int kd_exec_native_begin(struct kd_exec_frame *frame, bool mutex)
 	bool checked_mutex =
 		mutex && frame &&
 		frame->control_call.phase == KD_CALL_STACK_CHANGED &&
-		kd_call_after_matches(&frame->control_call, kd_exec_frame_regs(frame)->ip,
+		kd_call_after_matches(&frame->control_call,
+				      kd_exec_frame_regs(frame)->ip,
 				      kd_exec_frame_regs(frame)->sp);
-	bool checked_spin = !mutex && frame &&
-			    frame->control_call.phase == KD_CALL_SPIN_NATIVE &&
-			    kd_call_after_matches(&frame->control_call,
-						  kd_exec_frame_regs(frame)->ip,
-						  kd_exec_frame_regs(frame)->sp);
+	bool checked_spin =
+		!mutex && frame &&
+		frame->control_call.phase == KD_CALL_SPIN_NATIVE &&
+		kd_call_after_matches(&frame->control_call,
+				      kd_exec_frame_regs(frame)->ip,
+				      kd_exec_frame_regs(frame)->sp);
 	int ret;
 
 	if ((!kd_exec_frame_can_borrow_locks(frame) &&
@@ -60,9 +64,11 @@ int kd_exec_native_begin(struct kd_exec_frame *frame, bool mutex)
 	      kd_exec_frame_regs(frame)->ip != frame->control_call.target ||
 	      kd_exec_frame_regs(frame)->sp != frame->control_call.stack)))
 		return -EINVAL;
-	/* These distinct tags authorize validated post-control boundaries. The
+	/*
+	 * These distinct tags authorize validated post-control boundaries. The
 	 * original owner retains acquired locks; the waiter must not call the
-	 * completed lock/unlock again. Other COMPLETE/partial phases stay refused. */
+	 * completed lock/unlock again. Other COMPLETE/partial phases stay refused.
+	 */
 	if (frame->control_call.phase != KD_CALL_NONE &&
 	    frame->control_call.phase != KD_CALL_PENDING && !relay &&
 	    !checked_mutex && !checked_spin)
@@ -85,7 +91,8 @@ int kd_exec_native_begin(struct kd_exec_frame *frame, bool mutex)
 	atomic64_inc(&kd_native_started);
 	pr_info("kd_native begin: task=%d outer=%lx entry=%lx ip=%lx sp=%lx held=%u mutex=%u cpu=%u outer_released=%u remaining=%u\n",
 		frame->logical_task->pid, frame->outer_lock_addr,
-		frame->entry_ip, kd_exec_frame_regs(frame)->ip, kd_exec_frame_regs(frame)->sp,
+		frame->entry_ip, kd_exec_frame_regs(frame)->ip,
+		kd_exec_frame_regs(frame)->sp,
 		frame->jit_lock_depth - frame->outer_lock_index, mutex,
 		raw_smp_processor_id(), frame->outer_unlock_seen, remaining);
 #ifdef KDLOCK_SELFTEST
@@ -94,8 +101,10 @@ int kd_exec_native_begin(struct kd_exec_frame *frame, bool mutex)
 	return 0;
 }
 
-/* Routing describes physical locks; the ticket separately retains executors.
- * No new route can appear after the root publishes NATIVE_READY. */
+/*
+ * Routing describes physical locks; the ticket separately retains executors.
+ * No new route can appear after the root publishes NATIVE_READY.
+ */
 bool kd_exec_native_pending(struct task_struct *task)
 {
 	struct kd_exec_frame *frame;
@@ -112,8 +121,10 @@ bool kd_exec_native_pending(struct task_struct *task)
 	return pending;
 }
 
-/* Called on the original waiter's stack. A matching retained owner must finish
- * the unlock before this local request can disappear on return. */
+/*
+ * Called on the original waiter's stack. A matching retained owner must finish
+ * the unlock before this local request can disappear on return.
+ */
 bool kd_exec_native_unlock(unsigned long lock_addr, bool mutex)
 {
 	struct kd_native_request request = { .lock_addr = lock_addr };
@@ -130,8 +141,10 @@ bool kd_exec_native_unlock(unsigned long lock_addr, bool mutex)
 		if (frame->logical_task != current ||
 		    frame->mutex_backend != mutex)
 			continue;
-		/* Ancestors copied into a remote B frame still belong to A's
-		 * executor. Only route the locks owned by this particular frame. */
+		/*
+		 * Ancestors copied into a remote B frame still belong to A's
+		 * executor. Only route the locks owned by this particular frame.
+		 */
 		for (i = frame->outer_lock_index; i < frame->jit_lock_depth;
 		     i++) {
 			if (frame->jit_lock_addr[i] != lock_addr ||
@@ -149,8 +162,10 @@ bool kd_exec_native_unlock(unsigned long lock_addr, bool mutex)
 	if (!found)
 		return false;
 
-	/* The acknowledgment lives on the waiter's native stack, not in the
-	 * executor frame, which may be retired as soon as it acknowledges. */
+	/*
+	 * The acknowledgment lives on the waiter's native stack, not in the
+	 * executor frame, which may be retired as soon as it acknowledges.
+	 */
 	while (!smp_load_acquire(&request.done)) {
 		cpu_relax();
 		if (mutex)
@@ -161,8 +176,10 @@ bool kd_exec_native_unlock(unsigned long lock_addr, bool mutex)
 		request.spin_last = true;
 		kd_spin_native_retire(&request.spin_origin);
 	}
-	/* The executor's completion log may follow its release-store. Observe
-	 * acknowledgment on the waiter, using only its still-live stack data. */
+	/*
+	 * The executor's completion log may follow its release-store. Observe
+	 * acknowledgment on the waiter, using only its still-live stack data.
+	 */
 	pr_info("kd_native ack: task=%d lock=%lx mutex=%u last_spin=%u\n",
 		current->pid, request.lock_addr, mutex, request.spin_last);
 	return true;
@@ -187,18 +204,22 @@ static int kd_exec_native_finish(struct kd_exec_frame *frame)
 	return 0;
 }
 
-/* The physical owner pauses its batch here, servicing the waiter's unlocks.
+/*
+ * The physical owner pauses its batch here, servicing the waiter's unlocks.
  * Remove routing/references before the final release ACK; an awakened waiter
- * may immediately return, exit, or discard its request storage. */
+ * may immediately return, exit, or discard its request storage.
+ */
 int kd_exec_native_wait(struct kd_exec_frame *frame)
 {
 	u64 start = kd_exe_native_timing_start();
 	bool mutex = frame->mutex_backend;
 	int result;
 
-	/* Publication precedes this entry: an already-running waiter prefix is
+	/*
+	 * Publication precedes this entry: an already-running waiter prefix is
 	 * outside this interval. Include unlock/finish work and error returns;
-	 * nested relay waits overlap and must not be summed as wall time. */
+	 * nested relay waits overlap and must not be summed as wall time.
+	 */
 	for (;;) {
 		struct kd_native_request *request =
 			smp_load_acquire(&frame->native_request);
@@ -214,10 +235,7 @@ int kd_exec_native_wait(struct kd_exec_frame *frame)
 					NULL);
 			else if (frame->owned_mutex)
 				ret = kd_owned_mutex_jit_nested_unlock_ctx(
-					(struct kd_mutex *)request->lock_addr, frame);
-			else if (frame->mutex_backend)
-				ret = kd_mutex_jit_nested_unlock_ctx(
-					(struct mutex *)request->lock_addr,
+					(struct kd_mutex *)request->lock_addr,
 					frame);
 			else
 				ret = kd_spin_jit_nested_unlock_ctx(
@@ -262,8 +280,10 @@ int kd_exec_native_wait(struct kd_exec_frame *frame)
 			preempt_disable();
 		}
 	}
-	/* No request/task access after the final ACK; the caller still owns its
-	 * frame, but only the captured backend is needed for this observation. */
+	/*
+	 * No request/task access after the final ACK; the caller still owns its
+	 * frame, but only the captured backend is needed for this observation.
+	 */
 	kd_exe_native_timing_end(mutex, start);
 	return result;
 }

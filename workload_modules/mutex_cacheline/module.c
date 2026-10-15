@@ -14,7 +14,7 @@
 #ifndef SC_SCENARIO
 #define SC_SCENARIO 0
 #endif
-#if SC_SCENARIO && !defined(SC_MUTEX_OWNED)
+#if SC_SCENARIO && !defined(SC_DIRECT_KDLOCK)
 #error "Mutex nested/early scenarios require owned-v1"
 #endif
 
@@ -37,7 +37,7 @@
 
 #if defined(SC_DIRECT_KDLOCK)
 #include <linux/objtool.h>
-#ifdef SC_MUTEX_OWNED
+#define SC_MUTEX_OWNED 1
 #include "kd_owned_mutex_direct.h"
 static struct kd_mutex sc_lock __aligned(SC_LINE_BYTES);
 #if SC_SCENARIO
@@ -68,16 +68,6 @@ MODULE_INFO(owned_preflight_policy, "c_abi_v1");
 #else
 MODULE_INFO(owned_preflight_policy, "capture_first");
 #endif
-#endif
-#else
-#include "kd_mutex_direct.h"
-static struct mutex sc_lock __aligned(SC_LINE_BYTES);
-#define SC_LOCK(n) struct kd_mutex_outer_cookie sc_outer_cookie; \
-	KD_MUTEX_OUTER_LOCK(&sc_lock, sc_outer_cookie, \
-	".globl mc_entry_" #n "\nmc_entry_" #n ":\n\t" ANNOTATE_NOENDBR)
-#define SC_UNLOCK() KD_MUTEX_OUTER_UNLOCK(&sc_lock, sc_outer_cookie)
-static void sc_lock_init(void) { mutex_init(&sc_lock); }
-MODULE_INFO(mutex_implementation, "legacy");
 #endif
 extern char mc_entry_0[], mc_entry_1[], mc_entry_2[], mc_entry_4[];
 extern char mc_entry_8[], mc_entry_16[];

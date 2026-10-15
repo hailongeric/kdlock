@@ -187,10 +187,6 @@ static void mutex_unlock(pthread_mutex_t *lock)
 {
 	CHECK(!pthread_mutex_unlock(lock));
 }
-static bool kd_mutex_check_idle(void)
-{
-	return mutex_idle;
-}
 static bool kd_owned_mutex_check_idle(void)
 {
 	return mutex_idle;

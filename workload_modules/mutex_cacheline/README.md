@@ -4,22 +4,22 @@
 produces `mutex_cacheline.ko` with `/dev/mutex_cacheline`. It includes shared
 payload/ioctl/timing helpers from `../spin_cacheline`; operation bodies do not
 branch on a runtime lock-kind flag. The runner selects cacheline or RCUHT at
-build time, using the same payload source for all three arms.
+build time, using the same payload source. KD supports c01; Native/TCLock also support
+the other cacheline sizes and RCUHT.
 
 | Build arm | Lock object and operations |
 | --- | --- |
 | `SC_BACKEND=native` | Original `struct mutex`; `(mutex_lock/unlock)` bypass the experiment's caller-clobber macros |
 | `SC_BACKEND=tclock` | `struct komb_mutex`; actual upstream ordinary mutex port and fixed-affinity worker registration |
-| `SC_BACKEND=kdlock` | Original `struct mutex`; outer caller CAS/cookie pair, contended direct clobber entry and named `mc_entry_*` JIT continuations |
-| `SC_BACKEND=kdlock SC_MUTEX_OWNED=1` | Separate 32-byte KD `struct kd_mutex`; owned outer cookie, registry kind 3, default ABI2 or opt-in ABI4, c01 only |
+| `SC_BACKEND=kdlock` | Separate 32-byte KD `struct kd_mutex`; owned outer cookie, registry kind 3, default ABI2 or opt-in ABI4, c01 only |
 
 The owned arm includes `kd_owned_mutex_direct.h`, initializes with
 `kd_mutex_init`, prepares with `kd_owned_mutex_prepare`, and checks
 `kd_owned_mutex_is_idle` after all workers join. It uses the same lock alignment and
 payload counters as Native. It does not reinterpret a Linux mutex
 or share its object with native consumers. Other cacheline sizes and the hash
-payload are rejected for this initial implementation; kernel-owned real-API
-workloads continue using the legacy interface. Module metadata records the
+payload are rejected for KD. Kernel-owned real-API mutex workloads compare
+Stock syscalls and Native/TCLock controls, without a KD arm. Module metadata records the
 actual compiled implementation for the runner to verify.
 
 `KD_OWNED_MUTEX_CABI=1` selects the ordinary-C ABI4 caller, which tries KD-owned
@@ -63,14 +63,14 @@ KD translations, registers all workers, performs warmup, verifies payload and
 returned-body JIT/delegation evidence, and drains, retires sources and unloads modules in order.
 Commands, the full thread set, UBSAN-off provider policy and statistics are
 maintained in the [comparison README](../../bench/tclock_compare/README.md).
-Owned `KD_SELF`/`ADAPTIVE_SELF`, legacy native execution and returned-JIT samples
-remain distinct. The [full-grid command](../../bench/tclock_compare/README.md#owned-c01-full-grid)
-uses the owned profile explicitly; the general runner still defaults to legacy.
+Owned `KD_SELF`/`ADAPTIVE_SELF` and returned-JIT samples remain distinct. The [full-grid command](../../bench/tclock_compare/README.md#owned-c01-full-grid)
+selects ABI4/reuse-32 explicitly; the general runner defaults to owned ABI2.
 
 The default workload supports plain ordinary mutex operations. Owned c01 also
 supports `SC_SCENARIO=1` (nested) and `2` (early outer release), selected only by
-the runner's `--functional` KD-only one-round mode. A distinct aligned inner
-owned mutex uses the direct clobber interface; both objects must be idle at drain.
+the runner's `--functional` KD-only one-round mode. The distinct aligned inner
+owned mutex uses ordinary owned calls for the nested scenario and direct clobber
+calls for early outer release; both objects must be idle at drain.
 The owned early probe alternates LIFO and early release using protected counter
 parity. Native early A release cannot combine while B remains held; LIFO callers
 provide executors for queued early-release bodies. Acceptance requires a returned

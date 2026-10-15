@@ -212,14 +212,6 @@ static void kd_mutex_task_put(struct task_struct *task)
 	CHECK(task == &logical && list_empty(&kd_native_frames));
 	mutex_puts++;
 }
-static int kd_mutex_jit_nested_unlock_ctx(struct mutex *lock,
-					  struct kd_exec_frame *frame)
-{
-	(void)lock;
-	(void)frame;
-	BUG_ON(true);
-	return -EINVAL;
-}
 static int kd_spin_entry_borrow_get(const struct kd_spin_ref *ref)
 {
 	(void)ref;

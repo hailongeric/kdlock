@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-only
 /* Scoped, task-context syscall comparison on the captured 6.1.159 kernel.
- * Native and KD retain the actual kernel mutex. TCLock requires its own object;
+ * Native retains the actual kernel mutex. TCLock requires its own object;
  * all consumers of the private pipe/file must obey the selected protocol.
  * The client retains every descriptor until the workers join and hooks unload.
  * No reads/writes/resizes, descriptor mutation, or independent consumers while
@@ -24,10 +24,6 @@
 #include <asm/ioctls.h>
 #include "control.h"
 
-#ifdef RB_MUTEX_OWNED
-#error "owned-v1 cannot replace a kernel-owned struct mutex; this workload requires the legacy API"
-#endif
-
 static char *target_path;
 module_param(target_path, charp, 0400);
 static int target_pid;
@@ -40,14 +36,7 @@ static unsigned long lock_addr;
 module_param(lock_addr, ulong, 0400);
 static DEFINE_PER_CPU(u64, redirected);
 
-#ifdef RB_KDLOCK
-#include "kd_mutex_direct.h"
-#define RA_COOKIE struct kd_mutex_outer_cookie cookie
-#define RA_LOCK() KD_MUTEX_OUTER_LOCK(original_lock, cookie, \
-	".globl rb_entry\nrb_entry:\n\t" ANNOTATE_NOENDBR)
-#define RA_UNLOCK() KD_MUTEX_OUTER_UNLOCK(original_lock, cookie)
-extern char rb_entry[];
-#elif defined(RB_TCLOCK)
+#ifdef RB_TCLOCK
 #include "mutex/komb_mutex.h"
 static struct komb_mutex tc_lock __aligned(64);
 int tc_mutex_worker_register(void);
@@ -156,12 +145,7 @@ static int prepare_set(const char *value, const struct kernel_param *kp)
 	unsigned int n;
 	if (kstrtouint(value, 0, &n) || n != 1 || !lock_addr)
 		return -EINVAL;
-#ifdef RB_KDLOCK
-	return kd_mutex_prepare(original_lock, (unsigned long)rb_entry,
-				KD_ENTRY_ABI_MUTEX_CLOBBER_V1);
-#else
 	return 0;
-#endif
 }
 static const struct kernel_param_ops prepare_ops = { .set = prepare_set };
 module_param_cb(prepare, &prepare_ops, NULL, 0200);

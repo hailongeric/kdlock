@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: GPL-2.0
-/* Owned mutex delegation. Included by kd_spin_runtime.c so the checked batch
+/*
+ * Owned mutex delegation. Included by kd_spin_runtime.c so the checked batch
  * wrapper and frame retirement stay visible to the compiler. The public object
  * has one owner and one FIFO; private snapshots exist only while that owner is
- * retained. There is no Linux mutex API or address-to-shadow lookup here. */
+ * retained. There is no Linux mutex API or address-to-shadow lookup here.
+ */
 #include <linux/rcuwait.h>
 #include <linux/vmalloc.h>
 #include <linux/topology.h>
@@ -20,8 +22,10 @@ extern struct kd_comm_key kd_spin_target;
 #define KD_OWNED_MUTEX_SLOTS 4
 #define KD_OWNED_MUTEX_STACK_SIZE 8192UL
 
-/* The common FIFO header is also used by allocation-free stack SELF waiters.
- * Keep the existing packet/result offsets: ABI2 never initializes absent GPRs. */
+/*
+ * The common FIFO header is also used by allocation-free stack SELF waiters.
+ * Keep the existing packet/result offsets: ABI2 never initializes absent GPRs.
+ */
 struct kd_owned_mutex_node {
 	struct kd_owned_mutex_waiter waiter;
 	unsigned long gsbase;
@@ -39,15 +43,20 @@ struct kd_owned_mutex_node {
 	u64 queued_at_ns;
 	u32 outcome;
 	union {
-		struct { u32 readiness; int origin_cpu; };
+		struct {
+			u32 readiness;
+			int origin_cpu;
+		};
 		struct kd_origin_guard origin;
 	};
 	u32 bypasses;
 };
 
-/* One executor per CPU is sufficient: the frame context itself forbids a
+/*
+ * One executor per CPU is sufficient: the frame context itself forbids a
  * second live executor. This reservation survives scheduling and is separate
- * from all producer slots, including a producer sleeping on this same CPU. */
+ * from all producer slots, including a producer sleeping on this same CPU.
+ */
 struct kd_owned_mutex_executor {
 	void *stack_base;
 	unsigned long stack_ptr;
@@ -55,9 +64,11 @@ struct kd_owned_mutex_executor {
 	bool busy;
 };
 
-/* Large packet/stack identities use dynamic per-CPU storage. The kernel's
+/*
+ * Large packet/stack identities use dynamic per-CPU storage. The kernel's
  * reserved module-percpu arena is shared with the existing protocol families;
- * extending it with another static packet array can prevent module loading. */
+ * extending it with another static packet array can prevent module loading.
+ */
 struct kd_owned_mutex_cpu {
 	struct kd_owned_mutex_node nodes[KD_OWNED_MUTEX_SLOTS];
 	struct rcuwait waits[KD_OWNED_MUTEX_SLOTS];
@@ -79,60 +90,70 @@ static DEFINE_PER_CPU(unsigned long, kd_owned_mutex_preparations);
 
 static bool owned_mutex_origin_spin;
 module_param(owned_mutex_origin_spin, bool, 0444);
-MODULE_PARM_DESC(owned_mutex_origin_spin, "Admit audited images with exclusive origin readiness claims");
+MODULE_PARM_DESC(owned_mutex_origin_spin,
+		 "Admit audited images with exclusive origin readiness claims");
 static bool owned_mutex_numa;
 module_param(owned_mutex_numa, bool, 0444);
-MODULE_PARM_DESC(owned_mutex_numa, "Select within eight delegates with at most four bypasses (experimental)");
+MODULE_PARM_DESC(owned_mutex_numa,
+		 "Select within eight delegates with at most four bypasses (experimental)");
 
-/* One bounded grace after an unqueued release can preserve owner locality.
- * Zero keeps the exact Linux optimistic retry cadence. */
+/*
+ * One bounded grace after an unqueued release can preserve owner locality.
+ * Zero keeps the exact Linux optimistic retry cadence.
+ */
 unsigned int owned_mutex_reuse_spins;
 module_param(owned_mutex_reuse_spins, uint, 0444);
 MODULE_PARM_DESC(owned_mutex_reuse_spins,
-	"One unqueued-release grace per OSQ acquisition: 0, 8, 32 or 128 polls");
+		 "One unqueued-release grace per OSQ acquisition: 0, 8, 32 or 128 polls");
 
 bool owned_mutex_self_route;
 module_param(owned_mutex_self_route, bool, 0444);
 MODULE_PARM_DESC(owned_mutex_self_route,
-	"Use only the owned SELF core for new acquisitions (diagnostic control)");
-/* A getter-only identity cannot be overridden at module load to misdescribe
- * the acquisition policy implemented by this provider. */
+		 "Use only the owned SELF core for new acquisitions (diagnostic control)");
+/*
+ * A getter-only identity cannot be overridden at module load to misdescribe
+ * the acquisition policy implemented by this provider.
+ */
 static int kd_owned_mutex_protocol_get(char *buffer,
 				       const struct kernel_param *kp)
 {
 	(void)kp;
 	return scnprintf(buffer, PAGE_SIZE, "linux_local_first_v1");
 }
+
 static const struct kernel_param_ops kd_owned_mutex_protocol_ops = {
 	.get = kd_owned_mutex_protocol_get,
 };
 module_param_cb(owned_mutex_protocol, &kd_owned_mutex_protocol_ops, NULL, 0444);
-MODULE_PARM_DESC(owned_mutex_protocol, "Owned acquisition/release protocol identity");
+MODULE_PARM_DESC(owned_mutex_protocol,
+		 "Owned acquisition/release protocol identity");
 static bool owned_mutex_refill;
 module_param(owned_mutex_refill, bool, 0444);
 MODULE_PARM_DESC(owned_mutex_refill,
-	"Refill exhausted owned FIFO snapshots within the original batch quota");
-/* Zero isolates the C admission gate from optimistic retry. This candidate
- * changes execution placement only; it never alters existing queued work. */
+		 "Refill exhausted owned FIFO snapshots within the original batch quota");
+/*
+ * ABI2 preflight uses this bounded owner-poll budget before capture. Zero
+ * disables preflight polling; requests already queued keep their protocol.
+ */
 static unsigned int owned_mutex_preflight_spins;
 module_param(owned_mutex_preflight_spins, uint, 0444);
 MODULE_PARM_DESC(owned_mutex_preflight_spins,
-	"Owned outer pre-capture owner polls: 0, 64, 256, 1024 or 4096");
+		 "Owned outer pre-capture owner polls: 0, 64, 256, 1024 or 4096");
 static bool owned_mutex_preflight_queue;
 module_param(owned_mutex_preflight_queue, bool, 0444);
 MODULE_PARM_DESC(owned_mutex_preflight_queue,
-	"Allow preflight OSQ queueing within the shared queue/owner poll budget");
+		 "Allow preflight OSQ queueing within the shared queue/owner poll budget");
 
 static bool kd_owned_mutex_preflight_spins_valid(unsigned int spins)
 {
-	return spins == 0 || spins == 64 || spins == 256 ||
-		spins == 1024 || spins == 4096;
+	return spins == 0 || spins == 64 || spins == 256 || spins == 1024 ||
+	       spins == 4096;
 }
 
 static unsigned int owned_mutex_spin_limit = 4096;
 module_param(owned_mutex_spin_limit, uint, 0444);
 MODULE_PARM_DESC(owned_mutex_spin_limit,
-	"Maximum owned delegation result polls before sleeping");
+		 "Maximum owned delegation result polls before sleeping");
 
 static int kd_owned_mutex_wait_stats_get(char *buffer,
 				       const struct kernel_param *kp)
@@ -145,34 +166,42 @@ static int kd_owned_mutex_wait_stats_get(char *buffer,
 		parks += READ_ONCE(per_cpu(kd_owned_mutex_parks, cpu));
 		wakes += READ_ONCE(per_cpu(kd_owned_mutex_wakes, cpu));
 	}
-	return scnprintf(buffer, PAGE_SIZE, "%llu %llu 0\n", parks, wakes);
+	return scnprintf(buffer, PAGE_SIZE, "%llu %llu\n", parks, wakes);
 }
+
 static const struct kernel_param_ops kd_owned_mutex_wait_stats_ops = {
 	.get = kd_owned_mutex_wait_stats_get,
 };
-module_param_cb(owned_mutex_wait_stats, &kd_owned_mutex_wait_stats_ops, NULL, 0444);
+module_param_cb(owned_mutex_wait_stats, &kd_owned_mutex_wait_stats_ops, NULL,
+		0444);
 
 static int kd_owned_mutex_origin_stats_get(char *buffer, const struct kernel_param *kp)
 {
-	u64 claims = 0, failures = 0, preparations = 0, bypasses = 0, bodies = 0;
+	u64 claims = 0, failures = 0, preparations = 0, bypasses = 0,
+	    bodies = 0;
 	int cpu;
 
 	(void)kp;
 	for_each_possible_cpu(cpu) {
 		claims += READ_ONCE(per_cpu(kd_owned_mutex_claims, cpu));
-		failures += READ_ONCE(per_cpu(kd_owned_mutex_claim_failures, cpu));
-		preparations += READ_ONCE(per_cpu(kd_owned_mutex_preparations, cpu));
+		failures +=
+			READ_ONCE(per_cpu(kd_owned_mutex_claim_failures, cpu));
+		preparations +=
+			READ_ONCE(per_cpu(kd_owned_mutex_preparations, cpu));
 		bypasses += READ_ONCE(per_cpu(kd_owned_mutex_bypasses, cpu));
 		bodies += READ_ONCE(per_cpu(kd_owned_mutex_bodies, cpu));
 	}
 	return scnprintf(buffer, PAGE_SIZE, "%llu %llu %llu %llu %llu\n",
-		claims, failures, preparations, bypasses, bodies);
+			 claims, failures, preparations, bypasses, bodies);
 }
+
 static const struct kernel_param_ops kd_owned_mutex_origin_stats_ops = {
 	.get = kd_owned_mutex_origin_stats_get,
 };
-module_param_cb(owned_mutex_origin_stats, &kd_owned_mutex_origin_stats_ops, NULL, 0444);
-MODULE_PARM_DESC(owned_mutex_origin_stats, "Claims, failed claims, preparation requests, bypasses, completed bodies");
+module_param_cb(owned_mutex_origin_stats, &kd_owned_mutex_origin_stats_ops,
+		NULL, 0444);
+MODULE_PARM_DESC(owned_mutex_origin_stats,
+		 "Claims, failed claims, preparation requests, bypasses, completed bodies");
 
 static struct kd_owned_mutex_node *kd_owned_mutex_reserve(struct kd_mutex *lock)
 {
@@ -181,8 +210,7 @@ static struct kd_owned_mutex_node *kd_owned_mutex_reserve(struct kd_mutex *lock)
 	int i;
 
 	for (i = 0; i < KD_OWNED_MUTEX_SLOTS; i++)
-		if ((slots & BIT(i)) &&
-		    READ_ONCE(cpu->nodes[i].lock) == lock)
+		if ((slots & BIT(i)) && READ_ONCE(cpu->nodes[i].lock) == lock)
 			return NULL;
 	for (i = 0; i < KD_OWNED_MUTEX_SLOTS; i++) {
 		struct kd_owned_mutex_node *node;
@@ -214,8 +242,10 @@ static void kd_owned_mutex_unreserve(struct kd_owned_mutex_node *node)
 	WRITE_ONCE(cpu->slots, slots & ~BIT(node->slot));
 }
 
-/* Result publication is the last packet access. Only provider-lifetime wake
- * objects may be used after a waiter is allowed to reuse its slot. */
+/*
+ * Result publication is the last packet access. Only provider-lifetime wake
+ * objects may be used after a waiter is allowed to reuse its slot.
+ */
 static void kd_owned_mutex_flush_wakes(struct rcuwait **wake, unsigned int *count)
 {
 	unsigned int i, n = *count;
@@ -259,14 +289,17 @@ static bool kd_owned_mutex_result_ready(struct kd_owned_mutex_node *node)
 static void kd_owned_mutex_wait_result(struct kd_owned_mutex_node *node)
 {
 	struct rcuwait *wait = node->wait;
-	const struct kd_jit_image *image = owned_mutex_origin_spin ?
-		kd_image_current(kd_exe_find_ready(0, node->saved_ret_addr)) : NULL;
+	const struct kd_jit_image *image =
+		owned_mutex_origin_spin ?
+			kd_image_current(kd_exe_find_ready(0, node->saved_ret_addr)) :
+			NULL;
 	unsigned int left = owned_mutex_spin_limit;
 	bool registered = false;
 
 	if (owned_mutex_origin_spin && left && !need_resched() && image &&
 	    (image->requirements & KD_IMAGE_ORIGIN_SPIN))
-		cmpxchg_release(&node->readiness, KD_ORIGIN_PARKABLE, KD_ORIGIN_READY);
+		cmpxchg_release(&node->readiness, KD_ORIGIN_PARKABLE,
+				KD_ORIGIN_READY);
 	for (;;) {
 		u32 ready;
 
@@ -295,8 +328,10 @@ static void kd_owned_mutex_wait_result(struct kd_owned_mutex_node *node)
 		set_current_state(TASK_UNINTERRUPTIBLE);
 		if (kd_owned_mutex_result_ready(node))
 			break;
-		/* A preparation racing the state barrier gets another bounded poll
-		 * only when scheduling is not required. It never authorizes a body. */
+		/*
+		 * A preparation racing the state barrier gets another bounded poll
+		 * only when scheduling is not required. It never authorizes a body.
+		 */
 		if (smp_load_acquire(&node->readiness) == KD_ORIGIN_REQUESTED &&
 		    !need_resched() && owned_mutex_spin_limit) {
 			__set_current_state(TASK_RUNNING);
@@ -308,8 +343,10 @@ static void kd_owned_mutex_wait_result(struct kd_owned_mutex_node *node)
 		preempt_enable();
 		schedule_timeout(1);
 		preempt_disable();
-		/* Ordinary timeout wakes retain the existing sleeping path. Only a
-		 * new preparation request earns another bounded acknowledgment poll. */
+		/*
+		 * Ordinary timeout wakes retain the existing sleeping path. Only a
+		 * new preparation request earns another bounded acknowledgment poll.
+		 */
 		left = smp_load_acquire(&node->readiness) == KD_ORIGIN_REQUESTED &&
 		       !need_resched() ? owned_mutex_spin_limit : 0;
 	}
@@ -333,7 +370,8 @@ kd_owned_mutex_wait_on_stack(struct kd_mutex *lock, struct kd_owned_mutex_node *
 
 		kd_owned_mutex_wait_result(node);
 		outcome = smp_load_acquire(&node->outcome);
-		if (outcome == KD_OWNED_MUTEX_COMPLETE || outcome == KD_OWNED_MUTEX_FULL) {
+		if (outcome == KD_OWNED_MUTEX_COMPLETE ||
+		    outcome == KD_OWNED_MUTEX_FULL) {
 			ret = outcome == KD_OWNED_MUTEX_FULL ? 5 : 3;
 			break;
 		}
@@ -347,7 +385,8 @@ kd_owned_mutex_wait_on_stack(struct kd_mutex *lock, struct kd_owned_mutex_node *
 	this_cpu_ptr(kd_owned_mutex_cpus)->active_waiters--;
 	return ret;
 acquired:
-	kd_exe_queue_timing_end(true, &node->queued_at_ns, kd_exe_queue_timing_start());
+	kd_exe_queue_timing_end(true, &node->queued_at_ns,
+				kd_exe_queue_timing_start());
 	this_cpu_ptr(kd_owned_mutex_cpus)->active_waiters--;
 	return ret;
 }
@@ -360,16 +399,22 @@ kd_owned_mutex_resume(struct kd_owned_mutex_node *node)
 	u32 outcome = READ_ONCE(node->outcome);
 	bool native = outcome == KD_OWNED_MUTEX_FULL;
 	bool cabi = node->entry_abi == KD_ENTRY_ABI_OWNED_MUTEX_CABI_V2;
-	bool reduced = node->packet_state == kd_complete_packet_state(node->entry_abi);
-	unsigned long sp = node->regs.sp, ip = node->regs.ip, bp = node->regs.bp;
+	bool reduced = node->packet_state ==
+		       kd_complete_packet_state(node->entry_abi);
+	unsigned long sp = node->regs.sp, ip = node->regs.ip,
+		      bp = node->regs.bp;
 
 	BUG_ON(!kd_entry_abi_mutex_reduced(node->entry_abi));
 	BUG_ON(native ? reduced : outcome != KD_OWNED_MUTEX_COMPLETE);
 	BUG_ON(!reduced && node->packet_state != KD_PACKET_FULL);
 	if (cabi && reduced) {
-		callee.ip = ip; callee.sp = sp; callee.bp = bp;
-		callee.bx = node->regs.bx; callee.r12 = node->regs.r12;
-		callee.r13 = node->regs.r13; callee.r14 = node->regs.r14;
+		callee.ip = ip;
+		callee.sp = sp;
+		callee.bp = bp;
+		callee.bx = node->regs.bx;
+		callee.r12 = node->regs.r12;
+		callee.r13 = node->regs.r13;
+		callee.r14 = node->regs.r14;
 		callee.r15 = node->regs.r15;
 	}
 	if (!reduced)
@@ -392,7 +437,9 @@ kd_owned_mutex_resume(struct kd_owned_mutex_node *node)
 #else
 		     "ret\n\t"
 #endif
-		     : : "a"(sp), "c"(bp), "d"(ip) : "memory");
+		     :
+		     : "a"(sp), "c"(bp), "d"(ip)
+		     : "memory");
 	__builtin_unreachable();
 }
 
@@ -440,19 +487,22 @@ kd_owned_mutex_clobber_wait(struct kd_mutex *lock, struct kd_owned_mutex_node *n
 static bool kd_owned_mutex_delegation_eligible(void)
 {
 	return kd_source_is_open() &&
-		kd_comm_matches(&kd_spin_target, current->comm) &&
-		!kd_mutex_task_active(current);
+	       kd_comm_matches(&kd_spin_target, current->comm) &&
+	       !kd_mutex_task_active(current);
 }
 
-/* Ordinary C ABI: no captured stack or resource lease exists yet. The outer
+/*
+ * Ordinary C ABI: no captured stack or resource lease exists yet. The outer
  * failed probe reaches this exactly once, irrespective of the execution route.
  * A false return only permits ABI2 capture; it grants neither delegation nor
  * an eligibility lease. The prepared entry checks eligibility before resources.
- * A physical SELF acquisition is valid even when delegation is prohibited. */
+ * A physical SELF acquisition is valid even when delegation is prohibited.
+ */
 __attribute__((noipa)) noinline notrace bool
 kd_owned_mutex_outer_preflight_v1(struct kd_mutex *lock)
 {
-	enum kd_owned_mutex_preflight_result result = KD_OWNED_MUTEX_PREFLIGHT_BUSY;
+	enum kd_owned_mutex_preflight_result result =
+		KD_OWNED_MUTEX_PREFLIGHT_BUSY;
 	bool admitted;
 
 	preempt_disable();
@@ -460,8 +510,7 @@ kd_owned_mutex_outer_preflight_v1(struct kd_mutex *lock)
 	admitted = kd_hotlock_record_owned_mutex_pinned((unsigned long)lock);
 	if (admitted && !owned_mutex_self_route)
 		result = kd_owned_mutex_try_optimistic_pinned(lock,
-							    owned_mutex_preflight_spins,
-							    owned_mutex_preflight_queue);
+				owned_mutex_preflight_spins, owned_mutex_preflight_queue);
 	preempt_enable();
 	if (result == KD_OWNED_MUTEX_PREFLIGHT_ACQUIRED)
 		return true;
@@ -471,11 +520,14 @@ kd_owned_mutex_outer_preflight_v1(struct kd_mutex *lock)
 	kd_owned_mutex_lock_self(lock);
 	return true;
 }
+
 EXPORT_SYMBOL_GPL(kd_owned_mutex_outer_preflight_v1);
 
-/* The hardware post-CALL PC is the ABI4 identity. The exported continuation
+/*
+ * The hardware post-CALL PC is the ABI4 identity. The exported continuation
  * label follows one fixed, explicitly encoded nine-byte test/branch prefix.
- * This is a format check, never a scan through a compiler-generated prologue. */
+ * This is a format check, never a scan through a compiler-generated prologue.
+ */
 static bool kd_owned_mutex_cabi_stub_valid(unsigned long ip)
 {
 	u8 bytes[KD_CABI_CALL_STUB_SIZE], tail[2];
@@ -490,10 +542,10 @@ static bool kd_owned_mutex_cabi_stub_valid(unsigned long ip)
 	if (displacement < 2 || ip > ~0UL - sizeof(bytes) - displacement)
 		return false;
 	target = ip + sizeof(bytes) + displacement;
-	return !copy_from_kernel_nofault(tail, (void *)(target - 2), sizeof(tail)) &&
+	return !copy_from_kernel_nofault(tail, (void *)(target - 2),
+					 sizeof(tail)) &&
 	       tail[0] == 0x31 && tail[1] == 0xc0;
 }
-
 
 unsigned long kd_owned_mutex_outer_cabi_capture(struct kd_mutex *lock,
 		const struct kd_owned_mutex_cabi_state *saved)
@@ -520,9 +572,13 @@ unsigned long kd_owned_mutex_outer_cabi_capture(struct kd_mutex *lock,
 	INIT_LIST_HEAD(&node->waiter.list);
 	node->waiter.task = current;
 	node->waiter.kind = KD_OWNED_MUTEX_DELEGATE;
-	node->regs.ip = saved->ip; node->regs.sp = saved->sp; node->regs.bp = saved->bp;
-	node->regs.bx = saved->bx; node->regs.r12 = saved->r12;
-	node->regs.r13 = saved->r13; node->regs.r14 = saved->r14;
+	node->regs.ip = saved->ip;
+	node->regs.sp = saved->sp;
+	node->regs.bp = saved->bp;
+	node->regs.bx = saved->bx;
+	node->regs.r12 = saved->r12;
+	node->regs.r13 = saved->r13;
+	node->regs.r14 = saved->r14;
 	node->regs.r15 = saved->r15;
 	node->regs.ax = 0;
 	node->entry_abi = KD_ENTRY_ABI_OWNED_MUTEX_CABI_V2;
@@ -538,17 +594,22 @@ unsigned long kd_owned_mutex_outer_cabi_capture(struct kd_mutex *lock,
 	kd_mutex_task_put(current);
 	return (unsigned long)current;
 self:
-	/* The C gate already exhausted local optimism. Source/resource refusal
-	 * commits to SELF waiting instead of repeating the initial OSQ phase. */
+	/*
+	 * The C gate already exhausted local optimism. Source/resource refusal
+	 * commits to SELF waiting instead of repeating the initial OSQ phase.
+	 */
 	kd_owned_mutex_lock_self_wait(lock);
 	return (unsigned long)current;
 }
+
 EXPORT_SYMBOL_GPL(kd_owned_mutex_outer_lock_cabi_v2);
 
-/* The assembly leaf tail-calls this unchanged slow contract. The cookie is
+/*
+ * The assembly leaf tail-calls this unchanged slow contract. The cookie is
  * required on physical returns; a FULL borrowed continuation uses exact ACK
  * routing before the ordinary owner path is allowed to touch L. Rechecking
- * physical ownership here also preserves flag handling after a failed CAS. */
+ * physical ownership here also preserves flag handling after a failed CAS.
+ */
 void kd_owned_mutex_outer_cabi_unlock_slow(struct kd_mutex *lock, unsigned long owner)
 {
 	if (!owner) {
@@ -559,6 +620,7 @@ void kd_owned_mutex_outer_cabi_unlock_slow(struct kd_mutex *lock, unsigned long 
 	BUG_ON(owner != (unsigned long)current);
 	kd_owned_mutex_outer_unlock_v1(lock);
 }
+
 EXPORT_SYMBOL_GPL(kd_owned_mutex_outer_unlock_cabi_v2);
 
 static unsigned long kd_owned_mutex_contended(struct kd_mutex *lock,
@@ -568,12 +630,14 @@ static unsigned long kd_owned_mutex_contended(struct kd_mutex *lock,
 
 	/* The selected outer endpoint already made the exact heat observation.
 	 * That decision holds no lease; check eligibility before acquiring resources.
-	 * Cooling affects future attempts, never ownership of published requests. */
+	 * Cooling affects future attempts, never ownership of published requests.
+	 */
 	if (owned_mutex_self_route || !kd_owned_mutex_delegation_eligible())
 		goto self;
 	if (!kd_mutex_task_get(current))
 		goto self;
-	kd_exe_add_abi(0, ip, KD_EXE_LOCK_OWNED_MUTEX, KD_ENTRY_ABI_MUTEX_CLOBBER_V1);
+	kd_exe_add_abi(0, ip, KD_EXE_LOCK_OWNED_MUTEX,
+		       KD_ENTRY_ABI_MUTEX_CLOBBER_V1);
 	migrate_disable();
 	preempt_disable();
 	node = kd_owned_mutex_reserve(lock);
@@ -617,14 +681,17 @@ kd_owned_mutex_outer_contended_clobber_v1(struct kd_mutex *lock,
 	kd_hotlock_owned_mutex_entry();
 	admitted = kd_hotlock_record_owned_mutex_pinned((unsigned long)lock);
 	preempt_enable();
-	/* Original capture-first route: configured preflight polling is irrelevant
-	 * to callers that did not opt in. Cold attempts use the same owned core. */
+	/*
+	 * Original capture-first route: configured preflight polling is irrelevant
+	 * to callers that did not opt in. Cold attempts use the same owned core.
+	 */
 	if (!admitted) {
 		kd_owned_mutex_lock_self(lock);
 		return (unsigned long)current;
 	}
 	return kd_owned_mutex_contended(lock, sp, ip, bp);
 }
+
 EXPORT_SYMBOL_GPL(kd_owned_mutex_outer_contended_clobber_v1);
 
 __attribute__((noipa)) noinline notrace unsigned long
@@ -634,27 +701,36 @@ kd_owned_mutex_outer_prepared_clobber_v1(struct kd_mutex *lock,
 	/* Paired only with false from the C gate; never sample this attempt again. */
 	return kd_owned_mutex_contended(lock, sp, ip, bp);
 }
+
 EXPORT_SYMBOL_GPL(kd_owned_mutex_outer_prepared_clobber_v1);
 
 __attribute__((noipa)) noinline notrace void
 kd_owned_mutex_direct_contended_clobber_v1(struct kd_mutex *lock,
 		unsigned long sp, unsigned long ip, unsigned long bp)
 {
-	(void)sp; (void)ip; (void)bp;
+	(void)sp;
+	(void)ip;
+	(void)bp;
 	kd_mutex_lock(lock);
 }
+
 EXPORT_SYMBOL_GPL(kd_owned_mutex_direct_contended_clobber_v1);
 
 __attribute__((noipa)) noinline notrace void
 kd_owned_mutex_direct_lock_clobber_v1(struct kd_mutex *lock,
 		unsigned long sp, unsigned long ip, unsigned long bp)
 {
-	/* Ordinary direct controls are nestable SELF acquisitions. Delegation
+	/*
+	 * Ordinary direct controls are nestable SELF acquisitions. Delegation
 	 * admission belongs to the explicit outer-cookie boundary; translated
-	 * nested controls are serviced through the frame's ownership ledger. */
-	(void)sp; (void)ip; (void)bp;
+	 * nested controls are serviced through the frame's ownership ledger.
+	 */
+	(void)sp;
+	(void)ip;
+	(void)bp;
 	kd_mutex_lock(lock);
 }
+
 EXPORT_SYMBOL_GPL(kd_owned_mutex_direct_lock_clobber_v1);
 
 __attribute__((noipa)) noinline notrace void
@@ -669,6 +745,7 @@ kd_owned_mutex_direct_unlock_clobber_v1(struct kd_mutex *lock,
 		return;
 	kd_mutex_unlock(lock);
 }
+
 EXPORT_SYMBOL_GPL(kd_owned_mutex_direct_unlock_clobber_v1);
 
 int kd_owned_mutex_prepare(struct kd_mutex *lock, unsigned long ip, unsigned int abi)
@@ -688,8 +765,10 @@ int kd_owned_mutex_prepare(struct kd_mutex *lock, unsigned long ip, unsigned int
 	    exe->RIP != ip || exe->entry_abi != abi ||
 	    exe->lock_kind != KD_EXE_LOCK_OWNED_MUTEX)
 		return -EINVAL;
-	return READ_ONCE(exe->status_code) == KD_EXE_NATIVE_ONLY ? -EOPNOTSUPP : 0;
+	return READ_ONCE(exe->status_code) == KD_EXE_NATIVE_ONLY ? -EOPNOTSUPP :
+								   0;
 }
+
 EXPORT_SYMBOL_GPL(kd_owned_mutex_prepare);
 
 struct kd_owned_mutex_batch {
@@ -722,8 +801,10 @@ static void kd_owned_mutex_rejoin(struct kd_owned_mutex_batch *batch)
 
 	raw_spin_lock_irqsave(&lock->wait_lock, flags);
 	BUG_ON(!kd_owned_mutex_owned(lock, current));
-	/* Older private requests precede arrivals published during execution.
-	 * WAITERS has remained set throughout the detached interval. */
+	/*
+	 * Older private requests precede arrivals published during execution.
+	 * WAITERS has remained set throughout the detached interval.
+	 */
 	list_splice_init(&batch->pending, &lock->wait_list);
 	raw_spin_unlock_irqrestore(&lock->wait_lock, flags);
 }
@@ -735,16 +816,20 @@ static int kd_owned_mutex_release_outer(struct kd_exec_frame *frame,
 		container_of(hook, struct kd_owned_mutex_batch, outer);
 	struct kd_mutex *lock = batch->lock;
 
-	if (!frame->owned_mutex || frame->outer_lock_addr != (unsigned long)lock ||
-	    frame->jit_lock_kind[frame->outer_lock_index] != KD_EXEC_LOCK_QUEUE_OWNER ||
+	if (!frame->owned_mutex ||
+	    frame->outer_lock_addr != (unsigned long)lock ||
+	    frame->jit_lock_kind[frame->outer_lock_index] !=
+		    KD_EXEC_LOCK_QUEUE_OWNER ||
 	    frame->jit_lock_node[frame->outer_lock_index] != lock ||
 	    !kd_owned_mutex_owned(lock, current))
 		return -EINVAL;
 	kd_owned_mutex_retire_current(batch);
 	kd_owned_mutex_rejoin(batch);
 	kd_owned_mutex_flush_wakes(batch->wake, &batch->wake_count);
-	/* The owner's own critical section ended before this batch began.
-	 * After this release we never reacquire A or inspect its queue again. */
+	/*
+	 * The owner's own critical section ended before this batch began.
+	 * After this release we never reacquire A or inspect its queue again.
+	 */
 	this_cpu_inc(kd_owned_mutex_early_releases);
 	kd_owned_mutex_release(lock);
 	return 0;
@@ -766,7 +851,8 @@ kd_owned_mutex_execute(struct kd_owned_mutex_node *node,
 	BUG_ON(!kd_owned_mutex_owned(lock, current));
 	BUG_ON(!kd_entry_abi_mutex_reduced(entry_abi) ||
 	       node->packet_state != kd_entry_packet_state(entry_abi));
-	if (!node->regs.sp || !node->regs.ip || node->regs.ip != node->saved_ret_addr)
+	if (!node->regs.sp || !node->regs.ip ||
+	    node->regs.ip != node->saved_ret_addr)
 		return KD_EXE_NO_RUN;
 	if (!exe || READ_ONCE(exe->RIP) != node->regs.ip ||
 	    READ_ONCE(exe->lock_kind) != KD_EXE_LOCK_OWNED_MUTEX) {
@@ -776,11 +862,14 @@ kd_owned_mutex_execute(struct kd_owned_mutex_node *node,
 	if (!kd_exe_entry_is_ready(exe, 0, node->regs.ip) ||
 	    READ_ONCE(exe->lock_kind) != KD_EXE_LOCK_OWNED_MUTEX ||
 	    kd_exec_context_occupied() || !batch->image ||
-	    batch->image->entry != exe || batch->image->entry_abi != entry_abi ||
+	    batch->image->entry != exe ||
+	    batch->image->entry_abi != entry_abi ||
 	    !kd_owned_mutex_claim(node, batch->image))
 		return KD_EXE_NO_RUN;
 	frame = kd_exec_frame_push_owned_mutex_batch(&node->regs, node->regs.ip,
-		node->gsbase, node->waiter.task, lock, &batch->outer, entry_abi);
+						     node->gsbase,
+						     node->waiter.task, lock,
+						     &batch->outer, entry_abi);
 	if (!frame) {
 		kd_owned_mutex_finish_claim(node, false);
 		return KD_EXE_NO_RUN;
@@ -795,10 +884,13 @@ kd_owned_mutex_execute(struct kd_owned_mutex_node *node,
 		frame->executed = true;
 		kd_jit_clobber_call_v1(&call);
 		if (kd_exe_mutex_batch_completed(&call, frame)) {
-			kd_exe_queue_timing_end(true, &node->queued_at_ns, queue_end);
-			BUG_ON(kd_exec_frame_retire_owned_mutex_batch(frame, lock));
+			kd_exe_queue_timing_end(true, &node->queued_at_ns,
+						queue_end);
+			BUG_ON(kd_exec_frame_retire_owned_mutex_batch(frame,
+								      lock));
 			kd_owned_mutex_finish_claim(node, true);
-			node->packet_state = kd_complete_packet_state(node->entry_abi);
+			node->packet_state =
+				kd_complete_packet_state(node->entry_abi);
 			return 0;
 		}
 		kd_owned_mutex_flush_wakes(batch->wake, &batch->wake_count);
@@ -806,7 +898,7 @@ kd_owned_mutex_execute(struct kd_owned_mutex_node *node,
 	} else {
 		kd_owned_mutex_flush_wakes(batch->wake, &batch->wake_count);
 		ret = kd_exe_on_call_hl_entry(exe, regs, frame->entry_ip,
-					    frame->outer_lock_addr);
+					      frame->outer_lock_addr);
 	}
 	regs = kd_exec_frame_regs(frame);
 	if (frame->executed)
@@ -814,12 +906,15 @@ kd_owned_mutex_execute(struct kd_owned_mutex_node *node,
 	if (ret == KD_EXE_RUN_NATIVE) {
 		u64 handoff_start = kd_exe_native_timing_start();
 
-		/* The audited origin subset cannot call, block or leave a native
-		 * continuation. Never wake a claimed origin into an owner ACK loop. */
+		/*
+		 * The audited origin subset cannot call, block or leave a native
+		 * continuation. Never wake a claimed origin into an owner ACK loop.
+		 */
 		BUG_ON(frame->image->requirements & KD_IMAGE_ORIGIN_SPIN);
 
 		BUG_ON(kd_exec_native_begin(frame, true));
-		BUG_ON(frame->regs_borrowed || frame->packet_state != KD_PACKET_FULL);
+		BUG_ON(frame->regs_borrowed ||
+		       frame->packet_state != KD_PACKET_FULL);
 		node->regs = *kd_exec_frame_regs(frame);
 		node->packet_state = KD_PACKET_FULL;
 		kd_owned_mutex_retire_current(batch);
@@ -837,9 +932,11 @@ kd_owned_mutex_execute(struct kd_owned_mutex_node *node,
 		BUG();
 	}
 	if (ret == KD_EXE_RUN_TO_UNLOCK) {
-		clean = frame->outer_unlock_seen ? 0 : kd_exec_frame_record_event(
-			frame, KD_EXEC_EVENT_OUTER_UNLOCK,
-			frame->packet_state == kd_complete_packet_state(frame->entry_abi) ? NULL : regs);
+		clean = frame->outer_unlock_seen ? 0 :
+			kd_exec_frame_record_event(frame, KD_EXEC_EVENT_OUTER_UNLOCK,
+						   frame->packet_state ==
+						   kd_complete_packet_state(frame->entry_abi) ?
+							   NULL : regs);
 		BUG_ON(clean || kd_exec_frame_complete(frame));
 	} else {
 		BUG_ON(kd_owned_mutex_jit_abort_cleanup(frame));
@@ -851,10 +948,12 @@ kd_owned_mutex_execute(struct kd_owned_mutex_node *node,
 	return ret == KD_EXE_RUN_TO_UNLOCK ? 0 : ret;
 }
 
-/* Optional owner reuse across adjacent FIFO snapshots. No request survives
+/*
+ * Optional owner reuse across adjacent FIFO snapshots. No request survives
  * privately from the previous snapshot, and the original total body quota is
  * never reset. Wake completed producers before checking arrivals; a single
- * empty/public-SELF observation ends the batch without waiting for new work. */
+ * empty/public-SELF observation ends the batch without waiting for new work.
+ */
 static bool kd_owned_mutex_refill_batch(struct kd_owned_mutex_batch *batch,
 				       unsigned int count)
 {
@@ -863,8 +962,10 @@ static bool kd_owned_mutex_refill_batch(struct kd_owned_mutex_batch *batch,
 	unsigned long flags;
 	bool refilled = false;
 
-	/* Check released before touching the public object: after an early release
-	 * its new physical owner controls the public queue independently. */
+	/*
+	 * Check released before touching the public object: after an early release
+	 * its new physical owner controls the public queue independently.
+	 */
 	if (!owned_mutex_refill || batch->outer.released ||
 	    count >= KDLOCK_SPIN_BATCH || need_resched())
 		return false;
@@ -874,13 +975,16 @@ static bool kd_owned_mutex_refill_batch(struct kd_owned_mutex_batch *batch,
 	kd_owned_mutex_flush_wakes(batch->wake, &batch->wake_count);
 	raw_spin_lock_irqsave(&lock->wait_lock, flags);
 	BUG_ON(!kd_owned_mutex_owned(lock, current));
-	/* A new SELF head can request HANDOFF while the completed wakeups are
-	 * flushed or while wait_lock is acquired. It still ends this batch. */
+	/*
+	 * A new SELF head can request HANDOFF while the completed wakeups are
+	 * flushed or while wait_lock is acquired. It still ends this batch.
+	 */
 	if (need_resched() ||
 	    (atomic_long_read(&lock->owner) & KD_OWNED_MUTEX_FLAG_HANDOFF) ||
 	    list_empty(&lock->wait_list))
 		goto out;
-	first = list_first_entry(&lock->wait_list, struct kd_owned_mutex_waiter, list);
+	first = list_first_entry(&lock->wait_list, struct kd_owned_mutex_waiter,
+				 list);
 	if (first->kind != KD_OWNED_MUTEX_DELEGATE)
 		goto out;
 	list_splice_init(&lock->wait_list, &batch->pending);
@@ -896,7 +1000,8 @@ kd_owned_mutex_run_batch(struct kd_owned_mutex_batch *batch)
 	unsigned int count = 0;
 
 	this_cpu_inc(kd_owned_mutex_batches);
-	while (!list_empty(&batch->pending) || kd_owned_mutex_refill_batch(batch, count)) {
+	while (!list_empty(&batch->pending) ||
+	       kd_owned_mutex_refill_batch(batch, count)) {
 		struct kd_owned_mutex_node *node;
 		int ret;
 
@@ -917,10 +1022,12 @@ kd_owned_mutex_run_batch(struct kd_owned_mutex_batch *batch)
 		if (ret != KD_EXE_NATIVE_DONE) {
 			kd_owned_mutex_retire_current(batch);
 			this_cpu_inc(kd_owned_mutex_bodies);
-			kd_owned_mutex_defer(node, batch->wake, &batch->wake_count);
+			kd_owned_mutex_defer(node, batch->wake,
+					     &batch->wake_count);
 		}
 		if (batch->outer.released) {
-			kd_owned_mutex_flush_wakes(batch->wake, &batch->wake_count);
+			kd_owned_mutex_flush_wakes(batch->wake,
+						   &batch->wake_count);
 			return;
 		}
 		if (ret == KD_EXE_NATIVE_DONE)
@@ -932,8 +1039,10 @@ kd_owned_mutex_run_batch(struct kd_owned_mutex_batch *batch)
 	batch->outer.released = true;
 }
 
-/* The executor has its own reserved stack. It never reuses an acquisition
- * packet or lends the physical owner's native unlock frames to another task. */
+/*
+ * The executor has its own reserved stack. It never reuses an acquisition
+ * packet or lends the physical owner's native unlock frames to another task.
+ */
 static __always_inline void
 kd_owned_mutex_executor_call(struct kd_owned_mutex_batch *batch,
 			     struct kd_owned_mutex_executor *executor)
@@ -968,22 +1077,27 @@ bool kd_owned_mutex_combine(struct kd_mutex *lock)
 	unsigned long flags;
 	bool detached = false;
 
-	if (preempt_count() || irqs_disabled() || !kd_owned_mutex_task_can_combine())
+	if (preempt_count() || irqs_disabled() ||
+	    !kd_owned_mutex_task_can_combine())
 		return false;
 	migrate_disable();
 	preempt_disable();
 	executor = &this_cpu_ptr(kd_owned_mutex_cpus)->executor;
-	if (executor->busy || !executor->stack_base || kd_exec_context_occupied())
+	if (executor->busy || !executor->stack_base ||
+	    kd_exec_context_occupied())
 		goto unpin;
-	/* Check the FIFO under its only mutation lock before taking residency and
-	 * routing references. Existing delegates survive cooling/source closing. */
+	/*
+	 * Check the FIFO under its only mutation lock before taking residency and
+	 * routing references. Existing delegates survive cooling/source closing.
+	 */
 	raw_spin_lock_irqsave(&lock->wait_lock, flags);
 	if (list_empty(&lock->wait_list) ||
 	    (atomic_long_read(&lock->owner) & KD_OWNED_MUTEX_FLAG_HANDOFF)) {
 		raw_spin_unlock_irqrestore(&lock->wait_lock, flags);
 		goto unpin;
 	}
-	first = list_first_entry(&lock->wait_list, struct kd_owned_mutex_waiter, list);
+	first = list_first_entry(&lock->wait_list, struct kd_owned_mutex_waiter,
+				 list);
 	if (first->kind != KD_OWNED_MUTEX_DELEGATE) {
 		raw_spin_unlock_irqrestore(&lock->wait_lock, flags);
 		goto unpin;
@@ -999,8 +1113,10 @@ bool kd_owned_mutex_combine(struct kd_mutex *lock)
 	INIT_LIST_HEAD(&batch.pending);
 	raw_spin_lock_irqsave(&lock->wait_lock, flags);
 	BUG_ON(!kd_owned_mutex_owned(lock, current));
-	/* Owner retention makes the previously observed head stable. Enqueue is
-	 * append-only and v1 SELF waiters cannot cancel while another task owns. */
+	/*
+	 * Owner retention makes the previously observed head stable. Enqueue is
+	 * append-only and v1 SELF waiters cannot cancel while another task owns.
+	 */
 	list_splice_init(&lock->wait_list, &batch.pending);
 	raw_spin_unlock_irqrestore(&lock->wait_lock, flags);
 	detached = true;
@@ -1023,9 +1139,9 @@ void kd_owned_mutex_exit(void)
 	if (!kd_owned_mutex_cpus)
 		return;
 	for_each_possible_cpu(cpu) {
-		struct kd_owned_mutex_cpu *pool = per_cpu_ptr(kd_owned_mutex_cpus, cpu);
-		struct kd_owned_mutex_executor *executor =
-			&pool->executor;
+		struct kd_owned_mutex_cpu *pool =
+			per_cpu_ptr(kd_owned_mutex_cpus, cpu);
+		struct kd_owned_mutex_executor *executor = &pool->executor;
 
 		bodies += per_cpu(kd_owned_mutex_bodies, cpu);
 		batches += per_cpu(kd_owned_mutex_batches, cpu);
@@ -1033,8 +1149,7 @@ void kd_owned_mutex_exit(void)
 		early += per_cpu(kd_owned_mutex_early_releases, cpu);
 
 		for (slot = 0; slot < KD_OWNED_MUTEX_SLOTS; slot++) {
-			struct kd_owned_mutex_node *node =
-				&pool->nodes[slot];
+			struct kd_owned_mutex_node *node = &pool->nodes[slot];
 
 			vfree(node->shadow_stack_base);
 			node->shadow_stack_base = NULL;
@@ -1068,13 +1183,12 @@ int kd_owned_mutex_init_percpu(void)
 	if (!kd_owned_mutex_cpus)
 		return -ENOMEM;
 	for_each_possible_cpu(cpu) {
-		struct kd_owned_mutex_cpu *pool = per_cpu_ptr(kd_owned_mutex_cpus, cpu);
-		struct kd_owned_mutex_executor *executor =
-			&pool->executor;
+		struct kd_owned_mutex_cpu *pool =
+			per_cpu_ptr(kd_owned_mutex_cpus, cpu);
+		struct kd_owned_mutex_executor *executor = &pool->executor;
 
 		for (slot = 0; slot < KD_OWNED_MUTEX_SLOTS; slot++) {
-			struct kd_owned_mutex_node *node =
-				&pool->nodes[slot];
+			struct kd_owned_mutex_node *node = &pool->nodes[slot];
 
 			node->slot = slot;
 			node->numa_node = cpu_to_node(cpu);
@@ -1082,19 +1196,20 @@ int kd_owned_mutex_init_percpu(void)
 			node->waiter.outcome = &node->outcome;
 			rcuwait_init(node->wait);
 			INIT_LIST_HEAD(&node->waiter.list);
-			node->shadow_stack_base = vzalloc_node(KD_OWNED_MUTEX_STACK_SIZE,
-							  cpu_to_node(cpu));
+			node->shadow_stack_base =
+				vzalloc_node(KD_OWNED_MUTEX_STACK_SIZE, cpu_to_node(cpu));
 			if (!node->shadow_stack_base)
 				goto fail;
-			node->shadow_stack_ptr = (unsigned long)node->shadow_stack_base +
+			node->shadow_stack_ptr =
+				(unsigned long)node->shadow_stack_base +
 				KD_OWNED_MUTEX_STACK_SIZE - 8;
 		}
 		executor->stack_base = vzalloc_node(KD_OWNED_MUTEX_STACK_SIZE,
-						  cpu_to_node(cpu));
+						    cpu_to_node(cpu));
 		if (!executor->stack_base)
 			goto fail;
 		executor->stack_ptr = (unsigned long)executor->stack_base +
-			KD_OWNED_MUTEX_STACK_SIZE - 8;
+				      KD_OWNED_MUTEX_STACK_SIZE - 8;
 	}
 	return 0;
 fail:
@@ -1109,7 +1224,8 @@ bool kd_owned_mutex_check_idle(void)
 	if (!kd_owned_mutex_cpus)
 		return true;
 	for_each_possible_cpu(cpu) {
-		struct kd_owned_mutex_cpu *pool = per_cpu_ptr(kd_owned_mutex_cpus, cpu);
+		struct kd_owned_mutex_cpu *pool =
+			per_cpu_ptr(kd_owned_mutex_cpus, cpu);
 
 		if (READ_ONCE(pool->slots) || READ_ONCE(pool->active_waiters) ||
 		    READ_ONCE(pool->executor.busy))

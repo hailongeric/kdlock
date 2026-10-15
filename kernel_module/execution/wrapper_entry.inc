@@ -1,5 +1,7 @@
-/* Wrapper scope, image identity and reduced-entry/batch preparation.
- * Private to exe.c; the dispatcher consumes only validated packet states. */
+/*
+ * Wrapper scope, image identity and reduced-entry/batch preparation.
+ * Private to exe.c; the dispatcher consumes only validated packet states.
+ */
 /* Only abnormal exits log here. Saved flags are not live execution evidence. */
 static void kd_jit_log_hl_error(const char *reason,
 				const struct kd_exec_frame *frame,
@@ -16,7 +18,8 @@ static void kd_jit_log_hl_error(const char *reason,
 		frame->control_call.phase);
 }
 
-/* A non-root first dispatch is valid only for the published logical child of
+/*
+ * A non-root first dispatch is valid only for the published logical child of
  * a root invocation which already returned through a known lock CALL. A CPU-
  * local physical parent is not that proof. This establishes logical scope,
  * not immutable code identity; owned descriptors establish that separately.
@@ -50,9 +53,11 @@ static bool kd_jit_entry_has_scope(const struct kd_exec_frame *frame,
 	       parent->outer_lock_index < frame->outer_lock_index;
 }
 
-/* The excess CALL has not executed: retain its pushed return word and let the
+/*
+ * The excess CALL has not executed: retain its pushed return word and let the
  * original waiter run this callee and the native suffix. This is not an exit
- * from an arbitrary instruction/budget trap and needs no new flags contract. */
+ * from an arbitrary instruction/budget trap and needs no new flags contract.
+ */
 static int kd_jit_call_limit_native(struct kd_exec_frame *frame,
 				    struct kd_regs *regs, bool hostcall)
 {
@@ -77,7 +82,8 @@ static int kd_jit_call_limit_native(struct kd_exec_frame *frame,
 	end = base + THREAD_SIZE;
 	if (regs->sp < base || regs->sp > end - sizeof(return_ip) ||
 	    copy_from_kernel_nofault(&return_ip, (void *)regs->sp,
-				     sizeof(return_ip)) || !return_ip)
+				     sizeof(return_ip)) ||
+	    !return_ip)
 		return -EFAULT;
 	ret = kd_source_pin_target(regs->ip);
 	if (!ret)
@@ -85,8 +91,10 @@ static int kd_jit_call_limit_native(struct kd_exec_frame *frame,
 	if (ret)
 		return ret;
 
-	/* A previous control CALL may be COMPLETE; it does not describe this new
-	 * unexecuted CALL. Do not pop the word, replay stores or request learning. */
+	/*
+	 * A previous control CALL may be COMPLETE; it does not describe this new
+	 * unexecuted CALL. Do not pop the word, replay stores or request learning.
+	 */
 	frame->control_call.phase = KD_CALL_NONE;
 	kd_exec_frame_save_continuation(frame, regs);
 	pr_warn_ratelimited(
@@ -100,22 +108,26 @@ static int kd_jit_call_limit_native(struct kd_exec_frame *frame,
 static void kd_exe_note_body(unsigned long entry_ip, unsigned long outer_lock_addr,
 			     unsigned long witness)
 {
-	KD_PR_INFO("JIT body witness: entry=%lx lock=%lx body=%lu\n",
-		   entry_ip, outer_lock_addr, witness);
+	KD_PR_INFO("JIT body witness: entry=%lx lock=%lx body=%lu\n", entry_ip,
+		   outer_lock_addr, witness);
 }
 
-/* This is a root-only admission, not a bypass around translated entry guards.
+/*
+ * This is a root-only admission, not a bypass around translated entry guards.
  * Source OPEN, slot key/backend/status/code and the versioned alternate entry
- * are checked for every candidate. Code storage remains pinned by the batch. */
+ * are checked for every candidate. Code storage remains pinned by the batch.
+ */
 static void *kd_jit_bound_code(const struct kd_exe_info *exe,
 			       const struct kd_exec_frame *frame)
 {
 	return frame->owned_mutex ? (frame->image ? frame->image->code : NULL) :
-		READ_ONCE(exe->code_block);
+				    READ_ONCE(exe->code_block);
 }
 
-/* All owned dispatch routes, including generic FULL continuations, validate
- * the descriptor bound to this frame. A sleeping waiter has no claim proof. */
+/*
+ * All owned dispatch routes, including generic FULL continuations, validate
+ * the descriptor bound to this frame. A sleeping waiter has no claim proof.
+ */
 static bool kd_jit_bind_image(const struct kd_exe_info *exe,
 			      struct kd_exec_frame *frame)
 {
@@ -126,13 +138,16 @@ static bool kd_jit_bind_image(const struct kd_exe_info *exe,
 	if (!frame->image)
 		frame->image = kd_image_current(exe);
 	image = frame->image;
-	if (!image || image->entry != exe || image->entry_abi != frame->entry_abi ||
+	if (!image || image->entry != exe ||
+	    image->entry_abi != frame->entry_abi ||
 	    (image->requirements & ~KD_IMAGE_REQUIREMENTS))
 		return false;
 	if (image->requirements & KD_IMAGE_ORIGIN_SPIN)
-		return frame->origin && preempt_count() && frame->origin->cpu >= 0 &&
+		return frame->origin && preempt_count() &&
+		       frame->origin->cpu >= 0 &&
 		       frame->origin->cpu != raw_smp_processor_id() &&
-		       smp_load_acquire(&frame->origin->readiness) == KD_ORIGIN_CLAIMED;
+		       smp_load_acquire(&frame->origin->readiness) ==
+			       KD_ORIGIN_CLAIMED;
 	return true;
 }
 
@@ -145,32 +160,38 @@ static __always_inline bool kd_jit_image_matches(const struct kd_exe_info *exe,
 	if (!kd_jit_bind_image(exe, frame))
 		return false;
 	code = kd_jit_bound_code(exe, frame);
-	/* Exact directory bytes, without the out-of-line seven-byte memcmp on
-	 * every request. The overlapping words do not read beyond the signature. */
+	/*
+	 * Exact directory bytes, without the out-of-line seven-byte memcmp on
+	 * every request. The overlapping words do not read beyond the signature.
+	 */
 	directory = code && get_unaligned_le32(code + 25) == 0x4357444bU &&
-	                 get_unaligned_le32(code + 28) == 0x32303043U &&
-	                 get_unaligned_le32(code + 41) == 0x4241444bU;
+		    get_unaligned_le32(code + 28) == 0x32303043U &&
+		    get_unaligned_le32(code + 41) == 0x4241444bU;
 
 	if (READ_ONCE(exe->entry_abi) != frame->entry_abi)
 		return false;
 	if (kd_entry_abi_spin_clobber(frame->entry_abi))
-		return directory && code[KD_JIT_ABI_OFFSET] == frame->entry_abi &&
+		return directory &&
+		       code[KD_JIT_ABI_OFFSET] == frame->entry_abi &&
 		       clobber_spin_lock_addr && clobber_spin_unlock_addr;
 	if (frame->entry_abi == KD_ENTRY_ABI_OWNED_MUTEX_CABI_V2)
 		return frame->owned_mutex && directory &&
 		       code[KD_JIT_ABI_OFFSET] == frame->entry_abi &&
 		       owned_cabi_lock_addr && owned_cabi_unlock_addr;
 	if (frame->entry_abi == KD_ENTRY_ABI_MUTEX_CLOBBER_V1)
-		return directory && code[KD_JIT_ABI_OFFSET] == frame->entry_abi &&
-		       (frame->owned_mutex ? (owned_direct_lock_addr && owned_direct_unlock_addr) :
-		(direct_mutex_lock_addr && direct_mutex_unlock_addr));
+		return directory &&
+		       code[KD_JIT_ABI_OFFSET] == frame->entry_abi &&
+		       frame->owned_mutex && owned_direct_lock_addr &&
+		       owned_direct_unlock_addr;
 	return frame->entry_abi == KD_ENTRY_ABI_LEGACY &&
 	       (!directory || code[KD_JIT_ABI_OFFSET] == KD_ENTRY_ABI_LEGACY);
 }
 
-/* Minimal completion is possible only on the first wrapper invocation of a
+/*
+ * Minimal completion is possible only on the first wrapper invocation of a
  * pristine physical root. A mutex root has a real owner ledger even before
- * its first body; subsequent nested/service exits always use FULL instead. */
+ * its first body; subsequent nested/service exits always use FULL instead.
+ */
 static bool kd_jit_minimal_complete_allowed(const struct kd_exec_frame *frame)
 {
 	if (frame->parent || frame->depth)
@@ -178,7 +199,8 @@ static bool kd_jit_minimal_complete_allowed(const struct kd_exec_frame *frame)
 	if (kd_entry_abi_spin_clobber(frame->entry_abi))
 		return !frame->mutex_backend && frame->spin_simple;
 	return kd_entry_abi_mutex_reduced(frame->entry_abi) &&
-	       (frame->entry_abi != KD_ENTRY_ABI_OWNED_MUTEX_CABI_V2 || frame->owned_mutex) &&
+	       (frame->entry_abi != KD_ENTRY_ABI_OWNED_MUTEX_CABI_V2 ||
+		frame->owned_mutex) &&
 	       frame->mutex_backend && frame->jit_lock_depth == 1 &&
 	       frame->outer_lock_index == 0 && !frame->outer_unlock_seen &&
 	       !frame->jit_lock_released[0] && !frame->completion_seen &&
@@ -194,17 +216,19 @@ static void kd_jit_prepare_clobber(struct kd_jit_batch_call *call,
 	call->code = (char *)code + KD_JIT_CLOBBER_OFFSET;
 	call->lock = frame->outer_lock_addr;
 	call->unlock = frame->entry_abi == KD_ENTRY_ABI_OWNED_MUTEX_CABI_V2 ?
-		owned_cabi_unlock_addr : frame->owned_mutex ? owned_direct_unlock_addr :
-		frame->mutex_backend ? direct_mutex_unlock_addr :
-					     clobber_spin_unlock_addr;
+			       owned_cabi_unlock_addr :
+		       frame->owned_mutex   ? owned_direct_unlock_addr :
+					      clobber_spin_unlock_addr;
 	call->entry_sp = call->regs->sp;
 	call->entry_abi = frame->entry_abi;
 	call->packet_state = &frame->packet_state;
 	call->complete = kd_jit_minimal_complete_allowed(frame);
 }
 
-/* GNU inline retains the external definition for other execution clients;
- * the shared spin compilation unit folds this into its resident batch loop. */
+/*
+ * GNU inline retains the external definition for other execution clients;
+ * the shared spin compilation unit folds this into its resident batch loop.
+ */
 __always_inline __gnu_inline
 bool kd_exe_spin_batch_prepare(struct kd_exe_info *exe,
 			       struct kd_exec_frame *frame,
@@ -215,42 +239,49 @@ bool kd_exe_spin_batch_prepare(struct kd_exe_info *exe,
 	bool clobber;
 
 	if (!frame->spin_simple || frame->parent || frame->depth ||
-	    !frame->request_frame || frame->mutex_backend || frame->complex_ready ||
-	    frame->completion_seen || frame->state != KD_EXEC_FRAME_RUNNING ||
-	    !frame->outer_lock_addr || !regs->sp || regs != &frame->regs ||
-	    frame->executed || !frame->gsbase || !frame->logical_task ||
+	    !frame->request_frame || frame->mutex_backend ||
+	    frame->complex_ready || frame->completion_seen ||
+	    frame->state != KD_EXEC_FRAME_RUNNING || !frame->outer_lock_addr ||
+	    !regs->sp || regs != &frame->regs || frame->executed ||
+	    !frame->gsbase || !frame->logical_task ||
 	    regs->ip != frame->entry_ip ||
 	    !kd_exe_entry_is_ready(exe, 0, frame->entry_ip) ||
 	    READ_ONCE(exe->lock_kind) != KD_EXE_LOCK_SPIN ||
 	    !kd_jit_image_matches(exe, frame) ||
 	    frame->packet_state != (frame->entry_abi == KD_ENTRY_ABI_LEGACY ?
-	                          KD_PACKET_FULL : KD_PACKET_MINIMAL))
+					    KD_PACKET_FULL :
+					    KD_PACKET_MINIMAL))
 		return false;
 	code = READ_ONCE(exe->code_block);
-	/* Check exactly KDWB002: overlapping unaligned words cover bytes 9..15.
-	 * This avoids the out-of-line seven-byte memcmp without reading byte 16. */
+	/*
+	 * Check exactly KDWB002: overlapping unaligned words cover bytes 9..15.
+	 * This avoids the out-of-line seven-byte memcmp without reading byte 16.
+	 */
 	if (!code || get_unaligned_le32((char *)code + 9) != 0x4257444bU ||
 	    get_unaligned_le32((char *)code + 12) != 0x32303042U)
 		return false;
-	/* These admission checks already prove the simple spin root predicates
+	/*
+	 * These admission checks already prove the simple spin root predicates
 	 * required by kd_jit_minimal_complete_allowed. Select its final metadata
 	 * once: do not fill the legacy call and then rewrite it via the general
-	 * clobber helper, which still handles mutex and complex dispatch below. */
+	 * clobber helper, which still handles mutex and complex dispatch below.
+	 */
 	clobber = kd_entry_abi_spin_clobber(frame->entry_abi);
 	call->regs = regs;
 	call->args[0] = frame->gsbase;
 	call->args[1] = (unsigned long)frame->logical_task;
-	call->code = (char *)code + (clobber ? KD_JIT_CLOBBER_OFFSET :
-					   KD_JIT_BATCH_OFFSET);
+	call->code = (char *)code + (clobber ? KD_JIT_CLOBBER_OFFSET : KD_JIT_BATCH_OFFSET);
 	call->lock = frame->outer_lock_addr;
 	call->unlock = clobber ? clobber_spin_unlock_addr : raw_spin_unlock_addr;
 	call->entry_sp = regs->sp;
 	call->entry_abi = frame->entry_abi;
 	call->packet_state = &frame->packet_state;
 	call->complete = clobber;
-	/* The load-time timing switch is immutable during a session. Avoid
+	/*
+	 * The load-time timing switch is immutable during a session. Avoid
 	 * two out-of-line disabled helpers for every ordinary delegated body,
-	 * but retain distinct, ordered endpoints when timing is enabled. */
+	 * but retain distinct, ordered endpoints when timing is enabled.
+	 */
 	if (unlikely(kd_jit_timing)) {
 		call->dispatch_start = kd_jit_timing_start();
 		call->wrapper_start = kd_jit_timing_start();
@@ -266,13 +297,17 @@ bool kd_exe_spin_batch_completed(const struct kd_jit_batch_call *call,
 				 const struct kd_exec_frame *frame)
 {
 	if (kd_entry_abi_spin_clobber(call->entry_abi) ?
-	    (call->args[0] != KD_EXE_CLOBBER_COMPLETE ||
-	     *call->packet_state != KD_PACKET_COMPLETE || !call->complete) :
-	    (call->args[0] != KD_EXE_CALL_MISS ||
-	     call->regs->ip != call->unlock || call->regs->di != call->lock))
+		    (call->args[0] != KD_EXE_CLOBBER_COMPLETE ||
+		     *call->packet_state != KD_PACKET_COMPLETE ||
+		     !call->complete) :
+		    (call->args[0] != KD_EXE_CALL_MISS ||
+		     call->regs->ip != call->unlock ||
+		     call->regs->di != call->lock))
 		return false;
-	/* Only prepared batch calls reach here. Their local endpoint is zero
-	 * exactly when the immutable timing policy is off; avoid reloading it. */
+	/*
+	 * Only prepared batch calls reach here. Their local endpoint is zero
+	 * exactly when the immutable timing policy is off; avoid reloading it.
+	 */
 	if (unlikely(call->wrapper_start)) {
 		kd_jit_timing_end(KD_JIT_TIME_WRAPPER, call->wrapper_start);
 		kd_jit_timing_end(KD_JIT_TIME_DISPATCH, call->dispatch_start);
@@ -283,9 +318,11 @@ bool kd_exe_spin_batch_completed(const struct kd_jit_batch_call *call,
 	return true;
 }
 
-/* Mutex batches retain a full ownership ledger and a borrowed register packet.
- * Only pristine ABI2 roots use the short wrapper path. Every candidate still
- * checks OPEN, publication, backend and image ABI; a cached slot is no lease. */
+/*
+ * Mutex batches retain a full ownership ledger and a borrowed register packet.
+ * Pristine ABI2/ABI4 roots use the short wrapper path. Every candidate still
+ * checks OPEN, publication, backend and image ABI; a cached slot is no lease.
+ */
 __always_inline __gnu_inline
 bool kd_exe_mutex_batch_prepare(struct kd_exe_info *exe,
 	struct kd_exec_frame *frame, struct kd_jit_batch_call *call)
@@ -293,35 +330,39 @@ bool kd_exe_mutex_batch_prepare(struct kd_exe_info *exe,
 	struct kd_regs *regs = kd_exec_frame_regs(frame);
 
 	if (!frame->mutex_backend || !frame->batch_lease ||
-	    !frame->regs_borrowed || frame->spin_simple ||
-	    frame->parent || frame->depth || frame->request_frame ||
+	    !frame->regs_borrowed || frame->spin_simple || frame->parent ||
+	    frame->depth || frame->request_frame ||
 	    !kd_entry_abi_mutex_reduced(frame->entry_abi) ||
-	    (frame->entry_abi == KD_ENTRY_ABI_OWNED_MUTEX_CABI_V2 && !frame->owned_mutex) ||
-	    frame->packet_state != kd_entry_packet_state(frame->entry_abi) || frame->executed ||
-	    frame->state != KD_EXEC_FRAME_RUNNING || !frame->outer_lock_addr ||
-	    !frame->gsbase || !frame->logical_task || !regs->sp ||
-	    regs->ip != frame->entry_ip ||
+	    (frame->entry_abi == KD_ENTRY_ABI_OWNED_MUTEX_CABI_V2 &&
+	     !frame->owned_mutex) ||
+	    frame->packet_state != kd_entry_packet_state(frame->entry_abi) ||
+	    frame->executed || frame->state != KD_EXEC_FRAME_RUNNING ||
+	    !frame->outer_lock_addr || !frame->gsbase || !frame->logical_task ||
+	    !regs->sp || regs->ip != frame->entry_ip ||
 	    (!frame->complex_ready &&
 	     (!frame->jit_lock_node[0] || !frame->outer_unlock_hook)) ||
-	    (frame->complex_ready && frame->control_call.phase != KD_CALL_NONE) ||
+	    (frame->complex_ready &&
+	     frame->control_call.phase != KD_CALL_NONE) ||
 	    !kd_jit_minimal_complete_allowed(frame) ||
 	    !kd_exe_entry_is_ready(exe, 0, frame->entry_ip) ||
-	    READ_ONCE(exe->lock_kind) != (frame->owned_mutex ?
-		KD_EXE_LOCK_OWNED_MUTEX : KD_EXE_LOCK_MUTEX) ||
+	    READ_ONCE(exe->lock_kind) != KD_EXE_LOCK_OWNED_MUTEX ||
 	    !kd_jit_image_matches(exe, frame))
 		return false;
-	/* This pristine, exclusively bound root has just passed the complete
+	/*
+	 * This pristine, exclusively bound root has just passed the complete
 	 * reduced-ABI/ledger predicate above. Fill its final transport directly rather
 	 * than selecting the packet/backend and testing that predicate again in
 	 * the general clobber preparer. Complex/FULL dispatch still uses that
-	 * preparer and all completion/physical-owner retirement checks remain. */
+	 * preparer and all completion/physical-owner retirement checks remain.
+	 */
 	call->regs = regs;
 	call->args[0] = frame->gsbase;
 	call->args[1] = (unsigned long)frame->logical_task;
-	call->code = (char *)kd_jit_bound_code(exe, frame) + KD_JIT_CLOBBER_OFFSET;
+	call->code =
+		(char *)kd_jit_bound_code(exe, frame) + KD_JIT_CLOBBER_OFFSET;
 	call->lock = frame->outer_lock_addr;
 	call->unlock = frame->entry_abi == KD_ENTRY_ABI_OWNED_MUTEX_CABI_V2 ?
-		owned_cabi_unlock_addr : frame->owned_mutex ? owned_direct_unlock_addr : direct_mutex_unlock_addr;
+			       owned_cabi_unlock_addr : owned_direct_unlock_addr;
 	call->entry_sp = regs->sp;
 	call->entry_abi = frame->entry_abi;
 	call->packet_state = &frame->packet_state;
@@ -353,6 +394,8 @@ bool kd_exe_mutex_batch_completed(const struct kd_jit_batch_call *call,
 	return true;
 }
 
-/* One logical invocation may cross several control/hostcall wrapper returns.
+/*
+ * One logical invocation may cross several control/hostcall wrapper returns.
  * Keep exit classification here: backends must not infer replay permission
- * from an error number or from the optional generated-body witness. */
+ * from an error number or from the optional generated-body witness.
+ */

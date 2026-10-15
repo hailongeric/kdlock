@@ -62,9 +62,6 @@ Each lock type has its own ownership rules:
   tagged SELF/DELEGATE wait list provide exclusion. The opt-in ABI4 outer caller
   tries local acquisition before capturing state for delegation; only an explicit
   outer unlock can combine. It never passes that object to Linux mutex APIs.
-- KD legacy mutex retains the original Linux mutex and a separate scheduling
-  gate. Owning that gate does not mean owning the Linux mutex. This remains the
-  general benchmark default and the interface for existing kernel-owned objects.
 - KD rwlock uses a reader/writer count and a KD spin gate. Readers run locally;
   every writer must exclude readers, whether it runs natively or through JIT.
 
@@ -84,7 +81,7 @@ existing batch limit; both policies default to off. The
 [owned policy contract](design/mutex_implementation.md#conditional-origin-readiness-and-bounded-numa-selection)
 defines the claim, parking and selection boundaries.
 
-Spin, legacy mutex and owned ABI2 use heat counters to decide whether a new
+Spin and owned ABI2 use heat counters to decide whether a new
 request is worth delegating. Owned ABI4 instead requires failed local acquisition
 before checking delegation eligibility, without heat accounting. A cold or refused
 request acquires through its own backend's local path. Once a request
@@ -149,7 +146,7 @@ and provider teardown. Pool exhaustion refuses a replacement while preserving
 the previous image. Registration alone reserves no owned block. See
 [publication protocol 2](JIT_EXECUTION.md#owned-image-publication-protocol-2).
 
-Legacy spin, rwlock and mutex images still overwrite their RIP-indexed block.
+Spin and rwlock images still overwrite their RIP-indexed block.
 Their in-place publication limitation remains open.
 [Lifetimes](design/lifetimes.md) explains the separate protection provided by text
 pins, device references, image versions and frame leases.
@@ -158,7 +155,7 @@ pins, device references, image versions and frame leases.
 
 KD remains experimental. Its checks do not cover all runtime pointers or
 concurrent pointer changes. Processor flags and SIMD/FPU state are not fully
-restored, and legacy image families lack immutable versions. Spin/rwlock waiters
+restored, and spin/rwlock image families lack immutable versions. Spin/rwlock waiters
 keep preemption disabled; mutex waiters can sleep, but finite slots and same-CPU
 native fallback still limit general oversubscription.
 [TODO](TODO.md) records known failures and work explicitly left for later.

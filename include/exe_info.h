@@ -56,7 +56,7 @@ enum kd_packet_state {
 enum kd_exe_lock_kind {
 	KD_EXE_LOCK_UNKNOWN = 0,
 	KD_EXE_LOCK_SPIN = 1,
-	KD_EXE_LOCK_MUTEX = 2,
+	/* Wire value 2 is retired; never reuse it for owned objects. */
 	KD_EXE_LOCK_OWNED_MUTEX = 3,
 };
 
@@ -66,11 +66,10 @@ static inline int kd_entry_abi_valid(int kind, unsigned int abi)
 	if (kind == KD_EXE_LOCK_OWNED_MUTEX)
 		return abi == KD_ENTRY_ABI_MUTEX_CLOBBER_V1 ||
 		       abi == KD_ENTRY_ABI_OWNED_MUTEX_CABI_V2;
-	return (kind == KD_EXE_LOCK_SPIN || kind == KD_EXE_LOCK_MUTEX) &&
+	return kind == KD_EXE_LOCK_SPIN &&
 	       (abi == KD_ENTRY_ABI_LEGACY ||
-		((abi == KD_ENTRY_ABI_SPIN_CLOBBER_V1 ||
-		  abi == KD_ENTRY_ABI_RWLOCK_CLOBBER_V1) && kind == KD_EXE_LOCK_SPIN) ||
-		(abi == KD_ENTRY_ABI_MUTEX_CLOBBER_V1 && kind == KD_EXE_LOCK_MUTEX));
+		abi == KD_ENTRY_ABI_SPIN_CLOBBER_V1 ||
+		abi == KD_ENTRY_ABI_RWLOCK_CLOBBER_V1);
 }
 
 static inline int kd_entry_abi_clobber(unsigned int abi)

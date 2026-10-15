@@ -46,8 +46,8 @@ CALL miss.
 | [publication.inc](publication.inc) | ABI/layout checks, native-only status and upload |
 
 Private components remain in one translation unit and are tracked by the daemon
-build and basic daemon fixture. Entry identities 0/1/2/3/4 mean legacy/spin-clobber/
-mutex-clobber/rwlock-writer-clobber/owned-mutex-ordinary-C. ABI3 uses the spin
+build and basic daemon fixture. Entry ABIs 0/1/2/3/4 mean spin-full-context/spin-clobber/
+owned-mutex-clobber/rwlock-writer-clobber/owned-mutex-ordinary-C. ABI3 uses the spin
 backend with native writer admission before the prepared body. ABI4 uses owned
 lock kind 3 and the late-capture nonvolatile-register contract. The emitted
 layout/backend/ABI must match before upload. Replace callers, provider, daemon
@@ -91,7 +91,8 @@ If the code violates admission policy, it deletes stale outputs and returns 2
 (native-only). Exceptions or failures to launch, build or access the device are
 errors, not successful policy refusals. MINIMAL entry for ABI1/ABI2/ABI3 requires
 the matching versioned entry; ABI4 requires its CALLEE_ENTRY contract and owned
-backend identity. A legacy image cannot be relabelled as clobber or ABI4 code.
+backend identity. A full-context spin image cannot be relabelled as clobber or
+ABI4 code.
 
 Images must include the 48-byte wrapper directory and fit 640 KiB. The 64-byte
 version 2 upload header identifies the entry ABI, context requirements, upload,
@@ -102,7 +103,7 @@ until session teardown. A replacement cannot change a frame's bound version;
 an old miss cannot overwrite a newer version's status. The 64-block pool rejects
 exhausted replacements. Interrupted uploads return only their unpublished block.
 See [the publication lifecycle](../docs/JIT_EXECUTION.md#owned-image-publication-protocol-2).
-Legacy image families still overwrite their RIP-indexed block, as tracked in
+Spin/rwlock image families still overwrite their RIP-indexed block, as tracked in
 [TODO](../docs/TODO.md#c3-immutable-jit-publication-and-lifetime).
 
 ## Optional translation measurements

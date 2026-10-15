@@ -33,8 +33,8 @@ check, missing dependency, crash or compile failure must not be reported as a pa
 | Native pending/MCS |`spin/test_spin_nondelegated.py`, `test_spin_shadow.py` |
 | Continuation/frame/queue |`spin/test_spin_storage.py`, `test_spin_batch.py`, `test_spin_outer_progress.py`, `execution/test_exec_capacity.py` |
 | Wrapper, typed service and batch |`execution/test_jit_entry_scope.py`, `codegen/test_clobber_abi.py`, `test_jit_body_witness.py` |
-| Mutex resources/terminal path |`mutex/test_mutex_resources.py`, `test_mutex_task_cache.py`, `test_mutex_terminal.py`, `test_mutex_outer_progress.py` |
-| Mutex blocking/result wakeup | `mutex/test_mutex_parking.py`, `test_mutex_balances.py`, `test_mutex_wait_clobber.py`; [live scheduler probe](kernel/mutex/run_wait_selftest.py) |
+| Mutex acquisition/task references | `mutex/test_mutex_task_cache.py` |
+| Mutex blocking/result wakeup | `mutex/test_owned_mutex_delegation.py`, `test_owned_mutex_wait_clobber.py`; [live scheduler probe](kernel/mutex/run_wait_selftest.py) |
 | Mutex workload drain | `mutex/test_mutex_drain.py` checks residual owner flags, sleeping waiters and configured Linux OSQ |
 | Owned mutex | `mutex/test_owned_mutex_core.py`, `test_owned_mutex_delegation.py --mutations`, `test_owned_mutex_wait_clobber.py`, `test_owned_mutex_outer_api.py`; task-cache and admission checks also cover its private state |
 | Owned optimistic entry and OSQ | `mutex/test_owned_mutex_preflight.py`, `test_owned_mutex_osq.py`; the outer API fixture compiles both capture-first and opt-in preflight callers and executes their generated JIT |
@@ -90,8 +90,8 @@ parity is a separate `--require-parity` result. Readers do not count as JIT bodi
 The [mutex task/ACK probe](kernel/mutex/run_task_selftest.py) and selected SELFTEST
 hotlock/entry probes check resource/routing/drain without executing JIT bodies;
 they do not replace contended returned-body acceptance. KD mutex JIT is always
-enabled; the task/ACK probe constructs its continuation packet before hooks are
-published. Normal/SELFTEST builds stay separate.
+enabled; the task/ACK probe constructs its continuation packet before direct callers can
+enter. Normal/SELFTEST builds stay separate.
 The task probe also stresses concurrent exact task references and RCU eviction.
 Zero references disable routing immediately; cached inactive identities can
 remain until eviction or controlled unload. The probe pins a real RCU reader
@@ -103,18 +103,8 @@ Use `--cpus 0 32 33` for the current guest's cross-NUMA probe; its
 default remains three distinct local CPUs. Final drain requires zero active
 task membership after all workers and ACKs finish.
 
-The [mutex wait probe](kernel/mutex/run_wait_selftest.py) tests immediate parking
-and spin limits of 1,024 and 4,096. It observes real result/gate sleepers, runs
-other work on the parked task's CPU, exercises 3,072 result publications and
-checks progress with a deliberately withheld completion wake and exact drain.
-It also drives the real admission sampler from hot to cold while a result
-reservation and a gate waiter remain outstanding, then checks completion,
-native ownership and drain at each polling budget.
-These constructed packets execute no JIT bodies; the
-[mutex benchmark](../bench/tclock_compare/README.md) supplies that evidence.
-The task/ACK probe and scheduler probe both use the only supported blocking policy.
-
-Pass `--owned` to the scheduler probe for the owned FIFO. It reserves and
+The [mutex wait probe](kernel/mutex/run_wait_selftest.py) exercises owned FIFO
+result waiting at polling budgets 0, 1,024 and 4,096. It reserves and
 publishes a real DELEGATE node, cools the independent admission sampler while
 that node remains queued, observes actual result sleeping, then checks directed
 SELF pickup and exact drain at each polling budget. Its deliberately unstarted
@@ -161,7 +151,7 @@ retains the loaded session and evidence for explicit diagnosis and drain.
 The SELFTEST provider's `owned_mutex_origin_selftest=1` plus
 `owned_mutex_origin_spin=1` executes 256 claims with explicit reschedule requests,
 checking actual voluntary/involuntary context-switch counts and repeated slot
-reuse. `run_wait_selftest.py --owned --origin` runs it with spin limits 0, 1024
+reuse. `run_wait_selftest.py --origin` runs it with spin limits 0, 1024
 and 4096, from CPU 1 with the origin on CPU 0, and saves each receipt.
 The existing owned wait probe additionally checks queued cooling,
 sleep and local pickup. These constructed claims execute zero JIT bodies; the GS
@@ -177,16 +167,6 @@ JIT/FULL/owner ACK checks at `585335b`. The later
 198 correct, drained performance samples using that implementation; it does not
 rerun the unit suite or special nested/FULL cases. Correct SELF throughput,
 returned JIT and performance acceptance remain separate results.
-
-The [blocking-only mutex verification](../bench/results/10.176.26.71/tests/mutex-blocking-only-20261012/validation.json)
-on 2026-10-12 covers seven basic/affected groups, including 101 context-admission
-cases, and 87 runner/report tests. Normal and SELFTEST `W=1` builds with UBSAN off
-have no `mutex_blocking` parameter or symbol; build logs retain objtool warnings.
-The scheduler probe passed at polling budgets 0, 1024 and 4096, and the cross-NUMA
-task/ACK probe passed on CPUs 0, 32 and 33. A 16-worker/eight-cacheline functional
-run completed 320,000 operations with 308,209 returned JIT bodies and complete
-drain. No full suite or performance matrix was run. The evidence retains the
-initial outdated test expectations, corrected checks and exact working-tree inputs.
 
 Earlier mutex, NUMA, rwlock and migration receipts are indexed in
 [validation](../docs/VALIDATION.md) and the [machine result indexes](../bench/results/README.md).

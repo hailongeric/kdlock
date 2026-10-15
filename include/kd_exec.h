@@ -19,7 +19,6 @@
 #include "kd_spin_entry.h"
 
 struct task_struct;
-struct kd_mutex_legacy_gate;
 struct kd_mutex;
 struct kd_native_request;
 struct kd_remote_request;
@@ -199,11 +198,7 @@ bool kd_exec_context_occupied(void);
 /* The mutex combiner owns one enclosing source lease. A root still carries
  * its exact physical-owner ledger for FULL/native recovery; refusal publishes
  * no frame. Retirement is only for the first terminal reduced-ABI wrapper return.
- * Owned roots accept ABI2/ABI4; legacy roots retain constant ABI2 construction. */
-struct kd_exec_frame *kd_exec_frame_push_mutex_batch(
-	struct kd_regs *regs, unsigned long entry_ip, unsigned long gsbase,
-	struct task_struct *task, struct kd_mutex_legacy_gate *lock,
-	struct kd_exec_outer_unlock *hook);
+ * Owned roots accept ABI2/ABI4. */
 struct kd_exec_frame *kd_exec_frame_push_owned_mutex_batch(
 	struct kd_regs *regs, unsigned long entry_ip, unsigned long gsbase,
 	struct task_struct *task, struct kd_mutex *lock,
@@ -214,8 +209,6 @@ int kd_exec_frame_retire_owned_mutex_batch(struct kd_exec_frame *frame,
 /* Materialize cold routing before generic validation/dispatch. This preserves
  * the borrowed packet union, exact physical ledger and release hook. */
 int kd_exec_frame_prepare_mutex_complex(struct kd_exec_frame *frame);
-int kd_exec_frame_retire_mutex_batch(struct kd_exec_frame *frame,
-				    struct kd_mutex_legacy_gate *lock);
 
 /* Prepare once on the producer; bind only changes physical execution state.
  * batch_lease requires an enclosing source lease through the final unbind. */

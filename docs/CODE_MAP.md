@@ -14,12 +14,11 @@ files or benchmark archives.
 | [kd_spinlock.c](../kernel_module/kd_spinlock.c) → [spin](../kernel_module/spin/) | Direct entry, pending/MCS, batching, prefetch, continuation and restore |
 | [kd_rwlock.h](../include/kd_rwlock.h) → `spin/direct.inc`, `combiner.inc`, `execute.inc`, `restore.inc` | Local readers, native fast writers and ABI3 writer admission, cancellation and retry over the spin engine |
 | [kd_spin_entry.c](../kernel_module/kd_spin_entry.c) → `spin/ticket_*.inc` | Exact acquisition tickets, native borrowing and final retirement |
-| [kd_mutex.c](../kernel_module/kd_mutex.c) → [mutex](../kernel_module/mutex/) | Legacy original mutex owner, private scheduling gate, blocking result/gate waits and waiter restore |
 | [owned core](../kernel_module/owned_mutex/core.c), [OSQ](../kernel_module/owned_mutex/osq.c) | KD-owned 32-byte mutex, Linux-derived SELF acquisition, guarded release and typed FIFO |
 | [owned entry](../kernel_module/owned_mutex/entry.S), [delegation](../kernel_module/owned_mutex/delegation.c) | ABI4 leaf acquisition/unlock and late capture; ABI2 heat admission; unlock-side batching, result wait and restore |
 | [owned readiness](../kernel_module/owned_mutex/readiness.inc), [selection](../kernel_module/owned_mutex/selection.inc) | Exclusive origin claims, park arbitration and optional bounded NUMA delegate selection |
 | [kd_mutex_tasks.c](../kernel_module/kd_mutex_tasks.c) | Exact task/acquisition references and RCU removal |
-| [kd_lock.c](../kernel_module/kd_lock.c) → [lock](../kernel_module/lock/) | Nested control CALLs, direct mutex routing and retained bridge aliases |
+| [kd_lock.c](../kernel_module/kd_lock.c) → [lock](../kernel_module/lock/) | Translated spin/owned-mutex control CALLs and exact owner routing |
 | [kd_exec.c](../kernel_module/kd_exec.c), [exe.c](../kernel_module/exe.c) → [execution](../kernel_module/execution/) | Frame binding, lock ledger, remote/native ACKs, registry and JIT dispatch |
 | [images.inc](../kernel_module/execution/images.inc), [kd_image.h](../include/kd_image.h) | Owned upload staging, immutable image generations, frame binding and stale-status rejection |
 | [kd_hotlock.c](../kernel_module/kd_hotlock.c) | Per-type exact-address hot tables and approximate admission statistics |
@@ -29,8 +28,9 @@ files or benchmark archives.
 Private `.inc` files are source fragments included by a parent C file. They share
 that file's static state and declaration order; they are not separate Kbuild
 objects. Follow the ordinary spin path from
-`direct.inc` → `entry.inc` → queue/combiner → restore/unlock; read legacy mutex from
-`lock/mutex_calls.inc` → `mutex/queue.inc` → parking/combiner/waiter/clobber. Rwlock's
+`direct.inc` → `entry.inc` → queue/combiner → restore/unlock. Read mutex from
+`owned_mutex/core.c` → `owned_mutex/delegation.c`; translated controls use
+`lock/owned_mutex_calls.inc`. Rwlock's
 public count/gate protocol is in its header; the spin components acquire writer
 admission before ABI3 execution and preserve it across native continuation.
 For owned ABI4, follow `owned_mutex/entry.S` → `core.c` local acquisition →

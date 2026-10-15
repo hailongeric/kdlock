@@ -28,8 +28,7 @@ def main():
         + ";\n"
     )
     # The pristine mutex validator uses the real published ABI discriminator.
-    types += definition(read_source(ROOT / "include/exe_info.h"),
-                        "enum kd_entry_abi {").rstrip() + ";\n"
+    types += without_includes(read_source(ROOT / "include/exe_info.h")) + "\n"
     for name in ("include/kd_call.h", "include/kd_exec.h"):
         types += without_includes(read_source((ROOT / name))) + "\n"
     types += (

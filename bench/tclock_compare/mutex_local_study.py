@@ -123,17 +123,10 @@ def audit_block(folder, candidate, helpers):
             require(record['jit_share'] == record['jit_bodies']/completed and
                     record['delegated_bodies'] == record['jit_bodies'],
                     'returned-body classification differs')
-            for key in ('result_schedule_calls', 'result_wakes', 'gate_wait_calls'):
+            for key in ('result_schedule_calls', 'result_wakes'):
                 require(record['mutex_wait_after'][key] - record['mutex_wait_before'][key] ==
                         record['mutex_wait_delta'][key] >= 0, 'wait delta differs')
-            require(record['mutex_wait_delta']['gate_wait_calls'] == 0,
-                    'owned execution used a legacy gate')
-            stats = helpers.log_counts(log, 'kd_mutex stats:')
-            tasks = helpers.log_counts(log, 'kd_mutex tasks:')
-            acks = helpers.log_counts(log, 'kd_native stats:')
-            require(stats['active_waiters'] == stats['reserved_nodes'] == stats['frame_failure'] == 0 and
-                    stats['origin_acquires'] == stats['origin_releases'] and tasks['active_tasks'] == 0 and
-                    acks['started'] == acks['completed'], 'queue/task/frame/ACK did not drain')
+            # load_run checks owned retirement, task references and owner ACKs.
         hashes[record['name']] = {name: digest(path/name) for name in
                                 ('session.json', 'measure.json', 'kernel.log', 'drain.counts.json')}
     # load_run verified each source/binary byte; only collect manifests here.

@@ -1,10 +1,9 @@
 # Known limitations and deferred work
 
 Current scope is x86_64 kernel spin/mutex/rwlock delegation through explicit APIs.
-KD mutexes always support blocking. Legacy mutexes reject delegated origin-CPU GS;
-owned mutexes can opt into the bounded audited subset with an exclusive claim.
-Legacy mutexes preserve the original Linux owner; experimental owned mutexes
-retain their own exact owner/ACK protocol. Rwlock ABI3 acquires write access before the
+KD mutexes support blocking and retain their own exact owner/ACK protocol.
+They can opt into the bounded audited origin-CPU GS subset with an exclusive
+claim. Rwlock ABI3 acquires write access before the
 translated body. Implementation contracts live in [DESIGN](DESIGN.md);
 [performance status](PERFORMANCE.md) records measured gaps and
 [validation](VALIDATION.md) indexes source-specific receipts. None of those
@@ -44,12 +43,10 @@ Recorded failures and unresolved coverage:
   Single-CPU preparation avoids that phase rather than fixing it. The fixed
   [failure record](https://github.com/hailongeric/kdlock/blob/175d73bcc2faaa5ee9f9ab28a20491680d834043/bench/tclock_compare/results/20260918-native-stack.md)
   retains the original inputs.
-- The former polling-only mutex soft-locked in seven-role/two-CPU mode4. The
-  blocking probes do not rerun that dependency scenario; see the fixed
-  [mutex failure](https://github.com/hailongeric/kdlock/blob/1b9191256f64785f8e844ada914356a69d4f70f0/tests/README.md#mutex-pinned-mode4-failure).
-- An older oversubscribed mode5 published code but lacked actual JIT. Current
-  blocking checks do not provide a new run of that scenario; see
-  [the recorded assessment](VALIDATION.md#mutex-oversubscription-assessment).
+- The [owned-only checks](VALIDATION.md#owned-only-mutex-verification) cover
+  bounded scheduler probes and 16-worker JIT/FULL/ACK cases. They do not establish
+  general oversubscription progress or fairness; earlier implementations' failure
+  records remain in the [validation history](VALIDATION.md#fixed-records).
 
 ## Delivery scope
 
@@ -57,9 +54,9 @@ Keep the two-word wrapper ABI, separate backend identities, exact physical owner
 exact acquisition references and final ACKs. Shared storage must survive its final
 reader. Builds/tests/benchmarks run in the recovery guest; default work does not
 change its kernel. Mutexes permit sleep with migration pinned; an origin-sensitive
-owned image additionally requires a spinning claim. Blocking scheduler/JIT evidence does not
-retroactively establish a pass for historical
-oversubscription failures.
+owned image additionally requires a spinning claim. Blocking scheduler/JIT
+evidence does not retroactively establish a pass for historical oversubscription
+failures.
 
 Userspace/futex, rwsem, other architectures and oversubscription redesign are outside
 this phase. Basic plus directly affected checks are the default; full suites need
@@ -86,10 +83,9 @@ complete the required ACK and retirement steps.
 
 KD spin owns its word; TCLock/Native own theirs. KD owned mutex uses its own
 owner word, OSQ and tagged wait list. Its Linux-compatible object geometry does
-not permit Linux or TCLock callers on the same object. The retained legacy mutex
-uses the original Linux mutex plus a scheduling gate and excludes native peers
-through that original mutex. Preserve ledger identity, physical exclusion, frame
-pop, owner ACK and storage retirement as separate operations.
+not permit Linux or TCLock callers on the same object. Preserve ledger identity,
+physical exclusion, frame pop, owner ACK and storage retirement as separate
+operations.
 KD rwlock owns its count and KD gate. Ungated native writers retain exact
 nondelegated references; gate quiescence alone does not establish count or reader
 drain. No Linux/TCLock operations may access the same KD rwlock object.
@@ -99,7 +95,7 @@ drain. No Linux/TCLock operations may access the same KD rwlock object.
 Owned mutex publication now binds code, requirements and generation in immutable
 descriptors. Complete uploads use separate blocks; every published version survives
 until terminal session drain. Pool exhaustion refuses replacements. The remaining
-legacy spin/rwlock/mutex scope still overwrites its RIP-indexed block and remains
+spin/rwlock scope still overwrites its RIP-indexed block and remains
 deferred. Source leases and ABI tags alone do not resolve that lifetime problem.
 
 ### C4. Instruction, flags, and fault semantics

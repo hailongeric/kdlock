@@ -4,8 +4,7 @@ The archived 64-vCPU study accepted the owned ABI4/reuse-32 profile against the
 97% Native target for c01/post64 at 1–8 workers. It extends the experimental
 `d8d14a1` provider with Linux-style local acquisition before delegation at
 implementation commit `585335b`.
-The benchmark still defaults to legacy
-mutexes; `owned-v1` explicitly selects the independent 32-byte KD object.
+The benchmark uses `owned-v1`, the independent 32-byte KD mutex object.
 Owned ABI2 capture-first, admission ratio 256, reuse allowance 0 and finite FIFO
 remain the general defaults. The measured profile explicitly selects ABI4 and 32.
 This narrow result does not establish general Native parity. Implementation contracts live in
@@ -72,8 +71,6 @@ causal limits. These dispositions apply to the recorded version and scope.
 | --- | --- |
 | <a id="earlier-c01-owned-mutex-optimization"></a>Owned protocol, 2026-10-14 | [Report](../bench/results/10.176.26.71/bench/mutex_owned/20261014-hybrid/README.md): outcome/grant changes retained in the experimental provider; higher-thread same-policy gates pass, Native parity fails. |
 | <a id="earlier-c01-owned-mutex-redesign"></a>Owned redesign, 2026-10-13 | [Report](../bench/results/10.176.26.71/bench/mutex_owned/20261013/README.md): independent object/protocol retained explicitly; finite/refill performance target fails. |
-| <a id="earlier-c01-protocol-study"></a>Legacy protocol trials, 2026-10-13 | [Report](../bench/results/10.176.26.71/bench/mutex_protocol/20261013/README.md): frame/layout/capture/epoch candidates rejected; raw failures and post-work variants retained. |
-| <a id="earlier-c01-optimistic-spin-study"></a>Legacy optimistic retry, 2026-10-13 | [Report](../bench/results/10.176.26.71/bench/mutex_optimistic/20261013/README.md): six retry/OSQ candidates rejected; explicit native owner/list/OSQ drain check retained. |
 | <a id="earlier-c01-cost-study"></a>Three-way cost study, 2026-10-13 | [Report](../bench/results/10.176.26.71/bench/mutex_c01_cost/20261013/README.md): waiter counters and successor prefetch retained as a bounded higher-thread gain; Native parity unmet. |
 | <a id="earlier-c01-admission-study"></a>Admission study, 2026-10-13 | [Report](../bench/results/10.176.26.71/bench/mutex_admission/20261013/README.md): all eight thresholds rejected; default 256 retained with the pinned cold sampler. |
 

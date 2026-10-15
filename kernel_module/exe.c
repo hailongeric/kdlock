@@ -4,8 +4,9 @@
  * services, timing, registry and known CALL handling. Read with sys.c for
  * uploads and kd_exec.c for frame/owner lifetimes; see README.md for the map.
  *
- * Registration consumes one bounded code block; it does not compile text.
- * The daemon fills that block, then this file interprets wrapper exit packets:
+ * Registration records an entry point; the daemon supplies its translated
+ * code. Legacy entries reserve a block at registration, while owned mutexes
+ * allocate a new image for each upload. This file handles wrapper exits:
  *   CALL_MISS: known lock control, or original-waiter native continuation;
  *   HOSTCALL: exact allowlisted service, then another wrapper invocation;
  *   ENTRY_REFUSED: native fallback only after validating an unstarted root;
@@ -15,7 +16,8 @@
  *
  * Only validated outer-unlock handling completes a delegated request. A miss
  * after stores never rolls them back or grants permission to replay the entry.
- * Code blocks are still overwritten in place; source pins are not versions.
+ * Legacy code blocks are overwritten in place; source pins are not versions.
+ * Owned mutex frames bind immutable images managed by execution/images.inc.
  */
 #include "exe.h"
 #include "kd_exec.h"
@@ -41,9 +43,7 @@
 
 #include "utils.h"
 #include "kd_lock.h"
-#include "kd_mutex_legacy.h"
 #include "kd_mutex.h"
-#include "kd_mutex_direct.h"
 #include "kd_owned_mutex_direct.h"
 #include "kd_spinlock.h"
 #include "kd_hostcall.h"
@@ -63,17 +63,18 @@
 static int kd_jit_hl_fault_after_known_call;
 module_param_named(jit_hl_fault_after_known_call,
 		   kd_jit_hl_fault_after_known_call, int, 0644);
-MODULE_PARM_DESC(
-	jit_hl_fault_after_known_call,
-	"Inject after a known JIT call: 1=call miss, 2=IJ miss, 3=inst limit");
+MODULE_PARM_DESC(jit_hl_fault_after_known_call,
+		 "Inject after a known JIT call: 1=call miss, 2=IJ miss, 3=inst limit");
 
-/* Exercise a real, validated post-mutex-control continuation. Unlike the
- * synthetic fault above, this never fabricates a CALL or instruction exit. */
+/*
+ * Exercise a real, validated post-mutex-control continuation. Unlike the
+ * synthetic fault above, this never fabricates a CALL or instruction exit.
+ */
 static int kd_owned_mutex_native_after_control;
 module_param_named(owned_mutex_native_after_control,
 		   kd_owned_mutex_native_after_control, int, 0644);
 MODULE_PARM_DESC(owned_mutex_native_after_control,
-	"One-shot owned mutex diagnostic: resume natively after a checked control CALL");
+		 "One-shot owned mutex diagnostic: resume natively after a checked control CALL");
 
 static void *kd_code_block_pool[KD_CODE_BLOCK_POOL];
 static void *kd_code_block_allocations[KD_CODE_BLOCK_POOL];
@@ -86,8 +87,10 @@ static unsigned long kd_code_block_gate_lock(void)
 {
 	unsigned long flags;
 
-	/* A process-side publisher must not be preempted by a lock hook which
-	 * takes the same existing registry gate on this CPU. */
+	/*
+	 * A process-side publisher must not be preempted by a lock hook which
+	 * takes the same existing registry gate on this CPU.
+	 */
 	local_irq_save(flags);
 	while (atomic_cmpxchg_acquire(&kd_code_block_gate, 0, 1))
 		cpu_relax();
@@ -108,14 +111,6 @@ static unsigned long clobber_spin_lock_addr;
 static unsigned long clobber_spin_unlock_addr;
 static unsigned long pinned_spin_lock_addr;
 static unsigned long cold_spin_unlock_addr;
-static unsigned long mutex_lock_addr;
-static unsigned long mutex_unlock_addr;
-static unsigned long clobber_mutex_lock_addr;
-static unsigned long clobber_mutex_unlock_addr;
-static unsigned long direct_mutex_lock_addr;
-static unsigned long contended_mutex_lock_addr;
-static unsigned long outer_mutex_lock_addr;
-static unsigned long direct_mutex_unlock_addr;
 static unsigned long owned_mutex_lock_addr;
 static unsigned long owned_mutex_unlock_addr;
 static unsigned long owned_outer_unlock_addr;
@@ -155,9 +150,11 @@ static int kd_exe_dispatch(struct kd_exe_info *exe, struct kd_regs *regs,
 	u64 dispatch_start;
 	int ret_flag;
 
-	/* Both a pending batch return and a refused fast preparation arrive here.
+	/*
+	 * Both a pending batch return and a refused fast preparation arrive here.
 	 * Materialize before generic validation, scope checks, logging or service
-	 * reads; preserve a MINIMAL/refused borrowed packet and consume FULL once. */
+	 * reads; preserve a MINIMAL/refused borrowed packet and consume FULL once.
+	 */
 	if (frame && frame->mutex_backend && !frame->complex_ready &&
 	    kd_exec_frame_prepare_mutex_complex(frame))
 		return KD_EXE_RUN_ERROR;
@@ -165,11 +162,13 @@ static int kd_exe_dispatch(struct kd_exe_info *exe, struct kd_regs *regs,
 	    !frame->gsbase || !frame->logical_task)
 		return KD_EXE_RUN_ERROR;
 
-	/* Reuse the caller's slot, not its earlier readiness result. A successful
+	/*
+	 * Reuse the caller's slot, not its earlier readiness result. A successful
 	 * frame push admitted a source lease; closure before that push refuses,
 	 * closure observed here refuses, and closure racing after this check must
 	 * retain pins while this frame drains. Slot storage/keys are never reused
-	 * in-session. This does not make in-place code uploads immutable. */
+	 * in-session. This does not make in-place code uploads immutable.
+	 */
 	if (!pending && !kd_exe_entry_is_ready(exe, 0, entry_ip)) {
 		if (!exe)
 			return KD_EXE_NO_RUN;
@@ -183,8 +182,8 @@ static int kd_exe_dispatch(struct kd_exe_info *exe, struct kd_regs *regs,
 		return frame->executed ? KD_EXE_RUN_ERROR : KD_EXE_NO_RUN;
 
 	if (READ_ONCE(exe->lock_kind) !=
-	    (frame->owned_mutex ? KD_EXE_LOCK_OWNED_MUTEX :
-	     frame->mutex_backend ? KD_EXE_LOCK_MUTEX : KD_EXE_LOCK_SPIN)) {
+	    (frame->mutex_backend ? KD_EXE_LOCK_OWNED_MUTEX :
+				    KD_EXE_LOCK_SPIN)) {
 		kd_exe_publish_status(exe, KD_EXE_NATIVE_ONLY);
 		pr_warn_ratelimited(
 			"[KD_JIT][WARN] reason=FRAME_LOCK_KIND_MISMATCH entry=0x%lx registered=%d mutex_frame=%d\n",
@@ -197,8 +196,10 @@ static int kd_exe_dispatch(struct kd_exe_info *exe, struct kd_regs *regs,
 		return KD_EXE_NO_RUN;
 	}
 	/* Exclude pre-entry rejections and the caller's frame setup/teardown. */
-	dispatch_start = pending ? pending->dispatch_start : kd_jit_timing_start();
-	pristine_root = pending || (!frame->resume_target && regs->ip == entry_ip);
+	dispatch_start = pending ? pending->dispatch_start :
+				   kd_jit_timing_start();
+	pristine_root = pending ||
+			(!frame->resume_target && regs->ip == entry_ip);
 	translated = kd_jit_bound_code(exe, frame);
 	for (;;) {
 		int call_ret;
@@ -206,10 +207,13 @@ static int kd_exe_dispatch(struct kd_exe_info *exe, struct kd_regs *regs,
 		unsigned long entry_sp = regs->sp;
 		u64 boundary_start;
 
-		/* The batch wrapper already ran. Consume that exit exactly once; an
-		 * extra invocation here would repeat stores before handling the miss. */
+		/*
+		 * The batch wrapper already ran. Consume that exit exactly once; an
+		 * extra invocation here would repeat stores before handling the miss.
+		 */
 		if (pending) {
-			kd_jit_timing_end(KD_JIT_TIME_WRAPPER, pending->wrapper_start);
+			kd_jit_timing_end(KD_JIT_TIME_WRAPPER,
+					  pending->wrapper_start);
 			args[0] = pending->args[0];
 			args[1] = pending->args[1];
 			entry_sp = pending->entry_sp;
@@ -246,11 +250,14 @@ static int kd_exe_dispatch(struct kd_exe_info *exe, struct kd_regs *regs,
 			frame->executed = true;
 			boundary_start = kd_jit_timing_start();
 			if ((kd_entry_abi_clobber(frame->entry_abi) ||
-			     frame->entry_abi == KD_ENTRY_ABI_OWNED_MUTEX_CABI_V2) &&
-			    frame->packet_state == kd_entry_packet_state(frame->entry_abi)) {
+			     frame->entry_abi ==
+				     KD_ENTRY_ABI_OWNED_MUTEX_CABI_V2) &&
+			    frame->packet_state ==
+				    kd_entry_packet_state(frame->entry_abi)) {
 				struct kd_jit_batch_call call;
 
-				kd_jit_prepare_clobber(&call, frame, (void *)translated);
+				kd_jit_prepare_clobber(&call, frame,
+						       (void *)translated);
 				kd_jit_clobber_call_v1(&call);
 				args[0] = call.args[0];
 				args[1] = call.args[1];
@@ -260,7 +267,8 @@ static int kd_exe_dispatch(struct kd_exe_info *exe, struct kd_regs *regs,
 			kd_jit_timing_end(KD_JIT_TIME_WRAPPER, boundary_start);
 returned_wrapper:
 			if (args[0] == KD_EXE_ENTRY_REFUSED) {
-				/* Only this explicit pre-body exit can undo our conservative
+				/*
+				 * Only this explicit pre-body exit can undo our conservative
 				 * executed mark. A zero witness by itself never permits replay.
 				 * Root packet preservation is part of the generated guard ABI.
 				 */
@@ -281,12 +289,14 @@ returned_wrapper:
 						    frame, regs, args[0],
 						    -EINVAL, continuation_count,
 						    hostcall_count);
-				kd_jit_timing_end(KD_JIT_TIME_DISPATCH, dispatch_start);
+				kd_jit_timing_end(KD_JIT_TIME_DISPATCH,
+						  dispatch_start);
 				return KD_EXE_RUN_ERROR;
 			}
 			/* Observational only: never use missing evidence to replay work. */
 			if (!body_reported && args[1] == 1) {
-				kd_exe_note_body(entry_ip, outer_lock_addr, args[1]);
+				kd_exe_note_body(entry_ip, outer_lock_addr,
+						 args[1]);
 				body_reported = true;
 			}
 			if (resume_after_hostcall)
@@ -294,13 +304,16 @@ returned_wrapper:
 		}
 		resume_after_hostcall = false;
 
-		/* A fresh physical single-lock root needs no control transaction or
+		/*
+		 * A fresh physical single-lock root needs no control transaction or
 		 * combiner checkpoint for its final unlock. Match the backend's exact
 		 * CALL target as well as L; mixed mutex/spin exits stay rejected below.
-		 * Every other exit materializes complex state BEFORE its side effects. */
+		 * Every other exit materializes complex state BEFORE its side effects.
+		 */
 		if (args[0] == KD_EXE_CLOBBER_COMPLETE) {
 			/* A minimal result never enters the general register dispatcher. */
-			if (frame->packet_state != kd_complete_packet_state(frame->entry_abi) ||
+			if (frame->packet_state !=
+			    kd_complete_packet_state(frame->entry_abi) ||
 			    !kd_jit_minimal_complete_allowed(frame)) {
 				ret_flag = KD_EXE_RUN_ERROR;
 				break;
@@ -312,9 +325,11 @@ returned_wrapper:
 			ret_flag = KD_EXE_RUN_ERROR;
 			break;
 		}
-		/* A native mutex waiter releases its node before the owner ACK/pop.
+		/*
+		 * A native mutex waiter releases its node before the owner ACK/pop.
 		 * Detach only after a real FULL exit, before any C control service or
-		 * publication can outlive that node. Normal COMPLETE never copies it. */
+		 * publication can outlive that node. Normal COMPLETE never copies it.
+		 */
 		if (frame->mutex_backend && frame->regs_borrowed) {
 			kd_exec_frame_own_regs(frame);
 			regs = kd_exec_frame_regs(frame);
@@ -343,12 +358,13 @@ returned_wrapper:
 				call_ret = fault_kind ? -EINVAL :
 					kd_jit_call_limit_native(frame, regs, true);
 				if (call_ret)
-					kd_jit_log_hl_error("HOSTCALL_LIMIT", frame,
-							    regs, args[0], call_ret,
+					kd_jit_log_hl_error("HOSTCALL_LIMIT",
+							    frame, regs,
+							    args[0], call_ret,
 							    continuation_count,
 							    hostcall_count);
 				ret_flag = call_ret ? KD_EXE_RUN_ERROR :
-						     KD_EXE_RUN_NATIVE;
+						      KD_EXE_RUN_NATIVE;
 				break;
 			}
 
@@ -418,12 +434,13 @@ returned_wrapper:
 						kd_jit_call_limit_native(frame, regs, false);
 					if (call_ret)
 						kd_jit_log_hl_error(
-							"CONTINUATION_LIMIT", frame,
-							regs, args[0], call_ret,
+							"CONTINUATION_LIMIT",
+							frame, regs, args[0],
+							call_ret,
 							continuation_count,
 							hostcall_count);
 					ret_flag = call_ret ? KD_EXE_RUN_ERROR :
-							     KD_EXE_RUN_NATIVE;
+							      KD_EXE_RUN_NATIVE;
 					break;
 				}
 
@@ -454,7 +471,8 @@ returned_wrapper:
 					break;
 				}
 
-				/* An ordinary callee runs on the original waiter from this
+				/*
+				 * An ordinary callee runs on the original waiter from this
 				 * saved CALL state, including the remaining native suffix.
 				 * Learning this target only benefits future invocations; do
 				 * not loop back into this JIT after waiter-side execution.
@@ -473,7 +491,11 @@ returned_wrapper:
 					break;
 				}
 				if (!is_end_point(regs->ip))
-					kd_image_report(exe, frame->owned_mutex ? frame->image : NULL, KD_EXE_CALL_MISS,
+					kd_image_report(exe,
+							frame->owned_mutex ?
+								frame->image :
+								NULL,
+							KD_EXE_CALL_MISS,
 							regs->ip, 0);
 				/* Synthetic faults have no CALL frame and are not resumable. */
 				ret_flag = fault_kind ? KD_EXE_RUN_ERROR :
@@ -483,7 +505,8 @@ returned_wrapper:
 			kd_jit_log_hl_error("UNSUPPORTED_INSTRUCTION", frame,
 					    regs, args[0], -EILSEQ,
 					    continuation_count, hostcall_count);
-			kd_image_report(exe, frame->owned_mutex ? frame->image : NULL, KD_EXE_ERROR_INST, regs->ip, 0);
+			kd_image_report(exe, frame->owned_mutex ? frame->image : NULL,
+					KD_EXE_ERROR_INST, regs->ip, 0);
 			ret_flag = KD_EXE_RUN_ERROR;
 		} else if (args[0] == KD_EXE_INST_LIMIT) {
 			kd_jit_log_hl_error("BUDGET_LIMIT", frame, regs,
@@ -494,15 +517,17 @@ returned_wrapper:
 			kd_jit_log_hl_error("IJ_MISS", frame, regs, args[0], 0,
 					    continuation_count, hostcall_count);
 			if (!is_end_point(regs->ip) && !is_end_point(args[0]))
-				kd_image_report(exe, frame->owned_mutex ? frame->image : NULL, KD_EXE_IJ_MISS,
-						regs->ip, args[0]);
+				kd_image_report(exe, frame->owned_mutex ? frame->image : NULL,
+						KD_EXE_IJ_MISS, regs->ip, args[0]);
 			ret_flag = KD_EXE_RUN_ERROR;
 		}
 		break;
 	}
 
-	/* Completion/native/ACK releases and registry status CAS publish their
-	 * own state; returning this local result needs no additional full fence. */
+	/*
+	 * Completion/native/ACK releases and registry status CAS publish their
+	 * own state; returning this local result needs no additional full fence.
+	 */
 	kd_jit_timing_end(KD_JIT_TIME_DISPATCH, dispatch_start);
 	return ret_flag;
 }
@@ -518,8 +543,10 @@ int kd_exe_spin_batch_resume(struct kd_exe_info *exe,
 {
 	struct kd_exec_frame *frame = kd_exec_current_frame();
 
-	/* A non-final exit needs the explicit ledger before generic validation,
-	 * logging or any service side effect. The packet itself stays shared. */
+	/*
+	 * A non-final exit needs the explicit ledger before generic validation,
+	 * logging or any service side effect. The packet itself stays shared.
+	 */
 	kd_spin_jit_prepare_complex(frame);
 	return kd_exe_dispatch(exe, call->regs, frame->entry_ip,
 			       frame->outer_lock_addr, call);
@@ -533,9 +560,11 @@ int kd_exe_mutex_batch_resume(struct kd_exe_info *exe,
 	if (!frame || !frame->mutex_backend || !frame->batch_lease ||
 	    !kd_entry_abi_mutex_reduced(frame->entry_abi))
 		return KD_EXE_RUN_ERROR;
-	/* The exact ledger already exists. Dispatch first materializes lazy
+	/*
+	 * The exact ledger already exists. Dispatch first materializes lazy
 	 * routing, then consumes the pending exit once and detaches only FULL
-	 * packets before any service or native owner-ACK wait. */
+	 * packets before any service or native owner-ACK wait.
+	 */
 	return kd_exe_dispatch(exe, call->regs, frame->entry_ip,
 			       frame->outer_lock_addr, call);
 }

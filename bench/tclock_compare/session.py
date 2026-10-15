@@ -146,7 +146,7 @@ def check_kd_parameters(params, record, lock_addr):
             'mutex_blocking' not in params and record['mutex_wait_mode'] == 'blocking' and
             params['spin_delegate'] == ('N' if record.get('spin_delegate') == 'off' else 'Y'),
             'kdlock observation parameters differ')
-    if record.get('mutex_implementation', 'legacy') == 'owned-v1':
+    if record.get('mutex_implementation') == 'owned-v1':
         cabi = check_owned_caller_policy(record)
         require({'owned_mutex_spin_limit', 'owned_mutex_entry_ratio_limit',
                  'owned_mutex_self_route', 'owned_mutex_native_after_control'} <= set(params),
@@ -155,7 +155,6 @@ def check_kd_parameters(params, record, lock_addr):
                 int(params['owned_mutex_spin_limit']) == record['mutex_spin_limit'] and
                 int(params['owned_mutex_entry_ratio_limit']) == record['owned_mutex_entry_ratio_limit'] and
                 params['owned_mutex_self_route'] == ('Y' if record.get('mutex_routing') == 'self' else 'N') and
-                params['mutex_native_route'] == 'N' and
                 int(params['owned_mutex_native_after_control']) ==
                 int(record.get('owned_mutex_force_full', False)),
                 'owned mutex observation parameters differ')
@@ -200,12 +199,6 @@ def check_kd_parameters(params, record, lock_addr):
                          'owned_mutex_early_release'} & params.keys(),
                     'owned provider protocol differs')
 
-    else:
-        require(int(params['mutex_spin_limit']) == record['mutex_spin_limit'] and
-                int(params['mutex_entry_ratio_limit']) == record['mutex_entry_ratio_limit'] and
-                params['mutex_native_route'] == ('Y' if record.get('mutex_routing') == 'native' else 'N'),
-                'kdlock observation parameters differ')
-
 
 def check_jit_evidence(record):
     # A policy may select self-execution. Keep NO_JIT explicit and retain all
@@ -214,28 +207,20 @@ def check_jit_evidence(record):
     record['execution_class'] = ('NATIVE' if record['arm'] == 'native' else
                                  'JIT' if record.get('jit_bodies', 0) > 0 else 'NO_JIT')
     if record['arm'] == 'kdlock' and record.get('lock_kind') == 'mutex':
-        owned = record.get('mutex_implementation', 'legacy') == 'owned-v1'
-        if owned:
-            require(record.get('mutex_routing', 'adaptive') != 'native',
-                    'owned mutex cannot use a Linux native route')
-            record['execution_class'] = 'JIT' if record.get('jit_bodies', 0) > 0 else 'KD_SELF'
+        require(record.get('mutex_implementation') == 'owned-v1', 'unsupported mutex implementation')
+        require(record.get('mutex_routing', 'adaptive') in ('adaptive', 'self'), 'invalid mutex route')
+        record['execution_class'] = 'JIT' if record.get('jit_bodies', 0) > 0 else 'KD_SELF'
         if record.get('mutex_routing') == 'self':
-            require(owned and record.get('jit_bodies', 0) == 0, 'self routing control executed JIT or is not owned')
+            require(record.get('jit_bodies', 0) == 0, 'self routing control executed JIT or is not owned')
             require(not record.get('functional', False), 'self control is not a functional JIT check')
             record.update(jit_acceptance='SELF_ROUTING_CONTROL', execution_class='KD_SELF', diagnostic=True)
-            return
-        if record.get('mutex_routing', 'adaptive') == 'native':
-            require(record.get('jit_bodies', 0) == 0, 'native routing control executed JIT')
-            require(not record.get('functional', False), 'native control is not a functional JIT check')
-            record.update(jit_acceptance='NATIVE_ROUTING_CONTROL',
-                          execution_class='NATIVE_ROUTING_CONTROL', diagnostic=True)
             return
         if record.get('mutex_acceptance', 'jit-required') == 'adaptive-performance':
             require(not record.get('functional', False), 'adaptive performance is not a functional JIT check')
             record['jit_acceptance'] = ('PASS' if record.get('jit_bodies', 0) > 0 else
-                                        'ADAPTIVE_SELF' if owned else 'ADAPTIVE_NATIVE')
+                                        'ADAPTIVE_SELF')
             record['execution_class'] = ('JIT' if record.get('jit_bodies', 0) > 0 else
-                                         'KD_SELF' if owned else 'ADAPTIVE_NATIVE')
+                                         'KD_SELF')
             return
     if (record['arm'] == 'kdlock' and record.get('lock_kind', 'spin') == 'spin' and
             record.get('spin_delegate', 'on') == 'off'):
@@ -263,13 +248,6 @@ def check_jit_evidence(record):
 
 
 class BackendSession(Session):
-    def mutex_wait_stats(self):
-        if self.record.get('mutex_implementation', 'legacy') != 'owned-v1':
-            return super().mutex_wait_stats()
-        values = list(map(int, Path('/sys/module/kdlock_km/parameters/owned_mutex_wait_stats').read_text().split()))
-        require(len(values) == 3 and all(v >= 0 for v in values), 'invalid owned mutex wait observations')
-        return dict(zip(('result_schedule_calls', 'result_wakes', 'gate_wait_calls'), values))
-
     def run(self, args, log, **kwargs):
         # Every client command, including prepare and drain, checks the loaded
         # payload identity. A hash module must never satisfy a cacheline run.
@@ -318,7 +296,7 @@ class BackendSession(Session):
         self.run(['insmod', GUARD_MODULE], 'load-allocator-guard.log')
         self.run(['rmmod', 'tc_allocator_guard'], 'unload-allocator-guard.log')
         if self.record['arm'] == 'kdlock':
-            if self.record.get('mutex_implementation', 'legacy') == 'owned-v1':
+            if self.record.get('mutex_implementation') == 'owned-v1':
                 mutex_params = [
                     'owned_mutex_reuse_spins=' + str(self.record.get('owned_mutex_reuse_spins', 0)),
                     'owned_mutex_spin_limit=' + str(self.record['mutex_spin_limit']),
@@ -331,10 +309,7 @@ class BackendSession(Session):
                                  for field in ('owned_mutex_origin_spin', 'owned_mutex_numa')
                                  if field in self.record]
             else:
-                mutex_params = [
-                    'mutex_spin_limit=' + str(self.record.get('mutex_spin_limit', 4096)),
-                    'mutex_entry_ratio_limit=' + str(self.record['mutex_entry_ratio_limit']),
-                    'mutex_native_route=' + ('1' if self.record.get('mutex_routing') == 'native' else '0')]
+                mutex_params = []
             if self.record.get('owned_mutex_force_full'):
                 mutex_params.append('owned_mutex_native_after_control=1')
             self.run(['insmod', PROVIDER, 'bench_quiet=1', 'jit_timing=0', 'hotlock_stats=1',
@@ -353,7 +328,7 @@ class BackendSession(Session):
         self.loaded_source = True
         layout = json.loads(self.run([HERE/'client', '--layout'], 'layout.json'))
         self.record['layout'] = layout
-        if self.record.get('mutex_implementation', 'legacy') == 'owned-v1':
+        if self.record.get('mutex_implementation') == 'owned-v1':
             require(layout['lock_bytes'] == 32 and layout['line_bytes'] == 64 and
                     layout['lock_addr'] % 64 == layout['data_addr'] % 64 == 0,
                     'owned c01 lock/payload layout differs from the 32-byte aligned contract')
@@ -435,7 +410,7 @@ class BackendSession(Session):
             counter = 0
             owned = self.record.get('mutex_implementation') == 'owned-v1'
             if self.loaded_kd:
-                counter_symbol = 'kd_owned_mutex_bodies' if owned else 'kd_mutex_jit_success_count'
+                counter_symbol = 'kd_owned_mutex_bodies'
                 symbols = [int(s[0], 16) for line in Path('/proc/kallsyms').read_text().splitlines()
                            if len(s := line.split()) == 4 and
                            s[2:] == [counter_symbol, '[kdlock_km]']]

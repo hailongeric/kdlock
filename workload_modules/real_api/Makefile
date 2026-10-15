@@ -1,9 +1,11 @@
 # Build in the recovery guest; each binary selects one real kernel API and lock.
-ifneq ($(filter-out legacy,$(RB_MUTEX_IMPLEMENTATION)),)
-$(error real kernel API mutexes support only RB_MUTEX_IMPLEMENTATION=legacy)
-endif
 ifneq ($(filter owned owned-v1 kdlock-owned,$(RB_BACKEND)),)
 $(error a KD-owned object cannot replace a kernel-owned mutex)
+endif
+ifneq ($(filter $(RB_KIND),PIPEBYTES PIPECAP SEEK),)
+ifeq ($(RB_BACKEND),kdlock)
+$(error KD requires its own mutex object; kernel-owned mutex workloads support native/tclock only)
+endif
 endif
 ifneq ($(KERNELRELEASE),)
 obj-m := real_api.o

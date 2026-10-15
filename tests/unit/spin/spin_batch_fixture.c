@@ -220,7 +220,7 @@ static void test_cache(void)
 	CHECK(kd_spin_batch_find_ready(&next_batch, 0x900) == &entries[1]);
 	CHECK(lookups == 4);
 	/* Foreign backends are never hits; unchanged dispatcher rejects them. */
-	entries[1].lock_kind = KD_EXE_LOCK_MUTEX;
+	entries[1].lock_kind = KD_EXE_LOCK_OWNED_MUTEX;
 	CHECK(kd_spin_batch_find_ready(&batch, 0x900) == &entries[1]);
 	CHECK(lookups == 5);
 	CHECK(!kd_spin_batch_find_ready(&batch, 0xa00));

@@ -35,6 +35,18 @@ TEST_LOCK_SYMBOLS = {
 }
 
 
+OWNED_TEST_SYMBOLS = {
+    name: 0x2000000 + index * 0x1000
+    for index, name in enumerate((
+        "kd_owned_mutex_lock_v1", "kd_owned_mutex_unlock_v1",
+        "kd_owned_mutex_outer_unlock_v1", "kd_owned_mutex_direct_lock_clobber_v1",
+        "kd_owned_mutex_direct_contended_clobber_v1", "kd_owned_mutex_outer_contended_clobber_v1",
+        "kd_owned_mutex_outer_prepared_clobber_v1", "kd_owned_mutex_outer_preflight_v1",
+        "kd_owned_mutex_direct_unlock_clobber_v1", "kd_owned_mutex_outer_lock_cabi_v2",
+        "kd_owned_mutex_outer_unlock_cabi_v2",
+    ))
+}
+
 def decode(raw):
     return mn_x86.dis(bin_stream_str(bytes.fromhex(raw)), 64, 0)
 
@@ -52,10 +64,12 @@ def render(
     body_witness=False,
     indirect_history=None,
     mutex_stack_bytes=0,
-    abi=0,
+    abi=None,
 ):
     output = io.StringIO()
-    resolved_symbols = TEST_LOCK_SYMBOLS | (kernel_symbols or {})
+    resolved_symbols = TEST_LOCK_SYMBOLS | OWNED_TEST_SYMBOLS | (kernel_symbols or {})
+    if abi is None:
+        abi = 4 if lock_kind == "mutex-owned" else 0
     previous = os.getcwd()
 
     def read_regions(entry, jump_table, excluded_callees):
@@ -320,8 +334,8 @@ class JitDiagnosticsTests(unittest.TestCase):
         # Keep the diagnostic distinct from precision refusal, for direct and
         # memory-loaded pointers in both backends. This is not an assertion of
         # runtime safety; muted diagnostics must preserve the exact verdict/code.
-        for kind in ("spin", "mutex"):
-            for raw in ("488b07c3", "488b07488b00c3"):
+        for kind in ("spin", "mutex-owned"):
+            for raw in ("488b03c3", "488b03488b00c3"):
                 with self.subTest(kind=kind, raw=raw):
                     assembly, log, status = render(
                         raw, lock_kind=kind, return_status=True

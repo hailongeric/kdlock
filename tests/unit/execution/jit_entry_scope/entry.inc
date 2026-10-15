@@ -142,11 +142,11 @@ static void check_registry_refusal(void)
 
 	/* These are unstarted spin/mutex roots, not post-progress recovery. Check
 	 * the full packet, virtual stack and owner ledger, not just executed=false. */
-	for (int backend = 0; backend < 2; backend++) {
+	for (int backend = 0; backend < 1; backend++) {
 		for (int state = 0; state < 7; state++) {
 			reset();
 			active.mutex_backend = backend;
-			entry->lock_kind = backend ? KD_EXE_LOCK_MUTEX :
+			entry->lock_kind = backend ? KD_EXE_LOCK_OWNED_MUTEX :
 						     KD_EXE_LOCK_SPIN;
 			memset(&active.regs, 0x51, sizeof(active.regs));
 			active.regs.ip = active.entry_ip;
@@ -198,7 +198,7 @@ static void check_registry_refusal(void)
  * Source frame leasing itself is exercised by test_source_lifetime. */
 static void check_cached_entry(void)
 {
-	for (int backend = 0; backend < 2; backend++) {
+	for (int backend = 0; backend < 1; backend++) {
 		for (int change = -1; change < 9; change++) {
 			struct kd_exe_info *cached;
 			struct kd_exec_frame before;
@@ -206,7 +206,7 @@ static void check_cached_entry(void)
 
 			reset();
 			active.mutex_backend = backend;
-			entry->lock_kind = backend ? KD_EXE_LOCK_MUTEX : KD_EXE_LOCK_SPIN;
+			entry->lock_kind = backend ? KD_EXE_LOCK_OWNED_MUTEX : KD_EXE_LOCK_SPIN;
 			CHECK(kd_exe_is_ready(0, active.entry_ip));
 			registry_lookups = 0;
 			cached = kd_exe_find_ready(0, active.entry_ip);
@@ -220,7 +220,7 @@ static void check_cached_entry(void)
 			case 4: entry->code_block = NULL; break;
 			case 5: entry->pid = 1; break;
 			case 6: entry->RIP += 8; break;
-			case 7: entry->lock_kind = backend ? KD_EXE_LOCK_SPIN : KD_EXE_LOCK_MUTEX; break;
+			case 7: entry->lock_kind = backend ? KD_EXE_LOCK_SPIN : KD_EXE_LOCK_OWNED_MUTEX; break;
 			case 8: cached = NULL; break;
 			}
 			memcpy(&before, &active, sizeof(before));

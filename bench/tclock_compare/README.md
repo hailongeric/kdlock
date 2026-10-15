@@ -48,12 +48,11 @@ KDLOCK_RECOVERY_CONFIRMED=1 KDLOCK_SNAPSHOT_TAG=YOUR_CONFIRMED_SNAPSHOT \
   --output /root/kdlock-evidence/10.176.26.71/bench/spin-matrix-new
 ```
 
-For mutex, replace the entry with `run_mutex.py` and choose a new output directory.
-For hash, use `--workload rcuht` and omit `--cachelines`. Mutex accepts only ordinary
-`plain` operations. Its default batch cap is 1,024 bodies; `--kd-batch-size`
-sets the compile-time cap, checked against `mutex_batch` provider metadata. KD mutex
-delegation requires JIT; native-first acquisition remains enabled. The provider
-has no `mutex_jit` parameter.
+For mutex, use `run_mutex.py` with `--cachelines 1` and a new output directory.
+Its KD arm uses the owned mutex; Native/TCLock also support larger cacheline and
+RCUHT bodies when selected without KD. `--kd-batch-size` sets the provider's
+compile-time total body cap, default 1,024. KD mutex delegation requires JIT;
+SELF acquisition remains available for local execution.
 
 | Option/default | Meaning |
 | --- | --- |
@@ -63,12 +62,12 @@ has no `mutex_jit` parameter.
 | `--peak-window-ms 300`, `--peak-settle-ms 300` | Highest valid cohort window after settling |
 | `--collector-cpu 30` | Built-in default; override with an available CPU outside workers (63 on the documented destination, 38 in the original full matrix) |
 | `--share-collector` | Off by default; timed runs only, with the full ordered CPU list `0-63` and collector 63; labels overlap at 64 workers |
-| `--numa on`, `--kd-batch-size 1024` | KD spin/legacy-mutex NUMA selection and total body bound; owned selection has its own opt-in switch |
+| `--numa on`, `--kd-batch-size 1024` | KD spin NUMA selection and the shared total body bound; owned selection has its own opt-in switch |
 | `--spin-prefetch 2` | KD producer-prepared hints |
 | `--spin-entry-ratio-limit 2` | Adaptive ratio rule; 0 bypasses only ratio filtering |
 | `--kd-provider-ubsan off` | Private KD provider only; `kernel` inherits kernel policy |
 | `--mutex-spin-limit 4096` | KD mutex result polling budget before uninterruptible sleep; 0 skips polling. For owned-v1 this does not limit SELF owner spinning through OSQ |
-| `--mutex-implementation legacy` | `owned-v1` opts into the separate KD-owned c01 object; nested/early require functional mode |
+| `--mutex-implementation owned-v1` | KD-owned c01 object, the only KD mutex implementation; nested/early require functional mode |
 | `--owned-mutex-entry-ratio-limit 256` | Independent ABI2 admission threshold for `owned-v1`; powers of two 2–256. ABI4 local-first does not use heat admission |
 | `--owned-mutex-cabi` | Opt-in ABI4 ordinary-C caller; Linux local acquisition before late capture, with no fixed owner-spin budget |
 | `--owned-mutex-reuse-spins 0` | ABI4 allowance 0/8/32/128 after an unflagged release, once per OSQ turn; measured profile selects 32 |
@@ -80,7 +79,7 @@ has no `mutex_jit` parameter.
 | `--owned-mutex-preflight-queue` | Opt in to joining the private OSQ within a positive preflight polling budget; default false |
 | `--cpus LIST` | Ordered worker placement; each cohort takes its prefix. Choose node membership from the verified topology |
 | `--mutex-acceptance jit-required` | Default JIT acceptance; `adaptive-performance` also scores valid local execution with distinct classification |
-| `--mutex-routing adaptive` | `native` is an unscored legacy control; `self` is an unscored owned control |
+| `--mutex-routing adaptive` | `self` is an unscored owned control |
 | `--dry-run` | Print plan without live execution |
 
 KD mutexes always support blocking. `--mutex-wait-mode` has been removed;
@@ -88,7 +87,7 @@ each backend runs once per round. Records retain `mutex_wait_mode=blocking`
 and the polling budget so current runs remain distinct from historical spin
 measurements. The runner rejects providers with the obsolete policy selector.
 Owned wait counters cover delegated result waits; the third gate counter is
-zero because owned-v1 has no separate legacy gate. They do not count SELF sleeps.
+zero because owned-v1 has no separate admission gate. They do not count SELF sleeps.
 
 Both entries now accept any worker count from 1 through 64. The full new-host
 comparison uses 22 counts: 1–8 in steps of one, then 12–64 in steps of four.
@@ -223,20 +222,16 @@ policy. Static snapshots check complete structure and exact operation totals.
 | --- | --- | --- |
 | Native | Original kernel functions, no provider | Original mutex functions bypass experimental clobber macros |
 | TCLock | Native waiter-stack delegation | Actual upstream ordinary mutex port with parking |
-| KD | Explicit KD word, ABI1/JIT | Default legacy: original mutex plus shadow gate, ABI2; explicit owned-v1: private owner/OSQ/FIFO, ABI2 or ABI4 |
+| KD | Explicit KD word, ABI1/JIT | Owned private owner/OSQ/FIFO, ABI2 or ABI4, c01 |
 
-`--mutex-implementation owned-v1` selects a distinct KD-owned `struct kd_mutex`
-for the KD arm. The default `legacy` implementation and Native/TCLock arms keep
-their existing objects and interfaces. The owned object is exactly 32 bytes and
-occupies the same 64-byte-aligned lock slot as Native. Its caller uses the owned
-outer-cookie interface with default ABI2 or opt-in ABI4, and distinct registry lock kind 3; it never
-casts the object to a Linux mutex. The initial owned performance workload supports
-plain c01; nested/early are available only as KD-only functional checks. RCUHT,
-other body sizes and replacement of kernel-owned pipe/file mutexes are rejected.
-This option names an implementation,
-not a claim of performance acceptance.
+The KD arm uses a 32-byte `struct kd_mutex` in the same 64-byte-aligned lock
+slot as Native. Its outer-cookie interface uses ABI2 by default or opt-in ABI4,
+with registry kind 3. It never casts the object to a Linux mutex. The performance
+workload supports plain c01; nested/early are KD-only functional checks. RCUHT,
+other body sizes and replacement of kernel-owned pipe/file mutexes are rejected
+for KD. Implementation identity is separate from performance acceptance.
 
-The owned caller is compiled with `SC_MUTEX_OWNED=1`; the runner checks its
+The KD caller selects owned storage at compile time; the runner checks its
 `mutex_implementation=owned-v1` module metadata and owned symbol imports. It
 prepares the owned continuation, verifies publication identity and returned JIT
 bodies, and checks object idleness after worker drain before source retirement.
@@ -283,18 +278,13 @@ but excludes their failed scores and still exits nonzero.
 
 Mutex acceptance defaults to `--mutex-acceptance jit-required`. Explicit
 `--mutex-acceptance adaptive-performance` also scores correct, drained local
-execution chosen by the selected policy. Zero-JIT legacy samples retain
-the `ADAPTIVE_NATIVE` classification; they do not pass JIT acceptance.
-Functional checks always retain JIT-required acceptance.
-
-For `owned-v1`, self-execution is classified `KD_SELF`; adaptive acceptance with
-zero returned bodies is `ADAPTIVE_SELF`, never `ADAPTIVE_NATIVE` or a JIT pass.
-`--mutex-routing self` is an owned-only diagnostic control requiring zero JIT
-bodies and excluded from scores. It keeps the owned lock protocol active.
-`--mutex-routing native` is prohibited for an owned object. The owned threshold
-uses the separate `owned_mutex_entry_ratio_limit` provider parameter; changing
-the legacy threshold with an owned run is rejected. Results and acceptance
-screens keep implementation, queue policy and threshold identities separate.
+execution through the owned protocol. Such samples are classified `KD_SELF`,
+with acceptance `ADAPTIVE_SELF`; they do not pass JIT-required acceptance.
+Functional checks always require returned JIT bodies. `--mutex-routing self`
+forces local execution as an unscored diagnostic requiring zero JIT bodies.
+The `owned_mutex_entry_ratio_limit` provider parameter controls ABI2 heat
+admission; ABI4 uses local acquisition before capture. Results keep queue,
+caller and threshold identities separate.
 Owned records identify `owned_queue_policy=finite_fifo` by default. The opt-in
 `--owned-mutex-refill` experiment records `bounded_fifo_refill` and verifies its
 read-only provider parameter. It takes another FIFO snapshot only after consuming
@@ -310,20 +300,14 @@ zero calls with the owned target address. Its 100 us owner samples are not exact
 ownership streaks; probe overhead changes throughput and contention, so these
 runs never score. Separate PMU/flat-PC diagnostics remain available. Owned
 wait observations count delegated-result parks and wakes; their third field
-is zero because there is no legacy gate, and they do not claim a count of all
+is zero because there is no separate admission gate, and they do not claim a count of all
 self-execution waits.
 
-`--mutex-entry-ratio-limit` accepts powers of two from 2 through 256 (default
-256). The CPU compares `(entries >> 10) < limit` every 1,024 failed native
-attempts. The 1,025-record exact-address heat check and strict comparison stay
-unchanged. The pinned sampler skips cold table access between CPU comparisons;
-no threshold or route depends on the benchmark's worker count.
-
-`--mutex-routing native` forces the existing native fallback after sampling.
-It is an unscored `NATIVE_ROUTING_CONTROL` diagnostic and must return zero JIT
-bodies. Every sample records threshold, routing, acceptance and execution class.
-Reports keep different thresholds and policies separate, retain median whole-run
-rates, and exclude diagnostic/PMU samples from performance scores.
+`--owned-mutex-entry-ratio-limit` accepts powers of two from 2 through 256
+(default 256). ABI2 compares `(entries >> 10) < limit` every 1,024 failed native
+attempts and requires exact-address heat. No threshold or route depends on
+worker count. Reports keep thresholds and policies separate and exclude
+instrumented or diagnostic samples from performance scores.
 
 The [c01 acceptance auditor](mutex_study.py) verifies frozen inputs and recomputes
 peaks from raw progress. Its primary grid is 1–8, 12, 16, 20, 24 and 28 workers;
@@ -376,8 +360,7 @@ observation and verifies both objects are idle. Add `--owned-mutex-force-full`
 to resume one checked post-control continuation on its logical caller, requiring
 both physical-owner ACKs. This uses `owned_mutex_native_after_control`; the
 older `jit_hl_fault_after_known_call` intentionally fabricates invalid exits
-and must not be used as a valid FULL continuation probe. Legacy mutex scenarios and all
-timed nested/early runs are rejected. Keep these runs in separate output directories.
+and must not be used as a valid FULL continuation probe. All timed nested/early runs are rejected. Keep these runs in separate output directories.
 
 Functional runs require actual JIT for
 multithread positives and write `functional.json`, not performance summaries.
@@ -420,7 +403,7 @@ Join workers → verify data/lock/queue/frame drain → stop translators → ret
 sources → unload workload → unload backend/provider. Clear TCLock's diagnostic
 `target_lock` before freeing its workload storage. Do not force unload on EBUSY,
 reuse old RIP-keyed JIT after replacing only a source module, or alter frozen inputs.
-For Native and legacy KD mutex workloads, the worker-drain ioctl also requires
+For Native mutex workloads, the worker-drain ioctl also requires
 a zero original owner word, an empty sleeping wait list and an empty configured
 Linux OSQ. Owned-v1 instead calls `kd_owned_mutex_is_idle` on its distinct owner,
 wait list and private OSQ; functional scenarios check both owned objects.
@@ -480,7 +463,7 @@ the FULL owner-ACK path. Both owned caller ABIs now use guarded owner release:
 SELF-only release can clear ownership before acquiring `wait_lock`, while a
 published or detached DELEGATE retains the guard until its queue is drained.
 ABI2 remains the default caller, and the benchmark's implementation default
-remains `legacy`. ABI4 is incompatible with the ABI2 preflight switches.
+is `owned-v1`. ABI4 is incompatible with the ABI2 preflight switches.
 
 `--owned-mutex-reuse-spins 0` preserves Linux retry timing. Experimental values
 8, 32 and 128 permit one short grace after an unflagged release per OSQ turn,

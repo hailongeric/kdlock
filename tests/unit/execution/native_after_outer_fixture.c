@@ -23,7 +23,7 @@ struct list_head {
 typedef struct {
 	int value;
 } raw_spinlock_t;
-struct mutex {
+struct kd_mutex {
 	int value;
 };
 
@@ -43,16 +43,11 @@ static int stack_read_error;
 static unsigned long spin_owner;
 static unsigned int spin_word;
 static struct list_head kd_native_frames;
-static int kd_native_lock, borrowed, published, unlocked, nested_jit;
+static int kd_native_lock, borrowed, published, unlocked;
 static int failures, checks;
 static unsigned long raw_spin_lock_addr = 0x100, raw_spin_unlock_addr = 0x200;
 static unsigned long pinned_spin_lock_addr = 0x120, cold_spin_unlock_addr = 0x220;
 static unsigned long clobber_spin_lock_addr = 0x110, clobber_spin_unlock_addr = 0x210;
-static unsigned long clobber_mutex_lock_addr = 0x310, clobber_mutex_unlock_addr = 0x410;
-static unsigned long direct_mutex_lock_addr = 0x320, direct_mutex_unlock_addr = 0x420;
-static unsigned long contended_mutex_lock_addr = 0x330;
-static unsigned long outer_mutex_lock_addr = 0x340;
-static unsigned long mutex_lock_addr = 0x300, mutex_unlock_addr = 0x400;
 static unsigned long owned_mutex_lock_addr = 0x500, owned_mutex_unlock_addr = 0x600;
 static unsigned long owned_outer_unlock_addr = 0x680;
 static unsigned long owned_direct_lock_addr = 0x510, owned_direct_unlock_addr = 0x610;
@@ -60,7 +55,7 @@ static unsigned long owned_contended_lock_addr = 0x530;
 static unsigned long owned_outer_lock_addr = 0x520;
 static unsigned long owned_prepared_lock_addr = 0x528;
 static unsigned long owned_cabi_lock_addr = 0x538, owned_cabi_unlock_addr = 0x630;
-static struct mutex a, b;
+static struct kd_mutex a, b;
 static struct task_struct native_peer = { .pid = 13 }, *nested_owner;
 static bool track_nested_owner;
 static unsigned int nested_acquires, nested_waits;
@@ -154,7 +149,7 @@ struct kd_exec_frame *kd_exec_current_frame(void)
 {
 	return active;
 }
-static int kd_mutex_nested_unlock(struct mutex *lock)
+static int kd_owned_nested_unlock(struct kd_mutex *lock)
 {
 	if (lock != &b)
 		return -EINVAL;
@@ -168,11 +163,7 @@ static int kd_mutex_nested_unlock(struct mutex *lock)
 	unlocked++;
 	return 0;
 }
-static void kd_mutex_note_nested_jit(void)
-{
-	nested_jit++;
-}
-static int kd_mutex_nested_lock(struct mutex *lock);
+static int kd_owned_nested_lock(struct kd_mutex *lock);
 static int kd_spin_jit_nested_lock_ctx(raw_spinlock_t *lock,
 				       struct kd_regs *regs,
 				       struct kd_exec_frame *frame)
@@ -199,24 +190,6 @@ static int kd_spin_jit_outer_unlock_ooo_ctx(raw_spinlock_t *lock,
 	return -EOPNOTSUPP;
 }
 
-/* These scenarios exercise the legacy family. A routing regression must fail
- * explicitly if shared dispatch accidentally selects an owned primitive. */
-struct kd_mutex;
-static int kd_owned_mutex_jit_nested_lock_ctx(struct kd_mutex *lock,
-		struct kd_regs *regs, struct kd_exec_frame *frame)
-{
-	(void)lock; (void)regs; (void)frame;
-	fprintf(stderr, "FAIL unexpected owned lock in legacy fixture\n");
-	exit(1);
-}
-static int kd_owned_mutex_jit_nested_unlock_ctx(struct kd_mutex *lock,
-		struct kd_exec_frame *frame)
-{
-	(void)lock; (void)frame;
-	fprintf(stderr, "FAIL unexpected owned unlock in legacy fixture\n");
-	exit(1);
-}
-
 #include "frame_code.h"
 
 #define CHECK(expr)                                                     \
@@ -231,14 +204,13 @@ static int kd_owned_mutex_jit_nested_unlock_ctx(struct kd_mutex *lock,
 
 /* The native wait is deterministic. The actual nested-call producer must not
  * publish B or consume its CALL until this substituted acquisition returns. */
-static int kd_mutex_nested_lock(struct mutex *lock)
+static int kd_owned_nested_lock(struct kd_mutex *lock)
 {
 	CHECK(track_nested_owner && lock == &b && current == &executor);
 	CHECK(active->control_call.phase == KD_CALL_ENTERED);
-	CHECK((active->regs.ip == mutex_lock_addr ||
-	       active->regs.ip == clobber_mutex_lock_addr ||
-	       active->regs.ip == direct_mutex_lock_addr ||
-	       active->regs.ip == contended_mutex_lock_addr) &&
+	CHECK((active->regs.ip == owned_mutex_lock_addr ||
+	       active->regs.ip == owned_direct_lock_addr ||
+	       active->regs.ip == owned_contended_lock_addr) &&
 	      active->regs.sp == (unsigned long)&waiter_stack[32]);
 	CHECK(!kd_exec_frame_lock_contains(active, (unsigned long)lock));
 	if (nested_owner) {
@@ -261,7 +233,7 @@ static struct kd_exec_frame frame(bool mutex)
 		.logical_task = &waiter,
 		.jit_lock_addr = { (unsigned long)&a, (unsigned long)&b },
 		.jit_lock_kind = { KD_EXEC_LOCK_QUEUE_OWNER,
-				   KD_EXEC_LOCK_NATIVE },
+				   mutex ? KD_EXEC_LOCK_OWNED : KD_EXEC_LOCK_NATIVE },
 		.jit_lock_node = { &a, &b },
 		.held_lock_depth = 2,
 		.outer_lock_depth = 1,
@@ -270,6 +242,7 @@ static struct kd_exec_frame frame(bool mutex)
 		.state = KD_EXEC_FRAME_RUNNING,
 		.executed = true,
 		.mutex_backend = mutex,
+		.owned_mutex = mutex,
 		.complex_ready = true, /* Ordinary explicit two-lock ledger. */
 	};
 }
@@ -432,7 +405,7 @@ static void check_mutex_ooo(void)
 {
 	struct kd_exec_frame f = frame(true);
 	unsigned long *return_ip = &waiter_stack[32];
-	struct kd_regs regs = { .ip = mutex_unlock_addr,
+	struct kd_regs regs = { .ip = owned_mutex_unlock_addr,
 				.sp = (unsigned long)return_ip,
 				.di = (unsigned long)&a };
 	int ret;
@@ -450,19 +423,19 @@ static void check_mutex_ooo(void)
 	f = frame(true);
 	CHECK(kd_exec_frame_record_event(&f, KD_EXEC_EVENT_OUTER_UNLOCK,
 					 NULL) == 0);
-	regs = (struct kd_regs){ .ip = mutex_unlock_addr,
+	regs = (struct kd_regs){ .ip = owned_mutex_unlock_addr,
 				 .sp = (unsigned long)return_ip,
 				 .di = (unsigned long)&b };
 	ret = handle_known_call(&regs, f.outer_lock_addr);
 	CHECK(ret == KD_EXE_KNOWN_OUTER_UNLOCK);
-	CHECK(unlocked == 1 && nested_jit == 1);
+	CHECK(unlocked == 1);
 	/* Final unlock's CALL is consumed by the real waiter return trampoline. */
-	CHECK(regs.ip == mutex_unlock_addr &&
+	CHECK(regs.ip == owned_mutex_unlock_addr &&
 	      regs.sp == (unsigned long)return_ip);
 	CHECK(kd_exec_frame_can_complete(&f));
 	CHECK(kd_exec_frame_complete(&f) == 0);
 	CHECK(kd_exec_frame_complete(&f) == -EALREADY);
-	CHECK(kd_mutex_jit_nested_unlock_ctx(&b, &f) == -ENOENT);
+	CHECK(kd_owned_mutex_jit_nested_unlock_ctx(&b, &f) == -ENOENT);
 	CHECK(unlocked == 1);
 }
 
@@ -483,7 +456,7 @@ static void check_mutex_stack_changes(void)
 
 		memset(waiter_stack, 0, sizeof(waiter_stack));
 		*word = 0x900;
-		f.regs.ip = mutex_unlock_addr;
+		f.regs.ip = owned_mutex_unlock_addr;
 		f.regs.sp = (unsigned long)word;
 		f.regs.di = (unsigned long)&b;
 		f.regs.bx = 0xabcd;
@@ -557,7 +530,7 @@ static void check_mutex_stack_refusals(void)
 	/* Valid CALL, insufficient window: no unlock has happened and the waiter
 	 * must continue at that CALL, retaining every original physical owner. */
 	f = frame(true);
-	f.regs.ip = mutex_unlock_addr;
+	f.regs.ip = owned_mutex_unlock_addr;
 	f.regs.sp = (unsigned long)(waiter_stack +
 				    sizeof(waiter_stack) / sizeof(*word) - 1);
 	*(unsigned long *)f.regs.sp = 0x900;
@@ -576,7 +549,7 @@ static void check_mutex_stack_refusals(void)
 	for (int bad = 0; bad < 9; bad++) {
 		f = frame(true);
 		*word = 0x900;
-		f.regs.ip = mutex_lock_addr;
+		f.regs.ip = owned_mutex_lock_addr;
 		f.regs.sp = (unsigned long)word;
 		CHECK(kd_mutex_stack_prepare(&f, &f.regs, &saved) == 0);
 		f.control_call.phase = KD_CALL_COMPLETE;
@@ -616,7 +589,7 @@ static void check_mutex_stack_refusals(void)
 	}
 	for (int bad = 0; bad < 5; bad++) {
 		f = frame(true);
-		f.regs.ip = mutex_lock_addr;
+		f.regs.ip = owned_mutex_lock_addr;
 		f.regs.sp = (unsigned long)word;
 		*word = bad == 3 ? 0 : 0x900;
 		if (bad == 0)
@@ -643,7 +616,7 @@ static void check_completed_mutex_native(void)
 				CHECK(kd_exec_frame_record_event(
 					      &f, KD_EXEC_EVENT_OUTER_UNLOCK,
 					      NULL) == 0);
-			CHECK(kd_call_begin(&f.control_call, mutex_lock_addr,
+			CHECK(kd_call_begin(&f.control_call, owned_mutex_lock_addr,
 					    0x1000, 0x900) == 0);
 			f.control_call.phase = KD_CALL_STACK_CHANGED;
 			f.regs.ip = 0x900;
@@ -877,10 +850,9 @@ static void check_acquired_spin_native(void)
  * native peer wait. It resumes after lock(B), never after a remote unlock(B). */
 static void check_mutex_call_pair(void)
 {
-	/* Original Linux, captured kernel bridge and explicit module endpoints
-	 * must preserve the same ownership/continuation contract through FULL. */
-	const unsigned long locks[] = { mutex_lock_addr, clobber_mutex_lock_addr, direct_mutex_lock_addr, contended_mutex_lock_addr };
-	const unsigned long unlocks[] = { mutex_unlock_addr, clobber_mutex_unlock_addr, direct_mutex_unlock_addr, direct_mutex_unlock_addr };
+	/* Ordinary and direct owned endpoints preserve ownership through FULL. */
+	const unsigned long locks[] = { owned_mutex_lock_addr, owned_direct_lock_addr, owned_contended_lock_addr };
+	const unsigned long unlocks[] = { owned_mutex_unlock_addr, owned_direct_unlock_addr, owned_direct_unlock_addr };
 	for (unsigned int endpoint = 0; endpoint < sizeof(locks) / sizeof(locks[0]); endpoint++)
 	for (unsigned int contended = 0; contended < 2; contended++) {
 		struct kd_exec_frame f = frame(true);
@@ -907,7 +879,7 @@ static void check_mutex_call_pair(void)
 		CHECK(!memcmp(&f.regs, &expected, sizeof(expected)));
 		CHECK(nested_owner == current && nested_acquires == 1 &&
 		      nested_waits == contended && unlocked == before_unlock);
-		CHECK(f.jit_lock_depth == 2 && f.jit_lock_kind[1] == KD_EXEC_LOCK_NATIVE &&
+		CHECK(f.jit_lock_depth == 2 && f.jit_lock_kind[1] == KD_EXEC_LOCK_OWNED &&
 		      f.jit_lock_node[1] == &b && f.jit_lock_addr[1] == (unsigned long)&b);
 		CHECK(f.control_call.phase == KD_CALL_COMPLETE && !f.resume_target &&
 		      f.logical_task == &waiter && !f.outer_unlock_seen);
@@ -932,7 +904,7 @@ static void check_mutex_call_pair(void)
 		CHECK(!memcmp(&f.regs, &expected, sizeof(expected)));
 		/* The return-valued outer entry cannot be consumed as a nested void
 		 * acquisition: retain the packet and ownership for generic refusal. */
-		unsigned long outer_only[] = { outer_mutex_lock_addr, owned_outer_lock_addr,
+		unsigned long outer_only[] = { owned_outer_lock_addr,
 			owned_prepared_lock_addr, owned_cabi_lock_addr };
 		for (unsigned int entry = 0; entry < sizeof(outer_only)/sizeof(outer_only[0]); entry++) {
 			f.regs.ip = outer_only[entry];

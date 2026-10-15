@@ -44,8 +44,8 @@ def mutex_context_error(assembly, lock_kind, *, requirements=0):
     Logical current uses the separate task input and remains supported. Unknown
     assembly conservatively requires GS, as for wrapper input selection.
     """
-    if (lock_kind in {'mutex', 'mutex-owned'} and wrapper_context_inputs(assembly)[0]
-            and not (lock_kind == 'mutex-owned' and requirements == 1)):
+    if (lock_kind == 'mutex-owned' and wrapper_context_inputs(assembly)[0]
+            and requirements != 1):
         return "mutex cannot delegate origin-CPU GS storage"
     return None
 

@@ -3,8 +3,8 @@
 KD lets a lock holder execute a waiting caller's critical section through JIT.
 Spinlocks use KD's own four-byte object. The experimental owned mutex uses a
 32-byte `struct kd_mutex` with its own owner, OSQ and tagged waiter list; it
-never passes that object to Linux mutex operations. The retained legacy mutex
-backend keeps the original Linux object and its real owner. Read-write locks use a 128-byte object: readers run locally,
+never passes that object to Linux mutex operations. Read-write locks use a
+128-byte object: readers run locally,
 while writers may delegate through the spin engine. Rwlock ABI3 acquires exclusive
 write access before the translated body starts. Callers select these APIs
 explicitly; loading the provider does not redirect global Linux lock calls.
@@ -14,9 +14,9 @@ For an introduction to the execution model and its terms, start with
 
 Mutex delegation-result waits use bounded polling then sleep on reserved stacks;
 owned SELF acquisition separately uses Linux-style optimistic spinning and
-sleeping. Legacy mutexes refuse delegated origin-CPU GS access; owned mutexes
-can opt into the audited bounded subset with an exclusive spinning claim. The
-[validation index](VALIDATION.md#current-owned-protocol-verification) separates
+sleeping. Owned mutexes can opt into the audited bounded subset with an exclusive
+spinning claim. The
+[validation index](VALIDATION.md#owned-only-mutex-verification) separates
 current-source protocol/JIT/FULL/ACK checks from older receipts and performance runs.
 [Performance status](PERFORMANCE.md) summarizes the latest frozen measurements;
 [the results index](../bench/results/README.md) owns historical reports and provenance.
@@ -29,8 +29,8 @@ superseded for new runs by the 64-CPU
 placement below.
 The [current flowcharts](design/mutex_implementation.md#owned-abi4-acquisition-and-release-flow)
 show the protocol, and the [owned benchmark command](../bench/tclock_compare/README.md#owned-c01-full-grid)
-selects the measured profile explicitly. The runner's legacy default and the
-owned caller's ABI2/reuse-0 defaults remain unchanged.
+selects the measured profile explicitly. The mutex runner uses owned-v1; the
+caller defaults remain ABI2/reuse-0.
 
 Later source adds immutable owned-image generations, optional audited origin-GS
 delegation and optional bounded NUMA selection. The origin and NUMA policies
@@ -94,10 +94,10 @@ Spin/mutex timed runs support it with
 and the [complete-matrix driver](../tools/vm/README.md#complete-164-worker-comparison),
 still require a separate collector. Record collector/QEMU contention separately
 and preserve historical topology metadata.
-The [full-grid closeout](../bench/results/10.176.26.71/bench/mutex_owned/20261014-full-grid/README.md#verification-and-closeout)
-records the 2026-10-14 restoration, kernel/boot-policy and idle checks, and confirmed
-`normal64-after-mutex-owned-full-20261014` snapshot. Reverify the live state and
-snapshot before any new run; the receipt is a historical observation.
+The [owned-only verification](../bench/results/10.176.26.71/tests/remove-mutex-legacy-20261015/validation.json)
+records the 2026-10-15 kernel, boot-policy, CPU-pin and idle checks, with the
+confirmed `before-mutex-legacy-removal-20261015` recovery snapshot. Reverify the
+live state and snapshot before any new run; the receipt records that run's state.
 
 `vm_ssh.sh` uses `/home/eric/.ssh/kdlock_vm_ed25519` to reach the guest locally.
 The host also provides the `ssh kdlock-vm` alias. The source-host synchronization
@@ -108,9 +108,6 @@ Host ports 2222, 9090 and 9091 retain their guest mappings; debugger port 1234
 is available only on host loopback. The monitor and serial log remain
 `/tmp/qemu-monitor.sock` and `/tmp/qemu-serial.log`.
 
-The [blocking-mutex validation](../bench/results/10.176.26.71/tests/mutex-blocking-only-20261012/validation.json)
-verified the captured kernel, native qspinlocks, all 64 CPU pins and a fresh
-recovery snapshot on 2026-10-12. Recheck those properties before live runs.
 Snapshots belong to their exact CPU topology; archive evidence before restoration.
 
 ### Results by machine

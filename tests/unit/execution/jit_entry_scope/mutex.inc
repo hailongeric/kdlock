@@ -36,7 +36,7 @@ static void check_mutex_batch(void)
  unsigned char code[64]={0};
  struct kd_jit_batch_call call, before;
  struct kd_regs borrowed, saved_borrowed;
- unsigned long saved_lock_addr=direct_mutex_lock_addr, saved_unlock_addr=direct_mutex_unlock_addr;
+ unsigned long saved_lock_addr=owned_direct_lock_addr, saved_unlock_addr=owned_direct_unlock_addr;
  struct kd_exec_frame saved, rejected;
  struct kd_exec_outer_unlock hook={0};
  memcpy(code+25,"KDWC002",7); memcpy(code+41,"KDAB",4);
@@ -45,15 +45,17 @@ static void check_mutex_batch(void)
   reset(); borrowed=active.regs;
   /* Packet selection must use the borrowed waiter packet, not frame storage. */
   borrowed.sp+=8; saved_borrowed=borrowed;
-  active.mutex_backend=active.batch_lease=active.regs_borrowed=true;
+  active.owned_mutex=active.mutex_backend=active.batch_lease=active.regs_borrowed=true;
   active.borrowed_regs=&borrowed;
   active.entry_abi=entry->entry_abi=KD_ENTRY_ABI_MUTEX_CLOBBER_V1;
   active.packet_state=KD_PACKET_MINIMAL;
-  entry->lock_kind=KD_EXE_LOCK_MUTEX; entry->code_block=code;
+  entry->lock_kind=KD_EXE_LOCK_OWNED_MUTEX; entry->code_block=code;
+  mutex_image=(struct kd_jit_image){.entry=entry,.entry_abi=2,.code=code};
+  active.image=&mutex_image;
   kd_jit_timing=timing; timing_clock_active=timing; timing_clock=1;
   CHECK(kd_exe_mutex_batch_prepare(entry,&active,&call));
   CHECK(call.regs==&borrowed && call.entry_abi==2 && call.complete &&
-        call.unlock==direct_mutex_unlock_addr && call.lock==active.outer_lock_addr &&
+        call.unlock==owned_direct_unlock_addr && call.lock==active.outer_lock_addr &&
         call.entry_sp==borrowed.sp && call.entry_sp!=active.regs.sp &&
         call.code==code+32 && call.args[0]==active.gsbase &&
         call.args[1]==(unsigned long)&waiter && call.packet_state==&active.packet_state);
@@ -94,8 +96,8 @@ static void check_mutex_batch(void)
    case 28: active.outer_lock_addr=0;break;
    case 29: entry->entry_abi=KD_ENTRY_ABI_LEGACY;break;
    case 30: code[25]^=1;break;
-   case 31: direct_mutex_lock_addr=0;break;
-   case 32: direct_mutex_unlock_addr=0;break;
+   case 31: owned_direct_lock_addr=0;break;
+   case 32: owned_direct_unlock_addr=0;break;
    }
    before=call; rejected=active;
    CHECK(!kd_exe_mutex_batch_prepare(entry,&active,&call));
@@ -103,8 +105,8 @@ static void check_mutex_batch(void)
    CHECK(!memcmp(&active,&rejected,sizeof(active)));
    active=saved; borrowed=saved_borrowed; source_open=true;
    entry->status_code=KD_EXE_NORMAL; entry->entry_abi=KD_ENTRY_ABI_MUTEX_CLOBBER_V1;
-   entry->lock_kind=KD_EXE_LOCK_MUTEX; code[45]=2; code[25]='K';
-   direct_mutex_lock_addr=saved_lock_addr;direct_mutex_unlock_addr=saved_unlock_addr;
+   entry->lock_kind=KD_EXE_LOCK_OWNED_MUTEX; code[45]=2; code[25]='K';
+   owned_direct_lock_addr=saved_lock_addr;owned_direct_unlock_addr=saved_unlock_addr;
   }
   call.args[0]=KD_EXE_CALL_MISS;
   CHECK(!kd_exe_mutex_batch_completed(&call,&active));
@@ -116,11 +118,13 @@ static void check_mutex_batch(void)
  }
  for (int lazy=0;lazy<2;lazy++) for (int refuse=0;refuse<2;refuse++) {
   reset(); borrowed=active.regs;
-  active.mutex_backend=active.batch_lease=active.regs_borrowed=true;
+  active.owned_mutex=active.mutex_backend=active.batch_lease=active.regs_borrowed=true;
   active.borrowed_regs=&borrowed;
   active.entry_abi=entry->entry_abi=KD_ENTRY_ABI_MUTEX_CLOBBER_V1;
   active.packet_state=KD_PACKET_MINIMAL;
-  entry->lock_kind=KD_EXE_LOCK_MUTEX;entry->code_block=code;
+  entry->lock_kind=KD_EXE_LOCK_OWNED_MUTEX;entry->code_block=code;
+  mutex_image=(struct kd_jit_image){.entry=entry,.entry_abi=2,.code=code};
+  active.image=&mutex_image;
   active.jit_lock_node[0]=&active; active.outer_unlock_hook=&hook;
   if (lazy) { active.complex_ready=false; poison_mutex_routing(&active); }
   CHECK(kd_exe_mutex_batch_prepare(entry,&active,&call));
@@ -146,12 +150,14 @@ static void check_mutex_batch(void)
  /* A failed fast preparation reaches the same materialization before the
   * generic readiness rejection. It must not execute or copy MINIMAL bytes. */
  reset(); borrowed=active.regs;
- active.mutex_backend=active.batch_lease=active.regs_borrowed=true;
+ active.owned_mutex=active.mutex_backend=active.batch_lease=active.regs_borrowed=true;
  active.borrowed_regs=&borrowed; active.complex_ready=false;
  active.jit_lock_node[0]=&active; active.outer_unlock_hook=&hook;
  active.entry_abi=entry->entry_abi=KD_ENTRY_ABI_MUTEX_CLOBBER_V1;
  active.packet_state=KD_PACKET_MINIMAL;
- entry->lock_kind=KD_EXE_LOCK_MUTEX; entry->code_block=code;
+ entry->lock_kind=KD_EXE_LOCK_OWNED_MUTEX; entry->code_block=code;
+  mutex_image=(struct kd_jit_image){.entry=entry,.entry_abi=2,.code=code};
+  active.image=&mutex_image;
  poison_mutex_routing(&active); source_open=false;
  CHECK(!kd_exe_mutex_batch_prepare(entry,&active,&call));
  CHECK(mutex_routing_poisoned(&active));

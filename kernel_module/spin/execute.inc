@@ -1,6 +1,8 @@
-/* Progressed JIT exits and nested/native/remote completion.
+/*
+ * Progressed JIT exits and nested/native/remote completion.
  * Included by combiner.inc after its batch/outer-release helpers.
- * Keep compiler attributes, option pragmas and assembly in this translation unit. */
+ * Keep compiler attributes, option pragmas and assembly in this translation unit.
+ */
 #pragma GCC push_options
 #pragma GCC optimize("O3")
 /*
@@ -18,7 +20,8 @@ execute_cs(struct qspinlock *lock, struct kd_spin_node *curr_node,
 	int ret_flag;
 	struct kd_exe_info *exe;
 	unsigned int frame_lock_depth;
-	struct kd_spin_jit_context *jit_context = &curr_node->execution->jit_context;
+	struct kd_spin_jit_context *jit_context =
+		&curr_node->execution->jit_context;
 	unsigned long entry_ip;
 	u64 queue_end;
 	bool abort_cleaned = false;
@@ -54,29 +57,41 @@ execute_cs(struct qspinlock *lock, struct kd_spin_node *curr_node,
 #endif
 
 	/* Physical packets are fully prepared before the waiter publishes next. */
-	if (curr_node->execution->frame.spin_kind != KD_SPIN_CONT_VIRTUAL && !curr_node->execution->frame.spin_regs_decoded)
+	if (curr_node->execution->frame.spin_kind != KD_SPIN_CONT_VIRTUAL &&
+	    !curr_node->execution->frame.spin_regs_decoded)
 		return KD_EXE_RUN_ERROR;
-	if (curr_node->execution->frame.spin_kind == KD_SPIN_CONT_VIRTUAL && !jit_context->requester)
+	if (curr_node->execution->frame.spin_kind == KD_SPIN_CONT_VIRTUAL &&
+	    !jit_context->requester)
 		return KD_EXE_RUN_ERROR;
-	/* B is a continuation in A's admitted code. An independent B translation
-	 * starts at lexical depth one and can stop at an inherited A unlock. */
-	entry_ip = curr_node->execution->frame.spin_kind == KD_SPIN_CONT_VIRTUAL ? jit_context->requester->entry_ip :
-					   curr_node->execution->frame.regs_ref->ip;
+	/*
+	 * B is a continuation in A's admitted code. An independent B translation
+	 * starts at lexical depth one and can stop at an inherited A unlock.
+	 */
+	entry_ip = curr_node->execution->frame.spin_kind ==
+				   KD_SPIN_CONT_VIRTUAL ?
+			   jit_context->requester->entry_ip :
+			   curr_node->execution->frame.regs_ref->ip;
 	exe = kd_spin_batch_find_ready(batch, entry_ip);
 	if (!exe) {
 		kd_spin_debug_jit_not_ready(batch->diag,
 					    kd_spin_lock_stack_depth(ptr));
 		kd_exe_add_abi(0, entry_ip, KD_EXE_LOCK_SPIN,
-		               curr_node->execution->frame.entry_abi);
+			       curr_node->execution->frame.entry_abi);
 		return KD_EXE_NO_RUN;
 	}
 	if (curr_node->execution->frame.packet_state == KD_PACKET_FULL)
-	print_debug(
-		"r15 %lx r14 %lx r13 %lx r12 %lx bx %lx bp %lx ip %lx sp %lx\n",
-		curr_node->execution->frame.regs_ref->r15, curr_node->execution->frame.regs_ref->r14, curr_node->execution->frame.regs_ref->r13,
-		curr_node->execution->frame.regs_ref->r12, curr_node->execution->frame.regs_ref->bx, curr_node->execution->frame.regs_ref->bp,
-		curr_node->execution->frame.regs_ref->ip, curr_node->execution->frame.regs_ref->sp);
-	frame_lock_depth = curr_node->execution->frame.spin_kind == KD_SPIN_CONT_VIRTUAL ?
+		print_debug(
+			"r15 %lx r14 %lx r13 %lx r12 %lx bx %lx bp %lx ip %lx sp %lx\n",
+			curr_node->execution->frame.regs_ref->r15,
+			curr_node->execution->frame.regs_ref->r14,
+			curr_node->execution->frame.regs_ref->r13,
+			curr_node->execution->frame.regs_ref->r12,
+			curr_node->execution->frame.regs_ref->bx,
+			curr_node->execution->frame.regs_ref->bp,
+			curr_node->execution->frame.regs_ref->ip,
+			curr_node->execution->frame.regs_ref->sp);
+	frame_lock_depth = curr_node->execution->frame.spin_kind ==
+					   KD_SPIN_CONT_VIRTUAL ?
 				   jit_context->lock_depth :
 				   kd_spin_lock_stack_depth(ptr);
 	frame = &curr_node->execution->frame;
@@ -103,11 +118,14 @@ execute_cs(struct qspinlock *lock, struct kd_spin_node *curr_node,
 				  lock);
 		return KD_EXE_RUN_ERROR;
 	}
-	/* The generic ledger initializes only its live prefix. Keep one entry
+	/*
+	 * The generic ledger initializes only its live prefix. Keep one entry
 	 * for a simple root so promotion to nested/native needs no reconstruction;
-	 * delay the large combiner snapshot until the first non-final exit. */
-	frame->spin_simple = curr_node->execution->frame.spin_kind != KD_SPIN_CONT_VIRTUAL && !frame->parent &&
-			     frame_lock_depth == 1;
+	 * delay the large combiner snapshot until the first non-final exit.
+	 */
+	frame->spin_simple = curr_node->execution->frame.spin_kind !=
+				     KD_SPIN_CONT_VIRTUAL &&
+			     !frame->parent && frame_lock_depth == 1;
 	if (!frame->spin_simple)
 		kd_spin_capture_combiner_state(&frame->saved_combiner, ptr);
 	frame->outer_unlock_hook = &batch->outer;
@@ -120,7 +138,8 @@ execute_cs(struct qspinlock *lock, struct kd_spin_node *curr_node,
 			       KD_EXEC_REMOTE_WAITING);
 		pr_info("kd_remote start: task=%d cpu=%u entry=%lx ip=%lx outer=%lx parent_outer=%lx owner_task=%lx\n",
 			frame->logical_pid, raw_smp_processor_id(),
-			frame->entry_ip, kd_exec_frame_regs(frame)->ip, frame->outer_lock_addr,
+			frame->entry_ip, kd_exec_frame_regs(frame)->ip,
+			frame->outer_lock_addr,
 			frame->resume_target->outer_lock_addr,
 			(unsigned long)current);
 	}
@@ -134,9 +153,10 @@ execute_cs(struct qspinlock *lock, struct kd_spin_node *curr_node,
 #endif
 	{
 		kd_spin_rw_begin(frame);
-		ret_flag = kd_exe_on_call_hl_entry(
-			exe, kd_exec_frame_regs(frame), frame->entry_ip,
-			frame->outer_lock_addr);
+		ret_flag = kd_exe_on_call_hl_entry(exe,
+						   kd_exec_frame_regs(frame),
+						   frame->entry_ip,
+						   frame->outer_lock_addr);
 	}
 dispatched:
 	if (!frame->executed)
@@ -147,24 +167,32 @@ dispatched:
 	kd_spin_selftest_frame_end(frame_event, frame, ret_flag);
 	kd_spin_selftest_refusal_end(frame, ret_flag);
 #endif
-	/* A pre-body refusal is still waiting. Once a body ran, use its saved
-	 * dispatch boundary and consume metadata before native/completion wake. */
+	/*
+	 * A pre-body refusal is still waiting. Once a body ran, use its saved
+	 * dispatch boundary and consume metadata before native/completion wake.
+	 */
 	if (frame->executed)
-		kd_exe_queue_timing_end(false, &curr_node->execution->queued_at_ns, queue_end);
+		kd_exe_queue_timing_end(
+			false, &curr_node->execution->queued_at_ns, queue_end);
 	if (ret_flag == KD_EXE_RUN_TO_UNLOCK && frame->spin_simple) {
 		BUG_ON(kd_exec_frame_complete_single_spin(frame));
 		goto finish_frame;
 	}
 	if (ret_flag == KD_EXE_RUN_NATIVE) {
-		/* Remote publication can release an ancestor before this node is
-		 * woken. Start before both publications, not only local locked=0. */
+		/*
+		 * Remote publication can release an ancestor before this node is
+		 * woken. Start before both publications, not only local locked=0.
+		 */
 		u64 handoff_start = kd_exe_native_timing_start();
 		struct kd_spin_continuation *execution = curr_node->execution;
 		struct kd_spin_ref origin = frame->spin_origin;
-		bool last, virtual = execution->frame.spin_kind == KD_SPIN_CONT_VIRTUAL;
+		bool last, virtual = execution->frame.spin_kind ==
+				     KD_SPIN_CONT_VIRTUAL;
 
-		/* Every ancestor registers its ticket borrow before the root wake.
-		 * NATIVE_READY permits execution, never continuation reclamation. */
+		/*
+		 * Every ancestor registers its ticket borrow before the root wake.
+		 * NATIVE_READY permits execution, never continuation reclamation.
+		 */
 		BUG_ON(kd_exec_native_begin(frame, false));
 		BUG_ON(kd_exec_remote_native(frame));
 
@@ -178,20 +206,23 @@ dispatched:
 		BUG_ON(!kd_spin_combiner_state_matches(&frame->saved_combiner,
 						       ptr));
 		BUG_ON(kd_exec_frame_complete(frame));
-		BUG_ON(kd_exec_spin_retire(frame, virtual ? &execution->retired : NULL));
+		BUG_ON(kd_exec_spin_retire(
+			frame, virtual ? &execution->retired : NULL));
 		BUG_ON(kd_spin_entry_borrow_put(&origin, &last));
 		return KD_EXE_NATIVE_DONE;
 	}
 	if (ret_flag != KD_EXE_RUN_TO_UNLOCK && frame->executed) {
 		KD_PR_ERR(
 			"spin JIT non-continuable exit: entry=%lx ip=%lx ret=%d\n",
-			frame->entry_ip, kd_exec_frame_regs(frame)->ip, ret_flag);
+			frame->entry_ip, kd_exec_frame_regs(frame)->ip,
+			ret_flag);
 		BUG();
 	}
 	if (ret_flag == KD_EXE_RUN_TO_UNLOCK) {
 		if (!frame->outer_unlock_seen &&
-		    kd_exec_frame_record_event(
-			    frame, KD_EXEC_EVENT_OUTER_UNLOCK, kd_exec_frame_regs(frame))) {
+		    kd_exec_frame_record_event(frame,
+					       KD_EXEC_EVENT_OUTER_UNLOCK,
+					       kd_exec_frame_regs(frame))) {
 			KD_PR_ERR(
 				"spin JIT outer unlock event invalid lock=%px\n",
 				lock);
@@ -242,14 +273,19 @@ dispatched:
 				lock);
 	}
 finish_frame:
-	/* Only a native waiter needs the saved-entry return trampoline. A
-	 * virtual waiter acquires B and continues its existing parent frame. */
+	/*
+	 * Only a native waiter needs the saved-entry return trampoline. A
+	 * virtual waiter acquires B and continues its existing parent frame.
+	 */
 	curr_node->execution->result = curr_node->execution->frame.spin_kind == KD_SPIN_CONT_ROOT &&
-		ret_flag != KD_EXE_RUN_TO_UNLOCK ? KD_SPIN_RES_RETRY : KD_SPIN_RES_QUEUED;
+				ret_flag != KD_EXE_RUN_TO_UNLOCK ?
+			KD_SPIN_RES_RETRY :
+			KD_SPIN_RES_QUEUED;
 	if (curr_node->execution->result == KD_SPIN_RES_RETRY)
 		KD_PR_INFO(
 			"spin JIT retry regs: node=%px cpu=%d ip=%lx failed_ip=%lx\n",
-			curr_node, curr_node->cpuid, curr_node->execution->frame.regs_ref->ip,
+			curr_node, curr_node->cpuid,
+			curr_node->execution->frame.regs_ref->ip,
 			ret_flag == KD_EXE_RUN_TO_UNLOCK ?
 				0UL :
 				frame->continuation_ip);
@@ -262,13 +298,15 @@ finish_frame:
 	kd_spin_selftest_refusal_cancel(frame);
 #endif
 	if (ret_flag == KD_EXE_RUN_TO_UNLOCK ?
-	    kd_exec_spin_retire(frame, NULL) : kd_exec_frame_pop(frame, NULL)) {
+		    kd_exec_spin_retire(frame, NULL) :
+		    kd_exec_frame_pop(frame, NULL)) {
 		KD_PR_ERR("spin JIT frame pop mismatch lock=%px\n", lock);
 		BUG();
 	}
 
 	if (ret_flag == KD_EXE_RUN_TO_UNLOCK) {
-		kd_spin_debug_jit_success(batch->diag, kd_spin_lock_stack_depth(ptr));
+		kd_spin_debug_jit_success(batch->diag,
+					  kd_spin_lock_stack_depth(ptr));
 		KD_PR_DEBUG("delegation ok lock=%px depth=%u\n", lock,
 			    kd_spin_lock_stack_depth(ptr));
 	} else {
@@ -285,9 +323,11 @@ finish_frame:
 		this_cpu_inc(ooo_combiner_count);
 #endif
 
-		/* JIT waiters carry their continuation in kd_regs.  The native
+		/*
+		 * JIT waiters carry their continuation in kd_regs.  The native
 		 * TCLock path copies a real RSP here, but the combiner's base node
-		 * deliberately has rsp == NULL while run_combiner() is active. */
+		 * deliberately has rsp == NULL while run_combiner() is active.
+		 */
 		ptr->curr_cs_cpu = -1;
 		word->locked = _Q_LOCKED_COMBINER_VAL;
 	}

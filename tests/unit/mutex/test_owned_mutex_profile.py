@@ -168,7 +168,7 @@ int main(void)
  assert(profile_init()==-EINVAL && !allocations && !counts && !depth);
  const struct { bool kd_mode, spin_mode, owned_mode; unsigned int probes; } modes[] = {
   {false,false,false,2}, {false,true,false,1},
-  {true,false,false,4}, {true,false,true,5},
+  {true,false,true,5},
  };
  for(unsigned int mode=0;mode<ARRAY_SIZE(modes);mode++) {
   for(unsigned int failure=0;failure<=modes[mode].probes;failure++) {

@@ -79,7 +79,6 @@ static int compile_entry(const struct daemon_config *cfg,
 			  exe->entry_abi == KD_ENTRY_ABI_OWNED_MUTEX_CABI_V2 ? "4" :
 			  exe->entry_abi == KD_ENTRY_ABI_LEGACY ? "0" : "invalid";
 	const char *kind = exe->lock_kind == KD_EXE_LOCK_SPIN  ? "spin" :
-			   exe->lock_kind == KD_EXE_LOCK_MUTEX ? "mutex" :
 			   exe->lock_kind == KD_EXE_LOCK_OWNED_MUTEX ? "mutex-owned" :
 								 "unknown";
 	char workspace[256], pid_text[32], rip_text[32], fd_text[32];

@@ -52,16 +52,17 @@ selected with `--host`, `--mirror` and `--scripts`; inspect `--help` for options
 [`run_full_bench.py`](run_full_bench.py) runs Native, TCLock and KD with three
 rounds at `1 2 3 4 5 6 7 8 12 16 20 24 28 32 36 40 44 48 52 56 60 64`.
 By default it includes one-cacheline and RCUHT payloads for spin, mutex and
-rwlock, with rwlock at 1%/20% writes: **1,584 sessions** in six groups.
+rwlock, with rwlock at 1%/20% writes: **1,518 sessions** in six groups.
 This driver's default excludes multi-cacheline scenarios, including c02, c08
-and c16. `--include-multicacheline` selects its wider 3,960-session matrix.
+and c16. `--include-multicacheline` selects its wider 3,762-session matrix.
 Current runners always use blocking mutexes. The
 [real API runner](../../bench/real_api/README.md) covers syscall workloads and
 Stock controls separately; [the results index](../../bench/results/README.md)
 retains benchmark reports and their frozen source versions.
 Each session has 48,000 warmup operations per worker, a two-second measurement,
 and a 300 ms peak window after 300 ms of settling.
-The all-lock driver retains legacy mutexes. Use the
+The all-lock driver uses owned ABI2 for KD c01; other mutex payloads compare
+Native/TCLock only. Use the
 [owned c01 full-grid command](../../bench/tclock_compare/README.md#owned-c01-full-grid)
 for the ABI4/reuse-32 comparison alone: 22 counts, three arms, three rounds and
 198 sessions. That command supports the shared collector at 64 workers. The

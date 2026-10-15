@@ -89,8 +89,8 @@ def find_segment_policy_error(
             mutex_targets={
                 address
                 for address, (kind, name) in (lock_symbols or {}).items()
-                if lock_kind == kind and kind in {"mutex", "mutex-owned"}
-                and name in {"mutex_lock", "mutex_unlock", "kd_mutex_lock_clobber_v1", "kd_mutex_unlock_clobber_v1", "kd_mutex_direct_lock_clobber_v1", "kd_mutex_direct_contended_clobber_v1", "kd_mutex_direct_unlock_clobber_v1", "kd_owned_mutex_lock_v1", "kd_owned_mutex_unlock_v1", "kd_owned_mutex_outer_unlock_v1", "kd_owned_mutex_direct_lock_clobber_v1", "kd_owned_mutex_direct_contended_clobber_v1", "kd_owned_mutex_direct_unlock_clobber_v1"}
+                if lock_kind == kind and kind == "mutex-owned"
+                and name in {"kd_owned_mutex_lock_v1", "kd_owned_mutex_unlock_v1", "kd_owned_mutex_outer_unlock_v1", "kd_owned_mutex_direct_lock_clobber_v1", "kd_owned_mutex_direct_contended_clobber_v1", "kd_owned_mutex_direct_unlock_clobber_v1"}
             },
             mutex_stack_bytes=mutex_stack_bytes,
             native_exits=native_exits,

@@ -15,8 +15,8 @@ def summarize(records):
     groups = {}
     for r in records:
         key = tuple(r[k] for k in ('kind', 'query', 'entries', 'value_size', 'threads', 'arm')) + (
-            r.get('mutex_wait_mode', 'spin') if r['arm'] == 'kdlock' else 'not_applicable',
-            r.get('mutex_spin_limit', 1024) if r['arm'] == 'kdlock' else 0)
+            r.get('mutex_wait_mode', 'not_applicable') if r['arm'] == 'kdlock' else 'not_applicable',
+            r.get('mutex_spin_limit', 0) if r['arm'] == 'kdlock' else 0)
         groups.setdefault(key, []).append(r)
     rows = []
     for key, runs in sorted(groups.items()):
@@ -56,7 +56,7 @@ def summarize(records):
 
 def write_report(out, records):
     rows = summarize(records)
-    policies = {(r['mutex_wait_mode'], r['mutex_spin_limit']) for r in rows if r['arm'] == 'kdlock'}
+    policies = {(r['mutex_wait_mode'], r['mutex_spin_limit']) for r in rows if r['arm'] == 'kdlock' and r['mutex_wait_mode'] != 'not_applicable'}
     if len(policies) > 1:
         raise ValueError('cannot compare distinct KD waiting policies in one report; use separate report directories')
     out.mkdir(parents=True, exist_ok=True)

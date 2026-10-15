@@ -35,7 +35,10 @@ def commands(output, cpus, collector, include_multicacheline=False):
         runner = ('bench/rwlock_compare/run.py' if kind == 'rwlock' else
                   'bench/tclock_compare/run_mutex.py' if kind == 'mutex' else
                   'bench/tclock_compare/run.py')
-        args = [sys.executable, runner, '--backends', 'native', 'tclock', 'kdlock',
+        backends = ['native', 'tclock']
+        if kind != 'mutex' or (workload == 'cacheline' and lines == 1):
+            backends.append('kdlock')
+        args = [sys.executable, runner, '--backends', *backends,
                 '--threads', *map(str, THREADS), '--collector-cpu', str(collector),
                 '--repeats', '3', '--duration-ms', '2000', '--peak-window-ms', '300',
                 '--peak-settle-ms', '300', '--kernel-source', '/root/linux-6.1.159-kdclobber2',
@@ -50,7 +53,7 @@ def commands(output, cpus, collector, include_multicacheline=False):
         if lines:
             args += ['--cachelines', str(lines)]
         result.append(dict(name=name, lock_kind=kind, workload=workload,
-                           cachelines=lines, expected_sessions=len(THREADS) * 9 *
+                           cachelines=lines, expected_sessions=len(THREADS) * len(backends) * 3 *
                            (2 if kind == 'rwlock' else 1), argv=args))
     return result
 

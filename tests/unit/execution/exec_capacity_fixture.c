@@ -58,16 +58,12 @@ struct qspinlock {
 	atomic_t val;
 };
 typedef struct qspinlock raw_spinlock_t;
-struct mutex {
-	bool locked;
-};
 struct kd_mutex {
 	struct task_struct *owner;
 };
 static bool kd_owned_mutex_owned(struct kd_mutex *lock, struct task_struct *task)
 { return lock->owner == task; }
-static bool kd_origin_mutex_owned(struct mutex *lock, struct task_struct *task)
-{ return lock->locked && task == current; }
+
 #define ATOMIC_INIT(value) (value)
 #define atomic_read(p) (*(p))
 #define raw_smp_processor_id() cpu
@@ -139,8 +135,7 @@ static unsigned int atomic_cmpxchg(atomic_t *value, unsigned int old,
 		if (0)                       \
 			printf(__VA_ARGS__); \
 	} while (0)
-static int kd_mutex_nested_unlock(struct mutex *lock);
-static void kd_mutex_note_nested_abort_release(void);
+static int kd_owned_nested_unlock(struct kd_mutex *lock);
 static void kd_spin_debug_nested_unlock(raw_spinlock_t *lock);
 static void origin_raw_spin_unlock(raw_spinlock_t *lock);
 static int kd_spin_nested_unlock(struct qspinlock *lock);
@@ -217,20 +212,16 @@ static void released(unsigned long address)
 		release_order[release_count++] = address;
 }
 
-static int kd_mutex_nested_unlock(struct mutex *lock)
+static int kd_owned_nested_unlock(struct kd_mutex *lock)
 {
-	CHECK(lock->locked);
+	CHECK(lock->owner == current);
 	if (unlock_error)
 		return unlock_error;
-	lock->locked = false;
+	lock->owner = NULL;
 	released((unsigned long)lock);
 	return 0;
 }
 
-static void kd_mutex_note_nested_abort_release(void)
-{
-	abort_notes++;
-}
 
 static void kd_spin_debug_nested_unlock(raw_spinlock_t *lock)
 {
@@ -593,12 +584,12 @@ static void completion(void)
 static void cleanup(bool mutex, enum kd_exec_lock_kind kind, bool last_released)
 {
 	struct kd_exec_frame *frame = push(0);
-	struct mutex mutexes[3] = { { true }, { true }, { !last_released } };
+	struct kd_mutex mutexes[3] = { { current }, { current }, { last_released ? NULL : current } };
 	struct qspinlock spins[3] = { { 1 }, { 1 }, { !last_released } };
 	unsigned long locks[3];
 	enum kd_exec_lock_kind kinds[3] = { KD_EXEC_LOCK_QUEUE_OWNER, kind, kind };
 	void *nodes[3];
-	int (*run)(struct kd_exec_frame *) = mutex ? kd_mutex_jit_abort_cleanup :
+	int (*run)(struct kd_exec_frame *) = mutex ? kd_owned_mutex_jit_abort_cleanup :
 						   kd_spin_jit_abort_cleanup;
 	unsigned int i;
 
@@ -611,6 +602,7 @@ static void cleanup(bool mutex, enum kd_exec_lock_kind kind, bool last_released)
 		locks[i] = (unsigned long)nodes[i];
 	}
 	frame->outer_lock_addr = locks[0];
+	frame->owned_mutex = frame->mutex_backend = mutex;
 	frame->held_lock_depth = 3;
 	CHECK(kd_exec_frame_set_lock_entries(frame, locks, kinds, nodes, NULL, 3) == 0);
 	if (last_released)
@@ -634,15 +626,15 @@ static void cleanup(bool mutex, enum kd_exec_lock_kind kind, bool last_released)
 	CHECK(run(frame) == 0);
 	CHECK(frame->jit_lock_depth == 1 && frame->held_lock_depth == 1 &&
 	      frame->jit_lock_addr[0] == locks[0] && !frame->jit_lock_released[0]);
-	CHECK(mutexes[0].locked && spins[0].val == 1);
+	CHECK(mutexes[0].owner == current && spins[0].val == 1);
 	CHECK(release_count == 2U - last_released);
 	if (release_count)
 		CHECK(release_order[release_count - 1] == locks[1]);
 	if (!last_released)
 		CHECK(release_order[0] == locks[2]);
 	if (mutex) {
-		CHECK(abort_notes == release_count && !shadow_count);
-		CHECK(!mutexes[1].locked && !mutexes[2].locked);
+		CHECK(!abort_notes && !shadow_count);
+		CHECK(!mutexes[1].owner && !mutexes[2].owner);
 	} else {
 		unsigned int expected = kind == KD_EXEC_LOCK_NATIVE ? 2 : last_released;
 
@@ -1040,39 +1032,38 @@ static bool mutex_routing_initialized(const struct kd_exec_frame *frame)
  * fake mutex checks owner identity; actual blocking/ACK has separate fixtures. */
 static void mutex_batch_frames(void)
 {
- struct mutex origin = { .locked = true };
- struct kd_mutex_legacy_gate lock = { .origin_mutex_addr = (unsigned long)&origin };
+ struct kd_mutex lock = { .owner = current };
  struct kd_exec_outer_unlock hook = {0};
  struct kd_regs packet = registers(97), expected;
  struct kd_exec_frame *frame, saved, refused;
  struct kd_exec_context before;
 
- cpu=0; current=&owners[0]; lock.physical_owner=current;
+ cpu=0; current=&owners[0]; lock.owner=current;
  CHECK(!source_frames && !kd_exec_current_frame());
  CHECK(kd_source_frame_get());
  before=*kd_exec_current_context();
- CHECK(!kd_exec_frame_push_mutex_batch(NULL,0x1000,0x3000,&waiters[0],&lock,&hook));
- CHECK(!kd_exec_frame_push_mutex_batch(&packet,0x1000,0,&waiters[0],&lock,&hook));
- CHECK(!kd_exec_frame_push_mutex_batch(&packet,0x1000,0x3000,NULL,&lock,&hook));
- CHECK(!kd_exec_frame_push_mutex_batch(&packet,0x1000,0x3000,&waiters[0],NULL,&hook));
- CHECK(!kd_exec_frame_push_mutex_batch(&packet,0x1000,0x3000,&waiters[0],&lock,NULL));
- lock.origin_mutex_addr=0;
- CHECK(!kd_exec_frame_push_mutex_batch(&packet,0x1000,0x3000,&waiters[0],&lock,&hook));
- lock.origin_mutex_addr=(unsigned long)&origin;
+ CHECK(!kd_exec_frame_push_owned_mutex_batch(NULL,0x1000,0x3000,&waiters[0],&lock,&hook,KD_ENTRY_ABI_MUTEX_CLOBBER_V1));
+ CHECK(!kd_exec_frame_push_owned_mutex_batch(&packet,0x1000,0,&waiters[0],&lock,&hook,KD_ENTRY_ABI_MUTEX_CLOBBER_V1));
+ CHECK(!kd_exec_frame_push_owned_mutex_batch(&packet,0x1000,0x3000,NULL,&lock,&hook,KD_ENTRY_ABI_MUTEX_CLOBBER_V1));
+ CHECK(!kd_exec_frame_push_owned_mutex_batch(&packet,0x1000,0x3000,&waiters[0],NULL,&hook,KD_ENTRY_ABI_MUTEX_CLOBBER_V1));
+ CHECK(!kd_exec_frame_push_owned_mutex_batch(&packet,0x1000,0x3000,&waiters[0],&lock,NULL,KD_ENTRY_ABI_MUTEX_CLOBBER_V1));
+ lock.owner=NULL;
+ CHECK(!kd_exec_frame_push_owned_mutex_batch(&packet,0x1000,0x3000,&waiters[0],&lock,&hook,KD_ENTRY_ABI_MUTEX_CLOBBER_V1));
+ lock.owner=current;
  CHECK(!memcmp(&before,kd_exec_current_context(),sizeof(before)) && source_frames==1);
  kd_exec_current_context()->owner=&owners[1];
  before=*kd_exec_current_context();
- CHECK(!kd_exec_frame_push_mutex_batch(&packet,0x1000,0x3000,&waiters[0],&lock,&hook));
+ CHECK(!kd_exec_frame_push_owned_mutex_batch(&packet,0x1000,0x3000,&waiters[0],&lock,&hook,KD_ENTRY_ABI_MUTEX_CLOBBER_V1));
  CHECK(!memcmp(&before,kd_exec_current_context(),sizeof(before)) && source_frames==1);
  kd_exec_current_context()->owner=NULL;
  for (int round=0;round<2;round++) {
   poison_mutex_routing(&kd_exec_current_context()->frames[0]);
-  frame=kd_exec_frame_push_mutex_batch(&packet,0x1000,0x3000,&waiters[0],&lock,&hook);
+  frame=kd_exec_frame_push_owned_mutex_batch(&packet,0x1000,0x3000,&waiters[0],&lock,&hook,KD_ENTRY_ABI_MUTEX_CLOBBER_V1);
   CHECK(frame && source_frames==1 && frame->batch_lease && frame->regs_borrowed);
   if (!frame) return;
   CHECK(frame->mutex_backend && frame->entry_abi==KD_ENTRY_ABI_MUTEX_CLOBBER_V1 &&
         frame->packet_state==KD_PACKET_MINIMAL && kd_exec_frame_validate(frame));
-  CHECK(frame->jit_lock_node[0]==&lock && frame->jit_lock_addr[0]==(unsigned long)&origin);
+  CHECK(frame->jit_lock_node[0]==&lock && frame->jit_lock_addr[0]==(unsigned long)&lock);
   CHECK(!frame->complex_ready && mutex_routing_poisoned(frame));
   CHECK(frame->outer_unlock_hook==&hook && kd_exec_frame_regs(frame)==&packet);
   if (round) {
@@ -1084,7 +1075,7 @@ static void mutex_batch_frames(void)
    CHECK(!kd_exec_frame_prepare_mutex_complex(frame));
    CHECK(!memcmp(frame,&saved,sizeof(saved)));
   }
-  CHECK(!kd_exec_frame_push_mutex_batch(&packet,0x1000,0x3000,&waiters[0],&lock,&hook));
+  CHECK(!kd_exec_frame_push_owned_mutex_batch(&packet,0x1000,0x3000,&waiters[0],&lock,&hook,KD_ENTRY_ABI_MUTEX_CLOBBER_V1));
   frame->executed=true; frame->packet_state=KD_PACKET_COMPLETE;
   saved=*frame;
   /* Every refusal must preserve the live frame and source reference. */
@@ -1117,27 +1108,27 @@ static void mutex_batch_frames(void)
    case 21: frame->resume_target=frame;break;
    case 22: frame->outer_unlock_hook=NULL;break;
    case 23: hook.released=true;break;
-   case 24: lock.physical_owner=&owners[1];break;
-   case 25: origin.locked=false;break;
+   case 24: lock.owner=&owners[1];break;
+   case 25: lock.owner=NULL;break;
    }
    refused=*frame;
-   CHECK(kd_exec_frame_retire_mutex_batch(frame,&lock)==-EINVAL);
+   CHECK(kd_exec_frame_retire_owned_mutex_batch(frame,&lock)==-EINVAL);
    CHECK(!memcmp(frame,&refused,sizeof(refused)) && source_frames==1);
-   *frame=saved;hook.released=false;lock.physical_owner=current;origin.locked=true;
+   *frame=saved;hook.released=false;lock.owner=current;lock.owner=current;
   }
   /* Closure stops new roots, but cannot strand an admitted body's lease. */
   source_open=false;
-  CHECK(!kd_exec_frame_retire_mutex_batch(frame,&lock));
+  CHECK(!kd_exec_frame_retire_owned_mutex_batch(frame,&lock));
   if (!round) CHECK(mutex_routing_poisoned(frame));
-  CHECK(!kd_exec_current_frame() && source_frames==1 && origin.locked);
+  CHECK(!kd_exec_current_frame() && source_frames==1 && lock.owner==current);
   before=*kd_exec_current_context();
-  CHECK(!kd_exec_frame_push_mutex_batch(&packet,0x1000,0x3000,&waiters[0],&lock,&hook));
+  CHECK(!kd_exec_frame_push_owned_mutex_batch(&packet,0x1000,0x3000,&waiters[0],&lock,&hook,KD_ENTRY_ABI_MUTEX_CLOBBER_V1));
   CHECK(!memcmp(&before,kd_exec_current_context(),sizeof(before)) && source_frames==1);
   source_open=true;
  }
  /* A FULL exit owns its copy through generic retirement; the waiter packet
   * may be reused only after detachment. A pending owner ACK still forbids pop. */
- frame=kd_exec_frame_push_mutex_batch(&packet,0x1000,0x3000,&waiters[0],&lock,&hook);
+ frame=kd_exec_frame_push_owned_mutex_batch(&packet,0x1000,0x3000,&waiters[0],&lock,&hook,KD_ENTRY_ABI_MUTEX_CLOBBER_V1);
  frame->executed=true; frame->packet_state=KD_PACKET_FULL;
  CHECK(!kd_exec_frame_prepare_mutex_complex(frame));
  CHECK(frame->complex_ready && mutex_routing_initialized(frame));
@@ -1174,11 +1165,6 @@ static void owned_mutex_batch_abis(void)
         &waiters[0],&lock,&hook,invalid[i]));
   CHECK(!memcmp(&before,kd_exec_current_context(),sizeof(before)) && source_frames==1);
  }
- /* The private shared constructor must not silently make a legacy ABI4
-  * frame, even though owned construction supports that same entry ABI. */
- CHECK(!kd_exec_frame_push_mutex_root(&packet,0x1000,0x3000,&waiters[0],
-       &lock,(unsigned long)&lock,false,&hook,KD_ENTRY_ABI_OWNED_MUTEX_CABI_V2));
- CHECK(!memcmp(&before,kd_exec_current_context(),sizeof(before)) && source_frames==1);
  lock.owner=&owners[1];
  CHECK(!kd_exec_frame_push_owned_mutex_batch(&packet,0x1000,0x3000,
        &waiters[0],&lock,&hook,KD_ENTRY_ABI_MUTEX_CLOBBER_V1));
@@ -1261,7 +1247,7 @@ int main(void)
 			if (failures)
 				return 1;
 		}
-		cleanup(true, KD_EXEC_LOCK_NATIVE, last_released);
+		cleanup(true, KD_EXEC_LOCK_OWNED, last_released);
 		if (failures)
 			return 1;
 	}

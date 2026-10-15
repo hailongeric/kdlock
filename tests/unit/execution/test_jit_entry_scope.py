@@ -111,8 +111,8 @@ def main():
             "call->complete = false;",
         ),
         "mutex-batch-wrong-backend-endpoint": (
-            "owned_cabi_unlock_addr : frame->owned_mutex ? owned_direct_unlock_addr : direct_mutex_unlock_addr;",
-            "owned_cabi_unlock_addr : frame->owned_mutex ? owned_direct_unlock_addr : clobber_spin_unlock_addr;",
+            "owned_cabi_unlock_addr : owned_direct_unlock_addr;",
+            "owned_cabi_unlock_addr : clobber_spin_unlock_addr;",
         ),
         "mutex-batch-uses-private-stack": (
             "call->entry_sp = regs->sp;\n\tcall->entry_abi = frame->entry_abi;\n"

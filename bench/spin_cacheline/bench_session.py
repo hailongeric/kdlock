@@ -22,9 +22,9 @@ from bench_runtime import (
 class Session:
     @staticmethod
     def mutex_wait_stats():
-        values = list(map(int, Path('/sys/module/kdlock_km/parameters/mutex_wait_stats').read_text().split()))
-        require(len(values) == 3 and all(v >= 0 for v in values), 'invalid mutex wait observations')
-        return dict(zip(('result_schedule_calls', 'result_wakes', 'gate_wait_calls'), values))
+        values = list(map(int, Path('/sys/module/kdlock_km/parameters/owned_mutex_wait_stats').read_text().split()))
+        require(len(values) == 2 and all(v >= 0 for v in values), 'invalid owned mutex wait observations')
+        return dict(zip(('result_schedule_calls', 'result_wakes'), values))
 
     def __init__(self, out, spec, *, workload_module=None):
         self.workload_module = workload_module or WORKLOAD / "spin_cacheline.ko"

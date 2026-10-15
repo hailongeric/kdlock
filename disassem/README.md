@@ -25,7 +25,7 @@ Use [the daemon](../daemon/README.md) for publication and
 CALL tokens and COMPLETE/FULL. `solve_bug.py` contains narrow, actively called
 encoding/assembly corrections; it is not an obsolete standalone driver.
 
-Entry identities are legacy 0, spin clobber 1, mutex clobber 2, rwlock writer
+Entry ABIs are spin full-context 0, spin clobber 1, owned mutex clobber 2, rwlock writer
 clobber 3 and owned mutex ordinary C 4. ABI4 uses owned lock kind 3, late capture
 of IP/SP/BP and nonvolatile registers, and a distinct completion path that restores
 updated values. Caller-saved inputs must be defined before use. It shares the
@@ -47,7 +47,7 @@ Owned images carry their audited context requirements into immutable publication
 descriptors. The provider binds a frame to one version and checks any required
 origin-readiness claim at dispatch; see
 [publication protocol 2](../docs/JIT_EXECUTION.md#owned-image-publication-protocol-2).
-Legacy image families retain in-place publication.
+Spin/rwlock image families retain in-place publication.
 
 The translator does not check every memory address when it is used or restore all
 processor state. Those features remain deferred. Its context checks are not a

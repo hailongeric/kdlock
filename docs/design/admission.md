@@ -51,8 +51,7 @@ Some code depends on the CPU or task that runs it. KD therefore checks context
 operations across every block it will emit:
 
 - Spin and rwlock images may lower explicit GS reads, writes and read-modify-write
-  operations through the pinned origin CPU's GS base. Legacy mutex images requiring
-  that base are refused because their waiters may sleep. Owned mutexes admit only
+  operations through the pinned origin CPU's GS base. Owned mutexes admit only
   the audited subset below, with an exclusive origin claim. A GS displacement is an offset,
   not a linear kernel address.
 - Supported `current_task` MOV loads may use the original task supplied to JIT.
@@ -79,7 +78,7 @@ it does not add back an ordinary CALL miss's native-only remainder.
 `instruction_policy.py` permits supported scalar instruction families with GPR
 operands, then applies the existing segment, memory and entry-value checks.
 An unknown mnemonic or a hardware register without a lowering contract refuses
-the entry. This applies equally to legacy, clobber, rwlock and owned-mutex ABIs.
+the entry. This applies equally to spin ABI0, clobber, rwlock and owned-mutex ABIs.
 
 | Native-only operations | Examples |
 | --- | --- |
@@ -381,7 +380,7 @@ refused. The final chunk publishes NORMAL only after header validation.
 Independent locks may share the RIP-keyed artifact; early A unlock can also
 allow overlapping execution. Lock serialization is not version retirement.
 Owned mutex frames bind immutable descriptors; every published version consumes
-one of the bounded 64 blocks until terminal session teardown. Legacy image
+one of the bounded 64 blocks until terminal session teardown. Spin/rwlock image
 families still overwrite their existing block; that remaining scope is tracked
 under [C3](../TODO.md#c3-immutable-jit-publication-and-lifetime).
 See [daemon README](../../daemon/README.md) for CLI and diagnostics.

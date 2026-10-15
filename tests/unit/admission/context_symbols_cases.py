@@ -164,7 +164,7 @@ class ContextSymbolsCases(ContextCaseSupport):
                 )
             for address in (core + 0x101, core + 0x103, end, core + 0x3000):
                 self.assertIsNone(symbols.resolve(address))
-            for kind in ("spin", "mutex"):
+            for kind in ("spin", "mutex-owned"):
                 # Numeric direct, derived, implicit and store-forwarded inputs
                 # exercise the existing refusal paths, never real unsafe loads.
                 for raw in (
@@ -175,7 +175,7 @@ class ContextSymbolsCases(ContextCaseSupport):
                     b"\x48\xbe" + struct.pack("<Q", end - 4) + bytes.fromhex("48adc3"),
                     b"\x48\xb8"
                     + struct.pack("<Q", end)
-                    + bytes.fromhex("488907488b374883ee0448adc3"),
+                    + bytes.fromhex("488903488b334883ee0448adc3"),
                 ):
                     with self.subTest(cpu=cpu, kind=kind, raw=raw.hex()):
                         self.assertIn(
@@ -327,7 +327,7 @@ class ContextSymbolsCases(ContextCaseSupport):
             symbols = context_policy.load_context_symbols(
                 read_memory=lambda address, size: payloads[address]
             )
-        for kind in ("spin", "mutex"):
+        for kind in ("spin", "mutex-owned"):
             # Direct address-taking, derived overlap, and implicit IR loads all
             # use the existing checker. No per-CPU instruction is executed here.
             for raw in (
@@ -338,7 +338,7 @@ class ContextSymbolsCases(ContextCaseSupport):
                 + bytes.fromhex("48adc3"),
                 b"\x48\xb8"
                 + struct.pack("<Q", base - 0x10)
-                + bytes.fromhex("488907488b374883c62048adc3"),
+                + bytes.fromhex("488903488b334883c62048adc3"),
             ):
                 with self.subTest(kind=kind, raw=raw.hex()):
                     self.assertIn(
@@ -399,14 +399,14 @@ class ContextSymbolsCases(ContextCaseSupport):
                 capability.assert_called_once_with()
                 loader.reset_mock()
                 capability.side_effect = RuntimeError("range capability unavailable")
-                for kind in ("spin", "mutex"):
+                for kind in ("spin", "mutex-owned"):
                     with (
                         self.subTest(kind=kind),
                         self.assertRaisesRegex(
                             RuntimeError, "range capability unavailable"
                         ),
                     ):
-                        translator.dis_assem(0, 0x1000, kind)
+                        translator.dis_assem(0, 0x1000, kind, abi=4 if kind == "mutex-owned" else 0)
                 loader.assert_not_called()
                 read.assert_not_called()
                 self.assertEqual(list(Path("asm").iterdir()), [])

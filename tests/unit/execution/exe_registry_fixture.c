@@ -201,10 +201,6 @@ static void kd_spin_lock_clobber_v1(void) { CHECK(!"unexpected lock call"); }
 static void kd_spin_lock_pinned_clobber_v1(void) { CHECK(!"unexpected lock call"); }
 static void kd_spin_direct_native_unlock(void) { CHECK(!"unexpected unlock call"); }
 static void kd_spin_unlock_clobber_v1(void) { CHECK(!"unexpected unlock call"); }
-static void kd_mutex_direct_lock_clobber_v1(void) { CHECK(!"unexpected mutex lock call"); }
-static void kd_mutex_direct_contended_clobber_v1(void) { CHECK(!"unexpected contended mutex lock call"); }
-static void kd_mutex_outer_contended_clobber_v1(void) { CHECK(!"unexpected outer mutex lock call"); }
-static void kd_mutex_direct_unlock_clobber_v1(void) { CHECK(!"unexpected mutex unlock call"); }
 static void kd_owned_mutex_lock_v1(void) { CHECK(!"unexpected owned mutex call"); }
 static void kd_owned_mutex_unlock_v1(void) { CHECK(!"unexpected owned mutex call"); }
 static void kd_owned_mutex_outer_unlock_v1(void) { CHECK(!"unexpected owned mutex call"); }
@@ -334,8 +330,7 @@ static void check_pool(enum allocation_mode mode)
 	kd_exe_add(0, key(0), KD_EXE_LOCK_UNKNOWN);
 	CHECK(kd_code_block_free == available);
 	for (int i = 0; i < available; i++) {
-		enum kd_exe_lock_kind kind = i % 2 ? KD_EXE_LOCK_MUTEX :
-						     KD_EXE_LOCK_SPIN;
+		enum kd_exe_lock_kind kind = KD_EXE_LOCK_SPIN;
 		struct kd_exe_info *exe;
 
 		kd_exe_add(0, key(i), kind);
@@ -356,7 +351,7 @@ static void check_pool(enum allocation_mode mode)
 	/* Exhaustion must leave the entire table unchanged, not publish a partial
 	 * key that the daemon might later treat as a translation request. */
 	memcpy(snapshot, kd_exes, sizeof(snapshot));
-	kd_exe_add(0, key(available), KD_EXE_LOCK_MUTEX);
+	kd_exe_add(0, key(available), KD_EXE_LOCK_SPIN);
 	CHECK(kd_code_block_free == 0 && errors == 1);
 	CHECK(memcmp(snapshot, kd_exes, sizeof(snapshot)) == 0);
 	CHECK(!kd_exe_is_ready(0, key(available)));
@@ -366,7 +361,7 @@ static void check_pool(enum allocation_mode mode)
 		CHECK(kd_exe_is_ready(0, key(i)));
 
 	/* Backend conflict is terminal, but not code-pool reclamation. */
-	kd_exe_add(0, key(0), KD_EXE_LOCK_MUTEX);
+	kd_exe_add_abi(0, key(0), KD_EXE_LOCK_OWNED_MUTEX, KD_ENTRY_ABI_MUTEX_CLOBBER_V1);
 	CHECK(warnings == 1 && kd_code_block_free == 0);
 	CHECK(kd_get_exe(0, key(0))->status_code == KD_EXE_NATIVE_ONLY);
 	CHECK(!kd_exe_is_ready(0, key(0)));
@@ -419,11 +414,11 @@ static void check_device(void)
 	reset(NORMAL);
 	CHECK(kd_exe_init() == 0);
 	source_root_error = -ESTALE;
-	kd_exe_add(0, key(0), KD_EXE_LOCK_MUTEX);
+	kd_exe_add(0, key(0), KD_EXE_LOCK_SPIN);
 	CHECK(kd_get_exe(0, key(0))->status_code == KD_EXE_UNUSED);
 	CHECK(kd_code_block_free == KD_CODE_BLOCK_POOL && warnings == 1);
 	source_root_error = 0;
-	kd_exe_add(0, key(0), KD_EXE_LOCK_MUTEX);
+	kd_exe_add(0, key(0), KD_EXE_LOCK_SPIN);
 	exe = kd_get_exe(0, key(0));
 	packet = (__typeof__(packet)){ .head = { .status_code=KD_EXE_UNINIT, .RIP=key(0), .version=KD_IMAGE_PROTOCOL, .image_length=64, .upload_id=1 },
 				       .data = { 0x5a } };
@@ -483,7 +478,7 @@ static void check_packet_directory(void)
         for (unsigned int fault = 0; fault < 5; fault++) {
             reset(NORMAL);
             CHECK(kd_exe_init() == 0);
-            kd_exe_add_abi(0, key(0), abi == 1 ? KD_EXE_LOCK_SPIN : KD_EXE_LOCK_MUTEX, abi);
+            kd_exe_add_abi(0, key(0), abi == 2 ? KD_EXE_LOCK_OWNED_MUTEX : KD_EXE_LOCK_SPIN, abi);
             packet = (__typeof__(packet)){ .head = { .status_code=KD_EXE_UNINIT,.RIP=key(0),.version=KD_IMAGE_PROTOCOL,.entry_abi=abi,.image_length=48,.upload_id=1 } };
             memcpy(packet.data + 9, "KDWB002", 7);
             memcpy(packet.data + 25, "KDWC002", 7);
@@ -501,6 +496,8 @@ static void check_packet_directory(void)
                   (fault ? -EPROTO : (ssize_t)bytes));
             CHECK(kd_exe_is_ready(0, key(0)) == !fault);
             if (fault) CHECK(kd_dev_write_locked(&upload, (char *)&packet, bytes) == -EPROTO);
+            kd_image_discard(upload.image);
+            upload = (struct kd_image_upload){0};
             kd_exe_exit();
         }
     }
@@ -516,7 +513,7 @@ static void check_registration_reads(void)
 
 	reset(NORMAL);
 	CHECK(kd_exe_init() == 0);
-	for (int backend = KD_EXE_LOCK_SPIN; backend <= KD_EXE_LOCK_MUTEX;
+	for (int backend = KD_EXE_LOCK_SPIN; backend <= KD_EXE_LOCK_SPIN;
 	     backend++) {
 		gate_before = gate_attempts;
 		pins_before = source_pin_calls;
@@ -541,6 +538,10 @@ static void check_registration_reads(void)
 		}
 	}
 
+	CHECK(!kd_exe_registered(0, key(KD_EXE_LOCK_SPIN),
+		KD_EXE_LOCK_OWNED_MUTEX, KD_ENTRY_ABI_LEGACY));
+	CHECK(!kd_exe_registered(0, key(KD_EXE_LOCK_SPIN), 2, KD_ENTRY_ABI_LEGACY));
+
 	/* An incompatible backend must retain the old terminal conflict path,
 	 * including when there are still free code blocks available. */
 	kd_exe_add(0, key(3), KD_EXE_LOCK_SPIN);
@@ -549,7 +550,7 @@ static void check_registration_reads(void)
 	gate_before = gate_attempts;
 	pins_before = source_pin_calls;
 	free_before = kd_code_block_free;
-	kd_exe_add(0, key(3), KD_EXE_LOCK_MUTEX);
+	kd_exe_add_abi(0, key(3), KD_EXE_LOCK_OWNED_MUTEX, KD_ENTRY_ABI_MUTEX_CLOBBER_V1);
 	CHECK(gate_attempts == gate_before + 1 && source_pin_calls == pins_before + 1);
 	CHECK(exe->status_code == KD_EXE_NATIVE_ONLY && warnings == 1);
 	CHECK(kd_code_block_free == free_before);
@@ -616,7 +617,7 @@ static void *register_worker(void *arg)
 	pthread_barrier_wait(&start);
 	for (int i = 0; i < 100; i++)
 		kd_exe_add(0, key(id % 6),
-			   id % 2 ? KD_EXE_LOCK_MUTEX : KD_EXE_LOCK_SPIN);
+			   KD_EXE_LOCK_SPIN);
 	return NULL;
 }
 

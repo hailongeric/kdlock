@@ -73,12 +73,9 @@ static inline int sc_prepare(unsigned int lines)
 	default: return -EINVAL;
 	}
 #ifdef SC_MUTEX_WORKLOAD
-#ifdef SC_MUTEX_OWNED
 	return kd_owned_mutex_prepare(&sc_lock, KD_OWNED_MUTEX_PREPARE_IP(entry),
 				     KD_OWNED_MUTEX_ENTRY_ABI);
-#else
-	return kd_mutex_prepare(&sc_lock, entry, KD_ENTRY_ABI_MUTEX_CLOBBER_V1);
-#endif
+
 #else
 	return kd_spin_prepare(&sc_lock, entry, KD_ENTRY_ABI_SPIN_CLOBBER_V1);
 #endif

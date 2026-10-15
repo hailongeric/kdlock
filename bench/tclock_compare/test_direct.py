@@ -121,7 +121,7 @@ class DirectTests(unittest.TestCase):
                          for arg in captured))
         params = dict(bench_quiet='Y', jit_timing='N', bench_lock_addr='4096',
             spin_entry_ratio_limit='2', spin_prefetch='2', spin_delegate='Y',
-            mutex_native_route='N', owned_mutex_spin_limit='4096',
+            owned_mutex_spin_limit='4096',
             owned_mutex_entry_ratio_limit='256', owned_mutex_self_route='N',
             owned_mutex_native_after_control='0', owned_mutex_refill='N',
             owned_mutex_preflight_spins='0', owned_mutex_preflight_queue='N',
@@ -155,16 +155,13 @@ class DirectTests(unittest.TestCase):
                 self.assertEqual(row['mutex_implementation'], 'owned-v1')
                 self.assertEqual((row['registry_lock_kind'], row['entry_abi']), (3, 2))
                 self.assertEqual(row['owned_mutex_entry_ratio_limit'], 8)
-                self.assertIsNone(row['mutex_entry_ratio_limit'])
                 self.assertTrue(row['name'].endswith('-owned-v1-capture-first'))
             else:
                 self.assertEqual(row['mutex_implementation'], 'not_applicable')
                 self.assertIsNone(row['owned_mutex_entry_ratio_limit'])
-                self.assertEqual(row['registry_lock_kind'], 2)
-        legacy = run.make_plan(Namespace(**dict(vars(args), mutex_implementation='legacy',
-                                               owned_mutex_entry_ratio_limit=256)))
-        self.assertTrue(all(row['name'] not in {r['name'] for r in plan if r['arm'] == 'kdlock'}
-                            for row in legacy if row['arm'] == 'kdlock'))
+                self.assertEqual(row['registry_lock_kind'], 0)
+        with self.assertRaises(run.Failure):
+            run.make_plan(Namespace(**dict(vars(args), mutex_implementation='legacy')))
 
     def test_owned_preflight_plan_scope_and_distinct_identity(self):
         args = dict(cachelines=[1], threads=[4], repeats=1, iterations=100,
@@ -277,10 +274,8 @@ class DirectTests(unittest.TestCase):
         base = dict(cachelines=[1], threads=[4], repeats=1, iterations=100,
                     backends=['kdlock'], lock_kind='mutex', mutex_implementation='owned-v1')
         for change in (dict(cachelines=[8]), dict(cachelines=[1, 8]),
-                       dict(workload='rcuht', cachelines=None), dict(lock_kind='spin'),
-                       dict(backends=['native']), dict(scenario='nested'),
-                       dict(mutex_routing='native'),
-                       dict(mutex_entry_ratio_limit=2)):
+                       dict(workload='rcuht', cachelines=None), dict(scenario='nested'),
+                       dict(mutex_routing='native')):
             with self.subTest(change=change), self.assertRaises(run.Failure):
                 run.make_plan(Namespace(**dict(base, **change)))
         for change in (dict(mutex_routing='self'), dict(owned_mutex_entry_ratio_limit=2)):
@@ -301,7 +296,7 @@ class DirectTests(unittest.TestCase):
         self.assertFalse(default['profile_owned_preflight'])
         controls = run.make_plan(Namespace(cachelines=[1], threads=[4], repeats=1,
             iterations=100, backends=['native', 'kdlock'], lock_kind='mutex',
-            mutex_implementation='legacy', profile_lock=True))
+            mutex_implementation='owned-v1', profile_lock=True))
         self.assertTrue(all(not row['profile_owned_preflight'] for row in controls))
         row, = run.make_plan(Namespace(cachelines=[1], threads=[4], repeats=1,
             iterations=100, backends=['kdlock'], lock_kind='mutex', mutex_implementation='owned-v1'))
@@ -339,7 +334,7 @@ class DirectTests(unittest.TestCase):
                 parse_owned_preflight_profile(line, dict(record, **changes))
 
     def test_preflight_probes_load_only_for_declared_owned_profile(self):
-        for implementation, enabled in (('owned-v1', True), ('owned-v1', False), ('legacy', False)):
+        for implementation, enabled in (('owned-v1', True), ('owned-v1', False)):
             session = BackendSession.__new__(BackendSession)
             session.loaded_kd = True
             session.lock_kind = 'mutex'
@@ -353,8 +348,7 @@ class DirectTests(unittest.TestCase):
                 if log == 'load-profile.log':
                     raise RuntimeError('captured profiler command')
             session.run = command
-            symbols = ('00002000 d kd_owned_mutex_bodies [kdlock_km]\n'
-                       '00003000 d kd_mutex_jit_success_count [kdlock_km]\n')
+            symbols = '00002000 d kd_owned_mutex_bodies [kdlock_km]\n'
             with patch.object(Path, 'read_text', return_value=symbols), \
                     self.assertRaisesRegex(RuntimeError, 'captured profiler command'):
                 session.measure()
@@ -431,10 +425,9 @@ class DirectTests(unittest.TestCase):
         record = dict(spin_entry_ratio_limit=2, spin_prefetch=2, spin_delegate='on',
                       mutex_wait_mode='blocking', mutex_spin_limit=4096,
                       mutex_implementation='owned-v1', owned_mutex_entry_ratio_limit=8,
-                      mutex_routing='self', mutex_entry_ratio_limit=None)
+                      mutex_routing='self')
         params = dict(bench_quiet='Y', jit_timing='N', bench_lock_addr='4096',
                       spin_entry_ratio_limit='2', spin_prefetch='2', spin_delegate='Y',
-                      mutex_native_route='N', mutex_entry_ratio_limit='256',
                       owned_mutex_spin_limit='4096', owned_mutex_entry_ratio_limit='8',
                       owned_mutex_self_route='Y', owned_mutex_native_after_control='0')
         check_kd_parameters(params, record, 4096)
@@ -477,21 +470,20 @@ class DirectTests(unittest.TestCase):
             check_kd_parameters(params, record, 4096)
         params['owned_mutex_refill'] = 'N'
         for change in (dict(owned_mutex_entry_ratio_limit='256'), dict(owned_mutex_self_route='N'),
-                       dict(mutex_native_route='Y'), dict(owned_mutex_native_after_control='1')):
+                       dict(owned_mutex_native_after_control='1')):
             with self.subTest(change=change), self.assertRaises(run.Failure):
                 check_kd_parameters(dict(params, **change), record, 4096)
         del params['owned_mutex_self_route']
         with self.assertRaisesRegex(run.Failure, 'missing owned'):
             check_kd_parameters(params, record, 4096)
 
-    def test_report_keeps_owned_legacy_and_self_diagnostic_separate(self):
+    def test_report_keeps_owned_self_diagnostic_separate(self):
         args = dict(cachelines=[1], threads=[4], repeats=1, iterations=100,
                     backends=['kdlock'], lock_kind='mutex', mutex_acceptance='adaptive-performance')
-        legacy, = run.make_plan(Namespace(**args))
         owned, = run.make_plan(Namespace(**args, mutex_implementation='owned-v1'))
         control, = run.make_plan(Namespace(**args, mutex_implementation='owned-v1', mutex_routing='self'))
         control['name'] += '-self'
-        plans = [legacy, owned, control]
+        plans = [owned, control]
         with tempfile.TemporaryDirectory() as temporary:
             out = Path(temporary)
             run.write_json(out/'plan.json', plans)
@@ -503,14 +495,14 @@ class DirectTests(unittest.TestCase):
                 run.write_json(folder/'session.json', row)
             run.report(out)
             summary = json.loads((out/'summary.json').read_text())
-            self.assertEqual(len(summary), 3)
-            self.assertEqual(sum(row['valid'] for row in summary), 2)
+            self.assertEqual(len(summary), 2)
+            self.assertEqual(sum(row['valid'] for row in summary), 1)
             owned_rows = [r for r in summary if r['mutex_implementation'] == 'owned-v1']
             self.assertTrue(all(r['execution_classes'] == ['KD_SELF'] for r in owned_rows))
             self.assertIsNone(next(r for r in owned_rows if r['diagnostic'])['best_session'])
 
     def test_mutex_plan_uses_blocking_with_one_session_per_backend(self):
-        plan = run.make_plan(Namespace(cachelines=[16], threads=[16], repeats=3,
+        plan = run.make_plan(Namespace(cachelines=[1], threads=[16], repeats=3,
             iterations=100, backends=['native', 'tclock', 'kdlock'],
             lock_kind='mutex'))
         self.assertEqual(len(plan), 9)
@@ -525,14 +517,15 @@ class DirectTests(unittest.TestCase):
 
     def test_provider_identity_rejects_obsolete_mutex_switches(self):
         record = dict(spin_entry_ratio_limit=2, spin_prefetch=2,
-                      mutex_entry_ratio_limit=256, mutex_routing='adaptive',
+                      mutex_implementation='owned-v1', owned_mutex_entry_ratio_limit=256,
+                      mutex_routing='adaptive',
                       spin_delegate='on', mutex_wait_mode='blocking', mutex_spin_limit=4096)
         params = dict(bench_quiet='Y', jit_timing='N', bench_lock_addr='4096',
-                      mutex_entry_ratio_limit='256', mutex_native_route='N',
-                      mutex_spin_limit='4096',
+                      owned_mutex_spin_limit='4096', owned_mutex_entry_ratio_limit='256',
+                      owned_mutex_self_route='N', owned_mutex_native_after_control='0',
                       spin_entry_ratio_limit='2', spin_prefetch='2', spin_delegate='Y')
         check_kd_parameters(params, record, 4096)
-        for key, value in (('mutex_entry_ratio_limit', '2'), ('mutex_native_route', 'Y')):
+        for key, value in (('owned_mutex_entry_ratio_limit', '2'), ('owned_mutex_self_route', 'Y')):
             with self.assertRaises(run.Failure):
                 check_kd_parameters(dict(params, **{key: value}), record, 4096)
         for name in ('mutex_jit', 'mutex_blocking'):
@@ -563,7 +556,7 @@ class DirectTests(unittest.TestCase):
 
     def test_mutex_cannot_bypass_returned_body_acceptance(self):
         record = dict(arm='kdlock', lock_kind='mutex', threads=16,
-                      jit_bodies=0, scenario='plain', spin_delegate='off')
+                      mutex_implementation='owned-v1', jit_bodies=0, scenario='plain', spin_delegate='off')
         with self.assertRaisesRegex(run.Failure, 'no actual JIT'):
             check_jit_evidence(record)
         self.assertEqual(record['jit_acceptance'], 'NO_JIT')
@@ -573,29 +566,20 @@ class DirectTests(unittest.TestCase):
     def test_mutex_adaptive_performance_is_explicit_and_not_jit(self):
         for threads in (1, 2, 4, 16, 28, 60):
             record = dict(arm='kdlock', lock_kind='mutex', threads=threads,
-                          mutex_acceptance='adaptive-performance', jit_bodies=0)
+                          mutex_implementation='owned-v1', mutex_acceptance='adaptive-performance', jit_bodies=0)
             check_jit_evidence(record)
-            self.assertEqual(record['jit_acceptance'], 'ADAPTIVE_NATIVE')
-            self.assertEqual(record['execution_class'], 'ADAPTIVE_NATIVE')
+            self.assertEqual(record['jit_acceptance'], 'ADAPTIVE_SELF')
+            self.assertEqual(record['execution_class'], 'KD_SELF')
             with self.assertRaises(run.Failure):
                 check_jit_evidence(dict(record, functional=True))
             check_jit_evidence(record := dict(record, jit_bodies=1))
             self.assertEqual(record['execution_class'], 'JIT')
 
-    def test_mutex_native_control_rejects_jit_and_is_unscored(self):
-        record = dict(arm='kdlock', lock_kind='mutex', threads=16,
-                      mutex_routing='native', jit_bodies=0)
-        check_jit_evidence(record)
-        self.assertTrue(record['diagnostic'])
-        self.assertEqual(record['execution_class'], 'NATIVE_ROUTING_CONTROL')
-        with self.assertRaisesRegex(run.Failure, 'control executed JIT'):
-            check_jit_evidence(dict(record, jit_bodies=1))
-
     def test_report_excludes_diagnostics_and_separates_mutex_thresholds(self):
         base, = run.make_plan(Namespace(cachelines=[1], threads=[4], repeats=1,
             iterations=100, backends=['kdlock'], lock_kind='mutex',
             mutex_acceptance='adaptive-performance'))
-        plans = [dict(base, name=str(i), mutex_entry_ratio_limit=limit, diagnostic=diagnostic)
+        plans = [dict(base, name=str(i), owned_mutex_entry_ratio_limit=limit, diagnostic=diagnostic)
                  for i, (limit, diagnostic) in enumerate(((2, False), (4, False), (2, True)))]
         with tempfile.TemporaryDirectory() as directory:
             out = Path(directory)
@@ -603,7 +587,7 @@ class DirectTests(unittest.TestCase):
             for spec in plans:
                 (out/spec['name']).mkdir()
                 row = dict(spec, execution_status='OK', drained=True, jit_bodies=0,
-                           execution_class='ADAPTIVE_NATIVE',
+                           execution_class='KD_SELF',
                            measurement=dict(complete=True, data_ok=True, completed=100, wall_ns=100000))
                 (out/spec['name']/'session.json').write_text(json.dumps(row))
             run.report(out)
@@ -615,7 +599,7 @@ class DirectTests(unittest.TestCase):
                     self.assertIsNone(row['best_session'])
                 else:
                     self.assertEqual(row['median_whole_throughput_ops_s'], 1000000)
-                    self.assertEqual(row['execution_classes'], ['ADAPTIVE_NATIVE'])
+                    self.assertEqual(row['execution_classes'], ['KD_SELF'])
 
     def test_cpu_samples_are_unscored_for_every_backend(self):
         plan = run.make_plan(Namespace(cachelines=[1], threads=[16], repeats=1,
@@ -640,16 +624,16 @@ class DirectTests(unittest.TestCase):
         args = Namespace(cachelines=[1], threads=[4], repeats=3, iterations=100,
                          backends=['native', 'kdlock'], lock_kind='mutex')
         for limit in (2, 4, 8, 16, 32, 64, 128, 256):
-            args.mutex_entry_ratio_limit = limit
+            args.owned_mutex_entry_ratio_limit = limit
             rows = run.make_plan(args)
             self.assertEqual([r['arm'] for r in rows],
                              ['native', 'kdlock', 'kdlock', 'native', 'native', 'kdlock'])
-            self.assertEqual({r['mutex_entry_ratio_limit'] for r in rows if r['arm']=='kdlock'}, {limit})
+            self.assertEqual({r['owned_mutex_entry_ratio_limit'] for r in rows if r['arm']=='kdlock'}, {limit})
         for limit in (0, 1, 3, 512):
-            args.mutex_entry_ratio_limit = limit
+            args.owned_mutex_entry_ratio_limit = limit
             with self.assertRaises(run.Failure):
                 run.make_plan(args)
-        args.mutex_entry_ratio_limit = 256
+        args.owned_mutex_entry_ratio_limit = 256
         args.mutex_acceptance = 'adaptive-performance'
         args.functional = True
         with self.assertRaisesRegex(run.Failure, 'functional checks require'):
@@ -670,7 +654,7 @@ class DirectTests(unittest.TestCase):
                                  run.digest(path))
         reader = 'tests/unit/infrastructure/source_text.py'
         self.assertEqual(state[reader], run.digest(run.ROOT / reader))
-        for name in ('include/kd_mutex.h', 'include/kd_mutex_legacy.h',
+        for name in ('include/kd_mutex.h',
                      'include/kd_owned_mutex_direct.h', 'workload_modules/mutex_cacheline/module.c'):
             self.assertEqual(state[name], run.digest(run.ROOT / name))
 
@@ -733,9 +717,9 @@ class DirectTests(unittest.TestCase):
         plan = json.loads(output.getvalue())
         self.assertEqual(len(plan), 18)
         self.assertTrue(all(s['lock_kind'] == 'mutex' for s in plan))
-        self.assertTrue(all(s['caller_shell'] == 'mutex_outer_cookie'
+        self.assertTrue(all(s['caller_shell'] == 'owned_mutex_outer_cookie'
                             for s in plan if s['arm'] == 'kdlock'))
-        self.assertTrue(all(s['cookie_storage'] == 'outer_acquisition_local'
+        self.assertTrue(all(s['cookie_storage'] == 'owned_acquisition_local'
                             for s in plan if s['arm'] == 'kdlock'))
         params = dict(target_lock=4096, komb_batch_size=1024, quiescent=1,
                       delegated=8192, batches=8, parks=4)
@@ -747,7 +731,7 @@ class DirectTests(unittest.TestCase):
         # Successful data with zero JIT does not establish a contended positive.
         with self.assertRaisesRegex(run.Failure, 'no actual JIT'):
             check_jit_evidence(dict(arm='kdlock', lock_kind='mutex', threads=16,
-                                    jit_bodies=0, scenario='plain'))
+                                    mutex_implementation='owned-v1', jit_bodies=0, scenario='plain'))
 
     def test_explicit_placement_and_collector(self):
         args = Namespace(cachelines=[1], threads=[8, 16], repeats=1,
@@ -1022,8 +1006,8 @@ class DirectTests(unittest.TestCase):
         session.loaded_kd = True
         session.save = Mock()
         session.mutex_wait_stats = Mock(side_effect=[
-            dict(result_schedule_calls=10, result_wakes=7, gate_wait_calls=2),
-            dict(result_schedule_calls=14, result_wakes=9, gate_wait_calls=3)])
+            dict(result_schedule_calls=10, result_wakes=7),
+            dict(result_schedule_calls=14, result_wakes=9)])
         events, counts = [], iter((700, 705))  # 700 bodies already returned in warmup.
 
         def counter():
@@ -1048,7 +1032,16 @@ class DirectTests(unittest.TestCase):
         self.assertEqual(session.record['jit_share'], 5/51)
         self.assertEqual(session.record['measurement']['completed'], 51)
         self.assertEqual(session.record['mutex_wait_delta'],
-                         dict(result_schedule_calls=4, result_wakes=2, gate_wait_calls=1))
+                         dict(result_schedule_calls=4, result_wakes=2))
+
+    def test_owned_wait_observations_have_only_scheduler_counters(self):
+        with patch.object(Path, 'read_text', return_value='14 9\n'):
+            self.assertEqual(BackendSession.mutex_wait_stats(),
+                             dict(result_schedule_calls=14, result_wakes=9))
+        for invalid in ('14 9 0\n', '-1 9\n', '14\n'):
+            with patch.object(Path, 'read_text', return_value=invalid):
+                with self.assertRaises(run.Failure):
+                    BackendSession.mutex_wait_stats()
 
     def test_functional_report_has_no_performance_scores(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -1557,7 +1550,6 @@ class DirectTests(unittest.TestCase):
     def test_provider_load_has_no_admission_mode_parameter(self):
         session = BackendSession.__new__(BackendSession)
         session.record = dict(arm='kdlock', hotlock_mode='adaptive',
-                              mutex_entry_ratio_limit=256, mutex_routing='adaptive',
                               spin_entry_ratio_limit=4, spin_delegate='on', spin_prefetch=0)
         commands = []
 
@@ -1575,8 +1567,7 @@ class DirectTests(unittest.TestCase):
         self.assertIn('spin_entry_ratio_limit=4', args)
         self.assertIn('spin_delegate=1', args)
         self.assertIn('spin_prefetch=0', args)
-        self.assertIn('mutex_entry_ratio_limit=256', args)
-        self.assertIn('mutex_native_route=0', args)
+        self.assertFalse(any(str(arg).startswith(('mutex_', 'owned_mutex_')) for arg in args))
 
 
 if __name__ == '__main__':

@@ -12,9 +12,9 @@ Linux `pt_regs` is unchanged and must never be cast to `kd_regs`.
 
 | `entry_abi` | Identity | Captured input |
 | --- | --- | --- |
-| 0 | Legacy entry | Defined native callee-saved state plus IP/SP |
+| 0 | Spin full-context entry | Defined native callee-saved state plus IP/SP |
 | 1 | Ordinary spin clobber v1 | IP/SP/BP |
-| 2 | Ordinary mutex clobber v1 | IP/SP/BP |
+| 2 | Owned mutex clobber v1 | IP/SP/BP |
 | 3 | Rwlock writer clobber v1; writer admission before the body | IP/SP/BP |
 | 4 | Owned mutex ordinary C v2 (opt-in) | IP/SP/BP, RBX, R12–R15; synthetic RAX=0 |
 
@@ -49,19 +49,7 @@ them. If the analysis budget runs out, the entry is refused before execution.
 
 ### Mutex clobber and outer cookie
 
-Legacy direct mutex uses ABI2. Its outer paired API first attempts Linux's native
-owner CAS in the caller. A native acquisition stores its exact task owner in an
-opaque same-task cookie; its matching unlock calls original `mutex_unlock`.
-The contended outer entry returns an exact native owner only before taking a KD
-reference/gate; entry into the KD queue returns zero. The separate JIT continuation
-defines zero before writing the cookie, so MINIMAL never depends on incoming RAX.
-
-Nested translated operations keep `KD_MUTEX_DIRECT_LOCK/UNLOCK`. Retained kernel
-bridge aliases use generic FULL control handling. Special interruptible/killable/IO,
-trylock and explicit nested APIs keep their original contracts. See
-[mutex routing](design/locking.md#mutex-outer-direct).
-
-The owned ABI2 pair uses a distinct registry kind and the KD owner protocol.
+The owned ABI2 pair uses registry kind 3 and the KD owner protocol.
 Its physical cookie identifies a SELF owner and its borrowed cookie is zero;
 neither calls the original Linux mutex API. The
 [owned entry contract](design/mutex_implementation.md#kd-owned-implementation-experimental)
@@ -153,7 +141,7 @@ two-word ABI remain the same.
 | --- | --- |
 | 0 | Ordinary C entry |
 | 9 | `KDWB002` batch-layout tag |
-| 16 | Legacy batch entry |
+| 16 | Full-context spin batch entry (ABI0) |
 | 25 | `KDWC002` clobber-layout tag |
 | 32 | Clobber entry |
 | 41 | `KDAB` identity tag |
@@ -198,14 +186,13 @@ The wrapper reserves the same 176-byte frame plus its CALL word across entries:
 | -120, -128 | Origin GS base, logical task |
 | -136, -144 | Logical RIP scratch, exit/indirect value |
 | -152 | Body witness |
-| -160, -168 | Legacy batch descriptor, clobber descriptor |
+| -160, -168 | Full-context spin batch descriptor (ABI0), clobber descriptor |
 
 Other words remain reserved to preserve offsets. `Stack_RSP/RBP/R11..R15` macros
 refer to packet fields, not another copy on the physical stack. Allocation precedes
 stores; kernel code never relies on the red zone.
 
-GS lowering adds the pinned origin base for spin/rwlock images. Legacy mutex
-images that need it are refused because waiters may sleep. Owned mutex images
+GS lowering adds the pinned origin base for spin/rwlock images. Owned mutex images
 may use the [audited bounded subset](design/admission.md#audited-owned-mutex-gs-subset)
 when enabled and protected by an exclusive claim on a spinning origin; a parked
 origin cannot grant that claim. Supported current_task loads use logical task
@@ -232,7 +219,7 @@ The two forms of the register proof are:
 
 The fused form checks the same continuation without storing and rereading a
 virtual return word. If it fails, KD constructs the original CALL exactly once
-and enters FULL handling. Unknown endpoints, nonterminal unlocks and legacy images
+and enters FULL handling. Unknown endpoints, nonterminal unlocks and ABI0 images
 keep ordinary CALL handling.
 
 ABI3's body releases its writer byte before this spin endpoint. Pre-body refusal
@@ -260,8 +247,8 @@ participates in alias analysis; future services do not inherit that summary.
 
 ## Native continuation and final restore
 
-Legacy native entry decodes RBX, R12..R15, RBP and the return IP from the saved
-callee-saved/CALL stack; caller-saved incoming values are unspecified. Shared child
+Full-context spin entry (ABI0) decodes RBX, R12..R15, RBP and the return IP from
+the saved callee-saved/CALL stack; caller-saved incoming values are unspecified. Shared child
 frames alias the root packet. Native owner state and continuation/ACK metadata
 remain independently live.
 

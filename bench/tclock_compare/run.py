@@ -31,7 +31,7 @@ DEFAULT_KD_PROVIDER_UBSAN = 'off'
 DEFAULT_MUTEX_ENTRY_RATIO_LIMIT = 256
 MUTEX_ENTRY_RATIO_LIMITS = tuple(1 << shift for shift in range(1, 9))
 OWNED_MUTEX_PREFLIGHT_SPINS = (0, 64, 256, 1024, 4096)
-MUTEX_POLICY_FIELDS = ('mutex_implementation', 'mutex_entry_ratio_limit',
+MUTEX_POLICY_FIELDS = ('mutex_implementation',
                        'owned_mutex_entry_ratio_limit', 'mutex_routing', 'mutex_acceptance',
                        'owned_queue_policy', 'owned_preflight_policy', 'owned_mutex_preflight',
                        'owned_mutex_reuse_spins', 'owned_mutex_origin_spin', 'owned_mutex_numa',
@@ -151,9 +151,8 @@ def owned_workload_imports(imported, *, cabi=False, preflight=False, scenario='p
         expected.update(('kd_owned_mutex_direct_lock_clobber_v1',
                          'kd_owned_mutex_direct_unlock_clobber_v1'))
     require(not symbols.intersection({'mutex_lock', 'mutex_unlock',
-            '__mutex_lock_slowpath', '__mutex_unlock_slowpath', 'kd_mutex_prepare',
-            'kd_mutex_outer_contended_clobber_v1', 'kd_mutex_direct_unlock_clobber_v1'}),
-            'owned workload imports a Linux/legacy mutex execution path')
+            '__mutex_lock_slowpath', '__mutex_unlock_slowpath'}),
+            'owned workload imports a Linux mutex execution path')
     require(expected <= symbols, 'missing direct owned API import')
     return tuple(sorted(expected))
 
@@ -201,15 +200,14 @@ def make_plan(args):
     timing = timing_settings(args)
     workload = getattr(args, 'workload', 'cacheline')
     lock_kind = getattr(args, 'lock_kind', 'spin')
-    mutex_limit = getattr(args, 'mutex_entry_ratio_limit', DEFAULT_MUTEX_ENTRY_RATIO_LIMIT)
     owned_limit = getattr(args, 'owned_mutex_entry_ratio_limit', DEFAULT_MUTEX_ENTRY_RATIO_LIMIT)
-    mutex_implementation = getattr(args, 'mutex_implementation', 'legacy')
+    mutex_implementation = getattr(args, 'mutex_implementation', 'owned-v1')
     mutex_routing = getattr(args, 'mutex_routing', 'adaptive')
     mutex_acceptance = getattr(args, 'mutex_acceptance', 'jit-required')
-    require(mutex_limit in MUTEX_ENTRY_RATIO_LIMITS and owned_limit in MUTEX_ENTRY_RATIO_LIMITS,
+    require(owned_limit in MUTEX_ENTRY_RATIO_LIMITS,
             'invalid mutex entry ratio limit')
-    require(mutex_implementation in ('legacy', 'owned-v1'), 'invalid mutex implementation')
-    owned = mutex_implementation == 'owned-v1'
+    require(mutex_implementation == 'owned-v1', 'invalid mutex implementation')
+    owned = lock_kind == 'mutex' and 'kdlock' in args.backends
     owned_cabi = getattr(args, 'owned_mutex_cabi', False)
     require(type(owned_cabi) is bool and (not owned_cabi or owned),
             'owned C-ABI caller requires owned-v1')
@@ -242,10 +240,9 @@ def make_plan(args):
     require(not force_full or (owned and functional and scenario in ('nested', 'early') and
             args.backends == ['kdlock'] and args.repeats == 1),
             'forced FULL requires one owned nested/early functional KD round')
-    require(mutex_routing in ('adaptive', 'native', 'self') and
+    require(mutex_routing in ('adaptive', 'self') and
             mutex_acceptance in ('jit-required', 'adaptive-performance'), 'invalid mutex policy')
-    require(lock_kind == 'mutex' or (mutex_limit == DEFAULT_MUTEX_ENTRY_RATIO_LIMIT and
-            owned_limit == DEFAULT_MUTEX_ENTRY_RATIO_LIMIT and not owned and
+    require(lock_kind == 'mutex' or (owned_limit == DEFAULT_MUTEX_ENTRY_RATIO_LIMIT and not owned and
             mutex_routing == 'adaptive' and mutex_acceptance == 'jit-required'),
             'mutex controls require the mutex runner')
     require(not owned or (lock_kind == 'mutex' and workload == 'cacheline' and
@@ -254,11 +251,7 @@ def make_plan(args):
     require(lock_kind != 'mutex' or scenario == 'plain' or
             (owned and functional and args.backends == ['kdlock'] and args.repeats == 1),
             'mutex nested/early scenarios require owned-v1 functional mode and one KD round')
-    require(mutex_routing != 'native' or not owned,
-            'owned-v1 cannot route its object through Linux native mutex operations')
     require(mutex_routing != 'self' or owned, 'self routing requires owned-v1')
-    require(not owned or mutex_limit == DEFAULT_MUTEX_ENTRY_RATIO_LIMIT,
-            'owned-v1 uses --owned-mutex-entry-ratio-limit')
     require(owned or owned_limit == DEFAULT_MUTEX_ENTRY_RATIO_LIMIT,
             'owned mutex threshold requires owned-v1')
     require(not getattr(args, 'functional', False) or
@@ -298,13 +291,12 @@ def make_plan(args):
                 cachelines=n, threads=t, repeat=repeat, arm=backend, caller_abi='clobber' if backend == 'kdlock' and not (owned_backend and owned_cabi) else 'c',
                 api_mode='direct', workload=workload, lock_kind=lock_kind, hotlock_mode=mode,
                 post_work_rounds=post_work_rounds,
-                registry_lock_kind=3 if owned_backend else (2 if lock_kind == 'mutex' else 1),
+                registry_lock_kind=(3 if owned_backend else 1) if backend == 'kdlock' else 0,
                 entry_abi=(4 if owned_backend and owned_cabi else 2 if lock_kind == 'mutex' else 1) if backend == 'kdlock' else 0,
-                caller_shell=('owned_mutex_outer_cabi' if owned_backend and owned_cabi else 'owned_mutex_outer_cookie' if owned_backend else 'mutex_outer_cookie' if lock_kind == 'mutex' else 'cold_clobber') if backend == 'kdlock' else 'c',
-                cookie_storage=('owned_acquisition_local' if owned_backend else 'outer_acquisition_local' if lock_kind == 'mutex' else 'percpu_direct_gate') if backend == 'kdlock' else 'not_applicable',
-                cpu_heat_policy=('owned_mutex_contention1024_shift10_lock1025_pinned_cold' if owned_backend else 'mutex_contention1024_shift10_lock1025_pinned_cold' if lock_kind == 'mutex' else 'mcs_reset1024_shift10_lock512_head6') if backend == 'kdlock' else 'not_applicable',
+                caller_shell=('owned_mutex_outer_cabi' if owned_backend and owned_cabi else 'owned_mutex_outer_cookie' if owned_backend else 'cold_clobber') if backend == 'kdlock' else 'c',
+                cookie_storage=('owned_acquisition_local' if owned_backend else 'percpu_direct_gate') if backend == 'kdlock' else 'not_applicable',
+                cpu_heat_policy=('owned_mutex_contention1024_shift10_lock1025_pinned_cold' if owned_backend else 'mcs_reset1024_shift10_lock512_head6') if backend == 'kdlock' else 'not_applicable',
                 mutex_implementation=mutex_implementation if backend == 'kdlock' and lock_kind == 'mutex' else 'not_applicable',
-                mutex_entry_ratio_limit=mutex_limit if backend == 'kdlock' and not owned_backend else None,
                 owned_mutex_entry_ratio_limit=owned_limit if owned_backend else None,
                 owned_queue_policy=('bounded_fifo_refill' if owned_refill else 'finite_fifo') if owned_backend else 'not_applicable',
                 owned_mutex_refill=owned_refill if owned_backend else False,
@@ -323,7 +315,7 @@ def make_plan(args):
                 mutex_routing=mutex_routing if backend == 'kdlock' and lock_kind == 'mutex' else 'not_applicable',
                 mutex_acceptance=mutex_acceptance if backend == 'kdlock' and lock_kind == 'mutex' else 'not_applicable',
                 diagnostic=bool(getattr(args, 'pmu', False) or getattr(args, 'perf_record', False) or
-                                profile or force_full or mutex_routing in ('native', 'self')),
+                                profile or force_full or mutex_routing == 'self'),
                 owned_mutex_force_full=force_full,
                 profile_lock=profile,
                 profile_owned_preflight=bool(profile and owned_backend and owned_preflight),
@@ -334,7 +326,7 @@ def make_plan(args):
                 kd_provider_ubsan=provider_ubsan if backend == 'kdlock' else 'not_applicable',
                 mutex_wait_mode='blocking' if backend == 'kdlock' else 'not_applicable',
                 mutex_spin_limit=getattr(args, 'mutex_spin_limit', 4096) if backend == 'kdlock' else None,
-                mutex_wait_counter_scope='owned_delegate_waits' if owned_backend else 'legacy_mutex_waits',
+                mutex_wait_counter_scope='owned_delegate_waits' if owned_backend else 'not_applicable',
                 numa_policy=numa if backend != 'native' else 'not_applicable',
                 delegation_batch_limit=batch if backend == 'kdlock' else (1024 if backend == 'tclock' else None),
                 pmu=getattr(args, 'pmu', False),
@@ -506,17 +498,14 @@ def execute_session(session, keep_going_no_jit=False):
 
 def main(lock_kind='spin'):
     p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument('--mutex-implementation', choices=('legacy', 'owned-v1'), default='legacy',
+    p.add_argument('--mutex-implementation', choices=('owned-v1',), default='owned-v1',
                    help='owned-v1 uses a KD-owned object; initial scope is plain c01 only')
     p.add_argument('--mutex-spin-limit', type=int, default=4096)
-    p.add_argument('--mutex-entry-ratio-limit', type=int, choices=MUTEX_ENTRY_RATIO_LIMITS,
-                   default=DEFAULT_MUTEX_ENTRY_RATIO_LIMIT,
-                   help='exclusive (entries >> 10) bound per 1024 failed native attempts')
     p.add_argument('--owned-mutex-entry-ratio-limit', type=int, choices=MUTEX_ENTRY_RATIO_LIMITS,
                    default=DEFAULT_MUTEX_ENTRY_RATIO_LIMIT,
-                   help='owned-v1 admission threshold; independent of the legacy mutex sampler')
-    p.add_argument('--mutex-routing', choices=('adaptive', 'native', 'self'), default='adaptive',
-                   help='native (legacy) or self (owned-v1) are unscored diagnostic controls')
+                   help='owned mutex admission threshold')
+    p.add_argument('--mutex-routing', choices=('adaptive', 'self'), default='adaptive',
+                   help='self selects an unscored KD SELF diagnostic control')
     p.add_argument('--owned-mutex-force-full', action='store_true',
                    help='functional nested/early probe: force one post-control FULL continuation and ACK')
     p.add_argument('--owned-mutex-reuse-spins', type=int, choices=(0, 8, 32, 128), default=0,
@@ -673,11 +662,6 @@ def main(lock_kind='spin'):
                 batch_value = command(['modinfo', '-F', 'spin_batch', binary],
                                       out/'kdlock-batch.txt').strip()
                 require(batch_value == str(args.kd_batch_size), 'KD batch build identity differs')
-                if lock_kind == 'mutex':
-                    mutex_batch = command(['modinfo', '-F', 'mutex_batch', binary],
-                                          out/'kdlock-mutex-batch.txt').strip()
-                    require(mutex_batch == str(args.kd_batch_size),
-                            'KD mutex batch build identity differs')
                 audit_provider_ubsan(out, args.kd_provider_ubsan)
         if 'tclock' in args.backends:
             # Check the actual ELF: changing a Kbuild variable must not leave a
@@ -705,7 +689,6 @@ def main(lock_kind='spin'):
                 extra = [f'KBUILD_EXTRA_SYMBOLS={module.parent / "Module.symvers"}']
             command(['make','-C',folder,f'KDIR={args.kernel_source}',
                      f'SC_BACKEND={backend}', f'SC_WORKLOAD={args.workload}',
-                     f'SC_MUTEX_OWNED={int(lock_kind == "mutex" and backend == "kdlock" and args.mutex_implementation == "owned-v1")}',
                      f'SC_OWNED_MUTEX_PREFLIGHT={int(backend == "kdlock" and args.owned_mutex_preflight)}',
                      f'SC_OWNED_MUTEX_CABI={int(backend == "kdlock" and args.owned_mutex_cabi)}',
                      f'SC_SCENARIO={dict(plain=0, nested=1, early=2)[args.scenario]}',
@@ -729,13 +712,11 @@ def main(lock_kind='spin'):
                                    'kd_spin_unlock_clobber_v1', 'kd_spin_prepare'),
                         'tclock': ('komb_spin_lock', 'komb_spin_unlock'), 'native': ()}[backend]
             if lock_kind == 'mutex':
-                expected = {'kdlock': ('kd_mutex_outer_contended_clobber_v1',
-                                       'kd_hotlock_mutex_entries', 'mutex_unlock',
-                                       'kd_mutex_direct_unlock_clobber_v1', 'kd_mutex_prepare'),
+                expected = {'kdlock': (),
                             'tclock': ('komb_mutex_lock', 'komb_mutex_unlock',
                                        'tc_mutex_worker_register', 'tc_mutex_workers_drain'),
                             'native': ('mutex_lock', 'mutex_unlock')}[backend]
-                if backend == 'kdlock' and args.mutex_implementation == 'owned-v1':
+                if backend == 'kdlock':
                     gate_policy = ('not_applicable' if args.owned_mutex_cabi else
                                    'c_abi_v1' if args.owned_mutex_preflight else 'capture_first')
                     compiled_policy = command(['modinfo', '-F', 'owned_preflight_policy', binary],
@@ -749,9 +730,6 @@ def main(lock_kind='spin'):
                         require(value == expected_value, 'compiled owned caller identity differs: ' + field)
                     expected = owned_workload_imports(imported, cabi=args.owned_mutex_cabi,
                         preflight=args.owned_mutex_preflight, scenario=args.scenario)
-                require('kd_mutex_lock_clobber_v1' not in imported.split() and
-                        'kd_mutex_unlock_clobber_v1' not in imported.split(),
-                        'workload still imports experimental kernel mutex bridge')
             if backend == 'kdlock' and lock_kind == 'spin':
                 require('kd_spin_direct_native_lock' not in imported.split(),
                         'cold caller still imports the out-of-line CAS entry')

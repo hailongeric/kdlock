@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Recovery-guest task lifetime / physical-owner ACK resource probe.
 
-The in-provider fixture uses real pinned tasks and original Linux mutexes. Its
+The in-provider fixture uses real pinned tasks and KD-owned mutexes. Its
 continuation packet is constructed and executes no JIT bodies. The provider
 always enables mutex JIT; this probe cannot replace returned-body JIT tests.
 """
@@ -78,7 +78,7 @@ def main():
                         'obsolete mutex JIT switch present')
         runtime.require(not Path('/sys/module/kdlock_km/parameters/mutex_blocking').exists(),
                         'obsolete mutex wait-mode switch present')
-        runtime.require('orders=2 acks=4 deferred_frees=2 failures=0 jit_bodies=0' in messages,
+        runtime.require('orders=2 acks=4 deferred_frees=4 failures=0 jit_bodies=0' in messages,
                         'missing task/owner ACK evidence')
         runtime.require('registry stress: workers=3 iterations=4096 deferred_frees=3 failures=0 jit_bodies=0' in messages,
                         'missing concurrent task-registry evidence')
@@ -90,7 +90,7 @@ def main():
                         'task registry was not empty at unload')
         runtime.idle()
         runtime.write_json(out/'result.json', dict(passed=True, drained=True,
-            mutex_wait_mode='blocking', orders=['B-A', 'A-B'], acks=4, deferred_frees=2, jit=False,
+            mutex_wait_mode='blocking', orders=['B-A', 'A-B'], acks=4, deferred_frees=4, jit=False,
             registry_stress_workers=3, registry_stress_iterations=4096,
             registry_stress_deferred_frees=3,
             jit_bodies=0, mutex_jit_required=True, scope='task_owner_ack_resource_probe'))

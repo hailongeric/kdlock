@@ -4,8 +4,8 @@ This is now kdlock's default ordinary spin lock/unlock boundary. The provider
 requires `KD_SPIN_CLOBBER_V1` at build time; it no longer installs hooks on the
 older pointer/static-only kernels. Legacy callers on this kernel still work.
 
-The current provider also requires the [mutex extension](../mutex_clobber/README.md)
-on `kdclobber2`. The following records how its preserved spin parent was created.
+The verified kernel remains `kdclobber2`; its captured
+[mutex extension](../mutex_clobber/README.md) is historical provenance. The following records how its preserved spin parent was created.
 Apply [guest-kernel.patch](guest-kernel.patch) only to an independent copy of the
 captured `6.1.159-kdstatic2` source/build. Preserve the parent kernel, configuration,
 installed modules and baseline. The release is `6.1.159-kdclobber1`; only

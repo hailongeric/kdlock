@@ -9,6 +9,30 @@ NUMA node 0 has CPUs 0–31 and node 1 has CPUs 32–63, with no extra vCPUs or
 unused spare CPU. Historical receipts retain their original topology; they
 do not authorize reusing a superseded placement.
 
+## Owned-only mutex verification
+
+The [removal receipt](../bench/results/10.176.26.71/tests/remove-mutex-legacy-20261015/validation.json)
+records normal/SELFTEST provider and workload builds, two basic tests, 24 affected
+unit drivers and five runner test drivers. The owned task/RCU/ACK and scheduler
+probes pass. Separate 16-worker ABI2 nested and ABI4 early-unlock runs each
+complete 1.6 million operations, return JIT bodies and complete their forced
+FULL continuation with both owner ACKs. Both retire and drain successfully.
+
+The final provider has no retired mutex symbols or parameters. Kernel identity,
+native qspinlocks, all 64 CPU pins and final guest idle state were checked.
+The receipt preserves failed fixture attempts and their corrections, with source
+and binary identities for each live run. No full suite or performance matrix was
+run; historical results and captured kernel provenance remain unchanged.
+
+The [commit check](../bench/results/10.176.26.71/tests/remove-mutex-legacy-20261015/commit-check-20261016.json)
+repeats the two basic tests, 24 affected unit drivers, five runner checks and
+normal/SELFTEST provider and daemon builds from the isolated staged source.
+All pass; 411 source/build/test inputs match the recorded manifest, and all 40
+removed paths are absent from the guest. Existing objtool and locale warnings
+remain in the build logs. This check adds no live module or performance run.
+The documentation audit covers all 102 Markdown files and their local links,
+anchors and fixed Git references; unrelated provider edits remain unstaged.
+
 ## Origin readiness and image-version verification
 
 The [2026-10-15 receipt](../bench/results/10.176.26.71/bench/mutex_owned/20261015-origin/validation.json)
@@ -85,9 +109,7 @@ inherited-versus-rerun coverage. No row implies a current full-project pass.
 
 | Scope | Receipt and limits |
 | --- | --- |
-| <a id="earlier-owned-mutex-verification"></a>Owned redesign, 2026-10-13 | [Receipt](../bench/results/10.176.26.71/bench/mutex_owned/20261013/validation.json): core/refill, outer/FULL/ACK and legacy compatibility; earlier-source coverage remains distinct. |
-| <a id="earlier-mutex-protocol-verification"></a>Legacy protocol trials, 2026-10-13 | [Receipt](../bench/results/10.176.26.71/bench/mutex_protocol/20261013/validation.json): frame/cookie/ABI, admission, task references, parking and terminal/owner checks; candidates rejected on performance. |
-| <a id="earlier-optimistic-spin-verification"></a>Legacy optimistic retry, 2026-10-13 | [Receipt](../bench/results/10.176.26.71/bench/mutex_optimistic/20261013/validation.json): rejected candidates and restored-provider drain verification kept separate. |
+| <a id="earlier-owned-mutex-verification"></a>Owned redesign, 2026-10-13 | [Receipt](../bench/results/10.176.26.71/bench/mutex_owned/20261013/validation.json): core/refill, outer/FULL/ACK; earlier-source coverage remains distinct. |
 | <a id="earlier-cost-study-verification"></a>Cost study, 2026-10-13 | [Receipt](../bench/results/10.176.26.71/bench/mutex_c01_cost/20261013/validation.json): prefetch/counter checks and live resource probes; exact candidate sources retained. |
 | <a id="earlier-admission-verification"></a>Admission study, 2026-10-13 | [Receipt](../bench/results/10.176.26.71/bench/mutex_admission/20261013/validation.json): affected admission/caller checks, parking/cooling and owner/ACK; no broader workload acceptance. |
 | <a id="earlier-blocking-only-verification"></a>Blocking policy, 2026-10-12 | [Receipt](../bench/results/10.176.26.71/tests/mutex-blocking-only-20261012/validation.json): scheduler/task probes and contended JIT; historical oversubscription scenarios are not thereby rerun. |

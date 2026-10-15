@@ -85,6 +85,8 @@ def build(out, args):
                  '-pthread', ROOT/'bench/real_api/client.c', '-o', build_dir/'client'],
                 out/'build-client.log', timeout=60)
         for backend, kind in itertools.product(('native', 'tclock', 'kdlock'), args.kinds):
+            if backend == 'kdlock' and kind in MUTEX_KINDS:
+                continue
             dest = build_dir / (backend + '-' + kind)
             dest.mkdir()
             for name in ('module.c', 'mutex.c', 'uts.c', 'control.h', 'Makefile'):
@@ -237,8 +239,7 @@ class SyscallSession(Session):
         if s['arm'] == 'kdlock':
             self.run(['insmod', self.out/'build/kdlock_km.ko', 'bench_quiet=1', 'jit_timing=0',
                       'hotlock_stats=1', 'target_process=sc_worker', 'spin_entry_ratio_limit=2',
-                      'spin_prefetch=2',
-                      'mutex_spin_limit=' + str(s.get('mutex_spin_limit', 4096))], 'load-kd.log')
+                      'spin_prefetch=2'], 'load-kd.log')
             self.loaded_kd = True
         if s['arm'] == 'tclock':
             self.run(['insmod', self.out/'build'/(self.tc_module+'.ko'), 'komb_batch_size=1024'], 'load-tc.log')
@@ -263,8 +264,6 @@ class SyscallSession(Session):
             (PARAM/'prepare').write_text('1')
         if self.loaded_kd:
             s['parameters'] = parameters()
-            require('mutex_blocking' not in s['parameters'] and s['mutex_wait_mode'] == 'blocking' and
-                    int(s['parameters']['mutex_spin_limit']) == s['mutex_spin_limit'], 'mutex waiting policy differs')
             sym = [line.split() for line in Path('/proc/kallsyms').read_text().splitlines()]
             begin = [int(v[0], 16) for v in sym if len(v) == 4 and v[2:] == ['rb_body', '[real_api]']]
             nm = self.run(['nm', '-S', self.workload_module], 'symbols.txt')
@@ -413,6 +412,8 @@ def make_plan(args):
     for kind, query, count, n, repeat in itertools.product(args.kinds, args.queries, args.entries, args.threads, range(args.repeats)):
         order = args.backends[repeat % len(args.backends):] + args.backends[:repeat % len(args.backends)]
         for arm in order:
+            if arm == 'kdlock' and kind in MUTEX_KINDS:
+                continue
             plan.append(dict(name=f'{kind}-{query}-n{count}-t{n:02d}-r{repeat}-{arm}', kind=kind,
                 query=query, entries=count, threads=n, repeat=repeat, arm=arm, value_size=args.value_size,
                 cpus=cpus[:n], collector_cpu=args.collector_cpu, duration_ms=args.duration_ms,
@@ -421,17 +422,16 @@ def make_plan(args):
                 helper_waves=args.helper_waves,
                 syscalls_per_op=2 if kind == 'setfd' else 1,
                 file_descriptions='per-worker' if kind in ('setfd', 'pipebytes', 'pipecap') else 'shared-query',
-                lock_kind=lock_kind(kind), mutex_wait_mode='blocking' if arm == 'kdlock' else 'not_applicable',
-                mutex_spin_limit=args.mutex_spin_limit if arm == 'kdlock' else None,
+                lock_kind=lock_kind(kind),
                 entry_abi=({'spin': 1, 'mutex': 2, 'rwlock': 3}[lock_kind(kind)] if arm == 'kdlock' else 0),
                 caller_abi='clobber' if arm == 'kdlock' else 'c'))
+    require(plan, 'KD requires its own mutex object; select native/tclock for kernel mutex workloads')
     return plan
 
 
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('--output', type=Path, required=True)
-    p.add_argument('--mutex-spin-limit', type=int, default=4096)
     p.add_argument('--build-from', type=Path)
     p.add_argument('--kinds', nargs='+', choices=['xattr', 'ofd', 'setfd', 'utsname', *sorted(MUTEX_KINDS)], default=['ofd'])
     p.add_argument('--queries', nargs='+', choices=['tail', 'miss', 'front', 'size', 'toggle', 'query', 'set', 'end', 'host', 'domain'], default=['tail'])
@@ -450,7 +450,6 @@ def main():
     p.add_argument('--kernel-source', default='/root/linux-6.1.159-kdclobber2')
     p.add_argument('--kernel-baseline', default='/root/kdlock-kernel-baselines/mutex-clobber2-20260919')
     args = p.parse_args()
-    require(0 <= args.mutex_spin_limit <= 1048576, 'mutex spin limit must be 0..1048576')
     out = args.output.resolve()
     require(out != ROOT and ROOT not in out.parents and not out.exists(), 'output must be new and outside checkout')
     require(os.environ.get('KDLOCK_RECOVERY_CONFIRMED') == '1' and os.environ.get('KDLOCK_SNAPSHOT_TAG'),

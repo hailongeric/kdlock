@@ -28,9 +28,9 @@ worker count is always selected separately with `--threads`.
 | tmpfs `fgetxattr()` | `simple_xattr_get()` holds `simple_xattrs.lock` across linked-list name comparisons and the value copy | Kernel integration exists; current translated xattr bodies are refused by pointer/context admission and are excluded from accepted performance comparisons. |
 | `fcntl(F_OFD_GETLK)` | `posix_test_lock()` holds `file_lock_context.flc_lock` while checking owners, ranges and conflict type, then copying the conflict | Implemented for local, non-expiring OFD locks; models repeated byte-range conflict queries on one file. |
 | `fcntl(F_SETFD)` | `set_close_on_exec()` holds `files_struct.file_lock` across the close-on-exec bitmap update | Implemented; each thread toggles its own preallocated descriptor flag in the shared table. Descriptor spacing changes the dirty bitmap footprint. |
-| `ioctl(FIONREAD)` on a shared pipe | `pipe_ioctl()` holds `pipe_inode_info.mutex` while summing real buffer lengths around the ring | Implemented mutex case; occupied buffer count controls protected traversal, with one independent file description per worker. |
-| `fcntl(F_GETPIPE_SZ)` | `pipe_fcntl()` holds the same pipe mutex while reading `max_usage` | Implemented short mutex control on the same real subsystem. |
-| Shared-file `lseek(SEEK_SET/SEEK_END)` | `ksys_lseek()` holds `file.f_pos_lock` across size checks and `f_pos`/`f_version` updates | Implemented mutex case for an anonymous tmpfs file and one shared open description. |
+| `ioctl(FIONREAD)` on a shared pipe | `pipe_ioctl()` holds `pipe_inode_info.mutex` while summing real buffer lengths around the ring | Native/TCLock mutex case; occupied buffer count controls protected traversal, with one independent file description per worker. |
+| `fcntl(F_GETPIPE_SZ)` | `pipe_fcntl()` holds the same pipe mutex while reading `max_usage` | Native/TCLock short mutex control on the same real subsystem. |
+| Shared-file `lseek(SEEK_SET/SEEK_END)` | `ksys_lseek()` holds `file.f_pos_lock` across size checks and `f_pos`/`f_version` updates | Native/TCLock mutex case for an anonymous tmpfs file and one shared open description. |
 | `uname()` with `sethostname()` / `setdomainname()` | `uts_sem` protects the real UTS structure: readers copy it, writers replace one name | Implemented bounded read/write experiment in a private UTS namespace; Native rwsem versus KD/TCLock reader/writer spinlocks, with the specialization below. |
 
 Sources: [TCLocks evaluation, Table 1 and Figure 3](https://www.usenix.org/system/files/osdi23-gupta.pdf),
@@ -103,7 +103,7 @@ measured operation. A failed/undrained session has no accepted score.
 ## Mutex and reader/writer contracts
 
 The [mutex module](../../workload_modules/real_api/mutex.c) keeps the real pipe
-mutex or `f_pos_lock` for Native and KD; TCLock uses its separate ordinary-mutex
+mutex or `f_pos_lock` for Native; TCLock uses its separate ordinary-mutex
 object. The client creates an unlinked FIFO, fills whole pages before binding,
 and opens an independent description per worker. No pipe reads, writes or resizes
 occur while bound. The seek case retains a shared description, restricts calls
@@ -140,13 +140,13 @@ TCLock mutex delegation counts are recorded; spin/rwlock shares remain unmeasure
 Follow [operations](../../docs/AGENTS.md), synchronize reviewed source, verify
 the current kernel, NUMA placement and physical vCPU pins, and confirm a fresh
 monitor snapshot of the actual CPU topology. Do not rebuild the kernel. The
-standard guest has 64 vCPUs; collector 63 is excluded from worker cohorts.
-The client supports up to 64 workers. A 64-worker run requires explicit
-`--cpus 0,...,31,33,...,64 --collector-cpu 65` on the documented temporary
-[66-vCPU layout](../../tools/vm/README.md#complete-164-worker-comparison).
-Use a comma-separated list with every CPU spelled out, not the ellipses above.
-The collector then shares physical host core 63 with the last worker; retain
-that limitation and topology with the results.
+guest must use exactly CPUs 0–63, with NUMA node 0 on 0–31 and node 1 on 32–63,
+pinned to the same-numbered host cores. Do not add extra vCPUs or an unused
+spare CPU. For up to 63 workers, collector 63 is excluded from worker cohorts.
+The client supports up to 64 workers, but the current timed runner requires a
+separate collector. The 64-worker point needs collector-sharing support on CPU
+63 before execution; retain the resulting worker/collector/QEMU contention
+with the results. See the [placement limitation](../../tools/vm/README.md#complete-164-worker-comparison).
 
 ```sh
 export PATH=/root/kdlock-evidence/clobber-20260918/venv/bin:$PATH
@@ -164,12 +164,10 @@ python3 bench/real_api/report.py \
 
 CSV/JSON/text reports use only the standard Python library. `--plots` additionally
 requires Matplotlib; use a separate analysis environment after measurement.
-KD mutexes always support blocking. `--mutex-spin-limit` defaults to 4,096
-PAUSE iterations before sleeping; zero parks immediately. Records retain
-`mutex_wait_mode=blocking` and the budget, which is checked against the loaded
-module. `--mutex-wait-mode` has been removed. Each backend runs once per round.
-The API report rejects archives with different mutex wait settings; export each
-setting to a separate report directory.
+Pipe/file mutex workloads compare Stock, Native and TCLock. KD uses its own
+mutex storage and is excluded from these kernel-owned objects. The runner
+omits that arm from mixed plans and rejects a plan with no supported sessions.
+Each supported backend runs once per round.
 The recorded figures used Matplotlib 3.9.4. Basic and directly affected checks:
 
 ```sh
@@ -189,11 +187,11 @@ Use separate output directories for these additional cases:
 # --entries means occupied 4 KiB pipe buffers (capacity pages for pipecap).
 python3 bench/real_api/run.py --kinds pipebytes pipecap --queries query \
   --entries 16 128 --threads 1 8 16 32 48 60 --repeats 3 \
-  --backends stock native tclock kdlock --output /root/kdlock-evidence/10.176.26.71/bench/pipe-new
+  --backends stock native tclock --output /root/kdlock-evidence/10.176.26.71/bench/pipe-new
 # --entries means file size in 4 KiB pages.
 python3 bench/real_api/run.py --kinds seek --queries set end --entries 16 \
   --threads 1 8 16 32 48 60 --repeats 3 \
-  --backends stock native tclock kdlock --output /root/kdlock-evidence/10.176.26.71/bench/seek-new
+  --backends stock native tclock --output /root/kdlock-evidence/10.176.26.71/bench/seek-new
 # --entries means write percentage; remaining operations call uname().
 python3 bench/real_api/run.py --kinds utsname --queries host domain \
   --entries 20 100 --value-size 64 --threads 1 8 16 32 48 60 --repeats 3 \

@@ -1,12 +1,14 @@
 // SPDX-License-Identifier: GPL-2.0
 
-/* Shared spin/mutex execution ledger and original-waiter rendezvous.
+/*
+ * Shared spin/mutex execution ledger and original-waiter rendezvous.
  * A frame records logical state; its physical executor retains native locks.
  * Native/remote requests are stack objects whose done ACK is the final access.
  * The bounded per-CPU frame stack belongs to one physical task at a time.
  * This file owns frame push/pop, validation and event transitions; the
  * execution/{native,remote,lock_ledger}.inc components own rendezvous and
- * lock-vector operations while sharing these private counters/state. */
+ * lock-vector operations while sharing these private counters/state.
+ */
 #include <linux/percpu.h>
 #include <linux/moduleparam.h>
 #include <linux/atomic.h>
@@ -21,7 +23,6 @@
 #include "kd_source.h"
 #include "kd_lock.h"
 #include "kd_spinlock.h"
-#include "kd_mutex_legacy.h"
 #include "kd_owned_mutex_internal.h"
 
 #ifdef KDLOCK_SELFTEST
@@ -75,25 +76,32 @@ bool kd_exec_frame_validate(const struct kd_exec_frame *frame)
 
 	state = kd_exec_frame_state(frame);
 	if (frame->spin_simple && !frame->complex_ready)
-		return frame->request_frame && !frame->parent && !frame->depth &&
-		       frame->gsbase && frame->logical_task && frame->outer_lock_addr &&
+		return frame->request_frame && !frame->parent &&
+		       !frame->depth && frame->gsbase && frame->logical_task &&
+		       frame->outer_lock_addr &&
 		       (state == KD_EXEC_FRAME_RUNNING ||
-			(state == KD_EXEC_FRAME_COMPLETE && frame->completion_seen));
-	/* A pristine mutex root already has its exact live one-lock ledger. It
+			(state == KD_EXEC_FRAME_COMPLETE &&
+			 frame->completion_seen));
+	/*
+	 * A pristine mutex root already has its exact live one-lock ledger. It
 	 * cannot have a continuation or generic side effect before routing state
-	 * is materialized, so never inspect the inactive continuation union. */
+	 * is materialized, so never inspect the inactive continuation union.
+	 */
 	if (frame->mutex_backend && !frame->complex_ready &&
 	    (!frame->batch_lease || !frame->regs_borrowed || frame->regs_ref ||
-	     !frame->borrowed_regs || frame->spin_simple || frame->request_frame ||
-	     frame->parent || frame->depth || !frame->outer_unlock_hook ||
+	     !frame->borrowed_regs || frame->spin_simple ||
+	     frame->request_frame || frame->parent || frame->depth ||
+	     !frame->outer_unlock_hook ||
 	     (!kd_entry_abi_mutex_reduced(frame->entry_abi) ||
-	      (frame->entry_abi == KD_ENTRY_ABI_OWNED_MUTEX_CABI_V2 && !frame->owned_mutex)) ||
+	      (frame->entry_abi == KD_ENTRY_ABI_OWNED_MUTEX_CABI_V2 &&
+	       !frame->owned_mutex)) ||
 	     frame->held_lock_depth != 1 || frame->outer_lock_depth != 1 ||
 	     frame->jit_lock_depth != 1 || frame->outer_lock_index ||
 	     frame->jit_lock_addr[0] != frame->outer_lock_addr ||
 	     frame->jit_lock_kind[0] != KD_EXEC_LOCK_QUEUE_OWNER ||
 	     !frame->jit_lock_node[0] ||
-	     (state != KD_EXEC_FRAME_RUNNING && state != KD_EXEC_FRAME_COMPLETE)))
+	     (state != KD_EXEC_FRAME_RUNNING &&
+	      state != KD_EXEC_FRAME_COMPLETE)))
 		return false;
 	if (!kd_exec_frame_state_is_active(state) ||
 	    frame->depth >= KD_EXEC_MAX_NESTING || !frame->gsbase ||
@@ -207,8 +215,10 @@ bool kd_exec_context_busy(void)
 	return ctx->depth && ctx->owner != current;
 }
 
-/* Fresh spin admission needs both checks. Read the CPU context once while
- * the caller holds its acquisition pin; retain the exact frame/busy predicate. */
+/*
+ * Fresh spin admission needs both checks. Read the CPU context once while
+ * the caller holds its acquisition pin; retain the exact frame/busy predicate.
+ */
 bool kd_exec_context_occupied(void)
 {
 	struct kd_exec_context *ctx = kd_exec_current_context();
@@ -216,11 +226,6 @@ bool kd_exec_context_occupied(void)
 	return ctx->depth && (ctx->owner != current || ctx->top);
 }
 
-/* The producer owns the unqueued request. Inactive arrays and register bytes
- * are deliberately untouched; their live depths and packet producer own them. */
-/* Materialize branch-local discriminators once. Never clear inactive arrays or
- * copy the shared register packet. A pristine single-lock ledger is implicit
- * until the first service/control boundary requires an explicit owner record. */
 #include "execution/frame_lifecycle.inc"
 
 void kd_exec_frame_save_continuation(struct kd_exec_frame *frame,
@@ -321,13 +326,15 @@ static void kd_exec_frame_set_state(struct kd_exec_frame *frame, int state)
 {
 	if (!frame)
 		return;
- /* Publish the stable role before the state/wake publication. */
- frame->role = state == KD_EXEC_FRAME_COMPLETE || state == KD_EXEC_FRAME_ERROR ?
-  KD_ROLE_DONE : state == KD_EXEC_FRAME_WAITING_LOCK ? KD_ROLE_WAITER : KD_ROLE_COMBINER;
+	/* Publish the stable role before the state/wake publication. */
+	frame->role =
+		state == KD_EXEC_FRAME_COMPLETE || state == KD_EXEC_FRAME_ERROR ?
+			KD_ROLE_DONE :
+		state == KD_EXEC_FRAME_WAITING_LOCK ? KD_ROLE_WAITER : KD_ROLE_COMBINER;
 #ifdef KDLOCK_SELFTEST
- if (kd_hotlock_role_trace)
-  pr_info("kd_hotlock role: address=%lx request=%px role=%u state=%d\n",
-          frame->outer_lock_addr, frame, frame->role, state);
+	if (kd_hotlock_role_trace)
+		pr_info("kd_hotlock role: address=%lx request=%px role=%u state=%d\n",
+			frame->outer_lock_addr, frame, frame->role, state);
 #endif
 	smp_store_release(&frame->state, state);
 }

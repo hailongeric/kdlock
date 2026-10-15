@@ -13,8 +13,6 @@ per mutex request.
 | --- | --- | --- |
 | Native | `(mutex_lock)` / `(mutex_unlock)` | Captured kernel `kernel/locking/mutex.c`, `include/linux/mutex.h` |
 | TCLock | `komb_mutex_lock` / `komb_mutex_unlock` | [komb_mutex.c](../../tclock_backend/komb_mutex.c), [combiner.c](../../tclock_backend/combiner.c), [mutex_provider.c](../../tclock_backend/mutex_provider.c) |
-| KD legacy outer | `KD_MUTEX_OUTER_LOCK/UNLOCK` | [kd_mutex_direct.h](../../include/kd_mutex_direct.h), [mutex_calls.inc](../../kernel_module/lock/mutex_calls.inc) |
-| KD legacy general/nested | `KD_MUTEX_DIRECT_LOCK/UNLOCK` and retained bridge endpoints | Same routing file, [kd_mutex.c](../../kernel_module/kd_mutex.c), [native.inc](../../kernel_module/execution/native.inc) |
 | KD owned outer | `KD_OWNED_MUTEX_OUTER_LOCK/UNLOCK` | [kd_owned_mutex_direct.h](../../include/kd_owned_mutex_direct.h), [owned core](../../kernel_module/owned_mutex/core.c), [delegation](../../kernel_module/owned_mutex/delegation.c) |
 | KD owned ordinary/nested | `kd_mutex_lock/unlock`, `KD_OWNED_MUTEX_DIRECT_LOCK/UNLOCK` | Owned SELF core; translated nested calls use [owned_mutex_calls.inc](../../kernel_module/lock/owned_mutex_calls.inc) |
 
@@ -50,7 +48,7 @@ acquire ordering.
 
 The Native arm deliberately parenthesizes function names to bypass the
 experimental caller-clobber macros. No KD selector is installed, so it reaches
-the original Linux algorithm. It does not allocate a KD task record/shadow,
+the original Linux algorithm. It does not allocate a KD task record,
 use a JIT frame, or move to a TCLock shadow stack.
 
 ## TCLock implementation
@@ -129,17 +127,15 @@ unload frees preallocated contexts/stacks; no forced context release is used.
 `owned-v1` is a separate object protocol. It ports ordinary non-RT Linux
 6.1.159 owner spinning, OSQ, sleeping and owner flags into KD, with exact captured
 source hashes and port boundaries in [linux-source.json](../../kernel_module/owned_mutex/linux-source.json).
-The owned target never enters `mutex_lock`, `mutex_unlock`, their slowpaths or
-the legacy shadow gate. Linux mutexes used elsewhere by provider control code
-remain unrelated objects. Existing kernel-owned objects continue using the
-explicit legacy interface; an owned object cannot mix callers from either API.
+KD mutexes use `struct kd_mutex` exclusively. Every caller of that object uses
+the KD API. Linux mutexes used by provider control code are separate objects;
+existing kernel-owned `struct mutex` objects continue using Linux operations.
 
 [kd_mutex.h](../../include/kd_mutex.h) statically checks size, alignment and
 every field offset against the captured Linux type: 32 bytes, alignment 8,
 owner at 0, wait lock at 8, OSQ at 12 and wait list at 16. This matches object
 geometry, not measured cache behavior. Unsupported RT/debug layouts fail the
-build. The old internal shadow-gate type is now `kd_mutex_legacy_gate` in
-[kd_mutex_legacy.h](../../include/kd_mutex_legacy.h).
+build.
 
 The whole owner word is the sole ownership authority. WAITERS=1, HANDOFF=2 and
 PICKUP=4 retain acquire/release ordering. The owned-only DELEGATION=8 guard uses
@@ -334,7 +330,8 @@ module arena exceeded this kernel's 8 KiB reserve. Reusable `rcuwait` identities
 outlive packets. Final result publication is the last packet access; deferred
 wakes retain only those stable identities.
 
-Registry kind 3 and entry ABI2 or ABI4 distinguish owned images from legacy mutex images.
+Registry kind 3 and entry ABI2 or ABI4 identify KD mutex images. Wire kind 2 is
+reserved and rejected; its value is not reused for a different object protocol.
 The two-word wrapper, reduced COMPLETE return, FULL detachment and logical-task
 continuation remain shared. A FULL borrower never releases another task's owner
 word: the physical executor performs each unlock and acknowledges it. Early
@@ -348,270 +345,44 @@ reports KD_SELF separately from JIT and Linux Native. It covers plain c01
 performance and separate nested/early functional probes. The
 [accepted profile](../PERFORMANCE.md#accepted-c01-18-worker-profile) is scoped to
 64 post-work rounds and 1–8 workers on the regular 64-vCPU boot. The later
-[1–64-worker comparison](../PERFORMANCE.md#fresh-c01-164-worker-comparison) uses
-the same implementation on a temporary 66-vCPU boot and misses the three-worker
-peak gate. These results do not promote general defaults or expand translator
+[1–64-worker comparison](../PERFORMANCE.md#fresh-c01-164-worker-comparison) used
+the same implementation on a historical temporary 66-vCPU boot and missed the
+three-worker peak gate. New runs require the fixed
+[64-CPU placement](../../tools/vm/README.md#complete-164-worker-comparison).
+These results do not promote general defaults or expand translator
 context/flags limits, payload coverage or RT/WW/interruptible mutex APIs.
 
-## Legacy KD implementation
+## Blocking waits and lifetime
 
-### Entry and native routing
+Published delegates poll up to `owned_mutex_spin_limit` PAUSE iterations
+(default 4096, range 0–1048576), then sleep uninterruptibly on their reserved
+stacks while retaining migration pins. Zero requests immediate parking. This
+budget is separate from SELF's Linux-style optimistic owner spinning.
 
-The outer pair first reads the original `mutex.owner`, attempting an acquire
-CAS only when the entire owner/flags word is zero. A busy read declines without
-an exclusive cacheline request; a racing owner still defeats the CAS. Success
-increments only the approximate CPU-local entry observation
-and stores the exact native result in the lexical cookie. Unlock uses the
-original function, preserving its owner/flag slowpath. Cookie zero routes to
-KD, including native fallbacks after joining KD ownership routing.
+Result waiters register in persistent `rcuwait` slots, publish their sleep state,
+recheck the result and use `schedule_timeout(1)`. The timeout permits progress
+when completion has been published but its wake is buffered behind another body.
+A wake can end the sleep sooner; neither mechanism bounds scheduler latency.
+Completion retires packet/frame ownership before publishing the outcome. Deferred
+wakes retain stable notification identities and never read recycled packets.
 
-`kd_mutex_outer_contended_clobber_v1()` does not retry the declined fastpath.
-`kd_mutex_contended_acquire()` records that contention once and checks heat,
-source OPEN, target comm, active-task routing and JIT policy before shadow/task
-work. A native-only result is returned only when this acquisition obtained no
-KD routing reference. The general direct and bridge APIs keep their void
-contract; their unlock uses task membership, native requests and exact shadow
-physical ownership rather than a fresh admission decision.
+The RCU task cache in [kd_mutex_tasks.c](../../kernel_module/kd_mutex_tasks.c)
+retains exact acquisition references and ordinary/nested held counts. A zero
+reference count disables routing immediately; inactive identities can remain
+cached until eviction or controlled unload. The cache is part of owned mutex
+execution and does not replace the physical owner, unlock ACK or frame ledger.
 
-The contended hook owns a short preemption pin and calls the specialized
-`kd_hotlock_record_mutex_pinned()` sampler. It records one entry and one failed
-attempt. While the CPU is cold, samples below the 1,024-contention boundary
-return before touching the exact-address table guard. The next boundary still
-checks the strict `(entries >> 10) < mutex_entry_ratio_limit` ratio and CPU-local
-contention frequency; the read-only limit defaults to 256 and accepts powers of two from
-2 through 256. Per-address heat still needs 1,025 records, and a busy table
-retains observations for retry. No task reference, shadow allocation or queue
-publication occurs before native fallback. The load-time `mutex_native_route`
-diagnostic forces that fallback after sampling; unlock never consults it.
-Cooling changes new admission only. Existing waiters, task references and
-owner acknowledgments remain live until their normal completion and retirement.
+The [scheduler probe](../../tests/kernel/mutex/run_wait_selftest.py) checks queued
+admission cooling, actual sleep, directed SELF pickup and exact drain. Its
+constructed requests execute no JIT bodies. The [mutex runner](../../bench/tclock_compare/README.md)
+checks returned JIT evidence separately, with nested/early/FULL probes in functional
+mode. [Validation](../VALIDATION.md) and [performance status](../PERFORMANCE.md)
+identify the exact source and scope of recorded checks.
 
-`kd_mutex_prepare()` registers the named post-lock continuation with
-`KD_ENTRY_ABI_MUTEX_CLOBBER_V1`. Translation/admission/control tables recognize
-direct symbols and kernel bridge aliases. The direct admitted unlock can use
-terminal COMPLETE; bridge aliases use checked generic FULL dispatch. The
-outer returning entry has a separate physical C return and JIT continuation
-which defines route zero, so a nested translated call never consumes an
-unmodelled native result.
-
-### Current storage and lookup
-
-| Object | Current storage/lifetime |
-| --- | --- |
-| Original Linux mutex | Workload's `struct mutex`; authoritative native-peer exclusion and physical ownership |
-| Shadow table | 1024 resident `kd_mutex_shadow_entry` objects in [kd_lock.c](../../kernel_module/kd_lock.c); each 192-byte gate separates tail, physical ownership/state and waiter identity/gate wait list onto three cachelines |
-| Mapped waiter counts | Dynamically allocated 1024 exact integers per possible CPU (256 KiB for 64 CPUs); immutable shadow slot, initialized before map publication and retained until provider unload |
-| Task routing record | RCU hash with 256 cacheline-aligned buckets in [kd_mutex_tasks.c](../../kernel_module/kd_mutex_tasks.c); cached identities retain an atomic acquisition count and a `task_struct` ref; insertion/eviction use the bucket writer lock |
-| `kd_mutex_node` | Four independently bitmap-reserved slots per possible CPU; 320 bytes each, 64-byte aligned |
-| Waiter stacks | Four 8 KiB stacks per possible CPU, allocated by [lifecycle.inc](../../kernel_module/mutex/lifecycle.inc) with `vzalloc_node(..., cpu_to_node(cpu))` |
-| Blocking notifications | Four `rcuwait` slots per CPU, resident for the provider lifetime; each node retains its immutable slot pointer, independent of packet reuse |
-| Execution frames | Shared per-CPU context, up to eight frames; physical owner remains fixed through sleep/ACK; root borrows node packet until FULL detachment |
-| Batch state | Physical combiner's stack; retains current retirement flag, exact successor, bounded NUMA deferred chain, outer-release callback and image-slot identity |
-
-Shadow hits acquire-load the immutable exact address without a lock. The
-current collision policy is `address % 1024` plus linear probing; misses take
-`kd_mutex_shadow_lock`, recheck, initialize and release-publish the address.
-Entries are cacheline-aligned and are not removed/reused while callers are live.
-Exhaustion falls back to the original mutex. The shadow hash policy is unchanged.
-
-`kd_mutex_task_get()` first attempts an RCU lookup and atomic acquisition-reference
-increment. Cache hits require neither allocation nor the bucket writer lock.
-Misses allocate with GFP_ATOMIC, lock the bucket and recheck before publication.
-The last put changes the exact count to zero, immediately disabling routing;
-the inactive identity can remain cached. A bucket retains up to eight identities
-unless live acquisitions require more. A zero-reference eviction CAS claims
-the record with -1, arbitrating against concurrent reactivation, before unlinking
-it. RCU then protects old readers until the callback drops the task ref and frees
-storage. Inactive records also disappear during controlled provider unload.
-
-Controlled drain counts records with positive references after callers stop.
-Cached task lifetime does not extend routing membership or excuse an outstanding
-owner ACK. Active overflow is pruned on the final put. Approximate heat/counter
-values never replace these references. The allocation-fault switch remains
-checked before cache lookup, using a read before its one-shot CAS.
-
-Mutex heat has separate entry/contention counters from spin. Every 1024
-contentions the accepted policy checks `(entries >> 10) < 256`, resets both
-counters, then samples the clock. The earlier proposed limit 2 is not the
-current mutex setting. CPU and exact-address heat windows remain separate;
-see [heat and roles](../JIT_EXECUTION.md#heat-and-roles) for the full policy.
-
-### Packet/cacheline and prefetch layout
-
-The node's first line contains next, GS base, saved physical RSP, stack
-base/top, lock, task and saved entry identity. ABI/packet/tail/slot state and
-immutable NUMA identity occupy the second line; `regs` begins at offset 128.
-IP/SP/BP and five virtual GPR slots share its first aligned line.
-`completed/locked/native_resume` occupy offsets 304/305/306, after the 168-byte
-packet in the node's existing fifth line. Minimal packet and metadata writes
-therefore do not invalidate the polling line. FULL recovery can touch the
-packet's last line; the node remains 320 bytes. Linux `pt_regs` is unchanged.
-
-The root frame's own hot header contains entry/lock identity and frame state.
-For spin its inline IP/SP/BP share that first aligned line. A mutex simple
-frame instead borrows `node->regs`; the frame header and node packet are
-distinct objects. Caller stack memory keeps its original addresses/aliases
-and is not relocated into either header. These are layout facts, not measured
-cache misses or a claim that all request state occupies one line.
-
-Before the current body, `kd_mutex_prefetch_successor()` hints the known-live
-successor header, ABI and aligned hot packet line. After that body,
-`kd_mutex_prefetch_successor_stack()` reads the saved SP and hints SP and SP-8.
-Separating these stages lets the current body overlap the packet fetch instead
-of immediately waiting for a cold SP load. The stack stage is skipped after
-early outer release or native continuation. The pointer is queue-owned until
-wake; no successor or current-node read is allowed after its completion/native
-publication. Prefetch grants no ownership, admission or lifetime.
-
-The private gate also uses a read before its acquire CAS. Together with the
-original-owner guard, this keeps failed producer RMWs from invalidating ownership
-lines held across a batch. Tail exchanges retain their atomic operations.
-Mapped waiter counts use a component per origin CPU and immutable shadow slot;
-entry/exit run with preemption disabled on the migration-pinned CPU. Private
-unmapped gates retain their atomic count. The live mapped sum spans different
-CPU instants and grants no ownership or retirement authority. Controlled drain
-checks every component, including opposite nonzero balances; active-waiter,
-reservation and underflow checks remain. Storage is allocated once at module
-initialization with rollback, avoiding the reserved module-percpu size limit.
-
-### Queue, batch execution and recovery
-
-[queue.inc](../../kernel_module/mutex/queue.inc) encodes `(CPU+1, slot)` into
-the tail, reserves nodes, and acquires the original Linux mutex only after
-the scheduling gate. A same-CPU reserved predecessor on that queue refuses
-before publication. This preserves the spin policy's progress rule and prevents
-two tasks from sharing one CPU's executor context in either waiting mode.
-[clobber.inc](../../kernel_module/mutex/clobber.inc) switches to the
-reserved waiter stack before publication and restores the post-completion
-boundary without returning through potentially overwritten hook frames.
-
-[combiner.inc](../../kernel_module/mutex/combiner.inc) selects local requests
-when built with NUMA enabled. It can defer at most 64 fully linked remote nodes;
-an unlinked global tail is never detached. Selection happens at loop entry;
-the current body retains the original successor chain through refusal and early
-release. The next iteration uses the saved batch pointer, never a completed
-node. This avoids an eager second NUMA selection before the current body.
-At 128 completed bodies, or when the
-retained successor has no link, deferred requests take priority. Eight or more
-deferred requests receive physical handoff; a smaller remote cohort is rejoined
-and serviced on the current owner, with FIFO selection for the rest of that
-batch. This avoids moving the owner and frame stack for only a few requests.
-All refusal, ordinary handoff and early-release exits rejoin deferred requests
-before publishing a wake. These bounds constrain bypass within a batch; they
-do not prove scheduler-independent starvation freedom.
-
-The default total cap is exactly 1024 bodies. `--kd-batch-size` configures that
-compile-time cap, verified through the provider's `mutex_batch` ELF metadata.
-The combiner takes one enclosing source lease and uses
-`kd_exec_frame_push_mutex_batch()` plus `kd_exe_mutex_batch_prepare()` for
-eligible simple ABI2 roots. Each request still checks source OPEN and current
-image readiness/publication/ABI; caching slot identity is not caching readiness.
-The physical QUEUE_OWNER ledger is initialized before body entry. Cold
-complex routing is materialized only when needed.
-
-The first wrapper invocation either returns terminal COMPLETE and retires
-through the dedicated mutex helper, or its returned FULL/refusal enters
-`kd_exe_mutex_batch_resume()` once. It never reruns the first body. Packet
-state and lock-ledger state are distinct: MINIMAL/COMPLETE only authorize the
-documented clobber fields; FULL authorizes generic recovery GPRs. Retirement
-reads ABI and packet state separately with field-width `READ_ONCE` loads. This
-preserves every check while preventing a compiler-merged 64-bit comparison
-from overlapping the wrapper's 32-bit packet-state store.
-
-Committed terminal nodes retire before any wake: retain a linked successor,
-or remove the exact tail by CAS; losing that CAS waits for the owed link.
-The saved `current_retired` flag prevents repeated node reads after native
-wake/reuse. Normal results retire/pop before release publication. FULL native
-resume first detaches frame-owned state, copies the resume packet, retires the
-queue node and publishes native readiness. The combiner then services the
-exact physical-owner unlock/final ACK and pops the retained frame. Early A
-release uses the same saved batch state and reacquires A for the combiner's
-own operation after B finishes. [The detailed protocol](locking.md#53-nested-ab-and-native-continuation)
-defines that ownership ordering.
-
-Exact per-CPU active-waiter/reserved-node balances and slot bitmaps are
-checked separately at drain; opposite imbalances on two CPUs cannot cancel.
-The shared original-owner ledger, task refs, nested waiters and ACKs keep
-their own exact state. Pure observations are per-CPU totals read after drain.
-Native mutex release precedes gate release. The batch source lease outlives
-all native/ACK/frame processing.
-
-Every returning combiner holds the original mutex and normal gate value 1.
-Refusal and ordinary completion publish that value before waking a successor;
-early outer release reacquires it before returning. Terminal and outer-progress
-fixtures check this contract independently of the caller's repeated restoration.
-
-## Scope and evidence
-
-### Blocking waits
-
-KD mutexes always support ordinary uninterruptible sleep after at most
-`mutex_spin_limit` PAUSE iterations (default 4096, permitted range 0–1048576).
-Zero requests immediate parking. Scheduler pressure is checked every 64
-iterations. The polling budget is read-only after load. The spin-only policy
-and `mutex_blocking` selector have been removed; the public lock/unlock ABI
-is unchanged.
-
-[parking.inc](../../kernel_module/mutex/parking.inc) separates result waiters
-from gate waiters. Result waiters register in a persistent `rcuwait` slot, set
-`TASK_UNINTERRUPTIBLE`, recheck the result and call `schedule_timeout(1)` with
-preemption enabled. The one-jiffy timeout rechecks completion even when a later
-translated body depends on the completed caller and cannot flush its buffered
-wake. An ordinary wake ends the sleep sooner. A timer tick is not a wall-clock
-latency guarantee; scheduler delays still apply.
-They retain migration pinning and their independently reserved stack. Completion
-publishes the aligned two-byte result and orders its wake check against the
-sleep-state barrier. Registration is cleared before node release. Late wakes use
-only the resident wake object, never a recycled packet. A wake of a later user of
-that slot is spurious; its condition loop checks its own result. The exact task
-acquisition reference and RCU-delayed task-cache eviction protect wake readers.
-
-The combiner buffers up to 16 persistent wake-slot pointers so short COMPLETE
-bodies share a store-to-wake barrier. It flushes before FULL/generic dispatch,
-before a native/ACK service can sleep, before early-release reacquisition and
-before batch exit. Native continuation and physical handoff wake immediately.
-Queue retirement and frame retirement still precede result publication; a wake
-does not transfer Linux ownership or release an acquisition reference. This
-bounded batching can add completion-to-wake delay; it is not a latency bound.
-
-Queue heads use bounded polling plus `wait_event` on the gate's private wait
-queue. Original-mutex release still precedes gate release. Its wake check has
-the matching barrier, preventing a head from sleeping through gate opening.
-The 24-byte wait queue fits the existing 192-byte shadow gate. Node size remains
-320 bytes; `completed/locked/native_resume` keep offsets 304/305/306.
-
-Legacy mutex translation rejects final images that import the origin CPU's GS base,
-including generated guards and learned callees, because another task may use
-that CPU while the caller sleeps. Such bodies take the native path. Logical
-`current` remains a separately supplied task identity. Existing
-[admission and alias limits](admission.md) still apply. The mutex does not
-add new interruptible/killable interfaces or a general rwsem/mmap implementation.
-
-The [mutex runner](../../bench/tclock_compare/README.md) records the blocking
-policy and scheduler observations. The
-[scheduler probe](../../tests/kernel/mutex/run_wait_selftest.py) checks actual
-sleep, progress with a deliberately withheld completion wake, same-CPU progress
-and exact drain; its constructed packets are separate
-from benchmark JIT evidence.
-
-KD retains migration pins, finite per-CPU reservations and bounded NUMA queue
-grouping. Stack allocation, request selection and physical ownership have separate roles.
-TCLock supports parking, but this port's fixed-affinity context contract does
-not validate arbitrary oversubscription. Both stack/context protocols require
-independently runnable dependencies and controlled drain.
-
-The benchmark KD provider defaults to UBSAN off; a standalone provider build
-inherits the existing kernel configuration. Backend/workload ELF identity
-and instrumentation policy are recorded separately. The captured kernel is
-unchanged. Build/use instructions belong in the
-[workload README](../../workload_modules/mutex_cacheline/README.md) and
-[runner README](../../bench/tclock_compare/README.md).
-
-The [blocking-only verification](../../bench/results/10.176.26.71/tests/mutex-blocking-only-20261012/validation.json)
-records affected fixtures, actual scheduler/owner probes and returned JIT bodies.
-[Performance status](../PERFORMANCE.md) summarizes the latest frozen comparison;
-[validation](../VALIDATION.md) indexes older checks and rejected candidates.
-These selected checks do not establish arbitrary oversubscription or starvation freedom.
+Finite per-CPU reservations, independently runnable dependencies and controlled
+drain remain required. Ordinary mutex calls are uninterruptible; the owned API
+does not provide RT, WW, killable or interruptible acquisition. Selected checks
+do not establish arbitrary oversubscription or starvation freedom.
 
 ## Conditional origin readiness and bounded NUMA selection
 

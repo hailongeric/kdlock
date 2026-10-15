@@ -28,20 +28,21 @@ ownership and lifetime terms used below.
    delegation requests use bounded result polling followed by sleep on reserved
    stacks while retaining migration pins. Owned SELF acquisition uses a separate
    Linux-style optimistic spin/sleep path; the result budget does not limit that
-   owner spin. Legacy mutexes refuse delegated origin-CPU GS access. Owned mutexes
-   may opt into the audited bounded subset with an exclusive origin-readiness
-   claim. Physical mutex owners/services may sleep. There is no spin-only mutex policy.
+   owner spin. Owned mutexes may opt into the audited bounded subset with an
+   exclusive origin-readiness claim. Physical mutex owners/services may sleep.
+   There is no spin-only mutex policy.
 6. Ordinary KD spin and rwlock pairs protect preemption and preserve IRQ/BH state.
    Spin IRQ/irqsave/BH variants use their explicit native interfaces. Rwlocks
    support ordinary task context only; no rwlock IRQ/BH variants are provided.
 7. Do not modify, build or install the guest kernel by default. The separately
    authorized static/spin-clobber/mutex-clobber experiments keep independent
-   source trees, releases and captured baselines. Current code requires both
-   clobber-v1 interfaces; old kernels are only for matching historical checkouts.
+   source trees, releases and captured baselines. Current code requires the spin
+   clobber-v1 interface; old kernels are only for matching historical checkouts.
 8. Access-time guards and pre-instruction native exits, general instruction/flags
    repair remain explicitly deferred. Owned mutex images have immutable versions;
-   legacy image families retain their in-place publication limitation. Cleanup does
-   not reopen them. Known supported-path failures remain documented in [TODO](TODO.md).
+   spin/rwlock image families retain their in-place publication limitation.
+   Cleanup does not reopen them. Known supported-path failures remain documented
+   in [TODO](TODO.md).
 9. Keep kernel payload demos under `workload_modules/`, runners under `bench/`
    or `tests/`, and provider probes under `tests/kernel/`. Private `.inc` files
    belong to their translation unit and must be included in frozen inputs.
@@ -127,12 +128,11 @@ as needed. Delete only identified obsolete project files. Never move, recursivel
 replace or clear `/root/host_fs`, and do not edit frozen running inputs.
 
 The 64-vCPU boot, exact kernel identity, all 64 CPU pins and guest idle state were
-verified by the [blocking-mutex checks](../bench/results/10.176.26.71/tests/mutex-blocking-only-20261012/validation.json)
-on 2026-10-12. The [full-grid closeout](../bench/results/10.176.26.71/bench/mutex_owned/20261014-full-grid/README.md#verification-and-closeout)
-records restoration and rechecking of the regular boot on 2026-10-14, with
-confirmed snapshot `normal64-after-mutex-owned-full-20261014`. Recheck live state
-and snapshot availability before new work. The earlier 73-session migration
-benchmark used 60 vCPUs and remains evidence for that topology. The migration copy contains current disk
+verified by the [owned-only mutex checks](../bench/results/10.176.26.71/tests/remove-mutex-legacy-20261015/validation.json)
+on 2026-10-15, with confirmed recovery snapshot
+`before-mutex-legacy-removal-20261015`. Recheck live state and snapshot availability
+before new work. The earlier 73-session migration benchmark used 60 vCPUs and
+remains evidence for that topology. The migration copy contains current disk
 contents without historical VM snapshots; the original disks on `380G10` remain
 untouched for rollback. Saved VM state from the old CPU/topology is not portable
 to the destination. Create and verify a new snapshot there before live module/JIT
@@ -197,11 +197,11 @@ remaining users; never force unload or reopen admission. After retirement succee
 unload workloads before providers.
 
 When replacing code, replace the workload, provider and JIT session together.
-Legacy generated artifacts are keyed by RIP without immutable versions. Owned
-mutex replacements bind immutable descriptors, but never permit source code or
-module identity to be changed while its session is active. Source pins, device references, physical owners, ACKs and
-frames each have their own lifetime. Reusing a queue node or waking a waiter does
-not mean its frame has retired.
+Spin/rwlock generated artifacts are keyed by RIP without immutable versions.
+Owned mutex replacements bind immutable descriptors, but never permit source
+code or module identity to be changed while its session is active. Source pins,
+device references, physical owners, ACKs and frames each have their own lifetime.
+Reusing a queue node or waking a waiter does not mean its frame has retired.
 
 Before changing inputs, stop the experiment through its mechanism for stopping
 between cases. Keep partial results, and do not combine runs from different frozen

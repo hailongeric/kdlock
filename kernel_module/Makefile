@@ -1,6 +1,6 @@
 # Guest-only external-module build against the captured running kernel.
 # This compiles kdlock, not the guest kernel; SELFTEST is an explicit opt-in.
-# kd_spin_runtime.c combines spin, mutex and shared execution implementations;
+# kd_spin_runtime.c combines spin, owned mutex and shared execution code;
 # Kbuild tracks their C/.inc dependencies. Do not link them a second time.
 obj-m += kdlock_km.o
 

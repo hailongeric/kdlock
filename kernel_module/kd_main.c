@@ -1,7 +1,9 @@
-/* Direct provider lifecycle: initialize all services before admitting callers.
+/*
+ * Direct provider lifecycle: initialize all services before admitting callers.
  * Mutex acquisition records retain routing after admission closes or a waiter
  * renames. No global hooks are installed; teardown still requires the external
- * no-new-callers boundary and complete request/source retirement. */
+ * no-new-callers boundary and complete request/source retirement.
+ */
 #include <linux/module.h>
 #include <linux/moduleparam.h>
 #include <linux/mutex.h>
@@ -15,20 +17,12 @@
 #ifndef KD_SPIN_CLOBBER_V1
 #error "kdlock requires the spin caller-clobber v1 (kdclobber2 or compatible)"
 #endif
-#if __has_include(<linux/kd_mutex_hooks.h>)
-#include <linux/kd_mutex_hooks.h>
-#endif
-#ifndef KD_MUTEX_CLOBBER_V1
-#error "kdlock requires ordinary mutex clobber v1 (kdclobber2 or compatible)"
-#endif
-
 #include "exe.h"
 #include "kd_exec.h"
 #include "kd_comm.h"
 #include "kd_source.h"
 #include "kd_hotlock.h"
 #include "kd_lock.h"
-#include "kd_mutex_legacy.h"
 #include "kd_owned_mutex_direct.h"
 #include "kd_spinlock.h"
 #include "kd_spin_entry.h"
@@ -41,17 +35,19 @@ MODULE_DESCRIPTION("kdlock JIT lock delegation");
 extern int kd_spin_jit_fail_after_nested_lock;
 module_param_named(spin_jit_fail_after_nested_lock,
 		   kd_spin_jit_fail_after_nested_lock, int, 0644);
-MODULE_PARM_DESC(
-	spin_jit_fail_after_nested_lock,
-	"one-shot local post-acquisition EIO; native only with a validated CALL/owner checkpoint");
+MODULE_PARM_DESC(spin_jit_fail_after_nested_lock,
+		 "one-shot local post-acquisition EIO; native only with a validated CALL/owner checkpoint");
 
 static char *target_process = "kd_test";
 struct kd_comm_key kd_spin_target;
 module_param(target_process, charp, S_IRUGO);
-MODULE_PARM_DESC(target_process, "task comm eligible for direct mutex delegation");
+MODULE_PARM_DESC(target_process,
+		 "task comm eligible for direct mutex delegation");
 
-/* Error labels unwind only initialized services, in reverse dependency order.
- * Optional component selftests finish before direct callers can use the module. */
+/*
+ * Error labels unwind only initialized services, in reverse dependency order.
+ * Optional component selftests finish before direct callers can use the module.
+ */
 static int __init kdlock_km_init(void)
 {
 	int ret;
@@ -80,13 +76,9 @@ static int __init kdlock_km_init(void)
 	if (ret)
 		goto err_sys;
 
-	ret = kd_mutex_init_percpu();
-	if (ret)
-		goto err_spinlock;
-
 	ret = kd_owned_mutex_init_percpu();
 	if (ret)
-		goto err_mutex;
+		goto err_spinlock;
 
 #ifdef KDLOCK_SELFTEST
 	ret = kd_hotlock_lifetime_check();
@@ -96,9 +88,6 @@ static int __init kdlock_km_init(void)
 	if (ret)
 		goto err_owned_mutex;
 	ret = kd_mutex_task_selftest();
-	if (ret)
-		goto err_owned_mutex;
-	ret = kd_mutex_wait_selftest();
 	if (ret)
 		goto err_owned_mutex;
 	ret = kd_owned_mutex_wait_selftest();
@@ -113,8 +102,7 @@ static int __init kdlock_km_init(void)
 err_owned_mutex:
 #endif
 	kd_owned_mutex_exit();
-err_mutex:
-	kd_mutex_exit();
+	kd_mutex_tasks_exit();
 err_spinlock:
 	kd_spinlock_exit();
 err_sys:
@@ -131,13 +119,14 @@ err_source:
 	return ret;
 }
 
-/* Callers, translators and source leases must already be drained/retired.
- * RCU alone does not protect outstanding direct calls or lock-object storage. */
+/*
+ * Callers, translators and source leases must already be drained/retired.
+ * RCU alone does not protect outstanding direct calls or lock-object storage.
+ */
 static void __exit kdlock_km_exit(void)
 {
 	synchronize_rcu();
 	kd_owned_mutex_exit();
-	kd_mutex_exit();
 	kd_mutex_tasks_exit();
 	WARN_ON_ONCE(kd_spin_entries_check_idle());
 	kd_spinlock_exit();

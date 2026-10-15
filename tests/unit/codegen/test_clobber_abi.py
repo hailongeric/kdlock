@@ -1,4 +1,4 @@
-"""Run the actual clobber wrapper and kernel caller constraints in the guest.
+"""Run the clobber wrapper and spin/owned-mutex caller constraints in the guest.
 
 Poison every absent entry register, exercise explicit completion/refusal/full
 exits, and force caller spills with real all-GPR destruction between live values.
@@ -204,14 +204,23 @@ def exercise_abi(entry_abi, direct=False, poison_stack=False, premature_pop=Fals
         (path/'linux/linkage.h').write_text('#define SYM_FUNC_START(x) .globl x; .type x,@function; x:\n#define SYM_FUNC_END(x) .size x, .-x\n')
         (path/'asm/asm.h').write_text('register unsigned long current_stack_pointer asm("rsp");\n#define ASM_CALL_CONSTRAINT "+r"(current_stack_pointer)\n')
         (path/'asm/nospec-branch.h').write_text('#ifdef __ASSEMBLER__\n.macro CALL_NOSPEC reg\ncall *%\\reg\n.endm\n#define RET ret\n#else\n#define CALL_NOSPEC "call *%[thunk_target]\\n"\n#endif\n')
-        # Extract the reviewed experiment macro, rather than maintaining a second ABI.
-        patch=(ROOT/f'kernel_experiments/{"mutex" if entry_abi == 2 else "spin"}_clobber/guest-kernel.patch').read_text()
-        added='\n'.join(line[1:] for line in patch.splitlines() if line.startswith('+') and not line.startswith('+++'))
-        marker = '#define __kd_mutex_clobber_call_v1' if entry_abi == 2 else '#define __kd_spin_clobber_call_v1'
-        macro=added[added.index(marker):added.index('#else',added.index(marker))] if entry_abi == 1 else added[added.index(marker):added.index('#endif',added.index(marker))]
         if entry_abi == 2:
-            macro = macro.replace('struct mutex', 'raw_spinlock_t').replace('__kd_mutex_clobber_call_v1', '__kd_spin_clobber_call_v1').replace('kd_mutex_', 'kd_raw_spin_').replace('mutex_lock(', 'raw_spin_lock(').replace('mutex_unlock(', 'raw_spin_unlock(')
-        (path/'caller.h').write_text('typedef unsigned long raw_spinlock_t, kd_spinlock_t;\n'+macro+'\n#define raw_spin_unlock(lock) __kd_spin_clobber_call_v1(kd_raw_spin_unlock_clobber_v1, lock)\n')
+            # Preserve the production owned caller's assembly/constraints;
+            # only the lock storage type and fixture endpoint names differ.
+            header = (ROOT/'include/kd_owned_mutex_direct.h').read_text()
+            start = header.index('#define KD_OWNED_MUTEX_DIRECT_CALL')
+            end = header.index('} while (0)', start) + len('} while (0)')
+            macro = header[start:end].replace('struct kd_mutex', 'raw_spinlock_t')
+            (path/'caller.h').write_text('typedef unsigned long raw_spinlock_t, kd_spinlock_t;\n'+macro+
+                '\n#define raw_spin_lock(lock) KD_OWNED_MUTEX_DIRECT_CALL(kd_raw_spin_lock_clobber_v1, lock, "")\n'
+                '#define raw_spin_unlock(lock) KD_OWNED_MUTEX_DIRECT_CALL(kd_raw_spin_unlock_clobber_v1, lock, "")\n')
+        else:
+            # The spin kernel interface is still supported independently.
+            patch=(ROOT/'kernel_experiments/spin_clobber/guest-kernel.patch').read_text()
+            added='\n'.join(line[1:] for line in patch.splitlines() if line.startswith('+') and not line.startswith('+++'))
+            start = added.index('#define __kd_spin_clobber_call_v1')
+            macro = added[start:added.index('#else', start)]
+            (path/'caller.h').write_text('typedef unsigned long raw_spinlock_t, kd_spinlock_t;\n'+macro+'\n#define raw_spin_unlock(lock) __kd_spin_clobber_call_v1(kd_raw_spin_unlock_clobber_v1, lock)\n')
         if direct:
             # Exercise the actual direct shell with the same destructive
             # register/metadata oracle, rather than a copied assembly string.

@@ -1,7 +1,9 @@
-/* /dev/kd_dev is the daemon's registry/image channel and source-control API.
+/*
+ * /dev/kd_dev is the daemon's registry/image channel and source-control API.
  * Writable opens retain one translation-session writer; readonly status/CAPS
  * opens do not. Retirement closes admission before releasing source pins.
- * Owned uploads stage complete immutable versions; legacy images stay in place. */
+ * Owned uploads stage complete immutable versions; legacy images stay in place.
+ */
 #include <linux/build_bug.h>
 #include <linux/cdev.h>
 #include <linux/capability.h>
@@ -20,7 +22,6 @@
 
 #include "exe.h"
 #include "kd_lock.h"
-#include "kd_mutex_legacy.h"
 #include "kd_owned_mutex_direct.h"
 #include "kd_source.h"
 #include "kd_spin_entry.h"
@@ -40,7 +41,8 @@ static int kd_dev_open(struct inode *inode, struct file *file)
 		return -ENODEV;
 	file->private_data = NULL;
 	if (file->f_mode & FMODE_WRITE) {
-		struct kd_image_upload *upload = kzalloc(sizeof(*upload), GFP_KERNEL);
+		struct kd_image_upload *upload =
+			kzalloc(sizeof(*upload), GFP_KERNEL);
 
 		if (!upload)
 			return -ENOMEM;
@@ -77,11 +79,13 @@ static struct kd_jit_caps kd_jit_capabilities(void)
 #if defined(CONFIG_X86_64) && defined(CONFIG_SMP)
 	unsigned long *reserved;
 
-	/* x86 setup reserves this arena in either first-chunk allocator. A
+	/*
+	 * x86 setup reserves this arena in either first-chunk allocator. A
 	 * non-NULL boot-fixed reserved chunk forces module allocations to use
 	 * it, even when full. Inspect only the pointer, never private chunk
 	 * layout or live allocation maps. Missing capability must not make a
-	 * translator assume all module per-CPU addresses have been checked. */
+	 * translator assume all module per-CPU addresses have been checked.
+	 */
 	BUILD_BUG_ON(PERCPU_MODULE_RESERVE != KD_JIT_PERCPU_MODULE_BYTES);
 	BUILD_BUG_ON(PCPU_MIN_ALLOC_SIZE != KD_JIT_PERCPU_ALIGNMENT);
 	reserved = (unsigned long *)kallsyms_lookup_name("pcpu_reserved_chunk");
@@ -103,9 +107,11 @@ static long kd_dev_ioctl(struct file *file, unsigned int command,
 
 	switch (command) {
 	case KD_JIT_CAPS:
-		/* The open description pins this provider. Report immutable build
+		/*
+		 * The open description pins this provider. Report immutable build
 		 * semantics even while draining; this query opens no admission,
-		 * reserves no resource and changes no existing packet layout. */
+		 * reserves no resource and changes no existing packet layout.
+		 */
 		caps = kd_jit_capabilities();
 		return copy_to_user((void __user *)arg, &caps, sizeof(caps)) ?
 			       -EFAULT :
@@ -126,11 +132,14 @@ static long kd_dev_ioctl(struct file *file, unsigned int command,
 			return -EPERM;
 		if (mutex_lock_interruptible(&kd_publish_lock))
 			return -ERESTARTSYS;
-		/* A readonly control FD does not count as its own writer. The caller
-		 * must stop new workloads; idle snapshots are not a hook-reader barrier. */
+		/*
+		 * A readonly control FD does not count as its own writer. The caller
+		 * must stop new workloads; idle snapshots are not a hook-reader barrier.
+		 */
 		ret = kd_source_begin_retire();
-		if (!ret && (!kd_mutex_check_idle() || !kd_owned_mutex_check_idle() || !kd_mutex_tasks_idle() ||
-			     kd_spin_entries_check_idle()))
+		if (!ret &&
+		    (!kd_owned_mutex_check_idle() ||
+		     !kd_mutex_tasks_idle() || kd_spin_entries_check_idle()))
 			ret = -EBUSY;
 		if (!ret) {
 			kd_exe_retire_all();
@@ -223,7 +232,8 @@ static ssize_t kd_dev_write_locked(struct kd_image_upload *upload,
 	if (head.base_generation != READ_ONCE(entry->generation))
 		return -ESTALE;
 	if (head.status_code == KD_EXE_NATIVE_ONLY) {
-		if (len || head.offset || head.image_length || head.requirements || head.upload_id)
+		if (len || head.offset || head.image_length ||
+		    head.requirements || head.upload_id)
 			return -EINVAL;
 		if (smp_load_acquire(&entry->status_code) !=
 		    KD_EXE_NATIVE_ONLY) {
@@ -233,12 +243,15 @@ static ssize_t kd_dev_write_locked(struct kd_image_upload *upload,
 		}
 		return count;
 	}
-	if (!len || !head.upload_id || head.image_length < KD_IMAGE_HEADER_SIZE ||
-	    head.image_length > KD_CODE_BLOCK_SIZE || head.offset > head.image_length ||
+	if (!len || !head.upload_id ||
+	    head.image_length < KD_IMAGE_HEADER_SIZE ||
+	    head.image_length > KD_CODE_BLOCK_SIZE ||
+	    head.offset > head.image_length ||
 	    len > head.image_length - head.offset ||
 	    (head.status_code != KD_EXE_UNINIT &&
 	     head.status_code != KD_EXE_NORMAL) ||
-	    ((head.status_code == KD_EXE_NORMAL) != (head.offset + len == head.image_length)))
+	    ((head.status_code == KD_EXE_NORMAL) !=
+	     (head.offset + len == head.image_length)))
 		return -EINVAL;
 	if (smp_load_acquire(&entry->status_code) == KD_EXE_NATIVE_ONLY)
 		return -EPERM;
@@ -252,7 +265,8 @@ static ssize_t kd_dev_write_locked(struct kd_image_upload *upload,
 			if (!upload->image)
 				return -ENOSPC;
 		}
-	} else if (head.pid != upload->identity.pid || head.RIP != upload->identity.RIP ||
+	} else if (head.pid != upload->identity.pid ||
+		   head.RIP != upload->identity.RIP ||
 		   head.upload_id != upload->identity.upload_id ||
 		   head.base_generation != upload->identity.base_generation ||
 		   head.image_length != upload->identity.image_length ||
@@ -269,20 +283,21 @@ static ssize_t kd_dev_write_locked(struct kd_image_upload *upload,
 		"install JIT chunk: pid=%d rip=%px status=%d offset=%lu bytes=%zu\n",
 		head.pid, (void *)head.RIP, head.status_code, head.offset, len);
 
-	if (copy_from_user((char *)code + head.offset, payload,
-			   len))
+	if (copy_from_user((char *)code + head.offset, payload, len))
 		return -EFAULT;
 	upload->covered += len;
 	/* Keep the prior miss state recoverable until the full image is present. */
 	if (head.status_code == KD_EXE_NORMAL) {
 		const unsigned char *bytes = code;
 		bool directory = !memcmp(bytes + 9, "KDWB002", 7) &&
-		                 !memcmp(bytes + 25, "KDWC002", 7) &&
-		                 !memcmp(bytes + 41, "KDAB", 4);
+				 !memcmp(bytes + 25, "KDWC002", 7) &&
+				 !memcmp(bytes + 41, "KDAB", 4);
 
-		/* Every uploaded image uses KD's private packet, including FULL
+		/*
+		 * Every uploaded image uses KD's private packet, including FULL
 		 * recovery and legacy kernel-bridge entries. Old pt_regs offsets must
-		 * never be published NORMAL for this provider's rearranged packet. */
+		 * never be published NORMAL for this provider's rearranged packet.
+		 */
 		if (!directory || bytes[45] != entry->entry_abi ||
 		    bytes[KD_IMAGE_VERSION_OFFSET] != head.version ||
 		    bytes[KD_IMAGE_REQUIREMENTS_OFFSET] != head.requirements) {
@@ -292,7 +307,8 @@ static ssize_t kd_dev_write_locked(struct kd_image_upload *upload,
 			upload->image->length = head.image_length;
 			upload->image->requirements = head.requirements;
 			upload->image->entry_abi = head.entry_abi;
-			ret = kd_image_publish(entry, upload->image, head.base_generation);
+			ret = kd_image_publish(entry, upload->image,
+					       head.base_generation);
 			if (ret)
 				return ret;
 			upload->image = NULL;

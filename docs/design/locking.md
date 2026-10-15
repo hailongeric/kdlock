@@ -38,7 +38,7 @@ let it be reused; completion/ACK metadata needed later lives outside that node.
 ### 4.3 Combiner and native returns
 
 The combiner holds the KD word, binds a logical waiter and executes its ready body.
-Simple roots may use minimal completion; legacy/nested/complex exits require their
+Simple roots may use minimal completion; ABI0, nested and complex exits require their
 own checks. After final body completion, pop the frame before release-publishing
 parent DONE and waiter completion. Queue handoff and physical unlock remain exact.
 
@@ -68,9 +68,8 @@ resource failure after progress cannot be relabelled an unstarted retry.
 
 ## 5. Mutex delegation protocol
 
-Owned and legacy mutexes use distinct physical protocols. Both retain exact
-physical owners and acquisition references through native continuation and ACK.
-The sections below label those object boundaries explicitly.
+KD mutexes retain exact physical owners and acquisition references through
+native continuation and ACK.
 
 ### KD-owned mutex ownership
 
@@ -98,118 +97,26 @@ pins. This does not limit the separate Linux-style SELF optimistic spin phase.
 Stop callers and drain the object, producer packets, executor, frames and ACKs
 before reinitializing or freeing its storage.
 
-### 5.1 Physical lock and scheduling gate
+### Nested controls and native continuation
 
-Sections 5.1–5.4 describe the retained legacy backend.
+A translated nested acquisition obtains another KD mutex on the physical executor
+and records `KD_EXEC_LOCK_OWNED` in the frame ledger. A validated PENDING control
+boundary resumes the original CALL; a checked STACK_CHANGED boundary resumes
+after the completed CALL. Existing acquisitions retain their physical owners,
+which service native unlock requests and exact ACKs. No path replays an acquisition
+or rolls back body effects.
 
-The retained legacy backend uses the original Linux `struct mutex`, including
-its owner word, wait list and sleeping rules. Ordinary native users still contend
-on that same mutex. A private `kd_mutex_legacy_gate`, called the shadow gate,
-orders KD's queued work. A combiner
-must acquire the Linux mutex as well as that gate before running a delegated body.
-Loading KD does not intercept global mutex calls.
+Task records remain live through the final owner ACK. Zero-reference identities
+stop routing immediately; eviction unlinks them before RCU releases the record
+and task reference. Independent requests retain independent ACK packets.
 
-Exact shadow addresses select the gate. The current 1024-entry table has lock-free
-published-key reads and serialized insertion; full capacity falls back natively.
-Task/acquisition records route retained native unlocks and hold real task references
-through final ACK. A profiling value cannot authorize release.
-
-### 5.2 Entry, completion and task routing
-
-<a id="mutex-outer-direct"></a>
-#### Outer direct pair
-
-`KD_MUTEX_OUTER_LOCK/UNLOCK` keeps a cookie for one acquisition. The same task must
-use it for the matching unlock; callers must not copy, modify or transfer it.
-If the caller's owner CAS succeeds, the cookie records the native owner and unlock
-calls the original `(mutex_unlock)`. If the CAS fails, the provider counts that
-entry once and continues without repeating the first CAS.
-
-A native fallback may return the exact task owner only before it takes a KD
-reference or gate. Once the request enters the KD queue, it returns zero instead.
-Zero tells the matching unlock to use KD's ownership routing.
-
-The physical return preserves its result. The separate JIT entry defines zero
-before using the cookie, avoiding an incoming-RAX dependency under MINIMAL. Nested
-JIT controls use `KD_MUTEX_DIRECT_LOCK/UNLOCK`, not the outer result-returning entry.
-Existing void contended and kernel bridge aliases remain compatible; generic
-bridge/control recovery uses FULL state.
-
-#### Provider acquisition and completion
-
-Before executing a delegated body the combiner must hold the original Linux mutex.
-The frame ledger records that physical owner. A batch may retain its source lease
-and physical ownership, but cannot bypass native-peer exclusion or owner checks.
-Dedicated ABI2 preparation/completion/retirement avoids generic work for eligible
-simple roots; FULL exits materialize cold routing fields before generic use.
-
-A terminal COMPLETE returns only IP/SP/BP and can retire its queue node once no
-executor needs it. Queue tail retirement CASes the exact tail; when a successor is
-not yet linked, wait for publication rather than dropping it. A completed waiter
-never reexecutes its body or unlock. Current mutex batching has a default
-1024-body cap and bounded NUMA selection. Only fully linked remote nodes can be
-deferred; every exit rejoins them before handoff. The
-[implementation guide](mutex_implementation.md#queue-batch-execution-and-recovery)
-defines the scan/cohort limits and small-remote-cohort service rule.
-
-#### Mutex waiting
-
-A published KD waiter polls for at most `mutex_spin_limit` iterations, checks
-scheduler pressure every 64 iterations, then registers an RCU waiter and sleeps
-uninterruptibly. The queue head also uses bounded polling followed by a gate
-wait queue. Waiters retain their migration pin and the original Linux mutex's
-real ownership. There is no spin-only mutex policy.
-
-Result sleep uses a one-jiffy timeout to recheck completion when its wake remains
-buffered behind a later translated body. Ordinary wakes can end sleep sooner.
-The [implementation guide](mutex_implementation.md#blocking-waits)
-explains the dependency case and wake ordering; scheduler delays are not bounded.
-
-Completion release-publishes the result, then orders its wake-slot check against
-the waiter's sleep-state barrier. The independently resident wake slot can be
-read after packet reuse; the packet cannot. Registration is cleared before slot
-release. Acquisition references and RCU task-cache eviction protect the task
-through a late wake. Controlled drain checks each registration as well as slots,
-waiter balances, frames, owners and ACKs.
-
-Legacy mutex translation refuses images that import the origin CPU's GS base,
-including emitted guards and learned callees. Such bodies run natively. Logical
-`current` uses a separate task input and remains supported. This is necessary
-because another task may run on a sleeping caller's CPU. One physical task still
-owns each per-CPU executor context; a competing task cannot overwrite its frame.
-
-Blocking makes the waiter's CPU available during a long wait. The finite per-CPU
-slot and same-CPU native-fallback rules still apply. The historical mode-4 spin
-failure remains in
-[TODO](../TODO.md#current-checkpoint).
-
-### 5.3 Nested A/B and native continuation
-
-Local B acquisition uses the original mutex and records the combiner as physical
-owner. A validated PENDING capacity/control boundary resumes the original CALL;
-a checked STACK_CHANGED boundary resumes after the already-completed CALL.
-Previously acquired A/B remain on their real owners, serviced through native
-unlock notifications and exact ACKs. Never roll back memory or replay acquisition.
-
-An ordinary untranslated interruptible/killable CALL runs on the original waiter
-with its source return token. The native callee supplies its real result; `-EINTR`
-creates no B ownership. Uninterruptible `mutex_lock` completes its suffix and ACKs
-before userspace signal/exit handling. Generic post-progress faults remain fail-stop.
-
-Each acquisition holds its task-record reference through final owner ACK. Zero-ref
-records immediately stop routing and may remain in the bounded inactive cache.
-Eviction unlinks the identity; the record and task reference are released after RCU
-readers drain. Native frames for independent tasks/locks use independent ACK packets.
-
-### 5.4 Differences from spin
-
-| Boundary | Spin | Legacy mutex |
+| Boundary | Spin | KD mutex |
 | --- | --- | --- |
-| Physical lock | KD word | Original Linux mutex |
-| Queue | Tail in the same word | Separate shadow gate |
-| Native route | Generation-checked ticket/borrow | Task acquisition reference and owner ACK |
-| Sleeping | Ordinary path does not sleep | Physical owner/control may sleep |
-| Restore | Stable continuation retained through packet reads | Node packet; FULL copy before node reuse |
+| Physical exclusion | KD word | KD owner word |
+| Waiters | Tail in the spin word | Tagged SELF/DELEGATE FIFO |
+| Native continuation | Generation-checked ticket/borrow | Task acquisition reference and owner ACK |
+| Sleeping | Ordinary spin path does not sleep | SELF waiters, delegates and physical owner may sleep |
+| Restore | Stable continuation retained through packet reads | Producer packet; FULL detaches state before packet reuse |
 
 ### Spin diagnostic identity lifetime
 

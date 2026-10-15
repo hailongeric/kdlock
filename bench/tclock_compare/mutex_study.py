@@ -57,9 +57,9 @@ def require_owned_identity(record):
 
 
 def require_owned_evidence(record, folder):
-    """Recheck existing live receipts; legacy archives predate owned metadata."""
-    if record.get('mutex_implementation', 'legacy') != 'owned-v1':
-        return
+    """Recheck owned mutex identity and its live execution receipts."""
+    require(record.get('mutex_implementation') == 'owned-v1',
+            'owned mutex implementation required')
     require_owned_identity(record)
     layout = record.get('layout', {})
     require(layout.get('lock_bytes') == 32 and layout.get('line_bytes') == 64 and
@@ -87,6 +87,13 @@ def require_owned_evidence(record, folder):
             'owned plain body observations disagree with measured execution')
     require(json.loads((folder/'drain.counts.json').read_text())['active'] == 0,
             'owned workers did not drain')
+    # Source retirement checks the owned queue, reserved stacks and frame
+    # ledger before unload. Pair that receipt with the exact task/ACK counters.
+    tasks = re.findall(r'kd_mutex tasks: active_tasks=(\d+) ', log)
+    acks = re.findall(r'kd_native stats: started=(\d+) completed=(\d+) unlocks=(\d+)', log)
+    require(record.get('retired') == dict(state=2, modules=0, frames=0, writers=0) and
+            tasks == ['0'] and len(acks) == 1 and acks[0][0] == acks[0][1],
+            'owned queue/task/frame/ACK did not drain')
 
 
 def load_run(folder, post_work_rounds=64):
@@ -199,16 +206,15 @@ def metrics(rows):
 
 def evaluate(baseline, candidate):
     post_work_rounds = study_post_work_rounds([*baseline, *candidate])
-    implementations = {r.get('mutex_implementation', 'legacy') for r in candidate if r['arm'] == 'kdlock'}
-    require(len(implementations) == 1 and implementations <= {'legacy', 'owned-v1'},
+    implementations = {r.get('mutex_implementation') for r in candidate if r['arm'] == 'kdlock'}
+    require(implementations == {'owned-v1'},
             'one mutex implementation per candidate')
     implementation = next(iter(implementations))
     policies = {r.get('owned_queue_policy', 'not_applicable') for r in candidate if r['arm'] == 'kdlock'}
     require(len(policies) == 1, 'one queue policy per candidate')
-    if implementation == 'owned-v1':
-        for record in candidate:
-            if record['arm'] == 'kdlock':
-                require_owned_identity(record)
+    for record in candidate:
+        if record['arm'] == 'kdlock':
+            require_owned_identity(record)
     preflights = {(r.get('owned_preflight_policy'), r.get('owned_mutex_preflight_spins'),
                    r.get('owned_mutex_preflight_queue'), r.get('owned_mutex_preflight'))
                   for r in candidate if r['arm'] == 'kdlock'}
@@ -218,8 +224,7 @@ def evaluate(baseline, candidate):
                for r in candidate if r['arm'] == 'kdlock'}
     require(len(callers) == 1, 'one owned caller/native-first/release policy per candidate')
     caller_policy = dict(zip(run.OWNED_CALLER_FIELDS, next(iter(callers))))
-    threshold_field = ('owned_mutex_entry_ratio_limit' if implementation == 'owned-v1' else
-                       'mutex_entry_ratio_limit')
+    threshold_field = 'owned_mutex_entry_ratio_limit'
     limits = {r.get(threshold_field) for r in candidate if r['arm'] == 'kdlock'}
     require(len(limits) == 1 and next(iter(limits)) in run.MUTEX_ENTRY_RATIO_LIMITS,
             'one threshold per candidate')
