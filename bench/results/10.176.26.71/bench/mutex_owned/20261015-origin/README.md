@@ -1,6 +1,6 @@
 # Owned mutex origin claims and bounded NUMA selection
 
-The new policies remain opt-in. The full c01 screen missed the 97%-of-current-KD
+Origin claims and NUMA selection remain opt-in. The full c01 screen missed the 97%-of-current-KD
 regression gate. Immutable owned images, exclusive origin readiness and the
 bounded selector are implemented; that protocol work does not establish a
 throughput improvement or general GS safety.
@@ -46,12 +46,11 @@ Production waiter tests race withdrawal against claiming 10,000 times; live
 kernel probes exercise 768 claims with explicit reschedule requests and observe
 zero schedules while claimed. These constructed probes execute no JIT bodies.
 
-Separate live GS runs complete 320,000 operations per policy with zero errors
-and the expected 160,000 counter increments. FIFO returns 48 CPU-read and 41
-counter bodies under claims; NUMA returns 98 and 45, with 50 bypasses. Every
-worker CPU receives exactly 20,000 increments and every unused CPU stays at
-zero. The [FIFO](gs-fifo-percpu.json) and [NUMA](gs-numa-percpu.json) receipts
-retain all 64 values and each worker's CPU time. Live nested/early-unlock
+The separate live GS run with NUMA selection completes 320,000 operations with
+zero errors and the expected 160,000 counter increments. It returns 98 CPU-read
+and 45 counter bodies under claims, with 50 bypasses. Every worker CPU receives
+exactly 20,000 increments and every unused CPU stays at zero. The
+[GS receipt](gs-numa-percpu.json) retains all 64 values and each worker's CPU time. Live nested/early-unlock
 controls, forced FULL continuations and physical-owner ACKs
 also pass and drain. Their returned-body counts are in the receipt. These
 functional runs contribute no c01 performance scores.
@@ -88,11 +87,13 @@ three rounds, reversing the complete backend order in the middle round.
 Every block measures fresh Native and TCLock controls. `current-kd` uses provider,
 daemon and translator built from archived pre-change commit
 `b994aefaaf4da8be7b18353fd130818df9b2aba2`; historical throughput is never imported.
-The screen compares origin/FIFO and origin/NUMA. NUMA was selected for two fresh
-confirmation blocks because both candidates missed two screen cohorts, while
-NUMA had the smaller worst deficit. Selection does not mean acceptance.
+The report compares origin/NUMA against these three controls in the screen and
+two fresh confirmation blocks. Each reported block contains 264 sessions. The
+archived screen also contains 66 sessions from a retired comparison arm; those
+are omitted from this report and its exports. The original raw evidence remains
+unchanged, and the retained sessions keep their actual execution order.
 
-Both candidate arms enable origin readiness, but c01 is GS-independent and
+The NUMA candidate enables origin readiness, but c01 is GS-independent and
 records zero origin claims, claim failures and preparation requests. The GS
 tests establish correctness separately. This comparison does not establish
 the new provider's flags-off performance; `current-kd` is the pre-change build.
@@ -104,10 +105,10 @@ independently. No blocks, topologies or diagnostic runs are pooled into a score.
 
 ## Results
 
-All **858** scored sessions have correct results, progress by every worker and complete drain.
+All **792** reported sessions have correct results, progress by every worker and complete drain.
 The [independent audit](verification.json) verifies matching frozen inputs across all three blocks.
-All **441 multithreaded KD sessions** (controls and candidates) return JIT bodies.
-The 21 single-worker KD sessions execute SELF and are not positive delegation evidence.
+All **378 multithreaded KD sessions** (control and candidate) return JIT bodies.
+The 18 single-worker KD sessions execute SELF and are not positive delegation evidence.
 
 ![Independent block regression ratios; the 97% line and shared 64-worker point are marked](regression.svg)
 
@@ -115,9 +116,7 @@ Every regression-gate miss is listed below. Percentages compare against that blo
 
 | Block / policy | Workers | Median whole | Best peak | Whole from peak session |
 | --- | ---: | ---: | ---: | ---: |
-| Screen / FIFO | 3 | 102.17% | 91.13% | 91.20% |
 | Screen / NUMA | 3 | 108.09% | 94.60% | 94.63% |
-| Screen / FIFO | 6 | 95.41% | 93.85% | 93.76% |
 | Screen / NUMA | 16 | 96.71% | 96.99% | 96.90% |
 | Confirmation A / NUMA | 3 | 96.41% | 88.67% | 88.66% |
 | Confirmation A / NUMA | 4 | 96.19% | 94.50% | 94.40% |
@@ -127,14 +126,13 @@ Every regression-gate miss is listed below. Percentages compare against that blo
 The clean confirmation's two-worker median reaches only **88.55%** of current KD,
 even though its best peak reaches **106.81%**. A check of only the winning
 peak session would hide this median regression. Confirmation A's worst NUMA
-peak is **88.67%** at three workers. Neither candidate satisfies the full
-screen-plus-confirmations requirement; the new policies remain off by default.
+peak is **88.67%** at three workers. NUMA does not satisfy the full
+screen-plus-confirmations requirement; the provider defaults remain off.
 
 The independent Native target at 1–8 workers has these misses:
 
 | Block / policy | Worker counts below 97% of Native |
 | --- | --- |
-| Screen / FIFO | 3, 4 |
 | Screen / NUMA | 3, 4 |
 | Confirmation A / NUMA | 3 |
 | Confirmation B (clean) / NUMA | None |
@@ -155,7 +153,6 @@ workers in those sessions. This contention is not extrapolated to smaller cohort
 | Screen | native | 3.322 | 3.667 | 17,379.4 | 0.79–4.40% |
 | Screen | tclock | 3.368 | 3.396 | 18,984.1 | 1.54–1.72% |
 | Screen | current-kd | 6.812 | 7.038 | 9,390.3 | 0.65–2.19% |
-| Screen | fifo | 6.931 | 7.033 | 9,227.4 | 0.65–2.47% |
 | Screen | numa | 6.894 | 7.132 | 9,279.2 | 0.55–2.26% |
 | Confirmation A | native | 3.338 | 3.808 | 17,388.6 | 0.71–4.69% |
 | Confirmation A | tclock | 3.312 | 3.342 | 19,303.1 | 1.54–1.68% |
@@ -176,7 +173,6 @@ candidate session because these bodies are GS-independent.
 
 | Block / policy | Minimum worker ops | Returned JIT bodies | Max JIT share | Parks | Bypasses |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| Screen / FIFO | 90,368 | 1,055,829 | 0.543% | 501 | 0 |
 | Screen / NUMA | 76,032 | 1,066,528 | 0.647% | 440 | 793,077 |
 | Confirmation A / NUMA | 91,648 | 992,793 | 0.409% | 729 | 758,152 |
 | Confirmation B (clean) / NUMA | 77,824 | 1,042,994 | 0.396% | 353 | 806,915 |
@@ -198,7 +194,7 @@ audited exports; no host benchmark or protocol test was run.
 
 ## Evidence and reproduction
 
-[analyze.py](analyze.py) rechecks every raw result, warmed peak, worker's progress,
+[analyze.py](analyze.py) rechecks every retained raw result, warmed peak, worker's progress,
 frozen source/binary identity, returned JIT evidence, ownership/frame/task/ACK
 drain and the complete alternating-order grid. Its exports retain each session
 and worker, min/median/max throughput, CPU ns/op, JIT/delegation shares, parks,
@@ -208,7 +204,10 @@ as measured zero. Operation shares do not establish latency or fairness bounds.
 
 The runner and command contract are documented in the
 [origin comparison guide](../../../../../tclock_compare/README.md#owned-origin-and-numa-comparison).
-Use `--policies numa` for each confirmation, with a fresh output directory.
+Use the same command for each confirmation, with a fresh output directory.
+The [runner checks](maintenance.json) cover the four-arm plan, rejection of
+removed options and the updated score gates. This report was regenerated from
+the existing raw records; all retained NUMA ratios are unchanged.
 On the guest, an archived audit can be repeated with:
 
 ```sh
@@ -222,10 +221,10 @@ Guest raw evidence is under
 `/root/kdlock-evidence/10.176.26.71/{bench,tests}/owned-origin-20261015`.
 The physical-host mirrors are
 `/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/{bench,tests}/owned-origin-20261015`.
-The [archive check](archive-verification.json) verifies all 4,290 hashed session
-files, their source/binary manifests, exported results and final receipts after
-copying. Its full raw inventory covers 53,527 regular files, including preserved
-failures and frozen sources; symlinks are recorded without following them.
+The [archive check](archive-verification.json) verifies the 3,960 hashed session
+files retained in this report, their source/binary manifests and exported results.
+The original raw inventory also preserves retired experiments, failed attempts
+and frozen sources; symlinks are recorded without following them.
 The archives preserve failed attempts, smoke runs, two stopped temporary
 66-vCPU screens and the rejected source-drift confirmation; none contributes a
 scored sample. A fresh checkout contains

@@ -145,12 +145,11 @@ The origin GS workload runs separately from c01 performance:
 
 ```sh
 python3 tests/kernel/mutex/run_origin_gs.py \
-  --output /root/kdlock-evidence/10.176.26.71/tests/origin-gs-NEW
-python3 tests/kernel/mutex/run_origin_gs.py --numa \
   --output /root/kdlock-evidence/10.176.26.71/tests/origin-gs-numa-NEW
 ```
 
-Use the pinned Python environment and a verified regular 64-vCPU snapshot. Each
+The driver enables origin claims and bounded NUMA selection. Use the pinned
+Python environment and a verified regular 64-vCPU snapshot. Each
 run checks origin CPU reads and the private task-only per-CPU counter with eight
 workers on CPUs 0–3 and 32–35. Both roots must return claimed JIT bodies. Each
 CPU's counter must match its logical invocations, with zero on unused CPUs;

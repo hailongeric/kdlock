@@ -205,32 +205,6 @@
   },
   "live_gs": [
     {
-      "policy": "fifo",
-      "receipt": "gs-fifo-percpu/result.json",
-      "compact_receipt": "gs-fifo-percpu.json",
-      "operations": 320000,
-      "counter": 160000,
-      "errors": 0,
-      "per_cpu_checked": 64,
-      "worker_cpus": [
-        0,
-        1,
-        2,
-        3,
-        32,
-        33,
-        34,
-        35
-      ],
-      "increments_per_worker_cpu": 20000,
-      "unused_cpu_value": 0,
-      "cpu_read_claimed_bodies": 48,
-      "counter_claimed_bodies": 41,
-      "bypasses": 0,
-      "claim_failures": 0,
-      "drained": true
-    },
-    {
       "policy": "numa",
       "receipt": "gs-numa-percpu/result.json",
       "compact_receipt": "gs-numa-percpu.json",
@@ -333,13 +307,9 @@
       "owned_mutex_origin_spin": false,
       "owned_mutex_numa": false
     },
-    "scored_sessions": 858,
+    "scored_sessions": 792,
     "regression_failures": {
       "screen64": {
-        "fifo": [
-          3,
-          6
-        ],
         "numa": [
           3,
           16
@@ -357,21 +327,17 @@
           2
         ]
       }
-    }
+    },
+    "report_arms": [
+      "native",
+      "tclock",
+      "current-kd",
+      "numa"
+    ],
+    "omitted_screen_sessions": 66,
+    "report_scope": "NUMA and its three controls; original raw experiments and prior receipts remain archived unchanged."
   },
   "earlier_live_gs": [
-    {
-      "policy": "fifo",
-      "receipt": "gs-fifo-final/result.json",
-      "operations": 320000,
-      "counter": 160000,
-      "errors": 0,
-      "cpu_read_claimed_bodies": 84,
-      "counter_claimed_bodies": 114,
-      "bypasses": 0,
-      "claim_failures": 0,
-      "drained": true
-    },
     {
       "policy": "numa",
       "receipt": "gs-numa-final/result.json",
@@ -416,5 +382,6 @@
   },
   "plotting_limit": "The optional guest --plot step lacked matplotlib after verification had passed. The audit was rerun without plotting and exited successfully; the chart was rendered offline from verified exports on the source host.",
   "gs_test_commit": "c67bb1cc26b0e109cff9b12fcc5d04232a98cb05",
-  "implementation_identity_receipt": "commit-identity.json"
+  "implementation_identity_receipt": "commit-identity.json",
+  "report_maintenance_receipt": "maintenance.json"
 }

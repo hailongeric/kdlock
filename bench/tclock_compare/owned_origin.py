@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Fresh c01 controls plus origin/FIFO and bounded-NUMA candidates.
+"""Fresh c01 controls plus the bounded-NUMA origin candidate.
 
 Use the normal runner's builds, oracles, alternating rounds and drain. The
 baseline is a separately archived checkout with its matching daemon/translator;
@@ -47,7 +47,7 @@ def gates(out):
                         max(r['measurement']['peak']['throughput_ops_s'] for r in samples)])
     comparisons = []
     for (threads, arm), row in scores.items():
-        if arm not in ('fifo', 'numa'):
+        if arm != 'numa':
             continue
         baseline = scores.get((threads, 'current-kd'))
         native = scores.get((threads, 'native'))
@@ -63,7 +63,7 @@ def gates(out):
             native_target_pass=complete and min(native_ratios.values()) >= .97 if threads <= 8 else None))
     grid = set(range(1, 9)) | set(range(12, 65, 4))
     arms = {arm for _, arm in scores}
-    coverage = bool(arms & {'fifo', 'numa'}) and {'native', 'tclock', 'current-kd'} <= arms
+    coverage = arms == {'native', 'tclock', 'current-kd', 'numa'}
     coverage = coverage and set(scores) == {(count, arm) for count in grid for arm in arms}
     coverage = coverage and all(s['samples'] == 3 and s['rounds'] == [0, 1, 2] for s in scores.values())
     runner.write_json(out / 'origin-gates.json', dict(scores=list(scores.values()), comparisons=comparisons,
@@ -75,7 +75,6 @@ def main():
     p = argparse.ArgumentParser(add_help=False)
     p.add_argument('--baseline-root', type=Path, required=True)
     p.add_argument('--baseline-commit', required=True)
-    p.add_argument('--policies', nargs='+', choices=('fifo', 'numa'), default=['fifo', 'numa'])
     local, remaining = p.parse_known_args()
     baseline = local.baseline_root.resolve()
     provider = baseline / 'bench/spin_cacheline/.build/provider/kernel_module/kdlock_km.ko'
@@ -95,7 +94,7 @@ def main():
             if spec['arm'] != 'kdlock':
                 result.append(dict(spec, comparison_arm=spec['arm']))
                 continue
-            variants = ['current-kd', *local.policies]
+            variants = ['current-kd', 'numa']
             if spec['repeat'] % 2:
                 variants.reverse()
             for variant in variants:
@@ -104,7 +103,7 @@ def main():
                     row.pop('owned_mutex_origin_spin'); row.pop('owned_mutex_numa')
                     row['baseline_commit'] = local.baseline_commit
                 else:
-                    row.update(owned_mutex_origin_spin=True, owned_mutex_numa=variant == 'numa')
+                    row.update(owned_mutex_origin_spin=True, owned_mutex_numa=True)
                 result.append(row)
         return result
 

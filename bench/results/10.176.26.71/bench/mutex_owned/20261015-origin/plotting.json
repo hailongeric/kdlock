@@ -1,12 +1,12 @@
 {
-  "kind": "offline rendering of audited archive exports; no benchmark or unit execution on host",
+  "kind": "offline rendering of audited NUMA/control archive exports; no benchmark or unit execution on host",
   "python": "3.10.12 (main, Aug 31 2026, 10:18:17) [GCC 11.4.0]",
   "matplotlib": "3.8.3",
-  "auditor_sha256": "0b2e9f3fe699ade23caea00b45d9e17f025ea3d8b5dd4502aa3c299c9c8a2629",
+  "auditor_sha256": "c20ea535383c214d1c5bbe9e26ea019637a661407694defc981c02baa3d0726b",
   "inputs": {
-    "screen64": "4b6956f93c4c80fee0a6c23f3257fb1ff17fb92ea69b8887ce7108adb80600f6",
+    "screen64": "a01c5265123fea2ed0af416706f400a8106c19d9925f591f1ff551fc7678897d",
     "confirm64-a": "4b8beb628fee8ef47813a853e62746e26c1783e078ed12be6f06cdccc81a7c92",
     "confirm64-b-clean": "24f8382b8952b950be1227f1982ac618632cef1ce510a61e16fd1454e0859730"
   },
-  "svg_sha256": "d79d4669252a6a73b1d7229a5ad05c525f8b51c80e21fcb011bbda63e2dc1087"
+  "svg_sha256": "3ffa6ddec3d6e50c147d4744b7e4e3089459e573c1f97ed53dc96d04bd5afe23"
 }

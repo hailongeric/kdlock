@@ -8,9 +8,10 @@ from owned_origin import gates
 
 
 class OriginGates(unittest.TestCase):
-    def fixture(self, out, counts=(3,), low_median=False):
+    def fixture(self, out, counts=(3,), low_median=False,
+                arms=('native', 'tclock', 'current-kd', 'numa')):
         for count in counts:
-            for arm in ('native', 'tclock', 'current-kd', 'numa'):
+            for arm in arms:
                 for repeat in range(3):
                     name = f'{count}-{arm}-{repeat}'
                     path = out/name
@@ -50,6 +51,17 @@ class OriginGates(unittest.TestCase):
             path.unlink()
             gates(out)
             self.assertFalse(json.loads((out/'origin-gates.json').read_text())['regression_pass'])
+
+    def test_unsupported_arm_cannot_expand_the_grid(self):
+        with tempfile.TemporaryDirectory() as directory:
+            out = Path(directory)
+            self.fixture(out, (*range(1,9), *range(12,65,4)),
+                         arms=('native', 'tclock', 'current-kd', 'numa', 'unsupported'))
+            gates(out)
+            result = json.loads((out/'origin-gates.json').read_text())
+            self.assertFalse(result['full_grid_complete'])
+            self.assertFalse(result['regression_pass'])
+            self.assertEqual({row['arm'] for row in result['comparisons']}, {'numa'})
 
 
 if __name__ == '__main__':

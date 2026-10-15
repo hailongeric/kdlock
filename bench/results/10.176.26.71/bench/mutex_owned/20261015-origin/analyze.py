@@ -21,6 +21,7 @@ from bench_runtime import FAULT, digest, require, validate_measurement
 from summarize import valid
 
 THREADS = [*range(1, 9), *range(12, 65, 4)]
+ARMS = ['native', 'tclock', 'current-kd', 'numa']
 BASELINE = 'b994aefaaf4da8be7b18353fd130818df9b2aba2'
 
 
@@ -61,12 +62,12 @@ def independent_peak(record):
 
 def audit(folder, baseline):
     require(not (folder / 'failure.json').exists(), 'failed or partial block: ' + str(folder))
-    plan = read(folder / 'plan.json')
-    policies = list(dict.fromkeys(r['comparison_arm'] for r in plan
-                                 if r['comparison_arm'] in ('fifo', 'numa')))
-    arms = ['native', 'tclock', 'current-kd', *policies]
+    archived_plan = read(folder / 'plan.json')
+    # Preserve archived experiments; report only the supported candidate and
+    # its controls, retaining their original relative execution order.
+    plan = [r for r in archived_plan if r['comparison_arm'] in ARMS]
     expected = [(t, repeat, arm) for t in THREADS for repeat in range(3)
-                for arm in (arms[::-1] if repeat % 2 else arms)]
+                for arm in (ARMS[::-1] if repeat % 2 else ARMS)]
     require([(r['threads'], r['repeat'], r['comparison_arm']) for r in plan] == expected,
             'incomplete or reordered 22-count/three-round grid')
     env = read(folder / 'environment.json')
@@ -90,7 +91,7 @@ def audit(folder, baseline):
                 if '/variants/' in original else folder / 'binaries' / Path(original).name)
         require(digest(path) == sha, 'binary changed: ' + original)
     aggregate = {r['name']: r for r in read(folder / 'records.json')}
-    require(len(aggregate) == len(plan), 'aggregate coverage differs')
+    require(len(aggregate) == len(archived_plan), 'aggregate coverage differs')
     records, hashes, geometry = [], {}, set()
     for spec in plan:
         path = folder / spec['name']
@@ -124,8 +125,8 @@ def audit(folder, baseline):
             for original, sha in r['baseline_binary_sha256'].items():
                 relative = original.split('/baseline/', 1)[1]
                 require(digest(baseline / relative) == sha, 'baseline binary changed')
-        elif arm in ('fifo', 'numa'):
-            require(r['owned_mutex_origin_spin'] is True and r['owned_mutex_numa'] == (arm == 'numa'),
+        elif arm == 'numa':
+            require(r['owned_mutex_origin_spin'] is True and r['owned_mutex_numa'] is True,
                     'candidate policy differs')
             delta = dict(zip(('claims', 'claim_failures', 'preparations', 'bypasses', 'bodies'),
                              [b-a for a,b in zip(r['origin_before'], r['origin_after'])]))
@@ -145,7 +146,8 @@ def audit(folder, baseline):
     require(all(a['measurement']['finished_ns'] < b['measurement']['started_ns']
                 for a,b in zip(records, records[1:])), 'actual execution order differs')
     return records, dict(passed=True, sessions=len(records), source_files=len(sources),
-        binaries=len(binaries), raw_sha256=hashes, policies=policies,
+        binaries=len(binaries), raw_sha256=hashes, candidate='numa',
+        archived_sessions=len(archived_plan), omitted_sessions=len(archived_plan)-len(plan),
         manifests={name: digest(folder/name) for name in ('environment.json', 'plan.json',
                    'source-sha256.json', 'baseline-source-sha256.json', 'binary-sha256.json')})
 
@@ -185,7 +187,7 @@ def export(block, records, out):
                      worker_share_range=[min(w['share'] for w in cohort),max(w['share'] for w in cohort)])
         scores[key] = score
     for (count, arm), candidate in scores.items():
-        if arm not in ('fifo', 'numa'):
+        if arm != 'numa':
             continue
         ratios = {metric:candidate[metric]/scores[count,'current-kd'][metric]
                   for metric in ('median_whole','best_peak','peak_session_whole')}
@@ -209,7 +211,7 @@ def plot(comparisons, out):
     import matplotlib.pyplot as plt
     plt.rcParams.update({'svg.fonttype':'none', 'svg.hashsalt':'owned-origin-20261015', 'font.size':10})
     fig, axes = plt.subplots(1, 2, figsize=(14, 4.6), sharey=True)
-    colors = ['#767676','#0072B2','#D55E00','#009E73']
+    colors = ['#0072B2','#D55E00','#009E73']
     series = [(block, arm, sorted((r for r in rows if r['arm']==arm), key=lambda r:r['threads']))
               for block, rows in comparisons.items() for arm in sorted({r['arm'] for r in rows})]
     for ax, metric, title in zip(axes, ('median_whole','best_peak'),
@@ -227,10 +229,12 @@ def plot(comparisons, out):
         ax.spines[['top','right']].set_visible(False)
     axes[0].set_ylabel('Percent of the same block\'s current-KD control')
     handles, labels = axes[0].get_legend_handles_labels()
-    fig.legend(handles,labels,loc='lower center',ncol=5,frameon=False,fontsize=9)
+    fig.legend(handles,labels,loc='lower center',ncol=4,frameon=False,fontsize=9)
     fig.suptitle('c01 / post64 · independent three-round blocks · *64 workers share collector CPU 63')
     fig.tight_layout(rect=(0,.07,1,.94))
     fig.savefig(out/'regression.svg',metadata={'Date':None})
+    svg = out/'regression.svg'
+    svg.write_text('\n'.join(line.rstrip() for line in svg.read_text().splitlines())+'\n')
     fig.savefig(out/'regression.png',dpi=120)
     plt.close(fig)
 

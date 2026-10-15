@@ -111,9 +111,8 @@ the actual build, so requested option names alone cannot mislabel a sample.
 The origin-readiness/NUMA comparison uses [owned_origin.py](owned_origin.py)
 with a separately archived and built pre-change source tree. Its `current-kd`
 arm uses that tree's provider, daemon and translator; Native and TCLock are also
-measured afresh.
-`fifo` enables origin claims with FIFO selection; `numa` additionally enables
-the eight-request/four-bypass selector. Both switches remain independently
+measured afresh. The `numa` candidate enables origin claims and the
+eight-request/four-bypass selector. Both switches remain independently
 selectable in `run_mutex.py` as `--owned-mutex-origin-spin` and
 `--owned-mutex-numa`. Provider defaults are off.
 
@@ -136,13 +135,12 @@ KDLOCK_RECOVERY_CONFIRMED=1 KDLOCK_SNAPSHOT_TAG=YOUR_CONFIRMED_64_VCPU_SNAPSHOT 
 
 Build the archived baseline's private provider and daemon in the guest before
 running. Replace `BASELINE_SOURCE` with that tree and `FULL_BASELINE_COMMIT` with
-its 40-character commit ID. The default screen has five arms and 330 sessions:
-Native, TCLock, frozen KD, origin/FIFO and origin/NUMA. Each single-policy
-confirmation has four arms and 264 sessions.
+its 40-character commit ID. The screen and each confirmation have four arms and
+264 sessions: Native, TCLock, frozen KD and origin/NUMA.
 The matrix retains three alternating-order rounds, 64 post-work rounds,
 48,000 warmup operations per worker and the existing warmed-peak rules. Confirm
-the selected candidate with `--policies fifo` or `--policies numa` in two new
-three-round output directories. Never combine blocks or CPU topologies into one
+the NUMA candidate with the same command in two new three-round output
+directories. Never combine blocks or CPU topologies into one
 score. The 64-worker point must use workers 0–63 and collector 63, sharing that
 CPU with the final worker and QEMU services. Record that contention separately.
 The session and raw client JSON mark this point with `collector_shared=true`;

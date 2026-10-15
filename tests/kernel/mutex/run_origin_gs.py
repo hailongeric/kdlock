@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Live origin GS results and returned-body evidence in the recovery guest."""
+"""Live origin GS results with bounded NUMA selection in the recovery guest."""
 import argparse
 import ctypes
 import fcntl
@@ -35,7 +35,6 @@ def worker(cpu, command, count, barrier, output):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--output', type=Path, required=True)
-    parser.add_argument('--numa', action='store_true')
     parser.add_argument('--operations', type=int, default=20000)
     kernel_identity.arguments(parser)
     args = parser.parse_args()
@@ -59,7 +58,7 @@ def main():
     shutil.copyfile(ko,out/ko.name)
     shutil.copyfile(ROOT/'kernel_module/kdlock_km.ko',out/'kdlock_km.ko')
     runtime.command(['insmod',ROOT/'kernel_module/kdlock_km.ko','target_process=kd_origin',
-        'owned_mutex_origin_spin=1',f'owned_mutex_numa={int(args.numa)}'],out/'load-provider.log')
+        'owned_mutex_origin_spin=1','owned_mutex_numa=1'],out/'load-provider.log')
     runtime.command(['insmod',ko],out/'load-workload.log')
     symbols={parts[2]:int(parts[0],16) for line in Path('/proc/kallsyms').read_text().splitlines()
              if len(parts:=line.split())>=3}
@@ -114,7 +113,7 @@ def main():
     runtime.require('JIT body witness:' in kernel,'no returned JIT witness')
     runtime.idle()
     runtime.write_json(out/'result.json',dict(passed=True,drained=True,operations=operations,
-        counter=counter,counter_per_cpu=counter_per_cpu,errors=errors,numa=args.numa,results=results))
+        counter=counter,counter_per_cpu=counter_per_cpu,errors=errors,numa=True,results=results))
     print('PASS origin CPU reads and task-only counter with claimed returned JIT bodies; drained')
 
 

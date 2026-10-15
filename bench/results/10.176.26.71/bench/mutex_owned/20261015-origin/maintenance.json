@@ -1,0 +1,24 @@
+{
+  "passed": true,
+  "unit_tests": 3,
+  "planned_sessions": 264,
+  "planned_arms": [
+    "native",
+    "tclock",
+    "current-kd",
+    "numa"
+  ],
+  "alternating_order": true,
+  "removed_options_rejected": true,
+  "archived_sessions_verified": 792,
+  "live_module_tests": false,
+  "source_sha256": {
+    "bench/tclock_compare/owned_origin.py": "b14e08386764a433c0951baeaf479425c7d0d24805c011148fc43b8aaddbf7ea",
+    "bench/tclock_compare/test_owned_origin.py": "9612c1b9fc987250170f7b36f2a3b07a3181c5fe9e9f90eefb336b676fd37131",
+    "tests/kernel/mutex/run_origin_gs.py": "194064fdcd1b13eaedfcbef1efa05eee24bd951cb04b9f3bb55a5f7462e4d55a",
+    "bench/results/10.176.26.71/bench/mutex_owned/20261015-origin/analyze.py": "c20ea535383c214d1c5bbe9e26ea019637a661407694defc981c02baa3d0726b"
+  },
+  "kernel": "6.1.159-kdclobber2",
+  "preemption": "none (voluntary) full",
+  "scope": "Isolated VM unit/CLI checks and re-audit of existing archived data; no new throughput or live-kernel results."
+}
