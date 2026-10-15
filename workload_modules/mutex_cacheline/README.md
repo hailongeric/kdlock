@@ -28,6 +28,10 @@ sets `--owned-mutex-reuse-spins 32`; that is an explicit selection, while the
 provider default is 0. Both arms retain the same 32-byte public object and
 64-byte-aligned lock slot, separate from the shared counter line. The payload's
 [post-work source](../spin_cacheline/post_work.h) currently selects 64 rounds.
+Optional origin-readiness and NUMA policies belong to the provider and runner;
+they do not change this c01 body or its object layout. Use the separate
+[policy comparison](../../bench/tclock_compare/README.md#owned-origin-and-numa-comparison)
+to measure them against fresh frozen-KD, Native and TCLock controls.
 
 The paired KD outer cookie records the exact acquisition route for one lexical
 acquisition. Owned SELF uses KD's physical owner and borrowed FULL uses exact

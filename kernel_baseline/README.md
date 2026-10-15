@@ -117,9 +117,10 @@ preemption support, PV spinlocks, frame pointers, module versioning, strong stac
 protection and out-of-line spin unlock. Debug spinlocks/mutexes and debug lock
 allocation are disabled. The captured guest exposed 40 CPUs; `CONFIG_NR_CPUS=8192`
 is a compile-time maximum, not its online CPU count. The documented destination
-uses a 60-vCPU launcher configuration and still requires migration verification;
-see [current operations](../docs/PROJECT_GUIDE.md#guest-workflow). Other configurations are
-not validated by matching a few of these options.
+now uses exactly 64 vCPUs; see
+[current operations](../docs/PROJECT_GUIDE.md#guest-workflow). That placement does
+not change this historical capture. Other configurations are not validated by
+matching a few of these options.
 The observed boot uses `nokaslr` and the runtime preemption selector reports
 `none (voluntary) full`. Neither dynamic preemption nor boot arguments are
 checked by `--running`; its Build-ID result establishes identity, not the full

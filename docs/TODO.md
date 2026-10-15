@@ -12,13 +12,13 @@ measurements resolves the correctness limits below.
 
 ## Current checkpoint
 
-The experimental owned provider at `585335b` extends `d8d14a1` with the accepted
+The measured owned provider at `585335b` extends `d8d14a1` with the accepted
 [ABI4/reuse-32 c01 profile](PERFORMANCE.md#active-c01-18-worker-study), limited to
 KD-only object lifetimes and the captured x86-64 configuration. Its
 [targeted receipts](VALIDATION.md#current-owned-protocol-verification) do not
 establish fairness, general oversubscription or universal Native parity.
 The later [c01/post64 full-grid comparison](PERFORMANCE.md#fresh-c01-164-worker-comparison)
-measures 1–8 workers in steps of one and 12–64 in steps of four on a separate
+measured 1–8 workers in steps of one and 12–64 in steps of four on a historical
 66-vCPU boot. All 198 samples are correct and drained; the three-worker warmed
 peak misses 97% of Native. Full-grid parity and its two fresh confirmation blocks
 remain outstanding. The predominantly SELF results do not establish a benefit
@@ -29,6 +29,17 @@ the failures below.
 
 Recorded failures and unresolved coverage:
 
+- New benchmarks use exactly CPUs 0–63: NUMA node 0 has CPUs 0–31 and node 1
+  has CPUs 32–63.
+  Spin/mutex timed runs support explicit collector sharing on CPU 63 at
+  64 workers. Rwlock, real-API and the all-lock driver still need that support;
+  through-60 runs leave their full-grid gate open. See the
+  [runner support table](../tools/vm/README.md#complete-164-worker-comparison).
+- The later immutable owned-image implementation and opt-in origin/NUMA policies
+  need their own source-specific correctness and performance evidence. Keep
+  origin claims and NUMA selection disabled by default until their documented
+  [screen and confirmation gates](../bench/tclock_compare/README.md#owned-origin-and-numa-comparison)
+  are met; the older c01 acceptance does not cover these additions.
 - Concurrent cold promotion stalled with an RCU warning in c16/t4 preparation.
   Single-CPU preparation avoids that phase rather than fixing it. The fixed
   [failure record](https://github.com/hailongeric/kdlock/blob/175d73bcc2faaa5ee9f9ab28a20491680d834043/bench/tclock_compare/results/20260918-native-stack.md)

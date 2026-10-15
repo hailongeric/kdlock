@@ -24,9 +24,14 @@ Edit source on `380G10`, synchronize with `python3 tools/vm/sync_to_vm.py`, and 
 builds, tests and benchmarks in the recovery VM on `10.176.26.71`. Follow
 [guest setup](../docs/PROJECT_GUIDE.md#guest-workflow) and
 [operations](../docs/AGENTS.md) for kernel identity, dependencies, snapshot confirmation
-and drain. The regular boot has 64 vCPUs across two NUMA nodes. Use collector CPU
-63 and exclude it from worker cohorts. A full 64-worker run needs the separately
-verified temporary [66-vCPU layout](../tools/vm/README.md#complete-164-worker-comparison).
+and drain. All new runs use exactly 64 CPUs: node 0 has CPUs 0–31 and node 1
+has CPUs 32–63, pinned to the same-numbered host cores. Do not add extra vCPUs
+or an unused spare CPU. For up to 63 workers, use collector CPU 63 outside
+worker cohorts. At 64 workers, the collector must share CPU 63 with a worker
+and QEMU services. Spin/mutex timed runs support this with
+`--cpus 0-63 --collector-cpu 63 --share-collector`; rwlock, real-API and the full
+matrix driver still require a separate collector. See the
+[64-CPU placement and runner support](../tools/vm/README.md#complete-164-worker-comparison).
 
 Live output belongs in a new directory outside the guest checkout:
 `/root/kdlock-evidence/10.176.26.71/bench/<run>`. Archive raw evidence under
@@ -71,7 +76,7 @@ to its captured source, workload, boot policy and topology.
 The [2026-10-10 migration receipt](results/10.176.26.71/bench/migration-20261010T070707Z/README.md)
 records the initial 60-vCPU setup and its functional/performance checks. It is
 historical evidence for that topology. Current connection, synchronization and
-64/66-vCPU instructions live in the [project guide](../docs/PROJECT_GUIDE.md)
+64-vCPU instructions live in the [project guide](../docs/PROJECT_GUIDE.md)
 and [VM tools guide](../tools/vm/README.md).
 
 The [spin/mutex](tclock_compare/README.md), [rwlock](rwlock_compare/README.md) and

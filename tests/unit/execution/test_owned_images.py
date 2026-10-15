@@ -30,9 +30,9 @@ def main():
         (tmp / 'production.h').write_text(code)
         binary = tmp / 'check'
         subprocess.run(shlex.split(os.environ.get('CC', 'cc')) + [
-            '-std=gnu11', '-O2', '-Wall', '-Wextra', '-Werror', '-Wno-sign-compare',
+            '-std=gnu11', '-O2', '-pthread', '-Wall', '-Wextra', '-Werror', '-Wno-sign-compare',
             '-I', str(ROOT / 'include'), '-I', str(tmp),
-            str(ROOT / 'tests/unit/execution/owned_images_fixture.c'),
+            str(Path(__file__).with_name('owned_images_fixture.c')),
             '-o', str(binary)], check=True, timeout=30)
         subprocess.run([str(binary)], check=True, timeout=20)
 

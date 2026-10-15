@@ -16,6 +16,7 @@ assembly and the Python translator. Helpers used only inside a backend live unde
 | Sleeping read-write semaphore | [kd_rwsem.h](kd_rwsem.h) | Owned-mutex admission gate, concurrent sleeping readers, ordinary writers/trylock/downgrade and explicit outer writer delegation |
 | Frames and controls | [kd_exec.h](kd_exec.h), [kd_call.h](kd_call.h), [kd_lock.h](kd_lock.h) | Logical state, held-lock ledger, source CALL and final ACK |
 | Registry and execution | [exe.h](exe.h), [exe_info.h](exe_info.h), [kd_jit_batch.h](kd_jit_batch.h) | Backend/ABI/layout identity, readiness and distinct wrapper/C results |
+| Owned image publication | [exe_info.h](exe_info.h), [kd_image.h](kd_image.h) | Versioned upload header, immutable descriptor and context requirements; frame binding and stale-generation checks |
 | Packet and wrapper | [kd_regs.h](kd_regs.h), [asm_head.h](asm_head.h), [wrapper.S](wrapper.S) | Layout2, virtual register backing and two-word input |
 | Heat | [kd_hotlock.h](kd_hotlock.h) | Approximate future admission, not ownership |
 | Source/device | [kd_source.h](kd_source.h), [kd_source_api.h](kd_source_api.h), [sys.h](sys.h) | Text residency, capabilities and irreversible retirement |
@@ -63,6 +64,14 @@ The [measured c01 profile](../docs/PERFORMANCE.md#accepted-c01-18-worker-profile
 explicitly pairs ABI4 with `owned_mutex_reuse_spins=32`; the provider default is 0.
 That allowance is separate from delegated-result polling and does not bound the
 whole optimistic acquisition loop.
+
+Owned delegation defaults to FIFO without origin-sensitive GS bodies. Provider
+options `owned_mutex_origin_spin=1` and `owned_mutex_numa=1` independently enable
+audited origin claims and bounded NUMA selection. They do not change the public
+object or caller ABI. See the
+[owned policy contract](../docs/design/mutex_implementation.md#conditional-origin-readiness-and-bounded-numa-selection)
+for the claim and parking rules; matching provider/translator image identities
+remain required.
 
 Legacy mutex outer callers pair `KD_MUTEX_OUTER_LOCK/UNLOCK` with one opaque
 `kd_mutex_outer_cookie` per acquisition. Do not copy, modify, transfer or reuse it

@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "source_sha256": "868b681366305ffb144581092f5a74e2e8ca8f61af0aa031b9c7c987c00db06c",
+  "source_sha256": "491a1a1b47ac357a24d4478a73cd75b63c1a2e69fa31b497fe7c26da88bb2f31",
   "symbol": "kd_origin_test_counter",
   "size": 8,
   "operations": [
@@ -8,5 +8,5 @@
     "write",
     "rmw"
   ],
-  "audit": "Private cacheline-aligned task-only counter; writes only under lock in counter_body, stopped-worker REPORT reads; no IRQ/NMI registrations, exports, or remote writes."
+  "audit": "Private cacheline-aligned task-only counter; writes only under lock in counter_body. Stopped-worker REPORT reads all per-CPU counters under the same mutex; no IRQ/NMI registrations, exports, or unsynchronized remote accesses."
 }

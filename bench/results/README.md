@@ -34,10 +34,20 @@ synchronization. Keep full raw evidence, including failures, partial runs, comma
 source/binary hashes, CPU/NUMA topology, kernel identity and final drain checks.
 Do not pool measurements from different machines or VM topologies.
 Extracted working copies may be removed after regular-file bytes and logical
-symlink destinations match a retained canonical archive. The
-[documentation cleanup receipt](380G10/tests/documentation-cleanup-20261012.json)
-records the four pruned copies and recovery archive paths; raw archives and
-unique failure records remain available.
+symlink destinations match a retained canonical archive. Cleanup receipts for
+[2026-10-12](380G10/tests/documentation-cleanup-20261012.json) and
+[2026-10-15](380G10/tests/documentation-cleanup-20261015.json) record the pruned
+copies, archive hashes and recovery paths. The later check also compares file
+permissions and retains copies with unique files or differing permissions.
+Raw archives and unique failure records remain available. Restore an extraction
+only when needed for an offline audit, using the receipt's archive and member
+prefix; retain any recorded guest-to-local symlink mapping.
+
+Dated measurements, kernel captures, upstream provenance and branch inventories
+are historical records, not files that expire by age. Update maintained guides
+and indexes when behavior changes; preserve frozen commands, verdicts and source
+identities. Generated Python bytecode outside raw evidence can be removed and
+regenerated from its source. The `bench/.tmp` compatibility link below is retained.
 
 Live guest output must remain outside `/root/host_fs/kdlock`, as required by the
 runners' frozen-input checks. New output paths are:

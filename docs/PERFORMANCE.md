@@ -22,7 +22,9 @@ workers with complete delegation, but remains native and slower at 32; the
 is refused by spin ABI1's register-store check, so its KD timing is explicitly
 a native control. This does not establish end-to-end `ps` or mmap performance.
 
-## Fresh c01 1–64-worker comparison
+<a id="fresh-c01-164-worker-comparison"></a>
+
+## Recorded c01 1–64-worker comparison
 
 The [full-grid report](../bench/results/10.176.26.71/bench/mutex_owned/20261014-full-grid/README.md)
 compares the unchanged ABI4/reuse-32 profile, Linux Native and TCLock at 1–8
@@ -31,10 +33,10 @@ and drained. KD reaches 97% of Native median throughput at every count; the
 three-worker warmed peak reaches only 93.86%, so this block does not establish
 full-grid parity. At 60 workers, KD/Native medians are 6.913/3.599 Mops/s.
 At least 99.5% of each KD sample executes through SELF, although all 63 contended
-KD sessions return some JIT bodies. This descriptive three-round block uses the
-temporary 66-vCPU topology, with physical collector contention at 64 workers;
-it remains separate from the accepted 64-vCPU study below and supplies no fresh
-confirmation blocks for full-grid acceptance.
+KD sessions return some JIT bodies. This historical 2026-10-14 three-round block
+used the temporary 66-vCPU topology, with physical collector contention at
+64 workers. It remains separate from the accepted 64-vCPU study below and supplies
+no fresh confirmation blocks for full-grid acceptance.
 
 At three workers, Native's whole-run spread is 35.88% versus KD's 5.67%; the
 fastest Native sample gives one worker 85.11% of operations. Those shares are
@@ -88,10 +90,22 @@ causal limits. These dispositions apply to the recorded version and scope.
 ## Remaining gaps and comparison limits
 
 Keep source versions, policies, object/caller ABIs, workloads, topologies,
-governors and instrumented runs separate. The regular VM uses collector CPU 63
-outside worker cohorts. The [complete comparison workflow](../tools/vm/README.md#complete-164-worker-comparison)
-uses 66 vCPUs; at 64 workers, collector vCPU 65, the last worker and QEMU services
-share physical host core 63. Historical cohorts are not interchangeable.
+governors and instrumented runs separate. All new runs use exactly CPUs 0–63,
+with node 0 on 0–31 and node 1 on 32–63; no extra vCPUs or unused spare CPU.
+Use collector CPU 63 outside cohorts of up to 63 workers. At 64 workers the
+collector must share CPU 63 with the final worker and QEMU services, and that
+contention must be reported separately. The [complete comparison workflow](../tools/vm/README.md#complete-164-worker-comparison)
+records support by runner. Spin/mutex timed runs now accept explicit
+`--share-collector`; rwlock, real-API and the all-lock driver still require a
+separate collector. Historical 66-vCPU results remain evidence only for their
+recorded placement and cannot replace the shared 64-worker point.
+
+Immutable owned-image publication and opt-in origin-readiness/NUMA policies
+were added after the accepted `585335b` implementation. The
+[origin comparison](../bench/tclock_compare/README.md#owned-origin-and-numa-comparison)
+uses fresh Native, TCLock and frozen KD controls. Its screen and confirmations
+must stand on their own; this index does not promote the optional policies or
+transfer an older performance verdict to the new source.
 
 All valid variation belongs in the result. Operation shares do not measure
 ownership streaks or establish starvation bounds. Aggregate throughput and

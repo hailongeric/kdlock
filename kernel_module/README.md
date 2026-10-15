@@ -35,10 +35,10 @@ inputs; stop callers, retire sources and unload before changing builds.
 
 ## Source organization
 
-`kd_spin_runtime.c` includes `kd_exec.c`, `exe.c`, `kd_spinlock.c`, then `kd_mutex.c`
-in declaration order. This keeps simple execution helpers visible for inlining;
-Kbuild links only the combined object, not those four files again. Their source
-boundaries remain separate for reading.
+`kd_spin_runtime.c` includes `kd_exec.c`, `exe.c`, `kd_spinlock.c`, `kd_mutex.c`,
+then `owned_mutex/delegation.c` in declaration order. This keeps execution helpers
+visible for inlining. Kbuild links only the combined object; the five included
+files remain separate for reading.
 
 | Component | Responsibility |
 | --- | --- |
@@ -64,7 +64,7 @@ include those files too. Shared APIs live in [include](../include/README.md).
 
 | Setting | Default and meaning |
 | --- | --- |
-| `KDLOCK_NUMA` build variable | 1; spin/legacy-mutex local grouping and CPU-node stack allocation; owned FIFO does not reorder by NUMA |
+| `KDLOCK_NUMA` build variable | 1; spin/legacy-mutex local grouping and CPU-node stack allocation; owned selection uses its separate `owned_mutex_numa` option |
 | `KDLOCK_SPIN_BATCH` build variable | 1024, allowed 1..1024 bodies; separate scan budget uses the same initial value |
 | Legacy mutex batch | Uses `KDLOCK_SPIN_BATCH` (default 1,024) with bounded NUMA selection and remote-cohort handoff |
 | Owned mutex batch | Same total body cap; finite FIFO snapshot at explicit outer unlock, stopping at SELF/handoff boundaries |
@@ -77,6 +77,8 @@ include those files too. Shared APIs live in [include](../include/README.md).
 | `owned_mutex_reuse_spins` | 0; allowed 0/8/32/128, one allowance after observing an unflagged release per optimistic OSQ turn; the measured ABI4 profile selects 32 |
 | `owned_mutex_self_route` | False; read-only diagnostic control selecting only KD-owned SELF acquisition |
 | `owned_mutex_refill` | False; opt-in further FIFO snapshots within the same cumulative batch cap |
+| `owned_mutex_origin_spin` | False; permit the audited bounded origin-GS subset only while an exclusive spinning-origin claim is held |
+| `owned_mutex_numa` | False; inspect at most eight delegates and retain four-bypass barriers within the existing batch cap |
 | `owned_mutex_preflight_spins`, `owned_mutex_preflight_queue` | 0/false; bounded ABI2 C-preflight experiment, separate from ABI4's unbounded owner optimism |
 | `owned_mutex_protocol` | Getter-only identity `linux_local_first_v1`; guarded owner release is mandatory |
 | `hotlock_stats` | Optional final approximate observation totals |
@@ -92,8 +94,16 @@ KD mutexes always support blocking; load with `insmod kdlock_km.ko`. The
 `mutex_blocking` selector has been removed. Owned SELF acquisition uses its own
 Linux-style optimistic spin/sleep protocol; the legacy backend retains the original
 Linux mutex owner. Published delegates retain their reserved stack and migration
-pin while sleeping after bounded result polling. Translations that require
-origin-CPU GS storage are refused.
+pin while sleeping after bounded result polling. Legacy mutexes refuse
+translations requiring origin-CPU GS storage. Owned mutexes can opt into the
+audited bounded subset with an exclusive origin-readiness claim; a parked origin
+is ineligible. See the [policy contract](../docs/design/mutex_implementation.md#conditional-origin-readiness-and-bounded-numa-selection).
+
+Owned uploads publish immutable image descriptors, binding a frame to one code
+generation through completion and native continuations. Legacy image families
+retain in-place publication. The
+[publication guide](../docs/JIT_EXECUTION.md#owned-image-publication-protocol-2)
+defines staging, capability checks, pool exhaustion and teardown.
 
 Caller build option `KD_OWNED_MUTEX_CABI=1` selects ABI4's local acquisition before
 late capture. The default remains ABI2 capture-first, with optional

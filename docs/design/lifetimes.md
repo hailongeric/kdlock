@@ -14,7 +14,8 @@ The earlier audit is in [VALIDATION](../VALIDATION.md#source-and-hook-lifetime-r
 
 | Resource | What keeps it alive | Limit |
 | --- | --- | --- |
-| JIT entry and source code | Entries use `(0, RIP)`. Registration, text reads and ordinary call targets pin up to 64 LIVE modules for the session. Retirement invalidates every used entry before dropping those pins. | No concurrent code versions or source replacement within a session. Init and unknown source are refused. |
+| JIT entry and source code | Entries use `(0, RIP)`. Registration, text reads and ordinary call targets pin up to 64 LIVE modules for the session. Retirement invalidates every used entry before dropping those pins. | Source code and module identity cannot be replaced within a session. Init and unknown source are refused. |
+| Owned generated image | Each published descriptor binds code, ABI, requirements and generation; a frame retains its bound version through every continuation. | Published blocks remain allocated until terminal drain and provider teardown. The 64-block pool can refuse replacements. Legacy image families still publish in place. |
 | Translation session | The daemon, cache and translator children share one writer-open device description. Real kcore reads pin source before inspecting it. | Publishers must follow this path. A pin keeps a module loaded; it does not prove its bytes are unchanged or arbitrary pointers remain valid. |
 | Hotlock record | Per-CPU records match exact typed addresses, have bounded capacity and reset their sampling windows without eviction. | Reusing an address does not identify a new allocation. Statistics cannot authorize unlock or request retirement. |
 | Legacy mutex shadow | Scheduling records are indexed by the original Linux mutex address. | There is no allocation/free notification or retirement operation for an individual lock object. |
@@ -83,8 +84,10 @@ inherit it, and Python validates the device identity before real text reads.
 An orphaned translator retains the same open description. The live cdev probe
 checks normal unload refusal at each stage, not reader protection after the last
 close. Detailed flow, control commands and direct-CLI restrictions live in
-[the daemon guide](../../daemon/README.md#device-session-and-source-residency). Wire structures and the
-two-word wrapper ABI are unchanged; source controls are separate ioctls.
+[the daemon guide](../../daemon/README.md#device-session-and-source-residency).
+Source controls are separate ioctls. The two-word wrapper input is unchanged;
+current image uploads use the versioned header described in
+[publication protocol 2](../JIT_EXECUTION.md#owned-image-publication-protocol-2).
 
 `kd_source.c` keeps source resident for the whole session. It does not reclaim
 individual image versions. Its lifecycle is:

@@ -9,12 +9,13 @@ Use [the daemon](../daemon/README.md) for publication and
 
 | Read first | Responsibility |
 | --- | --- |
-| [disassem.py](disassem.py) |CLI, input coordination, assembly/link and diagnostics |
+| [disassem.py](disassem.py) | CLI, input coordination, assembly/link and diagnostics |
 | [translation_scope.py](translation_scope.py) | Decode windows, selected blocks and CALL continuations |
 | [translation_image.py](translation_image.py) | Dispatch targets and generated assembly |
 | [context_policy.py](context_policy.py), `context_symbols.py` | Backend/context screening and static ranges |
 | `context_values.py`, `context_registers.py`, `context_memory.py` | Bounded flow, register facts and sequential memory/alias model |
 | `context_guards.py`, `entry_abi.py` | Entry predicates and MINIMAL input-dependency proof |
+| [origin_policy.py](origin_policy.py) | Exact audit, allowed operations and bounded origin-GS body proof for owned mutex images |
 | `conflict.py`, `normal.py`, `special_inst.py`, `hostcall.py` | Virtual register/instruction/control lowering |
 | `device_session.py`, `memread.py` | Same-device lease, capabilities and source pinning |
 
@@ -41,7 +42,12 @@ options with `python3 disassem/disassem.py --help`; real-text CLI use acquires i
 own device lease and does not by itself upload a published image. Importing helpers
 for byte fixtures does not establish actual kernel JIT evidence.
 
-The translator does not check every memory address when it is used, restore all
-processor state, or keep separate immutable versions of generated images. Those
-features remain deferred. Its context checks are not a security sandbox; see
-[known limitations](../docs/TODO.md).
+Owned images carry their audited context requirements into immutable publication
+descriptors. The provider binds a frame to one version and checks any required
+origin-readiness claim at dispatch; see
+[publication protocol 2](../docs/JIT_EXECUTION.md#owned-image-publication-protocol-2).
+Legacy image families retain in-place publication.
+
+The translator does not check every memory address when it is used or restore all
+processor state. Those features remain deferred. Its context checks are not a
+security sandbox; see [known limitations](../docs/TODO.md).

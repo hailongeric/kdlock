@@ -1,11 +1,14 @@
 /* SPDX-License-Identifier: GPL-2.0 */
 #include <assert.h>
 #include <errno.h>
+#include <pthread.h>
+#include <sched.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
+#include <sys/mman.h>
 #include "kd_image.h"
 #define KD_CODE_BLOCK_POOL 64
 #define READ_ONCE(x) (x)
@@ -39,6 +42,20 @@ static int preempt_count(void) { return 1; }
 static struct { struct kd_recv_pkt head; unsigned char code[128]; } packet;
 static struct kd_image_upload upload;
 static struct kd_exe_info *entry;
+/* Synthetic code bodies exercise executable-storage lifetime, independently
+ * of the kernel wrapper/GS admission tests. The old version waits until the
+ * publisher releases it; the replacement declares the origin requirement and
+ * returns immediately. Actual GS operations are covered by the live tests. */
+static unsigned int body_started, body_release, body_finished;
+static int body_result;
+typedef int (*test_body)(unsigned int *, unsigned int *);
+static void *run_bound_body(void *arg) {
+ struct kd_exec_frame *frame=arg;
+ test_body body=(test_body)((unsigned char *)kd_jit_bound_code(entry,frame)+KD_IMAGE_HEADER_SIZE);
+ body_result=body(&body_started,&body_release);
+ __atomic_store_n(&body_finished,1,__ATOMIC_RELEASE);
+ return NULL;
+}
 static void start(unsigned long id, unsigned long generation, unsigned int req) {
  memset(&packet,0,sizeof(packet));
  packet.head=(struct kd_recv_pkt){.status_code=KD_EXE_NORMAL,.RIP=0x1000,
@@ -47,6 +64,12 @@ static void start(unsigned long id, unsigned long generation, unsigned int req) 
  memcpy(packet.code+9,"KDWB002",7); memcpy(packet.code+25,"KDWC002",7);
  memcpy(packet.code+41,"KDAB",4); packet.code[45]=4; packet.code[46]=2;
  packet.code[47]=req;
+ /* x86-64: mark started, PAUSE/load/test until released, then return 1. */
+ static const unsigned char waiting[]={0xc7,0x07,1,0,0,0,0xf3,0x90,0x8b,0x06,
+  0x85,0xc0,0x74,0xf8,0xb8,1,0,0,0,0xc3};
+ static const unsigned char immediate[]={0xb8,2,0,0,0,0xc3};
+ if(req) memcpy(packet.code+KD_IMAGE_HEADER_SIZE,immediate,sizeof(immediate));
+ else memcpy(packet.code+KD_IMAGE_HEADER_SIZE,waiting,sizeof(waiting));
 }
 static ssize_t send_bytes(size_t n) {
  ssize_t ret=kd_dev_write_locked(&upload,(const char *)&packet,sizeof(packet.head)+n);
@@ -55,7 +78,12 @@ static ssize_t send_bytes(size_t n) {
 }
 int main(void) {
  for(int i=0;i<KD_MAX_EXE;i++) entries[i].status_code=KD_EXE_UNUSED;
- for(int i=0;i<64;i++) allocations[i]=kd_code_block_pool[kd_code_block_free++]=calloc(1,KD_CODE_BLOCK_SIZE);
+ for(int i=0;i<64;i++) {
+  void *code=mmap(NULL,KD_CODE_BLOCK_SIZE,PROT_READ|PROT_WRITE|PROT_EXEC,
+                  MAP_PRIVATE|MAP_ANONYMOUS,-1,0);
+  assert(code!=MAP_FAILED);
+  allocations[i]=kd_code_block_pool[kd_code_block_free++]=code;
+ }
  entry=kd_get_exe(0,0x1000);
  *entry=(struct kd_exe_info){.status_code=KD_EXE_UNINIT,.RIP=0x1000,.lock_kind=3,.entry_abi=4};
  start(1,0,0); assert(send_bytes(128)>0);
@@ -63,6 +91,9 @@ int main(void) {
  assert(old && old->generation==1 && !old->requirements && kd_code_block_free==63);
  struct kd_exec_frame bound={.owned_mutex=true,.entry_abi=4};
  assert(kd_jit_bind_image(entry,&bound) && bound.image==old);
+ pthread_t executor;
+ assert(!pthread_create(&executor,NULL,run_bound_body,&bound));
+ while(!__atomic_load_n(&body_started,__ATOMIC_ACQUIRE)) sched_yield();
  unsigned char saved[128]; memcpy(saved,old->code,128);
  start(2,1,1); packet.head.status_code=KD_EXE_UNINIT;
  assert(send_bytes(64)>0); assert(kd_image_current(entry)==old);
@@ -75,7 +106,11 @@ int main(void) {
  start(4,1,1); packet.code[47]=0;
  assert(send_bytes(128)==-EPROTO); assert(kd_image_current(entry)==old);
  start(5,1,1); copy_fault=true; assert(send_bytes(128)==-EFAULT); copy_fault=false;
- start(6,1,1); assert(send_bytes(128)>0);
+ assert(!__atomic_load_n(&body_finished,__ATOMIC_ACQUIRE));
+ start(6,1,1); packet.head.status_code=KD_EXE_UNINIT;
+ assert(send_bytes(64)>0 && kd_image_current(entry)==old);
+ packet.head.offset=64; packet.head.status_code=KD_EXE_NORMAL;
+ memmove(packet.code,packet.code+64,64); assert(send_bytes(64)>0);
  const struct kd_jit_image *new=kd_image_current(entry);
  assert(new!=old && new->requirements==1 && new->generation==2);
  assert(kd_jit_bind_image(entry,&bound) && kd_jit_bound_code(entry,&bound)==old->code);
@@ -85,6 +120,12 @@ int main(void) {
  fresh.origin=&origin;
  assert(!kd_jit_bind_image(entry,&fresh));
  origin.readiness=KD_ORIGIN_CLAIMED;assert(kd_jit_bind_image(entry,&fresh));
+ test_body replacement=(test_body)((unsigned char *)kd_jit_bound_code(entry,&fresh)+KD_IMAGE_HEADER_SIZE);
+ assert(replacement(NULL,NULL)==2);
+ assert(!__atomic_load_n(&body_finished,__ATOMIC_ACQUIRE));
+ assert(!__atomic_load_n(&body_release,__ATOMIC_RELAXED));
+ __atomic_store_n(&body_release,1,__ATOMIC_RELEASE);
+ assert(!pthread_join(executor,NULL) && body_result==1);
  origin.cpu=1;assert(!kd_jit_bind_image(entry,&fresh));
  origin.cpu=0;origin.readiness=KD_ORIGIN_FINISHED;assert(!kd_jit_bind_image(entry,&fresh));
  assert(!memcmp(old->code,saved,128));
@@ -101,6 +142,6 @@ int main(void) {
  assert(kd_image_current(entry)==last && last->generation==64);
  assert(!memcmp(old->code,saved,128));
  source_open=false; assert(send_bytes(128)==-ESHUTDOWN);
- for(int i=0;i<64;i++) free(allocations[i]);
- puts("owned images: immutable replacement, coverage, identity, metadata, stale misses and 64-block exhaustion passed");
+ for(int i=0;i<64;i++) assert(!munmap(allocations[i],KD_CODE_BLOCK_SIZE));
+ puts("owned images: active old-code execution across origin-sensitive replacement, coverage, identity, metadata, stale misses and 64-block exhaustion passed");
 }

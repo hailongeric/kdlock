@@ -43,7 +43,7 @@ CALL miss.
 | [daemon.c](daemon.c) | Configuration, device session and polling loop |
 | [workspace.inc](workspace.inc) | Workspace commands, learned targets and cache |
 | [compiler.inc](compiler.inc) | Child launch/reap and optional measurements |
-| [publication.inc](publication.inc) |ABI/layout checks, native-only status and upload |
+| [publication.inc](publication.inc) | ABI/layout checks, native-only status and upload |
 
 Private components remain in one translation unit and are tracked by the daemon
 build and basic daemon fixture. Entry identities 0/1/2/3/4 mean legacy/spin-clobber/

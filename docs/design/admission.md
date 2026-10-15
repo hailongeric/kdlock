@@ -165,15 +165,16 @@ the two unlock ACKs precede suffix completion. The oracle requires the distinct
 stack-change warning, actual source CALL successor and unchanged NORMAL root,
 not only successful native code. This is one bounded shared-slot history, not
 arbitrary concurrent mutation or a stack-privacy assumption; see
-[Historical the execution gate](https://github.com/hailongeric/kdlock/blob/1b9191256f64785f8e844ada914356a69d4f70f0/docs/testing/entry_admission.md#53-mutex-%E6%8E%A7%E5%88%B6-call-%E7%9A%84%E6%A0%88%E6%A3%80%E6%9F%A5).
+[historical execution check](https://github.com/hailongeric/kdlock/blob/1b9191256f64785f8e844ada914356a69d4f70f0/docs/testing/entry_admission.md#53-mutex-%E6%8E%A7%E5%88%B6-call-%E7%9A%84%E6%A0%88%E6%A3%80%E6%9F%A5).
 
 The provider now advertises this immutable implementation contract through
 the separate 16-byte `KD_JIT_CAPS` ioctl. Translation queries its validated
 device description once before text inspection, caches only that lease's bound
 and clears it on close. Absent/unknown contracts leave the bound zero; actual I/O
-errors abort inspection. Version 1 still describes the old mutex bound but lacks
-the module range required by current translation (7.2.2). Source INFO remains
-mandatory. This is not a mutable
+errors abort inspection. Version 1 describes the old mutex bound; version 2
+adds the module range below. Current translation requires version 3 and the
+immutable owned-image capability before inspecting text. Source INFO remains
+mandatory. The stack bound is not a mutable
 admission bit or executable generation. Guarded mutex analysis now uses the bound
 only at registered local controls whose IR matches the exact eight-byte CALL
 push and source return token. It first applies that write, then derives checked
@@ -288,15 +289,16 @@ when that boot-fixed chunk exists, failing rather than spilling to a dynamic
 chunk when full. Normal module unload frees allocations within that arena,
 not the arena's address classification. This does not pin or validate an object.
 
-The provider reports this bound using version 2 of the existing 16-byte CAPS
-packet on the same device lease. It checks the build constants and the non-NULL
-`pcpu_reserved_chunk` pointer, which is read-only after init; it never dereferences
-the private chunk layout. Translation adds `[base + ALIGN(core_size, 4),
-base + ALIGN(core_size, 4) + module_bytes)` for each possible CPU. Version 1,
-unavailable or invalid capability cannot silently omit the module check: current
-translation reports an infrastructure error before reading source text. Source
-inspection/retirement can still query older providers. Neither the ioctl number
-nor its size, guest code or wrapper arguments change.
+The module bound was introduced in version 2 of the 16-byte CAPS packet and is
+retained in version 3 on the same device lease. The provider checks the build
+constants and the non-NULL `pcpu_reserved_chunk` pointer, which is read-only
+after init; it never dereferences the private chunk layout. Translation adds
+`[base + ALIGN(core_size, 4),
+base + ALIGN(core_size, 4) + module_bytes)` for each possible CPU. Missing or
+invalid module bounds cannot silently omit the check. Current translation also
+requires the version-3 image capability; an older provider fails before text
+inspection. Raw source/capability observers can still query older providers.
+The ioctl number and size, guest kernel and wrapper arguments are unchanged.
 
 Do not extend coverage to `pcpu_unit_size`: the embedded allocator returns unused
 tail pages to ordinary memory. Alignment padding is not claimed as module data,

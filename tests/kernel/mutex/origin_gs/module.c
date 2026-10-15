@@ -2,7 +2,8 @@
 /* Audit scope: the static counter is private to this test module. Only task
  * ioctls below write it, under one KD mutex. No IRQ/NMI callback, exported
  * address, timer, workqueue or remote write exists. Summation happens only in
- * the stopped-worker REPORT ioctl. Each counter occupies its own cacheline.
+ * the stopped-worker REPORT ioctl, also under the same mutex. Each counter
+ * occupies its own cacheline, and REPORT returns every CPU's value.
  * Changing this file invalidates audit.json and all generated manifests. */
 #include <linux/module.h>
 #include <linux/miscdevice.h>
@@ -72,12 +73,19 @@ static long origin_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 		return failures ? -EIO : 0;
 	}
 	if (cmd == 0x4703) {
-		u64 result[4];
+		u64 result[4 + 64] = { 0 };
 
 		if (atomic_read(&running) || !kd_owned_mutex_is_idle(&lock))
 			return -EBUSY;
-		for_each_possible_cpu(cpu)
-			total += per_cpu(kd_origin_test_counter, cpu);
+		if (nr_cpu_ids > 64)
+			return -E2BIG;
+		/* Serialize remote reads even if a new ioctl races the idle check. */
+		kd_mutex_lock(&lock);
+		for_each_possible_cpu(cpu) {
+			result[4 + cpu] = per_cpu(kd_origin_test_counter, cpu);
+			total += result[4 + cpu];
+		}
+		kd_mutex_unlock(&lock);
 		result[0] = operations; result[1] = errors; result[2] = total; result[3] = 1;
 		return copy_to_user((void __user *)arg, result, sizeof(result)) ? -EFAULT : 0;
 	}
