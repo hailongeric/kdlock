@@ -99,10 +99,12 @@ def main():
         old=list(map(int,before.split()))
         runtime.require(stats[0]>old[0] and stats[4]>old[4], 'no completed claimed GS bodies')
         results.append(dict(command=command,workers=progress,origin_stats_before=old,origin_stats_after=stats))
-    report=bytearray(32);fcntl.ioctl(fd,0x4703,report,True)
-    operations,errors,counter,idle=struct.unpack('<QQQQ',report)
+    report=bytearray(8*(4+64));fcntl.ioctl(fd,0x4703,report,True)
+    operations,errors,counter,idle,*counter_per_cpu=struct.unpack('<'+'Q'*(4+64),report)
     runtime.require(errors==0 and idle==1 and operations==2*len(cpus)*args.operations and
         counter==len(cpus)*args.operations,'incorrect origin CPU/counter results or incomplete drain')
+    runtime.require(counter_per_cpu==[args.operations if cpu in cpus else 0 for cpu in range(64)],
+                    'counter updates landed on the wrong origin CPU')
     os.close(fd)
     daemon.terminate();daemon.wait(timeout=15);log.close()
     runtime.command([sys.executable,ROOT/'disassem/device_session.py','retire'],out/'retire.log')
@@ -112,7 +114,7 @@ def main():
     runtime.require('JIT body witness:' in kernel,'no returned JIT witness')
     runtime.idle()
     runtime.write_json(out/'result.json',dict(passed=True,drained=True,operations=operations,
-        counter=counter,errors=errors,numa=args.numa,results=results))
+        counter=counter,counter_per_cpu=counter_per_cpu,errors=errors,numa=args.numa,results=results))
     print('PASS origin CPU reads and task-only counter with claimed returned JIT bodies; drained')
 
 

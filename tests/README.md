@@ -152,8 +152,10 @@ python3 tests/kernel/mutex/run_origin_gs.py --numa \
 
 Use the pinned Python environment and a verified regular 64-vCPU snapshot. Each
 run checks origin CPU reads and the private task-only per-CPU counter with eight
-workers on CPUs 0–3 and 32–35. Both roots must return claimed JIT bodies; totals
-and per-worker CPU time are saved separately from performance scores. The exact
+workers on CPUs 0–3 and 32–35. Both roots must return claimed JIT bodies. Each
+CPU's counter must match its logical invocations, with zero on unused CPUs;
+the report reads counters under the same mutex. Totals and per-worker CPU time
+are saved separately from performance scores. The exact
 module source audit, ELF digest and live Build ID must match. Failed admission
 retains the loaded session and evidence for explicit diagnosis and drain.
 
@@ -165,7 +167,9 @@ and 4096, from CPU 1 with the origin on CPU 0, and saves each receipt.
 The existing owned wait probe additionally checks queued cooling,
 sleep and local pickup. These constructed claims execute zero JIT bodies; the GS
 workload supplies that separate evidence. Image-replacement and pool-exhaustion
-coverage uses production C in VM userspace fixtures, not a live replacement claim.
+coverage uses production C in VM userspace fixtures: old generated code remains
+executing during publication, and old/new bound images return their expected
+distinct values. This is not a live kernel image-replacement claim.
 
 The current owned implementation's [targeted verification](../docs/VALIDATION.md#current-owned-protocol-verification)
 records basic and affected fixtures, queued cooling/task probes and actual
