@@ -17,6 +17,7 @@ import hostcall
 import indirect_jump
 import memread
 import normal
+import origin_policy
 import solve_bug
 from translation_image import (emit_jit_assembly, write_entry_dispatch,
                                wrapper_context_inputs, mutex_context_error)
@@ -61,7 +62,7 @@ def run_build_step(command, **kwargs):
         raise
 
 
-def build_jit_binary(abi=0, *, context_inputs=None):
+def build_jit_binary(abi=0, *, context_inputs=None, requirements=0):
     diagnostics.set_instruction(None, "<assemble/objcopy/objdump>")
     include_dir = os.path.join(
         os.path.dirname(os.path.abspath(__file__)), "..", "include"
@@ -73,6 +74,7 @@ def build_jit_binary(abi=0, *, context_inputs=None):
             "gcc",
             f"-I{include_dir}",
             f"-DKD_GENERATED_ENTRY_ABI={abi}",
+            f"-DKD_GENERATED_REQUIREMENTS={requirements}",
             f"-DKD_GENERATED_GS_INPUT={int(gs)}",
             f"-DKD_GENERATED_TASK_INPUT={int(task)}",
             "-I./asm/",
@@ -413,9 +415,16 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0):
                                   {direct_mutex_unlock or clobber_mutex_unlock}) if abi == 2 else set()),
         terminal_cabi_unlocks={owned_cabi_unlock} if abi == 4 else set(),
     )
-    # Mutex waiters may sleep, so their CPU's GS data is never a safe delegated
-    # input. Apply this admission rule to every mutex image, including ABI0.
-    reason = mutex_context_error(assembly, lock_kind)
+    requirements = 0
+    if lock_kind == 'mutex-owned' and wrapper_context_inputs(assembly)[0]:
+        try:
+            requirements = origin_policy.requirements(
+                block_dict, db_dict, entry,
+                {owned_cabi_unlock} if abi == 4 else {owned_direct_unlock},
+                origin_policy.load_allowlist(get_percpu_symbol_offset))
+        except (ValueError, OSError, KeyError) as error:
+            return reject_translation(str(error))
+    reason = mutex_context_error(assembly, lock_kind, requirements=requirements)
     if reason:
         return reject_translation(reason)
     Path("./asm/jit.S").write_text(assembly, encoding="utf-8")
@@ -423,7 +432,7 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0):
     solve_bug.solve_cond_jmp_lock_cmpxchg("./asm/jit.S")
 
     build_jit_binary(abi, context_inputs=wrapper_context_inputs(
-        Path('./asm/jit.S').read_text(encoding='utf-8')))
+        Path('./asm/jit.S').read_text(encoding='utf-8')), requirements=requirements)
     return 0
 
 

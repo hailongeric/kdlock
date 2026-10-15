@@ -47,7 +47,7 @@ static __attribute__((noipa,__noinline__)) void check_executor(void) {
 def main():
     source = (ROOT/'kernel_module/owned_mutex/delegation.c').read_text()
     types = definition((ROOT/'include/kd_regs.h').read_text(), 'struct kd_regs {')+';\n'
-    types += ('#include "kd_owned_mutex_cabi.h"\n'
+    types += ('#include "kd_owned_mutex_cabi.h"\n#include "kd_image.h"\n'
               'typedef uint64_t u64;\n'
               'struct list_head { struct list_head *next,*prev; };\n'
               'struct task_struct; struct kd_mutex; struct rcuwait;\n'

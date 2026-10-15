@@ -1,0 +1,12 @@
+{
+  "schema": 1,
+  "source_sha256": "868b681366305ffb144581092f5a74e2e8ca8f61af0aa031b9c7c987c00db06c",
+  "symbol": "kd_origin_test_counter",
+  "size": 8,
+  "operations": [
+    "read",
+    "write",
+    "rmw"
+  ],
+  "audit": "Private cacheline-aligned task-only counter; writes only under lock in counter_body, stopped-worker REPORT reads; no IRQ/NMI registrations, exports, or remote writes."
+}

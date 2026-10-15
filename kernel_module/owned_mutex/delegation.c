@@ -38,6 +38,11 @@ struct kd_owned_mutex_node {
 	struct kd_regs regs __aligned(64);
 	u64 queued_at_ns;
 	u32 outcome;
+	union {
+		struct { u32 readiness; int origin_cpu; };
+		struct kd_origin_guard origin;
+	};
+	u32 bypasses;
 };
 
 /* One executor per CPU is sufficient: the frame context itself forbids a
@@ -67,6 +72,14 @@ static DEFINE_PER_CPU(unsigned long, kd_owned_mutex_bodies);
 static DEFINE_PER_CPU(unsigned long, kd_owned_mutex_batches);
 static DEFINE_PER_CPU(unsigned long, kd_owned_mutex_refusals);
 static DEFINE_PER_CPU(unsigned long, kd_owned_mutex_early_releases);
+static DEFINE_PER_CPU(unsigned long, kd_owned_mutex_claim_failures);
+static DEFINE_PER_CPU(unsigned long, kd_owned_mutex_claims);
+static DEFINE_PER_CPU(unsigned long, kd_owned_mutex_bypasses);
+static DEFINE_PER_CPU(unsigned long, kd_owned_mutex_preparations);
+
+static bool owned_mutex_origin_spin;
+module_param(owned_mutex_origin_spin, bool, 0444);
+MODULE_PARM_DESC(owned_mutex_origin_spin, "Admit audited images with exclusive origin readiness claims");
 
 /* One bounded grace after an unqueued release can preserve owner locality.
  * Zero keeps the exact Linux optimistic retry cadence. */
@@ -136,6 +149,28 @@ static const struct kernel_param_ops kd_owned_mutex_wait_stats_ops = {
 };
 module_param_cb(owned_mutex_wait_stats, &kd_owned_mutex_wait_stats_ops, NULL, 0444);
 
+static int kd_owned_mutex_origin_stats_get(char *buffer, const struct kernel_param *kp)
+{
+	u64 claims = 0, failures = 0, preparations = 0, bypasses = 0, bodies = 0;
+	int cpu;
+
+	(void)kp;
+	for_each_possible_cpu(cpu) {
+		claims += READ_ONCE(per_cpu(kd_owned_mutex_claims, cpu));
+		failures += READ_ONCE(per_cpu(kd_owned_mutex_claim_failures, cpu));
+		preparations += READ_ONCE(per_cpu(kd_owned_mutex_preparations, cpu));
+		bypasses += READ_ONCE(per_cpu(kd_owned_mutex_bypasses, cpu));
+		bodies += READ_ONCE(per_cpu(kd_owned_mutex_bodies, cpu));
+	}
+	return scnprintf(buffer, PAGE_SIZE, "%llu %llu %llu %llu %llu\n",
+		claims, failures, preparations, bypasses, bodies);
+}
+static const struct kernel_param_ops kd_owned_mutex_origin_stats_ops = {
+	.get = kd_owned_mutex_origin_stats_get,
+};
+module_param_cb(owned_mutex_origin_stats, &kd_owned_mutex_origin_stats_ops, NULL, 0444);
+MODULE_PARM_DESC(owned_mutex_origin_stats, "Claims, failed claims, preparation requests, bypasses, completed bodies");
+
 static struct kd_owned_mutex_node *kd_owned_mutex_reserve(struct kd_mutex *lock)
 {
 	struct kd_owned_mutex_cpu *cpu = this_cpu_ptr(kd_owned_mutex_cpus);
@@ -155,6 +190,9 @@ static struct kd_owned_mutex_node *kd_owned_mutex_reserve(struct kd_mutex *lock)
 		if (!node->shadow_stack_base)
 			continue;
 		WRITE_ONCE(cpu->slots, slots | BIT(i));
+		node->readiness = KD_ORIGIN_PARKABLE;
+		node->origin_cpu = raw_smp_processor_id();
+		node->bypasses = 0;
 		return node;
 	}
 	return NULL;
@@ -166,7 +204,8 @@ static void kd_owned_mutex_unreserve(struct kd_owned_mutex_node *node)
 	unsigned long slots = cpu->slots;
 
 	BUG_ON(node->slot < 0 || node->slot >= KD_OWNED_MUTEX_SLOTS ||
-	       !(slots & BIT(node->slot)) || !list_empty(&node->waiter.list));
+	       !(slots & BIT(node->slot)) || !list_empty(&node->waiter.list) ||
+	       READ_ONCE(node->readiness) == KD_ORIGIN_CLAIMED);
 	WRITE_ONCE(node->lock, NULL);
 	node->waiter.task = NULL;
 	WRITE_ONCE(cpu->slots, slots & ~BIT(node->slot));
@@ -212,32 +251,64 @@ static bool kd_owned_mutex_result_ready(struct kd_owned_mutex_node *node)
 	return smp_load_acquire(&node->outcome) != KD_OWNED_MUTEX_QUEUED;
 }
 
+#include "readiness.inc"
+
 static void kd_owned_mutex_wait_result(struct kd_owned_mutex_node *node)
 {
 	struct rcuwait *wait = node->wait;
+	const struct kd_jit_image *image = owned_mutex_origin_spin ?
+		kd_image_current(kd_exe_find_ready(0, node->saved_ret_addr)) : NULL;
 	unsigned int left = owned_mutex_spin_limit;
+	bool registered = false;
 
-	while (!kd_owned_mutex_result_ready(node)) {
-		if (!left || (!(left & 63) && need_resched()))
-			break;
-		left--;
-		cpu_relax();
-	}
-	if (kd_owned_mutex_result_ready(node))
-		return;
-	prepare_to_rcuwait(wait);
+	if (owned_mutex_origin_spin && left && !need_resched() && image &&
+	    (image->requirements & KD_IMAGE_ORIGIN_SPIN))
+		cmpxchg_release(&node->readiness, KD_ORIGIN_PARKABLE, KD_ORIGIN_READY);
 	for (;;) {
+		u32 ready;
+
+		if (kd_owned_mutex_result_ready(node)) {
+			BUG_ON(READ_ONCE(node->readiness) == KD_ORIGIN_CLAIMED);
+			break;
+		}
+		ready = smp_load_acquire(&node->readiness);
+		if (ready == KD_ORIGIN_CLAIMED) {
+			cpu_relax();
+			continue;
+		}
+		if (left && (!(left & 63) ? !need_resched() : true)) {
+			if (ready == KD_ORIGIN_REQUESTED && !need_resched())
+				kd_owned_mutex_acknowledge(node);
+			left--;
+			cpu_relax();
+			continue;
+		}
+		if (!kd_owned_mutex_withdraw(node))
+			continue;
+		if (!registered) {
+			prepare_to_rcuwait(wait);
+			registered = true;
+		}
 		set_current_state(TASK_UNINTERRUPTIBLE);
 		if (kd_owned_mutex_result_ready(node))
 			break;
+		/* A preparation racing the state barrier gets another bounded poll
+		 * only when scheduling is not required. It never authorizes a body. */
+		if (smp_load_acquire(&node->readiness) == KD_ORIGIN_REQUESTED &&
+		    !need_resched() && owned_mutex_spin_limit) {
+			__set_current_state(TASK_RUNNING);
+			left = owned_mutex_spin_limit;
+			continue;
+		}
+		/* A request may race here, but PARKABLE/REQUESTED cannot be claimed. */
 		this_cpu_inc(kd_owned_mutex_parks);
 		preempt_enable();
-		/* Also bounds deferred completion notification. The state barrier
-		 * precedes the single grant/COMPLETE/FULL outcome observation. */
 		schedule_timeout(1);
 		preempt_disable();
+		left = owned_mutex_spin_limit;
 	}
-	finish_rcuwait(wait);
+	if (registered)
+		finish_rcuwait(wait);
 }
 
 static __attribute__((noipa)) noinline notrace int
@@ -622,9 +693,12 @@ struct kd_owned_mutex_batch {
 	bool current_retired;
 	struct kd_mutex *lock;
 	struct kd_exe_info *exe;
+	const struct kd_jit_image *image;
 	struct rcuwait *wake[16];
 	unsigned int wake_count;
 };
+
+#include "selection.inc"
 
 static void kd_owned_mutex_retire_current(struct kd_owned_mutex_batch *batch)
 {
@@ -695,12 +769,19 @@ kd_owned_mutex_execute(struct kd_owned_mutex_node *node,
 	}
 	if (!kd_exe_entry_is_ready(exe, 0, node->regs.ip) ||
 	    READ_ONCE(exe->lock_kind) != KD_EXE_LOCK_OWNED_MUTEX ||
-	    kd_exec_context_occupied())
+	    kd_exec_context_occupied() || !batch->image ||
+	    batch->image->entry != exe || batch->image->entry_abi != entry_abi ||
+	    !kd_owned_mutex_claim(node, batch->image))
 		return KD_EXE_NO_RUN;
 	frame = kd_exec_frame_push_owned_mutex_batch(&node->regs, node->regs.ip,
 		node->gsbase, node->waiter.task, lock, &batch->outer, entry_abi);
-	if (!frame)
+	if (!frame) {
+		kd_owned_mutex_finish_claim(node, false);
 		return KD_EXE_NO_RUN;
+	}
+	frame->image = batch->image;
+	frame->origin = &node->origin;
+	kd_owned_mutex_prepare_successor(batch, node);
 	queue_end = kd_exe_queue_timing_start();
 	regs = kd_exec_frame_regs(frame);
 	if (kd_exe_mutex_batch_prepare(exe, frame, &call)) {
@@ -709,6 +790,7 @@ kd_owned_mutex_execute(struct kd_owned_mutex_node *node,
 		if (kd_exe_mutex_batch_completed(&call, frame)) {
 			kd_exe_queue_timing_end(true, &node->queued_at_ns, queue_end);
 			BUG_ON(kd_exec_frame_retire_owned_mutex_batch(frame, lock));
+			kd_owned_mutex_finish_claim(node, true);
 			node->packet_state = kd_complete_packet_state(node->entry_abi);
 			return 0;
 		}
@@ -724,6 +806,10 @@ kd_owned_mutex_execute(struct kd_owned_mutex_node *node,
 		kd_exe_queue_timing_end(true, &node->queued_at_ns, queue_end);
 	if (ret == KD_EXE_RUN_NATIVE) {
 		u64 handoff_start = kd_exe_native_timing_start();
+
+		/* The audited origin subset cannot call, block or leave a native
+		 * continuation. Never wake a claimed origin into an owner ACK loop. */
+		BUG_ON(frame->image->requirements & KD_IMAGE_ORIGIN_SPIN);
 
 		BUG_ON(kd_exec_native_begin(frame, true));
 		BUG_ON(frame->regs_borrowed || frame->packet_state != KD_PACKET_FULL);
@@ -754,6 +840,7 @@ kd_owned_mutex_execute(struct kd_owned_mutex_node *node,
 	}
 	node->packet_state = frame->packet_state;
 	BUG_ON(kd_exec_frame_pop(frame, &node->regs));
+	kd_owned_mutex_finish_claim(node, ret == KD_EXE_RUN_TO_UNLOCK);
 	return ret == KD_EXE_RUN_TO_UNLOCK ? 0 : ret;
 }
 
@@ -803,16 +890,15 @@ kd_owned_mutex_run_batch(struct kd_owned_mutex_batch *batch)
 
 	this_cpu_inc(kd_owned_mutex_batches);
 	while (!list_empty(&batch->pending) || kd_owned_mutex_refill_batch(batch, count)) {
-		struct kd_owned_mutex_waiter *waiter = list_first_entry(
-			&batch->pending, struct kd_owned_mutex_waiter, list);
 		struct kd_owned_mutex_node *node;
 		int ret;
 
-		if (waiter->kind != KD_OWNED_MUTEX_DELEGATE ||
-		    count >= KDLOCK_SPIN_BATCH || need_resched() ||
+		if (count >= KDLOCK_SPIN_BATCH || need_resched() ||
 		    (atomic_long_read(&batch->lock->owner) & KD_OWNED_MUTEX_FLAG_HANDOFF))
 			break;
-		node = container_of(waiter, struct kd_owned_mutex_node, waiter);
+		node = kd_owned_mutex_select(batch);
+		if (!node)
+			break;
 		batch->current_node = node;
 		batch->current_retired = false;
 		ret = kd_owned_mutex_execute(node, batch);

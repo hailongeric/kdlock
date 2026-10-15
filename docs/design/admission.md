@@ -51,8 +51,9 @@ Some code depends on the CPU or task that runs it. KD therefore checks context
 operations across every block it will emit:
 
 - Spin and rwlock images may lower explicit GS reads, writes and read-modify-write
-  operations through the pinned origin CPU's GS base. Mutex images requiring that
-  base are refused because their waiters may sleep. A GS displacement is an offset,
+  operations through the pinned origin CPU's GS base. Legacy mutex images requiring
+  that base are refused because their waiters may sleep. Owned mutexes admit only
+  the audited subset below, with an exclusive origin claim. A GS displacement is an offset,
   not a linear kernel address.
 - Supported `current_task` MOV loads may use the original task supplied to JIT.
 - FS/base operations, implicit GS string/XLAT operations without lowering, known
@@ -330,13 +331,38 @@ flow; opening a new device after an error is not a supported recovery path.
 Policy refusal removes stale outputs and exits 2; launch failures/exceptions
 are errors/retry conditions, not successful native-only decisions.
 
-Images must be nonempty and fit 640 KiB. Transfers use up to 4000-byte chunks;
-the last complete chunk sets NORMAL. The kernel checks entry, offset, payload
-size and status, but does not establish complete image continuity/generation
-or protect live executors. Recompilation overwrites the existing block.
+Images must include the 48-byte wrapper directory and fit 640 KiB. Version 2
+transfers use contiguous chunks with an upload identity, declared length, entry
+ABI, requirements and base generation. Incompatible or incomplete metadata is
+refused. The final chunk publishes NORMAL only after header validation.
 
 Independent locks may share the RIP-keyed artifact; early A unlock can also
 allow overlapping execution. Lock serialization is not version retirement.
-Immutable versions, full publication validation and reclamation are explicitly
-deferred under [C3](../TODO.md#c3-immutable-jit-publication-and-lifetime).
+Owned mutex frames bind immutable descriptors; every published version consumes
+one of the bounded 64 blocks until terminal session teardown. Legacy image
+families still overwrite their existing block; that remaining scope is tracked
+under [C3](../TODO.md#c3-immutable-jit-publication-and-lifetime).
 See [daemon README](../../daemon/README.md) for CLI and diagnostics.
+
+## Audited owned-mutex GS subset
+
+The origin-sensitive subset is opt-in and fail-closed. `origin_policy.py` accepts
+only explicit, statically resolved scalar GS operands with exact symbol bounds,
+width and operation permission. `cpu_number` is a read-only four-byte object in
+the captured kernel Build ID `5ca28058e156f34a2c7fe91e8e0fbf92f4e51960`; the live
+kernel notes, vmlinux symbol size and running address must all match.
+
+The only mutable seed is `kd_origin_test_counter` in the private `kd_origin_gs`
+test module. Its audit binds the reviewed source SHA256, exact module ELF SHA256,
+ELF/live Build ID, relocated symbol address and eight-byte object width. It has
+its own cacheline, no export or interrupt/NMI callback, and no remote writer.
+Only task ioctls under its mutex update it; summation follows worker drain.
+`KD_GS_AUDIT` selects that exact build manifest and cannot add arbitrary names.
+
+Every newly admitted GS image must contain at most 256 decoded instructions,
+with an acyclic, fully resolved graph ending at the terminal outer unlock. Other
+calls, nested locks, services, indirect control and blocking instructions are
+rejected. Unknown symbols, wrong widths, dynamic or implicit GS operations and
+context-management storage remain rejected. The logical `current_task` rewrite
+is unchanged and does not require an origin claim. Admitted GS operands use the
+saved origin base; the executor's hardware GS register is unchanged.

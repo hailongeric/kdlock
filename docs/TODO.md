@@ -1,7 +1,8 @@
 # Known limitations and deferred work
 
 Current scope is x86_64 kernel spin/mutex/rwlock delegation through explicit APIs.
-KD mutexes always support blocking and reject delegated origin-CPU GS access.
+KD mutexes always support blocking. Legacy mutexes reject delegated origin-CPU GS;
+owned mutexes can opt into the bounded audited subset with an exclusive claim.
 Legacy mutexes preserve the original Linux owner; experimental owned mutexes
 retain their own exact owner/ACK protocol. Rwlock ABI3 acquires write access before the
 translated body. Implementation contracts live in [DESIGN](DESIGN.md);
@@ -44,8 +45,8 @@ Recorded failures and unresolved coverage:
 Keep the two-word wrapper ABI, separate backend identities, exact physical owners,
 exact acquisition references and final ACKs. Shared storage must survive its final
 reader. Builds/tests/benchmarks run in the recovery guest; default work does not
-change its kernel. Mutexes always permit sleep with migration pinned and reject
-delegated origin-CPU GS access. Blocking scheduler/JIT evidence does not
+change its kernel. Mutexes permit sleep with migration pinned; an origin-sensitive
+owned image additionally requires a spinning claim. Blocking scheduler/JIT evidence does not
 retroactively establish a pass for historical
 oversubscription failures.
 
@@ -84,12 +85,11 @@ drain. No Linux/TCLock operations may access the same KD rwlock object.
 
 ### C3. Immutable JIT publication and lifetime
 
-This work was deferred by user decision. Recompiling an entry overwrites the code
-block indexed by its instruction address (RIP). Source leases keep modules loaded,
-and ABI tags identify calling conventions, but neither gives running code its own
-unchanging image version. A future design must validate complete images, identify
-generations and wait for old executions before reclaiming them. Better throughput
-does not resolve this lifetime problem.
+Owned mutex publication now binds code, requirements and generation in immutable
+descriptors. Complete uploads use separate blocks; every published version survives
+until terminal session drain. Pool exhaustion refuses replacements. The remaining
+legacy spin/rwlock/mutex scope still overwrites its RIP-indexed block and remains
+deferred. Source leases and ABI tags alone do not resolve that lifetime problem.
 
 ### C4. Instruction, flags, and fault semantics
 

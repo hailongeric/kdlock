@@ -73,6 +73,8 @@ static int kd_owned_wait_test_worker(void *data)
 	return 0;
 }
 
+#include "origin_claim_selftest.inc"
+
 int kd_owned_mutex_wait_selftest(void)
 {
 	struct kd_owned_wait_test test = {};
@@ -80,6 +82,10 @@ int kd_owned_mutex_wait_selftest(void)
 	unsigned long parks;
 	unsigned int tries = 1000;
 	bool slept;
+	int ret = kd_origin_probe_run();
+
+	if (ret)
+		return ret;
 
 	if (!owned_mutex_wait_selftest)
 		return 0;

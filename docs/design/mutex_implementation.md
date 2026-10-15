@@ -580,7 +580,7 @@ the matching barrier, preventing a head from sleeping through gate opening.
 The 24-byte wait queue fits the existing 192-byte shadow gate. Node size remains
 320 bytes; `completed/locked/native_resume` keep offsets 304/305/306.
 
-Mutex translation rejects final images that import the origin CPU's GS base,
+Legacy mutex translation rejects final images that import the origin CPU's GS base,
 including generated guards and learned callees, because another task may use
 that CPU while the caller sleeps. Such bodies take the native path. Logical
 `current` remains a separately supplied task identity. Existing
@@ -612,3 +612,40 @@ records affected fixtures, actual scheduler/owner probes and returned JIT bodies
 [Performance status](../PERFORMANCE.md) summarizes the latest frozen comparison;
 [validation](../VALIDATION.md) indexes older checks and rejected candidates.
 These selected checks do not establish arbitrary oversubscription or starvation freedom.
+
+## Conditional origin readiness
+
+`owned_mutex_origin_spin=1` enables the separately audited GS subset.
+It is off by default pending validation. GS-independent images continue
+to execute for sleeping producers with their existing FULL/native ACK behavior.
+The public mutex is still 32 bytes; request registers remain at offset 128 and
+the outcome at offset 304 in the 320-byte private packet. Readiness, origin CPU
+and the persistent bypass count occupy the final twelve padding bytes.
+
+```mermaid
+stateDiagram-v2
+    [*] --> PARKABLE
+    PARKABLE --> REQUESTED: Combiner prepares one successor
+    PARKABLE --> READY: Initial bounded poll with both pins
+    REQUESTED --> READY: Waiter acknowledges with both pins
+    REQUESTED --> PARKABLE: Reschedule or park
+    READY --> PARKABLE: Waiter wins atomic withdrawal
+    READY --> CLAIMED: Combiner wins atomic claim
+    CLAIMED --> PARKABLE: Verified pre-body refusal and frame retirement
+    CLAIMED --> FINISHED: Execution and frame retirement finish
+```
+
+READY is a release publication made with migration and preemption disabled.
+The combiner binds the exact immutable image and excludes its own CPU before
+claiming with an acquire CAS. The waiter's competing CAS makes withdrawal and
+claiming exclusive. Unclaimed polling retains the configured 4,096-poll budget
+and reschedule checks. A claimed waiter cannot schedule or revoke the claim on
+timeout. Completion is published only after the frame retires and the claim is
+released. A preparation wake is a request, never execution authority. Only the
+combiner inspects queue links; it may prepare one prospective successor while
+processing the current request.
+
+The origin claim excludes task scheduling, not interrupts or NMIs. It does not
+make arbitrary per-CPU storage safe; admission must separately exclude conflicting
+interrupt/NMI and unsynchronized remote accesses. See the
+[Linux per-CPU operations contract](https://docs.kernel.org/6.1/core-api/this_cpu_ops.html).

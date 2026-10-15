@@ -28,7 +28,8 @@ ownership and lifetime terms used below.
    delegation requests use bounded result polling followed by sleep on reserved
    stacks while retaining migration pins. Owned SELF acquisition uses a separate
    Linux-style optimistic spin/sleep path; the result budget does not limit that
-   owner spin. Mutexes refuse delegated origin-CPU GS access. Physical mutex
+   owner spin. Legacy mutexes refuse delegated origin-CPU GS access. Owned mutexes may opt in
+   to the audited bounded subset with an exclusive origin-readiness claim. Physical mutex
    owners/services may sleep. There is no spin-only mutex policy.
 6. Ordinary KD spin and rwlock pairs protect preemption and preserve IRQ/BH state.
    Spin IRQ/irqsave/BH variants use their explicit native interfaces. Rwlocks
@@ -38,7 +39,8 @@ ownership and lifetime terms used below.
    source trees, releases and captured baselines. Current code requires both
    clobber-v1 interfaces; old kernels are only for matching historical checkouts.
 8. Access-time guards and pre-instruction native exits, general instruction/flags
-   repair and immutable JIT versions remain explicitly deferred. Cleanup does
+   repair remain explicitly deferred. Owned mutex images have immutable versions;
+   legacy image families retain their in-place publication limitation. Cleanup does
    not reopen them. Known supported-path failures remain documented in [TODO](TODO.md).
 9. Keep kernel payload demos under `workload_modules/`, runners under `bench/`
    or `tests/`, and provider probes under `tests/kernel/`. Private `.inc` files
@@ -189,8 +191,9 @@ remaining users; never force unload or reopen admission. After retirement succee
 unload workloads before providers.
 
 When replacing code, replace the workload, provider and JIT session together.
-Generated artifacts are keyed by RIP and have no immutable version that makes
-old code safe to reuse. Source pins, device references, physical owners, ACKs and
+Legacy generated artifacts are keyed by RIP without immutable versions. Owned
+mutex replacements bind immutable descriptors, but never permit source code or
+module identity to be changed while its session is active. Source pins, device references, physical owners, ACKs and
 frames each have their own lifetime. Reusing a queue node or waking a waiter does
 not mean its frame has retired.
 

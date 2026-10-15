@@ -22,6 +22,7 @@ PREFIX = r'''
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "kd_image.h"
 #define BUG_ON(x) assert(!(x))
 #define READ_ONCE(x) (*(volatile __typeof__(x) *)&(x))
 #define WRITE_ONCE(x,v) (*(volatile __typeof__(x) *)&(x)=(v))
@@ -43,7 +44,7 @@ static void (*lock_action)(void);
 #define KD_EXE_NO_RUN 9
 #define EINVAL 22
 struct task_struct { int id; } __attribute__((aligned(16)));
-static struct task_struct owner={1}, tasks[8];
+static struct task_struct owner={1}, tasks[16];
 static struct task_struct *current=&owner;
 struct list_head { struct list_head *next,*prev; };
 static struct list_head *refill_source;
@@ -82,7 +83,8 @@ struct kd_owned_mutex_waiter {
  struct list_head list; struct task_struct *task; unsigned int kind,state,*outcome;
 };
 struct kd_mutex { unsigned long owner; int wait_lock; struct list_head wait_list; };
-struct kd_owned_mutex_node { struct kd_owned_mutex_waiter waiter; unsigned int id; };
+struct kd_owned_mutex_node { struct kd_owned_mutex_waiter waiter; unsigned int id;
+ int origin_cpu,numa_node; unsigned int readiness,bypasses,entry_abi; unsigned long saved_ret_addr; };
 struct kd_exec_frame {
  bool owned_mutex; unsigned long outer_lock_addr;
  unsigned int outer_lock_index; int jit_lock_kind[1]; void *jit_lock_node[1];
@@ -92,14 +94,27 @@ struct kd_exec_outer_unlock {
 };
 struct kd_exe_info; struct rcuwait;
 static unsigned long kd_owned_mutex_batches,kd_owned_mutex_refusals,kd_owned_mutex_bodies,kd_owned_mutex_early_releases;
-static bool resched,owned_mutex_refill;
+static bool resched,owned_mutex_refill,owned_mutex_numa,owned_mutex_origin_spin;
+static struct kd_exe_info entries[16];
+static struct kd_jit_image images[16];
+#define smp_load_acquire(p) (*(p))
+#define list_for_each_entry(p,h,m) for(p=container_of((h)->next,__typeof__(*(p)),m); &p->m!=(h); p=container_of(p->m.next,__typeof__(*(p)),m))
+static int raw_smp_processor_id(void) {return 0;}
+static struct kd_exe_info *kd_exe_find_ready(int pid,unsigned long ip) {
+ (void)pid;return ip && ip<=16 && entries[ip-1].status_code==KD_EXE_NORMAL ? &entries[ip-1] : NULL;
+}
+const struct kd_jit_image *kd_image_current(const struct kd_exe_info *e) {
+ return e ? &images[e-entries] : NULL;
+}
+static void kd_owned_mutex_request_ready(struct kd_owned_mutex_node *n) { n->readiness=KD_ORIGIN_REQUESTED; }
+
 static bool need_resched(void) { return resched; }
 static bool kd_owned_mutex_owned(struct kd_mutex *lock,struct task_struct *task) {
  return (lock->owner&~KD_OWNED_MUTEX_FLAGS)==(unsigned long)task;
 }
 static int released,executed,completed,scenario;
-static unsigned int release_order[8], release_count;
-static struct kd_owned_mutex_node nodes[8];
+static unsigned int release_order[16], release_count;
+static struct kd_owned_mutex_node nodes[16];
 static struct kd_mutex *arrival_lock;
 static unsigned int arrival_next,arrival_end;
 static void kd_owned_mutex_flush_wakes(struct rcuwait **wake,unsigned int *count) {
@@ -140,6 +155,7 @@ static int kd_owned_mutex_execute(struct kd_owned_mutex_node *node,
  assert_guard();
  if(list_empty(&batch->lock->wait_list) && !list_empty(&batch->pending))
   private_guard_checks++;
+ kd_owned_mutex_prepare_successor(batch,node);
  executed++;
  if(scenario==1) return KD_EXE_NO_RUN;
  if(scenario==8 && node->id==1) {
@@ -186,14 +202,17 @@ static void setup(struct kd_mutex *lock,struct kd_owned_mutex_batch *batch,int c
  guard_owner=&lock->owner;
  batch->lock=lock; batch->outer.release=kd_owned_mutex_release_outer;
  memset(nodes,0,sizeof(nodes));
- for(int i=0;i<8;i++) {
+ for(int i=0;i<16;i++) {
   INIT_LIST_HEAD(&nodes[i].waiter.list); nodes[i].id=i;
+  nodes[i].saved_ret_addr=i+1;nodes[i].entry_abi=4;nodes[i].origin_cpu=1;
+  entries[i].status_code=KD_EXE_NORMAL;
+  images[i]=(struct kd_jit_image){.entry=&entries[i],.entry_abi=4};
   nodes[i].waiter.task=&tasks[i]; nodes[i].waiter.kind=KD_OWNED_MUTEX_DELEGATE;
  }
  for(int i=0;i<count;i++) list_add_tail(&nodes[i].waiter.list,&batch->pending);
  nodes[5].waiter.kind=KD_OWNED_MUTEX_SELF;
  released=executed=completed=flushes=scenario=0; release_count=0;resched=false;
- owned_mutex_refill=false;refills=last_refill_flush=0;refill_source=&lock->wait_list;
+ owned_mutex_numa=owned_mutex_origin_spin=false;owned_mutex_refill=false;refills=last_refill_flush=0;refill_source=&lock->wait_list;
  arrival_lock=lock;arrival_next=arrival_end=0;lock_action=NULL;
 }
 static void check_order(unsigned int count,const unsigned int *order) {
@@ -326,6 +345,7 @@ int main(void) {
 
 def production(source):
     value = definition(source, 'struct kd_owned_mutex_batch {')+';\n'
+    value += (ROOT/'kernel_module/owned_mutex/selection.inc').read_text()
     for marker in ('static void kd_owned_mutex_retire_current(struct kd_owned_mutex_batch *batch)',
                    'static void kd_owned_mutex_rejoin(struct kd_owned_mutex_batch *batch)',
                    'static int kd_owned_mutex_release_outer(struct kd_exec_frame *frame,'):
@@ -344,7 +364,19 @@ NOTIFICATION_PREFIX = r'''
 #include <stdio.h>
 typedef uint32_t u32;
 struct rcuwait { int active, wakes; } waits[16];
-struct kd_owned_mutex_node { struct rcuwait *wait; u32 outcome; } nodes[16];
+#include "kd_image.h"
+struct kd_owned_mutex_node { struct rcuwait *wait; u32 outcome,readiness; unsigned long saved_ret_addr; } nodes[16];
+static bool owned_mutex_origin_spin;
+#define BUG_ON(x) assert(!(x))
+#define READ_ONCE(x) (x)
+#define cmpxchg_release(p,o,v) ({u32 old=*(p); if(old==(o)) *(p)=(v); old;})
+#define TASK_RUNNING 0
+static struct kd_exe_info *kd_exe_find_ready(int pid,unsigned long ip) {(void)pid;(void)ip;return NULL;}
+const struct kd_jit_image *kd_image_current(const struct kd_exe_info *e) {(void)e;return NULL;}
+static bool kd_owned_mutex_withdraw(struct kd_owned_mutex_node *n) {(void)n;return true;}
+static void kd_owned_mutex_acknowledge(struct kd_owned_mutex_node *n) {(void)n;assert(0);}
+static void __set_current_state(int state) {assert(state==TASK_RUNNING);}
+
 static struct kd_owned_mutex_node *publishing;
 static int publications, barriers, last_publish_barrier, reads;
 static u32 expected_outcome;
@@ -513,7 +545,7 @@ def main():
             cfile, binary = path/(name+'.c'), path/name
             cfile.write_text(generate(text))
             subprocess.run(cc+['-O2', '-std=gnu11', '-Wall', '-Wextra', '-Werror',
-                               str(cfile), '-o', str(binary)],
+                               '-I', str(ROOT/'include'), str(cfile), '-o', str(binary)],
                            check=True, timeout=30)
             return subprocess.run([binary], capture_output=True, text=True, timeout=10)
 
