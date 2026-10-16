@@ -11,6 +11,20 @@ This narrow result does not establish general Native parity. Implementation cont
 [the mutex guide](design/mutex_implementation.md); correctness receipts live in
 [validation](VALIDATION.md).
 
+## Expanded mutex workloads
+
+The [2026-10-16 comparison](../bench/results/10.176.26.71/bench/comparison/mutex-expanded-20261016T040928Z/README.md)
+contains 2,079 accepted, drained sessions across c01/c02/c04/c08/c16, RCUHT and
+five pipe/file API variants, with three repetitions at 1–8 workers by one and
+12–60 by four. It selects ABI4/reuse-32 with owned origin and NUMA policies off.
+At 60 workers, KD median whole-run throughput is 1.20–2.26× Native across the
+eleven variants. Both seek variants remain slower than TCLock, at 0.65–0.66×.
+KD is below Native at 29 of 231 workload/worker-count points, including larger
+low-worker API regressions. The report retains all samples, warmed peaks and
+variation. API KD/TCLock use private objects while Native retains its embedded
+kernel mutex. This descriptive comparison leaves the narrow acceptance below
+and general provider defaults unchanged.
+
 <a id="fresh-c01-164-worker-comparison"></a>
 
 ## Recorded c01 1–64-worker comparison

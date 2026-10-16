@@ -14,7 +14,16 @@ topology rather than relabeling them as 64-vCPU results.
 
 ## Current workload comparison
 
-The [2026-10-16 synthetic and syscall/API round](bench/comparison/workloads-20261015T180603Z/README.md)
+The [expanded mutex round](bench/comparison/mutex-expanded-20261016T040928Z/README.md)
+contains 2,079 accepted, drained measurements across all eleven mutex variants,
+with three repetitions at 1–8 workers by one and 12–60 by four. KD now covers
+c01/c02/c04/c08/c16, RCUHT, pipebytes n16/n128, pipecap n16 and seek set/end.
+Its 693 measurements include all 630 previously omitted KD samples and fresh
+c01 controls; Native and TCLock each have 693 fresh samples. The report retains
+the 93 basic/affected checks, 29 live validation sessions, full curves and archive.
+Pipe/file KD uses the controlled private-object adapter.
+
+The earlier [synthetic and syscall/API round](bench/comparison/workloads-20261015T180603Z/README.md)
 contains 7,749 accepted, drained measurements across 41 workload groups, with
 three repetitions at every worker count from 1–8 by one and 12–60 by four.
 It compares the captured current workspace with TCLock and Linux Native on
@@ -23,8 +32,8 @@ curves, whole-run and warmed-peak statistics, raw samples, source identity and
 a checksummed archive.
 
 KD's local executions and returned JIT bodies are distinguished throughout.
-KD owned mutex coverage is c01 only; pipe/seek mutexes and xattr API cases
-compare Native with TCLock. UTS retains its scoped rwsem/rwlock distinction.
+In that earlier round, KD owned mutex coverage was c01 only; pipe/seek mutexes
+and xattr API cases compared Native with TCLock. UTS retains its scoped rwsem/rwlock distinction.
 The report includes lower-worker regressions as well as high-worker gains;
 this comparison does not change provider defaults or performance acceptance.
 

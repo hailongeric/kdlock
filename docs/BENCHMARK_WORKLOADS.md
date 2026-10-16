@@ -23,9 +23,9 @@ same selected counters under one lock. The bodies contain explicit updates:
 | `c08` | Increment counters 0–7 | 512 bytes |
 | `c16` | Increment counters 0–15 | 1,024 bytes |
 
-These sizes apply to spin, Native/TCLock mutex and rwlock cacheline cases. The
+These sizes apply to spin, mutex and rwlock cacheline cases. The
 experimental [owned-v1 mutex runner](../bench/tclock_compare/README.md#workloads-and-backends)
-currently supports only plain c01 for performance comparisons.
+supports all five sizes and RCUHT through its explicit KD-owned object.
 
 For example, c01 performs a protected load/add/store:
 
@@ -166,8 +166,9 @@ The kernel paths below describe selected helpers in the captured Linux 6.1.159
 source. Matched Native/TCLock/KD runs substitute the indicated function only for
 the bound benchmark object and reproduce its relevant body in an adapter.
 Stock runs retain the original body. Pipe and seek mutex cases support Stock,
-Native and TCLock controls. KD-owned mutexes require their own storage and cannot
-replace these kernel-owned objects. The
+Native, TCLock and KD controls. Native retains the kernel-owned mutex;
+TCLock and KD use private adapter objects while all benchmark accesses obey the
+selected protocol. KD never casts the kernel mutex to its own type. The
 [runner contract](../bench/real_api/README.md#contract-and-comparison-limits)
 defines allowed consumers and source/instrumentation differences. These are
 syscall microbenchmarks on controlled objects, not complete application workloads.

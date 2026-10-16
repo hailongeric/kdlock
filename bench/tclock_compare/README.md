@@ -57,7 +57,7 @@ SELF acquisition remains available for local execution.
 | Option/default | Meaning |
 | --- | --- |
 | `--threads 1 4 8 16 20` | Short default; set worker counts explicitly for a timed comparison |
-| `--cachelines 1` | Select one or more of 1, 2, 4, 8 and 16; the KD owned mutex supports c01 only |
+| `--cachelines 1` | Select one or more of 1, 2, 4, 8 and 16 for every backend |
 | `--repeats 3` | Three rounds/configuration, reversing backend order in the middle round |
 | `--duration-ms 0` | Fixed iterations by default; use 2,000 for the timed comparison |
 | `--peak-window-ms 300`, `--peak-settle-ms 300` | Highest valid cohort window after settling |
@@ -68,7 +68,7 @@ SELF acquisition remains available for local execution.
 | `--spin-entry-ratio-limit 2` | Adaptive ratio rule; 0 bypasses only ratio filtering |
 | `--kd-provider-ubsan off` | Private KD provider only; `kernel` inherits kernel policy |
 | `--mutex-spin-limit 4096` | KD mutex result polling budget before uninterruptible sleep; 0 skips polling. For owned-v1 this does not limit SELF owner spinning through OSQ |
-| `--mutex-implementation owned-v1` | KD-owned c01 object, the only KD mutex implementation; nested/early require functional mode |
+| `--mutex-implementation owned-v1` | KD-owned object for cacheline and RCUHT payloads; c01 nested/early require functional mode |
 | `--owned-mutex-entry-ratio-limit 256` | Independent ABI2 admission threshold for `owned-v1`; powers of two 2–256. ABI4 local-first does not use heat admission |
 | `--owned-mutex-cabi` | Opt-in ABI4 ordinary-C caller; Linux local acquisition before late capture, with no fixed owner-spin budget |
 | `--owned-mutex-reuse-spins 0` | ABI4 allowance 0/8/32/128 after an unflagged release, once per OSQ turn; measured profile selects 32 |
@@ -223,14 +223,17 @@ policy. Static snapshots check complete structure and exact operation totals.
 | --- | --- | --- |
 | Native | Original kernel functions, no provider | Original mutex functions bypass experimental clobber macros |
 | TCLock | Native waiter-stack delegation | Actual upstream ordinary mutex port with parking |
-| KD | Explicit KD word, ABI1/JIT | Owned private owner/OSQ/FIFO, ABI2 or ABI4, c01 |
+| KD | Explicit KD word, ABI1/JIT | Owned private owner/OSQ/FIFO, ABI2 or ABI4, c01/c02/c04/c08/c16 and RCUHT |
 
 The KD arm uses a 32-byte `struct kd_mutex` in the same 64-byte-aligned lock
 slot as Native. Its outer-cookie interface uses ABI2 by default or opt-in ABI4,
 with registry kind 3. It never casts the object to a Linux mutex. The performance
-workload supports plain c01; nested/early are KD-only functional checks. RCUHT,
-other body sizes and replacement of kernel-owned pipe/file mutexes are rejected
-for KD. Implementation identity is separate from performance acceptance.
+workloads support all five cacheline sizes and RCUHT; c01 nested/early remain
+KD-only functional checks. The [real-API runner](../real_api/README.md#mutex-and-readerwriter-contracts)
+uses separate private KD objects for controlled pipe/file workloads. It does not
+reinterpret kernel-owned mutex storage. Implementation identity is separate from
+performance acceptance; the historical accepted c01 profile does not establish
+performance parity for the additional payloads.
 
 The KD caller selects owned storage at compile time; the runner checks its
 `mutex_implementation=owned-v1` module metadata and owned symbol imports. It
@@ -251,6 +254,11 @@ See [TCLock scope](../../tclock_backend/README.md) and
 [lock protocols](../../docs/design/lock_protocols.md).
 
 ## Results and validity
+
+The [expanded mutex comparison](../results/10.176.26.71/bench/comparison/mutex-expanded-20261016T040928Z/README.md)
+covers all five cacheline sizes and RCUHT with Native/TCLock/KD at 1–8 workers
+by one and 12–60 by four, plus the private pipe/file API adapter. It retains
+three fresh repetitions, validation and frozen inputs for every variant.
 
 `records.json` keeps every planned sample, including failed or unrun cases.
 `summary.csv/json` includes only samples with correct results, completed work and

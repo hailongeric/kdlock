@@ -1,0 +1,9 @@
+{
+  "archive": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/mutex-expanded-20261016T040928Z/mutex-expanded-20261016T040928Z.tar.gz",
+  "sha256": "8054d9efd71209b237efeb59afc71a1ab99d4917fb1c84d1c7a8a26aa5c7c24a",
+  "bytes": 233629308,
+  "utc": "2026-10-16T06:32:36.062052+00:00",
+  "retained_guest": true,
+  "matrix_state": "COMPLETE",
+  "disposition": "Complete expanded-mutex comparison; includes all 29 support-validation sessions"
+}

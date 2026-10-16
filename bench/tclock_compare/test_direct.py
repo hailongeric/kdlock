@@ -270,11 +270,30 @@ class DirectTests(unittest.TestCase):
                 run.make_plan(Namespace(**dict(args, **change), owned_mutex_preflight_queue=True))
         self.assertIn('owned_mutex_preflight_queue', run.MUTEX_POLICY_FIELDS)
 
-    def test_owned_mutex_rejects_unvalidated_scope_and_native_alias(self):
+    def test_owned_mutex_covers_cacheline_and_hash_with_matched_controls(self):
+        base = dict(threads=[1, 16], repeats=3, iterations=100,
+                    backends=['native', 'tclock', 'kdlock'], lock_kind='mutex',
+                    mutex_implementation='owned-v1', owned_mutex_cabi=True)
+        for workload, lines, sizes in (('cacheline', [1, 2, 4, 8, 16], [1, 2, 4, 8, 16]),
+                                       ('rcuht', None, [0])):
+            with self.subTest(workload=workload):
+                rows = run.make_plan(Namespace(**base, workload=workload, cachelines=lines))
+                expected = {(n, t, r, a) for n in sizes for t in base['threads']
+                            for r in range(3) for a in base['backends']}
+                self.assertEqual({(r['cachelines'], r['threads'], r['repeat'], r['arm'])
+                                  for r in rows}, expected)
+                self.assertEqual(len(rows), len(expected))
+                for row in rows:
+                    if row['arm'] == 'kdlock':
+                        self.assertEqual((row['registry_lock_kind'], row['entry_abi']), (3, 4))
+                        self.assertEqual(row['mutex_implementation'], 'owned-v1')
+
+    def test_owned_mutex_rejects_protocol_scope_and_native_alias(self):
         base = dict(cachelines=[1], threads=[4], repeats=1, iterations=100,
                     backends=['kdlock'], lock_kind='mutex', mutex_implementation='owned-v1')
-        for change in (dict(cachelines=[8]), dict(cachelines=[1, 8]),
-                       dict(workload='rcuht', cachelines=None), dict(scenario='nested'),
+        for change in (dict(cachelines=[8], scenario='nested', functional=True),
+                       dict(workload='rcuht', cachelines=None, scenario='early', functional=True),
+                       dict(scenario='nested'),
                        dict(mutex_routing='native')):
             with self.subTest(change=change), self.assertRaises(run.Failure):
                 run.make_plan(Namespace(**dict(base, **change)))

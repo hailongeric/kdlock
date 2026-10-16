@@ -4,23 +4,24 @@
 produces `mutex_cacheline.ko` with `/dev/mutex_cacheline`. It includes shared
 payload/ioctl/timing helpers from `../spin_cacheline`; operation bodies do not
 branch on a runtime lock-kind flag. The runner selects cacheline or RCUHT at
-build time, using the same payload source. KD supports c01; Native/TCLock also support
-the other cacheline sizes and RCUHT.
+build time, using the same payload source. All three backends support
+c01/c02/c04/c08/c16 and RCUHT.
 
 | Build arm | Lock object and operations |
 | --- | --- |
 | `SC_BACKEND=native` | Original `struct mutex`; `(mutex_lock/unlock)` bypass the experiment's caller-clobber macros |
 | `SC_BACKEND=tclock` | `struct komb_mutex`; actual upstream ordinary mutex port and fixed-affinity worker registration |
-| `SC_BACKEND=kdlock` | Separate 32-byte KD `struct kd_mutex`; owned outer cookie, registry kind 3, default ABI2 or opt-in ABI4, c01 only |
+| `SC_BACKEND=kdlock` | Separate 32-byte KD `struct kd_mutex`; owned outer cookie, registry kind 3, default ABI2 or opt-in ABI4 |
 
 The owned arm includes `kd_owned_mutex_direct.h`, initializes with
 `kd_mutex_init`, prepares with `kd_owned_mutex_prepare`, and checks
 `kd_owned_mutex_is_idle` after all workers join. It uses the same lock alignment and
 payload counters as Native. It does not reinterpret a Linux mutex
-or share its object with native consumers. Other cacheline sizes and the hash
-payload are rejected for KD. Kernel-owned real-API mutex workloads compare
-Stock syscalls and Native/TCLock controls, without a KD arm. Module metadata records the
-actual compiled implementation for the runner to verify.
+or share its object with native consumers. Each selected payload has its own
+prepared continuation; hash runs retain the complete node/link/key oracle.
+Real-API pipe/file workloads use a separate private KD adapter under their
+controlled-object contract. Module metadata records the actual compiled
+implementation for the runner to verify.
 
 `KD_OWNED_MUTEX_CABI=1` selects the ordinary-C ABI4 caller, which tries KD-owned
 local acquisition before late capture. The runner's measured c01 profile also
@@ -29,7 +30,7 @@ provider default is 0. Both arms retain the same 32-byte public object and
 64-byte-aligned lock slot, separate from the shared counter line. The payload's
 [post-work source](../spin_cacheline/post_work.h) currently selects 64 rounds.
 Optional origin-readiness and NUMA policies belong to the provider and runner;
-they do not change this c01 body or its object layout. Use the separate
+they do not change the payload bodies or their object layout. Use the separate
 [policy comparison](../../bench/tclock_compare/README.md#owned-origin-and-numa-comparison)
 to measure them against fresh frozen-KD, Native and TCLock controls.
 

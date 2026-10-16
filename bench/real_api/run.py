@@ -31,6 +31,34 @@ PARAM = Path('/sys/module/real_api/parameters')
 MUTEX_KINDS = {'pipebytes', 'pipecap', 'seek'}
 
 
+def owned_mutex_parameters(spec):
+    return dict(owned_mutex_spin_limit=spec['mutex_spin_limit'],
+                owned_mutex_reuse_spins=spec['owned_mutex_reuse_spins'],
+                owned_mutex_origin_spin=0, owned_mutex_numa=0,
+                owned_mutex_self_route=0, owned_mutex_native_after_control=0,
+                owned_mutex_refill=0, owned_mutex_preflight_spins=0,
+                owned_mutex_preflight_queue=0)
+
+
+def check_owned_mutex_parameters(params, spec):
+    def number(value):
+        return {'Y': 1, 'N': 0}[value] if value in ('Y', 'N') else int(value, 0)
+    require(all(key in params and number(params[key]) == value
+                for key, value in owned_mutex_parameters(spec).items()) and
+            params.get('owned_mutex_protocol') == 'linux_local_first_v1',
+            'KD owned mutex parameters differ')
+
+
+def audit_owned_mutex_imports(imported):
+    symbols = set(imported.split())
+    expected = {'kd_owned_mutex_prepare', 'kd_mutex_init', 'kd_owned_mutex_is_idle',
+                'kd_owned_mutex_outer_lock_cabi_v2', 'kd_owned_mutex_outer_unlock_cabi_v2'}
+    require(expected <= symbols and not symbols.intersection({
+        'mutex_lock', 'mutex_unlock', '__mutex_lock_slowpath', '__mutex_unlock_slowpath',
+        'kd_owned_mutex_outer_contended_clobber_v1', 'kd_owned_mutex_outer_unlock_v1'}),
+        'API mutex caller does not exclusively use the owned ABI4 protocol')
+
+
 def lock_kind(kind):
     return 'rwlock' if kind == 'utsname' else 'mutex' if kind in MUTEX_KINDS else 'spin'
 
@@ -85,8 +113,6 @@ def build(out, args):
                  '-pthread', ROOT/'bench/real_api/client.c', '-o', build_dir/'client'],
                 out/'build-client.log', timeout=60)
         for backend, kind in itertools.product(('native', 'tclock', 'kdlock'), args.kinds):
-            if backend == 'kdlock' and kind in MUTEX_KINDS:
-                continue
             dest = build_dir / (backend + '-' + kind)
             dest.mkdir()
             for name in ('module.c', 'mutex.c', 'uts.c', 'control.h', 'Makefile'):
@@ -128,6 +154,14 @@ def build(out, args):
             imports = command(['nm', '-u', binary['path']],
                               out/('imports-'+name.replace('/', '-')+'.txt'))
             require('__ubsan_' not in imports, 'timed module still imports UBSAN: '+name)
+            if name.startswith('kdlock-') and name.split('/')[0][7:] in MUTEX_KINDS:
+                audit_owned_mutex_imports(imports)
+                expected = dict(mutex_implementation='owned-v1',
+                                owned_caller_policy='c_abi_v2', owned_entry_abi='4')
+                for field, value in expected.items():
+                    actual = command(['modinfo', '-F', field, Path(binary['path'])],
+                                     out/(name.replace('/', '-')+'-'+field+'.txt')).strip()
+                    require(actual == value, 'API mutex caller identity differs: '+field)
     write_json(out/'build-configuration.json', metadata)
     # Capture the exact real implementations, not just a moving upstream URL.
     for relative in ('fs/xattr.c', 'fs/locks.c', 'fs/file.c', 'fs/fcntl.c', 'fs/pipe.c',
@@ -237,9 +271,11 @@ class SyscallSession(Session):
         self.run(['insmod', self.out/'build/tc_allocator_guard.ko'], 'load-guard.log')
         self.run(['rmmod', 'tc_allocator_guard'], 'unload-guard.log')
         if s['arm'] == 'kdlock':
+            owned_params = ([f'{key}={value}' for key, value in owned_mutex_parameters(s).items()]
+                            if s['lock_kind'] == 'mutex' else [])
             self.run(['insmod', self.out/'build/kdlock_km.ko', 'bench_quiet=1', 'jit_timing=0',
                       'hotlock_stats=1', 'target_process=sc_worker', 'spin_entry_ratio_limit=2',
-                      'spin_prefetch=2'], 'load-kd.log')
+                      'spin_prefetch=2', *owned_params], 'load-kd.log')
             self.loaded_kd = True
         if s['arm'] == 'tclock':
             self.run(['insmod', self.out/'build'/(self.tc_module+'.ko'), 'komb_batch_size=1024'], 'load-tc.log')
@@ -264,6 +300,8 @@ class SyscallSession(Session):
             (PARAM/'prepare').write_text('1')
         if self.loaded_kd:
             s['parameters'] = parameters()
+            if s['lock_kind'] == 'mutex':
+                check_owned_mutex_parameters(s['parameters'], s)
             sym = [line.split() for line in Path('/proc/kallsyms').read_text().splitlines()]
             begin = [int(v[0], 16) for v in sym if len(v) == 4 and v[2:] == ['rb_body', '[real_api]']]
             nm = self.run(['nm', '-S', self.workload_module], 'symbols.txt')
@@ -305,6 +343,10 @@ class SyscallSession(Session):
 
     def measure(self):
         s = self.record
+        if self.loaded_kd:
+            s['published_before'] = self.publication()
+            require(s['published_before']['source']['writers'] == 0,
+                    'translator writer remains before measurement', 'UNDRAINED')
         before = int((PARAM/'calls').read_text()) if self.loaded_source else 0
         jit = Path('/sys/module/kdlock_km/parameters/bench_jit_bodies')
         jbefore = int(jit.read_text()) if self.loaded_kd else 0
@@ -338,6 +380,11 @@ class SyscallSession(Session):
         s['jit_share'] = s['jit_bodies']/s['jit_eligible_operations'] if s['jit_eligible_operations'] else 0
         s['jit_status'] = ('PASS' if s['jit_bodies'] else 'NO_JIT') if self.loaded_kd else 'NOT_APPLICABLE'
         s['registry_after'] = registry() if self.loaded_kd else []
+        if self.loaded_kd:
+            s['published_after'] = self.publication()
+            require(s['published_before']['entry'] == s['published_after']['entry'] and
+                    s['published_before']['images'] == s['published_after']['images'],
+                    'published image changed during measurement', 'DATA_ERROR')
         s['tclock_delegation'] = (int(tc_delegated.read_text())-tc_before if tc_before is not None else
                                   'UNMEASURED' if self.loaded_tc else 'NOT_APPLICABLE')
         self.faults()
@@ -412,8 +459,7 @@ def make_plan(args):
     for kind, query, count, n, repeat in itertools.product(args.kinds, args.queries, args.entries, args.threads, range(args.repeats)):
         order = args.backends[repeat % len(args.backends):] + args.backends[:repeat % len(args.backends)]
         for arm in order:
-            if arm == 'kdlock' and kind in MUTEX_KINDS:
-                continue
+            owned = arm == 'kdlock' and kind in MUTEX_KINDS
             plan.append(dict(name=f'{kind}-{query}-n{count}-t{n:02d}-r{repeat}-{arm}', kind=kind,
                 query=query, entries=count, threads=n, repeat=repeat, arm=arm, value_size=args.value_size,
                 cpus=cpus[:n], collector_cpu=args.collector_cpu, duration_ms=args.duration_ms,
@@ -423,9 +469,16 @@ def make_plan(args):
                 syscalls_per_op=2 if kind == 'setfd' else 1,
                 file_descriptions='per-worker' if kind in ('setfd', 'pipebytes', 'pipecap') else 'shared-query',
                 lock_kind=lock_kind(kind),
-                entry_abi=({'spin': 1, 'mutex': 2, 'rwlock': 3}[lock_kind(kind)] if arm == 'kdlock' else 0),
-                caller_abi='clobber' if arm == 'kdlock' else 'c'))
-    require(plan, 'KD requires its own mutex object; select native/tclock for kernel mutex workloads')
+                registry_lock_kind=3 if owned else 1 if arm == 'kdlock' else 0,
+                entry_abi=(4 if owned else {'spin': 1, 'rwlock': 3}[lock_kind(kind)]
+                           if arm == 'kdlock' else 0),
+                caller_abi='clobber' if arm == 'kdlock' and not owned else 'c',
+                mutex_implementation='owned-v1' if owned else 'not_applicable',
+                mutex_wait_mode='blocking' if owned else 'not_applicable',
+                mutex_spin_limit=getattr(args, 'mutex_spin_limit', 4096) if owned else 0,
+                owned_mutex_reuse_spins=getattr(args, 'owned_mutex_reuse_spins', 32) if owned else 0,
+                owned_mutex_origin_spin=False, owned_mutex_numa=False))
+    require(plan, 'no API sessions selected')
     return plan
 
 
@@ -447,6 +500,10 @@ def main():
     p.add_argument('--warmup', type=int, default=48000)
     p.add_argument('--warmup-ms', type=int, default=1000)
     p.add_argument('--helper-waves', type=int, default=4)
+    p.add_argument('--mutex-spin-limit', type=int, default=4096,
+                   help='owned mutex result polling budget before blocking')
+    p.add_argument('--owned-mutex-reuse-spins', type=int, choices=(0, 8, 32, 128), default=32,
+                   help='owned ABI4 release reuse allowance')
     p.add_argument('--kernel-source', default='/root/linux-6.1.159-kdclobber2')
     p.add_argument('--kernel-baseline', default='/root/kdlock-kernel-baselines/mutex-clobber2-20260919')
     args = p.parse_args()
@@ -459,6 +516,7 @@ def main():
         require(not Path('/sys/module', name).exists(), 'existing module: '+name)
     worker_cpus(args)
     require(args.repeats > 0 and 0 <= args.helper_waves <= 16, 'invalid repeat/helper configuration')
+    require(0 <= args.mutex_spin_limit <= 1048576, 'invalid owned mutex result polling budget')
     require(1 <= min(args.entries) <= max(args.entries) <= 4096
             and 1 <= args.value_size <= 4096 and 700 <= args.duration_ms <= 10000
             and args.warmup > 0 and 0 <= args.warmup_ms <= 10000, 'invalid workload bounds')

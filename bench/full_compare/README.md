@@ -1,15 +1,14 @@
 # Complete spin, mutex and rwlock reports
 
 The [full benchmark driver](../../tools/vm/README.md#complete-164-worker-comparison)
-plans one-cacheline and RCUHT payloads under TCLock and Linux Native, plus
-KD spin, rwlock and c01 mutex cases, at 22 worker counts: 1–8 in steps of one,
-then 12–64 in steps of four. Three rounds select 1,518 timed sessions by default.
-Explicitly opting into multi-cacheline payloads selects 3,762 sessions. Execution
+plans one-cacheline and RCUHT payloads under TCLock, Linux Native and KD for
+spin, mutex and rwlock, at 22 worker counts: 1–8 in steps of one,
+then 12–64 in steps of four. Three rounds select 1,584 timed sessions by default.
+Explicitly opting into multi-cacheline payloads selects 3,960 sessions. Execution
 at 64 workers still requires the collector-sharing support described below.
 The driver owns execution and drain;
 [`export.py`](export.py) reads saved evidence without executing benchmark code.
-The all-lock driver uses owned ABI2 for KD c01, with Native/TCLock only for
-other mutex payloads. The current owned ABI4
+The all-lock driver uses owned ABI2 for KD mutex payloads. The current owned ABI4
 c01 profile uses the [dedicated command](../tclock_compare/README.md#owned-c01-full-grid)
 and its [198-sample report/auditor](../results/10.176.26.71/bench/mutex_owned/20261014-full-grid/README.md),
 separately from the all-lock c01/hash matrix.

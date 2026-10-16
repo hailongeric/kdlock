@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-only
 /* Scoped, task-context syscall comparison on the captured 6.1.159 kernel.
- * Native retains the actual kernel mutex. TCLock requires its own object;
+ * Native retains the actual kernel mutex. TCLock and KD use private objects;
  * all consumers of the private pipe/file must obey the selected protocol.
  * The client retains every descriptor until the workers join and hooks unload.
  * No reads/writes/resizes, descriptor mutation, or independent consumers while
@@ -36,7 +36,23 @@ static unsigned long lock_addr;
 module_param(lock_addr, ulong, 0400);
 static DEFINE_PER_CPU(u64, redirected);
 
-#ifdef RB_TCLOCK
+#ifdef RB_KDLOCK
+/* The anonymous object is fully initialized before binding. Every measured
+ * access goes through this adapter; Linux never acquires this KD object.
+ * Keep the file/pipe reference until callers join, KD sources retire and the
+ * hook is removed, so a delegated body cannot outlive its protected storage. */
+#define KD_OWNED_MUTEX_CABI 1
+#include "kd_owned_mutex_direct.h"
+static struct kd_mutex kd_lock __aligned(64);
+extern char rb_entry[];
+#define RA_COOKIE struct kd_owned_mutex_outer_cookie cookie
+#define RA_LOCK() KD_OWNED_MUTEX_OUTER_LOCK(&kd_lock, cookie, \
+	".globl rb_entry\nrb_entry:\n\t" ANNOTATE_NOENDBR)
+#define RA_UNLOCK() KD_OWNED_MUTEX_OUTER_UNLOCK(&kd_lock, cookie)
+MODULE_INFO(mutex_implementation, "owned-v1");
+MODULE_INFO(owned_caller_policy, "c_abi_v2");
+MODULE_INFO(owned_entry_abi, "4");
+#elif defined(RB_TCLOCK)
 #include "mutex/komb_mutex.h"
 static struct komb_mutex tc_lock __aligned(64);
 int tc_mutex_worker_register(void);
@@ -44,10 +60,12 @@ int tc_mutex_workers_drain(void);
 #define RA_COOKIE do { } while (0)
 #define RA_LOCK() komb_mutex_lock(&tc_lock)
 #define RA_UNLOCK() komb_mutex_unlock(&tc_lock)
+MODULE_INFO(mutex_implementation, "tclock");
 #else
 #define RA_COOKIE do { } while (0)
 #define RA_LOCK() (mutex_lock)(original_lock)
 #define RA_UNLOCK() (mutex_unlock)(original_lock)
+MODULE_INFO(mutex_implementation, "native");
 #endif
 
 #if defined(RB_PIPEBYTES) || defined(RB_PIPECAP)
@@ -145,10 +163,28 @@ static int prepare_set(const char *value, const struct kernel_param *kp)
 	unsigned int n;
 	if (kstrtouint(value, 0, &n) || n != 1 || !lock_addr)
 		return -EINVAL;
+#ifdef RB_KDLOCK
+	if (!kd_owned_mutex_is_idle(&kd_lock))
+		return -EBUSY;
+	return kd_owned_mutex_prepare(&kd_lock, KD_OWNED_MUTEX_PREPARE_IP(rb_entry),
+				     KD_OWNED_MUTEX_ENTRY_ABI);
+#else
 	return 0;
+#endif
 }
 static const struct kernel_param_ops prepare_ops = { .set = prepare_set };
 module_param_cb(prepare, &prepare_ops, NULL, 0200);
+
+#ifdef RB_KDLOCK
+/* Read only after the client has joined all users. Provider frame/source
+ * retirement is checked separately before unloading this module. */
+static int quiescent_get(char *buf, const struct kernel_param *kp)
+{
+	return scnprintf(buf, PAGE_SIZE, "%d\n", kd_owned_mutex_is_idle(&kd_lock));
+}
+static const struct kernel_param_ops quiescent_ops = { .get = quiescent_get };
+module_param_cb(quiescent, &quiescent_ops, NULL, 0400);
+#endif
 
 static long control_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 {
@@ -166,6 +202,8 @@ static long control_ioctl(struct file *file, unsigned int cmd, unsigned long arg
 	if (cmd == RA_DRAIN) {
 #ifdef RB_TCLOCK
 		return tc_mutex_workers_drain();
+#elif defined(RB_KDLOCK)
+		return kd_owned_mutex_is_idle(&kd_lock) ? 0 : -EBUSY;
 #else
 		return 0;
 #endif
@@ -250,6 +288,9 @@ static int __init rb_init(void)
 #ifdef RB_TCLOCK
 	komb_mutex_init(&tc_lock);
 	lock_addr = (unsigned long)&tc_lock;
+#elif defined(RB_KDLOCK)
+	kd_mutex_init(&kd_lock);
+	lock_addr = (unsigned long)&kd_lock;
 #else
 	lock_addr = (unsigned long)original_lock;
 #endif
@@ -278,6 +319,9 @@ static void __exit rb_exit(void)
 	unregister_ftrace_function(&trace_ops);
 	ftrace_set_filter_ip(&trace_ops, hook_addr, 1, 0);
 	misc_deregister(&control_device);
+#ifdef RB_KDLOCK
+	WARN_ON_ONCE(!kd_owned_mutex_is_idle(&kd_lock));
+#endif
 	WARN_ON_ONCE(mutex_is_locked(original_lock));
 	fput(target_file);
 }

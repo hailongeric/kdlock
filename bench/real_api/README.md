@@ -11,6 +11,9 @@ KD mutex cases always use bounded polling followed by blocking.
 [Performance status](../../docs/PERFORMANCE.md) describes remaining throughput
 gaps. The [machine index](../results/10.176.26.71/README.md) retains earlier API
 reports, exploratory failures and source identities.
+The [expanded mutex comparison](../results/10.176.26.71/bench/comparison/mutex-expanded-20261016T040928Z/README.md)
+includes all three backends for pipebytes n16/n128, pipecap n16 and seek set/end,
+with three repetitions at each requested worker count through 60.
 
 These are API microbenchmarks with real kernel metadata, not end-to-end
 application measurements or a global replacement of Linux locks. Neither loading
@@ -28,9 +31,9 @@ worker count is always selected separately with `--threads`.
 | tmpfs `fgetxattr()` | `simple_xattr_get()` holds `simple_xattrs.lock` across linked-list name comparisons and the value copy | Kernel integration exists; current translated xattr bodies are refused by pointer/context admission and are excluded from accepted performance comparisons. |
 | `fcntl(F_OFD_GETLK)` | `posix_test_lock()` holds `file_lock_context.flc_lock` while checking owners, ranges and conflict type, then copying the conflict | Implemented for local, non-expiring OFD locks; models repeated byte-range conflict queries on one file. |
 | `fcntl(F_SETFD)` | `set_close_on_exec()` holds `files_struct.file_lock` across the close-on-exec bitmap update | Implemented; each thread toggles its own preallocated descriptor flag in the shared table. Descriptor spacing changes the dirty bitmap footprint. |
-| `ioctl(FIONREAD)` on a shared pipe | `pipe_ioctl()` holds `pipe_inode_info.mutex` while summing real buffer lengths around the ring | Native/TCLock mutex case; occupied buffer count controls protected traversal, with one independent file description per worker. |
-| `fcntl(F_GETPIPE_SZ)` | `pipe_fcntl()` holds the same pipe mutex while reading `max_usage` | Native/TCLock short mutex control on the same real subsystem. |
-| Shared-file `lseek(SEEK_SET/SEEK_END)` | `ksys_lseek()` holds `file.f_pos_lock` across size checks and `f_pos`/`f_version` updates | Native/TCLock mutex case for an anonymous tmpfs file and one shared open description. |
+| `ioctl(FIONREAD)` on a shared pipe | `pipe_ioctl()` holds `pipe_inode_info.mutex` while summing real buffer lengths around the ring | Native/TCLock/KD mutex case; occupied buffer count controls protected traversal, with one independent file description per worker. |
+| `fcntl(F_GETPIPE_SZ)` | `pipe_fcntl()` holds the same pipe mutex while reading `max_usage` | Native/TCLock/KD short mutex control on the same real subsystem. |
+| Shared-file `lseek(SEEK_SET/SEEK_END)` | `ksys_lseek()` holds `file.f_pos_lock` across size checks and `f_pos`/`f_version` updates | Native/TCLock/KD mutex case for an anonymous tmpfs file and one shared open description. |
 | `uname()` with `sethostname()` / `setdomainname()` | `uts_sem` protects the real UTS structure: readers copy it, writers replace one name | Implemented bounded read/write experiment in a private UTS namespace; Native rwsem versus KD/TCLock reader/writer spinlocks, with the specialization below. |
 
 Sources: [TCLocks evaluation, Table 1 and Figure 3](https://www.usenix.org/system/files/osdi23-gupta.pdf),
@@ -103,8 +106,16 @@ measured operation. A failed/undrained session has no accepted score.
 ## Mutex and reader/writer contracts
 
 The [mutex module](../../workload_modules/real_api/mutex.c) keeps the real pipe
-mutex or `f_pos_lock` for Native; TCLock uses its separate ordinary-mutex
-object. The client creates an unlinked FIFO, fills whole pages before binding,
+mutex or `f_pos_lock` for Native; TCLock and KD use separate ordinary-mutex
+objects. KD uses a private 32-byte `struct kd_mutex`, owned outer ABI4, and
+reuse allowance 32 by default. Its result wait polls up to 4,096 times before
+blocking; `--owned-mutex-reuse-spins` and `--mutex-spin-limit` record alternate
+policies separately. Owned origin and NUMA selection remain off. The build
+checks ABI4 symbol imports and module identity, and the runner verifies provider
+parameters, returned JIT bodies, object idleness and complete source retirement.
+No KD object is passed to Linux mutex APIs or mixed with Linux waiters.
+
+The client creates an unlinked FIFO, fills whole pages before binding,
 and opens an independent description per worker. No pipe reads, writes or resizes
 occur while bound. The seek case retains a shared description, restricts calls
 to `SEEK_SET`/`SEEK_END`, and changes the real position on every worker's sequence.
@@ -114,7 +125,8 @@ TCLock mutex workers register a fixed-CPU context before each phase. The client
 joins every thread and retries the provider's checked drain for up to five seconds:
 `pthread_join` can observe thread completion before the final kernel task exit.
 No live-task or queue check is bypassed. `/dev/real_api_control` carries registration
-and drain commands outside timing. Close it before unloading the source, while
+and drain commands outside timing. KD's drain requires its private object to be
+idle after every worker has joined. Close the control descriptor before unloading the source, while
 retaining the benchmark object's descriptors until afterward.
 
 The [UTS module](../../workload_modules/real_api/uts.c) binds only a private
@@ -164,10 +176,10 @@ python3 bench/real_api/report.py \
 
 CSV/JSON/text reports use only the standard Python library. `--plots` additionally
 requires Matplotlib; use a separate analysis environment after measurement.
-Pipe/file mutex workloads compare Stock, Native and TCLock. KD uses its own
-mutex storage and is excluded from these kernel-owned objects. The runner
-omits that arm from mixed plans and rejects a plan with no supported sessions.
-Each supported backend runs once per round.
+Pipe/file mutex workloads compare Stock, Native, TCLock and the private KD-owned
+adapter. Each selected backend runs once per round. Historical reports that
+excluded KD retain their original coverage and source identity; they are not
+evidence for the new adapter.
 The recorded figures used Matplotlib 3.9.4. Basic and directly affected checks:
 
 ```sh
@@ -187,11 +199,11 @@ Use separate output directories for these additional cases:
 # --entries means occupied 4 KiB pipe buffers (capacity pages for pipecap).
 python3 bench/real_api/run.py --kinds pipebytes pipecap --queries query \
   --entries 16 128 --threads 1 8 16 32 48 60 --repeats 3 \
-  --backends stock native tclock --output /root/kdlock-evidence/10.176.26.71/bench/pipe-new
+  --backends stock native tclock kdlock --output /root/kdlock-evidence/10.176.26.71/bench/pipe-new
 # --entries means file size in 4 KiB pages.
 python3 bench/real_api/run.py --kinds seek --queries set end --entries 16 \
   --threads 1 8 16 32 48 60 --repeats 3 \
-  --backends stock native tclock --output /root/kdlock-evidence/10.176.26.71/bench/seek-new
+  --backends stock native tclock kdlock --output /root/kdlock-evidence/10.176.26.71/bench/seek-new
 # --entries means write percentage; remaining operations call uname().
 python3 bench/real_api/run.py --kinds utsname --queries host domain \
   --entries 20 100 --value-size 64 --threads 1 8 16 32 48 60 --repeats 3 \

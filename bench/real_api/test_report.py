@@ -20,6 +20,18 @@ def record(whole=10, peak=12, *, arm='kdlock', **changes):
 
 
 class ReportTests(unittest.TestCase):
+    def test_owned_mutex_identity_is_not_pooled_with_legacy_or_other_policies(self):
+        old = record(kind='pipebytes', query='query', mutex_wait_mode='blocking',
+                     mutex_spin_limit=4096)
+        owned = dict(old, mutex_implementation='owned-v1', entry_abi=4,
+                     owned_mutex_reuse_spins=32, owned_mutex_origin_spin=False,
+                     owned_mutex_numa=False)
+        rows = [old, owned, dict(owned, owned_mutex_reuse_spins=0)]
+        self.assertEqual(len(summarize(rows)), 3)
+        with tempfile.TemporaryDirectory() as d:
+            with self.assertRaisesRegex(ValueError, 'distinct KD mutex protocols'):
+                write_report(Path(d), rows)
+
     def test_wait_policies_are_not_pooled(self):
         rows = [record(mutex_wait_mode='spin', mutex_spin_limit=4096),
                 record(100, 120, mutex_wait_mode='blocking', mutex_spin_limit=4096),

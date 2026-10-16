@@ -35,9 +35,7 @@ def commands(output, cpus, collector, include_multicacheline=False):
         runner = ('bench/rwlock_compare/run.py' if kind == 'rwlock' else
                   'bench/tclock_compare/run_mutex.py' if kind == 'mutex' else
                   'bench/tclock_compare/run.py')
-        backends = ['native', 'tclock']
-        if kind != 'mutex' or (workload == 'cacheline' and lines == 1):
-            backends.append('kdlock')
+        backends = ['native', 'tclock', 'kdlock']
         args = [sys.executable, runner, '--backends', *backends,
                 '--threads', *map(str, THREADS), '--collector-cpu', str(collector),
                 '--repeats', '3', '--duration-ms', '2000', '--peak-window-ms', '300',

@@ -245,9 +245,9 @@ def make_plan(args):
     require(lock_kind == 'mutex' or (owned_limit == DEFAULT_MUTEX_ENTRY_RATIO_LIMIT and not owned and
             mutex_routing == 'adaptive' and mutex_acceptance == 'jit-required'),
             'mutex controls require the mutex runner')
-    require(not owned or (lock_kind == 'mutex' and workload == 'cacheline' and
-            (args.cachelines or [1]) == [1] and 'kdlock' in args.backends),
-            'owned-v1 supports the KD c01 mutex workload only')
+    require(not owned or scenario == 'plain' or
+            (workload == 'cacheline' and (args.cachelines or [1]) == [1]),
+            'owned nested/early functional scenarios require c01')
     require(lock_kind != 'mutex' or scenario == 'plain' or
             (owned and functional and args.backends == ['kdlock'] and args.repeats == 1),
             'mutex nested/early scenarios require owned-v1 functional mode and one KD round')
@@ -499,7 +499,7 @@ def execute_session(session, keep_going_no_jit=False):
 def main(lock_kind='spin'):
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('--mutex-implementation', choices=('owned-v1',), default='owned-v1',
-                   help='owned-v1 uses a KD-owned object; initial scope is plain c01 only')
+                   help='owned-v1 uses a KD-owned object for cacheline and RCUHT payloads')
     p.add_argument('--mutex-spin-limit', type=int, default=4096)
     p.add_argument('--owned-mutex-entry-ratio-limit', type=int, choices=MUTEX_ENTRY_RATIO_LIMITS,
                    default=DEFAULT_MUTEX_ENTRY_RATIO_LIMIT,

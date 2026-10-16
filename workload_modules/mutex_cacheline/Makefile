@@ -23,11 +23,6 @@ ccflags-y += -DSC_DIRECT_TCLOCK
 else ifeq ($(SC_BACKEND),native)
 ccflags-y += -DSC_DIRECT_NATIVE
 endif
-ifeq ($(SC_BACKEND),kdlock)
-ifeq ($(SC_WORKLOAD),rcuht)
-$(error owned-v1 is limited to the c01 cacheline workload)
-endif
-endif
 ifeq ($(SC_OWNED_MUTEX_PREFLIGHT),1)
 ifneq ($(SC_BACKEND),kdlock)
 $(error SC_OWNED_MUTEX_PREFLIGHT requires SC_BACKEND=kdlock)

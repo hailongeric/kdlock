@@ -9,6 +9,24 @@ NUMA node 0 has CPUs 0–31 and node 1 has CPUs 32–63, with no extra vCPUs or
 unused spare CPU. Historical receipts retain their original topology; they
 do not authorize reusing a superseded placement.
 
+## Expanded mutex workload verification
+
+The [2026-10-16 support receipt](../bench/results/10.176.26.71/bench/comparison/mutex-expanded-20261016T040928Z/validation.json)
+records 93 basic/affected unit checks and 29 live sessions: all six synthetic
+payloads with ABI2 and ABI4, pipe/seek variants at 1/16/60 workers, and API
+spin/rwlock regressions. All passed result checks, stable publication and exact
+source/frame retirement. The 24 contended sessions returned JIT bodies; five
+single-worker API controls stayed local. Source, binary and JIT hashes are audited.
+
+The separate [performance audit](../bench/results/10.176.26.71/bench/comparison/mutex-expanded-20261016T040928Z/verification.json)
+accepts all 2,079 Native/TCLock/KD measurements on the requested 21-count grid.
+All 660 multithreaded KD sessions returned JIT bodies; the 33 single-worker
+sessions stayed local. The audit recomputes every warmed peak and checks CPU
+placement, ABI4/reuse-32 policy, immutable publication and complete drain.
+Kernel identity, boot policy, all 64 CPU pins and final idle state passed.
+These workload/runner edits preserve the provider implementation; the receipts
+apply to the captured workspace and do not claim a complete project test suite.
+
 ## Owned-only mutex verification
 
 The [removal receipt](../bench/results/10.176.26.71/tests/remove-mutex-legacy-20261015/validation.json)

@@ -106,12 +106,10 @@ static long sc_run_timed(void __user *user)
 #else
 	switch (run.cachelines) {
 	case 1: body = sc_body_1; break;
-#ifndef SC_MUTEX_OWNED
 	case 2: body = sc_body_2; break;
 	case 4: body = sc_body_4; break;
 	case 8: body = sc_body_8; break;
 	case 16: body = sc_body_16; break;
-#endif
 	default: return -EINVAL;
 	}
 #endif
@@ -261,12 +259,10 @@ static long sc_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 #else
 		switch (run.cachelines) {
 		case 1: body = sc_body_1; break;
-#ifndef SC_MUTEX_OWNED
 		case 2: body = sc_body_2; break;
 		case 4: body = sc_body_4; break;
 		case 8: body = sc_body_8; break;
 		case 16: body = sc_body_16; break;
-#endif
 		default: return -EINVAL;
 		}
 #endif

@@ -9,6 +9,8 @@ import statistics
 PARAMETER_UNITS = {'xattr': 'attributes', 'ofd': 'ranges', 'setfd': 'FD stride',
                    'pipebytes': 'pipe buffers', 'pipecap': 'pipe capacity in pages',
                    'seek': 'file size in pages', 'utsname': 'write percent'}
+MUTEX_IDENTITY = ('mutex_implementation', 'entry_abi', 'owned_mutex_reuse_spins',
+                  'owned_mutex_origin_spin', 'owned_mutex_numa')
 
 
 def summarize(records):
@@ -16,13 +18,16 @@ def summarize(records):
     for r in records:
         key = tuple(r[k] for k in ('kind', 'query', 'entries', 'value_size', 'threads', 'arm')) + (
             r.get('mutex_wait_mode', 'not_applicable') if r['arm'] == 'kdlock' else 'not_applicable',
-            r.get('mutex_spin_limit', 0) if r['arm'] == 'kdlock' else 0)
+            r.get('mutex_spin_limit', 0) if r['arm'] == 'kdlock' else 0) + tuple(
+            str(r.get(field, 'unrecorded')) if r['arm'] == 'kdlock' and
+                r['kind'] in ('pipebytes', 'pipecap', 'seek') else 'not_applicable'
+            for field in MUTEX_IDENTITY)
         groups.setdefault(key, []).append(r)
     rows = []
     for key, runs in sorted(groups.items()):
         good = [r for r in runs if r['execution_status'] == 'OK' and r.get('drained')]
         row = dict(zip(('kind', 'query', 'entries', 'value_size', 'threads', 'arm',
-                        'mutex_wait_mode', 'mutex_spin_limit'), key))
+                        'mutex_wait_mode', 'mutex_spin_limit', *MUTEX_IDENTITY), key))
         row.update(planned=len(runs), accepted=len(good),
                    failed=sum(r['execution_status'] != 'NOT_RUN' and
                               (r['execution_status'] != 'OK' or not r.get('drained')) for r in runs),
@@ -59,6 +64,10 @@ def write_report(out, records):
     policies = {(r['mutex_wait_mode'], r['mutex_spin_limit']) for r in rows if r['arm'] == 'kdlock' and r['mutex_wait_mode'] != 'not_applicable'}
     if len(policies) > 1:
         raise ValueError('cannot compare distinct KD waiting policies in one report; use separate report directories')
+    protocols = {tuple(r[field] for field in MUTEX_IDENTITY) for r in rows
+                 if r['arm'] == 'kdlock' and r['kind'] in ('pipebytes', 'pipecap', 'seek')}
+    if len(protocols) > 1:
+        raise ValueError('cannot compare distinct KD mutex protocols in one report; use separate report directories')
     out.mkdir(parents=True, exist_ok=True)
     (out/'summary.json').write_text(json.dumps(rows, indent=2)+'\n')
     if rows:
@@ -87,7 +96,9 @@ def write_report(out, records):
             'Entries/stride means attributes/ranges for xattr/OFD, FD stride for setfd, occupied buffers '
             'for pipebytes, capacity in pages for pipecap, file pages for seek, or write percentage for UTS. '
             'Matched UTS arms use private locks: a Linux rwsem for Native, reader/writer spinlocks for KD/TCLock. '
-            'They move proc notification after unlock; stock keeps the global rwsem and original placement.', '',
+            'They move proc notification after unlock; stock keeps the global rwsem and original placement. '
+            'Matched pipe/seek Native uses the original kernel mutex; TCLock and KD use private objects '
+            'under the controlled-client lifetime contract. KD uses owned ABI4 and never mixes Linux mutex waiters.', '',
             '| API/query | Entries/stride/write % | Threads | Stock | Native | TCLock | KD | KD/native | KD/TC | Peak KD/native | Peak KD/TC | KD JIT runs |',
             '| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |']
     for key, arms in sorted(configs.items()):

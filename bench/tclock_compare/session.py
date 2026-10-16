@@ -331,7 +331,7 @@ class BackendSession(Session):
         if self.record.get('mutex_implementation') == 'owned-v1':
             require(layout['lock_bytes'] == 32 and layout['line_bytes'] == 64 and
                     layout['lock_addr'] % 64 == layout['data_addr'] % 64 == 0,
-                    'owned c01 lock/payload layout differs from the 32-byte aligned contract')
+                    'owned lock/payload layout differs from the 32-byte aligned contract')
         if self.record.get('workload') == 'rcuht':
             hash_layout(layout)
         require(self.counts('initial')['values'] == [0]*16, 'source was not reset')

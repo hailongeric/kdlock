@@ -44,12 +44,10 @@ static __attribute__((noipa)) void sc_body_##n(void) \
 	SC_EXIT(); \
 }
 SC_BODY(1)
-#ifndef SC_MUTEX_OWNED
 SC_BODY(2)
 SC_BODY(4)
 SC_BODY(8)
 SC_BODY(16)
-#endif
 #endif
 
 /* Register the CALL continuation, never a C wrapper/prologue. Only the chosen
@@ -63,12 +61,10 @@ static inline int sc_prepare(unsigned int lines)
 	case 0: entry = (unsigned long)sc_entry_0; break;
 #else
 	case 1: entry = (unsigned long)sc_entry_1; break;
-#ifndef SC_MUTEX_OWNED
 	case 2: entry = (unsigned long)sc_entry_2; break;
 	case 4: entry = (unsigned long)sc_entry_4; break;
 	case 8: entry = (unsigned long)sc_entry_8; break;
 	case 16: entry = (unsigned long)sc_entry_16; break;
-#endif
 #endif
 	default: return -EINVAL;
 	}
