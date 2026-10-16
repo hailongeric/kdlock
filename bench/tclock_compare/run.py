@@ -527,7 +527,7 @@ def main(lock_kind='spin'):
                    help='opt in to scoring correct adaptive native runs; never a JIT pass')
     p.add_argument('--output', type=Path, required=True)
     p.add_argument('--workload', choices=('cacheline', 'rcuht'), default='cacheline')
-    p.add_argument('--cachelines', type=int, nargs='+', choices=(1,8,16))
+    p.add_argument('--cachelines', type=int, nargs='+', choices=(1,2,4,8,16))
     p.add_argument('--threads', type=int, nargs='+', choices=range(1, 65), default=[1,4,8,16,20])
     p.add_argument('--cpus', type=runtime.cpu_list,
                    help='ordered worker CPUs, e.g. 0-7,20-27; each cohort uses its prefix')

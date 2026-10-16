@@ -9,12 +9,13 @@ import threading
 import time
 from types import SimpleNamespace
 import unittest
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 import boot_policy
 from oracle import jit_evidence, post_work_checksum, validate, writes_for
 import run
 import client
+import session
 from protocol import RUN_FORMAT
 
 
@@ -38,6 +39,43 @@ def fixture(workload='cacheline', percent=50):
 
 
 class BenchTests(unittest.TestCase):
+    def test_prepare_uses_and_verifies_current_owned_mutex_parameter(self):
+        args = run.parser().parse_args(['--backends', 'kdlock', '--threads', '1',
+                                       '--write-percent', '0', '--mutex-spin-limit', '0'])
+        spec = run.make_plan(args)[0]
+        params = dict(bench_lock_addr='4100', bench_quiet='Y', jit_timing='N',
+                      owned_mutex_spin_limit='0', spin_entry_ratio_limit='2',
+                      spin_delegate='Y', spin_prefetch='2', hotlock_stats='Y',
+                      target_process='rb_worker')
+        for change in ({}, {'owned_mutex_spin_limit': '4096'}, {'mutex_spin_limit': '0'}):
+            with self.subTest(change=change):
+                current = dict(params, **change)
+                if 'mutex_spin_limit' in change:
+                    del current['owned_mutex_spin_limit']
+                obj = object.__new__(session.RWSession)
+                obj.record = dict(spec)
+                obj.binaries = dict(guard=Path('/unused/guard.ko'), kdlock=Path('/unused/kd.ko'))
+                obj.workload_module = Path('/unused/rwlock_bench.ko')
+                obj.loaded_tc = obj.loaded_kd = False
+                obj.run = Mock()
+                obj.counts = Mock(return_value=dict(values=[0]*16, lock_addr=4096,
+                                                   gate_addr=4100, entry=8192))
+                obj.phase, obj.save = Mock(), Mock()
+                with patch.object(session, 'parameters', return_value=current), \
+                        patch.object(session, 'KD_PARAMS'):
+                    if change:
+                        with self.assertRaisesRegex(run.Failure, 'KD parameters differ'):
+                            obj.prepare()
+                        obj.phase.assert_not_called()
+                    else:
+                        obj.prepare()
+                        obj.phase.assert_called_once()
+                loads = [call.args[0] for call in obj.run.call_args_list
+                         if call.args[0][:2] == ['insmod', obj.binaries['kdlock']]]
+                self.assertEqual(len(loads), 1)
+                self.assertIn('owned_mutex_spin_limit=0', loads[0])
+                self.assertNotIn('mutex_spin_limit=0', loads[0])
+
     def test_default_rcuht_matrix(self):
         plan = run.make_plan(run.parser().parse_args([]))
         self.assertEqual(len(plan), 270)

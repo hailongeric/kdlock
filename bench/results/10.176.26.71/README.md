@@ -12,6 +12,22 @@ with no extra vCPUs or unused spare CPU. Earlier 66-vCPU reports below are
 historical evidence, not instructions for new runs; retain their recorded
 topology rather than relabeling them as 64-vCPU results.
 
+## Current workload comparison
+
+The [2026-10-16 synthetic and syscall/API round](bench/comparison/workloads-20261015T180603Z/README.md)
+contains 7,749 accepted, drained measurements across 41 workload groups, with
+three repetitions at every worker count from 1–8 by one and 12–60 by four.
+It compares the captured current workspace with TCLock and Linux Native on
+the regular 64-vCPU guest, using collector CPU 63. The report includes complete
+curves, whole-run and warmed-peak statistics, raw samples, source identity and
+a checksummed archive.
+
+KD's local executions and returned JIT bodies are distinguished throughout.
+KD owned mutex coverage is c01 only; pipe/seek mutexes and xattr API cases
+compare Native with TCLock. UTS retains its scoped rwsem/rwlock distinction.
+The report includes lower-worker regressions as well as high-worker gains;
+this comparison does not change provider defaults or performance acceptance.
+
 ## Owned-only mutex verification
 
 The [removal receipt](tests/remove-mutex-legacy-20261015/validation.json) records

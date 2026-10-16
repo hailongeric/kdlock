@@ -57,6 +57,7 @@ SELF acquisition remains available for local execution.
 | Option/default | Meaning |
 | --- | --- |
 | `--threads 1 4 8 16 20` | Short default; set worker counts explicitly for a timed comparison |
+| `--cachelines 1` | Select one or more of 1, 2, 4, 8 and 16; the KD owned mutex supports c01 only |
 | `--repeats 3` | Three rounds/configuration, reversing backend order in the middle round |
 | `--duration-ms 0` | Fixed iterations by default; use 2,000 for the timed comparison |
 | `--peak-window-ms 300`, `--peak-settle-ms 300` | Highest valid cohort window after settling |
