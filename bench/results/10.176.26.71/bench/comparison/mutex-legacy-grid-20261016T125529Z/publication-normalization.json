@@ -1,0 +1,12 @@
+{
+  "whole-throughput.svg": {
+    "raw_sha256": "c86d6e74c1b4a940b7fd2dc91bc8bbb4bd745c2f8deabe98bef8d0d2a47cc3d2",
+    "published_sha256": "acf6ca2e2dd0fa8366cdb6d4298001dbed6b20be510932ba0f4bf2010a02fbb4",
+    "change": "Removed trailing whitespace only; parsed SVG content unchanged."
+  },
+  "peak-throughput.svg": {
+    "raw_sha256": "0d51dfd75a06da9fc07edb37a40863732dcb780173cf2ebea26d637db09c7d42",
+    "published_sha256": "99fc7cf384ab7449a5b92f564f7b69d55993492d42448497c729a72b3f43e421",
+    "change": "Removed trailing whitespace only; parsed SVG content unchanged."
+  }
+}

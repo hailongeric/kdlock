@@ -1,12 +1,23 @@
 # Performance status
 
-This is the recovered legacy mutex baseline on `recovery/mutex-legacy-5m330`.
+The [fresh recovered-legacy comparison](../bench/results/10.176.26.71/bench/comparison/mutex-legacy-grid-20261016T125529Z/README.md)
+accepted all 378 sessions across c01/post64 and pipebytes n16 at 1–8 workers by
+one and 12–60 by four. At 60 workers, KD median throughput is **4.931 Mops/s**
+for c01 (**1.19× Native, 1.60× TCLock**) and **5.379 Mops/s** for pipebytes
+(**2.87× Native, 2.17× TCLock**). The pipebytes result reproduces the historical
+5.330 Mops/s. C01 remains below Native median throughput at tested counts 2–40,
+and below Native best peak at every multithreaded count. See the report for
+all three repetitions, low-count variability and JIT/NO_JIT classifications.
+This result does not include the rejected owned/adaptive implementation.
+
+This benchmark branch retains the recovered legacy mutex from
+`recovery/mutex-legacy-5m330`; only the shared synthetic post-work header changes.
 The [2026-10-16 recovery receipt](../bench/results/10.176.26.71/bench/comparison/mutex-legacy-recovery-20261016T113518Z/README.md) identifies the exact historical sources
 and fresh pipebytes validation. The later owned/adaptive implementation is not
 part of this branch; the reports below retain their original dates and scope.
 
 KD does not yet match both TCLock and Linux Native at every requested thread
-count. The latest [mutex c01/hash optimization](../bench/results/10.176.26.71/bench/comparison/mutex-opt-20261011T045425Z/README.md)
+count. The historical [mutex c01/hash optimization](../bench/results/10.176.26.71/bench/comparison/mutex-opt-20261011T045425Z/README.md)
 measures task caching, polling layout, retirement loads and bounded NUMA selection
 across all 22 worker counts. The earlier [all-lock c01/hash rerun](../bench/results/10.176.26.71/bench/comparison/full-matrix-20261011T025525Z/overview.md)
 retains the spin/rwlock comparison and the pre-optimization mutex baseline.

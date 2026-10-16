@@ -1,5 +1,11 @@
 # Results from 10.176.26.71
 
+The [fresh legacy mutex grid](bench/comparison/mutex-legacy-grid-20261016T125529Z/README.md)
+compares c01/post64 and pipebytes n16 over all 21 requested worker counts,
+with 378 accepted/drained sessions. At 60 workers, legacy KD reaches
+4.931/5.379 Mops/s respectively. The report includes every count, all three
+repetitions, peak/whole statistics, plots and the independently replayed archive.
+
 This is the machine directory for tests and benchmarks in the VM on the Ubuntu
 Xeon Gold 6438N host at `eric@10.176.26.71`. Source edits remain in the original
 checkout on `380G10` and are synchronized to this VM before testing.

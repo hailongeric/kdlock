@@ -1,5 +1,13 @@
 # Benchmarks
 
+The [complete legacy c01/pipebytes sweep](results/10.176.26.71/bench/comparison/mutex-legacy-grid-20261016T125529Z/README.md)
+contains 378 accepted, drained sessions: 21 worker counts, three backends and
+three repetitions per workload. At 60 workers, legacy KD median throughput is
+4.931 Mops/s for c01/post64 and 5.379 Mops/s for pipebytes n16. The report retains
+all counts, warmed peaks, variation and source identities. This uses the recovered
+legacy mutex; the only measured source adjustment selects the common 64-round
+synthetic post-work. Follow its exact commands and frozen inputs to reproduce it.
+
 Choose the runner for the lock you want to compare. The runners test KD, TCLock
 and Linux Native with matching workloads:
 
@@ -31,7 +39,7 @@ Live benchmark output goes outside the guest checkout to
 `bench/results/10.176.26.71/raw/bench/<run>/`, and compact published reports in
 `bench/results/10.176.26.71/bench/<runner>/<run>/`.
 
-The latest [mutex optimization comparison](results/10.176.26.71/bench/comparison/mutex-opt-20261011T045425Z/README.md)
+The historical [mutex optimization comparison](results/10.176.26.71/bench/comparison/mutex-opt-20261011T045425Z/README.md)
 contains 396 accepted, drained c01/hash sessions: all three backends, three rounds
 at the same 22 worker counts. It records task caching, polling layout, retirement
 loads and bounded NUMA selection, with rejected candidates and remaining gaps.
@@ -48,7 +56,7 @@ excluded.** Reports retain all samples, round variation, JIT/NO_JIT evidence,
 CSV/JSON and scaling plots. The temporary 66-vCPU layout puts workers on distinct
 host cores, with collector vCPU 65; at 64 workers, the collector and QEMU services
 share physical core 63 with the last worker. The governor remains `ondemand`.
-The latest mutex comparison uses this same placement and frequency policy;
+That historical mutex comparison uses this same placement and frequency policy;
 the earlier report retains the latest spin/rwlock results and prior mutex baseline.
 The [earlier full baseline](results/10.176.26.71/bench/comparison/full-matrix-20261010T094831Z/README.md)
 retains 3,960 sessions and multi-cacheline payloads at its original source version.
@@ -72,7 +80,7 @@ gaps; superseded reports are retrieved from fixed Git records.
 | --- | --- |
 | [Mutex and read/write API results](results/10.176.26.71/bench/real_api/20261011-sync/RESULTS.md) | 504 accepted sessions: pipe-buffer/capacity queries, shared-file seeks and private UTS reads/writes; syscall-to-lock mapping, three-round scaling, JIT evidence and rwsem integration limits |
 | [Spinlock API results](results/10.176.26.71/bench/real_api/20261011/RESULTS.md) | Workload-to-lock mapping, TCLocks paper context and scaling results from 288 accepted OFD/setfd sessions; stock plus matched Native/TCLock/KD, with regressions and exploratory failures retained |
-| [Latest mutex optimization](results/10.176.26.71/bench/comparison/mutex-opt-20261011T045425Z/README.md) | `10.176.26.71`: 396 accepted sessions, c01/hash, 22 worker counts; causes, selected changes, rejected candidates and remaining parity gaps |
+| [Historical mutex optimization](results/10.176.26.71/bench/comparison/mutex-opt-20261011T045425Z/README.md) | `10.176.26.71`: 396 accepted sessions, c01/hash, 22 worker counts; causes, selected changes, rejected candidates and remaining parity gaps |
 | [Earlier all-lock c01/hash rerun](results/10.176.26.71/bench/comparison/full-matrix-20261011T025525Z/overview.md) | `10.176.26.71`: 1,584 sessions, 22 worker counts, all backends and lock families; c02/c04/c08/c16 excluded |
 | [Earlier complete baseline](results/10.176.26.71/bench/comparison/full-matrix-20261010T094831Z/README.md) | `10.176.26.71`: all maintained spin/mutex/rwlock payloads, 1–8 and 12–64 workers, 3,960 sessions; temporary 66-vCPU VM, collector 65 shares a physical core at 64 workers |
 | [Earlier bounded 64-vCPU comparison](results/10.176.26.71/bench/comparison/performance-20261010T081816Z/README.md) | `10.176.26.71`: RCUHT rwlocks at 1/16/32/56 workers and spin/mutex cacheline at 1/16/32/36 workers; 144 timed sessions, collector CPU 63 |

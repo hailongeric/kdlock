@@ -1,6 +1,13 @@
 # kdlock
 
-This is the recovered legacy mutex baseline on `recovery/mutex-legacy-5m330`.
+The [fresh legacy c01/pipebytes comparison](bench/results/10.176.26.71/bench/comparison/mutex-legacy-grid-20261016T125529Z/README.md)
+covers 1–8 workers by one and 12–60 by four, with all 378 sessions accepted.
+It uses the recovered legacy provider and the documented common 64-round
+post-unlock work for c01. Source and results are in `/tmp/kdlock-mutex-legacy-grid`
+on `bench/legacy-mutex-c01-pipebytes`.
+
+This benchmark branch retains the recovered legacy mutex from
+`recovery/mutex-legacy-5m330`; only the shared synthetic post-work header changes.
 The [2026-10-16 recovery receipt](bench/results/10.176.26.71/bench/comparison/mutex-legacy-recovery-20261016T113518Z/README.md) identifies the exact historical sources
 and fresh pipebytes validation. The later owned/adaptive implementation is not
 part of this branch; the reports below retain their original dates and scope.

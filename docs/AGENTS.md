@@ -1,5 +1,13 @@
 # Development and operations
 
+The latest legacy benchmark variant is `/tmp/kdlock-mutex-legacy-grid`, branch
+`bench/legacy-mutex-c01-pipebytes`. Its [378-session report](../bench/results/10.176.26.71/bench/comparison/mutex-legacy-grid-20261016T125529Z/README.md)
+uses the recovered provider unchanged and a shared 64-round c01 post-work
+header. The original recovery worktree remains unchanged. Reproduce this
+comparison from the benchmark variant and its recorded commands. Its verified
+snapshot is `before-mutex-legacy-grid-20261016T125529Z`; recheck live state and
+snapshot availability before further module/JIT work.
+
 Follow these rules when developing or running the x86_64 KD spin/mutex/rwlock
 provider. Start with the [project guide](PROJECT_GUIDE.md). Use
 [tests](../tests/README.md) and [benchmarks](../bench/README.md) for commands and
