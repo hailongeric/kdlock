@@ -1,5 +1,11 @@
 # Project guide
 
+The user rejected the adaptive mutex experiment on 2026-10-16. The
+[recovered legacy baseline](../bench/results/10.176.26.71/bench/comparison/mutex-legacy-recovery-20261016T113518Z/README.md) is commit `6ecdd0a`, branch
+`recovery/mutex-legacy-5m330`, worktree `/tmp/kdlock-mutex-legacy-5m330`. The
+primary checkout preserves the 35 pre-existing edits and the rejected experimental
+source. The owned/adaptive descriptions below describe that retained experiment.
+
 KD lets a lock holder execute a waiting caller's critical section through JIT.
 Spinlocks use KD's own four-byte object. The experimental owned mutex uses a
 128-byte, 64-byte-aligned `struct kd_mutex` with its own owner, OSQ and tagged

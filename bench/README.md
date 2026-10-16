@@ -1,5 +1,11 @@
 # Benchmarks
 
+The [legacy mutex recovery](../bench/results/10.176.26.71/bench/comparison/mutex-legacy-recovery-20261016T113518Z/README.md) restores the exact source
+associated with the historical 5.330 Mops/s pipebytes result. Commit `6ecdd0a`
+in `/tmp/kdlock-mutex-legacy-5m330` reaches 5.367 Mops/s at 60 workers in the
+fresh three-round comparison. The adaptive experiment was rejected; its
+evidence remains preserved separately.
+
 Choose a maintained runner for the workload you want to compare. Each uses matching
 KD, TCLock and Linux Native payloads; the real API runner also provides Stock Linux.
 KD mutexes support blocking. Their delegation-result polling budget is separate

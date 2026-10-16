@@ -1,5 +1,11 @@
 # Adaptive KD mutex: c01 and pipebytes, 1–60 workers
 
+**Rejected by the user on 2026-10-16.** This experiment and all its evidence
+remain preserved at `archive/owned-mutex-adaptive-a49a87c`. The subsequent
+[exact legacy recovery](../mutex-legacy-recovery-20261016T113518Z/README.md)
+reaches 5.367 Mops/s at 60 workers on pipebytes n16; the measurements below
+remain the rejected experiment's original results.
+
 The requested hybrid policy is implemented as an **opt-in experiment**. Short
 queues keep ABI4's local CAS/OSQ path; high queue pressure offers early
 delegation, bounded refill, successor prefetch and optional legacy-style NUMA

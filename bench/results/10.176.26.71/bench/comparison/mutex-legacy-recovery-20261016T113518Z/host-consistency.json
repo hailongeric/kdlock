@@ -1,0 +1,13 @@
+{
+  "passed": true,
+  "qemu_pid": 257489,
+  "unchanged": [
+    "QEMU arguments",
+    "64 vCPU pins",
+    "two NUMA nodes",
+    "CPU frequency policy"
+  ],
+  "service_threads_all_cpu63": true,
+  "before_utc": "2026-10-16T11:37:50.524320+00:00",
+  "after_utc": "2026-10-16T11:47:17.257388+00:00"
+}

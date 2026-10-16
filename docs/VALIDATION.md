@@ -1,5 +1,11 @@
 # Validation index
 
+The [legacy recovery receipt](../bench/results/10.176.26.71/bench/comparison/mutex-legacy-recovery-20261016T113518Z/README.md) covers commit `6ecdd0a`
+on `recovery/mutex-legacy-5m330`: two basic programs, nine affected drivers,
+and 18 accepted/drained pipebytes sessions at 1/60 workers. All 215 captured
+source files match the historical archive. This validates the separate recovered
+worktree; it does not transfer validation to the rejected adaptive source below.
+
 [Tests](../tests/README.md) owns check selection and commands;
 [operations](AGENTS.md) owns the verified guest environment, recovery and drain.
 Receipts apply to their recorded source, kernel, boot policy and topology.

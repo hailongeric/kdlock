@@ -1,5 +1,15 @@
 # Development and operations
 
+The active recovery request uses `/tmp/kdlock-mutex-legacy-5m330`, branch
+`recovery/mutex-legacy-5m330`, commit `6ecdd0a`. The
+[recovery receipt](../bench/results/10.176.26.71/bench/comparison/mutex-legacy-recovery-20261016T113518Z/README.md) verifies the exact historical source
+and fresh measurements. The user explicitly requested that original legacy
+implementation, including pinned polling producers. The owned mutex policy
+described below applies to this retained experimental checkout; use the recovered
+worktree and its operations guide for subsequent legacy changes. Preserve all
+35 pre-existing edits here and the rejected tip at
+`archive/owned-mutex-adaptive-a49a87c`.
+
 Follow these rules when developing or running the x86_64 KD spin/mutex/rwlock
 provider. Start with the [project guide](PROJECT_GUIDE.md). Use
 [tests](../tests/README.md) and [benchmarks](../bench/README.md) for commands and

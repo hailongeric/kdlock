@@ -1,5 +1,12 @@
 # Performance status
 
+The adaptive mutex experiment is rejected. The source-verified
+[legacy recovery](../bench/results/10.176.26.71/bench/comparison/mutex-legacy-recovery-20261016T113518Z/README.md) reaches **5.367 Mops/s** at 60 workers
+on `api-pipebytes-query-n16`, compared with the historical **5.330 Mops/s**.
+All 18 fresh Native/TCLock/KD sessions at 1 and 60 workers passed and drained.
+The recovered source is on `recovery/mutex-legacy-5m330` (`6ecdd0a`); this
+checkout retains the rejected experiment and its measurements below.
+
 The archived 64-vCPU study accepted the owned ABI4/reuse-32 profile against the
 97% Native target for c01/post64 at 1–8 workers. It extends the experimental
 `d8d14a1` provider with Linux-style local acquisition before delegation at

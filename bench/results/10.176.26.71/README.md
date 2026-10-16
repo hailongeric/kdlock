@@ -1,5 +1,10 @@
 # Results from 10.176.26.71
 
+The latest [legacy mutex recovery](bench/comparison/mutex-legacy-recovery-20261016T113518Z/README.md)
+verifies all 215 historical source inputs and 18 fresh pipebytes sessions.
+The recovered 60-worker median is 5.367 Mops/s; source commit `6ecdd0a` is on
+`recovery/mutex-legacy-5m330`. The adaptive experiment is rejected.
+
 This index covers the VM on the Ubuntu Xeon Gold 6438N host at
 `eric@10.176.26.71`. Source edits stay on `380G10`. Each report retains its own
 source, kernel, boot policy, topology, measurements and failed attempts.
