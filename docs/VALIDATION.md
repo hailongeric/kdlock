@@ -1,5 +1,14 @@
 # Validation index
 
+The [2026-10-16 legacy grid receipt](../bench/results/10.176.26.71/bench/comparison/mutex-legacy-grid-20261016T125529Z/validation.json)
+records the two basic C programs, four directly affected Python drivers, emitted
+64-round post-work checks and 378 accepted/drained timed mutex sessions. All
+source/ELF/JIT identities, business results, worker placement/progress, warmed
+peaks and exact retirement records passed replay. The sealed archive contains
+12,440 regular files and 252 symlink records; source-host replay reproduces the
+guest tables exactly. Kernel identity, all 64 vCPU pins, boot policy and final
+idle state were verified. No full suite or kernel rebuild was run.
+
 The [legacy recovery receipt](../bench/results/10.176.26.71/bench/comparison/mutex-legacy-recovery-20261016T113518Z/README.md) covers commit `6ecdd0a`
 on `recovery/mutex-legacy-5m330`: two basic programs, nine affected drivers,
 and 18 accepted/drained pipebytes sessions at 1/60 workers. All 215 captured

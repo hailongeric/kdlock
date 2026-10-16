@@ -1,0 +1,13 @@
+{
+  "passed": true,
+  "archive_sha256": "b069918d1eb20e3e0226e7379d25ac0dbcfd6065903bd601974ad75826f3b03f",
+  "bytes": 38149952,
+  "regular_files": 12440,
+  "symlinks": 252,
+  "archive_members": 13971,
+  "manifest_sha256": "5030b7726e01dee8f732023f49a588386c4b09ba8dff7dbdac5bdf482c9744dc",
+  "extracted_to": "bench/results/10.176.26.71/raw/bench/mutex-legacy-grid-20261016T125529Z/replay",
+  "symlinks_materialized": false,
+  "offline_replay_matches_guest": true,
+  "offline_replayed_files": 12
+}

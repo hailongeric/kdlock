@@ -1,5 +1,11 @@
 # Benchmark workloads and critical sections
 
+The [fresh legacy c01/pipebytes report](../bench/results/10.176.26.71/bench/comparison/mutex-legacy-grid-20261016T125529Z/README.md)
+runs both selected workloads over 1–8 workers by one and 12–60 by four. All
+378 sessions passed. It uses the documented 64-round c01 post-work and the
+recovered legacy pipe adapter, where KD retains the embedded Linux mutex.
+Its source identities are separate from the owned adapters described below.
+
 This document describes the shared objects, protected operations and workload
 parameters in the synthetic and real-world API benchmarks. Use the
 [benchmark guide](../bench/README.md) for runner selection and measurement rules,

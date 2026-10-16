@@ -1,6 +1,12 @@
 # Results from 10.176.26.71
 
-The latest [legacy mutex recovery](bench/comparison/mutex-legacy-recovery-20261016T113518Z/README.md)
+The [fresh legacy mutex grid](bench/comparison/mutex-legacy-grid-20261016T125529Z/README.md)
+compares c01/post64 and pipebytes n16 over all 21 requested worker counts,
+with 378 accepted/drained sessions. At 60 workers, legacy KD reaches
+4.931/5.379 Mops/s respectively. The report includes every count, all three
+repetitions, peak/whole statistics, plots and the independently replayed archive.
+
+The initial [legacy mutex recovery](bench/comparison/mutex-legacy-recovery-20261016T113518Z/README.md)
 verifies all 215 historical source inputs and 18 fresh pipebytes sessions.
 The recovered 60-worker median is 5.367 Mops/s; source commit `6ecdd0a` is on
 `recovery/mutex-legacy-5m330`. The adaptive experiment is rejected.

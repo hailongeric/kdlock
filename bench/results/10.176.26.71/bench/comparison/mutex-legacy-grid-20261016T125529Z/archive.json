@@ -1,0 +1,6 @@
+{
+  "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/mutex-legacy-grid-20261016T125529Z/mutex-legacy-grid-20261016T125529Z.tar.gz",
+  "bytes": 38149952,
+  "sha256": "b069918d1eb20e3e0226e7379d25ac0dbcfd6065903bd601974ad75826f3b03f",
+  "guest_root": "/root/kdlock-evidence/10.176.26.71/bench/mutex-legacy-grid-20261016T125529Z"
+}

@@ -1,5 +1,13 @@
 # Development and operations
 
+The latest legacy benchmark variant is `/tmp/kdlock-mutex-legacy-grid`, branch
+`bench/legacy-mutex-c01-pipebytes` at commit `74676c3`. Its [378-session report](../bench/results/10.176.26.71/bench/comparison/mutex-legacy-grid-20261016T125529Z/README.md)
+uses the recovered provider unchanged and a shared 64-round c01 post-work
+header. The original recovery worktree remains unchanged. Reproduce this
+comparison from the benchmark variant and its recorded commands. Its verified
+snapshot is `before-mutex-legacy-grid-20261016T125529Z`; recheck live state and
+snapshot availability before further module/JIT work.
+
 The active recovery request uses `/tmp/kdlock-mutex-legacy-5m330`, branch
 `recovery/mutex-legacy-5m330`, commit `6ecdd0a`. The
 [recovery receipt](../bench/results/10.176.26.71/bench/comparison/mutex-legacy-recovery-20261016T113518Z/README.md) verifies the exact historical source

@@ -1,5 +1,11 @@
 # kdlock
 
+The [fresh legacy c01/pipebytes comparison](bench/results/10.176.26.71/bench/comparison/mutex-legacy-grid-20261016T125529Z/README.md)
+covers 1–8 workers by one and 12–60 by four, with all 378 sessions accepted.
+It uses the recovered legacy provider and the documented common 64-round
+post-unlock work for c01. Source and results are in `/tmp/kdlock-mutex-legacy-grid`
+on `bench/legacy-mutex-c01-pipebytes` at commit `74676c3`.
+
 The adaptive mutex experiment was rejected. The [recovered legacy baseline](bench/results/10.176.26.71/bench/comparison/mutex-legacy-recovery-20261016T113518Z/README.md)
 is committed as `6ecdd0a` on `recovery/mutex-legacy-5m330` in
 `/tmp/kdlock-mutex-legacy-5m330`. It reproduces the 60-worker pipebytes result at
@@ -28,7 +34,7 @@ guest-kernel interfaces.
 Use the [project guide](docs/PROJECT_GUIDE.md) to build and run in the verified
 guest. [Performance status](docs/PERFORMANCE.md) summarizes measured outcomes,
 and the [results index](bench/results/README.md) retains source-specific evidence.
-The [latest mutex comparison](bench/results/10.176.26.71/bench/comparison/mutex-expanded-20261016T040928Z/README.md)
+The [earlier expanded mutex comparison](bench/results/10.176.26.71/bench/comparison/mutex-expanded-20261016T040928Z/README.md)
 covers all five cacheline payloads, RCUHT and the private pipe/file API adapter
 at 1–60 workers. [Performance status](docs/PERFORMANCE.md) keeps these results
 separate from the accepted c01/post64 profile at 1–8 workers and earlier studies.

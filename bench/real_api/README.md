@@ -1,5 +1,12 @@
 # Real kernel API contention
 
+The [2026-10-16 recovered-legacy pipebytes sweep](../results/10.176.26.71/bench/comparison/mutex-legacy-grid-20261016T125529Z/README.md)
+adds 189 accepted sessions over the complete 21-count grid. At 60 workers,
+KD/Native/TCLock median rates are **5.379/1.873/2.481 Mops/s**. Native and KD
+retain the original embedded pipe mutex in this legacy adapter; TCLock uses
+its private object. This is a separate source baseline from the later owned
+mutex adapter. The report retains exact sources, syscall oracles and drain.
+
 This runner measures actual syscalls on private kernel objects: file-lock
 queries, descriptor flags, pipe metadata, file positions and UTS namespace names.
 Userspace and surrounding security/result-copy paths remain in the measured

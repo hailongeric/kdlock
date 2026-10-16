@@ -1,5 +1,13 @@
 # Benchmarks
 
+The [complete legacy c01/pipebytes sweep](results/10.176.26.71/bench/comparison/mutex-legacy-grid-20261016T125529Z/README.md)
+contains 378 accepted, drained sessions: 21 worker counts, three backends and
+three repetitions per workload. At 60 workers, legacy KD median throughput is
+4.931 Mops/s for c01/post64 and 5.379 Mops/s for pipebytes n16. The report retains
+all counts, warmed peaks, variation and source identities. This uses the recovered
+legacy mutex; the only measured source adjustment selects the common 64-round
+synthetic post-work. Follow its exact commands and frozen inputs to reproduce it.
+
 The [legacy mutex recovery](../bench/results/10.176.26.71/bench/comparison/mutex-legacy-recovery-20261016T113518Z/README.md) restores the exact source
 associated with the historical 5.330 Mops/s pipebytes result. Commit `6ecdd0a`
 in `/tmp/kdlock-mutex-legacy-5m330` reaches 5.367 Mops/s at 60 workers in the

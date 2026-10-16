@@ -1,5 +1,12 @@
 # KD, TCLock and Linux Native comparison
 
+The [2026-10-16 legacy c01 comparison](../results/10.176.26.71/bench/comparison/mutex-legacy-grid-20261016T125529Z/README.md)
+uses the recovered ABI2 mutex and the documented 64 post-unlock rounds for all
+three backends. It covers 1–8 workers by one and 12–60 by four, three repetitions,
+with all 189 c01 sessions accepted. Its old `-adaptive` filename suffix denotes
+legacy hot-lock admission, not the rejected owned adaptive policy. Use the
+report’s source identities and commands for that historical provider.
+
 [run.py](run.py) measures spin; [run_mutex.py](run_mutex.py) measures ordinary mutex.
 Each backend has its own compiled workload functions and lock object. They use
 the same protected operations, timing method and reports. Choosing spin versus

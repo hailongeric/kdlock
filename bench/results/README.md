@@ -1,5 +1,11 @@
 # Results by physical machine
 
+The [latest recovered-legacy mutex grid](10.176.26.71/bench/comparison/mutex-legacy-grid-20261016T125529Z/README.md)
+contains all 378 requested c01/post64 and pipebytes n16 sessions, with separate
+source-verified archives and fresh Native/TCLock controls. Its raw archive is
+`10.176.26.71/raw/bench/mutex-legacy-grid-20261016T125529Z/`; all samples and
+failed offline-analysis invocation logs remain preserved.
+
 Use the physical benchmark host as the machine identifier, even when the run
 executes inside its VM. Source edits remain on `380G10`; all new compilation,
 tests and benchmarks run in the VM on `10.176.26.71`.
