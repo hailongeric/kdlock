@@ -97,7 +97,10 @@ The wrapper compiles the `callee_complete` body and its preceding skip branch
 only when `KD_GENERATED_ENTRY_ABI == 4`. Older generated ABIs retain their
 existing fallthrough to `clobber_complete`; they contain no ABI4 completion body.
 
-ABI2 remains the default. ABI4 preparation, caller, provider and generated image
+ABI2 remains the general caller default. The controlled
+[pipe/file API adapter](../bench/real_api/README.md#mutex-and-readerwriter-contracts)
+explicitly selects ABI4 for its private KD-owned object.
+ABI4 preparation, caller, provider and generated image
 must be replaced together; source identity includes both owned lock kind and
 entry ABI. ABI4 is not a new guest-kernel hook or an ABI for Linux mutex objects.
 

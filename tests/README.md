@@ -51,6 +51,7 @@ check, missing dependency, crash or compile failure must not be reported as a pa
 | Reader/writer exclusion, ABI3 admission and retry | `rwlock/test_rwlock.py`, `admission/test_clobber_entry.py`, `codegen/test_spin_paired_jit.py`, `execution/test_jit_entry_scope.py`, `spin/test_spin_wait.py`; [live rwlock controls/JIT](kernel/rwlock/README.md) |
 | TCLock rwlock assembly and benchmark oracles | `rwlock/test_tclock_rwlock_context.py`; `bench/rwlock_compare/test_bench.py`; [rwlock benchmark](../bench/rwlock_compare/README.md) |
 | Runner/assembly export |`bench/tclock_compare/test_direct.py`, `bench/spin_cacheline/test_assembly.py` |
+| API workload planning and result identity | `bench/real_api/test_plan.py`, `bench/real_api/test_report.py`; owned pipe/seek ABI4 policy, backend coverage and protocol-separated reports |
 
 Fixtures check selected state transitions and machine-code continuations. They
 do not exercise every possible kernel schedule. The checkers under `protocols/`
@@ -75,11 +76,19 @@ checks for kernel errors and callers still running, and keeps failure records.
 `verify_evidence.py` checks existing archives offline; it does not run the tests again.
 
 Use [the direct runner](../bench/tclock_compare/README.md) to exercise actual JIT.
-Choose plain, nested or early according to the changed path; nested/early apply
-to KD spin and the explicit owned-v1 c01 mutex functional probes. A successful multithreaded functional JIT case
+Plain owned-v1 mutex runs support c01/c02/c04/c08/c16 and RCUHT with ABI2 or
+explicit ABI4. Choose plain, nested or early according to the changed path;
+nested/early apply to KD spin and the owned-v1 c01 mutex functional probes.
+A successful multithreaded functional JIT case
 must return at least one JIT body. `spin_delegate=0` is a separate control that must
 return zero. Many threads, a published request or NORMAL status alone do not prove
 delegation occurred.
+
+The [API runner](../bench/real_api/README.md) covers owned ABI4 pipebytes,
+pipecap and seek with a private KD object. Validate module/import identity,
+stable publication, business results and complete source/object drain. Its
+single-worker local controls are separate from contended returned-JIT checks;
+these bounded clients do not validate arbitrary kernel-owned mutex replacement.
 
 Rwlock correctness uses [its own live runner](kernel/rwlock/README.md), checking
 reader overlap, writer exclusion, updates and exact count/gate drain. The
@@ -131,6 +140,14 @@ python3 tests/kernel/mutex/run_wait_selftest.py \
 
 ## Recent verification and historical evidence
 
+The [expanded workload receipt](../docs/VALIDATION.md#expanded-mutex-workload-verification)
+records 93 basic/affected checks and 29 live sessions: all six synthetic mutex
+payloads with ABI2 and ABI4, five pipe/seek variants at 1/16/60 workers, and
+two API spin/rwlock regressions. The separate 2,079-session performance round
+checks all requested mutex variants and worker counts. These receipts identify
+their frozen inputs and retain JIT, local execution and performance acceptance
+as separate results.
+
 The origin GS workload runs separately from c01 performance:
 
 ```sh
@@ -160,7 +177,7 @@ coverage uses production C in VM userspace fixtures: old generated code remains
 executing during publication, and old/new bound images return their expected
 distinct values. This is not a live kernel image-replacement claim.
 
-The current owned implementation's [targeted verification](../docs/VALIDATION.md#current-owned-protocol-verification)
+The recorded owned implementation's [targeted verification](../docs/VALIDATION.md#current-owned-protocol-verification)
 records basic and affected fixtures, queued cooling/task probes and actual
 JIT/FULL/owner ACK checks at `585335b`. The later
 [full-grid c01 audit](../docs/VALIDATION.md#full-grid-c01-verification) covers

@@ -18,7 +18,8 @@ per mutex request.
 
 The benchmark arms use distinct compiled functions in
 [mutex_cacheline/module.c](../../workload_modules/mutex_cacheline/module.c).
-The mutex translation unit reuses payload, ioctl runner and timing sources;
+The mutex translation unit reuses payload, ioctl runner and timing sources for
+c01/c02/c04/c08/c16 and RCUHT;
 there is no per-operation runtime `is_mutex` branch. Measurement runs through
 [run_mutex.py](../../bench/tclock_compare/run_mutex.py), sharing reporting with
 the spin runner. Registration and final context drain are outside measurement.
@@ -228,7 +229,8 @@ It adds no field to the public object. Result polling uses the separate
 
 ### Owned ABI4 acquisition and release flow
 
-This is the opt-in local-first path used by the current c01 profile. The OSQ
+This is the opt-in local-first path used by the accepted c01 profile and the
+[expanded mutex comparison](../PERFORMANCE.md#expanded-mutex-workloads). The OSQ
 serializes optimistic spinners; it is separate from the tagged wait list under
 `wait_lock`. ABI2's heat/capture path above remains a different caller policy.
 
@@ -340,17 +342,40 @@ reacquires A nor accesses its queue afterward while B finishes. Source retiremen
 requires producer slots, parked waits, executors, task references and frames to
 drain independently of heat.
 
-The benchmark selects this backend with `--mutex-implementation owned-v1` and
-reports KD_SELF separately from JIT and Linux Native. It covers plain c01
-performance and separate nested/early functional probes. The
+The synthetic benchmark selects this backend with `--mutex-implementation owned-v1`
+and reports KD_SELF separately from JIT and Linux Native. Plain performance
+workloads cover c01/c02/c04/c08/c16 and RCUHT; nested/early functional probes
+remain limited to c01. The
 [accepted profile](../PERFORMANCE.md#accepted-c01-18-worker-profile) is scoped to
 64 post-work rounds and 1–8 workers on the regular 64-vCPU boot. The later
 [1–64-worker comparison](../PERFORMANCE.md#fresh-c01-164-worker-comparison) used
 the same implementation on a historical temporary 66-vCPU boot and missed the
 three-worker peak gate. New runs require the fixed
 [64-CPU placement](../../tools/vm/README.md#complete-164-worker-comparison).
-These results do not promote general defaults or expand translator
-context/flags limits, payload coverage or RT/WW/interruptible mutex APIs.
+The [expanded workload comparison](../PERFORMANCE.md#expanded-mutex-workloads)
+measures all six synthetic payloads and five pipe/file API variants through
+60 workers. Its workload/runner expansion leaves the provider algorithm and
+general defaults unchanged. These descriptive measurements do not extend the
+c01 optimization acceptance or resolve translator context/flags limits or
+RT/WW/interruptible mutex APIs.
+
+### Private pipe/file API adapter
+
+The [API mutex module](../../workload_modules/real_api/mutex.c) uses an explicit
+64-byte-aligned private `struct kd_mutex` and ABI4 outer pairs for pipe byte-count,
+pipe capacity and SEEK_SET/SEEK_END bodies. It prepares the named continuation
+with the matching owned entry ABI and checks object idleness before preparation
+and after worker join. The [API runner](../../bench/real_api/README.md) verifies
+the compiled imports, caller identity, provider policy, stable image publication
+and final source/frame retirement.
+
+The original embedded Linux mutex remains a distinct object. Native uses that
+mutex; KD and TCLock use their private objects around the matched protected body.
+Every measured access to the bound file or pipe follows the selected adapter,
+and retained references survive worker join, source retirement and hook removal.
+Concurrent unhooked consumers, pipe mutation and descriptor changes are outside
+the controlled benchmark contract. This adapter does not provide interchangeable
+Linux/KD mutex APIs or global kernel mutex replacement.
 
 ## Blocking waits and lifetime
 

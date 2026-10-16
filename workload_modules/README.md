@@ -13,7 +13,7 @@ compile time. All participants on a target lock must use that same backend's API
 | [mutex_cacheline](mutex_cacheline/README.md) | `mutex_cacheline.ko` / `/dev/mutex_cacheline` | Separate Native/TCLock/KD cacheline and RCUHT functions; KD-owned ABI2 or ABI4 |
 | [rwlock](rwlock/README.md) | `rwlock_test.ko` / `/dev/kd_rwlock_test` | Native/KD concurrent readers, exclusive writers and JIT writer correctness |
 | [rwlock_bench](rwlock_bench/README.md) | `rwlock_bench.ko` / `/dev/kd_rwlock_bench` | Native/TCLock/KD rwlock performance; default 1%/20% RCUHT mixes and ABI3 JIT writers |
-| [real_api](../bench/real_api/README.md) | `real_api.ko` / scoped ftrace substitution | Real syscall critical sections: xattr/OFD, descriptor flags and bounded UTS metadata use Native/TCLock/KD; pipe and file-position mutexes use Native/TCLock |
+| [real_api](../bench/real_api/README.md) | `real_api.ko` / scoped ftrace substitution | Native/TCLock/KD OFD, descriptor flags, bounded UTS metadata and private pipe/file mutex adapters; translated xattr remains refused by admission |
 
 The top-level Makefile builds the spin and mutex Linux Native workloads by default; explicit
 `spin_cacheline` and `mutex_cacheline` targets build one. Run it only in the

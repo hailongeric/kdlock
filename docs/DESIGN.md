@@ -9,6 +9,12 @@ KD supports spinlocks, ordinary mutexes and read-write locks on x86_64. Callers
 use explicit KD APIs, built against the recorded caller-clobber kernel interfaces.
 Loading the provider does not intercept other Linux locks.
 
+The separate [syscall benchmark adapter](../bench/real_api/README.md) supplies
+private KD-owned mutexes for controlled pipe and file workloads. It redirects
+operations on the bound benchmark object and retains the protected objects
+until shutdown. That scoped adapter leaves the explicit provider API and
+one-protocol-per-object boundary intact.
+
 ## Terms used in these guides
 
 | Term | Meaning |

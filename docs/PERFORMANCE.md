@@ -25,6 +25,12 @@ variation. API KD/TCLock use private objects while Native retains its embedded
 kernel mutex. This descriptive comparison leaves the narrow acceptance below
 and general provider defaults unchanged.
 
+Spin, rwlock and the other API cases remain in the separate
+[7,749-session all-lock round](../bench/results/10.176.26.71/bench/comparison/workloads-20261015T180603Z/README.md).
+Its c01-only KD mutex coverage describes the source captured before this
+expansion. The new mutex round supplies fresh controls for every variant;
+samples from the two rounds are not pooled. KD xattr admission remains unsupported.
+
 <a id="fresh-c01-164-worker-comparison"></a>
 
 ## Recorded c01 1–64-worker comparison
@@ -62,8 +68,10 @@ each pass independently. Correctness, every worker's progress and complete drain
 remain required; this scope has no higher-thread or minimum-JIT gate.
 The [scoped auditor](../bench/tclock_compare/mutex_local_study.py) verifies that
 the screen and both confirmations pass. Their lowest whole/peak ratios are
-98.15%/98.51%. The owned target uses only KD's protocol and retains the Linux
-object layout. General defaults and acceptance above eight workers are unchanged.
+98.15%/98.51%. The independently owned 32-byte target uses only KD's protocol
+and matches the captured Linux mutex layout; it never calls Linux mutex
+operations on that object. General defaults and acceptance above eight workers
+are unchanged.
 
 <a id="latest-owned-mutex-entry-and-waiting-study"></a>
 

@@ -53,8 +53,10 @@ selected with `--host`, `--mirror` and `--scripts`; inspect `--help` for options
 rounds at `1 2 3 4 5 6 7 8 12 16 20 24 28 32 36 40 44 48 52 56 60 64`.
 By default it includes one-cacheline and RCUHT payloads for spin, mutex and
 rwlock, with rwlock at 1%/20% writes: **1,584 sessions** in six groups.
-This driver's default excludes multi-cacheline scenarios, including c02, c08
-and c16. `--include-multicacheline` selects its wider 3,960-session matrix.
+This driver's default excludes multi-cacheline scenarios.
+`--include-multicacheline` adds c08/c16 for spin/mutex and c02/c04/c08/c16 for
+rwlock, selecting its wider 3,960-session matrix. It does not select spin/mutex
+c02/c04 or syscall/API workloads.
 Current runners always use blocking mutexes. The
 [real API runner](../../bench/real_api/README.md) covers syscall workloads and
 Stock controls separately; [the results index](../../bench/results/README.md)
@@ -62,6 +64,12 @@ retains benchmark reports and their frozen source versions.
 Each session has 48,000 warmup operations per worker, a two-second measurement,
 and a 300 ms peak window after 300 ms of settling.
 The all-lock driver uses owned ABI2 for KD cacheline and RCUHT mutex payloads.
+The [expanded mutex commands](../../bench/tclock_compare/README.md#expanded-owned-mutex-comparison)
+cover all six synthetic payloads and link the five API variants at 21 worker
+counts through 60, using ABI4/reuse-32. Their
+[2,079-session report](../../bench/results/10.176.26.71/bench/comparison/mutex-expanded-20261016T040928Z/README.md)
+retains a separate frozen driver and exact commands; it does not execute this
+driver's 64-worker point.
 Use the
 [owned c01 full-grid command](../../bench/tclock_compare/README.md#owned-c01-full-grid)
 for the ABI4/reuse-32 comparison alone: 22 counts, three arms, three rounds and

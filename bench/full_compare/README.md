@@ -8,10 +8,19 @@ Explicitly opting into multi-cacheline payloads selects 3,960 sessions. Executio
 at 64 workers still requires the collector-sharing support described below.
 The driver owns execution and drain;
 [`export.py`](export.py) reads saved evidence without executing benchmark code.
-The all-lock driver uses owned ABI2 for KD mutex payloads. The current owned ABI4
-c01 profile uses the [dedicated command](../tclock_compare/README.md#owned-c01-full-grid)
-and its [198-sample report/auditor](../results/10.176.26.71/bench/mutex_owned/20261014-full-grid/README.md),
-separately from the all-lock c01/hash matrix.
+The all-lock driver uses owned ABI2 for KD mutex payloads. Its optional larger
+payloads are c08/c16 for spin/mutex and c02/c04/c08/c16 for rwlock; it does not
+select spin/mutex c02/c04 or any syscall/API cases.
+
+The requested 21-count comparison through 60 workers has separate frozen
+drivers and auditors: the [all-lock/API round](../results/10.176.26.71/bench/comparison/workloads-20261015T180603Z/README.md)
+and the later [expanded mutex round](../results/10.176.26.71/bench/comparison/mutex-expanded-20261016T040928Z/README.md).
+The latter selects owned ABI4/reuse-32 for all six synthetic mutex payloads and
+five private pipe/file API variants. Use the dedicated
+[synthetic](../tclock_compare/README.md#expanded-owned-mutex-comparison) and
+[API](../real_api/README.md#expanded-mutex-grid) commands for that coverage.
+The separate [c01 full-grid command](../tclock_compare/README.md#owned-c01-full-grid)
+retains its 22-count scope and [historical report](../results/10.176.26.71/bench/mutex_owned/20261014-full-grid/README.md).
 
 After the complete matrix has drained, use the plotting environment in the guest:
 

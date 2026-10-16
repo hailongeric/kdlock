@@ -7,10 +7,11 @@ this historical kernel on production machines. Rebuilding/installing the guest
 kernel still requires separate approval under `docs/AGENTS.md`.
 
 This is the original `6.1.159` baseline, not the current ordinary-spin ABI.
-The current provider requires spin and mutex caller-clobber v1 on
-[`kdclobber2`](../kernel_experiments/mutex_clobber/README.md) and does not build on this
-original kernel; retain this bundle for verification, recovery and reproducing
-its historical source versions.
+The current provider requires the spin caller-clobber v1 interface on the verified
+[`kdclobber2`](../kernel_experiments/mutex_clobber/README.md) kernel and does not
+build on this original kernel. Its owned mutex is provider-local and consumes
+no kernel mutex hooks. Retain this bundle for verification, recovery and
+reproducing its historical source versions.
 The separate [spin-static](../kernel_experiments/spin_static/README.md) and
 [caller-clobber](../kernel_experiments/spin_clobber/README.md) experiments retain
 independent source/build trees and external captured bundles. Select the bundle

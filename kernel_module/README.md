@@ -103,6 +103,11 @@ late capture. The default remains ABI2 capture-first, with optional
 `KD_OWNED_MUTEX_PREFLIGHT=1`. These caller choices are not provider load parameters.
 See the [mutex runner](../bench/tclock_compare/README.md#owned-c01-full-grid)
 for the explicit measured profile and the implementation guide for wake ordering.
+Owned callers now cover all five synthetic cacheline sizes and RCUHT. The
+[private pipe/file adapter](../docs/design/mutex_implementation.md#private-pipefile-api-adapter)
+also uses ABI4; this workload expansion changes neither the provider algorithm
+nor its default policy. [Validation](../docs/VALIDATION.md#expanded-mutex-workload-verification)
+records both ABI2/ABI4 synthetic checks and the scoped API checks.
 
 [Execution flow](../docs/JIT_EXECUTION.md#heat-and-roles) owns full heat rules;
 [spin](../docs/design/spin_implementation.md) owns layout/prefetch/batch details;
@@ -116,7 +121,8 @@ observation never controls final lifetime.
 
 Use [tests](../tests/README.md) for basic and affected checks; performance can run
 directly through the [spin/mutex](../bench/tclock_compare/README.md) or
-[rwlock](../bench/rwlock_compare/README.md) comparison. Do not turn
+[rwlock](../bench/rwlock_compare/README.md) comparison, or the
+[scoped syscall/API runner](../bench/real_api/README.md). Do not turn
 source organization changes into an automatic full matrix.
 
 Stop new calls and wait for workers and translators to finish. Retire sources,

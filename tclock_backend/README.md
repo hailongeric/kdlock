@@ -115,7 +115,10 @@ counts prove delegation but are not exact selected 300 ms window shares. KD mute
 delegates use bounded result polling followed by blocking. Owned SELF uses
 Linux-style optimism/sleeping. These wait paths differ from TCLock's parking
 policy. The
-[current owned c01 comparison](../docs/PERFORMANCE.md#fresh-c01-164-worker-comparison)
+[recorded owned c01 comparison](../docs/PERFORMANCE.md#fresh-c01-164-worker-comparison)
 records predominantly SELF execution for KD and whole-run delegated shares for
-TCLock; throughput alone cannot attribute a benefit to delegation. Data/JIT/context/progress/drain
+TCLock. The [expanded mutex comparison](../bench/results/10.176.26.71/bench/comparison/mutex-expanded-20261016T040928Z/README.md)
+adds all six synthetic payloads and five pipe/file API variants with fresh
+Native/TCLock/KD controls. Throughput alone cannot attribute a benefit to delegation.
+Data/JIT/context/progress/drain
 acceptance and commands live in [the runner](../bench/tclock_compare/README.md).

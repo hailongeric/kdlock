@@ -7,11 +7,11 @@ from the owned protocol's Linux-style optimistic SELF acquisition.
 
 | Runner | Scope |
 | --- | --- |
-| [Spin/mutex comparison](tclock_compare/README.md) | Separate spinlock and ordinary blocking-mutex cacheline/RCUHT workloads |
+| [Spin/mutex comparison](tclock_compare/README.md) | Separate spinlock and ordinary blocking-mutex c01/c02/c04/c08/c16 and RCUHT workloads |
 | [Owned mutex c01 full grid](tclock_compare/README.md#owned-c01-full-grid) | ABI4/reuse-32, one shared counter, Native/TCLock/KD, 22 worker counts and 198 samples |
 | [Rwlock comparison](rwlock_compare/README.md) | Cacheline and RCUHT reader/writer mixes; 1%/20% writes by default |
 | [Complete comparison](../tools/vm/README.md#complete-164-worker-comparison) | All three lock families, c01/hash and 22 worker counts; larger payloads are opt-in |
-| [Real kernel APIs](real_api/README.md) | OFD queries, descriptor flags, pipe/file-position mutexes and bounded UTS reader/writer metadata |
+| [Real kernel APIs](real_api/README.md) | OFD queries, descriptor flags, private owned pipe/file-position mutex adapters and bounded UTS reader/writer metadata |
 | [Shared components](spin_cacheline/README.md) | Clients, warmup, peak selection, provider preparation and offline reports |
 
 The [workload guide](../docs/BENCHMARK_WORKLOADS.md) explains cacheline and hash
@@ -48,13 +48,17 @@ per worker. Record the actual host governor, frequency policy and CPU/NUMA place
 Functional runs explicitly use one round and are separate from performance
 measurements.
 
-The complete grid is
+The complete driver's historical grid is
 `1 2 3 4 5 6 7 8 12 16 20 24 28 32 36 40 44 48 52 56 60 64`.
 Individual runners retain shorter defaults; use explicit placement and worker
 counts for a comparison. Follow the [complete driver](../tools/vm/README.md#complete-164-worker-comparison)
 and its [offline exporter](full_compare/README.md) for the full c01/hash matrix.
-That driver uses owned KD mutexes for c01 and Native/TCLock for other mutex
-payloads. The ABI4/reuse-32 c01 profile has its own explicit command above.
+That driver now includes owned ABI2 KD mutexes for every selected synthetic
+mutex payload, alongside Native and TCLock. Its separate-collector requirement
+still prevents the 64-worker point on the required 64-vCPU topology. The latest
+all-lock and expanded-mutex rounds use 1–8 workers in steps of one and 12–60 in
+steps of four; their frozen drivers and exact commands are retained with their
+reports. The ABI4/reuse-32 c01 profile has its own explicit command above.
 
 Retain best peak and whole-run throughput, minimum/median/maximum/spread across
 rounds, returned JIT/delegation counts, each worker's and NUMA node's progress,
@@ -64,8 +68,15 @@ sessions remain visible and are not successful JIT measurements.
 
 ## Results
 
-[Performance status](../docs/PERFORMANCE.md) summarizes the recent c01 mutex
-studies, retained changes and rejected experiments. The
+[The expanded mutex comparison](results/10.176.26.71/bench/comparison/mutex-expanded-20261016T040928Z/README.md)
+contains 2,079 fresh accepted and drained sessions across six synthetic and five
+pipe/file API variants, with three repetitions per backend and worker count.
+It completes the previously missing KD mutex coverage. The
+[earlier all-lock round](results/10.176.26.71/bench/comparison/workloads-20261015T180603Z/README.md)
+retains the separate spin/rwlock and other-API results; samples are not pooled.
+
+[Performance status](../docs/PERFORMANCE.md) summarizes these comparisons, the
+c01 mutex acceptance studies, retained changes and rejected experiments. The
 [validation index](../docs/VALIDATION.md) separates correctness checks from
 performance acceptance. The [machine indexes](results/README.md) retain complete
 reports, earlier all-lock comparisons and rejected trials. Each result applies

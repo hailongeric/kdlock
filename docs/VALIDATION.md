@@ -19,13 +19,22 @@ source/frame retirement. The 24 contended sessions returned JIT bodies; five
 single-worker API controls stayed local. Source, binary and JIT hashes are audited.
 
 The separate [performance audit](../bench/results/10.176.26.71/bench/comparison/mutex-expanded-20261016T040928Z/verification.json)
-accepts all 2,079 Native/TCLock/KD measurements on the requested 21-count grid.
+accepts all 2,079 Native/TCLock/KD measurements: eleven variants, three backends
+and three repetitions at 1–8 workers by one and 12–60 by four.
 All 660 multithreaded KD sessions returned JIT bodies; the 33 single-worker
 sessions stayed local. The audit recomputes every warmed peak and checks CPU
 placement, ABI4/reuse-32 policy, immutable publication and complete drain.
 Kernel identity, boot policy, all 64 CPU pins and final idle state passed.
 These workload/runner edits preserve the provider implementation; the receipts
 apply to the captured workspace and do not claim a complete project test suite.
+
+The [source identity](../bench/results/10.176.26.71/bench/comparison/mutex-expanded-20261016T040928Z/source-state.json)
+remains `078557a` plus its captured workspace patch and file hashes. The later
+support commit `8010f8f` does not replace that measured identity. The
+[closeout](../bench/results/10.176.26.71/bench/comparison/mutex-expanded-20261016T040928Z/closeout.json)
+records matching implementation inputs, preservation of the 35 preexisting
+kernel-module edits and identical raw archive copies on both physical hosts.
+The earlier all-lock comparison remains a separate source-specific receipt.
 
 ## Owned-only mutex verification
 

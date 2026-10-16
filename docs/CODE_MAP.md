@@ -60,9 +60,11 @@ operations and label parameters implemented by these modules and runners.
 | Directory | Contents |
 | --- | --- |
 | [workload_modules](../workload_modules/README.md) | Separate spin/mutex/rwlock payloads; shared timing and business logic |
+| [mutex_cacheline](../workload_modules/mutex_cacheline/README.md) | Owned ABI2/ABI4 synthetic callers for c01/c02/c04/c08/c16 and RCUHT |
+| [real_api/mutex.c](../workload_modules/real_api/mutex.c) | Private owned ABI4 pipe/seek adapter, bound object references and quiescence checks |
 | [bench/tclock_compare](../bench/tclock_compare/README.md) | Three-arm spin/mutex runners, fresh-control owned origin/NUMA comparison, sessions and reports |
 | [bench/rwlock_compare](../bench/rwlock_compare/README.md) | Mixed RCUHT/cacheline rwlock runner, exact read/write oracle, JIT accounting and parity reports |
-| [bench/real_api](../bench/real_api/README.md) | Scoped syscall workloads, matched backends, Stock control and acceptance limits |
+| [bench/real_api](../bench/real_api/README.md) | Scoped syscall workloads, matched backends, owned caller/policy/publication checks, Stock control and acceptance limits |
 | [tools/vm](../tools/vm/README.md) | Source synchronization and complete 1–64-worker comparison |
 | [bench/results](../bench/results/README.md) | Frozen measurements and validation receipts grouped by machine |
 | [bench/spin_cacheline](../bench/spin_cacheline/README.md) | Shared client, peak selection, provider preparation and offline readers |

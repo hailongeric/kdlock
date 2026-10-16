@@ -231,3 +231,41 @@ kernel fault retains the processes/modules for diagnosis; do not force unload.
 Archive evidence before snapshot recovery. Live output belongs outside the
 guest checkout, and host archives/reports follow the existing machine-specific
 [result layout](../results/README.md).
+
+## Expanded mutex grid
+
+The [expanded comparison](../results/10.176.26.71/bench/comparison/mutex-expanded-20261016T040928Z/README.md)
+uses five API variants: pipebytes at n16/n128, pipecap at n16, and seek set/end
+at n16. After the guest checks and environment setup above, the commands below
+select 945 sessions: five variants, 21 worker counts, three backends and three
+repetitions. Each command needs a fresh output directory. Collector CPU 63 is
+separate from the default worker CPU prefixes throughout this grid.
+
+```sh
+timeout --kill-after=10s 7200s python3 bench/real_api/run.py \
+  --kinds pipebytes --queries query --entries 16 128 \
+  --threads 1 2 3 4 5 6 7 8 12 16 20 24 28 32 36 40 44 48 52 56 60 \
+  --collector-cpu 63 --backends native tclock kdlock --repeats 3 \
+  --mutex-spin-limit 4096 --owned-mutex-reuse-spins 32 \
+  --output /root/kdlock-evidence/10.176.26.71/bench/mutex-pipebytes-NEW
+timeout --kill-after=10s 7200s python3 bench/real_api/run.py \
+  --kinds pipecap --queries query --entries 16 \
+  --threads 1 2 3 4 5 6 7 8 12 16 20 24 28 32 36 40 44 48 52 56 60 \
+  --collector-cpu 63 --backends native tclock kdlock --repeats 3 \
+  --mutex-spin-limit 4096 --owned-mutex-reuse-spins 32 \
+  --output /root/kdlock-evidence/10.176.26.71/bench/mutex-pipecap-NEW
+timeout --kill-after=10s 7200s python3 bench/real_api/run.py \
+  --kinds seek --queries set end --entries 16 \
+  --threads 1 2 3 4 5 6 7 8 12 16 20 24 28 32 36 40 44 48 52 56 60 \
+  --collector-cpu 63 --backends native tclock kdlock --repeats 3 \
+  --mutex-spin-limit 4096 --owned-mutex-reuse-spins 32 \
+  --output /root/kdlock-evidence/10.176.26.71/bench/mutex-seek-NEW
+```
+
+These select the adapter's explicit ABI4 policy with origin/NUMA options off.
+The [synthetic commands](../tclock_compare/README.md#expanded-owned-mutex-comparison)
+add 1,134 sessions for c01/c02/c04/c08/c16 and RCUHT. The archived
+[matrix plan](../results/10.176.26.71/bench/comparison/mutex-expanded-20261016T040928Z/matrix-plan.json)
+preserves the exact per-group commands used for the published round. Keep
+single-worker local KD results distinct from returned-JIT sessions, and retain
+the private-versus-embedded lock placement difference in every API comparison.

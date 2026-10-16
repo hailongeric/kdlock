@@ -23,11 +23,21 @@ Current KD mutexes always support blocking. Older reports retain the policies,
 commands and source hashes captured when they ran; reproduce them with their
 frozen source versions. The [performance guide](../../docs/PERFORMANCE.md) and
 [validation index](../../docs/VALIDATION.md) describe the applicable limits.
-The current owned ABI4 profile has a separate
+The recorded owned ABI4/reuse-32 profile has a separate
 [1–8-worker acceptance study](10.176.26.71/bench/mutex_owned/20261014-linux-local/README.md)
 and [1–64-worker comparison](10.176.26.71/bench/mutex_owned/20261014-full-grid/README.md).
 They use different VM topologies; the latter's three-worker peak misses its
 Native target. Neither changes historical report verdicts or general defaults.
+
+The [2026-10-16 expanded mutex comparison](10.176.26.71/bench/comparison/mutex-expanded-20261016T040928Z/README.md)
+adds 2,079 fresh accepted and drained sessions across all five cacheline payloads,
+RCUHT and five private pipe/file API variants. It compares KD, TCLock and Native
+at 21 worker counts through 60, with three repetitions and explicit ABI4/reuse-32.
+The [2026-10-15 all-lock round](10.176.26.71/bench/comparison/workloads-20261015T180603Z/README.md)
+remains the separate 7,749-session spin/mutex/rwlock and API report; its missing
+KD mutex variants describe the support at that frozen source version. The new
+matrix supplies complete mutex coverage without pooling the rounds or broadening
+the earlier c01 performance acceptance.
 
 Compact reports are tracked in Git. `raw/` is ignored and is not included in source
 synchronization. Keep full raw evidence, including failures, partial runs, commands,

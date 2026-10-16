@@ -257,5 +257,7 @@ counts remain unmeasured. KD rwlock JIT share uses completed writes as its
 denominator. Performance acceptance, failed candidates and remaining gaps live in
 [performance status](../PERFORMANCE.md) and the
 [machine result indexes](../../bench/results/README.md). Current owned mutex
-verification is [recorded separately](../VALIDATION.md#owned-only-mutex-verification).
+verification separates the
+[owned-only protocol checks](../VALIDATION.md#owned-only-mutex-verification) and
+[expanded synthetic/API coverage](../VALIDATION.md#expanded-mutex-workload-verification).
 Frozen reports retain the implementation, policy and topology used by each run.

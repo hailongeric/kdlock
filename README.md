@@ -22,9 +22,11 @@ guest-kernel interfaces.
 Use the [project guide](docs/PROJECT_GUIDE.md) to build and run in the verified
 guest. [Performance status](docs/PERFORMANCE.md) summarizes measured outcomes,
 and the [results index](bench/results/README.md) retains source-specific evidence.
-The [owned-mutex performance status](docs/PERFORMANCE.md) distinguishes the
-accepted c01/post64 profile at 1–8 workers from the later 1–64-worker comparison
-and archived experiments. The [current protocol flowcharts](docs/design/mutex_implementation.md#owned-abi4-acquisition-and-release-flow)
+The [latest mutex comparison](bench/results/10.176.26.71/bench/comparison/mutex-expanded-20261016T040928Z/README.md)
+covers all five cacheline payloads, RCUHT and the private pipe/file API adapter
+at 1–60 workers. [Performance status](docs/PERFORMANCE.md) keeps these results
+separate from the accepted c01/post64 profile at 1–8 workers and earlier studies.
+The [current protocol flowcharts](docs/design/mutex_implementation.md#owned-abi4-acquisition-and-release-flow)
 show local acquisition, delegation and owner acknowledgements.
 Current owned-mutex code also supports immutable image versions and opt-in
 origin-readiness/NUMA policies. The [policy comparison](bench/tclock_compare/README.md#owned-origin-and-numa-comparison)

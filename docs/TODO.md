@@ -11,7 +11,7 @@ measurements resolves the correctness limits below.
 
 ## Current checkpoint
 
-The measured owned provider at `585335b` extends `d8d14a1` with the accepted
+The recorded owned provider at `585335b` extends `d8d14a1` with the accepted
 [ABI4/reuse-32 c01 profile](PERFORMANCE.md#active-c01-18-worker-study), limited to
 KD-only object lifetimes and the captured x86-64 configuration. Its
 [targeted receipts](VALIDATION.md#current-owned-protocol-verification) do not
@@ -21,10 +21,20 @@ measured 1–8 workers in steps of one and 12–64 in steps of four on a histori
 66-vCPU boot. All 198 samples are correct and drained; the three-worker warmed
 peak misses 97% of Native. Full-grid parity and its two fresh confirmation blocks
 remain outstanding. The predominantly SELF results do not establish a benefit
-from bulk delegation. Other payloads and post-work settings need separate studies.
+from bulk delegation. Optimization acceptance for other payloads and post-work
+settings requires separate studies.
 The broader native-first experiment remains rejected and archived. None of these
 results waives ownership, lifetime, progress or drain requirements, or resolves
 the failures below.
+
+The [2026-10-16 expanded comparison](PERFORMANCE.md#expanded-mutex-workloads)
+covers c01/c02/c04/c08/c16, RCUHT and five private pipe/file API variants on the
+required 64-vCPU topology through 60 workers. The associated
+[support checks](VALIDATION.md#expanded-mutex-workload-verification) establish
+the added workload coverage. The descriptive performance results retain
+low-worker regressions and do not extend the narrow optimization acceptance,
+generalize the private API adapter to arbitrary kernel objects or close the
+64-worker collector gap below.
 
 Recorded failures and unresolved coverage:
 
@@ -35,10 +45,11 @@ Recorded failures and unresolved coverage:
   through-60 runs leave their full-grid gate open. See the
   [runner support table](../tools/vm/README.md#complete-164-worker-comparison).
 - The later immutable owned-image implementation and opt-in origin/NUMA policies
-  need their own source-specific correctness and performance evidence. Keep
-  origin claims and NUMA selection disabled by default until their documented
+  have [separate source-specific receipts](VALIDATION.md#origin-readiness-and-image-version-verification).
+  Keep origin claims and NUMA selection disabled by default until their documented
   [screen and confirmation gates](../bench/tclock_compare/README.md#owned-origin-and-numa-comparison)
-  are met; the older c01 acceptance does not cover these additions.
+  are met; the recorded origin/NUMA comparison missed those gates, and the older
+  c01 acceptance does not cover these additions.
 - Concurrent cold promotion stalled with an RCU warning in c16/t4 preparation.
   Single-CPU preparation avoids that phase rather than fixing it. The fixed
   [failure record](https://github.com/hailongeric/kdlock/blob/175d73bcc2faaa5ee9f9ab28a20491680d834043/bench/tclock_compare/results/20260918-native-stack.md)

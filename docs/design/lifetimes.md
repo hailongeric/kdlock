@@ -35,6 +35,12 @@ that old users have finished. Keep storage alive until all of them finish. Even
 the final logical ACK for lock A can arrive before the batch physically releases
 A, so that ACK alone is not permission to free the containing object.
 
+The [pipe/file benchmark adapter](mutex_implementation.md#private-pipefile-api-adapter)
+retains a separate reference to its bound file or pipe. That reference survives
+worker join, source retirement and hook removal; a private KD mutex becoming
+idle does not release it. The controlled client excludes independent consumers
+that could access the protected storage through its original Linux mutex.
+
 An idle rwlock gate is also insufficient: fast readers and native fast writers
 can be active without holding it. Stop callers, then check the count, gate and exact
 acquisition/frame state. An ABI3 body that resumes natively after making progress

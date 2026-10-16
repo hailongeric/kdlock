@@ -18,6 +18,10 @@ retain host archives and compact summaries in [the machine result layout](../res
 remaining gaps. The [destination-host index](../results/10.176.26.71/README.md)
 and [original-host index](../results/380G10/README.md) retain the separate
 measurements, caller ABIs, JIT evidence and topology limits.
+The [2026-10-15 all-lock/API round](../results/10.176.26.71/bench/comparison/workloads-20261015T180603Z/README.md)
+covers c01/c02/c04/c08/c16 and RCUHT at both write mixes, with 1–8 workers in
+steps of one and 12–60 in steps of four. The later mutex expansion is a separate report;
+it does not rerun or change these rwlock measurements.
 
 ## Cases
 
@@ -49,7 +53,7 @@ its original report.
 
 The default thread set matches the earlier spin/mutex comparison:
 `1 2 3 4 5 6 7 8 12 16 20 24 28 32 36`. Three rounds of each case with all three
-backends produce **270 sessions**. `--threads` selects a shorter set;
+backends produce **270 sessions**. `--threads` selects an explicit set;
 `--full-matrix` explicitly restores the default 15-point set.
 `--cpus` is an ordered list: a run with N workers uses the first N CPUs. Keep
 runs on one NUMA node separate from runs spanning nodes. The collector samples

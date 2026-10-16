@@ -48,9 +48,11 @@ KDLOCK_RECOVERY_CONFIRMED=1 KDLOCK_SNAPSHOT_TAG=YOUR_CONFIRMED_SNAPSHOT \
   --output /root/kdlock-evidence/10.176.26.71/bench/spin-matrix-new
 ```
 
-For mutex, use `run_mutex.py` with `--cachelines 1` and a new output directory.
-Its KD arm uses the owned mutex; Native/TCLock also support larger cacheline and
-RCUHT bodies when selected without KD. `--kd-batch-size` sets the provider's
+For mutex, use `run_mutex.py` and a new output directory. All three backends
+support `--workload cacheline --cachelines 1 2 4 8 16` and, in a separate run,
+`--workload rcuht`. Its KD arm uses the owned mutex with ABI2 by default;
+the [expanded comparison](#expanded-owned-mutex-comparison) selects ABI4 explicitly.
+`--kd-batch-size` sets the provider's
 compile-time total body cap, default 1,024. KD mutex delegation requires JIT;
 SELF acquisition remains available for local execution.
 
@@ -205,12 +207,45 @@ The [accepted 1–8 study](../../docs/PERFORMANCE.md#accepted-c01-18-worker-prof
 has its own screen and two confirmation blocks. A descriptive full-grid run
 does not substitute for that acceptance procedure or the functional FULL/ACK checks.
 
+## Expanded owned mutex comparison
+
+The [2026-10-16 report](../results/10.176.26.71/bench/comparison/mutex-expanded-20261016T040928Z/README.md)
+compares all six synthetic mutex payloads and five private pipe/file API variants
+at 21 worker counts: 1–8 by one and 12–60 by four. It uses owned ABI4, reuse
+allowance 32, result polling budget 4096 and blocking waits, with origin/NUMA
+policies off. This is a separate descriptive comparison from the c01 acceptance
+study above.
+
+After the same guest, snapshot and idle checks, run the synthetic cacheline set:
+
+```sh
+KDLOCK_RECOVERY_CONFIRMED=1 KDLOCK_SNAPSHOT_TAG=YOUR_CONFIRMED_64_VCPU_SNAPSHOT \
+  LC_ALL=C timeout --kill-after=10s 7200s python3 bench/tclock_compare/run_mutex.py \
+  --mutex-implementation owned-v1 --owned-mutex-cabi --owned-mutex-reuse-spins 32 \
+  --mutex-spin-limit 4096 --mutex-acceptance adaptive-performance --kd-provider-ubsan off \
+  --workload cacheline --cachelines 1 2 4 8 16 \
+  --threads 1 2 3 4 5 6 7 8 12 16 20 24 28 32 36 40 44 48 52 56 60 \
+  --cpus 0-59 --collector-cpu 63 --backends native tclock kdlock --repeats 3 \
+  --duration-ms 2000 --peak-window-ms 300 --peak-settle-ms 300 --sample-ms 10 \
+  --kernel-source /root/linux-6.1.159-kdclobber2 \
+  --kernel-baseline /root/kdlock-kernel-baselines/mutex-clobber2-20260919 \
+  --output /root/kdlock-evidence/10.176.26.71/bench/mutex-owned-cachelines-NEW
+```
+
+For RCUHT, replace `--workload cacheline --cachelines 1 2 4 8 16` with
+`--workload rcuht` and use a fresh output directory. These commands select 945
+cacheline sessions and 189 hash sessions; the [API runner](../real_api/README.md#expanded-mutex-grid)
+supplies the remaining 945 sessions. Workers use the prefix of CPUs 0–59;
+collector CPU 63 remains separate throughout. The frozen report's
+[matrix plan](../results/10.176.26.71/bench/comparison/mutex-expanded-20261016T040928Z/matrix-plan.json)
+retains the exact per-group commands that produced its measurements.
+
 ## Workloads and backends
 
 See [workloads and critical sections](../../docs/BENCHMARK_WORKLOADS.md#synthetic-cacheline-updates)
 for the meaning of `c01`–`c16`, the shared counter layout and each hash move attempt.
 
-Cacheline comparisons default to one line; 8/16-line bodies remain available only
+Cacheline comparisons default to one line; 2/4/8/16-line bodies remain available only
 when explicitly requested. Hash uses 1,024 buckets, 4,096 preallocated
 nodes, 8,192 keys and 100% writes: each request records one move, conflict or miss.
 The three arms use the same immediate unlink/relink body and fixed CPU-seeded random

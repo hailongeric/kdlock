@@ -10,6 +10,14 @@ phase. Real API workers issue syscalls individually. The bodies below describe
 the protected payload; throughput also includes the surrounding timed work
 defined by each runner.
 
+The [all-lock/API comparison](../bench/results/10.176.26.71/bench/comparison/workloads-20261015T180603Z/README.md)
+and [expanded mutex comparison](../bench/results/10.176.26.71/bench/comparison/mutex-expanded-20261016T040928Z/README.md)
+record three repetitions at 1–8 workers by one and 12–60 by four. The latter
+adds fresh Native/TCLock/KD measurements for all six synthetic mutex payloads
+and five pipe/file API variants. Earlier KD mutex omissions remain part of the
+first report's captured scope. Xattr and the proposed process/mmap workloads
+below remain outside accepted KD coverage.
+
 ## Synthetic cacheline updates
 
 Each counter is a 64-bit value padded to a 64-byte slot. All workers access the
@@ -41,14 +49,15 @@ sleep in the plain payload. The `cNN` suffix counts payload cachelines only,
 excluding lock storage and other metadata. Padding separates different counters;
 every worker still shares the same counter in c01.
 
-The owned c01 comparison places its 32-byte mutex in the same 64-byte-aligned
+The owned synthetic comparison places its 32-byte mutex in the same 64-byte-aligned
 lock slot as Native, separate from the counter. Matching the public type's size,
 alignment and offsets preserves embedding geometry; it does not establish equal
-cache traffic. The timed loop currently includes 64 dependent arithmetic rounds
+cache traffic. Spin/mutex loops currently include 64 dependent arithmetic rounds
 after each unlock, defined in [post_work.h](../workload_modules/spin_cacheline/post_work.h).
-Both the accepted 1–8-worker profile and later 22-count comparison use this
-post64 setting. An eight-round variant is a different workload and needs its own
-baseline; it must not be pooled with those results.
+The accepted c01 1–8-worker profile, later 22-count comparison and expanded
+21-count mutex comparison use this post64 setting. An eight-round variant is
+a different workload and needs its own baseline; it must not be pooled with
+those results.
 
 At completion, each selected counter must match the total completed increments;
 unselected counters must remain unchanged.
@@ -86,6 +95,11 @@ The `wNN` suffix is the write percentage: `w01` means 1% writes and 99% reads;
 deterministic initial phase and evenly spaced writes. It does not assign 20% of
 workers to a dedicated writer role. The runner supports 0–100% writes and
 defaults to the 1% and 20% mixes.
+
+The rwlock loop uses four dependent arithmetic rounds after each read or write
+unlock, defined in its own [post_work.h](../workload_modules/rwlock_bench/post_work.h).
+This differs from the spin/mutex post64 loop; compare backends within the same
+lock family, payload and read/write mix.
 
 For example, `rwlock-cacheline-c08-w20` means eight shared counter cachelines,
 with readers checking all eight and writers incrementing all eight, at a 20%
@@ -306,8 +320,8 @@ varying displacement `d` between 1 and 1,024 bytes:
 - `set`: `lseek(fd, d, SEEK_SET)` returns `d`.
 - `end`: `lseek(fd, -d, SEEK_END)` returns `N*4096 - d`.
 
-**Matched critical section.** The exclusive `file.f_pos_lock` protects these
-steps in the adapter:
+**Matched critical section.** Native takes the original `file.f_pos_lock`;
+TCLock and KD take their private adapter mutexes. Each protects the same steps:
 
 1. Read the filesystem's maximum file size (`s_maxbytes`). For `SEEK_END`, also
    read the inode size with `i_size_read()` and add the requested displacement.

@@ -45,7 +45,8 @@ never be passed to Linux mutex APIs; matching size and offsets do not permit
 mixed waiters. Compile-time checks require the same size, alignment and field
 offsets as the captured non-RT `struct mutex`; this preserves embedding geometry,
 without adding public fields or proving identical cache traffic. See the [owned protocol](../docs/design/mutex_implementation.md#kd-owned-implementation-experimental)
-and [c01 caller](../workload_modules/mutex_cacheline/module.c).
+and [synthetic caller](../workload_modules/mutex_cacheline/module.c), which covers
+all five cacheline sizes and RCUHT.
 
 The opt-in `KD_OWNED_MUTEX_CABI=1` outer caller uses ordinary C register
 preservation and internal ABI4. Prepare it with
@@ -62,6 +63,12 @@ The [measured c01 profile](../docs/PERFORMANCE.md#accepted-c01-18-worker-profile
 explicitly pairs ABI4 with `owned_mutex_reuse_spins=32`; the provider default is 0.
 That allowance is separate from delegated-result polling and does not bound the
 whole optimistic acquisition loop.
+
+The [pipe/file API adapter](../workload_modules/real_api/mutex.c) is another ABI4
+caller. It uses a private aligned KD object, not the file or pipe's embedded Linux
+mutex, and retains the protected storage through worker and source drain. Its
+[benchmark contract](../bench/real_api/README.md) limits all consumers to the bound
+client and records the different Native/KD object placement.
 
 Owned delegation defaults to FIFO without origin-sensitive GS bodies. Provider
 options `owned_mutex_origin_spin=1` and `owned_mutex_numa=1` independently enable

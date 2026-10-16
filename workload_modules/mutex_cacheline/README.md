@@ -24,7 +24,7 @@ controlled-object contract. Module metadata records the actual compiled
 implementation for the runner to verify.
 
 `KD_OWNED_MUTEX_CABI=1` selects the ordinary-C ABI4 caller, which tries KD-owned
-local acquisition before late capture. The runner's measured c01 profile also
+local acquisition before late capture. The runner's measured ABI4 profile also
 sets `--owned-mutex-reuse-spins 32`; that is an explicit selection, while the
 provider default is 0. Both arms retain the same 32-byte public object and
 64-byte-aligned lock slot, separate from the shared counter line. The payload's
@@ -62,6 +62,8 @@ The [mutex runner](../../bench/tclock_compare/run_mutex.py) builds the other
 arms with the correct provider/include paths and `Module.symvers`, prepares
 KD translations, registers all workers, performs warmup, verifies payload and
 returned-body JIT/delegation evidence, and drains, retires sources and unloads modules in order.
+The [expanded comparison command](../../bench/tclock_compare/README.md#expanded-owned-mutex-comparison)
+selects all six payloads through 60 workers, with separate pipe/file API runs.
 Commands, the full thread set, UBSAN-off provider policy and statistics are
 maintained in the [comparison README](../../bench/tclock_compare/README.md).
 Owned `KD_SELF`/`ADAPTIVE_SELF` and returned-JIT samples remain distinct. The [full-grid command](../../bench/tclock_compare/README.md#owned-c01-full-grid)

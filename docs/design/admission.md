@@ -196,14 +196,16 @@ is unavailable before the call, a validated PENDING exit runs the call natively.
 An invalid token, read or packet after progress is still fail-stop. Final completion
 needs no preservation check because it does not return to this JIT episode.
 
-The real contention gate now extends the existing seven-role driver. B's native
-owner waits for the combiner in Linux's mutex wait_list before writing an
-explicitly exposed live waiter-local word. The original waiter observes the new
+The historical real-contention check extended a seven-role driver. In that
+recorded Linux-mutex implementation, B's native owner waited for the combiner
+in Linux's mutex wait_list before writing an explicitly exposed live waiter-local
+word. The original waiter observed the new
 value after the completed CALL, with A and B still owned by that combiner;
-the two unlock ACKs precede suffix completion. The oracle requires the distinct
+the two unlock ACKs preceded suffix completion. The oracle required the distinct
 stack-change warning, actual source CALL successor and unchanged NORMAL root,
 not only successful native code. This is one bounded shared-slot history, not
-arbitrary concurrent mutation or a stack-privacy assumption; see
+arbitrary concurrent mutation or a stack-privacy assumption. It is not a fresh
+owned-mutex execution check; see
 [historical execution check](https://github.com/hailongeric/kdlock/blob/1b9191256f64785f8e844ada914356a69d4f70f0/docs/testing/entry_admission.md#53-mutex-%E6%8E%A7%E5%88%B6-call-%E7%9A%84%E6%A0%88%E6%A3%80%E6%9F%A5).
 
 The provider now advertises this immutable implementation contract through

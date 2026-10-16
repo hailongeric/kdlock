@@ -21,6 +21,17 @@ current-source protocol/JIT/FULL/ACK checks from older receipts and performance 
 [Performance status](PERFORMANCE.md) summarizes the latest frozen measurements;
 [the results index](../bench/results/README.md) owns historical reports and provenance.
 
+Current owned mutex workloads cover c01/c02/c04/c08/c16 and RCUHT. The
+[real API adapter](../bench/real_api/README.md) also supports pipebytes, pipecap
+and seek with a private KD-owned object and controlled callers. It does not
+replace arbitrary Linux mutexes. The
+[2026-10-16 comparison](../bench/results/10.176.26.71/bench/comparison/mutex-expanded-20261016T040928Z/README.md)
+contains 2,079 accepted and drained measurements across 11 variants, all three
+backends and the requested 21 worker counts through 60. Its explicit
+ABI4/reuse-32 profile does not change caller defaults or the earlier acceptance
+scope below. The [validation index](VALIDATION.md) records the associated
+93 unit checks and 29 live validation sessions.
+
 The recorded owned ABI4/reuse-32 profile at `585335b` is accepted for c01/post64
 at 1–8 workers on the regular boot. The historical 2026-10-14 22-count,
 1–64-worker comparison used the same implementation on a temporary 66-vCPU
@@ -94,9 +105,9 @@ Spin/mutex timed runs support it with
 and the [complete-matrix driver](../tools/vm/README.md#complete-164-worker-comparison),
 still require a separate collector. Record collector/QEMU contention separately
 and preserve historical topology metadata.
-The [owned-only verification](../bench/results/10.176.26.71/tests/remove-mutex-legacy-20261015/validation.json)
-records the 2026-10-15 kernel, boot-policy, CPU-pin and idle checks, with the
-confirmed `before-mutex-legacy-removal-20261015` recovery snapshot. Reverify the
+The [mutex workload validation](../bench/results/10.176.26.71/bench/comparison/mutex-expanded-20261016T040928Z/validation.json)
+records the 2026-10-16 kernel, boot-policy, CPU-pin and idle checks, with the
+confirmed `before-mutex-coverage-20261016T034903Z` recovery snapshot. Reverify the
 live state and snapshot before any new run; the receipt records that run's state.
 
 `vm_ssh.sh` uses `/home/eric/.ssh/kdlock_vm_ed25519` to reach the guest locally.

@@ -128,9 +128,9 @@ as needed. Delete only identified obsolete project files. Never move, recursivel
 replace or clear `/root/host_fs`, and do not edit frozen running inputs.
 
 The 64-vCPU boot, exact kernel identity, all 64 CPU pins and guest idle state were
-verified by the [owned-only mutex checks](../bench/results/10.176.26.71/tests/remove-mutex-legacy-20261015/validation.json)
-on 2026-10-15, with confirmed recovery snapshot
-`before-mutex-legacy-removal-20261015`. Recheck live state and snapshot availability
+verified by the [mutex workload checks](../bench/results/10.176.26.71/bench/comparison/mutex-expanded-20261016T040928Z/validation.json)
+on 2026-10-16, with confirmed recovery snapshot
+`before-mutex-coverage-20261016T034903Z`. Recheck live state and snapshot availability
 before new work. The earlier 73-session migration benchmark used 60 vCPUs and
 remains evidence for that topology. The migration copy contains current disk
 contents without historical VM snapshots; the original disks on `380G10` remain
