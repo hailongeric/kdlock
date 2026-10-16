@@ -49,10 +49,11 @@ sleep in the plain payload. The `cNN` suffix counts payload cachelines only,
 excluding lock storage and other metadata. Padding separates different counters;
 every worker still shares the same counter in c01.
 
-The owned synthetic comparison places its 32-byte mutex in the same 64-byte-aligned
-lock slot as Native, separate from the counter. Matching the public type's size,
-alignment and offsets preserves embedding geometry; it does not establish equal
-cache traffic. Spin/mutex loops currently include 64 dependent arithmetic rounds
+The current owned synthetic comparison places a 128-byte KD mutex in its
+64-byte-aligned lock slot, separate from the counter. Native retains its 32-byte
+mutex. Historical comparisons through the expanded 2026-10-16 round used a
+32-byte KD object; the adaptive experiment changes this geometry. The c01
+name still means one payload cacheline, not one total cacheline. Spin/mutex loops currently include 64 dependent arithmetic rounds
 after each unlock, defined in [post_work.h](../workload_modules/spin_cacheline/post_work.h).
 The accepted c01 1–8-worker profile, later 22-count comparison and expanded
 21-count mutex comparison use this post64 setting. An eight-round variant is

@@ -26,8 +26,9 @@ class ReportTests(unittest.TestCase):
         owned = dict(old, mutex_implementation='owned-v1', entry_abi=4,
                      owned_mutex_reuse_spins=32, owned_mutex_origin_spin=False,
                      owned_mutex_numa=False)
-        rows = [old, owned, dict(owned, owned_mutex_reuse_spins=0)]
-        self.assertEqual(len(summarize(rows)), 3)
+        rows = [old, owned, dict(owned, owned_mutex_reuse_spins=0),
+                dict(owned, owned_mutex_adaptive=True)]
+        self.assertEqual(len(summarize(rows)), 4)
         with tempfile.TemporaryDirectory() as d:
             with self.assertRaisesRegex(ValueError, 'distinct KD mutex protocols'):
                 write_report(Path(d), rows)

@@ -63,10 +63,11 @@ The [code map](CODE_MAP.md) shows where each component is implemented.
 Each lock type has its own ownership rules:
 
 - KD spin uses one KD lock word for native acquisition and delegated execution.
-- KD owned mutex uses a 32-byte object matching the captured Linux mutex's size,
-  alignment and field offsets. Its own owner word, optimistic spin queue and
+- KD owned mutex uses a 128-byte, 64-byte-aligned object with separate owner
+  and delegate-publication cachelines. Its owner word, optimistic spin queue and
   tagged SELF/DELEGATE wait list provide exclusion. The opt-in ABI4 outer caller
-  tries local acquisition before capturing state for delegation; only an explicit
+  normally tries local acquisition before capture. Opt-in queue-pressure adaptation
+  favors early delegation under contention; only an explicit
   outer unlock can combine. It never passes that object to Linux mutex APIs.
 - KD rwlock uses a reader/writer count and a KD spin gate. Readers run locally;
   every writer must exclude readers, whether it runs natively or through JIT.

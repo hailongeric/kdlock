@@ -27,6 +27,7 @@ static int fixture_clock_gettime(clockid_t, struct timespec *);
 #undef pthread_setname_np
 #undef clock_gettime
 #include <stdarg.h>
+#include <assert.h>
 
 typedef pthread_spinlock_t spinlock_t;
 #define spin_lock(p) pthread_spin_lock(p)
@@ -165,6 +166,28 @@ int fixture_ioctl(int fd, unsigned long cmd, ...)
 
 int main(int argc, char **argv)
 {
+	struct sc_layout layout = {
+		.version = SC_VERSION, .line_bytes = SC_LINE_BYTES, .slots = SC_SLOTS,
+		.lock_bytes = 128, .lock_kind = 2, .lock_addr = 0x1000,
+		.control_addr = 0x2000, .data_addr = 0x3000,
+		.workload = SC_WORKLOAD_CACHELINE,
+	};
+	for (int i = 0; i < SC_SLOTS; i++)
+		layout.slot_addr[i] = layout.data_addr + i * SC_LINE_BYTES;
+	assert(layout_valid(&layout));
+	layout.control_addr = layout.lock_addr + 64;
+	assert(!layout_valid(&layout));
+	layout.control_addr = 0x2000;
+	layout.lock_addr = layout.data_addr - 64;
+	assert(!layout_valid(&layout));
+	layout.lock_addr = 0x1000;
+	layout.lock_kind = 1;
+	assert(!layout_valid(&layout));
+	layout.lock_kind = 2;
+	layout.lock_bytes = 96;
+	assert(!layout_valid(&layout));
+	layout.lock_bytes = 32;
+	assert(layout_valid(&layout));
 	_Static_assert(sizeof(struct sc_slot) == 64, "payload stride");
 	_Static_assert(_Alignof(struct sc_slot) == 64, "payload alignment");
 	pthread_spin_init(&sc_lock, PTHREAD_PROCESS_PRIVATE);

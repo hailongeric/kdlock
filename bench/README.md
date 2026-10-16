@@ -68,6 +68,12 @@ sessions remain visible and are not successful JIT measurements.
 
 ## Results
 
+The [adaptive mutex comparison](results/10.176.26.71/bench/comparison/mutex-adaptive-20261016T075356Z/README.md)
+contains 504 accepted/drained c01 and pipebytes n16 sessions across the same
+21 worker counts, with adaptive KD, exact pre-change KD, Native and TCLock.
+The new policy remains opt-in; the report retains its regressions, full curves,
+JIT share and the new 128-byte layout's compatibility/performance limits.
+
 [The expanded mutex comparison](results/10.176.26.71/bench/comparison/mutex-expanded-20261016T040928Z/README.md)
 contains 2,079 fresh accepted and drained sessions across six synthetic and five
 pipe/file API variants, with three repetitions per backend and worker count.

@@ -83,6 +83,26 @@ class DirectTests(unittest.TestCase):
             with self.subTest(change=change), self.assertRaises(run.Failure):
                 run.make_plan(Namespace(**dict(args, **change)))
 
+    def test_adaptive_policy_is_explicit_and_requires_cabi(self):
+        args = dict(cachelines=[1], threads=[8], repeats=1, iterations=100,
+                    backends=['native', 'kdlock'], lock_kind='mutex',
+                    mutex_implementation='owned-v1', owned_mutex_cabi=True)
+        before = run.make_plan(Namespace(**args))[-1]
+        control, adaptive = run.make_plan(Namespace(**args, owned_mutex_adaptive=True))
+        self.assertFalse(control['owned_mutex_adaptive'])
+        self.assertFalse(before['owned_mutex_adaptive'])
+        self.assertTrue(adaptive['owned_mutex_adaptive'])
+        self.assertEqual(adaptive['owned_acquire_policy'], 'contention_adaptive')
+        self.assertEqual(adaptive['owned_queue_policy'], 'bounded_fifo_refill')
+        numa = run.make_plan(Namespace(**args, owned_mutex_adaptive=True, owned_mutex_numa=True))[-1]
+        self.assertEqual(numa['owned_queue_policy'], 'bounded_numa_cohort_refill')
+        self.assertNotEqual(before['name'], adaptive['name'])
+        self.assertIn('owned_mutex_adaptive', run.MUTEX_POLICY_FIELDS)
+        for change in (dict(owned_mutex_adaptive=1),
+                       dict(owned_mutex_adaptive=True, owned_mutex_cabi=False)):
+            with self.subTest(change=change), self.assertRaises(run.Failure):
+                run.make_plan(Namespace(**dict(args, **change)))
+
     def test_owned_cabi_import_audit_excludes_other_outer_paths(self):
         common = {'kd_owned_mutex_prepare', 'kd_mutex_init', 'kd_owned_mutex_is_idle'}
         abi4 = common | {'kd_owned_mutex_outer_lock_cabi_v2', 'kd_owned_mutex_outer_unlock_cabi_v2'}
@@ -125,9 +145,15 @@ class DirectTests(unittest.TestCase):
             owned_mutex_entry_ratio_limit='256', owned_mutex_self_route='N',
             owned_mutex_native_after_control='0', owned_mutex_refill='N',
             owned_mutex_preflight_spins='0', owned_mutex_preflight_queue='N',
-            owned_mutex_reuse_spins='0', owned_mutex_protocol='linux_local_first_v1',
-            owned_mutex_origin_spin='N', owned_mutex_numa='N')
+            owned_mutex_reuse_spins='0', owned_mutex_protocol='linux_local_split_v1',
+            owned_mutex_origin_spin='N', owned_mutex_numa='N', owned_mutex_adaptive='N')
         check_kd_parameters(params, record, 4096)
+        adaptive = dict(record, owned_mutex_adaptive=True, owned_acquire_policy='contention_adaptive')
+        adaptive_params = dict(params, owned_mutex_adaptive='Y', owned_mutex_protocol='contention_adaptive_v8')
+        check_kd_parameters(adaptive_params, adaptive, 4096)
+        for observed, expected in ((params, adaptive), (adaptive_params, record)):
+            with self.assertRaises(run.Failure):
+                check_kd_parameters(observed, expected, 4096)
         for value in ('', 'old_protocol'):
             with self.subTest(value=value), self.assertRaises(run.Failure):
                 check_kd_parameters(dict(params, owned_mutex_protocol=value), record, 4096)

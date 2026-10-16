@@ -1,0 +1,156 @@
+{
+  "archive": {
+    "archive_member_prefix": "mutex-adaptive-20261016T075356Z/",
+    "bytes": 191683217,
+    "copies": [
+      {
+        "host": "380G10",
+        "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/mutex-adaptive-20261016T075356Z/mutex-adaptive-20261016T075356Z.tar.gz",
+        "verified": true
+      },
+      {
+        "host": "10.176.26.71",
+        "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/mutex-adaptive-20261016T075356Z/mutex-adaptive-20261016T075356Z.tar.gz",
+        "verified": true
+      }
+    ],
+    "guest_tree": "/root/kdlock-evidence/10.176.26.71/bench/mutex-adaptive-20261016T075356Z",
+    "note": "Raw archive includes every pilot and failure plus audited data. Published Markdown and archive/publication receipts were completed afterward; they do not relabel measured source identities.",
+    "offline_archive_verification": {
+      "archive": "bench/results/10.176.26.71/raw/bench/mutex-adaptive-20261016T075356Z/mutex-adaptive-20261016T075356Z.tar.gz",
+      "bytes": 191683217,
+      "directories_verified": 6030,
+      "files_verified": 42412,
+      "manifest_sha256": "eef9d6c8c383408eb31c33c12e23e58342e66bf9493c94c9d9953509b0a2c26f",
+      "passed": true,
+      "sha256": "7c1622987ced2ca2f44a0a412e03b3c8b428ace72614ad617345c7c5590582fa",
+      "symlinks_verified": 1206,
+      "utc": "2026-10-16T11:12:52.912488+00:00"
+    },
+    "run": "mutex-adaptive-20261016T075356Z",
+    "sha256": "7c1622987ced2ca2f44a0a412e03b3c8b428ace72614ad617345c7c5590582fa"
+  },
+  "base_head": "ff01dff1243ae965bb8cfc77257f759cfcb11f19",
+  "branch": "task/owned-mutex-origin-numa",
+  "compact_artifacts_sha256": {
+    "analyze.py": "6d83edf62540ee6213dc0c99badf898c284b353a378780a723636643c8f201cd",
+    "archive.json": "0a5236b1578bfa844cd01b357e87213f9767de3c9428679bcaf229fe5b21e751",
+    "compare.py": "3758bf6486dbea37920fbfc21c2862a38d5254ca5e92fa677e3ca0a2f87dd909",
+    "comparisons.json": "e119247af4cf137c94a184461dc6d1a2058f069458b31621bdf8dbf7fa525a49",
+    "driver.py": "5e6652cb05b9f85ec5a4df80fed5791e7af73588317d2d7a023bbfd2f6cc43f8",
+    "full-v8-plan.json": "c1f312dccdcbf4cbea90d4c22d7bc33e3269f42dcdf27479ee634291013d54df",
+    "full-v8-status.json": "f31426f6d728d7fa73f9b50eb161d77e9e3cd7529d8a77c6d5f4a7b2a4afea98",
+    "guest-after.json": "a5916368252a465ebf2d783a9e700870dcb97fff97a37700132a465f2be464b2",
+    "guest-before.json": "5b91358e0d3f165de4825428363d825f318361c6c4bbc3d59f4fb4d0505a877f",
+    "historical-legacy-reference.json": "3fe2c6987d5a31e50587d8d1e7290e8741e36d04bf0daaf0fdcc57558b2f454c",
+    "host-after.json": "66fafd322cb18fd02df684df0ed5fd828fcb162d293413c9d84b56560b7ba95e",
+    "host-before.json": "c2cdb8431695183f2d50eff78c07e44c9416b4aacad175b5d23bc3afaf92ad76",
+    "host-consistency.json": "207e647f0876a72682f8cae9267a2ef07058ce75f6c139a35d01042908de5631",
+    "jit-share.svg": "75c7fe527f16d5e49211462866c02f3f13a427340f69fac827baf454efc03f23",
+    "nodes.csv": "0611c177ef539d75585ac024424610d8ae2d3379973c85c8cbfaf7aacc920a48",
+    "peak.png": "ca8c3cc1d3547950fbb2e31f29caf5976c12df565419aee1845969e3752e17dd",
+    "peak.svg": "cc7b6ae04cf3da688946964620e47baf4cff2e16990dd15e22812276da7cc040",
+    "samples.csv": "1db3a1e484656db93d356c8fa4a74975a4f7fc95c5ee8038fa814cc130dcda86",
+    "samples.json": "c9885ccf8b9ecd7a858880d7bc7664a5580a8a9bcf5ae06ff98f7297b3582930",
+    "source-state.json": "0a2819560251d3bb85d0edeb282aafc780da0e93773a9d06708536b57f470597",
+    "summary.csv": "6e93649d016a55791eb7f667374152300029518f7aef9665994d9e3833186f97",
+    "summary.json": "ec2d9ccd65de6c6d577715917dc2fe5bba7c4bc37e04a0812078e0296d1efe86",
+    "validation.json": "283cff785fc2cb0efa2cc24a166c7c27e4be05217311f44ae522cf5758d5a7a7",
+    "verification.json": "d4c301c3151f44f6c6e8b43e4097924fc33b34947840f5d7eb29ea612e0cf828",
+    "whole.png": "61b2e428269461f813df5e2354a59816a8abc83d4f6b5801ef5ede190e260778",
+    "whole.svg": "4761c0b78d6778f54fb590c6968515e3ea421f0e9ef8d829c9b3ff373f4df062",
+    "workers.csv.gz": "f4a2b6b19a6f9eebd4f6662393bebb2d7ad3c023c72ac12d4d41cf0c6577022a"
+  },
+  "compiled_code_token_match": true,
+  "documentation_audit": {
+    "external_links_skipped": 105,
+    "issues": [],
+    "local_targets_checked": 1280,
+    "markdown_files": 105,
+    "markdown_fragments_checked": 159
+  },
+  "limits": [
+    "Basic and affected checks only; no full project suite.",
+    "Performance measurements use captured workspace bytes, not the later commit.",
+    "Four partially staged files differ only in comments/whitespace from measured worktree tokens; preexisting edits stay unstaged.",
+    "No 128-byte adaptive-off performance control or fresh confirmation blocks."
+  ],
+  "measured_inputs_unchanged": true,
+  "preexisting_unstaged_paths": 35,
+  "preservation": {
+    "nonoverlap_unchanged": 31,
+    "overlap_task_only": {
+      "kernel_module/owned_mutex/core.c": {
+        "index_sha256": "ae97354e053cc6b528c1bd7942fc98c13eada446525a5787145618e1608a1076",
+        "tokens_match": true,
+        "worktree_sha256": "dbd244421dbe0618f99e5b5ab5a10af94fc03a16eae0d94269ff5df3a9f44d96"
+      },
+      "kernel_module/owned_mutex/entry.S": {
+        "index_sha256": "6855911ca7a9941ebcc8a8e0d6b728fb5c54e77b564e1e8e346c6d6f184b103c",
+        "tokens_match": true,
+        "worktree_sha256": "382e44bf74aa7ef62bde67e4e11518ca48a1cfa963ed9911d979b063dba126df"
+      },
+      "kernel_module/owned_mutex/osq.c": {
+        "index_sha256": "891a7d3f7da324f10b8596e3aa0ba8f44c32a5526c616701f3064c49d06a7726",
+        "tokens_match": true,
+        "worktree_sha256": "5a381b947d024f7d12e36003d72cfcb6e3ac336cc426c1503c7a6582b07be6d5"
+      },
+      "kernel_module/owned_mutex/selection.inc": {
+        "index_sha256": "2eb910907386b998ba2b1a4fae6f504effe6aad59201f6e43afdf9009f48d361",
+        "tokens_match": true,
+        "worktree_sha256": "b9743825fc00561e3e4d0e7ef766f04b186f22781b9f71054b9dd00b034eb889"
+      }
+    },
+    "preexisting_user_files": 35
+  },
+  "publication_formatting": [
+    {
+      "change": "SVG trailing whitespace removed",
+      "file": "jit-share.svg",
+      "parsed_content_equal": true,
+      "published_sha256": "75c7fe527f16d5e49211462866c02f3f13a427340f69fac827baf454efc03f23",
+      "raw_sha256": "cfeac815422760f55c755f077130abaadc2f18cf812cd02470fad08c486a4c22"
+    },
+    {
+      "change": "CSV CRLF to LF",
+      "file": "nodes.csv",
+      "parsed_content_equal": true,
+      "published_sha256": "0611c177ef539d75585ac024424610d8ae2d3379973c85c8cbfaf7aacc920a48",
+      "raw_sha256": "f072554828c22ad2b618517219e33f5fcc2d411fd4450bb67f99e95542b320d3"
+    },
+    {
+      "change": "SVG trailing whitespace removed",
+      "file": "peak.svg",
+      "parsed_content_equal": true,
+      "published_sha256": "cc7b6ae04cf3da688946964620e47baf4cff2e16990dd15e22812276da7cc040",
+      "raw_sha256": "f11332c2778f1e4bd9e6912d912bec5df9fbab82f006562eedf6deb3470e2f27"
+    },
+    {
+      "change": "CSV CRLF to LF",
+      "file": "samples.csv",
+      "parsed_content_equal": true,
+      "published_sha256": "1db3a1e484656db93d356c8fa4a74975a4f7fc95c5ee8038fa814cc130dcda86",
+      "raw_sha256": "d5bb4ad6d738c7a9369684db949ca31b672d4149d3ac33c0d8dc4a2195edd57a"
+    },
+    {
+      "change": "CSV CRLF to LF",
+      "file": "summary.csv",
+      "parsed_content_equal": true,
+      "published_sha256": "6e93649d016a55791eb7f667374152300029518f7aef9665994d9e3833186f97",
+      "raw_sha256": "14ca7cdd54f92f9dfe085cf63b1ba19b87d48592a4726eb5a3b8dc8a1473895b"
+    },
+    {
+      "change": "SVG trailing whitespace removed",
+      "file": "whole.svg",
+      "parsed_content_equal": true,
+      "published_sha256": "4761c0b78d6778f54fb590c6968515e3ea421f0e9ef8d829c9b3ff373f4df062",
+      "raw_sha256": "c721e581363a113d84cbdd56fb432782f7abdf43252dc021979d43de8b2c17c9"
+    }
+  ],
+  "runtime_files_verified": 436,
+  "staged_diff_check_passed": true,
+  "staged_paths": 82,
+  "state": "reviewed-for-commit",
+  "utc": "2026-10-16T11:19:40.540499+00:00",
+  "whole_plot_visually_reviewed": true
+}

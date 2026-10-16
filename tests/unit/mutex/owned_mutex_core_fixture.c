@@ -8,6 +8,7 @@
 unsigned int owned_mutex_reuse_spins;
 
 bool owned_mutex_self_route;
+bool owned_mutex_adaptive;
 
 typedef uint32_t u32;
 typedef struct { unsigned long counter; } atomic_long_t;
@@ -42,6 +43,7 @@ static void (*before_list_add)(struct list_head *, struct list_head *);
 #define static_assert(expr, ...) _Static_assert(expr, #expr)
 #undef __always_inline
 #define __always_inline inline __attribute__((always_inline))
+#define __aligned(n) __attribute__((aligned(n)))
 #define noinline __attribute__((noinline))
 #define notrace
 #define likely(x) (x)
@@ -175,6 +177,11 @@ bool kd_owned_mutex_combine(struct kd_mutex *lock)
 		return false;
 	kd_owned_mutex_release(lock);
 	return true;
+}
+bool kd_owned_osq_crowded(struct optimistic_spin_queue *lock)
+{
+	(void)lock;
+	return false;
 }
 bool kd_owned_osq_lock(struct optimistic_spin_queue *lock)
 {

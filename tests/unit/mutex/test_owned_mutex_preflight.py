@@ -56,6 +56,12 @@ def main():
     production += capture
     production += 'unsigned long ' + definition(delegate, 'kd_owned_mutex_outer_prepared_clobber_v1(')
     mutations = {
+        'adaptive-ignores-queue-pressure': (cabi_gate, cabi_gate.replace(
+            'kd_owned_osq_crowded(&lock->osq)', 'false')),
+        'adaptive-ignores-crowded-episode': (cabi_gate, cabi_gate.replace(
+            'READ_ONCE(lock->adaptive_hot)', 'false')),
+        'adaptive-overrides-diagnostic-self': (cabi_gate, cabi_gate.replace(
+            'owned_mutex_adaptive && !owned_mutex_self_route', 'owned_mutex_adaptive')),
         'cabi-gate-touches-admission': (cabi_gate, cabi_gate.replace(
             '\tpreempt_disable();', '\tpreempt_disable();\n\tkd_hotlock_owned_mutex_entry();')),
         'cabi-gate-skips-local': (cabi_gate, cabi_gate.replace(

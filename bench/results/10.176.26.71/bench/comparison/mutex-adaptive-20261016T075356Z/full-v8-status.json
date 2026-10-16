@@ -1,0 +1,29 @@
+{
+  "state": "COMPLETE",
+  "started_utc": "2026-10-16T10:32:13.968674+00:00",
+  "groups": [
+    {
+      "name": "full-v8-api-pipebytes-query-n16",
+      "started_utc": "2026-10-16T10:32:14.139334+00:00",
+      "exit_code": 0,
+      "finished_utc": "2026-10-16T10:51:08.513715+00:00",
+      "recorded": 252,
+      "drained": 252,
+      "statuses": {
+        "OK": 252
+      }
+    },
+    {
+      "name": "full-v8-mutex-c01",
+      "started_utc": "2026-10-16T10:51:09.157065+00:00",
+      "exit_code": 0,
+      "finished_utc": "2026-10-16T11:06:37.935596+00:00",
+      "recorded": 252,
+      "drained": 252,
+      "statuses": {
+        "OK": 252
+      }
+    }
+  ],
+  "finished_utc": "2026-10-16T11:06:38.578580+00:00"
+}

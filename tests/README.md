@@ -40,6 +40,7 @@ check, missing dependency, crash or compile failure must not be reported as a pa
 | Owned optimistic entry and OSQ | `mutex/test_owned_mutex_preflight.py`, `test_owned_mutex_osq.py`; the outer API fixture compiles both capture-first and opt-in preflight callers and executes their generated JIT |
 | Owned ordinary-C ABI4 | `mutex/test_owned_mutex_cabi.py --mutations`; actual leaf entry/unlock, eight-word late capture/restore, poisoned caller-saved registers, updated callee COMPLETE, exact FULL and cookie checks. Also select `execution/test_native_after_outer.py`, `test_exec_capacity.py` and ABI admission/codegen checks when changing shared state |
 | Owned origin readiness / NUMA | `mutex/test_owned_origin.py`, `test_owned_mutex_delegation.py`, `admission/test_origin_policy.py`; atomic park/claim arbitration, exact audit bounds and operations, eight-request selection and persistent four-bypass barriers |
+| Owned adaptive entry / cohorts | `mutex/test_owned_mutex_osq.py`, `test_owned_mutex_cabi.py`, `test_owned_mutex_core.py`, `test_owned_mutex_delegation.py --mutations`; sampled queue membership, hint offset, finite scan/refill/cohort budgets, deferred ordering and FULL/early retirement. Also select runner planning and layout checks |
 | Owned immutable images | `execution/test_owned_images.py`, `test_exe_registry.py`, `test_jit_entry_scope.py`, `admission/test_text_regions.py`; interrupted/invalid uploads, old-frame binding during replacement, stale misses, generic claim checks, capability negotiation and 64-block exhaustion |
 | Owned intrusive profiler | `mutex/test_owned_mutex_profile.py`; probe registration/unwind, target filtering and return-value ABI, separate from live diagnostic receipts |
 | Task/source/registry lifetime |`infrastructure/test_source_lifetime.py`, `execution/test_exe_registry.py` |
@@ -120,8 +121,10 @@ SELF pickup and exact drain at each polling budget. Its deliberately unstarted
 packet executes no JIT. The separate owned functional checks cover both ordinary
 and clobber nested controls, delegated early release and checked FULL owner ACKs.
 Guarded release is mandatory. The driver verifies
-`owned_mutex_protocol=linux_local_first_v1` from sysfs and records that identity
-and `owned_release_policy=guarded_owner_release`; there is no early-release flag.
+`owned_mutex_protocol=linux_local_split_v1` for its default-policy probe and
+records that identity with `owned_release_policy=guarded_owner_release`.
+The benchmark runners separately verify `contention_adaptive_v8` when the
+adaptive policy is selected. There is no early-release flag.
 ABI4 local-first acquisition may finish entirely through SELF, so use separate
 returned-JIT and forced-FULL functional checks to validate delegation. A correct
 zero-JIT performance sample does not replace those checks.
@@ -139,6 +142,13 @@ python3 tests/kernel/mutex/run_wait_selftest.py \
 ```
 
 ## Recent verification and historical evidence
+
+The [adaptive mutex receipt](../docs/VALIDATION.md#adaptive-mutex-verification)
+records final core/ABI4/cohort checks, the two basic C tests, real blocking-wait
+probes and ABI2/ABI4 forced-FULL controls. The associated 504 performance
+sessions all pass result/progress/drain checks. Earlier failures remain in the
+archive, including a 48-worker early-FULL warmup timeout; final 16-worker
+functional checks do not replace that failed high-thread case.
 
 The [expanded workload receipt](../docs/VALIDATION.md#expanded-mutex-workload-verification)
 records 93 basic/affected checks and 29 live sessions: all six synthetic mutex

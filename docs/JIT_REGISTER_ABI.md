@@ -58,15 +58,20 @@ defines capture-first heat admission and the optional C preflight.
 ### Owned mutex ordinary C entry
 
 `KD_OWNED_MUTEX_CABI=1` selects internal ABI4 for the owned outer pair. It does
-not change the 32-byte lock, the two-word wrapper input, or the device record.
+not change the two-word wrapper input or the device record. The current
+public lock is 128 bytes; rebuild callers and provider together when moving
+from the earlier 32-byte layout.
 Both outer boundaries obey the ordinary x86-64 C register contract. A leaf
 assembly owner CAS returns the physical task cookie without saving nonvolatile
-registers. On contention, Linux-style optimistic SELF acquisition runs before
+registers. The adaptive hint is checked off the owner cacheline before this
+CAS; a hot episode enters the C gate directly. Normally, on contention,
+Linux-style optimistic SELF acquisition runs before
 eligibility, references or capture. Its OSQ/owner loop has no fixed poll
 budget; owner progress and scheduling decide when it stops. Fast and optimistic
 successes do not update the ABI2 admission counters. After optimism fails, the
 helper reschedules if needed and performs a final acquisition retry.
-Only a remaining failure can request capture of the original caller's
+A remaining failure, or the opt-in queue-pressure switch, can request capture
+of the original caller's
 nonvolatile registers and actual post-CALL IP/SP. No OSQ, preemption, waiter,
 packet or task-reference lease crosses that C return. Capture checks exact
 delegation eligibility before resources; refusal commits to SELF waiting.

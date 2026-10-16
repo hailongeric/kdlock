@@ -88,7 +88,7 @@ def parse_owned_local_first_profile(messages, record):
         return None
     require(record.get('profile_lock') and record.get('diagnostic') and
             record.get('arm') == 'kdlock' and record.get('mutex_implementation') == 'owned-v1' and
-            check_owned_caller_policy(record) and record.get('owned_acquire_policy') == 'linux_local_first' and
+            check_owned_caller_policy(record) and record.get('owned_acquire_policy') in ('linux_local_first', 'contention_adaptive') and
             not record.get('profile_owned_preflight', False),
             'local-first profile requires an unscored ABI4 local-first caller')
     require(len(rows) == 1, 'missing or duplicate owned local-first profile receipt')
@@ -113,8 +113,11 @@ def check_owned_caller_policy(record):
     require(all(key in record for key in OWNED_CALLER_FIELDS),
             'incomplete owned caller policy')
     cabi = record['owned_mutex_cabi']
+    adaptive = record.get('owned_mutex_adaptive', False)
+    require(type(adaptive) is bool and (not adaptive or cabi),
+            'adaptive acquisition requires an owned ABI4 caller')
     require(type(cabi) is bool and
-            record['owned_acquire_policy'] == ('linux_local_first' if cabi else 'capture_admission') and
+            record['owned_acquire_policy'] == ('contention_adaptive' if adaptive else 'linux_local_first' if cabi else 'capture_admission') and
             record['owned_release_policy'] == 'guarded_owner_release' and
             record['owned_caller_policy'] == ('c_abi_v2' if cabi else 'clobber_v1') and
             type(record['owned_entry_abi']) is int and
@@ -186,7 +189,7 @@ def check_kd_parameters(params, record, lock_addr):
                  params['owned_mutex_preflight_queue'] == ('Y' if queued else 'N') and
                  (not queued or (policy == 'c_abi_v1' and budget > 0))),
                 'owned queued preflight policy or parameter differs')
-        for field in ('owned_mutex_origin_spin', 'owned_mutex_numa'):
+        for field in ('owned_mutex_origin_spin', 'owned_mutex_numa', 'owned_mutex_adaptive'):
             if field in record:
                 require(params.get(field) == ('Y' if record[field] else 'N'), 'loaded policy differs: ' + field)
         if 'owned_mutex_reuse_spins' in record:
@@ -194,7 +197,8 @@ def check_kd_parameters(params, record, lock_addr):
                     int(params['owned_mutex_reuse_spins']) == record['owned_mutex_reuse_spins'],
                     'owned reuse grace provider parameter differs')
         if any(key in record for key in OWNED_CALLER_FIELDS):
-            require(params.get('owned_mutex_protocol') == 'linux_local_first_v1' and
+            require(params.get('owned_mutex_protocol') ==
+                    ('contention_adaptive_v8' if record.get('owned_mutex_adaptive', False) else 'linux_local_split_v1' if record.get('owned_mutex_object_bytes', 32) == 128 else 'linux_local_first_v1') and
                     not {'owned_mutex_native_first', 'owned_mutex_native_first_spins',
                          'owned_mutex_early_release'} & params.keys(),
                     'owned provider protocol differs')
@@ -306,7 +310,7 @@ class BackendSession(Session):
                     'owned_mutex_preflight_queue=' + str(int(self.record.get('owned_mutex_preflight_queue', False))),
                     'owned_mutex_self_route=' + ('1' if self.record.get('mutex_routing') == 'self' else '0')]
                 mutex_params += [field + '=' + str(int(self.record[field]))
-                                 for field in ('owned_mutex_origin_spin', 'owned_mutex_numa')
+                                 for field in ('owned_mutex_origin_spin', 'owned_mutex_numa', 'owned_mutex_adaptive')
                                  if field in self.record]
             else:
                 mutex_params = []
@@ -329,9 +333,9 @@ class BackendSession(Session):
         layout = json.loads(self.run([HERE/'client', '--layout'], 'layout.json'))
         self.record['layout'] = layout
         if self.record.get('mutex_implementation') == 'owned-v1':
-            require(layout['lock_bytes'] == 32 and layout['line_bytes'] == 64 and
+            require(layout['lock_bytes'] == self.record.get('owned_mutex_object_bytes', 32) and layout['line_bytes'] == 64 and
                     layout['lock_addr'] % 64 == layout['data_addr'] % 64 == 0,
-                    'owned lock/payload layout differs from the 32-byte aligned contract')
+                    'owned lock/payload layout differs from its recorded object contract')
         if self.record.get('workload') == 'rcuht':
             hash_layout(layout)
         require(self.counts('initial')['values'] == [0]*16, 'source was not reset')
@@ -425,7 +429,7 @@ class BackendSession(Session):
             local_first = self.record.get('profile_owned_local_first', False)
             require(not local_first or (owned and self.record.get('diagnostic') and
                     check_owned_caller_policy(self.record) and
-                    self.record.get('owned_acquire_policy') == 'linux_local_first' and not preflight),
+                    self.record.get('owned_acquire_policy') in ('linux_local_first', 'contention_adaptive') and not preflight),
                     'owned local-first probes require an unscored ABI4 local-first caller')
             if local_first:
                 extra_profile.append('local_first=1')

@@ -11,7 +11,7 @@ c01/c02/c04/c08/c16 and RCUHT.
 | --- | --- |
 | `SC_BACKEND=native` | Original `struct mutex`; `(mutex_lock/unlock)` bypass the experiment's caller-clobber macros |
 | `SC_BACKEND=tclock` | `struct komb_mutex`; actual upstream ordinary mutex port and fixed-affinity worker registration |
-| `SC_BACKEND=kdlock` | Separate 32-byte KD `struct kd_mutex`; owned outer cookie, registry kind 3, default ABI2 or opt-in ABI4 |
+| `SC_BACKEND=kdlock` | Separate 128-byte, 64-byte-aligned KD `struct kd_mutex`; owned outer cookie, registry kind 3, default ABI2 or opt-in ABI4 |
 
 The owned arm includes `kd_owned_mutex_direct.h`, initializes with
 `kd_mutex_init`, prepares with `kd_owned_mutex_prepare`, and checks
@@ -26,8 +26,10 @@ implementation for the runner to verify.
 `KD_OWNED_MUTEX_CABI=1` selects the ordinary-C ABI4 caller, which tries KD-owned
 local acquisition before late capture. The runner's measured ABI4 profile also
 sets `--owned-mutex-reuse-spins 32`; that is an explicit selection, while the
-provider default is 0. Both arms retain the same 32-byte public object and
-64-byte-aligned lock slot, separate from the shared counter line. The payload's
+provider default is 0. KD now uses a 128-byte object and Native a 32-byte
+object, each in a 64-byte-aligned lock slot separate from the shared counter.
+`--owned-mutex-adaptive` adds the pressure-based switch and bounded refill;
+combining it with NUMA selection enables local cohorts. The payload's
 [post-work source](../spin_cacheline/post_work.h) currently selects 64 rounds.
 Optional origin-readiness and NUMA policies belong to the provider and runner;
 they do not change the payload bodies or their object layout. Use the separate

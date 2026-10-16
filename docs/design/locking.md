@@ -73,7 +73,7 @@ native continuation and ACK.
 
 ### KD-owned mutex ownership
 
-`struct kd_mutex` owns its 32-byte owner/OSQ/wait-list object for its entire
+`struct kd_mutex` owns its 128-byte owner/OSQ/wait-list object for its entire
 lifetime. Only KD APIs may access it. SELF callers and delegated executors use
 the same owner word; there is no second lock or address-indexed shadow gate.
 The [implementation flowcharts](mutex_implementation.md#owned-abi4-acquisition-and-release-flow)
@@ -88,7 +88,9 @@ early releases exactly once on every path.
 Ordinary/nested native acquisitions retain task-local held counts and never combine on
 unlock. Only explicit outer unlock may detach and execute a leading DELEGATE
 prefix. WAITERS/DELEGATION remain set while detached work still needs ownership.
-An early outer release rejoins unstarted requests before releasing A; the batch
+The adaptive NUMA policy may hold older remote requests in a separate private
+list. An early outer release rejoins that deferred prefix and all unstarted
+requests before releasing A; the batch
 does not reacquire or access A while a still-held B finishes. No later heat or
 admission change can cancel already published work or its cleanup obligations.
 

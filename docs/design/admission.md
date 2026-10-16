@@ -5,7 +5,9 @@ explains the current checks and their limits. Read the [design overview](../DESI
 first; [tests](../../tests/README.md) records which source versions were checked.
 
 Delegation admission and translation admission are separate. Owned mutex ABI4
-offers a request only after its local acquisition path fails; it then checks
+normally offers a request after local acquisition fails. The opt-in adaptive
+policy can offer one earlier after observing at least eight contenders. Both
+routes then check
 source/task eligibility and resources without heat sampling. The translator still
 checks owned lock kind 3, ABI4's defined register inputs, the fixed caller stub,
 terminal unlock and all applicable context/memory rules below. A local SELF

@@ -10,6 +10,9 @@ struct kd_owned_osq_node {
 	struct kd_owned_osq_node *next, *prev;
 	int locked;
 	int cpu;
+	/* Advisory membership only; never grants ownership or permits reuse. */
+	struct optimistic_spin_queue *queue;
+	unsigned int probes;
 };
 
 /*
@@ -41,6 +44,45 @@ static inline struct kd_owned_osq_node *kd_owned_osq_decode_cpu(int encoded_cpu_
 	int cpu_nr = encoded_cpu_val - 1;
 
 	return per_cpu_ptr(&kd_owned_osq_nodes, cpu_nr);
+}
+
+/*
+ * Seven distinct existing spinners plus this arriving caller establish at
+ * least eight contenders without double-counting an owner still leaving OSQ.
+ * Nodes have provider lifetime, so a bounded, lockless walk is safe even when
+ * cancellation changes the links.
+ * Membership and duplicate checks make stale/cross-lock chains inconclusive.
+ * This is only an admission hint: it must never drive queue unlinking, owner
+ * selection, object retirement or any other exact lifetime decision.
+ */
+bool kd_owned_osq_crowded(struct optimistic_spin_queue *lock)
+{
+	struct kd_owned_osq_node *node, *seen[7];
+	unsigned int count, i;
+	int tail;
+
+	lockdep_assert_preemption_disabled();
+	/* Avoid walking remote cache lines on every short-cohort acquisition. */
+	if (++this_cpu_ptr(&kd_owned_osq_nodes)->probes & 63)
+		return false;
+	tail = atomic_read(&lock->tail);
+	if (!tail)
+		return false;
+	node = kd_owned_osq_decode_cpu(tail);
+	for (count = 0; count < 7; count++) {
+		if (!node || READ_ONCE(node->queue) != lock)
+			return false;
+		for (i = 0; i < count; i++)
+			if (seen[i] == node)
+				return false;
+		seen[count] = node;
+		if (count == 6)
+			return true;
+		if (READ_ONCE(node->locked))
+			return false;
+		node = READ_ONCE(node->prev);
+	}
+	return false;
 }
 
 /*
@@ -111,9 +153,13 @@ bool kd_owned_osq_trylock(struct optimistic_spin_queue *lock)
 	curr = kd_owned_osq_encode_cpu(smp_processor_id());
 	node->locked = 0;
 	node->next = NULL;
+	node->prev = NULL;
 	node->cpu = curr;
-	return atomic_cmpxchg(&lock->tail, OSQ_UNLOCKED_VAL, curr) ==
-		OSQ_UNLOCKED_VAL;
+	WRITE_ONCE(node->queue, lock);
+	if (atomic_cmpxchg(&lock->tail, OSQ_UNLOCKED_VAL, curr) == OSQ_UNLOCKED_VAL)
+		return true;
+	WRITE_ONCE(node->queue, NULL);
+	return false;
 }
 
 /* Count deliberate queued observations only. Stabilizing and unlinking an
@@ -137,7 +183,9 @@ kd_owned_osq_lock_common(struct optimistic_spin_queue *lock, unsigned int *remai
 
 	node->locked = 0;
 	node->next = NULL;
+	node->prev = NULL;
 	node->cpu = curr;
+	WRITE_ONCE(node->queue, lock);
 
 	/*
 	 * We need both ACQUIRE (pairs with corresponding RELEASE in
@@ -249,19 +297,28 @@ kd_owned_osq_lock_common(struct optimistic_spin_queue *lock, unsigned int *remai
 
 bool kd_owned_osq_lock(struct optimistic_spin_queue *lock)
 {
-	return kd_owned_osq_lock_common(lock, NULL);
+	bool acquired = kd_owned_osq_lock_common(lock, NULL);
+
+	if (!acquired)
+		WRITE_ONCE(this_cpu_ptr(&kd_owned_osq_nodes)->queue, NULL);
+	return acquired;
 }
 
 bool kd_owned_osq_lock_bounded(struct optimistic_spin_queue *lock,
 			     unsigned int *remaining)
 {
+	bool acquired;
+
 	lockdep_assert_preemption_disabled();
 	if (!remaining || !*remaining)
 		return false;
 	/* A predecessor grant racing expiration, including Step A, returns true.
 	 * The caller then owns OSQ and must unlock even if remaining reached zero.
 	 * Neither cancellation nor unlock has a wall-clock or iteration bound. */
-	return kd_owned_osq_lock_common(lock, remaining);
+	acquired = kd_owned_osq_lock_common(lock, remaining);
+	if (!acquired)
+		WRITE_ONCE(this_cpu_ptr(&kd_owned_osq_nodes)->queue, NULL);
+	return acquired;
 }
 
 void kd_owned_osq_unlock(struct optimistic_spin_queue *lock)
@@ -269,6 +326,8 @@ void kd_owned_osq_unlock(struct optimistic_spin_queue *lock)
 	struct kd_owned_osq_node *node, *next;
 	int curr = kd_owned_osq_encode_cpu(smp_processor_id());
 
+	/* Stop advertising membership before the real, unchanged handoff. */
+	WRITE_ONCE(this_cpu_ptr(&kd_owned_osq_nodes)->queue, NULL);
 	/*
 	 * Fast path for the uncontended case.
 	 */

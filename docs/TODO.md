@@ -36,6 +36,15 @@ low-worker regressions and do not extend the narrow optimization acceptance,
 generalize the private API adapter to arbitrary kernel objects or close the
 64-worker collector gap below.
 
+The [adaptive mutex experiment](PERFORMANCE.md#adaptive-mutex-comparison) changes
+the object to 128 bytes and adds an opt-in pressure-based local/delegated policy.
+It changes routing but does not recover legacy performance generally; c01 has
+large high-worker regressions. Adaptation stays off. The new layout, including
+adaptive-off mode, needs fresh performance acceptance and matched caller/provider
+builds. The earlier 32-byte acceptance does not transfer. A retained v6
+48-worker early-FULL warmup timeout completed naturally before normal drain;
+final 16-worker checks do not close that high-thread coverage gap.
+
 Recorded failures and unresolved coverage:
 
 - New benchmarks use exactly CPUs 0–63: NUMA node 0 has CPUs 0–31 and node 1
@@ -93,8 +102,9 @@ complete the required ACK and retirement steps.
 ### C2. One protocol per physical lock
 
 KD spin owns its word; TCLock/Native own theirs. KD owned mutex uses its own
-owner word, OSQ and tagged wait list. Its Linux-compatible object geometry does
-not permit Linux or TCLock callers on the same object. Preserve ledger identity,
+owner word, OSQ and tagged wait list in a private 128-byte object. Its
+Linux-derived local algorithm does not permit Linux or TCLock callers on the
+same object. Preserve ledger identity,
 physical exclusion, frame pop, owner ACK and storage retirement as separate
 operations.
 KD rwlock owns its count and KD gate. Ungated native writers retain exact

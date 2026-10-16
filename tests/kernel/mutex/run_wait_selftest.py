@@ -45,7 +45,7 @@ def main():
     shutil.copyfile(module, out/module.name)
     runtime.write_json(out/'identity.json', dict(module_sha256=runtime.digest(module),
         snapshot_tag=os.environ.get('KDLOCK_SNAPSHOT_TAG'), cpu=args.cpu, jit_bodies=0,
-        owned_mutex_protocol='linux_local_first_v1',
+        owned_mutex_protocol='linux_local_split_v1',
         owned_release_policy='guarded_owner_release'))
     results = []
     for limit in (0, 1024, 4096):
@@ -75,7 +75,7 @@ def main():
             runtime.command(load,
                 path/'load.log', timeout=30)
             protocol = Path('/sys/module/kdlock_km/parameters/owned_mutex_protocol').read_text().strip()
-            runtime.require(protocol == 'linux_local_first_v1',
+            runtime.require(protocol == 'linux_local_split_v1',
                             'owned protocol identity differs')
             runtime.write_json(path/'policy.json', dict(
                 owned_mutex_protocol=protocol, owned_release_policy='guarded_owner_release'))

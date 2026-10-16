@@ -11,7 +11,8 @@
 #include "kd_regs.h"
 #include "exe_info.h"
 #include "kd_owned_mutex_cabi.h"
-struct kd_mutex { unsigned long owner; };
+struct kd_mutex { unsigned long owner; unsigned char queue_storage[80]; bool adaptive_hot; };
+_Static_assert(offsetof(struct kd_mutex, adaptive_hot)==88, "assembly hint offset");
 void *current_task=(void *)0x8000;
 #define current current_task
 #define might_sleep() ((void)0)
@@ -246,6 +247,13 @@ int main(void) {
   assert(gate_calls==gates+(mode!=0));assert(capture_calls==captures+(mode==2));
   assert(continuation_hits==0);
  }
+ /* The hot hint must bypass even a free-owner leaf CAS at its exact ABI
+  * offset, then let the C gate establish the ordinary physical cookie. */
+ gate_mode=1;test_lock.owner=0;test_lock.adaptive_hot=true;
+ unsigned long old_gates=gate_calls,old_captures=capture_calls;
+ assert(cabi_case()==0x10ef && !test_lock.owner);
+ assert(gate_calls==old_gates+1 && capture_calls==old_captures);
+ test_lock.adaptive_hot=false;
  check_stub();check_cabi_restore();check_unlock_routes();check_jit();
  puts("PASS actual ABI4 leaf/SELF/late-capture preserves callee registers; production eight-word restore");
  return 0;

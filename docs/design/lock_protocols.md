@@ -19,7 +19,7 @@ execution details. KD's nested ownership, recovery and ACK contract remains in
 | KD spin | Explicit four-byte `kd_spinlock_t` | Caller or combiner running translated code | Pinned polling | KD native variants only; no Linux/TCLock mixing |
 | Linux Native mutex | Original `struct mutex` | Its actual Linux owner | Optimistic spinning and sleeping | Ordinary compatible Linux APIs |
 | TCLock mutex | Separate `struct komb_mutex` | Caller or combiner on the waiter's real stack | Polling, scheduling and parking | Not supported |
-| KD owned mutex | KD-owned 32-byte owner/OSQ/tagged FIFO object | SELF caller or physical owner running JIT at an explicit outer unlock | Private optimistic spinning/sleeping; delegated waiters use bounded polling then sleep | No mixing with Linux or TCLock APIs |
+| KD owned mutex | KD-owned 128-byte owner/OSQ/tagged FIFO object | SELF caller or physical owner running JIT at an explicit outer unlock | Private optimistic spinning/sleeping; delegated waiters use bounded polling then sleep | No mixing with Linux or TCLock APIs |
 | Linux Native rwlock | Linux `rwlock_t` / queued rwlock | Each reader or writer executes its own body | Concurrent readers; spinning reader/writer admission | Ordinary compatible Linux rwlock APIs |
 | TCLock rwlock | Separate `struct komb_rwlock` count and gate | Readers run locally; queued writer bodies may run on a borrowed waiter stack | Pinned polling and upstream gate delegation | TCLock rwlock pairs only |
 | KD rwlock | 128-byte `kd_rwlock_t`, count and KD gate on separate cache lines | Readers run locally; writers run natively or through ABI3 JIT | Pinned readers/writers; KD gate queues contended admission | KD native and direct pairs only; no Linux/TCLock mixing |
@@ -169,26 +169,29 @@ mutex owner word provides interoperability for `struct komb_mutex`.
 ## KD mutex
 
 The current owned protocol has its own owner word, OSQ and tagged SELF/DELEGATE
-FIFO inside a 32-byte object matching the captured Linux mutex layout. It ports
+FIFO inside a 128-byte, 64-byte-aligned object. This private layout separates
+owner traffic from delegate publication and no longer matches Linux. It ports
 Linux's optimistic acquisition, sleeping and handoff logic without calling the
 original Linux mutex API on that object. Ordinary/nested pairs execute SELF.
 Delegation requires the explicit `KD_OWNED_MUTEX_OUTER_LOCK/UNLOCK` pair.
 
-The opt-in ABI4 caller first tries a leaf CAS and owner-running optimistic
+The opt-in ABI4 caller normally tries a leaf CAS and owner-running optimistic
 spinning. A local success returns its physical-owner cookie without heat, task
 record or packet work. A remaining failure captures the caller state and checks
 delegation eligibility/resources. Refusal commits to SELF waiting; a published
 delegate polls, then sleeps while retaining its migration pin and reserved stack.
-Default ABI2 uses separate heat admission before delegation instead.
+Opt-in queue-pressure adaptation can offer capture earlier after observing
+at least eight contenders. Default ABI2 uses separate heat admission instead.
 
 WAITERS/HANDOFF/PICKUP keep their Linux roles; DELEGATION guards queued and
 detached delegated work. Only explicit outer unlock can run leading delegates
-from a finite FIFO snapshot, retaining physical ownership. Unstarted requests
+from a private FIFO snapshot, retaining physical ownership. Adaptive mode
+permits bounded refill and optional bounded local NUMA cohorts. Unstarted requests
 rejoin ahead of newer arrivals. GRANTED transfers exact pickup to the caller;
 COMPLETE restores after the finished body; FULL resumes progressed native code
 with owner ACKs. The [implementation and flowcharts](mutex_implementation.md#owned-abi4-acquisition-and-release-flow)
 define the detailed state transitions and optional reuse allowance. A matching
-layout does not permit mixed Linux/KD waiters or APIs.
+calling convention does not permit mixed Linux/KD waiters or APIs.
 
 ## Linux Native rwlock
 

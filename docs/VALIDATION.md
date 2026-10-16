@@ -9,6 +9,35 @@ NUMA node 0 has CPUs 0–31 and node 1 has CPUs 32–63, with no extra vCPUs or
 unused spare CPU. Historical receipts retain their original topology; they
 do not authorize reusing a superseded placement.
 
+## Adaptive mutex verification
+
+The [2026-10-16 adaptive receipt](../bench/results/10.176.26.71/bench/comparison/mutex-adaptive-20261016T075356Z/validation.json)
+records basic and affected checks for the 128-byte layout, sampled OSQ pressure,
+ABI4 hot entry, finite refill/cohort selection and exact deferred-list retirement.
+The final candidate passes core, compiled/JIT ABI4 and delegation fixtures,
+runner policy/layout checks, both basic C tests, the live blocking-wait probe at
+budgets 0/1024/4096, ABI2 forced-FULL nested execution, and ABI4 forced-FULL
+nested/early execution. Each final live control returns JIT where required and
+drains. These are selected checks, not a full project suite.
+
+The [independent audit](../bench/results/10.176.26.71/bench/comparison/mutex-adaptive-20261016T075356Z/verification.json)
+checks all 504 scored c01/pipebytes sessions, including fresh pre-change KD,
+Native and TCLock controls. It recomputes all warmed peaks and checks business
+results, CPU placement, frozen sources/binaries/JIT images and final retirement.
+The report keeps exploratory pilots separate, including build/layout failures
+and the v6 48-worker early-FULL warmup timeout. That warmup later completed
+naturally before normal drain/unload; its original timeout is retained. The final
+16-worker controls do not establish a pass for that failed high-thread case.
+
+The measured identity is `ff01dff` plus the captured workspace inputs, including
+35 preexisting edits. The new commit does not retroactively replace that identity.
+[Source and publication receipts](../bench/results/10.176.26.71/bench/comparison/mutex-adaptive-20261016T075356Z/source-state.json)
+retain exact hashes; [archive records](../bench/results/10.176.26.71/bench/comparison/mutex-adaptive-20261016T075356Z/archive.json)
+identify both host copies. Kernel identity, boot policy, all 64 CPU pins and final
+idle state were rechecked with snapshot
+`before-mutex-adaptive-20261016T075356Z`. Performance regressions remain visible
+in [the report](../bench/results/10.176.26.71/bench/comparison/mutex-adaptive-20261016T075356Z/README.md), and adaptation remains opt-in.
+
 ## Expanded mutex workload verification
 
 The [2026-10-16 support receipt](../bench/results/10.176.26.71/bench/comparison/mutex-expanded-20261016T040928Z/validation.json)

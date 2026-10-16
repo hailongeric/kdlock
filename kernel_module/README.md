@@ -45,7 +45,7 @@ files remain separate for reading.
 | [spin](spin/) | Direct entry, native pending/MCS, NUMA queue, batch, prefetch, stable request, restore and unlock |
 | [kd_rwlock.h](../include/kd_rwlock.h) and `spin/{direct,combiner,execute,restore}.inc` | Reader/count protocol and ABI3 writer admission, refusal/retry and completion over the spin backend |
 | `spin/ticket_*.inc` via [kd_spin_entry.c](kd_spin_entry.c) | Exact acquisition generation, root borrowing and final retirement |
-| [owned_mutex](owned_mutex/) | Independent 32-byte object, Linux-derived SELF/OSQ, ABI4 leaf entry and late capture, guarded FIFO and outer-unlock delegation |
+| [owned_mutex](owned_mutex/) | Independent 128-byte object, Linux-derived SELF/OSQ, ABI4 leaf entry and late capture, guarded FIFO and outer-unlock delegation |
 | [lock](lock/) via [kd_lock.c](kd_lock.c) | Direct/bridge mutex routes and nested spin/mutex control CALLs |
 | [execution](execution/) | Registry, wrapper preparation, frame/ledger, control/services, native and remote ACK |
 | [kd_source.c](kd_source.c), [sys.c](sys.c) | Text pins, device session, capabilities, publication and retirement |
@@ -72,11 +72,12 @@ include those files too. Shared APIs live in [include](../include/README.md).
 | `owned_mutex_entry_ratio_limit` | Owned ABI2: independent limit 256 with the same ratio/cadence; ABI4 does not use heat admission |
 | `owned_mutex_reuse_spins` | 0; allowed 0/8/32/128, one allowance after observing an unflagged release per optimistic OSQ turn; the measured ABI4 profile selects 32 |
 | `owned_mutex_self_route` | False; read-only diagnostic control selecting only KD-owned SELF acquisition |
-| `owned_mutex_refill` | False; opt-in further FIFO snapshots within the same cumulative batch cap |
+| `owned_mutex_refill` | False; opt-in further FIFO snapshots within the same cumulative batch cap; adaptive mode also enables refill |
+| `owned_mutex_adaptive` | False; ABI4 preserves local acquisition at low queue pressure and queues early after a sampled seven-member OSQ pressure cue |
 | `owned_mutex_origin_spin` | False; permit the audited bounded origin-GS subset only while an exclusive spinning-origin claim is held |
-| `owned_mutex_numa` | False; inspect at most eight delegates and retain four-bypass barriers within the existing batch cap |
+| `owned_mutex_numa` | False; eight-delegate/four-bypass selection, or bounded 128-body local cohorts when adaptive mode is also enabled |
 | `owned_mutex_preflight_spins`, `owned_mutex_preflight_queue` | 0/false; bounded ABI2 C-preflight experiment, separate from ABI4's unbounded owner optimism |
-| `owned_mutex_protocol` | Getter-only identity `linux_local_first_v1`; guarded owner release is mandatory |
+| `owned_mutex_protocol` | Getter-only identity `linux_local_split_v1` or `contention_adaptive_v8`; guarded owner release is mandatory |
 | `hotlock_stats` | Optional final approximate observation totals |
 | `target_process` | Task comm eligible for direct mutex delegation |
 | `owned_mutex_spin_limit` | Delegation-result polling limit 4096; 0 parks immediately, maximum 1048576; does not limit SELF owner optimism |

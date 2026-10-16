@@ -31,10 +31,10 @@ DEFAULT_KD_PROVIDER_UBSAN = 'off'
 DEFAULT_MUTEX_ENTRY_RATIO_LIMIT = 256
 MUTEX_ENTRY_RATIO_LIMITS = tuple(1 << shift for shift in range(1, 9))
 OWNED_MUTEX_PREFLIGHT_SPINS = (0, 64, 256, 1024, 4096)
-MUTEX_POLICY_FIELDS = ('mutex_implementation',
+MUTEX_POLICY_FIELDS = ('mutex_implementation', 'owned_mutex_object_bytes',
                        'owned_mutex_entry_ratio_limit', 'mutex_routing', 'mutex_acceptance',
                        'owned_queue_policy', 'owned_preflight_policy', 'owned_mutex_preflight',
-                       'owned_mutex_reuse_spins', 'owned_mutex_origin_spin', 'owned_mutex_numa',
+                       'owned_mutex_reuse_spins', 'owned_mutex_adaptive', 'owned_mutex_origin_spin', 'owned_mutex_numa',
                        'owned_mutex_preflight_spins', 'owned_mutex_preflight_queue',
                        *OWNED_CALLER_FIELDS)
 SPIN_ENTRY_RATIO_LIMITS = (0, *(1 << shift for shift in range(1, 32)))
@@ -211,6 +211,9 @@ def make_plan(args):
     owned_cabi = getattr(args, 'owned_mutex_cabi', False)
     require(type(owned_cabi) is bool and (not owned_cabi or owned),
             'owned C-ABI caller requires owned-v1')
+    owned_adaptive = getattr(args, 'owned_mutex_adaptive', False)
+    require(type(owned_adaptive) is bool and (not owned_adaptive or owned_cabi),
+            'owned adaptive acquisition requires ABI4')
     reuse_spins = getattr(args, 'owned_mutex_reuse_spins', 0)
     require(type(reuse_spins) is int and reuse_spins in (0, 8, 32, 128) and
             (not reuse_spins or owned_cabi), 'owned reuse grace requires ABI4 and a supported bound')
@@ -285,6 +288,8 @@ def make_plan(args):
                            f'-preflight{owned_preflight_spins}' if owned_preflight else '-capture-first')
                 if reuse_spins:
                     suffix += f'-reuse{reuse_spins}'
+                if owned_adaptive:
+                    suffix += '-adaptive-queue'
                 if owned_preflight_queue:
                     suffix += '-queued'
             result.append(dict(name=f'{prefix}-t{t:02d}-r{repeat:02d}-direct-{backend}{suffix}',
@@ -298,7 +303,7 @@ def make_plan(args):
                 cpu_heat_policy=('owned_mutex_contention1024_shift10_lock1025_pinned_cold' if owned_backend else 'mcs_reset1024_shift10_lock512_head6') if backend == 'kdlock' else 'not_applicable',
                 mutex_implementation=mutex_implementation if backend == 'kdlock' and lock_kind == 'mutex' else 'not_applicable',
                 owned_mutex_entry_ratio_limit=owned_limit if owned_backend else None,
-                owned_queue_policy=('bounded_fifo_refill' if owned_refill else 'finite_fifo') if owned_backend else 'not_applicable',
+                owned_queue_policy=('bounded_numa_cohort_refill' if owned_adaptive and owned_numa else 'bounded_fifo_refill' if owned_refill or owned_adaptive else 'finite_fifo') if owned_backend else 'not_applicable',
                 owned_mutex_refill=owned_refill if owned_backend else False,
                 owned_mutex_origin_spin=origin_spin if owned_backend else False,
                 owned_mutex_numa=owned_numa if owned_backend else False,
@@ -310,7 +315,9 @@ def make_plan(args):
                 owned_caller_policy=('c_abi_v2' if owned_cabi else 'clobber_v1') if owned_backend else 'not_applicable',
                 owned_entry_abi=(4 if owned_cabi else 2) if owned_backend else None,
                 owned_mutex_reuse_spins=reuse_spins if owned_backend else None,
-                owned_acquire_policy=('linux_local_first' if owned_cabi else 'capture_admission') if owned_backend else 'not_applicable',
+                owned_mutex_adaptive=owned_adaptive if owned_backend else False,
+                owned_mutex_object_bytes=128 if owned_backend else None,
+                owned_acquire_policy=('contention_adaptive' if owned_adaptive else 'linux_local_first' if owned_cabi else 'capture_admission') if owned_backend else 'not_applicable',
                 owned_release_policy='guarded_owner_release' if owned_backend else 'not_applicable',
                 mutex_routing=mutex_routing if backend == 'kdlock' and lock_kind == 'mutex' else 'not_applicable',
                 mutex_acceptance=mutex_acceptance if backend == 'kdlock' and lock_kind == 'mutex' else 'not_applicable',
@@ -510,6 +517,8 @@ def main(lock_kind='spin'):
                    help='functional nested/early probe: force one post-control FULL continuation and ACK')
     p.add_argument('--owned-mutex-reuse-spins', type=int, choices=(0, 8, 32, 128), default=0,
                    help='one bounded unqueued-release grace in the ABI4 OSQ path; zero disables')
+    p.add_argument('--owned-mutex-adaptive', action='store_true',
+                   help='offer ABI4 delegation when the OSQ is crowded')
     p.add_argument('--owned-mutex-cabi', action='store_true',
                    help='ABI4 Linux local-first acquisition with capture only after optimism fails')
     p.add_argument('--owned-mutex-preflight', action='store_true',

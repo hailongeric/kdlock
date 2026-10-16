@@ -47,6 +47,7 @@ static void kd_owned_mutex_wake_q_add(struct wake_q_head *head,
 void kd_mutex_init(struct kd_mutex *lock)
 {
 	atomic_long_set(&lock->owner, 0);
+	WRITE_ONCE(lock->adaptive_hot, false);
 	raw_spin_lock_init(&lock->wait_lock);
 	atomic_set(&lock->osq.tail, OSQ_UNLOCKED_VAL);
 	INIT_LIST_HEAD(&lock->wait_list);
@@ -357,10 +358,12 @@ kd_owned_mutex_try_local_pinned(struct kd_mutex *lock)
 	return !kd_owned_mutex_trylock_common(lock, false);
 }
 
-/* ABI4 follows the Linux local acquisition path before any KD work. Unlike
- * ABI2's entry-ratio policy, neither fast nor optimistic SELF acquisitions
- * update heat history. Only genuine optimism failure can request capture;
- * exact source/task eligibility is checked there once, before resources.
+/*
+ * ABI4 follows the Linux local acquisition path before any KD work. The
+ * optional adaptive policy offers capture earlier when contention is high.
+ * Unlike ABI2's entry-ratio policy, neither fast nor optimistic SELF
+ * acquisitions update heat history. Exact source/task eligibility is checked
+ * once after capture, before resources.
  *
  * Return zero only to request late capture. Every other return owns L, and
  * there is no stack waiter, OSQ ownership, pin or routing lease on return. */
@@ -369,6 +372,28 @@ kd_owned_mutex_outer_cabi_gate(struct kd_mutex *lock, unsigned long return_ip)
 {
 	(void)return_ip; /* Passed from the actual outer CALL, never a C helper PC. */
 	preempt_disable();
+	/*
+	 * Preserve local acquisition for short queues. With a crowded OSQ, offer
+	 * delegation before entering its unbounded optimistic wait. Only observed
+	 * crowding starts this mode; a small cohort's scheduler-induced delegate
+	 * must not turn every arrival into a delegate. Draining the wait list ends
+	 * this advisory mode. Exact capture/admission still happens later;
+	 * this observation grants no source lease or execution permission.
+	 */
+	if (owned_mutex_adaptive && !owned_mutex_self_route) {
+		if (READ_ONCE(lock->adaptive_hot)) {
+			if (atomic_long_read(&lock->owner)) {
+				preempt_enable();
+				return 0;
+			}
+			WRITE_ONCE(lock->adaptive_hot, false);
+		}
+		if (kd_owned_osq_crowded(&lock->osq)) {
+			WRITE_ONCE(lock->adaptive_hot, true);
+			preempt_enable();
+			return 0;
+		}
+	}
 	if (kd_owned_mutex_try_local_pinned(lock))
 		goto acquired;
 	if (!owned_mutex_self_route) {
@@ -492,6 +517,10 @@ static void kd_owned_mutex_release_common(struct kd_mutex *lock, bool directed)
 			WRITE_ONCE(waiter->kind, KD_OWNED_MUTEX_SELF);
 		}
 	}
+	/* A drained queue ends the advisory combining episode. A racing hint
+	 * may be lost; exact ownership/grants remain entirely in owner/wait_list. */
+	if (list_empty(&lock->wait_list) && READ_ONCE(lock->adaptive_hot))
+		WRITE_ONCE(lock->adaptive_hot, false);
 	owner = atomic_long_read(&lock->owner);
 	for (;;) {
 		BUG_ON((owner & ~KD_OWNED_MUTEX_FLAGS) != (unsigned long)current ||

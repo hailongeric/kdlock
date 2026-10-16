@@ -49,7 +49,7 @@ static struct kd_mutex sc_inner __aligned(SC_LINE_BYTES);
 #define SC_UNLOCK() KD_OWNED_MUTEX_OUTER_UNLOCK(&sc_lock, sc_outer_cookie)
 static void sc_lock_init(void)
 {
-	BUILD_BUG_ON(sizeof(struct kd_mutex) != 32);
+	BUILD_BUG_ON(sizeof(struct kd_mutex) != 128);
 	kd_mutex_init(&sc_lock);
 #if SC_SCENARIO
 	kd_mutex_init(&sc_inner);

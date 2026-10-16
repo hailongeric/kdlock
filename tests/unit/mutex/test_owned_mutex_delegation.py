@@ -94,7 +94,7 @@ struct kd_exec_outer_unlock {
 };
 struct kd_exe_info; struct rcuwait;
 static unsigned long kd_owned_mutex_batches,kd_owned_mutex_refusals,kd_owned_mutex_bodies,kd_owned_mutex_early_releases;
-static bool resched,owned_mutex_refill,owned_mutex_numa,owned_mutex_origin_spin;
+static bool resched,owned_mutex_refill,owned_mutex_numa,owned_mutex_origin_spin,owned_mutex_adaptive;
 static unsigned long kd_owned_mutex_bypasses;
 static struct kd_exe_info entries[16];
 static struct kd_jit_image images[16];
@@ -200,6 +200,7 @@ CASES = r'''
 static void setup(struct kd_mutex *lock,struct kd_owned_mutex_batch *batch,int count) {
  memset(lock,0,sizeof(*lock)); memset(batch,0,sizeof(*batch));
  INIT_LIST_HEAD(&lock->wait_list); INIT_LIST_HEAD(&batch->pending);
+ INIT_LIST_HEAD(&batch->deferred);batch->scan_left=KDLOCK_SPIN_BATCH;
  lock->owner=(unsigned long)current|KD_OWNED_MUTEX_FLAG_WAITERS|
              KD_OWNED_MUTEX_FLAG_DELEGATION;
  guard_owner=&lock->owner;
@@ -215,7 +216,7 @@ static void setup(struct kd_mutex *lock,struct kd_owned_mutex_batch *batch,int c
  for(int i=0;i<count;i++) list_add_tail(&nodes[i].waiter.list,&batch->pending);
  nodes[5].waiter.kind=KD_OWNED_MUTEX_SELF;
  released=executed=completed=flushes=scenario=0; release_count=0;resched=false;
- owned_mutex_numa=owned_mutex_origin_spin=false;owned_mutex_refill=false;refills=last_refill_flush=0;refill_source=&lock->wait_list;
+ owned_mutex_adaptive=owned_mutex_numa=owned_mutex_origin_spin=false;owned_mutex_refill=false;refills=last_refill_flush=0;refill_source=&lock->wait_list;
  arrival_lock=lock;arrival_next=arrival_end=0;lock_action=NULL;
 }
 static void check_order(unsigned int count,const unsigned int *order) {
@@ -276,8 +277,9 @@ static void run_cases(void) {
 
  /* The default finite snapshot ignores arrivals even when a refill could
   * execute them safely. Enabling the candidate changes only this boundary. */
- for(int enabled=0;enabled<=1;enabled++) {
-  setup(&lock,&batch,1);owned_mutex_refill=enabled;
+ for(int policy=0;policy<=2;policy++) {
+  int enabled=policy!=0;
+  setup(&lock,&batch,1);owned_mutex_refill=policy==1;owned_mutex_adaptive=policy==2;
   list_add_tail(&nodes[1].waiter.list,&lock.wait_list);
   kd_owned_mutex_run_batch(&batch);
   assert(executed==1+enabled && completed==1+enabled && refills==enabled);
@@ -369,8 +371,56 @@ static void selection_cases(void) {
  owned_mutex_numa=false;assert(kd_owned_mutex_select(&batch)==NULL);
  puts("PASS bounded NUMA: earliest locality, eight-window, four persistent bypasses, SELF, ineligible/same-CPU heads and FIFO control");
 }
+
+static void cohort_cases(void) {
+ struct kd_mutex lock;struct kd_owned_mutex_batch batch;
+ setup(&lock,&batch,6);batch.scan_left=16;
+ nodes[5].waiter.kind=KD_OWNED_MUTEX_DELEGATE;
+ nodes[0].numa_node=nodes[2].numa_node=1;
+ assert(kd_owned_mutex_select_cohort(&batch,0)==&nodes[1]);
+ list_del_init(&nodes[1].waiter.list);
+ assert(kd_owned_mutex_select_cohort(&batch,1)==&nodes[3]);
+ list_del_init(&nodes[3].waiter.list);
+ assert(kd_owned_mutex_select_cohort(&batch,KD_OWNED_MUTEX_LOCAL_COHORT)==NULL);
+ list_add_tail(&nodes[6].waiter.list,&lock.wait_list);
+ kd_owned_mutex_rejoin(&batch);kd_owned_mutex_release(&lock);
+ {const unsigned int order[]={0,2,4,5,6};check_order(5,order);}
+ assert(list_empty(&batch.deferred) && list_empty(&batch.pending));
+
+ /* An all-remote snapshot may refill once to find a local body. The older
+  * remote origin remains queued and is granted at the finite batch boundary. */
+ setup(&lock,&batch,1);owned_mutex_adaptive=owned_mutex_numa=true;
+ nodes[0].numa_node=1;list_add_tail(&nodes[1].waiter.list,&lock.wait_list);
+ kd_owned_mutex_run_batch(&batch);
+ assert(executed==1 && completed==1 && refills==1);
+ {const unsigned int order[]={0};check_order(1,order);}
+
+ /* Scan quota and SELF are hard boundaries; no request disappears. */
+ for(int stop=0;stop<2;stop++) {
+  setup(&lock,&batch,3);owned_mutex_adaptive=owned_mutex_numa=true;
+  nodes[0].numa_node=1;
+  if(stop) nodes[1].waiter.kind=KD_OWNED_MUTEX_SELF;
+  else batch.scan_left=1;
+  kd_owned_mutex_run_batch(&batch);
+  assert(executed==0 && completed==0);
+  {const unsigned int order[]={0,1,2};check_order(3,order);}
+ }
+ /* Refusal, FULL and early unlock rejoin the deferred prefix before both
+  * the unstarted private suffix and a newer public arrival. */
+ for(int mode=1;mode<=3;mode++) {
+  setup(&lock,&batch,3);owned_mutex_adaptive=owned_mutex_numa=true;
+  nodes[0].numa_node=1;scenario=mode;
+  list_add_tail(&nodes[5].waiter.list,&lock.wait_list);
+  kd_owned_mutex_run_batch(&batch);
+  assert(executed==1 && completed==(mode==1 ? 0 : 1));
+  if(mode==1) {const unsigned int order[]={0,1,2,5};check_order(4,order);}
+  else {const unsigned int order[]={0,2,5};check_order(3,order);}
+  assert(list_empty(&batch.deferred) && list_empty(&batch.pending));
+ }
+ puts("PASS adaptive locality: finite scan/cohort limits, remote-prefix rejoin, refill, SELF, refusal/FULL/early stop");
+}
 int main(void) {
- run_cases();selection_cases();
+ run_cases();selection_cases();cohort_cases();
  puts("PASS mandatory detached owned guard: public-empty private prefix, refill, early-release rejoin and physical-release boundary");
 }
 '''
@@ -380,18 +430,23 @@ def production(source):
     value = definition(source, 'struct kd_owned_mutex_batch {')+';\n'
     value += '\n'.join(line for line in source.splitlines()
                        if line.startswith(('#define KD_OWNED_MUTEX_WINDOW ',
-                                           '#define KD_OWNED_MUTEX_MAX_BYPASSES '))) + '\n'
+                                           '#define KD_OWNED_MUTEX_MAX_BYPASSES ',
+                                           '#define KD_OWNED_MUTEX_LOCAL_COHORT '))) + '\n'
     for marker in ('kd_owned_mutex_candidate(struct kd_owned_mutex_node *node, struct kd_exe_info **exe)',
+                   'kd_owned_mutex_select_cohort(struct kd_owned_mutex_batch *batch, unsigned int count)',
                    'static struct kd_owned_mutex_node *kd_owned_mutex_select(struct kd_owned_mutex_batch *batch)',
                    'static void kd_owned_mutex_note_dispatch(struct kd_owned_mutex_batch *batch,',
                    'static void kd_owned_mutex_prepare_successor(struct kd_owned_mutex_batch *batch,'):
         if marker.startswith('kd_owned_mutex_candidate'):
             value += 'static const struct kd_jit_image *\n'
+        if marker.startswith('kd_owned_mutex_select_cohort'):
+            value += 'static struct kd_owned_mutex_node *\n'
         value += definition(source, marker)
     for marker in ('static void kd_owned_mutex_retire_current(struct kd_owned_mutex_batch *batch)',
                    'static void kd_owned_mutex_rejoin(struct kd_owned_mutex_batch *batch)',
                    'static int kd_owned_mutex_release_outer(struct kd_exec_frame *frame,'):
         value += definition(source, marker)
+    value += 'static void kd_owned_mutex_prefetch_successor(struct kd_owned_mutex_batch *b, struct kd_owned_mutex_node *n) { (void)b; (void)n; }\n'
     value += EXECUTE
     value += definition(source, 'static bool kd_owned_mutex_refill_batch(struct kd_owned_mutex_batch *batch,')
     value += 'static __attribute__((noipa)) noinline notrace void\n'
@@ -553,7 +608,7 @@ def main():
         'full-retire-idempotent': ('if (batch->current_retired)\n\t\treturn;',
                                    'if (false)\n\t\treturn;'),
         'early-release-no-second-release': ('if (batch->outer.released) {', 'if (false) {'),
-        'refill-off-gate': ('if (!owned_mutex_refill || batch->outer.released ||',
+        'refill-off-gate': ('if (!(owned_mutex_refill || owned_mutex_adaptive) || batch->outer.released ||',
                             'if ((owned_mutex_refill && false) || batch->outer.released ||'),
         'refill-total-quota': ('count >= KDLOCK_SPIN_BATCH || need_resched())',
                                'count >= 100 || need_resched())'),
@@ -567,10 +622,13 @@ def main():
                                      'if ((need_resched() && false) ||\n'),
         'refill-self-head': ('if (first->kind != KD_OWNED_MUTEX_DELEGATE)\n\t\tgoto out;',
                              'if (first->kind != KD_OWNED_MUTEX_DELEGATE && false)\n\t\tgoto out;'),
-        'refill-after-release': ('!owned_mutex_refill || batch->outer.released ||',
-                                 '!owned_mutex_refill || false ||'),
+        'refill-after-release': ('!(owned_mutex_refill || owned_mutex_adaptive) || batch->outer.released ||',
+                                 '!(owned_mutex_refill || owned_mutex_adaptive) || false ||'),
         'stop-after-full': ('if (ret == KD_EXE_NATIVE_DONE)\n\t\t\tbreak;',
                             'if (false)\n\t\t\tbreak;'),
+        'cohort-drops-deferred': ('list_splice_init(&batch->deferred, &batch->pending);', 'INIT_LIST_HEAD(&batch->deferred);'),
+        'cohort-ignores-scan-cap': ('if (!batch->scan_left ||', 'if (false ||'),
+        'cohort-ignores-body-cap': ('count >= KD_OWNED_MUTEX_LOCAL_COHORT)', 'count >= 99999)'),
         'rejoin-drops-private-guard': (
             '\tlist_splice_init(&batch->pending, &lock->wait_list);',
             '\tlock->owner &= ~KD_OWNED_MUTEX_FLAG_DELEGATION;\n'

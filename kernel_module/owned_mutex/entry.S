@@ -12,6 +12,12 @@
  * slow C gate returns before any nonvolatile register is captured, so its
  * compiler-owned frame cannot become part of the delegated continuation. */
 SYM_FUNC_START(kd_owned_mutex_outer_lock_cabi_v2)
+	/* A crowded episode bypasses failed write-prefixed owner CAS operations.
+	 * Cold/small cohorts retain the original leaf CAS and local retry cadence.
+	 * The hint is off the owner cacheline: cold reads must not downgrade the
+	 * line before its CAS. The C gate rechecks a free owner. */
+	cmpb $0, 88(%rdi)
+	jne .Lowned_cabi_slow
 	movq PER_CPU_VAR(current_task), %rdx
 	xorl %eax, %eax
 	lock cmpxchgq %rdx, (%rdi)

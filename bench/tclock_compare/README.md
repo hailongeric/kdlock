@@ -74,9 +74,10 @@ SELF acquisition remains available for local execution.
 | `--owned-mutex-entry-ratio-limit 256` | Independent ABI2 admission threshold for `owned-v1`; powers of two 2–256. ABI4 local-first does not use heat admission |
 | `--owned-mutex-cabi` | Opt-in ABI4 ordinary-C caller; Linux local acquisition before late capture, with no fixed owner-spin budget |
 | `--owned-mutex-reuse-spins 0` | ABI4 allowance 0/8/32/128 after an unflagged release, once per OSQ turn; measured profile selects 32 |
+| `--owned-mutex-adaptive` | Opt-in ABI4 queue-pressure switch, successor prefetch and bounded refill; combines with NUMA for 128-body local cohorts |
 | `--owned-mutex-refill` | Opt-in FIFO refilling within the same total batch cap; default is one finite snapshot |
 | `--owned-mutex-origin-spin` | Opt into audited origin-GS execution with an exclusive readiness claim; requires `owned-v1` |
-| `--owned-mutex-numa` | Opt into the eight-request/four-bypass selector; requires `owned-v1`, independent of origin claims |
+| `--owned-mutex-numa` | Opt into eight-request/four-bypass selection, or local cohorts with adaptive mode; requires `owned-v1`, independent of origin claims |
 | `--owned-mutex-preflight` | Compile the experimental ABI2 C gate; default false retains capture-first entry; mutually exclusive with ABI4 |
 | `--owned-mutex-preflight-spins` | Opt-in gate budget: 0 (default), 64, 256, 1024 or 4096 polling steps; positive values require the gate flag |
 | `--owned-mutex-preflight-queue` | Opt in to joining the private OSQ within a positive preflight polling budget; default false |
@@ -260,8 +261,8 @@ policy. Static snapshots check complete structure and exact operation totals.
 | TCLock | Native waiter-stack delegation | Actual upstream ordinary mutex port with parking |
 | KD | Explicit KD word, ABI1/JIT | Owned private owner/OSQ/FIFO, ABI2 or ABI4, c01/c02/c04/c08/c16 and RCUHT |
 
-The KD arm uses a 32-byte `struct kd_mutex` in the same 64-byte-aligned lock
-slot as Native. Its outer-cookie interface uses ABI2 by default or opt-in ABI4,
+The KD arm uses a 128-byte `struct kd_mutex` in a 64-byte-aligned lock
+slot, separate from the payload. Native retains its 32-byte object. Its outer-cookie interface uses ABI2 by default or opt-in ABI4,
 with registry kind 3. It never casts the object to a Linux mutex. The performance
 workloads support all five cacheline sizes and RCUHT; c01 nested/early remain
 KD-only functional checks. The [real-API runner](../real_api/README.md#mutex-and-readerwriter-contracts)
@@ -333,7 +334,9 @@ Owned records identify `owned_queue_policy=finite_fifo` by default. The opt-in
 `--owned-mutex-refill` experiment records `bounded_fifo_refill` and verifies its
 read-only provider parameter. It takes another FIFO snapshot only after consuming
 the previous one, within the same total body cap and without crossing a SELF or
-handoff boundary. These labels describe batch refilling. NUMA reordering is
+handoff boundary. Adaptive mode also refills, recording `bounded_fifo_refill`
+or `bounded_numa_cohort_refill` when NUMA cohorts are selected. These labels
+describe batch refilling. NUMA reordering is
 controlled separately by `--owned-mutex-numa`, which defaults to off regardless
 of the shared provider's NUMA build switch. Records retain both
 `owned_mutex_numa` and `owned_mutex_origin_spin`; compare each policy separately.
@@ -496,12 +499,17 @@ complete performance acceptance; these controls remain opt-in.
 ordinary C register preservation. Its owner-word leaf CAS and private Linux
 OSQ path execute locally before KD admission, task/registry work or capture.
 The optimistic loop has no fixed poll budget; scheduling and owner state decide
-when it stops. Only failure after any required rescheduling and a final exact
-retry permits late capture. ABI4 does not update ABI2's heat/entry-ratio history.
+when it stops. With adaptation off, only failure after any required rescheduling and a final
+exact retry permits late capture. `--owned-mutex-adaptive` can offer capture
+earlier at high queue pressure. ABI4 does not update ABI2's heat/entry-ratio history.
 Source or resource refusal then commits to SELF waiting without another initial
 optimistic pass. No owned target is passed to a Linux mutex API.
 
-The 32-byte object geometry and outer acquisition cookie are unchanged. A
+The current object is 128 bytes and requires matching rebuilt callers and
+provider; the outer acquisition cookie is unchanged. The
+[adaptive c01/pipebytes report](../results/10.176.26.71/bench/comparison/mutex-adaptive-20261016T075356Z/README.md)
+compares the exact old object with the new policy/layout and keeps its
+regressions visible. A
 nonzero return identifies physical ownership; a zero delegated cookie retains
 the FULL owner-ACK path. Both owned caller ABIs now use guarded owner release:
 SELF-only release can clear ownership before acquiring `wait_lock`, while a
@@ -516,9 +524,11 @@ waiters and flagged releases bypass it; rescheduling interrupts it. The read-onl
 provider value is recorded and checked for every sample. Positive values require
 ABI4 in this runner, and different values must not be pooled.
 
-Records distinguish `owned_acquire_policy=linux_local_first` from ABI2
-`capture_admission`, and record `owned_release_policy=guarded_owner_release`.
-The provider must report `owned_mutex_protocol=linux_local_first_v1`; the old
+Records distinguish `owned_acquire_policy=linux_local_first`,
+`contention_adaptive` and ABI2 `capture_admission`, and record
+`owned_release_policy=guarded_owner_release`.
+The provider must report `owned_mutex_protocol=linux_local_split_v1` for
+local-first mode or `contention_adaptive_v8` for adaptive mode; the old
 native-first budget and optional early-release parameters are absent. Existing
 caller ABI, preparation, ELF imports and source checks still apply.
 `--profile-lock` automatically adds the ABI4 `local_first` diagnostic probe and
@@ -526,7 +536,9 @@ stores a separate `owned_local_first_profile` record. Its acquired/failed counts
 come from the fused gate's full-width acquisition cookie, and missed returns must be zero. These
 instrumented sessions remain excluded from scores.
 
-The separate [local study auditor](mutex_local_study.py) covers c01 with the
+The historical [local study auditor](mutex_local_study.py) retains the original
+32-byte geometry and `linux_local_first_v1` acceptance contract. It rejects the
+new layout rather than transferring that verdict. It covers c01 with the
 frozen 64-round post-work header and **1–8 workers only**. Use
 `--mutex-acceptance adaptive-performance`, 48,000 warmup operations per worker,
 two-second measurement and the existing 300 ms warmed-peak rules. Each candidate
@@ -542,7 +554,9 @@ establish accepted parity.
 
 The [2026-10-14 study](../results/10.176.26.71/bench/mutex_owned/20261014-linux-local/README.md)
 passes the full screen and both confirmations with ABI4 and reuse bound 32.
-Reproduce the accepted profile in the verified recovery guest with a new output:
+Use the frozen source from that report to reproduce its accepted profile in the
+verified recovery guest with a new output. The same command on current source
+measures the new 128-byte, adaptive-off object and cannot reuse that acceptance:
 
 ```sh
 python3 bench/tclock_compare/run_mutex.py \

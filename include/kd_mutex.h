@@ -10,8 +10,8 @@
 #include <linux/spinlock.h>
 
 /* Owned objects are used exclusively through KD for their entire lifetime.
- * Matching Linux's layout does not permit mixing either mutex's waiters or
- * APIs. This first port targets the captured x86-64 non-RT configuration. */
+ * Delegate publication must not invalidate the owner line inspected by every
+ * delegated body. This layout is private; never mix Linux mutex APIs/waiters. */
 #if !defined(CONFIG_X86_64) || !defined(CONFIG_MUTEX_SPIN_ON_OWNER) || \
     defined(CONFIG_PREEMPT_RT) || defined(CONFIG_DEBUG_MUTEXES) || \
     defined(CONFIG_DEBUG_LOCK_ALLOC) || defined(CONFIG_DEBUG_SPINLOCK)
@@ -20,25 +20,25 @@
 
 struct kd_mutex {
 	atomic_long_t owner;
-	raw_spinlock_t wait_lock;
+	/* Keep the low-pressure owner/OSQ transfer on one cacheline. */
 	struct optimistic_spin_queue osq;
+	raw_spinlock_t wait_lock __aligned(64);
 	struct list_head wait_list;
+	/* Advisory admission state; keep its read off the owner CAS cacheline. */
+	bool adaptive_hot;
 };
 
-static_assert(sizeof(struct kd_mutex) == 32);
-static_assert(sizeof(struct kd_mutex) == sizeof(struct mutex));
-static_assert(__alignof__(struct kd_mutex) == __alignof__(struct mutex));
+static_assert(sizeof(struct kd_mutex) == 128);
+static_assert(__alignof__(struct kd_mutex) == 64);
 static_assert(offsetof(struct kd_mutex, owner) == 0);
-static_assert(offsetof(struct kd_mutex, wait_lock) == 8);
-static_assert(offsetof(struct kd_mutex, osq) == 12);
-static_assert(offsetof(struct kd_mutex, wait_list) == 16);
-static_assert(offsetof(struct kd_mutex, owner) == offsetof(struct mutex, owner));
-static_assert(offsetof(struct kd_mutex, wait_lock) == offsetof(struct mutex, wait_lock));
-static_assert(offsetof(struct kd_mutex, osq) == offsetof(struct mutex, osq));
-static_assert(offsetof(struct kd_mutex, wait_list) == offsetof(struct mutex, wait_list));
+static_assert(offsetof(struct kd_mutex, adaptive_hot) == 88);
+static_assert(offsetof(struct kd_mutex, wait_lock) == 64);
+static_assert(offsetof(struct kd_mutex, osq) == 8);
+static_assert(offsetof(struct kd_mutex, wait_list) == 72);
 
 #define __KD_MUTEX_INITIALIZER(name) { \
 	.owner = ATOMIC_LONG_INIT(0), \
+	.adaptive_hot = false, \
 	.wait_lock = __RAW_SPIN_LOCK_UNLOCKED(name.wait_lock), \
 	.osq = OSQ_LOCK_UNLOCKED, \
 	.wait_list = LIST_HEAD_INIT(name.wait_list), \

@@ -14,6 +14,14 @@ topology rather than relabeling them as 64-vCPU results.
 
 ## Current workload comparison
 
+The [adaptive mutex round](bench/comparison/mutex-adaptive-20261016T075356Z/README.md)
+contains 504 accepted/drained c01 and pipebytes n16 sessions: 21 worker counts,
+three repetitions and four arms (adaptive KD, exact pre-change KD, Native and
+TCLock). The opt-in policy shifts high-pressure execution toward delegation,
+but the results do not establish a general gain. The report separates the
+128-byte candidate from its original 32-byte control, historical legacy data
+and all rejected pilots; earlier acceptance does not cover the new layout.
+
 The [expanded mutex round](bench/comparison/mutex-expanded-20261016T040928Z/README.md)
 contains 2,079 accepted, drained measurements across all eleven mutex variants,
 with three repetitions at 1–8 workers by one and 12–60 by four. KD now covers

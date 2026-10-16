@@ -9,7 +9,7 @@ import statistics
 PARAMETER_UNITS = {'xattr': 'attributes', 'ofd': 'ranges', 'setfd': 'FD stride',
                    'pipebytes': 'pipe buffers', 'pipecap': 'pipe capacity in pages',
                    'seek': 'file size in pages', 'utsname': 'write percent'}
-MUTEX_IDENTITY = ('mutex_implementation', 'entry_abi', 'owned_mutex_reuse_spins',
+MUTEX_IDENTITY = ('mutex_implementation', 'entry_abi', 'owned_mutex_reuse_spins', 'owned_mutex_adaptive', 'owned_mutex_object_bytes',
                   'owned_mutex_origin_spin', 'owned_mutex_numa')
 
 

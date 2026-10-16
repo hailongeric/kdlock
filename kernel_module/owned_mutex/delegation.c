@@ -95,7 +95,7 @@ MODULE_PARM_DESC(owned_mutex_origin_spin,
 static bool owned_mutex_numa;
 module_param(owned_mutex_numa, bool, 0444);
 MODULE_PARM_DESC(owned_mutex_numa,
-		 "Select within eight delegates with at most four bypasses (experimental)");
+		 "Bounded NUMA selection; adaptive mode uses local cohorts (experimental)");
 
 /*
  * One bounded grace after an unqueued release can preserve owner locality.
@@ -105,6 +105,11 @@ unsigned int owned_mutex_reuse_spins;
 module_param(owned_mutex_reuse_spins, uint, 0444);
 MODULE_PARM_DESC(owned_mutex_reuse_spins,
 		 "One unqueued-release grace per OSQ acquisition: 0, 8, 32 or 128 polls");
+
+bool owned_mutex_adaptive;
+module_param(owned_mutex_adaptive, bool, 0444);
+MODULE_PARM_DESC(owned_mutex_adaptive,
+		 "Offer ABI4 delegation when seven existing OSQ spinners indicate high contention");
 
 bool owned_mutex_self_route;
 module_param(owned_mutex_self_route, bool, 0444);
@@ -118,7 +123,8 @@ static int kd_owned_mutex_protocol_get(char *buffer,
 				       const struct kernel_param *kp)
 {
 	(void)kp;
-	return scnprintf(buffer, PAGE_SIZE, "linux_local_first_v1");
+	return scnprintf(buffer, PAGE_SIZE, "%s", owned_mutex_adaptive ?
+			 "contention_adaptive_v8" : "linux_local_split_v1");
 }
 
 static const struct kernel_param_ops kd_owned_mutex_protocol_ops = {
@@ -774,6 +780,8 @@ EXPORT_SYMBOL_GPL(kd_owned_mutex_prepare);
 struct kd_owned_mutex_batch {
 	struct kd_exec_outer_unlock outer;
 	struct list_head pending;
+	struct list_head deferred;
+	unsigned int scan_left;
 	struct kd_owned_mutex_node *current_node;
 	bool current_retired;
 	struct kd_mutex *lock;
@@ -805,6 +813,8 @@ static void kd_owned_mutex_rejoin(struct kd_owned_mutex_batch *batch)
 	 * Older private requests precede arrivals published during execution.
 	 * WAITERS has remained set throughout the detached interval.
 	 */
+	if (!list_empty(&batch->deferred))
+		list_splice_init(&batch->deferred, &batch->pending);
 	list_splice_init(&batch->pending, &lock->wait_list);
 	raw_spin_unlock_irqrestore(&lock->wait_lock, flags);
 }
@@ -966,7 +976,7 @@ static bool kd_owned_mutex_refill_batch(struct kd_owned_mutex_batch *batch,
 	 * Check released before touching the public object: after an early release
 	 * its new physical owner controls the public queue independently.
 	 */
-	if (!owned_mutex_refill || batch->outer.released ||
+	if (!(owned_mutex_refill || owned_mutex_adaptive) || batch->outer.released ||
 	    count >= KDLOCK_SPIN_BATCH || need_resched())
 		return false;
 	BUG_ON(!list_empty(&batch->pending));
@@ -994,6 +1004,33 @@ out:
 	return refilled;
 }
 
+/* The private successor remains linked and cannot retire until its outcome.
+ * Bring its packet and native return slots over before executing this body,
+ * as the legacy combiner did. Never follow these links after publication. */
+static void kd_owned_mutex_prefetch_successor(struct kd_owned_mutex_batch *batch,
+					    struct kd_owned_mutex_node *node)
+{
+	struct kd_owned_mutex_waiter *waiter;
+	struct kd_owned_mutex_node *next;
+	unsigned long sp;
+
+	if (!owned_mutex_adaptive || list_is_last(&node->waiter.list, &batch->pending))
+		return;
+	waiter = list_next_entry(&node->waiter, list);
+	if (waiter->kind != KD_OWNED_MUTEX_DELEGATE)
+		return;
+	next = container_of(waiter, struct kd_owned_mutex_node, waiter);
+	prefetchw(next);
+	prefetchw(&next->entry_abi);
+	prefetchw(&next->regs);
+	prefetchw(&next->regs.bx);
+	sp = READ_ONCE(next->regs.sp);
+	if (sp) {
+		prefetchw((void *)sp);
+		prefetchw((void *)(sp - sizeof(unsigned long)));
+	}
+}
+
 static __attribute__((noipa)) noinline notrace void
 kd_owned_mutex_run_batch(struct kd_owned_mutex_batch *batch)
 {
@@ -1008,11 +1045,22 @@ kd_owned_mutex_run_batch(struct kd_owned_mutex_batch *batch)
 		if (count >= KDLOCK_SPIN_BATCH || need_resched() ||
 		    (atomic_long_read(&batch->lock->owner) & KD_OWNED_MUTEX_FLAG_HANDOFF))
 			break;
-		node = kd_owned_mutex_select(batch);
-		if (!node)
+		node = owned_mutex_adaptive && owned_mutex_numa ?
+			kd_owned_mutex_select_cohort(batch, count) :
+			kd_owned_mutex_select(batch);
+		if (!node) {
+			/* Selection may have moved an all-remote snapshot aside.
+			 * Refill only within the same finite scan/body budgets. */
+			if (owned_mutex_adaptive && owned_mutex_numa &&
+			    list_empty(&batch->pending) && batch->scan_left &&
+			    count < KD_OWNED_MUTEX_LOCAL_COHORT &&
+			    kd_owned_mutex_refill_batch(batch, count))
+				continue;
 			break;
+		}
 		batch->current_node = node;
 		batch->current_retired = false;
+		kd_owned_mutex_prefetch_successor(batch, node);
 		ret = kd_owned_mutex_execute(node, batch);
 		if (ret && ret != KD_EXE_NATIVE_DONE) {
 			this_cpu_inc(kd_owned_mutex_refusals);
@@ -1111,6 +1159,8 @@ bool kd_owned_mutex_combine(struct kd_mutex *lock)
 	}
 	executor->busy = true;
 	INIT_LIST_HEAD(&batch.pending);
+	INIT_LIST_HEAD(&batch.deferred);
+	batch.scan_left = KDLOCK_SPIN_BATCH;
 	raw_spin_lock_irqsave(&lock->wait_lock, flags);
 	BUG_ON(!kd_owned_mutex_owned(lock, current));
 	/*
@@ -1121,7 +1171,8 @@ bool kd_owned_mutex_combine(struct kd_mutex *lock)
 	raw_spin_unlock_irqrestore(&lock->wait_lock, flags);
 	detached = true;
 	kd_owned_mutex_executor_call(&batch, executor);
-	BUG_ON(!batch.outer.released || !list_empty(&batch.pending));
+	BUG_ON(!batch.outer.released || !list_empty(&batch.pending) ||
+	       !list_empty(&batch.deferred));
 	executor->busy = false;
 	kd_mutex_task_put(current);
 	kd_source_frame_put();

@@ -21,6 +21,7 @@ def production(core, osq, internal):
         ('static inline int ', 'kd_owned_osq_encode_cpu('),
         ('static inline int ', 'kd_owned_osq_node_cpu('),
         ('static inline struct kd_owned_osq_node *', 'kd_owned_osq_decode_cpu('),
+        ('bool ', 'kd_owned_osq_crowded('),
         ('static inline struct kd_owned_osq_node *', 'kd_owned_osq_wait_next('),
         ('bool ', 'kd_owned_osq_trylock('),
         ('static __always_inline bool ', 'kd_owned_osq_budget_expired('),
@@ -45,6 +46,10 @@ def main():
     internal = (ROOT/'include/kd_owned_mutex_internal.h').read_text()
     original = production(core, osq, internal)
     mutations = {
+        'crowded-counts-six': ('if (count == 6)', 'if (count == 5)'),
+        'crowded-crosses-locks': ('!node || READ_ONCE(node->queue) != lock', '!node'),
+        'crowded-counts-cycle': ('if (seen[i] == node)', 'if (false && seen[i] == node)'),
+        'crowded-passes-head': ('if (READ_ONCE(node->locked))', 'if (false && READ_ONCE(node->locked))'),
         'ignore-budget': ('return !--*remaining;', 'return false;'),
         'timeout-drops-grant': ('\t\treturn true;\n\n\t/* unqueue */',
                                '\t\treturn remaining && !*remaining ? false : true;\n\n\t/* unqueue */'),

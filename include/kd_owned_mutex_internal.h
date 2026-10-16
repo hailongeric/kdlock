@@ -97,6 +97,7 @@ kd_owned_mutex_try_optimistic_pinned(struct kd_mutex *lock, unsigned int spins,
 /* Diagnostic routing is read only after the fused local path fails. */
 extern bool owned_mutex_self_route;
 extern unsigned int owned_mutex_reuse_spins;
+extern bool owned_mutex_adaptive;
 /* Committed SELF wait loop, with no initial optimistic pass or pin transition.
  * No stack waiter or resource survives its return. Caller retains its pin. */
 void kd_owned_mutex_lock_wait_pinned(struct kd_mutex *lock);
@@ -108,6 +109,7 @@ bool kd_owned_osq_trylock(struct optimistic_spin_queue *lock);
 bool kd_owned_osq_lock_bounded(struct optimistic_spin_queue *lock,
 			     unsigned int *remaining);
 bool kd_owned_osq_lock(struct optimistic_spin_queue *lock);
+bool kd_owned_osq_crowded(struct optimistic_spin_queue *lock);
 void kd_owned_osq_unlock(struct optimistic_spin_queue *lock);
 
 #endif /* KD_OWNED_MUTEX_INTERNAL_H */

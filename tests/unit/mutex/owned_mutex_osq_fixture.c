@@ -20,7 +20,7 @@ static void after_write(void *address);
 static void before_conditional(void);
 static void cpu_relax(void);
 static struct optimistic_spin_queue *active_queue(void) { return core_mode ? &mutex.osq : &queue; }
-#define DEFINE_PER_CPU_SHARED_ALIGNED(type,name) static type name[4]
+#define DEFINE_PER_CPU_SHARED_ALIGNED(type,name) static type name[8]
 #define this_cpu_ptr(p) (&(*(p))[cpu])
 #define per_cpu_ptr(p,n) (&(*(p))[n])
 #define smp_processor_id() ((int)cpu)
@@ -123,9 +123,42 @@ static void release_head(void)
 {
  cpu=0;kd_owned_osq_unlock(active_queue());assert(!active_queue()->tail.counter);
 }
+static void check_crowded(void)
+{
+ reset(0);
+ queue.tail.counter=0;
+ assert(!kd_owned_osq_crowded(&queue));
+ for(unsigned int n=1;n<=7;n++) {
+  memset(kd_owned_osq_nodes,0,sizeof(kd_owned_osq_nodes));
+  for(unsigned int i=0;i<n;i++) {
+   kd_owned_osq_nodes[i].queue=&queue;
+   kd_owned_osq_nodes[i].prev=i ? &kd_owned_osq_nodes[i-1] : NULL;
+  }
+  queue.tail.counter=n;
+  for(unsigned int probe=0;probe<63;probe++)
+   assert(!kd_owned_osq_crowded(&queue));
+  assert(kd_owned_osq_crowded(&queue)==(n>=7));
+ }
+ queue.tail.counter=7;
+ kd_owned_osq_nodes[3].queue=&mutex.osq;
+ kd_owned_osq_nodes[0].probes=63;
+ assert(!kd_owned_osq_crowded(&queue));
+ kd_owned_osq_nodes[3].queue=&queue;
+ kd_owned_osq_nodes[3].prev=&kd_owned_osq_nodes[5];
+ kd_owned_osq_nodes[0].probes=63;
+ assert(!kd_owned_osq_crowded(&queue));
+ kd_owned_osq_nodes[3].prev=&kd_owned_osq_nodes[2];
+ kd_owned_osq_nodes[3].locked=1;
+ kd_owned_osq_nodes[0].probes=63;
+ assert(!kd_owned_osq_crowded(&queue));
+ kd_owned_osq_nodes[3].locked=0;
+ kd_owned_osq_nodes[0].probes=63;
+ assert(kd_owned_osq_crowded(&queue));
+}
 int main(void)
 {
  unsigned int remaining;
+ check_crowded();
  reset(1);remaining=0;
  assert(!kd_owned_osq_lock_bounded(&queue,&remaining));
  assert(queue.tail.counter==1 && !observations && !kd_owned_osq_nodes[0].next);

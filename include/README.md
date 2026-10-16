@@ -9,7 +9,7 @@ assembly and the Python translator. Helpers used only inside a backend live unde
 | --- | --- | --- |
 | Explicit spin object/API | [kd_spin_type.h](kd_spin_type.h), [kd_spin_direct.h](kd_spin_direct.h), [kd_spin_fast.h](kd_spin_fast.h) | One KD word; ordinary preemption pair; no Linux/TCLock mixing |
 | Spin queue and ticket | [kd_spinlock.h](kd_spinlock.h), [kd_spin_entry.h](kd_spin_entry.h), [qspinlock_i.h](qspinlock_i.h) | Reusable nodes, stable continuation and exact native borrowing |
-| Owned mutex | [kd_mutex.h](kd_mutex.h), [kd_owned_mutex_direct.h](kd_owned_mutex_direct.h) | KD-only 32-byte object, private OSQ/sleeping, outer cookie with default ABI2 or opt-in ABI4 |
+| Owned mutex | [kd_mutex.h](kd_mutex.h), [kd_owned_mutex_direct.h](kd_owned_mutex_direct.h) | KD-only 128-byte, 64-byte-aligned object, private OSQ/sleeping, outer cookie with default ABI2 or opt-in ABI4 |
 | Owned late capture | [kd_owned_mutex_cabi.h](kd_owned_mutex_cabi.h) | ABI4 eight-word record and fixed nine-byte caller stub; allocated after failed local acquisition |
 | Read-write lock | [kd_rwlock.h](kd_rwlock.h) | 128-byte object, 64-byte alignment; local readers, native fast writers and ABI3 JIT writers |
 | Frames and controls | [kd_exec.h](kd_exec.h), [kd_call.h](kd_call.h), [kd_lock.h](kd_lock.h) | Logical state, held-lock ledger, source CALL and final ACK |
@@ -52,12 +52,14 @@ The opt-in `KD_OWNED_MUTEX_CABI=1` outer caller uses ordinary C register
 preservation and internal ABI4. Prepare it with
 `KD_OWNED_MUTEX_PREPARE_IP(continuation_label)` and `KD_OWNED_MUTEX_ENTRY_ABI`;
 the helper includes the fixed return-PC stub in the registered image. Pair it
-with the matching provider and translator. The lock object and acquisition
-cookie retain their existing layout and ownership rules. ABI4 first executes
+with the matching provider and translator. The 128-byte object requires matching rebuilt callers and provider; the
+acquisition cookie is unchanged. ABI4 normally executes
 locally through the private Linux owner/OSQ protocol, without a fixed optimistic
-spin budget or heat accounting. Only failed local acquisition can reach late
-capture and delegation eligibility checks. The provider reports
-`owned_mutex_protocol=linux_local_first_v1`; guarded owner release is mandatory.
+spin budget or heat accounting. Failed local acquisition reaches late capture
+and delegation eligibility checks. Opt-in contention adaptation can bypass
+that optimistic pass after observing at least eight contenders. The
+provider reports `linux_local_split_v1` or `contention_adaptive_v8` through
+`owned_mutex_protocol`; guarded owner release is mandatory.
 ABI2 remains the default; caller and image identities cannot be mixed.
 The [measured c01 profile](../docs/PERFORMANCE.md#accepted-c01-18-worker-profile)
 explicitly pairs ABI4 with `owned_mutex_reuse_spins=32`; the provider default is 0.

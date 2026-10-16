@@ -1,0 +1,13 @@
+{
+  "phase": "full-v8",
+  "samples": 504,
+  "accepted": 504,
+  "auditor_sha256": "6d83edf62540ee6213dc0c99badf898c284b353a378780a723636643c8f201cd",
+  "baseline_source_files": 1097,
+  "source_hashes": 540,
+  "kernel_input_hashes": 15,
+  "binary_hashes": 17,
+  "recomputed_peaks": 504,
+  "jit_image_hashes": 756,
+  "baseline_binary_checks": 378
+}

@@ -2,8 +2,8 @@
 
 KD lets a lock holder execute a waiting caller's critical section through JIT.
 Spinlocks use KD's own four-byte object. The experimental owned mutex uses a
-32-byte `struct kd_mutex` with its own owner, OSQ and tagged waiter list; it
-never passes that object to Linux mutex operations. Read-write locks use a
+128-byte, 64-byte-aligned `struct kd_mutex` with its own owner, OSQ and tagged
+waiter list; it never passes that object to Linux mutex operations. Read-write locks use a
 128-byte object: readers run locally,
 while writers may delegate through the spin engine. Rwlock ABI3 acquires exclusive
 write access before the translated body starts. Callers select these APIs
@@ -48,6 +48,15 @@ delegation and optional bounded NUMA selection. The origin and NUMA policies
 default to off. Their [fresh-control workflow](../bench/tclock_compare/README.md#owned-origin-and-numa-comparison)
 keeps the earlier accepted implementation as a separately frozen comparison arm;
 the older acceptance does not validate these additions.
+
+The current [adaptive experiment](PERFORMANCE.md#adaptive-mutex-comparison) adds
+an opt-in pressure switch and bounded legacy-style combining within the owned
+protocol. Its [504-session comparison](../bench/results/10.176.26.71/bench/comparison/mutex-adaptive-20261016T075356Z/README.md)
+covers c01 and pipebytes n16 with exact pre-change KD and fresh Native/TCLock
+controls. Adaptation defaults off because the results do not justify a general
+performance change. The public object is now 128 bytes even with adaptation off;
+rebuild callers/provider together, and do not transfer the historical 32-byte
+performance acceptance to it.
 
 ## Reading order
 
@@ -105,9 +114,9 @@ Spin/mutex timed runs support it with
 and the [complete-matrix driver](../tools/vm/README.md#complete-164-worker-comparison),
 still require a separate collector. Record collector/QEMU contention separately
 and preserve historical topology metadata.
-The [mutex workload validation](../bench/results/10.176.26.71/bench/comparison/mutex-expanded-20261016T040928Z/validation.json)
+The [adaptive mutex validation](../bench/results/10.176.26.71/bench/comparison/mutex-adaptive-20261016T075356Z/validation.json)
 records the 2026-10-16 kernel, boot-policy, CPU-pin and idle checks, with the
-confirmed `before-mutex-coverage-20261016T034903Z` recovery snapshot. Reverify the
+confirmed `before-mutex-adaptive-20261016T075356Z` recovery snapshot. Reverify the
 live state and snapshot before any new run; the receipt records that run's state.
 
 `vm_ssh.sh` uses `/home/eric/.ssh/kdlock_vm_ed25519` to reach the guest locally.

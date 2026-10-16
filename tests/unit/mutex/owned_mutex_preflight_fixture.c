@@ -9,7 +9,7 @@ unsigned int owned_mutex_reuse_spins;
 typedef struct { unsigned long counter; } atomic_long_t;
 typedef struct { int counter; } atomic_t;
 struct optimistic_spin_queue { atomic_t tail; };
-struct kd_mutex { atomic_long_t owner; struct optimistic_spin_queue osq; };
+struct kd_mutex { atomic_long_t owner; struct optimistic_spin_queue osq; bool adaptive_hot; };
 struct kd_owned_mutex_waiter;
 struct task_struct { bool on_cpu; char comm[16]; } __attribute__((aligned(64)));
 #include "preflight_types.h"
@@ -29,6 +29,7 @@ static unsigned int kd_owned_mutex_refusals;
 static bool resched, cas_race, admitted, source_open, comm_matches, task_active;
 static bool task_get_ok, reserve_ok, node_reserved;
 static bool owned_mutex_self_route,owned_mutex_preflight_queue;
+static bool owned_mutex_adaptive, crowded;
 static unsigned int owned_mutex_preflight_spins;
 static int kd_spin_target;
 static enum { NONE, FREE_OWNER, RESCHED, OWNER_OFF_CPU, ADD_WAITERS, ADD_HANDOFF,
@@ -87,6 +88,11 @@ static unsigned long read_owner(atomic_long_t *word)
 #define this_cpu_ptr(p) (p)
 #define smp_processor_id() 0
 static void lockdep_assert_preemption_disabled(void) { assert(pins == 1); }
+static inline bool kd_owned_osq_crowded(struct optimistic_spin_queue *queue)
+{
+ assert(queue==&lock.osq && pins==1);
+ return crowded;
+}
 static bool need_resched(void) { return resched; }
 static bool owner_on_cpu(struct task_struct *owner) { assert(pins == 1); return owner->on_cpu; }
 static int ordered_cas(atomic_t *p, int old, int value)
@@ -295,6 +301,7 @@ static void reset(void)
  native_queue_cancel=change_owner_after_read=free_owner_after_read=churn_owner=false;
  memset(&request,0xa5,sizeof(request));
  resched=cas_race=owned_mutex_self_route=task_active=false;
+ owned_mutex_adaptive=crowded=false;
  admitted=source_open=comm_matches=true; owned_mutex_preflight_spins=64; action=NONE;
 }
 static void check_cleanup(void)
@@ -641,9 +648,37 @@ static void check_cabi_gate(void)
  assert(run_cabi_gate()==(unsigned long)current);
  assert(schedules==1 && !self_calls && !self_wait_calls);
 }
+static void check_adaptive_gate(void)
+{
+ reset();pins=0;owned_mutex_adaptive=true;lock.adaptive_hot=true;lock.owner.counter=0;
+ assert(run_cabi_gate()==(unsigned long)current && !lock.adaptive_hot);
+ assert(!native_queue_calls && !self_calls && !self_wait_calls);
+ /* Crowded admission carries no queue ownership, pin, or request resource
+  * into capture. Exact eligibility is still checked by the prepared entry. */
+ for(unsigned int reason=0;reason<2;reason++) {
+  reset();pins=0;owned_mutex_adaptive=true;
+  if(reason==0) crowded=true;
+  else lock.adaptive_hot=true;
+  unsigned long owner=lock.owner.counter;
+  assert(run_cabi_gate()==0);
+  assert(lock.owner.counter==owner && !native_queue_calls && !polls && !releases);
+  assert(!self_calls && !self_wait_calls);
+ }
+ /* Short cohorts, disabled policy, and diagnostic SELF retain local reuse. */
+ for(unsigned int route=0;route<4;route++) {
+  reset();pins=0;action=FREE_OWNER;
+  owned_mutex_adaptive=route!=1;
+  crowded=route==1 || route==2;
+  owned_mutex_self_route=route==2;
+  if(route==3) lock.owner.counter|=KD_OWNED_MUTEX_FLAG_DELEGATION;
+  assert(run_cabi_gate()==(unsigned long)current);
+  assert(native_queue_calls==1 && !self_wait_calls && releases==1);
+ }
+}
 int main(void)
 {
  check_cleanup(); check_refusals_and_bounds(); check_gate(); check_prepared(); check_capture_first(); check_local_first(); check_cabi_gate(); check_reuse_grace();
+ check_adaptive_gate();
  puts("PASS owned preflight: ABI2 once-only admission/resources, Linux unbounded local OSQ, directed transitions, cancellation/yield cleanup, final retry and one-pin ABI4 gate");
  return 0;
 }

@@ -115,10 +115,14 @@ invalid:
 static bool layout_valid(const struct sc_layout *l)
 {
 	if (l->version != SC_VERSION || l->line_bytes != SC_LINE_BYTES ||
-	    l->slots != SC_SLOTS || !l->lock_bytes || l->lock_bytes > SC_LINE_BYTES ||
+	    l->slots != SC_SLOTS || !l->lock_bytes ||
+	    (l->lock_bytes > SC_LINE_BYTES &&
+	     !(l->lock_kind == 2 && l->lock_bytes == 2 * SC_LINE_BYTES)) ||
 	    !l->lock_addr || !l->control_addr || !l->data_addr ||
 	    l->lock_addr % SC_LINE_BYTES || l->control_addr % SC_LINE_BYTES ||
-	    l->data_addr % SC_LINE_BYTES || l->lock_addr == l->control_addr)
+	    l->data_addr % SC_LINE_BYTES ||
+	    (l->control_addr >= l->lock_addr &&
+	     l->control_addr - l->lock_addr < l->lock_bytes))
 		return false;
 	if (l->workload == SC_WORKLOAD_HASH)
 		return l->buckets == SC_HASH_BUCKETS && l->entries == SC_HASH_ENTRIES &&
@@ -127,7 +131,9 @@ static bool layout_valid(const struct sc_layout *l)
 		return false;
 	for (int i = 0; i < SC_SLOTS; i++)
 		if (l->slot_addr[i] != l->data_addr + i * SC_LINE_BYTES ||
-		    l->slot_addr[i] == l->lock_addr || l->slot_addr[i] == l->control_addr)
+		    (l->slot_addr[i] >= l->lock_addr &&
+		     l->slot_addr[i] - l->lock_addr < l->lock_bytes) ||
+		    l->slot_addr[i] == l->control_addr)
 			return false;
 	return true;
 }

@@ -29,6 +29,12 @@ and [1–64-worker comparison](10.176.26.71/bench/mutex_owned/20261014-full-grid
 They use different VM topologies; the latter's three-worker peak misses its
 Native target. Neither changes historical report verdicts or general defaults.
 
+The [adaptive c01/pipebytes comparison](10.176.26.71/bench/comparison/mutex-adaptive-20261016T075356Z/README.md)
+adds 504 fresh sessions with exact pre-change KD, adaptive KD, Native and TCLock.
+The new 128-byte layout and optional contention policy have separate identities;
+performance regressions keep adaptation off by default. Its historical legacy
+reference and rejected pilots are not pooled with the final comparison.
+
 The [2026-10-16 expanded mutex comparison](10.176.26.71/bench/comparison/mutex-expanded-20261016T040928Z/README.md)
 adds 2,079 fresh accepted and drained sessions across all five cacheline payloads,
 RCUHT and five private pipe/file API variants. It compares KD, TCLock and Native

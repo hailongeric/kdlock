@@ -34,7 +34,8 @@ MUTEX_KINDS = {'pipebytes', 'pipecap', 'seek'}
 def owned_mutex_parameters(spec):
     return dict(owned_mutex_spin_limit=spec['mutex_spin_limit'],
                 owned_mutex_reuse_spins=spec['owned_mutex_reuse_spins'],
-                owned_mutex_origin_spin=0, owned_mutex_numa=0,
+                owned_mutex_adaptive=int(spec.get('owned_mutex_adaptive', False)),
+                owned_mutex_origin_spin=0, owned_mutex_numa=int(spec.get('owned_mutex_numa', False)),
                 owned_mutex_self_route=0, owned_mutex_native_after_control=0,
                 owned_mutex_refill=0, owned_mutex_preflight_spins=0,
                 owned_mutex_preflight_queue=0)
@@ -45,7 +46,8 @@ def check_owned_mutex_parameters(params, spec):
         return {'Y': 1, 'N': 0}[value] if value in ('Y', 'N') else int(value, 0)
     require(all(key in params and number(params[key]) == value
                 for key, value in owned_mutex_parameters(spec).items()) and
-            params.get('owned_mutex_protocol') == 'linux_local_first_v1',
+            params.get('owned_mutex_protocol') ==
+            ('contention_adaptive_v8' if spec.get('owned_mutex_adaptive', False) else 'linux_local_split_v1' if spec.get('owned_mutex_object_bytes', 32) == 128 else 'linux_local_first_v1'),
             'KD owned mutex parameters differ')
 
 
@@ -477,7 +479,10 @@ def make_plan(args):
                 mutex_wait_mode='blocking' if owned else 'not_applicable',
                 mutex_spin_limit=getattr(args, 'mutex_spin_limit', 4096) if owned else 0,
                 owned_mutex_reuse_spins=getattr(args, 'owned_mutex_reuse_spins', 32) if owned else 0,
-                owned_mutex_origin_spin=False, owned_mutex_numa=False))
+                owned_mutex_adaptive=getattr(args, 'owned_mutex_adaptive', False) if owned else False,
+                owned_mutex_object_bytes=128 if owned else None,
+                owned_mutex_origin_spin=False,
+                owned_mutex_numa=getattr(args, 'owned_mutex_numa', False) if owned else False))
     require(plan, 'no API sessions selected')
     return plan
 
@@ -504,6 +509,10 @@ def main():
                    help='owned mutex result polling budget before blocking')
     p.add_argument('--owned-mutex-reuse-spins', type=int, choices=(0, 8, 32, 128), default=32,
                    help='owned ABI4 release reuse allowance')
+    p.add_argument('--owned-mutex-adaptive', action='store_true',
+                   help='offer owned ABI4 delegation when the OSQ is crowded')
+    p.add_argument('--owned-mutex-numa', action='store_true',
+                   help='prefer an eligible local delegate within the bounded FIFO window')
     p.add_argument('--kernel-source', default='/root/linux-6.1.159-kdclobber2')
     p.add_argument('--kernel-baseline', default='/root/kdlock-kernel-baselines/mutex-clobber2-20260919')
     args = p.parse_args()

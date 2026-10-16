@@ -70,7 +70,7 @@ class PlanTests(unittest.TestCase):
     def test_owned_mutex_parameters_and_imports_reject_wrong_protocol(self):
         spec = run.make_plan(arguments(backends=['kdlock']))[0]
         params = {k: str(v) for k, v in run.owned_mutex_parameters(spec).items()}
-        params['owned_mutex_protocol'] = 'linux_local_first_v1'
+        params['owned_mutex_protocol'] = 'linux_local_split_v1'
         run.check_owned_mutex_parameters(params, spec)
         for key in run.owned_mutex_parameters(spec):
             with self.subTest(key=key):
@@ -89,6 +89,20 @@ class PlanTests(unittest.TestCase):
         for name in ('mutex_lock', 'mutex_unlock', 'kd_owned_mutex_outer_contended_clobber_v1'):
             with self.assertRaises(run.Failure):
                 run.audit_owned_mutex_imports(' '.join(required | {name}))
+
+    def test_adaptive_provider_identity_is_checked(self):
+        rows = run.make_plan(arguments(owned_mutex_adaptive=True, owned_mutex_numa=True))
+        spec = next(r for r in rows if r['arm'] == 'kdlock')
+        self.assertTrue(spec['owned_mutex_adaptive'])
+        self.assertTrue(spec['owned_mutex_numa'])
+        self.assertTrue(all(not r['owned_mutex_adaptive'] for r in rows if r['arm'] != 'kdlock'))
+        params = {k: str(v) for k, v in run.owned_mutex_parameters(spec).items()}
+        params['owned_mutex_protocol'] = 'contention_adaptive_v8'
+        run.check_owned_mutex_parameters(params, spec)
+        for changes in (dict(owned_mutex_adaptive='0'),
+                        dict(owned_mutex_protocol='linux_local_split_v1')):
+            with self.subTest(changes=changes), self.assertRaises(run.Failure):
+                run.check_owned_mutex_parameters(dict(params, **changes), spec)
 
 
 if __name__ == '__main__':

@@ -107,10 +107,14 @@ measured operation. A failed/undrained session has no accepted score.
 
 The [mutex module](../../workload_modules/real_api/mutex.c) keeps the real pipe
 mutex or `f_pos_lock` for Native; TCLock and KD use separate ordinary-mutex
-objects. KD uses a private 32-byte `struct kd_mutex`, owned outer ABI4, and
+objects. KD uses a private 128-byte, 64-byte-aligned `struct kd_mutex`, owned outer ABI4, and
 reuse allowance 32 by default. Its result wait polls up to 4,096 times before
 blocking; `--owned-mutex-reuse-spins` and `--mutex-spin-limit` record alternate
-policies separately. Owned origin and NUMA selection remain off. The build
+policies separately. `--owned-mutex-adaptive --owned-mutex-numa` enables the
+experimental queue-pressure switch and bounded local cohorts. The
+[c01/pipebytes comparison](../results/10.176.26.71/bench/comparison/mutex-adaptive-20261016T075356Z/README.md)
+records the full 21-count results and regressions. Both policies are off by
+default; origin spin remains off. The build
 checks ABI4 symbol imports and module identity, and the runner verifies provider
 parameters, returned JIT bodies, object idleness and complete source retirement.
 No KD object is passed to Linux mutex APIs or mixed with Linux waiters.

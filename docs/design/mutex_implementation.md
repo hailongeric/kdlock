@@ -133,17 +133,21 @@ the KD API. Linux mutexes used by provider control code are separate objects;
 existing kernel-owned `struct mutex` objects continue using Linux operations.
 
 [kd_mutex.h](../../include/kd_mutex.h) statically checks size, alignment and
-every field offset against the captured Linux type: 32 bytes, alignment 8,
-owner at 0, wait lock at 8, OSQ at 12 and wait list at 16. This matches object
-geometry, not measured cache behavior. Unsupported RT/debug layouts fail the
-build.
+every field offset of the private 128-byte, 64-byte-aligned type: owner at 0,
+OSQ at 8, wait lock at 64, wait list at 72 and adaptive hint at 88. Delegate
+publication writes a different cacheline from the owner. The advisory hint
+also stays off the owner line, so cold entry need not read-share that line
+before its locked CAS. This changes the
+former 32-byte embedding ABI: callers and provider must be rebuilt together.
+The captured Linux layout and source hashes remain provenance for the port,
+not an interchangeability contract. Unsupported RT/debug layouts fail the build.
 
 The whole owner word is the sole ownership authority. WAITERS=1, HANDOFF=2 and
 PICKUP=4 retain acquire/release ordering. The owned-only DELEGATION=8 guard uses
 the captured task pointer's 16-byte alignment; pointer comparisons mask all four
 bits. One FIFO under `wait_lock` contains
 tagged SELF and DELEGATE waiters; each starts with the same 40-byte private
-header. This header is outside the public 32-byte mutex object. ABI2 cold and
+header. This header is outside the public 128-byte mutex object. ABI2 cold and
 refused acquisitions use KD's optimistic SELF core; ABI4 tries local acquisition
 first and commits to SELF waiting on later refusal. The OSQ head competes for a running owner; a waiter
 sleeps if spinning cannot make progress. Ordinary SELF release permits barging
@@ -227,10 +231,50 @@ not a total owner-spin budget, an ownership guarantee or a thread-count policy.
 It adds no field to the public object. Result polling uses the separate
 `owned_mutex_spin_limit`, default 4,096, before sleeping on a reserved stack.
 
+### Contention-adaptive ABI4 policy
+
+`owned_mutex_adaptive=1` is an opt-in acquisition and batching policy. It does
+not receive the benchmark's worker count. Every 64th contended entry per CPU
+may walk at most seven distinct OSQ nodes. Matching queue-membership tags,
+head/grant checks and cycle checks reject inconclusive chains. Seven observed
+spinners plus the arriving caller supply a conservative pressure cue aimed at
+eight or more contenders. The lockless observations are not an exact simultaneous
+count under churn or migration; they never grant ownership or control retirement.
+Short queues normally retain the original leaf CAS and Linux-style optimistic
+path. Eight configured workers may also remain mostly local because the physical
+owner normally sits outside OSQ. Ordinary/ABI2 acquisitions retain their existing
+routing.
+
+Once the lock's advisory `adaptive_hot` flag is set, later ABI4 arrivals skip the
+failed locked CAS and optimistic pass, then attempt ordinary late-capture
+admission. Exact eligibility, resource checks and publication retries still
+apply. Refusal commits to the existing SELF core. The hint clears when the
+actual public/private queue drains, or when entry observes a free owner. It is
+not a persistent classification of the object or an exact thread counter.
+
+Adaptive combining prefetches the next linked packet and its native return
+slots before executing the current body, and permits bounded FIFO refill. With
+`owned_mutex_numa=1`, it instead moves remote-node heads to a private deferred
+list once and serves local requests as a cohort. A pending remote prefix limits
+the cohort to 128 bodies; one scan budget and the existing body budget each cap
+work at 1,024 across refills. SELF, HANDOFF, scheduling, refusal, FULL and early
+release remain hard boundaries. The deferred prefix is rejoined before the
+unstarted suffix and newer public arrivals on every exit, before physical
+release. No spin on a future successor is introduced.
+
+The policy borrows early queuing, successor prefetch and local cohorts from the
+retired legacy mutex. It retains the owned mutex's immutable image binding,
+exact owner/packet/frame lifetimes, FULL/ACK protocol and bounded result polling
+followed by sleeping. It does not restore the legacy shadow map or spin-only
+producer wait. The general defaults remain ABI2 and adaptive mode off; see the
+[current performance report](../PERFORMANCE.md) before selecting the experiment.
+
 ### Owned ABI4 acquisition and release flow
 
-This is the opt-in local-first path used by the accepted c01 profile and the
-[expanded mutex comparison](../PERFORMANCE.md#expanded-mutex-workloads). The OSQ
+This shows ABI4 with the optional contention switch. The archived local-first
+path used by the accepted c01 profile and the
+[expanded mutex comparison](../PERFORMANCE.md#expanded-mutex-workloads) has the
+switch disabled. A hot entry also bypasses the initial failed leaf CAS. The OSQ
 serializes optimistic spinners; it is separate from the tagged wait list under
 `wait_lock`. ABI2's heat/capture path above remains a different caller policy.
 
@@ -238,7 +282,9 @@ serializes optimistic spinners; it is separate from the tagged wait list under
 flowchart TD
     Entry[Outer lock: leaf CAS from zero to current] --> Fast{Acquired?}
     Fast -->|Yes| Self[Return physical cookie; caller runs body]
-    Fast -->|No| Local[Retry and owner-running OSQ spin; reschedule if needed; final retry]
+    Fast -->|No| Pressure{Adaptive hot or observed queue pressure?}
+    Pressure -->|Yes| Capture
+    Pressure -->|No| Local[Retry and owner-running OSQ spin; reschedule if needed; final retry]
     Local --> LocalOK{Acquired?}
     LocalOK -->|Yes| Self
     LocalOK -->|No| Capture[Late capture of eight words]
@@ -278,7 +324,8 @@ flowchart TD
 
 The following release rules apply to both owned caller ABIs. Ordinary/nested
 unlock never enters the combining branch. Optional refill takes further FIFO
-snapshots under the same cumulative cap; it is off in the measured profile.
+snapshots under the same cumulative cap. Adaptive mode enables refill; the
+archived local-first profile used one finite snapshot.
 
 A delegate publisher sets WAITERS and DELEGATION under `wait_lock` before
 linking, preserving its
@@ -288,7 +335,8 @@ slow SELF unlock can release the owner word before taking `wait_lock`, then
 only wake a waiter; it cannot hand off on behalf of a newer owner. A guarded
 release retains ownership until the tagged queue/batch is resolved. This keeps
 Linux ownership reuse on SELF-only queues without stranding delegated requests.
-The read-only provider identity is `owned_mutex_protocol=linux_local_first_v1`;
+The read-only provider identity is `owned_mutex_protocol=linux_local_split_v1` in local-first mode and
+`contention_adaptive_v8` in adaptive mode;
 there is no optional early-release or budgeted native-first mode.
 
 Ordinary and direct clobber calls are nestable SELF controls on their caller.
@@ -307,7 +355,8 @@ It releases or hands off through the SELF core and retains borrower ACK routing.
 Only explicit outer unlock can combine. This also prevents B's unlock from
 executing a B waiter that needs the caller's still-held outer A.
 
-Combining starts on explicit outer unlock, after the physical owner's own body. A combiner
+In the default finite policy, combining starts on explicit outer unlock, after
+the physical owner's own body. A combiner
 reserves its independent executor stack and source/task references, then detaches
 one finite FIFO snapshot while retaining owner and WAITERS. It executes only
 the leading delegates, stops at SELF, handoff, reschedule, refusal, FULL/native
@@ -416,7 +465,7 @@ do not establish arbitrary oversubscription or starvation freedom.
 after the [2026-10-15 comparison](../../bench/results/10.176.26.71/bench/mutex_owned/20261015-origin/README.md)
 missed the regression gates. GS-independent images continue
 to execute for sleeping producers with their existing FULL/native ACK behavior.
-The public mutex is still 32 bytes; request registers remain at offset 128 and
+The current public mutex is 128 bytes; request registers remain at offset 128 and
 the outcome at offset 304 in the 320-byte private packet. Readiness, origin CPU
 and the persistent bypass count occupy the final twelve padding bytes.
 
@@ -443,7 +492,7 @@ released. A preparation wake is a request, never execution authority. Only the
 combiner inspects queue links; it may prepare one prospective successor while
 processing the current request.
 
-NUMA mode examines at most eight delegates, stopping at SELF and HANDOFF
+Without adaptive mode, NUMA selection examines at most eight delegates, stopping at SELF and HANDOFF
 boundaries. It chooses the earliest eligible local-node request, otherwise the
 earliest eligible remote request. Each overtaken predecessor increments its
 persistent count when the selected request is dispatched. A count of four stops

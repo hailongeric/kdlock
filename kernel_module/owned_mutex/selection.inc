@@ -2,6 +2,7 @@
  * linked in their original order; their bypass counts survive queue rejoin. */
 #define KD_OWNED_MUTEX_WINDOW 8U
 #define KD_OWNED_MUTEX_MAX_BYPASSES 4U
+#define KD_OWNED_MUTEX_LOCAL_COHORT 128U
 
 static const struct kd_jit_image *
 kd_owned_mutex_candidate(struct kd_owned_mutex_node *node, struct kd_exe_info **exe)
@@ -18,6 +19,44 @@ kd_owned_mutex_candidate(struct kd_owned_mutex_node *node, struct kd_exe_info **
 			return NULL;
 	}
 	return image;
+}
+
+/* Legacy-style bounded locality: move older remote heads aside once, rather
+ * than rescanning/updating them for every local body. They retain their exact
+ * queued ownership and precede all remaining/new requests on rejoin. A remote
+ * prefix ends the local cohort after 128 bodies; total scans/bodies still have
+ * the enclosing batch cap. SELF, refusal, scheduling and FULL remain stops. */
+static struct kd_owned_mutex_node *
+kd_owned_mutex_select_cohort(struct kd_owned_mutex_batch *batch, unsigned int count)
+{
+	while (!list_empty(&batch->pending)) {
+		struct kd_owned_mutex_waiter *waiter;
+		struct kd_owned_mutex_node *node;
+		struct kd_exe_info *exe;
+		const struct kd_jit_image *image;
+
+		if (!batch->scan_left ||
+		    (!list_empty(&batch->deferred) && count >= KD_OWNED_MUTEX_LOCAL_COHORT))
+			return NULL;
+		batch->scan_left--;
+		waiter = list_first_entry(&batch->pending, struct kd_owned_mutex_waiter, list);
+		if (waiter->kind != KD_OWNED_MUTEX_DELEGATE)
+			return NULL;
+		node = container_of(waiter, struct kd_owned_mutex_node, waiter);
+		if (node->numa_node != numa_node_id()) {
+			list_del_init(&waiter->list);
+			list_add_tail(&waiter->list, &batch->deferred);
+			this_cpu_inc(kd_owned_mutex_bypasses);
+			continue;
+		}
+		image = kd_owned_mutex_candidate(node, &exe);
+		if (!image)
+			return NULL;
+		batch->exe = exe;
+		batch->image = image;
+		return node;
+	}
+	return NULL;
 }
 
 static struct kd_owned_mutex_node *kd_owned_mutex_select(struct kd_owned_mutex_batch *batch)
@@ -48,6 +87,10 @@ static struct kd_owned_mutex_node *kd_owned_mutex_select(struct kd_owned_mutex_b
 			batch->exe = exe;
 			batch->image = image;
 		}
+		/* The first eligible local request is already the final choice.
+		 * Later entries cannot improve locality or change its FIFO tie-break. */
+		if (best_local)
+			break;
 		if (node->bypasses >= KD_OWNED_MUTEX_MAX_BYPASSES)
 			break;
 	}

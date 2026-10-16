@@ -4,12 +4,38 @@ The archived 64-vCPU study accepted the owned ABI4/reuse-32 profile against the
 97% Native target for c01/post64 at 1–8 workers. It extends the experimental
 `d8d14a1` provider with Linux-style local acquisition before delegation at
 implementation commit `585335b`.
-The benchmark uses `owned-v1`, the independent 32-byte KD mutex object.
+That archived benchmark used `owned-v1` with the then-current independent
+32-byte KD mutex object. The current 128-byte adaptive experiment has a separate
+comparison below; the earlier acceptance does not transfer to its layout/policy.
 Owned ABI2 capture-first, admission ratio 256, reuse allowance 0 and finite FIFO
 remain the general defaults. The measured profile explicitly selects ABI4 and 32.
 This narrow result does not establish general Native parity. Implementation contracts live in
 [the mutex guide](design/mutex_implementation.md); correctness receipts live in
 [validation](VALIDATION.md).
+
+## Adaptive mutex comparison
+
+The [fresh c01/pipebytes comparison](../bench/results/10.176.26.71/bench/comparison/mutex-adaptive-20261016T075356Z/README.md) contains
+504 accepted and drained measurements: both workloads, four arms, three rounds
+and 1–8 workers by one plus 12–60 by four. The candidate keeps ABI4 local
+acquisition at low queue pressure and offers earlier delegation, successor
+prefetch and bounded refill/cohorts at high pressure. It uses the new 128-byte
+object; the separately frozen pre-change KD arm retains its exact 32-byte object.
+Native and TCLock controls are fresh. Historical legacy results remain separate.
+
+At 60 workers, adaptive/before median whole-run throughput is
+2.972/6.894 Mops/s for c01/post64 (-56.9%) and
+2.944/2.961 Mops/s for pipebytes n16 (-0.6%).
+Low-count behavior is also mixed: c01 loses 17.8% at three workers and pipebytes
+loses 35.7% at seven, despite remaining almost entirely local. The four-worker
+pipebytes gain likewise executes more than 99.99% of operations locally.
+The policy changes delegation frequency but does not establish a general gain;
+`owned_mutex_adaptive` remains off by default. The report retains all worker
+counts, warmed peaks, spread, CPU cost, worker/node shares and rejected pilots.
+This is one descriptive block, without fresh confirmation blocks or a separate
+128-byte adaptive-off performance arm. The old 32-byte acceptance below does
+not cover the new layout, even with adaptation disabled. Callers and provider
+must be rebuilt together.
 
 ## Expanded mutex workloads
 

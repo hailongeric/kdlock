@@ -14,7 +14,7 @@ files or benchmark archives.
 | [kd_spinlock.c](../kernel_module/kd_spinlock.c) → [spin](../kernel_module/spin/) | Direct entry, pending/MCS, batching, prefetch, continuation and restore |
 | [kd_rwlock.h](../include/kd_rwlock.h) → `spin/direct.inc`, `combiner.inc`, `execute.inc`, `restore.inc` | Local readers, native fast writers and ABI3 writer admission, cancellation and retry over the spin engine |
 | [kd_spin_entry.c](../kernel_module/kd_spin_entry.c) → `spin/ticket_*.inc` | Exact acquisition tickets, native borrowing and final retirement |
-| [owned core](../kernel_module/owned_mutex/core.c), [OSQ](../kernel_module/owned_mutex/osq.c) | KD-owned 32-byte mutex, Linux-derived SELF acquisition, guarded release and typed FIFO |
+| [owned core](../kernel_module/owned_mutex/core.c), [OSQ](../kernel_module/owned_mutex/osq.c) | KD-owned 128-byte mutex, Linux-derived SELF acquisition, guarded release and typed FIFO |
 | [owned entry](../kernel_module/owned_mutex/entry.S), [delegation](../kernel_module/owned_mutex/delegation.c) | ABI4 leaf acquisition/unlock and late capture; ABI2 heat admission; unlock-side batching, result wait and restore |
 | [owned readiness](../kernel_module/owned_mutex/readiness.inc), [selection](../kernel_module/owned_mutex/selection.inc) | Exclusive origin claims, park arbitration and optional bounded NUMA delegate selection |
 | [kd_mutex_tasks.c](../kernel_module/kd_mutex_tasks.c) | Exact task/acquisition references and RCU removal |

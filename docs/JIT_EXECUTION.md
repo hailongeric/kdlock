@@ -43,9 +43,10 @@ Writers first try a native count CAS without the gate; on failure they take the
 native or hot gate path. Before the body starts, either the pinned native helper
 or the combiner must acquire exclusive writer admission.
 
-Owned mutex ABI4 first tries its own leaf CAS and Linux-style optimistic SELF
-acquisition. It performs no heat accounting. Only failed local acquisition reaches
-late capture and source/task/resource checks. The owned ABI2 caller instead uses
+Owned mutex ABI4 normally tries its own leaf CAS and Linux-style optimistic
+SELF acquisition. Opt-in queue-pressure adaptation can bypass optimism after
+observing at least eight contenders. Both routes perform no heat accounting;
+late capture still requires exact source/task/resource checks. The owned ABI2 caller instead uses
 its independent heat policy. See the [owned acquisition flow](design/mutex_implementation.md#owned-abi4-acquisition-and-release-flow)
 for publication, SELF pickup and unlock-side batching.
 
@@ -113,7 +114,7 @@ heat policy or reader delegation.
 | Spin lock gate | At `>=512` records, interval must be `<1250000000` TSC ticks |
 | Owned mutex ABI2 CPU gate | Independent entry/contention counters; at `>=1024` contentions compare `(entries >> 10) < limit`, reset both, then sample time; the limit defaults to 256 |
 | Owned mutex ABI2 lock gate | The 1025th record checks an interval `<2500000000` TSC ticks |
-| Owned ABI4 | No heat samples or ratio gate; local acquisition must fail before delegation eligibility checks |
+| Owned ABI4 | No heat samples or ratio gate; local-first by default, or opt-in queue-pressure bypass before exact eligibility checks |
 
 At 1024 MCS publications, the default ratio accepts 1024..2047 acquisitions and
 rejects 2048. The first window participates. Limit 0 disables only the ratio;
