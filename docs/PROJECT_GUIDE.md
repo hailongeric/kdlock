@@ -1,5 +1,10 @@
 # Project guide
 
+This is the recovered legacy mutex baseline on `recovery/mutex-legacy-5m330`.
+The [2026-10-16 recovery receipt](../bench/results/10.176.26.71/bench/comparison/mutex-legacy-recovery-20261016T113518Z/README.md) identifies the exact historical sources
+and fresh pipebytes validation. The later owned/adaptive implementation is not
+part of this branch; the reports below retain their original dates and scope.
+
 KD lets a lock holder execute a waiting caller's critical section through JIT.
 Spinlocks use KD's own four-byte object. Mutexes keep the original Linux mutex
 and its real owner. Read-write locks use a 128-byte object: readers run locally,
@@ -78,10 +83,9 @@ guest node 0 CPUs 0–31 map to host CPUs 0–31, and guest node 1 CPUs 32–63 
 to host CPUs 32–63, with 12 GiB bound to each matching host memory node.
 `pin_cpu.sh` verifies one-to-one pinning automatically. QEMU service threads share
 host CPU 63 with guest CPU 63. Use collector CPU 63 and exclude it from workers.
-Both comparison runners accept up to 64 workers. The [complete 22-point matrix](../tools/vm/README.md#complete-164-worker-comparison)
-uses a temporary 66-vCPU boot for 64 workers and a separate guest collector;
-at 64 workers they share the last physical host core. Archive that topology's
-evidence before restoring the regular boot, and keep its snapshots separate.
+New runs use exactly 64 vCPUs. The recovered API runner requires a separate
+collector, so it supports at most 63 workers. Historical extra-vCPU recipes are
+retained as evidence only; follow the current placement rules in [AGENTS](AGENTS.md).
 
 `vm_ssh.sh` uses `/home/eric/.ssh/kdlock_vm_ed25519` to reach the guest locally.
 The host also provides the `ssh kdlock-vm` alias. The source-host synchronization

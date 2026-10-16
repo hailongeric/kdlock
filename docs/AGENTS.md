@@ -56,6 +56,23 @@ raw samples in their evidence archives. Roll back committed work with `git rever
 or a reviewed path-specific restore followed by a new commit, never a whole-tree
 reset. Git rollback does not synchronize the guest or drain loaded modules.
 
+## Recovered legacy baseline
+
+This branch restores the captured KD mutex implementation associated with the
+2026-10-11 pipebytes n16 result of 5.330 Mops/s at 60 workers. It uses the original
+Linux mutex, shadow MCS queue and pinned polling producers. The user's explicit
+2026-10-16 recovery instruction selects this historical policy; do not add the
+later owned mutex, adaptive policy or sleeping producer path to this baseline.
+See the [recovery receipt](../bench/results/10.176.26.71/bench/comparison/mutex-legacy-recovery-20261016T113518Z/README.md)
+for source identities, validation and fresh measurements.
+
+The source worktree is `/tmp/kdlock-mutex-legacy-5m330` on `380G10`, branch
+`recovery/mutex-legacy-5m330`. The primary worktree retains its 35 pre-existing
+edits and the rejected adaptive experiment. Synchronize with the maintained
+helper from that worktree using `--source /tmp/kdlock-mutex-legacy-5m330`.
+Freeze only manifest-listed files for builds so obsolete destination files
+cannot enter the recovered source set. All builds and tests remain guest-only.
+
 ## Environment
 
 | Action | Location |
@@ -77,11 +94,9 @@ bound to host CPUs 0–31 and memory node 0. Guest node 1 has CPUs 32–63 and
 to the same-numbered physical host core. QEMU service threads share host CPU 63;
 the VM retains all 64 cores. `pin_cpu.sh` runs automatically and verifies every
 vCPU affinity. Use collector CPU 63 and worker cohorts that exclude it.
-Spin/mutex and rwlock accept up to 64 workers, but the regular VM cannot provide
-64 distinct workers plus a separate collector. The [complete matrix workflow](../tools/vm/README.md#complete-164-worker-comparison)
-uses a temporary 66-vCPU boot and records physical collector contention at
-64 workers. Restore the regular boot after archiving; never load snapshots
-between different CPU topologies.
+Use exactly 64 vCPUs for new runs. This recovered API runner requires a separate
+collector and supports at most 63 workers. Do not use the historical temporary
+66-vCPU recipe for new measurements or load snapshots from another topology.
 
 Launcher modes are `recovery`, `shared`, `status`, `monitor [COMMAND]` and
 `stop`; `stop` requests guest shutdown and never force-kills QEMU. Guest SSH
@@ -105,7 +120,8 @@ as needed. Delete only identified obsolete project files. Never move, recursivel
 replace or clear `/root/host_fs`, and do not edit frozen running inputs.
 
 The 64-vCPU boot, exact kernel identity, all 64 CPU pins and guest health were
-verified on 2026-10-10. The earlier 73-session migration benchmark used 60 vCPUs
+verified again on 2026-10-16, with recovery snapshot
+`before-mutex-legacy-recovery-20261016T113518Z`. The earlier 73-session migration benchmark used 60 vCPUs
 and remains evidence for that topology. The migration copy contains current disk
 contents without historical VM snapshots; the original disks on `380G10` remain
 untouched for rollback. Saved VM state from the old CPU/topology is not portable

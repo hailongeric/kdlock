@@ -15,13 +15,6 @@ reports scaling, useful KD regimes, regressions and xattr admission limits.
 The separate [run record](../results/10.176.26.71/bench/real_api/20261011/README.md)
 retains reproduction commands, validation, exploratory failures and raw evidence.
 
-The [mutex and read/write extension](../results/10.176.26.71/bench/real_api/20261011-sync/RESULTS.md)
-adds pipe-buffer and capacity queries, shared-file seeks, and private UTS reads
-with hostname/domain-name updates. It reports three-round scaling and separates
-mutex delegation evidence from UTS's low JIT share, with the sleeping-rwsem
-comparison limits made explicit. All 504 final sessions passed correctness and
-drained; plots, full statistics and the retained pilots accompany the report.
-
 These are API microbenchmarks with real kernel metadata, not end-to-end
 application measurements or a global replacement of Linux locks. Neither loading
 KD nor loading TCLock alone changes ordinary syscall locking.
@@ -53,10 +46,9 @@ hashes; the compiled experiment targets the captured 6.1.159 guest.
 
 ## Contract and comparison limits
 
-For xattr/OFD, the client creates an anonymous `memfd`, fills its
-`trusted.kdlock.*` attributes (root is required; this guest has no tmpfs `user.*`
-handler) or establishes nonadjacent one-byte OFD write locks, and then waits for
-the controller. The
+The client creates an anonymous `memfd`, fills its `trusted.kdlock.*` attributes
+(root is required; this guest has no tmpfs `user.*` handler) or establishes
+nonadjacent one-byte OFD write locks, and then waits for the controller. The
 module pins that file and rejects linked files and non-tmpfs objects. The OFD
 variant also rejects lock-manager callbacks and non-OFD locks. Once bound,
 **no participant may mutate metadata, change the OFD locks, or close their owner
@@ -86,8 +78,8 @@ pooled with the matched native arm. The captured kernel has UBSAN enabled, while
 all timed replacement/provider modules have UBSAN disabled. Therefore only the
 matched native comparison isolates the lock change within this compiled body.
 
-Only one fixed worker runs on each selected CPU. The spin cases use the real
-kernel metadata and original lock storage. Syscalls run individually, without an
+Only one fixed worker runs on each selected CPU. All requests use the real
+kernel list and original lock storage. Syscalls run individually, without an
 ioctl loop or artificial arithmetic inside the critical section. Warmup and
 setup are outside timing. User-buffer validation is inside timing and identical
 across backends. Values differ by attribute key; every returned byte is checked.

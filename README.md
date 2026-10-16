@@ -1,5 +1,10 @@
 # kdlock
 
+This is the recovered legacy mutex baseline on `recovery/mutex-legacy-5m330`.
+The [2026-10-16 recovery receipt](bench/results/10.176.26.71/bench/comparison/mutex-legacy-recovery-20261016T113518Z/README.md) identifies the exact historical sources
+and fresh pipebytes validation. The later owned/adaptive implementation is not
+part of this branch; the reports below retain their original dates and scope.
+
 kdlock is an experimental lock library for x86_64 Linux kernel code. When several
 threads need the same lock, one thread can hold it and run critical sections for
 waiting threads. That thread is the **combiner**. A background daemon translates

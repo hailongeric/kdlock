@@ -1,5 +1,10 @@
 # Performance status
 
+This is the recovered legacy mutex baseline on `recovery/mutex-legacy-5m330`.
+The [2026-10-16 recovery receipt](../bench/results/10.176.26.71/bench/comparison/mutex-legacy-recovery-20261016T113518Z/README.md) identifies the exact historical sources
+and fresh pipebytes validation. The later owned/adaptive implementation is not
+part of this branch; the reports below retain their original dates and scope.
+
 KD does not yet match both TCLock and Linux Native at every requested thread
 count. The latest [mutex c01/hash optimization](../bench/results/10.176.26.71/bench/comparison/mutex-opt-20261011T045425Z/README.md)
 measures task caching, polling layout, retirement loads and bounded NUMA selection

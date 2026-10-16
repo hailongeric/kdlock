@@ -1,0 +1,11 @@
+{
+  "archive_sha256": "cfa734b8670eee49d0f265d9f28310336026d525820970df73cf7b36b3028d6c",
+  "bytes": 18899421,
+  "regular_files_verified": 1903,
+  "symlinks_verified": 12,
+  "manifest_sha256": "ace9a098c2b3d00c58f3d3ec9a18b3d1960f60bb5b039cfba9ce12ead82234e8",
+  "source_host": "380G10",
+  "benchmark_host": "10.176.26.71",
+  "same_absolute_archive_path_on_both_hosts": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/mutex-legacy-recovery-20261016T113518Z/mutex-legacy-recovery-20261016T113518Z.tar.gz",
+  "all_manifest_entries_match": true
+}
