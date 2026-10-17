@@ -22,9 +22,10 @@ struct task_struct {
 	int pid;
 	char comm[16];
 };
-struct mutex {
-	struct task_struct *owner;
-};
+typedef struct task_struct *atomic_long_t;
+typedef int raw_spinlock_t;
+struct optimistic_spin_queue { atomic_t tail; };
+struct list_head { struct list_head *next, *prev; };
 #include "mutex_resource_types.h"
 
 static struct task_struct waiter = { .pid = 1 }, peer = { .pid = 2 };
@@ -40,14 +41,7 @@ static unsigned long kd_mutex_origin_acquires, kd_mutex_origin_releases;
 static int kd_mutex_reserved_nodes;
 static bool promoted, task_failure, active_override, borrowed;
 static bool cpu_hot = true, trace_admission, sampled_first;
-static unsigned int comm_queries, table_lock_entries;
-/* Inject one competing get after a reader observes a hole, before its
- * insertion lock is acquired. This is a deterministic interleaving, not a
- * replacement for live concurrent publication and owner/ACK validation. */
-static void (*shadow_before_lock)(void);
-static struct mutex *shadow_racing_origin;
-static struct kd_mutex *shadow_racing_entry;
-static struct kd_mutex shadow_racing_snapshot;
+static unsigned int comm_queries;
 static bool schedule_wanted, recycle_on_enable, direct_packet;
 static bool source_open, native_owner_wait;
 /* Most resource cases substitute a failed first CAS followed by a racing
@@ -100,19 +94,6 @@ static jmp_buf resume_target;
 #define this_cpu_ptr(p) (p)
 #define per_cpu_ptr(p, cpu) tail_node_for_cpu(p, cpu)
 #define DEFINE_RAW_SPINLOCK(name) int name
-#define raw_spin_lock_irqsave(p, flags)     \
-	do {                                \
-		if (shadow_before_lock) {   \
-			void (*publish)(void) = shadow_before_lock; \
-			shadow_before_lock = NULL; \
-			publish();          \
-		}                          \
-		CHECK(!*(p) && !table_irq); \
-		*(p) = 1;                   \
-		table_irq++;                \
-		table_lock_entries++;       \
-		(flags) = 0;                \
-	} while (0)
 #define raw_spin_unlock_irqrestore(p, flags)                    \
 	do {                                                    \
 		CHECK(*(p) == 1 && table_irq == 1 && !(flags)); \
@@ -150,8 +131,8 @@ static void migrate_disable(void);
 static bool need_resched(void) __attribute__((unused));
 static void schedule(void) __attribute__((unused));
 static void cpu_relax(void);
-static void kd_origin_mutex_lock(struct mutex *lock);
-static void kd_origin_mutex_unlock(struct mutex *lock, unsigned long ip);
+static void kd_origin_mutex_lock(struct kd_mutex *lock);
+static void kd_origin_mutex_unlock(struct kd_mutex *lock, unsigned long ip);
 static bool kd_mutex_task_active(struct task_struct *task);
 static bool kd_mutex_task_reroute(struct task_struct *task);
 static bool kd_source_is_open(void);
@@ -174,7 +155,7 @@ static void kd_hotlock_mutex_entry(void)
 	CHECK(preempt <= 1);
 	entry_attempts++;
 }
-static bool kd_mutex_trylock_fast(struct mutex *lock)
+static bool kd_mutex_trylock_fast(struct kd_mutex *lock)
 {
 	fast_probes++;
 	CHECK(!preempt);
@@ -184,15 +165,16 @@ static bool kd_mutex_trylock_fast(struct mutex *lock)
 	acquires++;
 	return true;
 }
+#define atomic_long_set(p,v) (*(p) = (void *)(unsigned long)(v))
+#define osq_lock_init(p) ((p)->tail.counter = 0)
+#define raw_spin_lock_init(p) (*(p) = 0)
+#define INIT_LIST_HEAD(p) ((p)->next = (p)->prev = (p))
 #include "mutex_resource_code.h"
 
-/* Equal table-sized strides force collisions using actual mutex addresses;
- * unlike the removed model, the full 1024-entry table is filled through get(). */
-struct origin_slot {
-	struct mutex mutex;
-	char padding[KD_MUTEX_SHADOW_TABLE_SIZE - sizeof(struct mutex)];
-};
-static struct origin_slot origins[KD_MUTEX_SHADOW_TABLE_SIZE + 1];
+/* Independent initialized objects replace the historical shadow-map fixture.
+ * The live local probe exercises all 2048 objects against the actual kernel. */
+struct origin_slot { struct kd_mutex mutex; };
+static struct origin_slot origins[2048];
 static char shadow_stacks[KD_MUTEX_MAX_NODES][KD_MUTEX_SHADOW_STACK_SIZE];
 
 /* Model only per-CPU storage, not the codec. Use distinct addresses for the
@@ -290,11 +272,11 @@ static void cpu_relax(void)
 	release_peer(waiting_gate);
 	waiting_gate = NULL;
 }
-static void kd_origin_mutex_lock(struct mutex *lock)
+static void kd_origin_mutex_lock(struct kd_mutex *lock)
 {
 	CHECK(lock && !preempt && !table_irq);
 	if (native_owner_wait) {
-		struct kd_mutex *gate = find_kd_mutex_shadow(lock);
+		struct kd_mutex *gate = lock;
 
 		/* A native peer acquired L between private-queue owners. Claiming
 		 * S cannot bypass that owner; substitute only its eventual unlock. */
@@ -311,7 +293,7 @@ static void kd_origin_mutex_lock(struct mutex *lock)
 	lock->owner = current;
 	acquires++;
 }
-static void kd_origin_mutex_unlock(struct mutex *lock, unsigned long ip)
+static void kd_origin_mutex_unlock(struct kd_mutex *lock, unsigned long ip)
 {
 	(void)ip;
 	CHECK(lock && lock->owner == current && !preempt && !table_irq);
@@ -449,7 +431,7 @@ static void jump_to_saved_regs_in_cs(struct kd_regs *regs)
 static void reset(void)
 {
 	memset(origins, 0, sizeof(origins));
-	memset(kd_mutex_shadows, 0, sizeof(kd_mutex_shadows));
+	for (unsigned int i = 0; i < 2048; i++) kd_mutex_init(&origins[i].mutex);
 	memset(kd_mutex_nodes, 0, sizeof(kd_mutex_nodes));
 	memset(&cpu_shadows, 0, sizeof(cpu_shadows));
 	for (int i = 0; i < KD_MUTEX_MAX_NODES; i++) {
@@ -467,7 +449,7 @@ static void reset(void)
 	fast_available = false;
 	entry_attempts = entry_pins = fast_probes = 0;
 	native_waits = 0;
-	errors = preempt = migration = table_irq = table_lock_entries = 0;
+	errors = preempt = migration = table_irq = 0;
 	gets = task_puts = refs = adds = acquires = releases = schedules = 0;
 	slow_calls = notify_calls = samples = mode = 0;
 	kd_mutex_multi_slot_count = kd_mutex_frame_failure_count = 0;
@@ -477,9 +459,6 @@ static void reset(void)
 	promoted = cpu_hot = true;
 	trace_admission = sampled_first = false;
 	comm_queries = 0;
-	shadow_before_lock = NULL;
-	shadow_racing_origin = NULL;
-	shadow_racing_entry = NULL;
 	kd_comm_init(&kd_spin_target, target_process);
 	task_failure = active_override = borrowed = false;
 	schedule_wanted = recycle_on_enable = direct_packet = false;
@@ -550,7 +529,7 @@ static void check_nodes(void)
 							KD_MUTEX_MAX_NODES];
 				kd_mutex_nodes[i].task_struct_ptr = &peer;
 				kd_mutex_nodes[i].lock =
-					&kd_mutex_shadows[0].kd_mtx;
+					&origins[0].mutex;
 				kd_mutex_nodes[i].gsbase = 0xabcd;
 				if (chosen < 0 && !(occupied & BIT(i)) &&
 				    (available & BIT(i)))
@@ -610,111 +589,16 @@ static void check_nodes(void)
 	CHECK(memcmp(before, kd_mutex_nodes, sizeof(before)) == 0);
 }
 
-static unsigned int shadow_count(void)
-{
-	unsigned int count = 0;
-	for (int i = 0; i < KD_MUTEX_SHADOW_TABLE_SIZE; i++)
-		count += kd_mutex_shadows[i].kd_mtx.origin_mutex_addr != 0;
-	return count;
-}
-static void check_shadow_table(void)
-{
-	struct kd_mutex_shadow_entry before[KD_MUTEX_SHADOW_TABLE_SIZE];
-	struct kd_mutex *entries[KD_MUTEX_SHADOW_TABLE_SIZE];
-	struct mutex *missing = &origins[KD_MUTEX_SHADOW_TABLE_SIZE].mutex;
-
-	reset();
-	CHECK(!find_kd_mutex_shadow(&origins[0].mutex) && !shadow_count());
-	CHECK(!table_lock_entries);
-	for (int i = 0; i < KD_MUTEX_SHADOW_TABLE_SIZE; i++) {
-		entries[i] = get_kd_mutex_shadow(&origins[i].mutex);
-		CHECK(entries[i] && entries[i]->origin_mutex_addr ==
-					    (unsigned long)&origins[i].mutex);
-		CHECK(!entries[i]->tail && !entries[i]->state.counter &&
-		      !entries[i]->waiter_count.counter &&
-		      !entries[i]->physical_owner);
-		CHECK((unsigned long)&origins[i] % KD_MUTEX_SHADOW_TABLE_SIZE ==
-		      (unsigned long)&origins[0] % KD_MUTEX_SHADOW_TABLE_SIZE);
-		CHECK(shadow_count() == (unsigned int)i + 1);
-	}
-	/* Keep a pre-existing native owner intact when a different address cannot
-	 * obtain a shadow; unlock lookup must never create another entry. */
-	entries[0]->locked = _Q_LOCKED_VAL;
-	entries[0]->physical_owner = &peer;
-	origins[0].mutex.owner = &peer;
-	memcpy(before, kd_mutex_shadows, sizeof(before));
-	CHECK(table_lock_entries == KD_MUTEX_SHADOW_TABLE_SIZE);
-	for (int i = 0; i < KD_MUTEX_SHADOW_TABLE_SIZE; i++) {
-		CHECK(get_kd_mutex_shadow(&origins[i].mutex) == entries[i]);
-		CHECK(find_kd_mutex_shadow(&origins[i].mutex) == entries[i]);
-	}
-	CHECK(!find_kd_mutex_shadow(missing));
-	/* Existing queue owners stay intact without the insertion lock. */
-	CHECK(table_lock_entries == KD_MUTEX_SHADOW_TABLE_SIZE);
-	__kd_mutex_lock(missing, (unsigned long)&native_stack[16], 0x8000);
-	CHECK(errors == 1 && !gets && !adds && !slow_calls && !refs);
-	CHECK(missing->owner == current && acquires == 1);
-	__kd_mutex_unlock(missing, 0, 0x9000);
-	CHECK(!missing->owner && releases == 1 && !task_puts);
-	CHECK(!cpu_shadows.node_slots && !kd_mutex_reserved_nodes);
-	CHECK(memcmp(before, kd_mutex_shadows, sizeof(before)) == 0);
-	CHECK(!table_irq && !kd_mutex_shadow_lock);
-}
-
-static void publish_shadow_before_lock(void)
-{
-	CHECK(shadow_racing_origin && !table_irq && !kd_mutex_shadow_lock);
-	shadow_racing_entry = get_kd_mutex_shadow(shadow_racing_origin);
-	CHECK(shadow_racing_entry);
-	/* An actual gate may already be in use when the losing inserter reaches
-	 * the lock. Rechecking an existing key must never reinitialize that gate. */
-	shadow_racing_entry->tail = kd_mutex_encode_tail(1, 2);
-	shadow_racing_entry->locked = _Q_LOCKED_COMBINER_VAL;
-	shadow_racing_entry->physical_owner = &peer;
-	shadow_racing_entry->waiter_count.counter = 2;
-	shadow_racing_origin->owner = &peer;
-	memcpy(&shadow_racing_snapshot, shadow_racing_entry,
-	       sizeof(shadow_racing_snapshot));
-}
-
-static void check_shadow_insert_race(void)
-{
-	for (unsigned int collision = 0; collision < 2; collision++) {
-		struct mutex *lock = &origins[0].mutex;
-		struct kd_mutex *entry;
-
-		reset();
-		shadow_racing_origin = &origins[collision].mutex;
-		CHECK((unsigned long)lock % KD_MUTEX_SHADOW_TABLE_SIZE ==
-		      (unsigned long)shadow_racing_origin % KD_MUTEX_SHADOW_TABLE_SIZE);
-		shadow_before_lock = publish_shadow_before_lock;
-		entry = get_kd_mutex_shadow(lock);
-		CHECK(!shadow_before_lock && shadow_racing_entry && entry);
-		CHECK(entry->origin_mutex_addr == (unsigned long)lock);
-		CHECK((entry != shadow_racing_entry) == !!collision);
-		CHECK(shadow_count() == 1 + collision);
-		CHECK(!memcmp(&shadow_racing_snapshot, shadow_racing_entry,
-			      sizeof(shadow_racing_snapshot)));
-		CHECK(shadow_racing_origin->owner == &peer);
-		CHECK(find_kd_mutex_shadow(shadow_racing_origin) == shadow_racing_entry);
-		CHECK(find_kd_mutex_shadow(lock) == entry);
-		if (collision)
-			CHECK(!entry->tail && !entry->state.counter &&
-			      !entry->physical_owner && !entry->waiter_count.counter);
-		CHECK(table_lock_entries == 2 && !table_irq && !kd_mutex_shadow_lock);
-	}
-}
-
 static void check_hook_fallbacks(void)
 {
 	/* Exercise each early routing decision, both with a cold shadow and with
 	 * an existing unused shadow. Native-only paths never reserve a node. */
 	for (int existing = 0; existing < 2; existing++) {
 		for (int reason = 0; reason < 3; reason++) {
-			struct mutex *lock = &origins[0].mutex;
+			struct kd_mutex *lock = &origins[0].mutex;
 			reset();
 			if (existing)
-				CHECK(get_kd_mutex_shadow(lock));
+				CHECK(lock);
 			active_override = reason == 0;
 			promoted = reason != 1;
 			task_failure = reason == 2;
@@ -723,15 +607,11 @@ static void check_hook_fallbacks(void)
 			CHECK(lock->owner == current && acquires == 1);
 			CHECK(gets == (unsigned int)(reason == 2) &&
 			      !task_puts && !refs && !adds);
-			CHECK(shadow_count() ==
-			      (unsigned int)(existing || reason == 2));
 			CHECK(samples == 1);
 			CHECK(!slow_calls && !cpu_shadows.node_slots &&
 			      !kd_mutex_reserved_nodes);
 			__kd_mutex_unlock(lock, 0, 0x9000);
 			CHECK(!lock->owner && releases == 1 && !task_puts);
-			CHECK(shadow_count() ==
-			      (unsigned int)(existing || reason == 2));
 			CHECK(!errors && !preempt && !migration && !table_irq);
 		}
 	}
@@ -742,13 +622,13 @@ static void check_hook_fallbacks(void)
  * neither its return nor unlock may touch the predecessor's gate/reservation. */
 static void check_local_predecessor(void)
 {
-	struct mutex *lock = &origins[0].mutex;
+	struct kd_mutex *lock = &origins[0].mutex;
 	struct kd_mutex_node *head;
 	struct kd_mutex *gate;
 	struct kd_mutex other = {0};
 
 	reset();
-	gate = get_kd_mutex_shadow(lock);
+	gate = lock;
 	preempt = migration = 1;
 	head = kd_mutex_reserve_node();
 	head->lock = gate;
@@ -773,7 +653,7 @@ static void hold_peer(struct kd_mutex *gate)
 {
 	gate->locked = _Q_LOCKED_COMBINER_VAL;
 	gate->physical_owner = &peer;
-	((struct mutex *)gate->origin_mutex_addr)->owner = &peer;
+	gate->owner = &peer;
 	kd_mutex_origin_acquires = 1;
 }
 
@@ -784,7 +664,7 @@ static void check_frequency_order(void)
 	for (unsigned int abi = 0; abi < 2; abi++) {
 		for (unsigned int stage = 0; stage < 4; stage++) {
 			reset();
-			struct mutex *lock = &origins[0].mutex;
+			struct kd_mutex *lock = &origins[0].mutex;
 			cpu_hot = stage != 0;
 			promoted = stage != 1;
 			source_open = stage != 3;
@@ -798,33 +678,33 @@ static void check_frequency_order(void)
 			unsigned int queries = comm_queries;
 			__kd_mutex_unlock(lock, 0, 0x9000);
 			CHECK(!lock->owner && comm_queries == queries && samples == 1);
-			CHECK(!notify_calls && !refs && !shadow_count());
+			CHECK(!notify_calls && !refs);
 		}
 	}
 }
 
 static void check_promotion_and_routing(void)
 {
-	struct mutex *lock = &origins[0].mutex;
+	struct kd_mutex *lock = &origins[0].mutex;
 	struct kd_mutex *gate;
 
 	reset();
 	promoted = false;
 	__kd_mutex_lock(lock, (unsigned long)&native_stack[16], 0x8000);
-	CHECK(lock->owner == current && !refs && !shadow_count());
+	CHECK(lock->owner == current && !refs);
 	promoted = true;
 	__kd_mutex_unlock(lock, 0, 0x9000);
-	CHECK(!lock->owner && !task_puts && !shadow_count());
+	CHECK(!lock->owner && !task_puts);
 
 	/* A native peer may win L before the promoted target's next acquisition;
 	 * no queue handoff is allowed to manufacture native ownership. */
 	current = &peer;
 	__kd_mutex_lock(lock, (unsigned long)&native_stack[16], 0x8000);
-	CHECK(!refs && !shadow_count());
+	CHECK(!refs);
 	current = &waiter;
 	native_owner_wait = true;
 	__kd_mutex_lock(lock, (unsigned long)&native_stack[16], 0x8000);
-	gate = find_kd_mutex_shadow(lock);
+	gate = lock;
 	CHECK(!native_owner_wait && native_waits == 1);
 	CHECK(gate && gate->physical_owner == current && lock->owner == current);
 	CHECK(refs == 1 && gets == 1 && !task_puts);
@@ -846,13 +726,13 @@ static void check_hook_nodes(void)
 	/* Full slots and absent stacks converge on the real no-node wait path.
 	 * It must poll with preemption disabled, then acquire L and unlock L before S. */
 	for (int resource = 0; resource < 3; resource++) {
-		struct mutex *lock = &origins[0].mutex;
+		struct kd_mutex *lock = &origins[0].mutex;
 		struct kd_mutex *gate;
 		struct kd_mutex_node before[KD_MUTEX_MAX_NODES];
 		unsigned long occupied;
 
 		reset();
-		gate = get_kd_mutex_shadow(lock);
+		gate = lock;
 		if (resource) {
 			hold_peer(gate);
 			waiting_gate = gate;
@@ -898,12 +778,12 @@ static void check_slowpath_packets(void)
 	 * arguments at the direct API. The assembly boundary supplies valid queue
 	 * outcomes; these do not prove the substituted queue's JIT correctness. */
 	for (scenario = 0; scenario < 6; scenario++) {
-		struct mutex *lock = &origins[0].mutex;
+		struct kd_mutex *lock = &origins[0].mutex;
 		struct kd_mutex *gate;
 		int resumed;
 
 		reset();
-		gate = get_kd_mutex_shadow(lock);
+		gate = lock;
 		hold_peer(gate);
 		mode = scenario % 3 == 0 ? 2 : scenario % 3 == 1 ? 3 : 5;
 		direct_packet = scenario >= 3;
@@ -946,7 +826,7 @@ static void check_slowpath_packets(void)
 			CHECK(task_puts == (unsigned int)(mode == 3) &&
 			      refs == (unsigned int)(mode == 5));
 			if (mode == 5) {
-				struct mutex *nested = &origins[1].mutex;
+				struct kd_mutex *nested = &origins[1].mutex;
 				unsigned int count;
 
 				/* A borrowed suffix keeps its acquisition routing reference
@@ -959,8 +839,8 @@ static void check_slowpath_packets(void)
 				 * pre-existing routing ref or modifying A's physical owner.
 				 * Actual rename/ACK scheduling is checked in the live gate. */
 				if (direct_packet)
-					CHECK(get_kd_mutex_shadow(nested));
-				count = shadow_count();
+					CHECK(nested);
+				count = 0;
 				__kd_mutex_lock(
 					nested,
 					(unsigned long)&native_stack[16],
@@ -970,7 +850,7 @@ static void check_slowpath_packets(void)
 				__kd_mutex_unlock(nested, 0, 0x9000);
 				CHECK(!nested->owner && releases == 1);
 				CHECK(refs == 1 && gets == 1 && !task_puts &&
-				      shadow_count() == count && !errors);
+				      count == 0 && !errors);
 				CHECK(gate->physical_owner == &peer &&
 				      lock->owner == &peer);
 				borrowed = true;
@@ -1015,8 +895,8 @@ static void check_poll_result(void)
 static void check_minimal_entry(void)
 {
 	reset();
-	struct mutex *lock = &origins[0].mutex;
-	struct kd_mutex *gate = get_kd_mutex_shadow(lock);
+	struct kd_mutex *lock = &origins[0].mutex;
+	struct kd_mutex *gate = lock;
 	hold_peer(gate);
 	for (unsigned int i = 0; i < KD_MUTEX_MAX_NODES; i++)
 		memset(&kd_mutex_nodes[i].regs, 0xa7, sizeof(struct kd_regs));
@@ -1033,7 +913,7 @@ static void check_outer_native_result(void)
 {
 	for (unsigned int scenario = 0; scenario < 6; scenario++) {
 		reset();
-		struct mutex *lock = &origins[0].mutex;
+		struct kd_mutex *lock = &origins[0].mutex;
 		if (scenario == 0) cpu_hot = false;
 		if (scenario == 1) source_open = false;
 		if (scenario == 2) strcpy(current->comm, "non-target");
@@ -1049,10 +929,10 @@ static void check_outer_native_result(void)
 		CHECK(!lock->owner && refs == inherited_refs && !notify_calls && !task_puts);
 	}
 	reset();
-	struct mutex *lock = &origins[0].mutex;
+	struct kd_mutex *lock = &origins[0].mutex;
 	unsigned long route = kd_mutex_outer_contended_clobber_v1(
 		lock, (unsigned long)&native_stack[16], 0x8000, 0);
-	struct kd_mutex *gate = find_kd_mutex_shadow(lock);
+	struct kd_mutex *gate = lock;
 	CHECK(!route && refs == 1 && gate && gate->physical_owner == current);
 	__kd_mutex_unlock(lock, 0, 0x9000);
 	CHECK(!refs && task_puts == 1 && !gate->locked);
@@ -1060,7 +940,7 @@ static void check_outer_native_result(void)
 	/* A later native fallback has already entered the KD queue contract.
 	 * Keep ROUTED even though local-predecessor refusal drops its own ref. */
 	reset();
-	gate = get_kd_mutex_shadow(lock);
+	gate = lock;
 	preempt = migration = 1;
 	struct kd_mutex_node *head = kd_mutex_reserve_node();
 	head->lock = gate;
@@ -1080,13 +960,13 @@ static void check_outer_native_result(void)
 int main(void)
 {
 	/* Even a hot lock with task/shadow work otherwise eligible must bypass all
-	 * of it when the original owner CAS succeeds. Unlock still uses Linux. */
+	 * of it when the original owner CAS succeeds. Unlock still uses the KD physical primitive. */
 	reset();
 	fast_available = true;
 	__kd_mutex_lock_clobber_v1(&origins[0].mutex, 0x7000, 0x8000, 0);
 	CHECK(origins[0].mutex.owner == current && entry_attempts == 1);
 	CHECK(!samples && !gets && !adds && !refs && !comm_queries && !entry_pins);
-	CHECK(!preempt && !migration && !shadow_count());
+	CHECK(!preempt && !migration);
 	__kd_mutex_unlock(&origins[0].mutex, 0, 0x9000);
 	CHECK(!origins[0].mutex.owner && acquires == 1 && releases == 1);
 	/* This endpoint consumes a caller's failed CAS; it must not retry the CAS
@@ -1103,16 +983,14 @@ int main(void)
 	check_poll_result();
 	check_tails();
 	check_nodes();
-	check_shadow_table();
-	check_shadow_insert_race();
 	check_hook_fallbacks();
 	check_local_predecessor();
 	check_frequency_order();
 	check_promotion_and_routing();
 	check_hook_nodes();
 	check_slowpath_packets();
-	printf("production mutex resources: %u checks, 0 failures; nodes=%d shadow=%d regs=%zu\n",
-	       checks, KD_MUTEX_MAX_NODES, KD_MUTEX_SHADOW_TABLE_SIZE,
+	printf("production mutex resources: %u checks, 0 failures; nodes=%d objects=%d regs=%zu\n",
+	       checks, KD_MUTEX_MAX_NODES, 2048,
 	       sizeof(struct kd_regs));
 	return 0;
 }

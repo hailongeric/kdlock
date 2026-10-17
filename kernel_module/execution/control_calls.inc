@@ -223,7 +223,7 @@ static int handle_known_mutex_call(struct kd_exec_frame *frame,
 		return ret;
 	if (regs->ip == mutex_lock_addr || regs->ip == clobber_mutex_lock_addr ||
 	    regs->ip == direct_mutex_lock_addr || regs->ip == contended_mutex_lock_addr) {
-		ret = kd_mutex_jit_nested_lock_ctx((struct mutex *)regs->di,
+		ret = kd_mutex_jit_nested_lock_ctx((struct kd_mutex *)regs->di,
 						   regs, frame);
 		ret = finish_known_lock_call(frame, regs, ret);
 	} else {
@@ -234,7 +234,7 @@ static int handle_known_mutex_call(struct kd_exec_frame *frame,
 				frame, KD_EXEC_EVENT_OUTER_UNLOCK, regs);
 		} else {
 			ret = kd_mutex_jit_nested_unlock_ctx(
-				(struct mutex *)regs->di, frame);
+				(struct kd_mutex *)regs->di, frame);
 			if (!ret)
 				kd_mutex_note_nested_jit();
 		}

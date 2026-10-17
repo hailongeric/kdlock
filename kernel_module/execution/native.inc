@@ -214,7 +214,7 @@ int kd_exec_native_wait(struct kd_exec_frame *frame)
 					NULL);
 			else if (frame->mutex_backend)
 				ret = kd_mutex_jit_nested_unlock_ctx(
-					(struct mutex *)request->lock_addr,
+					(struct kd_mutex *)request->lock_addr,
 					frame);
 			else
 				ret = kd_spin_jit_nested_unlock_ctx(

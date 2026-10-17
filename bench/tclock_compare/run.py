@@ -9,6 +9,7 @@ import argparse
 import importlib.metadata
 import itertools
 import json
+import re
 import os
 from pathlib import Path
 import shutil
@@ -481,11 +482,14 @@ def main(lock_kind='spin'):
                         'tclock': ('komb_spin_lock', 'komb_spin_unlock'), 'native': ()}[backend]
             if lock_kind == 'mutex':
                 expected = {'kdlock': ('kd_mutex_outer_contended_clobber_v1',
-                                       'kd_hotlock_mutex_entries', 'mutex_unlock',
+                                       'kd_hotlock_mutex_entries', 'kd_mutex_local_unlock',
                                        'kd_mutex_direct_unlock_clobber_v1', 'kd_mutex_prepare'),
                             'tclock': ('komb_mutex_lock', 'komb_mutex_unlock',
                                        'tc_mutex_worker_register', 'tc_mutex_workers_drain'),
                             'native': ('mutex_lock', 'mutex_unlock')}[backend]
+                if backend == 'kdlock':
+                    require(not re.search(r'\bU (?:atomic_dec_and_mutex_lock|mutex\w*|__mutex\w*|kd_mutex_(?:lock|unlock)_clobber_v1|osq_lock|osq_unlock)\b', imported),
+                            'KD-only caller imports a Linux mutex API')
                 require('kd_mutex_lock_clobber_v1' not in imported.split() and
                         'kd_mutex_unlock_clobber_v1' not in imported.split(),
                         'workload still imports experimental kernel mutex bridge')

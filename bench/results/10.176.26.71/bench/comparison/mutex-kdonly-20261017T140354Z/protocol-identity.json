@@ -1,0 +1,43 @@
+{
+  "unchanged_files": [
+    {
+      "file": "kernel_module/mutex/clobber.inc",
+      "sha256": "4e71dacc09f6fea7c8548b21a6b841b61d9d2b7d171f847bb205aaf97cf55d11",
+      "byte_identical_to_accepted": true
+    },
+    {
+      "file": "kernel_module/kd_mutex_tasks.c",
+      "sha256": "e4f74118652d7c6e3c956e0eb0a07d3fae0ebb42d9a30774e549016c857c3703",
+      "byte_identical_to_accepted": true
+    },
+    {
+      "file": "kernel_module/execution/images.inc",
+      "sha256": "8d76db5d86b3532d2c11c873fffa07ebce8abe1572e73736ab416911e2b94571",
+      "byte_identical_to_accepted": true
+    },
+    {
+      "file": "kernel_module/execution/remote.inc",
+      "sha256": "4fb849bf6fc908a3f35ccd81e6bfe11c523738d7de161d519f18102552e3319e",
+      "byte_identical_to_accepted": true
+    },
+    {
+      "file": "kernel_module/execution/lock_ledger.inc",
+      "sha256": "506eb9aa0b4557a36ab169cffd617247a08e892ccf173215492e9ffef0315cf2",
+      "byte_identical_to_accepted": true
+    },
+    {
+      "file": "include/kd_regs.h",
+      "sha256": "70a0f1edd9eca1f78a5cb4b520c78faabe1ba3d7f6d085352b0931ad446ff0ff",
+      "byte_identical_to_accepted": true
+    }
+  ],
+  "changed_boundaries": [
+    "embedded KD physical object replaces address-to-shadow table",
+    "physical lock/unlock/trylock use KD core",
+    "fixed bounded read-guarded probing before delegation admission",
+    "executor and frame identity is the KD object address",
+    "capability v5 refuses Linux mutex integration",
+    "workload and client layout support 256-byte KD objects"
+  ],
+  "delegation_policy": "legacy queue, pinned producers, NUMA selection and batch limit retained"
+}

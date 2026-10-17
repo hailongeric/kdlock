@@ -57,8 +57,9 @@ The [code map](CODE_MAP.md) shows where each component is implemented.
 Each lock type has its own ownership rules:
 
 - KD spin uses one KD lock word for native acquisition and delegated execution.
-- KD mutex uses the original Linux mutex. A separate scheduling gate orders KD
-  requests, but owning that gate does not mean owning the Linux mutex.
+- KD mutex owns physical exclusion and an embedded legacy scheduling gate. Every
+  delegation executor must own the KD physical primitive as well as that gate.
+  See the [KD-only object and API contract](design/kd_only_mutex.md).
 - KD rwlock uses a reader/writer count and a KD spin gate. Readers run locally;
   every writer must exclude readers, whether it runs natively or through JIT.
 

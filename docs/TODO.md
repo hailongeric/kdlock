@@ -1,5 +1,10 @@
 # Known limitations and deferred work
 
+The [KD-only mutex contract](design/kd_only_mutex.md) is the current replacement
+assumption. Whole-kernel rebuilding, lockdep/RT/ww_mutex integration and broad
+oversubscription remain unvalidated. Removing the Linux mutex bridge does not
+resolve historical pinned-producer scheduling failures.
+
 Current scope: x86_64 kernel spin/mutex/rwlock delegation. Implementation contracts
 live in [DESIGN](DESIGN.md); [performance status](PERFORMANCE.md) distinguishes the
 closed spin/mutex phase from the later rwlock comparison. These unresolved issues
@@ -39,7 +44,7 @@ Known failures are still open:
 
 ## Delivery scope
 
-Keep the two-word wrapper ABI, separate backend identities, original mutex owners,
+Keep the two-word wrapper ABI, separate backend identities, exact KD physical owners,
 exact acquisition references and final ACKs. Shared storage must survive its final
 reader. Builds/tests/benchmarks run in the recovery guest; default work does not
 change its kernel. Published KD waiters remain pinned polling.
@@ -67,8 +72,9 @@ complete the required ACK and retirement steps.
 
 ### C2. One protocol per physical lock
 
-KD spin owns its word; TCLock/Native own theirs. KD mutex keeps the original Linux
-mutex plus a scheduling gate. Preserve ledger identity, native-peer exclusion,
+KD spin owns its word; TCLock/Native own theirs. KD mutex owns its physical
+owner word, wait list and legacy scheduling gate. Linux mutex objects or calls
+cannot be mixed on it. Preserve ledger identity, local/delegated exclusion,
 frame pop, owner ACK and storage retirement as separate operations.
 KD rwlock owns its count and KD gate. Ungated native writers retain exact
 nondelegated references; gate quiescence alone does not establish count or reader

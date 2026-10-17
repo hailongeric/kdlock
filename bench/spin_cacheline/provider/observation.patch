@@ -170,7 +170,7 @@ diff --git a/kernel_module/kd_mutex.c b/kernel_module/kd_mutex.c
 -			KD_PR_DEBUG(
 +			KD_PR_DEBUG_ALWAYS(
  				"mutex node fallback: task=%d entry=%lx lock=%lx cpu=%u slots=%lx\n",
- 				current->pid, ret_addr, lock->origin_mutex_addr,
+ 				current->pid, ret_addr, (unsigned long)lock,
  				smp_processor_id(),
 diff --git a/kernel_module/spin/restore.inc b/kernel_module/spin/restore.inc
 --- a/kernel_module/spin/restore.inc
@@ -204,7 +204,7 @@ diff --git a/kernel_module/mutex/combiner.inc b/kernel_module/mutex/combiner.inc
 +		KD_PR_DEBUG_ALWAYS(
  			"mutex JIT context busy: task=%d waiter=%d entry=%lx lock=%lx cpu=%u\n",
  			current->pid, curr_node->task_struct_ptr->pid,
- 			curr_node->regs.ip, lock->origin_mutex_addr,
+ 			curr_node->regs.ip, (unsigned long)lock,
 @@ -261,7 +261,7 @@
  	}
  

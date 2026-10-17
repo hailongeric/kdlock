@@ -118,7 +118,7 @@ static bool kd_mutex_batch_can_execute(struct kd_mutex_node *node)
  * before waking/releasing this node. This is MCS link completion, not a refill
  * spin. Never call on an unstarted/refused request which must become the head.
  * The early-unlock/native paths may call twice; only saved batch state survives
- * the first wake. The original mutex owner and source lease are unchanged. */
+ * the first wake. The KD physical mutex owner and source lease are unchanged. */
 static void kd_mutex_batch_retire_current(struct kd_mutex *lock,
 					struct kd_mutex_batch *batch)
 {
@@ -161,7 +161,7 @@ static int kd_mutex_release_outer(struct kd_exec_frame *frame,
 	if (!frame->mutex_backend || !lock ||
 	    frame->jit_lock_kind[frame->outer_lock_index] !=
 		    KD_EXEC_LOCK_QUEUE_OWNER ||
-	    frame->outer_lock_addr != lock->origin_mutex_addr ||
+	    frame->outer_lock_addr != (unsigned long)lock ||
 	    READ_ONCE(lock->locked) != _Q_LOCKED_COMBINER_VAL)
 		return -EINVAL;
 	/* A terminal request may have no successor. Remove its published tail
@@ -189,7 +189,7 @@ static int kd_mutex_release_outer(struct kd_exec_frame *frame,
 /* --------------------------------------------------------------------------
  * JIT-sandbox execution of a waiter's critical section
  *
- * The kernel's mutex_lock saves ALL callee-saved registers before capturing
+ * The captured legacy mutex_lock saved ALL callee-saved registers before capturing
  * ret_rsp (confirmed via disassembly).  Stack layout at ret_rsp:
  *   [0] = lock ptr / padding    [4] = saved r14
  *   [1] = saved rbx             [5] = saved r15
@@ -218,7 +218,7 @@ kd_mutex_execute_cs(struct kd_mutex *lock, struct kd_mutex_node *curr_node,
 	u64 queue_end;
 
 	BUG_ON(READ_ONCE(lock->physical_owner) != current);
-	BUG_ON(!kd_origin_mutex_owned((struct mutex *)lock->origin_mutex_addr,
+	BUG_ON(!kd_origin_mutex_owned(lock,
 				      current));
 	if (!incoming_rsp_ptr)
 		return KD_EXE_RUN_ERROR;
@@ -250,7 +250,7 @@ kd_mutex_execute_cs(struct kd_mutex *lock, struct kd_mutex_node *curr_node,
 		 * frame failure. Keep its identity distinct from context refusal. */
 		KD_PR_DEBUG("mutex JIT not ready: task=%d waiter=%d entry=%lx lock=%lx cpu=%u\n",
 			    current->pid, curr_node->task_struct_ptr->pid,
-			    curr_node->regs.ip, lock->origin_mutex_addr,
+			    curr_node->regs.ip, (unsigned long)lock,
 			    raw_smp_processor_id());
 		kd_exe_add_abi(0, curr_node->regs.ip, KD_EXE_LOCK_MUTEX,
 			       curr_node->entry_abi);
@@ -265,7 +265,7 @@ kd_mutex_execute_cs(struct kd_mutex *lock, struct kd_mutex_node *curr_node,
 		KD_PR_DEBUG(
 			"mutex JIT context busy: task=%d waiter=%d entry=%lx lock=%lx cpu=%u\n",
 			current->pid, curr_node->task_struct_ptr->pid,
-			curr_node->regs.ip, lock->origin_mutex_addr,
+			curr_node->regs.ip, (unsigned long)lock,
 			raw_smp_processor_id());
 		return KD_EXE_NO_RUN;
 	}
@@ -282,18 +282,18 @@ kd_mutex_execute_cs(struct kd_mutex *lock, struct kd_mutex_node *curr_node,
 		goto prepared;
 	if (clobber)
 		frame = kd_exec_frame_push_borrowed(
-			&curr_node->regs, curr_node->regs.ip, lock->origin_mutex_addr, 1,
+			&curr_node->regs, curr_node->regs.ip, (unsigned long)lock, 1,
 			curr_node->gsbase, curr_node->task_struct_ptr);
 	else
 		frame = kd_exec_frame_push(
-			&curr_node->regs, curr_node->regs.ip, lock->origin_mutex_addr, 1,
+			&curr_node->regs, curr_node->regs.ip, (unsigned long)lock, 1,
 			curr_node->gsbase, curr_node->task_struct_ptr);
 	if (!frame) {
 		this_cpu_inc(kd_mutex_frame_failure_count);
 		return KD_EXE_RUN_ERROR;
 	}
 
-	lock_addr[0] = lock->origin_mutex_addr;
+	lock_addr[0] = (unsigned long)lock;
 	frame->mutex_backend = true;
 	frame->entry_abi = curr_node->entry_abi;
 	frame->packet_state = curr_node->packet_state;

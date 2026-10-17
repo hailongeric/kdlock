@@ -1,21 +1,22 @@
 # Project guide
 
-The [504-session compatibility report](../bench/results/10.176.26.71/bench/comparison/mutex-legacy-compat-20261017T122742Z/README.md)
-compares both legacy versions with Native and TCLock. See
-[performance status](PERFORMANCE.md) for measured gains, regressions and scope.
-
-This is the legacy compatibility branch, `task/legacy-mutex-compat`, in
-`/tmp/kdlock-mutex-legacy-compat`. It backports instruction-state admission and
-immutable mutex images onto baseline `74676c3`, while keeping the recovered lock
-protocol and caller ABI. See [the implementation comparison](design/legacy_mutex_compatibility.md).
-The original recovery and post64 benchmark branches remain unchanged.
+The current mutex implementation is the [KD-only legacy protocol](design/kd_only_mutex.md)
+on `task/kd-only-mutex` in `/tmp/kdlock-mutex-kdonly`. It starts from the
+user-accepted compatibility commit `555b8b7`, retaining its instruction admission,
+immutable images, delegation queue and pinned producers. Each mutex now owns KD
+physical exclusion directly. The original recovery and accepted comparison
+worktrees remain unchanged; `current/kd-mutex` identifies the validated selection.
+See [performance status](PERFORMANCE.md) for the fresh paired comparison.
 
 KD lets a lock holder execute a waiting caller's critical section through JIT.
-Spinlocks use KD's own four-byte object. Mutexes keep the original Linux mutex
-and its real owner. Read-write locks use a 128-byte object: readers run locally,
-while writers may delegate through the spin engine. Rwlock ABI3 acquires exclusive
-write access before the translated body starts. Callers select these APIs
-explicitly; loading the provider does not redirect global Linux lock calls.
+Spinlocks use KD's own four-byte object. Mutexes use a 256-byte KD object, with
+one physical owner and an embedded legacy delegation queue. Read-write locks use
+a 128-byte object: readers run locally, while writers may delegate through the
+spin engine. Rwlock ABI3 acquires exclusive write access before the translated
+body starts. Loading the provider does not redirect global Linux lock calls.
+The mutex API aliases require rebuilding every affected object and caller;
+explicit clobber callers enable delegation. These benchmarks test controlled
+objects and syscall adapters, not a rebuilt whole kernel.
 
 For an introduction to the execution model and its terms, start with
 [Design](DESIGN.md). The table below points to implementation and operations guides.
@@ -67,8 +68,8 @@ Synchronize from the current host before testing:
 
 ```sh
 cd /home/eric/vm/vm-shared/kdlock
-python3 tools/vm/sync_to_vm.py --dry-run
-python3 tools/vm/sync_to_vm.py
+python3 tools/vm/sync_to_vm.py --source /tmp/kdlock-mutex-kdonly --dry-run
+python3 tools/vm/sync_to_vm.py --source /tmp/kdlock-mutex-kdonly
 ssh -p 2222 root@10.176.26.71
 ```
 

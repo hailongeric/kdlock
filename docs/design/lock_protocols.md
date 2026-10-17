@@ -19,7 +19,7 @@ execution details. KD's nested ownership, recovery and ACK contract remains in
 | KD spin | Explicit four-byte `kd_spinlock_t` | Caller or combiner running translated code | Pinned polling | KD native variants only; no Linux/TCLock mixing |
 | Linux Native mutex | Original `struct mutex` | Its actual Linux owner | Optimistic spinning and sleeping | Ordinary compatible Linux APIs |
 | TCLock mutex | Separate `struct komb_mutex` | Caller or combiner on the waiter's real stack | Polling, scheduling and parking | Not supported |
-| KD mutex | Original Linux mutex plus a private scheduling gate | Actual Linux owner executes JIT, or services a borrowed native suffix | Published KD waiters poll pinned; physical owners may sleep | Original Linux mutex callers remain excluded by that same mutex |
+| KD mutex | KD physical owner and embedded legacy scheduling gate | Actual KD owner executes JIT, or services a borrowed native suffix | Published KD waiters poll pinned; physical owners may sleep | Every caller must use the KD object and APIs |
 | Linux Native rwlock | Linux `rwlock_t` / queued rwlock | Each reader or writer executes its own body | Concurrent readers; spinning reader/writer admission | Ordinary compatible Linux rwlock APIs |
 | TCLock rwlock | Separate `struct komb_rwlock` count and gate | Readers run locally; queued writer bodies may run on a borrowed waiter stack | Pinned polling and upstream gate delegation | TCLock rwlock pairs only |
 | KD rwlock | 128-byte `kd_rwlock_t`, count and KD gate on separate cache lines | Readers run locally; writers run natively or through ABI3 JIT | Pinned readers/writers; KD gate queues contended admission | KD native and direct pairs only; no Linux/TCLock mixing |
@@ -27,8 +27,8 @@ execution details. KD's nested ownership, recovery and ACK contract remains in
 A queue-head notification tells a waiter it may try to acquire the lock. It does
 not mean the waiter owns the lock or that its body has run. A completion
 notification tells the original caller that its body has already run and must be
-skipped. For KD mutex, the scheduling gate and the original Linux mutex are
-separate: the executor must own the Linux mutex before running a body.
+skipped. For KD mutex, the scheduling gate and physical exclusion have
+separate roles in one object: the executor must own both before running a body.
 
 The workload builds a separate version for each backend. Every operation on a
 lock uses that backend's matching API. Loading KD or TCLock does not redirect
@@ -168,10 +168,17 @@ mutex owner word provides interoperability for `struct komb_mutex`.
 ## KD mutex
 
 The outer benchmark uses `KD_MUTEX_OUTER_LOCK/UNLOCK`. A successful caller-side
-acquire CAS on the original Linux owner bypasses admission, shadow/task
+acquire CAS on the KD physical owner bypasses admission, queue/task
 records and translation. Its lexical cookie holds the exact native owner
-result; matching unlock calls the original Linux function. The cookie belongs
+result; matching unlock calls the KD local physical function. The cookie belongs
 to that acquisition and cannot be copied, transferred or reused.
+
+The caller probes at most eight times, with read guards and pauses on failure.
+Only the successful zero-owner CAS grants ownership. This bounded window can
+resolve a short clash before admission and uses no worker-count threshold.
+The active-combiner gate state (3) ends retries immediately; a lone gate owner
+(state 1) may finish during the bounded window. The observed state is a retry hint
+and never grants ownership or permission to retire a request.
 
 On contention the provider checks its separate mutex heat policy, source
 admission, target comm and active task routing. A native fallback before any
@@ -180,12 +187,12 @@ returns route zero, including local native fallbacks that still need KD-aware
 unlock routing. General `KD_MUTEX_DIRECT_LOCK/UNLOCK` and bridge entries keep
 their void ABI and are also used by translated nested control calls.
 
-An eligible acquisition holds an exact task routing reference, finds the
-original-address shadow, and reserves a CPU-local node/stack. A delegation
+An eligible acquisition holds an exact task routing reference, uses the embedded
+queue, and reserves a CPU-local node/stack. A delegation
 follower keeps migration/preemption disabled, moves off its caller stack and
-polls. A queue head first takes the private gate, then acquires the original
-Linux mutex as `current`; only that physical owner executes/releases bodies.
-It may enable preemption while sleeping for the original mutex or nested B,
+polls. A queue head first takes the private gate, then acquires KD physical
+exclusion as `current`; only that physical owner executes/releases bodies.
+It may enable preemption while sleeping for the KD physical mutex or nested B,
 while retaining its CPU reservation and frame ownership.
 
 The combiner uses bounded NUMA selection, a default 1024-body limit and a source
@@ -205,7 +212,7 @@ completion; the waiter restores IP/SP/BP after logical unlock. A FULL exit
 materializes recovery state once. For a native suffix, the waiter resumes
 with progressed state while the original physical owner remains responsible
 for mutex release and services unlock/ACK messages. Early A release and
-nested B ownership retain the explicit ledger; there is no Linux owner
+nested B ownership retain the explicit ledger; there is no physical owner
 transfer to the logical waiter. Final ACK/frame retirement precede dropping
 the enclosing source lease. Physical mutex release precedes opening its gate.
 

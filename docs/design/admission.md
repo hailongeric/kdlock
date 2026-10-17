@@ -279,7 +279,9 @@ not the arena's address classification. This does not pin or validate an object.
 
 The provider reports this bound using the existing 16-byte CAPS packet on the
 same device lease. The module bound was introduced in version 2; this branch
-uses version 4 and also requires the legacy immutable mutex image capability. It checks the build constants and the non-NULL
+uses version 5 and requires immutable mutex images plus exclusive KD objects
+(`KD_JIT_CAP_MUTEX_EXCLUSIVE`, bit 4). Version 4 remains readable by observers but
+cannot open a translation session for this object contract. It checks the build constants and the non-NULL
 `pcpu_reserved_chunk` pointer, which is read-only after init; it never dereferences
 the private chunk layout. Translation adds `[base + ALIGN(core_size, 4),
 base + ALIGN(core_size, 4) + module_bytes)` for each possible CPU. Version 1,

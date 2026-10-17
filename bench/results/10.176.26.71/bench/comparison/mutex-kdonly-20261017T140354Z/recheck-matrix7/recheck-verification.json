@@ -1,0 +1,231 @@
+{
+  "accepted": 18,
+  "actual_jit": 18,
+  "checks": {
+    "baseline/api-pipebytes-query-n16": {
+      "accepted": 9,
+      "binary": {
+        "checked_files": 9,
+        "sha256": "fd078b1fcee344eec581fd6224e37436deacf5efb49915b0b09d6a05b34d55f0"
+      },
+      "emitted_context_audits_recomputed": [
+        "mutex"
+      ],
+      "environment": {
+        "build_reused": true,
+        "cmdline": "BOOT_IMAGE=/boot/vmlinuz-6.1.159-kdclobber2 root=UUID=aa0bde06-47f6-4049-aaaf-13d052e53961 ro nokaslr nopvspin console=tty1 console=ttyS0\n",
+        "new_measurements": true,
+        "shared_environment": "/root/kdlock-evidence/10.176.26.71/bench/mutex-kdonly-20261017T140354Z/matrix7/control/guest-before.json",
+        "snapshot": "before-mutex-kdonly-20261017T140354Z"
+      },
+      "excluded": [],
+      "final": false,
+      "identical_to_final_matrix": true,
+      "kd_eligible_operations": 96303104,
+      "kd_jit_bodies": 93667278,
+      "kd_jit_positive": 9,
+      "kd_sessions": 9,
+      "kernel": {
+        "checked_files": 15,
+        "sha256": "4b53ccdd71a941d746719b44be3761b7c53f1911b91b985e228bb084cdade200"
+      },
+      "planned": 9,
+      "prepared_provider": {
+        "observation": 3,
+        "prepared": 83,
+        "production": 81
+      },
+      "raw_measurements_peaks_oracles_and_drain_recomputed": true,
+      "records_sha256": "436f9af21b1b7a5de78a1ccf3ae8cc4626801259d3a62f2f16cf868de7323e37",
+      "source": {
+        "checked_files": 218,
+        "sha256": "eb278e441770c5d7649cabb6395e3bb5c45587ff7bc7362501680ed3c3dbaa4f"
+      },
+      "status": "AUDITED",
+      "statuses": {
+        "OK": 9
+      },
+      "tclock_mutex_delegated": 0,
+      "timed_operations": 96303104
+    },
+    "compat/api-pipebytes-query-n16": {
+      "accepted": 9,
+      "binary": {
+        "checked_files": 9,
+        "sha256": "d9ccc1704771f0abe8187d1900611a834ee66fa3c4e2dd0faa8af9c6ff76a51a"
+      },
+      "emitted_context_audits_recomputed": [
+        "mutex"
+      ],
+      "environment": {
+        "build_reused": false,
+        "cmdline": "BOOT_IMAGE=/boot/vmlinuz-6.1.159-kdclobber2 root=UUID=aa0bde06-47f6-4049-aaaf-13d052e53961 ro nokaslr nopvspin console=tty1 console=ttyS0\n",
+        "new_measurements": true,
+        "shared_environment": "/root/kdlock-evidence/10.176.26.71/bench/mutex-kdonly-20261017T140354Z/matrix7/control/guest-before.json",
+        "snapshot": "before-mutex-kdonly-20261017T140354Z"
+      },
+      "excluded": [],
+      "final": false,
+      "identical_to_final_matrix": true,
+      "kd_eligible_operations": 94517504,
+      "kd_jit_bodies": 87461411,
+      "kd_jit_positive": 9,
+      "kd_sessions": 9,
+      "kernel": {
+        "checked_files": 15,
+        "sha256": "4b53ccdd71a941d746719b44be3761b7c53f1911b91b985e228bb084cdade200"
+      },
+      "no_native_mutex_imports": [
+        {
+          "forbidden": [],
+          "module": "build/kdlock_km.ko",
+          "sha256": "0e782bc9711abf3bd5e77d671e44886ef4a5f53c0ce1830aa6d4d20ada38d827",
+          "undefined_symbols": [
+            "__SCT__cond_resched",
+            "__SCT__might_resched",
+            "__SCT__preempt_schedule",
+            "___ratelimit",
+            "__alloc_percpu",
+            "__check_object_size",
+            "__class_create",
+            "__cpu_possible_mask",
+            "__fentry__",
+            "__per_cpu_offset",
+            "__preempt_count",
+            "__put_task_struct",
+            "__rcu_read_lock",
+            "__rcu_read_unlock",
+            "__stack_chk_fail",
+            "__x86_indirect_thunk_rax",
+            "__x86_return_thunk",
+            "_copy_from_user",
+            "_copy_to_user",
+            "_find_next_bit",
+            "_printk",
+            "_raw_spin_lock",
+            "_raw_spin_lock_irqsave",
+            "_raw_spin_unlock",
+            "_raw_spin_unlock_irqrestore",
+            "alloc_chrdev_region",
+            "call_rcu",
+            "capable",
+            "cdev_add",
+            "cdev_del",
+            "cdev_init",
+            "class_destroy",
+            "copy_from_kernel_nofault",
+            "cpu_number",
+            "current_task",
+            "device_create",
+            "device_destroy",
+            "fixed_percpu_data",
+            "fortify_panic",
+            "free_percpu",
+            "int_sqrt",
+            "kallsyms_lookup_name",
+            "kfree",
+            "kmalloc_caches",
+            "kmalloc_trace",
+            "ktime_get",
+            "memcmp",
+            "memcpy",
+            "memmove",
+            "memset",
+            "migrate_disable",
+            "migrate_enable",
+            "module_put",
+            "nonseekable_open",
+            "nr_cpu_ids",
+            "numa_node",
+            "param_ops_bool",
+            "param_ops_charp",
+            "param_ops_int",
+            "param_ops_uint",
+            "param_ops_ulong",
+            "pv_ops",
+            "rcu_barrier",
+            "refcount_warn_saturate",
+            "schedule",
+            "scnprintf",
+            "set_memory_x",
+            "strnlen",
+            "synchronize_rcu",
+            "this_cpu_off",
+            "try_module_get",
+            "unregister_chrdev_region",
+            "vfree",
+            "vmalloc",
+            "vzalloc",
+            "vzalloc_node",
+            "wake_up_q"
+          ]
+        },
+        {
+          "forbidden": [],
+          "module": "build/kdlock-pipebytes/real_api.ko",
+          "sha256": "1f8e6409935b6f2bde2cd1be630b365980375b6c62ebc92dc3224c5ed74800e7",
+          "undefined_symbols": [
+            "__SCT__might_resched",
+            "__cpu_possible_mask",
+            "__fentry__",
+            "__per_cpu_offset",
+            "__put_task_struct",
+            "__put_user_4",
+            "__stack_chk_fail",
+            "__x86_indirect_thunk_rbx",
+            "__x86_return_thunk",
+            "_find_next_bit",
+            "capable",
+            "current_task",
+            "find_get_pid",
+            "fput",
+            "ftrace_set_filter_ip",
+            "get_pid_task",
+            "kallsyms_lookup_name",
+            "kd_hotlock_mutex_entries",
+            "kd_mutex_direct_unlock_clobber_v1",
+            "kd_mutex_init",
+            "kd_mutex_is_idle",
+            "kd_mutex_local_unlock",
+            "kd_mutex_outer_contended_clobber_v1",
+            "kd_mutex_prepare",
+            "kstrtouint",
+            "misc_deregister",
+            "misc_register",
+            "nr_cpu_ids",
+            "param_ops_charp",
+            "param_ops_int",
+            "param_ops_ulong",
+            "put_pid",
+            "refcount_warn_saturate",
+            "register_ftrace_function",
+            "scnprintf",
+            "sscanf",
+            "unregister_ftrace_function"
+          ]
+        }
+      ],
+      "planned": 9,
+      "prepared_provider": {
+        "observation": 3,
+        "prepared": 87,
+        "production": 85
+      },
+      "raw_measurements_peaks_oracles_and_drain_recomputed": true,
+      "records_sha256": "62c17c3aa25d2f93cf7f986be647790e20d927e26caf2cec8620b671e2cfb8ad",
+      "source": {
+        "checked_files": 223,
+        "sha256": "0716881a3e15b345776500feb738838155b8890d5df41817dad0901086a6a48a"
+      },
+      "status": "AUDITED",
+      "statuses": {
+        "OK": 9
+      },
+      "tclock_mutex_delegated": 0,
+      "timed_operations": 94517504
+    }
+  },
+  "drained": 18,
+  "sessions": 18,
+  "status": "PASS"
+}

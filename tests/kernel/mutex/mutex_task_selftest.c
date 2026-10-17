@@ -16,7 +16,7 @@ static int kd_task_test_cpus[3] = { 0, 1, 2 };
 module_param_array_named(mutex_task_cpus, kd_task_test_cpus, int, NULL, 0444);
 
 static struct {
-	struct mutex locks[2];
+	struct kd_mutex locks[2];
 	struct kd_exec_frame frame;
 	struct kd_exec_outer_unlock outer_hook;
 	struct task_struct *workers[3];
@@ -87,7 +87,7 @@ static unsigned int kd_task_refs(struct task_struct *task)
 static int kd_task_release_outer(struct kd_exec_frame *frame,
 				 struct kd_exec_outer_unlock *hook)
 {
-	struct mutex *lock = &kd_task_test.locks[0];
+	struct kd_mutex *lock = &kd_task_test.locks[0];
 
 	/* There is no queue batch in this probe. Use its callback slot solely to
 	 * release real A when the production event handler observes early A unlock. */
@@ -316,7 +316,7 @@ static int kd_task_round(bool outer_first, bool registry_stress)
 	kd_task_test.registry_stress = registry_stress;
 	kd_task_test.frees_before = atomic_read(&kd_mutex_task_test_frees);
 	for (i = 0; i < ARRAY_SIZE(kd_task_test.locks); i++)
-		mutex_init(&kd_task_test.locks[i]);
+		kd_mutex_init(&kd_task_test.locks[i]);
 	init_completion(&kd_task_test.start);
 	for (i = 0; i < ARRAY_SIZE(kd_task_test.workers); i++) {
 		struct task_struct *worker;

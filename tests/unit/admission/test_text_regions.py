@@ -35,7 +35,7 @@ class DeviceSessionTests(unittest.TestCase):
         self.pins = []
         self.source_state = device_session.OPEN
         self.pin_error = None
-        self.caps_packet = device_session.CAPS_STRUCT.pack(4, 11, 256, 8192)
+        self.caps_packet = device_session.CAPS_STRUCT.pack(5, 27, 256, 8192)
         self.caps_result = 0
         self.caps_error = None
         self.caps_queries = []
@@ -173,12 +173,12 @@ class DeviceSessionTests(unittest.TestCase):
             device_session.mutex_stack_bytes()
         with self.assertRaisesRegex(RuntimeError, "active kd_dev session"):
             device_session.percpu_module_bytes()
-        with self.assertRaisesRegex(RuntimeError, "immutable legacy mutex image"), device_session.session():
+        with self.assertRaisesRegex(RuntimeError, "exclusive KD mutex object"), device_session.session():
             self.fail("old provider entered translator")
         self.assertEqual(len(self.caps_queries), 2)
 
     def test_known_versions_never_infer_an_unadvertised_module_arena(self):
-        # Raw observers can inspect old providers; translation needs v4 mutex images.
+        # Raw observers can inspect old providers; translation needs v5 exclusive objects and immutable images.
         for version, features, stack, module in (
             (1, 0, 0, 0), (1, 1, 256, 0), (2, 0, 0, 0),
             (2, 1, 256, 0), (2, 2, 0, 8192), (2, 3, 256, 8192),
@@ -190,16 +190,22 @@ class DeviceSessionTests(unittest.TestCase):
                 try:
                     self.assertEqual(device_session.query_capabilities(fd), {
                         'mutex_stack_bytes': stack, 'percpu_module_bytes': module,
-                        'mutex_images': False})
+                        'mutex_images': False, 'mutex_exclusive': False})
                 finally:
                     os.close(fd)
-                with self.assertRaisesRegex(RuntimeError, "immutable legacy mutex image"), device_session.session():
+                with self.assertRaisesRegex(RuntimeError, "exclusive KD mutex object"), device_session.session():
                     self.fail("old provider entered translator")
         self.assertNotIn("JIT_CAPABILITY_INVALID", self.stderr.getvalue())
 
+    def test_shared_linux_object_provider_is_refused(self):
+        self.caps_packet = device_session.CAPS_STRUCT.pack(4, 11, 256, 8192)
+        with self.assertRaisesRegex(RuntimeError, "exclusive KD mutex object"), device_session.session():
+            self.fail("Linux-object provider entered KD-only translator")
+        self.assertEqual(self.pins, [])
+
     def test_old_optional_capability_does_not_enable_preservation(self):
         self.caps_error = errno.ENOTTY
-        with self.assertRaisesRegex(RuntimeError, "immutable legacy mutex image"), device_session.session():
+        with self.assertRaisesRegex(RuntimeError, "exclusive KD mutex object"), device_session.session():
             self.fail("old provider entered translator")
         self.assertEqual(self.pins, [])
         self.assertIn("reason=JIT_CAPABILITY_UNAVAILABLE", self.stderr.getvalue())
@@ -212,7 +218,7 @@ class DeviceSessionTests(unittest.TestCase):
             device_session.CAPS_STRUCT.pack(*values)
             for values in (
                 (0, 1, 256, 0),
-                (5, 1, 256, 0),
+                (6, 1, 256, 0),
                 (1, 3, 256, 0),
                 (1, 0, 256, 0),
                 (1, 1, 0, 0),
@@ -230,13 +236,13 @@ class DeviceSessionTests(unittest.TestCase):
         ]
         for packet in packets:
             self.caps_packet = packet
-            with self.subTest(packet=packet), self.assertRaisesRegex(RuntimeError, "immutable legacy mutex image"), device_session.session():
+            with self.subTest(packet=packet), self.assertRaisesRegex(RuntimeError, "exclusive KD mutex object"), device_session.session():
                 self.fail("invalid contract entered translator")
             self.assertEqual(device_session._mutex_stack_bytes, 0)
             self.assertEqual(device_session._percpu_module_bytes, 0)
         self.caps_packet = device_session.CAPS_STRUCT.pack(1, 1, 256, 0)
         self.caps_result = 1
-        with self.assertRaisesRegex(RuntimeError, "immutable legacy mutex image"), device_session.session():
+        with self.assertRaisesRegex(RuntimeError, "exclusive KD mutex object"), device_session.session():
             self.fail("invalid query result entered translator")
         self.assertEqual(
             self.stderr.getvalue().count("reason=JIT_CAPABILITY_INVALID"),

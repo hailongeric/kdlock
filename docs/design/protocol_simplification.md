@@ -19,8 +19,10 @@ registers and the stack pointer carry its native continuation. During JIT execut
 KD keeps physical RSP/RBP on the executor's wrapper frame and maps the waiter's
 logical registers separately. Virtual SP/BP still address the waiter's original
 stack. Register conflicts, translated stack accesses and budget checks add work.
-KD mutex also preserves the original Linux mutex owner, allowing native peers on
-that object. TCLock uses its own mutex object and does not provide that bridge.
+At the time of this 2026-10-09 proposal, KD mutex also preserved the original
+Linux mutex owner for native peers. The current [KD-only mutex](kd_only_mutex.md)
+removes that bridge and owns its exclusion directly, while retaining the legacy
+delegation queue and JIT execution model.
 
 The hot path should prove simple requests once, then keep their execution short.
 It still needs each request's publication, source OPEN/readiness, identity,

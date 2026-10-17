@@ -657,6 +657,11 @@ with (
     def test_symbol_families_and_compiler_clones(self):
         for name in (
             "__schedule.isra.0",
+            "mutex_lock",
+            "mutex_unlock",
+            "__mutex_lock_slowpath",
+            "atomic_dec_and_mutex_lock",
+            "atomic_dec_and_mutex_lock.isra.0",
             "rcu_read_unlock",
             "synchronize_rcu_expedited",
             "local_bh_enable",
@@ -665,7 +670,8 @@ with (
         ):
             self.assertTrue(context_policy.is_context_symbol(name), name)
         for name in (
-            "mutex_lock",
+            "kd_mutex_local_lock",
+            "kd_mutex_local_unlock",
             "_raw_spin_unlock",
             "kd_spin_lock",
             "kd_spin_unlock",

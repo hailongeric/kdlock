@@ -31,6 +31,12 @@ memory/context checks and releases its writer byte before spin completion.
 This admits the current RCUHT writer without translating reader-drain atomics;
 it does not resolve the general dynamic-pointer screening gap.
 
+KD-only mutex translation requires capability v5 with exclusive KD objects and
+immutable images. Linux mutex APIs, their compiler clones and the old kernel
+mutex bridge are refused. Ordinary KD return-valued or task-sensitive locking
+APIs remain local; explicit clobber entries supply delegation. See the
+[object/API contract](../docs/design/kd_only_mutex.md).
+
 Install [the pinned requirements](requirements.txt) in a guest venv. Inspect CLI
 options with `python3 disassem/disassem.py --help`; real-text CLI use acquires its
 own device lease and does not by itself upload a published image. Importing helpers

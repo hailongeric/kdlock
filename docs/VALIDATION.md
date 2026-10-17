@@ -1,5 +1,19 @@
 # Historical validation index
 
+The [KD-only mutex receipt](../bench/results/10.176.26.71/bench/comparison/mutex-kdonly-20261017T140354Z/validation.json)
+records basic and affected checks, including the compiled/JIT caller and the
+live ordinary API probe (eight workers, 160,000 operations and 2,048 initialized
+objects). [Validation scope](../bench/results/10.176.26.71/bench/comparison/mutex-kdonly-20261017T140354Z/validation-scope.json) separates final
+reruns from retained earlier checks on unchanged protocol components. The final
+504-session matrix accepted and drained every run; 225 KD sessions
+returned JIT bodies and 27 were NO_JIT controls. Separate candidate
+trials, follow-ups, PMU diagnostics and failed attempts remain archived.
+Offline replay reproduced 143 numerical artifacts;
+the sealed archive verifies 150,984 regular files and
+3916 symlink records. Final source/kernel/boot identity, host pins,
+idle drain and no-new-fault checks passed. No full suite, new spin/rwlock sweep or
+whole-kernel replacement pass is claimed.
+
 The [2026-10-17 legacy compatibility receipt](../bench/results/10.176.26.71/bench/comparison/mutex-legacy-compat-20261017T122742Z/validation.json)
 records provider/strict-daemon builds, two basic C programs and 16 affected
 Python drivers, followed by 504 accepted/drained timed sessions. Both c01/post64

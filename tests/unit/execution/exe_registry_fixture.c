@@ -188,6 +188,8 @@ static int set_memory_x(unsigned long addr, int pages)
 		       0;
 }
 
+static void kd_mutex_local_lock(void) {}
+static void kd_mutex_local_unlock(void) {}
 static unsigned long kallsyms_lookup_name(const char *name)
 {
 	return (unsigned long)name;
@@ -253,7 +255,7 @@ static int kd_source_pin_root(unsigned long address)
  * functions; keep strict warnings on this fixture and its assertions. */
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wsign-compare"
-struct mutex { int unused; };
+struct kd_mutex { int unused; };
 #include "registry_code.h"
 #pragma GCC diagnostic pop
 
@@ -369,7 +371,7 @@ static void check_pool(enum allocation_mode mode)
  * Use the real registry and prepare helper, not a handwritten successful stub. */
 static void check_mutex_preparation(void)
 {
-	struct mutex lock = {0};
+	struct kd_mutex lock = {0};
 	struct kd_exe_info *exe;
 	int blocks, pins;
 

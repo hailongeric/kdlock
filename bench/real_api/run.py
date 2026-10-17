@@ -126,6 +126,9 @@ def build(out, args):
             imports = command(['nm', '-u', binary['path']],
                               out/('imports-'+name.replace('/', '-')+'.txt'))
             require('__ubsan_' not in imports, 'timed module still imports UBSAN: '+name)
+            if name == 'kdlock_km.ko' or (name.startswith('kdlock-') and any(k in name for k in MUTEX_KINDS)):
+                require(not re.search(r'\bU (?:atomic_dec_and_mutex_lock|mutex\w*|__mutex\w*|kd_mutex_(?:lock|unlock)_clobber_v1|osq_lock|osq_unlock)\b', imports),
+                        'KD-only module imports a Linux mutex API: '+name)
     write_json(out/'build-configuration.json', metadata)
     # Capture the exact real implementations, not just a moving upstream URL.
     for relative in ('fs/xattr.c', 'fs/locks.c', 'fs/file.c', 'fs/fcntl.c', 'fs/pipe.c',

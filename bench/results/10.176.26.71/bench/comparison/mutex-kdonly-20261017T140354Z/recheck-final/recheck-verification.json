@@ -1,0 +1,177 @@
+{
+  "accepted": 54,
+  "actual_jit": 54,
+  "checks": {
+    "baseline/api-pipebytes-query-n16": {
+      "accepted": 18,
+      "binary": {
+        "checked_files": 9,
+        "sha256": "032957ed600547075d58548376f31cc38d36e9194f966d4fdadadb41e15332aa"
+      },
+      "emitted_context_audits_recomputed": [
+        "mutex"
+      ],
+      "environment": {
+        "build_reused": true,
+        "cmdline": "BOOT_IMAGE=/boot/vmlinuz-6.1.159-kdclobber2 root=UUID=aa0bde06-47f6-4049-aaaf-13d052e53961 ro nokaslr nopvspin console=tty1 console=ttyS0\n",
+        "new_measurements": true,
+        "shared_environment": "/root/kdlock-evidence/10.176.26.71/bench/mutex-kdonly-20261017T140354Z/matrix5/control/guest-before.json",
+        "snapshot": "before-mutex-kdonly-20261017T140354Z"
+      },
+      "excluded": [],
+      "final": false,
+      "kd_eligible_operations": 344001536,
+      "kd_jit_bodies": 342927872,
+      "kd_jit_positive": 18,
+      "kd_sessions": 18,
+      "kernel": {
+        "checked_files": 15,
+        "sha256": "4b53ccdd71a941d746719b44be3761b7c53f1911b91b985e228bb084cdade200"
+      },
+      "planned": 18,
+      "prepared_provider": {
+        "observation": 3,
+        "prepared": 83,
+        "production": 81
+      },
+      "raw_measurements_peaks_oracles_and_drain_recomputed": true,
+      "records_sha256": "eeb3c13e5d89160ed3d54cbe0e0056e03b8c57b8650bef211ac6c06f107f14bf",
+      "source": {
+        "checked_files": 218,
+        "sha256": "eb278e441770c5d7649cabb6395e3bb5c45587ff7bc7362501680ed3c3dbaa4f"
+      },
+      "status": "AUDITED",
+      "statuses": {
+        "OK": 18
+      },
+      "tclock_mutex_delegated": 0,
+      "timed_operations": 344001536
+    },
+    "baseline/c01-post64": {
+      "binary": 8,
+      "jit_images": 27,
+      "post_work": {
+        "kdlock": {
+          "dependent_multiply_add_groups": [
+            64,
+            64
+          ],
+          "module": "/mnt/kdlock-builds/evidence/10.176.26.71/bench/mutex-legacy-compat-20261017T122742Z/attempt2/compat/c01-post64/variants/kdlock/mutex_cacheline.ko",
+          "sha256": "6f70b270c688fea47fa5a5959cf9c7a144866a48f68687ab0ad8c11f343ff96a",
+          "verified": true
+        },
+        "native": {
+          "dependent_multiply_add_groups": [
+            64,
+            64
+          ],
+          "module": "/mnt/kdlock-builds/evidence/10.176.26.71/bench/mutex-legacy-compat-20261017T122742Z/attempt2/compat/c01-post64/variants/native/mutex_cacheline.ko",
+          "sha256": "dba2c800857027cb6f2a4afc939ba41d9eb9254f159cc3fb24986d1a6eff724c",
+          "verified": true
+        },
+        "tclock": {
+          "dependent_multiply_add_groups": [
+            64,
+            64
+          ],
+          "module": "/mnt/kdlock-builds/evidence/10.176.26.71/bench/mutex-legacy-compat-20261017T122742Z/attempt2/compat/c01-post64/variants/tclock/mutex_cacheline.ko",
+          "sha256": "3e37faae939f40e92fde50328323db65b1799eb310e7e6c7e7bc489d12f7a853",
+          "verified": true
+        }
+      },
+      "prepared_provider": {
+        "observation": 3,
+        "prepared": 83,
+        "production": 81
+      },
+      "source": 297
+    },
+    "compat/api-pipebytes-query-n16": {
+      "accepted": 18,
+      "binary": {
+        "checked_files": 9,
+        "sha256": "b8a3dcb8bb37060dc6674e26536cfb4776aecfdf64ee54093ccc0c900d593ee2"
+      },
+      "emitted_context_audits_recomputed": [
+        "mutex"
+      ],
+      "environment": {
+        "build_reused": false,
+        "cmdline": "BOOT_IMAGE=/boot/vmlinuz-6.1.159-kdclobber2 root=UUID=aa0bde06-47f6-4049-aaaf-13d052e53961 ro nokaslr nopvspin console=tty1 console=ttyS0\n",
+        "new_measurements": true,
+        "shared_environment": "/root/kdlock-evidence/10.176.26.71/bench/mutex-kdonly-20261017T140354Z/matrix5/control/guest-before.json",
+        "snapshot": "before-mutex-kdonly-20261017T140354Z"
+      },
+      "excluded": [],
+      "final": false,
+      "kd_eligible_operations": 346914048,
+      "kd_jit_bodies": 345783615,
+      "kd_jit_positive": 18,
+      "kd_sessions": 18,
+      "kernel": {
+        "checked_files": 15,
+        "sha256": "4b53ccdd71a941d746719b44be3761b7c53f1911b91b985e228bb084cdade200"
+      },
+      "planned": 18,
+      "prepared_provider": {
+        "observation": 3,
+        "prepared": 87,
+        "production": 85
+      },
+      "raw_measurements_peaks_oracles_and_drain_recomputed": true,
+      "records_sha256": "13edaa3cc35dd80b9ae8f2b6ecf4de3922d46df0ef596d5359c679b1a22c7d33",
+      "source": {
+        "checked_files": 223,
+        "sha256": "8545076d74c54eb8e1a0d409d2f5101f80af88be5ceef1849b37a97404fda963"
+      },
+      "status": "AUDITED",
+      "statuses": {
+        "OK": 18
+      },
+      "tclock_mutex_delegated": 0,
+      "timed_operations": 346914048
+    },
+    "compat/c01-post64": {
+      "binary": 8,
+      "jit_images": 27,
+      "post_work": {
+        "kdlock": {
+          "dependent_multiply_add_groups": [
+            64,
+            64
+          ],
+          "module": "/mnt/kdlock-builds/evidence/10.176.26.71/bench/mutex-kdonly-20261017T140354Z/matrix5/compat/c01-post64/variants/kdlock/mutex_cacheline.ko",
+          "sha256": "cbd8a7ab26265ae5c7c3743220aea69e0d195763a86e8b61649910c216062e12",
+          "verified": true
+        },
+        "native": {
+          "dependent_multiply_add_groups": [
+            64,
+            64
+          ],
+          "module": "/mnt/kdlock-builds/evidence/10.176.26.71/bench/mutex-kdonly-20261017T140354Z/matrix5/compat/c01-post64/variants/native/mutex_cacheline.ko",
+          "sha256": "a0f18a073ee2e10b2ce06fdd39710bc7b3b3e38d4043c7939055181d5c53f084",
+          "verified": true
+        },
+        "tclock": {
+          "dependent_multiply_add_groups": [
+            64,
+            64
+          ],
+          "module": "/mnt/kdlock-builds/evidence/10.176.26.71/bench/mutex-kdonly-20261017T140354Z/matrix5/compat/c01-post64/variants/tclock/mutex_cacheline.ko",
+          "sha256": "6752aa383f00bdf8c0d6bc3b4bba7df7efa73d0d3cf6d22d092f410cc1562f7b",
+          "verified": true
+        }
+      },
+      "prepared_provider": {
+        "observation": 3,
+        "prepared": 87,
+        "production": 85
+      },
+      "source": 306
+    }
+  },
+  "drained": 54,
+  "sessions": 54,
+  "status": "PASS"
+}

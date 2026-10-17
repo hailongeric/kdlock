@@ -22,6 +22,10 @@ FIXTURE = r'''
 typedef uint8_t u8;
 typedef uint32_t u32;
 typedef struct { int counter; } atomic_t;
+typedef unsigned long atomic_long_t;
+typedef int raw_spinlock_t;
+struct optimistic_spin_queue { atomic_t tail; };
+struct list_head { struct list_head *next, *prev; };
 #define noinline __attribute__((noinline))
 #define notrace
 #define __always_inline inline __attribute__((always_inline))

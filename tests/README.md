@@ -1,5 +1,14 @@
 # Verification
 
+The [KD-only local mutex probe](kernel/mutex/local/kd_mutex_local_probe.c) checks
+ordinary API aliases, exclusion, sleeping/nested owners, interruptible/killable
+cancellation, I/O accounting, trylock and 2,048 independent objects. It checks
+exact drain before unload. The [current receipt](../bench/results/10.176.26.71/bench/comparison/mutex-kdonly-20261017T140354Z/validation.json)
+keeps the live probe separate from unit fixtures and returned-body JIT benchmarks.
+The [provider lifecycle fixture](unit/infrastructure/test_provider_lifecycle.py)
+checks publication after runtime initialization, failed-start cleanup, and device
+removal before teardown in ordinary and SELFTEST control flow.
+
 Build and run all checks only in the recovery guest on `10.176.26.71`. Use the
 [project guide](../docs/PROJECT_GUIDE.md) for setup and
 [operations](../docs/AGENTS.md) for kernel verification, snapshots, fixed test inputs
@@ -34,6 +43,7 @@ check, missing dependency, crash or compile failure must not be reported as a pa
 | Continuation/frame/queue |`spin/test_spin_storage.py`, `test_spin_batch.py`, `test_spin_outer_progress.py`, `execution/test_exec_capacity.py` |
 | Wrapper, typed service and batch |`execution/test_jit_entry_scope.py`, `codegen/test_clobber_abi.py`, `test_jit_body_witness.py` |
 | Mutex resources/terminal path |`mutex/test_mutex_resources.py`, `test_mutex_task_cache.py`, `test_mutex_terminal.py`, `test_mutex_outer_progress.py` |
+| Provider initialization/publication | `infrastructure/test_provider_lifecycle.py` |
 | Task/source/registry lifetime |`infrastructure/test_source_lifetime.py`, `execution/test_exe_registry.py` |
 | Native ACK and remote continuation |`execution/test_remote_outer.py`, `test_remote_depth_protocol.py`, `test_remote_outer_protocol.py` |
 | Context, aliases and guards |`admission/test_context_policy.py`, `test_context_memory.py`, `test_context_guards.py` |

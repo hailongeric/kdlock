@@ -317,7 +317,14 @@ static int __init sc_init(void)
 {
 	BUILD_BUG_ON(sizeof(struct sc_slot) != SC_LINE_BYTES);
 	BUILD_BUG_ON(__alignof__(struct sc_slot) != SC_LINE_BYTES);
+#if defined(SC_MUTEX_WORKLOAD) && defined(SC_DIRECT_KDLOCK)
+	/* KD embeds its former external scheduling state in the lock object.
+	 * The c01 business payload remains exactly one separate cacheline. */
+	BUILD_BUG_ON(sizeof(sc_lock) != 4 * SC_LINE_BYTES);
+	BUILD_BUG_ON(__alignof__(sc_lock) < SC_LINE_BYTES);
+#else
 	BUILD_BUG_ON(sizeof(sc_lock) > SC_LINE_BYTES);
+#endif
 	BUILD_BUG_ON(sizeof(sc_control) > SC_LINE_BYTES);
 	BUILD_BUG_ON(sizeof(struct sc_progress_slot) != 128);
 	sc_lock_init();

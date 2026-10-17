@@ -1,0 +1,362 @@
+[
+  {
+    "cycles_per_op": 887.5950247685753,
+    "hot_stats": [
+      "6,257322,209470225624,-;kd_mutex stats: slowpath=1669710 combiner=8123 handoff=0 jit_success=8123 jit_not_ready=0 jit_failure=0 jit_resume=8123 frame_failure=0 node_overflow=0 multi_slot=0 context_busy=0 nested_lock=0 nested_fast=0 nested_queued=0 nested_jit=0 nested_unlock=0 nested_abort_release=0 active_waiters=0 max_waiters_per_cpu=1 reserved_nodes=0 origin_acquires=3259541 origin_releases=3259541",
+      "6,257331,209470252734,-;kd_hotlock mutex ratio: cpu=0 entries=580 contentions=155 last_entries=3073 checks=1459 cpu_hot=1 window=1024 scope=unfinished_batch role=DONE",
+      "6,257332,209470252744,-;kd_hotlock final: cpu=0 type=mutex address=ffffffffc07dd940 count=748 cpu_hot=1 lock_hot=1 role=DONE",
+      "6,257333,209470252751,-;kd_hotlock mutex ratio: cpu=1 entries=4715 contentions=947 last_entries=4912 checks=1735 cpu_hot=1 window=1024 scope=unfinished_batch role=DONE",
+      "6,257334,209470252758,-;kd_hotlock final: cpu=1 type=mutex address=ffffffffc07dd940 count=239 cpu_hot=1 lock_hot=1 role=DONE"
+    ],
+    "instructions_per_op": 436.6265093400499,
+    "jit_bodies": 8054,
+    "mean_ghz": 2.7682315197815965,
+    "ops": 12520704,
+    "placement": {
+      "control_addr": {
+        "address": 18446744072644056320,
+        "regions": [
+          "0xffffffffc07d8000-0xffffffffc07e0000   32768 load_module+0xb61/0x2760 pages=7 vmalloc N0=7"
+        ]
+      },
+      "data_addr": {
+        "address": 18446744072644056384,
+        "regions": [
+          "0xffffffffc07d8000-0xffffffffc07e0000   32768 load_module+0xb61/0x2760 pages=7 vmalloc N0=7"
+        ]
+      },
+      "lock_addr": {
+        "address": 18446744072644057408,
+        "regions": [
+          "0xffffffffc07d8000-0xffffffffc07e0000   32768 load_module+0xb61/0x2760 pages=7 vmalloc N0=7"
+        ]
+      }
+    },
+    "pmu": {
+      "context-switches": 284.0,
+      "cpu-migrations": 3.0,
+      "cycles": 11113314577.0,
+      "instructions": 5466871282.0,
+      "task-clock": 4014.59
+    },
+    "repeat": 0,
+    "sequence": 0,
+    "version": "baseline",
+    "whole_mops": 6.260075886832859
+  },
+  {
+    "cycles_per_op": 696.103713842943,
+    "hot_stats": [
+      "6,257407,209484241302,-;kd_mutex stats: slowpath=134974 combiner=242 handoff=0 jit_success=242 jit_not_ready=0 jit_failure=0 jit_resume=242 frame_failure=0 node_overflow=0 multi_slot=0 context_busy=0 nested_lock=0 nested_fast=0 nested_queued=0 nested_jit=0 nested_unlock=0 nested_abort_release=0 active_waiters=0 max_waiters_per_cpu=1 reserved_nodes=0 origin_acquires=241683 origin_releases=241683",
+      "6,257416,209484268383,-;kd_hotlock mutex ratio: cpu=0 entries=95743 contentions=902 last_entries=90112 checks=120 cpu_hot=1 window=1024 scope=unfinished_batch role=DONE",
+      "6,257417,209484268392,-;kd_hotlock final: cpu=0 type=mutex address=ffffffffc07dd940 count=784 cpu_hot=1 lock_hot=1 role=DONE",
+      "6,257418,209484268398,-;kd_hotlock mutex ratio: cpu=1 entries=37881 contentions=381 last_entries=98566 checks=119 cpu_hot=1 window=1024 scope=unfinished_batch role=DONE",
+      "6,257419,209484268404,-;kd_hotlock final: cpu=1 type=mutex address=ffffffffc07dd940 count=264 cpu_hot=1 lock_hot=1 role=DONE"
+    ],
+    "instructions_per_op": 231.04314293045562,
+    "jit_bodies": 242,
+    "mean_ghz": 3.5573618598144567,
+    "ops": 20530432,
+    "placement": {
+      "control_addr": {
+        "address": 18446744072644056320,
+        "regions": [
+          "0xffffffffc07d8000-0xffffffffc07e0000   32768 load_module+0xb61/0x2760 pages=7 vmalloc N0=7"
+        ]
+      },
+      "data_addr": {
+        "address": 18446744072644056384,
+        "regions": [
+          "0xffffffffc07d8000-0xffffffffc07e0000   32768 load_module+0xb61/0x2760 pages=7 vmalloc N0=7"
+        ]
+      },
+      "lock_addr": {
+        "address": 18446744072644057408,
+        "regions": [
+          "0xffffffffc07d8000-0xffffffffc07e0000   32768 load_module+0xb61/0x2760 pages=7 vmalloc N0=7"
+        ]
+      }
+    },
+    "pmu": {
+      "context-switches": 237.0,
+      "cpu-migrations": 3.0,
+      "cycles": 14291309962.0,
+      "instructions": 4743415535.0,
+      "task-clock": 4017.39
+    },
+    "repeat": 1,
+    "sequence": 3,
+    "version": "baseline",
+    "whole_mops": 10.26488517301576
+  },
+  {
+    "cycles_per_op": 930.5600640091137,
+    "hot_stats": [
+      "6,257436,209488429173,-;kd_mutex stats: slowpath=3383164 combiner=10546 handoff=0 jit_success=10546 jit_not_ready=0 jit_failure=0 jit_resume=10546 frame_failure=0 node_overflow=0 multi_slot=0 context_busy=0 nested_lock=0 nested_fast=0 nested_queued=0 nested_jit=0 nested_unlock=0 nested_abort_release=0 active_waiters=0 max_waiters_per_cpu=1 reserved_nodes=0 origin_acquires=3538197 origin_releases=3538197",
+      "6,257445,209488456148,-;kd_hotlock mutex ratio: cpu=0 entries=290 contentions=61 last_entries=4776 checks=1752 cpu_hot=1 window=1024 scope=unfinished_batch role=DONE",
+      "6,257446,209488456158,-;kd_hotlock final: cpu=0 type=mutex address=ffffffffc07dd940 count=361 cpu_hot=1 lock_hot=1 role=DONE",
+      "6,257447,209488456164,-;kd_hotlock mutex ratio: cpu=1 entries=2349 contentions=520 last_entries=4431 checks=1717 cpu_hot=1 window=1024 scope=unfinished_batch role=DONE",
+      "6,257448,209488456169,-;kd_hotlock final: cpu=1 type=mutex address=ffffffffc07dd940 count=855 cpu_hot=1 lock_hot=1 role=DONE"
+    ],
+    "instructions_per_op": 435.602685333984,
+    "jit_bodies": 10505,
+    "mean_ghz": 3.5591808330092807,
+    "ops": 15442176,
+    "placement": {
+      "control_addr": {
+        "address": 18446744072644056320,
+        "regions": [
+          "0xffffffffc07d8000-0xffffffffc07e0000   32768 load_module+0xb61/0x2760 pages=7 vmalloc N0=7"
+        ]
+      },
+      "data_addr": {
+        "address": 18446744072644056384,
+        "regions": [
+          "0xffffffffc07d8000-0xffffffffc07e0000   32768 load_module+0xb61/0x2760 pages=7 vmalloc N0=7"
+        ]
+      },
+      "lock_addr": {
+        "address": 18446744072644057408,
+        "regions": [
+          "0xffffffffc07d8000-0xffffffffc07e0000   32768 load_module+0xb61/0x2760 pages=7 vmalloc N0=7"
+        ]
+      }
+    },
+    "pmu": {
+      "context-switches": 256.0,
+      "cpu-migrations": 4.0,
+      "cycles": 14369872287.0,
+      "instructions": 6726653333.0,
+      "task-clock": 4037.41
+    },
+    "repeat": 2,
+    "sequence": 4,
+    "version": "baseline",
+    "whole_mops": 7.720854393969029
+  },
+  {
+    "cycles_per_op": 798.1517929130226,
+    "hot_stats": [
+      "6,257521,209501840941,-;kd_mutex stats: slowpath=1420180 combiner=553 handoff=0 jit_success=553 jit_not_ready=0 jit_failure=0 jit_resume=553 frame_failure=0 node_overflow=0 multi_slot=0 context_busy=0 nested_lock=0 nested_fast=0 nested_queued=0 nested_jit=0 nested_unlock=0 nested_abort_release=0 active_waiters=0 max_waiters_per_cpu=1 reserved_nodes=0 origin_acquires=3312099 origin_releases=3312099",
+      "6,257530,209501859596,-;kd_hotlock mutex ratio: cpu=0 entries=655 contentions=111 last_entries=5359 checks=1579 cpu_hot=1 window=1024 scope=unfinished_batch role=DONE",
+      "6,257531,209501859603,-;kd_hotlock final: cpu=0 type=mutex address=ffffffffc07dd940 count=584 cpu_hot=1 lock_hot=1 role=DONE",
+      "6,257532,209501859608,-;kd_hotlock mutex ratio: cpu=1 entries=5275 contentions=923 last_entries=5544 checks=1659 cpu_hot=1 window=1024 scope=unfinished_batch role=DONE",
+      "6,257533,209501859612,-;kd_hotlock final: cpu=1 type=mutex address=ffffffffc07dd940 count=291 cpu_hot=1 lock_hot=1 role=DONE"
+    ],
+    "instructions_per_op": 372.63628921488373,
+    "jit_bodies": 515,
+    "mean_ghz": 3.566624779922761,
+    "ops": 18177792,
+    "placement": {
+      "control_addr": {
+        "address": 18446744072644056320,
+        "regions": [
+          "0xffffffffc07d8000-0xffffffffc07e0000   32768 load_module+0xb61/0x2760 pages=7 vmalloc N0=7"
+        ]
+      },
+      "data_addr": {
+        "address": 18446744072644056384,
+        "regions": [
+          "0xffffffffc07d8000-0xffffffffc07e0000   32768 load_module+0xb61/0x2760 pages=7 vmalloc N0=7"
+        ]
+      },
+      "lock_addr": {
+        "address": 18446744072644057408,
+        "regions": [
+          "0xffffffffc07d8000-0xffffffffc07e0000   32768 load_module+0xb61/0x2760 pages=7 vmalloc N0=7"
+        ]
+      }
+    },
+    "pmu": {
+      "context-switches": 286.0,
+      "cpu-migrations": 4.0,
+      "cycles": 14508637276.0,
+      "instructions": 6773704957.0,
+      "task-clock": 4067.89
+    },
+    "repeat": 3,
+    "sequence": 7,
+    "version": "baseline",
+    "whole_mops": 9.088618074603588
+  },
+  {
+    "cycles_per_op": 931.2225863608146,
+    "hot_stats": [
+      "6,257350,209475013503,-;kd_mutex stats: slowpath=2008119 combiner=66551 handoff=0 jit_success=66551 jit_not_ready=0 jit_failure=0 jit_resume=66551 frame_failure=0 node_overflow=0 multi_slot=0 context_busy=0 nested_lock=0 nested_fast=0 nested_queued=0 nested_jit=0 nested_unlock=0 nested_abort_release=0 active_waiters=0 max_waiters_per_cpu=1 reserved_nodes=0 origin_acquires=3516088 origin_releases=3516088",
+      "6,257359,209475032213,-;kd_hotlock mutex ratio: cpu=0 entries=3525 contentions=946 last_entries=3877 checks=1557 cpu_hot=1 window=1024 scope=unfinished_batch role=DONE",
+      "6,257360,209475032220,-;kd_hotlock final: cpu=0 type=mutex address=ffffffffc07dd940 count=416 cpu_hot=1 lock_hot=1 role=DONE",
+      "6,257361,209475032225,-;kd_hotlock mutex ratio: cpu=1 entries=3161 contentions=763 last_entries=4149 checks=1944 cpu_hot=1 window=1024 scope=unfinished_batch role=DONE",
+      "6,257362,209475032228,-;kd_hotlock final: cpu=1 type=mutex address=ffffffffc07dd940 count=871 cpu_hot=1 lock_hot=1 role=DONE"
+    ],
+    "instructions_per_op": 445.33716035348175,
+    "jit_bodies": 66408,
+    "mean_ghz": 2.7964920835833382,
+    "ops": 12061952,
+    "placement": {
+      "control_addr": {
+        "address": 18446744072644056320,
+        "regions": [
+          "0xffffffffc07d8000-0xffffffffc07e0000   32768 load_module+0xb61/0x2760 pages=7 vmalloc N0=7"
+        ]
+      },
+      "data_addr": {
+        "address": 18446744072644056384,
+        "regions": [
+          "0xffffffffc07d8000-0xffffffffc07e0000   32768 load_module+0xb61/0x2760 pages=7 vmalloc N0=7"
+        ]
+      },
+      "lock_addr": {
+        "address": 18446744072644057408,
+        "regions": [
+          "0xffffffffc07d8000-0xffffffffc07e0000   32768 load_module+0xb61/0x2760 pages=7 vmalloc N0=7"
+        ]
+      }
+    },
+    "pmu": {
+      "context-switches": 272.0,
+      "cpu-migrations": 3.0,
+      "cycles": 11232362138.0,
+      "instructions": 5371635452.0,
+      "task-clock": 4016.59
+    },
+    "repeat": 0,
+    "sequence": 1,
+    "version": "compat",
+    "whole_mops": 6.030738337648221
+  },
+  {
+    "cycles_per_op": 953.0066904444506,
+    "hot_stats": [
+      "6,257378,209479757368,-;kd_mutex stats: slowpath=1795873 combiner=690 handoff=0 jit_success=690 jit_not_ready=0 jit_failure=0 jit_resume=690 frame_failure=0 node_overflow=0 multi_slot=0 context_busy=0 nested_lock=0 nested_fast=0 nested_queued=0 nested_jit=0 nested_unlock=0 nested_abort_release=0 active_waiters=0 max_waiters_per_cpu=1 reserved_nodes=0 origin_acquires=4369959 origin_releases=4369959",
+      "6,257387,209479775929,-;kd_hotlock mutex ratio: cpu=0 entries=1540 contentions=485 last_entries=3354 checks=2144 cpu_hot=1 window=1024 scope=unfinished_batch role=DONE",
+      "6,257388,209479775935,-;kd_hotlock final: cpu=0 type=mutex address=ffffffffc07dd940 count=393 cpu_hot=1 lock_hot=1 role=DONE",
+      "6,257389,209479775940,-;kd_hotlock mutex ratio: cpu=1 entries=2883 contentions=754 last_entries=3546 checks=2127 cpu_hot=1 window=1024 scope=unfinished_batch role=DONE",
+      "6,257390,209479775944,-;kd_hotlock final: cpu=1 type=mutex address=ffffffffc07dd940 count=679 cpu_hot=1 lock_hot=1 role=DONE"
+    ],
+    "instructions_per_op": 434.0773851390736,
+    "jit_bodies": 633,
+    "mean_ghz": 3.5591236648026583,
+    "ops": 15206912,
+    "placement": {
+      "control_addr": {
+        "address": 18446744072644056320,
+        "regions": [
+          "0xffffffffc07d8000-0xffffffffc07e0000   32768 load_module+0xb61/0x2760 pages=7 vmalloc N0=7"
+        ]
+      },
+      "data_addr": {
+        "address": 18446744072644056384,
+        "regions": [
+          "0xffffffffc07d8000-0xffffffffc07e0000   32768 load_module+0xb61/0x2760 pages=7 vmalloc N0=7"
+        ]
+      },
+      "lock_addr": {
+        "address": 18446744072644057408,
+        "regions": [
+          "0xffffffffc07d8000-0xffffffffc07e0000   32768 load_module+0xb61/0x2760 pages=7 vmalloc N0=7"
+        ]
+      }
+    },
+    "pmu": {
+      "context-switches": 290.0,
+      "cpu-migrations": 3.0,
+      "cycles": 14492288877.0,
+      "instructions": 6600976597.0,
+      "task-clock": 4071.87
+    },
+    "repeat": 1,
+    "sequence": 2,
+    "version": "compat",
+    "whole_mops": 7.603168987973873
+  },
+  {
+    "cycles_per_op": 917.4755635759224,
+    "hot_stats": [
+      "6,257464,209493185148,-;kd_mutex stats: slowpath=1700906 combiner=227 handoff=0 jit_success=227 jit_not_ready=0 jit_failure=0 jit_resume=227 frame_failure=0 node_overflow=0 multi_slot=0 context_busy=0 nested_lock=0 nested_fast=0 nested_queued=0 nested_jit=0 nested_unlock=0 nested_abort_release=0 active_waiters=0 max_waiters_per_cpu=1 reserved_nodes=0 origin_acquires=4177012 origin_releases=4177012",
+      "6,257473,209493207709,-;kd_hotlock mutex ratio: cpu=0 entries=1269 contentions=396 last_entries=3448 checks=2096 cpu_hot=1 window=1024 scope=unfinished_batch role=DONE",
+      "6,257474,209493207716,-;kd_hotlock final: cpu=0 type=mutex address=ffffffffc07dd940 count=352 cpu_hot=1 lock_hot=1 role=DONE",
+      "6,257475,209493207721,-;kd_hotlock mutex ratio: cpu=1 entries=4135 contentions=969 last_entries=4188 checks=1986 cpu_hot=1 window=1024 scope=unfinished_batch role=DONE",
+      "6,257476,209493207725,-;kd_hotlock final: cpu=1 type=mutex address=ffffffffc07dd940 count=10 cpu_hot=1 lock_hot=1 role=DONE"
+    ],
+    "instructions_per_op": 413.91498230836675,
+    "jit_bodies": 213,
+    "mean_ghz": 3.5611818775933095,
+    "ops": 15584768,
+    "placement": {
+      "control_addr": {
+        "address": 18446744072644056320,
+        "regions": [
+          "0xffffffffc07d8000-0xffffffffc07e0000   32768 load_module+0xb61/0x2760 pages=7 vmalloc N0=7"
+        ]
+      },
+      "data_addr": {
+        "address": 18446744072644056384,
+        "regions": [
+          "0xffffffffc07d8000-0xffffffffc07e0000   32768 load_module+0xb61/0x2760 pages=7 vmalloc N0=7"
+        ]
+      },
+      "lock_addr": {
+        "address": 18446744072644057408,
+        "regions": [
+          "0xffffffffc07d8000-0xffffffffc07e0000   32768 load_module+0xb61/0x2760 pages=7 vmalloc N0=7"
+        ]
+      }
+    },
+    "pmu": {
+      "context-switches": 277.0,
+      "cpu-migrations": 3.0,
+      "cycles": 14298643804.0,
+      "instructions": 6450768971.0,
+      "task-clock": 4015.14
+    },
+    "repeat": 2,
+    "sequence": 5,
+    "version": "compat",
+    "whole_mops": 7.792108829468797
+  },
+  {
+    "cycles_per_op": 1000.8243797813383,
+    "hot_stats": [
+      "6,257492,209497716991,-;kd_mutex stats: slowpath=1863223 combiner=1177 handoff=0 jit_success=1177 jit_not_ready=0 jit_failure=0 jit_resume=1177 frame_failure=0 node_overflow=0 multi_slot=0 context_busy=0 nested_lock=0 nested_fast=0 nested_queued=0 nested_jit=0 nested_unlock=0 nested_abort_release=0 active_waiters=0 max_waiters_per_cpu=1 reserved_nodes=0 origin_acquires=4221493 origin_releases=4221493",
+      "6,257501,209497740288,-;kd_hotlock mutex ratio: cpu=0 entries=1616 contentions=471 last_entries=3220 checks=2073 cpu_hot=1 window=1024 scope=unfinished_batch role=DONE",
+      "6,257502,209497740297,-;kd_hotlock final: cpu=0 type=mutex address=ffffffffc07dd940 count=450 cpu_hot=1 lock_hot=1 role=DONE",
+      "6,257503,209497740304,-;kd_hotlock mutex ratio: cpu=1 entries=870 contentions=245 last_entries=3443 checks=2054 cpu_hot=1 window=1024 scope=unfinished_batch role=DONE",
+      "6,257504,209497740310,-;kd_hotlock final: cpu=1 type=mutex address=ffffffffc07dd940 count=243 cpu_hot=1 lock_hot=1 role=DONE"
+    ],
+    "instructions_per_op": 439.64838328728047,
+    "jit_bodies": 1167,
+    "mean_ghz": 3.5498699465752135,
+    "ops": 14313984,
+    "placement": {
+      "control_addr": {
+        "address": 18446744072644056320,
+        "regions": [
+          "0xffffffffc07d8000-0xffffffffc07e0000   32768 load_module+0xb61/0x2760 pages=7 vmalloc N0=7"
+        ]
+      },
+      "data_addr": {
+        "address": 18446744072644056384,
+        "regions": [
+          "0xffffffffc07d8000-0xffffffffc07e0000   32768 load_module+0xb61/0x2760 pages=7 vmalloc N0=7"
+        ]
+      },
+      "lock_addr": {
+        "address": 18446744072644057408,
+        "regions": [
+          "0xffffffffc07d8000-0xffffffffc07e0000   32768 load_module+0xb61/0x2760 pages=7 vmalloc N0=7"
+        ]
+      }
+    },
+    "pmu": {
+      "context-switches": 280.0,
+      "cpu-migrations": 4.0,
+      "cycles": 14325784159.0,
+      "instructions": 6293119924.0,
+      "task-clock": 4035.58
+    },
+    "repeat": 3,
+    "sequence": 6,
+    "version": "compat",
+    "whole_mops": 7.156057375970354
+  }
+]

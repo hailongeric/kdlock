@@ -1,0 +1,19 @@
+FAIL line 49: active == SERVICES (active=1f)
+Traceback (most recent call last):
+  File "/root/host_fs/kdlock/tests/unit/run.py", line 46, in <module>
+    main()
+  File "/root/host_fs/kdlock/tests/unit/run.py", line 42, in main
+    runpy.run_path(str(path), run_name="__main__")
+  File "/usr/lib/python3.10/runpy.py", line 289, in run_path
+    return _run_module_code(code, init_globals, run_name,
+  File "/usr/lib/python3.10/runpy.py", line 96, in _run_module_code
+    _run_code(code, mod_globals, init_globals,
+  File "/usr/lib/python3.10/runpy.py", line 86, in _run_code
+    exec(code, run_globals)
+  File "/root/host_fs/kdlock/tests/unit/infrastructure/test_provider_lifecycle.py", line 36, in <module>
+    main()
+  File "/root/host_fs/kdlock/tests/unit/infrastructure/test_provider_lifecycle.py", line 32, in main
+    subprocess.run([str(binary)], check=True, timeout=10)
+  File "/usr/lib/python3.10/subprocess.py", line 526, in run
+    raise CalledProcessError(retcode, process.args,
+subprocess.CalledProcessError: Command '['/tmp/kd-provider-lifecycle-dwtim3gw/ordinary']' returned non-zero exit status 1.

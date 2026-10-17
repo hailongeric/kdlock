@@ -20,10 +20,11 @@ PIN = 0x40104B70
 INFO = 0x80104B71
 RETIRE = 0x4B72
 CAPS = 0x80104B73
-CAPS_VERSION = 4
+CAPS_VERSION = 5
 CAP_MUTEX_STACK = 1
 CAP_PERCPU_MODULE = 2
 CAP_MUTEX_IMAGES = 8
+CAP_MUTEX_EXCLUSIVE = 16
 MUTEX_STACK_BYTES = 256
 PERCPU_MODULE_BYTES = 8192
 PERCPU_ALIGNMENT = 4
@@ -65,7 +66,7 @@ def query_capabilities(fd):
     range required by current translation. Raw queries are not a lease; use
     the cached getters after session() validates the actual read/write cdev.
     """
-    disabled = {"mutex_stack_bytes": 0, "percpu_module_bytes": 0, "mutex_images": False}
+    disabled = {"mutex_stack_bytes": 0, "percpu_module_bytes": 0, "mutex_images": False, "mutex_exclusive": False}
     packet = bytearray(b"\xff" * CAPS_STRUCT.size)
     try:
         result = fcntl.ioctl(fd, CAPS, packet, True)
@@ -80,13 +81,15 @@ def query_capabilities(fd):
         return disabled
     if result == 0 and len(packet) == CAPS_STRUCT.size:
         version, features, stack_bytes, module_bytes = CAPS_STRUCT.unpack(packet)
-        known = CAP_MUTEX_STACK | (CAP_PERCPU_MODULE if version in (2, 3, CAPS_VERSION) else 0)
+        known = CAP_MUTEX_STACK | (CAP_PERCPU_MODULE if version in (2, 3, 4, CAPS_VERSION) else 0)
         if version == 3:
             known |= 4  # historical owned-image capability, not this backend
-        if version == CAPS_VERSION:
+        if version in (4, CAPS_VERSION):
             known |= CAP_MUTEX_IMAGES
+        if version == CAPS_VERSION:
+            known |= CAP_MUTEX_EXCLUSIVE
         if (
-            version in (1, 2, 3, CAPS_VERSION)
+            version in (1, 2, 3, 4, CAPS_VERSION)
             and not features & ~known
             and stack_bytes == (MUTEX_STACK_BYTES if features & CAP_MUTEX_STACK else 0)
             and module_bytes
@@ -96,6 +99,7 @@ def query_capabilities(fd):
                 "mutex_stack_bytes": stack_bytes,
                 "percpu_module_bytes": module_bytes,
                 "mutex_images": bool(features & CAP_MUTEX_IMAGES),
+                "mutex_exclusive": bool(features & CAP_MUTEX_EXCLUSIVE),
             }
     print(
         f"[KD_JIT][WARN] reason=JIT_CAPABILITY_INVALID "
@@ -177,6 +181,8 @@ def session():
         # Query the same validated description once, before any text read.
         # Never reuse a prior session's capability or open another provider.
         caps = query_capabilities(fd)
+        if not caps["mutex_exclusive"]:
+            raise RuntimeError("exclusive KD mutex object capability required")
         if not caps["mutex_images"]:
             raise RuntimeError("immutable legacy mutex image publication capability required")
         _mutex_stack_bytes = caps["mutex_stack_bytes"]

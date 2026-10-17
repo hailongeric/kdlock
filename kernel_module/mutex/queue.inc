@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0
 // Derived from TCLocks; Copyright (c) 2022 Vishal Gupta, Kumar Kartikeya Dwivedi.
 /*
- * Per-CPU slot reservation, native mutex acquisition and private tail helpers.
+ * Per-CPU slot reservation, KD physical acquisition and private tail helpers.
  * Private implementation included only by kd_mutex.c.
  * Keep this translation unit: static state, inlining and assembly labels
  * are shared with the adjacent components. This is not a standalone object.
@@ -98,11 +98,11 @@ static void kd_mutex_wait_for_result(struct kd_mutex_node *node)
 		cpu_relax();
 }
 
-/* The scheduling gate cannot authorize a CS without the original mutex. */
+/* The scheduling gate cannot authorize a CS without the KD physical mutex. */
 static void kd_mutex_claim_origin(struct kd_mutex *lock)
 {
 	BUG_ON(READ_ONCE(lock->physical_owner));
-	kd_origin_mutex_lock((struct mutex *)lock->origin_mutex_addr);
+	kd_origin_mutex_lock(lock);
 	WRITE_ONCE(lock->physical_owner, current);
 	this_cpu_inc(kd_mutex_origin_acquires);
 }
@@ -128,9 +128,9 @@ static void kd_mutex_wait_and_lock(struct kd_mutex *lock)
  * CPU. An executor can later sleep acquiring the real mutex; its reserved
  * stack must survive that sleep. Published delegation waiters never schedule. */
 /* A reserved local predecessor may have enabled preemption while acquiring
- * the original mutex. Publishing another non-scheduling waiter on its CPU
+ * the KD physical mutex. Publishing another non-scheduling waiter on its CPU
  * would prevent that predecessor from ever resuming. Refuse before publication;
- * the new caller can sleep on the original mutex without exposing GS state. */
+ * the new caller can sleep on the KD physical mutex without exposing GS state. */
 static bool kd_mutex_has_local_predecessor(struct kd_mutex *lock)
 {
 	struct kd_mutex_cpu_state *shadow = this_cpu_ptr(&kd_mutex_shadows);

@@ -12,9 +12,14 @@ void kd_mutex_init(struct kd_mutex *lock)
 	lock->tail = 0;
 	atomic_set(&lock->state, 0);
 	lock->physical_owner = NULL;
-	WRITE_ONCE(lock->origin_mutex_addr, 0);
+	atomic_long_set(&lock->owner, 0);
+	osq_lock_init(&lock->osq);
+	raw_spin_lock_init(&lock->wait_lock);
+	INIT_LIST_HEAD(&lock->wait_list);
 	atomic_set(&lock->waiter_count, 0);
 }
+
+EXPORT_SYMBOL_GPL(kd_mutex_init);
 
 static void kd_mutex_free_percpu_stacks(void)
 {
@@ -41,6 +46,10 @@ static void kd_mutex_free_percpu_stacks(void)
 int kd_mutex_init_percpu(void)
 {
 	int i, j;
+	int ret = kd_mutex_local_runtime_init();
+
+	if (ret)
+		return ret;
 
 	/* Per-CPU alignment alone does not isolate the four array elements. */
 	BUILD_BUG_ON(__alignof__(struct kd_mutex_node) < L1_CACHE_BYTES);
@@ -48,9 +57,11 @@ int kd_mutex_init_percpu(void)
 	BUILD_BUG_ON(offsetof(struct kd_mutex_node, completed) != 304);
 	BUILD_BUG_ON(offsetof(struct kd_mutex_node, locked) != 305);
 	BUILD_BUG_ON(offsetof(struct kd_mutex_node, regs) != 2 * L1_CACHE_BYTES);
-	BUILD_BUG_ON(sizeof(struct kd_mutex) != 3 * L1_CACHE_BYTES);
+	BUILD_BUG_ON(sizeof(struct kd_mutex) != 4 * L1_CACHE_BYTES);
+	BUILD_BUG_ON(__alignof__(struct kd_mutex) < 2 * L1_CACHE_BYTES);
+	BUILD_BUG_ON(offsetof(struct kd_mutex, tail) != 2 * L1_CACHE_BYTES);
 	BUILD_BUG_ON(offsetof(struct kd_mutex, physical_owner) != L1_CACHE_BYTES);
-	BUILD_BUG_ON(offsetof(struct kd_mutex, waiter_count) != 2 * L1_CACHE_BYTES);
+	BUILD_BUG_ON(offsetof(struct kd_mutex, waiter_count) != 3 * L1_CACHE_BYTES);
 
 	for_each_possible_cpu(i) {
 		struct kd_mutex_cpu_state *p = per_cpu_ptr(&kd_mutex_shadows, i);
@@ -107,6 +118,7 @@ int kd_mutex_init_percpu(void)
 
 err_free:
 	kd_mutex_free_percpu_stacks();
+	kd_mutex_local_runtime_exit();
 	return -ENOMEM;
 }
 
@@ -177,4 +189,5 @@ void kd_mutex_exit(void)
 				  i, READ_ONCE(p->node_slots));
 	}
 	kd_mutex_free_percpu_stacks();
+	kd_mutex_local_runtime_exit();
 }

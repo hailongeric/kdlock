@@ -1,12 +1,14 @@
 # Development and operations
 
-The current compatibility experiment is `/tmp/kdlock-mutex-legacy-compat`, branch
-`task/legacy-mutex-compat`, based on `74676c3`. Its
-[implementation comparison](design/legacy_mutex_compatibility.md) separates the
-backported instruction/publication changes from the unchanged legacy protocol.
-The exact recovery and baseline benchmark worktrees remain unchanged. The current
-verified snapshot is `before-mutex-legacy-compat-20261017T122742Z`; recheck live state
-and snapshot availability before further module/JIT work.
+The validated current KD-only mutex worktree is `/tmp/kdlock-mutex-kdonly`, branch
+`task/kd-only-mutex`, based on the user-accepted compatibility commit `555b8b7`.
+`accepted/kd-mutex-compat-20261017` retains that baseline; `current/kd-mutex`
+selects the validated current version. The [KD-only contract](design/kd_only_mutex.md)
+preserves its legacy queue and batching while replacing Linux mutex objects and
+calls with KD physical exclusion. The primary, recovered and accepted worktrees
+remain unchanged. The verified snapshot for this round is
+`before-mutex-kdonly-20261017T140354Z`; recheck live state and snapshot availability
+before further module/JIT work.
 
 Follow these rules when developing or running the x86_64 KD spin/mutex/rwlock
 provider. Start with the [project guide](PROJECT_GUIDE.md). Use
@@ -33,18 +35,20 @@ ownership and lifetime terms used below.
    lifetime.
 5. Keep the two-word wrapper input ABI. Userspace/futex, other architectures and
    general oversubscription redesign are outside this phase. Published KD waiters
-   remain pinned and poll; native mutex owners/services may sleep.
+   remain pinned and poll; KD physical owners/services may sleep.
 6. Ordinary KD spin and rwlock pairs protect preemption and preserve IRQ/BH state.
    Spin IRQ/irqsave/BH variants use their explicit native interfaces. Rwlocks
    support ordinary task context only; no rwlock IRQ/BH variants are provided.
 7. Do not modify, build or install the guest kernel by default. The separately
    authorized static/spin-clobber/mutex-clobber experiments keep independent
-   source trees, releases and captured baselines. Current code requires both
-   clobber-v1 interfaces; old kernels are only for matching historical checkouts.
-8. This isolated compatibility experiment backports fail-closed processor-state
-   admission and immutable mutex images at the user's 2026-10-17 request. It retains
-   the recovered legacy lock protocol. Access-time guards, general instruction/flags
-   repair, ordinary-C ABI4 and owned-origin claims are outside this experiment.
+   source trees, releases and captured baselines. Current spin code requires spin-clobber-v1. KD mutex now uses its own
+   object and clobber entry; it no longer requires the kernel mutex-clobber API.
+8. The user's 2026-10-17 instruction selects exclusively KD mutex objects/APIs.
+   Preserve the accepted legacy delegation protocol, instruction admission and
+   immutable images. Do not reintroduce the rejected adaptive/owned protocol or
+   mix Linux mutex operations on a KD object. Ordinary API aliases execute KD
+   physical locking locally; explicit clobber callers enable delegation. Whole
+   kernel integration, RT/ww_mutex and lockdep need separate validation.
 9. Keep kernel payload demos under `workload_modules/`, runners under `bench/`
    or `tests/`, and provider probes under `tests/kernel/`. Private `.inc` files
    belong to their translation unit and must be included in frozen inputs.
@@ -67,7 +71,7 @@ reset. Git rollback does not synchronize the guest or drain loaded modules.
 
 ## Recovered legacy baseline
 
-This branch restores the captured KD mutex implementation associated with the
+The retained recovery branch restores the captured KD mutex implementation associated with the
 2026-10-11 pipebytes n16 result of 5.330 Mops/s at 60 workers. It uses the original
 Linux mutex, shadow MCS queue and pinned polling producers. The user's explicit
 2026-10-16 recovery instruction selects this historical policy; do not add the
@@ -76,8 +80,9 @@ See the [recovery receipt](../bench/results/10.176.26.71/bench/comparison/mutex-
 for source identities, validation and fresh measurements.
 
 The original source is `/tmp/kdlock-mutex-legacy-5m330` on `380G10`, branch
-`recovery/mutex-legacy-5m330`. The compatibility source is the worktree named
-above; use the maintained helper with `--source /tmp/kdlock-mutex-legacy-compat`.
+`recovery/mutex-legacy-5m330`. The accepted compatibility source remains in `/tmp/kdlock-mutex-legacy-compat`.
+For the current KD-only source, use the maintained helper with
+`--source /tmp/kdlock-mutex-kdonly`.
 The primary worktree retains its 35 pre-existing edits and archived adaptive
 experiment. Freeze manifest-listed inputs and keep all builds and tests guest-only.
 

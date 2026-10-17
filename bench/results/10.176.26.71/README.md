@@ -1,5 +1,13 @@
 # Results from 10.176.26.71
 
+The [KD-only mutex round](bench/comparison/mutex-kdonly-20261017T140354Z/README.md) contains 504 fresh accepted/drained sessions
+at 1–8 workers by one and 12–60 by four, three repetitions, with accepted KD,
+Native and TCLock controls. It measures the removal of Linux mutex backing while
+retaining legacy delegation. At 60 workers KD-only reaches
+4.838/5.130 Mops/s for c01/post64 and
+pipebytes n16. Full scaling, low-count variation, separate regression follow-ups,
+intermediate trials and independently replayed evidence remain in the report.
+
 The [legacy compatibility comparison, 2026-10-17](bench/comparison/mutex-legacy-compat-20261017T122742Z/README.md)
 contains 504 accepted/drained sessions for c01/post64 and pipebytes n16, with
 fresh legacy, backported legacy, Native and TCLock at all 21 worker counts.

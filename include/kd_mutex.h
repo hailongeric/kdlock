@@ -10,17 +10,23 @@
  * reaches mutex_unlock. JIT replaces the body handoff, while queue execution
  * still uses physical shadow stacks with their own lifetime constraints.
  *
- * The kd_mutex is a scheduling gate beside the kernel's struct mutex. Every
- * executor also acquires the original mutex; only that task releases it.
+ * Each KD object owns its physical exclusion and legacy delegation state.
+ * Every executor acquires the KD owner word; only that task releases it.
+ * Linux mutex objects and waiters never participate in this protocol.
  */
 
 #define KD_MUTEX_SHADOW_STACK_SIZE 8192L
 #define KD_MUTEX_MAX_NODES 4 /* concurrent waiter slots per CPU */
+#define KD_MUTEX_GATE_COMBINER 3 /* existing gate state while servicing a batch */
 
+#include <linux/atomic.h>
+#include <linux/spinlock.h>
+#include <linux/list.h>
+#include <linux/osq_lock.h>
 #include "kd_regs.h"
 
 struct kd_exec_frame;
-struct mutex;
+struct kd_mutex;
 
 bool kd_mutex_check_idle(void);
 
@@ -28,7 +34,7 @@ bool kd_mutex_check_idle(void);
  * kd_mutex_node — per-waiter queue node.
  *
  * Each CPU owns KD_MUTEX_MAX_NODES independently reserved slots. A slot also
- * owns its shadow stack, so an executor acquiring a sleeping native mutex cannot
+ * owns its shadow stack, so an executor acquiring a sleeping KD mutex cannot
  * have its stack reused by another target task running on the same CPU.
  * A published delegation waiter keeps preemption disabled while polling.
  * The combiner feeds node->regs
@@ -69,27 +75,51 @@ struct kd_mutex_node {
 };
 
 /*
- * Scheduling state beside one original Linux mutex.
+ * KD-only physical exclusion and legacy delegation scheduling, in one object.
  */
 struct kd_mutex {
-	/* Producers exchange the tail on every request. Keep their writes away
-	 * from the physical ownership fields checked by every delegated body. */
-	u32 tail; /* encoded CPU/slot; zero means no queued tail */
+	/* KD-owned physical exclusion for every local and delegated executor. */
+	atomic_long_t owner;
+	struct optimistic_spin_queue osq;
+	raw_spinlock_t wait_lock;
+	struct list_head wait_list;
+	/* Keep physical ownership in the first 128-byte region. The other
+	 * region contains producer-written queue and waiter-count fields, so
+	 * 128-byte alignment keeps adjacent-line pairs within each group. */
 	struct task_struct *physical_owner __attribute__((aligned(64)));
-	unsigned long origin_mutex_addr; /* original struct mutex *, if shadow */
 	union {
 		atomic_t state;
 		struct {
 			u8 locked;
 		};
 	};
+	u32 tail __attribute__((aligned(64))); /* encoded CPU/slot; zero means no queued tail */
 	/* Exact probe count, independent of both queue publication and ownership.
 	 * Its enter/exit RMWs must not invalidate either of those cachelines. */
 	atomic_t waiter_count __attribute__((aligned(64)));
-};
+} __attribute__((aligned(128)));
+
+#define KD_MUTEX_INITIALIZER(name) { \
+ .owner = ATOMIC_LONG_INIT(0), .osq = OSQ_LOCK_UNLOCKED, \
+ .wait_lock = __RAW_SPIN_LOCK_UNLOCKED(name.wait_lock), \
+ .wait_list = LIST_HEAD_INIT(name.wait_list), \
+ .state = ATOMIC_INIT(0), .waiter_count = ATOMIC_INIT(0) }
+#define DEFINE_KD_MUTEX(name) struct kd_mutex name = KD_MUTEX_INITIALIZER(name)
 
 void kd_mutex_init(struct kd_mutex *lock);
+void kd_mutex_destroy(struct kd_mutex *lock);
+void kd_mutex_local_lock(struct kd_mutex *lock);
+void kd_mutex_local_unlock(struct kd_mutex *lock);
+int kd_mutex_lock_interruptible(struct kd_mutex *lock);
+int kd_mutex_lock_killable(struct kd_mutex *lock);
+void kd_mutex_lock_io(struct kd_mutex *lock);
+int kd_atomic_dec_and_mutex_lock(atomic_t *count, struct kd_mutex *lock);
+int kd_mutex_trylock(struct kd_mutex *lock);
+bool kd_mutex_is_locked(struct kd_mutex *lock);
+bool kd_mutex_is_idle(struct kd_mutex *lock);
 int kd_mutex_init_percpu(void);
+int kd_mutex_local_runtime_init(void);
+void kd_mutex_local_runtime_exit(void);
 void kd_mutex_exit(void);
 
 void _kd_mutex_lock_abi(struct kd_mutex *lock, unsigned long rsp_value,
@@ -98,8 +128,8 @@ int _kd_mutex_unlock_checked(struct kd_mutex *lock);
 void _kd_mutex_unlock(struct kd_mutex *lock);
 
 int kd_mutex_debug_nested_waiters(void);
-int kd_mutex_nested_lock(struct mutex *lock);
-int kd_mutex_nested_unlock(struct mutex *lock);
+int kd_mutex_nested_lock(struct kd_mutex *lock);
+int kd_mutex_nested_unlock(struct kd_mutex *lock);
 void kd_mutex_note_nested_jit(void);
 int kd_mutex_waiter_count(struct kd_mutex *lock);
 void kd_mutex_note_nested_abort_release(void);

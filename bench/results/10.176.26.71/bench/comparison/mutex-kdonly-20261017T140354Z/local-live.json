@@ -1,0 +1,18 @@
+{
+  "name": "local-live-probe",
+  "exit_code": 0,
+  "passed": true,
+  "operations": 160000,
+  "objects": 2048,
+  "workers": 8,
+  "signals": [
+    "SIGUSR1",
+    "SIGKILL"
+  ],
+  "drained": true,
+  "no_linux_mutex_imports": true,
+  "modules": {
+    "/root/host_fs/kdlock/kernel_module/kdlock_km.ko": "58a804a829988bb3990050a114f80c82888394c1bc7b53f7979a98a8a2ff8936",
+    "/root/host_fs/kdlock/tests/kernel/mutex/local/kd_mutex_local_probe.ko": "38ba10d7271ed7b162f92c302fc8c793cc2b98ef9899fabb548abba78d62341c"
+  }
+}

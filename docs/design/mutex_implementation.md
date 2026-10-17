@@ -3,7 +3,8 @@
 This branch retains the recovered legacy lock protocol and ABI0/2 interfaces.
 The [compatibility backport](legacy_mutex_compatibility.md) adds fail-closed
 processor-state admission, immutable mutex images and generation-bound frames.
-Those changes do not replace the queue, original Linux owner or pinned producer.
+The [KD-only extension](kd_only_mutex.md) embeds physical exclusion and scheduling
+in each KD object while retaining the queue and pinned producer.
 
 Read [lock protocols](lock_protocols.md) for the algorithm/ownership comparison
 and [KD locking](locking.md#5-mutex-delegation-protocol) for nested owner/ACK
@@ -19,7 +20,7 @@ per mutex request.
 | Native | `(mutex_lock)` / `(mutex_unlock)` | Captured kernel `kernel/locking/mutex.c`, `include/linux/mutex.h` |
 | TCLock | `komb_mutex_lock` / `komb_mutex_unlock` | [komb_mutex.c](../../tclock_backend/komb_mutex.c), [combiner.c](../../tclock_backend/combiner.c), [mutex_provider.c](../../tclock_backend/mutex_provider.c) |
 | KD outer | `KD_MUTEX_OUTER_LOCK/UNLOCK` | [kd_mutex_direct.h](../../include/kd_mutex_direct.h), [mutex_calls.inc](../../kernel_module/lock/mutex_calls.inc) |
-| KD general/nested | `KD_MUTEX_DIRECT_LOCK/UNLOCK` and retained bridge endpoints | Same routing file, [kd_mutex.c](../../kernel_module/kd_mutex.c), [native.inc](../../kernel_module/execution/native.inc) |
+| KD general/nested | `KD_MUTEX_DIRECT_LOCK/UNLOCK` and internal ABI0/2 entries | Same routing file, [kd_mutex.c](../../kernel_module/kd_mutex.c), [native.inc](../../kernel_module/execution/native.inc) |
 
 All three use distinct compiled functions in
 [mutex_cacheline/module.c](../../workload_modules/mutex_cacheline/module.c).
@@ -32,8 +33,9 @@ The existing kernel build is `/root/linux-6.1.159-kdclobber2` in the guest. Its
 release, configuration, source/interface hashes and live Build ID are checked
 by the [kernel identity verifier](../../bench/spin_cacheline/kernel_identity.py)
 against the [captured baseline](../../kernel_baseline/README.md). Native source
-paths above refer to that build, not to a second Linux implementation in this
-repository.
+paths above refer to that build. The KD physical core is a separately namespaced
+port of its ordinary mutex/OSQ algorithms; it owns KD objects and makes no Linux
+mutex API calls.
 
 ## Linux Native implementation
 
@@ -131,26 +133,30 @@ unload frees preallocated contexts/stacks; no forced context release is used.
 
 ### Entry and native routing
 
-The outer pair first reads the original `mutex.owner`, attempting an acquire
-CAS only when the entire owner/flags word is zero. A busy read declines without
-an exclusive cacheline request; a racing owner still defeats the CAS. Success
-increments only the approximate CPU-local entry observation
+The outer pair probes the KD `owner` word at most eight times, attempting an
+acquire CAS only when the entire owner/flags word is zero. Each failed probe
+pauses before the next attempt; a busy read issues no locked RMW, and a racing
+owner still defeats the CAS. The existing active-combiner gate state (3) ends
+retries; a lone gate owner (state 1) may finish during the bounded window.
+The observed state is a hint and never grants ownership or retirement. This window
+has no worker-count threshold. Success increments the CPU-local entry observation
 and stores the exact native result in the lexical cookie. Unlock uses the
-original function, preserving its owner/flag slowpath. Cookie zero routes to
+KD local function, preserving its owner/flag slowpath. Cookie zero routes to
 KD, including native fallbacks after joining KD ownership routing.
 
-`kd_mutex_outer_contended_clobber_v1()` does not retry the declined fastpath.
+After the bounded probes are exhausted,
+`kd_mutex_outer_contended_clobber_v1()` does not repeat that probe window.
 `kd_mutex_contended_acquire()` records that contention once and checks heat,
-source OPEN, target comm, active-task routing and JIT policy before shadow/task
+source OPEN, target comm, active-task routing and JIT policy before task/queue
 work. A native-only result is returned only when this acquisition obtained no
-KD routing reference. The general direct and bridge APIs keep their void
-contract; their unlock uses task membership, native requests and exact shadow
+KD routing reference. The general direct and internal entry APIs keep their void
+contract; their unlock uses task membership, native requests and exact KD
 physical ownership rather than a fresh admission decision.
 
 `kd_mutex_prepare()` registers the named post-lock continuation with
 `KD_ENTRY_ABI_MUTEX_CLOBBER_V1`. Translation/admission/control tables recognize
-direct symbols and kernel bridge aliases. The direct admitted unlock can use
-terminal COMPLETE; bridge aliases use checked generic FULL dispatch. The
+KD direct and local physical symbols. The direct admitted unlock can use
+terminal COMPLETE; complex recovery uses checked generic FULL dispatch. The
 outer returning entry has a separate physical C return and JIT continuation
 which defines route zero, so a nested translated call never consumes an
 unmodelled native result.
@@ -159,19 +165,17 @@ unmodelled native result.
 
 | Object | Current storage/lifetime |
 | --- | --- |
-| Original Linux mutex | Workload's `struct mutex`; authoritative native-peer exclusion and physical ownership |
-| Shadow table | 1024 resident `kd_mutex_shadow_entry` objects in [kd_lock.c](../../kernel_module/kd_lock.c); each 192-byte gate separates tail, physical ownership/state and exact waiter count onto three cachelines |
+| KD mutex object | 256 bytes, aligned to 128 bytes, owned by the caller; physical exclusion, delegation tail, executor/gate and exact waiter count occupy four separate cachelines |
+| Physical waiting | Private per-CPU OSQ nodes and stack-resident sleeping waiters; ordinary Linux mutex APIs never participate |
 | Task routing record | RCU hash with 256 cacheline-aligned buckets in [kd_mutex_tasks.c](../../kernel_module/kd_mutex_tasks.c); cached identities retain an atomic acquisition count and a `task_struct` ref; insertion/eviction use the bucket writer lock |
 | `kd_mutex_node` | Four independently bitmap-reserved slots per possible CPU; 320 bytes each, 64-byte aligned |
 | Waiter stacks | Four 8 KiB stacks per possible CPU, allocated by [lifecycle.inc](../../kernel_module/mutex/lifecycle.inc) with `vzalloc_node(..., cpu_to_node(cpu))` |
 | Execution frames | Shared per-CPU context, up to eight frames; physical owner remains fixed through sleep/ACK; root borrows node packet until FULL detachment |
 | Batch state | Physical combiner's stack; retains current retirement flag, exact successor, bounded NUMA deferred chain, outer-release callback and image-slot identity |
 
-Shadow hits acquire-load the immutable exact address without a lock. The
-current collision policy is `address % 1024` plus linear probing; misses take
-`kd_mutex_shadow_lock`, recheck, initialize and release-publish the address.
-Entries are cacheline-aligned and are not removed/reused while callers are live.
-Exhaustion falls back to the original mutex. The shadow hash policy is unchanged.
+There is no shadow lookup or fixed object-count ceiling. Object identity is the
+KD pointer itself. The [KD-only guide](kd_only_mutex.md) records field offsets,
+ordinary API aliases, initialization, drain and full-rebuild requirements.
 
 `kd_mutex_task_get()` first attempts an RCU lookup and atomic acquisition-reference
 increment. Cache hits require neither allocation nor the bucket writer lock.
@@ -221,7 +225,7 @@ current-node read is allowed after its completion/native publication. Prefetch
 grants no ownership, admission or lifetime.
 
 The private gate also uses a read before its acquire CAS. Together with the
-original-owner guard, this keeps failed producer RMWs from invalidating ownership
+physical-owner guard, this keeps failed producer RMWs from invalidating ownership
 lines held across a batch. Tail exchanges and exact waiter-count updates retain
 their original atomic operations on separate lines; no probe or ownership check
 is removed.
@@ -229,7 +233,7 @@ is removed.
 ### Queue, batch execution and recovery
 
 [queue.inc](../../kernel_module/mutex/queue.inc) encodes `(CPU+1, slot)` into
-the tail, reserves nodes, and acquires the original Linux mutex only after
+the tail, reserves nodes, and acquires KD physical exclusion only after
 the scheduling gate. A same-CPU reserved predecessor on that queue refuses
 before publication so a pinned follower cannot prevent a sleeping head from
 resuming. [clobber.inc](../../kernel_module/mutex/clobber.inc) switches to the
@@ -278,12 +282,12 @@ defines that ownership ordering.
 
 Exact per-CPU active-waiter/reserved-node balances and slot bitmaps are
 checked separately at drain; opposite imbalances on two CPUs cannot cancel.
-The shared original-owner ledger, task refs, nested waiters and ACKs keep
+The shared physical-owner ledger, task refs, nested waiters and ACKs keep
 their own exact state. Pure observations are per-CPU totals read after drain.
-Native mutex release precedes gate release. The batch source lease outlives
+KD physical mutex release precedes gate release. The batch source lease outlives
 all native/ACK/frame processing.
 
-Every returning combiner holds the original mutex and normal gate value 1.
+Every returning combiner holds KD physical exclusion and normal gate value 1.
 Refusal and ordinary completion publish that value before waking a successor;
 early outer release reacquires it before returning. Terminal and outer-progress
 fixtures check this contract independently of the caller's repeated restoration.
@@ -291,7 +295,7 @@ fixtures check this contract independently of the caller's repeated restoration.
 ## Scope and evidence
 
 KD keeps pinned published waiters and bounded NUMA queue grouping. Stack
-allocation, request selection and physical Linux ownership have separate roles.
+allocation, request selection and KD physical ownership have separate roles.
 TCLock supports parking, but this port's fixed-affinity context contract does
 not validate arbitrary oversubscription. Both stack/context protocols require
 independently runnable dependencies and controlled drain.

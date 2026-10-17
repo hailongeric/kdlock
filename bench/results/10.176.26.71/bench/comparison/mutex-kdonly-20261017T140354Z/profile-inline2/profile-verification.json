@@ -1,0 +1,92 @@
+{
+  "accepted": 8,
+  "checks": {
+    "baseline": {
+      "binary": 8,
+      "jit_images": 12,
+      "post_work": {
+        "kdlock": {
+          "dependent_multiply_add_groups": [
+            64,
+            64
+          ],
+          "module": "/mnt/kdlock-builds/evidence/10.176.26.71/bench/mutex-legacy-compat-20261017T122742Z/attempt2/compat/c01-post64/variants/kdlock/mutex_cacheline.ko",
+          "sha256": "6f70b270c688fea47fa5a5959cf9c7a144866a48f68687ab0ad8c11f343ff96a",
+          "verified": true
+        },
+        "native": {
+          "dependent_multiply_add_groups": [
+            64,
+            64
+          ],
+          "module": "/mnt/kdlock-builds/evidence/10.176.26.71/bench/mutex-legacy-compat-20261017T122742Z/attempt2/compat/c01-post64/variants/native/mutex_cacheline.ko",
+          "sha256": "dba2c800857027cb6f2a4afc939ba41d9eb9254f159cc3fb24986d1a6eff724c",
+          "verified": true
+        },
+        "tclock": {
+          "dependent_multiply_add_groups": [
+            64,
+            64
+          ],
+          "module": "/mnt/kdlock-builds/evidence/10.176.26.71/bench/mutex-legacy-compat-20261017T122742Z/attempt2/compat/c01-post64/variants/tclock/mutex_cacheline.ko",
+          "sha256": "3e37faae939f40e92fde50328323db65b1799eb310e7e6c7e7bc489d12f7a853",
+          "verified": true
+        }
+      },
+      "prepared_provider": {
+        "observation": 3,
+        "prepared": 83,
+        "production": 81
+      },
+      "source": 297
+    },
+    "compat": {
+      "binary": 8,
+      "jit_images": 12,
+      "post_work": {
+        "kdlock": {
+          "dependent_multiply_add_groups": [
+            64,
+            64
+          ],
+          "module": "/mnt/kdlock-builds/evidence/10.176.26.71/bench/mutex-kdonly-20261017T140354Z/trial-inline/compat/c01-post64/variants/kdlock/mutex_cacheline.ko",
+          "sha256": "405c9a50fc2ef08f5a0b117222eb35ece8551e7b4bc1c56129ed0c65156b4288",
+          "verified": true
+        },
+        "native": {
+          "dependent_multiply_add_groups": [
+            64,
+            64
+          ],
+          "module": "/mnt/kdlock-builds/evidence/10.176.26.71/bench/mutex-kdonly-20261017T140354Z/trial-inline/compat/c01-post64/variants/native/mutex_cacheline.ko",
+          "sha256": "97bad79acafecbf67ba3966beae90e76cc0778da647d4b3c02ad7766509b3218",
+          "verified": true
+        },
+        "tclock": {
+          "dependent_multiply_add_groups": [
+            64,
+            64
+          ],
+          "module": "/mnt/kdlock-builds/evidence/10.176.26.71/bench/mutex-kdonly-20261017T140354Z/trial-inline/compat/c01-post64/variants/tclock/mutex_cacheline.ko",
+          "sha256": "aaee0df1948ee4cf0ae45934779a3f32d062a892a52b1dec718f86fc9351339d",
+          "verified": true
+        }
+      },
+      "prepared_provider": {
+        "observation": 3,
+        "prepared": 87,
+        "production": 85
+      },
+      "source": 306
+    }
+  },
+  "drained": 8,
+  "excluded_from_scores": true,
+  "perf": {
+    "path": "/root/kdlock-evidence/10.176.26.71/bench/mutex-admission-20261013/tools/perf",
+    "sha256": "be41fc3678db80aa92593a72034ebd6ec4c574c2dca2523f294dff5a0667aca3",
+    "version": "perf version 5.15.209\n"
+  },
+  "sessions": 8,
+  "status": "PASS"
+}

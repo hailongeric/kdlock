@@ -1,0 +1,12 @@
+{
+  "extra_pairs_per_point": 9,
+  "initial_sessions_retained": true,
+  "points": [
+    {
+      "initial_change_pct": -7.0008142043285755,
+      "threads": 44,
+      "workload": "api-pipebytes-query-n16"
+    }
+  ],
+  "rule": "all full-grid points with median KD-only loss greater than 5 percent"
+}

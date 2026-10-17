@@ -12,7 +12,7 @@
 static bool hotlock_lifetime_selftest;
 module_param(hotlock_lifetime_selftest, bool, 0444);
 static struct {
- struct mutex mutex;
+ struct kd_mutex mutex;
  struct completion entered, done;
  int before_cpu, after_cpu;
  bool balanced;
@@ -74,7 +74,7 @@ int kd_hotlock_lifetime_check(void)
  if (atomic_read(&lock.val)) ret = -EUCLEAN;
  pr_info("kd_hotlock role: type=spin address=%lx role=DONE word=%x\n", address, atomic_read(&lock.val));
  if (ret) return ret;
- mutex_init(&kd_hot_test.mutex);
+ kd_mutex_init(&kd_hot_test.mutex);
  init_completion(&kd_hot_test.entered);
  init_completion(&kd_hot_test.done);
  kd_origin_mutex_lock(&kd_hot_test.mutex);

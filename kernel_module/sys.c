@@ -30,7 +30,7 @@ static dev_t kd_devno;
 static struct cdev kd_cdev;
 static struct class *kd_class;
 /* Serializes uploads with rejection, not execution of already published code. */
-static DEFINE_MUTEX(kd_publish_lock);
+static DEFINE_KD_MUTEX(kd_publish_lock);
 
 static int kd_dev_open(struct inode *inode, struct file *file)
 {
@@ -70,7 +70,8 @@ static struct kd_jit_caps kd_jit_capabilities(void)
 {
 	struct kd_jit_caps caps = {
 		.version = KD_JIT_CAPS_VERSION,
-		.features = KD_JIT_CAP_MUTEX_STACK | KD_JIT_CAP_MUTEX_IMAGES,
+		.features = KD_JIT_CAP_MUTEX_STACK | KD_JIT_CAP_MUTEX_IMAGES |
+			KD_JIT_CAP_MUTEX_EXCLUSIVE,
 		.mutex_stack_bytes = KD_JIT_MUTEX_STACK_BYTES,
 	};
 #if defined(CONFIG_X86_64) && defined(CONFIG_SMP)
@@ -123,7 +124,7 @@ static long kd_dev_ioctl(struct file *file, unsigned int command,
 	case KD_SOURCE_RETIRE:
 		if (!capable(CAP_SYS_MODULE))
 			return -EPERM;
-		if (mutex_lock_interruptible(&kd_publish_lock))
+		if (kd_mutex_lock_interruptible(&kd_publish_lock))
 			return -ERESTARTSYS;
 		/* A readonly control FD does not count as its own writer. The caller
 		 * must stop new workloads; idle snapshots are not a hook-reader barrier. */
@@ -139,7 +140,7 @@ static long kd_dev_ioctl(struct file *file, unsigned int command,
 		pr_info("kd_source retire: result=%d state=%u modules=%u frames=%u writers=%u\n",
 			ret, info.state, info.modules, info.frames,
 			info.writers);
-		mutex_unlock(&kd_publish_lock);
+		kd_mutex_local_unlock(&kd_publish_lock);
 		return ret;
 	default:
 		return -ENOTTY;
@@ -310,7 +311,7 @@ static ssize_t kd_dev_write(struct file *file, const char __user *buf,
 	(void)offset;
 	if (!file->private_data)
 		return -EBADF;
-	if (mutex_lock_interruptible(&kd_publish_lock))
+	if (kd_mutex_lock_interruptible(&kd_publish_lock))
 		return -ERESTARTSYS;
 	ret = kd_dev_write_locked(file->private_data, buf, count);
 	if (ret < 0) {
@@ -320,7 +321,7 @@ static ssize_t kd_dev_write(struct file *file, const char __user *buf,
 		upload->image = NULL;
 		upload->covered = 0;
 	}
-	mutex_unlock(&kd_publish_lock);
+	kd_mutex_local_unlock(&kd_publish_lock);
 	return ret;
 }
 

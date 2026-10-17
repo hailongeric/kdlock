@@ -1,0 +1,9 @@
+{
+  "argv": [
+    "/root/kdlock-evidence/clobber-20260918/venv/bin/python3",
+    "tests/unit/run.py",
+    "infrastructure/test_provider_lifecycle.py"
+  ],
+  "exit_code": 1,
+  "expected_failure": true
+}

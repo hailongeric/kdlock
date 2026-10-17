@@ -239,7 +239,7 @@ struct kd_exec_frame *kd_exec_frame_push_mutex_batch(
 
 	/* These are push_internal's checks specialized to depth zero, one held
 	 * lock and an existing batch lease. Failure publishes no frame. */
-	if (!regs || !gsbase || !task || !lock || !lock->origin_mutex_addr ||
+	if (!regs || !gsbase || !task || !lock ||
 	    !hook || ctx->depth || ctx->owner
 #ifdef KDLOCK_SELFTEST
 	    || !kd_exec_context_validate(ctx)
@@ -256,7 +256,7 @@ struct kd_exec_frame *kd_exec_frame_push_mutex_batch(
 	frame->borrowed_regs = regs;
 	frame->regs_ref = NULL;
 	frame->entry_ip = entry_ip;
-	frame->outer_lock_addr = lock->origin_mutex_addr;
+	frame->outer_lock_addr = (unsigned long)lock;
 	frame->gsbase = gsbase;
 	frame->logical_task = task;
 	frame->parent = NULL;
@@ -283,7 +283,7 @@ struct kd_exec_frame *kd_exec_frame_push_mutex_batch(
 	frame->packet_state = KD_PACKET_MINIMAL;
 	frame->held_lock_depth = 1;
 	frame->outer_lock_depth = 1;
-	frame->jit_lock_addr[0] = lock->origin_mutex_addr;
+	frame->jit_lock_addr[0] = (unsigned long)lock;
 	frame->jit_lock_kind[0] = KD_EXEC_LOCK_QUEUE_OWNER;
 	frame->jit_lock_node[0] = lock;
 	frame->jit_lock_released[0] = false;
@@ -353,8 +353,8 @@ int kd_exec_frame_retire_mutex_batch(struct kd_exec_frame *frame,
 	    frame->outer_unlock_seen || frame->held_lock_depth != 1 ||
 	    frame->outer_lock_depth != 1 || frame->jit_lock_depth != 1 ||
 	    frame->outer_lock_index != 0 || frame->jit_lock_released[0] ||
-	    frame->outer_lock_addr != lock->origin_mutex_addr ||
-	    frame->jit_lock_addr[0] != lock->origin_mutex_addr ||
+	    frame->outer_lock_addr != (unsigned long)lock ||
+	    frame->jit_lock_addr[0] != (unsigned long)lock ||
 	    frame->jit_lock_kind[0] != KD_EXEC_LOCK_QUEUE_OWNER ||
 	    frame->jit_lock_node[0] != lock ||
 	    /* A pristine root has never entered a service or published routing.
@@ -366,7 +366,7 @@ int kd_exec_frame_retire_mutex_batch(struct kd_exec_frame *frame,
 	      !list_empty(&frame->native_link))) ||
 	    !frame->outer_unlock_hook || frame->outer_unlock_hook->released ||
 	    READ_ONCE(lock->physical_owner) != current ||
-	    !kd_origin_mutex_owned((struct mutex *)lock->origin_mutex_addr, current))
+	    !kd_origin_mutex_owned(lock, current))
 		return -EINVAL;
 	frame->jit_lock_released[0] = true;
 	frame->outer_unlock_seen = true;

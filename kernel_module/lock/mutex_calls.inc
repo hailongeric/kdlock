@@ -9,10 +9,10 @@
  * Mutex hooks
  * ========================================================================== */
 
-/* A nonzero result is proof that THIS acquisition used only the original
- * Linux mutex. Other task records do not grant or revoke this ownership. Any
+/* A nonzero result is proof that THIS acquisition used only local KD
+ * physical exclusion. Other task records do not grant or revoke this ownership. Any
  * entry into the KD queue keeps zero, including its local native fallbacks. */
-static unsigned long kd_mutex_contended_acquire(struct mutex *lock, unsigned long ret_rsp,
+static unsigned long kd_mutex_contended_acquire(struct kd_mutex *lock, unsigned long ret_rsp,
 		unsigned long ret_addr, unsigned long bp, enum kd_entry_abi abi)
 {
 	struct kd_mutex *kd_mtx;
@@ -23,13 +23,13 @@ static unsigned long kd_mutex_contended_acquire(struct mutex *lock, unsigned lon
 	admitted = kd_hotlock_record_mutex((unsigned long)lock);
 	preempt_enable();
 	/* Only failed acquisitions supply contention observations. Frequency
-	 * checks still precede process selection and any task/shadow work. */
+	 * checks still precede process selection and any task/queue work. */
 	if (!admitted) {
 		kd_origin_mutex_lock(lock);
 		return (unsigned long)current;
 	}
 	/* Nested native calls and borrowed continuations must not join another
-	 * delegation queue. Their original mutexes still provide mutual exclusion. */
+	 * delegation queue. Their KD physical primitives still provide mutual exclusion. */
 	if (!kd_source_is_open() ||
 	    !kd_comm_matches(&kd_spin_target, current->comm) ||
 	    kd_mutex_task_active(current)) {
@@ -37,20 +37,10 @@ static unsigned long kd_mutex_contended_acquire(struct mutex *lock, unsigned lon
 		return (unsigned long)current;
 	}
 
-	kd_mtx = get_kd_mutex_shadow(lock);
-	if (!kd_mtx || !kd_mutex_task_get(current)) {
-		/* Distinguish shadow exhaustion from task allocation refusal and
-		 * node shortage. Neither branch acquired a routing reference. */
-		if (kd_mtx)
-			KD_PR_INFO(
-				"mutex task fallback: task=%d entry=%lx lock=%px cpu=%u\n",
-				current->pid, ret_addr, lock,
-				raw_smp_processor_id());
-		else
-			KD_PR_INFO(
-				"mutex shadow fallback: task=%d entry=%lx lock=%px cpu=%u\n",
-				current->pid, ret_addr, lock,
-				raw_smp_processor_id());
+	kd_mtx = lock;
+	if (!kd_mutex_task_get(current)) {
+		KD_PR_INFO("mutex task fallback: task=%d entry=%lx lock=%px cpu=%u\n",
+			current->pid, ret_addr, lock, raw_smp_processor_id());
 		kd_origin_mutex_lock(lock);
 		return (unsigned long)current;
 	}
@@ -60,21 +50,21 @@ static unsigned long kd_mutex_contended_acquire(struct mutex *lock, unsigned lon
 }
 
 /* Preserve the void protocol for existing direct and kernel bridge callers. */
-static void kd_mutex_contended_entry(struct mutex *lock, unsigned long ret_rsp,
+static void kd_mutex_contended_entry(struct kd_mutex *lock, unsigned long ret_rsp,
 		unsigned long ret_addr, unsigned long bp, enum kd_entry_abi abi)
 {
 	(void)kd_mutex_contended_acquire(lock, ret_rsp, ret_addr, bp, abi);
 }
 
-static void kd_mutex_lock_entry(struct mutex *lock, unsigned long ret_rsp,
+static void kd_mutex_lock_entry(struct kd_mutex *lock, unsigned long ret_rsp,
 		unsigned long ret_addr, unsigned long bp, enum kd_entry_abi abi)
 {
 	/* The legacy kernel hook already saved the caller on its native stack.
 	 * execute_cs reads that authoritative frame. The clobber bridge supplies
 	 * IP/SP/BP explicitly; neither ABI needs a second hook snapshot. */
 
-	/* Native ownership is authoritative even after a shadow has been created.
-	 * A free original mutex needs no admission, task record or translation.
+	/* Physical ownership is authoritative whether or not delegation is active.
+	 * A free KD owner word needs no admission, task record or translation.
 	 * Count a successful CAS with one CPU-local instruction, without a pin.
 	 * Failed entry/contention observations share a short pin, released before
 	 * any native slowpath is allowed to sleep. Neither count grants ownership. */
@@ -86,21 +76,21 @@ static void kd_mutex_lock_entry(struct mutex *lock, unsigned long ret_rsp,
 	kd_mutex_contended_entry(lock, ret_rsp, ret_addr, bp, abi);
 }
 
-void __kd_mutex_lock(struct mutex *lock, unsigned long ret_rsp,
+void __kd_mutex_lock(struct kd_mutex *lock, unsigned long ret_rsp,
 		     unsigned long ret_addr)
 {
 	kd_mutex_lock_entry(lock, ret_rsp, ret_addr, 0, KD_ENTRY_ABI_LEGACY);
 }
 
-void __kd_mutex_lock_clobber_v1(struct mutex *lock, unsigned long sp,
+void __kd_mutex_lock_clobber_v1(struct kd_mutex *lock, unsigned long sp,
 			       unsigned long ip, unsigned long bp)
 {
 	kd_mutex_lock_entry(lock, sp, ip, bp, KD_ENTRY_ABI_MUTEX_CLOBBER_V1);
 }
 
 /* A borrowed unlock is a request, not permission to unlock another task's
- * Linux mutex. Queue owners also have bookkeeping beyond the native unlock. */
-void __kd_mutex_unlock(struct mutex *lock, unsigned long ret_rsp,
+ * KD physical mutex. Queue owners also have bookkeeping beyond the native unlock. */
+void __kd_mutex_unlock(struct kd_mutex *lock, unsigned long ret_rsp,
 		       unsigned long ret_addr)
 {
 	struct kd_mutex *kd_mtx;
@@ -114,8 +104,8 @@ void __kd_mutex_unlock(struct mutex *lock, unsigned long ret_rsp,
 	}
 	if (kd_exec_native_unlock((unsigned long)lock, true))
 		return;
-	kd_mtx = find_kd_mutex_shadow(lock);
-	if (kd_mtx && READ_ONCE(kd_mtx->physical_owner) == current) {
+	kd_mtx = lock;
+	if (READ_ONCE(kd_mtx->physical_owner) == current) {
 		_kd_mutex_unlock(kd_mtx);
 		kd_mutex_task_put(current);
 		return;
@@ -123,7 +113,7 @@ void __kd_mutex_unlock(struct mutex *lock, unsigned long ret_rsp,
 	kd_origin_mutex_unlock(lock, ret_addr);
 }
 
-void __kd_mutex_unlock_clobber_v1(struct mutex *lock, unsigned long sp,
+void __kd_mutex_unlock_clobber_v1(struct kd_mutex *lock, unsigned long sp,
 				 unsigned long ip, unsigned long bp)
 {
 	(void)bp;
@@ -133,7 +123,7 @@ void __kd_mutex_unlock_clobber_v1(struct mutex *lock, unsigned long sp,
 /* Explicit module callers work with global interception disabled. Keep the
  * captured kernel bridge aliases above for existing generic FULL exits. */
 __attribute__((noipa)) noinline notrace void
-kd_mutex_direct_lock_clobber_v1(struct mutex *lock, unsigned long sp,
+kd_mutex_direct_lock_clobber_v1(struct kd_mutex *lock, unsigned long sp,
 			      unsigned long ip, unsigned long bp)
 {
 	kd_mutex_lock_entry(lock, sp, ip, bp, KD_ENTRY_ABI_MUTEX_CLOBBER_V1);
@@ -144,7 +134,7 @@ EXPORT_SYMBOL_GPL(kd_mutex_direct_lock_clobber_v1);
  * sleep context. Count precisely that failure once; retrying here changes which
  * acquisition attempts feed the existing contention sampler. */
 __attribute__((noipa)) noinline notrace void
-kd_mutex_direct_contended_clobber_v1(struct mutex *lock, unsigned long sp,
+kd_mutex_direct_contended_clobber_v1(struct kd_mutex *lock, unsigned long sp,
 				   unsigned long ip, unsigned long bp)
 {
 	kd_mutex_contended_entry(lock, sp, ip, bp, KD_ENTRY_ABI_MUTEX_CLOBBER_V1);
@@ -155,7 +145,7 @@ EXPORT_SYMBOL_GPL(kd_mutex_direct_contended_clobber_v1);
  * supplied IP is a different continuation which itself defines route zero.
  * A translated nested CALL must not model this as the old void interface. */
 __attribute__((noipa)) noinline notrace unsigned long
-kd_mutex_outer_contended_clobber_v1(struct mutex *lock, unsigned long sp,
+kd_mutex_outer_contended_clobber_v1(struct kd_mutex *lock, unsigned long sp,
 				  unsigned long ip, unsigned long bp)
 {
 	return kd_mutex_contended_acquire(lock, sp, ip, bp,
@@ -164,14 +154,14 @@ kd_mutex_outer_contended_clobber_v1(struct mutex *lock, unsigned long sp,
 EXPORT_SYMBOL_GPL(kd_mutex_outer_contended_clobber_v1);
 
 __attribute__((noipa)) noinline notrace void
-kd_mutex_direct_unlock_clobber_v1(struct mutex *lock, unsigned long sp,
+kd_mutex_direct_unlock_clobber_v1(struct kd_mutex *lock, unsigned long sp,
 				unsigned long ip, unsigned long bp)
 {
 	__kd_mutex_unlock(lock, sp, ip);
 }
 EXPORT_SYMBOL_GPL(kd_mutex_direct_unlock_clobber_v1);
 
-int kd_mutex_prepare(struct mutex *lock, unsigned long ip, unsigned int abi)
+int kd_mutex_prepare(struct kd_mutex *lock, unsigned long ip, unsigned int abi)
 {
 	struct kd_exe_info *exe;
 
@@ -214,7 +204,7 @@ static int kd_jit_advance_call(struct kd_exec_frame *frame,
 	return 0;
 }
 
-int kd_mutex_jit_nested_lock_ctx(struct mutex *lock, struct kd_regs *regs,
+int kd_mutex_jit_nested_lock_ctx(struct kd_mutex *lock, struct kd_regs *regs,
 				 struct kd_exec_frame *frame)
 {
 	int ret;
@@ -256,7 +246,7 @@ int kd_mutex_jit_nested_lock_ctx(struct mutex *lock, struct kd_regs *regs,
 	return ret ? ret : 1;
 }
 
-int kd_mutex_jit_nested_unlock_ctx(struct mutex *lock,
+int kd_mutex_jit_nested_unlock_ctx(struct kd_mutex *lock,
 				   struct kd_exec_frame *frame)
 {
 	int ret;
@@ -283,7 +273,7 @@ int kd_mutex_jit_abort_cleanup(struct kd_exec_frame *frame)
 
 	while (frame->jit_lock_depth > frame->outer_lock_index + 1) {
 		unsigned int i = frame->jit_lock_depth - 1;
-		struct mutex *lock = (struct mutex *)frame->jit_lock_addr[i];
+		struct kd_mutex *lock = (struct kd_mutex *)frame->jit_lock_addr[i];
 		int ret;
 
 		if (frame->jit_lock_kind[i] != KD_EXEC_LOCK_NATIVE ||
@@ -302,13 +292,13 @@ int kd_mutex_jit_abort_cleanup(struct kd_exec_frame *frame)
 	return 0;
 }
 
-int kd_mutex_debug_waiter_count(struct mutex *lock)
+int kd_mutex_debug_waiter_count(struct kd_mutex *lock)
 {
 	struct kd_mutex *kd_mtx;
 
 	if (!lock)
 		return -EINVAL;
-	kd_mtx = find_kd_mutex_shadow(lock);
+	kd_mtx = lock;
 	return kd_mtx ? kd_mutex_waiter_count(kd_mtx) : -ENOENT;
 }
 EXPORT_SYMBOL_GPL(kd_mutex_debug_waiter_count);

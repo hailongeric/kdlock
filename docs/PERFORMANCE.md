@@ -1,5 +1,26 @@
 # Performance status
 
+The [KD-only mutex comparison](../bench/results/10.176.26.71/bench/comparison/mutex-kdonly-20261017T140354Z/README.md)
+validates the selected `current/kd-mutex` version against accepted `555b8b7`,
+Linux Native and TCLock: 504 accepted/drained sessions across c01/post64 and
+pipebytes n16, all 21 requested worker counts, three repetitions. At 60 workers,
+KD-only reaches **4.838 Mops/s** for c01 versus **4.856** (-0.39%), and
+**5.130 Mops/s** for pipebytes versus **5.371** (-4.48%).
+Forty-one of 42 main-grid medians are within 5% of accepted KD or faster.
+Pipebytes at 44 workers lost 7.00% in the main grid; nine fresh pairs measured
++0.35% by ratio of medians and -2.50% by median paired ratio. Both comparisons
+remain separate. The report retains every scaling point, all intermediate
+candidates, PMU diagnostics and the regression follow-up.
+
+The initial two-worker c01 regression prompted bounded entry probes. The final
+layout groups ownership separately from producer writes in aligned 128-byte
+regions; the object remains 256 bytes. Entry probing allows at most eight attempts
+and joins promptly when the existing gate state indicates an active combiner.
+Device publication now follows private runtime initialization. There is no
+worker-count switch. KD owns physical exclusion and uses no Linux mutex fallback;
+[the integration boundary](design/kd_only_mutex.md) remains controlled objects,
+not a globally rebuilt kernel.
+
 The [2026-10-17 compatibility backport comparison](../bench/results/10.176.26.71/bench/comparison/mutex-legacy-compat-20261017T122742Z/README.md)
 contains 504 accepted/drained sessions: fresh legacy and backported legacy,
 Native and TCLock, c01/post64 and pipebytes n16, all 21 worker counts through 60,
@@ -21,7 +42,9 @@ and below Native best peak at every multithreaded count. See the report for
 all three repetitions, low-count variability and JIT/NO_JIT classifications.
 This result does not include the rejected owned/adaptive implementation.
 
-This branch backports independent admission/publication changes onto that baseline.
+The accepted `555b8b7` branch backports independent admission/publication changes
+onto that baseline. The current KD-only branch additionally replaces Linux mutex
+objects and calls while retaining the accepted delegation protocol.
 The [implementation comparison](design/legacy_mutex_compatibility.md) describes
 what changed and what remains specific to the owned protocol. Historical results
 below retain their original dates and scope.

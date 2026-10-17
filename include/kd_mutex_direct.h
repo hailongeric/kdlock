@@ -3,19 +3,19 @@
 #define KD_MUTEX_DIRECT_H
 
 #include <asm/asm.h>
-#include <linux/mutex.h>
+#include "kd_mutex.h"
 #include <linux/sched.h>
 #include "kd_hotlock.h"
 #include "exe_info.h"
 
-int kd_mutex_prepare(struct mutex *, unsigned long, unsigned int);
-void kd_mutex_direct_lock_clobber_v1(struct mutex *, unsigned long,
+int kd_mutex_prepare(struct kd_mutex *, unsigned long, unsigned int);
+void kd_mutex_direct_lock_clobber_v1(struct kd_mutex *, unsigned long,
 									 unsigned long, unsigned long);
-void kd_mutex_direct_contended_clobber_v1(struct mutex *, unsigned long,
+void kd_mutex_direct_contended_clobber_v1(struct kd_mutex *, unsigned long,
 										  unsigned long, unsigned long);
-unsigned long kd_mutex_outer_contended_clobber_v1(struct mutex *, unsigned long,
+unsigned long kd_mutex_outer_contended_clobber_v1(struct kd_mutex *, unsigned long,
 												  unsigned long, unsigned long);
-void kd_mutex_direct_unlock_clobber_v1(struct mutex *, unsigned long,
+void kd_mutex_direct_unlock_clobber_v1(struct kd_mutex *, unsigned long,
 									   unsigned long, unsigned long);
 
 /* ABI2: compiler-owned spills and the existing lock/SP/IP/BP arguments.
@@ -24,7 +24,7 @@ void kd_mutex_direct_unlock_clobber_v1(struct mutex *, unsigned long,
 #define KD_MUTEX_DIRECT_CALL(symbol, lock, continuation)            \
 	do                                                              \
 	{                                                               \
-		struct mutex *kd_arg = (lock);                              \
+		struct kd_mutex *kd_arg = (lock);                              \
 		unsigned long kd_sp, kd_ip, kd_bp;                          \
 		asm volatile("movq %%rsp, %%rsi\n\t"                        \
 					 "leaq 1f(%%rip), %%rdx\n\t"                    \
@@ -54,22 +54,35 @@ struct kd_mutex_outer_cookie
 };
 
 static __always_inline bool
-kd_mutex_outer_trylock(struct mutex *lock, unsigned long owner)
+kd_mutex_outer_trylock(struct kd_mutex *lock, unsigned long owner)
 {
-	unsigned long zero = 0;
-
-	/* A combiner keeps the original mutex across many bodies. Failed locked
+	/* A combiner keeps KD physical exclusion across many bodies. Failed locked
 	 * RMWs from every producer would repeatedly invalidate its owner line.
 	 * The read only declines a busy mutex; the zero-owner CAS still decides
-	 * acquisition and preserves Linux's WAITERS/HANDOFF/PICKUP semantics. */
-	return !atomic_long_read(&lock->owner) &&
-	       atomic_long_try_cmpxchg_acquire(&lock->owner, &zero, owner);
+	 * acquisition and preserves the KD WAITERS/HANDOFF/PICKUP flags.
+	 * Bound the probes so brief clashes can resolve before queue admission.
+	 * An active combiner receives new work immediately. A lone gate owner
+	 * may finish its local body during the short retry window. The observed
+	 * gate state is only a hint, never permission to acquire or retire.
+	 * Busy owners receive reads rather than repeated locked RMWs. Exhaustion
+	 * enters the unchanged legacy admission and pinned-waiter protocol. */
+	for (unsigned int probe = 0; probe < 8; probe++) {
+		unsigned long zero = 0;
+
+		if (!atomic_long_read(&lock->owner) &&
+		    atomic_long_try_cmpxchg_acquire(&lock->owner, &zero, owner))
+			return true;
+		if (READ_ONCE(lock->locked) == KD_MUTEX_GATE_COMBINER)
+			return false;
+		cpu_relax();
+	}
+	return false;
 }
 
 #define KD_MUTEX_OUTER_LOCK(lock, cookie, continuation)                       \
 	do                                                                        \
 	{                                                                         \
-		struct mutex *kd_outer_lock = (lock);                                 \
+		struct kd_mutex *kd_outer_lock = (lock);                                 \
 		unsigned long kd_native_owner = (unsigned long)current;               \
 		might_sleep();                                                        \
 		if (kd_mutex_outer_trylock(kd_outer_lock, kd_native_owner))           \
@@ -100,16 +113,16 @@ kd_mutex_outer_trylock(struct mutex *lock, unsigned long owner)
 
 /* Both branches end at known mutex control CALLs. An inline native release
  * CAS could succeed without a CALL and pull the caller's canary/epilogue into
- * the conservative translated CFG. The original function supplies its exact
+ * the conservative translated CFG. The KD local function supplies its exact
  * owner/flags slowpath while bypassing the KD task-routing lookup. */
 #define KD_MUTEX_OUTER_UNLOCK(lock, cookie)                            \
 	do                                                                 \
 	{                                                                  \
-		struct mutex *kd_outer_lock = (lock);                          \
+		struct kd_mutex *kd_outer_lock = (lock);                          \
 		unsigned long kd_native_owner = READ_ONCE((cookie).owner);     \
 		if (kd_native_owner)                                           \
 		{                                                              \
-			(mutex_unlock)(kd_outer_lock);                             \
+			kd_mutex_local_unlock(kd_outer_lock);                             \
 			/* Retain a CALL boundary even when last in the caller. */ \
 			asm volatile("" : : : "memory");                           \
 		}                                                              \

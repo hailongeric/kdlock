@@ -1,14 +1,13 @@
 # kdlock
 
-This branch, `task/legacy-mutex-compat`, carries reviewed compatibility and
-functional changes onto the recovered legacy mutex. It retains the original Linux
-mutex ownership, shadow queue, polling and ABI2 caller. The
-[implementation comparison](docs/design/legacy_mutex_compatibility.md) identifies
-the instruction-admission and immutable-image backports, adaptations and limits.
-The [paired 504-session report](bench/results/10.176.26.71/bench/comparison/mutex-legacy-compat-20261017T122742Z/README.md)
-compares both legacy versions with Native and TCLock across the requested grid.
+The current KD mutex uses a KD-owned object with the accepted legacy delegation
+queue, batching, pinned waiters and ABI2 caller. Commit `555b8b7` is the accepted
+baseline; the [KD-only design](docs/design/kd_only_mutex.md) describes the change,
+API contract and scoped kernel integration. The
+[paired benchmark report](bench/results/10.176.26.71/bench/comparison/mutex-kdonly-20261017T140354Z/README.md)
+compares both versions with Native and TCLock on c01/post64 and pipebytes n16.
 
-The unchanged baseline is `74676c3` on `bench/legacy-mutex-c01-pipebytes`; its
+The earlier recovered baseline is `74676c3` on `bench/legacy-mutex-c01-pipebytes`; its
 [378-session comparison](bench/results/10.176.26.71/bench/comparison/mutex-legacy-grid-20261016T125529Z/README.md)
 records the common c01 post64 workload and pipebytes n16 results. The original
 [5.330 Mops/s recovery](bench/results/10.176.26.71/bench/comparison/mutex-legacy-recovery-20261016T113518Z/README.md)
@@ -22,8 +21,7 @@ the critical-section machine code; the combiner runs the generated JIT code.
 KD provides three kinds of lock:
 
 - **Spinlock:** uses KD's own four-byte lock object.
-- **Mutex:** keeps the original Linux mutex, including its real owner, and adds
-  a queue for delegated work.
+- **Mutex:** owns its physical exclusion and retains the legacy queue for delegated work.
 - **Read-write lock:** lets readers run concurrently on their own CPUs. Writers
   can run locally or delegate through the spin JIT engine.
 

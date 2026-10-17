@@ -105,8 +105,11 @@ measured operation. A failed/undrained session has no accepted score.
 ## Mutex and reader/writer contracts
 
 The [mutex module](../../workload_modules/real_api/mutex.c) keeps the real pipe
-mutex or `f_pos_lock` for Native and KD; TCLock uses its separate ordinary-mutex
-object. The client creates an unlinked FIFO, fills whole pages before binding,
+mutex or `f_pos_lock` only for Native. KD uses a private `struct kd_mutex` and
+TCLock its private ordinary-mutex object; neither can share exclusion with an
+unconverted Linux caller. This is a controlled adapter for the exclusively KD
+assumption, not global replacement in the running kernel. The client creates an
+unlinked FIFO, fills whole pages before binding,
 and opens an independent description per worker. No pipe reads, writes or resizes
 occur while bound. The seek case retains a shared description, restricts calls
 to `SEEK_SET`/`SEEK_END`, and changes the real position on every worker's sequence.

@@ -1,4 +1,4 @@
-"""Guest-only production mutex tail, node, shadow-table and entry routing tests.
+"""Guest-only production mutex tail, node, embedded-object and entry routing tests.
 
 Keep the real capacities, guest kd_regs and decisions. Kernel scheduling,
 physical mutexes, task records, the assembly slowpath and resume trampolines
@@ -64,24 +64,17 @@ def production():
     ):
         code += f"__attribute__((noipa)) {result}\n" + definition(mutex, marker)
     code += "#undef kd_mutex_shadows\n"
-    code += hook[
-        hook.index("#define KD_MUTEX_SHADOW_TABLE_SIZE ") : hook.index(
-            "/* --- externs from patched kernel"
-        )
-    ]
     for marker in (
-        "static struct kd_mutex *get_kd_mutex_shadow(struct mutex *lock)",
-        "static struct kd_mutex *find_kd_mutex_shadow(struct mutex *lock)",
-        "static unsigned long kd_mutex_contended_acquire(struct mutex *lock, unsigned long ret_rsp,",
-        "static void kd_mutex_contended_entry(struct mutex *lock, unsigned long ret_rsp,",
-        "static void kd_mutex_lock_entry(struct mutex *lock, unsigned long ret_rsp,",
-        "void __kd_mutex_lock(struct mutex *lock, unsigned long ret_rsp,",
-        "void __kd_mutex_lock_clobber_v1(struct mutex *lock, unsigned long sp,",
-        "void __kd_mutex_unlock(struct mutex *lock, unsigned long ret_rsp,",
+        "static unsigned long kd_mutex_contended_acquire(struct kd_mutex *lock, unsigned long ret_rsp,",
+        "static void kd_mutex_contended_entry(struct kd_mutex *lock, unsigned long ret_rsp,",
+        "static void kd_mutex_lock_entry(struct kd_mutex *lock, unsigned long ret_rsp,",
+        "void __kd_mutex_lock(struct kd_mutex *lock, unsigned long ret_rsp,",
+        "void __kd_mutex_lock_clobber_v1(struct kd_mutex *lock, unsigned long sp,",
+        "void __kd_mutex_unlock(struct kd_mutex *lock, unsigned long ret_rsp,",
     ):
         code += definition(hook, marker)
-    code += "void " + definition(hook, "kd_mutex_direct_contended_clobber_v1(struct mutex *lock, unsigned long sp,")
-    code += "unsigned long " + definition(hook, "kd_mutex_outer_contended_clobber_v1(struct mutex *lock, unsigned long sp,")
+    code += "void " + definition(hook, "kd_mutex_direct_contended_clobber_v1(struct kd_mutex *lock, unsigned long sp,")
+    code += "unsigned long " + definition(hook, "kd_mutex_outer_contended_clobber_v1(struct kd_mutex *lock, unsigned long sp,")
     return code
 
 
@@ -105,10 +98,6 @@ def main():
         "outer-queued-result-native": (
             "_kd_mutex_lock_abi(kd_mtx, ret_rsp, ret_addr, bp, abi);\n\treturn 0;",
             "_kd_mutex_lock_abi(kd_mtx, ret_rsp, ret_addr, bp, abi);\n\treturn (unsigned long)current;",
-        ),
-        "shadow-insert-skips-locked-recheck": (
-            "if (kd_mutex_shadows[pos].kd_mtx.origin_mutex_addr == mutex_addr) {",
-            "if (false && kd_mutex_shadows[pos].kd_mtx.origin_mutex_addr == mutex_addr) {",
         ),
         "native-success-still-samples": (
             "if (kd_mutex_trylock_fast(lock)) {",
@@ -174,13 +163,9 @@ def main():
                 "jump_to_saved_regs_in_cs(&resume_regs); }"
             ),
         ),
-        "unlock-allocates-shadow": (
-            "kd_mtx = find_kd_mutex_shadow(lock);",
-            "kd_mtx = get_kd_mutex_shadow(lock);",
-        ),
         "hook-ignores-task-failure": (
-            "if (!kd_mtx || !kd_mutex_task_get(current)) {",
-            "if (!kd_mtx || (kd_mutex_task_get(current) && false)) {",
+            "if (!kd_mutex_task_get(current)) {",
+            "if (kd_mutex_task_get(current) && false) {",
         ),
         "unlock-drops-retained-task": (
             "kd_mutex_task_reroute(current)",

@@ -1,0 +1,1770 @@
+{
+  "guest-before.json": {
+    "boot_id": "b65f0205-c8f9-4385-8b13-039cbce243a6",
+    "cmdline": "BOOT_IMAGE=/boot/vmlinuz-6.1.159-kdclobber2 root=UUID=aa0bde06-47f6-4049-aaaf-13d052e53961 ro nokaslr nopvspin console=tty1 console=ttyS0\n",
+    "free_bytes": 7224459264,
+    "idle": true,
+    "online": "0-63",
+    "preemption": "none (voluntary) full \n",
+    "utc": "2026-10-17T19:42:58.268962+00:00"
+  },
+  "guest-after.json": {
+    "utc": "2026-10-17T20:21:25.880696+00:00",
+    "boot_id": "b65f0205-c8f9-4385-8b13-039cbce243a6",
+    "online": "0-63",
+    "cmdline": "BOOT_IMAGE=/boot/vmlinuz-6.1.159-kdclobber2 root=UUID=aa0bde06-47f6-4049-aaaf-13d052e53961 ro nokaslr nopvspin console=tty1 console=ttyS0\n",
+    "preemption": "none (voluntary) full \n",
+    "idle": true,
+    "free_bytes": 6924431360,
+    "kernel_identity_unchanged": true,
+    "no_new_kernel_fault": true,
+    "measured_sources_unchanged": true
+  },
+  "host-before": {
+    "passed": true,
+    "utc": "2026-10-17T14:08:48.715987+00:00",
+    "pid": 257489,
+    "argv": [
+      "qemu-system-x86_64",
+      "-name",
+      "ubuntu-build,debug-threads=on",
+      "-enable-kvm",
+      "-cpu",
+      "host",
+      "-smp",
+      "64,maxcpus=64,sockets=2,cores=32,threads=1",
+      "-m",
+      "24G",
+      "-object",
+      "memory-backend-ram,id=mem0,size=12G,host-nodes=0,policy=bind",
+      "-object",
+      "memory-backend-ram,id=mem1,size=12G,host-nodes=1,policy=bind",
+      "-numa",
+      "node,nodeid=0,cpus=0-31,memdev=mem0",
+      "-numa",
+      "node,nodeid=1,cpus=32-63,memdev=mem1",
+      "-device",
+      "virtio-scsi-pci,id=scsi0",
+      "-drive",
+      "file=/home/eric/vm/qemu-disks/ubuntu22.04.img,format=qcow2,if=none,id=drive_system",
+      "-device",
+      "scsi-hd,drive=drive_system,bus=scsi0.0,bootindex=0",
+      "-drive",
+      "file=/home/eric/vm/qemu-disks/sda.qcow2,format=qcow2,if=none,id=drive_data1",
+      "-device",
+      "scsi-hd,drive=drive_data1,bus=scsi0.0",
+      "-netdev",
+      "user,id=n1,hostfwd=tcp:0.0.0.0:2222-:22,hostfwd=tcp:0.0.0.0:9090-:9090,hostfwd=tcp:0.0.0.0:9091-:9091",
+      "-device",
+      "virtio-net-pci,netdev=n1",
+      "-display",
+      "none",
+      "-serial",
+      "file:/tmp/qemu-serial.log",
+      "-monitor",
+      "unix:/tmp/qemu-monitor.sock,server=on,wait=off",
+      "-gdb",
+      "tcp:127.0.0.1:1234",
+      "-pidfile",
+      "/tmp/kdlock-qemu.pid",
+      "-daemonize"
+    ],
+    "vcpus": {
+      "0": {
+        "tid": 257495,
+        "affinity": [
+          0
+        ]
+      },
+      "1": {
+        "tid": 257496,
+        "affinity": [
+          1
+        ]
+      },
+      "2": {
+        "tid": 257497,
+        "affinity": [
+          2
+        ]
+      },
+      "3": {
+        "tid": 257498,
+        "affinity": [
+          3
+        ]
+      },
+      "4": {
+        "tid": 257499,
+        "affinity": [
+          4
+        ]
+      },
+      "5": {
+        "tid": 257500,
+        "affinity": [
+          5
+        ]
+      },
+      "6": {
+        "tid": 257501,
+        "affinity": [
+          6
+        ]
+      },
+      "7": {
+        "tid": 257502,
+        "affinity": [
+          7
+        ]
+      },
+      "8": {
+        "tid": 257503,
+        "affinity": [
+          8
+        ]
+      },
+      "9": {
+        "tid": 257504,
+        "affinity": [
+          9
+        ]
+      },
+      "10": {
+        "tid": 257505,
+        "affinity": [
+          10
+        ]
+      },
+      "11": {
+        "tid": 257506,
+        "affinity": [
+          11
+        ]
+      },
+      "12": {
+        "tid": 257507,
+        "affinity": [
+          12
+        ]
+      },
+      "13": {
+        "tid": 257508,
+        "affinity": [
+          13
+        ]
+      },
+      "14": {
+        "tid": 257509,
+        "affinity": [
+          14
+        ]
+      },
+      "15": {
+        "tid": 257510,
+        "affinity": [
+          15
+        ]
+      },
+      "16": {
+        "tid": 257511,
+        "affinity": [
+          16
+        ]
+      },
+      "17": {
+        "tid": 257512,
+        "affinity": [
+          17
+        ]
+      },
+      "18": {
+        "tid": 257513,
+        "affinity": [
+          18
+        ]
+      },
+      "19": {
+        "tid": 257514,
+        "affinity": [
+          19
+        ]
+      },
+      "20": {
+        "tid": 257515,
+        "affinity": [
+          20
+        ]
+      },
+      "21": {
+        "tid": 257516,
+        "affinity": [
+          21
+        ]
+      },
+      "22": {
+        "tid": 257517,
+        "affinity": [
+          22
+        ]
+      },
+      "23": {
+        "tid": 257518,
+        "affinity": [
+          23
+        ]
+      },
+      "24": {
+        "tid": 257519,
+        "affinity": [
+          24
+        ]
+      },
+      "25": {
+        "tid": 257520,
+        "affinity": [
+          25
+        ]
+      },
+      "26": {
+        "tid": 257521,
+        "affinity": [
+          26
+        ]
+      },
+      "27": {
+        "tid": 257522,
+        "affinity": [
+          27
+        ]
+      },
+      "28": {
+        "tid": 257523,
+        "affinity": [
+          28
+        ]
+      },
+      "29": {
+        "tid": 257524,
+        "affinity": [
+          29
+        ]
+      },
+      "30": {
+        "tid": 257525,
+        "affinity": [
+          30
+        ]
+      },
+      "31": {
+        "tid": 257526,
+        "affinity": [
+          31
+        ]
+      },
+      "32": {
+        "tid": 257527,
+        "affinity": [
+          32
+        ]
+      },
+      "33": {
+        "tid": 257528,
+        "affinity": [
+          33
+        ]
+      },
+      "34": {
+        "tid": 257529,
+        "affinity": [
+          34
+        ]
+      },
+      "35": {
+        "tid": 257530,
+        "affinity": [
+          35
+        ]
+      },
+      "36": {
+        "tid": 257531,
+        "affinity": [
+          36
+        ]
+      },
+      "37": {
+        "tid": 257532,
+        "affinity": [
+          37
+        ]
+      },
+      "38": {
+        "tid": 257533,
+        "affinity": [
+          38
+        ]
+      },
+      "39": {
+        "tid": 257534,
+        "affinity": [
+          39
+        ]
+      },
+      "40": {
+        "tid": 257535,
+        "affinity": [
+          40
+        ]
+      },
+      "41": {
+        "tid": 257536,
+        "affinity": [
+          41
+        ]
+      },
+      "42": {
+        "tid": 257537,
+        "affinity": [
+          42
+        ]
+      },
+      "43": {
+        "tid": 257538,
+        "affinity": [
+          43
+        ]
+      },
+      "44": {
+        "tid": 257539,
+        "affinity": [
+          44
+        ]
+      },
+      "45": {
+        "tid": 257540,
+        "affinity": [
+          45
+        ]
+      },
+      "46": {
+        "tid": 257541,
+        "affinity": [
+          46
+        ]
+      },
+      "47": {
+        "tid": 257542,
+        "affinity": [
+          47
+        ]
+      },
+      "48": {
+        "tid": 257543,
+        "affinity": [
+          48
+        ]
+      },
+      "49": {
+        "tid": 257544,
+        "affinity": [
+          49
+        ]
+      },
+      "50": {
+        "tid": 257545,
+        "affinity": [
+          50
+        ]
+      },
+      "51": {
+        "tid": 257546,
+        "affinity": [
+          51
+        ]
+      },
+      "52": {
+        "tid": 257547,
+        "affinity": [
+          52
+        ]
+      },
+      "53": {
+        "tid": 257548,
+        "affinity": [
+          53
+        ]
+      },
+      "54": {
+        "tid": 257549,
+        "affinity": [
+          54
+        ]
+      },
+      "55": {
+        "tid": 257550,
+        "affinity": [
+          55
+        ]
+      },
+      "56": {
+        "tid": 257551,
+        "affinity": [
+          56
+        ]
+      },
+      "57": {
+        "tid": 257552,
+        "affinity": [
+          57
+        ]
+      },
+      "58": {
+        "tid": 257553,
+        "affinity": [
+          58
+        ]
+      },
+      "59": {
+        "tid": 257554,
+        "affinity": [
+          59
+        ]
+      },
+      "60": {
+        "tid": 257555,
+        "affinity": [
+          60
+        ]
+      },
+      "61": {
+        "tid": 257556,
+        "affinity": [
+          61
+        ]
+      },
+      "62": {
+        "tid": 257557,
+        "affinity": [
+          62
+        ]
+      },
+      "63": {
+        "tid": 257558,
+        "affinity": [
+          63
+        ]
+      }
+    },
+    "service_threads": {
+      "257489": {
+        "name": "qemu-system-x86",
+        "affinity": [
+          63
+        ]
+      },
+      "257490": {
+        "name": "call_rcu",
+        "affinity": [
+          63
+        ]
+      },
+      "257560": {
+        "name": "kvm-nx-lpage-re",
+        "affinity": [
+          63
+        ]
+      },
+      "339504": {
+        "name": "worker",
+        "affinity": [
+          63
+        ]
+      },
+      "339515": {
+        "name": "worker",
+        "affinity": [
+          63
+        ]
+      },
+      "339516": {
+        "name": "worker",
+        "affinity": [
+          63
+        ]
+      }
+    },
+    "nodes": {
+      "node0": "0-31",
+      "node1": "32-63"
+    },
+    "frequency": {
+      "0": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      },
+      "1": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      },
+      "2": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      },
+      "3": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      },
+      "4": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      },
+      "5": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      },
+      "6": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      },
+      "7": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      },
+      "8": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      },
+      "9": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      },
+      "10": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      },
+      "11": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      },
+      "12": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      },
+      "13": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      },
+      "14": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      },
+      "15": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      },
+      "16": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      },
+      "17": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      },
+      "18": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      },
+      "19": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      },
+      "20": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      },
+      "21": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      },
+      "22": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      },
+      "23": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      },
+      "24": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      },
+      "25": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      },
+      "26": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      },
+      "27": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      },
+      "28": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      },
+      "29": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      },
+      "30": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      },
+      "31": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      },
+      "32": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      },
+      "33": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      },
+      "34": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      },
+      "35": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      },
+      "36": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      },
+      "37": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      },
+      "38": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      },
+      "39": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      },
+      "40": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      },
+      "41": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      },
+      "42": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      },
+      "43": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      },
+      "44": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      },
+      "45": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      },
+      "46": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      },
+      "47": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      },
+      "48": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      },
+      "49": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      },
+      "50": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      },
+      "51": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      },
+      "52": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      },
+      "53": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      },
+      "54": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      },
+      "55": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      },
+      "56": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      },
+      "57": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      },
+      "58": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      },
+      "59": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      },
+      "60": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      },
+      "61": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      },
+      "62": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      },
+      "63": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      }
+    }
+  },
+  "host-after": {
+    "passed": true,
+    "utc": "2026-10-17T20:21:31.554542+00:00",
+    "pid": 257489,
+    "argv": [
+      "qemu-system-x86_64",
+      "-name",
+      "ubuntu-build,debug-threads=on",
+      "-enable-kvm",
+      "-cpu",
+      "host",
+      "-smp",
+      "64,maxcpus=64,sockets=2,cores=32,threads=1",
+      "-m",
+      "24G",
+      "-object",
+      "memory-backend-ram,id=mem0,size=12G,host-nodes=0,policy=bind",
+      "-object",
+      "memory-backend-ram,id=mem1,size=12G,host-nodes=1,policy=bind",
+      "-numa",
+      "node,nodeid=0,cpus=0-31,memdev=mem0",
+      "-numa",
+      "node,nodeid=1,cpus=32-63,memdev=mem1",
+      "-device",
+      "virtio-scsi-pci,id=scsi0",
+      "-drive",
+      "file=/home/eric/vm/qemu-disks/ubuntu22.04.img,format=qcow2,if=none,id=drive_system",
+      "-device",
+      "scsi-hd,drive=drive_system,bus=scsi0.0,bootindex=0",
+      "-drive",
+      "file=/home/eric/vm/qemu-disks/sda.qcow2,format=qcow2,if=none,id=drive_data1",
+      "-device",
+      "scsi-hd,drive=drive_data1,bus=scsi0.0",
+      "-netdev",
+      "user,id=n1,hostfwd=tcp:0.0.0.0:2222-:22,hostfwd=tcp:0.0.0.0:9090-:9090,hostfwd=tcp:0.0.0.0:9091-:9091",
+      "-device",
+      "virtio-net-pci,netdev=n1",
+      "-display",
+      "none",
+      "-serial",
+      "file:/tmp/qemu-serial.log",
+      "-monitor",
+      "unix:/tmp/qemu-monitor.sock,server=on,wait=off",
+      "-gdb",
+      "tcp:127.0.0.1:1234",
+      "-pidfile",
+      "/tmp/kdlock-qemu.pid",
+      "-daemonize"
+    ],
+    "vcpus": {
+      "0": {
+        "tid": 257495,
+        "affinity": [
+          0
+        ]
+      },
+      "1": {
+        "tid": 257496,
+        "affinity": [
+          1
+        ]
+      },
+      "2": {
+        "tid": 257497,
+        "affinity": [
+          2
+        ]
+      },
+      "3": {
+        "tid": 257498,
+        "affinity": [
+          3
+        ]
+      },
+      "4": {
+        "tid": 257499,
+        "affinity": [
+          4
+        ]
+      },
+      "5": {
+        "tid": 257500,
+        "affinity": [
+          5
+        ]
+      },
+      "6": {
+        "tid": 257501,
+        "affinity": [
+          6
+        ]
+      },
+      "7": {
+        "tid": 257502,
+        "affinity": [
+          7
+        ]
+      },
+      "8": {
+        "tid": 257503,
+        "affinity": [
+          8
+        ]
+      },
+      "9": {
+        "tid": 257504,
+        "affinity": [
+          9
+        ]
+      },
+      "10": {
+        "tid": 257505,
+        "affinity": [
+          10
+        ]
+      },
+      "11": {
+        "tid": 257506,
+        "affinity": [
+          11
+        ]
+      },
+      "12": {
+        "tid": 257507,
+        "affinity": [
+          12
+        ]
+      },
+      "13": {
+        "tid": 257508,
+        "affinity": [
+          13
+        ]
+      },
+      "14": {
+        "tid": 257509,
+        "affinity": [
+          14
+        ]
+      },
+      "15": {
+        "tid": 257510,
+        "affinity": [
+          15
+        ]
+      },
+      "16": {
+        "tid": 257511,
+        "affinity": [
+          16
+        ]
+      },
+      "17": {
+        "tid": 257512,
+        "affinity": [
+          17
+        ]
+      },
+      "18": {
+        "tid": 257513,
+        "affinity": [
+          18
+        ]
+      },
+      "19": {
+        "tid": 257514,
+        "affinity": [
+          19
+        ]
+      },
+      "20": {
+        "tid": 257515,
+        "affinity": [
+          20
+        ]
+      },
+      "21": {
+        "tid": 257516,
+        "affinity": [
+          21
+        ]
+      },
+      "22": {
+        "tid": 257517,
+        "affinity": [
+          22
+        ]
+      },
+      "23": {
+        "tid": 257518,
+        "affinity": [
+          23
+        ]
+      },
+      "24": {
+        "tid": 257519,
+        "affinity": [
+          24
+        ]
+      },
+      "25": {
+        "tid": 257520,
+        "affinity": [
+          25
+        ]
+      },
+      "26": {
+        "tid": 257521,
+        "affinity": [
+          26
+        ]
+      },
+      "27": {
+        "tid": 257522,
+        "affinity": [
+          27
+        ]
+      },
+      "28": {
+        "tid": 257523,
+        "affinity": [
+          28
+        ]
+      },
+      "29": {
+        "tid": 257524,
+        "affinity": [
+          29
+        ]
+      },
+      "30": {
+        "tid": 257525,
+        "affinity": [
+          30
+        ]
+      },
+      "31": {
+        "tid": 257526,
+        "affinity": [
+          31
+        ]
+      },
+      "32": {
+        "tid": 257527,
+        "affinity": [
+          32
+        ]
+      },
+      "33": {
+        "tid": 257528,
+        "affinity": [
+          33
+        ]
+      },
+      "34": {
+        "tid": 257529,
+        "affinity": [
+          34
+        ]
+      },
+      "35": {
+        "tid": 257530,
+        "affinity": [
+          35
+        ]
+      },
+      "36": {
+        "tid": 257531,
+        "affinity": [
+          36
+        ]
+      },
+      "37": {
+        "tid": 257532,
+        "affinity": [
+          37
+        ]
+      },
+      "38": {
+        "tid": 257533,
+        "affinity": [
+          38
+        ]
+      },
+      "39": {
+        "tid": 257534,
+        "affinity": [
+          39
+        ]
+      },
+      "40": {
+        "tid": 257535,
+        "affinity": [
+          40
+        ]
+      },
+      "41": {
+        "tid": 257536,
+        "affinity": [
+          41
+        ]
+      },
+      "42": {
+        "tid": 257537,
+        "affinity": [
+          42
+        ]
+      },
+      "43": {
+        "tid": 257538,
+        "affinity": [
+          43
+        ]
+      },
+      "44": {
+        "tid": 257539,
+        "affinity": [
+          44
+        ]
+      },
+      "45": {
+        "tid": 257540,
+        "affinity": [
+          45
+        ]
+      },
+      "46": {
+        "tid": 257541,
+        "affinity": [
+          46
+        ]
+      },
+      "47": {
+        "tid": 257542,
+        "affinity": [
+          47
+        ]
+      },
+      "48": {
+        "tid": 257543,
+        "affinity": [
+          48
+        ]
+      },
+      "49": {
+        "tid": 257544,
+        "affinity": [
+          49
+        ]
+      },
+      "50": {
+        "tid": 257545,
+        "affinity": [
+          50
+        ]
+      },
+      "51": {
+        "tid": 257546,
+        "affinity": [
+          51
+        ]
+      },
+      "52": {
+        "tid": 257547,
+        "affinity": [
+          52
+        ]
+      },
+      "53": {
+        "tid": 257548,
+        "affinity": [
+          53
+        ]
+      },
+      "54": {
+        "tid": 257549,
+        "affinity": [
+          54
+        ]
+      },
+      "55": {
+        "tid": 257550,
+        "affinity": [
+          55
+        ]
+      },
+      "56": {
+        "tid": 257551,
+        "affinity": [
+          56
+        ]
+      },
+      "57": {
+        "tid": 257552,
+        "affinity": [
+          57
+        ]
+      },
+      "58": {
+        "tid": 257553,
+        "affinity": [
+          58
+        ]
+      },
+      "59": {
+        "tid": 257554,
+        "affinity": [
+          59
+        ]
+      },
+      "60": {
+        "tid": 257555,
+        "affinity": [
+          60
+        ]
+      },
+      "61": {
+        "tid": 257556,
+        "affinity": [
+          61
+        ]
+      },
+      "62": {
+        "tid": 257557,
+        "affinity": [
+          62
+        ]
+      },
+      "63": {
+        "tid": 257558,
+        "affinity": [
+          63
+        ]
+      }
+    },
+    "service_threads": {
+      "257489": {
+        "name": "qemu-system-x86",
+        "affinity": [
+          63
+        ]
+      },
+      "257490": {
+        "name": "call_rcu",
+        "affinity": [
+          63
+        ]
+      },
+      "257560": {
+        "name": "kvm-nx-lpage-re",
+        "affinity": [
+          63
+        ]
+      },
+      "355189": {
+        "name": "worker",
+        "affinity": [
+          63
+        ]
+      },
+      "355192": {
+        "name": "worker",
+        "affinity": [
+          63
+        ]
+      },
+      "355197": {
+        "name": "worker",
+        "affinity": [
+          63
+        ]
+      },
+      "355199": {
+        "name": "worker",
+        "affinity": [
+          63
+        ]
+      }
+    },
+    "nodes": {
+      "node0": "0-31",
+      "node1": "32-63"
+    },
+    "frequency": {
+      "0": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      },
+      "1": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      },
+      "2": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      },
+      "3": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      },
+      "4": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      },
+      "5": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      },
+      "6": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      },
+      "7": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      },
+      "8": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      },
+      "9": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      },
+      "10": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      },
+      "11": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      },
+      "12": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      },
+      "13": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      },
+      "14": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      },
+      "15": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      },
+      "16": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      },
+      "17": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      },
+      "18": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      },
+      "19": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      },
+      "20": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      },
+      "21": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      },
+      "22": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      },
+      "23": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      },
+      "24": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      },
+      "25": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      },
+      "26": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      },
+      "27": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      },
+      "28": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      },
+      "29": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      },
+      "30": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      },
+      "31": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      },
+      "32": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      },
+      "33": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      },
+      "34": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      },
+      "35": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      },
+      "36": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      },
+      "37": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      },
+      "38": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      },
+      "39": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      },
+      "40": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      },
+      "41": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      },
+      "42": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      },
+      "43": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      },
+      "44": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      },
+      "45": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      },
+      "46": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      },
+      "47": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      },
+      "48": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      },
+      "49": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      },
+      "50": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      },
+      "51": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      },
+      "52": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      },
+      "53": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      },
+      "54": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      },
+      "55": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      },
+      "56": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      },
+      "57": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      },
+      "58": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      },
+      "59": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      },
+      "60": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      },
+      "61": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      },
+      "62": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      },
+      "63": {
+        "scaling_governor": "ondemand",
+        "scaling_driver": "intel_cpufreq",
+        "scaling_min_freq": "800000",
+        "scaling_max_freq": "3600000"
+      }
+    }
+  },
+  "host-comparison": {
+    "status": "PASS",
+    "unchanged": [
+      "pid",
+      "argv",
+      "vcpus",
+      "nodes",
+      "frequency"
+    ],
+    "before_utc": "2026-10-17T14:08:48.715987+00:00",
+    "after_utc": "2026-10-17T20:21:31.554542+00:00",
+    "all_64_vcpus_pinned": true
+  }
+}

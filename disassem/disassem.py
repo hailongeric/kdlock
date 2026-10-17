@@ -134,16 +134,16 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0):
     # identities as its executor, including the clobber unlock completion PC.
     raw_spin_lock = get_kernel_symbol("kd_spin_lock") or control_symbols["_raw_spin_lock"]
     raw_spin_unlock = get_kernel_symbol("kd_spin_unlock") or control_symbols["_raw_spin_unlock"]
-    mutex_lock = control_symbols["mutex_lock"]
-    mutex_unlock = control_symbols["mutex_unlock"]
+    mutex_lock = get_kernel_symbol("kd_mutex_local_lock")
+    mutex_unlock = get_kernel_symbol("kd_mutex_local_unlock")
     clobber_lock = (get_kernel_symbol("kd_spin_lock_clobber_v1") or
                     get_kernel_symbol("kd_raw_spin_lock_clobber_v1"))
     clobber_unlock = (get_kernel_symbol("kd_spin_unlock_clobber_v1") or
                       get_kernel_symbol("kd_raw_spin_unlock_clobber_v1"))
     pinned_spin_lock = get_kernel_symbol("kd_spin_lock_pinned_clobber_v1")
     cold_spin_unlock = get_kernel_symbol("kd_spin_direct_native_unlock")
-    clobber_mutex_lock = get_kernel_symbol("kd_mutex_lock_clobber_v1")
-    clobber_mutex_unlock = get_kernel_symbol("kd_mutex_unlock_clobber_v1")
+    clobber_mutex_lock = 0
+    clobber_mutex_unlock = 0
     direct_mutex_lock = get_kernel_symbol("kd_mutex_direct_lock_clobber_v1")
     direct_mutex_unlock = get_kernel_symbol("kd_mutex_direct_unlock_clobber_v1")
     contended_mutex_lock = get_kernel_symbol("kd_mutex_direct_contended_clobber_v1")
@@ -166,8 +166,8 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0):
             (contended_mutex_lock, "mutex", "kd_mutex_direct_contended_clobber_v1"),
             (outer_mutex_lock, "mutex", "kd_mutex_outer_contended_clobber_v1"),
             (direct_mutex_unlock, "mutex", "kd_mutex_direct_unlock_clobber_v1"),
-            (mutex_lock, "mutex", "mutex_lock"),
-            (mutex_unlock, "mutex", "mutex_unlock"),
+            (mutex_lock, "mutex", "kd_mutex_local_lock"),
+            (mutex_unlock, "mutex", "kd_mutex_local_unlock"),
             (clobber_mutex_lock, "mutex", "kd_mutex_lock_clobber_v1"),
             (clobber_mutex_unlock, "mutex", "kd_mutex_unlock_clobber_v1"),
         )

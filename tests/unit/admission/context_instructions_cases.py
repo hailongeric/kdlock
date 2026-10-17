@@ -279,6 +279,13 @@ class ContextInstructionsCases(ContextCaseSupport):
         self.assert_rejected("488b05f91f0000c3", symbols={0x3000: "current_task"})
 
 
+    def test_linux_mutex_apis_are_refused_in_kd_only_entries(self):
+        for name in ("mutex_lock", "mutex_unlock", "__mutex_lock_slowpath",
+                     "kd_mutex_lock_clobber_v1", "kd_mutex_lock_interruptible"):
+            with self.subTest(name=name):
+                self.assert_rejected("e8fb1f0000c3", lock_kind="mutex",
+                                     symbols={0x3000: name})
+
     def test_unknown_calls_keep_dynamic_completion(self):
         for raw in ("e8fb0f0000c3", "ffd0c3"):
             assembly, _, status = render(raw, return_status=True)
@@ -289,12 +296,12 @@ class ContextInstructionsCases(ContextCaseSupport):
     def test_mixed_spin_mutex_calls_are_not_admitted(self):
         self.assert_rejected(
             "e8fb2f0000e8f61f0000c3",
-            kernel_symbols={"_raw_spin_lock": 0x4000, "mutex_unlock": 0x3000},
+            kernel_symbols={"_raw_spin_lock": 0x4000, "kd_mutex_local_unlock": 0x3000},
         )
 
 
     def test_foreign_lock_references_need_no_visible_outer_unlock(self):
-        for kind, symbol in (("spin", "mutex_lock"), ("mutex", "_raw_spin_lock")):
+        for kind, symbol in (("spin", "kd_mutex_local_lock"), ("mutex", "_raw_spin_lock")):
             for raw in ("e8fb1f0000c3", "e9fb1f0000", "48c7c000300000c3"):
                 with self.subTest(kind=kind, raw=raw):
                     log = self.assert_rejected(
@@ -305,7 +312,7 @@ class ContextInstructionsCases(ContextCaseSupport):
 
 
     def test_matching_lock_backends_still_admitted(self):
-        for kind, symbol in (("spin", "_raw_spin_lock"), ("mutex", "mutex_lock")):
+        for kind, symbol in (("spin", "_raw_spin_lock"), ("mutex", "kd_mutex_local_lock")):
             assembly, _, status = render(
                 "e8fb1f0000c3",
                 lock_kind=kind,
@@ -317,7 +324,7 @@ class ContextInstructionsCases(ContextCaseSupport):
 
 
     def test_lexical_lock_capacity_boundary(self):
-        symbols = {"mutex_lock": 0x3000}
+        symbols = {"kd_mutex_local_lock": 0x3000}
         assembly, _, status = render(
             self.mutex_calls(0x1000, 7).hex(),
             lock_kind="mutex",
@@ -345,7 +352,7 @@ class ContextInstructionsCases(ContextCaseSupport):
             "",
             regions=regions,
             lock_kind="mutex",
-            kernel_symbols={"mutex_lock": 0x3000},
+            kernel_symbols={"kd_mutex_local_lock": 0x3000},
             return_status=True,
         )
         self.assertEqual(status, 0)
@@ -366,7 +373,7 @@ class ContextInstructionsCases(ContextCaseSupport):
             (bytes.fromhex("e8fb0f0000c3"), 0x2000, [0x2000]),
         ]
         log = self.assert_rejected(
-            "", regions=regions, kernel_symbols={"mutex_lock": 0x3000}
+            "", regions=regions, kernel_symbols={"kd_mutex_local_lock": 0x3000}
         )
         self.assertIn('rip="0x2000"', log)
 
@@ -374,7 +381,7 @@ class ContextInstructionsCases(ContextCaseSupport):
     def test_foreign_backend_after_outer_unlock_is_outside_cs(self):
         assembly, _, status = render(
             "e8fb1f0000e8f62f0000c3",
-            kernel_symbols={"_raw_spin_unlock": 0x3000, "mutex_lock": 0x4000},
+            kernel_symbols={"_raw_spin_unlock": 0x3000, "kd_mutex_local_lock": 0x4000},
             return_status=True,
         )
         self.assertEqual(status, 0)

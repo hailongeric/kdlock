@@ -1,0 +1,7 @@
+{
+  "status": "PASS",
+  "regular_files": 150984,
+  "symlinks": 3916,
+  "manifest_sha256": "4ae10fa25c3cc3b2ec682607bc2ac1f51f639a0bff053327ed0b4c1532a0a3a8",
+  "accepted": 504
+}

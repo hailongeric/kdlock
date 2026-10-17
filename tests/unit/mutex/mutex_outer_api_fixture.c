@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <string.h>
-struct mutex { unsigned long owner; };
+struct kd_mutex { unsigned long owner; unsigned int tail; unsigned char locked; int waiter_count; };
 #define current ((void *)0x8000UL)
 #define READ_ONCE(x) (*(volatile __typeof__(x) *)&(x))
 #define WRITE_ONCE(x,v) (*(volatile __typeof__(x) *)&(x) = (v))
@@ -13,6 +13,15 @@ register unsigned long current_stack_pointer asm("rsp");
 #define ASM_CALL_CONSTRAINT "+r" (current_stack_pointer)
 static unsigned int owner_cas_count;
 static bool owner_cas_race;
+static unsigned long *release_on_pause;
+static inline void cpu_relax(void)
+{
+ asm volatile("pause" : : : "memory");
+ if (release_on_pause) {
+  *release_on_pause = 0;
+  release_on_pause = NULL;
+ }
+}
 static inline bool outer_test_cas(unsigned long *p, unsigned long *old, unsigned long value)
 {
  owner_cas_count++;
@@ -21,6 +30,7 @@ static inline bool outer_test_cas(unsigned long *p, unsigned long *old, unsigned
  return __atomic_compare_exchange_n(p,old,value,false,__ATOMIC_SEQ_CST,__ATOMIC_SEQ_CST);
 }
 #define atomic_long_read(p) READ_ONCE(*(p))
+#define atomic_read(p) READ_ONCE(*(p))
 #define atomic_long_try_cmpxchg_acquire outer_test_cas
 #define atomic_long_try_cmpxchg_release outer_test_cas
 #define might_sleep() do { } while (0)
@@ -28,7 +38,7 @@ unsigned long entries, routed_locks, routed_unlocks, native_unlocks;
 unsigned long *test_cookie_address;
 unsigned long contended_native_return;
 static inline void kd_hotlock_mutex_entry(void) { entries++; }
-__attribute__((noinline,noipa)) void mutex_unlock(struct mutex *lock)
+__attribute__((noinline,noipa)) void kd_mutex_local_unlock(struct kd_mutex *lock)
 {
  assert((lock->owner & ~7UL) == (unsigned long)current);
  native_unlocks++;
@@ -38,10 +48,10 @@ __attribute__((noinline,noipa)) void mutex_unlock(struct mutex *lock)
 
 static void check_owner_probe(void)
 {
- struct mutex lock = {0};
+ struct kd_mutex lock = {0};
  assert(kd_mutex_outer_trylock(&lock, (unsigned long)current));
  assert(lock.owner == (unsigned long)current && owner_cas_count == 1);
- /* Busy owners and each Linux owner-flag combination decline without RMW. */
+ /* Busy owners and each KD owner-flag combination decline without RMW. */
  for (unsigned long flags=0;flags<8;flags++) {
   lock.owner=0x9000UL|flags;
   assert(!kd_mutex_outer_trylock(&lock, (unsigned long)current));
@@ -57,6 +67,19 @@ static void check_owner_probe(void)
  assert(!kd_mutex_outer_trylock(&lock, (unsigned long)current));
  assert(lock.owner==0x9000UL && owner_cas_count==2);
  owner_cas_race=false;
+ /* An active combiner ends retries without waiting for a physical release. */
+ lock.locked=KD_MUTEX_GATE_COMBINER;
+ release_on_pause=&lock.owner;
+ assert(!kd_mutex_outer_trylock(&lock, (unsigned long)current));
+ assert(release_on_pause && lock.owner==0x9000UL && owner_cas_count==2);
+ release_on_pause=NULL;
+ /* A lone gate owner may finish between probes; hints never grant the
+  * acquisition, which still requires the exact zero-owner CAS. */
+ lock.tail=1;
+ lock.locked=1;
+ release_on_pause=&lock.owner;
+ assert(kd_mutex_outer_trylock(&lock, (unsigned long)current));
+ assert(!release_on_pause && lock.owner==(unsigned long)current && owner_cas_count==3);
 }
 struct kd_regs { unsigned long w[21]; };
 #define __KERNEL__
@@ -100,7 +123,7 @@ asm(".text\n"
 
 /* Fixed virtual identity keeps decoded RIP-relative lock references identical
  * when the already-built fixture object is relinked with its generated JIT. */
-static struct mutex test_lock __attribute__((section(".outer_lock")));
+static struct kd_mutex test_lock __attribute__((section(".outer_lock")));
 /* All live source inputs at the hot entry are compiler stack spills. This
  * function is also decoded by the actual translator, including native branch. */
 __attribute__((noinline,noipa)) unsigned long outer_jit_case(void)
@@ -117,7 +140,7 @@ __attribute__((noinline,noipa)) unsigned long outer_jit_case(void)
 
 __attribute__((noinline,noipa)) static unsigned long stress(unsigned long seed, int mode)
 {
- struct mutex lock={ (mode==1 || mode==3) ? 0x9000UL : 0 };
+ struct kd_mutex lock={ .owner=(mode==1 || mode==3) ? 0x9000UL : 0 };
  struct kd_mutex_outer_cookie cookie;
  unsigned long a=seed+1,b=seed+2,c=seed+3,d=seed+4,e=seed+5;
  asm volatile("" : "+r"(a),"+r"(b),"+r"(c),"+r"(d),"+r"(e) : : "memory");

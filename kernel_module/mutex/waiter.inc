@@ -91,7 +91,7 @@ kd_mutex_lock_slowpath(struct kd_mutex *lock, struct kd_mutex_node *curr_node)
 	return __kd_mutex_lock_slowpath(lock, curr_node->tail, curr_node);
 }
 
-int kd_mutex_nested_lock(struct mutex *lock)
+int kd_mutex_nested_lock(struct kd_mutex *lock)
 {
 	if (WARN_ON_ONCE(!lock || irqs_disabled()))
 		return -EINVAL;
@@ -100,9 +100,9 @@ int kd_mutex_nested_lock(struct mutex *lock)
 
 	this_cpu_inc(kd_mutex_nested_lock_count);
 	/* A owns this CPU's frame stack across scheduling. The active-task
-	 * registry routes unrelated reentrant acquisitions to native Linux. */
+	 * registry routes unrelated reentrant acquisitions to local KD execution. */
 	preempt_enable();
-	if (mutex_trylock(lock)) {
+	if (kd_mutex_trylock(lock)) {
 		this_cpu_inc(kd_mutex_nested_fast_count);
 	} else {
 		this_cpu_inc(kd_mutex_nested_queued_count);
@@ -115,7 +115,7 @@ int kd_mutex_nested_lock(struct mutex *lock)
 	return 0;
 }
 
-int kd_mutex_nested_unlock(struct mutex *lock)
+int kd_mutex_nested_unlock(struct kd_mutex *lock)
 {
 	kd_origin_mutex_unlock(lock, _RET_IP_);
 	this_cpu_inc(kd_mutex_nested_unlock_count);

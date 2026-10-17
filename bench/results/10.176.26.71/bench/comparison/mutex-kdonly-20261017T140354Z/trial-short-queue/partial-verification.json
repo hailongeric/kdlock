@@ -1,0 +1,203 @@
+{
+  "accepted": 48,
+  "checks": {
+    "baseline/c01-post64": {
+      "binary": 8,
+      "jit_images": 72,
+      "post_work": {
+        "kdlock": {
+          "dependent_multiply_add_groups": [
+            64,
+            64
+          ],
+          "module": "/mnt/kdlock-builds/evidence/10.176.26.71/bench/mutex-legacy-compat-20261017T122742Z/attempt2/compat/c01-post64/variants/kdlock/mutex_cacheline.ko",
+          "sha256": "6f70b270c688fea47fa5a5959cf9c7a144866a48f68687ab0ad8c11f343ff96a",
+          "verified": true
+        },
+        "native": {
+          "dependent_multiply_add_groups": [
+            64,
+            64
+          ],
+          "module": "/mnt/kdlock-builds/evidence/10.176.26.71/bench/mutex-legacy-compat-20261017T122742Z/attempt2/compat/c01-post64/variants/native/mutex_cacheline.ko",
+          "sha256": "dba2c800857027cb6f2a4afc939ba41d9eb9254f159cc3fb24986d1a6eff724c",
+          "verified": true
+        },
+        "tclock": {
+          "dependent_multiply_add_groups": [
+            64,
+            64
+          ],
+          "module": "/mnt/kdlock-builds/evidence/10.176.26.71/bench/mutex-legacy-compat-20261017T122742Z/attempt2/compat/c01-post64/variants/tclock/mutex_cacheline.ko",
+          "sha256": "3e37faae939f40e92fde50328323db65b1799eb310e7e6c7e7bc489d12f7a853",
+          "verified": true
+        }
+      },
+      "prepared_provider": {
+        "observation": 3,
+        "prepared": 83,
+        "production": 81
+      },
+      "source": 297
+    },
+    "compat/c01-post64": {
+      "binary": 8,
+      "jit_images": 72,
+      "no_native_mutex_imports": [
+        {
+          "forbidden": [],
+          "module": "binaries/kdlock_km.ko",
+          "sha256": "0883c97bec0733058d2f00a9d6568b2ec766ef44c748ad9bbf77593d42c7d903",
+          "undefined_symbols": [
+            "__SCT__cond_resched",
+            "__SCT__might_resched",
+            "__SCT__preempt_schedule",
+            "___ratelimit",
+            "__alloc_percpu",
+            "__check_object_size",
+            "__class_create",
+            "__cpu_possible_mask",
+            "__fentry__",
+            "__per_cpu_offset",
+            "__preempt_count",
+            "__put_task_struct",
+            "__rcu_read_lock",
+            "__rcu_read_unlock",
+            "__stack_chk_fail",
+            "__x86_indirect_thunk_rax",
+            "__x86_return_thunk",
+            "_copy_from_user",
+            "_copy_to_user",
+            "_find_next_bit",
+            "_printk",
+            "_raw_spin_lock",
+            "_raw_spin_lock_irqsave",
+            "_raw_spin_unlock",
+            "_raw_spin_unlock_irqrestore",
+            "alloc_chrdev_region",
+            "call_rcu",
+            "capable",
+            "cdev_add",
+            "cdev_del",
+            "cdev_init",
+            "class_destroy",
+            "copy_from_kernel_nofault",
+            "cpu_number",
+            "current_task",
+            "device_create",
+            "device_destroy",
+            "fixed_percpu_data",
+            "fortify_panic",
+            "free_percpu",
+            "int_sqrt",
+            "kallsyms_lookup_name",
+            "kfree",
+            "kmalloc_caches",
+            "kmalloc_trace",
+            "ktime_get",
+            "memcmp",
+            "memcpy",
+            "memmove",
+            "memset",
+            "migrate_disable",
+            "migrate_enable",
+            "module_put",
+            "nonseekable_open",
+            "nr_cpu_ids",
+            "numa_node",
+            "param_ops_bool",
+            "param_ops_charp",
+            "param_ops_int",
+            "param_ops_uint",
+            "param_ops_ulong",
+            "pv_ops",
+            "rcu_barrier",
+            "refcount_warn_saturate",
+            "schedule",
+            "scnprintf",
+            "set_memory_x",
+            "strnlen",
+            "synchronize_rcu",
+            "this_cpu_off",
+            "try_module_get",
+            "unregister_chrdev_region",
+            "vfree",
+            "vmalloc",
+            "vzalloc",
+            "vzalloc_node",
+            "wake_up_q"
+          ]
+        },
+        {
+          "forbidden": [],
+          "module": "variants/kdlock/mutex_cacheline.ko",
+          "sha256": "e2c3c0d62e2203ca08e71a48743328ff507ffe9705cb4630d6ca91737a9b0f45",
+          "undefined_symbols": [
+            "__SCT__might_resched",
+            "__fentry__",
+            "__preempt_count",
+            "__stack_chk_fail",
+            "__x86_indirect_thunk_r12",
+            "__x86_indirect_thunk_r13",
+            "__x86_return_thunk",
+            "_copy_from_user",
+            "_copy_to_user",
+            "current_task",
+            "kd_hotlock_mutex_entries",
+            "kd_mutex_direct_unlock_clobber_v1",
+            "kd_mutex_init",
+            "kd_mutex_is_idle",
+            "kd_mutex_local_unlock",
+            "kd_mutex_outer_contended_clobber_v1",
+            "kd_mutex_prepare",
+            "ktime_get",
+            "misc_deregister",
+            "misc_register",
+            "pv_ops"
+          ]
+        }
+      ],
+      "post_work": {
+        "kdlock": {
+          "dependent_multiply_add_groups": [
+            64,
+            64
+          ],
+          "module": "/mnt/kdlock-builds/evidence/10.176.26.71/bench/mutex-kdonly-20261017T140354Z/trial-short-queue/compat/c01-post64/variants/kdlock/mutex_cacheline.ko",
+          "sha256": "e2c3c0d62e2203ca08e71a48743328ff507ffe9705cb4630d6ca91737a9b0f45",
+          "verified": true
+        },
+        "native": {
+          "dependent_multiply_add_groups": [
+            64,
+            64
+          ],
+          "module": "/mnt/kdlock-builds/evidence/10.176.26.71/bench/mutex-kdonly-20261017T140354Z/trial-short-queue/compat/c01-post64/variants/native/mutex_cacheline.ko",
+          "sha256": "0b0e089897dea1e3046cd58536aba403f1a295fe0147383448254eed979ce764",
+          "verified": true
+        },
+        "tclock": {
+          "dependent_multiply_add_groups": [
+            64,
+            64
+          ],
+          "module": "/mnt/kdlock-builds/evidence/10.176.26.71/bench/mutex-kdonly-20261017T140354Z/trial-short-queue/compat/c01-post64/variants/tclock/mutex_cacheline.ko",
+          "sha256": "28d10eebd40446dbfffdbabdd621abcff111cd906fd8650135404ca7f37412f4",
+          "verified": true
+        }
+      },
+      "prepared_provider": {
+        "observation": 3,
+        "prepared": 87,
+        "production": 85
+      },
+      "source": 306
+    }
+  },
+  "drained": 48,
+  "excluded_from_final_scores": true,
+  "experiment_state": "STOPPED",
+  "planned": 180,
+  "sessions": 48,
+  "status": "PASS"
+}

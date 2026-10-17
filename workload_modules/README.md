@@ -1,5 +1,10 @@
 # Explicit kernel workloads
 
+KD mutex workloads own [KD-only objects](../docs/design/kd_only_mutex.md).
+Their Linux Native and TCLock controls keep separate object types. The real-API
+adapter uses a private KD mutex around the controlled subsystem body; the running
+kernel itself has not been rebuilt to replace every mutex.
+
 This directory contains the kernel code exercised by tests and benchmarks.
 Userspace clients, timing and reports live under
 [bench/tclock_compare](../bench/tclock_compare/README.md) and

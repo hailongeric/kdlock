@@ -15,12 +15,6 @@
 #ifndef KD_SPIN_CLOBBER_V1
 #error "kdlock requires the spin caller-clobber v1 (kdclobber2 or compatible)"
 #endif
-#if __has_include(<linux/kd_mutex_hooks.h>)
-#include <linux/kd_mutex_hooks.h>
-#endif
-#ifndef KD_MUTEX_CLOBBER_V1
-#error "kdlock requires ordinary mutex clobber v1 (kdclobber2 or compatible)"
-#endif
 
 #include "exe.h"
 #include "kd_exec.h"
@@ -71,13 +65,10 @@ static int __init kdlock_km_init(void)
 	ret = kd_spin_entries_init();
 	if (ret)
 		goto err_exec_context;
-	ret = kd_sys_init();
-	if (ret)
-		goto err_spin_entries;
 
 	ret = kd_spinlock_init();
 	if (ret)
-		goto err_sys;
+		goto err_spin_entries;
 
 	ret = kd_mutex_init_percpu();
 	if (ret)
@@ -95,17 +86,19 @@ static int __init kdlock_km_init(void)
 		goto err_mutex;
 #endif
 
+	/* Device calls can acquire the KD publication mutex as soon as cdev_add
+	 * exposes them. Its private OSQ and all execution services must be ready. */
+	ret = kd_sys_init();
+	if (ret)
+		goto err_mutex;
+
 	KD_PR_INFO("kd kernel module init: direct spin/mutex APIs; global hooks disabled\n");
 	return 0;
 
-#ifdef KDLOCK_SELFTEST
 err_mutex:
-#endif
 	kd_mutex_exit();
 err_spinlock:
 	kd_spinlock_exit();
-err_sys:
-	kd_sys_exit();
 err_spin_entries:
 	kd_spin_entries_exit();
 err_exec_context:
@@ -122,6 +115,7 @@ err_source:
  * RCU alone does not protect outstanding direct calls or lock-object storage. */
 static void __exit kdlock_km_exit(void)
 {
+	kd_sys_exit();
 	synchronize_rcu();
 	kd_mutex_exit();
 	kd_mutex_tasks_exit();
@@ -129,7 +123,6 @@ static void __exit kdlock_km_exit(void)
 	kd_spinlock_exit();
 	kd_exec_context_exit();
 	kd_spin_entries_exit();
-	kd_sys_exit();
 	kd_exe_exit();
 	kd_hotlock_exit();
 	kd_source_exit();

@@ -114,7 +114,7 @@ Supported nonzero values are powers of two of at least 2.
 
 Mutex uses its separate fixed ratio limit 256 and the same CPU time bound;
 the initially proposed limit 2 is not its current setting. Native successful
-acquisitions count entries without touching shadow/task/translation state.
+acquisitions count entries without touching delegation/task/translation state.
 
 When sampling, a hot native MCS queue head also saves the current tail and checks
 up to six linked successors before waiting for or acquiring the word. A missing

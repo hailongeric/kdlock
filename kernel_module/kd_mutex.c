@@ -4,9 +4,9 @@
 // Ported to kdlock: kd_mutex — JIT-sandbox mutex delegation.
 // Follows the same kd_exe_on_call_hl_entry() model as kd_spinlock.c.
 
-/* Read in this order: reserve node, claim original mutex, kd_mutex_execute_cs,
- * kd_mutex_run_combiner, then waiter restoration. The private gate never substitutes
- * for Linux exclusion. Native continuation keeps the physical owner blocked
+/* Read in this order: reserve node, claim KD physical exclusion, kd_mutex_execute_cs,
+ * kd_mutex_run_combiner, then waiter restoration. Every queue executor must
+ * own the KD physical primitive. Native continuation keeps that owner blocked
  * in its ACK service loop; it does not hand the mutex owner field to waiter.
  * Public lock/unlock and stack trampolines remain here. mutex/ components
  * separate queue reservation, delegated execution, waiting and lifecycle. */
@@ -61,7 +61,7 @@
  * -------------------------------------------------------------------------- */
 #define KD_MUTEX_WAITER_PROCESSED 1
 
-#define _Q_LOCKED_COMBINER_VAL 3
+#define _Q_LOCKED_COMBINER_VAL KD_MUTEX_GATE_COMBINER
 
 /* Share the runner's configured upper bound with spin; NUMA fairness may
  * hand off earlier. The default remains 1024 in the provider Makefile. */
@@ -202,11 +202,11 @@ _kd_mutex_lock_abi(struct kd_mutex *lock, unsigned long rsp_value,
 	preempt_disable();
 	if (unlikely(kd_mutex_has_local_predecessor(lock))) {
 		/* No node/packet has been published. This acquisition therefore owns
-		 * only the native mutex and must not release the private queue gate. */
+		 * only the KD physical mutex and must not release the private queue gate. */
 		preempt_enable();
 		migrate_enable();
 		kd_mutex_task_put(current);
-		kd_origin_mutex_lock((struct mutex *)lock->origin_mutex_addr);
+		kd_origin_mutex_lock(lock);
 		return;
 	}
 	{
@@ -214,14 +214,14 @@ _kd_mutex_lock_abi(struct kd_mutex *lock, unsigned long rsp_value,
 
 		if (unlikely(!curr_node)) {
 			/* No queue node was published. Wait on the native stack for the
-			 * scheduling gate, then acquire the original mutex as its owner. */
+			 * scheduling gate, then acquire the KD physical mutex as its owner. */
 			this_cpu_inc(kd_mutex_node_overflow_count);
 			/* Identify the unstarted request and the stable reservation mask.
 			 * A missing stack can also refuse a node, so only a full mask
 			 * establishes actual per-CPU slot exhaustion. */
 			KD_PR_DEBUG(
 				"mutex node fallback: task=%d entry=%lx lock=%lx cpu=%u slots=%lx\n",
-				current->pid, ret_addr, lock->origin_mutex_addr,
+				current->pid, ret_addr, (unsigned long)lock,
 				smp_processor_id(),
 				READ_ONCE(this_cpu_ptr(&kd_mutex_shadows)->node_slots));
 			kd_mutex_wait_and_lock(lock);
@@ -300,7 +300,7 @@ scheduler_restore:;
 }
 
 /*
- * Release the original mutex as its real owner, then open the scheduling gate.
+ * Release the KD physical mutex as its real owner, then open the scheduling gate.
  *
  * Ordinary completion retains A through the batch and the owner's CS. An early
  * A unlock with B still live detaches the batch through kd_mutex_release_outer().
@@ -313,7 +313,7 @@ _kd_mutex_unlock_checked(struct kd_mutex *lock)
 	if (locked == _Q_LOCKED_VAL || locked == _Q_LOCKED_COMBINER_VAL) {
 		BUG_ON(READ_ONCE(lock->physical_owner) != current);
 		WRITE_ONCE(lock->physical_owner, NULL);
-		kd_origin_mutex_unlock((struct mutex *)lock->origin_mutex_addr,
+		kd_origin_mutex_unlock(lock,
 				       _RET_IP_);
 		this_cpu_inc(kd_mutex_origin_releases);
 		smp_store_release(&lock->locked, 0);

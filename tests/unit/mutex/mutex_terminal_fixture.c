@@ -13,6 +13,9 @@ typedef uint16_t u16;
 typedef uint32_t u32;
 typedef uint64_t u64;
 typedef int atomic_t;
+typedef unsigned long atomic_long_t;
+typedef int raw_spinlock_t;
+struct optimistic_spin_queue { atomic_t tail; };
 struct task_struct { int pid; };
 struct list_head { struct list_head *next, *prev; };
 #include "types.h"
@@ -92,7 +95,7 @@ static int kd_mutex_execute_cs(struct kd_mutex *p,struct kd_mutex_node *node,str
     if(i==refusal_at)return KD_EXE_NO_RUN;
     if(i==early_at) {
         struct kd_exec_frame frame={.mutex_backend=true,.logical_task=&waiter,
-            .outer_lock_addr=p->origin_mutex_addr,.jit_lock_depth=2};
+            .outer_lock_addr=(unsigned long)p,.jit_lock_depth=2};
         frame.jit_lock_kind[0]=KD_EXEC_LOCK_QUEUE_OWNER;frame.jit_lock_node[0]=p;
         CHECK(!batch->outer.release(&frame,&batch->outer));batch->outer.released=true;
         CHECK(!p->locked && !p->physical_owner);
@@ -117,7 +120,7 @@ static int kd_mutex_execute_cs(struct kd_mutex *p,struct kd_mutex_node *node,str
 static void reset(unsigned int count)
 {
     memset(nodes,0,sizeof(nodes));memset(&lock,0,sizeof(lock));
-    lock.locked=3;lock.physical_owner=current;lock.origin_mutex_addr=0x120000;
+    lock.locked=3;lock.physical_owner=current;
     source_open=true;delayed_link=new_head_after_cas=new_head_pending=false;
     refusal_at=native_at=early_at=-1;
     leases=lease_gets=lease_puts=calls=completed=wakes=reclaims=polls=cas_calls=0;

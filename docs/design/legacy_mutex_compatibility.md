@@ -1,5 +1,9 @@
 # Legacy mutex compatibility backport
 
+This page records the accepted `555b8b7` baseline. The subsequent
+[KD-only object change](kd_only_mutex.md) retains its delegation protocol and
+replaces Linux physical exclusion. Historical comparisons below keep their scope.
+
 This experiment compares the recovered mutex in `74676c3` with the later
 owned/adaptive implementation archived at `a49a87c`, then carries independent
 execution and admission changes onto the recovered mutex. The implementation is

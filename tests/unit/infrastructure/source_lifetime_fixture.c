@@ -179,11 +179,11 @@ static bool capable(int cap)
 	CHECK(cap == CAP_SYS_MODULE);
 	return admin;
 }
-static int mutex_lock_interruptible(pthread_mutex_t *lock)
+static int kd_mutex_lock_interruptible(pthread_mutex_t *lock)
 {
 	return interrupted ? -EINTR : pthread_mutex_lock(lock);
 }
-static void mutex_unlock(pthread_mutex_t *lock)
+static void kd_mutex_local_unlock(pthread_mutex_t *lock)
 {
 	CHECK(!pthread_mutex_unlock(lock));
 }
@@ -244,7 +244,7 @@ static void check_caps(struct file *file)
 	memset(&caps, 0xff, sizeof(caps));
 	CHECK(!kd_dev_ioctl(file, KD_JIT_CAPS, (unsigned long)&caps));
 	CHECK(caps.version == KD_JIT_CAPS_VERSION);
-	CHECK(caps.features == (KD_JIT_CAP_MUTEX_STACK | KD_JIT_CAP_MUTEX_IMAGES |
+	CHECK(caps.features == (KD_JIT_CAP_MUTEX_STACK | KD_JIT_CAP_MUTEX_IMAGES | KD_JIT_CAP_MUTEX_EXCLUSIVE |
 				(module_bytes ? KD_JIT_CAP_PERCPU_MODULE : 0)));
 	CHECK(caps.mutex_stack_bytes == KD_JIT_MUTEX_STACK_BYTES);
 	CHECK(caps.percpu_module_bytes == module_bytes);
@@ -513,7 +513,7 @@ int main(void)
 	_Static_assert(KD_SOURCE_RETIRE == 0x4b72, "Python RETIRE ABI");
 	_Static_assert(sizeof(struct kd_jit_caps) == 16, "capability ABI");
 	_Static_assert(KD_JIT_CAPS == 0x80104b73, "Python capability ioctl");
-	_Static_assert(KD_JIT_CAPS_VERSION == 4 &&
+	_Static_assert(KD_JIT_CAPS_VERSION == 5 &&
 			       KD_JIT_CAP_MUTEX_STACK == 1 &&
 			       KD_JIT_CAP_PERCPU_MODULE == 2,
 		       "Python capability semantics");

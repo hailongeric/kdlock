@@ -1,0 +1,8 @@
+{
+  "created_utc": "2026-10-17T15:00:23.486871+00:00",
+  "main_grid_progress": 214,
+  "selection": "all complete main-grid points with median KD-only loss greater than 5 percent",
+  "extra_pairs": 9,
+  "order": "alternate accepted/KD-only, KD-only/accepted",
+  "pool_with_main_grid": false
+}

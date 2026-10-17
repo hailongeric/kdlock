@@ -100,13 +100,13 @@ int kd_exe_init(void)
 	pinned_spin_lock_addr = (unsigned long)kd_spin_lock_pinned_clobber_v1;
 	cold_spin_unlock_addr = (unsigned long)kd_spin_direct_native_unlock;
 	end_points[end_point_count++] = cold_spin_unlock_addr;
-	mutex_lock_addr = kallsyms_lookup_name("mutex_lock");
-	mutex_unlock_addr = kallsyms_lookup_name("mutex_unlock");
+	mutex_lock_addr = (unsigned long)kd_mutex_local_lock;
+	mutex_unlock_addr = (unsigned long)kd_mutex_local_unlock;
 	end_points[end_point_count] = mutex_unlock_addr;
 	if (mutex_unlock_addr)
 		end_point_count++;
-	clobber_mutex_lock_addr = kallsyms_lookup_name("kd_mutex_lock_clobber_v1");
-	clobber_mutex_unlock_addr = kallsyms_lookup_name("kd_mutex_unlock_clobber_v1");
+	clobber_mutex_lock_addr = 0;
+	clobber_mutex_unlock_addr = 0;
 	if (clobber_mutex_unlock_addr)
 		end_points[end_point_count++] = clobber_mutex_unlock_addr;
 	direct_mutex_lock_addr = (unsigned long)kd_mutex_direct_lock_clobber_v1;

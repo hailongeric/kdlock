@@ -10,9 +10,9 @@ build time, using the same payload source for all three arms.
 | --- | --- |
 | `SC_BACKEND=native` | Original `struct mutex`; `(mutex_lock/unlock)` bypass the experiment's caller-clobber macros |
 | `SC_BACKEND=tclock` | `struct komb_mutex`; actual upstream ordinary mutex port and fixed-affinity worker registration |
-| `SC_BACKEND=kdlock` | Original `struct mutex`; outer caller CAS/cookie pair, contended direct clobber entry and named `mc_entry_*` JIT continuations |
+| `SC_BACKEND=kdlock` | 256-byte `struct kd_mutex`; outer caller CAS/cookie pair, contended direct clobber entry and named `mc_entry_*` JIT continuations |
 
-The paired KD outer cookie records the exact native result for one lexical
+The paired KD outer cookie records the exact local acquisition result for one lexical
 acquisition. General direct mutex interfaces remain available for nested
 control calls; they are not substituted for the outer caller's fast path.
 See [mutex implementation](../../docs/design/mutex_implementation.md) and

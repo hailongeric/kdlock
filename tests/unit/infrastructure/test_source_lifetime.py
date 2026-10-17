@@ -81,7 +81,7 @@ def main():
             ".mutex_stack_bytes = KD_JIT_MUTEX_STACK_BYTES + 8,",
         ),
         "missing-stack-feature": (
-            ".features = KD_JIT_CAP_MUTEX_STACK | KD_JIT_CAP_MUTEX_IMAGES,",
+            ".features = KD_JIT_CAP_MUTEX_STACK | KD_JIT_CAP_MUTEX_IMAGES |\n\t\t\tKD_JIT_CAP_MUTEX_EXCLUSIVE,",
             ".features = 0,",
         ),
         "wrong-module-arena": (

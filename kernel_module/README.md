@@ -2,7 +2,10 @@
 
 This module implements KD spinlocks, mutexes and rwlocks. It also exposes
 `/dev/kd_dev` for translation requests and code uploads. Builds require the recorded
-`kdclobber2` spin and mutex clobber-v1 interfaces and fail if either is missing.
+`kdclobber2` spin-clobber-v1 interface. The KD-only mutex supplies its own object
+and clobber entry; it does not require or call the kernel mutex-clobber interface.
+All private lock and execution services initialize before `/dev/kd_dev` is
+published; teardown removes the device before releasing those services.
 Loading the module does not redirect ordinary Linux lock calls.
 [Lock protocols](../docs/design/lock_protocols.md) and
 [the code map](../docs/CODE_MAP.md) define behavior and source responsibilities.
@@ -45,8 +48,9 @@ boundaries remain separate for reading.
 | [spin](spin/) | Direct entry, native pending/MCS, NUMA queue, batch, prefetch, stable request, restore and unlock |
 | [kd_rwlock.h](../include/kd_rwlock.h) and `spin/{direct,combiner,execute,restore}.inc` | Reader/count protocol and ABI3 writer admission, refusal/retry and completion over the spin backend |
 | `spin/ticket_*.inc` via [kd_spin_entry.c](kd_spin_entry.c) | Exact acquisition generation, root borrowing and final retirement |
-| [mutex](mutex/) via [kd_mutex.c](kd_mutex.c) | Original mutex acquisition, shadow queue, terminal batch, pinned waiter and restore |
-| [lock](lock/) via [kd_lock.c](kd_lock.c) | Direct/bridge mutex routes and nested spin/mutex control CALLs |
+| [mutex](mutex/) via [kd_mutex.c](kd_mutex.c) | Embedded legacy delegation queue, terminal batch, pinned waiter and restore |
+| [kd_mutex_local.c](kd_mutex_local.c), [kd_mutex_osq.c](kd_mutex_osq.c) | KD-owned physical exclusion, sleeping callers and private optimistic spinning |
+| [lock](lock/) via [kd_lock.c](kd_lock.c) | Direct KD mutex routes and nested spin/mutex control CALLs |
 | [execution](execution/) | Registry, wrapper preparation, frame/ledger, control/services, native and remote ACK |
 | [execution/images.inc](execution/images.inc) | Immutable legacy mutex publication, bound generations and stale-miss rejection |
 | [kd_source.c](kd_source.c), [sys.c](sys.c) | Text pins, device session, capabilities, publication and retirement |
@@ -66,7 +70,7 @@ include those files too. Shared APIs live in [include](../include/README.md).
 | --- | --- |
 | `KDLOCK_NUMA` build variable | 1; spin local grouping and CPU-node stack allocation |
 | `KDLOCK_SPIN_BATCH` build variable | 1024, allowed 1..1024 bodies; separate scan budget uses the same initial value |
-| Mutex batch | Fixed 1,024 bodies, FIFO; rejected NUMA grouping is absent |
+| Mutex batch | Fixed 1,024 bodies; accepted bounded NUMA grouping when enabled |
 | `spin_delegate` | Enabled; false selects native KD spin/rwlock-writer self-execution |
 | `spin_prefetch` | 2; producer hints. Modes 0/1 select off/consumer lookup |
 | `spin_entry_ratio_limit` | 2; 0 disables only the ratio filter |

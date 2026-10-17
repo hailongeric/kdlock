@@ -55,10 +55,9 @@ struct qspinlock {
 	atomic_t val;
 };
 typedef struct qspinlock raw_spinlock_t;
-struct mutex {
-	bool locked;
-};
-static bool kd_origin_mutex_owned(struct mutex *lock, struct task_struct *task)
+
+struct kd_mutex { bool locked; struct task_struct *physical_owner; };
+static bool kd_origin_mutex_owned(struct kd_mutex *lock, struct task_struct *task)
 { return lock->locked && task == current; }
 #define ATOMIC_INIT(value) (value)
 #define atomic_read(p) (*(p))
@@ -131,7 +130,7 @@ static unsigned int atomic_cmpxchg(atomic_t *value, unsigned int old,
 		if (0)                       \
 			printf(__VA_ARGS__); \
 	} while (0)
-static int kd_mutex_nested_unlock(struct mutex *lock);
+static int kd_mutex_nested_unlock(struct kd_mutex *lock);
 static void kd_mutex_note_nested_abort_release(void);
 static void kd_spin_debug_nested_unlock(raw_spinlock_t *lock);
 static void origin_raw_spin_unlock(raw_spinlock_t *lock);
@@ -209,7 +208,7 @@ static void released(unsigned long address)
 		release_order[release_count++] = address;
 }
 
-static int kd_mutex_nested_unlock(struct mutex *lock)
+static int kd_mutex_nested_unlock(struct kd_mutex *lock)
 {
 	CHECK(lock->locked);
 	if (unlock_error)
@@ -585,7 +584,7 @@ static void completion(void)
 static void cleanup(bool mutex, enum kd_exec_lock_kind kind, bool last_released)
 {
 	struct kd_exec_frame *frame = push(0);
-	struct mutex mutexes[3] = { { true }, { true }, { !last_released } };
+	struct kd_mutex mutexes[3] = { { .locked = true }, { .locked = true }, { .locked = !last_released } };
 	struct qspinlock spins[3] = { { 1 }, { 1 }, { !last_released } };
 	unsigned long locks[3];
 	enum kd_exec_lock_kind kinds[3] = { KD_EXEC_LOCK_QUEUE_OWNER, kind, kind };
@@ -1032,8 +1031,7 @@ static bool mutex_routing_initialized(const struct kd_exec_frame *frame)
  * fake mutex checks owner identity; actual blocking/ACK has separate fixtures. */
 static void mutex_batch_frames(void)
 {
- struct mutex origin = { .locked = true };
- struct kd_mutex lock = { .origin_mutex_addr = (unsigned long)&origin };
+ struct kd_mutex lock = { .locked = true };
  struct kd_exec_outer_unlock hook = {0};
  struct kd_regs packet = registers(97), expected;
  struct kd_exec_frame *frame, saved, refused;
@@ -1048,9 +1046,6 @@ static void mutex_batch_frames(void)
  CHECK(!kd_exec_frame_push_mutex_batch(&packet,0x1000,0x3000,NULL,&lock,&hook));
  CHECK(!kd_exec_frame_push_mutex_batch(&packet,0x1000,0x3000,&waiters[0],NULL,&hook));
  CHECK(!kd_exec_frame_push_mutex_batch(&packet,0x1000,0x3000,&waiters[0],&lock,NULL));
- lock.origin_mutex_addr=0;
- CHECK(!kd_exec_frame_push_mutex_batch(&packet,0x1000,0x3000,&waiters[0],&lock,&hook));
- lock.origin_mutex_addr=(unsigned long)&origin;
  CHECK(!memcmp(&before,kd_exec_current_context(),sizeof(before)) && source_frames==1);
  kd_exec_current_context()->owner=&owners[1];
  before=*kd_exec_current_context();
@@ -1064,7 +1059,7 @@ static void mutex_batch_frames(void)
   if (!frame) return;
   CHECK(frame->mutex_backend && frame->entry_abi==KD_ENTRY_ABI_MUTEX_CLOBBER_V1 &&
         frame->packet_state==KD_PACKET_MINIMAL && kd_exec_frame_validate(frame));
-  CHECK(frame->jit_lock_node[0]==&lock && frame->jit_lock_addr[0]==(unsigned long)&origin);
+  CHECK(frame->jit_lock_node[0]==&lock && frame->jit_lock_addr[0]==(unsigned long)&lock);
   CHECK(!frame->complex_ready && mutex_routing_poisoned(frame));
   CHECK(frame->outer_unlock_hook==&hook && kd_exec_frame_regs(frame)==&packet);
   if (round) {
@@ -1110,18 +1105,18 @@ static void mutex_batch_frames(void)
    case 22: frame->outer_unlock_hook=NULL;break;
    case 23: hook.released=true;break;
    case 24: lock.physical_owner=&owners[1];break;
-   case 25: origin.locked=false;break;
+   case 25: lock.locked=false;break;
    }
    refused=*frame;
    CHECK(kd_exec_frame_retire_mutex_batch(frame,&lock)==-EINVAL);
    CHECK(!memcmp(frame,&refused,sizeof(refused)) && source_frames==1);
-   *frame=saved;hook.released=false;lock.physical_owner=current;origin.locked=true;
+   *frame=saved;hook.released=false;lock.physical_owner=current;lock.locked=true;
   }
   /* Closure stops new roots, but cannot strand an admitted body's lease. */
   source_open=false;
   CHECK(!kd_exec_frame_retire_mutex_batch(frame,&lock));
   if (!round) CHECK(mutex_routing_poisoned(frame));
-  CHECK(!kd_exec_current_frame() && source_frames==1 && origin.locked);
+  CHECK(!kd_exec_current_frame() && source_frames==1 && lock.locked);
   before=*kd_exec_current_context();
   CHECK(!kd_exec_frame_push_mutex_batch(&packet,0x1000,0x3000,&waiters[0],&lock,&hook));
   CHECK(!memcmp(&before,kd_exec_current_context(),sizeof(before)) && source_frames==1);

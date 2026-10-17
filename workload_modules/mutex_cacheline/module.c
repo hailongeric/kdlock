@@ -31,14 +31,14 @@
 #if defined(SC_DIRECT_KDLOCK)
 #include <linux/objtool.h>
 #include "kd_mutex_direct.h"
-static struct mutex sc_lock __aligned(SC_LINE_BYTES);
+static struct kd_mutex sc_lock;
 #define SC_LOCK(n) struct kd_mutex_outer_cookie sc_outer_cookie; \
 	KD_MUTEX_OUTER_LOCK(&sc_lock, sc_outer_cookie, \
 	".globl mc_entry_" #n "\nmc_entry_" #n ":\n\t" ANNOTATE_NOENDBR)
 #define SC_UNLOCK() KD_MUTEX_OUTER_UNLOCK(&sc_lock, sc_outer_cookie)
 extern char mc_entry_0[], mc_entry_1[], mc_entry_2[], mc_entry_4[];
 extern char mc_entry_8[], mc_entry_16[];
-static void sc_lock_init(void) { mutex_init(&sc_lock); }
+static void sc_lock_init(void) { kd_mutex_init(&sc_lock); }
 #elif defined(SC_DIRECT_TCLOCK)
 #include "mutex/komb_mutex.h"
 static struct komb_mutex sc_lock __aligned(SC_LINE_BYTES);
@@ -67,6 +67,8 @@ static int sc_workers_drain(void)
 {
 #ifdef SC_DIRECT_TCLOCK
 	return tc_mutex_workers_drain();
+#elif defined(SC_DIRECT_KDLOCK)
+	return kd_mutex_is_idle(&sc_lock) ? 0 : -EBUSY;
 #else
 	return 0;
 #endif

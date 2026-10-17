@@ -70,15 +70,13 @@ resource failure after progress cannot be relabelled an unstarted retry.
 
 ### 5.1 Physical lock and scheduling gate
 
-KD retains the original Linux `struct mutex`, including its owner word, wait list
-and sleeping rules. Ordinary native users still contend on that same mutex. A
-private `komb_mutex`, called the shadow gate, orders KD's queued work. A combiner
-must acquire the Linux mutex as well as that gate before running a delegated body.
-Loading KD does not intercept global mutex calls.
+KD owns a 256-byte `struct kd_mutex`, with its physical owner, sleeping wait list,
+private OSQ and legacy delegation gate. Every executor acquires physical exclusion
+as well as the gate. There is no Linux mutex object or shadow lookup. Every caller
+must obey the [KD-only object/API contract](kd_only_mutex.md); loading the module
+does not replace objects in the running kernel.
 
-Exact shadow addresses select the gate. The current 1024-entry table has lock-free
-published-key reads and serialized insertion; full capacity falls back natively.
-Task/acquisition records route retained native unlocks and hold real task references
+Task/acquisition records retain real task references and exact unlock routing
 through final ACK. A profiling value cannot authorize release.
 
 ### 5.2 Entry, completion and task routing
@@ -88,9 +86,14 @@ through final ACK. A profiling value cannot authorize release.
 
 `KD_MUTEX_OUTER_LOCK/UNLOCK` keeps a cookie for one acquisition. The same task must
 use it for the matching unlock; callers must not copy, modify or transfer it.
-If the caller's owner CAS succeeds, the cookie records the native owner and unlock
-calls the original `(mutex_unlock)`. If the CAS fails, the provider counts that
-entry once and continues without repeating the first CAS.
+The caller makes up to eight read-guarded owner probes, with a pause after each
+failure. If its zero-owner CAS succeeds, the cookie records the native owner and
+unlock calls `kd_mutex_local_unlock`. If the bounded window is exhausted, the
+provider counts that contention once and enters legacy admission without
+repeating the probe window. The existing active-combiner gate state (3) also ends retries, so new work
+joins a batch promptly. A lone gate owner (state 1) may finish its local body
+during the bounded retry window. The observed state is only a hint;
+it never authorizes ownership or retirement. There is no worker-count threshold.
 
 A native fallback may return the exact task owner only before it takes a KD
 reference or gate. Once the request enters the KD queue, it returns zero instead.
@@ -99,14 +102,14 @@ Zero tells the matching unlock to use KD's ownership routing.
 The physical return preserves its result. The separate JIT entry defines zero
 before using the cookie, avoiding an incoming-RAX dependency under MINIMAL. Nested
 JIT controls use `KD_MUTEX_DIRECT_LOCK/UNLOCK`, not the outer result-returning entry.
-Existing void contended and kernel bridge aliases remain compatible; generic
-bridge/control recovery uses FULL state.
+The void direct interfaces retain ABI2; generic control recovery uses FULL state.
+Linux mutex bridge symbols are refused by the KD-only translator.
 
 #### Provider acquisition and completion
 
-Before executing a delegated body the combiner must hold the original Linux mutex.
+Before executing a delegated body the combiner must hold KD physical exclusion.
 The frame ledger records that physical owner. A batch may retain its source lease
-and physical ownership, but cannot bypass native-peer exclusion or owner checks.
+and physical ownership, but cannot bypass physical exclusion or owner checks.
 Dedicated ABI2 preparation/completion/retirement avoids generic work for eligible
 simple roots; FULL exits materialize cold routing fields before generic use.
 
@@ -133,7 +136,7 @@ on from running. The reproduced mode-4 failure remains in
 
 ### 5.3 Nested A/B and native continuation
 
-Local B acquisition uses the original mutex and records the combiner as physical
+Local B acquisition uses the KD physical primitive and records the combiner as physical
 owner. A validated PENDING capacity/control boundary resumes the original CALL;
 a checked STACK_CHANGED boundary resumes after the already-completed CALL.
 Previously acquired A/B remain on their real owners, serviced through native
@@ -153,8 +156,8 @@ readers drain. Native frames for independent tasks/locks use independent ACK pac
 
 | Boundary | Spin | Mutex |
 | --- | --- | --- |
-| Physical lock | KD word | Original Linux mutex |
-| Queue | Tail in the same word | Separate shadow gate |
+| Physical lock | KD word | KD-owned owner word and sleeping wait list |
+| Queue | Tail in the same word | Legacy scheduling fields in the same object |
 | Native route | Generation-checked ticket/borrow | Task acquisition reference and owner ACK |
 | Sleeping | Ordinary path does not sleep | Physical owner/control may sleep |
 | Restore | Stable continuation retained through packet reads | Node packet; FULL copy before node reuse |

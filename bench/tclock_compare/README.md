@@ -1,5 +1,10 @@
 # KD, TCLock and Linux Native comparison
 
+The current KD mutex arm uses a 256-byte `struct kd_mutex` with no Linux mutex
+imports. The shared client validates its full object extent; other lock types
+keep their own sizes. The accepted `555b8b7` baseline uses its frozen older client,
+provider and translator in the [paired round](../results/10.176.26.71/bench/comparison/mutex-kdonly-20261017T140354Z/README.md).
+
 [run.py](run.py) measures spin; [run_mutex.py](run_mutex.py) measures ordinary mutex.
 Each backend has its own compiled workload functions and lock object. They use
 the same protected operations, timing method and reports. Choosing spin versus
@@ -94,7 +99,7 @@ policy. Static snapshots check complete structure and exact operation totals.
 | --- | --- | --- |
 | Native | Original kernel functions, no provider | Original mutex functions bypass experimental clobber macros |
 | TCLock | Native waiter-stack delegation | Actual upstream ordinary mutex port with parking |
-| KD | Explicit KD word, ABI1/JIT | Original Linux mutex plus shadow gate, ABI2/outer cookie/JIT |
+| KD | Explicit KD word, ABI1/JIT | KD-owned physical mutex and embedded legacy gate, ABI2/outer cookie/JIT |
 
 TCLock retains NUMA/WWJUMP and configured 1,024; zero-based jumps can execute 1,025
 bodies. The shared port header currently enables NUMA even when Makefile's variable

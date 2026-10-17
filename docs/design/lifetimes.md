@@ -17,18 +17,18 @@ The earlier audit is in [VALIDATION](../VALIDATION.md#source-and-hook-lifetime-r
 | JIT entry and source code | Entries use `(0, RIP)`. Registration, text reads and ordinary call targets pin up to 64 LIVE modules for the session. Retirement invalidates every used entry before dropping those pins. | No concurrent code versions or source replacement within a session. Init and unknown source are refused. |
 | Translation session | The daemon, cache and translator children share one writer-open device description. Real kcore reads pin source before inspecting it. | Publishers must follow this path. A pin keeps a module loaded; it does not prove its bytes are unchanged or arbitrary pointers remain valid. |
 | Hotlock record | Per-CPU records match exact typed addresses, have bounded capacity and reset their sampling windows without eviction. | Reusing an address does not identify a new allocation. Statistics cannot authorize unlock or request retirement. |
-| Mutex shadow | Scheduling records are indexed by the mutex address. | There is no allocation/free notification or retirement operation for an individual lock object. |
+| KD mutex object | The caller owns physical and scheduling state in one object. | Join callers and drain physical/OSQ/sleeping/delegation queues, ACKs and frames before destroy or reuse. `kd_mutex_is_idle` checks stopped objects; it does not pin storage. |
 | KD spin word and ticket | The caller owns the four-byte word. A stable ticket retains task, CPU and acquisition generation. | There is no separate gate map or second Linux lock. The caller must keep storage alive through every owner and request. |
 | KD rwlock count and gate | The caller owns the 128-byte object. Fast native writers hold an exact nondelegated reference; gated writers use spin tickets and frames. | Source pins do not pin lock allocations or reader data. Join all readers and writers before freeing or reinitializing them. |
 | Active request | Spin continuations outlive queue-node reuse. Native executors retain root tickets; mutex requests retain exact task acquisition references and owner ACKs. Source/provider leases last through frame removal, once per eligible spin/mutex batch or per generic push. Inactive cached mutex identities retain only task lifetime, with routing disabled. | These references do not pin the containing lock allocation or protect execution before hook entry or after frame removal. |
 | Hook provider | Device operations use `.owner=THIS_MODULE`; preserved guest hooks are plain function pointers into KD. | A `/dev/kd_dev` reference does not protect independent readers of lock-hook pointers. |
 
 See [registration](../../kernel_module/exe.c), [hook publication/removal](../../kernel_module/kd_main.c),
-[mutex shadow lookup](../../kernel_module/kd_lock.c) and
+[KD physical exclusion](../../kernel_module/kd_mutex_local.c) and
 [spin ticket ownership](../../kernel_module/kd_spin_entry.c) for implementation.
 
 Address reuse alone does not prove an exclusion bug: KD still acquires an initialized
-spin word or the original mutex. However, address-keyed tables cannot distinguish
+spin word or KD physical mutex. However, address-keyed tables cannot distinguish
 two allocations at the same address, reset policy for a new allocation, or prove
 that old users have finished. Keep storage alive until all of them finish. Even
 the final logical ACK for lock A can arrive before the batch physically releases

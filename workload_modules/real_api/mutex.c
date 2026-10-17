@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-only
 /* Scoped, task-context syscall comparison on the captured 6.1.159 kernel.
- * Native and KD retain the actual kernel mutex. TCLock requires its own object;
+ * Native uses the actual kernel mutex. KD and TCLock use private objects;
  * all consumers of the private pipe/file must obey the selected protocol.
  * The client retains every descriptor until the workers join and hooks unload.
  * No reads/writes/resizes, descriptor mutation, or independent consumers while
@@ -31,17 +31,20 @@ module_param(target_pid, int, 0400);
 static int target_fd;
 static struct file *target_file;
 static struct pipe_inode_info *target_pipe;
+#ifndef RB_KDLOCK
 static struct mutex *original_lock;
+#endif
 static unsigned long lock_addr;
 module_param(lock_addr, ulong, 0400);
 static DEFINE_PER_CPU(u64, redirected);
 
 #ifdef RB_KDLOCK
 #include "kd_mutex_direct.h"
+static struct kd_mutex kd_lock;
 #define RA_COOKIE struct kd_mutex_outer_cookie cookie
-#define RA_LOCK() KD_MUTEX_OUTER_LOCK(original_lock, cookie, \
+#define RA_LOCK() KD_MUTEX_OUTER_LOCK(&kd_lock, cookie, \
 	".globl rb_entry\nrb_entry:\n\t" ANNOTATE_NOENDBR)
-#define RA_UNLOCK() KD_MUTEX_OUTER_UNLOCK(original_lock, cookie)
+#define RA_UNLOCK() KD_MUTEX_OUTER_UNLOCK(&kd_lock, cookie)
 extern char rb_entry[];
 #elif defined(RB_TCLOCK)
 #include "mutex/komb_mutex.h"
@@ -153,7 +156,7 @@ static int prepare_set(const char *value, const struct kernel_param *kp)
 	if (kstrtouint(value, 0, &n) || n != 1 || !lock_addr)
 		return -EINVAL;
 #ifdef RB_KDLOCK
-	return kd_mutex_prepare(original_lock, (unsigned long)rb_entry,
+	return kd_mutex_prepare(&kd_lock, (unsigned long)rb_entry,
 				KD_ENTRY_ABI_MUTEX_CLOBBER_V1);
 #else
 	return 0;
@@ -178,6 +181,8 @@ static long control_ioctl(struct file *file, unsigned int cmd, unsigned long arg
 	if (cmd == RA_DRAIN) {
 #ifdef RB_TCLOCK
 		return tc_mutex_workers_drain();
+#elif defined(RB_KDLOCK)
+		return kd_mutex_is_idle(&kd_lock) ? 0 : -EBUSY;
 #else
 		return 0;
 #endif
@@ -247,7 +252,9 @@ static int __init rb_init(void)
 	target_pipe = target_file->private_data;
 	if (pipe_has_watch_queue(target_pipe))
 		goto fail;
+#ifndef RB_KDLOCK
 	original_lock = &target_pipe->mutex;
+#endif
 #else
 	if (!S_ISREG(file_inode(target_file)->i_mode) ||
 	    file_inode(target_file)->i_sb->s_magic != TMPFS_MAGIC ||
@@ -255,13 +262,20 @@ static int __init rb_init(void)
 	     (unsigned long)target_file->f_op->llseek != kallsyms_lookup_name("shmem_file_llseek")) ||
 	    !(target_file->f_mode & FMODE_ATOMIC_POS))
 		goto fail;
+#ifndef RB_KDLOCK
 	original_lock = &target_file->f_pos_lock;
 #endif
+#endif
+#ifndef RB_KDLOCK
 	if (mutex_is_locked(original_lock))
 		goto fail;
+#endif
 #ifdef RB_TCLOCK
 	komb_mutex_init(&tc_lock);
 	lock_addr = (unsigned long)&tc_lock;
+#elif defined(RB_KDLOCK)
+	kd_mutex_init(&kd_lock);
+	lock_addr = (unsigned long)&kd_lock;
 #else
 	lock_addr = (unsigned long)original_lock;
 #endif
@@ -290,7 +304,11 @@ static void __exit rb_exit(void)
 	unregister_ftrace_function(&trace_ops);
 	ftrace_set_filter_ip(&trace_ops, hook_addr, 1, 0);
 	misc_deregister(&control_device);
+#ifdef RB_KDLOCK
+	WARN_ON_ONCE(!kd_mutex_is_idle(&kd_lock));
+#else
 	WARN_ON_ONCE(mutex_is_locked(original_lock));
+#endif
 	fput(target_file);
 }
 module_init(rb_init);

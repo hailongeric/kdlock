@@ -77,7 +77,7 @@ def production():
     ):
         code += definition(device, name)
     code += definition(read_source(ROOT / 'kernel_module/kd_lock.c'),
-                       'int kd_mutex_prepare(struct mutex *lock, unsigned long ip, unsigned int abi)')
+                       'int kd_mutex_prepare(struct kd_mutex *lock, unsigned long ip, unsigned int abi)')
     return code
 
 
