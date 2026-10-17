@@ -1,0 +1,98 @@
+{
+  "baseline/c01-post64": {
+    "/root/host_fs/kdlock/bench/spin_cacheline/.build/provider/kernel_module/kdlock_km.ko": "a0d4ce452ebb8434d7a7cbf7bf9cf0323fc7a1d5a015fc9d37dc7e8250c9b132",
+    "/root/host_fs/kdlock/bench/spin_cacheline/client": "15229b4d02b0d0e5828069ee9f4b6d9e73953ae22060dc5fa6eed8067f96b8a1",
+    "/root/host_fs/kdlock/bench/tclock_compare/allocator_guard/tc_allocator_guard.ko": "4323537a05b588952ba6800a5b65cf3f0681174c3aa37dd1102e5cc1e963f930",
+    "/root/host_fs/kdlock/daemon/daemon": "64c341457a1f28908d6a8034380ebbea72db85b60f4aeae980f3a2190d5381ab",
+    "/root/host_fs/kdlock/tclock_backend/tclock_mutex_backend_km.ko": "f1e6fd9041ca24ee802bfeb02ae95a258c9f87b9ede36a09fcd3d7e7d4234916",
+    "/root/kdlock-evidence/10.176.26.71/bench/mutex-legacy-grid-20261016T125529Z/c01-post64/variants/kdlock/mutex_cacheline.ko": "9b8fbf6ec59053b71d2763b76214333097d979b92305064633f192a0be4d524c",
+    "/root/kdlock-evidence/10.176.26.71/bench/mutex-legacy-grid-20261016T125529Z/c01-post64/variants/native/mutex_cacheline.ko": "d0ce61744a5812de96f2a4773b6fce0f158e023a4593073998475b7a3b5d4b9f",
+    "/root/kdlock-evidence/10.176.26.71/bench/mutex-legacy-grid-20261016T125529Z/c01-post64/variants/tclock/mutex_cacheline.ko": "d5730969bed73a83e5f2943b7eb6e267e2ec14d888f0ae60a789fdee4b0e21ab"
+  },
+  "baseline/api-pipebytes-query-n16": {
+    "client": {
+      "path": "/root/kdlock-evidence/10.176.26.71/bench/mutex-legacy-compat-20261017T122742Z/attempt2/baseline/api-pipebytes-query-n16/build/client",
+      "sha256": "82af39176fa3cc31f5e5291a5369b1575b47c4af5d0c71c7ad93c118bc11707b"
+    },
+    "daemon": {
+      "path": "/root/kdlock-evidence/10.176.26.71/bench/mutex-legacy-compat-20261017T122742Z/attempt2/baseline/api-pipebytes-query-n16/build/daemon",
+      "sha256": "64c341457a1f28908d6a8034380ebbea72db85b60f4aeae980f3a2190d5381ab"
+    },
+    "kdlock-pipebytes/real_api.ko": {
+      "path": "/root/kdlock-evidence/10.176.26.71/bench/mutex-legacy-compat-20261017T122742Z/attempt2/baseline/api-pipebytes-query-n16/build/kdlock-pipebytes/real_api.ko",
+      "sha256": "cbc672fc24027dbdac0ed66878c1ac3945fa442ec2b3f53eb594af7910ca7c30"
+    },
+    "kdlock_km.ko": {
+      "path": "/root/kdlock-evidence/10.176.26.71/bench/mutex-legacy-compat-20261017T122742Z/attempt2/baseline/api-pipebytes-query-n16/build/kdlock_km.ko",
+      "sha256": "d893d2239ec26de173c66199667e6143109275192e879efd239ca8f7bd2486cc"
+    },
+    "native-pipebytes/real_api.ko": {
+      "path": "/root/kdlock-evidence/10.176.26.71/bench/mutex-legacy-compat-20261017T122742Z/attempt2/baseline/api-pipebytes-query-n16/build/native-pipebytes/real_api.ko",
+      "sha256": "2427cfada1523177e13dee997dd3c4f5261145a14dedfb1d875c7931b1906c33"
+    },
+    "tc_allocator_guard.ko": {
+      "path": "/root/kdlock-evidence/10.176.26.71/bench/mutex-legacy-compat-20261017T122742Z/attempt2/baseline/api-pipebytes-query-n16/build/tc_allocator_guard.ko",
+      "sha256": "4323537a05b588952ba6800a5b65cf3f0681174c3aa37dd1102e5cc1e963f930"
+    },
+    "tclock-mutex/tclock_mutex_backend_km.ko": {
+      "path": "/root/kdlock-evidence/10.176.26.71/bench/mutex-legacy-compat-20261017T122742Z/attempt2/baseline/api-pipebytes-query-n16/build/tclock-mutex/tclock_mutex_backend_km.ko",
+      "sha256": "8b9d1cc0337c367ff4d1c006e78a07c76f73a0253542df28d669e62e3fbb8bd3"
+    },
+    "tclock-pipebytes/real_api.ko": {
+      "path": "/root/kdlock-evidence/10.176.26.71/bench/mutex-legacy-compat-20261017T122742Z/attempt2/baseline/api-pipebytes-query-n16/build/tclock-pipebytes/real_api.ko",
+      "sha256": "fcfad9780b1ea4ffe5edd30b1bef4cd8e07460e818ce5c37d9ad29c950c69e5c"
+    },
+    "tclock_mutex_backend_km.ko": {
+      "path": "/root/kdlock-evidence/10.176.26.71/bench/mutex-legacy-compat-20261017T122742Z/attempt2/baseline/api-pipebytes-query-n16/build/tclock_mutex_backend_km.ko",
+      "sha256": "8b9d1cc0337c367ff4d1c006e78a07c76f73a0253542df28d669e62e3fbb8bd3"
+    }
+  },
+  "compat/c01-post64": {
+    "/mnt/kdlock-builds/evidence/10.176.26.71/bench/mutex-legacy-compat-20261017T122742Z/attempt2/compat/c01-post64/variants/kdlock/mutex_cacheline.ko": "6f70b270c688fea47fa5a5959cf9c7a144866a48f68687ab0ad8c11f343ff96a",
+    "/mnt/kdlock-builds/evidence/10.176.26.71/bench/mutex-legacy-compat-20261017T122742Z/attempt2/compat/c01-post64/variants/native/mutex_cacheline.ko": "dba2c800857027cb6f2a4afc939ba41d9eb9254f159cc3fb24986d1a6eff724c",
+    "/mnt/kdlock-builds/evidence/10.176.26.71/bench/mutex-legacy-compat-20261017T122742Z/attempt2/compat/c01-post64/variants/tclock/mutex_cacheline.ko": "3e37faae939f40e92fde50328323db65b1799eb310e7e6c7e7bc489d12f7a853",
+    "/root/host_fs/kdlock/bench/spin_cacheline/.build/provider/kernel_module/kdlock_km.ko": "eb0ac718065d88fadf17c6d611c53ef26420f525545bbd5732d9733c51bfcb01",
+    "/root/host_fs/kdlock/bench/spin_cacheline/client": "15229b4d02b0d0e5828069ee9f4b6d9e73953ae22060dc5fa6eed8067f96b8a1",
+    "/root/host_fs/kdlock/bench/tclock_compare/allocator_guard/tc_allocator_guard.ko": "4323537a05b588952ba6800a5b65cf3f0681174c3aa37dd1102e5cc1e963f930",
+    "/root/host_fs/kdlock/daemon/daemon": "ce5fdd42680cdf590daafeef56c6436e881ad693707dca4fb3852be021888536",
+    "/root/host_fs/kdlock/tclock_backend/tclock_mutex_backend_km.ko": "f1e6fd9041ca24ee802bfeb02ae95a258c9f87b9ede36a09fcd3d7e7d4234916"
+  },
+  "compat/api-pipebytes-query-n16": {
+    "client": {
+      "path": "/mnt/kdlock-builds/evidence/10.176.26.71/bench/mutex-legacy-compat-20261017T122742Z/attempt2/compat/api-pipebytes-query-n16/build/client",
+      "sha256": "82af39176fa3cc31f5e5291a5369b1575b47c4af5d0c71c7ad93c118bc11707b"
+    },
+    "daemon": {
+      "path": "/mnt/kdlock-builds/evidence/10.176.26.71/bench/mutex-legacy-compat-20261017T122742Z/attempt2/compat/api-pipebytes-query-n16/build/daemon",
+      "sha256": "ce5fdd42680cdf590daafeef56c6436e881ad693707dca4fb3852be021888536"
+    },
+    "kdlock-pipebytes/real_api.ko": {
+      "path": "/mnt/kdlock-builds/evidence/10.176.26.71/bench/mutex-legacy-compat-20261017T122742Z/attempt2/compat/api-pipebytes-query-n16/build/kdlock-pipebytes/real_api.ko",
+      "sha256": "a13edd0efd100f875fefaa2e41ea889c0bba3679e02d6804bf8ead06d4e3625d"
+    },
+    "kdlock_km.ko": {
+      "path": "/mnt/kdlock-builds/evidence/10.176.26.71/bench/mutex-legacy-compat-20261017T122742Z/attempt2/compat/api-pipebytes-query-n16/build/kdlock_km.ko",
+      "sha256": "5f693e0b6bf8902b7a620a08db882cd608ac7c94a6b7118b5928c057bac9d1eb"
+    },
+    "native-pipebytes/real_api.ko": {
+      "path": "/mnt/kdlock-builds/evidence/10.176.26.71/bench/mutex-legacy-compat-20261017T122742Z/attempt2/compat/api-pipebytes-query-n16/build/native-pipebytes/real_api.ko",
+      "sha256": "5cf9024a1e259d2e82935380eb4c6e9da9da8c31132d0ce877aab5e6d597205c"
+    },
+    "tc_allocator_guard.ko": {
+      "path": "/mnt/kdlock-builds/evidence/10.176.26.71/bench/mutex-legacy-compat-20261017T122742Z/attempt2/compat/api-pipebytes-query-n16/build/tc_allocator_guard.ko",
+      "sha256": "4323537a05b588952ba6800a5b65cf3f0681174c3aa37dd1102e5cc1e963f930"
+    },
+    "tclock-mutex/tclock_mutex_backend_km.ko": {
+      "path": "/mnt/kdlock-builds/evidence/10.176.26.71/bench/mutex-legacy-compat-20261017T122742Z/attempt2/compat/api-pipebytes-query-n16/build/tclock-mutex/tclock_mutex_backend_km.ko",
+      "sha256": "a1701687fd908c0e026862d4cbf208efd1ae14e8b7dcdeffc437b69f654c9644"
+    },
+    "tclock-pipebytes/real_api.ko": {
+      "path": "/mnt/kdlock-builds/evidence/10.176.26.71/bench/mutex-legacy-compat-20261017T122742Z/attempt2/compat/api-pipebytes-query-n16/build/tclock-pipebytes/real_api.ko",
+      "sha256": "94574a13f9cc06aabc52003d6e8c2eebf7b94f328b1e46ddc0d9d87551ac54e8"
+    },
+    "tclock_mutex_backend_km.ko": {
+      "path": "/mnt/kdlock-builds/evidence/10.176.26.71/bench/mutex-legacy-compat-20261017T122742Z/attempt2/compat/api-pipebytes-query-n16/build/tclock_mutex_backend_km.ko",
+      "sha256": "a1701687fd908c0e026862d4cbf208efd1ae14e8b7dcdeffc437b69f654c9644"
+    }
+  }
+}

@@ -152,3 +152,15 @@ Other results remain tied to their versions in [VALIDATION](../docs/VALIDATION.m
 and [benchmark history](../bench/results/380G10/bench/tclock_compare/HISTORY.md). Retain original
 ignored/guest archives and failed candidates; known failures and deferrals remain in
 [TODO](../docs/TODO.md).
+
+## Legacy compatibility checks
+
+The [backport](../docs/design/legacy_mutex_compatibility.md) adds
+`admission/test_instruction_policy.py` and `execution/test_mutex_images.py`.
+`execution/test_exe_registry.py` also executes production `kd_mutex_prepare()`
+against a newly registered root with no code block, terminal refusals and source
+closure. Select these with the existing basic, context/codegen, source-lifetime,
+entry-scope, wrapper and legacy ABI checks; no full inventory run is implied.
+The [2026-10-17 validation receipt](../bench/results/10.176.26.71/bench/comparison/mutex-legacy-compat-20261017T122742Z/validation.json)
+records the completed selected checks and builds. The accompanying report records
+504 accepted/drained live benchmark sessions and independent archive replay.

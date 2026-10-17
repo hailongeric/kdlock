@@ -1,5 +1,13 @@
 # Results from 10.176.26.71
 
+The [legacy compatibility comparison, 2026-10-17](bench/comparison/mutex-legacy-compat-20261017T122742Z/README.md)
+contains 504 accepted/drained sessions for c01/post64 and pipebytes n16, with
+fresh legacy, backported legacy, Native and TCLock at all 21 worker counts.
+At 60 workers, the backport reaches 4.914/5.375 Mops/s versus legacy's
+4.820/5.370. The 44-worker pipebytes regression and low-count variability remain
+in the report. Both KD versions retain the legacy lock protocol. This run uses
+64 vCPUs and collector CPU 63.
+
 The [fresh legacy mutex grid](bench/comparison/mutex-legacy-grid-20261016T125529Z/README.md)
 compares c01/post64 and pipebytes n16 over all 21 requested worker counts,
 with 378 accepted/drained sessions. At 60 workers, legacy KD reaches
@@ -44,7 +52,7 @@ checkout on `380G10` and are synchronized to this VM before testing.
 - [64-vCPU setup and affected checks, 2026-10-10](tests/20261010-topology64/README.md)
 - [Initial 60-vCPU migration validation, 2026-10-10](bench/migration-20261010T070707Z/README.md)
 
-The complete comparisons, including the latest mutex results, use a temporary
+The historical complete comparisons through 2026-10-11 use a temporary
 66-vCPU boot, 32 worker CPUs per NUMA node and collector vCPU 65. At 64 workers,
 the collector and QEMU services share
 physical host core 63 with the last worker. The earlier bounded report uses a

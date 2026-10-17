@@ -21,6 +21,7 @@ import solve_bug
 from translation_image import emit_jit_assembly, write_entry_dispatch, wrapper_context_inputs
 from translation_scope import (
     decode_regions, find_resumable_call_continuations, find_segment_policy_error,
+    find_undecoded_policy_error,
 )
 
 
@@ -221,6 +222,11 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0):
             return reject_translation(reason)
         if entry not in block_dict:
             return reject_translation("entry has no reachable decoded block")
+
+        encoding_error = find_undecoded_policy_error(block_dict, rets)
+        if encoding_error:
+            offset, reason = encoding_error
+            return reject_translation(f"{reason} at 0x{offset:x}")
 
         code_ranges = [(start, start + len(data)) for data, start, _ in rets]
         empty_blocks = {

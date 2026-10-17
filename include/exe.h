@@ -1,5 +1,6 @@
 #ifndef EXE_H
 #define EXE_H
+#include "kd_image.h"
 /* Registry and frame-backed executor interface. KD_EXE_RUN_* below are C
  * dispatcher results, not the similarly named wrapper/wire status constants
  * in exe_info.h; backends must preserve that distinction when handing off. */

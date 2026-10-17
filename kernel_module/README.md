@@ -48,6 +48,7 @@ boundaries remain separate for reading.
 | [mutex](mutex/) via [kd_mutex.c](kd_mutex.c) | Original mutex acquisition, shadow queue, terminal batch, pinned waiter and restore |
 | [lock](lock/) via [kd_lock.c](kd_lock.c) | Direct/bridge mutex routes and nested spin/mutex control CALLs |
 | [execution](execution/) | Registry, wrapper preparation, frame/ledger, control/services, native and remote ACK |
+| [execution/images.inc](execution/images.inc) | Immutable legacy mutex publication, bound generations and stale-miss rejection |
 | [kd_source.c](kd_source.c), [sys.c](sys.c) | Text pins, device session, capabilities, publication and retirement |
 | [kd_hotlock.c](kd_hotlock.c) | Exact-address per-type tables and approximate sampling |
 | [kd_mutex_tasks.c](kd_mutex_tasks.c) | Exact task/acquisition refs and RCU lifetime |

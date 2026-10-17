@@ -277,8 +277,9 @@ when that boot-fixed chunk exists, failing rather than spilling to a dynamic
 chunk when full. Normal module unload frees allocations within that arena,
 not the arena's address classification. This does not pin or validate an object.
 
-The provider reports this bound using version 2 of the existing 16-byte CAPS
-packet on the same device lease. It checks the build constants and the non-NULL
+The provider reports this bound using the existing 16-byte CAPS packet on the
+same device lease. The module bound was introduced in version 2; this branch
+uses version 4 and also requires the legacy immutable mutex image capability. It checks the build constants and the non-NULL
 `pcpu_reserved_chunk` pointer, which is read-only after init; it never dereferences
 the private chunk layout. Translation adds `[base + ALIGN(core_size, 4),
 base + ALIGN(core_size, 4) + module_bytes)` for each possible CPU. Version 1,
@@ -320,13 +321,17 @@ flow; opening a new device after an error is not a supported recovery path.
 Policy refusal removes stale outputs and exits 2; launch failures/exceptions
 are errors/retry conditions, not successful native-only decisions.
 
-Images must be nonempty and fit 640 KiB. Transfers use up to 4000-byte chunks;
-the last complete chunk sets NORMAL. The kernel checks entry, offset, payload
-size and status, but does not establish complete image continuity/generation
-or protect live executors. Recompilation overwrites the existing block.
+Images must include the 48-byte protocol/ABI directory and fit 640 KiB. Transfers
+use up to 4000-byte chunks with exact upload identity, contiguous coverage and a
+base generation. Mutex uploads publish a complete immutable descriptor; frames
+retain it through continuations and old-generation misses cannot change a newer
+image's metadata. Published versions remain in the bounded pool until teardown.
+Spin/rwlock images retain in-place storage. Independent locks sharing a RIP do
+not establish image lifetime through lock serialization.
 
-Independent locks may share the RIP-keyed artifact; early A unlock can also
-allow overlapping execution. Lock serialization is not version retirement.
-Immutable versions, full publication validation and reclamation are explicitly
-deferred under [C3](../TODO.md#c3-immutable-jit-publication-and-lifetime).
+The scalar instruction policy also refuses processor-state instructions, unknown
+mnemonics and equivalent context helpers before emission. Sensitive raw encodings
+are checked at instruction boundaries, including selected undecodable roots.
+See [the compatibility backport](legacy_mutex_compatibility.md) for scope, capability
+negotiation and the separate owned-origin/ABI4 interfaces.
 See [daemon README](../../daemon/README.md) for CLI and diagnostics.

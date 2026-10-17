@@ -113,23 +113,24 @@ that storage is reused or the original preemption pin is released. See
 
 A simple batch can hold one source lease across all its bodies, including native
 or remote waits. KD still checks each request's image readiness. Holding source
-modules loaded does not make the generated image immutable.
+modules loaded does not itself make a generated image immutable. Mutex frames
+now bind a separately published generation on the compatibility branch.
 
 The registry has 511 slots. Provider initialization allocates up to 64 page-aligned
 code blocks of 640 KiB each, or 40 MiB in total. The daemon uploads an image in
 chunks and marks it NORMAL after the last complete chunk. NORMAL means that code
 was published; it does not mean a request executed that code.
 
-Recompiling an entry currently overwrites the block associated with its instruction
-address (RIP). There is no separate immutable generation for an older execution
-that may still be using it. [Lifetimes](design/lifetimes.md) explains what the
+Mutex recompilation publishes a new immutable generation; existing mutex frames
+retain their bound generation through continuations and retirement. Spin/rwlock
+recompilation still overwrites the RIP-associated block. [Lifetimes](design/lifetimes.md) explains what the
 existing text pins, device references and frame leases do and do not protect.
 
 ## Limits and evidence
 
 KD remains experimental. Its checks do not cover all runtime pointers or
 concurrent pointer changes. Processor flags and SIMD/FPU state are not fully
-restored, generated images have no immutable versions, and pinned waiters can
+restored; spin/rwlock images still lack immutable versions, and pinned waiters can
 block progress when there are more runnable tasks than available CPUs.
 [TODO](TODO.md) records known failures and work explicitly left for later.
 

@@ -2,6 +2,7 @@
 # GS memory uses the pinned waiter's base; current_task uses its logical task.
 # FS/base manipulation remains unsupported. No use-time bounds guard exists.
 import diagnostics
+from instruction_policy import segment_encoding_policy_error
 from assist import make_inst
 from conflict import (
     apply_map,
@@ -46,35 +47,6 @@ def is_current_task_operand(arg):
         return False
     mask = (1 << address.size) - 1
     return (expr_int_value(address) & mask) == (current_task_offset & mask)
-
-
-def segment_encoding_policy_error(raw):
-    if not raw:
-        return None
-    try:
-        raw = bytes(raw)
-    except (TypeError, ValueError):
-        return None
-
-    if raw == b"\x0f\x01\xf8":
-        return "direct FS/GS base access is unsupported"
-
-    index = 0
-    if raw[index : index + 1] != b"\xf3":
-        return None
-    index += 1
-    if index < len(raw) and 0x40 <= raw[index] <= 0x4F:
-        index += 1
-    if raw[index : index + 2] != b"\x0f\xae":
-        return None
-    index += 2
-    if index + 1 != len(raw):
-        return None
-    modrm = raw[index]
-    register_class = (modrm >> 3) & 0x7
-    if (modrm & 0xC0) == 0xC0 and register_class <= 3:
-        return "direct FS/GS base access is unsupported"
-    return None
 
 
 def segment_policy_error(line):

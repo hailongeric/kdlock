@@ -1,16 +1,18 @@
 # kdlock
 
-The [fresh legacy c01/pipebytes comparison](bench/results/10.176.26.71/bench/comparison/mutex-legacy-grid-20261016T125529Z/README.md)
-covers 1–8 workers by one and 12–60 by four, with all 378 sessions accepted.
-It uses the recovered legacy provider and the documented common 64-round
-post-unlock work for c01. Source and results are in `/tmp/kdlock-mutex-legacy-grid`
-on `bench/legacy-mutex-c01-pipebytes`.
+This branch, `task/legacy-mutex-compat`, carries reviewed compatibility and
+functional changes onto the recovered legacy mutex. It retains the original Linux
+mutex ownership, shadow queue, polling and ABI2 caller. The
+[implementation comparison](docs/design/legacy_mutex_compatibility.md) identifies
+the instruction-admission and immutable-image backports, adaptations and limits.
+The [paired 504-session report](bench/results/10.176.26.71/bench/comparison/mutex-legacy-compat-20261017T122742Z/README.md)
+compares both legacy versions with Native and TCLock across the requested grid.
 
-This benchmark branch retains the recovered legacy mutex from
-`recovery/mutex-legacy-5m330`; only the shared synthetic post-work header changes.
-The [2026-10-16 recovery receipt](bench/results/10.176.26.71/bench/comparison/mutex-legacy-recovery-20261016T113518Z/README.md) identifies the exact historical sources
-and fresh pipebytes validation. The later owned/adaptive implementation is not
-part of this branch; the reports below retain their original dates and scope.
+The unchanged baseline is `74676c3` on `bench/legacy-mutex-c01-pipebytes`; its
+[378-session comparison](bench/results/10.176.26.71/bench/comparison/mutex-legacy-grid-20261016T125529Z/README.md)
+records the common c01 post64 workload and pipebytes n16 results. The original
+[5.330 Mops/s recovery](bench/results/10.176.26.71/bench/comparison/mutex-legacy-recovery-20261016T113518Z/README.md)
+remains on `recovery/mutex-legacy-5m330`.
 
 kdlock is an experimental lock library for x86_64 Linux kernel code. When several
 threads need the same lock, one thread can hold it and run critical sections for

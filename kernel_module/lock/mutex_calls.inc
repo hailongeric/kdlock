@@ -179,11 +179,12 @@ int kd_mutex_prepare(struct mutex *lock, unsigned long ip, unsigned int abi)
 		return -EINVAL;
 	if (!kd_source_is_open())
 		return -ESHUTDOWN;
+	/* Registration is valid before the first immutable upload owns a block. */
 	kd_exe_add_abi(0, ip, KD_EXE_LOCK_MUTEX, abi);
 	exe = kd_get_exe(0, ip);
 	if (!exe || smp_load_acquire(&exe->status_code) == KD_EXE_UNUSED ||
 	    exe->RIP != ip || exe->entry_abi != abi ||
-	    exe->lock_kind != KD_EXE_LOCK_MUTEX || !exe->code_block)
+	    exe->lock_kind != KD_EXE_LOCK_MUTEX)
 		return -EINVAL;
 	return READ_ONCE(exe->status_code) == KD_EXE_NATIVE_ONLY ? -EOPNOTSUPP : 0;
 }

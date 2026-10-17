@@ -1,12 +1,12 @@
 # Development and operations
 
-The latest legacy benchmark variant is `/tmp/kdlock-mutex-legacy-grid`, branch
-`bench/legacy-mutex-c01-pipebytes`. Its [378-session report](../bench/results/10.176.26.71/bench/comparison/mutex-legacy-grid-20261016T125529Z/README.md)
-uses the recovered provider unchanged and a shared 64-round c01 post-work
-header. The original recovery worktree remains unchanged. Reproduce this
-comparison from the benchmark variant and its recorded commands. Its verified
-snapshot is `before-mutex-legacy-grid-20261016T125529Z`; recheck live state and
-snapshot availability before further module/JIT work.
+The current compatibility experiment is `/tmp/kdlock-mutex-legacy-compat`, branch
+`task/legacy-mutex-compat`, based on `74676c3`. Its
+[implementation comparison](design/legacy_mutex_compatibility.md) separates the
+backported instruction/publication changes from the unchanged legacy protocol.
+The exact recovery and baseline benchmark worktrees remain unchanged. The current
+verified snapshot is `before-mutex-legacy-compat-20261017T122742Z`; recheck live state
+and snapshot availability before further module/JIT work.
 
 Follow these rules when developing or running the x86_64 KD spin/mutex/rwlock
 provider. Start with the [project guide](PROJECT_GUIDE.md). Use
@@ -41,9 +41,10 @@ ownership and lifetime terms used below.
    authorized static/spin-clobber/mutex-clobber experiments keep independent
    source trees, releases and captured baselines. Current code requires both
    clobber-v1 interfaces; old kernels are only for matching historical checkouts.
-8. Access-time guards and pre-instruction native exits, general instruction/flags
-   repair and immutable JIT versions remain explicitly deferred. Cleanup does
-   not reopen them. Known supported-path failures remain documented in [TODO](TODO.md).
+8. This isolated compatibility experiment backports fail-closed processor-state
+   admission and immutable mutex images at the user's 2026-10-17 request. It retains
+   the recovered legacy lock protocol. Access-time guards, general instruction/flags
+   repair, ordinary-C ABI4 and owned-origin claims are outside this experiment.
 9. Keep kernel payload demos under `workload_modules/`, runners under `bench/`
    or `tests/`, and provider probes under `tests/kernel/`. Private `.inc` files
    belong to their translation unit and must be included in frozen inputs.
@@ -74,12 +75,11 @@ later owned mutex, adaptive policy or sleeping producer path to this baseline.
 See the [recovery receipt](../bench/results/10.176.26.71/bench/comparison/mutex-legacy-recovery-20261016T113518Z/README.md)
 for source identities, validation and fresh measurements.
 
-The source worktree is `/tmp/kdlock-mutex-legacy-5m330` on `380G10`, branch
-`recovery/mutex-legacy-5m330`. The primary worktree retains its 35 pre-existing
-edits and the rejected adaptive experiment. Synchronize with the maintained
-helper from that worktree using `--source /tmp/kdlock-mutex-legacy-5m330`.
-Freeze only manifest-listed files for builds so obsolete destination files
-cannot enter the recovered source set. All builds and tests remain guest-only.
+The original source is `/tmp/kdlock-mutex-legacy-5m330` on `380G10`, branch
+`recovery/mutex-legacy-5m330`. The compatibility source is the worktree named
+above; use the maintained helper with `--source /tmp/kdlock-mutex-legacy-compat`.
+The primary worktree retains its 35 pre-existing edits and archived adaptive
+experiment. Freeze manifest-listed inputs and keep all builds and tests guest-only.
 
 ## Environment
 
@@ -195,8 +195,8 @@ remaining users; never force unload or reopen admission. After retirement succee
 unload workloads before providers.
 
 When replacing code, replace the workload, provider and JIT session together.
-Generated artifacts are keyed by RIP and have no immutable version that makes
-old code safe to reuse. Source pins, device references, physical owners, ACKs and
+Mutex frames bind immutable generations retained until session teardown.
+Spin/rwlock artifacts remain keyed by RIP with in-place replacement. Source pins, device references, physical owners, ACKs and
 frames each have their own lifetime. Reusing a queue node or waking a waiter does
 not mean its frame has retired.
 

@@ -157,3 +157,14 @@ of returned JIT writer bodies divided by completed writes; reads are excluded.
 [spin/mutex runner](../bench/tclock_compare/README.md) and
 [rwlock runner](../bench/rwlock_compare/README.md) define acceptance and commands;
 [operations](AGENTS.md) defines environment/recovery.
+
+## Legacy mutex image generations
+
+On the compatibility branch, mutex registration precedes executable allocation.
+The daemon publishes one complete, immutable generation; a frame binds its
+image and keeps it through FULL continuations. Replacement never overwrites a
+running mutex image, and old-generation misses cannot change the current image's
+metadata. Source and ownership retirement still apply independently. Published
+versions remain in the existing 64-block pool until session teardown. Spin/rwlock
+image storage retains its existing in-place lifetime. See the
+[compatibility comparison](design/legacy_mutex_compatibility.md).

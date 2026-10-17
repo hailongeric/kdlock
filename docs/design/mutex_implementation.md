@@ -1,5 +1,10 @@
 # Mutex implementation: KD, TCLock and Linux Native
 
+This branch retains the recovered legacy lock protocol and ABI0/2 interfaces.
+The [compatibility backport](legacy_mutex_compatibility.md) adds fail-closed
+processor-state admission, immutable mutex images and generation-bound frames.
+Those changes do not replace the queue, original Linux owner or pinned producer.
+
 Read [lock protocols](lock_protocols.md) for the algorithm/ownership comparison
 and [KD locking](locking.md#5-mutex-delegation-protocol) for nested owner/ACK
 details. This page maps the current ordinary mutex paths to their data and

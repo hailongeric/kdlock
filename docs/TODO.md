@@ -76,18 +76,19 @@ drain. No Linux/TCLock operations may access the same KD rwlock object.
 
 ### C3. Immutable JIT publication and lifetime
 
-This work was deferred by user decision. Recompiling an entry overwrites the code
-block indexed by its instruction address (RIP). Source leases keep modules loaded,
-and ABI tags identify calling conventions, but neither gives running code its own
-unchanging image version. A future design must validate complete images, identify
-generations and wait for old executions before reclaiming them. Better throughput
-does not resolve this lifetime problem.
+The legacy mutex compatibility branch implements complete staged publication,
+immutable mutex generations, frame binding and stale-miss rejection. Published
+versions use the existing bounded pool and remain until session teardown; there
+is no in-session generation reclamation. Spin/rwlock images still use in-place
+storage. See [the backport comparison](design/legacy_mutex_compatibility.md).
 
 ### C4. Instruction, flags, and fault semantics
 
-Deferred by user decision. INT-to-NOP, warning-only special instructions,
-instrumentation flag clobbers and incomplete flags/SIMD/FPU restoration remain
-limits. Packet comparisons do not prove live hardware flags restoration.
+The compatibility branch refuses unvirtualized processor-state instructions,
+unknown mnemonics and equivalent context helpers before emission. INT-to-NOP and
+silent special-instruction omission are removed. General flags repair,
+instrumentation flag clobbers and SIMD/FPU virtualization remain deferred.
+Packet comparisons do not prove live hardware flags restoration.
 
 ### C5. Origin context and nested boundaries
 

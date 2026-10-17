@@ -260,6 +260,24 @@ struct kd_exec_frame *kd_exec_current_frame(void)
 #include "hostcall_code.h"
 #include "timing_code.h"
 #pragma GCC diagnostic pop
+/* Publication is exercised by test_mutex_images; generic control/ACK routes
+ * use one descriptor per fixture registry slot. */
+const struct kd_jit_image *kd_image_current(const struct kd_exe_info *exe)
+{
+	static struct kd_jit_image image[KD_MAX_EXE];
+	struct kd_jit_image *slot = &image[exe - kd_exes];
+	*slot = (struct kd_jit_image){ .code = exe->code_block,
+		.entry = (struct kd_exe_info *)exe, .entry_abi = exe->entry_abi };
+	return slot;
+}
+void kd_image_report(struct kd_exe_info *exe, const struct kd_jit_image *image,
+                     int status, unsigned long target, unsigned long from)
+{
+	(void)image;
+	exe->tgt_addr = target;
+	exe->jump_from = from;
+	kd_exe_publish_status(exe, status);
+}
 static bool is_end_point(unsigned long ip)
 {
 	return ip == 0x9000;

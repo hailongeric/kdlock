@@ -12,6 +12,12 @@
 #include <sys/types.h>
 
 #include "exe_info.h"
+#include "kd_image.h"
+#include <stdint.h>
+#include <assert.h>
+#define BUG_ON(x) assert(!(x))
+#define local_irq_save(f) ((f)=0)
+#define local_irq_restore(f) ((void)(f))
 #include "kd_call.h"
 #include "kd_hostcall.h"
 #include "kd_source_api.h"
@@ -75,7 +81,7 @@ static int load_acquire_int(const int *pointer)
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof((a)[0]))
 #define ATOMIC_INIT(value) { value }
 #define READ_ONCE(x) __atomic_load_n(&(x), __ATOMIC_RELAXED)
-#define smp_load_acquire(p) load_acquire_int(p)
+#define smp_load_acquire(p) _Generic((p), int*:load_acquire_int((const int*)(p)), const int*:load_acquire_int((const int*)(p)), default:__atomic_load_n(p,__ATOMIC_ACQUIRE))
 #define smp_store_release(p, v) __atomic_store_n(p, v, __ATOMIC_RELEASE)
 #define atomic_set(p, v) __atomic_store_n(&(p)->counter, v, __ATOMIC_RELAXED)
 #define atomic_read(p) __atomic_load_n(&(p)->counter, __ATOMIC_RELAXED)
@@ -200,6 +206,7 @@ static void kd_mutex_direct_contended_clobber_v1(void) { CHECK(!"unexpected cont
 static void kd_mutex_outer_contended_clobber_v1(void) { CHECK(!"unexpected outer mutex lock call"); }
 static void kd_mutex_direct_unlock_clobber_v1(void) { CHECK(!"unexpected mutex unlock call"); }
 
+
 static unsigned long ktime_get(void)
 {
 	return 0;
@@ -246,6 +253,7 @@ static int kd_source_pin_root(unsigned long address)
  * functions; keep strict warnings on this fixture and its assertions. */
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wsign-compare"
+struct mutex { int unused; };
 #include "registry_code.h"
 #pragma GCC diagnostic pop
 
@@ -317,8 +325,7 @@ static void check_pool(enum allocation_mode mode)
 	kd_exe_add(0, key(0), KD_EXE_LOCK_UNKNOWN);
 	CHECK(kd_code_block_free == available);
 	for (int i = 0; i < available; i++) {
-		enum kd_exe_lock_kind kind = i % 2 ? KD_EXE_LOCK_MUTEX :
-						     KD_EXE_LOCK_SPIN;
+		enum kd_exe_lock_kind kind = KD_EXE_LOCK_SPIN;
 		struct kd_exe_info *exe;
 
 		kd_exe_add(0, key(i), kind);
@@ -339,7 +346,7 @@ static void check_pool(enum allocation_mode mode)
 	/* Exhaustion must leave the entire table unchanged, not publish a partial
 	 * key that the daemon might later treat as a translation request. */
 	memcpy(snapshot, kd_exes, sizeof(snapshot));
-	kd_exe_add(0, key(available), KD_EXE_LOCK_MUTEX);
+	kd_exe_add(0, key(available), KD_EXE_LOCK_SPIN);
 	CHECK(kd_code_block_free == 0 && errors == 1);
 	CHECK(memcmp(snapshot, kd_exes, sizeof(snapshot)) == 0);
 	CHECK(!kd_exe_is_ready(0, key(available)));
@@ -356,6 +363,37 @@ static void check_pool(enum allocation_mode mode)
 	CHECK(!kd_exe_publish_status(kd_get_exe(0, key(0)), KD_EXE_NORMAL));
 	kd_exe_exit();
 	CHECK(timing_rows == (mode == PARTIAL ? KD_JIT_TIME_COUNT : 0));
+}
+
+/* Preparation registers a root before immutable publication has a code block.
+ * Use the real registry and prepare helper, not a handwritten successful stub. */
+static void check_mutex_preparation(void)
+{
+	struct mutex lock = {0};
+	struct kd_exe_info *exe;
+	int blocks, pins;
+
+	reset(NORMAL);
+	CHECK(kd_exe_init() == 0);
+	blocks = kd_code_block_free;
+	CHECK(kd_mutex_prepare(NULL, key(0), 2) == -EINVAL);
+	CHECK(kd_mutex_prepare(&lock, 0, 2) == -EINVAL);
+	CHECK(kd_mutex_prepare(&lock, key(0), 1) == -EINVAL);
+	CHECK(kd_mutex_prepare(&lock, key(0), 2) == 0);
+	exe = kd_get_exe(0, key(0));
+	CHECK(exe->status_code == KD_EXE_UNINIT && !exe->code_block);
+	CHECK(!kd_exe_is_ready(0, key(0)) && !kd_image_current(exe));
+	CHECK(kd_code_block_free == blocks);
+	pins = source_pin_calls;
+	CHECK(kd_mutex_prepare(&lock, key(0), 2) == 0);
+	CHECK(source_pin_calls == pins && kd_code_block_free == blocks);
+	CHECK(kd_exe_publish_status(exe, KD_EXE_NATIVE_ONLY));
+	CHECK(kd_mutex_prepare(&lock, key(0), 2) == -EOPNOTSUPP);
+	source_root_error = -ENOENT;
+	CHECK(kd_mutex_prepare(&lock, key(1), 2) == -EINVAL);
+	source_open = false;
+	CHECK(kd_mutex_prepare(&lock, key(0), 2) == -ESHUTDOWN);
+	kd_exe_exit();
 }
 
 static void check_full_table(void)
@@ -387,11 +425,13 @@ static void check_full_table(void)
 	kd_exe_exit();
 }
 
+static struct kd_image_upload upload;
+
 static void check_device(void)
 {
 	struct {
 		struct kd_recv_pkt head;
-		unsigned char data[16];
+		unsigned char data[64];
 	} packet;
 	struct kd_exe_info *exe, snapshot;
 	const size_t header = sizeof(packet.head);
@@ -406,50 +446,51 @@ static void check_device(void)
 	source_root_error = 0;
 	kd_exe_add(0, key(0), KD_EXE_LOCK_MUTEX);
 	exe = kd_get_exe(0, key(0));
-	packet = (__typeof__(packet)){ .head = { KD_EXE_NORMAL, 0, key(0), 0 },
+	packet = (__typeof__(packet)){ .head = { .status_code=KD_EXE_UNINIT, .RIP=key(0), .version=KD_IMAGE_PROTOCOL, .image_length=64, .upload_id=1 },
 				       .data = { 0x5a } };
 	CHECK(kd_dev_read(NULL, buffer, sizeof(buffer) - 1, NULL) == 0);
 	CHECK(kd_dev_read(NULL, buffer, sizeof(buffer), NULL) ==
 	      sizeof(buffer));
 	memcpy(&snapshot, buffer, sizeof(snapshot));
 	CHECK(snapshot.RIP == key(0) && snapshot.status_code == KD_EXE_UNINIT);
-	CHECK(kd_dev_write_locked((char *)&packet, header - 1) == -EINVAL);
+	CHECK(kd_dev_write_locked(&upload, (char *)&packet, header - 1) == -EINVAL);
 	packet.head.RIP = key(1);
-	CHECK(kd_dev_write_locked((char *)&packet, header + 1) == -ENOENT);
+	CHECK(kd_dev_write_locked(&upload, (char *)&packet, header + 1) == -ENOENT);
 	packet.head.RIP = key(0);
 	for (int boundary = 0; boundary < 3; boundary++) {
 		packet.head.offset = boundary == 0 ? KD_CODE_BLOCK_SIZE :
 				     boundary == 1 ? KD_CODE_BLOCK_SIZE + 1 :
 						     ~0UL;
-		CHECK(kd_dev_write_locked((char *)&packet, header + 1) ==
+		CHECK(kd_dev_write_locked(&upload, (char *)&packet, header + 1) ==
 		      -EINVAL);
 		CHECK(!kd_exe_is_ready(0, key(0)));
 	}
 	packet.head.offset = 0;
+	packet.head.image_length=KD_CODE_BLOCK_SIZE+1;
+	CHECK(kd_dev_write_locked(&upload,(char *)&packet,header+1)==-EINVAL);
+	packet.head.image_length=64;
 	copy_calls = 0;
 	fail_copy = 2;
-	CHECK(kd_dev_write_locked((char *)&packet, header + 1) == -EFAULT);
+	CHECK(kd_dev_write_locked(&upload, (char *)&packet, header + 1) == -EFAULT);
 	CHECK(!kd_exe_is_ready(0, key(0)));
 	fail_copy = 0;
-	memcpy((char *)exe->code_block + 9, "KDWB002", 7);
-	memcpy((char *)exe->code_block + 25, "KDWC002", 7);
-	memcpy((char *)exe->code_block + 41, "KDAB", 4);
-	((unsigned char *)exe->code_block)[45] = exe->entry_abi;
-	packet.head.offset = KD_CODE_BLOCK_SIZE - 1;
-	CHECK(kd_dev_write_locked((char *)&packet, header + 1) ==
-	      (ssize_t)header + 1);
-	CHECK(((unsigned char *)exe->code_block)[KD_CODE_BLOCK_SIZE - 1] ==
-	      0x5a);
+	memcpy(packet.data+9,"KDWB002",7);
+	memcpy(packet.data+25,"KDWC002",7);
+	memcpy(packet.data+41,"KDAB",4);
+	packet.data[45]=0;packet.data[46]=KD_IMAGE_PROTOCOL;packet.data[47]=0;
+	packet.head.status_code=KD_EXE_NORMAL;
+	CHECK(kd_dev_write_locked(&upload,(char *)&packet,header+64)==(ssize_t)header+64);
+	CHECK(!memcmp(exe->code_block,packet.data,64));
 	CHECK(kd_exe_is_ready(0, key(0)));
 	source_open = false;
 	CHECK(!kd_exe_is_ready(0, key(0)));
-	CHECK(kd_dev_write_locked((char *)&packet, header + 1) == -ESHUTDOWN);
+	CHECK(kd_dev_write_locked(&upload, (char *)&packet, header + 1) == -ESHUTDOWN);
 	source_open = true;
-	packet.head = (struct kd_recv_pkt){ KD_EXE_NATIVE_ONLY, 0, key(0), 0 };
-	CHECK(kd_dev_write_locked((char *)&packet, header) == (ssize_t)header);
+	packet.head = (struct kd_recv_pkt){ .status_code=KD_EXE_NATIVE_ONLY, .RIP=key(0), .version=KD_IMAGE_PROTOCOL, .base_generation=exe->generation };
+	CHECK(kd_dev_write_locked(&upload, (char *)&packet, header) == (ssize_t)header);
 	CHECK(!kd_exe_is_ready(0, key(0)));
-	packet.head.status_code = KD_EXE_NORMAL;
-	CHECK(kd_dev_write_locked((char *)&packet, header + 1) == -EPERM);
+	packet.head.status_code = KD_EXE_NORMAL;packet.head.image_length=48;packet.head.upload_id=2;
+	CHECK(kd_dev_write_locked(&upload, (char *)&packet, header + 48) == -EPERM);
 	kd_exe_exit();
 }
 
@@ -458,29 +499,30 @@ static void check_device(void)
  * grants NORMAL, and a rejected entry stays terminal. */
 static void check_packet_directory(void)
 {
-    struct { struct kd_recv_pkt head; unsigned char data[46]; } packet;
+    struct { struct kd_recv_pkt head; unsigned char data[48]; } packet;
     for (unsigned int abi = 0; abi <= 2; abi++) {
         for (unsigned int fault = 0; fault < 5; fault++) {
             reset(NORMAL);
             CHECK(kd_exe_init() == 0);
             kd_exe_add_abi(0, key(0), abi == 1 ? KD_EXE_LOCK_SPIN : KD_EXE_LOCK_MUTEX, abi);
-            packet = (__typeof__(packet)){ .head = { KD_EXE_UNINIT, 0, key(0), 0 } };
+            packet = (__typeof__(packet)){ .head = { .status_code=KD_EXE_UNINIT,.RIP=key(0),.version=KD_IMAGE_PROTOCOL,.entry_abi=abi,.image_length=48,.upload_id=1 } };
             memcpy(packet.data + 9, "KDWB002", 7);
             memcpy(packet.data + 25, "KDWC002", 7);
             memcpy(packet.data + 41, "KDAB", 4);
-            packet.data[45] = abi;
+            packet.data[45] = abi;packet.data[46]=KD_IMAGE_PROTOCOL;
             if (fault == 1) packet.data[15] = '1';
             if (fault == 2) packet.data[31] = '1';
             if (fault == 3) memset(packet.data, 0, sizeof(packet.data));
             if (fault == 4) packet.data[45] = (abi + 1) % 3;
             size_t bytes = sizeof(packet.head) + sizeof(packet.data);
-            CHECK(kd_dev_write_locked((char *)&packet, bytes) == (ssize_t)bytes);
+            CHECK(kd_dev_write_locked(&upload, (char *)&packet, bytes) == -EINVAL);
             CHECK(!kd_exe_is_ready(0, key(0)));
             packet.head.status_code = KD_EXE_NORMAL;
-            CHECK(kd_dev_write_locked((char *)&packet, bytes) ==
+            CHECK(kd_dev_write_locked(&upload, (char *)&packet, bytes) ==
                   (fault ? -EPROTO : (ssize_t)bytes));
             CHECK(kd_exe_is_ready(0, key(0)) == !fault);
-            if (fault) CHECK(kd_dev_write_locked((char *)&packet, bytes) == -EPERM);
+            if (fault) CHECK(kd_dev_write_locked(&upload, (char *)&packet, bytes) == -EPROTO);
+            kd_image_discard(upload.image); upload.image = NULL;
             kd_exe_exit();
         }
     }
@@ -504,6 +546,16 @@ static void check_registration_reads(void)
 		exe = kd_get_exe(0, key(backend));
 		CHECK(gate_attempts == gate_before + 1);
 		CHECK(source_pin_calls == pins_before + 1);
+		if (backend == KD_EXE_LOCK_MUTEX) {
+			struct kd_jit_image *image;
+			CHECK(!exe->code_block && !kd_image_current(exe));
+			image = kd_image_alloc();
+			CHECK(image != NULL);
+			image->length = KD_IMAGE_HEADER_SIZE;
+			image->requirements = 0;
+			image->entry_abi = 0;
+			CHECK(kd_image_publish(exe, image, 0) == 0);
+		}
 		free_before = kd_code_block_free;
 		gate_before = gate_attempts;
 		pins_before = source_pin_calls;
@@ -620,13 +672,14 @@ static void check_concurrent_registration(void)
 	pthread_barrier_destroy(&start);
 	for (int i = 0; i < KD_MAX_EXE; i++)
 		occupied += kd_exes[i].status_code != KD_EXE_UNUSED;
-	CHECK(occupied == 6 && kd_code_block_free == KD_CODE_BLOCK_POOL - 6);
+	CHECK(occupied == 6 && kd_code_block_free == KD_CODE_BLOCK_POOL - 3);
 	CHECK(!errors && !warnings);
 	for (int i = 0; i < 6; i++) {
 		struct kd_exe_info *exe = kd_get_exe(0, key(i));
 
 		CHECK(exe->RIP == key(i) && exe->status_code == KD_EXE_UNINIT);
-		CHECK(exe->code_block != NULL && !kd_exe_is_ready(0, key(i)));
+		CHECK((exe->code_block != NULL) == !(i % 2));
+		CHECK(!kd_exe_is_ready(0, key(i)));
 	}
 	kd_exe_exit();
 }
@@ -634,6 +687,7 @@ static void check_concurrent_registration(void)
 int main(void)
 {
 	check_init_failures();
+	check_mutex_preparation();
 	check_pool(NORMAL);
 	check_pool(PARTIAL);
 	check_full_table();

@@ -11,6 +11,11 @@
 #include <stdlib.h>
 #include <string.h>
 #include "exe_info.h"
+#include "kd_image.h"
+#define GFP_KERNEL 0
+#define kzalloc(n,f) calloc(1,n)
+#define kfree(p) free(p)
+void kd_image_discard(struct kd_jit_image *image) { if (image) abort(); }
 #include "kd_source_api.h"
 
 typedef long long s64;
@@ -160,13 +165,14 @@ static unsigned long kallsyms_lookup_name(const char *name)
 		return CORE + 0x8000;
 	return 0;
 }
-static void kd_code_block_gate_lock(void)
+static unsigned long kd_code_block_gate_lock(void)
 {
 	CHECK(!pthread_mutex_lock(&registry_gate));
+	return 0;
 }
-static void kd_code_block_gate_unlock(void)
+static void kd_code_block_gate_unlock(unsigned long flags)
 {
-	CHECK(!pthread_mutex_unlock(&registry_gate));
+	(void)flags; CHECK(!pthread_mutex_unlock(&registry_gate));
 }
 static bool capable(int cap)
 {
@@ -238,7 +244,7 @@ static void check_caps(struct file *file)
 	memset(&caps, 0xff, sizeof(caps));
 	CHECK(!kd_dev_ioctl(file, KD_JIT_CAPS, (unsigned long)&caps));
 	CHECK(caps.version == KD_JIT_CAPS_VERSION);
-	CHECK(caps.features == (KD_JIT_CAP_MUTEX_STACK |
+	CHECK(caps.features == (KD_JIT_CAP_MUTEX_STACK | KD_JIT_CAP_MUTEX_IMAGES |
 				(module_bytes ? KD_JIT_CAP_PERCPU_MODULE : 0)));
 	CHECK(caps.mutex_stack_bytes == KD_JIT_MUTEX_STACK_BYTES);
 	CHECK(caps.percpu_module_bytes == module_bytes);
@@ -507,7 +513,7 @@ int main(void)
 	_Static_assert(KD_SOURCE_RETIRE == 0x4b72, "Python RETIRE ABI");
 	_Static_assert(sizeof(struct kd_jit_caps) == 16, "capability ABI");
 	_Static_assert(KD_JIT_CAPS == 0x80104b73, "Python capability ioctl");
-	_Static_assert(KD_JIT_CAPS_VERSION == 2 &&
+	_Static_assert(KD_JIT_CAPS_VERSION == 4 &&
 			       KD_JIT_CAP_MUTEX_STACK == 1 &&
 			       KD_JIT_CAP_PERCPU_MODULE == 2,
 		       "Python capability semantics");
@@ -517,7 +523,7 @@ int main(void)
 	_Static_assert(KD_JIT_MUTEX_STACK_BYTES == 256,
 		       "Python checked window");
 	_Static_assert(sizeof(struct kd_exe_info) == 64, "entry ABI");
-	_Static_assert(sizeof(struct kd_recv_pkt) == 24, "upload ABI");
+	_Static_assert(sizeof(struct kd_recv_pkt) == 64, "upload ABI");
 	residency();
 	draining();
 	concurrent_pins();

@@ -19,6 +19,7 @@ files or benchmark archives.
 | [kd_lock.c](../kernel_module/kd_lock.c) → [lock](../kernel_module/lock/) | Nested control CALLs, direct mutex routing and retained bridge aliases |
 | [kd_exec.c](../kernel_module/kd_exec.c), [exe.c](../kernel_module/exe.c) → [execution](../kernel_module/execution/) | Frame binding, lock ledger, remote/native ACKs, registry and JIT dispatch |
 | [kd_hotlock.c](../kernel_module/kd_hotlock.c) | Per-type exact-address hot tables and approximate admission statistics |
+| [execution/images.inc](../kernel_module/execution/images.inc), [kd_image.h](../include/kd_image.h) | Immutable legacy mutex uploads, descriptor binding and generation-scoped misses |
 | [kd_source.c](../kernel_module/kd_source.c), [sys.c](../kernel_module/sys.c) | Source pins, device session, capabilities, publication and retirement |
 | [Shared headers](../include/README.md) | Direct APIs, ABI, packet/frame types and wrapper assembly |
 

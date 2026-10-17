@@ -148,7 +148,14 @@ struct kd_exec_frame {
 	struct kd_call_state control_call;
 	struct list_head native_link;
 	struct kd_native_request *native_request;
-	struct kd_spin_ref spin_origin;
+	/* Backend-exclusive ownership: mutex frames never carry a spin ticket.
+	 * Keep the frame size and packet offsets within the module per-CPU arena. */
+	union {
+		struct kd_spin_ref spin_origin;
+		struct {
+			const struct kd_jit_image *image;
+		};
+	};
 };
 
 struct kd_exec_context {

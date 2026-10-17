@@ -50,6 +50,7 @@ void kd_exec_frame_prepare(struct kd_exec_frame *frame, unsigned long entry_ip,
   pr_info("kd_hotlock role: address=%lx request=%px role=WAITER\n", frame->outer_lock_addr, frame);
 #endif
 	frame->mutex_backend = false;
+	frame->image = NULL;
 	frame->spin_simple = false;
 	frame->request_frame = true;
 	frame->batch_lease = false;
@@ -170,6 +171,7 @@ static struct kd_exec_frame *kd_exec_frame_push_internal(
   pr_info("kd_hotlock role: address=%lx request=%px role=WAITER\n", frame->outer_lock_addr, frame);
 #endif
 	frame->mutex_backend = false;
+	frame->image = NULL;
 	frame->spin_simple = false;
 	frame->request_frame = false;
 	frame->complex_ready = true;
@@ -260,6 +262,7 @@ struct kd_exec_frame *kd_exec_frame_push_mutex_batch(
 	frame->parent = NULL;
 	frame->depth = 0;
 	frame->mutex_backend = true;
+	frame->image = NULL;
 	frame->spin_simple = false;
 	frame->request_frame = false;
 	frame->batch_lease = true;

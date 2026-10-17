@@ -1,9 +1,14 @@
 # Project guide
 
-This is the recovered legacy mutex baseline on `recovery/mutex-legacy-5m330`.
-The [2026-10-16 recovery receipt](../bench/results/10.176.26.71/bench/comparison/mutex-legacy-recovery-20261016T113518Z/README.md) identifies the exact historical sources
-and fresh pipebytes validation. The later owned/adaptive implementation is not
-part of this branch; the reports below retain their original dates and scope.
+The [504-session compatibility report](../bench/results/10.176.26.71/bench/comparison/mutex-legacy-compat-20261017T122742Z/README.md)
+compares both legacy versions with Native and TCLock. See
+[performance status](PERFORMANCE.md) for measured gains, regressions and scope.
+
+This is the legacy compatibility branch, `task/legacy-mutex-compat`, in
+`/tmp/kdlock-mutex-legacy-compat`. It backports instruction-state admission and
+immutable mutex images onto baseline `74676c3`, while keeping the recovered lock
+protocol and caller ABI. See [the implementation comparison](design/legacy_mutex_compatibility.md).
+The original recovery and post64 benchmark branches remain unchanged.
 
 KD lets a lock holder execute a waiting caller's critical section through JIT.
 Spinlocks use KD's own four-byte object. Mutexes keep the original Linux mutex

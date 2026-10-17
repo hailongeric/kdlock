@@ -1,0 +1,21 @@
+{
+  "run": "mutex-legacy-compat-20261017T122742Z",
+  "archive": "/mnt/kdlock-builds/evidence/archives/mutex-legacy-compat-20261017T122742Z.tar.gz",
+  "bytes": 76774565,
+  "sha256": "cd5777d1f79894467cf3c551f31349111ad80346eac936e99e151aeaf707cb86",
+  "seal": {
+    "accepted": 504,
+    "failed_attempt_retained": true,
+    "manifest_sha256": "4bf0fd729afee33229f9bbbf1872b7cae26ba1b92065551c067e566d134dc9f9",
+    "regular_files": 20567,
+    "run": "mutex-legacy-compat-20261017T122742Z",
+    "source_bytes": 345123701,
+    "symlinks": 506,
+    "utc": "2026-10-17T13:17:47.900863+00:00"
+  },
+  "physical_host_archive": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/mutex-legacy-compat-20261017T122742Z/mutex-legacy-compat-20261017T122742Z.tar.gz",
+  "guest_root": "/root/kdlock-evidence/10.176.26.71/bench/mutex-legacy-compat-20261017T122742Z",
+  "physical_host_hash_verified": true,
+  "local_archive": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/mutex-legacy-compat-20261017T122742Z/mutex-legacy-compat-20261017T122742Z.tar.gz",
+  "local_hash_verified": true
+}

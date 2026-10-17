@@ -171,6 +171,8 @@ static void test_chunk_session(void)
 	memcpy(image + 25, "KDWC002", 7);
 	memcpy(image + 41, "KDAB", 4);
 	image[45] = exe.entry_abi;
+	image[46] = KD_IMAGE_PROTOCOL;
+	image[47] = 0;
 	assert(fwrite(image, 1, sizeof(image), binary) == sizeof(image));
 	assert(!fclose(binary));
 	sys_fd = open("transport", O_CREAT | O_RDWR | O_CLOEXEC, 0600);
@@ -256,7 +258,7 @@ int main(void)
 	assert(offsetof(struct kd_exe_info, code_block) == 24);
 	assert(offsetof(struct kd_exe_info, jump_from) == 32);
 	assert(offsetof(struct kd_exe_info, tgt_addr) == 40);
-	assert(sizeof(struct kd_recv_pkt) == 24);
+	assert(sizeof(struct kd_recv_pkt) == 64);
 	close(fd);
 	sys_fd = -1;
 	assert(write_native_only(&exe) == -1);

@@ -163,6 +163,7 @@ int kd_exe_init(void)
 			vfree(block);
 			continue;
 		}
+		kd_code_block_allocations[i] = block;
 		kd_code_block_pool[kd_code_block_free++] = block;
 	}
 	KD_PR_INFO("JIT code block pool ready: %d/%d\n", kd_code_block_free,
@@ -198,9 +199,12 @@ void kd_exe_exit(void)
 
 	vfree(kd_exes);
 	kd_exes = NULL;
+	memset(kd_published_images, 0, sizeof(kd_published_images));
+	memset(kd_images, 0, sizeof(kd_images));
 
 	for (i = 0; i < KD_CODE_BLOCK_POOL; i++) {
-		vfree(kd_code_block_pool[i]);
+		vfree(kd_code_block_allocations[i]);
+		kd_code_block_allocations[i] = NULL;
 		kd_code_block_pool[i] = NULL;
 	}
 	kd_code_block_free = 0;

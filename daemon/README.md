@@ -69,11 +69,12 @@ for real source inspection must explicitly enter `device_session.session()`. A
 missing, closed or wrong inherited descriptor is an infrastructure error, not a
 successful decision to run the body natively.
 
-CAPS v2 advertises the checked mutex stack bound and static module per-CPU arena.
-Unknown/old contracts clear optional bounds; current translation requires the module
-arena and fails before text inspection if unavailable. Rebuild/reload matching
-code rather than overriding capabilities. These bounds are not mutable admission
-flags, runtime address guards or executable generations.
+CAPS v4 retains the checked mutex stack bound and static module per-CPU arena
+introduced in v1/v2, and advertises the legacy immutable-mutex-image capability
+on bit 3. Translation requires that capability and the module arena before text
+inspection. Read-only observers can still inspect older contracts. Rebuild/reload
+the matching provider, daemon and translator. These bounds are not mutable
+admission flags or runtime address guards.
 
 Real kcore text windows pin up to 64 distinct LIVE source modules, including learned
 callees and cold extensions. Core text/rodata follow their declared ranges; init,
@@ -90,12 +91,17 @@ If the code violates admission policy, it deletes stale outputs and returns 2
 errors, not successful policy refusals. MINIMAL entry for ABI1/ABI2/ABI3 requires
 the matching versioned entry. A legacy image cannot be relabelled as clobber code.
 
-Images must be nonempty and fit 640 KiB. Uploads use chunks of at most 4,000 bytes;
-the final complete chunk publishes NORMAL. That status does not prove execution.
-Recompiling an entry overwrites the code block indexed by its RIP. Keeping source
-loaded and workspaces separate does not give running code an immutable image
-version or validate a complete image generation.
-Those changes are deferred in [TODO](../docs/TODO.md#c3-immutable-jit-publication-and-lifetime).
+Images must fit 640 KiB and include the 48-byte protocol/ABI directory. Uploads
+use chunks of at most 4,000 bytes with a common upload ID, image length and base
+generation. Complete contiguous coverage and matching directory metadata are
+required before NORMAL publication; NORMAL alone does not prove execution.
+
+On this compatibility branch, mutex uploads stage a new immutable block and bind
+its generation to each frame. Old versions remain until session teardown, and old
+misses cannot overwrite current generation metadata. Spin/rwlock images retain
+in-place storage. Deploy the matching provider, daemon and translator together;
+the translator requires capability version 4's legacy mutex image bit. See
+[the backport details](../docs/design/legacy_mutex_compatibility.md).
 
 ## Optional translation measurements
 

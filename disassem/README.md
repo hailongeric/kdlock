@@ -10,6 +10,7 @@ Use [the daemon](../daemon/README.md) for publication and
 | Read first | Responsibility |
 | --- | --- |
 | [disassem.py](disassem.py) |CLI, input coordination, assembly/link and diagnostics |
+| [instruction_policy.py](instruction_policy.py) | Scalar instruction, hardware-register and raw-encoding admission |
 | [translation_scope.py](translation_scope.py) | Decode windows, selected blocks and CALL continuations |
 | [translation_image.py](translation_image.py) | Dispatch targets and generated assembly |
 | [context_policy.py](context_policy.py), `context_symbols.py` | Backend/context screening and static ranges |
@@ -35,7 +36,9 @@ options with `python3 disassem/disassem.py --help`; real-text CLI use acquires i
 own device lease and does not by itself upload a published image. Importing helpers
 for byte fixtures does not establish actual kernel JIT evidence.
 
-The translator does not check every memory address when it is used, restore all
-processor state, or keep separate immutable versions of generated images. Those
-features remain deferred. Its context checks are not a security sandbox; see
+The translator does not check every memory address when it is used or restore all
+processor state. The compatibility branch refuses unvirtualized state before
+emission and versions mutex images separately; spin/rwlock images remain in place.
+Access-time guards and general state restoration remain deferred. Its context
+checks are not a security sandbox; see
 [known limitations](../docs/TODO.md).

@@ -1,7 +1,8 @@
 # Lower virtual CALL/RET/stack/control operations that cannot use plain copying.
 # CALL pushes the source return address; POP/PUSH use virtual SP, not physical
-# wrapper RSP. Some legacy special instructions remain warning-only/deferred.
+# wrapper RSP. Processor-state instructions are refused before code emission.
 import diagnostics
+import instruction_policy
 from assist import (conditional_branch, get_inst_name, im64_abs, make_inst,
                     make_mem_dict, unconditional_branch)
 from conflict import (
@@ -20,12 +21,7 @@ special_instruction = [
     "POP",
     "PUSH",
     "LEAVE",
-    "PUSHF",
-    "POPF",
     "ENDBR64",
-    "SYSCALL",
-    "INVLPG",
-    "INT",
 ]
 
 
@@ -91,11 +87,7 @@ def process_jump(name, line, arg, offset, db, reg_map):
 def special_inst_dispatch(line, args, offset, db, reg_map, block_end):
     ret_str = ""
     name = get_inst_name(line)
-    if name == "ENDBR64" or line.name == "NOP" or name == "INT":
-        if name == "INT":
-            diagnostics.warn(
-                "INT_AS_NOP", "emit_nop", "original interrupt behavior is omitted"
-            )
+    if name == "ENDBR64" or line.name == "NOP":
         ret_str += "NOP\n"
         ret_str += release_conflict(reg_map, block_end)
     elif name == "CALL":
@@ -121,14 +113,8 @@ def special_inst_dispatch(line, args, offset, db, reg_map, block_end):
         )
         ret_str += process_pop(ExprId("RBP", 64), offset, reg_map)
         ret_str += release_conflict(reg_map, block_end)
-    elif name == "SYSCALL":
-        ret_str += make_inst("MOVABS", ["R14", hex(offset - 2)])
-        ret_str += make_inst("JMP", ["comp_syscall"])
-    elif name == "INVLPG":
-        ret_str += make_inst("MOVABS", ["R14", hex(offset - 2)])
-        ret_str += make_inst("JMP", ["ill_inst"])
     else:
-        diagnostics.warn("UNSUPPORTED_SPECIAL", "omit_instruction", name)
+        raise ValueError(f"unsupported special instruction: {name}")
     return ret_str
 
 
@@ -183,6 +169,11 @@ def process_pop(arg, offset, reg_map):
 
 
 def translate(line, offset, db, reg_map, block_end):
+    # Production admission runs before the emitter. Keep direct lowering callers
+    # from silently copying a state instruction if they omit that admission pass.
+    reason = instruction_policy.rejection(line)
+    if reason:
+        raise ValueError(reason)
     args = line.args
     name = get_inst_name(line)
     if line.name in special_instruction:

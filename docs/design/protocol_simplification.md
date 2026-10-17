@@ -100,7 +100,9 @@ preserves their screens, full matrices and rechecks. Lazy backing is not a curre
 implementation feature, and no memory reduction was promoted in these trials.
 Exact image-sized allocation is a separate problem: later chunks/recompiles may
 grow, and moving live code requires a new executable-version lifetime protocol.
-That protocol remains [deferred](../TODO.md#c3-immutable-jit-publication-and-lifetime).
+The [compatibility backport](legacy_mutex_compatibility.md) now versions mutex
+images within the unchanged fixed-size pool; spin/rwlock and exact image-sized
+allocation remain separate work.
 
 The smaller structures already have distinct access patterns. KD's private
 `kd_regs` leaves Linux `pt_regs` unchanged; spin request identity/state and IP/SP/BP

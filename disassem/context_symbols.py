@@ -70,6 +70,15 @@ CONTEXT_SYMBOLS = (
     "__per_cpu_offset",
     "this_cpu_off",
     "cpu_number",
+    # Equivalent out-of-line helpers must not hide processor-context effects.
+    "stac", "clac", "smap_*", "uaccess_*", "__uaccess_*", "user_access_*",
+    "get_user", "put_user", "__get_user*", "__put_user*",
+    "copy_from_user*", "copy_to_user*", "_copy_from_user*", "_copy_to_user*",
+    "__copy_from_user*", "__copy_to_user*", "raw_copy_from_user*", "raw_copy_to_user*",
+    "copy_user_*", "clear_user", "__clear_user", "strnlen_user", "strncpy_from_user",
+    "rdmsr*", "wrmsr*", "native_read_msr*", "native_write_msr*",
+    "native_read_cr*", "native_write_cr*", "native_get_debugreg", "native_set_debugreg",
+    "kernel_fpu_*",
 )
 
 # One anchored union preserves fnmatchcase's whole-name/case-sensitive policy

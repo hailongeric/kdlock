@@ -13,6 +13,7 @@ assembly and the Python translator. Helpers used only inside a backend live unde
 | Read-write lock | [kd_rwlock.h](kd_rwlock.h) | 128-byte object, 64-byte alignment; local readers, native fast writers and ABI3 JIT writers |
 | Frames and controls | [kd_exec.h](kd_exec.h), [kd_call.h](kd_call.h), [kd_lock.h](kd_lock.h) | Logical state, held-lock ledger, source CALL and final ACK |
 | Registry and execution | [exe.h](exe.h), [exe_info.h](exe_info.h), [kd_jit_batch.h](kd_jit_batch.h) | Backend/ABI/layout identity, readiness and distinct wrapper/C results |
+| Mutex image lifetime | [kd_image.h](kd_image.h) | Immutable image descriptors, upload identity and generation-bound frames |
 | Packet and wrapper | [kd_regs.h](kd_regs.h), [asm_head.h](asm_head.h), [wrapper.S](wrapper.S) | Layout2, virtual register backing and two-word input |
 | Heat | [kd_hotlock.h](kd_hotlock.h) | Approximate future admission, not ownership |
 | Source/device | [kd_source.h](kd_source.h), [kd_source_api.h](kd_source_api.h), [sys.h](sys.h) | Text residency, capabilities and irreversible retirement |
@@ -35,7 +36,10 @@ Mutex outer callers pair `KD_MUTEX_OUTER_LOCK/UNLOCK` with one opaque
 `kd_mutex_outer_cookie` per acquisition. Do not copy, modify, transfer or reuse it
 before its matching same-task unlock. The native CAS saves an exact owner; contended
 KD entry saves zero. Nested translated operations use `KD_MUTEX_DIRECT_LOCK/UNLOCK`;
-prepare uses `kd_mutex_prepare(..., KD_ENTRY_ABI_MUTEX_CLOBBER_V1)`.
+prepare uses `kd_mutex_prepare(..., KD_ENTRY_ABI_MUTEX_CLOBBER_V1)`. Registration
+can succeed before immutable image allocation; only complete NORMAL publication
+allows JIT execution. Provider, daemon and translator must negotiate the matching
+version-4 legacy image capability.
 [Ownership](../docs/design/locking.md#mutex-outer-direct) explains the routing.
 
 Rwlock readers pair `kd_read_lock/unlock`; explicitly native writers pair

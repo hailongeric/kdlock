@@ -1,5 +1,17 @@
 # Historical validation index
 
+The [2026-10-17 legacy compatibility receipt](../bench/results/10.176.26.71/bench/comparison/mutex-legacy-compat-20261017T122742Z/validation.json)
+records provider/strict-daemon builds, two basic C programs and 16 affected
+Python drivers, followed by 504 accepted/drained timed sessions. Both c01/post64
+and pipebytes n16 cover all 21 worker counts through 60. Of 252 KD sessions,
+234 return JIT bodies and 18 are low-count NO_JIT controls. Independent replay
+reproduced all 11 numerical outputs and verified the 20,567-file archive.
+The failed first preparation and earlier fixture failures are retained separately;
+the corrected matrix was restarted in full. Final kernel/source identity, host
+pins and idle drain passed. This validates the isolated compatibility branch;
+no full suite, spin/rwlock performance or live concurrent-republication stress
+pass is claimed.
+
 The [2026-10-16 legacy grid receipt](../bench/results/10.176.26.71/bench/comparison/mutex-legacy-grid-20261016T125529Z/validation.json)
 records the two basic C programs, four directly affected Python drivers, emitted
 64-round post-work checks and 378 accepted/drained timed mutex sessions. All

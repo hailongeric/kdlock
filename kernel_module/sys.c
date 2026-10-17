@@ -1,7 +1,7 @@
 /* /dev/kd_dev is the daemon's registry/image channel and source-control API.
  * Writable opens retain one translation-session writer; readonly status/CAPS
  * opens do not. Retirement closes admission before releasing source pins.
- * Chunk bounds checks do not provide immutable or atomic whole-image versions. */
+ * Mutex uploads stage complete immutable versions; spin images stay in place. */
 #include <linux/build_bug.h>
 #include <linux/cdev.h>
 #include <linux/capability.h>
@@ -13,6 +13,7 @@
 #include <linux/mutex.h>
 #include <linux/percpu.h>
 #include <linux/string.h>
+#include <linux/slab.h>
 #include <linux/types.h>
 #include <linux/uaccess.h>
 #include <linux/version.h>
@@ -38,9 +39,15 @@ static int kd_dev_open(struct inode *inode, struct file *file)
 		return -ENODEV;
 	file->private_data = NULL;
 	if (file->f_mode & FMODE_WRITE) {
-		if (!kd_source_writer_get())
+		struct kd_image_upload *upload = kzalloc(sizeof(*upload), GFP_KERNEL);
+
+		if (!upload)
+			return -ENOMEM;
+		if (!kd_source_writer_get()) {
+			kfree(upload);
 			return -ESHUTDOWN;
-		file->private_data = (void *)1;
+		}
+		file->private_data = upload;
 	}
 	return nonseekable_open(inode, file);
 }
@@ -49,8 +56,13 @@ static int kd_dev_release(struct inode *inode, struct file *file)
 {
 	(void)inode;
 	/* dup/fork share one open description; only its final release drops this. */
-	if (file->private_data)
+	if (file->private_data) {
+		struct kd_image_upload *upload = file->private_data;
+
+		kd_image_discard(upload->image);
+		kfree(upload);
 		kd_source_writer_put();
+	}
 	return 0;
 }
 
@@ -58,7 +70,7 @@ static struct kd_jit_caps kd_jit_capabilities(void)
 {
 	struct kd_jit_caps caps = {
 		.version = KD_JIT_CAPS_VERSION,
-		.features = KD_JIT_CAP_MUTEX_STACK,
+		.features = KD_JIT_CAP_MUTEX_STACK | KD_JIT_CAP_MUTEX_IMAGES,
 		.mutex_stack_bytes = KD_JIT_MUTEX_STACK_BYTES,
 	};
 #if defined(CONFIG_X86_64) && defined(CONFIG_SMP)
@@ -162,8 +174,7 @@ static ssize_t kd_dev_read(struct file *file, char __user *buf, size_t count,
 		if (entry_size > count - len)
 			break;
 
-		memcpy(&snapshot, entry, entry_size);
-		snapshot.status_code = status;
+		kd_exe_snapshot(entry, &snapshot);
 		if (copy_to_user(buf + len, &snapshot, entry_size))
 			return -EFAULT;
 		len += entry_size;
@@ -172,12 +183,15 @@ static ssize_t kd_dev_read(struct file *file, char __user *buf, size_t count,
 	return len;
 }
 
-static ssize_t kd_dev_write_locked(const char __user *buf, size_t count)
+static ssize_t kd_dev_write_locked(struct kd_image_upload *upload,
+				   const char __user *buf, size_t count)
 {
 	struct kd_recv_pkt head;
 	struct kd_exe_info *entry;
 	const char __user *payload;
 	size_t len;
+	void *code;
+	int ret;
 
 	if (!kd_source_is_open())
 		return -ESHUTDOWN;
@@ -185,6 +199,9 @@ static ssize_t kd_dev_write_locked(const char __user *buf, size_t count)
 		return -EINVAL;
 	if (copy_from_user(&head, buf, sizeof(head)))
 		return -EFAULT;
+	if (head.version != KD_IMAGE_PROTOCOL || head.reserved ||
+	    (head.requirements & ~KD_IMAGE_REQUIREMENTS))
+		return -EPROTO;
 
 	len = count - sizeof(head);
 	payload = buf + sizeof(head);
@@ -193,13 +210,19 @@ static ssize_t kd_dev_write_locked(const char __user *buf, size_t count)
 		return -ENOSPC;
 	if (READ_ONCE(entry->RIP) != head.RIP ||
 	    READ_ONCE(entry->pid) != head.pid ||
-	    !READ_ONCE(entry->code_block)) {
+	    smp_load_acquire(&entry->status_code) == KD_EXE_UNUSED) {
 		KD_PR_ERR("translation entry not found: pid=%d rip=%px\n",
 			  head.pid, (void *)head.RIP);
 		return -ENOENT;
 	}
+	if (head.entry_abi != entry->entry_abi ||
+	    !kd_entry_abi_valid(entry->lock_kind, head.entry_abi) ||
+	    (head.requirements && entry->lock_kind != KD_EXE_LOCK_MUTEX))
+		return -EPROTO;
+	if (head.base_generation != READ_ONCE(entry->generation))
+		return -ESTALE;
 	if (head.status_code == KD_EXE_NATIVE_ONLY) {
-		if (len || head.offset)
+		if (len || head.offset || head.image_length || head.requirements || head.upload_id)
 			return -EINVAL;
 		if (smp_load_acquire(&entry->status_code) !=
 		    KD_EXE_NATIVE_ONLY) {
@@ -209,36 +232,72 @@ static ssize_t kd_dev_write_locked(const char __user *buf, size_t count)
 		}
 		return count;
 	}
-	if (!len || head.offset > KD_CODE_BLOCK_SIZE ||
-	    len > KD_CODE_BLOCK_SIZE - head.offset ||
+	if (!len || !head.upload_id || head.image_length < KD_IMAGE_HEADER_SIZE ||
+	    head.image_length > KD_CODE_BLOCK_SIZE || head.offset > head.image_length ||
+	    len > head.image_length - head.offset ||
 	    (head.status_code != KD_EXE_UNINIT &&
-	     head.status_code != KD_EXE_NORMAL))
+	     head.status_code != KD_EXE_NORMAL) ||
+	    ((head.status_code == KD_EXE_NORMAL) != (head.offset + len == head.image_length)))
 		return -EINVAL;
 	if (smp_load_acquire(&entry->status_code) == KD_EXE_NATIVE_ONLY)
 		return -EPERM;
+	if (!head.offset) {
+		kd_image_discard(upload->image);
+		upload->image = NULL;
+		upload->covered = 0;
+		upload->identity = head;
+		if (entry->lock_kind == KD_EXE_LOCK_MUTEX) {
+			upload->image = kd_image_alloc();
+			if (!upload->image)
+				return -ENOSPC;
+		}
+	} else if (head.pid != upload->identity.pid || head.RIP != upload->identity.RIP ||
+		   head.upload_id != upload->identity.upload_id ||
+		   head.base_generation != upload->identity.base_generation ||
+		   head.image_length != upload->identity.image_length ||
+		   head.entry_abi != upload->identity.entry_abi ||
+		   head.requirements != upload->identity.requirements)
+		return -ESTALE;
+	if (head.offset != upload->covered)
+		return -EINVAL;
+	code = upload->image ? upload->image->code : entry->code_block;
+	if (!code)
+		return -EINVAL;
 
 	KD_PR_INFO(
 		"install JIT chunk: pid=%d rip=%px status=%d offset=%lu bytes=%zu\n",
 		head.pid, (void *)head.RIP, head.status_code, head.offset, len);
 
-	if (copy_from_user((char *)entry->code_block + head.offset, payload,
+	if (copy_from_user((char *)code + head.offset, payload,
 			   len))
 		return -EFAULT;
+	upload->covered += len;
 	/* Keep the prior miss state recoverable until the full image is present. */
 	if (head.status_code == KD_EXE_NORMAL) {
-		const unsigned char *code = entry->code_block;
-		bool directory = !memcmp(code + 9, "KDWB002", 7) &&
-		                 !memcmp(code + 25, "KDWC002", 7) &&
-		                 !memcmp(code + 41, "KDAB", 4);
+		const unsigned char *bytes = code;
+		bool directory = !memcmp(bytes + 9, "KDWB002", 7) &&
+		                 !memcmp(bytes + 25, "KDWC002", 7) &&
+		                 !memcmp(bytes + 41, "KDAB", 4);
 
 		/* Every uploaded image uses KD's private packet, including FULL
 		 * recovery and legacy kernel-bridge entries. Old pt_regs offsets must
 		 * never be published NORMAL for this provider's rearranged packet. */
-		if (!directory || code[45] != entry->entry_abi) {
-			kd_exe_publish_status(entry, KD_EXE_NATIVE_ONLY);
+		if (!directory || bytes[45] != entry->entry_abi ||
+		    bytes[KD_IMAGE_VERSION_OFFSET] != head.version ||
+		    bytes[KD_IMAGE_REQUIREMENTS_OFFSET] != head.requirements) {
 			return -EPROTO;
 		}
-		kd_exe_publish_status(entry, KD_EXE_NORMAL);
+		if (upload->image) {
+			upload->image->length = head.image_length;
+			upload->image->requirements = head.requirements;
+			upload->image->entry_abi = head.entry_abi;
+			ret = kd_image_publish(entry, upload->image, head.base_generation);
+			if (ret)
+				return ret;
+			upload->image = NULL;
+		} else
+			kd_exe_publish_status(entry, KD_EXE_NORMAL);
+		upload->covered = 0;
 	}
 	return count;
 }
@@ -248,11 +307,19 @@ static ssize_t kd_dev_write(struct file *file, const char __user *buf,
 {
 	ssize_t ret;
 
-	(void)file;
 	(void)offset;
+	if (!file->private_data)
+		return -EBADF;
 	if (mutex_lock_interruptible(&kd_publish_lock))
 		return -ERESTARTSYS;
-	ret = kd_dev_write_locked(buf, count);
+	ret = kd_dev_write_locked(file->private_data, buf, count);
+	if (ret < 0) {
+		struct kd_image_upload *upload = file->private_data;
+
+		kd_image_discard(upload->image);
+		upload->image = NULL;
+		upload->covered = 0;
+	}
 	mutex_unlock(&kd_publish_lock);
 	return ret;
 }

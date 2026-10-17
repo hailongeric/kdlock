@@ -80,6 +80,20 @@ def check_execution():
                     "GS write/RMW changed the wrong storage")
             require(args[1] == 1, "wrapper did not report an executed body")
 
+    # Logical current needs no origin-CPU storage and remains usable by both
+    # backends. A zero GS base catches accidental dependence on that input.
+    for kind in ("spin", "mutex"):
+        assembly, log, status = render(
+            "65488b142520000000c3", lock_kind=kind,
+            kernel_symbols={"current_task": 0x20}, symbols={0x20: "current_task"},
+            return_status=True,
+        )
+        require(status == 0, log)
+        for task in (0x12345678, 0xABCDEF00):
+            regs, args = run_image(assembly, [0x1000], context=(0, task))[0]
+            require(regs[14] == task, "current did not use the logical waiter")
+            require(args[1] == 1, "logical-current body did not execute")
+
 
 def main():
     normal.set_current_task_offset(CURRENT_TASK_OFFSET)
