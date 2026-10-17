@@ -1,5 +1,16 @@
 # Performance status
 
+The [2026-10-17 compatibility backport comparison](../bench/results/10.176.26.71/bench/comparison/mutex-legacy-compat-20261017T122742Z/README.md)
+contains 504 accepted/drained sessions: fresh legacy and backported legacy,
+Native and TCLock, c01/post64 and pipebytes n16, all 21 worker counts through 60,
+three repetitions. At 60 workers, backport versus legacy median throughput is
+**4.914 versus 4.820 Mops/s** for c01 (+1.94%) and **5.375 versus 5.370 Mops/s**
+for pipebytes (+0.11%). Pipebytes at 44 workers regresses 9.47%; low-count
+variation and all individual results remain in the report. The selected
+instruction/publication changes retain the legacy lock protocol; see
+[the implementation comparison](design/legacy_mutex_compatibility.md).
+This evidence applies to `task/legacy-mutex-compat`, not the retained owned code.
+
 The [fresh recovered-legacy comparison](../bench/results/10.176.26.71/bench/comparison/mutex-legacy-grid-20261016T125529Z/README.md)
 accepted all 378 sessions across c01/post64 and pipebytes n16 at 1–8 workers by
 one and 12–60 by four. At 60 workers, KD median throughput is **4.931 Mops/s**

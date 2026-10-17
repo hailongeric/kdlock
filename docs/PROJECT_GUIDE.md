@@ -1,5 +1,11 @@
 # Project guide
 
+Current legacy compatibility work lives in `/tmp/kdlock-mutex-legacy-compat`,
+branch `task/legacy-mutex-compat`. Its [implementation comparison](design/legacy_mutex_compatibility.md)
+and [504-session report](../bench/results/10.176.26.71/bench/comparison/mutex-legacy-compat-20261017T122742Z/README.md) describe the backported features,
+unchanged legacy protocol and measured regressions. This primary checkout still
+retains the owned experiment and its 35 pre-existing edits.
+
 The user rejected the adaptive mutex experiment on 2026-10-16. The
 [recovered legacy baseline](../bench/results/10.176.26.71/bench/comparison/mutex-legacy-recovery-20261016T113518Z/README.md) is commit `6ecdd0a`, branch
 `recovery/mutex-legacy-5m330`, worktree `/tmp/kdlock-mutex-legacy-5m330`. The

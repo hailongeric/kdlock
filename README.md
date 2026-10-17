@@ -1,5 +1,13 @@
 # kdlock
 
+The [legacy compatibility backport](docs/design/legacy_mutex_compatibility.md)
+is commit `555b8b7` on `task/legacy-mutex-compat` in
+`/tmp/kdlock-mutex-legacy-compat`.
+It adds instruction admission and immutable images while retaining the recovered
+legacy mutex protocol. The [504-session comparison](bench/results/10.176.26.71/bench/comparison/mutex-legacy-compat-20261017T122742Z/README.md)
+records the requested worker grid, gains, regressions and archive replay.
+The original recovery and baseline benchmark branches remain unchanged.
+
 The [fresh legacy c01/pipebytes comparison](bench/results/10.176.26.71/bench/comparison/mutex-legacy-grid-20261016T125529Z/README.md)
 covers 1–8 workers by one and 12–60 by four, with all 378 sessions accepted.
 It uses the recovered legacy provider and the documented common 64-round

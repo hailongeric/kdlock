@@ -1,5 +1,13 @@
 # Results from 10.176.26.71
 
+The [legacy compatibility comparison, 2026-10-17](bench/comparison/mutex-legacy-compat-20261017T122742Z/README.md)
+contains 504 accepted/drained sessions for c01/post64 and pipebytes n16, with
+fresh legacy, backported legacy, Native and TCLock at all 21 worker counts.
+At 60 workers, the backport reaches 4.914/5.375 Mops/s versus legacy's
+4.820/5.370. The 44-worker pipebytes regression and low-count variability remain
+in the report. Both KD versions retain the legacy lock protocol. This run uses
+64 vCPUs and collector CPU 63.
+
 The [fresh legacy mutex grid](bench/comparison/mutex-legacy-grid-20261016T125529Z/README.md)
 compares c01/post64 and pipebytes n16 over all 21 requested worker counts,
 with 378 accepted/drained sessions. At 60 workers, legacy KD reaches

@@ -1,0 +1,198 @@
+[
+  {
+    "argv": [
+      "make",
+      "-C",
+      "kernel_module",
+      "-j8",
+      "W=1"
+    ],
+    "exit_code": 0,
+    "name": "provider",
+    "seconds": 2.6810622430057265
+  },
+  {
+    "argv": [
+      "make",
+      "-B",
+      "-C",
+      "daemon",
+      "CFLAGS=-O2 -Wall -Wextra -Werror"
+    ],
+    "exit_code": 0,
+    "name": "daemon",
+    "seconds": 0.31768269001622684
+  },
+  {
+    "argv": [
+      "make",
+      "-B",
+      "-C",
+      "tests/unit",
+      "run"
+    ],
+    "exit_code": 0,
+    "name": "basic",
+    "seconds": 0.8700763639935758
+  },
+  {
+    "argv": [
+      "/root/kdlock-evidence/clobber-20260918/venv/bin/python3",
+      "tests/unit/run.py",
+      "admission/test_instruction_policy.py"
+    ],
+    "exit_code": 0,
+    "name": "test_instruction_policy",
+    "seconds": 1.272032458015019
+  },
+  {
+    "argv": [
+      "/root/kdlock-evidence/clobber-20260918/venv/bin/python3",
+      "tests/unit/run.py",
+      "admission/test_context_policy.py"
+    ],
+    "exit_code": 0,
+    "name": "test_context_policy",
+    "seconds": 3.3311994659889024
+  },
+  {
+    "argv": [
+      "/root/kdlock-evidence/clobber-20260918/venv/bin/python3",
+      "tests/unit/run.py",
+      "admission/test_context_guards.py"
+    ],
+    "exit_code": 0,
+    "name": "test_context_guards",
+    "seconds": 2.5280492019956
+  },
+  {
+    "argv": [
+      "/root/kdlock-evidence/clobber-20260918/venv/bin/python3",
+      "tests/unit/run.py",
+      "admission/test_context_memory.py"
+    ],
+    "exit_code": 0,
+    "name": "test_context_memory",
+    "seconds": 3.480823755991878
+  },
+  {
+    "argv": [
+      "/root/kdlock-evidence/clobber-20260918/venv/bin/python3",
+      "tests/unit/run.py",
+      "admission/test_text_regions.py"
+    ],
+    "exit_code": 0,
+    "name": "test_text_regions",
+    "seconds": 0.6678394739865325
+  },
+  {
+    "argv": [
+      "/root/kdlock-evidence/clobber-20260918/venv/bin/python3",
+      "tests/unit/run.py",
+      "codegen/test_jit_diagnostics.py"
+    ],
+    "exit_code": 0,
+    "name": "test_jit_diagnostics",
+    "seconds": 0.41629106798791327
+  },
+  {
+    "argv": [
+      "/root/kdlock-evidence/clobber-20260918/venv/bin/python3",
+      "tests/unit/run.py",
+      "codegen/test_segment_codegen.py"
+    ],
+    "exit_code": 0,
+    "name": "test_segment_codegen",
+    "seconds": 1.1215754270087928
+  },
+  {
+    "argv": [
+      "/root/kdlock-evidence/clobber-20260918/venv/bin/python3",
+      "tests/unit/run.py",
+      "execution/test_mutex_images.py"
+    ],
+    "exit_code": 0,
+    "name": "test_mutex_images",
+    "seconds": 0.31714991500484757
+  },
+  {
+    "argv": [
+      "/root/kdlock-evidence/clobber-20260918/venv/bin/python3",
+      "tests/unit/run.py",
+      "execution/test_exe_registry.py"
+    ],
+    "exit_code": 0,
+    "name": "test_exe_registry",
+    "seconds": 15.697913915006211
+  },
+  {
+    "argv": [
+      "/root/kdlock-evidence/clobber-20260918/venv/bin/python3",
+      "tests/unit/run.py",
+      "execution/test_jit_entry_scope.py"
+    ],
+    "exit_code": 0,
+    "name": "test_jit_entry_scope",
+    "seconds": 28.603906133008422
+  },
+  {
+    "argv": [
+      "/root/kdlock-evidence/clobber-20260918/venv/bin/python3",
+      "tests/unit/run.py",
+      "execution/test_exec_capacity.py"
+    ],
+    "exit_code": 0,
+    "name": "test_exec_capacity",
+    "seconds": 16.288770229002694
+  },
+  {
+    "argv": [
+      "/root/kdlock-evidence/clobber-20260918/venv/bin/python3",
+      "tests/unit/run.py",
+      "infrastructure/test_source_lifetime.py"
+    ],
+    "exit_code": 0,
+    "name": "test_source_lifetime",
+    "seconds": 4.2849802400160115
+  },
+  {
+    "argv": [
+      "/root/kdlock-evidence/clobber-20260918/venv/bin/python3",
+      "tests/unit/run.py",
+      "codegen/test_clobber_abi.py"
+    ],
+    "exit_code": 0,
+    "name": "test_clobber_abi",
+    "seconds": 1.5241104390006512
+  },
+  {
+    "argv": [
+      "/root/kdlock-evidence/clobber-20260918/venv/bin/python3",
+      "tests/unit/run.py",
+      "codegen/test_wrapper_inputs.py"
+    ],
+    "exit_code": 0,
+    "name": "test_wrapper_inputs",
+    "seconds": 0.6692497170006391
+  },
+  {
+    "argv": [
+      "/root/kdlock-evidence/clobber-20260918/venv/bin/python3",
+      "tests/unit/run.py",
+      "mutex/test_mutex_wait_clobber.py"
+    ],
+    "exit_code": 0,
+    "name": "test_mutex_wait_clobber",
+    "seconds": 0.21661140501964837
+  },
+  {
+    "argv": [
+      "/root/kdlock-evidence/clobber-20260918/venv/bin/python3",
+      "tests/unit/run.py",
+      "mutex/test_mutex_outer_api.py"
+    ],
+    "exit_code": 0,
+    "name": "test_mutex_outer_api",
+    "seconds": 0.8706039469980169
+  }
+]

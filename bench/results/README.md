@@ -1,5 +1,12 @@
 # Results by physical machine
 
+The [2026-10-17 legacy compatibility comparison](10.176.26.71/bench/comparison/mutex-legacy-compat-20261017T122742Z/README.md)
+contains 504 accepted/drained sessions and a verified 20,567-file archive,
+including its failed first preparation. It compares independent instruction/image
+backports against fresh legacy, with Native/TCLock controls. Raw evidence is in
+`10.176.26.71/raw/bench/mutex-legacy-compat-20261017T122742Z/`; the report retains all results, regressions,
+plots, source identities and replay receipts.
+
 The [latest recovered-legacy mutex grid](10.176.26.71/bench/comparison/mutex-legacy-grid-20261016T125529Z/README.md)
 contains all 378 requested c01/post64 and pipebytes n16 sessions, with separate
 source-verified archives and fresh Native/TCLock controls. Its raw archive is
