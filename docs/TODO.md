@@ -1,5 +1,11 @@
 # Known limitations and deferred work
 
+The [terminology guide](TERMINOLOGY.md) explains lock, generated-code and
+measurement terms used here. In particular, rwsem means a sleeping reader/writer
+semaphore; JIT means just-in-time compiled code used to execute a waiting task's
+work; and final drain means all requests, references and release confirmations
+have finished.
+
 The [KD-only mutex contract](design/kd_only_mutex.md) is the current replacement
 assumption. Whole-kernel rebuilding, lockdep/RT/ww_mutex integration and broad
 oversubscription remain unvalidated. Removing the Linux mutex bridge does not
@@ -8,7 +14,7 @@ resolve historical pinned-producer scheduling failures.
 Current scope: x86_64 kernel spin/mutex/rwlock delegation and sleeping rwsem
 with local readers and explicit outer writer delegation. Implementation contracts
 live in [DESIGN](DESIGN.md); [performance status](PERFORMANCE.md) distinguishes the
-accepted KD-only mutex, selected rwsem results, the separate spinning-rwlock
+accepted KD-only mutex, accepted `c21345b` rwsem results, the separate spinning-rwlock
 reference and historical comparisons. These unresolved issues remain documented;
 this list does not schedule new work. Historical evidence is
 indexed in [VALIDATION](VALIDATION.md).
@@ -39,20 +45,23 @@ Native and 28/30 against TCLock. These
 comparisons retain repetition ranges and do not establish statistical
 significance. TCLock's stack-delegation share remains unmeasured.
 
-The selected [rwsem optimization](../bench/results/10.176.26.71/bench/rwsem-optimization-20261018/README.md)
-uses separate admission/drain queues, independent cachelines and finite polling
-before publication, while preserving the accepted KD mutex protocol. All 756
+The accepted `c21345b` [rwsem implementation](../bench/results/10.176.26.71/bench/rwsem-optimization-20261018/README.md)
+uses separate queues for waiting to enter and waiting for readers to finish,
+separates frequently written fields across cachelines, and checks conditions
+repeatedly for a limited number of attempts before sleeping. These changes
+precede delegation publication and preserve the accepted KD mutex protocol. All 756
 sessions completed correctly and drained. KD meets both observed throughput
 criteria at 117/126 points against Native, with six misses and three split
 execution-status groups. Against the initial KD there are 110 passes, 12 misses
 and four split comparisons. Low-count regressions remain substantial: c01/c08
 at 20% writes and two workers reach only 0.286×/0.276× the initial KD whole-run
-throughput. The six Native misses are the three 20%/one-worker cases,
+throughput, approximately 71–72% slower. The user accepted this version with
+those measured limitations; acceptance does not remove them. The six Native
+misses are the three 20%/one-worker cases,
 c08/1%/two workers and c01/c08 at 20%/36 workers. Split comparisons completed
 all planned sessions; execution groups and variability remain in the report.
-The 16,384-probe choice is platform-specific experimental tuning, not a universal
-optimum. The
-first-repetition Native variation in both baseline and selected focused screens
+The limit of 16,384 condition checks is accepted platform-specific tuning, not a
+universal optimum. The first-repetition Native variation in both baseline and selected focused screens
 remains unexplained; governor-policy equality does not isolate its cause.
 Continuous outer-writer arrivals can delay readers or ordinary writers, and no
 Linux rwsem fairness or bounded-wait guarantee is provided.

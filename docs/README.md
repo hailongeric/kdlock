@@ -1,17 +1,21 @@
 # Documentation index
 
 These guides describe `master`, whose mutex implementation is the accepted
-KD-only version from `d2a2304`. Historical experiments do not define current APIs.
+KD-only version from `d2a2304` and whose reader/writer semaphore (rwsem) waiting
+implementation is accepted at `c21345b`. The rwsem acceptance includes its
+documented two-worker performance regressions. Historical experiments do not
+define current APIs (application programming interfaces).
 
 | Guide | Responsibility |
 | --- | --- |
 | [Project guide](PROJECT_GUIDE.md) | Reading order, source ownership and quick setup |
+| [Terminology](TERMINOLOGY.md) | Plain-language definitions of lock, execution and benchmark terms |
 | [VM operations](operations/VM.md) | Environment, identity, builds, recovery and drain |
 | [Development rules](../AGENTS.md) | Repository-wide contribution constraints |
 | [Design](DESIGN.md), [code map](CODE_MAP.md) | Architecture, terms and file responsibilities |
 | [Lock protocols](design/lock_protocols.md) | KD/TCLock/Native spin, mutex and rwlock behavior |
 | [Spin](design/spin_implementation.md), [mutex](design/mutex_implementation.md), [rwlock](design/rwlock_implementation.md) | Implementation and storage details |
-| [Sleeping rwsem](design/rwsem_implementation.md) | Ordinary sleeping APIs and outer ABI2 writers, phase admission before mutex publication; real mmap replacement remains separate |
+| [Sleeping rwsem](design/rwsem_implementation.md) | Accepted reader/writer semaphore; writers stop new readers and wait for existing readers before delegating; replacing the kernel's real memory-map lock remains separate |
 | [KD-only mutex](design/kd_only_mutex.md) | Object replacement, ordinary aliases and delegation |
 | [Locking](design/locking.md), [frames](design/frames.md), [lifetimes](design/lifetimes.md) | Ownership and retirement |
 | [JIT execution](JIT_EXECUTION.md), [register ABI](JIT_REGISTER_ABI.md), [admission](design/admission.md) | Translation and execution contracts |

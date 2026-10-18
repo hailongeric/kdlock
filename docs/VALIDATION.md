@@ -1,13 +1,23 @@
 # Validation index
 
-Validation applies to the recorded inputs and scope. Publication, returned JIT
-execution, correctness, drain and performance parity are distinct observations.
+Validation applies to the recorded inputs and scope. Publishing generated code,
+returning from actual just-in-time compiled (JIT) execution, producing correct
+results, finishing all outstanding ownership work (drain), and matching another
+implementation's throughput (performance parity) are distinct observations.
 Basic plus affected checks are the default; an old pass is not a current full pass.
+The [terminology guide](TERMINOLOGY.md) explains status labels and other technical
+terms used in the receipts below.
 
-## Selected rwsem optimization, 2026-10-18
+## Accepted rwsem implementation, c21345b
+
+The user accepted this reader/writer semaphore (rwsem) waiting implementation
+with its documented performance tradeoffs. The acceptance preserves the
+[two-worker regressions](PERFORMANCE.md#accepted-rwsem-implementation-c21345b)
+and does not add new test coverage to the recorded 2026-10-18 checks.
 
 The [optimization receipt](../bench/results/10.176.26.71/tests/rwsem-optimization-20261018/README.md)
-records **PASS** for the selected split-queue, 16,384-probe implementation:
+records **PASS** for the accepted implementation with separate waiting queues
+and at most 16,384 condition checks before sleeping:
 the scheduler/API probe, two basic C programs and all 44 focused workload
 checks. Builds and live execution ran in the recovery VM. The
 [design](design/rwsem_implementation.md) retains reader drainage before pinned

@@ -1,14 +1,23 @@
 # kdlock
 
 kdlock is an experimental x86_64 Linux kernel lock library. A lock holder can
-execute waiting callers' critical sections through a JIT compiler. The project
+execute waiting callers' critical sections through a just-in-time (JIT) compiler,
+which translates their protected work into code for delegated execution. The project
 provides spinlocks, ordinary mutexes and spinning read-write locks, with matched
-Linux Native and TCLock workloads. A separate [sleeping rwsem](docs/design/rwsem_implementation.md)
-provides ordinary local readers/writers and explicit ABI2 writer delegation,
-with Native/KD comparisons. Writer reservations drain readers before entering
-the unchanged KD mutex protocol. Its admission uses separate waitqueues and
-bounded polling before publication; see the rwsem design for ordering. There is
-no TCLock rwsem arm.
+Linux Native (unmodified Linux locks) and TCLock (the separate stack-switching
+delegation implementation) workloads. A separate
+[sleeping reader/writer semaphore, or rwsem](docs/design/rwsem_implementation.md),
+allows concurrent readers or one exclusive writer, and lets blocked callers
+sleep. Its ordinary readers/writers execute locally; explicit outer writers can
+delegate their work through the unchanged KD mutex protocol.
+
+The rwsem waiting implementation in **`c21345b` is accepted as current**. Writers
+first block new readers and wait for existing readers to finish. Separate queues
+serve different waiting conditions, and callers repeatedly check those conditions
+for a bounded number of attempts before sleeping. The
+[756-session comparison](bench/results/10.176.26.71/bench/rwsem-optimization-20261018/README.md)
+records large 60-worker gains and retained two-worker regressions. Acceptance
+includes this measured tradeoff. This port has no sleeping TCLock rwsem.
 
 `master` is the maintained version. Its KD mutex uses **KD-owned physical
 exclusion and the accepted legacy delegation protocol**, selected at `d2a2304`.
@@ -25,6 +34,7 @@ with three repetitions and Native/TCLock controls. The
 ## Documentation
 
 - [Documentation index](docs/README.md) and [project guide](docs/PROJECT_GUIDE.md)
+- [Terminology](docs/TERMINOLOGY.md): lock, execution and measurement terms used in these guides
 - [Design](docs/DESIGN.md), [nine lock protocols](docs/design/lock_protocols.md)
   and [code map](docs/CODE_MAP.md)
 - [Benchmark workloads](docs/BENCHMARK_WORKLOADS.md) and [benchmark commands](bench/README.md)
@@ -32,7 +42,7 @@ with three repetitions and Native/TCLock controls. The
 - [VM operations](docs/operations/VM.md) and [development rules](AGENTS.md)
 - [Branch consolidation](docs/history/main-consolidation-20261018.md) and [historical evidence](docs/history/README.md)
 - [Feature reintegration](docs/history/feature-reintegration-20261018.md): restored proc snapshots, benchmark safeguards and ordinary rwsem
-- [Rwsem optimization comparison](bench/results/10.176.26.71/bench/rwsem-optimization-20261018/README.md): current Native/KD scaling, separate Native/TCLock/KD spinning-rwlock reference, candidate history and validation limits
+- [Accepted rwsem comparison](bench/results/10.176.26.71/bench/rwsem-optimization-20261018/README.md): `c21345b` Native/KD results, separate Native/TCLock/KD spinning-rwlock reference, candidate history and validation limits
 - [Initial rwsem writer comparison](bench/results/10.176.26.71/bench/rwsem/20261018/README.md): historical shared-queue baseline, execution evidence and regressions
 
 ## Repository

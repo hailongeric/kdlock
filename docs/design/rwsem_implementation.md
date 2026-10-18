@@ -1,13 +1,33 @@
 # Sleeping KD reader/writer semaphore
 
+The waiting implementation in `c21345b` is the **accepted current KD rwsem**.
+Acceptance includes the measured tradeoff: large gains at 60 workers and
+substantial regressions at two workers with 20% writes. The
+[performance status](../PERFORMANCE.md#accepted-rwsem-implementation-c21345b)
+retains those results. This acceptance does not replace the selected KD mutex
+protocol or establish support for every Linux reader/writer semaphore use.
+
 [`kd_rwsem.h`](../../include/kd_rwsem.h) provides concurrent sleeping readers and
 ordinary exclusive writers. The explicit outer-writer interface in
 [`kd_rwsem_direct.h`](../../include/kd_rwsem_direct.h) also permits writer
-delegation through the selected KD-only mutex. Reader admission closes and
-existing readers drain before any writer can publish a pinned delegation
-request. No Linux mutex or Linux rwsem backs the object. The KD mutex's physical
-ownership, legacy queue and batching, ABI2, immutable images, source leases,
-unlock acknowledgements and frame retirement remain unchanged.
+delegation: a lock holder can execute a waiting writer's protected work through
+the selected KD-only mutex. A reader/writer semaphore, abbreviated **rwsem**,
+allows concurrent readers or one exclusive writer, and blocked callers can sleep.
+Before a writer publishes a delegation request, it closes **reader admission**
+(permission for new readers to enter) and waits for existing readers to finish,
+called **reader drain**. A published mutex waiter then polls with preemption
+disabled, so the scheduler cannot pause it in the ordinary way to run another
+task on that CPU; this is the **pinned waiter** restriction.
+
+No Linux mutex or Linux rwsem backs the object. The KD mutex keeps the same
+physical ownership records, queue, and batching of several waiting operations.
+Its machine-level calling agreement remains ABI2; just-in-time compiled (JIT)
+code remains
+immutable after publication. References keep the source module loaded until it
+is no longer needed, unlock acknowledgements confirm release, and execution
+records are retired only after their final user finishes. These ownership and
+lifetime rules are unchanged. The [terminology guide](../TERMINOLOGY.md) explains
+other code and evidence terms used below.
 
 ## API and scope
 
@@ -27,11 +47,14 @@ gate checks cannot replace provider source/frame drain.
 
 `KD_RWSEM_OUTER_WRITE_LOCK()` / `KD_RWSEM_OUTER_WRITE_UNLOCK()` are a separate
 matched pair for delegation-capable outer writers. The caller supplies an opaque
-`struct kd_rwsem_outer_cookie` for one lexical acquisition and a unique named
-continuation in a `noipa` function. Prepare that continuation on the embedded KD
-mutex with `kd_mutex_prepare()` and `KD_ENTRY_ABI_MUTEX_CLOBBER_V1`. The compiler
-owns spills across the clobber boundaries, as for direct KD mutex calls. The
-existing two-word wrapper input and packet ABI do not change.
+`struct kd_rwsem_outer_cookie` to record one matching lock/unlock operation and a
+unique named continuation (the point where execution resumes) in a `noipa`
+function, which disables interprocedural compiler optimization. Prepare that
+continuation on the embedded KD mutex with `kd_mutex_prepare()` and
+`KD_ENTRY_ABI_MUTEX_CLOBBER_V1`. The compiler
+knows which registers the call may overwrite and saves the values needed later,
+as for direct KD mutex calls. The existing two-word wrapper input and packet
+ABI do not change.
 
 The outer pair cannot downgrade or cancel after publication. Its admission and
 drain waits are uninterruptible; callers needing cancellation use an ordinary
@@ -49,7 +72,7 @@ refuse ordinary rwsem APIs and admission helpers inside an enclosing delegated
 body, including calls discovered while learning a helper. There is no nested
 rwsem ledger mode or remote cancellation/downgrade contract.
 
-## Admission phases
+## Who may enter: admission phases
 
 An atomic admission word is independent of the embedded KD physical mutex:
 
@@ -105,15 +128,17 @@ reservation, so admission cannot reopen while that wait remains live. Fully
 ordered count/phase updates precede the lockless `waitqueue_active()` checks
 and pair with waitqueue enrolment and predicate rechecks.
 
-Uninterruptible acquisitions poll before entering a sleeping wait. Each polling
-stage tries at most 16,384 condition probes and stops early when rescheduling is
-needed. Polling occurs before delegation publication, with preemption enabled;
+Uninterruptible acquisitions poll, meaning they repeatedly check whether they
+can proceed before entering a sleeping wait. Each polling stage tries at most
+16,384 condition checks and stops early when the scheduler needs the CPU.
+Polling occurs before delegation publication, with preemption enabled;
 its finite fallback lets sleeping or colocated holders resume. A successful
 predicate may acquire a reader count or writer reservation, so it is consumed
 once without another acquisition attempt. The ordinary writer's read-only
 phase check is only a hint; its compare/exchange remains authoritative. The
-budget is an experimentally chosen tuning for the captured benchmark platform,
-not a universal optimum.
+budget is the accepted tuning for the captured benchmark platform, not a
+universal optimum. It improves the measured 60-worker cases but substantially
+reduces throughput in some two-worker cases; acceptance retains that limitation.
 
 The polling bound counts predicate invocations, not elapsed time: the existing
 outer-reservation predicate can retry its compare/exchange internally. The

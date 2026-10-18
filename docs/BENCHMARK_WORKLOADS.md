@@ -1,9 +1,14 @@
 # Benchmark workloads and critical sections
 
-This catalog defines the synthetic and syscall/API workloads selected for
+This catalog defines the synthetic and system-call/application programming
+interface (syscall/API) workloads selected for
 benchmarks on `master`. Use [benchmark commands](../bench/README.md) for execution and
 [performance status](PERFORMANCE.md) for measured outcomes. Selection is not
 a claim that the current KD version has passed every configuration.
+The [terminology guide](TERMINOLOGY.md) explains lock names, execution status
+labels and measurement terms. In particular, a reader/writer spinlock (rwlock)
+waits by spinning, while a reader/writer semaphore (rwsem) can sleep while
+waiting. Just-in-time (JIT) compilation supplies code for delegated execution.
 
 The standard grid is 1–8 workers by one and 12–60 by four, three repetitions per
 configuration, comparing KD, TCLock and Linux Native where supported. Rwlock and
@@ -14,7 +19,9 @@ syscalls individually. Include both categories when requesting the full catalog.
 The current accepted [KD-only matrix](../bench/results/10.176.26.71/bench/comparison/mutex-kdonly-20261017T140354Z/README.md)
 covers c01/post64 and `api-pipebytes-query-n16`. Broader historical owned-mutex
 coverage remains in [history](history/README.md), with its original implementation
-identity. Sleeping rwsem with outer writer delegation and extracted proc snapshots have explicit
+identity. The rwsem waiting implementation in **`c21345b` is accepted as current**,
+including its documented two-worker throughput regressions. Sleeping rwsem with
+outer writer delegation and extracted proc snapshots have explicit
 runner modes described below. Full [process inspection and mmap candidates](#process-inspection-and-mmap-candidates)
 remain proposals, outside the runnable standard catalog.
 
@@ -412,7 +419,7 @@ automatically added to an ordinary rwlock or full-catalog sweep.
 
 | Mode | Payloads / backends | Execution contract |
 | --- | --- | --- |
-| `--lock-kind rwsem` | c01/c08 or RCUHT; `--backends native kdlock` | Sleeping local readers and explicit ABI2 outer writers. KD reserves a reader-free phase before entering the unchanged mutex delegation queue. `--delegate off` selects a distinct ordinary-local KD control with zero JIT. No TCLock sleeping-rwsem port. |
+| `--lock-kind rwsem` | c01/c08 or RCUHT; `--backends native kdlock` | Sleeping local readers and explicit writers that may delegate. KD blocks new readers and waits for existing readers before entering the unchanged mutex delegation queue. `--delegate off` selects a distinct ordinary-local KD control with zero JIT. No TCLock sleeping-rwsem port. |
 | `--lock-kind spin --workloads argbounds` | Four-word argument-boundary snapshot; Native/TCLock/KD | Every snapshot takes an exclusive spinlock; KD may delegate reads. Controlled optional mutations use the same selected lock. |
 | `--lock-kind spin --workloads taskname` | Exact `strscpy_pad()` copy from a 16-byte name to a 64-byte padded buffer; Native/TCLock/KD | Preserve helper semantics and admission. Historical exact-helper refusal remains a known limit; explicit `--delegate off` gives a KD local control. |
 
@@ -430,14 +437,17 @@ separate from actual delegated results.
 
 The [rwsem design](design/rwsem_implementation.md) supports ordinary sleeping
 read/write, trylocks, downgrade and interruptible/killable cancellation. Its
-explicit outer writer pair can delegate admitted bodies through the existing
-mutex ABI2. Each reservation closes reader admission and drains existing readers
-while schedulable, before any pinned queue publication. Ordinary writers hold an
-exclusive phase, so their downgrade cannot create a reader after another writer
-has passed drain. Outer reservations remain live until origin unlock/ACK returns;
-that pair cannot downgrade or cancel after publication. Separate admission/drain
-waitqueues and bounded polling before publication are described in the design;
-they preserve the selected KD mutex protocol. The
+explicit outer writer pair can delegate permitted bodies through ABI2, the
+existing mutex machine-level calling agreement. Each writer reserves permission
+to enter, prevents new readers, and waits for existing readers while the scheduler
+can still pause it. Only then can it publish a mutex request and become pinned
+with preemption disabled. Ordinary writers hold an exclusive admission state,
+so a writer-to-reader downgrade cannot introduce a reader after a delegated
+writer has passed that wait. An outer writer keeps its reservation until its
+original task receives the matching unlock acknowledgement (ACK); that pair
+cannot downgrade or cancel after publication. Separate queues for those waiting
+conditions and a limited number of checks before sleeping preserve the selected
+KD mutex protocol. The
 [scheduler probe](../tests/kernel/rwsem/README.md) exercises sleeping holders and
 contenders sharing one CPU and checks pre-publication ordering across downgrade.
 This object is not a replacement for the real `mmap_lock`. The
@@ -452,8 +462,9 @@ and retain complete-body counts, NO_JIT controls, correctness, worker progress
 and final drain. Admission and Linux rwsem fairness policies differ; the design
 does not imply a throughput advantage.
 
-The [rwsem optimization report](../bench/results/10.176.26.71/bench/rwsem-optimization-20261018/README.md)
-records the current comparison, candidate screens, separate baseline controls,
+The [accepted rwsem comparison](../bench/results/10.176.26.71/bench/rwsem-optimization-20261018/README.md)
+records the `c21345b` implementation's measurements, smaller candidate comparisons,
+separate baseline controls,
 diagnostic profiles and actual execution groups. Its separate spinning-rwlock
 reference selects Native/TCLock/KD on c01, c08 and RCUHT at 1%/20% writes and
 1/8/32/36/60 workers, with three repetitions: 270 completed sessions. This reference

@@ -1,6 +1,10 @@
 # Results by physical machine
 
-`master` selects KD-only `d2a2304`; see [current performance](../../docs/PERFORMANCE.md).
+`master` retains the accepted KD-only mutex protocol from `d2a2304` and the accepted
+reader/writer semaphore (rwsem) waiting implementation from `c21345b`. See
+[current performance](../../docs/PERFORMANCE.md) for results and retained
+regressions, and [terminology](../../docs/TERMINOLOGY.md) for execution and
+measurement definitions.
 The [2026-10-18 consolidation checks](10.176.26.71/tests/main-consolidation-20261018/README.md)
 validate organization and tooling separately from the measured runtime.
 The [feature reintegration checks](10.176.26.71/tests/feature-reintegration-20261018/README.md)
@@ -8,11 +12,12 @@ validate the earlier ordinary-only rwsem, restored snapshots and benchmark safeg
 including retained delegation failures. Historical owned/adaptive mutex and
 owned-gate rwsem reports remain separate evidence.
 
-The [rwsem optimization comparison](10.176.26.71/bench/rwsem-optimization-20261018/README.md)
-records the current Native/KD c01/c08/RCUHT comparison at 1%/20% writes on the
+The [accepted rwsem comparison](10.176.26.71/bench/rwsem-optimization-20261018/README.md)
+records the `c21345b` Native/KD c01/c08/RCUHT comparison at 1%/20% writes on the
 standard 1–60-worker grid, preserving the selected KD mutex protocol. It retains
 candidate screens, baseline controls, execution groups, diagnostic profiles and
-source identities. Its separate Native/TCLock/KD spinning-rwlock reference uses
+source identities. Acceptance includes the substantial two-worker regressions;
+the recorded report and raw measurements remain unchanged. Its separate Native/TCLock/KD spinning-rwlock reference uses
 all three payloads and both mixes at 1/8/32/36/60 workers, 270 completed sessions;
 those non-sleeping results are not pooled with rwsem. The
 [focused validation receipt](10.176.26.71/tests/rwsem-optimization-20261018/README.md)

@@ -1,5 +1,13 @@
 # Sleeping rwsem and outer-writer admission checks
 
+The reader/writer semaphore (rwsem) waiting implementation in `c21345b` is the
+accepted current version. Admission means permission for a reader or writer to
+enter. An outer writer uses the explicit interface that may delegate its work
+to another lock holder. JIT means just-in-time compiled code for that delegated
+execution; a returned body must reach its matching unlock and finish the return
+protocol. See the [terminology guide](../../../docs/TERMINOLOGY.md) for other
+implementation and result labels.
+
 Run only in the verified recovery guest, following
 [VM operations](../../../docs/operations/VM.md). This probe exercises the
 [current KD rwsem](../../../docs/design/rwsem_implementation.md), including the
@@ -48,8 +56,9 @@ The probe checks:
   readers and writer reservations, no phase or drain waiters and an idle
   physical gate.
 
-The provider's uninterruptible pre-publication waits have a finite 16,384-probe
-polling stage with an early reschedule exit. The sleeping and same-CPU cases
+Before publishing a request, uninterruptible waits check their condition at most
+16,384 times before sleeping, and stop this polling earlier if the scheduler
+needs the CPU. The sleeping and same-CPU cases
 exercise the scheduling fallback after that stage. Interruptible and killable
 acquisitions retain their original cancellation path. Reader count acquisition
 runs on the reader's own task.

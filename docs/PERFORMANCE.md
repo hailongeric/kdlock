@@ -1,5 +1,20 @@
 # Performance status
 
+The reader/writer semaphore (rwsem) implementation measured in `c21345b` is
+**accepted as the current version**, including the two-worker regressions below.
+Acceptance identifies the maintained implementation; it does not turn every
+measured configuration into a performance pass.
+
+Throughput is reported in **Mops/s**, millions of completed operations per second.
+The **whole-run median** is the middle of three repetition rates, each measured
+over its full timed interval. A ratio of 2× means twice the reference rate;
+0.286× means 28.6% of that rate, or 71.4% slower. A **JIT** (just-in-time compiled)
+body counts as returned only after delegated execution reaches its matching
+unlock and completes the return protocol. `NO_JIT` means no such bodies were
+returned in that measurement. **Drained** means all requests and their required
+references and acknowledgements finished. The
+[terminology guide](TERMINOLOGY.md) defines the remaining lock and evidence terms.
+
 The accepted current mutex is KD-only `d2a2304`: KD physical exclusion with the
 legacy delegation queue. The [2026-10-17 paired report](../bench/results/10.176.26.71/bench/comparison/mutex-kdonly-20261017T140354Z/README.md)
 contains 504 complete, drained sessions: two workloads, 21 worker counts, three
@@ -31,21 +46,26 @@ Its focused validation is recorded separately in [VALIDATION](VALIDATION.md).
 The later rwsem comparison below measures the new writer interface separately;
 it does not rerun or replace the accepted mutex comparison.
 
-## Selected rwsem optimization, 2026-10-18
+## Accepted rwsem implementation, c21345b
 
 The [optimization report](../bench/results/10.176.26.71/bench/rwsem-optimization-20261018/README.md)
 records all **756 correct, drained Native/KD sessions**: c01/c08/RCUHT, 1%/20%
 writes, the standard 21 worker counts through 60, three repetitions and post4
-work. At 60 workers, selected KD median whole-run throughput is **5.10–7.42×**
+work (four dependent arithmetic rounds after each unlock). At 60 workers,
+accepted KD median whole-run throughput is **5.10–7.42×**
 the initial KD rwsem and **1.546–2.352×** contemporary Native. Low-count
 regressions remain; this is not an improvement at every configuration.
 
-Separate admission/drain waitqueues, independent cachelines and finite
-pre-publication polling replace the original shared-queue waiting path;
-ordinary writer admission also reads the phase before its authoritative CAS.
-The 16,384-probe budget is experimental tuning for this captured platform, not
-a universal optimum or a fixed time bound. Reader drainage still precedes
-pinned writer publication. The [design](design/rwsem_implementation.md) explains
+Separate waiting queues now serve callers waiting for permission to enter and
+writers waiting for existing readers to finish. Frequently written fields occupy
+different cachelines, reducing interference between CPU caches. Before sleeping,
+callers poll: they repeatedly check whether they can proceed, for up to 16,384
+checks, stopping earlier if the scheduler needs the CPU. Ordinary writers also
+read the admission state before the authoritative atomic compare-and-exchange
+that reserves it. The budget is accepted tuning for this captured platform, not
+a universal optimum or a fixed time bound. Existing readers still finish before
+a writer publishes a pinned delegation request. The
+[design](design/rwsem_implementation.md) explains
 the ordering and the object-size tradeoff (384 to 512 bytes). The accepted KD
 mutex protocol, heat policy and wrapper ABI remain unchanged.
 
@@ -57,7 +77,7 @@ later baseline-repeat screen and candidate screens remain separate runs.
 
 At 60 workers, median whole-run throughput in Mops/s is:
 
-| Workload | Writes | Linux Native | Selected KD rwsem | KD / Native | KD / initial KD |
+| Workload | Writes | Linux Native | Accepted KD rwsem | KD / Native | KD / initial KD |
 | --- | ---: | ---: | ---: | ---: | ---: |
 | c01 | 1% | 3.561 | 7.900 | 2.219× | 7.416× |
 | c01 | 20% | 1.421 | 2.197 | 1.546× | 5.458× |
@@ -66,13 +86,17 @@ At 60 workers, median whole-run throughput in Mops/s is:
 | RCUHT | 1% | 3.262 | 7.312 | 2.242× | 6.927× |
 | RCUHT | 20% | 0.873 | 2.047 | 2.344× | 5.100× |
 
+For each comparison, both the median whole-run rate and the best eligible
+post-warmup window must be at least the reference rates to count as a pass.
 Across 126 points, KD meets both observed median-whole and best-peak criteria
 at **110 points versus the initial KD**, with 12 failures and four split-status
 comparisons. Against contemporary Native there are **117 passes, six failures
 and three split-status comparisons**. At 20% writes/two workers, c01 and c08
 retain substantial whole-run regressions versus the initial KD: **0.286× and
-0.276×** respectively. The six Native misses are all three 20%/one-worker
-points, c08/1%/two workers, and c01/c08 at 20%/36 workers. The report retains
+0.276×** respectively, approximately **71–72% slower**. These regressions remain
+part of the accepted implementation's documented performance. The six Native
+misses are all three 20%/one-worker points, c08/1%/two workers, and c01/c08 at
+20%/36 workers. The report retains
 all remaining differences and repetition ranges; these descriptive thresholds
 are not significance tests.
 

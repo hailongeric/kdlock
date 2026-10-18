@@ -1,5 +1,12 @@
 # Reader/writer and proc snapshot comparisons
 
+Reader/writer spinlocks (rwlocks) permit concurrent readers or one exclusive
+writer and wait by spinning. Reader/writer semaphores (rwsems) can sleep while
+waiting. KD delegation lets a lock holder execute a waiting caller's work using
+just-in-time compiled (JIT) code. The
+[terminology guide](../../docs/TERMINOLOGY.md) explains the interface and result
+labels used below.
+
 This runner compares Linux native rwlocks, the
 [TCLock rwlock port](../../tclock_backend/README.md) and
 [KD rwlocks](../../docs/design/rwlock_implementation.md) on the same workload.
@@ -12,13 +19,16 @@ snapshots. These modes keep distinct lock, caller and execution identities.
 
 `--lock-kind rwsem --backends native kdlock` compares Linux rwsem with the
 [KD sleeping semaphore](../../docs/design/rwsem_implementation.md) on c01/c08 or
-RCUHT. Readers execute locally. The default KD writer shell joins a writer-only
-phase, drains existing readers while it can sleep, and then enters the
-unchanged KD mutex ABI2 protocol. Its matching unlock finishes before the original
+RCUHT. The waiting implementation in **`c21345b` is accepted as current**, including
+the low-count regressions recorded in its comparison. Readers execute locally.
+The default KD writer interface reserves a writer-only phase, blocks new readers,
+waits for existing readers while it can sleep, and then enters the unchanged KD
+mutex ABI2 protocol (its machine-level calling agreement). Its matching unlock finishes before the original
 caller releases that reservation. Ordinary writers, including downgrade callers,
 use a separate exclusive admission state on the same semaphore; they cannot add
-readers during a delegated writer epoch. Separate admission/drain waitqueues and
-bounded polling before publication are described in the rwsem design; the KD
+readers during a delegated writer phase. Separate queues for waiting to enter
+and waiting for readers to finish, plus limited condition checks before sleeping,
+are described in the rwsem design; the KD
 mutex protocol is unchanged.
 
 `--delegate off` compiles the ordinary local KD writer API and labels its variant
