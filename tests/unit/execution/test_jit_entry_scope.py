@@ -57,6 +57,8 @@ def main():
             "static void kd_jit_log_hl_error(const char *reason,",
             "static bool kd_jit_entry_has_scope(const struct kd_exec_frame *frame,",
             "static int kd_jit_call_limit_native(struct kd_exec_frame *frame,",
+            "static int kd_jit_native_escape_opcode(unsigned long ip)",
+            "static int kd_jit_native_escape(struct kd_exe_info *exe,",
             "static void kd_exe_note_body(unsigned long entry_ip, unsigned long outer_lock_addr,",
             "static void *kd_jit_bound_code(const struct kd_exe_info *exe,",
             "static bool kd_jit_bind_image(const struct kd_exe_info *exe,",

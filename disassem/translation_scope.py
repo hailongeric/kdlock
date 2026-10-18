@@ -8,6 +8,7 @@ import context_policy
 import diagnostics
 import instruction_policy
 import normal
+import native_escape
 from miasm.analysis.machine import Machine
 from miasm.core.bin_stream import bin_stream_str
 from miasm.core.locationdb import LocationDB
@@ -43,6 +44,7 @@ def find_segment_policy_error(
     mutex_stack_bytes=0,
     entry_spill_guards=False,
     readonly_targets=(),
+    native_escapes=False,
 ):
     # A guarded verdict is conditional: its complete predicates must be emitted
     # before body execution. Analysis and emission share this same collector.
@@ -66,7 +68,8 @@ def find_segment_policy_error(
         offset = block_start
         for line in block.lines:
             context_error = context_policy.instruction_rejection(
-                line, offset, db_dict.get(block), symbols, lock_kind, lock_symbols
+                line, offset, db_dict.get(block), symbols, lock_kind, lock_symbols,
+                native_escapes=native_escapes,
             )
             if context_error:
                 reason, symbol = context_error
@@ -108,12 +111,16 @@ def find_segment_policy_error(
                     lock_kind,
                     lock_symbols,
                     constants,
+                    native_escapes=native_escapes,
                 )
                 if context_error:
                     reason, symbol = context_error
                     diagnostics.set_instruction(offset, line)
                     return offset, f"{reason}: {symbol}" if symbol else reason
-                constants.update(line, symbols)
+                if native_escapes and native_escape.descriptor(line):
+                    native_escape.apply_context_effects(line, constants)
+                else:
+                    constants.update(line, symbols)
                 offset += line.l
     except context_policy.ContextFlowLimit as error:
         error.report()

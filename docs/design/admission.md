@@ -3,6 +3,8 @@
 Admission decides which machine code KD may translate and execute. This guide
 explains the current checks and their limits. Read the [design overview](../DESIGN.md)
 first; [tests](../../tests/README.md) records which source versions were checked.
+The [terminology guide](../TERMINOLOGY.md) defines ABI (application binary
+interface), JIT (just-in-time compilation) and the lock/lifetime terms used here.
 
 ## 7. Translation And Publication
 
@@ -210,11 +212,11 @@ failure. The entry predicates, local mutex checkpoint, retained native owner
 and unconditional emitted-block scan do not close this gap. Successful code
 generation now reports `CONTEXT_SCREENING_ONLY`; no runtime guard is added.
 
-**2026-09-13 user decision:** the access-time guard, pre-instruction waiter
-continuation and their local condition-code preservation remain deferred and
-unimplemented. This is a retained limitation, not a pending scope decision.
-The following order is for a future explicit reopening of this feature,
-**not an implemented safety contract or the current implementation agenda**:
+The 2026-09-13 deferral still applies to access-time address guards. The later
+instruction-marker request implements a limited pre-instruction continuation,
+described under [checked instruction exits](#checked-instruction-exits); it does
+not check arbitrary memory accesses. The following steps describe the remaining
+address-guard work, **not an implemented safety contract**:
 
 1. Define the enforceable address/object policy and its lifetime first. Linked
    kallsyms intervals alone do not enumerate runtime per-CPU allocations, task
@@ -227,16 +229,12 @@ The following order is for a future explicit reopening of this feature,
    and check the effective address once, then use that same address for the
    original load/store/RMW, including width/overflow and implicit accesses.
    Reloading a mutable pointer after checking it leaves a check/use race.
-3. Define a pre-instruction native exit with unchanged current GPRs, virtual
-   stack and required flags. Preserve completed stores and retained owners;
-   the original waiter continues at that instruction and unlocks through ACKs.
-   Do not reuse entry refusal after progress or treat a generic fault as a
-   validated escape. Necessary local guard flags preservation belongs to this
-   deferred feature; general flags repair is also still deferred. The
-   [future packet contract](../JIT_REGISTER_ABI.md#deferred-access-time-continuation)
-   separates pass-path preservation from native-target restoration; neither
-   reading the stale packet flags nor relying on the existing MOV/RET stubs
-   implements it.
+3. Extend the [checked instruction-exit contract](../JIT_REGISTER_ABI.md#checked-instruction-exit)
+   only after proving the memory guard's own address and state handling. The
+   marker for a reviewed processor instruction does not authorize recovery at
+   an arbitrary memory operation. Preserve completed stores, exact owners and
+   required flags; do not reuse entry refusal after progress or treat a generic
+   fault as a validated exit. General flag repair remains deferred.
 4. Validate memory/RET assumptions at their uses or conservatively join their
    effects. Keep the complete emitted return whitelist; unconditional byte
    bans alone do not check computed addresses in a dataflow-skipped block.
@@ -279,8 +277,10 @@ not the arena's address classification. This does not pin or validate an object.
 
 The provider reports this bound using the existing 16-byte CAPS packet on the
 same device lease. The module bound was introduced in version 2; the current provider
-uses version 5 and requires immutable mutex images plus exclusive KD objects
-(`KD_JIT_CAP_MUTEX_EXCLUSIVE`, bit 4). Version 4 remains readable by observers but
+uses version 6. Translation requires immutable mutex images plus exclusive KD
+objects (`KD_JIT_CAP_MUTEX_EXCLUSIVE`, bit 4); ordinary images still accept the
+version 5 contract. Instruction-marker images additionally require version 6
+bit 5. Version 4 remains readable by observers but
 cannot open a translation session for this object contract. It checks the build constants and the non-NULL
 `pcpu_reserved_chunk` pointer, which is read-only after init; it never dereferences
 the private chunk layout. Translation adds `[base + ALIGN(core_size, 4),
@@ -331,9 +331,67 @@ image's metadata. Published versions remain in the bounded pool until teardown.
 Spin/rwlock images retain in-place storage. Independent locks sharing a RIP do
 not establish image lifetime through lock serialization.
 
-The scalar instruction policy also refuses processor-state instructions, unknown
-mnemonics and equivalent context helpers before emission. Sensitive raw encodings
-are checked at instruction boundaries, including selected undecodable roots.
+The scalar instruction policy refuses unknown instructions and unreviewed
+processor-state operations before emission. Sensitive raw encodings are checked
+at instruction boundaries, including selected undecodable roots. The limited
+mutex exception below emits an exit marker, never the special operation itself.
 See [the compatibility backport](../history/legacy_mutex_compatibility.md) for scope, capability
 negotiation and the separate owned-origin/ABI4 interfaces.
 See [daemon README](../../daemon/README.md) for CLI and diagnostics.
+
+### Checked instruction exits
+
+An instruction on a rarely taken branch need not reject an otherwise eligible
+mutex critical section before it runs. For mutex entry ABI2, the translator can
+replace the exact reviewed encodings below with a **marker**, generated code
+that returns to the runtime before executing that instruction. The runtime
+resumes the original waiter at the instruction and disables future delegation
+of that critical-section entry. Earlier protected writes are retained and are
+not repeated. Rwsem outer writers use this same ABI2 path.
+
+| Source instructions | Meaning; action at the marker |
+| --- | --- |
+| `RDTSC`, `RDTSCP` | Read the processor timestamp counter; RDTSCP also returns an operating-system-programmed value called TSC_AUX, commonly used to identify a CPU. The waiter performs the read. |
+| `CPUID` | Query processor features using register inputs; the waiter performs the query. |
+| `RDPMC` | Read a processor performance counter selected by a register; the waiter performs the read. |
+| `RDMSR`, `WRMSR` | Read or write a model-specific processor register; the waiter executes the original operation with its current register inputs. |
+| `CLI`, `STI` | Disable or enable maskable interrupts on the current CPU; the original operation runs on the waiter. |
+| `CLD`, `STD` | Clear or set the direction flag used by string instructions; the original operation runs on the waiter. |
+| `LAHF`, `SAHF` | Copy selected arithmetic flags to or from the high byte of register AX; the original operation runs on the waiter. |
+
+Instruction meanings and encodings follow Intel's
+[instruction-set reference](https://cdrdv2-public.intel.com/789581/325383-sdm-vol-2abcd.pdf).
+The live probe relies on the documented property that RDTSC leaves arithmetic
+flags unchanged, so the native suffix can check flags set before the marker.
+
+Only exact unprefixed encodings without explicit operands qualify. The translator
+models their scalar inputs and outputs to check the original code, but never
+simulates their processor effects on the executor. An unsafe source instruction
+does not become safe by running locally: this change preserves the original
+program's behavior and does not authorize new kernel operations. In particular,
+the live check uses the harmless timestamp read, not interrupt or register writes.
+
+Before emitting markers, admission still checks the full selected source graph,
+including the part that would run natively after a marker. Backend, context,
+memory-alias and captured-input checks remain active. The marker needs proven
+register inputs and source-defined arithmetic flags. A source path that cannot
+satisfy those checks remains refused. Only after proof does generated control
+flow end at each marker. Therefore an untaken eligible instruction can cease to
+be the reason for rejection, while an unsafe or undecodable suffix can still
+reject the entry.
+
+Provider capability version 6 advertises this contract on bit 5; the image
+requires it on directory bit 0. Older providers cannot accept such images.
+Spin/rwlock images retain their existing static instruction policy. Unknown
+encodings, unreviewed prefixes, control-register moves, flags-stack operations,
+interrupt/trap instructions, transactional operations and floating-point/vector
+state remain outside this reviewed marker set. Runtime validation failures and
+generic JIT faults remain errors, not arbitrary native-continuation points.
+
+The entry becomes `NATIVE_ONLY` under the image-publication gate, including when
+an older retained image reaches the marker. Already admitted work may drain;
+after quiescence, later calls must have zero JIT entries. The disable persists
+for the source session and is cleared only by its normal retirement/reload.
+See [register restoration](../JIT_REGISTER_ABI.md#checked-instruction-exit) and
+[frame lifetime](frames.md#95-forward-native-continuation) for the exact state
+and ownership obligations.

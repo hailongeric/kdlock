@@ -5,6 +5,9 @@ reader/writer semaphore (rwsem) waiting implementation from `c21345b`. See
 [current performance](../../docs/PERFORMANCE.md) for results and retained
 regressions, and [terminology](../../docs/TERMINOLOGY.md) for execution and
 measurement definitions.
+The [instruction-exit receipt](10.176.26.71/tests/native-instruction-exit-20261018/README.md)
+records the later checked waiter-continuation feature and its failures/final
+correctness checks separately from accepted throughput measurements.
 The [2026-10-18 consolidation checks](10.176.26.71/tests/main-consolidation-20261018/README.md)
 validate organization and tooling separately from the measured runtime.
 The [feature reintegration checks](10.176.26.71/tests/feature-reintegration-20261018/README.md)

@@ -5,7 +5,7 @@ Its frame keeps the state needed to finish the work and resume the caller.
 This guide explains when that storage can be reused. [Ownership](locking.md)
 covers locks and unlock acknowledgements; [register ABI](../JIT_REGISTER_ABI.md)
 covers saved registers and wrapper exits. Start with the
-[glossary](../DESIGN.md#terms-used-in-these-guides) if these terms are new.
+[terminology guide](../TERMINOLOGY.md) if these terms are new.
 
 ## 9. Nested ownership and continuation
 
@@ -136,6 +136,16 @@ Native registration accepts only supported NONE/PENDING and distinct validated
 post-acquisition/STACK_CHANGED/remote COMPLETE tags. It verifies callee, token,
 IP/SP and phase before borrowing references or publishing a native frame. A held A
 does not make every progressed error recoverable.
+
+A mutex ABI2 instruction marker has a separate checked boundary: the current
+instruction has not executed, earlier effects remain, and the original waiter
+continues at that exact address with current registers and arithmetic flags.
+The runtime checks the source opcode and active immutable image before disabling
+future delegation of the entry. It retains the existing physical-owner records,
+source leases, unlock acknowledgements and native-frame references until their
+normal retirement. A marker does not release a held lock or replay the entry.
+The [register contract](../JIT_REGISTER_ABI.md#checked-instruction-exit) specifies
+the validated tag and restore order.
 
 Before a supported local mutex control, KD snapshots 256 bytes within the
 waiter's live stack. After the call, it compares those bytes and checks the exact

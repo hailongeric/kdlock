@@ -80,6 +80,9 @@ static unsigned int timing_reads;
 static int source_error, source_calls, source_fail_at;
 static unsigned long source_targets[2];
 static int stack_error, stack_reads;
+static unsigned char escape_text[16];
+static unsigned long kd_native_escape_count;
+#define ESCAPE_IP 0xa000UL
 #define THREAD_SIZE sizeof(stack)
 #define task_stack_page(task) ((task)->stack)
 
@@ -90,6 +93,13 @@ static int copy_from_kernel_nofault(void *to, const void *from, size_t size)
 	unsigned long address = (unsigned long)from;
 
 	stack_reads++;
+	if (address >= ESCAPE_IP && address < ESCAPE_IP + sizeof(escape_text) &&
+	    size <= ESCAPE_IP + sizeof(escape_text) - address) {
+		if (stack_error)
+			return -EFAULT;
+		memcpy(to, escape_text + address - ESCAPE_IP, size);
+		return 0;
+	}
 	if (stack_error || size != sizeof(unsigned long) ||
 	    address < (unsigned long)stack ||
 	    address > (unsigned long)stack + sizeof(stack) - size)
@@ -267,7 +277,8 @@ const struct kd_jit_image *kd_image_current(const struct kd_exe_info *exe)
 	static struct kd_jit_image image[KD_MAX_EXE];
 	struct kd_jit_image *slot = &image[exe - kd_exes];
 	*slot = (struct kd_jit_image){ .code = exe->code_block,
-		.entry = (struct kd_exe_info *)exe, .entry_abi = exe->entry_abi };
+		.entry = (struct kd_exe_info *)exe, .entry_abi = exe->entry_abi,
+		.requirements = exe->requirements, .generation = exe->generation };
 	return slot;
 }
 void kd_image_report(struct kd_exe_info *exe, const struct kd_jit_image *image,
@@ -277,6 +288,10 @@ void kd_image_report(struct kd_exe_info *exe, const struct kd_jit_image *image,
 	exe->tgt_addr = target;
 	exe->jump_from = from;
 	kd_exe_publish_status(exe, status);
+}
+void kd_image_disable(struct kd_exe_info *exe)
+{
+	kd_exe_publish_status(exe, KD_EXE_NATIVE_ONLY);
 }
 static bool is_end_point(unsigned long ip)
 {
@@ -321,9 +336,11 @@ void kd_spin_jit_prepare_complex(struct kd_exec_frame *frame)
 #include "jit_entry_scope/timing.inc"
 #include "jit_entry_scope/spin.inc"
 #include "jit_entry_scope/mutex.inc"
+#include "jit_entry_scope/native_escape.inc"
 
 int main(void)
 {
+	check_native_escape();
 	check_mutex_batch();
 	check_batch_admission();
 	check_batch_metadata();

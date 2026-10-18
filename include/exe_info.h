@@ -47,6 +47,8 @@ enum kd_packet_state {
 	KD_PACKET_COMPLETE = 2,
 };
 #define KD_EXE_CLOBBER_COMPLETE 7
+/* A reviewed instruction was reached before execution; original waiter resumes. */
+#define KD_EXE_NATIVE_ESCAPE 8
 
 enum kd_exe_lock_kind {
 	KD_EXE_LOCK_UNKNOWN = 0,
@@ -113,7 +115,16 @@ struct kd_recv_pkt {
 };
 
 #define KD_IMAGE_PROTOCOL 2U
-#define KD_IMAGE_REQUIREMENTS 0U
+#define KD_IMAGE_REQUIRE_NATIVE_ESCAPE (1U << 0)
+#define KD_IMAGE_REQUIREMENTS KD_IMAGE_REQUIRE_NATIVE_ESCAPE
+
+static inline int kd_image_requirements_valid(int kind, unsigned int abi,
+					     unsigned int requirements)
+{
+	return !(requirements & ~KD_IMAGE_REQUIREMENTS) &&
+	       (!requirements || (kind == KD_EXE_LOCK_MUTEX &&
+				  abi == KD_ENTRY_ABI_MUTEX_CLOBBER_V1));
+}
 #define KD_IMAGE_HEADER_SIZE 48U
 #define KD_IMAGE_VERSION_OFFSET 46U
 #define KD_IMAGE_REQUIREMENTS_OFFSET 47U

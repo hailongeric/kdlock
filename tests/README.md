@@ -1,5 +1,9 @@
 # Verification
 
+JIT means just-in-time compilation: KD generates machine code so one lock holder
+can perform another waiting task's protected work. The [terminology guide](../docs/TERMINOLOGY.md)
+explains the lock, execution-state and measurement terms used below.
+
 The [KD-only local mutex probe](kernel/mutex/local/kd_mutex_local_probe.c) checks
 ordinary API aliases, exclusion, sleeping/nested owners, interruptible/killable
 cancellation, I/O accounting, trylock and 2,048 independent objects. It checks
@@ -49,6 +53,7 @@ check, missing dependency, crash or compile failure must not be reported as a pa
 | Native pending/MCS |`spin/test_spin_nondelegated.py`, `test_spin_shadow.py` |
 | Continuation/frame/queue |`spin/test_spin_storage.py`, `test_spin_batch.py`, `test_spin_outer_progress.py`, `execution/test_exec_capacity.py` |
 | Wrapper, typed service and batch |`execution/test_jit_entry_scope.py`, `codegen/test_clobber_abi.py`, `test_jit_body_witness.py` |
+| Conditional instruction exit | `admission/test_native_escape.py`, `codegen/test_native_escape_codegen.py`, `execution/test_jit_entry_scope.py`, `execution/test_native_escape_restore.py`, `execution/test_mutex_images.py`; [live check](kernel/jit_escape/README.md) |
 | Mutex resources/terminal path |`mutex/test_mutex_resources.py`, `test_mutex_task_cache.py`, `test_mutex_terminal.py`, `test_mutex_outer_progress.py` |
 | Provider initialization/publication | `infrastructure/test_provider_lifecycle.py` |
 | Task/source/registry lifetime |`infrastructure/test_source_lifetime.py`, `execution/test_exe_registry.py` |
@@ -67,6 +72,19 @@ verify identities, owners, ACKs, ordering and effects in traces. A synthetic tra
 can check those rules without proving that real JIT code ran.
 The large wrapper fixture now groups entry/services/timing/spin/mutex cases under
 [unit/execution/jit_entry_scope](unit/execution/jit_entry_scope) without changing checks.
+
+The instruction-exit checks distinguish generated-code behavior from final task
+resumption. Translation checks verify that reviewed instructions become exit
+markers, short generated sequences that return control before the original
+instruction, and that unreviewed instructions remain refused. Generated-code checks
+execute the marker without executing its original privileged instruction. The
+restoration check executes the provider's actual x86 register-restoration code
+for all 64 combinations of arithmetic condition flags, which describe results
+such as zero, carry and overflow. It also checks every general-purpose register,
+the exact stack position, unchanged waiter control flags governing interrupts
+and access checks, and untouched memory outside the two temporary stack words.
+These userspace checks do not establish
+kernel ownership or concurrent progress.
 
 ## Live checks
 
@@ -99,6 +117,17 @@ The same runner's `--lock-kind rwsem` mode compares Linux Native with KD outer
 ABI2 writers; `--delegate off` selects the local KD control. Mixed c08 runs check
 reader consistency while entry and matching-unlock completion counters record
 actual delegated execution. Whole-kernel mmap replacement is outside this scope.
+
+The [conditional instruction-exit check](kernel/jit_escape/README.md) uses a
+mutex operation containing a branch to `RDTSC`, the x86 processor-counter read.
+With the branch untaken, it requires completed delegated bodies. Taking the
+branch must stop generated execution immediately before that instruction,
+resume the original waiter without repeating earlier updates, and disable
+future delegation for that operation. After all earlier calls finish, a final
+phase requires correct local execution and no further generated-code entries.
+The check also verifies task identity, arithmetic flags, mutual exclusion and
+complete release of execution records before unloading modules. It supplies
+correctness evidence, not a throughput comparison.
 
 The [mutex task/ACK probe](kernel/mutex/run_task_selftest.py) and selected SELFTEST
 hotlock/entry probes check resource/routing/drain without executing JIT bodies;

@@ -27,5 +27,7 @@ int kd_image_publish(struct kd_exe_info *entry, struct kd_jit_image *image,
 const struct kd_jit_image *kd_image_current(const struct kd_exe_info *entry);
 void kd_image_report(struct kd_exe_info *entry, const struct kd_jit_image *image,
 		     int status, unsigned long target, unsigned long from);
+/* Terminal for this stable entry, including markers from an older image. */
+void kd_image_disable(struct kd_exe_info *entry);
 void kd_exe_snapshot(const struct kd_exe_info *entry, struct kd_exe_info *snapshot);
 #endif

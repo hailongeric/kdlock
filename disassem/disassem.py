@@ -17,6 +17,7 @@ import hostcall
 import indirect_jump
 import memread
 import normal
+import native_escape
 import solve_bug
 from translation_image import emit_jit_assembly, write_entry_dispatch, wrapper_context_inputs
 from translation_scope import (
@@ -61,7 +62,7 @@ def run_build_step(command, **kwargs):
         raise
 
 
-def build_jit_binary(abi=0, *, context_inputs=None):
+def build_jit_binary(abi=0, *, context_inputs=None, requirements=0):
     diagnostics.set_instruction(None, "<assemble/objcopy/objdump>")
     include_dir = os.path.join(
         os.path.dirname(os.path.abspath(__file__)), "..", "include"
@@ -73,6 +74,7 @@ def build_jit_binary(abi=0, *, context_inputs=None):
             "gcc",
             f"-I{include_dir}",
             f"-DKD_GENERATED_ENTRY_ABI={abi}",
+            f"-DKD_GENERATED_REQUIREMENTS={requirements}",
             f"-DKD_GENERATED_GS_INPUT={int(gs)}",
             f"-DKD_GENERATED_TASK_INPUT={int(task)}",
             "-I./asm/",
@@ -181,6 +183,8 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0):
     mutex_stack_bytes = (
         memread.device_session.mutex_stack_bytes() if lock_kind == "mutex" else 0
     )
+    escape_capable = (lock_kind == "mutex" and abi == 2
+                      and memread.device_session.native_escape())
     jump_table = {}
     diagnostics.set_instruction(entry, "<CFG text coverage>")
     try:
@@ -195,6 +199,8 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0):
     normal.set_current_task_offset(get_percpu_symbol_offset("current_task") or None)
     for expansion in range(33):
         block_dict, db_dict = decode_regions(rets, raw_spin_unlock, keep_call_stack)
+        if escape_capable:
+            native_escape.normalize_decoded(block_dict)
         try:
             # Admission and emission must use the same executable scope. A
             # native-only suffix is not a service run on the combiner's context.
@@ -283,6 +289,7 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0):
             native_exits=native_exits,
             mutex_stack_bytes=mutex_stack_bytes,
             readonly_targets=readonly_targets,
+            native_escapes=escape_capable,
         )
         if (
             segment_error
@@ -327,6 +334,7 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0):
                     mutex_stack_bytes=mutex_stack_bytes,
                     entry_spill_guards=abi in {1, 2, 3},
                     readonly_targets=readonly_targets,
+                    native_escapes=escape_capable,
                 )
                 if not segment_error:
                     entry_guards = candidate
@@ -368,28 +376,52 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0):
     except indirect_jump.ReturnFlowError as error:
         diagnostics.set_instruction(error.offset, "<return dispatch>")
         return reject_translation(str(error))
+    has_escapes = escape_capable and any(
+        native_escape.descriptor(line)
+        for block in block_dict.values() for line in block.lines
+    )
     if abi in {1, 2, 3}:
         reason = entry_abi.check_minimal_entry(
             block_dict, db_dict, entry, clobber_targets,
-            set(lock_symbols), jump_table,
+            set(lock_symbols), jump_table, native_escapes=has_escapes,
         )
         if reason:
             return reject_translation(reason)
         if entry_guards is not None and entry_guards.register_dependencies() - {"RSP", "RBP"}:
             return reject_translation("entry guard requires an uncaptured GPR")
+    if has_escapes:
+        # Both admission passes above checked the complete original scope,
+        # including every cold branch and the native suffix. Only now remove
+        # instructions that this generated invocation can never execute.
+        block_dict, db_dict = native_escape.emitted_scope(block_dict, db_dict)
+        block_dict, db_dict, _ = context_policy.jit_phase_blocks(
+            block_dict, db_dict, (discovered_targets | {entry}) & block_dict.keys(),
+            keep_call_stack,
+        )
+        live_offsets = {line.offset + line.l
+                        for block in block_dict.values() for line in block.lines}
+        jump_table = {source: [target for target in targets if target in block_dict]
+                      for source, targets in jump_table.items() if source in live_offsets}
+        try:
+            missing_callees = indirect_jump.find(block_dict, db_dict, jump_table)
+        except indirect_jump.ReturnFlowError as error:
+            diagnostics.set_instruction(error.offset, "<native escape return dispatch>")
+            return reject_translation(str(error))
     assembly = emit_jit_assembly(
         entry, block_dict, db_dict, jump_table, missing_callees,
         resolved_hostcalls, keep_call_stack,
         entry_guards=entry_guards, body_witness=body_witness,
         terminal_clobber_unlocks=({clobber_unlock} if abi in {1, 3} else
                                  {direct_mutex_unlock or clobber_mutex_unlock} if abi == 2 else set()),
+        native_escapes=has_escapes,
     )
     Path("./asm/jit.S").write_text(assembly, encoding="utf-8")
 
     solve_bug.solve_cond_jmp_lock_cmpxchg("./asm/jit.S")
 
     build_jit_binary(abi, context_inputs=wrapper_context_inputs(
-        Path('./asm/jit.S').read_text(encoding='utf-8')))
+        Path('./asm/jit.S').read_text(encoding='utf-8')),
+        requirements=native_escape.REQUIREMENT if has_escapes else 0)
     return 0
 
 

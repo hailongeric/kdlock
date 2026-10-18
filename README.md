@@ -26,6 +26,14 @@ locally, while explicit clobber callers permit delegation. Loading the provider
 does not replace locks throughout an existing kernel. See the
 [mutex contract](docs/design/kd_only_mutex.md) for supported APIs and scope.
 
+Mutex translation now supports [checked instruction exits](docs/design/admission.md#checked-instruction-exits).
+A reviewed special instruction on an untaken branch can remain in an eligible
+critical section. If that branch is taken, generated code stops before the
+instruction; the original waiter resumes there, and delegation of that entry is
+disabled for the source session. Earlier updates are retained. The
+[validation record](bench/results/10.176.26.71/tests/native-instruction-exit-20261018/README.md)
+separates correctness checks from the accepted performance measurements below.
+
 The accepted [504-session comparison](bench/results/10.176.26.71/bench/comparison/mutex-kdonly-20261017T140354Z/README.md)
 covers c01/post64 and `api-pipebytes-query-n16` at 1–8 workers and 12–60 by four,
 with three repetitions and Native/TCLock controls. The

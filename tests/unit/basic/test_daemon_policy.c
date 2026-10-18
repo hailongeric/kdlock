@@ -159,6 +159,14 @@ static void test_chunk_session(void)
 	char *argv[] = { "daemon", NULL };
 	FILE *binary;
 
+	assert(kd_image_requirements_valid(KD_EXE_LOCK_MUTEX, 2,
+					 KD_IMAGE_REQUIRE_NATIVE_ESCAPE));
+	assert(!kd_image_requirements_valid(KD_EXE_LOCK_MUTEX, 0,
+					  KD_IMAGE_REQUIRE_NATIVE_ESCAPE));
+	assert(!kd_image_requirements_valid(KD_EXE_LOCK_SPIN, 1,
+					  KD_IMAGE_REQUIRE_NATIVE_ESCAPE));
+	assert(!kd_image_requirements_valid(KD_EXE_LOCK_MUTEX, 2, 2));
+
 	assert(original_dir >= 0 && mkdtemp(root));
 	assert(!chdir(root));
 	assert(!mkdir("0x1234", 0700));

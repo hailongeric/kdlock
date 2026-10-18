@@ -8,6 +8,33 @@ Basic plus affected checks are the default; an old pass is not a current full pa
 The [terminology guide](TERMINOLOGY.md) explains status labels and other technical
 terms used in the receipts below.
 
+## Checked instruction exits, 2026-10-18
+
+The [final focused receipt](../bench/results/10.176.26.71/tests/native-instruction-exit-20261018/README.md)
+records a checked original-waiter continuation for twelve reviewed processor
+instructions in mutex ABI2 images. ABI2 is the machine-level calling agreement
+also used by rwsem outer writers. A reached instruction marker stops generated
+code before that instruction, preserves current state and earlier effects, and
+disables future delegation of the entry for the source session. The mutex lock
+protocol and accepted rwsem waiting implementation remain unchanged.
+
+Both basic C programs and 17 affected Python drivers passed in the VM. The
+production restore fixture covered every general-purpose register and all 64
+arithmetic-flag combinations with and without the kernel return-helper path.
+The final live probe completed 6,400,000 operations: its cold check returned
+1,479,585 JIT bodies, its taken branch produced one checked instruction exit,
+and its final 1,600,000 operations produced zero JIT entries after disable and
+drain. Exact updates, original task identity, flags and full retirement passed.
+
+Ordinary c08/RCUHT rwsem controls at 16 workers and 80% writes returned
+860,947/224,329 writer bodies with correct data and complete drain. These are
+correctness checks, not a new throughput comparison. The receipt retains the
+initial decoder/fixture failures, the worker-name `NO_JIT` failure, intermediate
+results, final source hashes and build warnings. Only the safe RDTSC timestamp
+read was exercised live; other reviewed instructions have fixture coverage.
+Generic faults, arbitrary memory-address checks, spin/rwlock markers and general
+processor-state restoration remain outside this validation.
+
 ## Accepted rwsem implementation, c21345b
 
 The user accepted this reader/writer semaphore (rwsem) waiting implementation

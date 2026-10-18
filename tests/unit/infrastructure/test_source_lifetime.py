@@ -81,7 +81,7 @@ def main():
             ".mutex_stack_bytes = KD_JIT_MUTEX_STACK_BYTES + 8,",
         ),
         "missing-stack-feature": (
-            ".features = KD_JIT_CAP_MUTEX_STACK | KD_JIT_CAP_MUTEX_IMAGES |\n\t\t\tKD_JIT_CAP_MUTEX_EXCLUSIVE,",
+            ".features = KD_JIT_CAP_MUTEX_STACK | KD_JIT_CAP_MUTEX_IMAGES |\n\t\t\tKD_JIT_CAP_MUTEX_EXCLUSIVE | KD_JIT_CAP_NATIVE_ESCAPE,",
             ".features = 0,",
         ),
         "wrong-module-arena": (
@@ -91,6 +91,10 @@ def main():
         "missing-module-feature": (
             "caps.features |= KD_JIT_CAP_PERCPU_MODULE;",
             "(void)caps.features;",
+        ),
+        "missing-native-escape-feature": (
+            "KD_JIT_CAP_MUTEX_EXCLUSIVE | KD_JIT_CAP_NATIVE_ESCAPE,",
+            "KD_JIT_CAP_MUTEX_EXCLUSIVE,",
         ),
     }
     with tempfile.TemporaryDirectory(prefix="kdlock-source-unit-") as tmp:

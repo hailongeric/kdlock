@@ -81,7 +81,7 @@ int main(void) {
  assert(kd_jit_bind_image(entry,&fresh) && fresh.image==new);
  fresh.entry_abi=1; assert(!kd_jit_bind_image(entry,&fresh));
  fresh.entry_abi=2;
- start(7,2,1); assert(send_bytes(128)==-EPROTO);
+ start(7,2,2); assert(send_bytes(128)==-EPROTO);
  assert(!memcmp(old->code,saved,128));
  kd_image_report(entry,old,KD_EXE_CALL_MISS,0xdead,0);
  assert(entry->status_code==KD_EXE_NORMAL && !entry->tgt_addr);
@@ -90,12 +90,30 @@ int main(void) {
  start(7,1,0); assert(send_bytes(128)==-ESTALE);
  start(8,2,0); packet.head.version=1; assert(send_bytes(128)==-EPROTO);
  start(9,2,0); packet.head.image_length=47; assert(send_bytes(47)==-EINVAL);
- for(unsigned int gen=2;gen<64;gen++) { start(gen+10,gen,0); assert(send_bytes(128)>0); }
+ /* The instruction-marker requirement is restricted to matching ABI2 mutex
+  * images; unrelated/older entries cannot silently accept that contract. */
+ assert(!kd_image_requirements_valid(KD_EXE_LOCK_SPIN,1,KD_IMAGE_REQUIRE_NATIVE_ESCAPE));
+ assert(!kd_image_requirements_valid(KD_EXE_LOCK_MUTEX,0,KD_IMAGE_REQUIRE_NATIVE_ESCAPE));
+ start(10,2,KD_IMAGE_REQUIRE_NATIVE_ESCAPE); assert(send_bytes(128)>0);
+ fresh.image=NULL;
+ assert(kd_jit_bind_image(entry,&fresh) && fresh.image->requirements==KD_IMAGE_REQUIRE_NATIVE_ESCAPE);
+ for(unsigned int gen=3;gen<64;gen++) { start(gen+10,gen,0); assert(send_bytes(128)>0); }
  const struct kd_jit_image *last=kd_image_current(entry);
  start(100,64,0); assert(send_bytes(128)==-ENOSPC);
  assert(kd_image_current(entry)==last && last->generation==64);
  assert(!memcmp(old->code,saved,128));
+ /* A marker in an old bound image bans the stable entry, including an upload
+  * which was staged before the ban. Publication and ban use the same gate. */
+ struct kd_jit_image pending={.code=packet.code,.entry_abi=2};
+ kd_image_disable(old->entry);
+ assert(entry->status_code==KD_EXE_NATIVE_ONLY && !gate);
+ assert(kd_image_publish(entry,&pending,64)==-ESHUTDOWN);
+ assert(!pending.entry && kd_image_current(entry)==last);
+ kd_image_report(entry,last,KD_EXE_CALL_MISS,0xfeed,0);
+ assert(entry->status_code==KD_EXE_NATIVE_ONLY);
+ assert(kd_jit_bound_code(entry,&bound)==old->code && !memcmp(old->code,saved,128));
+ start(101,64,0); assert(send_bytes(128)==-EPERM);
  source_open=false; assert(send_bytes(128)==-ESHUTDOWN);
  for(int i=0;i<64;i++) free(allocations[i]);
- puts("mutex images: immutable replacement, coverage, identity, metadata, stale misses and 64-block exhaustion passed");
+ puts("mutex images: immutable replacement, marker contract, terminal ban, stale misses and 64-block exhaustion passed");
 }

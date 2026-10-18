@@ -95,7 +95,8 @@ static int write_sys(const struct daemon_config *cfg,
 		if (!kd_entry_abi_valid(exe->lock_kind, exe->entry_abi) ||
 		    !directory || header[45] != exe->entry_abi ||
 		    header[KD_IMAGE_VERSION_OFFSET] != KD_IMAGE_PROTOCOL ||
-		    (header[KD_IMAGE_REQUIREMENTS_OFFSET] & ~KD_IMAGE_REQUIREMENTS) ||
+		    !kd_image_requirements_valid(exe->lock_kind, exe->entry_abi,
+					header[KD_IMAGE_REQUIREMENTS_OFFSET]) ||
 		    fseek(fp, 0, SEEK_SET)) {
 			fprintf(stderr, "daemon: JIT entry ABI mismatch\n");
 			fclose(fp);

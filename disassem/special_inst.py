@@ -1,8 +1,10 @@
 # Lower virtual CALL/RET/stack/control operations that cannot use plain copying.
 # CALL pushes the source return address; POP/PUSH use virtual SP, not physical
-# wrapper RSP. Processor-state instructions are refused before code emission.
+# wrapper RSP. Processor-state instructions never execute in generated code;
+# separately admitted native markers stop before their original source bytes.
 import diagnostics
 import instruction_policy
+import native_escape
 from assist import (conditional_branch, get_inst_name, im64_abs, make_inst,
                     make_mem_dict, unconditional_branch)
 from conflict import (
@@ -23,6 +25,20 @@ special_instruction = [
     "LEAVE",
     "ENDBR64",
 ]
+
+
+def native_escape_marker(line, reg_map):
+    """Stop before the reviewed source instruction, with no replay or CALL."""
+    if not native_escape.descriptor(line):
+        raise ValueError("unreviewed native escape instruction")
+    code = release_conflict(reg_map)
+    # MOV-only spill stores above retain the source arithmetic flags. Use the
+    # executor's allocated stack for this temporary word, never the waiter SP.
+    code += "PUSHFQ\nPOP QWORD PTR[REG_BANK + KD_REG_FLAGS]\n"
+    code += make_inst("MOVABS", ["R14", hex(line.offset)])
+    code += make_inst("MOV", ["Stack_IJ", str(native_escape.EXIT)])
+    code += make_inst("JMP", ["full_exit"])
+    return code
 
 
 def terminal_clobber_unlock(target, continuation, reg_map):

@@ -15,6 +15,12 @@ returned in that measurement. **Drained** means all requests and their required
 references and acknowledgements finished. The
 [terminology guide](TERMINOLOGY.md) defines the remaining lock and evidence terms.
 
+The later [instruction-exit change](design/admission.md#checked-instruction-exits)
+has focused correctness validation, including ordinary rwsem delegation controls.
+It does not have a new timed comparison. The throughput values below belong to
+their recorded source versions; acceptance of those results does not measure the
+additional flag-preservation cost in images that contain instruction markers.
+
 The accepted current mutex is KD-only `d2a2304`: KD physical exclusion with the
 legacy delegation queue. The [2026-10-17 paired report](../bench/results/10.176.26.71/bench/comparison/mutex-kdonly-20261017T140354Z/README.md)
 contains 504 complete, drained sessions: two workloads, 21 worker counts, three

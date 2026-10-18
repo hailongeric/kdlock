@@ -19,7 +19,8 @@ def render(raw, **kwargs):
     return render_source(raw, body_witness=True, **kwargs)
 
 
-def run_image(assembly, entries, initialize=None, *, resume=None, context=(0xFEED, 0xBEEF)):
+def run_image(assembly, entries, initialize=None, *, resume=None, context=(0xFEED, 0xBEEF),
+              abi=0, requirements=0):
     previous = Path.cwd()
     with tempfile.TemporaryDirectory(prefix="kdlock-body-witness-") as directory:
         directory = Path(directory)
@@ -27,8 +28,8 @@ def run_image(assembly, entries, initialize=None, *, resume=None, context=(0xFEE
         (directory / "asm/jit.S").write_bytes(assembly)
         os.chdir(directory)
         try:
-            translator.build_jit_binary(context_inputs=
-                translator.wrapper_context_inputs(assembly.decode()))
+            translator.build_jit_binary(abi, context_inputs=
+                translator.wrapper_context_inputs(assembly.decode()), requirements=requirements)
             binary = (directory / "asm/jit.bin").read_bytes()
         finally:
             os.chdir(previous)

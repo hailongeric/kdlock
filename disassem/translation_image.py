@@ -13,6 +13,7 @@ import diagnostics
 import indirect_jump
 import solve_bug
 import special_inst
+import native_escape
 from assist import make_inst
 from miasm.arch.x86.arch import mn_x86
 from miasm.expression.expression import ExprLoc
@@ -39,6 +40,7 @@ def wrapper_context_inputs(assembly):
 
 def write_entry_dispatch(
     f, entry, block_dict, continuation_targets=None, *, body_witness=False,
+    preserve_flags=False,
 ):
     dispatch_targets = set(block_dict)
     dispatch_targets.update(continuation_targets or set())
@@ -49,21 +51,30 @@ def write_entry_dispatch(
     # flags itself, avoiding a second access to the wrapper's budget slot.
     f.write("MOV     Stack_BUDGET, 0x1000000\n")
     f.write("MOV     R14, PT_RIP\n")
+    if preserve_flags:
+        f.write("PUSHFQ\n")
     for offset in ordered_targets:
         f.write(f"CMP     R14, 0x{offset:x}\n")
-        target = f"kd_body_entry_{offset:x}" if body_witness else f"loc_{offset:x}"
+        target = (f"kd_dispatch_{offset:x}" if preserve_flags else
+                  f"kd_body_entry_{offset:x}" if body_witness else f"loc_{offset:x}")
         f.write(f"JZ      {target}\n")
+    if preserve_flags:
+        f.write("POPFQ\n")
     f.write("MOV     Stack_IJ, 0x2\n")
     f.write("MOV     R15, R14\n")
     f.write("JMP     exit\n")
-    if body_witness:
+    if body_witness or preserve_flags:
         # Only validated dispatch targets pass through these stubs. Internal
         # branches use loc_* directly: one witness store per wrapper entry,
         # including resumed CALL continuations, without stores on loop edges.
         # Entry guards and dispatch misses still return with a zero witness.
         for offset in ordered_targets:
-            f.write(f"kd_body_entry_{offset:x}:\n")
-            f.write(make_inst("MOV", ["Stack_JIT_WITNESS", "1"]))
+            f.write((f"kd_dispatch_{offset:x}:\n" if preserve_flags else
+                     f"kd_body_entry_{offset:x}:\n"))
+            if preserve_flags:
+                f.write("POPFQ\n")
+            if body_witness:
+                f.write(make_inst("MOV", ["Stack_JIT_WITNESS", "1"]))
             f.write(f"JMP     loc_{offset:x}\n")
 
 
@@ -71,6 +82,7 @@ def emit_jit_assembly(
     entry, block_dict, db_dict, jump_table, missing_callees,
     resolved_hostcalls, keep_call_stack, *, entry_guards=None, body_witness=False,
     terminal_clobber_unlocks=(),
+    native_escapes=False,
 ):
     continuation_targets = find_resumable_call_continuations(
         block_dict, db_dict, keep_call_stack
@@ -91,6 +103,7 @@ def emit_jit_assembly(
         entry_guards.emit(f, entry)
     write_entry_dispatch(
         f, entry, block_dict, continuation_targets, body_witness=body_witness,
+        preserve_flags=native_escapes,
     )
     budget_rips = []
 
@@ -107,8 +120,12 @@ def emit_jit_assembly(
 
         if assist.check_is_branch(block.lines) and label[0] == "l":
             budget_rips.append(offset)
+            if native_escapes:
+                f.write("PUSHFQ\n")
             f.write("DEC             Stack_BUDGET\n")
             f.write(f"JZ              kd_budget_limit_{offset:x}\n")
+            if native_escapes:
+                f.write("POPFQ\n")
 
         temp_i = 0
         temp_j = 0
@@ -126,9 +143,12 @@ def emit_jit_assembly(
             if str(line) == "LEA        R13, QWORD PTR [R12 + R14]":
                 diagnostics.warn(
                     "LEA_FLAGS_REWRITE",
-                    "emit_mov_add",
+                    "emit_saved_flags_mov_add" if native_escapes else "emit_mov_add",
+                    "save source flags around ADD" if native_escapes else
                     "ADD changes flags although the original LEA does not",
                 )
+                if native_escapes:
+                    f.write("PUSHFQ\n")
                 temp_inst1 = mn_x86.fromstring("MOV R13, R14", loc_db=None, mode="64")
                 temp_inst2 = mn_x86.fromstring("ADD R13, R12", loc_db=None, mode="64")
                 block.lines[temp_i : temp_i + 1] = [temp_inst1, temp_inst2]
@@ -152,21 +172,30 @@ def emit_jit_assembly(
             target = (db.get_location_offset(line.args[0].loc_key)
                       if line.name == 'CALL' and isinstance(line.args[0], ExprLoc)
                       else None)
-            if target in terminal_clobber_unlocks and offset not in emitted_offsets:
+            if native_escapes and native_escape.descriptor(line):
+                diagnostics.warn("NATIVE_ESCAPE_MARKER", "emit_waiter_exit",
+                                 "stop before source instruction and disable future delegation",
+                                 source_ip=hex(line.offset), instruction=line.name)
+                f.write(special_inst.native_escape_marker(line, reg_map))
+            elif target in terminal_clobber_unlocks and offset not in emitted_offsets:
                 f.write(special_inst.terminal_clobber_unlock(target, offset, reg_map))
             else:
                 f.write(special_inst.translate(line, offset, db, reg_map, block_end))
             temp_i += 1
             if temp_j > 0:
                 temp_j -= 1
+                if native_escapes and temp_j == 0:
+                    f.write("POPFQ\n")
         f.write("\n\n")
-    f.write(indirect_jump.make_jump_table(jump_table))
+    f.write(indirect_jump.make_jump_table(jump_table, preserve_flags=native_escapes))
     f.write(indirect_jump.make_callee_table(missing_callees, resolved_hostcalls))
     # The source RIP is needed only if the budget expires. Keep its material-
     # ization off the frequently executed branch-block path; the exit resumes
     # at the same untouched source block as the previous INC/TEST sequence.
     for offset in budget_rips:
         f.write(f"kd_budget_limit_{offset:x}:\n")
+        if native_escapes:
+            f.write("POPFQ\n")
         f.write(make_inst("MOVABS", ["R14", hex(offset)]))
         f.write("JMP             inst_limit\n")
 
@@ -184,9 +213,11 @@ def emit_jit_assembly(
     )
     diagnostics.set_instruction(entry, "<entry/branch instrumentation>")
     diagnostics.warn(
-        "FLAGS_UNPRESERVED",
-        "emit_unchanged",
-        "entry dispatch and branch budget may clobber live flags; liveness is unchecked",
+        "NATIVE_ESCAPE_FLAGS" if native_escapes else "FLAGS_UNPRESERVED",
+        "preserve_arithmetic_flags" if native_escapes else "emit_unchanged",
+        ("marker images preserve dispatch/budget flags and require defined source flags"
+         if native_escapes else
+         "entry dispatch and branch budget may clobber live flags; liveness is unchecked"),
         budget_blocks=len(budget_rips),
         first_budget_rip=(
             f"0x{budget_rips[0]:x}" if budget_rips else "n/a"

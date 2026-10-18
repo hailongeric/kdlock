@@ -1,0 +1,9 @@
+{
+  "idle": true,
+  "modules": [],
+  "tasks": [],
+  "kernel": "6.1.159-kdclobber2",
+  "boot_id": "b65f0205-c8f9-4385-8b13-039cbce243a6",
+  "cmdline": "BOOT_IMAGE=/boot/vmlinuz-6.1.159-kdclobber2 root=UUID=aa0bde06-47f6-4049-aaaf-13d052e53961 ro nokaslr nopvspin console=tty1 console=ttyS0",
+  "cpus": "0-63"
+}

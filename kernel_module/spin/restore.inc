@@ -45,11 +45,58 @@
 	[reg_si] "i"(offsetof(struct kd_regs, si)), \
 	[reg_di] "i"(offsetof(struct kd_regs, di))
 
+/* Reached only through a checked instruction marker. All C cleanup and
+ * scheduling ran before this call. Merge source arithmetic flags into the
+ * waiter's control flags; installing the executor's IF/DF/AC would change
+ * task context. After POPF, the return path must preserve flags through the
+ * untouched original instruction. The verified guest's return thunks meet
+ * that contract; use its configured mitigation instead of a bare return. */
+static __attribute__((noipa, noreturn)) noinline notrace void
+kd_jump_to_saved_regs_with_flags(struct kd_regs *regs)
+{
+	asm volatile("pushfq\n"
+		     "popq %%rax\n"
+		     "andq $%c[keep_flags], %%rax\n"
+		     "movq %c[reg_flags](%%rdi), %%rcx\n"
+		     "andq $%c[arithmetic_flags], %%rcx\n"
+		     "orq %%rcx, %%rax\n"
+		     "movq %c[reg_sp](%%rdi), %%rsp\n"
+		     "pushq %c[reg_ip](%%rdi)\n"
+		     "pushq %%rax\n"
+		     "movq %c[reg_r15](%%rdi), %%r15\n"
+		     "movq %c[reg_r14](%%rdi), %%r14\n"
+		     "movq %c[reg_r13](%%rdi), %%r13\n"
+		     "movq %c[reg_r12](%%rdi), %%r12\n"
+		     "movq %c[reg_bp](%%rdi), %%rbp\n"
+		     "movq %c[reg_bx](%%rdi), %%rbx\n"
+		     "movq %c[reg_r11](%%rdi), %%r11\n"
+		     "movq %c[reg_r10](%%rdi), %%r10\n"
+		     "movq %c[reg_r9](%%rdi), %%r9\n"
+		     "movq %c[reg_r8](%%rdi), %%r8\n"
+		     "movq %c[reg_ax](%%rdi), %%rax\n"
+		     "movq %c[reg_cx](%%rdi), %%rcx\n"
+		     "movq %c[reg_dx](%%rdi), %%rdx\n"
+		     "movq %c[reg_si](%%rdi), %%rsi\n"
+		     "movq %c[reg_di](%%rdi), %%rdi\n"
+		     "popfq\n"
+#ifdef CONFIG_RETHUNK
+		     "jmp __x86_return_thunk\n"
+#else
+		     "retq\n"
+#endif
+		     :
+		     : KD_RESTORE_REG_OPERANDS,
+		       [reg_flags] "i"(offsetof(struct kd_regs, flags)),
+		       [arithmetic_flags] "i"(KD_REG_ARITHMETIC_FLAGS),
+		       [keep_flags] "i"(~KD_REG_ARITHMETIC_FLAGS)
+		     : "memory", "cc");
+	__builtin_unreachable();
+}
+
 #pragma GCC push_options
 #pragma GCC optimize("O3")
-/* Software packet restoration only: neither entry below loads flags. The
- * normal form consumes a saved stack return; the in-CS form pushes regs.ip.
- * Do not reuse them for a new flags-live exit without its separate contract. */
+/* Ordinary CALL restoration has no live-flags contract. The in-CS form
+ * separately routes a validated instruction marker to its flags-aware path. */
 __attribute__((noipa)) noinline notrace void
 jump_to_saved_regs(struct kd_regs *regs)
 {
@@ -80,6 +127,8 @@ jump_to_saved_regs(struct kd_regs *regs)
 __attribute__((noipa)) noinline notrace void
 jump_to_saved_regs_in_cs(struct kd_regs *regs)
 {
+	if (regs->orig_ax == KD_REG_NATIVE_ESCAPE_TAG)
+		kd_jump_to_saved_regs_with_flags(regs);
 	asm volatile("movq %c[reg_r15](%%rdi), %%r15\n"
 				 "movq %c[reg_r14](%%rdi), %%r14\n"
 				 "movq %c[reg_r13](%%rdi), %%r13\n"

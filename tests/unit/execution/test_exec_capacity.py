@@ -19,7 +19,9 @@ from test_spin_shadow import definition
 def production():
     kernel = Path(f"/lib/modules/{os.uname().release}/build")
     ptrace = (ROOT / "include/kd_regs.h").read_text()
-    types = definition(ptrace, "struct kd_regs {").rstrip() + ";\n"
+    types = "\n".join(line for line in ptrace.splitlines()
+                      if line.startswith("#define KD_REG_")) + "\n"
+    types += definition(ptrace, "struct kd_regs {").rstrip() + ";\n"
     types += (
         definition(
             read_source((ROOT / "include/kd_spin_entry.h")), "struct kd_spin_ref {"

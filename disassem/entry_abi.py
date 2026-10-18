@@ -11,6 +11,7 @@ from miasm.expression.expression import ExprCompose, ExprCond, ExprId, ExprInt, 
 from miasm.expression.simplifications import expr_simp
 
 from context_policy import FlowConstants, ContextFlowLimit, static_address
+import native_escape
 
 GPRS = {"RAX", "RBX", "RCX", "RDX", "RSI", "RDI", "RBP", "RSP"} | {f"R{i}" for i in range(8, 16)}
 PRESERVED = {"RBX", "RBP", "RSP", "R12", "R13", "R14", "R15"}
@@ -21,10 +22,19 @@ def merge(left, right):
     return {key: left.get(key, 0) | right.get(key, 0) for key in left.keys() | right.keys()}
 
 
-def check_minimal_entry(blocks, databases, entry, clobber_targets, lock_targets, jump_table):
-    """Return a refusal reason, or None after bounded conservative propagation."""
+def check_minimal_entry(blocks, databases, entry, clobber_targets, lock_targets,
+                        jump_table, *, native_escapes=False):
+    """Check all source paths, including a marker's original native suffix.
+
+    Marker images additionally require source-defined arithmetic flags. Their
+    initial flags and post-CALL flags are unspecified by the entry/C contracts;
+    preserving the translator's temporary flags does not make them valid.
+    """
     tracker = FlowConstants()
     incoming = {entry: {ExprId(name, 64): MASK for name in GPRS - {"RSP", "RBP"}}}
+    if native_escapes:
+        incoming[entry].update({ExprId(name, 1): 1
+                               for name in native_escape.ARITHMETIC_FLAGS})
     pending = deque([entry])
     work = 0
 
@@ -104,6 +114,11 @@ def check_minimal_entry(blocks, databases, entry, clobber_targets, lock_targets,
         return after
 
     def step(line, state):
+        if native_escapes and native_escape.descriptor(line):
+            if any(state.get(ExprId(name, 1), 0)
+                   for name in native_escape.ARITHMETIC_FLAGS):
+                raise ValueError("native escape requires source-defined arithmetic flags")
+            return native_escape.apply_entry_effects(line, state)
         plan = tracker.instruction_plan(line)
         if plan is None:
             raise ValueError("instruction has no entry-value proof")
@@ -171,10 +186,18 @@ def check_minimal_entry(blocks, databases, entry, clobber_targets, lock_targets,
                     state = {ExprId(reg, 64): before.get(ExprId(reg, 64), 0) for reg in saved}
                     if target in clobber_targets:
                         state.update({ExprId(reg, 64): MASK for reg in GPRS - saved})
+                    if native_escapes:
+                        # A C/lock CALL has no condition-flag return contract.
+                        state.update({ExprId(name, 1): 1
+                                      for name in native_escape.ARITHMETIC_FLAGS})
                 elif line.name.upper() == "RET":
+                    edges.update(jump_table.get(line.offset + line.l, ()))
+                elif native_escapes and line.name.upper() == "JMP":
                     edges.update(jump_table.get(line.offset + line.l, ()))
             for edge in edges:
                 enqueue(edge, state)
     except (ValueError, ContextFlowLimit) as error:
         return f"minimal entry unavailable at 0x{line.offset:x}: {error}"
+    if native_escapes and blocks.keys() - incoming.keys():
+        return "native escape requires a complete entry-state proof for every selected block"
     return None

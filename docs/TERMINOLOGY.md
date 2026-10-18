@@ -16,6 +16,7 @@ implementation or measurement.
 | Rwsem | A reader/writer semaphore: several readers may enter together, or one writer may enter alone, and blocked callers can sleep. The KD version has additional restrictions once a delegation request is published. |
 | KD / delegation | This project's lock implementation. A lock holder can execute another waiting task's protected work on that task's behalf. |
 | Native / Linux Native | The corresponding unmodified Linux lock implementation used in a comparison. This label does not mean that every surrounding benchmark adapter is original kernel code. |
+| Native execution / native continuation | The original waiter runs its original source instructions. This can still use KD locks; it does not mean switching a KD object to Linux Native locking. |
 | TCLock | The separately maintained comparison implementation, which can delegate work by switching to a waiting caller's stack. This repository has TCLock spin, mutex and rwlock ports, but no sleeping rwsem port. |
 | Backend / arm | One implementation in a comparison, such as Native, TCLock or KD. |
 | Origin / waiter / producer | The task that requested an operation. When its request is delegated, it waits for the result. |
@@ -54,6 +55,10 @@ implementation or measurement.
 | Continuation / `noipa` | A continuation is the point where execution resumes. The `noipa` compiler attribute prevents interprocedural optimization from changing a function in ways that invalidate its prepared continuation. |
 | Packet / frame / ledger | A packet stores the execution state shared between waiter and executor. A frame tracks one active delegated operation. A ledger records exact acquisitions and ownership obligations. None can be replaced by approximate activity counts. |
 | Source lease | A reference that keeps the module containing an operation's original code loaded while it can still be used. |
+| Instruction marker / native suffix / `NATIVE_ONLY` | A marker is generated code that exits before a reviewed original instruction. The native suffix is the remaining code, resumed by the original waiter at that instruction without repeating earlier work. `NATIVE_ONLY` disables further delegation of that entry for the source session. |
+| Arithmetic flags / control flags | Arithmetic flags record carry, parity, auxiliary carry, zero, sign and overflow from calculations. Control flags govern matters such as interrupt delivery, string-operation direction and access checks. The instruction-exit path restores source arithmetic flags while retaining the waiter's control flags. |
+| Opcode / encoding / prefix | An opcode identifies a machine instruction; its encoding is the exact sequence of bytes the CPU executes. Prefix bytes can change its meaning. The marker policy admits only individually reviewed encodings. |
+| Scalar / vector / SIMD / FPU | Scalar operations act on individual values. Vector operations process several values together; SIMD means single instruction, multiple data. FPU denotes floating-point processing. Vector and floating-point execution state is outside the instruction-marker contract. |
 | ACK / unlock acknowledgement | Confirmation required by the ownership protocol that a lock release has completed. Storage cannot be retired merely because the body stopped executing. |
 | Memory ordering / barrier | Rules and instructions that ensure one CPU observes shared-state changes in the required order. Acquire ordering constrains later accesses; a full barrier orders accesses on both sides. |
 | CAS / compare-and-exchange | An atomic operation that changes a value only if it still equals the expected old value. It prevents two writers from reserving the same exclusive state. |

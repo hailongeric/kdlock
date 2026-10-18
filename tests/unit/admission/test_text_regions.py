@@ -35,7 +35,7 @@ class DeviceSessionTests(unittest.TestCase):
         self.pins = []
         self.source_state = device_session.OPEN
         self.pin_error = None
-        self.caps_packet = device_session.CAPS_STRUCT.pack(5, 27, 256, 8192)
+        self.caps_packet = device_session.CAPS_STRUCT.pack(6, 59, 256, 8192)
         self.caps_result = 0
         self.caps_error = None
         self.caps_queries = []
@@ -72,6 +72,7 @@ class DeviceSessionTests(unittest.TestCase):
             self.assertFalse(os.get_inheritable(fd))
             self.assertEqual(device_session.mutex_stack_bytes(), 256)
             self.assertEqual(device_session.percpu_module_bytes(), 8192)
+            self.assertTrue(device_session.native_escape())
             self.assertEqual(self.caps_queries, [fd])
         self.assert_closed(fd)
         with self.assertRaisesRegex(RuntimeError, "active kd_dev session"):
@@ -166,13 +167,17 @@ class DeviceSessionTests(unittest.TestCase):
             self.caps_packet = device_session.CAPS_STRUCT.pack(1, 0, 0, 0)
             self.assertEqual(device_session.mutex_stack_bytes(), 256)
             self.assertEqual(device_session.percpu_module_bytes(), 8192)
+            self.assertTrue(device_session.native_escape())
             self.assertEqual(self.caps_queries, [fd])
         self.assertEqual(device_session._mutex_stack_bytes, 0)
         self.assertEqual(device_session._percpu_module_bytes, 0)
+        self.assertFalse(device_session._native_escape)
         with self.assertRaisesRegex(RuntimeError, "active kd_dev session"):
             device_session.mutex_stack_bytes()
         with self.assertRaisesRegex(RuntimeError, "active kd_dev session"):
             device_session.percpu_module_bytes()
+        with self.assertRaisesRegex(RuntimeError, "active kd_dev session"):
+            device_session.native_escape()
         with self.assertRaisesRegex(RuntimeError, "exclusive KD mutex object"), device_session.session():
             self.fail("old provider entered translator")
         self.assertEqual(len(self.caps_queries), 2)
@@ -190,7 +195,8 @@ class DeviceSessionTests(unittest.TestCase):
                 try:
                     self.assertEqual(device_session.query_capabilities(fd), {
                         'mutex_stack_bytes': stack, 'percpu_module_bytes': module,
-                        'mutex_images': False, 'mutex_exclusive': False})
+                        'mutex_images': False, 'mutex_exclusive': False,
+                        'native_escape': False})
                 finally:
                     os.close(fd)
                 with self.assertRaisesRegex(RuntimeError, "exclusive KD mutex object"), device_session.session():
@@ -202,6 +208,17 @@ class DeviceSessionTests(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError, "exclusive KD mutex object"), device_session.session():
             self.fail("Linux-object provider entered KD-only translator")
         self.assertEqual(self.pins, [])
+
+    def test_marker_capability_is_optional_and_versioned(self):
+        for version, features, expected in ((5, 27, False), (6, 27, False), (6, 59, True)):
+            with self.subTest(version=version, features=features):
+                self.caps_packet = device_session.CAPS_STRUCT.pack(version, features, 256, 8192)
+                with device_session.session():
+                    self.assertEqual(device_session.native_escape(), expected)
+                self.assertFalse(device_session._native_escape)
+        self.caps_packet = device_session.CAPS_STRUCT.pack(5, 59, 256, 8192)
+        with self.assertRaisesRegex(RuntimeError, "exclusive KD mutex object"), device_session.session():
+            self.fail("old provider advertised an unknown marker guarantee")
 
     def test_old_optional_capability_does_not_enable_preservation(self):
         self.caps_error = errno.ENOTTY
@@ -218,7 +235,7 @@ class DeviceSessionTests(unittest.TestCase):
             device_session.CAPS_STRUCT.pack(*values)
             for values in (
                 (0, 1, 256, 0),
-                (6, 1, 256, 0),
+                (7, 1, 256, 0),
                 (1, 3, 256, 0),
                 (1, 0, 256, 0),
                 (1, 1, 0, 0),

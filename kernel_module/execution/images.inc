@@ -81,6 +81,18 @@ void kd_image_report(struct kd_exe_info *entry, const struct kd_jit_image *image
 	kd_code_block_gate_unlock(publish_flags);
 }
 
+/* A runtime marker is a decision about the source entry, not a stale miss
+ * requesting another image. Serialize with the publisher's status check and
+ * NORMAL store so no upload can reopen the entry after this decision. Bound
+ * images stay resident and already admitted frames retain their source leases. */
+void kd_image_disable(struct kd_exe_info *entry)
+{
+	unsigned long publish_flags = kd_code_block_gate_lock();
+
+	kd_exe_publish_status(entry, KD_EXE_NATIVE_ONLY);
+	kd_code_block_gate_unlock(publish_flags);
+}
+
 void kd_exe_snapshot(const struct kd_exe_info *entry, struct kd_exe_info *snapshot)
 {
 	unsigned long publish_flags;

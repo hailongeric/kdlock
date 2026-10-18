@@ -96,6 +96,79 @@ static int kd_jit_call_limit_native(struct kd_exec_frame *frame,
 	return 0;
 }
 
+/* Verify the same exact, unprefixed instruction families as admission. This
+ * is not a decoder for arbitrary failed code. The instruction itself has not
+ * executed, and neither a CALL word nor its return address may be consumed. */
+static int kd_jit_native_escape_opcode(unsigned long ip)
+{
+	unsigned char opcode[3];
+
+	if (copy_from_kernel_nofault(opcode, (void *)ip, 1))
+		return -EFAULT;
+	if (opcode[0] == 0xfa || opcode[0] == 0xfb ||
+	    opcode[0] == 0xfc || opcode[0] == 0xfd ||
+	    opcode[0] == 0x9e || opcode[0] == 0x9f)
+		return 0; /* CLI/STI, CLD/STD, SAHF/LAHF */
+	if (opcode[0] != 0x0f ||
+	    copy_from_kernel_nofault(opcode + 1, (void *)(ip + 1), 1))
+		return -EILSEQ;
+	if (opcode[1] == 0x31 || opcode[1] == 0xa2 ||
+	    opcode[1] == 0x30 || opcode[1] == 0x32 || opcode[1] == 0x33)
+		return 0; /* RDTSC, CPUID, WRMSR/RDMSR/RDPMC */
+	if (opcode[1] == 0x01 &&
+	    !copy_from_kernel_nofault(opcode + 2, (void *)(ip + 2), 1) &&
+	    opcode[2] == 0xf9)
+		return 0; /* RDTSCP */
+	return -EILSEQ;
+}
+
+static int kd_jit_native_escape(struct kd_exe_info *exe,
+				struct kd_exec_frame *frame, struct kd_regs *regs)
+{
+	unsigned long base, end;
+	int ret;
+
+	if (!exe || !frame || !regs || !frame->mutex_backend ||
+	    frame->entry_abi != KD_ENTRY_ABI_MUTEX_CLOBBER_V1 ||
+	    frame->packet_state != KD_PACKET_FULL || !frame->image ||
+	    frame->image->entry != exe ||
+	    !(frame->image->requirements & KD_IMAGE_REQUIRE_NATIVE_ESCAPE) ||
+	    !kd_exec_frame_can_borrow_locks(frame) || !frame->executed ||
+	    frame->logical_task == current || !regs->ip || !regs->sp ||
+	    kd_exec_frame_remote_pending(frame) || frame->remote_request ||
+	    frame->native_request ||
+	    (frame->control_call.phase != KD_CALL_NONE &&
+	     frame->control_call.phase != KD_CALL_COMPLETE) || !(regs->flags & 2))
+		return -EINVAL;
+	base = (unsigned long)task_stack_page(frame->logical_task);
+	if (!base || base > ~0UL - THREAD_SIZE)
+		return -EFAULT;
+	end = base + THREAD_SIZE;
+	/* The final restore pushes IP and merged flags below the virtual SP.
+	 * Require those words and the caller's live stack to remain in bounds. */
+	if (regs->sp < base + 2 * sizeof(unsigned long) ||
+	    regs->sp > end - sizeof(unsigned long))
+		return -EFAULT;
+	ret = kd_source_pin_target(regs->ip);
+	if (!ret)
+		ret = kd_jit_native_escape_opcode(regs->ip);
+	if (ret)
+		return ret;
+
+	/* The earlier control operation is complete; this is a new instruction
+	 * boundary. Preserve its exact SP and all preceding side effects. */
+	frame->control_call.phase = KD_CALL_NONE;
+	regs->orig_ax = KD_REG_NATIVE_ESCAPE_TAG;
+	kd_exec_frame_save_continuation(frame, regs);
+	kd_image_disable(exe);
+	atomic64_inc(&kd_native_escape_count);
+	pr_warn_ratelimited(
+		"[KD_JIT][WARN] reason=NATIVE_ESCAPE entry=0x%lx rip=0x%lx generation=%lu waiter_pid=%d action=native_suffix_and_disable\n",
+		frame->entry_ip, regs->ip, frame->image->generation,
+		frame->logical_task->pid);
+	return 0;
+}
+
 /* Called after a real wrapper return, once per logical invocation. */
 static void kd_exe_note_body(unsigned long entry_ip, unsigned long outer_lock_addr,
 			     unsigned long witness)
@@ -123,7 +196,9 @@ static bool kd_jit_bind_image(const struct kd_exe_info *exe,
 		return true;
 	image = frame->image ? frame->image : kd_image_current(exe);
 	if (!image || image->entry != exe ||
-	    image->entry_abi != frame->entry_abi || image->requirements)
+	    image->entry_abi != frame->entry_abi ||
+	    !kd_image_requirements_valid(KD_EXE_LOCK_MUTEX, frame->entry_abi,
+					image->requirements))
 		return false;
 	frame->image = image;
 	return true;

@@ -4,6 +4,10 @@ Only the scalar instruction families below may reach lowering. This is separate
 from address/alias and entry-value proofs: a known GPR input does not authorize
 RDMSR, POPFQ, or another access to the physical executor's context. New decoder
 mnemonics fail closed until their explicit and implicit state has been reviewed.
+
+native_escape.py separately recognizes a small exact-byte set that can become
+terminal waiter-return markers in negotiated mutex images. This policy still
+rejects copying those instructions into generated code.
 """
 from miasm.expression.expression import ExprId, ExprMem
 

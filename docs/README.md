@@ -1,10 +1,12 @@
 # Documentation index
 
-These guides describe `master`, whose mutex implementation is the accepted
-KD-only version from `d2a2304` and whose reader/writer semaphore (rwsem) waiting
+These guides describe `master`, whose mutex retains the accepted
+KD-only lock protocol from `d2a2304` and whose reader/writer semaphore (rwsem) waiting
 implementation is accepted at `c21345b`. The rwsem acceptance includes its
 documented two-worker performance regressions. Historical experiments do not
 define current APIs (application programming interfaces).
+The [checked instruction-exit contract](JIT_REGISTER_ABI.md#checked-instruction-exit)
+adds validated original-waiter continuation without changing that lock protocol.
 
 | Guide | Responsibility |
 | --- | --- |

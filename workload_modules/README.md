@@ -5,6 +5,10 @@ Their Linux Native and TCLock controls keep separate object types. The real-API
 adapter uses a private KD mutex around the controlled subsystem body; the running
 kernel itself has not been rebuilt to replace every mutex.
 
+JIT means just-in-time compilation: KD generates code for a lock holder to
+execute a waiting task's protected operation. Additional implementation and
+measurement terms are defined in the [terminology guide](../docs/TERMINOLOGY.md).
+
 This directory contains the kernel code exercised by tests and benchmarks.
 Userspace clients, timing and reports live under
 [bench/tclock_compare](../bench/tclock_compare/README.md) and
@@ -19,6 +23,7 @@ compile time. All participants on a target lock must use that same backend's API
 | [rwlock](rwlock/README.md) | `rwlock_test.ko` / `/dev/kd_rwlock_test` | Native/KD concurrent readers, exclusive writers and JIT writer correctness |
 | [rwlock_bench](rwlock_bench/README.md) | `rwlock_bench.ko` / `/dev/kd_rwlock_bench` | Native/TCLock/KD rwlock and proc spin snapshots; Native/KD rwsem with explicit KD outer writers or a local control; separate shell identities |
 | [real_api](../bench/real_api/README.md) | `real_api.ko` / scoped ftrace substitution | Real syscall critical sections: xattr/OFD, descriptor flags, pipe mutexes, file-position mutexes and bounded UTS reader/writer metadata; Native/TCLock/KD selection |
+| [jit_escape](jit_escape/README.md) | `jit_escape_test.ko` / `/dev/kd_jit_escape_test` | KD mutex correctness: an untaken special-instruction branch still permits delegation; taking it resumes the original task at that instruction and disables further delegation |
 
 The top-level Makefile builds the spin and mutex Linux Native workloads by default; explicit
 `spin_cacheline` and `mutex_cacheline` targets build one. Run it only in the
@@ -27,6 +32,12 @@ backend-specific copies with matching symbol dependencies and observer metadata.
 The rwlock correctness and benchmark workloads have their own Makefiles and
 separate [test](../tests/kernel/rwlock/README.md) and
 [performance](../bench/rwlock_compare/README.md) runners.
+The conditional instruction-exit workload has a separate
+[correctness runner](../tests/kernel/jit_escape/README.md). Its conditional branch
+uses the safe processor-counter read `RDTSC`. The workload checks that updates
+occur exactly once and verifies saved arithmetic flags and original-task
+execution. It is not part of
+the throughput workload grid.
 The old transparent-hook workload is removed; its historical evidence remains
 in Git and the validation/report indexes.
 

@@ -20,11 +20,12 @@ PIN = 0x40104B70
 INFO = 0x80104B71
 RETIRE = 0x4B72
 CAPS = 0x80104B73
-CAPS_VERSION = 5
+CAPS_VERSION = 6
 CAP_MUTEX_STACK = 1
 CAP_PERCPU_MODULE = 2
 CAP_MUTEX_IMAGES = 8
 CAP_MUTEX_EXCLUSIVE = 16
+CAP_NATIVE_ESCAPE = 32
 MUTEX_STACK_BYTES = 256
 PERCPU_MODULE_BYTES = 8192
 PERCPU_ALIGNMENT = 4
@@ -35,6 +36,7 @@ RANGE_STRUCT = struct.Struct("<QQ")
 _fd = None
 _mutex_stack_bytes = 0
 _percpu_module_bytes = 0
+_native_escape = False
 
 
 class SourceRefused(RuntimeError):
@@ -66,7 +68,9 @@ def query_capabilities(fd):
     range required by current translation. Raw queries are not a lease; use
     the cached getters after session() validates the actual read/write cdev.
     """
-    disabled = {"mutex_stack_bytes": 0, "percpu_module_bytes": 0, "mutex_images": False, "mutex_exclusive": False}
+    disabled = {"mutex_stack_bytes": 0, "percpu_module_bytes": 0,
+                "mutex_images": False, "mutex_exclusive": False,
+                "native_escape": False}
     packet = bytearray(b"\xff" * CAPS_STRUCT.size)
     try:
         result = fcntl.ioctl(fd, CAPS, packet, True)
@@ -81,15 +85,17 @@ def query_capabilities(fd):
         return disabled
     if result == 0 and len(packet) == CAPS_STRUCT.size:
         version, features, stack_bytes, module_bytes = CAPS_STRUCT.unpack(packet)
-        known = CAP_MUTEX_STACK | (CAP_PERCPU_MODULE if version in (2, 3, 4, CAPS_VERSION) else 0)
+        known = CAP_MUTEX_STACK | (CAP_PERCPU_MODULE if version in (2, 3, 4, 5, CAPS_VERSION) else 0)
         if version == 3:
             known |= 4  # historical owned-image capability, not this backend
-        if version in (4, CAPS_VERSION):
+        if version in (4, 5, CAPS_VERSION):
             known |= CAP_MUTEX_IMAGES
-        if version == CAPS_VERSION:
+        if version in (5, CAPS_VERSION):
             known |= CAP_MUTEX_EXCLUSIVE
+        if version == CAPS_VERSION:
+            known |= CAP_NATIVE_ESCAPE
         if (
-            version in (1, 2, 3, 4, CAPS_VERSION)
+            version in (1, 2, 3, 4, 5, CAPS_VERSION)
             and not features & ~known
             and stack_bytes == (MUTEX_STACK_BYTES if features & CAP_MUTEX_STACK else 0)
             and module_bytes
@@ -100,6 +106,7 @@ def query_capabilities(fd):
                 "percpu_module_bytes": module_bytes,
                 "mutex_images": bool(features & CAP_MUTEX_IMAGES),
                 "mutex_exclusive": bool(features & CAP_MUTEX_EXCLUSIVE),
+                "native_escape": bool(features & CAP_NATIVE_ESCAPE),
             }
     print(
         f"[KD_JIT][WARN] reason=JIT_CAPABILITY_INVALID "
@@ -132,6 +139,12 @@ def percpu_module_bytes():
     return _percpu_module_bytes
 
 
+def native_escape():
+    """The original waiter's flags restore must be negotiated on this lease."""
+    require()
+    return _native_escape
+
+
 def pin_range(address, size):
     """The writer lease spans this ioctl and the following kcore read."""
     try:
@@ -147,7 +160,7 @@ def pin_range(address, size):
 
 @contextmanager
 def session():
-    global _fd, _mutex_stack_bytes, _percpu_module_bytes
+    global _fd, _mutex_stack_bytes, _percpu_module_bytes, _native_escape
     if _fd is not None:
         raise RuntimeError("kd_dev session is already active")
     inherited = os.environ.get("KD_DEVICE_FD")
@@ -187,17 +200,20 @@ def session():
             raise RuntimeError("immutable legacy mutex image publication capability required")
         _mutex_stack_bytes = caps["mutex_stack_bytes"]
         _percpu_module_bytes = caps["percpu_module_bytes"]
+        _native_escape = caps["native_escape"]
         _fd = fd
         print(f"Translation device session: inherited={int(inherited is not None)}")
         print(
             f"Translation runtime capability: mutex_stack_bytes={_mutex_stack_bytes} "
-            f"percpu_module_bytes={_percpu_module_bytes}"
+            f"percpu_module_bytes={_percpu_module_bytes} "
+            f"native_escape={int(_native_escape)}"
         )
         yield fd
     finally:
         _fd = None
         _mutex_stack_bytes = 0
         _percpu_module_bytes = 0
+        _native_escape = False
         if fd is not None:
             os.close(fd)
 

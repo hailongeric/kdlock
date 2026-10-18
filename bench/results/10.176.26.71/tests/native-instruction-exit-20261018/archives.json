@@ -1,0 +1,32 @@
+[
+  {
+    "guest_run": "/mnt/kdlock-builds/native-escape-units-20261018-01",
+    "archive": "native-escape-units-20261018-01.tar.gz",
+    "bytes": 7813474,
+    "sha256": "c6a4856e475a95dd53f3052f18ffaffa577988b829d118d53e3d72729663f6eb"
+  },
+  {
+    "guest_run": "/mnt/kdlock-builds/native-escape-units-20261018-02",
+    "archive": "native-escape-units-20261018-02.tar.gz",
+    "bytes": 7813650,
+    "sha256": "e4601b9f971aaa43686e23dc11e7d4098c7741c7db5f145a16e70cf873625696"
+  },
+  {
+    "guest_run": "/mnt/kdlock-builds/native-escape-live-20261018-01",
+    "archive": "native-escape-live-20261018-01.tar.gz",
+    "bytes": 3898787,
+    "sha256": "2a2b3703fbd545db78cbb4b8182b8e8737d6b00b5ae32e0a60330e297cbc6979"
+  },
+  {
+    "guest_run": "/mnt/kdlock-builds/native-escape-live-20261018-02",
+    "archive": "native-escape-live-20261018-02.tar.gz",
+    "bytes": 3901202,
+    "sha256": "d6add1437b3e67c8586a5b58eb208017418f99296409b0811156214ffc5058bb"
+  },
+  {
+    "guest_run": "/mnt/kdlock-builds/native-escape-rwsem-20261018-01",
+    "archive": "native-escape-rwsem-20261018-01.tar.gz",
+    "bytes": 4402583,
+    "sha256": "b1f34e10d6f1b356e04776a2ddc1b40c9e56addab18fd0187617e40a731b3e32"
+  }
+]

@@ -5,8 +5,10 @@ images through one `/dev/kd_dev` session. [The project guide](../docs/PROJECT_GU
 owns guest setup; [admission](../docs/design/admission.md) and
 [register ABI](../docs/JIT_REGISTER_ABI.md) own translation/packet contracts.
 Do not start a second daemon alongside a runner-managed session.
+JIT means just-in-time compilation; ABI means application binary interface.
+The [terminology guide](../docs/TERMINOLOGY.md) defines execution and lifetime terms.
 
-## Build and CLI
+## Build and command-line interface
 
 Build and run in the recovery guest after loading the matching provider:
 
@@ -16,7 +18,7 @@ cd daemon
 ./daemon --mode per-tgid
 ```
 
-Put the pinned venv's `bin` first in PATH: the daemon uses `execlp("python3", ...)`
+Put the pinned Python virtual environment's `bin` first in PATH: the daemon uses `execlp("python3", ...)`
 and inherits PATH. `VIRTUAL_ENV` alone does not choose Python; do not upgrade global
 packages. [requirements.txt](../disassem/requirements.txt) specifies dependency pins.
 
@@ -30,7 +32,8 @@ packages. [requirements.txt](../disassem/requirements.txt) specifies dependency 
 | `--metrics` | Additional compiler-child wall/CPU/resource JSON; off by default |
 
 Kernel entries use pid 0 for lookup but keep the tgid of the process that registered
-them. Workspace mode changes directory organization; it does not select the lock,
+them. Here pid is a process identifier, tgid a thread-group identifier and RIP the
+entry instruction address. Workspace mode changes directory organization; it does not select the lock,
 JIT or benchmark mode. The daemon creates `asm/` and the callee/indirect-target tables
 without a template. A newly discovered call target can be included in a later
 compilation. The current invocation still finishes natively after an ordinary
@@ -61,7 +64,8 @@ provider session and lose the original lifetime guarantee.
 Only the translator child inherits the internal `KD_DEVICE_FD`; do not set it
 manually. Before reading real code, Python checks the device identity and access
 mode, makes a duplicate that its own children cannot inherit, and queries source
-INFO and CAPS through that same session. Assembler and workspace children do not
+INFO (source-session status) and CAPS (provider capabilities) through that same
+session. Assembler and workspace children do not
 inherit the descriptor.
 
 The standalone translator CLI opens its own session. Code importing the translator
@@ -69,10 +73,13 @@ for real source inspection must explicitly enter `device_session.session()`. A
 missing, closed or wrong inherited descriptor is an infrastructure error, not a
 successful decision to run the body natively.
 
-CAPS v5 retains the checked mutex stack bound and static module per-CPU arena
+CAPS v6 retains the checked mutex stack bound and static module per-CPU arena
 introduced in v1/v2, and advertises the legacy immutable-mutex-image capability
-on bit 3, plus exclusive KD mutex objects on bit 4. Translation requires
-both capabilities and the module arena before text inspection. Read-only observers can still inspect older contracts. Rebuild/reload
+on bit 3, exclusive KD mutex objects on bit 4, and checked instruction exits on
+bit 5. Translation requires immutable images, exclusive KD objects and the
+module arena before text inspection. Instruction markers additionally require
+bit 5; ordinary images can still use the version 5 contract. Read-only observers
+can inspect older contracts. Rebuild/reload
 the matching provider, daemon and translator. These bounds are not mutable
 admission flags or runtime address guards.
 
@@ -100,8 +107,11 @@ In the current implementation, mutex uploads stage a new immutable block and bin
 its generation to each frame. Old versions remain until session teardown, and old
 misses cannot overwrite current generation metadata. Spin/rwlock images retain
 in-place storage. Deploy the matching provider, daemon and translator together;
-the translator requires capability version 5 with immutable images and exclusive
-KD objects. See
+ordinary mutex translation accepts capability version 5 or 6 with immutable images
+and exclusive KD objects. Images with instruction markers additionally require
+version 6 bit 5 and set directory requirement bit 0. A reached marker disables
+the entry under the publication gate, so a concurrent upload cannot reopen it.
+The existing session must drain and retire normally. See
 [the backport details](../docs/history/legacy_mutex_compatibility.md).
 
 ## Optional translation measurements

@@ -10,6 +10,7 @@ from copy import copy
 import context_memory  # Preserve the admission API used by guard consumers.
 import indirect_jump
 import instruction_policy
+import native_escape
 from context_symbols import (
     CONTEXT_SYMBOLS, CONTROL_SYMBOLS, MAX_PERCPU_CPUS, MAX_PERCPU_STATIC_BYTES,
     ContextSymbols, is_context_symbol, load_context_symbols,
@@ -391,11 +392,12 @@ def constant_blocks(
 
 
 def instruction_rejection(
-    line, offset, db, symbols, lock_kind=None, lock_symbols=None, constants=None
+    line, offset, db, symbols, lock_kind=None, lock_symbols=None, constants=None,
+    *, native_escapes=False,
 ):
     """Return (reason, symbol) before any stateful instruction reaches lowering."""
     reason = instruction_policy.rejection(line)
-    if reason:
+    if reason and not (native_escapes and native_escape.descriptor(line)):
         return reason, ""
     if line.name.upper() == "NOP":
         return None

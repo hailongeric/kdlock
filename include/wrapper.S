@@ -1,6 +1,8 @@
 /* Callable shell around generated jit.S. Physical RSP/RBP belong to combiner;
  * virtual SP/BP and spilled GPRs belong to the shared packet. args has two words,
- * reused for exit kind and body witness. Current flags are not written back. */
+ * reused for exit kind and body witness. Only reviewed native-exit markers
+ * export arithmetic flags before reaching full_exit; other exits have no
+ * flags-live continuation contract. */
 #include "asm_head.h"
 #ifndef KD_GENERATED_ENTRY_ABI
 #define KD_GENERATED_ENTRY_ABI 0

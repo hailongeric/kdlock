@@ -53,6 +53,8 @@ def render(
     indirect_history=None,
     mutex_stack_bytes=0,
     abi=0,
+    native_escape_capable=False,
+    build_options=None,
 ):
     output = io.StringIO()
     resolved_symbols = TEST_LOCK_SYMBOLS | (kernel_symbols or {})
@@ -81,6 +83,8 @@ def render(
                 return_value=mutex_stack_bytes,
             )
         )
+        stack.enter_context(patch.object(translator.memread.device_session,
+                                        "native_escape", return_value=native_escape_capable))
         stack.enter_context(
             patch.object(
                 translator.memread.device_session,
@@ -110,7 +114,7 @@ def render(
                 side_effect=lambda name, default=0: resolved_symbols.get(name, default),
             )
         )
-        stack.enter_context(patch.object(translator, "build_jit_binary"))
+        build_mock = stack.enter_context(patch.object(translator, "build_jit_binary"))
         stack.enter_context(
             patch.object(
                 translator.context_policy,
@@ -127,6 +131,8 @@ def render(
             )
             path = Path("asm/jit.S")
             assembly = path.read_bytes() if path.exists() else b""
+            if build_options is not None and build_mock.call_args:
+                build_options.update(build_mock.call_args.kwargs)
         finally:
             os.chdir(previous)
     result = assembly, output.getvalue()

@@ -9,13 +9,15 @@
  *   CALL_MISS: known lock control, or original-waiter native continuation;
  *   HOSTCALL: exact allowlisted service, then another wrapper invocation;
  *   ENTRY_REFUSED: native fallback only after validating an unstarted root;
+ *   NATIVE_ESCAPE: checked instruction boundary, disable and resume waiter;
  *   IJ_MISS / ERROR / INST_LIMIT: error, not generic native continuation.
  * The budget counts instrumented blocks, not retired instructions. NORMAL
  * remains a legacy syscall exit, unsupported for kernel critical sections.
  *
  * Only validated outer-unlock handling completes a delegated request. A miss
  * after stores never rolls them back or grants permission to replay the entry.
- * Code blocks are still overwritten in place; source pins are not versions.
+ * Mutex frames bind immutable code images; spin images remain in place.
+ * Original-source residency pins are separate from executable image identity.
  */
 #include "exe.h"
 #include "kd_exec.h"
@@ -64,6 +66,20 @@ module_param_named(jit_hl_fault_after_known_call,
 MODULE_PARM_DESC(
 	jit_hl_fault_after_known_call,
 	"Inject after a known JIT call: 1=call miss, 2=IJ miss, 3=inst limit");
+
+/* Exact observations only; admission and ownership never depend on this total. */
+static atomic64_t kd_native_escape_count = ATOMIC64_INIT(0);
+static int kd_native_escape_count_get(char *buffer, const struct kernel_param *kp)
+{
+	(void)kp;
+	return scnprintf(buffer, PAGE_SIZE, "%lld\n",
+			 (long long)atomic64_read(&kd_native_escape_count));
+}
+static const struct kernel_param_ops kd_native_escape_count_ops = {
+	.get = kd_native_escape_count_get,
+};
+module_param_cb(native_escape_count, &kd_native_escape_count_ops, NULL, 0444);
+MODULE_PARM_DESC(native_escape_count, "Validated instruction-marker native continuations");
 
 static void *kd_code_block_pool[KD_CODE_BLOCK_POOL];
 static void *kd_code_block_allocations[KD_CODE_BLOCK_POOL];
@@ -457,6 +473,13 @@ returned_wrapper:
 				ret_flag = fault_kind ? KD_EXE_RUN_ERROR :
 							KD_EXE_RUN_NATIVE;
 			}
+		} else if (args[0] == KD_EXE_NATIVE_ESCAPE) {
+			call_ret = kd_jit_native_escape(exe, frame, regs);
+			if (call_ret)
+				kd_jit_log_hl_error("INVALID_NATIVE_ESCAPE", frame,
+						    regs, args[0], call_ret,
+						    continuation_count, hostcall_count);
+			ret_flag = call_ret ? KD_EXE_RUN_ERROR : KD_EXE_RUN_NATIVE;
 		} else if (args[0] == KD_EXE_ERROR_INST) {
 			kd_jit_log_hl_error("UNSUPPORTED_INSTRUCTION", frame,
 					    regs, args[0], -EILSEQ,
@@ -478,6 +501,13 @@ returned_wrapper:
 		}
 		break;
 	}
+
+	/* Only a validated marker may request flags-aware waiter restoration.
+	 * CALL packets can carry old/uninitialized orig_ax bytes; never interpret
+	 * them as an instruction-continuation tag when publishing a native suffix. */
+	if (frame->mutex_backend && ret_flag == KD_EXE_RUN_NATIVE &&
+	    args[0] != KD_EXE_NATIVE_ESCAPE)
+		regs->orig_ax = 0;
 
 	/* Completion/native/ACK releases and registry status CAS publish their
 	 * own state; returning this local result needs no additional full fence. */

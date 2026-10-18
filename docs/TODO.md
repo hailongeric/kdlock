@@ -139,11 +139,16 @@ storage. See [the backport comparison](history/legacy_mutex_compatibility.md).
 
 ### C4. Instruction, flags, and fault semantics
 
-The current translator refuses unvirtualized processor-state instructions,
-unknown mnemonics and equivalent context helpers before emission. INT-to-NOP and
-silent special-instruction omission are removed. General flags repair,
-instrumentation flag clobbers and SIMD/FPU virtualization remain deferred.
-Packet comparisons do not prove live hardware flags restoration.
+Mutex ABI2 can emit a checked exit marker before the reviewed instructions listed
+in [instruction admission](design/admission.md#checked-instruction-exits).
+An executed marker resumes the original waiter at that instruction and disables
+future delegation of the entry. Its image preserves arithmetic flags across
+generated checks and restores them at that boundary. Unknown instructions,
+unreviewed processor-state operations and equivalent context helpers still fail
+static admission. Interrupt instructions are never silently replaced with no-ops.
+General flag repair outside marker-bearing images and floating-point/vector
+virtualization remain deferred. Packet comparisons alone do not prove live
+processor-flag restoration.
 
 ### C5. Origin context and nested boundaries
 
@@ -153,9 +158,10 @@ context-object lifetimes, runtime pointers and concurrent replacement remain ope
 
 #### Deferred access-time guard
 
-The user deferred runtime guards, pre-instruction native continuation and local
-condition-code preservation on 2026-09-13. They remain unimplemented, not pending
-permission. Entry guards and the mutex stack checkpoint do not close the
+The 2026-09-13 deferral still applies to runtime address guards. The later request
+reopens instruction-specific native continuation and its necessary arithmetic
+flag preservation, as described above. It does not implement address checks at
+each memory access. Entry guards and the mutex stack checkpoint do not close the
 [dynamic-address gap](design/admission.md#721-dynamic-address-gap).
 
 ## P1: Evidence and services

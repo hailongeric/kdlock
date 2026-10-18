@@ -71,7 +71,7 @@ static struct kd_jit_caps kd_jit_capabilities(void)
 	struct kd_jit_caps caps = {
 		.version = KD_JIT_CAPS_VERSION,
 		.features = KD_JIT_CAP_MUTEX_STACK | KD_JIT_CAP_MUTEX_IMAGES |
-			KD_JIT_CAP_MUTEX_EXCLUSIVE,
+			KD_JIT_CAP_MUTEX_EXCLUSIVE | KD_JIT_CAP_NATIVE_ESCAPE,
 		.mutex_stack_bytes = KD_JIT_MUTEX_STACK_BYTES,
 	};
 #if defined(CONFIG_X86_64) && defined(CONFIG_SMP)
@@ -218,7 +218,8 @@ static ssize_t kd_dev_write_locked(struct kd_image_upload *upload,
 	}
 	if (head.entry_abi != entry->entry_abi ||
 	    !kd_entry_abi_valid(entry->lock_kind, head.entry_abi) ||
-	    (head.requirements && entry->lock_kind != KD_EXE_LOCK_MUTEX))
+	    !kd_image_requirements_valid(entry->lock_kind, head.entry_abi,
+					head.requirements))
 		return -EPROTO;
 	if (head.base_generation != READ_ONCE(entry->generation))
 		return -ESTALE;

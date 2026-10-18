@@ -63,6 +63,10 @@ static void reset(void)
 	known_result = 1;
 	source_error = source_calls = source_fail_at = stack_error = stack_reads = 0;
 	memset(source_targets, 0, sizeof(source_targets));
+	kd_native_escape_count = 0;
+	memset(escape_text, 0, sizeof(escape_text));
+	escape_text[0] = 0x0f;
+	escape_text[1] = 0x31;
 }
 
 static int run(void)

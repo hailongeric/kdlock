@@ -90,19 +90,28 @@ def find(blocks, db_dict, pre_jump_table, *, max_visits=65536):
     return sorted(missing_callees)
 
 
-def make_jump_table(jump_table):
+def make_jump_table(jump_table, *, preserve_flags=False):
     ret_str = ""
     for offset, psb_targets in sorted(jump_table.items()):
         ret_str += "ij_" + hex(offset)[2:] + ":\n"
+        if preserve_flags:
+            ret_str += "PUSHFQ\n"
         dst_reg = "R14"  # jump_regs[offset]
         psb_reg = "R15"  # if dst_reg != 'R15' else 'R14'
 
         for psb_tgt in sorted(set(psb_targets)):
             ret_str += make_inst("MOVABS", [psb_reg, hex(psb_tgt)])
             ret_str += make_inst("CMP", [dst_reg, psb_reg])
-            ret_str += make_inst("JZ", ["loc_" + hex(psb_tgt)[2:]])
+            ret_str += make_inst("JZ", [f"kd_ij_{offset:x}_{psb_tgt:x}"
+                                       if preserve_flags else f"loc_{psb_tgt:x}"])
+        if preserve_flags:
+            ret_str += "POPFQ\n"
         ret_str += make_inst("MOVABS", ["R15", hex(offset)])
         ret_str += make_inst("JMP", ["ij_failed"])
+        if preserve_flags:
+            for target in sorted(set(psb_targets)):
+                ret_str += f"kd_ij_{offset:x}_{target:x}:\nPOPFQ\n"
+                ret_str += make_inst("JMP", [f"loc_{target:x}"])
         ret_str += "\n"
     return ret_str
 
