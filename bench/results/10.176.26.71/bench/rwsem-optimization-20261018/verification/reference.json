@@ -1,0 +1,67 @@
+{
+  "archive_prefix": "rwsem-opt-20261018",
+  "binary_file_instances_verified": 13,
+  "bytes": 26267103,
+  "capture_receipt_sha256": "48d9c45dca64ad4976e8deb241fe2819117a4f9237c4305932e8a029e81cdbe7",
+  "export_directory": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/rwsem-optimization-20261018/receipts/reference",
+  "exported_receipts": [
+    {
+      "bytes": 2167,
+      "path": "final-reference/binary-sha256.json",
+      "sha256": "a91c3acd1404eda5b50af8e2ebaa1111e3be0197a4923454224a7c1a39967262"
+    },
+    {
+      "bytes": 4308,
+      "path": "final-reference/environment.json",
+      "sha256": "0a85e8f60cb422cb371c3e6f337e67147b7c0a3a84f697722ac652f9e9bbaece"
+    },
+    {
+      "bytes": 15931,
+      "path": "final-reference/parity.json",
+      "sha256": "15874f67fb66942e3f29b790b00b9b0b44475de088b9d4ea510306f3cfd6c5ed"
+    },
+    {
+      "bytes": 372756,
+      "path": "final-reference/plan.json",
+      "sha256": "fba66df5f2c819250ff284e9a1ceb376ec9483fd80a40f22768abf1609790a84"
+    },
+    {
+      "bytes": 42426219,
+      "path": "final-reference/records.json",
+      "sha256": "32310b814ab311858636cb7c10b9d5ac86946a9628e9f62f912282d3988e4fef"
+    },
+    {
+      "bytes": 24581,
+      "path": "final-reference/source-sha256.json",
+      "sha256": "e0450cc9d2cee54337851b1fd8f7b3ede99d42d8665aa992ea73c3983b446734"
+    },
+    {
+      "bytes": 64924,
+      "path": "final-reference/summary.json",
+      "sha256": "498ba3664fa6030a54ee6682018450b39877a83e471a66173671c6689749c0e0"
+    }
+  ],
+  "guest_base": "/mnt/kdlock-builds/rwsem-opt-20261018",
+  "guest_capture_hash_checked": true,
+  "links": 180,
+  "manifests_verified": [
+    {
+      "files": 13,
+      "kind": "binary",
+      "path": "rwsem-opt-20261018/final-reference/binary-sha256.json"
+    },
+    {
+      "files": 233,
+      "kind": "source",
+      "path": "rwsem-opt-20261018/final-reference/source-sha256.json"
+    }
+  ],
+  "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/rwsem-optimization-20261018/reference.tar.gz",
+  "regular_bytes": 150380144,
+  "regular_files": 7891,
+  "schema": 1,
+  "scope": "Read-only streaming archive hashes and complete frozen source/binary manifests; no source execution or tests",
+  "sha256": "7b80d8e230e6577faa5c3ba6285764776bade531113d3f174b85eb2ed0463d59",
+  "source_file_instances_verified": 233,
+  "status": "PASS"
+}

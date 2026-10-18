@@ -1,0 +1,58 @@
+{
+  "scope": "Static helper integration inspection and read-only arithmetic replay of one frozen 48-session baseline; no VM/test/figure execution",
+  "passed": true,
+  "checks": {
+    "main_complete": true,
+    "replay_complete": true,
+    "no_replay_failures": true,
+    "48_valid": true,
+    "groups_match": true,
+    "no_tclock_rows": true,
+    "rates_match": true,
+    "tclock_not_applicable_preserved": true,
+    "runner_marks_tc_unmeasured": true,
+    "runner_jit_native_label_is_non_kd_witness": true
+  },
+  "raw_replay_check_count": 18322,
+  "raw_replay_failures": [],
+  "baseline_source_manifest_sha256": "4ab41cc461d68945022c74a305a1e28258901bd6dbab2dc907128e78c8ef41e3",
+  "helper_sha256_before": {
+    "health.py": "b240eea650ca49fc32d024e15e65377e7493d00bb6f7c59ccace53e2aab4c3b5",
+    "archive-guest.py": "aa4dcbb50260173f29e3fc0a39186452545eeae27109ce6f54d8e986702f75b7",
+    "verify-archive.py": "828cd1bd7e00890b26ef5bfe698b801b79d1e21882c1887510dc7990f811d98c",
+    "report.py": "8087258d09d1f6a7932392e323ddd13dbb4749ce34ab380086444e87f4ea18ab",
+    "independent-replay.py": "0ff9857a6d86f2a1df46ce4764ae32929f46152ef1e0494fb85d29b8e11e64b3",
+    "validation-report.py": "221879218f622e5d0e6ad76976e7c75b693675915099283781cd250ba8bbcf14",
+    "IMPORT.md": "8213bce702f64308544c556f25111aba23ec96c84ae00f16a76d1fac02da138b"
+  },
+  "helper_sha256_after": {
+    "health.py": "b240eea650ca49fc32d024e15e65377e7493d00bb6f7c59ccace53e2aab4c3b5",
+    "archive-guest.py": "ed3ff4145a0d3ba4ccc874ea5613f3895732ad7121e60a0fd7cb2bebf5651560",
+    "verify-archive.py": "828cd1bd7e00890b26ef5bfe698b801b79d1e21882c1887510dc7990f811d98c",
+    "report.py": "7572ae433ff6d74bb85b98380231b9ad6205bef639504595bf18ee63310363a7",
+    "independent-replay.py": "425e5bf0b637e9a20dede0ecda32ef085cdd9ae15d59f1c011c506785a4ee1cc",
+    "validation-report.py": "33bd9ee9d884844c1171b5bb1648d21185159321cbb62eb8c5e0226a14693a4e",
+    "IMPORT.md": "20197a720dd5fbe5191bae22911df24ebe5484daa107e39745daecca6a64af8d"
+  },
+  "changed_helpers": [
+    "archive-guest.py",
+    "report.py",
+    "independent-replay.py",
+    "validation-report.py",
+    "IMPORT.md"
+  ],
+  "run_map_template_sha256": "982501490d202542400034c5957aa7d20c5f6c41edf1a03143fe71c0056ef815",
+  "static_reference_source_sha256": {
+    "bench/rwlock_compare/session.py": "18bcde3d158e0a748ae5e5ee113ff0959780e8a09f2edf07bbd068c2879c86ef",
+    "bench/rwlock_compare/oracle.py": "06944b376837ab4f16a08835fe4142dac0c131d3d5ebae1acb264f94037cb092",
+    "bench/rwlock_compare/run.py": "dc3afd5386560074520d81af091aa6376e238f482a92b6816f0e6739b70a5e62"
+  },
+  "findings": [
+    "Provider import-log naming matches runner binary.parent.name + -ubsan.txt.",
+    "Archive prefixes and absolute binary paths map correctly through archives.json guest_base/archive_prefix.",
+    "Profile map roots must point at baseline-profile/final-profile; performance receipts live one level deeper under rwsem.",
+    "TCLock NATIVE is a non-KD-witness label; delegation remains UNMEASURED, including in independent replay.",
+    "Mixed KD JIT statuses do not suppress a complete Native/TCLock rwlock comparison.",
+    "health.py and verify-archive.py were not modified. Guest-side helper changes must be transferred only after active work is idle."
+  ]
+}

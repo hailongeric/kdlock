@@ -17,7 +17,9 @@ phase, drains existing readers while it can sleep, and then enters the
 unchanged KD mutex ABI2 protocol. Its matching unlock finishes before the original
 caller releases that reservation. Ordinary writers, including downgrade callers,
 use a separate exclusive admission state on the same semaphore; they cannot add
-readers during a delegated writer epoch.
+readers during a delegated writer epoch. Separate admission/drain waitqueues and
+bounded polling before publication are described in the rwsem design; the KD
+mutex protocol is unchanged.
 
 `--delegate off` compiles the ordinary local KD writer API and labels its variant
 `-local`; it requires zero JIT counts. `--require-jit` applies only to eligible
@@ -26,13 +28,15 @@ mode does not replace the real kernel mmap lock. Use the
 [scheduler probe](../../tests/kernel/rwsem/README.md) for sleeping holders,
 same-CPU progress, cancellation, epoch exclusion and downgrade coverage.
 
-The [2026-10-18 rwsem report](../results/10.176.26.71/bench/rwsem/20261018/README.md)
-contains all 756 standard-grid sessions, correct and drained. KD meets both
-observed throughput criteria at 26/126 points; 99 are slower on at least one
-metric, and one has split JIT statuses despite all repetitions completing.
-Only seven KD timed sessions returned complete delegated bodies. High-count
-regressions, all local fallback results and the separate strict JIT acceptance
-checks remain explicit.
+The [rwsem optimization report](../results/10.176.26.71/bench/rwsem-optimization-20261018/README.md)
+records the current Native/KD standard-grid comparison, candidate screens,
+separate baseline controls, diagnostic profiles and execution groups. The
+[focused validation receipt](../results/10.176.26.71/tests/rwsem-optimization-20261018/README.md)
+records sleeping/cancellation/downgrade checks and actual returned JIT evidence.
+The [initial writer-delegation report](../results/10.176.26.71/bench/rwsem/20261018/README.md)
+retains the earlier shared-queue implementation's full comparison, high-count
+regressions and local fallback results. Those measurements remain historical
+source-specific evidence.
 
 `--lock-kind spin --workloads argbounds taskname` selects module-owned extracted
 proc snapshots. All snapshots take an exclusive spinlock; KD may delegate the
@@ -87,6 +91,21 @@ timeout 10800s python3 bench/rwlock_compare/run.py \
   --threads 1 2 3 4 5 6 7 8 12 16 20 24 28 32 36 40 44 48 52 56 60 \
   --collector-cpu 63 --duration-ms 2000 --repeats 3 \
   --output /root/kdlock-evidence/10.176.26.71/bench/rwsem-comparison-NEW
+```
+
+The optimization report also records a separate spinning-rwlock reference.
+It selects Native/TCLock/KD on c01, c08 and RCUHT at 1%/20% writes and
+1/8/32/36/60 workers, with three repetitions: **270 completed sessions**. The
+32/36-worker points straddle the current guest's NUMA boundary. This reference
+uses non-sleeping bodies and does not substitute TCLock rwlock for a sleeping
+rwsem or count as rwsem parity.
+
+```sh
+timeout 7200s python3 bench/rwlock_compare/run.py \
+  --lock-kind rwlock --backends native tclock kdlock \
+  --workloads cacheline rcuht --cachelines 1 8 --write-percent 1 20 \
+  --threads 1 8 32 36 60 --collector-cpu 63 --duration-ms 2000 --repeats 3 \
+  --output /root/kdlock-evidence/10.176.26.71/bench/rwlock-reference-NEW
 ```
 
 The [2026-10-15 snapshot results](../results/10.176.26.71/bench/proc_snapshots/20261015/README.md)

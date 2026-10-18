@@ -1,0 +1,20 @@
+{
+  "status": "PASS",
+  "scope": "Path relocation only; all 12 run roots resolve to identical retained inputs",
+  "original_map_sha256": "83d558ec292132c61563215eeb58146a621305fc679e69f7500586f3d06c02d5",
+  "report_map_sha256": "c10b2c6b5e20f54cc3abd84fe53c6ed60626d8c1940d3adc07cb6ca1c56b8089",
+  "resolved_inputs": {
+    "baseline-grid": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/rwsem-delegation-20261018/guest-evidence.tar.gz",
+    "baseline-screen": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/rwsem-optimization-20261018/receipts/screens/baseline-screen",
+    "poll-screen": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/rwsem-optimization-20261018/receipts/screens/poll-screen",
+    "split-screen": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/rwsem-optimization-20261018/receipts/screens/split-screen",
+    "long-screen": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/rwsem-optimization-20261018/receipts/screens/long-screen",
+    "grant-screen": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/rwsem-optimization-20261018/receipts/screens/grant-screen",
+    "xlong-screen": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/rwsem-optimization-20261018/receipts/screens/xlong-screen",
+    "baseline-repeat-screen": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/rwsem-optimization-20261018/receipts/screens/baseline-repeat-screen",
+    "final-grid": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/rwsem-optimization-20261018/receipts/main/final-grid",
+    "final-reference": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/rwsem-optimization-20261018/receipts/reference/final-reference",
+    "baseline-profile": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/rwsem-optimization-20261018/receipts/profiles/baseline-profile",
+    "final-profile": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/rwsem-optimization-20261018/receipts/profiles/final-profile"
+  }
+}

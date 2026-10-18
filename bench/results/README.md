@@ -4,16 +4,23 @@
 The [2026-10-18 consolidation checks](10.176.26.71/tests/main-consolidation-20261018/README.md)
 validate organization and tooling separately from the measured runtime.
 The [feature reintegration checks](10.176.26.71/tests/feature-reintegration-20261018/README.md)
-validate the new ordinary rwsem, restored snapshots and benchmark safeguards,
+validate the earlier ordinary-only rwsem, restored snapshots and benchmark safeguards,
 including retained delegation failures. Historical owned/adaptive mutex and
 owned-gate rwsem reports remain separate evidence.
 
-The [rwsem writer-delegation comparison](10.176.26.71/bench/rwsem/20261018/README.md)
-contains 756 correct, drained c01/c08/RCUHT sessions at 1%/20% writes on the
-standard 1–60 grid. It preserves the selected mutex protocol. Seven KD timed
-sessions completed delegated bodies; high-count throughput remains substantially
-below Native. The report retains all repetitions, split execution statuses,
-regressions, figures and verified archives, with separate focused validation.
+The [rwsem optimization comparison](10.176.26.71/bench/rwsem-optimization-20261018/README.md)
+records the current Native/KD c01/c08/RCUHT comparison at 1%/20% writes on the
+standard 1–60-worker grid, preserving the selected KD mutex protocol. It retains
+candidate screens, baseline controls, execution groups, diagnostic profiles and
+source identities. Its separate Native/TCLock/KD spinning-rwlock reference uses
+all three payloads and both mixes at 1/8/32/36/60 workers, 270 completed sessions;
+those non-sleeping results are not pooled with rwsem. The
+[focused validation receipt](10.176.26.71/tests/rwsem-optimization-20261018/README.md)
+records the matching functional and execution checks.
+
+The [initial rwsem writer-delegation comparison](10.176.26.71/bench/rwsem/20261018/README.md)
+remains the historical shared-queue baseline. Its high-count regressions, split
+execution statuses, returned-body counts and raw evidence are preserved.
 
 The [KD-only mutex round](10.176.26.71/bench/comparison/mutex-kdonly-20261017T140354Z/README.md) contains 504 fresh accepted/drained sessions
 at 1–8 workers by one and 12–60 by four, three repetitions, with accepted KD,

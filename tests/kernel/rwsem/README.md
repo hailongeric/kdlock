@@ -41,16 +41,32 @@ The probe checks:
   acquisition waiting for an outer writer reservation. Killable
   waits first receive a nonfatal signal and must remain blocked, then cancel on
   `SIGKILL`. A cancelled drain waiter must reopen reader admission immediately.
+  Phase-admission cases inspect `phase_wait`; writers that already own their
+  reservation and wait for readers inspect `reader_drain`. The other queue must
+  remain empty at each controlled cancellation point.
 - Exact zero error result, expected sleeping transitions, all worker joins, zero
-  readers and writer reservations, no drain waiters and an idle physical gate.
+  readers and writer reservations, no phase or drain waiters and an idle
+  physical gate.
+
+The provider's uninterruptible pre-publication waits have a finite 16,384-probe
+polling stage with an early reschedule exit. The sleeping and same-CPU cases
+exercise the scheduling fallback after that stage. Interruptible and killable
+acquisitions retain their original cancellation path. Reader count acquisition
+runs on the reader's own task.
 
 Expected result: `api_checks=8`, `cancellation_checks=10`, `readers_slept=2`,
 `writer_slept=1`, `late_reader_slept=1`, `outer_readers_slept=2`,
 `outer_writer_slept=1`, `downgrade_checks=1`, `publication_checks=3`,
 `colocated=1`, `errors=0`, `idle=1`. Outer acquisition has no cancellation or
 downgrade API; these cases exercise the supported ordinary operations mixed
-with outer callers. Returned JIT bodies are explicitly zero. The
-[previous local-only receipt](../../../bench/results/10.176.26.71/tests/feature-reintegration-20261018/README.md)
+with outer callers. Returned JIT bodies are explicitly zero. See the
+[optimization validation receipt](../../../bench/results/10.176.26.71/tests/rwsem-optimization-20261018/README.md)
+for recorded outcomes and source identities, and the separate
+[benchmark report](../../../bench/results/10.176.26.71/bench/rwsem-optimization-20261018/README.md)
+for performance measurements. The
+[initial writer-delegation receipt](../../../bench/results/10.176.26.71/tests/rwsem-delegation-20261018/README.md)
+uses the same twelve-field result layout with the earlier shared-queue provider.
+The [previous local-only receipt](../../../bench/results/10.176.26.71/tests/feature-reintegration-20261018/README.md)
 records the earlier eight-field probe and separate workload checks. The historical
 [2026-10-15 receipt](../../../bench/results/10.176.26.71/tests/rwsem-snapshots-20261015/README.md)
 belongs to the archived owned-mutex implementation and is not current evidence.

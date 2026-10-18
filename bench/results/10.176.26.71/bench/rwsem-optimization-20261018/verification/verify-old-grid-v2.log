@@ -1,0 +1,67 @@
+{
+  "archive_prefix": "rwsem-delegation-grid-20261018",
+  "binary_file_instances_verified": 9,
+  "bytes": 50002705,
+  "capture_receipt_sha256": null,
+  "export_directory": "/tmp/kd-rwsem-opt-20261018/verify-old-grid-v2-receipts",
+  "exported_receipts": [
+    {
+      "bytes": 1493,
+      "path": "binary-sha256.json",
+      "sha256": "1e7342387060827862eb82bada927995ba50ab261d9a08233c480e7fc9ad73a6"
+    },
+    {
+      "bytes": 4443,
+      "path": "environment.json",
+      "sha256": "9382edd45736bb95779e5103ccae542d3940c1bb3a5bd4ab1124e5f302451f7c"
+    },
+    {
+      "bytes": 49327,
+      "path": "parity.json",
+      "sha256": "84e681a3d97967ab633515790caf651dcda56699791a14465242fea1fcee5aa0"
+    },
+    {
+      "bytes": 1017363,
+      "path": "plan.json",
+      "sha256": "0bbe6643475c5a2d4833ba77e4e981a4cf6a77c9a1afdbe1b4241f1926bfdbb8"
+    },
+    {
+      "bytes": 105009151,
+      "path": "records.json",
+      "sha256": "a0cd70a1550b2cb65ba02f8cc24422ba70f63a818832185588974d78e04d6f18"
+    },
+    {
+      "bytes": 24581,
+      "path": "source-sha256.json",
+      "sha256": "4ab41cc461d68945022c74a305a1e28258901bd6dbab2dc907128e78c8ef41e3"
+    },
+    {
+      "bytes": 188369,
+      "path": "summary.json",
+      "sha256": "6f50055311782be40fd45107470c166355daabda394582cc61ae4ba8342e3fab"
+    }
+  ],
+  "guest_base": "/mnt/kdlock-builds/rwsem-delegation-grid-20261018",
+  "guest_capture_hash_checked": false,
+  "links": 756,
+  "manifests_verified": [
+    {
+      "files": 9,
+      "kind": "binary",
+      "path": "rwsem-delegation-grid-20261018/binary-sha256.json"
+    },
+    {
+      "files": 233,
+      "kind": "source",
+      "path": "rwsem-delegation-grid-20261018/source-sha256.json"
+    }
+  ],
+  "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/rwsem-delegation-20261018/guest-evidence.tar.gz",
+  "regular_bytes": 342029706,
+  "regular_files": 21027,
+  "schema": 1,
+  "scope": "Read-only streaming archive hashes and complete frozen source/binary manifests; no source execution or tests",
+  "sha256": "2d6b750786b54102f473f4936568b45625482fe5407ecdbdb95af657b67bcfad",
+  "source_file_instances_verified": 233,
+  "status": "PASS"
+}

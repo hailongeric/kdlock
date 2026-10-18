@@ -68,27 +68,60 @@ keeps admission closed conservatively.
 
 A reader observes admission open, publishes its reader count with a fully
 ordered increment, then rechecks admission with acquire ordering. A failed
-speculation rolls back without touching protected data. A slow reader sleeps
-and retries the same admission-aware acquisition; it cannot bypass a closed
-phase by acquiring the physical gate. Speculative reader counts can briefly
-appear during a writer phase, but those callers never access the protected
-payload.
+speculation rolls back without touching protected data. A slow reader retries
+the same admission-aware acquisition, sleeping when needed; it cannot bypass a
+closed phase by acquiring the physical gate. Speculative reader counts can
+briefly appear during a writer phase, but those callers never access the
+protected payload.
 
 An outer writer atomically joins or creates a positive phase, executes the
-reader-drain ordering barrier, and sleeps until existing readers drain. Only
+reader-drain ordering barrier, and waits until existing readers drain. Only
 then does it call the unchanged KD mutex outer interface, which may acquire
 locally, combine other requests or publish a pinned waiter. All admitted
 readers have finished before that publication, and the positive phase prevents
 new admitted readers. The reader's ordered increment/recheck and the writer's
 reservation/barrier/count check prevent both from missing each other.
 
-The final reader's ordered decrement precedes the drain wakeup. Waitqueue
-enrolment and condition rechecks ensure a waiter either observes the completed
-drain or receives a wakeup. Releasing the last outer reservation reopens
-admission and wakes readers and ordinary writers. Reservation release is
-outside the translated region, after the existing mutex unlock endpoint;
-synthetic completion resumes there on the origin rather than releasing the
-reservation from the executor.
+The final reader's ordered decrement precedes the reader-drain wakeup.
+Waitqueue enrolment and condition rechecks ensure a waiter either observes the
+completed drain or receives a wakeup. Releasing the last outer reservation
+reopens admission and wakes phase waiters. Reservation release is outside the
+translated region, after the existing mutex unlock endpoint; synthetic
+completion resumes there on the origin rather than releasing the reservation
+from the executor.
+
+## Waiting and wakeups
+
+Reader counts, admission reservations, and the two waitqueue heads occupy
+separate 64-byte-aligned regions. In the captured x86_64 build, this increases
+the object from 384 to 512 bytes; both layouts have 128-byte overall alignment
+through the embedded mutex. `phase_wait` contains readers and writers
+waiting for an eligible admission phase. `reader_drain` contains writers that
+already hold an ordinary or outer reservation and are waiting for readers to
+finish. The final reader wakes only `reader_drain`; an ordinary phase release
+or final outer reservation release wakes only `phase_wait`. Reader drainage
+cannot open a closed admission phase. A reader-drain waiter retains its
+reservation, so admission cannot reopen while that wait remains live. Fully
+ordered count/phase updates precede the lockless `waitqueue_active()` checks
+and pair with waitqueue enrolment and predicate rechecks.
+
+Uninterruptible acquisitions poll before entering a sleeping wait. Each polling
+stage tries at most 16,384 condition probes and stops early when rescheduling is
+needed. Polling occurs before delegation publication, with preemption enabled;
+its finite fallback lets sleeping or colocated holders resume. A successful
+predicate may acquire a reader count or writer reservation, so it is consumed
+once without another acquisition attempt. The ordinary writer's read-only
+phase check is only a hint; its compare/exchange remains authoritative. The
+budget is an experimentally chosen tuning for the captured benchmark platform,
+not a universal optimum.
+
+The polling bound counts predicate invocations, not elapsed time: the existing
+outer-reservation predicate can retry its compare/exchange internally. The
+fallback retains `wait_event()` enrolment, condition rechecks and scheduling.
+Interruptible and killable acquisitions keep their existing sleeping waits and
+cancellation rules. Wakeups prompt readers to retry their own admission-aware
+acquisition. Published mutex waiters, physical ownership, queue batching and
+wrapper ABI are unchanged.
 
 ## Ordinary writers, cancellation and downgrade
 
@@ -154,20 +187,24 @@ configuration validation. Safe admission does not establish that
 `access_remote_vm()` or another task-dependent body can be delegated; existing
 instruction and context admission still apply.
 
-The [current validation receipt](../../bench/results/10.176.26.71/tests/rwsem-delegation-20261018/README.md)
-records the focused checks for this implementation. The
-[API probe](../../tests/kernel/rwsem/README.md) covers sleeping readers,
+The [API probe](../../tests/kernel/rwsem/README.md) covers sleeping readers,
 writer/late-reader exclusion, same-CPU scheduling progress, cancellation,
-trylocks, downgrade and drain. Its phase-specific checks keep an outer writer
-before publication while an ordinary reader or downgraded writer is active.
-Separate strict JIT acceptance checks establish returned bodies through matching
-outer-unlock completions; a published `NORMAL` image alone is insufficient.
-Native, delegated-capable KD and ordinary local KD shells retain distinct source
-and instrumentation identities. Functional and JIT acceptance results do not
-establish throughput parity; see the [performance status](../PERFORMANCE.md)
-for measured comparisons.
+trylocks, downgrade and drain. Its phase-specific checks distinguish the two
+waitqueues and keep an outer writer before publication while an ordinary reader
+or downgraded writer is active. Separate strict JIT acceptance checks require
+returned bodies through matching outer-unlock completions; a published `NORMAL`
+image alone is insufficient. Native, delegated-capable KD and ordinary local KD
+shells retain distinct source and instrumentation identities.
 
-The [previous ordinary-only receipt](../../bench/results/10.176.26.71/tests/feature-reintegration-20261018/README.md)
+See the [optimization validation receipt](../../bench/results/10.176.26.71/tests/rwsem-optimization-20261018/README.md)
+for recorded checks and source identities. Functional and JIT acceptance do not
+establish throughput parity; measured comparisons belong in the
+[optimization report](../../bench/results/10.176.26.71/bench/rwsem-optimization-20261018/README.md)
+and [performance status](../PERFORMANCE.md).
+
+The [initial writer-delegation receipt](../../bench/results/10.176.26.71/tests/rwsem-delegation-20261018/README.md)
+records the earlier shared-queue implementation without bounded polling. The
+[previous ordinary-only receipt](../../bench/results/10.176.26.71/tests/feature-reintegration-20261018/README.md)
 and [archived delegated receipt](../../bench/results/10.176.26.71/tests/rwsem-snapshots-20261015/README.md)
-describe their captured implementations. Neither establishes validation or
-performance of this admission-phase implementation.
+describe their captured implementations. Those earlier receipts do not establish
+validation or performance of the current waiting implementation.

@@ -9,7 +9,7 @@ summarizes the accepted version. Build and run only in the verified VM on
 | --- | --- | --- |
 | Spin | [tclock_compare/run.py](tclock_compare/run.py) | c01/c08 and RCUHT |
 | Mutex | [tclock_compare/run_mutex.py](tclock_compare/run_mutex.py) | Same payloads, selected KD-only mutex |
-| Rwlock | [rwlock_compare/run.py](rwlock_compare/run.py) | Cachelines and RCUHT, default 1%/20% writes |
+| Rwlock | [rwlock_compare/run.py](rwlock_compare/run.py) | c01/c08 and RCUHT, default 1%/20% writes |
 | Sleeping rwsem | [rwlock_compare/run.py](rwlock_compare/run.py), `--lock-kind rwsem --backends native kdlock` | c01/c08 or RCUHT; local readers and outer ABI2 KD writers, with `--delegate off` local control; no TCLock arm |
 | Proc snapshots | [rwlock_compare/run.py](rwlock_compare/run.py), `--lock-kind spin` | `argbounds` and exact `taskname`; separate from full procfs/ps |
 | Syscall/API | [real_api/run.py](real_api/run.py) | OFD, setfd, pipebytes, pipecap, seek, bounded UTS and xattr controls |
@@ -67,6 +67,16 @@ The [current KD-only report](results/10.176.26.71/bench/comparison/mutex-kdonly-
 contains 504 sessions for c01/post64 and pipebytes n16 with accepted KD baseline,
 Native and TCLock controls. Use the [results index](results/README.md) for other
 versions and lock families; historical results retain their own frozen inputs.
+
+The [rwsem optimization report](results/10.176.26.71/bench/rwsem-optimization-20261018/README.md)
+records the current Native/KD comparison for c01/c08/RCUHT at 1%/20% writes on
+the standard worker grid. It retains candidate screens, separate baseline
+controls, JIT execution groups and diagnostic profiles. A distinct spinning-rwlock
+reference selects Native/TCLock/KD, the same three payloads and mixes, and
+1/8/32/36/60 workers: 270 completed sessions with three repetitions. That reference
+uses non-sleeping lock semantics and is not scored as rwsem parity. The
+[initial rwsem comparison](results/10.176.26.71/bench/rwsem/20261018/README.md)
+remains evidence for the earlier shared-queue implementation.
 
 Write guest results outside the checkout to
 `/root/kdlock-evidence/10.176.26.71/bench/<new-run>`. Track compact reports under

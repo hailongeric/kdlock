@@ -8,35 +8,61 @@ resolve historical pinned-producer scheduling failures.
 Current scope: x86_64 kernel spin/mutex/rwlock delegation and sleeping rwsem
 with local readers and explicit outer writer delegation. Implementation contracts
 live in [DESIGN](DESIGN.md); [performance status](PERFORMANCE.md) distinguishes the
-accepted KD-only mutex, current rwsem results and historical spin/rwlock comparisons. These unresolved issues
-remain documented; this list does not schedule new work. Historical evidence is
+accepted KD-only mutex, selected rwsem results, the separate spinning-rwlock
+reference and historical comparisons. These unresolved issues remain documented;
+this list does not schedule new work. Historical evidence is
 indexed in [VALIDATION](VALIDATION.md).
 
 ## Current checkpoint
 
-KD has explicit spin, ordinary mutex, rwlock and rwsem APIs, with workloads comparing
-KD, TCLock and Native. It tracks real lock owners and unlock acknowledgements,
-keeps source modules loaded while needed, and shares register packets between
-waiter and combiner. It does not intercept global lock calls. KD has not matched
-both alternatives at every requested configuration; see the
-[spin/mutex report](../bench/results/380G10/bench/tclock_compare/20261008-protocol-simplification/README.md)
+KD has explicit spin, ordinary mutex, rwlock and rwsem APIs. Spin/mutex/rwlock
+workloads compare KD, TCLock and Native; sleeping rwsem compares KD with Native
+because this port has no TCLock sleeping rwsem. KD tracks real lock owners and
+unlock acknowledgements, keeps source modules loaded while needed, and shares
+register packets between waiter and combiner. It does not intercept global lock
+calls. Historical comparisons retained configuration-specific throughput gaps;
+see the [spin/mutex report](../bench/results/380G10/bench/tclock_compare/20261008-protocol-simplification/README.md)
 and [RCUHT rwlock report](../bench/results/380G10/bench/rwlock_compare/20261010-rcuht/README.md).
 
-Rwlock ABI3 moves the wait for readers and acquisition of write access before
-the prepared body. This resolves the older hash-writer translation refusal.
-Native writers now have a fast path, and the count and gate occupy separate cache
-lines in a 128-byte object. All 270 runs of the 1%/20% RCUHT matrix produced correct
-results and drained, but KD met both throughput targets at only 21 of 30 comparison
-points. Read-heavy runs across NUMA nodes and writer performance at two threads
-still have gaps. None of these results resolves the correctness limits below.
+Rwlock ABI3 moves reader drainage and write admission before the prepared body,
+resolving the older hash-writer translation refusal. Native writers have a fast
+path, and the count and gate occupy separate cachelines in a 128-byte object.
+The historical 40-vCPU RCUHT matrix completed 270 runs correctly and drained,
+but met both throughput targets at only 21/30 points. That captured version and
+placement had read-heavy cross-NUMA and two-worker writer gaps; those results do
+not establish a universal or current KD rwlock limitation. The separate fresh
+spinning reference is source- and topology-specific and remains distinct from
+sleeping-rwsem performance. All 270 sessions completed correctly and drained.
+KD is slower than both comparators at c08/20%/one worker and slower than TCLock
+at RCUHT/1%/60 workers; it meets both measured criteria at 29/30 points against
+Native and 28/30 against TCLock. These
+comparisons retain repetition ranges and do not establish statistical
+significance. TCLock's stack-delegation share remains unmeasured.
 
-The current [rwsem comparison](../bench/results/10.176.26.71/bench/rwsem/20261018/README.md)
-completed all 756 sessions correctly but met both throughput criteria at only
-26/126 points. At 60 workers KD reaches 28–46% of Native throughput across the
-six workload/mix combinations. Seven KD timed sessions returned JIT bodies;
-371 used local fallback. Reader/writer admission costs and the interaction with
-unchanged mutex heat admission need profiling before any performance claim.
-Preserve the selected mutex protocol while investigating this separate rwsem gap.
+The selected [rwsem optimization](../bench/results/10.176.26.71/bench/rwsem-optimization-20261018/README.md)
+uses separate admission/drain queues, independent cachelines and finite polling
+before publication, while preserving the accepted KD mutex protocol. All 756
+sessions completed correctly and drained. KD meets both observed throughput
+criteria at 117/126 points against Native, with six misses and three split
+execution-status groups. Against the initial KD there are 110 passes, 12 misses
+and four split comparisons. Low-count regressions remain substantial: c01/c08
+at 20% writes and two workers reach only 0.286×/0.276× the initial KD whole-run
+throughput. The six Native misses are the three 20%/one-worker cases,
+c08/1%/two workers and c01/c08 at 20%/36 workers. Split comparisons completed
+all planned sessions; execution groups and variability remain in the report.
+The 16,384-probe choice is platform-specific experimental tuning, not a universal
+optimum. The
+first-repetition Native variation in both baseline and selected focused screens
+remains unexplained; governor-policy equality does not isolate its cause.
+Continuous outer-writer arrivals can delay readers or ordinary writers, and no
+Linux rwsem fairness or bounded-wait guarantee is provided.
+
+The [initial rwsem report](../bench/results/10.176.26.71/bench/rwsem/20261018/README.md)
+preserves the `485729f` shared-queue baseline: 756 correct, drained sessions,
+26/126 observed parity points, seven JIT-positive KD sessions and 371 local
+fallback sessions. Its high-count regressions are historical evidence, not
+current performance numbers. Neither waiting-path changes nor favorable
+measurements resolve the correctness limits below.
 
 Known failures are still open:
 

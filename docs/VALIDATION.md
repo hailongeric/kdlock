@@ -4,11 +4,59 @@ Validation applies to the recorded inputs and scope. Publication, returned JIT
 execution, correctness, drain and performance parity are distinct observations.
 Basic plus affected checks are the default; an old pass is not a current full pass.
 
-## Rwsem writer delegation, 2026-10-18
+## Selected rwsem optimization, 2026-10-18
 
-The [delegation receipt](../bench/results/10.176.26.71/tests/rwsem-delegation-20261018/README.md)
-records the new phase admission around the unchanged selected mutex protocol.
-The final sleeping/API probe passed same-CPU reader progress, ordinary downgrade
+The [optimization receipt](../bench/results/10.176.26.71/tests/rwsem-optimization-20261018/README.md)
+records **PASS** for the selected split-queue, 16,384-probe implementation:
+the scheduler/API probe, two basic C programs and all 44 focused workload
+checks. Builds and live execution ran in the recovery VM. The
+[design](design/rwsem_implementation.md) retains reader drainage before pinned
+writer publication and the accepted KD mutex protocol.
+
+| Evidence | Recorded outcome |
+| --- | --- |
+| Basic programs | `basic/test_control_call` and `basic/test_daemon_policy` passed without skips; source/command/log captured, but no separate executable-hash manifest |
+| Sleeping/API scheduler probe | Original twelve-field result passed: eight API checks, ten cancellation cases, same-CPU reader progress, ordinary downgrade, three pre-publication checks, queue-role assertions and final idle |
+| Native/KD functional workloads | 36/36 correct and drained: c01/c08/RCUHT, 0%/1%/20% writes, 1/8 workers, 100,000 iterations per worker; 343 matching JIT entries/completions in one c08/20%/eight-worker session |
+| Ordinary local KD controls | 4/4 correct and drained: c08, 0%/20% writes, 1/8 workers; zero JIT |
+| Strict returned-writer JIT acceptance | 4/4 correct and drained: c08/RCUHT, 80%/100% writes, 16 workers and 200,000 iterations per worker; 7,446,858 matching entries/completions |
+| Standard Native/KD timed matrix | 756/756 valid and drained; 155 KD sessions with returned JIT and 223 KD NO_JIT sessions |
+| Separate Native/TCLock/KD spinning-rwlock reference | 270/270 valid and drained; 48 KD sessions with returned JIT and 42 KD NO_JIT sessions |
+| Diagnostic profiles | Baseline/final each completed six c01/20%/60-worker sessions; tracing restored, 768 raw per-CPU profile hashes verified; excluded from throughput scoring |
+| Independent offline arithmetic replay | PASS for all 2,118 timed sessions: initial/final grids (756 each), seven screens (336) and spinning reference (270); raw effects, JIT deltas, rates, peaks and comparison groups agree |
+| Frozen inputs and byte equivalence | Two final manifests each match all 233 runtime inputs; 16 selected mutex files and 112 runtime files match `d2a2304`; 115 other provider/header/translator/daemon files match `485729f` (overlapping scopes) |
+| Final health | Captured idle state, unchanged boot, no Linux mutex imports and no faults in 1,423 retained session logs; tracing at `nop`, profiling disabled, no enabled functions |
+
+The strict c08 checks returned **892,769 / 3,174,542** JIT writer bodies at
+80%/100% writes; RCUHT returned **197,319 / 3,182,228**. Every check required
+correct protected effects, reader consistency, worker progress and final drain.
+Image publication or local execution alone does not establish returned JIT.
+The ordinary probe does not register an image and supplies no JIT evidence.
+
+The independent replay read retained plans, records and samples without
+repository imports or VM access; it did not run new kernel tests. Six captured
+archives passed integrity verification. The focused offline validation
+directly checked 61 kernel logs in its tests/metadata/profiles scope;
+the broader 1,423-log statement comes from the retained guest health receipt.
+The final dmesg ring is retained and is not a complete boot-long log. The
+kernel remains `6.1.159-kdclobber2`, Build ID
+`5ca28058e156f34a2c7fe91e8e0fbf92f4e51960`.
+
+The [performance report](../bench/results/10.176.26.71/bench/rwsem-optimization-20261018/README.md)
+keeps candidate screens, baseline repeats, instrumented profiles and execution
+statuses separate. Performance failures or split JIT groups do not mean a test
+was unexecuted. TCLock has no sleeping rwsem backend. Earlier experimental
+probes and rejected candidates remain distinct from selected-source results;
+the selected implementation contains no asynchronous reader-grant mechanism.
+These are basic plus affected checks, not a full unit-suite claim. They do not
+establish whole-kernel mmap replacement, RT/ww_mutex/lockdep, Linux rwsem
+fairness, or general producer-oversubscription safety.
+
+## Historical rwsem writer-delegation validation, 2026-10-18
+
+The [initial delegation receipt](../bench/results/10.176.26.71/tests/rwsem-delegation-20261018/README.md)
+records the `485729f` shared-queue phase-admission implementation around the
+unchanged selected mutex protocol. Its final sleeping/API probe passed same-CPU reader progress, ordinary downgrade
 before outer publication, ten cancellation cases and complete drain. Twenty-four
 Native/KD c01/c08/RCUHT functional sessions passed; they recorded zero JIT and are
 kept separate from four successful strict acceptance runs at 16 workers.

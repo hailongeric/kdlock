@@ -4,15 +4,23 @@
 The [2026-10-18 consolidation checks](tests/main-consolidation-20261018/README.md)
 validate organization and tooling separately from the measured runtime.
 The [feature reintegration checks](tests/feature-reintegration-20261018/README.md)
-validate the new ordinary rwsem, restored snapshots and benchmark safeguards,
+validate the earlier ordinary-only rwsem, restored snapshots and benchmark safeguards,
 including retained delegation failures. Historical owned/adaptive mutex and
 owned-gate rwsem reports remain separate evidence.
 
-The [rwsem writer-delegation comparison](bench/rwsem/20261018/README.md)
-contains all 756 correct, drained c01/c08/RCUHT sessions at 1%/20% writes over
-the standard 1–60-worker grid. KD meets both throughput criteria at 26/126 points;
-99 are slower and one has split execution statuses despite complete execution.
-The report preserves high-count regressions, actual JIT counts and all raw evidence.
+The [rwsem optimization comparison](bench/rwsem-optimization-20261018/README.md)
+records the current Native/KD c01/c08/RCUHT comparison at 1%/20% writes on the
+standard 1–60-worker grid. It retains candidate screens, separate baseline
+controls, execution groups, diagnostic profiles and source identities. A
+separate Native/TCLock/KD spinning-rwlock reference selects the same three
+payloads and mixes at 1/8/32/36/60 workers, 270 completed sessions; its non-sleeping
+semantics remain distinct from rwsem. The
+[focused validation receipt](tests/rwsem-optimization-20261018/README.md)
+records the matching functional and execution checks.
+
+The [initial rwsem writer-delegation comparison](bench/rwsem/20261018/README.md)
+remains historical evidence for the shared-queue baseline, including its
+high-count regressions, split execution statuses and actual JIT counts.
 
 The [KD-only mutex round](bench/comparison/mutex-kdonly-20261017T140354Z/README.md) contains 504 fresh accepted/drained sessions
 at 1–8 workers by one and 12–60 by four, three repetitions, with accepted KD,

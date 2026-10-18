@@ -1,0 +1,2140 @@
+{
+  "baseline-profile": {
+    "data": {
+      "diagnostic.json": {
+        "argv": [
+          "/tmp/kd-rwsem-opt-profile.py",
+          "--output",
+          "/mnt/kdlock-builds/rwsem-opt-20261018/baseline-profile",
+          "--timeout-seconds",
+          "900"
+        ],
+        "diagnostic": true,
+        "kernel_config_sha256": "e1dd628c6f2315c77debd559cf6df1f299814b0b4ba47d5964cfb5bde4dd4ccd",
+        "kernel_release": "6.1.159-kdclobber2",
+        "notes": [
+          "Do not pool with throughput benchmark sessions.",
+          "Function profiling uses return-address instrumentation; absent/notrace symbols are recorded.",
+          "Selected kernel calls include background work. Counts are diagnostic observations, not ownership.",
+          "Prior function-profile rows are preserved, but trace_stat is read-only and its contents cannot be restored."
+        ],
+        "scope": "All CPUs and tasks during RWSession.measure, including client startup and publication/counter reads; excludes preparation, warmup and cleanup",
+        "score_eligible": false,
+        "script_sha256": "8a206c1f0dc1970d5b0f8ca191a38f59540c295947500e8a52f06b4264eacee6",
+        "snapshot_tag": "before-mutex-kdonly-20261017T140354Z",
+        "source_root": "/root/host_fs/kdlock",
+        "tracing_root": "/sys/kernel/tracing"
+      },
+      "function-count-summary.json": [
+        {
+          "backend": "kdlock",
+          "category": "waitqueue",
+          "function": "__wake_up",
+          "jit_status": "NO_JIT",
+          "lock_kind": "rwsem",
+          "max_hits_per_completed_op": 0.03975722719869707,
+          "median_hits_per_completed_op": 0.0374134234828496,
+          "min_hits_per_completed_op": 0.03731516645119586,
+          "repetitions": 3,
+          "sessions": [
+            "rwsem-cacheline-c01-kdlock-w020-t60-r00",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r01",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r02"
+          ]
+        },
+        {
+          "backend": "kdlock",
+          "category": "waitqueue",
+          "function": "__wake_up_common",
+          "jit_status": "NO_JIT",
+          "lock_kind": "rwsem",
+          "max_hits_per_completed_op": 0.04136553338762215,
+          "median_hits_per_completed_op": 0.037434036939313985,
+          "min_hits_per_completed_op": 0.03733284179056238,
+          "repetitions": 3,
+          "sessions": [
+            "rwsem-cacheline-c01-kdlock-w020-t60-r00",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r01",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r02"
+          ]
+        },
+        {
+          "backend": "kdlock",
+          "category": "waitqueue",
+          "function": "__wake_up_common_lock",
+          "jit_status": "NO_JIT",
+          "lock_kind": "rwsem",
+          "max_hits_per_completed_op": 0.04126374185667753,
+          "median_hits_per_completed_op": 0.03742115352902375,
+          "min_hits_per_completed_op": 0.037322741596638655,
+          "repetitions": 3,
+          "sessions": [
+            "rwsem-cacheline-c01-kdlock-w020-t60-r00",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r01",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r02"
+          ]
+        },
+        {
+          "backend": "kdlock",
+          "category": "raw_spin",
+          "function": "_raw_spin_lock_irq",
+          "jit_status": "NO_JIT",
+          "lock_kind": "rwsem",
+          "max_hits_per_completed_op": 0.0775549674267101,
+          "median_hits_per_completed_op": 0.06532047915319975,
+          "min_hits_per_completed_op": 0.0648653941292876,
+          "repetitions": 3,
+          "sessions": [
+            "rwsem-cacheline-c01-kdlock-w020-t60-r00",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r01",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r02"
+          ]
+        },
+        {
+          "backend": "kdlock",
+          "category": "raw_spin",
+          "function": "_raw_spin_lock_irqsave",
+          "jit_status": "NO_JIT",
+          "lock_kind": "rwsem",
+          "max_hits_per_completed_op": 9.728037128312863,
+          "median_hits_per_completed_op": 9.68437190798153,
+          "min_hits_per_completed_op": 9.6388309242671,
+          "repetitions": 3,
+          "sessions": [
+            "rwsem-cacheline-c01-kdlock-w020-t60-r00",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r01",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r02"
+          ]
+        },
+        {
+          "backend": "kdlock",
+          "category": "raw_spin",
+          "function": "_raw_spin_unlock",
+          "jit_status": "NO_JIT",
+          "lock_kind": "rwsem",
+          "max_hits_per_completed_op": 4.0716612377850165e-05,
+          "median_hits_per_completed_op": 0.0,
+          "min_hits_per_completed_op": 0.0,
+          "repetitions": 3,
+          "sessions": [
+            "rwsem-cacheline-c01-kdlock-w020-t60-r00",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r01",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r02"
+          ]
+        },
+        {
+          "backend": "kdlock",
+          "category": "raw_spin",
+          "function": "_raw_spin_unlock_irq",
+          "jit_status": "NO_JIT",
+          "lock_kind": "rwsem",
+          "max_hits_per_completed_op": 0.01772953990228013,
+          "median_hits_per_completed_op": 0.007054955474934037,
+          "min_hits_per_completed_op": 0.006719154007756949,
+          "repetitions": 3,
+          "sessions": [
+            "rwsem-cacheline-c01-kdlock-w020-t60-r00",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r01",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r02"
+          ]
+        },
+        {
+          "backend": "kdlock",
+          "category": "raw_spin",
+          "function": "_raw_spin_unlock_irqrestore",
+          "jit_status": "NO_JIT",
+          "lock_kind": "rwsem",
+          "max_hits_per_completed_op": 9.787701498868778,
+          "median_hits_per_completed_op": 9.743496454485488,
+          "min_hits_per_completed_op": 9.704231982899023,
+          "repetitions": 3,
+          "sessions": [
+            "rwsem-cacheline-c01-kdlock-w020-t60-r00",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r01",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r02"
+          ]
+        },
+        {
+          "backend": "kdlock",
+          "category": "waitqueue",
+          "function": "autoremove_wake_function",
+          "jit_status": "NO_JIT",
+          "lock_kind": "rwsem",
+          "max_hits_per_completed_op": 2.0366687540400776,
+          "median_hits_per_completed_op": 2.0314406744722957,
+          "min_hits_per_completed_op": 2.02388792752443,
+          "repetitions": 3,
+          "sessions": [
+            "rwsem-cacheline-c01-kdlock-w020-t60-r00",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r01",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r02"
+          ]
+        },
+        {
+          "backend": "kdlock",
+          "category": "waitqueue",
+          "function": "default_wake_function",
+          "jit_status": "NO_JIT",
+          "lock_kind": "rwsem",
+          "max_hits_per_completed_op": 2.0366738041370396,
+          "median_hits_per_completed_op": 2.0314458278364116,
+          "min_hits_per_completed_op": 2.024562296416938,
+          "repetitions": 3,
+          "sessions": [
+            "rwsem-cacheline-c01-kdlock-w020-t60-r00",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r01",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r02"
+          ]
+        },
+        {
+          "backend": "kdlock",
+          "category": "native_rwsem",
+          "function": "down_read",
+          "jit_status": "NO_JIT",
+          "lock_kind": "rwsem",
+          "max_hits_per_completed_op": 0.003893526058631922,
+          "median_hits_per_completed_op": 0.0008503050791556728,
+          "min_hits_per_completed_op": 0.0008332659987071751,
+          "repetitions": 3,
+          "sessions": [
+            "rwsem-cacheline-c01-kdlock-w020-t60-r00",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r01",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r02"
+          ]
+        },
+        {
+          "backend": "kdlock",
+          "category": "native_rwsem",
+          "function": "down_write",
+          "jit_status": "NO_JIT",
+          "lock_kind": "rwsem",
+          "max_hits_per_completed_op": 0.029626425081433226,
+          "median_hits_per_completed_op": 0.00199435191292876,
+          "min_hits_per_completed_op": 0.0019543875242404654,
+          "repetitions": 3,
+          "sessions": [
+            "rwsem-cacheline-c01-kdlock-w020-t60-r00",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r01",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r02"
+          ]
+        },
+        {
+          "backend": "kdlock",
+          "category": "waitqueue",
+          "function": "finish_wait",
+          "jit_status": "NO_JIT",
+          "lock_kind": "rwsem",
+          "max_hits_per_completed_op": 0.8898793770358306,
+          "median_hits_per_completed_op": 0.8895299101253298,
+          "min_hits_per_completed_op": 0.8884105324822237,
+          "repetitions": 3,
+          "sessions": [
+            "rwsem-cacheline-c01-kdlock-w020-t60-r00",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r01",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r02"
+          ]
+        },
+        {
+          "backend": "kdlock",
+          "category": "kd_rwsem",
+          "function": "kd_down_read",
+          "jit_status": "NO_JIT",
+          "lock_kind": "rwsem",
+          "max_hits_per_completed_op": 0.8000005153364116,
+          "median_hits_per_completed_op": 0.8,
+          "min_hits_per_completed_op": 0.7999984849709114,
+          "repetitions": 3,
+          "sessions": [
+            "rwsem-cacheline-c01-kdlock-w020-t60-r00",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r01",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r02"
+          ]
+        },
+        {
+          "backend": "kdlock",
+          "category": "kd_rwsem",
+          "function": "kd_down_read_trylock",
+          "jit_status": "NO_JIT",
+          "lock_kind": "rwsem",
+          "max_hits_per_completed_op": 0.0,
+          "median_hits_per_completed_op": 0.0,
+          "min_hits_per_completed_op": 0.0,
+          "repetitions": 3,
+          "sessions": [
+            "rwsem-cacheline-c01-kdlock-w020-t60-r00",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r01",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r02"
+          ]
+        },
+        {
+          "backend": "kdlock",
+          "category": "kd_rwsem",
+          "function": "kd_rwsem_delegate_enter",
+          "jit_status": "NO_JIT",
+          "lock_kind": "rwsem",
+          "max_hits_per_completed_op": 0.20000151502908856,
+          "median_hits_per_completed_op": 0.2,
+          "min_hits_per_completed_op": 0.19999948466358838,
+          "repetitions": 3,
+          "sessions": [
+            "rwsem-cacheline-c01-kdlock-w020-t60-r00",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r01",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r02"
+          ]
+        },
+        {
+          "backend": "kdlock",
+          "category": "kd_rwsem",
+          "function": "kd_rwsem_delegate_exit",
+          "jit_status": "NO_JIT",
+          "lock_kind": "rwsem",
+          "max_hits_per_completed_op": 0.20000151502908856,
+          "median_hits_per_completed_op": 0.2,
+          "min_hits_per_completed_op": 0.19999948466358838,
+          "repetitions": 3,
+          "sessions": [
+            "rwsem-cacheline-c01-kdlock-w020-t60-r00",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r01",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r02"
+          ]
+        },
+        {
+          "backend": "kdlock",
+          "category": "kd_rwsem",
+          "function": "kd_rwsem_reserve_delegate",
+          "jit_status": "NO_JIT",
+          "lock_kind": "rwsem",
+          "max_hits_per_completed_op": 0.20000151502908856,
+          "median_hits_per_completed_op": 0.2,
+          "min_hits_per_completed_op": 0.19999948466358838,
+          "repetitions": 3,
+          "sessions": [
+            "rwsem-cacheline-c01-kdlock-w020-t60-r00",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r01",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r02"
+          ]
+        },
+        {
+          "backend": "kdlock",
+          "category": "kd_rwsem",
+          "function": "kd_up_read",
+          "jit_status": "NO_JIT",
+          "lock_kind": "rwsem",
+          "max_hits_per_completed_op": 0.8045297231270359,
+          "median_hits_per_completed_op": 0.8042203660310278,
+          "min_hits_per_completed_op": 0.8042159671833773,
+          "repetitions": 3,
+          "sessions": [
+            "rwsem-cacheline-c01-kdlock-w020-t60-r00",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r01",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r02"
+          ]
+        },
+        {
+          "backend": "kdlock",
+          "category": "raw_spin",
+          "function": "native_queued_spin_lock_slowpath",
+          "jit_status": "NO_JIT",
+          "lock_kind": "rwsem",
+          "max_hits_per_completed_op": 2.9776305955074336,
+          "median_hits_per_completed_op": 2.971246804914248,
+          "min_hits_per_completed_op": 2.964299165309446,
+          "repetitions": 3,
+          "sessions": [
+            "rwsem-cacheline-c01-kdlock-w020-t60-r00",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r01",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r02"
+          ]
+        },
+        {
+          "backend": "kdlock",
+          "category": "waitqueue",
+          "function": "prepare_to_wait_event",
+          "jit_status": "NO_JIT",
+          "lock_kind": "rwsem",
+          "max_hits_per_completed_op": 2.053483051874596,
+          "median_hits_per_completed_op": 2.0460401550131926,
+          "min_hits_per_completed_op": 2.038925081433225,
+          "repetitions": 3,
+          "sessions": [
+            "rwsem-cacheline-c01-kdlock-w020-t60-r00",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r01",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r02"
+          ]
+        },
+        {
+          "backend": "kdlock",
+          "category": "native_rwsem",
+          "function": "rwsem_down_read_slowpath",
+          "jit_status": "NO_JIT",
+          "lock_kind": "rwsem",
+          "max_hits_per_completed_op": 3.8650230870712404e-05,
+          "median_hits_per_completed_op": 2.0358306188925082e-05,
+          "min_hits_per_completed_op": 1.767533936651584e-05,
+          "repetitions": 3,
+          "sessions": [
+            "rwsem-cacheline-c01-kdlock-w020-t60-r00",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r01",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r02"
+          ]
+        },
+        {
+          "backend": "kdlock",
+          "category": "native_rwsem",
+          "function": "rwsem_down_write_slowpath",
+          "jit_status": "NO_JIT",
+          "lock_kind": "rwsem",
+          "max_hits_per_completed_op": 2.319013852242744e-05,
+          "median_hits_per_completed_op": 2.2903094462540716e-05,
+          "min_hits_per_completed_op": 2.525048480930834e-06,
+          "repetitions": 3,
+          "sessions": [
+            "rwsem-cacheline-c01-kdlock-w020-t60-r00",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r01",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r02"
+          ]
+        },
+        {
+          "backend": "kdlock",
+          "category": "native_rwsem",
+          "function": "rwsem_mark_wake",
+          "jit_status": "NO_JIT",
+          "lock_kind": "rwsem",
+          "max_hits_per_completed_op": 5.6687005277044855e-05,
+          "median_hits_per_completed_op": 3.0537459283387624e-05,
+          "min_hits_per_completed_op": 2.020038784744667e-05,
+          "repetitions": 3,
+          "sessions": [
+            "rwsem-cacheline-c01-kdlock-w020-t60-r00",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r01",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r02"
+          ]
+        },
+        {
+          "backend": "kdlock",
+          "category": "native_rwsem",
+          "function": "rwsem_spin_on_owner",
+          "jit_status": "NO_JIT",
+          "lock_kind": "rwsem",
+          "max_hits_per_completed_op": 0.0007060108839050132,
+          "median_hits_per_completed_op": 0.00034863599348534203,
+          "min_hits_per_completed_op": 0.00016412815126050421,
+          "repetitions": 3,
+          "sessions": [
+            "rwsem-cacheline-c01-kdlock-w020-t60-r00",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r01",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r02"
+          ]
+        },
+        {
+          "backend": "kdlock",
+          "category": "native_rwsem",
+          "function": "rwsem_wake.isra.0",
+          "jit_status": "NO_JIT",
+          "lock_kind": "rwsem",
+          "max_hits_per_completed_op": 1.2883410290237467e-05,
+          "median_hits_per_completed_op": 7.634364820846906e-06,
+          "min_hits_per_completed_op": 5.050096961861668e-06,
+          "repetitions": 3,
+          "sessions": [
+            "rwsem-cacheline-c01-kdlock-w020-t60-r00",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r01",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r02"
+          ]
+        },
+        {
+          "backend": "kdlock",
+          "category": "scheduler",
+          "function": "schedule",
+          "jit_status": "NO_JIT",
+          "lock_kind": "rwsem",
+          "max_hits_per_completed_op": 1.168554561247576,
+          "median_hits_per_completed_op": 1.1602438571899736,
+          "min_hits_per_completed_op": 1.1538553542345278,
+          "repetitions": 3,
+          "sessions": [
+            "rwsem-cacheline-c01-kdlock-w020-t60-r00",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r01",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r02"
+          ]
+        },
+        {
+          "backend": "kdlock",
+          "category": "scheduler",
+          "function": "schedule_timeout",
+          "jit_status": "NO_JIT",
+          "lock_kind": "rwsem",
+          "max_hits_per_completed_op": 0.0002621131921824104,
+          "median_hits_per_completed_op": 9.276055408970976e-05,
+          "min_hits_per_completed_op": 8.837669683257918e-05,
+          "repetitions": 3,
+          "sessions": [
+            "rwsem-cacheline-c01-kdlock-w020-t60-r00",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r01",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r02"
+          ]
+        },
+        {
+          "backend": "kdlock",
+          "category": "scheduler",
+          "function": "try_to_wake_up",
+          "jit_status": "NO_JIT",
+          "lock_kind": "rwsem",
+          "max_hits_per_completed_op": 2.040016968325792,
+          "median_hits_per_completed_op": 2.035045452671504,
+          "min_hits_per_completed_op": 2.0289418770358307,
+          "repetitions": 3,
+          "sessions": [
+            "rwsem-cacheline-c01-kdlock-w020-t60-r00",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r01",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r02"
+          ]
+        },
+        {
+          "backend": "kdlock",
+          "category": "scheduler",
+          "function": "ttwu_do_activate",
+          "jit_status": "NO_JIT",
+          "lock_kind": "rwsem",
+          "max_hits_per_completed_op": 1.167963699903038,
+          "median_hits_per_completed_op": 1.1595739198548813,
+          "min_hits_per_completed_op": 1.1531479030944625,
+          "repetitions": 3,
+          "sessions": [
+            "rwsem-cacheline-c01-kdlock-w020-t60-r00",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r01",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r02"
+          ]
+        },
+        {
+          "backend": "kdlock",
+          "category": "native_rwsem",
+          "function": "up_read",
+          "jit_status": "NO_JIT",
+          "lock_kind": "rwsem",
+          "max_hits_per_completed_op": 0.02993943403908795,
+          "median_hits_per_completed_op": 0.0098686922823219,
+          "min_hits_per_completed_op": 0.00944873141564318,
+          "repetitions": 3,
+          "sessions": [
+            "rwsem-cacheline-c01-kdlock-w020-t60-r00",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r01",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r02"
+          ]
+        },
+        {
+          "backend": "kdlock",
+          "category": "native_rwsem",
+          "function": "up_write",
+          "jit_status": "NO_JIT",
+          "lock_kind": "rwsem",
+          "max_hits_per_completed_op": 0.03578735749185668,
+          "median_hits_per_completed_op": 0.002903920679419525,
+          "min_hits_per_completed_op": 0.0028457296380090496,
+          "repetitions": 3,
+          "sessions": [
+            "rwsem-cacheline-c01-kdlock-w020-t60-r00",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r01",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r02"
+          ]
+        },
+        {
+          "backend": "kdlock",
+          "category": "waitqueue",
+          "function": "wake_up_process",
+          "jit_status": "NO_JIT",
+          "lock_kind": "rwsem",
+          "max_hits_per_completed_op": 0.002155435667752443,
+          "median_hits_per_completed_op": 0.001388831629287599,
+          "min_hits_per_completed_op": 0.001323125404007757,
+          "repetitions": 3,
+          "sessions": [
+            "rwsem-cacheline-c01-kdlock-w020-t60-r00",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r01",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r02"
+          ]
+        },
+        {
+          "backend": "kdlock",
+          "category": "waitqueue",
+          "function": "wake_up_q",
+          "jit_status": "NO_JIT",
+          "lock_kind": "rwsem",
+          "max_hits_per_completed_op": 0.0022545968007915565,
+          "median_hits_per_completed_op": 0.0021656148208469054,
+          "min_hits_per_completed_op": 0.0020907401422107304,
+          "repetitions": 3,
+          "sessions": [
+            "rwsem-cacheline-c01-kdlock-w020-t60-r00",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r01",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r02"
+          ]
+        },
+        {
+          "backend": "native",
+          "category": "waitqueue",
+          "function": "__wake_up",
+          "jit_status": "NATIVE",
+          "lock_kind": "rwsem",
+          "max_hits_per_completed_op": 0.0006308451186131387,
+          "median_hits_per_completed_op": 0.0005848930481283422,
+          "min_hits_per_completed_op": 0.0005813294010889292,
+          "repetitions": 3,
+          "sessions": [
+            "rwsem-cacheline-c01-native-w020-t60-r00",
+            "rwsem-cacheline-c01-native-w020-t60-r01",
+            "rwsem-cacheline-c01-native-w020-t60-r02"
+          ]
+        },
+        {
+          "backend": "native",
+          "category": "waitqueue",
+          "function": "__wake_up_common",
+          "jit_status": "NATIVE",
+          "lock_kind": "rwsem",
+          "max_hits_per_completed_op": 0.0006629219890510948,
+          "median_hits_per_completed_op": 0.000619708110516934,
+          "min_hits_per_completed_op": 0.0006025975499092559,
+          "repetitions": 3,
+          "sessions": [
+            "rwsem-cacheline-c01-native-w020-t60-r00",
+            "rwsem-cacheline-c01-native-w020-t60-r01",
+            "rwsem-cacheline-c01-native-w020-t60-r02"
+          ]
+        },
+        {
+          "backend": "native",
+          "category": "waitqueue",
+          "function": "__wake_up_common_lock",
+          "jit_status": "NATIVE",
+          "lock_kind": "rwsem",
+          "max_hits_per_completed_op": 0.0006415374087591241,
+          "median_hits_per_completed_op": 0.0005953375668449198,
+          "min_hits_per_completed_op": 0.0005848740925589837,
+          "repetitions": 3,
+          "sessions": [
+            "rwsem-cacheline-c01-native-w020-t60-r00",
+            "rwsem-cacheline-c01-native-w020-t60-r01",
+            "rwsem-cacheline-c01-native-w020-t60-r02"
+          ]
+        },
+        {
+          "backend": "native",
+          "category": "raw_spin",
+          "function": "_raw_spin_lock_irq",
+          "jit_status": "NATIVE",
+          "lock_kind": "rwsem",
+          "max_hits_per_completed_op": 0.8925084948752228,
+          "median_hits_per_completed_op": 0.8885043624543796,
+          "min_hits_per_completed_op": 0.8831279775408348,
+          "repetitions": 3,
+          "sessions": [
+            "rwsem-cacheline-c01-native-w020-t60-r00",
+            "rwsem-cacheline-c01-native-w020-t60-r01",
+            "rwsem-cacheline-c01-native-w020-t60-r02"
+          ]
+        },
+        {
+          "backend": "native",
+          "category": "raw_spin",
+          "function": "_raw_spin_lock_irqsave",
+          "jit_status": "NATIVE",
+          "lock_kind": "rwsem",
+          "max_hits_per_completed_op": 2.471966911764706,
+          "median_hits_per_completed_op": 2.444546219206204,
+          "min_hits_per_completed_op": 2.417582378629764,
+          "repetitions": 3,
+          "sessions": [
+            "rwsem-cacheline-c01-native-w020-t60-r00",
+            "rwsem-cacheline-c01-native-w020-t60-r01",
+            "rwsem-cacheline-c01-native-w020-t60-r02"
+          ]
+        },
+        {
+          "backend": "native",
+          "category": "raw_spin",
+          "function": "_raw_spin_unlock",
+          "jit_status": "NATIVE",
+          "lock_kind": "rwsem",
+          "max_hits_per_completed_op": 0.0,
+          "median_hits_per_completed_op": 0.0,
+          "min_hits_per_completed_op": 0.0,
+          "repetitions": 3,
+          "sessions": [
+            "rwsem-cacheline-c01-native-w020-t60-r00",
+            "rwsem-cacheline-c01-native-w020-t60-r01",
+            "rwsem-cacheline-c01-native-w020-t60-r02"
+          ]
+        },
+        {
+          "backend": "native",
+          "category": "raw_spin",
+          "function": "_raw_spin_unlock_irq",
+          "jit_status": "NATIVE",
+          "lock_kind": "rwsem",
+          "max_hits_per_completed_op": 0.8861129679144385,
+          "median_hits_per_completed_op": 0.8815294251824818,
+          "min_hits_per_completed_op": 0.8772331556261344,
+          "repetitions": 3,
+          "sessions": [
+            "rwsem-cacheline-c01-native-w020-t60-r00",
+            "rwsem-cacheline-c01-native-w020-t60-r01",
+            "rwsem-cacheline-c01-native-w020-t60-r02"
+          ]
+        },
+        {
+          "backend": "native",
+          "category": "raw_spin",
+          "function": "_raw_spin_unlock_irqrestore",
+          "jit_status": "NATIVE",
+          "lock_kind": "rwsem",
+          "max_hits_per_completed_op": 2.4796366700089125,
+          "median_hits_per_completed_op": 2.4532568715784673,
+          "min_hits_per_completed_op": 2.424749744782214,
+          "repetitions": 3,
+          "sessions": [
+            "rwsem-cacheline-c01-native-w020-t60-r00",
+            "rwsem-cacheline-c01-native-w020-t60-r01",
+            "rwsem-cacheline-c01-native-w020-t60-r02"
+          ]
+        },
+        {
+          "backend": "native",
+          "category": "waitqueue",
+          "function": "autoremove_wake_function",
+          "jit_status": "NATIVE",
+          "lock_kind": "rwsem",
+          "max_hits_per_completed_op": 0.0,
+          "median_hits_per_completed_op": 0.0,
+          "min_hits_per_completed_op": 0.0,
+          "repetitions": 3,
+          "sessions": [
+            "rwsem-cacheline-c01-native-w020-t60-r00",
+            "rwsem-cacheline-c01-native-w020-t60-r01",
+            "rwsem-cacheline-c01-native-w020-t60-r02"
+          ]
+        },
+        {
+          "backend": "native",
+          "category": "waitqueue",
+          "function": "default_wake_function",
+          "jit_status": "NATIVE",
+          "lock_kind": "rwsem",
+          "max_hits_per_completed_op": 7.128193430656934e-06,
+          "median_hits_per_completed_op": 6.96301247771836e-06,
+          "min_hits_per_completed_op": 0.0,
+          "repetitions": 3,
+          "sessions": [
+            "rwsem-cacheline-c01-native-w020-t60-r00",
+            "rwsem-cacheline-c01-native-w020-t60-r01",
+            "rwsem-cacheline-c01-native-w020-t60-r02"
+          ]
+        },
+        {
+          "backend": "native",
+          "category": "native_rwsem",
+          "function": "down_read",
+          "jit_status": "NATIVE",
+          "lock_kind": "rwsem",
+          "max_hits_per_completed_op": 0.8010258337114338,
+          "median_hits_per_completed_op": 0.8010129162864964,
+          "min_hits_per_completed_op": 0.801004066399287,
+          "repetitions": 3,
+          "sessions": [
+            "rwsem-cacheline-c01-native-w020-t60-r00",
+            "rwsem-cacheline-c01-native-w020-t60-r01",
+            "rwsem-cacheline-c01-native-w020-t60-r02"
+          ]
+        },
+        {
+          "backend": "native",
+          "category": "native_rwsem",
+          "function": "down_write",
+          "jit_status": "NATIVE",
+          "lock_kind": "rwsem",
+          "max_hits_per_completed_op": 0.20274007755474452,
+          "median_hits_per_completed_op": 0.20272444986388385,
+          "min_hits_per_completed_op": 0.2026654411764706,
+          "repetitions": 3,
+          "sessions": [
+            "rwsem-cacheline-c01-native-w020-t60-r00",
+            "rwsem-cacheline-c01-native-w020-t60-r01",
+            "rwsem-cacheline-c01-native-w020-t60-r02"
+          ]
+        },
+        {
+          "backend": "native",
+          "category": "waitqueue",
+          "function": "finish_wait",
+          "jit_status": "NATIVE",
+          "lock_kind": "rwsem",
+          "max_hits_per_completed_op": 6.415374087591241e-05,
+          "median_hits_per_completed_op": 4.177807486631016e-05,
+          "min_hits_per_completed_op": 3.1902223230490015e-05,
+          "repetitions": 3,
+          "sessions": [
+            "rwsem-cacheline-c01-native-w020-t60-r00",
+            "rwsem-cacheline-c01-native-w020-t60-r01",
+            "rwsem-cacheline-c01-native-w020-t60-r02"
+          ]
+        },
+        {
+          "backend": "native",
+          "category": "raw_spin",
+          "function": "native_queued_spin_lock_slowpath",
+          "jit_status": "NATIVE",
+          "lock_kind": "rwsem",
+          "max_hits_per_completed_op": 0.14210464015151514,
+          "median_hits_per_completed_op": 0.13108269056261343,
+          "min_hits_per_completed_op": 0.12994340214416059,
+          "repetitions": 3,
+          "sessions": [
+            "rwsem-cacheline-c01-native-w020-t60-r00",
+            "rwsem-cacheline-c01-native-w020-t60-r01",
+            "rwsem-cacheline-c01-native-w020-t60-r02"
+          ]
+        },
+        {
+          "backend": "native",
+          "category": "waitqueue",
+          "function": "prepare_to_wait_event",
+          "jit_status": "NATIVE",
+          "lock_kind": "rwsem",
+          "max_hits_per_completed_op": 6.380444646098003e-05,
+          "median_hits_per_completed_op": 5.702554744525547e-05,
+          "min_hits_per_completed_op": 5.570409982174688e-05,
+          "repetitions": 3,
+          "sessions": [
+            "rwsem-cacheline-c01-native-w020-t60-r00",
+            "rwsem-cacheline-c01-native-w020-t60-r01",
+            "rwsem-cacheline-c01-native-w020-t60-r02"
+          ]
+        },
+        {
+          "backend": "native",
+          "category": "native_rwsem",
+          "function": "rwsem_down_read_slowpath",
+          "jit_status": "NATIVE",
+          "lock_kind": "rwsem",
+          "max_hits_per_completed_op": 0.7992041276737968,
+          "median_hits_per_completed_op": 0.7988635719147006,
+          "min_hits_per_completed_op": 0.7983220232664233,
+          "repetitions": 3,
+          "sessions": [
+            "rwsem-cacheline-c01-native-w020-t60-r00",
+            "rwsem-cacheline-c01-native-w020-t60-r01",
+            "rwsem-cacheline-c01-native-w020-t60-r02"
+          ]
+        },
+        {
+          "backend": "native",
+          "category": "native_rwsem",
+          "function": "rwsem_down_write_slowpath",
+          "jit_status": "NATIVE",
+          "lock_kind": "rwsem",
+          "max_hits_per_completed_op": 0.19989764371657753,
+          "median_hits_per_completed_op": 0.19983552631578946,
+          "min_hits_per_completed_op": 0.19969990305656934,
+          "repetitions": 3,
+          "sessions": [
+            "rwsem-cacheline-c01-native-w020-t60-r00",
+            "rwsem-cacheline-c01-native-w020-t60-r01",
+            "rwsem-cacheline-c01-native-w020-t60-r02"
+          ]
+        },
+        {
+          "backend": "native",
+          "category": "native_rwsem",
+          "function": "rwsem_mark_wake",
+          "jit_status": "NATIVE",
+          "lock_kind": "rwsem",
+          "max_hits_per_completed_op": 1.7305857248185117,
+          "median_hits_per_completed_op": 1.724794708029197,
+          "min_hits_per_completed_op": 1.7227223986185383,
+          "repetitions": 3,
+          "sessions": [
+            "rwsem-cacheline-c01-native-w020-t60-r00",
+            "rwsem-cacheline-c01-native-w020-t60-r01",
+            "rwsem-cacheline-c01-native-w020-t60-r02"
+          ]
+        },
+        {
+          "backend": "native",
+          "category": "native_rwsem",
+          "function": "rwsem_spin_on_owner",
+          "jit_status": "NATIVE",
+          "lock_kind": "rwsem",
+          "max_hits_per_completed_op": 0.33210436163101603,
+          "median_hits_per_completed_op": 0.31735268262250454,
+          "min_hits_per_completed_op": 0.31635278854927007,
+          "repetitions": 3,
+          "sessions": [
+            "rwsem-cacheline-c01-native-w020-t60-r00",
+            "rwsem-cacheline-c01-native-w020-t60-r01",
+            "rwsem-cacheline-c01-native-w020-t60-r02"
+          ]
+        },
+        {
+          "backend": "native",
+          "category": "native_rwsem",
+          "function": "rwsem_wake.isra.0",
+          "jit_status": "NATIVE",
+          "lock_kind": "rwsem",
+          "max_hits_per_completed_op": 0.9056119555353902,
+          "median_hits_per_completed_op": 0.8992821909215328,
+          "min_hits_per_completed_op": 0.8939254679144385,
+          "repetitions": 3,
+          "sessions": [
+            "rwsem-cacheline-c01-native-w020-t60-r00",
+            "rwsem-cacheline-c01-native-w020-t60-r01",
+            "rwsem-cacheline-c01-native-w020-t60-r02"
+          ]
+        },
+        {
+          "backend": "native",
+          "category": "scheduler",
+          "function": "schedule",
+          "jit_status": "NATIVE",
+          "lock_kind": "rwsem",
+          "max_hits_per_completed_op": 0.14538073752228164,
+          "median_hits_per_completed_op": 0.1371820825729927,
+          "min_hits_per_completed_op": 0.1294450431034483,
+          "repetitions": 3,
+          "sessions": [
+            "rwsem-cacheline-c01-native-w020-t60-r00",
+            "rwsem-cacheline-c01-native-w020-t60-r01",
+            "rwsem-cacheline-c01-native-w020-t60-r02"
+          ]
+        },
+        {
+          "backend": "native",
+          "category": "scheduler",
+          "function": "schedule_timeout",
+          "jit_status": "NATIVE",
+          "lock_kind": "rwsem",
+          "max_hits_per_completed_op": 0.00016751254562043797,
+          "median_hits_per_completed_op": 0.00015596642468239564,
+          "min_hits_per_completed_op": 0.00013229723707664884,
+          "repetitions": 3,
+          "sessions": [
+            "rwsem-cacheline-c01-native-w020-t60-r00",
+            "rwsem-cacheline-c01-native-w020-t60-r01",
+            "rwsem-cacheline-c01-native-w020-t60-r02"
+          ]
+        },
+        {
+          "backend": "native",
+          "category": "scheduler",
+          "function": "try_to_wake_up",
+          "jit_status": "NATIVE",
+          "lock_kind": "rwsem",
+          "max_hits_per_completed_op": 1.008157169117647,
+          "median_hits_per_completed_op": 1.007869215063521,
+          "min_hits_per_completed_op": 1.007042655109489,
+          "repetitions": 3,
+          "sessions": [
+            "rwsem-cacheline-c01-native-w020-t60-r00",
+            "rwsem-cacheline-c01-native-w020-t60-r01",
+            "rwsem-cacheline-c01-native-w020-t60-r02"
+          ]
+        },
+        {
+          "backend": "native",
+          "category": "scheduler",
+          "function": "ttwu_do_activate",
+          "jit_status": "NATIVE",
+          "lock_kind": "rwsem",
+          "max_hits_per_completed_op": 0.14507088346702318,
+          "median_hits_per_completed_op": 0.1369076471259124,
+          "min_hits_per_completed_op": 0.12918273593466426,
+          "repetitions": 3,
+          "sessions": [
+            "rwsem-cacheline-c01-native-w020-t60-r00",
+            "rwsem-cacheline-c01-native-w020-t60-r01",
+            "rwsem-cacheline-c01-native-w020-t60-r02"
+          ]
+        },
+        {
+          "backend": "native",
+          "category": "native_rwsem",
+          "function": "up_read",
+          "jit_status": "NATIVE",
+          "lock_kind": "rwsem",
+          "max_hits_per_completed_op": 0.8112882071167883,
+          "median_hits_per_completed_op": 0.8110005955081669,
+          "min_hits_per_completed_op": 0.8108010249554367,
+          "repetitions": 3,
+          "sessions": [
+            "rwsem-cacheline-c01-native-w020-t60-r00",
+            "rwsem-cacheline-c01-native-w020-t60-r01",
+            "rwsem-cacheline-c01-native-w020-t60-r02"
+          ]
+        },
+        {
+          "backend": "native",
+          "category": "native_rwsem",
+          "function": "up_write",
+          "jit_status": "NATIVE",
+          "lock_kind": "rwsem",
+          "max_hits_per_completed_op": 0.20399820369525548,
+          "median_hits_per_completed_op": 0.20397927064428312,
+          "min_hits_per_completed_op": 0.20389441287878787,
+          "repetitions": 3,
+          "sessions": [
+            "rwsem-cacheline-c01-native-w020-t60-r00",
+            "rwsem-cacheline-c01-native-w020-t60-r01",
+            "rwsem-cacheline-c01-native-w020-t60-r02"
+          ]
+        },
+        {
+          "backend": "native",
+          "category": "waitqueue",
+          "function": "wake_up_process",
+          "jit_status": "NATIVE",
+          "lock_kind": "rwsem",
+          "max_hits_per_completed_op": 0.0021339042649727766,
+          "median_hits_per_completed_op": 0.0019388686131386861,
+          "min_hits_per_completed_op": 0.001799938725490196,
+          "repetitions": 3,
+          "sessions": [
+            "rwsem-cacheline-c01-native-w020-t60-r00",
+            "rwsem-cacheline-c01-native-w020-t60-r01",
+            "rwsem-cacheline-c01-native-w020-t60-r02"
+          ]
+        },
+        {
+          "backend": "native",
+          "category": "waitqueue",
+          "function": "wake_up_q",
+          "jit_status": "NATIVE",
+          "lock_kind": "rwsem",
+          "max_hits_per_completed_op": 1.6377289870689655,
+          "median_hits_per_completed_op": 1.6267107664233578,
+          "min_hits_per_completed_op": 1.616223122771836,
+          "repetitions": 3,
+          "sessions": [
+            "rwsem-cacheline-c01-native-w020-t60-r00",
+            "rwsem-cacheline-c01-native-w020-t60-r01",
+            "rwsem-cacheline-c01-native-w020-t60-r02"
+          ]
+        }
+      ],
+      "result.json": {
+        "commands": [
+          {
+            "argv": [
+              "--lock-kind",
+              "rwsem",
+              "--backends",
+              "native",
+              "kdlock",
+              "--workloads",
+              "cacheline",
+              "--cachelines",
+              "1",
+              "--write-percent",
+              "20",
+              "--threads",
+              "60",
+              "--collector-cpu",
+              "63",
+              "--repeats",
+              "3",
+              "--duration-ms",
+              "2000",
+              "--output",
+              "/mnt/kdlock-builds/rwsem-opt-20261018/baseline-profile/rwsem"
+            ],
+            "diagnostic": true,
+            "returncode": 0,
+            "score_eligible": false,
+            "seconds": 99.99751345597906
+          }
+        ],
+        "completed": true,
+        "diagnostic": true,
+        "guest_idle": true,
+        "score_eligible": false,
+        "tracing_restored": true
+      }
+    },
+    "diagnostic": true,
+    "input_sha256": {
+      "diagnostic.json": "91eb370c74d6981d2182b0876654128e0c080cae2e5a29200039e611a40e06a3",
+      "function-count-summary.json": "f6cb652b51321e3f6c2b92472e8da478f33613a436aeb8d64a4ad4e8cd87494f",
+      "result.json": "bdaabf9281ef38788f689502e89501c714c998d1a0d59b8d3a430a9773129531"
+    },
+    "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/rwsem-optimization-20261018/receipts/profiles/baseline-profile",
+    "score_eligible": false,
+    "status": "AVAILABLE"
+  },
+  "final-profile": {
+    "data": {
+      "diagnostic.json": {
+        "argv": [
+          "/tmp/kd-rwsem-opt-profile.py",
+          "--output",
+          "/mnt/kdlock-builds/rwsem-opt-20261018/final-profile",
+          "--timeout-seconds",
+          "900"
+        ],
+        "diagnostic": true,
+        "kernel_config_sha256": "e1dd628c6f2315c77debd559cf6df1f299814b0b4ba47d5964cfb5bde4dd4ccd",
+        "kernel_release": "6.1.159-kdclobber2",
+        "notes": [
+          "Do not pool with throughput benchmark sessions.",
+          "Function profiling uses return-address instrumentation; absent/notrace symbols are recorded.",
+          "Selected kernel calls include background work. Counts are diagnostic observations, not ownership.",
+          "Prior function-profile rows are preserved, but trace_stat is read-only and its contents cannot be restored."
+        ],
+        "scope": "All CPUs and tasks during RWSession.measure, including client startup and publication/counter reads; excludes preparation, warmup and cleanup",
+        "score_eligible": false,
+        "script_sha256": "8a206c1f0dc1970d5b0f8ca191a38f59540c295947500e8a52f06b4264eacee6",
+        "snapshot_tag": "before-mutex-kdonly-20261017T140354Z",
+        "source_root": "/root/host_fs/kdlock",
+        "tracing_root": "/sys/kernel/tracing"
+      },
+      "function-count-summary.json": [
+        {
+          "backend": "kdlock",
+          "category": "waitqueue",
+          "function": "__wake_up",
+          "jit_status": "PASS",
+          "lock_kind": "rwsem",
+          "max_hits_per_completed_op": 0.0019566935737124584,
+          "median_hits_per_completed_op": 0.0007178575867211666,
+          "min_hits_per_completed_op": 0.00040755383580080753,
+          "repetitions": 3,
+          "sessions": [
+            "rwsem-cacheline-c01-kdlock-w020-t60-r00",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r01",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r02"
+          ]
+        },
+        {
+          "backend": "kdlock",
+          "category": "waitqueue",
+          "function": "__wake_up_common",
+          "jit_status": "PASS",
+          "lock_kind": "rwsem",
+          "max_hits_per_completed_op": 0.0019600391115678884,
+          "median_hits_per_completed_op": 0.0007200152590587716,
+          "min_hits_per_completed_op": 0.0004086053162853297,
+          "repetitions": 3,
+          "sessions": [
+            "rwsem-cacheline-c01-kdlock-w020-t60-r00",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r01",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r02"
+          ]
+        },
+        {
+          "backend": "kdlock",
+          "category": "waitqueue",
+          "function": "__wake_up_common_lock",
+          "jit_status": "PASS",
+          "lock_kind": "rwsem",
+          "max_hits_per_completed_op": 0.001958477860568688,
+          "median_hits_per_completed_op": 0.000718504888422448,
+          "min_hits_per_completed_op": 0.00040776413189771196,
+          "repetitions": 3,
+          "sessions": [
+            "rwsem-cacheline-c01-kdlock-w020-t60-r00",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r01",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r02"
+          ]
+        },
+        {
+          "backend": "kdlock",
+          "category": "raw_spin",
+          "function": "_raw_spin_lock_irq",
+          "jit_status": "PASS",
+          "lock_kind": "rwsem",
+          "max_hits_per_completed_op": 0.007495789083019299,
+          "median_hits_per_completed_op": 0.007237911856495802,
+          "min_hits_per_completed_op": 0.007025782301480484,
+          "repetitions": 3,
+          "sessions": [
+            "rwsem-cacheline-c01-kdlock-w020-t60-r00",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r01",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r02"
+          ]
+        },
+        {
+          "backend": "kdlock",
+          "category": "raw_spin",
+          "function": "_raw_spin_lock_irqsave",
+          "jit_status": "PASS",
+          "lock_kind": "rwsem",
+          "max_hits_per_completed_op": 0.01999181904476419,
+          "median_hits_per_completed_op": 0.014328886226800707,
+          "min_hits_per_completed_op": 0.011733260430686407,
+          "repetitions": 3,
+          "sessions": [
+            "rwsem-cacheline-c01-kdlock-w020-t60-r00",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r01",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r02"
+          ]
+        },
+        {
+          "backend": "kdlock",
+          "category": "raw_spin",
+          "function": "_raw_spin_unlock",
+          "jit_status": "PASS",
+          "lock_kind": "rwsem",
+          "max_hits_per_completed_op": 3.7916095694872674e-05,
+          "median_hits_per_completed_op": 3.193355059655325e-05,
+          "min_hits_per_completed_op": 2.3973755047106326e-05,
+          "repetitions": 3,
+          "sessions": [
+            "rwsem-cacheline-c01-kdlock-w020-t60-r00",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r01",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r02"
+          ]
+        },
+        {
+          "backend": "kdlock",
+          "category": "raw_spin",
+          "function": "_raw_spin_unlock_irq",
+          "jit_status": "PASS",
+          "lock_kind": "rwsem",
+          "max_hits_per_completed_op": 0.0006258386148224278,
+          "median_hits_per_completed_op": 0.0005871026430623067,
+          "min_hits_per_completed_op": 0.0005385683041722745,
+          "repetitions": 3,
+          "sessions": [
+            "rwsem-cacheline-c01-kdlock-w020-t60-r00",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r01",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r02"
+          ]
+        },
+        {
+          "backend": "kdlock",
+          "category": "raw_spin",
+          "function": "_raw_spin_unlock_irqrestore",
+          "jit_status": "PASS",
+          "lock_kind": "rwsem",
+          "max_hits_per_completed_op": 0.027064732142857144,
+          "median_hits_per_completed_op": 0.02107851683329651,
+          "min_hits_per_completed_op": 0.01829155450874832,
+          "repetitions": 3,
+          "sessions": [
+            "rwsem-cacheline-c01-kdlock-w020-t60-r00",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r01",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r02"
+          ]
+        },
+        {
+          "backend": "kdlock",
+          "category": "waitqueue",
+          "function": "autoremove_wake_function",
+          "jit_status": "PASS",
+          "lock_kind": "rwsem",
+          "max_hits_per_completed_op": 0.0022316967854287997,
+          "median_hits_per_completed_op": 0.0008095586610693769,
+          "min_hits_per_completed_op": 0.00045487045760430684,
+          "repetitions": 3,
+          "sessions": [
+            "rwsem-cacheline-c01-kdlock-w020-t60-r00",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r01",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r02"
+          ]
+        },
+        {
+          "backend": "kdlock",
+          "category": "waitqueue",
+          "function": "default_wake_function",
+          "jit_status": "PASS",
+          "lock_kind": "rwsem",
+          "max_hits_per_completed_op": 0.002232811964713943,
+          "median_hits_per_completed_op": 0.0008099901955368979,
+          "min_hits_per_completed_op": 0.00045487045760430684,
+          "repetitions": 3,
+          "sessions": [
+            "rwsem-cacheline-c01-kdlock-w020-t60-r00",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r01",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r02"
+          ]
+        },
+        {
+          "backend": "kdlock",
+          "category": "native_rwsem",
+          "function": "down_read",
+          "jit_status": "PASS",
+          "lock_kind": "rwsem",
+          "max_hits_per_completed_op": 7.360183281945872e-05,
+          "median_hits_per_completed_op": 7.120318714096332e-05,
+          "min_hits_per_completed_op": 6.939771197846569e-05,
+          "repetitions": 3,
+          "sessions": [
+            "rwsem-cacheline-c01-kdlock-w020-t60-r00",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r01",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r02"
+          ]
+        },
+        {
+          "backend": "kdlock",
+          "category": "native_rwsem",
+          "function": "down_write",
+          "jit_status": "PASS",
+          "lock_kind": "rwsem",
+          "max_hits_per_completed_op": 0.00017508314776750028,
+          "median_hits_per_completed_op": 0.00016872997680070703,
+          "min_hits_per_completed_op": 0.00016445154777927322,
+          "repetitions": 3,
+          "sessions": [
+            "rwsem-cacheline-c01-kdlock-w020-t60-r00",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r01",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r02"
+          ]
+        },
+        {
+          "backend": "kdlock",
+          "category": "waitqueue",
+          "function": "finish_wait",
+          "jit_status": "PASS",
+          "lock_kind": "rwsem",
+          "max_hits_per_completed_op": 4.2376812835445926e-05,
+          "median_hits_per_completed_op": 3.128624889527176e-05,
+          "min_hits_per_completed_op": 2.208109017496635e-05,
+          "repetitions": 3,
+          "sessions": [
+            "rwsem-cacheline-c01-kdlock-w020-t60-r00",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r01",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r02"
+          ]
+        },
+        {
+          "backend": "kdlock",
+          "category": "kd_rwsem",
+          "function": "kd_down_read",
+          "jit_status": "PASS",
+          "lock_kind": "rwsem",
+          "max_hits_per_completed_op": 0.8000001784286856,
+          "median_hits_per_completed_op": 0.800000172613787,
+          "min_hits_per_completed_op": 0.8,
+          "repetitions": 3,
+          "sessions": [
+            "rwsem-cacheline-c01-kdlock-w020-t60-r00",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r01",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r02"
+          ]
+        },
+        {
+          "backend": "kdlock",
+          "category": "kd_rwsem",
+          "function": "kd_down_read_trylock",
+          "jit_status": "PASS",
+          "lock_kind": "rwsem",
+          "max_hits_per_completed_op": 0.0,
+          "median_hits_per_completed_op": 0.0,
+          "min_hits_per_completed_op": 0.0,
+          "repetitions": 3,
+          "sessions": [
+            "rwsem-cacheline-c01-kdlock-w020-t60-r00",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r01",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r02"
+          ]
+        },
+        {
+          "backend": "kdlock",
+          "category": "kd_rwsem",
+          "function": "kd_rwsem_delegate_enter",
+          "jit_status": "PASS",
+          "lock_kind": "rwsem",
+          "max_hits_per_completed_op": 0.2,
+          "median_hits_per_completed_op": 0.199999827386213,
+          "min_hits_per_completed_op": 0.19999982157131438,
+          "repetitions": 3,
+          "sessions": [
+            "rwsem-cacheline-c01-kdlock-w020-t60-r00",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r01",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r02"
+          ]
+        },
+        {
+          "backend": "kdlock",
+          "category": "kd_rwsem",
+          "function": "kd_rwsem_delegate_exit",
+          "jit_status": "PASS",
+          "lock_kind": "rwsem",
+          "max_hits_per_completed_op": 0.2,
+          "median_hits_per_completed_op": 0.199999827386213,
+          "min_hits_per_completed_op": 0.19999982157131438,
+          "repetitions": 3,
+          "sessions": [
+            "rwsem-cacheline-c01-kdlock-w020-t60-r00",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r01",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r02"
+          ]
+        },
+        {
+          "backend": "kdlock",
+          "category": "kd_rwsem",
+          "function": "kd_rwsem_reserve_delegate",
+          "jit_status": "PASS",
+          "lock_kind": "rwsem",
+          "max_hits_per_completed_op": 0.2,
+          "median_hits_per_completed_op": 0.199999827386213,
+          "min_hits_per_completed_op": 0.19999982157131438,
+          "repetitions": 3,
+          "sessions": [
+            "rwsem-cacheline-c01-kdlock-w020-t60-r00",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r01",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r02"
+          ]
+        },
+        {
+          "backend": "kdlock",
+          "category": "kd_rwsem",
+          "function": "kd_up_read",
+          "jit_status": "PASS",
+          "lock_kind": "rwsem",
+          "max_hits_per_completed_op": 2.2376015832136544,
+          "median_hits_per_completed_op": 2.2265819041195614,
+          "min_hits_per_completed_op": 2.2027163946837147,
+          "repetitions": 3,
+          "sessions": [
+            "rwsem-cacheline-c01-kdlock-w020-t60-r00",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r01",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r02"
+          ]
+        },
+        {
+          "backend": "kdlock",
+          "category": "raw_spin",
+          "function": "native_queued_spin_lock_slowpath",
+          "jit_status": "PASS",
+          "lock_kind": "rwsem",
+          "max_hits_per_completed_op": 0.000517889260020555,
+          "median_hits_per_completed_op": 0.00022224025077330976,
+          "min_hits_per_completed_op": 0.00019704744279946165,
+          "repetitions": 3,
+          "sessions": [
+            "rwsem-cacheline-c01-kdlock-w020-t60-r00",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r01",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r02"
+          ]
+        },
+        {
+          "backend": "kdlock",
+          "category": "waitqueue",
+          "function": "prepare_to_wait_event",
+          "jit_status": "PASS",
+          "lock_kind": "rwsem",
+          "max_hits_per_completed_op": 0.002227682140002284,
+          "median_hits_per_completed_op": 0.0008194839538223597,
+          "min_hits_per_completed_op": 0.000461599932705249,
+          "repetitions": 3,
+          "sessions": [
+            "rwsem-cacheline-c01-kdlock-w020-t60-r00",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r01",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r02"
+          ]
+        },
+        {
+          "backend": "kdlock",
+          "category": "native_rwsem",
+          "function": "rwsem_down_read_slowpath",
+          "jit_status": "PASS",
+          "lock_kind": "rwsem",
+          "max_hits_per_completed_op": 1.1145693135935396e-05,
+          "median_hits_per_completed_op": 8.630689350419797e-06,
+          "min_hits_per_completed_op": 7.360183281945872e-06,
+          "repetitions": 3,
+          "sessions": [
+            "rwsem-cacheline-c01-kdlock-w020-t60-r00",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r01",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r02"
+          ]
+        },
+        {
+          "backend": "kdlock",
+          "category": "native_rwsem",
+          "function": "rwsem_down_write_slowpath",
+          "jit_status": "PASS",
+          "lock_kind": "rwsem",
+          "max_hits_per_completed_op": 2.230358570286628e-06,
+          "median_hits_per_completed_op": 2.1576723376049493e-06,
+          "min_hits_per_completed_op": 1.4720726783310902e-06,
+          "repetitions": 3,
+          "sessions": [
+            "rwsem-cacheline-c01-kdlock-w020-t60-r00",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r01",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r02"
+          ]
+        },
+        {
+          "backend": "kdlock",
+          "category": "native_rwsem",
+          "function": "rwsem_mark_wake",
+          "jit_status": "PASS",
+          "lock_kind": "rwsem",
+          "max_hits_per_completed_op": 1.2617765814266488e-05,
+          "median_hits_per_completed_op": 1.229873232434821e-05,
+          "min_hits_per_completed_op": 8.02929085303186e-06,
+          "repetitions": 3,
+          "sessions": [
+            "rwsem-cacheline-c01-kdlock-w020-t60-r00",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r01",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r02"
+          ]
+        },
+        {
+          "backend": "kdlock",
+          "category": "native_rwsem",
+          "function": "rwsem_spin_on_owner",
+          "jit_status": "PASS",
+          "lock_kind": "rwsem",
+          "max_hits_per_completed_op": 8.609112627043748e-05,
+          "median_hits_per_completed_op": 7.85086216740893e-05,
+          "min_hits_per_completed_op": 5.320491251682369e-05,
+          "repetitions": 3,
+          "sessions": [
+            "rwsem-cacheline-c01-kdlock-w020-t60-r00",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r01",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r02"
+          ]
+        },
+        {
+          "backend": "kdlock",
+          "category": "native_rwsem",
+          "function": "rwsem_wake.isra.0",
+          "jit_status": "PASS",
+          "lock_kind": "rwsem",
+          "max_hits_per_completed_op": 3.020741272646929e-06,
+          "median_hits_per_completed_op": 1.892664872139973e-06,
+          "min_hits_per_completed_op": 1.115179285143314e-06,
+          "repetitions": 3,
+          "sessions": [
+            "rwsem-cacheline-c01-kdlock-w020-t60-r00",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r01",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r02"
+          ]
+        },
+        {
+          "backend": "kdlock",
+          "category": "scheduler",
+          "function": "schedule",
+          "jit_status": "PASS",
+          "lock_kind": "rwsem",
+          "max_hits_per_completed_op": 0.002559113423546877,
+          "median_hits_per_completed_op": 0.001123068451723376,
+          "min_hits_per_completed_op": 0.0007730484522207268,
+          "repetitions": 3,
+          "sessions": [
+            "rwsem-cacheline-c01-kdlock-w020-t60-r00",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r01",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r02"
+          ]
+        },
+        {
+          "backend": "kdlock",
+          "category": "scheduler",
+          "function": "schedule_timeout",
+          "jit_status": "PASS",
+          "lock_kind": "rwsem",
+          "max_hits_per_completed_op": 1.2266972136576453e-05,
+          "median_hits_per_completed_op": 7.336085947856827e-06,
+          "min_hits_per_completed_op": 6.098586810228802e-06,
+          "repetitions": 3,
+          "sessions": [
+            "rwsem-cacheline-c01-kdlock-w020-t60-r00",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r01",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r02"
+          ]
+        },
+        {
+          "backend": "kdlock",
+          "category": "scheduler",
+          "function": "try_to_wake_up",
+          "jit_status": "PASS",
+          "lock_kind": "rwsem",
+          "max_hits_per_completed_op": 0.002595914339956606,
+          "median_hits_per_completed_op": 0.0011403298304242155,
+          "min_hits_per_completed_op": 0.0007825117765814266,
+          "repetitions": 3,
+          "sessions": [
+            "rwsem-cacheline-c01-kdlock-w020-t60-r00",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r01",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r02"
+          ]
+        },
+        {
+          "backend": "kdlock",
+          "category": "scheduler",
+          "function": "ttwu_do_activate",
+          "jit_status": "PASS",
+          "lock_kind": "rwsem",
+          "max_hits_per_completed_op": 0.0025026853517186253,
+          "median_hits_per_completed_op": 0.0010635166952054794,
+          "min_hits_per_completed_op": 0.0007358260430686406,
+          "repetitions": 3,
+          "sessions": [
+            "rwsem-cacheline-c01-kdlock-w020-t60-r00",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r01",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r02"
+          ]
+        },
+        {
+          "backend": "kdlock",
+          "category": "native_rwsem",
+          "function": "up_read",
+          "jit_status": "PASS",
+          "lock_kind": "rwsem",
+          "max_hits_per_completed_op": 0.0008758618105515587,
+          "median_hits_per_completed_op": 0.0008123636351082634,
+          "min_hits_per_completed_op": 0.0007930265814266487,
+          "repetitions": 3,
+          "sessions": [
+            "rwsem-cacheline-c01-kdlock-w020-t60-r00",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r01",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r02"
+          ]
+        },
+        {
+          "backend": "kdlock",
+          "category": "native_rwsem",
+          "function": "up_write",
+          "jit_status": "PASS",
+          "lock_kind": "rwsem",
+          "max_hits_per_completed_op": 0.00025381480529861826,
+          "median_hits_per_completed_op": 0.0002448958103181617,
+          "min_hits_per_completed_op": 0.00023868606998654106,
+          "repetitions": 3,
+          "sessions": [
+            "rwsem-cacheline-c01-kdlock-w020-t60-r00",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r01",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r02"
+          ]
+        },
+        {
+          "backend": "kdlock",
+          "category": "waitqueue",
+          "function": "wake_up_process",
+          "jit_status": "PASS",
+          "lock_kind": "rwsem",
+          "max_hits_per_completed_op": 0.00013939741064291424,
+          "median_hits_per_completed_op": 0.00011040545087483176,
+          "min_hits_per_completed_op": 0.00010788361688024746,
+          "repetitions": 3,
+          "sessions": [
+            "rwsem-cacheline-c01-kdlock-w020-t60-r00",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r01",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r02"
+          ]
+        },
+        {
+          "backend": "kdlock",
+          "category": "waitqueue",
+          "function": "wake_up_q",
+          "jit_status": "PASS",
+          "lock_kind": "rwsem",
+          "max_hits_per_completed_op": 0.00022375062140963324,
+          "median_hits_per_completed_op": 0.00022370496459974876,
+          "min_hits_per_completed_op": 0.00021492261103633916,
+          "repetitions": 3,
+          "sessions": [
+            "rwsem-cacheline-c01-kdlock-w020-t60-r00",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r01",
+            "rwsem-cacheline-c01-kdlock-w020-t60-r02"
+          ]
+        },
+        {
+          "backend": "native",
+          "category": "waitqueue",
+          "function": "__wake_up",
+          "jit_status": "NATIVE",
+          "lock_kind": "rwsem",
+          "max_hits_per_completed_op": 0.0006026170798898072,
+          "median_hits_per_completed_op": 0.0005904377880184331,
+          "min_hits_per_completed_op": 0.0005766201620162016,
+          "repetitions": 3,
+          "sessions": [
+            "rwsem-cacheline-c01-native-w020-t60-r00",
+            "rwsem-cacheline-c01-native-w020-t60-r01",
+            "rwsem-cacheline-c01-native-w020-t60-r02"
+          ]
+        },
+        {
+          "backend": "native",
+          "category": "waitqueue",
+          "function": "__wake_up_common",
+          "jit_status": "NATIVE",
+          "lock_kind": "rwsem",
+          "max_hits_per_completed_op": 0.0006384871441689623,
+          "median_hits_per_completed_op": 0.0006084389400921659,
+          "min_hits_per_completed_op": 0.0005977160216021603,
+          "repetitions": 3,
+          "sessions": [
+            "rwsem-cacheline-c01-native-w020-t60-r00",
+            "rwsem-cacheline-c01-native-w020-t60-r01",
+            "rwsem-cacheline-c01-native-w020-t60-r02"
+          ]
+        },
+        {
+          "backend": "native",
+          "category": "waitqueue",
+          "function": "__wake_up_common_lock",
+          "jit_status": "NATIVE",
+          "lock_kind": "rwsem",
+          "max_hits_per_completed_op": 0.0006205521120293848,
+          "median_hits_per_completed_op": 0.0005940380184331798,
+          "min_hits_per_completed_op": 0.0005801361386138614,
+          "repetitions": 3,
+          "sessions": [
+            "rwsem-cacheline-c01-native-w020-t60-r00",
+            "rwsem-cacheline-c01-native-w020-t60-r01",
+            "rwsem-cacheline-c01-native-w020-t60-r02"
+          ]
+        },
+        {
+          "backend": "native",
+          "category": "raw_spin",
+          "function": "_raw_spin_lock_irq",
+          "jit_status": "NATIVE",
+          "lock_kind": "rwsem",
+          "max_hits_per_completed_op": 0.8913914828982898,
+          "median_hits_per_completed_op": 0.8849108987603306,
+          "min_hits_per_completed_op": 0.883820564516129,
+          "repetitions": 3,
+          "sessions": [
+            "rwsem-cacheline-c01-native-w020-t60-r00",
+            "rwsem-cacheline-c01-native-w020-t60-r01",
+            "rwsem-cacheline-c01-native-w020-t60-r02"
+          ]
+        },
+        {
+          "backend": "native",
+          "category": "raw_spin",
+          "function": "_raw_spin_lock_irqsave",
+          "jit_status": "NATIVE",
+          "lock_kind": "rwsem",
+          "max_hits_per_completed_op": 2.4676494993249323,
+          "median_hits_per_completed_op": 2.4206159607438016,
+          "min_hits_per_completed_op": 2.41938724078341,
+          "repetitions": 3,
+          "sessions": [
+            "rwsem-cacheline-c01-native-w020-t60-r00",
+            "rwsem-cacheline-c01-native-w020-t60-r01",
+            "rwsem-cacheline-c01-native-w020-t60-r02"
+          ]
+        },
+        {
+          "backend": "native",
+          "category": "raw_spin",
+          "function": "_raw_spin_unlock",
+          "jit_status": "NATIVE",
+          "lock_kind": "rwsem",
+          "max_hits_per_completed_op": 0.0,
+          "median_hits_per_completed_op": 0.0,
+          "min_hits_per_completed_op": 0.0,
+          "repetitions": 3,
+          "sessions": [
+            "rwsem-cacheline-c01-native-w020-t60-r00",
+            "rwsem-cacheline-c01-native-w020-t60-r01",
+            "rwsem-cacheline-c01-native-w020-t60-r02"
+          ]
+        },
+        {
+          "backend": "native",
+          "category": "raw_spin",
+          "function": "_raw_spin_unlock_irq",
+          "jit_status": "NATIVE",
+          "lock_kind": "rwsem",
+          "max_hits_per_completed_op": 0.885344003150315,
+          "median_hits_per_completed_op": 0.8777332988980716,
+          "min_hits_per_completed_op": 0.8768145161290323,
+          "repetitions": 3,
+          "sessions": [
+            "rwsem-cacheline-c01-native-w020-t60-r00",
+            "rwsem-cacheline-c01-native-w020-t60-r01",
+            "rwsem-cacheline-c01-native-w020-t60-r02"
+          ]
+        },
+        {
+          "backend": "native",
+          "category": "raw_spin",
+          "function": "_raw_spin_unlock_irqrestore",
+          "jit_status": "NATIVE",
+          "lock_kind": "rwsem",
+          "max_hits_per_completed_op": 2.4749767945544554,
+          "median_hits_per_completed_op": 2.429350321395776,
+          "min_hits_per_completed_op": 2.4277397753456222,
+          "repetitions": 3,
+          "sessions": [
+            "rwsem-cacheline-c01-native-w020-t60-r00",
+            "rwsem-cacheline-c01-native-w020-t60-r01",
+            "rwsem-cacheline-c01-native-w020-t60-r02"
+          ]
+        },
+        {
+          "backend": "native",
+          "category": "waitqueue",
+          "function": "autoremove_wake_function",
+          "jit_status": "NATIVE",
+          "lock_kind": "rwsem",
+          "max_hits_per_completed_op": 0.0,
+          "median_hits_per_completed_op": 0.0,
+          "min_hits_per_completed_op": 0.0,
+          "repetitions": 3,
+          "sessions": [
+            "rwsem-cacheline-c01-native-w020-t60-r00",
+            "rwsem-cacheline-c01-native-w020-t60-r01",
+            "rwsem-cacheline-c01-native-w020-t60-r02"
+          ]
+        },
+        {
+          "backend": "native",
+          "category": "waitqueue",
+          "function": "default_wake_function",
+          "jit_status": "NATIVE",
+          "lock_kind": "rwsem",
+          "max_hits_per_completed_op": 7.1740128558310376e-06,
+          "median_hits_per_completed_op": 0.0,
+          "min_hits_per_completed_op": 0.0,
+          "repetitions": 3,
+          "sessions": [
+            "rwsem-cacheline-c01-native-w020-t60-r00",
+            "rwsem-cacheline-c01-native-w020-t60-r01",
+            "rwsem-cacheline-c01-native-w020-t60-r02"
+          ]
+        },
+        {
+          "backend": "native",
+          "category": "native_rwsem",
+          "function": "down_read",
+          "jit_status": "NATIVE",
+          "lock_kind": "rwsem",
+          "max_hits_per_completed_op": 0.8010404665898617,
+          "median_hits_per_completed_op": 0.80103951446281,
+          "min_hits_per_completed_op": 0.8010097884788479,
+          "repetitions": 3,
+          "sessions": [
+            "rwsem-cacheline-c01-native-w020-t60-r00",
+            "rwsem-cacheline-c01-native-w020-t60-r01",
+            "rwsem-cacheline-c01-native-w020-t60-r02"
+          ]
+        },
+        {
+          "backend": "native",
+          "category": "native_rwsem",
+          "function": "down_write",
+          "jit_status": "NATIVE",
+          "lock_kind": "rwsem",
+          "max_hits_per_completed_op": 0.2027541762672811,
+          "median_hits_per_completed_op": 0.20274836432506887,
+          "min_hits_per_completed_op": 0.20269956683168316,
+          "repetitions": 3,
+          "sessions": [
+            "rwsem-cacheline-c01-native-w020-t60-r00",
+            "rwsem-cacheline-c01-native-w020-t60-r01",
+            "rwsem-cacheline-c01-native-w020-t60-r02"
+          ]
+        },
+        {
+          "backend": "native",
+          "category": "waitqueue",
+          "function": "finish_wait",
+          "jit_status": "NATIVE",
+          "lock_kind": "rwsem",
+          "max_hits_per_completed_op": 1.4400921658986175e-05,
+          "median_hits_per_completed_op": 1.4348025711662075e-05,
+          "min_hits_per_completed_op": 1.4063906390639063e-05,
+          "repetitions": 3,
+          "sessions": [
+            "rwsem-cacheline-c01-native-w020-t60-r00",
+            "rwsem-cacheline-c01-native-w020-t60-r01",
+            "rwsem-cacheline-c01-native-w020-t60-r02"
+          ]
+        },
+        {
+          "backend": "native",
+          "category": "raw_spin",
+          "function": "native_queued_spin_lock_slowpath",
+          "jit_status": "NATIVE",
+          "lock_kind": "rwsem",
+          "max_hits_per_completed_op": 0.14136335508550854,
+          "median_hits_per_completed_op": 0.12944430096418733,
+          "min_hits_per_completed_op": 0.12849222350230416,
+          "repetitions": 3,
+          "sessions": [
+            "rwsem-cacheline-c01-native-w020-t60-r00",
+            "rwsem-cacheline-c01-native-w020-t60-r01",
+            "rwsem-cacheline-c01-native-w020-t60-r02"
+          ]
+        },
+        {
+          "backend": "native",
+          "category": "waitqueue",
+          "function": "prepare_to_wait_event",
+          "jit_status": "NATIVE",
+          "lock_kind": "rwsem",
+          "max_hits_per_completed_op": 2.880184331797235e-05,
+          "median_hits_per_completed_op": 2.869605142332415e-05,
+          "min_hits_per_completed_op": 2.8127812781278127e-05,
+          "repetitions": 3,
+          "sessions": [
+            "rwsem-cacheline-c01-native-w020-t60-r00",
+            "rwsem-cacheline-c01-native-w020-t60-r01",
+            "rwsem-cacheline-c01-native-w020-t60-r02"
+          ]
+        },
+        {
+          "backend": "native",
+          "category": "native_rwsem",
+          "function": "rwsem_down_read_slowpath",
+          "jit_status": "NATIVE",
+          "lock_kind": "rwsem",
+          "max_hits_per_completed_op": 0.7990666609274564,
+          "median_hits_per_completed_op": 0.7988443260368664,
+          "min_hits_per_completed_op": 0.7987208877137714,
+          "repetitions": 3,
+          "sessions": [
+            "rwsem-cacheline-c01-native-w020-t60-r00",
+            "rwsem-cacheline-c01-native-w020-t60-r01",
+            "rwsem-cacheline-c01-native-w020-t60-r02"
+          ]
+        },
+        {
+          "backend": "native",
+          "category": "native_rwsem",
+          "function": "rwsem_down_write_slowpath",
+          "jit_status": "NATIVE",
+          "lock_kind": "rwsem",
+          "max_hits_per_completed_op": 0.19985865774077408,
+          "median_hits_per_completed_op": 0.19983930211202938,
+          "min_hits_per_completed_op": 0.1998055875576037,
+          "repetitions": 3,
+          "sessions": [
+            "rwsem-cacheline-c01-native-w020-t60-r00",
+            "rwsem-cacheline-c01-native-w020-t60-r01",
+            "rwsem-cacheline-c01-native-w020-t60-r02"
+          ]
+        },
+        {
+          "backend": "native",
+          "category": "native_rwsem",
+          "function": "rwsem_mark_wake",
+          "jit_status": "NATIVE",
+          "lock_kind": "rwsem",
+          "max_hits_per_completed_op": 1.7311108241505968,
+          "median_hits_per_completed_op": 1.7302671370967742,
+          "min_hits_per_completed_op": 1.7209299054905491,
+          "repetitions": 3,
+          "sessions": [
+            "rwsem-cacheline-c01-native-w020-t60-r00",
+            "rwsem-cacheline-c01-native-w020-t60-r01",
+            "rwsem-cacheline-c01-native-w020-t60-r02"
+          ]
+        },
+        {
+          "backend": "native",
+          "category": "native_rwsem",
+          "function": "rwsem_spin_on_owner",
+          "jit_status": "NATIVE",
+          "lock_kind": "rwsem",
+          "max_hits_per_completed_op": 0.3298724403690369,
+          "median_hits_per_completed_op": 0.31845443067033974,
+          "min_hits_per_completed_op": 0.3140084965437788,
+          "repetitions": 3,
+          "sessions": [
+            "rwsem-cacheline-c01-native-w020-t60-r00",
+            "rwsem-cacheline-c01-native-w020-t60-r01",
+            "rwsem-cacheline-c01-native-w020-t60-r02"
+          ]
+        },
+        {
+          "backend": "native",
+          "category": "native_rwsem",
+          "function": "rwsem_wake.isra.0",
+          "jit_status": "NATIVE",
+          "lock_kind": "rwsem",
+          "max_hits_per_completed_op": 0.9057693411386594,
+          "median_hits_per_completed_op": 0.9053499423963134,
+          "min_hits_per_completed_op": 0.8929279646714672,
+          "repetitions": 3,
+          "sessions": [
+            "rwsem-cacheline-c01-native-w020-t60-r00",
+            "rwsem-cacheline-c01-native-w020-t60-r01",
+            "rwsem-cacheline-c01-native-w020-t60-r02"
+          ]
+        },
+        {
+          "backend": "native",
+          "category": "scheduler",
+          "function": "schedule",
+          "jit_status": "NATIVE",
+          "lock_kind": "rwsem",
+          "max_hits_per_completed_op": 0.1450551305130513,
+          "median_hits_per_completed_op": 0.12896364210284664,
+          "min_hits_per_completed_op": 0.12844542050691243,
+          "repetitions": 3,
+          "sessions": [
+            "rwsem-cacheline-c01-native-w020-t60-r00",
+            "rwsem-cacheline-c01-native-w020-t60-r01",
+            "rwsem-cacheline-c01-native-w020-t60-r02"
+          ]
+        },
+        {
+          "backend": "native",
+          "category": "scheduler",
+          "function": "schedule_timeout",
+          "jit_status": "NATIVE",
+          "lock_kind": "rwsem",
+          "max_hits_per_completed_op": 0.0001506542699724518,
+          "median_hits_per_completed_op": 0.00014760944700460828,
+          "min_hits_per_completed_op": 0.00011954320432043204,
+          "repetitions": 3,
+          "sessions": [
+            "rwsem-cacheline-c01-native-w020-t60-r00",
+            "rwsem-cacheline-c01-native-w020-t60-r01",
+            "rwsem-cacheline-c01-native-w020-t60-r02"
+          ]
+        },
+        {
+          "backend": "native",
+          "category": "scheduler",
+          "function": "try_to_wake_up",
+          "jit_status": "NATIVE",
+          "lock_kind": "rwsem",
+          "max_hits_per_completed_op": 1.008278810835629,
+          "median_hits_per_completed_op": 1.0082157258064517,
+          "min_hits_per_completed_op": 1.0074222265976598,
+          "repetitions": 3,
+          "sessions": [
+            "rwsem-cacheline-c01-native-w020-t60-r00",
+            "rwsem-cacheline-c01-native-w020-t60-r01",
+            "rwsem-cacheline-c01-native-w020-t60-r02"
+          ]
+        },
+        {
+          "backend": "native",
+          "category": "scheduler",
+          "function": "ttwu_do_activate",
+          "jit_status": "NATIVE",
+          "lock_kind": "rwsem",
+          "max_hits_per_completed_op": 0.14478791629162915,
+          "median_hits_per_completed_op": 0.12870179063360881,
+          "min_hits_per_completed_op": 0.12820060483870968,
+          "repetitions": 3,
+          "sessions": [
+            "rwsem-cacheline-c01-native-w020-t60-r00",
+            "rwsem-cacheline-c01-native-w020-t60-r01",
+            "rwsem-cacheline-c01-native-w020-t60-r02"
+          ]
+        },
+        {
+          "backend": "native",
+          "category": "native_rwsem",
+          "function": "up_read",
+          "jit_status": "NATIVE",
+          "lock_kind": "rwsem",
+          "max_hits_per_completed_op": 0.8111679147465438,
+          "median_hits_per_completed_op": 0.8111512855831038,
+          "min_hits_per_completed_op": 0.8108861667416741,
+          "repetitions": 3,
+          "sessions": [
+            "rwsem-cacheline-c01-native-w020-t60-r00",
+            "rwsem-cacheline-c01-native-w020-t60-r01",
+            "rwsem-cacheline-c01-native-w020-t60-r02"
+          ]
+        },
+        {
+          "backend": "native",
+          "category": "native_rwsem",
+          "function": "up_write",
+          "jit_status": "NATIVE",
+          "lock_kind": "rwsem",
+          "max_hits_per_completed_op": 0.20402505760368664,
+          "median_hits_per_completed_op": 0.20401457759412306,
+          "min_hits_per_completed_op": 0.20394070657065708,
+          "repetitions": 3,
+          "sessions": [
+            "rwsem-cacheline-c01-native-w020-t60-r00",
+            "rwsem-cacheline-c01-native-w020-t60-r01",
+            "rwsem-cacheline-c01-native-w020-t60-r02"
+          ]
+        },
+        {
+          "backend": "native",
+          "category": "waitqueue",
+          "function": "wake_up_process",
+          "jit_status": "NATIVE",
+          "lock_kind": "rwsem",
+          "max_hits_per_completed_op": 0.002198834940312213,
+          "median_hits_per_completed_op": 0.0020557315668202764,
+          "min_hits_per_completed_op": 0.001757988298829883,
+          "repetitions": 3,
+          "sessions": [
+            "rwsem-cacheline-c01-native-w020-t60-r00",
+            "rwsem-cacheline-c01-native-w020-t60-r01",
+            "rwsem-cacheline-c01-native-w020-t60-r02"
+          ]
+        },
+        {
+          "backend": "native",
+          "category": "waitqueue",
+          "function": "wake_up_q",
+          "jit_status": "NATIVE",
+          "lock_kind": "rwsem",
+          "max_hits_per_completed_op": 1.6388350837924701,
+          "median_hits_per_completed_op": 1.638738479262673,
+          "min_hits_per_completed_op": 1.6154646714671468,
+          "repetitions": 3,
+          "sessions": [
+            "rwsem-cacheline-c01-native-w020-t60-r00",
+            "rwsem-cacheline-c01-native-w020-t60-r01",
+            "rwsem-cacheline-c01-native-w020-t60-r02"
+          ]
+        }
+      ],
+      "result.json": {
+        "commands": [
+          {
+            "argv": [
+              "--lock-kind",
+              "rwsem",
+              "--backends",
+              "native",
+              "kdlock",
+              "--workloads",
+              "cacheline",
+              "--cachelines",
+              "1",
+              "--write-percent",
+              "20",
+              "--threads",
+              "60",
+              "--collector-cpu",
+              "63",
+              "--repeats",
+              "3",
+              "--duration-ms",
+              "2000",
+              "--output",
+              "/mnt/kdlock-builds/rwsem-opt-20261018/final-profile/rwsem"
+            ],
+            "diagnostic": true,
+            "returncode": 0,
+            "score_eligible": false,
+            "seconds": 80.07757773203775
+          }
+        ],
+        "completed": true,
+        "diagnostic": true,
+        "guest_idle": true,
+        "score_eligible": false,
+        "tracing_restored": true
+      }
+    },
+    "diagnostic": true,
+    "input_sha256": {
+      "diagnostic.json": "b154aa37df5f072742d30f2bc4ad537964a3a6899d1784d0a881a18746d8ce3e",
+      "function-count-summary.json": "33f92fcf4f6fe583eac432d0bcf4d23ffd30f53af82ab493d8db3bc24dcc2c53",
+      "result.json": "1939454db4821bc78fd7757cedb261c32c4269e394cfe2588e7a84e0d072c690"
+    },
+    "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/rwsem-optimization-20261018/receipts/profiles/final-profile",
+    "score_eligible": false,
+    "status": "AVAILABLE"
+  }
+}

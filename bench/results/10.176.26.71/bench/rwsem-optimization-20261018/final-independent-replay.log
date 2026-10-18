@@ -1,0 +1,150 @@
+{
+  "passed": true,
+  "failure_count": 0,
+  "runs": {
+    "baseline-grid": {
+      "valid_sessions": 756,
+      "totals": {
+        "completed": 10470346496,
+        "reads": 9630044642,
+        "writes": 840301854,
+        "jit_entries": 1752,
+        "jit_completions": 1752
+      },
+      "point_status_counts": {
+        "PASS": 26,
+        "FAIL": 99,
+        "INCOMPLETE": 1
+      }
+    },
+    "baseline-screen": {
+      "valid_sessions": 48,
+      "totals": {
+        "completed": 1580388352,
+        "reads": 1419428534,
+        "writes": 160959818,
+        "jit_entries": 0,
+        "jit_completions": 0
+      },
+      "point_status_counts": {
+        "PASS": 1,
+        "FAIL": 7
+      }
+    },
+    "poll-screen": {
+      "valid_sessions": 48,
+      "totals": {
+        "completed": 1692013568,
+        "reads": 1525164081,
+        "writes": 166849487,
+        "jit_entries": 2577,
+        "jit_completions": 2577
+      },
+      "point_status_counts": {
+        "PASS": 4,
+        "FAIL": 4
+      }
+    },
+    "split-screen": {
+      "valid_sessions": 48,
+      "totals": {
+        "completed": 1550014976,
+        "reads": 1413080353,
+        "writes": 136934623,
+        "jit_entries": 443,
+        "jit_completions": 443
+      },
+      "point_status_counts": {
+        "PASS": 5,
+        "FAIL": 3
+      }
+    },
+    "long-screen": {
+      "valid_sessions": 48,
+      "totals": {
+        "completed": 1576280576,
+        "reads": 1436358868,
+        "writes": 139921708,
+        "jit_entries": 19863,
+        "jit_completions": 19863
+      },
+      "point_status_counts": {
+        "PASS": 5,
+        "FAIL": 1,
+        "INCOMPLETE": 2
+      }
+    },
+    "grant-screen": {
+      "valid_sessions": 48,
+      "totals": {
+        "completed": 1598174464,
+        "reads": 1457901169,
+        "writes": 140273295,
+        "jit_entries": 5767,
+        "jit_completions": 5767
+      },
+      "point_status_counts": {
+        "PASS": 4,
+        "FAIL": 3,
+        "INCOMPLETE": 1
+      }
+    },
+    "xlong-screen": {
+      "valid_sessions": 48,
+      "totals": {
+        "completed": 1790765312,
+        "reads": 1618799799,
+        "writes": 171965513,
+        "jit_entries": 351167,
+        "jit_completions": 351167
+      },
+      "point_status_counts": {
+        "PASS": 7,
+        "FAIL": 1
+      }
+    },
+    "baseline-repeat-screen": {
+      "valid_sessions": 48,
+      "totals": {
+        "completed": 1580246016,
+        "reads": 1419616186,
+        "writes": 160629830,
+        "jit_entries": 0,
+        "jit_completions": 0
+      },
+      "point_status_counts": {
+        "PASS": 1,
+        "FAIL": 7
+      }
+    },
+    "final-grid": {
+      "valid_sessions": 756,
+      "totals": {
+        "completed": 13813605632,
+        "reads": 12890364065,
+        "writes": 923241567,
+        "jit_entries": 7275620,
+        "jit_completions": 7275620
+      },
+      "point_status_counts": {
+        "PASS": 117,
+        "FAIL": 6,
+        "INCOMPLETE": 3
+      }
+    },
+    "final-reference": {
+      "valid_sessions": 270,
+      "totals": {
+        "completed": 11700758272,
+        "reads": 10618437990,
+        "writes": 1082320282,
+        "jit_entries": 3037542,
+        "jit_completions": 3037542
+      },
+      "point_status_counts": {
+        "PASS": 29,
+        "FAIL": 1
+      }
+    }
+  }
+}

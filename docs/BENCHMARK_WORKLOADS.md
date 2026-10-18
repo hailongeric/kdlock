@@ -435,7 +435,9 @@ mutex ABI2. Each reservation closes reader admission and drains existing readers
 while schedulable, before any pinned queue publication. Ordinary writers hold an
 exclusive phase, so their downgrade cannot create a reader after another writer
 has passed drain. Outer reservations remain live until origin unlock/ACK returns;
-that pair cannot downgrade or cancel after publication. The
+that pair cannot downgrade or cancel after publication. Separate admission/drain
+waitqueues and bounded polling before publication are described in the design;
+they preserve the selected KD mutex protocol. The
 [scheduler probe](../tests/kernel/rwsem/README.md) exercises sleeping holders and
 contenders sharing one CPU and checks pre-publication ordering across downgrade.
 This object is not a replacement for the real `mmap_lock`. The
@@ -450,14 +452,21 @@ and retain complete-body counts, NO_JIT controls, correctness, worker progress
 and final drain. Admission and Linux rwsem fairness policies differ; the design
 does not imply a throughput advantage.
 
-The [2026-10-18 writer-delegation comparison](../bench/results/10.176.26.71/bench/rwsem/20261018/README.md)
-completed all 756 sessions with correct results and full drain. Seven KD timed
-sessions returned delegated bodies; 371 used local fallback. The report keeps
-their execution groups separate and records the substantial high-count Native
-advantage. The [focused validation](../bench/results/10.176.26.71/tests/rwsem-delegation-20261018/README.md)
-also includes writer-heavy strict JIT checks, cancellation/downgrade ordering,
-ordinary local controls and read-only cases. Neither report validates real MM
-or task-structure integration.
+The [rwsem optimization report](../bench/results/10.176.26.71/bench/rwsem-optimization-20261018/README.md)
+records the current comparison, candidate screens, separate baseline controls,
+diagnostic profiles and actual execution groups. Its separate spinning-rwlock
+reference selects Native/TCLock/KD on c01, c08 and RCUHT at 1%/20% writes and
+1/8/32/36/60 workers, with three repetitions: 270 completed sessions. This reference
+uses non-sleeping bodies and is not a TCLock rwsem implementation or a rwsem
+parity result. The [focused validation](../bench/results/10.176.26.71/tests/rwsem-optimization-20261018/README.md)
+records strict JIT checks, cancellation/downgrade ordering, ordinary local
+controls and read-only cases. Neither report validates real MM or task-structure
+integration.
+
+The [initial writer-delegation comparison](../bench/results/10.176.26.71/bench/rwsem/20261018/README.md)
+and its [validation receipt](../bench/results/10.176.26.71/tests/rwsem-delegation-20261018/README.md)
+remain historical evidence for the shared-queue baseline, including its
+high-count regressions, local fallback results and returned-body counts.
 
 The [earlier 2026-10-18 validation](../bench/results/10.176.26.71/tests/feature-reintegration-20261018/README.md)
 passed the prior ordinary-only rwsem scheduling and workload checks. Three default-policy timed

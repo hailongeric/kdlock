@@ -1,0 +1,267 @@
+{
+  "archive_prefix": "rwsem-opt-20261018",
+  "binary_file_instances_verified": 28,
+  "bytes": 32256068,
+  "capture_receipt_sha256": "48d9c45dca64ad4976e8deb241fe2819117a4f9237c4305932e8a029e81cdbe7",
+  "export_directory": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/rwsem-optimization-20261018/receipts/tests",
+  "exported_receipts": [
+    {
+      "bytes": 16907,
+      "path": "final-basic/source-sha256.json",
+      "sha256": "16b4a0726e0ef67b141c50bedf32dbce5fcd8f7d2fdfa39b94743c7cb12fe772"
+    },
+    {
+      "bytes": 1538,
+      "path": "final-functional/binary-sha256.json",
+      "sha256": "7517b1c98691222a1e73c92e9175eb11f59ce63e0be84283fa717b538f1ab1ce"
+    },
+    {
+      "bytes": 3308,
+      "path": "final-functional/environment.json",
+      "sha256": "756093fbcd1c3aa02e94967fd34a36cc64e6b84279075e955249b97adc77d611"
+    },
+    {
+      "bytes": 144,
+      "path": "final-functional/parity.json",
+      "sha256": "f32d8b4eb7ca2f88ac551d54b9733aa7705255d9b8e1883a1a2772c35f2251b7"
+    },
+    {
+      "bytes": 35097,
+      "path": "final-functional/plan.json",
+      "sha256": "3e3c2d59d5be205639674f852ba529d7145fce0bb9fceffe86fa54d1fe9bec22"
+    },
+    {
+      "bytes": 252879,
+      "path": "final-functional/records.json",
+      "sha256": "f8a900a5ebaae2f79d79fcf158c2c05fd8911819ef46d824061f3fea4a4c7b54"
+    },
+    {
+      "bytes": 24581,
+      "path": "final-functional/source-sha256.json",
+      "sha256": "e0450cc9d2cee54337851b1fd8f7b3ede99d42d8665aa992ea73c3983b446734"
+    },
+    {
+      "bytes": 3,
+      "path": "final-functional/summary.json",
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+    },
+    {
+      "bytes": 799,
+      "path": "final-jit/binary-sha256.json",
+      "sha256": "47b66c016d51a894badecf40a68626f32f7c98f956e6ca6d4524373933b09b90"
+    },
+    {
+      "bytes": 3434,
+      "path": "final-jit/environment.json",
+      "sha256": "e751bf1506533f14ec75c443b68b96526ce2047ec8bc052f9c80a0a2533c5f1b"
+    },
+    {
+      "bytes": 144,
+      "path": "final-jit/parity.json",
+      "sha256": "f32d8b4eb7ca2f88ac551d54b9733aa7705255d9b8e1883a1a2772c35f2251b7"
+    },
+    {
+      "bytes": 4737,
+      "path": "final-jit/plan.json",
+      "sha256": "d472f2700d5b2b91afa6a464506499bc47fec1e66b02b3f642ce8a34a049c55f"
+    },
+    {
+      "bytes": 60246,
+      "path": "final-jit/records.json",
+      "sha256": "fae792d30649918b2277862cb0d79c65063e6173b76b3f6d7cd078366950555d"
+    },
+    {
+      "bytes": 24581,
+      "path": "final-jit/source-sha256.json",
+      "sha256": "e0450cc9d2cee54337851b1fd8f7b3ede99d42d8665aa992ea73c3983b446734"
+    },
+    {
+      "bytes": 3,
+      "path": "final-jit/summary.json",
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+    },
+    {
+      "bytes": 647,
+      "path": "final-local/binary-sha256.json",
+      "sha256": "a232960141f86481030e3bc5079475f25a7e9d1f77b385b6593ec1e5572f8d52"
+    },
+    {
+      "bytes": 3287,
+      "path": "final-local/environment.json",
+      "sha256": "b4136e804437f47e2063a705579f11412473a0d83a280b7dee2554ff9f6bf694"
+    },
+    {
+      "bytes": 144,
+      "path": "final-local/parity.json",
+      "sha256": "f32d8b4eb7ca2f88ac551d54b9733aa7705255d9b8e1883a1a2772c35f2251b7"
+    },
+    {
+      "bytes": 3969,
+      "path": "final-local/plan.json",
+      "sha256": "1ce3783d6763b5779a31923afbb9c0e329e1466b45457f74f39e8dba8f0eb3ea"
+    },
+    {
+      "bytes": 25189,
+      "path": "final-local/records.json",
+      "sha256": "02374b65b4c687da583efc6c000782cf9b8eae4f36e6f42c13ce7c6451e4bd0a"
+    },
+    {
+      "bytes": 24581,
+      "path": "final-local/source-sha256.json",
+      "sha256": "e0450cc9d2cee54337851b1fd8f7b3ede99d42d8665aa992ea73c3983b446734"
+    },
+    {
+      "bytes": 3,
+      "path": "final-local/summary.json",
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+    },
+    {
+      "bytes": 324,
+      "path": "grant-probe/binary-sha256.json",
+      "sha256": "5cfe98b14f2ea9fe55722bb5ba70d7b13064528db61853e6da9ec501014ab18b"
+    },
+    {
+      "bytes": 16014,
+      "path": "grant-probe/source-sha256.json",
+      "sha256": "78a70b37e3c23360b6b53d474a041ded296d9d9c764172f142f8963a0acd572d"
+    },
+    {
+      "bytes": 322,
+      "path": "long-probe/binary-sha256.json",
+      "sha256": "fa9c45be6d38c251350b7c61a80fc1b22b910eaadc119bacf87709ce6d507ed8"
+    },
+    {
+      "bytes": 16014,
+      "path": "long-probe/source-sha256.json",
+      "sha256": "be055563fde0a22a150bb1bdfeb8fd045fc6d253c96a61fb0bdf1c7b224119b2"
+    },
+    {
+      "bytes": 322,
+      "path": "poll-probe/binary-sha256.json",
+      "sha256": "7b92ad01ddcaa8575db4000b8029a2a5a01d7e7c686c882a7db10730d632d65a"
+    },
+    {
+      "bytes": 16014,
+      "path": "poll-probe/source-sha256.json",
+      "sha256": "e5483e3094cf0cbf28cc261524e259bd24a94f8fd592f2434a243e54094493a8"
+    },
+    {
+      "bytes": 324,
+      "path": "split-probe/binary-sha256.json",
+      "sha256": "43a1c0aa985e770e995957a5b78ce8cabbb49895d5620aae39d8b6bd1f8ab78f"
+    },
+    {
+      "bytes": 16014,
+      "path": "split-probe/source-sha256.json",
+      "sha256": "0c99760a8844f6401554942fe03937e60e51e2cd4ee3580b5eb9e05c44ec8573"
+    },
+    {
+      "bytes": 324,
+      "path": "xlong-probe/binary-sha256.json",
+      "sha256": "c31a6453e2146403ad2ca655be79b904e589848cb71e2ed5779a31dcaf6d6b07"
+    },
+    {
+      "bytes": 16014,
+      "path": "xlong-probe/source-sha256.json",
+      "sha256": "745fcfec98cf36d4156e27ff3a393c989e591806af3e4c80f27e740e5703aee4"
+    }
+  ],
+  "guest_base": "/mnt/kdlock-builds/rwsem-opt-20261018",
+  "guest_capture_hash_checked": true,
+  "links": 32,
+  "manifests_verified": [
+    {
+      "files": 153,
+      "kind": "source",
+      "path": "rwsem-opt-20261018/final-basic/source-sha256.json"
+    },
+    {
+      "files": 9,
+      "kind": "binary",
+      "path": "rwsem-opt-20261018/final-functional/binary-sha256.json"
+    },
+    {
+      "files": 233,
+      "kind": "source",
+      "path": "rwsem-opt-20261018/final-functional/source-sha256.json"
+    },
+    {
+      "files": 5,
+      "kind": "binary",
+      "path": "rwsem-opt-20261018/final-jit/binary-sha256.json"
+    },
+    {
+      "files": 233,
+      "kind": "source",
+      "path": "rwsem-opt-20261018/final-jit/source-sha256.json"
+    },
+    {
+      "files": 4,
+      "kind": "binary",
+      "path": "rwsem-opt-20261018/final-local/binary-sha256.json"
+    },
+    {
+      "files": 233,
+      "kind": "source",
+      "path": "rwsem-opt-20261018/final-local/source-sha256.json"
+    },
+    {
+      "files": 2,
+      "kind": "binary",
+      "path": "rwsem-opt-20261018/grant-probe/binary-sha256.json"
+    },
+    {
+      "files": 154,
+      "kind": "source",
+      "path": "rwsem-opt-20261018/grant-probe/source-sha256.json"
+    },
+    {
+      "files": 2,
+      "kind": "binary",
+      "path": "rwsem-opt-20261018/long-probe/binary-sha256.json"
+    },
+    {
+      "files": 154,
+      "kind": "source",
+      "path": "rwsem-opt-20261018/long-probe/source-sha256.json"
+    },
+    {
+      "files": 2,
+      "kind": "binary",
+      "path": "rwsem-opt-20261018/poll-probe/binary-sha256.json"
+    },
+    {
+      "files": 154,
+      "kind": "source",
+      "path": "rwsem-opt-20261018/poll-probe/source-sha256.json"
+    },
+    {
+      "files": 2,
+      "kind": "binary",
+      "path": "rwsem-opt-20261018/split-probe/binary-sha256.json"
+    },
+    {
+      "files": 154,
+      "kind": "source",
+      "path": "rwsem-opt-20261018/split-probe/source-sha256.json"
+    },
+    {
+      "files": 2,
+      "kind": "binary",
+      "path": "rwsem-opt-20261018/xlong-probe/binary-sha256.json"
+    },
+    {
+      "files": 154,
+      "kind": "source",
+      "path": "rwsem-opt-20261018/xlong-probe/source-sha256.json"
+    }
+  ],
+  "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/rwsem-optimization-20261018/tests.tar.gz",
+  "regular_bytes": 118704137,
+  "regular_files": 4064,
+  "schema": 1,
+  "scope": "Read-only streaming archive hashes and complete frozen source/binary manifests; no source execution or tests",
+  "sha256": "d59cae1b4802148eded077153ea514385cc196bf94ba7f7e09928fcb673e62b2",
+  "source_file_instances_verified": 1622,
+  "status": "PASS"
+}
