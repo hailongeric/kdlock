@@ -10,7 +10,7 @@ summarizes the accepted version. Build and run only in the verified VM on
 | Spin | [tclock_compare/run.py](tclock_compare/run.py) | c01/c08 and RCUHT |
 | Mutex | [tclock_compare/run_mutex.py](tclock_compare/run_mutex.py) | Same payloads, selected KD-only mutex |
 | Rwlock | [rwlock_compare/run.py](rwlock_compare/run.py) | Cachelines and RCUHT, default 1%/20% writes |
-| Sleeping rwsem | [rwlock_compare/run.py](rwlock_compare/run.py), `--lock-kind rwsem --backends native kdlock` | c01/c08 or RCUHT; ordinary local bodies, no JIT/TCLock |
+| Sleeping rwsem | [rwlock_compare/run.py](rwlock_compare/run.py), `--lock-kind rwsem --backends native kdlock` | c01/c08 or RCUHT; local readers and outer ABI2 KD writers, with `--delegate off` local control; no TCLock arm |
 | Proc snapshots | [rwlock_compare/run.py](rwlock_compare/run.py), `--lock-kind spin` | `argbounds` and exact `taskname`; separate from full procfs/ps |
 | Syscall/API | [real_api/run.py](real_api/run.py) | OFD, setfd, pipebytes, pipecap, seek, bounded UTS and xattr controls |
 
@@ -52,7 +52,7 @@ Do not use the retired temporary 66-vCPU launcher for new measurements.
 Use NUMA-on, the UBSAN-off private KD benchmark provider, 48,000 warmup operations
 per worker, two-second measurements and the highest valid 300 ms window after
 300 ms settling. Record min/median/max/spread and median whole-run throughput.
-Spin/mutex uses post64; rwlock uses post4. Retain actual host governor, CPU/NUMA
+Spin/mutex uses post64; rwlock/rwsem uses post4. Retain actual host governor, CPU/NUMA
 placement, source and ELF hashes, kernel identity and instrumentation policy.
 
 Validate business results, every worker's progress, required returned JIT bodies

@@ -16,6 +16,7 @@ from oracle import jit_evidence, post_work_checksum, validate, writes_for
 import run
 import client
 import session
+import bench_session
 from protocol import RUN_FORMAT
 
 
@@ -110,7 +111,7 @@ class BenchTests(unittest.TestCase):
     def test_rwsem_plan_uses_only_local_sleeping_backends(self):
         args = run.parser().parse_args(['--lock-kind', 'rwsem', '--workloads', 'cacheline',
             '--cachelines', '1', '8', '--backends', 'native', 'kdlock', '--threads', '8',
-            '--write-percent', '0', '20', '100'])
+            '--write-percent', '0', '20', '100', '--delegate', 'off'])
         plan = run.make_plan(args)
         self.assertEqual(len(plan), 36)
         self.assertTrue(all(s['lock_kind'] == 'rwsem' and not s['delegate'] and
@@ -120,6 +121,9 @@ class BenchTests(unittest.TestCase):
         for spec in plan:
             candidate.record = spec
             self.assertFalse(candidate.has_entry())
+            self.assertEqual(spec['rwsem_writer_shell'], 'ordinary-local')
+            if spec['arm'] == 'kdlock':
+                self.assertTrue(spec['variant'].endswith('-local'))
         args.require_jit = True
         with self.assertRaises(run.Failure):
             run.make_plan(args)
@@ -128,6 +132,59 @@ class BenchTests(unittest.TestCase):
         with self.assertRaises(run.Failure):
             run.make_plan(args)
 
+    def test_rwsem_delegation_plan_and_standard_grid(self):
+        threads = [*range(1, 9), *range(12, 61, 4)]
+        args = run.parser().parse_args(['--lock-kind', 'rwsem', '--workloads', 'cacheline', 'rcuht',
+            '--cachelines', '1', '8', '--backends', 'native', 'kdlock', '--threads',
+            *map(str, threads), '--collector-cpu', '63', '--require-jit'])
+        plan = run.make_plan(args)
+        self.assertEqual(len(plan), 756)
+        self.assertEqual(sorted({s['threads'] for s in plan}), threads)
+        self.assertEqual({s['write_percent'] for s in plan}, {1, 20})
+        self.assertEqual({s['duration_ms'] for s in plan}, {2000})
+        candidate = object.__new__(session.RWSession)
+        for spec in plan:
+            kd = spec['arm'] == 'kdlock'
+            self.assertEqual(spec['delegate'], kd)
+            self.assertEqual(spec['entry_abi'], 2 if kd else None)
+            self.assertEqual(spec['caller_abi'], 'clobber' if kd else 'c')
+            self.assertEqual(spec['require_jit'], kd and spec['threads'] > 1)
+            self.assertEqual(spec['delegation_batch_limit'], 1024 if kd else None)
+            candidate.record = spec
+            self.assertEqual(candidate.has_entry(), kd)
+        args.write_percent = [0]
+        with self.assertRaises(run.Failure):
+            run.make_plan(args)
+        args.require_jit = False
+        for spec in run.make_plan(args):
+            candidate.record = spec
+            self.assertFalse(candidate.has_entry())
+
+    def test_rwsem_publication_requires_mutex_kind_and_abi2(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            candidate = object.__new__(session.RWSession)
+            candidate.path = Path(tmp)
+            candidate.record = dict(lock_kind='rwsem', caller_abi='clobber', entry_abi=2,
+                                    entry_range=[0x2000, 0x2001])
+            folder = candidate.path / 'workspace/daemon/0x2000/0/asm'
+            folder.mkdir(parents=True)
+            (folder / 'jit.bin').write_bytes(b'\x90\xc3')
+            (folder / 'jit.S').write_text('MOV             Stack_JIT_WITNESS, 1\nloc_2000:\n')
+            (folder / 'bin.txt').write_text('nop\nret\n')
+            entry = dict(entry=0x2000, tgid=0, pid=0, lock_kind=2, entry_abi=2, status=0, code=1)
+            state = dict(state=0, frames=0, writers=0)
+            with patch.object(bench_session, 'registry', return_value=[entry]), \
+                    patch.object(bench_session, 'status', return_value=state):
+                before = candidate.publication()
+                self.assertEqual(before['entry']['lock_kind'], 2)
+                (folder / 'bin.txt').write_text('changed image inspection\n')
+                self.assertNotEqual(before, candidate.publication())
+                entry['lock_kind'] = 1
+                with self.assertRaises(run.Failure):
+                    candidate.publication()
+                entry['lock_kind'], entry['entry_abi'] = 2, 3
+                with self.assertRaises(run.Failure):
+                    candidate.publication()
     def test_snapshot_plan_rejects_mixed_shells_and_ineligible_jit(self):
         for argv in (['--lock-kind', 'spin', '--workloads', 'taskname', 'cacheline'],
                      ['--lock-kind', 'spin', '--workloads', 'cacheline'],

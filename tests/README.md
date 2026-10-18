@@ -8,9 +8,12 @@ keeps the live probe separate from unit fixtures and returned-body JIT benchmark
 The [provider lifecycle fixture](unit/infrastructure/test_provider_lifecycle.py)
 checks publication after runtime initialization, failed-start cleanup, and device
 removal before teardown in ordinary and SELFTEST control flow.
-The [ordinary rwsem probe](kernel/rwsem/README.md) checks sleeping reader/writer
-semantics, cancellation, trylocks and downgrade on the selected KD physical
-mutex. Proc snapshot and rwsem runner checks are in `bench/rwlock_compare/test_bench.py`;
+The [rwsem admission probe](kernel/rwsem/README.md) checks sleeping reader/writer
+semantics, cancellation, trylocks and ordinary downgrade on the selected KD
+mutex. It also checks that outer writers stay unpublished until sleeping or
+downgraded readers release, including same-CPU progress. These checks use local
+outer returns; they do not claim JIT execution. Proc snapshot and rwsem runner
+checks are in `bench/rwlock_compare/test_bench.py`;
 full procfs/mmap integration is outside these checks.
 
 Build and run all checks only in the recovery guest on `10.176.26.71`. Use the
@@ -92,6 +95,10 @@ reader overlap, writer exclusion, updates and exact count/gate drain. The
 [rwlock benchmark](../bench/rwlock_compare/README.md) adds the real TCLock port and
 1%/20% RCUHT mixes. Its `--require-jit` checks returned writer bodies; performance
 parity is a separate `--require-parity` result. Readers do not count as JIT bodies.
+The same runner's `--lock-kind rwsem` mode compares Linux Native with KD outer
+ABI2 writers; `--delegate off` selects the local KD control. Mixed c08 runs check
+reader consistency while entry and matching-unlock completion counters record
+actual delegated execution. Whole-kernel mmap replacement is outside this scope.
 
 The [mutex task/ACK probe](kernel/mutex/run_task_selftest.py) and selected SELFTEST
 hotlock/entry probes check resource/routing/drain without executing JIT bodies;

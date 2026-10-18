@@ -125,7 +125,9 @@ class Session:
     def publication(self):
         """Check a stable NORMAL entry and its image; actual execution is separate."""
         r = registry()
-        lock_kind = 2 if self.record.get("lock_kind") == "mutex" else 1
+        # Explicit rwsem writer entries reuse the unchanged mutex ABI2 and
+        # registry kind; the enclosing reader admission is outside the image.
+        lock_kind = 2 if self.record.get("lock_kind") in ("mutex", "rwsem") else 1
         if "root_entry" in self.record:
             # Nested regressions can register continuation entries during the
             # measured JIT. Validate the exact prepared root, never whichever

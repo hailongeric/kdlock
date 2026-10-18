@@ -185,4 +185,9 @@ The body releases the writer byte before spin unlock/completion; final frame
 cleanup cannot release that byte again. Readers, native writers and delegated
 writers must all drain before lock storage is reused. Linux and TCLock rwlocks
 cannot participate in this object. Sleeping read/write operations use the separate
-[ordinary KD rwsem](rwsem_implementation.md), whose bodies execute locally.
+[KD rwsem](rwsem_implementation.md). Its readers execute locally; explicit outer
+writers reserve a phase and sleep until readers drain before entering the
+unchanged mutex ABI2 protocol. Ordinary writers use an exclusive phase so that
+downgrade cannot create a reader behind an already published outer writer.
+Ordinary cancellation and downgrade remain supported; outer writers cannot
+cancel or downgrade. The rwsem guide owns this API and its integration limits.

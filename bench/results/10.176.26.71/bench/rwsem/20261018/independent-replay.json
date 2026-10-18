@@ -1,0 +1,1080 @@
+{
+  "schema": 1,
+  "static_offline_only": true,
+  "repository_programs_imported_or_executed": false,
+  "archive": "bench/results/10.176.26.71/raw/bench/rwsem-delegation-20261018/guest-evidence.tar.gz",
+  "archive_sha256": "2d6b750786b54102f473f4936568b45625482fe5407ecdbdb95af657b67bcfad",
+  "source": "Frozen archive records, samples, summary, parity, plan and kernel logs; no guest access.",
+  "passed": true,
+  "checks": {
+    "756 planned and present": 1,
+    "standard worker grid": 1,
+    "unique session names": 1,
+    "planned order and identities": 1,
+    "successful correct drained session": 756,
+    "whole interval": 756,
+    "worker count": 756,
+    "worker total": 18144,
+    "exact deterministic write mix": 18144,
+    "worker progress and errors": 18144,
+    "worker affinity": 18144,
+    "aggregate completed": 756,
+    "aggregate reads": 756,
+    "aggregate writes": 756,
+    "cacheline protected effects": 504,
+    "payload quiescence": 1512,
+    "entry counter delta": 756,
+    "completion counter delta": 756,
+    "JIT body bounds": 756,
+    "full-cohort peak exists": 756,
+    "peak start_sample_index": 756,
+    "peak end_sample_index": 756,
+    "peak elapsed_ns": 756,
+    "peak completed": 756,
+    "peak worker_completed": 756,
+    "peak writes": 756,
+    "peak reads": 756,
+    "peak candidate_windows": 756,
+    "peak eligible_samples": 756,
+    "whole throughput": 756,
+    "peak throughput": 756,
+    "peak nested throughput": 756,
+    "whole reads rate": 756,
+    "whole writes rate": 756,
+    "hash protected effects": 252,
+    "summary group count": 1,
+    "summary valid_rounds": 253,
+    "summary expected_rounds": 253,
+    "summary complete": 253,
+    "summary best_peak_ops_s": 253,
+    "summary peak_min_ops_s": 253,
+    "summary peak_median_ops_s": 253,
+    "summary peak_max_ops_s": 253,
+    "summary peak_spread_pct": 253,
+    "summary whole_min_ops_s": 253,
+    "summary whole_median_ops_s": 253,
+    "summary whole_max_ops_s": 253,
+    "summary whole_spread_pct": 253,
+    "summary samples": 253,
+    "parity best_peak": 125,
+    "parity median_whole": 125,
+    "parity point status": 126,
+    "parity point count": 1,
+    "overall parity": 1
+  },
+  "failure_count": 0,
+  "failures": [],
+  "sessions": 756,
+  "per_arm": {
+    "native": 378,
+    "kdlock": 378
+  },
+  "execution_statuses": {
+    "OK": 756
+  },
+  "jit_groups": {
+    "native:NATIVE": 378,
+    "kdlock:NO_JIT": 371,
+    "kdlock:PASS": 7
+  },
+  "totals": {
+    "completed": 10470346496,
+    "reads": 9630044642,
+    "writes": 840301854,
+    "jit_entries": 1752,
+    "jit_completions": 1752
+  },
+  "replayed_summary_groups": 253,
+  "replayed_points": 126,
+  "parity_statuses": {
+    "PASS": 26,
+    "FAIL": 99,
+    "INCOMPLETE": 1
+  },
+  "split_points": [
+    {
+      "workload": "cacheline",
+      "cachelines": 8,
+      "write_percent": 20,
+      "threads": 16,
+      "valid_sessions": 6,
+      "groups": {
+        "native": [
+          {
+            "jit_status": "NATIVE",
+            "rounds": 3,
+            "samples": [
+              "rwsem-cacheline-c08-native-w020-t16-r00",
+              "rwsem-cacheline-c08-native-w020-t16-r01",
+              "rwsem-cacheline-c08-native-w020-t16-r02"
+            ],
+            "whole_median_Mops": 2.9424734035450437
+          }
+        ],
+        "kdlock": [
+          {
+            "jit_status": "NO_JIT",
+            "rounds": 2,
+            "samples": [
+              "rwsem-cacheline-c08-kdlock-w020-t16-r00",
+              "rwsem-cacheline-c08-kdlock-w020-t16-r02"
+            ],
+            "whole_median_Mops": 0.8690866325632916
+          },
+          {
+            "jit_status": "PASS",
+            "rounds": 1,
+            "samples": [
+              "rwsem-cacheline-c08-kdlock-w020-t16-r01"
+            ],
+            "whole_median_Mops": 0.8866703672439541
+          }
+        ]
+      }
+    }
+  ],
+  "sixty_worker_results": [
+    {
+      "workload": "cacheline",
+      "cachelines": 1,
+      "write_percent": 1,
+      "threads": 60,
+      "kd_jit_status": "NO_JIT",
+      "native_median_Mops": 3.5764975423088594,
+      "kd_median_Mops": 1.0652776526599639,
+      "ratios": {
+        "best_peak": 0.2955775040645259,
+        "median_whole": 0.2978549936238062
+      },
+      "status": "FAIL"
+    },
+    {
+      "workload": "cacheline",
+      "cachelines": 1,
+      "write_percent": 20,
+      "threads": 60,
+      "kd_jit_status": "NO_JIT",
+      "native_median_Mops": 1.4240550182899379,
+      "kd_median_Mops": 0.4025145278219823,
+      "ratios": {
+        "best_peak": 0.28285771376038993,
+        "median_whole": 0.2826537757686763
+      },
+      "status": "FAIL"
+    },
+    {
+      "workload": "cacheline",
+      "cachelines": 8,
+      "write_percent": 1,
+      "threads": 60,
+      "kd_jit_status": "NO_JIT",
+      "native_median_Mops": 3.2591810378628083,
+      "kd_median_Mops": 1.0699654919289294,
+      "ratios": {
+        "best_peak": 0.3307551970972169,
+        "median_whole": 0.32829274578455264
+      },
+      "status": "FAIL"
+    },
+    {
+      "workload": "cacheline",
+      "cachelines": 8,
+      "write_percent": 20,
+      "threads": 60,
+      "kd_jit_status": "NO_JIT",
+      "native_median_Mops": 1.4148401453990775,
+      "kd_median_Mops": 0.3972537431750256,
+      "ratios": {
+        "best_peak": 0.27386929712772046,
+        "median_whole": 0.28077641454185204
+      },
+      "status": "FAIL"
+    },
+    {
+      "workload": "rcuht",
+      "cachelines": 0,
+      "write_percent": 1,
+      "threads": 60,
+      "kd_jit_status": "NO_JIT",
+      "native_median_Mops": 3.2698155302075396,
+      "kd_median_Mops": 1.0556989022899594,
+      "ratios": {
+        "best_peak": 0.32138479475836135,
+        "median_whole": 0.3228619145444431
+      },
+      "status": "FAIL"
+    },
+    {
+      "workload": "rcuht",
+      "cachelines": 0,
+      "write_percent": 20,
+      "threads": 60,
+      "kd_jit_status": "NO_JIT",
+      "native_median_Mops": 0.8676883667166644,
+      "kd_median_Mops": 0.4013653065898992,
+      "ratios": {
+        "best_peak": 0.46600850412147105,
+        "median_whole": 0.4625685003806918
+      },
+      "status": "FAIL"
+    }
+  ],
+  "timed_jit_positive_sessions": [
+    {
+      "name": "rwsem-cacheline-c08-kdlock-w020-t16-r01",
+      "workload": "cacheline",
+      "cachelines": 8,
+      "write_percent": 20,
+      "threads": 16,
+      "repeat": 1,
+      "jit_status": "PASS",
+      "jit_bodies": 3,
+      "jit_completions": 3,
+      "writes": 356556,
+      "heat": {
+        "reported_cpus": 16,
+        "cpu_hot_count": 16,
+        "cpu_checks_range": [
+          1,
+          2
+        ],
+        "residual_contentions_range": [
+          50,
+          1008
+        ],
+        "last_entries_range": [
+          12459,
+          17316
+        ],
+        "reported_locks": 16,
+        "lock_hot_count": 5,
+        "lock_sample_count_range": [
+          50,
+          1009
+        ],
+        "mutex_stats": "slowpath=82 combiner=3 handoff=0 jit_success=3 jit_not_ready=0 jit_failure=0 jit_resume=3 frame_failure=0 node_overflow=0 multi_slot=0 context_busy=0 nested_lock=0 nested_fast=0 nested_queued=0 nested_jit=0 nested_unlock=0 nested_abort_release=0 active_waiters=0 max_waiters_per_cpu=1 reserved_nodes=0 origin_acquires=2129 origin_releases=2129"
+      }
+    },
+    {
+      "name": "rwsem-cacheline-c08-kdlock-w020-t36-r00",
+      "workload": "cacheline",
+      "cachelines": 8,
+      "write_percent": 20,
+      "threads": 36,
+      "repeat": 0,
+      "jit_status": "PASS",
+      "jit_bodies": 172,
+      "jit_completions": 172,
+      "writes": 217344,
+      "heat": {
+        "reported_cpus": 36,
+        "cpu_hot_count": 36,
+        "cpu_checks_range": [
+          2,
+          5
+        ],
+        "residual_contentions_range": [
+          7,
+          1023
+        ],
+        "last_entries_range": [
+          3002,
+          6340
+        ],
+        "reported_locks": 36,
+        "lock_hot_count": 4,
+        "lock_sample_count_range": [
+          6,
+          1023
+        ],
+        "mutex_stats": "slowpath=1689 combiner=225 handoff=0 jit_success=238 jit_not_ready=0 jit_failure=0 jit_resume=238 frame_failure=0 node_overflow=0 multi_slot=0 context_busy=0 nested_lock=0 nested_fast=0 nested_queued=0 nested_jit=0 nested_unlock=0 nested_abort_release=0 active_waiters=0 max_waiters_per_cpu=1 reserved_nodes=0 origin_acquires=10703 origin_releases=10703"
+      }
+    },
+    {
+      "name": "rwsem-cacheline-c08-kdlock-w020-t36-r01",
+      "workload": "cacheline",
+      "cachelines": 8,
+      "write_percent": 20,
+      "threads": 36,
+      "repeat": 1,
+      "jit_status": "PASS",
+      "jit_bodies": 30,
+      "jit_completions": 30,
+      "writes": 220261,
+      "heat": {
+        "reported_cpus": 36,
+        "cpu_hot_count": 36,
+        "cpu_checks_range": [
+          2,
+          5
+        ],
+        "residual_contentions_range": [
+          2,
+          955
+        ],
+        "last_entries_range": [
+          3056,
+          7216
+        ],
+        "reported_locks": 36,
+        "lock_hot_count": 4,
+        "lock_sample_count_range": [
+          123,
+          1024
+        ],
+        "mutex_stats": "slowpath=1084 combiner=106 handoff=0 jit_success=117 jit_not_ready=0 jit_failure=0 jit_resume=117 frame_failure=0 node_overflow=0 multi_slot=0 context_busy=0 nested_lock=0 nested_fast=0 nested_queued=0 nested_jit=0 nested_unlock=0 nested_abort_release=0 active_waiters=0 max_waiters_per_cpu=1 reserved_nodes=0 origin_acquires=8466 origin_releases=8466"
+      }
+    },
+    {
+      "name": "rwsem-cacheline-c08-kdlock-w020-t36-r02",
+      "workload": "cacheline",
+      "cachelines": 8,
+      "write_percent": 20,
+      "threads": 36,
+      "repeat": 2,
+      "jit_status": "PASS",
+      "jit_bodies": 63,
+      "jit_completions": 63,
+      "writes": 216064,
+      "heat": {
+        "reported_cpus": 36,
+        "cpu_hot_count": 36,
+        "cpu_checks_range": [
+          2,
+          4
+        ],
+        "residual_contentions_range": [
+          280,
+          526
+        ],
+        "last_entries_range": [
+          3598,
+          7544
+        ],
+        "reported_locks": 36,
+        "lock_hot_count": 4,
+        "lock_sample_count_range": [
+          280,
+          526
+        ],
+        "mutex_stats": "slowpath=847 combiner=104 handoff=0 jit_success=116 jit_not_ready=0 jit_failure=0 jit_resume=116 frame_failure=0 node_overflow=0 multi_slot=0 context_busy=0 nested_lock=0 nested_fast=0 nested_queued=0 nested_jit=0 nested_unlock=0 nested_abort_release=0 active_waiters=0 max_waiters_per_cpu=1 reserved_nodes=0 origin_acquires=5730 origin_releases=5730"
+      }
+    },
+    {
+      "name": "rwsem-cacheline-c08-kdlock-w020-t40-r00",
+      "workload": "cacheline",
+      "cachelines": 8,
+      "write_percent": 20,
+      "threads": 40,
+      "repeat": 0,
+      "jit_status": "PASS",
+      "jit_bodies": 489,
+      "jit_completions": 489,
+      "writes": 190313,
+      "heat": {
+        "reported_cpus": 40,
+        "cpu_hot_count": 40,
+        "cpu_checks_range": [
+          2,
+          4
+        ],
+        "residual_contentions_range": [
+          32,
+          1004
+        ],
+        "last_entries_range": [
+          2884,
+          5075
+        ],
+        "reported_locks": 40,
+        "lock_hot_count": 8,
+        "lock_sample_count_range": [
+          31,
+          1004
+        ],
+        "mutex_stats": "slowpath=2739 combiner=622 handoff=0 jit_success=839 jit_not_ready=0 jit_failure=0 jit_resume=839 frame_failure=0 node_overflow=0 multi_slot=0 context_busy=0 nested_lock=0 nested_fast=0 nested_queued=0 nested_jit=0 nested_unlock=0 nested_abort_release=0 active_waiters=0 max_waiters_per_cpu=1 reserved_nodes=0 origin_acquires=9538 origin_releases=9538"
+      }
+    },
+    {
+      "name": "rwsem-cacheline-c08-kdlock-w020-t40-r01",
+      "workload": "cacheline",
+      "cachelines": 8,
+      "write_percent": 20,
+      "threads": 40,
+      "repeat": 1,
+      "jit_status": "PASS",
+      "jit_bodies": 726,
+      "jit_completions": 726,
+      "writes": 191127,
+      "heat": {
+        "reported_cpus": 40,
+        "cpu_hot_count": 40,
+        "cpu_checks_range": [
+          3,
+          5
+        ],
+        "residual_contentions_range": [
+          10,
+          954
+        ],
+        "last_entries_range": [
+          2778,
+          5229
+        ],
+        "reported_locks": 40,
+        "lock_hot_count": 6,
+        "lock_sample_count_range": [
+          7,
+          952
+        ],
+        "mutex_stats": "slowpath=5683 combiner=1412 handoff=0 jit_success=2139 jit_not_ready=0 jit_failure=0 jit_resume=2139 frame_failure=0 node_overflow=0 multi_slot=0 context_busy=0 nested_lock=0 nested_fast=0 nested_queued=0 nested_jit=0 nested_unlock=0 nested_abort_release=0 active_waiters=0 max_waiters_per_cpu=1 reserved_nodes=0 origin_acquires=14814 origin_releases=14814"
+      }
+    },
+    {
+      "name": "rwsem-cacheline-c08-kdlock-w020-t40-r02",
+      "workload": "cacheline",
+      "cachelines": 8,
+      "write_percent": 20,
+      "threads": 40,
+      "repeat": 2,
+      "jit_status": "PASS",
+      "jit_bodies": 269,
+      "jit_completions": 269,
+      "writes": 191488,
+      "heat": {
+        "reported_cpus": 40,
+        "cpu_hot_count": 40,
+        "cpu_checks_range": [
+          3,
+          4
+        ],
+        "residual_contentions_range": [
+          256,
+          918
+        ],
+        "last_entries_range": [
+          2905,
+          4959
+        ],
+        "reported_locks": 40,
+        "lock_hot_count": 3,
+        "lock_sample_count_range": [
+          255,
+          916
+        ],
+        "mutex_stats": "slowpath=3576 combiner=734 handoff=0 jit_success=972 jit_not_ready=0 jit_failure=0 jit_resume=972 frame_failure=0 node_overflow=0 multi_slot=0 context_busy=0 nested_lock=0 nested_fast=0 nested_queued=0 nested_jit=0 nested_unlock=0 nested_abort_release=0 active_waiters=0 max_waiters_per_cpu=1 reserved_nodes=0 origin_acquires=13523 origin_releases=13523"
+      }
+    }
+  ],
+  "sixty_worker_heat_snapshots": [
+    {
+      "name": "rwsem-cacheline-c01-kdlock-w001-t60-r00",
+      "workload": "cacheline",
+      "cachelines": 1,
+      "write_percent": 1,
+      "threads": 60,
+      "repeat": 0,
+      "jit_status": "NO_JIT",
+      "jit_bodies": 0,
+      "jit_completions": 0,
+      "writes": 21140,
+      "heat": {
+        "reported_cpus": 60,
+        "cpu_hot_count": 0,
+        "cpu_checks_range": [
+          0,
+          0
+        ],
+        "residual_contentions_range": [
+          5,
+          16
+        ],
+        "last_entries_range": [
+          0,
+          0
+        ],
+        "reported_locks": 0,
+        "lock_hot_count": 0,
+        "lock_sample_count_range": null,
+        "mutex_stats": "slowpath=0 combiner=0 handoff=0 jit_success=0 jit_not_ready=0 jit_failure=0 jit_resume=0 frame_failure=0 node_overflow=0 multi_slot=0 context_busy=0 nested_lock=0 nested_fast=0 nested_queued=0 nested_jit=0 nested_unlock=0 nested_abort_release=0 active_waiters=0 max_waiters_per_cpu=0 reserved_nodes=0 origin_acquires=0 origin_releases=0"
+      }
+    },
+    {
+      "name": "rwsem-cacheline-c01-kdlock-w001-t60-r01",
+      "workload": "cacheline",
+      "cachelines": 1,
+      "write_percent": 1,
+      "threads": 60,
+      "repeat": 1,
+      "jit_status": "NO_JIT",
+      "jit_bodies": 0,
+      "jit_completions": 0,
+      "writes": 21513,
+      "heat": {
+        "reported_cpus": 60,
+        "cpu_hot_count": 0,
+        "cpu_checks_range": [
+          0,
+          0
+        ],
+        "residual_contentions_range": [
+          4,
+          20
+        ],
+        "last_entries_range": [
+          0,
+          0
+        ],
+        "reported_locks": 0,
+        "lock_hot_count": 0,
+        "lock_sample_count_range": null,
+        "mutex_stats": "slowpath=0 combiner=0 handoff=0 jit_success=0 jit_not_ready=0 jit_failure=0 jit_resume=0 frame_failure=0 node_overflow=0 multi_slot=0 context_busy=0 nested_lock=0 nested_fast=0 nested_queued=0 nested_jit=0 nested_unlock=0 nested_abort_release=0 active_waiters=0 max_waiters_per_cpu=0 reserved_nodes=0 origin_acquires=0 origin_releases=0"
+      }
+    },
+    {
+      "name": "rwsem-cacheline-c01-kdlock-w001-t60-r02",
+      "workload": "cacheline",
+      "cachelines": 1,
+      "write_percent": 1,
+      "threads": 60,
+      "repeat": 2,
+      "jit_status": "NO_JIT",
+      "jit_bodies": 0,
+      "jit_completions": 0,
+      "writes": 21522,
+      "heat": {
+        "reported_cpus": 60,
+        "cpu_hot_count": 0,
+        "cpu_checks_range": [
+          0,
+          0
+        ],
+        "residual_contentions_range": [
+          5,
+          20
+        ],
+        "last_entries_range": [
+          0,
+          0
+        ],
+        "reported_locks": 0,
+        "lock_hot_count": 0,
+        "lock_sample_count_range": null,
+        "mutex_stats": "slowpath=0 combiner=0 handoff=0 jit_success=0 jit_not_ready=0 jit_failure=0 jit_resume=0 frame_failure=0 node_overflow=0 multi_slot=0 context_busy=0 nested_lock=0 nested_fast=0 nested_queued=0 nested_jit=0 nested_unlock=0 nested_abort_release=0 active_waiters=0 max_waiters_per_cpu=0 reserved_nodes=0 origin_acquires=0 origin_releases=0"
+      }
+    },
+    {
+      "name": "rwsem-cacheline-c01-kdlock-w020-t60-r00",
+      "workload": "cacheline",
+      "cachelines": 1,
+      "write_percent": 20,
+      "threads": 60,
+      "repeat": 0,
+      "jit_status": "NO_JIT",
+      "jit_bodies": 0,
+      "jit_completions": 0,
+      "writes": 162765,
+      "heat": {
+        "reported_cpus": 60,
+        "cpu_hot_count": 60,
+        "cpu_checks_range": [
+          1,
+          2
+        ],
+        "residual_contentions_range": [
+          1,
+          1016
+        ],
+        "last_entries_range": [
+          5469,
+          7292
+        ],
+        "reported_locks": 60,
+        "lock_hot_count": 0,
+        "lock_sample_count_range": [
+          1,
+          1017
+        ],
+        "mutex_stats": "slowpath=0 combiner=0 handoff=0 jit_success=0 jit_not_ready=0 jit_failure=0 jit_resume=0 frame_failure=0 node_overflow=0 multi_slot=0 context_busy=0 nested_lock=0 nested_fast=0 nested_queued=0 nested_jit=0 nested_unlock=0 nested_abort_release=0 active_waiters=0 max_waiters_per_cpu=0 reserved_nodes=0 origin_acquires=0 origin_releases=0"
+      }
+    },
+    {
+      "name": "rwsem-cacheline-c01-kdlock-w020-t60-r01",
+      "workload": "cacheline",
+      "cachelines": 1,
+      "write_percent": 20,
+      "threads": 60,
+      "repeat": 1,
+      "jit_status": "NO_JIT",
+      "jit_bodies": 0,
+      "jit_completions": 0,
+      "writes": 165633,
+      "heat": {
+        "reported_cpus": 60,
+        "cpu_hot_count": 60,
+        "cpu_checks_range": [
+          1,
+          2
+        ],
+        "residual_contentions_range": [
+          37,
+          1017
+        ],
+        "last_entries_range": [
+          5453,
+          6511
+        ],
+        "reported_locks": 60,
+        "lock_hot_count": 0,
+        "lock_sample_count_range": [
+          37,
+          1018
+        ],
+        "mutex_stats": "slowpath=0 combiner=0 handoff=0 jit_success=0 jit_not_ready=0 jit_failure=0 jit_resume=0 frame_failure=0 node_overflow=0 multi_slot=0 context_busy=0 nested_lock=0 nested_fast=0 nested_queued=0 nested_jit=0 nested_unlock=0 nested_abort_release=0 active_waiters=0 max_waiters_per_cpu=0 reserved_nodes=0 origin_acquires=0 origin_releases=0"
+      }
+    },
+    {
+      "name": "rwsem-cacheline-c01-kdlock-w020-t60-r02",
+      "workload": "cacheline",
+      "cachelines": 1,
+      "write_percent": 20,
+      "threads": 60,
+      "repeat": 2,
+      "jit_status": "NO_JIT",
+      "jit_bodies": 0,
+      "jit_completions": 0,
+      "writes": 162660,
+      "heat": {
+        "reported_cpus": 60,
+        "cpu_hot_count": 60,
+        "cpu_checks_range": [
+          1,
+          2
+        ],
+        "residual_contentions_range": [
+          1,
+          1021
+        ],
+        "last_entries_range": [
+          5419,
+          6572
+        ],
+        "reported_locks": 60,
+        "lock_hot_count": 0,
+        "lock_sample_count_range": [
+          1,
+          1022
+        ],
+        "mutex_stats": "slowpath=0 combiner=0 handoff=0 jit_success=0 jit_not_ready=0 jit_failure=0 jit_resume=0 frame_failure=0 node_overflow=0 multi_slot=0 context_busy=0 nested_lock=0 nested_fast=0 nested_queued=0 nested_jit=0 nested_unlock=0 nested_abort_release=0 active_waiters=0 max_waiters_per_cpu=0 reserved_nodes=0 origin_acquires=0 origin_releases=0"
+      }
+    },
+    {
+      "name": "rwsem-cacheline-c08-kdlock-w001-t60-r00",
+      "workload": "cacheline",
+      "cachelines": 8,
+      "write_percent": 1,
+      "threads": 60,
+      "repeat": 0,
+      "jit_status": "NO_JIT",
+      "jit_bodies": 0,
+      "jit_completions": 0,
+      "writes": 21516,
+      "heat": {
+        "reported_cpus": 60,
+        "cpu_hot_count": 0,
+        "cpu_checks_range": [
+          0,
+          0
+        ],
+        "residual_contentions_range": [
+          44,
+          80
+        ],
+        "last_entries_range": [
+          0,
+          0
+        ],
+        "reported_locks": 0,
+        "lock_hot_count": 0,
+        "lock_sample_count_range": null,
+        "mutex_stats": "slowpath=0 combiner=0 handoff=0 jit_success=0 jit_not_ready=0 jit_failure=0 jit_resume=0 frame_failure=0 node_overflow=0 multi_slot=0 context_busy=0 nested_lock=0 nested_fast=0 nested_queued=0 nested_jit=0 nested_unlock=0 nested_abort_release=0 active_waiters=0 max_waiters_per_cpu=0 reserved_nodes=0 origin_acquires=0 origin_releases=0"
+      }
+    },
+    {
+      "name": "rwsem-cacheline-c08-kdlock-w001-t60-r01",
+      "workload": "cacheline",
+      "cachelines": 8,
+      "write_percent": 1,
+      "threads": 60,
+      "repeat": 1,
+      "jit_status": "NO_JIT",
+      "jit_bodies": 0,
+      "jit_completions": 0,
+      "writes": 21510,
+      "heat": {
+        "reported_cpus": 60,
+        "cpu_hot_count": 0,
+        "cpu_checks_range": [
+          0,
+          0
+        ],
+        "residual_contentions_range": [
+          42,
+          72
+        ],
+        "last_entries_range": [
+          0,
+          0
+        ],
+        "reported_locks": 0,
+        "lock_hot_count": 0,
+        "lock_sample_count_range": null,
+        "mutex_stats": "slowpath=0 combiner=0 handoff=0 jit_success=0 jit_not_ready=0 jit_failure=0 jit_resume=0 frame_failure=0 node_overflow=0 multi_slot=0 context_busy=0 nested_lock=0 nested_fast=0 nested_queued=0 nested_jit=0 nested_unlock=0 nested_abort_release=0 active_waiters=0 max_waiters_per_cpu=0 reserved_nodes=0 origin_acquires=0 origin_releases=0"
+      }
+    },
+    {
+      "name": "rwsem-cacheline-c08-kdlock-w001-t60-r02",
+      "workload": "cacheline",
+      "cachelines": 8,
+      "write_percent": 1,
+      "threads": 60,
+      "repeat": 2,
+      "jit_status": "NO_JIT",
+      "jit_bodies": 0,
+      "jit_completions": 0,
+      "writes": 21612,
+      "heat": {
+        "reported_cpus": 60,
+        "cpu_hot_count": 0,
+        "cpu_checks_range": [
+          0,
+          0
+        ],
+        "residual_contentions_range": [
+          39,
+          71
+        ],
+        "last_entries_range": [
+          0,
+          0
+        ],
+        "reported_locks": 0,
+        "lock_hot_count": 0,
+        "lock_sample_count_range": null,
+        "mutex_stats": "slowpath=0 combiner=0 handoff=0 jit_success=0 jit_not_ready=0 jit_failure=0 jit_resume=0 frame_failure=0 node_overflow=0 multi_slot=0 context_busy=0 nested_lock=0 nested_fast=0 nested_queued=0 nested_jit=0 nested_unlock=0 nested_abort_release=0 active_waiters=0 max_waiters_per_cpu=0 reserved_nodes=0 origin_acquires=0 origin_releases=0"
+      }
+    },
+    {
+      "name": "rwsem-cacheline-c08-kdlock-w020-t60-r00",
+      "workload": "cacheline",
+      "cachelines": 8,
+      "write_percent": 20,
+      "threads": 60,
+      "repeat": 0,
+      "jit_status": "NO_JIT",
+      "jit_bodies": 0,
+      "jit_completions": 0,
+      "writes": 161328,
+      "heat": {
+        "reported_cpus": 60,
+        "cpu_hot_count": 60,
+        "cpu_checks_range": [
+          4,
+          4
+        ],
+        "residual_contentions_range": [
+          152,
+          564
+        ],
+        "last_entries_range": [
+          2677,
+          3688
+        ],
+        "reported_locks": 60,
+        "lock_hot_count": 0,
+        "lock_sample_count_range": [
+          150,
+          562
+        ],
+        "mutex_stats": "slowpath=0 combiner=0 handoff=0 jit_success=0 jit_not_ready=0 jit_failure=0 jit_resume=0 frame_failure=0 node_overflow=0 multi_slot=0 context_busy=0 nested_lock=0 nested_fast=0 nested_queued=0 nested_jit=0 nested_unlock=0 nested_abort_release=0 active_waiters=0 max_waiters_per_cpu=0 reserved_nodes=0 origin_acquires=0 origin_releases=0"
+      }
+    },
+    {
+      "name": "rwsem-cacheline-c08-kdlock-w020-t60-r01",
+      "workload": "cacheline",
+      "cachelines": 8,
+      "write_percent": 20,
+      "threads": 60,
+      "repeat": 1,
+      "jit_status": "NO_JIT",
+      "jit_bodies": 0,
+      "jit_completions": 0,
+      "writes": 160870,
+      "heat": {
+        "reported_cpus": 60,
+        "cpu_hot_count": 60,
+        "cpu_checks_range": [
+          3,
+          4
+        ],
+        "residual_contentions_range": [
+          12,
+          1021
+        ],
+        "last_entries_range": [
+          2843,
+          3686
+        ],
+        "reported_locks": 60,
+        "lock_hot_count": 0,
+        "lock_sample_count_range": [
+          10,
+          1020
+        ],
+        "mutex_stats": "slowpath=0 combiner=0 handoff=0 jit_success=0 jit_not_ready=0 jit_failure=0 jit_resume=0 frame_failure=0 node_overflow=0 multi_slot=0 context_busy=0 nested_lock=0 nested_fast=0 nested_queued=0 nested_jit=0 nested_unlock=0 nested_abort_release=0 active_waiters=0 max_waiters_per_cpu=0 reserved_nodes=0 origin_acquires=0 origin_releases=0"
+      }
+    },
+    {
+      "name": "rwsem-cacheline-c08-kdlock-w020-t60-r02",
+      "workload": "cacheline",
+      "cachelines": 8,
+      "write_percent": 20,
+      "threads": 60,
+      "repeat": 2,
+      "jit_status": "NO_JIT",
+      "jit_bodies": 0,
+      "jit_completions": 0,
+      "writes": 158978,
+      "heat": {
+        "reported_cpus": 60,
+        "cpu_hot_count": 60,
+        "cpu_checks_range": [
+          3,
+          4
+        ],
+        "residual_contentions_range": [
+          6,
+          1013
+        ],
+        "last_entries_range": [
+          2801,
+          3445
+        ],
+        "reported_locks": 60,
+        "lock_hot_count": 0,
+        "lock_sample_count_range": [
+          4,
+          1012
+        ],
+        "mutex_stats": "slowpath=0 combiner=0 handoff=0 jit_success=0 jit_not_ready=0 jit_failure=0 jit_resume=0 frame_failure=0 node_overflow=0 multi_slot=0 context_busy=0 nested_lock=0 nested_fast=0 nested_queued=0 nested_jit=0 nested_unlock=0 nested_abort_release=0 active_waiters=0 max_waiters_per_cpu=0 reserved_nodes=0 origin_acquires=0 origin_releases=0"
+      }
+    },
+    {
+      "name": "rwsem-rcuht-c00-kdlock-w001-t60-r00",
+      "workload": "rcuht",
+      "cachelines": 0,
+      "write_percent": 1,
+      "threads": 60,
+      "repeat": 0,
+      "jit_status": "NO_JIT",
+      "jit_bodies": 0,
+      "jit_completions": 0,
+      "writes": 21206,
+      "heat": {
+        "reported_cpus": 60,
+        "cpu_hot_count": 0,
+        "cpu_checks_range": [
+          0,
+          0
+        ],
+        "residual_contentions_range": [
+          3,
+          17
+        ],
+        "last_entries_range": [
+          0,
+          0
+        ],
+        "reported_locks": 0,
+        "lock_hot_count": 0,
+        "lock_sample_count_range": null,
+        "mutex_stats": "slowpath=0 combiner=0 handoff=0 jit_success=0 jit_not_ready=0 jit_failure=0 jit_resume=0 frame_failure=0 node_overflow=0 multi_slot=0 context_busy=0 nested_lock=0 nested_fast=0 nested_queued=0 nested_jit=0 nested_unlock=0 nested_abort_release=0 active_waiters=0 max_waiters_per_cpu=0 reserved_nodes=0 origin_acquires=0 origin_releases=0"
+      }
+    },
+    {
+      "name": "rwsem-rcuht-c00-kdlock-w001-t60-r01",
+      "workload": "rcuht",
+      "cachelines": 0,
+      "write_percent": 1,
+      "threads": 60,
+      "repeat": 1,
+      "jit_status": "NO_JIT",
+      "jit_bodies": 0,
+      "jit_completions": 0,
+      "writes": 21241,
+      "heat": {
+        "reported_cpus": 60,
+        "cpu_hot_count": 0,
+        "cpu_checks_range": [
+          0,
+          0
+        ],
+        "residual_contentions_range": [
+          1,
+          12
+        ],
+        "last_entries_range": [
+          0,
+          0
+        ],
+        "reported_locks": 0,
+        "lock_hot_count": 0,
+        "lock_sample_count_range": null,
+        "mutex_stats": "slowpath=0 combiner=0 handoff=0 jit_success=0 jit_not_ready=0 jit_failure=0 jit_resume=0 frame_failure=0 node_overflow=0 multi_slot=0 context_busy=0 nested_lock=0 nested_fast=0 nested_queued=0 nested_jit=0 nested_unlock=0 nested_abort_release=0 active_waiters=0 max_waiters_per_cpu=0 reserved_nodes=0 origin_acquires=0 origin_releases=0"
+      }
+    },
+    {
+      "name": "rwsem-rcuht-c00-kdlock-w001-t60-r02",
+      "workload": "rcuht",
+      "cachelines": 0,
+      "write_percent": 1,
+      "threads": 60,
+      "repeat": 2,
+      "jit_status": "NO_JIT",
+      "jit_bodies": 0,
+      "jit_completions": 0,
+      "writes": 21232,
+      "heat": {
+        "reported_cpus": 60,
+        "cpu_hot_count": 0,
+        "cpu_checks_range": [
+          0,
+          0
+        ],
+        "residual_contentions_range": [
+          1,
+          15
+        ],
+        "last_entries_range": [
+          0,
+          0
+        ],
+        "reported_locks": 0,
+        "lock_hot_count": 0,
+        "lock_sample_count_range": null,
+        "mutex_stats": "slowpath=0 combiner=0 handoff=0 jit_success=0 jit_not_ready=0 jit_failure=0 jit_resume=0 frame_failure=0 node_overflow=0 multi_slot=0 context_busy=0 nested_lock=0 nested_fast=0 nested_queued=0 nested_jit=0 nested_unlock=0 nested_abort_release=0 active_waiters=0 max_waiters_per_cpu=0 reserved_nodes=0 origin_acquires=0 origin_releases=0"
+      }
+    },
+    {
+      "name": "rwsem-rcuht-c00-kdlock-w020-t60-r00",
+      "workload": "rcuht",
+      "cachelines": 0,
+      "write_percent": 20,
+      "threads": 60,
+      "repeat": 0,
+      "jit_status": "NO_JIT",
+      "jit_bodies": 0,
+      "jit_completions": 0,
+      "writes": 164658,
+      "heat": {
+        "reported_cpus": 60,
+        "cpu_hot_count": 60,
+        "cpu_checks_range": [
+          1,
+          2
+        ],
+        "residual_contentions_range": [
+          19,
+          979
+        ],
+        "last_entries_range": [
+          5150,
+          6765
+        ],
+        "reported_locks": 60,
+        "lock_hot_count": 0,
+        "lock_sample_count_range": [
+          19,
+          980
+        ],
+        "mutex_stats": "slowpath=0 combiner=0 handoff=0 jit_success=0 jit_not_ready=0 jit_failure=0 jit_resume=0 frame_failure=0 node_overflow=0 multi_slot=0 context_busy=0 nested_lock=0 nested_fast=0 nested_queued=0 nested_jit=0 nested_unlock=0 nested_abort_release=0 active_waiters=0 max_waiters_per_cpu=0 reserved_nodes=0 origin_acquires=0 origin_releases=0"
+      }
+    },
+    {
+      "name": "rwsem-rcuht-c00-kdlock-w020-t60-r01",
+      "workload": "rcuht",
+      "cachelines": 0,
+      "write_percent": 20,
+      "threads": 60,
+      "repeat": 1,
+      "jit_status": "NO_JIT",
+      "jit_bodies": 0,
+      "jit_completions": 0,
+      "writes": 162198,
+      "heat": {
+        "reported_cpus": 60,
+        "cpu_hot_count": 60,
+        "cpu_checks_range": [
+          1,
+          2
+        ],
+        "residual_contentions_range": [
+          40,
+          1020
+        ],
+        "last_entries_range": [
+          5254,
+          6192
+        ],
+        "reported_locks": 60,
+        "lock_hot_count": 0,
+        "lock_sample_count_range": [
+          40,
+          1021
+        ],
+        "mutex_stats": "slowpath=0 combiner=0 handoff=0 jit_success=0 jit_not_ready=0 jit_failure=0 jit_resume=0 frame_failure=0 node_overflow=0 multi_slot=0 context_busy=0 nested_lock=0 nested_fast=0 nested_queued=0 nested_jit=0 nested_unlock=0 nested_abort_release=0 active_waiters=0 max_waiters_per_cpu=0 reserved_nodes=0 origin_acquires=0 origin_releases=0"
+      }
+    },
+    {
+      "name": "rwsem-rcuht-c00-kdlock-w020-t60-r02",
+      "workload": "rcuht",
+      "cachelines": 0,
+      "write_percent": 20,
+      "threads": 60,
+      "repeat": 2,
+      "jit_status": "NO_JIT",
+      "jit_bodies": 0,
+      "jit_completions": 0,
+      "writes": 161893,
+      "heat": {
+        "reported_cpus": 60,
+        "cpu_hot_count": 60,
+        "cpu_checks_range": [
+          1,
+          2
+        ],
+        "residual_contentions_range": [
+          5,
+          1019
+        ],
+        "last_entries_range": [
+          5715,
+          6621
+        ],
+        "reported_locks": 60,
+        "lock_hot_count": 0,
+        "lock_sample_count_range": [
+          5,
+          1020
+        ],
+        "mutex_stats": "slowpath=0 combiner=0 handoff=0 jit_success=0 jit_not_ready=0 jit_failure=0 jit_resume=0 frame_failure=0 node_overflow=0 multi_slot=0 context_busy=0 nested_lock=0 nested_fast=0 nested_queued=0 nested_jit=0 nested_unlock=0 nested_abort_release=0 active_waiters=0 max_waiters_per_cpu=0 reserved_nodes=0 origin_acquires=0 origin_releases=0"
+      }
+    }
+  ],
+  "scope_limits": [
+    "Runtime correctness flags and recorded payload effects were checked; this is not a new execution.",
+    "Post-work checksum and complete hash-table structure are not independently re-executed.",
+    "Heat logs are final cumulative/unfinished-window diagnostics and do not time-localize admission within measurement.",
+    "Mixed JIT statuses are never pooled into three-repetition point medians."
+  ]
+}

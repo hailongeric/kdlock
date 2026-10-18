@@ -4,6 +4,32 @@ Validation applies to the recorded inputs and scope. Publication, returned JIT
 execution, correctness, drain and performance parity are distinct observations.
 Basic plus affected checks are the default; an old pass is not a current full pass.
 
+## Rwsem writer delegation, 2026-10-18
+
+The [delegation receipt](../bench/results/10.176.26.71/tests/rwsem-delegation-20261018/README.md)
+records the new phase admission around the unchanged selected mutex protocol.
+The final sleeping/API probe passed same-CPU reader progress, ordinary downgrade
+before outer publication, ten cancellation cases and complete drain. Twenty-four
+Native/KD c01/c08/RCUHT functional sessions passed; they recorded zero JIT and are
+kept separate from four successful strict acceptance runs at 16 workers.
+Those c08/RCUHT runs returned 3,174,269/3,178,872 JIT bodies at 100% writes and
+404,874/163,345 at 80% writes, with matching completion counts, correct data and
+complete drain. The mixed c08 case had zero reader consistency errors.
+Five additional c08 local/read-only controls passed with zero JIT and full drain,
+bringing the focused workload checks to 33 successful sessions.
+
+Basic and affected checks passed individually or after the documented fixture
+corrections. The receipt preserves the obsolete ABI fixture, unexported probe
+accessor and Python import-setup failures. It also preserves the strict
+20%-write/32-worker c08 attempt: correct and drained, but no returned JIT bodies;
+its following RCUHT plan item was not run. The separate
+[standard performance grid](../bench/results/10.176.26.71/bench/rwsem/20261018/README.md)
+completed all 756 sessions correctly and drained. Final health recorded an idle
+guest, unchanged boot ID, verified source/binary inputs, no Linux mutex imports
+and no new faults in the retained kernel log. Per-session fault captures remain
+separate from the possibly rotated final ring. These checks do not establish
+whole-kernel mmap replacement or oversubscription safety.
+
 ## Feature reintegration, 2026-10-18
 
 The [reintegration receipt](../bench/results/10.176.26.71/tests/feature-reintegration-20261018/README.md)

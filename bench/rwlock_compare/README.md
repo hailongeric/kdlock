@@ -5,18 +5,34 @@ This runner compares Linux native rwlocks, the
 [KD rwlocks](../../docs/design/rwlock_implementation.md) on the same workload.
 Use the separate [correctness test](../../workload_modules/rwlock/README.md) for
 instrumented checks of reader overlap and writer exclusion.
-The same runner also supports ordinary sleeping rwsems and extracted proc spin
+The same runner also supports sleeping rwsems and extracted proc spin
 snapshots. These modes keep distinct lock, caller and execution identities.
 
 ## Additional explicit modes
 
 `--lock-kind rwsem --backends native kdlock` compares Linux rwsem with the
-[ordinary KD sleeping semaphore](../../docs/design/rwsem_implementation.md) on
-c01/c08 or RCUHT. All readers and writers execute locally; KD has no delegated
-rwsem entry and the runner requires zero JIT counts. There is no TCLock sleeping
-rwsem backend. `--require-jit` is rejected. This mode does not replace the real
-kernel mmap lock. Use the [scheduler probe](../../tests/kernel/rwsem/README.md)
-for sleeping holders, same-CPU progress, cancellation and downgrade coverage.
+[KD sleeping semaphore](../../docs/design/rwsem_implementation.md) on c01/c08 or
+RCUHT. Readers execute locally. The default KD writer shell joins a writer-only
+phase, drains existing readers while it can sleep, and then enters the
+unchanged KD mutex ABI2 protocol. Its matching unlock finishes before the original
+caller releases that reservation. Ordinary writers, including downgrade callers,
+use a separate exclusive admission state on the same semaphore; they cannot add
+readers during a delegated writer epoch.
+
+`--delegate off` compiles the ordinary local KD writer API and labels its variant
+`-local`; it requires zero JIT counts. `--require-jit` applies only to eligible
+multithreaded default-KD writers. There is no TCLock sleeping rwsem backend. This
+mode does not replace the real kernel mmap lock. Use the
+[scheduler probe](../../tests/kernel/rwsem/README.md) for sleeping holders,
+same-CPU progress, cancellation, epoch exclusion and downgrade coverage.
+
+The [2026-10-18 rwsem report](../results/10.176.26.71/bench/rwsem/20261018/README.md)
+contains all 756 standard-grid sessions, correct and drained. KD meets both
+observed throughput criteria at 26/126 points; 99 are slower on at least one
+metric, and one has split JIT statuses despite all repetitions completing.
+Only seven KD timed sessions returned complete delegated bodies. High-count
+regressions, all local fallback results and the separate strict JIT acceptance
+checks remain explicit.
 
 `--lock-kind spin --workloads argbounds taskname` selects module-owned extracted
 proc snapshots. All snapshots take an exclusive spinlock; KD may delegate the
@@ -33,21 +49,21 @@ uncaptured R13 under spin ABI1; do not bypass this admission check. Use
 `--delegate off` for an explicitly local KD control, keeping it separate from
 default-KD acceptance attempts.
 
-The [fresh reintegration checks](../results/10.176.26.71/tests/feature-reintegration-20261018/README.md)
+The [earlier reintegration checks](../results/10.176.26.71/tests/feature-reintegration-20261018/README.md)
 passed local rwsem and snapshot correctness. Argbounds completed delegated bodies
 in three default-policy timed eight-worker runs; its short 16-worker check was
 `NO_JIT`. Taskname exhausted the learning waves without complete delegation in
-the current acceptance attempt. Keep both outcomes and local controls explicit.
+that acceptance attempt. Keep both outcomes and local controls explicit.
 
 Examples below run only after the guest/snapshot checks described next. Choose
 new external output directories:
 
 ```sh
-# Ordinary sleeping rwsem; correctness only, no performance score.
+# Explicit local sleeping rwsem control; correctness only, no performance score.
 timeout 900s python3 bench/rwlock_compare/run.py \
   --lock-kind rwsem --backends native kdlock --workloads cacheline \
   --cachelines 1 8 --write-percent 1 20 --threads 1 8 \
-  --functional --repeats 1 --collector-cpu 63 \
+  --delegate off --functional --repeats 1 --collector-cpu 63 \
   --output /root/kdlock-evidence/10.176.26.71/tests/rwsem-functional-NEW
 
 # Extracted four-word snapshot; read-only and controlled mutations.
@@ -59,6 +75,20 @@ timeout 900s python3 bench/rwlock_compare/run.py \
 
 For fresh performance use the standard grid through 60 workers and three
 repetitions from [benchmark commands](../README.md#standard-worker-grid).
+The explicit rwsem comparison below plans **756 sessions**: three workloads,
+two write mixes, 21 worker counts, three repetitions and two backends. It retains
+zero-entry and partial-entry KD groups separately from completed delegation;
+single-worker results do not require a delegated body.
+
+```sh
+timeout 10800s python3 bench/rwlock_compare/run.py \
+  --lock-kind rwsem --backends native kdlock \
+  --workloads cacheline rcuht --cachelines 1 8 --write-percent 1 20 \
+  --threads 1 2 3 4 5 6 7 8 12 16 20 24 28 32 36 40 44 48 52 56 60 \
+  --collector-cpu 63 --duration-ms 2000 --repeats 3 \
+  --output /root/kdlock-evidence/10.176.26.71/bench/rwsem-comparison-NEW
+```
+
 The [2026-10-15 snapshot results](../results/10.176.26.71/bench/proc_snapshots/20261015/README.md)
 belong to their frozen historical provider; restoring source is not a new score.
 
@@ -86,7 +116,7 @@ These records do not constitute a new run of the consolidated provider.
 
 The hash update and final structure checks reuse the previous
 [KD/TCLock hash payload](../../workload_modules/spin_cacheline/hash_payload.h),
-adapted from TCLocks `rcuhashbash_write_lock`. One global rwlock protects the table.
+adapted from TCLocks `rcuhashbash_write_lock`. One global reader/writer lock protects the table.
 Despite the RCUHT name, readers take that lock: the body uses no lock-free RCU,
 node allocation or RCU services.
 
@@ -161,6 +191,11 @@ limit zero bypasses only the optional spin entry-ratio filter; adaptive CPU/lock
 heat admission remains enabled. The default ratio limit is 2, NUMA is on,
 prefetch mode is 2, and the KD/TCLock batch setting is 1,024. All benchmark modules
 disable UBSAN; the captured kernel's configuration and mitigations stay intact.
+The ratio filter and spin delegation switch do not govern rwsem's mutex ABI2
+entry: it retains the current mutex heat admission, queue and NUMA batching.
+Its compiled batch upper bound is also 1,024, with the mutex's existing earlier
+fairness boundaries. Rwsem local controls use ordinary API calls in a separate
+compiled shell, rather than relying on a spin-only module switch.
 Replace `YOUR_CONFIRMED_SNAPSHOT` with the actual destination monitor tag and use
 new output directories. The archived original-host snapshot is not portable.
 
@@ -201,10 +236,10 @@ unchanged. Hash checks cover membership, unique keys, backlinks, bucket placemen
 and move/conflict/miss totals. Worker CPU, arithmetic checksum, preemption/IRQ
 balance and final reader/writer count and gate state must also match.
 
-For rwlock, KD's eligible operations are writes; for spin snapshots they are
+For rwlock and delegated rwsem, KD's eligible operations are writes; for spin snapshots they are
 reads. Entry witnesses and complete matching-outer-unlock bodies are recorded
 separately. `--require-jit` requires at least one complete body, and
-`PARTIAL_JIT` must not count as completion. Rwsem and explicit local controls
+`PARTIAL_JIT` must not count as completion. Read-only rwsem and explicit local controls
 must return zero JIT. NORMAL only means code was published.
 `--require-jit` fails a selected multithreaded KD writer case if it returns no JIT
 bodies. Read-only and delegation-disabled controls must return zero. TCLock uses
@@ -225,7 +260,7 @@ logs. Each run also has a `session.json`.
 
 Functional runs have no performance summary entries. For performance parity, both
 of these must hold against **each** of Native and TCLock for spin/rwlock, or
-against Native for ordinary rwsem:
+against Native for rwsem:
 
 1. KD's best warmed peak is at least as high.
 2. KD's median whole-run rate is at least as high.

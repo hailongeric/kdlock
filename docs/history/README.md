@@ -13,7 +13,7 @@ Historical throughput does not describe `master` unless the report says so.
 | [KD-only acceptance report](../../bench/results/10.176.26.71/bench/comparison/mutex-kdonly-20261017T140354Z/README.md) | Measured current lock implementation |
 | [All-workload comparison](../../bench/results/10.176.26.71/bench/comparison/workloads-20261015T180603Z/README.md) | Earlier spin/rwlock/API coverage and superseded owned mutex |
 | [Expanded owned mutex](../../bench/results/10.176.26.71/bench/comparison/mutex-expanded-20261016T040928Z/README.md) | Historical compatibility/performance study, not selected |
-| [Old master rwsem validation](../../bench/results/10.176.26.71/tests/rwsem-snapshots-20261015/README.md) | Historical owned-gate and delegated-writer results; distinct from the current ordinary rwsem port |
+| [Old master rwsem validation](../../bench/results/10.176.26.71/tests/rwsem-snapshots-20261015/README.md) | Historical owned-gate and delegated-writer results; distinct from the current phase-admitted rwsem port |
 
 The [machine result index](../../bench/results/README.md) retains other reports and
 raw archive locations. The old large status narratives remain in

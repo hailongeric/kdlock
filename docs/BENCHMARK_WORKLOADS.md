@@ -6,14 +6,15 @@ benchmarks on `master`. Use [benchmark commands](../bench/README.md) for executi
 a claim that the current KD version has passed every configuration.
 
 The standard grid is 1–8 workers by one and 12–60 by four, three repetitions per
-configuration, comparing KD, TCLock and Linux Native. Rwlock uses 1% and 20% writes.
+configuration, comparing KD, TCLock and Linux Native where supported. Rwlock and
+rwsem use 1% and 20% writes; rwsem compares KD with Linux Native.
 Synthetic bodies run repeatedly inside one ioctl per phase; API workers issue
 syscalls individually. Include both categories when requesting the full catalog.
 
 The current accepted [KD-only matrix](../bench/results/10.176.26.71/bench/comparison/mutex-kdonly-20261017T140354Z/README.md)
 covers c01/post64 and `api-pipebytes-query-n16`. Broader historical owned-mutex
 coverage remains in [history](history/README.md), with its original implementation
-identity. Ordinary sleeping rwsem and extracted proc snapshots have explicit
+identity. Sleeping rwsem with outer writer delegation and extracted proc snapshots have explicit
 runner modes described below. Full [process inspection and mmap candidates](#process-inspection-and-mmap-candidates)
 remain proposals, outside the runnable standard catalog.
 
@@ -27,8 +28,8 @@ same selected counters under one lock. The bodies contain explicit updates:
 | `c01` | Increment counter 0 | 64 bytes |
 | `c08` | Increment counters 0–7 | 512 bytes |
 
-Future synthetic cacheline benchmarks use only c01 and c08 for spin, mutex and
-rwlock. Select `--cachelines 1 8` in the
+Future synthetic cacheline benchmarks use only c01 and c08 for spin, mutex,
+rwlock and rwsem. Select `--cachelines 1 8` in the
 [spin/mutex runner](../bench/tclock_compare/README.md). KD mutex uses the selected
 legacy delegation protocol.
 
@@ -411,7 +412,7 @@ automatically added to an ordinary rwlock or full-catalog sweep.
 
 | Mode | Payloads / backends | Execution contract |
 | --- | --- | --- |
-| `--lock-kind rwsem` | c01/c08 or RCUHT; `--backends native kdlock` | Ordinary sleeping readers and writers. KD uses its physical mutex gate, all bodies execute locally, and JIT counts must be zero. No TCLock sleeping-rwsem port or `--require-jit`. |
+| `--lock-kind rwsem` | c01/c08 or RCUHT; `--backends native kdlock` | Sleeping local readers and explicit ABI2 outer writers. KD reserves a reader-free phase before entering the unchanged mutex delegation queue. `--delegate off` selects a distinct ordinary-local KD control with zero JIT. No TCLock sleeping-rwsem port. |
 | `--lock-kind spin --workloads argbounds` | Four-word argument-boundary snapshot; Native/TCLock/KD | Every snapshot takes an exclusive spinlock; KD may delegate reads. Controlled optional mutations use the same selected lock. |
 | `--lock-kind spin --workloads taskname` | Exact `strscpy_pad()` copy from a 16-byte name to a 64-byte padded buffer; Native/TCLock/KD | Preserve helper semantics and admission. Historical exact-helper refusal remains a known limit; explicit `--delegate off` gives a KD local control. |
 
@@ -427,16 +428,39 @@ NORMAL image or entry witness. The benchmark-only provider counts entries and
 matching completed bodies separately. Refusals and local controls remain
 separate from actual delegated results.
 
-The [ordinary rwsem design](design/rwsem_implementation.md) supports sleeping
+The [rwsem design](design/rwsem_implementation.md) supports ordinary sleeping
 read/write, trylocks, downgrade and interruptible/killable cancellation. Its
+explicit outer writer pair can delegate admitted bodies through the existing
+mutex ABI2. Each reservation closes reader admission and drains existing readers
+while schedulable, before any pinned queue publication. Ordinary writers hold an
+exclusive phase, so their downgrade cannot create a reader after another writer
+has passed drain. Outer reservations remain live until origin unlock/ACK returns;
+that pair cannot downgrade or cancel after publication. The
 [scheduler probe](../tests/kernel/rwsem/README.md) exercises sleeping holders and
-contenders sharing one CPU. This object is not a replacement for the real
-`mmap_lock`, and it deliberately has no delegated outer writer API. The
+contenders sharing one CPU and checks pre-publication ordering across downgrade.
+This object is not a replacement for the real `mmap_lock`. The
 [branch review](history/feature-reintegration-20261018.md) explains why the
-archived delegated rwsem could not be copied unchanged.
+archived delegated rwsem could not be copied unchanged; the phase design
+resolves those ordering hazards while preserving the selected mutex protocol.
 
-The [2026-10-18 validation](../bench/results/10.176.26.71/tests/feature-reintegration-20261018/README.md)
-passed ordinary rwsem scheduling and workload checks. Three default-policy timed
+The standard rwsem comparison uses c01, c08 and RCUHT, 1%/20% writes, three
+two-second repetitions, and workers 1–8 by one then 12–60 by four. With Native
+and KD this is 756 sessions. Use the [runner command](../bench/rwlock_compare/README.md)
+and retain complete-body counts, NO_JIT controls, correctness, worker progress
+and final drain. Admission and Linux rwsem fairness policies differ; the design
+does not imply a throughput advantage.
+
+The [2026-10-18 writer-delegation comparison](../bench/results/10.176.26.71/bench/rwsem/20261018/README.md)
+completed all 756 sessions with correct results and full drain. Seven KD timed
+sessions returned delegated bodies; 371 used local fallback. The report keeps
+their execution groups separate and records the substantial high-count Native
+advantage. The [focused validation](../bench/results/10.176.26.71/tests/rwsem-delegation-20261018/README.md)
+also includes writer-heavy strict JIT checks, cancellation/downgrade ordering,
+ordinary local controls and read-only cases. Neither report validates real MM
+or task-structure integration.
+
+The [earlier 2026-10-18 validation](../bench/results/10.176.26.71/tests/feature-reintegration-20261018/README.md)
+passed the prior ordinary-only rwsem scheduling and workload checks. Three default-policy timed
 argbounds runs at eight workers returned complete delegated bodies; a shorter
 16-worker acceptance attempt remained `NO_JIT`. Taskname's 16-worker preparation
 exhausted its helper waves without a completed body; local controls passed.
@@ -448,8 +472,8 @@ These outcomes do not establish performance parity or full task/MM integration.
 but container count alone does not establish contention on any one lock. The
 short `arg_lock` and task-name snapshots are restored extracted spin workloads.
 Full procfs and mmap operations need Native scaling measurements first; the
-selected KD provider cannot delegate these complete paths today. Ordinary local
-rwsem support does not change that full-path boundary.
+selected KD provider cannot delegate these complete paths today. Explicit rwsem
+writer delegation does not change that full-path boundary.
 
 This review checked the current provider and the retained Linux 6.1.159 source
 and procps-ng 3.3.17 traces. All 25 captured kernel/configuration files and the
@@ -561,12 +585,12 @@ The following requirements still apply under the KD-only mutex assumption:
   disables preemption, requires non-sleeping bodies and delegates only writers;
   readers execute locally. It is not a sleeping rwsem. Mmap uses concurrent
   readers, killable waits, trylocks, downgrade and release/reacquire paths.
-  KD mutex is exclusive and does not provide that contract. The new ordinary
-  KD rwsem supplies local sleeping APIs separately, without JIT. The archived
-  delegated rwsem depended on unlock-time owned-mutex combining; current
-  acquire-time combining would execute before its old reader-drain call.
-  Pinned delegated waiters also need a progress design for sleeping readers.
-  Neither version establishes real mmap-lock replacement.
+  KD mutex is exclusive and does not provide that contract. KD rwsem supplies
+  the ordinary sleeping APIs and a distinct delegated outer writer pair. Its
+  phase admission drains readers before acquire-time combining can run, and
+  excludes ordinary downgrade until all outer reservations retire. The outer
+  pair itself cannot downgrade or cancel after publication. These APIs do not
+  establish real mmap-lock replacement or arbitrary MM-body delegation.
 - **All consumers and lifetime.** A private KD lock around proc readers cannot
   exclude native mapping writers, faults, exec or exit. All accesses must use
   one protocol, including implicit kernel users. Task/MM references keep
@@ -652,7 +676,7 @@ has been replaced. See the [API contract](../bench/real_api/README.md#contract-a
 and [KD-only assumptions](design/kd_only_mutex.md).
 
 The full process/mmap proposals are grounded in retained source and trace
-evidence. The restored extracted snapshots and ordinary local rwsem have their
+evidence. The extracted snapshots and phase-admitted rwsem have their
 own runner contracts. Historical snapshot delegation does not validate current
 performance, live task/MM replacement or a large-container deployment. Full
 procfs/mmap candidates still need implementation and fresh VM validation.

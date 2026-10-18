@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Guest-only sleeping rwsem checks; no constructed result counts as JIT."""
+"""Guest-only rwsem sleeping and outer admission checks; no result counts as JIT."""
 import argparse
 import fcntl
 import json
@@ -64,16 +64,19 @@ def main():
     kernel_identity.arguments(p)
     args = p.parse_args()
     if args.client:
-        buffer = bytearray(64)
+        buffer = bytearray(96)
         with open('/dev/kd_rwsem_probe', 'rb', buffering=0) as device:
-            fcntl.ioctl(device, 0x80405301, buffer, True)
+            fcntl.ioctl(device, 0x80605301, buffer, True)
         row = dict(zip(('errors', 'api_checks', 'readers_slept', 'writer_slept',
                         'late_reader_slept', 'cancellation_checks', 'colocated',
-                        'idle'), struct.unpack('=8Q', buffer)))
+                        'idle', 'outer_readers_slept', 'outer_writer_slept',
+                        'downgrade_checks', 'publication_checks'), struct.unpack('=12Q', buffer)))
         print(json.dumps(row))
         return 0 if row == dict(errors=0, api_checks=8, readers_slept=2,
                                writer_slept=1, late_reader_slept=1,
-                               cancellation_checks=6, colocated=1, idle=1) else 1
+                               cancellation_checks=10, colocated=1, idle=1,
+                               outer_readers_slept=2, outer_writer_slept=1,
+                               downgrade_checks=1, publication_checks=3) else 1
     rt.require(args.output and os.geteuid() == 0 and str(ROOT).startswith('/root/') and
                os.environ.get('KDLOCK_RECOVERY_CONFIRMED') == '1' and
                os.environ.get('KDLOCK_SNAPSHOT_TAG'), 'confirmed recovery guest required')
@@ -101,8 +104,8 @@ def main():
     verify_inputs(source, hashes, binaries)
     rt.write_json(out / 'binary-sha256.json', binaries)
     results = []
-    # This provider uses only KD physical sleeping admission. No delegated
-    # requests, immutable images or result-poll settings participate.
+    # No image or translator is provided for the outer bodies. Assertions
+    # exercise local outer returns and ordering before queue publication.
     for mode in ('local',):
         idle()
         verify_inputs(source, hashes, binaries)
@@ -142,8 +145,8 @@ def main():
     rt.write_json(out / 'result.json', dict(passed=True, drained=True, jit_bodies=0,
         snapshot_tag=os.environ['KDLOCK_SNAPSHOT_TAG'], kernel_identity=identity, results=results,
         binaries={str(p.relative_to(out)): rt.digest(p) for p in (module, provider)}))
-    print('PASS: concurrent sleeping readers, waiting writer/late reader, same-CPU '
-          'progress, exclusion, trylocks, downgrade, cancellation and drain')
+    print('PASS: sleeping readers, ordinary/outer writer admission, same-CPU '
+          'progress, trylocks, downgrade before publication, cancellation and drain')
     return 0
 
 

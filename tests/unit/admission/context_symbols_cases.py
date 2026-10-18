@@ -713,6 +713,7 @@ with (
     def test_local_rwsem_apis_are_context_boundaries(self):
         names = (
             "kd_rwsem_init", "kd_rwsem_is_idle",
+            "kd_rwsem_delegate_enter", "kd_rwsem_delegate_exit",
             "kd_down_read", "kd_down_read_interruptible", "kd_down_read_killable",
             "kd_down_read_trylock", "kd_up_read", "kd_down_write",
             "kd_down_write_interruptible", "kd_down_write_killable",

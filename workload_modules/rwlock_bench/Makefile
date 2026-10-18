@@ -9,7 +9,7 @@ ifneq ($(filter taskname argbounds,$(RB_WORKLOAD)),$(RB_WORKLOAD))
 $(error spin requires a taskname or argbounds snapshot workload)
 endif
 else ifeq ($(RB_LOCK_KIND),rwsem)
-ccflags-y += -DRB_RWSEM
+ccflags-y += -DRB_RWSEM -DRB_RWSEM_DELEGATE=$(RB_RWSEM_DELEGATE)
 ifeq ($(RB_BACKEND),tclock)
 $(error TCLock backend has no sleeping rwsem port)
 endif
@@ -40,12 +40,13 @@ KDIR ?= /lib/modules/$(shell uname -r)/build
 RB_BACKEND ?= native
 RB_WORKLOAD ?= cacheline
 RB_LOCK_KIND ?= rwlock
+RB_RWSEM_DELEGATE ?= 0
 RB_LINES ?= 1
 RB_POST_WORK_ROUNDS ?= 4
 RB_SHARED ?= $(abspath ../spin_cacheline)
 .PHONY: all clean
 all:
-	$(MAKE) -C $(KDIR) M=$(CURDIR) W=1 RB_BACKEND=$(RB_BACKEND) RB_LOCK_KIND=$(RB_LOCK_KIND) RB_LINES=$(RB_LINES) RB_POST_WORK_ROUNDS=$(RB_POST_WORK_ROUNDS) RB_SHARED=$(RB_SHARED) modules
+	$(MAKE) -C $(KDIR) M=$(CURDIR) W=1 RB_BACKEND=$(RB_BACKEND) RB_LOCK_KIND=$(RB_LOCK_KIND) RB_RWSEM_DELEGATE=$(RB_RWSEM_DELEGATE) RB_LINES=$(RB_LINES) RB_POST_WORK_ROUNDS=$(RB_POST_WORK_ROUNDS) RB_SHARED=$(RB_SHARED) modules
 clean:
 	$(MAKE) -C $(KDIR) M=$(CURDIR) clean
 endif

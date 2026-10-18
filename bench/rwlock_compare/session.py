@@ -32,7 +32,7 @@ class RWSession(Session):
 
     def has_entry(self):
         if self.record['lock_kind'] == 'rwsem':
-            return False
+            return self.record['delegate'] and bool(self.record['write_percent'])
         return self.record['write_percent'] < 100 if self.record['lock_kind'] == 'spin' else bool(self.record['write_percent'])
 
     def counts(self, label):
@@ -175,8 +175,8 @@ class RWSession(Session):
             require(all(number(params[k]) == v for k, v in expected.items()) and
                     params['target_process'] == 'rb_worker', 'KD parameters differ')
             self.record.update(entry_range=[layout['entry'], layout['entry'] + 1])
-            # Sleeping rwsem bodies execute locally; rwlock readers also
-            # have no delegated entry. Spin snapshots delegate their reads.
+            # Rwsem/rwlock readers have no delegated entry. Explicit rwsem
+            # writer shells publish ABI2; spin snapshots delegate their reads.
             if self.has_entry():
                 with open(DEVICE, 'rb', buffering=0) as device:
                     fcntl.ioctl(device, PREPARE)
@@ -209,6 +209,10 @@ class RWSession(Session):
         before = int(count_path.read_text()) if self.loaded_kd else 0
         complete_before = int(complete_path.read_text()) if self.loaded_kd else 0
         publication = self.publication() if self.loaded_kd and self.has_entry() else None
+        if publication:
+            require(publication['source']['writers'] == 0,
+                    'translator writer before measurement', 'UNDRAINED')
+            self.record['published_before'] = publication
         if self.loaded_tc:
             self.record['tclock_before'] = self.tc_idle()
         self.record.update(execution_status='MEASURING', jit_before=before, jit_complete_before=complete_before)
@@ -225,7 +229,10 @@ class RWSession(Session):
                                         operation='snapshot' if snapshot_entry else 'writer',
                                         completed=complete_after - complete_before))
         if publication:
-            require(publication == self.publication(), 'delegated-entry publication changed during measurement')
+            after_publication = self.publication()
+            self.record['published_after'] = after_publication
+            require(publication == after_publication,
+                    'delegated-entry publication changed during measurement')
         if self.loaded_tc:
             self.record['tclock_after'] = self.tc_idle()
         self.record['tclock_delegation_status'] = 'UNMEASURED' if self.loaded_tc else 'NOT_APPLICABLE'

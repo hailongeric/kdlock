@@ -5,16 +5,16 @@ assumption. Whole-kernel rebuilding, lockdep/RT/ww_mutex integration and broad
 oversubscription remain unvalidated. Removing the Linux mutex bridge does not
 resolve historical pinned-producer scheduling failures.
 
-Current scope: x86_64 kernel spin/mutex/rwlock delegation and ordinary local
-sleeping rwsem. Implementation contracts
+Current scope: x86_64 kernel spin/mutex/rwlock delegation and sleeping rwsem
+with local readers and explicit outer writer delegation. Implementation contracts
 live in [DESIGN](DESIGN.md); [performance status](PERFORMANCE.md) distinguishes the
-accepted KD-only mutex from historical spin/rwlock comparisons. These unresolved issues
+accepted KD-only mutex, current rwsem results and historical spin/rwlock comparisons. These unresolved issues
 remain documented; this list does not schedule new work. Historical evidence is
 indexed in [VALIDATION](VALIDATION.md).
 
 ## Current checkpoint
 
-KD has explicit spin, ordinary mutex and rwlock APIs, with workloads comparing
+KD has explicit spin, ordinary mutex, rwlock and rwsem APIs, with workloads comparing
 KD, TCLock and Native. It tracks real lock owners and unlock acknowledgements,
 keeps source modules loaded while needed, and shares register packets between
 waiter and combiner. It does not intercept global lock calls. KD has not matched
@@ -29,6 +29,14 @@ lines in a 128-byte object. All 270 runs of the 1%/20% RCUHT matrix produced cor
 results and drained, but KD met both throughput targets at only 21 of 30 comparison
 points. Read-heavy runs across NUMA nodes and writer performance at two threads
 still have gaps. None of these results resolves the correctness limits below.
+
+The current [rwsem comparison](../bench/results/10.176.26.71/bench/rwsem/20261018/README.md)
+completed all 756 sessions correctly but met both throughput criteria at only
+26/126 points. At 60 workers KD reaches 28–46% of Native throughput across the
+six workload/mix combinations. Seven KD timed sessions returned JIT bodies;
+371 used local fallback. Reader/writer admission costs and the interaction with
+unchanged mutex heat admission need profiling before any performance claim.
+Preserve the selected mutex protocol while investigating this separate rwsem gap.
 
 Known failures are still open:
 
@@ -50,10 +58,13 @@ exact acquisition references and final ACKs. Shared storage must survive its fin
 reader. Builds/tests/benchmarks run in the recovery guest; default work does not
 change its kernel. Published KD waiters remain pinned polling.
 
-Userspace/futex, delegated rwsem, real mmap-lock replacement, other architectures
-and oversubscription redesign remain deferred. The [ordinary rwsem port](design/rwsem_implementation.md)
-uses KD physical locking; its local execution does not fix reader-drain ordering
-or pinned-waiter progress for delegated writers. Basic plus directly affected checks are the default; full suites need
+Userspace/futex, real mmap-lock replacement, other architectures and
+oversubscription redesign remain deferred. The [rwsem phase protocol](design/rwsem_implementation.md)
+drains readers before writer publication and excludes ordinary downgrade during
+an outer-writer cohort. It preserves pinned mutex producers and their existing
+oversubscription limits. Outer downgrade, post-publication cancellation, Linux
+rwsem fairness and general nested rwsem JIT controls remain unsupported.
+Basic plus directly affected checks are the default; full suites need
 explicit selection. Extremely uncommon scheduling/resource/alias combinations are
 optional coverage, while reproduced supported-path failures must remain visible.
 

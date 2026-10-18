@@ -8,6 +8,12 @@ validate the new ordinary rwsem, restored snapshots and benchmark safeguards,
 including retained delegation failures. Historical owned/adaptive mutex and
 owned-gate rwsem reports remain separate evidence.
 
+The [rwsem writer-delegation comparison](bench/rwsem/20261018/README.md)
+contains all 756 correct, drained c01/c08/RCUHT sessions at 1%/20% writes over
+the standard 1–60-worker grid. KD meets both throughput criteria at 26/126 points;
+99 are slower and one has split execution statuses despite complete execution.
+The report preserves high-count regressions, actual JIT counts and all raw evidence.
+
 The [KD-only mutex round](bench/comparison/mutex-kdonly-20261017T140354Z/README.md) contains 504 fresh accepted/drained sessions
 at 1–8 workers by one and 12–60 by four, three repetitions, with accepted KD,
 Native and TCLock controls. It measures the removal of Linux mutex backing while

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Compare rwlocks, local sleeping rwsems and proc spin snapshots in the guest."""
+"""Compare rwlocks, sleeping rwsems and proc spin snapshots in the guest."""
 import argparse
 import importlib.metadata
 import itertools
@@ -50,7 +50,8 @@ def parser():
     p.add_argument('--iterations', type=int, default=50000, help='per worker for fixed/functional runs')
     p.add_argument('--post-work-rounds', type=int, default=4)
     p.add_argument('--spin-entry-ratio-limit', type=int, default=2)
-    p.add_argument('--delegate', choices=('on', 'off'), default='on', help='KD native control when off')
+    p.add_argument('--delegate', choices=('on', 'off'), default='on',
+                   help='KD local control when off; rwsem compiles the ordinary API shell')
     p.add_argument('--require-jit', action='store_true',
                    help='require complete delegation in each eligible multithread KD case')
     p.add_argument('--require-parity', action='store_true',
@@ -70,8 +71,6 @@ def make_plan(args):
             'run snapshots separately from rwlock/rwsem payloads')
     require(args.lock_kind != 'rwsem' or 'tclock' not in args.backends,
             'the TCLock backend has no sleeping rwsem port; use native/kdlock')
-    require(args.lock_kind != 'rwsem' or not args.require_jit,
-            'rwsem bodies execute locally; --require-jit is unsupported')
     threads = FULL_THREADS if args.full_matrix else args.threads
     for values, name in ((threads, 'threads'), (args.backends, 'backends'), (args.workloads, 'workloads'),
                          (args.cachelines, 'cachelines'), (args.write_percent, 'write percentages')):
@@ -105,6 +104,11 @@ def make_plan(args):
             variant = f'{workload}-c{lines:02d}-{arm}'
             if args.lock_kind != 'rwlock':
                 variant = args.lock_kind + '-' + variant
+            rwsem_direct = args.lock_kind == 'rwsem' and arm == 'kdlock' and args.delegate == 'on'
+            if args.lock_kind == 'rwsem' and arm == 'kdlock' and not rwsem_direct:
+                variant += '-local'
+            entry_abi = (2 if rwsem_direct else None) if args.lock_kind == 'rwsem' else \
+                {'rwlock': 3, 'spin': 1}[args.lock_kind]
             plan.append(dict(name=f'{variant}-w{percent:03d}-t{n:02d}-r{repeat:02d}', variant=variant,
                 arm=arm, workload=workload, cachelines=lines, write_percent=percent, threads=n, repeat=repeat,
                 cpus=cpus[:n], collector_cpu=args.collector_cpu, iterations=args.iterations,
@@ -113,15 +117,19 @@ def make_plan(args):
                 warmup_iterations_per_worker=48000, mix_policy='evenly_spaced_worker_phase17',
                 helper_waves=args.helper_waves if workload == 'taskname' and arm == 'kdlock' and n > 1
                     and percent < 100 and args.delegate == 'on' else 0,
-                lock_kind=args.lock_kind, entry_abi={'rwlock': 3, 'spin': 1, 'rwsem': None}[args.lock_kind],
-                caller_abi='clobber' if arm == 'kdlock' and args.lock_kind != 'rwsem' else 'c',
-                delegate=args.delegate == 'on' if arm == 'kdlock' and args.lock_kind != 'rwsem' else False,
+                lock_kind=args.lock_kind, entry_abi=entry_abi,
+                caller_abi='clobber' if arm == 'kdlock' and (args.lock_kind != 'rwsem' or rwsem_direct) else 'c',
+                delegate=args.delegate == 'on' if arm == 'kdlock' else False,
+                rwsem_writer_shell=('delegated-epoch-abi2' if rwsem_direct else 'ordinary-local')
+                    if args.lock_kind == 'rwsem' else None,
                 require_jit=args.require_jit and arm == 'kdlock' and
                     (percent < 100 if args.lock_kind == 'spin' else percent > 0) and n > 1,
                 spin_entry_ratio_limit=args.spin_entry_ratio_limit if arm == 'kdlock' else None,
-                numa_policy='on' if arm != 'native' and args.lock_kind != 'rwsem' else 'not_applicable',
+                numa_policy='on' if arm != 'native' and (args.lock_kind != 'rwsem' or rwsem_direct)
+                    else 'not_applicable',
                 provider_ubsan='off',
-                delegation_batch_limit=1024 if arm != 'native' and args.lock_kind != 'rwsem' else None))
+                delegation_batch_limit=1024 if arm != 'native' and
+                    (args.lock_kind != 'rwsem' or rwsem_direct) else None))
     return plan
 
 
@@ -213,7 +221,7 @@ def build(args, out, plan):
         command(['make', '-C', source / 'daemon', 'CFLAGS=-O2 -Wall -Wextra -Werror'],
                 out / 'build-daemon.log', timeout=120)
         binaries['daemon'] = source / 'daemon/daemon'
-        for field, expected in (('spin_numa', '1'), ('spin_batch', '1024')):
+        for field, expected in (('spin_numa', '1'), ('spin_batch', '1024'), ('mutex_batch', '1024')):
             require(command(['modinfo', '-F', field, binaries['kdlock']], out / (field + '.txt')).strip() == expected,
                     'KD compiled policy differs')
     if 'tclock' in args.backends:
@@ -238,6 +246,7 @@ def build(args, out, plan):
         command(['make', '-C', folder, f'KDIR={args.kernel_source}', f'RB_BACKEND={backend}',
                  f'RB_WORKLOAD={spec["workload"]}', f'RB_LINES={spec["cachelines"]}',
                  f'RB_LOCK_KIND={spec["lock_kind"]}',
+                 f'RB_RWSEM_DELEGATE={int(spec["lock_kind"] == "rwsem" and spec["delegate"])}',
                  f'RB_POST_WORK_ROUNDS={spec["post_work_rounds"]}',
                  f'KDLOCK_INCLUDE={source / "include"}', f'TCLOCK_INCLUDE={source / "tclock_backend/include"}',
                  f'RB_SHARED={source / "workload_modules/spin_cacheline"}', *extra],
@@ -253,6 +262,11 @@ def build(args, out, plan):
         elif spec['lock_kind'] == 'rwsem':
             expected = {'native': ('down_read', 'up_read', 'down_write', 'up_write'),
                         'kdlock': ('kd_down_read', 'kd_up_read', 'kd_down_write', 'kd_up_write')}[backend]
+            if backend == 'kdlock' and spec['delegate']:
+                expected = ('kd_down_read', 'kd_up_read', 'kd_mutex_prepare',
+                            'kd_rwsem_delegate_enter', 'kd_rwsem_delegate_exit',
+                            'kd_mutex_outer_contended_clobber_v1',
+                            'kd_mutex_direct_unlock_clobber_v1', 'kd_mutex_local_unlock')
         missing = sorted(set(expected) - set(imports.split()))
         require(not missing, f'{variant}: missing direct API imports: {missing}')
         require(backend != 'native' or not any(name in imports for name in ('kd_', 'komb_')), 'native imports a delegate')

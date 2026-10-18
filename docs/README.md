@@ -11,7 +11,7 @@ KD-only version from `d2a2304`. Historical experiments do not define current API
 | [Design](DESIGN.md), [code map](CODE_MAP.md) | Architecture, terms and file responsibilities |
 | [Lock protocols](design/lock_protocols.md) | KD/TCLock/Native spin, mutex and rwlock behavior |
 | [Spin](design/spin_implementation.md), [mutex](design/mutex_implementation.md), [rwlock](design/rwlock_implementation.md) | Implementation and storage details |
-| [Sleeping rwsem](design/rwsem_implementation.md) | Ordinary sleeping readers/writers on KD physical locking; delegation and real mmap replacement remain separate |
+| [Sleeping rwsem](design/rwsem_implementation.md) | Ordinary sleeping APIs and outer ABI2 writers, phase admission before mutex publication; real mmap replacement remains separate |
 | [KD-only mutex](design/kd_only_mutex.md) | Object replacement, ordinary aliases and delegation |
 | [Locking](design/locking.md), [frames](design/frames.md), [lifetimes](design/lifetimes.md) | Ownership and retirement |
 | [JIT execution](JIT_EXECUTION.md), [register ABI](JIT_REGISTER_ABI.md), [admission](design/admission.md) | Translation and execution contracts |

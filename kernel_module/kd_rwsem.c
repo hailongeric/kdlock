@@ -1,165 +1,210 @@
 // SPDX-License-Identifier: GPL-2.0
-/* Sleeping reader admission using the selected KD-only physical mutex. */
+/* Reader/ordinary-writer/delegated-writer phases around an unchanged KD mutex. */
 #include <linux/module.h>
+#include <linux/limits.h>
 #include "kd_rwsem.h"
 #include "kd_lock.h"
+
+#define KD_RWSEM_LOCAL_WRITER (-1L)
 
 void kd_rwsem_init(struct kd_rwsem *sem)
 {
 	kd_mutex_init(&sem->gate);
 	atomic_long_set(&sem->readers, 0);
+	atomic_long_set(&sem->admission, 0);
 	init_waitqueue_head(&sem->drain);
 }
 EXPORT_SYMBOL_GPL(kd_rwsem_init);
 
+static void kd_rwsem_wake(struct kd_rwsem *sem)
+{
+	/* Call only after a fully ordered count/phase RMW. This pairs with the
+	 * waiter's enqueue and condition check, including this lockless test. */
+	if (waitqueue_active(&sem->drain))
+		wake_up_all(&sem->drain);
+}
+
 void kd_up_read(struct kd_rwsem *sem)
 {
-	/* Full ordering pairs with the writer's enqueue/condition check, including
-	 * this lockless waitqueue_active test: the final reader cannot lose wakeup.
-	 */
-	if (atomic_long_dec_and_test(&sem->readers) &&
-	    waitqueue_active(&sem->drain))
-		wake_up_all(&sem->drain);
+	if (atomic_long_dec_and_test(&sem->readers))
+		kd_rwsem_wake(sem);
 }
 EXPORT_SYMBOL_GPL(kd_up_read);
 
 int kd_down_read_trylock(struct kd_rwsem *sem)
 {
-	if (atomic_long_read(&sem->gate.owner))
+	if (atomic_long_read(&sem->admission))
 		return 0;
-	/* Publish before rechecking the whole owner word, including waiter flags.
-	 * This full barrier and the writer's barrier prohibit both sides missing
-	 * each other. Failed speculation touches no protected payload.
-	 */
+	/* Publish before checking the phase again. This full barrier and the
+	 * writer's reservation RMW prohibit both missing each other's admission.
+	 * A speculative count can overlap a writer, but cannot touch its payload. */
 	atomic_long_inc_return(&sem->readers);
-	if (!atomic_long_read_acquire(&sem->gate.owner))
+	if (!atomic_long_read_acquire(&sem->admission))
 		return 1;
 	kd_up_read(sem);
 	return 0;
 }
 EXPORT_SYMBOL_GPL(kd_down_read_trylock);
 
-static void kd_rwsem_admit_reader(struct kd_rwsem *sem)
-{
-	atomic_long_inc(&sem->readers);
-	kd_mutex_local_unlock(&sem->gate);
-}
-
 void kd_down_read(struct kd_rwsem *sem)
 {
 	might_sleep();
-	if (kd_down_read_trylock(sem))
-		return;
-	kd_mutex_local_lock(&sem->gate);
-	kd_rwsem_admit_reader(sem);
+	wait_event(sem->drain, kd_down_read_trylock(sem));
 }
 EXPORT_SYMBOL_GPL(kd_down_read);
 
 int kd_down_read_interruptible(struct kd_rwsem *sem)
 {
-	int ret;
-
 	might_sleep();
-	if (kd_down_read_trylock(sem))
-		return 0;
-	ret = kd_mutex_lock_interruptible(&sem->gate);
-	if (!ret)
-		kd_rwsem_admit_reader(sem);
-	return ret;
+	return wait_event_interruptible(sem->drain, kd_down_read_trylock(sem)) ? -EINTR : 0;
 }
 EXPORT_SYMBOL_GPL(kd_down_read_interruptible);
 
 int kd_down_read_killable(struct kd_rwsem *sem)
 {
-	int ret;
-
 	might_sleep();
-	if (kd_down_read_trylock(sem))
-		return 0;
-	ret = kd_mutex_lock_killable(&sem->gate);
-	if (!ret)
-		kd_rwsem_admit_reader(sem);
-	return ret;
+	return wait_event_killable(sem->drain, kd_down_read_trylock(sem)) ? -EINTR : 0;
 }
 EXPORT_SYMBOL_GPL(kd_down_read_killable);
 
+static bool kd_rwsem_reserve_local(struct kd_rwsem *sem)
+{
+	return atomic_long_cmpxchg(&sem->admission, 0, KD_RWSEM_LOCAL_WRITER) == 0;
+}
+
+static void kd_rwsem_release_local(struct kd_rwsem *sem)
+{
+	/* Every ordinary writer retains this exclusive phase until after its
+	 * physical unlock. No delegated producer can have passed reader drain. */
+	BUG_ON(atomic_long_xchg(&sem->admission, 0) != KD_RWSEM_LOCAL_WRITER);
+	kd_rwsem_wake(sem);
+}
+
 void kd_down_write(struct kd_rwsem *sem)
 {
+	might_sleep();
+	wait_event(sem->drain, kd_rwsem_reserve_local(sem));
 	kd_mutex_local_lock(&sem->gate);
-	smp_mb();
 	wait_event(sem->drain, !atomic_long_read_acquire(&sem->readers));
 }
 EXPORT_SYMBOL_GPL(kd_down_write);
 
 int kd_down_write_interruptible(struct kd_rwsem *sem)
 {
-	int ret = kd_mutex_lock_interruptible(&sem->gate);
+	int ret;
 
+	might_sleep();
+	ret = wait_event_interruptible(sem->drain, kd_rwsem_reserve_local(sem));
 	if (ret)
-		return ret;
-	smp_mb();
-	ret = wait_event_interruptible(sem->drain,
-				       !atomic_long_read_acquire(&sem->readers));
-	if (ret) {
-		/* No write acquisition was granted. Remove the gate ownership before
-		 * reporting cancellation so later readers/writers can make progress.
-		 */
-		kd_mutex_local_unlock(&sem->gate);
 		return -EINTR;
+	ret = kd_mutex_lock_interruptible(&sem->gate);
+	if (!ret) {
+		ret = wait_event_interruptible(sem->drain,
+					       !atomic_long_read_acquire(&sem->readers));
+		if (!ret)
+			return 0;
+		kd_mutex_local_unlock(&sem->gate);
 	}
-	return 0;
+	/* Wait macros remove their waiter before rollback reopens admission. */
+	kd_rwsem_release_local(sem);
+	return -EINTR;
 }
 EXPORT_SYMBOL_GPL(kd_down_write_interruptible);
 
 int kd_down_write_killable(struct kd_rwsem *sem)
 {
-	int ret = kd_mutex_lock_killable(&sem->gate);
+	int ret;
 
+	might_sleep();
+	ret = wait_event_killable(sem->drain, kd_rwsem_reserve_local(sem));
 	if (ret)
-		return ret;
-	smp_mb();
-	ret = wait_event_killable(sem->drain,
-				 !atomic_long_read_acquire(&sem->readers));
-	if (ret) {
-		kd_mutex_local_unlock(&sem->gate);
 		return -EINTR;
+	ret = kd_mutex_lock_killable(&sem->gate);
+	if (!ret) {
+		ret = wait_event_killable(sem->drain,
+					 !atomic_long_read_acquire(&sem->readers));
+		if (!ret)
+			return 0;
+		kd_mutex_local_unlock(&sem->gate);
 	}
-	return 0;
+	kd_rwsem_release_local(sem);
+	return -EINTR;
 }
 EXPORT_SYMBOL_GPL(kd_down_write_killable);
 
 int kd_down_write_trylock(struct kd_rwsem *sem)
 {
-	if (!kd_mutex_trylock(&sem->gate))
+	if (!kd_rwsem_reserve_local(sem))
 		return 0;
-	smp_mb();
-	if (!atomic_long_read_acquire(&sem->readers))
-		return 1;
-	kd_mutex_local_unlock(&sem->gate);
+	if (kd_mutex_trylock(&sem->gate)) {
+		if (!atomic_long_read_acquire(&sem->readers))
+			return 1;
+		kd_mutex_local_unlock(&sem->gate);
+	}
+	kd_rwsem_release_local(sem);
 	return 0;
 }
 EXPORT_SYMBOL_GPL(kd_down_write_trylock);
 
 void kd_up_write(struct kd_rwsem *sem)
 {
+	BUG_ON(atomic_long_read(&sem->admission) != KD_RWSEM_LOCAL_WRITER);
 	kd_mutex_local_unlock(&sem->gate);
+	kd_rwsem_release_local(sem);
 }
 EXPORT_SYMBOL_GPL(kd_up_write);
 
 void kd_downgrade_write(struct kd_rwsem *sem)
 {
-	BUG_ON(!kd_origin_mutex_owned(&sem->gate, current));
-	/* Count this reader before making the gate available. A successor writer
-	 * must observe the count and wait; no writer can enter during conversion.
-	 */
+	BUG_ON(atomic_long_read(&sem->admission) != KD_RWSEM_LOCAL_WRITER ||
+	       !kd_origin_mutex_owned(&sem->gate, current));
+	/* Only the exclusive ordinary phase can downgrade. Publish this reader
+	 * before reopening admission: any later D reservation must drain it while
+	 * schedulable, before entering the legacy queue and pinning its producer. */
 	atomic_long_inc(&sem->readers);
 	kd_mutex_local_unlock(&sem->gate);
+	kd_rwsem_release_local(sem);
 }
 EXPORT_SYMBOL_GPL(kd_downgrade_write);
 
+static bool kd_rwsem_reserve_delegate(struct kd_rwsem *sem)
+{
+	long phase = atomic_long_read(&sem->admission);
+
+	while (phase >= 0 && phase < LONG_MAX) {
+		/* Exact reservations also close reader/ordinary-writer admission.
+		 * Use a full barrier before inspecting admitted readers. */
+		if (atomic_long_try_cmpxchg(&sem->admission, &phase, phase + 1))
+			return true;
+	}
+	return false;
+}
+
+void kd_rwsem_delegate_enter(struct kd_rwsem *sem)
+{
+	might_sleep();
+	wait_event(sem->drain, kd_rwsem_reserve_delegate(sem));
+	/* No producer has published yet. A sleeping reader can resume even when
+	 * it shares this CPU. Positive admission prevents new accepted readers or
+	 * ordinary downgrades throughout every reservation in the cohort. */
+	wait_event(sem->drain, !atomic_long_read_acquire(&sem->readers));
+}
+EXPORT_SYMBOL_GPL(kd_rwsem_delegate_enter);
+
+void kd_rwsem_delegate_exit(struct kd_rwsem *sem)
+{
+	long remaining = atomic_long_dec_return(&sem->admission);
+
+	BUG_ON(remaining < 0);
+	if (!remaining)
+		kd_rwsem_wake(sem);
+}
+EXPORT_SYMBOL_GPL(kd_rwsem_delegate_exit);
+
 bool kd_rwsem_is_idle(struct kd_rwsem *sem)
 {
-	return !atomic_long_read(&sem->readers) &&
+	return !atomic_long_read(&sem->admission) &&
+		!atomic_long_read(&sem->readers) &&
 		!waitqueue_active(&sem->drain) && kd_mutex_is_idle(&sem->gate);
 }
 EXPORT_SYMBOL_GPL(kd_rwsem_is_idle);

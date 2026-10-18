@@ -1,106 +1,173 @@
 # Sleeping KD reader/writer semaphore
 
-[`kd_rwsem.h`](../../include/kd_rwsem.h) provides an explicit sleeping reader/writer
-object using the selected KD-only physical mutex for admission. Readers and
-writers execute locally. Neither acquisition publishes a delegation request,
-and no Linux mutex or Linux rwsem backs the object. The selected legacy mutex
-queue, batching, ABI2 and published-waiter protocol are unchanged.
+[`kd_rwsem.h`](../../include/kd_rwsem.h) provides concurrent sleeping readers and
+ordinary exclusive writers. The explicit outer-writer interface in
+[`kd_rwsem_direct.h`](../../include/kd_rwsem_direct.h) also permits writer
+delegation through the selected KD-only mutex. Reader admission closes and
+existing readers drain before any writer can publish a pinned delegation
+request. No Linux mutex or Linux rwsem backs the object. The KD mutex's physical
+ownership, legacy queue and batching, ABI2, immutable images, source leases,
+unlock acknowledgements and frame retirement remain unchanged.
 
 ## API and scope
 
 `DEFINE_KD_RWSEM()` and `kd_rwsem_init()` initialize static and dynamic objects.
 `kd_down_read()` / `kd_up_read()` permit concurrent, sleeping readers.
-`kd_down_write()` / `kd_up_write()` provide exclusive, sleeping writers. Read and
-write trylocks return 1 on success and 0 on failure. Interruptible and killable
-read/write acquisitions return zero on success and `-EINTR` on cancellation,
-without leaving reader or gate ownership behind. Killable acquisition ignores
-nonfatal signals. An immediately available acquisition may succeed despite a
-pending signal, as with the physical mutex API.
+`kd_down_write()` / `kd_up_write()` provide exclusive, sleeping ordinary writers.
+Read and write trylocks return 1 on success and 0 on failure. Interruptible and
+killable ordinary acquisitions return zero on success and `-EINTR` on
+cancellation, without leaving reader, writer-admission or gate ownership behind.
+Killable acquisition ignores nonfatal signals. An immediately available
+acquisition may succeed despite a pending signal.
 
 `kd_downgrade_write()` converts an ordinary writer to a reader without admitting
 an intervening writer; finish with `kd_up_read()`. `kd_rwsem_is_idle()` is an
-inspection helper after callers have stopped and joined. It is not an admission
-primitive and cannot replace source/frame drain for other provider users.
+inspection helper after all callers stop and join. Its admission, reader and
+gate checks cannot replace provider source/frame drain.
 
-All participants must adopt this API for the same object. Do not access the
-embedded gate directly or pass either object to Linux lock APIs. There is no
-delegated outer-writer API, reader-to-writer upgrade, recursive locking guarantee,
-non-owner release API, IRQ/BH variant, lockdep integration or RT support. This is
-not a binary/layout-compatible replacement for Linux `struct rw_semaphore`.
-The translator explicitly refuses these APIs inside an enclosing delegated body,
-including calls discovered while learning a helper. The execution ledger has no
-rwsem ownership mode or downgrade/cancellation contract; ordinary availability
-does not make them valid nested JIT lock controls.
+`KD_RWSEM_OUTER_WRITE_LOCK()` / `KD_RWSEM_OUTER_WRITE_UNLOCK()` are a separate
+matched pair for delegation-capable outer writers. The caller supplies an opaque
+`struct kd_rwsem_outer_cookie` for one lexical acquisition and a unique named
+continuation in a `noipa` function. Prepare that continuation on the embedded KD
+mutex with `kd_mutex_prepare()` and `KD_ENTRY_ABI_MUTEX_CLOBBER_V1`. The compiler
+owns spills across the clobber boundaries, as for direct KD mutex calls. The
+existing two-word wrapper input and packet ABI do not change.
 
-## Admission and ordering
+The outer pair cannot downgrade or cancel after publication. Its admission and
+drain waits are uninterruptible; callers needing cancellation use an ordinary
+acquisition. It must finish with its matching outer unlock, even when a
+particular invocation executes locally. Ordinary trylock,
+interruptible/killable acquisition and downgrade
+retain their local contracts. Do not mix an ordinary acquisition with an outer
+unlock, reuse or transfer a live cookie, or access the embedded gate directly.
 
-The physical KD mutex gates admission. An atomic count records admitted readers.
-A reader first observes the whole gate owner word as zero, publishes its count
-with a fully ordered increment, then rechecks the owner word with acquire
-ordering. Owner flags also close this fast path. A failed speculation rolls back
-without touching protected data. Slow readers acquire the physical gate, publish
-their count and release the gate; they never enter the delegation queue.
+All participants must adopt this API for the same object. This is not a
+binary/layout-compatible replacement for Linux `struct rw_semaphore`. There is
+no reader-to-writer upgrade, recursive locking guarantee, non-owner release API,
+IRQ/BH variant, lockdep integration or RT support. The translator continues to
+refuse ordinary rwsem APIs and admission helpers inside an enclosing delegated
+body, including calls discovered while learning a helper. There is no nested
+rwsem ledger mode or remote cancellation/downgrade contract.
 
-A writer acquires and retains the gate, executes a full barrier, then sleeps on
-the drain wait queue until the reader count is zero. The reader's
-increment/recheck and writer's gate/barrier/count check prevent both from missing
-the other's admission. Speculative counts may overlap an executing writer, but
-those readers cannot access the payload. The final reader's fully ordered
-decrement precedes `waitqueue_active()` and wakeup, pairing with the writer's
-enqueue and condition recheck to avoid lost wakeups.
+## Admission phases
 
-A cancelled writer first removes its drain waiter through the wait-event helper,
-then releases its KD gate before reporting `-EINTR`. Cancellation while acquiring
-the gate uses the selected KD mutex's existing wait-list removal and handoff
-rules. Downgrade publishes a reader count before releasing the gate, forcing any
-successor writer to wait for the downgraded reader.
+An atomic admission word is independent of the embedded KD physical mutex:
 
-This is a gate/count construction, not a port of Linux's optimized rwsem reader
-batching and fairness policy. No throughput advantage is implied by its design.
+| Admission value | Allowed participants |
+| --- | --- |
+| `0` | Readers may enter; an ordinary or outer writer may reserve admission |
+| Positive | Exact number of live outer-writer reservations; no new reader or ordinary writer may enter |
+| `-1` | One ordinary writer owns admission; no outer writer or new reader may enter |
+
+The positive count records exact reservations acquired and released by the outer
+API. It does not identify the physical executor or replace the mutex's owner,
+queue, source lease, result acknowledgement or frame records. An outer
+reservation begins before the KD mutex call and ends only after its matching
+unlock returns on the originating task. An origin delayed after unlock therefore
+keeps admission closed conservatively.
+
+A reader observes admission open, publishes its reader count with a fully
+ordered increment, then rechecks admission with acquire ordering. A failed
+speculation rolls back without touching protected data. A slow reader sleeps
+and retries the same admission-aware acquisition; it cannot bypass a closed
+phase by acquiring the physical gate. Speculative reader counts can briefly
+appear during a writer phase, but those callers never access the protected
+payload.
+
+An outer writer atomically joins or creates a positive phase, executes the
+reader-drain ordering barrier, and sleeps until existing readers drain. Only
+then does it call the unchanged KD mutex outer interface, which may acquire
+locally, combine other requests or publish a pinned waiter. All admitted
+readers have finished before that publication, and the positive phase prevents
+new admitted readers. The reader's ordered increment/recheck and the writer's
+reservation/barrier/count check prevent both from missing each other.
+
+The final reader's ordered decrement precedes the drain wakeup. Waitqueue
+enrolment and condition rechecks ensure a waiter either observes the completed
+drain or receives a wakeup. Releasing the last outer reservation reopens
+admission and wakes readers and ordinary writers. Reservation release is
+outside the translated region, after the existing mutex unlock endpoint;
+synthetic completion resumes there on the origin rather than releasing the
+reservation from the executor.
+
+## Ordinary writers, cancellation and downgrade
+
+An ordinary writer atomically changes admission from `0` to `-1`, acquires the
+KD physical gate locally, and drains readers while it may sleep. An unavailable
+admission phase is itself a sleeping wait. Interruptible/killable acquisition
+cancels at an applicable wait without retaining the phase or physical gate.
+Failure during reader drainage releases both before reporting `-EINTR`.
+
+Ordinary unlock releases the KD physical gate before reopening admission.
+Downgrade publishes its reader count while it still owns both `-1` admission
+and the physical gate, then releases the gate and reopens admission. A following
+outer writer must reserve admission and drain this reader before publication.
+An existing positive phase excludes ordinary ownership, so an ordinary writer
+can never introduce a downgraded reader behind already-pinned outer writers.
+
+The outer API does not downgrade because other writers in its positive phase
+may already have published pinned requests. Introducing a reader at that point
+would violate their reader-free admission guarantee and could prevent that
+reader from resuming on a pinned CPU. Cancelling a published request would also
+require changing the selected mutex's queue and source/frame lifetime protocol.
+Keeping those operations on ordinary acquisitions preserves both contracts.
+
+This construction prefers a live outer-writer cohort: new outer writers may
+join a positive phase while readers or ordinary writers wait. It does not port
+Linux rwsem's reader batching or fairness policy, and sustained outer-writer
+arrivals can delay those waiters. It supplies no bounded-wait guarantee or
+implied throughput advantage. The selected mutex's general oversubscription
+limitations remain separate from the rwsem reader-drain solution.
 
 ## Why the archived delegation cannot be copied unchanged
 
-The prior implementation remains reachable at
-`archive/task/sleep-rwsem-snapshots` (`82f92db`). Its ordinary gate/count interface
-is the basis of this port. Its delegated writer integration depends on the
-rejected owned-mutex protocol and is not compatible with the selected mutex:
+The archived implementation remains reachable at
+`archive/task/sleep-rwsem-snapshots` (`82f92db`). Its writer integration depended
+on the rejected owned-mutex protocol:
 
-1. The archived mutex combined writers during unlock, after the physical writer
-   had already drained readers. The selected legacy queue can execute delegated
-   bodies during acquisition, before an outer writer macro returns. Placing
-   reader drainage after that macro would allow a delegated writer to overlap
-   admitted readers.
-2. In the selected mutex, `cookie.owner == 0` identifies every routed acquisition,
-   including physical queue owners and some native fallbacks. It does not prove
-   that this execution is a synthetic delegated entry. The archived conditional
-   reader wait would therefore also miss some physical writers.
-3. Published legacy producers poll with preemption disabled. A sleeping reader
-   can retain a read count on a CPU subsequently occupied by a pinned writer;
-   that reader then cannot resume to release its count. A pre-batch reader-drain
-   hook alone does not resolve this progress problem.
+1. It combined during unlock, after the physical writer had drained readers.
+   The selected mutex may combine during acquisition. Reader drainage after
+   its outer lock macro is therefore too late. The new positive phase drains
+   readers before entering that macro.
+2. `cookie.owner == 0` includes routed physical acquisitions and native
+   fallbacks; it does not identify only synthetic delegated entries. The new
+   phase protocol applies before every outer acquisition without making this
+   assumption.
+3. Published waiters poll with preemption disabled. Waiting for a sleeping
+   reader only after publication can prevent that reader from resuming on a
+   pinned CPU. The new drain wait happens before publication while the caller
+   remains schedulable.
+4. A pre-publication reader drain alone cannot account for a later ordinary
+   downgrade. Exclusive ordinary admission prevents that transition from
+   overlapping a positive outer-writer phase.
 
-Reserving a writer before queue publication can close reader admission and drain
-existing readers before any producer becomes pinned. That is not a complete
-solution when ordinary downgrade is allowed: a physical writer can create a new
-reader after peers have already passed their drain check and published requests.
-A correct delegated design must order that transition against publication, or
-introduce a separately specified API that cannot downgrade. It must also retain
-exact ownership, source leases, result acknowledgements and frame retirement.
-Restoring the old owned mutex or parked producers is not part of this port.
+These admission rules resolve the rwsem-specific ordering hazards without
+restoring the owned/adaptive protocol, Linux mutex backing or parked published
+producers.
 
 ## Mmap and validation boundaries
 
-Sleeping/killable acquisition and downgrade are useful prerequisites for an MM
-lock experiment. They do not integrate this object into `mm_struct::mmap_lock`.
-That requires coordinated replacement of every reader/writer, Linux helper and
-lockdep contracts, fault/VMA lifetimes, retry and lock-mode transitions, and
-kernel configuration validation. Ordinary sleeping access does not establish
-that `access_remote_vm()` or other task-dependent bodies can be delegated.
+The API does not integrate this object into `mm_struct::mmap_lock`. That requires
+coordinated replacement of every reader/writer, Linux helper and lockdep
+contracts, fault/VMA lifetimes, retry and lock-mode transitions, and kernel
+configuration validation. Safe admission does not establish that
+`access_remote_vm()` or another task-dependent body can be delegated; existing
+instruction and context admission still apply.
 
-The [ordinary API probe](../../tests/kernel/rwsem/README.md) checks concurrent
-sleeping readers, writer/late-reader exclusion, one-CPU scheduling progress,
-trylocks, downgrade, both cancellation sites and final drain. No ordinary probe
-result counts as returned-JIT evidence. The [current validation receipt](../../bench/results/10.176.26.71/tests/feature-reintegration-20261018/README.md)
-records the passing probe and 24 Native/KD workload sessions. Historical delegated results remain in
-the [archived receipt](../../bench/results/10.176.26.71/tests/rwsem-snapshots-20261015/README.md)
-and must not be presented as validation of this implementation.
+The [current validation receipt](../../bench/results/10.176.26.71/tests/rwsem-delegation-20261018/README.md)
+records the focused checks for this implementation. The
+[API probe](../../tests/kernel/rwsem/README.md) covers sleeping readers,
+writer/late-reader exclusion, same-CPU scheduling progress, cancellation,
+trylocks, downgrade and drain. Its phase-specific checks keep an outer writer
+before publication while an ordinary reader or downgraded writer is active.
+Separate strict JIT acceptance checks establish returned bodies through matching
+outer-unlock completions; a published `NORMAL` image alone is insufficient.
+Native, delegated-capable KD and ordinary local KD shells retain distinct source
+and instrumentation identities. Functional and JIT acceptance results do not
+establish throughput parity; see the [performance status](../PERFORMANCE.md)
+for measured comparisons.
+
+The [previous ordinary-only receipt](../../bench/results/10.176.26.71/tests/feature-reintegration-20261018/README.md)
+and [archived delegated receipt](../../bench/results/10.176.26.71/tests/rwsem-snapshots-20261015/README.md)
+describe their captured implementations. Neither establishes validation or
+performance of this admission-phase implementation.

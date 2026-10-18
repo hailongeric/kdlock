@@ -5,20 +5,22 @@
 #include <linux/wait.h>
 #include "kd_mutex.h"
 
-/* Task-context sleeping reader/writer object. The selected KD physical mutex
- * gates admission; it never publishes a delegated request. Readers retain only
- * their count and writers retain the gate until release or downgrade. Every
- * participant must use this API, and callers must not access the embedded gate.
+/* Task-context sleeping reader/writer object. Admission is separate from the
+ * unchanged KD mutex protocol: 0 admits readers, -1 reserves an ordinary writer,
+ * and positive values count exact delegation-capable writer reservations.
+ * Every participant must use this API; never access the embedded gate directly.
  */
 struct kd_rwsem {
 	struct kd_mutex gate;
 	atomic_long_t readers __aligned(64);
+	atomic_long_t admission;
 	wait_queue_head_t drain;
 };
 
 #define KD_RWSEM_INITIALIZER(name) { \
 	.gate = KD_MUTEX_INITIALIZER(name.gate), \
 	.readers = ATOMIC_LONG_INIT(0), \
+	.admission = ATOMIC_LONG_INIT(0), \
 	.drain = __WAIT_QUEUE_HEAD_INITIALIZER(name.drain), \
 }
 #define DEFINE_KD_RWSEM(name) \
@@ -36,6 +38,10 @@ int kd_down_write_killable(struct kd_rwsem *sem);
 int kd_down_write_trylock(struct kd_rwsem *sem);
 void kd_up_write(struct kd_rwsem *sem);
 void kd_downgrade_write(struct kd_rwsem *sem);
+/* Outer clobber wrappers only: reserve before publication and release on the
+ * origin after the matching mutex unlock/ACK. Not nested JIT lock controls. */
+void kd_rwsem_delegate_enter(struct kd_rwsem *sem);
+void kd_rwsem_delegate_exit(struct kd_rwsem *sem);
 /* Quiescent inspection after stopping/joining every user, not admission. */
 bool kd_rwsem_is_idle(struct kd_rwsem *sem);
 

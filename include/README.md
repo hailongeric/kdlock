@@ -11,7 +11,7 @@ assembly and the Python translator. Helpers used only inside a backend live unde
 | Spin queue and ticket | [kd_spinlock.h](kd_spinlock.h), [kd_spin_entry.h](kd_spin_entry.h), [qspinlock_i.h](qspinlock_i.h) | Reusable nodes, stable continuation and exact native borrowing |
 | Mutex | [kd_mutex.h](kd_mutex.h), [kd_mutex_direct.h](kd_mutex_direct.h), [kd_mutex_compat.h](kd_mutex_compat.h) | KD-only object, ordinary API aliases, ABI2 and opaque outer cookie |
 | Read-write lock | [kd_rwlock.h](kd_rwlock.h) | 128-byte object, 64-byte alignment; local readers, native fast writers and ABI3 JIT writers |
-| Sleeping semaphore | [kd_rwsem.h](kd_rwsem.h) | Ordinary local sleeping readers/writers, KD physical admission gate, trylocks and downgrade; no delegated outer API |
+| Sleeping semaphore | [kd_rwsem.h](kd_rwsem.h), [kd_rwsem_direct.h](kd_rwsem_direct.h) | Ordinary sleeping APIs and outer ABI2 writers; phase reservations and reader drain precede the unchanged KD mutex queue |
 | Frames and controls | [kd_exec.h](kd_exec.h), [kd_call.h](kd_call.h), [kd_lock.h](kd_lock.h) | Logical state, held-lock ledger, source CALL and final ACK |
 | Registry and execution | [exe.h](exe.h), [exe_info.h](exe_info.h), [kd_jit_batch.h](kd_jit_batch.h) | Backend/ABI/layout identity, readiness and distinct wrapper/C results |
 | Mutex image lifetime | [kd_image.h](kd_image.h) | Immutable image descriptors, upload identity and generation-bound frames |
@@ -53,6 +53,15 @@ rwlock callers must be rebuilt with matching provider, daemon and translator.
 See [the rwlock API and protocol](../docs/design/rwlock_implementation.md).
 All rwlock pairs keep preemption disabled until unlock. IRQ/BH variants and
 read-to-write upgrades are unsupported.
+
+Rwsem readers use `kd_down_read/up_read`; ordinary writers use
+`kd_down_write/up_write`, with trylock, interruptible/killable and downgrade
+variants. Explicit outer writers pair `KD_RWSEM_OUTER_WRITE_LOCK/UNLOCK` with
+one `kd_rwsem_outer_cookie`. The pair reserves writer admission and drains
+readers before the mutex can publish a pinned request, then releases that
+reservation on the origin after the mutex unlock returns. It reuses ABI2 and
+does not support cancellation, downgrade or nested translated acquisition.
+See [the rwsem API and ordering](../docs/design/rwsem_implementation.md).
 
 ## Explicit IRQ/BH spin interfaces
 

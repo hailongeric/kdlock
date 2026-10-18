@@ -138,13 +138,14 @@ class ClobberEntryTests(unittest.TestCase):
         self.assertEqual(self.generate('48833c2400740748c7c00100000048890424c3')[2],2)
 
     def test_contract_identity_matches_backend(self):
-        mutex_symbols = {"kd_mutex_lock_clobber_v1": 0x5000,
-                         "kd_mutex_unlock_clobber_v1": 0x6000}
+        mutex_symbols = {"kd_mutex_direct_lock_clobber_v1": 0x5000,
+                         "kd_mutex_direct_unlock_clobber_v1": 0x6000}
         for abi, kind, expected in ((1, 'mutex', 2), (2, 'spin', 2), (2, 'mutex', 0),
                                     (3, 'mutex', 2), (3, 'spin', 0)):
-            self.assertEqual(render('c3', abi=abi, lock_kind=kind,
-                                    kernel_symbols=SYMBOLS | mutex_symbols,
-                                    return_status=True, muted=True)[2], expected)
+            with self.subTest(abi=abi, lock_kind=kind):
+                self.assertEqual(render('c3', abi=abi, lock_kind=kind,
+                                        kernel_symbols=SYMBOLS | mutex_symbols,
+                                        return_status=True, muted=True)[2], expected)
         for code in ('488b45f848890424c3', '48890424c3'):
             self.assertEqual(render(code, abi=3, kernel_symbols=SYMBOLS,
                                     return_status=True, muted=True)[2],
@@ -153,21 +154,28 @@ class ClobberEntryTests(unittest.TestCase):
                                     kernel_symbols=mutex_symbols, return_status=True,
                                     muted=True)[2], 0 if code.startswith('488b45') else 2)
 
-    def test_direct_mutex_unlock_bounds_abi2_and_bridge_remains_known(self):
-        # Both identities bound admission, while COMPLETE targets the explicit
-        # module endpoint. A bridge alias still leaves through generic FULL.
+    def test_obsolete_mutex_bridge_cannot_supply_abi2_identity(self):
+        # KD-only ABI2 resolves its own module endpoints. The old Linux bridge
+        # names cannot establish an available clobber contract, even for RET.
         symbols = {"kd_mutex_lock_clobber_v1": 0x5000,
-                   "kd_mutex_unlock_clobber_v1": 0x6000,
-                   "kd_mutex_direct_lock_clobber_v1": 0x7000,
+                   "kd_mutex_unlock_clobber_v1": 0x6000}
+        assembly, log, status = render('c3', abi=2, lock_kind='mutex',
+                                      kernel_symbols=symbols, return_status=True)
+        self.assertEqual((status, assembly), (2, b''))
+        self.assertIn('clobber entry symbols unavailable', log)
+
+    def test_direct_mutex_unlock_bounds_abi2(self):
+        # The provider's direct endpoint terminates the body before the unsafe
+        # suffix and is eligible for checked COMPLETE rather than a CALL miss.
+        symbols = {"kd_mutex_direct_lock_clobber_v1": 0x7000,
                    "kd_mutex_direct_unlock_clobber_v1": 0x8000}
-        for target in (0x6000, 0x8000):
-            code = bytes.fromhex('48c7c7009000004889e648c7c2191000004889e9')
-            code += b'\xe8' + (target - 0x1019).to_bytes(4, 'little', signed=True)
-            code += bytes.fromhex('64488b042500000000c3')
-            asm, _, status = render(code.hex(), abi=2, lock_kind='mutex',
-                                    kernel_symbols=symbols, return_status=True, muted=True)
-            self.assertEqual(status, 0)
-            self.assertEqual(b'clobber_complete' in asm, target == 0x8000)
+        code = bytes.fromhex('48c7c7009000004889e648c7c2191000004889e9')
+        code += b'\xe8' + (0x8000 - 0x1019).to_bytes(4, 'little', signed=True)
+        code += bytes.fromhex('64488b042500000000c3')
+        asm, _, status = render(code.hex(), abi=2, lock_kind='mutex',
+                                kernel_symbols=symbols, return_status=True, muted=True)
+        self.assertEqual(status, 0)
+        self.assertIn(b'clobber_complete', asm)
 
     def test_contended_mutex_symbol_is_an_abi2_control_boundary(self):
         symbols = {"kd_mutex_direct_lock_clobber_v1": 0x5000,

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0
-/* Ordinary sleeping API probe. Real JIT acceptance is a separate benchmark. */
+/* Sleeping admission and outer-writer ordering. JIT acceptance is separate. */
 #include <linux/completion.h>
 #include <linux/cpu.h>
 #include <linux/delay.h>
@@ -11,6 +11,7 @@
 #include <linux/sched/signal.h>
 #include <linux/uaccess.h>
 #include "kd_rwsem.h"
+#include "kd_rwsem_direct.h"
 
 static DEFINE_KD_RWSEM(sem);
 static DEFINE_KD_MUTEX(control);
@@ -18,13 +19,14 @@ static atomic_t reading = ATOMIC_INIT(0), writing = ATOMIC_INIT(0), errors = ATO
 struct worker {
 	struct task_struct *task;
 	struct completion entered, release, done;
-	bool writer;
+	enum { READER, WRITER, OUTER_WRITER } kind;
 	u64 switches;
 };
 static struct worker workers[4];
 struct result {
 	u64 errors, api_checks, readers_slept, writer_slept, late_reader_slept;
 	u64 cancellation_checks, colocated, idle;
+	u64 outer_readers_slept, outer_writer_slept, downgrade_checks, publication_checks;
 };
 #define RUN _IOR('S', 1, struct result)
 
@@ -37,11 +39,32 @@ static void check_at(bool condition, unsigned int line)
 }
 #define check(condition) check_at(!!(condition), __LINE__)
 
+/* No image is registered for this body. Its blocking assertions intentionally
+ * test the outer wrapper's local return path; workload completion witnesses
+ * separately prove that translated writers returned through the same pair.
+ */
+static __attribute__((noipa)) void outer_body(struct worker *w)
+{
+	struct kd_rwsem_outer_cookie cookie;
+
+	KD_RWSEM_OUTER_WRITE_LOCK(&sem, cookie, "");
+	check(!atomic_read(&reading));
+	check(atomic_inc_return(&writing) == 1);
+	complete(&w->entered);
+	wait_for_completion(&w->release);
+	atomic_dec(&writing);
+	KD_RWSEM_OUTER_WRITE_UNLOCK(&sem, cookie);
+}
+
 static int worker_main(void *data)
 {
 	struct worker *w = data;
 	unsigned long before = current->nvcsw;
-	if (w->writer) {
+	if (w->kind == OUTER_WRITER) {
+		outer_body(w);
+		goto done;
+	}
+	if (w->kind == WRITER) {
 		kd_down_write(&sem);
 		check(!atomic_read(&reading));
 		check(atomic_inc_return(&writing) == 1);
@@ -52,7 +75,7 @@ static int worker_main(void *data)
 	}
 	complete(&w->entered);
 	wait_for_completion(&w->release);
-	if (w->writer) {
+	if (w->kind == WRITER) {
 		atomic_dec(&writing);
 		kd_up_write(&sem);
 	} else {
@@ -60,6 +83,7 @@ static int worker_main(void *data)
 		atomic_dec(&reading);
 		kd_up_read(&sem);
 	}
+done:
 	w->switches = current->nvcsw - before;
 	complete(&w->done);
 	return 0;
@@ -67,10 +91,10 @@ static int worker_main(void *data)
 
 /* All four workers share one CPU. Sleeping holders must resume while later
  * contenders wait; pinned delegation polling would invalidate this scenario. */
-static int start(unsigned int i, bool writer)
+static int start(unsigned int i, unsigned int kind)
 {
 	struct worker *w = &workers[i];
-	w->writer = writer;
+	w->kind = kind;
 	w->task = kthread_create(worker_main, w, "kd_rwsem_probe");
 	if (IS_ERR(w->task)) {
 		int ret = PTR_ERR(w->task);
@@ -95,7 +119,14 @@ static bool parked(struct task_struct *task)
 {
 	unsigned long deadline = jiffies + 5 * HZ;
 	do {
-		if (READ_ONCE(task->__state) & TASK_UNINTERRUPTIBLE)
+		/* prepare_to_wait sets state before the final condition check. Require
+		 * an actual switch-out, not that transient state on a running task.
+		 */
+		if ((READ_ONCE(task->__state) & TASK_UNINTERRUPTIBLE)
+#ifdef CONFIG_SMP
+		    && !READ_ONCE(task->on_cpu)
+#endif
+		   )
 			return true;
 		msleep(1);
 	} while (time_before(jiffies, deadline));
@@ -131,23 +162,14 @@ static int cancel_worker(void *data)
 	return 0;
 }
 
-static bool gate_waiting(void)
-{
-	bool queued;
-
-	_raw_spin_lock(&sem.gate.wait_lock);
-	queued = !list_empty(&sem.gate.wait_list);
-	_raw_spin_unlock(&sem.gate.wait_lock);
-	return queued;
-}
-
-/* Cover cancellation on both waits: physical gate acquisition and reader
- * drainage after the writer already owns the gate. Retain all holders until
+/* Cover cancellation during phase admission and reader drainage after an
+ * ordinary writer owns its phase and gate. Retain all holders until
  * cancellation is observed, so successful acquisition cannot masquerade as it.
  */
-static int cancel_case(bool writer, bool drain, int signal)
+static int cancel_case(bool writer, bool drain, int signal, bool outer)
 {
 	struct cancellation c = { .writer = writer, .signal = signal, .result = 1 };
+	struct kd_rwsem_outer_cookie cookie;
 	struct task_struct *task;
 	unsigned long deadline;
 	bool queued = false;
@@ -156,12 +178,16 @@ static int cancel_case(bool writer, bool drain, int signal)
 	init_completion(&c.done);
 	if (drain)
 		kd_down_read(&sem);
+	else if (outer)
+		KD_RWSEM_OUTER_WRITE_LOCK(&sem, cookie, "");
 	else
 		kd_down_write(&sem);
 	task = kthread_create(cancel_worker, &c, "kd_rwsem_cancel");
 	if (IS_ERR(task)) {
 		if (drain)
 			kd_up_read(&sem);
+		else if (outer)
+			KD_RWSEM_OUTER_WRITE_UNLOCK(&sem, cookie);
 		else
 			kd_up_write(&sem);
 		return PTR_ERR(task);
@@ -172,7 +198,7 @@ static int cancel_case(bool writer, bool drain, int signal)
 	check(wait_for_completion_timeout(&c.ready, 5 * HZ));
 	deadline = jiffies + 5 * HZ;
 	do {
-		queued = drain ? waitqueue_active(&sem.drain) : gate_waiting();
+		queued = waitqueue_active(&sem.drain);
 		if (queued)
 			break;
 		msleep(1);
@@ -187,7 +213,7 @@ static int cancel_case(bool writer, bool drain, int signal)
 	check(wait_for_completion_timeout(&c.done, 5 * HZ));
 	check(c.result == -EINTR);
 	if (drain) {
-		/* A cancelled writer must have released its physical gate even though
+		/* A cancelled writer must have released its phase and gate even though
 		 * this reader remains live. Another reader can immediately enter.
 		 */
 		if (kd_down_read_trylock(&sem))
@@ -195,12 +221,156 @@ static int cancel_case(bool writer, bool drain, int signal)
 		else
 			check(false);
 		kd_up_read(&sem);
+	} else if (outer) {
+		KD_RWSEM_OUTER_WRITE_UNLOCK(&sem, cookie);
 	} else {
 		kd_up_write(&sem);
 	}
 	check(!kthread_stop(task));
 	put_task_struct(task);
 	check(kd_rwsem_is_idle(&sem));
+	return 0;
+}
+
+static void init_workers(void)
+{
+	unsigned int i;
+
+	for (i = 0; i < ARRAY_SIZE(workers); i++) {
+		workers[i].task = NULL;
+		workers[i].switches = 0;
+		init_completion(&workers[i].entered);
+		init_completion(&workers[i].release);
+		init_completion(&workers[i].done);
+	}
+}
+
+static void join_workers(void)
+{
+	unsigned int i;
+
+	/* A timeout is not drain. Keep the ioctl/module live until every worker
+	 * really exits, preserving failed ownership and publication for diagnosis.
+	 */
+	for (i = 0; i < ARRAY_SIZE(workers); i++)
+		complete_all(&workers[i].release);
+	for (i = 0; i < ARRAY_SIZE(workers); i++) {
+		if (!workers[i].task)
+			continue;
+		check(!kthread_stop(workers[i].task));
+		check(workers[i].switches > 0);
+		put_task_struct(workers[i].task);
+		workers[i].task = NULL;
+	}
+	check(kd_rwsem_is_idle(&sem));
+}
+
+static void unpublished(struct result *r)
+{
+	/* These are the queue's exact publication fields, not estimates from a
+	 * timing window. Phase/drain waiters have not entered its pinned protocol.
+	 */
+	check(!READ_ONCE(sem.gate.tail));
+	/* The internal accessor is not an exported module API. Read the same
+	 * exact atomic field directly in this probe, without changing the gate. */
+	check(!atomic_read(&sem.gate.waiter_count));
+	r->publication_checks++;
+}
+
+static bool phase_is(long expected)
+{
+	unsigned long deadline = jiffies + 5 * HZ;
+
+	do {
+		if (atomic_long_read(&sem.admission) == expected)
+			return true;
+		msleep(1);
+	} while (time_before(jiffies, deadline));
+	return false;
+}
+
+static int sleeping_case(struct result *r, bool outer)
+{
+	unsigned int i;
+	u64 readers_slept, writer_slept, late_reader_slept;
+	int ret = 0;
+
+	init_workers();
+	for (i = 0; i < 2; i++) {
+		ret = start(i, READER);
+		if (ret || !entered(i))
+			goto join;
+	}
+	check(atomic_read(&reading) == 2);
+	readers_slept = parked(workers[0].task) + parked(workers[1].task);
+	ret = start(2, outer ? OUTER_WRITER : WRITER);
+	if (ret)
+		goto join;
+	writer_slept = parked(workers[2].task);
+	check(waitqueue_active(&sem.drain));
+	check(!completion_done(&workers[2].entered));
+	if (outer) {
+		check(atomic_long_read(&sem.admission) == 1);
+		unpublished(r);
+	}
+	ret = start(3, READER);
+	if (ret)
+		goto join;
+	late_reader_slept = parked(workers[3].task);
+	check(!completion_done(&workers[3].entered));
+	complete(&workers[0].release);
+	check(wait_for_completion_timeout(&workers[0].done, 5 * HZ));
+	check(!completion_done(&workers[2].entered));
+	complete(&workers[1].release);
+	check(entered(2));
+	check(parked(workers[2].task));
+	check(!completion_done(&workers[3].entered));
+	complete(&workers[2].release);
+	check(entered(3));
+	check(readers_slept == 2 && writer_slept && late_reader_slept);
+	if (outer) {
+		r->outer_readers_slept = readers_slept;
+		r->outer_writer_slept = writer_slept;
+	} else {
+		r->readers_slept = readers_slept;
+		r->writer_slept = writer_slept;
+		r->late_reader_slept = late_reader_slept;
+	}
+join:
+	join_workers();
+	return ret;
+}
+
+static int downgrade_case(struct result *r)
+{
+	int ret;
+
+	init_workers();
+	kd_down_write(&sem);
+	ret = start(0, OUTER_WRITER);
+	if (ret) {
+		kd_up_write(&sem);
+		return ret;
+	}
+	check(parked(workers[0].task));
+	check(atomic_long_read(&sem.admission) == -1);
+	check(!completion_done(&workers[0].entered));
+	unpublished(r);
+	/* Conversion creates an admitted reader before reopening the phase. The
+	 * waiting outer caller can reserve, but must still sleep before pinning.
+	 */
+	atomic_inc(&reading);
+	kd_downgrade_write(&sem);
+	check(phase_is(1));
+	check(parked(workers[0].task));
+	check(atomic_long_read(&sem.admission) == 1);
+	check(!completion_done(&workers[0].entered));
+	unpublished(r);
+	atomic_dec(&reading);
+	kd_up_read(&sem);
+	check(entered(0));
+	join_workers();
+	r->downgrade_checks++;
 	return 0;
 }
 
@@ -257,60 +427,27 @@ static long run(void __user *user)
 	if (atomic_read(&errors))
 		goto result;
 	for (i = 0; i < 6; i++) {
-		ret = cancel_case(i / 2 != 0, i / 2 == 2, i % 2 ? SIGKILL : SIGUSR1);
+		ret = cancel_case(i / 2 != 0, i / 2 == 2,
+				  i % 2 ? SIGKILL : SIGUSR1, false);
 		if (ret || atomic_read(&errors))
 			goto result;
 		r.cancellation_checks++;
 	}
 	for (i = 0; i < 4; i++) {
-		workers[i].task = NULL;
-		workers[i].switches = 0;
-		init_completion(&workers[i].entered);
-		init_completion(&workers[i].release);
-		init_completion(&workers[i].done);
+		ret = cancel_case(i / 2, false, i % 2 ? SIGKILL : SIGUSR1, true);
+		if (ret || atomic_read(&errors))
+			goto result;
+		r.cancellation_checks++;
 	}
-	for (i = 0; i < 2; i++) {
-		ret = start(i, false);
-		if (ret || !entered(i))
-			goto join;
-	}
-	check(atomic_read(&reading) == 2);
-	r.readers_slept = parked(workers[0].task) + parked(workers[1].task);
-	ret = start(2, true);
-	if (ret)
-		goto join;
-	r.writer_slept = parked(workers[2].task);
-	check(waitqueue_active(&sem.drain));
-	check(!completion_done(&workers[2].entered));
-	ret = start(3, false);
-	if (ret)
-		goto join;
-	r.late_reader_slept = parked(workers[3].task);
-	check(!completion_done(&workers[3].entered));
-	complete(&workers[0].release);
-	check(wait_for_completion_timeout(&workers[0].done, 5 * HZ));
-	check(!completion_done(&workers[2].entered));
-	complete(&workers[1].release);
-	check(entered(2));
-	check(parked(workers[2].task)); /* real writer body can sleep too */
-	check(!completion_done(&workers[3].entered));
-	complete(&workers[2].release);
-	check(entered(3));
-join:
-	/* On failure retain the module until every worker really exits. A hung
-	 * acquisition intentionally leaves the ioctl blocked for diagnosis. */
-	for (i = 0; i < 4; i++)
-		complete_all(&workers[i].release);
-	for (i = 0; i < 4; i++) {
-		if (!workers[i].task)
-			continue;
-		/* done may already have been consumed by the staged assertion. */
-		check(!kthread_stop(workers[i].task));
-		check(workers[i].switches > 0);
-		put_task_struct(workers[i].task);
-		workers[i].task = NULL;
-	}
-	check(r.readers_slept == 2 && r.writer_slept && r.late_reader_slept);
+	ret = sleeping_case(&r, false);
+	if (ret || atomic_read(&errors))
+		goto result;
+	ret = sleeping_case(&r, true);
+	if (ret || atomic_read(&errors))
+		goto result;
+	ret = downgrade_case(&r);
+	if (ret || atomic_read(&errors))
+		goto result;
 	r.colocated = 1;
 result:
 	r.idle = kd_rwsem_is_idle(&sem) && !atomic_read(&reading) && !atomic_read(&writing);
@@ -338,4 +475,4 @@ static void __exit probe_exit(void) { misc_deregister(&device); }
 module_init(probe_init);
 module_exit(probe_exit);
 MODULE_LICENSE("GPL");
-MODULE_DESCRIPTION("KD rwsem ordinary sleeping API and admission probe");
+MODULE_DESCRIPTION("KD rwsem sleeping API, outer admission and downgrade probe");
