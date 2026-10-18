@@ -13,7 +13,8 @@ syscalls individually. Include both categories when requesting the full catalog.
 The current accepted [KD-only matrix](../bench/results/10.176.26.71/bench/comparison/mutex-kdonly-20261017T140354Z/README.md)
 covers c01/post64 and `api-pipebytes-query-n16`. Broader historical owned-mutex
 coverage remains in [history](history/README.md), with its original implementation
-identity. Process inspection and mmap/rwsem proposals are not current benchmarks.
+identity. The [process inspection and mmap candidates](#process-inspection-and-mmap-candidates)
+below are feasibility proposals, outside the runnable standard catalog.
 
 ## Synthetic cacheline updates
 
@@ -401,6 +402,201 @@ exploratory case: the runner guide records that translated bodies are refused by
 admission and excluded from accepted KD performance comparisons.
 
 
+## Process inspection and mmap candidates
+
+**Review, 2026-10-18:** process inspection reaches real task and memory locks,
+but container count alone does not establish contention on any one lock. The
+short `arg_lock` and task-name snapshots are useful extracted spin candidates.
+Full procfs and mmap operations need Native scaling measurements first; the
+selected KD provider cannot delegate these complete paths today.
+
+This review checked the current provider and the retained Linux 6.1.159 source
+and procps-ng 3.3.17 traces. All 25 captured kernel/configuration files and the
+three traces match their recorded hashes. The [source audit and offline recheck](../bench/results/10.176.26.71/tests/proc-mmap-audit-20261015/README.md)
+record provenance and limits. No new live tracing, container experiment or
+performance benchmark ran for this review. These are kernel-version-specific
+findings; a different production kernel or `ps` version needs its own trace.
+
+### Containers, processes and shared locks
+
+There is no single lock protecting every field of every `task_struct`.
+`task_lock(task)` acquires that task's `alloc_lock` for selected fields. Threads
+normally share `mm_struct`, `signal_struct` and `sighand_struct`, while each has
+its own task structure and `alloc_lock`. Independent processes normally have
+separate address spaces and mmap locks, including processes in the same container.
+Sharing a mapped file does not by itself make their `mm->mmap_lock` the same lock.
+
+A host PID-namespace scan can see descendant-container processes, subject to
+procfs visibility and access policy. A container's procfs normally exposes its
+own PID namespace and descendants. Docker's
+[PID namespace setting](https://docs.docker.com/reference/cli/docker/container/run/#pid)
+can change that visibility, including use of the host namespace. Keep container
+count, processes per container, threads per process and concurrent observers as
+separate parameters. Here `ps` means the Linux process tool; `docker ps` is a
+different container-listing operation.
+
+More processes increase directory enumeration and procfs work. More threads in
+one process increase whole-process accounting traversal; simultaneous observers
+of the same process can share its signal/accounting locks. Mapping writers in
+that process can delay mmap readers. Those are possible bottlenecks to measure,
+not evidence that a slow host-wide scan is dominated by one lock.
+
+The retained syscall traces establish the following paths for the audited `ps`:
+
+| Command | Observed process files |
+| --- | --- |
+| `ps -e -o pid=,comm=` | `stat`, `status` |
+| `ps -e -o pid=,args=` | `stat`, `status`, `cmdline` |
+| `ps -eL -o pid=,tid=,comm=` | Process `stat`/`status`, `task` directory enumeration, per-thread `stat`/`status` |
+
+None opened `maps` or `smaps`. Basic memory-counter helpers used by `stat`,
+`statm` and `status` do not take mmap read ownership in this kernel.
+`get_task_mm()` pins an MM reference under `task_lock()`; that is not an mmap
+lock acquisition. Argument-displaying `ps` reaches the mmap lock through remote
+`cmdline` page access. The kernel's [procfs guide](https://docs.kernel.org/6.1/filesystems/proc.html)
+describes the interfaces and the more expensive page-table inspection in `smaps`.
+
+### Task and process-inspection critical sections
+
+Locations below refer to the hashed `kernel-inputs/` files in the source audit.
+They identify relevant task/MM protection, not every VFS or security lock in a
+complete syscall.
+
+| Operation and source | Lock and protected work | Current KD delegation boundary |
+| --- | --- | --- |
+| `/proc` enumeration: `fs/proc/base.c:3536`, `next_tgid()` | RCU, PID lookup and task references; thread enumeration also uses RCU | No global `tasklist_lock` held across the scan; not a single lock-body benchmark |
+| Name copy: `fs/exec.c:1219`, `__get_task_comm()` | Per-task `alloc_lock`; `strscpy_pad()` copies `comm` | Small ordinary-spin payload; exact helper has a historical admission refusal described below |
+| Task pointers/status: `kernel/fork.c:1388`, `get_task_mm()`; `fs/proc/array.c:170` | Per-task `alloc_lock`; MM reference or `fs`/`files` snapshot | Task references, surrounding RCU and mutable pointer lifetimes require a separate audit; not covered by a name-copy test |
+| Signal snapshot: `fs/proc/array.c:275,505`; `kernel/signal.c:1389` | Shared `sighand->siglock` with IRQ saving and pointer revalidation; signal state, thread count and related fields | Explicit IRQ spin paths stay on the caller; no current delegated adapter |
+| Whole-process statistics: `fs/proc/array.c:533`; `kernel/sched/cputime.c:308` | `signal->stats_lock` seqlock with normally lockless initial reads and RCU thread traversal; retry can take an IRQ-saving exclusive lock | Preserve seqlock/RCU semantics; cannot model the normal path as one exclusive delegated thread scan |
+| CPU-time adjustment: `kernel/sched/cputime.c:554,644` | Raw IRQ-saving `signal->prev_cputime.lock`, or per-task equivalent; keeps reported CPU times monotonic | Caller-context accounting, separate from the long traversal; no current delegation |
+| Command-line boundaries: `fs/proc/base.c:301` | Ordinary exclusive `mm->arg_lock`; load `arg_start`, `arg_end`, `env_start`, `env_end` | Best extracted KD spin candidate; argument bytes and mmap operations are outside this section |
+| Command-line bytes: `fs/proc/base.c:336,358` → `mm/memory.c:5700` | Target mmap read lock with killable acquisition; VMA/page lookup, possible faults and remote copy | Sleeping rwsem and MM-context work; unsupported as a complete KD body |
+
+The long statistics traversal in this 6.1.159 source already uses `stats_lock`,
+rather than holding `sighand->siglock` throughout as older code did. Its initial
+sequence read is lockless; exit and child-reaping writers can invalidate it and
+force retries. Read-only observers do not themselves change the sequence. A
+benchmark must retain this distinction when assessing many-thread processes.
+The captured x86-64 tick-accounting configuration also uses the plain runtime
+load in `read_sum_exec_runtime()`, not its 32-bit runqueue-lock fallback.
+
+Global `tasklist_lock` still matters for fork, exit, reparenting and wait/reaping
+paths, including IRQ-disabled write acquisitions (`kernel/fork.c:2476`,
+`kernel/exit.c:252`). A creation/exit storm deserves its own workload; ordinary
+procfs enumeration is not evidence of that global lock being the bottleneck.
+
+### mmap critical-section boundaries
+
+`include/linux/mm_types.h:597` declares `mmap_lock` as `struct rw_semaphore`.
+It protects VMA layout and related MM operations. Page tables and reverse
+mappings have additional locks; mmap ownership does not protect every task field.
+
+| Entry / source | Acquisition and protected work |
+| --- | --- |
+| `mmap()` → `vm_mmap_pgoff()`, `mm/util.c:507` | Write-killable lock around `do_mmap()`: validate/select addresses, create/merge VMAs, update Maple Tree and accounting; allocation and filesystem/security callbacks can occur. Optional population follows unlock. |
+| `munmap()` → `__vm_munmap()`, `mm/mmap.c:2926` | Write-killable lock for VMA removal; `do_mas_align_munmap()` can downgrade before unmapping pages, freeing page tables and completing TLB work. Release mode depends on the path. |
+| `mprotect()`, `mm/mprotect.c:702`; `mremap()`, `mm/mremap.c:943`; `brk()`, `mm/mmap.c:181` | Write-killable acquisition around validation and VMA changes, with path-dependent splitting/merging, allocation, page-table and TLB work |
+| `/proc/PID/maps`, `fs/proc/task_mmu.c:141,186` | `m_start()` takes a killable read lock and `m_stop()` releases it; VMA traversal and record formatting span a seq-file batch, not necessarily the whole file |
+| `/proc/PID/smaps`, `fs/proc/task_mmu.c:613`; `smaps_rollup`, `:877` | Mmap read ownership plus nested page-table locks; collect resident/PSS statistics and allow rescheduling. Rollup explicitly drops/reacquires mmap ownership when contended. |
+| `cmdline` → `__access_remote_vm()`, `mm/memory.c:5700` | Read-killable acquisition; VMA lookup, possible stack expansion, page acquisition and remote copy. The later `copy_to_user()` to the observer is outside this helper's mmap lock. |
+| User faults, `arch/x86/mm/fault.c:1312` | Mmap read ownership for VMA/fault work, with retry and stack-growth paths requiring explicit lock-state handling |
+
+Opening `maps`/`smaps` also uses `mm_access()` (`kernel/fork.c:1405`), which
+takes the separate `signal->exec_update_lock` rwsem around MM acquisition and
+access checks. This is distinct from the mmap read batches and from the plain
+`cmdline` path's `get_task_mm()`.
+
+### What would be required for delegation
+
+Replacing every Linux **mutex** with KD mutex does not replace `alloc_lock`,
+`siglock`, raw spinlocks, seqlocks or the **rwsem** `mmap_lock`. The current
+[mutex aliases](../include/kd_mutex_compat.h) operate on rebuilt KD mutex objects;
+ordinary C aliases execute locally, while explicit clobber callers permit JIT.
+The following requirements still apply under the KD-only mutex assumption:
+
+- **Matching lock semantics.** Current [KD rwlock](../include/kd_rwlock.h)
+  disables preemption, requires non-sleeping bodies and delegates only writers;
+  readers execute locally. It is not a sleeping rwsem. Mmap uses concurrent
+  readers, killable waits, trylocks, downgrade and release/reacquire paths.
+  KD mutex is exclusive and does not provide that contract. The archived
+  sleeping-rwsem experiment depends on the rejected owned mutex and is absent
+  from `master`; its tests did not replace the real mmap lock.
+- **All consumers and lifetime.** A private KD lock around proc readers cannot
+  exclude native mapping writers, faults, exec or exit. All accesses must use
+  one protocol, including implicit kernel users. Task/MM references keep
+  allocations alive but do not freeze fields or thread membership. Permission
+  checks, exit/exec handling and nested lock ordering remain required.
+- **Execution context.** A KD mutex executor can sleep, so sleep alone is not
+  a universal prohibition. However, full MM bodies include faults, allocation,
+  callbacks, nested locks, MMU notifications and TLB operations. Logical
+  `current` handling does not switch the hardware address space or reproduce
+  arbitrary credentials, CPU, IRQ, RCU or scheduler context. The
+  [context admission rules](../disassem/context_symbols.py) refuse many of these
+  operations; an admitted bounded copy is not evidence for a complete MM path.
+- **IRQ and accounting semantics.** [Explicit IRQ/BH spin interfaces](../include/kd_spin_direct.h)
+  execute locally. Moving `siglock`, the stats fallback or raw accounting
+  sections would need a new audited context contract. Current KD rwlock also
+  lacks the IRQ variants needed for `tasklist_lock` writers.
+
+### Candidate workload plan
+
+These labels are proposals, not accepted runner options or additions to the
+default full-catalog sweep. Native screening identifies the expensive shared
+object; matched extracted-body tests can then compare KD, TCLock and Native.
+
+| Proposed case | Measured operation and controls | Feasibility |
+| --- | --- | --- |
+| `proc-arg-bounds` | Copy four words under one module-owned exclusive spinlock into stable worker-local kernel storage. Compare shared/distinct records; optionally alternate valid tuples under the same lock. | First KD spin candidate. Historical complete delegation exists; restore a focused workload and validate current admission before treating it as runnable. |
+| `proc-comm-snapshot` | Exact `strscpy_pad()` name copy, 16-byte source and 64-byte padded destination, with shared/distinct records and separately labelled mutations | Native/TCLock and KD local controls are feasible. Exact KD delegation needs the historical helper/ABI refusal resolved and revalidated. A different copy loop is a different payload. |
+| `proc-stat` / `proc-status` | Independent observers read the same large thread group versus distinct groups; idle, CPU-active and exit/reaping variants kept separate | Native-only candidates requiring implementation; preserve actual seqlock/RCU/IRQ paths. No full-path KD adapter. |
+| `proc-cmdline-mmap` | Read stable arguments while target threads map/unmap disjoint scratch regions in that same MM. Include a no-writer control; vary argument length and VMA count. | Native mmap-contention workload; current KD/TCLock sleeping-rwsem comparison unavailable |
+| `proc-maps` / `proc-smaps` | Complete proc-file reads while a target changes separate mappings; vary actual VMA count and resident bytes independently | Native workloads; distinguish VMA formatting from page-table accounting and preserve allowed concurrent-update semantics |
+| `mmap-churn` | Target threads perform matched map/unmap cycles or separately labelled protection changes; compare shared MM with independent processes and with/without observers | Native writer control; record map/unmap latency separately as well as cycle throughput. Full MM delegation unsupported. |
+| `task-lifecycle` | Controlled process/thread creation, exit and reaping with/without proc observers | Native control for global task-list and statistics writers; no current KD IRQ-rwlock adapter |
+
+The [historical proc snapshot report](../bench/results/10.176.26.71/bench/proc_snapshots/20261015/README.md)
+records 93,229,983 complete delegated argument-boundary bodies across its timed
+comparison. That is proof of feasibility for that frozen extracted spin workload,
+not a current-version performance result or an end-to-end `ps` improvement.
+The exact task-name helper was refused because `strscpy_pad+0x8` saved uncaptured
+R13 under spin ABI1. Its KD timings used explicit local execution. Image
+publication and an entry witness did not establish a complete delegated body.
+
+For a future round, use the standard 1–8 and 12–60-by-four observer/worker grid
+and three repetitions, keeping target population independent of worker count:
+
+1. Compare one shared process/MM with the same total target tasks spread across
+   independent processes. Vary containers/PID namespaces separately, recording
+   procfs policy, kernel/procps versions, CPU placement and runnable population.
+   Large sleeping target populations need not imply oversubscribed KD workers;
+   arbitrary KD producer oversubscription remains unvalidated.
+2. Vary observer and mapping-writer counts independently. Keep idle, CPU-active,
+   mapping and lifecycle churn as separate cases. Record actual VMA count to
+   catch automatic merging, mapped/resident bytes, and argument bytes.
+3. Give each proc observer an independent open file description. Define one
+   operation as a complete read from offset zero; state whether open/close or
+   rewind is timed. Shared descriptions can add seq-file/file-position
+   serialization. An end-to-end `ps` run additionally times userspace parsing,
+   selection and formatting; report it separately from proc-file reads.
+4. Record whole-scan latency, reads/second, p50/p95/p99 latency, CPU time,
+   errors and target progress. Use separate profiling runs to attribute wait
+   and hold intervals to a specific lock address/MM and call stack. High CPU
+   traversal cost alone is not evidence of lock contention.
+5. For extracted comparisons, require identical bodies, one protocol for all
+   accesses, exact tuple/name validation, actual returned JIT-body counts,
+   per-worker progress and complete drain. Keep refused/local controls separate
+   from delegated results. Procfs lifecycle tests must handle expected exit
+   races; maps/smaps across multiple reads are not one atomic snapshot.
+
+The captured kernel has mmap start/acquired/released tracepoints but
+`CONFIG_LOCK_STAT` is disabled. Pair events by task and MM, track failed
+killable/trylock attempts and explicit drop/reacquire paths. Downgrade emits a
+successful read-acquired event without a new start or write-release event, so
+it needs an explicit write-to-read transition. Release events precede physical
+unlock; account for that measurement boundary, non-owner releases and lost
+events. Keep probe overhead out of the throughput comparison.
+
 ## Scope and evidence
 
 The API adapter substitutes only selected functions on controlled objects. KD
@@ -409,8 +605,8 @@ Linux mutex. This tests scoped behavior, not a rebuilt kernel where every mutex
 has been replaced. See the [API contract](../bench/real_api/README.md#contract-and-comparison-limits)
 and [KD-only assumptions](design/kd_only_mutex.md).
 
-The historical process/mmap feasibility study remains in
-[the original catalog](https://github.com/hailongeric/kdlock/blob/9a4bf2af9a52a92e147b439393f21343b7fc99af/docs/BENCHMARK_WORKLOADS.md#process-inspection-and-mmap-candidates).
-Sleeping rwsem is excluded from the selected provider; its older implementation
-depends on the rejected owned mutex. Do not list these proposals as runnable
-or validated scenarios.
+The process/mmap section is a candidate plan grounded in retained source and
+trace evidence. Historical snapshot delegation does not validate the current
+provider, live task/MM replacement, a large-container deployment or a performance
+gain. Implementations and fresh VM validation are required before promoting any
+candidate into the runnable catalog.
