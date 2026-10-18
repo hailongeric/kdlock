@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: GPL-2.0
-/* Owned-object nested acquisition records. The executor retains each physical
- * owner through the matching logical release or final continuation ACK. */
+/*
+ * Owned-object nested acquisition records. The executor retains each physical
+ * owner through the matching logical release or final continuation ACK.
+ */
 static int kd_owned_nested_lock(struct kd_mutex *lock)
 {
 	if (!lock || irqs_disabled() || preempt_count() != 1)
@@ -28,8 +30,8 @@ int kd_owned_mutex_jit_nested_lock_ctx(struct kd_mutex *lock, struct kd_regs *re
 {
 	int ret;
 
-	if (!lock || !regs || !regs->sp || !frame ||
-	    !frame->owned_mutex || !kd_exec_frame_validate(frame))
+	if (!lock || !regs || !regs->sp || !frame || !frame->owned_mutex ||
+	    !kd_exec_frame_validate(frame))
 		return -EINVAL;
 	ret = kd_jit_begin_call(frame, regs);
 	if (ret)
@@ -70,7 +72,8 @@ int kd_owned_mutex_jit_nested_unlock_ctx(struct kd_mutex *lock,
 {
 	int ret;
 
-	if (!lock || !frame || !frame->owned_mutex || !kd_exec_frame_validate(frame))
+	if (!lock || !frame || !frame->owned_mutex ||
+	    !kd_exec_frame_validate(frame))
 		return -EINVAL;
 	if (kd_exec_frame_lock_kind(frame, (unsigned long)lock) !=
 		    KD_EXEC_LOCK_OWNED ||
@@ -92,7 +95,8 @@ int kd_owned_mutex_jit_abort_cleanup(struct kd_exec_frame *frame)
 
 	while (frame->jit_lock_depth > frame->outer_lock_index + 1) {
 		unsigned int i = frame->jit_lock_depth - 1;
-		struct kd_mutex *lock = (struct kd_mutex *)frame->jit_lock_addr[i];
+		struct kd_mutex *lock =
+			(struct kd_mutex *)frame->jit_lock_addr[i];
 		int ret;
 
 		if (frame->jit_lock_kind[i] != KD_EXEC_LOCK_OWNED ||

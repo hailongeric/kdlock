@@ -26,7 +26,8 @@ bool kd_spin_nested_shadow_has_space(void)
 	return kd_spin_lock_stack_depth(ptr) < ARRAY_SIZE(ptr->lock_addr);
 }
 
-/* Register a nested lock ownership record for this CPU's combiner stack.
+/*
+ * Register a nested lock ownership record for this CPU's combiner stack.
  * The stack is used to validate outer-unlock ordering and out-of-order unlock
  * checks during delegated nested execution.
  */
@@ -52,7 +53,8 @@ int kd_spin_nested_shadow_push(struct qspinlock *lock)
 	return 0;
 }
 
-/* Remove one lock from the nested shadow stack, allowing arbitrary hole compaction.
+/*
+ * Remove one lock from the nested shadow stack, allowing arbitrary hole compaction.
  * This keeps lock addresses topologically ordered in lock-depth tracking.
  */
 int kd_spin_nested_shadow_remove(struct qspinlock *lock)
@@ -78,7 +80,8 @@ int kd_spin_nested_shadow_remove(struct qspinlock *lock)
 	return -ENOENT;
 }
 
-/* Pop requires exact top-of-stack match; used when this lock is the current
+/*
+ * Pop requires exact top-of-stack match; used when this lock is the current
  * nesting boundary being released.
  */
 static int kd_spin_nested_shadow_pop(struct qspinlock *lock)
@@ -136,9 +139,11 @@ kd_spin_combiner_state_matches(const struct kd_combiner_state *saved,
 
 void kd_spin_jit_prepare_complex(struct kd_exec_frame *frame)
 {
-	/* Before the first service/control exit only translated waiter code has
+	/*
+	 * Before the first service/control exit only translated waiter code has
 	 * run; it has not changed this executor's combiner metadata. Capture now,
-	 * before nested acquisition, hostcall or native/remote publication. */
+	 * before nested acquisition, hostcall or native/remote publication.
+	 */
 	if (frame->spin_simple) {
 		kd_exec_frame_prepare_complex(frame);
 		kd_exec_frame_own_regs(frame);
@@ -169,7 +174,8 @@ static void kd_spin_diag_validate_lock_stack(const struct kd_spin_cpu_state *ptr
 	}
 }
 
-/* Verify a candidate unlock matches the latest expected nesting index.
+/*
+ * Verify a candidate unlock matches the latest expected nesting index.
  * Detects accidental reordering before mutating spin/qspin states.
  */
 static void kd_spin_diag_validate_outer_unlock(const struct kd_spin_cpu_state *ptr,

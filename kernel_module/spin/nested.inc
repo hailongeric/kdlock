@@ -7,7 +7,8 @@
  * are shared with the adjacent components. This is not a standalone object.
  */
 
-/* Share the logical packet, but prepare the child's independent owner ledger
+/*
+ * Share the logical packet, but prepare the child's independent owner ledger
  * directly in stable request storage. The producer owns this frame until
  * publication; no intermediate context copy is needed before remote binding.
  */
@@ -31,7 +32,7 @@ static int kd_spin_prepare_jit_node(struct kd_spin_node *node,
 
 	frame = &node->execution->frame;
 	kd_exec_frame_prepare(frame, parent->entry_ip, (unsigned long)lock,
-		parent->gsbase, parent->logical_task);
+			      parent->gsbase, parent->logical_task);
 	kd_exec_frame_prepare_complex(frame);
 	frame->regs_ref = regs;
 	frame->entry_abi = parent->entry_abi;
@@ -55,7 +56,8 @@ static int kd_spin_prepare_jit_node(struct kd_spin_node *node,
 	return 0;
 }
 
-/* Restore a virtual node's continuation after the callee returns from nested
+/*
+ * Restore a virtual node's continuation after the callee returns from nested
  * critical-section execution.
  */
 static int kd_spin_advance_jit_node(struct kd_spin_node *node,
@@ -65,7 +67,8 @@ static int kd_spin_advance_jit_node(struct kd_spin_node *node,
 
 	if (!node || !regs || !node->execution->frame.regs_ref->sp)
 		return -EINVAL;
-	return_ip = READ_ONCE(*(unsigned long *)node->execution->frame.regs_ref->sp);
+	return_ip = READ_ONCE(
+		*(unsigned long *)node->execution->frame.regs_ref->sp);
 	if (!return_ip)
 		return -EINVAL;
 	node->execution->frame.regs_ref->sp += sizeof(unsigned long);
@@ -73,7 +76,8 @@ static int kd_spin_advance_jit_node(struct kd_spin_node *node,
 	return 0;
 }
 
-/* Complete the virtual-node resume decision after delegated nested execution:
+/*
+ * Complete the virtual-node resume decision after delegated nested execution:
  * parent done -> return to parent unlock path, else restore caller continuation.
  */
 static int kd_spin_finish_remote_node(struct kd_spin_node *node,
@@ -82,8 +86,10 @@ static int kd_spin_finish_remote_node(struct kd_spin_node *node,
 {
 	if (smp_load_acquire(&parent->remote_result) != KD_EXEC_REMOTE_DONE)
 		return -EINVAL;
-	/* The physical waiter trampoline still needs the final unlock CALL word.
-	 * Consume it only when this parent will resume more translated code. */
+	/*
+	 * The physical waiter trampoline still needs the final unlock CALL word.
+	 * Consume it only when this parent will resume more translated code.
+	 */
 	if (kd_exec_frame_can_complete(parent)) {
 		return KD_SPIN_NESTED_PARENT_OOO;
 	}
@@ -92,7 +98,8 @@ static int kd_spin_finish_remote_node(struct kd_spin_node *node,
 	return KD_SPIN_NESTED_DELEGATED;
 }
 
-/* Register a nested spinlock request in logical parent frame and run queue protocol.
+/*
+ * Register a nested spinlock request in logical parent frame and run queue protocol.
  * Returns acquired/delegated markers used by the parent CALL continuation handling.
  */
 int kd_spin_nested_lock(struct qspinlock *lock, struct kd_regs *regs,
@@ -118,7 +125,8 @@ int kd_spin_nested_lock(struct qspinlock *lock, struct kd_regs *regs,
 	parent->remote_result = KD_EXEC_REMOTE_IDLE;
 
 #ifdef KDLOCK_SELFTEST
-	/* NULL requests select only the read-only pre-allocation observer. The
+	/*
+	 * NULL requests select only the read-only pre-allocation observer. The
 	 * context/node injection probes still start after a ticket is reserved.
 	 */
 	requests = *this_cpu_ptr(&kd_spin_continuations);
@@ -133,8 +141,10 @@ int kd_spin_nested_lock(struct qspinlock *lock, struct kd_regs *regs,
 #endif
 	if (ret)
 		return ret;
-	/* Nested physical acquisitions publish through the same MCS sampler.
-	 * Include their entries too, on the pinned executor's physical CPU. */
+	/*
+	 * Nested physical acquisitions publish through the same MCS sampler.
+	 * Include their entries too, on the pinned executor's physical CPU.
+	 */
 	kd_hotlock_spin_entry_pinned();
 	word = request.word = kd_spin_request_word(&request.ref);
 	if (atomic_cmpxchg_acquire(&word->val, 0, _Q_LOCKED_VAL_HL) == 0) {
@@ -167,8 +177,10 @@ int kd_spin_nested_lock(struct qspinlock *lock, struct kd_regs *regs,
 	execution = kd_spin_continuation_reserve();
 	if (!execution) {
 		this_cpu_dec(kd_spin_cpu.node_count);
-		/* No publication or body occurred for this nested acquisition. Keep
-		 * its ticket and use the independent native MCS nodes. */
+		/*
+		 * No publication or body occurred for this nested acquisition. Keep
+		 * its ticket and use the independent native MCS nodes.
+		 */
 		kd_spin_acquire_nondelegated(word);
 		kd_spin_claim_origin(&request);
 		parent->control_call.phase = KD_CALL_ACQUIRED;
@@ -190,8 +202,7 @@ int kd_spin_nested_lock(struct qspinlock *lock, struct kd_regs *regs,
 
 	node->execution->result = KD_SPIN_RES_QUEUED;
 	node->execution->frame.spin_regs_decoded = false;
-	ret = kd_spin_prepare_jit_node(node, lock, regs,
-				       parent);
+	ret = kd_spin_prepare_jit_node(node, lock, regs, parent);
 	if (ret) {
 		kd_spin_continuation_release(execution);
 		this_cpu_dec(kd_spin_cpu.node_count);
@@ -263,7 +274,8 @@ cancel:
 	return ret;
 }
 
-/* Resolve nested unlock for a delegated spinlock and propagate OOO condition.
+/*
+ * Resolve nested unlock for a delegated spinlock and propagate OOO condition.
  * For normal fast-path release it only pops the logical shadow stack entry.
  */
 int kd_spin_nested_unlock(struct qspinlock *lock)

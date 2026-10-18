@@ -220,9 +220,11 @@ int kd_spin_jit_outer_unlock_ooo_ctx(raw_spinlock_t *lock, struct kd_regs *regs,
 	if (kd_exec_frame_record_event(frame, KD_EXEC_EVENT_OUTER_UNLOCK, regs))
 		return -EINVAL;
 
-	/* The local batch callback already opened L/S. Never mark a successor's
+	/*
+	 * The local batch callback already opened L/S. Never mark a successor's
 	 * scheduling word OOO after publication. Inherited ancestors use the
-	 * logical-parent request protocol above, never another CPU's ticket. */
+	 * logical-parent request protocol above, never another CPU's ticket.
+	 */
 	if (frame->outer_unlock_hook && frame->outer_unlock_hook->released)
 		return 0;
 	kd_spin_unlock_protocol((struct qspinlock *)lock);

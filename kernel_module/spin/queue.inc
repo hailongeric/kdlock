@@ -43,8 +43,10 @@ static inline bool check_irq_node(struct kd_spin_node *node)
 static __always_inline void
 clear_locked_set_completed(struct kd_spin_node *lock)
 {
-	/* On x86 this word sets completed and clears locked together. Publish
-	 * the final register packet before the waiter can consume/reuse it. */
+	/*
+	 * On x86 this word sets completed and clears locked together. Publish
+	 * the final register packet before the waiter can consume/reuse it.
+	 */
 	smp_store_release(&lock->locked_completed, 1);
 }
 
@@ -58,10 +60,12 @@ static __always_inline void clear_pending_set_locked(struct qspinlock *word)
 
 static __always_inline u32 xchg_tail(struct qspinlock *word, u32 tail)
 {
-	/* Count each actual MCS publication once, for both cold native and hot
+	/*
+	 * Count each actual MCS publication once, for both cold native and hot
 	 * delegated producers. Fast/pending success and node-exhaustion polling
 	 * never reach this boundary. Raw accounting is independent of queue depth;
-	 * a native queue head can later veto admission without recounting. */
+	 * a native queue head can later veto admission without recounting.
+	 */
 	if (kd_spin_delegate)
 		kd_hotlock_record_spin_mcs_pinned();
 	return ((u32)xchg(&word->tail, tail >> _Q_TAIL_OFFSET_HL))
@@ -83,7 +87,7 @@ static __always_inline void clear_pending(struct qspinlock *word)
  * set_locked - Set the lock bit and own the lock
  * @word: The single KD exclusion/scheduling word
  *
- * *,*,0 -> *,0,1
+ * *,*,0 -> *,*,1
  */
 static __always_inline void set_locked(struct qspinlock *word)
 {
@@ -132,11 +136,13 @@ kd_spin_fetch_set_pending_acquire(struct qspinlock *word)
 	return atomic_fetch_or_acquire(_Q_PENDING_VAL_HL, &word->val);
 }
 
-/* Called only at initial batch entry, before any NUMA splicing and while
+/*
+ * Called only at initial batch entry, before any NUMA splicing and while
  * this executor owns the KD word. A producer publishes tail before prev->next.
  * A different nonzero tail therefore proves a successor exists: wait for its
  * release publication instead of mistaking that window for the final waiter.
- * No wait is allowed for an actual tail node, or a detached deferred list. */
+ * No wait is allowed for an actual tail node, or a detached deferred list.
+ */
 static struct kd_spin_node *kd_spin_linked_successor(struct qspinlock *word,
 						    struct kd_spin_node *node)
 {
@@ -176,16 +182,20 @@ get_next_node(struct kd_spin_node *my_node, u16 *scan_left)
 	struct kd_spin_node *next_node = my_node->next;
 	bool deferred = false;
 
-	/* The immediate local successor needs no NUMA scan. Defer the usual
+	/*
+	 * The immediate local successor needs no NUMA scan. Defer the usual
 	 * next-next boundary check until after this body, avoiding an early
-	 * remote-node read on the common single-socket batch path. */
+	 * remote-node read on the common single-socket batch path.
+	 */
 	if (next_node && next_node->socket_id == numa_node_id())
 		return next_node;
 
 	while (true) {
-		/* A spent scan budget needs no dependent successor reads. Return
+		/*
+		 * A spent scan budget needs no dependent successor reads. Return
 		 * the same handoff candidate without touching its successor header;
-		 * the deferred prefix still has priority at final handoff. */
+		 * the deferred prefix still has priority at final handoff.
+		 */
 		if (!*scan_left)
 			return next_node;
 		if (next_node == NULL || next_node->next == NULL)
@@ -199,11 +209,13 @@ get_next_node(struct kd_spin_node *my_node, u16 *scan_left)
 			return next_node;
 		}
 
-		/* One scan defers a contiguous run. Its existing next links already
+		/*
+		 * One scan defers a contiguous run. Its existing next links already
 		 * join every node after the first; rewriting them would needlessly
 		 * take ownership of remote queue-header cache lines. Only the first
 		 * append joins the prior deferred prefix. Keep the CPU-local tail
-		 * current for rejection rollback and per-node observers. */
+		 * current for rejection rollback and per-node observers.
+		 */
 		if (!deferred) {
 			add_to_local_queue(next_node);
 			deferred = true;
@@ -224,13 +236,16 @@ next_node_null:
 #endif
 }
 
-/* Decode the physical hook packet on its originating CPU before publication.
+/*
+ * Decode the physical hook packet on its originating CPU before publication.
  * After publication the waiter lends its C stack and only polls locked; JIT
  * may update node->execution->frame.regs_ref in place until the release wake. Caller-saved values
- * keep the existing hook ABI; this is the saved callee-register/return frame. */
+ * keep the existing hook ABI; this is the saved callee-register/return frame.
+ */
 static void kd_spin_prepare_regs(struct kd_spin_node *node)
 {
-	const unsigned long *saved = (const unsigned long *)node->execution->frame.regs_ref->sp;
+	const unsigned long *saved =
+		(const unsigned long *)node->execution->frame.regs_ref->sp;
 
 	node->execution->frame.regs_ref->bx = saved[1];
 	node->execution->frame.regs_ref->r12 = saved[2];

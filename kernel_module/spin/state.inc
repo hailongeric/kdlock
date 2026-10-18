@@ -10,9 +10,11 @@
 #define IRQ_NUMA_NODE 255
 #define KD_SPIN_DIAG_SLOTS 32
 
-/* Bound delegated bodies per physical hold; NUMA scan work has a separate
+/*
+ * Bound delegated bodies per physical hold; NUMA scan work has a separate
  * batch-local budget. A 1024-body cap amortizes hash working-set transfers
- * between combiners. This is a work bound, not a scheduler latency guarantee. */
+ * between combiners. This is a work bound, not a scheduler latency guarantee.
+ */
 #ifndef KDLOCK_SPIN_BATCH
 #define KDLOCK_SPIN_BATCH 1024
 #endif
@@ -27,20 +29,24 @@ MODULE_INFO(spin_numa, "1");
 MODULE_INFO(spin_numa, "0");
 #endif
 
-/* Fixed self-execution control for protocol comparisons. This changes only
- * fresh admission; unlock always follows the acquisition's ownership record. */
+/*
+ * Fixed self-execution control for protocol comparisons. This changes only
+ * fresh admission; unlock always follows the acquisition's ownership record.
+ */
 bool kd_spin_delegate __read_mostly = true;
 EXPORT_SYMBOL_GPL(kd_spin_delegate);
 module_param_named(spin_delegate, kd_spin_delegate, bool, 0400);
-MODULE_PARM_DESC(spin_delegate, "Allow JIT delegation; false keeps KD self-execution");
-
+MODULE_PARM_DESC(spin_delegate,
+		 "Allow JIT delegation; false keeps KD self-execution");
 
 static __always_inline int kd_spin_trylock(struct qspinlock *word);
 
-/* Physical request state lives on the caller's stack, not a recyclable node
+/*
+ * Physical request state lives on the caller's stack, not a recyclable node
  * or the logical waiter's spin_origin (which can belong to an ancestor).
  * The entry pin keeps this request local; the KD word is passed through the
- * queue/batch, including early release and reclaim, without another map scan. */
+ * queue/batch, including early release and reclaim, without another map scan.
+ */
 struct kd_spin_request {
 	struct kd_spin_ref ref;
 	struct qspinlock *word;
@@ -54,8 +60,10 @@ static struct qspinlock *kd_spin_request_word(const struct kd_spin_ref *ref)
 	return word;
 }
 
-/* Normal unlocks use their live ticket. An OOO ancestor can be represented
- * by shadow/frame state only; its direct word grants no ownership by itself. */
+/*
+ * Normal unlocks use their live ticket. An OOO ancestor can be represented
+ * by shadow/frame state only; its direct word grants no ownership by itself.
+ */
 static struct kd_spin_request kd_spin_unlock_lookup(struct qspinlock *lock)
 {
 	struct kd_spin_request request = { 0 };
@@ -72,7 +80,7 @@ static void kd_spin_unlock_request(struct qspinlock *lock,
 
 static bool kd_spin_is_ooo(struct qspinlock *lock)
 {
- return READ_ONCE(lock->locked) == 7;
+	return READ_ONCE(lock->locked) == 7;
 }
 
 static void kd_spin_claim_origin(const struct kd_spin_request *request)
@@ -83,7 +91,8 @@ static void kd_spin_claim_origin(const struct kd_spin_request *request)
 	if (unlikely(ret)) {
 		KD_PR_ERR(
 			"spin origin claim failed word=%px cpu=%d task=%d ret=%d\n",
-			request->word, raw_smp_processor_id(), current->pid, ret);
+			request->word, raw_smp_processor_id(), current->pid,
+			ret);
 		BUG();
 	}
 }
@@ -92,8 +101,10 @@ static void kd_spin_release_origin(struct kd_spin_request *request)
 {
 	BUG_ON(kd_spin_entry_release_origin(&request->ref));
 	smp_store_release(&request->word->locked, 0);
-	/* end() drops the ticket pin and may schedule; do not access CPU-local
-	 * state after it returns. */
+	/*
+	 * end() drops the ticket pin and may schedule; do not access CPU-local
+	 * state after it returns.
+	 */
 	BUG_ON(kd_spin_entry_end(&request->ref));
 }
 
@@ -146,15 +157,19 @@ enum kd_spin_diag_event {
 };
 
 struct kd_spin_diag_slot {
-	/* Waiter totals live per CPU. Only identity and the disable latch remain
-	 * shared; keep adjacent identities on separate 128-byte boundaries. */
+	/*
+	 * Waiter totals live per CPU. Only identity and the disable latch remain
+	 * shared; keep adjacent identities on separate 128-byte boundaries.
+	 */
 	atomic_long_t addr __aligned(2 * L1_CACHE_BYTES);
 	atomic_t jit_disabled;
 };
 
-/* Slots keep their identity for the module session. Only the disable latch
+/*
+ * Slots keep their identity for the module session. Only the disable latch
  * is mutable shared state; reporting folds these CPU-local counters. The two
- * waiter totals preserve final balance without a shared per-request RMW. */
+ * waiter totals preserve final balance without a shared per-request RMW.
+ */
 struct kd_spin_diag_counts {
 	u64 event[KD_SPIN_DIAG_EVENT_COUNT];
 	int max_depth;
@@ -203,24 +218,19 @@ struct kd_spin_cpu_state {
 	 */
 	uint64_t lock_addr[8];
 
-	/*
-	 * Used by the combiner to identify for which CPU is the critical section
-	 * currently executing.
-	 */
+	/* Origin CPU of the critical section currently run by this combiner. */
 	uint32_t curr_cs_cpu;
 	/* CPU-owned reservation depth; not part of any published queue node. */
 	int node_count;
-	/* TCLock-style physical waiter stack, separate from the logical frame.
+	/*
+	 * TCLock-style physical waiter stack, separate from the logical frame.
 	 * The ticket pins the sole polling user to this CPU; polling preserves
 	 * the caller's IRQ state.
-	 * Virtual waiters retain their executor stack for nested owner/ACK work. */
+	 * Virtual waiters retain their executor stack for nested owner/ACK work.
+	 */
 	void *wait_stack_top;
 #ifdef NUMA_AWARE
-	/*
-	 * Create a queue which is used by the combiner to store nodes which belong to
-	 * different socket.
-	 */
-
+	/* Deferred waiters from other NUMA nodes, retained for later handoff. */
 	struct kd_spin_node *local_queue_head;
 	struct kd_spin_node *local_queue_tail;
 #endif
@@ -235,7 +245,7 @@ DEFINE_PER_CPU_ALIGNED(uint64_t, ooo_unlocks);
 #endif
 
 /*
- * Used by all threads to add itself to the queue on the slowpath.
+ * Per-CPU nodes used to join the slowpath queue.
  * Keep each two-line node in its own aligned pair, apart from CPU-local
  * pointers that can change while another CPU reads the queue links.
  */
@@ -260,7 +270,8 @@ struct kd_spin_native_input {
 
 static DEFINE_PER_CPU(struct kd_spin_node *, kd_spin_resume_nodes);
 
-static DEFINE_PER_CPU(struct kd_spin_continuation_stack *, kd_spin_continuations);
+static DEFINE_PER_CPU(struct kd_spin_continuation_stack *,
+		      kd_spin_continuations);
 /* A native root remains pinned to its CPU until all executor borrows retire. */
 static DEFINE_PER_CPU(struct kd_spin_continuation *, kd_spin_native_root);
 
@@ -280,4 +291,5 @@ static void kd_spin_selftest_virtual_end(const struct kd_spin_ref *request,
 #define _Q_UNLOCKED_OOO_VAL 7 /* Lock released out of order. */
 #define _Q_LOCKED_IRQ_VAL 15 /* Lock stolen by an IRQ context. */
 
-static void kd_spin_diag_validate_lock_stack(const struct kd_spin_cpu_state *ptr);
+static void
+kd_spin_diag_validate_lock_stack(const struct kd_spin_cpu_state *ptr);

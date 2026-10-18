@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: GPL-2.0
-/* Read-only pool drain and diagnostic owner scans. These observations
- * do not grant ownership or replace stable ticket references. */
+/*
+ * Read-only pool drain and diagnostic owner scans. These observations
+ * do not grant ownership or replace stable ticket references.
+ */
 
-/* Controlled teardown only; neither pool memory nor native frames may be live. */
+/* After callers drain, verify that no fast hold or live ticket remains. */
 int kd_spin_entries_check_idle(void)
 {
 	int cpu;
@@ -28,8 +30,10 @@ int kd_spin_entries_check_idle(void)
 	return 0;
 }
 
-/* Diagnostic snapshot only; ownership decisions use the caller's stable ref.
- * Pool storage survives all observers until provider drain. */
+/*
+ * Diagnostic snapshot only; ownership decisions use the caller's stable ref.
+ * Pool storage survives all observers until provider drain.
+ */
 unsigned long kd_spin_entry_owner(raw_spinlock_t *origin)
 {
 	int cpu;
@@ -38,8 +42,10 @@ unsigned long kd_spin_entry_owner(raw_spinlock_t *origin)
 	if (!kd_spin_entries)
 		return 0;
 	for_each_possible_cpu(cpu) {
-		struct kd_spin_fast_cpu *fast = per_cpu_ptr(&kd_spin_fast_cpu, cpu);
-		struct kd_spin_entry_pool *pool = per_cpu_ptr(kd_spin_entries, cpu);
+		struct kd_spin_fast_cpu *fast =
+			per_cpu_ptr(&kd_spin_fast_cpu, cpu);
+		struct kd_spin_entry_pool *pool =
+			per_cpu_ptr(kd_spin_entries, cpu);
 
 		if (READ_ONCE(fast->held) == (kd_spinlock_t *)origin)
 			return (unsigned long)READ_ONCE(fast->owner);
@@ -47,7 +53,8 @@ unsigned long kd_spin_entry_owner(raw_spinlock_t *origin)
 			struct kd_spin_entry *entry = &pool->entries[i];
 
 			if (READ_ONCE(entry->origin) == origin &&
-			    kd_entry_state(atomic64_read(&entry->control)) == KD_ENTRY_OWNED)
+			    kd_entry_state(atomic64_read(&entry->control)) ==
+				    KD_ENTRY_OWNED)
 				return (unsigned long)READ_ONCE(entry->task);
 		}
 	}

@@ -1,9 +1,11 @@
 // SPDX-License-Identifier: GPL-2.0
 
-/* Residency leases for original text/data, not executable-image versions.
+/*
+ * Residency leases for original text/data, not executable-image versions.
  * OPEN accepts writers/frames; DRAINING lets retained holders finish; RETIRED
  * releases dependencies only after registry invalidation and complete drain.
- * No path pins arbitrary heap objects or supplies missing guest hook readers. */
+ * No path pins arbitrary heap objects or supplies missing guest hook readers.
+ */
 #include <linux/bug.h>
 #include <linux/atomic.h>
 #include <linux/errno.h>
@@ -15,15 +17,19 @@
 
 #include "kd_source.h"
 
-/* Session-wide dependencies avoid per-image reclamation while C3 is deferred.
+/*
+ * Session-wide dependencies avoid per-image reclamation while C3 is deferred.
  * A reverse source/provider dependency is broken by explicit retirement before
- * either exit. No allocation or sleeping occurs in lock hooks. */
+ * either exit. No allocation or sleeping occurs in lock hooks.
+ */
 static DEFINE_RAW_SPINLOCK(kd_source_lock);
 struct kd_source_info kd_sources;
-/* Admission and live count share one atomic word: closing cannot observe zero
+/*
+ * Admission and live count share one atomic word: closing cannot observe zero
  * between an OPEN check and a later increment. The upper bit is irreversible
  * until module init; low 32 bits retain the source-info counter ABI. Writers
- * and dependency registration are cold paths protected by kd_source_lock. */
+ * and dependency registration are cold paths protected by kd_source_lock.
+ */
 #define KD_SOURCE_FRAME_CLOSED (1ULL << 32)
 static atomic64_t kd_source_frame_gate = ATOMIC64_INIT(0);
 
@@ -35,8 +41,10 @@ static unsigned int kd_source_frame_count(void)
 static void kd_source_frame_release(void)
 {
 	/* A zero-count release wraps the low word, even when admission is closed. */
-	BUG_ON((unsigned int)atomic64_dec_return(&kd_source_frame_gate) == UINT_MAX);
+	BUG_ON((unsigned int)atomic64_dec_return(&kd_source_frame_gate) ==
+	       UINT_MAX);
 }
+
 static struct module *kd_source_modules[KD_SOURCE_MAX_MODULES];
 static struct module *(*kd_module_address)(unsigned long address);
 static unsigned long kd_core_start, kd_core_text_end, kd_core_end;
@@ -79,11 +87,14 @@ bool kd_source_frame_get(void)
 	s64 old = atomic64_read(&kd_source_frame_gate);
 
 	do {
-		if ((old & KD_SOURCE_FRAME_CLOSED) || (unsigned int)old == UINT_MAX)
+		if ((old & KD_SOURCE_FRAME_CLOSED) ||
+		    (unsigned int)old == UINT_MAX)
 			return false;
 	} while (!atomic64_try_cmpxchg(&kd_source_frame_gate, &old, old + 1));
-	/* Count covers this in-progress acquisition as well as the retained frame.
-	 * A close racing here must see it or follow the rollback decrement. */
+	/*
+	 * Count covers this in-progress acquisition as well as the retained frame.
+	 * A close racing here must see it or follow the rollback decrement.
+	 */
 	if (try_module_get(THIS_MODULE))
 		return true;
 	kd_source_frame_release();
@@ -93,13 +104,17 @@ bool kd_source_frame_get(void)
 void kd_source_frame_put(void)
 {
 	kd_source_frame_release();
-	/* Spans the retained frame, not earlier guest dispatch or code after pop.
-	 * This is not the missing generic hook-reader lifetime protocol. */
+	/*
+	 * Spans the retained frame, not earlier guest dispatch or code after pop.
+	 * This is not the missing generic hook-reader lifetime protocol.
+	 */
 	module_put(THIS_MODULE);
 }
 
-/* The raw lock keeps preemption disabled through lookup and try_module_get.
- * Read windows may include core rodata; roots/continuations require text. */
+/*
+ * The raw lock keeps preemption disabled through lookup and try_module_get.
+ * Read windows may include core rodata; roots/continuations require text.
+ */
 static int kd_source_piece(unsigned long address, bool text, unsigned long *end)
 {
 	struct module *module;
@@ -138,7 +153,8 @@ static int kd_source_piece(unsigned long address, bool text, unsigned long *end)
 static int kd_source_pin(unsigned long address, unsigned long size, bool text,
 			 enum kd_source_scope scope)
 {
-	/* All address range checks happen under the source lock to coordinate with
+	/*
+	 * All address range checks happen under the source lock to coordinate with
 	 * retire transitions and pin state changes.
 	 */
 	unsigned long flags, cursor = address, limit;
@@ -164,8 +180,10 @@ static int kd_source_pin(unsigned long address, unsigned long size, bool text,
 		cursor = min(end, limit);
 	}
 out:
-	/* Partial failures retain pins used by older images. Existing writer/frame
-	 * holders may finish while admission is draining; release needs zero users. */
+	/*
+	 * Partial failures retain pins used by older images. Existing writer/frame
+	 * holders may finish while admission is draining; release needs zero users.
+	 */
 	raw_spin_unlock_irqrestore(&kd_source_lock, flags);
 	return ret;
 }
@@ -197,8 +215,10 @@ void kd_source_info(struct kd_source_info *info)
 
 int kd_source_begin_retire(void)
 {
-	/* Close admission atomically before testing drain. A successful racing get
-	 * is counted; every later get fails. EBUSY leaves admission closed. */
+	/*
+	 * Close admission atomically before testing drain. A successful racing get
+	 * is counted; every later get fails. EBUSY leaves admission closed.
+	 */
 	unsigned long flags;
 	int ret = 0;
 
@@ -218,8 +238,10 @@ void kd_source_finish_retire(void)
 	unsigned long flags;
 	unsigned int count, i;
 
-	/* The publisher first invalidates entries under the registry gate. Never
-	 * hold this source lock while waiting for that gate or dropping modules. */
+	/*
+	 * The publisher first invalidates entries under the registry gate. Never
+	 * hold this source lock while waiting for that gate or dropping modules.
+	 */
 	raw_spin_lock_irqsave(&kd_source_lock, flags);
 	BUG_ON(kd_sources.state == KD_SOURCE_OPEN || kd_source_frame_count() ||
 	       kd_sources.writers);
@@ -235,7 +257,8 @@ void kd_source_finish_retire(void)
 
 int kd_source_init(void)
 {
-	/* Cache core/module boundaries once so hot paths do not repeatedly query
+	/*
+	 * Cache core/module boundaries once so hot paths do not repeatedly query
 	 * kallsyms while servicing lock events.
 	 */
 	kd_module_address = (void *)kallsyms_lookup_name("__module_address");
@@ -257,8 +280,10 @@ int kd_source_init(void)
 
 void kd_source_exit(void)
 {
-	/* Normal unload cannot pass source/self pins. A used session retires
-	 * explicitly; an unused or init-failed session has no dependencies. */
+	/*
+	 * Normal unload cannot pass source/self pins. A used session retires
+	 * explicitly; an unused or init-failed session has no dependencies.
+	 */
 	BUG_ON(kd_source_begin_retire());
 	kd_source_finish_retire();
 }

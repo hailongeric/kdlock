@@ -14,13 +14,17 @@
 #include "kd_owned_mutex_internal.h"
 #include "kd_owned_mutex_cabi.h"
 
-/* Owned objects never mix Linux waiters. Their fourth low owner bit is valid
- * only when the actual kernel task type guarantees all four bits are free. */
+/*
+ * Owned objects never mix Linux waiters. Their fourth low owner bit is valid
+ * only when the actual kernel task type guarantees all four bits are free.
+ */
 static_assert(__alignof__(struct task_struct) >= 16);
 
-/* The kernel helper is not exported, and MODULE undefines its scheduler-only
+/*
+ * The kernel helper is not exported, and MODULE undefines its scheduler-only
  * macro. These are precisely its non-RT preempt-count operations. All callers
- * hold one preemption disable and no wait_lock/OSQ; migration may stay pinned. */
+ * hold one preemption disable and no wait_lock/OSQ; migration may stay pinned.
+ */
 static void kd_owned_mutex_schedule(void)
 {
 	barrier();
@@ -29,8 +33,10 @@ static void kd_owned_mutex_schedule(void)
 	preempt_disable();
 }
 
-/* Private copy of scheduler __wake_q_add/wake_q_add. A queued task reference
- * survives wait-list removal and is consumed by the exported wake_up_q(). */
+/*
+ * Private copy of scheduler __wake_q_add/wake_q_add. A queued task reference
+ * survives wait-list removal and is consumed by the exported wake_up_q().
+ */
 static void kd_owned_mutex_wake_q_add(struct wake_q_head *head,
 				    struct task_struct *task)
 {
@@ -52,12 +58,14 @@ void kd_mutex_init(struct kd_mutex *lock)
 	atomic_set(&lock->osq.tail, OSQ_UNLOCKED_VAL);
 	INIT_LIST_HEAD(&lock->wait_list);
 }
+
 EXPORT_SYMBOL_GPL(kd_mutex_init);
 
 bool kd_mutex_is_locked(struct kd_mutex *lock)
 {
 	return kd_owned_mutex_owner(lock) != NULL;
 }
+
 EXPORT_SYMBOL_GPL(kd_mutex_is_locked);
 
 bool kd_owned_mutex_is_idle(struct kd_mutex *lock)
@@ -66,11 +74,14 @@ bool kd_owned_mutex_is_idle(struct kd_mutex *lock)
 	       list_empty(&lock->wait_list) &&
 	       atomic_read(&lock->osq.tail) == OSQ_UNLOCKED_VAL;
 }
+
 EXPORT_SYMBOL_GPL(kd_owned_mutex_is_idle);
 
-/* Returns the owning task on failure, NULL on acquisition. A queued first
+/*
+ * Returns the owning task on failure, NULL on acquisition. A queued first
  * SELF waiter can request HANDOFF; only the designated owner consumes PICKUP.
- * Flag updates can race, so every failed CAS refreshes the whole owner word. */
+ * Flag updates can race, so every failed CAS refreshes the whole owner word.
+ */
 static __always_inline struct task_struct *
 kd_owned_mutex_trylock_common(struct kd_mutex *lock, bool handoff)
 {
@@ -100,7 +111,7 @@ kd_owned_mutex_trylock_common(struct kd_mutex *lock, bool handoff)
 		}
 
 		if (atomic_long_try_cmpxchg_acquire(&lock->owner, &owner,
-						  task | flags)) {
+						    task | flags)) {
 			if (task == curr)
 				return NULL;
 			break;
@@ -116,6 +127,7 @@ int kd_mutex_trylock(struct kd_mutex *lock)
 	kd_owned_mutex_task_enter();
 	return 1;
 }
+
 EXPORT_SYMBOL_GPL(kd_mutex_trylock);
 
 static bool kd_owned_mutex_waiter_first(struct kd_mutex *lock,
@@ -124,9 +136,11 @@ static bool kd_owned_mutex_waiter_first(struct kd_mutex *lock,
 	return READ_ONCE(lock->wait_list.next) == &waiter->list;
 }
 
-/* The owner cannot lose the lock while a detached delegation prefix exists.
+/*
+ * The owner cannot lose the lock while a detached delegation prefix exists.
  * Thus only the actual next owner can remove itself and clear the last flags;
- * batch detachment/rejoin must not call this acquisition-only helper. */
+ * batch detachment/rejoin must not call this acquisition-only helper.
+ */
 static void kd_owned_mutex_remove_waiter(struct kd_mutex *lock,
 				       struct kd_owned_mutex_waiter *waiter)
 {
@@ -143,10 +157,12 @@ static __always_inline void kd_owned_mutex_add_waiter(struct kd_mutex *lock,
 		unsigned long guard = KD_OWNED_MUTEX_FLAG_WAITERS |
 				      KD_OWNED_MUTEX_FLAG_DELEGATION;
 
-		/* Flag the possible delegate before linking it. A racing unguarded
+		/*
+		 * Flag the possible delegate before linking it. A racing unguarded
 		 * release either wins first (publish retries acquisition), or its
 		 * whole-word CAS fails and it must retain ownership for slow release.
-		 * Never infer absence of private batches from public-list emptiness. */
+		 * Never infer absence of private batches from public-list emptiness.
+		 */
 		if ((atomic_long_read(&lock->owner) & guard) != guard) {
 			atomic_long_or(guard, &lock->owner);
 			smp_mb__after_atomic();
@@ -155,8 +171,10 @@ static __always_inline void kd_owned_mutex_add_waiter(struct kd_mutex *lock,
 		return;
 	}
 	list_add_tail(&waiter->list, &lock->wait_list);
-	/* Publish list insertion before an owner can observe WAITERS and enter
-	 * the slow unlock. This is also harmless when a private prefix exists. */
+	/*
+	 * Publish list insertion before an owner can observe WAITERS and enter
+	 * the slow unlock. This is also harmless when a private prefix exists.
+	 */
 	if (!(atomic_long_read(&lock->owner) & KD_OWNED_MUTEX_FLAG_WAITERS))
 		atomic_long_or(KD_OWNED_MUTEX_FLAG_WAITERS, &lock->owner);
 }
@@ -174,10 +192,12 @@ bool kd_owned_mutex_publish(struct kd_mutex *lock,
 	acquired = !kd_owned_mutex_trylock_common(lock, false);
 	if (!acquired) {
 		kd_owned_mutex_add_waiter(lock, waiter);
-		/* Fast release can win before WAITERS is set. SELF's sleeping loop
+		/*
+		 * Fast release can win before WAITERS is set. SELF's sleeping loop
 		 * retries after enqueue; a DELEGATE needs the same retry here or
 		 * there may be no owner left to grant or execute its request. The
-		 * wait_lock keeps this transient entry invisible to a batch. */
+		 * wait_lock keeps this transient entry invisible to a batch.
+		 */
 		if (!kd_owned_mutex_trylock_common(lock, false)) {
 			kd_owned_mutex_remove_waiter(lock, waiter);
 			acquired = true;
@@ -197,7 +217,8 @@ bool kd_owned_mutex_pickup(struct kd_mutex *lock,
 		return false;
 	/* The releaser unlinked this delegated node before publishing GRANTED.
 	 * PICKUP excludes every other acquirer until this exact task consumes it.
-	 * Producers may now reuse their node even while release holds wait_lock. */
+	 * Producers may now reuse their node even while release holds wait_lock.
+	 */
 	owner = atomic_long_read(&lock->owner);
 	for (;;) {
 		if ((owner & ~KD_OWNED_MUTEX_FLAGS) != (unsigned long)current ||
@@ -209,8 +230,10 @@ bool kd_owned_mutex_pickup(struct kd_mutex *lock,
 	}
 }
 
-/* Speculative task dereferences retain Linux's owner recheck and compiler
- * barrier under preemption disable (the corresponding RCU read-side period). */
+/*
+ * Speculative task dereferences retain Linux's owner recheck and compiler
+ * barrier under preemption disable (the corresponding RCU read-side period).
+ */
 static noinline bool kd_owned_mutex_spin_on_owner(struct kd_mutex *lock,
 						 struct task_struct *owner)
 {
@@ -235,17 +258,20 @@ static bool kd_owned_mutex_can_spin(struct kd_mutex *lock)
 	return !owner || owner_on_cpu(owner);
 }
 
-/* Bounded queue/owner polling before delegation resources/capture. The initial
+/*
+ * Bounded queue/owner polling before delegation resources/capture. The initial
  * retry preserves Linux acquisition of ownerless WAITERS, but an occupied
  * directed handoff state does not recruit another optimistic spinner. WAITERS
  * alone permits bounded spinning, as in the ordinary Linux owner-spin path. A zero
  * budget disables this retry entirely. Queue cancellation and OSQ unlock retain
- * their mandatory stabilization waits; this is not a wall-time bound. */
+ * their mandatory stabilization waits; this is not a wall-time bound.
+ */
 enum kd_owned_mutex_preflight_result
 kd_owned_mutex_try_optimistic_pinned(struct kd_mutex *lock, unsigned int spins,
 				   bool queued)
 {
-	enum kd_owned_mutex_preflight_result result = KD_OWNED_MUTEX_PREFLIGHT_BUSY;
+	enum kd_owned_mutex_preflight_result result =
+		KD_OWNED_MUTEX_PREFLIGHT_BUSY;
 	struct task_struct *owner;
 	unsigned int i;
 
@@ -307,16 +333,19 @@ static __always_inline bool kd_owned_mutex_optimistic_spin(struct kd_mutex *lock
 			goto fail;
 	}
 	for (;;) {
-		struct task_struct *owner = kd_owned_mutex_trylock_common(lock, false);
+		struct task_struct *owner =
+			kd_owned_mutex_trylock_common(lock, false);
 
 		if (!owner)
 			break;
 		if (!kd_owned_mutex_spin_on_owner(lock, owner))
 			goto fail_unlock;
-		/* Offer the releasing owner one short opportunity to reuse the
+		/*
+		 * Offer the releasing owner one short opportunity to reuse the
 		 * protected line. Consume this budget once, never per transition;
 		 * queued/handoff/delegation states and first waiters keep Linux's
-		 * prompt retry. No owner identity or additional lock state survives. */
+		 * prompt retry. No owner identity or additional lock state survives.
+		 */
 		if (reuse_spins && !atomic_long_read(&lock->owner)) {
 			do {
 				if (need_resched())
@@ -342,12 +371,14 @@ fail:
 	return false;
 }
 
-/* The ordinary C-ABI outer entry reaches this before admission, capture or
+/*
+ * The ordinary C-ABI outer entry reaches this before admission, capture or
  * request resources. Match Linux's unbounded owner-running OSQ path, including
  * its reschedule on spin failure. A final exact retry observes a release during
  * OSQ cleanup or that reschedule before offering delegation instead of sleep.
  * Owner flags do not veto spinning; trylock_common alone consumes PICKUP.
- * The caller retains its one pin and can continue directly into SELF waiting. */
+ * The caller retains its one pin and can continue directly into SELF waiting.
+ */
 static __always_inline bool
 kd_owned_mutex_try_local_pinned(struct kd_mutex *lock)
 {
@@ -366,7 +397,8 @@ kd_owned_mutex_try_local_pinned(struct kd_mutex *lock)
  * once after capture, before resources.
  *
  * Return zero only to request late capture. Every other return owns L, and
- * there is no stack waiter, OSQ ownership, pin or routing lease on return. */
+ * there is no stack waiter, OSQ ownership, pin or routing lease on return.
+ */
 __attribute__((noipa)) noinline notrace unsigned long
 kd_owned_mutex_outer_cabi_gate(struct kd_mutex *lock, unsigned long return_ip)
 {
@@ -400,17 +432,20 @@ kd_owned_mutex_outer_cabi_gate(struct kd_mutex *lock, unsigned long return_ip)
 		preempt_enable();
 		return 0;
 	}
-	/* Diagnostic refusal joins SELF under the same pin, without another
-	 * initial optimistic pass or a stack waiter surviving this C call. */
+	/*
+	 * Diagnostic refusal joins SELF under the same pin, without another
+	 * initial optimistic pass or a stack waiter surviving this C call.
+	 */
 	kd_owned_mutex_lock_wait_pinned(lock);
 acquired:
 	preempt_enable();
 	return (unsigned long)current;
 }
 
-
-/* The caller supplies the preemption pin. Both the ordinary slow path and
- * committed local-first SELF continuation share this exact sleeping loop. */
+/*
+ * The caller supplies the preemption pin. Both the ordinary slow path and
+ * committed local-first SELF continuation share this exact sleeping loop.
+ */
 noinline void kd_owned_mutex_lock_wait_pinned(struct kd_mutex *lock)
 {
 	struct kd_owned_mutex_waiter waiter;
@@ -464,8 +499,10 @@ void kd_owned_mutex_lock_self_wait(struct kd_mutex *lock)
 {
 	might_sleep();
 	preempt_disable();
-	/* Match the Linux spin-failure reschedule before attempting acquisition,
-	 * while avoiding a second initial optimistic pass after the C gate. */
+	/*
+	 * Match the Linux spin-failure reschedule before attempting acquisition,
+	 * while avoiding a second initial optimistic pass after the C gate.
+	 */
 	if (need_resched()) {
 		__set_current_state(TASK_RUNNING);
 		kd_owned_mutex_schedule();
@@ -486,13 +523,16 @@ void kd_owned_mutex_lock_v1(struct kd_mutex *lock)
 	kd_owned_mutex_task_enter();
 	kd_owned_mutex_lock_self(lock);
 }
+
 EXPORT_SYMBOL_GPL(kd_owned_mutex_lock_v1);
 
-/* Unlike Linux's untyped queue, the tagged head must be inspected before
+/*
+ * Unlike Linux's untyped queue, the tagged head must be inspected before
  * clearing owner: a DELEGATE polls a grant/result and cannot race for a free
  * owner word. The wait_lock therefore precedes release on this slow path.
  * SELF retains Linux's wake-before-handoff behavior; directed release is used
- * for a delegated head, an explicit batch boundary, or a HANDOFF request. */
+ * for a delegated head, an explicit batch boundary, or a HANDOFF request.
+ */
 static void kd_owned_mutex_release_common(struct kd_mutex *lock, bool directed)
 {
 	struct kd_owned_mutex_waiter *waiter = NULL;
@@ -504,13 +544,15 @@ static void kd_owned_mutex_release_common(struct kd_mutex *lock, bool directed)
 	raw_spin_lock(&lock->wait_lock);
 	if (!list_empty(&lock->wait_list)) {
 		waiter = list_first_entry(&lock->wait_list,
-					 struct kd_owned_mutex_waiter, list);
+					  struct kd_owned_mutex_waiter, list);
 		delegated = waiter->kind == KD_OWNED_MUTEX_DELEGATE;
 		directed |= delegated;
 		outcome = waiter->outcome;
-		/* Hold the wake reference before either result publication or removal
+		/*
+		 * Hold the wake reference before either result publication or removal
 		 * permits the producer to retire/reuse its request. No packet access
-		 * is allowed after the release-store to the producer's outcome. */
+		 * is allowed after the release-store to the producer's outcome.
+		 */
 		kd_owned_mutex_wake_q_add(&wake_q, waiter->task);
 		if (delegated) {
 			list_del_init(&waiter->list);
@@ -523,9 +565,11 @@ static void kd_owned_mutex_release_common(struct kd_mutex *lock, bool directed)
 		WRITE_ONCE(lock->adaptive_hot, false);
 	owner = atomic_long_read(&lock->owner);
 	for (;;) {
-		BUG_ON((owner & ~KD_OWNED_MUTEX_FLAGS) != (unsigned long)current ||
+		BUG_ON((owner & ~KD_OWNED_MUTEX_FLAGS) !=
+			       (unsigned long)current ||
 		       (owner & KD_OWNED_MUTEX_FLAG_PICKUP));
-		grant = waiter && (directed || (owner & KD_OWNED_MUTEX_FLAG_HANDOFF));
+		grant = waiter &&
+			(directed || (owner & KD_OWNED_MUTEX_FLAG_HANDOFF));
 		next = list_empty(&lock->wait_list) ? 0 :
 			KD_OWNED_MUTEX_FLAG_WAITERS | (owner & KD_OWNED_MUTEX_FLAG_DELEGATION);
 		if (grant)
@@ -551,14 +595,17 @@ static void kd_owned_mutex_release_noncombining(struct kd_mutex *lock)
 
 	owner = atomic_long_read(&lock->owner);
 	for (;;) {
-		BUG_ON((owner & ~KD_OWNED_MUTEX_FLAGS) != (unsigned long)current ||
+		BUG_ON((owner & ~KD_OWNED_MUTEX_FLAGS) !=
+			       (unsigned long)current ||
 		       (owner & KD_OWNED_MUTEX_FLAG_PICKUP));
 		if (owner & (KD_OWNED_MUTEX_FLAG_HANDOFF | KD_OWNED_MUTEX_FLAG_DELEGATION)) {
 			kd_owned_mutex_release_common(lock, false);
 			return;
 		}
-		/* A publisher's guard update races this entire word, never a store
-		 * that could lose a flag. Success permanently gives up authority. */
+		/*
+		 * A publisher's guard update races this entire word, never a store
+		 * that could lose a flag. Success permanently gives up authority.
+		 */
 		if (atomic_long_try_cmpxchg_release(&lock->owner, &owner,
 						  owner & KD_OWNED_MUTEX_FLAG_WAITERS)) {
 			if (!(owner & KD_OWNED_MUTEX_FLAG_WAITERS))
@@ -568,7 +615,8 @@ static void kd_owned_mutex_release_noncombining(struct kd_mutex *lock)
 	}
 	/* A newer owner may already be executing, publishing delegates or asking
 	 * for HANDOFF. This former owner only wakes the current public head; it
-	 * must never interpret newer flags as permission for another handoff. */
+	 * must never interpret newer flags as permission for another handoff.
+	 */
 	raw_spin_lock(&lock->wait_lock);
 	if (!list_empty(&lock->wait_list)) {
 		struct kd_owned_mutex_waiter *waiter = list_first_entry(
@@ -583,11 +631,13 @@ static void kd_owned_mutex_release_noncombining(struct kd_mutex *lock)
 static __always_inline bool
 kd_owned_mutex_unlock_borrowed(struct kd_mutex *lock, unsigned long owner)
 {
-	/* A FULL continuation may be running on its logical caller while the
+	/*
+	 * A FULL continuation may be running on its logical caller while the
 	 * executor still physically owns this nested mutex. Its unlock is an
 	 * owner-ACK request, never permission to change another task's owner word.
 	 * Such a borrower differs from the physical owner, so its CAS fails
-	 * without writing. Ordinary owners need no task-routing lookup. */
+	 * without writing. Ordinary owners need no task-routing lookup.
+	 */
 	if ((owner & ~KD_OWNED_MUTEX_FLAGS) != (unsigned long)current) {
 		if (kd_mutex_task_reroute(current) &&
 		    kd_exec_native_unlock((unsigned long)lock, true))
@@ -613,23 +663,29 @@ void kd_owned_mutex_outer_unlock_v1(struct kd_mutex *lock)
 	if (!kd_owned_mutex_combine(lock))
 		kd_owned_mutex_release_noncombining(lock);
 }
+
 EXPORT_SYMBOL_GPL(kd_owned_mutex_outer_unlock_v1);
 
 void kd_owned_mutex_unlock_v1(struct kd_mutex *lock)
 {
 	unsigned long owner = (unsigned long)current;
 
-	/* Borrowed FULL unlocks have no native acquisition marker on the logical
-	 * task. Their physical owner consumes its own marker when servicing ACK. */
+	/*
+	 * Borrowed FULL unlocks have no native acquisition marker on the logical
+	 * task. Their physical owner consumes its own marker when servicing ACK.
+	 */
 	if (kd_owned_mutex_owned(lock, current))
 		kd_owned_mutex_task_leave();
 	if (atomic_long_try_cmpxchg_release(&lock->owner, &owner, 0))
 		return;
-	/* The last tracked ordinary lock may still be nested inside an untracked
+	/*
+	 * The last tracked ordinary lock may still be nested inside an untracked
 	 * explicit outer acquisition. Combining here could execute a waiter that
 	 * needs that outer lock while its owner is blocked inside this unlock.
-	 * Only the explicit outer API establishes a safe batching boundary. */
+	 * Only the explicit outer API establishes a safe batching boundary.
+	 */
 	if (!kd_owned_mutex_unlock_borrowed(lock, owner))
 		kd_owned_mutex_release_noncombining(lock);
 }
+
 EXPORT_SYMBOL_GPL(kd_owned_mutex_unlock_v1);

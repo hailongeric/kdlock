@@ -7,16 +7,18 @@
  * are shared with the adjacent components. This is not a standalone object.
  */
 
-/* Page-aligned allocations otherwise put every CPU's root packet in the
+/*
+ * Page-aligned allocations otherwise put every CPU's root packet in the
  * same L1 sets. Use only the unused continuation-area tail to spread roots;
  * the allocation length and the upper 8 KiB polling stack stay unchanged.
  * The current 8512-byte stack admits 60 cache-line colors. A stride of 13
- * visits all of them over consecutive CPU identifiers before repeating. */
+ * visits all of them over consecutive CPU identifiers before repeating.
+ */
 static size_t kd_spin_continuation_offset(unsigned int cpu)
 {
-	const size_t colors = 1 +
-		(KD_SPIN_CONT_BYTES - sizeof(struct kd_spin_continuation_stack)) /
-		L1_CACHE_BYTES;
+	const size_t colors = 1 + (KD_SPIN_CONT_BYTES -
+				   sizeof(struct kd_spin_continuation_stack)) /
+					  L1_CACHE_BYTES;
 
 	return ((unsigned long)cpu * 13 % colors) * L1_CACHE_BYTES;
 }
@@ -29,8 +31,10 @@ static void kd_spinlock_free_percpu(void)
 		struct kd_spin_cpu_state *stack =
 			per_cpu_ptr(&kd_spin_cpu, cpu);
 
-		/* The continuation pointer may be interior. The unchanged polling
-		 * stack top retains the allocation base, also during partial init. */
+		/*
+		 * The continuation pointer may be interior. The unchanged polling
+		 * stack top retains the allocation base, also during partial init.
+		 */
 		if (stack->wait_stack_top)
 			vfree((char *)stack->wait_stack_top - KD_SPIN_STORAGE_BYTES);
 		*per_cpu_ptr(&kd_spin_continuations, cpu) = NULL;
@@ -58,28 +62,40 @@ int kd_spinlock_init(void)
 	BUILD_BUG_ON(__alignof__(struct kd_spin_node) < L1_CACHE_BYTES);
 	BUILD_BUG_ON(__alignof__(kd_spin_nodes) < 2 * L1_CACHE_BYTES);
 	BUILD_BUG_ON(sizeof(struct kd_spin_node) != 2 * L1_CACHE_BYTES);
-	BUILD_BUG_ON(offsetof(struct kd_spin_node, completed) != L1_CACHE_BYTES);
-	BUILD_BUG_ON(offsetof(struct kd_spin_node, locked) != L1_CACHE_BYTES + 1);
+	BUILD_BUG_ON(offsetof(struct kd_spin_node, completed) !=
+		     L1_CACHE_BYTES);
+	BUILD_BUG_ON(offsetof(struct kd_spin_node, locked) !=
+		     L1_CACHE_BYTES + 1);
 	BUILD_BUG_ON(sizeof(kd_spinlock_t) != sizeof(u32));
 	/* Preserve pair separation within each diagnostic slot and across slots. */
 	BUILD_BUG_ON(__alignof__(struct kd_spin_diag_slot) != 2 * L1_CACHE_BYTES);
 	BUILD_BUG_ON(sizeof(struct kd_spin_diag_slot) != 2 * L1_CACHE_BYTES);
-	/* Queue tags share a producer-owned byte; publication/retirement flags
+	/*
+	 * Queue tags share a producer-owned byte; publication/retirement flags
 	 * remain separate. Core identity/state and all three continuation words
-	 * must fit in the aligned first line; virtual GPRs occupy the next. */
+	 * must fit in the aligned first line; virtual GPRs occupy the next.
+	 */
 	BUILD_BUG_ON(KD_SPIN_CONT_VIRTUAL > 1);
-	BUILD_BUG_ON(sizeof(((struct kd_spin_continuation *)0)->result) != sizeof(u32));
+	BUILD_BUG_ON(sizeof(((struct kd_spin_continuation *)0)->result) !=
+		     sizeof(u32));
 	BUILD_BUG_ON(offsetof(struct kd_spin_continuation, frame) != 0);
 	BUILD_BUG_ON(offsetof(struct kd_exec_frame, regs) != 40);
-	BUILD_BUG_ON(offsetof(struct kd_exec_frame, regs.bp) + sizeof(unsigned long) != L1_CACHE_BYTES);
-	BUILD_BUG_ON(offsetof(struct kd_exec_frame, regs.r15) != L1_CACHE_BYTES);
-	BUILD_BUG_ON(offsetof(struct kd_exec_frame, regs.r11) >= 2 * L1_CACHE_BYTES);
-	BUILD_BUG_ON(offsetof(struct kd_exec_frame, regs_ref) / L1_CACHE_BYTES !=
+	BUILD_BUG_ON(offsetof(struct kd_exec_frame, regs.bp) +
+			     sizeof(unsigned long) !=
+		     L1_CACHE_BYTES);
+	BUILD_BUG_ON(offsetof(struct kd_exec_frame, regs.r15) !=
+		     L1_CACHE_BYTES);
+	BUILD_BUG_ON(offsetof(struct kd_exec_frame, regs.r11) >=
+		     2 * L1_CACHE_BYTES);
+	BUILD_BUG_ON(offsetof(struct kd_exec_frame, regs_ref) /
+			     L1_CACHE_BYTES !=
 		     offsetof(struct kd_exec_frame, parent) / L1_CACHE_BYTES);
 	BUILD_BUG_ON(sizeof(struct kd_spin_continuation) % L1_CACHE_BYTES);
 	BUILD_BUG_ON(sizeof(struct kd_spin_continuation) > 768);
-	BUILD_BUG_ON(sizeof(struct kd_spin_continuation_stack) > KD_SPIN_CONT_BYTES);
-	BUILD_BUG_ON(__alignof__(struct kd_spin_continuation_stack) > L1_CACHE_BYTES);
+	BUILD_BUG_ON(sizeof(struct kd_spin_continuation_stack) >
+		     KD_SPIN_CONT_BYTES);
+	BUILD_BUG_ON(__alignof__(struct kd_spin_continuation_stack) >
+		     L1_CACHE_BYTES);
 	BUILD_BUG_ON(KD_SPIN_CONT_BYTES % L1_CACHE_BYTES);
 	BUILD_BUG_ON(KD_SPIN_WAIT_STACK_SIZE % L1_CACHE_BYTES);
 	if (kd_spin_prefetch_mode > 2)
@@ -95,8 +111,10 @@ int kd_spinlock_init(void)
 	if (ret)
 		return ret;
 #endif
-	/* Keep diagnostic storage outside the kernel's fixed module per-CPU
-	 * reservation. Allocate once at startup, never on a request path. */
+	/*
+	 * Keep diagnostic storage outside the kernel's fixed module per-CPU
+	 * reservation. Allocate once at startup, never on a request path.
+	 */
 	kd_spin_diag_cpu = alloc_percpu(struct kd_spin_diag_cpu);
 	if (!kd_spin_diag_cpu)
 		goto err_free;
@@ -107,18 +125,22 @@ int kd_spinlock_init(void)
 		memset(per_cpu_ptr(kd_spin_diag_cpu, i), 0,
 		       sizeof(struct kd_spin_diag_cpu));
 
-		/* The continuation and polling stack belong to CPU i, not to the
+		/*
+		 * The continuation and polling stack belong to CPU i, not to the
 		 * module loader. Prefer its node at startup; allocation may fall
-		 * back under memory pressure. No allocation enters the lock path. */
+		 * back under memory pressure. No allocation enters the lock path.
+		 */
 #ifdef NUMA_AWARE
-		wait_stack = vzalloc_node(KD_SPIN_STORAGE_BYTES, cpu_to_node(i));
+		wait_stack =
+			vzalloc_node(KD_SPIN_STORAGE_BYTES, cpu_to_node(i));
 #else
 		wait_stack = vzalloc(KD_SPIN_STORAGE_BYTES);
 #endif
 		if (!wait_stack)
 			goto err_free;
 		*per_cpu_ptr(&kd_spin_continuations, i) =
-			(void *)((char *)wait_stack + kd_spin_continuation_offset(i));
+			(void *)((char *)wait_stack +
+				 kd_spin_continuation_offset(i));
 		ptr->wait_stack_top = (char *)wait_stack + KD_SPIN_STORAGE_BYTES;
 		*per_cpu_ptr(&kd_spin_native_root, i) = NULL;
 
@@ -138,7 +160,6 @@ int kd_spinlock_init(void)
 				per_cpu_ptr(&kd_spin_nodes[j], i);
 
 			node->execution = NULL;
-
 		}
 	}
 
@@ -156,7 +177,8 @@ err_free:
 	return -ENOMEM;
 }
 
-/* Print per-lock accounting and release per-CPU resources.
+/*
+ * Print per-lock accounting and release per-CPU resources.
  * Must be invoked after all active frames and waiters have drained.
  */
 void kd_spinlock_exit(void)
@@ -172,7 +194,8 @@ void kd_spinlock_exit(void)
 		for (i = 0; i < stack->top; i++)
 			BUG_ON(!smp_load_acquire(&stack->records[i].retired));
 		BUG_ON(*per_cpu_ptr(&kd_spin_native_root, cpu));
-		batch_entries += per_cpu_ptr(kd_spin_diag_cpu, cpu)->batch_entries;
+		batch_entries +=
+			per_cpu_ptr(kd_spin_diag_cpu, cpu)->batch_entries;
 		ww_jumps += per_cpu_ptr(kd_spin_diag_cpu, cpu)->ww_jumps;
 		overflow += per_cpu_ptr(kd_spin_diag_cpu, cpu)->overflow;
 		invariant_failures +=
@@ -187,13 +210,15 @@ void kd_spinlock_exit(void)
 	kd_spin_selftest_deferred_report();
 #endif
 #endif
-	/* The caller already drained requests; this is an exact final oracle,
-	 * not a live admission or module-lifetime decision. */
+	/*
+	 * The caller already drained requests; this is an exact final oracle,
+	 * not a live admission or module-lifetime decision.
+	 */
 	invariant_failures += kd_spin_diag_waiter_mismatches();
 	KD_PR_INFO("kd_spin batch: entries=%llu ww_jumps=%llu\n",
-		   (unsigned long long)batch_entries, (unsigned long long)ww_jumps);
-	KD_PR_INFO("kd_spin diag overflow=%lld\n",
-		   (long long)overflow);
+		   (unsigned long long)batch_entries,
+		   (unsigned long long)ww_jumps);
+	KD_PR_INFO("kd_spin diag overflow=%lld\n", (long long)overflow);
 	KD_PR_INFO("kd_spin diag invariant_failures=%lld\n",
 		   (long long)invariant_failures);
 	for (i = 0; i < KD_SPIN_DIAG_SLOTS; i++) {

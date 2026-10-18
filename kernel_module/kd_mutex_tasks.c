@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: GPL-2.0
 
-/* RCU task identities retain exact acquisition references. Zero references
+/*
+ * RCU task identities retain exact acquisition references. Zero references
  * remove routing immediately; a bounded inactive cache avoids allocation and
- * RCU callback traffic on every contested acquisition. Eviction waits for RCU. */
+ * RCU callback traffic on every contested acquisition. Eviction waits for RCU.
+ */
 #include <linux/cache.h>
 #include <linux/hash.h>
 #include <linux/rculist.h>
@@ -15,16 +17,19 @@
 #include "kd_lock.h"
 #include "kd_mutex_stats.h"
 
-/* Keep task routing alive through queue waits, the owner's CS, and borrowed
+/*
+ * Keep task routing alive through queue waits, the owner's CS, and borrowed
  * native CSs, independently of CPU frequency or target-process selection.
  * Reads neither sleep nor allocate. Cached references use their own atomic;
- * only insertion and eviction take the bucket's lock. */
+ * only insertion and eviction take the bucket's lock.
+ */
 struct kd_mutex_task {
 	struct hlist_node link;
 	struct rcu_head rcu;
 	struct task_struct *task;
 	atomic_t refs; /* >=0 live identity, -1 claimed exclusively for eviction */
-	unsigned int owned_holds; /* current task's ordinary/nested KD acquisitions */
+	unsigned int
+		owned_holds; /* current task's ordinary/nested KD acquisitions */
 };
 
 #define KD_MUTEX_TASK_BITS 8
@@ -34,7 +39,8 @@ struct kd_mutex_task {
 struct kd_mutex_task_bucket {
 	raw_spinlock_t lock;
 	struct hlist_head tasks;
-	unsigned int count; /* resident identities; protected by this bucket's lock */
+	unsigned int
+		count; /* resident identities; protected by this bucket's lock */
 } ____cacheline_aligned_in_smp;
 
 static struct kd_mutex_task_bucket kd_mutex_task_buckets[KD_MUTEX_TASK_BUCKETS] = {
@@ -48,9 +54,11 @@ static struct kd_mutex_task_bucket *kd_mutex_task_bucket(struct task_struct *tas
 	return &kd_mutex_task_buckets[hash_ptr(task, KD_MUTEX_TASK_BITS)];
 }
 
-/* Controlled-drain snapshot only, as before: callers stop new acquisitions
+/*
+ * Controlled-drain snapshot only, as before: callers stop new acquisitions
  * before relying on idleness. Each bucket retains exact membership; no global
- * increment/decrement cacheline is written by every contending CPU. */
+ * increment/decrement cacheline is written by every contending CPU.
+ */
 static unsigned int kd_mutex_task_count(void)
 {
 	unsigned int count = 0, i;
@@ -58,19 +66,23 @@ static unsigned int kd_mutex_task_count(void)
 
 	rcu_read_lock();
 	for (i = 0; i < KD_MUTEX_TASK_BUCKETS; i++)
-		hlist_for_each_entry_rcu(entry, &kd_mutex_task_buckets[i].tasks, link)
+		hlist_for_each_entry_rcu(entry, &kd_mutex_task_buckets[i].tasks,
+					 link)
 			count += atomic_read(&entry->refs) > 0;
 	rcu_read_unlock();
 	return count;
 }
+
 KD_MUTEX_STAT(kd_mutex_task_failures);
 KD_MUTEX_STAT(kd_mutex_task_reroutes);
 static int kd_mutex_task_fail_once __read_mostly;
 module_param_named(mutex_task_fail_once, kd_mutex_task_fail_once, int, 0644);
 
 #ifdef KDLOCK_SELFTEST
-/* Observe the real deferred free without replacing RCU or task references.
- * Hooks are unpublished during the probe, so only its records contribute. */
+/*
+ * Observe the real deferred free without replacing RCU or task references.
+ * Hooks are unpublished during the probe, so only its records contribute.
+ */
 static atomic_t kd_mutex_task_test_frees = ATOMIC_INIT(0);
 #endif
 
@@ -101,9 +113,11 @@ bool kd_mutex_task_reroute(struct task_struct *task)
 
 static void kd_mutex_task_free(struct rcu_head *rcu);
 
-/* Caller holds the bucket lock. A concurrent cache hit can reactivate zero;
+/*
+ * Caller holds the bucket lock. A concurrent cache hit can reactivate zero;
  * the CAS arbitrates that race without unlinking a newly active identity.
- * Once negative, no getter can revive the entry and RCU protects old readers. */
+ * Once negative, no getter can revive the entry and RCU protects old readers.
+ */
 static bool kd_mutex_task_evict(struct kd_mutex_task_bucket *bucket,
 				struct kd_mutex_task *entry)
 {
@@ -121,15 +135,18 @@ bool kd_mutex_task_get(struct task_struct *task)
 	struct kd_mutex_task *entry, *new;
 	unsigned long flags;
 
-	/* The test switch is normally zero. A read avoids taking exclusive
+	/*
+	 * The test switch is normally zero. A read avoids taking exclusive
 	 * ownership of its cacheline on every real acquisition; the CAS still
-	 * allows exactly one injected failure when the switch is armed. */
+	 * allows exactly one injected failure when the switch is armed.
+	 */
 	if (unlikely(READ_ONCE(kd_mutex_task_fail_once) == 1) &&
 	    cmpxchg(&kd_mutex_task_fail_once, 1, 0) == 1)
 		goto failure;
 	rcu_read_lock();
 	hlist_for_each_entry_rcu(entry, &bucket->tasks, link) {
-		if (entry->task == task && atomic_add_unless(&entry->refs, 1, -1)) {
+		if (entry->task == task &&
+		    atomic_add_unless(&entry->refs, 1, -1)) {
 			rcu_read_unlock();
 			return true;
 		}
@@ -167,7 +184,8 @@ failure:
 
 static void kd_mutex_task_free(struct rcu_head *rcu)
 {
-	struct kd_mutex_task *entry = container_of(rcu, struct kd_mutex_task, rcu);
+	struct kd_mutex_task *entry =
+		container_of(rcu, struct kd_mutex_task, rcu);
 
 	put_task_struct(entry->task);
 	kfree(entry);
@@ -191,9 +209,12 @@ void kd_mutex_task_put(struct task_struct *task)
 		refs = atomic_dec_return(&entry->refs);
 
 		WARN_ON_ONCE(refs < 0);
-		/* Active collisions may exceed the cache bound. Only the cold
-		 * zero transition of an overfull bucket needs writer serialization. */
-		if (!refs && READ_ONCE(bucket->count) > KD_MUTEX_TASK_CACHE_PER_BUCKET) {
+		/*
+		 * Active collisions may exceed the cache bound. Only the cold
+		 * zero transition of an overfull bucket needs writer serialization.
+		 */
+		if (!refs &&
+		    READ_ONCE(bucket->count) > KD_MUTEX_TASK_CACHE_PER_BUCKET) {
 			raw_spin_lock_irqsave(&bucket->lock, flags);
 			kd_mutex_task_evict(bucket, entry);
 			raw_spin_unlock_irqrestore(&bucket->lock, flags);
@@ -211,18 +232,21 @@ bool kd_mutex_tasks_idle(void)
 	return !kd_mutex_task_count();
 }
 
-/* Outer-cookie calls are explicitly outermost entries. Ordinary/direct
+/*
+ * Outer-cookie calls are explicitly outermost entries. Ordinary/direct
  * controls can nest, so retain an exact task-local depth through their native
  * critical sections. An early A unlock while B is held must not execute an A
  * waiter that acquires B: the native B unlock is still below this call frame.
- * One routing reference pins the identity until the entire depth drains. */
+ * One routing reference pins the identity until the entire depth drains.
+ */
 static bool kd_owned_tracking_exhausted;
 
 static struct kd_mutex_task *kd_owned_current_record(void)
 {
 	struct kd_mutex_task *entry;
 
-	hlist_for_each_entry_rcu(entry, &kd_mutex_task_bucket(current)->tasks, link)
+	hlist_for_each_entry_rcu(entry, &kd_mutex_task_bucket(current)->tasks,
+				 link)
 		if (entry->task == current)
 			return entry;
 	return NULL;
@@ -241,10 +265,12 @@ void kd_owned_mutex_task_enter(void)
 		return;
 	}
 	rcu_read_unlock();
-	/* Refusal cannot make a mutex acquisition fail. If identity allocation
+	/*
+	 * Refusal cannot make a mutex acquisition fail. If identity allocation
 	 * fails, permanently disable new batches for this provider lifetime.
 	 * Existing requests receive SELF handoff and retain their normal drain.
-	 * Untracked tasks never start tracking a later nested acquisition. */
+	 * Untracked tasks never start tracking a later nested acquisition.
+	 */
 	if (unlikely(READ_ONCE(kd_owned_tracking_exhausted)))
 		return;
 	if (!kd_mutex_task_get(current)) {
@@ -291,8 +317,10 @@ bool kd_owned_mutex_task_can_combine(void)
 
 static void kd_mutex_tasks_purge(void)
 {
-	/* Controlled teardown only: all hook callers and acquisitions must have
-	 * finished before unregistering. This is not concurrent hot-unload support. */
+	/*
+	 * Controlled teardown only: all hook callers and acquisitions must have
+	 * finished before unregistering. This is not concurrent hot-unload support.
+	 */
 	unsigned int i;
 
 	for (i = 0; i < KD_MUTEX_TASK_BUCKETS; i++) {

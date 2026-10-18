@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: GPL-2.0
-/* Private ticket pool, packed generation/phase/borrow control word and
- * shared validation/CAS helpers. Allocation is initialization-only. */
+/*
+ * Private ticket pool, packed generation/phase/borrow control word and
+ * shared validation/CAS helpers. Allocation is initialization-only.
+ */
 
 enum kd_spin_entry_state {
 	KD_ENTRY_FREE,
@@ -10,9 +12,11 @@ enum kd_spin_entry_state {
 	KD_ENTRY_NATIVE,
 };
 
-/* x86_64: 48-bit generation, 12-bit borrow count, immutable kind and phase.
+/*
+ * x86_64: 48-bit generation, 12-bit borrow count, immutable kind and phase.
  * The finite limits fail admission instead of wrapping into a live handle.
- * Keeping kind here lets remote borrowers inspect only this atomic word. */
+ * Keeping kind here lets remote borrowers inspect only this atomic word.
+ */
 #define KD_ENTRY_STATE_MASK 7UL
 #define KD_ENTRY_VIRTUAL_BIT (1UL << 3)
 #define KD_ENTRY_REF_SHIFT 4
@@ -25,8 +29,9 @@ enum kd_spin_entry_state {
 
 _Static_assert(KD_ENTRY_NATIVE <= KD_ENTRY_STATE_MASK,
 	       "ticket phase must fit below the immutable kind bit");
-_Static_assert((KD_ENTRY_STATE_MASK | KD_ENTRY_VIRTUAL_BIT | KD_ENTRY_REF_MASK) ==
-	       KD_ENTRY_LOW_MASK, "ticket fields must fill the low 16 bits");
+_Static_assert((KD_ENTRY_STATE_MASK | KD_ENTRY_VIRTUAL_BIT |
+		KD_ENTRY_REF_MASK) == KD_ENTRY_LOW_MASK,
+	       "ticket fields must fill the low 16 bits");
 
 struct kd_spin_entry {
 	atomic64_t control;
@@ -86,10 +91,15 @@ kd_entry_with_state(unsigned long control, enum kd_spin_entry_state state)
 static __always_inline int kd_entry_valid(const struct kd_spin_ref *ref,
 					 unsigned long control)
 {
-	/* Compare the complete caller generation: masking an invalid high bit
-	 * would alias it onto a valid 48-bit generation. */
+	/*
+	 * Compare the complete caller generation: masking an invalid high bit
+	 * would alias it onto a valid 48-bit generation.
+	 */
 	return kd_entry_state(control) != KD_ENTRY_FREE &&
-	       (control >> KD_ENTRY_SEQUENCE_SHIFT) == ref->sequence ? 0 : -ESTALE;
+			       (control >> KD_ENTRY_SEQUENCE_SHIFT) ==
+				       ref->sequence ?
+		       0 :
+		       -ESTALE;
 }
 
 static __always_inline int kd_entry_local(const struct kd_spin_ref *ref,
@@ -102,18 +112,23 @@ static __always_inline int kd_entry_local(const struct kd_spin_ref *ref,
 	if (READ_ONCE(ref->entry->cpu) != raw_smp_processor_id() ||
 	    READ_ONCE(ref->entry->task) != current)
 		return -EPERM;
-	/* After local validation, the caller's pin prevents slot reuse across
-	 * CAS retries. Only remote borrow counts can change its current tag. */
+	/*
+	 * After local validation, the caller's pin prevents slot reuse across
+	 * CAS retries. Only remote borrow counts can change its current tag.
+	 */
 	return 0;
 }
 
-/* A successful CAS includes the generation even on a count-only update.
- * A failed CAS supplies the next snapshot without another shared load. */
+/*
+ * A successful CAS includes the generation even on a count-only update.
+ * A failed CAS supplies the next snapshot without another shared load.
+ */
 static __always_inline bool kd_entry_update(struct kd_spin_entry *entry,
 					   unsigned long *control,
 					   unsigned long next)
 {
-	unsigned long before = atomic64_cmpxchg(&entry->control, *control, next);
+	unsigned long before =
+		atomic64_cmpxchg(&entry->control, *control, next);
 
 	if (before == *control)
 		return true;

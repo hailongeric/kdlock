@@ -10,16 +10,19 @@ static bool kd_exe_registered(unsigned int pid, unsigned long rip,
 {
 	struct kd_exe_info *exe = kd_get_exe(pid, rip);
 
-	/* A lookup can return an UNUSED slot whose writer is still initializing
+	/*
+	 * A lookup can return an UNUSED slot whose writer is still initializing
 	 * its key. Only publication proves that root pinning and all immutable
 	 * metadata are complete. UNINIT/miss/native-only entries also need no
-	 * duplicate registration; this check does not claim JIT readiness. */
+	 * duplicate registration; this check does not claim JIT readiness.
+	 */
 	if (!exe || smp_load_acquire(&exe->status_code) == KD_EXE_UNUSED)
 		return false;
 	return READ_ONCE(exe->pid) == pid && READ_ONCE(exe->RIP) == rip &&
 	       READ_ONCE(exe->lock_kind) == kind &&
 	       READ_ONCE(exe->entry_abi) == abi &&
-	       (kind == KD_EXE_LOCK_OWNED_MUTEX || READ_ONCE(exe->code_block)) &&
+	       (kind == KD_EXE_LOCK_OWNED_MUTEX ||
+		READ_ONCE(exe->code_block)) &&
 	       kd_source_is_open();
 }
 
@@ -33,12 +36,14 @@ void kd_exe_add_abi(int pid, unsigned long rip, enum kd_exe_lock_kind kind,
 
 	if (!kd_entry_abi_valid(kind, abi))
 		return;
-	/* Root pins outlive the append-only registry within this source session.
+	/*
+	 * Root pins outlive the append-only registry within this source session.
 	 * Repeated registrations read metadata only, without taking the global
 	 * gate or repeating source/module lookup. Retirement can race this no-op:
 	 * it neither dereferences source/code nor grants an execution lease.
 	 * Actual dispatch still requires readiness and an admitted source frame.
-	 * Misses, backend conflicts and closed admission keep the serialized path. */
+	 * Misses, backend conflicts and closed admission keep the serialized path.
+	 */
 	if (kd_exe_registered(pid, rip, kind, abi))
 		return;
 	publish_flags = kd_code_block_gate_lock();
@@ -79,8 +84,10 @@ void kd_exe_add_abi(int pid, unsigned long rip, enum kd_exe_lock_kind kind,
 
 	if (!mem && kind != KD_EXE_LOCK_OWNED_MUTEX) {
 		kd_code_block_gate_unlock(publish_flags);
-		/* Identify the rejected root without publishing a partial entry or
-		 * evicting an image still used by an older execution/native frame. */
+		/*
+		 * Identify the rejected root without publishing a partial entry or
+		 * evicting an image still used by an older execution/native frame.
+		 */
 		KD_PR_ERR(
 			"kd_exe_add: code block pool exhausted entry=%lx task=%d kind=%d\n",
 			rip, current->pid, kind);
@@ -110,8 +117,10 @@ void kd_exe_retire_all(void)
 	unsigned long publish_flags;
 	unsigned int i;
 
-	/* Closing precedes this gate, so a racing registration either finishes
-	 * before invalidation or refuses. Slots/images are not reused in-session. */
+	/*
+	 * Closing precedes this gate, so a racing registration either finishes
+	 * before invalidation or refuses. Slots/images are not reused in-session.
+	 */
 	publish_flags = kd_code_block_gate_lock();
 	for (i = 0; kd_exes && i < KD_MAX_EXE; i++)
 		if (READ_ONCE(kd_exes[i].status_code) != KD_EXE_UNUSED)

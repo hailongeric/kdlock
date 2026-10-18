@@ -20,9 +20,11 @@ static atomic64_t kd_hostcall_rejected;
 static atomic64_t kd_hostcall_failed;
 static atomic64_t kd_hostcall_limit;
 
-/* The same-device capability authorizes only bounded mutex stack facts, not
+/*
+ * The same-device capability authorizes only bounded mutex stack facts, not
  * arbitrary callee memory preservation. Exclude the consumed CALL word, whose
- * identity is checked separately before JIT may resume. */
+ * identity is checked separately before JIT may resume.
+ */
 #define KD_MUTEX_CALL_STACK_BYTES KD_JIT_MUTEX_STACK_BYTES
 struct kd_mutex_call_stack {
 	struct kd_call_state call;
@@ -44,7 +46,8 @@ static int kd_hostcall_invoke_ktime_get_ns(struct kd_regs *regs)
 	return 0;
 }
 
-/* x86-64 unsigned long: consume the full saved RDI and replace only RAX.
+/*
+ * x86-64 unsigned long: consume the full saved RDI and replace only RAX.
  * The native helper has at most 32 scalar iterations and no external memory,
  * sleeping or task/CPU-context dependency; it does not run on the waiter stack.
  * This CALL boundary requires no new flags or memory-access recovery contract.

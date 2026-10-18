@@ -1,23 +1,19 @@
 // SPDX-License-Identifier: GPL-2.0
 // Copyright (c) 2022 Vishal Gupta, Kumar Kartikeya Dwivedi
-//
-// Ported to kdlock: TCLocks komb.c → kd_spinlock.c
-//
-// kd_spinlock implements explicit delegation for KD spinlocks.
-// The protocol uses a per-CPU MCS-style queue with a combiner/waiter model:
-// the lock holder (combiner) executes critical sections on behalf of queued
-// waiters by running JIT-translated code through kd_exe_on_call_hl_entry().
-//
-// Key differences from TCLocks komb.c:
-//   - Calls kd_exe_on_call_hl_entry() inside execute_cs() for JIT delegation
-//   - Uses kd_spin_node with a shared request/frame/register packet
-//   - Delegation via sandbox JIT; a per-CPU shadow stack isolates waiter polling
 
-/* Scheduling nodes carry packets, but kd_spin_entry owns origin tickets and
+/*
+ * KD spinlock delegation, derived from TCLocks komb.c.
+ *
+ * A per-CPU MCS-style queue links waiters to the lock holder (combiner).
+ * The combiner runs their translated critical sections through execute_cs()
+ * and kd_exe_on_call_hl_entry(), using a shared request/frame/register packet.
+ *
+ * Scheduling nodes carry packets, but kd_spin_entry owns origin tickets and
  * the KD word owns exclusion. Keep these lifetimes separate when reading the
  * nested queue paths: a remote executor may carry the same logical waiter.
  * Combiners use their task stack. Physical waiters switch to a shadow stack
- * before publication and return to their task stack after the release wake. */
+ * before publication and return to their task stack after the release wake.
+ */
 #include "kd_spinlock.h"
 #include "utils.h"
 #include "exe.h"
@@ -38,10 +34,12 @@
 #include <linux/kernel.h>
 #include <linux/module.h>
 
-/* This file assembles the spin implementation in declaration order:
+/*
+ * This file assembles the spin implementation in declaration order:
  * state -> queues -> execution -> nested requests -> restore -> entry/unlock.
  * Keep one translation unit: stack-switch labels, static state and compiler
- * inlining form part of the existing entry ABI. See README.md for the map. */
+ * inlining form part of the existing entry ABI. See README.md for the map.
+ */
 #include "spin/state.inc"
 
 #include "spin/shadow.inc"

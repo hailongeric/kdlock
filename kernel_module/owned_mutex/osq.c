@@ -3,9 +3,11 @@
 #include <linux/sched.h>
 #include "kd_owned_mutex_internal.h"
 
-/* Private port of the captured Linux 6.1.159 OSQ. See linux-source.json.
+/*
+ * Private port of the captured Linux 6.1.159 OSQ. See linux-source.json.
  * Names and the node type are private; the queue/cancellation ordering is
- * unchanged. No Linux osq_lock/osq_unlock symbol is imported. */
+ * unchanged. No Linux osq_lock/osq_unlock symbol is imported.
+ */
 struct kd_owned_osq_node {
 	struct kd_owned_osq_node *next, *prev;
 	int locked;
@@ -24,7 +26,6 @@ struct kd_owned_osq_node {
  * spinning.
  */
 static DEFINE_PER_CPU_SHARED_ALIGNED(struct kd_owned_osq_node, kd_owned_osq_nodes);
-
 /*
  * We use the value 0 to represent "no CPU", thus the encoded value
  * will be the CPU number incremented by 1.
@@ -138,9 +139,11 @@ kd_owned_osq_wait_next(struct optimistic_spin_queue *lock,
 	return next;
 }
 
-/* A preflight may become the immediate head, but must not join and wait on
+/*
+ * A preflight may become the immediate head, but must not join and wait on
  * an existing OSQ. Publish initialized node fields with both acquire/release
- * ordering, as the full OSQ entry does. A successor may join after our CAS. */
+ * ordering, as the full OSQ entry does. A successor may join after our CAS.
+ */
 bool kd_owned_osq_trylock(struct optimistic_spin_queue *lock)
 {
 	struct kd_owned_osq_node *node;
@@ -162,8 +165,10 @@ bool kd_owned_osq_trylock(struct optimistic_spin_queue *lock)
 	return false;
 }
 
-/* Count deliberate queued observations only. Stabilizing and unlinking an
- * admitted node must finish even after this budget expires. */
+/*
+ * Count deliberate queued observations only. Stabilizing and unlinking an
+ * admitted node must finish even after this budget expires.
+ */
 static __always_inline bool kd_owned_osq_budget_expired(unsigned int *remaining)
 {
 	if (!remaining)
@@ -230,9 +235,8 @@ kd_owned_osq_lock_common(struct optimistic_spin_queue *lock, unsigned int *remai
 	 * polling, be careful.
 	 */
 	if (smp_cond_load_relaxed(&node->locked,
-				  kd_owned_osq_budget_expired(remaining) || VAL ||
-				  need_resched() ||
-				  vcpu_is_preempted(kd_owned_osq_node_cpu(node->prev))))
+		kd_owned_osq_budget_expired(remaining) || VAL || need_resched() ||
+		vcpu_is_preempted(kd_owned_osq_node_cpu(node->prev))))
 		return true;
 
 	/* unqueue */
@@ -284,7 +288,7 @@ kd_owned_osq_lock_common(struct optimistic_spin_queue *lock, unsigned int *remai
 	/*
 	 * Step - C -- unlink
 	 *
-	 * @prev is stable because its still waiting for a new @prev->next
+	 * @prev is stable because it is still waiting for a new @prev->next
 	 * pointer, @next is stable because our @node->next pointer is NULL and
 	 * it will wait in Step-A.
 	 */
@@ -312,9 +316,11 @@ bool kd_owned_osq_lock_bounded(struct optimistic_spin_queue *lock,
 	lockdep_assert_preemption_disabled();
 	if (!remaining || !*remaining)
 		return false;
-	/* A predecessor grant racing expiration, including Step A, returns true.
+	/*
+	 * A predecessor grant racing expiration, including Step A, returns true.
 	 * The caller then owns OSQ and must unlock even if remaining reached zero.
-	 * Neither cancellation nor unlock has a wall-clock or iteration bound. */
+	 * Neither cancellation nor unlock has a wall-clock or iteration bound.
+	 */
 	acquired = kd_owned_osq_lock_common(lock, remaining);
 	if (!acquired)
 		WRITE_ONCE(this_cpu_ptr(&kd_owned_osq_nodes)->queue, NULL);
@@ -328,16 +334,12 @@ void kd_owned_osq_unlock(struct optimistic_spin_queue *lock)
 
 	/* Stop advertising membership before the real, unchanged handoff. */
 	WRITE_ONCE(this_cpu_ptr(&kd_owned_osq_nodes)->queue, NULL);
-	/*
-	 * Fast path for the uncontended case.
-	 */
+	/* Fast path for the uncontended case. */
 	if (likely(atomic_cmpxchg_release(&lock->tail, curr,
 					  OSQ_UNLOCKED_VAL) == curr))
 		return;
 
-	/*
-	 * Second most likely case.
-	 */
+	/* Second most likely case. */
 	node = this_cpu_ptr(&kd_owned_osq_nodes);
 	next = xchg(&node->next, NULL);
 	if (next) {

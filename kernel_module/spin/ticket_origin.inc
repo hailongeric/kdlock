@@ -1,9 +1,13 @@
 // SPDX-License-Identifier: GPL-2.0
-/* Origin-local lookup, reservation, physical ownership and final release.
- * A caller-owned preemption pin protects pool membership throughout. */
+/*
+ * Origin-local lookup, reservation, physical ownership and final release.
+ * A caller-owned preemption pin protects pool membership throughout.
+ */
 
-/* The existing request pin protects membership and identity. Remote peers
- * update only the packed count, never recycle a slot or migrate its owner. */
+/*
+ * The existing request pin protects membership and identity. Remote peers
+ * update only the packed count, never recycle a slot or migrate its owner.
+ */
 static bool kd_entry_lookup(raw_spinlock_t *origin, bool native,
 			    struct kd_spin_ref *ref)
 {
@@ -44,13 +48,17 @@ bool kd_spin_entry_task_active(void)
 
 bool kd_spin_entry_native_active(void)
 {
-	/* A lightweight KD root owns the physical lock but is not a native
-	 * continuation. Its nested hooks still need their own tickets. */
+	/*
+	 * A lightweight KD root owns the physical lock but is not a native
+	 * continuation. Its nested hooks still need their own tickets.
+	 */
 	return kd_entry_lookup(NULL, true, NULL);
 }
 
-/* Reserve under a caller-owned pin. No peer may mutate a FREE generation;
- * the next tag is published only after its owner-local metadata is ready. */
+/*
+ * Reserve under a caller-owned pin. No peer may mutate a FREE generation;
+ * the next tag is published only after its owner-local metadata is ready.
+ */
 static int kd_spin_entry_reserve(raw_spinlock_t *origin,
 				enum kd_spin_entry_kind kind,
 				struct kd_spin_ref *ref)
@@ -69,7 +77,8 @@ static int kd_spin_entry_reserve(raw_spinlock_t *origin,
 		return -EPERM;
 	pool = this_cpu_ptr(kd_spin_entries);
 	for (occupied = pool->occupied; occupied; occupied &= occupied - 1) {
-		struct kd_spin_entry *candidate = &pool->entries[__builtin_ctzl(occupied)];
+		struct kd_spin_entry *candidate =
+			&pool->entries[__builtin_ctzl(occupied)];
 
 		if (candidate->task == current && candidate->origin == origin)
 			return -EDEADLK;
@@ -84,7 +93,8 @@ static int kd_spin_entry_reserve(raw_spinlock_t *origin,
 	entry->task = current;
 	entry->origin = origin;
 	entry->cpu = raw_smp_processor_id();
-	control = (++pool->sequence << KD_ENTRY_SEQUENCE_SHIFT) | KD_ENTRY_WAITING;
+	control = (++pool->sequence << KD_ENTRY_SEQUENCE_SHIFT) |
+		  KD_ENTRY_WAITING;
 	if (kind == KD_SPIN_ENTRY_VIRTUAL)
 		control |= KD_ENTRY_VIRTUAL_BIT;
 	pool->occupied |= 1UL << index;
@@ -118,10 +128,13 @@ kd_spinlock_t *kd_spin_entry_word(const struct kd_spin_ref *ref)
 	if (!kd_entry_ref_present(ref) || !kd_entry_pinned())
 		return NULL;
 	entry = ref->entry;
-	/* A local request pin excludes identity reuse; remote native borrowers
-	 * do not change these fields. Reject other CPUs before following origin. */
+	/*
+	 * A local request pin excludes identity reuse; remote native borrowers
+	 * do not change these fields. Reject other CPUs before following origin.
+	 */
 	if (READ_ONCE(entry->cpu) != raw_smp_processor_id() ||
-	    entry->task != current || kd_entry_valid(ref, atomic64_read(&entry->control)))
+	    entry->task != current ||
+	    kd_entry_valid(ref, atomic64_read(&entry->control)))
 		return NULL;
 	return (kd_spinlock_t *)entry->origin;
 }
@@ -143,16 +156,20 @@ static int kd_spin_entry_claim_from(const struct kd_spin_ref *ref,
 	if (ret)
 		return ret;
 	for (;;) {
-		if (kd_entry_state(control) == KD_ENTRY_OWNED && from == KD_ENTRY_WAITING)
+		if (kd_entry_state(control) == KD_ENTRY_OWNED &&
+		    from == KD_ENTRY_WAITING)
 			return 0;
 		if (kd_entry_state(control) != from || kd_entry_refs(control))
 			return -EBUSY;
-		/* Physical acquisition precedes this metadata transition. The CAS
-		 * excludes a racing native borrow without a separate guard word. */
+		/*
+		 * Physical acquisition precedes this metadata transition. The CAS
+		 * excludes a racing native borrow without a separate guard word.
+		 */
 		if (!READ_ONCE(((kd_spinlock_t *)entry->origin)->locked))
 			return -EINVAL;
 		if (kd_entry_update(entry, &control,
-				    kd_entry_with_state(control, KD_ENTRY_OWNED)))
+				    kd_entry_with_state(control,
+							KD_ENTRY_OWNED)))
 			return 0;
 	}
 }
@@ -185,10 +202,13 @@ int kd_spin_entry_release_origin(const struct kd_spin_ref *ref)
 	for (;;) {
 		if (kd_entry_state(control) != KD_ENTRY_OWNED)
 			return -EBUSY;
-		/* Metadata retirement is separate from the scheduler's physical
-		 * release store and wake publication. Keep the request pin. */
+		/*
+		 * Metadata retirement is separate from the scheduler's physical
+		 * release store and wake publication. Keep the request pin.
+		 */
 		if (kd_entry_update(entry, &control,
-				    kd_entry_with_state(control, KD_ENTRY_RELEASED)))
+				    kd_entry_with_state(control,
+							KD_ENTRY_RELEASED)))
 			return 0;
 	}
 }
@@ -216,9 +236,12 @@ int kd_spin_entry_end_pinned(struct kd_spin_ref *ref)
 		    (state != KD_ENTRY_WAITING && state != KD_ENTRY_RELEASED &&
 		     state != KD_ENTRY_NATIVE))
 			return -EBUSY;
-		/* FREE retains the generation, rejecting any delayed old CAS.
-		 * Only this pinned owner can reserve the slot after this point. */
-		if (kd_entry_update(entry, &control, control & ~KD_ENTRY_LOW_MASK))
+		/*
+		 * FREE retains the generation, rejecting any delayed old CAS.
+		 * Only this pinned owner can reserve the slot after this point.
+		 */
+		if (kd_entry_update(entry, &control,
+				    control & ~KD_ENTRY_LOW_MASK))
 			break;
 	}
 	pool = this_cpu_ptr(kd_spin_entries);
@@ -231,8 +254,10 @@ int kd_spin_entry_end_pinned(struct kd_spin_ref *ref)
 	return 0;
 }
 
-/* Ordinary C exits consume the pin here. Nonlocal packet restoration uses
- * end_pinned(), retires its record after the last load, then unpins. */
+/*
+ * Ordinary C exits consume the pin here. Nonlocal packet restoration uses
+ * end_pinned(), retires its record after the last load, then unpins.
+ */
 int kd_spin_entry_end(struct kd_spin_ref *ref)
 {
 	int ret = kd_spin_entry_end_pinned(ref);

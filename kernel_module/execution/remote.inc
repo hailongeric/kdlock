@@ -114,21 +114,26 @@ void kd_exec_remote_cancel(struct kd_exec_frame *frame)
 	BUG_ON(frame->executed ||
 	       parent->remote_result != KD_EXEC_REMOTE_WAITING ||
 	       READ_ONCE(parent->remote_request));
-	/* Cancel this unexecuted child, not its still-queued virtual request.
-	 * A retry, local acquisition or native handoff still owns its disposition. */
+	/*
+	 * Cancel this unexecuted child, not its still-queued virtual request.
+	 * A retry, local acquisition or native handoff still owns its disposition.
+	 */
 	frame->resume_target = NULL;
 }
 
-/* DONE grants the parent permission to resume and retire. Detach and pop the
- * child first; after publication neither child nor its shared packet is read. */
+/*
+ * DONE grants the parent permission to resume and retire. Detach and pop the
+ * child first; after publication neither child nor its shared packet is read.
+ */
 int kd_exec_spin_retire(struct kd_exec_frame *frame, bool *retired)
 {
-	struct kd_exec_frame *parent = frame->complex_ready ? frame->resume_target : NULL;
+	struct kd_exec_frame *parent =
+		frame->complex_ready ? frame->resume_target : NULL;
 	int ret;
 
 	if (parent && (!kd_exec_frame_can_complete(frame) ||
-	    !kd_exec_frame_remote_pending(parent) ||
-	    READ_ONCE(parent->remote_request)))
+		       !kd_exec_frame_remote_pending(parent) ||
+		       READ_ONCE(parent->remote_request)))
 		return -EINVAL;
 	if (frame->complex_ready)
 		frame->resume_target = NULL;

@@ -5,11 +5,13 @@
  * are shared with the adjacent components. This is not a standalone object.
  */
 
-/* Optional inclusive C-boundary timings, not instruction or CPU time.
+/*
+ * Optional inclusive C-boundary timings, not instruction or CPU time.
  * Load-time selection keeps every invocation in one session under the same
  * policy. Disabled invocations take no extra clock samples or atomic updates.
  * Nested dispatch/control intervals may overlap; never sum them as wall time.
- * Measurement failure cannot change an execution, replay or owner decision. */
+ * Measurement failure cannot change an execution, replay or owner decision.
+ */
 enum kd_jit_timing_phase {
 	KD_JIT_TIME_DISPATCH,
 	KD_JIT_TIME_WRAPPER,
@@ -25,7 +27,8 @@ enum kd_jit_timing_phase {
 };
 static bool kd_jit_timing;
 module_param_named(jit_timing, kd_jit_timing, bool, 0444);
-MODULE_PARM_DESC(jit_timing, "Collect inclusive JIT boundary timings at unload");
+MODULE_PARM_DESC(jit_timing,
+		 "Collect inclusive JIT boundary timings at unload");
 
 static struct kd_jit_timing_stat {
 	atomic64_t samples;
@@ -54,8 +57,10 @@ static inline void kd_jit_timing_add(struct kd_jit_timing_stat *stat,
 	}
 }
 
-/* Queue service is confirmed only after dispatch returns. Accept the saved
- * pre-dispatch endpoint so the generated body is not charged as queue wait. */
+/*
+ * Queue service is confirmed only after dispatch returns. Accept the saved
+ * pre-dispatch endpoint so the generated body is not charged as queue wait.
+ */
 static inline void kd_jit_timing_record(enum kd_jit_timing_phase phase,
 				       u64 start, u64 end)
 {
@@ -87,13 +92,17 @@ static inline void kd_jit_timing_reset(void)
 	}
 }
 
-/* Teardown follows drain: paired readers require exactly one row per phase,
- * including zero rows for a native-only session with measurement enabled. */
+/*
+ * Teardown follows drain: paired readers require exactly one row per phase,
+ * including zero rows for a native-only session with measurement enabled.
+ */
 static inline void kd_jit_timing_report(void)
 {
-	/* Bind log labels to their counters explicitly: declaration order must
-	 * not silently relabel an interval consumed by the evidence observer. */
-	static const char * const names[KD_JIT_TIME_COUNT] = {
+	/*
+	 * Bind log labels to their counters explicitly: declaration order must
+	 * not silently relabel an interval consumed by the evidence observer.
+	 */
+	static const char *const names[KD_JIT_TIME_COUNT] = {
 		[KD_JIT_TIME_DISPATCH] = "dispatch",
 		[KD_JIT_TIME_WRAPPER] = "wrapper",
 		[KD_JIT_TIME_HOSTCALL] = "hostcall",
@@ -110,15 +119,18 @@ static inline void kd_jit_timing_report(void)
 	if (!kd_jit_timing)
 		return;
 	for (i = 0; i < KD_JIT_TIME_COUNT; i++)
-		KD_PR_INFO("kd_jit timing: phase=%s samples=%lld ns=%lld invalid=%d\n",
-			   names[i],
-			   (long long)atomic64_read(&kd_jit_times[i].samples),
-			   (long long)atomic64_read(&kd_jit_times[i].ns),
-			   atomic_read(&kd_jit_times[i].invalid));
+		KD_PR_INFO(
+			"kd_jit timing: phase=%s samples=%lld ns=%lld invalid=%d\n",
+			names[i],
+			(long long)atomic64_read(&kd_jit_times[i].samples),
+			(long long)atomic64_read(&kd_jit_times[i].ns),
+			atomic_read(&kd_jit_times[i].invalid));
 }
 
-/* Keep metrics private to the executor. The shared owner wait uses only a
- * local timestamp/backend, never waiter storage that the final ACK releases. */
+/*
+ * Keep metrics private to the executor. The shared owner wait uses only a
+ * local timestamp/backend, never waiter storage that the final ACK releases.
+ */
 u64 kd_exe_native_timing_start(void)
 {
 	return kd_jit_timing_start();
@@ -127,16 +139,20 @@ u64 kd_exe_native_timing_start(void)
 void kd_exe_native_timing_end(bool mutex, u64 start)
 {
 	kd_jit_timing_end(mutex ? KD_JIT_TIME_NATIVE_MUTEX_WAIT :
-				 KD_JIT_TIME_NATIVE_SPIN_WAIT, start);
+				  KD_JIT_TIME_NATIVE_SPIN_WAIT,
+			  start);
 }
 
-/* This contains, rather than adds to, the owner-wait interval. The caller
+/*
+ * This contains, rather than adds to, the owner-wait interval. The caller
  * captures start before either remote or local waiter publication and supplies
- * no waiter/node pointer after ACK. Nested remote envelopes may overlap. */
+ * no waiter/node pointer after ACK. Nested remote envelopes may overlap.
+ */
 void kd_exe_native_handoff_timing_end(bool mutex, u64 start)
 {
 	kd_jit_timing_end(mutex ? KD_JIT_TIME_NATIVE_MUTEX_HANDOFF :
-				 KD_JIT_TIME_NATIVE_SPIN_HANDOFF, start);
+				  KD_JIT_TIME_NATIVE_SPIN_HANDOFF,
+			  start);
 }
 
 u64 kd_exe_queue_timing_start(void)
@@ -144,10 +160,12 @@ u64 kd_exe_queue_timing_start(void)
 	return kd_jit_timing_start();
 }
 
-/* The queue owner and waiter consume this field in protocol order, not
+/*
+ * The queue owner and waiter consume this field in protocol order, not
  * concurrently: dispatch finishes before wake; acquisition precedes node reuse.
  * Zero means disabled, not queued or already accounted. Module-loaded clocks
- * use nonzero monotonic uptime. Measurements never decide ownership or replay. */
+ * use nonzero monotonic uptime. Measurements never decide ownership or replay.
+ */
 void kd_exe_queue_timing_end(bool mutex, u64 *queued_at, u64 end)
 {
 	u64 start;
@@ -157,5 +175,6 @@ void kd_exe_queue_timing_end(bool mutex, u64 *queued_at, u64 end)
 	start = *queued_at;
 	*queued_at = 0;
 	kd_jit_timing_record(mutex ? KD_JIT_TIME_MUTEX_QUEUE :
-				    KD_JIT_TIME_SPIN_QUEUE, start, end);
+				     KD_JIT_TIME_SPIN_QUEUE,
+			     start, end);
 }

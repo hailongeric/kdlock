@@ -50,29 +50,38 @@ __kd_spin_lock_longjmp(struct qspinlock *lock, int tail,
 		prev_node = decode_tail(old_tail);
 #ifdef KDLOCK_SELFTEST
 		/* Publication can let the predecessor finish and recycle its node. */
-		int previous_task = prev_node->execution ?
-			prev_node->execution->frame.logical_task->pid : 0;
+		int previous_task =
+			prev_node->execution ?
+				prev_node->execution->frame.logical_task->pid :
+				0;
 		int previous_cpu = prev_node->cpuid;
 #endif
 
 #ifdef KDLOCK_SELFTEST
-		/* Observe before publication: the physical waiter cannot call C
-		 * once a remote executor is allowed to overwrite its old frames. */
+		/*
+		 * Observe before publication: the physical waiter cannot call C
+		 * once a remote executor is allowed to overwrite its old frames.
+		 */
 		kd_spin_selftest_link(curr_node, prev_node, previous_task,
 				      previous_cpu);
 #endif
-		if (curr_node->execution->frame.spin_kind != KD_SPIN_CONT_VIRTUAL) {
-			kd_spin_publish_wait(curr_node, prev_node,
+		if (curr_node->execution->frame.spin_kind !=
+		    KD_SPIN_CONT_VIRTUAL) {
+			kd_spin_publish_wait(
+				curr_node, prev_node,
 				this_cpu_ptr(&kd_spin_cpu)->wait_stack_top);
 			/* Only an unexecuted queue-head handoff returns here. */
 			goto queue_head;
 		}
 		smp_store_release(&prev_node->next, curr_node);
 
-		/* This is a virtual waiter: its independent executor stack stays live
+		/*
+		 * This is a virtual waiter: its independent executor stack stays live
 		 * while the child runs. Poll the mailbox inline on the empty path, but
-		 * service every observed request so ancestor unlock/ACK can progress. */
-		struct kd_exec_frame *requester = curr_node->execution->jit_context.requester;
+		 * service every observed request so ancestor unlock/ACK can progress.
+		 */
+		struct kd_exec_frame *requester =
+			curr_node->execution->jit_context.requester;
 
 		while (smp_load_acquire(&curr_node->locked)) {
 			kd_spin_selftest_node_event(KD_NODE_REMOTE_POLL);
@@ -81,7 +90,8 @@ __kd_spin_lock_longjmp(struct qspinlock *lock, int tail,
 			cpu_relax();
 		}
 		smp_rmb();
-		if ((READ_ONCE(curr_node->execution->result) == KD_SPIN_RES_NATIVE_READY)) {
+		if ((READ_ONCE(curr_node->execution->result) ==
+		     KD_SPIN_RES_NATIVE_READY)) {
 			kd_spin_selftest_node_event(KD_NODE_NATIVE_RETURN);
 			kd_spin_diag_waiter_exit(curr_node->execution->diag);
 			kd_spin_set_resume_node(curr_node);
@@ -98,7 +108,9 @@ __kd_spin_lock_longjmp(struct qspinlock *lock, int tail,
 
 			kd_spin_selftest_node_event(KD_NODE_REMOTE_RETURN);
 
-			if (curr_node->execution->frame.spin_kind != KD_SPIN_CONT_VIRTUAL && j >= 0) {
+			if (curr_node->execution->frame.spin_kind !=
+				    KD_SPIN_CONT_VIRTUAL &&
+			    j >= 0) {
 				parent_lock =
 					(struct qspinlock *)(unsigned long)
 						ptr->lock_addr[j];
@@ -107,7 +119,8 @@ __kd_spin_lock_longjmp(struct qspinlock *lock, int tail,
 #endif
 				if (kd_spin_is_ooo(parent_lock)) {
 					print_debug("Waiter unlocked OOO\n");
-					kd_spin_diag_waiter_exit(curr_node->execution->diag);
+					kd_spin_diag_waiter_exit(
+						curr_node->execution->diag);
 					kd_spin_set_resume_node(curr_node);
 					return 1;
 				}
@@ -130,16 +143,12 @@ __kd_spin_lock_longjmp(struct qspinlock *lock, int tail,
 	}
 
 	/*
-	 * we're at the head of the waitqueue, wait for the owner & pending to
-	 * go away.
+	 * At the queue head, wait for both the owner and pending acquirer to leave.
 	 *
 	 * *,x,y -> *,0,0
 	 *
-	 * this wait loop must use a load-acquire such that we match the
-	 * store-release that clears the locked bit and create lock
-	 * sequentiality; this is because the set_locked() function below
-	 * does not imply a full barrier.
-	 *
+	 * The acquire load pairs with the owner's release store. The later
+	 * set_locked() store does not provide that ordering on its own.
 	 */
 
 queue_head:
@@ -147,7 +156,7 @@ queue_head:
 				       !(VAL & _Q_LOCKED_PENDING_MASK));
 
 	/*
-	 * claim the lock:
+	 * Claim the lock:
 	 *
 	 * n,0,0 -> 0,0,1 : lock, uncontended
 	 * *,*,0 -> *,*,1 : lock, contended
@@ -165,14 +174,14 @@ queue_head:
 	/* Either somebody is queued behind us or _Q_PENDING_VAL_HL is set */
 	check_and_set_combiner(word);
 	kd_spin_claim_origin(request);
-	/* This request now owns Linux L. Record before releasing/reusing its node
-	 * to process followers; the combiner's batch is not this queue interval. */
+	/*
+	 * This request now owns the KD word. Record before releasing/reusing its node
+	 * to process followers; the combiner's batch is not this queue interval.
+	 */
 	kd_exe_queue_timing_end(false, &curr_node->execution->queued_at_ns,
 				kd_exe_queue_timing_start());
 
-	/*
-	 * contended path; wait for next if not observed yet, release.
-	 */
+	/* A successor owns the tail; wait for its link before releasing our node. */
 	smp_cond_load_relaxed_sched(&curr_node->next, (VAL));
 	next_node = curr_node->next;
 #ifdef DEBUG_KD_SPIN
@@ -226,8 +235,10 @@ queue_head:
 	ptr->lock_addr[j] = (uint64_t)(unsigned long)lock;
 	kd_spin_diag_validate_lock_stack(ptr);
 
-	/* The owner continuation survives node reuse; carry its immutable slot
-	 * without looking through a recyclable node or a follower's packet. */
+	/*
+	 * The owner continuation survives node reuse; carry its immutable slot
+	 * without looking through a recyclable node or a follower's packet.
+	 */
 	run_combiner(lock, next_node, request, prev_execution->diag);
 	/* Nested users returned; reserve this slot before touching it again. */
 	this_cpu_inc(kd_spin_cpu.node_count);
@@ -267,7 +278,9 @@ queue_head:
 
 	kd_spin_diag_waiter_exit(curr_node->execution->diag);
 	kd_spin_set_resume_node(curr_node);
-	return (READ_ONCE(curr_node->execution->result) == KD_SPIN_RES_RETRY) ? 4 : 2;
+	return (READ_ONCE(curr_node->execution->result) == KD_SPIN_RES_RETRY) ?
+		       4 :
+		       2;
 release:
 	kd_spin_claim_origin(request);
 	kd_exe_queue_timing_end(false, &curr_node->execution->queued_at_ns,
@@ -276,7 +289,9 @@ release:
 	kd_spin_selftest_node_event(KD_NODE_HEAD_RETURN);
 	kd_spin_diag_waiter_exit(curr_node->execution->diag);
 	kd_spin_set_resume_node(curr_node);
-	return (READ_ONCE(curr_node->execution->result) == KD_SPIN_RES_RETRY) ? 4 : 0;
+	return (READ_ONCE(curr_node->execution->result) == KD_SPIN_RES_RETRY) ?
+		       4 :
+		       0;
 }
 #pragma GCC pop_options
 
@@ -325,9 +340,7 @@ __kd_spin_lock_slowpath(struct qspinlock *lock, struct kd_spin_request *request,
 	curr_node->execution->frame.regs_ref = &execution->frame.regs;
 	tail = encode_tail(smp_processor_id(), idx);
 
-	/*
-	 * Initialize curr_node
-	 */
+	/* Initialize curr_node */
 	curr_node->locked = true;
 	curr_node->completed = false;
 	curr_node->next = NULL;
@@ -351,17 +364,23 @@ __kd_spin_lock_slowpath(struct qspinlock *lock, struct kd_spin_request *request,
 	} else {
 		kd_spin_prepare_regs(curr_node);
 	}
-	kd_exec_frame_prepare(&execution->frame, curr_node->execution->frame.regs_ref->ip,
-		(unsigned long)lock, curr_node->execution->frame.gsbase, current);
+	kd_exec_frame_prepare(&execution->frame,
+			      curr_node->execution->frame.regs_ref->ip,
+			      (unsigned long)lock,
+			      curr_node->execution->frame.gsbase, current);
 	execution->frame.entry_abi = input->entry_abi;
-	execution->frame.packet_state = kd_entry_abi_spin_clobber(input->entry_abi) ?
-		KD_PACKET_MINIMAL : KD_PACKET_FULL;
+	execution->frame.packet_state =
+		kd_entry_abi_spin_clobber(input->entry_abi) ?
+			KD_PACKET_MINIMAL :
+			KD_PACKET_FULL;
 	execution->frame.spin_origin = request->ref;
 	kd_spin_prepare_prefetch(curr_node, &execution->frame.regs);
 
 	ret = __kd_spin_lock_longjmp(lock, tail, curr_node, request);
-	/* Delegated waiters reclaim in restore assembly after the final packet
-	 * load. An intact head return can release its continuation here. */
+	/*
+	 * Delegated waiters reclaim in restore assembly after the final packet
+	 * load. An intact head return can release its continuation here.
+	 */
 	if (ret == 0 || ret == 2) {
 		kd_spin_continuation_release(execution);
 		barrier();
@@ -371,10 +390,9 @@ __kd_spin_lock_slowpath(struct qspinlock *lock, struct kd_spin_request *request,
 	return ret;
 }
 
-/*
- * Public API
- */
+/* Public API */
 
-/* Free all spin-related per-CPU resources and shadow-node state.
+/*
+ * Free all spin-related per-CPU resources and shadow-node state.
  * Callers must ensure no active delegations remain before draining.
  */

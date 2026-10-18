@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0
-/* Physical waiters lend their original stack to the remote JIT. Switch to
+/*
+ * Physical waiters lend their original stack to the remote JIT. Switch to
  * the per-CPU 8 KiB shadow stack BEFORE publishing the node. Keep switching,
  * publication and polling in one assembly region so compiler spills cannot
  * touch the lent stack. The ticket pins this CPU; IRQ state stays unchanged.
@@ -14,8 +15,10 @@ kd_spin_publish_wait(struct kd_spin_node *node, struct kd_spin_node *previous,
 		     void *wait_stack_top)
 {
 	asm volatile(
-		/* Only an unexecuted head handoff may use the old C continuation.
-		 * Save that one RSP on the shadow stack, not in the shared packet. */
+		/*
+		 * Only an unexecuted head handoff may use the old C continuation.
+		 * Save that one RSP on the shadow stack, not in the shared packet.
+		 */
 		"movq %%rsp, %%rax\n"
 		"movq %[stack_top], %%rsp\n"
 		"pushq %%rax\n"
@@ -25,15 +28,19 @@ kd_spin_publish_wait(struct kd_spin_node *node, struct kd_spin_node *previous,
 		"je 2f\n"
 		"pause\n"
 		"jmp 1b\n"
-		/* These loads acquire the release wakeup on x86. A head wake did
-		 * not execute our body, so its C frames are still intact. */
+		/*
+		 * These loads acquire the release wakeup on x86. A head wake did
+		 * not execute our body, so its C frames are still intact.
+		 */
 		"2: movq %c[execution](%[node]), %%rdi\n"
 		"cmpl $%c[native_ready], %c[result](%%rdi)\n"
 		"je 3f\n"
 		"cmpb $0, %c[completed](%[node])\n"
 		"je 4f\n"
-		/* Discard every old hook/queue frame. Only start C again below both
-		 * the saved physical RSP and the final logical RSP. */
+		/*
+		 * Discard every old hook/queue frame. Only start C again below both
+		 * the saved physical RSP and the final logical RSP.
+		 */
 		"3: movq %c[rsp](%[node]), %%rax\n"
 		"movq %c[regs](%%rdi), %%rdi\n"
 		"cmpq %c[sp](%%rdi), %%rax\n"
@@ -54,7 +61,8 @@ kd_spin_publish_wait(struct kd_spin_node *node, struct kd_spin_node *previous,
 		  [native_ready] "i"(KD_SPIN_RES_NATIVE_READY),
 		  [completed] "i"(offsetof(struct kd_spin_node, completed)),
 		  [rsp] "i"(offsetof(struct kd_spin_node, rsp)),
-		  [regs] "i"(offsetof(struct kd_spin_continuation, frame.regs_ref)),
+		  [regs] "i"(offsetof(struct kd_spin_continuation,
+				      frame.regs_ref)),
 		  [sp] "i"(offsetof(struct kd_regs, sp)),
 		  [resume] "i"(kd_spin_resume_completed)
 		: "rax", "rdi", "cc", "memory");
