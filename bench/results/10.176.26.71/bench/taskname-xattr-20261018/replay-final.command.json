@@ -1,0 +1,16 @@
+{
+  "argv": [
+    "/root/kdlock-plot-venv-20261019/bin/python3",
+    "/root/host_fs/kdlock/bench/results/10.176.26.71/bench/taskname-xattr-20261018/report.py",
+    "/mnt/kdlock-builds/taskname-xattr-main-c79d84f/run-map.json",
+    "/mnt/kdlock-builds/taskname-xattr-main-c79d84f/replay-final",
+    "--plots"
+  ],
+  "start_ns": 1792351294377668340,
+  "prior_failed_logs": [
+    "replay-command.log",
+    "replay-retry-command.log"
+  ],
+  "returncode": 0,
+  "end_ns": 1792351299217130789
+}

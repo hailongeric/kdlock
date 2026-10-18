@@ -1,0 +1,94 @@
+{
+  "archive_paths": 18026,
+  "archive_receipt_sha256": "7a2d5cb69a6c9b9e24b6016fb5526a9d6c6c2ad29b6ded0e284f6623125b54ea",
+  "archives": [
+    {
+      "bytes": 14391389,
+      "file": "taskname.tar.gz",
+      "member_types": {
+        "directory": 701,
+        "file": 5826,
+        "symlink": 126
+      },
+      "regular_content_bytes": 97705765,
+      "sha256": "e8560c7feb5c77297fe77c0858998f0b1a074532e5f2b854b9a4d9570049a55b"
+    },
+    {
+      "bytes": 18393938,
+      "file": "xattr.tar.gz",
+      "member_types": {
+        "directory": 1453,
+        "file": 9638,
+        "symlink": 252
+      },
+      "regular_content_bytes": 149528589,
+      "sha256": "4efdd1f0ac0a168da1dc01ca5b318f3f078ed14c301ae892ec20fd6545353f0b"
+    },
+    {
+      "bytes": 1220543,
+      "file": "metadata.tar.gz",
+      "member_types": {
+        "directory": 2,
+        "file": 28
+      },
+      "regular_content_bytes": 9859643,
+      "sha256": "c61a14c7ebc2c553cb010770d76b1c8ff4f640b925ae533ceb6255d1db7d6bd9"
+    }
+  ],
+  "audited_utc": "2026-10-18T19:37:25.798085+00:00",
+  "base": "bench/results/10.176.26.71/raw/bench/taskname-xattr-20261018",
+  "complete": true,
+  "discrepancies": [],
+  "git_source_differences": [],
+  "git_source_paths_absent": [],
+  "git_verified_source_paths": 265,
+  "hashed_regular_files": 15492,
+  "health_sha256": "fdd765603cf8a980bf35ce664eac97744361c71579bc82be8bb0fba518c663ff",
+  "implementation_commit": "c79d84f9adf5b1069bd7827466ce188f7e3f2dbd",
+  "inventory_paths": 18026,
+  "inventory_sha256": "2a399e5cdf35380ac002185e30170d115bb73ee5472a5ce6b419aa6aef73de29",
+  "kernel_faults": [],
+  "kernel_logs": 567,
+  "limits": [
+    "Tar preserves content, type, mode, owner and symlink targets; original inode/device/ctime/link count remain in inventory, not restorable tar attributes.",
+    "Tar mtime uses the archive writer's floating-point timestamp precision; exact nanosecond timestamps remain in input-inventory.json.",
+    "NO_JIT is retained as recorded execution status and is not claimed as delegated completion.",
+    "Raw bytes, recorded business-oracle results and replay coverage were checked; archived code was never imported or executed."
+  ],
+  "max_tar_mtime_rounding_ns": 245,
+  "private_inc_files": 184,
+  "replay_sha256": "0e93a699f44412f87ed02e6cff391d899dc2286e198b8adad8bedcb8b875f4e2",
+  "runs": {
+    "taskname": {
+      "kd_retirement_receipts": 63,
+      "kd_status_counts": {
+        "NO_JIT": 7,
+        "PASS": 56
+      },
+      "sessions": 189,
+      "source_id": "a797735df951a2ccfee5455c1684017c52dcb9758b10b2d7573c76a775aa18ea",
+      "source_manifest_sha256": "865ce2cda2689e5a459d62ab2e44917b706ded2d11dd63c50696d692cbce7e7f",
+      "source_private_inc_files": 58,
+      "verified_binaries": 7,
+      "verified_frozen_sources": 241,
+      "verified_replay_inputs": 2080
+    },
+    "xattr": {
+      "kd_retirement_receipts": 126,
+      "kd_status_counts": {
+        "NO_JIT": 30,
+        "PASS": 96
+      },
+      "sessions": 378,
+      "source_id": "429714db1f61c5536d622ca5b95842884c327e0482980487ab45c282c78b7ed1",
+      "source_manifest_sha256": "694090c2dbb90a36e142b555d4d6e868c11dfccdbedc0729abe5a8f2b37540a3",
+      "source_private_inc_files": 57,
+      "verified_binaries": 9,
+      "verified_frozen_sources": 238,
+      "verified_replay_inputs": 4286
+    }
+  },
+  "schema": 1,
+  "scope": "Offline read-only archive integrity and recorded-evidence checks; no archived code executed, no fresh benchmark/test, no VM access",
+  "symlinks": 378
+}

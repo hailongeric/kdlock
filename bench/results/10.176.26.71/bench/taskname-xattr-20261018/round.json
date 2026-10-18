@@ -1,0 +1,33 @@
+{
+  "implementation_commit": "c79d84f9adf5b1069bd7827466ce188f7e3f2dbd",
+  "started_utc": "2026-10-18T16:56:50.354648+00:00",
+  "snapshot": "before-mutex-kdonly-20261017T140354Z",
+  "grid": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    12,
+    16,
+    20,
+    24,
+    28,
+    32,
+    36,
+    40,
+    44,
+    48,
+    52,
+    56,
+    60
+  ],
+  "repeats": 3,
+  "duration_ms": 2000,
+  "helper_workers": 16,
+  "helper_waves": 8,
+  "collector_cpu": 63
+}

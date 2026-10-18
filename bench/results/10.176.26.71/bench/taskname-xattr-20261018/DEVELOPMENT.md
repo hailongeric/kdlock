@@ -216,3 +216,21 @@ receipts and failed admission logs. Its SHA-256 is:
 Raw evidence is stored outside Git according to the project's result-storage
 policy. The final comparison must identify its own frozen source and validation
 receipts separately from these exploratory attempts.
+
+The complete follow-up archive, `exploration-through-candidate11.tar.gz` in the
+same raw directory, has SHA-256:
+
+```text
+e662cb0f7bf9779df5a5ae25bbc98845abeeb5eb6e9c1ea530888bfb15e01569
+```
+
+The [independent archive audit](validation-archive-audit.json) verified 1,811
+manifest entries, all 39 live-session drains and all 32 KD source retirements.
+It retains 13 failed live acceptance attempts, seven failed unit batches and
+the first provider-build failure. Relative to committed `c79d84f`, the final
+runtime source differs only by the removal of a trailing blank line; other
+snapshot differences are documentation. This integrity check neither changes
+failed outcomes nor supplies performance evidence. The final benchmark-runner
+checks passed 10 API-plan tests, 13 API-report tests and 23 reader/writer-runner
+tests. A separate report preflight replayed the eight authentic xattr controls
+and rejected diagnostic timing and an altered undrained receipt as main results.

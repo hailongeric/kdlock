@@ -1,0 +1,866 @@
+{
+  "qemu": [
+    {
+      "pid": 257489,
+      "args": "qemu-system-x86_64 -name ubuntu-build,debug-threads=on -enable-kvm -cpu host -smp 64,maxcpus=64,sockets=2,cores=32,threads=1 -m 24G -object memory-backend-ram,id=mem0,size=12G,host-nodes=0,policy=bind -object memory-backend-ram,id=mem1,size=12G,host-nodes=1,policy=bind -numa node,nodeid=0,cpus=0-31,memdev=mem0 -numa node,nodeid=1,cpus=32-63,memdev=mem1 -device virtio-scsi-pci,id=scsi0 -drive file=/home/eric/vm/qemu-disks/ubuntu22.04.img,format=qcow2,if=none,id=drive_system -device scsi-hd,drive=drive_system,bus=scsi0.0,bootindex=0 -drive file=/home/eric/vm/qemu-disks/sda.qcow2,format=qcow2,if=none,id=drive_data1 -device scsi-hd,drive=drive_data1,bus=scsi0.0 -netdev user,id=n1,hostfwd=tcp:0.0.0.0:2222-:22,hostfwd=tcp:0.0.0.0:9090-:9090,hostfwd=tcp:0.0.0.0:9091-:9091 -device virtio-net-pci,netdev=n1 -display none -serial file:/tmp/qemu-serial.log -monitor unix:/tmp/qemu-monitor.sock,server=on,wait=off -gdb tcp:127.0.0.1:1234 -pidfile /tmp/kdlock-qemu.pid -daemonize",
+      "tasks": [
+        {
+          "tid": 257489,
+          "comm": "qemu-system-x86",
+          "affinity": [
+            63
+          ]
+        },
+        {
+          "tid": 257490,
+          "comm": "call_rcu",
+          "affinity": [
+            63
+          ]
+        },
+        {
+          "tid": 257495,
+          "comm": "CPU 0/KVM",
+          "affinity": [
+            0
+          ]
+        },
+        {
+          "tid": 257496,
+          "comm": "CPU 1/KVM",
+          "affinity": [
+            1
+          ]
+        },
+        {
+          "tid": 257497,
+          "comm": "CPU 2/KVM",
+          "affinity": [
+            2
+          ]
+        },
+        {
+          "tid": 257498,
+          "comm": "CPU 3/KVM",
+          "affinity": [
+            3
+          ]
+        },
+        {
+          "tid": 257499,
+          "comm": "CPU 4/KVM",
+          "affinity": [
+            4
+          ]
+        },
+        {
+          "tid": 257500,
+          "comm": "CPU 5/KVM",
+          "affinity": [
+            5
+          ]
+        },
+        {
+          "tid": 257501,
+          "comm": "CPU 6/KVM",
+          "affinity": [
+            6
+          ]
+        },
+        {
+          "tid": 257502,
+          "comm": "CPU 7/KVM",
+          "affinity": [
+            7
+          ]
+        },
+        {
+          "tid": 257503,
+          "comm": "CPU 8/KVM",
+          "affinity": [
+            8
+          ]
+        },
+        {
+          "tid": 257504,
+          "comm": "CPU 9/KVM",
+          "affinity": [
+            9
+          ]
+        },
+        {
+          "tid": 257505,
+          "comm": "CPU 10/KVM",
+          "affinity": [
+            10
+          ]
+        },
+        {
+          "tid": 257506,
+          "comm": "CPU 11/KVM",
+          "affinity": [
+            11
+          ]
+        },
+        {
+          "tid": 257507,
+          "comm": "CPU 12/KVM",
+          "affinity": [
+            12
+          ]
+        },
+        {
+          "tid": 257508,
+          "comm": "CPU 13/KVM",
+          "affinity": [
+            13
+          ]
+        },
+        {
+          "tid": 257509,
+          "comm": "CPU 14/KVM",
+          "affinity": [
+            14
+          ]
+        },
+        {
+          "tid": 257510,
+          "comm": "CPU 15/KVM",
+          "affinity": [
+            15
+          ]
+        },
+        {
+          "tid": 257511,
+          "comm": "CPU 16/KVM",
+          "affinity": [
+            16
+          ]
+        },
+        {
+          "tid": 257512,
+          "comm": "CPU 17/KVM",
+          "affinity": [
+            17
+          ]
+        },
+        {
+          "tid": 257513,
+          "comm": "CPU 18/KVM",
+          "affinity": [
+            18
+          ]
+        },
+        {
+          "tid": 257514,
+          "comm": "CPU 19/KVM",
+          "affinity": [
+            19
+          ]
+        },
+        {
+          "tid": 257515,
+          "comm": "CPU 20/KVM",
+          "affinity": [
+            20
+          ]
+        },
+        {
+          "tid": 257516,
+          "comm": "CPU 21/KVM",
+          "affinity": [
+            21
+          ]
+        },
+        {
+          "tid": 257517,
+          "comm": "CPU 22/KVM",
+          "affinity": [
+            22
+          ]
+        },
+        {
+          "tid": 257518,
+          "comm": "CPU 23/KVM",
+          "affinity": [
+            23
+          ]
+        },
+        {
+          "tid": 257519,
+          "comm": "CPU 24/KVM",
+          "affinity": [
+            24
+          ]
+        },
+        {
+          "tid": 257520,
+          "comm": "CPU 25/KVM",
+          "affinity": [
+            25
+          ]
+        },
+        {
+          "tid": 257521,
+          "comm": "CPU 26/KVM",
+          "affinity": [
+            26
+          ]
+        },
+        {
+          "tid": 257522,
+          "comm": "CPU 27/KVM",
+          "affinity": [
+            27
+          ]
+        },
+        {
+          "tid": 257523,
+          "comm": "CPU 28/KVM",
+          "affinity": [
+            28
+          ]
+        },
+        {
+          "tid": 257524,
+          "comm": "CPU 29/KVM",
+          "affinity": [
+            29
+          ]
+        },
+        {
+          "tid": 257525,
+          "comm": "CPU 30/KVM",
+          "affinity": [
+            30
+          ]
+        },
+        {
+          "tid": 257526,
+          "comm": "CPU 31/KVM",
+          "affinity": [
+            31
+          ]
+        },
+        {
+          "tid": 257527,
+          "comm": "CPU 32/KVM",
+          "affinity": [
+            32
+          ]
+        },
+        {
+          "tid": 257528,
+          "comm": "CPU 33/KVM",
+          "affinity": [
+            33
+          ]
+        },
+        {
+          "tid": 257529,
+          "comm": "CPU 34/KVM",
+          "affinity": [
+            34
+          ]
+        },
+        {
+          "tid": 257530,
+          "comm": "CPU 35/KVM",
+          "affinity": [
+            35
+          ]
+        },
+        {
+          "tid": 257531,
+          "comm": "CPU 36/KVM",
+          "affinity": [
+            36
+          ]
+        },
+        {
+          "tid": 257532,
+          "comm": "CPU 37/KVM",
+          "affinity": [
+            37
+          ]
+        },
+        {
+          "tid": 257533,
+          "comm": "CPU 38/KVM",
+          "affinity": [
+            38
+          ]
+        },
+        {
+          "tid": 257534,
+          "comm": "CPU 39/KVM",
+          "affinity": [
+            39
+          ]
+        },
+        {
+          "tid": 257535,
+          "comm": "CPU 40/KVM",
+          "affinity": [
+            40
+          ]
+        },
+        {
+          "tid": 257536,
+          "comm": "CPU 41/KVM",
+          "affinity": [
+            41
+          ]
+        },
+        {
+          "tid": 257537,
+          "comm": "CPU 42/KVM",
+          "affinity": [
+            42
+          ]
+        },
+        {
+          "tid": 257538,
+          "comm": "CPU 43/KVM",
+          "affinity": [
+            43
+          ]
+        },
+        {
+          "tid": 257539,
+          "comm": "CPU 44/KVM",
+          "affinity": [
+            44
+          ]
+        },
+        {
+          "tid": 257540,
+          "comm": "CPU 45/KVM",
+          "affinity": [
+            45
+          ]
+        },
+        {
+          "tid": 257541,
+          "comm": "CPU 46/KVM",
+          "affinity": [
+            46
+          ]
+        },
+        {
+          "tid": 257542,
+          "comm": "CPU 47/KVM",
+          "affinity": [
+            47
+          ]
+        },
+        {
+          "tid": 257543,
+          "comm": "CPU 48/KVM",
+          "affinity": [
+            48
+          ]
+        },
+        {
+          "tid": 257544,
+          "comm": "CPU 49/KVM",
+          "affinity": [
+            49
+          ]
+        },
+        {
+          "tid": 257545,
+          "comm": "CPU 50/KVM",
+          "affinity": [
+            50
+          ]
+        },
+        {
+          "tid": 257546,
+          "comm": "CPU 51/KVM",
+          "affinity": [
+            51
+          ]
+        },
+        {
+          "tid": 257547,
+          "comm": "CPU 52/KVM",
+          "affinity": [
+            52
+          ]
+        },
+        {
+          "tid": 257548,
+          "comm": "CPU 53/KVM",
+          "affinity": [
+            53
+          ]
+        },
+        {
+          "tid": 257549,
+          "comm": "CPU 54/KVM",
+          "affinity": [
+            54
+          ]
+        },
+        {
+          "tid": 257550,
+          "comm": "CPU 55/KVM",
+          "affinity": [
+            55
+          ]
+        },
+        {
+          "tid": 257551,
+          "comm": "CPU 56/KVM",
+          "affinity": [
+            56
+          ]
+        },
+        {
+          "tid": 257552,
+          "comm": "CPU 57/KVM",
+          "affinity": [
+            57
+          ]
+        },
+        {
+          "tid": 257553,
+          "comm": "CPU 58/KVM",
+          "affinity": [
+            58
+          ]
+        },
+        {
+          "tid": 257554,
+          "comm": "CPU 59/KVM",
+          "affinity": [
+            59
+          ]
+        },
+        {
+          "tid": 257555,
+          "comm": "CPU 60/KVM",
+          "affinity": [
+            60
+          ]
+        },
+        {
+          "tid": 257556,
+          "comm": "CPU 61/KVM",
+          "affinity": [
+            61
+          ]
+        },
+        {
+          "tid": 257557,
+          "comm": "CPU 62/KVM",
+          "affinity": [
+            62
+          ]
+        },
+        {
+          "tid": 257558,
+          "comm": "CPU 63/KVM",
+          "affinity": [
+            63
+          ]
+        },
+        {
+          "tid": 257560,
+          "comm": "kvm-nx-lpage-re",
+          "affinity": [
+            63
+          ]
+        },
+        {
+          "tid": 372206,
+          "comm": "worker",
+          "affinity": [
+            63
+          ]
+        },
+        {
+          "tid": 372212,
+          "comm": "worker",
+          "affinity": [
+            63
+          ]
+        },
+        {
+          "tid": 372214,
+          "comm": "worker",
+          "affinity": [
+            63
+          ]
+        },
+        {
+          "tid": 372215,
+          "comm": "worker",
+          "affinity": [
+            63
+          ]
+        },
+        {
+          "tid": 372235,
+          "comm": "worker",
+          "affinity": [
+            63
+          ]
+        },
+        {
+          "tid": 372238,
+          "comm": "worker",
+          "affinity": [
+            63
+          ]
+        },
+        {
+          "tid": 372239,
+          "comm": "worker",
+          "affinity": [
+            63
+          ]
+        },
+        {
+          "tid": 372240,
+          "comm": "worker",
+          "affinity": [
+            63
+          ]
+        },
+        {
+          "tid": 372241,
+          "comm": "worker",
+          "affinity": [
+            63
+          ]
+        }
+      ]
+    }
+  ],
+  "frequency_policies": {
+    "policy11": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    },
+    "policy8": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    },
+    "policy58": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    },
+    "policy48": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    },
+    "policy38": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    },
+    "policy6": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    },
+    "policy28": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    },
+    "policy56": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    },
+    "policy18": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    },
+    "policy46": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    },
+    "policy36": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    },
+    "policy4": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    },
+    "policy26": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    },
+    "policy54": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    },
+    "policy16": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    },
+    "policy44": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    },
+    "policy34": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    },
+    "policy2": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    },
+    "policy62": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    },
+    "policy24": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    },
+    "policy52": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    },
+    "policy14": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    },
+    "policy42": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    },
+    "policy32": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    },
+    "policy0": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    },
+    "policy60": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    },
+    "policy22": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    },
+    "policy50": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    },
+    "policy12": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    },
+    "policy40": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    },
+    "policy9": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    },
+    "policy30": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    },
+    "policy59": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    },
+    "policy20": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    },
+    "policy49": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    },
+    "policy10": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    },
+    "policy39": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    },
+    "policy7": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    },
+    "policy29": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    },
+    "policy57": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    },
+    "policy19": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    },
+    "policy47": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    },
+    "policy37": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    },
+    "policy5": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    },
+    "policy27": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    },
+    "policy55": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    },
+    "policy17": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    },
+    "policy45": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    },
+    "policy35": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    },
+    "policy3": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    },
+    "policy63": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    },
+    "policy25": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    },
+    "policy53": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    },
+    "policy15": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    },
+    "policy43": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    },
+    "policy33": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    },
+    "policy1": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    },
+    "policy61": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    },
+    "policy23": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    },
+    "policy51": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    },
+    "policy13": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    },
+    "policy41": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    },
+    "policy31": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    },
+    "policy21": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    }
+  },
+  "vcpu_pinning_verified": true,
+  "service_cpu": 63
+}

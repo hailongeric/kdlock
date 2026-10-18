@@ -1,0 +1,64 @@
+{
+  "archive_prefix": "taskname-xattr-main-c79d84f",
+  "boot_id": "b65f0205-c8f9-4385-8b13-039cbce243a6",
+  "completed": true,
+  "finished_ns": 1792351620970583502,
+  "groups": [
+    {
+      "bytes": 14391389,
+      "file": "taskname.tar.gz",
+      "group": "taskname",
+      "path": "/mnt/kdlock-builds/taskname-xattr-main-c79d84f-archives/taskname.tar.gz",
+      "roots": [
+        "taskname-xattr-main-c79d84f/taskname"
+      ],
+      "sha256": "e8560c7feb5c77297fe77c0858998f0b1a074532e5f2b854b9a4d9570049a55b"
+    },
+    {
+      "bytes": 18393938,
+      "file": "xattr.tar.gz",
+      "group": "xattr",
+      "path": "/mnt/kdlock-builds/taskname-xattr-main-c79d84f-archives/xattr.tar.gz",
+      "roots": [
+        "taskname-xattr-main-c79d84f/xattr"
+      ],
+      "sha256": "4efdd1f0ac0a168da1dc01ca5b318f3f078ed14c301ae892ec20fd6545353f0b"
+    },
+    {
+      "bytes": 1220543,
+      "file": "metadata.tar.gz",
+      "group": "metadata",
+      "path": "/mnt/kdlock-builds/taskname-xattr-main-c79d84f-archives/metadata.tar.gz",
+      "roots": [
+        "taskname-xattr-main-c79d84f/dmesg-final.txt",
+        "taskname-xattr-main-c79d84f/final-health.py",
+        "taskname-xattr-main-c79d84f/health.json",
+        "taskname-xattr-main-c79d84f/plot-env-install.log",
+        "taskname-xattr-main-c79d84f/plot-packages.txt",
+        "taskname-xattr-main-c79d84f/replay",
+        "taskname-xattr-main-c79d84f/replay-command.log",
+        "taskname-xattr-main-c79d84f/replay-final",
+        "taskname-xattr-main-c79d84f/replay-final-command.log",
+        "taskname-xattr-main-c79d84f/replay-final.command.json",
+        "taskname-xattr-main-c79d84f/replay-retry-command.log",
+        "taskname-xattr-main-c79d84f/replay-retry.command.json",
+        "taskname-xattr-main-c79d84f/round.json",
+        "taskname-xattr-main-c79d84f/run-map.json",
+        "taskname-xattr-main-c79d84f/taskname-command.log",
+        "taskname-xattr-main-c79d84f/xattr-command.log"
+      ],
+      "sha256": "c61a14c7ebc2c553cb010770d76b1c8ff4f640b925ae533ceb6255d1db7d6bd9"
+    }
+  ],
+  "guest_base": "/mnt/kdlock-builds/taskname-xattr-main-c79d84f",
+  "guest_idle": true,
+  "health_path": "health.json",
+  "health_sha256": "fdd765603cf8a980bf35ce664eac97744361c71579bc82be8bb0fba518c663ff",
+  "idle_source_sha256": "395592b8e72f700696034ed16182b74481bdebfcab56cd58a5fc7eed91b88da5",
+  "input_inventory_sha256": "2a399e5cdf35380ac002185e30170d115bb73ee5472a5ce6b419aa6aef73de29",
+  "kernel_release": "6.1.159-kdclobber2",
+  "schema": 1,
+  "scope": "Complete evidence preservation; no deletion, module action, test or timing",
+  "script_sha256": "8d666f148a10d7fe19294cc7d193464c8bb53d4c3aec64b7518b9d335966c952",
+  "started_ns": 1792351613775730901
+}
