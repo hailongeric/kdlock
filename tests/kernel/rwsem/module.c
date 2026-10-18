@@ -27,6 +27,7 @@ struct result {
 	u64 errors, api_checks, readers_slept, writer_slept, late_reader_slept;
 	u64 cancellation_checks, colocated, idle;
 	u64 outer_readers_slept, outer_writer_slept, downgrade_checks, publication_checks;
+	u64 reader_grant_checks;
 };
 #define RUN _IOR('S', 1, struct result)
 
@@ -198,12 +199,13 @@ static int cancel_case(bool writer, bool drain, int signal, bool outer)
 	check(wait_for_completion_timeout(&c.ready, 5 * HZ));
 	deadline = jiffies + 5 * HZ;
 	do {
-		queued = waitqueue_active(&sem.drain);
+		queued = waitqueue_active(drain ? &sem.reader_drain : &sem.phase_wait);
 		if (queued)
 			break;
 		msleep(1);
 	} while (time_before(jiffies, deadline));
 	check(queued);
+	check(!waitqueue_active(drain ? &sem.phase_wait : &sem.reader_drain));
 	if (signal == SIGKILL) {
 		check(!send_sig(SIGUSR1, task, 1));
 		msleep(20);
@@ -307,7 +309,8 @@ static int sleeping_case(struct result *r, bool outer)
 	if (ret)
 		goto join;
 	writer_slept = parked(workers[2].task);
-	check(waitqueue_active(&sem.drain));
+	check(waitqueue_active(&sem.reader_drain));
+	check(!waitqueue_active(&sem.phase_wait));
 	check(!completion_done(&workers[2].entered));
 	if (outer) {
 		check(atomic_long_read(&sem.admission) == 1);
@@ -317,6 +320,7 @@ static int sleeping_case(struct result *r, bool outer)
 	if (ret)
 		goto join;
 	late_reader_slept = parked(workers[3].task);
+	check(waitqueue_active(&sem.phase_wait));
 	check(!completion_done(&workers[3].entered));
 	complete(&workers[0].release);
 	check(wait_for_completion_timeout(&workers[0].done, 5 * HZ));
@@ -324,6 +328,8 @@ static int sleeping_case(struct result *r, bool outer)
 	complete(&workers[1].release);
 	check(entered(2));
 	check(parked(workers[2].task));
+	check(!waitqueue_active(&sem.reader_drain));
+	check(waitqueue_active(&sem.phase_wait));
 	check(!completion_done(&workers[3].entered));
 	complete(&workers[2].release);
 	check(entered(3));
@@ -354,6 +360,8 @@ static int downgrade_case(struct result *r)
 	}
 	check(parked(workers[0].task));
 	check(atomic_long_read(&sem.admission) == -1);
+	check(waitqueue_active(&sem.phase_wait));
+	check(!waitqueue_active(&sem.reader_drain));
 	check(!completion_done(&workers[0].entered));
 	unpublished(r);
 	/* Conversion creates an admitted reader before reopening the phase. The
@@ -363,6 +371,8 @@ static int downgrade_case(struct result *r)
 	kd_downgrade_write(&sem);
 	check(phase_is(1));
 	check(parked(workers[0].task));
+	check(!waitqueue_active(&sem.phase_wait));
+	check(waitqueue_active(&sem.reader_drain));
 	check(atomic_long_read(&sem.admission) == 1);
 	check(!completion_done(&workers[0].entered));
 	unpublished(r);
@@ -374,6 +384,83 @@ static int downgrade_case(struct result *r)
 	return 0;
 }
 
+/* The ioctl caller and workers all use CPU 0. Prevent those readers from
+ * running across phase release, so their exact counts can only come from wake
+ * callbacks. This checks transfer before scheduling, not a favorable race.
+ */
+static int reader_grant_case(struct result *r)
+{
+	unsigned int i;
+	int ret = 0;
+
+	init_workers();
+	kd_down_write(&sem);
+	for (i = 0; i < 2; i++) {
+		ret = start(i, READER);
+		if (ret)
+			goto unlock_join;
+		if (!parked(workers[i].task)) {
+			check(false);
+			goto unlock_join;
+		}
+		check(!completion_done(&workers[i].entered));
+	}
+	check(waitqueue_active(&sem.phase_wait));
+	check(!waitqueue_active(&sem.reader_drain));
+	check(!atomic_long_read(&sem.readers));
+	check(!atomic_read(&reading));
+	preempt_disable();
+	if (raw_smp_processor_id() != 0) {
+		/* An unexpected affinity change must not strand the held writer or
+		 * leave preemption disabled while error cleanup joins readers.
+		 */
+		preempt_enable();
+		ret = -EINVAL;
+		goto unlock_join;
+	}
+	kd_up_write(&sem);
+	check(atomic_long_read(&sem.readers) == 2);
+	check(!atomic_read(&reading));
+	for (i = 0; i < 2; i++) {
+		bool acquired = kd_down_write_trylock(&sem);
+
+		check(!acquired);
+		/* Release any unexpected successful trylock so a failed assertion
+		 * can still drain; never discard an acquisition record.
+		 */
+		if (acquired)
+			kd_up_write(&sem);
+		check(atomic_long_read(&sem.readers) == 2);
+		check(!atomic_read(&reading));
+	}
+	preempt_enable();
+	if (!entered(0) || !entered(1))
+		goto join;
+	check(atomic_read(&reading) == 2);
+	ret = start(2, OUTER_WRITER);
+	if (ret)
+		goto join;
+	check(parked(workers[2].task));
+	check(atomic_long_read(&sem.admission) == 1);
+	check(waitqueue_active(&sem.reader_drain));
+	check(!completion_done(&workers[2].entered));
+	unpublished(r);
+	complete(&workers[0].release);
+	check(wait_for_completion_timeout(&workers[0].done, 5 * HZ));
+	check(atomic_long_read(&sem.readers) == 1);
+	check(!completion_done(&workers[2].entered));
+	complete(&workers[1].release);
+	check(entered(2));
+	join_workers();
+	r->reader_grant_checks++;
+	return ret;
+unlock_join:
+	kd_up_write(&sem);
+join:
+	join_workers();
+	return ret;
+}
+
 static long run(void __user *user)
 {
 	struct result r = { 0 };
@@ -381,7 +468,10 @@ static long run(void __user *user)
 	int ret = 0;
 	if (!kd_mutex_trylock(&control))
 		return -EBUSY;
-	if (!cpu_online(0)) {
+	/* The grant-before-resume case requires this caller and its readers to
+	 * share one CPU. Reject an unpinned invocation before touching the sem.
+	 */
+	if (!cpu_online(0) || !cpumask_equal(current->cpus_ptr, cpumask_of(0))) {
 		ret = -EINVAL;
 		goto unlock;
 	}
@@ -446,6 +536,9 @@ static long run(void __user *user)
 	if (ret || atomic_read(&errors))
 		goto result;
 	ret = downgrade_case(&r);
+	if (ret || atomic_read(&errors))
+		goto result;
+	ret = reader_grant_case(&r);
 	if (ret || atomic_read(&errors))
 		goto result;
 	r.colocated = 1;

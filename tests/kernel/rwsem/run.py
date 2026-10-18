@@ -64,19 +64,21 @@ def main():
     kernel_identity.arguments(p)
     args = p.parse_args()
     if args.client:
-        buffer = bytearray(96)
+        buffer = bytearray(104)
         with open('/dev/kd_rwsem_probe', 'rb', buffering=0) as device:
-            fcntl.ioctl(device, 0x80605301, buffer, True)
+            fcntl.ioctl(device, 0x80685301, buffer, True)
         row = dict(zip(('errors', 'api_checks', 'readers_slept', 'writer_slept',
                         'late_reader_slept', 'cancellation_checks', 'colocated',
                         'idle', 'outer_readers_slept', 'outer_writer_slept',
-                        'downgrade_checks', 'publication_checks'), struct.unpack('=12Q', buffer)))
+                        'downgrade_checks', 'publication_checks',
+                        'reader_grant_checks'), struct.unpack('=13Q', buffer)))
         print(json.dumps(row))
         return 0 if row == dict(errors=0, api_checks=8, readers_slept=2,
                                writer_slept=1, late_reader_slept=1,
                                cancellation_checks=10, colocated=1, idle=1,
                                outer_readers_slept=2, outer_writer_slept=1,
-                               downgrade_checks=1, publication_checks=3) else 1
+                               downgrade_checks=1, publication_checks=4,
+                               reader_grant_checks=1) else 1
     rt.require(args.output and os.geteuid() == 0 and str(ROOT).startswith('/root/') and
                os.environ.get('KDLOCK_RECOVERY_CONFIRMED') == '1' and
                os.environ.get('KDLOCK_SNAPSHOT_TAG'), 'confirmed recovery guest required')
@@ -129,7 +131,8 @@ def main():
         try:
             rt.command(['insmod', provider], path / 'load-provider.log')
             rt.command(['insmod', module], path / 'load-probe.log')
-            data = rt.command([sys.executable, source / 'tests/kernel/rwsem/run.py', '--client'],
+            data = rt.command(['taskset', '--cpu-list', '0', sys.executable,
+                               source / 'tests/kernel/rwsem/run.py', '--client'],
                               path / 'result.json', timeout=40)
             check_log()
             verify_inputs(source, hashes, binaries)
@@ -146,7 +149,8 @@ def main():
         snapshot_tag=os.environ['KDLOCK_SNAPSHOT_TAG'], kernel_identity=identity, results=results,
         binaries={str(p.relative_to(out)): rt.digest(p) for p in (module, provider)}))
     print('PASS: sleeping readers, ordinary/outer writer admission, same-CPU '
-          'progress, trylocks, downgrade before publication, cancellation and drain')
+          'progress, exact reader grants before resumption, trylocks, downgrade '
+          'before publication, cancellation and drain')
     return 0
 
 
