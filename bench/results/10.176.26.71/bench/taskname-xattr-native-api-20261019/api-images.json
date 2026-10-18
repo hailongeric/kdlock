@@ -1,0 +1,3095 @@
+{
+  "scope": "Read captured API images; do not execute generated code or change inputs.",
+  "sessions": 189,
+  "images": 315,
+  "all_string_images_have_no_pointer_or_stack_alias_guards": true,
+  "rows": [
+    {
+      "session": "taskname/spin-taskname-c00-kdlock-w000-t01-r00/session.json",
+      "images": [
+        {
+          "path": "taskname/spin-taskname-c00-kdlock-w000-t01-r00/publications/00/jit.bin",
+          "sha256": "1bd64efb9a22f0e31b5d77a1e40f54c968b208f6ad9cf72ea1319d8fd48658a3",
+          "requirements": 8
+        }
+      ],
+      "jit_status": "NO_JIT",
+      "jit_completions": 0,
+      "drained": true
+    },
+    {
+      "session": "taskname/spin-taskname-c00-kdlock-w000-t01-r01/session.json",
+      "images": [
+        {
+          "path": "taskname/spin-taskname-c00-kdlock-w000-t01-r01/publications/00/jit.bin",
+          "sha256": "1bd64efb9a22f0e31b5d77a1e40f54c968b208f6ad9cf72ea1319d8fd48658a3",
+          "requirements": 8
+        }
+      ],
+      "jit_status": "NO_JIT",
+      "jit_completions": 0,
+      "drained": true
+    },
+    {
+      "session": "taskname/spin-taskname-c00-kdlock-w000-t01-r02/session.json",
+      "images": [
+        {
+          "path": "taskname/spin-taskname-c00-kdlock-w000-t01-r02/publications/00/jit.bin",
+          "sha256": "1bd64efb9a22f0e31b5d77a1e40f54c968b208f6ad9cf72ea1319d8fd48658a3",
+          "requirements": 8
+        }
+      ],
+      "jit_status": "NO_JIT",
+      "jit_completions": 0,
+      "drained": true
+    },
+    {
+      "session": "taskname/spin-taskname-c00-kdlock-w000-t02-r00/session.json",
+      "images": [
+        {
+          "path": "taskname/spin-taskname-c00-kdlock-w000-t02-r00/publications/00/jit.bin",
+          "sha256": "1bd64efb9a22f0e31b5d77a1e40f54c968b208f6ad9cf72ea1319d8fd48658a3",
+          "requirements": 8
+        }
+      ],
+      "jit_status": "NO_JIT",
+      "jit_completions": 0,
+      "drained": true
+    },
+    {
+      "session": "taskname/spin-taskname-c00-kdlock-w000-t02-r01/session.json",
+      "images": [
+        {
+          "path": "taskname/spin-taskname-c00-kdlock-w000-t02-r01/publications/00/jit.bin",
+          "sha256": "1bd64efb9a22f0e31b5d77a1e40f54c968b208f6ad9cf72ea1319d8fd48658a3",
+          "requirements": 8
+        }
+      ],
+      "jit_status": "NO_JIT",
+      "jit_completions": 0,
+      "drained": true
+    },
+    {
+      "session": "taskname/spin-taskname-c00-kdlock-w000-t02-r02/session.json",
+      "images": [
+        {
+          "path": "taskname/spin-taskname-c00-kdlock-w000-t02-r02/publications/00/jit.bin",
+          "sha256": "1bd64efb9a22f0e31b5d77a1e40f54c968b208f6ad9cf72ea1319d8fd48658a3",
+          "requirements": 8
+        }
+      ],
+      "jit_status": "NO_JIT",
+      "jit_completions": 0,
+      "drained": true
+    },
+    {
+      "session": "taskname/spin-taskname-c00-kdlock-w000-t03-r00/session.json",
+      "images": [
+        {
+          "path": "taskname/spin-taskname-c00-kdlock-w000-t03-r00/publications/00/jit.bin",
+          "sha256": "1bd64efb9a22f0e31b5d77a1e40f54c968b208f6ad9cf72ea1319d8fd48658a3",
+          "requirements": 8
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 405,
+      "drained": true
+    },
+    {
+      "session": "taskname/spin-taskname-c00-kdlock-w000-t03-r01/session.json",
+      "images": [
+        {
+          "path": "taskname/spin-taskname-c00-kdlock-w000-t03-r01/publications/00/jit.bin",
+          "sha256": "1bd64efb9a22f0e31b5d77a1e40f54c968b208f6ad9cf72ea1319d8fd48658a3",
+          "requirements": 8
+        }
+      ],
+      "jit_status": "NO_JIT",
+      "jit_completions": 0,
+      "drained": true
+    },
+    {
+      "session": "taskname/spin-taskname-c00-kdlock-w000-t03-r02/session.json",
+      "images": [
+        {
+          "path": "taskname/spin-taskname-c00-kdlock-w000-t03-r02/publications/00/jit.bin",
+          "sha256": "1bd64efb9a22f0e31b5d77a1e40f54c968b208f6ad9cf72ea1319d8fd48658a3",
+          "requirements": 8
+        }
+      ],
+      "jit_status": "NO_JIT",
+      "jit_completions": 0,
+      "drained": true
+    },
+    {
+      "session": "taskname/spin-taskname-c00-kdlock-w000-t04-r00/session.json",
+      "images": [
+        {
+          "path": "taskname/spin-taskname-c00-kdlock-w000-t04-r00/publications/00/jit.bin",
+          "sha256": "1bd64efb9a22f0e31b5d77a1e40f54c968b208f6ad9cf72ea1319d8fd48658a3",
+          "requirements": 8
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 1609,
+      "drained": true
+    },
+    {
+      "session": "taskname/spin-taskname-c00-kdlock-w000-t04-r01/session.json",
+      "images": [
+        {
+          "path": "taskname/spin-taskname-c00-kdlock-w000-t04-r01/publications/00/jit.bin",
+          "sha256": "1bd64efb9a22f0e31b5d77a1e40f54c968b208f6ad9cf72ea1319d8fd48658a3",
+          "requirements": 8
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 2001,
+      "drained": true
+    },
+    {
+      "session": "taskname/spin-taskname-c00-kdlock-w000-t04-r02/session.json",
+      "images": [
+        {
+          "path": "taskname/spin-taskname-c00-kdlock-w000-t04-r02/publications/00/jit.bin",
+          "sha256": "1bd64efb9a22f0e31b5d77a1e40f54c968b208f6ad9cf72ea1319d8fd48658a3",
+          "requirements": 8
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 934,
+      "drained": true
+    },
+    {
+      "session": "taskname/spin-taskname-c00-kdlock-w000-t05-r00/session.json",
+      "images": [
+        {
+          "path": "taskname/spin-taskname-c00-kdlock-w000-t05-r00/publications/00/jit.bin",
+          "sha256": "1bd64efb9a22f0e31b5d77a1e40f54c968b208f6ad9cf72ea1319d8fd48658a3",
+          "requirements": 8
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 178779,
+      "drained": true
+    },
+    {
+      "session": "taskname/spin-taskname-c00-kdlock-w000-t05-r01/session.json",
+      "images": [
+        {
+          "path": "taskname/spin-taskname-c00-kdlock-w000-t05-r01/publications/00/jit.bin",
+          "sha256": "1bd64efb9a22f0e31b5d77a1e40f54c968b208f6ad9cf72ea1319d8fd48658a3",
+          "requirements": 8
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 1750616,
+      "drained": true
+    },
+    {
+      "session": "taskname/spin-taskname-c00-kdlock-w000-t05-r02/session.json",
+      "images": [
+        {
+          "path": "taskname/spin-taskname-c00-kdlock-w000-t05-r02/publications/00/jit.bin",
+          "sha256": "1bd64efb9a22f0e31b5d77a1e40f54c968b208f6ad9cf72ea1319d8fd48658a3",
+          "requirements": 8
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 117812,
+      "drained": true
+    },
+    {
+      "session": "taskname/spin-taskname-c00-kdlock-w000-t06-r00/session.json",
+      "images": [
+        {
+          "path": "taskname/spin-taskname-c00-kdlock-w000-t06-r00/publications/00/jit.bin",
+          "sha256": "1bd64efb9a22f0e31b5d77a1e40f54c968b208f6ad9cf72ea1319d8fd48658a3",
+          "requirements": 8
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 825169,
+      "drained": true
+    },
+    {
+      "session": "taskname/spin-taskname-c00-kdlock-w000-t06-r01/session.json",
+      "images": [
+        {
+          "path": "taskname/spin-taskname-c00-kdlock-w000-t06-r01/publications/00/jit.bin",
+          "sha256": "1bd64efb9a22f0e31b5d77a1e40f54c968b208f6ad9cf72ea1319d8fd48658a3",
+          "requirements": 8
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 623840,
+      "drained": true
+    },
+    {
+      "session": "taskname/spin-taskname-c00-kdlock-w000-t06-r02/session.json",
+      "images": [
+        {
+          "path": "taskname/spin-taskname-c00-kdlock-w000-t06-r02/publications/00/jit.bin",
+          "sha256": "1bd64efb9a22f0e31b5d77a1e40f54c968b208f6ad9cf72ea1319d8fd48658a3",
+          "requirements": 8
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 2472785,
+      "drained": true
+    },
+    {
+      "session": "taskname/spin-taskname-c00-kdlock-w000-t07-r00/session.json",
+      "images": [
+        {
+          "path": "taskname/spin-taskname-c00-kdlock-w000-t07-r00/publications/00/jit.bin",
+          "sha256": "1bd64efb9a22f0e31b5d77a1e40f54c968b208f6ad9cf72ea1319d8fd48658a3",
+          "requirements": 8
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 2767382,
+      "drained": true
+    },
+    {
+      "session": "taskname/spin-taskname-c00-kdlock-w000-t07-r01/session.json",
+      "images": [
+        {
+          "path": "taskname/spin-taskname-c00-kdlock-w000-t07-r01/publications/00/jit.bin",
+          "sha256": "1bd64efb9a22f0e31b5d77a1e40f54c968b208f6ad9cf72ea1319d8fd48658a3",
+          "requirements": 8
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 2816634,
+      "drained": true
+    },
+    {
+      "session": "taskname/spin-taskname-c00-kdlock-w000-t07-r02/session.json",
+      "images": [
+        {
+          "path": "taskname/spin-taskname-c00-kdlock-w000-t07-r02/publications/00/jit.bin",
+          "sha256": "1bd64efb9a22f0e31b5d77a1e40f54c968b208f6ad9cf72ea1319d8fd48658a3",
+          "requirements": 8
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 1152744,
+      "drained": true
+    },
+    {
+      "session": "taskname/spin-taskname-c00-kdlock-w000-t08-r00/session.json",
+      "images": [
+        {
+          "path": "taskname/spin-taskname-c00-kdlock-w000-t08-r00/publications/00/jit.bin",
+          "sha256": "1bd64efb9a22f0e31b5d77a1e40f54c968b208f6ad9cf72ea1319d8fd48658a3",
+          "requirements": 8
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 5996283,
+      "drained": true
+    },
+    {
+      "session": "taskname/spin-taskname-c00-kdlock-w000-t08-r01/session.json",
+      "images": [
+        {
+          "path": "taskname/spin-taskname-c00-kdlock-w000-t08-r01/publications/00/jit.bin",
+          "sha256": "1bd64efb9a22f0e31b5d77a1e40f54c968b208f6ad9cf72ea1319d8fd48658a3",
+          "requirements": 8
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 6136586,
+      "drained": true
+    },
+    {
+      "session": "taskname/spin-taskname-c00-kdlock-w000-t08-r02/session.json",
+      "images": [
+        {
+          "path": "taskname/spin-taskname-c00-kdlock-w000-t08-r02/publications/00/jit.bin",
+          "sha256": "1bd64efb9a22f0e31b5d77a1e40f54c968b208f6ad9cf72ea1319d8fd48658a3",
+          "requirements": 8
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 5364565,
+      "drained": true
+    },
+    {
+      "session": "taskname/spin-taskname-c00-kdlock-w000-t12-r00/session.json",
+      "images": [
+        {
+          "path": "taskname/spin-taskname-c00-kdlock-w000-t12-r00/publications/00/jit.bin",
+          "sha256": "1bd64efb9a22f0e31b5d77a1e40f54c968b208f6ad9cf72ea1319d8fd48658a3",
+          "requirements": 8
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 6052713,
+      "drained": true
+    },
+    {
+      "session": "taskname/spin-taskname-c00-kdlock-w000-t12-r01/session.json",
+      "images": [
+        {
+          "path": "taskname/spin-taskname-c00-kdlock-w000-t12-r01/publications/00/jit.bin",
+          "sha256": "1bd64efb9a22f0e31b5d77a1e40f54c968b208f6ad9cf72ea1319d8fd48658a3",
+          "requirements": 8
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 6277612,
+      "drained": true
+    },
+    {
+      "session": "taskname/spin-taskname-c00-kdlock-w000-t12-r02/session.json",
+      "images": [
+        {
+          "path": "taskname/spin-taskname-c00-kdlock-w000-t12-r02/publications/00/jit.bin",
+          "sha256": "1bd64efb9a22f0e31b5d77a1e40f54c968b208f6ad9cf72ea1319d8fd48658a3",
+          "requirements": 8
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 5813058,
+      "drained": true
+    },
+    {
+      "session": "taskname/spin-taskname-c00-kdlock-w000-t16-r00/session.json",
+      "images": [
+        {
+          "path": "taskname/spin-taskname-c00-kdlock-w000-t16-r00/publications/00/jit.bin",
+          "sha256": "1bd64efb9a22f0e31b5d77a1e40f54c968b208f6ad9cf72ea1319d8fd48658a3",
+          "requirements": 8
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 5867667,
+      "drained": true
+    },
+    {
+      "session": "taskname/spin-taskname-c00-kdlock-w000-t16-r01/session.json",
+      "images": [
+        {
+          "path": "taskname/spin-taskname-c00-kdlock-w000-t16-r01/publications/00/jit.bin",
+          "sha256": "1bd64efb9a22f0e31b5d77a1e40f54c968b208f6ad9cf72ea1319d8fd48658a3",
+          "requirements": 8
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 5906158,
+      "drained": true
+    },
+    {
+      "session": "taskname/spin-taskname-c00-kdlock-w000-t16-r02/session.json",
+      "images": [
+        {
+          "path": "taskname/spin-taskname-c00-kdlock-w000-t16-r02/publications/00/jit.bin",
+          "sha256": "1bd64efb9a22f0e31b5d77a1e40f54c968b208f6ad9cf72ea1319d8fd48658a3",
+          "requirements": 8
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 5859250,
+      "drained": true
+    },
+    {
+      "session": "taskname/spin-taskname-c00-kdlock-w000-t20-r00/session.json",
+      "images": [
+        {
+          "path": "taskname/spin-taskname-c00-kdlock-w000-t20-r00/publications/00/jit.bin",
+          "sha256": "1bd64efb9a22f0e31b5d77a1e40f54c968b208f6ad9cf72ea1319d8fd48658a3",
+          "requirements": 8
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 5484238,
+      "drained": true
+    },
+    {
+      "session": "taskname/spin-taskname-c00-kdlock-w000-t20-r01/session.json",
+      "images": [
+        {
+          "path": "taskname/spin-taskname-c00-kdlock-w000-t20-r01/publications/00/jit.bin",
+          "sha256": "1bd64efb9a22f0e31b5d77a1e40f54c968b208f6ad9cf72ea1319d8fd48658a3",
+          "requirements": 8
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 5566104,
+      "drained": true
+    },
+    {
+      "session": "taskname/spin-taskname-c00-kdlock-w000-t20-r02/session.json",
+      "images": [
+        {
+          "path": "taskname/spin-taskname-c00-kdlock-w000-t20-r02/publications/00/jit.bin",
+          "sha256": "1bd64efb9a22f0e31b5d77a1e40f54c968b208f6ad9cf72ea1319d8fd48658a3",
+          "requirements": 8
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 5622410,
+      "drained": true
+    },
+    {
+      "session": "taskname/spin-taskname-c00-kdlock-w000-t24-r00/session.json",
+      "images": [
+        {
+          "path": "taskname/spin-taskname-c00-kdlock-w000-t24-r00/publications/00/jit.bin",
+          "sha256": "1bd64efb9a22f0e31b5d77a1e40f54c968b208f6ad9cf72ea1319d8fd48658a3",
+          "requirements": 8
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 5089277,
+      "drained": true
+    },
+    {
+      "session": "taskname/spin-taskname-c00-kdlock-w000-t24-r01/session.json",
+      "images": [
+        {
+          "path": "taskname/spin-taskname-c00-kdlock-w000-t24-r01/publications/00/jit.bin",
+          "sha256": "1bd64efb9a22f0e31b5d77a1e40f54c968b208f6ad9cf72ea1319d8fd48658a3",
+          "requirements": 8
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 5399145,
+      "drained": true
+    },
+    {
+      "session": "taskname/spin-taskname-c00-kdlock-w000-t24-r02/session.json",
+      "images": [
+        {
+          "path": "taskname/spin-taskname-c00-kdlock-w000-t24-r02/publications/00/jit.bin",
+          "sha256": "1bd64efb9a22f0e31b5d77a1e40f54c968b208f6ad9cf72ea1319d8fd48658a3",
+          "requirements": 8
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 5287505,
+      "drained": true
+    },
+    {
+      "session": "taskname/spin-taskname-c00-kdlock-w000-t28-r00/session.json",
+      "images": [
+        {
+          "path": "taskname/spin-taskname-c00-kdlock-w000-t28-r00/publications/00/jit.bin",
+          "sha256": "1bd64efb9a22f0e31b5d77a1e40f54c968b208f6ad9cf72ea1319d8fd48658a3",
+          "requirements": 8
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 5100158,
+      "drained": true
+    },
+    {
+      "session": "taskname/spin-taskname-c00-kdlock-w000-t28-r01/session.json",
+      "images": [
+        {
+          "path": "taskname/spin-taskname-c00-kdlock-w000-t28-r01/publications/00/jit.bin",
+          "sha256": "1bd64efb9a22f0e31b5d77a1e40f54c968b208f6ad9cf72ea1319d8fd48658a3",
+          "requirements": 8
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 5149981,
+      "drained": true
+    },
+    {
+      "session": "taskname/spin-taskname-c00-kdlock-w000-t28-r02/session.json",
+      "images": [
+        {
+          "path": "taskname/spin-taskname-c00-kdlock-w000-t28-r02/publications/00/jit.bin",
+          "sha256": "1bd64efb9a22f0e31b5d77a1e40f54c968b208f6ad9cf72ea1319d8fd48658a3",
+          "requirements": 8
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 4938842,
+      "drained": true
+    },
+    {
+      "session": "taskname/spin-taskname-c00-kdlock-w000-t32-r00/session.json",
+      "images": [
+        {
+          "path": "taskname/spin-taskname-c00-kdlock-w000-t32-r00/publications/00/jit.bin",
+          "sha256": "1bd64efb9a22f0e31b5d77a1e40f54c968b208f6ad9cf72ea1319d8fd48658a3",
+          "requirements": 8
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 5199250,
+      "drained": true
+    },
+    {
+      "session": "taskname/spin-taskname-c00-kdlock-w000-t32-r01/session.json",
+      "images": [
+        {
+          "path": "taskname/spin-taskname-c00-kdlock-w000-t32-r01/publications/00/jit.bin",
+          "sha256": "1bd64efb9a22f0e31b5d77a1e40f54c968b208f6ad9cf72ea1319d8fd48658a3",
+          "requirements": 8
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 5183531,
+      "drained": true
+    },
+    {
+      "session": "taskname/spin-taskname-c00-kdlock-w000-t32-r02/session.json",
+      "images": [
+        {
+          "path": "taskname/spin-taskname-c00-kdlock-w000-t32-r02/publications/00/jit.bin",
+          "sha256": "1bd64efb9a22f0e31b5d77a1e40f54c968b208f6ad9cf72ea1319d8fd48658a3",
+          "requirements": 8
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 5119166,
+      "drained": true
+    },
+    {
+      "session": "taskname/spin-taskname-c00-kdlock-w000-t36-r00/session.json",
+      "images": [
+        {
+          "path": "taskname/spin-taskname-c00-kdlock-w000-t36-r00/publications/00/jit.bin",
+          "sha256": "1bd64efb9a22f0e31b5d77a1e40f54c968b208f6ad9cf72ea1319d8fd48658a3",
+          "requirements": 8
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 4841943,
+      "drained": true
+    },
+    {
+      "session": "taskname/spin-taskname-c00-kdlock-w000-t36-r01/session.json",
+      "images": [
+        {
+          "path": "taskname/spin-taskname-c00-kdlock-w000-t36-r01/publications/00/jit.bin",
+          "sha256": "1bd64efb9a22f0e31b5d77a1e40f54c968b208f6ad9cf72ea1319d8fd48658a3",
+          "requirements": 8
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 4827797,
+      "drained": true
+    },
+    {
+      "session": "taskname/spin-taskname-c00-kdlock-w000-t36-r02/session.json",
+      "images": [
+        {
+          "path": "taskname/spin-taskname-c00-kdlock-w000-t36-r02/publications/00/jit.bin",
+          "sha256": "1bd64efb9a22f0e31b5d77a1e40f54c968b208f6ad9cf72ea1319d8fd48658a3",
+          "requirements": 8
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 4857567,
+      "drained": true
+    },
+    {
+      "session": "taskname/spin-taskname-c00-kdlock-w000-t40-r00/session.json",
+      "images": [
+        {
+          "path": "taskname/spin-taskname-c00-kdlock-w000-t40-r00/publications/00/jit.bin",
+          "sha256": "1bd64efb9a22f0e31b5d77a1e40f54c968b208f6ad9cf72ea1319d8fd48658a3",
+          "requirements": 8
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 5253817,
+      "drained": true
+    },
+    {
+      "session": "taskname/spin-taskname-c00-kdlock-w000-t40-r01/session.json",
+      "images": [
+        {
+          "path": "taskname/spin-taskname-c00-kdlock-w000-t40-r01/publications/00/jit.bin",
+          "sha256": "1bd64efb9a22f0e31b5d77a1e40f54c968b208f6ad9cf72ea1319d8fd48658a3",
+          "requirements": 8
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 5220067,
+      "drained": true
+    },
+    {
+      "session": "taskname/spin-taskname-c00-kdlock-w000-t40-r02/session.json",
+      "images": [
+        {
+          "path": "taskname/spin-taskname-c00-kdlock-w000-t40-r02/publications/00/jit.bin",
+          "sha256": "1bd64efb9a22f0e31b5d77a1e40f54c968b208f6ad9cf72ea1319d8fd48658a3",
+          "requirements": 8
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 5157434,
+      "drained": true
+    },
+    {
+      "session": "taskname/spin-taskname-c00-kdlock-w000-t44-r00/session.json",
+      "images": [
+        {
+          "path": "taskname/spin-taskname-c00-kdlock-w000-t44-r00/publications/00/jit.bin",
+          "sha256": "1bd64efb9a22f0e31b5d77a1e40f54c968b208f6ad9cf72ea1319d8fd48658a3",
+          "requirements": 8
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 5196369,
+      "drained": true
+    },
+    {
+      "session": "taskname/spin-taskname-c00-kdlock-w000-t44-r01/session.json",
+      "images": [
+        {
+          "path": "taskname/spin-taskname-c00-kdlock-w000-t44-r01/publications/00/jit.bin",
+          "sha256": "1bd64efb9a22f0e31b5d77a1e40f54c968b208f6ad9cf72ea1319d8fd48658a3",
+          "requirements": 8
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 5147195,
+      "drained": true
+    },
+    {
+      "session": "taskname/spin-taskname-c00-kdlock-w000-t44-r02/session.json",
+      "images": [
+        {
+          "path": "taskname/spin-taskname-c00-kdlock-w000-t44-r02/publications/00/jit.bin",
+          "sha256": "1bd64efb9a22f0e31b5d77a1e40f54c968b208f6ad9cf72ea1319d8fd48658a3",
+          "requirements": 8
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 5272967,
+      "drained": true
+    },
+    {
+      "session": "taskname/spin-taskname-c00-kdlock-w000-t48-r00/session.json",
+      "images": [
+        {
+          "path": "taskname/spin-taskname-c00-kdlock-w000-t48-r00/publications/00/jit.bin",
+          "sha256": "1bd64efb9a22f0e31b5d77a1e40f54c968b208f6ad9cf72ea1319d8fd48658a3",
+          "requirements": 8
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 5040599,
+      "drained": true
+    },
+    {
+      "session": "taskname/spin-taskname-c00-kdlock-w000-t48-r01/session.json",
+      "images": [
+        {
+          "path": "taskname/spin-taskname-c00-kdlock-w000-t48-r01/publications/00/jit.bin",
+          "sha256": "1bd64efb9a22f0e31b5d77a1e40f54c968b208f6ad9cf72ea1319d8fd48658a3",
+          "requirements": 8
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 5097970,
+      "drained": true
+    },
+    {
+      "session": "taskname/spin-taskname-c00-kdlock-w000-t48-r02/session.json",
+      "images": [
+        {
+          "path": "taskname/spin-taskname-c00-kdlock-w000-t48-r02/publications/00/jit.bin",
+          "sha256": "1bd64efb9a22f0e31b5d77a1e40f54c968b208f6ad9cf72ea1319d8fd48658a3",
+          "requirements": 8
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 4965750,
+      "drained": true
+    },
+    {
+      "session": "taskname/spin-taskname-c00-kdlock-w000-t52-r00/session.json",
+      "images": [
+        {
+          "path": "taskname/spin-taskname-c00-kdlock-w000-t52-r00/publications/00/jit.bin",
+          "sha256": "1bd64efb9a22f0e31b5d77a1e40f54c968b208f6ad9cf72ea1319d8fd48658a3",
+          "requirements": 8
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 4987906,
+      "drained": true
+    },
+    {
+      "session": "taskname/spin-taskname-c00-kdlock-w000-t52-r01/session.json",
+      "images": [
+        {
+          "path": "taskname/spin-taskname-c00-kdlock-w000-t52-r01/publications/00/jit.bin",
+          "sha256": "1bd64efb9a22f0e31b5d77a1e40f54c968b208f6ad9cf72ea1319d8fd48658a3",
+          "requirements": 8
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 4919251,
+      "drained": true
+    },
+    {
+      "session": "taskname/spin-taskname-c00-kdlock-w000-t52-r02/session.json",
+      "images": [
+        {
+          "path": "taskname/spin-taskname-c00-kdlock-w000-t52-r02/publications/00/jit.bin",
+          "sha256": "1bd64efb9a22f0e31b5d77a1e40f54c968b208f6ad9cf72ea1319d8fd48658a3",
+          "requirements": 8
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 5027825,
+      "drained": true
+    },
+    {
+      "session": "taskname/spin-taskname-c00-kdlock-w000-t56-r00/session.json",
+      "images": [
+        {
+          "path": "taskname/spin-taskname-c00-kdlock-w000-t56-r00/publications/00/jit.bin",
+          "sha256": "1bd64efb9a22f0e31b5d77a1e40f54c968b208f6ad9cf72ea1319d8fd48658a3",
+          "requirements": 8
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 4930196,
+      "drained": true
+    },
+    {
+      "session": "taskname/spin-taskname-c00-kdlock-w000-t56-r01/session.json",
+      "images": [
+        {
+          "path": "taskname/spin-taskname-c00-kdlock-w000-t56-r01/publications/00/jit.bin",
+          "sha256": "1bd64efb9a22f0e31b5d77a1e40f54c968b208f6ad9cf72ea1319d8fd48658a3",
+          "requirements": 8
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 4916517,
+      "drained": true
+    },
+    {
+      "session": "taskname/spin-taskname-c00-kdlock-w000-t56-r02/session.json",
+      "images": [
+        {
+          "path": "taskname/spin-taskname-c00-kdlock-w000-t56-r02/publications/00/jit.bin",
+          "sha256": "1bd64efb9a22f0e31b5d77a1e40f54c968b208f6ad9cf72ea1319d8fd48658a3",
+          "requirements": 8
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 4878749,
+      "drained": true
+    },
+    {
+      "session": "taskname/spin-taskname-c00-kdlock-w000-t60-r00/session.json",
+      "images": [
+        {
+          "path": "taskname/spin-taskname-c00-kdlock-w000-t60-r00/publications/00/jit.bin",
+          "sha256": "1bd64efb9a22f0e31b5d77a1e40f54c968b208f6ad9cf72ea1319d8fd48658a3",
+          "requirements": 8
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 4941786,
+      "drained": true
+    },
+    {
+      "session": "taskname/spin-taskname-c00-kdlock-w000-t60-r01/session.json",
+      "images": [
+        {
+          "path": "taskname/spin-taskname-c00-kdlock-w000-t60-r01/publications/00/jit.bin",
+          "sha256": "1bd64efb9a22f0e31b5d77a1e40f54c968b208f6ad9cf72ea1319d8fd48658a3",
+          "requirements": 8
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 4940207,
+      "drained": true
+    },
+    {
+      "session": "taskname/spin-taskname-c00-kdlock-w000-t60-r02/session.json",
+      "images": [
+        {
+          "path": "taskname/spin-taskname-c00-kdlock-w000-t60-r02/publications/00/jit.bin",
+          "sha256": "1bd64efb9a22f0e31b5d77a1e40f54c968b208f6ad9cf72ea1319d8fd48658a3",
+          "requirements": 8
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 4831796,
+      "drained": true
+    },
+    {
+      "session": "xattr/xattr-tail-n128-t01-r0-kdlock/session.json",
+      "images": [
+        {
+          "path": "xattr/xattr-tail-n128-t01-r0-kdlock/publications/00/jit.bin",
+          "sha256": "ed516788dd5a6219edb2c4fa4a3e6355e1d70b6ed47d7850d66fa20d93b9a2c2",
+          "requirements": 4
+        },
+        {
+          "path": "xattr/xattr-tail-n128-t01-r0-kdlock/publications/01/jit.bin",
+          "sha256": "ea7e292ba90ee996ca7d12257da9bf28aebdfb99a5748984bea3e69fb8b89456",
+          "requirements": 4
+        }
+      ],
+      "jit_status": "NO_JIT",
+      "jit_completions": 0,
+      "drained": true
+    },
+    {
+      "session": "xattr/xattr-tail-n128-t01-r1-kdlock/session.json",
+      "images": [
+        {
+          "path": "xattr/xattr-tail-n128-t01-r1-kdlock/publications/00/jit.bin",
+          "sha256": "ed516788dd5a6219edb2c4fa4a3e6355e1d70b6ed47d7850d66fa20d93b9a2c2",
+          "requirements": 4
+        },
+        {
+          "path": "xattr/xattr-tail-n128-t01-r1-kdlock/publications/01/jit.bin",
+          "sha256": "ea7e292ba90ee996ca7d12257da9bf28aebdfb99a5748984bea3e69fb8b89456",
+          "requirements": 4
+        }
+      ],
+      "jit_status": "NO_JIT",
+      "jit_completions": 0,
+      "drained": true
+    },
+    {
+      "session": "xattr/xattr-tail-n128-t01-r2-kdlock/session.json",
+      "images": [
+        {
+          "path": "xattr/xattr-tail-n128-t01-r2-kdlock/publications/00/jit.bin",
+          "sha256": "ed516788dd5a6219edb2c4fa4a3e6355e1d70b6ed47d7850d66fa20d93b9a2c2",
+          "requirements": 4
+        },
+        {
+          "path": "xattr/xattr-tail-n128-t01-r2-kdlock/publications/01/jit.bin",
+          "sha256": "ea7e292ba90ee996ca7d12257da9bf28aebdfb99a5748984bea3e69fb8b89456",
+          "requirements": 4
+        }
+      ],
+      "jit_status": "NO_JIT",
+      "jit_completions": 0,
+      "drained": true
+    },
+    {
+      "session": "xattr/xattr-tail-n128-t02-r0-kdlock/session.json",
+      "images": [
+        {
+          "path": "xattr/xattr-tail-n128-t02-r0-kdlock/publications/00/jit.bin",
+          "sha256": "ed516788dd5a6219edb2c4fa4a3e6355e1d70b6ed47d7850d66fa20d93b9a2c2",
+          "requirements": 4
+        },
+        {
+          "path": "xattr/xattr-tail-n128-t02-r0-kdlock/publications/01/jit.bin",
+          "sha256": "ea7e292ba90ee996ca7d12257da9bf28aebdfb99a5748984bea3e69fb8b89456",
+          "requirements": 4
+        }
+      ],
+      "jit_status": "NO_JIT",
+      "jit_completions": 0,
+      "drained": true
+    },
+    {
+      "session": "xattr/xattr-tail-n128-t02-r1-kdlock/session.json",
+      "images": [
+        {
+          "path": "xattr/xattr-tail-n128-t02-r1-kdlock/publications/00/jit.bin",
+          "sha256": "ed516788dd5a6219edb2c4fa4a3e6355e1d70b6ed47d7850d66fa20d93b9a2c2",
+          "requirements": 4
+        },
+        {
+          "path": "xattr/xattr-tail-n128-t02-r1-kdlock/publications/01/jit.bin",
+          "sha256": "ea7e292ba90ee996ca7d12257da9bf28aebdfb99a5748984bea3e69fb8b89456",
+          "requirements": 4
+        }
+      ],
+      "jit_status": "NO_JIT",
+      "jit_completions": 0,
+      "drained": true
+    },
+    {
+      "session": "xattr/xattr-tail-n128-t02-r2-kdlock/session.json",
+      "images": [
+        {
+          "path": "xattr/xattr-tail-n128-t02-r2-kdlock/publications/00/jit.bin",
+          "sha256": "ed516788dd5a6219edb2c4fa4a3e6355e1d70b6ed47d7850d66fa20d93b9a2c2",
+          "requirements": 4
+        },
+        {
+          "path": "xattr/xattr-tail-n128-t02-r2-kdlock/publications/01/jit.bin",
+          "sha256": "ea7e292ba90ee996ca7d12257da9bf28aebdfb99a5748984bea3e69fb8b89456",
+          "requirements": 4
+        }
+      ],
+      "jit_status": "NO_JIT",
+      "jit_completions": 0,
+      "drained": true
+    },
+    {
+      "session": "xattr/xattr-tail-n128-t03-r0-kdlock/session.json",
+      "images": [
+        {
+          "path": "xattr/xattr-tail-n128-t03-r0-kdlock/publications/00/jit.bin",
+          "sha256": "ed516788dd5a6219edb2c4fa4a3e6355e1d70b6ed47d7850d66fa20d93b9a2c2",
+          "requirements": 4
+        },
+        {
+          "path": "xattr/xattr-tail-n128-t03-r0-kdlock/publications/01/jit.bin",
+          "sha256": "ea7e292ba90ee996ca7d12257da9bf28aebdfb99a5748984bea3e69fb8b89456",
+          "requirements": 4
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 1037,
+      "drained": true
+    },
+    {
+      "session": "xattr/xattr-tail-n128-t03-r1-kdlock/session.json",
+      "images": [
+        {
+          "path": "xattr/xattr-tail-n128-t03-r1-kdlock/publications/00/jit.bin",
+          "sha256": "ed516788dd5a6219edb2c4fa4a3e6355e1d70b6ed47d7850d66fa20d93b9a2c2",
+          "requirements": 4
+        },
+        {
+          "path": "xattr/xattr-tail-n128-t03-r1-kdlock/publications/01/jit.bin",
+          "sha256": "ea7e292ba90ee996ca7d12257da9bf28aebdfb99a5748984bea3e69fb8b89456",
+          "requirements": 4
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 964,
+      "drained": true
+    },
+    {
+      "session": "xattr/xattr-tail-n128-t03-r2-kdlock/session.json",
+      "images": [
+        {
+          "path": "xattr/xattr-tail-n128-t03-r2-kdlock/publications/00/jit.bin",
+          "sha256": "ed516788dd5a6219edb2c4fa4a3e6355e1d70b6ed47d7850d66fa20d93b9a2c2",
+          "requirements": 4
+        },
+        {
+          "path": "xattr/xattr-tail-n128-t03-r2-kdlock/publications/01/jit.bin",
+          "sha256": "ea7e292ba90ee996ca7d12257da9bf28aebdfb99a5748984bea3e69fb8b89456",
+          "requirements": 4
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 1013,
+      "drained": true
+    },
+    {
+      "session": "xattr/xattr-tail-n128-t04-r0-kdlock/session.json",
+      "images": [
+        {
+          "path": "xattr/xattr-tail-n128-t04-r0-kdlock/publications/00/jit.bin",
+          "sha256": "ed516788dd5a6219edb2c4fa4a3e6355e1d70b6ed47d7850d66fa20d93b9a2c2",
+          "requirements": 4
+        },
+        {
+          "path": "xattr/xattr-tail-n128-t04-r0-kdlock/publications/01/jit.bin",
+          "sha256": "ea7e292ba90ee996ca7d12257da9bf28aebdfb99a5748984bea3e69fb8b89456",
+          "requirements": 4
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 212560,
+      "drained": true
+    },
+    {
+      "session": "xattr/xattr-tail-n128-t04-r1-kdlock/session.json",
+      "images": [
+        {
+          "path": "xattr/xattr-tail-n128-t04-r1-kdlock/publications/00/jit.bin",
+          "sha256": "ed516788dd5a6219edb2c4fa4a3e6355e1d70b6ed47d7850d66fa20d93b9a2c2",
+          "requirements": 4
+        },
+        {
+          "path": "xattr/xattr-tail-n128-t04-r1-kdlock/publications/01/jit.bin",
+          "sha256": "ea7e292ba90ee996ca7d12257da9bf28aebdfb99a5748984bea3e69fb8b89456",
+          "requirements": 4
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 213530,
+      "drained": true
+    },
+    {
+      "session": "xattr/xattr-tail-n128-t04-r2-kdlock/session.json",
+      "images": [
+        {
+          "path": "xattr/xattr-tail-n128-t04-r2-kdlock/publications/00/jit.bin",
+          "sha256": "ed516788dd5a6219edb2c4fa4a3e6355e1d70b6ed47d7850d66fa20d93b9a2c2",
+          "requirements": 4
+        },
+        {
+          "path": "xattr/xattr-tail-n128-t04-r2-kdlock/publications/01/jit.bin",
+          "sha256": "ea7e292ba90ee996ca7d12257da9bf28aebdfb99a5748984bea3e69fb8b89456",
+          "requirements": 4
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 142547,
+      "drained": true
+    },
+    {
+      "session": "xattr/xattr-tail-n128-t05-r0-kdlock/session.json",
+      "images": [
+        {
+          "path": "xattr/xattr-tail-n128-t05-r0-kdlock/publications/00/jit.bin",
+          "sha256": "ed516788dd5a6219edb2c4fa4a3e6355e1d70b6ed47d7850d66fa20d93b9a2c2",
+          "requirements": 4
+        },
+        {
+          "path": "xattr/xattr-tail-n128-t05-r0-kdlock/publications/01/jit.bin",
+          "sha256": "ea7e292ba90ee996ca7d12257da9bf28aebdfb99a5748984bea3e69fb8b89456",
+          "requirements": 4
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 215854,
+      "drained": true
+    },
+    {
+      "session": "xattr/xattr-tail-n128-t05-r1-kdlock/session.json",
+      "images": [
+        {
+          "path": "xattr/xattr-tail-n128-t05-r1-kdlock/publications/00/jit.bin",
+          "sha256": "ed516788dd5a6219edb2c4fa4a3e6355e1d70b6ed47d7850d66fa20d93b9a2c2",
+          "requirements": 4
+        },
+        {
+          "path": "xattr/xattr-tail-n128-t05-r1-kdlock/publications/01/jit.bin",
+          "sha256": "ea7e292ba90ee996ca7d12257da9bf28aebdfb99a5748984bea3e69fb8b89456",
+          "requirements": 4
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 215807,
+      "drained": true
+    },
+    {
+      "session": "xattr/xattr-tail-n128-t05-r2-kdlock/session.json",
+      "images": [
+        {
+          "path": "xattr/xattr-tail-n128-t05-r2-kdlock/publications/00/jit.bin",
+          "sha256": "ed516788dd5a6219edb2c4fa4a3e6355e1d70b6ed47d7850d66fa20d93b9a2c2",
+          "requirements": 4
+        },
+        {
+          "path": "xattr/xattr-tail-n128-t05-r2-kdlock/publications/01/jit.bin",
+          "sha256": "ea7e292ba90ee996ca7d12257da9bf28aebdfb99a5748984bea3e69fb8b89456",
+          "requirements": 4
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 214864,
+      "drained": true
+    },
+    {
+      "session": "xattr/xattr-tail-n128-t06-r0-kdlock/session.json",
+      "images": [
+        {
+          "path": "xattr/xattr-tail-n128-t06-r0-kdlock/publications/00/jit.bin",
+          "sha256": "ed516788dd5a6219edb2c4fa4a3e6355e1d70b6ed47d7850d66fa20d93b9a2c2",
+          "requirements": 4
+        },
+        {
+          "path": "xattr/xattr-tail-n128-t06-r0-kdlock/publications/01/jit.bin",
+          "sha256": "ea7e292ba90ee996ca7d12257da9bf28aebdfb99a5748984bea3e69fb8b89456",
+          "requirements": 4
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 138860,
+      "drained": true
+    },
+    {
+      "session": "xattr/xattr-tail-n128-t06-r1-kdlock/session.json",
+      "images": [
+        {
+          "path": "xattr/xattr-tail-n128-t06-r1-kdlock/publications/00/jit.bin",
+          "sha256": "ed516788dd5a6219edb2c4fa4a3e6355e1d70b6ed47d7850d66fa20d93b9a2c2",
+          "requirements": 4
+        },
+        {
+          "path": "xattr/xattr-tail-n128-t06-r1-kdlock/publications/01/jit.bin",
+          "sha256": "ea7e292ba90ee996ca7d12257da9bf28aebdfb99a5748984bea3e69fb8b89456",
+          "requirements": 4
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 150387,
+      "drained": true
+    },
+    {
+      "session": "xattr/xattr-tail-n128-t06-r2-kdlock/session.json",
+      "images": [
+        {
+          "path": "xattr/xattr-tail-n128-t06-r2-kdlock/publications/00/jit.bin",
+          "sha256": "ed516788dd5a6219edb2c4fa4a3e6355e1d70b6ed47d7850d66fa20d93b9a2c2",
+          "requirements": 4
+        },
+        {
+          "path": "xattr/xattr-tail-n128-t06-r2-kdlock/publications/01/jit.bin",
+          "sha256": "ea7e292ba90ee996ca7d12257da9bf28aebdfb99a5748984bea3e69fb8b89456",
+          "requirements": 4
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 181197,
+      "drained": true
+    },
+    {
+      "session": "xattr/xattr-tail-n128-t07-r0-kdlock/session.json",
+      "images": [
+        {
+          "path": "xattr/xattr-tail-n128-t07-r0-kdlock/publications/00/jit.bin",
+          "sha256": "ed516788dd5a6219edb2c4fa4a3e6355e1d70b6ed47d7850d66fa20d93b9a2c2",
+          "requirements": 4
+        },
+        {
+          "path": "xattr/xattr-tail-n128-t07-r0-kdlock/publications/01/jit.bin",
+          "sha256": "ea7e292ba90ee996ca7d12257da9bf28aebdfb99a5748984bea3e69fb8b89456",
+          "requirements": 4
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 189419,
+      "drained": true
+    },
+    {
+      "session": "xattr/xattr-tail-n128-t07-r1-kdlock/session.json",
+      "images": [
+        {
+          "path": "xattr/xattr-tail-n128-t07-r1-kdlock/publications/00/jit.bin",
+          "sha256": "ed516788dd5a6219edb2c4fa4a3e6355e1d70b6ed47d7850d66fa20d93b9a2c2",
+          "requirements": 4
+        },
+        {
+          "path": "xattr/xattr-tail-n128-t07-r1-kdlock/publications/01/jit.bin",
+          "sha256": "ea7e292ba90ee996ca7d12257da9bf28aebdfb99a5748984bea3e69fb8b89456",
+          "requirements": 4
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 188411,
+      "drained": true
+    },
+    {
+      "session": "xattr/xattr-tail-n128-t07-r2-kdlock/session.json",
+      "images": [
+        {
+          "path": "xattr/xattr-tail-n128-t07-r2-kdlock/publications/00/jit.bin",
+          "sha256": "ed516788dd5a6219edb2c4fa4a3e6355e1d70b6ed47d7850d66fa20d93b9a2c2",
+          "requirements": 4
+        },
+        {
+          "path": "xattr/xattr-tail-n128-t07-r2-kdlock/publications/01/jit.bin",
+          "sha256": "ea7e292ba90ee996ca7d12257da9bf28aebdfb99a5748984bea3e69fb8b89456",
+          "requirements": 4
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 215114,
+      "drained": true
+    },
+    {
+      "session": "xattr/xattr-tail-n128-t08-r0-kdlock/session.json",
+      "images": [
+        {
+          "path": "xattr/xattr-tail-n128-t08-r0-kdlock/publications/00/jit.bin",
+          "sha256": "ed516788dd5a6219edb2c4fa4a3e6355e1d70b6ed47d7850d66fa20d93b9a2c2",
+          "requirements": 4
+        },
+        {
+          "path": "xattr/xattr-tail-n128-t08-r0-kdlock/publications/01/jit.bin",
+          "sha256": "ea7e292ba90ee996ca7d12257da9bf28aebdfb99a5748984bea3e69fb8b89456",
+          "requirements": 4
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 216169,
+      "drained": true
+    },
+    {
+      "session": "xattr/xattr-tail-n128-t08-r1-kdlock/session.json",
+      "images": [
+        {
+          "path": "xattr/xattr-tail-n128-t08-r1-kdlock/publications/00/jit.bin",
+          "sha256": "ed516788dd5a6219edb2c4fa4a3e6355e1d70b6ed47d7850d66fa20d93b9a2c2",
+          "requirements": 4
+        },
+        {
+          "path": "xattr/xattr-tail-n128-t08-r1-kdlock/publications/01/jit.bin",
+          "sha256": "ea7e292ba90ee996ca7d12257da9bf28aebdfb99a5748984bea3e69fb8b89456",
+          "requirements": 4
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 193269,
+      "drained": true
+    },
+    {
+      "session": "xattr/xattr-tail-n128-t08-r2-kdlock/session.json",
+      "images": [
+        {
+          "path": "xattr/xattr-tail-n128-t08-r2-kdlock/publications/00/jit.bin",
+          "sha256": "ed516788dd5a6219edb2c4fa4a3e6355e1d70b6ed47d7850d66fa20d93b9a2c2",
+          "requirements": 4
+        },
+        {
+          "path": "xattr/xattr-tail-n128-t08-r2-kdlock/publications/01/jit.bin",
+          "sha256": "ea7e292ba90ee996ca7d12257da9bf28aebdfb99a5748984bea3e69fb8b89456",
+          "requirements": 4
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 193255,
+      "drained": true
+    },
+    {
+      "session": "xattr/xattr-tail-n128-t12-r0-kdlock/session.json",
+      "images": [
+        {
+          "path": "xattr/xattr-tail-n128-t12-r0-kdlock/publications/00/jit.bin",
+          "sha256": "ed516788dd5a6219edb2c4fa4a3e6355e1d70b6ed47d7850d66fa20d93b9a2c2",
+          "requirements": 4
+        },
+        {
+          "path": "xattr/xattr-tail-n128-t12-r0-kdlock/publications/01/jit.bin",
+          "sha256": "ea7e292ba90ee996ca7d12257da9bf28aebdfb99a5748984bea3e69fb8b89456",
+          "requirements": 4
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 216170,
+      "drained": true
+    },
+    {
+      "session": "xattr/xattr-tail-n128-t12-r1-kdlock/session.json",
+      "images": [
+        {
+          "path": "xattr/xattr-tail-n128-t12-r1-kdlock/publications/00/jit.bin",
+          "sha256": "ed516788dd5a6219edb2c4fa4a3e6355e1d70b6ed47d7850d66fa20d93b9a2c2",
+          "requirements": 4
+        },
+        {
+          "path": "xattr/xattr-tail-n128-t12-r1-kdlock/publications/01/jit.bin",
+          "sha256": "ea7e292ba90ee996ca7d12257da9bf28aebdfb99a5748984bea3e69fb8b89456",
+          "requirements": 4
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 216681,
+      "drained": true
+    },
+    {
+      "session": "xattr/xattr-tail-n128-t12-r2-kdlock/session.json",
+      "images": [
+        {
+          "path": "xattr/xattr-tail-n128-t12-r2-kdlock/publications/00/jit.bin",
+          "sha256": "ed516788dd5a6219edb2c4fa4a3e6355e1d70b6ed47d7850d66fa20d93b9a2c2",
+          "requirements": 4
+        },
+        {
+          "path": "xattr/xattr-tail-n128-t12-r2-kdlock/publications/01/jit.bin",
+          "sha256": "ea7e292ba90ee996ca7d12257da9bf28aebdfb99a5748984bea3e69fb8b89456",
+          "requirements": 4
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 216168,
+      "drained": true
+    },
+    {
+      "session": "xattr/xattr-tail-n128-t16-r0-kdlock/session.json",
+      "images": [
+        {
+          "path": "xattr/xattr-tail-n128-t16-r0-kdlock/publications/00/jit.bin",
+          "sha256": "ed516788dd5a6219edb2c4fa4a3e6355e1d70b6ed47d7850d66fa20d93b9a2c2",
+          "requirements": 4
+        },
+        {
+          "path": "xattr/xattr-tail-n128-t16-r0-kdlock/publications/01/jit.bin",
+          "sha256": "ea7e292ba90ee996ca7d12257da9bf28aebdfb99a5748984bea3e69fb8b89456",
+          "requirements": 4
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 199873,
+      "drained": true
+    },
+    {
+      "session": "xattr/xattr-tail-n128-t16-r1-kdlock/session.json",
+      "images": [
+        {
+          "path": "xattr/xattr-tail-n128-t16-r1-kdlock/publications/00/jit.bin",
+          "sha256": "ed516788dd5a6219edb2c4fa4a3e6355e1d70b6ed47d7850d66fa20d93b9a2c2",
+          "requirements": 4
+        },
+        {
+          "path": "xattr/xattr-tail-n128-t16-r1-kdlock/publications/01/jit.bin",
+          "sha256": "ea7e292ba90ee996ca7d12257da9bf28aebdfb99a5748984bea3e69fb8b89456",
+          "requirements": 4
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 198673,
+      "drained": true
+    },
+    {
+      "session": "xattr/xattr-tail-n128-t16-r2-kdlock/session.json",
+      "images": [
+        {
+          "path": "xattr/xattr-tail-n128-t16-r2-kdlock/publications/00/jit.bin",
+          "sha256": "ed516788dd5a6219edb2c4fa4a3e6355e1d70b6ed47d7850d66fa20d93b9a2c2",
+          "requirements": 4
+        },
+        {
+          "path": "xattr/xattr-tail-n128-t16-r2-kdlock/publications/01/jit.bin",
+          "sha256": "ea7e292ba90ee996ca7d12257da9bf28aebdfb99a5748984bea3e69fb8b89456",
+          "requirements": 4
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 199910,
+      "drained": true
+    },
+    {
+      "session": "xattr/xattr-tail-n128-t20-r0-kdlock/session.json",
+      "images": [
+        {
+          "path": "xattr/xattr-tail-n128-t20-r0-kdlock/publications/00/jit.bin",
+          "sha256": "ed516788dd5a6219edb2c4fa4a3e6355e1d70b6ed47d7850d66fa20d93b9a2c2",
+          "requirements": 4
+        },
+        {
+          "path": "xattr/xattr-tail-n128-t20-r0-kdlock/publications/01/jit.bin",
+          "sha256": "ea7e292ba90ee996ca7d12257da9bf28aebdfb99a5748984bea3e69fb8b89456",
+          "requirements": 4
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 189217,
+      "drained": true
+    },
+    {
+      "session": "xattr/xattr-tail-n128-t20-r1-kdlock/session.json",
+      "images": [
+        {
+          "path": "xattr/xattr-tail-n128-t20-r1-kdlock/publications/00/jit.bin",
+          "sha256": "ed516788dd5a6219edb2c4fa4a3e6355e1d70b6ed47d7850d66fa20d93b9a2c2",
+          "requirements": 4
+        },
+        {
+          "path": "xattr/xattr-tail-n128-t20-r1-kdlock/publications/01/jit.bin",
+          "sha256": "ea7e292ba90ee996ca7d12257da9bf28aebdfb99a5748984bea3e69fb8b89456",
+          "requirements": 4
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 189220,
+      "drained": true
+    },
+    {
+      "session": "xattr/xattr-tail-n128-t20-r2-kdlock/session.json",
+      "images": [
+        {
+          "path": "xattr/xattr-tail-n128-t20-r2-kdlock/publications/00/jit.bin",
+          "sha256": "ed516788dd5a6219edb2c4fa4a3e6355e1d70b6ed47d7850d66fa20d93b9a2c2",
+          "requirements": 4
+        },
+        {
+          "path": "xattr/xattr-tail-n128-t20-r2-kdlock/publications/01/jit.bin",
+          "sha256": "ea7e292ba90ee996ca7d12257da9bf28aebdfb99a5748984bea3e69fb8b89456",
+          "requirements": 4
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 189223,
+      "drained": true
+    },
+    {
+      "session": "xattr/xattr-tail-n128-t24-r0-kdlock/session.json",
+      "images": [
+        {
+          "path": "xattr/xattr-tail-n128-t24-r0-kdlock/publications/00/jit.bin",
+          "sha256": "ed516788dd5a6219edb2c4fa4a3e6355e1d70b6ed47d7850d66fa20d93b9a2c2",
+          "requirements": 4
+        },
+        {
+          "path": "xattr/xattr-tail-n128-t24-r0-kdlock/publications/01/jit.bin",
+          "sha256": "ea7e292ba90ee996ca7d12257da9bf28aebdfb99a5748984bea3e69fb8b89456",
+          "requirements": 4
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 177978,
+      "drained": true
+    },
+    {
+      "session": "xattr/xattr-tail-n128-t24-r1-kdlock/session.json",
+      "images": [
+        {
+          "path": "xattr/xattr-tail-n128-t24-r1-kdlock/publications/00/jit.bin",
+          "sha256": "ed516788dd5a6219edb2c4fa4a3e6355e1d70b6ed47d7850d66fa20d93b9a2c2",
+          "requirements": 4
+        },
+        {
+          "path": "xattr/xattr-tail-n128-t24-r1-kdlock/publications/01/jit.bin",
+          "sha256": "ea7e292ba90ee996ca7d12257da9bf28aebdfb99a5748984bea3e69fb8b89456",
+          "requirements": 4
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 177973,
+      "drained": true
+    },
+    {
+      "session": "xattr/xattr-tail-n128-t24-r2-kdlock/session.json",
+      "images": [
+        {
+          "path": "xattr/xattr-tail-n128-t24-r2-kdlock/publications/00/jit.bin",
+          "sha256": "ed516788dd5a6219edb2c4fa4a3e6355e1d70b6ed47d7850d66fa20d93b9a2c2",
+          "requirements": 4
+        },
+        {
+          "path": "xattr/xattr-tail-n128-t24-r2-kdlock/publications/01/jit.bin",
+          "sha256": "ea7e292ba90ee996ca7d12257da9bf28aebdfb99a5748984bea3e69fb8b89456",
+          "requirements": 4
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 177887,
+      "drained": true
+    },
+    {
+      "session": "xattr/xattr-tail-n128-t28-r0-kdlock/session.json",
+      "images": [
+        {
+          "path": "xattr/xattr-tail-n128-t28-r0-kdlock/publications/00/jit.bin",
+          "sha256": "ed516788dd5a6219edb2c4fa4a3e6355e1d70b6ed47d7850d66fa20d93b9a2c2",
+          "requirements": 4
+        },
+        {
+          "path": "xattr/xattr-tail-n128-t28-r0-kdlock/publications/01/jit.bin",
+          "sha256": "ea7e292ba90ee996ca7d12257da9bf28aebdfb99a5748984bea3e69fb8b89456",
+          "requirements": 4
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 164696,
+      "drained": true
+    },
+    {
+      "session": "xattr/xattr-tail-n128-t28-r1-kdlock/session.json",
+      "images": [
+        {
+          "path": "xattr/xattr-tail-n128-t28-r1-kdlock/publications/00/jit.bin",
+          "sha256": "ed516788dd5a6219edb2c4fa4a3e6355e1d70b6ed47d7850d66fa20d93b9a2c2",
+          "requirements": 4
+        },
+        {
+          "path": "xattr/xattr-tail-n128-t28-r1-kdlock/publications/01/jit.bin",
+          "sha256": "ea7e292ba90ee996ca7d12257da9bf28aebdfb99a5748984bea3e69fb8b89456",
+          "requirements": 4
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 164735,
+      "drained": true
+    },
+    {
+      "session": "xattr/xattr-tail-n128-t28-r2-kdlock/session.json",
+      "images": [
+        {
+          "path": "xattr/xattr-tail-n128-t28-r2-kdlock/publications/00/jit.bin",
+          "sha256": "ed516788dd5a6219edb2c4fa4a3e6355e1d70b6ed47d7850d66fa20d93b9a2c2",
+          "requirements": 4
+        },
+        {
+          "path": "xattr/xattr-tail-n128-t28-r2-kdlock/publications/01/jit.bin",
+          "sha256": "ea7e292ba90ee996ca7d12257da9bf28aebdfb99a5748984bea3e69fb8b89456",
+          "requirements": 4
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 164656,
+      "drained": true
+    },
+    {
+      "session": "xattr/xattr-tail-n128-t32-r0-kdlock/session.json",
+      "images": [
+        {
+          "path": "xattr/xattr-tail-n128-t32-r0-kdlock/publications/00/jit.bin",
+          "sha256": "ed516788dd5a6219edb2c4fa4a3e6355e1d70b6ed47d7850d66fa20d93b9a2c2",
+          "requirements": 4
+        },
+        {
+          "path": "xattr/xattr-tail-n128-t32-r0-kdlock/publications/01/jit.bin",
+          "sha256": "ea7e292ba90ee996ca7d12257da9bf28aebdfb99a5748984bea3e69fb8b89456",
+          "requirements": 4
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 165383,
+      "drained": true
+    },
+    {
+      "session": "xattr/xattr-tail-n128-t32-r1-kdlock/session.json",
+      "images": [
+        {
+          "path": "xattr/xattr-tail-n128-t32-r1-kdlock/publications/00/jit.bin",
+          "sha256": "ed516788dd5a6219edb2c4fa4a3e6355e1d70b6ed47d7850d66fa20d93b9a2c2",
+          "requirements": 4
+        },
+        {
+          "path": "xattr/xattr-tail-n128-t32-r1-kdlock/publications/01/jit.bin",
+          "sha256": "ea7e292ba90ee996ca7d12257da9bf28aebdfb99a5748984bea3e69fb8b89456",
+          "requirements": 4
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 165727,
+      "drained": true
+    },
+    {
+      "session": "xattr/xattr-tail-n128-t32-r2-kdlock/session.json",
+      "images": [
+        {
+          "path": "xattr/xattr-tail-n128-t32-r2-kdlock/publications/00/jit.bin",
+          "sha256": "ed516788dd5a6219edb2c4fa4a3e6355e1d70b6ed47d7850d66fa20d93b9a2c2",
+          "requirements": 4
+        },
+        {
+          "path": "xattr/xattr-tail-n128-t32-r2-kdlock/publications/01/jit.bin",
+          "sha256": "ea7e292ba90ee996ca7d12257da9bf28aebdfb99a5748984bea3e69fb8b89456",
+          "requirements": 4
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 165550,
+      "drained": true
+    },
+    {
+      "session": "xattr/xattr-tail-n128-t36-r0-kdlock/session.json",
+      "images": [
+        {
+          "path": "xattr/xattr-tail-n128-t36-r0-kdlock/publications/00/jit.bin",
+          "sha256": "ed516788dd5a6219edb2c4fa4a3e6355e1d70b6ed47d7850d66fa20d93b9a2c2",
+          "requirements": 4
+        },
+        {
+          "path": "xattr/xattr-tail-n128-t36-r0-kdlock/publications/01/jit.bin",
+          "sha256": "ea7e292ba90ee996ca7d12257da9bf28aebdfb99a5748984bea3e69fb8b89456",
+          "requirements": 4
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 160507,
+      "drained": true
+    },
+    {
+      "session": "xattr/xattr-tail-n128-t36-r1-kdlock/session.json",
+      "images": [
+        {
+          "path": "xattr/xattr-tail-n128-t36-r1-kdlock/publications/00/jit.bin",
+          "sha256": "ed516788dd5a6219edb2c4fa4a3e6355e1d70b6ed47d7850d66fa20d93b9a2c2",
+          "requirements": 4
+        },
+        {
+          "path": "xattr/xattr-tail-n128-t36-r1-kdlock/publications/01/jit.bin",
+          "sha256": "ea7e292ba90ee996ca7d12257da9bf28aebdfb99a5748984bea3e69fb8b89456",
+          "requirements": 4
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 169190,
+      "drained": true
+    },
+    {
+      "session": "xattr/xattr-tail-n128-t36-r2-kdlock/session.json",
+      "images": [
+        {
+          "path": "xattr/xattr-tail-n128-t36-r2-kdlock/publications/00/jit.bin",
+          "sha256": "ed516788dd5a6219edb2c4fa4a3e6355e1d70b6ed47d7850d66fa20d93b9a2c2",
+          "requirements": 4
+        },
+        {
+          "path": "xattr/xattr-tail-n128-t36-r2-kdlock/publications/01/jit.bin",
+          "sha256": "ea7e292ba90ee996ca7d12257da9bf28aebdfb99a5748984bea3e69fb8b89456",
+          "requirements": 4
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 168812,
+      "drained": true
+    },
+    {
+      "session": "xattr/xattr-tail-n128-t40-r0-kdlock/session.json",
+      "images": [
+        {
+          "path": "xattr/xattr-tail-n128-t40-r0-kdlock/publications/00/jit.bin",
+          "sha256": "ed516788dd5a6219edb2c4fa4a3e6355e1d70b6ed47d7850d66fa20d93b9a2c2",
+          "requirements": 4
+        },
+        {
+          "path": "xattr/xattr-tail-n128-t40-r0-kdlock/publications/01/jit.bin",
+          "sha256": "ea7e292ba90ee996ca7d12257da9bf28aebdfb99a5748984bea3e69fb8b89456",
+          "requirements": 4
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 174022,
+      "drained": true
+    },
+    {
+      "session": "xattr/xattr-tail-n128-t40-r1-kdlock/session.json",
+      "images": [
+        {
+          "path": "xattr/xattr-tail-n128-t40-r1-kdlock/publications/00/jit.bin",
+          "sha256": "ed516788dd5a6219edb2c4fa4a3e6355e1d70b6ed47d7850d66fa20d93b9a2c2",
+          "requirements": 4
+        },
+        {
+          "path": "xattr/xattr-tail-n128-t40-r1-kdlock/publications/01/jit.bin",
+          "sha256": "ea7e292ba90ee996ca7d12257da9bf28aebdfb99a5748984bea3e69fb8b89456",
+          "requirements": 4
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 173914,
+      "drained": true
+    },
+    {
+      "session": "xattr/xattr-tail-n128-t40-r2-kdlock/session.json",
+      "images": [
+        {
+          "path": "xattr/xattr-tail-n128-t40-r2-kdlock/publications/00/jit.bin",
+          "sha256": "ed516788dd5a6219edb2c4fa4a3e6355e1d70b6ed47d7850d66fa20d93b9a2c2",
+          "requirements": 4
+        },
+        {
+          "path": "xattr/xattr-tail-n128-t40-r2-kdlock/publications/01/jit.bin",
+          "sha256": "ea7e292ba90ee996ca7d12257da9bf28aebdfb99a5748984bea3e69fb8b89456",
+          "requirements": 4
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 174682,
+      "drained": true
+    },
+    {
+      "session": "xattr/xattr-tail-n128-t44-r0-kdlock/session.json",
+      "images": [
+        {
+          "path": "xattr/xattr-tail-n128-t44-r0-kdlock/publications/00/jit.bin",
+          "sha256": "ed516788dd5a6219edb2c4fa4a3e6355e1d70b6ed47d7850d66fa20d93b9a2c2",
+          "requirements": 4
+        },
+        {
+          "path": "xattr/xattr-tail-n128-t44-r0-kdlock/publications/01/jit.bin",
+          "sha256": "ea7e292ba90ee996ca7d12257da9bf28aebdfb99a5748984bea3e69fb8b89456",
+          "requirements": 4
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 175449,
+      "drained": true
+    },
+    {
+      "session": "xattr/xattr-tail-n128-t44-r1-kdlock/session.json",
+      "images": [
+        {
+          "path": "xattr/xattr-tail-n128-t44-r1-kdlock/publications/00/jit.bin",
+          "sha256": "ed516788dd5a6219edb2c4fa4a3e6355e1d70b6ed47d7850d66fa20d93b9a2c2",
+          "requirements": 4
+        },
+        {
+          "path": "xattr/xattr-tail-n128-t44-r1-kdlock/publications/01/jit.bin",
+          "sha256": "ea7e292ba90ee996ca7d12257da9bf28aebdfb99a5748984bea3e69fb8b89456",
+          "requirements": 4
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 175112,
+      "drained": true
+    },
+    {
+      "session": "xattr/xattr-tail-n128-t44-r2-kdlock/session.json",
+      "images": [
+        {
+          "path": "xattr/xattr-tail-n128-t44-r2-kdlock/publications/00/jit.bin",
+          "sha256": "ed516788dd5a6219edb2c4fa4a3e6355e1d70b6ed47d7850d66fa20d93b9a2c2",
+          "requirements": 4
+        },
+        {
+          "path": "xattr/xattr-tail-n128-t44-r2-kdlock/publications/01/jit.bin",
+          "sha256": "ea7e292ba90ee996ca7d12257da9bf28aebdfb99a5748984bea3e69fb8b89456",
+          "requirements": 4
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 173348,
+      "drained": true
+    },
+    {
+      "session": "xattr/xattr-tail-n128-t48-r0-kdlock/session.json",
+      "images": [
+        {
+          "path": "xattr/xattr-tail-n128-t48-r0-kdlock/publications/00/jit.bin",
+          "sha256": "ed516788dd5a6219edb2c4fa4a3e6355e1d70b6ed47d7850d66fa20d93b9a2c2",
+          "requirements": 4
+        },
+        {
+          "path": "xattr/xattr-tail-n128-t48-r0-kdlock/publications/01/jit.bin",
+          "sha256": "ea7e292ba90ee996ca7d12257da9bf28aebdfb99a5748984bea3e69fb8b89456",
+          "requirements": 4
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 164230,
+      "drained": true
+    },
+    {
+      "session": "xattr/xattr-tail-n128-t48-r1-kdlock/session.json",
+      "images": [
+        {
+          "path": "xattr/xattr-tail-n128-t48-r1-kdlock/publications/00/jit.bin",
+          "sha256": "ed516788dd5a6219edb2c4fa4a3e6355e1d70b6ed47d7850d66fa20d93b9a2c2",
+          "requirements": 4
+        },
+        {
+          "path": "xattr/xattr-tail-n128-t48-r1-kdlock/publications/01/jit.bin",
+          "sha256": "ea7e292ba90ee996ca7d12257da9bf28aebdfb99a5748984bea3e69fb8b89456",
+          "requirements": 4
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 175824,
+      "drained": true
+    },
+    {
+      "session": "xattr/xattr-tail-n128-t48-r2-kdlock/session.json",
+      "images": [
+        {
+          "path": "xattr/xattr-tail-n128-t48-r2-kdlock/publications/00/jit.bin",
+          "sha256": "ed516788dd5a6219edb2c4fa4a3e6355e1d70b6ed47d7850d66fa20d93b9a2c2",
+          "requirements": 4
+        },
+        {
+          "path": "xattr/xattr-tail-n128-t48-r2-kdlock/publications/01/jit.bin",
+          "sha256": "ea7e292ba90ee996ca7d12257da9bf28aebdfb99a5748984bea3e69fb8b89456",
+          "requirements": 4
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 165783,
+      "drained": true
+    },
+    {
+      "session": "xattr/xattr-tail-n128-t52-r0-kdlock/session.json",
+      "images": [
+        {
+          "path": "xattr/xattr-tail-n128-t52-r0-kdlock/publications/00/jit.bin",
+          "sha256": "ed516788dd5a6219edb2c4fa4a3e6355e1d70b6ed47d7850d66fa20d93b9a2c2",
+          "requirements": 4
+        },
+        {
+          "path": "xattr/xattr-tail-n128-t52-r0-kdlock/publications/01/jit.bin",
+          "sha256": "ea7e292ba90ee996ca7d12257da9bf28aebdfb99a5748984bea3e69fb8b89456",
+          "requirements": 4
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 173029,
+      "drained": true
+    },
+    {
+      "session": "xattr/xattr-tail-n128-t52-r1-kdlock/session.json",
+      "images": [
+        {
+          "path": "xattr/xattr-tail-n128-t52-r1-kdlock/publications/00/jit.bin",
+          "sha256": "ed516788dd5a6219edb2c4fa4a3e6355e1d70b6ed47d7850d66fa20d93b9a2c2",
+          "requirements": 4
+        },
+        {
+          "path": "xattr/xattr-tail-n128-t52-r1-kdlock/publications/01/jit.bin",
+          "sha256": "ea7e292ba90ee996ca7d12257da9bf28aebdfb99a5748984bea3e69fb8b89456",
+          "requirements": 4
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 171801,
+      "drained": true
+    },
+    {
+      "session": "xattr/xattr-tail-n128-t52-r2-kdlock/session.json",
+      "images": [
+        {
+          "path": "xattr/xattr-tail-n128-t52-r2-kdlock/publications/00/jit.bin",
+          "sha256": "ed516788dd5a6219edb2c4fa4a3e6355e1d70b6ed47d7850d66fa20d93b9a2c2",
+          "requirements": 4
+        },
+        {
+          "path": "xattr/xattr-tail-n128-t52-r2-kdlock/publications/01/jit.bin",
+          "sha256": "ea7e292ba90ee996ca7d12257da9bf28aebdfb99a5748984bea3e69fb8b89456",
+          "requirements": 4
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 172725,
+      "drained": true
+    },
+    {
+      "session": "xattr/xattr-tail-n128-t56-r0-kdlock/session.json",
+      "images": [
+        {
+          "path": "xattr/xattr-tail-n128-t56-r0-kdlock/publications/00/jit.bin",
+          "sha256": "ed516788dd5a6219edb2c4fa4a3e6355e1d70b6ed47d7850d66fa20d93b9a2c2",
+          "requirements": 4
+        },
+        {
+          "path": "xattr/xattr-tail-n128-t56-r0-kdlock/publications/01/jit.bin",
+          "sha256": "ea7e292ba90ee996ca7d12257da9bf28aebdfb99a5748984bea3e69fb8b89456",
+          "requirements": 4
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 171653,
+      "drained": true
+    },
+    {
+      "session": "xattr/xattr-tail-n128-t56-r1-kdlock/session.json",
+      "images": [
+        {
+          "path": "xattr/xattr-tail-n128-t56-r1-kdlock/publications/00/jit.bin",
+          "sha256": "ed516788dd5a6219edb2c4fa4a3e6355e1d70b6ed47d7850d66fa20d93b9a2c2",
+          "requirements": 4
+        },
+        {
+          "path": "xattr/xattr-tail-n128-t56-r1-kdlock/publications/01/jit.bin",
+          "sha256": "ea7e292ba90ee996ca7d12257da9bf28aebdfb99a5748984bea3e69fb8b89456",
+          "requirements": 4
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 167443,
+      "drained": true
+    },
+    {
+      "session": "xattr/xattr-tail-n128-t56-r2-kdlock/session.json",
+      "images": [
+        {
+          "path": "xattr/xattr-tail-n128-t56-r2-kdlock/publications/00/jit.bin",
+          "sha256": "ed516788dd5a6219edb2c4fa4a3e6355e1d70b6ed47d7850d66fa20d93b9a2c2",
+          "requirements": 4
+        },
+        {
+          "path": "xattr/xattr-tail-n128-t56-r2-kdlock/publications/01/jit.bin",
+          "sha256": "ea7e292ba90ee996ca7d12257da9bf28aebdfb99a5748984bea3e69fb8b89456",
+          "requirements": 4
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 168486,
+      "drained": true
+    },
+    {
+      "session": "xattr/xattr-tail-n128-t60-r0-kdlock/session.json",
+      "images": [
+        {
+          "path": "xattr/xattr-tail-n128-t60-r0-kdlock/publications/00/jit.bin",
+          "sha256": "ed516788dd5a6219edb2c4fa4a3e6355e1d70b6ed47d7850d66fa20d93b9a2c2",
+          "requirements": 4
+        },
+        {
+          "path": "xattr/xattr-tail-n128-t60-r0-kdlock/publications/01/jit.bin",
+          "sha256": "ea7e292ba90ee996ca7d12257da9bf28aebdfb99a5748984bea3e69fb8b89456",
+          "requirements": 4
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 165810,
+      "drained": true
+    },
+    {
+      "session": "xattr/xattr-tail-n128-t60-r1-kdlock/session.json",
+      "images": [
+        {
+          "path": "xattr/xattr-tail-n128-t60-r1-kdlock/publications/00/jit.bin",
+          "sha256": "ed516788dd5a6219edb2c4fa4a3e6355e1d70b6ed47d7850d66fa20d93b9a2c2",
+          "requirements": 4
+        },
+        {
+          "path": "xattr/xattr-tail-n128-t60-r1-kdlock/publications/01/jit.bin",
+          "sha256": "ea7e292ba90ee996ca7d12257da9bf28aebdfb99a5748984bea3e69fb8b89456",
+          "requirements": 4
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 165459,
+      "drained": true
+    },
+    {
+      "session": "xattr/xattr-tail-n128-t60-r2-kdlock/session.json",
+      "images": [
+        {
+          "path": "xattr/xattr-tail-n128-t60-r2-kdlock/publications/00/jit.bin",
+          "sha256": "ed516788dd5a6219edb2c4fa4a3e6355e1d70b6ed47d7850d66fa20d93b9a2c2",
+          "requirements": 4
+        },
+        {
+          "path": "xattr/xattr-tail-n128-t60-r2-kdlock/publications/01/jit.bin",
+          "sha256": "ea7e292ba90ee996ca7d12257da9bf28aebdfb99a5748984bea3e69fb8b89456",
+          "requirements": 4
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 166856,
+      "drained": true
+    },
+    {
+      "session": "xattr/xattr-tail-n16-t01-r0-kdlock/session.json",
+      "images": [
+        {
+          "path": "xattr/xattr-tail-n16-t01-r0-kdlock/publications/00/jit.bin",
+          "sha256": "ed516788dd5a6219edb2c4fa4a3e6355e1d70b6ed47d7850d66fa20d93b9a2c2",
+          "requirements": 4
+        },
+        {
+          "path": "xattr/xattr-tail-n16-t01-r0-kdlock/publications/01/jit.bin",
+          "sha256": "ea7e292ba90ee996ca7d12257da9bf28aebdfb99a5748984bea3e69fb8b89456",
+          "requirements": 4
+        }
+      ],
+      "jit_status": "NO_JIT",
+      "jit_completions": 0,
+      "drained": true
+    },
+    {
+      "session": "xattr/xattr-tail-n16-t01-r1-kdlock/session.json",
+      "images": [
+        {
+          "path": "xattr/xattr-tail-n16-t01-r1-kdlock/publications/00/jit.bin",
+          "sha256": "ed516788dd5a6219edb2c4fa4a3e6355e1d70b6ed47d7850d66fa20d93b9a2c2",
+          "requirements": 4
+        },
+        {
+          "path": "xattr/xattr-tail-n16-t01-r1-kdlock/publications/01/jit.bin",
+          "sha256": "ea7e292ba90ee996ca7d12257da9bf28aebdfb99a5748984bea3e69fb8b89456",
+          "requirements": 4
+        }
+      ],
+      "jit_status": "NO_JIT",
+      "jit_completions": 0,
+      "drained": true
+    },
+    {
+      "session": "xattr/xattr-tail-n16-t01-r2-kdlock/session.json",
+      "images": [
+        {
+          "path": "xattr/xattr-tail-n16-t01-r2-kdlock/publications/00/jit.bin",
+          "sha256": "ed516788dd5a6219edb2c4fa4a3e6355e1d70b6ed47d7850d66fa20d93b9a2c2",
+          "requirements": 4
+        },
+        {
+          "path": "xattr/xattr-tail-n16-t01-r2-kdlock/publications/01/jit.bin",
+          "sha256": "ea7e292ba90ee996ca7d12257da9bf28aebdfb99a5748984bea3e69fb8b89456",
+          "requirements": 4
+        }
+      ],
+      "jit_status": "NO_JIT",
+      "jit_completions": 0,
+      "drained": true
+    },
+    {
+      "session": "xattr/xattr-tail-n16-t02-r0-kdlock/session.json",
+      "images": [
+        {
+          "path": "xattr/xattr-tail-n16-t02-r0-kdlock/publications/00/jit.bin",
+          "sha256": "ed516788dd5a6219edb2c4fa4a3e6355e1d70b6ed47d7850d66fa20d93b9a2c2",
+          "requirements": 4
+        },
+        {
+          "path": "xattr/xattr-tail-n16-t02-r0-kdlock/publications/01/jit.bin",
+          "sha256": "ea7e292ba90ee996ca7d12257da9bf28aebdfb99a5748984bea3e69fb8b89456",
+          "requirements": 4
+        }
+      ],
+      "jit_status": "NO_JIT",
+      "jit_completions": 0,
+      "drained": true
+    },
+    {
+      "session": "xattr/xattr-tail-n16-t02-r1-kdlock/session.json",
+      "images": [
+        {
+          "path": "xattr/xattr-tail-n16-t02-r1-kdlock/publications/00/jit.bin",
+          "sha256": "ed516788dd5a6219edb2c4fa4a3e6355e1d70b6ed47d7850d66fa20d93b9a2c2",
+          "requirements": 4
+        },
+        {
+          "path": "xattr/xattr-tail-n16-t02-r1-kdlock/publications/01/jit.bin",
+          "sha256": "ea7e292ba90ee996ca7d12257da9bf28aebdfb99a5748984bea3e69fb8b89456",
+          "requirements": 4
+        }
+      ],
+      "jit_status": "NO_JIT",
+      "jit_completions": 0,
+      "drained": true
+    },
+    {
+      "session": "xattr/xattr-tail-n16-t02-r2-kdlock/session.json",
+      "images": [
+        {
+          "path": "xattr/xattr-tail-n16-t02-r2-kdlock/publications/00/jit.bin",
+          "sha256": "ed516788dd5a6219edb2c4fa4a3e6355e1d70b6ed47d7850d66fa20d93b9a2c2",
+          "requirements": 4
+        },
+        {
+          "path": "xattr/xattr-tail-n16-t02-r2-kdlock/publications/01/jit.bin",
+          "sha256": "ea7e292ba90ee996ca7d12257da9bf28aebdfb99a5748984bea3e69fb8b89456",
+          "requirements": 4
+        }
+      ],
+      "jit_status": "NO_JIT",
+      "jit_completions": 0,
+      "drained": true
+    },
+    {
+      "session": "xattr/xattr-tail-n16-t03-r0-kdlock/session.json",
+      "images": [
+        {
+          "path": "xattr/xattr-tail-n16-t03-r0-kdlock/publications/00/jit.bin",
+          "sha256": "ed516788dd5a6219edb2c4fa4a3e6355e1d70b6ed47d7850d66fa20d93b9a2c2",
+          "requirements": 4
+        },
+        {
+          "path": "xattr/xattr-tail-n16-t03-r0-kdlock/publications/01/jit.bin",
+          "sha256": "ea7e292ba90ee996ca7d12257da9bf28aebdfb99a5748984bea3e69fb8b89456",
+          "requirements": 4
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 8,
+      "drained": true
+    },
+    {
+      "session": "xattr/xattr-tail-n16-t03-r1-kdlock/session.json",
+      "images": [
+        {
+          "path": "xattr/xattr-tail-n16-t03-r1-kdlock/publications/00/jit.bin",
+          "sha256": "ed516788dd5a6219edb2c4fa4a3e6355e1d70b6ed47d7850d66fa20d93b9a2c2",
+          "requirements": 4
+        },
+        {
+          "path": "xattr/xattr-tail-n16-t03-r1-kdlock/publications/01/jit.bin",
+          "sha256": "ea7e292ba90ee996ca7d12257da9bf28aebdfb99a5748984bea3e69fb8b89456",
+          "requirements": 4
+        }
+      ],
+      "jit_status": "NO_JIT",
+      "jit_completions": 0,
+      "drained": true
+    },
+    {
+      "session": "xattr/xattr-tail-n16-t03-r2-kdlock/session.json",
+      "images": [
+        {
+          "path": "xattr/xattr-tail-n16-t03-r2-kdlock/publications/00/jit.bin",
+          "sha256": "ed516788dd5a6219edb2c4fa4a3e6355e1d70b6ed47d7850d66fa20d93b9a2c2",
+          "requirements": 4
+        },
+        {
+          "path": "xattr/xattr-tail-n16-t03-r2-kdlock/publications/01/jit.bin",
+          "sha256": "ea7e292ba90ee996ca7d12257da9bf28aebdfb99a5748984bea3e69fb8b89456",
+          "requirements": 4
+        }
+      ],
+      "jit_status": "NO_JIT",
+      "jit_completions": 0,
+      "drained": true
+    },
+    {
+      "session": "xattr/xattr-tail-n16-t04-r0-kdlock/session.json",
+      "images": [
+        {
+          "path": "xattr/xattr-tail-n16-t04-r0-kdlock/publications/00/jit.bin",
+          "sha256": "ed516788dd5a6219edb2c4fa4a3e6355e1d70b6ed47d7850d66fa20d93b9a2c2",
+          "requirements": 4
+        },
+        {
+          "path": "xattr/xattr-tail-n16-t04-r0-kdlock/publications/01/jit.bin",
+          "sha256": "ea7e292ba90ee996ca7d12257da9bf28aebdfb99a5748984bea3e69fb8b89456",
+          "requirements": 4
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 1145981,
+      "drained": true
+    },
+    {
+      "session": "xattr/xattr-tail-n16-t04-r1-kdlock/session.json",
+      "images": [
+        {
+          "path": "xattr/xattr-tail-n16-t04-r1-kdlock/publications/00/jit.bin",
+          "sha256": "ed516788dd5a6219edb2c4fa4a3e6355e1d70b6ed47d7850d66fa20d93b9a2c2",
+          "requirements": 4
+        },
+        {
+          "path": "xattr/xattr-tail-n16-t04-r1-kdlock/publications/01/jit.bin",
+          "sha256": "ea7e292ba90ee996ca7d12257da9bf28aebdfb99a5748984bea3e69fb8b89456",
+          "requirements": 4
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 1198874,
+      "drained": true
+    },
+    {
+      "session": "xattr/xattr-tail-n16-t04-r2-kdlock/session.json",
+      "images": [
+        {
+          "path": "xattr/xattr-tail-n16-t04-r2-kdlock/publications/00/jit.bin",
+          "sha256": "ed516788dd5a6219edb2c4fa4a3e6355e1d70b6ed47d7850d66fa20d93b9a2c2",
+          "requirements": 4
+        },
+        {
+          "path": "xattr/xattr-tail-n16-t04-r2-kdlock/publications/01/jit.bin",
+          "sha256": "ea7e292ba90ee996ca7d12257da9bf28aebdfb99a5748984bea3e69fb8b89456",
+          "requirements": 4
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 1175403,
+      "drained": true
+    },
+    {
+      "session": "xattr/xattr-tail-n16-t05-r0-kdlock/session.json",
+      "images": [
+        {
+          "path": "xattr/xattr-tail-n16-t05-r0-kdlock/publications/00/jit.bin",
+          "sha256": "ed516788dd5a6219edb2c4fa4a3e6355e1d70b6ed47d7850d66fa20d93b9a2c2",
+          "requirements": 4
+        },
+        {
+          "path": "xattr/xattr-tail-n16-t05-r0-kdlock/publications/01/jit.bin",
+          "sha256": "ea7e292ba90ee996ca7d12257da9bf28aebdfb99a5748984bea3e69fb8b89456",
+          "requirements": 4
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 1228890,
+      "drained": true
+    },
+    {
+      "session": "xattr/xattr-tail-n16-t05-r1-kdlock/session.json",
+      "images": [
+        {
+          "path": "xattr/xattr-tail-n16-t05-r1-kdlock/publications/00/jit.bin",
+          "sha256": "ed516788dd5a6219edb2c4fa4a3e6355e1d70b6ed47d7850d66fa20d93b9a2c2",
+          "requirements": 4
+        },
+        {
+          "path": "xattr/xattr-tail-n16-t05-r1-kdlock/publications/01/jit.bin",
+          "sha256": "ea7e292ba90ee996ca7d12257da9bf28aebdfb99a5748984bea3e69fb8b89456",
+          "requirements": 4
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 1227713,
+      "drained": true
+    },
+    {
+      "session": "xattr/xattr-tail-n16-t05-r2-kdlock/session.json",
+      "images": [
+        {
+          "path": "xattr/xattr-tail-n16-t05-r2-kdlock/publications/00/jit.bin",
+          "sha256": "ed516788dd5a6219edb2c4fa4a3e6355e1d70b6ed47d7850d66fa20d93b9a2c2",
+          "requirements": 4
+        },
+        {
+          "path": "xattr/xattr-tail-n16-t05-r2-kdlock/publications/01/jit.bin",
+          "sha256": "ea7e292ba90ee996ca7d12257da9bf28aebdfb99a5748984bea3e69fb8b89456",
+          "requirements": 4
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 1227989,
+      "drained": true
+    },
+    {
+      "session": "xattr/xattr-tail-n16-t06-r0-kdlock/session.json",
+      "images": [
+        {
+          "path": "xattr/xattr-tail-n16-t06-r0-kdlock/publications/00/jit.bin",
+          "sha256": "ed516788dd5a6219edb2c4fa4a3e6355e1d70b6ed47d7850d66fa20d93b9a2c2",
+          "requirements": 4
+        },
+        {
+          "path": "xattr/xattr-tail-n16-t06-r0-kdlock/publications/01/jit.bin",
+          "sha256": "ea7e292ba90ee996ca7d12257da9bf28aebdfb99a5748984bea3e69fb8b89456",
+          "requirements": 4
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 1235450,
+      "drained": true
+    },
+    {
+      "session": "xattr/xattr-tail-n16-t06-r1-kdlock/session.json",
+      "images": [
+        {
+          "path": "xattr/xattr-tail-n16-t06-r1-kdlock/publications/00/jit.bin",
+          "sha256": "ed516788dd5a6219edb2c4fa4a3e6355e1d70b6ed47d7850d66fa20d93b9a2c2",
+          "requirements": 4
+        },
+        {
+          "path": "xattr/xattr-tail-n16-t06-r1-kdlock/publications/01/jit.bin",
+          "sha256": "ea7e292ba90ee996ca7d12257da9bf28aebdfb99a5748984bea3e69fb8b89456",
+          "requirements": 4
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 1210896,
+      "drained": true
+    },
+    {
+      "session": "xattr/xattr-tail-n16-t06-r2-kdlock/session.json",
+      "images": [
+        {
+          "path": "xattr/xattr-tail-n16-t06-r2-kdlock/publications/00/jit.bin",
+          "sha256": "ed516788dd5a6219edb2c4fa4a3e6355e1d70b6ed47d7850d66fa20d93b9a2c2",
+          "requirements": 4
+        },
+        {
+          "path": "xattr/xattr-tail-n16-t06-r2-kdlock/publications/01/jit.bin",
+          "sha256": "ea7e292ba90ee996ca7d12257da9bf28aebdfb99a5748984bea3e69fb8b89456",
+          "requirements": 4
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 1226501,
+      "drained": true
+    },
+    {
+      "session": "xattr/xattr-tail-n16-t07-r0-kdlock/session.json",
+      "images": [
+        {
+          "path": "xattr/xattr-tail-n16-t07-r0-kdlock/publications/00/jit.bin",
+          "sha256": "ed516788dd5a6219edb2c4fa4a3e6355e1d70b6ed47d7850d66fa20d93b9a2c2",
+          "requirements": 4
+        },
+        {
+          "path": "xattr/xattr-tail-n16-t07-r0-kdlock/publications/01/jit.bin",
+          "sha256": "ea7e292ba90ee996ca7d12257da9bf28aebdfb99a5748984bea3e69fb8b89456",
+          "requirements": 4
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 1208186,
+      "drained": true
+    },
+    {
+      "session": "xattr/xattr-tail-n16-t07-r1-kdlock/session.json",
+      "images": [
+        {
+          "path": "xattr/xattr-tail-n16-t07-r1-kdlock/publications/00/jit.bin",
+          "sha256": "ed516788dd5a6219edb2c4fa4a3e6355e1d70b6ed47d7850d66fa20d93b9a2c2",
+          "requirements": 4
+        },
+        {
+          "path": "xattr/xattr-tail-n16-t07-r1-kdlock/publications/01/jit.bin",
+          "sha256": "ea7e292ba90ee996ca7d12257da9bf28aebdfb99a5748984bea3e69fb8b89456",
+          "requirements": 4
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 1167564,
+      "drained": true
+    },
+    {
+      "session": "xattr/xattr-tail-n16-t07-r2-kdlock/session.json",
+      "images": [
+        {
+          "path": "xattr/xattr-tail-n16-t07-r2-kdlock/publications/00/jit.bin",
+          "sha256": "ed516788dd5a6219edb2c4fa4a3e6355e1d70b6ed47d7850d66fa20d93b9a2c2",
+          "requirements": 4
+        },
+        {
+          "path": "xattr/xattr-tail-n16-t07-r2-kdlock/publications/01/jit.bin",
+          "sha256": "ea7e292ba90ee996ca7d12257da9bf28aebdfb99a5748984bea3e69fb8b89456",
+          "requirements": 4
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 1235697,
+      "drained": true
+    },
+    {
+      "session": "xattr/xattr-tail-n16-t08-r0-kdlock/session.json",
+      "images": [
+        {
+          "path": "xattr/xattr-tail-n16-t08-r0-kdlock/publications/00/jit.bin",
+          "sha256": "ed516788dd5a6219edb2c4fa4a3e6355e1d70b6ed47d7850d66fa20d93b9a2c2",
+          "requirements": 4
+        },
+        {
+          "path": "xattr/xattr-tail-n16-t08-r0-kdlock/publications/01/jit.bin",
+          "sha256": "ea7e292ba90ee996ca7d12257da9bf28aebdfb99a5748984bea3e69fb8b89456",
+          "requirements": 4
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 1195492,
+      "drained": true
+    },
+    {
+      "session": "xattr/xattr-tail-n16-t08-r1-kdlock/session.json",
+      "images": [
+        {
+          "path": "xattr/xattr-tail-n16-t08-r1-kdlock/publications/00/jit.bin",
+          "sha256": "ed516788dd5a6219edb2c4fa4a3e6355e1d70b6ed47d7850d66fa20d93b9a2c2",
+          "requirements": 4
+        },
+        {
+          "path": "xattr/xattr-tail-n16-t08-r1-kdlock/publications/01/jit.bin",
+          "sha256": "ea7e292ba90ee996ca7d12257da9bf28aebdfb99a5748984bea3e69fb8b89456",
+          "requirements": 4
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 1190687,
+      "drained": true
+    },
+    {
+      "session": "xattr/xattr-tail-n16-t08-r2-kdlock/session.json",
+      "images": [
+        {
+          "path": "xattr/xattr-tail-n16-t08-r2-kdlock/publications/00/jit.bin",
+          "sha256": "ed516788dd5a6219edb2c4fa4a3e6355e1d70b6ed47d7850d66fa20d93b9a2c2",
+          "requirements": 4
+        },
+        {
+          "path": "xattr/xattr-tail-n16-t08-r2-kdlock/publications/01/jit.bin",
+          "sha256": "ea7e292ba90ee996ca7d12257da9bf28aebdfb99a5748984bea3e69fb8b89456",
+          "requirements": 4
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 1247290,
+      "drained": true
+    },
+    {
+      "session": "xattr/xattr-tail-n16-t12-r0-kdlock/session.json",
+      "images": [
+        {
+          "path": "xattr/xattr-tail-n16-t12-r0-kdlock/publications/00/jit.bin",
+          "sha256": "ed516788dd5a6219edb2c4fa4a3e6355e1d70b6ed47d7850d66fa20d93b9a2c2",
+          "requirements": 4
+        },
+        {
+          "path": "xattr/xattr-tail-n16-t12-r0-kdlock/publications/01/jit.bin",
+          "sha256": "ea7e292ba90ee996ca7d12257da9bf28aebdfb99a5748984bea3e69fb8b89456",
+          "requirements": 4
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 1204276,
+      "drained": true
+    },
+    {
+      "session": "xattr/xattr-tail-n16-t12-r1-kdlock/session.json",
+      "images": [
+        {
+          "path": "xattr/xattr-tail-n16-t12-r1-kdlock/publications/00/jit.bin",
+          "sha256": "ed516788dd5a6219edb2c4fa4a3e6355e1d70b6ed47d7850d66fa20d93b9a2c2",
+          "requirements": 4
+        },
+        {
+          "path": "xattr/xattr-tail-n16-t12-r1-kdlock/publications/01/jit.bin",
+          "sha256": "ea7e292ba90ee996ca7d12257da9bf28aebdfb99a5748984bea3e69fb8b89456",
+          "requirements": 4
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 1226522,
+      "drained": true
+    },
+    {
+      "session": "xattr/xattr-tail-n16-t12-r2-kdlock/session.json",
+      "images": [
+        {
+          "path": "xattr/xattr-tail-n16-t12-r2-kdlock/publications/00/jit.bin",
+          "sha256": "ed516788dd5a6219edb2c4fa4a3e6355e1d70b6ed47d7850d66fa20d93b9a2c2",
+          "requirements": 4
+        },
+        {
+          "path": "xattr/xattr-tail-n16-t12-r2-kdlock/publications/01/jit.bin",
+          "sha256": "ea7e292ba90ee996ca7d12257da9bf28aebdfb99a5748984bea3e69fb8b89456",
+          "requirements": 4
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 1236228,
+      "drained": true
+    },
+    {
+      "session": "xattr/xattr-tail-n16-t16-r0-kdlock/session.json",
+      "images": [
+        {
+          "path": "xattr/xattr-tail-n16-t16-r0-kdlock/publications/00/jit.bin",
+          "sha256": "ed516788dd5a6219edb2c4fa4a3e6355e1d70b6ed47d7850d66fa20d93b9a2c2",
+          "requirements": 4
+        },
+        {
+          "path": "xattr/xattr-tail-n16-t16-r0-kdlock/publications/01/jit.bin",
+          "sha256": "ea7e292ba90ee996ca7d12257da9bf28aebdfb99a5748984bea3e69fb8b89456",
+          "requirements": 4
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 1133311,
+      "drained": true
+    },
+    {
+      "session": "xattr/xattr-tail-n16-t16-r1-kdlock/session.json",
+      "images": [
+        {
+          "path": "xattr/xattr-tail-n16-t16-r1-kdlock/publications/00/jit.bin",
+          "sha256": "ed516788dd5a6219edb2c4fa4a3e6355e1d70b6ed47d7850d66fa20d93b9a2c2",
+          "requirements": 4
+        },
+        {
+          "path": "xattr/xattr-tail-n16-t16-r1-kdlock/publications/01/jit.bin",
+          "sha256": "ea7e292ba90ee996ca7d12257da9bf28aebdfb99a5748984bea3e69fb8b89456",
+          "requirements": 4
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 1150769,
+      "drained": true
+    },
+    {
+      "session": "xattr/xattr-tail-n16-t16-r2-kdlock/session.json",
+      "images": [
+        {
+          "path": "xattr/xattr-tail-n16-t16-r2-kdlock/publications/00/jit.bin",
+          "sha256": "ed516788dd5a6219edb2c4fa4a3e6355e1d70b6ed47d7850d66fa20d93b9a2c2",
+          "requirements": 4
+        },
+        {
+          "path": "xattr/xattr-tail-n16-t16-r2-kdlock/publications/01/jit.bin",
+          "sha256": "ea7e292ba90ee996ca7d12257da9bf28aebdfb99a5748984bea3e69fb8b89456",
+          "requirements": 4
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 1161481,
+      "drained": true
+    },
+    {
+      "session": "xattr/xattr-tail-n16-t20-r0-kdlock/session.json",
+      "images": [
+        {
+          "path": "xattr/xattr-tail-n16-t20-r0-kdlock/publications/00/jit.bin",
+          "sha256": "ed516788dd5a6219edb2c4fa4a3e6355e1d70b6ed47d7850d66fa20d93b9a2c2",
+          "requirements": 4
+        },
+        {
+          "path": "xattr/xattr-tail-n16-t20-r0-kdlock/publications/01/jit.bin",
+          "sha256": "ea7e292ba90ee996ca7d12257da9bf28aebdfb99a5748984bea3e69fb8b89456",
+          "requirements": 4
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 1102961,
+      "drained": true
+    },
+    {
+      "session": "xattr/xattr-tail-n16-t20-r1-kdlock/session.json",
+      "images": [
+        {
+          "path": "xattr/xattr-tail-n16-t20-r1-kdlock/publications/00/jit.bin",
+          "sha256": "ed516788dd5a6219edb2c4fa4a3e6355e1d70b6ed47d7850d66fa20d93b9a2c2",
+          "requirements": 4
+        },
+        {
+          "path": "xattr/xattr-tail-n16-t20-r1-kdlock/publications/01/jit.bin",
+          "sha256": "ea7e292ba90ee996ca7d12257da9bf28aebdfb99a5748984bea3e69fb8b89456",
+          "requirements": 4
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 1066377,
+      "drained": true
+    },
+    {
+      "session": "xattr/xattr-tail-n16-t20-r2-kdlock/session.json",
+      "images": [
+        {
+          "path": "xattr/xattr-tail-n16-t20-r2-kdlock/publications/00/jit.bin",
+          "sha256": "ed516788dd5a6219edb2c4fa4a3e6355e1d70b6ed47d7850d66fa20d93b9a2c2",
+          "requirements": 4
+        },
+        {
+          "path": "xattr/xattr-tail-n16-t20-r2-kdlock/publications/01/jit.bin",
+          "sha256": "ea7e292ba90ee996ca7d12257da9bf28aebdfb99a5748984bea3e69fb8b89456",
+          "requirements": 4
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 1104412,
+      "drained": true
+    },
+    {
+      "session": "xattr/xattr-tail-n16-t24-r0-kdlock/session.json",
+      "images": [
+        {
+          "path": "xattr/xattr-tail-n16-t24-r0-kdlock/publications/00/jit.bin",
+          "sha256": "ed516788dd5a6219edb2c4fa4a3e6355e1d70b6ed47d7850d66fa20d93b9a2c2",
+          "requirements": 4
+        },
+        {
+          "path": "xattr/xattr-tail-n16-t24-r0-kdlock/publications/01/jit.bin",
+          "sha256": "ea7e292ba90ee996ca7d12257da9bf28aebdfb99a5748984bea3e69fb8b89456",
+          "requirements": 4
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 1037931,
+      "drained": true
+    },
+    {
+      "session": "xattr/xattr-tail-n16-t24-r1-kdlock/session.json",
+      "images": [
+        {
+          "path": "xattr/xattr-tail-n16-t24-r1-kdlock/publications/00/jit.bin",
+          "sha256": "ed516788dd5a6219edb2c4fa4a3e6355e1d70b6ed47d7850d66fa20d93b9a2c2",
+          "requirements": 4
+        },
+        {
+          "path": "xattr/xattr-tail-n16-t24-r1-kdlock/publications/01/jit.bin",
+          "sha256": "ea7e292ba90ee996ca7d12257da9bf28aebdfb99a5748984bea3e69fb8b89456",
+          "requirements": 4
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 1032861,
+      "drained": true
+    },
+    {
+      "session": "xattr/xattr-tail-n16-t24-r2-kdlock/session.json",
+      "images": [
+        {
+          "path": "xattr/xattr-tail-n16-t24-r2-kdlock/publications/00/jit.bin",
+          "sha256": "ed516788dd5a6219edb2c4fa4a3e6355e1d70b6ed47d7850d66fa20d93b9a2c2",
+          "requirements": 4
+        },
+        {
+          "path": "xattr/xattr-tail-n16-t24-r2-kdlock/publications/01/jit.bin",
+          "sha256": "ea7e292ba90ee996ca7d12257da9bf28aebdfb99a5748984bea3e69fb8b89456",
+          "requirements": 4
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 1050061,
+      "drained": true
+    },
+    {
+      "session": "xattr/xattr-tail-n16-t28-r0-kdlock/session.json",
+      "images": [
+        {
+          "path": "xattr/xattr-tail-n16-t28-r0-kdlock/publications/00/jit.bin",
+          "sha256": "ed516788dd5a6219edb2c4fa4a3e6355e1d70b6ed47d7850d66fa20d93b9a2c2",
+          "requirements": 4
+        },
+        {
+          "path": "xattr/xattr-tail-n16-t28-r0-kdlock/publications/01/jit.bin",
+          "sha256": "ea7e292ba90ee996ca7d12257da9bf28aebdfb99a5748984bea3e69fb8b89456",
+          "requirements": 4
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 990424,
+      "drained": true
+    },
+    {
+      "session": "xattr/xattr-tail-n16-t28-r1-kdlock/session.json",
+      "images": [
+        {
+          "path": "xattr/xattr-tail-n16-t28-r1-kdlock/publications/00/jit.bin",
+          "sha256": "ed516788dd5a6219edb2c4fa4a3e6355e1d70b6ed47d7850d66fa20d93b9a2c2",
+          "requirements": 4
+        },
+        {
+          "path": "xattr/xattr-tail-n16-t28-r1-kdlock/publications/01/jit.bin",
+          "sha256": "ea7e292ba90ee996ca7d12257da9bf28aebdfb99a5748984bea3e69fb8b89456",
+          "requirements": 4
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 987630,
+      "drained": true
+    },
+    {
+      "session": "xattr/xattr-tail-n16-t28-r2-kdlock/session.json",
+      "images": [
+        {
+          "path": "xattr/xattr-tail-n16-t28-r2-kdlock/publications/00/jit.bin",
+          "sha256": "ed516788dd5a6219edb2c4fa4a3e6355e1d70b6ed47d7850d66fa20d93b9a2c2",
+          "requirements": 4
+        },
+        {
+          "path": "xattr/xattr-tail-n16-t28-r2-kdlock/publications/01/jit.bin",
+          "sha256": "ea7e292ba90ee996ca7d12257da9bf28aebdfb99a5748984bea3e69fb8b89456",
+          "requirements": 4
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 992241,
+      "drained": true
+    },
+    {
+      "session": "xattr/xattr-tail-n16-t32-r0-kdlock/session.json",
+      "images": [
+        {
+          "path": "xattr/xattr-tail-n16-t32-r0-kdlock/publications/00/jit.bin",
+          "sha256": "ed516788dd5a6219edb2c4fa4a3e6355e1d70b6ed47d7850d66fa20d93b9a2c2",
+          "requirements": 4
+        },
+        {
+          "path": "xattr/xattr-tail-n16-t32-r0-kdlock/publications/01/jit.bin",
+          "sha256": "ea7e292ba90ee996ca7d12257da9bf28aebdfb99a5748984bea3e69fb8b89456",
+          "requirements": 4
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 984499,
+      "drained": true
+    },
+    {
+      "session": "xattr/xattr-tail-n16-t32-r1-kdlock/session.json",
+      "images": [
+        {
+          "path": "xattr/xattr-tail-n16-t32-r1-kdlock/publications/00/jit.bin",
+          "sha256": "ed516788dd5a6219edb2c4fa4a3e6355e1d70b6ed47d7850d66fa20d93b9a2c2",
+          "requirements": 4
+        },
+        {
+          "path": "xattr/xattr-tail-n16-t32-r1-kdlock/publications/01/jit.bin",
+          "sha256": "ea7e292ba90ee996ca7d12257da9bf28aebdfb99a5748984bea3e69fb8b89456",
+          "requirements": 4
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 989104,
+      "drained": true
+    },
+    {
+      "session": "xattr/xattr-tail-n16-t32-r2-kdlock/session.json",
+      "images": [
+        {
+          "path": "xattr/xattr-tail-n16-t32-r2-kdlock/publications/00/jit.bin",
+          "sha256": "ed516788dd5a6219edb2c4fa4a3e6355e1d70b6ed47d7850d66fa20d93b9a2c2",
+          "requirements": 4
+        },
+        {
+          "path": "xattr/xattr-tail-n16-t32-r2-kdlock/publications/01/jit.bin",
+          "sha256": "ea7e292ba90ee996ca7d12257da9bf28aebdfb99a5748984bea3e69fb8b89456",
+          "requirements": 4
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 988847,
+      "drained": true
+    },
+    {
+      "session": "xattr/xattr-tail-n16-t36-r0-kdlock/session.json",
+      "images": [
+        {
+          "path": "xattr/xattr-tail-n16-t36-r0-kdlock/publications/00/jit.bin",
+          "sha256": "ed516788dd5a6219edb2c4fa4a3e6355e1d70b6ed47d7850d66fa20d93b9a2c2",
+          "requirements": 4
+        },
+        {
+          "path": "xattr/xattr-tail-n16-t36-r0-kdlock/publications/01/jit.bin",
+          "sha256": "ea7e292ba90ee996ca7d12257da9bf28aebdfb99a5748984bea3e69fb8b89456",
+          "requirements": 4
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 1019732,
+      "drained": true
+    },
+    {
+      "session": "xattr/xattr-tail-n16-t36-r1-kdlock/session.json",
+      "images": [
+        {
+          "path": "xattr/xattr-tail-n16-t36-r1-kdlock/publications/00/jit.bin",
+          "sha256": "ed516788dd5a6219edb2c4fa4a3e6355e1d70b6ed47d7850d66fa20d93b9a2c2",
+          "requirements": 4
+        },
+        {
+          "path": "xattr/xattr-tail-n16-t36-r1-kdlock/publications/01/jit.bin",
+          "sha256": "ea7e292ba90ee996ca7d12257da9bf28aebdfb99a5748984bea3e69fb8b89456",
+          "requirements": 4
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 1020135,
+      "drained": true
+    },
+    {
+      "session": "xattr/xattr-tail-n16-t36-r2-kdlock/session.json",
+      "images": [
+        {
+          "path": "xattr/xattr-tail-n16-t36-r2-kdlock/publications/00/jit.bin",
+          "sha256": "ed516788dd5a6219edb2c4fa4a3e6355e1d70b6ed47d7850d66fa20d93b9a2c2",
+          "requirements": 4
+        },
+        {
+          "path": "xattr/xattr-tail-n16-t36-r2-kdlock/publications/01/jit.bin",
+          "sha256": "ea7e292ba90ee996ca7d12257da9bf28aebdfb99a5748984bea3e69fb8b89456",
+          "requirements": 4
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 1009632,
+      "drained": true
+    },
+    {
+      "session": "xattr/xattr-tail-n16-t40-r0-kdlock/session.json",
+      "images": [
+        {
+          "path": "xattr/xattr-tail-n16-t40-r0-kdlock/publications/00/jit.bin",
+          "sha256": "ed516788dd5a6219edb2c4fa4a3e6355e1d70b6ed47d7850d66fa20d93b9a2c2",
+          "requirements": 4
+        },
+        {
+          "path": "xattr/xattr-tail-n16-t40-r0-kdlock/publications/01/jit.bin",
+          "sha256": "ea7e292ba90ee996ca7d12257da9bf28aebdfb99a5748984bea3e69fb8b89456",
+          "requirements": 4
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 1086929,
+      "drained": true
+    },
+    {
+      "session": "xattr/xattr-tail-n16-t40-r1-kdlock/session.json",
+      "images": [
+        {
+          "path": "xattr/xattr-tail-n16-t40-r1-kdlock/publications/00/jit.bin",
+          "sha256": "ed516788dd5a6219edb2c4fa4a3e6355e1d70b6ed47d7850d66fa20d93b9a2c2",
+          "requirements": 4
+        },
+        {
+          "path": "xattr/xattr-tail-n16-t40-r1-kdlock/publications/01/jit.bin",
+          "sha256": "ea7e292ba90ee996ca7d12257da9bf28aebdfb99a5748984bea3e69fb8b89456",
+          "requirements": 4
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 1079814,
+      "drained": true
+    },
+    {
+      "session": "xattr/xattr-tail-n16-t40-r2-kdlock/session.json",
+      "images": [
+        {
+          "path": "xattr/xattr-tail-n16-t40-r2-kdlock/publications/00/jit.bin",
+          "sha256": "ed516788dd5a6219edb2c4fa4a3e6355e1d70b6ed47d7850d66fa20d93b9a2c2",
+          "requirements": 4
+        },
+        {
+          "path": "xattr/xattr-tail-n16-t40-r2-kdlock/publications/01/jit.bin",
+          "sha256": "ea7e292ba90ee996ca7d12257da9bf28aebdfb99a5748984bea3e69fb8b89456",
+          "requirements": 4
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 1073160,
+      "drained": true
+    },
+    {
+      "session": "xattr/xattr-tail-n16-t44-r0-kdlock/session.json",
+      "images": [
+        {
+          "path": "xattr/xattr-tail-n16-t44-r0-kdlock/publications/00/jit.bin",
+          "sha256": "ed516788dd5a6219edb2c4fa4a3e6355e1d70b6ed47d7850d66fa20d93b9a2c2",
+          "requirements": 4
+        },
+        {
+          "path": "xattr/xattr-tail-n16-t44-r0-kdlock/publications/01/jit.bin",
+          "sha256": "ea7e292ba90ee996ca7d12257da9bf28aebdfb99a5748984bea3e69fb8b89456",
+          "requirements": 4
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 1076757,
+      "drained": true
+    },
+    {
+      "session": "xattr/xattr-tail-n16-t44-r1-kdlock/session.json",
+      "images": [
+        {
+          "path": "xattr/xattr-tail-n16-t44-r1-kdlock/publications/00/jit.bin",
+          "sha256": "ed516788dd5a6219edb2c4fa4a3e6355e1d70b6ed47d7850d66fa20d93b9a2c2",
+          "requirements": 4
+        },
+        {
+          "path": "xattr/xattr-tail-n16-t44-r1-kdlock/publications/01/jit.bin",
+          "sha256": "ea7e292ba90ee996ca7d12257da9bf28aebdfb99a5748984bea3e69fb8b89456",
+          "requirements": 4
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 1057269,
+      "drained": true
+    },
+    {
+      "session": "xattr/xattr-tail-n16-t44-r2-kdlock/session.json",
+      "images": [
+        {
+          "path": "xattr/xattr-tail-n16-t44-r2-kdlock/publications/00/jit.bin",
+          "sha256": "ed516788dd5a6219edb2c4fa4a3e6355e1d70b6ed47d7850d66fa20d93b9a2c2",
+          "requirements": 4
+        },
+        {
+          "path": "xattr/xattr-tail-n16-t44-r2-kdlock/publications/01/jit.bin",
+          "sha256": "ea7e292ba90ee996ca7d12257da9bf28aebdfb99a5748984bea3e69fb8b89456",
+          "requirements": 4
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 1069852,
+      "drained": true
+    },
+    {
+      "session": "xattr/xattr-tail-n16-t48-r0-kdlock/session.json",
+      "images": [
+        {
+          "path": "xattr/xattr-tail-n16-t48-r0-kdlock/publications/00/jit.bin",
+          "sha256": "ed516788dd5a6219edb2c4fa4a3e6355e1d70b6ed47d7850d66fa20d93b9a2c2",
+          "requirements": 4
+        },
+        {
+          "path": "xattr/xattr-tail-n16-t48-r0-kdlock/publications/01/jit.bin",
+          "sha256": "ea7e292ba90ee996ca7d12257da9bf28aebdfb99a5748984bea3e69fb8b89456",
+          "requirements": 4
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 1030839,
+      "drained": true
+    },
+    {
+      "session": "xattr/xattr-tail-n16-t48-r1-kdlock/session.json",
+      "images": [
+        {
+          "path": "xattr/xattr-tail-n16-t48-r1-kdlock/publications/00/jit.bin",
+          "sha256": "ed516788dd5a6219edb2c4fa4a3e6355e1d70b6ed47d7850d66fa20d93b9a2c2",
+          "requirements": 4
+        },
+        {
+          "path": "xattr/xattr-tail-n16-t48-r1-kdlock/publications/01/jit.bin",
+          "sha256": "ea7e292ba90ee996ca7d12257da9bf28aebdfb99a5748984bea3e69fb8b89456",
+          "requirements": 4
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 1049550,
+      "drained": true
+    },
+    {
+      "session": "xattr/xattr-tail-n16-t48-r2-kdlock/session.json",
+      "images": [
+        {
+          "path": "xattr/xattr-tail-n16-t48-r2-kdlock/publications/00/jit.bin",
+          "sha256": "ed516788dd5a6219edb2c4fa4a3e6355e1d70b6ed47d7850d66fa20d93b9a2c2",
+          "requirements": 4
+        },
+        {
+          "path": "xattr/xattr-tail-n16-t48-r2-kdlock/publications/01/jit.bin",
+          "sha256": "ea7e292ba90ee996ca7d12257da9bf28aebdfb99a5748984bea3e69fb8b89456",
+          "requirements": 4
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 991221,
+      "drained": true
+    },
+    {
+      "session": "xattr/xattr-tail-n16-t52-r0-kdlock/session.json",
+      "images": [
+        {
+          "path": "xattr/xattr-tail-n16-t52-r0-kdlock/publications/00/jit.bin",
+          "sha256": "ed516788dd5a6219edb2c4fa4a3e6355e1d70b6ed47d7850d66fa20d93b9a2c2",
+          "requirements": 4
+        },
+        {
+          "path": "xattr/xattr-tail-n16-t52-r0-kdlock/publications/01/jit.bin",
+          "sha256": "ea7e292ba90ee996ca7d12257da9bf28aebdfb99a5748984bea3e69fb8b89456",
+          "requirements": 4
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 1014748,
+      "drained": true
+    },
+    {
+      "session": "xattr/xattr-tail-n16-t52-r1-kdlock/session.json",
+      "images": [
+        {
+          "path": "xattr/xattr-tail-n16-t52-r1-kdlock/publications/00/jit.bin",
+          "sha256": "ed516788dd5a6219edb2c4fa4a3e6355e1d70b6ed47d7850d66fa20d93b9a2c2",
+          "requirements": 4
+        },
+        {
+          "path": "xattr/xattr-tail-n16-t52-r1-kdlock/publications/01/jit.bin",
+          "sha256": "ea7e292ba90ee996ca7d12257da9bf28aebdfb99a5748984bea3e69fb8b89456",
+          "requirements": 4
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 1005974,
+      "drained": true
+    },
+    {
+      "session": "xattr/xattr-tail-n16-t52-r2-kdlock/session.json",
+      "images": [
+        {
+          "path": "xattr/xattr-tail-n16-t52-r2-kdlock/publications/00/jit.bin",
+          "sha256": "ed516788dd5a6219edb2c4fa4a3e6355e1d70b6ed47d7850d66fa20d93b9a2c2",
+          "requirements": 4
+        },
+        {
+          "path": "xattr/xattr-tail-n16-t52-r2-kdlock/publications/01/jit.bin",
+          "sha256": "ea7e292ba90ee996ca7d12257da9bf28aebdfb99a5748984bea3e69fb8b89456",
+          "requirements": 4
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 1011169,
+      "drained": true
+    },
+    {
+      "session": "xattr/xattr-tail-n16-t56-r0-kdlock/session.json",
+      "images": [
+        {
+          "path": "xattr/xattr-tail-n16-t56-r0-kdlock/publications/00/jit.bin",
+          "sha256": "ed516788dd5a6219edb2c4fa4a3e6355e1d70b6ed47d7850d66fa20d93b9a2c2",
+          "requirements": 4
+        },
+        {
+          "path": "xattr/xattr-tail-n16-t56-r0-kdlock/publications/01/jit.bin",
+          "sha256": "ea7e292ba90ee996ca7d12257da9bf28aebdfb99a5748984bea3e69fb8b89456",
+          "requirements": 4
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 986961,
+      "drained": true
+    },
+    {
+      "session": "xattr/xattr-tail-n16-t56-r1-kdlock/session.json",
+      "images": [
+        {
+          "path": "xattr/xattr-tail-n16-t56-r1-kdlock/publications/00/jit.bin",
+          "sha256": "ed516788dd5a6219edb2c4fa4a3e6355e1d70b6ed47d7850d66fa20d93b9a2c2",
+          "requirements": 4
+        },
+        {
+          "path": "xattr/xattr-tail-n16-t56-r1-kdlock/publications/01/jit.bin",
+          "sha256": "ea7e292ba90ee996ca7d12257da9bf28aebdfb99a5748984bea3e69fb8b89456",
+          "requirements": 4
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 997271,
+      "drained": true
+    },
+    {
+      "session": "xattr/xattr-tail-n16-t56-r2-kdlock/session.json",
+      "images": [
+        {
+          "path": "xattr/xattr-tail-n16-t56-r2-kdlock/publications/00/jit.bin",
+          "sha256": "ed516788dd5a6219edb2c4fa4a3e6355e1d70b6ed47d7850d66fa20d93b9a2c2",
+          "requirements": 4
+        },
+        {
+          "path": "xattr/xattr-tail-n16-t56-r2-kdlock/publications/01/jit.bin",
+          "sha256": "ea7e292ba90ee996ca7d12257da9bf28aebdfb99a5748984bea3e69fb8b89456",
+          "requirements": 4
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 991810,
+      "drained": true
+    },
+    {
+      "session": "xattr/xattr-tail-n16-t60-r0-kdlock/session.json",
+      "images": [
+        {
+          "path": "xattr/xattr-tail-n16-t60-r0-kdlock/publications/00/jit.bin",
+          "sha256": "ed516788dd5a6219edb2c4fa4a3e6355e1d70b6ed47d7850d66fa20d93b9a2c2",
+          "requirements": 4
+        },
+        {
+          "path": "xattr/xattr-tail-n16-t60-r0-kdlock/publications/01/jit.bin",
+          "sha256": "ea7e292ba90ee996ca7d12257da9bf28aebdfb99a5748984bea3e69fb8b89456",
+          "requirements": 4
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 961963,
+      "drained": true
+    },
+    {
+      "session": "xattr/xattr-tail-n16-t60-r1-kdlock/session.json",
+      "images": [
+        {
+          "path": "xattr/xattr-tail-n16-t60-r1-kdlock/publications/00/jit.bin",
+          "sha256": "ed516788dd5a6219edb2c4fa4a3e6355e1d70b6ed47d7850d66fa20d93b9a2c2",
+          "requirements": 4
+        },
+        {
+          "path": "xattr/xattr-tail-n16-t60-r1-kdlock/publications/01/jit.bin",
+          "sha256": "ea7e292ba90ee996ca7d12257da9bf28aebdfb99a5748984bea3e69fb8b89456",
+          "requirements": 4
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 988107,
+      "drained": true
+    },
+    {
+      "session": "xattr/xattr-tail-n16-t60-r2-kdlock/session.json",
+      "images": [
+        {
+          "path": "xattr/xattr-tail-n16-t60-r2-kdlock/publications/00/jit.bin",
+          "sha256": "ed516788dd5a6219edb2c4fa4a3e6355e1d70b6ed47d7850d66fa20d93b9a2c2",
+          "requirements": 4
+        },
+        {
+          "path": "xattr/xattr-tail-n16-t60-r2-kdlock/publications/01/jit.bin",
+          "sha256": "ea7e292ba90ee996ca7d12257da9bf28aebdfb99a5748984bea3e69fb8b89456",
+          "requirements": 4
+        }
+      ],
+      "jit_status": "PASS",
+      "jit_completions": 972226,
+      "drained": true
+    }
+  ]
+}

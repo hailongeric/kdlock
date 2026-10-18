@@ -39,6 +39,15 @@ covers c01/post64 and `api-pipebytes-query-n16` at 1–8 workers and 12–60 by 
 with three repetitions and Native/TCLock controls. The
 [performance guide](docs/PERFORMANCE.md) retains variation and regression limits.
 
+The original `strcmp` and `strscpy_pad` services now rely on the reviewed caller's
+memory and lifetime guarantees, without helper-code checks, string pre-scans or
+runtime destination checks. The
+[`88bb5a4` taskname/xattr comparison](bench/results/10.176.26.71/bench/taskname-xattr-native-api-20261019/README.md)
+contains 567 validated, drained sessions. At 60 workers the revised KD whole-run rates
+improve over the checked implementation but remain below fresh Native and TCLock
+controls. The report preserves low-count regressions and the separate taskname
+mutation case, which remains unaccepted for delegated execution.
+
 ## Documentation
 
 - [Documentation index](docs/README.md) and [project guide](docs/PROJECT_GUIDE.md)

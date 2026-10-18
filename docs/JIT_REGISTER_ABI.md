@@ -61,8 +61,10 @@ and drained but failed measured delegation. The
 [validation record](../bench/results/10.176.26.71/bench/taskname-xattr-20261018/DEVELOPMENT.md)
 retains those source identities. The current version without helper-specific
 checks passed [focused correctness validation](VALIDATION.md#taskname-and-xattr-helper-validation)
-through candidate 6; performance remains pending. Its mutation control disabled
-helper preparation and recorded zero JIT, so it does not reverse the earlier
+through candidate 6 and completed the
+[`88bb5a4` standard-grid comparison](../bench/results/10.176.26.71/bench/taskname-xattr-native-api-20261019/README.md).
+The separate mutation control disabled helper preparation and recorded zero JIT,
+so it does not reverse the earlier
 delegation failure. See [API admission](design/admission.md#original-strscpy_pad-writing-service).
 
 ### Mutex clobber and outer cookie
@@ -242,8 +244,9 @@ they add no wrapper argument or exit number. `strcmp` receives saved DI/SI and
 stores its 32-bit integer result in saved AX. `strscpy_pad` receives DI/SI/DX and
 stores its full-width result in AX. Its translation summary describes count 64
 and all 64 destination bytes, including native truncation and padding. The
-summary discards caller-saved register facts and retains callee-saved registers
-and the returned SP. The source CALL still writes its actual return-address
+summary discards facts for registers the call may overwrite (caller-saved) and
+retains registers the calling agreement requires it to preserve (callee-saved),
+along with the returned SP. The source CALL still writes its actual return-address
 word, and runtime still reads and consumes that word. Only for the `strcmp`
 and `strscpy_pad` services used by selected reviewed C callers does analysis
 record these temporary control bytes separately from
@@ -256,8 +259,9 @@ refinement for partially overlapping CALL-return bytes remains archived. This is
 a caller obligation, not a runtime pointer check or a promise for arbitrary C
 functions. The simplified implementation passed
 [focused correctness checks](VALIDATION.md#taskname-and-xattr-helper-validation)
-through candidate 6; the performance comparison remains pending.
-See the
+through candidate 6. The
+[`88bb5a4` performance comparison](../bench/results/10.176.26.71/bench/taskname-xattr-native-api-20261019/README.md)
+is complete. See the
 [selected-caller contract](design/admission.md#original-call-word-aliases).
 
 The original caller supplies valid stable ordinary memory and, for the writer,
@@ -279,8 +283,10 @@ its pushed word and earlier effects. See the
 Neither API summary proves that incoming arithmetic flags are unused by the
 helper; address guards cannot infer that from a service declaration.
 
-The v10 implementation passed focused correctness checks; performance
-measurements remain pending. Earlier
+The v10 implementation passed focused correctness checks and completed all 567
+sessions of the [standard-grid comparison](../bench/results/10.176.26.71/bench/taskname-xattr-native-api-20261019/README.md)
+with validation and drain. KD remains slower than Linux Native and TCLock at
+60 workers in all three measured workloads. Earlier
 [functional checks](../bench/results/10.176.26.71/bench/taskname-xattr-20261018/DEVELOPMENT.md)
 and the [comparison record](../bench/results/10.176.26.71/bench/taskname-xattr-20261018/README.md)
 belong to the frozen `c79d84f` checked implementation. Its probe for native return

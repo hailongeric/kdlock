@@ -70,8 +70,10 @@ These source proofs do not establish support for the complete procfs task-name
 operation. The current extracted taskname caller uses the original API service
 without helper-specific checks and passed
 [focused correctness validation](../VALIDATION.md#taskname-and-xattr-helper-validation)
-through candidate 6. Performance remains pending. Its 20% mutation control
-disabled helper preparation and recorded zero JIT, so it establishes correctness
+through candidate 6. The
+[`88bb5a4` standard-grid comparison](../../bench/results/10.176.26.71/bench/taskname-xattr-native-api-20261019/README.md)
+is complete. The separate 20% mutation control disabled helper preparation and
+recorded zero JIT, so it establishes correctness
 only. The preceding
 `c79d84f` checked implementation completed delegated bodies in the read-only
 functional check; its 20% mutation case was correct but failed measured
@@ -290,10 +292,13 @@ retain all allowed continuations for uncertain return words and verify that an
 unlisted actual target exits the JIT.
 
 The negotiated version 10 string APIs have a separate, explicit selected-caller
-contract. The caller and its helpers do not inspect, retain pointers into, or
-mutate those services' temporary return-token and helper scratch storage below
-the stack pointer before CALL. The kernel C calling convention has no red zone
-(reserved caller-local storage below that stack pointer), so normal live locals,
+contract. Through ordinary data accesses, the caller and its helpers do not
+inspect, retain pointers into, or mutate those services' temporary return-token
+and discarded helper-stack storage below the stack pointer before CALL. This
+storage holds temporary control state, not caller objects. Normal CALL/RET
+handling and a helper's own internal stack use remain unchanged. The kernel C
+calling convention has no red zone (reserved caller-local storage below that
+stack pointer), so normal live locals,
 list nodes, heap objects and string buffers satisfy this distinction. Merely
 passing valid strings does not establish the promise: code that inspects raw task
 stack bytes, escapes a control-slot pointer, or uses assembly to observe that
@@ -323,7 +328,8 @@ captured kernel/module bytes and requires the copy's RET dispatch to reach its
 original caller continuation and terminal unlock, without an address guard.
 The simplified version passed these focused checks through candidate 6; see the
 [validation record](../VALIDATION.md#taskname-and-xattr-helper-validation).
-Performance measurements remain pending.
+The [completed performance comparison](../../bench/results/10.176.26.71/bench/taskname-xattr-native-api-20261019/README.md)
+records `88bb5a4` separately from the checked-helper baseline.
 
 #### Checked spin pointer loads
 
@@ -596,10 +602,12 @@ Ordinary captured-register and context-address admission remains active. Context
 addresses refer to task or processor state that cannot safely be treated as
 ordinary shared data. The existing 256-byte static screening span remains an
 analysis rule, not a runtime string-length limit or proof that arbitrary
-pointers are safe. Loss of address facts through widening still refuses the
-body. Neither string service supplies a source-flags proof for an address guard:
-without inspecting the helper, admission cannot assume that it overwrites every
-incoming arithmetic flag before use. Such a guard must have an independent
+pointers are safe. If analysis can no longer bound every possible address value,
+the resulting widened value still causes refusal. An address guard needs proof
+that source instructions overwrite incoming arithmetic flags before reading
+them. Neither string service supplies that proof: without inspecting the helper,
+admission cannot assume that it overwrites every incoming arithmetic flag before
+use. Such a guard must have an independent
 proof from the original source instructions or remain refused.
 
 Both string services require one top-level physical lock hold. A source graph
@@ -620,8 +628,11 @@ not evidence that an entire benchmark body completed in generated code.
 
 Version 10 passed [focused correctness validation](../VALIDATION.md#taskname-and-xattr-helper-validation)
 through candidate 6, including valid 300-character strings and all eight xattr
-controls. Performance measurements remain pending. The preceding
-implementation, frozen in `c79d84f`, performed helper and string checks and has
+controls. The
+[`88bb5a4` comparison](../../bench/results/10.176.26.71/bench/taskname-xattr-native-api-20261019/README.md)
+completed all 567 sessions with validation and drain. KD remains slower than
+Linux Native and TCLock at 60 workers in all three measured workloads. The
+preceding implementation, frozen in `c79d84f`, performed helper and string checks and has
 separate [functional receipts](../../bench/results/10.176.26.71/bench/taskname-xattr-20261018/DEVELOPMENT.md).
 Its candidate 10 string probe completed 6,400,000 operations, with 1,292,047
 matching generated entries and completed bodies in the cold phase. An over-limit
@@ -646,10 +657,10 @@ Translation must know that the count is 64 and that the destination is one
 memory-effect summary and protect saved control state; they are not runtime
 buffer checks. Both possible 64-byte argument spans still pass ordinary
 context-address analysis. Unsupported counts, unknown frame relationships and
-widened address facts remain refused. The original caller owns source validity
-and lifetime, keeps the source outside the waiter's stack, and supplies a live
-local destination disjoint from the source and
-saved CALL/control words, as required by this API use. Taskname declares these
+address values that analysis can no longer bound remain refused. The original
+caller owns source validity and lifetime, keeps the source outside the waiter's
+stack, and supplies a live local destination disjoint from the source and saved
+CALL/control words, as required by this API use. Taskname declares these
 properties next to its unchanged call.
 
 The helper is selected by its original kernel symbol. No phase inspects its
@@ -659,13 +670,14 @@ described above. There is no preliminary string scan or separate
 helper-specific fallback. Execution invokes the original helper with its
 original arguments, under the same common owner/frame/return-continuation
 protocol as other services. Truncation runs through the original API instead
-of causing a KD-specific rejection. This service supplies no source-flags proof
-to an address guard.
+of causing a KD-specific rejection. This service does not prove that incoming
+arithmetic flags are overwritten before use, as an address guard requires.
 
 After the service, analysis retains the virtual CALL write, invalidates every
-one of the 64 destination bytes, drops caller-saved register facts and preserves
-the callee-saved registers and returned stack pointer. A possible destination
-alias still invalidates overlapping facts. The caller cannot observe the
+one of the 64 destination bytes, drops facts for registers the call may overwrite,
+and preserves those the calling agreement requires it to keep, along with the
+returned stack pointer. A possible destination alias still invalidates overlapping
+facts. The caller cannot observe the
 helper's discarded temporary stack storage: the helper runs on the executor's
 stack. This does not declare arbitrary waiter memory private or read-only.
 The entry uses immutable images. General writing helpers, including `memcpy`,
@@ -678,11 +690,13 @@ register initialization. Version 10 passed read-only taskname correctness with
 returned KD bodies through candidate 6. Its 20% mutation run disabled helper
 preparation and recorded zero JIT; it is a correctness control, not a delegation
 pass. See the [current validation record](../VALIDATION.md#taskname-and-xattr-helper-validation).
-Performance remains pending. In the preceding
+The [completed comparison](../../bench/results/10.176.26.71/bench/taskname-xattr-native-api-20261019/README.md)
+measures read-only taskname and xattr tail searches; it does not establish
+mutation delegation. In the preceding
 `c79d84f` implementation, its 16-worker read-only check completed 3,200,000
 operations with 3,194,222 returned delegated bodies. Linux Native, TCLock and KD
 passed data and drain checks with 20% mutations, but KD's nine preparation
 completions were followed by zero measured completions. That strict measured-
 delegation check remains failed. The [validation record](../../bench/results/10.176.26.71/bench/taskname-xattr-20261018/DEVELOPMENT.md)
-retains those source-specific results and earlier failures; new performance
-results must identify the revised version separately.
+retains those source-specific results and earlier failures; the completed
+comparison identifies the revised `88bb5a4` version separately.

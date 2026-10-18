@@ -10,8 +10,9 @@ The **whole-run median** is the middle of three repetition rates, each measured
 over its full timed interval. A ratio of 2× means twice the reference rate;
 0.286× means 28.6% of that rate, or 71.4% slower. A **JIT** (just-in-time compiled)
 body counts as returned only after delegated execution reaches its matching
-unlock and completes the return protocol. `NO_JIT` means no such bodies were
-returned in that measurement. **Drained** means all requests and their required
+unlock and completes the return protocol. `NO_JIT` means no generated body was
+entered during measurement; `PARTIAL_JIT` means bodies were entered but none
+completed the return protocol. **Drained** means all requests and their required
 references and acknowledgements finished. The
 [terminology guide](TERMINOLOGY.md) defines the remaining lock and evidence terms.
 
@@ -29,20 +30,44 @@ TCLock). It uses the regular 64-vCPU VM and collector 63.
 
 ## Taskname and xattr comparison
 
-The historical `c79d84f` taskname/xattr checked-helper implementation has
-[focused returned-body validation](VALIDATION.md#taskname-and-xattr-helper-validation).
-Its [Native/TCLock/KD standard-grid comparison](../bench/results/10.176.26.71/bench/taskname-xattr-20261018/README.md)
-completed all 567 sessions, with 152 KD sessions returning delegated bodies and
-37 KD sessions recording no JIT entry. Those execution states remain separate.
-The current revision removes
-helper instruction checks, argument scans and runtime destination checks from
-`strcmp` and `strscpy_pad`, relying on their original C caller contracts. Fresh
-focused VM checks passed for read-only taskname and all eight xattr controls;
-the [new comparison](../bench/results/10.176.26.71/bench/taskname-xattr-native-api-20261019/README.md)
-is pending. The separate 20% taskname mutation control was correct but returned
-no delegated bodies. Correct delegation does not establish a throughput gain.
-Both versions retain the selected KD mutex protocol;
-their timings must not be pooled.
+Revision `88bb5a4` removes helper instruction checks, argument scans and runtime
+destination checks from `strcmp` and `strscpy_pad`, relying on their original C
+caller contracts. Its [Native/TCLock/KD comparison](../bench/results/10.176.26.71/bench/taskname-xattr-native-api-20261019/README.md)
+completed all 567 sessions on the standard grid. The 189 KD sessions include
+167 with returned delegated bodies and 22 with no generated-code entry. These
+execution states remain separate; mixed repetitions do not supply a pooled
+three-run median. All sessions passed evidence replay and drained.
+
+At 60 workers, median whole-run throughput in Mops/s is:
+
+| Workload | Fresh Linux Native | Fresh TCLock | Current KD | KD / Native | KD / TCLock |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Taskname, read-only | 3.754 | 5.024 | 2.460 | 0.655× | 0.490× |
+| Xattr tail, 16 attributes, 64-byte values | 2.200 | 2.414 | 0.483 | 0.220× | 0.200× |
+| Xattr tail, 128 attributes, 64-byte values | 0.564 | 0.603 | 0.088 | 0.156× | 0.146× |
+
+Current KD remains below both fresh controls at 60 workers. Its rates there are
+2.178×, 4.184× and 1.910× the separate
+[`c79d84f` checked-helper baseline](../bench/results/10.176.26.71/bench/taskname-xattr-20261018/README.md),
+respectively. This is a comparison of observed whole-run rates, not a measurement
+of the isolated cost of helper checks. Returned-body shares also changed: for
+xattr with 128 attributes, the 60-worker share rose from 29.23% to 91.03%.
+
+Low-count regressions remain visible. At four workers, xattr with 16 attributes
+fell from 2.659 to 0.597 Mops/s while its returned-body share changed from 0.03%
+to 98.41%; five workers also regressed. The
+[full-grid tables](../bench/results/10.176.26.71/bench/taskname-xattr-native-api-20261019/tables.md)
+retain these outcomes, peak rates and status-based exclusions. The
+[current full-grid CSV](../bench/results/10.176.26.71/bench/taskname-xattr-native-api-20261019/current-full-grid.csv)
+and [historical KD CSV](../bench/results/10.176.26.71/bench/taskname-xattr-native-api-20261019/historical-kd-full-grid.csv)
+also retain the minimum and maximum repetition rates.
+Each delegated comparison still crosses the common service dispatcher; the
+report explains that remaining work without claiming a profiled cost breakdown.
+
+[Focused checks](VALIDATION.md#taskname-and-xattr-helper-validation) passed for
+read-only taskname and all eight xattr controls. The separate 20% taskname
+mutation control was correct but returned no delegated bodies. Both revisions
+retain the selected KD mutex protocol; their timings are never pooled.
 
 ## Current mutex result
 

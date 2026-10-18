@@ -108,7 +108,9 @@ service, address-guard recovery and mutex instruction-marker probes also passed.
 A separate 20% taskname mutation control with preparation disabled passed
 correctness on Linux Native, TCLock and KD but recorded zero KD generated bodies;
 it does not establish delegation or supersede the earlier strict failure. The
-revised performance comparison remains pending.
+[`88bb5a4` standard-grid comparison](../bench/results/10.176.26.71/bench/taskname-xattr-native-api-20261019/README.md)
+completed all 567 sessions with validation and drain. KD remains slower than
+Linux Native and TCLock at 60 workers in all three measured workloads.
 
 The preceding
 `c79d84f` implementation passed the ordinary taskname shell's 16-worker read-only
@@ -119,8 +121,8 @@ checks at n16/n128 and 16 workers passed with matching entries/completions,
 correct results and clean teardown. Earlier address-guard and string-preflight
 probes also passed, but the removed string preflight is not current behavior.
 These [functional results](../bench/results/10.176.26.71/bench/taskname-xattr-20261018/DEVELOPMENT.md)
-remain tied to their source versions; the pending comparison must report the
-revised implementation separately.
+remain tied to their source versions; the completed comparison reports the
+revised `88bb5a4` implementation separately.
 
 Install [the pinned requirements](requirements.txt) in a guest Python virtual
 environment. The translator command uses positional arguments:

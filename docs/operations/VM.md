@@ -153,7 +153,12 @@ remain. Version alone does not prove a feature is available. See the
 
 The v10 implementation passed
 [focused correctness checks](../VALIDATION.md#taskname-and-xattr-helper-validation)
-through candidate 6; performance measurements remain pending. Preserve the frozen `c79d84f`
+through candidate 6. The
+[`88bb5a4` standard-grid comparison](../../bench/results/10.176.26.71/bench/taskname-xattr-native-api-20261019/README.md)
+completed all 567 sessions with validation and drain, and its per-session kernel
+logs contained no recorded fault matches. This does not establish taskname
+mutation delegation or performance parity with Linux Native or TCLock.
+Preserve the frozen `c79d84f`
 checked implementation's logs and measurements under their existing source
 identity. Its preliminary string-length check and native-fallback probe are
 historical behavior. New probes must validate original API results, returned

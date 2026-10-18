@@ -156,10 +156,10 @@ change the current generation's metadata.
 An address-guard exit validates its source target again under the active frame's
 source lease before native transfer. A typed string service validates ownership
 and saves the pending CALL's return state before invocation. The original C
-caller supplies argument validity and lifetime; KD performs no helper-specific
-code, string or buffer checks. A failed address guard disables the stable entry
-under the same publication gate that installs images, preventing a concurrent
-upload from reenabling delegation.
+caller supplies argument validity and lifetime; publication and execution perform
+no helper-specific code, string or buffer checks. A failed address guard disables
+the stable entry under the same publication gate that installs images, preventing
+a concurrent upload from reenabling delegation.
 Already admitted frames keep their own code, exact owners and source references
 until retirement. All generations share the existing
 64-block pool and remain allocated until session teardown; there is no in-session
@@ -168,9 +168,10 @@ ordinary spin/rwlock entries that have never made this transition.
 
 Source-code pins do not keep arbitrary string allocations alive or stop writers.
 The string-service caller must establish both properties under its physical
-source lock. The writing service's destination is restricted to the original
-waiter's live local frame; checks precede all writes. These limits preserve the
-existing ownership and retirement rules rather than introducing a new lock API.
+source lock. Translation models a known 64-byte local destination; the reviewed
+caller supplies its validity and lifetime. Runtime validates common ownership
+and saved return state before invoking the helper. These obligations preserve
+the existing ownership and retirement rules without a new lock API.
 
 The source limit is 64 distinct modules, with no hook-time allocation; each
 read is limited to 256 KiB. Built-in resident ranges need no module ref. These

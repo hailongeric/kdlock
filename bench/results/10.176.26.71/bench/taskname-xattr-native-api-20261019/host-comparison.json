@@ -1,0 +1,342 @@
+{
+  "passed": true,
+  "checks": {
+    "before_one_vm": true,
+    "before_64_matching_vcpu_pins": true,
+    "before_service_cpu_63": true,
+    "after_one_vm": true,
+    "after_64_matching_vcpu_pins": true,
+    "after_service_cpu_63": true,
+    "same_vm_pid": true,
+    "same_vm_arguments": true,
+    "same_frequency_policy": true
+  },
+  "input_sha256": {
+    "before": "aafe02580ed6bc9b85c48a77542359e96e7627c8366727b47ed31ee40f20e219",
+    "after": "3ac78cdfa5000ced71600252fef158cf97d7dd97c3caffc6f2a88fc02245cd34"
+  },
+  "frequency_policies": {
+    "policy11": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    },
+    "policy8": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    },
+    "policy58": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    },
+    "policy48": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    },
+    "policy38": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    },
+    "policy6": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    },
+    "policy28": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    },
+    "policy56": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    },
+    "policy18": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    },
+    "policy46": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    },
+    "policy36": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    },
+    "policy4": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    },
+    "policy26": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    },
+    "policy54": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    },
+    "policy16": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    },
+    "policy44": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    },
+    "policy34": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    },
+    "policy2": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    },
+    "policy62": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    },
+    "policy24": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    },
+    "policy52": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    },
+    "policy14": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    },
+    "policy42": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    },
+    "policy32": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    },
+    "policy0": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    },
+    "policy60": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    },
+    "policy22": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    },
+    "policy50": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    },
+    "policy12": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    },
+    "policy40": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    },
+    "policy9": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    },
+    "policy30": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    },
+    "policy59": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    },
+    "policy20": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    },
+    "policy49": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    },
+    "policy10": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    },
+    "policy39": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    },
+    "policy7": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    },
+    "policy29": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    },
+    "policy57": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    },
+    "policy19": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    },
+    "policy47": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    },
+    "policy37": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    },
+    "policy5": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    },
+    "policy27": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    },
+    "policy55": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    },
+    "policy17": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    },
+    "policy45": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    },
+    "policy35": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    },
+    "policy3": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    },
+    "policy63": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    },
+    "policy25": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    },
+    "policy53": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    },
+    "policy15": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    },
+    "policy43": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    },
+    "policy33": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    },
+    "policy1": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    },
+    "policy61": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    },
+    "policy23": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    },
+    "policy51": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    },
+    "policy13": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    },
+    "policy41": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    },
+    "policy31": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    },
+    "policy21": {
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000"
+    }
+  },
+  "scope": "Read-only offline comparison of before/after captures; no host tuning or timing test.",
+  "limitation": "Matching frequency policy does not prove equal effective frequencies or load during measurements."
+}

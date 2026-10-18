@@ -106,7 +106,8 @@ cases refuse known full or partial observers, lost control identities and
 exhausted analysis budgets. Ordinary calls and data writes remain conservative.
 Decoded `memcpy` retains ordinary analysis and every copy effect; no separate
 copy classification or special RET extension is tested as maintained behavior.
-Candidate 5 validation is pending. The
+Focused validation passed through candidate 6, whose production code is unchanged
+from candidate 5; only one regression-test operand was corrected. The
 [development record](../bench/results/10.176.26.71/bench/taskname-xattr-native-api-20261019/DEVELOPMENT.md)
 retains earlier failures and explains why the candidate 4 assertions requiring
 refusal without a copy classification were unjustified. Test coverage

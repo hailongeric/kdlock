@@ -8,8 +8,9 @@ Candidate 6 passed the focused unit coverage and final live acceptance for
 read-only taskname, all eight xattr controls and three provider probes. Its
 20% mutation controls passed correctness with zero KD JIT entries/completions;
 that is not mutation delegation acceptance. Earlier failures remain recorded
-below. The full performance matrix remains pending; the historical baseline
-does not establish this revision's performance.
+below. The completed 567-session performance matrix for frozen `88bb5a4` is
+reported in [README.md](README.md); it is separate from these development attempts
+and the historical baseline.
 
 ## Candidate 1
 
@@ -25,7 +26,7 @@ The frozen guest source was under
 The copied `v10-candidate1-units.log` has SHA-256
 `42840e893dc3715bf60348b51bc546695ae1d8ff4acf41e722b39334f97428f6`.
 The complete build logs, source manifest and command receipts are retained in
-`checks.tar.gz` in the [archive described below](#preserved-evidence).
+`checks.tar.gz` in the [archive described below](#preserved-evidence-through-candidate-2).
 
 Selected passing evidence from the unit log:
 
@@ -538,6 +539,28 @@ The host audit matched all 28 session status/drain/retirement records against th
 health receipt. Passing the final focused checks does not relabel earlier failed
 batches or establish performance parity, mutation delegation, whole-kernel
 replacement or arbitrary caller safety.
+
+## Completed standard-grid round
+
+Frozen `88bb5a4d9b52eec8ed52982ea4039b981d0e5814` completed the full 567-session
+comparison: taskname read-only and xattr tail n16/n128 with 64-byte values, all
+three backends, the standard 21 worker counts and three repetitions. All sessions
+validated and drained. KD recorded 167 `PASS` sessions, 22 `NO_JIT`, no
+`PARTIAL_JIT`, 303,233,704 returned bodies and zero address-guard exits. No fault
+matches appeared in the 567 per-session kernel logs.
+
+The [final report](README.md) provides fresh-control and separate historical
+comparisons, full-grid tables/figures, reproduction commands and the
+[archive audit](archive-audit.json). At 60 workers, whole-run KD throughput was
+2.178×, 4.184× and 1.910× the c79 baseline for taskname, xattr n16 and xattr n128,
+respectively, while remaining below both fresh controls. The n16 four-worker
+result regressed from 2.659 to 0.597 Mops/s as returned share changed from 0.03%
+to 98.41%; this failure remains visible. Fifty-five historical points had matching
+complete status/settings groups; eight were excluded.
+
+This round does not change the earlier candidate outcomes or the mutation
+limitation. The 20% mutation runs above remain correctness-only evidence with
+zero KD JIT bodies, and their earlier strict delegation failure remains recorded.
 
 ## Preserved evidence through candidate 2
 

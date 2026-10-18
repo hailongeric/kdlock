@@ -1,0 +1,15 @@
+{
+  "name": "image-audit",
+  "argv": [
+    "/root/kdlock-translation-venv-20261019/bin/python3",
+    "/tmp/audit-api-images.py",
+    "--base",
+    "/mnt/kdlock-builds/taskname-xattr-native-api-88bb5a4",
+    "--output",
+    "/mnt/kdlock-builds/taskname-xattr-native-api-88bb5a4/api-images.json"
+  ],
+  "timeout": 180,
+  "start_ns": 1792361124157359397,
+  "returncode": 0,
+  "end_ns": 1792361124573571749
+}

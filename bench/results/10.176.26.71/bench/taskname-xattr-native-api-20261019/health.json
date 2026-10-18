@@ -1,0 +1,22 @@
+{
+  "idle": true,
+  "boot_id": "b65f0205-c8f9-4385-8b13-039cbce243a6",
+  "kernel_release": "6.1.159-kdclobber2",
+  "source_checks": [
+    {
+      "kind": "taskname",
+      "source_files": 239,
+      "source_manifest_sha256": "bd780605f43bf5d2947cb10db6136afb7cb7665bcb83292b1f50c57b66311782"
+    },
+    {
+      "kind": "xattr",
+      "source_files": 236,
+      "source_manifest_sha256": "0fa31caad419922a5b276713124f67c9bafb11d0e4fe9a597102d75ffba2aa83"
+    }
+  ],
+  "completed_sessions": 567,
+  "per_session_kernel_logs": 567,
+  "per_session_kernel_faults": [],
+  "replay_sha256": "ca29dc4dc8595c051d13fcaf68860927e92730239dbc1c6724764aef231d5af9",
+  "dmesg_scope": "Final ring retained; fault checks cover every session kernel.log"
+}

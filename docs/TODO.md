@@ -202,10 +202,22 @@ taskname, all eight xattr controls and the string/exit probes; the
 [current development record](../bench/results/10.176.26.71/bench/taskname-xattr-native-api-20261019/DEVELOPMENT.md)
 preserves the failed intermediate checks and the final receipts. See the
 [selected-caller contract](design/admission.md#original-call-word-aliases).
-The standard-grid performance comparison remains pending. The 20% taskname
-mutation control is correct but has no returned delegated bodies; its delegation
-acceptance remains open. Historical checked-helper timings do not measure these
-changed inputs.
+The [`88bb5a4` standard-grid comparison](../bench/results/10.176.26.71/bench/taskname-xattr-native-api-20261019/README.md)
+is complete: 567 correct, fully drained sessions cover read-only taskname and
+xattr tail queries at 16 and 128 attributes, with fresh Linux Native and TCLock
+controls. KD returned generated bodies in 167 of its 189 sessions; 22 recorded
+no generated entry. These execution outcomes remain separate in the report.
+KD's whole-run throughput at 60 workers is below both comparators in all three
+cases. Explaining that remaining performance gap requires profiling; the
+comparison alone does not isolate the cost of service dispatch or locking.
+
+The 20% taskname mutation control is correct but has no returned delegated
+bodies; its delegation acceptance remains open, and the earlier strict failure
+is retained. Xattr front, miss and size-only queries have correctness evidence
+but no separate throughput matrix in this round. Full live-task/procfs
+integration and arbitrary-caller safety also remain unvalidated. Historical
+checked-helper timings retain their own source identity and are not pooled
+with this revision.
 
 ## P1: Evidence and services
 

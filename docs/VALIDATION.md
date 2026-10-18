@@ -13,8 +13,17 @@ terms used in the receipts below.
 The current version removes helper-specific instruction checks, string scans and
 runtime destination checks. It relies on the original callers' memory and
 lifetime guarantees while retaining KD ownership and saved-return bookkeeping.
-Focused correctness validation passed through candidate 6; the revised
-performance comparison remains pending. The [current development record](../bench/results/10.176.26.71/bench/taskname-xattr-native-api-20261019/DEVELOPMENT.md)
+Focused correctness validation passed through candidate 6. The subsequent
+[`88bb5a4` comparison](../bench/results/10.176.26.71/bench/taskname-xattr-native-api-20261019/README.md)
+completed all 567 standard-grid sessions with successful evidence replay and
+full drain. Among its 189 KD sessions, 167 returned delegated bodies and 22 had
+no generated-code entry; none entered without a completion. All 567 session
+kernel logs had no matched fault reports. The independent archive audit verified
+263 source paths against the exact Git revision, 16 binaries, 189 empty source
+retirement records and 315 captured images without pointer or stack-alias guards.
+The comparison preserves remaining performance gaps and low-count regressions.
+
+The [current development record](../bench/results/10.176.26.71/bench/taskname-xattr-native-api-20261019/DEVELOPMENT.md)
 retains each frozen candidate's checks and failures. Candidate 2 passed all 11
 focused unit programs/drivers, the 300-character `strcmp` probe, the spin
 address-guard and mutex-marker probes, and read-only taskname correctness on

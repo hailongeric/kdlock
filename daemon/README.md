@@ -138,8 +138,10 @@ define the caller's obligations and separate writing effects.
 
 The current v10 implementation passed
 [focused VM correctness checks](../docs/VALIDATION.md#taskname-and-xattr-helper-validation)
-through candidate 6. Performance measurements remain pending; this is not a
-full-suite or whole-kernel validation claim.
+through candidate 6 and completed all 567 sessions of the
+[`88bb5a4` standard-grid comparison](../bench/results/10.176.26.71/bench/taskname-xattr-native-api-20261019/README.md)
+with validation and drain. This does not establish mutation-case delegation,
+performance parity with Native/TCLock, a full-suite pass or whole-kernel support.
 The frozen `c79d84f` checked implementation's
 [functional receipts](../bench/results/10.176.26.71/bench/taskname-xattr-20261018/DEVELOPMENT.md)
 and [comparison record](../bench/results/10.176.26.71/bench/taskname-xattr-20261018/README.md)

@@ -54,8 +54,11 @@ Version 10 candidate 6 passed all eight xattr controls: front hit, tail hit,
 missing name and size-only query, each with 16 and 128 attributes, 64-byte values
 and 16 workers. Every control returned correct results and recorded matching
 generated-body entries and completions. The tail/front value queries retained
-the real `memcpy` copy. These are focused correctness and delegation checks;
-the revised Native/TCLock/KD performance comparison remains pending.
+the real `memcpy` copy. These focused correctness and delegation checks are
+separate from the completed
+[`88bb5a4` Native/TCLock/KD comparison](../results/10.176.26.71/bench/taskname-xattr-native-api-20261019/README.md).
+That round measures tail queries at n16/n128 across the standard worker grid;
+front, miss and size-only cases remain correctness controls.
 
 In the preceding implementation frozen in `c79d84f`, candidate 11 passed all eight
 front/tail/miss/size combinations at n16/n128, v64 and 16 workers. Each recorded

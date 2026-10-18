@@ -61,8 +61,9 @@ remain available for other translated code.
 
 The current version without helper-specific checks passed
 [focused correctness checks](../docs/VALIDATION.md#taskname-and-xattr-helper-validation)
-through candidate 6; performance measurements remain pending. Read-only KD
-taskname returned delegated bodies. Its 20% mutation control used no helper
+through candidate 6 and completed the
+[`88bb5a4` standard-grid comparison](../bench/results/10.176.26.71/bench/taskname-xattr-native-api-20261019/README.md).
+Read-only KD taskname returned delegated bodies. Its 20% mutation control used no helper
 preparation and recorded zero JIT, so it establishes correctness only.
 The frozen `c79d84f` version used helper checks: its read-only taskname check
 completed delegated bodies, while its 20% mutation check produced correct

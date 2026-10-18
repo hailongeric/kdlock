@@ -63,7 +63,9 @@ three backends but recorded zero KD generated bodies. It validates the resulting
 names and padding, not mutation-case delegation, and does not supersede earlier
 strict delegation failures. The
 [current development record](../../bench/results/10.176.26.71/bench/taskname-xattr-native-api-20261019/DEVELOPMENT.md)
-records the focused checks; the revised performance comparison remains pending.
+records the focused checks. The separate
+[`88bb5a4` standard-grid comparison](../../bench/results/10.176.26.71/bench/taskname-xattr-native-api-20261019/README.md)
+is complete for read-only taskname; mutation-case delegation remains unaccepted.
 
 In the preceding implementation frozen in `c79d84f`, the ordinary shell passed its 16-worker
 read-only check with 3,200,000 operations and 3,194,222 matching generated

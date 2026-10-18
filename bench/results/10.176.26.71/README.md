@@ -5,6 +5,13 @@ reader/writer semaphore (rwsem) waiting implementation from `c21345b`. See
 [current performance](../../../docs/PERFORMANCE.md) for results and retained
 regressions, and [terminology](../../../docs/TERMINOLOGY.md) for execution and
 measurement definitions.
+The [`88bb5a4` taskname/xattr comparison](bench/taskname-xattr-native-api-20261019/README.md)
+contains 567 validated, drained sessions after removal of helper-specific
+checks. It compares fresh Native/TCLock/KD samples on all 21 worker counts and
+separately retains the [checked-helper baseline](bench/taskname-xattr-20261018/README.md).
+Higher 60-worker KD whole-run rates than that baseline coexist with low-count regressions
+and a remaining gap to both fresh controls.
+
 The [instruction-exit receipt](tests/native-instruction-exit-20261018/README.md)
 records the later checked waiter-continuation feature and its failures/final
 correctness checks separately from accepted throughput measurements.

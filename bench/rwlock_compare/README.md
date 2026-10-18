@@ -78,7 +78,9 @@ all three backends but recorded zero KD generated bodies. Disabling preparation
 for that control does not establish delegated execution or supersede the
 earlier failed strict delegation check. The
 [current development record](../results/10.176.26.71/bench/taskname-xattr-native-api-20261019/DEVELOPMENT.md)
-retains these outcomes. The revised performance comparison remains pending.
+retains these outcomes. The separate
+[`88bb5a4` standard-grid comparison](../results/10.176.26.71/bench/taskname-xattr-native-api-20261019/README.md)
+is complete for read-only taskname; it does not establish mutation-case delegation.
 
 In the preceding `c79d84f` implementation, the ordinary shell's 16-worker
 read-only check completed 3,200,000 operations and 3,194,222 delegated bodies.
