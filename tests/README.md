@@ -8,6 +8,10 @@ keeps the live probe separate from unit fixtures and returned-body JIT benchmark
 The [provider lifecycle fixture](unit/infrastructure/test_provider_lifecycle.py)
 checks publication after runtime initialization, failed-start cleanup, and device
 removal before teardown in ordinary and SELFTEST control flow.
+The [ordinary rwsem probe](kernel/rwsem/README.md) checks sleeping reader/writer
+semantics, cancellation, trylocks and downgrade on the selected KD physical
+mutex. Proc snapshot and rwsem runner checks are in `bench/rwlock_compare/test_bench.py`;
+full procfs/mmap integration is outside these checks.
 
 Build and run all checks only in the recovery guest on `10.176.26.71`. Use the
 [project guide](../docs/PROJECT_GUIDE.md) for setup and

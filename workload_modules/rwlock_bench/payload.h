@@ -4,7 +4,9 @@
 
 /* Explicitly configured register-only post-work, matching the spin suite. */
 #include "post_work.h"
-#ifdef RB_HASH
+#ifdef RB_SNAPSHOT_PAYLOAD
+#include "snapshot_payload.h"
+#elif defined(RB_HASH)
 /* Reuse the existing TCLock RCUHT move body and full structural oracle. Only
  * its locking shell changes; keys, linked-list stores and outcome accounting
  * stay identical to the earlier KD/TCLock hash comparison. */

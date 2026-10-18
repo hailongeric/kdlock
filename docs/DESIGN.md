@@ -8,6 +8,9 @@ code, and the lock holder runs the generated code through the JIT engine.
 KD supports spinlocks, ordinary mutexes and read-write locks on x86_64. Callers
 use explicit KD APIs, built against the recorded caller-clobber kernel interfaces.
 Loading the provider does not intercept other Linux locks.
+The separate [sleeping rwsem](design/rwsem_implementation.md) uses ordinary KD
+physical locking and executes both reader and writer bodies locally. It does
+not add another JIT ABI or replace the kernel's mmap rwsem.
 
 ## Terms used in these guides
 
@@ -62,6 +65,8 @@ Each lock type has its own ownership rules:
   See the [KD-only object and API contract](design/kd_only_mutex.md).
 - KD rwlock uses a reader/writer count and a KD spin gate. Readers run locally;
   every writer must exclude readers, whether it runs natively or through JIT.
+- KD rwsem uses a reader count, sleeping drain wait queue and an ordinary KD
+  physical mutex gate. All bodies run locally; sleeping readers can overlap.
 
 The frame's lock ledger records acquisitions and releases that actually happened.
 Changing the ledger does not itself acquire or release a lock. See

@@ -1,9 +1,11 @@
-"""Rwlock preparation, returned-writer evidence and strict source/queue drain."""
+"""Snapshot/rwlock preparation, complete-body evidence and strict source/queue drain."""
 import fcntl
 import json
 import os
 from pathlib import Path
 import re
+import shutil
+import signal
 import subprocess
 import sys
 import time
@@ -16,7 +18,6 @@ from summarize import write_json
 from protocol import DEVICE, PREPARE, snapshot
 from oracle import check_snapshot, jit_evidence, validate
 
-TC_PARAMS = Path('/sys/module/tclock_rwlock_backend_km/parameters')
 KD_PARAMS = Path('/sys/module/kdlock_km/parameters')
 
 
@@ -25,6 +26,14 @@ class RWSession(Session):
         super().__init__(out, spec, workload_module=binaries['workloads'][spec['variant']])
         self.binaries = binaries
         self.loaded_tc = False
+        self.daemon_paused = False
+        self.tc_module = binaries.get('tclock', Path('tclock_rwlock_backend_km.ko')).stem
+        self.tc_params = Path('/sys/module') / self.tc_module / 'parameters'
+
+    def has_entry(self):
+        if self.record['lock_kind'] == 'rwsem':
+            return False
+        return self.record['write_percent'] < 100 if self.record['lock_kind'] == 'spin' else bool(self.record['write_percent'])
 
     def counts(self, label):
         row = snapshot()
@@ -33,8 +42,8 @@ class RWSession(Session):
         return row
 
     def tc_idle(self):
-        row = {p.name: int(p.read_text()) for p in TC_PARAMS.iterdir()}
-        require(row['quiescent'] == 1, 'TCLock rwlock contexts/queue remain active', 'UNDRAINED')
+        row = {p.name: int(p.read_text()) for p in self.tc_params.iterdir()}
+        require(row['quiescent'] == 1, 'TCLock contexts/queue remain active', 'UNDRAINED')
         return row
 
     def start_daemon(self):
@@ -52,11 +61,92 @@ class RWSession(Session):
         self.record['daemon_pid'] = self.daemon.pid
         self.save()
 
+    def await_publication(self):
+        deadline = time.monotonic() + 90
+        while True:
+            self.faults()
+            require(self.daemon.poll() is None, 'daemon exited during preparation')
+            text = (self.path / 'daemon.log').read_text()
+            require(not re.search(r'\[KD_JIT\]\[ERROR\]|Traceback|command failed', text),
+                    'translator failed; see daemon.log')
+            metrics = [json.loads(line.split(' ', 1)[1]) for line in text.splitlines()
+                       if line.startswith('KD_TRANSLATION_METRICS ')]
+            require(all(m['result'] == m['status'] == 0 for m in metrics), 'translation refused')
+            rows = registry()
+            require(len(rows) == 1 and rows[0]['entry'] == self.record['layout']['entry'] and
+                    rows[0]['status'] in (-1, 0, 1, 2), 'unexpected delegated-entry registry')
+            if rows[0]['status'] == 0 and metrics and not children(self.daemon.pid):
+                self.record['translation'] = metrics
+                publication = self.publication()
+                self.record['publication'] = publication
+                # The translator overwrites its asm directory on the next
+                # helper miss. Preserve every admitted image before learning.
+                history = self.record.setdefault('publications', [])
+                archive = self.path / 'publications' / f'{len(history):02d}'
+                archive.mkdir(parents=True)
+                entry = publication['entry']
+                folder = self.path / 'workspace/daemon' / hex(entry['entry']) / str(entry['tgid']) / 'asm'
+                for name in publication['images']:
+                    shutil.copyfile(folder / name, archive / name)
+                history.append(dict(path=str(archive.relative_to(self.path)), **publication))
+                self.save()
+                return
+            if time.monotonic() >= deadline:
+                raise Failure('TIMEOUT', 'delegated-entry publication timed out', unsafe=True)
+            time.sleep(0.1)
+
+    def pause_daemon(self):
+        require(not children(self.daemon.pid), 'translator active before learning wave', 'UNDRAINED')
+        os.kill(self.daemon.pid, signal.SIGSTOP)
+        self.daemon_paused = True
+        deadline = time.monotonic() + 5
+        while not re.search(r'^State:\s+T', Path(f'/proc/{self.daemon.pid}/status').read_text(), re.M):
+            require(time.monotonic() < deadline, 'daemon did not stop')
+            time.sleep(.01)
+        require(not children(self.daemon.pid), 'translator raced daemon pause', 'UNDRAINED')
+
+    def stop_daemon(self):
+        if self.daemon is not None and self.daemon_paused:
+            require(status()['frames'] == 0, 'learning callers still active', 'UNDRAINED')
+            os.kill(self.daemon.pid, signal.SIGCONT)
+            self.daemon_paused = False
+        super().stop_daemon()
+
+    def learn_helpers(self):
+        # Same drain-separated learning protocol as bench/real_api: an old
+        # spin image is never replaced while workers are executing it.
+        self.record['learning_waves'] = []
+        for wave in range(self.record['helper_waves']):
+            self.pause_daemon()
+            before = int((KD_PARAMS / 'bench_jit_bodies').read_text())
+            complete_before = int((KD_PARAMS / 'bench_jit_completions').read_text())
+            measured = self.phase(f'learning-{wave}', dict(self.record, iterations=48000, duration_ms=0))
+            evidence = jit_evidence(before, int((KD_PARAMS / 'bench_jit_bodies').read_text()),
+                measured['reads'], backend='kdlock', delegate=True, operation='snapshot',
+                completed=int((KD_PARAMS / 'bench_jit_completions').read_text()) - complete_before)
+            state = status()
+            require(state['frames'] == 0 and state['writers'] == 1,
+                    'learning wave did not drain to paused daemon lease', 'UNDRAINED')
+            rows = registry()
+            self.record['learning_waves'].append(dict(registry=rows, **evidence))
+            self.save()
+            os.kill(self.daemon.pid, signal.SIGCONT)
+            self.daemon_paused = False
+            if len(rows) == 1 and rows[0]['status'] == 0:
+                # A cold wave can leave the initial CALL-miss image NORMAL
+                # simply because it never ran. It has not learned the body.
+                if evidence['jit_completions']:
+                    return
+            else:
+                self.await_publication()
+        raise Failure('PREPARATION_FAILED',
+                      'helper learning did not establish complete delegation within configured waves')
+
     def prepare(self):
         self.run(['insmod', self.binaries['guard']], 'load-allocator-guard.log')
         self.run(['rmmod', 'tc_allocator_guard'], 'unload-allocator-guard.log')
         if self.record['arm'] == 'kdlock':
-            self.run(['insmod', self.binaries['kdlock'], 'bench_quiet=1', 'jit_timing=0',
+            self.run(['insmod', self.binaries['kdlock'], 'bench_quiet=1', 'bench_complete_probe=1', 'jit_timing=0',
                       'hotlock_stats=1', 'target_process=rb_worker', 'spin_prefetch=2',
                       f'spin_entry_ratio_limit={self.record["spin_entry_ratio_limit"]}',
                       f'spin_delegate={int(self.record["delegate"])}'], 'load-kdlock.log')
@@ -70,47 +160,30 @@ class RWSession(Session):
         require(layout['values'] == [0] * 16, 'workload not reset')
         self.record['layout'] = layout
         if self.loaded_tc:
-            (TC_PARAMS / 'target_lock').write_text(str(layout['lock_addr']))
+            (self.tc_params / 'target_lock').write_text(str(layout['lock_addr']))
             self.record['parameters'] = self.tc_idle()
             require(self.record['parameters']['target_lock'] == layout['lock_addr'] and
                     self.record['parameters']['komb_batch_size'] == 1024, 'TCLock binding differs')
         if self.loaded_kd:
             (KD_PARAMS / 'bench_lock_addr').write_text(str(layout['gate_addr']))
             self.record['parameters'] = params = parameters()
-            expected = dict(bench_lock_addr=layout['gate_addr'], bench_quiet=1, jit_timing=0,
+            expected = dict(bench_lock_addr=layout['gate_addr'], bench_quiet=1, bench_complete_probe=1, jit_timing=0,
                             spin_entry_ratio_limit=self.record['spin_entry_ratio_limit'],
                             spin_delegate=int(self.record['delegate']), spin_prefetch=2, hotlock_stats=1)
             def number(value):
                 return {'Y': 1, 'N': 0}[value] if value in ('Y', 'N') else int(value, 0)
             require(all(number(params[k]) == v for k, v in expected.items()) and
                     params['target_process'] == 'rb_worker', 'KD parameters differ')
-            self.record.update(entry_range=[layout['entry'], layout['entry'] + 1], caller_abi='clobber', entry_abi=3)
-            # Read-only sessions have no writer continuation to execute. Keep
-            # them as explicit native-reader controls, without a fake JIT pass.
-            if self.record['write_percent']:
+            self.record.update(entry_range=[layout['entry'], layout['entry'] + 1])
+            # Sleeping rwsem bodies execute locally; rwlock readers also
+            # have no delegated entry. Spin snapshots delegate their reads.
+            if self.has_entry():
                 with open(DEVICE, 'rb', buffering=0) as device:
                     fcntl.ioctl(device, PREPARE)
                 self.start_daemon()
-                deadline = time.monotonic() + 90
-                while True:
-                    self.faults()
-                    require(self.daemon.poll() is None, 'daemon exited during preparation')
-                    text = (self.path / 'daemon.log').read_text()
-                    require(not re.search(r'\[KD_JIT\]\[ERROR\]|Traceback|command failed', text),
-                            'translator failed; see daemon.log')
-                    metrics = [json.loads(line.split(' ', 1)[1]) for line in text.splitlines()
-                               if line.startswith('KD_TRANSLATION_METRICS ')]
-                    require(all(m['result'] == m['status'] == 0 for m in metrics), 'translation refused')
-                    rows = registry()
-                    require(len(rows) == 1 and rows[0]['entry'] == layout['entry'] and
-                            rows[0]['status'] in (-1, 0), 'unexpected writer registry')
-                    if rows[0]['status'] == 0 and metrics and not children(self.daemon.pid):
-                        self.record['translation'] = metrics
-                        self.record['publication'] = self.publication()
-                        break
-                    if time.monotonic() >= deadline:
-                        raise Failure('TIMEOUT', 'writer publication timed out', unsafe=True)
-                    time.sleep(0.1)
+                self.await_publication()
+                if self.record['helper_waves']:
+                    self.learn_helpers()
                 self.stop_daemon()
                 require(status()['writers'] == 0, 'translator writer still open', 'UNDRAINED')
         self.phase('warmup', dict(self.record, iterations=48000, duration_ms=0))
@@ -132,26 +205,33 @@ class RWSession(Session):
 
     def measure(self):
         count_path = KD_PARAMS / 'bench_jit_bodies'
+        complete_path = KD_PARAMS / 'bench_jit_completions'
         before = int(count_path.read_text()) if self.loaded_kd else 0
-        publication = self.publication() if self.loaded_kd and self.record['write_percent'] else None
+        complete_before = int(complete_path.read_text()) if self.loaded_kd else 0
+        publication = self.publication() if self.loaded_kd and self.has_entry() else None
         if self.loaded_tc:
             self.record['tclock_before'] = self.tc_idle()
-        self.record.update(execution_status='MEASURING', jit_before=before)
+        self.record.update(execution_status='MEASURING', jit_before=before, jit_complete_before=complete_before)
         self.save()
         m = self.phase('measure', self.record)
         self.record['measurement'] = m
         after = int(count_path.read_text()) if self.loaded_kd else 0
+        complete_after = int(complete_path.read_text()) if self.loaded_kd else 0
         self.record['jit_after'] = after
-        self.record.update(jit_evidence(before, after, m['writes'], backend=self.record['arm'],
-                                        delegate=self.record['delegate']))
+        self.record['jit_complete_after'] = complete_after
+        snapshot_entry = self.record['lock_kind'] == 'spin'
+        self.record.update(jit_evidence(before, after, m['reads'] if snapshot_entry else m['writes'],
+                                        backend=self.record['arm'], delegate=self.record['delegate'],
+                                        operation='snapshot' if snapshot_entry else 'writer',
+                                        completed=complete_after - complete_before))
         if publication:
-            require(publication == self.publication(), 'writer publication changed during measurement')
+            require(publication == self.publication(), 'delegated-entry publication changed during measurement')
         if self.loaded_tc:
             self.record['tclock_after'] = self.tc_idle()
         self.record['tclock_delegation_status'] = 'UNMEASURED' if self.loaded_tc else 'NOT_APPLICABLE'
         self.save()
-        require(not self.record['require_jit'] or self.record['jit_bodies'] > 0,
-                'required KD writer JIT did not execute', 'NO_JIT')
+        require(not self.record['require_jit'] or self.record['jit_completions'] > 0,
+                'required complete KD body did not execute', 'NO_JIT')
 
     def cleanup(self):
         if self.loaded_tc:
@@ -159,12 +239,12 @@ class RWSession(Session):
             if self.loaded_source:
                 self.counts('tclock-drain')
             self.record['tclock_drained'] = self.tc_idle()
-            (TC_PARAMS / 'target_lock').write_text('0')
+            (self.tc_params / 'target_lock').write_text('0')
         super().cleanup()
         if self.loaded_tc:
             self.record['drained'] = False
             self.save()
-            self.run(['rmmod', 'tclock_rwlock_backend_km'], 'unload-tclock.log')
+            self.run(['rmmod', self.tc_module], 'unload-tclock.log')
             self.loaded_tc = False
             self.faults()
             self.record['drained'] = True

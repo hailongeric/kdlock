@@ -1,0 +1,13 @@
+{
+  "outer_wrapper_status": "failed prefix assertion after all commands passed",
+  "before_lines": 4166,
+  "after_lines": 4176,
+  "first_mismatch_index": 0,
+  "before_line": "[224985.451872] kd_hotlock final: cpu=15 type=mutex address=ff1100010026cb40 count=407 cpu_hot=1 lock_hot=1 role=DONE",
+  "after_line": "[224985.451916] kd_hotlock final: cpu=21 type=mutex address=ff1100010026cb40 count=213 cpu_hot=1 lock_hot=1 role=DONE",
+  "retained_final_record": "[259361.803856] Code: 00 48 c7 84 24 48 ff ff ff 46 02 00 00 48 c7 84 24 40 ff ff ff 46 02 00 00 48 83 bd 58 ff ff ff 00 74 16 48 8b 85 58 ff ff ff <48> 8b 40 50 c7 00 00 00 00 00 e9 af 06 00 00 48 83 bd 60 ff ff ff",
+  "final_record_index": 3549,
+  "final_new_lines": 899,
+  "new_faults": [],
+  "assessment": "Final pre-run record retained uniquely; all subsequent records inspected. Per-session /dev/kmsg checks also passed."
+}

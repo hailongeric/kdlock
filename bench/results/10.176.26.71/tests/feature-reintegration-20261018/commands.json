@@ -1,0 +1,382 @@
+[
+  {
+    "name": "dependencies",
+    "command": [
+      "python3",
+      "-m",
+      "pip",
+      "check"
+    ],
+    "cwd": "/mnt/kdlock-builds/feature-reintegration-20261018-v1/source",
+    "returncode": 0,
+    "seconds": 0.568
+  },
+  {
+    "name": "kernel-identity",
+    "command": [
+      "python3",
+      "bench/spin_cacheline/kernel_identity.py"
+    ],
+    "cwd": "/mnt/kdlock-builds/feature-reintegration-20261018-v1/source",
+    "returncode": 0,
+    "seconds": 1.122
+  },
+  {
+    "name": "provider-build",
+    "command": [
+      "make",
+      "-C",
+      "kernel_module",
+      "-j8",
+      "W=1",
+      "UBSAN_SANITIZE=n"
+    ],
+    "cwd": "/mnt/kdlock-builds/feature-reintegration-20261018-v1/source",
+    "returncode": 0,
+    "seconds": 5.748
+  },
+  {
+    "name": "basic-and-admission",
+    "command": [
+      "make",
+      "-C",
+      "tests/unit",
+      "run",
+      "PY_TESTS=admission/test_context_policy.py infrastructure/test_provider_lifecycle.py"
+    ],
+    "cwd": "/mnt/kdlock-builds/feature-reintegration-20261018-v1/source",
+    "returncode": 0,
+    "seconds": 5.494
+  },
+  {
+    "name": "direct-runner-tests",
+    "command": [
+      "python3",
+      "test_direct.py"
+    ],
+    "cwd": "/mnt/kdlock-builds/feature-reintegration-20261018-v1/source/bench/tclock_compare",
+    "returncode": 0,
+    "seconds": 0.367
+  },
+  {
+    "name": "api-plan-tests",
+    "command": [
+      "python3",
+      "test_plan.py"
+    ],
+    "cwd": "/mnt/kdlock-builds/feature-reintegration-20261018-v1/source/bench/real_api",
+    "returncode": 0,
+    "seconds": 0.166
+  },
+  {
+    "name": "api-report-tests",
+    "command": [
+      "python3",
+      "test_report.py"
+    ],
+    "cwd": "/mnt/kdlock-builds/feature-reintegration-20261018-v1/source/bench/real_api",
+    "returncode": 0,
+    "seconds": 0.116
+  },
+  {
+    "name": "rwlock-runner-tests",
+    "command": [
+      "python3",
+      "test_bench.py"
+    ],
+    "cwd": "/mnt/kdlock-builds/feature-reintegration-20261018-v1/source/bench/rwlock_compare",
+    "returncode": 0,
+    "seconds": 0.418
+  },
+  {
+    "name": "rwsem-live-probe",
+    "command": [
+      "python3",
+      "tests/kernel/rwsem/run.py",
+      "--output",
+      "/mnt/kdlock-builds/feature-reintegration-20261018-v1/rwsem-probe"
+    ],
+    "cwd": "/root/host_fs/kdlock",
+    "returncode": 0,
+    "seconds": 16.053
+  },
+  {
+    "name": "rwsem-functional",
+    "command": [
+      "python3",
+      "bench/rwlock_compare/run.py",
+      "--functional",
+      "--repeats",
+      "1",
+      "--collector-cpu",
+      "63",
+      "--iterations",
+      "10000",
+      "--lock-kind",
+      "rwsem",
+      "--backends",
+      "native",
+      "kdlock",
+      "--workloads",
+      "cacheline",
+      "--cachelines",
+      "1",
+      "8",
+      "--write-percent",
+      "0",
+      "20",
+      "100",
+      "--threads",
+      "1",
+      "8",
+      "--output",
+      "/mnt/kdlock-builds/feature-reintegration-20261018-v1/rwsem-functional"
+    ],
+    "returncode": 0,
+    "seconds": 40.743
+  },
+  {
+    "name": "rwlock-regression",
+    "command": [
+      "python3",
+      "bench/rwlock_compare/run.py",
+      "--functional",
+      "--repeats",
+      "1",
+      "--collector-cpu",
+      "63",
+      "--iterations",
+      "10000",
+      "--workloads",
+      "cacheline",
+      "--cachelines",
+      "8",
+      "--write-percent",
+      "20",
+      "--threads",
+      "8",
+      "--output",
+      "/mnt/kdlock-builds/feature-reintegration-20261018-v1/rwlock-regression"
+    ],
+    "returncode": 0,
+    "seconds": 31.541
+  },
+  {
+    "name": "argbounds-functional",
+    "command": [
+      "python3",
+      "bench/rwlock_compare/run.py",
+      "--functional",
+      "--repeats",
+      "1",
+      "--collector-cpu",
+      "63",
+      "--iterations",
+      "10000",
+      "--lock-kind",
+      "spin",
+      "--workloads",
+      "argbounds",
+      "--write-percent",
+      "0",
+      "20",
+      "--threads",
+      "1",
+      "8",
+      "--output",
+      "/mnt/kdlock-builds/feature-reintegration-20261018-v1/argbounds-functional"
+    ],
+    "returncode": 0,
+    "seconds": 41.394
+  },
+  {
+    "name": "taskname-local",
+    "command": [
+      "python3",
+      "bench/rwlock_compare/run.py",
+      "--functional",
+      "--repeats",
+      "1",
+      "--collector-cpu",
+      "63",
+      "--iterations",
+      "10000",
+      "--lock-kind",
+      "spin",
+      "--workloads",
+      "taskname",
+      "--delegate",
+      "off",
+      "--write-percent",
+      "0",
+      "20",
+      "--threads",
+      "1",
+      "8",
+      "--output",
+      "/mnt/kdlock-builds/feature-reintegration-20261018-v1/taskname-local"
+    ],
+    "returncode": 0,
+    "seconds": 41.694
+  },
+  {
+    "name": "rwsem-probe-final",
+    "command": [
+      "python3",
+      "tests/kernel/rwsem/run.py",
+      "--output",
+      "/mnt/kdlock-builds/feature-reintegration-20261018-v1/rwsem-probe-final"
+    ],
+    "returncode": 0,
+    "seconds": 16.407
+  },
+  {
+    "name": "argbounds-jit",
+    "command": [
+      "python3",
+      "bench/rwlock_compare/run.py",
+      "--functional",
+      "--repeats",
+      "1",
+      "--collector-cpu",
+      "63",
+      "--iterations",
+      "100000",
+      "--backends",
+      "kdlock",
+      "--threads",
+      "16",
+      "--require-jit",
+      "--spin-entry-ratio-limit",
+      "0",
+      "--lock-kind",
+      "spin",
+      "--workloads",
+      "argbounds",
+      "--write-percent",
+      "0",
+      "--output",
+      "/mnt/kdlock-builds/feature-reintegration-20261018-v1/argbounds-jit"
+    ],
+    "returncode": 1,
+    "seconds": 22.64
+  },
+  {
+    "name": "rwlock-jit",
+    "command": [
+      "python3",
+      "bench/rwlock_compare/run.py",
+      "--functional",
+      "--repeats",
+      "1",
+      "--collector-cpu",
+      "63",
+      "--iterations",
+      "100000",
+      "--backends",
+      "kdlock",
+      "--threads",
+      "16",
+      "--require-jit",
+      "--spin-entry-ratio-limit",
+      "0",
+      "--workloads",
+      "cacheline",
+      "--cachelines",
+      "8",
+      "--write-percent",
+      "100",
+      "--output",
+      "/mnt/kdlock-builds/feature-reintegration-20261018-v1/rwlock-jit"
+    ],
+    "returncode": 0,
+    "seconds": 22.443
+  },
+  {
+    "name": "taskname-jit",
+    "command": [
+      "python3",
+      "bench/rwlock_compare/run.py",
+      "--functional",
+      "--repeats",
+      "1",
+      "--collector-cpu",
+      "63",
+      "--iterations",
+      "100000",
+      "--backends",
+      "kdlock",
+      "--threads",
+      "16",
+      "--require-jit",
+      "--spin-entry-ratio-limit",
+      "0",
+      "--lock-kind",
+      "spin",
+      "--workloads",
+      "taskname",
+      "--write-percent",
+      "0",
+      "--output",
+      "/mnt/kdlock-builds/feature-reintegration-20261018-v1/taskname-jit"
+    ],
+    "returncode": 1,
+    "seconds": 24.71
+  },
+  {
+    "name": "api-pipebytes-smoke",
+    "command": [
+      "python3",
+      "bench/real_api/run.py",
+      "--kinds",
+      "pipebytes",
+      "--queries",
+      "query",
+      "--entries",
+      "16",
+      "--threads",
+      "1",
+      "8",
+      "--backends",
+      "native",
+      "tclock",
+      "kdlock",
+      "--repeats",
+      "1",
+      "--duration-ms",
+      "1000",
+      "--output",
+      "/mnt/kdlock-builds/feature-reintegration-20261018-v1/api-pipebytes-smoke"
+    ],
+    "returncode": 0,
+    "seconds": 44.0
+  },
+  {
+    "name": "argbounds-timed-acceptance",
+    "command": [
+      "python3",
+      "bench/rwlock_compare/run.py",
+      "--backends",
+      "kdlock",
+      "--lock-kind",
+      "spin",
+      "--workloads",
+      "argbounds",
+      "--write-percent",
+      "0",
+      "--threads",
+      "8",
+      "--collector-cpu",
+      "63",
+      "--repeats",
+      "3",
+      "--duration-ms",
+      "2000",
+      "--output",
+      "/mnt/kdlock-builds/feature-reintegration-20261018-v1/argbounds-timed-acceptance"
+    ],
+    "returncode": 0,
+    "seconds": 32.44,
+    "purpose": "Match archived timed admission profile without altering default policy; no cross-version performance comparison"
+  }
+]

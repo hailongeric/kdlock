@@ -3,6 +3,28 @@ obj-m := rwlock_bench.o
 rwlock_bench-objs := module.o
 UBSAN_SANITIZE := n
 ccflags-y += -DRB_LINES=$(RB_LINES) -DRB_POST_WORK_ROUNDS=$(RB_POST_WORK_ROUNDS) -I$(RB_SHARED)
+ifeq ($(RB_LOCK_KIND),spin)
+ccflags-y += -DRB_SPIN
+ifneq ($(filter taskname argbounds,$(RB_WORKLOAD)),$(RB_WORKLOAD))
+$(error spin requires a taskname or argbounds snapshot workload)
+endif
+else ifeq ($(RB_LOCK_KIND),rwsem)
+ccflags-y += -DRB_RWSEM
+ifeq ($(RB_BACKEND),tclock)
+$(error TCLock backend has no sleeping rwsem port)
+endif
+else ifneq ($(RB_LOCK_KIND),rwlock)
+$(error RB_LOCK_KIND must be rwlock, spin or rwsem)
+endif
+ifneq ($(filter taskname argbounds,$(RB_WORKLOAD)),)
+ifneq ($(RB_LOCK_KIND),spin)
+$(error taskname and argbounds require RB_LOCK_KIND=spin)
+endif
+ccflags-y += -DRB_SNAPSHOT_PAYLOAD
+ifeq ($(RB_WORKLOAD),taskname)
+ccflags-y += -DRB_TASKNAME
+endif
+endif
 ifeq ($(RB_WORKLOAD),rcuht)
 ccflags-y += -DRB_HASH
 endif
@@ -17,12 +39,13 @@ else
 KDIR ?= /lib/modules/$(shell uname -r)/build
 RB_BACKEND ?= native
 RB_WORKLOAD ?= cacheline
+RB_LOCK_KIND ?= rwlock
 RB_LINES ?= 1
 RB_POST_WORK_ROUNDS ?= 4
 RB_SHARED ?= $(abspath ../spin_cacheline)
 .PHONY: all clean
 all:
-	$(MAKE) -C $(KDIR) M=$(CURDIR) W=1 RB_BACKEND=$(RB_BACKEND) RB_LINES=$(RB_LINES) RB_POST_WORK_ROUNDS=$(RB_POST_WORK_ROUNDS) RB_SHARED=$(RB_SHARED) modules
+	$(MAKE) -C $(KDIR) M=$(CURDIR) W=1 RB_BACKEND=$(RB_BACKEND) RB_LOCK_KIND=$(RB_LOCK_KIND) RB_LINES=$(RB_LINES) RB_POST_WORK_ROUNDS=$(RB_POST_WORK_ROUNDS) RB_SHARED=$(RB_SHARED) modules
 clean:
 	$(MAKE) -C $(KDIR) M=$(CURDIR) clean
 endif

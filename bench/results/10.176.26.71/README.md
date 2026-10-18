@@ -3,8 +3,10 @@
 `master` selects KD-only `d2a2304`; see [current performance](../../../docs/PERFORMANCE.md).
 The [2026-10-18 consolidation checks](tests/main-consolidation-20261018/README.md)
 validate organization and tooling separately from the measured runtime.
-Historical owned/adaptive mutex and sleeping-rwsem reports below are preserved
-evidence, not current implementation selections.
+The [feature reintegration checks](tests/feature-reintegration-20261018/README.md)
+validate the new ordinary rwsem, restored snapshots and benchmark safeguards,
+including retained delegation failures. Historical owned/adaptive mutex and
+owned-gate rwsem reports remain separate evidence.
 
 The [KD-only mutex round](bench/comparison/mutex-kdonly-20261017T140354Z/README.md) contains 504 fresh accepted/drained sessions
 at 1–8 workers by one and 12–60 by four, three repetitions, with accepted KD,

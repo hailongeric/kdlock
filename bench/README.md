@@ -10,6 +10,8 @@ summarizes the accepted version. Build and run only in the verified VM on
 | Spin | [tclock_compare/run.py](tclock_compare/run.py) | c01/c08 and RCUHT |
 | Mutex | [tclock_compare/run_mutex.py](tclock_compare/run_mutex.py) | Same payloads, selected KD-only mutex |
 | Rwlock | [rwlock_compare/run.py](rwlock_compare/run.py) | Cachelines and RCUHT, default 1%/20% writes |
+| Sleeping rwsem | [rwlock_compare/run.py](rwlock_compare/run.py), `--lock-kind rwsem --backends native kdlock` | c01/c08 or RCUHT; ordinary local bodies, no JIT/TCLock |
+| Proc snapshots | [rwlock_compare/run.py](rwlock_compare/run.py), `--lock-kind spin` | `argbounds` and exact `taskname`; separate from full procfs/ps |
 | Syscall/API | [real_api/run.py](real_api/run.py) | OFD, setfd, pipebytes, pipecap, seek, bounded UTS and xattr controls |
 
 Runner contracts: [spin/mutex](tclock_compare/README.md), [rwlock](rwlock_compare/README.md),

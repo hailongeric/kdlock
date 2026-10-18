@@ -1,0 +1,595 @@
+{
+  "audit_base": "8a20380b6110d787f9311c7d3f51b507f42a95f7",
+  "ref_count": 61,
+  "unique_tip_count": 40,
+  "refs": [
+    {
+      "ref": "refs/heads/current/kd-mutex",
+      "commit": "46e1fd2993bac6daefb319818d8a28208cf35c04",
+      "ancestor_of_audit_base": true,
+      "disposition": "Maintained lineage/current alias; source already in master."
+    },
+    {
+      "ref": "refs/heads/master",
+      "commit": "8a20380b6110d787f9311c7d3f51b507f42a95f7",
+      "ancestor_of_audit_base": true,
+      "disposition": "Maintained lineage/current alias; source already in master."
+    },
+    {
+      "ref": "refs/heads/wip/pre-main-20261018",
+      "commit": "bc7efcf4225352d25181d3e30066c92213ef9120",
+      "ancestor_of_audit_base": false,
+      "disposition": "Preserve explicit WIP; formatting/comment-only according to prior token audit; not a missing feature."
+    },
+    {
+      "ref": "refs/remotes/origin/bench/legacy-mutex-c01-pipebytes",
+      "commit": "74676c3d379742415a42310b84aa868012fb3198",
+      "ancestor_of_audit_base": true,
+      "disposition": "Accepted selected-runtime lineage retained in master; no whole-tree merge needed."
+    },
+    {
+      "ref": "refs/remotes/origin/current/kd-mutex",
+      "commit": "46e1fd2993bac6daefb319818d8a28208cf35c04",
+      "ancestor_of_audit_base": true,
+      "disposition": "Maintained lineage/current alias; source already in master."
+    },
+    {
+      "ref": "refs/remotes/origin/master",
+      "commit": "9787d596ca5620d0e7b28b0636ef37f52f4c3e73",
+      "ancestor_of_audit_base": true,
+      "disposition": "Maintained lineage/current alias; source already in master."
+    },
+    {
+      "ref": "refs/remotes/origin/perf/hash-payload-20260927",
+      "commit": "b96f2827726c81908145c214399a4c14f92cdf56",
+      "ancestor_of_audit_base": true,
+      "disposition": "Hash workload/tooling retained; ancestor already integrated."
+    },
+    {
+      "ref": "refs/remotes/origin/perf/mutex-empty-bucket-rejected-20261003",
+      "commit": "67b7d222778bbc9f4cb8e014a65751e653bbbd58",
+      "ancestor_of_audit_base": true,
+      "disposition": "Historical mutex protocol/admission/locality/waiting trial or report; keep archive, exclude rejected runtime policies, retain independently useful reporting changes per feature inventory."
+    },
+    {
+      "ref": "refs/remotes/origin/perf/mutex-fail-read-rejected-20261003",
+      "commit": "527417010058fe545e927581b8883f7cbdd3b8a6",
+      "ancestor_of_audit_base": true,
+      "disposition": "Historical mutex protocol/admission/locality/waiting trial or report; keep archive, exclude rejected runtime policies, retain independently useful reporting changes per feature inventory."
+    },
+    {
+      "ref": "refs/remotes/origin/perf/mutex-hash-admission-20260928",
+      "commit": "ae46afd942edfbcd17d5fc85bd179fb07a87052f",
+      "ancestor_of_audit_base": false,
+      "disposition": "Historical mutex protocol/admission/locality/waiting trial or report; keep archive, exclude rejected runtime policies, retain independently useful reporting changes per feature inventory."
+    },
+    {
+      "ref": "refs/remotes/origin/perf/mutex-numa-candidate-20260928",
+      "commit": "8f9d3cd9637d27f13aca995b75f8f5748824573c",
+      "ancestor_of_audit_base": false,
+      "disposition": "Historical mutex protocol/admission/locality/waiting trial or report; keep archive, exclude rejected runtime policies, retain independently useful reporting changes per feature inventory."
+    },
+    {
+      "ref": "refs/remotes/origin/perf/mutex-numa-rejected-20261003b",
+      "commit": "87888c9e6b8975cef0ee843f1b71bb679d4e9533",
+      "ancestor_of_audit_base": true,
+      "disposition": "Historical mutex protocol/admission/locality/waiting trial or report; keep archive, exclude rejected runtime policies, retain independently useful reporting changes per feature inventory."
+    },
+    {
+      "ref": "refs/remotes/origin/perf/mutex-pack-rejected-20261003b",
+      "commit": "ad59ff314c6b9ffa4f9ee62aa46847f49eb63628",
+      "ancestor_of_audit_base": true,
+      "disposition": "Historical mutex protocol/admission/locality/waiting trial or report; keep archive, exclude rejected runtime policies, retain independently useful reporting changes per feature inventory."
+    },
+    {
+      "ref": "refs/remotes/origin/perf/mutex-protocol-c01-20261013",
+      "commit": "475e1d62b05c167881c64f8993e4b1e4cd137eb1",
+      "ancestor_of_audit_base": false,
+      "disposition": "Historical mutex protocol/admission/locality/waiting trial or report; keep archive, exclude rejected runtime policies, retain independently useful reporting changes per feature inventory."
+    },
+    {
+      "ref": "refs/remotes/origin/perf/mutex-retry-rejected-20261003b",
+      "commit": "ae7a26be6fe977db8af4404ade141f89f2c7fe0d",
+      "ancestor_of_audit_base": true,
+      "disposition": "Historical mutex protocol/admission/locality/waiting trial or report; keep archive, exclude rejected runtime policies, retain independently useful reporting changes per feature inventory."
+    },
+    {
+      "ref": "refs/remotes/origin/perf/mutex-task-buckets-rejected-20261003",
+      "commit": "781ef6ceb8164c7078d2e11942beaffa81f0c5d9",
+      "ancestor_of_audit_base": true,
+      "disposition": "Historical mutex protocol/admission/locality/waiting trial or report; keep archive, exclude rejected runtime policies, retain independently useful reporting changes per feature inventory."
+    },
+    {
+      "ref": "refs/remotes/origin/perf/mutex-task-cache-batch-candidate-20260928",
+      "commit": "a8343f2904d2c97c11e8295a4b16da1f6fa77a5f",
+      "ancestor_of_audit_base": false,
+      "disposition": "Historical mutex protocol/admission/locality/waiting trial or report; keep archive, exclude rejected runtime policies, retain independently useful reporting changes per feature inventory."
+    },
+    {
+      "ref": "refs/remotes/origin/perf/mutex-task-cache-candidate-20260928",
+      "commit": "ad4936850a0a2bd9b952350e9db73c360f971f9b",
+      "ancestor_of_audit_base": false,
+      "disposition": "Historical mutex protocol/admission/locality/waiting trial or report; keep archive, exclude rejected runtime policies, retain independently useful reporting changes per feature inventory."
+    },
+    {
+      "ref": "refs/remotes/origin/recovery/mutex-legacy-5m330",
+      "commit": "6ecdd0a15e42ead07451a955eaeb2506f50ee909",
+      "ancestor_of_audit_base": true,
+      "disposition": "Accepted selected-runtime lineage retained in master; no whole-tree merge needed."
+    },
+    {
+      "ref": "refs/remotes/origin/task/kd-only-mutex",
+      "commit": "d2a23049a4b6e3c65cf0ff21bbfd3e21cd975761",
+      "ancestor_of_audit_base": true,
+      "disposition": "Accepted selected-runtime lineage retained in master; no whole-tree merge needed."
+    },
+    {
+      "ref": "refs/remotes/origin/task/legacy-mutex-compat",
+      "commit": "555b8b7a182c343945581d5a0a99c6474139b02b",
+      "ancestor_of_audit_base": true,
+      "disposition": "Accepted selected-runtime lineage retained in master; no whole-tree merge needed."
+    },
+    {
+      "ref": "refs/remotes/origin/task/owned-mutex-origin-numa",
+      "commit": "9a4bf2af9a52a92e147b439393f21343b7fc99af",
+      "ancestor_of_audit_base": false,
+      "disposition": "Retain evidence; port independent benchmark safety/diagnostic pieces identified below; exclude owned/adaptive mutex implementation and its dependent probes."
+    },
+    {
+      "ref": "refs/remotes/origin/wip/pre-main-20261018",
+      "commit": "bc7efcf4225352d25181d3e30066c92213ef9120",
+      "ancestor_of_audit_base": false,
+      "disposition": "Preserve explicit WIP; formatting/comment-only according to prior token audit; not a missing feature."
+    },
+    {
+      "ref": "refs/remotes/origin/wip/worktree-20261012",
+      "commit": "09bfffe07f0123622b7b68ae67057339d18ca7f2",
+      "ancestor_of_audit_base": true,
+      "disposition": "Historical ancestor/checkpoint already reachable; current descendants retain applicable features; no blind snapshot restoration."
+    },
+    {
+      "ref": "refs/tags/accepted/kd-mutex-compat-20261017",
+      "commit": "555b8b7a182c343945581d5a0a99c6474139b02b",
+      "ancestor_of_audit_base": true,
+      "disposition": "Accepted selected-runtime lineage retained in master; no whole-tree merge needed."
+    },
+    {
+      "ref": "refs/tags/accepted/kd-only-mutex-20261018",
+      "commit": "d2a23049a4b6e3c65cf0ff21bbfd3e21cd975761",
+      "ancestor_of_audit_base": true,
+      "disposition": "Accepted selected-runtime lineage retained in master; no whole-tree merge needed."
+    },
+    {
+      "ref": "refs/tags/archive/docs/mutex-status-20261015",
+      "commit": "b994aefaaf4da8be7b18353fd130818df9b2aba2",
+      "ancestor_of_audit_base": true,
+      "disposition": "Historical mutex protocol/admission/locality/waiting trial or report; keep archive, exclude rejected runtime policies, retain independently useful reporting changes per feature inventory."
+    },
+    {
+      "ref": "refs/tags/archive/legacy-mutex-grid-20261018",
+      "commit": "74676c3d379742415a42310b84aa868012fb3198",
+      "ancestor_of_audit_base": true,
+      "disposition": "Accepted selected-runtime lineage retained in master; no whole-tree merge needed."
+    },
+    {
+      "ref": "refs/tags/archive/master-before-integration-20261012",
+      "commit": "d38173d6697566d787ed36789ac463d11fb95207",
+      "ancestor_of_audit_base": true,
+      "disposition": "Historical ancestor/checkpoint already reachable; current descendants retain applicable features; no blind snapshot restoration."
+    },
+    {
+      "ref": "refs/tags/archive/master-before-kdonly-20261018",
+      "commit": "2c8889549d8ee0aa05f6181713ffb1da5f2fc8d0",
+      "ancestor_of_audit_base": true,
+      "disposition": "History/evidence retained; ordinary sleeping rwsem and proc snapshot tools restored with current compatible local exclusion. Historical owned-mutex writer-JIT gate is not restored. Guest outcomes are recorded in the feature-reintegration-20261018 validation receipt."
+    },
+    {
+      "ref": "refs/tags/archive/mutex-legacy-recovery-20261018",
+      "commit": "6ecdd0a15e42ead07451a955eaeb2506f50ee909",
+      "ancestor_of_audit_base": true,
+      "disposition": "Accepted selected-runtime lineage retained in master; no whole-tree merge needed."
+    },
+    {
+      "ref": "refs/tags/archive/owned-mutex-adaptive-a49a87c",
+      "commit": "a49a87c38b22390b1924f51972c69bfb00bc908b",
+      "ancestor_of_audit_base": false,
+      "disposition": "Historical mutex protocol/admission/locality/waiting trial or report; keep archive, exclude rejected runtime policies, retain independently useful reporting changes per feature inventory."
+    },
+    {
+      "ref": "refs/tags/archive/owned-mutex-before-main-20261018",
+      "commit": "9a4bf2af9a52a92e147b439393f21343b7fc99af",
+      "ancestor_of_audit_base": false,
+      "disposition": "Retain evidence; port independent benchmark safety/diagnostic pieces identified below; exclude owned/adaptive mutex implementation and its dependent probes."
+    },
+    {
+      "ref": "refs/tags/archive/perf/hash-payload-20260927",
+      "commit": "b96f2827726c81908145c214399a4c14f92cdf56",
+      "ancestor_of_audit_base": true,
+      "disposition": "Hash workload/tooling retained; ancestor already integrated."
+    },
+    {
+      "ref": "refs/tags/archive/perf/mutex-admission-c01-20261013",
+      "commit": "33fde04b221369ca62584e3960c55999f40b5cbb",
+      "ancestor_of_audit_base": true,
+      "disposition": "Historical mutex protocol/admission/locality/waiting trial or report; keep archive, exclude rejected runtime policies, retain independently useful reporting changes per feature inventory."
+    },
+    {
+      "ref": "refs/tags/archive/perf/mutex-c01-cost-20261013",
+      "commit": "9b7671984cc9adadc5cd94e698ac9b80c3b3b6d6",
+      "ancestor_of_audit_base": true,
+      "disposition": "Historical mutex protocol/admission/locality/waiting trial or report; keep archive, exclude rejected runtime policies, retain independently useful reporting changes per feature inventory."
+    },
+    {
+      "ref": "refs/tags/archive/perf/mutex-c01-full-grid-20261014",
+      "commit": "5d09eefda7530834636b4528a7feeb59018339b8",
+      "ancestor_of_audit_base": true,
+      "disposition": "Historical mutex protocol/admission/locality/waiting trial or report; keep archive, exclude rejected runtime policies, retain independently useful reporting changes per feature inventory."
+    },
+    {
+      "ref": "refs/tags/archive/perf/mutex-empty-bucket-rejected-20261003",
+      "commit": "67b7d222778bbc9f4cb8e014a65751e653bbbd58",
+      "ancestor_of_audit_base": true,
+      "disposition": "Historical mutex protocol/admission/locality/waiting trial or report; keep archive, exclude rejected runtime policies, retain independently useful reporting changes per feature inventory."
+    },
+    {
+      "ref": "refs/tags/archive/perf/mutex-fail-read-rejected-20261003",
+      "commit": "527417010058fe545e927581b8883f7cbdd3b8a6",
+      "ancestor_of_audit_base": true,
+      "disposition": "Historical mutex protocol/admission/locality/waiting trial or report; keep archive, exclude rejected runtime policies, retain independently useful reporting changes per feature inventory."
+    },
+    {
+      "ref": "refs/tags/archive/perf/mutex-hash-admission-20260928",
+      "commit": "ae46afd942edfbcd17d5fc85bd179fb07a87052f",
+      "ancestor_of_audit_base": false,
+      "disposition": "Historical mutex protocol/admission/locality/waiting trial or report; keep archive, exclude rejected runtime policies, retain independently useful reporting changes per feature inventory."
+    },
+    {
+      "ref": "refs/tags/archive/perf/mutex-linux-local-c01-20261014",
+      "commit": "c768c231544b3c2636decdbe6210aa4c52d451d2",
+      "ancestor_of_audit_base": true,
+      "disposition": "Historical mutex protocol/admission/locality/waiting trial or report; keep archive, exclude rejected runtime policies, retain independently useful reporting changes per feature inventory."
+    },
+    {
+      "ref": "refs/tags/archive/perf/mutex-native-first-20261014",
+      "commit": "9a5305e7631247136ea89f1c8ac771afd7da3d8c",
+      "ancestor_of_audit_base": false,
+      "disposition": "Historical mutex protocol/admission/locality/waiting trial or report; keep archive, exclude rejected runtime policies, retain independently useful reporting changes per feature inventory."
+    },
+    {
+      "ref": "refs/tags/archive/perf/mutex-native-first-report-20261014",
+      "commit": "b8808436a4de9dd2e3b70e972d5a3c0091e40c73",
+      "ancestor_of_audit_base": true,
+      "disposition": "Historical mutex protocol/admission/locality/waiting trial or report; keep archive, exclude rejected runtime policies, retain independently useful reporting changes per feature inventory."
+    },
+    {
+      "ref": "refs/tags/archive/perf/mutex-numa-candidate-20260928",
+      "commit": "8f9d3cd9637d27f13aca995b75f8f5748824573c",
+      "ancestor_of_audit_base": false,
+      "disposition": "Historical mutex protocol/admission/locality/waiting trial or report; keep archive, exclude rejected runtime policies, retain independently useful reporting changes per feature inventory."
+    },
+    {
+      "ref": "refs/tags/archive/perf/mutex-numa-rejected-20261003b",
+      "commit": "87888c9e6b8975cef0ee843f1b71bb679d4e9533",
+      "ancestor_of_audit_base": true,
+      "disposition": "Historical mutex protocol/admission/locality/waiting trial or report; keep archive, exclude rejected runtime policies, retain independently useful reporting changes per feature inventory."
+    },
+    {
+      "ref": "refs/tags/archive/perf/mutex-optimistic-c01-20261013",
+      "commit": "260d330f7e0f58e2d894e5e7ba4bfed0a3244850",
+      "ancestor_of_audit_base": false,
+      "disposition": "Historical mutex protocol/admission/locality/waiting trial or report; keep archive, exclude rejected runtime policies, retain independently useful reporting changes per feature inventory."
+    },
+    {
+      "ref": "refs/tags/archive/perf/mutex-optimistic-report-20261013",
+      "commit": "096f1d400916e0a83a32fcb6fb861bfb9ab129be",
+      "ancestor_of_audit_base": true,
+      "disposition": "Historical mutex protocol/admission/locality/waiting trial or report; keep archive, exclude rejected runtime policies, retain independently useful reporting changes per feature inventory."
+    },
+    {
+      "ref": "refs/tags/archive/perf/mutex-owned-hybrid-20261014",
+      "commit": "d8d14a1170c96cf9110c792f8b2391d5a92cdbda",
+      "ancestor_of_audit_base": true,
+      "disposition": "Historical mutex protocol/admission/locality/waiting trial or report; keep archive, exclude rejected runtime policies, retain independently useful reporting changes per feature inventory."
+    },
+    {
+      "ref": "refs/tags/archive/perf/mutex-pack-rejected-20261003b",
+      "commit": "ad59ff314c6b9ffa4f9ee62aa46847f49eb63628",
+      "ancestor_of_audit_base": true,
+      "disposition": "Historical mutex protocol/admission/locality/waiting trial or report; keep archive, exclude rejected runtime policies, retain independently useful reporting changes per feature inventory."
+    },
+    {
+      "ref": "refs/tags/archive/perf/mutex-protocol-c01-20261013",
+      "commit": "722ea98f10abac56eee3b503c264090df47c1612",
+      "ancestor_of_audit_base": false,
+      "disposition": "Historical mutex protocol/admission/locality/waiting trial or report; keep archive, exclude rejected runtime policies, retain independently useful reporting changes per feature inventory."
+    },
+    {
+      "ref": "refs/tags/archive/perf/mutex-protocol-report-20261013",
+      "commit": "de0150816aaf5a0cbf3f76f554dd1393dd1b0689",
+      "ancestor_of_audit_base": true,
+      "disposition": "Historical mutex protocol/admission/locality/waiting trial or report; keep archive, exclude rejected runtime policies, retain independently useful reporting changes per feature inventory."
+    },
+    {
+      "ref": "refs/tags/archive/perf/mutex-retry-rejected-20261003b",
+      "commit": "ae7a26be6fe977db8af4404ade141f89f2c7fe0d",
+      "ancestor_of_audit_base": true,
+      "disposition": "Historical mutex protocol/admission/locality/waiting trial or report; keep archive, exclude rejected runtime policies, retain independently useful reporting changes per feature inventory."
+    },
+    {
+      "ref": "refs/tags/archive/perf/mutex-task-buckets-rejected-20261003",
+      "commit": "781ef6ceb8164c7078d2e11942beaffa81f0c5d9",
+      "ancestor_of_audit_base": true,
+      "disposition": "Historical mutex protocol/admission/locality/waiting trial or report; keep archive, exclude rejected runtime policies, retain independently useful reporting changes per feature inventory."
+    },
+    {
+      "ref": "refs/tags/archive/perf/mutex-task-cache-batch-candidate-20260928",
+      "commit": "a8343f2904d2c97c11e8295a4b16da1f6fa77a5f",
+      "ancestor_of_audit_base": false,
+      "disposition": "Historical mutex protocol/admission/locality/waiting trial or report; keep archive, exclude rejected runtime policies, retain independently useful reporting changes per feature inventory."
+    },
+    {
+      "ref": "refs/tags/archive/perf/mutex-task-cache-candidate-20260928",
+      "commit": "ad4936850a0a2bd9b952350e9db73c360f971f9b",
+      "ancestor_of_audit_base": false,
+      "disposition": "Historical mutex protocol/admission/locality/waiting trial or report; keep archive, exclude rejected runtime policies, retain independently useful reporting changes per feature inventory."
+    },
+    {
+      "ref": "refs/tags/archive/perf/mutex-waiters-only-20261014",
+      "commit": "5dd159ded2d5765d1a4250e13f2df41a2e7c0ca3",
+      "ancestor_of_audit_base": false,
+      "disposition": "Historical mutex protocol/admission/locality/waiting trial or report; keep archive, exclude rejected runtime policies, retain independently useful reporting changes per feature inventory."
+    },
+    {
+      "ref": "refs/tags/archive/remote/perf/mutex-protocol-c01-20261013",
+      "commit": "475e1d62b05c167881c64f8993e4b1e4cd137eb1",
+      "ancestor_of_audit_base": false,
+      "disposition": "Historical mutex protocol/admission/locality/waiting trial or report; keep archive, exclude rejected runtime policies, retain independently useful reporting changes per feature inventory."
+    },
+    {
+      "ref": "refs/tags/archive/task/rwlock-c01-20261015",
+      "commit": "2c8889549d8ee0aa05f6181713ffb1da5f2fc8d0",
+      "ancestor_of_audit_base": true,
+      "disposition": "History/evidence retained; ordinary sleeping rwsem and proc snapshot tools restored with current compatible local exclusion. Historical owned-mutex writer-JIT gate is not restored. Guest outcomes are recorded in the feature-reintegration-20261018 validation receipt."
+    },
+    {
+      "ref": "refs/tags/archive/task/sleep-rwsem-snapshots",
+      "commit": "82f92dbaf91fd4104dbc1170dfdbaff594c22104",
+      "ancestor_of_audit_base": true,
+      "disposition": "History/evidence retained; ordinary sleeping rwsem and proc snapshot tools restored with current compatible local exclusion. Historical owned-mutex writer-JIT gate is not restored. Guest outcomes are recorded in the feature-reintegration-20261018 validation receipt."
+    },
+    {
+      "ref": "refs/tags/archive/wip/mutex-owned-v1-20261013",
+      "commit": "66576d11aac9c67403cde0cf18aafa9533ddd4f5",
+      "ancestor_of_audit_base": true,
+      "disposition": "Historical mutex protocol/admission/locality/waiting trial or report; keep archive, exclude rejected runtime policies, retain independently useful reporting changes per feature inventory."
+    },
+    {
+      "ref": "refs/tags/archive/wip/worktree-20261012",
+      "commit": "09bfffe07f0123622b7b68ae67057339d18ca7f2",
+      "ancestor_of_audit_base": true,
+      "disposition": "Historical ancestor/checkpoint already reachable; current descendants retain applicable features; no blind snapshot restoration."
+    }
+  ],
+  "features": [
+    {
+      "feature": "Sleeping rwsem and proc snapshots",
+      "commits": [
+        "8ce6ab9",
+        "82f92db",
+        "076d4f9",
+        "2c88895"
+      ],
+      "paths": [
+        "include/kd_rwsem.h",
+        "kernel_module/kd_rwsem.c",
+        "workload_modules/rwlock_bench/direct_rwsem.h",
+        "workload_modules/rwlock_bench/direct_spin.h",
+        "workload_modules/rwlock_bench/snapshot_payload.h",
+        "bench/rwlock_compare",
+        "tests/kernel/rwsem"
+      ],
+      "disposition": "Ordinary sleeping KD rwsem implemented without modifying selected mutex or delegating writer bodies. Proc snapshot payloads and runner restored; guest outcomes are recorded in the feature-reintegration-20261018 validation receipt. Full mmap integration remains unsupported."
+    },
+    {
+      "feature": "Pristine completed-body diagnostic",
+      "commits": [
+        "8ce6ab9"
+      ],
+      "paths": [
+        "bench/spin_cacheline/provider/kd_bench.c",
+        "bench/spin_cacheline/provider/kd_bench.h",
+        "bench/spin_cacheline/provider/observation.patch"
+      ],
+      "disposition": "Completion instrumentation restored with proc snapshot runner; guest outcomes are recorded in the feature-reintegration-20261018 validation receipt. Entry witnesses remain distinct from full matching-unlock completion."
+    },
+    {
+      "feature": "Flat kernel CPU samples",
+      "commits": [
+        "1255bdc"
+      ],
+      "paths": [
+        "bench/tclock_compare/run.py",
+        "bench/tclock_compare/session.py",
+        "bench/tclock_compare/test_direct.py"
+      ],
+      "disposition": "Port implemented: --perf-record, 199Hz cycles:k, kallsyms/modules/perf.data/report/script retained; instrumented runs unscored, mutually exclusive PMU. Default PMU events unchanged."
+    },
+    {
+      "feature": "Frozen alternate translator and daemon",
+      "commits": [
+        "797bcad"
+      ],
+      "paths": [
+        "bench/spin_cacheline/bench_session.py"
+      ],
+      "disposition": "Port implemented: optional translation_source/daemon_binary attributes; defaults unchanged."
+    },
+    {
+      "feature": "Syscall publication boundaries",
+      "commits": [
+        "8010f8f"
+      ],
+      "paths": [
+        "bench/real_api/run.py"
+      ],
+      "disposition": "Port implemented: no open translator writers before/after measured call; exact prepared entry/images stable."
+    },
+    {
+      "feature": "Syscall plan identities and bounds",
+      "commits": [
+        "e378642",
+        "8010f8f"
+      ],
+      "paths": [
+        "bench/real_api/run.py",
+        "bench/real_api/test_plan.py"
+      ],
+      "disposition": "Port implemented: extracted plan/worker helpers and tests, duplicate dimensions refused; retain max63 dedicated collector, currentABI2."
+    },
+    {
+      "feature": "Syscall report protocol separation",
+      "commits": [
+        "8010f8f"
+      ],
+      "paths": [
+        "bench/real_api/report.py",
+        "bench/real_api/test_report.py"
+      ],
+      "disposition": "Port/adaptation implemented: source/kernel/topology fingerprints plus explicit current protocol and preserved historical fields; no mixed source/protocol/cohort instrumentation comparisons; diagnostics unscored."
+    },
+    {
+      "feature": "Processor state fail-closed admission",
+      "commits": [
+        "98118e9",
+        "555b8b7"
+      ],
+      "paths": [
+        "disassem/instruction_policy.py",
+        "disassem/context_policy.py",
+        "disassem/translation_scope.py",
+        "tests/unit/admission/test_instruction_policy.py"
+      ],
+      "disposition": "Already retained/backported in accepted compat lineage."
+    },
+    {
+      "feature": "Immutable image generations and concurrent replacement",
+      "commits": [
+        "95bca27",
+        "f208f83",
+        "555b8b7"
+      ],
+      "paths": [
+        "kernel_module/execution/images.inc",
+        "include/kd_image.h",
+        "tests/unit/execution/mutex_images_fixture.c",
+        "tests/unit/execution/test_mutex_images.py"
+      ],
+      "disposition": "Already retained/adapted to legacy mutex lock kind2; old-frame binding and replacement tests retained."
+    },
+    {
+      "feature": "Origin claims and bounded NUMA selection for parkable owned waiters",
+      "commits": [
+        "a761b3c",
+        "0a68dcf",
+        "3a542f4",
+        "c67bb1c"
+      ],
+      "paths": [
+        "disassem/origin_policy.py",
+        "kernel_module/owned_mutex/readiness.inc",
+        "kernel_module/owned_mutex/selection.inc",
+        "tests/kernel/mutex/origin_gs"
+      ],
+      "disposition": "Protocol-specific, excluded. Current published mutex waiters are pinned; existing GS lowering uses pinned origin. Do not import owned readiness/probes/ABI4."
+    },
+    {
+      "feature": "Synthetic size/collector/workload expansion",
+      "commits": [
+        "20bd721",
+        "078557a",
+        "8010f8f",
+        "46e1fd2"
+      ],
+      "paths": [
+        "bench/tclock_compare/run.py",
+        "bench/rwlock_compare/session.py",
+        "bench/spin_cacheline/client.c",
+        "workload_modules/mutex_cacheline",
+        "workload_modules/real_api"
+      ],
+      "disposition": "Current catalogs/tooling already include applicable API/hash/cacheline support, rwlock accounting fix, shared64 synthetic collector; retired c02/c04/c16 selection defaults must not return."
+    },
+    {
+      "feature": "Runtime protocol exploration and obsolete dependent fixtures",
+      "commits": [
+        "1e64120",
+        "260d330",
+        "391dcce",
+        "93291e3",
+        "475e1d6",
+        "722ea98",
+        "66576d1",
+        "585335b",
+        "9a5305e",
+        "5dd159d",
+        "a49a87c"
+      ],
+      "paths": [
+        "kernel_module/owned_mutex",
+        "kernel_module/lock/mutex_policy.inc",
+        "bench/tclock_compare/mutex_study.py",
+        "tests/kernel/mutex/profile"
+      ],
+      "disposition": "Exclude mutex admission/native routing/epochs/ownedCABI/parking/reuse trials. Generic perf sampling isolated above. Historical evidence remains reachable."
+    },
+    {
+      "feature": "Older mutex locality/task-cache/admission trials",
+      "commits": [
+        "ad49368",
+        "8f9d3cd",
+        "a8343f2",
+        "ae46afd",
+        "8faf2fa",
+        "acdda8c",
+        "3d11913",
+        "5274170",
+        "67b7d22",
+        "781ef6c",
+        "87888c9",
+        "ad59ff3",
+        "ae7a26b"
+      ],
+      "paths": [
+        "kernel_module/mutex",
+        "kernel_module/kd_mutex_tasks.c",
+        "include/kd_hotlock.h"
+      ],
+      "disposition": "Exclude experimental protocol/performance candidates; selected runtime already contains independently accepted task/lifetime behavior."
+    },
+    {
+      "feature": "Formatting-only WIP",
+      "commits": [
+        "bc7efcf"
+      ],
+      "paths": [
+        "kernel_module"
+      ],
+      "disposition": "Preserve wip/pre-main-20261018 as requested;35 source formatting/comment edits, no functional feature to merge."
+    },
+    {
+      "feature": "Obsolete VM launchers, trace fixtures, kernel snapshots",
+      "commits": [
+        "46e1fd2"
+      ],
+      "paths": [
+        "tools/vm/run_full_bench.py",
+        "tools/vm/resume_full_bench.py",
+        "tests/protocols/mutex_parallel_events.py",
+        "kernel_baseline/experiments"
+      ],
+      "disposition": "Do not restore obsolete66-vCPU launcher or removed-hook tests; kernel source snapshots retained as historical inputs, no kernel install."
+    }
+  ],
+  "validation": "Read-only audit of 61 refs / 40 unique tips; basic and affected guest checks, two ordinary rwsem probes, 61 successful workload sessions and two retained failed delegation-acceptance attempts. No fresh comparative performance claim.",
+  "validation_receipt": "bench/results/10.176.26.71/tests/feature-reintegration-20261018/README.md"
+}

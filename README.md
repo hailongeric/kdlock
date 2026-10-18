@@ -3,7 +3,9 @@
 kdlock is an experimental x86_64 Linux kernel lock library. A lock holder can
 execute waiting callers' critical sections through a JIT compiler. The project
 provides spinlocks, ordinary mutexes and spinning read-write locks, with matched
-Linux Native and TCLock workloads.
+Linux Native and TCLock workloads. A separate [sleeping rwsem](docs/design/rwsem_implementation.md)
+provides ordinary local readers/writers with Native/KD comparisons; it has no
+delegated writer or TCLock arm.
 
 `master` is the maintained version. Its KD mutex uses **KD-owned physical
 exclusion and the accepted legacy delegation protocol**, selected at `d2a2304`.
@@ -26,6 +28,7 @@ with three repetitions and Native/TCLock controls. The
 - [Tests](tests/README.md), [validation](docs/VALIDATION.md) and [known limitations](docs/TODO.md)
 - [VM operations](docs/operations/VM.md) and [development rules](AGENTS.md)
 - [Branch consolidation](docs/history/main-consolidation-20261018.md) and [historical evidence](docs/history/README.md)
+- [Feature reintegration](docs/history/feature-reintegration-20261018.md): restored proc snapshots, benchmark safeguards and ordinary rwsem
 
 ## Repository
 

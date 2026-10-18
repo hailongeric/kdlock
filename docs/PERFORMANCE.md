@@ -24,8 +24,11 @@ the original matrix; it does not erase the original regression or its variabilit
 The 252 KD measurements comprise 225 JIT-positive sessions and 27 NO_JIT controls.
 The report retains every sample, whole-run and warmed-peak statistics, spread,
 source identities, failed intermediate trials and independent archive replay.
-This consolidation preserves the accepted runtime bytes; its validation is
-recorded separately in [VALIDATION](VALIDATION.md), without claiming new timings.
+The initial consolidation preserved the accepted runtime bytes. The subsequent
+[feature reintegration](history/feature-reintegration-20261018.md) adds ordinary
+rwsem and restores snapshots/tooling while retaining the accepted mutex source.
+Its focused validation is recorded separately in [VALIDATION](VALIDATION.md);
+it is not a new performance matrix or a claim of throughput parity.
 
 ## Other lock families and earlier versions
 

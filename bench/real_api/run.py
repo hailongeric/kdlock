@@ -2,6 +2,7 @@
 """Matched real-syscall comparison, run only in the recorded recovery guest."""
 import argparse
 import fcntl
+import hashlib
 import itertools
 import json
 import os
@@ -305,6 +306,10 @@ class SyscallSession(Session):
 
     def measure(self):
         s = self.record
+        if self.loaded_kd:
+            s['published_before'] = self.publication()
+            require(s['published_before']['source']['writers'] == 0,
+                    'translator writer remains before measurement', 'UNDRAINED')
         before = int((PARAM/'calls').read_text()) if self.loaded_source else 0
         jit = Path('/sys/module/kdlock_km/parameters/bench_jit_bodies')
         jbefore = int(jit.read_text()) if self.loaded_kd else 0
@@ -332,6 +337,13 @@ class SyscallSession(Session):
         s['jit_share'] = s['jit_bodies']/s['jit_eligible_operations'] if s['jit_eligible_operations'] else 0
         s['jit_status'] = ('PASS' if s['jit_bodies'] else 'NO_JIT') if self.loaded_kd else 'NOT_APPLICABLE'
         s['registry_after'] = registry() if self.loaded_kd else []
+        if self.loaded_kd:
+            s['published_after'] = self.publication()
+            require(s['published_after']['source']['writers'] == 0,
+                    'translator writer remains after measurement', 'UNDRAINED')
+            require(s['published_before']['entry'] == s['published_after']['entry'] and
+                    s['published_before']['images'] == s['published_after']['images'],
+                    'published image changed during measurement', 'DATA_ERROR')
         s['tclock_delegation'] = (int(tc_delegated.read_text())-tc_before if tc_before is not None else
                                   'UNMEASURED' if self.loaded_tc else 'NOT_APPLICABLE')
         self.faults()
@@ -389,6 +401,47 @@ class SyscallSession(Session):
         self.record['drained'] = True
 
 
+def worker_cpus(args):
+    """Retain the dedicated collector and reject duplicate cohort identities."""
+    cpus = list(map(int, args.cpus.split(',')))
+    require(bool(cpus) and bool(args.threads) and len(set(cpus)) == len(cpus) and
+            len(set(args.threads)) == len(args.threads) and
+            0 < min(args.threads) <= max(args.threads) <= min(63, len(cpus)) and
+            args.collector_cpu not in cpus[:max(args.threads)],
+            'invalid worker/collector CPUs')
+    require(min(cpus) >= 0 and max(cpus) < 1024 and 0 <= args.collector_cpu < 1024,
+            'CPU outside supported affinity mask')
+    return cpus
+
+
+def make_plan(args):
+    cpus = worker_cpus(args)
+    require(args.repeats > 0 and 0 <= args.helper_waves <= 16,
+            'invalid repeat/helper configuration')
+    for field in ('kinds', 'queries', 'entries', 'backends'):
+        values = getattr(args, field)
+        require(bool(values) and len(set(values)) == len(values),
+                'empty or duplicate plan dimension: ' + field)
+    plan = []
+    for kind, query, count, n, repeat in itertools.product(args.kinds, args.queries, args.entries, args.threads, range(args.repeats)):
+        order = args.backends[repeat % len(args.backends):] + args.backends[:repeat % len(args.backends)]
+        for arm in order:
+            plan.append(dict(name=f'{kind}-{query}-n{count}-t{n:02d}-r{repeat}-{arm}', kind=kind,
+                query=query, entries=count, threads=n, repeat=repeat, arm=arm, value_size=args.value_size,
+                cpus=cpus[:n], collector_cpu=args.collector_cpu, duration_ms=args.duration_ms,
+                peak_window_ms=300, peak_settle_ms=300, sample_ms=10,
+                warmup=args.warmup, warmup_ms=args.warmup_ms,
+                helper_waves=args.helper_waves,
+                syscalls_per_op=2 if kind == 'setfd' else 1,
+                file_descriptions='per-worker' if kind in ('setfd', 'pipebytes', 'pipecap') else 'shared-query',
+                lock_kind=lock_kind(kind),
+                entry_abi=({'spin': 1, 'mutex': 2, 'rwlock': 3}[lock_kind(kind)] if arm == 'kdlock' else 0),
+                caller_abi='clobber' if arm == 'kdlock' else 'c',
+                mutex_implementation=('kd-only-legacy' if arm == 'kdlock' and kind in MUTEX_KINDS
+                                      else 'not_applicable')))
+    return plan
+
+
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('--output', type=Path, required=True)
@@ -417,12 +470,8 @@ def main():
     idle()
     for name in ('real_api', 'tclock_backend_km', 'tclock_mutex_backend_km', 'tclock_rwlock_backend_km', 'tc_allocator_guard'):
         require(not Path('/sys/module', name).exists(), 'existing module: '+name)
-    cpus = list(map(int, args.cpus.split(',')))
-    require(len(set(cpus)) == len(cpus) and 0 < min(args.threads) <= max(args.threads) <= len(cpus)
-            and max(args.threads) <= 63 and args.collector_cpu not in cpus[:max(args.threads)]
-            and args.repeats > 0 and 0 <= args.helper_waves <= 16, 'invalid CPU/repeat configuration')
-    require(min(cpus) >= 0 and max(cpus) < 1024 and 0 <= args.collector_cpu < 1024
-            and 1 <= min(args.entries) <= max(args.entries) <= 4096
+    plan = make_plan(args)
+    require(1 <= min(args.entries) <= max(args.entries) <= 4096
             and 1 <= args.value_size <= 4096 and 700 <= args.duration_ms <= 10000
             and args.warmup > 0 and 0 <= args.warmup_ms <= 10000, 'invalid workload bounds')
     for kind, query in itertools.product(args.kinds, args.queries):
@@ -452,21 +501,13 @@ def main():
     write_json(out/'source-sha256.json', frozen)
     build(out, args)
     require(sources() == frozen, 'source changed during build')
-    plan = []
-    for kind, query, count, n, repeat in itertools.product(args.kinds, args.queries, args.entries, args.threads, range(args.repeats)):
-        order = args.backends[repeat % len(args.backends):] + args.backends[:repeat % len(args.backends)]
-        for arm in order:
-            plan.append(dict(name=f'{kind}-{query}-n{count}-t{n:02d}-r{repeat}-{arm}', kind=kind,
-                query=query, entries=count, threads=n, repeat=repeat, arm=arm, value_size=args.value_size,
-                cpus=cpus[:n], collector_cpu=args.collector_cpu, duration_ms=args.duration_ms,
-                peak_window_ms=300, peak_settle_ms=300, sample_ms=10,
-                warmup=args.warmup, warmup_ms=args.warmup_ms,
-                helper_waves=args.helper_waves,
-                syscalls_per_op=2 if kind == 'setfd' else 1,
-                file_descriptions='per-worker' if kind in ('setfd', 'pipebytes', 'pipecap') else 'shared-query',
-                lock_kind=lock_kind(kind),
-                entry_abi=({'spin': 1, 'mutex': 2, 'rwlock': 3}[lock_kind(kind)] if arm == 'kdlock' else 0),
-                caller_abi='clobber' if arm == 'kdlock' else 'c'))
+    # Bind every exported sample to the frozen source and captured kernel /
+    # topology, so combining reports cannot silently combine different builds.
+    source_identity = hashlib.sha256(json.dumps(frozen, sort_keys=True).encode()).hexdigest()
+    for spec in plan:
+        spec.update(source_identity=source_identity,
+                    kernel_identity=digest(out/'kernel-identity.json'),
+                    topology_identity=digest(out/'topology.txt'))
     write_json(out/'plan.json', plan)
     try:
         for i, spec in enumerate(plan):

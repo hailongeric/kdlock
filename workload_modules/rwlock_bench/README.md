@@ -1,12 +1,13 @@
-# Read-write lock benchmark workload
+# Reader/writer and proc snapshot benchmark workload
 
 `rwlock_bench.ko` exposes `/dev/kd_rwlock_bench` for the
 [comparison runner](../../bench/rwlock_compare/README.md). Build variants select
-Linux native, TCLock or KD rwlocks through `RB_BACKEND`; all use the same timed
-worker loop, operation mix and payload.
+Linux native, TCLock or KD through `RB_BACKEND` and the locking shell through
+`RB_LOCK_KIND=rwlock|spin|rwsem`. All use the same timed worker loop, operation
+mix and payload. TCLock has no sleeping rwsem backend.
 The runner defaults to RCUHT at 1% and 20% writes across all fifteen requested
-thread counts. Readers execute locally; only KD writer bodies can contribute
-to the returned-body JIT count. TCLock uses the actual upstream rwlock algorithm,
+thread counts. Rwlock readers execute locally; only KD writer bodies can contribute
+to the complete-body JIT count. TCLock uses the actual upstream rwlock algorithm,
 with its delegation share reported as unmeasured.
 
 Cacheline variants compile a fixed `RB_LINES` body. Hash variants use
@@ -21,6 +22,24 @@ the earlier cacheline benchmark's multiply/add pattern;
 Its default is four rounds, independent of the shared spin/mutex post-work
 setting. RCUHT here is a globally locked hash workload, with no per-body
 allocation or RCU services; the name does not imply lock-free reader execution.
+Future cacheline benchmark selections use `RB_LINES=1` or `RB_LINES=8`.
+
+`RB_LOCK_KIND=spin RB_WORKLOAD=argbounds|taskname RB_LINES=0` selects extracted
+Linux 6.1.159 proc snapshots. Argument bounds copy four related address fields;
+task names call `strscpy_pad()` and verify the complete padded destination after
+unlock. Both retain exclusive spin semantics. Snapshot reads are the KD delegated
+entry; optional mutations use the same physical KD lock locally. The mutation
+counter and per-reader checks detect lost updates and inconsistent snapshots.
+These tests exclude task/MM lifetime management and procfs I/O. Task-name helper
+learning can be refused by strict instruction admission; a published NORMAL image
+or an entry witness alone does not establish complete delegation.
+
+`RB_LOCK_KIND=rwsem` selects Native or KD sleeping reader/writer operations for
+the cacheline/hash payloads. All bodies execute locally. KD uses the selected
+physical KD mutex as its admission gate and a sleeping reader-drain wait; it
+does not restore the historical owned-mutex or ABI4 writer integration. The
+runner rejects `--require-jit` for this shell and records no delegated entry.
+This extracted benchmark does not replace a live kernel `mmap_lock`.
 
 The versioned [ABI](api.h) configures each phase while no workers are active. Each
 worker claims its slot once and executes its whole batch in one ioctl. It publishes

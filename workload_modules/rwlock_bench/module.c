@@ -137,6 +137,10 @@ static long rb_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 		.post_work_rounds = RB_POST_WORK_ROUNDS,
 #ifdef RB_HASH
 		.workload = 1,
+#elif defined(RB_TASKNAME)
+		.workload = 2,
+#elif defined(RB_SNAPSHOT_PAYLOAD)
+		.workload = 3,
 #endif
 	};
 	unsigned int i;

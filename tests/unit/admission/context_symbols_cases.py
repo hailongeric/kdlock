@@ -662,6 +662,10 @@ with (
             "__mutex_lock_slowpath",
             "atomic_dec_and_mutex_lock",
             "atomic_dec_and_mutex_lock.isra.0",
+            "kd_down_read",
+            "kd_up_write",
+            "kd_downgrade_write",
+            "kd_rwsem_init.constprop.0",
             "rcu_read_unlock",
             "synchronize_rcu_expedited",
             "local_bh_enable",
@@ -705,3 +709,37 @@ with (
             self.assertRaises(OSError),
         ):
             context_policy.load_context_symbols()
+
+    def test_local_rwsem_apis_are_context_boundaries(self):
+        names = (
+            "kd_rwsem_init", "kd_rwsem_is_idle",
+            "kd_down_read", "kd_down_read_interruptible", "kd_down_read_killable",
+            "kd_down_read_trylock", "kd_up_read", "kd_down_write",
+            "kd_down_write_interruptible", "kd_down_write_killable",
+            "kd_down_write_trylock", "kd_up_write", "kd_downgrade_write",
+        )
+        for name in names:
+            for suffix in ("", ".isra.0"):
+                symbol = name + suffix
+                text = f"3000 T {symbol} [kdlock_km]\n3100 T ordinary [kdlock_km]\n"
+                with patch("builtins.open", mock_open(read_data=text)):
+                    symbols = context_policy.load_context_symbols()
+                self.assertEqual(symbols.resolve(0x3008), symbol)
+                for kind in ("spin", "mutex"):
+                    # Reject both direct and interior tail calls before codegen;
+                    # neither can become a CALL-miss helper or nested endpoint.
+                    for raw in ("e8fb1f0000c3", "e903200000"):
+                        with self.subTest(symbol=symbol, kind=kind, raw=raw):
+                            log = self.assert_rejected(raw, lock_kind=kind, symbols=symbols)
+                            self.assertIn(symbol, log)
+
+    def test_late_helper_with_local_rwsem_rejects_enclosing_entry(self):
+        caller = "e8fb0f0000c3"
+        for kind in ("spin", "mutex"):
+            with self.subTest(kind=kind):
+                log = self.assert_rejected(caller, lock_kind=kind,
+                    regions=[(bytes.fromhex(caller), 0x1000, [0x1000]),
+                             (bytes.fromhex("e8fb0f0000c3"), 0x2000, [0x2000])],
+                    symbols={0x3000: "kd_down_write_killable"})
+                self.assertIn('entry="0x1000"', log)
+                self.assertIn('rip="0x2000"', log)

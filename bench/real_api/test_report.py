@@ -20,6 +20,39 @@ def record(whole=10, peak=12, *, arm='kdlock', **changes):
 
 
 class ReportTests(unittest.TestCase):
+    def test_source_and_protocol_variants_never_pool(self):
+        for changes in (dict(source_identity='other-source'),
+                        dict(entry_abi=4), dict(mutex_implementation='owned-v1'),
+                        dict(cpus=[2, 3]), dict(pmu=True)):
+            rows = [record(kind='pipebytes', query='query', source_identity='current',
+                           entry_abi=2, mutex_implementation='kd-only-legacy', cpus=[0, 1])]
+            rows.append(dict(rows[0], **changes))
+            with self.subTest(changes=changes), tempfile.TemporaryDirectory() as temporary:
+                self.assertEqual(len(summarize(rows)), 2)
+                with self.assertRaisesRegex(ValueError, 'distinct'):
+                    write_report(Path(temporary), rows)
+
+    def test_backend_comparison_requires_matching_source_and_placement(self):
+        for changes in (dict(source_identity='other-source'), dict(cpus=[2, 3]),
+                        dict(collector_cpu=3), dict(duration_ms=5000)):
+            rows = [record(source_identity='current', cpus=[0, 1], collector_cpu=63,
+                           duration_ms=2000)]
+            rows.append(dict(rows[0], arm='native', **changes))
+            with self.subTest(changes=changes), tempfile.TemporaryDirectory() as temporary:
+                with self.assertRaisesRegex(ValueError, 'cannot compare'):
+                    write_report(Path(temporary), rows)
+
+    def test_protocol_cannot_change_between_thread_counts(self):
+        rows = [record(entry_abi=2), record(threads=4, entry_abi=4)]
+        with tempfile.TemporaryDirectory() as temporary:
+            with self.assertRaisesRegex(ValueError, 'across cohorts'):
+                write_report(Path(temporary), rows)
+
+    def test_instrumented_syscall_records_are_unscored(self):
+        row, = summarize([record(diagnostic=True)])
+        self.assertEqual((row['accepted'], row['diagnostics']), (0, 1))
+        self.assertIsNone(row['whole_median'])
+
     def test_failures_unrun_and_undrained_never_improve_score(self):
         rows = [record(), record(20, 25, jit_bodies=0),
                 record(1000, 2000, execution_status='DATA_ERROR'),

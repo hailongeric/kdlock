@@ -1,10 +1,66 @@
-# Read-write lock comparison
+# Reader/writer and proc snapshot comparisons
 
 This runner compares Linux native rwlocks, the
 [TCLock rwlock port](../../tclock_backend/README.md) and
 [KD rwlocks](../../docs/design/rwlock_implementation.md) on the same workload.
 Use the separate [correctness test](../../workload_modules/rwlock/README.md) for
 instrumented checks of reader overlap and writer exclusion.
+The same runner also supports ordinary sleeping rwsems and extracted proc spin
+snapshots. These modes keep distinct lock, caller and execution identities.
+
+## Additional explicit modes
+
+`--lock-kind rwsem --backends native kdlock` compares Linux rwsem with the
+[ordinary KD sleeping semaphore](../../docs/design/rwsem_implementation.md) on
+c01/c08 or RCUHT. All readers and writers execute locally; KD has no delegated
+rwsem entry and the runner requires zero JIT counts. There is no TCLock sleeping
+rwsem backend. `--require-jit` is rejected. This mode does not replace the real
+kernel mmap lock. Use the [scheduler probe](../../tests/kernel/rwsem/README.md)
+for sleeping holders, same-CPU progress, cancellation and downgrade coverage.
+
+`--lock-kind spin --workloads argbounds taskname` selects module-owned extracted
+proc snapshots. All snapshots take an exclusive spinlock; KD may delegate the
+snapshot read, while mutation runs locally through the same selected lock.
+`argbounds` copies four words. `taskname` calls the exact kernel `strscpy_pad()`
+with a 16-byte name and 64-byte padded output. Names/tuples are validated after
+unlock; a mixed run also checks exact mutation totals. These are not full procfs
+syscalls or an end-to-end `ps` workload.
+
+Task-name preparation uses at most `--helper-waves 8` fully drained learning
+rounds, saving each published image. A NORMAL image with no completed body does
+not establish helper readiness. The historical exact helper was refused for
+uncaptured R13 under spin ABI1; do not bypass this admission check. Use
+`--delegate off` for an explicitly local KD control, keeping it separate from
+default-KD acceptance attempts.
+
+The [fresh reintegration checks](../results/10.176.26.71/tests/feature-reintegration-20261018/README.md)
+passed local rwsem and snapshot correctness. Argbounds completed delegated bodies
+in three default-policy timed eight-worker runs; its short 16-worker check was
+`NO_JIT`. Taskname exhausted the learning waves without complete delegation in
+the current acceptance attempt. Keep both outcomes and local controls explicit.
+
+Examples below run only after the guest/snapshot checks described next. Choose
+new external output directories:
+
+```sh
+# Ordinary sleeping rwsem; correctness only, no performance score.
+timeout 900s python3 bench/rwlock_compare/run.py \
+  --lock-kind rwsem --backends native kdlock --workloads cacheline \
+  --cachelines 1 8 --write-percent 1 20 --threads 1 8 \
+  --functional --repeats 1 --collector-cpu 63 \
+  --output /root/kdlock-evidence/10.176.26.71/tests/rwsem-functional-NEW
+
+# Extracted four-word snapshot; read-only and controlled mutations.
+timeout 900s python3 bench/rwlock_compare/run.py \
+  --lock-kind spin --workloads argbounds --write-percent 0 20 \
+  --threads 1 8 --functional --repeats 1 --collector-cpu 63 \
+  --output /root/kdlock-evidence/10.176.26.71/tests/argbounds-functional-NEW
+```
+
+For fresh performance use the standard grid through 60 workers and three
+repetitions from [benchmark commands](../README.md#standard-worker-grid).
+The [2026-10-15 snapshot results](../results/10.176.26.71/bench/proc_snapshots/20261015/README.md)
+belong to their frozen historical provider; restoring source is not a new score.
 
 Build, test and run only in the recovery guest on `10.176.26.71`. Follow
 [operations](../../docs/operations/VM.md) to verify the kernel, confirm a recovery snapshot
@@ -145,9 +201,11 @@ unchanged. Hash checks cover membership, unique keys, backlinks, bucket placemen
 and move/conflict/miss totals. Worker CPU, arithmetic checksum, preemption/IRQ
 balance and final reader/writer count and gate state must also match.
 
-KD's JIT share is **returned JIT writer bodies / completed writes**. Reads are
-excluded. `NO_JIT` means no returned JIT bodies were observed; a native run may
-still have valid throughput. NORMAL only means code was published.
+For rwlock, KD's eligible operations are writes; for spin snapshots they are
+reads. Entry witnesses and complete matching-outer-unlock bodies are recorded
+separately. `--require-jit` requires at least one complete body, and
+`PARTIAL_JIT` must not count as completion. Rwsem and explicit local controls
+must return zero JIT. NORMAL only means code was published.
 `--require-jit` fails a selected multithreaded KD writer case if it returns no JIT
 bodies. Read-only and delegation-disabled controls must return zero. TCLock uses
 native stack delegation, but its share is **UNMEASURED**. Neither throughput nor
@@ -166,7 +224,8 @@ logs. Each run also has a `session.json`.
 | `parity.json` | Whether KD meets the throughput target at each combination of write percentage and thread count. |
 
 Functional runs have no performance summary entries. For performance parity, both
-of these must hold against **each** of Native and TCLock:
+of these must hold against **each** of Native and TCLock for spin/rwlock, or
+against Native for ordinary rwsem:
 
 1. KD's best warmed peak is at least as high.
 2. KD's median whole-run rate is at least as high.

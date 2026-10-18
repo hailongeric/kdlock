@@ -1,0 +1,387 @@
+{
+  "generated_utc": "2026-10-18T06:59:26.495322+00:00",
+  "head": "8a20380b6110d787f9311c7d3f51b507f42a95f7",
+  "scope": "Static AST/JSON parsing, Git whitespace checks, and local Markdown path existence. No project imports/tests. Maintained docs plus all changed Markdown, including new validation README. External URLs and anchors not checked.",
+  "self_hash_excluded": "bench/results/10.176.26.71/tests/feature-reintegration-20261018/static-audit.json",
+  "changed_python_count": 16,
+  "changed_json_count": 10,
+  "syntax_errors": [],
+  "syntax_inputs": [
+    {
+      "path": "bench/real_api/report.py",
+      "sha256": "b59e4a222a3130c808620c504c9c05c0fcb17b357bcb35b5982c67ff9d40f8c6",
+      "format": "py",
+      "valid": true
+    },
+    {
+      "path": "bench/real_api/run.py",
+      "sha256": "686dc9566ee7b23a60277457e941d004417ffca10ca6b779090c861210352642",
+      "format": "py",
+      "valid": true
+    },
+    {
+      "path": "bench/real_api/test_plan.py",
+      "sha256": "56e9b5dc14a704c73771a3d7381ea4d1ec027a4561b2ba2c1041bd111dd32d74",
+      "format": "py",
+      "valid": true
+    },
+    {
+      "path": "bench/real_api/test_report.py",
+      "sha256": "01d517a69e9570272d351ffde37e6150ce510d315879b0208d27e867db643376",
+      "format": "py",
+      "valid": true
+    },
+    {
+      "path": "bench/results/10.176.26.71/tests/feature-reintegration-20261018/archive.json",
+      "sha256": "fddd97a6831fff3680b6ce5ad8505cd7ee1d5c9a2e33f9e84e0c8e66296e7fbf",
+      "format": "json",
+      "valid": true
+    },
+    {
+      "path": "bench/results/10.176.26.71/tests/feature-reintegration-20261018/commands.json",
+      "sha256": "202a2e43aaac3dc1d6910947fac898a3d51a0a8085d674f7f682840f712f7bc1",
+      "format": "json",
+      "valid": true
+    },
+    {
+      "path": "bench/results/10.176.26.71/tests/feature-reintegration-20261018/final-health.json",
+      "sha256": "fb7161680a7378a6b55b4b71bdb65bc4307ccc51ec5ffdf53b37657519f91c36",
+      "format": "json",
+      "valid": true
+    },
+    {
+      "path": "bench/results/10.176.26.71/tests/feature-reintegration-20261018/initial-log-assessment.json",
+      "sha256": "61aa4046410bcf37b6889de2ddc48074f646aa050bcaf439823ec33dbc650ac7",
+      "format": "json",
+      "valid": true
+    },
+    {
+      "path": "bench/results/10.176.26.71/tests/feature-reintegration-20261018/runtime-equivalence.json",
+      "sha256": "5f9ba11198174140c5d12420fd4f3f62490957150eb09422e8b85f129ee08bb1",
+      "format": "json",
+      "valid": true
+    },
+    {
+      "path": "bench/results/10.176.26.71/tests/feature-reintegration-20261018/rwsem-probe-final.json",
+      "sha256": "48828ee47f92309405cb3b33d6f0649ec9d391e001d62e0545fc6de0e1d6a8a6",
+      "format": "json",
+      "valid": true
+    },
+    {
+      "path": "bench/results/10.176.26.71/tests/feature-reintegration-20261018/sessions.json",
+      "sha256": "444e6f872fced730b1aa863d1effd7874b0370aee87f785c3037fef75df2719f",
+      "format": "json",
+      "valid": true
+    },
+    {
+      "path": "bench/results/10.176.26.71/tests/feature-reintegration-20261018/source-manifests.json",
+      "sha256": "ead01b97920d9dac07920964cb2e549c4d68d81e48e44706dad26bb7b7d19719",
+      "format": "json",
+      "valid": true
+    },
+    {
+      "path": "bench/results/10.176.26.71/tests/feature-reintegration-20261018/validation.json",
+      "sha256": "747270a72132e3b50301b559fef977565a041e82e9ea71c44ac8e1157f87a3bf",
+      "format": "json",
+      "valid": true
+    },
+    {
+      "path": "bench/rwlock_compare/oracle.py",
+      "sha256": "06944b376837ab4f16a08835fe4142dac0c131d3d5ebae1acb264f94037cb092",
+      "format": "py",
+      "valid": true
+    },
+    {
+      "path": "bench/rwlock_compare/parity.py",
+      "sha256": "d131d9311aafe8021e3cb894cc850f41e7bdefd77863e56bd27e04522ecbcf6c",
+      "format": "py",
+      "valid": true
+    },
+    {
+      "path": "bench/rwlock_compare/run.py",
+      "sha256": "e27a046dfbef9a4d268e7c84702c9a020b80a49a5d36256197a85d9f163dd59f",
+      "format": "py",
+      "valid": true
+    },
+    {
+      "path": "bench/rwlock_compare/session.py",
+      "sha256": "637d549215383cc635119dbc632159ed5adf1bebaace342266c6fb4be9f6f2c4",
+      "format": "py",
+      "valid": true
+    },
+    {
+      "path": "bench/rwlock_compare/test_bench.py",
+      "sha256": "d58730afced18a145c7395e80b1cc5179b6193013d6d755b00d9a1f71c6831a7",
+      "format": "py",
+      "valid": true
+    },
+    {
+      "path": "bench/spin_cacheline/bench_session.py",
+      "sha256": "61fd03ccfad3b0f182485bd64e8e23cd32d95c55ec449ceaffd3927f41bb52bb",
+      "format": "py",
+      "valid": true
+    },
+    {
+      "path": "bench/tclock_compare/run.py",
+      "sha256": "1d0d47a5bfed14896d9156232f3ec035c5c4c16433c060c6b3d1c39d3df6d4a7",
+      "format": "py",
+      "valid": true
+    },
+    {
+      "path": "bench/tclock_compare/session.py",
+      "sha256": "897d477f0bdb9baa147f29de982dd345db21ce9b58aa788eca5ad84ce8ab50a7",
+      "format": "py",
+      "valid": true
+    },
+    {
+      "path": "bench/tclock_compare/test_direct.py",
+      "sha256": "3eb9389d1d025a40721dfc16c468c59649989202292c78e6b734fb2a0a8ad1f1",
+      "format": "py",
+      "valid": true
+    },
+    {
+      "path": "disassem/context_symbols.py",
+      "sha256": "461355ee6cfead5a43fe5ea9673577ea930112c81629255657f1db2bcb805e64",
+      "format": "py",
+      "valid": true
+    },
+    {
+      "path": "docs/history/feature-reintegration-20261018.json",
+      "sha256": "26c274853985757a2af8666644f49a56424d55626e0a1799f65508da470e8226",
+      "format": "json",
+      "valid": true
+    },
+    {
+      "path": "tests/kernel/rwsem/run.py",
+      "sha256": "e95fb6e6b9d6aff6270c3419f3ed6aa62a68dd3a8a5589fcd22456a14d05af05",
+      "format": "py",
+      "valid": true
+    },
+    {
+      "path": "tests/unit/admission/context_symbols_cases.py",
+      "sha256": "8a97eaf869efe61f1af2942038deecc2c64da683874abf471ce34922dd3113e3",
+      "format": "py",
+      "valid": true
+    }
+  ],
+  "git_diff_check": {
+    "exit_code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  "untracked_whitespace_errors": [],
+  "markdown_count": 50,
+  "local_link_count": 659,
+  "broken_local_links": [],
+  "fragment_only_links_skipped": 2,
+  "external_links_skipped": 23,
+  "unchanged_historical_markdown_excluded_prefixes": [
+    "bench/results/",
+    "docs/history/",
+    "bench/archive/",
+    "kernel_baseline/experiments/"
+  ],
+  "markdown_inputs": [
+    {
+      "path": "AGENTS.md",
+      "sha256": "09c55de602ff530b7ad7e8054069fb26f6e9cd28a8d3efd6e2fb93be6b5f7e5c"
+    },
+    {
+      "path": "README.md",
+      "sha256": "ebefa7198ff4f51bd2bbb33cafb8882c599bac9d85e7a1745f7980765aa5ea65"
+    },
+    {
+      "path": "bench/README.md",
+      "sha256": "de091430776cfdd4243b39aff970d9c7422c7c371d5aa880606221b83ac1ad0b"
+    },
+    {
+      "path": "bench/real_api/README.md",
+      "sha256": "4084c834bf98a8729c8d4a94b3879783da2d499fe754176c536114a9c1ab791e"
+    },
+    {
+      "path": "bench/results/10.176.26.71/README.md",
+      "sha256": "39f9cf6bd0d65febef8cc2c87e4131a51d43e4be690163ecf5f4093897899462"
+    },
+    {
+      "path": "bench/results/10.176.26.71/tests/feature-reintegration-20261018/README.md",
+      "sha256": "4e0e203591e1f4011e6aed8147a77b68a76ccd64972c5cf38a0edb51a2abd8c8"
+    },
+    {
+      "path": "bench/results/README.md",
+      "sha256": "f899a4614bb9d00bda241eaf9aac189ac9e5ddb14e2712146f953ae79956bc33"
+    },
+    {
+      "path": "bench/rwlock_compare/README.md",
+      "sha256": "12b0a074d2edc13a5277d6569e4ad9b66dfab001cb2791309e995b1f2649d12b"
+    },
+    {
+      "path": "bench/spin_cacheline/README.md",
+      "sha256": "4c368b388d345b54cda9f5e0100ab416053e5710afe0d24419b815ee2cfb8a06"
+    },
+    {
+      "path": "bench/tclock_compare/README.md",
+      "sha256": "7fd6546aeca84547faa96db8d9962e3fa2b051976df00810dc0673ef8aed41ec"
+    },
+    {
+      "path": "daemon/README.md",
+      "sha256": "821d7f98fb9af9f5bb0f47d8f6dd4d86c93c169cba04660ed4b4eb61e44ea519"
+    },
+    {
+      "path": "disassem/README.md",
+      "sha256": "c4e2cfbf84a83d3e3bf74556e5d6dfe01399186db0d7a781bdde31d5f3eb757f"
+    },
+    {
+      "path": "docs/BENCHMARK_WORKLOADS.md",
+      "sha256": "1df3880d6ec1a364255fb888246b7baff845d8f340d0197e07eeb24634500a74"
+    },
+    {
+      "path": "docs/CODE_MAP.md",
+      "sha256": "341b4eaf3152c91d46512939187a7b2404325e93e33d012e3ea44b816d5513d3"
+    },
+    {
+      "path": "docs/DESIGN.md",
+      "sha256": "3ff5b4e41f9598ba35575e366f588dd4bb4faf7e7b7a03639439a895f0df2553"
+    },
+    {
+      "path": "docs/JIT_EXECUTION.md",
+      "sha256": "39bc29fe6a9b1cc2fe82f8d1e56ee5c077ac7395f4ddf417e7890cebe1f463fa"
+    },
+    {
+      "path": "docs/JIT_REGISTER_ABI.md",
+      "sha256": "a2c4dbdde99d8396e7790ecdc653aa789eb7ca3c327e4a76f5142eec4fb966e8"
+    },
+    {
+      "path": "docs/PERFORMANCE.md",
+      "sha256": "ac5e20324e2062fc34a6ccd112f3c6422be2b08edca5e807803f568701db2ccc"
+    },
+    {
+      "path": "docs/PROJECT_GUIDE.md",
+      "sha256": "92f946c6eca02030298f40193fe821a90737aeb76112214af858f6e8c23905e4"
+    },
+    {
+      "path": "docs/README.md",
+      "sha256": "59de1b7b644a91a84e81422f8e60f3a77f0f2ebbd556804535d5d379c751342f"
+    },
+    {
+      "path": "docs/TODO.md",
+      "sha256": "5d1283dfb993bffaeab76d1d3e92bde5fb524d5bbdaec5900fbceebf110701e8"
+    },
+    {
+      "path": "docs/VALIDATION.md",
+      "sha256": "6434f16f29135769b5618edfb5645a830aff3ea218c45a691d004d87515ba7dd"
+    },
+    {
+      "path": "docs/design/admission.md",
+      "sha256": "17658e3b8778e42b43b04dc1c561d59e7f61faee9c4cf2dc5626399fa52c12b0"
+    },
+    {
+      "path": "docs/design/frames.md",
+      "sha256": "77b838ff531dfe02c193bf2ffc3de3c30b7a82104ad02d8ccab495f0f5e5a67d"
+    },
+    {
+      "path": "docs/design/kd_only_mutex.md",
+      "sha256": "ef9267efb0378b4bcc7228a2ebc2cccc8d01cceefd704a6ee22390d58b6192d0"
+    },
+    {
+      "path": "docs/design/lifetimes.md",
+      "sha256": "c25f8440f7d717c9ea907872c4ed8d5bc3f6c5b994eec68676defe522a01347c"
+    },
+    {
+      "path": "docs/design/lock_protocols.md",
+      "sha256": "a9b48fa04857a0438af42c846c935179f339acb7e5200780e86902f037e34710"
+    },
+    {
+      "path": "docs/design/locking.md",
+      "sha256": "2ea5990bf0e13983fc07e1a2d130aa28d5e64c5cbe380ca1de8f67f66298c264"
+    },
+    {
+      "path": "docs/design/mutex_implementation.md",
+      "sha256": "9c02acc61115adbbc1e268781ac67eb4c44c0c87a422616153ca632d314a0ab3"
+    },
+    {
+      "path": "docs/design/rwlock_implementation.md",
+      "sha256": "f30ae36c544982116e1946869e542ed972326afb8cb28e07a0126876efc65cac"
+    },
+    {
+      "path": "docs/design/rwsem_implementation.md",
+      "sha256": "b828ef924c8f053e7b7931cca658c595d9232c189a84db231b6899aa6660daa4"
+    },
+    {
+      "path": "docs/design/spin_implementation.md",
+      "sha256": "a03e075408563dca34057b1dbafe7b0e2a5b879b02841fbd7b8ff0a56697b3d1"
+    },
+    {
+      "path": "docs/history/README.md",
+      "sha256": "70f9ab15b29020d89a5f8a4b3559722109c01ac14f4562e9e16c2df1062666bf"
+    },
+    {
+      "path": "docs/history/feature-reintegration-20261018.md",
+      "sha256": "fd5f6c89a62bcad7978bc18fb87b1ad95865452aaa15d05f23873fbf7f43c566"
+    },
+    {
+      "path": "docs/history/main-consolidation-20261018.md",
+      "sha256": "bdf8b3aae27372a90570d683762b7206f4f3b3b127914c4dd657823ece44cf7e"
+    },
+    {
+      "path": "docs/operations/VM.md",
+      "sha256": "4d36ee61f7adb844a5fff65d440ff2857d24c341d50d8d2bd649270b9aade096"
+    },
+    {
+      "path": "include/README.md",
+      "sha256": "061a583b6f824af02bf78fb693c794a2c2698e2d211b52df6a787b65823bba88"
+    },
+    {
+      "path": "kernel_baseline/README.md",
+      "sha256": "56204ffb2f575d574c4b7db59f47e38bb0b00b141f800e0ce1d10384e4b39a03"
+    },
+    {
+      "path": "kernel_module/README.md",
+      "sha256": "440b6dd1eb7044eadcf592fecce318aebe495b12898a289bcad3ece8c26c9203"
+    },
+    {
+      "path": "tclock_backend/README.md",
+      "sha256": "2481a5d71e2488f2bbc0d1ad2faa0f54f3aedce1ebeb7da361368ed586736774"
+    },
+    {
+      "path": "tests/README.md",
+      "sha256": "047daf47f13cf9e91dacc5d6f8c5d9ab2e7990a768831c31ce511a47571f0f00"
+    },
+    {
+      "path": "tests/kernel/rwlock/README.md",
+      "sha256": "c57921766a6f5988c5fb3f3b9e650e0eabb6e14b4d8b8cda915a2cd458f25983"
+    },
+    {
+      "path": "tests/kernel/rwsem/README.md",
+      "sha256": "f30064dee3a5ab6a6a6bb5526bda96b5bcdcf6900b1d240e93de5a5121eafa00"
+    },
+    {
+      "path": "tests/kernel/spin/irq_api/README.md",
+      "sha256": "eaa67f3d31d9aac946b8aa86615df8e06bd2ccc98b53381a0078006103b15add"
+    },
+    {
+      "path": "tools/vm/README.md",
+      "sha256": "49b0b0dbf075854cc394d044a003d4dbd3286c8aed6423284908b54f37df90c2"
+    },
+    {
+      "path": "workload_modules/README.md",
+      "sha256": "e739fdd7d0860ba728b289080f220eed433efafd0add9edbb66419b6ad0bccd1"
+    },
+    {
+      "path": "workload_modules/mutex_cacheline/README.md",
+      "sha256": "ef349efb1994ed548f096e2b12e3b4d2e29f4272ffcfd182d007d290eafcb4ef"
+    },
+    {
+      "path": "workload_modules/rwlock/README.md",
+      "sha256": "b5e65ea9cd8a941c348b5d9469d0fe2df454d1eaa2a39de0680c650216b7bbba"
+    },
+    {
+      "path": "workload_modules/rwlock_bench/README.md",
+      "sha256": "e1b7bd7db76acd8c68a62807ff3bcf6d0904b6d9d595e7023919d4c774a12a73"
+    },
+    {
+      "path": "workload_modules/spin_cacheline/README.md",
+      "sha256": "e45f523e5805136e080e8c371f04d6b39eb0882f10f599afb10416d9bd337acc"
+    }
+  ],
+  "passed": true
+}

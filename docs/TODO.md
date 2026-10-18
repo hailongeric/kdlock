@@ -5,7 +5,8 @@ assumption. Whole-kernel rebuilding, lockdep/RT/ww_mutex integration and broad
 oversubscription remain unvalidated. Removing the Linux mutex bridge does not
 resolve historical pinned-producer scheduling failures.
 
-Current scope: x86_64 kernel spin/mutex/rwlock delegation. Implementation contracts
+Current scope: x86_64 kernel spin/mutex/rwlock delegation and ordinary local
+sleeping rwsem. Implementation contracts
 live in [DESIGN](DESIGN.md); [performance status](PERFORMANCE.md) distinguishes the
 accepted KD-only mutex from historical spin/rwlock comparisons. These unresolved issues
 remain documented; this list does not schedule new work. Historical evidence is
@@ -49,8 +50,10 @@ exact acquisition references and final ACKs. Shared storage must survive its fin
 reader. Builds/tests/benchmarks run in the recovery guest; default work does not
 change its kernel. Published KD waiters remain pinned polling.
 
-Userspace/futex, rwsem, other architectures and oversubscription redesign are outside
-this phase. Basic plus directly affected checks are the default; full suites need
+Userspace/futex, delegated rwsem, real mmap-lock replacement, other architectures
+and oversubscription redesign remain deferred. The [ordinary rwsem port](design/rwsem_implementation.md)
+uses KD physical locking; its local execution does not fix reader-drain ordering
+or pinned-waiter progress for delegated writers. Basic plus directly affected checks are the default; full suites need
 explicit selection. Extremely uncommon scheduling/resource/alias combinations are
 optional coverage, while reproduced supported-path failures must remain visible.
 

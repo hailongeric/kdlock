@@ -4,6 +4,17 @@ Validation applies to the recorded inputs and scope. Publication, returned JIT
 execution, correctness, drain and performance parity are distinct observations.
 Basic plus affected checks are the default; an old pass is not a current full pass.
 
+## Feature reintegration, 2026-10-18
+
+The [reintegration receipt](../bench/results/10.176.26.71/tests/feature-reintegration-20261018/README.md)
+records ordinary sleeping rwsem, proc snapshots and independent benchmark tools.
+Basic/affected tests, two rwsem scheduler probes and 61 workload sessions passed;
+two failed delegation-acceptance attempts remain visible. Timed argbounds and a
+rwlock writer check have fresh complete-body evidence. Taskname delegation did
+not pass preparation; its explicit local controls passed. The accepted mutex
+source is unchanged. This is neither whole-kernel mmap integration nor a new
+full performance matrix.
+
 ## Main consolidation, 2026-10-18
 
 The [consolidation receipt](../bench/results/10.176.26.71/tests/main-consolidation-20261018/README.md)

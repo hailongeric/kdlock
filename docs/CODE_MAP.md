@@ -17,6 +17,7 @@ files or benchmark archives.
 | [kd_mutex.c](../kernel_module/kd_mutex.c) → [mutex](../kernel_module/mutex) | KD physical owner, legacy scheduling gate, queue and waiter restore |
 | [kd_mutex_local.c](../kernel_module/kd_mutex_local.c), [kd_mutex_osq.c](../kernel_module/kd_mutex_osq.c) | KD-owned ordinary mutex exclusion, sleeping waiters, signal cancellation and private OSQ |
 | [kd_mutex_compat.h](../include/kd_mutex_compat.h) | Source aliases for an exclusively KD ordinary-mutex build |
+| [kd_rwsem.h](../include/kd_rwsem.h), [kd_rwsem.c](../kernel_module/kd_rwsem.c) | Ordinary sleeping reader/writer admission and drain using the KD physical mutex; no delegated writer path |
 | [kd_mutex_tasks.c](../kernel_module/kd_mutex_tasks.c) | Exact task/acquisition references and RCU removal |
 | [kd_lock.c](../kernel_module/kd_lock.c) → [lock](../kernel_module/lock) | Nested control CALLs and direct KD mutex routing; no Linux mutex bridge |
 | [kd_exec.c](../kernel_module/kd_exec.c), [exe.c](../kernel_module/exe.c) → [execution](../kernel_module/execution) | Frame binding, lock ledger, remote/native ACKs, registry and JIT dispatch |
@@ -52,11 +53,12 @@ admission before ABI3 execution and preserve it across native continuation.
 | --- | --- |
 | [workload_modules](../workload_modules/README.md) | Separate spin/mutex/rwlock payloads; shared timing and business logic |
 | [bench/tclock_compare](../bench/tclock_compare/README.md) | Three-arm spin/mutex runners, sessions and result reports |
-| [bench/rwlock_compare](../bench/rwlock_compare/README.md) | Mixed RCUHT/cacheline rwlock runner, exact read/write oracle, JIT accounting and parity reports |
+| [bench/rwlock_compare](../bench/rwlock_compare/README.md) | RCUHT/cacheline rwlock and local rwsem comparisons, proc spin snapshots, exact oracles and complete-body JIT evidence |
 | [bench/spin_cacheline](../bench/spin_cacheline/README.md) | Shared client, peak selection, provider preparation and offline readers |
 | [tests/unit](../tests/unit) | Guest-only basic and selected production-code fixtures |
 | [tests/kernel](../tests/kernel) | Provider observers and kernel selftests |
 | [tests/kernel/rwlock](../tests/kernel/rwlock/README.md) | Native/KD correctness sessions: reader overlap, writer exclusion, exact updates, JIT and drain |
+| [tests/kernel/rwsem](../tests/kernel/rwsem/README.md) | Ordinary sleeping/cancellation/downgrade probe, with no JIT claim |
 | [tests/protocols](../tests/protocols) | Trace validation, topology and protocol oracles |
 | [kernel_baseline](../kernel_baseline/README.md), [kernel_experiments](../kernel_baseline/experiments/README.md) | Captured kernel identity and independently authorized experiment bundles |
 

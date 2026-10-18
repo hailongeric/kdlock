@@ -13,8 +13,9 @@ syscalls individually. Include both categories when requesting the full catalog.
 The current accepted [KD-only matrix](../bench/results/10.176.26.71/bench/comparison/mutex-kdonly-20261017T140354Z/README.md)
 covers c01/post64 and `api-pipebytes-query-n16`. Broader historical owned-mutex
 coverage remains in [history](history/README.md), with its original implementation
-identity. The [process inspection and mmap candidates](#process-inspection-and-mmap-candidates)
-below are feasibility proposals, outside the runnable standard catalog.
+identity. Ordinary sleeping rwsem and extracted proc snapshots have explicit
+runner modes described below. Full [process inspection and mmap candidates](#process-inspection-and-mmap-candidates)
+remain proposals, outside the runnable standard catalog.
 
 ## Synthetic cacheline updates
 
@@ -402,19 +403,60 @@ exploratory case: the runner guide records that translated bodies are refused by
 admission and excluded from accepted KD performance comparisons.
 
 
+## Sleeping rwsem and extracted proc snapshots
+
+The [reader/writer runner](../bench/rwlock_compare/README.md) now also exposes
+these explicit modes. They are separate lock/payload identities and are not
+automatically added to an ordinary rwlock or full-catalog sweep.
+
+| Mode | Payloads / backends | Execution contract |
+| --- | --- | --- |
+| `--lock-kind rwsem` | c01/c08 or RCUHT; `--backends native kdlock` | Ordinary sleeping readers and writers. KD uses its physical mutex gate, all bodies execute locally, and JIT counts must be zero. No TCLock sleeping-rwsem port or `--require-jit`. |
+| `--lock-kind spin --workloads argbounds` | Four-word argument-boundary snapshot; Native/TCLock/KD | Every snapshot takes an exclusive spinlock; KD may delegate reads. Controlled optional mutations use the same selected lock. |
+| `--lock-kind spin --workloads taskname` | Exact `strscpy_pad()` copy from a 16-byte name to a 64-byte padded buffer; Native/TCLock/KD | Preserve helper semantics and admission. Historical exact-helper refusal remains a known limit; explicit `--delegate off` gives a KD local control. |
+
+Snapshots use module-owned records, fixed lifetimes and worker-local kernel
+outputs. They do not operate on live task/MM structures, invoke procfs, fetch
+remote argument pages or time `ps`. `--write-percent 0` is read-only snapshot
+traffic; a 20% mutation case alternates valid versions and checks the complete
+tuple or padded name. Read operations remain exclusive spin acquisitions.
+
+Snapshot preparation saves every published image and uses fully drained helper
+learning waves. Readiness requires a complete returned body rather than just a
+NORMAL image or entry witness. The benchmark-only provider counts entries and
+matching completed bodies separately. Refusals and local controls remain
+separate from actual delegated results.
+
+The [ordinary rwsem design](design/rwsem_implementation.md) supports sleeping
+read/write, trylocks, downgrade and interruptible/killable cancellation. Its
+[scheduler probe](../tests/kernel/rwsem/README.md) exercises sleeping holders and
+contenders sharing one CPU. This object is not a replacement for the real
+`mmap_lock`, and it deliberately has no delegated outer writer API. The
+[branch review](history/feature-reintegration-20261018.md) explains why the
+archived delegated rwsem could not be copied unchanged.
+
+The [2026-10-18 validation](../bench/results/10.176.26.71/tests/feature-reintegration-20261018/README.md)
+passed ordinary rwsem scheduling and workload checks. Three default-policy timed
+argbounds runs at eight workers returned complete delegated bodies; a shorter
+16-worker acceptance attempt remained `NO_JIT`. Taskname's 16-worker preparation
+exhausted its helper waves without a completed body; local controls passed.
+These outcomes do not establish performance parity or full task/MM integration.
+
 ## Process inspection and mmap candidates
 
 **Review, 2026-10-18:** process inspection reaches real task and memory locks,
 but container count alone does not establish contention on any one lock. The
-short `arg_lock` and task-name snapshots are useful extracted spin candidates.
+short `arg_lock` and task-name snapshots are restored extracted spin workloads.
 Full procfs and mmap operations need Native scaling measurements first; the
-selected KD provider cannot delegate these complete paths today.
+selected KD provider cannot delegate these complete paths today. Ordinary local
+rwsem support does not change that full-path boundary.
 
 This review checked the current provider and the retained Linux 6.1.159 source
 and procps-ng 3.3.17 traces. All 25 captured kernel/configuration files and the
 three traces match their recorded hashes. The [source audit and offline recheck](../bench/results/10.176.26.71/tests/proc-mmap-audit-20261015/README.md)
-record provenance and limits. No new live tracing, container experiment or
-performance benchmark ran for this review. These are kernel-version-specific
+record provenance and limits. No new live tracing or container experiment ran
+for that source review; the separate feature validation above tests extracted
+payloads and the explicit KD rwsem object. These are kernel-version-specific
 findings; a different production kernel or `ps` version needs its own trace.
 
 ### Containers, processes and shared locks
@@ -519,9 +561,12 @@ The following requirements still apply under the KD-only mutex assumption:
   disables preemption, requires non-sleeping bodies and delegates only writers;
   readers execute locally. It is not a sleeping rwsem. Mmap uses concurrent
   readers, killable waits, trylocks, downgrade and release/reacquire paths.
-  KD mutex is exclusive and does not provide that contract. The archived
-  sleeping-rwsem experiment depends on the rejected owned mutex and is absent
-  from `master`; its tests did not replace the real mmap lock.
+  KD mutex is exclusive and does not provide that contract. The new ordinary
+  KD rwsem supplies local sleeping APIs separately, without JIT. The archived
+  delegated rwsem depended on unlock-time owned-mutex combining; current
+  acquire-time combining would execute before its old reader-drain call.
+  Pinned delegated waiters also need a progress design for sleeping readers.
+  Neither version establishes real mmap-lock replacement.
 - **All consumers and lifetime.** A private KD lock around proc readers cannot
   exclude native mapping writers, faults, exec or exit. All accesses must use
   one protocol, including implicit kernel users. Task/MM references keep
@@ -541,14 +586,15 @@ The following requirements still apply under the KD-only mutex assumption:
 
 ### Candidate workload plan
 
-These labels are proposals, not accepted runner options or additions to the
-default full-catalog sweep. Native screening identifies the expensive shared
-object; matched extracted-body tests can then compare KD, TCLock and Native.
+The extracted snapshots below map to restored runner modes; the full procfs,
+mmap and lifecycle labels remain proposals, not accepted runner options. None
+is automatically added to the default full-catalog sweep. Native screening
+identifies the expensive shared object before a real-object adapter is designed.
 
 | Proposed case | Measured operation and controls | Feasibility |
 | --- | --- | --- |
-| `proc-arg-bounds` | Copy four words under one module-owned exclusive spinlock into stable worker-local kernel storage. Compare shared/distinct records; optionally alternate valid tuples under the same lock. | First KD spin candidate. Historical complete delegation exists; restore a focused workload and validate current admission before treating it as runnable. |
-| `proc-comm-snapshot` | Exact `strscpy_pad()` name copy, 16-byte source and 64-byte padded destination, with shared/distinct records and separately labelled mutations | Native/TCLock and KD local controls are feasible. Exact KD delegation needs the historical helper/ABI refusal resolved and revalidated. A different copy loop is a different payload. |
+| `proc-arg-bounds` | Copy four words under one module-owned exclusive spinlock into stable worker-local kernel storage; optionally alternate valid tuples under the same lock. Distinct-record control remains an extension. | Implemented as `--lock-kind spin --workloads argbounds`; require fresh returned-body evidence for current delegation claims. |
+| `proc-comm-snapshot` | Exact `strscpy_pad()` name copy, 16-byte source and 64-byte padded destination, with separately labelled mutations; distinct-record control remains an extension | Implemented as `--lock-kind spin --workloads taskname`, including KD local control. Exact KD delegation remains subject to helper/ABI admission. A different copy loop is a different payload. |
 | `proc-stat` / `proc-status` | Independent observers read the same large thread group versus distinct groups; idle, CPU-active and exit/reaping variants kept separate | Native-only candidates requiring implementation; preserve actual seqlock/RCU/IRQ paths. No full-path KD adapter. |
 | `proc-cmdline-mmap` | Read stable arguments while target threads map/unmap disjoint scratch regions in that same MM. Include a no-writer control; vary argument length and VMA count. | Native mmap-contention workload; current KD/TCLock sleeping-rwsem comparison unavailable |
 | `proc-maps` / `proc-smaps` | Complete proc-file reads while a target changes separate mappings; vary actual VMA count and resident bytes independently | Native workloads; distinguish VMA formatting from page-table accounting and preserve allowed concurrent-update semantics |
@@ -605,8 +651,8 @@ Linux mutex. This tests scoped behavior, not a rebuilt kernel where every mutex
 has been replaced. See the [API contract](../bench/real_api/README.md#contract-and-comparison-limits)
 and [KD-only assumptions](design/kd_only_mutex.md).
 
-The process/mmap section is a candidate plan grounded in retained source and
-trace evidence. Historical snapshot delegation does not validate the current
-provider, live task/MM replacement, a large-container deployment or a performance
-gain. Implementations and fresh VM validation are required before promoting any
-candidate into the runnable catalog.
+The full process/mmap proposals are grounded in retained source and trace
+evidence. The restored extracted snapshots and ordinary local rwsem have their
+own runner contracts. Historical snapshot delegation does not validate current
+performance, live task/MM replacement or a large-container deployment. Full
+procfs/mmap candidates still need implementation and fresh VM validation.

@@ -184,4 +184,5 @@ retry. A progressed suffix keeps exclusion and the spin ticket/ACK protocol.
 The body releases the writer byte before spin unlock/completion; final frame
 cleanup cannot release that byte again. Readers, native writers and delegated
 writers must all drain before lock storage is reused. Linux and TCLock rwlocks
-cannot participate in this object, and no sleeping rwsem contract is provided.
+cannot participate in this object. Sleeping read/write operations use the separate
+[ordinary KD rwsem](rwsem_implementation.md), whose bodies execute locally.

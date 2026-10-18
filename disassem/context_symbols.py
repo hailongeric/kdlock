@@ -39,6 +39,10 @@ CONTEXT_SYMBOLS = (
     # Return-valued or task-signal/I/O APIs stay on the original task.
     "kd_mutex_lock_interruptible", "kd_mutex_lock_killable", "kd_mutex_lock_io",
     "kd_mutex_trylock", "kd_atomic_dec_and_mutex_lock",
+    # Sleeping KD rwsems have local acquisition/ownership only. The execution
+    # ledger has no rwsem read/write mode, downgrade or cancellation protocol;
+    # never learn these APIs as ordinary helpers inside a translated body.
+    "kd_down_*", "kd_up_*", "kd_downgrade_write", "kd_rwsem_*",
     "schedule*",
     "__schedule*",
     "*cond_resched*",

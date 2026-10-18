@@ -68,6 +68,7 @@ has no `mutex_jit` parameter.
 | `--spin-entry-ratio-limit 2` | Adaptive ratio rule; 0 bypasses only ratio filtering |
 | `--kd-provider-ubsan off` | Private KD provider only; `kernel` inherits kernel policy |
 | `--cpus LIST` | Ordered worker placement; each cohort takes its prefix. Choose node membership from the verified topology |
+| `--pmu` / `--perf-record` | Separate, unscored counter or flat CPU-sampling run; mutually exclusive |
 | `--dry-run` | Print plan without live execution |
 
 Both entries accept 1–64 workers. The standard grid stops at 60 and keeps
@@ -82,6 +83,10 @@ checks the built ELF interfaces, return layouts and sanitizer references. KD
 publishes the prepared entry before every worker warms up with 48,000 operations.
 The daemon stops before measurement. Recorded NUMA and layout settings come from
 the actual build, so requested option names alone cannot mislabel a sample.
+Custom comparison drivers can set `Session.translation_source` and
+`Session.daemon_binary` to a matching frozen source tree and daemon. Those
+overrides do not freeze inputs themselves: the driver must retain their hashes
+and verify them before each session. The normal runner keeps its existing paths.
 
 ## Workloads and backends
 
@@ -115,7 +120,8 @@ polling. See [TCLock scope](../../tclock_backend/README.md) and
 
 `records.json` keeps every planned sample, including failed or unrun cases.
 `summary.csv/json` includes only samples with correct results, completed work and
-successful drain. Timed comparisons select `best_valid_warmed_peak`; fixed-iteration
+successful drain, excluding instrumented diagnostics. `records.json` retains
+diagnostic rates with `score_eligible=false`. Timed comparisons select `best_valid_warmed_peak`; fixed-iteration
 comparisons select `best_valid_throughput`. The selected run supplies both its
 throughput and amortized ns/op.
 
@@ -172,9 +178,17 @@ multithread positives and write `functional.json`, not performance summaries.
 It applies only to spin; the mutex entry rejects it.
 Ratio0 does not guarantee admission or waive returned-body/context/drain checks.
 
-`--pmu` is a separate long-batch diagnostic using supported perf events. Verify
-availability, sample loss and identity before attribution; do not add its scores to
-normal measurements or infer remote-memory latency from flat cycle samples.
+`--pmu` runs `perf stat` around the measured client and inherited workers;
+`--perf-record` collects flat `cycles:k` samples at 199 Hz around the same phase.
+They are mutually exclusive and both set `diagnostic=true`, excluding every
+backend from throughput scores. Setup, translation and warmup remain outside
+the instrumented interval. CPU sampling saves `perf.data`, `kallsyms`, `modules`,
+`perf-report.txt` and `perf-samples.txt`; symbol resolution happens before module
+unload. It does not unwind borrowed waiter stacks. Use a separate output directory
+and confirm event availability, sample loss and captured identities before
+attribution. A missing perf tool or failed perf command fails the diagnostic;
+flat cycle samples do not establish remote-memory latency. Restoring this tooling
+does not constitute a new performance measurement.
 [Tests](../../tests/README.md) selects affected fixtures and source/assembly audits.
 
 ## Shutdown

@@ -18,6 +18,49 @@ from context_audit import audit as audit_context
 
 
 class DirectTests(unittest.TestCase):
+    def test_performance_diagnostics_are_unscored_for_every_backend(self):
+        for mode in ('pmu', 'perf_record'):
+            plan = run.make_plan(Namespace(cachelines=[1], threads=[16], repeats=1,
+                iterations=100, backends=['native', 'tclock', 'kdlock'],
+                lock_kind='mutex', **{mode: True}))
+            with self.subTest(mode=mode), tempfile.TemporaryDirectory() as directory:
+                out = Path(directory)
+                run.write_json(out/'plan.json', plan)
+                for spec in plan:
+                    self.assertTrue(spec['diagnostic'] and spec[mode])
+                    (out/spec['name']).mkdir()
+                    run.write_json(out/spec['name']/'session.json', dict(spec,
+                        execution_status='OK', drained=True, jit_bodies=100,
+                        measurement=dict(complete=True, data_ok=True, completed=100, wall_ns=100000)))
+                run.report(out)
+                records = json.loads((out/'records.json').read_text())
+                self.assertTrue(all(not r['score_eligible'] for r in records))
+                self.assertTrue(all(r['whole_throughput_ops_s'] == 1000000 for r in records))
+                self.assertTrue(all(r['valid'] == 0 and r['best_session'] is None for r in
+                                    json.loads((out/'summary.json').read_text())))
+
+    def test_cpu_samples_cannot_mix_with_pmu(self):
+        with self.assertRaisesRegex(run.Failure, 'separate diagnostic runs'):
+            run.make_plan(Namespace(cachelines=[1], threads=[16], repeats=1,
+                iterations=100, backends=['native'], pmu=True, perf_record=True))
+
+    def test_cpu_samples_resolve_modules_before_cleanup(self):
+        session = BackendSession.__new__(BackendSession)
+        session.lock_kind = 'spin'
+        session.record = dict(perf_record=True)
+        with tempfile.TemporaryDirectory() as temporary, \
+                patch.object(Path, 'read_text', return_value='captured symbols'), \
+                patch.object(Session, 'run', return_value='measurement') as invoke:
+            session.path = Path(temporary)
+            result = session.run([run.HERE/'client', '--iterations', 100], 'measure.json', timeout=120)
+            self.assertEqual(result, 'measurement')
+            self.assertEqual([call.args[0][1] for call in invoke.call_args_list],
+                             ['record', 'report', 'script'])
+            self.assertIn('--sample-cpu', invoke.call_args_list[0].args[0])
+            self.assertEqual(invoke.call_args_list[0].kwargs['timeout'], 120)
+            self.assertTrue((session.path/'kallsyms').is_file())
+            self.assertTrue((session.path/'modules').is_file())
+
     def test_provider_identity_rejects_mutex_jit_switch(self):
         record = dict(spin_entry_ratio_limit=2, spin_prefetch=2,
                       spin_delegate='on')

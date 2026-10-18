@@ -1,5 +1,9 @@
 # Main consolidation, 2026-10-18
 
+The later [feature reintegration](feature-reintegration-20261018.md) corrects the
+overbroad exclusion of independent snapshot/tooling features and ports ordinary
+sleeping rwsem support. This record describes the original consolidation.
+
 The user selected KD-only `d2a23049a4b6e3c65cf0ff21bbfd3e21cd975761` as the main
 implementation. `master` merges the previous master history while retaining that
 runtime. Compatible tooling and missing reports from the owned-mutex branch are

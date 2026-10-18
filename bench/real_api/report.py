@@ -9,18 +9,38 @@ import statistics
 PARAMETER_UNITS = {'xattr': 'attributes', 'ofd': 'ranges', 'setfd': 'FD stride',
                    'pipebytes': 'pipe buffers', 'pipecap': 'pipe capacity in pages',
                    'seek': 'file size in pages', 'utsname': 'write percent'}
+IDENTITY_FIELDS = ('source_identity', 'kernel_identity', 'topology_identity',
+                   'cpus', 'cpu_nodes', 'collector_cpu', 'duration_ms',
+                   'peak_window_ms', 'peak_settle_ms', 'sample_ms',
+                   'warmup', 'warmup_ms', 'helper_waves', 'file_descriptions',
+                   'entry_abi', 'caller_abi', 'mutex_implementation',
+                   'mutex_wait_mode', 'mutex_spin_limit', 'owned_mutex_reuse_spins',
+                   'owned_mutex_adaptive', 'owned_mutex_object_bytes',
+                   'owned_mutex_origin_spin', 'owned_mutex_numa',
+                   'diagnostic', 'pmu', 'perf_record')
+
+
+def comparison_identity(record):
+    # Missing historical identities stay unknown; never infer the current
+    # protocol for an old record, even when its workload name is unchanged.
+    return {field: record.get(field, 'unrecorded') for field in IDENTITY_FIELDS}
 
 
 def summarize(records):
     groups = {}
     for r in records:
-        key = tuple(r[k] for k in ('kind', 'query', 'entries', 'value_size', 'threads', 'arm'))
+        key = tuple(r[k] for k in ('kind', 'query', 'entries', 'value_size', 'threads', 'arm')) + (
+            json.dumps(comparison_identity(r), sort_keys=True),)
         groups.setdefault(key, []).append(r)
     rows = []
     for key, runs in sorted(groups.items()):
-        good = [r for r in runs if r['execution_status'] == 'OK' and r.get('drained')]
-        row = dict(zip(('kind', 'query', 'entries', 'value_size', 'threads', 'arm'), key))
+        good = [r for r in runs if r['execution_status'] == 'OK' and r.get('drained') and
+                not any(r.get(field, False) for field in ('diagnostic', 'pmu', 'perf_record'))]
+        row = dict(zip(('kind', 'query', 'entries', 'value_size', 'threads', 'arm'), key[:6]))
+        row['identity'] = json.loads(key[6])
         row.update(planned=len(runs), accepted=len(good),
+                   diagnostics=sum(any(r.get(field, False) for field in
+                                       ('diagnostic', 'pmu', 'perf_record')) for r in runs),
                    failed=sum(r['execution_status'] != 'NOT_RUN' and
                               (r['execution_status'] != 'OK' or not r.get('drained')) for r in runs),
                    not_run=sum(r['execution_status'] == 'NOT_RUN' for r in runs),
@@ -53,6 +73,40 @@ def summarize(records):
 
 def write_report(out, records):
     rows = summarize(records)
+    # The compact comparison table has one column per backend. Fail before
+    # writing it if that column would hide a source/protocol/placement change.
+    seen = set()
+    for row in rows:
+        key = tuple(row[k] for k in ('kind', 'query', 'entries', 'value_size', 'threads', 'arm'))
+        if key in seen:
+            raise ValueError('cannot compare distinct source/protocol/placement identities in one report')
+        seen.add(key)
+    for field in ('source_identity', 'kernel_identity', 'topology_identity'):
+        if len({json.dumps(row['identity'][field], sort_keys=True) for row in rows}) > 1:
+            raise ValueError('cannot compare distinct ' + field + ' values in one report')
+    protocols = {}
+    for row in rows:
+        key = (row['kind'], row['arm'])
+        protocol = tuple(json.dumps(row['identity'][field], sort_keys=True) for field in
+                         ('entry_abi', 'caller_abi', 'mutex_implementation',
+                          'mutex_wait_mode', 'mutex_spin_limit', 'owned_mutex_reuse_spins',
+                          'owned_mutex_adaptive', 'owned_mutex_object_bytes',
+                          'owned_mutex_origin_spin', 'owned_mutex_numa',
+                          'diagnostic', 'pmu', 'perf_record'))
+        if key in protocols and protocols[key] != protocol:
+            raise ValueError('cannot compare distinct protocol/instrumentation identities across cohorts')
+        protocols[key] = protocol
+    matched = {}
+    for row in rows:
+        key = tuple(row[k] for k in ('kind', 'query', 'entries', 'value_size', 'threads'))
+        identity = row['identity']
+        geometry = tuple(json.dumps(identity[field], sort_keys=True) for field in
+                         ('cpus', 'cpu_nodes', 'collector_cpu', 'duration_ms',
+                          'peak_window_ms', 'peak_settle_ms', 'sample_ms',
+                          'warmup', 'warmup_ms', 'helper_waves'))
+        if key in matched and matched[key] != geometry:
+            raise ValueError('cannot compare different worker/timing identities across backends')
+        matched[key] = geometry
     out.mkdir(parents=True, exist_ok=True)
     (out/'summary.json').write_text(json.dumps(rows, indent=2)+'\n')
     if rows:
@@ -72,7 +126,8 @@ def write_report(out, records):
             'uname reads with fixed-length name updates in a private namespace. '
             'These are API microbenchmarks, not whole-application measurements.', '',
             f'Accepted and drained: {sum(r["accepted"] for r in rows)}/{len(records)} sessions. '
-            f'Failed: {sum(r["failed"] for r in rows)}; not run: {sum(r["not_run"] for r in rows)}.', '',
+            f'Failed: {sum(r["failed"] for r in rows)}; not run: {sum(r["not_run"] for r in rows)}; '
+            f'unscored diagnostics: {sum(r["diagnostics"] for r in rows)}.', '',
             'Whole-run columns are medians across rounds, in million operations/second. '
             'Peak ratios use the best valid 300 ms window from each backend. '
             'A speedup above 1 favors KD. Raw exports retain min/median/max/spread and NO_JIT runs. '

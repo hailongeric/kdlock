@@ -95,13 +95,14 @@ class Session:
         # Both point at frozen inputs, without touching existing workspaces.
         workspace = self.path / "workspace"
         (workspace / "daemon").mkdir(parents=True)
+        source = getattr(self, 'translation_source', self.path.parent / "source")
         for directory in ("disassem", "include"):
-            (workspace / directory).symlink_to(self.path.parent / "source" / directory,
+            (workspace / directory).symlink_to(source / directory,
                                                target_is_directory=True)
         self.daemon_log = (self.path / "daemon.log").open("w")
         env = dict(os.environ, KD_JIT_BODY_WITNESS="1")
         env.pop("KD_DEVICE_FD", None)
-        self.daemon = subprocess.Popen([ROOT / "daemon/daemon", "--quiet", "--metrics",
+        self.daemon = subprocess.Popen([getattr(self, 'daemon_binary', ROOT / "daemon/daemon"), "--quiet", "--metrics",
                                         "--mode", "per-tgid"], cwd=workspace / "daemon",
                                        env=env, stdout=self.daemon_log,
                                        stderr=subprocess.STDOUT, start_new_session=True)

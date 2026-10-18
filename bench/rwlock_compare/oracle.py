@@ -31,7 +31,8 @@ def post_work_checksum(completed, rounds):
 def check_snapshot(row, spec):
     require((row['version'], row['backend'], row['workload'], row['lines'], row['post_work_rounds']) ==
             (1, {'native': 0, 'tclock': 1, 'kdlock': 2}[spec['arm']],
-             int(spec['workload'] == 'rcuht'), spec['cachelines'], spec['post_work_rounds']),
+             {'cacheline': 0, 'rcuht': 1, 'taskname': 2, 'argbounds': 3}[spec['workload']],
+             spec['cachelines'], spec['post_work_rounds']),
             'workload identity differs')
     require(all(row[name] == 0 for name in ('active', 'cnts', 'gate')), 'rwlock did not drain')
     require(len(row['values']) == 16 and all(type(v) is int and 0 <= v < 2**64 for v in row['values']),
@@ -73,6 +74,9 @@ def validate(measurement, spec):
         require(delta == [m['writes']] * spec['cachelines'] + [0] * (16 - spec['cachelines']),
                 'lost/duplicated write or inactive-line update')
         require(all(w['read_hits'] == 0 for w in workers), 'cacheline reader returned hash hits')
+    elif spec['workload'] in ('taskname', 'argbounds'):
+        require(delta == [m['writes']] + [0] * 15, 'lost/duplicated snapshot mutation')
+        require(all(w['read_hits'] == 0 for w in workers), 'snapshot returned hash hits')
     else:
         require(delta[0] == m['writes'] == sum(delta[1:4]) and all(x >= 0 for x in delta[:4]) and
                 before['values'][4:] == after['values'][4:] == [0] * 12,
@@ -92,10 +96,16 @@ def validate(measurement, spec):
     return peak
 
 
-def jit_evidence(before, after, writes, *, backend, delegate):
+def jit_evidence(before, after, writes, *, backend, delegate, operation='writer', completed=None):
     bodies = after - before
-    require(0 <= bodies <= writes, 'JIT count exceeds completed writers')
+    require(0 <= bodies <= writes, 'JIT count exceeds completed eligible operations')
     require((backend == 'kdlock' and delegate) or bodies == 0, 'native control executed JIT')
     status = ('PASS' if bodies else 'NO_JIT') if backend == 'kdlock' and delegate and writes else 'NATIVE'
-    return dict(jit_bodies=bodies, jit_writer_share=bodies / writes if writes else 0,
-                jit_status=status)
+    row = dict(jit_bodies=bodies, **{'jit_' + operation + '_share': bodies / writes if writes else 0},
+               jit_operation=operation, jit_status=status)
+    if completed is not None:
+        require(0 <= completed <= bodies, 'completion count exceeds entry witnesses')
+        row.update(jit_completions=completed, jit_complete_share=completed / writes if writes else 0)
+        if bodies and not completed:
+            row['jit_status'] = 'PARTIAL_JIT'
+    return row

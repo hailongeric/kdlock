@@ -1,6 +1,7 @@
 # KD kernel provider
 
-This module implements KD spinlocks, mutexes and rwlocks. It also exposes
+This module implements KD spinlocks, mutexes, rwlocks and ordinary sleeping
+rwsems. Rwsem bodies run locally using the KD physical mutex gate. It also exposes
 `/dev/kd_dev` for translation requests and code uploads. Builds require the recorded
 `kdclobber2` spin-clobber-v1 interface. The KD-only mutex supplies its own object
 and clobber entry; it does not require or call the kernel mutex-clobber interface.
@@ -50,6 +51,7 @@ boundaries remain separate for reading.
 | `spin/ticket_*.inc` via [kd_spin_entry.c](kd_spin_entry.c) | Exact acquisition generation, root borrowing and final retirement |
 | [mutex](mutex) via [kd_mutex.c](kd_mutex.c) | Embedded legacy delegation queue, terminal batch, pinned waiter and restore |
 | [kd_mutex_local.c](kd_mutex_local.c), [kd_mutex_osq.c](kd_mutex_osq.c) | KD-owned physical exclusion, sleeping callers and private optimistic spinning |
+| [kd_rwsem.c](kd_rwsem.c) | Ordinary sleeping readers/writers, interruptible/killable cancellation, trylocks and downgrade; no delegated outer entry |
 | [lock](lock) via [kd_lock.c](kd_lock.c) | Direct KD mutex routes and nested spin/mutex control CALLs |
 | [execution](execution) | Registry, wrapper preparation, frame/ledger, control/services, native and remote ACK |
 | [execution/images.inc](execution/images.inc) | Immutable legacy mutex publication, bound generations and stale-miss rejection |

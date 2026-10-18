@@ -37,7 +37,7 @@ it is not validation of every current KD mutex scenario.
 | `uname()` with `sethostname()` / `setdomainname()` | `uts_sem` protects the real UTS structure: readers copy it, writers replace one name | Implemented bounded read/write experiment in a private UTS namespace; Native rwsem versus KD/TCLock reader/writer spinlocks, with the specialization below. |
 | FxMark directory enumeration / rename | Shared dentry/rename state and, for cross-directory rename, `s_vfs_rename_mutex` | Candidate for wider integration; additional lock sites and filesystem behavior must be preserved. |
 | will-it-scale `lock1` | Repeated `F_SETLKW` / unlock, with a **separate file per worker** | Useful reference; it does not itself create a shared inode lock. The original paper's kernel/version bottleneck must be re-established on this kernel. |
-| will-it-scale `mmap1` | `mm_struct.mmap_lock`, a sleeping rwsem, covers VMA allocation/removal and potentially blocking/nested work | The local TCLocks copy maps and unmaps 128 MiB. A general sleeping-rwsem implementation is required before claiming a KD mmap comparison. |
+| will-it-scale `mmap1` | `mm_struct.mmap_lock`, a sleeping rwsem, covers VMA allocation/removal and potentially blocking/nested work | The local TCLocks copy maps and unmaps 128 MiB. The separate ordinary [KD rwsem](../../docs/design/rwsem_implementation.md) does not integrate the full mmap API or delegate its writers; no KD mmap comparison is implemented. |
 | eventfd / epoll wakeup paths | Short queue/counter critical sections, often with IRQ exclusion | Poor initial fit for the present ordinary-task-context delegation ports. |
 
 Sources: [TCLocks evaluation, Table 1 and Figure 3](https://www.usenix.org/system/files/osdi23-gupta.pdf),
@@ -103,6 +103,10 @@ waves pause the daemon, join every caller, then resume translation; a refusal
 ends that session. The daemon stops before the common warmup. Returned-body
 counters distinguish actual JIT execution from
 `NO_JIT`; no refusal or low JIT count is converted into a success claim.
+Immediately before and after measurement, the runner checks a drained publication
+with zero translator writers and verifies that the prepared entry and generated
+image hashes are unchanged. These boundary checks are outside syscall timing;
+they establish image identity, separately from returned-body evidence.
 TCLock spin delegation remains unmeasured, as in the existing comparator.
 The module counts redirected calls, and the runner requires one call per
 measured operation. A failed/undrained session has no accepted score.
@@ -173,6 +177,7 @@ The recorded figures used Matplotlib 3.9.4. Basic and directly affected checks:
 ```sh
 make -C tests/unit run
 python3 bench/real_api/test_report.py
+python3 bench/real_api/test_plan.py
 python3 -m unittest discover -s bench/spin_cacheline -p test_peak.py
 ```
 
@@ -204,6 +209,18 @@ source versions, governors or warmup settings. `--build-from RUN` reuses saved
 binaries only when all current source hashes and the previous binary hashes
 match. The output retains all planned sessions, including failures and unrun
 cases; the backend order rotates between rounds.
+The planner rejects duplicate thread counts, backends, workload kinds, queries
+and entry counts so distinct requests cannot overwrite one session directory.
+API runs retain the 63-worker maximum and a dedicated collector.
+
+New records bind the frozen source manifest, captured kernel identity and topology
+to SHA-256 identities. KD mutex records explicitly name `kd-only-legacy`, ABI2
+and the clobber caller. Reports separate source, protocol, caller, placement,
+timing and instrumentation identities; the compact comparison refuses mixed
+identities that would hide multiple implementations in one backend column or
+across its worker counts. Missing historical fields stay `unrecorded`, without
+assuming the current protocol. PMU/sampled diagnostic records remain unscored.
+This restores reporting safeguards; no new benchmark outcome is implied.
 
 Warmup requires at least 48,000 operations **and one second per worker** by
 default; measurement is two seconds. `--warmup` and `--warmup-ms` control those

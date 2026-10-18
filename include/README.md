@@ -11,6 +11,7 @@ assembly and the Python translator. Helpers used only inside a backend live unde
 | Spin queue and ticket | [kd_spinlock.h](kd_spinlock.h), [kd_spin_entry.h](kd_spin_entry.h), [qspinlock_i.h](qspinlock_i.h) | Reusable nodes, stable continuation and exact native borrowing |
 | Mutex | [kd_mutex.h](kd_mutex.h), [kd_mutex_direct.h](kd_mutex_direct.h), [kd_mutex_compat.h](kd_mutex_compat.h) | KD-only object, ordinary API aliases, ABI2 and opaque outer cookie |
 | Read-write lock | [kd_rwlock.h](kd_rwlock.h) | 128-byte object, 64-byte alignment; local readers, native fast writers and ABI3 JIT writers |
+| Sleeping semaphore | [kd_rwsem.h](kd_rwsem.h) | Ordinary local sleeping readers/writers, KD physical admission gate, trylocks and downgrade; no delegated outer API |
 | Frames and controls | [kd_exec.h](kd_exec.h), [kd_call.h](kd_call.h), [kd_lock.h](kd_lock.h) | Logical state, held-lock ledger, source CALL and final ACK |
 | Registry and execution | [exe.h](exe.h), [exe_info.h](exe_info.h), [kd_jit_batch.h](kd_jit_batch.h) | Backend/ABI/layout identity, readiness and distinct wrapper/C results |
 | Mutex image lifetime | [kd_image.h](kd_image.h) | Immutable image descriptors, upload identity and generation-bound frames |

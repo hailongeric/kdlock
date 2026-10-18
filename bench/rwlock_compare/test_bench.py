@@ -15,6 +15,7 @@ import boot_policy
 from oracle import jit_evidence, post_work_checksum, validate, writes_for
 import run
 import client
+import session
 from protocol import RUN_FORMAT
 
 
@@ -38,6 +39,104 @@ def fixture(workload='cacheline', percent=50):
 
 
 class BenchTests(unittest.TestCase):
+    def test_cold_normal_image_does_not_finish_helper_learning(self):
+        # Reproduce a NORMAL CALL-miss image that has never executed. Only a
+        # later complete returned body can make preparation successful.
+        for complete_second_wave in (False, True):
+            with self.subTest(complete_second_wave=complete_second_wave), tempfile.TemporaryDirectory() as tmp:
+                params = Path(tmp)
+                for name in ('bench_jit_bodies', 'bench_jit_completions'):
+                    (params / name).write_text('0')
+                candidate = object.__new__(session.RWSession)
+                candidate.record = dict(helper_waves=2)
+                candidate.daemon = SimpleNamespace(pid=123)
+                candidate.pause_daemon = lambda: None
+                candidate.save = lambda: None
+                phases = []
+
+                def phase(label, spec):
+                    phases.append(label)
+                    if len(phases) == 2 and complete_second_wave:
+                        for name in ('bench_jit_bodies', 'bench_jit_completions'):
+                            (params / name).write_text('1')
+                    return dict(reads=100)
+
+                candidate.phase = phase
+                with patch.object(session, 'KD_PARAMS', params), \
+                     patch.object(session, 'status', return_value=dict(frames=0, writers=1)), \
+                     patch.object(session, 'registry', return_value=[dict(status=0)]), \
+                     patch.object(session.os, 'kill'):
+                    if complete_second_wave:
+                        candidate.learn_helpers()
+                    else:
+                        with self.assertRaises(run.Failure):
+                            candidate.learn_helpers()
+                self.assertEqual(phases, ['learning-0', 'learning-1'])
+
+    def test_snapshot_plan_and_evidence(self):
+        args = run.parser().parse_args(['--lock-kind', 'spin', '--workloads', 'taskname', 'argbounds',
+            '--write-percent', '0', '--threads', '1', '8', '--collector-cpu', '63', '--require-jit'])
+        plan = run.make_plan(args)
+        self.assertEqual(len(plan), 36)
+        self.assertTrue(all(s['cachelines'] == 0 and s['entry_abi'] == 1 for s in plan))
+        self.assertTrue(all(s['require_jit'] == (s['arm'] == 'kdlock' and s['threads'] > 1) for s in plan))
+        row = jit_evidence(2, 8, 10, backend='kdlock', delegate=True, operation='snapshot')
+        self.assertEqual(row['jit_snapshot_share'], .6)
+        self.assertNotIn('jit_writer_share', row)
+        partial = jit_evidence(0, 10, 20, backend='kdlock', delegate=True, operation='snapshot', completed=0)
+        self.assertEqual(partial['jit_status'], 'PARTIAL_JIT')
+        with self.assertRaises(ValueError):
+            jit_evidence(0, 10, 20, backend='kdlock', delegate=True, completed=11)
+        args.lock_kind = 'rwlock'
+        with self.assertRaises(run.Failure):
+            run.make_plan(args)
+
+    def test_snapshot_oracle_and_mutations(self):
+        for workload, number in (('taskname', 2), ('argbounds', 3)):
+            spec, m = fixture('cacheline', 20)
+            spec.update(workload=workload, cachelines=0, lock_kind='spin')
+            for snap in (m['before'], m['after']):
+                snap.update(workload=number, lines=0)
+            m['after']['values'] = [40] + [0] * 15
+            validate(m, spec)
+            for change in (lambda b: b['workers'][0].__setitem__('read_errors', 1),
+                           lambda b: b['after']['values'].__setitem__(0, 39),
+                           lambda b: b['after'].__setitem__('gate', 1)):
+                bad = copy.deepcopy(m)
+                change(bad)
+                with self.assertRaises(ValueError):
+                    validate(bad, spec)
+
+    def test_rwsem_plan_uses_only_local_sleeping_backends(self):
+        args = run.parser().parse_args(['--lock-kind', 'rwsem', '--workloads', 'cacheline',
+            '--cachelines', '1', '8', '--backends', 'native', 'kdlock', '--threads', '8',
+            '--write-percent', '0', '20', '100'])
+        plan = run.make_plan(args)
+        self.assertEqual(len(plan), 36)
+        self.assertTrue(all(s['lock_kind'] == 'rwsem' and not s['delegate'] and
+                            not s['require_jit'] and s['entry_abi'] is None and
+                            s['caller_abi'] == 'c' for s in plan))
+        candidate = object.__new__(session.RWSession)
+        for spec in plan:
+            candidate.record = spec
+            self.assertFalse(candidate.has_entry())
+        args.require_jit = True
+        with self.assertRaises(run.Failure):
+            run.make_plan(args)
+        args.require_jit = False
+        args.backends.append('tclock')
+        with self.assertRaises(run.Failure):
+            run.make_plan(args)
+
+    def test_snapshot_plan_rejects_mixed_shells_and_ineligible_jit(self):
+        for argv in (['--lock-kind', 'spin', '--workloads', 'taskname', 'cacheline'],
+                     ['--lock-kind', 'spin', '--workloads', 'cacheline'],
+                     ['--workloads', 'argbounds'],
+                     ['--lock-kind', 'spin', '--workloads', 'argbounds',
+                      '--require-jit', '--write-percent', '100']):
+            with self.subTest(argv=argv), self.assertRaises(run.Failure):
+                run.make_plan(run.parser().parse_args(argv))
+
     def test_default_rcuht_matrix(self):
         plan = run.make_plan(run.parser().parse_args([]))
         self.assertEqual(len(plan), 270)
@@ -66,6 +165,51 @@ class BenchTests(unittest.TestCase):
         args = run.parser().parse_args(['--require-parity', '--backends', 'kdlock'])
         with self.assertRaises(run.Failure):
             run.make_plan(args)
+
+    def test_rwsem_parity_requires_native_and_kd_for_both_metrics(self):
+        args = run.parser().parse_args(['--lock-kind', 'rwsem', '--backends', 'native', 'kdlock',
+            '--threads', '8', '--write-percent', '20', '--require-parity'])
+        plan = run.make_plan(args)
+        summary = [dict(variant=f'rwsem-rcuht-c00-{arm}', write_percent=20, threads=8,
+                        complete=True, valid_rounds=3, jit_status='NATIVE',
+                        best_peak_ops_s=rate, whole_median_ops_s=rate)
+                   for arm, rate in (('native', 10), ('kdlock', 12))]
+        result = run.assess(plan, summary)
+        self.assertEqual(result['status'], 'PASS')
+        self.assertEqual(result['points'][0]['lock_kind'], 'rwsem')
+        self.assertEqual(result['points'][0]['comparators'], ['native'])
+        self.assertEqual(set(result['points'][0]['ratios']), {'native'})
+        for metric in ('best_peak_ops_s', 'whole_median_ops_s'):
+            slower = copy.deepcopy(summary)
+            slower[1][metric] = 9
+            self.assertEqual(run.assess(plan, slower)['status'], 'FAIL')
+        partial = copy.deepcopy(summary)
+        partial[1].update(complete=False, valid_rounds=2)
+        self.assertEqual(run.assess(plan, partial)['status'], 'INCOMPLETE')
+        for backend in ('native', 'kdlock'):
+            args.backends = [backend]
+            with self.assertRaises(run.Failure):
+                run.make_plan(args)
+        args.backends = ['native', 'kdlock']
+        args.functional, args.repeats = True, 1
+        with self.assertRaises(run.Failure):
+            run.make_plan(args)
+
+    def test_spin_and_rwlock_parity_still_require_tclock(self):
+        for extra in ([], ['--lock-kind', 'spin', '--workloads', 'argbounds']):
+            args = run.parser().parse_args(['--backends', 'native', 'kdlock',
+                '--threads', '8', '--write-percent', '20', '--require-parity', *extra])
+            with self.assertRaises(run.Failure):
+                run.make_plan(args)
+            args.require_parity = False
+            plan = run.make_plan(args)
+            summary = [dict(variant=spec['variant'], write_percent=20, threads=8,
+                            complete=True, valid_rounds=3, jit_status='NATIVE',
+                            best_peak_ops_s=10, whole_median_ops_s=10)
+                       for spec in plan[:2]]
+            result = run.assess(plan, summary)
+            self.assertEqual(result['status'], 'INCOMPLETE')
+            self.assertEqual(result['points'][0]['comparators'], ['native', 'tclock'])
 
     def test_mix_matches_scheduler(self):
         for percent in (0, 1, 10, 20, 50, 99, 100):

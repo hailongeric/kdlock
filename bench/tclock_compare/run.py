@@ -125,6 +125,8 @@ def source_state():
 def make_plan(args):
     require(args.repeats > 0 and 0 < args.iterations <= 100000000,
             'invalid repeats/iterations')
+    require(not (getattr(args, 'pmu', False) and getattr(args, 'perf_record', False)),
+            'PMU counters and CPU sampling require separate diagnostic runs')
     ratio_limit = getattr(args, 'spin_entry_ratio_limit', DEFAULT_SPIN_ENTRY_RATIO_LIMIT)
     require(ratio_limit in SPIN_ENTRY_RATIO_LIMITS, 'invalid spin entry ratio limit')
     batch = getattr(args, 'kd_batch_size', 1024)
@@ -166,6 +168,8 @@ def make_plan(args):
                 numa_policy=numa if backend != 'native' else 'not_applicable',
                 delegation_batch_limit=batch if backend == 'kdlock' else (1024 if backend == 'tclock' else None),
                 pmu=getattr(args, 'pmu', False),
+                perf_record=getattr(args, 'perf_record', False),
+                diagnostic=bool(getattr(args, 'pmu', False) or getattr(args, 'perf_record', False)),
                 scenario=getattr(args, 'scenario', 'plain'),
                 spin_delegate=getattr(args, 'spin_delegate', 'on'),
                 warmup_policy='all_workers', warmup_iterations_per_worker=48000,
@@ -208,6 +212,8 @@ def report(out):
         r = json.loads(p.read_text()) if p.exists() else dict(spec, execution_status='NOT_RUN', drained=False)
         m = r.get('measurement', {})
         good = valid(r)
+        r['score_eligible'] = good and not any(r.get(k, False) for k in
+                                              ('diagnostic', 'pmu', 'perf_record'))
         timed = bool(r.get('duration_ms', 0))
         r['whole_throughput_ops_s'] = m['completed']*1e9/m['wall_ns'] if good else None
         r['whole_amortized_ns_op'] = m['wall_ns']/m['completed'] if good else None
@@ -240,7 +246,7 @@ def report(out):
     write_json(out/'records.json', records)
     summary = []
     for (lock_kind, n, t, arm, mode, shell, cookie, heat_policy, contention_pct, ratio_limit, timing, delegate, numa, batch, prefetch, provider_ubsan, cpus), rows in groups.items():
-        good = [r for r in rows if valid(r)]
+        good = [r for r in rows if r['score_eligible']]
         row = dict(cachelines=n, threads=t, api_mode='direct', arm=arm, lock_kind=lock_kind,
                    workload=rows[0].get('workload', 'cacheline'),
                    sessions=len(rows), valid=len(good),
@@ -346,8 +352,11 @@ def main(lock_kind='spin'):
                    help='explicitly share CPU 63 at the 64-worker point only; '
                         'requires timed workers 0-63 on the 64-vCPU VM')
     p.add_argument('--backends', nargs='+', choices=('native','tclock','kdlock'), default=['native','tclock','kdlock'])
-    p.add_argument('--pmu', action='store_true',
+    perf_mode = p.add_mutually_exclusive_group()
+    perf_mode.add_argument('--pmu', action='store_true',
                    help='separate long-batch diagnostic: perf stat around measured client only')
+    perf_mode.add_argument('--perf-record', action='store_true',
+                   help='unscored 199 Hz kernel cycle samples around measured client and workers')
     p.add_argument('--dry-run', action='store_true')
     p.add_argument('--functional', action='store_true',
                    help='KD functional acceptance only; requires --backends kdlock --repeats 1; no throughput report')
@@ -410,9 +419,9 @@ def main(lock_kind='spin'):
         builds = [('client',['make','-C',HERE,'client']),
                   ('allocator-guard',['make','-C',GUARD_MODULE.parent])]
         binaries = [HERE/'client', GUARD_MODULE]
-        if args.pmu:
+        if args.pmu or args.perf_record:
             perf = shutil.which('perf')
-            require(perf is not None, 'PMU diagnostic requires perf in PATH')
+            require(perf is not None, 'performance diagnostic requires perf in PATH')
             perf = Path(perf).resolve()
             write_json(out/'pmu-tool.json', dict(path=str(perf), sha256=digest(perf),
                 version=command([perf, 'version'], out/'perf-version.txt').strip(),
