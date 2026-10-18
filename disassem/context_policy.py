@@ -151,6 +151,7 @@ def constant_blocks(
     clobber_targets=(),
     readonly_targets=(),
     writer_targets=None,
+    audited_c_targets=(),
     mutex_targets=(),
     mutex_stack_bytes=0,
     native_exits=(),
@@ -181,6 +182,7 @@ def constant_blocks(
     control_calls = set()
     clobber_calls = set()
     readonly_calls = set()
+    audited_c_calls = set()
     writer_calls = {}
     writer_targets = writer_targets or {}
     mutex_calls = set()
@@ -218,6 +220,10 @@ def constant_blocks(
                 clobber_calls.add(id(line))
             if callee in readonly_targets:
                 readonly_calls.add(id(line))
+            if callee in audited_c_targets:
+                if callee not in readonly_targets and callee not in writer_targets:
+                    raise ContextFlowLimit("audited C target lacks a typed memory effect", line.offset)
+                audited_c_calls.add(id(line))
             if callee in writer_targets:
                 writer_calls[id(line)] = writer_targets[callee]
             if callee in readonly_targets or callee in writer_targets or ((guards is not None or callee in clobber_targets) and callee in control_targets):
@@ -293,6 +299,7 @@ def constant_blocks(
     tracker.control_calls = control_calls
     tracker.clobber_calls = clobber_calls
     tracker.readonly_calls = readonly_calls
+    tracker.audited_c_calls = audited_c_calls
     tracker.writer_calls = writer_calls
     tracker.mutex_calls = mutex_calls
     initial = tracker.snapshot()

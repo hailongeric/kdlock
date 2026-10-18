@@ -65,16 +65,36 @@ default. All preparation callers finish before the next translation and before
 the measured cohort starts; preparation is excluded from throughput. The
 record retains both CPU sets and their NUMA nodes.
 
-The historical exact helper was refused for
-uncaptured R13 under spin ABI1; do not bypass this admission check. Use
-`--delegate off` for an explicitly local KD control, keeping it separate from
-default-KD acceptance attempts.
+Taskname uses the ordinary `KD_SPIN_DIRECT_LOCK` shell and the original
+`strscpy_pad(result, name, 64)` call. Version 10 invokes that kernel API without
+helper-code checks, source-string scans or runtime destination checks. The
+native caller supplies valid storage; analysis retains the source CALL write,
+the statically known count of 64 and all 64 destination writes. See the
+[writing-service contract](../../docs/design/admission.md#original-strscpy_pad-writing-service).
+Version 10 candidate 6 passed the read-only taskname correctness check on Linux
+Native, TCLock and KD, with matching generated-body entries and completions on
+KD. A separate 20% mutation check with `--helper-waves 0` passed correctness on
+all three backends but recorded zero KD generated bodies. Disabling preparation
+for that control does not establish delegated execution or supersede the
+earlier failed strict delegation check. The
+[current development record](../results/10.176.26.71/bench/taskname-xattr-native-api-20261019/DEVELOPMENT.md)
+retains these outcomes. The revised performance comparison remains pending.
 
-The [earlier reintegration checks](../results/10.176.26.71/tests/feature-reintegration-20261018/README.md)
-passed local rwsem and snapshot correctness. Argbounds completed delegated bodies
-in three default-policy timed eight-worker runs; its short 16-worker check was
-`NO_JIT`. Taskname exhausted the learning waves without complete delegation in
-that acceptance attempt. Keep both outcomes and local controls explicit.
+In the preceding `c79d84f` implementation, the ordinary shell's 16-worker
+read-only check completed 3,200,000 operations and 3,194,222 delegated bodies.
+The 20% mutation check produced correct results and drained on all three
+backends, but KD completed only nine preparation bodies and none during
+measurement. That strict measured-delegation check remains failed. The
+[development record](../results/10.176.26.71/bench/taskname-xattr-20261018/DEVELOPMENT.md)
+keeps those source-specific results separate from new measurements.
+
+The earlier exact-helper translation was refused for uncaptured R13 under spin
+ABI1. The [reintegration checks](../results/10.176.26.71/tests/feature-reintegration-20261018/README.md)
+passed local rwsem and snapshot correctness; taskname exhausted its learning
+waves without a returned delegated body. Argbounds completed delegated bodies
+in three timed eight-worker runs, while its short 16-worker check was `NO_JIT`.
+These are historical outcomes. `--delegate off` remains an explicitly local KD
+control, separate from default-KD delegation attempts.
 
 Examples below run only after the guest/snapshot checks described next. Choose
 new external output directories:
@@ -198,7 +218,7 @@ python3 bench/rwlock_compare/run.py --dry-run --collector-cpu 63
 After verifying the actual monitor snapshot and guest identity:
 
 ```sh
-export PATH=/root/kdlock-evidence/clobber-20260918/venv/bin:$PATH
+export PATH=/root/kdlock-translation-venv-20261019/bin:$PATH
 export LC_ALL=C
 export KDLOCK_RECOVERY_CONFIRMED=1
 export KDLOCK_SNAPSHOT_TAG=YOUR_CONFIRMED_SNAPSHOT

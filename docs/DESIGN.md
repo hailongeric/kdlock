@@ -100,13 +100,15 @@ original waiter runs that function and the rest of the invocation natively. A
 later compilation may include the function. Known lock operations and approved
 services can instead return to JIT at a registered continuation.
 
-Provider capability version 9 includes separately negotiated ABI1 spin services
-for the original [`strcmp`](design/admission.md#bounded-original-strcmp-service)
-and [`strscpy_pad`](design/admission.md#bounded-original-strscpy_pad-writing-service)
-helpers. A service is a checked call executed by the current lock holder. These
+Provider capability version 10 includes separately negotiated ABI1 spin services
+for the original [`strcmp`](design/admission.md#original-strcmp-service)
+and [`strscpy_pad`](design/admission.md#original-strscpy_pad-writing-service)
+helpers. A service invokes the original function on the current lock holder. These
 services require one outer spin owner and a caller that keeps their ordinary
-source strings valid and unchanged. Their checks do not establish those object
-lifetimes or replace the physical locking protocol.
+source strings valid and unchanged. They use the original C caller's memory and
+lifetime guarantees without checking helper instructions, rescanning strings or
+rechecking destination buffers. KD still preserves ownership, memory effects and
+the saved return state. This does not replace the physical locking protocol.
 
 The register packet has three states:
 
@@ -143,7 +145,7 @@ Mutex recompilation publishes a new immutable generation; existing mutex frames
 retain their bound generation through continuations and retirement. Ordinary
 spin/rwlock recompilation still overwrites the entry's allocated code block.
 Publishing the first ABI1 image with [checked pointer loads](design/admission.md#checked-spin-pointer-loads),
-the bounded `strcmp` service or the bounded `strscpy_pad` service instead allocates
+the `strcmp` service or the `strscpy_pad` service instead allocates
 a separate immutable block. Existing spin frames retain their
 earlier descriptor and code; every later image for that entry is also immutable,
 even if it needs no guards or typed services. All versions remain in the same bounded pool

@@ -20,7 +20,7 @@ PIN = 0x40104B70
 INFO = 0x80104B71
 RETIRE = 0x4B72
 CAPS = 0x80104B73
-CAPS_VERSION = 9
+CAPS_VERSION = 10
 CAP_MUTEX_STACK = 1
 CAP_PERCPU_MODULE = 2
 CAP_MUTEX_IMAGES = 8
@@ -29,6 +29,7 @@ CAP_NATIVE_ESCAPE = 32
 CAP_ADDRESS_GUARD = 64
 CAP_STRING_SERVICES = 128
 CAP_STRING_WRITE = 256
+CAP_AUDITED_STRINGS = 512
 MUTEX_STACK_BYTES = 256
 PERCPU_MODULE_BYTES = 8192
 PERCPU_ALIGNMENT = 4
@@ -43,6 +44,7 @@ _native_escape = False
 _address_guard = False
 _string_services = False
 _string_write = False
+_audited_strings = False
 
 
 class SourceRefused(RuntimeError):
@@ -77,7 +79,8 @@ def query_capabilities(fd):
     disabled = {"mutex_stack_bytes": 0, "percpu_module_bytes": 0,
                 "mutex_images": False, "mutex_exclusive": False,
                 "native_escape": False, "address_guard": False,
-                "string_services": False, "string_write": False}
+                "string_services": False, "string_write": False,
+                "audited_strings": False}
     packet = bytearray(b"\xff" * CAPS_STRUCT.size)
     try:
         result = fcntl.ioctl(fd, CAPS, packet, True)
@@ -92,24 +95,28 @@ def query_capabilities(fd):
         return disabled
     if result == 0 and len(packet) == CAPS_STRUCT.size:
         version, features, stack_bytes, module_bytes = CAPS_STRUCT.unpack(packet)
-        known = CAP_MUTEX_STACK | (CAP_PERCPU_MODULE if version in (2, 3, 4, 5, 6, 7, 8, CAPS_VERSION) else 0)
+        known = CAP_MUTEX_STACK | (CAP_PERCPU_MODULE if version in (2, 3, 4, 5, 6, 7, 8, 9, CAPS_VERSION) else 0)
         if version == 3:
             known |= 4  # historical owned-image capability, not this backend
-        if version in (4, 5, 6, 7, 8, CAPS_VERSION):
+        if version in (4, 5, 6, 7, 8, 9, CAPS_VERSION):
             known |= CAP_MUTEX_IMAGES
-        if version in (5, 6, 7, 8, CAPS_VERSION):
+        if version in (5, 6, 7, 8, 9, CAPS_VERSION):
             known |= CAP_MUTEX_EXCLUSIVE
-        if version in (6, 7, 8, CAPS_VERSION):
+        if version in (6, 7, 8, 9, CAPS_VERSION):
             known |= CAP_NATIVE_ESCAPE
-        if version in (7, 8, CAPS_VERSION):
+        if version in (7, 8, 9, CAPS_VERSION):
             known |= CAP_ADDRESS_GUARD
-        if version in (8, CAPS_VERSION):
+        if version in (8, 9, CAPS_VERSION):
             known |= CAP_STRING_SERVICES
-        if version == CAPS_VERSION:
+        if version in (9, CAPS_VERSION):
             known |= CAP_STRING_WRITE
+        if version == CAPS_VERSION:
+            known |= CAP_AUDITED_STRINGS
         if (
-            version in (1, 2, 3, 4, 5, 6, 7, 8, CAPS_VERSION)
+            version in (1, 2, 3, 4, 5, 6, 7, 8, 9, CAPS_VERSION)
             and not features & ~known
+            and (not features & CAP_AUDITED_STRINGS
+                 or features & (CAP_STRING_SERVICES | CAP_STRING_WRITE))
             and stack_bytes == (MUTEX_STACK_BYTES if features & CAP_MUTEX_STACK else 0)
             and module_bytes
             == (PERCPU_MODULE_BYTES if features & CAP_PERCPU_MODULE else 0)
@@ -123,6 +130,7 @@ def query_capabilities(fd):
                 "address_guard": bool(features & CAP_ADDRESS_GUARD),
                 "string_services": bool(features & CAP_STRING_SERVICES),
                 "string_write": bool(features & CAP_STRING_WRITE),
+                "audited_strings": bool(features & CAP_AUDITED_STRINGS),
             }
     print(
         f"[KD_JIT][WARN] reason=JIT_CAPABILITY_INVALID "
@@ -168,15 +176,21 @@ def address_guard():
 
 
 def string_services():
-    """Bounded exact native string services require this same provider lease."""
+    """Read-only string API effects require this same provider lease."""
     require()
     return _string_services
 
 
 def string_write():
-    """The checked local-frame writer is distinct from readonly strcmp."""
+    """The 64-byte writing effect is distinct from readonly strcmp."""
     require()
     return _string_write
+
+
+def audited_strings():
+    """Original string APIs rely on native caller guarantees, without preflight."""
+    require()
+    return _audited_strings
 
 
 def pin_range(address, size):
@@ -194,7 +208,7 @@ def pin_range(address, size):
 
 @contextmanager
 def session():
-    global _fd, _mutex_stack_bytes, _percpu_module_bytes, _native_escape, _address_guard, _string_services, _string_write
+    global _fd, _mutex_stack_bytes, _percpu_module_bytes, _native_escape, _address_guard, _string_services, _string_write, _audited_strings
     if _fd is not None:
         raise RuntimeError("kd_dev session is already active")
     inherited = os.environ.get("KD_DEVICE_FD")
@@ -238,6 +252,7 @@ def session():
         _address_guard = caps["address_guard"]
         _string_services = caps["string_services"]
         _string_write = caps["string_write"]
+        _audited_strings = caps["audited_strings"]
         _fd = fd
         print(f"Translation device session: inherited={int(inherited is not None)}")
         print(
@@ -245,7 +260,7 @@ def session():
             f"percpu_module_bytes={_percpu_module_bytes} "
             f"native_escape={int(_native_escape)} address_guard={int(_address_guard)} "
             f"string_services={int(_string_services)} "
-            f"string_write={int(_string_write)}"
+            f"string_write={int(_string_write)} audited_strings={int(_audited_strings)}"
         )
         yield fd
     finally:
@@ -256,6 +271,7 @@ def session():
         _address_guard = False
         _string_services = False
         _string_write = False
+        _audited_strings = False
         if fd is not None:
             os.close(fd)
 

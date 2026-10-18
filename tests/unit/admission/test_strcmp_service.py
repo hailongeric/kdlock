@@ -1,32 +1,19 @@
-"""Guest-only exact native-helper contract and caller admission regressions."""
+"""Guest-only original API resolution and ordinary caller admission regressions."""
 import struct
 import unittest
-from unittest.mock import patch
 
 from miasm.expression.expression import ExprId
 from test_jit_diagnostics import decode, render, translator
 from address_guards import AddressGuards, GuardSite
 from context_values import FlowConstants
-import guard_flags
 import hostcall
 import strcmp_service
 
 
 ADDRESS = 0x2000
-THUNK = 0x5000
-SYMBOLS = {"strcmp": ADDRESS, "__x86_return_thunk": THUNK,
+SYMBOLS = {"strcmp": ADDRESS,
            "kd_raw_spin_lock_clobber_v1": 0x3000,
            "kd_raw_spin_unlock_clobber_v1": 0x4000}
-
-
-def helper_bytes(native_return=True):
-    raw = bytearray(strcmp_service.TEMPLATE)
-    for offset in strcmp_service.TAIL_OFFSETS:
-        if native_return:
-            raw[offset - 1:offset + 4] = strcmp_service.RETURN_TEMPLATE
-        else:
-            struct.pack_into("<i", raw, offset, THUNK - ADDRESS - offset - 4)
-    return bytes(raw)
 
 
 def call(target, address):
@@ -35,40 +22,27 @@ def call(target, address):
 
 class StrcmpServiceTests(unittest.TestCase):
     def reader(self, address, size):
-        self.assertEqual((address, size), (ADDRESS, strcmp_service.CODE_BYTES))
-        return helper_bytes()
+        self.fail("original strcmp code or data must not be inspected")
 
     def render(self, prefix="488b7df8488b75f0", suffix="4839c0c3", **kwargs):
         before = bytes.fromhex(prefix)
         raw = before + call(ADDRESS, 0x1000 + len(before)) + bytes.fromhex(suffix)
         return render(raw.hex(), abi=1, kernel_symbols=SYMBOLS,
                       memory_reader=self.reader, string_services_capable=True,
-                      return_status=True, **kwargs)
+                      audited_strings_capable=True, return_status=True, **kwargs)
 
-    def test_exact_bytes_both_return_targets_and_actual_flag_proof_are_required(self):
-        raw = helper_bytes()
-        self.assertTrue(strcmp_service.verified(ADDRESS, THUNK, self.reader))
-        self.assertTrue(strcmp_service.verified(ADDRESS, THUNK,
-                                               lambda *_: helper_bytes(False)))
-        for index in range(len(raw)):
-            changed = bytearray(raw)
-            changed[index] ^= 1
-            with self.subTest(byte=index):
-                self.assertFalse(strcmp_service.matches_text(changed, ADDRESS, THUNK))
-        for changed in (b"", raw[:-1], raw + b"\x90"):
-            self.assertFalse(strcmp_service.matches_text(changed, ADDRESS, THUNK))
-        self.assertFalse(strcmp_service.matches_text(helper_bytes(False), ADDRESS, THUNK + 1))
-        with patch.object(guard_flags, "prove_flags_dead", return_value="unproved flags"):
-            self.assertFalse(strcmp_service.verified(ADDRESS, THUNK, self.reader))
-
-    def test_resolver_requires_negotiation_and_validated_text(self):
+    def test_resolver_uses_only_original_symbol_and_negotiated_api_contract(self):
         lookup = lambda name, default=0: SYMBOLS.get(name, default)
         self.assertNotIn(ADDRESS, hostcall.resolve_hostcalls(lookup))
         self.assertNotIn(ADDRESS, hostcall.resolve_hostcalls(
-            lookup, string_services=True, reader=lambda *_: b"\x90" * 42))
-        resolved = hostcall.resolve_hostcalls(lookup, string_services=True, reader=self.reader)
+            lookup, string_services=True))
+        self.assertNotIn(ADDRESS, hostcall.resolve_hostcalls(
+            lookup, audited_strings=True))
+        resolved = hostcall.resolve_hostcalls(lookup, string_services=True, audited_strings=True)
         self.assertEqual(strcmp_service.targets(resolved), {ADDRESS})
         self.assertIn(ADDRESS, hostcall.readonly_waiter_targets(resolved))
+        self.assertFalse(strcmp_service.targets(hostcall.resolve_hostcalls(
+            lambda name, default=0: default, string_services=True, audited_strings=True)))
 
     def test_actual_service_call_sets_image_requirement_and_keeps_virtual_call(self):
         options = {}
@@ -76,13 +50,15 @@ class StrcmpServiceTests(unittest.TestCase):
         self.assertEqual(status, 0, log)
         self.assertIn(b"KD_HOSTCALL id=4 symbol=strcmp", assembly)
         self.assertEqual(options["requirements"], strcmp_service.REQUIREMENT)
+        self.assertNotIn(b"KDCS0001", assembly)
         self.assertRegex(assembly, rb"QWORD PTR \[R13\], R(?:14|15)")
         # Negotiating a service does not add an image requirement to unrelated
         # source; immutable-image selection remains tied to actual CALL use.
         options = {}
         _, log, status = render("31c0c3", abi=1, kernel_symbols=SYMBOLS,
                                 memory_reader=self.reader, string_services_capable=True,
-                                build_options=options, return_status=True)
+                                audited_strings_capable=True, build_options=options,
+                                return_status=True)
         self.assertEqual(status, 0, log)
         self.assertEqual(options["requirements"], 0)
 
@@ -110,7 +86,7 @@ class StrcmpServiceTests(unittest.TestCase):
             strcmp_service.argument_rejection(line, dbs[blocks[0x1000]], tracker,
                                                {ADDRESS}, {})
 
-    def test_guard_before_strcmp_uses_only_proved_native_flag_contract(self):
+    def test_original_api_contract_does_not_supply_a_source_flags_proof(self):
         raw = bytes.fromhex("488b07") + call(ADDRESS, 0x1003) + b"\xc3"
         blocks, dbs = translator.decode_regions([(raw, 0x1000, [0x1000])], 0, {ADDRESS})
         line = blocks[0x1000].lines[0]
@@ -119,15 +95,20 @@ class StrcmpServiceTests(unittest.TestCase):
         with self.assertRaises(translator.context_policy.ContextFlowLimit):
             guards.validate(blocks, dbs)
         resolved = hostcall.resolve_hostcalls(lambda name, default=0: SYMBOLS.get(name, default),
-                                             string_services=True, reader=self.reader)
-        guards.validate(blocks, dbs, flag_dead_calls=strcmp_service.targets(resolved))
+                                             string_services=True, audited_strings=True)
+        self.assertEqual(strcmp_service.targets(resolved), {ADDRESS})
+        with self.assertRaises(translator.context_policy.ContextFlowLimit):
+            guards.validate(blocks, dbs)
 
     def test_dynamic_node_load_keeps_call_word_alias_model_and_emits_guard(self):
         # Exact dynamic list-pointer shape: stack write can alias the node's
         # name pointer. The pointer argument must not be treated as a scalar;
         # only the checked actual MOV can replace that uncertain alternative.
+        # A source CMP, not an unchecked helper assumption, kills the flags.
         prefix = "488b7df8488b5df0488b1b48c74424f833330000488b33"
         assembly, log, status = self.render(prefix=prefix, address_guard_capable=True)
+        self.assertEqual((assembly, status), (b"", 2), log)
+        assembly, log, status = self.render(prefix=prefix + "4839ff", address_guard_capable=True)
         self.assertEqual(status, 0, log)
         self.assertIn("ADDRESS_GUARDED_ADMISSION", log)
         self.assertIn(b"kd_address_guard_failed_", assembly)
@@ -149,7 +130,7 @@ class StrcmpServiceTests(unittest.TestCase):
                 assembly, log, status = render(
                     raw.hex(), abi=1, kernel_symbols=SYMBOLS,
                     memory_reader=self.reader, string_services_capable=True,
-                    return_status=True)
+                    audited_strings_capable=True, return_status=True)
                 self.assertEqual(status, 2 if nested else 0, log)
                 if nested:
                     self.assertEqual(assembly, b"")

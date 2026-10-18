@@ -28,20 +28,42 @@ All seven implemented adapters already call KD APIs. The catalog's
 [API and delegation table](../../docs/BENCHMARK_WORKLOADS.md#kd-api-use-and-delegation)
 distinguishes eligible bodies, local readers and unresolved translation refusals.
 
-The current xattr implementation passed focused functional validation. It keeps the
-original list traversal, `strcmp()` comparisons and real `memcpy()` value copy.
-Narrow runtime pointer checks and a checked call to the exact original `strcmp`
-helper replace the reproduced admission blockers; `memcpy` remains a learned
-helper, without a new writing-service summary. Candidate 11 passed all eight
+Xattr keeps the original list traversal, `strcmp()` calls and real `memcpy()`
+value copy. Version 10 invokes the original `strcmp` through a service that
+models its read-only effect. It does not inspect helper code or scan the strings;
+the syscall and selected source lock provide the same valid, stable storage
+required by the native API. The reviewed caller also promises that ordinary
+data accesses do not inspect or overwrite the `strcmp` service's temporary
+CALL return-address storage.
+Analysis records that control storage separately from ordinary object data and
+refuses explicit known observers, while preserving original CALL writes and
+traversal loads. This promise concerns the selected caller, not arbitrary kernel
+code. `memcpy` remains a learned helper without a new writing-service summary.
+Its CALL return word and RET use ordinary conservative analysis, and all copy
+reads and writes remain present. There is no special copy-call classification or
+return path. The generic refinement for partially overlapping CALL-return bytes
+is archived; the maintained revision separates control storage only for the two
+original string services. Focused unit and live correctness checks passed, as
+recorded in the
+[current development record](../results/10.176.26.71/bench/taskname-xattr-native-api-20261019/DEVELOPMENT.md).
+Ordinary address/context admission and common owner/frame/return checks
+remain active. See the
+[API contract](../../docs/design/admission.md#original-strcmp-service).
+
+Version 10 candidate 6 passed all eight xattr controls: front hit, tail hit,
+missing name and size-only query, each with 16 and 128 attributes, 64-byte values
+and 16 workers. Every control returned correct results and recorded matching
+generated-body entries and completions. The tail/front value queries retained
+the real `memcpy` copy. These are focused correctness and delegation checks;
+the revised Native/TCLock/KD performance comparison remains pending.
+
+In the preceding implementation frozen in `c79d84f`, candidate 11 passed all eight
 front/tail/miss/size combinations at n16/n128, v64 and 16 workers. Each recorded
 matching generated entries and completed bodies, correct results and clean
-teardown; the tail checks completed 133,378 bodies at n16 and 18,985 at n128.
-The full Native/TCLock/KD performance matrix remains pending. Keep the
-[development evidence](../results/10.176.26.71/bench/taskname-xattr-20261018/DEVELOPMENT.md)
-separate from accepted comparison results. The
-[helper contract](../../docs/design/admission.md#bounded-original-strcmp-service)
-requires stable, allocated ordinary kernel strings under the selected physical
-lock; it does not make arbitrary pointers or whole-kernel replacement safe.
+teardown; tail checks completed 133,378 bodies at n16 and 18,985 at n128. Keep
+that [development evidence](../results/10.176.26.71/bench/taskname-xattr-20261018/DEVELOPMENT.md)
+and its performance matrix separate from the revised implementation. These
+scoped adapters do not establish whole-kernel replacement.
 
 ## Candidate selection
 
@@ -207,7 +229,7 @@ monitor snapshot of the actual CPU topology. Do not rebuild the kernel. The
 standard guest has 64 vCPUs; collector 63 is excluded from worker cohorts.
 
 ```sh
-export PATH=/root/kdlock-evidence/clobber-20260918/venv/bin:$PATH
+export PATH=/root/kdlock-translation-venv-20261019/bin:$PATH
 export LC_ALL=C
 export KDLOCK_RECOVERY_CONFIRMED=1
 export KDLOCK_SNAPSHOT_TAG=YOUR_CONFIRMED_SNAPSHOT

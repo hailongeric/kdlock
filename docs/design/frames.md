@@ -162,13 +162,13 @@ references and unlock acknowledgements through normal retirement, and disables
 future delegation of the entry. This is a specific checked boundary, not recovery
 from arbitrary faults or exhausted execution limits.
 
-The separately negotiated [string services](admission.md#bounded-original-strcmp-service)
+The separately negotiated [string services](admission.md#original-strcmp-service)
 also retain the frame's single outer spin owner, acquisition ticket and source
-lease. They validate the pending CALL before invoking the original helper. An
-argument refusal leaves its return word in place for native execution; success
-consumes the prevalidated return exactly once. The
-[writing service](admission.md#bounded-original-strscpy_pad-writing-service)
-checks its destination before any write and never retries a completed helper.
+lease. They save and validate the pending CALL's return state before invoking
+the original helper; success consumes that saved return exactly once. The
+[writing service](admission.md#original-strscpy_pad-writing-service)
+uses the original caller's valid-buffer contract and never retries a completed
+helper. Neither service checks helper instructions or scans argument strings.
 These services add no packet, frame or continuation fields.
 
 Before a supported local mutex control, KD snapshots 256 bytes within the
@@ -195,7 +195,7 @@ controls, actual JIT, context refusals and returned-body evidence remain separat
 Known pinned-waiter dependencies, general runtime address checks, general flags
 repair and immutable versions for ordinary spin/rwlock entries remain open or
 deferred in [TODO](../TODO.md). Mutex images and spin entries that have published
-checked pointer loads or either bounded string service use immutable generations.
+checked pointer loads or either string service use immutable generations.
 Ordinary spin/rwlock entries still use in-place storage. See
 [image lifetimes](lifetimes.md#executable-images-and-guarded-spin-transition)
 and the limited [pointer-load admission contract](admission.md#checked-spin-pointer-loads).

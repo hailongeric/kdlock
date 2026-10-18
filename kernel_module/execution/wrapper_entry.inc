@@ -96,181 +96,17 @@ static int kd_jit_call_limit_native(struct kd_exec_frame *frame,
 	return 0;
 }
 
-static int kd_hostcall_strcmp_text(unsigned long address)
-{
-	static const unsigned char expected[KD_STRCMP_CODE_BYTES] =
-		KD_STRCMP_CODE_TEMPLATE;
-	static const unsigned char patched_return[5] = KD_STRCMP_RETURN_TEMPLATE;
-	static const unsigned int tails[] = { KD_STRCMP_TAIL1_DISP, KD_STRCMP_TAIL2_DISP };
-	unsigned char actual[KD_STRCMP_CODE_BYTES];
-	unsigned int i;
-	int ret;
-
-	if (!address || address > ~0UL - sizeof(actual))
-		return -EINVAL;
-	ret = kd_source_pin_target(address);
-	if (ret)
-		return ret;
-	if (copy_from_kernel_nofault(actual, (void *)address, sizeof(actual)))
-		return -EFAULT;
-	for (i = 0; i < sizeof(actual); i++) {
-		if ((i >= KD_STRCMP_TAIL1_DISP - 1 && i < KD_STRCMP_TAIL1_DISP + 4) ||
-		    (i >= KD_STRCMP_TAIL2_DISP - 1 && i < KD_STRCMP_TAIL2_DISP + 4))
-			continue;
-		if (actual[i] != expected[i])
-			return -ESTALE;
-	}
-	for (i = 0; i < ARRAY_SIZE(tails); i++) {
-		unsigned int offset = tails[i];
-
-		/* The captured kernel alternatives replace a thunk JMP by RET and
-		 * four INT3 padding bytes. Accept that exact five-byte form only. */
-		if (!memcmp(actual + offset - 1, patched_return, sizeof(patched_return)))
-			continue;
-		if (actual[offset - 1] != 0xe9 || !kd_string_return_thunk ||
-		    address + offset + 4 + (long)(int)get_unaligned_le32(actual + offset) !=
-			kd_string_return_thunk)
-			return -ESTALE;
-		ret = kd_source_pin_target(kd_string_return_thunk);
-		if (ret)
-			return ret;
-	}
-	return 0;
-}
-
-/* Read only through the first NUL, never beyond the negotiated byte bound.
- * A failed read or absent terminator has made no helper/packet side effects. */
-static int kd_hostcall_string_preflight(unsigned long address)
-{
-	unsigned int i;
-	unsigned char value;
-
-	if ((long)address >= 0 || address > ~0UL - (KD_STRCMP_MAX_BYTES - 1))
-		return KD_HOSTCALL_NOT_EXECUTED;
-	for (i = 0; i < KD_STRCMP_MAX_BYTES; i++) {
-		if (copy_from_kernel_nofault(&value, (void *)(address + i), 1))
-			return KD_HOSTCALL_NOT_EXECUTED;
-		if (!value)
-			return 0;
-	}
-	return KD_HOSTCALL_NOT_EXECUTED;
-}
-
-/* Normalize only declared relative displacements after checking their exact
- * targets. All remaining helper bytes, including branches and CPU alternatives,
- * must match the leased live-kernel contract before any destination write. */
-static int kd_hostcall_string_text_match(unsigned long address,
-		const unsigned char *expected, unsigned int size,
-		const unsigned int *offsets, const unsigned long *targets,
-		unsigned int count, unsigned long short_target)
-{
-	unsigned char actual[KD_STRSCPY_CODE_BYTES];
-	unsigned int i, j;
-	int ret;
-
-	if (!address || !size || size > sizeof(actual) || address > ~0UL - size || count > 3)
-		return -EINVAL;
-	ret = kd_source_pin_target(address);
-	if (ret)
-		return ret;
-	if (copy_from_kernel_nofault(actual, (void *)address, size))
-		return -EFAULT;
-	for (i = 0; i < count; i++) {
-		unsigned int offset = offsets[i];
-
-		if (!targets[i] || size < 4 || offset > size - 4 ||
-		    address + offset + 4 + (long)(int)get_unaligned_le32(actual + offset) != targets[i])
-			return -ESTALE;
-		for (j = 0; j < 4; j++)
-			actual[offset + j] = 0;
-	}
-	if (short_target) {
-		if (size != KD_STRSCPY_MEMSET_ENTRY_BYTES ||
-		    address + size + (long)(signed char)actual[size - 1] != short_target)
-			return -ESTALE;
-		actual[size - 1] = 0;
-	}
-	return memcmp(actual, expected, size) ? -ESTALE : 0;
-}
-
-static int kd_hostcall_strscpy_text(unsigned long address)
-{
-	static const unsigned char pad[] = KD_STRSCPY_PAD_CODE_TEMPLATE;
-	static const unsigned char copy[] = KD_STRSCPY_CODE_TEMPLATE;
-	static const unsigned char fill_entry[] = KD_STRSCPY_MEMSET_ENTRY_TEMPLATE;
-	static const unsigned char fill[] = KD_STRSCPY_MEMSET_ERMS_TEMPLATE;
-	static const unsigned char returned[] = { 0xc3 };
-	static const unsigned int pad_offsets[] = {
-		KD_STRSCPY_PAD_CALL1_DISP, KD_STRSCPY_PAD_CALL2_DISP, KD_STRSCPY_PAD_RETURN_DISP };
-	static const unsigned int copy_offsets[] = {
-		KD_STRSCPY_RETURN1_DISP, KD_STRSCPY_RETURN2_DISP, KD_STRSCPY_RETURN3_DISP };
-	static const unsigned int fill_offsets[] = { KD_STRSCPY_MEMSET_RETURN_DISP };
-	const unsigned long pad_targets[] = {
-		kd_string_copy_helper, kd_string_memset_entry, kd_string_its_return };
-	const unsigned long copy_targets[] = {
-		kd_string_its_return, kd_string_its_return, kd_string_its_return };
-	const unsigned long fill_targets[] = { kd_string_its_return };
-	int ret;
-
-	if (!kd_string_copy_helper || !kd_string_memset_entry ||
-	    !kd_string_memset_erms || !kd_string_its_return)
-		return -ENOENT;
-	ret = kd_hostcall_string_text_match(address, pad, sizeof(pad),
-		pad_offsets, pad_targets, ARRAY_SIZE(pad_offsets), 0);
-	if (!ret)
-		ret = kd_hostcall_string_text_match(kd_string_copy_helper, copy, sizeof(copy),
-			copy_offsets, copy_targets, ARRAY_SIZE(copy_offsets), 0);
-	if (!ret)
-		ret = kd_hostcall_string_text_match(kd_string_memset_entry, fill_entry,
-			sizeof(fill_entry), NULL, NULL, 0, kd_string_memset_erms);
-	if (!ret)
-		ret = kd_hostcall_string_text_match(kd_string_memset_erms, fill, sizeof(fill),
-			fill_offsets, fill_targets, ARRAY_SIZE(fill_offsets), 0);
-	if (!ret)
-		ret = kd_hostcall_string_text_match(kd_string_its_return, returned,
-			sizeof(returned), NULL, NULL, 0, 0);
-	return ret;
-}
-
-static int kd_hostcall_strscpy_preflight(const struct kd_regs *regs,
-					unsigned long base, unsigned long end)
-{
-	unsigned char word[sizeof(unsigned long)];
-	unsigned int i, j;
-
-	/* The destination excludes the pending CALL, saved BP/return and every
-	 * older frame. Source must not alias the original helper's discarded
-	 * stack spills either, so exclude the waiter's entire stack allocation. */
-	if (regs->dx != KD_STRSCPY_BYTES || regs->bp < regs->sp + sizeof(unsigned long) ||
-	    regs->bp > end - 2 * sizeof(unsigned long) ||
-	    regs->bp < KD_STRSCPY_BYTES || regs->di < regs->sp + sizeof(unsigned long) ||
-	    regs->di > regs->bp - KD_STRSCPY_BYTES || (long)regs->si >= 0 ||
-	    regs->si > ~0UL - KD_STRSCPY_BYTES ||
-	    (regs->si < end && regs->si + KD_STRSCPY_BYTES > base))
-		return KD_HOSTCALL_NOT_EXECUTED;
-	/* The reviewed implementation reads whole eight-byte words, including
-	 * bytes after NUL in its last word. Check that exact read extent first. */
-	for (i = 0; i < KD_STRSCPY_BYTES; i += sizeof(word)) {
-		if (copy_from_kernel_nofault(word, (void *)(regs->si + i), sizeof(word)))
-			return KD_HOSTCALL_NOT_EXECUTED;
-		for (j = 0; j < sizeof(word); j++)
-			if (!word[j])
-				return 0;
-	}
-	return KD_HOSTCALL_NOT_EXECUTED;
-}
-
-/* Validate before executing a memory-reading service. Keep the actual pushed
- * CALL word in place until success; refusal can still resume that exact callee
- * natively. Successful completion consumes this already checked return token,
- * never a newly discovered target after the helper's effects. */
+/* Keep the actual pending CALL word in place until the original C helper
+ * returns. The caller supplies valid arguments, memory and lifetime exactly
+ * as for a native call. Only KD ownership and continuation bookkeeping are
+ * checked here: successful execution consumes this saved token once, never a
+ * newly discovered return address after the helper's effects. */
 static int kd_jit_string_prepare(struct kd_exe_info *exe,
 				 struct kd_exec_frame *frame, struct kd_regs *regs,
 				 unsigned long *return_ip)
 {
 	const struct kd_hostcall_desc *service;
 	unsigned long base, end;
-	unsigned char call[5];
 	int ret;
 
 	if (!exe || !frame || !regs || frame->mutex_backend ||
@@ -304,24 +140,7 @@ static int kd_jit_string_prepare(struct kd_exe_info *exe,
 	    copy_from_kernel_nofault(return_ip, (void *)regs->sp,
 				     sizeof(*return_ip)) || !*return_ip)
 		return -EFAULT;
-	ret = kd_source_pin_target(*return_ip);
-	if (!ret)
-		ret = *return_ip >= sizeof(call) ?
-			kd_source_pin_target(*return_ip - sizeof(call)) : -EINVAL;
-	if (ret)
-		return ret;
-	if (copy_from_kernel_nofault(call, (void *)(*return_ip - sizeof(call)),
-				     sizeof(call)) || call[0] != 0xe8 ||
-	    *return_ip + (long)(int)get_unaligned_le32(call + 1) != regs->ip)
-		return -EPROTO;
-	ret = service->id == KD_HOSTCALL_STRCMP ? kd_hostcall_strcmp_text(regs->ip) :
-		kd_hostcall_strscpy_text(regs->ip);
-	if (ret)
-		return ret;
-	if (service->id == KD_HOSTCALL_STRSCPY_PAD)
-		return kd_hostcall_strscpy_preflight(regs, base, end);
-	ret = kd_hostcall_string_preflight(regs->di);
-	return ret ? ret : kd_hostcall_string_preflight(regs->si);
+	return kd_source_pin_target(*return_ip);
 }
 
 /* Verify the same exact, unprefixed instruction families as admission. This

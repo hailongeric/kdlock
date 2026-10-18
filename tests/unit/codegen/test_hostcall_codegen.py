@@ -47,20 +47,15 @@ def main():
 
     unknown_address = 0x2000
     addresses = {spec.symbol: 0x1000 + i * 0x100 for i, spec in enumerate(specs)}
-    addresses["__x86_return_thunk"] = 0x3000
-    raw = bytearray(strcmp_service.TEMPLATE)
-    for offset in strcmp_service.TAIL_OFFSETS:
-        struct.pack_into("<i", raw, offset,
-                         addresses["__x86_return_thunk"] - addresses["strcmp"] - offset - 4)
     disabled = hostcall.resolve_hostcalls(lambda symbol, _: addresses.get(symbol))
     require(addresses["strcmp"] not in disabled, "string service bypassed negotiation")
     services = hostcall.resolve_hostcalls(lambda symbol, _: addresses.get(symbol),
-                                         string_services=True, reader=lambda addr, size: bytes(raw))
+                                         string_services=True, audited_strings=True)
     require(addresses["strscpy_pad"] not in services,
             "readonly string capability enabled a writing service")
     require(len(services) == len(specs) - 1, "an enabled service was not resolved")
-    # Writer text/capability checks have their own exact-contract tests. Stub
-    # generation must nevertheless preserve the common pending CALL for ID5.
+    # Writer capability/effects have their own tests. Stub generation must
+    # preserve the common pending CALL for ID5 without inspecting the helper.
     services[addresses["strscpy_pad"]] = hostcall.HostcallSpec(*strscpy_service.SPEC)
     assembly = indirect_jump.make_callee_table(
         [unknown_address, *services], services

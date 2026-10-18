@@ -29,12 +29,20 @@ TCLock). It uses the regular 64-vCPU VM and collector 63.
 
 ## Taskname and xattr comparison
 
-The new taskname/xattr checked-helper implementation has
+The historical `c79d84f` taskname/xattr checked-helper implementation has
 [focused returned-body validation](VALIDATION.md#taskname-and-xattr-helper-validation).
 Its [Native/TCLock/KD standard-grid comparison](../bench/results/10.176.26.71/bench/taskname-xattr-20261018/README.md)
-is being prepared. Correct delegation does not establish a throughput gain;
-the original helpers now run with additional argument, source and continuation
-checks. These changes retain the selected KD mutex protocol.
+completed all 567 sessions, with 152 KD sessions returning delegated bodies and
+37 KD sessions recording no JIT entry. Those execution states remain separate.
+The current revision removes
+helper instruction checks, argument scans and runtime destination checks from
+`strcmp` and `strscpy_pad`, relying on their original C caller contracts. Fresh
+focused VM checks passed for read-only taskname and all eight xattr controls;
+the [new comparison](../bench/results/10.176.26.71/bench/taskname-xattr-native-api-20261019/README.md)
+is pending. The separate 20% taskname mutation control was correct but returned
+no delegated bodies. Correct delegation does not establish a throughput gain.
+Both versions retain the selected KD mutex protocol;
+their timings must not be pooled.
 
 ## Current mutex result
 

@@ -83,31 +83,22 @@ static int stack_error, stack_reads;
 static unsigned char escape_text[16];
 static unsigned long kd_native_escape_count;
 static unsigned long kd_address_guard_count;
-static unsigned long kd_string_return_thunk;
-static unsigned long kd_string_copy_helper, kd_string_memset_entry;
-static unsigned long kd_string_memset_erms, kd_string_its_return;
 #define STRING_IP 0xffff80000000c000UL
 #define STRING_RETURN (STRING_IP + 0x1005)
 #define STRING_LEFT (STRING_IP + 0x2000)
 #define STRING_RIGHT (STRING_IP + 0x3000)
 #define PAD_IP (STRING_IP + 0x5000)
 #define PAD_RETURN (STRING_IP + 0x6005)
-#define COPY_IP (STRING_IP + 0x7000)
-#define FILL_IP (STRING_IP + 0x8000)
-#define FILL_ERMS (FILL_IP + 0x10)
-#define COPY_RETURN (STRING_IP + 0x9000)
-static unsigned char string_text[KD_STRCMP_CODE_BYTES], string_call[5];
-static unsigned char string_left[KD_STRCMP_MAX_BYTES], string_right[KD_STRCMP_MAX_BYTES];
+#define STRING_BYTES 512U
+static unsigned char string_left[STRING_BYTES], string_right[STRING_BYTES];
 static unsigned int string_calls;
 static int string_result, string_read_error;
 static bool string_change_return;
 static bool string_wrapper;
 static void *string_wrapper_code;
-static unsigned char pad_text[KD_STRSCPY_PAD_CODE_BYTES], copy_text[KD_STRSCPY_CODE_BYTES];
-static unsigned char fill_text[KD_STRSCPY_MEMSET_ENTRY_BYTES], fill_erms[KD_STRSCPY_MEMSET_ERMS_BYTES];
-static unsigned char copy_return;
 static unsigned int pad_calls, string_read_extent;
 static long pad_result;
+static bool pad_truncates;
 static unsigned long pad_destination;
 static unsigned int string_readable;
 #define ESCAPE_IP 0xa000UL
@@ -121,19 +112,6 @@ static int copy_from_kernel_nofault(void *to, const void *from, size_t size)
 	unsigned long address = (unsigned long)from;
 
 	stack_reads++;
-	if (address == STRING_IP && size == sizeof(string_text)) {
-		memcpy(to, string_text, size);
-		return 0;
-	}
-	if ((address == STRING_RETURN - 5 || address == PAD_RETURN - 5) && size == sizeof(string_call)) {
-		memcpy(to, string_call, size);
-		return 0;
-	}
-	if (address == PAD_IP && size == sizeof(pad_text)) { memcpy(to, pad_text, size); return 0; }
-	if (address == COPY_IP && size == sizeof(copy_text)) { memcpy(to, copy_text, size); return 0; }
-	if (address == FILL_IP && size == sizeof(fill_text)) { memcpy(to, fill_text, size); return 0; }
-	if (address == FILL_ERMS && size == sizeof(fill_erms)) { memcpy(to, fill_erms, size); return 0; }
-	if (address == COPY_RETURN && size == 1) { *(unsigned char *)to = copy_return; return 0; }
 	if ((size == 1 || size == sizeof(unsigned long)) &&
 	    ((address >= STRING_LEFT && address <= STRING_LEFT + sizeof(string_left) - size) ||
 	     (address >= STRING_RIGHT && address <= STRING_RIGHT + sizeof(string_right) - size))) {
@@ -287,9 +265,11 @@ static long fixture_strscpy_pad(char *destination, const char *source, unsigned 
 	CHECK(count == KD_STRSCPY_BYTES);
 	pad_calls++;
 	/* This is a primitive double, not a replacement implementation under test.
-	 * The live probe checks the actual helper's complete padding and return. */
+	 * Taskname checks live normal-copy padding but ignores the return value.
+	 * Truncation and return propagation here cover the production adapter,
+	 * without claiming actual-kernel truncation execution. */
 	memset(destination, 0, count);
-	memcpy(destination, string_right, 15);
+	memcpy(destination, string_right, pad_truncates ? count - 1 : 15);
 	return pad_result;
 }
 

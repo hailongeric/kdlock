@@ -24,8 +24,8 @@ prepared-provider and binary hashes. It also records kernel identity, CPU
 placement and dependency versions. These inputs must remain unchanged until
 the session ends.
 
-The provider must advertise capability version 7, 8 or 9 with feature bit 6
-(address guards). The current provider is version 9. The published entry must
+The provider must advertise capability version 7, 8, 9 or 10 with feature bit 6
+(address guards). The current provider is version 10. The published entry must
 use the spin clobber interface, called ABI1, and image requirement value 2.
 That requirement selects an immutable generated image: active frames retain the
 same code and guard-site records until retirement. The runner checks a positive
@@ -63,6 +63,12 @@ arbitrary loads/stores, task-sensitive objects, fault recovery or general
 processor-flag restoration. See the
 [admission contract](../../../../docs/design/admission.md#checked-spin-pointer-loads)
 for the exact source and flag-proof restrictions.
+
+The payload uses an explicit ordinary store, so the separate analysis rule for
+original CALL-word aliases does not remove this check. The
+[string-service probe](../string_service/README.md) separately requires both
+short and valid 300-character strings to complete through the original `strcmp`
+API without helper prechecks. Neither contract removes this pointer-load probe.
 
 A successful run additionally requires all workers to join, zero active
 execution records, source retirement, ordinary module unload and a final idle

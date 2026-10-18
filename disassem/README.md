@@ -23,7 +23,7 @@ The [terminology guide](../docs/TERMINOLOGY.md) explains execution-state terms.
 | `context_values.py`, `context_registers.py`, `context_memory.py` | Bounded flow, register facts and sequential memory/alias model |
 | `context_guards.py`, `entry_abi.py` | Entry predicates and MINIMAL input-dependency proof |
 | `conflict.py`, `normal.py`, `special_inst.py`, `hostcall.py` | Virtual register/instruction/control lowering |
-| [strcmp_service.py](strcmp_service.py), [strscpy_service.py](strscpy_service.py) | Exact original string-helper code, arguments and separate read-only/writing contracts |
+| [strcmp_service.py](strcmp_service.py), [strscpy_service.py](strscpy_service.py) | Original kernel API resolution and separate read-only/64-byte writing effects |
 | `device_session.py`, `memread.py` | Same-device lease, capabilities and source pinning |
 
 [Admission](../docs/design/admission.md) defines supported scope and refusal.
@@ -39,56 +39,88 @@ This admits the current RCUHT writer without translating reader-drain atomics;
 it does not resolve the general dynamic-pointer screening gap.
 
 KD-only mutex translation requires exclusive KD objects and immutable images
-(capability version 5 through 9). Checked mutex instruction markers require version
-6 through 9 bit 5. Checked spin address exits require version 7 through 9 bit 6 and image
-requirement bit 1; mutex instruction markers use image requirement bit 0.
-The exact bounded `strcmp` service requires version 8 or 9 bit 7 and image requirement
-bit 2, only for audited ABI1 direct callers with stable ordinary kernel strings.
-See [its admission contract](../docs/design/admission.md#bounded-original-strcmp-service).
-The separately negotiated `strscpy_pad` service requires version 9 bit 8 and
-image requirement bit 3. It models all 64 destination bytes as writes and only
-accepts a checked current-frame destination; readonly string capability alone
-cannot enable it. Both retain the original CALL-word effect and invoke the
-original helper. Only `strcmp` uses the allowance of 128 calls; writing helpers
-share the existing limit of 16 scalar/control continuations. See
-[writing-helper admission](../docs/design/admission.md#bounded-original-strscpy_pad-writing-service).
-Linux mutex APIs, their compiler clones and the old kernel
-mutex bridge are refused. Ordinary KD return-valued or task-sensitive locking
-APIs remain local; explicit clobber entries supply delegation. See the
+(capability versions 5 through 10). Checked mutex instruction markers require
+versions 6 through 10 bit 5. Checked spin address exits require versions 7 through
+10 bit 6 and image requirement bit 1; mutex instruction markers use image
+requirement bit 0. A capability is a provider's advertised execution support;
+an image requirement identifies support that its generated code needs.
+
+Original string API services require version 10 bit 9, together with bit 7 for
+`strcmp` or bit 8 for `strscpy_pad`. Their image requirements remain bit 2 and
+bit 3 respectively. A service invokes the original kernel function with its
+original arguments while the generated caller retains its analyzed memory
+effects. No phase checks helper bytes, helper-specific CALL encodings or string
+contents. Runtime does not recheck destination bounds. Native caller guarantees
+supply valid, stable strings and output storage. Ordinary register/context
+analysis remains active, and the writer still requires a statically known count
+of 64 and one local 64-byte destination to model every write. The source CALL's
+stack write remains in generated code. Only for these two services in selected
+reviewed C callers does analysis record temporary return-address bytes separately
+from ordinary object data:
+these callers promise not to inspect or overwrite that storage through data
+accesses. Explicit known observers are refused. This limited rule does not apply
+to arbitrary calls or discard ordinary writes. Decoded `memcpy` keeps ordinary
+CALL/RET analysis and all copy effects; it has no separate classification or
+special return path. See the
+[selected-caller contract](../docs/design/admission.md#original-call-word-aliases).
+Both services use immutable images. Only `strcmp` uses the allowance
+of 128 calls; writing helpers share the limit of 16 scalar/control continuations.
+See the [read-only contract](../docs/design/admission.md#original-strcmp-service)
+and [writing contract](../docs/design/admission.md#original-strscpy_pad-writing-service).
+
+Linux mutex APIs, their compiler clones and the old kernel mutex bridge are
+refused. Ordinary KD return-valued or task-sensitive locking APIs remain local;
+explicit clobber entries supply delegation. See the
 [object/API contract](../docs/design/kd_only_mutex.md).
 
-The taskname caller uses the ordinary `KD_SPIN_DIRECT_LOCK` pair. Its bounded
-`strscpy_pad` service executes the original helper without translating its
-prologue, so the call shell no longer adds five register initializations.
-The optional `KD_SPIN_DIRECT_HELPER_LOCK` remains available for other callers
-whose translated helpers save those incoming registers. The independent source
-constant proof also remains: it can exclude `strscpy()`'s impossible size-warning
-branch when the actual argument is 64, without changing the helper or permitting
-a reachable `UD2`. ABI1 bodies with learned indirect targets are not specialized;
-unknown facts and ambiguous joins keep their original branch alternatives.
-The ordinary taskname shell passed its read-only execution check at 16 workers:
-3,194,222 complete delegated bodies in 3,200,000 operations. Its 20% mutation
-check was correct and drained, but measured no completed delegated bodies and
-therefore failed the strict delegation requirement. Earlier call shells remain
-separate evidence; the full performance comparison is pending.
+Taskname uses the ordinary `KD_SPIN_DIRECT_LOCK` pair. Its `strscpy_pad` service
+executes the original helper without translating its prologue, so the call shell
+adds no helper-specific register initialization. The optional
+`KD_SPIN_DIRECT_HELPER_LOCK` remains available for other callers whose translated
+helpers save those incoming registers. The independent source constant proof
+also remains: it can exclude `strscpy()`'s impossible size-warning branch when
+the actual argument is 64, without changing the helper or permitting a reachable
+`UD2`. ABI1 bodies with learned indirect targets are not specialized; unknown
+facts and ambiguous joins retain their original branch alternatives.
 
-For the xattr traversal, a restricted ABI1 retry checks whether a later pointer
-load overlaps earlier writes on the waiter's stack. A failed check returns the
-original waiter to that exact load and disables future delegation. It requires
-the original source to overwrite arithmetic flags before reading them, because
-ordinary spin recovery does not restore them. Entries using address checks or
-typed string services publish immutable images from their first such version
-onward. Neither helper stacks
-nor arbitrary pointers are assumed private or safe. A body needing both source
-constant-branch simplification and address checks remains refused: simplifying
-the graph could hide a flags read in the original native suffix. The bounded
-writing service does not supply a generic helper flag proof to those guards.
-All eight xattr front/tail/miss/size checks at n16/n128 and 16 workers completed
-delegated bodies with correct results and clean teardown. The address-check and
-bounded-string probes also passed their successful-delegation and native-return
-checks. These are [functional results](../bench/results/10.176.26.71/bench/taskname-xattr-20261018/DEVELOPMENT.md);
-the full performance matrix remains pending. See the
-[detailed scope](../docs/design/admission.md#checked-spin-pointer-loads).
+A restricted ABI1 address guard can check whether a pointer load overlaps earlier
+writes on the waiter's stack. A failed guard returns the original waiter to that
+exact load and disables future delegation. It requires the original source to
+overwrite arithmetic flags before reading them, because ordinary spin recovery
+does not restore them. Neither string service supplies that flags proof. Entries
+using guards or string services publish immutable images from their first such
+version onward. A body needing both constant-branch simplification and address
+guards remains refused, because simplifying the graph could hide an incoming
+flags read in the native continuation. The generic partial-CALL-alias mask
+refinement is an archived experiment, not a maintained admission rule. It tried
+to retain the known and unknown byte portions of values overlapping CALL return
+words. The maintained revision keeps conservative ordinary-CALL analysis and separate
+control storage only for the two string services. It changes no source load or
+store and does not make arbitrary pointers safe. Focused unit and live correctness
+checks passed, as recorded in the
+[current development record](../bench/results/10.176.26.71/bench/taskname-xattr-native-api-20261019/DEVELOPMENT.md);
+see the [admission guide](../docs/design/admission.md#original-call-word-aliases)
+and [archived candidate 4](../bench/results/10.176.26.71/bench/taskname-xattr-native-api-20261019/DEVELOPMENT.md#archived-alias-experiment-and-next-scope).
+
+Version 10 candidate 6 passed all eight xattr controls and the read-only taskname
+checks with matching generated-body entries and completions. The original-string
+service, address-guard recovery and mutex instruction-marker probes also passed.
+A separate 20% taskname mutation control with preparation disabled passed
+correctness on Linux Native, TCLock and KD but recorded zero KD generated bodies;
+it does not establish delegation or supersede the earlier strict failure. The
+revised performance comparison remains pending.
+
+The preceding
+`c79d84f` implementation passed the ordinary taskname shell's 16-worker read-only
+check with 3,194,222 returned delegated bodies in 3,200,000 operations. Its 20%
+mutation check was correct and drained but measured no returned delegated body,
+so the strict delegation requirement failed. All eight xattr front/tail/miss/size
+checks at n16/n128 and 16 workers passed with matching entries/completions,
+correct results and clean teardown. Earlier address-guard and string-preflight
+probes also passed, but the removed string preflight is not current behavior.
+These [functional results](../bench/results/10.176.26.71/bench/taskname-xattr-20261018/DEVELOPMENT.md)
+remain tied to their source versions; the pending comparison must report the
+revised implementation separately.
 
 Install [the pinned requirements](requirements.txt) in a guest Python virtual
 environment. The translator command uses positional arguments:

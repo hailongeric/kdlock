@@ -24,7 +24,7 @@ it does not mean using the Linux Native backend.
 | Heat | [kd_hotlock.h](kd_hotlock.h) | Approximate future admission, not ownership |
 | Source/device | [kd_source.h](kd_source.h), [kd_source_api.h](kd_source_api.h), [sys.h](sys.h) | Text residency, capabilities and irreversible retirement |
 | Services/context | [kd_hostcall.h](kd_hostcall.h), [kd_hostcalls.def](kd_hostcalls.def), [kd_segment.h](kd_segment.h) | Typed effects and origin GS/logical task |
-| Bounded string helpers | [kd_strcmp_contract.h](kd_strcmp_contract.h), [kd_strscpy_contract.h](kd_strscpy_contract.h) | Exact original helper text and separate read-only/writing bounds |
+| Original kernel string APIs | [kd_hostcall.h](kd_hostcall.h) | Read-only versus 64-byte writing effects and invocation limits; argument validity follows the native caller's contract |
 
 When changing a shared layout, update the C offsets, wrapper assembly and Python
 translation together. [Register ABI](../docs/JIT_REGISTER_ABI.md) gives exact offsets
@@ -52,15 +52,24 @@ this API, without extra captures or stack saves. Other instruction, address and
 context checks remain unchanged; selecting it does not authorize arbitrary helper
 functions. Ordinary `KD_SPIN_DIRECT_LOCK` has no added instructions.
 
-Taskname now uses the ordinary `KD_SPIN_DIRECT_LOCK` pair. Its bounded
-`strscpy_pad(..., 64)` service invokes the original helper, so generated code does
-not enter the helper prologue and does not need the five register initializations.
-The optional helper entry remains available to other callers. The independent
-source constant proof also remains: it can exclude an impossible `strscpy()`
-size-warning branch without permitting a reachable trap or replacing the helper.
-Validation of the changed taskname call shell and performance acceptance remain
-pending; earlier results used a different shell. See
-[source branch admission](../docs/design/admission.md#source-branches-with-proven-constant-inputs).
+Taskname uses the ordinary `KD_SPIN_DIRECT_LOCK` pair. Its
+`strscpy_pad(..., 64)` service invokes the original kernel API, so generated code
+does not enter the helper prologue or need the five register initializations.
+The optional helper entry and the separate
+[source constant proof](../docs/design/admission.md#source-branches-with-proven-constant-inputs)
+remain available for other translated code.
+
+The current version without helper-specific checks passed
+[focused correctness checks](../docs/VALIDATION.md#taskname-and-xattr-helper-validation)
+through candidate 6; performance measurements remain pending. Read-only KD
+taskname returned delegated bodies. Its 20% mutation control used no helper
+preparation and recorded zero JIT, so it establishes correctness only.
+The frozen `c79d84f` version used helper checks: its read-only taskname check
+completed delegated bodies, while its 20% mutation check produced correct
+results and drained but completed no delegated bodies during measurement.
+Those [historical receipts](../bench/results/10.176.26.71/bench/taskname-xattr-20261018/DEVELOPMENT.md)
+and the [comparison record](../bench/results/10.176.26.71/bench/taskname-xattr-20261018/README.md)
+remain evidence for that earlier source version.
 
 Mutex outer callers pair `KD_MUTEX_OUTER_LOCK/UNLOCK` with one opaque
 `kd_mutex_outer_cookie` per acquisition. Do not copy, modify, transfer or reuse it
@@ -70,13 +79,13 @@ prepare uses `kd_mutex_prepare(..., KD_ENTRY_ABI_MUTEX_CLOBBER_V1)`. Registratio
 can succeed before immutable image allocation; only complete NORMAL publication
 allows JIT execution. Provider, daemon and translator must agree on
 immutable-image and exclusive-KD-object capabilities. Ordinary mutex images
-accept compatible capability versions 5 through 9. Images with checked
-instruction-exit markers require version 6 through 9 with feature bit 5 and declare
+accept compatible capability versions 5 through 10. Images with checked
+instruction-exit markers require version 6 through 10 with feature bit 5 and declare
 image requirement bit 0; see
 [the admission contract](../docs/design/admission.md#checked-instruction-exits).
 [Ownership](../docs/design/locking.md#mutex-outer-direct) explains the routing.
 
-Restricted ABI1 spin pointer-load checks require provider version 7 through 9 feature
+Restricted ABI1 spin pointer-load checks require provider version 7 through 10 feature
 bit 6 and image requirement bit 1. A failed check resumes the exact load on the
 original waiter and disables delegation for that entry; it does not change the
 object's lock protocol. The source must prove its incoming arithmetic flags are
@@ -87,15 +96,22 @@ onward; ordinary spin and ABI3 rwlock entries do not all gain that lifetime
 contract. The packet and two-word wrapper stay unchanged. See the
 [complete guard contract](../docs/JIT_REGISTER_ABI.md#checked-spin-address-exit).
 
-The current provider reports capability version 9. ABI1 `strcmp` uses feature
-bit 7 and image requirement bit 2; `strscpy_pad` uses the separate feature bit 8
-and image requirement bit 3. The former has a read-only memory contract; the
-latter requires count 64 and a checked current-frame destination, with every
-destination byte accounted for as a write. Both invoke the original helper and
-validate its CALL continuation. There may be at most 128 `strcmp` calls and 16
-other continuations, including writing services, in one invocation. See
-[read-only helper admission](../docs/design/admission.md#bounded-original-strcmp-service)
-and [writing helper admission](../docs/design/admission.md#bounded-original-strscpy_pad-writing-service).
+The current provider reports capability version 10. Feature bit 9 means that
+original string APIs use the native caller's memory and lifetime guarantees,
+without helper-specific checks. `strcmp` also requires feature bit 7 and image
+requirement bit 2; `strscpy_pad` requires feature bit 8 and image requirement bit
+3. No new image field or wrapper argument is added.
+
+The caller supplies valid, stable ordinary strings and a valid destination.
+The `strscpy_pad(..., 64)` analysis accounts for all 64 destination bytes,
+including truncation and padding. KD does not inspect either helper's
+instructions, scan strings or recheck destination bounds. It still verifies the
+physical owner, frame and saved CALL return word before invocation, then consumes
+that same word once. One invocation permits at most 128 comparisons and 16 other
+continuations, including writing services. See
+[read-only API admission](../docs/design/admission.md#original-strcmp-service)
+and [writing API admission](../docs/design/admission.md#original-strscpy_pad-writing-service)
+for the complete caller and continuation contracts.
 
 Rwlock readers pair `kd_read_lock/unlock`; explicitly native writers pair
 `kd_write_lock/unlock`. Delegating writers use `KD_RWLOCK_DIRECT_WRITE_LOCK/UNLOCK`

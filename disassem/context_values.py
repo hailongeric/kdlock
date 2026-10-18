@@ -63,6 +63,9 @@ class FlowConstants(RegisterConstants):
         self.control_calls = set()
         self.clobber_calls = set()
         self.readonly_calls = set()
+        # Only negotiated strcmp/strscpy_pad use the explicit selected-caller
+        # C-object/control-scratch contract. Scalar/assembly CALLs do not.
+        self.audited_c_calls = set()
         # Exact typed writing services supply a bounded RDI destination span.
         # Unlike readonly services, their effects invalidate each written byte.
         self.writer_calls = {}
@@ -90,6 +93,7 @@ class FlowConstants(RegisterConstants):
         self.memory.checked_spill_windows = state[4]
 
     def merge_state(self, left, right):
+        values = self.merge(left[0], right[0])
         origins = {
             reg: origin
             for reg, origin in left[1].items()
@@ -98,7 +102,7 @@ class FlowConstants(RegisterConstants):
         windows = left[4] | right[4]
         blocked = left[3] or right[3] or len(windows) > 64
         return (
-            self.merge(left[0], right[0]),
+            values,
             origins,
             self.memory.merge(left[2], right[2]),
             blocked,
@@ -176,6 +180,13 @@ class FlowConstants(RegisterConstants):
             yield dict(zip(registers, values))
 
     def resolve_many(self, expr, registers=None, *, allow_wide=False):
+        try:
+            return self._resolve_many(expr, registers, allow_wide=allow_wide)
+        except context_memory.AuditedScratchAccess as error:
+            line = self.current_line
+            raise ContextFlowLimit(str(error), getattr(line, "offset", 0), line) from error
+
+    def _resolve_many(self, expr, registers=None, *, allow_wide=False):
         expr = self.lifter.expr_fix_regs_for_mode(expr, 64)
         results = set()
         for values in self.environments((expr,), registers):
@@ -223,6 +234,12 @@ class FlowConstants(RegisterConstants):
         }
 
     def update(self, line, symbols=None):
+        try:
+            return self._update(line, symbols)
+        except context_memory.AuditedScratchAccess as error:
+            raise ContextFlowLimit(str(error), line.offset, line) from error
+
+    def _update(self, line, symbols=None):
         self.current_line = line
         if id(line) not in self.control_calls:
             return self.update_effects(line, symbols)
@@ -257,6 +274,7 @@ class FlowConstants(RegisterConstants):
             line, symbols, checked_mutex_stack=id(line) in self.mutex_calls,
             clobber_lock=lock_pointers,
             readonly_call=id(line) in self.readonly_calls,
+            audited_call=id(line) in self.audited_c_calls,
             writer_pointers=writer_pointers, writer_bytes=writer_bytes,
         )
         for reg in saved:
@@ -268,7 +286,7 @@ class FlowConstants(RegisterConstants):
 
     def update_effects(self, line, symbols=None, *, checked_mutex_stack=False,
                        clobber_lock=None, readonly_call=False,
-                       writer_pointers=None, writer_bytes=0):
+                       writer_pointers=None, writer_bytes=0, audited_call=False):
         plan = self.instruction_plan(line)
         if plan is None:
             self.clobber()
@@ -292,8 +310,37 @@ class FlowConstants(RegisterConstants):
                     values = self.resolve_many(returned, allow_wide=True)
                     if values and all(isinstance(value, ExprInt) for value in values):
                         self.return_targets[id(line)] = frozenset(map(int, values))
-            # CALL writes its return address before any callee can clobber it.
-            self.update_assignments(entry)
+            # Only a genuine lifted CALL may create/replace a control token.
+            # Other stores retain the original conservative byte model.
+            stack = ExprId("RSP", 64)
+            pushed = expr_simp(stack - ExprInt(8, 64))
+            call_return = (
+                line.name.upper() == "CALL" and line.is_subcall()
+                and expr_simp(entry.get(stack, stack)) == pushed
+                and {
+                    expr_simp(reg): static_address(value, self.lifter.loc_db, None)
+                    for reg, value in entry.items() if isinstance(reg, ExprMem)
+                } == {ExprMem(pushed, 64): line.offset + line.l}
+            )
+            if audited_call:
+                if not call_return:
+                    raise ContextFlowLimit("unrecognized audited C CALL store", line.offset, line)
+                # Known caller arguments cannot name the imminent control
+                # token. Ordinary unknown valid C objects use the explicit
+                # caller contract; no helper or runtime memory is inspected.
+                tokens = {ExprMem(pointer, 64): frozenset()
+                          for pointer in self.resolve_many(pushed)}
+                for name in ("RDI", "RSI"):
+                    for pointer in self.resolve_many(ExprId(name, 64)):
+                        extent = writer_bytes or 256
+                        self.memory.check_control_access(
+                            ExprMem(pointer, extent * 8))
+                        self.memory.check_control_access(
+                            ExprMem(pointer, extent * 8), words=tokens)
+            # Lowering still writes the original return word. The audited C
+            # effect keeps that word in separate exact control provenance.
+            self.update_assignments(entry, call_return=call_return,
+                                    audited_call=audited_call)
             if line.is_subcall():
                 self.call_entries[id(line)] = self.snapshot()
                 if (clobber_lock is not None or readonly_call or writer_pointers is not None) and line.name.upper() == "CALL":
@@ -397,8 +444,9 @@ class FlowConstants(RegisterConstants):
             self.clobber()
 
     def check_memory(self, line, assignments, symbols, registers=None):
-        if symbols is None:
+        if symbols is None and self.memory.control_words == {}:
             return
+        symbols = symbols or {}
         accesses = set()
         for destination, source in assignments.items():
             # Include stores, address-dereferences and branch-condition loads,
@@ -417,6 +465,17 @@ class FlowConstants(RegisterConstants):
                 error.instruction = line
                 raise
             for pointer in pointers:
+                # A genuine CALL's implicit push may replace an older token;
+                # an explicit source load/store may not observe that scratch.
+                pushed = expr_simp(ExprId("RSP", 64) - ExprInt(8, 64))
+                implicit_call_store = (line.name.upper() == "CALL" and line.is_subcall()
+                    and memory in assignments and memory.size == 64
+                    and expr_simp(memory.ptr) == pushed
+                    and expr_simp(assignments.get(ExprId("RSP", 64), ExprId("RSP", 64))) == pushed
+                    and static_address(assignments[memory], self.lifter.loc_db, None)
+                    == line.offset + line.l)
+                if not implicit_call_store:
+                    self.memory.check_control_access(ExprMem(pointer, memory.size))
                 symbol = context_reference(
                     pointer,
                     self.lifter.loc_db,
@@ -521,7 +580,8 @@ class FlowConstants(RegisterConstants):
             raise ValueError("instruction IR has unreachable blocks or no normal exit")
         return entry[0], graph, frozenset(temporaries)
 
-    def update_assignments(self, assignments, registers=None):
+    def update_assignments(self, assignments, registers=None, *, call_return=False,
+                           audited_call=False):
         tracked = self.registers if registers is None else registers
         writes = {
             reg: value
@@ -592,9 +652,7 @@ class FlowConstants(RegisterConstants):
                         else frozenset({value if isinstance(value, ExprInt) else None})
                     )
                     domains[reg] = self.join(domains[reg], domain)
-                    origins[reg].add(
-                        value if self.memory.address(value) is not None else None
-                    )
+                    origins[reg].add(value if self.memory.address(value) is not None else None)
         self.memory.store(
             [
                 (
@@ -609,6 +667,8 @@ class FlowConstants(RegisterConstants):
                 for reg, (pointers, contents) in memory_writes.items()
             ],
             rmw=rmw,
+            call_return=call_return,
+            audited_call=audited_call,
         )
         for reg, domain in domains.items():
             if domain == self.UNKNOWN:

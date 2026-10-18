@@ -26,8 +26,6 @@ def main(executor=None, benchmark=False):
     types += without_includes(read_source(ROOT / "include/kd_image.h"))
     types += without_includes(read_source(ROOT / "include/kd_jit_batch.h"))
     types += '#include "kd_hostcall.h"\n'
-    types += '#include "kd_strcmp_contract.h"\n'
-    types += '#include "kd_strscpy_contract.h"\n'
     if executor is None:
         executor = read_source(ROOT / "kernel_module/exe.c")
     types += definition(executor, "struct kd_hostcall_desc {").rstrip() + ";\n"
@@ -95,15 +93,10 @@ def main(executor=None, benchmark=False):
             "static int kd_hostcall_invoke_int_sqrt(struct kd_regs *regs)",
             "static int kd_hostcall_invoke_strcmp(struct kd_regs *regs)",
             "static int kd_hostcall_invoke_strscpy_pad(struct kd_regs *regs)",
-            "static int kd_hostcall_strcmp_text(unsigned long address)",
-            "static int kd_hostcall_string_preflight(unsigned long address)",
-            "static int kd_hostcall_string_text_match(unsigned long address,",
-            "static int kd_hostcall_strscpy_text(unsigned long address)",
-            "static int kd_hostcall_strscpy_preflight(const struct kd_regs *regs,",
         )
     )
-    # Only the native helper invocation is substituted. Production still checks
-    # the exact captured helper/CALL bytes and both original pointer arguments.
+    # Only the native helper invocation is substituted. Production retains
+    # ownership, image scope and exact pending CALL-word consumption.
     hostcalls = hostcalls.replace(
         "int (*callee)(const char *, const char *) = (void *)regs->ip;",
         "int (*callee)(const char *, const char *) = fixture_strcmp;",
@@ -261,19 +254,8 @@ def main(executor=None, benchmark=False):
             "if (!(frame->image->requirements & (service->id == KD_HOSTCALL_STRCMP ?\n\t\tKD_IMAGE_REQUIRE_STRING_SERVICES : KD_IMAGE_REQUIRE_STRING_WRITE)))",
             "if (false)",
         ),
-        "string-return-source-call-bypassed": (
-            "call[0] != 0xe8", "false",
-        ),
-        "string-unterminated-allowed": (
-            "\t\tif (!value)\n\t\t\treturn 0;\n\t}\n\treturn KD_HOSTCALL_NOT_EXECUTED;",
-            "\t\tif (!value)\n\t\t\treturn 0;\n\t}\n\treturn 0;",
-        ),
-        "copy-count-bypassed": (
-            "regs->dx != KD_STRSCPY_BYTES ||", "false ||",
-        ),
-        "copy-source-stack-allowed": (
-            "(regs->si < end && regs->si + KD_STRSCPY_BYTES > base)",
-            "(regs->si < base && false)",
+        "string-return-pin-bypassed": (
+            "return kd_source_pin_target(*return_ip);", "return 0;",
         ),
         "copy-result-truncated": (
             "regs->ax = (unsigned long)callee(", "regs->ax = (unsigned int)callee(",
@@ -329,8 +311,8 @@ def main(executor=None, benchmark=False):
             if mutation:
                 before, after = mutation
                 count = sum(source.count(before) for source in sources.values())
-                # The error counter occurs on both invoke and return failure.
-                assert count == (4 if name == "service-error-allows-replay" else
+                # Preparation, invoke and return failures each record an error.
+                assert count == (3 if name == "service-error-allows-replay" else
                                  2 if name == "timing-overflow-not-marked" else 1), (name, count)
                 sources = {
                     path: text.replace(before, after)

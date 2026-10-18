@@ -14,6 +14,11 @@ from miasm.ir.symbexec import SymbolicExecutionEngine
 
 UNKNOWN = frozenset({None})
 WIDE_PREFIX = "kd_memory_wide_"
+ADDRESS_MASK = (1 << 64) - 1
+
+
+class AuditedScratchAccess(ValueError):
+    """A selected C caller explicitly observes an API's temporary CALL word."""
 
 
 def is_wide(value):
@@ -84,6 +89,12 @@ class MemoryValues:
         self.cells = {}
         self.default = UNKNOWN
         self.words = {}
+        # Typed C APIs have an explicit caller contract: ordinary C objects do
+        # not observe their temporary return token below pre-CALL SP. Keep that
+        # token exact and separate, rather than mixing its bytes into every
+        # unknown object load. This is not enabled for ordinary assembly CALLs.
+        # None records exhausted control provenance and must fail closed.
+        self.control_words = {}
         self.work = 0
         # FlowConstants carries this bit in its CFG snapshot and joins it by
         # OR: an opaque write/callee forbids further initial-stack identities.
@@ -100,7 +111,8 @@ class MemoryValues:
         return self.work <= self.MAX_WORK
 
     def snapshot(self):
-        return dict(self.cells), self.default, dict(self.words)
+        return (dict(self.cells), self.default, dict(self.words),
+                None if self.control_words is None else dict(self.control_words))
 
     def entry_stack_value(self, memory):
         """Keep an initial spill identity only when every prior store is disjoint.
@@ -133,6 +145,107 @@ class MemoryValues:
     def restore(self, state):
         self.cells, self.default = dict(state[0]), state[1]
         self.words = dict(state[2])
+        self.control_words = (dict(state[3]) if len(state) > 3 and state[3] is not None
+                              else ({} if len(state) < 4 else None))
+
+    def merge_control(self, left, right):
+        a, b = (state[3] if len(state) > 3 else {} for state in (left, right))
+        if a is None or b is None:
+            return None
+        keys = a.keys() | b.keys()
+        if not keys:
+            return {}
+        if len(keys) > self.MAX_WORDS or not self.spend(len(keys)):
+            return None
+        result = {}
+        for key in keys:
+            values = a.get(key, frozenset()) | b.get(key, frozenset())
+            if len(values) > self.MAX_VALUES:
+                return None
+            result[key] = values
+        return result
+
+    def check_control_access(self, memory, *, words=None):
+        """Refuse a statically identifiable observer; do not test runtime aliases.
+
+        Different/unknown object bases use the audited caller promise. Matching
+        bases retain exact whole/partial/modular overlap detection, independent
+        of entry guards. Ordinary CALLs and their data aliases are unchanged.
+        """
+        words = self.control_words if words is None else words
+        if words is None:
+            raise AuditedScratchAccess("audited C CALL control provenance exhausted")
+        if not words:
+            return
+        if not self.spend(len(words)):
+            raise AuditedScratchAccess("audited C CALL control analysis exceeds its budget")
+        address = self.address(memory.ptr)
+        for word in words:
+            base = self.address(word.ptr)
+            if address is None or base is None or address[0] != base[0]:
+                continue
+            if self.placements(memory, word.ptr, word.size, use_guards=False) != [None]:
+                raise AuditedScratchAccess(
+                    "audited C caller explicitly observes temporary CALL control scratch")
+
+    def store_control_return(self, writes):
+        """Retain an exact token without declaring ordinary caller data written."""
+        if self.control_words is None or len(writes) != 1:
+            raise AuditedScratchAccess("unproved audited C CALL control word")
+        pointers, values, width = writes[0]
+        if (width != 64 or len(pointers) != 1 or not values
+                or len(values) > self.MAX_VALUES
+                or any(not isinstance(value, ExprInt) for value in values)):
+            raise AuditedScratchAccess("unproved audited C CALL control word")
+        pointer = next(iter(pointers))
+        base = self.address(pointer)
+        if base is None or not self.spend(len(self.cells) + len(self.words) + 8):
+            raise AuditedScratchAccess("unproved audited C CALL stack identity")
+        word = ExprMem(pointer, 64)
+        for old in self.control_words:
+            if (self.address(old.ptr) is not None
+                    and self.address(old.ptr)[0] == base[0]
+                    and self.address(old.ptr) != base
+                    and self.placements(old, pointer, 64, use_guards=False) != [None]):
+                raise AuditedScratchAccess("overlapping audited C CALL control slots")
+        # An exact overwrite supersedes an older token at that slot. Do not
+        # restore a whole memory snapshot or erase aliases at other bases.
+        def covered(address, size):
+            location = self.address(address)
+            return (location is not None and location[0] == base[0]
+                    and ((location[1] - base[1]) & ADDRESS_MASK) + size <= 8)
+        self.cells = {key: value for key, value in self.cells.items()
+                      if not covered(key, 1)}
+        self.words = {key: value for key, value in self.words.items()
+                      if self.placements(key, pointer, 64, use_guards=False) == [None]
+                      or self.address(key.ptr) is None
+                      or self.address(key.ptr)[0] != base[0]}
+        self.control_words[word] = frozenset(map(int, values))
+        if len(self.control_words) > self.MAX_WORDS:
+            raise AuditedScratchAccess("audited C CALL control records exceed their budget")
+
+    def replace_control_return(self, writes):
+        """An ordinary CALL really overwrites any fully covered older token."""
+        if not self.control_words:
+            return
+        if len(writes) != 1:
+            return
+        pointers, _, width = writes[0]
+        if width != 64 or len(pointers) != 1:
+            return
+        pointer = next(iter(pointers))
+        base = self.address(pointer)
+        if base is None:
+            return
+        for old in self.control_words:
+            if (self.address(old.ptr) is not None
+                    and self.address(old.ptr)[0] == base[0]
+                    and self.address(old.ptr) != base
+                    and self.placements(old, pointer, 64, use_guards=False) != [None]):
+                raise AuditedScratchAccess("ordinary CALL partially overwrites audited control scratch")
+        self.control_words = {
+            word: values for word, values in self.control_words.items()
+            if self.address(word.ptr) != base}
 
     def scaled_entry_value(self, value):
         """Name the exact scaled value, so its writes still need alias guards."""
@@ -192,13 +305,14 @@ class MemoryValues:
         return result
 
     def merge(self, left, right):
+        control = self.merge_control(left, right)
         keys = left[0].keys() | right[0].keys()
         if len(keys) > self.MAX_BYTES:
-            return {}, None, {}
+            return {}, None, {}, control
         if left == right:
             if not self.spend(len(keys) + len(left[2]) + 1):
-                return {}, None, {}
-            return dict(left[0]), left[1], self.bounded_words(left[2])
+                return {}, None, {}, control
+            return dict(left[0]), left[1], self.bounded_words(left[2]), control
         # Exact cells use a dictionary lookup; only missing cells scan aliases.
         # Restore each side once instead of copying both maps for every byte.
         cost = (
@@ -207,7 +321,7 @@ class MemoryValues:
             + len(right[0].keys() - left[0].keys()) * len(left[0])
         )
         if not self.spend(cost):
-            return {}, None, {}
+            return {}, None, {}, control
         old = self.snapshot()
         self.restore(left)
         values = {key: self.byte_at(key) for key in keys}
@@ -223,11 +337,11 @@ class MemoryValues:
         for memory in sorted(left[2].keys() & right[2].keys(), key=str):
             a, b = left[2][memory], right[2][memory]
             if not self.spend(len(a) + len(b)):
-                return {}, None, {}
+                return {}, None, {}, control
             domain = a | b
             if len(domain) <= self.MAX_VALUES:
                 words[memory] = domain
-        return result, default, self.bounded_words(words)
+        return result, default, self.bounded_words(words), control
 
     def checked_coverage(self, address, window, size, window_bytes):
         if address is None or window is None:
@@ -325,6 +439,7 @@ class MemoryValues:
         return tuple(ExprInt(value, memory.size) for value in sorted(projected))
 
     def load(self, memory):
+        self.check_control_access(memory)
         result = self.load_unchecked(memory)
         if self.load_guard is None or not any(is_wide(value) for value in result):
             return result
@@ -378,10 +493,10 @@ class MemoryValues:
                 results.add(expr_simp(ExprCompose(*pieces)))
         return tuple(sorted(results, key=str))
 
-    def placements(self, memory, pointer, width):
+    def placements(self, memory, pointer, width, *, use_guards=True):
         address, base = self.address(pointer), self.address(memory.ptr)
         size, written = memory.size // 8, width // 8
-        if self.guards is not None and self.guards.separate(
+        if use_guards and self.guards is not None and self.guards.separate(
             address, base, written, size
         ):
             return [None]
@@ -450,7 +565,7 @@ class MemoryValues:
                     words.pop(memory, None)
         return self.bounded_words(words)
 
-    def store(self, writes, *, rmw=None):
+    def store(self, writes, *, rmw=None, call_return=False, audited_call=False):
         """Apply one parallel IR assignment, resolving all writes in the old state.
 
         Each write is (possible pointers, possible values, bit width). Only a
@@ -462,6 +577,17 @@ class MemoryValues:
         default = self.default
         if not writes:
             return
+        if audited_call:
+            if not call_return:
+                raise AuditedScratchAccess("audited C effect lacks an original CALL store")
+            self.store_control_return(writes)
+            return
+        if call_return:
+            self.replace_control_return(writes)
+        else:
+            for pointers, _, width in writes:
+                for pointer in pointers:
+                    self.check_control_access(ExprMem(pointer, width))
         old_words, self.words = self.words, {}
         candidates = sum(
             len(pointers) * ((width + 7) // 8) for pointers, _, width in writes

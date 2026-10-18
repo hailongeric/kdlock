@@ -180,14 +180,32 @@ and these limited pointer-load checks do not close the
 [dynamic-address gap](design/admission.md#721-dynamic-address-gap). Functional
 continuation evidence and workload performance acceptance remain separate.
 
-The bounded [`strcmp`](design/admission.md#bounded-original-strcmp-service) and
-[`strscpy_pad`](design/admission.md#bounded-original-strscpy_pad-writing-service)
+The original [`strcmp`](design/admission.md#original-strcmp-service) and
+[`strscpy_pad`](design/admission.md#original-strscpy_pad-writing-service)
 services require stable, resident ordinary source strings and one outer spin
 owner. They do not infer object lifetime or authorize general copying. `strcmp`
 has a private 128-call allowance; `strscpy_pad`, scalar services and lock controls
-share the existing 16-call allowance. These implementation changes do not by
-themselves establish completed delegation or performance for the exact taskname
-and xattr workloads; that acceptance remains tied to fresh workload evidence.
+share the existing 16-call allowance. The current revision removes helper code
+checks, argument scans and runtime destination checks, using the original C
+caller's guarantees. For these two services in selected reviewed C callers,
+analysis records temporary CALL return-address storage separately from ordinary
+object data. The source
+CALL write and its runtime return handling remain unchanged; the caller promises
+that ordinary data accesses do not inspect or overwrite this storage. Known
+violations are refused, and other calls and ordinary writes retain conservative
+alias analysis. The generic refinement for partially overlapping CALL-return
+bytes remains archived. The current implementation retains conservative ordinary-CALL/RET
+behavior and separate control storage only for `strcmp` and `strscpy_pad`.
+Decoded `memcpy` has no special classification or return handling; its original
+loads and writes remain analyzed. Focused VM validation passed for read-only
+taskname, all eight xattr controls and the string/exit probes; the
+[current development record](../bench/results/10.176.26.71/bench/taskname-xattr-native-api-20261019/DEVELOPMENT.md)
+preserves the failed intermediate checks and the final receipts. See the
+[selected-caller contract](design/admission.md#original-call-word-aliases).
+The standard-grid performance comparison remains pending. The 20% taskname
+mutation control is correct but has no returned delegated bodies; its delegation
+acceptance remains open. Historical checked-helper timings do not measure these
+changed inputs.
 
 ## P1: Evidence and services
 

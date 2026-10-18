@@ -137,7 +137,7 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0):
         get_kernel_symbol,
         string_services=abi == 1 and memread.device_session.string_services(),
         string_write=abi == 1 and memread.device_session.string_write(),
-        reader=memread.read_kernel_addr_data,
+        audited_strings=abi == 1 and memread.device_session.audited_strings(),
     )
     hostcall_targets = set(resolved_hostcalls)
     string_targets = strcmp_service.targets(resolved_hostcalls)
@@ -410,7 +410,7 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0):
             if not segment_error:
                 try:
                     checked.validate(selected, db_dict, terminal_calls={clobber_unlock},
-                                     flag_dead_calls=string_targets)
+                                     flag_dead_calls=())
                 except context_policy.ContextFlowLimit as error:
                     segment_error = error.offset, str(error)
                 else:

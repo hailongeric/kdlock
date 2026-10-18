@@ -95,6 +95,7 @@ def find_segment_policy_error(
                              if name.endswith("_clobber_v1")},
             readonly_targets=readonly_targets,
             writer_targets=writer_targets,
+            audited_c_targets=set(string_targets) | set(writer_targets or {}),
             mutex_targets={
                 address
                 for address, (kind, name) in (lock_symbols or {}).items()

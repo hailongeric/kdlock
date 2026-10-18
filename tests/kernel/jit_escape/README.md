@@ -40,8 +40,8 @@ The four phases remain in one provider/source session:
    registry must remain `NATIVE_ONLY`. Operations still execute correctly on
    their original tasks.
 
-The runner accepts capability versions 6, 7, 8 or 9 only when feature bit 5
-(native instruction exit) is present. The current provider advertises version 9;
+The runner accepts capability versions 6, 7, 8, 9 or 10 only when feature bit 5
+(native instruction exit) is present. The current provider advertises version 10;
 the version alone does not establish support. The private benchmark observation
 overlay supplies entry/completion counts, including validated root completions
 after helper services; the production `native_escape_count` counts validated
@@ -68,3 +68,6 @@ This check covers the selected KD mutex ABI2 instruction-marker path. The
 [original strcmp service probe](../spin/string_service/README.md) exercise
 separate negotiated boundaries. Their feature bits do not authorize arbitrary
 instruction traps, memory faults or replay of a partially executed body.
+The string probe now requires valid short and 300-character inputs to complete
+delegated comparison calls, without the former helper prechecks. That change
+does not alter this instruction marker's continuation or permanent-disable checks.

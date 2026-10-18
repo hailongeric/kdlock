@@ -17,6 +17,13 @@ static __attribute__((noipa)) bool rb_read(void)
 	bool bad = false;
 	char first;
 	RB_READ_LOCK();
+	/* Audited original C API: rb_comm stays allocated and NUL-terminated,
+	 * and this same lock excludes its writers. result is our live, distinct
+	 * 64-byte local destination; helper reads and all destination writes are
+	 * valid. Delegation retains these native caller obligations, rather than
+	 * rescanning the string or checking the destination on every call.
+	 * Neither caller nor helper observes temporary CALL return words or
+	 * discarded helper scratch below the caller's live stack frame. */
 	strscpy_pad(result, rb_comm, sizeof(result));
 	RB_READ_UNLOCK();
 	/* Validate every destination byte after unlock, without another shared

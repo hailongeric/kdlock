@@ -48,8 +48,6 @@
 #include "kd_mutex_direct.h"
 #include "kd_spinlock.h"
 #include "kd_hostcall.h"
-#include "kd_strcmp_contract.h"
-#include "kd_strscpy_contract.h"
 
 /*
  * Pre-allocated pool of executable code blocks.  kd_exe_add() is called from
@@ -360,26 +358,9 @@ returned_wrapper:
 			if (string_service) {
 				call_ret = fault_kind ? -EINVAL :
 					kd_jit_string_prepare(exe, frame, regs, &string_return);
-				if (call_ret == KD_HOSTCALL_NOT_EXECUTED) {
-					call_ret = kd_jit_call_limit_native(frame, regs, true);
-					if (!call_ret) {
-						kd_image_disable(exe);
-						pr_warn_ratelimited(
-							"[KD_JIT][WARN] reason=STRING_PREFLIGHT_NATIVE entry=0x%lx ip=0x%lx action=native_call_and_disable\n",
-							entry_ip, regs->ip);
-					} else {
-						atomic64_inc(&kd_hostcall_failed);
-						kd_jit_log_hl_error("STRING_NATIVE_FAILED", frame,
-							regs, args[0], call_ret, continuation_count,
-							hostcall_count);
-					}
-					atomic64_inc(&kd_hostcall_rejected);
-					ret_flag = call_ret ? KD_EXE_RUN_ERROR : KD_EXE_RUN_NATIVE;
-					break;
-				}
 				if (call_ret) {
 					atomic64_inc(&kd_hostcall_failed);
-					kd_jit_log_hl_error("STRING_PREFLIGHT_INVALID", frame,
+					kd_jit_log_hl_error("STRING_CONTINUATION_INVALID", frame,
 						regs, args[0], call_ret, continuation_count,
 						hostcall_count);
 					ret_flag = KD_EXE_RUN_ERROR;

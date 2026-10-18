@@ -1,0 +1,73 @@
+{
+  "archive_prefix": "taskname-xattr-native-contract-20261019",
+  "boot_id": "b65f0205-c8f9-4385-8b13-039cbce243a6",
+  "completed": true,
+  "finished_ns": 1792356390219806883,
+  "groups": [
+    {
+      "bytes": 9091436,
+      "file": "checks.tar.gz",
+      "group": "checks",
+      "path": "/mnt/kdlock-builds/taskname-xattr-native-contract-through-candidate6-archives/checks.tar.gz",
+      "roots": [
+        "taskname-xattr-native-contract-20261019/candidate1-checks",
+        "taskname-xattr-native-contract-20261019/candidate2-checks",
+        "taskname-xattr-native-contract-20261019/candidate3-checks",
+        "taskname-xattr-native-contract-20261019/candidate4-checks",
+        "taskname-xattr-native-contract-20261019/candidate5-checks",
+        "taskname-xattr-native-contract-20261019/candidate6-checks"
+      ],
+      "sha256": "31e16d407a4b0c82187a13a3b8dbb3a8958606f640d7c2d58174c997780e1cfb"
+    },
+    {
+      "bytes": 52703465,
+      "file": "live.tar.gz",
+      "group": "live",
+      "path": "/mnt/kdlock-builds/taskname-xattr-native-contract-through-candidate6-archives/live.tar.gz",
+      "roots": [
+        "taskname-xattr-native-contract-20261019/candidate2-live",
+        "taskname-xattr-native-contract-20261019/candidate2-xattr",
+        "taskname-xattr-native-contract-20261019/candidate6-live"
+      ],
+      "sha256": "fb726513e2b3ff7b63b26e47977f8eb1781601edd0b775c67967bb32e06b78e6"
+    },
+    {
+      "bytes": 3556156,
+      "file": "diagnostic.tar.gz",
+      "group": "diagnostic",
+      "path": "/mnt/kdlock-builds/taskname-xattr-native-contract-through-candidate6-archives/diagnostic.tar.gz",
+      "roots": [
+        "taskname-xattr-native-contract-20261019/candidate2-xattr-trace",
+        "taskname-xattr-native-contract-20261019/candidate2-xattr-trace-data",
+        "taskname-xattr-native-contract-20261019/candidate4-replay"
+      ],
+      "sha256": "1f76339846f018657de9d112ee644996d7876c85f5a0a2776869f300ce238478"
+    },
+    {
+      "bytes": 47191,
+      "file": "metadata.tar.gz",
+      "group": "metadata",
+      "path": "/mnt/kdlock-builds/taskname-xattr-native-contract-through-candidate6-archives/metadata.tar.gz",
+      "roots": [
+        "taskname-xattr-native-contract-20261019/audit-api-images.py",
+        "taskname-xattr-native-contract-20261019/candidate6-api-images.json",
+        "taskname-xattr-native-contract-20261019/health-through-candidate2.json",
+        "taskname-xattr-native-contract-20261019/health-through-candidate6-dmesg.txt",
+        "taskname-xattr-native-contract-20261019/health-through-candidate6.json",
+        "taskname-xattr-native-contract-20261019/health-through-candidate6.py"
+      ],
+      "sha256": "c288e00a566add4e9852f83ceebc05b62c476292498366951888f6240475d57d"
+    }
+  ],
+  "guest_base": "/mnt/kdlock-builds/taskname-xattr-native-contract-20261019",
+  "guest_idle": true,
+  "health_path": "health-through-candidate6.json",
+  "health_sha256": "16c51247e7a55bdb5059ff90110f202516c2f3dcd36f216e8b1514c07bf36b15",
+  "idle_source_sha256": "395592b8e72f700696034ed16182b74481bdebfcab56cd58a5fc7eed91b88da5",
+  "input_inventory_sha256": "f10530be06108e4f89e38b12ad0adb953efb5c483b22891e2fe4c01224dd02e5",
+  "kernel_release": "6.1.159-kdclobber2",
+  "schema": 1,
+  "scope": "Complete evidence preservation; no deletion, module action, test or timing",
+  "script_sha256": "8d666f148a10d7fe19294cc7d193464c8bb53d4c3aec64b7518b9d335966c952",
+  "started_ns": 1792356380212523390
+}

@@ -10,10 +10,64 @@ terms used in the receipts below.
 
 ## Taskname and xattr helper validation
 
+The current version removes helper-specific instruction checks, string scans and
+runtime destination checks. It relies on the original callers' memory and
+lifetime guarantees while retaining KD ownership and saved-return bookkeeping.
+Focused correctness validation passed through candidate 6; the revised
+performance comparison remains pending. The [current development record](../bench/results/10.176.26.71/bench/taskname-xattr-native-api-20261019/DEVELOPMENT.md)
+retains each frozen candidate's checks and failures. Candidate 2 passed all 11
+focused unit programs/drivers, the 300-character `strcmp` probe, the spin
+address-guard and mutex-marker probes, and read-only taskname correctness on
+all three backends. Its KD read-only run completed 3,192,781 delegated bodies
+among 3,200,000 operations.
+
+The candidate 2 taskname mutation control failed KD preparation: all eight
+learning waves were correct and drained, but each had zero generated-body
+entries and completions despite a `NORMAL` published image. KD never entered
+measurement. Linux Native and TCLock each completed their 3,200,000-operation
+functional phase correctly. This differs from the historical measured
+`NO_JIT` failure described below. Xattr's first 16-entry front-hit control and a
+diagnostic repeat both refused the learned byte-copy instruction before
+measurement. All 11 live/diagnostic sessions drained, including these failures.
+
+Candidate 3 passed 11 of 12 unit programs/drivers; its coordinator fixture
+omitted required spin clobber-entry symbols. Candidate 4 also failed its
+selected-C-caller driver. Later source replay showed that its expected refusals
+without a special copy classification were unjustified; the ordinary copy and
+return path were already emitted. The development record preserves both the
+failures and that corrected diagnosis. The generic partial-CALL-alias mask
+experiment is preserved on `archive/taskname-xattr-candidate4-alias-20261019` at
+`66cccfab511866f095d9fbfb2ed33b909afd1d79`.
+
+Candidate 5 removes that experiment and keeps conservative ordinary
+CALL/RET analysis. Only `strcmp` and `strscpy_pad` use separate temporary control
+storage. There is no `memcpy` classification or special RET path. Candidate 6
+keeps the same production source and corrects a test expectation. Across
+candidates 5 and 6, both basic C programs and all ten affected Python drivers
+passed, covering 287 Python tests. The provider/daemon builds and runtime
+fixtures passed in candidate 1; their source was unchanged, and they were not
+rerun as a new full suite.
+
+Candidate 6 completed 17 new live sessions: the original-string, checked-address
+and mutex-marker probes; read-only taskname on all three backends; taskname with
+20% mutations on all three backends; and eight xattr front/tail/miss/size controls
+at 16/128 attributes. Read-only KD taskname and all eight KD xattr controls
+returned complete delegated bodies with correct results and full drain. The
+mutation runs are correctness controls: helper preparation was disabled
+(`helper-waves=0`), and KD recorded zero JIT entries and completions. They do not
+reverse the earlier strict delegation failure.
+
+The [final raw archive](../bench/results/10.176.26.71/raw/tests/taskname-xattr-native-api-20261019/taskname-xattr-native-contract-through-candidate6-archives/archives.json)
+retains checks, live sessions, diagnostics and metadata. Its health receipt
+covers all 28 sessions, including earlier failures, with complete drain. These
+focused checks establish neither a performance gain nor whole-kernel support.
+The historical results below apply to the earlier checked implementation,
+`c79d84f`, and remain separate evidence.
+
 The [development receipt](../bench/results/10.176.26.71/bench/taskname-xattr-20261018/DEVELOPMENT.md)
 retains the initial refusals, failed acceptance attempts, corrected observation
-counter, focused unit checks and live results. The exact taskname helper now
-returns delegated snapshots through the ordinary direct spin entry. All eight
+counter, focused unit checks and live results. The exact taskname helper returned
+delegated snapshots through the ordinary direct spin entry. All eight
 xattr front/tail/miss/size checks at 16/128 attributes and 64-byte values returned
 complete delegated bodies with correct syscall results and full drain.
 
@@ -32,8 +86,10 @@ data and full drain. The initial rwlock mixed-write check remains a recorded
 `NO_JIT` failure; the all-writer functional check disables the optional entry
 ratio filter, while the timing matrix retains its ordinary setting.
 The [standard-grid comparison](../bench/results/10.176.26.71/bench/taskname-xattr-20261018/README.md)
-is still being prepared. They do not establish whole-kernel replacement or the
-lifetime of arbitrary pointers supplied by other callers.
+completed all 567 sessions with correct results and full drain; 152 KD sessions
+returned delegated bodies and 37 recorded no JIT entry. These results do not
+establish whole-kernel replacement or the lifetime of arbitrary pointers supplied
+by other callers.
 
 ## Checked instruction exits, 2026-10-18
 

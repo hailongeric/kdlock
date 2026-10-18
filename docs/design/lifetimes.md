@@ -142,8 +142,8 @@ spin acquisition ticket occupy separate fields and protect different lifetimes.
 Ordinary recompilation may still replace that initial block in place.
 
 The first ABI1 image requiring [checked pointer loads](admission.md#checked-spin-pointer-loads),
-[`strcmp`](admission.md#bounded-original-strcmp-service) or
-[`strscpy_pad`](admission.md#bounded-original-strscpy_pad-writing-service)
+[`strcmp`](admission.md#original-strcmp-service) or
+[`strscpy_pad`](admission.md#original-strscpy_pad-writing-service)
 is staged in a separate block and validated before publication. Each guard's
 source instruction is pinned and its bytes checked while source admission is
 open. Publishing the new descriptor does not overwrite the earlier block or
@@ -154,10 +154,12 @@ cannot overwrite a newly published immutable image. Old-generation misses cannot
 change the current generation's metadata.
 
 An address-guard exit validates its source target again under the active frame's
-source lease before native transfer. A typed string service validates its exact
-helper code, source CALL and return before invocation. A failed address guard or
-string argument check disables the stable entry under the same publication gate
-that installs images, preventing a concurrent upload from reenabling delegation.
+source lease before native transfer. A typed string service validates ownership
+and saves the pending CALL's return state before invocation. The original C
+caller supplies argument validity and lifetime; KD performs no helper-specific
+code, string or buffer checks. A failed address guard disables the stable entry
+under the same publication gate that installs images, preventing a concurrent
+upload from reenabling delegation.
 Already admitted frames keep their own code, exact owners and source references
 until retirement. All generations share the existing
 64-block pool and remain allocated until session teardown; there is no in-session

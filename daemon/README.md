@@ -73,21 +73,21 @@ for real source inspection must explicitly enter `device_session.session()`. A
 missing, closed or wrong inherited descriptor is an infrastructure error, not a
 successful decision to run the body natively.
 
-CAPS version 9 retains the checked mutex stack bound and static module per-CPU arena
-introduced in v1/v2, and advertises the legacy immutable-mutex-image capability
-on bit 3, exclusive KD mutex objects on bit 4, and checked instruction exits on
-bit 5. Bit 6 adds the restricted ABI1 spin address-exit contract. Bit 7 supports
-the bounded read-only `strcmp` service; bit 8 separately supports the bounded
-`strscpy_pad` writing service. A service invokes a specifically checked original
-helper with defined argument, memory-effect and continuation rules. Translation
-requires immutable mutex images, exclusive KD objects and the module arena
-before text inspection. Ordinary images can use compatible versions 5 through 9;
-mutex instruction markers require versions 6 through 9 with bit 5, and spin
-address-check images require versions 7 through 9 with bit 6. `strcmp` requires
-version 8 or 9 with bit 7; writing requires version 9 with bit 8. Read-only observers can
-inspect older contracts. Rebuild/reload the matching provider, daemon and
-translator. The reported stack and module bounds are fixed implementation
-contracts; they are not switches that make arbitrary pointers safe.
+CAPS version 10 retains the checked mutex stack bound and static module per-CPU
+arena introduced in v1/v2. Bits 3 and 4 describe immutable mutex images and
+exclusive KD mutex objects; bits 5 and 6 describe checked instruction exits and
+restricted ABI1 spin address exits. Bits 7 and 8 identify the original `strcmp`
+and `strscpy_pad` APIs. Bit 9 states that these APIs rely on the original C
+caller's valid memory and lifetime, without helper-specific checks. Current
+translation requires bit 9 as well as the appropriate API bit before using
+these service summaries.
+
+Ordinary images accept compatible versions 5 through 10. Mutex instruction
+markers require versions 6 through 10 with bit 5; spin address-check images
+require versions 7 through 10 with bit 6. Older service contracts remain readable
+by observers, but do not authorize the current string summaries. Rebuild/reload
+the provider, daemon and translator together. Fixed stack and module bounds
+describe implementation behavior; they do not establish arbitrary object validity.
 
 Real kcore text windows pin up to 64 distinct LIVE source modules, including learned
 callees and cold extensions. Core text/rodata follow their declared ranges; init,
@@ -112,28 +112,42 @@ required before NORMAL publication; NORMAL alone does not prove execution.
 In the current implementation, mutex uploads stage a new immutable block and bind
 its generation to each frame. Old versions remain until session teardown, and old
 misses cannot overwrite current generation metadata. The first address-check
-or typed string-service
-image similarly moves its ABI1 spin entry to immutable versions, and later
-uploads for that entry remain immutable even without optional checks or services. Other spin entries
+or string-service image similarly moves its ABI1 spin entry to immutable versions.
+Later uploads remain immutable even without optional checks or services. Other spin entries
 and ABI3 rwlock images retain in-place storage. Deploy the matching provider,
 daemon and translator together. Mutex instruction markers set directory
 requirement bit 0; spin address checks set bit 1 and include a validated source
 instruction directory. Read-only string services set bit 2; writing services
 set bit 3 and cannot run on a provider advertising only the read-only contract.
-A reached marker, failed address check or string preflight refusal disables the
-stable entry under the publication gate, so a concurrent upload cannot reopen it.
+A reached instruction marker or failed address check disables the stable entry
+under the publication gate, so a concurrent upload cannot reopen it.
 Translation refuses bodies needing both source constant-branch simplification
 and spin address checks, because the flag proof must cover the original native
 suffix, including branches that generated code might otherwise remove.
-The existing session must drain and retire normally. String preflight means
-checking arguments before invoking the helper; a failed argument check can
-resume the original unexecuted helper while retaining the CALL word and earlier
-effects. The invocation limits are 128 `strcmp` calls and 16 other continuations,
-including writing services. The [canonical helper admission rules](../docs/design/admission.md#bounded-original-strcmp-service)
-define source validation, memory lifetime and the separate writing contract.
-Fresh taskname/xattr workload and performance acceptance remain pending. See
-[the checked spin contract](../docs/JIT_REGISTER_ABI.md#checked-spin-address-exit) and
-[the backport details](../docs/history/legacy_mutex_compatibility.md).
+
+String services invoke the original kernel APIs with the original arguments.
+No phase verifies the helper instructions. Runtime and publication perform no
+string scans or destination-bound rechecks. The translator still accounts
+for each API's register and memory effects; the caller supplies valid stable
+memory as for a native call. Common KD ownership, frame and pending CALL return
+bookkeeping remain mandatory. The limits are 128 `strcmp` calls and 16 other
+continuations, including `strscpy_pad`; quota fallback retains the unexecuted
+CALL and earlier effects. Every session must drain and retire normally. The
+[API admission rules](../docs/design/admission.md#original-strcmp-service)
+define the caller's obligations and separate writing effects.
+
+The current v10 implementation passed
+[focused VM correctness checks](../docs/VALIDATION.md#taskname-and-xattr-helper-validation)
+through candidate 6. Performance measurements remain pending; this is not a
+full-suite or whole-kernel validation claim.
+The frozen `c79d84f` checked implementation's
+[functional receipts](../bench/results/10.176.26.71/bench/taskname-xattr-20261018/DEVELOPMENT.md)
+and [comparison record](../bench/results/10.176.26.71/bench/taskname-xattr-20261018/README.md)
+remain historical evidence for that source version. Its preliminary string
+checks and resulting native fallback are no longer current behavior. See
+[checked spin exits](../docs/JIT_REGISTER_ABI.md#checked-spin-address-exit) and
+[the mutex compatibility backport](../docs/history/legacy_mutex_compatibility.md)
+for their independent contracts.
 
 ## Optional translation measurements
 

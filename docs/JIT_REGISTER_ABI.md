@@ -51,11 +51,19 @@ source continuation it defines the already-clobbered `RBX` and `R12`–`R15` wit
 five zeroing instructions before compiler reloads or helper prologues. Both hot
 local returns and delegated entry execute them; the ordinary cold path needs no
 added setup. It captures no additional registers and does not change SP/BP or
-the ordinary direct entry. Taskname now selects the ordinary entry because its
-bounded native service does not translate a helper prologue. The optional entry
-remains available to other callers; the two-word ABI is unchanged. The changed
-taskname shell still requires its own execution and performance validation.
-See [helper admission](design/admission.md#72-context-and-memory-admission).
+the ordinary direct entry. Taskname selects the ordinary entry because its
+original `strscpy_pad` API service does not translate the helper prologue. The
+optional entry remains available to other callers; the two-word ABI is unchanged.
+
+The frozen `c79d84f` implementation used helper checks. Its ordinary taskname
+shell passed the read-only functional check; the 20% mutation check was correct
+and drained but failed measured delegation. The
+[validation record](../bench/results/10.176.26.71/bench/taskname-xattr-20261018/DEVELOPMENT.md)
+retains those source identities. The current version without helper-specific
+checks passed [focused correctness validation](VALIDATION.md#taskname-and-xattr-helper-validation)
+through candidate 6; performance remains pending. Its mutation control disabled
+helper preparation and recorded zero JIT, so it does not reverse the earlier
+delegation failure. See [API admission](design/admission.md#original-strscpy_pad-writing-service).
 
 ### Mutex clobber and outer cookie
 
@@ -120,24 +128,27 @@ two-word ABI remain the same.
 | 41 | `KDAB` identity tag |
 | 45 | Generated `entry_abi` byte |
 | 46 | Image publication protocol version, currently 2 |
-| 47 | Required runtime features: bit 0 mutex instruction exits; bit 1 checked ABI1 spin address exits; bit 2 bounded read-only string service; bit 3 bounded string-writing service |
+| 47 | Required runtime features: bit 0 mutex instruction exits; bit 1 checked ABI1 spin address exits; bit 2 original read-only string API; bit 3 original string API with 64-byte writing effects |
 
 Layout-1 images cannot be published NORMAL. Ordinary offset 0 preserves the C ABI.
 Offset 16's adapter preserves physical RBP; offset 32 preserves it in the wrapper.
 Both batch entries allow the compiler to protect live combiner values and stay
 inside one C batch loop. Neither is callable as an ordinary C function pointer.
 
-The separate 16-byte `KD_JIT_CAPS` ioctl currently reports version 9. Feature
-bits 0 and 1 describe the checked mutex stack bound and static module per-CPU
-range; bit 3 advertises immutable mutex images and bit 4 exclusive KD mutex
-objects. Bit 5, introduced in version 6, supports mutex instruction exits.
-Bit 6, introduced in version 7, supports the checked spin address exit described
-below. Version 8 adds bit 7 for bounded `strcmp`; version 9 adds bit 8 for the
-separate `strscpy_pad` writing contract. Ordinary images can use compatible
-versions 5 through 9; optional
-image requirements must have their corresponding capability. Unknown requirement
-bits and mismatched backend/ABI combinations are refused. Bit 0 of the image
-requirements belongs only to mutex ABI2; bits 1, 2 and 3 belong only to spin ABI1.
+The separate 16-byte `KD_JIT_CAPS` ioctl reports version 10. Bits 0 and 1 describe
+the checked mutex stack bound and static module per-CPU range; bits 3 and 4
+advertise immutable mutex images and exclusive KD mutex objects. Bits 5 and 6
+support mutex instruction exits and checked spin address exits. Bits 7 and 8
+identify the original `strcmp` and `strscpy_pad` APIs. Version 10 adds bit 9:
+these APIs use the native caller's argument and memory-lifetime guarantees,
+without helper instruction checks, data scans or destination-bound rechecks.
+Current translation requires bit 9 plus the appropriate API bit.
+
+Ordinary images accept compatible versions 5 through 10. Optional image
+requirements still need their corresponding capabilities. Bit 9 adds no image
+requirement or packet field: image bit 0 remains mutex ABI2 only; image bits 1,
+2 and 3 remain spin ABI1 only. Unknown requirements or mismatched backend/ABI
+combinations are refused.
 
 ## Physical and virtual registers
 
@@ -226,28 +237,54 @@ Services `ktime_get`, `ktime_get_ns` and `int_sqrt` have typed argument/result,
 clobber and no-waiter-memory-write contracts. Their virtual return-slot write still
 participates in alias analysis; future services do not inherit that summary.
 
-The bounded string services also use HOSTCALL exit 5 and the existing FULL packet;
-they add no wrapper argument or exit number. `strcmp` reads saved DI/SI and writes
-its 32-bit integer result to saved AX. `strscpy_pad` reads DI/SI/DX, requires DX=64,
-writes the validated 64-byte destination and stores its full-width result in AX.
-The translator accounts for every destination byte and discards caller-saved
-register facts; it retains callee-saved registers and the returned SP. Neither
-service removes the source CALL's virtual return-word write from alias analysis.
+The original string API services use HOSTCALL exit 5 and the existing FULL packet;
+they add no wrapper argument or exit number. `strcmp` receives saved DI/SI and
+stores its 32-bit integer result in saved AX. `strscpy_pad` receives DI/SI/DX and
+stores its full-width result in AX. Its translation summary describes count 64
+and all 64 destination bytes, including native truncation and padding. The
+summary discards caller-saved register facts and retains callee-saved registers
+and the returned SP. The source CALL still writes its actual return-address
+word, and runtime still reads and consumes that word. Only for the `strcmp`
+and `strscpy_pad` services used by selected reviewed C callers does analysis
+record these temporary control bytes separately from
+ordinary object data. The caller promises that ordinary data accesses neither
+inspect nor overwrite that temporary return storage; an explicit known access
+to those bytes is refused. Other calls and ordinary data writes retain their
+conservative alias analysis, including decoded `memcpy` and its ordinary RET.
+There is no copy-call classification or special return path. The generic
+refinement for partially overlapping CALL-return bytes remains archived. This is
+a caller obligation, not a runtime pointer check or a promise for arbitrary C
+functions. The simplified implementation passed
+[focused correctness checks](VALIDATION.md#taskname-and-xattr-helper-validation)
+through candidate 6; the performance comparison remains pending.
+See the
+[selected-caller contract](design/admission.md#original-call-word-aliases).
 
-Both services require an immutable ABI1 image, a FULL root packet with one outer
-physical lock, and a checked original CALL/return pair. A successful invocation
-consumes that previously validated return word once. An argument check that fails
-before invocation resumes the original helper with its existing CALL word and
-disables the entry; errors after helper execution cannot request that fallback.
-There is room for at most 128 `strcmp` calls plus 16 other continuations per
-invocation. The latter allowance includes scalar services, lock controls and
-`strscpy_pad`; the total remains at most 144.
+The original caller supplies valid stable ordinary memory and, for the writer,
+a valid live local destination disjoint from the source and pending CALL word.
+Neither helper's instructions or arguments are checked at runtime or publication;
+the translator uses API effects rather than decoding the helper body. KD still
+requires an immutable ABI1 image, a FULL root packet and one exact outer physical
+lock owner. Before effects, it bounds and reads the pending CALL return word and
+retains the return target's source residency. Success consumes that saved token
+once. An invalid frame or continuation remains an error. Preliminary string
+checks no longer reject calls or automatically disable the entry.
 
-See the [read-only](design/admission.md#bounded-original-strcmp-service) and
-[writing](design/admission.md#bounded-original-strscpy_pad-writing-service)
-admission contracts for source, argument and memory-lifetime checks. The writing
-service does not grant a general flags-dead proof to address guards. Fresh
-taskname/xattr workload and performance acceptance remain pending.
+There may be at most 128 `strcmp` calls plus 16 other continuations per invocation.
+The latter allowance includes scalar services, lock controls and `strscpy_pad`.
+An excess unexecuted CALL uses the existing native continuation while retaining
+its pushed word and earlier effects. See the
+[read-only](design/admission.md#original-strcmp-service) and
+[writing](design/admission.md#original-strscpy_pad-writing-service) contracts.
+Neither API summary proves that incoming arithmetic flags are unused by the
+helper; address guards cannot infer that from a service declaration.
+
+The v10 implementation passed focused correctness checks; performance
+measurements remain pending. Earlier
+[functional checks](../bench/results/10.176.26.71/bench/taskname-xattr-20261018/DEVELOPMENT.md)
+and the [comparison record](../bench/results/10.176.26.71/bench/taskname-xattr-20261018/README.md)
+belong to the frozen `c79d84f` checked implementation. Its probe for native return
+after a failed string check does not describe current behavior.
 
 ## Native continuation and final restore
 
@@ -273,7 +310,7 @@ reused after unpin; its ACK/task references must outlive the native suffix.
 For mutex entry ABI2, an image can replace a reviewed processor instruction with
 a marker: generated code that saves current state and returns exit 8 before that
 instruction executes. The image declares requirement bit 0, and the provider must
-advertise capability version 6 through 9 with `KD_JIT_CAP_NATIVE_ESCAPE` (bit 5).
+advertise capability version 6 through 10 with `KD_JIT_CAP_NATIVE_ESCAPE` (bit 5).
 The [instruction policy](design/admission.md#checked-instruction-exits) lists the
 exact eligible instructions and the static checks that still apply.
 
@@ -309,10 +346,14 @@ a returned JIT body and complete drain remain distinct observations.
 
 ABI1 spin images may check a restricted 64-bit `MOV` pointer load for overlap
 with recorded source-stack writes. Such images set requirement bit 1 and require
-provider version 7 through 9 with `KD_JIT_CAP_ADDRESS_GUARD` (bit 6). This is distinct from
+provider version 7 through 10 with `KD_JIT_CAP_ADDRESS_GUARD` (bit 6). This is distinct from
 the mutex instruction marker. The [admission guide](design/admission.md#checked-spin-pointer-loads)
-defines the address and source flag proofs. Fresh taskname/xattr workload and
-performance acceptance remain pending.
+defines the address and source flag proofs. The
+[historical address-check probe](../bench/results/10.176.26.71/bench/taskname-xattr-20261018/DEVELOPMENT.md)
+passed successful delegation, exact native resumption after a failed check and
+continued local execution after delegation was disabled. That receipt belongs
+to the earlier frozen inputs. The current v10 implementation also passed the
+probe in [candidate 6](VALIDATION.md#taskname-and-xattr-helper-validation).
 An image that required source constant-branch simplification cannot also obtain
 address-check admission: the simplified graph could omit a flags read still
 present in the original native suffix. Bodies requiring both remain refused.
