@@ -81,7 +81,7 @@ def main():
             ".mutex_stack_bytes = KD_JIT_MUTEX_STACK_BYTES + 8,",
         ),
         "missing-stack-feature": (
-            ".features = KD_JIT_CAP_MUTEX_STACK | KD_JIT_CAP_MUTEX_IMAGES |\n\t\t\tKD_JIT_CAP_MUTEX_EXCLUSIVE | KD_JIT_CAP_NATIVE_ESCAPE |\n\t\t\tKD_JIT_CAP_ADDRESS_GUARD | KD_JIT_CAP_STRING_SERVICES |\n\t\t\tKD_JIT_CAP_STRING_WRITE,",
+            ".features = KD_JIT_CAP_MUTEX_STACK | KD_JIT_CAP_MUTEX_IMAGES |\n\t\t\tKD_JIT_CAP_MUTEX_EXCLUSIVE | KD_JIT_CAP_NATIVE_ESCAPE |\n\t\t\tKD_JIT_CAP_ADDRESS_GUARD | KD_JIT_CAP_STRING_SERVICES |\n\t\t\tKD_JIT_CAP_STRING_WRITE | KD_JIT_CAP_AUDITED_STRINGS,",
             ".features = 0,",
         ),
         "wrong-module-arena": (
@@ -105,7 +105,12 @@ def main():
             "KD_JIT_CAP_ADDRESS_GUARD |",
         ),
         "missing-string-write-feature": (
-            "KD_JIT_CAP_STRING_WRITE,", "0,",
+            "KD_JIT_CAP_STRING_WRITE | KD_JIT_CAP_AUDITED_STRINGS,",
+            "KD_JIT_CAP_AUDITED_STRINGS,",
+        ),
+        "missing-audited-string-feature": (
+            "KD_JIT_CAP_STRING_WRITE | KD_JIT_CAP_AUDITED_STRINGS,",
+            "KD_JIT_CAP_STRING_WRITE,",
         ),
     }
     with tempfile.TemporaryDirectory(prefix="kdlock-source-unit-") as tmp:

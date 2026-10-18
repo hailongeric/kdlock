@@ -168,10 +168,10 @@ class MemoryValueTests(unittest.TestCase):
         state, work = self.memory.snapshot(), self.memory.work
         with patch.object(self.memory, "MAX_WORK", work):
             self.memory.clobber(checked_windows=(self.rbp,), window_bytes=256)
-            self.assertEqual(self.memory.snapshot(), ({}, None, {}))
+            self.assertEqual(self.memory.snapshot(), ({}, None, {}, None, {}))
             self.memory.restore(state)
             self.memory.clobber(checked_windows=(self.rbp,), window_bytes=256)
-            self.assertEqual(self.memory.snapshot(), ({}, None, {}))
+            self.assertEqual(self.memory.snapshot(), ({}, None, {}, None, {}))
             self.assertGreater(self.memory.work, work)
 
     def test_cell_and_value_limits_preserve_exhaustion(self):
@@ -234,7 +234,7 @@ class MemoryValueTests(unittest.TestCase):
             self.load(self.memory.offset(self.slot, 16), 8), (ExprInt(0x30, 8),)
         )
         merged = self.memory.merge(known, ({}, None, {}))
-        self.assertEqual(merged, ({}, None, {}))
+        self.assertEqual(merged, ({}, None, {}, None, {}))
         self.memory.restore(merged)
         self.store(self.slot, 0x2FF8)
         self.assertEqual(self.load(), (ExprInt(0x2FF8, 64),))
@@ -254,9 +254,9 @@ class MemoryValueTests(unittest.TestCase):
         self.assertEqual(self.memory.merge(saved, saved), saved)
         self.assertEqual(self.memory.work - before, len(saved[0]) + len(saved[2]) + 1)
         with patch.object(self.memory, "MAX_WORK", self.memory.work):
-            self.assertEqual(self.memory.merge(saved, saved), ({}, None, {}))
+            self.assertEqual(self.memory.merge(saved, saved), ({}, None, {}, None, {}))
         with patch.object(self.memory, "MAX_BYTES", len(saved[0]) - 1):
-            self.assertEqual(self.memory.merge(saved, saved), ({}, None, {}))
+            self.assertEqual(self.memory.merge(saved, saved), ({}, None, {}, None, {}))
         self.assertEqual(self.memory.snapshot(), saved)
 
     def test_merge_keeps_missing_cell_aliases_and_does_not_mutate_inputs(self):
@@ -272,7 +272,7 @@ class MemoryValueTests(unittest.TestCase):
             self.memory.restore(right)
             expected[key] = self.memory.join(a, self.memory.byte_at(key))
         merged = self.memory.merge(left, right)
-        self.assertEqual(merged, (expected, context_memory.UNKNOWN, {}))
+        self.assertEqual(merged, (expected, context_memory.UNKNOWN, {}, None, {}))
         self.assertEqual(self.memory.snapshot(), right)
         self.memory.restore(merged)
         self.assertTrue(
@@ -612,7 +612,8 @@ class MemoryAdmissionTests(unittest.TestCase):
 
         for case in test_context_spill_audit.audit.CASES:
             with self.subTest(case=case.name):
-                self.assertTrue(test_context_spill_audit.audit.audit(case)["ok"])
+                result = test_context_spill_audit.audit.audit(case)
+                self.assertTrue(result["ok"], result)
 
     def test_call_does_not_erase_memory_dependencies_in_jit_successor(self):
         raw = self.SEED + "e800400000" + self.ACCESS

@@ -19,9 +19,6 @@ static atomic64_t kd_hostcall_resumed;
 static atomic64_t kd_hostcall_rejected;
 static atomic64_t kd_hostcall_failed;
 static atomic64_t kd_hostcall_limit;
-static unsigned long kd_string_return_thunk;
-static unsigned long kd_string_copy_helper, kd_string_memset_entry;
-static unsigned long kd_string_memset_erms, kd_string_its_return;
 
 /* The same-device capability authorizes only bounded mutex stack facts, not
  * arbitrary callee memory preservation. Exclude the consumed CALL word, whose
@@ -60,8 +57,8 @@ static int kd_hostcall_invoke_int_sqrt(struct kd_regs *regs)
 
 /* Invoke the exact resolved source helper, using the original arguments. The
  * audited caller keeps both ordinary kernel strings stable and resident while
- * its physical source lock is held. Preflight does not establish that lifetime
- * or protect against concurrent mutation. The captured helper defines EAX. */
+ * its physical source lock is held. No data scan or helper-code validation is
+ * performed here. The original C helper defines EAX. */
 static int kd_hostcall_invoke_strcmp(struct kd_regs *regs)
 {
 	int (*callee)(const char *, const char *) = (void *)regs->ip;
@@ -71,10 +68,11 @@ static int kd_hostcall_invoke_strcmp(struct kd_regs *regs)
 	return 0;
 }
 
-/* The separately negotiated writing service has already validated count 64,
- * the caller's live destination, stable off-stack source and complete helper
- * closure. Invoke the original C API on the executor stack. Discarded callee
- * scratch below the source CALL is outside this audited API's observations. */
+/* The typed writing summary describes count 64 and the caller's live local
+ * destination. The original C caller supplies valid memory and lifetime; no
+ * argument or helper-body checks are repeated here. Invoke the original API
+ * on the executor stack, preserving its padding and truncation behavior.
+ * Discarded callee scratch below CALL is outside the API observations. */
 static int kd_hostcall_invoke_strscpy_pad(struct kd_regs *regs)
 {
 	long (*callee)(char *, const char *, unsigned long) = (void *)regs->ip;
@@ -124,7 +122,7 @@ static int kd_hostcall_dispatch(struct kd_regs *regs)
 	if (ret)
 		return ret;
 	/* Strings require image, ownership and CALL validation by the separate
-	 * preflight path before invoking the adapter. Scalar callers cannot bypass it. */
+	 * continuation path before invoking the adapter. Scalar callers cannot bypass it. */
 	if (service->id == KD_HOSTCALL_STRCMP || service->id == KD_HOSTCALL_STRSCPY_PAD)
 		return -EPERM;
 	return service->invoke(regs);

@@ -14,7 +14,7 @@ import strscpy_service
 from miasm.analysis.machine import Machine
 from miasm.core.bin_stream import bin_stream_str
 from miasm.core.locationdb import LocationDB
-from miasm.expression.expression import ExprLoc
+from miasm.expression.expression import ExprInt, ExprLoc
 
 
 def find_undecoded_policy_error(blocks, regions):
@@ -50,6 +50,7 @@ def find_segment_policy_error(
     address_guards=None,
     string_targets=(),
     writer_targets=None,
+    c_copy_targets=(),
 ):
     # A guarded verdict is conditional: its complete predicates must be emitted
     # before body execution. Analysis and emission share this same collector.
@@ -60,6 +61,17 @@ def find_segment_policy_error(
         for start, block in block_dict.items()
         if not code_ranges or any(left <= start < right for left, right in code_ranges)
     }
+    typed_targets = set(string_targets) | set(writer_targets or {})
+    # The additional C-object contract is selected by an actual negotiated
+    # string API in this source graph. Merely resolving its symbol does not
+    # reclassify unrelated assembly or scalar calls. memcpy remains decoded;
+    # its real loads/stores and plain RET are analyzed and emitted normally.
+    uses_typed_c = any(
+        line.name.upper() == "CALL" and line.args
+        and isinstance(line.args[0], (ExprInt, ExprLoc))
+        and context_policy.static_address(line.args[0], db_dict.get(block),
+                                          line.offset + line.l) in typed_targets
+        for block in selected.values() for line in block.lines)
     for block_start, block in sorted(selected.items()):
         if not getattr(block, "lines", None):
             diagnostics.set_instruction(block_start, "<undecodable/empty block>")
@@ -95,6 +107,9 @@ def find_segment_policy_error(
                              if name.endswith("_clobber_v1")},
             readonly_targets=readonly_targets,
             writer_targets=writer_targets,
+            audited_c_targets=typed_targets,
+            audited_copy_targets=(set(c_copy_targets) & selected.keys()
+                                  if uses_typed_c else ()),
             mutex_targets={
                 address
                 for address, (kind, name) in (lock_symbols or {}).items()

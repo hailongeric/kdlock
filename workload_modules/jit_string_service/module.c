@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0
-/* The exact kernel strcmp executes on stable module-owned strings. A long,
- * still valid string exceeds the service's preflight bound; its original CALL
- * must then run on the waiter exactly once, after the already executed prefix.
+/* The exact kernel strcmp executes on valid, stable module-owned strings.
+ * Both short and 300-byte strings satisfy the original C helper's contract;
+ * delegated calls must retain the same values and exactly-once effects.
  * The control gate changes strings only after every worker has drained. */
 #include <linux/fs.h>
 #include <linux/miscdevice.h>
@@ -76,7 +76,7 @@ static long guard_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 		run.completed = run.errors = 0;
 		for (i = 0; i < run.iterations; i++) {
 			guard_body(&records[run.worker]);
-			if (records[run.worker].result != 0 ||
+			if (records[run.worker].result != (READ_ONCE(hot) ? -1 : 0) ||
 			    records[run.worker].task != (unsigned long)current)
 				run.errors++;
 			run.completed++;
@@ -104,6 +104,9 @@ static long guard_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 		else {
 			memset(left, 'x', sizeof(left) - 1);
 			memset(right, 'x', sizeof(right) - 1);
+			/* Force the helper to reach byte 299 and preserve a negative
+			 * int result as well as the long-string lifetime contract. */
+			right[sizeof(right) - 2] = 'y';
 			WRITE_ONCE(hot, 1);
 		}
 	} else {
@@ -142,4 +145,4 @@ static void __exit guard_exit(void) { misc_deregister(&guard_device); }
 module_init(guard_init);
 module_exit(guard_exit);
 MODULE_LICENSE("GPL");
-MODULE_DESCRIPTION("Checked kernel string service and unexecuted-CALL native continuation");
+MODULE_DESCRIPTION("Audited kernel string service with short and long valid inputs");

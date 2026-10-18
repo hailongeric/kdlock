@@ -40,7 +40,7 @@ snapshot. The workload uses no provider SELFTEST hooks. Build an ordinary provid
 with the existing private observation overlay to count returned JIT bodies:
 
 ```sh
-export PATH=/root/kdlock-evidence/clobber-20260918/venv/bin:$PATH
+export PATH=/root/kdlock-translation-venv-20261019/bin:$PATH
 export LC_ALL=C
 RW_ROOT="$PWD"
 RW_KERNEL=/root/linux-6.1.159-kdclobber2

@@ -50,7 +50,7 @@ than `INT_MAX`, the largest signed 32-bit integer, is therefore unreachable if
 that fact survives every source path to the comparison. The original helper
 call and copy operation remain unchanged; `UD2` itself remains refused. This
 proof remains available for ordinary helper translation. The current taskname
-path instead uses the separately checked original-helper service below and
+path instead invokes the original API through the service described below and
 does not depend on this branch transformation.
 
 The proof begins with unknown inputs at the registered root. It follows exact
@@ -67,10 +67,11 @@ checks and the same selected graph is emitted. The diagnostic
 `CONSTANT_PATH_SPECIALIZATION` records the changed branch addresses.
 
 These source proofs do not establish support for the complete procfs task-name
-operation. The current extracted taskname caller uses the checked-helper service;
-its read-only functional check completed delegated bodies. Its 20% mutation case
-was correct but failed measured delegation, and the full performance comparison
-remains pending. See the
+operation. The current extracted taskname caller uses the original API service
+without helper-specific checks, and its validation is pending. The preceding
+`c79d84f` checked implementation completed delegated bodies in the read-only
+functional check; its 20% mutation case was correct but failed measured
+delegation. Those historical results remain in the
 [validation record](../../bench/results/10.176.26.71/bench/taskname-xattr-20261018/DEVELOPMENT.md).
 
 ### 7.2 Context And Memory Admission
@@ -165,7 +166,7 @@ and delegated execution use the same five instructions; ordinary cold execution
 already has valid native values. A helper's formerly uncaptured R13 save can
 then pass the existing input check; other unsafe helper effects remain refused.
 The current taskname payload uses the ordinary `KD_SPIN_DIRECT_LOCK` entry and
-the bounded original `strscpy_pad` service instead, without these five setup
+the original `strscpy_pad` API service instead, without these five setup
 instructions. The optional helper entry and the selected KD mutex protocol
 are unchanged.
 
@@ -259,17 +260,102 @@ and unconditional emitted-block scan do not close this gap. Successful code
 generation reports `CONTEXT_SCREENING_ONLY`; the narrow stack-alias checks below
 do not establish a general runtime address or object policy.
 
+#### Original CALL-word aliases
+
+The source CALL still stores its return address in the waiter's memory. For an
+ordinary assembly CALL or scalar service, an
+ordinary later load can read all or part of that word, including through a list
+pointer. The translator keeps both accesses unchanged. It does not assume that
+stack memory is private and does not reject an overlap merely because it occurs.
+
+A narrow analysis rule handles the case where the only tracked writes are real
+CALLs to one eight-byte return slot, over otherwise unknown ordinary memory.
+The record includes a path that has not called yet, as occurs on the first loop
+iteration. Every possible complete return address stays a numeric alternative
+and receives the existing context-address checks. A partial overlap receives a
+separate provenance marker: an analysis label recording the known CALL-byte bits,
+the ordinary unknown bits, and any subsequent constant offset. This label does
+not emit an instruction or a runtime check. Copies and control-flow joins retain
+every recorded alternative, within a finite analysis budget.
+
+That partial value may be copied, dereferenced as an ordinary source pointer,
+or adjusted by a constant byte offset. Its derivable known bases are checked after
+the same offset. When the high address bits are known and only low bytes are
+unknown, they describe an exact contiguous address range; that range is checked
+for context overlap, including address wrap and the accessed operand's width.
+For example, seven return bytes plus one unknown low byte describe 256 addresses;
+adding a constant must not hide that range inside per-CPU storage. Unknown high
+bits do not become a huge interval covering all possible pointers: their known
+low-bit base is checked, while their unknown component keeps the ordinary dynamic
+pointer limitation above. This is known-base/range screening, not universal
+pointer validation. Masks, bit extraction, shifts and other arithmetic
+must either produce a bounded exhaustive set of numeric alternatives, checked
+individually, or retain refusal when an address requires that value. Stored-value
+reuse, an explicitly derived stack pointer, and indirect CALL/JMP operands cannot
+discard the partial-value marker to obtain an ordinary unknown value. An ordinary
+RET still uses its complete emitted list of allowed continuations: an uncertain
+value loaded from its return slot cannot narrow that list, and an unlisted target
+exits the JIT dispatcher. An ordinary memory write, an opaque helper effect, a second
+return slot or an exhausted analysis budget disables this refinement. Known
+context writes and unrelated widened values keep their existing checks.
+
+The focused guest fixtures include actual generated CALL stores and loads with
+full and partial overlap, plus negative context-range, offset, merge, arithmetic,
+control and budget cases. Validation of this change and the revised xattr image is pending; the
+earlier checked-pointer results below belong to the frozen baseline.
+
+The negotiated version 10 string APIs have a separate, explicit selected-caller
+contract. The caller and its helpers do not inspect, retain pointers into, or
+mutate those services' temporary return-token and helper scratch storage below
+the stack pointer before CALL. The kernel C calling convention has no red zone
+(reserved caller-local storage below that stack pointer), so normal live locals,
+list nodes, heap objects and string buffers satisfy this distinction. Merely
+passing valid strings does not establish the promise: code that inspects raw task
+stack bytes, escapes a control-slot pointer, or uses assembly to observe that
+scratch is outside this contract.
+
+For these two API calls, analysis retains the exact return token separately
+from ordinary caller-object bytes. The emitted store, original API call, runtime
+return-token read and continuation are unchanged. Known full or partial accesses
+to that temporary slot are refused as explicit contract violations. Different
+ordinary-object bases use the audited caller promise, without runtime pointer
+exclusions. Control-flow joins retain both control-slot records and every
+ordinary-memory effect; a typed-call path cannot erase an ordinary CALL path.
+Prior widened memory stays widened, and `strscpy_pad` still writes all 64 ordinary
+destination bytes. An explicit later reuse of that scratch as a new local can
+remain refused; this limited analysis does not prove arbitrary stack allocation
+lifetimes.
+
+When the selected source graph actually uses one of these negotiated string
+services, the same explicit caller contract also covers a direct call to the
+resolved original `memcpy` or `__memcpy`, provided its body has been decoded.
+Only its temporary CALL token receives the control classification. The complete
+original copy remains translated: its reads, writes, pointer arithmetic, byte
+count, direction and possible ordinary source/destination aliases keep their
+existing analysis and emitted instructions. It is neither a read-only summary
+nor a new native service, and the benchmark's count of 64 is not assumed by this
+analysis. Without the actual negotiated string call or resolved copy symbol,
+the ordinary CALL-alias model above still applies.
+
+A recognized plain RET can consume a complete control token. Because control
+records are unions of possible writes across paths, their presence does not
+prove what every path will return to: such a RET retains the complete existing
+dispatch list, and an unlisted actual target exits the JIT. No control-token
+value is made available as ordinary data. Explicit MOV reads and known partial
+RET overlaps remain refused. Focused guest validation of this separation and
+the complete xattr copy path is pending.
+
 #### Checked spin pointer loads
 
 A source CALL writes its return address on the waiter's stack. A later load
 through a dynamically obtained list pointer might refer to those same bytes.
 Keeping every possible overlap can make the analysis unable to bound the loaded
-pointer, as happened in the xattr linked-list traversal. Treating helper stacks
-as private would hide that possibility. `address_guards.py` instead permits a
-limited retry that checks the particular overlap immediately before the load.
+pointer, as happened in the earlier xattr linked-list translation. For cases
+outside the narrow CALL-word rule above, `address_guards.py` permits a limited
+retry that checks the particular overlap immediately before the load.
 
 This retry requires ABI1 spin, complete selected source text, no learned indirect
-control and provider capability version 7 bit 6. It handles only an explicit
+control and provider capability versions 7 through 10 with bit 6. It handles only an explicit
 64-bit `MOV` memory load addressed by one register plus a fixed displacement.
 The retry is disabled if source constant-branch proof changed any branch during
 this translation. A simplified branch could otherwise hide a flags read in the
@@ -377,12 +463,13 @@ not the arena's address classification. This does not pin or validate an object.
 
 The provider reports this bound using the existing 16-byte CAPS packet on the
 same device lease. The module bound was introduced in version 2; the current provider
-uses version 9. Translation requires immutable mutex images plus exclusive KD
+uses version 10. Translation requires immutable mutex images plus exclusive KD
 objects (`KD_JIT_CAP_MUTEX_EXCLUSIVE`, bit 4); ordinary images still accept the
-version 5 through 9 contracts. Instruction-marker images require version 6 through 9
-with bit 5. Spin address-check images require version 7 through 9 with bit 6;
-bounded `strcmp` requires version 8 or 9 bit 7. The bounded `strscpy_pad` writer
-requires version 9 bit 8 separately. Version 4 remains readable by observers but
+version 5 through 10 contracts. Instruction-marker images require version 6 through 10
+with bit 5. Spin address-check images require version 7 through 10 with bit 6.
+The current original string API summaries require version 10 bit 9 plus bit 7
+for `strcmp` or bit 8 for `strscpy_pad`. Bit 9 identifies the caller-guaranteed
+memory and lifetime contract without helper-specific checks. Version 4 remains readable by observers but
 cannot open a translation session for this object contract. It checks the build constants and the non-NULL
 `pcpu_reserved_chunk` pointer, which is read-only after init; it never dereferences
 the private chunk layout. Translation adds `[base + ALIGN(core_size, 4),
@@ -430,9 +517,10 @@ use up to 4000-byte chunks with exact upload identity, contiguous coverage and a
 base generation. Mutex uploads publish a complete immutable descriptor; frames
 retain it through continuations and old-generation misses cannot change a newer
 image's metadata. Published versions remain in the bounded pool until teardown.
-Publishing the first address-check image also moves that ABI1 spin entry to
-immutable versions; every later image for that entry remains immutable, even
-without checks. Its active frames retain their bound image and site directory.
+Publishing the first address-check or string-service image also moves that ABI1
+spin entry to immutable versions; every later image for that entry remains
+immutable, even without optional checks or services. Active frames retain their
+bound image and any address-check site directory. String services add no site table.
 Ordinary spin entries that have not made this transition and ABI3 rwlock images
 retain in-place storage. Independent locks sharing an entry address do not
 establish image lifetime through lock serialization.
@@ -486,7 +574,7 @@ flow end at each marker. Therefore an untaken eligible instruction can cease to
 be the reason for rejection, while an unsafe or undecodable suffix can still
 reject the entry.
 
-Provider capability versions 6 through 9 advertise this contract on bit 5; the image
+Provider capability versions 6 through 10 advertise this contract on bit 5; the image
 requires it on directory bit 0. Earlier providers cannot accept such images.
 Spin/rwlock images retain their existing static instruction policy. Unknown
 encodings, unreviewed prefixes, control-register moves, flags-stack operations,
@@ -502,135 +590,113 @@ See [register restoration](../JIT_REGISTER_ABI.md#checked-instruction-exit) and
 [frame lifetime](frames.md#95-forward-native-continuation) for the exact state
 and ownership obligations.
 
-### Bounded original strcmp service
+### Original strcmp service
 
-ABI1 spin callers can use a typed native service for the captured `strcmp`
-implementation. A typed service is a specific, checked helper call whose input,
-output and memory effects are known. This service invokes the original helper
-on the executor's stack and resumes the generated caller at its original return
-address. It retains the source CALL's write of its return address to the waiter
-stack; declaring the helper read-only does not remove that write from analysis.
+ABI1 spin callers can invoke the original kernel `strcmp` through a typed
+service. Here, typed means that translation knows the arguments, return value
+and caller-memory effects of this C API. The helper runs on the executor's
+stack with the original pointers; the generated caller resumes at its original
+return address. The source CALL still writes that return address to the waiter's
+stack. Analysis retains it as exact control state under the explicit
+[selected-caller scratch contract](#original-call-word-aliases), separately from
+ordinary caller objects. No emitted write or runtime return-token check is removed.
 
-This is limited to audited ordinary kernel strings that remain allocated and
-unchanged while the physical source lock is held. For the xattr workload, that
-lock protects stored names, and the pinned waiter owns the syscall's copied
-search name. Holding an arbitrary lock does not establish these properties for
-unrelated objects. The service is not a general guarantee for every kernel
-`strcmp` caller.
+Version 10 capability bit 9 selects the native API contract described here,
+together with bit 7 for read-only string services. The image retains requirement
+bit 2. The translator resolves the original kernel symbol without inspecting
+its implementation. Neither translation, publication nor execution checks
+helper bytes, helper-specific CALL encodings, string contents or string lengths.
+There is no extra per-call registration table. The original caller supplies the
+same valid, terminated, allocated and stable strings required by native
+`strcmp`. In the xattr workload, the source lock protects stored names and the
+pinned waiter owns the syscall's copied search name. An unrelated lock does not
+supply those guarantees for other objects.
 
-Capability version 8 or 9 bit 7 and image requirement bit 2 negotiate the service.
-Both bounded string services require one top-level physical lock hold. A
-selected source graph containing a nested acquisition or another nonterminal
-lock-control call is refused before publication. The terminal outer clobber
-unlock remains allowed. Runtime ownership and frame checks stay mandatory;
-the translation check prevents an unsupported nested service from reaching
-those checks only after protected work has already executed.
-Only an exact direct five-byte source CALL is accepted. Both provider and
-translator verify the captured 42-byte helper. Each return is either a jump to
-the actual return thunk or the captured runtime alternative, RET followed by
-four INT3 padding bytes. A return thunk is the kernel's shared return-instruction
-sequence; the padding traps if accidentally executed. Different helper text
-remains native. The translator also proves
-from those original instructions that incoming arithmetic flags cannot affect
-the helper's behavior; an ordinary C calling convention is not used as that
-proof. Each pointer must be captured, and its possible 256-byte read span passes
-the existing context-address checks. Widened address analysis still refuses.
+Ordinary captured-register and context-address admission remains active. Context
+addresses refer to task or processor state that cannot safely be treated as
+ordinary shared data. The existing 256-byte static screening span remains an
+analysis rule, not a runtime string-length limit or proof that arbitrary
+pointers are safe. Loss of address facts through widening still refuses the
+body. Neither string service supplies a source-flags proof for an address guard:
+without inspecting the helper, admission cannot assume that it overwrites every
+incoming arithmetic flag before use. Such a guard must have an independent
+proof from the original source instructions or remain refused.
 
-Before invoking the helper, the runtime validates the pending CALL and source
-residency, then reads each string through a bounded no-fault check until a NUL
-terminator is found. No-fault means an invalid address returns a failure instead
-of causing a kernel exception. At most 256 bytes per string are checked, covering
-the Linux xattr limit of 255 name bytes plus the terminator. Invalid, overflowing
-or unterminated inputs leave the service unexecuted. The original waiter then
-continues at that CALL's helper entry, and the critical-section entry is disabled
-for later delegation. Earlier work and the CALL word are retained; nothing is
-replayed. A successful service changes only saved RAX to the helper's 32-bit
-integer result and consumes the validated return continuation once.
+Both string services require one top-level physical lock hold. A source graph
+containing a nested acquisition or another nonterminal lock-control call is
+refused before publication; the terminal outer clobber unlock remains allowed.
+Runtime checks still establish the physical owner, frame and immutable image,
+read and consume the actual pending CALL return word, and preserve the common
+source-continuation lifetime. These are the shared delegation protocol, not
+helper validation. Successful `strcmp` changes the saved return register to its
+integer result and resumes the caller once. Invalid ownership or continuation
+state remains an error.
 
-Each invocation permits at most 128 `strcmp` calls. All other services and
-ordinary continuations share the existing limit of 16; total continuations are
-bounded by 144. The bounded `strscpy_pad` service below uses that ordinary
-allowance, not the 128-comparison allowance. `strscpy_pad` and `memcpy` write memory
-and do not inherit this read-only contract. Helper checks and successful image
-publication alone are not evidence that a whole benchmark body completed in JIT.
+Each delegated body permits at most 128 `strcmp` calls. All other services and
+ordinary continuations share the existing limit of 16, so their combined maximum
+is 144. `strscpy_pad` uses that ordinary allowance. `strscpy_pad` and `memcpy`
+write memory and do not inherit the read-only contract. Publication alone is
+not evidence that an entire benchmark body completed in generated code.
 
-The candidate 10 bounded-string probe passed all four phases, totaling 6,400,000
-operations. Its cold delegated phase recorded 1,292,047 matching entries and
-completed bodies. A string longer than the admitted bound caused one entry to
-return to the native waiter before calling the helper, with zero delegated
-completions; subsequent calls made zero generated-code entries. Candidate 11
-also completed all eight xattr front/tail/miss/size checks with 16 or 128
-attributes, 64-byte values and 16 workers. Each recorded matching entries and
-completions, correct results and clean teardown. These
-[functional receipts](../../bench/results/10.176.26.71/bench/taskname-xattr-20261018/DEVELOPMENT.md)
-remain separate from the pending full performance matrix.
+Version 10 functional and performance validation is pending. The preceding
+implementation, frozen in `c79d84f`, performed helper and string checks and has
+separate [functional receipts](../../bench/results/10.176.26.71/bench/taskname-xattr-20261018/DEVELOPMENT.md).
+Its candidate 10 string probe completed 6,400,000 operations, with 1,292,047
+matching generated entries and completed bodies in the cold phase. An over-limit
+string caused one native continuation with zero completed bodies, then zero
+subsequent generated entries. That historical length-triggered behavior is
+absent from version 10. Candidate 11 also passed all eight xattr
+front/tail/miss/size checks at n16/n128, v64 and 16 workers, with matching entries
+and completions, correct results and clean teardown. These observations do not
+validate the revised implementation or establish its throughput.
 
-### Bounded original strscpy_pad writing service
-
-The writing service passed the current ordinary taskname shell's 16-worker
-read-only check: 3,194,222 complete delegated bodies in 3,200,000 operations.
-Linux Native, TCLock and KD passed data and drain checks with 20% mutations,
-but KD's nine preparation completions were followed by zero measured completions. That
-strict measured-delegation check remains failed; the full performance matrix
-is pending. Exact source identities and earlier failures remain in the
-[validation record](../../bench/results/10.176.26.71/bench/taskname-xattr-20261018/DEVELOPMENT.md).
-The service has a separate capability, version 9 bit 8, and image requirement
-bit 3. A provider that supports only the read-only `strcmp` service cannot accept
-a writing-service image.
+### Original strscpy_pad writing service
 
 The supported API call is the original `strscpy_pad(destination, source, 64)`.
-That helper copies a string and fills the remainder of the 64-byte destination
-with zero bytes. The translator requires the exact count 64 and one known
-destination in the current caller's local stack frame. It screens both possible
-64-byte memory spans for task or processor-sensitive addresses. Unsupported
-counts, unknown frame relationships and widened address facts remain refused.
-It does not substitute a different copy operation or inspect mutable source
-bytes during translation.
+It copies a string and zero-fills the unused destination bytes; when the source
+does not fit, the original API's truncation result and destination contents are
+preserved. Version 10 bit 9 selects the native API contract, together with bit 8
+for writing string services. The image retains requirement bit 3. Read-only
+string capability alone cannot enable this writing summary.
 
-Both translator and provider check the complete captured implementation:
-70 bytes of `strscpy_pad`, 310 bytes of `strscpy`, the six-byte `__memset` entry
-that jumps to the selected 23-byte `memset_erms` implementation, and the actual
-single-return-instruction thunk. Every external branch must target the named,
-validated helper. The selected `memset_erms` uses a repeated byte-store
-instruction to fill the buffer. Other processor alternatives are not admitted
-by this contract. The warning trap in `strscpy` remains in the checked bytes;
-the exact count 64 cannot reach its oversized-count condition. Ordinary JIT
-instruction admission does not gain permission to execute that trap.
+Translation must know that the count is 64 and that the destination is one
+64-byte span in the current caller's local frame. Those facts justify the
+memory-effect summary and protect saved control state; they are not runtime
+buffer checks. Both possible 64-byte argument spans still pass ordinary
+context-address analysis. Unsupported counts, unknown frame relationships and
+widened address facts remain refused. The original caller owns source validity
+and lifetime, keeps the source outside the waiter's stack, and supplies a live
+local destination disjoint from the source and
+saved CALL/control words, as required by this API use. Taskname declares these
+properties next to its unchanged call.
 
-Before any destination write, the provider validates the source CALL, its
-return continuation, the physical lock owner and the helper source lifetime.
-The full destination must lie above the pending CALL word and below the saved
-frame pointer, within the logical waiter's task stack. Its source span must be
-outside that entire task stack. It then checks the original helper's eight-byte
-source reads until a terminating zero byte is found, with a 64-byte maximum.
-The check includes the remainder of the final eight-byte word, because the
-captured helper reads that word even when the string ends earlier. The audited
-caller must keep this ordinary kernel memory allocated and unchanged while the
-source lock is held; a no-fault read cannot establish that lifetime itself.
+The helper is selected by its original kernel symbol. No phase inspects its
+instructions or called routines. Publication and execution do not scan string
+contents or recheck destination bounds; translation retains the effect analysis
+described above. There is no preliminary string scan or separate
+helper-specific fallback. Execution invokes the original helper with its
+original arguments, under the same common owner/frame/return-continuation
+protocol as other services. Truncation runs through the original API instead
+of causing a KD-specific rejection. This service supplies no source-flags proof
+to an address guard.
 
-Failed argument bounds or source-read checks leave the helper unexecuted and
-return the waiter to its original helper entry with the existing CALL word.
-This keeps earlier protected writes and avoids repeating the CALL push.
-Malformed ownership, source text or continuation state remains an error.
-For the mandatory count 64, the exact `strscpy` prefix cannot take its
-zero-count branch. Its following comparison defines all six arithmetic flags
-before any incoming flag can affect execution. Both translation and runtime
-enforce that argument premise; no source branch is rewritten for this service.
-This bounded C API contract does not mark `strscpy_pad` as a generally
-flag-independent helper for address checks. The separate source-flag proof
-remains conservative when its instruction model leaves a processor-undefined
-flag unassigned. An address check that would need such a helper proof remains
-refused; constant branch specialization is not used to bypass that condition.
+After the service, analysis retains the virtual CALL write, invalidates every
+one of the 64 destination bytes, drops caller-saved register facts and preserves
+the callee-saved registers and returned stack pointer. A possible destination
+alias still invalidates overlapping facts. The caller cannot observe the
+helper's discarded temporary stack storage: the helper runs on the executor's
+stack. This does not declare arbitrary waiter memory private or read-only.
+The entry uses immutable images. General writing helpers, including `memcpy`,
+do not automatically receive this summary. Writing services share the limit of
+16 scalar services and ordinary continuations; only `strcmp` has the separate
+128-comparison allowance.
 
-After a successful service, analysis retains the original virtual CALL write,
-invalidates every destination byte, drops caller-saved register facts and
-preserves the callee-saved registers and returned stack pointer. It makes no
-blanket private-stack or read-only-memory assumption: a possible destination
-alias still invalidates the overlapping fact. Execution invokes the original
-helper with the original arguments and consumes the validated continuation
-once. This is a C API contract; observing discarded helper spill storage below
-the caller's stack pointer is outside it, because the helper executes on the
-executor's stack. The entry uses immutable images. General writing helpers,
-including `memcpy`, do not inherit this contract automatically.
-Writing services share the existing limit of 16 scalar services and ordinary
-continuations. Only `strcmp` uses the separate allowance of 128 comparisons.
+The ordinary taskname shell uses `KD_SPIN_DIRECT_LOCK`, without helper-specific
+register initialization. Version 10 validation is pending. In the preceding
+`c79d84f` implementation, its 16-worker read-only check completed 3,200,000
+operations with 3,194,222 returned delegated bodies. Linux Native, TCLock and KD
+passed data and drain checks with 20% mutations, but KD's nine preparation
+completions were followed by zero measured completions. That strict measured-
+delegation check remains failed. The [validation record](../../bench/results/10.176.26.71/bench/taskname-xattr-20261018/DEVELOPMENT.md)
+retains those source-specific results and earlier failures; new performance
+results must identify the revised version separately.

@@ -77,16 +77,18 @@ and stack position, retains earlier effects and existing lock ownership, and
 permanently disables delegation for the entry. It does not construct a CALL or
 retry the body. Generic faults and execution-limit exits cannot use this path.
 
-The [bounded `strcmp` service](design/admission.md#bounded-original-strcmp-service)
-uses the existing CALL exit and original helper. Before invocation, it validates
-the pending CALL, source code and pointer arguments. An argument refusal keeps
-that CALL intact for native execution and disables future delegation of the entry;
-success consumes the validated return once. `strcmp` has a separate allowance of
+The [original `strcmp` service](design/admission.md#original-strcmp-service)
+uses the existing CALL exit and original helper. It relies on the original C
+caller's valid memory and lifetime guarantees; it does not check helper code or
+scan argument strings. Before invocation, KD validates ownership and saves the
+pending CALL's return state. Success consumes that saved return once. `strcmp`
+has a separate allowance of
 128 calls per invocation. The separately negotiated
-[`strscpy_pad` service](design/admission.md#bounded-original-strscpy_pad-writing-service)
+[`strscpy_pad` service](design/admission.md#original-strscpy_pad-writing-service)
 shares the existing 16-call allowance with scalar services and lock controls.
-It verifies its local destination and source-read bounds before any write;
-once invoked, its effects cannot be replayed through native fallback. Together
+The translator describes its 64-byte write effect; runtime does not recheck its
+destination or scan its source. Once invoked, its effects cannot be replayed
+through native fallback. Together
 the two allowances permit at most 144 such continuations before final unlock.
 
 Completion removes the frame from the active stack before publishing DONE. The

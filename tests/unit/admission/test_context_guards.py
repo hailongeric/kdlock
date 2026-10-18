@@ -522,13 +522,53 @@ class ScopedCallTests(unittest.TestCase):
         self.assertEqual(observations, [frozenset({ExprInt(41, 64)})])
         # Run only this bounded MOV/CALL/RET corpus in guest userspace. The
         # production wrapper and emitted RET whitelist are not mocked.
-        assembly, _, status = render("", regions=regions, return_status=True)
-        self.assertEqual(status, 0)
+        assembly, log, status = render("", regions=regions, return_status=True)
+        self.assertEqual(status, 0, log)
         predicate = io.StringIO()
         guards.emit(predicate, 0x1000)
         regs, args = run_image(predicate.getvalue().encode() + assembly, [0x1000])[0]
         self.assertEqual(regs[12], 42)
         self.assertEqual(args[1], 1)
+
+    def test_unknown_return_word_keeps_whitelist_and_misses_unlisted_target(self):
+        caller = "bf29000000e8f60f00004883c001c3"
+        regions, blocks, dbs = self.graph(caller, "4889f8c3")
+        saw_partial_return = False
+        for _, block, tracker in translator.context_policy.constant_blocks(
+                blocks, dbs, roots={0x1000}):
+            for line in block.lines:
+                if line.name == "RET" and tracker.memory.call_words:
+                    values = tracker.resolve_many(ExprMem(ExprId("RSP", 64), 64),
+                                                  allow_wide=True)
+                    saw_partial_return |= any(
+                        translator.context_policy.context_memory.has_call_alias(value)
+                        for value in values)
+                tracker.update(line)
+                self.assertNotIn(id(line), tracker.return_targets)
+        self.assertTrue(saw_partial_return)
+
+        # Both the independent unknown return word and an unknown source-byte
+        # overwrite keep the same complete source CALL continuation whitelist.
+        # Execute the real dispatcher with an allowed and an unlisted value.
+        for callee in ("4889f8c3", "4889f8881424c3"):
+            regions, blocks, dbs = self.graph(caller, callee)
+            table = {}
+            translator.indirect_jump.find(blocks, dbs, table)
+            end = 0x2000 + len(bytes.fromhex(callee))
+            self.assertEqual(table[end], [0x100a])
+            assembly, log, status = render("", regions=regions, return_status=True)
+            self.assertEqual(status, 0, log)
+            for low in (0x0a, 0x77):
+                def initialize(regs, stack):
+                    regs[14] = low  # RDX; callee may overwrite only the low byte.
+                regs, args = run_image(assembly, [0x1000], initialize)[0]
+                with self.subTest(callee=callee, low=low):
+                    if callee == "4889f8c3" or low == 0x0a:
+                        self.assertEqual((regs[12], regs[0]), (42, 0x4444))
+                    else:
+                        self.assertEqual((regs[12], regs[0]), (41, 0x1077))
+                        self.assertEqual(args[0], end)  # Existing ij_failed exit.
+                    self.assertEqual(args[1], 1)
 
     def test_callee_memory_writes_reach_caller_admission(self):
         # The callee corrupts a caller-visible pointer. No saved-register or

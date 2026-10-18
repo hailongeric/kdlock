@@ -56,19 +56,16 @@ def load_hostcall_specs(path=None):
 
 
 def resolve_hostcalls(symbol_lookup, path=None, *, string_services=False,
-                      string_write=False, reader=None):
+                      string_write=False, audited_strings=False):
     resolved = {}
 
     for spec in load_hostcall_specs(path):
         address = symbol_lookup(spec.symbol, 0)
         if tuple(spec) == strcmp_service.SPEC:
-            if (not string_services or reader is None or not address
-                    or not strcmp_service.verified(
-                        address, symbol_lookup("__x86_return_thunk", 0), reader)):
+            if not string_services or not audited_strings:
                 continue
         if tuple(spec) == strscpy_service.SPEC:
-            if (not string_write or reader is None or not address
-                    or not strscpy_service.verified(address, symbol_lookup, reader)):
+            if not string_write or not audited_strings:
                 continue
         if address and address not in resolved:
             resolved[address] = spec
@@ -79,9 +76,10 @@ def readonly_waiter_targets(resolved):
     """Exact typed services whose handlers only replace saved RAX.
 
     These audited helpers run on the executor stack and do not write waiter
-    memory. strcmp additionally requires its negotiated exact-text, pointer
-    screening and runtime string-bound checks. Keep future services opaque. This
-    summarizes sequential effects only, not concurrent memory freshness.
+    memory. strcmp uses its resolved original API symbol and negotiated native
+    caller contract, with ordinary pointer/context screening. No helper bytes
+    or arguments are checked by the service. Keep future services opaque. This
+    summarizes sequential effects, not memory validity or freshness.
     See kernel_module/execution/hostcalls.inc for the matching invocations.
     """
     audited = {("KTIME_GET", 1, "ktime_get"),

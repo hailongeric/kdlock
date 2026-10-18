@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
-"""Guest-only original strcmp, no-effect preflight refusal and waiter resumption."""
+"""Guest-only audited original strcmp with short and long valid strings."""
 import fcntl
 import importlib.util
 from pathlib import Path
-import re
 
 
 _shared = Path(__file__).resolve().parent.parent / "address_guard/run.py"
@@ -18,10 +17,10 @@ probe.WORKER_COMM = "ks_worker"
 probe.RUNNER = "tests/kernel/spin/string_service"
 probe.PAYLOAD = "workload_modules/jit_string_service"
 probe.MODULE = "jit_string_service_test"
-probe.CAP_VERSIONS, probe.CAP_BIT, probe.IMAGE_REQUIREMENT = (8, 9), 7, 4
+probe.CAP_VERSIONS, probe.CAP_BIT, probe.IMAGE_REQUIREMENT = (10,), 9, 4
 probe.SUCCESS_MESSAGE = (
-    "PASS: original strcmp delegated; long valid strings resumed the unexecuted CALL; "
-    "exact effects/task/value; permanent native-only state; final drain")
+    "PASS: original strcmp delegated with short and long valid strings; "
+    "exact effects/task/value; unchanged image; final drain")
 
 
 class StringSession(probe.EscapeSession):
@@ -32,35 +31,33 @@ class StringSession(probe.EscapeSession):
         probe.rt.require(cold["jit_delta"]["bench_jit_bodies"] ==
                          cold["jit_delta"]["bench_jit_completions"] > 0,
                          "cold strcmp lacks returned delegated bodies", "NO_JIT")
-        self.registry("cold", 0)
+        probe.rt.require(self.registry("cold", 0) == self.record["image_registry"],
+                         "cold immutable image identity changed", "DATA_ERROR")
         probe.rt.require(self.publication() == self.record["publication"],
                          "cold image changed")
         with open(probe.DEVICE, "rb", buffering=0) as device:
             fcntl.ioctl(device, probe.HOT)
-        hot = self.phase("hot-escape", self.record["iterations"], 1)
+        hot = self.phase("long-delegated", self.record["iterations"], 1)
         delta = hot["jit_delta"]
-        probe.rt.require(delta["bench_jit_bodies"] > 0 and
-                         delta["bench_jit_completions"] == delta["address_guard_count"] == 0,
-                         "preflight refusal did not precede helper completion", "DATA_ERROR")
-        self.registry("hot", -3)
+        probe.rt.require(delta["bench_jit_bodies"] == delta["bench_jit_completions"] > 0 and
+                         delta["address_guard_count"] == 0,
+                         "valid long strings did not complete delegated strcmp", "DATA_ERROR")
+        probe.rt.require(self.registry("long", 0) == self.record["image_registry"],
+                         "long-string immutable image identity changed", "DATA_ERROR")
         self.faults()
-        pattern = re.compile(
-            r"reason=STRING_PREFLIGHT_NATIVE\s+entry=(0x[0-9a-f]+)\s+"
-            r"ip=(0x[0-9a-f]+)\s+action=native_call_and_disable", re.I)
-        events = [dict(entry=int(match[1], 16), helper=int(match[2], 16))
-                  for match in pattern.finditer(self.messages)]
-        self.record["escape_events"] = events
-        self.save()
-        probe.rt.require(events and len(events) <= delta["bench_jit_bodies"] and
-                         all(event["entry"] == self.record["layout"]["entry"] and
-                             event["helper"] == self.record["layout"]["marker"]
-                             for event in events),
-                         "missing or mismatched preflight refusal", "DATA_ERROR")
-        post = self.phase("post-ban", self.record["iterations"], 1)
-        probe.rt.require(all(value == 0 for value in post["jit_delta"].values()),
-                         "delegation resumed after permanent refusal", "DATA_ERROR")
-        self.registry("post-ban", -3)
-        self.record.update(jit_status="COLD_JIT_THEN_NATIVE_ONLY", accepted=True,
+        probe.rt.require("reason=STRING_PREFLIGHT_NATIVE" not in self.messages and
+                         self.publication() == self.record["publication"],
+                         "audited strings refused or changed the published image", "DATA_ERROR")
+        post = self.phase("long-repeat", self.record["iterations"], 1)
+        delta = post["jit_delta"]
+        probe.rt.require(delta["bench_jit_bodies"] == delta["bench_jit_completions"] > 0 and
+                         delta["address_guard_count"] == 0,
+                         "repeated long strings lost complete delegation", "DATA_ERROR")
+        probe.rt.require(self.registry("long-repeat", 0) == self.record["image_registry"],
+                         "repeated long-string immutable image identity changed", "DATA_ERROR")
+        probe.rt.require(self.publication() == self.record["publication"],
+                         "long-string image changed")
+        self.record.update(jit_status="SHORT_AND_LONG_COMPLETE", escape_events=[], accepted=True,
                            final_parameters=probe.rt.parameters())
         self.verify()
 

@@ -14,6 +14,14 @@ from miasm.ir.symbexec import SymbolicExecutionEngine
 
 UNKNOWN = frozenset({None})
 WIDE_PREFIX = "kd_memory_wide_"
+CALL_ALIAS_PREFIX = "kd_call_alias_"
+CALL_ALIAS_OP = "kd_call_alias"
+ADDRESS_MASK = (1 << 64) - 1
+MAX_CALL_PATTERNS = 256
+
+
+class AuditedScratchAccess(ValueError):
+    """A selected C caller explicitly observes an API's temporary CALL word."""
 
 
 def is_wide(value):
@@ -25,6 +33,115 @@ def is_wide(value):
 
 def wide_value(size, name="budget"):
     return ExprId(WIDE_PREFIX + str(name), size)
+
+
+def has_call_alias(value):
+    """Partial original CALL-word overlap, distinct from unconstrained data."""
+    return any(isinstance(item, ExprId) and str(item).startswith(CALL_ALIAS_PREFIX)
+               for item in value.get_r(mem_read=True))
+
+
+def call_alias_value(size, name="load", patterns=()):
+    """Analysis-only unknown with exact partial-word masks and constant adds.
+
+    Each (mask, bits, offset) describes ((unknown & ~mask) | bits) + offset,
+    modulo 2**64. There is also an ordinary untouched-memory alternative.
+    Keeping the constants inside a tagged expression lets snapshots/copies
+    carry them without a side table or a new runtime check.
+    """
+    patterns = tuple(sorted(set(patterns)))
+    if size != 64 or len(patterns) > MAX_CALL_PATTERNS:
+        return wide_value(size, "call_patterns")
+    return ExprOp(CALL_ALIAS_OP, ExprId(CALL_ALIAS_PREFIX + str(name), size),
+                  *(ExprInt(part, size) for pattern in patterns for part in pattern))
+
+
+def call_alias_patterns(value):
+    """Return preserved patterns for a copy/constant add; None means unsupported."""
+    if value.size != 64 or not isinstance(value, ExprOp):
+        return None
+    if value.op == CALL_ALIAS_OP:
+        identity, *parts = value.args
+        if (not isinstance(identity, ExprId)
+                or not str(identity).startswith(CALL_ALIAS_PREFIX)
+                or len(parts) % 3 or len(parts) > 3 * MAX_CALL_PATTERNS
+                or not all(isinstance(part, ExprInt) for part in parts)):
+            return None
+        return tuple(tuple(map(int, parts[i:i + 3]))
+                     for i in range(0, len(parts), 3))
+    if value.op == "+":
+        dynamic = [part for part in value.args if not isinstance(part, ExprInt)]
+        if len(dynamic) != 1:
+            return None
+        patterns = call_alias_patterns(dynamic[0])
+        if patterns is not None:
+            amount = sum(int(part) for part in value.args if isinstance(part, ExprInt))
+            return tuple((mask, bits, (offset + amount) & ADDRESS_MASK)
+                         for mask, bits, offset in patterns)
+    return None
+
+
+def merge_call_aliases(values, size, name):
+    """Canonical union preserves every partial pattern through register joins."""
+    patterns = set()
+    for value in values:
+        if value is not None and is_wide(value):
+            return wide_value(size, "call_patterns")
+        if value is None or not has_call_alias(value):
+            continue
+        found = call_alias_patterns(value)
+        if found is None:
+            return wide_value(size, "call_operation")
+        patterns.update(found)
+        if len(patterns) > MAX_CALL_PATTERNS:
+            return wide_value(size, "call_patterns")
+    return call_alias_value(size, name, patterns)
+
+
+def ordinary_call_pointer(value):
+    """Only copies and constant byte offsets retain opaque pointer use.
+
+    Known bases and contiguous high-prefix ranges remain available to context
+    screening after an offset. Masks, slices, multiplication and combinations
+    of opaque values need exhaustive enumeration or the fail-closed wide domain.
+    """
+    return call_alias_patterns(value) is not None
+
+
+def call_alias_ranges(value, size=1):
+    """Known bases/ranges under the existing context-screening policy.
+
+    A high known prefix and unknown low bytes form an exact contiguous range.
+    A low known residue with unknown high bytes does NOT justify a huge range
+    hull: those high bits are ordinary unknown pointer input. Its zero-unknown
+    known base is still checked, including subsequent constant offsets.
+    """
+    patterns = call_alias_patterns(value)
+    if patterns is None:
+        return ()
+    ranges = set()
+    limit = ADDRESS_MASK + 1
+    for mask, bits, offset in patterns:
+        unknown = ADDRESS_MASK ^ mask
+        start = (bits + offset) & ADDRESS_MASK
+        lengths = [size]
+        if unknown & (unknown + 1) == 0:
+            lengths.append(unknown + size)
+        for length in lengths:
+            if length >= limit:
+                return ((0, limit),)
+            if start + length <= limit:
+                ranges.add((start, length))
+            else:
+                ranges.add((start, limit - start))
+                ranges.add((0, start + length - limit))
+        if offset:
+            if offset + size <= limit:
+                ranges.add((offset, size))
+            else:
+                ranges.add((offset, limit - offset))
+                ranges.add((0, offset + size - limit))
+    return tuple(sorted(ranges))
 
 
 def rmw_operation(destination, source):
@@ -84,6 +201,18 @@ class MemoryValues:
         self.cells = {}
         self.default = UNKNOWN
         self.words = {}
+        # A separate may-write record survives joins with the untouched path.
+        # None means an ordinary write, opaque effect or exhausted proof has
+        # invalidated this narrow provenance; {} means no source CALL yet.
+        # This is not a private-stack assumption: every possible overlap still
+        # reaches the original emitted load and original CALL store.
+        self.call_words = {}
+        # Typed C APIs have an explicit caller contract: ordinary C objects do
+        # not observe their temporary return token below pre-CALL SP. Keep that
+        # token exact and separate, rather than mixing its bytes into every
+        # unknown object load. This is not enabled for ordinary assembly CALLs.
+        # None records exhausted control provenance and must fail closed.
+        self.control_words = {}
         self.work = 0
         # FlowConstants carries this bit in its CFG snapshot and joins it by
         # OR: an opaque write/callee forbids further initial-stack identities.
@@ -100,7 +229,9 @@ class MemoryValues:
         return self.work <= self.MAX_WORK
 
     def snapshot(self):
-        return dict(self.cells), self.default, dict(self.words)
+        return (dict(self.cells), self.default, dict(self.words),
+                None if self.call_words is None else dict(self.call_words),
+                None if self.control_words is None else dict(self.control_words))
 
     def entry_stack_value(self, memory):
         """Keep an initial spill identity only when every prior store is disjoint.
@@ -133,6 +264,157 @@ class MemoryValues:
     def restore(self, state):
         self.cells, self.default = dict(state[0]), state[1]
         self.words = dict(state[2])
+        self.call_words = (dict(state[3]) if len(state) > 3 and state[3] is not None
+                           else None)
+        self.control_words = (dict(state[4]) if len(state) > 4 and state[4] is not None
+                              else ({} if len(state) < 5 else None))
+
+    def merge_control(self, left, right):
+        a, b = (state[4] if len(state) > 4 else {} for state in (left, right))
+        if a is None or b is None:
+            return None
+        keys = a.keys() | b.keys()
+        if not keys:
+            return {}
+        if len(keys) > self.MAX_WORDS or not self.spend(len(keys)):
+            return None
+        result = {}
+        for key in keys:
+            values = a.get(key, frozenset()) | b.get(key, frozenset())
+            if len(values) > self.MAX_VALUES:
+                return None
+            result[key] = values
+        return result
+
+    def check_control_access(self, memory, *, words=None):
+        """Refuse a statically identifiable observer; do not test runtime aliases.
+
+        Different/unknown object bases use the audited caller promise. Matching
+        bases retain exact whole/partial/modular overlap detection, independent
+        of entry guards. Ordinary CALLs and their data aliases are unchanged.
+        """
+        words = self.control_words if words is None else words
+        if words is None:
+            raise AuditedScratchAccess("audited C CALL control provenance exhausted")
+        if not words:
+            return
+        if not self.spend(len(words)):
+            raise AuditedScratchAccess("audited C CALL control analysis exceeds its budget")
+        address = self.address(memory.ptr)
+        for word in words:
+            base = self.address(word.ptr)
+            if address is None or base is None or address[0] != base[0]:
+                continue
+            if self.placements(memory, word.ptr, word.size, use_guards=False) != [None]:
+                raise AuditedScratchAccess(
+                    "audited C caller explicitly observes temporary CALL control scratch")
+
+    def store_control_return(self, writes):
+        """Retain an exact token without declaring ordinary caller data written."""
+        if self.control_words is None or len(writes) != 1:
+            raise AuditedScratchAccess("unproved audited C CALL control word")
+        pointers, values, width = writes[0]
+        if (width != 64 or len(pointers) != 1 or not values
+                or len(values) > self.MAX_VALUES
+                or any(not isinstance(value, ExprInt) for value in values)):
+            raise AuditedScratchAccess("unproved audited C CALL control word")
+        pointer = next(iter(pointers))
+        base = self.address(pointer)
+        if base is None or not self.spend(len(self.cells) + len(self.words) + 8):
+            raise AuditedScratchAccess("unproved audited C CALL stack identity")
+        word = ExprMem(pointer, 64)
+        for old in self.control_words:
+            if (self.address(old.ptr) is not None
+                    and self.address(old.ptr)[0] == base[0]
+                    and self.address(old.ptr) != base
+                    and self.placements(old, pointer, 64, use_guards=False) != [None]):
+                raise AuditedScratchAccess("overlapping audited C CALL control slots")
+        # An exact overwrite supersedes an older token at that slot. Do not
+        # restore a whole memory snapshot or erase aliases at other bases.
+        def covered(address, size):
+            location = self.address(address)
+            return (location is not None and location[0] == base[0]
+                    and ((location[1] - base[1]) & ADDRESS_MASK) + size <= 8)
+        self.cells = {key: value for key, value in self.cells.items()
+                      if not covered(key, 1)}
+        self.words = {key: value for key, value in self.words.items()
+                      if self.placements(key, pointer, 64, use_guards=False) == [None]
+                      or self.address(key.ptr) is None
+                      or self.address(key.ptr)[0] != base[0]}
+        if self.call_words is not None:
+            partial = any(self.address(key.ptr) is not None
+                          and self.address(key.ptr)[0] == base[0]
+                          and self.placements(key, pointer, 64, use_guards=False) != [None]
+                          and not covered(key.ptr, key.size // 8)
+                          for key in self.call_words)
+            self.call_words = (None if partial else
+                {key: value for key, value in self.call_words.items()
+                 if not covered(key.ptr, key.size // 8)})
+        self.control_words[word] = frozenset(map(int, values))
+        if len(self.control_words) > self.MAX_WORDS:
+            raise AuditedScratchAccess("audited C CALL control records exceed their budget")
+
+    def control_return_may_read(self, memory):
+        """Plain RET may consume a full token, without producing a data value.
+
+        This map is a may-write union, so presence never proves what every path
+        will pop. A possible token keeps the complete emitted RET whitelist.
+        Explicit data loads still use check_control_access and remain refused.
+        """
+        if memory.size != 64 or self.control_words is None:
+            raise AuditedScratchAccess("unproved audited C RET control access")
+        if not self.control_words:
+            return False
+        if not self.spend(len(self.control_words)):
+            raise AuditedScratchAccess("audited C RET control analysis exceeds its budget")
+        address = self.address(memory.ptr)
+        possible = False
+        for word in self.control_words:
+            base = self.address(word.ptr)
+            if address is None or base is None or address[0] != base[0]:
+                possible = True
+            elif address == base:
+                possible = True
+            elif self.placements(memory, word.ptr, word.size, use_guards=False) != [None]:
+                raise AuditedScratchAccess("plain RET partially overlaps audited C control scratch")
+        return possible
+
+    def replace_control_return(self, writes):
+        """An ordinary CALL really overwrites any fully covered older token."""
+        if not self.control_words:
+            return
+        if len(writes) != 1:
+            return
+        pointers, _, width = writes[0]
+        if width != 64 or len(pointers) != 1:
+            return
+        pointer = next(iter(pointers))
+        base = self.address(pointer)
+        if base is None:
+            return
+        for old in self.control_words:
+            if (self.address(old.ptr) is not None
+                    and self.address(old.ptr)[0] == base[0]
+                    and self.address(old.ptr) != base
+                    and self.placements(old, pointer, 64, use_guards=False) != [None]):
+                raise AuditedScratchAccess("ordinary CALL partially overwrites audited control scratch")
+        self.control_words = {
+            word: values for word, values in self.control_words.items()
+            if self.address(word.ptr) != base}
+
+    def merge_calls(self, left, right):
+        if len(left) < 4 or len(right) < 4 or left[3] is None or right[3] is None:
+            return None
+        keys = left[3].keys() | right[3].keys()
+        if len(keys) > 1:
+            return None
+        result = {}
+        for key in keys:
+            values = left[3].get(key, frozenset()) | right[3].get(key, frozenset())
+            if len(values) >= self.MAX_VALUES or not self.spend(len(values) + 1):
+                return None
+            result[key] = values
+        return result
 
     def scaled_entry_value(self, value):
         """Name the exact scaled value, so its writes still need alias guards."""
@@ -192,13 +474,15 @@ class MemoryValues:
         return result
 
     def merge(self, left, right):
+        control = self.merge_control(left, right)
         keys = left[0].keys() | right[0].keys()
         if len(keys) > self.MAX_BYTES:
-            return {}, None, {}
+            return {}, None, {}, None, control
         if left == right:
             if not self.spend(len(keys) + len(left[2]) + 1):
-                return {}, None, {}
-            return dict(left[0]), left[1], self.bounded_words(left[2])
+                return {}, None, {}, None, control
+            calls = self.merge_calls(left, right)
+            return dict(left[0]), left[1], self.bounded_words(left[2]), calls, control
         # Exact cells use a dictionary lookup; only missing cells scan aliases.
         # Restore each side once instead of copying both maps for every byte.
         cost = (
@@ -207,7 +491,7 @@ class MemoryValues:
             + len(right[0].keys() - left[0].keys()) * len(left[0])
         )
         if not self.spend(cost):
-            return {}, None, {}
+            return {}, None, {}, None, control
         old = self.snapshot()
         self.restore(left)
         values = {key: self.byte_at(key) for key in keys}
@@ -223,11 +507,11 @@ class MemoryValues:
         for memory in sorted(left[2].keys() & right[2].keys(), key=str):
             a, b = left[2][memory], right[2][memory]
             if not self.spend(len(a) + len(b)):
-                return {}, None, {}
+                return {}, None, {}, None, control
             domain = a | b
             if len(domain) <= self.MAX_VALUES:
                 words[memory] = domain
-        return result, default, self.bounded_words(words)
+        return result, default, self.bounded_words(words), self.merge_calls(left, right), control
 
     def checked_coverage(self, address, window, size, window_bytes):
         if address is None or window is None:
@@ -238,6 +522,7 @@ class MemoryValues:
                 and self.guards.inside_checked_window(address, window, size, window_bytes))
 
     def clobber(self, *, checked_windows=(), window_bytes=0):
+        self.call_words = None
         # Only the negotiated mutex boundary compares these bytes before
         # returning to JIT. Membership requires exact or entry-guarded address coverage
         # for EVERY possible RSP, not just an entry disjointness
@@ -325,6 +610,7 @@ class MemoryValues:
         return tuple(ExprInt(value, memory.size) for value in sorted(projected))
 
     def load(self, memory):
+        self.check_control_access(memory)
         result = self.load_unchecked(memory)
         if self.load_guard is None or not any(is_wide(value) for value in result):
             return result
@@ -346,6 +632,9 @@ class MemoryValues:
         if memory.size % 8 or size > self.MAX_ACCESS_BYTES:
             return (wide_value(memory.size),)
         values = self.word_load(memory)
+        if values is not None:
+            return values
+        values = self.call_alias_load(memory)
         if values is not None:
             return values
         pointers = [self.offset(memory.ptr, i) for i in range(size)]
@@ -378,10 +667,59 @@ class MemoryValues:
                 results.add(expr_simp(ExprCompose(*pieces)))
         return tuple(sorted(results, key=str))
 
-    def placements(self, memory, pointer, width):
+    def call_alias_load(self, memory):
+        """Keep original-load provenance for one possible source CALL word.
+
+        Partial masks retain their known bases and high-prefix ranges through
+        copies/dereferences/constant offsets. Bit extraction, stores and control
+        uses cannot erase this provenance. A full overlap retains every numeric
+        return address. This remains screening, not arbitrary pointer validation.
+        No byte is omitted from lowering and no overlap is ruled out.
+        """
+        if (memory.size != 64 or not self.call_words or len(self.call_words) != 1
+                or self.default != UNKNOWN):
+            return None
+        word, values = next(iter(self.call_words.items()))
+        base = self.address(word.ptr)
+        if base is None or not values or len(values) >= self.MAX_VALUES:
+            return None
+        if len(values) + 1 > self.MAX_COMBINATIONS:
+            return (wide_value(memory.size),)
+        if not self.spend(len(self.cells) + len(values) + 1):
+            return (wide_value(memory.size),)
+        # Only the recorded CALL bytes may have introduced precision. Even a
+        # wide cell left by an exhausted merge prevents this refinement.
+        for pointer, domain in self.cells.items():
+            address = self.address(pointer)
+            if (domain is None or address is None or address[0] != base[0]
+                    or ((address[1] - base[1]) & ((1 << 64) - 1)) >= 8):
+                return None
+        # This refinement preserves aliases; it must not create an entry
+        # predicate merely because both addresses have entry identities.
+        starts = self.placements(memory, word.ptr, 64, use_guards=False)
+        if starts == [None]:
+            return None
+        patterns = set()
+        for start in starts:
+            if start is None or start == 0:
+                continue
+            low, high = max(0, start), min(8, start + 8)
+            mask = ((1 << ((high - low) * 8)) - 1) << (low * 8)
+            for value in values:
+                bits = ((value >> (max(0, -start) * 8)) << (low * 8)) & mask
+                patterns.add((mask, bits, 0))
+        if (len(patterns) > MAX_CALL_PATTERNS
+                or not self.spend(len(starts) * len(values) + len(patterns))):
+            return (wide_value(memory.size, "call_patterns"),)
+        result = [call_alias_value(64, patterns=patterns)]
+        if 0 in starts:
+            result.extend(ExprInt(value, 64) for value in sorted(values))
+        return tuple(result)
+
+    def placements(self, memory, pointer, width, *, use_guards=True):
         address, base = self.address(pointer), self.address(memory.ptr)
         size, written = memory.size // 8, width // 8
-        if self.guards is not None and self.guards.separate(
+        if use_guards and self.guards is not None and self.guards.separate(
             address, base, written, size
         ):
             return [None]
@@ -450,7 +788,7 @@ class MemoryValues:
                     words.pop(memory, None)
         return self.bounded_words(words)
 
-    def store(self, writes, *, rmw=None):
+    def store(self, writes, *, rmw=None, call_return=False, audited_call=False):
         """Apply one parallel IR assignment, resolving all writes in the old state.
 
         Each write is (possible pointers, possible values, bit width). Only a
@@ -462,6 +800,18 @@ class MemoryValues:
         default = self.default
         if not writes:
             return
+        if audited_call:
+            if not call_return:
+                raise AuditedScratchAccess("audited C effect lacks an original CALL store")
+            self.store_control_return(writes)
+            return
+        if call_return:
+            self.replace_control_return(writes)
+        else:
+            for pointers, _, width in writes:
+                for pointer in pointers:
+                    self.check_control_access(ExprMem(pointer, width))
+        self.record_call_write(writes, call_return)
         old_words, self.words = self.words, {}
         candidates = sum(
             len(pointers) * ((width + 7) // 8) for pointers, _, width in writes
@@ -471,6 +821,7 @@ class MemoryValues:
         )
         if not self.spend(candidates + value_bytes):
             self.cells, self.default = {}, None
+            self.call_words = None
             return
         for pointers, values, width in writes:
             size = (width + 7) // 8
@@ -481,6 +832,7 @@ class MemoryValues:
                 or len(values) > self.MAX_VALUES
             ):
                 self.cells, self.default = {}, None
+                self.call_words = None
                 return
             byte_values = []
             for i in range(size):
@@ -488,7 +840,7 @@ class MemoryValues:
                 for value in values:
                     part = (
                         None
-                        if is_wide(value)
+                        if is_wide(value) or has_call_alias(value)
                         else frozenset(
                             {
                                 expr_simp(value[i * 8 : (i + 1) * 8])
@@ -518,6 +870,7 @@ class MemoryValues:
         ) * len(self.cells)
         if len(keys) > self.MAX_BYTES or not self.spend(cost):
             self.cells, self.default = {}, None
+            self.call_words = None
             return
         updated = {}
         for key in keys:
@@ -561,6 +914,26 @@ class MemoryValues:
         self.cells, self.default = updated, default
         self.words = self.written_words(old_words, writes, rmw)
 
+    def record_call_write(self, writes, call_return):
+        if self.call_words is None:
+            return
+        if not call_return or len(writes) != 1:
+            self.call_words = None
+            return
+        pointers, values, width = writes[0]
+        if (width != 64 or len(pointers) != 1 or not values
+                or any(not isinstance(value, ExprInt) for value in values)):
+            self.call_words = None
+            return
+        pointer = next(iter(pointers))
+        word = ExprMem(pointer, 64)
+        if (self.address(pointer) is None
+                or (self.call_words and word not in self.call_words)):
+            self.call_words = None
+            return
+        domain = self.call_words.get(word, frozenset()) | frozenset(map(int, values))
+        self.call_words = {word: domain} if len(domain) < self.MAX_VALUES else None
+
 
 class MemoryChoice(Exception):
     def __init__(self, memory, values):
@@ -585,6 +958,12 @@ class MemoryEngine(SymbolicExecutionEngine):
                 memory, wide_value(memory.size, len(self.widened))
             )
             values = tuple(wide if is_wide(value) else value for value in values)
+        if any(has_call_alias(value) for value in values):
+            # Separate reads must not cancel as the same arbitrary value.
+            opaque = self.widened.setdefault(
+                ("call_alias", memory), merge_call_aliases(
+                    values, memory.size, len(self.widened)))
+            values = tuple(opaque if has_call_alias(value) else value for value in values)
         if len(values) == 1:
             return values[0]
         raise MemoryChoice(memory, values)

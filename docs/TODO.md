@@ -180,14 +180,25 @@ and these limited pointer-load checks do not close the
 [dynamic-address gap](design/admission.md#721-dynamic-address-gap). Functional
 continuation evidence and workload performance acceptance remain separate.
 
-The bounded [`strcmp`](design/admission.md#bounded-original-strcmp-service) and
-[`strscpy_pad`](design/admission.md#bounded-original-strscpy_pad-writing-service)
+The original [`strcmp`](design/admission.md#original-strcmp-service) and
+[`strscpy_pad`](design/admission.md#original-strscpy_pad-writing-service)
 services require stable, resident ordinary source strings and one outer spin
 owner. They do not infer object lifetime or authorize general copying. `strcmp`
 has a private 128-call allowance; `strscpy_pad`, scalar services and lock controls
-share the existing 16-call allowance. These implementation changes do not by
-themselves establish completed delegation or performance for the exact taskname
-and xattr workloads; that acceptance remains tied to fresh workload evidence.
+share the existing 16-call allowance. The current revision removes helper code
+checks, argument scans and runtime destination checks, using the original C
+caller's guarantees. For selected reviewed C callers, analysis records temporary
+CALL return-address storage separately from ordinary object data. The source
+CALL write and its runtime return handling remain unchanged; the caller promises
+that ordinary data accesses do not inspect or overwrite this storage. Known
+violations are refused, and other calls and ordinary writes retain conservative
+alias analysis. A proposed extension would apply the same distinction to decoded
+`memcpy` calls only within a selected body that actually uses a version 10 string
+service; all copy reads and writes would still be analyzed. That extension awaits
+candidate 4 implementation and validation. See the
+[selected-caller contract](design/admission.md#original-call-word-aliases).
+Fresh VM validation and standard-grid performance comparison remain pending;
+historical checked-helper results do not validate these changed inputs.
 
 ## P1: Evidence and services
 

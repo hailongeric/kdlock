@@ -23,7 +23,7 @@ files or benchmark archives.
 | [kd_exec.c](../kernel_module/kd_exec.c), [exe.c](../kernel_module/exe.c) → [execution](../kernel_module/execution) | Frame binding, lock ledger, remote/native ACKs, registry and JIT dispatch |
 | [kd_hotlock.c](../kernel_module/kd_hotlock.c) | Per-type exact-address hot tables and approximate admission statistics |
 | [execution/images.inc](../kernel_module/execution/images.inc), [kd_image.h](../include/kd_image.h) | Immutable mutex uploads and ABI1 guard/service images, descriptor binding, guard-site validation and generation-scoped misses |
-| [execution/hostcalls.inc](../kernel_module/execution/hostcalls.inc), [execution/wrapper_entry.inc](../kernel_module/execution/wrapper_entry.inc) | Typed scalar services and checked original `strcmp`/`strscpy_pad`, including argument preflight and exact CALL continuation |
+| [execution/hostcalls.inc](../kernel_module/execution/hostcalls.inc), [execution/wrapper_entry.inc](../kernel_module/execution/wrapper_entry.inc) | Typed scalar services and original `strcmp`/`strscpy_pad` calls, preserving ownership and exact CALL return state |
 | [kd_source.c](../kernel_module/kd_source.c), [sys.c](../kernel_module/sys.c) | Source pins, device session, capabilities, publication and retirement |
 | [Shared headers](../include/README.md) | Direct APIs, ABI, packet/frame types and wrapper assembly |
 
@@ -44,7 +44,7 @@ admission before ABI3 execution and preserve it across native continuation.
 | [translation_scope.py](../disassem/translation_scope.py), [translation_image.py](../disassem/translation_image.py) | Selected decode scope, dispatch table and generated body |
 | [constant_paths.py](../disassem/constant_paths.py) | Proves fixed branch outcomes before pruning unreachable source paths |
 | [address_guards.py](../disassem/address_guards.py), [guard_flags.py](../disassem/guard_flags.py) | Restricted spin pointer-load checks and proof that incoming arithmetic flags are unused by the original native remainder |
-| [strcmp_service.py](../disassem/strcmp_service.py), [strscpy_service.py](../disassem/strscpy_service.py) | Exact helper-code and argument checks; readonly comparison and bounded destination-write descriptions remain separate |
+| [strcmp_service.py](../disassem/strcmp_service.py), [strscpy_service.py](../disassem/strscpy_service.py) | Original C API memory effects: comparison preserves caller data; padding writes all 64 destination bytes. No helper-code inspection or runtime argument prechecks |
 | `context_*.py` in [disassem](../disassem) | Admission, bounded value/memory flow, register facts and guards |
 | [komb.c](../tclock_backend/komb.c) → [TCLock spin](../tclock_backend/spin) | State, queue, combiner, waiter, lifecycle, trampoline, lock and unlock |
 | [komb_mutex.c](../tclock_backend/komb_mutex.c) → [TCLock mutex](../tclock_backend/mutex) | Parking, queue, combiner, slowpath, trampoline and unlock |
@@ -62,7 +62,7 @@ admission before ABI3 execution and preserve it across native continuation.
 | [tests/unit](../tests/unit) | Guest-only basic and selected production-code fixtures |
 | [tests/kernel](../tests/kernel) | Provider observers and kernel selftests |
 | [tests/kernel/spin/address_guard](../tests/kernel/spin/address_guard), [workload_modules/jit_address_guard](../workload_modules/jit_address_guard) | Checked spin exit probe: completed JIT bodies, exact native continuation, retained effects, permanent delegation refusal and drain |
-| [tests/kernel/spin/string_service](../tests/kernel/spin/string_service), [workload_modules/jit_string_service](../workload_modules/jit_string_service) | Original `strcmp` service probe: completed comparisons, argument refusal before invocation, native continuation, permanent delegation refusal and drain |
+| [tests/kernel/spin/string_service](../tests/kernel/spin/string_service), [workload_modules/jit_string_service](../workload_modules/jit_string_service) | Original `strcmp` service probe: short and 300-character comparisons, returned JIT bodies, unchanged published image, exact results and drain |
 | [tests/kernel/rwlock](../tests/kernel/rwlock/README.md) | Native/KD correctness sessions: reader overlap, writer exclusion, exact updates, JIT and drain |
 | [tests/kernel/rwsem](../tests/kernel/rwsem/README.md) | Sleeping/cancellation/downgrade and outer admission probe; checks ordering before publication without claiming JIT execution |
 | [tests/protocols](../tests/protocols) | Trace validation, topology and protocol oracles |

@@ -6,7 +6,7 @@ from unittest.mock import patch
 from test_jit_diagnostics import decode, render
 from context_policy import FlowConstants
 from context_guards import EntryGuards
-from context_memory import MemoryValues
+from context_memory import MemoryValues, has_call_alias
 import hostcall
 from miasm.expression.expression import ExprId, ExprInt, ExprMem
 from test_jit_body_witness import run_image
@@ -385,7 +385,13 @@ class ClobberEntryTests(unittest.TestCase):
             if readonly:
                 self.assertEqual(tracker.origins[ExprId('RBP', 64)], before)
                 tracker.update(decode('488b45f8'))
-                self.assertTrue(str(tracker.origins[ExprId('RAX', 64)]).startswith('kd_entry_SPILL_'))
+                # The original CALL can overlap this BP-relative slot. Keep
+                # full/partial return-word alternatives rather than requiring
+                # a new entry predicate to make it a pristine spill again.
+                values = tracker.resolve_many(ExprId('RAX', 64))
+                self.assertIn(ExprInt(call.offset + call.l, 64), values)
+                self.assertTrue(any(has_call_alias(value) for value in values))
+                self.assertEqual(tracker.memory.guards.conditions(), [])
 
     def test_unknown_writes_and_callees_cannot_reacquire_initial_spills(self):
         for opaque_call in (False, True):

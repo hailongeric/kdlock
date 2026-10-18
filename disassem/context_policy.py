@@ -151,6 +151,8 @@ def constant_blocks(
     clobber_targets=(),
     readonly_targets=(),
     writer_targets=None,
+    audited_c_targets=(),
+    audited_copy_targets=(),
     mutex_targets=(),
     mutex_stack_bytes=0,
     native_exits=(),
@@ -181,6 +183,8 @@ def constant_blocks(
     control_calls = set()
     clobber_calls = set()
     readonly_calls = set()
+    audited_c_calls = set()
+    audited_copy_calls = set()
     writer_calls = {}
     writer_targets = writer_targets or {}
     mutex_calls = set()
@@ -218,6 +222,15 @@ def constant_blocks(
                 clobber_calls.add(id(line))
             if callee in readonly_targets:
                 readonly_calls.add(id(line))
+            if callee in audited_c_targets:
+                if callee not in readonly_targets and callee not in writer_targets:
+                    raise ContextFlowLimit("audited C target lacks a typed memory effect", line.offset)
+                audited_c_calls.add(id(line))
+            if callee in audited_copy_targets:
+                if callee not in blocks or callee in control_targets:
+                    raise ContextFlowLimit("audited C copy requires its decoded body", line.offset)
+                audited_c_calls.add(id(line))
+                audited_copy_calls.add(id(line))
             if callee in writer_targets:
                 writer_calls[id(line)] = writer_targets[callee]
             if callee in readonly_targets or callee in writer_targets or ((guards is not None or callee in clobber_targets) and callee in control_targets):
@@ -293,6 +306,8 @@ def constant_blocks(
     tracker.control_calls = control_calls
     tracker.clobber_calls = clobber_calls
     tracker.readonly_calls = readonly_calls
+    tracker.audited_c_calls = audited_c_calls
+    tracker.audited_copy_calls = audited_copy_calls
     tracker.writer_calls = writer_calls
     tracker.mutex_calls = mutex_calls
     initial = tracker.snapshot()
@@ -450,6 +465,10 @@ def instruction_rejection(
             else 1
         )
         for expr in expressions:
+            if (line.name.upper() in {"CALL", "JMP"}
+                    and not isinstance(arg, ExprMem)
+                    and context_memory.has_call_alias(expr)):
+                return "partial CALL-word alias cannot select indirect control", ""
             address = static_address(expr, db, offset + line.l)
             # Include address-taking and tail calls: neither can hide a known
             # foreign backend behind an ordinary CALL-miss continuation.
@@ -467,6 +486,16 @@ def instruction_rejection(
             symbol = context_reference(expr, db, offset + line.l, symbols, size)
             if symbol:
                 return "context-sensitive symbol requires native execution", symbol
+        if constants and line.name.upper() in {"CALL", "JMP"} and isinstance(arg, ExprMem):
+            # The pointer to an indirect target and the loaded target are
+            # different uses. An ordinary dereference does not authorize the
+            # partial CALL-word value it reads to select a control-flow edge.
+            try:
+                targets = constants.resolve_many(arg, allow_wide=True)
+            except ContextFlowLimit as error:
+                return str(error), ""
+            if any(context_memory.has_call_alias(target) for target in targets):
+                return "partial CALL-word alias cannot select indirect control", ""
     return None
 
 

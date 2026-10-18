@@ -31,26 +31,26 @@ static void check_bench_completions(void)
 		CHECK(kd_bench_bodies == (u64)!!witnesses && kd_bench_completions == (u64)!!witnesses);
 	}
 
-	/* Refused argument, quota, unknown CALL, instruction error, invalid helper
-	 * identity and wrong unlock each retain the prefix but never count complete. */
+	/* Invalid CALL word, quota, unknown CALL, instruction error, refused service
+	 * flags and wrong unlock retain the prefix but never count complete. */
 	for (unsigned int failure = 0; failure < 6; failure++) {
 		unsigned int count = failure == 1 ? KD_STRCMP_MAX_CALLS + 1 : 1;
 		string_packet();
-		if (failure == 0) string_left[sizeof(string_left) - 1] = 'x';
+		if (failure == 0) stack_error = 1;
 		if (failure == 2) known_result = 0;
-		if (failure == 4) string_text[0] ^= 1;
+		if (failure == 4) kd_hostcalls[3].flags = 0;
 		for (unsigned int i = 0; i < count; i++)
 			steps[i] = (struct step){ KD_EXE_HOSTCALL, STRING_IP, 1, -8 };
 		steps[count] = (struct step){ failure == 3 ? KD_EXE_INST_LIMIT : KD_EXE_CALL_MISS,
 			failure == 2 || failure == 5 ? 0x9870 : 0x9000, 1, -8 };
 		if (failure == 5) known_result = -EINVAL;
-		CHECK(run() == (failure < 3 ? KD_EXE_RUN_NATIVE : KD_EXE_RUN_ERROR));
+		CHECK(run() == (failure == 1 || failure == 2 ? KD_EXE_RUN_NATIVE : KD_EXE_RUN_ERROR));
 		CHECK(kd_bench_bodies == 1 && kd_bench_completions == 0);
 	}
 	copy_packet();
-	active.regs.dx = KD_STRSCPY_BYTES - 1;
+	guard_image.requirements = 0;
 	steps[0] = (struct step){ KD_EXE_HOSTCALL, PAD_IP, 1, -8 };
-	CHECK(run() == KD_EXE_RUN_NATIVE && !pad_calls);
+	CHECK(run() == KD_EXE_RUN_ERROR && !pad_calls);
 	CHECK(kd_bench_bodies == 1 && !kd_bench_completions);
 	guard_packet(&pending);
 	CHECK(kd_exe_spin_batch_resume(entry, &pending) == KD_EXE_RUN_NATIVE);

@@ -1,13 +1,13 @@
-"""Narrow native strcmp contract for audited stable ordinary kernel strings.
+"""Original strcmp API semantics, with ordinary caller-context admission.
 
-The original helper executes only after bounded runtime NUL checks. This
-module recognizes that exact helper, proves its incoming flag independence,
-and screens its pointer arguments through the ordinary context-address policy.
-Neither the bound nor the held lock proves an arbitrary object's lifetime.
+The resolved kernel symbol supplies the original function. Its caller guarantees
+valid, terminated, stable ordinary kernel strings, as for a native call. No
+helper text, string data or helper-specific CALL encoding is inspected here.
+The service changes no caller memory and supplies no source-flags proof.
+The separately audited selected caller and its helpers also do not observe,
+retain pointers into, or mutate the temporary service CALL/control scratch
+below pre-CALL SP. Valid strings alone do not imply that extra caller contract.
 """
-from pathlib import Path
-import re
-import struct
 
 from miasm.expression.expression import ExprId
 
@@ -16,65 +16,13 @@ from context_registers import context_reference, static_address
 
 REQUIREMENT = 4
 SPEC = ("STRCMP", 4, "strcmp")
-_header = (Path(__file__).resolve().parent.parent / "include/kd_strcmp_contract.h").read_text()
-
-
-def _number(name):
-    match = re.search(r"^#define " + re.escape(name) + r" ([0-9]+)U$", _header, re.M)
-    if match is None:
-        raise ValueError("missing strcmp contract constant " + name)
-    return int(match.group(1))
-
-
-MAX_BYTES = _number("KD_STRCMP_MAX_BYTES")
-CODE_BYTES = _number("KD_STRCMP_CODE_BYTES")
-TAIL_OFFSETS = (_number("KD_STRCMP_TAIL1_DISP"), _number("KD_STRCMP_TAIL2_DISP"))
-_template = re.search(r"#define KD_STRCMP_CODE_TEMPLATE \{(.*?)\}", _header, re.S)
-if _template is None:
-    raise ValueError("missing strcmp code template")
-TEMPLATE = bytes(int(value, 16) for value in re.findall(r"0x([0-9a-fA-F]{2})", _template.group(1)))
-_returns = re.search(r"#define KD_STRCMP_RETURN_TEMPLATE \{(.*?)\}", _header, re.S)
-if _returns is None:
-    raise ValueError("missing strcmp return template")
-RETURN_TEMPLATE = bytes(int(value, 16) for value in re.findall(r"0x([0-9a-fA-F]{2})", _returns.group(1)))
-if len(TEMPLATE) != CODE_BYTES or MAX_BYTES != 256:
-    raise ValueError("inconsistent strcmp contract")
-
-
-def matches_text(raw, address, return_thunk):
-    if not address or raw is None or len(raw) != CODE_BYTES:
-        return False
-    normalized = bytearray(raw)
-    for offset in TAIL_OFFSETS:
-        if raw[offset - 1:offset + 4] == RETURN_TEMPLATE:
-            normalized[offset - 1] = 0xe9
-        else:
-            target = (address + offset + 4 + struct.unpack_from("<i", raw, offset)[0]) & ((1 << 64) - 1)
-            if raw[offset - 1] != 0xe9 or not return_thunk or target != return_thunk:
-                return False
-        normalized[offset:offset + 4] = b"\0" * 4
-    return normalized == TEMPLATE
-
-
-def verified(address, return_thunk, reader):
-    raw = reader(address, CODE_BYTES)
-    if not matches_text(raw, address, return_thunk):
-        return False
-    # Prove the actual original instructions, not a claim based on its C ABI.
-    # Missing return-thunk blocks remain absent: the proof must kill every
-    # incoming flag before reaching any uncovered successor. Here the first
-    # byte CMP does so, before the first conditional branch.
-    from translation_scope import decode_regions
-    from guard_flags import prove_flags_dead
-
-    blocks, databases = decode_regions([(raw, address, [address])], 0, set())
-    blocks = {start: block for start, block in blocks.items() if block.lines}
-    databases = {block: databases[block] for block in blocks.values()}
-    return prove_flags_dead(blocks, databases, address) is None
+# Retain the existing static context-screening extent. This is not a string
+# length limit or a validity check; the native caller owns the complete string.
+MAX_BYTES = 256
 
 
 def targets(resolved):
-    """Only the resolver's capability/text/proof-checked service is eligible."""
+    """Only the resolver's negotiated original API symbol supplies this effect."""
     return {address for address, spec in resolved.items() if tuple(spec) == SPEC}
 
 
@@ -85,13 +33,11 @@ def argument_rejection(line, db, constants, checked_targets, symbols,
     target = static_address(line.args[0], db, line.offset + line.l)
     if target not in checked_targets:
         return None
-    raw = bytes(line.b)
-    if len(raw) != 5 or raw[0] != 0xe8:
-        return "typed strcmp requires an exact direct source CALL", ""
     for name in ("RDI", "RSI"):
         # Unknown ordinary pointers retain ordinary policy; widened or known
-        # context addresses retain refusal. The runtime bounds the loop's
-        # actual accesses within the screened span before the native invocation.
+        # context addresses retain refusal. Audited callers additionally supply
+        # ordinary-memory validity for the complete terminated strings, just
+        # as for native strcmp. No source-function inspection supplies a proof.
         for expr in constants.resolve_many(ExprId(name, 64)):
             symbol = context_reference(expr, db, line.offset + line.l, symbols, MAX_BYTES)
             if symbol:

@@ -81,6 +81,12 @@ static __attribute__((noipa)) int rb_body(struct simple_xattrs *xattrs,
 
 	RB_LOCK(&xattrs->lock);
 	list_for_each_entry(xattr, &xattrs->head, list) {
+		/* Audited original C API: the syscall owns its copied, terminated
+		 * search name; this physical lock keeps each allocated list name
+		 * valid and unchanged. Delegation uses those same lifetime/read
+		 * guarantees and the original pointers, without rescanning names.
+		 * These callers access allocated names, list nodes and value buffers;
+		 * none observes temporary CALL return words or helper stack scratch. */
 		if (strcmp(name, xattr->name))
 			continue;
 		ret = xattr->size;

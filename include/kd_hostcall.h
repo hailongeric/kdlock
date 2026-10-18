@@ -7,9 +7,11 @@
 #define KD_HOSTCALL_F_NO_TASK_CONTEXT (1U << 1)
 #define KD_HOSTCALL_F_RETRY_SAFE (1U << 2)
 
-/* A checked preflight refused before invoking the helper or changing the
- * packet. Only this result permits the original unexecuted CALL to run natively. */
-#define KD_HOSTCALL_NOT_EXECUTED 1
+/* Native C API effects: comparison quota and the writer's modeled extent.
+ * The original callers supply valid arguments and lifetime. KD does not scan
+ * strings or verify helper instructions; pad retains native truncation/padding. */
+#define KD_STRCMP_MAX_CALLS 128U
+#define KD_STRSCPY_BYTES 64U
 
 enum kd_hostcall_id {
 	KD_HOSTCALL_NONE = 0,

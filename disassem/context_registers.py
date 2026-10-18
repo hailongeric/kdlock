@@ -7,6 +7,7 @@ cross-block transfer domain remains in context_values.FlowConstants.
 from copy import deepcopy
 
 import diagnostics
+import context_memory
 from context_symbols import ContextSymbols
 from miasm.analysis.machine import Machine
 from miasm.arch.x86.regs import regs64_expr
@@ -149,6 +150,28 @@ def context_reference(expr, db, next_rip, symbols, size=1):
         and expr_op(expr) == "segm"
         and str(expr_args(expr)[0]).upper() == "GS"
     ):
+        return None
+    if context_memory.ordinary_call_pointer(expr):
+        # Partial CALL aliases keep derivable constant bases and contiguous
+        # high-prefix ranges. Unknown high bits are ordinary dynamic pointer
+        # inputs, not evidence that every address in their interval hull is
+        # accessed. Never recurse into tagged mask/offset metadata as addresses.
+        for start, extent in context_memory.call_alias_ranges(expr, size):
+            if isinstance(symbols, ContextSymbols):
+                symbol = symbols.resolve(start, extent)
+            else:
+                symbol = next((name for address, name in symbols.items()
+                               if start <= address < start + extent), None)
+            if symbol:
+                return symbol
+        # Preserve the ordinary known-base rule for a literal offset written
+        # outside the tag, even when adding it produces a different base.
+        if isinstance(expr, ExprOp) and expr.op == "+":
+            for arg in expr.args:
+                if isinstance(arg, ExprInt):
+                    symbol = context_reference(arg, db, next_rip, symbols, size)
+                    if symbol:
+                        return symbol
         return None
     address = static_address(expr, db, next_rip)
     if isinstance(symbols, ContextSymbols):

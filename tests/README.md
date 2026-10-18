@@ -54,14 +54,14 @@ check, missing dependency, crash or compile failure must not be reported as a pa
 | Continuation/frame/queue |`spin/test_spin_storage.py`, `test_spin_batch.py`, `test_spin_outer_progress.py`, `execution/test_exec_capacity.py` |
 | Wrapper, typed service and batch |`execution/test_jit_entry_scope.py`, `codegen/test_clobber_abi.py`, `test_jit_body_witness.py` |
 | Checked spin pointer loads | `admission/test_address_guards.py`, `admission/test_guard_flags.py`, `execution/test_jit_entry_scope.py`, `execution/test_mutex_images.py`; [live check](kernel/spin/address_guard/README.md) |
-| Original bounded string helpers | `admission/test_strcmp_service.py`, `admission/test_strscpy_service.py`, `execution/test_jit_entry_scope.py`, `execution/test_mutex_images.py`; [live strcmp check](kernel/spin/string_service/README.md) |
+| Original string helpers | `admission/test_strcmp_service.py`, `admission/test_strscpy_service.py`, `admission/test_text_regions.py`, `codegen/test_hostcall_codegen.py`, `execution/test_jit_entry_scope.py`; [live strcmp check](kernel/spin/string_service/README.md) |
 | Completed-body observation overlay | `execution/test_bench_completion.py`; applies the real benchmark patch and checks dispatcher/batch counting |
 | Conditional instruction exit | `admission/test_native_escape.py`, `codegen/test_native_escape_codegen.py`, `execution/test_jit_entry_scope.py`, `execution/test_native_escape_restore.py`, `execution/test_mutex_images.py`; [live check](kernel/jit_escape/README.md) |
 | Mutex resources/terminal path |`mutex/test_mutex_resources.py`, `test_mutex_task_cache.py`, `test_mutex_terminal.py`, `test_mutex_outer_progress.py` |
 | Provider initialization/publication | `infrastructure/test_provider_lifecycle.py` |
 | Task/source/registry lifetime |`infrastructure/test_source_lifetime.py`, `execution/test_exe_registry.py` |
 | Native ACK and remote continuation |`execution/test_remote_outer.py`, `test_remote_depth_protocol.py`, `test_remote_outer_protocol.py` |
-| Context, aliases and guards |`admission/test_context_policy.py`, `test_context_memory.py`, `test_context_guards.py` |
+| Context, aliases and guards |`admission/test_context_policy.py`, `test_context_memory.py`, `test_context_guards.py`, `test_call_alias.py`, `test_audited_c_memory.py` |
 | Heat/ratio |`infrastructure/test_hotlock_sampling.py` |
 | IRQ/BH variants |`spin/test_spin_irq.py`, `test_spin_cold.py`; [kernel consumer](kernel/spin/irq_api/README.md) |
 | TCLock assembly/parking |`spin/test_tclock_context.py`, `mutex/test_tclock_mutex_context.py` |
@@ -91,10 +91,23 @@ kernel ownership or concurrent progress.
 
 The checked-pointer fixtures verify the generated address comparison, the proof
 that incoming arithmetic flags are overwritten before use, exact exit metadata,
-and the runtime's ownership/image checks. String-service fixtures check the
-captured helper instructions, argument bounds, source CALL and return validation,
-and separate limits of 128 `strcmp` calls plus 16 other services/control
-continuations. That second allowance includes the writing helper `strscpy_pad`.
+and the runtime's ownership/image checks. The CALL-alias fixture executes actual
+generated return-word stores and pointer loads with full and partial overlap;
+its negative cases preserve context, control and analysis-budget refusals.
+The selected-C-caller fixture tests a separate assumption: ordinary object
+accesses do not observe temporary CALL return-address bytes. Its positive cases
+keep that control storage separate without changing source effects; its negative
+cases refuse known full or partial observers, lost control identities and
+exhausted analysis budgets. Ordinary calls and data writes remain conservative.
+The candidate 3 coordinator fixture failed because required clobber-entry
+symbols were missing from its setup; the
+[development record](../bench/results/10.176.26.71/bench/taskname-xattr-native-api-20261019/DEVELOPMENT.md#candidate-3)
+retains that failed attempt. Test coverage descriptions are not pass receipts.
+String-service fixtures check capability negotiation, caller memory-effect
+summaries, pending-return consumption, and separate limits of 128 `strcmp` calls
+plus 16 other services/control continuations. That second allowance includes the
+writing helper `strscpy_pad`. Helper text and argument data are not inspected;
+validity and lifetime follow the original C caller's contract.
 Native helpers are substituted in the runtime fixtures; those checks alone do
 not prove that the actual kernel helper completed.
 
@@ -156,29 +169,31 @@ supported spin pointer load. Its cold address is disjoint from a stack pointer
 slot; its hot address safely aliases that slot. The failed check must resume the
 original load on the waiter, preserve earlier effects and disable future
 delegation of that entry. The [original-string-service probe](kernel/spin/string_service/README.md)
-uses short stable strings for delegated `strcmp`, then valid strings longer than
-the service's 256-byte check bound. That refusal must leave the helper unexecuted
-and continue its pending CALL on the original waiter. Both probes require exact
-operation counts, task identity, lock exclusion and final drain; their cold
-phases require positive matching entry and completed-body counts. Neither is a
+uses short stable strings for delegated `strcmp`, then valid 300-character
+strings exceeding the former 256-byte precheck bound. The long inputs must now
+complete delegated bodies from the same image, with the original comparison
+result and no permanent refusal. Both probes require exact operation counts,
+task identity, lock exclusion and final drain; their delegated phases require
+positive matching entry and completed-body counts. Neither is a
 performance benchmark or a general pointer-safety test. The string probe does
 not exercise the separate `strscpy_pad` writing service.
 
-The current provider advertises capability version 9. Each runner also checks
+The current provider advertises capability version 10. Each runner also checks
 its required feature in the provider's feature-bit mask; a version number alone
 is insufficient. The supported compatibility ranges are:
 
 | Boundary or service | Accepted capability versions | Required feature bit |
 | --- | --- | --- |
-| Mutex instruction marker | 6, 7, 8, 9 | 5: native instruction exit |
-| Checked spin pointer load | 7, 8, 9 | 6: address guard |
-| Original bounded `strcmp` | 8, 9 | 7: string services |
-| Original `strscpy_pad(..., 64)` | 9 | 8: string writing service |
+| Mutex instruction marker | 6, 7, 8, 9, 10 | 5: native instruction exit |
+| Checked spin pointer load | 7, 8, 9, 10 | 6: address guard |
+| Original `strcmp` | 10 | 7: string services and 9: original API contract |
+| Original `strscpy_pad(..., 64)` | 10 | 8: string writing service and 9: original API contract |
 
 The writing-service capability is separate from the read-only comparison
 capability. Its focused unit checks and exact taskname workload are separate
 from the `strcmp` continuation probe. See the
-[admission guide](../docs/design/admission.md#bounded-original-strcmp-service)
+[comparison contract](../docs/design/admission.md#original-strcmp-service) and
+[writing contract](../docs/design/admission.md#original-strscpy_pad-writing-service)
 for the single-lock, source-lifetime and stable-memory limits. Publication and
 unit success do not imply live workload or performance acceptance.
 

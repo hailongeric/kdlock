@@ -28,20 +28,31 @@ All seven implemented adapters already call KD APIs. The catalog's
 [API and delegation table](../../docs/BENCHMARK_WORKLOADS.md#kd-api-use-and-delegation)
 distinguishes eligible bodies, local readers and unresolved translation refusals.
 
-The current xattr implementation passed focused functional validation. It keeps the
-original list traversal, `strcmp()` comparisons and real `memcpy()` value copy.
-Narrow runtime pointer checks and a checked call to the exact original `strcmp`
-helper replace the reproduced admission blockers; `memcpy` remains a learned
-helper, without a new writing-service summary. Candidate 11 passed all eight
+Xattr keeps the original list traversal, `strcmp()` calls and real `memcpy()`
+value copy. Version 10 invokes the original `strcmp` through a service that
+models its read-only effect. It does not inspect helper code or scan the strings;
+the syscall and selected source lock provide the same valid, stable storage
+required by the native API. The reviewed caller also promises that ordinary
+data accesses do not inspect or overwrite temporary CALL return-address storage.
+Analysis records that control storage separately from ordinary object data and
+refuses explicit known observers, while preserving original CALL writes and
+traversal loads. This promise concerns the selected caller, not arbitrary kernel
+code. `memcpy` remains a learned helper without a new writing-service summary.
+A proposed extension would classify its CALL return word in the same way only
+when the selected body actually uses a version 10 string service; it would still
+analyze every copy read and write. Candidate 4 implementation and validation are
+pending. Ordinary address/context admission and common owner/frame/return checks
+remain active. See the
+[API contract](../../docs/design/admission.md#original-strcmp-service).
+
+Version 10 functional and performance validation is pending. In the preceding
+implementation frozen in `c79d84f`, candidate 11 passed all eight
 front/tail/miss/size combinations at n16/n128, v64 and 16 workers. Each recorded
 matching generated entries and completed bodies, correct results and clean
-teardown; the tail checks completed 133,378 bodies at n16 and 18,985 at n128.
-The full Native/TCLock/KD performance matrix remains pending. Keep the
-[development evidence](../results/10.176.26.71/bench/taskname-xattr-20261018/DEVELOPMENT.md)
-separate from accepted comparison results. The
-[helper contract](../../docs/design/admission.md#bounded-original-strcmp-service)
-requires stable, allocated ordinary kernel strings under the selected physical
-lock; it does not make arbitrary pointers or whole-kernel replacement safe.
+teardown; tail checks completed 133,378 bodies at n16 and 18,985 at n128. Keep
+that [development evidence](../results/10.176.26.71/bench/taskname-xattr-20261018/DEVELOPMENT.md)
+and its performance matrix separate from the revised implementation. These
+scoped adapters do not establish whole-kernel replacement.
 
 ## Candidate selection
 
@@ -207,7 +218,7 @@ monitor snapshot of the actual CPU topology. Do not rebuild the kernel. The
 standard guest has 64 vCPUs; collector 63 is excluded from worker cohorts.
 
 ```sh
-export PATH=/root/kdlock-evidence/clobber-20260918/venv/bin:$PATH
+export PATH=/root/kdlock-translation-venv-20261019/bin:$PATH
 export LC_ALL=C
 export KDLOCK_RECOVERY_CONFIRMED=1
 export KDLOCK_SNAPSHOT_TAG=YOUR_CONFIRMED_SNAPSHOT
