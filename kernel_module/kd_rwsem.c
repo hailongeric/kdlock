@@ -7,6 +7,27 @@
 
 #define KD_RWSEM_LOCAL_WRITER (-1L)
 
+/* Short holders often finish before a task can enqueue and be woken. Poll only
+ * before publication, with preemption enabled and a finite budget; sleeping or
+ * colocated holders still get the ordinary wait_event scheduling fallback.
+ * A successful condition may acquire a reservation, so never evaluate it again
+ * after success. The wait macro retains its enqueue/recheck ordering. */
+#define kd_rwsem_wait(sem, condition) do { \
+	unsigned int kd_rwsem_budget = 128; \
+	bool kd_rwsem_ready = false; \
+	do { \
+		if (condition) { \
+			kd_rwsem_ready = true; \
+			break; \
+		} \
+		if (need_resched()) \
+			break; \
+		cpu_relax(); \
+	} while (--kd_rwsem_budget); \
+	if (!kd_rwsem_ready) \
+		wait_event((sem)->drain, condition); \
+} while (0)
+
 void kd_rwsem_init(struct kd_rwsem *sem)
 {
 	kd_mutex_init(&sem->gate);
@@ -49,7 +70,7 @@ EXPORT_SYMBOL_GPL(kd_down_read_trylock);
 void kd_down_read(struct kd_rwsem *sem)
 {
 	might_sleep();
-	wait_event(sem->drain, kd_down_read_trylock(sem));
+	kd_rwsem_wait(sem, kd_down_read_trylock(sem));
 }
 EXPORT_SYMBOL_GPL(kd_down_read);
 
@@ -69,6 +90,8 @@ EXPORT_SYMBOL_GPL(kd_down_read_killable);
 
 static bool kd_rwsem_reserve_local(struct kd_rwsem *sem)
 {
+	if (atomic_long_read(&sem->admission))
+		return false;
 	return atomic_long_cmpxchg(&sem->admission, 0, KD_RWSEM_LOCAL_WRITER) == 0;
 }
 
@@ -83,9 +106,9 @@ static void kd_rwsem_release_local(struct kd_rwsem *sem)
 void kd_down_write(struct kd_rwsem *sem)
 {
 	might_sleep();
-	wait_event(sem->drain, kd_rwsem_reserve_local(sem));
+	kd_rwsem_wait(sem, kd_rwsem_reserve_local(sem));
 	kd_mutex_local_lock(&sem->gate);
-	wait_event(sem->drain, !atomic_long_read_acquire(&sem->readers));
+	kd_rwsem_wait(sem, !atomic_long_read_acquire(&sem->readers));
 }
 EXPORT_SYMBOL_GPL(kd_down_write);
 
@@ -183,11 +206,11 @@ static bool kd_rwsem_reserve_delegate(struct kd_rwsem *sem)
 void kd_rwsem_delegate_enter(struct kd_rwsem *sem)
 {
 	might_sleep();
-	wait_event(sem->drain, kd_rwsem_reserve_delegate(sem));
+	kd_rwsem_wait(sem, kd_rwsem_reserve_delegate(sem));
 	/* No producer has published yet. A sleeping reader can resume even when
 	 * it shares this CPU. Positive admission prevents new accepted readers or
 	 * ordinary downgrades throughout every reservation in the cohort. */
-	wait_event(sem->drain, !atomic_long_read_acquire(&sem->readers));
+	kd_rwsem_wait(sem, !atomic_long_read_acquire(&sem->readers));
 }
 EXPORT_SYMBOL_GPL(kd_rwsem_delegate_enter);
 
