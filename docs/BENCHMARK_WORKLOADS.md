@@ -1,8 +1,8 @@
 # Benchmark workloads and critical sections
 
-This catalog defines the synthetic and syscall/API workloads available on
-`master`. Use [benchmark commands](../bench/README.md) for execution and
-[performance status](PERFORMANCE.md) for measured outcomes. Availability is not
+This catalog defines the synthetic and syscall/API workloads selected for
+benchmarks on `master`. Use [benchmark commands](../bench/README.md) for execution and
+[performance status](PERFORMANCE.md) for measured outcomes. Selection is not
 a claim that the current KD version has passed every configuration.
 
 The standard grid is 1–8 workers by one and 12–60 by four, three repetitions per
@@ -23,14 +23,12 @@ same selected counters under one lock. The bodies contain explicit updates:
 | Label | Updates per operation | Selected payload footprint |
 | --- | --- | ---: |
 | `c01` | Increment counter 0 | 64 bytes |
-| `c02` | Increment counters 0–1 | 128 bytes |
-| `c04` | Increment counters 0–3 | 256 bytes |
 | `c08` | Increment counters 0–7 | 512 bytes |
-| `c16` | Increment counters 0–15 | 1,024 bytes |
 
-These sizes apply to spin, mutex and rwlock cacheline cases. The current
-[spin/mutex runner](../bench/tclock_compare/README.md) supports all five sizes
-and RCUHT. KD mutex uses the selected legacy delegation protocol.
+Future synthetic cacheline benchmarks use only c01 and c08 for spin, mutex and
+rwlock. Select `--cachelines 1 8` in the
+[spin/mutex runner](../bench/tclock_compare/README.md). KD mutex uses the selected
+legacy delegation protocol.
 
 For example, c01 performs a protected load/add/store:
 
@@ -80,7 +78,7 @@ Final checks validate node count, unique keys, bucket placement and list links.
 
 | Payload | Reader critical section | Writer critical section |
 | --- | --- | --- |
-| Cacheline `c01`–`c16` | Load the first counter and compare every selected counter against it; c01 also reloads its sole counter | Increment all selected counters |
+| Cacheline `c01`, `c08` | Load the first counter and compare every selected counter against it; c01 also reloads its sole counter | Increment all selected counters |
 | `rcuht` | Search one bucket for a key | Perform the hash move attempt described above |
 
 Readers hold the shared read lock; writers hold the exclusive write lock. Reader

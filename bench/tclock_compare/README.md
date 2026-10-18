@@ -85,8 +85,9 @@ the actual build, so requested option names alone cannot mislabel a sample.
 
 ## Workloads and backends
 
-Cacheline comparisons default to one line; explicitly select 2/4/8/16 for
-other payload sizes. Spin/mutex post-work is 64 dependent arithmetic rounds. Hash uses 1,024 buckets, 4,096 preallocated
+Future cacheline comparisons use c01 and c08. The default is one line; select
+`--cachelines 1 8` for both cases. Spin/mutex post-work is 64 dependent arithmetic
+rounds. Hash uses 1,024 buckets, 4,096 preallocated
 nodes, 8,192 keys and 100% writes: each request records one move, conflict or miss.
 The three arms use the same immediate unlink/relink body and fixed CPU-seeded random
 streams; this adaptation is not a byte-identical upstream RCUHT environment.

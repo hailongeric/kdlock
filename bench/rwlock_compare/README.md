@@ -23,9 +23,9 @@ These records do not constitute a new run of the consolidated provider.
 
 ## Cases
 
-| Workload | Protected operations | Sizes |
+| Workload | Protected operations | Benchmark sizes |
 | --- | --- | --- |
-| `cacheline` | Readers load and compare a consistent version; writers increment every selected line | 1, 2, 4, 8, 16 distinct 64-byte lines |
+| `cacheline` | Readers load and compare a consistent version; writers increment every selected line | 1 or 8 distinct 64-byte lines |
 | `rcuht` | Readers look up a key; writers move a preallocated node between hash buckets | 1,024 buckets, 4,096 nodes, 8,192 possible keys |
 
 The hash update and final structure checks reuse the previous

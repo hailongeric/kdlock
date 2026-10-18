@@ -7,7 +7,7 @@ summarizes the accepted version. Build and run only in the verified VM on
 
 | Comparison | Entry point | Payloads |
 | --- | --- | --- |
-| Spin | [tclock_compare/run.py](tclock_compare/run.py) | c01/c02/c04/c08/c16 and RCUHT |
+| Spin | [tclock_compare/run.py](tclock_compare/run.py) | c01/c08 and RCUHT |
 | Mutex | [tclock_compare/run_mutex.py](tclock_compare/run_mutex.py) | Same payloads, selected KD-only mutex |
 | Rwlock | [rwlock_compare/run.py](rwlock_compare/run.py) | Cachelines and RCUHT, default 1%/20% writes |
 | Syscall/API | [real_api/run.py](real_api/run.py) | OFD, setfd, pipebytes, pipecap, seek, bounded UTS and xattr controls |
@@ -36,7 +36,7 @@ python3 bench/tclock_compare/run_mutex.py --dry-run \
 
 Before live execution, confirm a recoverable snapshot and set the documented
 recovery variables, then omit `--dry-run` and use an outer timeout. For other
-synthetic sizes select `--cachelines 1 2 4 8 16`; for RCUHT use `--workload rcuht`
+synthetic sizes select `--cachelines 1 8`; for RCUHT use `--workload rcuht`
 and omit `--cachelines`. These choices define different workloads.
 
 The optional synthetic spin/mutex 64-worker point requires `--cpus 0-63
