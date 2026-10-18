@@ -87,6 +87,34 @@ Write guest results outside the checkout to
 `bench/results/<machine>/raw/bench/`. The historical full-matrix exporter is
 isolated in [archive](archive/README.md); it is not a current benchmark driver.
 
+## Archiving a completed round
+
+After runners and evidence replay have exited, save a final health receipt and
+kernel logs inside the completed evidence directory. The health JSON must state
+`idle: true` and the current `/proc/sys/kernel/random/boot_id` as `boot_id`.
+Then run [archive_run.py](archive_run.py) in the idle recovery guest:
+
+```sh
+python3 bench/archive_run.py \
+  --base /mnt/kdlock-builds/taskname-xattr-ROUND \
+  --output /mnt/kdlock-builds/taskname-xattr-ROUND-archives \
+  --health /mnt/kdlock-builds/taskname-xattr-ROUND/health.json \
+  --group taskname=taskname --group xattr=xattr
+```
+
+Both evidence and archive paths are explicit; the archive directory must be a
+new sibling. Each group selects one top-level path. Every unassigned path,
+including command logs, metadata and replay results, goes into `metadata.tar.gz`.
+Files and symlinks are preserved; link targets are not followed. The helper
+checks live idle state, rejects open writers to the evidence tree, records its
+inventory and compressed hashes, and checks that inputs remained unchanged.
+Redirect the helper's own output outside the input evidence directory.
+
+Accept capture only when `archives.json` records `completed: true`. A timeout
+or error leaves partial archives and a failure receipt; preserve them and use a
+new output directory for a retry. Nothing in the source tree or original evidence
+is deleted. Archive preservation is separate from result validation.
+
 ## VM migration validation
 
 The [initial migration receipt](results/10.176.26.71/bench/migration-20261010T070707Z/README.md)
