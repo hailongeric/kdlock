@@ -84,6 +84,11 @@ int kd_exe_init(void)
 	int i, ret;
 
 	kd_jit_timing_reset();
+	kd_string_return_thunk = kallsyms_lookup_name("__x86_return_thunk");
+	kd_string_copy_helper = kallsyms_lookup_name("strscpy");
+	kd_string_memset_entry = kallsyms_lookup_name("__memset");
+	kd_string_memset_erms = kallsyms_lookup_name("memset_erms");
+	kd_string_its_return = kallsyms_lookup_name("its_return_thunk");
 	/* Resolve unlock function addresses dynamically */
 	end_point_count = 0;
 	/* Direct APIs are linked into this provider; kallsyms need not expose a

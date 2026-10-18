@@ -166,6 +166,28 @@ static void test_chunk_session(void)
 	assert(!kd_image_requirements_valid(KD_EXE_LOCK_SPIN, 1,
 					  KD_IMAGE_REQUIRE_NATIVE_ESCAPE));
 	assert(!kd_image_requirements_valid(KD_EXE_LOCK_MUTEX, 2, 2));
+	assert(kd_image_requirements_valid(KD_EXE_LOCK_SPIN, 1,
+					KD_IMAGE_REQUIRE_ADDRESS_GUARD));
+	assert(!kd_image_requirements_valid(KD_EXE_LOCK_SPIN, 3,
+					 KD_IMAGE_REQUIRE_ADDRESS_GUARD));
+	assert(!kd_image_requirements_valid(KD_EXE_LOCK_SPIN, 1, 3));
+	assert(kd_image_requirements_valid(KD_EXE_LOCK_SPIN, 1,
+					KD_IMAGE_REQUIRE_STRING_SERVICES));
+	assert(kd_image_requirements_valid(KD_EXE_LOCK_SPIN, 1,
+		KD_IMAGE_REQUIRE_STRING_SERVICES | KD_IMAGE_REQUIRE_ADDRESS_GUARD));
+	assert(!kd_image_requirements_valid(KD_EXE_LOCK_SPIN, 3,
+					 KD_IMAGE_REQUIRE_STRING_SERVICES));
+	assert(!kd_image_requirements_valid(KD_EXE_LOCK_MUTEX, 2,
+					 KD_IMAGE_REQUIRE_STRING_SERVICES));
+	assert(!kd_image_requirements_valid(KD_EXE_LOCK_SPIN, 0,
+					 KD_IMAGE_REQUIRE_STRING_SERVICES));
+	assert(kd_image_requirements_valid(KD_EXE_LOCK_SPIN, 1, KD_IMAGE_REQUIRE_STRING_WRITE));
+	assert(kd_image_requirements_valid(KD_EXE_LOCK_SPIN, 1,
+		KD_IMAGE_REQUIRE_STRING_WRITE | KD_IMAGE_REQUIRE_STRING_SERVICES));
+	assert(!kd_image_requirements_valid(KD_EXE_LOCK_SPIN, 3, KD_IMAGE_REQUIRE_STRING_WRITE));
+	assert(!kd_image_requirements_valid(KD_EXE_LOCK_MUTEX, 2, KD_IMAGE_REQUIRE_STRING_WRITE));
+	assert(!kd_image_requirements_valid(KD_EXE_LOCK_SPIN, 0, KD_IMAGE_REQUIRE_STRING_WRITE));
+	assert(!kd_image_requirements_valid(KD_EXE_LOCK_SPIN, 1, 16));
 
 	assert(original_dir >= 0 && mkdtemp(root));
 	assert(!chdir(root));

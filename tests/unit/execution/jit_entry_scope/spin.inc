@@ -93,7 +93,8 @@ static void check_batch_admission(void)
 /* The wrapper consumes every metadata word, even when no optional clock is
  * active. Poison reused call storage and validate both entry ABIs so the
  * single-pass batch setup cannot retain a legacy offset/endpoint or stale
- * completion/timing permission. Preparation must not mutate the frame. */
+ * completion/timing permission. Only successful image binding may change
+ * frame metadata; all packet and ownership fields remain unchanged. */
 static void check_batch_metadata(void)
 {
 	unsigned char code[64] = { 0 };
@@ -135,6 +136,11 @@ static void check_batch_metadata(void)
 			CHECK(call.dispatch_start == (timed ? 1000 : 0) &&
 			      call.wrapper_start == (timed ? 1010 : 0) &&
 			      timing_reads == timed * 2);
+			/* Successful preparation binds exactly the selected image. No
+			 * packet, ownership, routing or execution state may change. */
+			CHECK(active.image && active.image->entry == entry &&
+			      active.image->code == code && active.image->entry_abi == abi);
+			before.image = active.image;
 			CHECK(!memcmp(&active, &before, sizeof(active)));
 
 			/* Both ABIs must validate all seven tag bytes, including the
@@ -279,6 +285,7 @@ static void check_clobber_identity(void)
 	active.packet_state = KD_PACKET_MINIMAL;
 	active.regs.di = 0xdead; /* deliberately not the root lock */
 	CHECK(!kd_exe_spin_batch_prepare(entry, &active, &call));
+	CHECK(!active.image); /* Invalid directory cannot bind an unstarted frame. */
 	memcpy(code + 25, "KDWC002", 7);
 	memcpy(code + 41, "KDAB", 4);
 	code[45] = KD_ENTRY_ABI_SPIN_CLOBBER_V1;
@@ -299,6 +306,7 @@ static void check_clobber_identity(void)
 	CHECK(!kd_exe_spin_batch_prepare(entry, &active, &call));
 	CHECK(calls == 0 && !active.executed);
 	active.entry_abi = entry->entry_abi = code[45] = KD_ENTRY_ABI_MUTEX_CLOBBER_V1;
+	active.image = NULL; /* A new ABI2 invocation, not reuse of the bound ABI1 frame. */
 	active.mutex_backend = true;
 	active.spin_simple = false;
 	active.jit_lock_depth = 1;

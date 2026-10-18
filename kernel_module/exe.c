@@ -16,7 +16,8 @@
  *
  * Only validated outer-unlock handling completes a delegated request. A miss
  * after stores never rolls them back or grants permission to replay the entry.
- * Mutex frames bind immutable code images; spin images remain in place.
+ * Mutex and guarded spin frames bind immutable code images. Ordinary spin
+ * blocks retain in-place publication until their first guarded generation.
  * Original-source residency pins are separate from executable image identity.
  */
 #include "exe.h"
@@ -47,6 +48,8 @@
 #include "kd_mutex_direct.h"
 #include "kd_spinlock.h"
 #include "kd_hostcall.h"
+#include "kd_strcmp_contract.h"
+#include "kd_strscpy_contract.h"
 
 /*
  * Pre-allocated pool of executable code blocks.  kd_exe_add() is called from
@@ -80,6 +83,19 @@ static const struct kernel_param_ops kd_native_escape_count_ops = {
 };
 module_param_cb(native_escape_count, &kd_native_escape_count_ops, NULL, 0444);
 MODULE_PARM_DESC(native_escape_count, "Validated instruction-marker native continuations");
+
+static atomic64_t kd_address_guard_count = ATOMIC64_INIT(0);
+static int kd_address_guard_count_get(char *buffer, const struct kernel_param *kp)
+{
+	(void)kp;
+	return scnprintf(buffer, PAGE_SIZE, "%lld\n",
+			 (long long)atomic64_read(&kd_address_guard_count));
+}
+static const struct kernel_param_ops kd_address_guard_count_ops = {
+	.get = kd_address_guard_count_get,
+};
+module_param_cb(address_guard_count, &kd_address_guard_count_ops, NULL, 0444);
+MODULE_PARM_DESC(address_guard_count, "Validated spin address-guard native continuations");
 
 static void *kd_code_block_pool[KD_CODE_BLOCK_POOL];
 static void *kd_code_block_allocations[KD_CODE_BLOCK_POOL];
@@ -145,6 +161,7 @@ static int kd_exe_dispatch(struct kd_exe_info *exe, struct kd_regs *regs,
 	unsigned long args[2];
 	int continuation_count = 0;
 	int hostcall_count = 0;
+	unsigned int string_count = 0;
 	bool resume_after_hostcall = false;
 	bool body_reported = false;
 	bool pristine_root;
@@ -259,7 +276,7 @@ returned_wrapper:
 				 * Root packet preservation is part of the generated guard ABI.
 				 */
 				if (pristine_root && !continuation_count &&
-				    !hostcall_count && regs->ip == entry_ip &&
+				    !hostcall_count && !string_count && regs->ip == entry_ip &&
 				    regs->sp == entry_sp && args[1] == 0) {
 					frame->executed = false;
 					pr_warn_ratelimited(
@@ -330,9 +347,49 @@ returned_wrapper:
 					    continuation_count, hostcall_count);
 			ret_flag = KD_EXE_RUN_ERROR;
 		} else if (args[0] == KD_EXE_HOSTCALL) {
+			const struct kd_hostcall_desc *service = kd_hostcall_lookup(regs->ip);
+			bool strcmp_budget = service && service->id == KD_HOSTCALL_STRCMP;
+			bool string_service = strcmp_budget ||
+				(service && service->id == KD_HOSTCALL_STRSCPY_PAD);
+			unsigned long string_return = 0;
+
 			atomic64_inc(&kd_hostcall_exits);
-			if (hostcall_count >= KD_EXE_HL_MAX_HOSTCALLS ||
-			    continuation_count >= KD_EXE_HL_MAX_CONTINUATIONS) {
+			/* Only strcmp has a separate allowance for an xattr traversal.
+			 * Writing helpers share the existing control/scalar budget: at
+			 * most 128 comparisons and 16 other continuations can complete. */
+			if (string_service) {
+				call_ret = fault_kind ? -EINVAL :
+					kd_jit_string_prepare(exe, frame, regs, &string_return);
+				if (call_ret == KD_HOSTCALL_NOT_EXECUTED) {
+					call_ret = kd_jit_call_limit_native(frame, regs, true);
+					if (!call_ret) {
+						kd_image_disable(exe);
+						pr_warn_ratelimited(
+							"[KD_JIT][WARN] reason=STRING_PREFLIGHT_NATIVE entry=0x%lx ip=0x%lx action=native_call_and_disable\n",
+							entry_ip, regs->ip);
+					} else {
+						atomic64_inc(&kd_hostcall_failed);
+						kd_jit_log_hl_error("STRING_NATIVE_FAILED", frame,
+							regs, args[0], call_ret, continuation_count,
+							hostcall_count);
+					}
+					atomic64_inc(&kd_hostcall_rejected);
+					ret_flag = call_ret ? KD_EXE_RUN_ERROR : KD_EXE_RUN_NATIVE;
+					break;
+				}
+				if (call_ret) {
+					atomic64_inc(&kd_hostcall_failed);
+					kd_jit_log_hl_error("STRING_PREFLIGHT_INVALID", frame,
+						regs, args[0], call_ret, continuation_count,
+						hostcall_count);
+					ret_flag = KD_EXE_RUN_ERROR;
+					break;
+				}
+			}
+			if ((strcmp_budget && string_count >= KD_STRCMP_MAX_CALLS) ||
+			    (!strcmp_budget &&
+			     (hostcall_count >= KD_EXE_HL_MAX_HOSTCALLS ||
+			      continuation_count >= KD_EXE_HL_MAX_CONTINUATIONS))) {
 				atomic64_inc(&kd_hostcall_limit);
 				call_ret = fault_kind ? -EINVAL :
 					kd_jit_call_limit_native(frame, regs, true);
@@ -347,7 +404,8 @@ returned_wrapper:
 			}
 
 			boundary_start = kd_jit_timing_start();
-			call_ret = kd_hostcall_dispatch(regs);
+			call_ret = string_service ? service->invoke(regs) :
+				kd_hostcall_dispatch(regs);
 			kd_jit_timing_end(KD_JIT_TIME_HOSTCALL, boundary_start);
 			if (call_ret) {
 				if (call_ret == -ENOENT || call_ret == -EPERM)
@@ -363,8 +421,16 @@ returned_wrapper:
 			}
 			atomic64_inc(&kd_hostcall_executed);
 
-			call_ret = advance_and_save_continuation(
-				kd_exec_current_frame(), regs);
+			if (string_service) {
+				regs->sp += sizeof(unsigned long);
+				regs->ip = string_return;
+				frame->control_call.phase = KD_CALL_NONE;
+				kd_exec_frame_save_continuation(frame, regs);
+				call_ret = 1;
+			} else {
+				call_ret = advance_and_save_continuation(
+					kd_exec_current_frame(), regs);
+			}
 			if (call_ret <= 0) {
 				atomic64_inc(&kd_hostcall_failed);
 				kd_jit_log_hl_error(
@@ -375,8 +441,12 @@ returned_wrapper:
 				break;
 			}
 
-			hostcall_count++;
-			continuation_count++;
+			if (strcmp_budget)
+				string_count++;
+			else {
+				hostcall_count++;
+				continuation_count++;
+			}
 			resume_after_hostcall = true;
 			continue;
 		} else if (args[0] == KD_EXE_CALL_MISS) {
@@ -467,7 +537,7 @@ returned_wrapper:
 					break;
 				}
 				if (!is_end_point(regs->ip))
-					kd_image_report(exe, frame->mutex_backend ? frame->image : NULL, KD_EXE_CALL_MISS,
+					kd_image_report(exe, frame->image, KD_EXE_CALL_MISS,
 							regs->ip, 0);
 				/* Synthetic faults have no CALL frame and are not resumable. */
 				ret_flag = fault_kind ? KD_EXE_RUN_ERROR :
@@ -480,11 +550,19 @@ returned_wrapper:
 						    regs, args[0], call_ret,
 						    continuation_count, hostcall_count);
 			ret_flag = call_ret ? KD_EXE_RUN_ERROR : KD_EXE_RUN_NATIVE;
+		} else if (args[0] == KD_EXE_ADDRESS_GUARD) {
+			call_ret = fault_kind ? -EINVAL :
+				kd_jit_address_guard(exe, frame, regs);
+			if (call_ret)
+				kd_jit_log_hl_error("INVALID_ADDRESS_GUARD", frame,
+						    regs, args[0], call_ret,
+						    continuation_count, hostcall_count);
+			ret_flag = call_ret ? KD_EXE_RUN_ERROR : KD_EXE_RUN_NATIVE;
 		} else if (args[0] == KD_EXE_ERROR_INST) {
 			kd_jit_log_hl_error("UNSUPPORTED_INSTRUCTION", frame,
 					    regs, args[0], -EILSEQ,
 					    continuation_count, hostcall_count);
-			kd_image_report(exe, frame->mutex_backend ? frame->image : NULL, KD_EXE_ERROR_INST, regs->ip, 0);
+			kd_image_report(exe, frame->image, KD_EXE_ERROR_INST, regs->ip, 0);
 			ret_flag = KD_EXE_RUN_ERROR;
 		} else if (args[0] == KD_EXE_INST_LIMIT) {
 			kd_jit_log_hl_error("BUDGET_LIMIT", frame, regs,
@@ -495,7 +573,7 @@ returned_wrapper:
 			kd_jit_log_hl_error("IJ_MISS", frame, regs, args[0], 0,
 					    continuation_count, hostcall_count);
 			if (!is_end_point(regs->ip) && !is_end_point(args[0]))
-				kd_image_report(exe, frame->mutex_backend ? frame->image : NULL, KD_EXE_IJ_MISS,
+				kd_image_report(exe, frame->image, KD_EXE_IJ_MISS,
 						regs->ip, args[0]);
 			ret_flag = KD_EXE_RUN_ERROR;
 		}

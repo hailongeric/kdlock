@@ -88,6 +88,23 @@ void kd_spin_lock_pinned_clobber_v1(kd_spinlock_t *, unsigned long,
 				    kd_lock_word, continuation); \
 } while (0)
 
+/* Helper prologues can save callee-saved registers before assigning them.
+ * Minimal spin entries deliberately import only SP/BP, so those saves would
+ * otherwise observe uncaptured inputs and fail admission. This opt-in entry
+ * defines five already-clobbered scratch registers in the original source,
+ * before the compiler reloads body values. The waiter and JIT execute the same
+ * setup; ordinary cold execution already has valid native register values.
+ * No extra packet fields, register captures or stack saves are introduced.
+ * Pair with KD_SPIN_DIRECT_UNLOCK and prepare the supplied continuation as
+ * usual. The five zero idioms cost only hot acquisitions selecting this API. */
+#define KD_SPIN_DIRECT_HELPER_LOCK(lock, cookie, continuation) \
+	KD_SPIN_DIRECT_LOCK(lock, cookie, continuation \
+		"xorl %%ebx, %%ebx\n\t" \
+		"xorl %%r12d, %%r12d\n\t" \
+		"xorl %%r13d, %%r13d\n\t" \
+		"xorl %%r14d, %%r14d\n\t" \
+		"xorl %%r15d, %%r15d\n\t")
+
 #define KD_SPIN_DIRECT_UNLOCK(lock, cookie) do { \
 	kd_spinlock_t *kd_unlock_word = (kd_spinlock_t *)(lock); \
 	/* Both ownership kinds use the same clobber/metadata contract. The \

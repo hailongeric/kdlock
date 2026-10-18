@@ -1,7 +1,8 @@
 # Real kernel API contention
 
-This runner measures actual syscalls on private kernel objects: file-lock
-queries, descriptor flags, pipe metadata, file positions and UTS namespace names.
+This runner measures actual syscalls on private kernel objects: extended
+attributes, file-lock queries, descriptor flags, pipe metadata, file positions
+and UTS namespace names.
 Userspace and surrounding security/result-copy paths remain in the measured
 operation. A scoped ftrace module substitutes selected functions for the bound
 object. Spin, mutex or reader/writer backends are selected at build time. The
@@ -26,6 +27,21 @@ it is not validation of every current KD mutex scenario.
 All seven implemented adapters already call KD APIs. The catalog's
 [API and delegation table](../../docs/BENCHMARK_WORKLOADS.md#kd-api-use-and-delegation)
 distinguishes eligible bodies, local readers and unresolved translation refusals.
+
+The current xattr implementation passed focused functional validation. It keeps the
+original list traversal, `strcmp()` comparisons and real `memcpy()` value copy.
+Narrow runtime pointer checks and a checked call to the exact original `strcmp`
+helper replace the reproduced admission blockers; `memcpy` remains a learned
+helper, without a new writing-service summary. Candidate 11 passed all eight
+front/tail/miss/size combinations at n16/n128, v64 and 16 workers. Each recorded
+matching generated entries and completed bodies, correct results and clean
+teardown; the tail checks completed 133,378 bodies at n16 and 18,985 at n128.
+The full Native/TCLock/KD performance matrix remains pending. Keep the
+[development evidence](../results/10.176.26.71/bench/taskname-xattr-20261018/DEVELOPMENT.md)
+separate from accepted comparison results. The
+[helper contract](../../docs/design/admission.md#bounded-original-strcmp-service)
+requires stable, allocated ordinary kernel strings under the selected physical
+lock; it does not make arbitrary pointers or whole-kernel replacement safe.
 
 ## Candidate selection
 
@@ -86,6 +102,17 @@ pooled with the matched native arm. The captured kernel has UBSAN enabled, while
 all timed replacement/provider modules have UBSAN disabled. Therefore only the
 matched native comparison isolates the lock change within this compiled body.
 
+For xattr, `--entries N` installs N attributes, and `--value-size 64` gives each
+attribute a 64-byte value. `front` finds the most recently inserted record in
+one name comparison; `tail` finds the oldest record after N comparisons and
+copies its value. `miss` makes N comparisons and returns `ENODATA` without a
+copy. `size` searches for that same tail record with `NULL, 0`, returning the
+length without a value copy. The main n16/n128 tail comparison therefore
+contains both name search and the actual 64-byte `memcpy`; it is not a
+size-query benchmark. At n128, exactly 128 `strcmp` calls fit their separate
+per-body allowance. Other helper/control continuations retain the ordinary
+allowance of 16.
+
 Only one fixed worker runs on each selected CPU. The spin adapters operate on
 the real lists or descriptor bitmap and original spinlock storage under the
 controlled-consumer restrictions above. KD/TCLock mutex adapters and all matched
@@ -106,9 +133,25 @@ and the highest valid peak are retained, together with CPU time and worker share
 
 KD must publish an admitted translation before measurement. Xattr helper-learning
 waves pause the daemon, join every caller, then resume translation; a refusal
-ends that session. The daemon stops before the common warmup. Returned-body
-counters distinguish actual JIT execution from
-`NO_JIT`; no refusal or low JIT count is converted into a success claim.
+ends that session. Each published image is saved before the next learning wave.
+Preparation succeeds only after a wave returns a complete delegated body while
+the entry remains admitted. Publication alone, or entering generated code before
+falling back, is insufficient.
+
+`--helper-workers 8` selects a separate, bounded preparation cohort from the
+configured CPU list. It uses the same bound file and metadata as timing, including
+when the measured cohort has only one worker. Every preparation caller finishes
+before the next translation; the measured CPU list is unchanged. The runner
+records each preparation cohort and its entry and completion counts. The daemon
+then stops before the common warmup on the measured CPUs. `--helper-waves 0`
+disables learning for an explicitly labelled initial-image diagnostic.
+
+New records enable the completion probe and separate entry counts from complete
+returned bodies. `PASS` means at least one complete body returned; `PARTIAL_JIT`
+means code was entered but no complete body returned; `NO_JIT` means there were
+no entries. Reports never pool these groups. Historical entry-only records keep
+completion counts unrecorded. `--require-jit` requires a returned body during
+every multithreaded KD measurement; single-worker timing need not delegate.
 Immediately before and after measurement, the runner checks a drained publication
 with zero translator writers and verifies that the prepared entry and generated
 image hashes are unchanged. These boundary checks are outside syscall timing;
@@ -207,6 +250,28 @@ python3 bench/real_api/run.py --kinds seek --queries set end --entries 16 \
 python3 bench/real_api/run.py --kinds utsname --queries host domain \
   --entries 20 100 --value-size 64 --threads 1 8 16 32 48 60 --repeats 3 \
   --backends stock native tclock kdlock --output /root/kdlock-evidence/10.176.26.71/bench/uts-new
+# Xattr tail lookup, two list sizes, full standard grid: 378 timed sessions.
+python3 bench/real_api/run.py --kinds xattr --queries tail \
+  --entries 16 128 --value-size 64 \
+  --threads 1 2 3 4 5 6 7 8 12 16 20 24 28 32 36 40 44 48 52 56 60 \
+  --collector-cpu 63 --duration-ms 2000 --repeats 3 --helper-workers 8 \
+  --backends native tclock kdlock --output /root/kdlock-evidence/10.176.26.71/bench/xattr-new
+```
+
+Before that matrix, the following focused KD screen checks all four lookup
+paths at both list lengths, including the 128-comparison boundary. The API
+runner has no fixed-iteration functional mode: this is a one-round correctness
+screen with a timed phase, not a performance comparison. Its per-operation and
+pre/post checks also cover every value byte, size results, `ERANGE` and
+`ENODATA`. Run it only after the observer and runtime checks have passed, and
+keep its output separate from the three-round matrix:
+
+```sh
+timeout --kill-after=10s 1800s python3 bench/real_api/run.py \
+  --kinds xattr --queries front tail miss size --entries 16 128 --value-size 64 \
+  --backends kdlock --threads 8 --collector-cpu 63 --helper-workers 8 \
+  --duration-ms 1000 --repeats 1 --require-jit \
+  --output /root/kdlock-evidence/10.176.26.71/tests/xattr-paths-NEW
 ```
 
 `--value-size` defaults to 64 bytes. `--cpus` takes an ordered comma-separated

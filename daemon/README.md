@@ -73,15 +73,21 @@ for real source inspection must explicitly enter `device_session.session()`. A
 missing, closed or wrong inherited descriptor is an infrastructure error, not a
 successful decision to run the body natively.
 
-CAPS v6 retains the checked mutex stack bound and static module per-CPU arena
+CAPS version 9 retains the checked mutex stack bound and static module per-CPU arena
 introduced in v1/v2, and advertises the legacy immutable-mutex-image capability
 on bit 3, exclusive KD mutex objects on bit 4, and checked instruction exits on
-bit 5. Translation requires immutable images, exclusive KD objects and the
-module arena before text inspection. Instruction markers additionally require
-bit 5; ordinary images can still use the version 5 contract. Read-only observers
-can inspect older contracts. Rebuild/reload
-the matching provider, daemon and translator. These bounds are not mutable
-admission flags or runtime address guards.
+bit 5. Bit 6 adds the restricted ABI1 spin address-exit contract. Bit 7 supports
+the bounded read-only `strcmp` service; bit 8 separately supports the bounded
+`strscpy_pad` writing service. A service invokes a specifically checked original
+helper with defined argument, memory-effect and continuation rules. Translation
+requires immutable mutex images, exclusive KD objects and the module arena
+before text inspection. Ordinary images can use compatible versions 5 through 9;
+mutex instruction markers require versions 6 through 9 with bit 5, and spin
+address-check images require versions 7 through 9 with bit 6. `strcmp` requires
+version 8 or 9 with bit 7; writing requires version 9 with bit 8. Read-only observers can
+inspect older contracts. Rebuild/reload the matching provider, daemon and
+translator. The reported stack and module bounds are fixed implementation
+contracts; they are not switches that make arbitrary pointers safe.
 
 Real kcore text windows pin up to 64 distinct LIVE source modules, including learned
 callees and cold extensions. Core text/rodata follow their declared ranges; init,
@@ -105,13 +111,28 @@ required before NORMAL publication; NORMAL alone does not prove execution.
 
 In the current implementation, mutex uploads stage a new immutable block and bind
 its generation to each frame. Old versions remain until session teardown, and old
-misses cannot overwrite current generation metadata. Spin/rwlock images retain
-in-place storage. Deploy the matching provider, daemon and translator together;
-ordinary mutex translation accepts capability version 5 or 6 with immutable images
-and exclusive KD objects. Images with instruction markers additionally require
-version 6 bit 5 and set directory requirement bit 0. A reached marker disables
-the entry under the publication gate, so a concurrent upload cannot reopen it.
-The existing session must drain and retire normally. See
+misses cannot overwrite current generation metadata. The first address-check
+or typed string-service
+image similarly moves its ABI1 spin entry to immutable versions, and later
+uploads for that entry remain immutable even without optional checks or services. Other spin entries
+and ABI3 rwlock images retain in-place storage. Deploy the matching provider,
+daemon and translator together. Mutex instruction markers set directory
+requirement bit 0; spin address checks set bit 1 and include a validated source
+instruction directory. Read-only string services set bit 2; writing services
+set bit 3 and cannot run on a provider advertising only the read-only contract.
+A reached marker, failed address check or string preflight refusal disables the
+stable entry under the publication gate, so a concurrent upload cannot reopen it.
+Translation refuses bodies needing both source constant-branch simplification
+and spin address checks, because the flag proof must cover the original native
+suffix, including branches that generated code might otherwise remove.
+The existing session must drain and retire normally. String preflight means
+checking arguments before invoking the helper; a failed argument check can
+resume the original unexecuted helper while retaining the CALL word and earlier
+effects. The invocation limits are 128 `strcmp` calls and 16 other continuations,
+including writing services. The [canonical helper admission rules](../docs/design/admission.md#bounded-original-strcmp-service)
+define source validation, memory lifetime and the separate writing contract.
+Fresh taskname/xattr workload and performance acceptance remain pending. See
+[the checked spin contract](../docs/JIT_REGISTER_ABI.md#checked-spin-address-exit) and
 [the backport details](../docs/history/legacy_mutex_compatibility.md).
 
 ## Optional translation measurements

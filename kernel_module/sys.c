@@ -1,7 +1,8 @@
 /* /dev/kd_dev is the daemon's registry/image channel and source-control API.
  * Writable opens retain one translation-session writer; readonly status/CAPS
  * opens do not. Retirement closes admission before releasing source pins.
- * Mutex uploads stage complete immutable versions; spin images stay in place. */
+ * Mutex uploads and ABI1 guard/string-service uploads stage immutable versions.
+ * Other spin/rwlock entries stay in place until their first such transition. */
 #include <linux/build_bug.h>
 #include <linux/cdev.h>
 #include <linux/capability.h>
@@ -71,7 +72,9 @@ static struct kd_jit_caps kd_jit_capabilities(void)
 	struct kd_jit_caps caps = {
 		.version = KD_JIT_CAPS_VERSION,
 		.features = KD_JIT_CAP_MUTEX_STACK | KD_JIT_CAP_MUTEX_IMAGES |
-			KD_JIT_CAP_MUTEX_EXCLUSIVE | KD_JIT_CAP_NATIVE_ESCAPE,
+			KD_JIT_CAP_MUTEX_EXCLUSIVE | KD_JIT_CAP_NATIVE_ESCAPE |
+			KD_JIT_CAP_ADDRESS_GUARD | KD_JIT_CAP_STRING_SERVICES |
+			KD_JIT_CAP_STRING_WRITE,
 		.mutex_stack_bytes = KD_JIT_MUTEX_STACK_BYTES,
 	};
 #if defined(CONFIG_X86_64) && defined(CONFIG_SMP)
@@ -248,7 +251,9 @@ static ssize_t kd_dev_write_locked(struct kd_image_upload *upload,
 		upload->image = NULL;
 		upload->covered = 0;
 		upload->identity = head;
-		if (entry->lock_kind == KD_EXE_LOCK_MUTEX) {
+		upload->code = entry->code_block;
+		if (entry->lock_kind == KD_EXE_LOCK_MUTEX || head.requirements ||
+		    (kd_image_current(entry) && kd_image_current(entry)->immutable)) {
 			upload->image = kd_image_alloc();
 			if (!upload->image)
 				return -ENOSPC;
@@ -262,9 +267,13 @@ static ssize_t kd_dev_write_locked(struct kd_image_upload *upload,
 		return -ESTALE;
 	if (head.offset != upload->covered)
 		return -EINVAL;
-	code = upload->image ? upload->image->code : entry->code_block;
+	code = upload->image ? upload->image->code : upload->code;
 	if (!code)
 		return -EINVAL;
+	if (!upload->image &&
+	    (entry->code_block != code || !kd_image_current(entry) ||
+	     kd_image_current(entry)->immutable))
+		return -ESTALE;
 
 	KD_PR_INFO(
 		"install JIT chunk: pid=%d rip=%px status=%d offset=%lu bytes=%zu\n",
@@ -293,12 +302,18 @@ static ssize_t kd_dev_write_locked(struct kd_image_upload *upload,
 			upload->image->length = head.image_length;
 			upload->image->requirements = head.requirements;
 			upload->image->entry_abi = head.entry_abi;
+			ret = kd_image_validate_address_guards(upload->image);
+			if (ret)
+				return ret;
 			ret = kd_image_publish(entry, upload->image, head.base_generation);
 			if (ret)
 				return ret;
 			upload->image = NULL;
-		} else
-			kd_exe_publish_status(entry, KD_EXE_NORMAL);
+		} else {
+			ret = kd_image_publish_mutable(entry, code, head.image_length);
+			if (ret)
+				return ret;
+		}
 		upload->covered = 0;
 	}
 	return count;

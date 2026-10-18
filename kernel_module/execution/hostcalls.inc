@@ -19,6 +19,9 @@ static atomic64_t kd_hostcall_resumed;
 static atomic64_t kd_hostcall_rejected;
 static atomic64_t kd_hostcall_failed;
 static atomic64_t kd_hostcall_limit;
+static unsigned long kd_string_return_thunk;
+static unsigned long kd_string_copy_helper, kd_string_memset_entry;
+static unsigned long kd_string_memset_erms, kd_string_its_return;
 
 /* The same-device capability authorizes only bounded mutex stack facts, not
  * arbitrary callee memory preservation. Exclude the consumed CALL word, whose
@@ -52,6 +55,32 @@ static int kd_hostcall_invoke_ktime_get_ns(struct kd_regs *regs)
 static int kd_hostcall_invoke_int_sqrt(struct kd_regs *regs)
 {
 	regs->ax = int_sqrt(regs->di);
+	return 0;
+}
+
+/* Invoke the exact resolved source helper, using the original arguments. The
+ * audited caller keeps both ordinary kernel strings stable and resident while
+ * its physical source lock is held. Preflight does not establish that lifetime
+ * or protect against concurrent mutation. The captured helper defines EAX. */
+static int kd_hostcall_invoke_strcmp(struct kd_regs *regs)
+{
+	int (*callee)(const char *, const char *) = (void *)regs->ip;
+
+	regs->ax = (unsigned int)callee((const char *)regs->di,
+				      (const char *)regs->si);
+	return 0;
+}
+
+/* The separately negotiated writing service has already validated count 64,
+ * the caller's live destination, stable off-stack source and complete helper
+ * closure. Invoke the original C API on the executor stack. Discarded callee
+ * scratch below the source CALL is outside this audited API's observations. */
+static int kd_hostcall_invoke_strscpy_pad(struct kd_regs *regs)
+{
+	long (*callee)(char *, const char *, unsigned long) = (void *)regs->ip;
+
+	regs->ax = (unsigned long)callee((char *)regs->di,
+				       (const char *)regs->si, regs->dx);
 	return 0;
 }
 
@@ -94,5 +123,9 @@ static int kd_hostcall_dispatch(struct kd_regs *regs)
 
 	if (ret)
 		return ret;
+	/* Strings require image, ownership and CALL validation by the separate
+	 * preflight path before invoking the adapter. Scalar callers cannot bypass it. */
+	if (service->id == KD_HOSTCALL_STRCMP || service->id == KD_HOSTCALL_STRSCPY_PAD)
+		return -EPERM;
 	return service->invoke(regs);
 }

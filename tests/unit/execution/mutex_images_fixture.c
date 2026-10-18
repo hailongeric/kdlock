@@ -29,6 +29,10 @@ static int copy_from_user(void *d, const void *s, size_t n) {
  if(copy_fault) return 1;
  memcpy(d,s,n); return 0;
 }
+static int kd_source_pin_root(unsigned long ip) { return ip ? 0 : -EINVAL; }
+static int copy_from_kernel_nofault(void *d, const void *s, size_t n) {
+ memcpy(d,s,n); return 0;
+}
 struct kd_exec_frame {
  bool mutex_backend; const struct kd_jit_image *image;
  unsigned int entry_abi;

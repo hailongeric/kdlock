@@ -459,6 +459,12 @@ static struct kd_spin_node *link_decode_tail(int tail)
 
 #define decode_tail link_decode_tail
 static void kd_spin_acquire_nondelegated(struct qspinlock *word);
+/* These scripted cases use ordinary spin roots. Extract the real ABI3 guard
+ * decisions too, and fail if an ordinary frame unexpectedly requests reader
+ * admission; rwlock admission itself is covered by its separate fixture. */
+typedef struct { kd_spinlock_t gate; } kd_rwlock_t;
+static void kd_rwlock_writer_enter(kd_rwlock_t *lock) { (void)lock; CHECK(false); }
+static void kd_rwlock_writer_exit(kd_rwlock_t *lock) { (void)lock; CHECK(false); }
 #include "spin_outer_production.h"
 /* Script only the physical reacquire boundary in this owner/ACK fixture. */
 static void kd_spin_acquire_nondelegated(struct qspinlock *word)
@@ -538,9 +544,11 @@ static void checked_run_combiner(struct qspinlock *lock,
 	bool full = mode == 8 && node == &request;
 
 	if (full) {
+		/* Image identity is independent of each frame's exact spin ticket;
+		 * packet layout stays fixed while eight frames add eight pointers. */
 		CHECK(sizeof(struct kd_regs) == 168 &&
 		      offsetof(struct kd_exec_frame, regs) == 40 &&
-		      sizeof(struct kd_exec_context) == 5208);
+		      sizeof(struct kd_exec_context) == 5272);
 		CHECK(!kd_exec_current_context()->depth);
 		for (unsigned int i = 0; i < KD_EXEC_MAX_NESTING; i++) {
 			struct kd_regs regs;

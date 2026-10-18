@@ -115,12 +115,17 @@ class RWSession(Session):
     def learn_helpers(self):
         # Same drain-separated learning protocol as bench/real_api: an old
         # spin image is never replaced while workers are executing it.
+        # A separate recorded cohort learns the same body even for one-worker
+        # timing. It cannot change the measured CPUs or relax entry policy.
+        learning_spec = dict(self.record, threads=len(self.record['helper_cpus']),
+            cpus=self.record['helper_cpus'], cpu_nodes=self.record.get('helper_cpu_nodes', []),
+            iterations=self.record['helper_iterations_per_worker'], duration_ms=0)
         self.record['learning_waves'] = []
         for wave in range(self.record['helper_waves']):
             self.pause_daemon()
             before = int((KD_PARAMS / 'bench_jit_bodies').read_text())
             complete_before = int((KD_PARAMS / 'bench_jit_completions').read_text())
-            measured = self.phase(f'learning-{wave}', dict(self.record, iterations=48000, duration_ms=0))
+            measured = self.phase(f'learning-{wave}', learning_spec)
             evidence = jit_evidence(before, int((KD_PARAMS / 'bench_jit_bodies').read_text()),
                 measured['reads'], backend='kdlock', delegate=True, operation='snapshot',
                 completed=int((KD_PARAMS / 'bench_jit_completions').read_text()) - complete_before)
@@ -206,8 +211,11 @@ class RWSession(Session):
     def measure(self):
         count_path = KD_PARAMS / 'bench_jit_bodies'
         complete_path = KD_PARAMS / 'bench_jit_completions'
+        address_guard_path = KD_PARAMS / 'address_guard_count'
         before = int(count_path.read_text()) if self.loaded_kd else 0
         complete_before = int(complete_path.read_text()) if self.loaded_kd else 0
+        self.record['address_guards_before'] = (int(address_guard_path.read_text())
+            if self.loaded_kd and address_guard_path.exists() else None)
         publication = self.publication() if self.loaded_kd and self.has_entry() else None
         if publication:
             require(publication['source']['writers'] == 0,
@@ -223,6 +231,11 @@ class RWSession(Session):
         complete_after = int(complete_path.read_text()) if self.loaded_kd else 0
         self.record['jit_after'] = after
         self.record['jit_complete_after'] = complete_after
+        guard_before = self.record['address_guards_before']
+        guard_after = int(address_guard_path.read_text()) if guard_before is not None else None
+        self.record.update(address_guards_after=guard_after,
+                           address_guard_exits=guard_after - guard_before
+                           if guard_before is not None else None)
         snapshot_entry = self.record['lock_kind'] == 'spin'
         self.record.update(jit_evidence(before, after, m['reads'] if snapshot_entry else m['writes'],
                                         backend=self.record['arm'], delegate=self.record['delegate'],

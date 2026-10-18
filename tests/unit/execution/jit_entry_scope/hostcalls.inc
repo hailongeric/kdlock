@@ -15,8 +15,8 @@ static void check_service_dispatch(void)
 	const unsigned int required = KD_HOSTCALL_F_ATOMIC_SAFE |
 		KD_HOSTCALL_F_NO_TASK_CONTEXT | KD_HOSTCALL_F_RETRY_SAFE;
 
-	CHECK(ARRAY_SIZE(kd_hostcalls) == ARRAY_SIZE(service_calls));
-	for (unsigned int i = 0; i < ARRAY_SIZE(kd_hostcalls); i++) {
+	CHECK(ARRAY_SIZE(kd_hostcalls) == ARRAY_SIZE(service_calls) + 2);
+	for (unsigned int i = 0; i < ARRAY_SIZE(service_calls); i++) {
 		for (unsigned int flags = 0; flags <= required; flags++) {
 			struct kd_regs expected;
 
@@ -92,7 +92,7 @@ static void check_service_returns(void)
 		memcpy(before_stack, stack, sizeof(stack));
 		for (unsigned int i = 0; i < count; i++)
 			steps[i] = (struct step){ KD_EXE_HOSTCALL,
-				kd_hostcalls[i % ARRAY_SIZE(kd_hostcalls)].addr, 1, -8 };
+				kd_hostcalls[i % ARRAY_SIZE(service_calls)].addr, 1, -8 };
 		steps[count] = (struct step){ KD_EXE_CALL_MISS, 0x9000, 1, -8 };
 		CHECK(run() == KD_EXE_RUN_TO_UNLOCK);
 		expected.ip = 0x9000;

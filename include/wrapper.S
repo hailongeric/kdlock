@@ -279,3 +279,8 @@ clobber_return:
 batch_return:
 	lea rsp, [rbp + 8]
 	ret
+
+#if KD_GENERATED_REQUIREMENTS & 2
+#define KD_EMIT_GUARD_DIRECTORY 1
+#include "jit.S"
+#endif

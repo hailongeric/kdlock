@@ -91,6 +91,7 @@ class MemoryValues:
         self.entry_spills_blocked = False
         self.allow_checked_entry_spills = False
         self.checked_spill_windows = frozenset()
+        self.load_guard = None
 
     def spend(self, amount):
         # Work is translation-local, not path-local: restoring a CFG snapshot
@@ -324,6 +325,23 @@ class MemoryValues:
         return tuple(ExprInt(value, memory.size) for value in sorted(projected))
 
     def load(self, memory):
+        result = self.load_unchecked(memory)
+        if self.load_guard is None or not any(is_wide(value) for value in result):
+            return result
+        excluded = self.load_guard(memory)
+        if not excluded:
+            return result
+        # The emitted predicate excludes these exact stack aliases for this
+        # load only. Keep every other cell and the global uncertainty default;
+        # neither the next instruction nor another path inherits disjointness.
+        cells = self.cells
+        self.cells = {key: value for key, value in cells.items() if key not in excluded}
+        try:
+            return self.load_unchecked(memory)
+        finally:
+            self.cells = cells
+
+    def load_unchecked(self, memory):
         size = (memory.size + 7) // 8
         if memory.size % 8 or size > self.MAX_ACCESS_BYTES:
             return (wide_value(memory.size),)

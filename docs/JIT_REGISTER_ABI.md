@@ -46,6 +46,17 @@ At clobber controls, analysis discards old register facts except SP/BP. It retai
 facts about saved stack values only when alias analysis or entry guards prove
 them. If the analysis budget runs out, the entry is refused before execution.
 
+The optional `KD_SPIN_DIRECT_HELPER_LOCK` uses this same ABI1 packet. At its
+source continuation it defines the already-clobbered `RBX` and `R12`–`R15` with
+five zeroing instructions before compiler reloads or helper prologues. Both hot
+local returns and delegated entry execute them; the ordinary cold path needs no
+added setup. It captures no additional registers and does not change SP/BP or
+the ordinary direct entry. Taskname now selects the ordinary entry because its
+bounded native service does not translate a helper prologue. The optional entry
+remains available to other callers; the two-word ABI is unchanged. The changed
+taskname shell still requires its own execution and performance validation.
+See [helper admission](design/admission.md#72-context-and-memory-admission).
+
 ### Mutex clobber and outer cookie
 
 Ordinary direct mutex uses ABI2. The outer paired interface first attempts to
@@ -109,12 +120,24 @@ two-word ABI remain the same.
 | 41 | `KDAB` identity tag |
 | 45 | Generated `entry_abi` byte |
 | 46 | Image publication protocol version, currently 2 |
-| 47 | Required runtime features; bit 0 means instruction-exit support |
+| 47 | Required runtime features: bit 0 mutex instruction exits; bit 1 checked ABI1 spin address exits; bit 2 bounded read-only string service; bit 3 bounded string-writing service |
 
 Layout-1 images cannot be published NORMAL. Ordinary offset 0 preserves the C ABI.
 Offset 16's adapter preserves physical RBP; offset 32 preserves it in the wrapper.
 Both batch entries allow the compiler to protect live combiner values and stay
 inside one C batch loop. Neither is callable as an ordinary C function pointer.
+
+The separate 16-byte `KD_JIT_CAPS` ioctl currently reports version 9. Feature
+bits 0 and 1 describe the checked mutex stack bound and static module per-CPU
+range; bit 3 advertises immutable mutex images and bit 4 exclusive KD mutex
+objects. Bit 5, introduced in version 6, supports mutex instruction exits.
+Bit 6, introduced in version 7, supports the checked spin address exit described
+below. Version 8 adds bit 7 for bounded `strcmp`; version 9 adds bit 8 for the
+separate `strscpy_pad` writing contract. Ordinary images can use compatible
+versions 5 through 9; optional
+image requirements must have their corresponding capability. Unknown requirement
+bits and mismatched backend/ABI combinations are refused. Bit 0 of the image
+requirements belongs only to mutex ABI2; bits 1, 2 and 3 belong only to spin ABI1.
 
 ## Physical and virtual registers
 
@@ -192,6 +215,7 @@ separate obligations; materializing FULL releases neither admission nor the gate
 | 6 ENTRY_REFUSED | Predicate failed before body execution |
 | 7 CLOBBER_COMPLETE | Body reached the validated final unlock using the minimal completion packet |
 | 8 NATIVE_ESCAPE | Checked mutex instruction marker; resume the waiter at the original instruction and disable future delegation |
+| 9 ADDRESS_GUARD | Checked ABI1 spin load would overlap recorded stack writes; resume the waiter before that load and disable future delegation |
 
 Wrapper values in `exe_info.h` differ from C dispatcher results in `exe.h`.
 COMPLETE stores only IP/SP/BP; FULL stores current logical GPRs before C reads them.
@@ -201,6 +225,29 @@ arbitrary native-recovery boundaries.
 Services `ktime_get`, `ktime_get_ns` and `int_sqrt` have typed argument/result,
 clobber and no-waiter-memory-write contracts. Their virtual return-slot write still
 participates in alias analysis; future services do not inherit that summary.
+
+The bounded string services also use HOSTCALL exit 5 and the existing FULL packet;
+they add no wrapper argument or exit number. `strcmp` reads saved DI/SI and writes
+its 32-bit integer result to saved AX. `strscpy_pad` reads DI/SI/DX, requires DX=64,
+writes the validated 64-byte destination and stores its full-width result in AX.
+The translator accounts for every destination byte and discards caller-saved
+register facts; it retains callee-saved registers and the returned SP. Neither
+service removes the source CALL's virtual return-word write from alias analysis.
+
+Both services require an immutable ABI1 image, a FULL root packet with one outer
+physical lock, and a checked original CALL/return pair. A successful invocation
+consumes that previously validated return word once. An argument check that fails
+before invocation resumes the original helper with its existing CALL word and
+disables the entry; errors after helper execution cannot request that fallback.
+There is room for at most 128 `strcmp` calls plus 16 other continuations per
+invocation. The latter allowance includes scalar services, lock controls and
+`strscpy_pad`; the total remains at most 144.
+
+See the [read-only](design/admission.md#bounded-original-strcmp-service) and
+[writing](design/admission.md#bounded-original-strscpy_pad-writing-service)
+admission contracts for source, argument and memory-lifetime checks. The writing
+service does not grant a general flags-dead proof to address guards. Fresh
+taskname/xattr workload and performance acceptance remain pending.
 
 ## Native continuation and final restore
 
@@ -226,7 +273,7 @@ reused after unpin; its ACK/task references must outlive the native suffix.
 For mutex entry ABI2, an image can replace a reviewed processor instruction with
 a marker: generated code that saves current state and returns exit 8 before that
 instruction executes. The image declares requirement bit 0, and the provider must
-advertise capability version 6 with `KD_JIT_CAP_NATIVE_ESCAPE` (bit 5).
+advertise capability version 6 through 9 with `KD_JIT_CAP_NATIVE_ESCAPE` (bit 5).
 The [instruction policy](design/admission.md#checked-instruction-exits) lists the
 exact eligible instructions and the static checks that still apply.
 
@@ -258,13 +305,60 @@ The read-only `native_escape_count` module parameter counts validated markers.
 It is diagnostic evidence, not an ownership record. Publication, a marker count,
 a returned JIT body and complete drain remain distinct observations.
 
-### Deferred access-time continuation
+### Checked spin address exit
 
-Checking arbitrary memory addresses immediately before each access remains
-unimplemented. The instruction marker does not add those checks or make generic
-faults resumable. General processor-flag repair, floating-point/vector state and
-hardware segment restoration remain outside this contract; see
-[open contracts](TODO.md).
+ABI1 spin images may check a restricted 64-bit `MOV` pointer load for overlap
+with recorded source-stack writes. Such images set requirement bit 1 and require
+provider version 7 through 9 with `KD_JIT_CAP_ADDRESS_GUARD` (bit 6). This is distinct from
+the mutex instruction marker. The [admission guide](design/admission.md#checked-spin-pointer-loads)
+defines the address and source flag proofs. Fresh taskname/xattr workload and
+performance acceptance remain pending.
+An image that required source constant-branch simplification cannot also obtain
+address-check admission: the simplified graph could omit a flags read still
+present in the original native suffix. Bodies requiring both remain refused.
+
+The image ends with a bounded directory containing at most 64 site records.
+Each 32-byte record contains the original eight-byte instruction address, a
+one-byte instruction length, proof kind 1, six reserved zero bytes and 16 bytes
+holding the opcode followed by zero padding. The final 16-byte footer contains
+`KDAG0001`, a four-byte directory offset and a four-byte record count. These are
+x86-64 little-endian fields, not pointers to userspace storage. Publication checks
+the directory bounds, unique source addresses, supported MOV encoding with the
+REX.W prefix that selects a 64-bit operand, source residency and exact source
+bytes. The encoding permits one base register
+with an optional displacement, including stack-base encoding, but no index,
+segment override, RIP-relative address or absolute address.
+
+Publishing an address-check or typed string-service image makes that spin entry use immutable versions from
+then on. Later recompilations cannot overwrite an active frame's code or site
+directory, even when a later image has no optional checks or services. Old versions remain until
+source-session teardown. This does not convert all ordinary spin or ABI3 rwlock
+entries to immutable publication.
+
+A failed check occurs before its load. Generated code materializes FULL with
+the exact source IP/SP/BP and current logical registers, stores
+`0x4b44414700000000 | site_index` in `orig_AX`, and returns exit 9. The runtime
+requires a matching immutable ABI1 image, one outer physical lock in a root
+frame, no pending nested/native/remote operation, and the exact directory token,
+source PC and unchanged opcode. The logical SP must leave four words below it
+and one live word at it within the waiter's kernel stack. Invalid state or a
+generic execution fault remains an error.
+
+After validation the runtime clears `orig_AX`, saves the continuation and
+permanently disables the stable entry for this source session under the image
+publication gate. The original waiter restores the full packet and resumes the
+same MOV with the same logical SP, without consuming a CALL word or replaying
+earlier effects. Existing physical ownership, unlock acknowledgements and frame
+retirement remain in force. Arithmetic flags are not restored on this path:
+the translator must prove every incoming arithmetic flag is overwritten before
+the source reads it. Passing checks preserve flags around their comparisons.
+The read-only `address_guard_count` parameter counts validated continuations;
+it does not prove body completion or replace an ownership record.
+
+This contract does not admit ABI3 rwlocks, nested spin continuations or arbitrary
+memory operations. General address/object validation, processor-flag repair,
+floating-point/vector state and hardware segment restoration remain outside it;
+see [open contracts](TODO.md).
 
 ## Change checklist
 

@@ -20,13 +20,16 @@ from source_text import ROOT, without_includes
 from test_spin_shadow import definition
 
 
-def main():
+def main(executor=None, benchmark=False):
     types, _ = production()
     types += without_includes(read_source((ROOT / "include/exe_info.h")))
     types += without_includes(read_source(ROOT / "include/kd_image.h"))
     types += without_includes(read_source(ROOT / "include/kd_jit_batch.h"))
     types += '#include "kd_hostcall.h"\n'
-    executor = read_source((ROOT / "kernel_module/exe.c"))
+    types += '#include "kd_strcmp_contract.h"\n'
+    types += '#include "kd_strscpy_contract.h"\n'
+    if executor is None:
+        executor = read_source(ROOT / "kernel_module/exe.c")
     types += definition(executor, "struct kd_hostcall_desc {").rstrip() + ";\n"
     for path in ("include/exe.h", "kernel_module/exe.c"):
         types += (
@@ -57,11 +60,14 @@ def main():
             "static void kd_jit_log_hl_error(const char *reason,",
             "static bool kd_jit_entry_has_scope(const struct kd_exec_frame *frame,",
             "static int kd_jit_call_limit_native(struct kd_exec_frame *frame,",
+            "static int kd_jit_string_prepare(struct kd_exe_info *exe,",
             "static int kd_jit_native_escape_opcode(unsigned long ip)",
             "static int kd_jit_native_escape(struct kd_exe_info *exe,",
+            "static int kd_jit_address_guard(struct kd_exe_info *exe,",
             "static void kd_exe_note_body(unsigned long entry_ip, unsigned long outer_lock_addr,",
             "static void *kd_jit_bound_code(const struct kd_exe_info *exe,",
-            "static bool kd_jit_bind_image(const struct kd_exe_info *exe,",
+            "static const struct kd_jit_image *kd_jit_select_image(const struct kd_exe_info *exe,",
+            "static inline bool kd_jit_bind_image(const struct kd_exe_info *exe,",
             "static __always_inline bool kd_jit_image_matches(const struct kd_exe_info *exe,",
             "static bool kd_jit_minimal_complete_allowed(const struct kd_exec_frame *frame)",
             "static void kd_jit_prepare_clobber(struct kd_jit_batch_call *call,",
@@ -75,8 +81,10 @@ def main():
             "int kd_exe_mutex_batch_resume(struct kd_exe_info *exe,",
         ),
     }.items():
-        source = read_source((ROOT / path))
+        source = executor if path == "kernel_module/exe.c" else read_source(ROOT / path)
         code += "\n".join(definition(source, name) for name in signatures) + "\n"
+    code = code.replace("translated(regs, args);",
+                        "fixture_wrapper_dispatch(translated, regs, args);")
     # Include the production manifest/table and adapters, substituting only the
     # service primitives. A handwritten dispatcher would not detect policy drift.
     hostcalls = "".join(
@@ -85,7 +93,24 @@ def main():
             "static int kd_hostcall_invoke_ktime_get(struct kd_regs *regs)",
             "static int kd_hostcall_invoke_ktime_get_ns(struct kd_regs *regs)",
             "static int kd_hostcall_invoke_int_sqrt(struct kd_regs *regs)",
+            "static int kd_hostcall_invoke_strcmp(struct kd_regs *regs)",
+            "static int kd_hostcall_invoke_strscpy_pad(struct kd_regs *regs)",
+            "static int kd_hostcall_strcmp_text(unsigned long address)",
+            "static int kd_hostcall_string_preflight(unsigned long address)",
+            "static int kd_hostcall_string_text_match(unsigned long address,",
+            "static int kd_hostcall_strscpy_text(unsigned long address)",
+            "static int kd_hostcall_strscpy_preflight(const struct kd_regs *regs,",
         )
+    )
+    # Only the native helper invocation is substituted. Production still checks
+    # the exact captured helper/CALL bytes and both original pointer arguments.
+    hostcalls = hostcalls.replace(
+        "int (*callee)(const char *, const char *) = (void *)regs->ip;",
+        "int (*callee)(const char *, const char *) = fixture_strcmp;",
+    )
+    hostcalls = hostcalls.replace(
+        "long (*callee)(char *, const char *, unsigned long) = (void *)regs->ip;",
+        "long (*callee)(char *, const char *, unsigned long) = fixture_strscpy_pad;",
     )
     hostcalls += executor[
         executor.index("static struct kd_hostcall_desc kd_hostcalls[] = {") : executor.index(
@@ -189,12 +214,12 @@ def main():
             "kd_hostcalls[i].addr == addr",
         ),
         "shared-service-budget-bypassed": (
-            "continuation_count >= KD_EXE_HL_MAX_CONTINUATIONS) {",
-            "(false && continuation_count >= KD_EXE_HL_MAX_CONTINUATIONS)) {",
+            "continuation_count >= KD_EXE_HL_MAX_CONTINUATIONS))) {",
+            "(false && continuation_count >= KD_EXE_HL_MAX_CONTINUATIONS)))) {",
         ),
         "service-return-not-consumed": (
-            "regs->sp += sizeof(unsigned long);",
-            "regs->sp += 0;",
+            "return_ip = READ_ONCE(*(unsigned long *)regs->sp);\n\tregs->sp += sizeof(unsigned long);",
+            "return_ip = READ_ONCE(*(unsigned long *)regs->sp);\n\tregs->sp += 0;",
         ),
         "service-error-ignored": (
             "if (call_ret) {\n\t\t\t\tif (call_ret == -ENOENT",
@@ -226,10 +251,78 @@ def main():
             "\tkd_exe_publish_status(kd_get_exe(0, frame->entry_ip), KD_EXE_CALL_MISS);\n"
             "\tpr_warn_ratelimited(",
         ),
+        "string-result-sign-extended": (
+            "regs->ax = (unsigned int)callee(", "regs->ax = (long)callee(",
+        ),
+        "string-quota-bypassed": (
+            "string_count >= KD_STRCMP_MAX_CALLS", "false",
+        ),
+        "string-requirement-bypassed": (
+            "if (!(frame->image->requirements & (service->id == KD_HOSTCALL_STRCMP ?\n\t\tKD_IMAGE_REQUIRE_STRING_SERVICES : KD_IMAGE_REQUIRE_STRING_WRITE)))",
+            "if (false)",
+        ),
+        "string-return-source-call-bypassed": (
+            "call[0] != 0xe8", "false",
+        ),
+        "string-unterminated-allowed": (
+            "\t\tif (!value)\n\t\t\treturn 0;\n\t}\n\treturn KD_HOSTCALL_NOT_EXECUTED;",
+            "\t\tif (!value)\n\t\t\treturn 0;\n\t}\n\treturn 0;",
+        ),
+        "copy-count-bypassed": (
+            "regs->dx != KD_STRSCPY_BYTES ||", "false ||",
+        ),
+        "copy-source-stack-allowed": (
+            "(regs->si < end && regs->si + KD_STRSCPY_BYTES > base)",
+            "(regs->si < base && false)",
+        ),
+        "copy-result-truncated": (
+            "regs->ax = (unsigned long)callee(", "regs->ax = (unsigned int)callee(",
+        ),
     }
+    if benchmark:
+        mutations = {
+            "completion-omitted": (
+                "bench_completion_root && body_reported)",
+                "bench_completion_root && body_reported && false)",
+            ),
+            "completion-counts-native-or-error": (
+                "if (ret_flag == KD_EXE_RUN_TO_UNLOCK &&\n\t    bench_completion_root",
+                "if (ret_flag != KD_EXE_NO_RUN &&\n\t    bench_completion_root",
+            ),
+            "completion-without-witness": (
+                "bench_completion_root && body_reported)",
+                "bench_completion_root)",
+            ),
+            "completion-counts-remote-suffix": (
+                "bench_completion_root = pristine_root && !frame->parent && !frame->depth &&\n\t\t!frame->resume_target && outer_lock_addr;",
+                "bench_completion_root = outer_lock_addr;",
+            ),
+            "completion-counts-physical-child": (
+                "bench_completion_root = pristine_root && !frame->parent && !frame->depth &&",
+                "bench_completion_root = pristine_root &&",
+            ),
+            "completion-per-wrapper": (
+                "if (resume_after_hostcall)\n\t\t\t\tatomic64_inc(&kd_hostcall_resumed);",
+                "if (resume_after_hostcall) {\n\t\t\t\tkd_bench_note_completion(outer_lock_addr);\n\t\t\t\tatomic64_inc(&kd_hostcall_resumed);\n\t\t\t}",
+            ),
+            "completion-counts-unfinished-batch": (
+                "if (kd_entry_abi_spin_clobber(call->entry_abi) ?",
+                "kd_bench_note_completion(call->lock);\n\tif (kd_entry_abi_spin_clobber(call->entry_abi) ?",
+            ),
+        }
     with tempfile.TemporaryDirectory(prefix="kdlock-jit-entry-scope-") as tmp:
         directory = Path(tmp)
         (directory / "frame_types.h").write_text(types)
+        if benchmark:
+            # Real counter gate, with one CPU slot substituted for per-CPU storage.
+            (directory / "bench_code.h").write_text(
+                "#define DECLARE_PER_CPU(type, name) extern type name\n"
+                "#define this_cpu_inc(name) ((name)++)\n"
+                + without_includes((ROOT / "bench/spin_cacheline/provider/kd_bench.h").read_text())
+                + "\nbool kd_bench_quiet, kd_bench_complete_probe;\n"
+                "unsigned long kd_bench_lock_addr;\n"
+                "u64 kd_bench_bodies, kd_bench_completions;\n"
+            )
         for name, mutation in [("production", None), *mutations.items()]:
             sources = {"frame_code.h": code, "hostcall_code.h": hostcalls,
                        "timing_code.h": timing_code(), "registry_lookup.h": lookup}
@@ -237,8 +330,8 @@ def main():
                 before, after = mutation
                 count = sum(source.count(before) for source in sources.values())
                 # The error counter occurs on both invoke and return failure.
-                assert count == (2 if name in ("service-error-allows-replay",
-                                               "timing-overflow-not-marked") else 1)
+                assert count == (4 if name == "service-error-allows-replay" else
+                                 2 if name == "timing-overflow-not-marked" else 1), (name, count)
                 sources = {
                     path: text.replace(before, after)
                     for path, text in sources.items()
@@ -255,6 +348,7 @@ def main():
                     "-Wextra",
                     "-Werror",
                     *(["-DKD_ENTRY_MUTATION"] if mutation else []),
+                    *(["-DKD_BENCH_COMPLETION_FIXTURE"] if benchmark else []),
                     "-I",
                     str(directory),
                     "-I",

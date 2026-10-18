@@ -83,6 +83,7 @@ def emit_jit_assembly(
     resolved_hostcalls, keep_call_stack, *, entry_guards=None, body_witness=False,
     terminal_clobber_unlocks=(),
     native_escapes=False,
+    address_guards=None,
 ):
     continuation_targets = find_resumable_call_continuations(
         block_dict, db_dict, keep_call_stack
@@ -172,6 +173,8 @@ def emit_jit_assembly(
             target = (db.get_location_offset(line.args[0].loc_key)
                       if line.name == 'CALL' and isinstance(line.args[0], ExprLoc)
                       else None)
+            if address_guards is not None:
+                f.write(address_guards.emit(line, reg_map))
             if native_escapes and native_escape.descriptor(line):
                 diagnostics.warn("NATIVE_ESCAPE_MARKER", "emit_waiter_exit",
                                  "stop before source instruction and disable future delegation",
@@ -223,4 +226,10 @@ def emit_jit_assembly(
             f"0x{budget_rips[0]:x}" if budget_rips else "n/a"
         ),
     )
-    return f.getvalue()
+    result = f.getvalue()
+    if address_guards is not None and address_guards.sites:
+        # wrapper.S includes the same self-contained artifact a second time
+        # after its exit code, placing the validated directory at image end.
+        result = ("#ifndef KD_EMIT_GUARD_DIRECTORY\n" + result + "#else\n"
+                  + address_guards.metadata() + "#endif\n")
+    return result

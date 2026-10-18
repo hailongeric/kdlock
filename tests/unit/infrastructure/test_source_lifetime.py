@@ -81,7 +81,7 @@ def main():
             ".mutex_stack_bytes = KD_JIT_MUTEX_STACK_BYTES + 8,",
         ),
         "missing-stack-feature": (
-            ".features = KD_JIT_CAP_MUTEX_STACK | KD_JIT_CAP_MUTEX_IMAGES |\n\t\t\tKD_JIT_CAP_MUTEX_EXCLUSIVE | KD_JIT_CAP_NATIVE_ESCAPE,",
+            ".features = KD_JIT_CAP_MUTEX_STACK | KD_JIT_CAP_MUTEX_IMAGES |\n\t\t\tKD_JIT_CAP_MUTEX_EXCLUSIVE | KD_JIT_CAP_NATIVE_ESCAPE |\n\t\t\tKD_JIT_CAP_ADDRESS_GUARD | KD_JIT_CAP_STRING_SERVICES |\n\t\t\tKD_JIT_CAP_STRING_WRITE,",
             ".features = 0,",
         ),
         "wrong-module-arena": (
@@ -93,8 +93,19 @@ def main():
             "(void)caps.features;",
         ),
         "missing-native-escape-feature": (
-            "KD_JIT_CAP_MUTEX_EXCLUSIVE | KD_JIT_CAP_NATIVE_ESCAPE,",
-            "KD_JIT_CAP_MUTEX_EXCLUSIVE,",
+            "KD_JIT_CAP_MUTEX_EXCLUSIVE | KD_JIT_CAP_NATIVE_ESCAPE |",
+            "KD_JIT_CAP_MUTEX_EXCLUSIVE |",
+        ),
+        "missing-address-guard-feature": (
+            "KD_JIT_CAP_ADDRESS_GUARD | KD_JIT_CAP_STRING_SERVICES |",
+            "KD_JIT_CAP_STRING_SERVICES |",
+        ),
+        "missing-string-service-feature": (
+            "KD_JIT_CAP_ADDRESS_GUARD | KD_JIT_CAP_STRING_SERVICES |",
+            "KD_JIT_CAP_ADDRESS_GUARD |",
+        ),
+        "missing-string-write-feature": (
+            "KD_JIT_CAP_STRING_WRITE,", "0,",
         ),
     }
     with tempfile.TemporaryDirectory(prefix="kdlock-source-unit-") as tmp:

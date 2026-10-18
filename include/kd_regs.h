@@ -34,6 +34,8 @@
 /* Only a validated instruction marker sets orig_ax to this continuation tag.
  * Ordinary CALL exits clear it. No packet layout or wrapper word is added. */
 #define KD_REG_NATIVE_ESCAPE_TAG 0x4b44455343415045UL
+#define KD_REG_ADDRESS_GUARD_TAG 0x4b44414700000000UL
+#define KD_REG_ADDRESS_GUARD_MASK 0xffffffff00000000UL
 #define KD_REG_ARITHMETIC_FLAGS 0x8d5UL
 
 #ifndef __ASSEMBLER__

@@ -43,6 +43,8 @@ def main():
     )
     for marker in ("enum kd_entry_abi {", "enum kd_packet_state {"):
         types += definition((ROOT / "include/exe_info.h").read_text(), marker).rstrip() + ";\n"
+    types += definition((ROOT / "include/exe_info.h").read_text(),
+                        "static inline int kd_entry_abi_spin_clobber(unsigned int abi)")
     types += (ROOT / "include/kd_jit_batch.h").read_text()
     spin = read_source((ROOT / "kernel_module/kd_spinlock.c"))
     for marker in ("struct kd_spin_cpu_state {", "struct kd_spin_request {"):
@@ -117,6 +119,8 @@ def main():
         ),
         ("static inline bool check_irq_node(struct kd_spin_node *node)", ""),
         ("void kd_spin_jit_prepare_complex(struct kd_exec_frame *frame)", ""),
+        ("static void kd_spin_rw_begin(struct kd_exec_frame *frame)", ""),
+        ("static void kd_spin_rw_cancel(struct kd_exec_frame *frame)", ""),
         ("clear_locked_set_completed(struct kd_spin_node *lock)", "static void\n"),
         ("static __always_inline void set_locked(struct qspinlock *word)", ""),
         (

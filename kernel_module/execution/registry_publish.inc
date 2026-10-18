@@ -28,6 +28,8 @@ void kd_exe_add_abi(int pid, unsigned long rip, enum kd_exe_lock_kind kind,
 {
 	unsigned long publish_flags;
 	void *mem = NULL;
+	struct kd_jit_image *image;
+	unsigned int i;
 	struct kd_exe_info *exe;
 	int ret;
 
@@ -93,6 +95,25 @@ void kd_exe_add_abi(int pid, unsigned long rip, enum kd_exe_lock_kind kind,
 	exe->lock_kind = kind;
 	exe->entry_abi = abi;
 	exe->code_block = mem;
+	if (mem) {
+		/* Even the historical in-place spin block has stable identity. A
+		 * later guarded image must not redirect its already-bound frames. */
+		image = NULL;
+		for (i = 0; i < KD_CODE_BLOCK_POOL; i++)
+			if (!kd_images[i].code) {
+				image = &kd_images[i];
+				break;
+			}
+		BUG_ON(!image);
+		image->code = mem;
+		image->entry = exe;
+		image->entry_abi = abi;
+		image->requirements = 0;
+		image->generation = 0;
+		image->length = 0;
+		image->immutable = 0;
+		smp_store_release(&kd_published_images[exe - kd_exes], image);
+	}
 
 	smp_store_release(&exe->status_code, KD_EXE_UNINIT);
 	kd_code_block_gate_unlock(publish_flags);

@@ -59,7 +59,7 @@ boundaries remain separate for reading.
 | [kd_rwsem.c](kd_rwsem.c) | Sleeping APIs, ordinary cancellation/downgrade and outer-writer phase admission before the unchanged mutex queue |
 | [lock](lock) via [kd_lock.c](kd_lock.c) | Direct KD mutex routes and nested spin/mutex control CALLs |
 | [execution](execution) | Registry, wrapper preparation, frame/ledger, control/services, native and remote ACK |
-| [execution/images.inc](execution/images.inc) | Immutable mutex publication, bound generations, stale-miss rejection and permanent disable after an instruction marker |
+| [execution/images.inc](execution/images.inc) | Immutable mutex publication and ABI1 guard/service images, bound generations, stale-miss rejection and permanent delegation refusal |
 | [kd_source.c](kd_source.c), [sys.c](sys.c) | Text pins, device session, capabilities, publication and retirement |
 | [kd_hotlock.c](kd_hotlock.c) | Exact-address per-type tables and approximate sampling |
 | [kd_mutex_tasks.c](kd_mutex_tasks.c) | Exact task/acquisition refs and RCU lifetime |
@@ -84,6 +84,7 @@ include those files too. Shared APIs live in [include](../include/README.md).
 | `hotlock_stats` | Optional final approximate observation totals |
 | `target_process` | Task comm eligible for direct mutex delegation |
 | `native_escape_count` | Read-only total of validated instruction-exit markers; read after workers finish. It does not establish completion or control admission. |
+| `address_guard_count` | Read-only total of validated spin pointer-load exits; read after workers finish. It does not establish body completion, lock ownership or drain. |
 
 [Execution flow](../docs/JIT_EXECUTION.md#heat-and-roles) owns full heat rules;
 [spin](../docs/design/spin_implementation.md) owns layout/prefetch/batch details;
@@ -106,9 +107,10 @@ does not stop delegation. If execution reaches it, the provider preserves the
 current registers and resumes the original waiter at that instruction, without
 repeating earlier writes.
 
-This feature requires provider capability version 6 and the matching requirement
-in the generated image, the object containing the compiled code. Older providers
-cannot accept such an image. The existing two-word wrapper interface and ABI2
+The current provider advertises capability version 9, retaining the instruction
+exit feature introduced in version 6. The translator requires the matching
+capability bit and image requirement, which declares what the compiled code needs
+from the provider. The existing two-word wrapper interface and ABI2
 mutex protocol remain unchanged. The waiter regains arithmetic flags, which
 describe calculation results, while retaining its own control flags, which
 govern matters such as interrupts and access checks.
@@ -125,6 +127,50 @@ untaken and taken branches, resumption on the original task, and subsequent loca
 execution. Generic translation errors and exhausted execution limits do not use
 this recovery path. The [register contract](../docs/JIT_REGISTER_ABI.md#checked-instruction-exit)
 describes the exact saved state and validation conditions.
+
+## Checked spin pointer loads
+
+Version 9 retains the checked pointer-load feature introduced in version 7.
+A limited ABI1 spin translation may check a pointer load against tracked stack
+writes immediately before executing it. A
+failed check resumes the original waiter at the same instruction and stack
+position, preserves earlier effects and disables delegation for the entry.
+The [admission guide](../docs/design/admission.md#checked-spin-pointer-loads)
+defines the supported load and required proof that incoming arithmetic flags are
+unused by the original remainder. This does not authorize arbitrary address or
+fault recovery, nested spin ownership or ABI3 rwlock exits.
+
+Such images publish in separate immutable blocks. Earlier frames retain their
+original descriptor and code; all later generations of that entry are immutable
+too. Ordinary spin/rwlock entries still use in-place images. The exit retains the
+physical owner, acquisition ticket, source lease and required native references
+and acknowledgements until normal retirement. The
+[focused probe](../tests/kernel/spin/address_guard/run.py) checks those effects;
+performance acceptance requires separate workload measurements.
+
+## Bounded string services
+
+Version 9 retains the original [`strcmp` service](../docs/design/admission.md#bounded-original-strcmp-service)
+introduced in version 8 and separately negotiates the original
+[`strscpy_pad` writing service](../docs/design/admission.md#bounded-original-strscpy_pad-writing-service).
+Both require ABI1, one outer physical spin owner and an immutable image. The
+caller must keep ordinary source strings valid and unchanged; provider checks
+cannot establish those lifetimes or exclude concurrent writers.
+
+Before invocation, the provider checks the exact helper code, source CALL,
+return token and argument bounds. These checks are called **preflight**. A
+refused argument leaves the CALL intact for execution on the original waiter
+and disables future delegation of the entry. Success consumes the validated
+return exactly once. `strscpy_pad` has a count of 64 and a destination confined to
+the waiter's live local frame; all checks precede the first write. A helper that
+has run cannot be retried through native fallback. The admission guides define
+the full argument and discarded-helper-stack restrictions.
+
+Only `strcmp` has the separate 128-call allowance. `strscpy_pad`, scalar services
+and lock controls share the existing 16-call allowance, for at most 144 such
+continuations before final unlock. These services preserve the two-word wrapper
+ABI, exact owners, source leases and final acknowledgements. Functional and
+performance acceptance for each workload still require measured evidence.
 
 ## Validation and shutdown
 

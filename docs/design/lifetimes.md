@@ -14,7 +14,8 @@ The earlier audit is in [VALIDATION](https://github.com/hailongeric/kdlock/blob/
 
 | Resource | What keeps it alive | Limit |
 | --- | --- | --- |
-| JIT entry and source code | Entries use `(0, RIP)`. Registration, text reads and ordinary call targets pin up to 64 LIVE modules for the session. Retirement invalidates every used entry before dropping those pins. | No concurrent code versions or source replacement within a session. Init and unknown source are refused. |
+| JIT entry and source code | Entries use `(0, RIP)`. Registration, text reads and ordinary call targets pin up to 64 LIVE modules for the session. Retirement invalidates every used entry before dropping those pins. | No concurrent source-code versions or source replacement within a session. Init and unknown source are refused. |
+| Generated image | Frames bind an image descriptor independently of their acquisition ticket. Mutex images and ABI1 spin entries that publish checked pointer loads, `strcmp` or `strscpy_pad` retain immutable generations in the existing code pool until session teardown. | Ordinary spin/rwlock descriptors initially refer to in-place code. Binding that descriptor alone does not make its bytes immutable. Image lifetime does not pin source data or lock allocations. |
 | Translation session | The daemon, cache and translator children share one writer-open device description. Real kcore reads pin source before inspecting it. | Publishers must follow this path. A pin keeps a module loaded; it does not prove its bytes are unchanged or arbitrary pointers remain valid. |
 | Hotlock record | Per-CPU records match exact typed addresses, have bounded capacity and reset their sampling windows without eviction. | Reusing an address does not identify a new allocation. Statistics cannot authorize unlock or request retirement. |
 | KD mutex object | The caller owns physical and scheduling state in one object. | Join callers and drain physical/OSQ/sleeping/delegation queues, ACKs and frames before destroy or reuse. `kd_mutex_is_idle` checks stopped objects; it does not pin storage. |
@@ -131,6 +132,43 @@ return only skips redundant work: it reads no source bytes, calls no code and
 acquires no execution lease. Readiness and frame admission still gate execution;
 pins are released only after invalidation and drain. Slots are never reused
 within the session, and controlled module teardown still requires no callers.
+
+#### Executable images and guarded spin transition
+
+An ordinary spin/rwlock entry receives its first descriptor with its allocated
+code block. Successful wrapper preparation binds that descriptor to the frame;
+refused preparation leaves the frame unchanged. The descriptor and the exact
+spin acquisition ticket occupy separate fields and protect different lifetimes.
+Ordinary recompilation may still replace that initial block in place.
+
+The first ABI1 image requiring [checked pointer loads](admission.md#checked-spin-pointer-loads),
+[`strcmp`](admission.md#bounded-original-strcmp-service) or
+[`strscpy_pad`](admission.md#bounded-original-strscpy_pad-writing-service)
+is staged in a separate block and validated before publication. Each guard's
+source instruction is pinned and its bytes checked while source admission is
+open. Publishing the new descriptor does not overwrite the earlier block or
+redirect frames already bound to it. Every subsequent image for that entry uses
+another immutable block, even if it no longer requires guards or typed services.
+The upload destination is fixed by the first chunk; an older in-place upload
+cannot overwrite a newly published immutable image. Old-generation misses cannot
+change the current generation's metadata.
+
+An address-guard exit validates its source target again under the active frame's
+source lease before native transfer. A typed string service validates its exact
+helper code, source CALL and return before invocation. A failed address guard or
+string argument check disables the stable entry under the same publication gate
+that installs images, preventing a concurrent upload from reenabling delegation.
+Already admitted frames keep their own code, exact owners and source references
+until retirement. All generations share the existing
+64-block pool and remain allocated until session teardown; there is no in-session
+generation reclamation. These rules do not extend immutable publication to
+ordinary spin/rwlock entries that have never made this transition.
+
+Source-code pins do not keep arbitrary string allocations alive or stop writers.
+The string-service caller must establish both properties under its physical
+source lock. The writing service's destination is restricted to the original
+waiter's live local frame; checks precede all writes. These limits preserve the
+existing ownership and retirement rules rather than introducing a new lock API.
 
 The source limit is 64 distinct modules, with no hook-time allocation; each
 read is limited to 256 KiB. Built-in resident ranges need no module ref. These

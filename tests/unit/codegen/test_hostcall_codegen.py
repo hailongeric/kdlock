@@ -2,12 +2,15 @@
 # Emitting a matching exit does not execute a Linux service or prove resumption.
 import os
 import re
+import struct
 import sys
 
 ROOT = os.path.normpath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
 sys.path.insert(0, os.path.join(ROOT, "disassem"))
 
 import hostcall
+import strcmp_service
+import strscpy_service
 
 # Missing miasm must fail this required code-generation gate, not count as PASS.
 import indirect_jump
@@ -44,8 +47,21 @@ def main():
 
     unknown_address = 0x2000
     addresses = {spec.symbol: 0x1000 + i * 0x100 for i, spec in enumerate(specs)}
-    services = hostcall.resolve_hostcalls(lambda symbol, _: addresses.get(symbol))
-    require(len(services) == len(specs), "a declared service was not resolved")
+    addresses["__x86_return_thunk"] = 0x3000
+    raw = bytearray(strcmp_service.TEMPLATE)
+    for offset in strcmp_service.TAIL_OFFSETS:
+        struct.pack_into("<i", raw, offset,
+                         addresses["__x86_return_thunk"] - addresses["strcmp"] - offset - 4)
+    disabled = hostcall.resolve_hostcalls(lambda symbol, _: addresses.get(symbol))
+    require(addresses["strcmp"] not in disabled, "string service bypassed negotiation")
+    services = hostcall.resolve_hostcalls(lambda symbol, _: addresses.get(symbol),
+                                         string_services=True, reader=lambda addr, size: bytes(raw))
+    require(addresses["strscpy_pad"] not in services,
+            "readonly string capability enabled a writing service")
+    require(len(services) == len(specs) - 1, "an enabled service was not resolved")
+    # Writer text/capability checks have their own exact-contract tests. Stub
+    # generation must nevertheless preserve the common pending CALL for ID5.
+    services[addresses["strscpy_pad"]] = hostcall.HostcallSpec(*strscpy_service.SPEC)
     assembly = indirect_jump.make_callee_table(
         [unknown_address, *services], services
     )

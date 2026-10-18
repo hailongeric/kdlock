@@ -19,9 +19,10 @@ static inline void kd_bench_note_body(unsigned long lock_addr)
 		this_cpu_inc(kd_bench_bodies);
 }
 
-/* Only a pristine batch wrapper that reaches its matching outer unlock in
- * that same invocation calls this. Entry witnesses alone also count partial
- * execution followed by native fallback; they cannot prove a full snapshot. */
+/* A root invocation calls this once after reaching its validated outer unlock,
+ * either directly from a batch or after dispatcher services. Entry witnesses
+ * alone include partial execution followed by native fallback; they cannot
+ * prove completion. Nested/remote suffixes and native exits do not count. */
 static inline void kd_bench_note_completion(unsigned long lock_addr)
 {
 	if (unlikely(kd_bench_complete_probe && kd_bench_lock_addr &&

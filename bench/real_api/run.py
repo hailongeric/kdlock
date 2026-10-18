@@ -25,6 +25,7 @@ from summarize import write_json
 import kernel_identity
 sys.path.insert(0, str(ROOT / 'bench/tclock_compare'))
 from context_audit import audit as audit_tclock
+from evidence import helper_ready, jit_evidence
 
 TC = ROOT / 'tclock_backend/tclock_backend_km.ko'
 GUARD = ROOT / 'bench/tclock_compare/allocator_guard/tc_allocator_guard.ko'
@@ -199,6 +200,7 @@ class SyscallSession(Session):
         while True:
             state = Path(f'/proc/{self.daemon.pid}/status').read_text()
             if re.search(r'^State:\s+T', state, re.M):
+                require(not children(self.daemon.pid), 'translator raced daemon pause', 'UNDRAINED')
                 return
             require(time.monotonic() < deadline, 'daemon did not stop between learning waves')
             time.sleep(.01)
@@ -216,17 +218,62 @@ class SyscallSession(Session):
             reg = registry()
             if len(reg) == 1 and reg[0]['status'] == 0 and metrics and not children(self.daemon.pid):
                 self.record['translation'] = metrics
-                self.record['publication'] = self.publication()
+                publication = self.publication()
+                self.record['publication'] = publication
+                history = self.record.setdefault('publications', [])
+                archive = self.path/'publications'/f'{len(history):02d}'
+                archive.mkdir(parents=True)
+                entry = publication['entry']
+                folder = self.path/'workspace/daemon'/hex(entry['entry'])/str(entry['tgid'])/'asm'
+                for name in publication['images']:
+                    shutil.copyfile(folder/name, archive/name)
+                history.append(dict(path=str(archive.relative_to(self.path)), **publication))
+                self.save()
                 return
             if time.monotonic() >= deadline:
                 raise Failure('TRANSLATION_TIMEOUT', 'no JIT publication after 90 seconds')
             time.sleep(.1)
+
+    def learn_helpers(self):
+        s = self.record
+        counts = Path('/sys/module/kdlock_km/parameters')
+        s['learning_waves'] = []
+        for wave in range(s['helper_waves']):
+            self.pause_daemon()
+            before = int((counts/'bench_jit_bodies').read_text())
+            complete_before = int((counts/'bench_jit_completions').read_text())
+            warm = self.tell('learn', label=f'learning-{wave}')
+            require(warm['ok'] and [w['cpu'] for w in warm['workers']] == s['helper_cpus'] and
+                    warm['completed'] == sum(w['completed'] for w in warm['workers']) and
+                    all(w['cpu'] == w['observed_cpu'] and w['error'] == 0 and
+                        w['completed'] >= s['warmup'] and
+                        w['finished_ns'] >= warm['started_ns'] + s['warmup_ms']*1000000
+                        for w in warm['workers']),
+                    'helper-learning syscall oracle or cohort failed', 'DATA_ERROR')
+            evidence = jit_evidence(int((counts/'bench_jit_bodies').read_text()) - before,
+                int((counts/'bench_jit_completions').read_text()) - complete_before,
+                warm['completed'], enabled=True)
+            state = status()
+            require(state['frames'] == 0 and state['writers'] == 1,
+                    'learning wave did not drain to the paused daemon lease', 'UNDRAINED')
+            reg = registry()
+            s['learning_waves'].append(dict(registry=reg, cpus=s['helper_cpus'], **evidence))
+            self.save()
+            os.kill(self.daemon.pid, signal.SIGCONT)
+            if helper_ready(reg, evidence):
+                return
+            if not (len(reg) == 1 and reg[0]['status'] == 0):
+                self.await_publication()
+        raise Failure('PREPARATION_FAILED',
+                      'helper learning did not establish complete delegation within configured waves')
 
     def prepare(self):
         s = self.record
         argv = [self.out/'build/client', s['kind'], s['query'], s['entries'], s['value_size'],
                 ','.join(map(str, s['cpus'])), s['collector_cpu'], s['duration_ms'],
                 s['warmup'], s['warmup_ms']]
+        if s['helper_cpus']:
+            argv.append(','.join(map(str, s['helper_cpus'])))
         self.client_log = (self.path/'client.stderr').open('w')
         self.client = subprocess.Popen(list(map(str, argv)), stdin=subprocess.PIPE,
                                        stdout=subprocess.PIPE, stderr=self.client_log,
@@ -239,7 +286,7 @@ class SyscallSession(Session):
         self.run(['insmod', self.out/'build/tc_allocator_guard.ko'], 'load-guard.log')
         self.run(['rmmod', 'tc_allocator_guard'], 'unload-guard.log')
         if s['arm'] == 'kdlock':
-            self.run(['insmod', self.out/'build/kdlock_km.ko', 'bench_quiet=1', 'jit_timing=0',
+            self.run(['insmod', self.out/'build/kdlock_km.ko', 'bench_quiet=1', 'bench_complete_probe=1', 'jit_timing=0',
                       'hotlock_stats=1', 'target_process=sc_worker', 'spin_entry_ratio_limit=2',
                       'spin_prefetch=2'], 'load-kd.log')
             self.loaded_kd = True
@@ -262,7 +309,13 @@ class SyscallSession(Session):
             if self.loaded_tc:
                 (self.tc_params/'target_lock').write_text(str(s['lock_addr']))
             if self.loaded_kd:
-                Path('/sys/module/kdlock_km/parameters/bench_lock_addr').write_text(str(s['gate_addr']))
+                params = Path('/sys/module/kdlock_km/parameters')
+                (params/'bench_lock_addr').write_text(str(s['gate_addr']))
+                s['probe_parameters'] = {name: (params/name).read_text().strip()
+                    for name in ('bench_complete_probe', 'bench_lock_addr')}
+                require(s['probe_parameters']['bench_complete_probe'] in ('Y', '1') and
+                        int(s['probe_parameters']['bench_lock_addr'], 0) == s['gate_addr'],
+                        'KD completion probe configuration differs')
             (PARAM/'prepare').write_text('1')
         if self.loaded_kd:
             sym = [line.split() for line in Path('/proc/kallsyms').read_text().splitlines()]
@@ -274,26 +327,12 @@ class SyscallSession(Session):
             s['entry_range'] = [begin[0], begin[0]+sizes[0]]
             self.start_daemon()
             self.await_publication()
-            s['learning_waves'] = []
             # A helper miss is learned only after every caller has joined.
             # The stopped daemon cannot replace an image while workers use it.
             # A final equal-size warmup follows these preparation-only waves.
-            if s['kind'] == 'xattr' and s['threads'] > 1 and s['helper_waves']:
-                for wave in range(s['helper_waves']):
-                    self.pause_daemon()
-                    warm = self.tell('warmup', label=f'learning-{wave}')
-                    require(warm['ok'], 'helper-learning syscall oracle failed', 'DATA_ERROR')
-                    state = status()
-                    require(state['frames'] == 0 and state['writers'] == 1,
-                            'learning wave did not drain to the paused daemon lease', 'UNDRAINED')
-                    reg = registry()
-                    s['learning_waves'].append(reg)
-                    os.kill(self.daemon.pid, signal.SIGCONT)
-                    if len(reg) == 1 and reg[0]['status'] == 0:
-                        break
-                    self.await_publication()
-                else:
-                    require(len(reg) == 1 and reg[0]['status'] == 0, 'helper learning did not converge')
+            s['learning_waves'] = []
+            if s['kind'] == 'xattr' and s['helper_waves']:
+                self.learn_helpers()
             self.stop_daemon()
         require(self.tell('check', label='check-before')['check'], 'redirected syscall result differs')
         warm = self.tell('warmup')
@@ -312,7 +351,12 @@ class SyscallSession(Session):
                     'translator writer remains before measurement', 'UNDRAINED')
         before = int((PARAM/'calls').read_text()) if self.loaded_source else 0
         jit = Path('/sys/module/kdlock_km/parameters/bench_jit_bodies')
+        complete = Path('/sys/module/kdlock_km/parameters/bench_jit_completions')
+        address_guard = Path('/sys/module/kdlock_km/parameters/address_guard_count')
         jbefore = int(jit.read_text()) if self.loaded_kd else 0
+        complete_before = int(complete.read_text()) if self.loaded_kd else 0
+        s['address_guards_before'] = (int(address_guard.read_text())
+                                      if self.loaded_kd and address_guard.exists() else None)
         tc_delegated = self.tc_params/'delegated'
         tc_before = int(tc_delegated.read_text()) if self.loaded_tc and tc_delegated.exists() else None
         s['execution_status'] = 'MEASURING'
@@ -328,15 +372,17 @@ class SyscallSession(Session):
         s['redirected_calls'] = int((PARAM/'calls').read_text())-before if self.loaded_source else 0
         require(not self.loaded_source or s['redirected_calls'] == m['completed'],
                 'not every measured syscall reached substituted critical section', 'DATA_ERROR')
-        s['jit_bodies'] = int(jit.read_text())-jbefore if self.loaded_kd else 0
-        require(0 <= s['jit_bodies'] <= m['completed'], 'invalid JIT count')
         if s['kind'] == 'utsname':
-            require(m['reads'] + m['writes'] == m['completed'] and s['jit_bodies'] <= m['writes'],
-                    'invalid rwlock operation/JIT accounting', 'DATA_ERROR')
-        s['jit_eligible_operations'] = m['writes'] if s['kind'] == 'utsname' else m['completed']
-        s['jit_share'] = s['jit_bodies']/s['jit_eligible_operations'] if s['jit_eligible_operations'] else 0
-        s['jit_status'] = ('PASS' if s['jit_bodies'] else 'NO_JIT') if self.loaded_kd else 'NOT_APPLICABLE'
+            require(m['reads'] + m['writes'] == m['completed'],
+                    'invalid rwlock operation accounting', 'DATA_ERROR')
+        s.update(jit_evidence(int(jit.read_text()) - jbefore if self.loaded_kd else 0,
+            int(complete.read_text()) - complete_before if self.loaded_kd else 0,
+            m['writes'] if s['kind'] == 'utsname' else m['completed'], enabled=self.loaded_kd))
         s['registry_after'] = registry() if self.loaded_kd else []
+        s['address_guards_after'] = (int(address_guard.read_text())
+                                     if s['address_guards_before'] is not None else None)
+        s['address_guard_exits'] = (s['address_guards_after'] - s['address_guards_before']
+                                    if s['address_guards_before'] is not None else None)
         if self.loaded_kd:
             s['published_after'] = self.publication()
             require(s['published_after']['source']['writers'] == 0,
@@ -349,6 +395,8 @@ class SyscallSession(Session):
         self.faults()
         require(self.tell('check', label='check-after')['check'], 'post-measurement data oracle failed')
         self.save()
+        require(not s['require_jit'] or s['jit_completions'] > 0,
+                'required complete KD body did not execute', 'NO_JIT')
 
     def cleanup(self):
         self.faults()
@@ -418,6 +466,13 @@ def make_plan(args):
     cpus = worker_cpus(args)
     require(args.repeats > 0 and 0 <= args.helper_waves <= 16,
             'invalid repeat/helper configuration')
+    require(2 <= args.helper_workers <= 16, 'helper workers must be 2..16')
+    helper_cpus = cpus[:min(args.helper_workers, len(cpus))]
+    if 'xattr' in args.kinds and args.helper_waves:
+        require(len(helper_cpus) >= 2 and args.collector_cpu not in helper_cpus,
+                'xattr helper preparation needs at least two CPUs and a separate collector')
+    require(not args.require_jit or ('kdlock' in args.backends and max(args.threads) > 1),
+            '--require-jit needs a multithreaded KD case')
     for field in ('kinds', 'queries', 'entries', 'backends'):
         values = getattr(args, field)
         require(bool(values) and len(set(values)) == len(values),
@@ -432,6 +487,10 @@ def make_plan(args):
                 peak_window_ms=300, peak_settle_ms=300, sample_ms=10,
                 warmup=args.warmup, warmup_ms=args.warmup_ms,
                 helper_waves=args.helper_waves,
+                helper_cpus=helper_cpus if kind == 'xattr' and args.helper_waves else [],
+                jit_evidence_version=2,
+                jit_completion_probe=arm == 'kdlock',
+                require_jit=args.require_jit and arm == 'kdlock' and n > 1,
                 syscalls_per_op=2 if kind == 'setfd' else 1,
                 file_descriptions='per-worker' if kind in ('setfd', 'pipebytes', 'pipecap') else 'shared-query',
                 lock_kind=lock_kind(kind),
@@ -460,6 +519,10 @@ def main():
     p.add_argument('--warmup', type=int, default=48000)
     p.add_argument('--warmup-ms', type=int, default=1000)
     p.add_argument('--helper-waves', type=int, default=4)
+    p.add_argument('--helper-workers', type=int, default=8,
+                   help='separate bounded xattr preparation cohort, including single-worker cases')
+    p.add_argument('--require-jit', action='store_true',
+                   help='require a returned KD body in every multithreaded KD measurement')
     p.add_argument('--kernel-source', default='/root/linux-6.1.159-kdclobber2')
     p.add_argument('--kernel-baseline', default='/root/kdlock-kernel-baselines/mutex-clobber2-20260919')
     args = p.parse_args()
@@ -515,7 +578,8 @@ def main():
             session = SyscallSession(out, spec)
             session.execute()
             r = session.record
-            print(f'  {r["whole_throughput_ops_s"]/1e6:.3f} M/s; peak {r["peak_throughput_ops_s"]/1e6:.3f}; JIT {r["jit_bodies"]}', flush=True)
+            print(f'  {r["whole_throughput_ops_s"]/1e6:.3f} M/s; peak {r["peak_throughput_ops_s"]/1e6:.3f}; '
+                  f'JIT entries {r["jit_bodies"]}, complete {r["jit_completions"]}', flush=True)
     finally:
         records = [json.loads((out/s['name']/'session.json').read_text())
                    if (out/s['name']/'session.json').exists() else dict(s, execution_status='NOT_RUN', drained=False)

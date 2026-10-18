@@ -49,6 +49,8 @@ enum kd_packet_state {
 #define KD_EXE_CLOBBER_COMPLETE 7
 /* A reviewed instruction was reached before execution; original waiter resumes. */
 #define KD_EXE_NATIVE_ESCAPE 8
+/* Checked spin address predicate failed before its source memory load. */
+#define KD_EXE_ADDRESS_GUARD 9
 
 enum kd_exe_lock_kind {
 	KD_EXE_LOCK_UNKNOWN = 0,
@@ -116,14 +118,23 @@ struct kd_recv_pkt {
 
 #define KD_IMAGE_PROTOCOL 2U
 #define KD_IMAGE_REQUIRE_NATIVE_ESCAPE (1U << 0)
-#define KD_IMAGE_REQUIREMENTS KD_IMAGE_REQUIRE_NATIVE_ESCAPE
+#define KD_IMAGE_REQUIRE_ADDRESS_GUARD (1U << 1)
+#define KD_IMAGE_REQUIRE_STRING_SERVICES (1U << 2)
+#define KD_IMAGE_REQUIRE_STRING_WRITE (1U << 3)
+#define KD_IMAGE_REQUIREMENTS (KD_IMAGE_REQUIRE_NATIVE_ESCAPE | KD_IMAGE_REQUIRE_ADDRESS_GUARD | KD_IMAGE_REQUIRE_STRING_SERVICES | KD_IMAGE_REQUIRE_STRING_WRITE)
 
 static inline int kd_image_requirements_valid(int kind, unsigned int abi,
 					     unsigned int requirements)
 {
 	return !(requirements & ~KD_IMAGE_REQUIREMENTS) &&
-	       (!requirements || (kind == KD_EXE_LOCK_MUTEX &&
-				  abi == KD_ENTRY_ABI_MUTEX_CLOBBER_V1));
+	       (!(requirements & KD_IMAGE_REQUIRE_NATIVE_ESCAPE) ||
+		(kind == KD_EXE_LOCK_MUTEX && abi == KD_ENTRY_ABI_MUTEX_CLOBBER_V1)) &&
+	       (!(requirements & KD_IMAGE_REQUIRE_ADDRESS_GUARD) ||
+		(kind == KD_EXE_LOCK_SPIN && abi == KD_ENTRY_ABI_SPIN_CLOBBER_V1)) &&
+	       (!(requirements & KD_IMAGE_REQUIRE_STRING_SERVICES) ||
+		(kind == KD_EXE_LOCK_SPIN && abi == KD_ENTRY_ABI_SPIN_CLOBBER_V1)) &&
+	       (!(requirements & KD_IMAGE_REQUIRE_STRING_WRITE) ||
+		(kind == KD_EXE_LOCK_SPIN && abi == KD_ENTRY_ABI_SPIN_CLOBBER_V1));
 }
 #define KD_IMAGE_HEADER_SIZE 48U
 #define KD_IMAGE_VERSION_OFFSET 46U

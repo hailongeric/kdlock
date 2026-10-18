@@ -27,6 +27,15 @@ contains 504 complete, drained sessions: two workloads, 21 worker counts, three
 repetitions and four arms (accepted compatibility baseline, KD-only, Native,
 TCLock). It uses the regular 64-vCPU VM and collector 63.
 
+## Taskname and xattr comparison
+
+The new taskname/xattr checked-helper implementation has
+[focused returned-body validation](VALIDATION.md#taskname-and-xattr-helper-validation).
+Its [Native/TCLock/KD standard-grid comparison](../bench/results/10.176.26.71/bench/taskname-xattr-20261018/README.md)
+is being prepared. Correct delegation does not establish a throughput gain;
+the original helpers now run with additional argument, source and continuation
+checks. These changes retain the selected KD mutex protocol.
+
 ## Current mutex result
 
 At 60 workers, median whole-run throughput in Mops/s is:

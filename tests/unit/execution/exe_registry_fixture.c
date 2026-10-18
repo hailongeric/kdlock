@@ -235,6 +235,7 @@ static size_t copy_from_user(void *to, const void *from, size_t size)
 	return 0;
 }
 #define copy_to_user(to, from, size) copy_from_user(to, from, size)
+#define copy_from_kernel_nofault(to, from, size) copy_from_user(to, from, size)
 
 /* Source admission is an external boundary in this allocation fixture; the
  * source-lifetime fixture executes its real locking and dependency decisions. */

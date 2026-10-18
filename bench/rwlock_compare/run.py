@@ -36,6 +36,8 @@ def parser():
     p.add_argument('--lock-kind', choices=('rwlock', 'spin', 'rwsem'), default='rwlock')
     p.add_argument('--helper-waves', type=int, default=8,
                    help='maximum drain-separated task-name helper-learning rounds; 0 diagnoses the initial image')
+    p.add_argument('--helper-workers', type=int, default=8,
+                   help='separate task-name preparation cohort, including single-worker timing')
     p.add_argument('--cachelines', nargs='+', type=int, choices=(1, 2, 4, 8, 16), default=[1])
     p.add_argument('--write-percent', nargs='+', type=int, default=[1, 20])
     p.add_argument('--threads', nargs='+', type=int, default=FULL_THREADS)
@@ -64,6 +66,7 @@ def parser():
 
 def make_plan(args):
     require(0 <= args.helper_waves <= 16, 'helper waves must be 0..16')
+    require(2 <= args.helper_workers <= 16, 'helper workers must be 2..16')
     snapshots = {'taskname', 'argbounds'}
     require((args.lock_kind == 'spin') == set(args.workloads).issubset(snapshots),
             'snapshot workloads require --lock-kind spin; other workloads use rwlock/rwsem')
@@ -87,10 +90,13 @@ def make_plan(args):
     require(not args.require_jit or (args.delegate == 'on' and 'kdlock' in args.backends and
             max(threads) > 1 and (min(args.write_percent) < 100 if args.lock_kind == 'spin'
                                  else max(args.write_percent) > 0)), '--require-jit needs contended eligible operations')
-    cpus = args.cpus if args.cpus is not None else list(range(max(threads)))
-    require(len(cpus) >= max(threads) and len(set(cpus)) == len(cpus) and all(c >= 0 for c in cpus),
+    learns_helpers = ('taskname' in args.workloads and 'kdlock' in args.backends and
+                      args.delegate == 'on' and args.helper_waves and min(args.write_percent) < 100)
+    required_cpus = max(max(threads), args.helper_workers if learns_helpers else 0)
+    cpus = args.cpus if args.cpus is not None else list(range(required_cpus))
+    require(len(cpus) >= required_cpus and len(set(cpus)) == len(cpus) and all(c >= 0 for c in cpus),
             'need distinct nonnegative worker CPUs')
-    require(args.collector_cpu >= 0 and args.collector_cpu not in cpus[:max(threads)],
+    require(args.collector_cpu >= 0 and args.collector_cpu not in cpus[:required_cpus],
             'collector must have a separate CPU')
     duration = 0 if args.functional else args.duration_ms
     require(args.functional or 0 < duration <= 10000, 'performance runs require a timed interval')
@@ -115,8 +121,11 @@ def make_plan(args):
                 duration_ms=duration, peak_window_ms=args.peak_window_ms, peak_settle_ms=args.peak_settle_ms,
                 sample_ms=args.sample_ms, functional=args.functional, post_work_rounds=args.post_work_rounds,
                 warmup_iterations_per_worker=48000, mix_policy='evenly_spaced_worker_phase17',
-                helper_waves=args.helper_waves if workload == 'taskname' and arm == 'kdlock' and n > 1
+                helper_waves=args.helper_waves if workload == 'taskname' and arm == 'kdlock'
                     and percent < 100 and args.delegate == 'on' else 0,
+                helper_cpus=cpus[:args.helper_workers] if workload == 'taskname' and arm == 'kdlock'
+                    and percent < 100 and args.delegate == 'on' and args.helper_waves else [],
+                helper_iterations_per_worker=240000,
                 lock_kind=args.lock_kind, entry_abi=entry_abi,
                 caller_abi='clobber' if arm == 'kdlock' and (args.lock_kind != 'rwsem' or rwsem_direct) else 'c',
                 delegate=args.delegate == 'on' if arm == 'kdlock' else False,
@@ -304,10 +313,11 @@ def main(argv=None):
         policy = boot_policy.capture(args.kernel_source, out, command)
         packages = {p: importlib.metadata.version(p) for p in ('miasm', 'future', 'pyparsing', 'pyelftools')}
         require(packages == dict(miasm='0.1.5', future='1.0.0', pyparsing='2.4.7', pyelftools='0.27'), 'dependencies differ')
-        cpus = max((spec['cpus'] for spec in plan), key=len)
+        cpus = max((cohort for spec in plan for cohort in (spec['cpus'], spec['helper_cpus'])), key=len)
         topology = capture_topology(cpus + [args.collector_cpu])
         for spec in plan:
             spec['cpu_nodes'] = topology['role_nodes'][:spec['threads']]
+            spec['helper_cpu_nodes'] = topology['role_nodes'][:len(spec['helper_cpus'])]
         write_json(out / 'plan.json', plan)
         write_json(out / 'environment.json', dict(kernel_identity=identity, boot_policy=policy,
             topology=topology, packages=packages, argv=sys.argv, python=sys.executable,

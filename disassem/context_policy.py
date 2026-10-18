@@ -150,12 +150,14 @@ def constant_blocks(
     control_targets=(),
     clobber_targets=(),
     readonly_targets=(),
+    writer_targets=None,
     mutex_targets=(),
     mutex_stack_bytes=0,
     native_exits=(),
     guards=None,
     scoped_calls=False,
     entry_spill_guards=False,
+    address_guards=None,
 ):
     """Seed real entries, then propagate to previously unvisited successors.
 
@@ -179,6 +181,8 @@ def constant_blocks(
     control_calls = set()
     clobber_calls = set()
     readonly_calls = set()
+    writer_calls = {}
+    writer_targets = writer_targets or {}
     mutex_calls = set()
     for start, block in blocks.items():
         db = databases.get(block)
@@ -214,7 +218,9 @@ def constant_blocks(
                 clobber_calls.add(id(line))
             if callee in readonly_targets:
                 readonly_calls.add(id(line))
-            if callee in readonly_targets or ((guards is not None or callee in clobber_targets) and callee in control_targets):
+            if callee in writer_targets:
+                writer_calls[id(line)] = writer_targets[callee]
+            if callee in readonly_targets or callee in writer_targets or ((guards is not None or callee in clobber_targets) and callee in control_targets):
                 control_calls.add(id(line))
                 if callee in mutex_targets:
                     mutex_calls.add(id(line))
@@ -282,10 +288,12 @@ def constant_blocks(
     tracker = FlowConstants(
         guards, scoped_calls=scoped_calls, mutex_stack_bytes=mutex_stack_bytes,
         entry_spill_guards=entry_spill_guards,
+        address_guards=address_guards,
     )
     tracker.control_calls = control_calls
     tracker.clobber_calls = clobber_calls
     tracker.readonly_calls = readonly_calls
+    tracker.writer_calls = writer_calls
     tracker.mutex_calls = mutex_calls
     initial = tracker.snapshot()
 

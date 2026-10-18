@@ -35,7 +35,7 @@ class FlowConstants(RegisterConstants):
     UNKNOWN = frozenset({None})
 
     def __init__(self, guards=None, *, scoped_calls=False, mutex_stack_bytes=0,
-                 entry_spill_guards=False):
+                 entry_spill_guards=False, address_guards=None):
         super().__init__()
         self.instruction_lifted = {}
         self.unknown = {
@@ -63,6 +63,9 @@ class FlowConstants(RegisterConstants):
         self.control_calls = set()
         self.clobber_calls = set()
         self.readonly_calls = set()
+        # Exact typed writing services supply a bounded RDI destination span.
+        # Unlike readonly services, their effects invalidate each written byte.
+        self.writer_calls = {}
         self.mutex_calls = set()
         self.mutex_stack_bytes = mutex_stack_bytes
         self.call_entries = {}
@@ -70,6 +73,11 @@ class FlowConstants(RegisterConstants):
         self.return_targets = {}
         self.entry_spill_guards = entry_spill_guards
         self.memory.allow_checked_entry_spills = entry_spill_guards
+        self.current_line = None
+        self.address_guards = address_guards
+        if address_guards is not None:
+            self.memory.load_guard = lambda memory: address_guards.stack_aliases(
+                self.current_line, memory, self)
 
     def snapshot(self):
         return (dict(self.values), dict(self.origins), self.memory.snapshot(),
@@ -215,6 +223,7 @@ class FlowConstants(RegisterConstants):
         }
 
     def update(self, line, symbols=None):
+        self.current_line = line
         if id(line) not in self.control_calls:
             return self.update_effects(line, symbols)
         # Model the original lock CALL boundary, not an arbitrary native C
@@ -238,11 +247,17 @@ class FlowConstants(RegisterConstants):
             frozenset(self.resolve_many(ExprId("RDI", 64), allow_wide=True))
             if id(line) in self.clobber_calls and id(line) not in self.mutex_calls else None
         )
+        writer_bytes = self.writer_calls.get(id(line), 0)
+        writer_pointers = (
+            frozenset(self.resolve_many(ExprId("RDI", 64), allow_wide=True))
+            if writer_bytes else None
+        )
         values, origins = dict(self.values), dict(self.origins)
         self.update_effects(
             line, symbols, checked_mutex_stack=id(line) in self.mutex_calls,
             clobber_lock=lock_pointers,
             readonly_call=id(line) in self.readonly_calls,
+            writer_pointers=writer_pointers, writer_bytes=writer_bytes,
         )
         for reg in saved:
             for output, before in ((self.values, values), (self.origins, origins)):
@@ -252,7 +267,8 @@ class FlowConstants(RegisterConstants):
                     output.pop(reg, None)
 
     def update_effects(self, line, symbols=None, *, checked_mutex_stack=False,
-                       clobber_lock=None, readonly_call=False):
+                       clobber_lock=None, readonly_call=False,
+                       writer_pointers=None, writer_bytes=0):
         plan = self.instruction_plan(line)
         if plan is None:
             self.clobber()
@@ -280,10 +296,25 @@ class FlowConstants(RegisterConstants):
             self.update_assignments(entry)
             if line.is_subcall():
                 self.call_entries[id(line)] = self.snapshot()
-                if (clobber_lock is not None or readonly_call) and line.name.upper() == "CALL":
+                if (clobber_lock is not None or readonly_call or writer_pointers is not None) and line.name.upper() == "CALL":
                     if clobber_lock is not None:
                         self.memory.store([(clobber_lock,
                             frozenset({context_memory.wide_value(32)}), 32)])
+                    if writer_pointers is not None:
+                        if not 0 < writer_bytes <= 64:
+                            raise ContextFlowLimit("invalid typed writer extent", line.offset)
+                        # Model the real virtual CALL word first, then every
+                        # destination byte. Unknown contents are ordinary data,
+                        # not a reason to retain old values or drop aliases.
+                        # Small chunks respect the existing memory-access bound;
+                        # simultaneous writes retain every possible destination.
+                        self.memory.store([
+                            (frozenset(self.memory.offset(pointer, index)
+                                       for pointer in writer_pointers),
+                             frozenset({ExprId("kd_writer_data", min(8, writer_bytes - index) * 8)}),
+                             min(8, writer_bytes - index) * 8)
+                            for index in range(0, writer_bytes, 8)
+                        ])
                     self.values.clear()
                     self.origins.clear()
                     return

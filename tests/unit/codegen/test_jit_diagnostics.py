@@ -54,6 +54,9 @@ def render(
     mutex_stack_bytes=0,
     abi=0,
     native_escape_capable=False,
+    address_guard_capable=False,
+    string_services_capable=False,
+    string_write_capable=False,
     build_options=None,
 ):
     output = io.StringIO()
@@ -85,6 +88,12 @@ def render(
         )
         stack.enter_context(patch.object(translator.memread.device_session,
                                         "native_escape", return_value=native_escape_capable))
+        stack.enter_context(patch.object(translator.memread.device_session,
+                                        "address_guard", return_value=address_guard_capable))
+        stack.enter_context(patch.object(translator.memread.device_session,
+                                        "string_services", return_value=string_services_capable))
+        stack.enter_context(patch.object(translator.memread.device_session,
+                                        "string_write", return_value=string_write_capable))
         stack.enter_context(
             patch.object(
                 translator.memread.device_session,

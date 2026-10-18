@@ -7,6 +7,10 @@
 #define KD_HOSTCALL_F_NO_TASK_CONTEXT (1U << 1)
 #define KD_HOSTCALL_F_RETRY_SAFE (1U << 2)
 
+/* A checked preflight refused before invoking the helper or changing the
+ * packet. Only this result permits the original unexecuted CALL to run natively. */
+#define KD_HOSTCALL_NOT_EXECUTED 1
+
 enum kd_hostcall_id {
 	KD_HOSTCALL_NONE = 0,
 #define KD_HOSTCALL(name, id, symbol, flags) KD_HOSTCALL_##name = id,

@@ -26,6 +26,7 @@
 #define MAX_SAMPLES 2048
 #define BATCH 256
 static int nworkers, cpus[MAX_WORKERS], collector = 63, entries = 128;
+static int nhelperworkers, helper_cpus[16];
 static int duration_ms = 2000, warmup_ms = 1000, value_size = 64, query_fd, owner_fd;
 static uint64_t warmup = 48000, start_ns, deadline_ns;
 static bool xattr_mode, setfd_mode, miss, size_only, front;
@@ -257,18 +258,20 @@ static void *worker_main(void *arg)
 	w->cpu_ns = now(CLOCK_THREAD_CPUTIME_ID) - cpu_start;
 	return NULL;
 }
-static bool run_phase(bool measure)
+static bool run_phase(bool measure, bool learning)
 {
 	pthread_t threads[MAX_WORKERS];
+	int cohort = learning ? nhelperworkers : nworkers;
+	const int *phase_cpus = learning ? helper_cpus : cpus;
 	uint64_t total = 0, finish = 0;
 	uint64_t reads = 0, writes = 0;
 	int nsamples = 0;
 	bool ok = true;
 	timed = measure;
 	memset(workers, 0, sizeof(workers));
-	if (pthread_barrier_init(&barrier, NULL, nworkers + 1)) die("barrier");
-	for (int i = 0; i < nworkers; i++) {
-		workers[i].cpu = cpus[i];
+	if (pthread_barrier_init(&barrier, NULL, cohort + 1)) die("barrier");
+	for (int i = 0; i < cohort; i++) {
+		workers[i].cpu = phase_cpus[i];
 		workers[i].fd = flag_fds[i];
 		int rc = pthread_create(&threads[i], NULL, worker_main, &workers[i]);
 		if (rc) { errno = rc; die("pthread_create"); }
@@ -282,12 +285,12 @@ static bool run_phase(bool measure)
 			if (nsamples == MAX_SAMPLES) break;
 			struct sample *s = &samples[nsamples++];
 			s->started = now(CLOCK_MONOTONIC);
-			for (int i = 0; i < nworkers; i++)
+			for (int i = 0; i < cohort; i++)
 				s->counts[i] = atomic_load_explicit(&workers[i].progress, memory_order_relaxed);
 			s->finished = now(CLOCK_MONOTONIC);
 		}
 	}
-	for (int i = 0; i < nworkers; i++) {
+	for (int i = 0; i < cohort; i++) {
 		pthread_join(threads[i], NULL);
 		struct worker *w = &workers[i];
 		total += w->done;
@@ -304,13 +307,13 @@ static bool run_phase(bool measure)
 	       "\"peak_settle_ns\":300000000,\"sample_period_ns\":10000000,"
 	       "\"progress_batch\":256,\"collector_cpu\":%d,\"collector_observed_cpu\":%d,"
 	       "\"collector_error\":0,\"workers\":[",
-	       measure ? "measure" : "warmup", ok ? "true" : "false",
+	       measure ? "measure" : learning ? "learn" : "warmup", ok ? "true" : "false",
 	       (unsigned long long)total, (unsigned long long)start_ns,
 	       (unsigned long long)deadline_ns, (unsigned long long)finish,
 	       (unsigned long long)(finish-start_ns),
 	       (unsigned long long)(measure ? duration_ms : warmup_ms)*1000000,
 	       collector, sched_getcpu());
-	for (int i = 0; i < nworkers; i++) {
+	for (int i = 0; i < cohort; i++) {
 		struct worker *w = &workers[i];
 		printf("%s{\"cpu\":%d,\"observed_cpu\":%d,\"error\":%d,\"completed\":%llu,"
 		       "\"active_started_ns\":%llu,\"kernel_finished_ns\":%llu,"
@@ -325,7 +328,7 @@ static bool run_phase(bool measure)
 		struct sample *s = &samples[i];
 		printf("%s{\"started_ns\":%llu,\"finished_ns\":%llu,\"completed\":[",
 		       i ? "," : "", (unsigned long long)s->started, (unsigned long long)s->finished);
-		for (int j = 0; j < nworkers; j++)
+		for (int j = 0; j < cohort; j++)
 			printf("%s%llu", j ? "," : "", (unsigned long long)s->counts[j]);
 		printf("]}");
 	}
@@ -352,9 +355,9 @@ static bool checked(void)
 }
 int main(int argc, char **argv)
 {
-	/* Positional, recorded by the controller: kind query entries value bytes,
-	 * comma-separated CPUs, collector, duration, warmup count and time. */
-	if (argc != 10) { fprintf(stderr, "kind query entries value_bytes cpus collector duration_ms warmup warmup_ms\n"); return 2; }
+	/* The optional xattr cohort prepares the same bound object before timing.
+	 * It never changes the measured cohort, including a one-worker run. */
+	if (argc != 10 && argc != 11) { fprintf(stderr, "kind query entries value_bytes cpus collector duration_ms warmup warmup_ms [xattr_helper_cpus]\n"); return 2; }
 	xattr_mode = !strcmp(argv[1], "xattr");
 	setfd_mode = !strcmp(argv[1], "setfd");
 	pipebytes_mode = !strcmp(argv[1], "pipebytes");
@@ -387,6 +390,18 @@ int main(int argc, char **argv)
 		p = strtok_r(NULL, ",", &save);
 	}
 	if (!nworkers) return 2;
+	if (argc == 11) {
+		if (!xattr_mode) return 2;
+		p = strtok_r(argv[10], ",", &save);
+		while (p) {
+			int cpu = atoi(p);
+			if (nhelperworkers == 16 || cpu < 0 || cpu >= CPU_SETSIZE || cpu == collector) return 2;
+			for (int i = 0; i < nhelperworkers; i++) if (helper_cpus[i] == cpu) return 2;
+			helper_cpus[nhelperworkers++] = cpu;
+			p = strtok_r(NULL, ",", &save);
+		}
+		if (nhelperworkers < 2) return 2;
+	}
 	if (uts_mode) {
 		if (entries > 100 || value_size != 64) return 2;
 		if (unshare(CLONE_NEWUTS)) die("private UTS namespace");
@@ -480,8 +495,11 @@ int main(int argc, char **argv)
 			if (control_fd >= 0) close(control_fd);
 			control_fd = -1;
 			puts("{\"unbound\":true}"); fflush(stdout);
-		} else if (!strcmp(cmd, "warmup\n")) { if (!run_phase(false)) return 1; }
-		else if (!strcmp(cmd, "measure\n")) { if (!run_phase(true)) return 1; }
+		} else if (!strcmp(cmd, "learn\n")) {
+			if (!xattr_mode || !nhelperworkers) return 2;
+			if (!run_phase(false, true)) return 1;
+		} else if (!strcmp(cmd, "warmup\n")) { if (!run_phase(false, false)) return 1; }
+		else if (!strcmp(cmd, "measure\n")) { if (!run_phase(true, false)) return 1; }
 		else if (!strcmp(cmd, "check\n")) {
 			bool ok = sync_mode ? checked() : check_all();
 			printf("{\"check\":%s}\n", ok ? "true" : "false"); fflush(stdout);

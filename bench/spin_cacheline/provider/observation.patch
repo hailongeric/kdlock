@@ -71,7 +71,15 @@ diff --git a/kernel_module/Makefile b/kernel_module/Makefile
 diff --git a/kernel_module/exe.c b/kernel_module/exe.c
 --- a/kernel_module/exe.c
 +++ b/kernel_module/exe.c
-@@ -128,7 +128,7 @@
+@@ -165,6 +165,7 @@
+ 	bool resume_after_hostcall = false;
+ 	bool body_reported = false;
+ 	bool pristine_root;
++	bool bench_completion_root;
+ 	u64 dispatch_start;
+ 	int ret_flag;
+ 
+@@ -185,7 +186,7 @@
  	if (!pending && !kd_exe_entry_is_ready(exe, 0, entry_ip)) {
  		if (!exe)
  			return KD_EXE_NO_RUN;
@@ -80,6 +88,30 @@ diff --git a/kernel_module/exe.c b/kernel_module/exe.c
  			"translation not ready: exe=%px status=%d entry=%lx ip=%lx pid=%d\n",
  			exe, exe->status_code, exe->RIP, regs->ip, exe->pid);
  		return KD_EXE_NO_RUN;
+@@ -211,6 +213,10 @@
+ 	/* Exclude pre-entry rejections and the caller's frame setup/teardown. */
+ 	dispatch_start = pending ? pending->dispatch_start : kd_jit_timing_start();
+ 	pristine_root = pending || (!frame->resume_target && regs->ip == entry_ip);
++	/* Count a complete root invocation, never a nested/remote suffix. */
++	bench_completion_root = pristine_root && !frame->parent && !frame->depth &&
++		!frame->resume_target && outer_lock_addr;
++
+ 	translated = kd_jit_bound_code(exe, frame);
+ 	for (;;) {
+ 		int call_ret;
+@@ -578,5 +584,12 @@
+ 	}
+ 
++	/* Services may return through several wrappers before the validated outer
++	 * unlock. Count this invocation once here; native suffixes and errors are
++	 * excluded. A completed fast batch returns before entering this dispatcher. */
++	if (ret_flag == KD_EXE_RUN_TO_UNLOCK &&
++	    bench_completion_root && body_reported)
++		kd_bench_note_completion(outer_lock_addr);
++
+ 	/* Only a validated marker may request flags-aware waiter restoration.
+ 	 * CALL packets can carry old/uninitialized orig_ax bytes; never interpret
+ 	 * them as an instruction-continuation tag when publishing a native suffix. */
 diff --git a/kernel_module/execution/native.inc b/kernel_module/execution/native.inc
 --- a/kernel_module/execution/native.inc
 +++ b/kernel_module/execution/native.inc

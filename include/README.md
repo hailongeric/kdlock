@@ -19,11 +19,12 @@ it does not mean using the Linux Native backend.
 | Sleeping semaphore | [kd_rwsem.h](kd_rwsem.h), [kd_rwsem_direct.h](kd_rwsem_direct.h) | Ordinary sleeping APIs and outer ABI2 writers; phase reservations and reader drain precede the unchanged KD mutex queue |
 | Frames and controls | [kd_exec.h](kd_exec.h), [kd_call.h](kd_call.h), [kd_lock.h](kd_lock.h) | Logical state, held-lock ledger, source CALL and final ACK |
 | Registry and execution | [exe.h](exe.h), [exe_info.h](exe_info.h), [kd_jit_batch.h](kd_jit_batch.h) | Backend/ABI/layout identity, readiness and distinct wrapper/C results |
-| Mutex image lifetime | [kd_image.h](kd_image.h) | Immutable image descriptors, upload identity and generation-bound frames |
+| Image lifetime | [kd_image.h](kd_image.h) | Immutable mutex images and spin images requiring address checks or string services; upload identity and generation-bound frames |
 | Packet and wrapper | [kd_regs.h](kd_regs.h), [asm_head.h](asm_head.h), [wrapper.S](wrapper.S) | Layout2, virtual register backing and two-word input |
 | Heat | [kd_hotlock.h](kd_hotlock.h) | Approximate future admission, not ownership |
 | Source/device | [kd_source.h](kd_source.h), [kd_source_api.h](kd_source_api.h), [sys.h](sys.h) | Text residency, capabilities and irreversible retirement |
 | Services/context | [kd_hostcall.h](kd_hostcall.h), [kd_hostcalls.def](kd_hostcalls.def), [kd_segment.h](kd_segment.h) | Typed effects and origin GS/logical task |
+| Bounded string helpers | [kd_strcmp_contract.h](kd_strcmp_contract.h), [kd_strscpy_contract.h](kd_strscpy_contract.h) | Exact original helper text and separate read-only/writing bounds |
 
 When changing a shared layout, update the C offsets, wrapper assembly and Python
 translation together. [Register ABI](../docs/JIT_REGISTER_ABI.md) gives exact offsets
@@ -38,6 +39,29 @@ value to choose how to enter the lock. It does not record how acquisition actual
 succeeded. Unlock uses the exact ownership record instead.
 [Execution flow](../docs/JIT_EXECUTION.md#heat-and-roles) explains the heat samples.
 
+Bodies that call ordinary C helpers can opt into `KD_SPIN_DIRECT_HELPER_LOCK`,
+paired with the same `KD_SPIN_DIRECT_UNLOCK` and ABI1 preparation. A helper often
+saves registers when it enters, even if it overwrites them immediately afterward.
+The minimal KD entry supplies only the stack and frame pointers, so saving another
+incoming register would otherwise fail the defined-value check. The helper entry
+sets the five already-discarded registers `RBX` and `R12`–`R15` to zero before the
+compiler reloads the body's values. These five source instructions execute on
+both local hot returns and delegated entry; ordinary cold execution already has
+valid native registers. This adds five instructions to hot acquisitions selecting
+this API, without extra captures or stack saves. Other instruction, address and
+context checks remain unchanged; selecting it does not authorize arbitrary helper
+functions. Ordinary `KD_SPIN_DIRECT_LOCK` has no added instructions.
+
+Taskname now uses the ordinary `KD_SPIN_DIRECT_LOCK` pair. Its bounded
+`strscpy_pad(..., 64)` service invokes the original helper, so generated code does
+not enter the helper prologue and does not need the five register initializations.
+The optional helper entry remains available to other callers. The independent
+source constant proof also remains: it can exclude an impossible `strscpy()`
+size-warning branch without permitting a reachable trap or replacing the helper.
+Validation of the changed taskname call shell and performance acceptance remain
+pending; earlier results used a different shell. See
+[source branch admission](../docs/design/admission.md#source-branches-with-proven-constant-inputs).
+
 Mutex outer callers pair `KD_MUTEX_OUTER_LOCK/UNLOCK` with one opaque
 `kd_mutex_outer_cookie` per acquisition. Do not copy, modify, transfer or reuse it
 before its matching same-task unlock. The native CAS saves an exact owner; contended
@@ -46,10 +70,32 @@ prepare uses `kd_mutex_prepare(..., KD_ENTRY_ABI_MUTEX_CLOBBER_V1)`. Registratio
 can succeed before immutable image allocation; only complete NORMAL publication
 allows JIT execution. Provider, daemon and translator must agree on
 immutable-image and exclusive-KD-object capabilities. Ordinary mutex images
-accept capability versions 5 and 6. Images with checked instruction-exit markers
-require version 6 and its instruction-exit capability; see
+accept compatible capability versions 5 through 9. Images with checked
+instruction-exit markers require version 6 through 9 with feature bit 5 and declare
+image requirement bit 0; see
 [the admission contract](../docs/design/admission.md#checked-instruction-exits).
 [Ownership](../docs/design/locking.md#mutex-outer-direct) explains the routing.
+
+Restricted ABI1 spin pointer-load checks require provider version 7 through 9 feature
+bit 6 and image requirement bit 1. A failed check resumes the exact load on the
+original waiter and disables delegation for that entry; it does not change the
+object's lock protocol. The source must prove its incoming arithmetic flags are
+no longer needed. Bodies that also need source constant-branch simplification
+remain refused, because a removed branch could hide a native flags read.
+Entries use immutable images from their first address-check or typed string-service version
+onward; ordinary spin and ABI3 rwlock entries do not all gain that lifetime
+contract. The packet and two-word wrapper stay unchanged. See the
+[complete guard contract](../docs/JIT_REGISTER_ABI.md#checked-spin-address-exit).
+
+The current provider reports capability version 9. ABI1 `strcmp` uses feature
+bit 7 and image requirement bit 2; `strscpy_pad` uses the separate feature bit 8
+and image requirement bit 3. The former has a read-only memory contract; the
+latter requires count 64 and a checked current-frame destination, with every
+destination byte accounted for as a write. Both invoke the original helper and
+validate its CALL continuation. There may be at most 128 `strcmp` calls and 16
+other continuations, including writing services, in one invocation. See
+[read-only helper admission](../docs/design/admission.md#bounded-original-strcmp-service)
+and [writing helper admission](../docs/design/admission.md#bounded-original-strscpy_pad-writing-service).
 
 Rwlock readers pair `kd_read_lock/unlock`; explicitly native writers pair
 `kd_write_lock/unlock`. Delegating writers use `KD_RWLOCK_DIRECT_WRITE_LOCK/UNLOCK`

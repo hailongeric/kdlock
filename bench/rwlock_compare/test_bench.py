@@ -49,7 +49,8 @@ class BenchTests(unittest.TestCase):
                 for name in ('bench_jit_bodies', 'bench_jit_completions'):
                     (params / name).write_text('0')
                 candidate = object.__new__(session.RWSession)
-                candidate.record = dict(helper_waves=2)
+                candidate.record = dict(helper_waves=2, helper_cpus=[0, 1],
+                    helper_iterations_per_worker=240000, threads=1, cpus=[0])
                 candidate.daemon = SimpleNamespace(pid=123)
                 candidate.pause_daemon = lambda: None
                 candidate.save = lambda: None
@@ -57,6 +58,9 @@ class BenchTests(unittest.TestCase):
 
                 def phase(label, spec):
                     phases.append(label)
+                    self.assertEqual(spec['threads'], 2)
+                    self.assertEqual(spec['cpus'], [0, 1])
+                    self.assertEqual(spec['iterations'], 240000)
                     if len(phases) == 2 and complete_second_wave:
                         for name in ('bench_jit_bodies', 'bench_jit_completions'):
                             (params / name).write_text('1')
@@ -73,6 +77,28 @@ class BenchTests(unittest.TestCase):
                         with self.assertRaises(run.Failure):
                             candidate.learn_helpers()
                 self.assertEqual(phases, ['learning-0', 'learning-1'])
+                self.assertEqual(candidate.record['threads'], 1)
+                self.assertEqual(candidate.record['cpus'], [0])
+
+    def test_single_worker_taskname_has_separate_learning_cohort(self):
+        args = run.parser().parse_args(['--lock-kind', 'spin', '--workloads', 'taskname',
+            '--backends', 'kdlock', '--write-percent', '0', '--threads', '1', '--collector-cpu', '63'])
+        plan = run.make_plan(args)
+        for spec in plan:
+            self.assertEqual(spec['cpus'], [0])
+            self.assertEqual(spec['threads'], 1)
+            self.assertEqual(spec['helper_cpus'], list(range(8)))
+            self.assertEqual(spec['helper_waves'], 8)
+            self.assertFalse(spec['require_jit'])
+        args.collector_cpu = 7
+        with self.assertRaises(run.Failure):
+            run.make_plan(args)
+        args.collector_cpu = 63
+        args.cpus = [0]
+        with self.assertRaises(run.Failure):
+            run.make_plan(args)
+        args.helper_waves = 0
+        self.assertEqual(run.make_plan(args)[0]['helper_cpus'], [])
 
     def test_snapshot_plan_and_evidence(self):
         args = run.parser().parse_args(['--lock-kind', 'spin', '--workloads', 'taskname', 'argbounds',

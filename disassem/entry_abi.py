@@ -23,7 +23,7 @@ def merge(left, right):
 
 
 def check_minimal_entry(blocks, databases, entry, clobber_targets, lock_targets,
-                        jump_table, *, native_escapes=False):
+                        jump_table, *, native_escapes=False, service_arguments=None):
     """Check all source paths, including a marker's original native suffix.
 
     Marker images additionally require source-defined arithmetic flags. Their
@@ -174,6 +174,10 @@ def check_minimal_entry(blocks, databases, entry, clobber_targets, lock_targets,
                     required = {"RDI"} | ({"RSI", "RDX", "RCX"} if target in clobber_targets else set())
                     if any(state.get(ExprId(reg, 64), 0) for reg in required):
                         raise ValueError("lock metadata depends on an uncaptured GPR")
+                if line.name.upper() == "CALL" and service_arguments:
+                    if any(state.get(ExprId(reg, 64), 0)
+                           for reg in service_arguments.get(target, ())):
+                        raise ValueError("native service argument depends on an uncaptured GPR")
                 state = step(line, state)
                 if line.name.upper() == "CALL":
                     enqueue(target, state)

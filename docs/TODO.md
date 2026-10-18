@@ -107,10 +107,12 @@ optional coverage, while reproduced supported-path failures must remain visible.
 
 ### C1. Forward continuation after partial execution
 
-The supported CALL/PENDING, post-acquisition spin and checked mutex exits resume
-from the current state. Earlier stores, lock acquisitions and releases must happen
-exactly once. Fixing a recovery defect must not restart those operations. Generic
-faults, indirect-jump misses and budget errors still stop execution; they cannot
+The supported CALL/PENDING, post-acquisition spin, checked mutex instruction exits
+and limited ABI1 pointer-load exits resume from the current state. Earlier stores,
+lock acquisitions and releases must happen exactly once. Fixing a recovery defect
+must not restart those operations. Typed string argument refusals also preserve
+the original unexecuted CALL; a helper that has run cannot be replayed. Generic
+faults, indirect-jump misses and instruction-budget errors still stop execution; they cannot
 be used as arbitrary native fallback points. Broader combinations of remote
 execution and resource exhaustion remain optional coverage.
 
@@ -134,8 +136,14 @@ drain. No Linux/TCLock operations may access the same KD rwlock object.
 The current KD mutex implements complete staged publication,
 immutable mutex generations, frame binding and stale-miss rejection. Published
 versions use the existing bounded pool and remain until session teardown; there
-is no in-session generation reclamation. Spin/rwlock images still use in-place
-storage. See [the backport comparison](history/legacy_mutex_compatibility.md).
+is no in-session generation reclamation. ABI1 spin entries now transition to
+immutable generations when first publishing checked pointer loads or the bounded
+`strcmp` or `strscpy_pad` service; every later generation remains immutable, and
+older frames keep their earlier image binding.
+Ordinary spin/rwlock entries still use in-place storage. General immutable
+publication for those entries and in-session reclamation remain open. See
+[image lifetimes](design/lifetimes.md#executable-images-and-guarded-spin-transition)
+and [the mutex backport comparison](history/legacy_mutex_compatibility.md).
 
 ### C4. Instruction, flags, and fault semantics
 
@@ -156,13 +164,30 @@ Current analysis screens emitted scope, CALL/RET, aliases and static per-CPU ran
 GS/logical current are not a hardware context switch. Arbitrary hidden calls,
 context-object lifetimes, runtime pointers and concurrent replacement remain open.
 
-#### Deferred access-time guard
+#### Limited pointer-load checks and remaining address policy
 
-The 2026-09-13 deferral still applies to runtime address guards. The later request
-reopens instruction-specific native continuation and its necessary arithmetic
-flag preservation, as described above. It does not implement address checks at
-each memory access. Entry guards and the mutex stack checkpoint do not close the
-[dynamic-address gap](design/admission.md#721-dynamic-address-gap).
+ABI1 spin can now check a restricted pointer load against tracked stack writes
+at the point of access. A failed check resumes the original waiter before that
+load and disables future delegation. Admission requires proof that incoming
+arithmetic flags are unused by the original remainder; a body whose branches
+were simplified is conservatively refused by this retry. See the exact
+[pointer-load contract](design/admission.md#checked-spin-pointer-loads).
+
+This does not provide general checks for every memory access, arbitrary object
+lifetimes, concurrent pointer changes, nested spin ownership or ABI3 rwlock.
+Those broader checks remain deferred. Entry guards, the mutex stack checkpoint
+and these limited pointer-load checks do not close the
+[dynamic-address gap](design/admission.md#721-dynamic-address-gap). Functional
+continuation evidence and workload performance acceptance remain separate.
+
+The bounded [`strcmp`](design/admission.md#bounded-original-strcmp-service) and
+[`strscpy_pad`](design/admission.md#bounded-original-strscpy_pad-writing-service)
+services require stable, resident ordinary source strings and one outer spin
+owner. They do not infer object lifetime or authorize general copying. `strcmp`
+has a private 128-call allowance; `strscpy_pad`, scalar services and lock controls
+share the existing 16-call allowance. These implementation changes do not by
+themselves establish completed delegation or performance for the exact taskname
+and xattr workloads; that acceptance remains tied to fresh workload evidence.
 
 ## P1: Evidence and services
 

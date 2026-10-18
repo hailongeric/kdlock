@@ -14,3 +14,11 @@ KD_HOSTCALL(KTIME_GET_NS, 2, ktime_get_ns,
 KD_HOSTCALL(INT_SQRT, 3, int_sqrt,
 	KD_HOSTCALL_F_ATOMIC_SAFE | KD_HOSTCALL_F_NO_TASK_CONTEXT |
 	KD_HOSTCALL_F_RETRY_SAFE)
+/* Capability and exact-text checks are additional mandatory admission gates. */
+KD_HOSTCALL(STRCMP, 4, strcmp,
+	KD_HOSTCALL_F_ATOMIC_SAFE | KD_HOSTCALL_F_NO_TASK_CONTEXT |
+	KD_HOSTCALL_F_RETRY_SAFE)
+/* This bounded writer requires its own capability and full destination model. */
+KD_HOSTCALL(STRSCPY_PAD, 5, strscpy_pad,
+	KD_HOSTCALL_F_ATOMIC_SAFE | KD_HOSTCALL_F_NO_TASK_CONTEXT |
+	KD_HOSTCALL_F_RETRY_SAFE)

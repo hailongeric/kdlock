@@ -100,6 +100,14 @@ original waiter runs that function and the rest of the invocation natively. A
 later compilation may include the function. Known lock operations and approved
 services can instead return to JIT at a registered continuation.
 
+Provider capability version 9 includes separately negotiated ABI1 spin services
+for the original [`strcmp`](design/admission.md#bounded-original-strcmp-service)
+and [`strscpy_pad`](design/admission.md#bounded-original-strscpy_pad-writing-service)
+helpers. A service is a checked call executed by the current lock holder. These
+services require one outer spin owner and a caller that keeps their ordinary
+source strings valid and unchanged. Their checks do not establish those object
+lifetimes or replace the physical locking protocol.
+
 The register packet has three states:
 
 | State | What KD may read |
@@ -122,8 +130,9 @@ that storage is reused or the original preemption pin is released. See
 
 A simple batch can hold one source lease across all its bodies, including native
 or remote waits. KD still checks each request's image readiness. Holding source
-modules loaded does not itself make a generated image immutable. Mutex frames
-bind a separately published immutable generation in the current implementation.
+modules loaded does not itself make a generated image immutable. Frames bind an
+image descriptor, which identifies their generated code independently of the
+entry's current publication. Mutex images are immutable after publication.
 
 The registry has 511 slots. Provider initialization allocates up to 64 page-aligned
 code blocks of 640 KiB each, or 40 MiB in total. The daemon uploads an image in
@@ -131,16 +140,24 @@ chunks and marks it NORMAL after the last complete chunk. NORMAL means that code
 was published; it does not mean a request executed that code.
 
 Mutex recompilation publishes a new immutable generation; existing mutex frames
-retain their bound generation through continuations and retirement. Spin/rwlock
-recompilation still overwrites the RIP-associated block. [Lifetimes](design/lifetimes.md) explains what the
-existing text pins, device references and frame leases do and do not protect.
+retain their bound generation through continuations and retirement. Ordinary
+spin/rwlock recompilation still overwrites the entry's allocated code block.
+Publishing the first ABI1 image with [checked pointer loads](design/admission.md#checked-spin-pointer-loads),
+the bounded `strcmp` service or the bounded `strscpy_pad` service instead allocates
+a separate immutable block. Existing spin frames retain their
+earlier descriptor and code; every later image for that entry is also immutable,
+even if it needs no guards or typed services. All versions remain in the same bounded pool
+until session teardown. [Lifetimes](design/lifetimes.md#executable-images-and-guarded-spin-transition)
+explains publication, source pins and frame leases.
 
 ## Limits and evidence
 
 KD remains experimental. Its checks do not cover all runtime pointers or
 concurrent pointer changes. Processor flags and SIMD/FPU state are not fully
-restored; spin/rwlock images still lack immutable versions, and pinned waiters can
-block progress when there are more runnable tasks than available CPUs.
+restored; ordinary spin/rwlock entries still permit in-place image replacement,
+and pinned waiters can block progress when there are more runnable tasks than
+available CPUs. The limited spin pointer-load checks do not establish a general
+runtime address or object-lifetime policy.
 [TODO](TODO.md) records known failures and work explicitly left for later.
 
 Keep these results distinct: a fixture passed, an image was published, JIT code

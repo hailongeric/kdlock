@@ -24,17 +24,19 @@ def main():
     code += definition(device, 'static ssize_t kd_dev_write_locked(')
     wrapper = (ROOT / 'kernel_module/execution/wrapper_entry.inc').read_text()
     code += definition(wrapper, 'static void *kd_jit_bound_code(')
-    code += definition(wrapper, 'static bool kd_jit_bind_image(')
+    code += definition(wrapper, 'static const struct kd_jit_image *kd_jit_select_image(')
+    code += definition(wrapper, 'static inline bool kd_jit_bind_image(')
     with tempfile.TemporaryDirectory(prefix='kd-mutex-images-') as tmp:
         tmp = Path(tmp)
         (tmp / 'production.h').write_text(code)
-        binary = tmp / 'check'
-        subprocess.run(shlex.split(os.environ.get('CC', 'cc')) + [
-            '-std=gnu11', '-O2', '-Wall', '-Wextra', '-Werror', '-Wno-sign-compare',
-            '-I', str(ROOT / 'include'), '-I', str(tmp),
-            str(ROOT / 'tests/unit/execution/mutex_images_fixture.c'),
-            '-o', str(binary)], check=True, timeout=30)
-        subprocess.run([str(binary)], check=True, timeout=20)
+        for fixture in ('mutex_images_fixture.c', 'spin_guard_images_fixture.c'):
+            binary = tmp / fixture.removesuffix('.c')
+            subprocess.run(shlex.split(os.environ.get('CC', 'cc')) + [
+                '-std=gnu11', '-O2', '-Wall', '-Wextra', '-Werror', '-Wno-sign-compare',
+                '-I', str(ROOT / 'include'), '-I', str(tmp),
+                str(ROOT / 'tests/unit/execution' / fixture),
+                '-o', str(binary)], check=True, timeout=30)
+            subprocess.run([str(binary)], check=True, timeout=20)
 
 
 if __name__ == '__main__':

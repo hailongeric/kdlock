@@ -35,7 +35,7 @@ class DeviceSessionTests(unittest.TestCase):
         self.pins = []
         self.source_state = device_session.OPEN
         self.pin_error = None
-        self.caps_packet = device_session.CAPS_STRUCT.pack(6, 59, 256, 8192)
+        self.caps_packet = device_session.CAPS_STRUCT.pack(9, 507, 256, 8192)
         self.caps_result = 0
         self.caps_error = None
         self.caps_queries = []
@@ -73,6 +73,9 @@ class DeviceSessionTests(unittest.TestCase):
             self.assertEqual(device_session.mutex_stack_bytes(), 256)
             self.assertEqual(device_session.percpu_module_bytes(), 8192)
             self.assertTrue(device_session.native_escape())
+            self.assertTrue(device_session.string_services())
+            self.assertTrue(device_session.string_write())
+            self.assertTrue(device_session.address_guard())
             self.assertEqual(self.caps_queries, [fd])
         self.assert_closed(fd)
         with self.assertRaisesRegex(RuntimeError, "active kd_dev session"):
@@ -172,12 +175,21 @@ class DeviceSessionTests(unittest.TestCase):
         self.assertEqual(device_session._mutex_stack_bytes, 0)
         self.assertEqual(device_session._percpu_module_bytes, 0)
         self.assertFalse(device_session._native_escape)
+        self.assertFalse(device_session._address_guard)
+        self.assertFalse(device_session._string_services)
+        self.assertFalse(device_session._string_write)
         with self.assertRaisesRegex(RuntimeError, "active kd_dev session"):
             device_session.mutex_stack_bytes()
         with self.assertRaisesRegex(RuntimeError, "active kd_dev session"):
             device_session.percpu_module_bytes()
         with self.assertRaisesRegex(RuntimeError, "active kd_dev session"):
             device_session.native_escape()
+        with self.assertRaisesRegex(RuntimeError, "active kd_dev session"):
+            device_session.address_guard()
+        with self.assertRaisesRegex(RuntimeError, "active kd_dev session"):
+            device_session.string_services()
+        with self.assertRaisesRegex(RuntimeError, "active kd_dev session"):
+            device_session.string_write()
         with self.assertRaisesRegex(RuntimeError, "exclusive KD mutex object"), device_session.session():
             self.fail("old provider entered translator")
         self.assertEqual(len(self.caps_queries), 2)
@@ -196,7 +208,8 @@ class DeviceSessionTests(unittest.TestCase):
                     self.assertEqual(device_session.query_capabilities(fd), {
                         'mutex_stack_bytes': stack, 'percpu_module_bytes': module,
                         'mutex_images': False, 'mutex_exclusive': False,
-                        'native_escape': False})
+                        'native_escape': False, 'address_guard': False,
+                        'string_services': False, 'string_write': False})
                 finally:
                     os.close(fd)
                 with self.assertRaisesRegex(RuntimeError, "exclusive KD mutex object"), device_session.session():
@@ -227,6 +240,43 @@ class DeviceSessionTests(unittest.TestCase):
         self.assertEqual(self.pins, [])
         self.assertIn("reason=JIT_CAPABILITY_UNAVAILABLE", self.stderr.getvalue())
 
+    def test_address_guard_capability_is_optional_and_versioned(self):
+        for version, features, expected in ((5, 27, False), (6, 59, False),
+                                            (7, 59, False), (7, 123, True)):
+            with self.subTest(version=version, features=features):
+                self.caps_packet = device_session.CAPS_STRUCT.pack(version, features, 256, 8192)
+                with device_session.session():
+                    self.assertEqual(device_session.address_guard(), expected)
+                self.assertFalse(device_session._address_guard)
+        self.caps_packet = device_session.CAPS_STRUCT.pack(6, 123, 256, 8192)
+        with self.assertRaisesRegex(RuntimeError, "exclusive KD mutex object"), device_session.session():
+            self.fail("older provider advertised an unknown address-guard contract")
+
+    def test_string_service_capability_requires_current_provider_and_lease(self):
+        for version, features, expected in ((7, 123, False), (8, 123, False),
+                                            (8, 251, True), (9, 507, True)):
+            with self.subTest(version=version, features=features):
+                self.caps_packet = device_session.CAPS_STRUCT.pack(version, features, 256, 8192)
+                with device_session.session():
+                    self.assertEqual(device_session.string_services(), expected)
+                self.assertFalse(device_session._string_services)
+        self.caps_packet = device_session.CAPS_STRUCT.pack(7, 251, 256, 8192)
+        with self.assertRaisesRegex(RuntimeError, "exclusive KD mutex object"), device_session.session():
+            self.fail("older provider advertised an unknown string-service contract")
+
+    def test_string_writer_requires_its_separate_capability_and_lease(self):
+        for version, features, expected in ((8, 251, False), (9, 251, False),
+                                            (9, 507, True), (9, 379, True)):
+            with self.subTest(version=version, features=features):
+                self.caps_packet = device_session.CAPS_STRUCT.pack(version, features, 256, 8192)
+                with device_session.session():
+                    self.assertEqual(device_session.string_write(), expected)
+                    self.assertEqual(device_session.string_services(), bool(features & 128))
+                self.assertFalse(device_session._string_write)
+        self.caps_packet = device_session.CAPS_STRUCT.pack(8, 507, 256, 8192)
+        with self.assertRaisesRegex(RuntimeError, "exclusive KD mutex object"), device_session.session():
+            self.fail("readonly string provider advertised an unknown writing contract")
+
     def test_partial_unknown_and_inconsistent_capabilities_stay_disabled(self):
         # Exact version/feature/window/reserved fields are one contract. Do
         # not infer a weaker bound from a larger, shorter or future response.
@@ -235,7 +285,7 @@ class DeviceSessionTests(unittest.TestCase):
             device_session.CAPS_STRUCT.pack(*values)
             for values in (
                 (0, 1, 256, 0),
-                (7, 1, 256, 0),
+                (10, 1, 256, 0),
                 (1, 3, 256, 0),
                 (1, 0, 256, 0),
                 (1, 1, 0, 0),

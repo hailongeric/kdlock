@@ -97,7 +97,8 @@ asm(".text\n"
     "movq $28,%r9\n movq $29,%r10\n movq $30,%r11\n ret\n"
     ".Lbad: ud2\n");
 
-__attribute__((noinline,noipa)) static unsigned long stress(unsigned long seed)
+__attribute__((noinline,noipa)) static unsigned long stress(unsigned long seed,
+                                                         bool helpers)
 {
  unsigned long a=seed+1, b=seed+2, c=seed+3, d=seed+4, e=seed+5;
  unsigned long stack[3]={seed+6,seed+7,seed+8};
@@ -108,7 +109,10 @@ __attribute__((noinline,noipa)) static unsigned long stress(unsigned long seed)
  /* Opaque ordinary C live values force the compiler to honor the declared
   * clobbers. Fixed register variables cannot legally survive those clobbers. */
  asm volatile("" : "+r"(a),"+r"(b),"+r"(c),"+r"(d),"+r"(e) : "m"(stack) : "memory");
- KD_SPIN_DIRECT_LOCK(&lock,kd_spin_direct_cookie,"");
+ if(helpers)
+  KD_SPIN_DIRECT_HELPER_LOCK(&lock,kd_spin_direct_cookie,"");
+ else
+  KD_SPIN_DIRECT_LOCK(&lock,kd_spin_direct_cookie,"");
  assert(pins==1 && lock.locked==(cold?KD_SPIN_DIRECT_NATIVE_HELD:1));
  assert(heat[cpu_id]==hot && heat[cpu_id^1]==other_cookie);
  heat[cpu_id]^=1;
@@ -121,6 +125,23 @@ __attribute__((noinline,noipa)) static unsigned long stress(unsigned long seed)
  assert(!lock.val && !pins && !kd_spin_fast_cpu.nondelegated);
  assert(heat[cpu_id^1]==other_cookie && heat[cpu_id]!=hot);
  return a+b+c+d+e;
+}
+
+__attribute__((noinline,noipa)) static void helper_seed(void)
+{
+ kd_spinlock_t lock={0};
+ unsigned long bx;
+ register unsigned long r12 asm("r12"), r13 asm("r13");
+ register unsigned long r14 asm("r14"), r15 asm("r15");
+ heat[cpu_id]=hot;
+ KD_SPIN_DIRECT_HELPER_LOCK(&lock,kd_spin_direct_cookie,"");
+ /* Read the actual inline-asm outputs before C can reuse these registers.
+  * The destructive hot callee sets all five to nonzero values; only the
+  * production continuation can make this assertion pass. */
+ asm volatile("" : "=b"(bx), "=r"(r12), "=r"(r13), "=r"(r14), "=r"(r15));
+ if(hot) assert(!(bx|r12|r13|r14|r15));
+ KD_SPIN_DIRECT_UNLOCK(&lock,kd_spin_direct_cookie);
+ assert(!lock.val && !pins && !kd_spin_fast_cpu.nondelegated);
 }
 
 static void nested_cookies(unsigned int outer_hot, unsigned int inner_hot,
@@ -156,9 +177,11 @@ int main(void)
  for(cpu_id=0;cpu_id<2;cpu_id++) {
   assert(!syscall(SYS_arch_prctl,ARCH_SET_GS,cpu_id*sizeof(heat[0])));
   for(hot=0;hot<2;hot++) {
-   for(unsigned long i=0;i<1000;i++) assert(stress(i)==10*i+36);
-   if(!hot) expected_cold+=1000;
-   else expected_hot+=2000;
+   for(unsigned int helpers=0;helpers<2;helpers++)
+    for(unsigned long i=0;i<1000;i++) assert(stress(i,helpers)==10*i+36);
+   helper_seed();
+   if(!hot) expected_cold+=2001;
+   else expected_hot+=4002;
   }
   for(unsigned int a=0;a<2;a++) for(unsigned int b=0;b<2;b++)
    for(unsigned int early=0;early<2;early++) {
@@ -172,4 +195,5 @@ int main(void)
  assert(generic_unlocks==expected_cold+expected_hot/2);
  puts("PASS inline cold acquisition: actual GS gate, two CPUs, one CAS/count and paired native drain");
  puts("PASS generic cold/hot clobber unlock: live C values/stack, exact SP/IP/BP, provenance, heat changes and nested/early unlock");
+ puts("PASS opt-in helper entry: five source-defined scratch registers, preserved compiler spills and unchanged cold accounting");
 }

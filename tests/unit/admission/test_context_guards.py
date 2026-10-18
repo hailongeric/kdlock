@@ -13,9 +13,19 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "disassem"))
 
 from context_guards import ENTRY_REFUSED, MASK, REGISTER_OFFSETS, EntryGuards
 from miasm.expression.expression import ExprId, ExprInt, ExprMem
-from test_jit_body_witness import render, run_image
+from test_jit_body_witness import render as render_image, run_image
 from test_jit_diagnostics import TEST_LOCK_SYMBOLS, decode, translator
 from test_jit_diagnostics import render as translator_render
+
+# Fixtures bind the current KD-only control endpoints, never Linux mutex APIs.
+TEST_LOCK_SYMBOLS = TEST_LOCK_SYMBOLS | {
+    "kd_mutex_local_lock": 0x2000000, "kd_mutex_local_unlock": 0x2001000,
+}
+
+
+def render(raw, **kwargs):
+    kwargs["kernel_symbols"] = TEST_LOCK_SYMBOLS | kwargs.get("kernel_symbols", {})
+    return render_image(raw, **kwargs)
 
 
 def address(name, offset=0):
@@ -64,7 +74,7 @@ class ScopedCallTests(unittest.TestCase):
         lock, unlock = (
             ("_raw_spin_lock", "_raw_spin_unlock")
             if lock_kind == "spin"
-            else ("mutex_lock", "mutex_unlock")
+            else ("kd_mutex_local_lock", "kd_mutex_local_unlock")
         )
         for name in (lock, unlock, unlock):
             caller += self.call(TEST_LOCK_SYMBOLS[name], 0x1000 + len(caller))
@@ -89,7 +99,7 @@ class ScopedCallTests(unittest.TestCase):
         # hide an explicit context/backend ban. Never execute these images.
         for kind in ("spin", "mutex"):
             foreign = TEST_LOCK_SYMBOLS[
-                "mutex_lock" if kind == "spin" else "_raw_spin_lock"
+                "kd_mutex_local_lock" if kind == "spin" else "_raw_spin_lock"
             ]
             cases = {
                 "fs": bytes.fromhex("64488b042500000000"),
@@ -131,7 +141,7 @@ class ScopedCallTests(unittest.TestCase):
         caller += self.call(0x2000, 0x1000 + len(caller))
         first_return = 0x1000 + len(caller)
         caller += bytes.fromhex("48c747102a000000488b4708")
-        for name in ("mutex_lock", "mutex_unlock", "mutex_unlock"):
+        for name in ("kd_mutex_local_lock", "kd_mutex_local_unlock", "kd_mutex_local_unlock"):
             caller += self.call(TEST_LOCK_SYMBOLS[name], 0x1000 + len(caller))
         outer = bytearray.fromhex("554889e5534889fb")
         outer += self.call(0x3000, 0x2000 + len(outer))
@@ -140,8 +150,8 @@ class ScopedCallTests(unittest.TestCase):
         inner = bytearray.fromhex("554889e55348ff07")
         inner += bytes.fromhex(corrupt)
         if control:
-            inner += self.call(TEST_LOCK_SYMBOLS["mutex_lock"], 0x3000 + len(inner))
-            inner += self.call(TEST_LOCK_SYMBOLS["mutex_unlock"], 0x3000 + len(inner))
+            inner += self.call(TEST_LOCK_SYMBOLS["kd_mutex_local_lock"], 0x3000 + len(inner))
+            inner += self.call(TEST_LOCK_SYMBOLS["kd_mutex_local_unlock"], 0x3000 + len(inner))
         inner += bytes.fromhex("488b5df8c9")
         regions = [(bytes(caller), 0x1000, [0x1000])]
         for source, body in ((0x2000, outer), (0x3000, inner)):
@@ -158,7 +168,7 @@ class ScopedCallTests(unittest.TestCase):
     def test_nested_shared_ret_executes_with_proven_stack_partitions(self):
         regions, returns = self.nested_call()
         blocks, dbs = translator.decode_regions(
-            regions, TEST_LOCK_SYMBOLS["mutex_unlock"], set(TEST_LOCK_SYMBOLS.values())
+            regions, TEST_LOCK_SYMBOLS["kd_mutex_local_unlock"], set(TEST_LOCK_SYMBOLS.values())
         )
         table = {}
         translator.indirect_jump.find(blocks, dbs, table)
@@ -192,7 +202,7 @@ class ScopedCallTests(unittest.TestCase):
         )
         self.assertEqual((regs[2], regs[8], regs[12]), (initial["rbp"], 0x5555, 17))
         self.assertEqual(regs[1], initial["rsp"] - 8)
-        self.assertEqual(regs[0], TEST_LOCK_SYMBOLS["mutex_lock"])
+        self.assertEqual(regs[0], TEST_LOCK_SYMBOLS["kd_mutex_local_lock"])
 
     def test_nested_ret_partition_budget_refuses_without_publishing(self):
         regions, _ = self.nested_call()
@@ -267,7 +277,7 @@ class ScopedCallTests(unittest.TestCase):
                     self.assertEqual(
                         regs[0],
                         TEST_LOCK_SYMBOLS[
-                            "mutex_lock" if len(calls) == 1 else "mutex_unlock"
+                            "kd_mutex_local_lock" if len(calls) == 1 else "kd_mutex_local_unlock"
                         ],
                     )
                     self.assertLessEqual(ctypes.addressof(stack), regs[1])
@@ -283,7 +293,7 @@ class ScopedCallTests(unittest.TestCase):
                     calls,
                     [
                         TEST_LOCK_SYMBOLS[name]
-                        for name in ("mutex_lock", "mutex_unlock", "mutex_lock")
+                        for name in ("kd_mutex_local_lock", "kd_mutex_local_unlock", "kd_mutex_local_lock")
                     ],
                 )
                 self.assertEqual(
@@ -325,7 +335,7 @@ class ScopedCallTests(unittest.TestCase):
         outer = bytearray.fromhex("4889fb")
         outer += self.call(0x3000, 0x2003)
         outer += bytes.fromhex("488b4308e9ef1f0000")
-        inner = self.call(TEST_LOCK_SYMBOLS["mutex_lock"], 0x3000)
+        inner = self.call(TEST_LOCK_SYMBOLS["kd_mutex_local_lock"], 0x3000)
         inner += bytes.fromhex("e9f60f0000")
         regions = [
             (self.call(0x2000, 0x1000) + b"\xc3", 0x1000, [0x1000]),
@@ -334,7 +344,7 @@ class ScopedCallTests(unittest.TestCase):
             (b"\xc3", 0x4000, [0x4000]),
         ]
         blocks, dbs = translator.decode_regions(
-            regions, TEST_LOCK_SYMBOLS["mutex_unlock"], set(TEST_LOCK_SYMBOLS.values())
+            regions, TEST_LOCK_SYMBOLS["kd_mutex_local_unlock"], set(TEST_LOCK_SYMBOLS.values())
         )
         table = {}
         translator.indirect_jump.find(blocks, dbs, table)
@@ -344,7 +354,7 @@ class ScopedCallTests(unittest.TestCase):
                 blocks,
                 db_dict=dbs,
                 lock_kind="mutex",
-                lock_symbols={TEST_LOCK_SYMBOLS["mutex_lock"]: ("mutex", "mutex_lock")},
+                lock_symbols={TEST_LOCK_SYMBOLS["kd_mutex_local_lock"]: ("mutex", "kd_mutex_local_lock")},
                 roots={0x1000},
                 guards=EntryGuards(),
                 scoped_calls=True,
@@ -665,6 +675,56 @@ class ScopedCallTests(unittest.TestCase):
                 regs, args = run_image(assembly, [0x1000], initialize)[0]
                 self.assertEqual((args, regs[12], destination.value), ([1, 1], 41, 42))
                 self.assertEqual(regs[0], TEST_LOCK_SYMBOLS["_raw_spin_lock"])
+
+    def test_helper_only_retry_executes_and_refuses_alias_before_any_store(self):
+        # A leaf critical section can call an ordinary learned helper without
+        # acquiring a nested lock. Its predicates must have the same semantics:
+        # reject an overlapping packet before the first source store and run
+        # the actual helper/RET for the admitted packet.
+        caller = bytes.fromhex("4d892c24c645f830498b04244c8930")
+        caller += self.call(0x2000, 0x1000 + len(caller)) + b"\xc3"
+        assembly, log, status = render(
+            "", regions=[(caller, 0x1000, [0x1000]),
+                          (bytes.fromhex("b829000000c3"), 0x2000, [0x2000])],
+            return_status=True,
+        )
+        self.assertEqual(status, 0, log)
+        self.assertIn("ENTRY_GUARDED_ADMISSION", log)
+        self.assertIn("scoped_calls=true", log)
+        for aliases in (False, True):
+            pointer, destination, unrelated = (ctypes.c_ulong() for _ in range(3))
+            pointer.value = 0x1234
+
+            def initialize(regs, _):
+                regs[6] = ctypes.addressof(pointer)
+                regs[5] = ctypes.addressof(destination)
+                regs[4] = 42
+                regs[2] = (ctypes.addressof(pointer) if aliases else
+                           ctypes.addressof(unrelated)) + 8
+
+            with self.subTest(aliases=aliases):
+                regs, args = run_image(assembly, [0x1000], initialize)[0]
+                if aliases:
+                    self.assertEqual(args[0], ENTRY_REFUSED)
+                    self.assertEqual((pointer.value, destination.value), (0x1234, 0))
+                else:
+                    self.assertEqual((args[1], regs[12], destination.value), (1, 41, 42))
+
+    def test_helper_only_retry_keeps_context_and_indirect_history_refusals(self):
+        caller = bytes.fromhex("4d892c24c645f830498b04244c8930")
+        caller += self.call(0x2000, 0x1000 + len(caller)) + b"\xc3"
+        for body, history in (
+            (bytes.fromhex("64488b042500000000c3"), None),
+            (bytes.fromhex("b829000000c3"), {0x2006: [0x2000]}),
+        ):
+            with self.subTest(body=body.hex(), history=history):
+                assembly, log, status = render(
+                    "", regions=[(caller, 0x1000, [0x1000]),
+                                  (body, 0x2000, [0x2000])],
+                    indirect_history=history, return_status=True,
+                )
+                self.assertEqual((assembly, status), (b"", 2), log)
+                self.assertNotIn("ENTRY_GUARDED_ADMISSION", log)
 
 
 class EntryGuardTests(unittest.TestCase):

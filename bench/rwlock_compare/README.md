@@ -58,7 +58,14 @@ syscalls or an end-to-end `ps` workload.
 
 Task-name preparation uses at most `--helper-waves 8` fully drained learning
 rounds, saving each published image. A NORMAL image with no completed body does
-not establish helper readiness. The historical exact helper was refused for
+not establish helper readiness. `--helper-workers 8` selects a separate
+preparation cohort on CPUs from the configured list, even when timing uses
+only one worker. Each preparation worker performs 240,000 iterations by
+default. All preparation callers finish before the next translation and before
+the measured cohort starts; preparation is excluded from throughput. The
+record retains both CPU sets and their NUMA nodes.
+
+The historical exact helper was refused for
 uncaptured R13 under spin ABI1; do not bypass this admission check. Use
 `--delegate off` for an explicitly local KD control, keeping it separate from
 default-KD acceptance attempts.

@@ -81,6 +81,42 @@ class ReportTests(unittest.TestCase):
                 record(value_size=128), record(threads=4), record(query='miss')]
         self.assertEqual(len(summarize(rows)), len(rows))
 
+    def test_completion_groups_are_not_pooled(self):
+        rows = [record(whole=10, jit_evidence_version=2, jit_completions=4),
+                record(whole=20, jit_evidence_version=2, jit_completions=0),
+                record(whole=30, jit_evidence_version=2, jit_bodies=0, jit_completions=0)]
+        groups = {r['execution_group']: r for r in summarize(rows)}
+        self.assertEqual(set(groups), {'PASS', 'PARTIAL_JIT', 'NO_JIT'})
+        self.assertEqual(groups['PASS']['whole_median'], 10)
+        self.assertEqual(groups['PARTIAL_JIT']['whole_median'], 20)
+        self.assertEqual(groups['NO_JIT']['whole_median'], 30)
+        self.assertEqual(groups['PASS']['jit_completions'], 4)
+        self.assertEqual(groups['PASS']['jit_complete_share'], .4)
+        with tempfile.TemporaryDirectory() as temporary:
+            write_report(Path(temporary), rows)
+            text = (Path(temporary)/'README.md').read_text()
+            for group in groups:
+                self.assertIn('| '+group+' |', text)
+
+    def test_historical_entry_counts_remain_unknown_completions(self):
+        row, = summarize([record()])
+        self.assertEqual(row['execution_group'], 'LEGACY_ENTRY_ONLY')
+        self.assertIsNone(row['jit_completions'])
+        self.assertIsNone(row['jit_complete_positive'])
+        self.assertIsNone(row['jit_complete_share'])
+
+    def test_different_completion_instrumentation_never_pools(self):
+        rows = [record(jit_evidence_version=2, jit_completions=4, jit_completion_probe=True),
+                record(jit_evidence_version=2, jit_completions=4, jit_completion_probe=False)]
+        self.assertEqual(len(summarize(rows)), 2)
+        with tempfile.TemporaryDirectory() as temporary:
+            with self.assertRaisesRegex(ValueError, 'distinct'):
+                write_report(Path(temporary), rows)
+
+    def test_impossible_returned_body_count_is_rejected(self):
+        with self.assertRaisesRegex(ValueError, 'completion'):
+            summarize([record(jit_evidence_version=2, jit_completions=5)])
+
     def test_rwlock_jit_share_counts_writes_and_mutex_delegation_is_retained(self):
         rw = record(kind='utsname', query='host', entries=20,
                     jit_bodies=2, measurement=dict(completed=10, reads=8, writes=2,

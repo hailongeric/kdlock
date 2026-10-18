@@ -8,6 +8,33 @@ Basic plus affected checks are the default; an old pass is not a current full pa
 The [terminology guide](TERMINOLOGY.md) explains status labels and other technical
 terms used in the receipts below.
 
+## Taskname and xattr helper validation
+
+The [development receipt](../bench/results/10.176.26.71/bench/taskname-xattr-20261018/DEVELOPMENT.md)
+retains the initial refusals, failed acceptance attempts, corrected observation
+counter, focused unit checks and live results. The exact taskname helper now
+returns delegated snapshots through the ordinary direct spin entry. All eight
+xattr front/tail/miss/size checks at 16/128 attributes and 64-byte values returned
+complete delegated bodies with correct syscall results and full drain.
+
+Taskname's 20% mutation controls were correct and drained for all three backends.
+KD returned nine snapshots during the checked preparation phase but none during
+the final measured phase, so its strict measured-delegation check remains a
+recorded `NO_JIT` failure. Preparation counts are never added to measured counts.
+
+The checked-address probe and bounded-string probe each validated exact effects,
+original-task resumption, permanent refusal after an unsupported runtime input,
+source retirement and normal module unload. The existing mutex instruction-exit
+probe also passed with the updated shared execution code. These are focused
+correctness checks. ABI3 all-writer c08/RCUHT checks returned 2,411,562/2,461,265
+bodies; rwsem 80%-write controls returned 413,784/164,848 bodies, with correct
+data and full drain. The initial rwlock mixed-write check remains a recorded
+`NO_JIT` failure; the all-writer functional check disables the optional entry
+ratio filter, while the timing matrix retains its ordinary setting.
+The [standard-grid comparison](../bench/results/10.176.26.71/bench/taskname-xattr-20261018/README.md)
+is still being prepared. They do not establish whole-kernel replacement or the
+lifetime of arbitrary pointers supplied by other callers.
+
 ## Checked instruction exits, 2026-10-18
 
 The [final focused receipt](../bench/results/10.176.26.71/tests/native-instruction-exit-20261018/README.md)

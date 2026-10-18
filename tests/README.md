@@ -53,6 +53,9 @@ check, missing dependency, crash or compile failure must not be reported as a pa
 | Native pending/MCS |`spin/test_spin_nondelegated.py`, `test_spin_shadow.py` |
 | Continuation/frame/queue |`spin/test_spin_storage.py`, `test_spin_batch.py`, `test_spin_outer_progress.py`, `execution/test_exec_capacity.py` |
 | Wrapper, typed service and batch |`execution/test_jit_entry_scope.py`, `codegen/test_clobber_abi.py`, `test_jit_body_witness.py` |
+| Checked spin pointer loads | `admission/test_address_guards.py`, `admission/test_guard_flags.py`, `execution/test_jit_entry_scope.py`, `execution/test_mutex_images.py`; [live check](kernel/spin/address_guard/README.md) |
+| Original bounded string helpers | `admission/test_strcmp_service.py`, `admission/test_strscpy_service.py`, `execution/test_jit_entry_scope.py`, `execution/test_mutex_images.py`; [live strcmp check](kernel/spin/string_service/README.md) |
+| Completed-body observation overlay | `execution/test_bench_completion.py`; applies the real benchmark patch and checks dispatcher/batch counting |
 | Conditional instruction exit | `admission/test_native_escape.py`, `codegen/test_native_escape_codegen.py`, `execution/test_jit_entry_scope.py`, `execution/test_native_escape_restore.py`, `execution/test_mutex_images.py`; [live check](kernel/jit_escape/README.md) |
 | Mutex resources/terminal path |`mutex/test_mutex_resources.py`, `test_mutex_task_cache.py`, `test_mutex_terminal.py`, `test_mutex_outer_progress.py` |
 | Provider initialization/publication | `infrastructure/test_provider_lifecycle.py` |
@@ -85,6 +88,25 @@ the exact stack position, unchanged waiter control flags governing interrupts
 and access checks, and untouched memory outside the two temporary stack words.
 These userspace checks do not establish
 kernel ownership or concurrent progress.
+
+The checked-pointer fixtures verify the generated address comparison, the proof
+that incoming arithmetic flags are overwritten before use, exact exit metadata,
+and the runtime's ownership/image checks. String-service fixtures check the
+captured helper instructions, argument bounds, source CALL and return validation,
+and separate limits of 128 `strcmp` calls plus 16 other services/control
+continuations. That second allowance includes the writing helper `strscpy_pad`.
+Native helpers are substituted in the runtime fixtures; those checks alone do
+not prove that the actual kernel helper completed.
+
+The completion-observation fixture applies the actual benchmark overlay to a
+private source copy. It counts one witnessed root invocation only after a
+validated matching outer unlock, whether the body used a fast batch or returned
+through helper services. A root invocation starts at the registered entry;
+a nested or remote continuation that executes only a suffix is excluded.
+Native fallback, quota exhaustion, malformed exits and missing witnesses do
+not count as complete. Counter mutations must compile and fail assertions;
+a compile failure is not mutation detection. These counters never control
+admission, lock ownership or retirement.
 
 ## Live checks
 
@@ -128,6 +150,37 @@ phase requires correct local execution and no further generated-code entries.
 The check also verifies task identity, arithmetic flags, mutual exclusion and
 complete release of execution records before unloading modules. It supplies
 correctness evidence, not a throughput comparison.
+
+The [checked-address probe](kernel/spin/address_guard/README.md) exercises one
+supported spin pointer load. Its cold address is disjoint from a stack pointer
+slot; its hot address safely aliases that slot. The failed check must resume the
+original load on the waiter, preserve earlier effects and disable future
+delegation of that entry. The [original-string-service probe](kernel/spin/string_service/README.md)
+uses short stable strings for delegated `strcmp`, then valid strings longer than
+the service's 256-byte check bound. That refusal must leave the helper unexecuted
+and continue its pending CALL on the original waiter. Both probes require exact
+operation counts, task identity, lock exclusion and final drain; their cold
+phases require positive matching entry and completed-body counts. Neither is a
+performance benchmark or a general pointer-safety test. The string probe does
+not exercise the separate `strscpy_pad` writing service.
+
+The current provider advertises capability version 9. Each runner also checks
+its required feature in the provider's feature-bit mask; a version number alone
+is insufficient. The supported compatibility ranges are:
+
+| Boundary or service | Accepted capability versions | Required feature bit |
+| --- | --- | --- |
+| Mutex instruction marker | 6, 7, 8, 9 | 5: native instruction exit |
+| Checked spin pointer load | 7, 8, 9 | 6: address guard |
+| Original bounded `strcmp` | 8, 9 | 7: string services |
+| Original `strscpy_pad(..., 64)` | 9 | 8: string writing service |
+
+The writing-service capability is separate from the read-only comparison
+capability. Its focused unit checks and exact taskname workload are separate
+from the `strcmp` continuation probe. See the
+[admission guide](../docs/design/admission.md#bounded-original-strcmp-service)
+for the single-lock, source-lifetime and stable-memory limits. Publication and
+unit success do not imply live workload or performance acceptance.
 
 The [mutex task/ACK probe](kernel/mutex/run_task_selftest.py) and selected SELFTEST
 hotlock/entry probes check resource/routing/drain without executing JIT bodies;

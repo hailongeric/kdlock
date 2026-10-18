@@ -4,6 +4,8 @@
 import os
 import re
 from collections import namedtuple
+import strcmp_service
+import strscpy_service
 
 HostcallSpec = namedtuple("HostcallSpec", "name service_id symbol")
 
@@ -53,11 +55,21 @@ def load_hostcall_specs(path=None):
     return specs
 
 
-def resolve_hostcalls(symbol_lookup, path=None):
+def resolve_hostcalls(symbol_lookup, path=None, *, string_services=False,
+                      string_write=False, reader=None):
     resolved = {}
 
     for spec in load_hostcall_specs(path):
         address = symbol_lookup(spec.symbol, 0)
+        if tuple(spec) == strcmp_service.SPEC:
+            if (not string_services or reader is None or not address
+                    or not strcmp_service.verified(
+                        address, symbol_lookup("__x86_return_thunk", 0), reader)):
+                continue
+        if tuple(spec) == strscpy_service.SPEC:
+            if (not string_write or reader is None or not address
+                    or not strscpy_service.verified(address, symbol_lookup, reader)):
+                continue
         if address and address not in resolved:
             resolved[address] = spec
     return resolved
@@ -66,12 +78,13 @@ def resolve_hostcalls(symbol_lookup, path=None):
 def readonly_waiter_targets(resolved):
     """Exact typed services whose handlers only replace saved RAX.
 
-    These audited scalar/time helpers run on the executor stack and do not
-    write waiter memory. Keep unknown/future manifest services opaque. This
+    These audited helpers run on the executor stack and do not write waiter
+    memory. strcmp additionally requires its negotiated exact-text, pointer
+    screening and runtime string-bound checks. Keep future services opaque. This
     summarizes sequential effects only, not concurrent memory freshness.
     See kernel_module/execution/hostcalls.inc for the matching invocations.
     """
     audited = {("KTIME_GET", 1, "ktime_get"),
                ("KTIME_GET_NS", 2, "ktime_get_ns"),
-               ("INT_SQRT", 3, "int_sqrt")}
+               ("INT_SQRT", 3, "int_sqrt"), strcmp_service.SPEC}
     return {address for address, spec in resolved.items() if tuple(spec) in audited}

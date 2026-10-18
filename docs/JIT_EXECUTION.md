@@ -47,10 +47,11 @@ or the combiner must acquire exclusive writer admission.
 
 A combiner can execute several simple root requests in one C loop. For each
 request, preparation checks the image layout, ABI, packet state and whether the
-request is eligible for this simple path. It then writes the wrapper metadata
-once. One source lease covers the batch, but each request still needs a readiness
-check. Legacy and clobber entries share the loop while keeping their different
-completion checks.
+request is eligible for this simple path. Successful preparation binds the
+frame's image descriptor before writing the wrapper metadata once. A refused
+preparation does not change that binding. One source lease covers the batch, but
+each request still needs a readiness check. Legacy and clobber entries share the
+loop while keeping their different completion checks.
 
 For an ABI3 rwlock root, the combiner waits for readers and acquires the writer
 byte in native code before entering JIT. A nested virtual spin request inherits
@@ -68,6 +69,25 @@ saves FULL state and uses the general recovery path. Nested and other complex
 exits also use the general dispatcher. Known controls and approved services can
 resume JIT at registered continuations; an ordinary untranslated call finishes
 natively.
+
+A [checked spin pointer load](design/admission.md#checked-spin-pointer-loads) can
+also stop before the original load when its address may overlap tracked stack
+writes. The checked exit resumes the original waiter at that same instruction
+and stack position, retains earlier effects and existing lock ownership, and
+permanently disables delegation for the entry. It does not construct a CALL or
+retry the body. Generic faults and execution-limit exits cannot use this path.
+
+The [bounded `strcmp` service](design/admission.md#bounded-original-strcmp-service)
+uses the existing CALL exit and original helper. Before invocation, it validates
+the pending CALL, source code and pointer arguments. An argument refusal keeps
+that CALL intact for native execution and disables future delegation of the entry;
+success consumes the validated return once. `strcmp` has a separate allowance of
+128 calls per invocation. The separately negotiated
+[`strscpy_pad` service](design/admission.md#bounded-original-strscpy_pad-writing-service)
+shares the existing 16-call allowance with scalar services and lock controls.
+It verifies its local destination and source-read bounds before any write;
+once invoked, its effects cannot be replayed through native fallback. Together
+the two allowances permit at most 144 such continuations before final unlock.
 
 Completion removes the frame from the active stack before publishing DONE. The
 waiter must read its return state before reusing the continuation or enabling
@@ -158,13 +178,24 @@ of returned JIT writer bodies divided by completed writes; reads are excluded.
 [rwlock runner](../bench/rwlock_compare/README.md) define acceptance and commands;
 [operations](operations/VM.md) defines environment/recovery.
 
-## Legacy mutex image generations
+## Executable image generations
 
 In the current implementation, mutex registration precedes executable allocation.
 The daemon publishes one complete, immutable generation; a frame binds its
 image and keeps it through FULL continuations. Replacement never overwrites a
 running mutex image, and old-generation misses cannot change the current image's
 metadata. Source and ownership retirement still apply independently. Published
-versions remain in the existing 64-block pool until session teardown. Spin/rwlock
-image storage retains its existing in-place lifetime. See the
+versions remain in the existing 64-block pool until session teardown. See the
 [compatibility comparison](history/legacy_mutex_compatibility.md).
+
+Ordinary spin/rwlock entries initially have a stable descriptor whose code block
+can be replaced in place. The first ABI1 image requiring checked pointer loads,
+`strcmp` or `strscpy_pad` instead publishes a new immutable block. A frame already
+using the earlier descriptor keeps its earlier code and cannot observe the new
+image's metadata. Every later generation for that entry remains immutable,
+including images without guards or typed services.
+Generation checks prevent an older frame's miss from changing newer metadata.
+Permanent delegation refusal uses the publication gate, so an upload cannot
+undo it. The [lifetime guide](design/lifetimes.md#executable-images-and-guarded-spin-transition)
+defines the transition and storage limits; ordinary spin/rwlock entries retain
+their existing in-place lifetime until such a transition.

@@ -40,6 +40,27 @@ class ClobberEntryTests(unittest.TestCase):
                 _,_,status=self.generate(code)
                 self.assertEqual(status,2)
 
+    def test_helper_entry_defines_saves_without_relaxing_admission(self):
+        # The helper entry defines only the five already-clobbered callee-save
+        # scratch registers. Reproduce an ordinary helper prologue/epilogue;
+        # omitting any one definition must retain the uncaptured-store refusal.
+        definitions = ('31db', '4531e4', '4531ed', '4531f6', '4531ff')
+        helper = '554889e5415541545341564157'
+        helper += '415f415e5b415c415d5dc3'
+        for omitted in (None, *range(len(definitions))):
+            with self.subTest(omitted=omitted):
+                code = ''.join(value for index, value in enumerate(definitions)
+                               if index != omitted) + helper
+                assembly, log, status = self.generate(code)
+                self.assertEqual(status, 0 if omitted is None else 2, log)
+                self.assertEqual(bool(assembly), omitted is None)
+        # This is not a new captured-register contract: volatile RAX and
+        # unsupported FS writes remain rejected after the same setup. Ordinary
+        # GS memory accesses have a separate origin-CPU lowering contract.
+        setup = ''.join(definitions)
+        self.assertEqual(self.generate(setup + '48890424c3')[2], 2)
+        self.assertEqual(self.generate(setup + '6448c704250000000001000000c3')[2], 2)
+
     def test_paired_stack_restore_and_control_abis(self):
         # The paired continuation reloads callee saves from the entry stack;
         # its cookie must be defined here, not inherited from uncaptured EAX.
@@ -346,7 +367,9 @@ class ClobberEntryTests(unittest.TestCase):
 
     def test_only_audited_services_keep_sequential_waiter_memory(self):
         specs = {i: spec for i, spec in enumerate(hostcall.load_hostcall_specs(), 1)}
-        self.assertEqual(hostcall.readonly_waiter_targets(specs), set(specs))
+        writers = {address for address, spec in specs.items() if spec.symbol == 'strscpy_pad'}
+        self.assertEqual(len(writers), 1)
+        self.assertEqual(hostcall.readonly_waiter_targets(specs), set(specs) - writers)
         specs[4] = hostcall.HostcallSpec('FUTURE', 4, 'unknown')
         self.assertNotIn(4, hostcall.readonly_waiter_targets(specs))
         for readonly in (False, True):

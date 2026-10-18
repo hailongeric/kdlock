@@ -40,9 +40,12 @@ The four phases remain in one provider/source session:
    registry must remain `NATIVE_ONLY`. Operations still execute correctly on
    their original tasks.
 
-The provider must advertise capability version 6 with the native-instruction-exit
-feature. The private benchmark observation overlay supplies entry/completion
-counts; the production `native_escape_count` counts validated marker events.
+The runner accepts capability versions 6, 7, 8 or 9 only when feature bit 5
+(native instruction exit) is present. The current provider advertises version 9;
+the version alone does not establish support. The private benchmark observation
+overlay supplies entry/completion counts, including validated root completions
+after helper services; the production `native_escape_count` counts validated
+marker events.
 That count does not by itself prove that a native continuation completed. The
 operation and final-retirement checks supply the additional evidence. The marker
 log is rate limited, so the test does not require one printed line per count.
@@ -59,3 +62,9 @@ diagnosis. It does not prove that work finished and does not authorize forced
 unload. Successful completion requires workers to join, zero active execution
 records, successful source retirement, ordinary module unload, and final idle
 inspection. This is a focused correctness check; no throughput result is claimed.
+
+This check covers the selected KD mutex ABI2 instruction-marker path. The
+[spin address-guard probe](../spin/address_guard/README.md) and
+[original strcmp service probe](../spin/string_service/README.md) exercise
+separate negotiated boundaries. Their feature bits do not authorize arbitrary
+instruction traps, memory faults or replay of a partially executed body.

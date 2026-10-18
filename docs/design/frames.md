@@ -40,8 +40,13 @@ the record `retired` after removing its frame; it cannot move that top. Reclaim
 records from the top only while each successive record is retired. Never reclaim
 past a record that is still live.
 
-The compact 648-byte frame places its header and IP/SP/BP in one cacheline; the next
+The 656-byte frame places its header and IP/SP/BP in one cacheline; the next
 line backs five virtual GPRs. Source/provenance pointers share another line.
+The eight-frame execution context occupies 5272 bytes. A separate image pointer
+keeps generated-code identity independent of the original spin acquisition
+ticket. It adds eight bytes to the frame and leaves the 168-byte register packet
+and its frame offset unchanged. Existing alignment absorbs that increase in the
+704-byte continuation, so the continuation stack remains 8512 bytes.
 [Spin implementation](spin_implementation.md) gives offsets and prefetch coverage.
 
 For ABI3 rwlock roots, `rwlock_admitted` shares one byte with `spin_kind` and
@@ -147,6 +152,25 @@ normal retirement. A marker does not release a held lock or replay the entry.
 The [register contract](../JIT_REGISTER_ABI.md#checked-instruction-exit) specifies
 the validated tag and restore order.
 
+An ABI1 [checked pointer-load exit](admission.md#checked-spin-pointer-loads)
+resumes the original waiter before the guarded load, with the exact current
+instruction, stack position and registers. Its image is immutable, and the
+translator must prove that the original remainder does not read incoming
+arithmetic flags before overwriting them. This path creates no synthetic CALL
+word. It retains the existing spin ticket, physical owner, source lease, native
+references and unlock acknowledgements through normal retirement, and disables
+future delegation of the entry. This is a specific checked boundary, not recovery
+from arbitrary faults or exhausted execution limits.
+
+The separately negotiated [string services](admission.md#bounded-original-strcmp-service)
+also retain the frame's single outer spin owner, acquisition ticket and source
+lease. They validate the pending CALL before invoking the original helper. An
+argument refusal leaves its return word in place for native execution; success
+consumes the prevalidated return exactly once. The
+[writing service](admission.md#bounded-original-strscpy_pad-writing-service)
+checks its destination before any write and never retries a completed helper.
+These services add no packet, frame or continuation fields.
+
 Before a supported local mutex control, KD snapshots 256 bytes within the
 waiter's live stack. After the call, it compares those bytes and checks the exact
 CALL, return token, IP and SP. If they still match, JIT may continue. If the bytes
@@ -168,7 +192,10 @@ packet restoration; [locking](locking.md) defines the owner obligations.
 Synthetic production-code fixtures check modeled transitions and exactly-once
 behavior; they do not establish every live remote/native schedule. Ordinary native
 controls, actual JIT, context refusals and returned-body evidence remain separate.
-Known pinned-waiter dependencies, dynamic-address guards, general flags repair
-and immutable spin/rwlock versions remain open or deferred in [TODO](../TODO.md).
-Mutex frames in the current implementation bind an immutable image descriptor; see
-[the backport](../history/legacy_mutex_compatibility.md).
+Known pinned-waiter dependencies, general runtime address checks, general flags
+repair and immutable versions for ordinary spin/rwlock entries remain open or
+deferred in [TODO](../TODO.md). Mutex images and spin entries that have published
+checked pointer loads or either bounded string service use immutable generations.
+Ordinary spin/rwlock entries still use in-place storage. See
+[image lifetimes](lifetimes.md#executable-images-and-guarded-spin-transition)
+and the limited [pointer-load admission contract](admission.md#checked-spin-pointer-loads).

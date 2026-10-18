@@ -17,6 +17,20 @@ static void reset(void)
 	memcpy(kd_hostcalls, original, sizeof(original));
 	for (unsigned int i = 0; i < ARRAY_SIZE(kd_hostcalls); i++)
 		kd_hostcalls[i].addr = 0x3000 + 8 * i;
+	kd_hostcalls[3].addr = STRING_IP;
+	kd_hostcalls[4].addr = PAD_IP;
+	kd_string_return_thunk = STRING_IP + 0x4000;
+	kd_string_copy_helper = COPY_IP;
+	kd_string_memset_entry = FILL_IP;
+	kd_string_memset_erms = FILL_ERMS;
+	kd_string_its_return = COPY_RETURN;
+	string_calls = 0;
+	string_result = string_read_error = 0;
+	string_change_return = false;
+	string_wrapper = false;
+	pad_calls = string_read_extent = 0;
+	pad_result = 15;
+	string_readable = KD_STRCMP_MAX_BYTES;
 	memset(service_calls, 0, sizeof(service_calls));
 	scalar_argument = 0;
 	memset(last_error, 0, sizeof(last_error));
@@ -30,6 +44,11 @@ static void reset(void)
 	active.complex_ready = true;
 	active.entry_ip = 0x1000;
 	active.outer_lock_addr = 0x8000;
+#ifdef KD_BENCH_COMPLETION_FIXTURE
+	kd_bench_lock_addr = active.outer_lock_addr;
+	kd_bench_complete_probe = true;
+	kd_bench_bodies = kd_bench_completions = 0;
+#endif
 	active.gsbase = 0xFEED;
 	active.logical_task = &waiter;
 	active.jit_lock_addr[0] = 0x8000;
@@ -64,6 +83,7 @@ static void reset(void)
 	source_error = source_calls = source_fail_at = stack_error = stack_reads = 0;
 	memset(source_targets, 0, sizeof(source_targets));
 	kd_native_escape_count = 0;
+	kd_address_guard_count = 0;
 	memset(escape_text, 0, sizeof(escape_text));
 	escape_text[0] = 0x0f;
 	escape_text[1] = 0x31;

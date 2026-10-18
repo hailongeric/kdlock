@@ -5,8 +5,10 @@
 Linux native, TCLock or KD through `RB_BACKEND` and the locking shell through
 `RB_LOCK_KIND=rwlock|spin|rwsem`. All use the same timed worker loop, operation
 mix and payload. TCLock has no sleeping rwsem backend.
-The runner defaults to RCUHT at 1% and 20% writes across all fifteen requested
-thread counts. Rwlock readers execute locally; only KD writer bodies can contribute
+The runner defaults to RCUHT at 1% and 20% writes on its historical fifteen-count
+grid ending at 36 workers. Current standard comparisons must explicitly select
+workers 1–8 and 12–60 by four, with CPU 63 reserved for the collector; the default
+is not that 21-count grid. Rwlock readers execute locally; only KD writer bodies can contribute
 to the complete-body JIT count. TCLock uses the actual upstream rwlock algorithm,
 with its delegation share reported as unmeasured.
 
@@ -31,8 +33,49 @@ unlock. Both retain exclusive spin semantics. Snapshot reads are the KD delegate
 entry; optional mutations use the same physical KD lock locally. The mutation
 counter and per-reader checks detect lost updates and inconsistent snapshots.
 These tests exclude task/MM lifetime management and procfs I/O. Task-name helper
-learning can be refused by strict instruction admission; a published NORMAL image
+learning still passes strict instruction admission; a published NORMAL image
 or an entry witness alone does not establish complete delegation.
+
+Taskname reads one module-owned 16-byte name into a caller-local 64-byte result
+using the original `strscpy_pad(result, name, 64)` call. The read-only case starts
+with 15 equal letters followed by a zero byte. Optional mutations alternate
+three-letter and fifteen-letter names, changing their letter with each update;
+the reader checks every character and every zero-padding byte after unlock.
+The 20% mutation case is a separate correctness workload, not part of the
+read-only performance score. Reads and mutations both take the same exclusive
+lock; a snapshot "read" does not use a shared reader lock. Post-work remains
+four arithmetic rounds by default and is recorded separately from the payload.
+
+The current KD shell uses ordinary `KD_SPIN_DIRECT_LOCK`, without helper-specific
+register setup. The exact original helper can use a separately negotiated checked
+native call: count 64, the live destination frame, source reads and the complete
+helper code are validated before writing. Analysis retains the original CALL
+stack write and all 64 destination writes. This does not replace the payload
+with a different copy loop or relax general instruction/address admission.
+See the [bounded writing-helper contract](../../docs/design/admission.md#bounded-original-strscpy_pad-writing-service).
+The current ordinary shell passed its 16-worker read-only check with 3,200,000
+operations and 3,194,222 matching generated entries and completed bodies. Native
+and TCLock controls also passed. All three 20% mutation cases produced correct
+results and drained, including 640,000 writes and 2,560,000 reads per case. KD
+completed nine delegated snapshots during preparation but zero during the
+measured phase, so the strict measured-delegation requirement remains failed
+(`NO_JIT`). Preparation completions are not a measured score. The full read-only
+performance matrix remains pending. The
+[development record](../../bench/results/10.176.26.71/bench/taskname-xattr-20261018/DEVELOPMENT.md)
+preserves these checks, historical refusals and intermediate results.
+`--delegate off` remains an explicitly local KD control.
+
+After the recovery and observer checks, this focused guest-only run checks both
+read-only snapshots and concurrent mutations with Native, TCLock and KD. It
+produces correctness records without performance scores:
+
+```sh
+timeout --kill-after=10s 1800s python3 bench/rwlock_compare/run.py \
+  --lock-kind spin --workloads taskname --write-percent 0 20 \
+  --backends native tclock kdlock --threads 8 --collector-cpu 63 \
+  --helper-workers 8 --functional --iterations 50000 --repeats 1 --require-jit \
+  --output /root/kdlock-evidence/10.176.26.71/tests/taskname-functional-NEW
+```
 
 `RB_LOCK_KIND=rwsem` selects Native or KD sleeping reader/writer operations for
 the cacheline/hash payloads. `RB_RWSEM_DELEGATE=1` selects the explicit KD writer

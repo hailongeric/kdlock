@@ -125,8 +125,18 @@ pins and diagnose remaining users. Never force unload or reopen admission.
 A timeout or signal does not prove a blocked ioctl drained.
 
 Replace workload, provider and JIT session together. Mutex frames bind immutable
-generations until session teardown; spin/rwlock images remain keyed by RIP with
-in-place replacement. Owners, ACKs, leases and frames have distinct lifetimes.
+generations until session teardown. Ordinary spin/rwlock images remain keyed by
+RIP with in-place replacement; an ABI1 spin entry that publishes checked pointer
+loads or either bounded string service (`strcmp` or `strscpy_pad`) transitions to
+immutable images for that and every later generation. Earlier frames keep their
+original descriptor and code. This does not permit
+editing frozen inputs or replacing source while work is active. Owners, ACKs,
+source leases and generated images have distinct [lifetimes](../design/lifetimes.md#executable-images-and-guarded-spin-transition).
+
+The provider currently advertises capability version 9. Runners must check the
+specific feature bit they require, including the separate writing-service bit;
+provider version alone does not prove that an image can use a feature. See the
+[service admission contracts](../design/admission.md#bounded-original-strcmp-service).
 
 Save commands, exit statuses, source/ELF hashes, kernel identity, topology,
 business results, every worker's progress, returned JIT counts and final drain.

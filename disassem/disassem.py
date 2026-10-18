@@ -10,6 +10,8 @@ import sys
 from pathlib import Path
 
 import context_guards
+import address_guards as checked_addresses
+import constant_paths
 import context_policy
 import diagnostics
 import entry_abi
@@ -19,6 +21,8 @@ import memread
 import normal
 import native_escape
 import solve_bug
+import strcmp_service
+import strscpy_service
 from translation_image import emit_jit_assembly, write_entry_dispatch, wrapper_context_inputs
 from translation_scope import (
     decode_regions, find_resumable_call_continuations, find_segment_policy_error,
@@ -129,8 +133,16 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0):
         )
         raise
 
-    resolved_hostcalls = hostcall.resolve_hostcalls(get_kernel_symbol)
+    resolved_hostcalls = hostcall.resolve_hostcalls(
+        get_kernel_symbol,
+        string_services=abi == 1 and memread.device_session.string_services(),
+        string_write=abi == 1 and memread.device_session.string_write(),
+        reader=memread.read_kernel_addr_data,
+    )
     hostcall_targets = set(resolved_hostcalls)
+    string_targets = strcmp_service.targets(resolved_hostcalls)
+    writer_targets = strscpy_service.writer_targets(resolved_hostcalls)
+    checked_string_targets = string_targets | writer_targets.keys()
     readonly_targets = hostcall.readonly_waiter_targets(resolved_hostcalls) if abi in {1, 2, 3} else set()
     # The current provider exposes direct protocol entries. Resolve the same
     # identities as its executor, including the clobber unlock completion PC.
@@ -191,11 +203,14 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0):
         rets = memread.read(entry, jump_table, excluded_callees=hostcall_targets)
     except (memread.TextReadLimit, memread.device_session.SourceRefused) as error:
         return reject_translation(str(error))
+    if any(checked_string_targets.intersection(targets) for targets in jump_table.values()):
+        return reject_translation("typed string services cannot use learned indirect-call targets")
 
     # Newly fetched branch targets inherit their caller's lock depth. Only
     # originally discovered callees/IJ targets are independent full-scan roots.
     discovered_targets = {target for _, _, targets in rets for target in targets}
     entry_guards = None
+    memory_guards = None
     normal.set_current_task_offset(get_percpu_symbol_offset("current_task") or None)
     for expansion in range(33):
         block_dict, db_dict = decode_regions(rets, raw_spin_unlock, keep_call_stack)
@@ -228,6 +243,22 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0):
             return reject_translation(reason)
         if entry not in block_dict:
             return reject_translation("entry has no reachable decoded block")
+
+        specialized_branches = ()
+        if abi == 1 and not jump_table and any(
+                line.name.upper() == "UD2"
+                for block in block_dict.values() for line in block.lines):
+            # A helper assertion can be impossible for the exact source CALL
+            # argument (e.g. strscpy's constant count). Keep feasible traps
+            # refused and leave the selected mutex/marker protocol untouched.
+            block_dict, db_dict, specialized_branches = constant_paths.specialize(
+                block_dict, db_dict, entry, indirect_history=jump_table)
+            native_exits &= block_dict.keys()
+            if specialized_branches:
+                diagnostics.set_instruction(entry, "<proved helper branches>")
+                diagnostics.warn("CONSTANT_PATH_SPECIALIZATION", "emit_proved_edges",
+                                 "source-defined constants exclude these branch alternatives",
+                                 branches=[hex(offset) for offset in specialized_branches])
 
         encoding_error = find_undecoded_policy_error(block_dict, rets)
         if encoding_error:
@@ -289,6 +320,8 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0):
             native_exits=native_exits,
             mutex_stack_bytes=mutex_stack_bytes,
             readonly_targets=readonly_targets,
+            string_targets=string_targets,
+            writer_targets=writer_targets,
             native_escapes=escape_capable,
         )
         if (
@@ -301,19 +334,23 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0):
                 and context_policy.static_address(
                     line.args[0], db_dict[block], line.offset + line.l
                 )
-                in {raw_spin_lock, clobber_lock, pinned_spin_lock, mutex_lock, clobber_mutex_lock, direct_mutex_lock, contended_mutex_lock, outer_mutex_lock}
+                in ({raw_spin_lock, clobber_lock, pinned_spin_lock, mutex_lock,
+                     clobber_mutex_lock, direct_mutex_lock, contended_mutex_lock,
+                     outer_mutex_lock} | (discovered_targets - {entry}))
                 for block in selected.values()
                 for line in block.lines
             )
         ):
             if missing:
-                # This is not admission: complete the selected cold paths and
-                # rerun both analyses before collecting/emitting any predicates.
+                # A learned helper needs the same real CALL/RET proof as a
+                # nested lock body: independent callee inputs can otherwise
+                # destroy a caller spill's identity. This is not admission:
+                # complete every selected cold path before collecting checks.
                 segment_error = None
                 diagnostics.warn(
                     "ENTRY_GUARD_WAIT_TEXT",
                     "complete_cfg",
-                    "nested precision retry requires all selected branch text",
+                    "CALL precision retry requires all selected branch text",
                 )
             else:
                 # Learned direct callees may inherit only real CALL packets
@@ -334,6 +371,8 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0):
                     mutex_stack_bytes=mutex_stack_bytes,
                     entry_spill_guards=abi in {1, 2, 3},
                     readonly_targets=readonly_targets,
+                    string_targets=string_targets,
+                    writer_targets=writer_targets,
                     native_escapes=escape_capable,
                 )
                 if not segment_error:
@@ -344,11 +383,43 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0):
                     diagnostics.warn(
                         "ENTRY_GUARDED_ADMISSION",
                         "emit_entry_checks",
-                        "conditional nested admission; check all premises before body",
+                        "conditional CALL admission; check all premises before body",
                         guards=len(candidate.conditions()),
                         scoped_calls=bool(discovered_targets - {entry}),
                         mutex_stack_bytes=mutex_stack_bytes,
                     )
+        # The guard's native continuation still executes original conditionals.
+        # A specialized graph could hide a live source-flag read from its proof.
+        # Until the original native graph is retained separately, never combine
+        # these two admission mechanisms in the same selected image.
+        if (segment_error and abi == 1 and not jump_table and not missing
+                and not specialized_branches
+                and segment_error[1].startswith("bounded register-address alternatives")
+                and memread.device_session.address_guard()):
+            candidate = context_guards.EntryGuards()
+            checked = checked_addresses.AddressGuards()
+            segment_error = find_segment_policy_error(
+                selected, code_ranges, db_dict, context_symbols, lock_kind,
+                lock_symbols, roots={entry}, native_exits=native_exits,
+                guards=candidate, scoped_calls=bool(discovered_targets - {entry}),
+                entry_spill_guards=True, readonly_targets=readonly_targets,
+                address_guards=checked,
+                string_targets=string_targets,
+                writer_targets=writer_targets,
+            )
+            if not segment_error:
+                try:
+                    checked.validate(selected, db_dict, terminal_calls={clobber_unlock},
+                                     flag_dead_calls=string_targets)
+                except context_policy.ContextFlowLimit as error:
+                    segment_error = error.offset, str(error)
+                else:
+                    entry_guards = candidate
+                    memory_guards = checked
+                    diagnostics.set_instruction(entry, "<checked stack-alias loads>")
+                    diagnostics.warn("ADDRESS_GUARDED_ADMISSION", "emit_use_checks",
+                                     "check exact source-stack alias exclusions before each load",
+                                     sites=len(checked.sites))
         if segment_error:
             offset, reason = segment_error
             detail = f"{reason} at 0x{offset:x}" if offset else reason
@@ -376,6 +447,29 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0):
     except indirect_jump.ReturnFlowError as error:
         diagnostics.set_instruction(error.offset, "<return dispatch>")
         return reject_translation(str(error))
+    call_sites = [
+        (line, context_policy.static_address(
+            line.args[0], db_dict[block], line.offset + line.l))
+        for block in block_dict.values() for line in block.lines
+        if line.name.upper() == "CALL" and line.args
+    ]
+    if any(target in checked_string_targets for _, target in call_sites):
+        # The bounded services run only in the original top-level physical
+        # hold. A nested acquisition may change frame/owner state before the
+        # service is reached, where the runtime must refuse after progress.
+        # Refuse that whole selected graph before publication instead. Only
+        # its terminal outer clobber unlock can cross a control boundary.
+        source_pcs = {line.offset for block in block_dict.values()
+                      for line in block.lines}
+        for line, target in call_sites:
+            if target not in lock_symbols:
+                continue
+            if target == clobber_unlock and line.offset + line.l not in source_pcs:
+                continue
+            diagnostics.set_instruction(line.offset, line)
+            return reject_translation(
+                "typed string services require a top-level single-lock scope; "
+                "nested or nonterminal lock control is unsupported")
     has_escapes = escape_capable and any(
         native_escape.descriptor(line)
         for block in block_dict.values() for line in block.lines
@@ -384,6 +478,9 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0):
         reason = entry_abi.check_minimal_entry(
             block_dict, db_dict, entry, clobber_targets,
             set(lock_symbols), jump_table, native_escapes=has_escapes,
+            service_arguments=({target: ("RDI", "RSI") for target in string_targets}
+                               | {target: strscpy_service.ARGUMENTS
+                                  for target in writer_targets}),
         )
         if reason:
             return reject_translation(reason)
@@ -414,14 +511,32 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0):
         terminal_clobber_unlocks=({clobber_unlock} if abi in {1, 3} else
                                  {direct_mutex_unlock or clobber_mutex_unlock} if abi == 2 else set()),
         native_escapes=has_escapes,
+        address_guards=memory_guards,
     )
     Path("./asm/jit.S").write_text(assembly, encoding="utf-8")
 
     solve_bug.solve_cond_jmp_lock_cmpxchg("./asm/jit.S")
 
+    uses_string_service = any(
+        line.name.upper() == "CALL" and line.args
+        and context_policy.static_address(line.args[0], db_dict[block], line.offset + line.l)
+        in string_targets
+        for block in block_dict.values() for line in block.lines
+    )
+    uses_string_write = any(
+        line.name.upper() == "CALL" and line.args
+        and context_policy.static_address(line.args[0], db_dict[block], line.offset + line.l)
+        in writer_targets
+        for block in block_dict.values() for line in block.lines
+    )
+
     build_jit_binary(abi, context_inputs=wrapper_context_inputs(
         Path('./asm/jit.S').read_text(encoding='utf-8')),
-        requirements=native_escape.REQUIREMENT if has_escapes else 0)
+        requirements=((native_escape.REQUIREMENT if has_escapes else 0)
+                      | (checked_addresses.REQUIREMENT if memory_guards is not None
+                         and memory_guards.sites else 0)
+                      | (strcmp_service.REQUIREMENT if uses_string_service else 0)
+                      | (strscpy_service.REQUIREMENT if uses_string_write else 0)))
     return 0
 
 
