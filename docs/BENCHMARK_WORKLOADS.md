@@ -13,6 +13,8 @@ waiting. Just-in-time (JIT) compilation supplies code for delegated execution.
 The standard grid is 1–8 workers by one and 12–60 by four, three repetitions per
 configuration, comparing KD, TCLock and Linux Native where supported. Rwlock and
 rwsem use 1% and 20% writes; rwsem compares KD with Linux Native.
+Pass the worker grid explicitly using the linked runner commands: the
+reader/writer runner's historical default and `--full-matrix` stop at 36 workers.
 Synthetic bodies run repeatedly inside one ioctl per phase; API workers issue
 syscalls individually. Include both categories when requesting the full catalog.
 
@@ -24,6 +26,70 @@ including its documented two-worker throughput regressions. Sleeping rwsem with
 outer writer delegation and extracted proc snapshots have explicit
 runner modes described below. Full [process inspection and mmap candidates](#process-inspection-and-mmap-candidates)
 remain proposals, outside the runnable standard catalog.
+
+## KD API use and delegation
+
+The 2026-10-18 source review, against `af330db`, confirms that the implemented
+workloads below **already call KD APIs**. Delegation means another executor
+runs the protected body on behalf of the waiting caller. Using a KD lock does
+not by itself enable delegation: ordinary mutex compatibility aliases,
+`kd_write_lock()` and `kd_down_write()` execute locally. Readers of KD rwlock
+and KD rwsem also execute locally while holding shared read access.
+
+The explicit pairs below permit delegation of admitted bodies. Admission is
+the translator/runtime check that the compiled body can execute safely with
+the captured inputs and execution context. It can still refuse a body, and an
+eligible call can execute locally because of contention or admission policy.
+An image labelled `NORMAL` proves publication only; a completed, returned JIT
+body proves actual delegated execution. Keep runs with no such completions
+(`NO_JIT`) separate in performance reports.
+
+| Workload and lock | KD API already used | Delegation decision and protected boundary |
+| --- | --- | --- |
+| c01, c08, RCUHT: spin | `KD_SPIN_DIRECT_LOCK` / `KD_SPIN_DIRECT_UNLOCK` | Exclusive counter updates and hash searches/moves are eligible. Storage is preallocated; there is no per-operation allocation or reclamation. |
+| c01, c08, RCUHT: mutex | `KD_MUTEX_OUTER_LOCK` / `KD_MUTEX_OUTER_UNLOCK` | The same bounded payloads are eligible through the selected KD mutex protocol. |
+| c01, c08, RCUHT: rwlock | `KD_RWLOCK_DIRECT_WRITE_LOCK` / `KD_RWLOCK_DIRECT_WRITE_UNLOCK`; `kd_read_lock` / `kd_read_unlock` | Writers may delegate; shared readers stay local. |
+| c01, c08, RCUHT: rwsem | `KD_RWSEM_OUTER_WRITE_LOCK` / `KD_RWSEM_OUTER_WRITE_UNLOCK`; `kd_down_read` / `kd_up_read` | Writers may delegate after existing readers finish. Shared readers stay local. `--delegate off` uses ordinary local writers instead. |
+| `ofd` | Spin direct pair above | Eligible list search and conflict-result copy, limited to the bound file's fixed OFD locks without callbacks. |
+| `setfd` | Spin direct pair above | Eligible bitmap update. The caller's `current->files` lookup happens before acquisition; descriptor creation/removal and table resizing are excluded while bound. |
+| `pipebytes`, `pipecap` | Mutex outer pair above | Eligible ring-length sum or capacity read. `pipebytes` copies to the user pointer after unlock; `pipecap` returns the value after unlock. Pipe mutation and resizing are excluded while bound. |
+| `seek` | Mutex outer pair above | Eligible offset checks and `f_pos`/`f_version` stores. File-reference acquisition/release stays outside the protected body. |
+| `utsname` | Rwlock writer pair and local read pair above | Only the fixed-size name update may delegate. User copies, permission checks, entropy mixing and notification execute on the original caller outside the lock. The current KD adapter uses a spinning rwlock, not KD rwsem. |
+| `argbounds` | Spin direct pair above | Eligible four-word copy under exclusive spin ownership. Optional mutations execute locally through the same KD physical lock. This is an extracted record, not a live process's memory map. |
+| `taskname` | Spin direct pair above | KD API use is implemented, but completed delegation of the exact `strscpy_pad()` body remains unproven. Historical admission refused an uncaptured register R13; the latest recorded preparation exhausted helper-learning attempts without a completed body. Local KD controls are available. |
+| `xattr` | Spin direct pair above | KD API use is implemented, but the expanded string-comparison path was refused because its memory address could not be proven safe. It remains exploratory and excluded from accepted KD delegation comparisons. |
+
+The corresponding source is in the [spin shell](../workload_modules/spin_cacheline/direct.h),
+[mutex shell](../workload_modules/mutex_cacheline/module.c),
+[rwlock shell](../workload_modules/rwlock_bench/direct.h),
+[rwsem shell](../workload_modules/rwlock_bench/direct_rwsem.h),
+[snapshot shell](../workload_modules/rwlock_bench/direct_spin.h) and the real API
+[spin](../workload_modules/real_api/module.c),
+[mutex](../workload_modules/real_api/mutex.c) and
+[UTS](../workload_modules/real_api/uts.c) adapters.
+The [interface guide](../include/README.md#preparing-a-delegating-body) gives
+the required object, continuation, registration and matching-unlock rules.
+Every consumer of a protected object must use the same lock protocol. An
+ordinary API rename, an extra private lock around only some consumers, or a
+cast from a Linux mutex to KD mutex does not implement that conversion.
+
+Eligibility in this table is a source assessment, not a fresh benchmark result.
+The selected mutex measurements cover c01/post64 and pipebytes n16; the accepted
+rwsem matrix covers c01, c08 and RCUHT. Other API measurements retain their
+historical source identities. The latest [instruction-exit validation](../bench/results/10.176.26.71/tests/native-instruction-exit-20261018/README.md)
+also completed delegated rwsem c08 and RCUHT writers, but it is a functional
+check, not a new throughput matrix. The snapshot and API sections below retain
+their successful execution evidence and refusals.
+
+The new [checked instruction exits](design/admission.md#checked-instruction-exits)
+apply only to mutex bodies and rwsem outer writers using ABI2, the mutex
+machine-level calling agreement. Twelve reviewed processor instructions can
+become markers that return execution to the original waiter before the
+instruction runs and disable future delegation of that entry. The full source
+body must still pass existing address, captured-register and execution-context
+checks, including paths after a marker. Spin and rwlock writers retain static
+instruction refusal. These markers do not resolve the taskname/xattr refusals,
+enable shared-reader delegation or supply the missing full mmap interfaces.
 
 ## Synthetic cacheline updates
 
@@ -428,6 +494,8 @@ outputs. They do not operate on live task/MM structures, invoke procfs, fetch
 remote argument pages or time `ps`. `--write-percent 0` is read-only snapshot
 traffic; a 20% mutation case alternates valid versions and checks the complete
 tuple or padded name. Read operations remain exclusive spin acquisitions.
+KD mutations use local execution through that same KD object; they do not
+acquire a separate Linux Native lock.
 
 Snapshot preparation saves every published image and uses fully drained helper
 learning waves. Readiness requires a complete returned body rather than just a
@@ -599,6 +667,28 @@ Replacing every Linux **mutex** with KD mutex does not replace `alloc_lock`,
 `siglock`, raw spinlocks, seqlocks or the **rwsem** `mmap_lock`. The current
 [mutex aliases](../include/kd_mutex_compat.h) operate on rebuilt KD mutex objects;
 ordinary C aliases execute locally, while explicit clobber callers permit JIT.
+The closest APIs for a future real-object conversion are listed below. These
+are integration choices, **not implemented procfs/mmap adapters**. A killable
+wait can return without acquiring the lock when a fatal signal is pending;
+downgrade changes exclusive write ownership into shared read ownership.
+
+| Actual kernel section | Closest KD API | Remaining boundary |
+| --- | --- | --- |
+| Plain `mm->arg_lock` and `task->alloc_lock` sections | `KD_SPIN_DIRECT_LOCK` / `KD_SPIN_DIRECT_UNLOCK` on a converted object | The extracted four-word body can delegate. The exact name helper remains blocked; pointer/reference snapshots need their own lifetime and compiled-body review. All real-object consumers still need conversion. |
+| `sighand->siglock` with interrupt-state saving | `kd_spin_lock_irqsave` / `kd_spin_unlock_irqrestore` | Local KD execution only; interrupt state belongs to the caller. The surrounding pointer revalidation and all signal-side consumers must be preserved. |
+| Mmap readers and `exec_update_lock` readers | `kd_down_read_killable` / `kd_up_read`, with the appropriate trylock/retry handling | Local shared access only. These APIs cover part of a future port; full mmap wrapper support is incomplete. |
+| Mmap writers | `kd_down_write_killable` / `kd_up_write`, with `kd_downgrade_write` where required | These are local operations. The delegating outer pair waits uninterruptibly and cannot downgrade; it cannot replace the current mmap acquisition/release paths. |
+| Sequence-lock statistics, raw accounting locks and interrupt-disabled task-list writers | No complete interchangeable KD API | Preserve sequence retries, read-copy-update (RCU) traversal, raw-lock rules and interrupt state. An ordinary exclusive delegated body is not equivalent. |
+
+The retained `include/linux/mmap_lock.h` additionally uses nested lock-dependency
+annotations, `mmap_read_unlock_non_owner()`, `rwsem_is_locked()` and
+`rwsem_is_contended()`. KD rwsem has no corresponding complete interfaces.
+Non-owner unlock permits a read acquisition to be released by a different task;
+contention checks let `smaps_rollup` decide when to drop and reacquire read ownership.
+`kd_rwsem_is_idle()` is an inspection helper after all users stop, not a
+replacement for a live contention query. Providing ordinary killable lock APIs
+therefore does not make even a fully local mmap conversion complete.
+
 The following requirements still apply under the KD-only mutex assumption:
 
 - **Matching lock semantics.** Current [KD rwlock](../include/kd_rwlock.h)
@@ -640,7 +730,7 @@ identifies the expensive shared object before a real-object adapter is designed.
 | `proc-arg-bounds` | Copy four words under one module-owned exclusive spinlock into stable worker-local kernel storage; optionally alternate valid tuples under the same lock. Distinct-record control remains an extension. | Implemented as `--lock-kind spin --workloads argbounds`; require fresh returned-body evidence for current delegation claims. |
 | `proc-comm-snapshot` | Exact `strscpy_pad()` name copy, 16-byte source and 64-byte padded destination, with separately labelled mutations; distinct-record control remains an extension | Implemented as `--lock-kind spin --workloads taskname`, including KD local control. Exact KD delegation remains subject to helper/ABI admission. A different copy loop is a different payload. |
 | `proc-stat` / `proc-status` | Independent observers read the same large thread group versus distinct groups; idle, CPU-active and exit/reaping variants kept separate | Native-only candidates requiring implementation; preserve actual seqlock/RCU/IRQ paths. No full-path KD adapter. |
-| `proc-cmdline-mmap` | Read stable arguments while target threads map/unmap disjoint scratch regions in that same MM. Include a no-writer control; vary argument length and VMA count. | Native mmap-contention workload; current KD/TCLock sleeping-rwsem comparison unavailable |
+| `proc-cmdline-mmap` | Read stable arguments while target threads map/unmap disjoint scratch regions in that same MM. Include a no-writer control; vary argument length and VMA count. | Native mmap-contention candidate; no full mmap adapter for KD or TCLock. The synthetic KD rwsem comparison does not implement this path. |
 | `proc-maps` / `proc-smaps` | Complete proc-file reads while a target changes separate mappings; vary actual VMA count and resident bytes independently | Native workloads; distinguish VMA formatting from page-table accounting and preserve allowed concurrent-update semantics |
 | `mmap-churn` | Target threads perform matched map/unmap cycles or separately labelled protection changes; compare shared MM with independent processes and with/without observers | Native writer control; record map/unmap latency separately as well as cycle throughput. Full MM delegation unsupported. |
 | `task-lifecycle` | Controlled process/thread creation, exit and reaping with/without proc observers | Native control for global task-list and statistics writers; no current KD IRQ-rwlock adapter |

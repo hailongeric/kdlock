@@ -4,6 +4,11 @@ These headers define the public lock APIs and the data layouts shared by C,
 assembly and the Python translator. Helpers used only inside a backend live under
 [kernel_module](../kernel_module/README.md). Payload ioctls live under
 [workload_modules](../workload_modules/README.md).
+API means application programming interface; ABI means the machine-level
+calling agreement. JIT means just-in-time compilation for delegated execution.
+The [terminology guide](../docs/TERMINOLOGY.md) explains the remaining protocol
+terms. Local KD execution uses KD physical locking on the original caller;
+it does not mean using the Linux Native backend.
 
 | Interface | Files | Boundary |
 | --- | --- | --- |
@@ -39,8 +44,11 @@ before its matching same-task unlock. The native CAS saves an exact owner; conte
 KD entry saves zero. Nested translated operations use `KD_MUTEX_DIRECT_LOCK/UNLOCK`;
 prepare uses `kd_mutex_prepare(..., KD_ENTRY_ABI_MUTEX_CLOBBER_V1)`. Registration
 can succeed before immutable image allocation; only complete NORMAL publication
-allows JIT execution. Provider, daemon and translator must negotiate the matching
-version-5 immutable-image and exclusive-KD-object capabilities.
+allows JIT execution. Provider, daemon and translator must agree on
+immutable-image and exclusive-KD-object capabilities. Ordinary mutex images
+accept capability versions 5 and 6. Images with checked instruction-exit markers
+require version 6 and its instruction-exit capability; see
+[the admission contract](../docs/design/admission.md#checked-instruction-exits).
 [Ownership](../docs/design/locking.md#mutex-outer-direct) explains the routing.
 
 Rwlock readers pair `kd_read_lock/unlock`; explicitly native writers pair
@@ -62,6 +70,39 @@ readers before the mutex can publish a pinned request, then releases that
 reservation on the origin after the mutex unlock returns. It reuses ABI2 and
 does not support cancellation, downgrade or nested translated acquisition.
 See [the rwsem API and ordering](../docs/design/rwsem_implementation.md).
+
+## Preparing a delegating body
+
+Ordinary mutex aliases in `kd_mutex_compat.h`, ordinary rwlock writers and
+ordinary rwsem writers run locally. Use an explicit direct/outer pair above
+when the body is eligible for delegation; see the
+[workload decisions](../docs/BENCHMARK_WORKLOADS.md#kd-api-use-and-delegation).
+
+1. Initialize the appropriate KD object and make every reader/writer use the
+   same protocol. Rebuild callers when changing object types; casting a Linux
+   mutex to a KD mutex cannot convert its layout or ownership protocol.
+2. Put the pair around the exact protected body in a function marked `noipa`,
+   which prevents the compiler from inlining or cloning it across callers.
+   Give its body-entry continuation a unique label. Retain the per-acquisition
+   cookie for mutex/rwsem outer pairs. Spin/rwlock pairs use the supplied shared
+   per-CPU routing cookie without modifying it. Match every acquisition with
+   its corresponding release.
+3. Before workers start, register that exact entry with `kd_spin_prepare()` for
+   spin, `kd_rwlock_prepare()` for rwlock writers, or `kd_mutex_prepare()` for
+   mutex. Their entry identities are ABI1, ABI3 and ABI2 respectively. The
+   current rwsem adapter registers its internal mutex gate with ABI2 as shown
+   in [direct_rwsem.h](../workload_modules/rwlock_bench/direct_rwsem.h), while
+   acquisition/release always uses the rwsem outer pair to preserve reader
+   exclusion. Do not use the gate directly to bypass that pair.
+4. Let the daemon translate and publish the compiled entry, retaining refusal
+   diagnostics. A successful prepare call or `NORMAL` image is not evidence
+   that the body executed remotely. Validate completed returned bodies,
+   protected results and full drain before reporting delegated performance.
+
+The outer rwsem pair is for a same-task acquisition/release around one body;
+its admission wait is uninterruptible. It does not provide killable admission,
+downgrade or acquisition inside another translated body. Ordinary KD rwsem
+APIs retain local cancellation and downgrade support.
 
 ## Explicit IRQ/BH spin interfaces
 

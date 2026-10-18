@@ -23,6 +23,9 @@ The current selected mutex result is the [KD-only pipebytes n16 comparison](../r
 The [workload catalog](../../docs/BENCHMARK_WORKLOADS.md) defines each label.
 Broader historical API coverage retains its original adapter/provider identity;
 it is not validation of every current KD mutex scenario.
+All seven implemented adapters already call KD APIs. The catalog's
+[API and delegation table](../../docs/BENCHMARK_WORKLOADS.md#kd-api-use-and-delegation)
+distinguishes eligible bodies, local readers and unresolved translation refusals.
 
 ## Candidate selection
 
@@ -37,7 +40,7 @@ it is not validation of every current KD mutex scenario.
 | `uname()` with `sethostname()` / `setdomainname()` | `uts_sem` protects the real UTS structure: readers copy it, writers replace one name | Implemented bounded read/write experiment in a private UTS namespace; Native rwsem versus KD/TCLock reader/writer spinlocks, with the specialization below. |
 | FxMark directory enumeration / rename | Shared dentry/rename state and, for cross-directory rename, `s_vfs_rename_mutex` | Candidate for wider integration; additional lock sites and filesystem behavior must be preserved. |
 | will-it-scale `lock1` | Repeated `F_SETLKW` / unlock, with a **separate file per worker** | Useful reference; it does not itself create a shared inode lock. The original paper's kernel/version bottleneck must be re-established on this kernel. |
-| will-it-scale `mmap1` | `mm_struct.mmap_lock`, a sleeping rwsem, covers VMA allocation/removal and potentially blocking/nested work | The local TCLocks copy maps and unmaps 128 MiB. The separate ordinary [KD rwsem](../../docs/design/rwsem_implementation.md) does not integrate the full mmap API or delegate its writers; no KD mmap comparison is implemented. |
+| will-it-scale `mmap1` | `mm_struct.mmap_lock`, a sleeping rwsem, covers VMA allocation/removal and potentially blocking/nested work | The local TCLocks copy maps and unmaps 128 MiB. [KD rwsem](../../docs/design/rwsem_implementation.md) supports explicit outer writer delegation, but that pair cannot preserve mmap's killable waits and downgrade paths. Full mmap APIs and execution context remain unintegrated; no KD mmap comparison is implemented. |
 | eventfd / epoll wakeup paths | Short queue/counter critical sections, often with IRQ exclusion | Poor initial fit for the present ordinary-task-context delegation ports. |
 
 Sources: [TCLocks evaluation, Table 1 and Figure 3](https://www.usenix.org/system/files/osdi23-gupta.pdf),
@@ -83,8 +86,11 @@ pooled with the matched native arm. The captured kernel has UBSAN enabled, while
 all timed replacement/provider modules have UBSAN disabled. Therefore only the
 matched native comparison isolates the lock change within this compiled body.
 
-Only one fixed worker runs on each selected CPU. All requests use the real
-kernel list and original lock storage. Syscalls run individually, without an
+Only one fixed worker runs on each selected CPU. The spin adapters operate on
+the real lists or descriptor bitmap and original spinlock storage under the
+controlled-consumer restrictions above. KD/TCLock mutex adapters and all matched
+UTS adapters use private objects; Native mutex keeps the original lock, as
+described below. Syscalls run individually, without an
 ioctl loop or artificial arithmetic inside the critical section. Warmup and
 setup are outside timing. User-buffer validation is inside timing and identical
 across backends. Values differ by attribute key; every returned byte is checked.
@@ -145,8 +151,9 @@ adaptation of the bounded, non-sleeping copy/update body, not a general replacem
 of Linux rwsems. Stock retains global `uts_sem`, the original notification placement
 and kernel instrumentation; its comparison includes all three differences. Global
 proc notifications to other namespaces are retained in every arm. KD prepares the
-ABI3 writer entry; readers stay native and
-concurrent. JIT shares use the number of **writes**, not total mixed operations.
+ABI3 writer entry; readers execute locally through `kd_read_lock()` and
+`kd_read_unlock()` with concurrent shared access. JIT shares use the number of
+**writes**, not total mixed operations.
 TCLock mutex delegation counts are recorded; spin/rwlock shares remain unmeasured.
 
 ## Run in the recovery guest
