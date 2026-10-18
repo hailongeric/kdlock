@@ -19,13 +19,13 @@ admission and writer delegation.
 
 Pinned source: [TCLocks](https://github.com/rs3lab/TCLocks), commit
 `bbfb9f00a12af51dff6ca291cb9829a82960c2ef`, subtree `src/kernel/rcuht/`.
-[upstream](upstream/) retains eight unchanged upstream files and author statements;
+[upstream](upstream) retains eight unchanged upstream files and author statements;
 [UPSTREAM.json](UPSTREAM.json) records their SHA256 hashes.
 
 | Entry/components | Responsibility |
 | --- | --- |
-| [komb.c](komb.c) → [spin](spin/) | State, queue, combiner, waiter, lifecycle, trampoline, lock and unlock |
-| [komb_mutex.c](komb_mutex.c) → [mutex](mutex/) | State, parking/wakeup, queue, combiner, slowpath, trampoline and unlock |
+| [komb.c](komb.c) → [spin](spin) | State, queue, combiner, waiter, lifecycle, trampoline, lock and unlock |
+| [komb_mutex.c](komb_mutex.c) → [mutex](mutex) | State, parking/wakeup, queue, combiner, slowpath, trampoline and unlock |
 | [combiner.c](combiner.c), [include/lib/combiner.h](include/lib/combiner.h) | Original six-GPR/RSP switch and shared constants |
 | [provider.c](provider.c), [compat.h](compat.h) | Spin lifecycle, binding and drain |
 | [mutex_provider.c](mutex_provider.c), [mutex_compat.h](mutex_compat.h) | Registered fixed-affinity contexts, stacks, task refs and complete cohort drain |

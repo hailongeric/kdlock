@@ -1,5 +1,11 @@
 # Results by physical machine
 
+`master` selects KD-only `d2a2304`; see [current performance](../../docs/PERFORMANCE.md).
+The [2026-10-18 consolidation checks](10.176.26.71/tests/main-consolidation-20261018/README.md)
+validate organization and tooling separately from the measured runtime.
+Historical owned/adaptive mutex and sleeping-rwsem reports below are preserved
+evidence, not current implementation selections.
+
 The [KD-only mutex round](10.176.26.71/bench/comparison/mutex-kdonly-20261017T140354Z/README.md) contains 504 fresh accepted/drained sessions
 at 1–8 workers by one and 12–60 by four, three repetitions, with accepted KD,
 Native and TCLock controls. It measures the removal of Linux mutex backing while

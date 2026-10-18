@@ -21,7 +21,8 @@ Payloads live in
 All-worker warmup and measurement share the same CPU geometry. Timed loops publish
 progress every 256 operations; static final snapshots independently verify exact
 cacheline/hash business results. Progress is used to select windows, not to replace
-data correctness. Assembly export groups identical code by critical section and
+data correctness. The optional synthetic 64-worker cohort must explicitly
+label collector sharing; client and peak checks enforce that identity. Assembly export groups identical code by critical section and
 retains all drained source sessions and hashes.
 
 `make -C bench/spin_cacheline test` runs only in the guest and loads no module.

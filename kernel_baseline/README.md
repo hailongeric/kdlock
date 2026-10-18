@@ -4,15 +4,15 @@ This directory records the existing x86-64 recovery guest prerequisite. It does
 not modify the guest, install a kernel, add hooks, or fix hook-reader lifetime.
 The captured configuration and patch are evidence, not a recommendation to use
 this historical kernel on production machines. Rebuilding/installing the guest
-kernel still requires separate approval under `docs/AGENTS.md`.
+kernel still requires separate approval under [development rules](../AGENTS.md).
 
 This is the original `6.1.159` baseline, not the current ordinary-spin ABI.
-The current provider requires spin and mutex caller-clobber v1 on
-[`kdclobber2`](../kernel_experiments/mutex_clobber/README.md) and does not build on this
+The current spin provider requires spin caller-clobber v1 on
+[`kdclobber2`](experiments/mutex_clobber/README.md) and does not build on this
 original kernel; retain this bundle for verification, recovery and reproducing
 its historical source versions.
-The separate [spin-static](../kernel_experiments/spin_static/README.md) and
-[caller-clobber](../kernel_experiments/spin_clobber/README.md) experiments retain
+The separate [spin-static](experiments/spin_static/README.md) and
+[caller-clobber](experiments/spin_clobber/README.md) experiments retain
 independent source/build trees and external captured bundles. Select the bundle
 matching the running kernel as described in [the manual](../docs/PROJECT_GUIDE.md#kernel-identity);
 do not overwrite this original capture or delete it as an obsolete artifact.
@@ -117,7 +117,7 @@ preemption support, PV spinlocks, frame pointers, module versioning, strong stac
 protection and out-of-line spin unlock. Debug spinlocks/mutexes and debug lock
 allocation are disabled. The captured guest exposed 40 CPUs; `CONFIG_NR_CPUS=8192`
 is a compile-time maximum, not its online CPU count. The documented destination
-uses a 60-vCPU launcher configuration and still requires migration verification;
+uses the verified 64-vCPU launcher configuration;
 see [current operations](../docs/PROJECT_GUIDE.md#guest-workflow). Other configurations are
 not validated by matching a few of these options.
 The observed boot uses `nokaslr` and the runtime preemption selector reports
@@ -158,6 +158,6 @@ regressions pass on 158 frozen inputs:
 34 unit programs without skips before/after and 16 fresh integrations
 (13 actual-JIT / three native-only). Final audits pass at
 2026-09-07 20:48:39 +08; evidence and scope are recorded in
-[VALIDATION](../docs/VALIDATION.md#captured-kernel-baseline). These are not the
+[VALIDATION](https://github.com/hailongeric/kdlock/blob/17f146e52f9f52485b8211addb7dab7195e70452/docs/VALIDATION.md#captured-kernel-baseline). These are not the
 latest matrix results. General C1/C2/C5,
 source/hook lifetime and the explicitly deferred C3/C4 semantic work remain open.

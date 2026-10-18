@@ -1,0 +1,1482 @@
+{
+  "file_count": 369,
+  "files": {
+    "bench/results/10.176.26.71/bench/comparison/mutex-adaptive-20261016T075356Z/analyze.py": {
+      "revision": "9a4bf2a",
+      "sha256": "6d83edf62540ee6213dc0c99badf898c284b353a378780a723636643c8f201cd"
+    },
+    "bench/results/10.176.26.71/bench/comparison/mutex-adaptive-20261016T075356Z/archive.json": {
+      "revision": "9a4bf2a",
+      "sha256": "0a5236b1578bfa844cd01b357e87213f9767de3c9428679bcaf229fe5b21e751"
+    },
+    "bench/results/10.176.26.71/bench/comparison/mutex-adaptive-20261016T075356Z/compare.py": {
+      "revision": "9a4bf2a",
+      "sha256": "3758bf6486dbea37920fbfc21c2862a38d5254ca5e92fa677e3ca0a2f87dd909"
+    },
+    "bench/results/10.176.26.71/bench/comparison/mutex-adaptive-20261016T075356Z/comparisons.json": {
+      "revision": "9a4bf2a",
+      "sha256": "e119247af4cf137c94a184461dc6d1a2058f069458b31621bdf8dbf7fa525a49"
+    },
+    "bench/results/10.176.26.71/bench/comparison/mutex-adaptive-20261016T075356Z/driver.py": {
+      "revision": "9a4bf2a",
+      "sha256": "5e6652cb05b9f85ec5a4df80fed5791e7af73588317d2d7a023bbfd2f6cc43f8"
+    },
+    "bench/results/10.176.26.71/bench/comparison/mutex-adaptive-20261016T075356Z/full-v8-plan.json": {
+      "revision": "9a4bf2a",
+      "sha256": "c1f312dccdcbf4cbea90d4c22d7bc33e3269f42dcdf27479ee634291013d54df"
+    },
+    "bench/results/10.176.26.71/bench/comparison/mutex-adaptive-20261016T075356Z/full-v8-status.json": {
+      "revision": "9a4bf2a",
+      "sha256": "f31426f6d728d7fa73f9b50eb161d77e9e3cd7529d8a77c6d5f4a7b2a4afea98"
+    },
+    "bench/results/10.176.26.71/bench/comparison/mutex-adaptive-20261016T075356Z/guest-after.json": {
+      "revision": "9a4bf2a",
+      "sha256": "a5916368252a465ebf2d783a9e700870dcb97fff97a37700132a465f2be464b2"
+    },
+    "bench/results/10.176.26.71/bench/comparison/mutex-adaptive-20261016T075356Z/guest-before.json": {
+      "revision": "9a4bf2a",
+      "sha256": "5b91358e0d3f165de4825428363d825f318361c6c4bbc3d59f4fb4d0505a877f"
+    },
+    "bench/results/10.176.26.71/bench/comparison/mutex-adaptive-20261016T075356Z/historical-legacy-reference.json": {
+      "revision": "9a4bf2a",
+      "sha256": "3fe2c6987d5a31e50587d8d1e7290e8741e36d04bf0daaf0fdcc57558b2f454c"
+    },
+    "bench/results/10.176.26.71/bench/comparison/mutex-adaptive-20261016T075356Z/host-after.json": {
+      "revision": "9a4bf2a",
+      "sha256": "66fafd322cb18fd02df684df0ed5fd828fcb162d293413c9d84b56560b7ba95e"
+    },
+    "bench/results/10.176.26.71/bench/comparison/mutex-adaptive-20261016T075356Z/host-before.json": {
+      "revision": "9a4bf2a",
+      "sha256": "c2cdb8431695183f2d50eff78c07e44c9416b4aacad175b5d23bc3afaf92ad76"
+    },
+    "bench/results/10.176.26.71/bench/comparison/mutex-adaptive-20261016T075356Z/host-consistency.json": {
+      "revision": "9a4bf2a",
+      "sha256": "207e647f0876a72682f8cae9267a2ef07058ce75f6c139a35d01042908de5631"
+    },
+    "bench/results/10.176.26.71/bench/comparison/mutex-adaptive-20261016T075356Z/jit-share.svg": {
+      "revision": "9a4bf2a",
+      "sha256": "75c7fe527f16d5e49211462866c02f3f13a427340f69fac827baf454efc03f23"
+    },
+    "bench/results/10.176.26.71/bench/comparison/mutex-adaptive-20261016T075356Z/nodes.csv": {
+      "revision": "9a4bf2a",
+      "sha256": "0611c177ef539d75585ac024424610d8ae2d3379973c85c8cbfaf7aacc920a48"
+    },
+    "bench/results/10.176.26.71/bench/comparison/mutex-adaptive-20261016T075356Z/peak.png": {
+      "revision": "9a4bf2a",
+      "sha256": "ca8c3cc1d3547950fbb2e31f29caf5976c12df565419aee1845969e3752e17dd"
+    },
+    "bench/results/10.176.26.71/bench/comparison/mutex-adaptive-20261016T075356Z/peak.svg": {
+      "revision": "9a4bf2a",
+      "sha256": "cc7b6ae04cf3da688946964620e47baf4cff2e16990dd15e22812276da7cc040"
+    },
+    "bench/results/10.176.26.71/bench/comparison/mutex-adaptive-20261016T075356Z/publication.json": {
+      "revision": "9a4bf2a",
+      "sha256": "93b2ab559e58c296db9469ea26a9c322125b2c13294d2aa6d800bcc72774036a"
+    },
+    "bench/results/10.176.26.71/bench/comparison/mutex-adaptive-20261016T075356Z/samples.csv": {
+      "revision": "9a4bf2a",
+      "sha256": "1db3a1e484656db93d356c8fa4a74975a4f7fc95c5ee8038fa814cc130dcda86"
+    },
+    "bench/results/10.176.26.71/bench/comparison/mutex-adaptive-20261016T075356Z/samples.json": {
+      "revision": "9a4bf2a",
+      "sha256": "c9885ccf8b9ecd7a858880d7bc7664a5580a8a9bcf5ae06ff98f7297b3582930"
+    },
+    "bench/results/10.176.26.71/bench/comparison/mutex-adaptive-20261016T075356Z/source-state.json": {
+      "revision": "9a4bf2a",
+      "sha256": "0a2819560251d3bb85d0edeb282aafc780da0e93773a9d06708536b57f470597"
+    },
+    "bench/results/10.176.26.71/bench/comparison/mutex-adaptive-20261016T075356Z/summary.csv": {
+      "revision": "9a4bf2a",
+      "sha256": "6e93649d016a55791eb7f667374152300029518f7aef9665994d9e3833186f97"
+    },
+    "bench/results/10.176.26.71/bench/comparison/mutex-adaptive-20261016T075356Z/summary.json": {
+      "revision": "9a4bf2a",
+      "sha256": "ec2d9ccd65de6c6d577715917dc2fe5bba7c4bc37e04a0812078e0296d1efe86"
+    },
+    "bench/results/10.176.26.71/bench/comparison/mutex-adaptive-20261016T075356Z/validation.json": {
+      "revision": "9a4bf2a",
+      "sha256": "283cff785fc2cb0efa2cc24a166c7c27e4be05217311f44ae522cf5758d5a7a7"
+    },
+    "bench/results/10.176.26.71/bench/comparison/mutex-adaptive-20261016T075356Z/verification.json": {
+      "revision": "9a4bf2a",
+      "sha256": "d4c301c3151f44f6c6e8b43e4097924fc33b34947840f5d7eb29ea612e0cf828"
+    },
+    "bench/results/10.176.26.71/bench/comparison/mutex-adaptive-20261016T075356Z/whole.png": {
+      "revision": "9a4bf2a",
+      "sha256": "61b2e428269461f813df5e2354a59816a8abc83d4f6b5801ef5ede190e260778"
+    },
+    "bench/results/10.176.26.71/bench/comparison/mutex-adaptive-20261016T075356Z/whole.svg": {
+      "revision": "9a4bf2a",
+      "sha256": "4761c0b78d6778f54fb590c6968515e3ea421f0e9ef8d829c9b3ff373f4df062"
+    },
+    "bench/results/10.176.26.71/bench/comparison/mutex-adaptive-20261016T075356Z/workers.csv.gz": {
+      "revision": "9a4bf2a",
+      "sha256": "f4a2b6b19a6f9eebd4f6662393bebb2d7ad3c023c72ac12d4d41cf0c6577022a"
+    },
+    "bench/results/10.176.26.71/bench/comparison/mutex-expanded-20261016T040928Z/analyze.py": {
+      "revision": "9a4bf2a",
+      "sha256": "60d1439013f56a2fe13bac6f410a853d570d0951c09d9a09d3121db83150ce20"
+    },
+    "bench/results/10.176.26.71/bench/comparison/mutex-expanded-20261016T040928Z/api-mutex-peak.png": {
+      "revision": "9a4bf2a",
+      "sha256": "8a2385aa8d95bab1732629bf6fcf8367de93b66a888fd3fb583fdd02aeb7cedf"
+    },
+    "bench/results/10.176.26.71/bench/comparison/mutex-expanded-20261016T040928Z/api-mutex-peak.svg": {
+      "revision": "9a4bf2a",
+      "sha256": "325a29947b2e1e6e094d9ee1526dd649c805a28757b2699490b30a9fa6a4c219"
+    },
+    "bench/results/10.176.26.71/bench/comparison/mutex-expanded-20261016T040928Z/api-mutex-whole.png": {
+      "revision": "9a4bf2a",
+      "sha256": "9e83a647d1640eebef30c711d3dfd6566ef701d662b468310f8246d9c36d6c51"
+    },
+    "bench/results/10.176.26.71/bench/comparison/mutex-expanded-20261016T040928Z/api-mutex-whole.svg": {
+      "revision": "9a4bf2a",
+      "sha256": "19102a253040e58895fd42d2b4dfee41327c12319b64cfe4dd774bca04a6b4b9"
+    },
+    "bench/results/10.176.26.71/bench/comparison/mutex-expanded-20261016T040928Z/archive.json": {
+      "revision": "9a4bf2a",
+      "sha256": "1de935a6858a1de692203956b5c34f8ffe3af037371db2ae38262cd06aadaada"
+    },
+    "bench/results/10.176.26.71/bench/comparison/mutex-expanded-20261016T040928Z/closeout.json": {
+      "revision": "9a4bf2a",
+      "sha256": "d7fa241ee74c73f085038963d57aa5f1f0e1d2806e5f27fefaa1d6d2d7802b90"
+    },
+    "bench/results/10.176.26.71/bench/comparison/mutex-expanded-20261016T040928Z/comparisons.csv": {
+      "revision": "9a4bf2a",
+      "sha256": "58682f9c0f6a3014491dcae7268290503efbb39a2128c466e386a03cc22c3ef7"
+    },
+    "bench/results/10.176.26.71/bench/comparison/mutex-expanded-20261016T040928Z/coverage.csv": {
+      "revision": "9a4bf2a",
+      "sha256": "da9420193b9450f6e6a32e6057e6878db1b71c8c4f4807a3ee85ccf4fe4cf51c"
+    },
+    "bench/results/10.176.26.71/bench/comparison/mutex-expanded-20261016T040928Z/driver.py": {
+      "revision": "9a4bf2a",
+      "sha256": "9950e240b018bcf8c3f618307cc2d3225ccca5f586df7fcdc6465873e647a281"
+    },
+    "bench/results/10.176.26.71/bench/comparison/mutex-expanded-20261016T040928Z/full-driver-plan-check.json": {
+      "revision": "9a4bf2a",
+      "sha256": "0446fa0b1eb2ede17e4643f06869191e9463c42e0c0bc76bba3ceed57cde96ad"
+    },
+    "bench/results/10.176.26.71/bench/comparison/mutex-expanded-20261016T040928Z/guest-after.json": {
+      "revision": "9a4bf2a",
+      "sha256": "38e700a78b6cd1f1c015faf847b22b2e87432fdc1a9bb049ab399679839750e1"
+    },
+    "bench/results/10.176.26.71/bench/comparison/mutex-expanded-20261016T040928Z/guest-before.json": {
+      "revision": "9a4bf2a",
+      "sha256": "a5dee49da8ecb84ee79c1ba81b479f1e8fdb0c5377ba0235d1937b0a24d922aa"
+    },
+    "bench/results/10.176.26.71/bench/comparison/mutex-expanded-20261016T040928Z/host-after.json": {
+      "revision": "9a4bf2a",
+      "sha256": "9bd32aa27adee5acdcfa61536bc550bde0be27f54f220b7899c19fac8c5628cf"
+    },
+    "bench/results/10.176.26.71/bench/comparison/mutex-expanded-20261016T040928Z/host-before.json": {
+      "revision": "9a4bf2a",
+      "sha256": "d23f0124805ea8c1afda36b58a286a6bbdfc19b83d185557213fa1e1ca6a1dc5"
+    },
+    "bench/results/10.176.26.71/bench/comparison/mutex-expanded-20261016T040928Z/matrix-plan.json": {
+      "revision": "9a4bf2a",
+      "sha256": "03d949e2fbf424a012e0139985ee06f04315d4955f03475837fe213862ac2034"
+    },
+    "bench/results/10.176.26.71/bench/comparison/mutex-expanded-20261016T040928Z/matrix-status.json": {
+      "revision": "9a4bf2a",
+      "sha256": "6cbbb3e38329f80b17a22c9e5a98f4533156659e5bc48ffe7c3474cc56e5e966"
+    },
+    "bench/results/10.176.26.71/bench/comparison/mutex-expanded-20261016T040928Z/monitor-events.jsonl": {
+      "revision": "9a4bf2a",
+      "sha256": "2e23eba8563789b17bf5c2171337616e6fca11b9f75d4d5e95784fae46f58e51"
+    },
+    "bench/results/10.176.26.71/bench/comparison/mutex-expanded-20261016T040928Z/no-jit-controls.csv": {
+      "revision": "9a4bf2a",
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+    },
+    "bench/results/10.176.26.71/bench/comparison/mutex-expanded-20261016T040928Z/node-progress.csv": {
+      "revision": "9a4bf2a",
+      "sha256": "f3529d31ec503c55e6c850d7158dd020113ffc7d2f8e0dc43bee877480529cb2"
+    },
+    "bench/results/10.176.26.71/bench/comparison/mutex-expanded-20261016T040928Z/pilot-status.json": {
+      "revision": "9a4bf2a",
+      "sha256": "aad7b5820a3f0f4dbf62c26cd28b8d94835e7634f79efd46e7434a343b880d1c"
+    },
+    "bench/results/10.176.26.71/bench/comparison/mutex-expanded-20261016T040928Z/publication.json": {
+      "revision": "9a4bf2a",
+      "sha256": "b31dec748a0c3f5ab86e7f3030640e951531f692722904d86af27bab6c20c29e"
+    },
+    "bench/results/10.176.26.71/bench/comparison/mutex-expanded-20261016T040928Z/regression-status.json": {
+      "revision": "9a4bf2a",
+      "sha256": "d2b1705d55080f3c8359dc9aafe1719aca2868ab1b9af493d21332f27a043dcf"
+    },
+    "bench/results/10.176.26.71/bench/comparison/mutex-expanded-20261016T040928Z/run.sh": {
+      "revision": "9a4bf2a",
+      "sha256": "e82d94b0671db45ef25bdce9e518bb1fe49e22cd72e2e8534604142500554ca9"
+    },
+    "bench/results/10.176.26.71/bench/comparison/mutex-expanded-20261016T040928Z/samples.csv": {
+      "revision": "9a4bf2a",
+      "sha256": "32ce1c53871b8248c3be120c061935888b3b956ffa85b13952780cf09b46992e"
+    },
+    "bench/results/10.176.26.71/bench/comparison/mutex-expanded-20261016T040928Z/source-sha256.json": {
+      "revision": "9a4bf2a",
+      "sha256": "af96efb163a11ef63c7afecfaf27d104041c7dd64b23520326474119fd777503"
+    },
+    "bench/results/10.176.26.71/bench/comparison/mutex-expanded-20261016T040928Z/source-state.json": {
+      "revision": "9a4bf2a",
+      "sha256": "876479d74c07f1a64034e69c2f80c734074755a01cea7179bda8eba22db64f4f"
+    },
+    "bench/results/10.176.26.71/bench/comparison/mutex-expanded-20261016T040928Z/statistics-by-execution.csv": {
+      "revision": "9a4bf2a",
+      "sha256": "79c7335af7431174f7dcc451f0f8b90f697e006fd327e57e70b347552c2640ee"
+    },
+    "bench/results/10.176.26.71/bench/comparison/mutex-expanded-20261016T040928Z/statistics.csv": {
+      "revision": "9a4bf2a",
+      "sha256": "2a35b61c81b0dd4414a141569f396131505f1e867f91659af54d612e6a701821"
+    },
+    "bench/results/10.176.26.71/bench/comparison/mutex-expanded-20261016T040928Z/synthetic-mutex-peak.png": {
+      "revision": "9a4bf2a",
+      "sha256": "a39af6fd6811ca8c94e23452d74fd10cf2f2cc64ce820b84eb009113c1492211"
+    },
+    "bench/results/10.176.26.71/bench/comparison/mutex-expanded-20261016T040928Z/synthetic-mutex-peak.svg": {
+      "revision": "9a4bf2a",
+      "sha256": "6966648a9d55dabf11e6a07d9341639377f8e66d89950d1a65eee720f5bd7eb8"
+    },
+    "bench/results/10.176.26.71/bench/comparison/mutex-expanded-20261016T040928Z/synthetic-mutex-whole.png": {
+      "revision": "9a4bf2a",
+      "sha256": "c8f4aa6216dd44098e72fa917cdb9980fc0f26307f7dba37a889aba71dcf605a"
+    },
+    "bench/results/10.176.26.71/bench/comparison/mutex-expanded-20261016T040928Z/synthetic-mutex-whole.svg": {
+      "revision": "9a4bf2a",
+      "sha256": "1c25af4fdbe21935253f9153562090d73722d7d4a99a32713f87abc1468b2cec"
+    },
+    "bench/results/10.176.26.71/bench/comparison/mutex-expanded-20261016T040928Z/unit-results.json": {
+      "revision": "9a4bf2a",
+      "sha256": "baa51875923545e76a1a62b7f4f792af7cb82d528798e407fc215eaeb5bf46eb"
+    },
+    "bench/results/10.176.26.71/bench/comparison/mutex-expanded-20261016T040928Z/validation.json": {
+      "revision": "9a4bf2a",
+      "sha256": "ed458960a9b95007c56de6fd6f7067bbd5e53ae8dae141e857c3d3b599117673"
+    },
+    "bench/results/10.176.26.71/bench/comparison/mutex-expanded-20261016T040928Z/verification.json": {
+      "revision": "9a4bf2a",
+      "sha256": "be1788f6f6a9e7aa07e2f38c083cc8e0f3df55e43d0eb60143aa8306ff8eb0b0"
+    },
+    "bench/results/10.176.26.71/bench/comparison/mutex-expanded-20261016T040928Z/workers.csv.gz": {
+      "revision": "9a4bf2a",
+      "sha256": "26d793a75e3cf22657c501e2394c330a599c3ba5b557f78a542901ea592b9b7f"
+    },
+    "bench/results/10.176.26.71/bench/comparison/mutex-expanded-20261016T040928Z/workspace.patch.gz": {
+      "revision": "9a4bf2a",
+      "sha256": "eea406517b229e9ac77a26ba75cc65089bfec2ae672905d5e92b58ade7126c17"
+    },
+    "bench/results/10.176.26.71/bench/comparison/mutex-legacy-recovery-20261016T113518Z/source-commit.json": {
+      "revision": "9a4bf2a",
+      "sha256": "36c2f316267f9efb2e4f93f91cee17d2000c13659fe7c912d626e9aadc00861b"
+    },
+    "bench/results/10.176.26.71/bench/comparison/workloads-20261015T180603Z/analyze.py": {
+      "revision": "9a4bf2a",
+      "sha256": "adee19cd0b85f9cb91ba702d54b69883e6335f5e0fef398ed318e8bdfa0c75a4"
+    },
+    "bench/results/10.176.26.71/bench/comparison/workloads-20261015T180603Z/api-mutex-peak.png": {
+      "revision": "9a4bf2a",
+      "sha256": "1778d5f5410526d7b95409c15979fb8f1d982573d1bad3f35445974e7bda0c7a"
+    },
+    "bench/results/10.176.26.71/bench/comparison/workloads-20261015T180603Z/api-mutex-peak.svg": {
+      "revision": "9a4bf2a",
+      "sha256": "52d268226fe75cd4dedc399df314f86be41a3a1df36b5f9d03420ca1e620a9f6"
+    },
+    "bench/results/10.176.26.71/bench/comparison/workloads-20261015T180603Z/api-mutex-whole.png": {
+      "revision": "9a4bf2a",
+      "sha256": "3fc0fa4e138355739de296271e482b24c3055097e7e69a700fdf02d76debd345"
+    },
+    "bench/results/10.176.26.71/bench/comparison/workloads-20261015T180603Z/api-mutex-whole.svg": {
+      "revision": "9a4bf2a",
+      "sha256": "99097c1beb61c6fa58bf600c9b31826bdd5c42076e4a9e88b85545d8de0bc257"
+    },
+    "bench/results/10.176.26.71/bench/comparison/workloads-20261015T180603Z/api-rwlock-peak.png": {
+      "revision": "9a4bf2a",
+      "sha256": "62d8134e7c6b3eae3f306a2013aed49aa0ef86feb5ba0dd4cecd08568e7b3705"
+    },
+    "bench/results/10.176.26.71/bench/comparison/workloads-20261015T180603Z/api-rwlock-peak.svg": {
+      "revision": "9a4bf2a",
+      "sha256": "375ee22eed921893fdd8ad59286437dd6f34c530aa3dda7a6d79224acda42ad7"
+    },
+    "bench/results/10.176.26.71/bench/comparison/workloads-20261015T180603Z/api-rwlock-whole.png": {
+      "revision": "9a4bf2a",
+      "sha256": "ad960980263b75f9cb49da99daaeed66c9213cadddf4cb801a51136dff68ba9f"
+    },
+    "bench/results/10.176.26.71/bench/comparison/workloads-20261015T180603Z/api-rwlock-whole.svg": {
+      "revision": "9a4bf2a",
+      "sha256": "00d57b2b5d9ccc72ada2e24535c6b7574a8446a9cabf3494e33561306e1cd9b8"
+    },
+    "bench/results/10.176.26.71/bench/comparison/workloads-20261015T180603Z/api-spin-peak.png": {
+      "revision": "9a4bf2a",
+      "sha256": "e9d319527d26f1e30dc00a2e7399b3ca552001bf01fbc51f33aa82493e184817"
+    },
+    "bench/results/10.176.26.71/bench/comparison/workloads-20261015T180603Z/api-spin-peak.svg": {
+      "revision": "9a4bf2a",
+      "sha256": "12e05a8981b7d7e605bb731ee6b2c8fa5f5a8af105d21009666f967644ac81ff"
+    },
+    "bench/results/10.176.26.71/bench/comparison/workloads-20261015T180603Z/api-spin-whole.png": {
+      "revision": "9a4bf2a",
+      "sha256": "39ea9b27dd8ee9a657aadc44d930ad7662cd3bf4e40e10dae1931fe12460a76c"
+    },
+    "bench/results/10.176.26.71/bench/comparison/workloads-20261015T180603Z/api-spin-whole.svg": {
+      "revision": "9a4bf2a",
+      "sha256": "70376664cb492d9f03039f6e6a7c5e9ab6deb5d45af4308fa7cd1108ef850fc0"
+    },
+    "bench/results/10.176.26.71/bench/comparison/workloads-20261015T180603Z/archive.json": {
+      "revision": "9a4bf2a",
+      "sha256": "f109f72076c3f1ef0b1b1018fbf383545535b373e1aa43d68bf217b39c173375"
+    },
+    "bench/results/10.176.26.71/bench/comparison/workloads-20261015T180603Z/comparisons.csv": {
+      "revision": "9a4bf2a",
+      "sha256": "e23ce24ab39e2634b022e512fb5da2f49a438dab5cb4308a1ce8083a7ac92f3e"
+    },
+    "bench/results/10.176.26.71/bench/comparison/workloads-20261015T180603Z/coverage.csv": {
+      "revision": "9a4bf2a",
+      "sha256": "b1e08536e513f64307b3374c6be2ecbf6b02689ec123d6dd618fcd503fcc5af8"
+    },
+    "bench/results/10.176.26.71/bench/comparison/workloads-20261015T180603Z/driver.py": {
+      "revision": "9a4bf2a",
+      "sha256": "29e173619b157f705fdb38f80c586f53f2957df5e8a620623d59dc64f63898cc"
+    },
+    "bench/results/10.176.26.71/bench/comparison/workloads-20261015T180603Z/files.sha256": {
+      "revision": "9a4bf2a",
+      "sha256": "00ee836b4640e1ea3d7da26de3e4844ce9357dc3d0877176a50c1f646934b203"
+    },
+    "bench/results/10.176.26.71/bench/comparison/workloads-20261015T180603Z/guest-after.json": {
+      "revision": "9a4bf2a",
+      "sha256": "0d7a3cbb6185ce6632fe8350428b5299c89b2a1409350bff5dffe157db4b9546"
+    },
+    "bench/results/10.176.26.71/bench/comparison/workloads-20261015T180603Z/guest-before.json": {
+      "revision": "9a4bf2a",
+      "sha256": "15c113b50c9b3e5498d691238318137bbe1d369e464ea77dc993d9222c731e35"
+    },
+    "bench/results/10.176.26.71/bench/comparison/workloads-20261015T180603Z/host-after.json": {
+      "revision": "9a4bf2a",
+      "sha256": "981f080a6f1f97f01e81b7b2f79e05b8eed61cd577dd1720280242283be55065"
+    },
+    "bench/results/10.176.26.71/bench/comparison/workloads-20261015T180603Z/host-before.json": {
+      "revision": "9a4bf2a",
+      "sha256": "93f56211703ac5caf48ae7927316a1f202e08f7497e40696ee6e954f48fb922f"
+    },
+    "bench/results/10.176.26.71/bench/comparison/workloads-20261015T180603Z/matrix-plan.json": {
+      "revision": "9a4bf2a",
+      "sha256": "66dec2f920821a7dd22fce115448301556ef6c042f5eeb2f2fe77e9f9cb8eedd"
+    },
+    "bench/results/10.176.26.71/bench/comparison/workloads-20261015T180603Z/matrix-status.json": {
+      "revision": "9a4bf2a",
+      "sha256": "ddb9a80d0f05cac3151f0ade8cc3cb36616e7dc202c9fc52be54b1783c07680e"
+    },
+    "bench/results/10.176.26.71/bench/comparison/workloads-20261015T180603Z/monitor-events.jsonl": {
+      "revision": "9a4bf2a",
+      "sha256": "070f51867866fe10e1a62af9f5535be7b616d22ba03422a767b826371bed4e48"
+    },
+    "bench/results/10.176.26.71/bench/comparison/workloads-20261015T180603Z/no-jit-controls.csv": {
+      "revision": "9a4bf2a",
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+    },
+    "bench/results/10.176.26.71/bench/comparison/workloads-20261015T180603Z/node-progress.csv": {
+      "revision": "9a4bf2a",
+      "sha256": "535630b35ba474d31efe416e59d92b5978cf8f1f26c75a9b4e3c7ff04dcddec3"
+    },
+    "bench/results/10.176.26.71/bench/comparison/workloads-20261015T180603Z/predecessor-archive.json": {
+      "revision": "9a4bf2a",
+      "sha256": "7d8465933a7221fe1d8aa4d4b402a19b6944d7c2cb4c10f2c603c548a3499e17"
+    },
+    "bench/results/10.176.26.71/bench/comparison/workloads-20261015T180603Z/publication.json": {
+      "revision": "9a4bf2a",
+      "sha256": "25572dbd953c16b01fea09530721f850549f267905a9f871698f402cd6285b6b"
+    },
+    "bench/results/10.176.26.71/bench/comparison/workloads-20261015T180603Z/run.sh": {
+      "revision": "9a4bf2a",
+      "sha256": "c939fef604b0f43a8acfeca421d65633b71d98ed739326c4f09ce83874949bf8"
+    },
+    "bench/results/10.176.26.71/bench/comparison/workloads-20261015T180603Z/rwlock-fix-functional.json": {
+      "revision": "9a4bf2a",
+      "sha256": "1e692111e184c7b71756b65a53d8edd50e8c0ee0e5334b53a3d5e0f4214f23a4"
+    },
+    "bench/results/10.176.26.71/bench/comparison/workloads-20261015T180603Z/samples.csv": {
+      "revision": "9a4bf2a",
+      "sha256": "38b53703ca368805b8ec2ae4b99414b6e01d1bce65bd1b0854cd9e85e735ceec"
+    },
+    "bench/results/10.176.26.71/bench/comparison/workloads-20261015T180603Z/source-sha256.json": {
+      "revision": "9a4bf2a",
+      "sha256": "8e895790b96d51419de137df02cf4ebfcda930d2112ee33cd5523e323c446e27"
+    },
+    "bench/results/10.176.26.71/bench/comparison/workloads-20261015T180603Z/source-state.json": {
+      "revision": "9a4bf2a",
+      "sha256": "81279137f8befa8dff22e2c62518903ab600678294aab716a85c3a18e24589ba"
+    },
+    "bench/results/10.176.26.71/bench/comparison/workloads-20261015T180603Z/statistics-by-execution.csv": {
+      "revision": "9a4bf2a",
+      "sha256": "942cb3e159f66a8b228b97e86f627ebb8f7bfef04fa4d902e61b0c31a91efa0f"
+    },
+    "bench/results/10.176.26.71/bench/comparison/workloads-20261015T180603Z/statistics.csv": {
+      "revision": "9a4bf2a",
+      "sha256": "5d8e4b7d1d3d0b1bfe57d4db407bb7b2aadcc00dedc1fb9c89723f38123d9121"
+    },
+    "bench/results/10.176.26.71/bench/comparison/workloads-20261015T180603Z/synthetic-mutex-peak.png": {
+      "revision": "9a4bf2a",
+      "sha256": "6b5d7984d5cfa5555ea52db4123e5fe44bf24e039c47a8c607a56046a0811b04"
+    },
+    "bench/results/10.176.26.71/bench/comparison/workloads-20261015T180603Z/synthetic-mutex-peak.svg": {
+      "revision": "9a4bf2a",
+      "sha256": "77c78a5ecd7b59213384f96460e22be77e1d2d008b672dbe427b8c31d038552d"
+    },
+    "bench/results/10.176.26.71/bench/comparison/workloads-20261015T180603Z/synthetic-mutex-whole.png": {
+      "revision": "9a4bf2a",
+      "sha256": "f81ed66d950b6139ee874827df2ef5c46be1c8bc224b8f371bb0ac0ab4b82164"
+    },
+    "bench/results/10.176.26.71/bench/comparison/workloads-20261015T180603Z/synthetic-mutex-whole.svg": {
+      "revision": "9a4bf2a",
+      "sha256": "a876874427fe97c52033bb1b5cb59506bb4e88584dcf7ba968525fbf33a23017"
+    },
+    "bench/results/10.176.26.71/bench/comparison/workloads-20261015T180603Z/synthetic-rwlock-peak.png": {
+      "revision": "9a4bf2a",
+      "sha256": "0dde012cb9e22b2328e01523743b6f01707bda15772bda4ed32bcb0776a88f23"
+    },
+    "bench/results/10.176.26.71/bench/comparison/workloads-20261015T180603Z/synthetic-rwlock-peak.svg": {
+      "revision": "9a4bf2a",
+      "sha256": "2fb1afce961b66736407a866c99a5981f4b10c6883d3eb9d4ab9b4118e8921da"
+    },
+    "bench/results/10.176.26.71/bench/comparison/workloads-20261015T180603Z/synthetic-rwlock-whole.png": {
+      "revision": "9a4bf2a",
+      "sha256": "81e9a32dccfbaafdd37d5a54db4874ea636d93e37304e958b0c5a3520b5ed930"
+    },
+    "bench/results/10.176.26.71/bench/comparison/workloads-20261015T180603Z/synthetic-rwlock-whole.svg": {
+      "revision": "9a4bf2a",
+      "sha256": "218b94908d6b633f2ff442876588ed3bb13416648d1a2122baca24a93a8b631c"
+    },
+    "bench/results/10.176.26.71/bench/comparison/workloads-20261015T180603Z/synthetic-spin-peak.png": {
+      "revision": "9a4bf2a",
+      "sha256": "44e79ec7ad14cc07e2ca2aea2bd37dfb6dbacea6869b7e1f9c8e6ac2d5695146"
+    },
+    "bench/results/10.176.26.71/bench/comparison/workloads-20261015T180603Z/synthetic-spin-peak.svg": {
+      "revision": "9a4bf2a",
+      "sha256": "1a117cbcf1991ad8efe9a78ac140d95c1beae41ff68288f29650bcca9b632483"
+    },
+    "bench/results/10.176.26.71/bench/comparison/workloads-20261015T180603Z/synthetic-spin-whole.png": {
+      "revision": "9a4bf2a",
+      "sha256": "6d1f64527fb30270a7f9f9363e9f74f6464c3ad12e63dba3a94547fb0468d688"
+    },
+    "bench/results/10.176.26.71/bench/comparison/workloads-20261015T180603Z/synthetic-spin-whole.svg": {
+      "revision": "9a4bf2a",
+      "sha256": "e05bea8b0978a70dd91022c853b80dc65c945b293b731a06723bf11644bfe177"
+    },
+    "bench/results/10.176.26.71/bench/comparison/workloads-20261015T180603Z/test-rwlock-fix.log": {
+      "revision": "9a4bf2a",
+      "sha256": "f43c376a48399b98d426fa0d00a9348598d4437f662d467b9c8ff905686e3175"
+    },
+    "bench/results/10.176.26.71/bench/comparison/workloads-20261015T180603Z/verification.json": {
+      "revision": "9a4bf2a",
+      "sha256": "3998df8db7359c9bcbc2a391e0592504e477d58002732406a63689b23009ff0f"
+    },
+    "bench/results/10.176.26.71/bench/comparison/workloads-20261015T180603Z/workers.csv.gz": {
+      "revision": "9a4bf2a",
+      "sha256": "008a77752e24915a23fc9081db3731548074a2d29599df0d81620c0f71b1800c"
+    },
+    "bench/results/10.176.26.71/bench/comparison/workloads-20261015T180603Z/workspace.patch.gz": {
+      "revision": "9a4bf2a",
+      "sha256": "e95064bb98fa24036c86b691ee13a44e280d0573119b450fcecffc6ea2e99f75"
+    },
+    "bench/results/10.176.26.71/bench/mutex_admission/20261013/acceptance-screen.json": {
+      "revision": "2c88895",
+      "sha256": "bb690926c4c57bc7a1d6c834a1acb5b6f03fd1d1db329b884d051ad34494750d"
+    },
+    "bench/results/10.176.26.71/bench/mutex_admission/20261013/baseline-batches.csv": {
+      "revision": "2c88895",
+      "sha256": "f9ffde94d3e6185655441d0777eabe4bab1e9e043833d02ca2ac2f0241552cba"
+    },
+    "bench/results/10.176.26.71/bench/mutex_admission/20261013/baseline.csv": {
+      "revision": "2c88895",
+      "sha256": "d033283179d6787a7ac9bb7e7258ac24ae3fef83898068cd672617281fef7c1d"
+    },
+    "bench/results/10.176.26.71/bench/mutex_admission/20261013/baseline.svg": {
+      "revision": "2c88895",
+      "sha256": "6521d269803c15a3fc2b5fce225634910546fe98b8129a3fefe4b2542d410cf4"
+    },
+    "bench/results/10.176.26.71/bench/mutex_admission/20261013/candidates.csv": {
+      "revision": "2c88895",
+      "sha256": "b3cc467aa7f1715b8fad12d72c8320793371c5c70a8bf054c6d2921587e6a1a1"
+    },
+    "bench/results/10.176.26.71/bench/mutex_admission/20261013/coverage.json": {
+      "revision": "2c88895",
+      "sha256": "21938dcf77d07549af6bddfbce14c20a89e8d4084bb8e2d7b26f8c39f69a29d6"
+    },
+    "bench/results/10.176.26.71/bench/mutex_admission/20261013/pmu-only.csv": {
+      "revision": "2c88895",
+      "sha256": "07a305e9d2abaefb5ad99e4e48c013ab8942e31d6de93864ef0ee3739cb03783"
+    },
+    "bench/results/10.176.26.71/bench/mutex_admission/20261013/probes.csv": {
+      "revision": "2c88895",
+      "sha256": "ff05333d433c0cfe121604cfc36a8f21680f65d6d0b2b5ecad166cc1214a543d"
+    },
+    "bench/results/10.176.26.71/bench/mutex_admission/20261013/retained-default-audit.json": {
+      "revision": "2c88895",
+      "sha256": "1ad22ad6b15fb20c69821ab9a377a6d4377383f0d190751e7975900a1a2574f6"
+    },
+    "bench/results/10.176.26.71/bench/mutex_admission/20261013/retained-default.csv": {
+      "revision": "2c88895",
+      "sha256": "12ba8ea534ad2c3b920939aa6b7fb032d57b563f5edbd5498205f11c46252f15"
+    },
+    "bench/results/10.176.26.71/bench/mutex_admission/20261013/screen.svg": {
+      "revision": "2c88895",
+      "sha256": "e33a39f5aa4b58fad1d3670b8a8424ff0f7c1d0d0fde379c2537991d2d9a4323"
+    },
+    "bench/results/10.176.26.71/bench/mutex_admission/20261013/validation.json": {
+      "revision": "2c88895",
+      "sha256": "254dbb48d8009a502c535d23abc843f133a547345c7d2988cba0c943a386d8a9"
+    },
+    "bench/results/10.176.26.71/bench/mutex_c01_cost/20261013/acceptance.json": {
+      "revision": "2c88895",
+      "sha256": "69c181649d6b4c2e98bcbdf7941ba9a180af882ed2ccdaef4b57dff7807b3f5c"
+    },
+    "bench/results/10.176.26.71/bench/mutex_c01_cost/20261013/analyze.py": {
+      "revision": "2c88895",
+      "sha256": "37359773c591b5e2430cc0181c708a763f54162cb60a25861808c300ef527664"
+    },
+    "bench/results/10.176.26.71/bench/mutex_c01_cost/20261013/artifacts.json": {
+      "revision": "2c88895",
+      "sha256": "7f5cbb6925efd2eab3b1f1adbd8078574dbb4df935e063a9017d96a28c4b6750"
+    },
+    "bench/results/10.176.26.71/bench/mutex_c01_cost/20261013/batches-and-waits.csv": {
+      "revision": "2c88895",
+      "sha256": "3ef85955f3a535670af04baaf66fa59307186bba019938defd8868b299586206"
+    },
+    "bench/results/10.176.26.71/bench/mutex_c01_cost/20261013/coverage.json": {
+      "revision": "2c88895",
+      "sha256": "03f666df1a45f71192432656de4cc8d91ca945d4f5984236a2fae5e0800af8d9"
+    },
+    "bench/results/10.176.26.71/bench/mutex_c01_cost/20261013/cpu-profiles.csv": {
+      "revision": "2c88895",
+      "sha256": "8096c48287064299ad7dd13a20645cb4596fa75168cccee2399cc12650ccafed"
+    },
+    "bench/results/10.176.26.71/bench/mutex_c01_cost/20261013/pmu.csv": {
+      "revision": "2c88895",
+      "sha256": "f8c9f3eb78d11b83435a0ced77379123ce514643b478bf94cf962e4af0b217d5"
+    },
+    "bench/results/10.176.26.71/bench/mutex_c01_cost/20261013/statistics.csv": {
+      "revision": "2c88895",
+      "sha256": "740b0ac595dddfdeab00a2072aef09e8ea0fc0b326cc2fe611649a827a309c3f"
+    },
+    "bench/results/10.176.26.71/bench/mutex_c01_cost/20261013/throughput.svg": {
+      "revision": "2c88895",
+      "sha256": "f94672ab135ba30972af4548613742f9c0caacdefc43799ff9bd00936d51ff0f"
+    },
+    "bench/results/10.176.26.71/bench/mutex_c01_cost/20261013/validation.json": {
+      "revision": "2c88895",
+      "sha256": "488a26f8b2829a7dcee5aa986c2b5f8695f7e8b2a5e8ea443d9d9a06fa7f6193"
+    },
+    "bench/results/10.176.26.71/bench/mutex_optimistic/20261013/acceptance.json": {
+      "revision": "2c88895",
+      "sha256": "64e62185e7d60716cb705601f8b27310881aefd8ee4f23270f743362911d897c"
+    },
+    "bench/results/10.176.26.71/bench/mutex_optimistic/20261013/analyze.py": {
+      "revision": "2c88895",
+      "sha256": "83b010ee21898be28a6c64cad0e465a5279c843c8f8518e7ee24ef0a5f309bee"
+    },
+    "bench/results/10.176.26.71/bench/mutex_optimistic/20261013/artifacts.json": {
+      "revision": "2c88895",
+      "sha256": "2106b5cbe28b499eb41eb95f4450c009ba1f7896cc88bd701cfc99f11b472c87"
+    },
+    "bench/results/10.176.26.71/bench/mutex_optimistic/20261013/coverage.json": {
+      "revision": "2c88895",
+      "sha256": "bad35e4f75fe034963b02fb1d1d80df84350ec5961adefa9636f4cf7aa5c3ae9"
+    },
+    "bench/results/10.176.26.71/bench/mutex_optimistic/20261013/samples.csv": {
+      "revision": "2c88895",
+      "sha256": "9d0e5c274ae1a0fe73a7a5d42d5b7766d784f015d43de2b60ab6a8053706d0e0"
+    },
+    "bench/results/10.176.26.71/bench/mutex_optimistic/20261013/statistics.csv": {
+      "revision": "2c88895",
+      "sha256": "ccb8fd743bda25cd4a59e37d840aa74c5afea66c21201f7917601e9b2be39661"
+    },
+    "bench/results/10.176.26.71/bench/mutex_optimistic/20261013/throughput.svg": {
+      "revision": "2c88895",
+      "sha256": "7c976b40d2b8035de8f24b4c01f506d10689c8644e46680bdda4fe15461b3f59"
+    },
+    "bench/results/10.176.26.71/bench/mutex_optimistic/20261013/validation.json": {
+      "revision": "2c88895",
+      "sha256": "89033e0c58078abb701388cb2cb5a767a8d20a201863b7507354472a045c05c0"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261013/acceptance.json": {
+      "revision": "2c88895",
+      "sha256": "bed0b4deded2872929645ca79e951f7ee76b7c0a5f27d2c1bdab8a6b53828785"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261013/analyze.py": {
+      "revision": "2c88895",
+      "sha256": "737ce2ea49d00805092d7155b1a01e01aaa673f28a0ceb7a3ae96ef659937835"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261013/artifacts.json": {
+      "revision": "2c88895",
+      "sha256": "974b83deed94ce54396925c92f9294ec938565e9fe9355dbcbdec80046ee3aef"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261013/batch-histograms.csv": {
+      "revision": "2c88895",
+      "sha256": "825c79f77bd31ba088f9398639cfc330e8845d828ccef1c661e7ebb3817f6491"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261013/batches.csv": {
+      "revision": "2c88895",
+      "sha256": "3f58b6f12fa47e0d3a739b8f8291c22e1b07c80b0cb7315c2d598630e320601d"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261013/coverage.json": {
+      "revision": "2c88895",
+      "sha256": "ccc6f9adf4787329b23295e1d721af218e30e4b2987a0c14644bd62cbe4763ff"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261013/flat-profiles.csv": {
+      "revision": "2c88895",
+      "sha256": "9002f3b8e466408bf59b1e2fbbe6c87b287519af8fd508213c0f976e8c3c735b"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261013/lock-profiles.csv": {
+      "revision": "2c88895",
+      "sha256": "f291304c5d22612a7993f8342725df121c5af04e6f705e5b39b83c8971f43e74"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261013/plot.py": {
+      "revision": "2c88895",
+      "sha256": "e18e51dd027a285c9d0452caf50c9e64de97cb1b0cfd3bda5c6155e5e18a99da"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261013/pmu.csv": {
+      "revision": "2c88895",
+      "sha256": "f6f958834e80ab48375293f26b9ec1f8165d94241ffd9efde788629e346f0e3d"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261013/samples.csv": {
+      "revision": "2c88895",
+      "sha256": "3aeba7b81100fd4f1d7aea63ffff54fd54843612e5adac328262de28d1f37118"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261013/statistics.csv": {
+      "revision": "2c88895",
+      "sha256": "fa63b0bf0a9ac8df0a60ee33e8dfb5a7580f8ccf44724ab5475078c266b7e7f5"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261013/throughput.svg": {
+      "revision": "2c88895",
+      "sha256": "16982e809153a2807c549f3808ca779117e23a8a14d5df3bc8c8fb038cfd4fe4"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261013/validate.py": {
+      "revision": "2c88895",
+      "sha256": "724fda912934f6cded4e133253c30da343e49cf612987a632dfbe9a113cc8580"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261013/validation.json": {
+      "revision": "2c88895",
+      "sha256": "6a7d548bc7143222d5dd39a6add23432e1467ab379a6bd185489a2db2becf50c"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261013/workers.csv": {
+      "revision": "2c88895",
+      "sha256": "068c2b3b3b45618dfe08c34e01c546c5b833006f535ef6256069d088a87d5584"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261014-full-grid/analyze.py": {
+      "revision": "2c88895",
+      "sha256": "773006a5044519d02903b78468ec46d04013ae0c66ac747b8d49d4fd45c5ad58"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261014-full-grid/comparison.csv": {
+      "revision": "2c88895",
+      "sha256": "8722b17b10eeec19957c5ca27c23fefca73a8cacc75c8b82880d6df234f65444"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261014-full-grid/plot-receipt.json": {
+      "revision": "2c88895",
+      "sha256": "7405019faa7dc95877a2a004e815b31ca32cf973343aa2686f2100c979abc088"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261014-full-grid/raw-archive.json": {
+      "revision": "2c88895",
+      "sha256": "0e749cf762dd50797073061d6c22dcedfe0faaabcd3f4e1657d5e3efe2a5a4e4"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261014-full-grid/samples.csv": {
+      "revision": "2c88895",
+      "sha256": "8ebf6507c65328dc19a274d8d6f04cf331a6c198a8ab39d60ce434fac7c9e83e"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261014-full-grid/statistics.csv": {
+      "revision": "2c88895",
+      "sha256": "7373465eb04dfc487737372552fe477ac662bc9e6f0dc4f0ffb3b72a883fc68f"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261014-full-grid/throughput.png": {
+      "revision": "2c88895",
+      "sha256": "3cb3c456ad72da8bb8c59d8c72db978c8e393cb06507030552b925801b29e4dd"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261014-full-grid/throughput.svg": {
+      "revision": "2c88895",
+      "sha256": "003fbf0f097ef02507ace8d3a76598c19f6ab0a6a38d304980d8bc7331c53de9"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261014-full-grid/verification.json": {
+      "revision": "2c88895",
+      "sha256": "9d3f080d8af862ab0a431be60f4d697f32484a7317df10a1540330de0fa2a184"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261014-full-grid/workers.csv": {
+      "revision": "2c88895",
+      "sha256": "09b3a31d492d3099a4a8f6923acff79395f333e91a92507b1b7a4e1b527990ac"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261014-hybrid/acceptance.json": {
+      "revision": "2c88895",
+      "sha256": "f50581d4acd30f6acc616c0ff46e5e1adc993b3e246f68af504fc9445f1ffdc1"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261014-hybrid/analyze.py": {
+      "revision": "2c88895",
+      "sha256": "8840e19424f07148342779a7254aed1de4455d73ed4c3b8a96b5ef248dbdc9f1"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261014-hybrid/artifacts.json": {
+      "revision": "2c88895",
+      "sha256": "d684087885d5f437c8e3a7248c7d77a80fb76ef44538845b71fe07c2388836bf"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261014-hybrid/batch-histograms.csv": {
+      "revision": "2c88895",
+      "sha256": "911cf34415dd2293ef3a439a005a8d2de44a7c551945127675de4de700e12b2c"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261014-hybrid/batches.csv": {
+      "revision": "2c88895",
+      "sha256": "9276a0e6dc824ddf852ed7854c6260c8ba99f0301a7a80d5339de26fbe5241a4"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261014-hybrid/coverage.json": {
+      "revision": "2c88895",
+      "sha256": "10c423f89e6609c398091866bf8017b79758a5730d8b1801913d082a90d23a0b"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261014-hybrid/execution.svg": {
+      "revision": "2c88895",
+      "sha256": "844b1b05d939377f1be645f76ffc8290f58d443f951c3ef3d8f62661c5e6b2fc"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261014-hybrid/flat-profiles.csv": {
+      "revision": "2c88895",
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261014-hybrid/lock-profiles.csv": {
+      "revision": "2c88895",
+      "sha256": "be1bddb5691302de90f5fb7a00619609d7ba94c02a38409e7cd69a28358dd6af"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261014-hybrid/owned-preflight-profiles.csv": {
+      "revision": "2c88895",
+      "sha256": "d0df664ad681a10d8e3800b63041cbd37bfa410ac8f10a39a3d405983475fcca"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261014-hybrid/plot-inputs.json": {
+      "revision": "2c88895",
+      "sha256": "7772d8c83a573d1158f6c333aa42f8e3ab912ff7a89138cf844b1ca5558e14c7"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261014-hybrid/plot.py": {
+      "revision": "2c88895",
+      "sha256": "70a2d51d8f6448a8b17f81c02b4228500aed298bf9aa9df523719f02f162a520"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261014-hybrid/pmu.csv": {
+      "revision": "2c88895",
+      "sha256": "8f0dd21edd25947a1e6945e45771787444c5177af7244b5ca8a23f16adadb7f7"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261014-hybrid/progress.csv.gz": {
+      "revision": "2c88895",
+      "sha256": "6e43f56a408385e0cd4f5387dc829eb881db99096a504421bd865f90316e06dc"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261014-hybrid/samples.csv": {
+      "revision": "2c88895",
+      "sha256": "17d1829fb7ed0a3a52e7940cc3f9a35cd1d973b8ee740001e6c085bd83f6c277"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261014-hybrid/statistics.csv": {
+      "revision": "2c88895",
+      "sha256": "13cfa93eac1f8480534498be7611f2a5dd8894c624c0df2508fc912ce05cfcb1"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261014-hybrid/throughput.svg": {
+      "revision": "2c88895",
+      "sha256": "f5cd6f01c7e5c34bc8dbd5f4a0e281a5dd8d2a0d167d731f18480238ccdd229b"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261014-hybrid/validation.json": {
+      "revision": "2c88895",
+      "sha256": "274ad44a566872bd6103e2818a2b9918346ac74b730d2557127f2152c436e791"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261014-hybrid/validation_builder.py": {
+      "revision": "2c88895",
+      "sha256": "a7d2c1e5c6f50b2081eb23739d7e7bfcb54ac303f04d64af7084ae040f77ce5b"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261014-hybrid/workers.csv": {
+      "revision": "2c88895",
+      "sha256": "4feb11dd7ba30ab803d58d73663ecca3d35273bd4d9f979bba9376da7564f4b5"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261014-linux-local/analyze.py": {
+      "revision": "2c88895",
+      "sha256": "ed5ba53a871540898404cce731a49d698a9a27a2e8f3836e584a274fdd8986bf"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261014-linux-local/c1/acceptance.json": {
+      "revision": "2c88895",
+      "sha256": "117aa1ad0c7112c356fe45d43a7c1e70e486efa3bbc5ca1f4d86fb62ca2f4355"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261014-linux-local/c3/acceptance.json": {
+      "revision": "2c88895",
+      "sha256": "787841857ff5aa8b576592b6dae74e202473c9766e5abdf36616e9ec4776519a"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261014-linux-local/c4/acceptance.json": {
+      "revision": "2c88895",
+      "sha256": "5fd4598495b97634010946ece0354bdf364e23669ebc20c5bca61b507e8cb8bc"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261014-linux-local/c5-reuse32/acceptance.json": {
+      "revision": "2c88895",
+      "sha256": "386c2686e0cedc505f624c189ca2aa7b27cd4792b8b862b31a9e18b77858de0e"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261014-linux-local/c5-reuse32/confirmation1.json": {
+      "revision": "2c88895",
+      "sha256": "fd7c58f2b4e71b62087b5db647670f6c34a783e5ce159b2a8f1b58c67e0306f9"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261014-linux-local/c5-reuse8/acceptance.json": {
+      "revision": "2c88895",
+      "sha256": "4cca4b2528fb02b1cd93eebfee51cae9930356c1839fa78573014c97d366411e"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261014-linux-local/candidate-patches.json": {
+      "revision": "2c88895",
+      "sha256": "cc7cbd2beba013bf6ed7988c6312eed6592e26cd8aaa715bae893b77b3f1c289"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261014-linux-local/comparisons.csv": {
+      "revision": "2c88895",
+      "sha256": "1dbf019992abb0637a084e9e6b0c68db4f50741c16ce2a3b8c45e68d18546b5f"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261014-linux-local/control-batches.csv": {
+      "revision": "2c88895",
+      "sha256": "f4554933d4451e73dfcfabc8a0cb2722792387313d11a8d1e7462a137f5aa234"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261014-linux-local/control-samples.csv": {
+      "revision": "2c88895",
+      "sha256": "16a4530cd288f3a4ff7932ea97a1ef7c97fa750bd6d354f96d441728c8afe19c"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261014-linux-local/control-statistics.csv": {
+      "revision": "2c88895",
+      "sha256": "cc0085cc212508a35dfc40a016b45240c0268ade2f5618453c14468fcdd80910"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261014-linux-local/control-workers.csv": {
+      "revision": "2c88895",
+      "sha256": "e054542ed037bf6a2954b1f0853bb17e81952af4f1c9d7797b23717a3a173d42"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261014-linux-local/coverage.json": {
+      "revision": "2c88895",
+      "sha256": "97f174931d70a72b76cbdf711dcd4f8990f5e8faef3a511fbf461e80ce1da6b3"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261014-linux-local/diagnostics.json": {
+      "revision": "2c88895",
+      "sha256": "47f5fbd273e3f22c4efff768ceab7a2282bce39392ca68a14e6ad0cf48364e00"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261014-linux-local/plot.py": {
+      "revision": "2c88895",
+      "sha256": "d425d49c3603e08d719d924a2f5ea3ecb2ed26eb3c582b30d7bec55e1e0cf331"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261014-linux-local/pmu-batches.csv": {
+      "revision": "2c88895",
+      "sha256": "9621c24b92dbd207bfc742a360eeab9a86d7a7c24a3416d8bfb11035532abb85"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261014-linux-local/pmu-pmu.csv": {
+      "revision": "2c88895",
+      "sha256": "2bcb84adc325c8b1de9ef46315bc31e1f6ccd353c13af8c053d6c40c7408259c"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261014-linux-local/pmu-samples.csv": {
+      "revision": "2c88895",
+      "sha256": "b2f6f0c4bdbddb84394c036e96a95b61d7a11218e14a04e2711e1703cbf7eb14"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261014-linux-local/pmu-statistics.csv": {
+      "revision": "2c88895",
+      "sha256": "c5fd89bab6e8d318382a8f1c91e40b64d9f7be2255fbf6f449a75981e2b48e89"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261014-linux-local/pmu-workers.csv": {
+      "revision": "2c88895",
+      "sha256": "dd4527684c8f5dd003215c37a3a4f8284fc5372707cea8fa761547af9b4c72d8"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261014-linux-local/raw-archive.json": {
+      "revision": "2c88895",
+      "sha256": "b577c4a68c8fa11c02c27a4dc78d46e672e10c374fe2f20b358f52adb13aa43d"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261014-linux-local/samples.csv": {
+      "revision": "2c88895",
+      "sha256": "bd426ab5438ecc7ca0520ddad799b8205ccb4e5fd8356e91218828e6292970d6"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261014-linux-local/throughput.svg": {
+      "revision": "2c88895",
+      "sha256": "0e2c7ade30be6c24a3676604456f6605c8cf890f32c602e31a926deae0df490c"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261014-linux-local/validation.json": {
+      "revision": "2c88895",
+      "sha256": "837b11f01be8601c206b819b79957e699c4ddba5d25c44f891eefe0271b609b5"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261014-linux-local/verify_validation.py": {
+      "revision": "2c88895",
+      "sha256": "90cb676e24b14050401222d0bab9b23528249f37254ac2d3e87edc9d8b2298ce"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261014-linux-local/workers.csv": {
+      "revision": "2c88895",
+      "sha256": "81285aa397d8bb25de7eb8097ffd2f825c9941164619f7561cf7d0377068cb29"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261014-native-first/acceptance.json": {
+      "revision": "2c88895",
+      "sha256": "32319adfd82ff7523795f10e7e2c34fdc63ec71d9e08091699dec10cf6123a08"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261014-native-first/analyze.py": {
+      "revision": "2c88895",
+      "sha256": "7969719c40922f23e98682ad1060bfa8a33952122c3ecd6fd7f4790ef0a5a7b9"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261014-native-first/audit-helper-provenance.json": {
+      "revision": "2c88895",
+      "sha256": "033c7ec7579f2fa9f9cff31009cd35525635d207ca0ba22c90fecfb30e4d887c"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261014-native-first/audit-portability.json": {
+      "revision": "2c88895",
+      "sha256": "c43070d6719f02655d2db629ccef624e2d6833176168addadb84dcbe4d60909b"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261014-native-first/batch-histograms.csv": {
+      "revision": "2c88895",
+      "sha256": "6c531636b0ec12bf05f2a371b28577d1bda99442cbaaa7ba13ab244df2c10589"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261014-native-first/batches.csv": {
+      "revision": "2c88895",
+      "sha256": "2df2a97bb7508985995ad9e1aa48c91192e7d9f935c124c594ef8ddcf76789f7"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261014-native-first/budget/execution.svg": {
+      "revision": "2c88895",
+      "sha256": "008c5ec7a718eea77b7de224ace5bce37d4e00672dccdb2cb0028c2a65613132"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261014-native-first/budget/plot-inputs.json": {
+      "revision": "2c88895",
+      "sha256": "5f3b42da077eb44efde9e5ce6c9e7e5ed24768af008bb18669c8aeba097fb9ef"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261014-native-first/budget/throughput.svg": {
+      "revision": "2c88895",
+      "sha256": "21bee928c7887dff89c86aecc24be84d55d59b92042d44db476bb79817aaeb15"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261014-native-first/c8-source-equivalence.json": {
+      "revision": "2c88895",
+      "sha256": "b627ee39cc60608fc466167e0997209fb03a0c6f6726fcfe3537714abc256708"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261014-native-first/comparisons.csv": {
+      "revision": "2c88895",
+      "sha256": "64743bab3012e6a5334699bd8b6744c2b7f889d7f153211cd11f96ba9e8b5c76"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261014-native-first/coverage.json": {
+      "revision": "2c88895",
+      "sha256": "f104af017db6c52353e1350263e63d6ef6d01c7620dd9c3dd9565b4fd17444fb"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261014-native-first/defaults/execution.svg": {
+      "revision": "2c88895",
+      "sha256": "a484250f8a9cb1c8ed9ab356c2f0cae02581460a59179ab446168c8b569b5c93"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261014-native-first/defaults/plot-inputs.json": {
+      "revision": "2c88895",
+      "sha256": "c8fbd2a808e1777f5158684d5a8f8476bbca6909748b56fca3d780c7d8bbac4d"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261014-native-first/defaults/throughput.svg": {
+      "revision": "2c88895",
+      "sha256": "d1015e19b1b5f81d8cdb029b95c964062a7ba481e230c51fd9c56d7cca74c6a1"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261014-native-first/evidence.py": {
+      "revision": "2c88895",
+      "sha256": "b7a7ceff3b47fd3de7b0e2824fb1d3607d13f51142e7d629a4c4a9353afd34da"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261014-native-first/execution.svg": {
+      "revision": "2c88895",
+      "sha256": "554f8314e7306b860e754ea02e1858fc96d11c635b31f740e0a7b23a7bb90cce"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261014-native-first/experiment_policy.py": {
+      "revision": "2c88895",
+      "sha256": "8cba21be4149744bd8494e022101ca29ad9a658c8a81bfd1d9ee16b6a84013d3"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261014-native-first/flat-profiles.csv": {
+      "revision": "2c88895",
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261014-native-first/full-grid/execution.svg": {
+      "revision": "2c88895",
+      "sha256": "e4cc3f92227b578a60956e73fcd1eb2ceba09a7189e753515c7b7ac930ee3568"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261014-native-first/full-grid/plot-inputs.json": {
+      "revision": "2c88895",
+      "sha256": "d4e23a3312b412f0946d0c33ee29987a34f6172439582e6de2a497e5bca89a74"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261014-native-first/full-grid/throughput.svg": {
+      "revision": "2c88895",
+      "sha256": "ee8822f5e61669208fb9bdffca1c24908e0d94c2b4a5e867a31e9203b223a579"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261014-native-first/guard1024-archive.json": {
+      "revision": "2c88895",
+      "sha256": "1d63b73e1088c49739130e1aa62963bcc1e166f40831bc857921a608ae3658ba"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261014-native-first/lock-profiles.csv": {
+      "revision": "2c88895",
+      "sha256": "50447d6aa37eb33e1af7310231f129f166da6c12daee0f2c0f4e0b298ad7beaf"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261014-native-first/owned-native-first-profiles.csv": {
+      "revision": "2c88895",
+      "sha256": "34b48fb43347f8cd807f8f74f55a46c1c3daf7df136b3410ce12c2a62a399a54"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261014-native-first/owned-preflight-profiles.csv": {
+      "revision": "2c88895",
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261014-native-first/partial-profile.json": {
+      "revision": "2c88895",
+      "sha256": "f8874d42992d4ff79bd668dec3846d62010908a27f211653e97b44e16ac50897"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261014-native-first/partial_diagnostic.py": {
+      "revision": "2c88895",
+      "sha256": "c7cba69e43b8af06655b9840539d11bacdbaa52b3616f95dd5fdc64090253246"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261014-native-first/plot-inputs.json": {
+      "revision": "2c88895",
+      "sha256": "24d1972e4e85fababa841f1d6ee084bc32f0e4cb0ddc61d01514bbf5821b3561"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261014-native-first/plot.py": {
+      "revision": "2c88895",
+      "sha256": "841d3f00c4e331eb2f6e4ff9061a75fe2a9435cbc193f0d13c87795b63c8f081"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261014-native-first/pmu.csv": {
+      "revision": "2c88895",
+      "sha256": "b4e6493247f5febf1535d32481d824bd5b6b100624a85d4620fc88175d248d8d"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261014-native-first/progress.csv.gz": {
+      "revision": "2c88895",
+      "sha256": "66dbcf4da12ad05fa4f3c50d1538e8e42b9eca815a6f1479f6ba5983ca7c674b"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261014-native-first/references.json": {
+      "revision": "2c88895",
+      "sha256": "03db5bf527fa912d8bf6a9bc7cab2d06655c0db19782531a42001b2b365c59cf"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261014-native-first/references.py": {
+      "revision": "2c88895",
+      "sha256": "8b784656ae46bb5a9bdae1fe16a4f4b47eaa132c45383fa2e785b1f8a375f504"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261014-native-first/release/execution.svg": {
+      "revision": "2c88895",
+      "sha256": "5fbe4133f6b68d7a6289b159680ac6d36e9da1a5d94021d84cfcc5626def8a21"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261014-native-first/release/plot-inputs.json": {
+      "revision": "2c88895",
+      "sha256": "174fca059c1bb26f709d8e46b7c29837a1a6d831d7f892a6487d596f4eb9abd0"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261014-native-first/release/throughput.svg": {
+      "revision": "2c88895",
+      "sha256": "62957a0cd055527d4864024372feb05b0c94b72bdebcb7a0aa7fd1fba1c15ff7"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261014-native-first/samples.csv": {
+      "revision": "2c88895",
+      "sha256": "773d5cd1ed98e42e29e5d9904637e91fbef270cec1a2f83fffa3ed1ee8684767"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261014-native-first/self-frequency-samples.csv": {
+      "revision": "2c88895",
+      "sha256": "cbfd49dd37fa0288d9dde17f8e220de2760d6a96ce52d79db4b48e62764e00f0"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261014-native-first/self-observer.json": {
+      "revision": "2c88895",
+      "sha256": "c6101e46eda42619656860f405f226e085065f4e39ee14bde62d2ab4a83393ce"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261014-native-first/self-pmu-analysis.csv": {
+      "revision": "2c88895",
+      "sha256": "e7d4950150e9bc23b361fbd6c15781c95ffd04d349051f7d5bebf1ee1ceb0fdc"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261014-native-first/self_diagnostics.py": {
+      "revision": "2c88895",
+      "sha256": "41c6c1790808fc5902f53c2544fbc936934b5929e49890457460e3da55dcd21f"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261014-native-first/source-equivalence.json": {
+      "revision": "2c88895",
+      "sha256": "bef5c529b2d845890c659659afdac0eacc8d907efb8d4f4785551b00cc7fa493"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261014-native-first/stage1-archive.json": {
+      "revision": "2c88895",
+      "sha256": "158c6eb163ed9ba523b6d06a61f67a269bdc76e0454ed312cd556997d0061a96"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261014-native-first/stages234-archive.json": {
+      "revision": "2c88895",
+      "sha256": "d2b0155b551dbc5f76b7b9633a40fdfe71a66788e2eeda3fccb9434f1c7da5de"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261014-native-first/statistics.csv": {
+      "revision": "2c88895",
+      "sha256": "8c39de2db756c59a6a4343f5ce5e84b5fcb5bdf1b4df87c5c56e8c37d2c502d2"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261014-native-first/study_audit.py": {
+      "revision": "2c88895",
+      "sha256": "b74116d92e193b08621c7ffe541a0044ed3c414401a39969256ffc4da12793b4"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261014-native-first/tclock-batches.csv": {
+      "revision": "2c88895",
+      "sha256": "cd84e0ceb9db51e501b999477730b0d1072f8f78acb0c5d082ad777b8672a0f6"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261014-native-first/tclock-comparisons.csv": {
+      "revision": "2c88895",
+      "sha256": "a372bb8aeec675e1c8519e49d2ab6c91018e66f7992d61ccd20298dd99a8cc00"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261014-native-first/tclock-progress.csv.gz": {
+      "revision": "2c88895",
+      "sha256": "dfedeece0ba02aa1c5bacd017e6b67b70a2107908100dde29ef25f3c6d88ff7f"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261014-native-first/tclock-samples.csv": {
+      "revision": "2c88895",
+      "sha256": "8300801a0f0bc5295fd47835b34e917c540b0cc5ce5aa007c0517f985437ddd5"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261014-native-first/tclock-statistics.csv": {
+      "revision": "2c88895",
+      "sha256": "969aed8d579d3503bf7f5862a0e36a55f1a7150af7d5944c442b3b8d65fe951a"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261014-native-first/tclock-workers.csv": {
+      "revision": "2c88895",
+      "sha256": "11833b7f1fe7161069e39045710d9047ddee6b6273f22c17c2525e018b69a149"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261014-native-first/throughput.svg": {
+      "revision": "2c88895",
+      "sha256": "412672862758a8fe114cd94a580daae4edd73f3d28a53ac826820e0c9d7a3d91"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261014-native-first/transition/execution.svg": {
+      "revision": "2c88895",
+      "sha256": "cdfdb5570790b02ee959f3b7c1e27253bd80b9e5a8cf4d840a9fa9c92c5dc9dd"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261014-native-first/transition/plot-inputs.json": {
+      "revision": "2c88895",
+      "sha256": "8c624f75e69dab70a25f720a786be1e5648a1a6aa4b7d14e5b88ed1815174ad6"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261014-native-first/transition/throughput.svg": {
+      "revision": "2c88895",
+      "sha256": "f7f7f1b8c11515f35e9bec7715b1149d20886a9cd6d506ca8216b576456deffd"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261014-native-first/validation.json": {
+      "revision": "2c88895",
+      "sha256": "36db0241ccffe114127e5dc35f26f9321647ff2ea161969585b21118468a5856"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261014-native-first/validation.py": {
+      "revision": "2c88895",
+      "sha256": "841ff56b778b94e609d6dd2f8e232eee07b0624b691a12d41ce5a3f57a210f74"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261014-native-first/workers.csv": {
+      "revision": "2c88895",
+      "sha256": "feda8259a94e3f20ca365264f47a8853a83e92a82055a7e824a5dd729148fb31"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261015-numa-rerun/analyze.py": {
+      "revision": "9a4bf2a",
+      "sha256": "9ed6fbf60fb2609121716b5efab14d2445dda3c69938775c9039171fb93d11c1"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261015-numa-rerun/archive.json": {
+      "revision": "9a4bf2a",
+      "sha256": "035464bb012d487931ef017add6cafc3090f1c39e389154e1187617ed8b79086"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261015-numa-rerun/comparisons.csv": {
+      "revision": "9a4bf2a",
+      "sha256": "c571536286d125ba952ef45943d273aba4b5d0ca6ba0fa9e3d22aeb734aa76a4"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261015-numa-rerun/comparisons.json": {
+      "revision": "9a4bf2a",
+      "sha256": "f17c2adc9dec0f770ec8fb9588c0f0f2c7d39c0f7900f503f411f79e16a373a8"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261015-numa-rerun/controls.json": {
+      "revision": "9a4bf2a",
+      "sha256": "ef06aad1114bbf06b8acc944ae02072bf981ad57f3f43b77ee1200767117e855"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261015-numa-rerun/environment.json": {
+      "revision": "9a4bf2a",
+      "sha256": "677d2c7cc8764786b1306d43b0b85cca5cd109de0b6bc11f4af7eb2d0b2af11b"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261015-numa-rerun/run.sh": {
+      "revision": "9a4bf2a",
+      "sha256": "3bd0b1dc46a605d761b288dbb347bd8e75ee59226c35835244e5d51de6a67d02"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261015-numa-rerun/samples.csv": {
+      "revision": "9a4bf2a",
+      "sha256": "7c3125aa3e117d996276760aed2ca1065229a3be69765203c47d7087221c165e"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261015-numa-rerun/source-identity.json": {
+      "revision": "9a4bf2a",
+      "sha256": "2ae509501cfd77e2faa469e5cae0304ee6cbc42c9499d10f401943b3ff8100b3"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261015-numa-rerun/statistics.csv": {
+      "revision": "9a4bf2a",
+      "sha256": "0632582efd774befe94c9abc5b77aca4f2e2554cb2d11690aa56402b1b4f6514"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261015-numa-rerun/throughput.png": {
+      "revision": "9a4bf2a",
+      "sha256": "e834a938eef32e86a3b59518787f3d17fa037d4ebdd541c92d2c744a60acc91e"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261015-numa-rerun/throughput.svg": {
+      "revision": "9a4bf2a",
+      "sha256": "4eeafdb960228cd0165145e95b46586264cfb3c378a1de5606d1c06a46d588b2"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261015-numa-rerun/verification.json": {
+      "revision": "9a4bf2a",
+      "sha256": "12fd15312c85733f74a974633b5b5c0d432bbb8632a434a4b1d7d73bc2e97087"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261015-numa-rerun/workers.csv": {
+      "revision": "9a4bf2a",
+      "sha256": "86957a4d546fe46e8dad457ef55806fca568595f7f227b570c97f211cf7293c8"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261015-origin/analyze.py": {
+      "revision": "9a4bf2a",
+      "sha256": "c20ea535383c214d1c5bbe9e26ea019637a661407694defc981c02baa3d0726b"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261015-origin/archive-verification.json": {
+      "revision": "9a4bf2a",
+      "sha256": "8b35c87fbcef79fc49150cf84a9cfe3b8e545e485824fba3adc31a9a8113ce2d"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261015-origin/commit-identity.json": {
+      "revision": "9a4bf2a",
+      "sha256": "0bfd29eb406c825191782f4ac6c89de5e0d34717cec9c43aaddb4375c42cef9c"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261015-origin/confirm64-a/comparisons.json": {
+      "revision": "9a4bf2a",
+      "sha256": "4b8beb628fee8ef47813a853e62746e26c1783e078ed12be6f06cdccc81a7c92"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261015-origin/confirm64-a/samples.csv": {
+      "revision": "9a4bf2a",
+      "sha256": "64d81bc79e00546b2a40e216d2ad4b02616f0623ae5f712184d99f643fb2b8b2"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261015-origin/confirm64-a/statistics.csv": {
+      "revision": "9a4bf2a",
+      "sha256": "eacfb05d5ef6099abf1682c63984061616344285df7e75e846aac1bc3132a449"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261015-origin/confirm64-a/workers.csv": {
+      "revision": "9a4bf2a",
+      "sha256": "fe6860dab2d40c6d78d57e67aac744b56913ac044b7a9ac1c677225c484d8a2b"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261015-origin/confirm64-b-clean/comparisons.json": {
+      "revision": "9a4bf2a",
+      "sha256": "24f8382b8952b950be1227f1982ac618632cef1ce510a61e16fd1454e0859730"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261015-origin/confirm64-b-clean/samples.csv": {
+      "revision": "9a4bf2a",
+      "sha256": "55161c965ac607c85b8bb05bbde6ce4678d32aae7e41becced471236b4dbfdb0"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261015-origin/confirm64-b-clean/statistics.csv": {
+      "revision": "9a4bf2a",
+      "sha256": "1730fbeea846ba1c486c871eb6bc9ebd8207af963597068005c189b594d545dd"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261015-origin/confirm64-b-clean/workers.csv": {
+      "revision": "9a4bf2a",
+      "sha256": "ec8ec5dcfdeee899f6e6c0d36cde780c5e56ab97b4b4882555233ae9c3a13567"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261015-origin/gs-numa-percpu.json": {
+      "revision": "9a4bf2a",
+      "sha256": "8dc96c510588eed28797565e086a594173c74e7f2ed842360a24cdb6307e6974"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261015-origin/guest-final.json": {
+      "revision": "9a4bf2a",
+      "sha256": "02226e52c0ca7fe61f130c08e228ac2799d32c7fe06bab8aeebc8e44208736f0"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261015-origin/host-final.json": {
+      "revision": "9a4bf2a",
+      "sha256": "dd4ffd54614a0d89c3bc0e67b3a3b4c6f118cc5a535d9a9d91d0621130aeb343"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261015-origin/isolated-source.json": {
+      "revision": "9a4bf2a",
+      "sha256": "ddebd577de8a60e1ece077633de005c25513cc5905547a30731bff435ac61f03"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261015-origin/kernel-final.json": {
+      "revision": "9a4bf2a",
+      "sha256": "650d2906508a943d0cb7da2d2f8781f78f09ca9e7533665da0db126276646f06"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261015-origin/maintenance.json": {
+      "revision": "9a4bf2a",
+      "sha256": "a59503c5b61a15cc46f8af21f4bca0f9bc391b99d13d9273e12ad1d9fe906e11"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261015-origin/plotting.json": {
+      "revision": "9a4bf2a",
+      "sha256": "7a5cf2e073bed305c08d4926141548aaed43b96d58dae68619e3536e37c44409"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261015-origin/regression.svg": {
+      "revision": "9a4bf2a",
+      "sha256": "3ffa6ddec3d6e50c147d4744b7e4e3089459e573c1f97ed53dc96d04bd5afe23"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261015-origin/rejected-confirm64-b.json": {
+      "revision": "9a4bf2a",
+      "sha256": "f93a8accbc2721732c6e620ed33445fa6629f1f0d116d05850d50c78d57b28c2"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261015-origin/screen64/comparisons.json": {
+      "revision": "9a4bf2a",
+      "sha256": "a01c5265123fea2ed0af416706f400a8106c19d9925f591f1ff551fc7678897d"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261015-origin/screen64/samples.csv": {
+      "revision": "9a4bf2a",
+      "sha256": "4805389d419060cbee00f8cfe536fef9463d31bd37610c68093eda0173a42f79"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261015-origin/screen64/statistics.csv": {
+      "revision": "9a4bf2a",
+      "sha256": "301c4eedd74beefdc658e83c99f4ceb700ec3a568b1755a131cf01a1509d0b1f"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261015-origin/screen64/workers.csv": {
+      "revision": "9a4bf2a",
+      "sha256": "ecc197bc90148550c70d6786de76d14ca4a9f6b0471c3e8f8aedf83cb4f9d269"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261015-origin/snapshots-final.txt": {
+      "revision": "9a4bf2a",
+      "sha256": "3adb8e2bd34aed779d639b4317f779d98d720e7b6a8cdc4dda7e92a26bb05365"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261015-origin/validation.json": {
+      "revision": "9a4bf2a",
+      "sha256": "93b93bd697e0344e458b9e53dd66d6e0a2cfc4a2519c6701ff5160ffe8fd3e0a"
+    },
+    "bench/results/10.176.26.71/bench/mutex_owned/20261015-origin/verification.json": {
+      "revision": "9a4bf2a",
+      "sha256": "58c632d59a64b0b12b324c696f0383a72781eb83dc15b181b73a595c7e86f918"
+    },
+    "bench/results/10.176.26.71/bench/mutex_protocol/20261013/acceptance.json": {
+      "revision": "2c88895",
+      "sha256": "b3a8d59d829c0a602ca5ae9e7024b2338f7b10ae95c2cae30460117cd565c41f"
+    },
+    "bench/results/10.176.26.71/bench/mutex_protocol/20261013/analyze.py": {
+      "revision": "2c88895",
+      "sha256": "06939ded338c5e68622bf8c6c821d889b0d3736199f318325e180e5408a2586c"
+    },
+    "bench/results/10.176.26.71/bench/mutex_protocol/20261013/artifacts.json": {
+      "revision": "2c88895",
+      "sha256": "193d0a0fde354929bf1e0b7498ae44163c19db11aeb2aa538f8cc65fd53d8005"
+    },
+    "bench/results/10.176.26.71/bench/mutex_protocol/20261013/coverage.json": {
+      "revision": "2c88895",
+      "sha256": "16a3695c0ccf21325e8652189d8143354da55b87a05f93515f4e0b3ecffaf10a"
+    },
+    "bench/results/10.176.26.71/bench/mutex_protocol/20261013/git-disposition.json": {
+      "revision": "2c88895",
+      "sha256": "2c57f832ddca2d14c769de2fb35a72a8d3d1908b2ba93ad08b9d870d40d9ae53"
+    },
+    "bench/results/10.176.26.71/bench/mutex_protocol/20261013/plot.py": {
+      "revision": "2c88895",
+      "sha256": "39f2b6c31c7ee52e6741fd18c7e299dbe12720781912dd877f971fd9c18621ae"
+    },
+    "bench/results/10.176.26.71/bench/mutex_protocol/20261013/samples.csv": {
+      "revision": "2c88895",
+      "sha256": "03bb27d42f5fde1dc2987005419a2a468e7df15082fa4ced4df6b3c6aa021884"
+    },
+    "bench/results/10.176.26.71/bench/mutex_protocol/20261013/statistics.csv": {
+      "revision": "2c88895",
+      "sha256": "d5e27b55b9aceb76f39b7f973a56ce204f30ec2dea702693c73ad95ffd894b96"
+    },
+    "bench/results/10.176.26.71/bench/mutex_protocol/20261013/throughput.svg": {
+      "revision": "2c88895",
+      "sha256": "44d483ead5049e08dff5a0fbbe52abe2b7244875bc6d3610e3d1bd1cd6c2973b"
+    },
+    "bench/results/10.176.26.71/bench/mutex_protocol/20261013/validation.json": {
+      "revision": "2c88895",
+      "sha256": "eb55c041fbf3b72dc8b0e0f26e7cc4f1a46e9ff17aa1e0fcb1c48b8e4de0ec9a"
+    },
+    "bench/results/10.176.26.71/bench/proc_snapshots/20261015/final-idle.json": {
+      "revision": "2c88895",
+      "sha256": "02c7d2c012c8949b5c3d944e547e75e82624d6947769b2bf6b01cf5d7df10c02"
+    },
+    "bench/results/10.176.26.71/bench/proc_snapshots/20261015/groups.csv": {
+      "revision": "2c88895",
+      "sha256": "11568c9d2603e21bd0454816995d50a550b196b6f669b1921c8c11ffd10e9bb3"
+    },
+    "bench/results/10.176.26.71/bench/proc_snapshots/20261015/results.json": {
+      "revision": "2c88895",
+      "sha256": "f96e5f92956dce44c66ba6f6ab0cbb6ecd5eb27436ea6aac29eac4a6575a9f9b"
+    },
+    "bench/results/10.176.26.71/bench/proc_snapshots/20261015/samples.csv": {
+      "revision": "2c88895",
+      "sha256": "b9440138e13f30cf9b4d0d50b093a7cfb84a83fac07c90dba9aae87369d0dc87"
+    },
+    "bench/results/10.176.26.71/bench/proc_snapshots/20261015/strscpy-pad-disassembly.txt": {
+      "revision": "2c88895",
+      "sha256": "0ca40770204911149911357735c210ae6635c886e41599f7b28c8495fa61f97f"
+    },
+    "bench/results/10.176.26.71/bench/rwlock/20261015-c01/analyze.py": {
+      "revision": "2c88895",
+      "sha256": "9cdd4982ad68026d712775952cdf6e3e27e4d6a1529b88326a903ffd75006f07"
+    },
+    "bench/results/10.176.26.71/bench/rwlock/20261015-c01/archive.json": {
+      "revision": "2c88895",
+      "sha256": "3139785d8e2e51e8bf0da44585e5bbe82df3c649a30f45fd3e1205a6d89a4366"
+    },
+    "bench/results/10.176.26.71/bench/rwlock/20261015-c01/binary-sha256.json": {
+      "revision": "2c88895",
+      "sha256": "dc60ca5e6e82f53e468f0bf65beca420aa683fae3d18e070c10dbe9c3847589b"
+    },
+    "bench/results/10.176.26.71/bench/rwlock/20261015-c01/command.sh": {
+      "revision": "2c88895",
+      "sha256": "1aaabd8a3ab7a0d82f0713b2015a0f60793224109c5f7871df8348b42946746d"
+    },
+    "bench/results/10.176.26.71/bench/rwlock/20261015-c01/environment.json": {
+      "revision": "2c88895",
+      "sha256": "f5f926d574ccca137237b8c0e098a35964d0a1bfc7f2d1af2ee25ebd454f5f1a"
+    },
+    "bench/results/10.176.26.71/bench/rwlock/20261015-c01/final-check.py": {
+      "revision": "2c88895",
+      "sha256": "e9f4e0992f38f3b14e27c6495f59eb8fb0bf9662bfe4976e3de2b8b7e6c52cee"
+    },
+    "bench/results/10.176.26.71/bench/rwlock/20261015-c01/final-idle.json": {
+      "revision": "2c88895",
+      "sha256": "3b69550139e4f137ab9dad7a278086abaa47ef3eb5f93c3234428fa223e595e9"
+    },
+    "bench/results/10.176.26.71/bench/rwlock/20261015-c01/host-final.json": {
+      "revision": "2c88895",
+      "sha256": "6f6edddb33e4a7172e7c92d6017ff5dc9f891ae7b5abfb2f6e19becc993e750a"
+    },
+    "bench/results/10.176.26.71/bench/rwlock/20261015-c01/host-policy.json": {
+      "revision": "2c88895",
+      "sha256": "786e710ea80ee954ae56cf85996c5031d92072fef453a2c4e6ff1cecb907ecc0"
+    },
+    "bench/results/10.176.26.71/bench/rwlock/20261015-c01/parity.json": {
+      "revision": "2c88895",
+      "sha256": "7324a48e522999c8ba530ff72c69c0b6ec070996997a572c145f9499bd368c2f"
+    },
+    "bench/results/10.176.26.71/bench/rwlock/20261015-c01/plot.py": {
+      "revision": "2c88895",
+      "sha256": "ff03bd2794fd59ca2016a423a2b33d9b0817c8c8ed7b7600114d1f90ebc51e75"
+    },
+    "bench/results/10.176.26.71/bench/rwlock/20261015-c01/preflight.json": {
+      "revision": "2c88895",
+      "sha256": "123cd469828bbe50098457d08d65732d8098b300eb7748089a4a1864f467b14c"
+    },
+    "bench/results/10.176.26.71/bench/rwlock/20261015-c01/samples.csv": {
+      "revision": "2c88895",
+      "sha256": "8672a69367d18c156c5bc564f1f1ea9936fcd6bfb3362d91d13369f202fbd13c"
+    },
+    "bench/results/10.176.26.71/bench/rwlock/20261015-c01/snapshot.json": {
+      "revision": "2c88895",
+      "sha256": "3842bbb27b926a257d1658e71f0b001666a675b32d1bd878b2d2158c634582d9"
+    },
+    "bench/results/10.176.26.71/bench/rwlock/20261015-c01/source-identity.json": {
+      "revision": "2c88895",
+      "sha256": "86b886c347bffba73aa43b12bc7dc535e73459e3281060dbe3a85faeb5357771"
+    },
+    "bench/results/10.176.26.71/bench/rwlock/20261015-c01/source-sha256.json": {
+      "revision": "2c88895",
+      "sha256": "d96085fe9c02e3fa3961892874da90173d543e1a9c028671597bc2cd2594b10d"
+    },
+    "bench/results/10.176.26.71/bench/rwlock/20261015-c01/statistics.csv": {
+      "revision": "2c88895",
+      "sha256": "be1b4cc70d091faed0bda2b478a8412052c5fad035eeea72988b0b77ee30a234"
+    },
+    "bench/results/10.176.26.71/bench/rwlock/20261015-c01/summary.json": {
+      "revision": "2c88895",
+      "sha256": "d7422617fc9e5517ed95583b261a57be27cb0c3610b4b6281dfaf2081f3f0abc"
+    },
+    "bench/results/10.176.26.71/bench/rwlock/20261015-c01/throughput.png": {
+      "revision": "2c88895",
+      "sha256": "fe94b7961f770b96943f24be969dda9b13d523e49abd6894bbc54c3452f64f7c"
+    },
+    "bench/results/10.176.26.71/bench/rwlock/20261015-c01/throughput.svg": {
+      "revision": "2c88895",
+      "sha256": "2cc91460bb6f6d7c741818d3612f85aee2cbfcf0fdf966f57cee442cffb5b119"
+    },
+    "bench/results/10.176.26.71/bench/rwlock/20261015-c01/verification.json": {
+      "revision": "2c88895",
+      "sha256": "e4e4cca60ea81433579ec66b9b6655e265d11a93cc2e9b01a7679c1814c72924"
+    },
+    "bench/results/10.176.26.71/bench/rwlock/20261015-c01/workers.csv": {
+      "revision": "2c88895",
+      "sha256": "ad618b6cb3e4b85a0a7e6e7ddd6e6df8cd5c2a91b3d29a06452338c42dc7215b"
+    },
+    "bench/results/10.176.26.71/tests/mutex-blocking-only-20261012/validation.json": {
+      "revision": "2c88895",
+      "sha256": "5e2117608cb5fe192ca641cec163b0eeee211e276dc9c06771d0231520aef0dc"
+    },
+    "bench/results/10.176.26.71/tests/remove-mutex-legacy-20261015/changed-source-sha256.json": {
+      "revision": "9a4bf2a",
+      "sha256": "88333e7c716762f10f407dd242a9c1c206f5d70eb9dbe2ce0d767c9cfcbd23a1"
+    },
+    "bench/results/10.176.26.71/tests/remove-mutex-legacy-20261015/commit-check-20261016.json": {
+      "revision": "9a4bf2a",
+      "sha256": "30883cb7e433a1d1b8e72078775dda0a93ba4b0a7c16689dafae9b5ef64f2305"
+    },
+    "bench/results/10.176.26.71/tests/remove-mutex-legacy-20261015/commit-source-sha256.json": {
+      "revision": "9a4bf2a",
+      "sha256": "fafd1de2b80234fd302cab4b0265e28941a450f078268ae7f9fed918b795875c"
+    },
+    "bench/results/10.176.26.71/tests/remove-mutex-legacy-20261015/validation.json": {
+      "revision": "9a4bf2a",
+      "sha256": "b599ea62d0c2adb3549dc906d9487763abc289fd2144942605ed343f38ec14f4"
+    },
+    "bench/results/10.176.26.71/tests/rwsem-snapshots-20261015/validation.json": {
+      "revision": "2c88895",
+      "sha256": "27687179696b58d149859e423ccee0b53565b149017227cde8c1456e5bf3c657"
+    },
+    "bench/results/380G10/tests/documentation-cleanup-20261012.json": {
+      "revision": "2c88895",
+      "sha256": "ce22f7c5c8253df38aa3b74877b9ed40692ad0356eb6ce502f56f26bde01c495"
+    },
+    "bench/results/380G10/tests/documentation-cleanup-20261015.json": {
+      "revision": "2c88895",
+      "sha256": "96ad1c33656e740b3bbeb495f03adc6ea79c4108727612805dc34af96a09a549"
+    },
+    "bench/results/380G10/tests/documentation-refresh-20261015.json": {
+      "revision": "2c88895",
+      "sha256": "3dabdb697f99779c1932115808676d005c782828cec1adcce7363497a29c1f0e"
+    }
+  },
+  "result": "PASS"
+}

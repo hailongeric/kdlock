@@ -296,7 +296,7 @@ class DirectTests(unittest.TestCase):
             duration_ms=2000)
         plan = run.make_plan(args)
         self.assertTrue(all(s['peak_window_ms'] == s['peak_settle_ms'] == 300 and
-                            s['sample_ms'] == 10 and s['collector_cpu'] == 30 and
+                            s['sample_ms'] == 10 and s['collector_cpu'] == 63 and
                             s['measurement_mode'] == 'timed_peak' for s in plan))
         with tempfile.TemporaryDirectory() as temporary:
             out = Path(temporary)
@@ -627,11 +627,11 @@ class DirectTests(unittest.TestCase):
                 run.main()
 
     def test_cli_small_and_numa_thread_matrix(self):
-        # Exercise the full 64-worker cohort with a separate collector vCPU.
+        # The 64-worker point explicitly shares collector 63; smaller cohorts do not.
         output = io.StringIO()
         argv = ['run.py', '--output', '/tmp/unused', '--dry-run',
-                '--cachelines', '1', '--duration-ms', '2000', '--collector-cpu', '65',
-                '--cpus', '0-31,33-64',
+                '--cachelines', '1', '--duration-ms', '2000', '--collector-cpu', '63',
+                '--cpus', '0-63', '--share-collector',
                 '--threads', '1', '2', '3', '4', '5', '6', '7', '8',
                 '12', '16', '20', '24', '28', '32', '36',
                 '40', '44', '48', '52', '56', '60', '64']
@@ -644,8 +644,9 @@ class DirectTests(unittest.TestCase):
                          set(range(1, 9)) | set(range(12, 65, 4)))
         self.assertEqual({s['repeat'] for s in plan}, {0, 1, 2})
         for spec in plan:
-            self.assertEqual(spec['cpus'], (list(range(32)) + list(range(33, 65)))[:spec['threads']])
-            self.assertNotIn(spec['collector_cpu'], spec['cpus'])
+            self.assertEqual(spec['cpus'], list(range(spec['threads'])))
+            self.assertEqual(spec['collector_shared'], spec['threads'] == 64)
+            self.assertEqual(spec['collector_cpu'] in spec['cpus'], spec['collector_shared'])
             self.assertEqual(spec['cpu_heat_policy'],
                              'mcs_reset1024_shift10_lock512_head6' if spec['arm'] == 'kdlock' else 'not_applicable')
             self.assertEqual(spec['spin_entry_ratio_limit'],
@@ -653,6 +654,20 @@ class DirectTests(unittest.TestCase):
             self.assertNotIn('spin_contention_pct', spec)
             self.assertNotIn('spin_hot_min_queue', spec)
             self.assertNotIn('spin_cold_fastpath', spec)
+
+
+    def test_shared_collector_rejects_unlabelled_or_partial_overlap(self):
+        args = dict(cachelines=[1], threads=[64], repeats=3, iterations=100,
+                    backends=['native'], duration_ms=2000, collector_cpu=63,
+                    cpus=list(range(64)))
+        with self.assertRaisesRegex(run.Failure, 'collector CPU'):
+            run.make_plan(Namespace(**args))
+        for change in (dict(collector_cpu=62), dict(threads=[60]),
+                       dict(cpus=list(range(1,65))), dict(share_collector=1),
+                       dict(duration_ms=0)):
+            with self.subTest(change=change), self.assertRaises(run.Failure):
+                run.make_plan(Namespace(**(args | {'share_collector': True} | change)))
+
 
     def test_contention_cli_preserves_explicit_threshold_and_zero_bypass(self):
         # A diagnostic zero must survive parsing;

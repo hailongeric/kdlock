@@ -107,7 +107,7 @@ in the results document.
 
 ## Reproduction
 
-Follow [operations](../../../../../../docs/AGENTS.md): edit on the source host,
+Follow [operations](../../../../../../docs/operations/VM.md): edit on the source host,
 synchronize into an idle guest, verify the exact kernel and physical pins, and
 confirm a fresh recoverable snapshot. The benchmark Python environment is
 `/root/kdlock-evidence/clobber-20260918/venv`. Run each command with an outer timeout

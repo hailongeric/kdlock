@@ -203,7 +203,7 @@ The sequential memory model also cannot stop another thread from changing a
 pointer before a later load. Holding lock A excludes other users of A, but not
 per-CPU activity or a writer that never takes A.
 
-The bounded [pointer audit](../VALIDATION.md#dynamic-pointer-screening-gap) executes
+The bounded [pointer audit](https://github.com/hailongeric/kdlock/blob/17f146e52f9f52485b8211addb7dab7195e70452/docs/VALIDATION.md#dynamic-pointer-screening-gap) executes
 these paths against harmless user allocations labelled by mock symbols.
 It confirms a missing check, not actual kernel context corruption or a rate of
 failure. The entry predicates, local mutex checkpoint, retained native owner
@@ -278,7 +278,7 @@ chunk when full. Normal module unload frees allocations within that arena,
 not the arena's address classification. This does not pin or validate an object.
 
 The provider reports this bound using the existing 16-byte CAPS packet on the
-same device lease. The module bound was introduced in version 2; this branch
+same device lease. The module bound was introduced in version 2; the current provider
 uses version 5 and requires immutable mutex images plus exclusive KD objects
 (`KD_JIT_CAP_MUTEX_EXCLUSIVE`, bit 4). Version 4 remains readable by observers but
 cannot open a translation session for this object contract. It checks the build constants and the non-NULL
@@ -334,6 +334,6 @@ not establish image lifetime through lock serialization.
 The scalar instruction policy also refuses processor-state instructions, unknown
 mnemonics and equivalent context helpers before emission. Sensitive raw encodings
 are checked at instruction boundaries, including selected undecodable roots.
-See [the compatibility backport](legacy_mutex_compatibility.md) for scope, capability
+See [the compatibility backport](../history/legacy_mutex_compatibility.md) for scope, capability
 negotiation and the separate owned-origin/ABI4 interfaces.
 See [daemon README](../../daemon/README.md) for CLI and diagnostics.

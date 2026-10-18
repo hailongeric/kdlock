@@ -1,5 +1,8 @@
 """Focused guest tests for timed accounting and raw-sample peak selection."""
 import copy
+from pathlib import Path
+import subprocess
+import tempfile
 import unittest
 
 import bench_runtime as runtime
@@ -33,6 +36,50 @@ def fixture():
 
 
 class PeakTests(unittest.TestCase):
+    def test_shared_collector_requires_explicit_matching_64_worker_identity(self):
+        spec, measurement = fixture()
+        spec.update(threads=64, cpus=list(range(64)), collector_cpu=63, collector_shared=True)
+        template = measurement['workers'][0]
+        measurement.update(threads=64, collector_cpu=63, collector_observed_cpu=63,
+                           collector_shared=True, completed=template['completed'] * 64,
+                           worker_cpu_ns=template['cpu_ns'] * 64,
+                           finished_ns=template['finished_ns'],
+                           wall_ns=template['finished_ns'] - measurement['started_ns'])
+        measurement['workers'] = [dict(template, cpu=i, observed_cpu=i) for i in range(64)]
+        measurement['after'][0] = measurement['before'][0] + measurement['completed']
+        for sample in measurement['samples']:
+            sample['completed'] = [sample['completed'][0]] * 64
+        self.assertTrue(runtime.validate_measurement(measurement, spec, 0)['collector_shared'])
+        for change in (dict(collector_shared=False), dict(collector_shared=1), dict(collector_cpu=62)):
+            with self.subTest(change=change), self.assertRaises(ValueError):
+                analyze_peak(dict(measurement, **change), spec)
+        with self.assertRaises(ValueError):
+            analyze_peak(measurement, dict(spec, collector_shared=False))
+
+    def test_real_client_rejects_implicit_and_partial_collector_sharing(self):
+        # Stop at open: exercise the real option parser without a device or
+        # workload. Live 64-worker runs separately check timed scheduling.
+        with tempfile.TemporaryDirectory(prefix='collector-parser-') as directory:
+            root = Path(directory)
+            source = Path(__file__).resolve().with_name('client.c')
+            (root / 'probe.c').write_text(
+                '#define open denied_open\n#include "' + str(source) + '"\n'
+                'int denied_open(const char *p, int f, ...) '
+                '{ (void)p; (void)f; errno=ENOENT; return -1; }\n')
+            binary = root / 'probe'
+            subprocess.run(['cc', '-O2', '-Wall', '-Wextra', '-Werror', '-pthread',
+                            root / 'probe.c', '-o', binary], check=True, timeout=30)
+            cpus = ','.join(map(str, range(64)))
+            base = [binary, '--cachelines', '1', '--duration-ms', '2000',
+                    '--cpus', cpus, '--collector-cpu', '63']
+            for extra, code in (([], 2), (['--share-collector'], 1),
+                                (['--share-collector', '--collector-cpu', '62'], 2),
+                                (['--share-collector', '--cpus', '0,1'], 2),
+                                (['--share-collector', '--duration-ms', '0'], 2)):
+                with self.subTest(extra=extra):
+                    result = subprocess.run(base + extra, capture_output=True, timeout=10)
+                    self.assertEqual(result.returncode, code, result.stderr)
+
     def test_exact_variable_totals_and_earliest_tied_window(self):
         spec, measurement = fixture()
         saved = copy.deepcopy(measurement)

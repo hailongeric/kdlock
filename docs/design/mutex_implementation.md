@@ -1,7 +1,7 @@
 # Mutex implementation: KD, TCLock and Linux Native
 
-This branch retains the recovered legacy lock protocol and ABI0/2 interfaces.
-The [compatibility backport](legacy_mutex_compatibility.md) adds fail-closed
+`master` retains the accepted legacy lock protocol and ABI0/2 interfaces.
+The [compatibility backport](../history/legacy_mutex_compatibility.md) adds fail-closed
 processor-state admission, immutable mutex images and generation-bound frames.
 The [KD-only extension](kd_only_mutex.md) embeds physical exclusion and scheduling
 in each KD object while retaining the queue and pinned producer.
@@ -62,7 +62,7 @@ use a JIT frame, or move to a TCLock shadow stack.
 
 The fixed upstream source is commit
 `bbfb9f00a12af51dff6ca291cb9829a82960c2ef`, retained byte-for-byte in
-[upstream](../../tclock_backend/upstream/) with hashes in
+[upstream](../../tclock_backend/upstream) with hashes in
 [UPSTREAM.json](../../tclock_backend/UPSTREAM.json). The external module
 replaces custom `task_struct` fields with
 [tc_mutex_context](../../tclock_backend/mutex_compat.h). It retains ordinary
@@ -307,9 +307,9 @@ unchanged. Build/use instructions belong in the
 [workload README](../../workload_modules/mutex_cacheline/README.md) and
 [runner README](../../bench/tclock_compare/README.md).
 
-The current c01/hash comparison, returned-body JIT/delegation evidence and
-remaining performance gaps are in the
-[mutex optimization report](../../bench/results/10.176.26.71/bench/comparison/mutex-opt-20261011T045425Z/README.md).
+The current c01/post64 and pipebytes n16 comparison, returned-body evidence
+and regression limits are in the
+[KD-only report](../../bench/results/10.176.26.71/bench/comparison/mutex-kdonly-20261017T140354Z/README.md).
 Earlier grouping/cache candidates remain in
 [fixed benchmark records](../../bench/results/380G10/bench/tclock_compare/HISTORY.md#mutex-followup).
 The earlier [mandatory-JIT trials](../../bench/results/380G10/bench/tclock_compare/20261008-mutex-priority-trials.md)

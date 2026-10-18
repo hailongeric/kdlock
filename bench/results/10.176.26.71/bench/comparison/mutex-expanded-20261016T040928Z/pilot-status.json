@@ -1,0 +1,331 @@
+[
+  {
+    "name": "cacheline-abi4",
+    "argv": [
+      "/root/kdlock-evidence/clobber-20260918/venv/bin/python3",
+      "bench/tclock_compare/run_mutex.py",
+      "--functional",
+      "--repeats",
+      "1",
+      "--backends",
+      "kdlock",
+      "--threads",
+      "16",
+      "--cpus",
+      "0-15",
+      "--collector-cpu",
+      "63",
+      "--iterations",
+      "100000",
+      "--owned-mutex-cabi",
+      "--owned-mutex-reuse-spins",
+      "32",
+      "--workload",
+      "cacheline",
+      "--output",
+      "/root/kdlock-evidence/10.176.26.71/tests/mutex-coverage-20261016T034903Z/cacheline-abi4",
+      "--cachelines",
+      "1",
+      "2",
+      "4",
+      "8",
+      "16"
+    ],
+    "started_utc": "2026-10-16T03:58:29.150027+00:00",
+    "exit_code": 0,
+    "finished_utc": "2026-10-16T03:59:01.938387+00:00"
+  },
+  {
+    "name": "rcuht-abi4",
+    "argv": [
+      "/root/kdlock-evidence/clobber-20260918/venv/bin/python3",
+      "bench/tclock_compare/run_mutex.py",
+      "--functional",
+      "--repeats",
+      "1",
+      "--backends",
+      "kdlock",
+      "--threads",
+      "16",
+      "--cpus",
+      "0-15",
+      "--collector-cpu",
+      "63",
+      "--iterations",
+      "100000",
+      "--owned-mutex-cabi",
+      "--owned-mutex-reuse-spins",
+      "32",
+      "--workload",
+      "rcuht",
+      "--output",
+      "/root/kdlock-evidence/10.176.26.71/tests/mutex-coverage-20261016T034903Z/rcuht-abi4"
+    ],
+    "started_utc": "2026-10-16T03:59:02.215928+00:00",
+    "exit_code": 0,
+    "finished_utc": "2026-10-16T03:59:23.345226+00:00"
+  },
+  {
+    "name": "cacheline-abi2",
+    "argv": [
+      "/root/kdlock-evidence/clobber-20260918/venv/bin/python3",
+      "bench/tclock_compare/run_mutex.py",
+      "--functional",
+      "--repeats",
+      "1",
+      "--backends",
+      "kdlock",
+      "--threads",
+      "16",
+      "--cpus",
+      "0-15",
+      "--collector-cpu",
+      "63",
+      "--iterations",
+      "100000",
+      "--workload",
+      "cacheline",
+      "--output",
+      "/root/kdlock-evidence/10.176.26.71/tests/mutex-coverage-20261016T034903Z/cacheline-abi2",
+      "--cachelines",
+      "1",
+      "2",
+      "4",
+      "8",
+      "16"
+    ],
+    "started_utc": "2026-10-16T03:59:23.621219+00:00",
+    "exit_code": 0,
+    "finished_utc": "2026-10-16T03:59:58.476726+00:00"
+  },
+  {
+    "name": "rcuht-abi2",
+    "argv": [
+      "/root/kdlock-evidence/clobber-20260918/venv/bin/python3",
+      "bench/tclock_compare/run_mutex.py",
+      "--functional",
+      "--repeats",
+      "1",
+      "--backends",
+      "kdlock",
+      "--threads",
+      "16",
+      "--cpus",
+      "0-15",
+      "--collector-cpu",
+      "63",
+      "--iterations",
+      "100000",
+      "--workload",
+      "rcuht",
+      "--output",
+      "/root/kdlock-evidence/10.176.26.71/tests/mutex-coverage-20261016T034903Z/rcuht-abi2"
+    ],
+    "started_utc": "2026-10-16T03:59:58.753503+00:00",
+    "exit_code": 0,
+    "finished_utc": "2026-10-16T04:00:19.931509+00:00"
+  },
+  {
+    "name": "api-pipebytes",
+    "argv": [
+      "/root/kdlock-evidence/clobber-20260918/venv/bin/python3",
+      "bench/real_api/run.py",
+      "--kinds",
+      "pipebytes",
+      "--queries",
+      "query",
+      "--entries",
+      "16",
+      "128",
+      "--backends",
+      "kdlock",
+      "--threads",
+      "1",
+      "16",
+      "60",
+      "--cpus",
+      "0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59",
+      "--collector-cpu",
+      "63",
+      "--repeats",
+      "1",
+      "--output",
+      "/root/kdlock-evidence/10.176.26.71/tests/mutex-coverage-20261016T034903Z/api-pipebytes"
+    ],
+    "started_utc": "2026-10-16T04:00:20.212697+00:00",
+    "exit_code": 0,
+    "finished_utc": "2026-10-16T04:01:18.615703+00:00",
+    "sessions": [
+      {
+        "name": "pipebytes-query-n16-t01-r0-kdlock",
+        "threads": 1,
+        "status": "OK",
+        "drained": true,
+        "jit_bodies": 0
+      },
+      {
+        "name": "pipebytes-query-n16-t16-r0-kdlock",
+        "threads": 16,
+        "status": "OK",
+        "drained": true,
+        "jit_bodies": 7071
+      },
+      {
+        "name": "pipebytes-query-n16-t60-r0-kdlock",
+        "threads": 60,
+        "status": "OK",
+        "drained": true,
+        "jit_bodies": 49604
+      },
+      {
+        "name": "pipebytes-query-n128-t01-r0-kdlock",
+        "threads": 1,
+        "status": "OK",
+        "drained": true,
+        "jit_bodies": 0
+      },
+      {
+        "name": "pipebytes-query-n128-t16-r0-kdlock",
+        "threads": 16,
+        "status": "OK",
+        "drained": true,
+        "jit_bodies": 8339
+      },
+      {
+        "name": "pipebytes-query-n128-t60-r0-kdlock",
+        "threads": 60,
+        "status": "OK",
+        "drained": true,
+        "jit_bodies": 38794
+      }
+    ]
+  },
+  {
+    "name": "api-pipecap",
+    "argv": [
+      "/root/kdlock-evidence/clobber-20260918/venv/bin/python3",
+      "bench/real_api/run.py",
+      "--kinds",
+      "pipecap",
+      "--queries",
+      "query",
+      "--entries",
+      "16",
+      "--backends",
+      "kdlock",
+      "--threads",
+      "1",
+      "16",
+      "60",
+      "--cpus",
+      "0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59",
+      "--collector-cpu",
+      "63",
+      "--repeats",
+      "1",
+      "--output",
+      "/root/kdlock-evidence/10.176.26.71/tests/mutex-coverage-20261016T034903Z/api-pipecap"
+    ],
+    "started_utc": "2026-10-16T04:01:18.904039+00:00",
+    "exit_code": 0,
+    "finished_utc": "2026-10-16T04:01:57.711432+00:00",
+    "sessions": [
+      {
+        "name": "pipecap-query-n16-t01-r0-kdlock",
+        "threads": 1,
+        "status": "OK",
+        "drained": true,
+        "jit_bodies": 0
+      },
+      {
+        "name": "pipecap-query-n16-t16-r0-kdlock",
+        "threads": 16,
+        "status": "OK",
+        "drained": true,
+        "jit_bodies": 6362
+      },
+      {
+        "name": "pipecap-query-n16-t60-r0-kdlock",
+        "threads": 60,
+        "status": "OK",
+        "drained": true,
+        "jit_bodies": 40057
+      }
+    ]
+  },
+  {
+    "name": "api-seek",
+    "argv": [
+      "/root/kdlock-evidence/clobber-20260918/venv/bin/python3",
+      "bench/real_api/run.py",
+      "--kinds",
+      "seek",
+      "--queries",
+      "set",
+      "end",
+      "--entries",
+      "16",
+      "--backends",
+      "kdlock",
+      "--threads",
+      "1",
+      "16",
+      "60",
+      "--cpus",
+      "0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59",
+      "--collector-cpu",
+      "63",
+      "--repeats",
+      "1",
+      "--output",
+      "/root/kdlock-evidence/10.176.26.71/tests/mutex-coverage-20261016T034903Z/api-seek"
+    ],
+    "started_utc": "2026-10-16T04:01:57.992804+00:00",
+    "exit_code": 0,
+    "finished_utc": "2026-10-16T04:02:55.337740+00:00",
+    "sessions": [
+      {
+        "name": "seek-set-n16-t01-r0-kdlock",
+        "threads": 1,
+        "status": "OK",
+        "drained": true,
+        "jit_bodies": 0
+      },
+      {
+        "name": "seek-set-n16-t16-r0-kdlock",
+        "threads": 16,
+        "status": "OK",
+        "drained": true,
+        "jit_bodies": 8221
+      },
+      {
+        "name": "seek-set-n16-t60-r0-kdlock",
+        "threads": 60,
+        "status": "OK",
+        "drained": true,
+        "jit_bodies": 40085
+      },
+      {
+        "name": "seek-end-n16-t01-r0-kdlock",
+        "threads": 1,
+        "status": "OK",
+        "drained": true,
+        "jit_bodies": 0
+      },
+      {
+        "name": "seek-end-n16-t16-r0-kdlock",
+        "threads": 16,
+        "status": "OK",
+        "drained": true,
+        "jit_bodies": 9103
+      },
+      {
+        "name": "seek-end-n16-t60-r0-kdlock",
+        "threads": 60,
+        "status": "OK",
+        "drained": true,
+        "jit_bodies": 39341
+      }
+    ]
+  }
+]

@@ -118,8 +118,8 @@ def source_state():
     for directory in ("bench/spin_cacheline", "workload_modules/spin_cacheline",
                       "workload_modules/mutex_cacheline",
                       "include", "kernel_module", "daemon",
-                      "disassem", "kernel_baseline", "kernel_experiments/spin_static",
-                      "kernel_experiments/spin_clobber",
+                      "disassem", "kernel_baseline", "kernel_baseline/experiments/spin_static",
+                      "kernel_baseline/experiments/spin_clobber",
                       "bench/spin_cacheline/.build/provider"):
         for path in (ROOT / directory).rglob("*"):
             if (path.is_file() and "__pycache__" not in path.parts and

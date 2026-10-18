@@ -1,0 +1,72 @@
+{
+  "block": "confirm64-b",
+  "excluded_from_acceptance": true,
+  "individually_valid_sessions": 264,
+  "reason": "Unrelated rwsem implementation and completion-probe sources changed between blocks; full cross-block identity gate rejected this confirmation.",
+  "source_differences": {
+    "bench/spin_cacheline/.build/provider/include/kd_bench.h": {
+      "screen": "189a29a8ee64ec8608187b0e0b1e6383c5db1bfd8a559b8e14506a42671e618b",
+      "rejected": "6cc9def09289d6a1aed8811ac0d1c5606b03a23422f626332228def457a401a2"
+    },
+    "bench/spin_cacheline/.build/provider/include/kd_rwlock.h": {
+      "screen": "a8d1efb6a8668eca1946c14220fdec182625fba0ad2d24efa944c03a4199f8c3",
+      "rejected": "a76902abcb85902f02a01b2a7bd54ef3882e97dfbba3ddb1683de2d8403e247e"
+    },
+    "bench/spin_cacheline/.build/provider/include/kd_rwsem.h": {
+      "screen": null,
+      "rejected": "1dde03aae1f8630b7cadbd89eda57b5ed323a96075c30cc3b040c74c5eda9de8"
+    },
+    "bench/spin_cacheline/.build/provider/kernel_module/Makefile": {
+      "screen": "070c519692843225d22ba3c94b7a440127075e5370e54a92fb075a2a35a1476b",
+      "rejected": "9a6858a958db822cca4c9b47c8c64713ee414b089e93449295db8b905c79dbbb"
+    },
+    "bench/spin_cacheline/.build/provider/kernel_module/execution/wrapper_entry.inc": {
+      "screen": "e38602d1bd2c0cb320db48fb9135803d3c68c9af85ad4bc754bfa04f2dca960e",
+      "rejected": "0e0105cc1574421891a8018d8232f04c9fd8afaeb2b29e0b0e1c5067c3720f29"
+    },
+    "bench/spin_cacheline/.build/provider/kernel_module/kd_bench.c": {
+      "screen": "1b67a9e287ded6aa5a3823eefb651383a63f48669857a3a740d38c0d952cf16e",
+      "rejected": "2c184de636e7a98b409534e866449bf5ea3323db0d1e8ece0d3c1251643e61cd"
+    },
+    "bench/spin_cacheline/.build/provider/kernel_module/kd_rwsem.c": {
+      "screen": null,
+      "rejected": "de04e0e5cb52d5504ee4cc72e7d5d96759f7d82bdeee6a43a9fc246b5fd3e5f9"
+    },
+    "bench/spin_cacheline/.build/provider/manifest.json": {
+      "screen": "6e8dbf15939bcde42ca4010bbfd832eb2b9e805ca3a04085fb7b3d32dcc7b921",
+      "rejected": "00a2199a750f9f071b58c323859aecda96eb5953db35e7fcce044bb41c7c4fe2"
+    },
+    "bench/spin_cacheline/provider/kd_bench.c": {
+      "screen": "1b67a9e287ded6aa5a3823eefb651383a63f48669857a3a740d38c0d952cf16e",
+      "rejected": "2c184de636e7a98b409534e866449bf5ea3323db0d1e8ece0d3c1251643e61cd"
+    },
+    "bench/spin_cacheline/provider/kd_bench.h": {
+      "screen": "189a29a8ee64ec8608187b0e0b1e6383c5db1bfd8a559b8e14506a42671e618b",
+      "rejected": "6cc9def09289d6a1aed8811ac0d1c5606b03a23422f626332228def457a401a2"
+    },
+    "bench/spin_cacheline/provider/observation.patch": {
+      "screen": "43c27e2309bcab4b37e7e98df080825a35b534fe151a330b334b13ee7bb27a31",
+      "rejected": "a7914b0151c50fd5aa15e8bd277375ec1f51195705db64272aa9947f70939087"
+    },
+    "bench/tclock_compare/README.md": {
+      "screen": "440e0a2d13e2145bdf49f1c7063041873d983f1ddab0c1b47abb255a54683149",
+      "rejected": "b67576da44c34bc15e1657cd208be862d3f31c0b96c0325884da57d5b2fe2255"
+    },
+    "include/kd_rwlock.h": {
+      "screen": "a8d1efb6a8668eca1946c14220fdec182625fba0ad2d24efa944c03a4199f8c3",
+      "rejected": "a76902abcb85902f02a01b2a7bd54ef3882e97dfbba3ddb1683de2d8403e247e"
+    },
+    "include/kd_rwsem.h": {
+      "screen": null,
+      "rejected": "1dde03aae1f8630b7cadbd89eda57b5ed323a96075c30cc3b040c74c5eda9de8"
+    },
+    "kernel_module/Makefile": {
+      "screen": "045f727d7ecc1086a95637651541b975fc8ac313ca2477be0521a9bf0900e39d",
+      "rejected": "25d3d31d50744299c0cb204bf036e4946e1d4c314a1a34f6e7977d6296b1bd39"
+    },
+    "kernel_module/kd_rwsem.c": {
+      "screen": null,
+      "rejected": "de04e0e5cb52d5504ee4cc72e7d5d96759f7d82bdeee6a43a9fc246b5fd3e5f9"
+    }
+  }
+}

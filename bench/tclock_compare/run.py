@@ -29,7 +29,7 @@ DEFAULT_SPIN_ENTRY_RATIO_LIMIT = 2
 DEFAULT_KD_PROVIDER_UBSAN = 'off'
 SPIN_ENTRY_RATIO_LIMITS = (0, *(1 << shift for shift in range(1, 32)))
 TIMING_FIELDS = ('duration_ms', 'peak_window_ms', 'peak_settle_ms',
-                 'sample_ms', 'collector_cpu')
+                 'sample_ms', 'collector_cpu', 'collector_shared')
 
 
 def worker_cpus(args):
@@ -44,16 +44,22 @@ def worker_cpus(args):
 
 def timing_settings(args):
     settings = {name: getattr(args, name, default) for name, default in
-                zip(TIMING_FIELDS, (0, 300, 300, 10, 30))}
+                zip(TIMING_FIELDS[:-1], (0, 300, 300, 10, 63))}
     duration = settings['duration_ms']
+    shared = getattr(args, 'share_collector', False)
+    require(type(shared) is bool, 'collector sharing must be explicitly boolean')
+    require(not shared or (duration and max(args.threads) == 64 and
+                           worker_cpus(args) == list(range(64)) and
+                           settings['collector_cpu'] == 63),
+            'shared collector requires timed workers 0-63 and collector 63')
     require(0 <= duration <= 10000, 'duration must be 0..10000 ms')
     if duration:
         require(0 < settings['sample_ms'] <= settings['peak_window_ms'] and
                 settings['peak_settle_ms'] >= 0 and
                 settings['peak_settle_ms'] + settings['peak_window_ms'] < duration,
                 'invalid peak timing intervals')
-        require(settings['collector_cpu'] >= 0 and
-                settings['collector_cpu'] not in worker_cpus(args),
+        require(settings['collector_cpu'] >= 0 and (shared or
+                settings['collector_cpu'] not in worker_cpus(args)),
                 'collector CPU must be outside every worker cohort')
         require(getattr(args, 'scenario', 'plain') == 'plain' and
                 getattr(args, 'workload', 'cacheline') in ('cacheline', 'rcuht') and
@@ -166,6 +172,7 @@ def make_plan(args):
                 warmup_pause_seconds=0,
                 measurement_mode='timed_peak' if timing['duration_ms'] else 'fixed_iterations',
                 **timing,
+                collector_shared=bool(getattr(args, 'share_collector', False) and t == 64),
                 iterations=args.iterations, cpus=cpus[:t]))
     return result
 
@@ -307,7 +314,7 @@ def main(lock_kind='spin'):
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('--output', type=Path, required=True)
     p.add_argument('--workload', choices=('cacheline', 'rcuht'), default='cacheline')
-    p.add_argument('--cachelines', type=int, nargs='+', choices=(1,8,16))
+    p.add_argument('--cachelines', type=int, nargs='+', choices=(1,2,4,8,16))
     p.add_argument('--threads', type=int, nargs='+', choices=range(1, 65), default=[1,4,8,16,20])
     p.add_argument('--cpus', type=runtime.cpu_list,
                    help='ordered worker CPUs, e.g. 0-7,20-27; each cohort uses its prefix')
@@ -333,8 +340,11 @@ def main(lock_kind='spin'):
     p.add_argument('--peak-settle-ms', type=int, default=300,
                    help='exclude initial measured settling from peak selection')
     p.add_argument('--sample-ms', type=int, default=10)
-    p.add_argument('--collector-cpu', type=int, default=30,
+    p.add_argument('--collector-cpu', type=int, default=63,
                    help='dedicated progress collector CPU, outside the worker set')
+    p.add_argument('--share-collector', action='store_true',
+                   help='explicitly share CPU 63 at the 64-worker point only; '
+                        'requires timed workers 0-63 on the 64-vCPU VM')
     p.add_argument('--backends', nargs='+', choices=('native','tclock','kdlock'), default=['native','tclock','kdlock'])
     p.add_argument('--pmu', action='store_true',
                    help='separate long-batch diagnostic: perf stat around measured client only')

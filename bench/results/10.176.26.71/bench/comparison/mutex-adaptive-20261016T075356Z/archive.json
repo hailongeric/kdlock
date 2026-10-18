@@ -1,0 +1,31 @@
+{
+  "archive_member_prefix": "mutex-adaptive-20261016T075356Z/",
+  "bytes": 191683217,
+  "copies": [
+    {
+      "host": "380G10",
+      "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/mutex-adaptive-20261016T075356Z/mutex-adaptive-20261016T075356Z.tar.gz",
+      "verified": true
+    },
+    {
+      "host": "10.176.26.71",
+      "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/mutex-adaptive-20261016T075356Z/mutex-adaptive-20261016T075356Z.tar.gz",
+      "verified": true
+    }
+  ],
+  "guest_tree": "/root/kdlock-evidence/10.176.26.71/bench/mutex-adaptive-20261016T075356Z",
+  "note": "Raw archive includes every pilot and failure plus audited data. Published Markdown and archive/publication receipts were completed afterward; they do not relabel measured source identities.",
+  "offline_archive_verification": {
+    "archive": "bench/results/10.176.26.71/raw/bench/mutex-adaptive-20261016T075356Z/mutex-adaptive-20261016T075356Z.tar.gz",
+    "bytes": 191683217,
+    "directories_verified": 6030,
+    "files_verified": 42412,
+    "manifest_sha256": "eef9d6c8c383408eb31c33c12e23e58342e66bf9493c94c9d9953509b0a2c26f",
+    "passed": true,
+    "sha256": "7c1622987ced2ca2f44a0a412e03b3c8b428ace72614ad617345c7c5590582fa",
+    "symlinks_verified": 1206,
+    "utc": "2026-10-16T11:12:52.912488+00:00"
+  },
+  "run": "mutex-adaptive-20261016T075356Z",
+  "sha256": "7c1622987ced2ca2f44a0a412e03b3c8b428ace72614ad617345c7c5590582fa"
+}

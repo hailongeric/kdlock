@@ -39,7 +39,7 @@ KD entry saves zero. Nested translated operations use `KD_MUTEX_DIRECT_LOCK/UNLO
 prepare uses `kd_mutex_prepare(..., KD_ENTRY_ABI_MUTEX_CLOBBER_V1)`. Registration
 can succeed before immutable image allocation; only complete NORMAL publication
 allows JIT execution. Provider, daemon and translator must negotiate the matching
-version-4 legacy image capability.
+version-5 immutable-image and exclusive-KD-object capabilities.
 [Ownership](../docs/design/locking.md#mutex-outer-direct) explains the routing.
 
 Rwlock readers pair `kd_read_lock/unlock`; explicitly native writers pair

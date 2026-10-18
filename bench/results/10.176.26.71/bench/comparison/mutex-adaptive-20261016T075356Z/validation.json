@@ -1,0 +1,1143 @@
+{
+  "final_candidate": "v8",
+  "final_performance": {
+    "accepted": 504,
+    "auditor_sha256": "6d83edf62540ee6213dc0c99badf898c284b353a378780a723636643c8f201cd",
+    "baseline_binary_checks": 378,
+    "baseline_source_files": 1097,
+    "binary_hashes": 17,
+    "jit_image_hashes": 756,
+    "kernel_input_hashes": 15,
+    "phase": "full-v8",
+    "recomputed_peaks": 504,
+    "samples": 504,
+    "source_hashes": 540
+  },
+  "functional_sessions": [
+    {
+      "completed": 160000,
+      "drained": true,
+      "error": null,
+      "group": "pilot-v1-functional-early",
+      "jit_bodies": 79978,
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      },
+      "session": "pilot-v1-functional-early/c01-t16-r00-direct-kdlock-adaptive-owned-v1-cabi4-linux-local-reuse32-adaptive-queue/session.json",
+      "status": "OK",
+      "threads": 16
+    },
+    {
+      "completed": 160000,
+      "drained": true,
+      "error": null,
+      "group": "pilot-v1-functional-nested",
+      "jit_bodies": 149392,
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      },
+      "session": "pilot-v1-functional-nested/c01-t16-r00-direct-kdlock-adaptive-owned-v1-cabi4-linux-local-reuse32-adaptive-queue/session.json",
+      "status": "OK",
+      "threads": 16
+    },
+    {
+      "completed": null,
+      "drained": false,
+      "error": "command exited 1: [PosixPath('/root/host_fs/kdlock/bench/spin_cacheline/client'), '--layout', '--lock-kind', 'mutex']; see /root/kdlock-evidence/10.176.26.71/bench/mutex-adaptive-20261016T075356Z/pilot-v3b-functional-nested/c01-t16-r00-direct-kdlock-adaptive-owned-v1-cabi4-linux-local-reuse32-adaptive-queue/layout.json",
+      "group": "pilot-v3b-functional-nested",
+      "jit_bodies": null,
+      "retired": null,
+      "session": "pilot-v3b-functional-nested/c01-t16-r00-direct-kdlock-adaptive-owned-v1-cabi4-linux-local-reuse32-adaptive-queue/session.json",
+      "status": "PREPARATION_FAILED",
+      "threads": 16
+    },
+    {
+      "completed": 160000,
+      "drained": true,
+      "error": null,
+      "group": "pilot-v3c-functional-early",
+      "jit_bodies": 79364,
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      },
+      "session": "pilot-v3c-functional-early/c01-t16-r00-direct-kdlock-adaptive-owned-v1-cabi4-linux-local-reuse32-adaptive-queue/session.json",
+      "status": "OK",
+      "threads": 16
+    },
+    {
+      "completed": 160000,
+      "drained": true,
+      "error": null,
+      "group": "pilot-v3c-functional-nested",
+      "jit_bodies": 153290,
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      },
+      "session": "pilot-v3c-functional-nested/c01-t16-r00-direct-kdlock-adaptive-owned-v1-cabi4-linux-local-reuse32-adaptive-queue/session.json",
+      "status": "OK",
+      "threads": 16
+    },
+    {
+      "completed": 160000,
+      "drained": true,
+      "error": null,
+      "group": "pilot-v4-functional-early",
+      "jit_bodies": 74197,
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      },
+      "session": "pilot-v4-functional-early/c01-t16-r00-direct-kdlock-adaptive-owned-v1-cabi4-linux-local-reuse32-adaptive-queue/session.json",
+      "status": "OK",
+      "threads": 16
+    },
+    {
+      "completed": 160000,
+      "drained": true,
+      "error": null,
+      "group": "pilot-v4-functional-nested",
+      "jit_bodies": 156370,
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      },
+      "session": "pilot-v4-functional-nested/c01-t16-r00-direct-kdlock-adaptive-owned-v1-cabi4-linux-local-reuse32-adaptive-queue/session.json",
+      "status": "OK",
+      "threads": 16
+    },
+    {
+      "completed": 160000,
+      "drained": true,
+      "error": null,
+      "group": "pilot-v5-functional-early",
+      "jit_bodies": 74641,
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      },
+      "session": "pilot-v5-functional-early/c01-t16-r00-direct-kdlock-adaptive-owned-v1-cabi4-linux-local-reuse32-adaptive-queue/session.json",
+      "status": "OK",
+      "threads": 16
+    },
+    {
+      "completed": 160000,
+      "drained": true,
+      "error": null,
+      "group": "pilot-v5-functional-nested",
+      "jit_bodies": 159173,
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      },
+      "session": "pilot-v5-functional-nested/c01-t16-r00-direct-kdlock-adaptive-owned-v1-cabi4-linux-local-reuse32-adaptive-queue/session.json",
+      "status": "OK",
+      "threads": 16
+    },
+    {
+      "completed": null,
+      "drained": false,
+      "error": "PID 1136447 timed out: [PosixPath('/root/host_fs/kdlock/bench/spin_cacheline/client'), '--cachelines', 1, '--cpus', '0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47', '--iterations', 48000, '--lock-kind', 'mutex']; no cleanup attempted",
+      "group": "pilot-v6-functional-early",
+      "jit_bodies": null,
+      "retired": null,
+      "session": "pilot-v6-functional-early/c01-t48-r00-direct-kdlock-adaptive-owned-v1-cabi4-linux-local-reuse32-adaptive-queue/session.json",
+      "status": "TIMEOUT",
+      "threads": 48
+    },
+    {
+      "completed": 480000,
+      "drained": true,
+      "error": null,
+      "group": "pilot-v6-functional-nested",
+      "jit_bodies": 474302,
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      },
+      "session": "pilot-v6-functional-nested/c01-t48-r00-direct-kdlock-adaptive-owned-v1-cabi4-linux-local-reuse32-adaptive-queue/session.json",
+      "status": "OK",
+      "threads": 48
+    },
+    {
+      "completed": 160000,
+      "drained": true,
+      "error": null,
+      "group": "pilot-v7-functional-early",
+      "jit_bodies": 65412,
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      },
+      "session": "pilot-v7-functional-early/c01-t16-r00-direct-kdlock-adaptive-owned-v1-cabi4-linux-local-reuse32-adaptive-queue/session.json",
+      "status": "OK",
+      "threads": 16
+    },
+    {
+      "completed": 160000,
+      "drained": true,
+      "error": null,
+      "group": "pilot-v7-functional-nested",
+      "jit_bodies": 111412,
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      },
+      "session": "pilot-v7-functional-nested/c01-t16-r00-direct-kdlock-adaptive-owned-v1-cabi4-linux-local-reuse32-adaptive-queue/session.json",
+      "status": "OK",
+      "threads": 16
+    },
+    {
+      "completed": 160000,
+      "drained": true,
+      "error": null,
+      "group": "pilot-v8-functional-early",
+      "jit_bodies": 77610,
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      },
+      "session": "pilot-v8-functional-early/c01-t16-r00-direct-kdlock-adaptive-owned-v1-cabi4-linux-local-reuse32-adaptive-queue/session.json",
+      "status": "OK",
+      "threads": 16
+    },
+    {
+      "completed": 160000,
+      "drained": true,
+      "error": null,
+      "group": "pilot-v8-functional-nested",
+      "jit_bodies": 151492,
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      },
+      "session": "pilot-v8-functional-nested/c01-t16-r00-direct-kdlock-adaptive-owned-v1-cabi4-linux-local-reuse32-adaptive-queue/session.json",
+      "status": "OK",
+      "threads": 16
+    },
+    {
+      "completed": 160000,
+      "drained": true,
+      "group": "final-abi2-nested",
+      "jit_bodies": 149889,
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      },
+      "session": "validation/final-abi2-nested/c01-t16-r00-direct-kdlock-adaptive-owned-v1-capture-first/session.json",
+      "status": "OK",
+      "threads": 16
+    }
+  ],
+  "host_consistency": {
+    "exact_vcpu_threads_and_pins_unchanged": true,
+    "frequency_policy_unchanged": true,
+    "note": "Initial offline equality assertion included transient QEMU worker IDs and failed. IDs/counts changed; all service threads retained CPU 63 affinity. No measured input or sample was changed.",
+    "passed": true,
+    "qemu_pid_and_arguments_unchanged": true,
+    "service_thread_affinity": [
+      63
+    ],
+    "service_threads_after": 52,
+    "service_threads_before": 29
+  },
+  "logs": [
+    {
+      "bytes": 298,
+      "path": "validation/baseline-daemon.log",
+      "sha256": "0cf59b9ede3951161772645875f7f5211702c9dc66305fec3b6cded18d28ebf4"
+    },
+    {
+      "bytes": 12681,
+      "path": "validation/baseline-provider.log",
+      "sha256": "52ff2515a4fb7eb7ca66812cb468c2b8825ae337d5cec5f0431401bbcea69fb9"
+    },
+    {
+      "bytes": 1190,
+      "path": "validation/client-v3c.log",
+      "sha256": "1308466341cbb7b5be9960ed2d96b3791dcf36849e3b51c30845b7251f243306"
+    },
+    {
+      "bytes": 5985,
+      "path": "validation/final-00.log",
+      "sha256": "3322ec5f5e21d86c58f74f266b1eae18cfc07b61a76277433fa17c2560321889"
+    },
+    {
+      "bytes": 74,
+      "path": "validation/final-01.log",
+      "sha256": "3b9f7393fc256cd95fed0368f3fb2d39b1a079801e9f1eb3d05f387ed3b1aab1"
+    },
+    {
+      "bytes": 116,
+      "path": "validation/final-02.log",
+      "sha256": "3b295d0816bb245234320335c19ee78fc6d448724d8e7138884de822927435c7"
+    },
+    {
+      "bytes": 5961,
+      "path": "validation/unit-00.log",
+      "sha256": "df4ad7606c25b06a1f5c29845d998f23be3e22172c1bb5f7e5c9a9ea334a3f98"
+    },
+    {
+      "bytes": 1745,
+      "path": "validation/unit-01.log",
+      "sha256": "32fa1c6e422eb1a8ce76bb262f1441673eba5eb3c1fc30c976df3a2bf3d08ad2"
+    },
+    {
+      "bytes": 959,
+      "path": "validation/unit-02.log",
+      "sha256": "dcdb7fe72bbe925dac6c489ae5ea6f2545471a55850103210044dd61669e914c"
+    },
+    {
+      "bytes": 2325,
+      "path": "validation/unit-03.log",
+      "sha256": "cae8deb2c73c5a6edfb97a550d4e3ce9d5eee47c7afd788176a17f9990f3a03f"
+    },
+    {
+      "bytes": 9824,
+      "path": "validation/unit-04.log",
+      "sha256": "609a75b2ecd996755730f18ee534db4457436b3d90e211077944722be4880bde"
+    },
+    {
+      "bytes": 178,
+      "path": "validation/unit-05.log",
+      "sha256": "891b8706e5d204908c5024255ef72609e96aca081c72f69b57f7d23bef56cd81"
+    },
+    {
+      "bytes": 105,
+      "path": "validation/unit-06.log",
+      "sha256": "21c7e48d0b1ec908feef784bbce1fa55f2c9a7acf76382fa7578754a78bd1ed8"
+    },
+    {
+      "bytes": 105,
+      "path": "validation/unit-07.log",
+      "sha256": "670a39115e7523a8984e4842e16547cb2094b03fad392b037b4b9dc8b2656e62"
+    },
+    {
+      "bytes": 2461,
+      "path": "validation/unit-retry-00.log",
+      "sha256": "c1da81c14b64b2115dc3f17469f31c8c23af8f854e94a6087732db8fdcd338dc"
+    },
+    {
+      "bytes": 959,
+      "path": "validation/unit-v2-00.log",
+      "sha256": "dcdb7fe72bbe925dac6c489ae5ea6f2545471a55850103210044dd61669e914c"
+    },
+    {
+      "bytes": 1891,
+      "path": "validation/unit-v2-01.log",
+      "sha256": "156ad796e1da6836755bbf78332ed306fd4bb668e24824f15f02d490bcf600a5"
+    },
+    {
+      "bytes": 178,
+      "path": "validation/unit-v2-02.log",
+      "sha256": "34d77c500c521f4fad6590234ce6ce95c5ca2018e60680714ea08a18ebbbbc00"
+    },
+    {
+      "bytes": 105,
+      "path": "validation/unit-v2-03.log",
+      "sha256": "21c7e48d0b1ec908feef784bbce1fa55f2c9a7acf76382fa7578754a78bd1ed8"
+    },
+    {
+      "bytes": 1376,
+      "path": "validation/unit-v3-00.log",
+      "sha256": "fea4a28d2625d440c984370d0c194c771c92dfe81e0c94d65dd6119fc3e82fea"
+    },
+    {
+      "bytes": 2458,
+      "path": "validation/unit-v3-01.log",
+      "sha256": "99d2ff8f51fbf991ded7d1a33ea846a38908f21c3dfc05abd19e8be2b27ed9ee"
+    },
+    {
+      "bytes": 641,
+      "path": "validation/unit-v3-02.log",
+      "sha256": "83f8b846b027d30d7158b2684e8b049a75526eccfc416d9d415862631a3fa8c4"
+    },
+    {
+      "bytes": 178,
+      "path": "validation/unit-v3-03.log",
+      "sha256": "c46ff4acbefdbab9ff6ba33b85396d6291009fc717dc045df43cebafe4dc40e5"
+    },
+    {
+      "bytes": 105,
+      "path": "validation/unit-v3-04.log",
+      "sha256": "21c7e48d0b1ec908feef784bbce1fa55f2c9a7acf76382fa7578754a78bd1ed8"
+    },
+    {
+      "bytes": 105,
+      "path": "validation/unit-v3-05.log",
+      "sha256": "670a39115e7523a8984e4842e16547cb2094b03fad392b037b4b9dc8b2656e62"
+    },
+    {
+      "bytes": 1376,
+      "path": "validation/unit-v4-00.log",
+      "sha256": "fea4a28d2625d440c984370d0c194c771c92dfe81e0c94d65dd6119fc3e82fea"
+    },
+    {
+      "bytes": 2458,
+      "path": "validation/unit-v4-01.log",
+      "sha256": "99d2ff8f51fbf991ded7d1a33ea846a38908f21c3dfc05abd19e8be2b27ed9ee"
+    },
+    {
+      "bytes": 2325,
+      "path": "validation/unit-v4-02.log",
+      "sha256": "f8d19a8289335a710fec52dae1dfb542d8d28bb548f662e3d28650e49bd4193f"
+    },
+    {
+      "bytes": 958,
+      "path": "validation/unit-v4-03.log",
+      "sha256": "09b883c7e7df6b0a1151b2c7c5f86be10ac4e36ca07242a980b3dccaf0ee6f7e"
+    },
+    {
+      "bytes": 178,
+      "path": "validation/unit-v4-04.log",
+      "sha256": "c46ff4acbefdbab9ff6ba33b85396d6291009fc717dc045df43cebafe4dc40e5"
+    },
+    {
+      "bytes": 105,
+      "path": "validation/unit-v4-05.log",
+      "sha256": "21c7e48d0b1ec908feef784bbce1fa55f2c9a7acf76382fa7578754a78bd1ed8"
+    },
+    {
+      "bytes": 1376,
+      "path": "validation/unit-v5-00.log",
+      "sha256": "fea4a28d2625d440c984370d0c194c771c92dfe81e0c94d65dd6119fc3e82fea"
+    },
+    {
+      "bytes": 641,
+      "path": "validation/unit-v5-01.log",
+      "sha256": "83f8b846b027d30d7158b2684e8b049a75526eccfc416d9d415862631a3fa8c4"
+    },
+    {
+      "bytes": 2458,
+      "path": "validation/unit-v5-02.log",
+      "sha256": "99d2ff8f51fbf991ded7d1a33ea846a38908f21c3dfc05abd19e8be2b27ed9ee"
+    },
+    {
+      "bytes": 2325,
+      "path": "validation/unit-v5-03.log",
+      "sha256": "740da45355fae98e916fc17ac59dbb1f908eb93ab6fb3b45b3a74ae6a01953bc"
+    },
+    {
+      "bytes": 958,
+      "path": "validation/unit-v5-04.log",
+      "sha256": "09b883c7e7df6b0a1151b2c7c5f86be10ac4e36ca07242a980b3dccaf0ee6f7e"
+    },
+    {
+      "bytes": 178,
+      "path": "validation/unit-v5-05.log",
+      "sha256": "616947e51af3fad3057323f4d5dacfd48c7faa32289347624be3965f3704a0cb"
+    },
+    {
+      "bytes": 105,
+      "path": "validation/unit-v5-06.log",
+      "sha256": "21c7e48d0b1ec908feef784bbce1fa55f2c9a7acf76382fa7578754a78bd1ed8"
+    },
+    {
+      "bytes": 752,
+      "path": "validation/unit-v6-00.log",
+      "sha256": "3d8d275d6064ebc130af9ea84afdefe160b47332f1ba1fa0f65b5bb455166da9"
+    },
+    {
+      "bytes": 178,
+      "path": "validation/unit-v6-01.log",
+      "sha256": "cfa50b563abcc4b9eb4cd8c241726e107220fd9394f98685badecfff8e2f137e"
+    },
+    {
+      "bytes": 105,
+      "path": "validation/unit-v6-02.log",
+      "sha256": "21c7e48d0b1ec908feef784bbce1fa55f2c9a7acf76382fa7578754a78bd1ed8"
+    },
+    {
+      "bytes": 1376,
+      "path": "validation/unit-v7-00.log",
+      "sha256": "fea4a28d2625d440c984370d0c194c771c92dfe81e0c94d65dd6119fc3e82fea"
+    },
+    {
+      "bytes": 2325,
+      "path": "validation/unit-v7-01.log",
+      "sha256": "1fc7618fccb765009e108fb53cdac88ede3553aa9c3bc4316a36060a86df3524"
+    },
+    {
+      "bytes": 752,
+      "path": "validation/unit-v7-02.log",
+      "sha256": "3d8d275d6064ebc130af9ea84afdefe160b47332f1ba1fa0f65b5bb455166da9"
+    },
+    {
+      "bytes": 178,
+      "path": "validation/unit-v7-03.log",
+      "sha256": "34d77c500c521f4fad6590234ce6ce95c5ca2018e60680714ea08a18ebbbbc00"
+    },
+    {
+      "bytes": 105,
+      "path": "validation/unit-v7-04.log",
+      "sha256": "21c7e48d0b1ec908feef784bbce1fa55f2c9a7acf76382fa7578754a78bd1ed8"
+    },
+    {
+      "bytes": 1376,
+      "path": "validation/unit-v8-00.log",
+      "sha256": "fea4a28d2625d440c984370d0c194c771c92dfe81e0c94d65dd6119fc3e82fea"
+    },
+    {
+      "bytes": 2325,
+      "path": "validation/unit-v8-01.log",
+      "sha256": "e4b528fad7beaa8ef16c7f95e2b327ac8c41ff0346eba28d65d320f6759a307f"
+    },
+    {
+      "bytes": 752,
+      "path": "validation/unit-v8-02.log",
+      "sha256": "3d8d275d6064ebc130af9ea84afdefe160b47332f1ba1fa0f65b5bb455166da9"
+    },
+    {
+      "bytes": 178,
+      "path": "validation/unit-v8-03.log",
+      "sha256": "eaacbf764ef39f0a2751596f686e9d65538a3c0706fc10b67cc27dba83bd6d29"
+    },
+    {
+      "bytes": 105,
+      "path": "validation/unit-v8-04.log",
+      "sha256": "21c7e48d0b1ec908feef784bbce1fa55f2c9a7acf76382fa7578754a78bd1ed8"
+    }
+  ],
+  "preexisting_userspace_mutation_traps": [
+    "[97546.271290] traps: full-retire-ide[1087069] general protection fault ip:5580ef8b3da4 sp:7ffda23d4f70 error:0 in full-retire-idempotent[5580ef8b3000+3000]"
+  ],
+  "retained_failure_receipts": {
+    "pilot-v3b-layout-drain.json": {
+      "idle": true,
+      "modules_unloaded": true,
+      "no_new_kernel_fault": true,
+      "note": "First cleanup command completed retirement/unload, then failed its dmesg-prefix assertion. This independent final scan verifies idle and absence of new faults; no ioctl was bypassed.",
+      "prior_drain_assertions_passed": [
+        "zero payload counts and active workers",
+        "SC_WORKERS_DRAIN",
+        "zero frames/writers",
+        "RETIRE returned state=2 modules=frames=writers=0",
+        "ordinary rmmod workload then provider"
+      ]
+    },
+    "pilot-v6-timeout-drain.json": {
+      "counts": [
+        2304000,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "idle": true,
+      "original_status": "TIMEOUT",
+      "provider_before": {
+        "frames": 0,
+        "modules": 1,
+        "state": 0,
+        "writers": 0
+      },
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      },
+      "session": "/root/kdlock-evidence/10.176.26.71/bench/mutex-adaptive-20261016T075356Z/pilot-v6-functional-early/c01-t48-r00-direct-kdlock-adaptive-owned-v1-cabi4-linux-local-reuse32-adaptive-queue/session.json",
+      "time": 1792145617.6495094,
+      "workers_drained": true
+    }
+  },
+  "scope": "Basic and directly affected checks; not the full project suite",
+  "unit_runs": {
+    "final-checks.json": [
+      {
+        "argv": [
+          "make",
+          "-C",
+          "tests/unit",
+          "run"
+        ],
+        "exit_code": 0,
+        "log": "/root/kdlock-evidence/10.176.26.71/bench/mutex-adaptive-20261016T075356Z/validation/final-00.log",
+        "seconds": 0.6693973541259766
+      },
+      {
+        "argv": [
+          "/root/kdlock-evidence/clobber-20260918/venv/bin/python3",
+          "tests/kernel/mutex/run_wait_selftest.py",
+          "--output",
+          "/root/kdlock-evidence/10.176.26.71/bench/mutex-adaptive-20261016T075356Z/validation/final-wait-probe"
+        ],
+        "exit_code": 0,
+        "log": "/root/kdlock-evidence/10.176.26.71/bench/mutex-adaptive-20261016T075356Z/validation/final-01.log",
+        "seconds": 15.65035080909729
+      },
+      {
+        "argv": [
+          "/root/kdlock-evidence/clobber-20260918/venv/bin/python3",
+          "bench/tclock_compare/run_mutex.py",
+          "--functional",
+          "--backends",
+          "kdlock",
+          "--cachelines",
+          "1",
+          "--threads",
+          "16",
+          "--cpus",
+          "0-59",
+          "--collector-cpu",
+          "63",
+          "--repeats",
+          "1",
+          "--iterations",
+          "10000",
+          "--scenario",
+          "nested",
+          "--owned-mutex-force-full",
+          "--output",
+          "/root/kdlock-evidence/10.176.26.71/bench/mutex-adaptive-20261016T075356Z/validation/final-abi2-nested"
+        ],
+        "exit_code": 0,
+        "log": "/root/kdlock-evidence/10.176.26.71/bench/mutex-adaptive-20261016T075356Z/validation/final-02.log",
+        "seconds": 22.031617403030396
+      }
+    ],
+    "unit-results.json": [
+      {
+        "argv": [
+          "make",
+          "-C",
+          "tests/unit",
+          "run"
+        ],
+        "exit_code": 0,
+        "log": "/root/kdlock-evidence/10.176.26.71/bench/mutex-adaptive-20261016T075356Z/validation/unit-00.log",
+        "seconds": 0.6189286708831787
+      },
+      {
+        "argv": [
+          "/root/kdlock-evidence/clobber-20260918/venv/bin/python3",
+          "tests/unit/run.py",
+          "mutex/test_owned_mutex_preflight.py"
+        ],
+        "exit_code": 1,
+        "log": "/root/kdlock-evidence/10.176.26.71/bench/mutex-adaptive-20261016T075356Z/validation/unit-01.log",
+        "seconds": 1.02101731300354
+      },
+      {
+        "argv": [
+          "/root/kdlock-evidence/clobber-20260918/venv/bin/python3",
+          "tests/unit/run.py",
+          "mutex/test_owned_mutex_osq.py",
+          "--mutations"
+        ],
+        "exit_code": 0,
+        "log": "/root/kdlock-evidence/10.176.26.71/bench/mutex-adaptive-20261016T075356Z/validation/unit-02.log",
+        "seconds": 5.999597549438477
+      },
+      {
+        "argv": [
+          "/root/kdlock-evidence/clobber-20260918/venv/bin/python3",
+          "tests/unit/run.py",
+          "mutex/test_owned_mutex_cabi.py"
+        ],
+        "exit_code": 0,
+        "log": "/root/kdlock-evidence/10.176.26.71/bench/mutex-adaptive-20261016T075356Z/validation/unit-03.log",
+        "seconds": 1.0211982727050781
+      },
+      {
+        "argv": [
+          "/root/kdlock-evidence/clobber-20260918/venv/bin/python3",
+          "tests/unit/run.py",
+          "mutex/test_owned_mutex_outer_api.py"
+        ],
+        "exit_code": 0,
+        "log": "/root/kdlock-evidence/10.176.26.71/bench/mutex-adaptive-20261016T075356Z/validation/unit-04.log",
+        "seconds": 1.222238540649414
+      },
+      {
+        "argv": [
+          "/root/kdlock-evidence/clobber-20260918/venv/bin/python3",
+          "bench/tclock_compare/test_direct.py"
+        ],
+        "exit_code": 0,
+        "log": "/root/kdlock-evidence/10.176.26.71/bench/mutex-adaptive-20261016T075356Z/validation/unit-05.log",
+        "seconds": 0.4681210517883301
+      },
+      {
+        "argv": [
+          "/root/kdlock-evidence/clobber-20260918/venv/bin/python3",
+          "bench/real_api/test_plan.py"
+        ],
+        "exit_code": 0,
+        "log": "/root/kdlock-evidence/10.176.26.71/bench/mutex-adaptive-20261016T075356Z/validation/unit-06.log",
+        "seconds": 0.11641311645507812
+      },
+      {
+        "argv": [
+          "/root/kdlock-evidence/clobber-20260918/venv/bin/python3",
+          "bench/real_api/test_report.py"
+        ],
+        "exit_code": 0,
+        "log": "/root/kdlock-evidence/10.176.26.71/bench/mutex-adaptive-20261016T075356Z/validation/unit-07.log",
+        "seconds": 0.11615228652954102
+      }
+    ],
+    "unit-retry-results.json": [
+      {
+        "argv": [
+          "/root/kdlock-evidence/clobber-20260918/venv/bin/python3",
+          "tests/unit/run.py",
+          "mutex/test_owned_mutex_preflight.py"
+        ],
+        "exit_code": 0,
+        "log": "/root/kdlock-evidence/10.176.26.71/bench/mutex-adaptive-20261016T075356Z/validation/unit-retry-00.log",
+        "seconds": 22.39046859741211
+      }
+    ],
+    "unit-v2-results.json": [
+      {
+        "argv": [
+          "/root/kdlock-evidence/clobber-20260918/venv/bin/python3",
+          "tests/unit/run.py",
+          "mutex/test_owned_mutex_osq.py",
+          "--mutations"
+        ],
+        "exit_code": 0,
+        "log": "/root/kdlock-evidence/10.176.26.71/bench/mutex-adaptive-20261016T075356Z/validation/unit-v2-00.log",
+        "seconds": 5.9483802318573
+      },
+      {
+        "argv": [
+          "/root/kdlock-evidence/clobber-20260918/venv/bin/python3",
+          "tests/unit/run.py",
+          "mutex/test_owned_mutex_delegation.py",
+          "--mutations"
+        ],
+        "exit_code": 0,
+        "log": "/root/kdlock-evidence/10.176.26.71/bench/mutex-adaptive-20261016T075356Z/validation/unit-v2-01.log",
+        "seconds": 12.084334373474121
+      },
+      {
+        "argv": [
+          "/root/kdlock-evidence/clobber-20260918/venv/bin/python3",
+          "bench/tclock_compare/test_direct.py"
+        ],
+        "exit_code": 0,
+        "log": "/root/kdlock-evidence/10.176.26.71/bench/mutex-adaptive-20261016T075356Z/validation/unit-v2-02.log",
+        "seconds": 0.4178040027618408
+      },
+      {
+        "argv": [
+          "/root/kdlock-evidence/clobber-20260918/venv/bin/python3",
+          "bench/real_api/test_plan.py"
+        ],
+        "exit_code": 0,
+        "log": "/root/kdlock-evidence/10.176.26.71/bench/mutex-adaptive-20261016T075356Z/validation/unit-v2-03.log",
+        "seconds": 0.1160879135131836
+      }
+    ],
+    "unit-v3-results.json": [
+      {
+        "argv": [
+          "/root/kdlock-evidence/clobber-20260918/venv/bin/python3",
+          "tests/unit/run.py",
+          "mutex/test_owned_mutex_core.py"
+        ],
+        "exit_code": 0,
+        "log": "/root/kdlock-evidence/10.176.26.71/bench/mutex-adaptive-20261016T075356Z/validation/unit-v3-00.log",
+        "seconds": 15.344728469848633
+      },
+      {
+        "argv": [
+          "/root/kdlock-evidence/clobber-20260918/venv/bin/python3",
+          "tests/unit/run.py",
+          "mutex/test_owned_mutex_preflight.py"
+        ],
+        "exit_code": 0,
+        "log": "/root/kdlock-evidence/10.176.26.71/bench/mutex-adaptive-20261016T075356Z/validation/unit-v3-01.log",
+        "seconds": 22.484220504760742
+      },
+      {
+        "argv": [
+          "/root/kdlock-evidence/clobber-20260918/venv/bin/python3",
+          "tests/unit/run.py",
+          "mutex/test_owned_mutex_delegation.py"
+        ],
+        "exit_code": 0,
+        "log": "/root/kdlock-evidence/10.176.26.71/bench/mutex-adaptive-20261016T075356Z/validation/unit-v3-02.log",
+        "seconds": 0.5685243606567383
+      },
+      {
+        "argv": [
+          "/root/kdlock-evidence/clobber-20260918/venv/bin/python3",
+          "bench/tclock_compare/test_direct.py"
+        ],
+        "exit_code": 0,
+        "log": "/root/kdlock-evidence/10.176.26.71/bench/mutex-adaptive-20261016T075356Z/validation/unit-v3-03.log",
+        "seconds": 0.4172847270965576
+      },
+      {
+        "argv": [
+          "/root/kdlock-evidence/clobber-20260918/venv/bin/python3",
+          "bench/real_api/test_plan.py"
+        ],
+        "exit_code": 0,
+        "log": "/root/kdlock-evidence/10.176.26.71/bench/mutex-adaptive-20261016T075356Z/validation/unit-v3-04.log",
+        "seconds": 0.11610221862792969
+      },
+      {
+        "argv": [
+          "/root/kdlock-evidence/clobber-20260918/venv/bin/python3",
+          "bench/real_api/test_report.py"
+        ],
+        "exit_code": 0,
+        "log": "/root/kdlock-evidence/10.176.26.71/bench/mutex-adaptive-20261016T075356Z/validation/unit-v3-05.log",
+        "seconds": 0.11609292030334473
+      }
+    ],
+    "unit-v4-results.json": [
+      {
+        "argv": [
+          "/root/kdlock-evidence/clobber-20260918/venv/bin/python3",
+          "tests/unit/run.py",
+          "mutex/test_owned_mutex_core.py"
+        ],
+        "exit_code": 0,
+        "log": "/root/kdlock-evidence/10.176.26.71/bench/mutex-adaptive-20261016T075356Z/validation/unit-v4-00.log",
+        "seconds": 13.786150693893433
+      },
+      {
+        "argv": [
+          "/root/kdlock-evidence/clobber-20260918/venv/bin/python3",
+          "tests/unit/run.py",
+          "mutex/test_owned_mutex_preflight.py"
+        ],
+        "exit_code": 0,
+        "log": "/root/kdlock-evidence/10.176.26.71/bench/mutex-adaptive-20261016T075356Z/validation/unit-v4-01.log",
+        "seconds": 22.933534622192383
+      },
+      {
+        "argv": [
+          "/root/kdlock-evidence/clobber-20260918/venv/bin/python3",
+          "tests/unit/run.py",
+          "mutex/test_owned_mutex_cabi.py"
+        ],
+        "exit_code": 0,
+        "log": "/root/kdlock-evidence/10.176.26.71/bench/mutex-adaptive-20261016T075356Z/validation/unit-v4-02.log",
+        "seconds": 1.020592212677002
+      },
+      {
+        "argv": [
+          "/root/kdlock-evidence/clobber-20260918/venv/bin/python3",
+          "tests/unit/run.py",
+          "mutex/test_owned_mutex_osq.py",
+          "--mutations"
+        ],
+        "exit_code": 0,
+        "log": "/root/kdlock-evidence/10.176.26.71/bench/mutex-adaptive-20261016T075356Z/validation/unit-v4-03.log",
+        "seconds": 5.8973095417022705
+      },
+      {
+        "argv": [
+          "/root/kdlock-evidence/clobber-20260918/venv/bin/python3",
+          "bench/tclock_compare/test_direct.py"
+        ],
+        "exit_code": 0,
+        "log": "/root/kdlock-evidence/10.176.26.71/bench/mutex-adaptive-20261016T075356Z/validation/unit-v4-04.log",
+        "seconds": 0.41733646392822266
+      },
+      {
+        "argv": [
+          "/root/kdlock-evidence/clobber-20260918/venv/bin/python3",
+          "bench/real_api/test_plan.py"
+        ],
+        "exit_code": 0,
+        "log": "/root/kdlock-evidence/10.176.26.71/bench/mutex-adaptive-20261016T075356Z/validation/unit-v4-05.log",
+        "seconds": 0.11606335639953613
+      }
+    ],
+    "unit-v5-results.json": [
+      {
+        "argv": [
+          "/root/kdlock-evidence/clobber-20260918/venv/bin/python3",
+          "tests/unit/run.py",
+          "mutex/test_owned_mutex_core.py"
+        ],
+        "exit_code": 0,
+        "log": "/root/kdlock-evidence/10.176.26.71/bench/mutex-adaptive-20261016T075356Z/validation/unit-v5-00.log",
+        "seconds": 15.401569843292236
+      },
+      {
+        "argv": [
+          "/root/kdlock-evidence/clobber-20260918/venv/bin/python3",
+          "tests/unit/run.py",
+          "mutex/test_owned_mutex_delegation.py"
+        ],
+        "exit_code": 0,
+        "log": "/root/kdlock-evidence/10.176.26.71/bench/mutex-adaptive-20261016T075356Z/validation/unit-v5-01.log",
+        "seconds": 0.5681729316711426
+      },
+      {
+        "argv": [
+          "/root/kdlock-evidence/clobber-20260918/venv/bin/python3",
+          "tests/unit/run.py",
+          "mutex/test_owned_mutex_preflight.py"
+        ],
+        "exit_code": 0,
+        "log": "/root/kdlock-evidence/10.176.26.71/bench/mutex-adaptive-20261016T075356Z/validation/unit-v5-02.log",
+        "seconds": 23.044411182403564
+      },
+      {
+        "argv": [
+          "/root/kdlock-evidence/clobber-20260918/venv/bin/python3",
+          "tests/unit/run.py",
+          "mutex/test_owned_mutex_cabi.py"
+        ],
+        "exit_code": 0,
+        "log": "/root/kdlock-evidence/10.176.26.71/bench/mutex-adaptive-20261016T075356Z/validation/unit-v5-03.log",
+        "seconds": 1.0212316513061523
+      },
+      {
+        "argv": [
+          "/root/kdlock-evidence/clobber-20260918/venv/bin/python3",
+          "tests/unit/run.py",
+          "mutex/test_owned_mutex_osq.py",
+          "--mutations"
+        ],
+        "exit_code": 0,
+        "log": "/root/kdlock-evidence/10.176.26.71/bench/mutex-adaptive-20261016T075356Z/validation/unit-v5-04.log",
+        "seconds": 5.89884614944458
+      },
+      {
+        "argv": [
+          "/root/kdlock-evidence/clobber-20260918/venv/bin/python3",
+          "bench/tclock_compare/test_direct.py"
+        ],
+        "exit_code": 0,
+        "log": "/root/kdlock-evidence/10.176.26.71/bench/mutex-adaptive-20261016T075356Z/validation/unit-v5-05.log",
+        "seconds": 0.4176011085510254
+      },
+      {
+        "argv": [
+          "/root/kdlock-evidence/clobber-20260918/venv/bin/python3",
+          "bench/real_api/test_plan.py"
+        ],
+        "exit_code": 0,
+        "log": "/root/kdlock-evidence/10.176.26.71/bench/mutex-adaptive-20261016T075356Z/validation/unit-v5-06.log",
+        "seconds": 0.11600828170776367
+      }
+    ],
+    "unit-v6-results.json": [
+      {
+        "argv": [
+          "/root/kdlock-evidence/clobber-20260918/venv/bin/python3",
+          "tests/unit/run.py",
+          "mutex/test_owned_mutex_delegation.py"
+        ],
+        "exit_code": 0,
+        "log": "/root/kdlock-evidence/10.176.26.71/bench/mutex-adaptive-20261016T075356Z/validation/unit-v6-00.log",
+        "seconds": 0.6184654235839844
+      },
+      {
+        "argv": [
+          "/root/kdlock-evidence/clobber-20260918/venv/bin/python3",
+          "bench/tclock_compare/test_direct.py"
+        ],
+        "exit_code": 0,
+        "log": "/root/kdlock-evidence/10.176.26.71/bench/mutex-adaptive-20261016T075356Z/validation/unit-v6-01.log",
+        "seconds": 0.41754841804504395
+      },
+      {
+        "argv": [
+          "/root/kdlock-evidence/clobber-20260918/venv/bin/python3",
+          "bench/real_api/test_plan.py"
+        ],
+        "exit_code": 0,
+        "log": "/root/kdlock-evidence/10.176.26.71/bench/mutex-adaptive-20261016T075356Z/validation/unit-v6-02.log",
+        "seconds": 0.11606335639953613
+      }
+    ],
+    "unit-v7-results.json": [
+      {
+        "argv": [
+          "/root/kdlock-evidence/clobber-20260918/venv/bin/python3",
+          "tests/unit/run.py",
+          "mutex/test_owned_mutex_core.py"
+        ],
+        "exit_code": 0,
+        "log": "/root/kdlock-evidence/10.176.26.71/bench/mutex-adaptive-20261016T075356Z/validation/unit-v7-00.log",
+        "seconds": 13.688416957855225
+      },
+      {
+        "argv": [
+          "/root/kdlock-evidence/clobber-20260918/venv/bin/python3",
+          "tests/unit/run.py",
+          "mutex/test_owned_mutex_cabi.py"
+        ],
+        "exit_code": 0,
+        "log": "/root/kdlock-evidence/10.176.26.71/bench/mutex-adaptive-20261016T075356Z/validation/unit-v7-01.log",
+        "seconds": 1.0206010341644287
+      },
+      {
+        "argv": [
+          "/root/kdlock-evidence/clobber-20260918/venv/bin/python3",
+          "tests/unit/run.py",
+          "mutex/test_owned_mutex_delegation.py"
+        ],
+        "exit_code": 0,
+        "log": "/root/kdlock-evidence/10.176.26.71/bench/mutex-adaptive-20261016T075356Z/validation/unit-v7-02.log",
+        "seconds": 0.5683035850524902
+      },
+      {
+        "argv": [
+          "/root/kdlock-evidence/clobber-20260918/venv/bin/python3",
+          "bench/tclock_compare/test_direct.py"
+        ],
+        "exit_code": 0,
+        "log": "/root/kdlock-evidence/10.176.26.71/bench/mutex-adaptive-20261016T075356Z/validation/unit-v7-03.log",
+        "seconds": 0.41795802116394043
+      },
+      {
+        "argv": [
+          "/root/kdlock-evidence/clobber-20260918/venv/bin/python3",
+          "bench/real_api/test_plan.py"
+        ],
+        "exit_code": 0,
+        "log": "/root/kdlock-evidence/10.176.26.71/bench/mutex-adaptive-20261016T075356Z/validation/unit-v7-04.log",
+        "seconds": 0.11598038673400879
+      }
+    ],
+    "unit-v8-results.json": [
+      {
+        "argv": [
+          "/root/kdlock-evidence/clobber-20260918/venv/bin/python3",
+          "tests/unit/run.py",
+          "mutex/test_owned_mutex_core.py"
+        ],
+        "exit_code": 0,
+        "log": "/root/kdlock-evidence/10.176.26.71/bench/mutex-adaptive-20261016T075356Z/validation/unit-v8-00.log",
+        "seconds": 15.399693250656128
+      },
+      {
+        "argv": [
+          "/root/kdlock-evidence/clobber-20260918/venv/bin/python3",
+          "tests/unit/run.py",
+          "mutex/test_owned_mutex_cabi.py"
+        ],
+        "exit_code": 0,
+        "log": "/root/kdlock-evidence/10.176.26.71/bench/mutex-adaptive-20261016T075356Z/validation/unit-v8-01.log",
+        "seconds": 1.0713388919830322
+      },
+      {
+        "argv": [
+          "/root/kdlock-evidence/clobber-20260918/venv/bin/python3",
+          "tests/unit/run.py",
+          "mutex/test_owned_mutex_delegation.py"
+        ],
+        "exit_code": 0,
+        "log": "/root/kdlock-evidence/10.176.26.71/bench/mutex-adaptive-20261016T075356Z/validation/unit-v8-02.log",
+        "seconds": 0.6190447807312012
+      },
+      {
+        "argv": [
+          "/root/kdlock-evidence/clobber-20260918/venv/bin/python3",
+          "bench/tclock_compare/test_direct.py"
+        ],
+        "exit_code": 0,
+        "log": "/root/kdlock-evidence/10.176.26.71/bench/mutex-adaptive-20261016T075356Z/validation/unit-v8-03.log",
+        "seconds": 0.4176955223083496
+      },
+      {
+        "argv": [
+          "/root/kdlock-evidence/clobber-20260918/venv/bin/python3",
+          "bench/real_api/test_plan.py"
+        ],
+        "exit_code": 0,
+        "log": "/root/kdlock-evidence/10.176.26.71/bench/mutex-adaptive-20261016T075356Z/validation/unit-v8-04.log",
+        "seconds": 0.11608433723449707
+      }
+    ]
+  },
+  "wait_probe": {
+    "drained": true,
+    "passed": true,
+    "results": [
+      {
+        "drained": true,
+        "jit_bodies": 0,
+        "origin_claims": 0,
+        "owned_mutex_protocol": "linux_local_split_v1",
+        "owned_release_policy": "guarded_owner_release",
+        "pickup": true,
+        "queued_cooling": true,
+        "result_sleep": true,
+        "scheduled_while_claimed": null,
+        "spin_limit": 0
+      },
+      {
+        "drained": true,
+        "jit_bodies": 0,
+        "origin_claims": 0,
+        "owned_mutex_protocol": "linux_local_split_v1",
+        "owned_release_policy": "guarded_owner_release",
+        "pickup": true,
+        "queued_cooling": true,
+        "result_sleep": true,
+        "scheduled_while_claimed": null,
+        "spin_limit": 1024
+      },
+      {
+        "drained": true,
+        "jit_bodies": 0,
+        "origin_claims": 0,
+        "owned_mutex_protocol": "linux_local_split_v1",
+        "owned_release_policy": "guarded_owner_release",
+        "pickup": true,
+        "queued_cooling": true,
+        "result_sleep": true,
+        "scheduled_while_claimed": null,
+        "spin_limit": 4096
+      }
+    ]
+  }
+}

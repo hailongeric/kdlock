@@ -1,0 +1,48 @@
+# Development rules
+
+The maintained branch is `master`. Preserve the selected `d2a2304` KD-only mutex:
+KD physical exclusion with legacy queue/batching, ABI2, pinned published waiters,
+immutable mutex images and fail-closed instruction admission. Do not restore
+the rejected owned/adaptive protocol, Linux mutex backing, or parked producers.
+Ordinary API aliases use KD physical locking locally; clobber callers permit JIT.
+All users of an object must follow one protocol. Whole-kernel replacement,
+RT/ww_mutex and lockdep integration remain separately unvalidated.
+
+1. Read source and Git status before editing. Preserve unrelated work. Maintained
+   prose and comments use English. Explain protocol purpose and ordering.
+2. Source edits, Git, static inspection and read-only offline archive checks run
+   on `380G10`. All builds, unit tests, modules, daemons and timing run only in the
+   VM on `10.176.26.71`. Follow [VM operations](docs/operations/VM.md).
+3. Use basic plus directly affected checks. Full suites require an explicit user
+   request. Missing dependencies, skips and compile failures are not passes.
+4. Keep exact physical owners, acquisitions, source leases, unlock ACKs and frame
+   retirement. Approximate counters cannot replace ownership records. Never
+   weaken admission or remove probes to hide a reproduced failure.
+5. Share existing packet/frame storage with explicit lifetime transfer; prefer
+   preallocation. Avoid whole-packet copies, blanket clears or a global lock
+   added only to simplify lifetime accounting. Retain required capture/restore.
+6. Preserve the two-word wrapper ABI. Spin/rwlock ordinary pairs protect
+   preemption and IRQ/BH state. Explicit spin IRQ variants use native interfaces;
+   rwlock IRQ/BH variants are unsupported. Published mutex waiters poll pinned;
+   physical mutex owners/services can sleep. Oversubscription redesign is deferred.
+7. Do not modify, build, install or reboot the guest kernel by default. Captured
+   kernel experiments under `kernel_baseline/experiments/` are historical inputs.
+   Spin still requires spin-clobber-v1; KD mutex owns its clobber entry.
+8. Synchronize only while idle and never edit frozen running inputs. Confirm a
+   real recovery snapshot before live module/JIT work. Bound remote commands.
+   A timeout does not prove drain. Never force unload or clear `/root/host_fs`.
+9. Keep payloads in `workload_modules/`, runners in `bench/` or `tests/`, and
+   provider probes in `tests/kernel/`. Include private `.inc` files in snapshots.
+10. Keep one guide per responsibility. Current instructions belong in maintained
+    docs; historical protocols/results belong in history or fixed Git evidence.
+    Preserve captured hashes, numeric evidence, failures and topology identities.
+
+## Git and reporting
+
+Ongoing local commits and branch organization are authorized. Review staged
+changes, commit coherent work and report validation limits. Use a reviewed
+path-specific restore or revert for rollback, never reset unknown work.
+Keep rejected experiments and user WIP reachable through explicit archive refs.
+Do not claim a performance gain without measurements; do not pool source versions,
+topologies, call shells, workloads or instrumentation settings. A NORMAL image
+is publication evidence, not proof of a returned JIT body.

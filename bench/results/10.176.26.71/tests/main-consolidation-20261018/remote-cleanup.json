@@ -1,0 +1,1732 @@
+{
+  "host": {
+    "cleanup": {
+      "root": "/home/eric/vm/vm-shared/kdlock",
+      "deleted": 94,
+      "paths": [
+        {
+          "path": "bench/full_compare/README.md",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "6fc6422db32bb736793f3b929c8b911ca3fb664e1aeb0dd21cbc7715bfa5464b",
+          "known_revisions": [
+            "d2a2304"
+          ]
+        },
+        {
+          "path": "bench/full_compare/export.py",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "1b8301cb72c7f533a1fb9eccffe9fc8c2a06dd2d252949c83657621c8f20c7a5",
+          "known_revisions": [
+            "d2a2304"
+          ]
+        },
+        {
+          "path": "bench/full_compare/requirements.txt",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "6524d9f38752c1cac26ab8e13206c2d3f6ae35fe1a961d9707040181447daaf3",
+          "known_revisions": [
+            "d2a2304",
+            "2c88895",
+            "9a4bf2a",
+            "bc7efcf"
+          ]
+        },
+        {
+          "path": "docs/AGENTS.md",
+          "status": "PRESERVED_DIFFERENT_BYTES",
+          "sha256": "c6d8ed57cc7d45907076c18a196a523a6bc68a480f1b2b5bbbd1517b5396071f"
+        },
+        {
+          "path": "docs/design/legacy_mutex_compatibility.md",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "265d25fefd69f91ee66ba7e9fbcef470d472e0e8d1369adc9af94377c89451ec",
+          "known_revisions": [
+            "d2a2304"
+          ]
+        },
+        {
+          "path": "docs/design/protocol_simplification.md",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "0a9eae1a915fd228efe44fe4eceafb3d784da7291574f72ae9efde62a2ecae85",
+          "known_revisions": [
+            "d2a2304"
+          ]
+        },
+        {
+          "path": "kernel_experiments/README.md",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "f19649b08fbc99ce5c0c46979c62f02e464d1ea477578e069267b66c28da1edf",
+          "known_revisions": [
+            "d2a2304"
+          ]
+        },
+        {
+          "path": "kernel_experiments/mutex_clobber/README.md",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "a422a175636ea598fd0e7e4949b0a679048755f6c6fa5007810ce306b9cea20b",
+          "known_revisions": [
+            "d2a2304",
+            "2c88895"
+          ]
+        },
+        {
+          "path": "kernel_experiments/mutex_clobber/capture.py",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "d690d390c2a1feca60707aba9183bd78492ea3de6d54758602d3a639c1c1075a",
+          "known_revisions": [
+            "d2a2304",
+            "2c88895",
+            "9a4bf2a",
+            "bc7efcf"
+          ]
+        },
+        {
+          "path": "kernel_experiments/mutex_clobber/guest-kernel.patch",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "b9e7ca7952da456a317f0da8d449c84299569532b61ee392ecf68ca8519841f2",
+          "known_revisions": [
+            "d2a2304",
+            "2c88895",
+            "9a4bf2a",
+            "bc7efcf"
+          ]
+        },
+        {
+          "path": "kernel_experiments/spin_clobber/README.md",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "b97055fac4c363082020ecd8687c91faf582111a1be93816f4ac97ad1a3b938c",
+          "known_revisions": [
+            "d2a2304",
+            "2c88895"
+          ]
+        },
+        {
+          "path": "kernel_experiments/spin_clobber/capture.py",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "aac9410a0a6deb58aa88a9a7c9f40204783938a682fabb12c5f9488a14d31dcb",
+          "known_revisions": [
+            "d2a2304",
+            "2c88895",
+            "9a4bf2a",
+            "bc7efcf"
+          ]
+        },
+        {
+          "path": "kernel_experiments/spin_clobber/guest-kernel.patch",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "1fb26a7b66555edc4249503c69fc51745a96e6ffdcc0aeda9c6c1a6f3c7783b7",
+          "known_revisions": [
+            "d2a2304",
+            "2c88895",
+            "9a4bf2a",
+            "bc7efcf"
+          ]
+        },
+        {
+          "path": "kernel_experiments/spin_static/README.md",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "49822f1170437d47c399ff77c07becf95a39b4c347de3e12079b1fe7392aa2fa",
+          "known_revisions": [
+            "d2a2304",
+            "2c88895"
+          ]
+        },
+        {
+          "path": "kernel_experiments/spin_static/capture.py",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "21c98b1f52b05f329b0d54ace74303cfa4f58ae31c2b9b91c3409dbfde4a4d5c",
+          "known_revisions": [
+            "d2a2304",
+            "2c88895",
+            "9a4bf2a",
+            "bc7efcf"
+          ]
+        },
+        {
+          "path": "kernel_experiments/spin_static/guest-kernel.patch",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "e621077111e6c2d3483456d4e265f64ab09bf406cd3c328179dda40cfd71e62b",
+          "known_revisions": [
+            "d2a2304",
+            "2c88895",
+            "9a4bf2a",
+            "bc7efcf"
+          ]
+        },
+        {
+          "path": "tests/clients/mutex_signal_client.c",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "540452e7b80d0cf93bfa3ccf1dd3ec6c7199d208df91dce1a29d14c468e5459c",
+          "known_revisions": [
+            "d2a2304",
+            "2c88895"
+          ]
+        },
+        {
+          "path": "tests/kernel/mutex/mutex_shadow_trace.c",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "2ba39b3eb8c129e892c0969c1a3596bfd0e611810c90af21859a9cde36beeebc",
+          "known_revisions": [
+            "d2a2304",
+            "2c88895"
+          ]
+        },
+        {
+          "path": "tests/protocols/mutex_parallel_events.py",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "fb9094c6226e6c1ee6eea7f67eb920487bd5caac3892a076742d459db061a83f",
+          "known_revisions": [
+            "d2a2304",
+            "2c88895"
+          ]
+        },
+        {
+          "path": "tests/protocols/mutex_parallel_pools.py",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "66cbc0cbf6d2a444cf3bf7033e5d3274b3a991153a66bfc7bc3a6e4b402b7d12",
+          "known_revisions": [
+            "d2a2304",
+            "2c88895"
+          ]
+        },
+        {
+          "path": "tests/protocols/mutex_parallel_protocol.py",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "9c7f0f1d87471092514358b00611563d1472895f7b9278dd4078b4af96c35a5b",
+          "known_revisions": [
+            "d2a2304",
+            "2c88895"
+          ]
+        },
+        {
+          "path": "tests/protocols/mutex_parallel_signals.py",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "c5f719ba439d200b661688762b7af723ed6702a750a720a55ab55a51069230ea",
+          "known_revisions": [
+            "d2a2304",
+            "2c88895"
+          ]
+        },
+        {
+          "path": "tests/protocols/mutex_shadow_protocol.py",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "6e6be30fa55200859d64b8efe84a413e0471344402cd88cb10ab74e3ba3dfca3",
+          "known_revisions": [
+            "d2a2304",
+            "2c88895"
+          ]
+        },
+        {
+          "path": "tests/protocols/mutex_signal_protocol.py",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "ce0a498384516a97a4ff9668a52b5b8ba43635ca0f94654bc93bbc13ca5fa746",
+          "known_revisions": [
+            "d2a2304",
+            "2c88895"
+          ]
+        },
+        {
+          "path": "tests/protocols/mutex_stack_protocol.py",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "2b06197ffdfc6ebeff54c7a8035185672660b161580f4fba7283a8be4c001a8a",
+          "known_revisions": [
+            "d2a2304",
+            "2c88895"
+          ]
+        },
+        {
+          "path": "tests/protocols/native_waiter_signal_race.py",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "45016596805d2eee5075191a19dbe60c2dcc02ca27699aced5b181b90aeb25c5",
+          "known_revisions": [
+            "d2a2304",
+            "2c88895"
+          ]
+        },
+        {
+          "path": "tests/unit/mutex/mutex_parallel_client_fixture.c",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "2b798fb718d021ec5953b481663e1ba867cae1aa46f7f4badc1c890b62c9b808",
+          "known_revisions": [
+            "d2a2304",
+            "2c88895"
+          ]
+        },
+        {
+          "path": "tests/unit/mutex/parallel_fixtures.py",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "be8e4286b34f5c3d318251f1cae3a9df1d59be1cf040b68cad021e42bde21be0",
+          "known_revisions": [
+            "d2a2304",
+            "2c88895"
+          ]
+        },
+        {
+          "path": "tests/unit/mutex/parallel_pools_cases.py",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "ce2b881b60d2c12ab2d1321c37253770478c410b312823aafb1c132b34eb8812",
+          "known_revisions": [
+            "d2a2304",
+            "2c88895"
+          ]
+        },
+        {
+          "path": "tests/unit/mutex/parallel_signals_cases.py",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "b46da9ba0205c606b4f581334f7230834ecf30d7c217838a98699ebe7e562d59",
+          "known_revisions": [
+            "d2a2304",
+            "2c88895"
+          ]
+        },
+        {
+          "path": "tests/unit/mutex/test_mutex_parallel_protocol.py",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "7b72b212f0ec3652088a283124dec95b38b525fad6c4e7909da6bc249366ee73",
+          "known_revisions": [
+            "d2a2304",
+            "2c88895"
+          ]
+        },
+        {
+          "path": "tests/unit/mutex/test_mutex_signal_protocol.py",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "0525f9f6ac915512c043010bb3028bc8f821be1d85bef433221901309f541203",
+          "known_revisions": [
+            "d2a2304",
+            "2c88895"
+          ]
+        },
+        {
+          "path": "tests/unit/mutex/test_mutex_stack_protocol.py",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "65e3e3cd9bd018051e4fdf30ec938977be676218cf874249d4f6a6823b0f987f",
+          "known_revisions": [
+            "d2a2304",
+            "2c88895"
+          ]
+        },
+        {
+          "path": "tools/vm/resume_full_bench.py",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "3a0999b2525a6880b224fe721dab619f248ead2c23a8aae00d564f670f7c3ead",
+          "known_revisions": [
+            "d2a2304",
+            "2c88895",
+            "9a4bf2a",
+            "bc7efcf"
+          ]
+        },
+        {
+          "path": "tools/vm/run_full_bench.py",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "b54897a44d18d9947baa9efd466482a0de65424e19ade91ad5dbd23acea7b764",
+          "known_revisions": [
+            "d2a2304"
+          ]
+        },
+        {
+          "path": "tools/vm/test_resume_full_bench.py",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "5a9244e9185f8ed6964f2c84b867297ca501e280f39d65813422ea1557e5cf40",
+          "known_revisions": [
+            "d2a2304",
+            "2c88895",
+            "9a4bf2a",
+            "bc7efcf"
+          ]
+        },
+        {
+          "path": "bench/real_api/test_plan.py",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "007525fc09280b3e0bb10a160b806e03e878f03f1d88c1513d9e65259e9cf94e",
+          "known_revisions": [
+            "9a4bf2a",
+            "bc7efcf"
+          ]
+        },
+        {
+          "path": "bench/tclock_compare/mutex_local_study.py",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "f58e532f453a2efc4312d2c5c9016db14471b95f44d37dde3f5549daae40f396",
+          "known_revisions": [
+            "9a4bf2a",
+            "bc7efcf"
+          ]
+        },
+        {
+          "path": "bench/tclock_compare/mutex_study.py",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "11ae66390d70abec33cfb0ab446104c4de65ffe15da8e49435686aae53eaf6ae",
+          "known_revisions": [
+            "9a4bf2a",
+            "bc7efcf"
+          ]
+        },
+        {
+          "path": "bench/tclock_compare/owned_origin.py",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "b14e08386764a433c0951baeaf479425c7d0d24805c011148fc43b8aaddbf7ea",
+          "known_revisions": [
+            "9a4bf2a",
+            "bc7efcf"
+          ]
+        },
+        {
+          "path": "bench/tclock_compare/test_mutex_study.py",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "a3ffd04f612e8e009726427af324b8f60c69612ae912f6caf1c7ad64ac4a297b",
+          "known_revisions": [
+            "9a4bf2a",
+            "bc7efcf"
+          ]
+        },
+        {
+          "path": "bench/tclock_compare/test_owned_origin.py",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "9612c1b9fc987250170f7b36f2a3b07a3181c5fe9e9f90eefb336b676fd37131",
+          "known_revisions": [
+            "9a4bf2a",
+            "bc7efcf"
+          ]
+        },
+        {
+          "path": "disassem/origin_policy.py",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "acc77a1ac8fd1078a88bc192c8647f3c2871159c927bd5fa6e0441ccfa9766b1",
+          "known_revisions": [
+            "2c88895",
+            "9a4bf2a",
+            "bc7efcf"
+          ]
+        },
+        {
+          "path": "docs/design/rwsem_implementation.md",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "32d15d024facb8fdea1821a422ce86d4dd04790db060078f4d08119d7f3aa2ec",
+          "known_revisions": [
+            "2c88895"
+          ]
+        },
+        {
+          "path": "docs/git-branches-20261012.json",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "aacfd9e71b9bdbb8ea9bb56b25176d5af47ab0c167d2d849ffda7325d135ca8a",
+          "known_revisions": [
+            "2c88895",
+            "9a4bf2a",
+            "bc7efcf"
+          ]
+        },
+        {
+          "path": "docs/git-branches-20261014.json",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "2a5e953406cb69d3b3276a6d4636a55bff7cf95c688dca677b2fbc03a8dde9a9",
+          "known_revisions": [
+            "2c88895",
+            "9a4bf2a",
+            "bc7efcf"
+          ]
+        },
+        {
+          "path": "docs/git-branches-20261015.json",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "1197a4d6d3e046d1ebc0374309e50bfa29af828808eeb5a04eb4411b53989c6a",
+          "known_revisions": [
+            "2c88895",
+            "9a4bf2a",
+            "bc7efcf"
+          ]
+        },
+        {
+          "path": "docs/proc_mmap_source_audit.json",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "c338cc891a5b1fee953ae947c1cd9461f773015f81127f6b15773040ee388c79",
+          "known_revisions": [
+            "2c88895",
+            "9a4bf2a",
+            "bc7efcf"
+          ]
+        },
+        {
+          "path": "include/kd_mutex_legacy.h",
+          "status": "ABSENT"
+        },
+        {
+          "path": "include/kd_owned_mutex_cabi.h",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "84162f06261f25dea6fa13d98a0e242803c94fc9940180ac3b03c3617018887b",
+          "known_revisions": [
+            "2c88895",
+            "9a4bf2a",
+            "bc7efcf"
+          ]
+        },
+        {
+          "path": "include/kd_owned_mutex_direct.h",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "7e2ac60ef7b30d53fd4473005bc5a536471af79a88a09b9f69f121ea0e30b2b9",
+          "known_revisions": [
+            "2c88895",
+            "9a4bf2a",
+            "bc7efcf"
+          ]
+        },
+        {
+          "path": "include/kd_owned_mutex_internal.h",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "bd58c30c929139896a87ba831aebc1b3df155fe080decf65b7d27b2f48b5d3c2",
+          "known_revisions": [
+            "9a4bf2a",
+            "bc7efcf"
+          ]
+        },
+        {
+          "path": "include/kd_rwsem.h",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "1dde03aae1f8630b7cadbd89eda57b5ed323a96075c30cc3b040c74c5eda9de8",
+          "known_revisions": [
+            "2c88895"
+          ]
+        },
+        {
+          "path": "kernel_module/kd_rwsem.c",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "de04e0e5cb52d5504ee4cc72e7d5d96759f7d82bdeee6a43a9fc246b5fd3e5f9",
+          "known_revisions": [
+            "2c88895"
+          ]
+        },
+        {
+          "path": "kernel_module/lock/owned_mutex_calls.inc",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "9a700b0576af642b8ea42c68e6df98754c8da98e43015768f97b4c3850b34bf9",
+          "known_revisions": [
+            "bc7efcf"
+          ]
+        },
+        {
+          "path": "kernel_module/mutex/parking.inc",
+          "status": "ABSENT"
+        },
+        {
+          "path": "kernel_module/owned_mutex/admission.inc",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "1a368b7bedea977d127173acb81765f79f9af6aff2b6e6cb54beb29073b4e28c",
+          "known_revisions": [
+            "9a4bf2a",
+            "bc7efcf"
+          ]
+        },
+        {
+          "path": "kernel_module/owned_mutex/core.c",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "dbd244421dbe0618f99e5b5ab5a10af94fc03a16eae0d94269ff5df3a9f44d96",
+          "known_revisions": [
+            "bc7efcf"
+          ]
+        },
+        {
+          "path": "kernel_module/owned_mutex/delegation.c",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "7ec8a4348df5c4fc4c07589c3ca3329b6446ec2d49de9a99412a2f4277299b15",
+          "known_revisions": [
+            "9a4bf2a",
+            "bc7efcf"
+          ]
+        },
+        {
+          "path": "kernel_module/owned_mutex/entry.S",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "382e44bf74aa7ef62bde67e4e11518ca48a1cfa963ed9911d979b063dba126df",
+          "known_revisions": [
+            "bc7efcf"
+          ]
+        },
+        {
+          "path": "kernel_module/owned_mutex/linux-source.json",
+          "status": "PRESERVED_DIFFERENT_BYTES",
+          "sha256": "c1076592c02dd097ca389cf69b92bd2e9571816dd6229e28b54f4fca059b2efa"
+        },
+        {
+          "path": "kernel_module/owned_mutex/osq.c",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "5a381b947d024f7d12e36003d72cfcb6e3ac336cc426c1503c7a6582b07be6d5",
+          "known_revisions": [
+            "bc7efcf"
+          ]
+        },
+        {
+          "path": "kernel_module/owned_mutex/readiness.inc",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "1c47bb5e0466b43ea895aaa00e0f96f9302fc21d2c919b5eb9c068f078f85688",
+          "known_revisions": [
+            "bc7efcf"
+          ]
+        },
+        {
+          "path": "kernel_module/owned_mutex/selection.inc",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "b9743825fc00561e3e4d0e7ef766f04b186f22781b9f71054b9dd00b034eb889",
+          "known_revisions": [
+            "bc7efcf"
+          ]
+        },
+        {
+          "path": "tests/kernel/mutex/mutex_wait_selftest.c",
+          "status": "ABSENT"
+        },
+        {
+          "path": "tests/kernel/mutex/origin_claim_selftest.inc",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "51fbd61399204c139bc6ef65ef24d1e19d492eb30237645e9ab9c974b18d2473",
+          "known_revisions": [
+            "2c88895",
+            "9a4bf2a",
+            "bc7efcf"
+          ]
+        },
+        {
+          "path": "tests/kernel/mutex/origin_gs/Makefile",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "336c21fcb38a8c8d9ba0fb3d58816af25a71b70ac45a1713aeec89939bd3a803",
+          "known_revisions": [
+            "2c88895",
+            "9a4bf2a",
+            "bc7efcf"
+          ]
+        },
+        {
+          "path": "tests/kernel/mutex/origin_gs/audit.json",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "914d178223414c94a0c15f8a331eda05f66bfa6cba8571fa9d24f04189475d04",
+          "known_revisions": [
+            "2c88895",
+            "9a4bf2a",
+            "bc7efcf"
+          ]
+        },
+        {
+          "path": "tests/kernel/mutex/origin_gs/module.c",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "491a1a1b47ac357a24d4478a73cd75b63c1a2e69fa31b497fe7c26da88bb2f31",
+          "known_revisions": [
+            "2c88895",
+            "9a4bf2a",
+            "bc7efcf"
+          ]
+        },
+        {
+          "path": "tests/kernel/mutex/owned_wait_selftest.c",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "3edd5770aa475da182bb7ddc76ab5457d8bd54af8b4369516154a13ebf090766",
+          "known_revisions": [
+            "2c88895",
+            "9a4bf2a",
+            "bc7efcf"
+          ]
+        },
+        {
+          "path": "tests/kernel/mutex/profile/Makefile",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "7b97927f80e653d5d940041c269452239ba18993f93279e3f03bd9608faffda8",
+          "known_revisions": [
+            "2c88895",
+            "9a4bf2a",
+            "bc7efcf"
+          ]
+        },
+        {
+          "path": "tests/kernel/mutex/profile/kd_mutex_profile.c",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "d74d0d71c0d54926cd299820286e0e7a41dc4f60a71b77d680700ac805c0910f",
+          "known_revisions": [
+            "9a4bf2a",
+            "bc7efcf"
+          ]
+        },
+        {
+          "path": "tests/kernel/mutex/run_origin_gs.py",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "194064fdcd1b13eaedfcbef1efa05eee24bd951cb04b9f3bb55a5f7462e4d55a",
+          "known_revisions": [
+            "9a4bf2a",
+            "bc7efcf"
+          ]
+        },
+        {
+          "path": "tests/kernel/mutex/run_wait_selftest.py",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "fb4d92e3d51ff9c6177e6c2b213bafd41458a400caaf1750af0152b6e5b28897",
+          "known_revisions": [
+            "9a4bf2a",
+            "bc7efcf"
+          ]
+        },
+        {
+          "path": "tests/kernel/rwsem/Makefile",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "ff285be8138fb878862d270eef270c9aa835ac36886e821da33f40dacbf67931",
+          "known_revisions": [
+            "2c88895"
+          ]
+        },
+        {
+          "path": "tests/kernel/rwsem/README.md",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "e1d1d0d10f64ef02d94e97405c8e9c0b04ca8da1c574e93b6c9539ef1f3cf96b",
+          "known_revisions": [
+            "2c88895"
+          ]
+        },
+        {
+          "path": "tests/kernel/rwsem/module.c",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "a3478289982b74e48ff03559c7f68bcbeb875df6b37439a2cc3245b8a273fb6b",
+          "known_revisions": [
+            "2c88895"
+          ]
+        },
+        {
+          "path": "tests/kernel/rwsem/run.py",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "e62df3713c44cdd479b147dc9444a54d05e9ac2b6b3f67b67842c510b708b2b9",
+          "known_revisions": [
+            "2c88895"
+          ]
+        },
+        {
+          "path": "tests/unit/admission/test_origin_policy.py",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "3a8c7851e8d0d7580228c74bfb04396e7f1edf2d667952f0817242c57e44cc85",
+          "known_revisions": [
+            "2c88895",
+            "9a4bf2a",
+            "bc7efcf"
+          ]
+        },
+        {
+          "path": "tests/unit/execution/owned_images_fixture.c",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "659f04844d1f5a3710d496f54df8a405da6be9faa776f277d4733058a3e367dc",
+          "known_revisions": [
+            "2c88895",
+            "9a4bf2a",
+            "bc7efcf"
+          ]
+        },
+        {
+          "path": "tests/unit/execution/test_owned_images.py",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "837029beed165c1ea6a01ffe821054560181b91b0ca1b6cdf50dea1746e471ae",
+          "known_revisions": [
+            "2c88895",
+            "9a4bf2a",
+            "bc7efcf"
+          ]
+        },
+        {
+          "path": "tests/unit/mutex/mutex_drain_fixture.c",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "42c58cb63ae0dea518107021131f1094e3db517efe71aa3599e9950c8cca05e5",
+          "known_revisions": [
+            "2c88895",
+            "9a4bf2a",
+            "bc7efcf"
+          ]
+        },
+        {
+          "path": "tests/unit/mutex/mutex_parking_fixture.c",
+          "status": "ABSENT"
+        },
+        {
+          "path": "tests/unit/mutex/owned_mutex_cabi_fixture.c",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "2bfd9b674503f3a313c996d40616ce4793108639ed8d648027cef720a30f9ada",
+          "known_revisions": [
+            "9a4bf2a",
+            "bc7efcf"
+          ]
+        },
+        {
+          "path": "tests/unit/mutex/owned_mutex_core_fixture.c",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "8090f40ec68c57fbe168aea3081850f96e6206e66eb970219bbf7be594c60eb7",
+          "known_revisions": [
+            "9a4bf2a",
+            "bc7efcf"
+          ]
+        },
+        {
+          "path": "tests/unit/mutex/owned_mutex_osq_fixture.c",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "f86591d2256d6b8cbd0a1741b2c78d85b3680476e4263ccfaa901368f70eba96",
+          "known_revisions": [
+            "9a4bf2a",
+            "bc7efcf"
+          ]
+        },
+        {
+          "path": "tests/unit/mutex/owned_mutex_preflight_fixture.c",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "1eea523bbe0922b13a0d0e3396681b1b53a73f47948c59f5123c51a016f9f21c",
+          "known_revisions": [
+            "9a4bf2a",
+            "bc7efcf"
+          ]
+        },
+        {
+          "path": "tests/unit/mutex/test_mutex_drain.py",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "3a382735ba7bb8de7fc4096158de1c5bcafdd1b0db2cc4d1c78633b1eb5e98b8",
+          "known_revisions": [
+            "2c88895",
+            "9a4bf2a",
+            "bc7efcf"
+          ]
+        },
+        {
+          "path": "tests/unit/mutex/test_mutex_parking.py",
+          "status": "ABSENT"
+        },
+        {
+          "path": "tests/unit/mutex/test_owned_mutex_cabi.py",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "7ac1adacdaf0d4b9a89e6917d957eb48f96472e05040ed599bdf6093d7173b2c",
+          "known_revisions": [
+            "2c88895",
+            "9a4bf2a",
+            "bc7efcf"
+          ]
+        },
+        {
+          "path": "tests/unit/mutex/test_owned_mutex_core.py",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "3c7bcb9a86ee28048d1a45923c08d20e74e69a441a9d6c139c948b49582d069e",
+          "known_revisions": [
+            "2c88895",
+            "9a4bf2a",
+            "bc7efcf"
+          ]
+        },
+        {
+          "path": "tests/unit/mutex/test_owned_mutex_delegation.py",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "1f5dbfe1c2e3f6b0114743b46eafded0a5fcbbc7e921bba8d58738b83d2851ea",
+          "known_revisions": [
+            "9a4bf2a",
+            "bc7efcf"
+          ]
+        },
+        {
+          "path": "tests/unit/mutex/test_owned_mutex_osq.py",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "51036301318b8b21e8285cda0499d6ce9cfa65e629efaec4dd78dcc759c63f44",
+          "known_revisions": [
+            "9a4bf2a",
+            "bc7efcf"
+          ]
+        },
+        {
+          "path": "tests/unit/mutex/test_owned_mutex_outer_api.py",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "58ef5e259251f08e8ef1217f877f592d93c76ae3bbfe9b5bf47ea72ee928e6ff",
+          "known_revisions": [
+            "9a4bf2a",
+            "bc7efcf"
+          ]
+        },
+        {
+          "path": "tests/unit/mutex/test_owned_mutex_preflight.py",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "05587f61eae0ba2da2c577f6c0bf4d4541416e942133f158527a1e1738c2d1bd",
+          "known_revisions": [
+            "9a4bf2a",
+            "bc7efcf"
+          ]
+        },
+        {
+          "path": "tests/unit/mutex/test_owned_mutex_profile.py",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "e96d63ec15b67d89b2e5ad8ed24e5da605992959212786867525372d7753a5f0",
+          "known_revisions": [
+            "9a4bf2a",
+            "bc7efcf"
+          ]
+        },
+        {
+          "path": "tests/unit/mutex/test_owned_mutex_wait_clobber.py",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "df9e2900e1c331b3e551a18ee3eb9591bc36166e0b2d5dc100f27e0b198db2b2",
+          "known_revisions": [
+            "9a4bf2a",
+            "bc7efcf"
+          ]
+        },
+        {
+          "path": "tests/unit/mutex/test_owned_origin.py",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "9a8bcd79370eac2648b72a2f6185d02306908b0a53c3eeec9df470d99901b557",
+          "known_revisions": [
+            "2c88895",
+            "9a4bf2a",
+            "bc7efcf"
+          ]
+        },
+        {
+          "path": "workload_modules/rwlock_bench/direct_rwsem.h",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "740eb3ea51b6176c4e5114e7cbeeb4c98b9ef34c0881e0005c795b8e2a301b34",
+          "known_revisions": [
+            "2c88895"
+          ]
+        },
+        {
+          "path": "workload_modules/rwlock_bench/direct_spin.h",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "e4e790824db2e3f028c695a21f0747cbfa302b69ddaf75542812df02c84e3448",
+          "known_revisions": [
+            "2c88895"
+          ]
+        },
+        {
+          "path": "workload_modules/rwlock_bench/snapshot_payload.h",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "a79632441a9988304fcce62a57e93c1d2a8d447f2bb0ffcf2a4cea3b66b4e313",
+          "known_revisions": [
+            "2c88895"
+          ]
+        }
+      ],
+      "policy": "Remove only obsolete tracked paths whose complete bytes match preserved Git revisions; no evidence or unknown files removed."
+    },
+    "preserved": [
+      {
+        "source": "/home/eric/vm/vm-shared/kdlock/docs/AGENTS.md",
+        "backup": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/main-consolidation-20261018/obsolete-local/docs/AGENTS.md",
+        "sha256": "c6d8ed57cc7d45907076c18a196a523a6bc68a480f1b2b5bbbd1517b5396071f",
+        "status": "PRESERVED_OUTSIDE_ACTIVE_SOURCE"
+      },
+      {
+        "source": "/home/eric/vm/vm-shared/kdlock/kernel_module/owned_mutex/linux-source.json",
+        "backup": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/main-consolidation-20261018/obsolete-local/kernel_module/owned_mutex/linux-source.json",
+        "sha256": "c1076592c02dd097ca389cf69b92bd2e9571816dd6229e28b54f4fca059b2efa",
+        "status": "PRESERVED_OUTSIDE_ACTIVE_SOURCE"
+      }
+    ]
+  },
+  "guest": {
+    "cleanup": {
+      "root": "/root/host_fs/kdlock",
+      "deleted": 74,
+      "paths": [
+        {
+          "path": "bench/full_compare/README.md",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "6fc6422db32bb736793f3b929c8b911ca3fb664e1aeb0dd21cbc7715bfa5464b",
+          "known_revisions": [
+            "d2a2304"
+          ]
+        },
+        {
+          "path": "bench/full_compare/export.py",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "1b8301cb72c7f533a1fb9eccffe9fc8c2a06dd2d252949c83657621c8f20c7a5",
+          "known_revisions": [
+            "d2a2304"
+          ]
+        },
+        {
+          "path": "bench/full_compare/requirements.txt",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "6524d9f38752c1cac26ab8e13206c2d3f6ae35fe1a961d9707040181447daaf3",
+          "known_revisions": [
+            "d2a2304",
+            "2c88895",
+            "9a4bf2a",
+            "bc7efcf"
+          ]
+        },
+        {
+          "path": "docs/AGENTS.md",
+          "status": "PRESERVED_DIFFERENT_BYTES",
+          "sha256": "c6d8ed57cc7d45907076c18a196a523a6bc68a480f1b2b5bbbd1517b5396071f"
+        },
+        {
+          "path": "docs/design/legacy_mutex_compatibility.md",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "265d25fefd69f91ee66ba7e9fbcef470d472e0e8d1369adc9af94377c89451ec",
+          "known_revisions": [
+            "d2a2304"
+          ]
+        },
+        {
+          "path": "docs/design/protocol_simplification.md",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "0a9eae1a915fd228efe44fe4eceafb3d784da7291574f72ae9efde62a2ecae85",
+          "known_revisions": [
+            "d2a2304"
+          ]
+        },
+        {
+          "path": "kernel_experiments/README.md",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "f19649b08fbc99ce5c0c46979c62f02e464d1ea477578e069267b66c28da1edf",
+          "known_revisions": [
+            "d2a2304"
+          ]
+        },
+        {
+          "path": "kernel_experiments/mutex_clobber/README.md",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "a422a175636ea598fd0e7e4949b0a679048755f6c6fa5007810ce306b9cea20b",
+          "known_revisions": [
+            "d2a2304",
+            "2c88895"
+          ]
+        },
+        {
+          "path": "kernel_experiments/mutex_clobber/capture.py",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "d690d390c2a1feca60707aba9183bd78492ea3de6d54758602d3a639c1c1075a",
+          "known_revisions": [
+            "d2a2304",
+            "2c88895",
+            "9a4bf2a",
+            "bc7efcf"
+          ]
+        },
+        {
+          "path": "kernel_experiments/mutex_clobber/guest-kernel.patch",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "b9e7ca7952da456a317f0da8d449c84299569532b61ee392ecf68ca8519841f2",
+          "known_revisions": [
+            "d2a2304",
+            "2c88895",
+            "9a4bf2a",
+            "bc7efcf"
+          ]
+        },
+        {
+          "path": "kernel_experiments/spin_clobber/README.md",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "b97055fac4c363082020ecd8687c91faf582111a1be93816f4ac97ad1a3b938c",
+          "known_revisions": [
+            "d2a2304",
+            "2c88895"
+          ]
+        },
+        {
+          "path": "kernel_experiments/spin_clobber/capture.py",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "aac9410a0a6deb58aa88a9a7c9f40204783938a682fabb12c5f9488a14d31dcb",
+          "known_revisions": [
+            "d2a2304",
+            "2c88895",
+            "9a4bf2a",
+            "bc7efcf"
+          ]
+        },
+        {
+          "path": "kernel_experiments/spin_clobber/guest-kernel.patch",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "1fb26a7b66555edc4249503c69fc51745a96e6ffdcc0aeda9c6c1a6f3c7783b7",
+          "known_revisions": [
+            "d2a2304",
+            "2c88895",
+            "9a4bf2a",
+            "bc7efcf"
+          ]
+        },
+        {
+          "path": "kernel_experiments/spin_static/README.md",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "49822f1170437d47c399ff77c07becf95a39b4c347de3e12079b1fe7392aa2fa",
+          "known_revisions": [
+            "d2a2304",
+            "2c88895"
+          ]
+        },
+        {
+          "path": "kernel_experiments/spin_static/capture.py",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "21c98b1f52b05f329b0d54ace74303cfa4f58ae31c2b9b91c3409dbfde4a4d5c",
+          "known_revisions": [
+            "d2a2304",
+            "2c88895",
+            "9a4bf2a",
+            "bc7efcf"
+          ]
+        },
+        {
+          "path": "kernel_experiments/spin_static/guest-kernel.patch",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "e621077111e6c2d3483456d4e265f64ab09bf406cd3c328179dda40cfd71e62b",
+          "known_revisions": [
+            "d2a2304",
+            "2c88895",
+            "9a4bf2a",
+            "bc7efcf"
+          ]
+        },
+        {
+          "path": "tests/clients/mutex_signal_client.c",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "540452e7b80d0cf93bfa3ccf1dd3ec6c7199d208df91dce1a29d14c468e5459c",
+          "known_revisions": [
+            "d2a2304",
+            "2c88895"
+          ]
+        },
+        {
+          "path": "tests/kernel/mutex/mutex_shadow_trace.c",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "2ba39b3eb8c129e892c0969c1a3596bfd0e611810c90af21859a9cde36beeebc",
+          "known_revisions": [
+            "d2a2304",
+            "2c88895"
+          ]
+        },
+        {
+          "path": "tests/protocols/mutex_parallel_events.py",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "fb9094c6226e6c1ee6eea7f67eb920487bd5caac3892a076742d459db061a83f",
+          "known_revisions": [
+            "d2a2304",
+            "2c88895"
+          ]
+        },
+        {
+          "path": "tests/protocols/mutex_parallel_pools.py",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "66cbc0cbf6d2a444cf3bf7033e5d3274b3a991153a66bfc7bc3a6e4b402b7d12",
+          "known_revisions": [
+            "d2a2304",
+            "2c88895"
+          ]
+        },
+        {
+          "path": "tests/protocols/mutex_parallel_protocol.py",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "9c7f0f1d87471092514358b00611563d1472895f7b9278dd4078b4af96c35a5b",
+          "known_revisions": [
+            "d2a2304",
+            "2c88895"
+          ]
+        },
+        {
+          "path": "tests/protocols/mutex_parallel_signals.py",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "c5f719ba439d200b661688762b7af723ed6702a750a720a55ab55a51069230ea",
+          "known_revisions": [
+            "d2a2304",
+            "2c88895"
+          ]
+        },
+        {
+          "path": "tests/protocols/mutex_shadow_protocol.py",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "6e6be30fa55200859d64b8efe84a413e0471344402cd88cb10ab74e3ba3dfca3",
+          "known_revisions": [
+            "d2a2304",
+            "2c88895"
+          ]
+        },
+        {
+          "path": "tests/protocols/mutex_signal_protocol.py",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "ce0a498384516a97a4ff9668a52b5b8ba43635ca0f94654bc93bbc13ca5fa746",
+          "known_revisions": [
+            "d2a2304",
+            "2c88895"
+          ]
+        },
+        {
+          "path": "tests/protocols/mutex_stack_protocol.py",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "2b06197ffdfc6ebeff54c7a8035185672660b161580f4fba7283a8be4c001a8a",
+          "known_revisions": [
+            "d2a2304",
+            "2c88895"
+          ]
+        },
+        {
+          "path": "tests/protocols/native_waiter_signal_race.py",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "45016596805d2eee5075191a19dbe60c2dcc02ca27699aced5b181b90aeb25c5",
+          "known_revisions": [
+            "d2a2304",
+            "2c88895"
+          ]
+        },
+        {
+          "path": "tests/unit/mutex/mutex_parallel_client_fixture.c",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "2b798fb718d021ec5953b481663e1ba867cae1aa46f7f4badc1c890b62c9b808",
+          "known_revisions": [
+            "d2a2304",
+            "2c88895"
+          ]
+        },
+        {
+          "path": "tests/unit/mutex/parallel_fixtures.py",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "be8e4286b34f5c3d318251f1cae3a9df1d59be1cf040b68cad021e42bde21be0",
+          "known_revisions": [
+            "d2a2304",
+            "2c88895"
+          ]
+        },
+        {
+          "path": "tests/unit/mutex/parallel_pools_cases.py",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "ce2b881b60d2c12ab2d1321c37253770478c410b312823aafb1c132b34eb8812",
+          "known_revisions": [
+            "d2a2304",
+            "2c88895"
+          ]
+        },
+        {
+          "path": "tests/unit/mutex/parallel_signals_cases.py",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "b46da9ba0205c606b4f581334f7230834ecf30d7c217838a98699ebe7e562d59",
+          "known_revisions": [
+            "d2a2304",
+            "2c88895"
+          ]
+        },
+        {
+          "path": "tests/unit/mutex/test_mutex_parallel_protocol.py",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "7b72b212f0ec3652088a283124dec95b38b525fad6c4e7909da6bc249366ee73",
+          "known_revisions": [
+            "d2a2304",
+            "2c88895"
+          ]
+        },
+        {
+          "path": "tests/unit/mutex/test_mutex_signal_protocol.py",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "0525f9f6ac915512c043010bb3028bc8f821be1d85bef433221901309f541203",
+          "known_revisions": [
+            "d2a2304",
+            "2c88895"
+          ]
+        },
+        {
+          "path": "tests/unit/mutex/test_mutex_stack_protocol.py",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "65e3e3cd9bd018051e4fdf30ec938977be676218cf874249d4f6a6823b0f987f",
+          "known_revisions": [
+            "d2a2304",
+            "2c88895"
+          ]
+        },
+        {
+          "path": "tools/vm/resume_full_bench.py",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "3a0999b2525a6880b224fe721dab619f248ead2c23a8aae00d564f670f7c3ead",
+          "known_revisions": [
+            "d2a2304",
+            "2c88895",
+            "9a4bf2a",
+            "bc7efcf"
+          ]
+        },
+        {
+          "path": "tools/vm/run_full_bench.py",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "b54897a44d18d9947baa9efd466482a0de65424e19ade91ad5dbd23acea7b764",
+          "known_revisions": [
+            "d2a2304"
+          ]
+        },
+        {
+          "path": "tools/vm/test_resume_full_bench.py",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "5a9244e9185f8ed6964f2c84b867297ca501e280f39d65813422ea1557e5cf40",
+          "known_revisions": [
+            "d2a2304",
+            "2c88895",
+            "9a4bf2a",
+            "bc7efcf"
+          ]
+        },
+        {
+          "path": "bench/real_api/test_plan.py",
+          "status": "ABSENT"
+        },
+        {
+          "path": "bench/tclock_compare/mutex_local_study.py",
+          "status": "ABSENT"
+        },
+        {
+          "path": "bench/tclock_compare/mutex_study.py",
+          "status": "ABSENT"
+        },
+        {
+          "path": "bench/tclock_compare/owned_origin.py",
+          "status": "ABSENT"
+        },
+        {
+          "path": "bench/tclock_compare/test_mutex_study.py",
+          "status": "ABSENT"
+        },
+        {
+          "path": "bench/tclock_compare/test_owned_origin.py",
+          "status": "ABSENT"
+        },
+        {
+          "path": "disassem/origin_policy.py",
+          "status": "ABSENT"
+        },
+        {
+          "path": "docs/design/rwsem_implementation.md",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "32d15d024facb8fdea1821a422ce86d4dd04790db060078f4d08119d7f3aa2ec",
+          "known_revisions": [
+            "2c88895"
+          ]
+        },
+        {
+          "path": "docs/git-branches-20261012.json",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "aacfd9e71b9bdbb8ea9bb56b25176d5af47ab0c167d2d849ffda7325d135ca8a",
+          "known_revisions": [
+            "2c88895",
+            "9a4bf2a",
+            "bc7efcf"
+          ]
+        },
+        {
+          "path": "docs/git-branches-20261014.json",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "2a5e953406cb69d3b3276a6d4636a55bff7cf95c688dca677b2fbc03a8dde9a9",
+          "known_revisions": [
+            "2c88895",
+            "9a4bf2a",
+            "bc7efcf"
+          ]
+        },
+        {
+          "path": "docs/git-branches-20261015.json",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "1197a4d6d3e046d1ebc0374309e50bfa29af828808eeb5a04eb4411b53989c6a",
+          "known_revisions": [
+            "2c88895",
+            "9a4bf2a",
+            "bc7efcf"
+          ]
+        },
+        {
+          "path": "docs/proc_mmap_source_audit.json",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "c338cc891a5b1fee953ae947c1cd9461f773015f81127f6b15773040ee388c79",
+          "known_revisions": [
+            "2c88895",
+            "9a4bf2a",
+            "bc7efcf"
+          ]
+        },
+        {
+          "path": "include/kd_mutex_legacy.h",
+          "status": "ABSENT"
+        },
+        {
+          "path": "include/kd_owned_mutex_cabi.h",
+          "status": "ABSENT"
+        },
+        {
+          "path": "include/kd_owned_mutex_direct.h",
+          "status": "ABSENT"
+        },
+        {
+          "path": "include/kd_owned_mutex_internal.h",
+          "status": "ABSENT"
+        },
+        {
+          "path": "include/kd_rwsem.h",
+          "status": "ABSENT"
+        },
+        {
+          "path": "kernel_module/kd_rwsem.c",
+          "status": "ABSENT"
+        },
+        {
+          "path": "kernel_module/lock/owned_mutex_calls.inc",
+          "status": "ABSENT"
+        },
+        {
+          "path": "kernel_module/mutex/parking.inc",
+          "status": "ABSENT"
+        },
+        {
+          "path": "kernel_module/owned_mutex/admission.inc",
+          "status": "ABSENT"
+        },
+        {
+          "path": "kernel_module/owned_mutex/core.c",
+          "status": "ABSENT"
+        },
+        {
+          "path": "kernel_module/owned_mutex/delegation.c",
+          "status": "ABSENT"
+        },
+        {
+          "path": "kernel_module/owned_mutex/entry.S",
+          "status": "ABSENT"
+        },
+        {
+          "path": "kernel_module/owned_mutex/linux-source.json",
+          "status": "ABSENT"
+        },
+        {
+          "path": "kernel_module/owned_mutex/osq.c",
+          "status": "ABSENT"
+        },
+        {
+          "path": "kernel_module/owned_mutex/readiness.inc",
+          "status": "ABSENT"
+        },
+        {
+          "path": "kernel_module/owned_mutex/selection.inc",
+          "status": "ABSENT"
+        },
+        {
+          "path": "tests/kernel/mutex/mutex_wait_selftest.c",
+          "status": "ABSENT"
+        },
+        {
+          "path": "tests/kernel/mutex/origin_claim_selftest.inc",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "51fbd61399204c139bc6ef65ef24d1e19d492eb30237645e9ab9c974b18d2473",
+          "known_revisions": [
+            "2c88895",
+            "9a4bf2a",
+            "bc7efcf"
+          ]
+        },
+        {
+          "path": "tests/kernel/mutex/origin_gs/Makefile",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "336c21fcb38a8c8d9ba0fb3d58816af25a71b70ac45a1713aeec89939bd3a803",
+          "known_revisions": [
+            "2c88895",
+            "9a4bf2a",
+            "bc7efcf"
+          ]
+        },
+        {
+          "path": "tests/kernel/mutex/origin_gs/audit.json",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "914d178223414c94a0c15f8a331eda05f66bfa6cba8571fa9d24f04189475d04",
+          "known_revisions": [
+            "2c88895",
+            "9a4bf2a",
+            "bc7efcf"
+          ]
+        },
+        {
+          "path": "tests/kernel/mutex/origin_gs/module.c",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "491a1a1b47ac357a24d4478a73cd75b63c1a2e69fa31b497fe7c26da88bb2f31",
+          "known_revisions": [
+            "2c88895",
+            "9a4bf2a",
+            "bc7efcf"
+          ]
+        },
+        {
+          "path": "tests/kernel/mutex/owned_wait_selftest.c",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "3edd5770aa475da182bb7ddc76ab5457d8bd54af8b4369516154a13ebf090766",
+          "known_revisions": [
+            "2c88895",
+            "9a4bf2a",
+            "bc7efcf"
+          ]
+        },
+        {
+          "path": "tests/kernel/mutex/profile/Makefile",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "7b97927f80e653d5d940041c269452239ba18993f93279e3f03bd9608faffda8",
+          "known_revisions": [
+            "2c88895",
+            "9a4bf2a",
+            "bc7efcf"
+          ]
+        },
+        {
+          "path": "tests/kernel/mutex/profile/kd_mutex_profile.c",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "d74d0d71c0d54926cd299820286e0e7a41dc4f60a71b77d680700ac805c0910f",
+          "known_revisions": [
+            "9a4bf2a",
+            "bc7efcf"
+          ]
+        },
+        {
+          "path": "tests/kernel/mutex/run_origin_gs.py",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "194064fdcd1b13eaedfcbef1efa05eee24bd951cb04b9f3bb55a5f7462e4d55a",
+          "known_revisions": [
+            "9a4bf2a",
+            "bc7efcf"
+          ]
+        },
+        {
+          "path": "tests/kernel/mutex/run_wait_selftest.py",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "fb4d92e3d51ff9c6177e6c2b213bafd41458a400caaf1750af0152b6e5b28897",
+          "known_revisions": [
+            "9a4bf2a",
+            "bc7efcf"
+          ]
+        },
+        {
+          "path": "tests/kernel/rwsem/Makefile",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "ff285be8138fb878862d270eef270c9aa835ac36886e821da33f40dacbf67931",
+          "known_revisions": [
+            "2c88895"
+          ]
+        },
+        {
+          "path": "tests/kernel/rwsem/README.md",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "e1d1d0d10f64ef02d94e97405c8e9c0b04ca8da1c574e93b6c9539ef1f3cf96b",
+          "known_revisions": [
+            "2c88895"
+          ]
+        },
+        {
+          "path": "tests/kernel/rwsem/module.c",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "a3478289982b74e48ff03559c7f68bcbeb875df6b37439a2cc3245b8a273fb6b",
+          "known_revisions": [
+            "2c88895"
+          ]
+        },
+        {
+          "path": "tests/kernel/rwsem/run.py",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "e62df3713c44cdd479b147dc9444a54d05e9ac2b6b3f67b67842c510b708b2b9",
+          "known_revisions": [
+            "2c88895"
+          ]
+        },
+        {
+          "path": "tests/unit/admission/test_origin_policy.py",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "3a8c7851e8d0d7580228c74bfb04396e7f1edf2d667952f0817242c57e44cc85",
+          "known_revisions": [
+            "2c88895",
+            "9a4bf2a",
+            "bc7efcf"
+          ]
+        },
+        {
+          "path": "tests/unit/execution/owned_images_fixture.c",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "659f04844d1f5a3710d496f54df8a405da6be9faa776f277d4733058a3e367dc",
+          "known_revisions": [
+            "2c88895",
+            "9a4bf2a",
+            "bc7efcf"
+          ]
+        },
+        {
+          "path": "tests/unit/execution/test_owned_images.py",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "837029beed165c1ea6a01ffe821054560181b91b0ca1b6cdf50dea1746e471ae",
+          "known_revisions": [
+            "2c88895",
+            "9a4bf2a",
+            "bc7efcf"
+          ]
+        },
+        {
+          "path": "tests/unit/mutex/mutex_drain_fixture.c",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "42c58cb63ae0dea518107021131f1094e3db517efe71aa3599e9950c8cca05e5",
+          "known_revisions": [
+            "2c88895",
+            "9a4bf2a",
+            "bc7efcf"
+          ]
+        },
+        {
+          "path": "tests/unit/mutex/mutex_parking_fixture.c",
+          "status": "ABSENT"
+        },
+        {
+          "path": "tests/unit/mutex/owned_mutex_cabi_fixture.c",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "2bfd9b674503f3a313c996d40616ce4793108639ed8d648027cef720a30f9ada",
+          "known_revisions": [
+            "9a4bf2a",
+            "bc7efcf"
+          ]
+        },
+        {
+          "path": "tests/unit/mutex/owned_mutex_core_fixture.c",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "8090f40ec68c57fbe168aea3081850f96e6206e66eb970219bbf7be594c60eb7",
+          "known_revisions": [
+            "9a4bf2a",
+            "bc7efcf"
+          ]
+        },
+        {
+          "path": "tests/unit/mutex/owned_mutex_osq_fixture.c",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "f86591d2256d6b8cbd0a1741b2c78d85b3680476e4263ccfaa901368f70eba96",
+          "known_revisions": [
+            "9a4bf2a",
+            "bc7efcf"
+          ]
+        },
+        {
+          "path": "tests/unit/mutex/owned_mutex_preflight_fixture.c",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "1eea523bbe0922b13a0d0e3396681b1b53a73f47948c59f5123c51a016f9f21c",
+          "known_revisions": [
+            "9a4bf2a",
+            "bc7efcf"
+          ]
+        },
+        {
+          "path": "tests/unit/mutex/test_mutex_drain.py",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "3a382735ba7bb8de7fc4096158de1c5bcafdd1b0db2cc4d1c78633b1eb5e98b8",
+          "known_revisions": [
+            "2c88895",
+            "9a4bf2a",
+            "bc7efcf"
+          ]
+        },
+        {
+          "path": "tests/unit/mutex/test_mutex_parking.py",
+          "status": "ABSENT"
+        },
+        {
+          "path": "tests/unit/mutex/test_owned_mutex_cabi.py",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "7ac1adacdaf0d4b9a89e6917d957eb48f96472e05040ed599bdf6093d7173b2c",
+          "known_revisions": [
+            "2c88895",
+            "9a4bf2a",
+            "bc7efcf"
+          ]
+        },
+        {
+          "path": "tests/unit/mutex/test_owned_mutex_core.py",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "3c7bcb9a86ee28048d1a45923c08d20e74e69a441a9d6c139c948b49582d069e",
+          "known_revisions": [
+            "2c88895",
+            "9a4bf2a",
+            "bc7efcf"
+          ]
+        },
+        {
+          "path": "tests/unit/mutex/test_owned_mutex_delegation.py",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "1f5dbfe1c2e3f6b0114743b46eafded0a5fcbbc7e921bba8d58738b83d2851ea",
+          "known_revisions": [
+            "9a4bf2a",
+            "bc7efcf"
+          ]
+        },
+        {
+          "path": "tests/unit/mutex/test_owned_mutex_osq.py",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "51036301318b8b21e8285cda0499d6ce9cfa65e629efaec4dd78dcc759c63f44",
+          "known_revisions": [
+            "9a4bf2a",
+            "bc7efcf"
+          ]
+        },
+        {
+          "path": "tests/unit/mutex/test_owned_mutex_outer_api.py",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "58ef5e259251f08e8ef1217f877f592d93c76ae3bbfe9b5bf47ea72ee928e6ff",
+          "known_revisions": [
+            "9a4bf2a",
+            "bc7efcf"
+          ]
+        },
+        {
+          "path": "tests/unit/mutex/test_owned_mutex_preflight.py",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "05587f61eae0ba2da2c577f6c0bf4d4541416e942133f158527a1e1738c2d1bd",
+          "known_revisions": [
+            "9a4bf2a",
+            "bc7efcf"
+          ]
+        },
+        {
+          "path": "tests/unit/mutex/test_owned_mutex_profile.py",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "e96d63ec15b67d89b2e5ad8ed24e5da605992959212786867525372d7753a5f0",
+          "known_revisions": [
+            "9a4bf2a",
+            "bc7efcf"
+          ]
+        },
+        {
+          "path": "tests/unit/mutex/test_owned_mutex_wait_clobber.py",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "df9e2900e1c331b3e551a18ee3eb9591bc36166e0b2d5dc100f27e0b198db2b2",
+          "known_revisions": [
+            "9a4bf2a",
+            "bc7efcf"
+          ]
+        },
+        {
+          "path": "tests/unit/mutex/test_owned_origin.py",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "9a8bcd79370eac2648b72a2f6185d02306908b0a53c3eeec9df470d99901b557",
+          "known_revisions": [
+            "2c88895",
+            "9a4bf2a",
+            "bc7efcf"
+          ]
+        },
+        {
+          "path": "workload_modules/rwlock_bench/direct_rwsem.h",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "740eb3ea51b6176c4e5114e7cbeeb4c98b9ef34c0881e0005c795b8e2a301b34",
+          "known_revisions": [
+            "2c88895"
+          ]
+        },
+        {
+          "path": "workload_modules/rwlock_bench/direct_spin.h",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "e4e790824db2e3f028c695a21f0747cbfa302b69ddaf75542812df02c84e3448",
+          "known_revisions": [
+            "2c88895"
+          ]
+        },
+        {
+          "path": "workload_modules/rwlock_bench/snapshot_payload.h",
+          "status": "REMOVE_VERIFIED",
+          "sha256": "a79632441a9988304fcce62a57e93c1d2a8d447f2bb0ffcf2a4cea3b66b4e313",
+          "known_revisions": [
+            "2c88895"
+          ]
+        }
+      ],
+      "policy": "Remove only obsolete tracked paths whose complete bytes match preserved Git revisions; no evidence or unknown files removed."
+    },
+    "preserved": [
+      {
+        "source": "/root/host_fs/kdlock/docs/AGENTS.md",
+        "backup": "/mnt/kdlock-builds/main-consolidation-20261018/obsolete-local/docs/AGENTS.md",
+        "sha256": "c6d8ed57cc7d45907076c18a196a523a6bc68a480f1b2b5bbbd1517b5396071f",
+        "status": "PRESERVED_OUTSIDE_ACTIVE_SOURCE"
+      }
+    ]
+  }
+}

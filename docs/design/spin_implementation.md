@@ -13,8 +13,8 @@ gate belong to a separate 128-byte object, not the four-byte spin object below.
 | Backend | Caller | Implementation |
 | --- | --- | --- |
 | Linux Native | `spin_lock/unlock` | Captured kernel `kernel/locking/qspinlock.c` and architecture/PV helpers |
-| TCLock | `komb_spin_lock/unlock` | [komb.c](../../tclock_backend/komb.c), private [spin components](../../tclock_backend/spin/) |
-| KD | `KD_SPIN_DIRECT_LOCK/UNLOCK` | [kd_spin_direct.h](../../include/kd_spin_direct.h), [spin components](../../kernel_module/spin/) |
+| TCLock | `komb_spin_lock/unlock` | [komb.c](../../tclock_backend/komb.c), private [spin components](../../tclock_backend/spin) |
+| KD | `KD_SPIN_DIRECT_LOCK/UNLOCK` | [kd_spin_direct.h](../../include/kd_spin_direct.h), [spin components](../../kernel_module/spin) |
 
 The three workload arms share payload, post-lock work, timing and verification.
 Each target lock belongs exclusively to its backend; equal word size does not

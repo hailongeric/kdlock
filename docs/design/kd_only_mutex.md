@@ -1,9 +1,10 @@
 # KD-only mutex with the accepted legacy delegation protocol
 
-The user accepted `555b8b7` as the baseline on 2026-10-17. It is preserved by
-`accepted/kd-mutex-compat-20261017`. The KD-only implementation is developed on
-`task/kd-only-mutex`; `current/kd-mutex` identifies the validated current version.
-The earlier owned/adaptive delegation experiment remains archived separately.
+The main branch is `master`, selecting KD-only implementation `d2a2304` with
+the accepted `555b8b7` compatibility baseline. Immutable tags
+`accepted/kd-only-mutex-20261018` and `accepted/kd-mutex-compat-20261017` retain
+those measured versions; `current/kd-mutex` follows main. The earlier
+owned/adaptive experiment is archived; see [branch dispositions](../history/main-consolidation-20261018.md).
 
 The replacement assumes every user of an object uses KD. Each `struct kd_mutex`
 contains physical exclusion and legacy delegation scheduling. There is no Linux

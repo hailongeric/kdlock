@@ -1,0 +1,12 @@
+{
+  "git_head": "ae4c3a7227941d6f69e5072c7e701991dec7d8ed",
+  "git_status": " M bench/rwlock_compare/session.py\n M bench/rwlock_compare/test_bench.py\n M bench/tclock_compare/run.py\n M kernel_module/execution/hostcalls.inc\n M kernel_module/execution/images.inc\n M kernel_module/execution/lock_ledger.inc\n M kernel_module/execution/registry_publish.inc\n M kernel_module/execution/remote.inc\n M kernel_module/execution/timing.inc\n M kernel_module/kd_mutex_tasks.c\n M kernel_module/kd_source.c\n M kernel_module/kd_spin_entry.c\n M kernel_module/kd_spinlock.c\n M kernel_module/lock/owned_mutex_calls.inc\n M kernel_module/lock/spin_calls.inc\n M kernel_module/owned_mutex/core.c\n M kernel_module/owned_mutex/entry.S\n M kernel_module/owned_mutex/osq.c\n M kernel_module/owned_mutex/readiness.inc\n M kernel_module/owned_mutex/selection.inc\n M kernel_module/spin/diagnostics.inc\n M kernel_module/spin/direct.inc\n M kernel_module/spin/entry.inc\n M kernel_module/spin/lifecycle.inc\n M kernel_module/spin/nested.inc\n M kernel_module/spin/nondelegated.inc\n M kernel_module/spin/prefetch.inc\n M kernel_module/spin/queue.inc\n M kernel_module/spin/request.inc\n M kernel_module/spin/shadow.inc\n M kernel_module/spin/slowpath.inc\n M kernel_module/spin/state.inc\n M kernel_module/spin/ticket_borrow.inc\n M kernel_module/spin/ticket_diagnostics.inc\n M kernel_module/spin/ticket_origin.inc\n M kernel_module/spin/ticket_state.inc\n M kernel_module/spin/unlock.inc\n M kernel_module/spin/wait.inc\n",
+  "files": 1005,
+  "policy": "Current tracked workspace bytes including preexisting uncommitted kernel edits; runner compatibility fixes only.",
+  "predecessor": "workloads-20261015T172603Z",
+  "changes_since_predecessor": [
+    "bench/rwlock_compare/session.py",
+    "bench/rwlock_compare/test_bench.py"
+  ],
+  "predecessor_samples_included": false
+}

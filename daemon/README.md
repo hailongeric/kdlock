@@ -69,10 +69,10 @@ for real source inspection must explicitly enter `device_session.session()`. A
 missing, closed or wrong inherited descriptor is an infrastructure error, not a
 successful decision to run the body natively.
 
-CAPS v4 retains the checked mutex stack bound and static module per-CPU arena
+CAPS v5 retains the checked mutex stack bound and static module per-CPU arena
 introduced in v1/v2, and advertises the legacy immutable-mutex-image capability
-on bit 3. Translation requires that capability and the module arena before text
-inspection. Read-only observers can still inspect older contracts. Rebuild/reload
+on bit 3, plus exclusive KD mutex objects on bit 4. Translation requires
+both capabilities and the module arena before text inspection. Read-only observers can still inspect older contracts. Rebuild/reload
 the matching provider, daemon and translator. These bounds are not mutable
 admission flags or runtime address guards.
 
@@ -96,12 +96,13 @@ use chunks of at most 4,000 bytes with a common upload ID, image length and base
 generation. Complete contiguous coverage and matching directory metadata are
 required before NORMAL publication; NORMAL alone does not prove execution.
 
-On this compatibility branch, mutex uploads stage a new immutable block and bind
+In the current implementation, mutex uploads stage a new immutable block and bind
 its generation to each frame. Old versions remain until session teardown, and old
 misses cannot overwrite current generation metadata. Spin/rwlock images retain
 in-place storage. Deploy the matching provider, daemon and translator together;
-the translator requires capability version 4's legacy mutex image bit. See
-[the backport details](../docs/design/legacy_mutex_compatibility.md).
+the translator requires capability version 5 with immutable images and exclusive
+KD objects. See
+[the backport details](../docs/history/legacy_mutex_compatibility.md).
 
 ## Optional translation measurements
 

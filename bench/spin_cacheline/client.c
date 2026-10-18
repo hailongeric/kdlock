@@ -196,6 +196,7 @@ int main(int argc, char **argv)
 		{ "peak-settle-ms", required_argument, NULL, 'S' },
 		{ "sample-ms", required_argument, NULL, 'P' },
 		{ "collector-cpu", required_argument, NULL, 'C' },
+		{ "share-collector", no_argument, NULL, 1000 },
 		{ NULL, 0, NULL, 0 },
 	};
 	struct worker workers[CPU_SETSIZE] = { 0 };
@@ -213,6 +214,7 @@ int main(int argc, char **argv)
 	unsigned int count = 0, created = 0;
 	bool layout_only = false, counts_only = false, prepare_only = false, valid = true;
 	bool hash = false, timed_options = false, iterations_set = false;
+	bool share_collector = false;
 	unsigned int lock_kind = 1;
 	char *cpu_text = NULL, *token, *save;
 	int fd, option, error = 0, collector_observed_cpu = -1, collector_error = 0;
@@ -235,6 +237,7 @@ int main(int argc, char **argv)
 		case 'S': settle_ms = number(optarg); timed_options = true; break;
 		case 'P': sample_ms = number(optarg); timed_options = true; break;
 		case 'C': collector_cpu = number(optarg); timed_options = true; break;
+		case 1000: share_collector = true; timed_options = true; break;
 		case 'w':
 			if (strcmp(optarg, "rcuht") && strcmp(optarg, "cacheline"))
 				return 2;
@@ -278,8 +281,14 @@ int main(int argc, char **argv)
 	if (duration_ms) {
 		if (count > SC_TIMED_MAX_WORKERS)
 			return 2;
+		/* Explicitly labelled 64-worker point on the fixed 64-vCPU VM.
+		 * Every smaller cohort retains a separate collector. */
+		if (share_collector && (count != 64 || collector_cpu != 63 ||
+		    sysconf(_SC_NPROCESSORS_ONLN) != 64))
+			return 2;
 		for (unsigned int i = 0; i < count; i++)
-			if (workers[i].cpu == (int)collector_cpu)
+			if ((share_collector && workers[i].cpu != (int)i) ||
+			    (!share_collector && workers[i].cpu == (int)collector_cpu))
 				return 2;
 		iterations = 0;
 		sample_capacity = duration_ms / sample_ms + 2;
@@ -492,12 +501,14 @@ int main(int argc, char **argv)
 		       "\"deadline_ns\":%llu,\"peak_window_ns\":%llu,\"peak_settle_ns\":%llu,"
 		       "\"sample_period_ns\":%llu,\"collector_cpu\":%llu,"
 		       "\"collector_observed_cpu\":%d,\"collector_error\":%d,"
+		       "\"collector_shared\":%s,"
 		       "\"progress_batch\":%u,\"samples\":[",
 		       (unsigned long long)(duration_ms * 1000000), timed_config.deadline_ns,
 		       (unsigned long long)(window_ms * 1000000),
 		       (unsigned long long)(settle_ms * 1000000),
 		       (unsigned long long)(sample_ms * 1000000),
 		       (unsigned long long)collector_cpu, collector_observed_cpu, collector_error,
+		       share_collector ? "true" : "false",
 		       SC_TIMED_BATCH);
 		for (size_t i = 0; i < sample_count; i++) {
 			struct sc_progress *sample = &samples[i];

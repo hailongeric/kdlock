@@ -10,7 +10,7 @@ records validation for specific source versions.
 
 The table shows what the current references protect. Keeping the physical mutex
 owner is necessary for correct unlock, but does not solve these other lifetimes.
-The earlier audit is in [VALIDATION](../VALIDATION.md#source-and-hook-lifetime-review).
+The earlier audit is in [VALIDATION](https://github.com/hailongeric/kdlock/blob/17f146e52f9f52485b8211addb7dab7195e70452/docs/VALIDATION.md#source-and-hook-lifetime-review).
 
 | Resource | What keeps it alive | Limit |
 | --- | --- | --- |
@@ -167,6 +167,6 @@ Capability assessment under the no-guest-edit default:
 
 Retain stable lock-allocation lifetimes during a session, retire source pins
 explicitly, and use only the controlled recovery procedure in
-[AGENTS](../AGENTS.md#acceptance-and-cleanup). Replacing a source module requires a fresh kdlock
+[AGENTS](../operations/VM.md#drain-and-evidence). Replacing a source module requires a fresh kdlock
 and daemon session after draining, not merely a new TGID or clearing daemon
 workspaces. This remains an experimental boundary, not safe hot-reload support.

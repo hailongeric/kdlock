@@ -126,7 +126,7 @@ no new fault is ignored and no log was cleared.
 
 ## Reproduction and evidence
 
-Use the recovered source worktree, follow [operations](../../../../../../docs/AGENTS.md),
+Use the recovered source worktree, follow [operations](../../../../../../docs/operations/VM.md),
 verify a new recovery snapshot and synchronize while idle. Freeze only the
 manifest-listed files into a new guest source directory before building.
 The [recorded command](benchmark-command.json) used the pinned guest environment:

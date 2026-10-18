@@ -205,7 +205,7 @@ def exercise_abi(entry_abi, direct=False, poison_stack=False, premature_pop=Fals
         (path/'asm/asm.h').write_text('register unsigned long current_stack_pointer asm("rsp");\n#define ASM_CALL_CONSTRAINT "+r"(current_stack_pointer)\n')
         (path/'asm/nospec-branch.h').write_text('#ifdef __ASSEMBLER__\n.macro CALL_NOSPEC reg\ncall *%\\reg\n.endm\n#define RET ret\n#else\n#define CALL_NOSPEC "call *%[thunk_target]\\n"\n#endif\n')
         # Extract the reviewed experiment macro, rather than maintaining a second ABI.
-        patch=(ROOT/f'kernel_experiments/{"mutex" if entry_abi == 2 else "spin"}_clobber/guest-kernel.patch').read_text()
+        patch=(ROOT/f'kernel_baseline/experiments/{"mutex" if entry_abi == 2 else "spin"}_clobber/guest-kernel.patch').read_text()
         added='\n'.join(line[1:] for line in patch.splitlines() if line.startswith('+') and not line.startswith('+++'))
         marker = '#define __kd_mutex_clobber_call_v1' if entry_abi == 2 else '#define __kd_spin_clobber_call_v1'
         macro=added[added.index(marker):added.index('#else',added.index(marker))] if entry_abi == 1 else added[added.index(marker):added.index('#endif',added.index(marker))]

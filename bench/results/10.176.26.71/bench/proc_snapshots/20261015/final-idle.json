@@ -1,0 +1,7 @@
+{
+  "checked_utc": "2026-10-15T07:34:25.360348+00:00",
+  "idle": true,
+  "project_modules": [],
+  "cmdline": "BOOT_IMAGE=/boot/vmlinuz-6.1.159-kdclobber2 root=UUID=aa0bde06-47f6-4049-aaaf-13d052e53961 ro nokaslr nopvspin console=tty1 console=ttyS0",
+  "preemption": "none (voluntary) full"
+}

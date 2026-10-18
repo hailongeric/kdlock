@@ -1,0 +1,91 @@
+run,profile,workload,arm,threads,repeat,jit_status,jit_bodies,jit_completions,jit_complete_share,reads,whole_ops_s,peak_ops_s,drained
+proc-argbounds-20261015,"KD adaptive, delegate on",argbounds,native,1,0,NATIVE,0,0,0.0,114309376,56860913.19208651,57318963.346360065,True
+proc-argbounds-20261015,"KD adaptive, delegate on",argbounds,tclock,1,0,NATIVE,0,0,0.0,112330752,55868827.36506615,76198074.93238391,True
+proc-argbounds-20261015,"KD adaptive, delegate on",argbounds,kdlock,1,0,NO_JIT,0,0,0.0,150697984,75308115.47034979,75563931.89138679,True
+proc-argbounds-20261015,"KD adaptive, delegate on",argbounds,kdlock,1,1,NO_JIT,0,0,0.0,145849600,72543473.59879975,75468670.75351267,True
+proc-argbounds-20261015,"KD adaptive, delegate on",argbounds,tclock,1,1,NATIVE,0,0,0.0,151826688,75520039.52344394,76165538.8318123,True
+proc-argbounds-20261015,"KD adaptive, delegate on",argbounds,native,1,1,NATIVE,0,0,0.0,206095360,102990100.91232255,103791514.01736553,True
+proc-argbounds-20261015,"KD adaptive, delegate on",argbounds,native,1,2,NATIVE,0,0,0.0,206816256,103354568.83559285,103787664.27214892,True
+proc-argbounds-20261015,"KD adaptive, delegate on",argbounds,tclock,1,2,NATIVE,0,0,0.0,152043008,75628100.79990777,76268410.00801729,True
+proc-argbounds-20261015,"KD adaptive, delegate on",argbounds,kdlock,1,2,NO_JIT,0,0,0.0,145986816,72615318.87827606,75536564.56501698,True
+proc-argbounds-20261015,"KD adaptive, delegate on",argbounds,native,8,0,NATIVE,0,0,0.0,13462272,6696570.789361365,7458074.961466635,True
+proc-argbounds-20261015,"KD adaptive, delegate on",argbounds,tclock,8,0,NATIVE,0,0,0.0,11393024,5667193.668970183,5712153.679408408,True
+proc-argbounds-20261015,"KD adaptive, delegate on",argbounds,kdlock,8,0,PASS,13876107,13876107,0.9429983119128392,14714880,7319197.853602334,7534919.820710455,True
+proc-argbounds-20261015,"KD adaptive, delegate on",argbounds,kdlock,8,1,PASS,13935333,13935333,0.9707688863154046,14354944,7140542.950549567,7286193.2074495545,True
+proc-argbounds-20261015,"KD adaptive, delegate on",argbounds,tclock,8,1,NATIVE,0,0,0.0,11101440,5545159.142511955,5563870.15146856,True
+proc-argbounds-20261015,"KD adaptive, delegate on",argbounds,native,8,1,NATIVE,0,0,0.0,15344384,7632063.00197085,7709125.288426705,True
+proc-argbounds-20261015,"KD adaptive, delegate on",argbounds,native,8,2,NATIVE,0,0,0.0,12320256,6128181.260998734,6200025.255094049,True
+proc-argbounds-20261015,"KD adaptive, delegate on",argbounds,tclock,8,2,NATIVE,0,0,0.0,11276544,5609237.660345836,5654065.9335121,True
+proc-argbounds-20261015,"KD adaptive, delegate on",argbounds,kdlock,8,2,PASS,14567298,14567298,0.9755611756159029,14932224,7427234.006190766,7724078.479510842,True
+proc-argbounds-20261015,"KD adaptive, delegate on",argbounds,native,16,0,NATIVE,0,0,0.0,14912000,7417007.951079277,7886491.182855644,True
+proc-argbounds-20261015,"KD adaptive, delegate on",argbounds,tclock,16,0,NATIVE,0,0,0.0,11689472,5814723.930423304,5885413.515639179,True
+proc-argbounds-20261015,"KD adaptive, delegate on",argbounds,kdlock,16,0,PASS,19502121,19502121,0.9638300099476208,20233984,10064016.736844115,10577670.663457645,True
+proc-argbounds-20261015,"KD adaptive, delegate on",argbounds,kdlock,16,1,PASS,14763505,14763505,0.8331278283505006,17720576,8814913.212202903,10528372.410454178,True
+proc-argbounds-20261015,"KD adaptive, delegate on",argbounds,tclock,16,1,NATIVE,0,0,0.0,13059328,6495635.431585988,6587707.048335425,True
+proc-argbounds-20261015,"KD adaptive, delegate on",argbounds,native,16,1,NATIVE,0,0,0.0,15366400,7643088.137177794,7727761.319609539,True
+proc-argbounds-20261015,"KD adaptive, delegate on",argbounds,native,16,2,NATIVE,0,0,0.0,15510784,7715465.442342257,7793147.551376479,True
+proc-argbounds-20261015,"KD adaptive, delegate on",argbounds,tclock,16,2,NATIVE,0,0,0.0,12766208,6349645.530248237,6425559.112025517,True
+proc-argbounds-20261015,"KD adaptive, delegate on",argbounds,kdlock,16,2,PASS,16551733,16551733,0.913738281084385,18114304,9010321.484805228,9926355.628004266,True
+proc-argbounds-20261015,"KD adaptive, delegate on",argbounds,native,32,0,NATIVE,0,0,0.0,12872448,6402879.716895444,6712006.525017109,True
+proc-argbounds-20261015,"KD adaptive, delegate on",argbounds,tclock,32,0,NATIVE,0,0,0.0,12144896,6041072.48786087,6194957.054434182,True
+proc-argbounds-20261015,"KD adaptive, delegate on",argbounds,kdlock,32,0,NO_JIT,0,0,0.0,10019584,4983439.202232375,5041974.29142409,True
+proc-argbounds-20261015,"KD adaptive, delegate on",argbounds,kdlock,32,1,NO_JIT,0,0,0.0,10050048,4999095.70272598,5044901.504050794,True
+proc-argbounds-20261015,"KD adaptive, delegate on",argbounds,tclock,32,1,NATIVE,0,0,0.0,11876352,5907516.376945973,6026018.985710334,True
+proc-argbounds-20261015,"KD adaptive, delegate on",argbounds,native,32,1,NATIVE,0,0,0.0,12901632,6417571.723835262,6544538.540599476,True
+proc-argbounds-20261015,"KD adaptive, delegate on",argbounds,native,32,2,NATIVE,0,0,0.0,13280512,6604663.475137149,6736207.427924821,True
+proc-argbounds-20261015,"KD adaptive, delegate on",argbounds,tclock,32,2,NATIVE,0,0,0.0,12147456,6041559.706281564,6161161.93018193,True
+proc-argbounds-20261015,"KD adaptive, delegate on",argbounds,kdlock,32,2,NO_JIT,0,0,0.0,9994240,4970921.145349823,5018933.900653562,True
+proc-argbounds-20261015,"KD adaptive, delegate on",argbounds,native,60,0,NATIVE,0,0,0.0,8384768,4170356.7781145535,4729143.208691094,True
+proc-argbounds-20261015,"KD adaptive, delegate on",argbounds,tclock,60,0,NATIVE,0,0,0.0,10368256,5156825.199295978,5330542.3856232,True
+proc-argbounds-20261015,"KD adaptive, delegate on",argbounds,kdlock,60,0,PASS,33886,33886,0.00556445213973432,6089728,3028697.70963484,3278088.256961551,True
+proc-argbounds-20261015,"KD adaptive, delegate on",argbounds,kdlock,60,1,NO_JIT,0,0,0.0,6492416,3228898.2992036464,3553226.2870626273,True
+proc-argbounds-20261015,"KD adaptive, delegate on",argbounds,tclock,60,1,NATIVE,0,0,0.0,10476288,5210745.30715004,5301021.638897276,True
+proc-argbounds-20261015,"KD adaptive, delegate on",argbounds,native,60,1,NATIVE,0,0,0.0,8246784,4101550.466521957,4645842.491180008,True
+proc-argbounds-20261015,"KD adaptive, delegate on",argbounds,native,60,2,NATIVE,0,0,0.0,7600128,3779820.9985503186,4183678.9030829133,True
+proc-argbounds-20261015,"KD adaptive, delegate on",argbounds,tclock,60,2,NATIVE,0,0,0.0,10229760,5087645.669924234,5234707.461676164,True
+proc-argbounds-20261015,"KD adaptive, delegate on",argbounds,kdlock,60,2,NO_JIT,0,0,0.0,6523392,3244305.913617803,3425263.4559775074,True
+proc-taskname-native-20261015,"KD native control, delegate off",taskname,native,1,0,NATIVE,0,0,0.0,30359296,15101226.304915186,15221503.837450657,True
+proc-taskname-native-20261015,"KD native control, delegate off",taskname,tclock,1,0,NATIVE,0,0,0.0,35071232,17443794.135364678,26077197.771237988,True
+proc-taskname-native-20261015,"KD native control, delegate off",taskname,kdlock,1,0,NATIVE,0,0,0.0,53226496,26599395.40726343,26714974.332385972,True
+proc-taskname-native-20261015,"KD native control, delegate off",taskname,kdlock,1,1,NATIVE,0,0,0.0,52940032,26455769.46232146,26556021.737653498,True
+proc-taskname-native-20261015,"KD native control, delegate off",taskname,tclock,1,1,NATIVE,0,0,0.0,52201728,26085084.714894604,26161658.941203915,True
+proc-taskname-native-20261015,"KD native control, delegate off",taskname,native,1,1,NATIVE,0,0,0.0,54691840,27206084.95388325,27503343.312772464,True
+proc-taskname-native-20261015,"KD native control, delegate off",taskname,native,1,2,NATIVE,0,0,0.0,54365952,27041327.092851795,27296334.26438157,True
+proc-taskname-native-20261015,"KD native control, delegate off",taskname,tclock,1,2,NATIVE,0,0,0.0,51365632,25548329.986947823,25746751.791884333,True
+proc-taskname-native-20261015,"KD native control, delegate off",taskname,kdlock,1,2,NATIVE,0,0,0.0,53352448,26537548.52396285,26751927.68062217,True
+proc-taskname-native-20261015,"KD native control, delegate off",taskname,native,8,0,NATIVE,0,0,0.0,13703680,6816435.417400931,7591857.333334715,True
+proc-taskname-native-20261015,"KD native control, delegate off",taskname,tclock,8,0,NATIVE,0,0,0.0,11093504,5517939.584603401,5579092.902118009,True
+proc-taskname-native-20261015,"KD native control, delegate off",taskname,kdlock,8,0,NATIVE,0,0,0.0,11688448,5838324.2449073875,5863233.398339779,True
+proc-taskname-native-20261015,"KD native control, delegate off",taskname,kdlock,8,1,NATIVE,0,0,0.0,11613952,5776802.486826357,5829575.1150572235,True
+proc-taskname-native-20261015,"KD native control, delegate off",taskname,tclock,8,1,NATIVE,0,0,0.0,11626240,5782708.516170535,5833147.2182001425,True
+proc-taskname-native-20261015,"KD native control, delegate off",taskname,native,8,1,NATIVE,0,0,0.0,12577792,6256065.986219522,6345695.695246787,True
+proc-taskname-native-20261015,"KD native control, delegate off",taskname,native,8,2,NATIVE,0,0,0.0,13192448,6561812.441486265,6646457.6847116025,True
+proc-taskname-native-20261015,"KD native control, delegate off",taskname,tclock,8,2,NATIVE,0,0,0.0,11616768,5778047.246971007,5832485.351420509,True
+proc-taskname-native-20261015,"KD native control, delegate off",taskname,kdlock,8,2,NATIVE,0,0,0.0,11165696,5553709.4912549695,5597861.143443672,True
+proc-taskname-native-20261015,"KD native control, delegate off",taskname,native,16,0,NATIVE,0,0,0.0,14702080,7313006.544813759,7806863.555929153,True
+proc-taskname-native-20261015,"KD native control, delegate off",taskname,tclock,16,0,NATIVE,0,0,0.0,11138816,5540425.072412249,5608950.053461906,True
+proc-taskname-native-20261015,"KD native control, delegate off",taskname,kdlock,16,0,NATIVE,0,0,0.0,11053312,5498233.040994222,5548596.1794956075,True
+proc-taskname-native-20261015,"KD native control, delegate off",taskname,kdlock,16,1,NATIVE,0,0,0.0,10737920,5340888.37083621,5400259.00651079,True
+proc-taskname-native-20261015,"KD native control, delegate off",taskname,tclock,16,1,NATIVE,0,0,0.0,10984192,5463392.37994372,5520499.288151495,True
+proc-taskname-native-20261015,"KD native control, delegate off",taskname,native,16,1,NATIVE,0,0,0.0,15215104,7568439.146587183,7674966.867078933,True
+proc-taskname-native-20261015,"KD native control, delegate off",taskname,native,16,2,NATIVE,0,0,0.0,14701056,7312339.569840731,7406499.880272007,True
+proc-taskname-native-20261015,"KD native control, delegate off",taskname,tclock,16,2,NATIVE,0,0,0.0,11752448,5845470.747501302,5909995.005528637,True
+proc-taskname-native-20261015,"KD native control, delegate off",taskname,kdlock,16,2,NATIVE,0,0,0.0,10706944,5325944.925552539,5374202.652620574,True
+proc-taskname-native-20261015,"KD native control, delegate off",taskname,native,32,0,NATIVE,0,0,0.0,12753664,6343737.460712875,6599596.1851284485,True
+proc-taskname-native-20261015,"KD native control, delegate off",taskname,tclock,32,0,NATIVE,0,0,0.0,10663168,5303947.677200965,5355454.913371286,True
+proc-taskname-native-20261015,"KD native control, delegate off",taskname,kdlock,32,0,NATIVE,0,0,0.0,9983744,4965736.689704918,5020016.176536542,True
+proc-taskname-native-20261015,"KD native control, delegate off",taskname,kdlock,32,1,NATIVE,0,0,0.0,10008320,4978092.675688284,5040383.730089883,True
+proc-taskname-native-20261015,"KD native control, delegate off",taskname,tclock,32,1,NATIVE,0,0,0.0,9949952,4948592.453146939,4998395.205192555,True
+proc-taskname-native-20261015,"KD native control, delegate off",taskname,native,32,1,NATIVE,0,0,0.0,14293504,7108923.601188098,7195674.983994459,True
+proc-taskname-native-20261015,"KD native control, delegate off",taskname,native,32,2,NATIVE,0,0,0.0,13069568,6500842.367404593,6578755.670841991,True
+proc-taskname-native-20261015,"KD native control, delegate off",taskname,tclock,32,2,NATIVE,0,0,0.0,10321152,5133707.238988533,5176444.419029403,True
+proc-taskname-native-20261015,"KD native control, delegate off",taskname,kdlock,32,2,NATIVE,0,0,0.0,10023168,4985243.967466118,5046545.587987766,True
+proc-taskname-native-20261015,"KD native control, delegate off",taskname,native,60,0,NATIVE,0,0,0.0,7789824,3874221.135083584,4301291.207455891,True
+proc-taskname-native-20261015,"KD native control, delegate off",taskname,tclock,60,0,NATIVE,0,0,0.0,9516544,4733890.08491597,4784501.536525533,True
+proc-taskname-native-20261015,"KD native control, delegate off",taskname,kdlock,60,0,NATIVE,0,0,0.0,6359296,3163088.692967239,3319869.1559341163,True
+proc-taskname-native-20261015,"KD native control, delegate off",taskname,kdlock,60,1,NATIVE,0,0,0.0,6494976,3230115.951893325,3531821.22814938,True
+proc-taskname-native-20261015,"KD native control, delegate off",taskname,tclock,60,1,NATIVE,0,0,0.0,10039552,4993614.205496692,5046278.243637028,True
+proc-taskname-native-20261015,"KD native control, delegate off",taskname,native,60,1,NATIVE,0,0,0.0,8173824,4065228.217006091,4628472.224166663,True
+proc-taskname-native-20261015,"KD native control, delegate off",taskname,native,60,2,NATIVE,0,0,0.0,7968768,3963026.897322449,4311843.416559381,True
+proc-taskname-native-20261015,"KD native control, delegate off",taskname,tclock,60,2,NATIVE,0,0,0.0,9889792,4919091.165930837,4972125.117751105,True
+proc-taskname-native-20261015,"KD native control, delegate off",taskname,kdlock,60,2,NATIVE,0,0,0.0,6397696,3181560.414037114,3444047.1799690383,True

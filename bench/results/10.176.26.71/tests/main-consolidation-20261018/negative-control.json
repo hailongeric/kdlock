@@ -1,0 +1,13 @@
+{
+  "child_pid": 1602856,
+  "dropped_old_lines": 2,
+  "expected_signal": "SIGSEGV",
+  "invocation": "exercise_abi(1, direct=True, poison_stack=True, premature_pop=True)",
+  "new_lines": [
+    "[259361.803744] fixture[1602856]: segfault at 296 ip 000055d84471d926 sp 00007ffdb9acba88 error 4 in fixture[55d84471b000+4000] likely on CPU 37 (core 5, socket 1)",
+    "[259361.803856] Code: 00 48 c7 84 24 48 ff ff ff 46 02 00 00 48 c7 84 24 40 ff ff ff 46 02 00 00 48 83 bd 58 ff ff ff 00 74 16 48 8b 85 58 ff ff ff <48> 8b 40 50 c7 00 00 00 00 00 e9 af 06 00 00 48 83 bd 60 ff ff ff"
+  ],
+  "result": "PASS",
+  "returncode": -11,
+  "source_sha256": "a9ffa7dda46aa7f5a601dfa4915b71590650172b250033539e665579a7525276"
+}

@@ -68,6 +68,8 @@ class Session:
             for name in ('duration_ms', 'peak_window_ms', 'peak_settle_ms',
                          'sample_ms', 'collector_cpu'):
                 args += ['--' + name.replace('_', '-'), spec[name]]
+            if spec.get('collector_shared', False):
+                args += ['--share-collector']
         else:
             args += ['--iterations', iterations]
         try:

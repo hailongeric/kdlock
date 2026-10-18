@@ -160,5 +160,5 @@ behavior; they do not establish every live remote/native schedule. Ordinary nati
 controls, actual JIT, context refusals and returned-body evidence remain separate.
 Known pinned-waiter dependencies, dynamic-address guards, general flags repair
 and immutable spin/rwlock versions remain open or deferred in [TODO](../TODO.md).
-Mutex frames on the compatibility branch bind an immutable image descriptor; see
-[the backport](legacy_mutex_compatibility.md).
+Mutex frames in the current implementation bind an immutable image descriptor; see
+[the backport](../history/legacy_mutex_compatibility.md).

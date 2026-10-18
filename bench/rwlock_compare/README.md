@@ -7,24 +7,19 @@ Use the separate [correctness test](../../workload_modules/rwlock/README.md) for
 instrumented checks of reader overlap and writer exclusion.
 
 Build, test and run only in the recovery guest on `10.176.26.71`. Follow
-[operations](../../docs/AGENTS.md) to verify the kernel, confirm a recovery snapshot
+[operations](../../docs/operations/VM.md) to verify the kernel, confirm a recovery snapshot
 and check that all work has finished before unloading modules.
 
 Edit source in the checkout on `380G10` and synchronize it to this guest first.
 New guest evidence belongs under `/root/kdlock-evidence/10.176.26.71/bench/<run>`;
 retain host archives and compact summaries in [the machine result layout](../results/README.md).
 
-The latest [RCUHT report](../results/380G10/bench/rwlock_compare/20261010-rcuht/README.md) contains 270 runs.
-All produced correct results and shut down cleanly. At 21 of the 30 combinations
-of write percentage and thread count, KD matched or exceeded both Native and
-TCLock on both peak and whole-run throughput. It fell short at the other nine.
-
-Older reports remain separate:
-
-- [2026-10-09 scaling](../results/380G10/bench/rwlock_compare/20261009-scaling/README.md): 270 runs with ABI1 and
-  one protected cacheline, at all 15 thread counts and 1%/20% writes.
-- [Initial mixes](../results/380G10/bench/rwlock_compare/20261009/README.md): 180 cacheline runs, 12 runs with KD
-  delegation disabled, and the ABI1 hash-writer refusal later resolved by ABI3.
+The [2026-10-15 c01 report](../results/10.176.26.71/bench/rwlock/20261015-c01/README.md)
+contains 378 accepted sessions at 1%/20% writes, over 1–8 workers and 12–60 by four.
+Its strict peak-and-whole parity criterion passes at 39 of 42 points; mixed JIT
+statuses remain separate. The [original-host RCUHT report](../results/380G10/bench/rwlock_compare/20261010-rcuht/README.md)
+retains its 270 runs and 21/30 parity result at the older topology/source version.
+These records do not constitute a new run of the consolidated provider.
 
 ## Cases
 
@@ -53,7 +48,8 @@ its original report.
 
 The default thread set matches the earlier spin/mutex comparison:
 `1 2 3 4 5 6 7 8 12 16 20 24 28 32 36`. Three rounds of each case with all three
-backends produce **270 sessions**. `--threads` selects a shorter set;
+backends produce **270 sessions**. `--threads` selects an explicit set, including the current 21-count grid
+through 60 workers;
 `--full-matrix` explicitly restores the default 15-point set.
 `--cpus` is an ordered list: a run with N workers uses the first N CPUs. Keep
 runs on one NUMA node separate from runs spanning nodes. The collector samples

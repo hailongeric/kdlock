@@ -1,5 +1,11 @@
 # Results from 10.176.26.71
 
+`master` selects KD-only `d2a2304`; see [current performance](../../../docs/PERFORMANCE.md).
+The [2026-10-18 consolidation checks](tests/main-consolidation-20261018/README.md)
+validate organization and tooling separately from the measured runtime.
+Historical owned/adaptive mutex and sleeping-rwsem reports below are preserved
+evidence, not current implementation selections.
+
 The [KD-only mutex round](bench/comparison/mutex-kdonly-20261017T140354Z/README.md) contains 504 fresh accepted/drained sessions
 at 1–8 workers by one and 12–60 by four, three repetitions, with accepted KD,
 Native and TCLock controls. It measures the removal of Linux mutex backing while
@@ -26,6 +32,9 @@ This is the machine directory for tests and benchmarks in the VM on the Ubuntu
 Xeon Gold 6438N host at `eric@10.176.26.71`. Source edits remain in the original
 checkout on `380G10` and are synchronized to this VM before testing.
 
+- [All-workload/API comparison, 2026-10-15](bench/comparison/workloads-20261015T180603Z/README.md): 21-count grid; historical owned mutex scope and omissions remain explicit.
+- [Expanded owned mutex, 2026-10-16](bench/comparison/mutex-expanded-20261016T040928Z/README.md): expanded synthetic/API coverage for the superseded protocol.
+- [Rwlock c01, 2026-10-15](bench/rwlock/20261015-c01/README.md): 378 sessions, 1%/20% writes, 39/42 strict parity points.
 - [Mutex and read/write API results, 2026-10-11](bench/real_api/20261011-sync/RESULTS.md):
   pipe-buffer/capacity queries, shared-file seeks and bounded UTS namespace
   reads/writes; 504 accepted sessions, three-round comparisons, JIT evidence and retained
@@ -37,7 +46,7 @@ checkout on `380G10` and are synchronized to this VM before testing.
   at six worker counts, 288 accepted sessions. The [run record](bench/real_api/20261011/README.md)
   retains validation, xattr refusal and exploratory failures; slower cases remain
   in the results.
-- [Latest mutex optimization, 2026-10-11](bench/comparison/mutex-opt-20261011T045425Z/README.md):
+- [Historical mutex optimization, 2026-10-11](bench/comparison/mutex-opt-20261011T045425Z/README.md):
   c01/hash, all three backends, 22 worker counts, three rounds;
   396 accepted, drained sessions. Causes, selected changes, rejected candidates
   and unresolved regressions are retained. Strict multithreaded parity holds at

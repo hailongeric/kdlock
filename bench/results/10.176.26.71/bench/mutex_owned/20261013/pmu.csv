@@ -1,0 +1,181 @@
+group,sample,arm,lock_kind,implementation,threads,repeat,post_work_rounds,diagnostic,score_eligible,event,value,unit,event_runtime_ns,running_pct,reported_metric,reported_metric_unit,value_per_completed_op
+legacy-pmu,c01-t02-r00-direct-native,native,mutex,native,2,0,64,True,False,cycles,8101131270.0,,4034132819.0,100.0,2.016,GHz,1102.7300422844723
+legacy-pmu,c01-t02-r00-direct-native,native,mutex,native,2,0,64,True,False,instructions,2216240861.0,,4034132819.0,100.0,0.27,insn per cycle,301.6758150078841
+legacy-pmu,c01-t02-r00-direct-native,native,mutex,native,2,0,64,True,False,cache-misses,15785.0,,4034132819.0,100.0,,,0.002148662098825661
+legacy-pmu,c01-t02-r00-direct-native,native,mutex,native,2,0,64,True,False,task-clock,4018.13,msec,4018130981.0,100.0,1.998,CPUs utilized,0.0005469498662752204
+legacy-pmu,c01-t02-r00-direct-native,native,mutex,native,2,0,64,True,False,context-switches,390.0,,4018130981.0,100.0,97.060,/sec,5.308699515628811e-05
+legacy-pmu,c01-t02-r00-direct-native,native,mutex,native,2,0,64,True,False,cpu-migrations,3.0,,4018130981.0,100.0,0.747,/sec,4.083615012022163e-07
+legacy-pmu,c01-t02-r00-direct-tclock,tclock,mutex,tclock,2,0,64,True,False,cycles,11680978661.0,,4028095676.0,100.0,2.906,GHz,864.6407734126288
+legacy-pmu,c01-t02-r00-direct-tclock,tclock,mutex,tclock,2,0,64,True,False,instructions,2843611527.0,,4028095676.0,100.0,0.24,insn per cycle,210.487711804437
+legacy-pmu,c01-t02-r00-direct-tclock,tclock,mutex,tclock,2,0,64,True,False,cache-misses,13050.0,,4028095676.0,100.0,,,0.0009659774596376867
+legacy-pmu,c01-t02-r00-direct-tclock,tclock,mutex,tclock,2,0,64,True,False,task-clock,4019.44,msec,4019444003.0,100.0,2.005,CPUs utilized,0.00029752401841885847
+legacy-pmu,c01-t02-r00-direct-tclock,tclock,mutex,tclock,2,0,64,True,False,context-switches,209.0,,4019444003.0,100.0,51.997,/sec,1.547044360645797e-05
+legacy-pmu,c01-t02-r00-direct-tclock,tclock,mutex,tclock,2,0,64,True,False,cpu-migrations,3.0,,4019444003.0,100.0,0.746,/sec,2.2206378382475556e-07
+legacy-pmu,c01-t02-r00-direct-kdlock-adaptive,kdlock,mutex,legacy,2,0,64,True,False,cycles,14296822123.0,,4035738167.0,100.0,3.556,GHz,845.8328752002052
+legacy-pmu,c01-t02-r00-direct-kdlock-adaptive,kdlock,mutex,legacy,2,0,64,True,False,instructions,6487712529.0,,4035738167.0,100.0,0.45,insn per cycle,383.82799300890935
+legacy-pmu,c01-t02-r00-direct-kdlock-adaptive,kdlock,mutex,legacy,2,0,64,True,False,cache-misses,23656.0,,4035738167.0,100.0,,,0.0013995433617059946
+legacy-pmu,c01-t02-r00-direct-kdlock-adaptive,kdlock,mutex,legacy,2,0,64,True,False,task-clock,4020.04,msec,4020037284.0,100.0,2.000,CPUs utilized,0.0002378348112864629
+legacy-pmu,c01-t02-r00-direct-kdlock-adaptive,kdlock,mutex,legacy,2,0,64,True,False,context-switches,284.0,,4020037284.0,100.0,70.646,/sec,1.680209311483355e-05
+legacy-pmu,c01-t02-r00-direct-kdlock-adaptive,kdlock,mutex,legacy,2,0,64,True,False,cpu-migrations,3.0,,4020037284.0,100.0,0.746,/sec,1.774868991003544e-07
+legacy-pmu,c01-t04-r00-direct-native,native,mutex,native,4,0,64,True,False,cycles,24422793698.0,,7995319009.0,100.0,3.062,GHz,1818.6617207010027
+legacy-pmu,c01-t04-r00-direct-native,native,mutex,native,4,0,64,True,False,instructions,5547502875.0,,7995319009.0,100.0,0.23,insn per cycle,413.09897831497705
+legacy-pmu,c01-t04-r00-direct-native,native,mutex,native,4,0,64,True,False,cache-misses,20912.0,,7995319009.0,100.0,,,0.0015572278246945117
+legacy-pmu,c01-t04-r00-direct-native,native,mutex,native,4,0,64,True,False,task-clock,7976.53,msec,7976534004.0,100.0,3.981,CPUs utilized,0.0005939783119983987
+legacy-pmu,c01-t04-r00-direct-native,native,mutex,native,4,0,64,True,False,context-switches,1729.0,,7976534004.0,100.0,216.761,/sec,0.00012875128676821014
+legacy-pmu,c01-t04-r00-direct-native,native,mutex,native,4,0,64,True,False,cpu-migrations,5.0,,7976534004.0,100.0,0.627,/sec,3.723287645118859e-07
+legacy-pmu,c01-t04-r00-direct-tclock,tclock,mutex,tclock,4,0,64,True,False,cycles,28533446645.0,,8028481784.0,100.0,3.558,GHz,4186.087882409346
+legacy-pmu,c01-t04-r00-direct-tclock,tclock,mutex,tclock,4,0,64,True,False,instructions,3529672710.0,,8028481784.0,100.0,0.12,insn per cycle,517.8315940598475
+legacy-pmu,c01-t04-r00-direct-tclock,tclock,mutex,tclock,4,0,64,True,False,cache-misses,16959.0,,8028481784.0,100.0,,,0.0024880227503192368
+legacy-pmu,c01-t04-r00-direct-tclock,tclock,mutex,tclock,4,0,64,True,False,task-clock,8019.6,msec,8019602842.0,100.0,4.003,CPUs utilized,0.0011765403177345453
+legacy-pmu,c01-t04-r00-direct-tclock,tclock,mutex,tclock,4,0,64,True,False,context-switches,218.0,,8019602842.0,100.0,27.183,/sec,3.1982366859460677e-05
+legacy-pmu,c01-t04-r00-direct-tclock,tclock,mutex,tclock,4,0,64,True,False,cpu-migrations,5.0,,8019602842.0,100.0,0.623,/sec,7.335405242995568e-07
+legacy-pmu,c01-t04-r00-direct-kdlock-adaptive,kdlock,mutex,legacy,4,0,64,True,False,cycles,28496624923.0,,8037695883.0,100.0,3.552,GHz,2650.6712967131502
+legacy-pmu,c01-t04-r00-direct-kdlock-adaptive,kdlock,mutex,legacy,4,0,64,True,False,instructions,10739115474.0,,8037695883.0,100.0,0.38,insn per cycle,998.9205815052387
+legacy-pmu,c01-t04-r00-direct-kdlock-adaptive,kdlock,mutex,legacy,4,0,64,True,False,cache-misses,27689.0,,8037695883.0,100.0,,,0.0025755484283843315
+legacy-pmu,c01-t04-r00-direct-kdlock-adaptive,kdlock,mutex,legacy,4,0,64,True,False,task-clock,8021.81,msec,8021805044.0,100.0,3.988,CPUs utilized,0.0007461649080247649
+legacy-pmu,c01-t04-r00-direct-kdlock-adaptive,kdlock,mutex,legacy,4,0,64,True,False,context-switches,244.0,,8021805044.0,100.0,30.417,/sec,2.269615430408382e-05
+legacy-pmu,c01-t04-r00-direct-kdlock-adaptive,kdlock,mutex,legacy,4,0,64,True,False,cpu-migrations,5.0,,8021805044.0,100.0,0.623,/sec,4.650851291820455e-07
+legacy-pmu,c01-t16-r00-direct-native,native,mutex,native,16,0,64,True,False,cycles,87232520881.0,,31208456965.0,100.0,2.802,GHz,6645.708052646687
+legacy-pmu,c01-t16-r00-direct-native,native,mutex,native,16,0,64,True,False,instructions,19766345270.0,,31208456965.0,100.0,0.23,insn per cycle,1505.8760036458536
+legacy-pmu,c01-t16-r00-direct-native,native,mutex,native,16,0,64,True,False,cache-misses,49680.0,,31208456965.0,100.0,,,0.0037848129656356047
+legacy-pmu,c01-t16-r00-direct-native,native,mutex,native,16,0,64,True,False,task-clock,31134.89,msec,31134888876.0,100.0,15.527,CPUs utilized,0.0023719753493485975
+legacy-pmu,c01-t16-r00-direct-native,native,mutex,native,16,0,64,True,False,context-switches,8230.0,,31134888876.0,100.0,264.334,/sec,0.000626992969146156
+legacy-pmu,c01-t16-r00-direct-native,native,mutex,native,16,0,64,True,False,cpu-migrations,17.0,,31134888876.0,100.0,0.546,/sec,1.2951252096579163e-06
+legacy-pmu,c01-t16-r00-direct-tclock,tclock,mutex,tclock,16,0,64,True,False,cycles,104415144960.0,,32045126885.0,100.0,3.259,GHz,14885.283748768294
+legacy-pmu,c01-t16-r00-direct-tclock,tclock,mutex,tclock,16,0,64,True,False,instructions,11450571098.0,,32045126885.0,100.0,0.11,insn per cycle,1632.378137716233
+legacy-pmu,c01-t16-r00-direct-tclock,tclock,mutex,tclock,16,0,64,True,False,cache-misses,53257.0,,32045126885.0,100.0,,,0.007592246861428415
+legacy-pmu,c01-t16-r00-direct-tclock,tclock,mutex,tclock,16,0,64,True,False,task-clock,32034.19,msec,32034194691.0,100.0,15.975,CPUs utilized,0.004566751384529761
+legacy-pmu,c01-t16-r00-direct-tclock,tclock,mutex,tclock,16,0,64,True,False,context-switches,280.0,,32034194691.0,100.0,8.741,/sec,3.991642640779533e-05
+legacy-pmu,c01-t16-r00-direct-tclock,tclock,mutex,tclock,16,0,64,True,False,cpu-migrations,17.0,,32034194691.0,100.0,0.531,/sec,2.4234973176161454e-06
+legacy-pmu,c01-t16-r00-direct-kdlock-adaptive,kdlock,mutex,legacy,16,0,64,True,False,cycles,104996704387.0,,32054623435.0,100.0,3.277,GHz,7126.7311296562775
+legacy-pmu,c01-t16-r00-direct-kdlock-adaptive,kdlock,mutex,legacy,16,0,64,True,False,instructions,32859665687.0,,32054623435.0,100.0,0.31,insn per cycle,2230.3747887027585
+legacy-pmu,c01-t16-r00-direct-kdlock-adaptive,kdlock,mutex,legacy,16,0,64,True,False,cache-misses,57760.0,,32054623435.0,100.0,,,0.003920503909643788
+legacy-pmu,c01-t16-r00-direct-kdlock-adaptive,kdlock,mutex,legacy,16,0,64,True,False,task-clock,32038.35,msec,32038352398.0,100.0,15.926,CPUs utilized,0.0021746273620764553
+legacy-pmu,c01-t16-r00-direct-kdlock-adaptive,kdlock,mutex,legacy,16,0,64,True,False,context-switches,265.0,,32038352398.0,100.0,8.271,/sec,1.79870764552563e-05
+legacy-pmu,c01-t16-r00-direct-kdlock-adaptive,kdlock,mutex,legacy,16,0,64,True,False,cpu-migrations,16.0,,32038352398.0,100.0,0.499,/sec,1.0860121633362293e-06
+legacy-pmu,c01-t28-r00-direct-native,native,mutex,native,28,0,64,True,False,cycles,131975181277.0,,53317648342.0,100.0,2.482,GHz,13516.374816163217
+legacy-pmu,c01-t28-r00-direct-native,native,mutex,native,28,0,64,True,False,instructions,29009499842.0,,53317648342.0,100.0,0.22,insn per cycle,2971.037958045476
+legacy-pmu,c01-t28-r00-direct-native,native,mutex,native,28,0,64,True,False,cache-misses,79796.0,,53317648342.0,100.0,,,0.008172389947825175
+legacy-pmu,c01-t28-r00-direct-native,native,mutex,native,28,0,64,True,False,task-clock,53182.25,msec,53182249297.0,100.0,26.496,CPUs utilized,0.005446715190018615
+legacy-pmu,c01-t28-r00-direct-native,native,mutex,native,28,0,64,True,False,context-switches,14641.0,,53182249297.0,100.0,275.299,/sec,0.0014994731719147375
+legacy-pmu,c01-t28-r00-direct-native,native,mutex,native,28,0,64,True,False,cpu-migrations,29.0,,53182249297.0,100.0,0.545,/sec,2.9700650218924515e-06
+legacy-pmu,c01-t28-r00-direct-tclock,tclock,mutex,tclock,28,0,64,True,False,cycles,149222711946.0,,56114991020.0,100.0,2.660,GHz,24003.509246378788
+legacy-pmu,c01-t28-r00-direct-tclock,tclock,mutex,tclock,28,0,64,True,False,instructions,15820362816.0,,56114991020.0,100.0,0.11,insn per cycle,2544.815197249218
+legacy-pmu,c01-t28-r00-direct-tclock,tclock,mutex,tclock,28,0,64,True,False,cache-misses,78485.0,,56114991020.0,100.0,,,0.012624857159034756
+legacy-pmu,c01-t28-r00-direct-tclock,tclock,mutex,tclock,28,0,64,True,False,task-clock,56102.45,msec,56102454355.0,100.0,27.920,CPUs utilized,0.009024468593003623
+legacy-pmu,c01-t28-r00-direct-tclock,tclock,mutex,tclock,28,0,64,True,False,context-switches,320.0,,56102454355.0,100.0,5.704,/sec,5.147422170976775e-05
+legacy-pmu,c01-t28-r00-direct-tclock,tclock,mutex,tclock,28,0,64,True,False,cpu-migrations,29.0,,56102454355.0,100.0,0.517,/sec,4.6648513424477025e-06
+legacy-pmu,c01-t28-r00-direct-kdlock-adaptive,kdlock,mutex,legacy,28,0,64,True,False,cycles,150005507810.0,,56109112799.0,100.0,2.674,GHz,11339.97164582003
+legacy-pmu,c01-t28-r00-direct-kdlock-adaptive,kdlock,mutex,legacy,28,0,64,True,False,instructions,36884466497.0,,56109112799.0,100.0,0.25,insn per cycle,2788.356310069404
+legacy-pmu,c01-t28-r00-direct-kdlock-adaptive,kdlock,mutex,legacy,28,0,64,True,False,cache-misses,86254.0,,56109112799.0,100.0,,,0.0065205466693760645
+legacy-pmu,c01-t28-r00-direct-kdlock-adaptive,kdlock,mutex,legacy,28,0,64,True,False,task-clock,56091.68,msec,56091682644.0,100.0,27.832,CPUs utilized,0.004240364704288589
+legacy-pmu,c01-t28-r00-direct-kdlock-adaptive,kdlock,mutex,legacy,28,0,64,True,False,context-switches,324.0,,56091682644.0,100.0,5.776,/sec,2.4493439386901996e-05
+legacy-pmu,c01-t28-r00-direct-kdlock-adaptive,kdlock,mutex,legacy,28,0,64,True,False,cpu-migrations,29.0,,56091682644.0,100.0,0.517,/sec,2.1923140191980184e-06
+legacy-pmu,c01-t32-r00-direct-native,native,mutex,native,32,0,64,True,False,cycles,155118924407.0,,60511855896.0,100.0,2.570,GHz,16088.718030504057
+legacy-pmu,c01-t32-r00-direct-native,native,mutex,native,32,0,64,True,False,instructions,34015715094.0,,60511855896.0,100.0,0.22,insn per cycle,3528.062425944918
+legacy-pmu,c01-t32-r00-direct-native,native,mutex,native,32,0,64,True,False,cache-misses,80221.0,,60511855896.0,100.0,,,0.008320409995486167
+legacy-pmu,c01-t32-r00-direct-native,native,mutex,native,32,0,64,True,False,task-clock,60361.73,msec,60361734034.0,100.0,30.072,CPUs utilized,0.006260634268294302
+legacy-pmu,c01-t32-r00-direct-native,native,mutex,native,32,0,64,True,False,context-switches,17204.0,,60361734034.0,100.0,285.015,/sec,0.0017843748340502362
+legacy-pmu,c01-t32-r00-direct-native,native,mutex,native,32,0,64,True,False,cpu-migrations,33.0,,60361734034.0,100.0,0.547,/sec,3.4227138760554406e-06
+legacy-pmu,c01-t32-r00-direct-tclock,tclock,mutex,tclock,32,0,64,True,False,cycles,170361145874.0,,64083074332.0,100.0,2.659,GHz,26073.47200839684
+legacy-pmu,c01-t32-r00-direct-tclock,tclock,mutex,tclock,32,0,64,True,False,instructions,17921064156.0,,64083074332.0,100.0,0.11,insn per cycle,2742.787166844611
+legacy-pmu,c01-t32-r00-direct-tclock,tclock,mutex,tclock,32,0,64,True,False,cache-misses,106110.0,,64083074332.0,100.0,,,0.01623994779218744
+legacy-pmu,c01-t32-r00-direct-tclock,tclock,mutex,tclock,32,0,64,True,False,task-clock,64072.18,msec,64072177948.0,100.0,31.946,CPUs utilized,0.00980613380578302
+legacy-pmu,c01-t32-r00-direct-tclock,tclock,mutex,tclock,32,0,64,True,False,context-switches,344.0,,64072177948.0,100.0,5.369,/sec,5.2648591466520395e-05
+legacy-pmu,c01-t32-r00-direct-tclock,tclock,mutex,tclock,32,0,64,True,False,cpu-migrations,33.0,,64072177948.0,100.0,0.515,/sec,5.0505916232417815e-06
+legacy-pmu,c01-t32-r00-direct-kdlock-adaptive,kdlock,mutex,legacy,32,0,64,True,False,cycles,170756828919.0,,64085283728.0,100.0,2.665,GHz,12871.593812640507
+legacy-pmu,c01-t32-r00-direct-kdlock-adaptive,kdlock,mutex,legacy,32,0,64,True,False,instructions,39572080385.0,,64085283728.0,100.0,0.23,insn per cycle,2982.9304529805727
+legacy-pmu,c01-t32-r00-direct-kdlock-adaptive,kdlock,mutex,legacy,32,0,64,True,False,cache-misses,120893.0,,64085283728.0,100.0,,,0.009112874727427105
+legacy-pmu,c01-t32-r00-direct-kdlock-adaptive,kdlock,mutex,legacy,32,0,64,True,False,task-clock,64069.26,msec,64069260430.0,100.0,31.814,CPUs utilized,0.004829519825456861
+legacy-pmu,c01-t32-r00-direct-kdlock-adaptive,kdlock,mutex,legacy,32,0,64,True,False,context-switches,379.0,,64069260430.0,100.0,5.915,/sec,2.8568895814438164e-05
+legacy-pmu,c01-t32-r00-direct-kdlock-adaptive,kdlock,mutex,legacy,32,0,64,True,False,cpu-migrations,32.0,,64069260430.0,100.0,0.499,/sec,2.4121495146755177e-06
+legacy-pmu,c01-t60-r00-direct-native,native,mutex,native,60,0,64,True,False,cycles,82593435656.0,,44356117624.0,100.0,1.874,GHz,38172.10222802295
+legacy-pmu,c01-t60-r00-direct-native,native,mutex,native,60,0,64,True,False,instructions,15926281415.0,,44356117624.0,100.0,0.19,insn per cycle,7360.629055530496
+legacy-pmu,c01-t60-r00-direct-native,native,mutex,native,60,0,64,True,False,cache-misses,29249605.0,,44356117624.0,100.0,,,13.518252429158778
+legacy-pmu,c01-t60-r00-direct-native,native,mutex,native,60,0,64,True,False,task-clock,44066.19,msec,44066187502.0,100.0,21.519,CPUs utilized,0.02036601451579508
+legacy-pmu,c01-t60-r00-direct-native,native,mutex,native,60,0,64,True,False,context-switches,14939.0,,44066187502.0,100.0,339.013,/sec,0.006904338470184571
+legacy-pmu,c01-t60-r00-direct-native,native,mutex,native,60,0,64,True,False,cpu-migrations,66.0,,44066187502.0,100.0,1.498,/sec,3.0503135352579272e-05
+legacy-pmu,c01-t60-r00-direct-tclock,tclock,mutex,tclock,60,0,64,True,False,cycles,280860106519.0,,121293050136.0,100.0,2.316,GHz,48555.42337197804
+legacy-pmu,c01-t60-r00-direct-tclock,tclock,mutex,tclock,60,0,64,True,False,instructions,28611817982.0,,121293050136.0,100.0,0.10,insn per cycle,4946.444522778823
+legacy-pmu,c01-t60-r00-direct-tclock,tclock,mutex,tclock,60,0,64,True,False,cache-misses,2156662.0,,121293050136.0,100.0,,,0.3728462464040717
+legacy-pmu,c01-t60-r00-direct-tclock,tclock,mutex,tclock,60,0,64,True,False,task-clock,121270.91,msec,121270913302.0,100.0,59.294,CPUs utilized,0.020965456613741978
+legacy-pmu,c01-t60-r00-direct-tclock,tclock,mutex,tclock,60,0,64,True,False,context-switches,497.0,,121270913302.0,100.0,4.098,/sec,8.5921940694844e-05
+legacy-pmu,c01-t60-r00-direct-tclock,tclock,mutex,tclock,60,0,64,True,False,cpu-migrations,62.0,,121270913302.0,100.0,0.511,/sec,1.0718632440805489e-05
+legacy-pmu,c01-t60-r00-direct-kdlock-adaptive,kdlock,mutex,legacy,60,0,64,True,False,cycles,308636524203.0,,120136710822.0,100.0,2.569,GHz,29738.078060925207
+legacy-pmu,c01-t60-r00-direct-kdlock-adaptive,kdlock,mutex,legacy,60,0,64,True,False,instructions,52845431102.0,,120136710822.0,100.0,0.17,insn per cycle,5091.819768683246
+legacy-pmu,c01-t60-r00-direct-kdlock-adaptive,kdlock,mutex,legacy,60,0,64,True,False,cache-misses,22117904.0,,120136710822.0,100.0,,,2.1311280555487038
+legacy-pmu,c01-t60-r00-direct-kdlock-adaptive,kdlock,mutex,legacy,60,0,64,True,False,task-clock,120116.75,msec,120116749354.0,100.0,59.532,CPUs utilized,0.011573618181285612
+legacy-pmu,c01-t60-r00-direct-kdlock-adaptive,kdlock,mutex,legacy,60,0,64,True,False,context-switches,732.0,,120116749354.0,100.0,6.094,/sec,7.053045065489257e-05
+legacy-pmu,c01-t60-r00-direct-kdlock-adaptive,kdlock,mutex,legacy,60,0,64,True,False,cpu-migrations,43.0,,120116749354.0,100.0,0.358,/sec,4.143182210601613e-06
+finite-pmu,c01-t02-r00-direct-kdlock-adaptive-owned-v1,kdlock,mutex,owned-v1,2,0,64,True,False,cycles,9129004514.0,,4040230892.0,100.0,2.270,GHz,1191.4923279365332
+finite-pmu,c01-t02-r00-direct-kdlock-adaptive-owned-v1,kdlock,mutex,owned-v1,2,0,64,True,False,instructions,4089215842.0,,4040230892.0,100.0,0.45,insn per cycle,533.7131004314377
+finite-pmu,c01-t02-r00-direct-kdlock-adaptive-owned-v1,kdlock,mutex,owned-v1,2,0,64,True,False,cache-misses,19738.0,,4040230892.0,100.0,,,0.002576148969227171
+finite-pmu,c01-t02-r00-direct-kdlock-adaptive-owned-v1,kdlock,mutex,owned-v1,2,0,64,True,False,task-clock,4020.79,msec,4020793582.0,100.0,1.995,CPUs utilized,0.0005247823494770958
+finite-pmu,c01-t02-r00-direct-kdlock-adaptive-owned-v1,kdlock,mutex,owned-v1,2,0,64,True,False,context-switches,208.0,,4020793582.0,100.0,51.731,/sec,2.7147582612182165e-05
+finite-pmu,c01-t02-r00-direct-kdlock-adaptive-owned-v1,kdlock,mutex,owned-v1,2,0,64,True,False,cpu-migrations,3.0,,4020793582.0,100.0,0.746,/sec,3.915516722910889e-07
+finite-pmu,c01-t04-r00-direct-kdlock-adaptive-owned-v1,kdlock,mutex,owned-v1,4,0,64,True,False,cycles,21621363738.0,,8040717173.0,100.0,2.696,GHz,6830.997420055201
+finite-pmu,c01-t04-r00-direct-kdlock-adaptive-owned-v1,kdlock,mutex,owned-v1,4,0,64,True,False,instructions,5924119074.0,,8040717173.0,100.0,0.27,insn per cycle,1871.6507710136282
+finite-pmu,c01-t04-r00-direct-kdlock-adaptive-owned-v1,kdlock,mutex,owned-v1,4,0,64,True,False,cache-misses,22070.0,,8040717173.0,100.0,,,0.006972738393723714
+finite-pmu,c01-t04-r00-direct-kdlock-adaptive-owned-v1,kdlock,mutex,owned-v1,4,0,64,True,False,task-clock,8021.17,msec,8021171090.0,100.0,3.981,CPUs utilized,0.0025341875859349727
+finite-pmu,c01-t04-r00-direct-kdlock-adaptive-owned-v1,kdlock,mutex,owned-v1,4,0,64,True,False,context-switches,218.0,,8021171090.0,100.0,27.178,/sec,6.887435296020705e-05
+finite-pmu,c01-t04-r00-direct-kdlock-adaptive-owned-v1,kdlock,mutex,owned-v1,4,0,64,True,False,cpu-migrations,5.0,,8021171090.0,100.0,0.623,/sec,1.5796869945001617e-06
+finite-pmu,c01-t16-r00-direct-kdlock-adaptive-owned-v1,kdlock,mutex,owned-v1,16,0,64,True,False,cycles,97843881012.0,,32056512009.0,100.0,3.054,GHz,20877.40537516387
+finite-pmu,c01-t16-r00-direct-kdlock-adaptive-owned-v1,kdlock,mutex,owned-v1,16,0,64,True,False,instructions,19956998435.0,,32056512009.0,100.0,0.20,insn per cycle,4258.317864025714
+finite-pmu,c01-t16-r00-direct-kdlock-adaptive-owned-v1,kdlock,mutex,owned-v1,16,0,64,True,False,cache-misses,61144.0,,32056512009.0,100.0,,,0.013046580542961709
+finite-pmu,c01-t16-r00-direct-kdlock-adaptive-owned-v1,kdlock,mutex,owned-v1,16,0,64,True,False,task-clock,32037.46,msec,32037459094.0,100.0,15.902,CPUs utilized,0.00683598230867974
+finite-pmu,c01-t16-r00-direct-kdlock-adaptive-owned-v1,kdlock,mutex,owned-v1,16,0,64,True,False,context-switches,315.0,,32037459094.0,100.0,9.832,/sec,6.721301960998525e-05
+finite-pmu,c01-t16-r00-direct-kdlock-adaptive-owned-v1,kdlock,mutex,owned-v1,16,0,64,True,False,cpu-migrations,17.0,,32037459094.0,100.0,0.531,/sec,3.6273693122849184e-06
+finite-pmu,c01-t28-r00-direct-kdlock-adaptive-owned-v1,kdlock,mutex,owned-v1,28,0,64,True,False,cycles,146591774641.0,,56114563233.0,100.0,2.613,GHz,32824.541111573875
+finite-pmu,c01-t28-r00-direct-kdlock-adaptive-owned-v1,kdlock,mutex,owned-v1,28,0,64,True,False,instructions,27331626654.0,,56114563233.0,100.0,0.19,insn per cycle,6120.0439448086845
+finite-pmu,c01-t28-r00-direct-kdlock-adaptive-owned-v1,kdlock,mutex,owned-v1,28,0,64,True,False,cache-misses,102704.0,,56114563233.0,100.0,,,0.022997277156778448
+finite-pmu,c01-t28-r00-direct-kdlock-adaptive-owned-v1,kdlock,mutex,owned-v1,28,0,64,True,False,task-clock,56093.14,msec,56093140408.0,100.0,27.766,CPUs utilized,0.012560265298079678
+finite-pmu,c01-t28-r00-direct-kdlock-adaptive-owned-v1,kdlock,mutex,owned-v1,28,0,64,True,False,context-switches,386.0,,56093140408.0,100.0,6.881,/sec,8.643235884207509e-05
+finite-pmu,c01-t28-r00-direct-kdlock-adaptive-owned-v1,kdlock,mutex,owned-v1,28,0,64,True,False,cpu-migrations,29.0,,56093140408.0,100.0,0.517,/sec,6.493622814560046e-06
+finite-pmu,c01-t32-r00-direct-kdlock-adaptive-owned-v1,kdlock,mutex,owned-v1,32,0,64,True,False,cycles,169295456625.0,,63956283795.0,100.0,2.649,GHz,39917.3282695362
+finite-pmu,c01-t32-r00-direct-kdlock-adaptive-owned-v1,kdlock,mutex,owned-v1,32,0,64,True,False,instructions,30580464284.0,,63956283795.0,100.0,0.18,insn per cycle,7210.4145958456575
+finite-pmu,c01-t32-r00-direct-kdlock-adaptive-owned-v1,kdlock,mutex,owned-v1,32,0,64,True,False,cache-misses,109359.0,,63956283795.0,100.0,,,0.025785211187903664
+finite-pmu,c01-t32-r00-direct-kdlock-adaptive-owned-v1,kdlock,mutex,owned-v1,32,0,64,True,False,task-clock,63915.44,msec,63915441795.0,100.0,31.614,CPUs utilized,0.015070301653890264
+finite-pmu,c01-t32-r00-direct-kdlock-adaptive-owned-v1,kdlock,mutex,owned-v1,32,0,64,True,False,context-switches,2714.0,,63915441795.0,100.0,42.462,/sec,0.0006399204744371341
+finite-pmu,c01-t32-r00-direct-kdlock-adaptive-owned-v1,kdlock,mutex,owned-v1,32,0,64,True,False,cpu-migrations,32.0,,63915441795.0,100.0,0.501,/sec,7.545119816502686e-06
+finite-pmu,c01-t60-r00-direct-kdlock-adaptive-owned-v1,kdlock,mutex,owned-v1,60,0,64,True,False,cycles,318497305407.0,,120781665281.0,100.0,2.637,GHz,125669.70699455493
+finite-pmu,c01-t60-r00-direct-kdlock-adaptive-owned-v1,kdlock,mutex,owned-v1,60,0,64,True,False,instructions,51130166191.0,,120781665281.0,100.0,0.16,insn per cycle,20174.46582662563
+finite-pmu,c01-t60-r00-direct-kdlock-adaptive-owned-v1,kdlock,mutex,owned-v1,60,0,64,True,False,cache-misses,54825100.0,,120781665281.0,100.0,,,21.63237847222222
+finite-pmu,c01-t60-r00-direct-kdlock-adaptive-owned-v1,kdlock,mutex,owned-v1,60,0,64,True,False,task-clock,120762.15,msec,120762145733.0,100.0,59.381,CPUs utilized,0.047649206912878786
+finite-pmu,c01-t60-r00-direct-kdlock-adaptive-owned-v1,kdlock,mutex,owned-v1,60,0,64,True,False,context-switches,686.0,,120762145733.0,100.0,5.681,/sec,0.00027067550505050506
+finite-pmu,c01-t60-r00-direct-kdlock-adaptive-owned-v1,kdlock,mutex,owned-v1,60,0,64,True,False,cpu-migrations,61.0,,120762145733.0,100.0,0.505,/sec,2.406881313131313e-05
+refill-pmu,c01-t02-r00-direct-kdlock-adaptive-owned-v1-refill,kdlock,mutex,owned-v1,2,0,64,True,False,cycles,9229956856.0,,4034807365.0,100.0,2.296,GHz,1323.2958587957864
+refill-pmu,c01-t02-r00-direct-kdlock-adaptive-owned-v1-refill,kdlock,mutex,owned-v1,2,0,64,True,False,instructions,4172878110.0,,4034807365.0,100.0,0.45,insn per cycle,598.2641531669786
+refill-pmu,c01-t02-r00-direct-kdlock-adaptive-owned-v1-refill,kdlock,mutex,owned-v1,2,0,64,True,False,cache-misses,21112.0,,4034807365.0,100.0,,,0.0030268204507083608
+refill-pmu,c01-t02-r00-direct-kdlock-adaptive-owned-v1-refill,kdlock,mutex,owned-v1,2,0,64,True,False,task-clock,4019.78,msec,4019777864.0,100.0,1.999,CPUs utilized,0.0005763145278205975
+refill-pmu,c01-t02-r00-direct-kdlock-adaptive-owned-v1-refill,kdlock,mutex,owned-v1,2,0,64,True,False,context-switches,210.0,,4019777864.0,100.0,52.242,/sec,3.010763047786831e-05
+refill-pmu,c01-t02-r00-direct-kdlock-adaptive-owned-v1-refill,kdlock,mutex,owned-v1,2,0,64,True,False,cpu-migrations,3.0,,4019777864.0,100.0,0.746,/sec,4.3010900682669015e-07
+refill-pmu,c01-t04-r00-direct-kdlock-adaptive-owned-v1-refill,kdlock,mutex,owned-v1,4,0,64,True,False,cycles,22920151534.0,,8036509321.0,100.0,2.858,GHz,6246.1170594172945
+refill-pmu,c01-t04-r00-direct-kdlock-adaptive-owned-v1-refill,kdlock,mutex,owned-v1,4,0,64,True,False,instructions,7321574686.0,,8036509321.0,100.0,0.32,insn per cycle,1995.249136123029
+refill-pmu,c01-t04-r00-direct-kdlock-adaptive-owned-v1-refill,kdlock,mutex,owned-v1,4,0,64,True,False,cache-misses,25367.0,,8036509321.0,100.0,,,0.006912923381470629
+refill-pmu,c01-t04-r00-direct-kdlock-adaptive-owned-v1-refill,kdlock,mutex,owned-v1,4,0,64,True,False,task-clock,8020.86,msec,8020864175.0,100.0,3.988,CPUs utilized,0.0021858158486814565
+refill-pmu,c01-t04-r00-direct-kdlock-adaptive-owned-v1-refill,kdlock,mutex,owned-v1,4,0,64,True,False,context-switches,215.0,,8020864175.0,100.0,26.805,/sec,5.8591024836054134e-05
+refill-pmu,c01-t04-r00-direct-kdlock-adaptive-owned-v1-refill,kdlock,mutex,owned-v1,4,0,64,True,False,cpu-migrations,5.0,,8020864175.0,100.0,0.623,/sec,1.3625819729314916e-06
+refill-pmu,c01-t16-r00-direct-kdlock-adaptive-owned-v1-refill,kdlock,mutex,owned-v1,16,0,64,True,False,cycles,99844605518.0,,32057374651.0,100.0,3.116,GHz,20930.449195271412
+refill-pmu,c01-t16-r00-direct-kdlock-adaptive-owned-v1-refill,kdlock,mutex,owned-v1,16,0,64,True,False,instructions,19692146152.0,,32057374651.0,100.0,0.20,insn per cycle,4128.069437922614
+refill-pmu,c01-t16-r00-direct-kdlock-adaptive-owned-v1-refill,kdlock,mutex,owned-v1,16,0,64,True,False,cache-misses,67145.0,,32057374651.0,100.0,,,0.014075622853386283
+refill-pmu,c01-t16-r00-direct-kdlock-adaptive-owned-v1-refill,kdlock,mutex,owned-v1,16,0,64,True,False,task-clock,32041.46,msec,32041459141.0,100.0,15.925,CPUs utilized,0.006716859135182999
+refill-pmu,c01-t16-r00-direct-kdlock-adaptive-owned-v1-refill,kdlock,mutex,owned-v1,16,0,64,True,False,context-switches,307.0,,32041459141.0,100.0,9.581,/sec,6.435648545669206e-05
+refill-pmu,c01-t16-r00-direct-kdlock-adaptive-owned-v1-refill,kdlock,mutex,owned-v1,16,0,64,True,False,cpu-migrations,17.0,,32041459141.0,100.0,0.531,/sec,3.5637141783836e-06
+refill-pmu,c01-t28-r00-direct-kdlock-adaptive-owned-v1-refill,kdlock,mutex,owned-v1,28,0,64,True,False,cycles,146266322770.0,,55999040764.0,100.0,2.614,GHz,32729.152965590452
+refill-pmu,c01-t28-r00-direct-kdlock-adaptive-owned-v1-refill,kdlock,mutex,owned-v1,28,0,64,True,False,instructions,26998562338.0,,55999040764.0,100.0,0.18,insn per cycle,6041.309167257404
+refill-pmu,c01-t28-r00-direct-kdlock-adaptive-owned-v1-refill,kdlock,mutex,owned-v1,28,0,64,True,False,cache-misses,99855.0,,55999040764.0,100.0,,,0.022343964813541846
+refill-pmu,c01-t28-r00-direct-kdlock-adaptive-owned-v1-refill,kdlock,mutex,owned-v1,28,0,64,True,False,task-clock,55965.67,msec,55965666896.0,100.0,27.783,CPUs utilized,0.012523108119235836
+refill-pmu,c01-t28-r00-direct-kdlock-adaptive-owned-v1-refill,kdlock,mutex,owned-v1,28,0,64,True,False,context-switches,2482.0,,55965666896.0,100.0,44.349,/sec,0.0005553825113135132
+refill-pmu,c01-t28-r00-direct-kdlock-adaptive-owned-v1-refill,kdlock,mutex,owned-v1,28,0,64,True,False,cpu-migrations,29.0,,55965666896.0,100.0,0.518,/sec,6.489159076588188e-06
+refill-pmu,c01-t32-r00-direct-kdlock-adaptive-owned-v1-refill,kdlock,mutex,owned-v1,32,0,64,True,False,cycles,169188748448.0,,64109399997.0,100.0,2.640,GHz,42920.73961715807
+refill-pmu,c01-t32-r00-direct-kdlock-adaptive-owned-v1-refill,kdlock,mutex,owned-v1,32,0,64,True,False,instructions,29347775820.0,,64109399997.0,100.0,0.17,insn per cycle,7445.106461675217
+refill-pmu,c01-t32-r00-direct-kdlock-adaptive-owned-v1-refill,kdlock,mutex,owned-v1,32,0,64,True,False,cache-misses,124030.0,,64109399997.0,100.0,,,0.031464617969866215
+refill-pmu,c01-t32-r00-direct-kdlock-adaptive-owned-v1-refill,kdlock,mutex,owned-v1,32,0,64,True,False,task-clock,64083.12,msec,64083123419.0,100.0,31.772,CPUs utilized,0.016256961131315757
+refill-pmu,c01-t32-r00-direct-kdlock-adaptive-owned-v1-refill,kdlock,mutex,owned-v1,32,0,64,True,False,context-switches,1535.0,,64083123419.0,100.0,23.953,/sec,0.00038940730939083
+refill-pmu,c01-t32-r00-direct-kdlock-adaptive-owned-v1-refill,kdlock,mutex,owned-v1,32,0,64,True,False,cpu-migrations,33.0,,64083123419.0,100.0,0.515,/sec,8.371622938043901e-06
+refill-pmu,c01-t60-r00-direct-kdlock-adaptive-owned-v1-refill,kdlock,mutex,owned-v1,60,0,64,True,False,cycles,320072665221.0,,121162501261.0,100.0,2.642,GHz,125530.50687947101
+refill-pmu,c01-t60-r00-direct-kdlock-adaptive-owned-v1-refill,kdlock,mutex,owned-v1,60,0,64,True,False,instructions,51028632335.0,,121162501261.0,100.0,0.16,insn per cycle,20013.11195367407
+refill-pmu,c01-t60-r00-direct-kdlock-adaptive-owned-v1-refill,kdlock,mutex,owned-v1,60,0,64,True,False,cache-misses,47234095.0,,121162501261.0,100.0,,,18.524918031501002
+refill-pmu,c01-t60-r00-direct-kdlock-adaptive-owned-v1-refill,kdlock,mutex,owned-v1,60,0,64,True,False,task-clock,121142.17,msec,121142165980.0,100.0,59.443,CPUs utilized,0.04751120497615462
+refill-pmu,c01-t60-r00-direct-kdlock-adaptive-owned-v1-refill,kdlock,mutex,owned-v1,60,0,64,True,False,context-switches,753.0,,121142165980.0,100.0,6.216,/sec,0.0002953219126506024
+refill-pmu,c01-t60-r00-direct-kdlock-adaptive-owned-v1-refill,kdlock,mutex,owned-v1,60,0,64,True,False,cpu-migrations,64.0,,121142165980.0,100.0,0.528,/sec,2.5100401606425704e-05

@@ -11,7 +11,7 @@ removal before teardown in ordinary and SELFTEST control flow.
 
 Build and run all checks only in the recovery guest on `10.176.26.71`. Use the
 [project guide](../docs/PROJECT_GUIDE.md) for setup and
-[operations](../docs/AGENTS.md) for kernel verification, snapshots, fixed test inputs
+[operations](../docs/operations/VM.md) for kernel verification, snapshots, fixed test inputs
 and safe shutdown. Run the basic checks plus those affected by the change. A full
 suite requires an explicit request.
 
@@ -59,7 +59,7 @@ do not exercise every possible kernel schedule. The checkers under `protocols/`
 verify identities, owners, ACKs, ordering and effects in traces. A synthetic trace
 can check those rules without proving that real JIT code ran.
 The large wrapper fixture now groups entry/services/timing/spin/mutex cases under
-[unit/execution/jit_entry_scope](unit/execution/jit_entry_scope/) without changing checks.
+[unit/execution/jit_entry_scope](unit/execution/jit_entry_scope) without changing checks.
 
 ## Live checks
 
@@ -105,67 +105,9 @@ Use `--cpus 0 32 33` for the current guest's cross-NUMA probe; its
 default remains three distinct local CPUs. Final drain requires zero active
 task membership after all workers and ACKs finish.
 
-## Recent verification and historical evidence
-
-The [mutex c01 optimization record](../bench/results/10.176.26.71/bench/comparison/mutex-opt-20261011T045425Z/README.md#validation)
-covers bounded task caching and NUMA queue selection, terminal/refusal/early-release
-fixtures, the cross-NUMA task/ACK probe, field-width retirement reads and the
-current c01/hash comparison. Live task/ACK probes execute no JIT bodies;
-the benchmark supplies actual returned-body evidence. No live nested/early
-mutex workload is provided by the maintained runner.
-
-The [new-host NUMA/mutex record](../bench/results/10.176.26.71/bench/comparison/numa-mutex-20261010/README.md#reproduction-and-validation)
-covers the registry/owner/CAS/layout/refill changes, basic and affected fixtures,
-and drained 36-worker nested-spin, early-unlock and rwlock c01 regression runs.
-It retains failed candidates and identifies the limits of the performance gains.
-
-The [2026-10-10 ABI3 record](kernel/rwlock/README.md#abi3-verification-on-2026-10-10)
-covers two basic programs plus five affected groups, 13 benchmark checks and
-drained KD-native/KD-JIT correctness runs of 4,801,000 operations each.
-All 270 sessions in the [RCUHT matrix](../bench/results/380G10/bench/rwlock_compare/20261010-rcuht/README.md)
-had correct results, worker progress and complete drain. KD matched both alternatives
-on both throughput measures at 21 of 30 comparison points. These results belong
-to the original 40-vCPU guest and cover the listed checks, not the full suite.
-The initial 60-vCPU destination has its own
-[migration validation record](../bench/README.md#vm-migration-validation).
-Subsequent tests use the 64-vCPU destination with 32 cores per NUMA node; see
-[the current environment](../docs/PROJECT_GUIDE.md#guest-workflow).
-
-### Mandatory mutex JIT, 2026-10-08
-
-On 2026-10-08, the mandatory mutex JIT change passed in guest `6.1.159-kdclobber2`:
-
-- Two basic programs plus mutex resource, outer-progress and terminal drivers:
-  five groups, zero failures; 48 runner tests also passed.
-- NORMAL and SELFTEST `W=1` builds with UBSAN off. Both modules have no
-  `mutex_jit` parameter, toggle symbols or UBSAN imports.
-- The task/owner probe completed both release orders, four ACKs and two deferred
-  frees, then drained. It constructs packets and executes no JIT bodies.
-- The 16-thread/eight-cacheline functional run completed 1.6 million operations
-  with 114,914 returned JIT bodies, passed data/JIT acceptance and drained.
-
-The first probe load failed before KD initialization with reserved per-CPU
-allocation ENOMEM. The existing allocator preparation helper allowed a separate
-retry to pass; the initial failure and kernel log are retained. No kernel change,
-full suite or performance matrix was run. The guest inputs remained frozen;
-concurrent host spin post-work edits were excluded from this verification.
-
-Sources, commands, exits, module identities, snapshot confirmation and live evidence
-are at guest `/root/kdlock-evidence/mutex-jit-required-20261008-evidence.tar.gz` and
-host `bench/results/380G10/raw/legacy/mutex-jit-required-20261008/guest-evidence.tar.gz`. Archive SHA256:
-`e55f8b372391cca78daaf16598e3b7532d636901c6a380be83d1ccf575239d8f`.
-This verification text is a documentation-only follow-up to the frozen inputs.
-
-The earlier cleanup, executable comparisons and archive identities remain in the
-fixed [cleanup record](https://github.com/hailongeric/kdlock/blob/10d800ea90d99e2b5e0e3e8d002dfe97b738d94e/tests/README.md).
-Other results remain tied to their versions in [VALIDATION](../docs/VALIDATION.md)
-and [benchmark history](../bench/results/380G10/bench/tclock_compare/HISTORY.md). Retain original
-ignored/guest archives and failed candidates; known failures and deferrals remain in
-[TODO](../docs/TODO.md).
-
 ## Legacy compatibility checks
 
-The [backport](../docs/design/legacy_mutex_compatibility.md) adds
+The [backport](../docs/history/legacy_mutex_compatibility.md) adds
 `admission/test_instruction_policy.py` and `execution/test_mutex_images.py`.
 `execution/test_exe_registry.py` also executes production `kd_mutex_prepare()`
 against a newly registered root with no code block, terminal refusals and source
@@ -174,3 +116,12 @@ entry-scope, wrapper and legacy ABI checks; no full inventory run is implied.
 The [2026-10-17 validation receipt](../bench/results/10.176.26.71/bench/comparison/mutex-legacy-compat-20261017T122742Z/validation.json)
 records the completed selected checks and builds. The accompanying report records
 504 accepted/drained live benchmark sessions and independent archive replay.
+
+
+## Validation receipts
+
+Use [the validation index](../docs/VALIDATION.md) for current and historical scope.
+The [main-consolidation receipt](../bench/results/10.176.26.71/tests/main-consolidation-20261018/README.md)
+records the affected tooling/path checks. Obsolete trace-only tests for removed
+shadow-map and signal hooks were retired; their deletion does not establish
+oversubscription correctness. Current limitations remain in [TODO](../docs/TODO.md).

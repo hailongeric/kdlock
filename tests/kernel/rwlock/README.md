@@ -34,7 +34,7 @@ native code. For changes to the TCLock port or performance checks, add the
 
 ## Build live inputs
 
-Follow [operations](../../../docs/AGENTS.md): verified kernel and boot policy,
+Follow [operations](../../../docs/operations/VM.md): verified kernel and boot policy,
 idle guest, frozen source, pinned Python environment and a confirmed QEMU recovery
 snapshot. The workload uses no provider SELFTEST hooks. Build an ordinary provider
 with the existing private observation overlay to count returned JIT bodies:

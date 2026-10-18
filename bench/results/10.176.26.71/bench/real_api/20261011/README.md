@@ -76,7 +76,7 @@ environment after timing; [dependency versions](plot-dependencies.txt) are saved
 
 ## Reproduction and evidence
 
-Follow the [VM workflow](../../../../../../docs/AGENTS.md), synchronize source
+Follow the [VM workflow](../../../../../../docs/operations/VM.md), synchronize source
 while idle, verify the kernel and physical pins, and confirm a recoverable
 snapshot. Then use the pinned benchmark Python environment:
 

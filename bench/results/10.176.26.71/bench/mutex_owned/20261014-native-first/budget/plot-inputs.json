@@ -1,0 +1,73 @@
+{
+  "acceptance_sha256": "32319adfd82ff7523795f10e7e2c34fdc63ec71d9e08091699dec10cf6123a08",
+  "coverage_sha256": "f104af017db6c52353e1350263e63d6ef6d01c7620dd9c3dd9565b4fd17444fb",
+  "missing_counts": "No marker; no interpolation or extrapolation",
+  "native_controls": "Each group retains its own Native controls in CSV; a plotted Native series applies only to its named group.",
+  "output_sha256": {
+    "execution.svg": "008c5ec7a718eea77b7de224ace5bce37d4e00672dccdb2cb0028c2a65613132",
+    "throughput.svg": "21bee928c7887dff89c86aecc24be84d55d59b92042d44db476bb79817aaeb15"
+  },
+  "plot_script_sha256": "841d3f00c4e331eb2f6e4ff9061a75fe2a9435cbc193f0d13c87795b63c8f081",
+  "schema": 1,
+  "series": [
+    {
+      "arm": "native",
+      "group": "guard4096",
+      "label": "Native \u00b7 paired guard4096",
+      "role": "screen",
+      "source_manifest_sha256": "4c8f1335ee600f633f488c2bb8563c3e5985f62ef8ce60e79ee95a13d17aced7",
+      "worker_counts": [
+        1,
+        4,
+        16,
+        28,
+        60
+      ]
+    },
+    {
+      "arm": "kdlock",
+      "group": "guard4096",
+      "label": "Owned \u00b7 guarded 4096 screen",
+      "role": "screen",
+      "source_manifest_sha256": "4c8f1335ee600f633f488c2bb8563c3e5985f62ef8ce60e79ee95a13d17aced7",
+      "worker_counts": [
+        1,
+        4,
+        16,
+        28,
+        60
+      ]
+    },
+    {
+      "arm": "native",
+      "group": "guard1024",
+      "label": "Native \u00b7 paired guard1024",
+      "role": "screen",
+      "source_manifest_sha256": "4c8f1335ee600f633f488c2bb8563c3e5985f62ef8ce60e79ee95a13d17aced7",
+      "worker_counts": [
+        1,
+        4,
+        16,
+        28,
+        60
+      ]
+    },
+    {
+      "arm": "kdlock",
+      "group": "guard1024",
+      "label": "Owned \u00b7 guarded 1024 screen",
+      "role": "screen",
+      "source_manifest_sha256": "4c8f1335ee600f633f488c2bb8563c3e5985f62ef8ce60e79ee95a13d17aced7",
+      "worker_counts": [
+        1,
+        4,
+        16,
+        28,
+        60
+      ]
+    }
+  ],
+  "source": "offline audited archive statistics",
+  "statistics_sha256": "8c39de2db756c59a6a4343f5ce5e84b5fcb5bdf1b4df87c5c56e8c37d2c502d2",
+  "target_reached": false
+}

@@ -1,0 +1,1429 @@
+{
+  "archive": {
+    "compressed_bytes": 21261541,
+    "directories": 1100,
+    "every_regular_file_byte_verified": true,
+    "path": "baseline-controls.tar.gz",
+    "regular_bytes": 108047342,
+    "regular_files": 10158,
+    "sha256": "4c0e97e71cbcd6286278fd424a1438e9bf41cb5c0dc46d97af15d3b372835550",
+    "symlink_limit": "Unmaterialized workspace links are retained as archive target strings; audited JIT/source files are regular files.",
+    "symlinks": [
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-finite64-20261014/c01-t20-r01-direct-kdlock-adaptive-owned-v1-capture-first/workspace/include",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-finite64-20261014/source/include"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-finite64-20261014/c01-t20-r01-direct-kdlock-adaptive-owned-v1-capture-first/workspace/disassem",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-finite64-20261014/source/disassem"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-finite64-20261014/c01-t36-r02-direct-kdlock-adaptive-owned-v1-capture-first/workspace/include",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-finite64-20261014/source/include"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-finite64-20261014/c01-t36-r02-direct-kdlock-adaptive-owned-v1-capture-first/workspace/disassem",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-finite64-20261014/source/disassem"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-finite64-20261014/c01-t24-r01-direct-kdlock-adaptive-owned-v1-capture-first/workspace/include",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-finite64-20261014/source/include"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-finite64-20261014/c01-t24-r01-direct-kdlock-adaptive-owned-v1-capture-first/workspace/disassem",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-finite64-20261014/source/disassem"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-finite64-20261014/c01-t48-r02-direct-kdlock-adaptive-owned-v1-capture-first/workspace/include",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-finite64-20261014/source/include"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-finite64-20261014/c01-t48-r02-direct-kdlock-adaptive-owned-v1-capture-first/workspace/disassem",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-finite64-20261014/source/disassem"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-finite64-20261014/c01-t03-r00-direct-kdlock-adaptive-owned-v1-capture-first/workspace/include",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-finite64-20261014/source/include"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-finite64-20261014/c01-t03-r00-direct-kdlock-adaptive-owned-v1-capture-first/workspace/disassem",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-finite64-20261014/source/disassem"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-finite64-20261014/c01-t08-r00-direct-kdlock-adaptive-owned-v1-capture-first/workspace/include",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-finite64-20261014/source/include"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-finite64-20261014/c01-t08-r00-direct-kdlock-adaptive-owned-v1-capture-first/workspace/disassem",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-finite64-20261014/source/disassem"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-finite64-20261014/c01-t20-r00-direct-kdlock-adaptive-owned-v1-capture-first/workspace/include",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-finite64-20261014/source/include"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-finite64-20261014/c01-t20-r00-direct-kdlock-adaptive-owned-v1-capture-first/workspace/disassem",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-finite64-20261014/source/disassem"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-finite64-20261014/c01-t02-r00-direct-kdlock-adaptive-owned-v1-capture-first/workspace/include",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-finite64-20261014/source/include"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-finite64-20261014/c01-t02-r00-direct-kdlock-adaptive-owned-v1-capture-first/workspace/disassem",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-finite64-20261014/source/disassem"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-finite64-20261014/c01-t16-r00-direct-kdlock-adaptive-owned-v1-capture-first/workspace/include",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-finite64-20261014/source/include"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-finite64-20261014/c01-t16-r00-direct-kdlock-adaptive-owned-v1-capture-first/workspace/disassem",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-finite64-20261014/source/disassem"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-finite64-20261014/c01-t60-r01-direct-kdlock-adaptive-owned-v1-capture-first/workspace/include",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-finite64-20261014/source/include"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-finite64-20261014/c01-t60-r01-direct-kdlock-adaptive-owned-v1-capture-first/workspace/disassem",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-finite64-20261014/source/disassem"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-finite64-20261014/c01-t28-r02-direct-kdlock-adaptive-owned-v1-capture-first/workspace/include",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-finite64-20261014/source/include"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-finite64-20261014/c01-t28-r02-direct-kdlock-adaptive-owned-v1-capture-first/workspace/disassem",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-finite64-20261014/source/disassem"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-finite64-20261014/c01-t04-r00-direct-kdlock-adaptive-owned-v1-capture-first/workspace/include",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-finite64-20261014/source/include"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-finite64-20261014/c01-t04-r00-direct-kdlock-adaptive-owned-v1-capture-first/workspace/disassem",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-finite64-20261014/source/disassem"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-finite64-20261014/c01-t16-r01-direct-kdlock-adaptive-owned-v1-capture-first/workspace/include",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-finite64-20261014/source/include"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-finite64-20261014/c01-t16-r01-direct-kdlock-adaptive-owned-v1-capture-first/workspace/disassem",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-finite64-20261014/source/disassem"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-finite64-20261014/c01-t06-r00-direct-kdlock-adaptive-owned-v1-capture-first/workspace/include",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-finite64-20261014/source/include"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-finite64-20261014/c01-t06-r00-direct-kdlock-adaptive-owned-v1-capture-first/workspace/disassem",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-finite64-20261014/source/disassem"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-finite64-20261014/c01-t28-r01-direct-kdlock-adaptive-owned-v1-capture-first/workspace/include",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-finite64-20261014/source/include"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-finite64-20261014/c01-t28-r01-direct-kdlock-adaptive-owned-v1-capture-first/workspace/disassem",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-finite64-20261014/source/disassem"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-finite64-20261014/c01-t60-r02-direct-kdlock-adaptive-owned-v1-capture-first/workspace/include",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-finite64-20261014/source/include"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-finite64-20261014/c01-t60-r02-direct-kdlock-adaptive-owned-v1-capture-first/workspace/disassem",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-finite64-20261014/source/disassem"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-finite64-20261014/c01-t07-r00-direct-kdlock-adaptive-owned-v1-capture-first/workspace/include",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-finite64-20261014/source/include"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-finite64-20261014/c01-t07-r00-direct-kdlock-adaptive-owned-v1-capture-first/workspace/disassem",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-finite64-20261014/source/disassem"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-finite64-20261014/c01-t07-r02-direct-kdlock-adaptive-owned-v1-capture-first/workspace/include",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-finite64-20261014/source/include"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-finite64-20261014/c01-t07-r02-direct-kdlock-adaptive-owned-v1-capture-first/workspace/disassem",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-finite64-20261014/source/disassem"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-finite64-20261014/c01-t05-r00-direct-kdlock-adaptive-owned-v1-capture-first/workspace/include",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-finite64-20261014/source/include"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-finite64-20261014/c01-t05-r00-direct-kdlock-adaptive-owned-v1-capture-first/workspace/disassem",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-finite64-20261014/source/disassem"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-finite64-20261014/c01-t02-r02-direct-kdlock-adaptive-owned-v1-capture-first/workspace/include",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-finite64-20261014/source/include"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-finite64-20261014/c01-t02-r02-direct-kdlock-adaptive-owned-v1-capture-first/workspace/disassem",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-finite64-20261014/source/disassem"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-finite64-20261014/c01-t12-r00-direct-kdlock-adaptive-owned-v1-capture-first/workspace/include",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-finite64-20261014/source/include"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-finite64-20261014/c01-t12-r00-direct-kdlock-adaptive-owned-v1-capture-first/workspace/disassem",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-finite64-20261014/source/disassem"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-finite64-20261014/c01-t07-r01-direct-kdlock-adaptive-owned-v1-capture-first/workspace/include",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-finite64-20261014/source/include"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-finite64-20261014/c01-t07-r01-direct-kdlock-adaptive-owned-v1-capture-first/workspace/disassem",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-finite64-20261014/source/disassem"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-finite64-20261014/c01-t06-r02-direct-kdlock-adaptive-owned-v1-capture-first/workspace/include",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-finite64-20261014/source/include"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-finite64-20261014/c01-t06-r02-direct-kdlock-adaptive-owned-v1-capture-first/workspace/disassem",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-finite64-20261014/source/disassem"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-finite64-20261014/c01-t01-r00-direct-kdlock-adaptive-owned-v1-capture-first/workspace/include",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-finite64-20261014/source/include"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-finite64-20261014/c01-t01-r00-direct-kdlock-adaptive-owned-v1-capture-first/workspace/disassem",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-finite64-20261014/source/disassem"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-finite64-20261014/c01-t02-r01-direct-kdlock-adaptive-owned-v1-capture-first/workspace/include",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-finite64-20261014/source/include"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-finite64-20261014/c01-t02-r01-direct-kdlock-adaptive-owned-v1-capture-first/workspace/disassem",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-finite64-20261014/source/disassem"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-finite64-20261014/c01-t16-r02-direct-kdlock-adaptive-owned-v1-capture-first/workspace/include",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-finite64-20261014/source/include"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-finite64-20261014/c01-t16-r02-direct-kdlock-adaptive-owned-v1-capture-first/workspace/disassem",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-finite64-20261014/source/disassem"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-finite64-20261014/c01-t36-r00-direct-kdlock-adaptive-owned-v1-capture-first/workspace/include",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-finite64-20261014/source/include"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-finite64-20261014/c01-t36-r00-direct-kdlock-adaptive-owned-v1-capture-first/workspace/disassem",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-finite64-20261014/source/disassem"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-finite64-20261014/c01-t01-r02-direct-kdlock-adaptive-owned-v1-capture-first/workspace/include",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-finite64-20261014/source/include"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-finite64-20261014/c01-t01-r02-direct-kdlock-adaptive-owned-v1-capture-first/workspace/disassem",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-finite64-20261014/source/disassem"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-finite64-20261014/c01-t60-r00-direct-kdlock-adaptive-owned-v1-capture-first/workspace/include",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-finite64-20261014/source/include"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-finite64-20261014/c01-t60-r00-direct-kdlock-adaptive-owned-v1-capture-first/workspace/disassem",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-finite64-20261014/source/disassem"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-finite64-20261014/c01-t36-r01-direct-kdlock-adaptive-owned-v1-capture-first/workspace/include",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-finite64-20261014/source/include"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-finite64-20261014/c01-t36-r01-direct-kdlock-adaptive-owned-v1-capture-first/workspace/disassem",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-finite64-20261014/source/disassem"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-finite64-20261014/c01-t03-r01-direct-kdlock-adaptive-owned-v1-capture-first/workspace/include",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-finite64-20261014/source/include"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-finite64-20261014/c01-t03-r01-direct-kdlock-adaptive-owned-v1-capture-first/workspace/disassem",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-finite64-20261014/source/disassem"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-finite64-20261014/c01-t12-r01-direct-kdlock-adaptive-owned-v1-capture-first/workspace/include",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-finite64-20261014/source/include"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-finite64-20261014/c01-t12-r01-direct-kdlock-adaptive-owned-v1-capture-first/workspace/disassem",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-finite64-20261014/source/disassem"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-finite64-20261014/c01-t28-r00-direct-kdlock-adaptive-owned-v1-capture-first/workspace/include",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-finite64-20261014/source/include"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-finite64-20261014/c01-t28-r00-direct-kdlock-adaptive-owned-v1-capture-first/workspace/disassem",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-finite64-20261014/source/disassem"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-finite64-20261014/c01-t08-r01-direct-kdlock-adaptive-owned-v1-capture-first/workspace/include",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-finite64-20261014/source/include"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-finite64-20261014/c01-t08-r01-direct-kdlock-adaptive-owned-v1-capture-first/workspace/disassem",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-finite64-20261014/source/disassem"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-finite64-20261014/c01-t06-r01-direct-kdlock-adaptive-owned-v1-capture-first/workspace/include",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-finite64-20261014/source/include"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-finite64-20261014/c01-t06-r01-direct-kdlock-adaptive-owned-v1-capture-first/workspace/disassem",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-finite64-20261014/source/disassem"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-finite64-20261014/c01-t48-r01-direct-kdlock-adaptive-owned-v1-capture-first/workspace/include",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-finite64-20261014/source/include"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-finite64-20261014/c01-t48-r01-direct-kdlock-adaptive-owned-v1-capture-first/workspace/disassem",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-finite64-20261014/source/disassem"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-finite64-20261014/c01-t24-r00-direct-kdlock-adaptive-owned-v1-capture-first/workspace/include",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-finite64-20261014/source/include"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-finite64-20261014/c01-t24-r00-direct-kdlock-adaptive-owned-v1-capture-first/workspace/disassem",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-finite64-20261014/source/disassem"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-finite64-20261014/c01-t48-r00-direct-kdlock-adaptive-owned-v1-capture-first/workspace/include",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-finite64-20261014/source/include"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-finite64-20261014/c01-t48-r00-direct-kdlock-adaptive-owned-v1-capture-first/workspace/disassem",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-finite64-20261014/source/disassem"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-finite64-20261014/c01-t12-r02-direct-kdlock-adaptive-owned-v1-capture-first/workspace/include",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-finite64-20261014/source/include"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-finite64-20261014/c01-t12-r02-direct-kdlock-adaptive-owned-v1-capture-first/workspace/disassem",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-finite64-20261014/source/disassem"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-finite64-20261014/c01-t04-r02-direct-kdlock-adaptive-owned-v1-capture-first/workspace/include",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-finite64-20261014/source/include"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-finite64-20261014/c01-t04-r02-direct-kdlock-adaptive-owned-v1-capture-first/workspace/disassem",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-finite64-20261014/source/disassem"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-finite64-20261014/c01-t05-r01-direct-kdlock-adaptive-owned-v1-capture-first/workspace/include",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-finite64-20261014/source/include"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-finite64-20261014/c01-t05-r01-direct-kdlock-adaptive-owned-v1-capture-first/workspace/disassem",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-finite64-20261014/source/disassem"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-finite64-20261014/c01-t08-r02-direct-kdlock-adaptive-owned-v1-capture-first/workspace/include",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-finite64-20261014/source/include"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-finite64-20261014/c01-t08-r02-direct-kdlock-adaptive-owned-v1-capture-first/workspace/disassem",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-finite64-20261014/source/disassem"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-finite64-20261014/c01-t20-r02-direct-kdlock-adaptive-owned-v1-capture-first/workspace/include",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-finite64-20261014/source/include"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-finite64-20261014/c01-t20-r02-direct-kdlock-adaptive-owned-v1-capture-first/workspace/disassem",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-finite64-20261014/source/disassem"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-finite64-20261014/c01-t01-r01-direct-kdlock-adaptive-owned-v1-capture-first/workspace/include",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-finite64-20261014/source/include"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-finite64-20261014/c01-t01-r01-direct-kdlock-adaptive-owned-v1-capture-first/workspace/disassem",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-finite64-20261014/source/disassem"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-finite64-20261014/c01-t32-r00-direct-kdlock-adaptive-owned-v1-capture-first/workspace/include",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-finite64-20261014/source/include"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-finite64-20261014/c01-t32-r00-direct-kdlock-adaptive-owned-v1-capture-first/workspace/disassem",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-finite64-20261014/source/disassem"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-finite64-20261014/c01-t24-r02-direct-kdlock-adaptive-owned-v1-capture-first/workspace/include",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-finite64-20261014/source/include"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-finite64-20261014/c01-t24-r02-direct-kdlock-adaptive-owned-v1-capture-first/workspace/disassem",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-finite64-20261014/source/disassem"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-finite64-20261014/c01-t04-r01-direct-kdlock-adaptive-owned-v1-capture-first/workspace/include",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-finite64-20261014/source/include"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-finite64-20261014/c01-t04-r01-direct-kdlock-adaptive-owned-v1-capture-first/workspace/disassem",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-finite64-20261014/source/disassem"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-finite64-20261014/c01-t32-r02-direct-kdlock-adaptive-owned-v1-capture-first/workspace/include",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-finite64-20261014/source/include"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-finite64-20261014/c01-t32-r02-direct-kdlock-adaptive-owned-v1-capture-first/workspace/disassem",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-finite64-20261014/source/disassem"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-finite64-20261014/c01-t03-r02-direct-kdlock-adaptive-owned-v1-capture-first/workspace/include",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-finite64-20261014/source/include"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-finite64-20261014/c01-t03-r02-direct-kdlock-adaptive-owned-v1-capture-first/workspace/disassem",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-finite64-20261014/source/disassem"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-finite64-20261014/c01-t32-r01-direct-kdlock-adaptive-owned-v1-capture-first/workspace/include",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-finite64-20261014/source/include"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-finite64-20261014/c01-t32-r01-direct-kdlock-adaptive-owned-v1-capture-first/workspace/disassem",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-finite64-20261014/source/disassem"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-finite64-20261014/c01-t05-r02-direct-kdlock-adaptive-owned-v1-capture-first/workspace/include",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-finite64-20261014/source/include"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-finite64-20261014/c01-t05-r02-direct-kdlock-adaptive-owned-v1-capture-first/workspace/disassem",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-finite64-20261014/source/disassem"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-refill64-20261014/c01-t16-r00-direct-kdlock-adaptive-owned-v1-refill-capture-first/workspace/include",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-refill64-20261014/source/include"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-refill64-20261014/c01-t16-r00-direct-kdlock-adaptive-owned-v1-refill-capture-first/workspace/disassem",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-refill64-20261014/source/disassem"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-refill64-20261014/c01-t04-r02-direct-kdlock-adaptive-owned-v1-refill-capture-first/workspace/include",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-refill64-20261014/source/include"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-refill64-20261014/c01-t04-r02-direct-kdlock-adaptive-owned-v1-refill-capture-first/workspace/disassem",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-refill64-20261014/source/disassem"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-refill64-20261014/c01-t60-r01-direct-kdlock-adaptive-owned-v1-refill-capture-first/workspace/include",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-refill64-20261014/source/include"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-refill64-20261014/c01-t60-r01-direct-kdlock-adaptive-owned-v1-refill-capture-first/workspace/disassem",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-refill64-20261014/source/disassem"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-refill64-20261014/c01-t36-r02-direct-kdlock-adaptive-owned-v1-refill-capture-first/workspace/include",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-refill64-20261014/source/include"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-refill64-20261014/c01-t36-r02-direct-kdlock-adaptive-owned-v1-refill-capture-first/workspace/disassem",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-refill64-20261014/source/disassem"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-refill64-20261014/c01-t03-r00-direct-kdlock-adaptive-owned-v1-refill-capture-first/workspace/include",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-refill64-20261014/source/include"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-refill64-20261014/c01-t03-r00-direct-kdlock-adaptive-owned-v1-refill-capture-first/workspace/disassem",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-refill64-20261014/source/disassem"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-refill64-20261014/c01-t24-r00-direct-kdlock-adaptive-owned-v1-refill-capture-first/workspace/include",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-refill64-20261014/source/include"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-refill64-20261014/c01-t24-r00-direct-kdlock-adaptive-owned-v1-refill-capture-first/workspace/disassem",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-refill64-20261014/source/disassem"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-refill64-20261014/c01-t03-r02-direct-kdlock-adaptive-owned-v1-refill-capture-first/workspace/include",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-refill64-20261014/source/include"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-refill64-20261014/c01-t03-r02-direct-kdlock-adaptive-owned-v1-refill-capture-first/workspace/disassem",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-refill64-20261014/source/disassem"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-refill64-20261014/c01-t01-r00-direct-kdlock-adaptive-owned-v1-refill-capture-first/workspace/include",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-refill64-20261014/source/include"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-refill64-20261014/c01-t01-r00-direct-kdlock-adaptive-owned-v1-refill-capture-first/workspace/disassem",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-refill64-20261014/source/disassem"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-refill64-20261014/c01-t07-r00-direct-kdlock-adaptive-owned-v1-refill-capture-first/workspace/include",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-refill64-20261014/source/include"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-refill64-20261014/c01-t07-r00-direct-kdlock-adaptive-owned-v1-refill-capture-first/workspace/disassem",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-refill64-20261014/source/disassem"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-refill64-20261014/c01-t06-r02-direct-kdlock-adaptive-owned-v1-refill-capture-first/workspace/include",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-refill64-20261014/source/include"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-refill64-20261014/c01-t06-r02-direct-kdlock-adaptive-owned-v1-refill-capture-first/workspace/disassem",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-refill64-20261014/source/disassem"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-refill64-20261014/c01-t20-r01-direct-kdlock-adaptive-owned-v1-refill-capture-first/workspace/include",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-refill64-20261014/source/include"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-refill64-20261014/c01-t20-r01-direct-kdlock-adaptive-owned-v1-refill-capture-first/workspace/disassem",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-refill64-20261014/source/disassem"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-refill64-20261014/c01-t32-r02-direct-kdlock-adaptive-owned-v1-refill-capture-first/workspace/include",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-refill64-20261014/source/include"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-refill64-20261014/c01-t32-r02-direct-kdlock-adaptive-owned-v1-refill-capture-first/workspace/disassem",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-refill64-20261014/source/disassem"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-refill64-20261014/c01-t12-r02-direct-kdlock-adaptive-owned-v1-refill-capture-first/workspace/include",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-refill64-20261014/source/include"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-refill64-20261014/c01-t12-r02-direct-kdlock-adaptive-owned-v1-refill-capture-first/workspace/disassem",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-refill64-20261014/source/disassem"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-refill64-20261014/c01-t48-r00-direct-kdlock-adaptive-owned-v1-refill-capture-first/workspace/include",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-refill64-20261014/source/include"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-refill64-20261014/c01-t48-r00-direct-kdlock-adaptive-owned-v1-refill-capture-first/workspace/disassem",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-refill64-20261014/source/disassem"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-refill64-20261014/c01-t20-r02-direct-kdlock-adaptive-owned-v1-refill-capture-first/workspace/include",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-refill64-20261014/source/include"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-refill64-20261014/c01-t20-r02-direct-kdlock-adaptive-owned-v1-refill-capture-first/workspace/disassem",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-refill64-20261014/source/disassem"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-refill64-20261014/c01-t08-r00-direct-kdlock-adaptive-owned-v1-refill-capture-first/workspace/include",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-refill64-20261014/source/include"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-refill64-20261014/c01-t08-r00-direct-kdlock-adaptive-owned-v1-refill-capture-first/workspace/disassem",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-refill64-20261014/source/disassem"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-refill64-20261014/c01-t28-r01-direct-kdlock-adaptive-owned-v1-refill-capture-first/workspace/include",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-refill64-20261014/source/include"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-refill64-20261014/c01-t28-r01-direct-kdlock-adaptive-owned-v1-refill-capture-first/workspace/disassem",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-refill64-20261014/source/disassem"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-refill64-20261014/c01-t24-r02-direct-kdlock-adaptive-owned-v1-refill-capture-first/workspace/include",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-refill64-20261014/source/include"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-refill64-20261014/c01-t24-r02-direct-kdlock-adaptive-owned-v1-refill-capture-first/workspace/disassem",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-refill64-20261014/source/disassem"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-refill64-20261014/c01-t01-r01-direct-kdlock-adaptive-owned-v1-refill-capture-first/workspace/include",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-refill64-20261014/source/include"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-refill64-20261014/c01-t01-r01-direct-kdlock-adaptive-owned-v1-refill-capture-first/workspace/disassem",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-refill64-20261014/source/disassem"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-refill64-20261014/c01-t32-r00-direct-kdlock-adaptive-owned-v1-refill-capture-first/workspace/include",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-refill64-20261014/source/include"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-refill64-20261014/c01-t32-r00-direct-kdlock-adaptive-owned-v1-refill-capture-first/workspace/disassem",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-refill64-20261014/source/disassem"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-refill64-20261014/c01-t36-r01-direct-kdlock-adaptive-owned-v1-refill-capture-first/workspace/include",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-refill64-20261014/source/include"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-refill64-20261014/c01-t36-r01-direct-kdlock-adaptive-owned-v1-refill-capture-first/workspace/disassem",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-refill64-20261014/source/disassem"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-refill64-20261014/c01-t02-r00-direct-kdlock-adaptive-owned-v1-refill-capture-first/workspace/include",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-refill64-20261014/source/include"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-refill64-20261014/c01-t02-r00-direct-kdlock-adaptive-owned-v1-refill-capture-first/workspace/disassem",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-refill64-20261014/source/disassem"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-refill64-20261014/c01-t05-r00-direct-kdlock-adaptive-owned-v1-refill-capture-first/workspace/include",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-refill64-20261014/source/include"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-refill64-20261014/c01-t05-r00-direct-kdlock-adaptive-owned-v1-refill-capture-first/workspace/disassem",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-refill64-20261014/source/disassem"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-refill64-20261014/c01-t60-r00-direct-kdlock-adaptive-owned-v1-refill-capture-first/workspace/include",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-refill64-20261014/source/include"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-refill64-20261014/c01-t60-r00-direct-kdlock-adaptive-owned-v1-refill-capture-first/workspace/disassem",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-refill64-20261014/source/disassem"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-refill64-20261014/c01-t05-r02-direct-kdlock-adaptive-owned-v1-refill-capture-first/workspace/include",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-refill64-20261014/source/include"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-refill64-20261014/c01-t05-r02-direct-kdlock-adaptive-owned-v1-refill-capture-first/workspace/disassem",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-refill64-20261014/source/disassem"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-refill64-20261014/c01-t28-r02-direct-kdlock-adaptive-owned-v1-refill-capture-first/workspace/include",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-refill64-20261014/source/include"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-refill64-20261014/c01-t28-r02-direct-kdlock-adaptive-owned-v1-refill-capture-first/workspace/disassem",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-refill64-20261014/source/disassem"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-refill64-20261014/c01-t36-r00-direct-kdlock-adaptive-owned-v1-refill-capture-first/workspace/include",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-refill64-20261014/source/include"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-refill64-20261014/c01-t36-r00-direct-kdlock-adaptive-owned-v1-refill-capture-first/workspace/disassem",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-refill64-20261014/source/disassem"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-refill64-20261014/c01-t06-r00-direct-kdlock-adaptive-owned-v1-refill-capture-first/workspace/include",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-refill64-20261014/source/include"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-refill64-20261014/c01-t06-r00-direct-kdlock-adaptive-owned-v1-refill-capture-first/workspace/disassem",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-refill64-20261014/source/disassem"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-refill64-20261014/c01-t16-r01-direct-kdlock-adaptive-owned-v1-refill-capture-first/workspace/include",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-refill64-20261014/source/include"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-refill64-20261014/c01-t16-r01-direct-kdlock-adaptive-owned-v1-refill-capture-first/workspace/disassem",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-refill64-20261014/source/disassem"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-refill64-20261014/c01-t06-r01-direct-kdlock-adaptive-owned-v1-refill-capture-first/workspace/include",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-refill64-20261014/source/include"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-refill64-20261014/c01-t06-r01-direct-kdlock-adaptive-owned-v1-refill-capture-first/workspace/disassem",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-refill64-20261014/source/disassem"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-refill64-20261014/c01-t12-r00-direct-kdlock-adaptive-owned-v1-refill-capture-first/workspace/include",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-refill64-20261014/source/include"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-refill64-20261014/c01-t12-r00-direct-kdlock-adaptive-owned-v1-refill-capture-first/workspace/disassem",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-refill64-20261014/source/disassem"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-refill64-20261014/c01-t02-r01-direct-kdlock-adaptive-owned-v1-refill-capture-first/workspace/include",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-refill64-20261014/source/include"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-refill64-20261014/c01-t02-r01-direct-kdlock-adaptive-owned-v1-refill-capture-first/workspace/disassem",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-refill64-20261014/source/disassem"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-refill64-20261014/c01-t60-r02-direct-kdlock-adaptive-owned-v1-refill-capture-first/workspace/include",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-refill64-20261014/source/include"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-refill64-20261014/c01-t60-r02-direct-kdlock-adaptive-owned-v1-refill-capture-first/workspace/disassem",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-refill64-20261014/source/disassem"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-refill64-20261014/c01-t24-r01-direct-kdlock-adaptive-owned-v1-refill-capture-first/workspace/include",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-refill64-20261014/source/include"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-refill64-20261014/c01-t24-r01-direct-kdlock-adaptive-owned-v1-refill-capture-first/workspace/disassem",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-refill64-20261014/source/disassem"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-refill64-20261014/c01-t08-r01-direct-kdlock-adaptive-owned-v1-refill-capture-first/workspace/include",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-refill64-20261014/source/include"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-refill64-20261014/c01-t08-r01-direct-kdlock-adaptive-owned-v1-refill-capture-first/workspace/disassem",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-refill64-20261014/source/disassem"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-refill64-20261014/c01-t07-r02-direct-kdlock-adaptive-owned-v1-refill-capture-first/workspace/include",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-refill64-20261014/source/include"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-refill64-20261014/c01-t07-r02-direct-kdlock-adaptive-owned-v1-refill-capture-first/workspace/disassem",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-refill64-20261014/source/disassem"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-refill64-20261014/c01-t48-r02-direct-kdlock-adaptive-owned-v1-refill-capture-first/workspace/include",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-refill64-20261014/source/include"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-refill64-20261014/c01-t48-r02-direct-kdlock-adaptive-owned-v1-refill-capture-first/workspace/disassem",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-refill64-20261014/source/disassem"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-refill64-20261014/c01-t12-r01-direct-kdlock-adaptive-owned-v1-refill-capture-first/workspace/include",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-refill64-20261014/source/include"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-refill64-20261014/c01-t12-r01-direct-kdlock-adaptive-owned-v1-refill-capture-first/workspace/disassem",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-refill64-20261014/source/disassem"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-refill64-20261014/c01-t05-r01-direct-kdlock-adaptive-owned-v1-refill-capture-first/workspace/include",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-refill64-20261014/source/include"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-refill64-20261014/c01-t05-r01-direct-kdlock-adaptive-owned-v1-refill-capture-first/workspace/disassem",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-refill64-20261014/source/disassem"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-refill64-20261014/c01-t32-r01-direct-kdlock-adaptive-owned-v1-refill-capture-first/workspace/include",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-refill64-20261014/source/include"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-refill64-20261014/c01-t32-r01-direct-kdlock-adaptive-owned-v1-refill-capture-first/workspace/disassem",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-refill64-20261014/source/disassem"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-refill64-20261014/c01-t03-r01-direct-kdlock-adaptive-owned-v1-refill-capture-first/workspace/include",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-refill64-20261014/source/include"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-refill64-20261014/c01-t03-r01-direct-kdlock-adaptive-owned-v1-refill-capture-first/workspace/disassem",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-refill64-20261014/source/disassem"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-refill64-20261014/c01-t04-r00-direct-kdlock-adaptive-owned-v1-refill-capture-first/workspace/include",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-refill64-20261014/source/include"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-refill64-20261014/c01-t04-r00-direct-kdlock-adaptive-owned-v1-refill-capture-first/workspace/disassem",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-refill64-20261014/source/disassem"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-refill64-20261014/c01-t08-r02-direct-kdlock-adaptive-owned-v1-refill-capture-first/workspace/include",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-refill64-20261014/source/include"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-refill64-20261014/c01-t08-r02-direct-kdlock-adaptive-owned-v1-refill-capture-first/workspace/disassem",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-refill64-20261014/source/disassem"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-refill64-20261014/c01-t48-r01-direct-kdlock-adaptive-owned-v1-refill-capture-first/workspace/include",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-refill64-20261014/source/include"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-refill64-20261014/c01-t48-r01-direct-kdlock-adaptive-owned-v1-refill-capture-first/workspace/disassem",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-refill64-20261014/source/disassem"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-refill64-20261014/c01-t02-r02-direct-kdlock-adaptive-owned-v1-refill-capture-first/workspace/include",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-refill64-20261014/source/include"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-refill64-20261014/c01-t02-r02-direct-kdlock-adaptive-owned-v1-refill-capture-first/workspace/disassem",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-refill64-20261014/source/disassem"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-refill64-20261014/c01-t07-r01-direct-kdlock-adaptive-owned-v1-refill-capture-first/workspace/include",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-refill64-20261014/source/include"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-refill64-20261014/c01-t07-r01-direct-kdlock-adaptive-owned-v1-refill-capture-first/workspace/disassem",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-refill64-20261014/source/disassem"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-refill64-20261014/c01-t16-r02-direct-kdlock-adaptive-owned-v1-refill-capture-first/workspace/include",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-refill64-20261014/source/include"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-refill64-20261014/c01-t16-r02-direct-kdlock-adaptive-owned-v1-refill-capture-first/workspace/disassem",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-refill64-20261014/source/disassem"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-refill64-20261014/c01-t01-r02-direct-kdlock-adaptive-owned-v1-refill-capture-first/workspace/include",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-refill64-20261014/source/include"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-refill64-20261014/c01-t01-r02-direct-kdlock-adaptive-owned-v1-refill-capture-first/workspace/disassem",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-refill64-20261014/source/disassem"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-refill64-20261014/c01-t04-r01-direct-kdlock-adaptive-owned-v1-refill-capture-first/workspace/include",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-refill64-20261014/source/include"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-refill64-20261014/c01-t04-r01-direct-kdlock-adaptive-owned-v1-refill-capture-first/workspace/disassem",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-refill64-20261014/source/disassem"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-refill64-20261014/c01-t20-r00-direct-kdlock-adaptive-owned-v1-refill-capture-first/workspace/include",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-refill64-20261014/source/include"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-refill64-20261014/c01-t20-r00-direct-kdlock-adaptive-owned-v1-refill-capture-first/workspace/disassem",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-refill64-20261014/source/disassem"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-refill64-20261014/c01-t28-r00-direct-kdlock-adaptive-owned-v1-refill-capture-first/workspace/include",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-refill64-20261014/source/include"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-refill64-20261014/c01-t28-r00-direct-kdlock-adaptive-owned-v1-refill-capture-first/workspace/disassem",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-refill64-20261014/source/disassem"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-pref4096q64-20261014/c01-t16-r02-direct-kdlock-adaptive-owned-v1-preflight4096-queued/workspace/include",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-pref4096q64-20261014/source/include"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-pref4096q64-20261014/c01-t16-r02-direct-kdlock-adaptive-owned-v1-preflight4096-queued/workspace/disassem",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-pref4096q64-20261014/source/disassem"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-pref4096q64-20261014/c01-t04-r01-direct-kdlock-adaptive-owned-v1-preflight4096-queued/workspace/include",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-pref4096q64-20261014/source/include"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-pref4096q64-20261014/c01-t04-r01-direct-kdlock-adaptive-owned-v1-preflight4096-queued/workspace/disassem",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-pref4096q64-20261014/source/disassem"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-pref4096q64-20261014/c01-t28-r00-direct-kdlock-adaptive-owned-v1-preflight4096-queued/workspace/include",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-pref4096q64-20261014/source/include"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-pref4096q64-20261014/c01-t28-r00-direct-kdlock-adaptive-owned-v1-preflight4096-queued/workspace/disassem",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-pref4096q64-20261014/source/disassem"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-pref4096q64-20261014/c01-t01-r00-direct-kdlock-adaptive-owned-v1-preflight4096-queued/workspace/include",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-pref4096q64-20261014/source/include"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-pref4096q64-20261014/c01-t01-r00-direct-kdlock-adaptive-owned-v1-preflight4096-queued/workspace/disassem",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-pref4096q64-20261014/source/disassem"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-pref4096q64-20261014/c01-t60-r00-direct-kdlock-adaptive-owned-v1-preflight4096-queued/workspace/include",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-pref4096q64-20261014/source/include"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-pref4096q64-20261014/c01-t60-r00-direct-kdlock-adaptive-owned-v1-preflight4096-queued/workspace/disassem",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-pref4096q64-20261014/source/disassem"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-pref4096q64-20261014/c01-t04-r00-direct-kdlock-adaptive-owned-v1-preflight4096-queued/workspace/include",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-pref4096q64-20261014/source/include"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-pref4096q64-20261014/c01-t04-r00-direct-kdlock-adaptive-owned-v1-preflight4096-queued/workspace/disassem",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-pref4096q64-20261014/source/disassem"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-pref4096q64-20261014/c01-t01-r01-direct-kdlock-adaptive-owned-v1-preflight4096-queued/workspace/include",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-pref4096q64-20261014/source/include"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-pref4096q64-20261014/c01-t01-r01-direct-kdlock-adaptive-owned-v1-preflight4096-queued/workspace/disassem",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-pref4096q64-20261014/source/disassem"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-pref4096q64-20261014/c01-t28-r01-direct-kdlock-adaptive-owned-v1-preflight4096-queued/workspace/include",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-pref4096q64-20261014/source/include"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-pref4096q64-20261014/c01-t28-r01-direct-kdlock-adaptive-owned-v1-preflight4096-queued/workspace/disassem",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-pref4096q64-20261014/source/disassem"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-pref4096q64-20261014/c01-t01-r02-direct-kdlock-adaptive-owned-v1-preflight4096-queued/workspace/include",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-pref4096q64-20261014/source/include"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-pref4096q64-20261014/c01-t01-r02-direct-kdlock-adaptive-owned-v1-preflight4096-queued/workspace/disassem",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-pref4096q64-20261014/source/disassem"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-pref4096q64-20261014/c01-t60-r01-direct-kdlock-adaptive-owned-v1-preflight4096-queued/workspace/include",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-pref4096q64-20261014/source/include"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-pref4096q64-20261014/c01-t60-r01-direct-kdlock-adaptive-owned-v1-preflight4096-queued/workspace/disassem",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-pref4096q64-20261014/source/disassem"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-pref4096q64-20261014/c01-t04-r02-direct-kdlock-adaptive-owned-v1-preflight4096-queued/workspace/include",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-pref4096q64-20261014/source/include"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-pref4096q64-20261014/c01-t04-r02-direct-kdlock-adaptive-owned-v1-preflight4096-queued/workspace/disassem",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-pref4096q64-20261014/source/disassem"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-pref4096q64-20261014/c01-t16-r01-direct-kdlock-adaptive-owned-v1-preflight4096-queued/workspace/include",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-pref4096q64-20261014/source/include"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-pref4096q64-20261014/c01-t16-r01-direct-kdlock-adaptive-owned-v1-preflight4096-queued/workspace/disassem",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-pref4096q64-20261014/source/disassem"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-pref4096q64-20261014/c01-t16-r00-direct-kdlock-adaptive-owned-v1-preflight4096-queued/workspace/include",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-pref4096q64-20261014/source/include"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-pref4096q64-20261014/c01-t16-r00-direct-kdlock-adaptive-owned-v1-preflight4096-queued/workspace/disassem",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-pref4096q64-20261014/source/disassem"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-pref4096q64-20261014/c01-t60-r02-direct-kdlock-adaptive-owned-v1-preflight4096-queued/workspace/include",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-pref4096q64-20261014/source/include"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-pref4096q64-20261014/c01-t60-r02-direct-kdlock-adaptive-owned-v1-preflight4096-queued/workspace/disassem",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-pref4096q64-20261014/source/disassem"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-pref4096q64-20261014/c01-t28-r02-direct-kdlock-adaptive-owned-v1-preflight4096-queued/workspace/include",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-pref4096q64-20261014/source/include"
+      },
+      {
+        "materialized": false,
+        "path": "bench/mutex-native-first-baseline-pref4096q64-20261014/c01-t28-r02-direct-kdlock-adaptive-owned-v1-preflight4096-queued/workspace/disassem",
+        "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex-native-first-baseline-pref4096q64-20261014/source/disassem"
+      }
+    ]
+  },
+  "command": [
+    "bench/results/10.176.26.71/bench/mutex_owned/20261014-native-first/references.py",
+    "--raw",
+    "bench/results/10.176.26.71/raw/bench/mutex-native-first-20261014/extracted",
+    "--run",
+    "bench/mutex-native-first-tclock-control64-20261014",
+    "--archive",
+    "bench/results/10.176.26.71/raw/bench/mutex-native-first-20261014/baseline-controls.tar.gz",
+    "--archive-sha256",
+    "4c0e97e71cbcd6286278fd424a1438e9bf41cb5c0dc46d97af15d3b372835550"
+  ],
+  "contributes_to_owned_acceptance": false,
+  "evidence_helper_sha256": "b7a7ceff3b47fd3de7b0e2824fb1d3607d13f51142e7d629a4c4a9353afd34da",
+  "generic_validator_sha256": {
+    "bench_runtime.py": "37d527bc11fd5e55b1f1f78eda3dec1adead18052fb83e3e37e6df8a6a184f19",
+    "peak.py": "9df9a2d11a159f6451e58f52b618223663e025ad0c5b55936d2883abfee017a5",
+    "summarize.py": "3535df0ad59016f097488693528313f99546353676633fbf39d38ca7d846ca06"
+  },
+  "limits": [
+    "Object sizes differ; workload lock/data alignment and relative data placement are checked.",
+    "No candidate performance or confirmation acceptance follows from this reference comparison."
+  ],
+  "passed": true,
+  "policy_auditor_sha256": "8cba21be4149744bd8494e022101ca29ad9a658c8a81bfd1d9ee16b6a84013d3",
+  "progress_rows": 6030,
+  "role": "fresh_same_machine_causal_context",
+  "run": {
+    "arms": [
+      "native",
+      "tclock"
+    ],
+    "binaries": 5,
+    "binary_manifest_sha256": "740c9377403c9866c10e0c682c29df520e71100a7b70653145717f233d74b6f7",
+    "diagnostic": false,
+    "drained": true,
+    "environment_sha256": "fd8721a550e8dba9281a4efae06902bb901a50f861cad9bd2bb6cc4b4310424a",
+    "every_worker_progress": true,
+    "historical_owned_queue_policy_unrecorded": false,
+    "kd_policy": null,
+    "label": "tclock_control",
+    "lock_kind": "mutex",
+    "plan_sha256": "8747ffeaacc9728f33dc8359d688d496f8646d11b35ffeca8109a51ed0f1bd31",
+    "post_work_rounds": 64,
+    "repeats": [
+      0,
+      1,
+      2
+    ],
+    "sample_artifact_sha256": {
+      "c01-t01-r00-direct-native": {
+        "drain.counts.json": "0df4f963a84b05ed4b87fa6e0344f8590d4e523fa37f8565564f90c2104d1b56",
+        "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "measure.json": "3fd3661cf72b5ff67d71f7c6b1fc0bd7a4a5cee48e1e8d11acb1798e61b32309",
+        "session.json": "1e8c14649ccdab0c4867e6c3ade18e25ff5c6984d6f2e22234cc00072b3ad9a8"
+      },
+      "c01-t01-r00-direct-tclock": {
+        "drain.counts.json": "312688f906e1e5853e6a25dd37f9fa5decd0491d2e51eaef7b727cd3c465e64f",
+        "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "measure.json": "10bf73227de21e2cb4628769d9d74869bd66d02bae51b55854b59debc3cc566f",
+        "session.json": "16ebf153449fa5a88233fac7b87ad9eba6413407a0b0b6d82c5df9f0282ce5d4"
+      },
+      "c01-t01-r01-direct-native": {
+        "drain.counts.json": "2f94abf5380c6ec3ed85f3b6ef132e1c37f9630cd7d5507b0f9fa478e694b54b",
+        "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "measure.json": "1ff210fb0849caeb989ef23593f214a437ce160e76a1f4859f3bb47e5784eca5",
+        "session.json": "09353e5adb8b003090e2a53ccfe708b8b1b2f79d6e9c3153b6bcc2bb8d5f0180"
+      },
+      "c01-t01-r01-direct-tclock": {
+        "drain.counts.json": "078a22a64278deb414cc9e595b60bbb9134ed2f434acf6f68172dc34629c4aa7",
+        "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "measure.json": "b7170efd73b842e7e13c4e1d33f58419bd399a33ff5d909834e9d58539989b47",
+        "session.json": "52af35d573a47272769945a43d1a3fd8bd3f3bddeb6048e757c405ad891d4e9c"
+      },
+      "c01-t01-r02-direct-native": {
+        "drain.counts.json": "54a0fad4d523348d022f67988d5535d379bec77f6b2a12de95ef1ee07f531ada",
+        "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "measure.json": "e3728d785ec9537db3d0a6b3ee87122cae8558c4dda729589057b8a04779745a",
+        "session.json": "471643667f92981541446b56db0549983125a5467ef69af55bb542e5a95346d9"
+      },
+      "c01-t01-r02-direct-tclock": {
+        "drain.counts.json": "6807a871f31d0e2cf1636d6be6c76d10cb52a8d776f67890fe6cee17e9c3a4e8",
+        "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "measure.json": "b8c034d8426d61af3d121beb59bf6483e74b79d516a60069ab606fe2fc5f0df8",
+        "session.json": "208b714ee778606391388c1711807496424ec8e9a9de76122dc84bebd34fdc08"
+      },
+      "c01-t04-r00-direct-native": {
+        "drain.counts.json": "d048ec7d018940b1cd3effcd55f75c369f714735413b689cc2bff40f640b080e",
+        "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "measure.json": "998aef75c5caf9bb8ad948767fabdeff709693ba794506385632e7932ed1bc94",
+        "session.json": "7aa0ca2b5f28239f666e4bd239de987d2c58efa810e66516451817867ba4718f"
+      },
+      "c01-t04-r00-direct-tclock": {
+        "drain.counts.json": "82eac0c9af39b65734879e657f15b1b161dddf49a2e4274f85d8c33a0ed8de69",
+        "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "measure.json": "f167bf831ca82a86619acae46050cf7835aacf6e75c0029b117642b13250c4cd",
+        "session.json": "3106025d3773b078a1642b154c3ac16a508650f70c34f2db934519bafa9ab009"
+      },
+      "c01-t04-r01-direct-native": {
+        "drain.counts.json": "cb739d9a6a13f25d71391989b2d18a645ff503bcaa5b90478d8d0156482b45fa",
+        "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "measure.json": "35dcdc608eec7c754d0b6f2c052482d4ac32f86624ce9221ac40210371fea440",
+        "session.json": "0d42688bd73e48a69a5ef581c4bee13f61d389c4526576430e7f299c9bc0b7a1"
+      },
+      "c01-t04-r01-direct-tclock": {
+        "drain.counts.json": "cd5f469003db94203be462d822c1cef8df706d805aba0984d7c2763c142f6633",
+        "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "measure.json": "1a0f1eb3315bb3c723d0a9c67f789d7e89b8fb97676320ed1f9ad17ea46ee4b3",
+        "session.json": "ad570d84ec74c433c93429a7934ffd85cd23a778db83801c7b2ca048025210ba"
+      },
+      "c01-t04-r02-direct-native": {
+        "drain.counts.json": "eaeae66cda5cbe1ddfa8262bd07a6197cac8bab3f48df419bdebe76b64a49dac",
+        "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "measure.json": "9921a1e0ecae56708075f80d5fd03f6932540a2e02726def5ce7e4b7549f03e9",
+        "session.json": "ee227e628d838d88381ef99970801176f6a5f9c825f7157f81e46c86758521e9"
+      },
+      "c01-t04-r02-direct-tclock": {
+        "drain.counts.json": "fefaacdbc9b7afa029f78231eff82fbb4d695735e1fd7596834ea7aae8fc2aa8",
+        "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "measure.json": "7ab79ce3558966e4f888764aa91ea2d36374a9eedf12cd4ab8c52b53f36170b4",
+        "session.json": "b1d21311df7d6157c2c11a2a972ccee3fa0466f05e3e19e9ee388b369d7a36f5"
+      },
+      "c01-t16-r00-direct-native": {
+        "drain.counts.json": "28e837487a31252912eeda50160526d1f30b1df0825a771884ee2de5391186e1",
+        "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "measure.json": "3f583939f50213bb30936969910ba12bb0e66117ff8566940567b5e0a98b44a3",
+        "session.json": "4c15105631c113fed25a98f4b770cdd7f6b9c499fd048d02c15e8c76800d72e6"
+      },
+      "c01-t16-r00-direct-tclock": {
+        "drain.counts.json": "ee778a010bd3f57d1f76e6a6ef7f1fd7ba64f55652384c361e5c4c287ae1a963",
+        "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "measure.json": "ad2b16c365dc2669e68637f0bb1ebaaaab3583f67ce2cac204f8f8de193f6890",
+        "session.json": "13fa9b51dde6d25b9e46035392cf1d2eb1aacf6cf8ce94780752324c76d6dce5"
+      },
+      "c01-t16-r01-direct-native": {
+        "drain.counts.json": "ca455d85f89a8d48fbbd41244382f4c2a3e8b3258fb585621005fc48a7303dad",
+        "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "measure.json": "b9cb9a71ecd2f3e0d9017c830d06abfebae704ed26e98d69975e2bce083e9a21",
+        "session.json": "f74fb328521ab1e10a7eb679bc12e12584c6fb54794891c8ea6da92053865713"
+      },
+      "c01-t16-r01-direct-tclock": {
+        "drain.counts.json": "b6c7ce6649bbba68fc075f46786ed021a295ad5b50a1e287eeff752583e58bd1",
+        "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "measure.json": "2e15c620cee50e2d575fd6940bb07ddba8cee5226e3615bd4fe9f54fbd8a5b99",
+        "session.json": "4bfdf32899e266cc6ff78f94c2dfc124ea7460190908e82fcec1a7fd0c5d4508"
+      },
+      "c01-t16-r02-direct-native": {
+        "drain.counts.json": "697d1ec5c102efb2e19e3c669171fc54cd7bf3253f80d815546f854f0f63c2a2",
+        "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "measure.json": "aeac12c34420b2f45972e57940d79be0170645a3c42cf2c021362157be246064",
+        "session.json": "09ce8147a4f33006b20f40329956d0549921f8193105da216c403f6c2f216b8d"
+      },
+      "c01-t16-r02-direct-tclock": {
+        "drain.counts.json": "6829eb66f7d3544867552b8875720808471c28803dbb8281c73d4b4d18bc4936",
+        "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "measure.json": "e2cbcfa3aff8cbbfcdf52e7591c0895b9876d2cda83d0cadb22ecdb20157e749",
+        "session.json": "ad1c2b8aa1adec92b8768a514adc86bf8b81f5fe8b3735d3af1883c6d0963da2"
+      },
+      "c01-t28-r00-direct-native": {
+        "drain.counts.json": "9d403f0edfb2d15513f9b3139cea2b74065029327c94ee4152e45a839b667bc6",
+        "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "measure.json": "3773e88972619d6bd26972049f6e5d78884506ddd75ce1f7b7d316b2c14a2d8d",
+        "session.json": "78a5afb5f8e0c31cf1466e3460b3a0717461ab562878859878d58f6196f8b51b"
+      },
+      "c01-t28-r00-direct-tclock": {
+        "drain.counts.json": "e11e17fd2074ff493559b3dff003464b380a75f4adf5007fbbe9d9738efbed13",
+        "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "measure.json": "efc75527a652bf09ad8449277fad579fda234cf52375cab432412c7b579cec02",
+        "session.json": "51ec470d38dbe335b7e437e59e3a5abff3ed009b2d28235dda4b7030f76ec27f"
+      },
+      "c01-t28-r01-direct-native": {
+        "drain.counts.json": "e946ae1aae3a6c31935ac6ffe286426b48059795e3f9aea85d5e01d72ac93140",
+        "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "measure.json": "e93ee506c0043942af965a909108370d0410e0b0b56674fcccaa699a42cabb09",
+        "session.json": "dc04bba760b8fb960e02eb534c56bc8af0c7999f4db2aa54185870d4943b5add"
+      },
+      "c01-t28-r01-direct-tclock": {
+        "drain.counts.json": "0924ee6a472dfd2af601607d03e61cc814b144fb1031db73b3936ffde8f8a155",
+        "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "measure.json": "758a96cedcdbbcf6919af01d58dd52451ccf3fe3ce580e849020f4d5ee14ab30",
+        "session.json": "0daedde86ee49fffcf2bf923960c14e933ecbffd3cd1145d1b7e121ce6471d33"
+      },
+      "c01-t28-r02-direct-native": {
+        "drain.counts.json": "c9d3aeab7ec11e051e1d82cb7b8388925a2c222d4fe5a7874fa6b8ba5effac2f",
+        "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "measure.json": "5812c4cf3f4925f7b4e6defd02ffbda7a16ea8d03d790ceaa18da2c6284f43c1",
+        "session.json": "b36805c1e376c4391af6313e022c0dbdc254477e1b73c80c90a805fc69ba27f0"
+      },
+      "c01-t28-r02-direct-tclock": {
+        "drain.counts.json": "2989a52c15254e5e1b09bbfdab34ef9af334180471a3ded3aaffb8aa174d3bc8",
+        "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "measure.json": "385f48697ca1b4d198653227866141cbdd10ca3a71b07f18f3cd1170c9ed51f5",
+        "session.json": "c9556415e02d6d5b3dc816e6744b9cccb082fbc657e83a7577b1969e8f79698b"
+      },
+      "c01-t60-r00-direct-native": {
+        "drain.counts.json": "5142f47bdd79b75b78313ff10796efd7c7a6c85906403168b1b26231df3af926",
+        "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "measure.json": "1265297ff78e973544b8769318184b6518d2267368b0951815dd0caef4ac028b",
+        "session.json": "c2c81ccf2deff31de17a70081c2f8e11d59cbc79a2a3c6108777e089b4b02865"
+      },
+      "c01-t60-r00-direct-tclock": {
+        "drain.counts.json": "5737c20458600a4cb5bbd271c7bcaab05d29ef8361528d828d24d2c3d3b506de",
+        "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "measure.json": "1d34bf530414e079a4291fac54b95909ad03e5fa1d24d0b9426814a56697d702",
+        "session.json": "6e05beec6147a45dcc99bb424b42172149552fc577f4277cc52d8d6aa80e86e2"
+      },
+      "c01-t60-r01-direct-native": {
+        "drain.counts.json": "c5d19cfcd8de2bbcd8168d66df97e381dc368a5e6ba5fa493acf0c766114e4f2",
+        "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "measure.json": "7e138b098a0fd77bd4fef4e60f26b1fbb60c9708fc5f5dafdc06fc2f7b6772f0",
+        "session.json": "a5376a1f60fae1ca816b361e404593711964538f0d6002e209cfe4dc1ccc5711"
+      },
+      "c01-t60-r01-direct-tclock": {
+        "drain.counts.json": "83f9bcb5737a9daf8c34a70404369da11ce5facdf52b8d8991a42f7ceb63dce4",
+        "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "measure.json": "f928c319a89496c76589e448850904fc2c088fdd3f2845b978c3c66b9f77e68c",
+        "session.json": "25aab827b44fb1b3377b99cd4c2f48bd6089a0a4e14e1b9307f0ab4504ac0803"
+      },
+      "c01-t60-r02-direct-native": {
+        "drain.counts.json": "fe19c24eb9521ff9023c3e5b61dd21a8ae5beea05e68451162c3da9d7025093e",
+        "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "measure.json": "a75a91e62c03af2b53b9f60b9ab17247b0e211c60cd1ec5ba7540efc058c9d08",
+        "session.json": "e004bbb2118670e05ad09caf3e7f91240fcbe8afc49e9407edead4d596f6a372"
+      },
+      "c01-t60-r02-direct-tclock": {
+        "drain.counts.json": "cd9c5301f6e26a4e901397165c285f7624e84e1e79559cdb487f42f02f5d5ea1",
+        "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "measure.json": "a5e88fb05df9563fc738f0dbc145d28c0c377c6d68ecca6b74c12c285ac34284",
+        "session.json": "9d7b00a373fb1715607dba74e693255ff3bee9d236ff9efd833c2f8e52a999c6"
+      }
+    },
+    "score_eligible": true,
+    "sessions": 30,
+    "source_and_raw_verified": true,
+    "source_files": 315,
+    "source_manifest_sha256": "a8b168717df03ddb89a2bc693ff9968db3f7b91eea0d858e26e6a777273ab2d4",
+    "worker_counts": [
+      1,
+      4,
+      16,
+      28,
+      60
+    ]
+  },
+  "script_sha256": "8b784656ae46bb5a9bdae1fe16a4f4b47eaa132c45383fa2e785b1f8a375f504",
+  "study_auditor_sha256": "b74116d92e193b08621c7ffe541a0044ed3c414401a39969256ffc4da12793b4"
+}

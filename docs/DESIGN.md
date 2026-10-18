@@ -115,7 +115,7 @@ that storage is reused or the original preemption pin is released. See
 A simple batch can hold one source lease across all its bodies, including native
 or remote waits. KD still checks each request's image readiness. Holding source
 modules loaded does not itself make a generated image immutable. Mutex frames
-now bind a separately published generation on the compatibility branch.
+bind a separately published immutable generation in the current implementation.
 
 The registry has 511 slots. Provider initialization allocates up to 64 page-aligned
 code blocks of 640 KiB each, or 40 MiB in total. The daemon uploads an image in
@@ -141,4 +141,4 @@ the others. Use [tests](../tests/README.md) for check selection,
 [benchmarks](../bench/README.md) for commands and reports, and
 [performance status](PERFORMANCE.md) for the measured outcomes.
 Historical results apply to their recorded source and environment;
-[operations](AGENTS.md) defines how to run new checks.
+[operations](operations/VM.md) defines how to run new checks.

@@ -1,78 +1,46 @@
 # kdlock
 
-The current KD mutex uses a KD-owned object with the accepted legacy delegation
-queue, batching, pinned waiters and ABI2 caller. Commit `555b8b7` is the accepted
-baseline; the [KD-only design](docs/design/kd_only_mutex.md) describes the change,
-API contract and scoped kernel integration. The
-[paired benchmark report](bench/results/10.176.26.71/bench/comparison/mutex-kdonly-20261017T140354Z/README.md)
-compares both versions with Native and TCLock on c01/post64 and pipebytes n16.
+kdlock is an experimental x86_64 Linux kernel lock library. A lock holder can
+execute waiting callers' critical sections through a JIT compiler. The project
+provides spinlocks, ordinary mutexes and spinning read-write locks, with matched
+Linux Native and TCLock workloads.
 
-The earlier recovered baseline is `74676c3` on `bench/legacy-mutex-c01-pipebytes`; its
-[378-session comparison](bench/results/10.176.26.71/bench/comparison/mutex-legacy-grid-20261016T125529Z/README.md)
-records the common c01 post64 workload and pipebytes n16 results. The original
-[5.330 Mops/s recovery](bench/results/10.176.26.71/bench/comparison/mutex-legacy-recovery-20261016T113518Z/README.md)
-remains on `recovery/mutex-legacy-5m330`.
+`master` is the maintained version. Its KD mutex uses **KD-owned physical
+exclusion and the accepted legacy delegation protocol**, selected at `d2a2304`.
+All callers of a KD mutex object must use KD APIs; ordinary mutex aliases execute
+locally, while explicit clobber callers permit delegation. Loading the provider
+does not replace locks throughout an existing kernel. See the
+[mutex contract](docs/design/kd_only_mutex.md) for supported APIs and scope.
 
-kdlock is an experimental lock library for x86_64 Linux kernel code. When several
-threads need the same lock, one thread can hold it and run critical sections for
-waiting threads. That thread is the **combiner**. A background daemon translates
-the critical-section machine code; the combiner runs the generated JIT code.
-
-KD provides three kinds of lock:
-
-- **Spinlock:** uses KD's own four-byte lock object.
-- **Mutex:** owns its physical exclusion and retains the legacy queue for delegated work.
-- **Read-write lock:** lets readers run concurrently on their own CPUs. Writers
-  can run locally or delegate through the spin JIT engine.
-
-The repository also includes TCLock ports and Linux Native workloads so all three
-implementations can be compared. Callers choose an API explicitly; loading KD does
-not redirect ordinary Linux lock calls. Builds require the recorded `kdclobber2`
-guest-kernel interfaces.
-
-The latest [RCUHT rwlock comparison](bench/results/380G10/bench/rwlock_compare/20261010-rcuht/README.md)
-tested 1% and 20% writes at 15 thread counts. All 270 runs produced correct results
-and shut down cleanly. KD matched or exceeded both alternatives on both throughput
-measures at 21 of the 30 combinations of write percentage and thread count. It did
-not meet that target everywhere. The earlier
-[spin/mutex optimization phase](bench/results/380G10/bench/tclock_compare/20261008-protocol-simplification/README.md)
-closed on 2026-10-09; its results are reported separately.
+The accepted [504-session comparison](bench/results/10.176.26.71/bench/comparison/mutex-kdonly-20261017T140354Z/README.md)
+covers c01/post64 and `api-pipebytes-query-n16` at 1–8 workers and 12–60 by four,
+with three repetitions and Native/TCLock controls. The
+[performance guide](docs/PERFORMANCE.md) retains variation and regression limits.
 
 ## Documentation
 
-| Start here | Content |
-| --- | --- |
-| [Project guide](docs/PROJECT_GUIDE.md) | Current state, reading order and guest setup |
-| [Nine lock protocols](docs/design/lock_protocols.md) | How KD, TCLock and Native acquire locks, run waiting work and release resources |
-| [Spin implementation](docs/design/spin_implementation.md) | Spin source paths, objects, cachelines, queues, prefetch and stack/packet flow |
-| [Mutex implementation](docs/design/mutex_implementation.md) | How mutex acquisition, delegation, sleeping and owner acknowledgements work |
-| [Read-write lock](docs/design/rwlock_implementation.md) | How to use the rwlock and how it coordinates readers and writers |
-| [KD design](docs/DESIGN.md) | Execution model, glossary and supported scope |
-| [KD ownership](docs/design/locking.md) / [frames](docs/design/frames.md) | Which task owns each lock and when request memory can be reused |
-| [JIT execution](docs/JIT_EXECUTION.md) / [register ABI](docs/JIT_REGISTER_ABI.md) | How code is accepted, translated, executed and returned to the caller |
-| [Code map](docs/CODE_MAP.md) | Source and documentation responsibilities |
-| [Operations](docs/AGENTS.md) | Where to build and test, how to shut down safely, and VM recovery |
-| [Known limitations](docs/TODO.md) / [performance status](docs/PERFORMANCE.md) | Known problems, measured performance and work left for later |
-| [Real kernel API benchmarks](bench/real_api/README.md) | Spinlock, mutex and bounded reader/writer syscall workloads; results, kernel-lock mapping and TCLocks paper context |
-| [Validation and cleanup](docs/VALIDATION.md) | Completed checks, evidence retention and closeout scope |
+- [Documentation index](docs/README.md) and [project guide](docs/PROJECT_GUIDE.md)
+- [Design](docs/DESIGN.md), [nine lock protocols](docs/design/lock_protocols.md)
+  and [code map](docs/CODE_MAP.md)
+- [Benchmark workloads](docs/BENCHMARK_WORKLOADS.md) and [benchmark commands](bench/README.md)
+- [Tests](tests/README.md), [validation](docs/VALIDATION.md) and [known limitations](docs/TODO.md)
+- [VM operations](docs/operations/VM.md) and [development rules](AGENTS.md)
+- [Branch consolidation](docs/history/main-consolidation-20261018.md) and [historical evidence](docs/history/README.md)
 
 ## Repository
 
 | Directory | Responsibility |
 | --- | --- |
-| [kernel_module](kernel_module/README.md) | KD spin/mutex/rwlock provider and shared execution engine |
-| [include](include/README.md) | Shared ABI, direct API headers and wrapper assembly |
-| [disassem](disassem/README.md) | Decode, admission, register lowering and code generation |
-| [daemon](daemon/README.md) | Translation requests and code publication |
-| [tclock_backend](tclock_backend/README.md) | TCLock ports, compatibility contexts and upstream provenance |
-| [workload_modules](workload_modules/README.md) | Spin, mutex and rwlock kernel payloads and rwlock correctness workload |
-| [bench](bench/README.md) | Clients, measurement instructions and performance evidence |
-| [tests](tests/README.md) | Targeted verification entry points and evidence |
-| [kernel_baseline](kernel_baseline/README.md) | Captured guest kernel configuration, interfaces and identity |
-| [kernel_experiments](kernel_experiments/README.md) | Separately authorized historical kernel experiments |
+| [kernel_module](kernel_module/README.md) | KD provider, ownership, queues and execution engine |
+| [include](include/README.md) | Public APIs, shared ABI and wrapper assembly |
+| [disassem](disassem/README.md), [daemon](daemon/README.md) | Translation, admission and immutable mutex image publication |
+| [tclock_backend](tclock_backend/README.md) | Independent TCLock ports and upstream provenance |
+| [workload_modules](workload_modules/README.md) | Kernel benchmark payloads |
+| [bench](bench/README.md) | Maintained runners, archived analysis and results by machine |
+| [tests](tests/README.md) | Basic, targeted and live checks |
+| [kernel_baseline](kernel_baseline/README.md) | Captured kernel identity and historical experiments |
+| [tools/vm](tools/vm/README.md) | Source synchronization |
 
-Edit source on the host; build and run tests in the recovery guest, following
-[operations](docs/AGENTS.md). Each directory guide contains its own commands.
-This project targets x86_64 only. Its JIT checks are not a security sandbox; read
-[admission limits](docs/design/admission.md), [resource lifetimes](docs/design/lifetimes.md)
-and [known limitations](docs/TODO.md#delivery-scope) before using it.
+Edit source on `380G10`; build and test only in the designated recovery VM on
+`10.176.26.71`. KD's admission checks are not a security sandbox. See
+[admission](docs/design/admission.md) and [lifetimes](docs/design/lifetimes.md).

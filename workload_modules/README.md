@@ -9,7 +9,7 @@ This directory contains the kernel code exercised by tests and benchmarks.
 Userspace clients, timing and reports live under
 [bench/tclock_compare](../bench/tclock_compare/README.md) and
 [bench/rwlock_compare](../bench/rwlock_compare/README.md). Provider-specific
-probes remain in [tests/kernel](../tests/kernel/). Each backend is selected at
+probes remain in [tests/kernel](../tests/kernel). Each backend is selected at
 compile time. All participants on a target lock must use that same backend's API.
 
 | Workload | Module / device | Content |

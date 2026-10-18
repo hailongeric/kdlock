@@ -7,7 +7,7 @@ resolve historical pinned-producer scheduling failures.
 
 Current scope: x86_64 kernel spin/mutex/rwlock delegation. Implementation contracts
 live in [DESIGN](DESIGN.md); [performance status](PERFORMANCE.md) distinguishes the
-closed spin/mutex phase from the later rwlock comparison. These unresolved issues
+accepted KD-only mutex from historical spin/rwlock comparisons. These unresolved issues
 remain documented; this list does not schedule new work. Historical evidence is
 indexed in [VALIDATION](VALIDATION.md).
 
@@ -82,15 +82,15 @@ drain. No Linux/TCLock operations may access the same KD rwlock object.
 
 ### C3. Immutable JIT publication and lifetime
 
-The legacy mutex compatibility branch implements complete staged publication,
+The current KD mutex implements complete staged publication,
 immutable mutex generations, frame binding and stale-miss rejection. Published
 versions use the existing bounded pool and remain until session teardown; there
 is no in-session generation reclamation. Spin/rwlock images still use in-place
-storage. See [the backport comparison](design/legacy_mutex_compatibility.md).
+storage. See [the backport comparison](history/legacy_mutex_compatibility.md).
 
 ### C4. Instruction, flags, and fault semantics
 
-The compatibility branch refuses unvirtualized processor-state instructions,
+The current translator refuses unvirtualized processor-state instructions,
 unknown mnemonics and equivalent context helpers before emission. INT-to-NOP and
 silent special-instruction omission are removed. General flags repair,
 instrumentation flag clobbers and SIMD/FPU virtualization remain deferred.

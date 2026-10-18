@@ -1,0 +1,387 @@
+{
+  "binaries": {
+    "daemon": {
+      "path": "bench/results/10.176.26.71/raw/tests/remove-mutex-legacy-commit-20261016/daemon",
+      "sha256": "af15f5bf200e1e2c6d6643bde0ff219e7e246d763a471132764556efab2bff3a"
+    },
+    "provider_normal": {
+      "path": "bench/results/10.176.26.71/raw/tests/remove-mutex-legacy-commit-20261016/provider-normal.ko",
+      "sha256": "2cfae613c74fe408b260556b5a2871260e8348c29ae299c5a3ae56a8dcc6b0ef"
+    }
+  },
+  "checks": {
+    "basic": {
+      "command": "make -C tests/unit run",
+      "exit_status": 0,
+      "log": {
+        "path": "bench/results/10.176.26.71/raw/tests/remove-mutex-legacy-commit-20261016/basic.log",
+        "sha256": "30ed1c2fffa4c9ef28cf8171d0acb426a58da07d891faada4a1894fe44d1537e"
+      }
+    },
+    "daemon": {
+      "command": "make -C daemon",
+      "exit_status": 0,
+      "log": {
+        "path": "bench/results/10.176.26.71/raw/tests/remove-mutex-legacy-commit-20261016/daemon.log",
+        "sha256": "bf5063723402548f111948545f1f861cc9dd789e10e75c86d45648f0efbce9eb"
+      }
+    },
+    "provider-normal": {
+      "command": "make -C kernel_module KDIR=/root/linux-6.1.159-kdclobber2 UBSAN_SANITIZE=n W=1 -j16",
+      "exit_status": 0,
+      "log": {
+        "path": "bench/results/10.176.26.71/raw/tests/remove-mutex-legacy-commit-20261016/provider-normal.log",
+        "sha256": "fe7cfb97a25b0082e930bd04a065a8dd325fc70211bd75ca82421911f5782333"
+      }
+    },
+    "provider-selftest": {
+      "command": "make -C kernel_module KDIR=/root/linux-6.1.159-kdclobber2 UBSAN_SANITIZE=n W=1 KDLOCK_SELFTEST=1 -j16",
+      "exit_status": 0,
+      "log": {
+        "path": "bench/results/10.176.26.71/raw/tests/remove-mutex-legacy-commit-20261016/provider-selftest.log",
+        "sha256": "77613733c12a0097b97bbe856fca84d054c164996e9a7acf124fce50b1b51b8a"
+      }
+    },
+    "test_clobber_abi": {
+      "command": "python3 tests/unit/run.py codegen/test_clobber_abi.py",
+      "exit_status": 0,
+      "log": {
+        "path": "bench/results/10.176.26.71/raw/tests/remove-mutex-legacy-commit-20261016/test_clobber_abi.log",
+        "sha256": "3725840a05bc47e6d9258421cfe3ab46c0339176bd4827c709ed96796f4ccd3f"
+      }
+    },
+    "test_clobber_entry": {
+      "command": "python3 tests/unit/run.py admission/test_clobber_entry.py",
+      "exit_status": 0,
+      "log": {
+        "path": "bench/results/10.176.26.71/raw/tests/remove-mutex-legacy-commit-20261016/test_clobber_entry.log",
+        "sha256": "e01ffc87e26cda10b497787af84fd27f2bb10180974649b68a7bd1cc44d0aa3e"
+      }
+    },
+    "test_context_guards": {
+      "command": "python3 tests/unit/run.py admission/test_context_guards.py",
+      "exit_status": 0,
+      "log": {
+        "path": "bench/results/10.176.26.71/raw/tests/remove-mutex-legacy-commit-20261016/test_context_guards.log",
+        "sha256": "06a0731337330823047bc6889a3e59dbfcf462c6923961cbe888f5eddf0f3f07"
+      }
+    },
+    "test_context_policy": {
+      "command": "python3 tests/unit/run.py admission/test_context_policy.py",
+      "exit_status": 0,
+      "log": {
+        "path": "bench/results/10.176.26.71/raw/tests/remove-mutex-legacy-commit-20261016/test_context_policy.log",
+        "sha256": "c8c7b57d89e52add6475be39de6ce0387545b8ec7c7d19be2c35f1a6638882b8"
+      }
+    },
+    "test_direct": {
+      "command": "python3 bench/tclock_compare/test_direct.py",
+      "exit_status": 0,
+      "log": {
+        "path": "bench/results/10.176.26.71/raw/tests/remove-mutex-legacy-commit-20261016/test_direct.log",
+        "sha256": "313b382509c6d684b43aa79e4146623adad0f8e08066894c1f92384ff306f68a"
+      }
+    },
+    "test_exe_registry": {
+      "command": "python3 tests/unit/run.py execution/test_exe_registry.py",
+      "exit_status": 0,
+      "log": {
+        "path": "bench/results/10.176.26.71/raw/tests/remove-mutex-legacy-commit-20261016/test_exe_registry.log",
+        "sha256": "1596a4b73209a6626823f2cfe843f4c3dd84b7dc8a100a219a9a7ee66cc20e58"
+      }
+    },
+    "test_exec_capacity": {
+      "command": "python3 tests/unit/run.py execution/test_exec_capacity.py",
+      "exit_status": 0,
+      "log": {
+        "path": "bench/results/10.176.26.71/raw/tests/remove-mutex-legacy-commit-20261016/test_exec_capacity.log",
+        "sha256": "f98682f7a13446ff8ddeb36bb807c79563bdc529e7f2cb2666847e4dcf26620c"
+      }
+    },
+    "test_hotlock_sampling": {
+      "command": "python3 tests/unit/run.py infrastructure/test_hotlock_sampling.py",
+      "exit_status": 0,
+      "log": {
+        "path": "bench/results/10.176.26.71/raw/tests/remove-mutex-legacy-commit-20261016/test_hotlock_sampling.log",
+        "sha256": "0848fbd46e51b6f3dbf13a3d057401bf26ba8794f1aa51fd81a33c49e9388628"
+      }
+    },
+    "test_instruction_policy": {
+      "command": "python3 tests/unit/run.py admission/test_instruction_policy.py",
+      "exit_status": 0,
+      "log": {
+        "path": "bench/results/10.176.26.71/raw/tests/remove-mutex-legacy-commit-20261016/test_instruction_policy.log",
+        "sha256": "fccc18c56f7e05c512882dd031cdb71bc3c4f4319a7a2e5ab621ff999782e1a3"
+      }
+    },
+    "test_jit_diagnostics": {
+      "command": "python3 tests/unit/run.py codegen/test_jit_diagnostics.py",
+      "exit_status": 0,
+      "log": {
+        "path": "bench/results/10.176.26.71/raw/tests/remove-mutex-legacy-commit-20261016/test_jit_diagnostics.log",
+        "sha256": "2e63eb074b7daa102ee0e25197a8f827314808ecd4a59f57faf859f2f5c006ea"
+      }
+    },
+    "test_jit_entry_scope": {
+      "command": "python3 tests/unit/run.py execution/test_jit_entry_scope.py",
+      "exit_status": 0,
+      "log": {
+        "path": "bench/results/10.176.26.71/raw/tests/remove-mutex-legacy-commit-20261016/test_jit_entry_scope.log",
+        "sha256": "4150f7c4b49319b740931ca63346d77cedd0dd4d954554210724ea32ecaf46c0"
+      }
+    },
+    "test_mutex_drain": {
+      "command": "python3 tests/unit/run.py mutex/test_mutex_drain.py",
+      "exit_status": 0,
+      "log": {
+        "path": "bench/results/10.176.26.71/raw/tests/remove-mutex-legacy-commit-20261016/test_mutex_drain.log",
+        "sha256": "6ac609ec35ec25e78a52869bb09977dc1225da2bebd0e42851f01c14dae47245"
+      }
+    },
+    "test_mutex_study": {
+      "command": "python3 bench/tclock_compare/test_mutex_study.py",
+      "exit_status": 0,
+      "log": {
+        "path": "bench/results/10.176.26.71/raw/tests/remove-mutex-legacy-commit-20261016/test_mutex_study.log",
+        "sha256": "1ad0338e936f5c289ad75ccbae324368025a3352eb368984d20047f62f9347a0"
+      }
+    },
+    "test_mutex_task_cache": {
+      "command": "python3 tests/unit/run.py mutex/test_mutex_task_cache.py",
+      "exit_status": 0,
+      "log": {
+        "path": "bench/results/10.176.26.71/raw/tests/remove-mutex-legacy-commit-20261016/test_mutex_task_cache.log",
+        "sha256": "9cd218f49a0b13a66361981c678f0b732efd8ad50ba68de3d0372d66204670b4"
+      }
+    },
+    "test_native_after_outer": {
+      "command": "python3 tests/unit/run.py execution/test_native_after_outer.py",
+      "exit_status": 0,
+      "log": {
+        "path": "bench/results/10.176.26.71/raw/tests/remove-mutex-legacy-commit-20261016/test_native_after_outer.log",
+        "sha256": "1ece6895f2af1b33d7bd7b9a357e3ad13ae1435dfc5c5cf38c79da31bd29cb5e"
+      }
+    },
+    "test_owned_images": {
+      "command": "python3 tests/unit/run.py execution/test_owned_images.py",
+      "exit_status": 0,
+      "log": {
+        "path": "bench/results/10.176.26.71/raw/tests/remove-mutex-legacy-commit-20261016/test_owned_images.log",
+        "sha256": "dfdaa3612bb31c4876892ff3df52ad5b5553ff8561459431091f87c1eb29dc0b"
+      }
+    },
+    "test_owned_mutex_cabi": {
+      "command": "python3 tests/unit/run.py mutex/test_owned_mutex_cabi.py",
+      "exit_status": 0,
+      "log": {
+        "path": "bench/results/10.176.26.71/raw/tests/remove-mutex-legacy-commit-20261016/test_owned_mutex_cabi.log",
+        "sha256": "3da00632f469bebf1b855f640b24667951f46d4ec03c15c3ccb241a1100585b1"
+      }
+    },
+    "test_owned_mutex_core": {
+      "command": "python3 tests/unit/run.py mutex/test_owned_mutex_core.py",
+      "exit_status": 0,
+      "log": {
+        "path": "bench/results/10.176.26.71/raw/tests/remove-mutex-legacy-commit-20261016/test_owned_mutex_core.log",
+        "sha256": "fea4a28d2625d440c984370d0c194c771c92dfe81e0c94d65dd6119fc3e82fea"
+      }
+    },
+    "test_owned_mutex_delegation": {
+      "command": "python3 tests/unit/run.py mutex/test_owned_mutex_delegation.py",
+      "exit_status": 0,
+      "log": {
+        "path": "bench/results/10.176.26.71/raw/tests/remove-mutex-legacy-commit-20261016/test_owned_mutex_delegation.log",
+        "sha256": "83f8b846b027d30d7158b2684e8b049a75526eccfc416d9d415862631a3fa8c4"
+      }
+    },
+    "test_owned_mutex_outer_api": {
+      "command": "python3 tests/unit/run.py mutex/test_owned_mutex_outer_api.py",
+      "exit_status": 0,
+      "log": {
+        "path": "bench/results/10.176.26.71/raw/tests/remove-mutex-legacy-commit-20261016/test_owned_mutex_outer_api.log",
+        "sha256": "15145760e3e54feebac969af9a8de9314919e0205bf462ea703f00d6feb2d2e1"
+      }
+    },
+    "test_owned_mutex_profile": {
+      "command": "python3 tests/unit/run.py mutex/test_owned_mutex_profile.py",
+      "exit_status": 0,
+      "log": {
+        "path": "bench/results/10.176.26.71/raw/tests/remove-mutex-legacy-commit-20261016/test_owned_mutex_profile.log",
+        "sha256": "4351e2150a49738b2f07aa5c1916a06ea0f68cf13d14de6bb65c915b9145c0a7"
+      }
+    },
+    "test_owned_mutex_wait_clobber": {
+      "command": "python3 tests/unit/run.py mutex/test_owned_mutex_wait_clobber.py",
+      "exit_status": 0,
+      "log": {
+        "path": "bench/results/10.176.26.71/raw/tests/remove-mutex-legacy-commit-20261016/test_owned_mutex_wait_clobber.log",
+        "sha256": "559d7c32bc76c0b23e476e63ac0296a6f1a86dcffb990e1e38c6e5786e39e956"
+      }
+    },
+    "test_plan": {
+      "command": "python3 bench/real_api/test_plan.py",
+      "exit_status": 0,
+      "log": {
+        "path": "bench/results/10.176.26.71/raw/tests/remove-mutex-legacy-commit-20261016/test_plan.log",
+        "sha256": "6273232de4d3ef7acd4ecafa5c86beeeb974f56586b21089a2990b3f72facbe6"
+      }
+    },
+    "test_remote_outer": {
+      "command": "python3 tests/unit/run.py execution/test_remote_outer.py",
+      "exit_status": 0,
+      "log": {
+        "path": "bench/results/10.176.26.71/raw/tests/remove-mutex-legacy-commit-20261016/test_remote_outer.log",
+        "sha256": "a36bf64ca25cebd37d0e33a289fbd5bb448263856e060ef2ba432f028afc9a68"
+      }
+    },
+    "test_report": {
+      "command": "python3 bench/real_api/test_report.py",
+      "exit_status": 0,
+      "log": {
+        "path": "bench/results/10.176.26.71/raw/tests/remove-mutex-legacy-commit-20261016/test_report.log",
+        "sha256": "65378dcad145da2497120819bebfc3c46534dce9714ce064b3d809a56654aca2"
+      }
+    },
+    "test_source_lifetime": {
+      "command": "python3 tests/unit/run.py infrastructure/test_source_lifetime.py",
+      "exit_status": 0,
+      "log": {
+        "path": "bench/results/10.176.26.71/raw/tests/remove-mutex-legacy-commit-20261016/test_source_lifetime.log",
+        "sha256": "f495301ad2750c2b44dc213058911e2b913189f845786c58e24c293a114244ee"
+      }
+    },
+    "test_spin_batch": {
+      "command": "python3 tests/unit/run.py spin/test_spin_batch.py",
+      "exit_status": 0,
+      "log": {
+        "path": "bench/results/10.176.26.71/raw/tests/remove-mutex-legacy-commit-20261016/test_spin_batch.log",
+        "sha256": "98c489ac2e96dfbeea276a3119f4906534bc60b14579185cabc67c0a108c74a8"
+      }
+    },
+    "test_spin_cacheline": {
+      "command": "python3 bench/spin_cacheline/test_spin_cacheline.py",
+      "exit_status": 0,
+      "log": {
+        "path": "bench/results/10.176.26.71/raw/tests/remove-mutex-legacy-commit-20261016/test_spin_cacheline.log",
+        "sha256": "1c6aa162554faee2c3fc0419e7d566cf2b692ed263972a7d5d2a956604c2bb90"
+      }
+    },
+    "test_spin_paired_jit": {
+      "command": "python3 tests/unit/run.py codegen/test_spin_paired_jit.py",
+      "exit_status": 0,
+      "log": {
+        "path": "bench/results/10.176.26.71/raw/tests/remove-mutex-legacy-commit-20261016/test_spin_paired_jit.log",
+        "sha256": "0e5c805a13538fef2bf19e30f7ba93ecc9d48c9c6aea9273bc23a00cf89cf165"
+      }
+    }
+  },
+  "deleted_source_paths_absent": [
+    "include/kd_mutex_direct.h",
+    "include/kd_mutex_legacy.h",
+    "kernel_module/kd_mutex.c",
+    "kernel_module/lock/mutex_calls.inc",
+    "kernel_module/mutex/clobber.inc",
+    "kernel_module/mutex/combiner.inc",
+    "kernel_module/mutex/lifecycle.inc",
+    "kernel_module/mutex/parking.inc",
+    "kernel_module/mutex/queue.inc",
+    "kernel_module/mutex/waiter.inc",
+    "tests/clients/mutex_signal_client.c",
+    "tests/kernel/mutex/mutex_shadow_trace.c",
+    "tests/kernel/mutex/mutex_wait_selftest.c",
+    "tests/protocols/mutex_parallel_events.py",
+    "tests/protocols/mutex_parallel_pools.py",
+    "tests/protocols/mutex_parallel_protocol.py",
+    "tests/protocols/mutex_parallel_signals.py",
+    "tests/protocols/mutex_shadow_protocol.py",
+    "tests/protocols/mutex_signal_protocol.py",
+    "tests/protocols/mutex_stack_protocol.py",
+    "tests/protocols/native_waiter_signal_race.py",
+    "tests/unit/mutex/mutex_balances_fixture.c",
+    "tests/unit/mutex/mutex_outer_progress_fixture.c",
+    "tests/unit/mutex/mutex_parallel_client_fixture.c",
+    "tests/unit/mutex/mutex_parking_fixture.c",
+    "tests/unit/mutex/mutex_resources_fixture.c",
+    "tests/unit/mutex/mutex_terminal_fixture.c",
+    "tests/unit/mutex/parallel_fixtures.py",
+    "tests/unit/mutex/parallel_pools_cases.py",
+    "tests/unit/mutex/parallel_signals_cases.py",
+    "tests/unit/mutex/test_mutex_balances.py",
+    "tests/unit/mutex/test_mutex_outer_api.py",
+    "tests/unit/mutex/test_mutex_outer_progress.py",
+    "tests/unit/mutex/test_mutex_parallel_protocol.py",
+    "tests/unit/mutex/test_mutex_parking.py",
+    "tests/unit/mutex/test_mutex_resources.py",
+    "tests/unit/mutex/test_mutex_signal_protocol.py",
+    "tests/unit/mutex/test_mutex_stack_protocol.py",
+    "tests/unit/mutex/test_mutex_terminal.py",
+    "tests/unit/mutex/test_mutex_wait_clobber.py"
+  ],
+  "execution_host": "10.176.26.71",
+  "finished_utc": "2026-10-15T16:37:06Z",
+  "git_base": "98118e91822847c37558655d07193c0c362c0bd8",
+  "guest_idle": true,
+  "guest_root": "/root/host_fs/kdlock",
+  "kernel_identity": {
+    "build_files": 9,
+    "bundle_files": 7,
+    "config": true,
+    "ok": true,
+    "running_build_id": "5ca28058e156f34a2c7fe91e8e0fbf92f4e51960",
+    "source_files": 20
+  },
+  "limits": {
+    "full_suite_run": false,
+    "new_live_module_or_jit_runs": false,
+    "performance_matrix_run": false,
+    "prior_live_evidence": "bench/results/10.176.26.71/tests/remove-mutex-legacy-20261015/validation.json"
+  },
+  "passed": true,
+  "preserved_unstaged_provider_files": 35,
+  "raw_run_script": {
+    "path": "bench/results/10.176.26.71/raw/tests/remove-mutex-legacy-commit-20261016/run.sh",
+    "sha256": "e395f6efdaf811c0a3a6ba86d093ab8c76cbc3f82ddfa6bb15a005dde160722f"
+  },
+  "schema": 1,
+  "scope": "Independent staged-source checks and documentation closeout for the KD legacy mutex removal",
+  "source_host": "380G10",
+  "source_identity": {
+    "guest_verification": {
+      "path": "bench/results/10.176.26.71/raw/tests/remove-mutex-legacy-commit-20261016/source-identity-check.json",
+      "sha256": "2f1a21d17311bfc3765210417803fe65fdb1b97b237b274624ca4dc83d36e340"
+    },
+    "manifest": {
+      "path": "bench/results/10.176.26.71/tests/remove-mutex-legacy-20261015/commit-source-sha256.json",
+      "sha256": "fafd1de2b80234fd302cab4b0265e28941a450f078268ae7f9fed918b795875c"
+    },
+    "matched_source_build_test_files": 411,
+    "note": "All non-Markdown tracked inputs outside benchmark result archives match the staged source. Final edits after these checks are documentation and evidence only."
+  },
+  "started_utc": "2026-10-15T16:34:30Z",
+  "static_checks": {
+    "documentation": {
+      "counts": {
+        "documents": 102,
+        "external_links_not_fetched": 40,
+        "fixed_git_links": 64,
+        "local_anchors": 137,
+        "local_links": 1315,
+        "maintained_documents": 43
+      },
+      "evidence": {
+        "path": "bench/results/10.176.26.71/raw/tests/remove-mutex-legacy-commit-20261016/documentation-audit.json",
+        "sha256": "8c4ab8cf31b500cf8f3d9bffcea60442f286f6185696a65da45455a9753d92b7"
+      },
+      "issues": [],
+      "method": "Static inline Markdown links and heading/explicit anchors; fixed Git links checked against local objects. External URLs not fetched. No project code executed."
+    },
+    "git_diff_check": true,
+    "observation_patch_dry_run_fuzz_0": true,
+    "python_syntax_files": 159
+  },
+  "tested_tree_before_documentation_closeout": "2922caf95d34b6741f721752c5ba6844f365aeb4",
+  "warnings": {
+    "locale": "Perl reports locale fallback in the kernel build; complete output is retained in the build logs.",
+    "objtool": "Handwritten restore/stack-switch warnings match the prior removal build after normalizing instruction offsets."
+  }
+}

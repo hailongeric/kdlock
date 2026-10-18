@@ -43,7 +43,7 @@ own device lease and does not by itself upload a published image. Importing help
 for byte fixtures does not establish actual kernel JIT evidence.
 
 The translator does not check every memory address when it is used or restore all
-processor state. The compatibility branch refuses unvirtualized state before
+processor state. The current translator refuses unvirtualized state before
 emission and versions mutex images separately; spin/rwlock images remain in place.
 Access-time guards and general state restoration remain deferred. Its context
 checks are not a security sandbox; see

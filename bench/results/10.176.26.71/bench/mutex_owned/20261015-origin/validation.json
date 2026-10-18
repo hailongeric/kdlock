@@ -1,0 +1,387 @@
+{
+  "scope": "Owned mutex immutable images, conditional origin readiness, audited GS subset and bounded NUMA selection",
+  "implementation_snapshot": "20bd721",
+  "baseline_commit": "b994aefaaf4da8be7b18353fd130818df9b2aba2",
+  "machine": "10.176.26.71",
+  "kernel": "6.1.159-kdclobber2",
+  "kernel_build_id": "5ca28058e156f34a2c7fe91e8e0fbf92f4e51960",
+  "kernel_identity_check": {
+    "source_files": 20,
+    "build_files": 9,
+    "bundle_files": 7,
+    "config": true
+  },
+  "live_preemption": "none (voluntary) full",
+  "boot_policy": [
+    "nokaslr",
+    "nopvspin"
+  ],
+  "final_live_topology": {
+    "vcpus": 64,
+    "node0": "0-31",
+    "node1": "32-63",
+    "host_pin": "same-numbered core",
+    "qemu_services_host_cpu": 63
+  },
+  "verified_recovery_snapshot": "owned-origin-regular64-final-20261015",
+  "guest_raw_tests": "/root/kdlock-evidence/10.176.26.71/tests/owned-origin-20261015",
+  "physical_host_raw_tests": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/owned-origin-20261015",
+  "builds": [
+    "normal provider W=1",
+    "SELFTEST provider W=1",
+    "daemon -O2 -Wall -Wextra -Werror",
+    "timed client -Wall -Wextra -Werror"
+  ],
+  "build_limits": "Existing objtool warnings remain archived; no guest kernel was modified or rebuilt.",
+  "affected_checks": [
+    {
+      "check": "two basic C programs",
+      "log": "kd-origin-finalunit.log",
+      "passed": true
+    },
+    {
+      "check": "immutable upload/bind production C fixture",
+      "coverage": [
+        "interrupted upload",
+        "contiguous coverage",
+        "identity and ABI/context metadata",
+        "old frame bound across replacement",
+        "stale generation misses",
+        "generic dispatch requires claim",
+        "same-CPU refusal",
+        "64-block exhaustion preserves old code",
+        "closed source",
+        "successful contiguous two-chunk publication",
+        "old generated code remains active while replacement is published",
+        "old and new generated code return different expected values"
+      ],
+      "passed": true,
+      "logs": [
+        "kd-origin-finalunit.log",
+        "active-image-final/checks-isolated.log"
+      ],
+      "source_receipt": "active-image-final/source-sha256.txt"
+    },
+    {
+      "check": "registry and source-lifetime mutation fixtures",
+      "log": "kd-origin-affected2.log",
+      "passed": true
+    },
+    {
+      "check": "generic entry/hostcalls and wrapper input",
+      "log": "kd-origin-finalunit.log",
+      "passed": true
+    },
+    {
+      "check": "frame capacity and retirement mutations",
+      "log": "kd-origin-affected.log",
+      "frame_bytes": 648,
+      "context_bytes": 5208,
+      "passed": true
+    },
+    {
+      "check": "actual ABI4 machine-code cookie, leaf, CALLEE COMPLETE and FULL paths",
+      "passed": true,
+      "logs": [
+        "kd-origin-finalunit.log",
+        "cabi-mutations-final.log"
+      ],
+      "mutations": 14
+    },
+    {
+      "check": "owned core, outer API and producer/executor stack preservation",
+      "logs": [
+        "kd-origin-unit.log",
+        "kd-origin-affected2.log"
+      ],
+      "passed": true
+    },
+    {
+      "check": "task cache, terminal queue and parking",
+      "log": "kd-origin-affected.log",
+      "passed": true
+    },
+    {
+      "check": "versioned text-region capability contract",
+      "tests": 30,
+      "log": "kd-origin-affected2.log",
+      "passed": true
+    },
+    {
+      "check": "decoded origin policy",
+      "tests": 7,
+      "log": "kd-origin-affected2.log",
+      "coverage": [
+        "CPU-number read",
+        "resolved RIP-relative GS",
+        "private task counter",
+        "unknown symbol",
+        "wrong width",
+        "CPU-number write",
+        "dynamic address",
+        "interrupt-shared counter without audit",
+        "blocking call",
+        "cycle",
+        "indirect control",
+        "instruction bound",
+        "logical current unchanged"
+      ],
+      "passed": true
+    },
+    {
+      "check": "production park/claim arbitration",
+      "races": 10000,
+      "coverage": [
+        "withdrawal wins",
+        "claim wins",
+        "wake before acknowledgment",
+        "same CPU",
+        "claim cannot time out",
+        "pre-body refusal",
+        "slot reuse"
+      ],
+      "passed": true,
+      "log": "kd-origin-boundary.log"
+    },
+    {
+      "check": "production bounded selector and waiter mutations",
+      "mutations": 27,
+      "logs": [
+        "selector-mutations-final.log"
+      ],
+      "coverage": [
+        "earliest locality",
+        "eight-request window",
+        "four persistent bypasses",
+        "SELF and HANDOFF",
+        "sleeping/ineligible head",
+        "queue order",
+        "refill",
+        "FULL and early release",
+        "timeout does not renew ordinary polling"
+      ],
+      "passed": true
+    },
+    {
+      "check": "collector accounting, real C option parser and benchmark runner",
+      "tests": 87,
+      "log": "collector-checks-final.log",
+      "passed": true
+    },
+    {
+      "check": "median-throughput and complete-grid score gates",
+      "tests": 2,
+      "log": "scoring-final/checks.log",
+      "passed": true,
+      "source_receipt": "scoring-final/source-sha256.txt"
+    },
+    {
+      "check": "source sync refuses an active origin matrix between module sessions",
+      "log": "scoring-final/sync-guard-final.log",
+      "passed": true,
+      "coverage": [
+        "relative runner path",
+        "absolute runner path",
+        "Python program text is not a runner argument"
+      ],
+      "source_receipt": "scoring-final/source-sha256.txt"
+    }
+  ],
+  "live_claim_and_cooling": {
+    "receipt": "origin-wait-final/result.json",
+    "polling_budgets": [
+      0,
+      1024,
+      4096
+    ],
+    "claims_per_budget": 256,
+    "scheduled_while_claimed": 0,
+    "explicit_reschedule_requests": 768,
+    "slot_reuses": 768,
+    "queued_cooling_sleep_and_pickup": true,
+    "jit_bodies": 0,
+    "constructed_packets": true,
+    "drained": true
+  },
+  "live_gs": [
+    {
+      "policy": "numa",
+      "receipt": "gs-numa-percpu/result.json",
+      "compact_receipt": "gs-numa-percpu.json",
+      "operations": 320000,
+      "counter": 160000,
+      "errors": 0,
+      "per_cpu_checked": 64,
+      "worker_cpus": [
+        0,
+        1,
+        2,
+        3,
+        32,
+        33,
+        34,
+        35
+      ],
+      "increments_per_worker_cpu": 20000,
+      "unused_cpu_value": 0,
+      "cpu_read_claimed_bodies": 98,
+      "counter_claimed_bodies": 45,
+      "bypasses": 50,
+      "claim_failures": 0,
+      "drained": true
+    }
+  ],
+  "live_controls": [
+    {
+      "case": "nested-normal-final",
+      "completed": 2000000,
+      "returned_jit_bodies": 1898341,
+      "drained": true
+    },
+    {
+      "case": "nested-forced-final",
+      "completed": 2000000,
+      "returned_jit_bodies": 1898307,
+      "forced_full_and_owner_acks": true,
+      "drained": true
+    },
+    {
+      "case": "early-normal-final",
+      "completed": 2000000,
+      "returned_jit_bodies": 249403,
+      "delegated_early_release": true,
+      "drained": true
+    },
+    {
+      "case": "early-forced-final",
+      "completed": 2000000,
+      "returned_jit_bodies": 222159,
+      "forced_full_and_owner_acks": true,
+      "drained": true
+    },
+    {
+      "case": "task-ack-final",
+      "receipt": "task-ack-final/result.json",
+      "orders": 2,
+      "acks": 4,
+      "deferred_frees": 2,
+      "registry_workers": 3,
+      "registry_iterations": 4096,
+      "registry_deferred_frees": 3,
+      "jit_bodies": 0,
+      "drained": true
+    }
+  ],
+  "preserved_failures": [
+    "Initial static per-CPU frame expansion exhausted the module arena; replaced with a same-size union before successful GS runs.",
+    "The first frozen GS workspace omitted .def inputs; corrected before acceptance.",
+    "RIP-relative GS decoding was initially treated as dynamic; exact static resolution and its decoded test were added.",
+    "Earlier fixtures lacked new owned-control stubs and matching helper signatures; corrected affected/final reruns passed. The initial shared-collector fixture used an inconsistent aggregate timestamp; its corrected rerun passed.",
+    "An unsupported zero owned-admission CLI value was rejected before loading; functional runs used the supported default.",
+    "Temporary 66-vCPU screens stopped at drained boundaries and are excluded from regular64 scoring.",
+    "The first one-off sync-guard fixture extracted unrelated top-level input code and failed before exercising the guard; the scoped extraction passed. The production sync guard was unchanged.",
+    "The first confirm64-b completed 264 individually correct/drained sessions but failed cross-block identity: unrelated rwsem and completion-probe sources changed before it started. It is excluded. A private mount namespace and a before-every-case comparison to the original screen manifest protect confirm64-b-clean."
+  ],
+  "limits": [
+    "Basic plus directly affected checks, not the full project suite.",
+    "Active-version replacement and pool exhaustion were checked with production C in VM userspace fixtures, not with live JIT image replacement.",
+    "Kernel claims and userspace race fixtures are separate from returned JIT evidence.",
+    "The allowlist covers only the exact audited build and subset; claims do not exclude interrupts or NMIs.",
+    "Performance and correctness receipts apply to frozen inputs, not concurrent unrelated formatting edits.",
+    "The first confirm64-b is preserved as excluded evidence; only the screen, confirm64-a and confirm64-b-clean may contribute acceptance scores."
+  ],
+  "postprocessing_commit": "bd5d1e6",
+  "active_image_test_commit": "f208f83",
+  "performance_identity": {
+    "accepted_blocks": [
+      "screen64",
+      "confirm64-a",
+      "confirm64-b-clean"
+    ],
+    "expected_source_files": 330,
+    "isolated_source_archive_sha256": "520312a89db97edf8b9eae08d61fb31b5497f14d5367a25636eecff6323b362d",
+    "excluded_block": "confirm64-b",
+    "excluded_sessions": 264,
+    "excluded_reason": "Cross-block source drift: rwsem code and completion-probe additions",
+    "candidate_defaults": {
+      "owned_mutex_origin_spin": false,
+      "owned_mutex_numa": false
+    },
+    "scored_sessions": 792,
+    "regression_failures": {
+      "screen64": {
+        "numa": [
+          3,
+          16
+        ]
+      },
+      "confirm64-a": {
+        "numa": [
+          3,
+          4,
+          7
+        ]
+      },
+      "confirm64-b-clean": {
+        "numa": [
+          2
+        ]
+      }
+    },
+    "report_arms": [
+      "native",
+      "tclock",
+      "current-kd",
+      "numa"
+    ],
+    "omitted_screen_sessions": 66,
+    "report_scope": "NUMA and its three controls; original raw experiments and prior receipts remain archived unchanged."
+  },
+  "earlier_live_gs": [
+    {
+      "policy": "numa",
+      "receipt": "gs-numa-final/result.json",
+      "operations": 320000,
+      "counter": 160000,
+      "errors": 0,
+      "cpu_read_claimed_bodies": 71,
+      "counter_claimed_bodies": 55,
+      "bypasses": 42,
+      "claim_failures": 0,
+      "drained": true
+    }
+  ],
+  "gs_module_source_sha256": "491a1a1b47ac357a24d4478a73cd75b63c1a2e69fa31b497fe7c26da88bb2f31",
+  "closeout": {
+    "guest-final.json": {
+      "passed": true,
+      "online_cpus": "0-63",
+      "numa_nodes": [
+        "0-31",
+        "32-63"
+      ],
+      "preemption": "none (voluntary) full",
+      "cmdline": "BOOT_IMAGE=/boot/vmlinuz-6.1.159-kdclobber2 root=UUID=aa0bde06-47f6-4049-aaaf-13d052e53961 ro nokaslr nopvspin console=tty1 console=ttyS0",
+      "project_modules": [],
+      "project_idle": true,
+      "kernel_faults": [],
+      "frozen_source_files_verified": 330,
+      "boot_id": "b65f0205-c8f9-4385-8b13-039cbce243a6",
+      "source_scope": "private frozen artifact; concurrent shared checkout was preserved"
+    },
+    "kernel-final.json": {
+      "build_files": 9,
+      "bundle_files": 7,
+      "config": true,
+      "ok": true,
+      "running_build_id": "5ca28058e156f34a2c7fe91e8e0fbf92f4e51960",
+      "source_files": 20
+    },
+    "host_receipt": "host-final.json",
+    "recovery_receipt": "snapshots-final.txt"
+  },
+  "plotting_limit": "The optional guest --plot step lacked matplotlib after verification had passed. The audit was rerun without plotting and exited successfully; the chart was rendered offline from verified exports on the source host.",
+  "gs_test_commit": "c67bb1cc26b0e109cff9b12fcc5d04232a98cb05",
+  "implementation_identity_receipt": "commit-identity.json",
+  "report_maintenance_receipt": "maintenance.json"
+}

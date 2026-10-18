@@ -47,62 +47,11 @@ The target's existing `/home/eric/vm/qemu-scripts/vm_ssh.sh` provides guest SSH
 using its dedicated key. Alternate physical host and mirror/script paths can be
 selected with `--host`, `--mirror` and `--scripts`; inspect `--help` for options.
 
-## Complete 1–64-worker comparison
 
-[`run_full_bench.py`](run_full_bench.py) runs Native, TCLock and KD with three
-rounds at `1 2 3 4 5 6 7 8 12 16 20 24 28 32 36 40 44 48 52 56 60 64`.
-By default it includes one-cacheline and RCUHT payloads for spin, mutex and
-rwlock, with rwlock at 1%/20% writes: **1,584 sessions** in six groups.
-Multi-cacheline scenarios, including c02, c08 and c16, are excluded from subsequent
-comparisons. `--include-multicacheline` restores the historical 3,960-session
-matrix when explicitly needed.
-Each session has 48,000 warmup operations per worker, a two-second measurement,
-and a 300 ms peak window after 300 ms of settling. The frozen spin/mutex default
-uses 64 post-work arithmetic rounds; rwlock explicitly uses four. Report these
-as separate workloads.
+## Benchmark entry points
 
-The standard 64-vCPU VM cannot supply 64 distinct worker CPUs and a separate
-collector CPU. A temporary two-node, 66-vCPU boot can use worker CPUs
-`0–31,33–64` and collector 65, with CPU 32 unused. Pin workers 0–31 to host 0–31
-and workers 33–64 to host 32–63, preserving 32 worker cores on each NUMA node.
-Pin the extra vCPUs 32/65 to host 31/63 respectively. This host has only 64
-physical cores: collector 65 and QEMU service threads share host core 63 with
-the last worker at **64 workers**. Record this contention explicitly; a separate
-guest CPU does not establish a separate physical collector core. Keep this
-topology's evidence separate from earlier 64-vCPU measurements.
-
-After synchronizing source, verifying pins/kernel/boot policy, and creating and
-confirming a fresh snapshot of the temporary boot, run inside the guest:
-
-```sh
-export PATH=/root/kdlock-evidence/clobber-20260918/venv/bin:$PATH
-export LC_ALL=C
-export KDLOCK_RECOVERY_CONFIRMED=1
-export KDLOCK_SNAPSHOT_TAG=YOUR_CONFIRMED_66_VCPU_SNAPSHOT
-python3 tools/vm/run_full_bench.py \
-  --cpus $(seq 0 31) $(seq 33 64) --collector-cpu 65 \
-  --output /root/kdlock-evidence/10.176.26.71/bench/full-matrix-NEW
-```
-
-Use `--dry-run` to inspect the selected groups. Each group has an outer two-hour
-timeout and retained runner logs. `matrix-status.json` records progress. Creating
-`<output>/STOP` stops at the next drained group boundary; for a shorter boundary,
-use the active runner's `<group>/STOP`. Incomplete or undrained groups stop the
-driver. Completed, drained NO_JIT rejections remain excluded from performance
-scores and do not prevent collecting other payloads. Archive all evidence before
-restoring the regular 64-vCPU boot; saved states from different topologies must
-never be loaded interchangeably.
-
-If a full matrix stops only because `/proc/<pid>/task` disappeared during an
-idle scan, [`resume_full_bench.py`](resume_full_bench.py) can continue after
-verifying the guest is drained, kernel health is clean and all original approved
-source hashes still match. Save the helper outside the guest checkout and invoke
-it with `--output` pointing to the stopped matrix, using the same confirmed
-snapshot and pinned benchmark environment. It preserves the interrupted group,
-failure, driver log and status under `attempts/`, then reruns that entire group
-and finishes the remaining groups. Three bounded retries handle an exited task;
-an entire original idle scan must succeed. Live workers, missing payloads,
-unsafe failures and repeated scan failures still stop execution. The
-[retry checks](test_resume_full_bench.py) exercise those distinctions in the guest.
-The [offline exporter](../../bench/full_compare/README.md) audits retained attempts
-and excludes their samples from the final three-round statistics.
+Use the per-lock and API runners in the [benchmark guide](../../bench/README.md).
+The standard grid is 1–8 workers and 12–60 by four on the regular 64-vCPU VM.
+The former 66-vCPU matrix launcher and one-off resume helper are retired;
+historical source remains in Git and the offline exporter is in
+[bench/archive](../../bench/archive/README.md).

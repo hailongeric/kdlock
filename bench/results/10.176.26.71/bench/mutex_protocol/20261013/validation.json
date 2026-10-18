@@ -1,0 +1,1350 @@
+{
+  "schema": 1,
+  "study": "mutex-protocol-c01-20261013",
+  "post_work_rounds": 64,
+  "scope": "Validation of frozen 64-round protocol experiment source and evidence; this is not performance acceptance or validation of a later checkout.",
+  "status": "Completed 64-round evidence audit; all eight screened variants rejected by the throughput gates.",
+  "environment": {
+    "vm": "10.176.26.71",
+    "kernel": "6.1.159-kdclobber2",
+    "kernel_build_id": "5ca28058e156f34a2c7fe91e8e0fbf92f4e51960",
+    "snapshot_tag": "mutex-protocol-c01-20261013",
+    "snapshot_log": {
+      "path": "bench/results/10.176.26.71/raw/bench/mutex-protocol-c01-20261013/snapshot.log",
+      "sha256": "68640940a75e2ff410fe8d98ca9c4dca24f966662a078a7d179398c1b48742d2",
+      "bytes": 2422
+    },
+    "collector_cpu": 63,
+    "placement": {
+      "host-preflight.json": {
+        "artifact": {
+          "path": "bench/results/10.176.26.71/raw/bench/mutex-protocol-c01-20261013/host-preflight.json",
+          "sha256": "d0d70687ec9cfcfcba725eac3d2a20c8bbd4e2c1b7f74259d0628890aa1044e9",
+          "bytes": 8421
+        },
+        "qemu_pid": 173337,
+        "vcpu_threads": 64,
+        "vcpu_to_same_number_host_cpu": true,
+        "service_threads": 6,
+        "service_cpu": 63,
+        "governor": "ondemand",
+        "governor_cpu_count": 64
+      },
+      "host-postflight64.json": {
+        "artifact": {
+          "path": "bench/results/10.176.26.71/raw/bench/mutex-protocol-c01-20261013/host-postflight64.json",
+          "sha256": "992a323cb9ce29613b32035d084cbf8d5c2c183ddb39f936ae93daac5fe4e659",
+          "bytes": 8235
+        },
+        "qemu_pid": 173337,
+        "vcpu_threads": 64,
+        "vcpu_to_same_number_host_cpu": true,
+        "service_threads": 4,
+        "service_cpu": 63,
+        "governor": "ondemand",
+        "governor_cpu_count": 64
+      }
+    }
+  },
+  "test_archive": {
+    "path": "bench/results/10.176.26.71/raw/tests/mutex-protocol-c01-20261013.tar.gz",
+    "sha256": "0ea2b82991c676dde331ee24b8722a1b7d757b4f1d49952ff2e5b728589de5f3",
+    "bytes": 4184810,
+    "tar_members": 1051,
+    "regular_files_verified_against_extracted_tree": 949,
+    "mismatches": 0
+  },
+  "benchmark_archives": {
+    "bench/results/10.176.26.71/raw/bench/mutex-protocol-c01-20261013/baseline.tar.gz": {
+      "sha256": "4cc11464565d48735ff25074794b659d4284c0032c0146b9bdd5e43dd62296e7",
+      "bytes": 9811264
+    },
+    "bench/results/10.176.26.71/raw/bench/mutex-protocol-c01-20261013/frame.tar.gz": {
+      "sha256": "3d0b0b4f32c77a5284f221fc5dc2a2853410c7903d6e09392a55f04981782c72",
+      "bytes": 5266423
+    },
+    "bench/results/10.176.26.71/raw/bench/mutex-protocol-c01-20261013/screens.tar.gz": {
+      "sha256": "d2fd8b1f6905d851d62a3fe3b329eb36df3b7ecc96443bd379aa3425eef74bcb",
+      "bytes": 37667410
+    }
+  },
+  "frozen_test_sources": {
+    "step1": {
+      "manifest": {
+        "path": "bench/results/10.176.26.71/raw/tests/mutex-protocol-c01-20261013/step1-sources.json",
+        "sha256": "3279e6f42e626b8dd49f8f4e4676280b9ff9a7645227e478d8979210b0d00f4e",
+        "bytes": 25536
+      },
+      "frozen_directory": "bench/results/10.176.26.71/raw/tests/mutex-protocol-c01-20261013/step1-source",
+      "files_verified": 234,
+      "mismatches": 0
+    },
+    "step2": {
+      "manifest": {
+        "path": "bench/results/10.176.26.71/raw/tests/mutex-protocol-c01-20261013/step2-sources.json",
+        "sha256": "fd28522ae799b101a062b3158c57bf32156027e1b1fa6140f8193e6f78de5cf3",
+        "bytes": 25536
+      },
+      "frozen_directory": "bench/results/10.176.26.71/raw/tests/mutex-protocol-c01-20261013/step2-source",
+      "files_verified": 234,
+      "mismatches": 0
+    },
+    "screen": {
+      "manifest": {
+        "path": "bench/results/10.176.26.71/raw/tests/mutex-protocol-c01-20261013/screen-sources.json",
+        "sha256": "c3b527aaeaea7249a0ae375ccf79e04872181e52323d3140b0e73bd20d9c5956",
+        "bytes": 25536
+      },
+      "frozen_directory": "bench/results/10.176.26.71/raw/tests/mutex-protocol-c01-20261013/screen-source",
+      "files_verified": 234,
+      "mismatches": 0
+    }
+  },
+  "normal_provider_builds": [
+    {
+      "log": {
+        "path": "bench/results/10.176.26.71/raw/tests/mutex-protocol-c01-20261013/build-step1.log",
+        "sha256": "4a1642e42b4e42c625e254b4767efbc943dee09c92e3a9a2e46d1d340b0200c2",
+        "bytes": 7062
+      },
+      "normal_provider": true,
+      "w": 1,
+      "result": "linked kdlock_km.ko successfully",
+      "objtool_warning_lines": 11,
+      "total_warning_lines": 35,
+      "command_sidecar_retained": false
+    },
+    {
+      "log": {
+        "path": "bench/results/10.176.26.71/raw/tests/mutex-protocol-c01-20261013/build-step2.log",
+        "sha256": "371c313aef7f8e502336b8e43a1d751bc2b19e3e01fc41a3356c250fae666cc6",
+        "bytes": 3358
+      },
+      "normal_provider": true,
+      "w": 1,
+      "result": "linked kdlock_km.ko successfully",
+      "objtool_warning_lines": 11,
+      "total_warning_lines": 17,
+      "command_sidecar_retained": false
+    }
+  ],
+  "build_provenance_note": "W=1 for the two normal builds is recorded by the executing agent; standalone build logs retain compiler/linker output but not argv sidecars. Selftest build argv, including W=1 and KDLOCK_SELFTEST=1, is retained below. Objtool and locale warnings are preserved, not classified as warning-free builds.",
+  "unit_attempts": [
+    {
+      "log": {
+        "path": "bench/results/10.176.26.71/raw/tests/mutex-protocol-c01-20261013/unit-step1.log",
+        "sha256": "c3d83fcc376c2630cc288b88130e7fc19e9de71acaea592f714c6e6e3e34c7c5",
+        "bytes": 23871
+      },
+      "passed_groups": 12,
+      "failed_groups": 1,
+      "failure": "Policy fixture extraction expected an incomplete kd_mutex_contended_acquire signature and found no definition.",
+      "resolution": "Policy fixture passed at 250 Hz and 1000 Hz in unit-step2.log.",
+      "resource_production_checks": 14046,
+      "resource_production_failures": 0,
+      "resource_mutations_detected": 26
+    },
+    {
+      "log": {
+        "path": "bench/results/10.176.26.71/raw/tests/mutex-protocol-c01-20261013/unit-step2.log",
+        "sha256": "786fa3be78fb949f4d113c0c404cd73ce0abc8fc7ab6496050609a95f0d9dc0f",
+        "bytes": 22293
+      },
+      "passed_groups": 5,
+      "failed_groups": 1,
+      "failure": "Resource mutation hook-ignores-task-failure had a stale source anchor after the shared queue helper refactor.",
+      "resolution": "Anchor corrected; next run proceeded through it. All resource mutations passed in unit-resource-final.log.",
+      "resource_production_checks": 14221,
+      "resource_production_failures": 0,
+      "resource_mutations_detected": 23
+    },
+    {
+      "log": {
+        "path": "bench/results/10.176.26.71/raw/tests/mutex-protocol-c01-20261013/unit-step3.log",
+        "sha256": "d0b3e0ef29a18b15fa042c5d94d1af84c135e7a7b58bbb4a8c570185fe363a77",
+        "bytes": 5119
+      },
+      "passed_groups": 2,
+      "failed_groups": 1,
+      "failure": "Resource mutation hook-admits-closed-source had a stale source anchor after the eligibility helper refactor.",
+      "resolution": "Remaining anchors audited and corrected; all resource mutations passed in unit-resource-final.log.",
+      "resource_production_checks": 14221,
+      "resource_production_failures": 0,
+      "resource_mutations_detected": 25
+    },
+    {
+      "log": {
+        "path": "bench/results/10.176.26.71/raw/tests/mutex-protocol-c01-20261013/unit-resource-final.log",
+        "sha256": "c53cdc285708013ec4410487c03f197e084202106676f273687733661cb2206f",
+        "bytes": 1945
+      },
+      "passed_groups": 1,
+      "failed_groups": 0,
+      "failure": null,
+      "resolution": null,
+      "resource_production_checks": 14221,
+      "resource_production_failures": 0,
+      "resource_mutations_detected": 27
+    }
+  ],
+  "unit_final_coverage": {
+    "interpretation": "The affected groups passed over focused reruns; no claim of a single all-green full-suite invocation is made. Initial failures were harness extraction/mutation-anchor errors; all production resource C checks passed on every attempt. Expected daemon fault-injection traces are part of passing basic tests.",
+    "basic_control_phase_error_cases": 56,
+    "basic_daemon_policy": "PASS, including real children and observation faults",
+    "frame_reuse_checks": 732,
+    "frame_reuse_final_log": "unit-step3.log",
+    "locality_policy": {
+      "log": "unit-step2.log",
+      "clock_hz": [
+        250,
+        1000
+      ],
+      "mutations_per_clock": 7,
+      "mutation_detections": 14,
+      "covered": [
+        "phase transitions",
+        "cooldown",
+        "races",
+        "time wrap",
+        "queued routing",
+        "remote veto",
+        "native cookie",
+        "locality pin"
+      ]
+    },
+    "resources": {
+      "log": "unit-resource-final.log",
+      "production_checks": 14221,
+      "failures": 0,
+      "mutations_detected": 27
+    },
+    "compiled_outer_abi": {
+      "log": "unit-step2.log",
+      "modes": [
+        {
+          "lazy_save": false,
+          "preflight": false
+        },
+        {
+          "lazy_save": true,
+          "preflight": false
+        },
+        {
+          "lazy_save": true,
+          "preflight": true
+        }
+      ],
+      "result": "PASS actual compiled continuation and generated JIT execution; ABI2 admission, poisoned registers, once-only admission observation, native/routed cookies, unchanged Linux owner, COMPLETE and exact FULL"
+    },
+    "outer_progress": {
+      "log": "unit-step1.log",
+      "checks": 505,
+      "scenarios": 12,
+      "failures": 0
+    },
+    "terminal_queue": {
+      "log": "unit-step1.log",
+      "checks": 6022,
+      "result": "PASS singleton, delayed link, independent new head, refusal, native reuse, early release, bounds and packet boundaries"
+    },
+    "frame_capacity": {
+      "log": "unit-step1.log",
+      "checks": 11045,
+      "failures": 0
+    },
+    "task_references": {
+      "log": "unit-step1.log",
+      "result": "PASS exact nested refs, reuse, collisions, active overflow, eviction/reactivation race, deferred free, allocation refusal and drain"
+    },
+    "parking": {
+      "log": "unit-step1.log",
+      "result": "PASS completion/sleep races, spurious wake, persistent wake slot, bounded spin and gate wake; sleeping mutex rejects origin GS and permits logical-task input"
+    },
+    "admission": {
+      "log": "unit-step1.log",
+      "result": "PASS independent sampling windows, exact keys, pins, cold recovery, ratio boundaries, CPU isolation, zero-ratio bypass and busy retry"
+    },
+    "remote_outer": {
+      "log": "unit-step1.log",
+      "checks": 6185,
+      "packet_checks": 2175,
+      "failures": 0
+    },
+    "admission_python": {
+      "log": "unit-step2.log",
+      "tests": 28,
+      "result": "OK"
+    },
+    "native_after_outer": {
+      "log": "unit-step2.log",
+      "checks": 3486,
+      "failures": 0
+    },
+    "execution_registry": {
+      "log": "unit-step2.log",
+      "production_checks": 29659,
+      "failures": 0,
+      "python_tests": 4
+    },
+    "jit_entry_scope": {
+      "log": "unit-step3.log",
+      "production_checks": 4359,
+      "failures": 0
+    }
+  },
+  "runner_attempts": [
+    {
+      "log": {
+        "path": "bench/results/10.176.26.71/raw/tests/mutex-protocol-c01-20261013/runner-step1.log",
+        "sha256": "1ad4cb6d57380fa1001e8a0220088206c30c180a8a17398d8ad0357a423b99a7",
+        "bytes": 161
+      },
+      "tests": 62,
+      "result": "OK"
+    },
+    {
+      "log": {
+        "path": "bench/results/10.176.26.71/raw/tests/mutex-protocol-c01-20261013/runner-step2.log",
+        "sha256": "0dc263f568f3572b86e6fc7d70b2d4b09beb2b441739224ac30c16680d0cd36a",
+        "bytes": 161
+      },
+      "tests": 62,
+      "result": "OK"
+    }
+  ],
+  "live_probes": {
+    "task-candidate": {
+      "identity": {
+        "cpus": [
+          0,
+          32,
+          33
+        ],
+        "jit": false,
+        "jit_bodies": 0,
+        "module_sha256": "abc03573b8d44b4f4dd3592908719b60c40d272db9b3bfe7213d51e27bd82c5e",
+        "mutex_jit_required": true,
+        "mutex_wait_mode": "blocking",
+        "provider_ubsan": "off",
+        "scope": "task_owner_ack_resource_probe",
+        "snapshot_tag": "mutex-protocol-c01-20261013"
+      },
+      "result": {
+        "acks": 4,
+        "deferred_frees": 2,
+        "drained": true,
+        "jit": false,
+        "jit_bodies": 0,
+        "mutex_jit_required": true,
+        "mutex_wait_mode": "blocking",
+        "orders": [
+          "B-A",
+          "A-B"
+        ],
+        "passed": true,
+        "registry_stress_deferred_frees": 3,
+        "registry_stress_iterations": 4096,
+        "registry_stress_workers": 3,
+        "scope": "task_owner_ack_resource_probe"
+      },
+      "kernel_identity": {
+        "build_files": 9,
+        "bundle_files": 7,
+        "config": true,
+        "ok": true,
+        "running_build_id": "5ca28058e156f34a2c7fe91e8e0fbf92f4e51960",
+        "source_files": 20
+      },
+      "source_manifest": {
+        "manifest": {
+          "path": "bench/results/10.176.26.71/raw/tests/mutex-protocol-c01-20261013/task-candidate/sources.json",
+          "sha256": "441590d68ecdb6460bd33c0f206fb76b4120f2e0b21c2470abf8c7146a5ce99d",
+          "bytes": 8902
+        },
+        "frozen_directory": "bench/results/10.176.26.71/raw/tests/mutex-protocol-c01-20261013/task-candidate/source",
+        "files_verified": 87,
+        "mismatches": 0
+      },
+      "module": {
+        "path": "bench/results/10.176.26.71/raw/tests/mutex-protocol-c01-20261013/task-candidate/kdlock_km.ko",
+        "sha256": "abc03573b8d44b4f4dd3592908719b60c40d272db9b3bfe7213d51e27bd82c5e",
+        "bytes": 3789352
+      },
+      "build_log": {
+        "path": "bench/results/10.176.26.71/raw/tests/mutex-protocol-c01-20261013/task-candidate/build.log",
+        "sha256": "f288d1bee88aeb491032c1a4f25c2072e2b8870f83c0942b169e0f36b9979362",
+        "bytes": 354
+      },
+      "build_command": {
+        "argv": [
+          "make",
+          "-C",
+          "/root/host_fs/kdlock/kernel_module",
+          "KDIR=/root/linux-6.1.159-kdclobber2",
+          "KDLOCK_SELFTEST=1",
+          "UBSAN_SANITIZE=n",
+          "W=1"
+        ],
+        "cwd": "/root/host_fs/kdlock",
+        "pid": 210926,
+        "started_ns": 57663586283053,
+        "timeout_seconds": 180
+      },
+      "fault_free_kernel_logs": 1,
+      "result_artifact": {
+        "path": "bench/results/10.176.26.71/raw/tests/mutex-protocol-c01-20261013/task-candidate/result.json",
+        "sha256": "e2c8caca79a208e73f28b5737db080a31f7769ea61e25a768d4bdd8c287edf42",
+        "bytes": 367
+      },
+      "scope_note": "Synthetic resource/lifetime probe; jit_bodies=0. Does not establish delegated-body execution.",
+      "build_note": "Build command succeeded without recompilation; reused the same selftest ELF as wait-candidate."
+    },
+    "wait-candidate": {
+      "identity": {
+        "cpu": 0,
+        "jit_bodies": 0,
+        "module_sha256": "abc03573b8d44b4f4dd3592908719b60c40d272db9b3bfe7213d51e27bd82c5e",
+        "snapshot_tag": "mutex-protocol-c01-20261013"
+      },
+      "result": {
+        "drained": true,
+        "passed": true,
+        "results": [
+          {
+            "admission_cooling_checks": 2,
+            "deferred_progress": true,
+            "drained": true,
+            "errors": 0,
+            "gate_sleep": true,
+            "jit_bodies": 0,
+            "result_sleep": true,
+            "rounds": 1024,
+            "spin_limit": 0,
+            "voluntary_switches": 2052
+          },
+          {
+            "admission_cooling_checks": 2,
+            "deferred_progress": true,
+            "drained": true,
+            "errors": 0,
+            "gate_sleep": true,
+            "jit_bodies": 0,
+            "result_sleep": true,
+            "rounds": 1024,
+            "spin_limit": 1024,
+            "voluntary_switches": 1091
+          },
+          {
+            "admission_cooling_checks": 2,
+            "deferred_progress": true,
+            "drained": true,
+            "errors": 0,
+            "gate_sleep": true,
+            "jit_bodies": 0,
+            "result_sleep": true,
+            "rounds": 1024,
+            "spin_limit": 4096,
+            "voluntary_switches": 1033
+          }
+        ]
+      },
+      "kernel_identity": {
+        "build_files": 9,
+        "bundle_files": 7,
+        "config": true,
+        "ok": true,
+        "running_build_id": "5ca28058e156f34a2c7fe91e8e0fbf92f4e51960",
+        "source_files": 20
+      },
+      "source_manifest": {
+        "manifest": {
+          "path": "bench/results/10.176.26.71/raw/tests/mutex-protocol-c01-20261013/wait-candidate/sources.json",
+          "sha256": "441590d68ecdb6460bd33c0f206fb76b4120f2e0b21c2470abf8c7146a5ce99d",
+          "bytes": 8902
+        },
+        "frozen_directory": "bench/results/10.176.26.71/raw/tests/mutex-protocol-c01-20261013/wait-candidate/source",
+        "files_verified": 87,
+        "mismatches": 0
+      },
+      "module": {
+        "path": "bench/results/10.176.26.71/raw/tests/mutex-protocol-c01-20261013/wait-candidate/kdlock_km.ko",
+        "sha256": "abc03573b8d44b4f4dd3592908719b60c40d272db9b3bfe7213d51e27bd82c5e",
+        "bytes": 3789352
+      },
+      "build_log": {
+        "path": "bench/results/10.176.26.71/raw/tests/mutex-protocol-c01-20261013/wait-candidate/build.log",
+        "sha256": "6210bee955524bc4ee004655c40d4785bf990b04218d72e24e288e6469b512f6",
+        "bytes": 7062
+      },
+      "build_command": {
+        "argv": [
+          "make",
+          "-C",
+          "/root/host_fs/kdlock/kernel_module",
+          "KDIR=/root/linux-6.1.159-kdclobber2",
+          "KDLOCK_SELFTEST=1",
+          "UBSAN_SANITIZE=n",
+          "W=1"
+        ],
+        "cwd": "/root/host_fs/kdlock",
+        "pid": 210258,
+        "started_ns": 57648631519154,
+        "timeout_seconds": 180
+      },
+      "fault_free_kernel_logs": 3,
+      "result_artifact": {
+        "path": "bench/results/10.176.26.71/raw/tests/mutex-protocol-c01-20261013/wait-candidate/result.json",
+        "sha256": "66aa0dc8679bc268077521373f15e6dd2a240ddabd9e452f6b685e6a3572349d",
+        "bytes": 905
+      },
+      "scope_note": "Synthetic resource/lifetime probe; jit_bodies=0. Does not establish delegated-body execution.",
+      "total_rounds": 3072,
+      "total_admission_cooling_checks": 6
+    }
+  },
+  "benchmark_audit": {
+    "samples": 537,
+    "arms": {
+      "native": 243,
+      "tclock": 51,
+      "kdlock": 243
+    },
+    "series": {
+      "baseline": {
+        "samples": 153,
+        "arms": {
+          "native": 51,
+          "tclock": 51,
+          "kdlock": 51
+        },
+        "workers": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          12,
+          16,
+          20,
+          24,
+          28,
+          32,
+          36,
+          48,
+          60
+        ],
+        "rounds": 3,
+        "post_work_rounds": 64,
+        "returned_jit_samples": 48,
+        "source_manifest": {
+          "manifest": {
+            "path": "bench/results/10.176.26.71/raw/bench/mutex-protocol-c01-20261013/baseline/source-sha256.json",
+            "sha256": "5b543c4718072b14f251d2f98898039e26e17092d7974574b909bb2b2af2dc85",
+            "bytes": 33964
+          },
+          "frozen_directory": "bench/results/10.176.26.71/raw/bench/mutex-protocol-c01-20261013/baseline/source",
+          "files_verified": 298,
+          "mismatches": 0
+        },
+        "binary_manifest": {
+          "path": "bench/results/10.176.26.71/raw/bench/mutex-protocol-c01-20261013/baseline/binary-sha256.json",
+          "sha256": "80862ad1206d3d81aeec315087868c506a936a3f1077b68787a1205d37cd014f",
+          "bytes": 1238
+        },
+        "binary_files_verified": 8,
+        "binary_mismatches": 0,
+        "fault_free_kernel_logs": 153,
+        "kd_resource_drain_and_owner_balance_logs": 51,
+        "policy": {
+          "mutex_entry_ratio_limit": [
+            "256"
+          ],
+          "mutex_routing": [
+            "adaptive"
+          ],
+          "mutex_acceptance": [
+            "adaptive-performance"
+          ],
+          "mutex_frame_reuse": [
+            "None"
+          ],
+          "mutex_native_epoch_ms": [
+            "None"
+          ],
+          "mutex_native_probe_ms": [
+            "None"
+          ],
+          "mutex_lazy_save": [
+            "None"
+          ],
+          "mutex_node_locality": [
+            "None"
+          ],
+          "mutex_preflight": [
+            "None"
+          ],
+          "mutex_native_epoch_cache": [
+            "None"
+          ]
+        }
+      },
+      "frame": {
+        "samples": 48,
+        "arms": {
+          "native": 24,
+          "kdlock": 24
+        },
+        "workers": [
+          2,
+          4,
+          16,
+          28,
+          32,
+          36,
+          48,
+          60
+        ],
+        "rounds": 3,
+        "post_work_rounds": 64,
+        "returned_jit_samples": 24,
+        "source_manifest": {
+          "manifest": {
+            "path": "bench/results/10.176.26.71/raw/bench/mutex-protocol-c01-20261013/frame/source-sha256.json",
+            "sha256": "56358f593aa2beb5ac94c5057d971571f6857c10d5d2f5e650929d3ec85077cc",
+            "bytes": 34219
+          },
+          "frozen_directory": "bench/results/10.176.26.71/raw/bench/mutex-protocol-c01-20261013/frame/source",
+          "files_verified": 300,
+          "mismatches": 0
+        },
+        "binary_manifest": {
+          "path": "bench/results/10.176.26.71/raw/bench/mutex-protocol-c01-20261013/frame/binary-sha256.json",
+          "sha256": "eecba560b1ae662e06d573c8a2382f300aaaf85bee43ec42c2dc3b6075b73df1",
+          "bytes": 910
+        },
+        "binary_files_verified": 6,
+        "binary_mismatches": 0,
+        "fault_free_kernel_logs": 48,
+        "kd_resource_drain_and_owner_balance_logs": 24,
+        "policy": {
+          "mutex_entry_ratio_limit": [
+            "256"
+          ],
+          "mutex_routing": [
+            "adaptive"
+          ],
+          "mutex_acceptance": [
+            "adaptive-performance"
+          ],
+          "mutex_frame_reuse": [
+            "True"
+          ],
+          "mutex_native_epoch_ms": [
+            "0"
+          ],
+          "mutex_native_probe_ms": [
+            "1"
+          ],
+          "mutex_lazy_save": [
+            "False"
+          ],
+          "mutex_node_locality": [
+            "False"
+          ],
+          "mutex_preflight": [
+            "None"
+          ],
+          "mutex_native_epoch_cache": [
+            "None"
+          ]
+        }
+      },
+      "control": {
+        "samples": 48,
+        "arms": {
+          "native": 24,
+          "kdlock": 24
+        },
+        "workers": [
+          2,
+          4,
+          16,
+          28,
+          32,
+          36,
+          48,
+          60
+        ],
+        "rounds": 3,
+        "post_work_rounds": 64,
+        "returned_jit_samples": 24,
+        "source_manifest": {
+          "manifest": {
+            "path": "bench/results/10.176.26.71/raw/bench/mutex-protocol-c01-20261013/control/source-sha256.json",
+            "sha256": "43b6c2a0fd8fc5ae62f67e42d1ce0d8275cd18d1ef80c3177733da48aac67763",
+            "bytes": 34219
+          },
+          "frozen_directory": "bench/results/10.176.26.71/raw/bench/mutex-protocol-c01-20261013/control/source",
+          "files_verified": 300,
+          "mismatches": 0
+        },
+        "binary_manifest": {
+          "path": "bench/results/10.176.26.71/raw/bench/mutex-protocol-c01-20261013/control/binary-sha256.json",
+          "sha256": "67d7ed788c63ef85141e83a16eb13225bfe78c1fa8abb3cb7b574a1bff4ee96c",
+          "bytes": 914
+        },
+        "binary_files_verified": 6,
+        "binary_mismatches": 0,
+        "fault_free_kernel_logs": 48,
+        "kd_resource_drain_and_owner_balance_logs": 24,
+        "policy": {
+          "mutex_entry_ratio_limit": [
+            "256"
+          ],
+          "mutex_routing": [
+            "adaptive"
+          ],
+          "mutex_acceptance": [
+            "adaptive-performance"
+          ],
+          "mutex_frame_reuse": [
+            "False"
+          ],
+          "mutex_native_epoch_ms": [
+            "0"
+          ],
+          "mutex_native_probe_ms": [
+            "1"
+          ],
+          "mutex_lazy_save": [
+            "False"
+          ],
+          "mutex_node_locality": [
+            "False"
+          ],
+          "mutex_preflight": [
+            "False"
+          ],
+          "mutex_native_epoch_cache": [
+            "None"
+          ]
+        }
+      },
+      "frame-width": {
+        "samples": 48,
+        "arms": {
+          "native": 24,
+          "kdlock": 24
+        },
+        "workers": [
+          2,
+          4,
+          16,
+          28,
+          32,
+          36,
+          48,
+          60
+        ],
+        "rounds": 3,
+        "post_work_rounds": 64,
+        "returned_jit_samples": 24,
+        "source_manifest": {
+          "manifest": {
+            "path": "bench/results/10.176.26.71/raw/bench/mutex-protocol-c01-20261013/frame-width/source-sha256.json",
+            "sha256": "43b6c2a0fd8fc5ae62f67e42d1ce0d8275cd18d1ef80c3177733da48aac67763",
+            "bytes": 34219
+          },
+          "frozen_directory": "bench/results/10.176.26.71/raw/bench/mutex-protocol-c01-20261013/frame-width/source",
+          "files_verified": 300,
+          "mismatches": 0
+        },
+        "binary_manifest": {
+          "path": "bench/results/10.176.26.71/raw/bench/mutex-protocol-c01-20261013/frame-width/binary-sha256.json",
+          "sha256": "99c03473043e219585e7703e49647bff6422cf7452523308a46a8cee360ccfe5",
+          "bytes": 922
+        },
+        "binary_files_verified": 6,
+        "binary_mismatches": 0,
+        "fault_free_kernel_logs": 48,
+        "kd_resource_drain_and_owner_balance_logs": 24,
+        "policy": {
+          "mutex_entry_ratio_limit": [
+            "256"
+          ],
+          "mutex_routing": [
+            "adaptive"
+          ],
+          "mutex_acceptance": [
+            "adaptive-performance"
+          ],
+          "mutex_frame_reuse": [
+            "True"
+          ],
+          "mutex_native_epoch_ms": [
+            "0"
+          ],
+          "mutex_native_probe_ms": [
+            "1"
+          ],
+          "mutex_lazy_save": [
+            "False"
+          ],
+          "mutex_node_locality": [
+            "False"
+          ],
+          "mutex_preflight": [
+            "False"
+          ],
+          "mutex_native_epoch_cache": [
+            "None"
+          ]
+        }
+      },
+      "node": {
+        "samples": 48,
+        "arms": {
+          "native": 24,
+          "kdlock": 24
+        },
+        "workers": [
+          2,
+          4,
+          16,
+          28,
+          32,
+          36,
+          48,
+          60
+        ],
+        "rounds": 3,
+        "post_work_rounds": 64,
+        "returned_jit_samples": 24,
+        "source_manifest": {
+          "manifest": {
+            "path": "bench/results/10.176.26.71/raw/bench/mutex-protocol-c01-20261013/node/source-sha256.json",
+            "sha256": "43b6c2a0fd8fc5ae62f67e42d1ce0d8275cd18d1ef80c3177733da48aac67763",
+            "bytes": 34219
+          },
+          "frozen_directory": "bench/results/10.176.26.71/raw/bench/mutex-protocol-c01-20261013/node/source",
+          "files_verified": 300,
+          "mismatches": 0
+        },
+        "binary_manifest": {
+          "path": "bench/results/10.176.26.71/raw/bench/mutex-protocol-c01-20261013/node/binary-sha256.json",
+          "sha256": "4eecde1cdac3a25175e417e5f70ed41e39248a0ecd417cb947286d863e44d9a2",
+          "bytes": 908
+        },
+        "binary_files_verified": 6,
+        "binary_mismatches": 0,
+        "fault_free_kernel_logs": 48,
+        "kd_resource_drain_and_owner_balance_logs": 24,
+        "policy": {
+          "mutex_entry_ratio_limit": [
+            "256"
+          ],
+          "mutex_routing": [
+            "adaptive"
+          ],
+          "mutex_acceptance": [
+            "adaptive-performance"
+          ],
+          "mutex_frame_reuse": [
+            "False"
+          ],
+          "mutex_native_epoch_ms": [
+            "0"
+          ],
+          "mutex_native_probe_ms": [
+            "1"
+          ],
+          "mutex_lazy_save": [
+            "False"
+          ],
+          "mutex_node_locality": [
+            "True"
+          ],
+          "mutex_preflight": [
+            "False"
+          ],
+          "mutex_native_epoch_cache": [
+            "None"
+          ]
+        }
+      },
+      "lazy": {
+        "samples": 48,
+        "arms": {
+          "native": 24,
+          "kdlock": 24
+        },
+        "workers": [
+          2,
+          4,
+          16,
+          28,
+          32,
+          36,
+          48,
+          60
+        ],
+        "rounds": 3,
+        "post_work_rounds": 64,
+        "returned_jit_samples": 24,
+        "source_manifest": {
+          "manifest": {
+            "path": "bench/results/10.176.26.71/raw/bench/mutex-protocol-c01-20261013/lazy/source-sha256.json",
+            "sha256": "43b6c2a0fd8fc5ae62f67e42d1ce0d8275cd18d1ef80c3177733da48aac67763",
+            "bytes": 34219
+          },
+          "frozen_directory": "bench/results/10.176.26.71/raw/bench/mutex-protocol-c01-20261013/lazy/source",
+          "files_verified": 300,
+          "mismatches": 0
+        },
+        "binary_manifest": {
+          "path": "bench/results/10.176.26.71/raw/bench/mutex-protocol-c01-20261013/lazy/binary-sha256.json",
+          "sha256": "dafc71aee85a417524cd0eb727fad2afead6295ebaf74373cbf4e598ad5cd16f",
+          "bytes": 908
+        },
+        "binary_files_verified": 6,
+        "binary_mismatches": 0,
+        "fault_free_kernel_logs": 48,
+        "kd_resource_drain_and_owner_balance_logs": 24,
+        "policy": {
+          "mutex_entry_ratio_limit": [
+            "256"
+          ],
+          "mutex_routing": [
+            "adaptive"
+          ],
+          "mutex_acceptance": [
+            "adaptive-performance"
+          ],
+          "mutex_frame_reuse": [
+            "False"
+          ],
+          "mutex_native_epoch_ms": [
+            "0"
+          ],
+          "mutex_native_probe_ms": [
+            "1"
+          ],
+          "mutex_lazy_save": [
+            "True"
+          ],
+          "mutex_node_locality": [
+            "False"
+          ],
+          "mutex_preflight": [
+            "False"
+          ],
+          "mutex_native_epoch_cache": [
+            "None"
+          ]
+        }
+      },
+      "preflight": {
+        "samples": 48,
+        "arms": {
+          "native": 24,
+          "kdlock": 24
+        },
+        "workers": [
+          2,
+          4,
+          16,
+          28,
+          32,
+          36,
+          48,
+          60
+        ],
+        "rounds": 3,
+        "post_work_rounds": 64,
+        "returned_jit_samples": 24,
+        "source_manifest": {
+          "manifest": {
+            "path": "bench/results/10.176.26.71/raw/bench/mutex-protocol-c01-20261013/preflight/source-sha256.json",
+            "sha256": "43b6c2a0fd8fc5ae62f67e42d1ce0d8275cd18d1ef80c3177733da48aac67763",
+            "bytes": 34219
+          },
+          "frozen_directory": "bench/results/10.176.26.71/raw/bench/mutex-protocol-c01-20261013/preflight/source",
+          "files_verified": 300,
+          "mismatches": 0
+        },
+        "binary_manifest": {
+          "path": "bench/results/10.176.26.71/raw/bench/mutex-protocol-c01-20261013/preflight/binary-sha256.json",
+          "sha256": "ad7167b280a49bd4d4ba68fdd8932bdb7632003c4e9724d5449671d54d6451c0",
+          "bytes": 918
+        },
+        "binary_files_verified": 6,
+        "binary_mismatches": 0,
+        "fault_free_kernel_logs": 48,
+        "kd_resource_drain_and_owner_balance_logs": 24,
+        "policy": {
+          "mutex_entry_ratio_limit": [
+            "256"
+          ],
+          "mutex_routing": [
+            "adaptive"
+          ],
+          "mutex_acceptance": [
+            "adaptive-performance"
+          ],
+          "mutex_frame_reuse": [
+            "False"
+          ],
+          "mutex_native_epoch_ms": [
+            "0"
+          ],
+          "mutex_native_probe_ms": [
+            "1"
+          ],
+          "mutex_lazy_save": [
+            "True"
+          ],
+          "mutex_node_locality": [
+            "False"
+          ],
+          "mutex_preflight": [
+            "True"
+          ],
+          "mutex_native_epoch_cache": [
+            "None"
+          ]
+        }
+      },
+      "epoch": {
+        "samples": 48,
+        "arms": {
+          "native": 24,
+          "kdlock": 24
+        },
+        "workers": [
+          2,
+          4,
+          16,
+          28,
+          32,
+          36,
+          48,
+          60
+        ],
+        "rounds": 3,
+        "post_work_rounds": 64,
+        "returned_jit_samples": 24,
+        "source_manifest": {
+          "manifest": {
+            "path": "bench/results/10.176.26.71/raw/bench/mutex-protocol-c01-20261013/epoch/source-sha256.json",
+            "sha256": "43b6c2a0fd8fc5ae62f67e42d1ce0d8275cd18d1ef80c3177733da48aac67763",
+            "bytes": 34219
+          },
+          "frozen_directory": "bench/results/10.176.26.71/raw/bench/mutex-protocol-c01-20261013/epoch/source",
+          "files_verified": 300,
+          "mismatches": 0
+        },
+        "binary_manifest": {
+          "path": "bench/results/10.176.26.71/raw/bench/mutex-protocol-c01-20261013/epoch/binary-sha256.json",
+          "sha256": "489e9f5e2f003acdc8e4f4972cba1fb2a69e6ac4c8d14bef3bc9cba72eccfc9f",
+          "bytes": 910
+        },
+        "binary_files_verified": 6,
+        "binary_mismatches": 0,
+        "fault_free_kernel_logs": 48,
+        "kd_resource_drain_and_owner_balance_logs": 24,
+        "policy": {
+          "mutex_entry_ratio_limit": [
+            "256"
+          ],
+          "mutex_routing": [
+            "adaptive"
+          ],
+          "mutex_acceptance": [
+            "adaptive-performance"
+          ],
+          "mutex_frame_reuse": [
+            "False"
+          ],
+          "mutex_native_epoch_ms": [
+            "128"
+          ],
+          "mutex_native_probe_ms": [
+            "1"
+          ],
+          "mutex_lazy_save": [
+            "False"
+          ],
+          "mutex_node_locality": [
+            "False"
+          ],
+          "mutex_preflight": [
+            "False"
+          ],
+          "mutex_native_epoch_cache": [
+            "None"
+          ]
+        }
+      },
+      "epoch-preflight": {
+        "samples": 48,
+        "arms": {
+          "native": 24,
+          "kdlock": 24
+        },
+        "workers": [
+          2,
+          4,
+          16,
+          28,
+          32,
+          36,
+          48,
+          60
+        ],
+        "rounds": 3,
+        "post_work_rounds": 64,
+        "returned_jit_samples": 24,
+        "source_manifest": {
+          "manifest": {
+            "path": "bench/results/10.176.26.71/raw/bench/mutex-protocol-c01-20261013/epoch-preflight/source-sha256.json",
+            "sha256": "43b6c2a0fd8fc5ae62f67e42d1ce0d8275cd18d1ef80c3177733da48aac67763",
+            "bytes": 34219
+          },
+          "frozen_directory": "bench/results/10.176.26.71/raw/bench/mutex-protocol-c01-20261013/epoch-preflight/source",
+          "files_verified": 300,
+          "mismatches": 0
+        },
+        "binary_manifest": {
+          "path": "bench/results/10.176.26.71/raw/bench/mutex-protocol-c01-20261013/epoch-preflight/binary-sha256.json",
+          "sha256": "851e50501b1b59e12a3c45b6fcc6cb658e04424f8025bcc0eb901d081044ec9f",
+          "bytes": 930
+        },
+        "binary_files_verified": 6,
+        "binary_mismatches": 0,
+        "fault_free_kernel_logs": 48,
+        "kd_resource_drain_and_owner_balance_logs": 24,
+        "policy": {
+          "mutex_entry_ratio_limit": [
+            "256"
+          ],
+          "mutex_routing": [
+            "adaptive"
+          ],
+          "mutex_acceptance": [
+            "adaptive-performance"
+          ],
+          "mutex_frame_reuse": [
+            "False"
+          ],
+          "mutex_native_epoch_ms": [
+            "128"
+          ],
+          "mutex_native_probe_ms": [
+            "1"
+          ],
+          "mutex_lazy_save": [
+            "True"
+          ],
+          "mutex_node_locality": [
+            "False"
+          ],
+          "mutex_preflight": [
+            "True"
+          ],
+          "mutex_native_epoch_cache": [
+            "None"
+          ]
+        }
+      }
+    },
+    "all_execution_status_ok": true,
+    "all_complete_and_data_ok": true,
+    "all_workers_made_whole_run_and_selected_peak_progress": true,
+    "all_worker_errors_zero_and_observed_placement_correct": true,
+    "all_collector_errors_zero_and_observed_cpu_63": true,
+    "all_drained": true,
+    "fault_free_kernel_logs": 537,
+    "kd_samples": 243,
+    "kd_samples_with_returned_jit_bodies": 240,
+    "kd_samples_without_returned_jit_bodies": 3,
+    "non_jit_kd_scope": "Only the three baseline one-worker samples.",
+    "kd_drain_counters": "active_waiters=reserved_nodes=frame_failure=0 and origin_acquires=origin_releases in every KD sample",
+    "warmup_operations_per_worker": 48000,
+    "measurement_ms": 2000,
+    "peak_window_ms": 300,
+    "peak_settle_ms": 300,
+    "post_work_rounds_verified_from_every_frozen_header": 64,
+    "root_audit": {
+      "sample_count": 537,
+      "acceptance_matches_durable_report": true,
+      "original_stdout_sha256": "f346e8e72c35ce229c8fb673df396f1e5ceb22b522fae2e33e89bb7547a582d7",
+      "analyzer": {
+        "path": "bench/results/10.176.26.71/bench/mutex_protocol/20261013/analyze.py",
+        "sha256": "251c016275d768ceb2fd4e298704944b844021a0411fa8d481c6219ba087a773",
+        "bytes": 6398
+      },
+      "coverage": {
+        "path": "bench/results/10.176.26.71/bench/mutex_protocol/20261013/coverage.json",
+        "sha256": "1662e5e80f7980da818afc95948b0d047c51ea38d0e62738577731a56c531504",
+        "bytes": 87250
+      },
+      "samples": {
+        "path": "bench/results/10.176.26.71/bench/mutex_protocol/20261013/samples.csv",
+        "sha256": "03bb27d42f5fde1dc2987005419a2a468e7df15082fa4ced4df6b3c6aa021884",
+        "bytes": 97412
+      },
+      "statistics": {
+        "path": "bench/results/10.176.26.71/bench/mutex_protocol/20261013/statistics.csv",
+        "sha256": "d5e27b55b9aceb76f39b7f973a56ce204f30ec2dea702693c73ad95ffd894b96",
+        "bytes": 36585
+      },
+      "acceptance": {
+        "path": "bench/results/10.176.26.71/bench/mutex_protocol/20261013/acceptance.json",
+        "sha256": "b3a8d59d829c0a602ca5ae9e7024b2338f7b10ae95c2cae30460117cd565c41f",
+        "bytes": 155593
+      }
+    },
+    "offline_recheck": "Verified all source and binary hashes, sessions, worker progress/placement, selected-peak worker progress, kernel fault exclusions, owner balance and drain counters against the frozen local evidence. No VM work or project tests were rerun while assembling this record."
+  },
+  "acceptance": {
+    "verdict": "REJECTED",
+    "screened_variants": {
+      "frame": {
+        "verdict": "REJECTED",
+        "missing_primary_worker_counts": [
+          1,
+          3,
+          5,
+          6,
+          7,
+          8,
+          12,
+          20,
+          24
+        ]
+      },
+      "control": {
+        "verdict": "REJECTED",
+        "missing_primary_worker_counts": [
+          1,
+          3,
+          5,
+          6,
+          7,
+          8,
+          12,
+          20,
+          24
+        ]
+      },
+      "frame-width": {
+        "verdict": "REJECTED",
+        "missing_primary_worker_counts": [
+          1,
+          3,
+          5,
+          6,
+          7,
+          8,
+          12,
+          20,
+          24
+        ]
+      },
+      "node": {
+        "verdict": "REJECTED",
+        "missing_primary_worker_counts": [
+          1,
+          3,
+          5,
+          6,
+          7,
+          8,
+          12,
+          20,
+          24
+        ]
+      },
+      "lazy": {
+        "verdict": "REJECTED",
+        "missing_primary_worker_counts": [
+          1,
+          3,
+          5,
+          6,
+          7,
+          8,
+          12,
+          20,
+          24
+        ]
+      },
+      "preflight": {
+        "verdict": "REJECTED",
+        "missing_primary_worker_counts": [
+          1,
+          3,
+          5,
+          6,
+          7,
+          8,
+          12,
+          20,
+          24
+        ]
+      },
+      "epoch": {
+        "verdict": "REJECTED",
+        "missing_primary_worker_counts": [
+          1,
+          3,
+          5,
+          6,
+          7,
+          8,
+          12,
+          20,
+          24
+        ]
+      },
+      "epoch-preflight": {
+        "verdict": "REJECTED",
+        "missing_primary_worker_counts": [
+          1,
+          3,
+          5,
+          6,
+          7,
+          8,
+          12,
+          20,
+          24
+        ]
+      }
+    },
+    "primary_grid_complete_for_candidates": false,
+    "higher_grid": [
+      32,
+      36,
+      48,
+      60
+    ],
+    "fresh_confirmation_blocks_completed": 0,
+    "note": "All samples retained. Rejected eight-count screens do not satisfy the full primary grid or two fresh confirmation blocks."
+  },
+  "excluded_pending_work": {
+    "checkpoint": "93291e3",
+    "status": "Excluded from the 64-round receipt; subsequent validation and completion are recorded separately.",
+    "features": [
+      "mutex_native_epoch_cache provider shortcut and runner policy metadata",
+      "post_work_rounds provenance and separate 8-round study auditor support"
+    ],
+    "not_covered_by_above_test_passes": true,
+    "eight_round_study": "Completed separately; no eight-round samples are included in this receipt.",
+    "status_at_initial_assembly": "Pending VM validation when this record was assembled.",
+    "resolved_by": "https://github.com/hailongeric/kdlock/blob/fe8d7586239d9fbe18adc3e89c98052d8873933e/bench/results/10.176.26.71/bench/mutex_protocol/20261013-post8/validation.json"
+  }
+}

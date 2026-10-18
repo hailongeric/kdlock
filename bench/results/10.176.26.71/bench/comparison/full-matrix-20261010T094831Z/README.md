@@ -56,9 +56,9 @@ Published SVGs have trailing whitespace normalized for Git; the
 [normalization receipt](svg-normalization.json) records identical SVG elements
 and path tokens. The raw archive retains the original generated SVG bytes.
 
-Follow the [full-matrix workflow](../../../../../../tools/vm/README.md#complete-164-worker-comparison)
+Follow the [full-matrix workflow](https://github.com/hailongeric/kdlock/blob/d2a2304/tools/vm/README.md#complete-164-worker-comparison)
 for CPU placement, verified recovery, pinned dependencies and all 14 groups.
-The [offline reporting guide](../../../../../full_compare/README.md) describes
+The [offline reporting guide](../../../../../archive/full_compare_20261011/README.md) describes
 [this saved exporter](export.py), its [plotting dependencies](requirements.txt)
 and auditing extracted evidence with `--no-plots`.
 

@@ -9,7 +9,7 @@ provider and translator in the [paired round](../results/10.176.26.71/bench/comp
 Each backend has its own compiled workload functions and lock object. They use
 the same protected operations, timing method and reports. Choosing spin versus
 mutex happens at build time, without a runtime `is_mutex` branch in each operation.
-Build and execute in the verified recovery guest on `10.176.26.71`; follow [operations](../../docs/AGENTS.md)
+Build and execute in the verified recovery guest on `10.176.26.71`; follow [operations](../../docs/operations/VM.md)
 for snapshots, frozen inputs and drain.
 Mixed read/write workloads use the separate [rwlock runner](../rwlock_compare/README.md),
 which compares Native, TCLock and KD on the same adapted RCUHT payload.
@@ -41,7 +41,7 @@ Full spin cacheline matrix after that verification:
 KDLOCK_RECOVERY_CONFIRMED=1 KDLOCK_SNAPSHOT_TAG=YOUR_CONFIRMED_SNAPSHOT \
   LC_ALL=C timeout --kill-after=10s 3600s python3 bench/tclock_compare/run.py \
   --backends native tclock kdlock --workload cacheline --cachelines 1 \
-  --threads 1 2 3 4 5 6 7 8 12 16 20 24 28 32 36 --repeats 3 \
+  --threads 1 2 3 4 5 6 7 8 12 16 20 24 28 32 36 40 44 48 52 56 60 --repeats 3 \
   --duration-ms 2000 --peak-window-ms 300 --collector-cpu 63 \
   --kernel-source /root/linux-6.1.159-kdclobber2 \
   --kernel-baseline /root/kdlock-kernel-baselines/mutex-clobber2-20260919 \
@@ -57,11 +57,12 @@ has no `mutex_jit` parameter.
 
 | Option/default | Meaning |
 | --- | --- |
-| `--threads 1 4 8 16 20` | Short default; explicitly select the full 15-point set above |
+| `--threads 1 4 8 16 20` | Short default; explicitly select the standard 21-point set above |
 | `--repeats 3` | Three rounds/configuration, rotating backend order |
 | `--duration-ms 0` | Fixed iterations by default; use 2,000 for the timed comparison |
 | `--peak-window-ms 300`, `--peak-settle-ms 300` | Highest valid cohort window after settling |
-| `--collector-cpu 30` | Built-in default; override with an available CPU outside workers (63 on the documented destination, 38 in the original full matrix) |
+| `--collector-cpu 63` | Separate collector on the current 64-vCPU VM |
+| `--share-collector` | Explicit optional 64-worker point only; timed mode and workers 0–63 required |
 | `--numa on`, `--kd-batch-size 1024` | KD spin/mutex NUMA selection and total body bound; separate scan/cohort budgets |
 | `--spin-prefetch 2` |KD producer-prepared hints |
 | `--spin-entry-ratio-limit 2` | Adaptive ratio rule; 0 bypasses only ratio filtering |
@@ -69,14 +70,12 @@ has no `mutex_jit` parameter.
 | `--cpus LIST` | Ordered worker placement; each cohort takes its prefix. Choose node membership from the verified topology |
 | `--dry-run` | Print plan without live execution |
 
-Both entries now accept any worker count from 1 through 64. The full new-host
-comparison uses 22 counts: 1–8 in steps of one, then 12–64 in steps of four.
-Use the [complete-matrix driver](../../tools/vm/README.md#complete-164-worker-comparison)
-for one-cacheline and hash payloads; larger cacheline sizes require an explicit
-opt-in. Its temporary 66-vCPU placement keeps
-64 distinct worker vCPUs and a separate guest collector; the collector shares
-a physical core with the last worker at the 64-worker point. The 15-point command
-above remains a smaller comparison that fits the regular 64-vCPU boot.
+Both entries accept 1–64 workers. The standard grid stops at 60 and keeps
+collector 63 separate. For an optional 64-worker point on exactly 64 online CPUs,
+select `--cpus 0-63 --collector-cpu 63 --share-collector` in timed mode.
+Only that cohort records `collector_shared=true`; smaller cohorts remain separate.
+The client and peak reader reject unlabelled/partial overlap. Report identity
+separates shared, dedicated and historical unrecorded collector settings.
 
 The runner builds matching copies of each backend, workload and provider. It
 checks the built ELF interfaces, return layouts and sanitizer references. KD
@@ -86,8 +85,8 @@ the actual build, so requested option names alone cannot mislabel a sample.
 
 ## Workloads and backends
 
-Cacheline comparisons default to one line; 8/16-line bodies remain available only
-when explicitly requested. Hash uses 1,024 buckets, 4,096 preallocated
+Cacheline comparisons default to one line; explicitly select 2/4/8/16 for
+other payload sizes. Spin/mutex post-work is 64 dependent arithmetic rounds. Hash uses 1,024 buckets, 4,096 preallocated
 nodes, 8,192 keys and 100% writes: each request records one move, conflict or miss.
 The three arms use the same immediate unlink/relink body and fixed CPU-seeded random
 streams; this adaptation is not a byte-identical upstream RCUHT environment.
@@ -143,35 +142,13 @@ Keep whole-run per-worker and node shares too, especially cohorts with unequal
 NUMA membership (24 threads in the original 40-vCPU setup). A bounded batch and
 positive observed counts do not prove starvation freedom.
 
-The current [mutex c01/hash optimization report](../results/10.176.26.71/bench/comparison/mutex-opt-20261011T045425Z/README.md)
-compares all 22 worker counts with three rounds per backend. It documents bounded
-task caching, NUMA selection and field-width retirement reads, including rejected
-candidates and the remaining parity gaps. Only c01 and hash were run.
-
-The closed phase screened candidates separately at 16/36 threads, adding 2 for
-caller changes and 24 for fairness. An apparent regression was rechecked once;
-repeatable median losses above 3% at protected points caused rejection. The full
-comparison used all 15 thread counts and both payloads. Parity required matching
-the stronger of TCLock and Native at each point, with peak and sustained rates
-reported separately; 90% of TCLock's peak was an intermediate milestone.
-
-The [protocol simplification report](../results/380G10/bench/tclock_compare/20261008-protocol-simplification/README.md)
-keeps isolated screens, full 15-point matrices and rechecks separate under
-`nopvspin`. Both combined terminal/memory and memory-only candidates were rejected
-for repeated regressions. No runtime change was promoted; the eager code pool
-remains current. Raw stage names `final` and `retained` identify those rejected
-candidates. The fresh restored-runtime comparison (`restored`) contains 540
-sessions across all 15 thread counts and both payloads for spin and mutex.
-
-The spin/mutex phase closed on 2026-10-09. The earlier
-[hash diagnosis](../results/380G10/bench/tclock_compare/HISTORY.md#hash-diagnosis) and
-[mandatory-JIT mutex trials](../results/380G10/bench/tclock_compare/20261008-mutex-priority-trials.md) use the same
-boot policy. The [previous 540-sample matrix](../results/380G10/bench/tclock_compare/HISTORY.md#pre-nopvspin-matrix)
-predates `nopvspin` and must remain separate. All of these runs use four lock-outside
-arithmetic rounds; the unrelated 64-round working-tree change was excluded.
-The [evidence index](../results/380G10/bench/tclock_compare/HISTORY.md) links source identities, failed candidates
-and complete statistics. Publication, correct execution and performance acceptance
-are distinct results.
+The [current KD-only comparison](../results/10.176.26.71/bench/comparison/mutex-kdonly-20261017T140354Z/README.md)
+retains 504 sessions for c01/post64 and pipebytes n16 over the standard grid,
+including the compatibility baseline and Native/TCLock controls. Use
+[performance status](../../docs/PERFORMANCE.md) for outcomes and
+[historical evidence](../../docs/history/README.md) for superseded implementations.
+The `adaptive` session suffix refers to admission heat policy, not the rejected
+adaptive mutex locking protocol.
 
 ## Functional and diagnostic checks
 

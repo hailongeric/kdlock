@@ -1,0 +1,1 @@
+{"observed_resolved_utc": "2026-10-15T22:08:24.550644+00:00", "event": "single SSH connection refused", "resolution": "Next host probe and guest status succeeded; QEMU PID remained257489; benchmark continued from4245 to4265 drained sessions", "measurement_intervention": false}

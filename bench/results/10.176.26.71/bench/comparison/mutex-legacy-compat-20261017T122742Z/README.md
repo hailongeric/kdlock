@@ -7,7 +7,7 @@ are measured controls. It covers **c01/post64** and
 repetitions: **504 sessions** in the corrected attempt.
 
 The code comparison and scope are in
-[legacy_mutex_compatibility.md](../../../../../../docs/design/legacy_mutex_compatibility.md).
+[legacy_mutex_compatibility.md](../../../../../../docs/history/legacy_mutex_compatibility.md).
 Baseline source is `74676c3`; the backport is on `task/legacy-mutex-compat` in
 `/tmp/kdlock-mutex-legacy-compat`. The captured baseline binaries are reused but
 **all timing samples in this comparison are new**. The original recovery and

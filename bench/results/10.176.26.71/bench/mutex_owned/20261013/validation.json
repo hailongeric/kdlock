@@ -1,0 +1,2238 @@
+{
+  "archives": [
+    {
+      "archive": {
+        "bytes": 72324080,
+        "path": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/stage1-baseline-diagnostics-tests.tar.gz",
+        "sha256": "4164be9da1ef92cd15db144c55b63578b72bed4f9472bf7f9511ef60b7cdf5d3"
+      },
+      "extracted_regular_bytes_verified": true,
+      "link_identities_sha256": "c9358e87a1fd51132aa4fbb985f2bc06e0e432b22e131fb8b30354060ee0654a",
+      "link_policy": "Links remain in the canonical archive; no target is followed or required on this host.",
+      "original_receipt": {
+        "bytes": 250,
+        "path": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/stage1-archive.json",
+        "sha256": "2092d9b2d3b6c2c5355613f159a3dbb9ef6fb5757400ae4dc51b8d3ac1641642"
+      },
+      "regular_bytes": 329666905,
+      "regular_files": 11662,
+      "symbolic_links": 154
+    },
+    {
+      "archive": {
+        "bytes": 63483211,
+        "path": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/stage2-finite-grid-screens-tests.tar.gz",
+        "sha256": "515160a404ae611d00d8f18cb98434ef6e7cd23ff68ee291cfd005b92939a925"
+      },
+      "extracted_regular_bytes_verified": true,
+      "link_identities_sha256": "5ec0545e99219933c9c5f3ead3022263da93fe658846aa71ebd314357aac7584",
+      "link_policy": "Links remain in the canonical archive; no target is followed or required on this host.",
+      "original_receipt": {
+        "bytes": 249,
+        "path": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/stage2-archive.json",
+        "sha256": "41bfd20206f42bd54d1417e30e63299d5f51a180de0a22a00f655bbeb2c90948"
+      },
+      "regular_bytes": 248062176,
+      "regular_files": 10726,
+      "symbolic_links": 176
+    },
+    {
+      "archive": {
+        "bytes": 52827435,
+        "path": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/stage3-refill-controls-diagnostics-tests.tar.gz",
+        "sha256": "2b0e9518e5a2d7a5d4584daff94cc6f45f597883c57e7a49576f49fee129c8ed"
+      },
+      "extracted_regular_bytes_verified": true,
+      "link_identities_sha256": "6ce104b1e558d66aa1af0124842db349782cdf4a782d5bb1c30cc61a3c5fd451",
+      "link_policy": "Links remain in the canonical archive; no target is followed or required on this host.",
+      "original_receipt": {
+        "bytes": 257,
+        "path": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/stage3-archive.json",
+        "sha256": "3f596895d2f7414b8da83b16a092fa81b482d4c9c7cd957649977e5622808dd8"
+      },
+      "regular_bytes": 212919999,
+      "regular_files": 7993,
+      "symbolic_links": 140
+    },
+    {
+      "archive": {
+        "bytes": 53239,
+        "path": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/stage4-guest-postflight.tar.gz",
+        "sha256": "b43406aebc57f84a739cd230929a713ab034adaf6f58557720430a030ff03593"
+      },
+      "extracted_regular_bytes_verified": true,
+      "link_identities_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "link_policy": "Links remain in the canonical archive; no target is followed or required on this host.",
+      "original_receipt": {
+        "bytes": 237,
+        "path": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/stage4-archive.json",
+        "sha256": "15f575afdbadfc342ecbb02e4b5f8e0252b384e04111000a43ed1a0d521d52bf"
+      },
+      "regular_bytes": 537920,
+      "regular_files": 2,
+      "symbolic_links": 0
+    },
+    {
+      "archive": {
+        "bytes": 1170718,
+        "path": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/stage5-matched-unit-source-supplement.tar.gz",
+        "sha256": "486abc91a93f126f2d0275ad47e995e600c07b03d3374d989b8cdfe4c2e3377a"
+      },
+      "extracted_regular_bytes_verified": true,
+      "link_identities_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "link_policy": "Links remain in the canonical archive; no target is followed or required on this host.",
+      "original_receipt": {
+        "bytes": 653,
+        "path": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/stage5-archive.json",
+        "sha256": "7fd95313e587d9acf03a44b51c5a7e727a79eaacc8f134c66b9863c6b203c256"
+      },
+      "regular_bytes": 4773398,
+      "regular_files": 473,
+      "symbolic_links": 0
+    },
+    {
+      "archive": {
+        "bytes": 2173297,
+        "path": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/stage6-legacy-smoke-and-postflight.tar.gz",
+        "sha256": "a79930dcb171bce12b75f9aaf237f13494661de2c40d97c8e5de95456792bf8e"
+      },
+      "extracted_regular_bytes_verified": true,
+      "link_identities_sha256": "cd10bc1011a1ae85fb1c6a60a1c0d9966c985662c1b9df42894abdc6e909d947",
+      "link_policy": "Links remain in the canonical archive; no target is followed or required on this host.",
+      "original_receipt": {
+        "bytes": 250,
+        "path": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/stage6-archive.json",
+        "sha256": "78963c6a178b5f14cdb0c0b1b828e5d7746d0e528e98e0d128c3d6daf97cd078"
+      },
+      "regular_bytes": 8320946,
+      "regular_files": 478,
+      "symbolic_links": 4
+    }
+  ],
+  "audit": "PASS",
+  "earlier_r4": {
+    "continuation_checks": 3447,
+    "jit_checks": 4359,
+    "limit": "Earlier-source log-only receipt; this directory has no source manifest. Do not attribute it to final/refill source.",
+    "logs": [
+      {
+        "bytes": 1956,
+        "path": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/tests/mutex-owned-v1-r4-20261013/jit-entry.log",
+        "sha256": "230948314eb133ce1dba30353904af84698219fcad0f41aa9eb6da80bcd77ee9"
+      },
+      {
+        "bytes": 160,
+        "path": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/tests/mutex-owned-v1-r4-20261013/continuation.log",
+        "sha256": "62d72c4c4005ca6c5dd51b6a136a7a648ca663c764d81e7e673bbf7c5c369b15"
+      }
+    ],
+    "rejected_mutations": [
+      "mutex-generic-skips-materialization",
+      "mutex-batch-final-completion-disabled",
+      "mutex-batch-wrong-backend-endpoint",
+      "mutex-batch-uses-private-stack",
+      "mutex-batch-skips-ledger-admission",
+      "batch-clobber-uses-legacy-entry",
+      "batch-clobber-uses-legacy-unlock",
+      "batch-completion-abi-inverted",
+      "dispatch-rehashes-entry",
+      "dispatch-reuses-old-ready-result",
+      "ready-ignores-closing",
+      "ready-plain-status-read",
+      "timing-clock-ignores-disable",
+      "timing-wrapper-not-counted",
+      "timing-overflow-not-marked",
+      "timing-hostcall-misclassified",
+      "scalar-argument-truncated",
+      "scalar-wrong-argument-register",
+      "scalar-result-sign-extended",
+      "service-flags-bypassed",
+      "unresolved-service-matched",
+      "shared-service-budget-bypassed",
+      "service-return-not-consumed",
+      "service-error-ignored",
+      "service-error-allows-replay",
+      "quota-invokes-excess-service",
+      "quota-consumes-pending-return",
+      "quota-retains-stale-control-phase",
+      "quota-skips-return-source-pin",
+      "quota-requests-callee-learning"
+    ]
+  },
+  "full": [
+    {
+      "binaries": {
+        "files": 5,
+        "hashes": {
+          "/root/host_fs/kdlock/bench/spin_cacheline/.build/provider/kernel_module/kdlock_km.ko": "07368574fa9c4b31005f3359cd5950f237bfaddf79c7a27b729e83244d8a6e30",
+          "/root/host_fs/kdlock/bench/spin_cacheline/client": "51e6d2ae116ead6ef42d83de2f0c8a543cdae0382f384ed8e7bc5f76cae9a665",
+          "/root/host_fs/kdlock/bench/tclock_compare/allocator_guard/tc_allocator_guard.ko": "4323537a05b588952ba6800a5b65cf3f0681174c3aa37dd1102e5cc1e963f930",
+          "/root/host_fs/kdlock/daemon/daemon": "5bf8df853e191d87d9bbdb3d3e767f34f4c113f7e06328e8daf35da063daeee8",
+          "/root/kdlock-evidence/10.176.26.71/tests/mutex-owned-v1-final-full-nested-20261013/variants/kdlock/mutex_cacheline.ko": "e5fbb77b1b7c198a830641a46c871bd1efb4815764776988b176a4c4828ac786"
+        },
+        "manifest": {
+          "bytes": 735,
+          "path": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/tests/mutex-owned-v1-final-full-nested-20261013/binary-sha256.json",
+          "sha256": "dff6b963c998988f32ed88cc17265239ec7b6674ce9a41ca66fb4d8b452143fe"
+        }
+      },
+      "collector_topology": null,
+      "environment": {
+        "bytes": 3833,
+        "path": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/tests/mutex-owned-v1-final-full-nested-20261013/environment.json",
+        "sha256": "ba250ffa711fbcf3d88b6e24b69830b5b6704b9a35b3f85470f5bb8308b57719"
+      },
+      "plan": {
+        "bytes": 3572,
+        "path": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/tests/mutex-owned-v1-final-full-nested-20261013/plan.json",
+        "sha256": "4852c70de990d60f707fb2a92c011e867603ff5823ebd928c128c4966c44a8bd"
+      },
+      "refill": false,
+      "scenario": "nested",
+      "sessions": [
+        {
+          "completed": 2000000,
+          "drain": {
+            "bytes": 62,
+            "path": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/tests/mutex-owned-v1-final-full-nested-20261013/c01-t04-r00-direct-kdlock-adaptive-owned-v1/drain.counts.json",
+            "sha256": "79d4f716aa478c4ff81e08cb0c2baa1b3e45a90fc9860bfd305c07e3c7186c86"
+          },
+          "jit_bodies": 789181,
+          "kernel": {
+            "log": {
+              "bytes": 3123,
+              "path": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/tests/mutex-owned-v1-final-full-nested-20261013/c01-t04-r00-direct-kdlock-adaptive-owned-v1/kernel.log",
+              "sha256": "ebb3ba72724901e2786da1d2f8a29dfa2f9bea2ab28fe5f5004e7d9f20fb1347"
+            },
+            "mutex": {
+              "active_waiters": 0,
+              "combiner": 0,
+              "context_busy": 0,
+              "frame_failure": 0,
+              "handoff": 0,
+              "jit_failure": 0,
+              "jit_not_ready": 0,
+              "jit_resume": 0,
+              "jit_success": 0,
+              "max_waiters_per_cpu": 0,
+              "multi_slot": 0,
+              "nested_abort_release": 0,
+              "nested_fast": 0,
+              "nested_jit": 789180,
+              "nested_lock": 0,
+              "nested_queued": 0,
+              "nested_unlock": 0,
+              "node_overflow": 0,
+              "origin_acquires": 0,
+              "origin_releases": 0,
+              "reserved_nodes": 0,
+              "slowpath": 0
+            },
+            "native": {
+              "completed": 1,
+              "started": 1,
+              "unlocks": 2
+            },
+            "owned": {
+              "batches": 281324,
+              "bodies": 789180,
+              "early_releases": 0,
+              "refusals": 0
+            },
+            "tasks": {
+              "active_tasks": 0,
+              "task_alloc_failure": 0,
+              "task_reroutes": 2
+            }
+          },
+          "measurement": {
+            "bytes": 793,
+            "path": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/tests/mutex-owned-v1-final-full-nested-20261013/c01-t04-r00-direct-kdlock-adaptive-owned-v1/measure.json",
+            "sha256": "cd4492ce6f0fcc05f634ed0174a0fbbcd93b3b1d32c1b393919dc8a753fd5f40"
+          },
+          "name": "c01-t04-r00-direct-kdlock-adaptive-owned-v1",
+          "session": {
+            "bytes": 7519,
+            "path": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/tests/mutex-owned-v1-final-full-nested-20261013/c01-t04-r00-direct-kdlock-adaptive-owned-v1/session.json",
+            "sha256": "0f0b8910c50e8f949e8bd99bdd17bc2b7e5dce3f2823183abab84eb7009734c5"
+          },
+          "workers": 4
+        },
+        {
+          "completed": 8000000,
+          "drain": {
+            "bytes": 62,
+            "path": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/tests/mutex-owned-v1-final-full-nested-20261013/c01-t16-r00-direct-kdlock-adaptive-owned-v1/drain.counts.json",
+            "sha256": "b1a1889d311c094479b726a927a034ff8371100e1389be994a580080aac9a627"
+          },
+          "jit_bodies": 7495482,
+          "kernel": {
+            "log": {
+              "bytes": 4752,
+              "path": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/tests/mutex-owned-v1-final-full-nested-20261013/c01-t16-r00-direct-kdlock-adaptive-owned-v1/kernel.log",
+              "sha256": "9c446357783b601951e5166bca57423a3a728eaddd6e155d46208e2dad850e1f"
+            },
+            "mutex": {
+              "active_waiters": 0,
+              "combiner": 0,
+              "context_busy": 0,
+              "frame_failure": 0,
+              "handoff": 0,
+              "jit_failure": 0,
+              "jit_not_ready": 0,
+              "jit_resume": 0,
+              "jit_success": 0,
+              "max_waiters_per_cpu": 0,
+              "multi_slot": 0,
+              "nested_abort_release": 0,
+              "nested_fast": 0,
+              "nested_jit": 7915795,
+              "nested_lock": 0,
+              "nested_queued": 0,
+              "nested_unlock": 0,
+              "node_overflow": 0,
+              "origin_acquires": 0,
+              "origin_releases": 0,
+              "reserved_nodes": 0,
+              "slowpath": 0
+            },
+            "native": {
+              "completed": 1,
+              "started": 1,
+              "unlocks": 2
+            },
+            "owned": {
+              "batches": 544980,
+              "bodies": 7915795,
+              "early_releases": 0,
+              "refusals": 0
+            },
+            "tasks": {
+              "active_tasks": 0,
+              "task_alloc_failure": 0,
+              "task_reroutes": 2
+            }
+          },
+          "measurement": {
+            "bytes": 2068,
+            "path": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/tests/mutex-owned-v1-final-full-nested-20261013/c01-t16-r00-direct-kdlock-adaptive-owned-v1/measure.json",
+            "sha256": "3462bb33c4313e3865b43f0ecf5272cde145b36e4566f518b2a4f90af75093ab"
+          },
+          "name": "c01-t16-r00-direct-kdlock-adaptive-owned-v1",
+          "session": {
+            "bytes": 9881,
+            "path": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/tests/mutex-owned-v1-final-full-nested-20261013/c01-t16-r00-direct-kdlock-adaptive-owned-v1/session.json",
+            "sha256": "38bf08e65aafafcfd9b9a46b230854d58abcfb8dfacb89b228d50563db314a0b"
+          },
+          "workers": 16
+        }
+      ],
+      "sources": {
+        "compared_to": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/bench/mutex-owned-v1-fullgrid64-20261013",
+        "manifest": {
+          "bytes": 36099,
+          "path": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/tests/mutex-owned-v1-final-full-nested-20261013/source-sha256.json",
+          "sha256": "556cf96d2dca5710846d02ee8bd597a0e7cf907d3febc1c270e320a46deaa562"
+        },
+        "missing_bytes": [],
+        "provider_differences": [],
+        "provider_files": 87,
+        "provider_matches_reference": true,
+        "recorded_files": 315,
+        "verified_files": 315
+      }
+    },
+    {
+      "binaries": {
+        "files": 5,
+        "hashes": {
+          "/root/host_fs/kdlock/bench/spin_cacheline/.build/provider/kernel_module/kdlock_km.ko": "83c0d0bd1b92499af0642f688b01bd9d649ffc7f204719ee94fd1671bd323456",
+          "/root/host_fs/kdlock/bench/spin_cacheline/client": "51e6d2ae116ead6ef42d83de2f0c8a543cdae0382f384ed8e7bc5f76cae9a665",
+          "/root/host_fs/kdlock/bench/tclock_compare/allocator_guard/tc_allocator_guard.ko": "4323537a05b588952ba6800a5b65cf3f0681174c3aa37dd1102e5cc1e963f930",
+          "/root/host_fs/kdlock/daemon/daemon": "5bf8df853e191d87d9bbdb3d3e767f34f4c113f7e06328e8daf35da063daeee8",
+          "/root/kdlock-evidence/10.176.26.71/tests/mutex-owned-v1-final-full-early-20261013/variants/kdlock/mutex_cacheline.ko": "ddbcadbcee231e04da540606f1d50441ed9ab46f224785443b7cef3dbeca33bd"
+        },
+        "manifest": {
+          "bytes": 734,
+          "path": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/tests/mutex-owned-v1-final-full-early-20261013/binary-sha256.json",
+          "sha256": "1bb6f71a09367af0605b4390eeccc0d64f2c9ed1b4b2f503a67564d39727dfe3"
+        }
+      },
+      "collector_topology": null,
+      "environment": {
+        "bytes": 3831,
+        "path": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/tests/mutex-owned-v1-final-full-early-20261013/environment.json",
+        "sha256": "66999f6d85d36d2efc4cf27c178367c61b69cd0d70a9b22644c1bc8814b972a4"
+      },
+      "plan": {
+        "bytes": 3570,
+        "path": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/tests/mutex-owned-v1-final-full-early-20261013/plan.json",
+        "sha256": "456daaa07ce30a9cbe1f352bf7c6c25ba1fec9a0c282c10745d55e23abee33e7"
+      },
+      "refill": false,
+      "scenario": "early",
+      "sessions": [
+        {
+          "completed": 2000000,
+          "drain": {
+            "bytes": 62,
+            "path": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/tests/mutex-owned-v1-final-full-early-20261013/c01-t04-r00-direct-kdlock-adaptive-owned-v1/drain.counts.json",
+            "sha256": "79d4f716aa478c4ff81e08cb0c2baa1b3e45a90fc9860bfd305c07e3c7186c86"
+          },
+          "jit_bodies": 997230,
+          "kernel": {
+            "log": {
+              "bytes": 3138,
+              "path": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/tests/mutex-owned-v1-final-full-early-20261013/c01-t04-r00-direct-kdlock-adaptive-owned-v1/kernel.log",
+              "sha256": "c256af4f83d36c01cb821116969b0dbb23034abe407e9adffde24747696f3654"
+            },
+            "mutex": {
+              "active_waiters": 0,
+              "combiner": 0,
+              "context_busy": 0,
+              "frame_failure": 0,
+              "handoff": 0,
+              "jit_failure": 0,
+              "jit_not_ready": 0,
+              "jit_resume": 0,
+              "jit_success": 0,
+              "max_waiters_per_cpu": 0,
+              "multi_slot": 0,
+              "nested_abort_release": 0,
+              "nested_fast": 0,
+              "nested_jit": 1044708,
+              "nested_lock": 0,
+              "nested_queued": 0,
+              "nested_unlock": 0,
+              "node_overflow": 0,
+              "origin_acquires": 0,
+              "origin_releases": 0,
+              "reserved_nodes": 0,
+              "slowpath": 0
+            },
+            "native": {
+              "completed": 1,
+              "started": 1,
+              "unlocks": 2
+            },
+            "owned": {
+              "batches": 1044709,
+              "bodies": 1044708,
+              "early_releases": 1044709,
+              "refusals": 0
+            },
+            "tasks": {
+              "active_tasks": 0,
+              "task_alloc_failure": 0,
+              "task_reroutes": 1147293
+            }
+          },
+          "measurement": {
+            "bytes": 793,
+            "path": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/tests/mutex-owned-v1-final-full-early-20261013/c01-t04-r00-direct-kdlock-adaptive-owned-v1/measure.json",
+            "sha256": "8c0a0aa1af58f02d8747c84989bbd3852750f566fcf23288a0fcbf15c5348497"
+          },
+          "name": "c01-t04-r00-direct-kdlock-adaptive-owned-v1",
+          "session": {
+            "bytes": 7529,
+            "path": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/tests/mutex-owned-v1-final-full-early-20261013/c01-t04-r00-direct-kdlock-adaptive-owned-v1/session.json",
+            "sha256": "796b7e198f1af870997fb19e8c017bc39598bc388023ab83dd21a1669adeb1a5"
+          },
+          "workers": 4
+        },
+        {
+          "completed": 8000000,
+          "drain": {
+            "bytes": 62,
+            "path": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/tests/mutex-owned-v1-final-full-early-20261013/c01-t16-r00-direct-kdlock-adaptive-owned-v1/drain.counts.json",
+            "sha256": "b1a1889d311c094479b726a927a034ff8371100e1389be994a580080aac9a627"
+          },
+          "jit_bodies": 3969242,
+          "kernel": {
+            "log": {
+              "bytes": 4759,
+              "path": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/tests/mutex-owned-v1-final-full-early-20261013/c01-t16-r00-direct-kdlock-adaptive-owned-v1/kernel.log",
+              "sha256": "f0683132d2abd0e4abbdc905a3d8f30aa9b81bb29dede6223950f1e4feebfbfb"
+            },
+            "mutex": {
+              "active_waiters": 0,
+              "combiner": 0,
+              "context_busy": 0,
+              "frame_failure": 0,
+              "handoff": 0,
+              "jit_failure": 0,
+              "jit_not_ready": 0,
+              "jit_resume": 0,
+              "jit_success": 0,
+              "max_waiters_per_cpu": 0,
+              "multi_slot": 0,
+              "nested_abort_release": 0,
+              "nested_fast": 0,
+              "nested_jit": 4220188,
+              "nested_lock": 0,
+              "nested_queued": 0,
+              "nested_unlock": 0,
+              "node_overflow": 0,
+              "origin_acquires": 0,
+              "origin_releases": 0,
+              "reserved_nodes": 0,
+              "slowpath": 0
+            },
+            "native": {
+              "completed": 1,
+              "started": 1,
+              "unlocks": 2
+            },
+            "owned": {
+              "batches": 4220191,
+              "bodies": 4220188,
+              "early_releases": 4220189,
+              "refusals": 0
+            },
+            "tasks": {
+              "active_tasks": 0,
+              "task_alloc_failure": 0,
+              "task_reroutes": 4547813
+            }
+          },
+          "measurement": {
+            "bytes": 2068,
+            "path": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/tests/mutex-owned-v1-final-full-early-20261013/c01-t16-r00-direct-kdlock-adaptive-owned-v1/measure.json",
+            "sha256": "0fa1baf5e679a802e0298e5ed5d94a8914cb9a7eb57db20c2a2e0ddd94b57112"
+          },
+          "name": "c01-t16-r00-direct-kdlock-adaptive-owned-v1",
+          "session": {
+            "bytes": 9886,
+            "path": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/tests/mutex-owned-v1-final-full-early-20261013/c01-t16-r00-direct-kdlock-adaptive-owned-v1/session.json",
+            "sha256": "cf8eeb9f7fe3c302080a07548efa43efea1527f3cc1132819af07a72889ea0e6"
+          },
+          "workers": 16
+        }
+      ],
+      "sources": {
+        "compared_to": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/bench/mutex-owned-v1-fullgrid64-20261013",
+        "manifest": {
+          "bytes": 36099,
+          "path": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/tests/mutex-owned-v1-final-full-early-20261013/source-sha256.json",
+          "sha256": "556cf96d2dca5710846d02ee8bd597a0e7cf907d3febc1c270e320a46deaa562"
+        },
+        "missing_bytes": [],
+        "provider_differences": [],
+        "provider_files": 87,
+        "provider_matches_reference": true,
+        "recorded_files": 315,
+        "verified_files": 315
+      }
+    }
+  ],
+  "legacy_smoke": {
+    "binaries": {
+      "files": 5,
+      "hashes": {
+        "/root/host_fs/kdlock/bench/spin_cacheline/.build/provider/kernel_module/kdlock_km.ko": "e251375a6ed292dee080af721a3b0dc6b21ecd491d51c6653bd77a31f9edbde6",
+        "/root/host_fs/kdlock/bench/spin_cacheline/client": "51e6d2ae116ead6ef42d83de2f0c8a543cdae0382f384ed8e7bc5f76cae9a665",
+        "/root/host_fs/kdlock/bench/tclock_compare/allocator_guard/tc_allocator_guard.ko": "4323537a05b588952ba6800a5b65cf3f0681174c3aa37dd1102e5cc1e963f930",
+        "/root/host_fs/kdlock/daemon/daemon": "5bf8df853e191d87d9bbdb3d3e767f34f4c113f7e06328e8daf35da063daeee8",
+        "/root/kdlock-evidence/10.176.26.71/tests/mutex-owned-v1-legacy-smoke-20261013/variants/kdlock/mutex_cacheline.ko": "7785eb778f3fbd84d73f23b5342ed147a4c85f36f1d1ea62b758bcfb34b0185d"
+      },
+      "manifest": {
+        "bytes": 730,
+        "path": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/tests/mutex-owned-v1-legacy-smoke-20261013/binary-sha256.json",
+        "sha256": "4d158e29bf599af2d7d1d9e368148a6795ef40f9f8da2e6b30dbab9a7a6feb8f"
+      }
+    },
+    "build": {
+      "argv": [
+        "make",
+        "-C",
+        "/root/host_fs/kdlock/bench/spin_cacheline",
+        "provider",
+        "KDLOCK_NUMA=1",
+        "KDLOCK_SPIN_BATCH=1024",
+        "UBSAN_SANITIZE=n",
+        "KDIR=/root/linux-6.1.159-kdclobber2"
+      ],
+      "command": {
+        "bytes": 332,
+        "path": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/tests/mutex-owned-v1-legacy-smoke-20261013/build-provider.log.command.json",
+        "sha256": "a12a5cd002d0b5f24d0a748de646886815dd1a77118f1ec83a356534d9921cd1"
+      },
+      "compilation_observed": true,
+      "limit": "Incremental logs do not establish a clean rebuild; warnings are retained, not a warning-free claim.",
+      "log": {
+        "bytes": 11831,
+        "path": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/tests/mutex-owned-v1-legacy-smoke-20261013/build-provider.log",
+        "sha256": "dc9dba6aa07608631bed7c4dc920d692f93fb31fb251586c0a00e4f8ced7e4b9"
+      },
+      "module_link_observed": true,
+      "warning_categories": {
+        "objtool": 12,
+        "other": 33
+      },
+      "warning_count": 45,
+      "warning_lines": [
+        "perl: warning: Setting locale failed.",
+        "perl: warning: Please check that your locale settings:",
+        "perl: warning: Falling back to a fallback locale (\"C.UTF-8\").",
+        "perl: warning: Setting locale failed.",
+        "perl: warning: Please check that your locale settings:",
+        "perl: warning: Falling back to a fallback locale (\"C.UTF-8\").",
+        "perl: warning: Setting locale failed.",
+        "perl: warning: Please check that your locale settings:",
+        "perl: warning: Falling back to a fallback locale (\"C.UTF-8\").",
+        "perl: warning: Setting locale failed.",
+        "perl: warning: Please check that your locale settings:",
+        "perl: warning: Falling back to a fallback locale (\"C.UTF-8\").",
+        "perl: warning: Setting locale failed.",
+        "perl: warning: Please check that your locale settings:",
+        "perl: warning: Falling back to a fallback locale (\"C.UTF-8\").",
+        "perl: warning: Setting locale failed.",
+        "perl: warning: Please check that your locale settings:",
+        "perl: warning: Falling back to a fallback locale (\"C.UTF-8\").",
+        "perl: warning: Setting locale failed.",
+        "perl: warning: Please check that your locale settings:",
+        "perl: warning: Falling back to a fallback locale (\"C.UTF-8\").",
+        "perl: warning: Setting locale failed.",
+        "perl: warning: Please check that your locale settings:",
+        "perl: warning: Falling back to a fallback locale (\"C.UTF-8\").",
+        "perl: warning: Setting locale failed.",
+        "perl: warning: Please check that your locale settings:",
+        "perl: warning: Falling back to a fallback locale (\"C.UTF-8\").",
+        "perl: warning: Setting locale failed.",
+        "perl: warning: Please check that your locale settings:",
+        "perl: warning: Falling back to a fallback locale (\"C.UTF-8\").",
+        "perl: warning: Setting locale failed.",
+        "perl: warning: Please check that your locale settings:",
+        "perl: warning: Falling back to a fallback locale (\"C.UTF-8\").",
+        "/root/host_fs/kdlock/bench/spin_cacheline/.build/provider/kernel_module/kdlock_km.o: warning: objtool: kd_spin_restore_request+0x59: 'naked' return found in RETHUNK build",
+        "/root/host_fs/kdlock/bench/spin_cacheline/.build/provider/kernel_module/kdlock_km.o: warning: objtool: kd_spin_restore_request+0x108: 'naked' return found in RETHUNK build",
+        "/root/host_fs/kdlock/bench/spin_cacheline/.build/provider/kernel_module/kdlock_km.o: warning: objtool: jump_to_saved_regs+0x47: 'naked' return found in RETHUNK build",
+        "/root/host_fs/kdlock/bench/spin_cacheline/.build/provider/kernel_module/kdlock_km.o: warning: objtool: jump_to_saved_regs_in_cs+0x49: 'naked' return found in RETHUNK build",
+        "/root/host_fs/kdlock/bench/spin_cacheline/.build/provider/kernel_module/kdlock_km.o: warning: objtool: kd_spin_restore_request+0x103: call without frame pointer save/setup",
+        "/root/host_fs/kdlock/bench/spin_cacheline/.build/provider/kernel_module/kdlock_km.o: warning: objtool: __kd_spin_lock_longjmp+0x89c: call without frame pointer save/setup",
+        "/root/host_fs/kdlock/bench/spin_cacheline/.build/provider/kernel_module/kdlock_km.o: warning: objtool: kd_mutex_execute_cs+0x117f: call without frame pointer save/setup",
+        "/root/host_fs/kdlock/bench/spin_cacheline/.build/provider/kernel_module/kdlock_km.o: warning: objtool: __kd_mutex_lock_slowpath+0x251: call without frame pointer save/setup",
+        "/root/host_fs/kdlock/bench/spin_cacheline/.build/provider/kernel_module/kdlock_km.o: warning: objtool: kd_mutex_lock_slowpath_asm.cold+0x11: call without frame pointer save/setup",
+        "/root/host_fs/kdlock/bench/spin_cacheline/.build/provider/kernel_module/kdlock_km.o: warning: objtool: jump_to_saved_regs_in_cs+0x49: return with modified stack frame",
+        "/root/host_fs/kdlock/bench/spin_cacheline/.build/provider/kernel_module/kdlock_km.o: warning: objtool: kd_mutex_resume_completed+0xe6: return with modified stack frame",
+        "/root/host_fs/kdlock/bench/spin_cacheline/.build/provider/kernel_module/kdlock_km.o: warning: objtool: kd_owned_mutex_resume+0xb9: return with modified stack frame"
+      ]
+    },
+    "collector_topology": null,
+    "environment": {
+      "bytes": 3808,
+      "path": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/tests/mutex-owned-v1-legacy-smoke-20261013/environment.json",
+      "sha256": "0029cf182d9aa3607682372d9af7c607763bfd229e12ea7f772a23a3bede4d56"
+    },
+    "legacy_idle_evidence": {
+      "mechanism": "Successful SC_WORKERS_DRAIN precedes complete client JSON; frozen workload requires zero owner word, empty native wait_list and unlocked OSQ. Kernel counters separately prove legacy queue/task/frame drain.",
+      "sources": [
+        {
+          "bytes": 3798,
+          "path": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/tests/mutex-owned-v1-legacy-smoke-20261013/source/workload_modules/mutex_cacheline/module.c",
+          "sha256": "c495d292f93f10d62fe87c105c65b75ec8623169ced53ef2db3fe76b14d15285"
+        },
+        {
+          "bytes": 18764,
+          "path": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/tests/mutex-owned-v1-legacy-smoke-20261013/source/bench/spin_cacheline/client.c",
+          "sha256": "59b85e4490e5d1f1c555358bd48d01bd74c91c27ae497158645014289e99141a"
+        },
+        {
+          "bytes": 10263,
+          "path": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/tests/mutex-owned-v1-legacy-smoke-20261013/source/workload_modules/spin_cacheline/runner.inc",
+          "sha256": "e1774a9dc57b4397b6f44be034f51204c1bcf8e1a1719fc33c63f81bed739a76"
+        }
+      ]
+    },
+    "plan": {
+      "bytes": 3596,
+      "path": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/tests/mutex-owned-v1-legacy-smoke-20261013/plan.json",
+      "sha256": "8e9361c4a38b9f2e23eacf8ab70f77461645633eda8cbe7bc22681be2641031e"
+    },
+    "refill": false,
+    "scenario": "plain",
+    "scope": "Current-provider legacy compatibility smoke only; no throughput acceptance.",
+    "sessions": [
+      {
+        "completed": 2000000,
+        "drain": {
+          "bytes": 62,
+          "path": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/tests/mutex-owned-v1-legacy-smoke-20261013/c01-t04-r00-direct-kdlock-adaptive/drain.counts.json",
+          "sha256": "79d4f716aa478c4ff81e08cb0c2baa1b3e45a90fc9860bfd305c07e3c7186c86"
+        },
+        "jit_bodies": 414157,
+        "kernel": {
+          "log": {
+            "bytes": 3714,
+            "path": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/tests/mutex-owned-v1-legacy-smoke-20261013/c01-t04-r00-direct-kdlock-adaptive/kernel.log",
+            "sha256": "c5b5049433e33a294dc705485fde27a6090490813bd8f2450edc9555f11c93df"
+          },
+          "mutex": {
+            "active_waiters": 0,
+            "combiner": 162295,
+            "context_busy": 0,
+            "frame_failure": 0,
+            "handoff": 0,
+            "jit_failure": 0,
+            "jit_not_ready": 0,
+            "jit_resume": 443616,
+            "jit_success": 443616,
+            "max_waiters_per_cpu": 1,
+            "multi_slot": 0,
+            "nested_abort_release": 0,
+            "nested_fast": 0,
+            "nested_jit": 0,
+            "nested_lock": 0,
+            "nested_queued": 0,
+            "nested_unlock": 0,
+            "node_overflow": 0,
+            "origin_acquires": 308327,
+            "origin_releases": 308327,
+            "reserved_nodes": 0,
+            "slowpath": 609309
+          },
+          "native": {
+            "completed": 0,
+            "started": 0,
+            "unlocks": 0
+          },
+          "owned": {
+            "batches": 0,
+            "bodies": 0,
+            "early_releases": 0,
+            "refusals": 0
+          },
+          "tasks": {
+            "active_tasks": 0,
+            "task_alloc_failure": 0,
+            "task_reroutes": 308327
+          }
+        },
+        "measurement": {
+          "bytes": 788,
+          "path": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/tests/mutex-owned-v1-legacy-smoke-20261013/c01-t04-r00-direct-kdlock-adaptive/measure.json",
+          "sha256": "a543715abb7e72efa34d1d51a41fc1f94a2aa85f61b12f94b0e1084433a769e1"
+        },
+        "name": "c01-t04-r00-direct-kdlock-adaptive",
+        "session": {
+          "bytes": 7305,
+          "path": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/tests/mutex-owned-v1-legacy-smoke-20261013/c01-t04-r00-direct-kdlock-adaptive/session.json",
+          "sha256": "a434fa1b4a2aa25d59037feba26c99dd01460a9f205585c5d5ed4a6c9ae71e22"
+        },
+        "workers": 4
+      },
+      {
+        "completed": 8000000,
+        "drain": {
+          "bytes": 62,
+          "path": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/tests/mutex-owned-v1-legacy-smoke-20261013/c01-t16-r00-direct-kdlock-adaptive/drain.counts.json",
+          "sha256": "b1a1889d311c094479b726a927a034ff8371100e1389be994a580080aac9a627"
+        },
+        "jit_bodies": 7964008,
+        "kernel": {
+          "log": {
+            "bytes": 7467,
+            "path": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/tests/mutex-owned-v1-legacy-smoke-20261013/c01-t16-r00-direct-kdlock-adaptive/kernel.log",
+            "sha256": "3ea1c16bcc5b0b42905b5be3f7f7e8c8c7e11b6f2573b749e46d92a4e6d9f452"
+          },
+          "mutex": {
+            "active_waiters": 0,
+            "combiner": 10596,
+            "context_busy": 0,
+            "frame_failure": 0,
+            "handoff": 0,
+            "jit_failure": 0,
+            "jit_not_ready": 0,
+            "jit_resume": 8631147,
+            "jit_success": 8631147,
+            "max_waiters_per_cpu": 1,
+            "multi_slot": 0,
+            "nested_abort_release": 0,
+            "nested_fast": 0,
+            "nested_jit": 0,
+            "nested_lock": 0,
+            "nested_queued": 0,
+            "nested_unlock": 0,
+            "node_overflow": 0,
+            "origin_acquires": 14993,
+            "origin_releases": 14993,
+            "reserved_nodes": 0,
+            "slowpath": 8642647
+          },
+          "native": {
+            "completed": 0,
+            "started": 0,
+            "unlocks": 0
+          },
+          "owned": {
+            "batches": 0,
+            "bodies": 0,
+            "early_releases": 0,
+            "refusals": 0
+          },
+          "tasks": {
+            "active_tasks": 0,
+            "task_alloc_failure": 0,
+            "task_reroutes": 14993
+          }
+        },
+        "measurement": {
+          "bytes": 2067,
+          "path": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/tests/mutex-owned-v1-legacy-smoke-20261013/c01-t16-r00-direct-kdlock-adaptive/measure.json",
+          "sha256": "e1b57a1ecb9f9475923f2909674298cc9e75e9c31a42d6d8f5244af89e16bb6c"
+        },
+        "name": "c01-t16-r00-direct-kdlock-adaptive",
+        "session": {
+          "bytes": 9640,
+          "path": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/tests/mutex-owned-v1-legacy-smoke-20261013/c01-t16-r00-direct-kdlock-adaptive/session.json",
+          "sha256": "5e75bc9acb6f81cf4432d2c20d79b68c5dce6ad09c094561888f6605db78b985"
+        },
+        "workers": 16
+      }
+    ],
+    "sources": {
+      "compared_to": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/bench/mutex-owned-v1-refill64-20261013",
+      "manifest": {
+        "bytes": 36099,
+        "path": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/tests/mutex-owned-v1-legacy-smoke-20261013/source-sha256.json",
+        "sha256": "2fe489a2bbade807c7f44d0460359d678cf26efc82171cf3c869bff1e2c222d2"
+      },
+      "missing_bytes": [],
+      "provider_differences": [],
+      "provider_files": 87,
+      "provider_matches_reference": true,
+      "recorded_files": 315,
+      "verified_files": 315
+    },
+    "workload_build": {
+      "argv": [
+        "make",
+        "-C",
+        "/root/kdlock-evidence/10.176.26.71/tests/mutex-owned-v1-legacy-smoke-20261013/variants/kdlock",
+        "KDIR=/root/linux-6.1.159-kdclobber2",
+        "SC_BACKEND=kdlock",
+        "SC_WORKLOAD=cacheline",
+        "SC_MUTEX_OWNED=0",
+        "SC_SCENARIO=0",
+        "KDLOCK_INCLUDE=/root/host_fs/kdlock/include",
+        "SC_SHARED=/root/host_fs/kdlock/workload_modules/spin_cacheline",
+        "TCLOCK_INCLUDE=/root/host_fs/kdlock/tclock_backend/include",
+        "KBUILD_EXTRA_SYMBOLS=/root/host_fs/kdlock/bench/spin_cacheline/.build/provider/kernel_module/Module.symvers"
+      ],
+      "command": {
+        "bytes": 694,
+        "path": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/tests/mutex-owned-v1-legacy-smoke-20261013/build-kdlock.log.command.json",
+        "sha256": "e0b4eeef525ba75869d30ae6d7dcf2b9145cc479ef5434cdf313dc4fb270b778"
+      },
+      "compilation_observed": true,
+      "limit": "Incremental logs do not establish a clean rebuild; warnings are retained, not a warning-free claim.",
+      "log": {
+        "bytes": 2116,
+        "path": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/tests/mutex-owned-v1-legacy-smoke-20261013/build-kdlock.log",
+        "sha256": "a8ba51fcd9cb48efedfaaef6214f0010e29f2b2290af4c13d0fa121ae18cf2be"
+      },
+      "module_link_observed": false,
+      "warning_categories": {
+        "objtool": 1,
+        "other": 3
+      },
+      "warning_count": 4,
+      "warning_lines": [
+        "perl: warning: Setting locale failed.",
+        "perl: warning: Please check that your locale settings:",
+        "perl: warning: Falling back to a fallback locale (\"C.UTF-8\").",
+        "/root/kdlock-evidence/10.176.26.71/tests/mutex-owned-v1-legacy-smoke-20261013/variants/kdlock/mutex_cacheline.o: warning: objtool: mc_body_16+0x1b6: unreachable instruction"
+      ]
+    }
+  },
+  "probes": [
+    {
+      "build": {
+        "argv": [
+          "make",
+          "-C",
+          "/root/host_fs/kdlock/kernel_module",
+          "KDIR=/root/linux-6.1.159-kdclobber2",
+          "KDLOCK_SELFTEST=1",
+          "UBSAN_SANITIZE=n",
+          "W=1"
+        ],
+        "command": {
+          "bytes": 294,
+          "path": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/tests/mutex-owned-v1-cooling-20261013/build.log.command.json",
+          "sha256": "8794f9366ace131515d9d91de27b44a6e74b071f5fe6e741cdaea3339cc9d650"
+        },
+        "compilation_observed": true,
+        "limit": "Incremental logs do not establish a clean rebuild; warnings are retained, not a warning-free claim.",
+        "log": {
+          "bytes": 8436,
+          "path": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/tests/mutex-owned-v1-cooling-20261013/build.log",
+          "sha256": "ee0cfc7b957d8c1d5f3d798f46c87d3ec8d4fdf0732e4db12b3c02458f47916c"
+        },
+        "module_link_observed": true,
+        "warning_categories": {
+          "objtool": 12,
+          "other": 30
+        },
+        "warning_count": 42,
+        "warning_lines": [
+          "perl: warning: Setting locale failed.",
+          "perl: warning: Please check that your locale settings:",
+          "perl: warning: Falling back to a fallback locale (\"C.UTF-8\").",
+          "perl: warning: Setting locale failed.",
+          "perl: warning: Please check that your locale settings:",
+          "perl: warning: Falling back to a fallback locale (\"C.UTF-8\").",
+          "perl: warning: Setting locale failed.",
+          "perl: warning: Please check that your locale settings:",
+          "perl: warning: Falling back to a fallback locale (\"C.UTF-8\").",
+          "perl: warning: Setting locale failed.",
+          "perl: warning: Please check that your locale settings:",
+          "perl: warning: Falling back to a fallback locale (\"C.UTF-8\").",
+          "perl: warning: Setting locale failed.",
+          "perl: warning: Please check that your locale settings:",
+          "perl: warning: Falling back to a fallback locale (\"C.UTF-8\").",
+          "perl: warning: Setting locale failed.",
+          "perl: warning: Please check that your locale settings:",
+          "perl: warning: Falling back to a fallback locale (\"C.UTF-8\").",
+          "perl: warning: Setting locale failed.",
+          "perl: warning: Please check that your locale settings:",
+          "perl: warning: Falling back to a fallback locale (\"C.UTF-8\").",
+          "perl: warning: Setting locale failed.",
+          "perl: warning: Please check that your locale settings:",
+          "perl: warning: Falling back to a fallback locale (\"C.UTF-8\").",
+          "perl: warning: Setting locale failed.",
+          "perl: warning: Please check that your locale settings:",
+          "perl: warning: Falling back to a fallback locale (\"C.UTF-8\").",
+          "perl: warning: Setting locale failed.",
+          "perl: warning: Please check that your locale settings:",
+          "perl: warning: Falling back to a fallback locale (\"C.UTF-8\").",
+          "/root/host_fs/kdlock/kernel_module/kdlock_km.o: warning: objtool: kd_spin_restore_request+0x59: 'naked' return found in RETHUNK build",
+          "/root/host_fs/kdlock/kernel_module/kdlock_km.o: warning: objtool: kd_spin_restore_request+0x108: 'naked' return found in RETHUNK build",
+          "/root/host_fs/kdlock/kernel_module/kdlock_km.o: warning: objtool: jump_to_saved_regs+0x47: 'naked' return found in RETHUNK build",
+          "/root/host_fs/kdlock/kernel_module/kdlock_km.o: warning: objtool: jump_to_saved_regs_in_cs+0x49: 'naked' return found in RETHUNK build",
+          "/root/host_fs/kdlock/kernel_module/kdlock_km.o: warning: objtool: kd_spin_restore_request+0x103: call without frame pointer save/setup",
+          "/root/host_fs/kdlock/kernel_module/kdlock_km.o: warning: objtool: __kd_spin_lock_longjmp+0xa23: call without frame pointer save/setup",
+          "/root/host_fs/kdlock/kernel_module/kdlock_km.o: warning: objtool: kd_mutex_execute_cs+0x147: call without frame pointer save/setup",
+          "/root/host_fs/kdlock/kernel_module/kdlock_km.o: warning: objtool: __kd_mutex_lock_slowpath+0x108: call without frame pointer save/setup",
+          "/root/host_fs/kdlock/kernel_module/kdlock_km.o: warning: objtool: kd_mutex_lock_slowpath_asm.cold+0x11: call without frame pointer save/setup",
+          "/root/host_fs/kdlock/kernel_module/kdlock_km.o: warning: objtool: jump_to_saved_regs_in_cs+0x49: return with modified stack frame",
+          "/root/host_fs/kdlock/kernel_module/kdlock_km.o: warning: objtool: kd_mutex_resume_completed+0xe6: return with modified stack frame",
+          "/root/host_fs/kdlock/kernel_module/kdlock_km.o: warning: objtool: kd_owned_mutex_resume+0xb9: return with modified stack frame"
+        ]
+      },
+      "identity": {
+        "bytes": 166,
+        "path": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/tests/mutex-owned-v1-cooling-20261013/identity.json",
+        "sha256": "4a1c43b75a8ab22d0d1fcc54b8c6e1d283e2e1bffbc727afb723fb849879b174"
+      },
+      "kernels": [
+        {
+          "log": {
+            "bytes": 3514,
+            "path": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/tests/mutex-owned-v1-cooling-20261013/spin-0/kernel.log",
+            "sha256": "2cccd47b299d1ea6e727cafc0a3e2b7d6bc845f24cebfe223d3e10131800e10f"
+          },
+          "mutex": {
+            "active_waiters": 0,
+            "combiner": 0,
+            "context_busy": 0,
+            "frame_failure": 0,
+            "handoff": 0,
+            "jit_failure": 0,
+            "jit_not_ready": 0,
+            "jit_resume": 0,
+            "jit_success": 0,
+            "max_waiters_per_cpu": 0,
+            "multi_slot": 0,
+            "nested_abort_release": 0,
+            "nested_fast": 0,
+            "nested_jit": 0,
+            "nested_lock": 0,
+            "nested_queued": 0,
+            "nested_unlock": 0,
+            "node_overflow": 0,
+            "origin_acquires": 0,
+            "origin_releases": 0,
+            "reserved_nodes": 0,
+            "slowpath": 0
+          },
+          "native": {
+            "completed": 0,
+            "started": 0,
+            "unlocks": 0
+          },
+          "owned": {
+            "batches": 1,
+            "bodies": 0,
+            "early_releases": 0,
+            "refusals": 1
+          },
+          "tasks": {
+            "active_tasks": 0,
+            "task_alloc_failure": 0,
+            "task_reroutes": 0
+          }
+        },
+        {
+          "log": {
+            "bytes": 3514,
+            "path": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/tests/mutex-owned-v1-cooling-20261013/spin-1024/kernel.log",
+            "sha256": "b04be7abbe188c3138fcd81f2269a796de1a7420020109dd8653ff44b16c5453"
+          },
+          "mutex": {
+            "active_waiters": 0,
+            "combiner": 0,
+            "context_busy": 0,
+            "frame_failure": 0,
+            "handoff": 0,
+            "jit_failure": 0,
+            "jit_not_ready": 0,
+            "jit_resume": 0,
+            "jit_success": 0,
+            "max_waiters_per_cpu": 0,
+            "multi_slot": 0,
+            "nested_abort_release": 0,
+            "nested_fast": 0,
+            "nested_jit": 0,
+            "nested_lock": 0,
+            "nested_queued": 0,
+            "nested_unlock": 0,
+            "node_overflow": 0,
+            "origin_acquires": 0,
+            "origin_releases": 0,
+            "reserved_nodes": 0,
+            "slowpath": 0
+          },
+          "native": {
+            "completed": 0,
+            "started": 0,
+            "unlocks": 0
+          },
+          "owned": {
+            "batches": 1,
+            "bodies": 0,
+            "early_releases": 0,
+            "refusals": 1
+          },
+          "tasks": {
+            "active_tasks": 0,
+            "task_alloc_failure": 0,
+            "task_reroutes": 0
+          }
+        },
+        {
+          "log": {
+            "bytes": 3514,
+            "path": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/tests/mutex-owned-v1-cooling-20261013/spin-4096/kernel.log",
+            "sha256": "e6440a4d96e3328272b256e24c8bcffe0edca8c699666d7d19be97a9f427db01"
+          },
+          "mutex": {
+            "active_waiters": 0,
+            "combiner": 0,
+            "context_busy": 0,
+            "frame_failure": 0,
+            "handoff": 0,
+            "jit_failure": 0,
+            "jit_not_ready": 0,
+            "jit_resume": 0,
+            "jit_success": 0,
+            "max_waiters_per_cpu": 0,
+            "multi_slot": 0,
+            "nested_abort_release": 0,
+            "nested_fast": 0,
+            "nested_jit": 0,
+            "nested_lock": 0,
+            "nested_queued": 0,
+            "nested_unlock": 0,
+            "node_overflow": 0,
+            "origin_acquires": 0,
+            "origin_releases": 0,
+            "reserved_nodes": 0,
+            "slowpath": 0
+          },
+          "native": {
+            "completed": 0,
+            "started": 0,
+            "unlocks": 0
+          },
+          "owned": {
+            "batches": 1,
+            "bodies": 0,
+            "early_releases": 0,
+            "refusals": 1
+          },
+          "tasks": {
+            "active_tasks": 0,
+            "task_alloc_failure": 0,
+            "task_reroutes": 0
+          }
+        }
+      ],
+      "kind": "owned",
+      "module": {
+        "bytes": 4233872,
+        "path": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/tests/mutex-owned-v1-cooling-20261013/kdlock_km.ko",
+        "sha256": "b26bb03780030bb7fc2dc7d3ecbcb169c664073beafca4c1ac569204a84ec190"
+      },
+      "result": {
+        "drained": true,
+        "passed": true,
+        "results": [
+          {
+            "drained": true,
+            "jit_bodies": 0,
+            "pickup": true,
+            "queued_cooling": true,
+            "result_sleep": true,
+            "spin_limit": 0
+          },
+          {
+            "drained": true,
+            "jit_bodies": 0,
+            "pickup": true,
+            "queued_cooling": true,
+            "result_sleep": true,
+            "spin_limit": 1024
+          },
+          {
+            "drained": true,
+            "jit_bodies": 0,
+            "pickup": true,
+            "queued_cooling": true,
+            "result_sleep": true,
+            "spin_limit": 4096
+          }
+        ]
+      },
+      "result_artifact": {
+        "bytes": 548,
+        "path": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/tests/mutex-owned-v1-cooling-20261013/result.json",
+        "sha256": "5f912b7f3a0b62b7a98c161df47600a035147f0a4f1b368076a412cba57d7161"
+      },
+      "scope": "Live resource/lifetime probe; zero returned JIT bodies.",
+      "source_limit": "Cooling was run before the ordinary nested-unlock correction. Its exact source and differing core.c hash are retained; it is not a fresh final/refill-core cooling run.",
+      "sources": {
+        "compared_to": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/bench/mutex-owned-v1-fullgrid64-20261013",
+        "manifest": {
+          "bytes": 9768,
+          "path": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/tests/mutex-owned-v1-cooling-20261013/sources.json",
+          "sha256": "a99dbf5f2ef90640424981a299d5b620c632f24155caa505630ce61f9962ab4b"
+        },
+        "missing_bytes": [],
+        "provider_differences": [
+          "kernel_module/owned_mutex/core.c"
+        ],
+        "provider_files": 87,
+        "provider_matches_reference": false,
+        "recorded_files": 95,
+        "verified_files": 95
+      }
+    },
+    {
+      "build": {
+        "argv": [
+          "make",
+          "-C",
+          "/root/host_fs/kdlock/kernel_module",
+          "KDIR=/root/linux-6.1.159-kdclobber2",
+          "KDLOCK_SELFTEST=1",
+          "UBSAN_SANITIZE=n",
+          "W=1"
+        ],
+        "command": {
+          "bytes": 294,
+          "path": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/tests/mutex-owned-v1-final-task-r2-20261013/build.log.command.json",
+          "sha256": "48312461de2c18aa1cdddfe3fbb00a2a2fe25265c1bde56dcdd9b9b23ea7ed82"
+        },
+        "compilation_observed": false,
+        "limit": "Incremental logs do not establish a clean rebuild; warnings are retained, not a warning-free claim.",
+        "log": {
+          "bytes": 354,
+          "path": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/tests/mutex-owned-v1-final-task-r2-20261013/build.log",
+          "sha256": "f288d1bee88aeb491032c1a4f25c2072e2b8870f83c0942b169e0f36b9979362"
+        },
+        "module_link_observed": false,
+        "warning_categories": {},
+        "warning_count": 0,
+        "warning_lines": []
+      },
+      "identity": {
+        "bytes": 343,
+        "path": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/tests/mutex-owned-v1-final-task-r2-20261013/identity.json",
+        "sha256": "c5751cde7d71ac1b4dbe2f42b677f7b646484403456ffe848db18435d8a46394"
+      },
+      "kernels": [
+        {
+          "log": {
+            "bytes": 4771,
+            "path": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/tests/mutex-owned-v1-final-task-r2-20261013/kernel.log",
+            "sha256": "5c48d5e48f8a880ee4e73633abbe56db88a76504418f75eba680ae07311df405"
+          },
+          "mutex": {
+            "active_waiters": 0,
+            "combiner": 0,
+            "context_busy": 0,
+            "frame_failure": 0,
+            "handoff": 0,
+            "jit_failure": 0,
+            "jit_not_ready": 0,
+            "jit_resume": 0,
+            "jit_success": 0,
+            "max_waiters_per_cpu": 0,
+            "multi_slot": 0,
+            "nested_abort_release": 0,
+            "nested_fast": 0,
+            "nested_jit": 0,
+            "nested_lock": 0,
+            "nested_queued": 0,
+            "nested_unlock": 2,
+            "node_overflow": 0,
+            "origin_acquires": 0,
+            "origin_releases": 0,
+            "reserved_nodes": 0,
+            "slowpath": 0
+          },
+          "native": {
+            "completed": 2,
+            "started": 2,
+            "unlocks": 4
+          },
+          "owned": {
+            "batches": 0,
+            "bodies": 0,
+            "early_releases": 0,
+            "refusals": 0
+          },
+          "tasks": {
+            "active_tasks": 0,
+            "task_alloc_failure": 2,
+            "task_reroutes": 4
+          }
+        }
+      ],
+      "kind": "task",
+      "module": {
+        "bytes": 4237584,
+        "path": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/tests/mutex-owned-v1-final-task-r2-20261013/kdlock_km.ko",
+        "sha256": "33fb822bed2ac0e4f45acf483ad60bf186d849044f741fc09d6a4e76e345364a"
+      },
+      "result": {
+        "acks": 4,
+        "deferred_frees": 2,
+        "drained": true,
+        "jit": false,
+        "jit_bodies": 0,
+        "mutex_jit_required": true,
+        "mutex_wait_mode": "blocking",
+        "orders": [
+          "B-A",
+          "A-B"
+        ],
+        "passed": true,
+        "registry_stress_deferred_frees": 3,
+        "registry_stress_iterations": 4096,
+        "registry_stress_workers": 3,
+        "scope": "task_owner_ack_resource_probe"
+      },
+      "result_artifact": {
+        "bytes": 367,
+        "path": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/tests/mutex-owned-v1-final-task-r2-20261013/result.json",
+        "sha256": "e2c8caca79a208e73f28b5737db080a31f7769ea61e25a768d4bdd8c287edf42"
+      },
+      "scope": "Live resource/lifetime probe; zero returned JIT bodies.",
+      "sources": {
+        "compared_to": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/bench/mutex-owned-v1-fullgrid64-20261013",
+        "manifest": {
+          "bytes": 9768,
+          "path": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/tests/mutex-owned-v1-final-task-r2-20261013/sources.json",
+          "sha256": "88d66a43a3f0bea184cd2aaa657a743acc00e2e33ff9f83ead8962367ba3c91a"
+        },
+        "missing_bytes": [],
+        "provider_differences": [],
+        "provider_files": 87,
+        "provider_matches_reference": true,
+        "recorded_files": 95,
+        "verified_files": 95
+      }
+    },
+    {
+      "build": {
+        "argv": [
+          "make",
+          "-C",
+          "/root/host_fs/kdlock/kernel_module",
+          "KDIR=/root/linux-6.1.159-kdclobber2",
+          "KDLOCK_SELFTEST=1",
+          "UBSAN_SANITIZE=n",
+          "W=1"
+        ],
+        "command": {
+          "bytes": 294,
+          "path": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/tests/mutex-owned-v1-final-legacy-wait-20261013/build.log.command.json",
+          "sha256": "f75256728b27264b60345bdc80479eec52f521db66aaec70b2f2a6d466fb302a"
+        },
+        "compilation_observed": false,
+        "limit": "Incremental logs do not establish a clean rebuild; warnings are retained, not a warning-free claim.",
+        "log": {
+          "bytes": 354,
+          "path": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/tests/mutex-owned-v1-final-legacy-wait-20261013/build.log",
+          "sha256": "f288d1bee88aeb491032c1a4f25c2072e2b8870f83c0942b169e0f36b9979362"
+        },
+        "module_link_observed": false,
+        "warning_categories": {},
+        "warning_count": 0,
+        "warning_lines": []
+      },
+      "identity": {
+        "bytes": 166,
+        "path": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/tests/mutex-owned-v1-final-legacy-wait-20261013/identity.json",
+        "sha256": "86a13fbcdfbaf92a3ea34725b900ac87245c5d742fd8706d700d96342c4b51c7"
+      },
+      "kernels": [
+        {
+          "log": {
+            "bytes": 3553,
+            "path": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/tests/mutex-owned-v1-final-legacy-wait-20261013/spin-0/kernel.log",
+            "sha256": "6b7a71fe9391fc01bf7b371045dd6b34f744eec76fd92a40d9f825beea1a7dee"
+          },
+          "mutex": {
+            "active_waiters": 0,
+            "combiner": 0,
+            "context_busy": 0,
+            "frame_failure": 0,
+            "handoff": 0,
+            "jit_failure": 0,
+            "jit_not_ready": 0,
+            "jit_resume": 0,
+            "jit_success": 0,
+            "max_waiters_per_cpu": 1,
+            "multi_slot": 0,
+            "nested_abort_release": 0,
+            "nested_fast": 0,
+            "nested_jit": 0,
+            "nested_lock": 0,
+            "nested_queued": 0,
+            "nested_unlock": 0,
+            "node_overflow": 0,
+            "origin_acquires": 2,
+            "origin_releases": 2,
+            "reserved_nodes": 0,
+            "slowpath": 0
+          },
+          "native": {
+            "completed": 0,
+            "started": 0,
+            "unlocks": 0
+          },
+          "owned": {
+            "batches": 0,
+            "bodies": 0,
+            "early_releases": 0,
+            "refusals": 0
+          },
+          "tasks": {
+            "active_tasks": 0,
+            "task_alloc_failure": 0,
+            "task_reroutes": 0
+          }
+        },
+        {
+          "log": {
+            "bytes": 3552,
+            "path": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/tests/mutex-owned-v1-final-legacy-wait-20261013/spin-1024/kernel.log",
+            "sha256": "c79448090427e58de2eccd9440df8680772267dd901f3f89246481a01af7864c"
+          },
+          "mutex": {
+            "active_waiters": 0,
+            "combiner": 0,
+            "context_busy": 0,
+            "frame_failure": 0,
+            "handoff": 0,
+            "jit_failure": 0,
+            "jit_not_ready": 0,
+            "jit_resume": 0,
+            "jit_success": 0,
+            "max_waiters_per_cpu": 1,
+            "multi_slot": 0,
+            "nested_abort_release": 0,
+            "nested_fast": 0,
+            "nested_jit": 0,
+            "nested_lock": 0,
+            "nested_queued": 0,
+            "nested_unlock": 0,
+            "node_overflow": 0,
+            "origin_acquires": 2,
+            "origin_releases": 2,
+            "reserved_nodes": 0,
+            "slowpath": 0
+          },
+          "native": {
+            "completed": 0,
+            "started": 0,
+            "unlocks": 0
+          },
+          "owned": {
+            "batches": 0,
+            "bodies": 0,
+            "early_releases": 0,
+            "refusals": 0
+          },
+          "tasks": {
+            "active_tasks": 0,
+            "task_alloc_failure": 0,
+            "task_reroutes": 0
+          }
+        },
+        {
+          "log": {
+            "bytes": 3550,
+            "path": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/tests/mutex-owned-v1-final-legacy-wait-20261013/spin-4096/kernel.log",
+            "sha256": "81cdb281e4c5e3ec484a961e078a6b901beb24a6c03f31ec532f187d658b5623"
+          },
+          "mutex": {
+            "active_waiters": 0,
+            "combiner": 0,
+            "context_busy": 0,
+            "frame_failure": 0,
+            "handoff": 0,
+            "jit_failure": 0,
+            "jit_not_ready": 0,
+            "jit_resume": 0,
+            "jit_success": 0,
+            "max_waiters_per_cpu": 1,
+            "multi_slot": 0,
+            "nested_abort_release": 0,
+            "nested_fast": 0,
+            "nested_jit": 0,
+            "nested_lock": 0,
+            "nested_queued": 0,
+            "nested_unlock": 0,
+            "node_overflow": 0,
+            "origin_acquires": 2,
+            "origin_releases": 2,
+            "reserved_nodes": 0,
+            "slowpath": 0
+          },
+          "native": {
+            "completed": 0,
+            "started": 0,
+            "unlocks": 0
+          },
+          "owned": {
+            "batches": 0,
+            "bodies": 0,
+            "early_releases": 0,
+            "refusals": 0
+          },
+          "tasks": {
+            "active_tasks": 0,
+            "task_alloc_failure": 0,
+            "task_reroutes": 0
+          }
+        }
+      ],
+      "kind": "legacy",
+      "module": {
+        "bytes": 4237584,
+        "path": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/tests/mutex-owned-v1-final-legacy-wait-20261013/kdlock_km.ko",
+        "sha256": "33fb822bed2ac0e4f45acf483ad60bf186d849044f741fc09d6a4e76e345364a"
+      },
+      "result": {
+        "drained": true,
+        "passed": true,
+        "results": [
+          {
+            "admission_cooling_checks": 2,
+            "deferred_progress": true,
+            "drained": true,
+            "errors": 0,
+            "gate_sleep": true,
+            "jit_bodies": 0,
+            "result_sleep": true,
+            "rounds": 1024,
+            "spin_limit": 0,
+            "voluntary_switches": 2055
+          },
+          {
+            "admission_cooling_checks": 2,
+            "deferred_progress": true,
+            "drained": true,
+            "errors": 0,
+            "gate_sleep": true,
+            "jit_bodies": 0,
+            "result_sleep": true,
+            "rounds": 1024,
+            "spin_limit": 1024,
+            "voluntary_switches": 1098
+          },
+          {
+            "admission_cooling_checks": 2,
+            "deferred_progress": true,
+            "drained": true,
+            "errors": 0,
+            "gate_sleep": true,
+            "jit_bodies": 0,
+            "result_sleep": true,
+            "rounds": 1024,
+            "spin_limit": 4096,
+            "voluntary_switches": 1031
+          }
+        ]
+      },
+      "result_artifact": {
+        "bytes": 905,
+        "path": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/tests/mutex-owned-v1-final-legacy-wait-20261013/result.json",
+        "sha256": "2dba91b3fa5d3926844074a2a216e04345169254145ba75b12c8b2c4e25b5edf"
+      },
+      "scope": "Live resource/lifetime probe; zero returned JIT bodies.",
+      "sources": {
+        "compared_to": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/bench/mutex-owned-v1-fullgrid64-20261013",
+        "manifest": {
+          "bytes": 9768,
+          "path": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/tests/mutex-owned-v1-final-legacy-wait-20261013/sources.json",
+          "sha256": "88d66a43a3f0bea184cd2aaa657a743acc00e2e33ff9f83ead8962367ba3c91a"
+        },
+        "missing_bytes": [],
+        "provider_differences": [],
+        "provider_files": 87,
+        "provider_matches_reference": true,
+        "recorded_files": 95,
+        "verified_files": 95
+      }
+    }
+  ],
+  "raw": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013",
+  "refill": {
+    "full": [
+      {
+        "binaries": {
+          "files": 5,
+          "hashes": {
+            "/root/host_fs/kdlock/bench/spin_cacheline/.build/provider/kernel_module/kdlock_km.ko": "9ac77ece749d70e44dbeaaa761d7ab0dc1bd3e0e2c7489fcee48c607efd8dbff",
+            "/root/host_fs/kdlock/bench/spin_cacheline/client": "51e6d2ae116ead6ef42d83de2f0c8a543cdae0382f384ed8e7bc5f76cae9a665",
+            "/root/host_fs/kdlock/bench/tclock_compare/allocator_guard/tc_allocator_guard.ko": "4323537a05b588952ba6800a5b65cf3f0681174c3aa37dd1102e5cc1e963f930",
+            "/root/host_fs/kdlock/daemon/daemon": "5bf8df853e191d87d9bbdb3d3e767f34f4c113f7e06328e8daf35da063daeee8",
+            "/root/kdlock-evidence/10.176.26.71/tests/mutex-owned-v1-refill-full-nested-20261013/variants/kdlock/mutex_cacheline.ko": "24cf3fef350afb659062ff4729916f29b0c1d22f5752a963ff47e13f710a5496"
+          },
+          "manifest": {
+            "bytes": 736,
+            "path": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/tests/mutex-owned-v1-refill-full-nested-20261013/binary-sha256.json",
+            "sha256": "a5ea88dfc99bdd1b06362348c69fb8bd458a7d902f75502bc9501de26b4f535a"
+          }
+        },
+        "collector_topology": null,
+        "environment": {
+          "bytes": 3862,
+          "path": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/tests/mutex-owned-v1-refill-full-nested-20261013/environment.json",
+          "sha256": "d9e7ee83a63e0131adaa4be54cd16ed086a2496943a809fab976f18b5c5ea756"
+        },
+        "plan": {
+          "bytes": 3666,
+          "path": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/tests/mutex-owned-v1-refill-full-nested-20261013/plan.json",
+          "sha256": "34c3ba227db6651359abfe0ca0169b61fb2f5751b4d3b3a03557a8f05709b4b1"
+        },
+        "refill": true,
+        "scenario": "nested",
+        "sessions": [
+          {
+            "completed": 2000000,
+            "drain": {
+              "bytes": 62,
+              "path": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/tests/mutex-owned-v1-refill-full-nested-20261013/c01-t04-r00-direct-kdlock-adaptive-owned-v1-refill/drain.counts.json",
+              "sha256": "79d4f716aa478c4ff81e08cb0c2baa1b3e45a90fc9860bfd305c07e3c7186c86"
+            },
+            "jit_bodies": 47252,
+            "kernel": {
+              "log": {
+                "bytes": 3153,
+                "path": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/tests/mutex-owned-v1-refill-full-nested-20261013/c01-t04-r00-direct-kdlock-adaptive-owned-v1-refill/kernel.log",
+                "sha256": "a190658a28169216cb8e4345d2888a6b15ccae8ecd3a9c071dafb29c76dcce75"
+              },
+              "mutex": {
+                "active_waiters": 0,
+                "combiner": 0,
+                "context_busy": 0,
+                "frame_failure": 0,
+                "handoff": 0,
+                "jit_failure": 0,
+                "jit_not_ready": 0,
+                "jit_resume": 0,
+                "jit_success": 0,
+                "max_waiters_per_cpu": 0,
+                "multi_slot": 0,
+                "nested_abort_release": 0,
+                "nested_fast": 0,
+                "nested_jit": 47251,
+                "nested_lock": 0,
+                "nested_queued": 0,
+                "nested_unlock": 0,
+                "node_overflow": 0,
+                "origin_acquires": 0,
+                "origin_releases": 0,
+                "reserved_nodes": 0,
+                "slowpath": 0
+              },
+              "native": {
+                "completed": 1,
+                "started": 1,
+                "unlocks": 2
+              },
+              "owned": {
+                "batches": 47250,
+                "bodies": 47251,
+                "early_releases": 0,
+                "refusals": 0
+              },
+              "tasks": {
+                "active_tasks": 0,
+                "task_alloc_failure": 0,
+                "task_reroutes": 2
+              }
+            },
+            "measurement": {
+              "bytes": 788,
+              "path": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/tests/mutex-owned-v1-refill-full-nested-20261013/c01-t04-r00-direct-kdlock-adaptive-owned-v1-refill/measure.json",
+              "sha256": "fd1f2d31838098d52735ea3da9ffd05e4e8eaf837b490aa26b98da52b066eddf"
+            },
+            "name": "c01-t04-r00-direct-kdlock-adaptive-owned-v1-refill",
+            "session": {
+              "bytes": 7583,
+              "path": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/tests/mutex-owned-v1-refill-full-nested-20261013/c01-t04-r00-direct-kdlock-adaptive-owned-v1-refill/session.json",
+              "sha256": "4d36110acd202d3ab9d3ae13dd3fd340bd931f8a9cbc84042a33e74291784b41"
+            },
+            "workers": 4
+          },
+          {
+            "completed": 8000000,
+            "drain": {
+              "bytes": 62,
+              "path": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/tests/mutex-owned-v1-refill-full-nested-20261013/c01-t16-r00-direct-kdlock-adaptive-owned-v1-refill/drain.counts.json",
+              "sha256": "b1a1889d311c094479b726a927a034ff8371100e1389be994a580080aac9a627"
+            },
+            "jit_bodies": 7924474,
+            "kernel": {
+              "log": {
+                "bytes": 4796,
+                "path": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/tests/mutex-owned-v1-refill-full-nested-20261013/c01-t16-r00-direct-kdlock-adaptive-owned-v1-refill/kernel.log",
+                "sha256": "b9b7241aa5533802ea008bc23d5b4e4c6bd523d2c66b4c69e44f2ec42b0b26e2"
+              },
+              "mutex": {
+                "active_waiters": 0,
+                "combiner": 0,
+                "context_busy": 0,
+                "frame_failure": 0,
+                "handoff": 0,
+                "jit_failure": 0,
+                "jit_not_ready": 0,
+                "jit_resume": 0,
+                "jit_success": 0,
+                "max_waiters_per_cpu": 0,
+                "multi_slot": 0,
+                "nested_abort_release": 0,
+                "nested_fast": 0,
+                "nested_jit": 8215547,
+                "nested_lock": 0,
+                "nested_queued": 0,
+                "nested_unlock": 0,
+                "node_overflow": 0,
+                "origin_acquires": 0,
+                "origin_releases": 0,
+                "reserved_nodes": 0,
+                "slowpath": 0
+              },
+              "native": {
+                "completed": 1,
+                "started": 1,
+                "unlocks": 2
+              },
+              "owned": {
+                "batches": 13131,
+                "bodies": 8215547,
+                "early_releases": 0,
+                "refusals": 0
+              },
+              "tasks": {
+                "active_tasks": 0,
+                "task_alloc_failure": 0,
+                "task_reroutes": 2
+              }
+            },
+            "measurement": {
+              "bytes": 2068,
+              "path": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/tests/mutex-owned-v1-refill-full-nested-20261013/c01-t16-r00-direct-kdlock-adaptive-owned-v1-refill/measure.json",
+              "sha256": "043786507e3e5601920fe9a35ead9b0328361af70206f02786dd29a80b4ed761"
+            },
+            "name": "c01-t16-r00-direct-kdlock-adaptive-owned-v1-refill",
+            "session": {
+              "bytes": 9951,
+              "path": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/tests/mutex-owned-v1-refill-full-nested-20261013/c01-t16-r00-direct-kdlock-adaptive-owned-v1-refill/session.json",
+              "sha256": "70f4914fab43a7fcffa6497df755c4df806b8298ff459f02af4f9c2b4b9c5c30"
+            },
+            "workers": 16
+          }
+        ],
+        "sources": {
+          "compared_to": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/bench/mutex-owned-v1-refill64-20261013",
+          "manifest": {
+            "bytes": 36099,
+            "path": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/tests/mutex-owned-v1-refill-full-nested-20261013/source-sha256.json",
+            "sha256": "2fe489a2bbade807c7f44d0460359d678cf26efc82171cf3c869bff1e2c222d2"
+          },
+          "missing_bytes": [],
+          "provider_differences": [],
+          "provider_files": 87,
+          "provider_matches_reference": true,
+          "recorded_files": 315,
+          "verified_files": 315
+        }
+      },
+      {
+        "binaries": {
+          "files": 5,
+          "hashes": {
+            "/root/host_fs/kdlock/bench/spin_cacheline/.build/provider/kernel_module/kdlock_km.ko": "66e7c2bf4f5665fceffa03154bd637c0b6b71c411d8ed9a060c5581d063b3aac",
+            "/root/host_fs/kdlock/bench/spin_cacheline/client": "51e6d2ae116ead6ef42d83de2f0c8a543cdae0382f384ed8e7bc5f76cae9a665",
+            "/root/host_fs/kdlock/bench/tclock_compare/allocator_guard/tc_allocator_guard.ko": "4323537a05b588952ba6800a5b65cf3f0681174c3aa37dd1102e5cc1e963f930",
+            "/root/host_fs/kdlock/daemon/daemon": "5bf8df853e191d87d9bbdb3d3e767f34f4c113f7e06328e8daf35da063daeee8",
+            "/root/kdlock-evidence/10.176.26.71/tests/mutex-owned-v1-refill-full-early-20261013/variants/kdlock/mutex_cacheline.ko": "19484cb44cfb88c3dcd0097adaa9a40aebe89eff7122b9b55313a00dd2a47af1"
+          },
+          "manifest": {
+            "bytes": 735,
+            "path": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/tests/mutex-owned-v1-refill-full-early-20261013/binary-sha256.json",
+            "sha256": "5a341bb0c4d7acb7e0fdb44b86be33c0e69fe64f3493716ac9e0d1e0c905e061"
+          }
+        },
+        "collector_topology": null,
+        "environment": {
+          "bytes": 3860,
+          "path": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/tests/mutex-owned-v1-refill-full-early-20261013/environment.json",
+          "sha256": "75a85ec344852711d20f9878aac13cbb2bdd3b85fba4ae25be0be1b67a94d48d"
+        },
+        "plan": {
+          "bytes": 3664,
+          "path": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/tests/mutex-owned-v1-refill-full-early-20261013/plan.json",
+          "sha256": "dfe31dc47d160ee926df53e82516ab3af88e9f154b22179dd7e8b16ec00ae77b"
+        },
+        "refill": true,
+        "scenario": "early",
+        "sessions": [
+          {
+            "completed": 2000000,
+            "drain": {
+              "bytes": 62,
+              "path": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/tests/mutex-owned-v1-refill-full-early-20261013/c01-t04-r00-direct-kdlock-adaptive-owned-v1-refill/drain.counts.json",
+              "sha256": "79d4f716aa478c4ff81e08cb0c2baa1b3e45a90fc9860bfd305c07e3c7186c86"
+            },
+            "jit_bodies": 996225,
+            "kernel": {
+              "log": {
+                "bytes": 3172,
+                "path": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/tests/mutex-owned-v1-refill-full-early-20261013/c01-t04-r00-direct-kdlock-adaptive-owned-v1-refill/kernel.log",
+                "sha256": "fd4267166e9df84d52b047bab0dfb851a71905875e76c35abddf54a8e1f993d8"
+              },
+              "mutex": {
+                "active_waiters": 0,
+                "combiner": 0,
+                "context_busy": 0,
+                "frame_failure": 0,
+                "handoff": 0,
+                "jit_failure": 0,
+                "jit_not_ready": 0,
+                "jit_resume": 0,
+                "jit_success": 0,
+                "max_waiters_per_cpu": 0,
+                "multi_slot": 0,
+                "nested_abort_release": 0,
+                "nested_fast": 0,
+                "nested_jit": 1064753,
+                "nested_lock": 0,
+                "nested_queued": 0,
+                "nested_unlock": 0,
+                "node_overflow": 0,
+                "origin_acquires": 0,
+                "origin_releases": 0,
+                "reserved_nodes": 0,
+                "slowpath": 0
+              },
+              "native": {
+                "completed": 1,
+                "started": 1,
+                "unlocks": 2
+              },
+              "owned": {
+                "batches": 1064755,
+                "bodies": 1064753,
+                "early_releases": 1064754,
+                "refusals": 0
+              },
+              "tasks": {
+                "active_tasks": 0,
+                "task_alloc_failure": 0,
+                "task_reroutes": 1127248
+              }
+            },
+            "measurement": {
+              "bytes": 793,
+              "path": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/tests/mutex-owned-v1-refill-full-early-20261013/c01-t04-r00-direct-kdlock-adaptive-owned-v1-refill/measure.json",
+              "sha256": "960d5209fb3a2aa29552563552e12ef5a7f3f8bd8e5ad9522f3e5033a1fcf0fc"
+            },
+            "name": "c01-t04-r00-direct-kdlock-adaptive-owned-v1-refill",
+            "session": {
+              "bytes": 7607,
+              "path": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/tests/mutex-owned-v1-refill-full-early-20261013/c01-t04-r00-direct-kdlock-adaptive-owned-v1-refill/session.json",
+              "sha256": "74f06b007a2835564ced483ed47ef7ea56142d07bb132d1cf11b74f7190e7b0b"
+            },
+            "workers": 4
+          },
+          {
+            "completed": 8000000,
+            "drain": {
+              "bytes": 62,
+              "path": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/tests/mutex-owned-v1-refill-full-early-20261013/c01-t16-r00-direct-kdlock-adaptive-owned-v1-refill/drain.counts.json",
+              "sha256": "b1a1889d311c094479b726a927a034ff8371100e1389be994a580080aac9a627"
+            },
+            "jit_bodies": 3969221,
+            "kernel": {
+              "log": {
+                "bytes": 4811,
+                "path": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/tests/mutex-owned-v1-refill-full-early-20261013/c01-t16-r00-direct-kdlock-adaptive-owned-v1-refill/kernel.log",
+                "sha256": "474ebea4aa1402e2d780e000ea4ae871867e72d2eb42288a4b77c206e88ecd62"
+              },
+              "mutex": {
+                "active_waiters": 0,
+                "combiner": 0,
+                "context_busy": 0,
+                "frame_failure": 0,
+                "handoff": 0,
+                "jit_failure": 0,
+                "jit_not_ready": 0,
+                "jit_resume": 0,
+                "jit_success": 0,
+                "max_waiters_per_cpu": 0,
+                "multi_slot": 0,
+                "nested_abort_release": 0,
+                "nested_fast": 0,
+                "nested_jit": 4220614,
+                "nested_lock": 0,
+                "nested_queued": 0,
+                "nested_unlock": 0,
+                "node_overflow": 0,
+                "origin_acquires": 0,
+                "origin_releases": 0,
+                "reserved_nodes": 0,
+                "slowpath": 0
+              },
+              "native": {
+                "completed": 1,
+                "started": 1,
+                "unlocks": 2
+              },
+              "owned": {
+                "batches": 4220617,
+                "bodies": 4220614,
+                "early_releases": 4220615,
+                "refusals": 0
+              },
+              "tasks": {
+                "active_tasks": 0,
+                "task_alloc_failure": 0,
+                "task_reroutes": 4547387
+              }
+            },
+            "measurement": {
+              "bytes": 2068,
+              "path": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/tests/mutex-owned-v1-refill-full-early-20261013/c01-t16-r00-direct-kdlock-adaptive-owned-v1-refill/measure.json",
+              "sha256": "622c51e0a612eb418db28e5c31ad83c24ec9faffb8319cf33d2be6c0cc7b5279"
+            },
+            "name": "c01-t16-r00-direct-kdlock-adaptive-owned-v1-refill",
+            "session": {
+              "bytes": 9963,
+              "path": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/tests/mutex-owned-v1-refill-full-early-20261013/c01-t16-r00-direct-kdlock-adaptive-owned-v1-refill/session.json",
+              "sha256": "c552774808d7923cac209cfeff8ebe27244a4e5a7b26f9ebb9cfe3bd9fd6870b"
+            },
+            "workers": 16
+          }
+        ],
+        "sources": {
+          "compared_to": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/bench/mutex-owned-v1-refill64-20261013",
+          "manifest": {
+            "bytes": 36099,
+            "path": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/tests/mutex-owned-v1-refill-full-early-20261013/source-sha256.json",
+            "sha256": "2fe489a2bbade807c7f44d0460359d678cf26efc82171cf3c869bff1e2c222d2"
+          },
+          "missing_bytes": [],
+          "provider_differences": [],
+          "provider_files": 87,
+          "provider_matches_reference": true,
+          "recorded_files": 315,
+          "verified_files": 315
+        }
+      }
+    ],
+    "scored_binaries": {
+      "files": 6,
+      "hashes": {
+        "/root/host_fs/kdlock/bench/spin_cacheline/.build/provider/kernel_module/kdlock_km.ko": "6bb08988d4f6089d9e70e5b69d9b160bc3cf750767cc0604ab215a1622bdb82f",
+        "/root/host_fs/kdlock/bench/spin_cacheline/client": "51e6d2ae116ead6ef42d83de2f0c8a543cdae0382f384ed8e7bc5f76cae9a665",
+        "/root/host_fs/kdlock/bench/tclock_compare/allocator_guard/tc_allocator_guard.ko": "4323537a05b588952ba6800a5b65cf3f0681174c3aa37dd1102e5cc1e963f930",
+        "/root/host_fs/kdlock/daemon/daemon": "5bf8df853e191d87d9bbdb3d3e767f34f4c113f7e06328e8daf35da063daeee8",
+        "/root/kdlock-evidence/10.176.26.71/bench/mutex-owned-v1-refill64-20261013/variants/kdlock/mutex_cacheline.ko": "6e26a2e2f71cfc0035ad4951a03b104ab9f0299d357a2bdd64359f0b79f15fd8",
+        "/root/kdlock-evidence/10.176.26.71/bench/mutex-owned-v1-refill64-20261013/variants/native/mutex_cacheline.ko": "7ee0a35bb0a54f6f6c5ddc3caf58a1446bc71d1e53da84bf8b388e7d7bc4b367"
+      },
+      "manifest": {
+        "bytes": 908,
+        "path": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/bench/mutex-owned-v1-refill64-20261013/binary-sha256.json",
+        "sha256": "597d32f8b0d61cc930e48678eafd547083fbe8695c1af36c632efeb724df93ab"
+      }
+    },
+    "scored_sources": {
+      "manifest": {
+        "bytes": 36099,
+        "path": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/bench/mutex-owned-v1-refill64-20261013/source-sha256.json",
+        "sha256": "2fe489a2bbade807c7f44d0460359d678cf26efc82171cf3c869bff1e2c222d2"
+      },
+      "missing_bytes": [],
+      "provider_files": 87,
+      "recorded_files": 315,
+      "verified_files": 315
+    },
+    "selected_units": {
+      "build": {
+        "argv": [
+          "make",
+          "-C",
+          "kernel_module",
+          "KDIR=/root/linux-6.1.159-kdclobber2",
+          "UBSAN_SANITIZE=n",
+          "W=1"
+        ],
+        "command": {
+          "bytes": 98,
+          "path": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/tests/mutex-owned-v1-refill-20261013/build.log.command.json",
+          "sha256": "0af157d707bb699a033bcda5d177ab9546ac6a91ef592d385e04cc44833576d5"
+        },
+        "compilation_observed": true,
+        "limit": "Incremental logs do not establish a clean rebuild; warnings are retained, not a warning-free claim.",
+        "log": {
+          "bytes": 8436,
+          "path": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/tests/mutex-owned-v1-refill-20261013/build.log",
+          "sha256": "702edadadd31030db8738efd6b555eadfc152e0df56356797784193245349471"
+        },
+        "module_link_observed": true,
+        "warning_categories": {
+          "objtool": 12,
+          "other": 30
+        },
+        "warning_count": 42,
+        "warning_lines": [
+          "perl: warning: Setting locale failed.",
+          "perl: warning: Please check that your locale settings:",
+          "perl: warning: Falling back to a fallback locale (\"C.UTF-8\").",
+          "perl: warning: Setting locale failed.",
+          "perl: warning: Please check that your locale settings:",
+          "perl: warning: Falling back to a fallback locale (\"C.UTF-8\").",
+          "perl: warning: Setting locale failed.",
+          "perl: warning: Please check that your locale settings:",
+          "perl: warning: Falling back to a fallback locale (\"C.UTF-8\").",
+          "perl: warning: Setting locale failed.",
+          "perl: warning: Please check that your locale settings:",
+          "perl: warning: Falling back to a fallback locale (\"C.UTF-8\").",
+          "perl: warning: Setting locale failed.",
+          "perl: warning: Please check that your locale settings:",
+          "perl: warning: Falling back to a fallback locale (\"C.UTF-8\").",
+          "perl: warning: Setting locale failed.",
+          "perl: warning: Please check that your locale settings:",
+          "perl: warning: Falling back to a fallback locale (\"C.UTF-8\").",
+          "perl: warning: Setting locale failed.",
+          "perl: warning: Please check that your locale settings:",
+          "perl: warning: Falling back to a fallback locale (\"C.UTF-8\").",
+          "perl: warning: Setting locale failed.",
+          "perl: warning: Please check that your locale settings:",
+          "perl: warning: Falling back to a fallback locale (\"C.UTF-8\").",
+          "perl: warning: Setting locale failed.",
+          "perl: warning: Please check that your locale settings:",
+          "perl: warning: Falling back to a fallback locale (\"C.UTF-8\").",
+          "perl: warning: Setting locale failed.",
+          "perl: warning: Please check that your locale settings:",
+          "perl: warning: Falling back to a fallback locale (\"C.UTF-8\").",
+          "/root/host_fs/kdlock/kernel_module/kdlock_km.o: warning: objtool: kd_spin_restore_request+0x59: 'naked' return found in RETHUNK build",
+          "/root/host_fs/kdlock/kernel_module/kdlock_km.o: warning: objtool: kd_spin_restore_request+0x108: 'naked' return found in RETHUNK build",
+          "/root/host_fs/kdlock/kernel_module/kdlock_km.o: warning: objtool: jump_to_saved_regs+0x47: 'naked' return found in RETHUNK build",
+          "/root/host_fs/kdlock/kernel_module/kdlock_km.o: warning: objtool: jump_to_saved_regs_in_cs+0x49: 'naked' return found in RETHUNK build",
+          "/root/host_fs/kdlock/kernel_module/kdlock_km.o: warning: objtool: kd_spin_restore_request+0x103: call without frame pointer save/setup",
+          "/root/host_fs/kdlock/kernel_module/kdlock_km.o: warning: objtool: __kd_spin_lock_longjmp+0x6f7: call without frame pointer save/setup",
+          "/root/host_fs/kdlock/kernel_module/kdlock_km.o: warning: objtool: kd_mutex_execute_cs+0x14c: call without frame pointer save/setup",
+          "/root/host_fs/kdlock/kernel_module/kdlock_km.o: warning: objtool: __kd_mutex_lock_slowpath+0x110: call without frame pointer save/setup",
+          "/root/host_fs/kdlock/kernel_module/kdlock_km.o: warning: objtool: kd_mutex_lock_slowpath_asm.cold+0x11: call without frame pointer save/setup",
+          "/root/host_fs/kdlock/kernel_module/kdlock_km.o: warning: objtool: jump_to_saved_regs_in_cs+0x49: return with modified stack frame",
+          "/root/host_fs/kdlock/kernel_module/kdlock_km.o: warning: objtool: kd_mutex_resume_completed+0xe6: return with modified stack frame",
+          "/root/host_fs/kdlock/kernel_module/kdlock_km.o: warning: objtool: kd_owned_mutex_resume+0xb9: return with modified stack frame"
+        ]
+      },
+      "commands": [
+        {
+          "bytes": 98,
+          "path": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/tests/mutex-owned-v1-refill-20261013/build.log.command.json",
+          "sha256": "0af157d707bb699a033bcda5d177ab9546ac6a91ef592d385e04cc44833576d5"
+        },
+        {
+          "bytes": 88,
+          "path": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/tests/mutex-owned-v1-refill-20261013/queue.log.command.json",
+          "sha256": "6dd73e442df4e2133720467b368bfd1699ce44baff35a494c9f262495ff9a2d3"
+        },
+        {
+          "bytes": 91,
+          "path": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/tests/mutex-owned-v1-refill-20261013/runner.log.command.json",
+          "sha256": "23e652a0d1fc5ceb3ee5e09bb40b6e4535f6ee2f0e149937d17a2072e56f07b2"
+        }
+      ],
+      "queue": {
+        "bytes": 975,
+        "path": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/tests/mutex-owned-v1-refill-20261013/queue.log",
+        "sha256": "5541bc77b6f756b9fc0355cd92fa880f6749d4f9f798cfa9c83bb24a0cb9bd41"
+      },
+      "rejected_queue_mutations": [
+        "retire-before-notify",
+        "honor-self-boundary",
+        "honor-handoff",
+        "honor-cap",
+        "honor-reschedule",
+        "refusal-preserves-current",
+        "full-retire-idempotent",
+        "early-release-no-second-release",
+        "refill-off-gate",
+        "refill-total-quota",
+        "refill-wake-before-check",
+        "refill-locked-handoff",
+        "refill-locked-reschedule",
+        "refill-self-head",
+        "refill-after-release",
+        "stop-after-full"
+      ],
+      "runner": {
+        "bytes": 179,
+        "path": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/tests/mutex-owned-v1-refill-20261013/runner.log",
+        "sha256": "e4191f04d51fc87c2c797d6d1a0073ecd4fc55bd5200045cfdaea3a0b0c35e0b"
+      },
+      "runner_tests": 80,
+      "scope": "Refill-specific subset: production FIFO/refill fixture with sixteen mutations, runner80, W=1. The earlier six-group selection was not repeated.",
+      "sources": {
+        "compared_to": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/bench/mutex-owned-v1-refill64-20261013",
+        "manifest": {
+          "bytes": 24568,
+          "path": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/tests/mutex-owned-v1-refill-20261013/sources.json",
+          "sha256": "a8a19f43d99f7d0a4c26d6685108dded984af68895fa270e9401a8b28fd65106"
+        },
+        "missing_bytes": [],
+        "provider_differences": [],
+        "provider_files": 87,
+        "provider_matches_reference": true,
+        "recorded_files": 223,
+        "supplemental_preservation": {
+          "bytes": 43180,
+          "path": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/tests/mutex-owned-v1-refill-20261013/source-matched-manifest.json",
+          "sha256": "cd94b09a403ec90cc2dcb3d2c874e077efcfb87169fd71a3b96edddc484e4019"
+        },
+        "verified_files": 223
+      }
+    }
+  },
+  "retained_failures": [
+    {
+      "analysis": "Initial static per-CPU allocation failure and later combine-under-held-outer deadlock. Recovery required; these runs are not passes.",
+      "archive": {
+        "bytes": 23854716,
+        "path": "bench/results/10.176.26.71/raw/tests/mutex-owned-v1-pre-recovery-20261013/evidence.tar.gz",
+        "sha256": "fd88ad07f1f64789ac88ace5dbec656b5883892a00c5953fb7416dc599c52117"
+      },
+      "checksum": {
+        "bytes": 187,
+        "path": "bench/results/10.176.26.71/raw/tests/mutex-owned-v1-pre-recovery-20261013/SHA256SUMS",
+        "sha256": "7877abc4d356550aa430361a2de2a50f97a0e3e6a2d7dd0b5673a7fa8eff9406"
+      },
+      "extracted_regular_bytes_verified": false,
+      "link_identities_sha256": "fb12bc2ea274cf9abb7d09c0c83f8913e746ab6e0b93a386cc268817e9d5afce",
+      "link_policy": "Links remain in the canonical archive; no target is followed or required on this host.",
+      "regular_bytes": 52762441,
+      "regular_files": 2379,
+      "serial": {
+        "bytes": 62309,
+        "path": "bench/results/10.176.26.71/raw/tests/mutex-owned-v1-pre-recovery-20261013/qemu-serial.log",
+        "sha256": "305f3942a553ebf573df03fab26c83b9810d6b2e76858217302dfd66cddcdb4e"
+      },
+      "state": {
+        "bytes": 6991184,
+        "path": "bench/results/10.176.26.71/raw/tests/mutex-owned-v1-pre-recovery-20261013/failure-state.txt",
+        "sha256": "8a7ae153c92927f6bbbbb10b3b5f3f01230cb66bf42ecbdd3373d3f841b9b9e7"
+      },
+      "symbolic_links": 18
+    },
+    {
+      "analysis": "Earlier FULL diagnostic used an unsupported synthetic continuation checkpoint. Its timeout/recovery is not valid FULL success evidence.",
+      "archive": {
+        "bytes": 4164779,
+        "path": "bench/results/10.176.26.71/raw/tests/mutex-owned-v1-full-failure-20261013/evidence.tar.gz",
+        "sha256": "592e4f280d6846e13c05942ae71eb438324e6eeb6155cd554609de4dfc5960f1"
+      },
+      "checksum": {
+        "bytes": 187,
+        "path": "bench/results/10.176.26.71/raw/tests/mutex-owned-v1-full-failure-20261013/SHA256SUMS",
+        "sha256": "3c1ba5de1e5db90d37c8c2a067d0d55af917917fca7200f8ed66e48e568d46df"
+      },
+      "extracted_regular_bytes_verified": false,
+      "link_identities_sha256": "d6685dfc1659b3258fbe1132bc2a95a8c1c91e6ddd5b99b7f9927cd36656818b",
+      "link_policy": "Links remain in the canonical archive; no target is followed or required on this host.",
+      "regular_bytes": 15197392,
+      "regular_files": 915,
+      "serial": {
+        "bytes": 66256,
+        "path": "bench/results/10.176.26.71/raw/tests/mutex-owned-v1-full-failure-20261013/qemu-serial.log",
+        "sha256": "0b37f6a87ba3ec59950edc1168d042e72785735b3e9415b106df4daa69712ac5"
+      },
+      "state": {
+        "bytes": 6992542,
+        "path": "bench/results/10.176.26.71/raw/tests/mutex-owned-v1-full-failure-20261013/failure-state.txt",
+        "sha256": "cab15d8e3cdff3396085eabdb81d1d18f3f1b4fffdea870fd420110ee3d12252"
+      },
+      "symbolic_links": 6
+    },
+    {
+      "analysis": "First final task probe had invalid insmod/affinity parameters; final-task-r2 is the successful receipt.",
+      "log": {
+        "bytes": 107,
+        "path": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/tests/mutex-owned-v1-final-task-20261013/load.log",
+        "sha256": "fe1ac0462fb123de2a8644e9a6d1b83438ef0cbf1cd27cba9ddc6749a668f5b0"
+      }
+    }
+  ],
+  "schema": 1,
+  "scope": "Selected correctness and provenance receipts; not a full-suite or throughput acceptance claim.",
+  "selected_units": {
+    "build": {
+      "argv": [
+        "make",
+        "-C",
+        "kernel_module",
+        "KDIR=/root/linux-6.1.159-kdclobber2",
+        "UBSAN_SANITIZE=n",
+        "W=1"
+      ],
+      "command": {
+        "bytes": 98,
+        "path": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/tests/mutex-owned-v1-final-20261013/build.log.command.json",
+        "sha256": "0af157d707bb699a033bcda5d177ab9546ac6a91ef592d385e04cc44833576d5"
+      },
+      "compilation_observed": true,
+      "limit": "Incremental logs do not establish a clean rebuild; warnings are retained, not a warning-free claim.",
+      "log": {
+        "bytes": 8436,
+        "path": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/tests/mutex-owned-v1-final-20261013/build.log",
+        "sha256": "702edadadd31030db8738efd6b555eadfc152e0df56356797784193245349471"
+      },
+      "module_link_observed": true,
+      "warning_categories": {
+        "objtool": 12,
+        "other": 30
+      },
+      "warning_count": 42,
+      "warning_lines": [
+        "perl: warning: Setting locale failed.",
+        "perl: warning: Please check that your locale settings:",
+        "perl: warning: Falling back to a fallback locale (\"C.UTF-8\").",
+        "perl: warning: Setting locale failed.",
+        "perl: warning: Please check that your locale settings:",
+        "perl: warning: Falling back to a fallback locale (\"C.UTF-8\").",
+        "perl: warning: Setting locale failed.",
+        "perl: warning: Please check that your locale settings:",
+        "perl: warning: Falling back to a fallback locale (\"C.UTF-8\").",
+        "perl: warning: Setting locale failed.",
+        "perl: warning: Please check that your locale settings:",
+        "perl: warning: Falling back to a fallback locale (\"C.UTF-8\").",
+        "perl: warning: Setting locale failed.",
+        "perl: warning: Please check that your locale settings:",
+        "perl: warning: Falling back to a fallback locale (\"C.UTF-8\").",
+        "perl: warning: Setting locale failed.",
+        "perl: warning: Please check that your locale settings:",
+        "perl: warning: Falling back to a fallback locale (\"C.UTF-8\").",
+        "perl: warning: Setting locale failed.",
+        "perl: warning: Please check that your locale settings:",
+        "perl: warning: Falling back to a fallback locale (\"C.UTF-8\").",
+        "perl: warning: Setting locale failed.",
+        "perl: warning: Please check that your locale settings:",
+        "perl: warning: Falling back to a fallback locale (\"C.UTF-8\").",
+        "perl: warning: Setting locale failed.",
+        "perl: warning: Please check that your locale settings:",
+        "perl: warning: Falling back to a fallback locale (\"C.UTF-8\").",
+        "perl: warning: Setting locale failed.",
+        "perl: warning: Please check that your locale settings:",
+        "perl: warning: Falling back to a fallback locale (\"C.UTF-8\").",
+        "/root/host_fs/kdlock/kernel_module/kdlock_km.o: warning: objtool: kd_spin_restore_request+0x59: 'naked' return found in RETHUNK build",
+        "/root/host_fs/kdlock/kernel_module/kdlock_km.o: warning: objtool: kd_spin_restore_request+0x108: 'naked' return found in RETHUNK build",
+        "/root/host_fs/kdlock/kernel_module/kdlock_km.o: warning: objtool: jump_to_saved_regs+0x47: 'naked' return found in RETHUNK build",
+        "/root/host_fs/kdlock/kernel_module/kdlock_km.o: warning: objtool: jump_to_saved_regs_in_cs+0x49: 'naked' return found in RETHUNK build",
+        "/root/host_fs/kdlock/kernel_module/kdlock_km.o: warning: objtool: kd_spin_restore_request+0x103: call without frame pointer save/setup",
+        "/root/host_fs/kdlock/kernel_module/kdlock_km.o: warning: objtool: __kd_spin_lock_longjmp+0x6f7: call without frame pointer save/setup",
+        "/root/host_fs/kdlock/kernel_module/kdlock_km.o: warning: objtool: kd_mutex_execute_cs+0x14c: call without frame pointer save/setup",
+        "/root/host_fs/kdlock/kernel_module/kdlock_km.o: warning: objtool: __kd_mutex_lock_slowpath+0x110: call without frame pointer save/setup",
+        "/root/host_fs/kdlock/kernel_module/kdlock_km.o: warning: objtool: kd_mutex_lock_slowpath_asm.cold+0x11: call without frame pointer save/setup",
+        "/root/host_fs/kdlock/kernel_module/kdlock_km.o: warning: objtool: jump_to_saved_regs_in_cs+0x49: return with modified stack frame",
+        "/root/host_fs/kdlock/kernel_module/kdlock_km.o: warning: objtool: kd_mutex_resume_completed+0xe6: return with modified stack frame",
+        "/root/host_fs/kdlock/kernel_module/kdlock_km.o: warning: objtool: kd_owned_mutex_resume+0xb9: return with modified stack frame"
+      ]
+    },
+    "core_rejected_mutations": [
+      "bypass-borrowed-unlock",
+      "combine-ordinary-under-outer",
+      "force-self-handoff",
+      "omit-pickup",
+      "omit-wake-reference",
+      "retain-last-flags",
+      "strand-publication-race"
+    ],
+    "groups": 6,
+    "runner": {
+      "bytes": 178,
+      "path": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/tests/mutex-owned-v1-final-20261013/runner.log",
+      "sha256": "83b0a962e5bad2f19c293686f055e44bef3d0d0e69bcf924d593fe553c8311c9"
+    },
+    "runner.log.command.json": {
+      "bytes": 91,
+      "path": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/tests/mutex-owned-v1-final-20261013/runner.log.command.json",
+      "sha256": "23e652a0d1fc5ceb3ee5e09bb40b6e4535f6ee2f0e149937d17a2072e56f07b2"
+    },
+    "runner_tests": 79,
+    "scope": "Two basic groups plus core, task cache, actual outer ABI/JIT, and native-after-outer; not the full suite.",
+    "sources": {
+      "compared_to": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/bench/mutex-owned-v1-fullgrid64-20261013",
+      "manifest": {
+        "bytes": 27195,
+        "path": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/tests/mutex-owned-v1-final-20261013/sources.json",
+        "sha256": "6c2dbedbc8fba3e991b33d6a51e669855a78b2993e809b16872eb3b8bab6ac4b"
+      },
+      "missing_bytes": [
+        "daemon/0xffffffffc0c02f1b/39032/asm/jit.S",
+        "tests/unit/mutex/test_owned_mutex_delegation.py"
+      ],
+      "provider_differences": [],
+      "provider_files": 87,
+      "provider_matches_reference": true,
+      "recorded_files": 250,
+      "supplemental_preservation": {
+        "bytes": 48022,
+        "path": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/tests/mutex-owned-v1-final-20261013/source-matched-manifest.json",
+        "sha256": "ee85b1b82816101f6356096b15012623f4d2b3ce7b9e4037fffa46fe2736c31b"
+      },
+      "verified_files": 248
+    },
+    "unit": {
+      "bytes": 11556,
+      "path": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/tests/mutex-owned-v1-final-20261013/unit.log",
+      "sha256": "32d8af2570158f0c15f57287cba06b2b37302aeb9c1555a5b6027b9671b802b3"
+    },
+    "unit.log.command.json": {
+      "bytes": 183,
+      "path": "bench/results/10.176.26.71/raw/bench/mutex-owned-v1-20261013/tests/mutex-owned-v1-final-20261013/unit.log.command.json",
+      "sha256": "f7975485b61ef7a3f94a06004c56d42b6cc1a2debd3b4742f1332b567f87d6f2"
+    }
+  }
+}

@@ -3,7 +3,7 @@
 This uses the normal provider and explicit [IRQ/BH interfaces](../../../../include/README.md#explicit-irqbh-spin-interfaces).
 It needs no SELFTEST, daemon, translation registration or kernel change. Build/run
 only in an idle verified recovery guest with an actual confirmed snapshot; follow
-[operations](../../../../docs/AGENTS.md).
+[operations](../../../../docs/operations/VM.md).
 
 ## Coverage and commands
 

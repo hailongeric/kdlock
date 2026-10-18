@@ -45,13 +45,13 @@ boundaries remain separate for reading.
 
 | Component | Responsibility |
 | --- | --- |
-| [spin](spin/) | Direct entry, native pending/MCS, NUMA queue, batch, prefetch, stable request, restore and unlock |
+| [spin](spin) | Direct entry, native pending/MCS, NUMA queue, batch, prefetch, stable request, restore and unlock |
 | [kd_rwlock.h](../include/kd_rwlock.h) and `spin/{direct,combiner,execute,restore}.inc` | Reader/count protocol and ABI3 writer admission, refusal/retry and completion over the spin backend |
 | `spin/ticket_*.inc` via [kd_spin_entry.c](kd_spin_entry.c) | Exact acquisition generation, root borrowing and final retirement |
-| [mutex](mutex/) via [kd_mutex.c](kd_mutex.c) | Embedded legacy delegation queue, terminal batch, pinned waiter and restore |
+| [mutex](mutex) via [kd_mutex.c](kd_mutex.c) | Embedded legacy delegation queue, terminal batch, pinned waiter and restore |
 | [kd_mutex_local.c](kd_mutex_local.c), [kd_mutex_osq.c](kd_mutex_osq.c) | KD-owned physical exclusion, sleeping callers and private optimistic spinning |
-| [lock](lock/) via [kd_lock.c](kd_lock.c) | Direct KD mutex routes and nested spin/mutex control CALLs |
-| [execution](execution/) | Registry, wrapper preparation, frame/ledger, control/services, native and remote ACK |
+| [lock](lock) via [kd_lock.c](kd_lock.c) | Direct KD mutex routes and nested spin/mutex control CALLs |
+| [execution](execution) | Registry, wrapper preparation, frame/ledger, control/services, native and remote ACK |
 | [execution/images.inc](execution/images.inc) | Immutable legacy mutex publication, bound generations and stale-miss rejection |
 | [kd_source.c](kd_source.c), [sys.c](sys.c) | Text pins, device session, capabilities, publication and retirement |
 | [kd_hotlock.c](kd_hotlock.c) | Exact-address per-type tables and approximate sampling |
@@ -96,4 +96,4 @@ Stop new calls and wait for workers and translators to finish. Retire sources,
 then unload workloads, then the provider. If retirement returns EBUSY, keep the
 pins and investigate the remaining users; never force unload. NORMAL means code
 was published, not that JIT ran. Frames, physical owners, unlock ACKs and source
-pins have separate lifetimes, as explained in [operations](../docs/AGENTS.md).
+pins have separate lifetimes, as explained in [operations](../docs/operations/VM.md).

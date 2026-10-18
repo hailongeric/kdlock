@@ -44,4 +44,4 @@ This workload supports plain ordinary mutex operations. Spin nested/early
 scenario recipes do not automatically apply to this mutex module. General
 oversubscription, PI/RT/WW mutexes and arbitrary context-sensitive bodies are
 outside its validated scope. Build and run only under the documented
-[guest operations procedure](../../docs/AGENTS.md).
+[guest operations procedure](../../docs/operations/VM.md).

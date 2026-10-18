@@ -1,0 +1,9 @@
+{
+  "basis": "test_clobber_abi.exercise_abi premature_pop=True deliberately releases frame before metadata; all unmutated fixtures exit zero.",
+  "classification": "Expected userspace negative-control fault, not a kernel BUG/Oops",
+  "dropped_old_lines": 3,
+  "new_lines": [
+    "[259168.261219] fixture[1602318]: segfault at 296 ip 000055916da0d926 sp 00007ffc6edd9ab8 error 4 in fixture[55916da0b000+4000] likely on CPU 42 (core 10, socket 1)",
+    "[259168.261372] Code: 00 48 c7 84 24 48 ff ff ff 46 02 00 00 48 c7 84 24 40 ff ff ff 46 02 00 00 48 83 bd 58 ff ff ff 00 74 16 48 8b 85 58 ff ff ff <48> 8b 40 50 c7 00 00 00 00 00 e9 af 06 00 00 48 83 bd 60 ff ff ff"
+  ]
+}

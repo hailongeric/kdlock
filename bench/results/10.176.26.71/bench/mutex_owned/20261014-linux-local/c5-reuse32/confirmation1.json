@@ -1,0 +1,1055 @@
+{
+  "evaluation": {
+    "checks": [
+      {
+        "threads": 1,
+        "candidate": {
+          "post_work_rounds": 64,
+          "median_whole": 13875890.950865397,
+          "best_peak": 13913053.077883508,
+          "whole_rates": [
+            9081983.841165502,
+            13883792.843098264,
+            13875890.950865397
+          ],
+          "peak_rates": [
+            13901653.785762668,
+            13912083.081412127,
+            13913053.077883508
+          ],
+          "whole_spread_pct": 34.605410340395395,
+          "peak_spread_pct": 0.08193806818240573,
+          "worker_share_min": 1.0,
+          "worker_share_max": 1.0,
+          "worker_cpu_ns_per_op": [
+            110.10532209221208,
+            72.02606185754125,
+            72.06681792539527
+          ],
+          "jit_bodies": [
+            0,
+            0,
+            0
+          ],
+          "jit_shares": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "execution_classes": [
+            "KD_SELF",
+            "KD_SELF",
+            "KD_SELF"
+          ]
+        },
+        "paired_native": {
+          "post_work_rounds": 64,
+          "median_whole": 13710728.168374812,
+          "best_peak": 13900759.317111066,
+          "whole_rates": [
+            7682622.397572049,
+            13837933.413003216,
+            13710728.168374812
+          ],
+          "peak_rates": [
+            7695377.691655972,
+            13864050.83074134,
+            13900759.317111066
+          ],
+          "whole_spread_pct": 44.89412188645835,
+          "peak_spread_pct": 44.75879164908744,
+          "worker_share_min": 1.0,
+          "worker_share_max": 1.0,
+          "worker_cpu_ns_per_op": [
+            130.16062025710548,
+            72.26363592414579,
+            72.9322479794479
+          ],
+          "jit_bodies": [
+            0,
+            0,
+            0
+          ],
+          "jit_shares": [
+            0,
+            0,
+            0
+          ],
+          "execution_classes": [
+            "NATIVE",
+            "NATIVE",
+            "NATIVE"
+          ]
+        },
+        "ratios": {
+          "median_whole": 1.012046244405279,
+          "best_peak": 1.000884394909083
+        },
+        "passed": true
+      },
+      {
+        "threads": 2,
+        "candidate": {
+          "post_work_rounds": 64,
+          "median_whole": 12232889.756104687,
+          "best_peak": 12773847.350028468,
+          "whole_rates": [
+            12139817.351421103,
+            12732813.029492386,
+            12232889.756104687
+          ],
+          "peak_rates": [
+            12186422.501684405,
+            12773847.350028468,
+            12260779.790513398
+          ],
+          "whole_spread_pct": 4.847551885893151,
+          "peak_spread_pct": 4.791088808222255,
+          "worker_share_min": 0.12049005756700336,
+          "worker_share_max": 0.8795099424329966,
+          "worker_cpu_ns_per_op": [
+            164.7417882096372,
+            157.0719121784465,
+            163.49054028072783
+          ],
+          "jit_bodies": [
+            98,
+            203,
+            181
+          ],
+          "jit_shares": [
+            4.0361480716108215e-06,
+            7.971297673857537e-06,
+            7.3978137130779616e-06
+          ],
+          "execution_classes": [
+            "JIT",
+            "JIT",
+            "JIT"
+          ]
+        },
+        "paired_native": {
+          "post_work_rounds": 64,
+          "median_whole": 9084481.638883207,
+          "best_peak": 11669898.264580889,
+          "whole_rates": [
+            8233395.296729455,
+            9084481.638883207,
+            11542387.48505671
+          ],
+          "peak_rates": [
+            9182364.734308429,
+            9177008.572387539,
+            11669898.264580889
+          ],
+          "whole_spread_pct": 36.424667029587866,
+          "peak_spread_pct": 27.148667737833026,
+          "worker_share_min": 0.03602834362767385,
+          "worker_share_max": 0.9639716563723262,
+          "worker_cpu_ns_per_op": [
+            242.83271787700542,
+            220.09569313578726,
+            173.2582565387313
+          ],
+          "jit_bodies": [
+            0,
+            0,
+            0
+          ],
+          "jit_shares": [
+            0,
+            0,
+            0
+          ],
+          "execution_classes": [
+            "NATIVE",
+            "NATIVE",
+            "NATIVE"
+          ]
+        },
+        "ratios": {
+          "median_whole": 1.3465699246664478,
+          "best_peak": 1.0945980042343777
+        },
+        "passed": true
+      },
+      {
+        "threads": 3,
+        "candidate": {
+          "post_work_rounds": 64,
+          "median_whole": 9965087.548371265,
+          "best_peak": 10218335.411006128,
+          "whole_rates": [
+            10183673.904187426,
+            9732735.542346975,
+            9965087.548371265
+          ],
+          "peak_rates": [
+            10218335.411006128,
+            9759130.433649398,
+            9988711.561584247
+          ],
+          "whole_spread_pct": 4.52518213865722,
+          "peak_spread_pct": 4.597239338883246,
+          "worker_share_min": 0.28432814247828764,
+          "worker_share_max": 0.3690031798700401,
+          "worker_cpu_ns_per_op": [
+            294.5906573250129,
+            308.23305317308325,
+            301.0058194958554
+          ],
+          "jit_bodies": [
+            310,
+            485,
+            506
+          ],
+          "jit_shares": [
+            1.5219857220064603e-05,
+            2.491492964229353e-05,
+            2.5382197709061022e-05
+          ],
+          "execution_classes": [
+            "JIT",
+            "JIT",
+            "JIT"
+          ]
+        },
+        "paired_native": {
+          "post_work_rounds": 64,
+          "median_whole": 7405380.545599518,
+          "best_peak": 8432519.892808327,
+          "whole_rates": [
+            6457016.125500557,
+            7405380.545599518,
+            8372515.362797455
+          ],
+          "peak_rates": [
+            6871205.708874027,
+            7495103.642313562,
+            8432519.892808327
+          ],
+          "whole_spread_pct": 25.866317409375274,
+          "peak_spread_pct": 20.83112200236846,
+          "worker_share_min": 0.2007017301277287,
+          "worker_share_max": 0.40252691981955513,
+          "worker_cpu_ns_per_op": [
+            464.25445303829423,
+            404.92275769893877,
+            358.1034832619994
+          ],
+          "jit_bodies": [
+            0,
+            0,
+            0
+          ],
+          "jit_shares": [
+            0,
+            0,
+            0
+          ],
+          "execution_classes": [
+            "NATIVE",
+            "NATIVE",
+            "NATIVE"
+          ]
+        },
+        "ratios": {
+          "median_whole": 1.3456550256951745,
+          "best_peak": 1.2117772078688878
+        },
+        "passed": true
+      },
+      {
+        "threads": 4,
+        "candidate": {
+          "post_work_rounds": 64,
+          "median_whole": 9975514.776527867,
+          "best_peak": 10733558.730229102,
+          "whole_rates": [
+            9975514.776527867,
+            9902196.146416288,
+            10655650.58955881
+          ],
+          "peak_rates": [
+            10001062.36620985,
+            9927348.327292385,
+            10733558.730229102
+          ],
+          "whole_spread_pct": 7.553038214282248,
+          "peak_spread_pct": 8.061247629658078,
+          "worker_share_min": 0.13020864614238867,
+          "worker_share_max": 0.44457123638154494,
+          "worker_cpu_ns_per_op": [
+            400.9437855514555,
+            403.8809135401321,
+            375.3846975655698
+          ],
+          "jit_bodies": [
+            1395,
+            1332,
+            1054
+          ],
+          "jit_shares": [
+            6.991017820029251e-05,
+            6.723947429634799e-05,
+            4.9455111650310504e-05
+          ],
+          "execution_classes": [
+            "JIT",
+            "JIT",
+            "JIT"
+          ]
+        },
+        "paired_native": {
+          "post_work_rounds": 64,
+          "median_whole": 8252485.307804391,
+          "best_peak": 8822897.3839178,
+          "whole_rates": [
+            7603451.771554271,
+            8252485.307804391,
+            8756870.256301565
+          ],
+          "peak_rates": [
+            8186197.331327179,
+            8297573.4949476635,
+            8822897.3839178
+          ],
+          "whole_spread_pct": 13.976619669428606,
+          "peak_spread_pct": 7.673328268539015,
+          "worker_share_min": 0.13239700100843282,
+          "worker_share_max": 0.31549332826681087,
+          "worker_cpu_ns_per_op": [
+            525.5562580222625,
+            484.3301587630475,
+            456.4800574756478
+          ],
+          "jit_bodies": [
+            0,
+            0,
+            0
+          ],
+          "jit_shares": [
+            0,
+            0,
+            0
+          ],
+          "execution_classes": [
+            "NATIVE",
+            "NATIVE",
+            "NATIVE"
+          ]
+        },
+        "ratios": {
+          "median_whole": 1.2087891591995934,
+          "best_peak": 1.2165571311975154
+        },
+        "passed": true
+      },
+      {
+        "threads": 5,
+        "candidate": {
+          "post_work_rounds": 64,
+          "median_whole": 9962363.259315433,
+          "best_peak": 10099275.229071775,
+          "whole_rates": [
+            10070448.635018403,
+            9532355.029203905,
+            9962363.259315433
+          ],
+          "peak_rates": [
+            10099275.229071775,
+            9566142.02805944,
+            10000097.616879066
+          ],
+          "whole_spread_pct": 5.401264657874694,
+          "peak_spread_pct": 5.3312799678321685,
+          "worker_share_min": 0.1885826121214432,
+          "worker_share_max": 0.20861133351125344,
+          "worker_cpu_ns_per_op": [
+            496.4517005965884,
+            524.5224145718923,
+            501.79906287330925
+          ],
+          "jit_bodies": [
+            1662,
+            1687,
+            1639
+          ],
+          "jit_shares": [
+            8.250648137557665e-05,
+            8.848278304420216e-05,
+            8.22384266098059e-05
+          ],
+          "execution_classes": [
+            "JIT",
+            "JIT",
+            "JIT"
+          ]
+        },
+        "paired_native": {
+          "post_work_rounds": 64,
+          "median_whole": 8130009.637869303,
+          "best_peak": 10010897.588021562,
+          "whole_rates": [
+            7660192.985693569,
+            9908596.693076469,
+            8130009.637869303
+          ],
+          "peak_rates": [
+            8092078.228562661,
+            10010897.588021562,
+            8158446.664841905
+          ],
+          "whole_spread_pct": 27.65560937234211,
+          "peak_spread_pct": 23.5194202804301,
+          "worker_share_min": 0.08777255347731736,
+          "worker_share_max": 0.2931952051255554,
+          "worker_cpu_ns_per_op": [
+            651.9988990972977,
+            504.2920169623366,
+            614.4903209325163
+          ],
+          "jit_bodies": [
+            0,
+            0,
+            0
+          ],
+          "jit_shares": [
+            0,
+            0,
+            0
+          ],
+          "execution_classes": [
+            "NATIVE",
+            "NATIVE",
+            "NATIVE"
+          ]
+        },
+        "ratios": {
+          "median_whole": 1.2253814820724307,
+          "best_peak": 1.0088281435578725
+        },
+        "passed": true
+      },
+      {
+        "threads": 6,
+        "candidate": {
+          "post_work_rounds": 64,
+          "median_whole": 10214645.293582149,
+          "best_peak": 10561902.169526542,
+          "whole_rates": [
+            10214645.293582149,
+            10034066.602865634,
+            10514124.179046974
+          ],
+          "peak_rates": [
+            10245073.897167463,
+            10079266.755636184,
+            10561902.169526542
+          ],
+          "whole_spread_pct": 4.699698936026284,
+          "peak_spread_pct": 4.710902222226002,
+          "worker_share_min": 0.11432049175339298,
+          "worker_share_max": 0.25779319578844867,
+          "worker_cpu_ns_per_op": [
+            587.3197587781119,
+            597.9029869694012,
+            570.6016776120596
+          ],
+          "jit_bodies": [
+            2148,
+            2241,
+            1994
+          ],
+          "jit_shares": [
+            0.00010512591618116896,
+            0.00011165411915512359,
+            9.480935426936888e-05
+          ],
+          "execution_classes": [
+            "JIT",
+            "JIT",
+            "JIT"
+          ]
+        },
+        "paired_native": {
+          "post_work_rounds": 64,
+          "median_whole": 8013777.531494766,
+          "best_peak": 9176691.236775888,
+          "whole_rates": [
+            8013777.531494766,
+            9089964.610179724,
+            7639277.685079993
+          ],
+          "peak_rates": [
+            8594763.850443885,
+            9176691.236775888,
+            7681495.220708225
+          ],
+          "whole_spread_pct": 18.102410746971945,
+          "peak_spread_pct": 17.396592181999768,
+          "worker_share_min": 0.13540834903701812,
+          "worker_share_max": 0.2141217881027807,
+          "worker_cpu_ns_per_op": [
+            747.78419007414,
+            659.4110182374164,
+            784.5465790451956
+          ],
+          "jit_bodies": [
+            0,
+            0,
+            0
+          ],
+          "jit_shares": [
+            0,
+            0,
+            0
+          ],
+          "execution_classes": [
+            "NATIVE",
+            "NATIVE",
+            "NATIVE"
+          ]
+        },
+        "ratios": {
+          "median_whole": 1.2746354953625556,
+          "best_peak": 1.1509488438708033
+        },
+        "passed": true
+      },
+      {
+        "threads": 7,
+        "candidate": {
+          "post_work_rounds": 64,
+          "median_whole": 9642735.546012294,
+          "best_peak": 10146068.567595644,
+          "whole_rates": [
+            10119039.038614184,
+            9642735.546012294,
+            9502964.357798157
+          ],
+          "peak_rates": [
+            10146068.567595644,
+            9665467.381912515,
+            9530451.352066355
+          ],
+          "whole_spread_pct": 6.389003181475832,
+          "peak_spread_pct": 6.369244147275539,
+          "worker_share_min": 0.12644166323808512,
+          "worker_share_max": 0.16802261536623886,
+          "worker_cpu_ns_per_op": [
+            691.686054942423,
+            725.8582331993974,
+            736.6078685410719
+          ],
+          "jit_bodies": [
+            2600,
+            2522,
+            2669
+          ],
+          "jit_shares": [
+            0.0001284495624019831,
+            0.00013074923354612658,
+            0.0001404183446018748
+          ],
+          "execution_classes": [
+            "JIT",
+            "JIT",
+            "JIT"
+          ]
+        },
+        "paired_native": {
+          "post_work_rounds": 64,
+          "median_whole": 8329937.45072028,
+          "best_peak": 9367265.51464349,
+          "whole_rates": [
+            7557369.285247763,
+            9271151.753917526,
+            8329937.45072028
+          ],
+          "peak_rates": [
+            7708969.109547208,
+            9367265.51464349,
+            8363903.271733791
+          ],
+          "whole_spread_pct": 20.5737735584266,
+          "peak_spread_pct": 19.82682428550524,
+          "worker_share_min": 0.1006407203109875,
+          "worker_share_max": 0.1989757181706492,
+          "worker_cpu_ns_per_op": [
+            924.8584429402127,
+            754.2830281712014,
+            839.462444109829
+          ],
+          "jit_bodies": [
+            0,
+            0,
+            0
+          ],
+          "jit_shares": [
+            0,
+            0,
+            0
+          ],
+          "execution_classes": [
+            "NATIVE",
+            "NATIVE",
+            "NATIVE"
+          ]
+        },
+        "ratios": {
+          "median_whole": 1.1575999943647233,
+          "best_peak": 1.083140917884166
+        },
+        "passed": true
+      },
+      {
+        "threads": 8,
+        "candidate": {
+          "post_work_rounds": 64,
+          "median_whole": 10019017.342053752,
+          "best_peak": 10410589.142479518,
+          "whole_rates": [
+            10371831.27253969,
+            9789305.004850483,
+            10019017.342053752
+          ],
+          "peak_rates": [
+            10410589.142479518,
+            9816633.513604367,
+            10048464.182807539
+          ],
+          "whole_spread_pct": 5.814205603219349,
+          "peak_spread_pct": 5.910909548659009,
+          "worker_share_min": 0.1030317238996582,
+          "worker_share_max": 0.17019360092790248,
+          "worker_cpu_ns_per_op": [
+            771.2382840455838,
+            817.1404377843472,
+            798.3376592255632
+          ],
+          "jit_bodies": [
+            2871,
+            2900,
+            2929
+          ],
+          "jit_shares": [
+            0.00013838139938057573,
+            0.00014809748859342928,
+            0.0001461338831838966
+          ],
+          "execution_classes": [
+            "JIT",
+            "JIT",
+            "JIT"
+          ]
+        },
+        "paired_native": {
+          "post_work_rounds": 64,
+          "median_whole": 9125926.245307794,
+          "best_peak": 9812187.50182862,
+          "whole_rates": [
+            9125926.245307794,
+            9723281.207118312,
+            8303723.227801783
+          ],
+          "peak_rates": [
+            9486790.916993048,
+            9812187.50182862,
+            8388475.477110414
+          ],
+          "whole_spread_pct": 15.555220819874718,
+          "peak_spread_pct": 15.007308974924358,
+          "worker_share_min": 0.07235846200423857,
+          "worker_share_max": 0.1619607997999184,
+          "worker_cpu_ns_per_op": [
+            875.2437531884625,
+            821.5466541039766,
+            961.7677606679241
+          ],
+          "jit_bodies": [
+            0,
+            0,
+            0
+          ],
+          "jit_shares": [
+            0,
+            0,
+            0
+          ],
+          "execution_classes": [
+            "NATIVE",
+            "NATIVE",
+            "NATIVE"
+          ]
+        },
+        "ratios": {
+          "median_whole": 1.0978630631827813,
+          "best_peak": 1.0609855488941053
+        },
+        "passed": true
+      }
+    ],
+    "passed": true
+  },
+  "receipt": {
+    "source_manifest_sha256": "c96207c8cae15a01f4a684d7208345882f93956462417015def8938d24449c32",
+    "binary_manifest_sha256": "9a3215c7cb3145774f371364fb7aae54faffe217679e4d7af9086aed5e1f904e",
+    "environment_sha256": "8a7d68973c18ae12286577fe51b91560e5b47ef9c0e0ccc2bd24c286a56567f7",
+    "plan_sha256": "22de1ae265ae714148d2fb2574398296af02baafa49ef043f3c014f95556bf5c",
+    "source_files": 320,
+    "binaries": 6,
+    "post_work_rounds": 64,
+    "sessions": 48,
+    "raw_artifact_sha256": {
+      "c01-t01-r00-direct-native": {
+        "session.json": "bf27c87505b1ac2414bac5933c9e328493d05423a56aeec37461606c846ab499",
+        "measure.json": "b3ee5fa4ca1ec7cb8e987c19f888f55962cc8ce96f72939f97efee1b0b422e5e",
+        "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "drain.counts.json": "d9d42ee8ffdbdc5337485f49c1af4a70a91b4f4224d72d524617174cfae67745"
+      },
+      "c01-t01-r00-direct-kdlock-adaptive-owned-v1-cabi4-linux-local-reuse32": {
+        "session.json": "ac2074a89a43ca6885a6b9b9cebeadac57601d29932248ce2359570378dea59c",
+        "measure.json": "7e5df5c7867ee804ff63ab2a0cded624d8af582c7e78820ad3e63a88deead290",
+        "kernel.log": "dd65858df41dbfc144cd23a9d51a670ca1e9f01c199ac2ce34da1ab48db47642",
+        "drain.counts.json": "156f64301252f5506463e7b1cde63c326eead573019962de0f7aa2799e823107"
+      },
+      "c01-t01-r01-direct-kdlock-adaptive-owned-v1-cabi4-linux-local-reuse32": {
+        "session.json": "a1fd6d4f2c197aa1728b7e8f629fda2d0512fe116c2be54842c233cb5e65820f",
+        "measure.json": "185f727167510b098cd7da348da163c009bbf0efb83966a6af8cd0a6332835ef",
+        "kernel.log": "7169a5a85dfeeca545434d12b9c8f5f78fbee95f53f1756f7154f4c699b75e23",
+        "drain.counts.json": "00ea3fcb8d9056110d1e72ae190ff16bf3aaee59821be9357ecf969c04127a3d"
+      },
+      "c01-t01-r01-direct-native": {
+        "session.json": "2b79035e6fd33331dcc86f96dd4084e708ac9436229f668ea976e754c487110e",
+        "measure.json": "6ef0f5ef782bfeb3fecd6def0f4972b948fe98b0f01fa17a6b0c48a10e6c51fb",
+        "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "drain.counts.json": "60e0f5c7e86b2e3fbeb8dc6de5c7b5e6fd10ff134d6911a25f0372aef959ede5"
+      },
+      "c01-t01-r02-direct-native": {
+        "session.json": "2847eaa94a3834a2dc269827888ec81d99da43c0d00f49f883990ba7fab508d1",
+        "measure.json": "1016c6a3e9342a605a6d22049122dafe90b5e903b331ab49e11076d062cb88e6",
+        "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "drain.counts.json": "a4cd1283fc63859b9e1f64863777277b97a3b04dd8ad5ef8468d89834b5f8843"
+      },
+      "c01-t01-r02-direct-kdlock-adaptive-owned-v1-cabi4-linux-local-reuse32": {
+        "session.json": "a1272eb3b54a6c5ff85ae6617db6f84375207653c62cd5b469ab2667f0678177",
+        "measure.json": "1966e72bde52fe6318430dce8f7d5382fa24d6475d0055bfcd800aeeba54a825",
+        "kernel.log": "9e7ae8026ba2fffa606383b686893bc3f9cec8bddc10f957d6e940459ef03260",
+        "drain.counts.json": "ec7ad1fc300ddb2bea0adecae27da8600095b99b1fa617c22910a8dcb504f763"
+      },
+      "c01-t02-r00-direct-native": {
+        "session.json": "754c1782dd56d0582665d6ca36a7adadce4e0b7a8e6677bb85e5f63a75004cc3",
+        "measure.json": "e936432db2d10316eb5ec1e43f0181ab2ce4996fc3bcd932344c66215dec6d1a",
+        "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "drain.counts.json": "12142432a5d5122fc84299380d3e80a6b4f79e5ae013164c8d18d1e85e1402d3"
+      },
+      "c01-t02-r00-direct-kdlock-adaptive-owned-v1-cabi4-linux-local-reuse32": {
+        "session.json": "436832f8c1090c12ac54dbce7c418779aa8dd7534d778f2e31553abb5b81d12a",
+        "measure.json": "6c80f19cf8c979e637a73803e1d97a041421b37c7ddc064978a7fcf62c25bde6",
+        "kernel.log": "5b2666dffa361284d6ac54d62c55393de24c7a98928ed67a02d186ecbd0a8283",
+        "drain.counts.json": "b451e44448b272588cfa9d243c51b8320ff99d0c7541a10567db99049b8ec3d1"
+      },
+      "c01-t02-r01-direct-kdlock-adaptive-owned-v1-cabi4-linux-local-reuse32": {
+        "session.json": "01bec2e7cdcb782634f6fd8fdd75cc5a96a27daee1832cd81bfb254ad83cb746",
+        "measure.json": "b9cc28a2862b268218564bfe9a64951f68527582c29dd1f7639160b4b4b7b36c",
+        "kernel.log": "ff0641c3256abc4733ea4d8c9ab9335b2a19f9608e524ea1e087beff485a161d",
+        "drain.counts.json": "aea38866a95d27f21025c022e7207b86ef7eac3fb7ff6ba32ad1d3cb14e2ba9c"
+      },
+      "c01-t02-r01-direct-native": {
+        "session.json": "19a093367d92fa6bdba975757a0f0274066a710c210c059efd30686fc996e82a",
+        "measure.json": "3621e80c142af79fda8473ade8ae3a7cca1a88edfc1d74f4177e4933efa4de51",
+        "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "drain.counts.json": "3151fa93c29e7a0b711bae917c7f79334e1c7d0b4b708cf61b75c06e64f1f04c"
+      },
+      "c01-t02-r02-direct-native": {
+        "session.json": "dec0df72e91de305fd6aacf1a3aead42835227497f85d06671d6efd96a1f2462",
+        "measure.json": "743fdf11875c57b1b332005b6a74ff015af57810ecf9eb63ccc871e11f7c885f",
+        "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "drain.counts.json": "b7b6ae6323d6190e8d878419bb79a91a53292882a7afdad5dc97f995b8cd3b16"
+      },
+      "c01-t02-r02-direct-kdlock-adaptive-owned-v1-cabi4-linux-local-reuse32": {
+        "session.json": "6be3a53f2ba0bb9692720ab6bf453b8e2873015e63e70e1ddc0972843957b565",
+        "measure.json": "a20e3e705e6c8f563ce391d01dc8b4f9fec8bfb2323ecde4ffd99c521e1352a5",
+        "kernel.log": "467e86d484119bb0fcd0f5750f740a1d572499bcd63aec4dff685d4e575c3812",
+        "drain.counts.json": "c0c028e94921fd12a50b8c68b40f91ed38063cfaa6f9188162ca165a0f817d8c"
+      },
+      "c01-t03-r00-direct-native": {
+        "session.json": "2267902698a62157600d9e6d308bca9dd83890f49fa29d61245b28375b36f30d",
+        "measure.json": "cc45ce00a9f8e6538943a313fedc41d49bbfa25db59ccb5ed0a5e9b9e2ec7fb5",
+        "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "drain.counts.json": "2f71465fa9cba1edffcdf049d631ccd45b45f67ba15609602373d7360f2f2751"
+      },
+      "c01-t03-r00-direct-kdlock-adaptive-owned-v1-cabi4-linux-local-reuse32": {
+        "session.json": "a320b849029043e7934a000cf25c42bbcf1181bbf6772a1f2489a6465b4d98de",
+        "measure.json": "d9d119633f1c3d175d28ea3c8e3e8e5fb994ded70174de03742114871329ccbf",
+        "kernel.log": "2eaa6a529baac77c79fb05309025a44ea943a049f60212196742a28661d4857d",
+        "drain.counts.json": "41f5b301da208e5929a69bf61798110423bf625d52459a107e33754907b8d020"
+      },
+      "c01-t03-r01-direct-kdlock-adaptive-owned-v1-cabi4-linux-local-reuse32": {
+        "session.json": "7691832c9b0218329985aab710c27a97196717b6c1b033da9b38fa9aafec1434",
+        "measure.json": "5759df631bfa1faab6db6b03fea2a5b6fb71f7465017a5ee5281f36c81cee1fd",
+        "kernel.log": "e4b6a3f9caea67edb9bda13a4f3924aa6ea112e92df4bcab573c516a4631ce86",
+        "drain.counts.json": "d008894d64908e08acf1c7ef910dfc31bafb422230e20bbf9e0f57a0ab31f20b"
+      },
+      "c01-t03-r01-direct-native": {
+        "session.json": "9f79e47c75abbc71c98142d344e6abe96c6608e5ab7a8542d304cda593cb4d9d",
+        "measure.json": "be3bb10b73dd846bb655b72cb9cb0f2692ce5babcdd83d4543d1598d446dbcb7",
+        "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "drain.counts.json": "2dd408d0a89ebdd7d43dd3c95eed1c90f789a4d44b9dcc16265239cfceb62448"
+      },
+      "c01-t03-r02-direct-native": {
+        "session.json": "61f8c8461d62a1687a59ef35616506e309b4af3a84d6ad575b0f511dda26d578",
+        "measure.json": "6e8ee39c568cb120dc026688d9cf1801bf49e60bebd8a9a8a8c0ebef6a0ee5e7",
+        "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "drain.counts.json": "d0d53e5248d88fc6d5c4225ee6709bbd826c2771463b6b5319815788f98de60f"
+      },
+      "c01-t03-r02-direct-kdlock-adaptive-owned-v1-cabi4-linux-local-reuse32": {
+        "session.json": "5dbec36debd02069183793e79fdb56c3e37f2148bbdf222100f3d82414d5ecd3",
+        "measure.json": "f3de9c29b1fdb90e7e6154cbc526bf4e287db08eb78f7775eac7c56c3e014036",
+        "kernel.log": "7a2636d1499b0c75836ca00801c23a1b72326d027b1df9a122d0deb8035d1ddc",
+        "drain.counts.json": "9dc842edbf8be023f1ef7beb2b3fde71c9edbef05acc6b0e7e2d38275b59af81"
+      },
+      "c01-t04-r00-direct-native": {
+        "session.json": "f8406d3d53de32422e20da1c50260257fc309e6b68b3a2738c82c9402ce6be10",
+        "measure.json": "e6101c7c9d49f6921e0346662d0ccaaca2a03fae91a04613017aa558b8d05a79",
+        "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "drain.counts.json": "1e7850723d68c73741ade8ad5aae3429b74ca0946b6e81b1c5f9d301de5afb97"
+      },
+      "c01-t04-r00-direct-kdlock-adaptive-owned-v1-cabi4-linux-local-reuse32": {
+        "session.json": "1eb4ae0853316cdf31a4b058615472a23e677747ded26026a6aba5b9f02bf8fc",
+        "measure.json": "c58e7929c6371c7a7d39001d47191ac4fd73f44ab9e99f9986d9515e370816cd",
+        "kernel.log": "4d494c0d079e482c0c6c4a9116e327b92aaf69552f46d03d5c60a99b68f502c2",
+        "drain.counts.json": "f68b7b139a365c8cbffaebaddf7125ddbf9181feceaa67c8eedd4e5bdcde00d0"
+      },
+      "c01-t04-r01-direct-kdlock-adaptive-owned-v1-cabi4-linux-local-reuse32": {
+        "session.json": "3385cb5088983f7fe9faf653a88557eac1634df560e93cf88cca1ab214145c00",
+        "measure.json": "3f8f430728d6c1e2520e38c0ae8fc42f9166391e613fcc84e3ac070fd62a3c25",
+        "kernel.log": "cbdac96a02fc475429376b1a9c28118eda9ef22ecc8c07bd2609f625f6e0346b",
+        "drain.counts.json": "d64b62cf8869602d1e520f265f7bde010bcf4fef4c92961be1552f65662f43fd"
+      },
+      "c01-t04-r01-direct-native": {
+        "session.json": "a431e6410bfb90a9a1a017cd217c40eafe2613f51c3bb2002b68951432beae19",
+        "measure.json": "17d164486e10b0c67b41f30c1f9a62a045436c18be4178788f5b329da9292ddd",
+        "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "drain.counts.json": "0949612928634fec36f60c95a0cba99f522e9a75f41653ceb02feef016c6ebf8"
+      },
+      "c01-t04-r02-direct-native": {
+        "session.json": "b5c1c6b7b29de06419638642301c17df96d1e7549c08364a56e543e4069c8a79",
+        "measure.json": "64cdbb8e543595c171864c6b091359d34e9e82bdd84d6c70d4f2b00ac4ff392f",
+        "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "drain.counts.json": "b08fb2dfee64fe79808daee3931facdac37958519a743c6cbd4978e229f008d4"
+      },
+      "c01-t04-r02-direct-kdlock-adaptive-owned-v1-cabi4-linux-local-reuse32": {
+        "session.json": "94cf191e3cac9cfa51f508cb7f04d24e735909672ca39b73326c6b0c794b7648",
+        "measure.json": "2fa313be473eb9ae797eb0089e97725144a90a5953aac5ff3caf8df10112711d",
+        "kernel.log": "1f8fa82ccdb67eed1aad89918c05b5f6de85bb17f46ecafc3560a1ad66ba93cc",
+        "drain.counts.json": "bbf2de084b465b190bdeee0950feab172a30a522cc672cc4c74da86a99b1c6aa"
+      },
+      "c01-t05-r00-direct-native": {
+        "session.json": "bad93122fc40fbb17239e92bf4e7c077e8b6c5fa96865d00e65f34dcde8a6cd8",
+        "measure.json": "4f40c5de65351dfbf6ec06d0f8326f13733d71a82012ff298c615a40752e02f4",
+        "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "drain.counts.json": "d42a4a1ba33ce57ed830341a1df6e3b1b46b35145b87b6f14e90a288a8528f08"
+      },
+      "c01-t05-r00-direct-kdlock-adaptive-owned-v1-cabi4-linux-local-reuse32": {
+        "session.json": "7dde84bfc7ff52728115c986801994c3fd08fb37d20cda2e213ea788a4a53297",
+        "measure.json": "86bf3e81fe73c409aab2784721d964ffaf35f2a3894848036f43ca0744fa1fb5",
+        "kernel.log": "1bd3736f809e555ef9cd1bb5eb7e0bdf66cc5c684a4fc73ded3e899d70180960",
+        "drain.counts.json": "ee36d9bcb44f26fa24186cde5fc74c1cdc39d700f86bd7b6dca2f8ffed35a52a"
+      },
+      "c01-t05-r01-direct-kdlock-adaptive-owned-v1-cabi4-linux-local-reuse32": {
+        "session.json": "c089b48d729ac083655d241b8fa773f7695d610f0c4e849684f0747a8e9fd360",
+        "measure.json": "ae480c04a6c08a03bdd8e3a1b494bb2508db5eda9d357f64c3cb1c7220a0e8bb",
+        "kernel.log": "7cb2280c47bf2c0f10ca2592bca8a17d3b267c6d6cc37bf2b7201eff321b57e0",
+        "drain.counts.json": "117fc882862ab43d0675cfde0e7d4d7c3f7e751bd8a336c96f104c987282d988"
+      },
+      "c01-t05-r01-direct-native": {
+        "session.json": "6ee25a5c2ab2390108d061c91489c86acd871fedb198ceb5e758707eb2ac5cb4",
+        "measure.json": "2fb3ae012836e125c0373e2cae3ba3962a1baa313c2d1e54564c84d05f0d6c25",
+        "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "drain.counts.json": "23bac8e96d2c1734661df0a13f2b10d30460c22b9e5d68245c70974e9e04d820"
+      },
+      "c01-t05-r02-direct-native": {
+        "session.json": "de171bc1dfc2096a8ca42c3481f25d2985c346bb24999375708fecc5afd34d19",
+        "measure.json": "739072e5f079b4dd41d5cee5efb55e666d2a0ab688447b39026f2086493fb08a",
+        "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "drain.counts.json": "1b46a85b3c00c149f6aef331dafd67ab139d1b478039e99606c9f766b172f9ff"
+      },
+      "c01-t05-r02-direct-kdlock-adaptive-owned-v1-cabi4-linux-local-reuse32": {
+        "session.json": "9b632ba0a19b94a8288c9578f03c1454275c09108f66aadcdf4d2ec08fffe66d",
+        "measure.json": "2d35d19968bfdd1a843fe790f59cd9999d9b9601ed0537da3fc986966b0b218e",
+        "kernel.log": "1fc939a0cf7e2b5d74201e3e228e361e52c08b8eb93310570f678a573d2b2926",
+        "drain.counts.json": "1b261f95fd3ea3f06033ce0042a9137271ea7301473378ddef527ea599bf3677"
+      },
+      "c01-t06-r00-direct-native": {
+        "session.json": "30c6785cb33a70b9f9eab13b556081dd963a0ff0b5ccb3f5b05451db11159aa8",
+        "measure.json": "84518d7390324cf34fa782127c8d5de5bda6a10b110453e60158ab7aee33ba2c",
+        "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "drain.counts.json": "437b2475599374b5208c08aa620765f8ad2346019e2201ee9aa6f15618ac897b"
+      },
+      "c01-t06-r00-direct-kdlock-adaptive-owned-v1-cabi4-linux-local-reuse32": {
+        "session.json": "82edfdf5624674467b9cf01b6e68f4e58385c1da530215e4932611b55c9b5d10",
+        "measure.json": "8e4d9e5cf45ce6a66614b5769a79567de675107b34486a0feae7470af28a0567",
+        "kernel.log": "9f8cb98ef4408b4398f0a74292675c04adc8b1f18f10163187365d700c03b344",
+        "drain.counts.json": "90bc3382189f5a7b4d42975f7a265fc896efdf8ef1520013504887e7112515a0"
+      },
+      "c01-t06-r01-direct-kdlock-adaptive-owned-v1-cabi4-linux-local-reuse32": {
+        "session.json": "8331e0942cc068ca48342b906f49e90d4ce13b9235ed36306d22ae8da0e6fd80",
+        "measure.json": "742fa573995c2520c7d5a16ab80331aed57b6a255769946e8c4d84820a0e78ce",
+        "kernel.log": "5013da6fba4a5651160b6c632616811578a2b3bdcdbc19c1f2d1ed0da83a24c1",
+        "drain.counts.json": "73f8e65003ee2c125de1a30cba1d478efd7f5f65ea4720a116a7c638a6c4ce81"
+      },
+      "c01-t06-r01-direct-native": {
+        "session.json": "bc1efe5d93f185e6f44849fca07225af4fda2a2c14ac2afa11c2eef5d7789c24",
+        "measure.json": "391d56512f237bfbebf661203ca65c5f72c7f02b9e094690b025b767e050beca",
+        "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "drain.counts.json": "2ddb5b896640cffadf924269bedec16117fda352f47d53b68d14bddd1f2a4f8f"
+      },
+      "c01-t06-r02-direct-native": {
+        "session.json": "d6534ee62c95da8beee01fb70a589139d91e6afda986d2ccff07672197c96ce2",
+        "measure.json": "587e35e5d2898bb2dad4b1faed7dc2cc778b9abe26011d2274a389e7ff68e557",
+        "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "drain.counts.json": "e54f146d412edb6c6343a6f48514053ed75c66e497cb485f234b5e0b68a21eec"
+      },
+      "c01-t06-r02-direct-kdlock-adaptive-owned-v1-cabi4-linux-local-reuse32": {
+        "session.json": "c472fd21f121c9c6fc2ca225fe60fbeeb3a6522ff3e0e6fbdaa814f4c9b4b288",
+        "measure.json": "1b0f1739a329a4282e3570fa8658d4394a83010d691a70df9099557155674a07",
+        "kernel.log": "b77ece6c45b3d7cbe8ca1fa740ec6c108399e4a6993d8e762b899c85d3fda566",
+        "drain.counts.json": "11020b3be0b0dae4afb26cd95fbdd4a6f18e31bb1150904a7b11768018055ac0"
+      },
+      "c01-t07-r00-direct-native": {
+        "session.json": "43a969b56a354a3798956dfcddccd539c2306817f3ca9b17aec5f7c3b5f7be86",
+        "measure.json": "f86ff975fe7bc3aaabe238a807786b15088a9905cc431e4a9f64e49214c3463a",
+        "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "drain.counts.json": "9b2fc5f19596fb75301c848995206101bcf0f268212d5bb692a635f0f713791b"
+      },
+      "c01-t07-r00-direct-kdlock-adaptive-owned-v1-cabi4-linux-local-reuse32": {
+        "session.json": "1f43c59e3cef494c3532678f050d8955cefa116531d7e23f0a66e8bf554f5a33",
+        "measure.json": "eed08b994d6794dd3b8b08b3a77cb439483d088271d3dffbe824d1a25ddf16b7",
+        "kernel.log": "efad1a96fec420ea481d85f6d9426df60bcfdb37f42b1742353aae4cf3223d94",
+        "drain.counts.json": "a3ef92cb6bbd4b3f448bf358e2dd6a7bee9df071a2ec10af5687718da4d8ef02"
+      },
+      "c01-t07-r01-direct-kdlock-adaptive-owned-v1-cabi4-linux-local-reuse32": {
+        "session.json": "950f72307846f0e6687bb6710bb550ad18f73bf7de8eb3ae2cd7b44cb5bc2465",
+        "measure.json": "95ecf9867cf5722acc125a0076b264d07af6089c83c6c12a6a6fdd6a65a5f18d",
+        "kernel.log": "00c3a2c0c254d9b777a4879775d5a96a67fd33cacc29c45b848ebb427a39c929",
+        "drain.counts.json": "ec8f0351b37608aa2b105bf2a6a2e825c62274af2eeac215d1872b039bdbb56a"
+      },
+      "c01-t07-r01-direct-native": {
+        "session.json": "54604677305ca83ad83f35eac4b3248a373a7e34cb3420ceba74bd3e32dc5c92",
+        "measure.json": "b00e3adc33dcce4613d72f0d6cd3de0f5d2d094d7e29787a97edd63acc3c7f85",
+        "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "drain.counts.json": "3957bc934b22b9d99d94ce0974a0776515f6a204ca071a56b04f47ff1aaae56d"
+      },
+      "c01-t07-r02-direct-native": {
+        "session.json": "b57c9e41e1f6ac926d5bd0042fdaecc72f411cbeb59b47f19f2240099eb0363f",
+        "measure.json": "4fd278d106fb510bf30d9ee42ae86dcbc3f20a508c5f3b1b548dc0da308de241",
+        "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "drain.counts.json": "6da074251b954e129325c65567b1d4f860a68dd0479e1375917b0f9a45940e47"
+      },
+      "c01-t07-r02-direct-kdlock-adaptive-owned-v1-cabi4-linux-local-reuse32": {
+        "session.json": "64623dd740f0efe6dbd745bcaca8555c9883a7002235ed8534242798a18a909f",
+        "measure.json": "6570777fe9433d8bb3f99ff59956836f61127d701baa503451c595757e2c6131",
+        "kernel.log": "c64429ddbd7d210e1265aa762f9a2297c017aa1114884b19e91d10995855d4c0",
+        "drain.counts.json": "6318e1be53fe93ff490b275815266ccb7b16b32b2abcd75a824478bd8326b3f2"
+      },
+      "c01-t08-r00-direct-native": {
+        "session.json": "4a70cd9d409cd832d3e900a7a4ff072f93ea2b13833cf6dc1379d6b85af9efd2",
+        "measure.json": "143be575f43bd1d554cbf3d00480d1bc959c838486a2e288daca13d1171ea5eb",
+        "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "drain.counts.json": "4deb1abe4fc54999255aa64e8166fcf6e4c52c2817f3b7b0b68a9be00ae19365"
+      },
+      "c01-t08-r00-direct-kdlock-adaptive-owned-v1-cabi4-linux-local-reuse32": {
+        "session.json": "d93912b31cb0b3d74177ae1a333a1978dbd8a26abac39a26331487d3c027ecb9",
+        "measure.json": "f7403ae00bce1b44fece993cf3002da2ba786ec68bf51955d887e5add01b1370",
+        "kernel.log": "02884427616eee0a082e88ebd6c50226bef77fd15e46aaf2a446b5cbbdf03516",
+        "drain.counts.json": "099b6a5acd63d9a7b96ce4e396e54255557cd2cd3c93f869767423040f47ac7b"
+      },
+      "c01-t08-r01-direct-kdlock-adaptive-owned-v1-cabi4-linux-local-reuse32": {
+        "session.json": "eb9ac1f770d2f7bb15adc1f042e223cd11ed1d3d7b5646555cca895cbb3c9d58",
+        "measure.json": "1650b13400f5a6f32537124b3541d1000ae4aa6c0e5e1c4eefd79d804a9e7f4c",
+        "kernel.log": "fb3f2ef4be6b5bd952afea6dda67f40beafd9152228dd07caee555ada92ffee6",
+        "drain.counts.json": "e2f56c99acd310d58b4a387146757eb474744b26380fe23c29ce32e795370ad9"
+      },
+      "c01-t08-r01-direct-native": {
+        "session.json": "cc1027d041cddc4ea508d5d5b7619d5806e3ff11ab3549d27565d08359dbd489",
+        "measure.json": "ec4dd8dba88175be05cf0db7d73a520e795ef7c2f1f7be34e16a135a77ee2b56",
+        "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "drain.counts.json": "8a60adcd93600618ce65bbd175df34c9d86231f8e24dd6b7c705b899a1fae473"
+      },
+      "c01-t08-r02-direct-native": {
+        "session.json": "930cbeb37fee84d48f4f351a6729818a0618d432c1b0f4919a9e7a6b42b0a58f",
+        "measure.json": "ce913ff645143bb2db2ca3d71aa16ae10b90f5c9430f7758fc252304ca8ff3ad",
+        "kernel.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "drain.counts.json": "d520f733874aa87ce4d1b40d1ba54e0d801f5d22ba4c0f5f4cb6f414c9ec8d98"
+      },
+      "c01-t08-r02-direct-kdlock-adaptive-owned-v1-cabi4-linux-local-reuse32": {
+        "session.json": "f55a2e4861a1164670a6a153f426f2917e7a5cec5bd425d5e41c57c2dd7b4323",
+        "measure.json": "111d8e9c07c4852b911835a00cbb8269d214a3873ebce0a6a2d866eb79b0d47d",
+        "kernel.log": "7abc29c08a8a8dcd4986db91c56e2776968e2cdbd0b4f70ecd8b0613d59bf2ea",
+        "drain.counts.json": "39856750e2421fdb289bedc50722e65d0703a04ceca5379f208f7af8d38d6720"
+      }
+    },
+    "passed": true
+  },
+  "policy": {
+    "api_mode": "direct",
+    "arm": "kdlock",
+    "cachelines": 1,
+    "caller_abi": "c",
+    "caller_shell": "owned_mutex_outer_cabi",
+    "collector_cpu": 63,
+    "cookie_storage": "owned_acquisition_local",
+    "cpu_heat_policy": "owned_mutex_contention1024_shift10_lock1025_pinned_cold",
+    "delegation_batch_limit": 1024,
+    "diagnostic": false,
+    "duration_ms": 2000,
+    "entry_abi": 4,
+    "hotlock_mode": "adaptive",
+    "iterations": 100000,
+    "kd_provider_ubsan": "off",
+    "lock_kind": "mutex",
+    "measurement_mode": "timed_peak",
+    "mutex_acceptance": "adaptive-performance",
+    "mutex_entry_ratio_limit": null,
+    "mutex_implementation": "owned-v1",
+    "mutex_routing": "adaptive",
+    "mutex_spin_limit": 4096,
+    "mutex_wait_counter_scope": "owned_delegate_waits",
+    "mutex_wait_mode": "blocking",
+    "numa_policy": "on",
+    "owned_acquire_policy": "linux_local_first",
+    "owned_caller_policy": "c_abi_v2",
+    "owned_entry_abi": 4,
+    "owned_mutex_cabi": true,
+    "owned_mutex_entry_ratio_limit": 256,
+    "owned_mutex_force_full": false,
+    "owned_mutex_preflight": false,
+    "owned_mutex_preflight_queue": false,
+    "owned_mutex_preflight_spins": 0,
+    "owned_mutex_refill": false,
+    "owned_mutex_reuse_spins": 32,
+    "owned_preflight_policy": "not_applicable",
+    "owned_queue_policy": "finite_fifo",
+    "owned_release_policy": "guarded_owner_release",
+    "peak_settle_ms": 300,
+    "peak_window_ms": 300,
+    "perf_record": false,
+    "pmu": false,
+    "post_work_rounds": 64,
+    "profile_lock": false,
+    "profile_owned_local_first": false,
+    "profile_owned_preflight": false,
+    "registry_lock_kind": 3,
+    "sample_ms": 10,
+    "scenario": "plain",
+    "spin_delegate": "on",
+    "spin_entry_ratio_limit": 2,
+    "spin_prefetch": 2,
+    "warmup_iterations_per_worker": 48000,
+    "warmup_pause_seconds": 0,
+    "warmup_policy": "all_workers",
+    "workload": "cacheline"
+  }
+}
