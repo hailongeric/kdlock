@@ -1,0 +1,13 @@
+branch-instructions
+branch-misses
+bus-cycles
+cache-misses
+cache-references
+cpu-cycles
+instructions
+mem-loads
+mem-loads-aux
+mem-stores
+ref-cycles
+sapphire_rapids
+2

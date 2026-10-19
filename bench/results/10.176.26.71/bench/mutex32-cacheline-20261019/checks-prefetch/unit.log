@@ -1,0 +1,312 @@
+make: Entering directory '/root/kdlock-evidence/10.176.26.71/bench/mutex32-cacheline-20261019/checks-prefetch/source/tests/unit'
+cc -g -O0 -Wall -Wextra -std=gnu11 -I../../include -o basic/test_control_call basic/test_control_call.c
+cc -g -O0 -Wall -Wextra -std=gnu11 -I../../include -o basic/test_daemon_policy basic/test_daemon_policy.c
+
+[PASS] test_control_call (56 phase/error combinations, post-CALL bounds)
+
+chdir translator workspace: No such file or directory
+daemon: translator failed: workspace=./0x1234 status=32256
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "/usr/lib/python3.10/runpy.py", line 288, in run_path
+    code, fname = _get_code_from_file(run_name, path_name)
+  File "/usr/lib/python3.10/runpy.py", line 252, in _get_code_from_file
+    with io.open_code(decoded_path) as f:
+FileNotFoundError: [Errno 2] No such file or directory: '/tmp/kdlock-compiler-launch.WOZ9nU/disassem/disassem.py'
+daemon: translator failed: workspace=./0x1234 status=256
+daemon: translator failed: workspace=./0x1234 status=256
+daemon: translator failed: workspace=./0x1234 status=256
+daemon: translator failed: workspace=./0x1234 status=256
+chdir translator workspace: No such file or directory
+KD_TRANSLATION_METRICS {"schema":1,"pid":0,"tgid":42,"entry":"0x1234","lock_kind":2,"child":2474333,"started_ns":383907303197576,"finished_ns":383907304552531,"wall_ns":1354955,"user_ns":0,"system_ns":928000,"maxrss_kib":1440,"minor_faults":39,"major_faults":0,"voluntary_cs":1,"involuntary_cs":0,"status":32256,"result":-1}
+daemon: translator failed: workspace=./0x1234/42 status=32256
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "/usr/lib/python3.10/runpy.py", line 288, in run_path
+    code, fname = _get_code_from_file(run_name, path_name)
+  File "/usr/lib/python3.10/runpy.py", line 252, in _get_code_from_file
+    with io.open_code(decoded_path) as f:
+FileNotFoundError: [Errno 2] No such file or directory: '/tmp/kdlock-compiler-launch.WOZ9nU/disassem/disassem.py'
+KD_TRANSLATION_METRICS {"schema":1,"pid":0,"tgid":42,"entry":"0x1234","lock_kind":2,"child":2474334,"started_ns":383907304769884,"finished_ns":383907331664616,"wall_ns":26894732,"user_ns":26423000,"system_ns":0,"maxrss_kib":9176,"minor_faults":991,"major_faults":0,"voluntary_cs":1,"involuntary_cs":0,"status":256,"result":-1}
+daemon: translator failed: workspace=./0x1234/42 status=256
+KD_TRANSLATION_METRICS {"schema":1,"pid":0,"tgid":42,"entry":"0x1234","lock_kind":0,"child":2474335,"started_ns":383907331866368,"finished_ns":383907358850984,"wall_ns":26984616,"user_ns":22083000,"system_ns":4427000,"maxrss_kib":9364,"minor_faults":1050,"major_faults":0,"voluntary_cs":1,"involuntary_cs":0,"status":0,"result":0}
+KD_TRANSLATION_METRICS {"schema":1,"pid":0,"tgid":42,"entry":"0x1234","lock_kind":0,"child":2474336,"started_ns":383907359184343,"finished_ns":383907385495441,"wall_ns":26311098,"user_ns":22208000,"system_ns":3684000,"maxrss_kib":9416,"minor_faults":1052,"major_faults":0,"voluntary_cs":1,"involuntary_cs":0,"status":256,"result":-1}
+daemon: translator failed: workspace=./0x1234/42 status=256
+KD_TRANSLATION_METRICS {"schema":1,"pid":0,"tgid":42,"entry":"0x1234","lock_kind":0,"child":2474337,"started_ns":383907385763166,"finished_ns":383907411866465,"wall_ns":26103299,"user_ns":21373000,"system_ns":4295000,"maxrss_kib":9516,"minor_faults":1054,"major_faults":0,"voluntary_cs":1,"involuntary_cs":0,"status":512,"result":2}
+KD_TRANSLATION_METRICS {"schema":1,"pid":0,"tgid":42,"entry":"0x1234","lock_kind":1,"child":2474338,"started_ns":383907412221953,"finished_ns":383907438895871,"wall_ns":26673918,"user_ns":26257000,"system_ns":0,"maxrss_kib":9312,"minor_faults":1052,"major_faults":0,"voluntary_cs":1,"involuntary_cs":0,"status":0,"result":0}
+KD_TRANSLATION_METRICS {"schema":1,"pid":0,"tgid":42,"entry":"0x1234","lock_kind":1,"child":2474339,"started_ns":383907439237608,"finished_ns":383907468164128,"wall_ns":28926520,"user_ns":16284000,"system_ns":12215000,"maxrss_kib":9412,"minor_faults":1052,"major_faults":0,"voluntary_cs":1,"involuntary_cs":0,"status":256,"result":-1}
+daemon: translator failed: workspace=./0x1234/42 status=256
+KD_TRANSLATION_METRICS {"schema":1,"pid":0,"tgid":42,"entry":"0x1234","lock_kind":1,"child":2474340,"started_ns":383907468585275,"finished_ns":383907496535833,"wall_ns":27950558,"user_ns":15760000,"system_ns":11789000,"maxrss_kib":9532,"minor_faults":1055,"major_faults":0,"voluntary_cs":1,"involuntary_cs":0,"status":512,"result":2}
+KD_TRANSLATION_METRICS {"schema":1,"pid":0,"tgid":42,"entry":"0x1234","lock_kind":2,"child":2474341,"started_ns":383907496800012,"finished_ns":383907524091233,"wall_ns":27291221,"user_ns":22390000,"system_ns":4471000,"maxrss_kib":9392,"minor_faults":1053,"major_faults":0,"voluntary_cs":1,"involuntary_cs":0,"status":0,"result":0}
+KD_TRANSLATION_METRICS {"schema":1,"pid":0,"tgid":42,"entry":"0x1234","lock_kind":2,"child":2474342,"started_ns":383907524355705,"finished_ns":383907550281971,"wall_ns":25926266,"user_ns":25514000,"system_ns":0,"maxrss_kib":9540,"minor_faults":1056,"major_faults":0,"voluntary_cs":1,"involuntary_cs":0,"status":256,"result":-1}
+daemon: translator failed: workspace=./0x1234/42 status=256
+KD_TRANSLATION_METRICS {"schema":1,"pid":0,"tgid":42,"entry":"0x1234","lock_kind":2,"child":2474343,"started_ns":383907550571959,"finished_ns":383907579115262,"wall_ns":28543303,"user_ns":20117000,"system_ns":8015000,"maxrss_kib":9436,"minor_faults":1054,"major_faults":0,"voluntary_cs":1,"involuntary_cs":0,"status":512,"result":2}
+daemon: invalid translation monotonic clock
+daemon: invalid translation monotonic clock
+daemon: invalid translation resource record
+daemon: invalid translation resource record
+daemon: invalid translation resource record
+write /dev/kd_dev: Bad file descriptor
+read /dev/kd_dev: Bad file descriptor
+open /dev/kd_dev session: No such file or directory
+daemon: native-only status write failed: -1
+[PASS] daemon opt-in metrics, real children and observation faults
+[PASS] test_daemon_policy
+
+PASS embedded mutex state: 32 bytes/8 alignment; versioned node records, owner phases, PICKUP, release handoff, 131072 independent roots
+mutex state mutation detected: gate-claim-accepts-held
+mutex state mutation detected: record-overflow-not-rejected
+mutex state mutation detected: record-odd-not-rejected
+mutex state mutation detected: record-identity-not-checked
+mutex state mutation detected: record-generation-not-advanced
+mutex state mutation detected: record-exit-keeps-key
+mutex state mutation detected: invalid-phase-not-rejected
+mutex state mutation detected: foreign-task-query-authorized
+mutex state mutation detected: pickup-authorized
+mutex state mutation detected: physical-owner-ignored
+mutex state mutation detected: acquiring-authorized
+mutex state mutation detected: releasing-authorized
+mutex state mutation detected: combiner-not-authorized
+mutex state mutation detected: held-before-physical
+mutex state mutation detected: free-before-physical-release
+mutex state mutation detected: releasing-phase-skipped
+mutex state mutation detected: post-release-clears-successor
+
+PASS exact mutex count: stable global cut, same-key reuse, odd records, bounded EAGAIN, ENOMEM, sparse CPU slots, 8 concurrent writers and exact drain
+mutex count mutation detected: validation-accepts-new-generation
+mutex count mutation detected: snapshot-accepts-odd
+mutex count mutation detected: snapshot-ignores-lock-identity
+mutex count mutation detected: allocation-failure-is-zero
+mutex count mutation detected: retry-exhaustion-is-zero
+mutex count mutation detected: scan-skips-last-cpu
+mutex count mutation detected: scan-skips-last-slot
+mutex count mutation detected: global-drain-ignores-odd
+mutex count mutation detected: global-drain-ignores-record
+mutex count mutation detected: object-idle-ignores-record
+mutex count mutation detected: snapshot-leaks-scratch
+mutex count mutation detected: writer-skips-odd-publication
+
+production mutex resources: 5741 checks, 0 failures; nodes=4 objects=2048 regs=168
+mutex resource mutation detected: outer-entry-retries-native-cas
+mutex resource mutation detected: outer-native-result-routed
+mutex resource mutation detected: outer-queued-result-native
+mutex resource mutation detected: native-success-still-samples
+mutex resource mutation detected: local-predecessor-still-publishes
+mutex resource mutation detected: tail-loses-empty-sentinel
+mutex resource mutation detected: tail-loses-slot
+mutex resource mutation detected: tail-decodes-next-cpu
+mutex resource mutation detected: tail-truncates-slot
+mutex resource mutation detected: tail-ignores-remote-cpu
+mutex resource mutation detected: missing-stack-accepted
+mutex resource mutation detected: reservation-not-published
+mutex resource mutation detected: poll-enables-preemption
+mutex resource mutation detected: poll-returns-before-publication
+mutex resource mutation detected: release-keeps-gs
+mutex resource mutation detected: release-resets-count-generation
+mutex resource mutation detected: gate-without-native-lock
+mutex resource mutation detected: claim-publishes-held-before-physical
+mutex resource mutation detected: unlock-clears-before-physical
+mutex resource mutation detected: unlock-skips-releasing-phase
+mutex resource mutation detected: unlock-clears-successor
+mutex resource mutation detected: resume-loses-register
+mutex resource mutation detected: native-drops-task-record
+mutex resource mutation detected: hook-ignores-task-failure
+mutex resource mutation detected: unlock-drops-retained-task
+mutex resource mutation detected: hook-admits-closed-source
+mutex resource mutation detected: borrowed-unlock-bypasses-notification
+
+PASS production mutex head: linked successor, exact last-node CAS, delayed link and racing publication
+mutex head mutation detected: touch-tail-with-linked-successor
+mutex head mutation detected: rmw-known-successor-tail
+mutex head mutation detected: retire-without-cas
+mutex head mutation detected: ignore-cas-race
+mutex head mutation detected: skip-delayed-link
+mutex head mutation detected: lose-delayed-successor
+
+PASS exact pinned balances: sleeping reservation, independent CPUs, slot lifetime, nested slots, underflow and drain
+mutex balance mutation detected: ignores-active-task
+mutex balance mutation detected: ignores-count-records
+mutex balance mutation detected: ignores-second-cpu
+mutex balance mutation detected: ignores-reservation
+mutex balance mutation detected: ignores-slot-lifetime
+mutex balance mutation detected: drops-exit-balance
+mutex balance mutation detected: opposite-balances-cancel
+
+PASS terminal queue: 5978 checks; singleton, delayed link, independent new head, refusal, native reuse, early release, bounds and packet boundaries
+terminal mutation detected: skip-tail-retirement
+terminal mutation detected: skip-delayed-link
+terminal mutation detected: repeat-after-native-reuse
+terminal mutation detected: skip-deferred-rejoin
+terminal mutation detected: lose-refused-successor
+terminal mutation detected: unbounded-local-cohort
+terminal mutation detected: skip-refusal-gate
+terminal mutation detected: skip-normal-gate
+
+mutex outer production progress: 585 checks, 0 failures, 12 scenarios
+mutex routine INFO traces retained: 12
+mutation detected: alert-regression
+mutation detected: disabled-trace
+
+PASS outer native/routed cookies, once-only observation, flags fallback, live registers and metadata
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 1000BD4
+
+/tmp/kd-mutex-outer-qhufhnly/fixture:     file format elf64-x86-64
+
+
+Disassembly of section .text:
+
+0000000001000a90 <outer_jit_case>:
+ 1000a90:	f3 0f 1e fa          	endbr64 
+ 1000a94:	55                   	push   %rbp
+ 1000a95:	ba 08 00 00 00       	mov    $0x8,%edx
+ 1000a9a:	31 c9                	xor    %ecx,%ecx
+ 1000a9c:	be 00 80 00 00       	mov    $0x8000,%esi
+ 1000aa1:	48 89 e5             	mov    %rsp,%rbp
+ 1000aa4:	41 57                	push   %r15
+ 1000aa6:	41 56                	push   %r14
+ 1000aa8:	41 55                	push   %r13
+ 1000aaa:	41 54                	push   %r12
+ 1000aac:	53                   	push   %rbx
+ 1000aad:	48 83 ec 28          	sub    $0x28,%rsp
+ 1000ab1:	64 48 8b 04 25 28 00 	mov    %fs:0x28,%rax
+ 1000ab8:	00 00 
+ 1000aba:	48 89 45 c8          	mov    %rax,-0x38(%rbp)
+ 1000abe:	31 c0                	xor    %eax,%eax
+ 1000ac0:	48 8d 45 b8          	lea    -0x48(%rbp),%rax
+ 1000ac4:	48 c7 45 c0 15 01 00 	movq   $0x115,-0x40(%rbp)
+ 1000acb:	00 
+ 1000acc:	48 89 05 cd 35 00 00 	mov    %rax,0x35cd(%rip)        # 10040a0 <test_cookie_address>
+ 1000ad3:	0f 1f 44 00 00       	nopl   0x0(%rax,%rax,1)
+ 1000ad8:	48 8b 05 21 f5 ff 5e 	mov    0x5efff521(%rip),%rax        # 60000000 <test_lock>
+ 1000adf:	48 85 c0             	test   %rax,%rax
+ 1000ae2:	75 2d                	jne    1000b11 <outer_jit_case+0x81>
+ 1000ae4:	83 05 f5 37 00 00 01 	addl   $0x1,0x37f5(%rip)        # 10042e0 <owner_cas_count>
+ 1000aeb:	80 3d f2 37 00 00 00 	cmpb   $0x0,0x37f2(%rip)        # 10042e4 <owner_cas_race>
+ 1000af2:	74 0b                	je     1000aff <outer_jit_case+0x6f>
+ 1000af4:	48 c7 05 01 f5 ff 5e 	movq   $0x9000,0x5efff501(%rip)        # 60000000 <test_lock>
+ 1000afb:	00 90 00 00 
+ 1000aff:	48 89 c8             	mov    %rcx,%rax
+ 1000b02:	f0 48 0f b1 35 f5 f4 	lock cmpxchg %rsi,0x5efff4f5(%rip)        # 60000000 <test_lock>
+ 1000b09:	ff 5e 
+ 1000b0b:	0f 84 9f 00 00 00    	je     1000bb0 <outer_jit_entry+0x5a>
+ 1000b11:	8b 05 f1 f4 ff 5e    	mov    0x5efff4f1(%rip),%eax        # 60000008 <test_lock+0x8>
+ 1000b17:	83 f8 03             	cmp    $0x3,%eax
+ 1000b1a:	74 21                	je     1000b3d <outer_jit_case+0xad>
+ 1000b1c:	f3 90                	pause  
+ 1000b1e:	48 8b 05 c3 37 00 00 	mov    0x37c3(%rip),%rax        # 10042e8 <release_on_pause>
+ 1000b25:	48 85 c0             	test   %rax,%rax
+ 1000b28:	74 0e                	je     1000b38 <outer_jit_case+0xa8>
+ 1000b2a:	48 c7 00 00 00 00 00 	movq   $0x0,(%rax)
+ 1000b31:	48 89 0d b0 37 00 00 	mov    %rcx,0x37b0(%rip)        # 10042e8 <release_on_pause>
+ 1000b38:	83 ea 01             	sub    $0x1,%edx
+ 1000b3b:	75 9b                	jne    1000ad8 <outer_jit_case+0x48>
+ 1000b3d:	bf 00 00 00 60       	mov    $0x60000000,%edi
+ 1000b42:	48 89 e6             	mov    %rsp,%rsi
+ 1000b45:	48 8d 15 0a 00 00 00 	lea    0xa(%rip),%rdx        # 1000b56 <outer_jit_entry>
+ 1000b4c:	48 89 e9             	mov    %rbp,%rcx
+ 1000b4f:	e8 fb fd ff ff       	call   100094f <kd_mutex_outer_contended_clobber_v1>
+ 1000b54:	eb 02                	jmp    1000b58 <outer_jit_entry+0x2>
+
+0000000001000b56 <outer_jit_entry>:
+ 1000b56:	31 c0                	xor    %eax,%eax
+ 1000b58:	48 89 45 b8          	mov    %rax,-0x48(%rbp)
+ 1000b5c:	48 8b 45 c0          	mov    -0x40(%rbp),%rax
+ 1000b60:	bf 00 00 00 60       	mov    $0x60000000,%edi
+ 1000b65:	48 83 c0 01          	add    $0x1,%rax
+ 1000b69:	48 89 45 c0          	mov    %rax,-0x40(%rbp)
+ 1000b6d:	48 8b 45 b8          	mov    -0x48(%rbp),%rax
+ 1000b71:	48 85 c0             	test   %rax,%rax
+ 1000b74:	75 52                	jne    1000bc8 <outer_jit_entry+0x72>
+ 1000b76:	48 89 e6             	mov    %rsp,%rsi
+ 1000b79:	48 8d 15 08 00 00 00 	lea    0x8(%rip),%rdx        # 1000b88 <outer_jit_entry+0x32>
+ 1000b80:	48 89 e9             	mov    %rbp,%rcx
+ 1000b83:	e8 f3 fd ff ff       	call   100097b <kd_mutex_direct_unlock_clobber_v1>
+ 1000b88:	48 8b 45 c0          	mov    -0x40(%rbp),%rax
+ 1000b8c:	48 8b 55 c8          	mov    -0x38(%rbp),%rdx
+ 1000b90:	64 48 2b 14 25 28 00 	sub    %fs:0x28,%rdx
+ 1000b97:	00 00 
+ 1000b99:	75 34                	jne    1000bcf <outer_jit_entry+0x79>
+ 1000b9b:	48 83 c4 28          	add    $0x28,%rsp
+ 1000b9f:	5b                   	pop    %rbx
+ 1000ba0:	41 5c                	pop    %r12
+ 1000ba2:	41 5d                	pop    %r13
+ 1000ba4:	41 5e                	pop    %r14
+ 1000ba6:	41 5f                	pop    %r15
+ 1000ba8:	5d                   	pop    %rbp
+ 1000ba9:	c3                   	ret    
+ 1000baa:	66 0f 1f 44 00 00    	nopw   0x0(%rax,%rax,1)
+ 1000bb0:	48 83 05 c8 34 00 00 	addq   $0x1,0x34c8(%rip)        # 1004080 <entries>
+ 1000bb7:	01 
+ 1000bb8:	48 c7 45 b8 00 80 00 	movq   $0x8000,-0x48(%rbp)
+ 1000bbf:	00 
+ 1000bc0:	eb 9a                	jmp    1000b5c <outer_jit_entry+0x6>
+ 1000bc2:	66 0f 1f 44 00 00    	nopw   0x0(%rax,%rax,1)
+ 1000bc8:	e8 d3 f6 ff ff       	call   10002a0 <kd_mutex_local_unlock>
+ 1000bcd:	eb b9                	jmp    1000b88 <outer_jit_entry+0x32>
+ 1000bcf:	e8 ac 04 40 ff       	call   401080 <__stack_chk_fail@plt>
+
+Disassembly of section .init:
+
+Disassembly of section .plt:
+
+Disassembly of section .plt.sec:
+
+Disassembly of section .fini:
+
+PASS actual compiled/JIT outer entry: poisoned registers, routed cookie, untouched Linux owner, COMPLETE and exact FULL
+PASS outer native/routed cookies, once-only observation, flags fallback, live registers and metadata
+PASS actual compiled outer continuation: strict ABI2 admission and generated execution
+
+[PASS] production mutex shadow switch: 32 intact returns, 32 destroyed-frame minimal resumes
+
+PASS production task cache: exact nested refs, reuse, collisions, active overflow, eviction/reactivation race, deferred free, allocation refusal and drain
+
+production frame capacity: checks=11044 failures=0 regs=168 frame=656 context=5272
+capacity mutation detected: early-refusal
+capacity mutation detected: reject-writes-parent
+capacity mutation detected: lost-registers
+capacity mutation detected: lost-parent
+capacity mutation detected: stale-owner
+capacity mutation detected: duplicate-ledger-lock
+capacity mutation detected: missing-outer-accepted
+capacity mutation detected: dense-pop-loses-kind
+capacity mutation detected: repeated-unlock-accepted
+capacity mutation detected: premature-completion
+capacity mutation detected: pop-drops-logical-child
+capacity mutation detected: pop-drops-native-request
+capacity mutation detected: pop-drops-native-routing
+capacity mutation detected: mutex-cleanup-double-unlock
+capacity mutation detected: child-observer-before-ack
+capacity mutation detected: child-pop-skips-observer
+capacity mutation detected: retirement-observer-assumes-alive
+capacity mutation detected: retirement-observer-loses-packet-check
+capacity mutation detected: exit-observer-loses-context-check
+capacity mutation detected: exit-observer-leaks-pid
+
+PASS control publication after KD runtime initialization; 7 failure paths unwind; unpublish before teardown
+PASS control publication after KD runtime initialization; 10 failure paths unwind; unpublish before teardown
+
+mutex images: immutable replacement, marker contract, terminal ban, stale misses and 64-block exhaustion passed
+spin guard images: exact trailer, stable prior image, immutable transition, stale upload/miss and terminal ban passed
+direct images: generated slots, source pins, rel32 range, immutable lifetime and shared 64-image ceiling passed
+
+remote outer production: 6185 checks, 0 failures
+remote packet/publication: regs=168 packet_checks=2175 done=59
+remote mutation detected: spin-done-before-pop
+remote mutation detected: remote-poll-clobbers-r12
+remote mutation detected: cancel-clobbers-r13
+remote mutation detected: done-before-detach
+remote mutation detected: write-after-done
+remote mutation detected: advance-loses-r15
+remote mutation detected: terminal-packet-loses-rax
+remote mutation detected: native-begin-clobbers-r10
+remote mutation detected: native-ack-clobbers-rbx
+remote mutation detected: native-wait-not-measured
+remote mutation detected: native-wait-wrong-backend
+remote mutation detected: native-wait-loses-error
+remote control: BUG-only exit is not assertion detection
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Unit tests: 16 passed, 0 failed
+make: Leaving directory '/root/kdlock-evidence/10.176.26.71/bench/mutex32-cacheline-20261019/checks-prefetch/source/tests/unit'

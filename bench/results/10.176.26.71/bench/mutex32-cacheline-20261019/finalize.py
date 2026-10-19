@@ -1,0 +1,478 @@
+#!/usr/bin/env python3
+"""Validate a completed pipe-only embedded comparison in the idle VM before archiving.
+
+This reads retained receipts and frozen bytes; it never builds or runs a test.
+Select every comparison arm explicitly and map each newly checked arm with
+--check ARM=DIRECTORY. Redirect stdout outside --base: the archive idle guard
+rejects every writable descriptor into the evidence tree, including this one.
+"""
+import argparse
+import ast
+from collections import Counter
+import hashlib
+import json
+import os
+from pathlib import Path
+import re
+import runpy
+import sys
+import time
+
+
+ROOT = Path('/root/host_fs/kdlock')
+DEFAULT_BASE = Path('/root/kdlock-evidence/10.176.26.71/bench/mutex32-cacheline-20261019')
+RELEASE = '6.1.159-kdclobber2'
+DRIVERS = ['mutex/test_mutex_state.py', 'mutex/test_mutex_count.py', 'mutex/test_mutex_resources.py',
+           'mutex/test_mutex_head.py',
+           'mutex/test_mutex_balances.py', 'mutex/test_mutex_terminal.py',
+           'mutex/test_mutex_outer_progress.py', 'mutex/test_mutex_outer_api.py',
+           'mutex/test_mutex_wait_clobber.py', 'mutex/test_mutex_task_cache.py',
+           'execution/test_exec_capacity.py', 'infrastructure/test_provider_lifecycle.py',
+           'execution/test_mutex_images.py', 'execution/test_remote_outer.py']
+RUNNER_TESTS = ['bench/real_api/test_plan.py', 'bench/real_api/test_report.py']
+COLLECTIONS = {'pipe': ('pipe', 6), 'profile': ('profile/pipe', 2)}
+
+
+def require(condition, message):
+    if not condition:
+        raise ValueError(message)
+
+
+def read(path):
+    return json.loads(path.read_text())
+
+
+def digest(path):
+    value = hashlib.sha256()
+    with path.open('rb') as stream:
+        for block in iter(lambda: stream.read(1 << 20), b''):
+            value.update(block)
+    return value.hexdigest()
+
+
+def save(path, value):
+    temporary = path.with_name('.' + path.name + '.tmp')
+    temporary.write_text(json.dumps(value, indent=2, sort_keys=True) + '\n')
+    temporary.replace(path)
+
+
+def child(base, name):
+    require(isinstance(name, str) and re.fullmatch(r'[a-z0-9][a-z0-9._-]*', name)
+            and name not in ('.', '..'), 'unsafe top-level name: ' + str(name))
+    path = base / name
+    require(path.is_dir() and not path.is_symlink(), 'missing ordinary directory: ' + str(path))
+    return path
+
+
+def relative_file(base, name):
+    relative = Path(name)
+    require(not relative.is_absolute() and '..' not in relative.parts,
+            'unsafe relative evidence path: ' + name)
+    path = base / relative
+    require(path.is_file() and path.resolve().is_relative_to(base.resolve()),
+            'missing/outside evidence file: ' + str(path))
+    return path
+
+
+def production(manifest):
+    # The check snapshot excludes maintained prose and generated module files.
+    # Compare every captured production input, including private .inc files.
+    suffixes = ('.c', '.h', '.inc', '.S', '.def', '.py', '.json', '.patch')
+    return {name: value for name, value in manifest.items()
+            if name.startswith(('include/', 'kernel_module/'))
+            and not name.endswith('.mod.c')
+            and (Path(name).suffix in suffixes or Path(name).name == 'Makefile')}
+
+
+def manifest_identity(manifest):
+    return hashlib.sha256(json.dumps(manifest, sort_keys=True,
+                                     separators=(',', ':')).encode()).hexdigest()
+
+
+def validate_matrix(base, arm, snapshot):
+    folder = child(base, arm)
+    matrix = read(folder / 'matrix.json')
+    commit = matrix.get('source_commit', '')
+    require(re.fullmatch(r'[0-9a-f]{7,40}', commit) is not None,
+            arm + ': missing committed source identity')
+    require(matrix.get('version') == arm and matrix.get('passed') is True and matrix.get('final_idle') is True
+            and matrix.get('full_suite') is False and matrix.get('plain_sessions') == 6
+            and matrix.get('profile_sessions') == 2 and matrix.get('snapshot_tag') == snapshot,
+            arm + ': matrix is incomplete or has different scope/snapshot')
+    require(matrix.get('comparison_arm') is (arm != 'prefetch'),
+            arm + ': original comparison/trial classification differs')
+    commands = matrix.get('commands', [])
+    require(len(commands) == len(COLLECTIONS), arm + ': matrix command count differs')
+    all_production, manifests = None, {}
+    for index, (name, (directory, count)) in enumerate(COLLECTIONS.items()):
+        receipt_path = folder / (name + '-command.json')
+        receipt = read(receipt_path)
+        argv = receipt.get('argv', [])
+        expected_argv = ['bench/real_api/run.py', '--cpus', ','.join(map(str, range(60))),
+                         '--entries', '16', '--value-size', '64', '--warmup', '48000', '--warmup-ms', '1000',
+                         '--helper-waves', '4', '--helper-workers', '8', '--backends', 'kdlock',
+                         '--threads', '8', '60', '--duration-ms', '2000', '--collector-cpu', '63',
+                         '--repeats', '3', '--kinds', 'pipebytes', '--queries', 'query', '--output', str(folder / name)]
+        if name == 'profile':
+            expected_argv = [str(base / 'mutex_profile.py'), '--source-root', str(ROOT),
+                             '--commit', commit, '--output', str(folder / name)]
+        require(commands[index] == receipt and receipt.get('exit_code') == 0
+                and receipt.get('source_commit') == commit and receipt.get('version') == arm
+                and receipt.get('expected_sessions') == count
+                and receipt.get('timeout_seconds') == 900 and receipt.get('cwd') == str(ROOT)
+                and receipt.get('finished_unix', 0) >= receipt.get('started_unix', 1)
+                and len(argv) == len(expected_argv) + 1 and Path(argv[0]).name.startswith('python')
+                and argv[1:] == expected_argv,
+                arm + '/' + name + ': command receipt differs or failed')
+        records_path = folder / directory / 'records.json'
+        records = read(records_path)
+        require(len(records) == count and all(r.get('execution_status') == 'OK'
+                and r.get('drained') is True for r in records),
+                arm + '/' + name + ': result count or drain differs')
+        path = folder / directory / 'source-sha256.json'
+        manifest = read(path)
+        prod = production(manifest)
+        require(prod and any(n.endswith('.inc') for n in prod),
+                arm + '/' + name + ': production manifest/private includes missing')
+        if all_production is None:
+            all_production = prod
+        require(prod == all_production, arm + ': collection production bytes differ')
+        manifests[name] = dict(path=str(path.relative_to(base)), sha256=digest(path),
+                               records_sha256=digest(records_path), sessions=count,
+                               command_sha256=digest(receipt_path))
+    profile = read(folder / 'profile/result.json')
+    require(profile.get('passed') is True and profile.get('final_idle') is True and
+            profile.get('exit_code') == 0 and profile.get('sessions') == 2 and
+            profile.get('diagnostic') is True and profile.get('score_eligible') is False and
+            profile.get('source_commit') == commit, arm + ': profile collection incomplete')
+    tool = folder / 'profile/tools/perf'
+    require(read(folder / 'profile/tool-sha256.json') == {'tools/perf': digest(tool)} and
+            profile.get('perf_binary_sha256') == digest(tool), arm + ': retained perf binary differs')
+    require(matrix.get('profile_driver_sha256') == profile.get('script_sha256') ==
+            digest(folder / 'profile/mutex_profile.py') == digest(base / 'mutex_profile.py'),
+            arm + ': profile driver changed or differs between source blocks')
+    result = dict(source_commit=commit, plain_sessions=6, profile_sessions=2,
+                  comparison_arm=matrix['comparison_arm'],
+                  cohort_role='trial' if arm == 'prefetch' else 'original_comparison',
+                  retained_perf_sha256=digest(tool), profile_result_sha256=digest(folder / 'profile/result.json'),
+                  profile_driver_sha256=matrix['profile_driver_sha256'],
+                  matrix_sha256=digest(folder / 'matrix.json'), collections=manifests,
+                  production_files=len(all_production),
+                  production_private_includes=sum(n.endswith('.inc') for n in all_production),
+                  production_manifest_sha256=manifest_identity(all_production))
+    return result, all_production
+
+
+def mutation_names(path, optional=False):
+    assignments = [node for node in ast.walk(ast.parse(path.read_text()))
+                   if isinstance(node, ast.Assign) and isinstance(node.value, ast.Dict)
+                   and any(isinstance(t, ast.Name) and t.id == 'mutations' for t in node.targets)]
+    if optional and not assignments:
+        return []
+    require(len(assignments) == 1, 'missing mutation dictionary: ' + str(path))
+    keys = assignments[0].value.keys
+    require(all(isinstance(key, ast.Constant) and isinstance(key.value, str) for key in keys),
+            'nonliteral mutation identity: ' + str(path))
+    return [key.value for key in keys]
+
+
+def validate_checks(base, arm, directory, prod, revision, snapshot):
+    folder = child(base, directory)
+    result = read(folder / 'result.json')
+    require(result.get('passed') is True and result.get('final_idle') is True
+            and result.get('source_unchanged') is True and result.get('full_suite') is False
+            and result.get('unit_basic') == 2 and result.get('unit_drivers') == DRIVERS
+            and result.get('runner_tests') == RUNNER_TESTS
+            and result.get('snapshot_tag') == snapshot and result.get('source_revision') == revision,
+            directory + ': incomplete checks or unexpected scope')
+    commands = read(folder / 'commands.json')
+    require(commands == result.get('commands'), directory + ': inconsistent command receipts')
+    expected = [
+        ('dependencies', ['-m', 'pip', 'check'], ROOT, 60),
+        ('provider', ['make', '-C', 'kernel_module', 'KDIR=/root/linux-6.1.159-kdclobber2',
+                      'W=1', 'UBSAN_SANITIZE=n'], folder / 'source', 240),
+        ('daemon', ['make', '-C', 'daemon', 'CFLAGS=-O2 -Wall -Wextra -Werror'], folder / 'source', 60),
+        ('unit', ['make', '-C', 'tests/unit', 'run', 'PY_TESTS=' + ' '.join(DRIVERS)], folder / 'source', 300),
+        ('runner-plan', [RUNNER_TESTS[0]], folder / 'source', 90),
+        ('runner-report', [RUNNER_TESTS[1]], folder / 'source', 90),
+        ('local', ['tests/kernel/mutex/local/run.py', '--output', str(folder / 'local')], ROOT, 300),
+        ('rwsem', ['tests/kernel/rwsem/run.py', '--output', str(folder / 'rwsem')], ROOT, 300),
+        ('instruction-exit', ['tests/kernel/jit_escape/run.py', '--cpus', '0-7,32-39',
+                              '--iterations', '200000', '--warmup-iterations', '200000',
+                              '--output', str(folder / 'instruction-exit')], ROOT, 900)]
+    require(len(commands) == len(expected), directory + ': check command count differs')
+    python = commands[0].get('argv', [''])[0]
+    require(Path(python).name.startswith('python'), directory + ': missing Python command')
+    logs = {}
+    for row, (name, argv, cwd, timeout) in zip(commands, expected):
+        if name in ('dependencies', 'runner-plan', 'runner-report', 'local', 'rwsem', 'instruction-exit'):
+            argv = [python, *argv]
+        require(row.get('name') == name and row.get('argv') == argv
+                and row.get('cwd') == str(cwd) and row.get('timeout_seconds') == timeout
+                and row.get('exit_code') == 0
+                and row.get('finished_unix', 0) >= row.get('started_unix', 1),
+                directory + ': unexpected/failed command ' + name)
+        logs[name] = digest(folder / (name + '.log'))
+    text = (folder / 'unit.log').read_text()
+    require(re.findall(r'Unit tests: (\d+) passed, (\d+) failed', text) == [('16', '0')]
+            and '[PASS] test_control_call' in text and '[PASS] test_daemon_policy' in text,
+            directory + ': exact basic and affected pass evidence missing')
+    runner_results = {}
+    for name, path in zip(('runner-plan', 'runner-report'), RUNNER_TESTS):
+        runner_log = (folder / (name + '.log')).read_text()
+        module = ast.parse((folder / 'source' / path).read_text())
+        expected_count = sum(isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
+                             and node.name.startswith('test_') for node in ast.walk(module))
+        counts = re.findall(r'(?m)^Ran (\d+) tests? in ', runner_log)
+        require(counts == [str(expected_count)] and expected_count > 0
+                and re.search(r'(?m)^OK$', runner_log) and 'skipped=' not in runner_log,
+                directory + ': runner test count, pass or no-skip evidence differs for ' + name)
+        runner_results[name] = dict(path=path, tests=expected_count, passed=True,
+                                    log_sha256=logs[name])
+    controls = {}
+    for name, prefix, optional in (('mutex/test_mutex_state.py', 'mutex state mutation detected: ', False),
+                                   ('mutex/test_mutex_count.py', 'mutex count mutation detected: ', False),
+                                   ('mutex/test_mutex_head.py', 'mutex head mutation detected: ', False),
+                                   ('mutex/test_mutex_resources.py', 'mutex resource mutation detected: ', False),
+                                   ('mutex/test_mutex_balances.py', 'mutex balance mutation detected: ', False),
+                                   ('mutex/test_mutex_outer_api.py', 'outer retry mutation detected: ', True)):
+        names = mutation_names(folder / 'source/tests/unit' / name, optional)
+        require((names or optional) and all(prefix + control in text for control in names),
+                directory + ': missing negative-control outcomes for ' + name)
+        if names:
+            controls[name] = names
+    manifest_path = folder / 'source-sha256.json'
+    manifest = read(manifest_path)
+    require(production(manifest) == prod, arm + ': checked and measured production bytes differ')
+    for name, sha in manifest.items():
+        require(digest(relative_file(folder / 'source', name)) == sha,
+                directory + ': frozen source changed: ' + name)
+    live, expected_logs = {}, set()
+    for name, kernel_log in (('local', 'local/kernel.log'), ('rwsem', 'rwsem/local/kernel.log'),
+                             ('instruction-exit', 'instruction-exit/session/kernel.log')):
+        path = folder / name / 'result.json'
+        probe = read(path)
+        require(probe.get('passed') is True and probe.get('drained') is True
+                and (name != 'local' or (probe.get('final_idle') is True and probe.get('probe', {}).get('lock_size') == 32 and probe.get('probe', {}).get('lock_align') == 8)),
+                directory + '/' + name + ': failed or undrained live probe')
+        live[name] = dict(passed=True, drained=True, result_sha256=digest(path))
+        expected_logs.add(directory + '/' + kernel_log)
+    provider = (folder / 'provider.log').read_text(errors='replace')
+    return dict(passed=True, source_commit=revision, checked_source_label=result['source_revision'],
+                directory=directory, unit_basic=2, unit_affected_drivers=DRIVERS,
+                unit_passed=16, unit_failed=0, runner_tests=runner_results, full_suite=False,
+                production_matches_benchmark=True, frozen_source_files=len(manifest),
+                source_manifest_sha256=digest(manifest_path), source_unchanged=True,
+                result_sha256=digest(folder / 'result.json'),
+                commands_sha256=digest(folder / 'commands.json'), logs_sha256=logs,
+                provider_warning_lines=sum(bool(re.search(r'\bwarning:', line, re.I))
+                                           for line in provider.splitlines()),
+                negative_controls=controls, live=live), expected_logs
+
+
+def topology(base):
+    before, after = (read(base / name) for name in ('host-before.json', 'host-after.json'))
+    require(before.get('snapshot_listed') and after.get('snapshot_listed')
+            and before['recovery_snapshot'] == after['recovery_snapshot'],
+            'real recovery snapshot missing or changed')
+    require(before['cpufreq'] == after['cpufreq'] and before['numa'] == after['numa'],
+            'host frequency policy or NUMA topology changed')
+    require(len(before['qemu']) == len(after['qemu']) == 1, 'ambiguous QEMU identity')
+    left, right = before['qemu'][0], after['qemu'][0]
+    require(left['pid'] == right['pid'] and left['args'] == right['args'], 'QEMU identity changed')
+    bt, at = ({t['tid']: t for t in q['tasks']} for q in (left, right))
+    require({k: v for k, v in bt.items() if v['comm'].startswith('CPU ')} ==
+            {k: v for k, v in at.items() if v['comm'].startswith('CPU ')}, 'vCPU pins changed')
+    require(all(bt[k] == at[k] for k in bt.keys() & at.keys()), 'retained host task pins changed')
+    require(all(t['affinity'] == [63] for t in [*bt.values(), *at.values()]
+                if not t['comm'].startswith('CPU ')), 'service thread outside collector CPU')
+    return dict(snapshot=after['recovery_snapshot'], unchanged=True,
+                before_sha256=digest(base / 'host-before.json'), after_sha256=digest(base / 'host-after.json'),
+                added_service_threads=[at[k] for k in sorted(at.keys() - bt.keys())],
+                removed_service_threads=[bt[k] for k in sorted(bt.keys() - at.keys())])
+
+
+def validate_placement(base, baseline_production, snapshot):
+    path = base / 'placement-analysis.json'
+    analysis = read(path)
+    result = read(base / 'placement/result.json')
+    require(analysis.get('complete') is True and analysis.get('issues') == []
+            and analysis.get('diagnostic') is True and analysis.get('score_eligible') is False
+            and analysis.get('source_revision') == '09ebd8f' and analysis.get('baseline_revision') == '0987358'
+            and analysis.get('provider_matches_baseline') is True
+            and analysis.get('script_sha256') == digest(base / 'placement-analysis.py'),
+            'placement analysis incomplete or source/helper differs')
+    require(result.get('passed') is True and result.get('final_idle') is True
+            and result.get('source_unchanged') is True and result.get('snapshot_tag') == snapshot
+            and result.get('source_revision') == analysis['source_revision']
+            and result.get('expected_sessions') == result.get('returned_jit_sessions') == 12
+            and result.get('profiles') == 0, 'placement run incomplete or scope/snapshot differs')
+    for name, sha in analysis.get('input_sha256', {}).items():
+        require(digest(relative_file(base, name)) == sha, 'placement input binding differs: ' + name)
+    require(len(analysis.get('collections', [])) == 2, 'placement collection count differs')
+    for collection in analysis['collections']:
+        folder = base / 'placement' / ('offset' + str(collection['offset']))
+        manifest = read(folder / 'source-sha256.json')
+        require(production(manifest) == baseline_production
+                and collection.get('source_manifest_sha256') == digest(folder / 'source-sha256.json')
+                and collection.get('records_sha256') == digest(folder / 'records.json'),
+                'placement provider or retained collection differs')
+    sessions = analysis.get('sessions', [])
+    require(len(sessions) == 12 and {(row['offset'], row['threads'], row['repeat']) for row in sessions} ==
+            {(offset, workers, repeat) for offset in (32, 40) for workers in (8, 60) for repeat in range(3)},
+            'placement session inventory differs')
+    logs = set()
+    for row in sessions:
+        saved = relative_file(base, row['session_path'] + '/session.json')
+        log = row['session_path'] + '/kernel.log'
+        record = read(saved)
+        require(row.get('valid') is True and row.get('diagnostic') is True and row.get('score_eligible') is False
+                and row.get('session_sha256') == digest(saved)
+                and row.get('kernel_log_sha256') == digest(relative_file(base, log))
+                and record.get('execution_status') == 'OK' and record.get('drained') is True
+                and record.get('diagnostic') is True and record.get('mutex_lock_offset') == row['offset']
+                and record.get('lock_addr', -1) % 64 == row['offset']
+                and record.get('jit_bodies') == record.get('jit_completions')
+                and record.get('jit_completions', 0) > 0,
+                'placement session evidence differs: ' + row['session_path'])
+        logs.add(log)
+    require(set(analysis.get('kernel_logs', [])) == logs, 'placement kernel-log inventory differs')
+    return dict(passed=True, diagnostic=True, score_eligible=False, sessions=12,
+                source_revision=analysis['source_revision'], baseline_revision=analysis['baseline_revision'],
+                provider_matches_baseline=True, analysis_sha256=digest(path),
+                result_sha256=digest(base / 'placement/result.json'),
+                commands_sha256=digest(base / 'placement/commands.json')), logs
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--base', type=Path, default=DEFAULT_BASE)
+    parser.add_argument('--arms', nargs='+', required=True)
+    parser.add_argument('--check', action='append', required=True, metavar='ARM=DIRECTORY')
+    parser.add_argument('--current-arm', required=True,
+                        help='checked candidate whose production bytes are now in the maintained checkout')
+    args = parser.parse_args()
+    require(Path.cwd() == ROOT and os.uname().release == RELEASE and os.geteuid() == 0,
+            'run from the maintained recovery-VM checkout')
+    base = args.base.resolve(strict=True)
+    require(base.is_dir() and not base.is_relative_to(ROOT), 'use an external evidence directory')
+    require(len(args.arms) == len(set(args.arms)) and set(args.arms) in
+            ({'packed32', 'candidate', 'old256'}, {'packed32', 'candidate', 'old256', 'prefetch'}),
+            'require the original three fresh arms and optionally the separately labeled prefetch trial')
+    checks = {}
+    for item in args.check:
+        arm, separator, directory = item.partition('=')
+        require(separator and arm in args.arms and arm not in checks
+                and directory not in checks.values(), 'invalid/duplicate check mapping: ' + item)
+        checks[arm] = directory
+    require(args.current_arm in checks, 'current arm needs its own checked-source mapping')
+    require({'candidate'} | ({'prefetch'} if 'prefetch' in args.arms else set()) <= checks.keys(),
+            'every new candidate/trial needs its own successful checked-source mapping')
+    sys.dont_write_bytecode = True
+    local = runpy.run_path(str(ROOT / 'tests/kernel/mutex/local/run.py'))
+    archive = runpy.run_path(str(ROOT / 'bench/archive_run.py'))
+    archive['idle'](base, local['idle'])
+    host = topology(base)
+    comparison = read(base / 'comparison.json')
+    profiles = read(base / 'profile-analysis.json')
+    require(comparison.get('complete') is True and not comparison.get('issues')
+            and comparison.get('arms') == args.arms, 'comparison incomplete or arm order differs')
+    require(comparison.get('original_comparison_arms') == [arm for arm in args.arms if arm != 'prefetch']
+            and comparison.get('trial_arms') == (['prefetch'] if 'prefetch' in args.arms else []),
+            'comparison/trial roles missing or changed')
+    sessions = comparison['sessions']
+    require(len(sessions) == 6 * len(args.arms)
+            and Counter(row['arm'] for row in sessions) == Counter({arm: 6 for arm in args.arms})
+            and all(row.get('valid') is True for row in sessions), 'session count or validity differs')
+    require(Counter(row['arm'] for row in sessions if row.get('score_eligible') is True) ==
+            Counter({arm: 6 for arm in args.arms}), 'plain timing score inventory differs')
+    require(profiles.get('complete') is True and not profiles.get('issues') and
+            len(profiles.get('profiles', [])) == 2 * len(args.arms), 'profile analysis incomplete')
+    require(Counter(row['arm'] for row in profiles['profiles']) == Counter({arm: 2 for arm in args.arms}),
+            'profile arm counts differ')
+    matrices, production_by_arm = {}, {}
+    for arm in args.arms:
+        matrices[arm], production_by_arm[arm] = validate_matrix(base, arm, host['snapshot'])
+        commit = matrices[arm]['source_commit']
+        require(all(row.get('source_commit') == commit for row in sessions if row['arm'] == arm),
+                arm + ': summary source identity differs')
+        selected = [row for row in profiles['profiles'] if row['arm'] == arm]
+        require({(row['threads'], row['repeat']) for row in selected} == {(8, 0), (60, 0)},
+                arm + ': profile worker/repeat identity differs')
+        for row in selected:
+            require(row.get('complete') is True and not row.get('issues') and row.get('source_commit') == commit and
+                    row.get('parsed_sample_lines', 0) > 0 and row.get('report_lost_samples') == [0] and
+                    row.get('perf_binary_sha256') == matrices[arm]['retained_perf_sha256'],
+                    arm + ': profile source, parsing, loss or binary identity differs')
+            saved = relative_file(base, row['profile_path'] + '/session.json')
+            record = read(saved)
+            require(digest(saved) == row['input_sha256'].get('session.json') and
+                    record.get('threads') == row['threads'] and record.get('repeat') == row['repeat'] and
+                    record.get('source_commit') == commit and record.get('diagnostic') is True and
+                    record.get('score_eligible') is False, arm + ': profile session binding differs')
+    expected_logs = {str(Path(row['session_path']) / 'kernel.log') for row in sessions}
+    require(len(expected_logs) == len(sessions), 'duplicate session paths')
+    expected_logs.update(row['profile_path'] + '/kernel.log' for row in profiles['profiles'])
+    placement, placement_logs = validate_placement(base, production_by_arm['packed32'], host['snapshot'])
+    expected_logs.update(placement_logs)
+    check_results = {}
+    for arm, directory in checks.items():
+        check_results[arm], probe_logs = validate_checks(base, arm, directory, production_by_arm[arm],
+                                                        matrices[arm]['source_commit'], host['snapshot'])
+        expected_logs.update(probe_logs)
+    current = production_by_arm[args.current_arm]
+    require(all(digest(relative_file(ROOT, name)) == sha for name, sha in current.items()),
+            'maintained checkout production differs from current checked candidate')
+    faults, logs = [], {}
+    fault = re.compile(local['rt'].FAULT.pattern + r'|runtime error:|KASAN:|UBSAN:', re.I)
+    for path in sorted(base.rglob('kernel.log')):
+        matches = [line for line in path.read_text(errors='replace').splitlines() if fault.search(line)]
+        name = str(path.relative_to(base))
+        logs[name] = digest(path)
+        if matches:
+            faults.append(dict(path=name, matches=matches))
+    require(expected_logs <= logs.keys() and not faults, 'missing kernel logs or retained runtime faults')
+    boot = Path('/proc/sys/kernel/random/boot_id').read_text().strip()
+    preflight = (base / 'guest-before.log').read_text()
+    require(re.findall(r'(?m)^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$', preflight) == [boot],
+            'guest boot changed or preflight boot identity missing')
+    validation = dict(schema=1, passed=True, full_suite=False, current_arm=args.current_arm,
+                      source_revision=matrices[args.current_arm]['source_commit'],
+                      checks_by_arm=check_results, matrices=matrices,
+                      original_comparison_arms=comparison['original_comparison_arms'],
+                      trial_arms=comparison['trial_arms'],
+                      placement=placement,
+                      returned_jit_sessions=sum(row['jit_class'] == 'RETURNED_JIT' for row in sessions),
+                      all_sessions_returned_jit=all(row['jit_class'] == 'RETURNED_JIT' for row in sessions),
+                      comparison_sha256=digest(base / 'comparison.json'),
+                      profile_analysis_sha256=digest(base / 'profile-analysis.json'),
+                      placement_analysis_sha256=digest(base / 'placement-analysis.json'),
+                      helper_sha256=digest(Path(__file__)),
+                      note='Basic plus the fourteen listed affected drivers, two runner test programs and three live probes only. '
+                           'Only fresh plain pipe timings; API returned JIT counters remain explicit.')
+    save(base / 'validation.json', validation)
+    # Close every output before the strict final idle check. This receipt is
+    # subsequently accepted by the maintained grouped archiver on this boot.
+    archive['idle'](base, local['idle'])
+    health = dict(schema=1, idle=True, boot_id=boot, kernel_release=os.uname().release,
+                  captured_unix=time.time(), snapshot=host['snapshot'], topology=host,
+                  current_arm=args.current_arm, source_revision=validation['source_revision'],
+                  per_session_kernel_faults=faults, kernel_logs=logs,
+                  expected_kernel_logs=sorted(expected_logs),
+                  additional_retained_kernel_logs=sorted(logs.keys() - expected_logs),
+                  valid_timing_sessions=6 * len(args.arms), valid_profiles=2 * len(args.arms),
+                  valid_placement_sessions=12,
+                  validation_sha256=digest(base / 'validation.json'),
+                  comparison_sha256=validation['comparison_sha256'],
+                  profile_analysis_sha256=validation['profile_analysis_sha256'],
+                  placement_analysis_sha256=validation['placement_analysis_sha256'],
+                  guest_before_sha256=digest(base / 'guest-before.log'))
+    save(base / 'health.json', health)
+    print(json.dumps(dict(passed=True, idle=True, timing=health['valid_timing_sessions'],
+                          profiles=health['valid_profiles'], kernel_logs=len(logs), faults=0,
+                          placement=health['valid_placement_sessions'],
+                          checks=list(checks), current_arm=args.current_arm), sort_keys=True))
+
+
+if __name__ == '__main__':
+    main()

@@ -1,0 +1,79 @@
+[
+  {
+    "argv": [
+      "python3",
+      "/root/kdlock-evidence/10.176.26.71/bench/mutex32-cacheline-20261019/placement-analysis.py",
+      "--base",
+      "/root/kdlock-evidence/10.176.26.71/bench/mutex32-cacheline-20261019"
+    ],
+    "cwd": "/root/host_fs/kdlock",
+    "started_unix": 1792427433.5884595,
+    "timeout_seconds": 240,
+    "finished_unix": 1792427433.7314637,
+    "exit_code": 0,
+    "stdout": "{\"complete\": true, \"sessions\": 12, \"effects\": [{\"threads\": 8, \"offset32_mops\": 4.982791522255121, \"offset40_mops\": 5.6492417525548175, \"split_over_shared\": 1.133750374127247, \"change_percent\": 13.3750374127247}, {\"threads\": 60, \"offset32_mops\": 4.125126653972098, \"offset40_mops\": 4.155770997207163, \"split_over_shared\": 1.0074287036024838, \"change_percent\": 0.7428703602483822}]}\n"
+  },
+  {
+    "argv": [
+      "python3",
+      "/root/kdlock-evidence/10.176.26.71/bench/mutex32-cacheline-20261019/summarize.py",
+      "--base",
+      "/root/kdlock-evidence/10.176.26.71/bench/mutex32-cacheline-20261019",
+      "--arms",
+      "packed32",
+      "candidate",
+      "old256",
+      "prefetch"
+    ],
+    "cwd": "/root/host_fs/kdlock",
+    "started_unix": 1792427433.7320235,
+    "timeout_seconds": 240,
+    "finished_unix": 1792427433.9623952,
+    "exit_code": 0,
+    "stdout": "{\"complete\": true, \"sessions\": 24, \"plain\": 24, \"groups\": 8, \"invalid\": 0, \"issues\": [], \"output\": \"/root/kdlock-evidence/10.176.26.71/bench/mutex32-cacheline-20261019\"}\n"
+  },
+  {
+    "argv": [
+      "python3",
+      "/root/kdlock-evidence/10.176.26.71/bench/mutex32-cacheline-20261019/profile-analysis.py",
+      "--base",
+      "/root/kdlock-evidence/10.176.26.71/bench/mutex32-cacheline-20261019",
+      "--arms",
+      "packed32",
+      "candidate",
+      "old256",
+      "prefetch"
+    ],
+    "cwd": "/root/host_fs/kdlock",
+    "started_unix": 1792427433.9630823,
+    "timeout_seconds": 240,
+    "finished_unix": 1792427448.8189569,
+    "exit_code": 0,
+    "stdout": "{\"complete\": true, \"profiles\": 8, \"parsed_samples\": 109590, \"issues\": [], \"output\": \"/root/kdlock-evidence/10.176.26.71/bench/mutex32-cacheline-20261019\"}\n"
+  },
+  {
+    "argv": [
+      "python3",
+      "/root/kdlock-evidence/10.176.26.71/bench/mutex32-cacheline-20261019/finalize.py",
+      "--base",
+      "/root/kdlock-evidence/10.176.26.71/bench/mutex32-cacheline-20261019",
+      "--arms",
+      "packed32",
+      "candidate",
+      "old256",
+      "prefetch",
+      "--check",
+      "candidate=checks-candidate",
+      "--check",
+      "prefetch=checks-prefetch",
+      "--current-arm",
+      "candidate"
+    ],
+    "cwd": "/root/host_fs/kdlock",
+    "started_unix": 1792427448.8197315,
+    "timeout_seconds": 240,
+    "finished_unix": 1792427449.3985686,
+    "exit_code": 0,
+    "stdout": "{\"checks\": [\"candidate\", \"prefetch\"], \"current_arm\": \"candidate\", \"faults\": 0, \"idle\": true, \"kernel_logs\": 50, \"passed\": true, \"placement\": 12, \"profiles\": 8, \"timing\": 24}\n"
+  }
+]

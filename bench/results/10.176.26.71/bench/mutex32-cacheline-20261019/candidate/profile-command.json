@@ -1,0 +1,20 @@
+{
+  "argv": [
+    "/root/kdlock-translation-venv-20261019/bin/python3",
+    "/root/kdlock-evidence/10.176.26.71/bench/mutex32-cacheline-20261019/mutex_profile.py",
+    "--source-root",
+    "/root/host_fs/kdlock",
+    "--commit",
+    "76af844",
+    "--output",
+    "/root/kdlock-evidence/10.176.26.71/bench/mutex32-cacheline-20261019/candidate/profile"
+  ],
+  "cwd": "/root/host_fs/kdlock",
+  "exit_code": 0,
+  "expected_sessions": 2,
+  "finished_unix": 1792426586.069435,
+  "source_commit": "76af844",
+  "started_unix": 1792426547.81812,
+  "timeout_seconds": 900,
+  "version": "candidate"
+}

@@ -1,0 +1,51 @@
+{
+  "files": [
+    {
+      "action": "removed",
+      "expected_sha256": "27d529dda4aaf1a289ebb2fcf0d266a0d4b5c0cc618c0c164715b5b740173f3e",
+      "observed_sha256": "27d529dda4aaf1a289ebb2fcf0d266a0d4b5c0cc618c0c164715b5b740173f3e",
+      "path": "include/kd_mutex_state.h"
+    },
+    {
+      "action": "removed",
+      "expected_sha256": "35d3533de0445789f2ae1d40063c4f091b0ce5fe42de553f594f4e6abe924368",
+      "observed_sha256": "35d3533de0445789f2ae1d40063c4f091b0ce5fe42de553f594f4e6abe924368",
+      "path": "kernel_module/mutex/count.inc"
+    },
+    {
+      "action": "removed",
+      "expected_sha256": "961d095d05afd31028be716d4ef662c3e270683c60ca7c7d4198fef24849782c",
+      "observed_sha256": "961d095d05afd31028be716d4ef662c3e270683c60ca7c7d4198fef24849782c",
+      "path": "tests/unit/mutex/mutex_count_fixture.c"
+    },
+    {
+      "action": "removed",
+      "expected_sha256": "01f8b563bd14668e0d1a5a120ee3a97b3a1db4665d4a87be81181f272e63849b",
+      "observed_sha256": "01f8b563bd14668e0d1a5a120ee3a97b3a1db4665d4a87be81181f272e63849b",
+      "path": "tests/unit/mutex/mutex_state_fixture.c"
+    },
+    {
+      "action": "removed",
+      "expected_sha256": "b09972d7c33049eb6e9c206a83137cd58aa93d88bf4dab47f69f3b4aed08b1f1",
+      "observed_sha256": "b09972d7c33049eb6e9c206a83137cd58aa93d88bf4dab47f69f3b4aed08b1f1",
+      "path": "tests/unit/mutex/mutex_state_mock.h"
+    },
+    {
+      "action": "removed",
+      "expected_sha256": "d43ea8dda6cbd2f96569a37c3e45d852bc1044d34313fd6f4decef1a955bf3ac",
+      "observed_sha256": "d43ea8dda6cbd2f96569a37c3e45d852bc1044d34313fd6f4decef1a955bf3ac",
+      "path": "tests/unit/mutex/test_mutex_count.py"
+    },
+    {
+      "action": "removed",
+      "expected_sha256": "99d5f21672fb416af4385ac447698b10e3dbda1399c41b6272a1a43155604bea",
+      "observed_sha256": "99d5f21672fb416af4385ac447698b10e3dbda1399c41b6272a1a43155604bea",
+      "path": "tests/unit/mutex/test_mutex_state.py"
+    }
+  ],
+  "final_idle": true,
+  "finished_unix": 1792425999.707367,
+  "passed": true,
+  "started_unix": 1792425999.6503773,
+  "target": "old256"
+}

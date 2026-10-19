@@ -23,12 +23,13 @@ their recorded source versions; acceptance of those results does not measure the
 additional flag-preservation cost in images that contain instruction markers.
 
 The mutex protocol remains KD-only `d2a2304`: KD physical exclusion with the
-legacy delegation queue. Current `c2f0d9c` keeps the 32-byte, native-aligned object
-and removes shared waiter-count updates using exact versioned node records.
-Its fresh pipe medians improve 19.4% and 20.7% over the embedded-count baseline
-at eight and sixty workers, while remaining 22.4% and 22.6% below the old
-256-byte version. The earlier `372be89` embedded-count and `ba98937`
-counted-pin comparison and preceding compact experiments remain separate below.
+legacy delegation queue. Current `76af844` keeps the 32-byte, native-aligned
+object and exact versioned node records, avoids redundant queue-head tail
+updates, and inlines the existing gate hint and ownership predicate. Its fresh
+pipe medians are 5.0% and 0.9% above the preceding compact implementation at
+eight and sixty workers, with overlapping repetition ranges. It remains 18.8%
+and 22.4% below the fresh old-256-byte control. The earlier `c2f0d9c`,
+`372be89` and `ba98937` comparisons remain separate historical rounds below.
 The
 [2026-10-17 paired report](../bench/results/10.176.26.71/bench/comparison/mutex-kdonly-20261017T140354Z/README.md)
 contains 504 complete, drained sessions: two workloads, 21 worker counts, three
@@ -36,7 +37,51 @@ repetitions and four arms (accepted compatibility baseline, KD-only, Native,
 TCLock). It uses the regular 64-vCPU VM and collector 63, and measures the former
 256-byte object. Those results do not measure the compact layout.
 
-## Mutex waiter-record pipe comparison
+## Mutex owner, gate and tail comparison
+
+The [cache-line investigation](../bench/results/10.176.26.71/bench/mutex32-cacheline-20261019/README.md)
+compares fresh `0987358` (production `c2f0d9c`), retained `76af844`, old256
+`0324e60` and a separate later prefetch trial `de30588`. Each source/worker
+point has three 2000 ms plain repetitions in the same 64-vCPU VM with collector
+63. Whole-run median Mops/s for the retained comparison is:
+
+| Workers | Old 256-byte | Previous 32-byte | Retained 32-byte | Retained / previous | Retained / old |
+| ---: | ---: | ---: | ---: | ---: | ---: |
+| 8 | 6.862 | 5.310 | 5.574 | 1.050× | 0.812× |
+| 60 | 5.387 | 4.144 | 4.181 | 1.009× | 0.776× |
+
+The candidate avoids a necessarily failing shared-tail CAS when the reserved
+head already has a successor, and retains the exact CAS and delayed-link wait
+for racing publication. The inlined gate hint and ownership predicate keep
+their owner/phase reads, full acquisition CAS and independent physical-owner
+probes. Layout remains 32 bytes with native 8-byte alignment; no auxiliary hash,
+shared lock refcount, registry lock or auxiliary RCU mechanism is introduced.
+
+Separate placement diagnostics use unchanged baseline provider bytes. Moving
+the owner to a different cache line from gate/tail changes observed medians by
++13.4% at eight workers and +0.7% at sixty. Gate readers and tail writers still
+share a line, and dedicated padding changes the object's neighbors. These
+results do not establish owner sharing alone as the major sixty-worker cause.
+The ordinary compact arms all actually place owner/gate/tail on one line;
+native alignment by itself does not guarantee that placement. No validated
+HITM/cache-transfer count was collected.
+
+Returned-JIT share at sixty workers is 95.463% for retained compact and 94.924%
+for old256, with whole-session batch ratios near 128. Lower delegation cannot
+explain that remaining gap uniformly. The later prefetch trial's +1.53%/+1.36%
+median changes versus `76af844` are inconclusive with overlapping ranges;
+`044e351` reverts its hints while its archive branch and results remain intact.
+No performance regression is claimed for the rejected trial.
+
+All 24 ordinary timings, eight unscored profiles and twelve separate placement
+sessions passed and drained. Each new source passed 16 basic/affected drivers,
+11/13-case runner programs and three live probes. Independent source/archive
+and arithmetic/profile audits passed. Sequential source blocks and three
+repetitions support descriptive comparisons, not a uniform speedup or statistical
+significance. The pipe gap remains; this round does not cover the full workload
+grid. The report retains exact ranges, execution mixes and profile limitations.
+
+## Earlier mutex waiter-record pipe comparison
 
 The [packed-state investigation](../bench/results/10.176.26.71/bench/mutex32-packed-20261019/README.md)
 compares fresh baseline `cb0e8e6` (runtime `372be89`), candidate `35718f5`
@@ -45,7 +90,7 @@ VM. Each point has three 2000 ms plain repetitions with collector 63. All 18
 timings returned JIT bodies and drained; six separate profiles are unscored.
 Whole-run median Mops/s is:
 
-| Workers | Old 256-byte | Previous 32-byte | Current 32-byte | Current / previous | Current / old |
+| Workers | Old 256-byte | Previous 32-byte | Then-current 32-byte | Then-current / previous | Then-current / old |
 | ---: | ---: | ---: | ---: | ---: | ---: |
 | 8 | 6.922 | 4.498 | 5.370 | 1.194× | 0.776× |
 | 60 | 5.387 | 3.456 | 4.171 | 1.207× | 0.774× |

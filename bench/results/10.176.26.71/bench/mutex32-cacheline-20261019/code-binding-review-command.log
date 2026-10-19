@@ -1,0 +1,7 @@
+{
+  "passed": true,
+  "checks": 25,
+  "inputs": 4,
+  "issues": [],
+  "output": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/bench/mutex32-cacheline-20261019/code-binding-review.json"
+}

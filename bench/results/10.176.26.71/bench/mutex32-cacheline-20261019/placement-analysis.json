@@ -1,0 +1,562 @@
+{
+  "baseline_revision": "0987358",
+  "collections": [
+    {
+      "offset": 32,
+      "provider_matches_baseline": true,
+      "records_sha256": "a556a1f399b7e6558b726c9cc0d6fde381423b3568a26d416a3563e81b1633f4",
+      "source_identity": "81a1ca92437df5255ef6d04173d2d0f5d47435e735df9712d0d24af093357d73",
+      "source_manifest_sha256": "2d4cb27fb5a0f0af083b4d5ab255da9c7b14882ae8e753ff00fa0bd004cb33ee"
+    },
+    {
+      "offset": 40,
+      "provider_matches_baseline": true,
+      "records_sha256": "b175fa28abfd6434ac46645495952e200052265f8fb4f4213b3a9e3a293500cf",
+      "source_identity": "81a1ca92437df5255ef6d04173d2d0f5d47435e735df9712d0d24af093357d73",
+      "source_manifest_sha256": "2d4cb27fb5a0f0af083b4d5ab255da9c7b14882ae8e753ff00fa0bd004cb33ee"
+    }
+  ],
+  "complete": true,
+  "diagnostic": true,
+  "effects": [
+    {
+      "change_percent": 13.3750374127247,
+      "offset32_mops": 4.982791522255121,
+      "offset40_mops": 5.6492417525548175,
+      "split_over_shared": 1.133750374127247,
+      "threads": 8
+    },
+    {
+      "change_percent": 0.7428703602483822,
+      "offset32_mops": 4.125126653972098,
+      "offset40_mops": 4.155770997207163,
+      "split_over_shared": 1.0074287036024838,
+      "threads": 60
+    }
+  ],
+  "groups": [
+    {
+      "measured_returned_jit_share": 0.9288236187226916,
+      "offset": 32,
+      "repeats": [
+        0,
+        1,
+        2
+      ],
+      "threads": 8,
+      "whole_mops": {
+        "max": 5.52723662165992,
+        "median": 4.982791522255121,
+        "min": 4.926984432629078,
+        "n": 3
+      }
+    },
+    {
+      "measured_returned_jit_share": 0.9537763249570046,
+      "offset": 32,
+      "repeats": [
+        0,
+        1,
+        2
+      ],
+      "threads": 60,
+      "whole_mops": {
+        "max": 4.222500106754565,
+        "median": 4.125126653972098,
+        "min": 3.9958151845379963,
+        "n": 3
+      }
+    },
+    {
+      "measured_returned_jit_share": 0.943280933830997,
+      "offset": 40,
+      "repeats": [
+        0,
+        1,
+        2
+      ],
+      "threads": 8,
+      "whole_mops": {
+        "max": 5.803986639601712,
+        "median": 5.6492417525548175,
+        "min": 5.182086083299859,
+        "n": 3
+      }
+    },
+    {
+      "measured_returned_jit_share": 0.9499503439394718,
+      "offset": 40,
+      "repeats": [
+        0,
+        1,
+        2
+      ],
+      "threads": 60,
+      "whole_mops": {
+        "max": 4.184842520915947,
+        "median": 4.155770997207163,
+        "min": 4.103948506286627,
+        "n": 3
+      }
+    }
+  ],
+  "input_sha256": {
+    "packed32/pipe/source-sha256.json": "4f2593d597864dff1ff4f64aa29b279c48195a4f4f29d986d86b57c8b8aa4557",
+    "placement/commands.json": "1e4971582c991b1c8447ab2bd986bddf08d767f5508fd30b1580ecf533ac0882",
+    "placement/input-source-hashes.json": "2d4cb27fb5a0f0af083b4d5ab255da9c7b14882ae8e753ff00fa0bd004cb33ee",
+    "placement/offset32/records.json": "a556a1f399b7e6558b726c9cc0d6fde381423b3568a26d416a3563e81b1633f4",
+    "placement/offset32/source-sha256.json": "2d4cb27fb5a0f0af083b4d5ab255da9c7b14882ae8e753ff00fa0bd004cb33ee",
+    "placement/offset40/records.json": "b175fa28abfd6434ac46645495952e200052265f8fb4f4213b3a9e3a293500cf",
+    "placement/offset40/source-sha256.json": "2d4cb27fb5a0f0af083b4d5ab255da9c7b14882ae8e753ff00fa0bd004cb33ee",
+    "placement/result.json": "187dbb3efb1599de3a263d7c44fd1242c696330cb36aaef6cd2c07626d8b8ae6",
+    "run-placement.py": "c32fc18e60d40db814cfc98f350fc151e1fc2ac3ad961bb8ca761b16e0c268cc"
+  },
+  "issues": [],
+  "kernel_logs": [
+    "placement/offset32/pipebytes-query-n16-t08-r0-kdlock/kernel.log",
+    "placement/offset32/pipebytes-query-n16-t08-r1-kdlock/kernel.log",
+    "placement/offset32/pipebytes-query-n16-t08-r2-kdlock/kernel.log",
+    "placement/offset32/pipebytes-query-n16-t60-r0-kdlock/kernel.log",
+    "placement/offset32/pipebytes-query-n16-t60-r1-kdlock/kernel.log",
+    "placement/offset32/pipebytes-query-n16-t60-r2-kdlock/kernel.log",
+    "placement/offset40/pipebytes-query-n16-t08-r0-kdlock/kernel.log",
+    "placement/offset40/pipebytes-query-n16-t08-r1-kdlock/kernel.log",
+    "placement/offset40/pipebytes-query-n16-t08-r2-kdlock/kernel.log",
+    "placement/offset40/pipebytes-query-n16-t60-r0-kdlock/kernel.log",
+    "placement/offset40/pipebytes-query-n16-t60-r1-kdlock/kernel.log",
+    "placement/offset40/pipebytes-query-n16-t60-r2-kdlock/kernel.log"
+  ],
+  "limits": [
+    "Separate placement-only diagnostics; do not pool with main timings or profiles.",
+    "Three sequential repeats per cohort, not a confidence interval.",
+    "Both placements use dedicated padding, unlike the ordinary private object.",
+    "A placement effect is not a direct cache-transfer or HITM measurement."
+  ],
+  "provider_matches_baseline": true,
+  "schema": 1,
+  "score_eligible": false,
+  "script_sha256": "35c6a7718f773135beabc59e80706bd3fcb785da232c8706eb088a4917ea8cc4",
+  "sessions": [
+    {
+      "completed": 9966592,
+      "diagnostic": true,
+      "field_lines": {
+        "gate": {
+          "address": 18446744072643773752,
+          "line": 288230376135058964,
+          "offset": 56
+        },
+        "owner": {
+          "address": 18446744072643773728,
+          "line": 288230376135058964,
+          "offset": 32
+        },
+        "tail": {
+          "address": 18446744072643773756,
+          "line": 288230376135058964,
+          "offset": 60
+        }
+      },
+      "jit_bodies": 9342675,
+      "jit_completions": 9342675,
+      "kernel_log_sha256": "3b2121ff51057bdf88a1bb1ef76a74b107b66f5831a29307313e33c5974297c3",
+      "lock_addr": 18446744072643773728,
+      "measured_returned_jit_share": 0.9373991631241652,
+      "offset": 32,
+      "repeat": 0,
+      "score_eligible": false,
+      "session_path": "placement/offset32/pipebytes-query-n16-t08-r0-kdlock",
+      "session_sha256": "dc26280086867989e42dbc6a317e7aec8ef77b04fa62fbada57bc86fb9c4fa63",
+      "threads": 8,
+      "valid": true,
+      "wall_ns": 2000202488,
+      "whole_mops": 4.982791522255121
+    },
+    {
+      "completed": 11055360,
+      "diagnostic": true,
+      "field_lines": {
+        "gate": {
+          "address": 18446744072643773752,
+          "line": 288230376135058964,
+          "offset": 56
+        },
+        "owner": {
+          "address": 18446744072643773728,
+          "line": 288230376135058964,
+          "offset": 32
+        },
+        "tail": {
+          "address": 18446744072643773756,
+          "line": 288230376135058964,
+          "offset": 60
+        }
+      },
+      "jit_bodies": 10286634,
+      "jit_completions": 10286634,
+      "kernel_log_sha256": "0d97e8084fcf536b65513451fdbb1d1f9d4b9be460f78159340af0f92dd2a983",
+      "lock_addr": 18446744072643773728,
+      "measured_returned_jit_share": 0.9304657650225773,
+      "offset": 32,
+      "repeat": 1,
+      "score_eligible": false,
+      "session_path": "placement/offset32/pipebytes-query-n16-t08-r1-kdlock",
+      "session_sha256": "0e5fe91aea95b7fc274689558442c343d22b53d2bf62ec15c77758673c90c51f",
+      "threads": 8,
+      "valid": true,
+      "wall_ns": 2000160434,
+      "whole_mops": 5.52723662165992
+    },
+    {
+      "completed": 9854976,
+      "diagnostic": true,
+      "field_lines": {
+        "gate": {
+          "address": 18446744072643773752,
+          "line": 288230376135058964,
+          "offset": 56
+        },
+        "owner": {
+          "address": 18446744072643773728,
+          "line": 288230376135058964,
+          "offset": 32
+        },
+        "tail": {
+          "address": 18446744072643773756,
+          "line": 288230376135058964,
+          "offset": 60
+        }
+      },
+      "jit_bodies": 9049911,
+      "jit_completions": 9049911,
+      "kernel_log_sha256": "6f4768edccde18a5af6ec557889aef82585237342b8bea7f26e25222cfc6e163",
+      "lock_addr": 18446744072643773728,
+      "measured_returned_jit_share": 0.9183087812694826,
+      "offset": 32,
+      "repeat": 2,
+      "score_eligible": false,
+      "session_path": "placement/offset32/pipebytes-query-n16-t08-r2-kdlock",
+      "session_sha256": "fc54c0d05bee5b9c5af05d746a4be811a674f35a72023bffe925718243629db5",
+      "threads": 8,
+      "valid": true,
+      "wall_ns": 2000204412,
+      "whole_mops": 4.926984432629078
+    },
+    {
+      "completed": 7998976,
+      "diagnostic": true,
+      "field_lines": {
+        "gate": {
+          "address": 18446744072643773752,
+          "line": 288230376135058964,
+          "offset": 56
+        },
+        "owner": {
+          "address": 18446744072643773728,
+          "line": 288230376135058964,
+          "offset": 32
+        },
+        "tail": {
+          "address": 18446744072643773756,
+          "line": 288230376135058964,
+          "offset": 60
+        }
+      },
+      "jit_bodies": 7639832,
+      "jit_completions": 7639832,
+      "kernel_log_sha256": "10e529a3a1d7609c0577f975b0ccc7c62d45900d24a3e481495ecf95d495206a",
+      "lock_addr": 18446744072643773728,
+      "measured_returned_jit_share": 0.955101252960379,
+      "offset": 32,
+      "repeat": 0,
+      "score_eligible": false,
+      "session_path": "placement/offset32/pipebytes-query-n16-t60-r0-kdlock",
+      "session_sha256": "152ca193aee2097d5c16cac8fdc3b6cd3a41cc78e92423bd674e3cece28df5ff",
+      "threads": 60,
+      "valid": true,
+      "wall_ns": 2001838331,
+      "whole_mops": 3.9958151845379963
+    },
+    {
+      "completed": 8452352,
+      "diagnostic": true,
+      "field_lines": {
+        "gate": {
+          "address": 18446744072643773752,
+          "line": 288230376135058964,
+          "offset": 56
+        },
+        "owner": {
+          "address": 18446744072643773728,
+          "line": 288230376135058964,
+          "offset": 32
+        },
+        "tail": {
+          "address": 18446744072643773756,
+          "line": 288230376135058964,
+          "offset": 60
+        }
+      },
+      "jit_bodies": 8057494,
+      "jit_completions": 8057494,
+      "kernel_log_sha256": "796ec0544404bfda9cc6d4491dd2365d20fa5fb77e162668ee0f1ca7a84f6a66",
+      "lock_addr": 18446744072643773728,
+      "measured_returned_jit_share": 0.9532842456158949,
+      "offset": 32,
+      "repeat": 1,
+      "score_eligible": false,
+      "session_path": "placement/offset32/pipebytes-query-n16-t60-r1-kdlock",
+      "session_sha256": "26686de6ac3a8844317223a318ae9688e618df1dd3ed61c2e327b065cc2abf67",
+      "threads": 60,
+      "valid": true,
+      "wall_ns": 2001741098,
+      "whole_mops": 4.222500106754565
+    },
+    {
+      "completed": 8258304,
+      "diagnostic": true,
+      "field_lines": {
+        "gate": {
+          "address": 18446744072643773752,
+          "line": 288230376135058964,
+          "offset": 56
+        },
+        "owner": {
+          "address": 18446744072643773728,
+          "line": 288230376135058964,
+          "offset": 32
+        },
+        "tail": {
+          "address": 18446744072643773756,
+          "line": 288230376135058964,
+          "offset": 60
+        }
+      },
+      "jit_bodies": 7870136,
+      "jit_completions": 7870136,
+      "kernel_log_sha256": "cd8569bb4ebdc0b274e12e6788178ce873090d101c35ad9ee4ab74f885d52bd5",
+      "lock_addr": 18446744072643773728,
+      "measured_returned_jit_share": 0.9529966443473139,
+      "offset": 32,
+      "repeat": 2,
+      "score_eligible": false,
+      "session_path": "placement/offset32/pipebytes-query-n16-t60-r2-kdlock",
+      "session_sha256": "0d60e8cd65efab4fff47bae2320aefafa5dbfd47679f1440c0d5a9476d01f3f2",
+      "threads": 60,
+      "valid": true,
+      "wall_ns": 2001951623,
+      "whole_mops": 4.125126653972098
+    },
+    {
+      "completed": 10365184,
+      "diagnostic": true,
+      "field_lines": {
+        "gate": {
+          "address": 18446744072643773760,
+          "line": 288230376135058965,
+          "offset": 0
+        },
+        "owner": {
+          "address": 18446744072643773736,
+          "line": 288230376135058964,
+          "offset": 40
+        },
+        "tail": {
+          "address": 18446744072643773764,
+          "line": 288230376135058965,
+          "offset": 4
+        }
+      },
+      "jit_bodies": 9745035,
+      "jit_completions": 9745035,
+      "kernel_log_sha256": "3be7e0ffb615f15292463aa9d633272b262a7405733f24b7a5747f21747903cf",
+      "lock_addr": 18446744072643773736,
+      "measured_returned_jit_share": 0.9401699960174368,
+      "offset": 40,
+      "repeat": 0,
+      "score_eligible": false,
+      "session_path": "placement/offset40/pipebytes-query-n16-t08-r0-kdlock",
+      "session_sha256": "fd9644c69f2835654d22a9110d02b27f78bcb2a153cd93cc727e03defe34efb8",
+      "threads": 8,
+      "valid": true,
+      "wall_ns": 2000195256,
+      "whole_mops": 5.182086083299859
+    },
+    {
+      "completed": 11608576,
+      "diagnostic": true,
+      "field_lines": {
+        "gate": {
+          "address": 18446744072643773760,
+          "line": 288230376135058965,
+          "offset": 0
+        },
+        "owner": {
+          "address": 18446744072643773736,
+          "line": 288230376135058964,
+          "offset": 40
+        },
+        "tail": {
+          "address": 18446744072643773764,
+          "line": 288230376135058965,
+          "offset": 4
+        }
+      },
+      "jit_bodies": 10979772,
+      "jit_completions": 10979772,
+      "kernel_log_sha256": "6c4bf8b0d1cb00f7fa4e2fc1da930a889d2f539ed2d613b962607c39f8488ecb",
+      "lock_addr": 18446744072643773736,
+      "measured_returned_jit_share": 0.9458328049883121,
+      "offset": 40,
+      "repeat": 1,
+      "score_eligible": false,
+      "session_path": "placement/offset40/pipebytes-query-n16-t08-r1-kdlock",
+      "session_sha256": "74b0de43dac6b9f4c472fd3b22ce4c168ebd15d59b964594f618fe03f4d3ea0a",
+      "threads": 8,
+      "valid": true,
+      "wall_ns": 2000103846,
+      "whole_mops": 5.803986639601712
+    },
+    {
+      "completed": 11299584,
+      "diagnostic": true,
+      "field_lines": {
+        "gate": {
+          "address": 18446744072643773760,
+          "line": 288230376135058965,
+          "offset": 0
+        },
+        "owner": {
+          "address": 18446744072643773736,
+          "line": 288230376135058964,
+          "offset": 40
+        },
+        "tail": {
+          "address": 18446744072643773764,
+          "line": 288230376135058965,
+          "offset": 4
+        }
+      },
+      "jit_bodies": 10661304,
+      "jit_completions": 10661304,
+      "kernel_log_sha256": "f7f69d71600f8fb4b076a5a2971749bd1900906bf1e394a8ec85e4329f1645e1",
+      "lock_addr": 18446744072643773736,
+      "measured_returned_jit_share": 0.9435129647250731,
+      "offset": 40,
+      "repeat": 2,
+      "score_eligible": false,
+      "session_path": "placement/offset40/pipebytes-query-n16-t08-r2-kdlock",
+      "session_sha256": "e5dbd2e7b8230ec56647550483804d8d1d8dbefda09a9e2fdb9faa0a943a1fed",
+      "threads": 8,
+      "valid": true,
+      "wall_ns": 2000194804,
+      "whole_mops": 5.6492417525548175
+    },
+    {
+      "completed": 8214272,
+      "diagnostic": true,
+      "field_lines": {
+        "gate": {
+          "address": 18446744072643773760,
+          "line": 288230376135058965,
+          "offset": 0
+        },
+        "owner": {
+          "address": 18446744072643773736,
+          "line": 288230376135058964,
+          "offset": 40
+        },
+        "tail": {
+          "address": 18446744072643773764,
+          "line": 288230376135058965,
+          "offset": 4
+        }
+      },
+      "jit_bodies": 7808912,
+      "jit_completions": 7808912,
+      "kernel_log_sha256": "a1860b2ab3ed2e45eede37966c09350637abcda10644c90440ceb5e1d9c32aee",
+      "lock_addr": 18446744072643773736,
+      "measured_returned_jit_share": 0.9506517436968243,
+      "offset": 40,
+      "repeat": 0,
+      "score_eligible": false,
+      "session_path": "placement/offset40/pipebytes-query-n16-t60-r0-kdlock",
+      "session_sha256": "62008e53630fd00ca2eabd44f68076b76d12469cfd4a3e628bb07803f615cf05",
+      "threads": 60,
+      "valid": true,
+      "wall_ns": 2001553379,
+      "whole_mops": 4.103948506286627
+    },
+    {
+      "completed": 8378368,
+      "diagnostic": true,
+      "field_lines": {
+        "gate": {
+          "address": 18446744072643773760,
+          "line": 288230376135058965,
+          "offset": 0
+        },
+        "owner": {
+          "address": 18446744072643773736,
+          "line": 288230376135058964,
+          "offset": 40
+        },
+        "tail": {
+          "address": 18446744072643773764,
+          "line": 288230376135058965,
+          "offset": 4
+        }
+      },
+      "jit_bodies": 7961914,
+      "jit_completions": 7961914,
+      "kernel_log_sha256": "f944115710ca1065fca7c9c18b7ab04ffc31b7300dc9ab4d151ede3add77bfe7",
+      "lock_addr": 18446744072643773736,
+      "measured_returned_jit_share": 0.9502941384288682,
+      "offset": 40,
+      "repeat": 1,
+      "score_eligible": false,
+      "session_path": "placement/offset40/pipebytes-query-n16-t60-r1-kdlock",
+      "session_sha256": "06f7d1a1056e9d99ab13d0f21af32c60689680157796b01d592d9be7e8fd18d6",
+      "threads": 60,
+      "valid": true,
+      "wall_ns": 2002074859,
+      "whole_mops": 4.184842520915947
+    },
+    {
+      "completed": 8318720,
+      "diagnostic": true,
+      "field_lines": {
+        "gate": {
+          "address": 18446744072643773760,
+          "line": 288230376135058965,
+          "offset": 0
+        },
+        "owner": {
+          "address": 18446744072643773736,
+          "line": 288230376135058964,
+          "offset": 40
+        },
+        "tail": {
+          "address": 18446744072643773764,
+          "line": 288230376135058965,
+          "offset": 4
+        }
+      },
+      "jit_bodies": 7893729,
+      "jit_completions": 7893729,
+      "kernel_log_sha256": "937617792a97a5d2884a59e3d6cadaa663c749b81439c28ee54d0154a8686dd8",
+      "lock_addr": 18446744072643773736,
+      "measured_returned_jit_share": 0.9489114911909524,
+      "offset": 40,
+      "repeat": 2,
+      "score_eligible": false,
+      "session_path": "placement/offset40/pipebytes-query-n16-t60-r2-kdlock",
+      "session_sha256": "555a00fe52eebba6db7b07cac53d06982c20946faee3316bd74266e53d58e202",
+      "threads": 60,
+      "valid": true,
+      "wall_ns": 2001727238,
+      "whole_mops": 4.155770997207163
+    }
+  ],
+  "source_revision": "09ebd8f"
+}

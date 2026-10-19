@@ -1,0 +1,13 @@
+1/6 pipebytes-query-n16-t08-r0-kdlock
+  6.115 M/s; peak 6.696; JIT entries 11680412, complete 11680412
+2/6 pipebytes-query-n16-t08-r1-kdlock
+  6.862 M/s; peak 6.899; JIT entries 13025259, complete 13025259
+3/6 pipebytes-query-n16-t08-r2-kdlock
+  7.011 M/s; peak 7.043; JIT entries 13674907, complete 13674907
+4/6 pipebytes-query-n16-t60-r0-kdlock
+  5.213 M/s; peak 5.438; JIT entries 9883315, complete 9883315
+5/6 pipebytes-query-n16-t60-r1-kdlock
+  5.387 M/s; peak 5.413; JIT entries 10253852, complete 10253852
+6/6 pipebytes-query-n16-t60-r2-kdlock
+  5.399 M/s; peak 5.423; JIT entries 10259216, complete 10259216
+All sessions completed and drained.

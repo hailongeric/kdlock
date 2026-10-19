@@ -1,0 +1,195 @@
+{
+  "archive_receipt_sha256": "601a837ab53eb25a3a5d611a78605599b3a3f5ce13f1e94ebfecae08e2647b7c",
+  "archived_groups": [
+    {
+      "bytes": 18774931,
+      "file": "packed32.tar.gz",
+      "members": 1401,
+      "sha256": "40e616dc9634697f1257c86ce82e50e858b03669a61ef3328167332117eb8a48",
+      "types": {
+        "dir": 201,
+        "file": 1184,
+        "symlink": 16
+      }
+    },
+    {
+      "bytes": 18782305,
+      "file": "candidate.tar.gz",
+      "members": 1401,
+      "sha256": "5c21f5b5fb12f09c7dc584fb957e816d229601addce8dabea8d9ef0adec9fb42",
+      "types": {
+        "dir": 201,
+        "file": 1184,
+        "symlink": 16
+      }
+    },
+    {
+      "bytes": 18798079,
+      "file": "old256.tar.gz",
+      "members": 1397,
+      "sha256": "483ec03c3740a230c638000eec8b6e1992bf28d9f7833028730f58dd24b7bdcd",
+      "types": {
+        "dir": 201,
+        "file": 1180,
+        "symlink": 16
+      }
+    },
+    {
+      "bytes": 18783728,
+      "file": "prefetch.tar.gz",
+      "members": 1401,
+      "sha256": "585053016f3a22d4f92d02b68cfdfbd8088bbd4f201392523b2c78238f4a689d",
+      "types": {
+        "dir": 201,
+        "file": 1184,
+        "symlink": 16
+      }
+    },
+    {
+      "bytes": 7488607,
+      "file": "placement.tar.gz",
+      "members": 1562,
+      "sha256": "650c9adc484f92c39e3f73e7ff63db35d66dae6c5c5ec2ac6565ff40fe86a346",
+      "types": {
+        "dir": 231,
+        "file": 1307,
+        "symlink": 24
+      }
+    },
+    {
+      "bytes": 14938012,
+      "file": "checks_candidate.tar.gz",
+      "members": 1523,
+      "sha256": "7b7adf662dc7cd5764e0a908c3f9a9fbfb359818c4bf1c04aebf26ef8a71ef3a",
+      "types": {
+        "dir": 135,
+        "file": 1386,
+        "symlink": 2
+      }
+    },
+    {
+      "bytes": 14938421,
+      "file": "checks_prefetch.tar.gz",
+      "members": 1523,
+      "sha256": "58c21b82aea0b990f0a4dad2cd61808aefbe343ce6b54c57700d5b6d4d99c996",
+      "types": {
+        "dir": 135,
+        "file": 1386,
+        "symlink": 2
+      }
+    },
+    {
+      "bytes": 188667,
+      "file": "metadata.tar.gz",
+      "members": 38,
+      "sha256": "234b378a570c15326b1fb2993bca0dc43ed455c3838d3ccfb5813b06de82e5a0",
+      "types": {
+        "file": 38
+      }
+    }
+  ],
+  "audit_script_sha256": "c53926040abd322e10fae6bd88ba5d983e5945fec1a054e8b1103f2884e8693a",
+  "binary_binding_map_sha256": "9cf7af0be4440e708cdf53b70d67f27f70d53d2882645073298ef17c69e77fde",
+  "binary_manifest_entries": 106,
+  "checks": {
+    "archive_bytes": 8,
+    "archive_completed_idle": 1,
+    "archive_hash": 8,
+    "archived_health_hash": 1,
+    "archiver_hash": 1,
+    "binary_manifest_hash": 106,
+    "check_receipt_hashes": 2,
+    "checks_basic_affected_scope": 2,
+    "checks_command_scope_and_exits": 2,
+    "compact_receipt_hash": 89,
+    "comparison_complete": 1,
+    "comparison_session_scope": 1,
+    "comparison_trial_roles": 1,
+    "copied_archives_receipt_hash": 1,
+    "current_production_git_hash": 90,
+    "current_revision_binding": 1,
+    "directory_empty_payload": 1305,
+    "embedded_layout_live_evidence": 2,
+    "expected_kernel_logs_retained": 1,
+    "finalization_helper_binding": 1,
+    "finalization_receipt_hash": 8,
+    "health_idle_same_boot": 1,
+    "health_kernel_log_hash": 50,
+    "health_kernel_log_inventory_exact": 1,
+    "inventory_exact_set": 1,
+    "inventory_hash": 1,
+    "jit_inventory_exact": 1,
+    "jit_publication_pair": 44,
+    "jit_publication_workspace_match": 44,
+    "jit_workspace_triplet": 46,
+    "live_probe_passed_drained": 6,
+    "matrix_complete_scope": 4,
+    "matrix_trial_role_preserved": 4,
+    "matrix_validation_binding": 4,
+    "member_assigned_group": 10246,
+    "member_bytes": 8849,
+    "member_in_inventory": 10246,
+    "member_mode": 10246,
+    "member_mtime_tar_projection": 10246,
+    "member_owner": 10246,
+    "member_prefix": 10246,
+    "member_read_bytes": 8849,
+    "member_safe_path": 10246,
+    "member_type": 10246,
+    "member_unique": 10246,
+    "negative_control_log": 10,
+    "original_source_git_hash": 4142,
+    "placement_expected_log_inventory": 1,
+    "placement_finalization_binding": 1,
+    "placement_input_hash": 9,
+    "placement_session_binding": 12,
+    "prepared_patch_targets_retained": 2,
+    "prepared_reconstructed_hash": 184,
+    "prepared_source_manifest_hash": 184,
+    "production_path_set_exact": 18,
+    "profile_complete_scope": 1,
+    "profile_driver_binding": 4,
+    "profile_perf_binary_binding": 8,
+    "profile_raw_input_binding": 64,
+    "profile_result_binding": 4,
+    "profile_source_parse_loss": 8,
+    "raw_session_passed_drained": 24,
+    "retained_perf_binary_binding": 4,
+    "runner_test_inventory": 2,
+    "runner_tests_passed_no_skips": 4,
+    "selected_source_commit": 4,
+    "source_manifest_hash": 4142,
+    "source_snapshot_mapped": 20,
+    "summary_collection_binding": 12,
+    "summary_collection_revision": 4,
+    "summary_collection_source_identity": 4,
+    "summary_session_hash": 24,
+    "summary_session_revision": 24,
+    "symlink_empty_payload": 92,
+    "symlink_target": 92,
+    "symlink_target_retained": 92,
+    "topology_receipt_binding": 2,
+    "unit_totals": 2,
+    "validated_collection_binding": 24,
+    "validation_candidate_commit": 2,
+    "validation_passed_affected_only": 1
+  },
+  "compact_copies": 89,
+  "compact_copy_map_sha256": "62393832126621dfbffff0f573767097cf32976ffa71d14fe18a6f8e7290dc08",
+  "host": "380G10",
+  "inventory_members": 10246,
+  "inventory_sha256": "b06eb0dda1bb271c6e4bab2f970522079f98995c193f2e7d1a1a3bdd1deb2cfe",
+  "issues": [],
+  "jit_binaries": 90,
+  "jit_map_sha256": "2e886fe6627509010ac10a51029390f0bcc97df5ac7c579c3ac5d158695afd81",
+  "members": 10246,
+  "metadata_limits": "Tar preserves reviewed path/type/mode/uid/gid, file length, symlink target and mtime projection. Original inode/device/ctime/directory size/link counts remain only in the hashed inventory. Inventory is stat metadata; archive hashes bind all bytes, with separate source/binary/receipt hash checks.",
+  "passed": true,
+  "regular_file_hash_map_sha256": "ba5613e5608ea2148e7f6531ea165bff66ec4697119c1468b3eccedf048c4ce6",
+  "regular_files": 8849,
+  "schema": 1,
+  "scope": "Offline inert-byte/Git-object audit; no archive extraction, execution, build, test or VM command",
+  "source_manifests": 20,
+  "symlink_map_sha256": "6d05222f299f1c9dcb6ed3327c95d9d3ffcdf8a769f520c960910ea0914c2292",
+  "symlinks": 92
+}

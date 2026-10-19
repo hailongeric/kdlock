@@ -1,0 +1,461 @@
+{
+  "archive_receipt_sha256": "601a837ab53eb25a3a5d611a78605599b3a3f5ce13f1e94ebfecae08e2647b7c",
+  "candidate_rb_body_full_disassembly": [
+    "00000000000000f0 <rb_body>:",
+    "  f0:\tcall   f5 <rb_body+0x5>",
+    "\t\t\tf1: R_X86_64_PLT32\t__fentry__-0x4",
+    "  f5:\tpush   %rbp",
+    "  f6:\tmov    %rsp,%rbp",
+    "  f9:\tpush   %r15",
+    "  fb:\tpush   %r14",
+    "  fd:\tpush   %r13",
+    "  ff:\tpush   %r12",
+    " 101:\tpush   %rbx",
+    " 102:\tmov    %gs:0x0,%rbx",
+    "\t\t\t107: R_X86_64_32S\tcurrent_task",
+    " 10b:\tsub    $0x8,%rsp",
+    " 10f:\tmov    %rdi,-0x30(%rbp)",
+    " 113:\tcall   118 <rb_body+0x28>",
+    "\t\t\t114: R_X86_64_PLT32\t__SCT__might_resched-0x4",
+    " 118:\tmov    $0x8,%edx",
+    " 11d:\tmov    0x0(%rip),%rax        # 124 <rb_body+0x34>",
+    "\t\t\t120: R_X86_64_PC32\t.bss+0x1c",
+    " 124:\ttest   %rax,%rax",
+    " 127:\tje     1d1 <rb_entry+0x77>",
+    " 12d:\tmov    0x0(%rip),%eax        # 133 <rb_body+0x43>",
+    "\t\t\t12f: R_X86_64_PC32\t.bss+0x34",
+    " 133:\tcmp    $0x3,%eax",
+    " 136:\tje     13f <rb_body+0x4f>",
+    " 138:\tpause  ",
+    " 13a:\tsub    $0x1,%edx",
+    " 13d:\tjne    11d <rb_body+0x2d>",
+    " 13f:\tmov    $0x0,%rdi",
+    "\t\t\t142: R_X86_64_32S\t.bss+0x20",
+    " 146:\tmov    %rsp,%rsi",
+    " 149:\tlea    0xa(%rip),%rdx        # 15a <rb_entry>",
+    " 150:\tmov    %rbp,%rcx",
+    " 153:\tcall   158 <rb_body+0x68>",
+    "\t\t\t154: R_X86_64_PLT32\tkd_mutex_outer_contended_clobber_v1-0x4",
+    " 158:\tjmp    15c <rb_entry+0x2>",
+    "000000000000015a <rb_entry>:",
+    " 15a:\txor    %eax,%eax",
+    " 15c:\tmov    %rax,%rbx",
+    " 15f:\tmov    -0x30(%rbp),%rax",
+    " 163:\tmov    0x5c(%rax),%ecx",
+    " 166:\tmov    0x50(%rax),%r8d",
+    " 16a:\tmov    0x54(%rax),%edx",
+    " 16d:\tmov    %ecx,-0x30(%rbp)",
+    " 170:\tlea    -0x1(%rcx),%edi",
+    " 173:\tcmp    %edx,%r8d",
+    " 176:\tje     1f4 <rb_entry+0x9a>",
+    " 178:\tmov    0x98(%rax),%r9",
+    " 17f:\txor    %esi,%esi",
+    " 181:\tmov    %edi,%eax",
+    " 183:\tand    %edx,%eax",
+    " 185:\tadd    $0x1,%edx",
+    " 188:\tlea    (%rax,%rax,4),%rax",
+    " 18c:\tadd    0xc(%r9,%rax,8),%esi",
+    " 191:\tcmp    %edx,%r8d",
+    " 194:\tjne    181 <rb_entry+0x27>",
+    " 196:\tmov    %esi,%eax",
+    " 198:\tmov    %rax,-0x30(%rbp)",
+    " 19c:\tmov    $0x0,%rdi",
+    "\t\t\t19f: R_X86_64_32S\t.bss+0x20",
+    " 1a3:\ttest   %rbx,%rbx",
+    " 1a6:\tjne    1ed <rb_entry+0x93>",
+    " 1a8:\tmov    %rsp,%rsi",
+    " 1ab:\tlea    0x8(%rip),%rdx        # 1ba <rb_entry+0x60>",
+    " 1b2:\tmov    %rbp,%rcx",
+    " 1b5:\tcall   1ba <rb_entry+0x60>",
+    "\t\t\t1b6: R_X86_64_PLT32\tkd_mutex_direct_unlock_clobber_v1-0x4",
+    " 1ba:\tmov    -0x30(%rbp),%rax",
+    " 1be:\tadd    $0x8,%rsp",
+    " 1c2:\tpop    %rbx",
+    " 1c3:\tpop    %r12",
+    " 1c5:\tpop    %r13",
+    " 1c7:\tpop    %r14",
+    " 1c9:\tpop    %r15",
+    " 1cb:\tpop    %rbp",
+    " 1cc:\tjmp    1d1 <rb_entry+0x77>",
+    "\t\t\t1cd: R_X86_64_PLT32\t__x86_return_thunk-0x4",
+    " 1d1:\tlock cmpxchg %rbx,0x0(%rip)        # 1da <rb_entry+0x80>",
+    "\t\t\t1d6: R_X86_64_PC32\t.bss+0x1c",
+    " 1da:\tjne    12d <rb_body+0x3d>",
+    " 1e0:\tincq   %gs:0x0(%rip)        # 1e8 <rb_entry+0x8e>",
+    "\t\t\t1e4: R_X86_64_PC32\tkd_hotlock_mutex_entries-0x4",
+    " 1e8:\tjmp    15f <rb_entry+0x5>",
+    " 1ed:\tcall   1f2 <rb_entry+0x98>",
+    "\t\t\t1ee: R_X86_64_PLT32\tkd_mutex_local_unlock-0x4",
+    " 1f2:\tjmp    1ba <rb_entry+0x60>",
+    " 1f4:\tmovq   $0x0,-0x30(%rbp)",
+    " 1fc:\tjmp    19c <rb_entry+0x42>",
+    "  f0:\tjg     fc <init_module+0xfc>",
+    "  f2:\tmov    $0x3,%esi",
+    "  f7:\tcall   fc <init_module+0xfc>",
+    "\t\t\tf8: R_X86_64_PLT32\trefcount_warn_saturate-0x4",
+    "  fc:\tmov    0x0(%rip),%rax        # 103 <init_module+0x103>",
+    "\t\t\tff: R_X86_64_PC32\t.bss+0x4c",
+    " 103:\tmov    $0xfffffff7,%r12d",
+    " 109:\ttest   %rax,%rax",
+    " 10c:\tje     1fd <init_module+0x1fd>",
+    " 112:\tmov    0x20(%rax),%rdx",
+    " 116:\tcmpl   $0x0,0x48(%rdx)",
+    " 11a:\tje     127 <init_module+0x127>",
+    " 11c:\tmov    $0xffffffea,%r12d",
+    " 122:\tjmp    1f1 <init_module+0x1f1>",
+    " 127:\tmov    (%rdx),%edx",
+    " 129:\tand    $0xf000,%dx",
+    " 12e:\tcmp    $0x1000,%dx",
+    " 133:\tjne    11c <init_module+0x11c>",
+    " 135:\tmov    0xc8(%rax),%rax",
+    " 13c:\ttest   %rax,%rax",
+    " 13f:\tje     11c <init_module+0x11c>",
+    " 141:\tcmpq   $0x0,0xa8(%rax)",
+    " 149:\tmov    %rax,0x0(%rip)        # 150 <init_module+0x150>",
+    "\t\t\t14c: R_X86_64_PC32\t.bss+0x44",
+    " 150:\tjne    11c <init_module+0x11c>",
+    " 152:\tmov    $0x0,%rdi",
+    "\t\t\t155: R_X86_64_32S\t.bss+0x20",
+    " 159:\tmov    $0xfffffffe,%r12d",
+    " 15f:\tcall   164 <init_module+0x164>",
+    "\t\t\t160: R_X86_64_PLT32\tkd_mutex_init-0x4",
+    " 164:\tmov    $0x0,%rdi",
+    "\t\t\t167: R_X86_64_32S\t.rodata.str1.1+0x19",
+    " 16b:\tmovq   $0x0,0x0(%rip)        # 176 <init_module+0x176>",
+    "\t\t\t16e: R_X86_64_PC32\t.bss+0x38",
+    "\t\t\t172: R_X86_64_32S\t.bss+0x20",
+    " 176:\tcall   17b <init_module+0x17b>",
+    "\t\t\t177: R_X86_64_PLT32\tkallsyms_lookup_name-0x4",
+    " 17b:\tmov    %rax,0x0(%rip)        # 182 <init_module+0x182>",
+    "\t\t\t17e: R_X86_64_PC32\t.bss-0x4",
+    " 182:\ttest   %rax,%rax",
+    " 185:\tje     1f1 <init_module+0x1f1>",
+    " 187:\tmov    $0x0,%rdi",
+    "\t\t\t18a: R_X86_64_32S\t.data+0xc0",
+    " 18e:\tcall   193 <init_module+0x193>",
+    "\t\t\t18f: R_X86_64_PLT32\tmisc_register-0x4",
+    " 193:\tmov    %eax,%r12d",
+    " 196:\ttest   %eax,%eax",
+    " 198:\tjne    1f1 <init_module+0x1f1>",
+    " 19a:\tmov    0x0(%rip),%rsi        # 1a1 <init_module+0x1a1>",
+    "\t\t\t19d: R_X86_64_PC32\t.bss-0x4",
+    " 1a1:\txor    %ecx,%ecx",
+    " 1a3:\txor    %edx,%edx",
+    " 1a5:\tmov    $0x0,%rdi",
+    "\t\t\t1a8: R_X86_64_32S\t.data",
+    " 1ac:\tcall   1b1 <init_module+0x1b1>",
+    "\t\t\t1ad: R_X86_64_PLT32\tftrace_set_filter_ip-0x4",
+    " 1b1:\tmov    %eax,%r12d",
+    " 1b4:\ttest   %eax,%eax",
+    " 1b6:\tjne    1e5 <init_module+0x1e5>",
+    " 1b8:\tmov    $0x0,%rdi",
+    "\t\t\t1bb: R_X86_64_32S\t.data",
+    " 1bf:\tcall   1c4 <init_module+0x1c4>",
+    "\t\t\t1c0: R_X86_64_PLT32\tregister_ftrace_function-0x4",
+    " 1c4:\tmov    %eax,%r12d",
+    " 1c7:\ttest   %eax,%eax",
+    " 1c9:\tje     1fd <init_module+0x1fd>",
+    " 1cb:\tmov    0x0(%rip),%rsi        # 1d2 <init_module+0x1d2>",
+    "\t\t\t1ce: R_X86_64_PC32\t.bss-0x4",
+    " 1d2:\txor    %ecx,%ecx",
+    " 1d4:\tmov    $0x1,%edx",
+    " 1d9:\tmov    $0x0,%rdi",
+    "\t\t\t1dc: R_X86_64_32S\t.data",
+    " 1e0:\tcall   1e5 <init_module+0x1e5>",
+    "\t\t\t1e1: R_X86_64_PLT32\tftrace_set_filter_ip-0x4",
+    " 1e5:\tmov    $0x0,%rdi",
+    "\t\t\t1e8: R_X86_64_32S\t.data+0xc0",
+    " 1ec:\tcall   1f1 <init_module+0x1f1>",
+    "\t\t\t1ed: R_X86_64_PLT32\tmisc_deregister-0x4",
+    " 1f1:\tmov    0x0(%rip),%rdi        # 1f8 <init_module+0x1f8>",
+    "\t\t\t1f4: R_X86_64_PC32\t.bss+0x4c",
+    " 1f8:\tcall   1fd <init_module+0x1fd>",
+    "\t\t\t1f9: R_X86_64_PLT32\tfput-0x4",
+    " 1fd:\tmov    -0x20(%rbp),%rax"
+  ],
+  "checks": [
+    {
+      "detail": null,
+      "name": "review JSON is the archived metadata copy",
+      "passed": true
+    },
+    {
+      "detail": null,
+      "name": "review script matches its recorded digest",
+      "passed": true
+    },
+    {
+      "detail": null,
+      "name": "manual review is the archived metadata copy",
+      "passed": true
+    },
+    {
+      "detail": {
+        "candidate": "76af844",
+        "packed32": "0987358",
+        "prefetch": "de30588"
+      },
+      "name": "review candidate is the held checked revision",
+      "passed": false
+    },
+    {
+      "detail": null,
+      "name": "review candidate provider is distinct from the prefetch trial",
+      "passed": true
+    },
+    {
+      "detail": null,
+      "name": "baseline_provider: reviewed ELF hash equals archived bytes",
+      "passed": true
+    },
+    {
+      "detail": {
+        "path": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-cacheline-20261019/packed32/pipe/build/kdlock_km.ko",
+        "sha256": "849b9435466850014f597b5ce85a84a3030195203c3ec9b277d8efae83f9d8b6"
+      },
+      "name": "baseline_provider: archived build manifest binds the same ELF",
+      "passed": true
+    },
+    {
+      "detail": null,
+      "name": "baseline_provider: independently inspected nm output matches review",
+      "passed": true
+    },
+    {
+      "detail": null,
+      "name": "baseline_provider: exactly one objdump file header path",
+      "passed": true
+    },
+    {
+      "detail": null,
+      "name": "baseline_provider: independently inspected objdump output matches review",
+      "passed": true
+    },
+    {
+      "detail": null,
+      "name": "baseline_workload: reviewed ELF hash equals archived bytes",
+      "passed": true
+    },
+    {
+      "detail": {
+        "path": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-cacheline-20261019/packed32/pipe/build/kdlock-pipebytes/real_api.ko",
+        "sha256": "a4c65953f49304129928886bc8538e6fa0b1da4eaa3cc3ca4c5949c1c0384b21"
+      },
+      "name": "baseline_workload: archived build manifest binds the same ELF",
+      "passed": true
+    },
+    {
+      "detail": null,
+      "name": "baseline_workload: independently inspected nm output matches review",
+      "passed": true
+    },
+    {
+      "detail": null,
+      "name": "baseline_workload: exactly one objdump file header path",
+      "passed": true
+    },
+    {
+      "detail": null,
+      "name": "baseline_workload: independently inspected objdump output matches review",
+      "passed": true
+    },
+    {
+      "detail": null,
+      "name": "candidate_provider: reviewed ELF hash equals archived bytes",
+      "passed": true
+    },
+    {
+      "detail": {
+        "path": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-cacheline-20261019/candidate/pipe/build/kdlock_km.ko",
+        "sha256": "c1cd9fc6c6acbc7e4c7c43fc79e9b35cdbeeb36699d54c0a288296c151dd0b0d"
+      },
+      "name": "candidate_provider: archived build manifest binds the same ELF",
+      "passed": true
+    },
+    {
+      "detail": null,
+      "name": "candidate_provider: independently inspected nm output matches review",
+      "passed": true
+    },
+    {
+      "detail": null,
+      "name": "candidate_provider: exactly one objdump file header path",
+      "passed": true
+    },
+    {
+      "detail": null,
+      "name": "candidate_provider: independently inspected objdump output matches review",
+      "passed": true
+    },
+    {
+      "detail": null,
+      "name": "candidate_workload: reviewed ELF hash equals archived bytes",
+      "passed": true
+    },
+    {
+      "detail": {
+        "path": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-cacheline-20261019/candidate/pipe/build/kdlock-pipebytes/real_api.ko",
+        "sha256": "e4d00099d944daae5cb1e2bd13c84a046f27adbaa035327c062c427e9d11a837"
+      },
+      "name": "candidate_workload: archived build manifest binds the same ELF",
+      "passed": true
+    },
+    {
+      "detail": null,
+      "name": "candidate_workload: independently inspected nm output matches review",
+      "passed": true
+    },
+    {
+      "detail": null,
+      "name": "candidate_workload: exactly one objdump file header path",
+      "passed": true
+    },
+    {
+      "detail": null,
+      "name": "candidate_workload: independently inspected objdump output matches review",
+      "passed": true
+    }
+  ],
+  "code_review_sha256": "fe5ec1fd0ccd2c516db8ef65d0a36e10527bda28d2eb6eaf0ed7c18412e033f1",
+  "host": "380G10",
+  "inputs": {
+    "baseline_provider": {
+      "archive": "packed32.tar.gz",
+      "bytes": 3496248,
+      "inspection": {
+        "nm": {
+          "command": [
+            "nm",
+            "-S",
+            "--defined-only",
+            "/tmp/kdlock-cacheline-static-binding-ffgzaant/baseline_provider/kdlock_km.ko"
+          ],
+          "normalized_stdout_sha256": "fa00208589d8713777656352fc86962f8b9d34a9afcc82381c5b1e0f95f4326f",
+          "stdout_sha256": "fa00208589d8713777656352fc86962f8b9d34a9afcc82381c5b1e0f95f4326f"
+        },
+        "objdump": {
+          "command": [
+            "objdump",
+            "-dr",
+            "--no-show-raw-insn",
+            "/tmp/kdlock-cacheline-static-binding-ffgzaant/baseline_provider/kdlock_km.ko"
+          ],
+          "normalized_stdout_sha256": "7aaec4f4f47e9d721659ed314e264c61f616e707e9154d106560e8a958b2b671",
+          "stdout_sha256": "77fa2e75531f59fe5172d0d45c4d378542601281377d77ff989d03e4a67f278f"
+        }
+      },
+      "member": "mutex32-cacheline-20261019/packed32/pipe/build/kdlock_km.ko",
+      "sha256": "849b9435466850014f597b5ce85a84a3030195203c3ec9b277d8efae83f9d8b6"
+    },
+    "baseline_workload": {
+      "archive": "packed32.tar.gz",
+      "bytes": 320408,
+      "inspection": {
+        "nm": {
+          "command": [
+            "nm",
+            "-S",
+            "--defined-only",
+            "/tmp/kdlock-cacheline-static-binding-ffgzaant/baseline_workload/real_api.ko"
+          ],
+          "normalized_stdout_sha256": "687d85f1a965a44530d448b93f5280b6424333e0698c3d9c692fbf1aa2cdfdc6",
+          "stdout_sha256": "687d85f1a965a44530d448b93f5280b6424333e0698c3d9c692fbf1aa2cdfdc6"
+        },
+        "objdump": {
+          "command": [
+            "objdump",
+            "-dr",
+            "--no-show-raw-insn",
+            "/tmp/kdlock-cacheline-static-binding-ffgzaant/baseline_workload/real_api.ko"
+          ],
+          "normalized_stdout_sha256": "b7c6649f2ac693a9f40db451aa3ce90dfb07f63684d19e9eecd414ac3ef3e11b",
+          "stdout_sha256": "5bd69f97a47840064650b380f333b1572c4c4c2ee0138f75db70bb6eea46fa0f"
+        }
+      },
+      "member": "mutex32-cacheline-20261019/packed32/pipe/build/kdlock-pipebytes/real_api.ko",
+      "sha256": "a4c65953f49304129928886bc8538e6fa0b1da4eaa3cc3ca4c5949c1c0384b21"
+    },
+    "candidate_provider": {
+      "archive": "candidate.tar.gz",
+      "bytes": 3500112,
+      "inspection": {
+        "nm": {
+          "command": [
+            "nm",
+            "-S",
+            "--defined-only",
+            "/tmp/kdlock-cacheline-static-binding-ffgzaant/candidate_provider/kdlock_km.ko"
+          ],
+          "normalized_stdout_sha256": "2fcbc49bfe434759e307caeb0335b33f1d92b30a3d866482b6aec4da4c06552a",
+          "stdout_sha256": "2fcbc49bfe434759e307caeb0335b33f1d92b30a3d866482b6aec4da4c06552a"
+        },
+        "objdump": {
+          "command": [
+            "objdump",
+            "-dr",
+            "--no-show-raw-insn",
+            "/tmp/kdlock-cacheline-static-binding-ffgzaant/candidate_provider/kdlock_km.ko"
+          ],
+          "normalized_stdout_sha256": "e5f6637811734c0cb8e0d7729cf93043e783ea8fd3b282df91a1d538afadcd16",
+          "stdout_sha256": "2f29858b09684ac82e56513751c6c8252be694c8deca77a380295be7c7f91926"
+        }
+      },
+      "member": "mutex32-cacheline-20261019/candidate/pipe/build/kdlock_km.ko",
+      "sha256": "c1cd9fc6c6acbc7e4c7c43fc79e9b35cdbeeb36699d54c0a288296c151dd0b0d"
+    },
+    "candidate_workload": {
+      "archive": "candidate.tar.gz",
+      "bytes": 321352,
+      "inspection": {
+        "nm": {
+          "command": [
+            "nm",
+            "-S",
+            "--defined-only",
+            "/tmp/kdlock-cacheline-static-binding-ffgzaant/candidate_workload/real_api.ko"
+          ],
+          "normalized_stdout_sha256": "afbcb347adcf5ffebd74e347218cb8dc2cc07b43bdd2ef5a85f092ff1c5d2778",
+          "stdout_sha256": "afbcb347adcf5ffebd74e347218cb8dc2cc07b43bdd2ef5a85f092ff1c5d2778"
+        },
+        "objdump": {
+          "command": [
+            "objdump",
+            "-dr",
+            "--no-show-raw-insn",
+            "/tmp/kdlock-cacheline-static-binding-ffgzaant/candidate_workload/real_api.ko"
+          ],
+          "normalized_stdout_sha256": "d94a68aae5977b5b31497b779446ab9dab91182d89cf717fcbe283832490819b",
+          "stdout_sha256": "e70bfc9d0a6df5bdaac5b231143928183a9b25d0690233c9bb297039cfadf8e7"
+        }
+      },
+      "member": "mutex32-cacheline-20261019/candidate/pipe/build/kdlock-pipebytes/real_api.ko",
+      "sha256": "e4d00099d944daae5cb1e2bd13c84a046f27adbaa035327c062c427e9d11a837"
+    }
+  },
+  "issues": [
+    {
+      "detail": {
+        "candidate": "76af844",
+        "packed32": "0987358",
+        "prefetch": "de30588"
+      },
+      "name": "review candidate is the held checked revision",
+      "passed": false
+    }
+  ],
+  "limitations": [
+    "ELF inspection does not execute the module or establish a performance result.",
+    "objdump path normalization changes only the recorded input filename in its header.",
+    "Manual concurrency review and live checks remain separate evidence."
+  ],
+  "manual_review_sha256": "c958d84d9409d8aa4e96b217111031b9d174ae756beb84bd0033eedbd21741ac",
+  "passed": false,
+  "schema": 1,
+  "scope": "Independent inert archive binding and static ELF reader replay; no archived code executed.",
+  "script_sha256": "56e29469bfb3d0c9c12df1707e16fd18f7720bfed6d87533c993a1362624cabc",
+  "source_commits": {
+    "candidate": "76af844",
+    "packed32": "0987358",
+    "prefetch": "de30588"
+  }
+}

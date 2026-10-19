@@ -1,0 +1,163 @@
+{
+  "commands": [
+    {
+      "argv": [
+        "/root/kdlock-translation-venv-20261019/bin/python3",
+        "-m",
+        "pip",
+        "check"
+      ],
+      "cwd": "/root/host_fs/kdlock",
+      "exit_code": 0,
+      "finished_unix": 1792426289.4596837,
+      "name": "dependencies",
+      "started_unix": 1792426288.8910375,
+      "timeout_seconds": 60
+    },
+    {
+      "argv": [
+        "make",
+        "-C",
+        "kernel_module",
+        "KDIR=/root/linux-6.1.159-kdclobber2",
+        "W=1",
+        "UBSAN_SANITIZE=n"
+      ],
+      "cwd": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-cacheline-20261019/checks-candidate/source",
+      "exit_code": 0,
+      "finished_unix": 1792426300.9670818,
+      "name": "provider",
+      "started_unix": 1792426289.5392113,
+      "timeout_seconds": 240
+    },
+    {
+      "argv": [
+        "make",
+        "-C",
+        "daemon",
+        "CFLAGS=-O2 -Wall -Wextra -Werror"
+      ],
+      "cwd": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-cacheline-20261019/checks-candidate/source",
+      "exit_code": 0,
+      "finished_unix": 1792426301.366625,
+      "name": "daemon",
+      "started_unix": 1792426301.0491247,
+      "timeout_seconds": 60
+    },
+    {
+      "argv": [
+        "make",
+        "-C",
+        "tests/unit",
+        "run",
+        "PY_TESTS=mutex/test_mutex_state.py mutex/test_mutex_count.py mutex/test_mutex_resources.py mutex/test_mutex_head.py mutex/test_mutex_balances.py mutex/test_mutex_terminal.py mutex/test_mutex_outer_progress.py mutex/test_mutex_outer_api.py mutex/test_mutex_wait_clobber.py mutex/test_mutex_task_cache.py execution/test_exec_capacity.py infrastructure/test_provider_lifecycle.py execution/test_mutex_images.py execution/test_remote_outer.py"
+      ],
+      "cwd": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-cacheline-20261019/checks-candidate/source",
+      "exit_code": 0,
+      "finished_unix": 1792426366.2050047,
+      "name": "unit",
+      "started_unix": 1792426301.445445,
+      "timeout_seconds": 300
+    },
+    {
+      "argv": [
+        "/root/kdlock-translation-venv-20261019/bin/python3",
+        "bench/real_api/test_plan.py"
+      ],
+      "cwd": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-cacheline-20261019/checks-candidate/source",
+      "exit_code": 0,
+      "finished_unix": 1792426366.5045278,
+      "name": "runner-plan",
+      "started_unix": 1792426366.2876513,
+      "timeout_seconds": 90
+    },
+    {
+      "argv": [
+        "/root/kdlock-translation-venv-20261019/bin/python3",
+        "bench/real_api/test_report.py"
+      ],
+      "cwd": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-cacheline-20261019/checks-candidate/source",
+      "exit_code": 0,
+      "finished_unix": 1792426366.7003677,
+      "name": "runner-report",
+      "started_unix": 1792426366.5842404,
+      "timeout_seconds": 90
+    },
+    {
+      "argv": [
+        "/root/kdlock-translation-venv-20261019/bin/python3",
+        "tests/kernel/mutex/local/run.py",
+        "--output",
+        "/root/kdlock-evidence/10.176.26.71/bench/mutex32-cacheline-20261019/checks-candidate/local"
+      ],
+      "cwd": "/root/host_fs/kdlock",
+      "exit_code": 0,
+      "finished_unix": 1792426383.5846164,
+      "name": "local",
+      "started_unix": 1792426366.77798,
+      "timeout_seconds": 300
+    },
+    {
+      "argv": [
+        "/root/kdlock-translation-venv-20261019/bin/python3",
+        "tests/kernel/rwsem/run.py",
+        "--output",
+        "/root/kdlock-evidence/10.176.26.71/bench/mutex32-cacheline-20261019/checks-candidate/rwsem"
+      ],
+      "cwd": "/root/host_fs/kdlock",
+      "exit_code": 0,
+      "finished_unix": 1792426401.1762094,
+      "name": "rwsem",
+      "started_unix": 1792426383.6648133,
+      "timeout_seconds": 300
+    },
+    {
+      "argv": [
+        "/root/kdlock-translation-venv-20261019/bin/python3",
+        "tests/kernel/jit_escape/run.py",
+        "--cpus",
+        "0-7,32-39",
+        "--iterations",
+        "200000",
+        "--warmup-iterations",
+        "200000",
+        "--output",
+        "/root/kdlock-evidence/10.176.26.71/bench/mutex32-cacheline-20261019/checks-candidate/instruction-exit"
+      ],
+      "cwd": "/root/host_fs/kdlock",
+      "exit_code": 0,
+      "finished_unix": 1792426436.1963782,
+      "name": "instruction-exit",
+      "started_unix": 1792426401.2543833,
+      "timeout_seconds": 900
+    }
+  ],
+  "final_idle": true,
+  "full_suite": false,
+  "passed": true,
+  "runner_tests": [
+    "bench/real_api/test_plan.py",
+    "bench/real_api/test_report.py"
+  ],
+  "script_sha256": "3ffa7d44a1fda78fcbbe9f0cf9fd50933129f85f8ffa04aebdc1e9e0bb3d516d",
+  "snapshot_tag": "before-mutex-kdonly-20261017T140354Z",
+  "source_revision": "76af844",
+  "source_unchanged": true,
+  "unit_basic": 2,
+  "unit_drivers": [
+    "mutex/test_mutex_state.py",
+    "mutex/test_mutex_count.py",
+    "mutex/test_mutex_resources.py",
+    "mutex/test_mutex_head.py",
+    "mutex/test_mutex_balances.py",
+    "mutex/test_mutex_terminal.py",
+    "mutex/test_mutex_outer_progress.py",
+    "mutex/test_mutex_outer_api.py",
+    "mutex/test_mutex_wait_clobber.py",
+    "mutex/test_mutex_task_cache.py",
+    "execution/test_exec_capacity.py",
+    "infrastructure/test_provider_lifecycle.py",
+    "execution/test_mutex_images.py",
+    "execution/test_remote_outer.py"
+  ]
+}

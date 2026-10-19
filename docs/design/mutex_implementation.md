@@ -452,7 +452,15 @@ unchanged. Build/use instructions belong in the
 [workload README](../../workload_modules/mutex_cacheline/README.md) and
 [runner README](../../bench/tclock_compare/README.md).
 
-The current [embedded-state comparison](../../bench/results/10.176.26.71/bench/mutex32-embedded-20261019/README.md)
+The current [cache-line comparison](../../bench/results/10.176.26.71/bench/mutex32-cacheline-20261019/README.md)
+records `76af844` basic/affected checks and fresh pipe comparisons against the
+previous 32-byte and old 256-byte versions. It removes redundant queue-head tail
+RMWs and inlines the gate hint and unchanged ownership predicate. The object
+remains 32 bytes with native alignment; the remaining pipe gap is explicit.
+Separate placement diagnostics and an archived prefetch trial do not enter the
+retained candidate's medians.
+
+The earlier [embedded-state comparison](../../bench/results/10.176.26.71/bench/mutex32-embedded-20261019/README.md)
 records `372be89` basic/affected checks and twelve fresh pipe sessions against
 old-256-byte `0324e60`. The 32-byte version trails by 40.7% at eight workers and
 37.0% at sixty; removing the auxiliary references has not established parity.

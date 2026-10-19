@@ -8,7 +8,36 @@ Basic plus affected checks are the default; an old pass is not a current full pa
 The [terminology guide](TERMINOLOGY.md) explains status labels and other technical
 terms used in the receipts below.
 
-## Versioned mutex waiter-record validation
+## Mutex queue-head and ownership-validation checks
+
+The [cache-line investigation](../bench/results/10.176.26.71/bench/mutex32-cacheline-20261019/README.md)
+checks and times `76af844`, whose production is retained after reverting the
+separate `de30588` prefetch trial with `044e351`. The mutex remains 32 bytes with
+native 8-byte alignment. The queue head avoids a tail RMW when a successor is
+known; the gate hint and unchanged exact ownership predicate are inlined.
+Physical owner, gate, source, frame and unlock-ACK checks remain intact.
+
+Both separately frozen candidate and trial bundles passed dependency checks,
+provider/daemon builds, two basic programs and fourteen affected drivers
+(16 passed, zero failed), plus 11 runner-plan and 13 runner-report cases.
+Each passed the ordinary mutex, rwsem and instruction-exit live probes with
+drain. The added queue-head fixture detects six negative controls covering
+unnecessary tail access and loss of the exact retirement CAS or delayed link.
+It does not establish all weak-memory interleavings. Each provider build retains
+48 warning lines; neither bundle is described as warning-free.
+
+All 24 plain timings, eight separate profiles and twelve placement diagnostics
+returned JIT bodies and drained. All 50 retained kernel logs have no matched
+runtime faults. The captured kernel, boot, topology, pins and frequency policy
+remained unchanged. The idle VM was restored to the checked candidate bytes.
+Independent source/archive review passed over 10,246 members and 20 source
+manifests, with zero exceptions or issues. The arithmetic/profile audit passed
+59,560 checks, reconstructing all 44 windows and 109,590 profile samples.
+The small prefetch median differences are inconclusive, and that trial remains
+archived. This round does not establish performance parity, a full suite,
+whole-kernel replacement, RT/ww_mutex, lockdep or oversubscription support.
+
+## Earlier versioned mutex waiter-record validation
 
 Runtime `c2f0d9c`, checked as `35718f5`, keeps the native 32-byte size and 8-byte
 alignment while moving exact waiter accounting into existing node padding.
