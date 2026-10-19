@@ -54,8 +54,41 @@ def main():
             '(void)atomic_long_fetch_dec(&aux->refs);\n\treturn false;',
         ),
         'accept-negative-pin': (
-            'if (likely(refs >= 0))',
+            'if (likely((unsigned long)refs < KD_MUTEX_AUX_MAX_REFS))',
             'if (likely(true))',
+        ),
+        'pin-accepts-admission-bound': (
+            'if (likely((unsigned long)refs < KD_MUTEX_AUX_MAX_REFS))',
+            'if (likely((unsigned long)refs <= KD_MUTEX_AUX_MAX_REFS))',
+        ),
+        'pin-ignores-invalid-positive': (
+            'BUG_ON(refs >= 0 || ((unsigned long)refs & KD_MUTEX_AUX_COUNT_MASK) >=\n\t'
+            '       KD_MUTEX_AUX_MAX_REFS);',
+            'BUG_ON(((unsigned long)refs & KD_MUTEX_AUX_COUNT_MASK) >=\n\t'
+            '       KD_MUTEX_AUX_MAX_REFS);',
+        ),
+        'pin-ignores-negative-admission-bound': (
+            'BUG_ON(refs >= 0 || ((unsigned long)refs & KD_MUTEX_AUX_COUNT_MASK) >=\n\t'
+            '       KD_MUTEX_AUX_MAX_REFS);',
+            'BUG_ON(refs >= 0);',
+        ),
+        'put-fast-accepts-zero': (
+            'if (likely((unsigned long)refs - 2 <',
+            'if (likely((unsigned long)refs <',
+        ),
+        'put-imposes-getter-admission-bound': (
+            'refs > (long)KD_MUTEX_AUX_COUNT_MASK);',
+            'refs > (long)KD_MUTEX_AUX_MAX_REFS);',
+        ),
+        'put-ignores-count-underflow': (
+            'BUG_ON(!((unsigned long)refs & KD_MUTEX_AUX_COUNT_MASK) ||\n\t'
+            '       refs > (long)KD_MUTEX_AUX_COUNT_MASK);',
+            'BUG_ON(refs > (long)KD_MUTEX_AUX_COUNT_MASK);',
+        ),
+        'put-ignores-invalid-positive': (
+            'BUG_ON(!((unsigned long)refs & KD_MUTEX_AUX_COUNT_MASK) ||\n\t'
+            '       refs > (long)KD_MUTEX_AUX_COUNT_MASK);',
+            'BUG_ON(!((unsigned long)refs & KD_MUTEX_AUX_COUNT_MASK));',
         ),
         'fault-rollback-erases-rejected-pin': (
             'this_cpu_inc(kd_mutex_aux_injected_failures);\n\t\t'
