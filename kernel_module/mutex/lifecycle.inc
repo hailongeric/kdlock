@@ -12,7 +12,9 @@ void kd_mutex_init(struct kd_mutex *lock)
 	atomic_long_set(&lock->owner, 0);
 	osq_lock_init(&lock->osq);
 	raw_spin_lock_init(&lock->wait_lock);
-	INIT_LIST_HEAD(&lock->wait_list);
+	lock->wait_head = NULL;
+	atomic_set(&lock->delegation_state, 0);
+	lock->delegation_tail = 0;
 }
 
 EXPORT_SYMBOL_GPL(kd_mutex_init);
@@ -59,13 +61,10 @@ int kd_mutex_init_percpu(void)
 	BUILD_BUG_ON(offsetof(struct kd_mutex, owner) != offsetof(struct mutex, owner));
 	BUILD_BUG_ON(offsetof(struct kd_mutex, wait_lock) != offsetof(struct mutex, wait_lock));
 	BUILD_BUG_ON(offsetof(struct kd_mutex, osq) != offsetof(struct mutex, osq));
-	BUILD_BUG_ON(offsetof(struct kd_mutex, wait_list) != offsetof(struct mutex, wait_list));
-
-	ret = kd_mutex_aux_init();
-	if (ret) {
-		kd_mutex_local_runtime_exit();
-		return ret;
-	}
+	BUILD_BUG_ON(offsetof(struct kd_mutex, wait_head) != 16);
+	BUILD_BUG_ON(offsetof(struct kd_mutex, delegation_state) != 24);
+	BUILD_BUG_ON(offsetof(struct kd_mutex, delegation_tail) != 28);
+	BUILD_BUG_ON(NR_CPUS > KD_MUTEX_WAITER_MAX / KD_MUTEX_MAX_NODES);
 
 	for_each_possible_cpu(i) {
 		struct kd_mutex_cpu_state *p = per_cpu_ptr(&kd_mutex_shadows, i);
@@ -122,7 +121,6 @@ int kd_mutex_init_percpu(void)
 
 err_free:
 	kd_mutex_free_percpu_stacks();
-	kd_mutex_aux_exit();
 	kd_mutex_local_runtime_exit();
 	return -ENOMEM;
 }
@@ -140,7 +138,10 @@ bool kd_mutex_check_idle(void)
 		    READ_ONCE(per_cpu(kd_mutex_shadows, cpu).node_slots))
 			return false;
 	}
-	return kd_mutex_aux_all_idle();
+	/* Every admitted call retains its existing task reference through final
+	 * owner unlock or completion. This includes immediate owners without nodes
+	 * and detached batches. Frame/source/ACK checks remain in provider drain. */
+	return kd_mutex_tasks_idle();
 }
 
 void kd_mutex_exit(void)
@@ -194,6 +195,5 @@ void kd_mutex_exit(void)
 				  i, READ_ONCE(p->node_slots));
 	}
 	kd_mutex_free_percpu_stacks();
-	kd_mutex_aux_exit();
 	kd_mutex_local_runtime_exit();
 }

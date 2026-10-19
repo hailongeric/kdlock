@@ -10,7 +10,7 @@ import shlex
 import subprocess
 import tempfile
 
-from source_text import ROOT, read_source
+from source_text import ROOT, read_source, without_includes
 from test_spin_shadow import definition
 
 
@@ -20,12 +20,13 @@ def main():
         assert f'static DEFINE_PER_CPU(int, kd_mutex_{name});' in source
     markers = (
         'static void kd_mutex_update_max_waiters(int active)',
-        'static void kd_mutex_waiter_enter(struct kd_mutex_aux *aux)',
-        'static void kd_mutex_waiter_exit(struct kd_mutex_aux *aux)',
+        'static void kd_mutex_waiter_enter(struct kd_mutex *lock)',
+        'static void kd_mutex_waiter_exit(struct kd_mutex *lock)',
         'bool kd_mutex_check_idle(void)',
     )
     code = '\n'.join(definition(source, marker) for marker in markers)
     mutations = {
+        'ignores-active-task': ('return kd_mutex_tasks_idle();', 'return (kd_mutex_tasks_idle(), true);'),
         'ignores-second-cpu': ('for_each_possible_cpu(cpu)',
                               'for (cpu = 0; cpu < 1; cpu++)'),
         'ignores-reservation': (
@@ -42,6 +43,8 @@ def main():
     }
     with tempfile.TemporaryDirectory(prefix='kdlock-mutex-balances-') as tmp:
         path = Path(tmp)
+        (path / 'mutex_state_production.h').write_text(
+            without_includes(read_source(ROOT / 'include/kd_mutex_state.h')))
         for name, mutation in [('production', None), *mutations.items()]:
             candidate = code
             if mutation:

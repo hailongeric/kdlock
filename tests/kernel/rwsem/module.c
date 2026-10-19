@@ -270,11 +270,12 @@ static void join_workers(void)
 static void unpublished(struct result *r)
 {
 	/* This controlled probe has no registered JIT body or other delegation
-	 * callers. An empty exact auxiliary index proves that no gate has even
-	 * reserved delegation state; phase/drain waiters cannot publish a tail.
+	 * callers. Empty embedded state proves that this gate has not reserved
+	 * delegation; phase/drain waiters cannot publish a delegation tail.
 	 * Keep the independent exact waiter count through its safe accessor.
 	 */
-	check(!kd_mutex_debug_aux_count());
+	check(!atomic_read(&sem.gate.delegation_state));
+	check(!READ_ONCE(sem.gate.delegation_tail));
 	check(!kd_mutex_debug_waiter_count(&sem.gate));
 	r->publication_checks++;
 }

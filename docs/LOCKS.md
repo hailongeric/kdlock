@@ -17,12 +17,12 @@ the separate Linux implementation used as a benchmark comparator.
 | KD family | Exclusion and object storage | Execution and waiting | Implementation guide |
 | --- | --- | --- | --- |
 | Spinlock | One four-byte `kd_spinlock_t` contains ownership, pending and queue-tail state | Exclusive body; callers poll with preemption disabled. An eligible body may delegate. The body must not sleep. | [Spinlock](design/spin_implementation.md) |
-| Mutex | A 32-byte, native-aligned `struct kd_mutex` contains KD physical ownership and a sleeping wait list; claimed slots in a preallocated direct-index table hold the legacy delegation queue/gate | Ordinary calls execute locally and may sleep. Explicit delegation callers can publish pinned polling requests; physical owners and supported service paths may sleep. | [Mutex](design/mutex_implementation.md) |
+| Mutex | A 32-byte, native-aligned `struct kd_mutex` contains KD physical ownership, a sleeping-waiter ring head, and the embedded legacy delegation phase/count and encoded tail | Ordinary calls execute locally and may sleep. Explicit delegation callers can publish pinned polling requests; physical owners and supported service paths may sleep. | [Mutex](design/mutex_implementation.md) |
 | Rwlock | A 128-byte `kd_rwlock_t` separates the reader/writer count from a KD spin gate | Readers run concurrently and locally. Writers exclude readers and may delegate through the spin engine. Neither body may sleep. | [Reader/writer spinlock](design/rwlock_implementation.md) |
 | Rwsem | A 320-byte `struct kd_rwsem` contains a KD mutex, reader count, writer reservations and two sleeping waitqueues | Readers and ordinary writers run locally. Explicit outer writers drain readers before entering mutex delegation. Published delegation waiters still poll pinned. | [Reader/writer semaphore](design/rwsem_implementation.md) |
 
 Sizes describe the captured x86_64 configuration, not a portable binary
-interface. They exclude auxiliary delegation records, per-CPU queues, stacks, execution frames and translated
+interface. They exclude per-CPU queues, stacks, execution frames and translated
 code. The four implementation guides describe those additional resources.
 Preemption is the scheduler's ability to pause a task; a pinned polling waiter
 retains its CPU while waiting. This restriction matters even for a sleeping lock.

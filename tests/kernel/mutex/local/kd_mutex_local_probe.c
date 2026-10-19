@@ -36,6 +36,12 @@ static DECLARE_COMPLETION(ready);
 static DECLARE_COMPLETION(cancelled);
 static int cancel_result, cancel_signal;
 
+static bool no_delegation(struct mutex *lock)
+{
+	return !atomic_read(&lock->delegation_state) &&
+		!READ_ONCE(lock->delegation_tail);
+}
+
 static int worker(void *arg)
 {
 	unsigned long id = (unsigned long)arg;
@@ -91,7 +97,7 @@ static int cancellation(int sig)
 	wait_for_completion(&ready);
 	do {
 		raw_spin_lock(&test_lock.wait_lock);
-		queued = !list_empty(&test_lock.wait_list);
+		queued = test_lock.wait_head != NULL;
 		raw_spin_unlock(&test_lock.wait_lock);
 		if (!queued)
 			usleep_range(100, 200);
@@ -102,6 +108,136 @@ static int cancellation(int sig)
 	put_task_struct(task);
 	mutex_unlock(&test_lock);
 	return queued && cancel_result == -EINTR && kd_mutex_is_idle(&test_lock) ? 0 : -EINVAL;
+}
+
+struct ring_waiter {
+	struct completion ready;
+	struct completion done;
+	struct task_struct *task;
+	int result;
+	unsigned int order;
+};
+
+static unsigned int ring_order;
+
+static int ring_worker(void *arg)
+{
+	struct ring_waiter *waiter = arg;
+
+	allow_signal(SIGUSR1);
+	complete(&waiter->ready);
+	waiter->result = mutex_lock_interruptible(&test_lock);
+	if (!waiter->result) {
+		if (atomic_inc_return(&active) != 1)
+			atomic_inc(&errors);
+		waiter->order = ++ring_order;
+		/* The next waiter must survive an owner that sleeps after pickup. */
+		usleep_range(100, 200);
+		if (atomic_dec_return(&active))
+			atomic_inc(&errors);
+		mutex_unlock(&test_lock);
+	}
+	/* Cancellation checks and final joining both observe this completion. */
+	complete_all(&waiter->done);
+	return 0;
+}
+
+/* The parent holds the mutex and this worker has passed its ready marker.
+ * This exact task's interruptible state is set only after queue insertion;
+ * wait_lock excludes observing an insertion before its state publication. */
+static bool ring_wait_until_queued(struct task_struct *task)
+{
+	unsigned int tries;
+
+	for (tries = 0; tries < 1000; tries++) {
+		bool queued;
+
+		raw_spin_lock(&test_lock.wait_lock);
+		queued = test_lock.wait_head &&
+			READ_ONCE(task->__state) == TASK_INTERRUPTIBLE;
+		raw_spin_unlock(&test_lock.wait_lock);
+		if (queued)
+			return true;
+		usleep_range(100, 200);
+	}
+	return false;
+}
+
+static int ring_cancellation(unsigned int victim)
+{
+	struct ring_waiter waiters[3];
+	struct kd_local_waiter *first;
+	unsigned int i, tries, expected = 0, started = 0;
+	bool handoff = false;
+	int ret = 0;
+
+	ring_order = 0;
+	mutex_lock(&test_lock);
+	for (i = 0; i < ARRAY_SIZE(waiters); i++) {
+		init_completion(&waiters[i].ready);
+		init_completion(&waiters[i].done);
+		waiters[i].result = -EINPROGRESS;
+		waiters[i].order = 0;
+		waiters[i].task = kthread_run(ring_worker, &waiters[i],
+					     "kd-local/ring-%u", i);
+		if (IS_ERR(waiters[i].task)) {
+			ret = PTR_ERR(waiters[i].task);
+			goto release;
+		}
+		get_task_struct(waiters[i].task);
+		started++;
+		wait_for_completion(&waiters[i].ready);
+		if (!ring_wait_until_queued(waiters[i].task)) {
+			ret = -ETIMEDOUT;
+			goto release;
+		}
+	}
+	/* Ordered insertion creates known head/middle/tail positions. Wake the
+	 * head while the parent still owns the mutex: its retry must request the
+	 * existing physical HANDOFF bit (2), before cancellation changes the ring. */
+	first = READ_ONCE(test_lock.wait_head);
+	wake_up_process(waiters[0].task);
+	for (tries = 0; tries < 1000; tries++) {
+		handoff = atomic_long_read(&test_lock.owner) & 2UL;
+		if (handoff)
+			break;
+		usleep_range(100, 200);
+	}
+	if (!handoff) {
+		ret = -ETIMEDOUT;
+		goto release;
+	}
+	send_sig(SIGUSR1, waiters[victim].task, 1);
+	wait_for_completion(&waiters[victim].done);
+	raw_spin_lock(&test_lock.wait_lock);
+	if (waiters[victim].result != -EINTR || waiters[victim].order ||
+	    !test_lock.wait_head ||
+	    ((test_lock.wait_head == first) != (victim != 0)) ||
+	    !(atomic_long_read(&test_lock.owner) & 2UL))
+		ret = -EINVAL;
+	raw_spin_unlock(&test_lock.wait_lock);
+release:
+	/* Always release the parent before joining. Never return while a worker
+	 * can still reference its stack argument; a broken drain stays observable
+	 * to the runner's timeout instead of freeing live waiter storage. */
+	mutex_unlock(&test_lock);
+	for (i = 0; i < started; i++) {
+		wait_for_completion(&waiters[i].done);
+		kthread_stop(waiters[i].task);
+		put_task_struct(waiters[i].task);
+	}
+	if (!ret) {
+		for (i = 0; i < started; i++) {
+			if (i == victim)
+				continue;
+			if (waiters[i].result || waiters[i].order != ++expected)
+				ret = -EINVAL;
+		}
+		if (ring_order != 2 || !kd_mutex_is_idle(&test_lock) ||
+		    !no_delegation(&test_lock) || atomic_read(&errors))
+			ret = -EINVAL;
+	}
+	return ret;
 }
 
 static int __init probe_init(void)
@@ -122,12 +258,11 @@ static int __init probe_init(void)
 		     offsetof(struct native_container, suffix));
 	BUILD_BUG_ON(sizeof(struct kd_container) != sizeof(struct native_container));
 
-	/* This controlled probe has no delegation callers. Exact registry
-	 * membership must remain empty even while ordinary owners are live. */
-	if (kd_mutex_debug_aux_count())
+	/* Ordinary callers never publish the embedded delegation gate or tail. */
+	if (!no_delegation(&test_lock))
 		return -EINVAL;
 	if (!mutex_trylock(&test_lock) || !mutex_is_locked(&test_lock) ||
-	    kd_mutex_debug_aux_count() || mutex_trylock(&test_lock))
+	    !no_delegation(&test_lock) || mutex_trylock(&test_lock))
 		return -EINVAL;
 	mutex_unlock(&test_lock);
 	mutex_lock_io(&test_lock);
@@ -148,7 +283,7 @@ static int __init probe_init(void)
 		for (i = 0; i < 2048; i++) {
 			mutex_init(&many[i]);
 			mutex_lock(&many[i]);
-			if (kd_mutex_debug_aux_count())
+			if (!no_delegation(&many[i]))
 				ret = -EINVAL;
 			mutex_unlock(&many[i]);
 			if (!kd_mutex_is_idle(&many[i]))
@@ -158,6 +293,9 @@ static int __init probe_init(void)
 	kfree(many);
 	if (ret || cancellation(SIGUSR1) || cancellation(SIGKILL))
 		return -EINVAL;
+	for (i = 0; i < 3; i++)
+		if (ring_cancellation(i))
+			return -EINVAL;
 	for (i = 0; i < 8; i++) {
 		init_completion(&done[i]);
 		tasks[i] = kthread_create(worker, (void *)(unsigned long)i, "kd-local/%d", i);
@@ -177,9 +315,9 @@ static int __init probe_init(void)
 	}
 	if (ret || operations != 160000 || atomic_read(&errors) ||
 	    !kd_mutex_is_idle(&test_lock) || !kd_mutex_is_idle(&nested) ||
-	    kd_mutex_debug_aux_count())
+	    !no_delegation(&test_lock) || !no_delegation(&nested))
 		return -EINVAL;
-	pr_info("KD_LOCAL_PROBE PASS operations=%lu workers=8 objects=2048 lock_size=%zu lock_align=%zu containing_layout=PASS address_reuse=PASS no_destroy=PASS no_aux=PASS interruptible=EINTR killable=EINTR nested_sleep=PASS io=PASS drain=PASS\n",
+	pr_info("KD_LOCAL_PROBE PASS operations=%lu workers=8 objects=2048 lock_size=%zu lock_align=%zu containing_layout=PASS address_reuse=PASS no_destroy=PASS no_aux=PASS interruptible=EINTR killable=EINTR ring_cancel=PASS ring_handoff=PASS nested_sleep=PASS io=PASS drain=PASS\n",
 		operations, sizeof(struct mutex), (size_t)__alignof__(struct mutex));
 	return 0;
 }

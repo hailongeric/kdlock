@@ -1,7 +1,6 @@
 /*
- * KD-only direct mutex routing. Native-sized objects contain physical exclusion;
- * address-indexed auxiliary records retain the legacy scheduling queue while
- * delegation is live. No Linux object or Linux slowpath is used.
+ * KD-only direct mutex routing. Native-sized objects contain physical exclusion
+ * and the legacy delegation root. No Linux object or Linux slowpath is used.
  * A native suffix (original code on the producer) still requests unlock from
  * its retained executor before any fresh admission or task-name decision.
  */

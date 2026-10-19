@@ -19,14 +19,14 @@ typedef struct {
 } atomic_t;
 struct task_struct {
 	int pid;
-};
+} __attribute__((aligned(8)));
 struct list_head {
 	struct list_head *next, *prev;
 };
 #include "../../../include/kd_regs.h"
 typedef struct task_struct *atomic_long_t;
-typedef struct { long counter; } fixture_aux_atomic_long_t;
 typedef int raw_spinlock_t;
+#define KD_MUTEX_OWNER_FLAGS 7UL
 struct optimistic_spin_queue { atomic_t tail; };
 struct hlist_node { struct hlist_node *next, **pprev; };
 struct rcu_head { struct rcu_head *next; void (*fn)(struct rcu_head *); };
@@ -36,7 +36,6 @@ static struct task_struct executor = { 1 }, waiter = { 2 }, other = { 3 };
 static struct task_struct *current = &executor;
 static struct kd_mutex b;
 static struct kd_mutex gate;
-#define gate_aux (*fixture_aux(&gate))
 static struct kd_mutex_node request, successor;
 static struct kd_exec_frame active;
 static unsigned long kd_exec_invariant_failures;
@@ -99,8 +98,8 @@ static bool fixture_warn(bool condition) { return condition; }
 			     sizeof("kd_mutex outer release:") - 1)) { \
 			release_traces++;                              \
 			CHECK(gate.owner == current &&                    \
-			      gate_aux.physical_owner == current);         \
-			CHECK(gate_aux.locked == _Q_LOCKED_COMBINER_VAL);  \
+			      kd_mutex_delegation_owned(&gate, current));         \
+			CHECK(kd_mutex_gate_read(&gate) == _Q_LOCKED_COMBINER_VAL);  \
 			CHECK(successor.locked &&                      \
 			      successor.task_struct_ptr == &other);    \
 		}                                                      \
@@ -135,7 +134,8 @@ static int __attribute__((unused)) routine_printk(const char *format, ...)
 #define KD_EXE_LOCK_MUTEX 2
 #define container_of(p, type, member) \
 	((type *)((char *)(p) - offsetof(type, member)))
-#include "mutex_aux_mock.h"
+#define atomic_long_read(p) ((unsigned long)*(p))
+#include "mutex_state_mock.h"
 
 /* Observe the queue metadata at the real producer boundary. Actual timing
  * accumulation/off-mode behavior is covered by the executor consumer unit. */
@@ -193,12 +193,16 @@ static void cpu_relax(void)
 static void kd_origin_mutex_lock(struct kd_mutex *lock)
 {
 	CHECK(!lock->owner);
+	if (lock == &gate)
+		CHECK(kd_mutex_gate_read(lock) == KD_MUTEX_GATE_ACQUIRING);
 	lock->owner = current;
 }
 static void kd_origin_mutex_unlock(struct kd_mutex *lock, unsigned long ip)
 {
 	(void)ip;
 	CHECK(lock->owner == current);
+	if (lock == &gate)
+		CHECK(kd_mutex_gate_read(lock) == KD_MUTEX_GATE_RELEASING);
 	lock->owner = NULL;
 }
 static bool kd_origin_mutex_owned(struct kd_mutex *lock, struct task_struct *task)
@@ -210,9 +214,9 @@ static void kd_mutex_clear_locked_set_completed(struct kd_mutex_node *node)
 	node->completed = 1;
 	smp_store_release(&node->locked, 0);
 }
-static void kd_mutex_set_locked(struct kd_mutex_aux *aux)
+static void kd_mutex_set_locked(struct kd_mutex *lock)
 {
-	smp_store_release(&aux->locked, _Q_LOCKED_VAL);
+	kd_mutex_gate_set(lock, KD_MUTEX_GATE_HELD);
 }
 /* Opaque lookup token: the production backend must pass this exact slot. */
 static struct kd_exe_info ready_entry;
@@ -300,17 +304,16 @@ static int kd_mutex_jit_abort_cleanup(struct kd_exec_frame *frame)
 static void successor_progress(void)
 {
 	/* A's independent C owner must be able to enter before B is released. */
-	CHECK(!gate.owner && gate_aux.locked == 0);
+	CHECK(!gate.owner && kd_mutex_gate_read(&gate) == 0);
 	/* A later empty-queue head does not need the detached batch to wake it. */
-	CHECK(terminal ? gate_aux.tail == 0 : successor.locked == 0);
+	CHECK(terminal ? gate.delegation_tail == 0 : successor.locked == 0);
 	CHECK(b.owner == &executor);
-	if (gate.owner || gate_aux.locked || (!terminal && successor.locked))
+	if (gate.owner || kd_mutex_gate_read(&gate) || (!terminal && successor.locked))
 		return;
 	current = &other;
-	kd_mutex_aux_ref(&gate_aux); /* Independent successor owner. */
-	gate_aux.locked = 1;
+	CHECK(kd_mutex_gate_trylock(&gate));
 	kd_origin_mutex_lock(&gate);
-	gate_aux.physical_owner = current;
+	kd_mutex_gate_set(&gate, KD_MUTEX_GATE_HELD);
 	kd_mutex_origin_acquires++;
 	current = &executor;
 	other_holds = true;
@@ -367,7 +370,7 @@ int kd_exec_native_wait(struct kd_exec_frame *frame)
 	CHECK(frame == &active && request.native_resume && !request.locked);
 	native_waits++;
 	if (terminal) {
-		CHECK(!gate_aux.tail);
+		CHECK(!gate.delegation_tail);
 		/* Publication lets the origin reuse this exact tail slot before ACK.
 		 * A subsequent early-release hook must use only retired batch state. */
 		request.tail = 0xdead;
@@ -395,16 +398,15 @@ int main(void)
 		unsigned int expected = mode == 4 ? 0 : 1;
 		bool early = mode >= 1 && mode <= 3;
 
-		fixture_aux_reset();
 		memset(&gate, 0, sizeof(gate));
-		CHECK(kd_mutex_aux_get(&gate) == &gate_aux); /* Batch invocation. */
+		kd_mutex_state_waiter_enter(&gate); /* Enclosing queued combiner. */
 		memset(&request, 0, sizeof(request));
 		memset(&successor, 0, sizeof(successor));
 		gate.owner = NULL;
 		b.owner = NULL;
 		request.tail = 1U << KD_MUTEX_TAIL_CPU_OFFSET;
 		request.next = terminal ? NULL : &successor;
-		gate_aux.tail = terminal ? (unsigned int)request.tail : 2U << KD_MUTEX_TAIL_CPU_OFFSET;
+		gate.delegation_tail = terminal ? (unsigned int)request.tail : 2U << KD_MUTEX_TAIL_CPU_OFFSET;
 		request.entry_abi = terminal ? KD_ENTRY_ABI_MUTEX_CLOBBER_V1 : KD_ENTRY_ABI_LEGACY;
 		request.packet_state = terminal ? KD_PACKET_MINIMAL : KD_PACKET_FULL;
 		request.regs.ip = 0x800;
@@ -423,34 +425,34 @@ int main(void)
 		release_traces = 0;
 		other_holds = false;
 		preempt = 1;
-		kd_mutex_wait_and_lock(&gate, &gate_aux);
-		gate_aux.locked = 3;
-		kd_mutex_run_combiner(&gate, &request, &gate_aux);
+		kd_mutex_wait_and_lock(&gate);
+		kd_mutex_gate_set(&gate, KD_MUTEX_GATE_COMBINER);
+		kd_mutex_run_combiner(&gate, &request);
 		CHECK(scripts == expected && pops == expected);
 		CHECK(queue_finishes == expected);
 		CHECK(request.queued_at_ns == (expected ? 0 : 50));
 		CHECK(native_waits == (mode == 2 || mode == 3 || mode == 5));
 		CHECK(handoff_starts == native_waits && handoff_ends == native_waits);
-		CHECK(gate_aux.physical_owner == &executor && gate.owner == &executor);
-		CHECK(gate_aux.locked == _Q_LOCKED_VAL);
+		CHECK(kd_mutex_delegation_owned(&gate, &executor) && gate.owner == &executor);
+		CHECK(kd_mutex_gate_read(&gate) == _Q_LOCKED_VAL);
 		CHECK(!b.owner && preempt == 1 && !other_holds);
 		CHECK(kd_mutex_origin_acquires == (early ? 3 : 1));
 		CHECK(kd_mutex_origin_releases == (early ? 2 : 0));
 		CHECK(wakes == ((mode == 4 || terminal) ? 0 : 1));
 		if (terminal)
-			CHECK(gate_aux.tail == (mode == 4 ? 1U << KD_MUTEX_TAIL_CPU_OFFSET : 0));
+			CHECK(gate.delegation_tail == (mode == 4 ? 1U << KD_MUTEX_TAIL_CPU_OFFSET : 0));
 		CHECK(successor.locked == (early || mode == 4 || terminal));
 		CHECK(request.completed == (mode == 0 || mode == 1));
 		CHECK(release_traces == early);
 		CHECK(_kd_mutex_unlock_checked(&gate) == 0);
-		CHECK(!gate_aux.locked && !gate.owner && !gate_aux.physical_owner);
+		CHECK(!kd_mutex_gate_read(&gate) && !gate.owner);
 		CHECK(kd_mutex_origin_acquires == kd_mutex_origin_releases);
-		CHECK(gate_aux.refs.counter == 1); /* Invocation survives every early owner release. */
+		CHECK(kd_mutex_state_waiter_count(&gate) == 1); /* Enclosing waiter survives early release. */
 		/* Remaining unexecuted nodes belong to substituted peers; discard them
-		 * only after the queue assertions, then close this fixture invocation. */
-		gate_aux.tail = 0;
-		kd_mutex_aux_put(&gate_aux);
-		CHECK(!gate_aux.refs.counter);
+		 * only after the queue assertions, then finish this enclosing waiter. */
+		gate.delegation_tail = 0;
+		kd_mutex_state_waiter_exit(&gate);
+		CHECK(!atomic_read(&gate.delegation_state));
 	}
 	CHECK(!kd_exec_invariant_failures && !kd_mutex_frame_failure_count);
 	CHECK(routine_traces == 12);

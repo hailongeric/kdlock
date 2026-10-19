@@ -25,7 +25,7 @@ def production():
     slowpath = definition(
         mutex, "__kd_mutex_lock_slowpath(struct kd_mutex *lock, int tail,"
     )
-    assert "release:\n\tkd_mutex_waiter_exit(aux);\n\treturn 2;" in slowpath
+    assert "release:\n\tkd_mutex_waiter_exit(lock);\n\treturn 2;" in slowpath
     # These statics belong to separate production translation units. Rename
     # only the per-CPU symbol so both unchanged paths can share one fixture.
     code = without_includes(read_source(ROOT / "include/kd_comm.h")).replace("kd_comm_matches(", "kd_comm_matches_real(")
@@ -48,11 +48,11 @@ def production():
         + "\n"
     )
     for marker in (
+        "bool kd_mutex_delegation_owned(struct kd_mutex *lock, struct task_struct *task)",
         "void kd_mutex_init(struct kd_mutex *lock)",
         "static void kd_mutex_wait_for_result(struct kd_mutex_node *node)",
-        "static void kd_mutex_claim_origin_take_ref(struct kd_mutex *lock,",
-        "static void kd_mutex_claim_origin(struct kd_mutex *lock, struct kd_mutex_aux *aux)",
-        "static void kd_mutex_wait_and_lock(struct kd_mutex *lock, struct kd_mutex_aux *aux)",
+        "static void kd_mutex_claim_origin(struct kd_mutex *lock)",
+        "static void kd_mutex_wait_and_lock(struct kd_mutex *lock)",
         "static bool kd_mutex_has_local_predecessor(struct kd_mutex *lock)",
         "static struct kd_mutex_node *kd_mutex_reserve_node(void)",
         "static void kd_mutex_release_node(struct kd_mutex_node *node)",
@@ -84,11 +84,6 @@ def main():
     ptrace = (ROOT / "include/kd_regs.h").read_text()
     types = definition(ptrace, "struct kd_regs {").rstrip() + ";\n"
     types += without_includes(read_source((ROOT / "include/kd_mutex.h")))
-    types += without_includes(read_source(ROOT / "include/kd_mutex_aux.h"))
-    # The queue fixture substitutes registry arithmetic separately from the
-    # pointer-shaped physical owner. Actual atomics run in test_mutex_aux.py.
-    assert types.count('atomic_long_t refs;') == 1
-    types = types.replace('atomic_long_t refs;', 'fixture_aux_atomic_long_t refs;')
     code = production()
     # Compile each broken decision first, then require an explicit assertion
     # failure. A crash, compiler error, BUG-only exit or timeout is not a pass.
@@ -155,29 +150,24 @@ def main():
         ),
         "release-keeps-gs": ("node->gsbase = 0;", "node->gsbase = 1;"),
         "gate-without-native-lock": (
-            "\t\tkd_mutex_claim_origin_take_ref(lock, aux);\n\t\treturn;",
+            "\t\tkd_mutex_claim_origin(lock);\n\t\treturn;",
             "\t\treturn;",
         ),
-        "fast-owner-restores-reference-pair": (
-            "\t\tkd_mutex_claim_origin_take_ref(lock, aux);\n\t\treturn;",
-            "\t\tkd_mutex_claim_origin(lock, aux);\n\t\tkd_mutex_aux_put(aux);\n\t\treturn;",
+        "claim-publishes-held-before-physical": (
+            "\tkd_origin_mutex_lock(lock);\n\tkd_mutex_gate_set(lock, KD_MUTEX_GATE_HELD);",
+            "\tkd_mutex_gate_set(lock, KD_MUTEX_GATE_HELD);\n\tkd_origin_mutex_lock(lock);",
         ),
-        "fast-owner-drops-transferred-reference": (
-            "\t\tkd_mutex_claim_origin_take_ref(lock, aux);\n\t\treturn;",
-            "\t\tkd_mutex_claim_origin_take_ref(lock, aux);\n\t\tkd_mutex_aux_put(aux);\n\t\treturn;",
+        "unlock-clears-before-physical": (
+            "kd_mutex_gate_set(lock, KD_MUTEX_GATE_RELEASING);",
+            "kd_mutex_gate_set(lock, KD_MUTEX_GATE_FREE);",
         ),
-        "unlock-restores-temporary-reference": (
-            "struct kd_mutex_aux *aux = kd_mutex_aux_borrow_owned(lock);",
-            "struct kd_mutex_aux *aux = kd_mutex_aux_borrow_owned(lock);\n\t"
-            "if (aux) aux = kd_mutex_aux_lookup(lock);",
+        "unlock-skips-releasing-phase": (
+            "kd_mutex_gate_set(lock, KD_MUTEX_GATE_RELEASING);",
+            "(void)lock;",
         ),
-        "unlock-error-drops-owner-reference": (
-            'KD_PR_ERR("kd_mutex_unlock: unexpected locked state %d\\n", locked);',
-            'KD_PR_ERR("kd_mutex_unlock: unexpected locked state %d\\n", locked);\n\tkd_mutex_aux_put(aux);',
-        ),
-        "unlock-drops-owner-before-gate": (
-            "\t\tsmp_store_release(&aux->locked, 0);",
-            "\t\tkd_mutex_aux_put(aux);\n\t\tsmp_store_release(&aux->locked, 0);",
+        "unlock-clears-successor": (
+            "kd_mutex_gate_set(lock, KD_MUTEX_GATE_FREE);\n\treturn 0;",
+            "kd_mutex_gate_set(lock, KD_MUTEX_GATE_FREE);\n\tkd_mutex_gate_set(lock, KD_MUTEX_GATE_FREE);\n\treturn 0;",
         ),
         "resume-loses-register": (
             "resume_regs = resume_node->regs;",
@@ -210,6 +200,8 @@ def main():
     with tempfile.TemporaryDirectory(prefix="kdlock-mutex-resources-") as tmp:
         directory = Path(tmp)
         (directory / "mutex_resource_types.h").write_text(types)
+        (directory / "mutex_state_production.h").write_text(
+            without_includes(read_source(ROOT / "include/kd_mutex_state.h")))
         for name, mutation in [("production", None), *mutations.items()]:
             candidate = code
             if mutation:

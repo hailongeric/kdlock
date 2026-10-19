@@ -16,7 +16,7 @@ from test_spin_shadow import definition
 def main():
     types = definition(read_source(ROOT/'include/kd_regs.h'), 'struct kd_regs {').rstrip()+';\n'
     types += definition(read_source(ROOT/'include/kd_spin_entry.h'), 'struct kd_spin_ref {').rstrip()+';\n'
-    for name in ('exe_info', 'kd_call', 'kd_exec', 'kd_mutex', 'kd_mutex_aux'):
+    for name in ('exe_info', 'kd_call', 'kd_exec', 'kd_mutex'):
         types += without_includes(read_source(ROOT/f'include/{name}.h'))+'\n'
     source = read_source(ROOT/'kernel_module/kd_mutex.c')
     helpers = definition(source, 'struct kd_mutex_batch {').rstrip()+';\n'
@@ -29,11 +29,13 @@ def main():
     ):
         helpers += definition(source, marker)+'\n'
     helpers += definition(source, 'static int kd_mutex_release_outer(struct kd_exec_frame *frame,')+'\n'
-    loop = 'static void\n'+definition(source, 'kd_mutex_run_combiner(struct kd_mutex *lock, struct kd_mutex_node *curr_node,')
+    loop = 'static void\n'+definition(source, 'kd_mutex_run_combiner(struct kd_mutex *lock, struct kd_mutex_node *curr_node)')
     with tempfile.TemporaryDirectory(prefix='kd-mutex-terminal-') as tmp:
         path=Path(tmp)
         (path/'types.h').write_text(types)
-        assert loop.count('kd_mutex_set_locked(aux);') == 2
+        (path/'mutex_state_production.h').write_text(
+            without_includes(read_source(ROOT/'include/kd_mutex_state.h')))
+        assert loop.count('kd_mutex_set_locked(lock);') == 2
         mutations = {
             'production': (helpers, loop),
             'skip-tail-retirement': (helpers.replace('if (batch->current_retired)', 'if (true)'), loop),
@@ -44,8 +46,8 @@ def main():
             'unbounded-local-cohort': (helpers, loop.replace('counter >= 128', 'false')),
             # Each combiner return must establish the normal gate value
             # independently, including source refusal before caller cleanup.
-            'skip-refusal-gate': (helpers, loop.replace('kd_mutex_set_locked(aux);', '', 1)),
-            'skip-normal-gate': (helpers, ''.join(loop.rsplit('kd_mutex_set_locked(aux);', 1))),
+            'skip-refusal-gate': (helpers, loop.replace('kd_mutex_set_locked(lock);', '', 1)),
+            'skip-normal-gate': (helpers, ''.join(loop.rsplit('kd_mutex_set_locked(lock);', 1))),
         }
         for name, (text, candidate_loop) in mutations.items():
             (path/'helpers.h').write_text(text)

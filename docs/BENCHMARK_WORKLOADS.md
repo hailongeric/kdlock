@@ -212,9 +212,9 @@ excluding lock storage and other metadata. Padding separates different counters;
 every worker still shares the same counter in c01.
 
 The current KD mutex occupies 32 bytes aligned to 8 bytes in the captured
-configuration, matching Native's embedded footprint. KD delegation state uses
-auxiliary allocations indexed by lock address, with automatic retirement after
-all references drain. Lock storage is separate from counters and controls. The
+configuration, matching Native's embedded footprint. Its delegation phase/count
+and encoded tail are embedded; there is no auxiliary lookup or shared reference
+count. Lock storage is separate from counters and controls. The
 recorded `d2a2304` KD-only comparisons used a 256-byte, 128-byte-aligned object;
 they do not measure the compact layout or establish a performance gain for it.
 The c01 name counts payload cachelines only. Spin/mutex loops currently include 64 dependent arithmetic rounds

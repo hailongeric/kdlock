@@ -8,7 +8,7 @@
  */
 
 struct kd_mutex_batch {
-	struct kd_mutex_aux *aux; /* borrowed from the enclosing invocation */
+	struct kd_mutex *lock; /* enclosing invocation keeps the object live */
 	struct kd_exec_outer_unlock outer;
 	struct kd_mutex_node *next;
 	/* A queue tail can receive a delayed successor link until it is retired.
@@ -126,7 +126,7 @@ static void kd_mutex_batch_retire_current(struct kd_mutex *lock,
 	struct kd_mutex_node *node;
 	struct kd_mutex_node *next;
 
-	BUG_ON(batch->aux->lock != lock);
+	BUG_ON(batch->lock != lock);
 	if (batch->current_retired)
 		return;
 	node = batch->current_node;
@@ -137,7 +137,7 @@ static void kd_mutex_batch_retire_current(struct kd_mutex *lock,
 		 * loop retains that node for rejoin instead of executing it. */
 		BUG_ON(batch->deferred_head);
 		next = smp_load_acquire(&node->next);
-		if (!next && cmpxchg(&batch->aux->tail, (u32)node->tail, 0) !=
+		if (!next && cmpxchg(&lock->delegation_tail, (u32)node->tail, 0) !=
 			     (u32)node->tail) {
 			do {
 				cpu_relax();
@@ -164,7 +164,8 @@ static int kd_mutex_release_outer(struct kd_exec_frame *frame,
 	    frame->jit_lock_kind[frame->outer_lock_index] !=
 		    KD_EXEC_LOCK_QUEUE_OWNER ||
 	    frame->outer_lock_addr != (unsigned long)lock ||
-	    READ_ONCE(batch->aux->locked) != _Q_LOCKED_COMBINER_VAL)
+	    batch->lock != lock ||
+	    kd_mutex_gate_read(lock) != _Q_LOCKED_COMBINER_VAL)
 		return -EINVAL;
 	/* A terminal request may have no successor. Remove its published tail
 	 * before opening A; future old_tail=0 arrivals poll A's gate themselves. */
@@ -219,7 +220,7 @@ kd_mutex_execute_cs(struct kd_mutex *lock, struct kd_mutex_node *curr_node,
 	int frame_ret;
 	u64 queue_end;
 
-	BUG_ON(READ_ONCE(batch->aux->physical_owner) != current);
+	BUG_ON(!kd_mutex_delegation_owned(lock, current));
 	BUG_ON(!kd_origin_mutex_owned(lock,
 				      current));
 	if (!incoming_rsp_ptr)
@@ -434,12 +435,11 @@ prepared:
 #pragma GCC push_options
 #pragma GCC optimize("O3")
 __attribute__((noipa)) noinline notrace static void
-kd_mutex_run_combiner(struct kd_mutex *lock, struct kd_mutex_node *curr_node,
-		      struct kd_mutex_aux *aux)
+kd_mutex_run_combiner(struct kd_mutex *lock, struct kd_mutex_node *curr_node)
 {
 	struct kd_mutex_node *next_node = NULL;
 	struct kd_mutex_batch batch = {
-		.aux = aux,
+		.lock = lock,
 		.outer.release = kd_mutex_release_outer,
 		.scan_left = 64,
 #ifdef NUMA_AWARE
@@ -455,7 +455,7 @@ kd_mutex_run_combiner(struct kd_mutex *lock, struct kd_mutex_node *curr_node,
 	if (!kd_mutex_batch_can_execute(curr_node) || !kd_source_frame_get()) {
 		/* Keep unsupported last packets and source refusal on native handoff. */
 		this_cpu_inc(kd_mutex_handoff_count);
-		kd_mutex_set_locked(aux);
+		kd_mutex_set_locked(lock);
 		if (curr_node)
 			smp_store_release(&curr_node->locked, 0);
 		return;
@@ -517,7 +517,7 @@ kd_mutex_run_combiner(struct kd_mutex *lock, struct kd_mutex_node *curr_node,
 			/* A's queue already runs independently. B and the frame are
 			 * now finished; reacquire A for our own original request.
 			 * Do not inspect or wake the old successor a second time. */
-			kd_mutex_wait_and_lock(lock, aux);
+			kd_mutex_wait_and_lock(lock);
 			kd_source_frame_put();
 			return;
 		}
@@ -537,7 +537,7 @@ kd_mutex_run_combiner(struct kd_mutex *lock, struct kd_mutex_node *curr_node,
 	 * An empty retired tail needs no wake; future heads already poll the gate.
 	 * Keep the real mutex and gate for this physical owner's original body. */
 	next_node = kd_mutex_batch_rejoin(&batch, next_node);
-	kd_mutex_set_locked(aux);
+	kd_mutex_set_locked(lock);
 	if (next_node)
 		smp_store_release(&next_node->locked, 0);
 	/* Includes synchronous native continuation and final physical owner ACK. */

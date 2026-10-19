@@ -9,12 +9,11 @@ this review. The owned/adaptive experiment is archived; see
 [branch dispositions](../history/main-consolidation-20261018.md).
 
 The replacement assumes every user of an object uses KD. Each `struct kd_mutex`
-contains physical exclusion; an auxiliary slot indexed by its address holds
-legacy delegation scheduling only while that state is needed. The object is
+contains physical exclusion and the embedded legacy delegation root. The object is
 32 bytes with native alignment in the captured configuration. There is no Linux
 `struct mutex` backing or Linux mutex fallback in this path.
 Cold calls, admission refusals, task-record shortages, same-CPU predecessor
-refusals, auxiliary slot collisions or claim refusals, nested calls and source
+refusals, nested calls and source
 closure all retain KD physical exclusion.
 
 This guide owns the object-replacement and ordinary-alias contract. The
@@ -50,8 +49,7 @@ Linux mutex APIs.
 Outer entry uses a fixed, short probe window to resolve transient clashes before
 paying queue-admission costs. Only a zero-owner acquire CAS grants ownership;
 busy owner reads do not modify that word. The active-combiner hint reads the
-direct-index slot with lifecycle-sequence validation, without a registry lock,
-reference-count write or retained auxiliary pointer. The existing active-combiner
+embedded delegation phase, without a lookup or reference operation. The existing active-combiner
 gate state (3) ends retries immediately, so a running batch receives new work promptly. A
 lone gate owner (state 1) may finish during the bounded retry window. The state
 is only a hint; it never authorizes ownership or retirement. Exhausting eight probes
@@ -72,46 +70,26 @@ do not enter the physical sleeping wait list.
 `struct kd_mutex` is 32 bytes, aligned to 8 bytes in the captured configuration,
 matching the native `struct mutex` size and alignment:
 
-| Storage | State |
-| --- | --- |
-| Embedded object | Physical owner at offset 0, private OSQ and wait-list spinlock, sleeping wait list at offset 16 |
-| Auxiliary delegation slot | 256 bytes aligned to 128 bytes; lock address and lifecycle sequence, exact references, delegation executor, gate state, legacy encoded tail and exact delegation waiter count |
-| Per-request node | Existing per-CPU linked queue node, packet, stack identity and completion state |
+| Field | Offset | Size |
+| --- | ---: | ---: |
+| Physical owner (`atomic_long_t`) | 0 | 8 |
+| Physical wait lock (`raw_spinlock_t`) | 8 | 4 |
+| OSQ (`optimistic_spin_queue`) | 12 | 4 |
+| Sleeping ring head (`kd_local_waiter *`) | 16 | 8 |
+| Delegation phase/exact waiter count (`atomic_t`) | 24 | 4 |
+| Encoded delegation tail (`u32`) | 28 | 4 |
 
-Ordinary physical operations and uncontended outer acquisition need only the
-embedded object. Provider initialization preallocates 65,536 auxiliary slots,
-occupying 16 MiB, and fails if that allocation cannot be made. Delegation hashes
-the address to one slot and claims it only when needed; concurrent requests for
-the same exact address share it. Lookup and retirement use no registry lock or
-RCU. A collision or a slot undergoing a lifecycle transition takes the existing
-local KD fallback before queue publication, without waiting for the other slot
-user. The table bounds simultaneous delegation state, not the number of ordinary
-mutex objects, and there is no allocation on acquisition or retirement.
+The ring head replaces Linux's list sentinel while preserving O(1) append,
+removal and cancellation. Internal list representation differs from Linux.
+The embedded phase/count and tail remove the auxiliary hash and shared reference
+count entirely. There is no per-object allocation or retirement callback and no
+new caller cleanup. The existing task routing and frame/source/ACK lifetimes
+remain. See the [implementation guide](mutex_implementation.md#current-storage-and-lookup)
+for phase ordering, exact ownership and count packing.
 
-Exact invocation and gate-owner references retain the slot through queue
-publication, physical ownership, native unlock ACKs and frame retirement. A
-scheduling node may retire before its owner's critical section returns, so node
-retirement alone cannot release the slot. Lookup pins LIVE with one fetch-add and
-then validates the address. LIVE zero can be pinned until a retiring put wins the
-zero-to-BUSY CAS. A losing put returns without inspecting protocol state; the
-winner checks exact drain, clears the address and publishes FREE. Negative-state
-pins reject protocol access, but remain counted until their put. Additive
-creation and retirement transitions preserve those pins, and a slot is reusable
-only at exact FREE. Read-only observers validate a lifecycle sequence around their
-address and field reads; the sequence never wraps into an old identity. Once
-users and their asynchronous obligations drain, caller storage may be freed or
-reinitialized at the same address without another cleanup API. No per-object
-allocation or callback remains, and `kd_mutex_destroy()` is not required for slot
-retirement. Controlled provider teardown stops and joins callers and observers,
-verifies all slots free, then releases the table. See the
-[implementation guide](mutex_implementation.md#current-storage-and-lookup) for
-lookup, sequence and final-reference ordering.
-
-The selected `d2a2304` object occupied 256 bytes aligned to 128 bytes, separating
-physical ownership and producer writes across four cachelines. Its measurements
-remain evidence for that layout. The compact layout reduces embedded storage;
-the preallocated auxiliary table and lookup costs are additional. No performance
-gain has been established for the direct-index change.
+The selected `d2a2304` object occupied 256 bytes aligned to 128 bytes. The later
+hash-based compact layout at `6341999` also required a 16 MiB auxiliary table.
+Measurements for both remain specific to those layouts and source identities.
 
 The per-request node remains 320 bytes, with its packet at offset 128 and
 completion/polling bytes at 304/305. Caller-owned object storage must remain alive
@@ -154,8 +132,9 @@ The live ordinary-API probe is
 It checks native size/alignment and containing-structure offsets at compile time,
 160,000 operations across eight workers, sleeping owners, nested locking,
 2,048 initialized objects reused at the same addresses and freed without destroy,
-no claimed auxiliary slots during ordinary ownership and after drain, interruptible
-and killable cancellation, I/O state and trylock.
+zero embedded delegation state during ordinary ownership and after drain,
+interruptible/killable cancellation, head/middle/tail ring cancellation with
+HANDOFF, I/O state and trylock.
 Unit checks retain compiled/JIT caller execution,
 queue-resource failures, terminal retirement, FULL recovery, frame capacity,
 immutable images and source leases. Provider and KD workload import audits reject
@@ -166,7 +145,7 @@ checks do not establish whole-kernel compatibility.
 
 The historical c01 comparison uses the unchanged one-cacheline business payload
 and 64 rounds of common post-work. Its 256-byte lock is separate from that payload;
-those results do not measure the current compact object and auxiliary table.
+those results do not measure the current compact embedded object.
 For pipebytes n16, Native uses the actual pipe mutex; KD and TCLock each protect the
 same redirected FIONREAD business body with their own private lock. The pipe is
 private to the controlled cohort; no reads, writes, resize or independent consumer

@@ -24,12 +24,8 @@ def main():
         ).rstrip()
         + ";\n"
     )
-    for name in ("include/exe_info.h", "include/kd_call.h", "include/kd_exec.h", "include/kd_mutex.h", "include/kd_mutex_aux.h"):
+    for name in ("include/exe_info.h", "include/kd_call.h", "include/kd_exec.h", "include/kd_mutex.h"):
         types += without_includes(read_source((ROOT / name))) + "\n"
-    # Registry arithmetic is the existing single-thread mock; keep its long
-    # width independently of the fixture's pointer-shaped physical owner.
-    assert types.count('atomic_long_t refs;') == 1
-    types = types.replace('atomic_long_t refs;', 'fixture_aux_atomic_long_t refs;')
     types += without_includes(read_source(ROOT / "include/kd_jit_batch.h")) + "\n"
     kernel = Path(f"/lib/modules/{os.uname().release}/build")
     types += (kernel / "include/linux/kern_levels.h").read_text() + "\n"
@@ -73,9 +69,9 @@ def main():
         "static bool kd_mutex_batch_can_execute(struct kd_mutex_node *node)",
         "static void kd_mutex_batch_retire_current(struct kd_mutex *lock,",
         "static void kd_mutex_prefetch_successor(struct kd_mutex_node *next)",
-        "static void kd_mutex_claim_origin_take_ref(struct kd_mutex *lock,",
-        "static void kd_mutex_claim_origin(struct kd_mutex *lock, struct kd_mutex_aux *aux)",
-        "static void kd_mutex_wait_and_lock(struct kd_mutex *lock, struct kd_mutex_aux *aux)",
+        "bool kd_mutex_delegation_owned(struct kd_mutex *lock, struct task_struct *task)",
+        "static void kd_mutex_claim_origin(struct kd_mutex *lock)",
+        "static void kd_mutex_wait_and_lock(struct kd_mutex *lock)",
     ):
         code += definition(mutex, marker) + "\n"
     code += "int\n" + definition(
@@ -100,6 +96,8 @@ def main():
     with tempfile.TemporaryDirectory(prefix="kdlock-mutex-outer-unit-") as directory:
         path = Path(directory)
         (path / "mutex_outer_types.h").write_text(types)
+        (path / "mutex_state_production.h").write_text(
+            without_includes(read_source(ROOT / "include/kd_mutex_state.h")))
         assert code.count("printk(KERN_INFO ") == 1
         # Each mutant must compile and then fail an explicit assertion. Turning
         # off trace records is not an acceptable cure for serial-console cost.

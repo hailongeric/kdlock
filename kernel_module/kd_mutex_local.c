@@ -16,7 +16,6 @@
 #include <linux/sched/task.h>
 #include <linux/sched/wake_q.h>
 #include "kd_mutex.h"
-#include "kd_mutex_aux.h"
 #include "kd_mutex_local.h"
 
 #if defined(CONFIG_PREEMPT_RT) || defined(CONFIG_DEBUG_MUTEXES) || defined(CONFIG_DEBUG_LOCK_ALLOC)
@@ -51,6 +50,45 @@ struct kd_local_waiter {
 	struct list_head list;
 	struct task_struct *task;
 };
+
+/* wait_head names the first real waiter in a circular doubly linked ring.
+ * Its prev link supplies the tail, so append and cancellation remain O(1)
+ * without embedding a two-pointer sentinel in every mutex. All links and
+ * head changes are protected by wait_lock. An unlocked reader may compare
+ * wait_head with its own live waiter, but must never dereference that sample. */
+static bool kd_local_waiter_add(struct kd_mutex *lock,
+				struct kd_local_waiter *waiter)
+{
+	struct kd_local_waiter *head = lock->wait_head;
+
+	if (head) {
+		list_add_tail(&waiter->list, &head->list);
+		return false;
+	}
+	INIT_LIST_HEAD(&waiter->list);
+	WRITE_ONCE(lock->wait_head, waiter);
+	return true;
+}
+
+static void kd_local_waiter_remove(struct kd_mutex *lock,
+				   struct kd_local_waiter *waiter)
+{
+	struct kd_local_waiter *head = lock->wait_head;
+
+	BUG_ON(!head);
+	if (head == waiter) {
+		struct list_head *next = waiter->list.next;
+
+		/* Save the successor before list_del poisons the removed links.
+		 * A singleton is a nonempty ring until its head becomes NULL. */
+		head = next == &waiter->list ? NULL :
+			list_entry(next, struct kd_local_waiter, list);
+		list_del(&waiter->list);
+		WRITE_ONCE(lock->wait_head, head);
+	} else {
+		list_del(&waiter->list);
+	}
+}
 
 static struct task_struct *kd_owner(struct kd_mutex *lock)
 {
@@ -169,8 +207,7 @@ static noinline int kd_local_lock_slow(struct kd_mutex *lock, unsigned int state
 	_raw_spin_lock(&lock->wait_lock);
 	if (!kd_try_common(lock, false))
 		goto unlock;
-	list_add_tail(&waiter.list, &lock->wait_list);
-	if (lock->wait_list.next == &waiter.list)
+	if (kd_local_waiter_add(lock, &waiter))
 		atomic_long_or(KD_WAITERS, &lock->owner);
 	set_current_state(state);
 	for (;;) {
@@ -185,7 +222,7 @@ static noinline int kd_local_lock_slow(struct kd_mutex *lock, unsigned int state
 		}
 		_raw_spin_unlock(&lock->wait_lock);
 		kd_local_schedule();
-		first = READ_ONCE(lock->wait_list.next) == &waiter.list;
+		first = READ_ONCE(lock->wait_head) == &waiter;
 		set_current_state(state);
 		if (!kd_try_common(lock, first) ||
 		    (first && kd_local_spin(lock, true))) {
@@ -195,8 +232,8 @@ static noinline int kd_local_lock_slow(struct kd_mutex *lock, unsigned int state
 		_raw_spin_lock(&lock->wait_lock);
 	}
 	__set_current_state(TASK_RUNNING);
-	list_del(&waiter.list);
-	if (list_empty(&lock->wait_list))
+	kd_local_waiter_remove(lock, &waiter);
+	if (!lock->wait_head)
 		atomic_long_andnot(KD_FLAGS, &lock->owner);
 unlock:
 	_raw_spin_unlock(&lock->wait_lock);
@@ -279,8 +316,8 @@ static noinline void kd_local_unlock_slow(struct kd_mutex *lock)
 		}
 	}
 	_raw_spin_lock(&lock->wait_lock);
-	if (!list_empty(&lock->wait_list)) {
-		next = list_first_entry(&lock->wait_list, struct kd_local_waiter, list)->task;
+	if (lock->wait_head) {
+		next = lock->wait_head->task;
 		kd_local_wake_add(&wake_q, next);
 	}
 	/* Use the saved releasing owner: a new acquirer may already own the word. */
@@ -319,8 +356,8 @@ EXPORT_SYMBOL_GPL(kd_mutex_is_locked);
 bool kd_mutex_is_idle(struct kd_mutex *lock)
 {
 	return !atomic_long_read(&lock->owner) && !atomic_read(&lock->osq.tail) &&
-		list_empty(&lock->wait_list) && !raw_spin_is_locked(&lock->wait_lock) &&
-		kd_mutex_aux_is_idle(lock);
+		!READ_ONCE(lock->wait_head) && !raw_spin_is_locked(&lock->wait_lock) &&
+		!atomic_read(&lock->delegation_state) && !READ_ONCE(lock->delegation_tail);
 }
 EXPORT_SYMBOL_GPL(kd_mutex_is_idle);
 

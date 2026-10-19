@@ -29,7 +29,7 @@
 #include <linux/objtool.h>
 
 #include "kd_mutex.h"
-#include "kd_mutex_aux.h"
+#include "kd_mutex_state.h"
 #include "kd_mutex_stats.h"
 #include "kd_lock.h"
 #include "kd_exec.h"
@@ -122,6 +122,30 @@ static DEFINE_PER_CPU_SHARED_ALIGNED(struct kd_mutex_cpu_state, kd_mutex_shadows
 
 #include "mutex/waiter.inc"
 
+/* Only current's completed physical acquisition orders this pair of reads.
+ * Arbitrary-task snapshots could mix different ownership generations. PICKUP
+ * names the successor before it actually acquires, so it is not ownership. */
+bool kd_mutex_delegation_owned(struct kd_mutex *lock, struct task_struct *task)
+{
+	unsigned long owner;
+	u32 phase;
+
+	if (!lock || task != current)
+		return false;
+	owner = atomic_long_read(&lock->owner);
+	if ((owner & ~KD_MUTEX_OWNER_FLAGS) != (unsigned long)current ||
+	    (owner & 4UL))
+		return false;
+	phase = kd_mutex_gate_read(lock);
+	return phase == KD_MUTEX_GATE_HELD || phase == KD_MUTEX_GATE_COMBINER;
+}
+
+bool kd_mutex_combiner_active(struct kd_mutex *lock)
+{
+	return lock && kd_mutex_gate_read(lock) == KD_MUTEX_GATE_COMBINER;
+}
+EXPORT_SYMBOL_GPL(kd_mutex_combiner_active);
+
 /* --------------------------------------------------------------------------
  * Asm trampoline: save regs, switch to shadow stack, call slowpath
  * -------------------------------------------------------------------------- */
@@ -147,7 +171,7 @@ kd_mutex_lock_slowpath_asm(struct kd_mutex *lock,
 		KD_PR_ERR(
 			"kd_mutex: waiter shadow stack is NULL on cpu %d slot %d\n",
 			smp_processor_id(), cur_node->slot);
-		kd_mutex_wait_and_lock(lock, curr_node->aux);
+		kd_mutex_wait_and_lock(lock);
 		return 0;
 	}
 
@@ -181,30 +205,17 @@ _kd_mutex_lock_abi(struct kd_mutex *lock, unsigned long rsp_value,
 	       unsigned long ret_addr, unsigned long bp, unsigned int abi)
 {
 	struct kd_regs resume_regs;
-	struct kd_mutex_aux *aux;
 	bool resume_ready = false;
 	bool native_resume = false;
 	int ret_val;
 
 	BUG_ON(abi != KD_ENTRY_ABI_LEGACY &&
 	       abi != KD_ENTRY_ABI_MUTEX_CLOBBER_V1);
-	/* This invocation protects queue/frame/ACK state even when a combiner
-	 * releases its gate early. A separate gate-owner reference survives the
-	 * returning queued lock call until the physical owner's final unlock. */
-	aux = kd_mutex_aux_get(lock);
-	if (unlikely(!aux)) {
-		kd_mutex_task_put(current);
-		kd_origin_mutex_lock(lock);
-		return;
-	}
-	/* A queued producer must not request exclusive ownership of a busy gate
-	 * just to discover that the current combiner still owns it. The CAS,
-	 * after the read-only hint, remains the sole acquisition decision. */
-	if (likely(!READ_ONCE(aux->locked) &&
-		   cmpxchg(&aux->locked, 0, _Q_LOCKED_VAL) == 0)) {
-		/* No node, frame or ACK was published. Transfer this invocation's
-		 * reference directly to the owner that survives the returning call. */
-		kd_mutex_claim_origin_take_ref(lock, aux);
+	/* The gate reserves delegation before physical acquisition. Its embedded
+	 * root lives with the caller-owned mutex, including detached frames/ACKs.
+	 * The read-only hint avoids writing a busy gate just to find it busy. */
+	if (likely(!kd_mutex_gate_read(lock) && kd_mutex_gate_trylock(lock))) {
+		kd_mutex_claim_origin(lock);
 		return;
 	}
 
@@ -219,7 +230,6 @@ _kd_mutex_lock_abi(struct kd_mutex *lock, unsigned long rsp_value,
 		preempt_enable();
 		migrate_enable();
 		kd_mutex_task_put(current);
-		kd_mutex_aux_put(aux);
 		kd_origin_mutex_lock(lock);
 		return;
 	}
@@ -238,7 +248,7 @@ _kd_mutex_lock_abi(struct kd_mutex *lock, unsigned long rsp_value,
 				current->pid, ret_addr, (unsigned long)lock,
 				smp_processor_id(),
 				READ_ONCE(this_cpu_ptr(&kd_mutex_shadows)->node_slots));
-			kd_mutex_wait_and_lock(lock, aux);
+			kd_mutex_wait_and_lock(lock);
 			ret_val = 0;
 			goto scheduler_restore;
 		}
@@ -261,7 +271,6 @@ _kd_mutex_lock_abi(struct kd_mutex *lock, unsigned long rsp_value,
 		curr_node->tail =
 			kd_mutex_encode_tail(smp_processor_id(), curr_node->slot);
 		curr_node->lock = lock;
-		curr_node->aux = aux;
 		curr_node->task_struct_ptr = current;
 		curr_node->gsbase = kd_read_kernel_gsbase();
 		curr_node->saved_ret_addr = ret_addr;
@@ -292,7 +301,6 @@ _kd_mutex_lock_abi(struct kd_mutex *lock, unsigned long rsp_value,
 		}
 scheduler_restore:;
 	}
-	kd_mutex_aux_put(aux);
 	preempt_enable();
 	migrate_enable();
 
@@ -324,26 +332,15 @@ scheduler_restore:;
 __attribute__((noipa)) noinline notrace int
 _kd_mutex_unlock_checked(struct kd_mutex *lock)
 {
-	struct kd_mutex_aux *aux = kd_mutex_aux_borrow_owned(lock);
-	u8 locked;
-
-	if (WARN_ON_ONCE(!aux))
+	if (WARN_ON_ONCE(!kd_mutex_delegation_owned(lock, current)))
 		return -EINVAL;
-	locked = smp_load_acquire(&aux->locked);
-	if (locked == _Q_LOCKED_VAL || locked == _Q_LOCKED_COMBINER_VAL) {
-		BUG_ON(READ_ONCE(aux->physical_owner) != current);
-		WRITE_ONCE(aux->physical_owner, NULL);
-		kd_origin_mutex_unlock(lock, _RET_IP_);
-		this_cpu_inc(kd_mutex_origin_releases);
-		smp_store_release(&aux->locked, 0);
-		/* The borrowed owner reference protects every preceding access.
-		 * Release it last and never access aux after this put. A surviving
-		 * queue invocation independently protects early outer release. */
-		kd_mutex_aux_put(aux);
-		return 0;
-	}
-	KD_PR_ERR("kd_mutex_unlock: unexpected locked state %d\n", locked);
-	return -EINVAL;
+	/* Publish RELEASING before the physical release. A subsequent ordinary
+	 * owner may run before FREE, but must never release this gate for us. */
+	kd_mutex_gate_set(lock, KD_MUTEX_GATE_RELEASING);
+	kd_origin_mutex_unlock(lock, _RET_IP_);
+	this_cpu_inc(kd_mutex_origin_releases);
+	kd_mutex_gate_set(lock, KD_MUTEX_GATE_FREE);
+	return 0;
 }
 
 __attribute__((noipa)) noinline notrace void

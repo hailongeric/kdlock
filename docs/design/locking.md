@@ -93,17 +93,15 @@ reclamation state. Mutex exact lifecycle balances remain separate.
 
 ### Physical lock and scheduling gate
 
-KD owns a 32-byte, native-aligned `struct kd_mutex`, with its physical owner,
-sleeping wait list and private OSQ. Claimed direct-index auxiliary slots hold
-the legacy delegation gate and queue until all exact invocation and owner
-references retire. Every delegation executor acquires physical
-exclusion as well as the gate; ordinary local callers acquire physical exclusion
-without joining that gate or accessing the auxiliary table. The provider
-preallocates 65,536 slots (16 MiB); address collisions or lifecycle reservations
-take the local KD fallback before queue publication. Exact references prevent
-slot reuse, and lifecycle-sequence validation protects read-only observations.
-Slot retirement requires no caller cleanup; the auxiliary table uses neither
-registry locks nor RCU. There is no Linux mutex backing object.
+KD owns a 32-byte, native-aligned `struct kd_mutex` containing physical ownership,
+OSQ, a sleeping-waiter ring head and the embedded delegation phase/count and tail.
+Every delegation executor acquires physical exclusion as well as the gate;
+ordinary local callers acquire physical exclusion without joining that gate.
+ACQUIRING precedes physical acquisition, HELD/COMBINER denotes current's completed
+acquisition, and RELEASING precedes physical release before FREE opens the gate.
+There is no auxiliary hash/refcount, registry lock or auxiliary RCU lifetime.
+The existing task/frame/source/ACK records still determine exact drain. There is
+no Linux mutex backing object. See the [layout and ordering](mutex_implementation.md#current-storage-and-lookup).
 Every caller must obey the [KD-only object/API contract](kd_only_mutex.md); loading the module
 does not replace objects in the running kernel.
 
@@ -195,7 +193,7 @@ readers drain. Native frames for independent tasks/locks use independent ACK pac
 | Boundary | Spin | Mutex |
 | --- | --- | --- |
 | Physical lock | KD word | KD-owned owner word and sleeping wait list |
-| Queue | Tail in the same word | Legacy tail in an indexed auxiliary slot; linked per-request nodes |
+| Queue | Tail in the same word | Embedded encoded tail; linked per-request nodes |
 | Native route | Generation-checked ticket/borrow | Task acquisition reference and owner ACK |
 | Sleeping | Ordinary path does not sleep | Physical owner/control may sleep |
 | Restore | Stable continuation retained through packet reads | Node packet; FULL copy before node reuse |

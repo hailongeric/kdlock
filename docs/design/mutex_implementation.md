@@ -5,7 +5,7 @@ callers use ABI2; ABI0 remains an internal legacy compatibility interface.
 The [compatibility backport](../history/legacy_mutex_compatibility.md) adds fail-closed
 processor-state admission, immutable mutex images and generation-bound frames.
 The [KD-only extension](kd_only_mutex.md) embeds physical exclusion in a native-sized
-KD object and claims separate delegation scheduling state only when needed, while
+KD object together with the delegation scheduling root, while
 retaining the queue and pinned producer.
 
 Read [lock protocols](lock_protocols.md) for the algorithm/ownership comparison
@@ -94,20 +94,19 @@ reference until wakeup. The local physical path allocates no delegation node or
 JIT frame. Callers entering through the delegation engine retain that engine's
 separate request records while using this same physical primitive.
 
-The delegation gate is separate from this owner word. A queue head first takes
-the gate, then acquires the same physical mutex through `kd_mutex_claim_origin`.
-The auxiliary record's `physical_owner` records the delegation executor; it is
-not the ordinary `owner` word and is not set for every local acquisition. Gate
-values 1 and 3
-identify ordinary gate ownership and an active combiner respectively. Neither
-value alone grants permission to execute protected data. Physical unlock must
-precede opening the gate.
+The delegation phase is separate from physical ownership. A queue head changes
+FREE (0) to ACQUIRING (2), acquires the physical mutex, then publishes HELD (1).
+COMBINER (3) marks batch execution. Unlock publishes RELEASING (4) before releasing
+the physical owner, and FREE only afterward. Only current's physical acquisition,
+with PICKUP clear and phase HELD/COMBINER, authorizes delegation unlock. This is
+not a remote task ownership snapshot: physical acquire/release ordering is what
+prevents an ordinary owner from observing an earlier delegate's HELD phase.
 
 | Stage | Source to follow |
 | --- | --- |
 | Local acquire, cancellation, unlock and idle | [kd_mutex_local.c](../../kernel_module/kd_mutex_local.c); private [OSQ](../../kernel_module/kd_mutex_osq.c) |
 | Direct entry policy and exact unlock routing | [lock/mutex_calls.inc](../../kernel_module/lock/mutex_calls.inc); [kd_mutex_tasks.c](../../kernel_module/kd_mutex_tasks.c) retains task/acquisition references |
-| Auxiliary delegation lookup and retirement | [kd_mutex_aux.c](../../kernel_module/kd_mutex_aux.c); [kd_mutex_aux.h](../../include/kd_mutex_aux.h) defines the shared record |
+| Packed delegation phase and exact waiter count | [kd_mutex_state.h](../../include/kd_mutex_state.h); masked atomic transitions preserve concurrent count updates |
 | Node reservation and physical-owner acquisition | [mutex/queue.inc](../../kernel_module/mutex/queue.inc), coordinated by [kd_mutex.c](../../kernel_module/kd_mutex.c) |
 | Batch selection, execution and node retirement | [mutex/combiner.inc](../../kernel_module/mutex/combiner.inc) |
 | Waiter execution stacks and continuation restore | [mutex/clobber.inc](../../kernel_module/mutex/clobber.inc), [mutex/waiter.inc](../../kernel_module/mutex/waiter.inc) |
@@ -118,10 +117,8 @@ precede opening the gate.
 The outer pair probes the KD `owner` word at most eight times, attempting an
 acquire CAS only when the entire owner/flags word is zero. Each failed probe
 pauses before the next attempt; a busy owner read does not modify that word, and a
-racing owner still defeats the CAS. The active-combiner hint reads the address's
-direct-index slot and validates its lifecycle sequence, without taking a lock,
-changing a reference count or retaining an auxiliary pointer. The existing
-active-combiner gate state (3) ends retries; a lone gate owner (state 1) may finish
+racing owner still defeats the CAS. The active-combiner hint reads the embedded
+phase without a lookup or reference operation. The existing active-combiner gate state (3) ends retries; a lone gate owner (state 1) may finish
 during the bounded window.
 The observed state is a hint and never grants ownership or retirement. This window
 has no worker-count threshold. Success increments the CPU-local entry observation
@@ -148,91 +145,51 @@ unmodelled native result.
 
 ### Current storage and lookup
 
-| Object | Current storage/lifetime |
+The public object is 32 bytes, aligned to 8 bytes on the captured non-RT x86-64
+configuration. Its complete fields are:
+
+| Field | Offset | Bytes | Purpose |
+| --- | ---: | ---: | --- |
+| `atomic_long_t owner` | 0 | 8 | Physical task pointer and WAITERS/HANDOFF/PICKUP flags |
+| `raw_spinlock_t wait_lock` | 8 | 4 | Existing physical sleeping-waiter serialization |
+| `struct optimistic_spin_queue osq` | 12 | 4 | Independent physical optimistic-spinning tail |
+| `struct kd_local_waiter *wait_head` | 16 | 8 | First real stack waiter in a circular doubly linked ring; NULL means empty |
+| `atomic_t delegation_state` | 24 | 4 | Low 8 bits phase; high 24 bits exact published waiter count |
+| `u32 delegation_tail` | 28 | 4 | `(CPU + 1) << 4` combined with `slot << 2`; zero means empty |
+
+The sleeping waiter remains a stack `list_head` plus task pointer (24 bytes).
+Append, cancellation and head removal remain O(1) under `wait_lock`. The outside-
+lock first-waiter check compares pointers only; it never follows a potentially
+retired stack node. The OSQ algorithm and its per-CPU nodes are unchanged.
+Internal list representation differs from Linux despite equal object geometry.
+
+All phase changes use masked full-word atomic compare-and-exchange, preserving
+concurrent exact count updates. Count entry/exit add/subtract 256 and fail closed
+on overflow/underflow. A compile-time bound proves four reserved nodes per possible
+CPU fit the count. Count RMW traffic remains; auxiliary reference traffic does not.
+There is no auxiliary hash, slot pool, lock address key, generation sequence,
+shared auxiliary reference count, allocation, retirement callback or lookup.
+
+| Other storage | Lifetime |
 | --- | --- |
-| KD mutex object | 32 bytes, aligned to 8 bytes in the captured configuration, owned by the caller; physical owner, OSQ, wait-list spinlock and sleeping wait list |
-| Delegation auxiliary slot | 256 bytes, aligned to 128 bytes; 65,536 direct-index slots occupy 16 MiB allocated once during provider initialization; each claimed slot retains an exact lock address, lifecycle sequence, delegation tail, executor/gate, waiter count and atomic references |
-| Physical waiting | Private per-CPU OSQ nodes and stack-resident sleeping waiters; ordinary Linux mutex APIs never participate |
-| Task routing record | RCU hash with 256 cacheline-aligned buckets in [kd_mutex_tasks.c](../../kernel_module/kd_mutex_tasks.c); cached identities retain an atomic acquisition count and a `task_struct` ref; insertion/eviction use the bucket writer lock |
-| `kd_mutex_node` | Four independently bitmap-reserved slots per possible CPU; 320 bytes each, 64-byte aligned |
-| Waiter stacks | Four 8 KiB stacks per possible CPU, allocated by [lifecycle.inc](../../kernel_module/mutex/lifecycle.inc) with `vzalloc_node(..., cpu_to_node(cpu))` |
-| Execution frames | Shared per-CPU context, up to eight frames; physical owner remains fixed through sleep/ACK; root borrows node packet until FULL detachment |
-| Batch state | Physical combiner's stack; retains current retirement flag, exact successor, bounded NUMA deferred chain, outer-release callback and image-slot identity |
+| Task routing record | Existing task-keyed RCU cache with exact acquisition references; unchanged by this refactor |
+| `kd_mutex_node` | Four independently reserved 320-byte, 64-byte-aligned slots per possible CPU; packet offset 128, completion/polling offsets 304/305; no auxiliary pointer |
+| Shadow stacks | Four preallocated 8 KiB stacks per possible CPU |
+| Execution frames | Existing per-CPU frame stack; borrowed packets detach before node reuse; native ACK and immutable image/source leases retain their existing lifetime |
+| Batch | Executor stack stores mutex pointer, successor/retirement flag, deferred NUMA chain and outer-release hook |
 
-Physical operations, including uncontended outer acquisition, use the embedded
-fields without an auxiliary lookup. Delegation hashes the object address to one
-of 65,536 slots; object identity remains the exact KD pointer. There is no
-collision chain, registry lock or auxiliary RCU lifetime. A collision or a slot
-being initialized or retired immediately takes the existing local KD fallback
-before queue publication. This bounds simultaneous delegation state without
-limiting the number of ordinary mutex objects. The [KD-only guide](kd_only_mutex.md)
-records field offsets, ordinary API aliases, initialization, drain and full-rebuild
-requirements.
+The embedded root shares the caller-owned mutex's existing lifetime. Stop and join
+callers and drain physical ownership, both queues, frames and ACKs before freeing
+or reinitializing an object. No destroy call or new caller cleanup is required.
+Provider drain checks each CPU's exact nodes/waiters and the existing exact task
+acquisition records, including immediate gate owners without a node and detached
+batches; independent frame/source/ACK checks remain. No approximate owner totals
+replace these records. No auxiliary registry lock or RCU mechanism is introduced;
+the pre-existing task routing cache and native-ACK serialization remain.
 
-The table is zeroed by `vzalloc()` during provider initialization; allocation
-failure aborts provider startup with `-ENOMEM`. No allocation occurs on a slot
-lookup or claim. A 64-bit reference word encodes LIVE, BUSY and FREE states with
-exact counts, including rejected pins during lifecycle transitions. A single
-fetch-add pins LIVE, including zero before retirement reserves it. Negative
-states reject protocol access and release their temporary pin through the same
-put operation. Creation claims only exact FREE, initializes the address and
-sequence, and publishes its first LIVE reference with an ordered additive
-transition that preserves any rejected pins. Lookup rechecks the address after
-pinning: an earlier address read alone cannot identify the acquired generation.
-A mismatched lookup releases its reference. The count admission bound is far
-below the state bits; overflow fails closed.
-
-Invocation references protect the published queue and its borrowed packet/frame
-storage. A separate gate-owner reference survives scheduling-node retirement and
-follows physical-owner release, including native ACK and early-release processing.
-There is one narrower transfer before node reservation: an immediate successful
-gate CAS in `_kd_mutex_lock_abi()` transfers its invocation reference to the
-owner through `kd_mutex_claim_origin_take_ref()`. No node, frame or ACK exists
-on that path, and the transferred reference protects physical acquisition even
-if it sleeps. Waiting, queued, node-overflow and early-reacquisition paths retain
-their invocation reference and acquire a separate owner reference.
-
-Synchronous checked unlock uses `kd_mutex_aux_borrow_owned()` to borrow the
-current task's established owner reference. The helper validates sequence,
-exact address and `physical_owner == current`; it neither increments a reference
-nor lends another task's lifetime. Successful unlock clears the recorded owner,
-releases physical exclusion, opens the scheduling gate and puts that one owner
-reference, with no subsequent access to the slot. A rejected unlock leaves the
-owner reference intact. Queue/frame/ACK retention and early outer-release
-ordering are unchanged.
-
-Each put atomically decrements the exact count. The last LIVE put must win a
-zero-to-BUSY CAS before inspecting or retiring state. A concurrent pin can revive
-LIVE zero first; a losing put returns without further field access. The winner
-verifies that executor, gate, tail and waiter state have drained, clears the
-address, and additively publishes FREE without erasing rejected pins. A rejected
-pin that spans publication can become the last LIVE count, so its put must also
-perform retirement. Cleanup uses the current reserved generation, which remains
-safe if a delayed final CAS crosses a complete intervening generation. A held
-reference prevents reuse through every protocol obligation; empty queue fields
-cannot replace it.
-
-Read-only ownership, combiner and waiter-count observations validate the address
-and observed fields between two lifecycle-sequence reads. Creation and retirement
-publish an odd sequence before changing the address and an even sequence after
-the change. Observers reject odd or changing sequences and do not pin a generation.
-The sequence never wraps: exhausting it permanently disables that slot, with
-future delegation attempts falling back locally. The combiner value remains a
-hint, while an actual delegation owner also holds its exact reference.
-An unstable waiter-count observation returns `-EAGAIN`; idle checks treat a
-reserved slot or changing sequence conservatively. A permanently exhausted slot
-with free references is idle. The final `kd_mutex aux:` counters distinguish
-collision, busy, generation-race, exhausted and injected refusals; they are
-diagnostics and never authorize ownership or retirement.
-
-Neither ordinary nor delegation callers need a destruction call to release their
-auxiliary slot. They must still stop and join users and drain all uses before
-freeing or reinitializing the lock object. Exact idle diagnostics count both live
-references and lifecycle reservations as active. Table storage remains allocated
-until controlled provider teardown has stopped and joined callers, including
-read-only observers, and verified every slot free. Only then is the table freed;
-there are no per-slot deferred callbacks. Empty references alone do not establish
-that a caller cannot start another observation.
+The previous hash/refcount design and its 65,536-slot, 16 MiB table are retained as
+fixed Git evidence at `6341999`; its measured results remain under their original
+source identity. They do not describe the embedded layout.
 
 `kd_mutex_task_get()` first attempts an RCU lookup and atomic acquisition-reference
 increment. Cache hits require neither allocation nor the bucket writer lock.
@@ -281,13 +238,10 @@ does not fetch the entire FULL packet on every minimal request. The pointer is q
 current-node read is allowed after its completion/native publication. Prefetch
 grants no ownership, admission or lifetime.
 
-The auxiliary gate also uses a read before its acquire CAS. Together with the
-physical-owner guard, this keeps failed producer RMWs from invalidating ownership
-lines held across a batch. Tail exchanges and exact waiter-count updates retain
-their original atomic operations on separate lines within the auxiliary record.
-Atomic lifetime references share the waiter-count line at offset 196, keeping
-reference writes away from the immutable lookup key and the executor/gate line.
-They remain independent of queue observations and exact ownership records.
+The embedded gate uses a read before its acquire CAS. Tail exchanges and exact
+waiter-count updates now share the object's cacheline with physical ownership.
+This trades cacheline separation for the requested native geometry; performance
+claims require the matching VM comparison, not an inference from fewer atomics.
 
 ### Queue, batch execution and recovery
 
