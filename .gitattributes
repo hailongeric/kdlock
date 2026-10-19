@@ -23,3 +23,12 @@ bench/results/10.176.26.71/bench/mutex32-screen-20261019/rcuht/summary.csv white
 # Preserve the plotted artifact's exact Matplotlib path serialization.
 bench/results/10.176.26.71/bench/mutex32-screen-20261019/comparison.svg -whitespace
 bench/results/10.176.26.71/bench/mutex32-api-screen-20261019/comparison.svg -whitespace
+# Frozen mutex-registry diagnostics and plot serialization remain byte-exact.
+bench/results/10.176.26.71/bench/mutex32-opt-20261019/checks/provider.log -whitespace
+bench/results/10.176.26.71/bench/mutex32-opt-20261019/checks/unit.log -whitespace
+bench/results/10.176.26.71/bench/mutex32-opt-20261019/compact-bucket/profile/*/perf-report.txt -whitespace
+bench/results/10.176.26.71/bench/mutex32-opt-20261019/precompact-256/profile/*/perf-report.txt -whitespace
+bench/results/10.176.26.71/bench/mutex32-opt-20261019/compact-rcu/profile/*/perf-report.txt -whitespace
+bench/results/10.176.26.71/bench/mutex32-opt-20261019/preflight/pv-lock-ops.txt -whitespace
+bench/results/10.176.26.71/bench/mutex32-opt-20261019/preflight/pv-template.txt -whitespace
+bench/results/10.176.26.71/bench/mutex32-opt-20261019/comparison.svg -whitespace

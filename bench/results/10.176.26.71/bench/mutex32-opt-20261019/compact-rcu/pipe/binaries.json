@@ -1,0 +1,38 @@
+{
+  "client": {
+    "path": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/compact-rcu/pipe/build/client",
+    "sha256": "58e901442810a274a7e35e835be030c6d01db0d3e1f955682f22a4e752e84442"
+  },
+  "daemon": {
+    "path": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/compact-rcu/pipe/build/daemon",
+    "sha256": "bae5dcaf8cfa83b020bec6e2a7a85c0b0496f603dd0789a4cc8f3e31d5305fcb"
+  },
+  "kdlock-pipebytes/real_api.ko": {
+    "path": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/compact-rcu/pipe/build/kdlock-pipebytes/real_api.ko",
+    "sha256": "4c78c3af0755764d90754b82778c6e765db08560bb7459dd253bf806e7de9d7c"
+  },
+  "kdlock_km.ko": {
+    "path": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/compact-rcu/pipe/build/kdlock_km.ko",
+    "sha256": "b1e9f7a640cbcb734fbfbe76b53c7ac5688c2879eb67720f6a133179b6784762"
+  },
+  "native-pipebytes/real_api.ko": {
+    "path": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/compact-rcu/pipe/build/native-pipebytes/real_api.ko",
+    "sha256": "a7e01abe8e6f887c15093e92f48b5ae3e4728665ef5a08a2ccf96810d7b3453d"
+  },
+  "tc_allocator_guard.ko": {
+    "path": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/compact-rcu/pipe/build/tc_allocator_guard.ko",
+    "sha256": "4323537a05b588952ba6800a5b65cf3f0681174c3aa37dd1102e5cc1e963f930"
+  },
+  "tclock-mutex/tclock_mutex_backend_km.ko": {
+    "path": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/compact-rcu/pipe/build/tclock-mutex/tclock_mutex_backend_km.ko",
+    "sha256": "cd928de55013dde3232d1b6d4e1bb76513b95b76a5d4a1194080f539d25b0d20"
+  },
+  "tclock-pipebytes/real_api.ko": {
+    "path": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/compact-rcu/pipe/build/tclock-pipebytes/real_api.ko",
+    "sha256": "db7c599a827138b9ee9f2aa74cf7fd850ad1edd7605d7a1d38aefea3c1d3ae52"
+  },
+  "tclock_mutex_backend_km.ko": {
+    "path": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/compact-rcu/pipe/build/tclock_mutex_backend_km.ko",
+    "sha256": "cd928de55013dde3232d1b6d4e1bb76513b95b76a5d4a1194080f539d25b0d20"
+  }
+}

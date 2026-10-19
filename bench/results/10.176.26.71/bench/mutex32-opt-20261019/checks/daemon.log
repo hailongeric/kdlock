@@ -1,0 +1,3 @@
+make: Entering directory '/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/checks/source/daemon'
+cc -I../include -O2 -Wall -Wextra -Werror daemon.c -o daemon
+make: Leaving directory '/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/checks/source/daemon'

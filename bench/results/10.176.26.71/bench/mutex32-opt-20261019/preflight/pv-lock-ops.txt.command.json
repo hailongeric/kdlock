@@ -1,0 +1,12 @@
+{
+  "argv": [
+    "pahole",
+    "-C",
+    "pv_lock_ops",
+    "/root/linux-6.1.159-kdclobber2/vmlinux"
+  ],
+  "cwd": "/root/host_fs/kdlock",
+  "pid": 2214347,
+  "started_ns": 358088282540762,
+  "timeout_seconds": 30
+}

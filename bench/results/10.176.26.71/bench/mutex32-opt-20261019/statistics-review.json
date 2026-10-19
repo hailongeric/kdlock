@@ -1,0 +1,209 @@
+{
+  "archives": {
+    "bucket.tar.gz": {
+      "bytes": 24421342,
+      "sha256": "cb664e830c8c11edb5a525413d6893bc2231bc6fac3d558cc2f5bf3ca4c53312"
+    },
+    "checks.tar.gz": {
+      "bytes": 16064322,
+      "sha256": "15e8785f0f6a25748e5fe4ab0afc37dc53cbd448087874e44d2fde9f4956b964"
+    },
+    "metadata.tar.gz": {
+      "bytes": 613853,
+      "sha256": "b69e60333cb3716a0bdbf3685da54581a95d6454cbd1b0108adbbf386cf657e1"
+    },
+    "old256.tar.gz": {
+      "bytes": 24254515,
+      "sha256": "feb6dcaf1f7398a79d306b9aeced90ee3c84dffc7240b17ab7379e88bcd89b6c"
+    },
+    "rcu.tar.gz": {
+      "bytes": 24553049,
+      "sha256": "1ebb0fff3d69a9812663e955051fd87a779d96dedb41c45789b20b34b0f12904"
+    }
+  },
+  "checked_utc": "2026-10-19T09:45:19.290423+00:00",
+  "checks": {
+    "api_class": 27,
+    "api_counter_bounds": 27,
+    "api_returned_share": 27,
+    "archived_comparison": 1,
+    "archived_profiles": 1,
+    "body_counter_semantics": 69,
+    "body_entry_share": 69,
+    "completion_probe": 69,
+    "compressed_archive_hash": 5,
+    "compressed_archive_size": 5,
+    "csv_cell": 3054,
+    "csv_row_count": 2,
+    "eligibility": 69,
+    "frozen_source_hash": 3396,
+    "group_body_count": 21,
+    "group_body_share": 21,
+    "group_class": 21,
+    "group_class_count": 21,
+    "group_complete": 21,
+    "group_completed": 21,
+    "group_completion_count": 21,
+    "group_repeats": 21,
+    "group_returned_count": 21,
+    "group_returned_share": 21,
+    "group_source_identity": 21,
+    "group_statistics": 210,
+    "matrix_groups": 1,
+    "matrix_plain": 1,
+    "matrix_sessions": 1,
+    "pipe_class_switch": 1,
+    "pipe_not_same_class": 1,
+    "plan_order": 12,
+    "planned_identity": 69,
+    "profile_all_percent": 283,
+    "profile_count": 1,
+    "profile_focus_all_percent": 48,
+    "profile_focus_sums": 48,
+    "profile_focus_worker_percent": 48,
+    "profile_loss": 6,
+    "profile_period_total": 6,
+    "profile_report_period": 6,
+    "profile_samples": 6,
+    "profile_symbol_sums": 282,
+    "profile_worker_percent": 283,
+    "profile_worker_total": 6,
+    "provenance_input_hash": 78,
+    "raw_body_count": 69,
+    "raw_completion_count": 27,
+    "raw_completion_disabled": 42,
+    "raw_entry_witness_delta": 42,
+    "raw_peak_exists": 69,
+    "raw_peak_rate": 69,
+    "raw_peak_selection": 69,
+    "raw_physical_diagnostics": 69,
+    "raw_profile_artifact_hash": 36,
+    "raw_profile_lost": 6,
+    "raw_profile_no_loss": 81444,
+    "raw_profile_sample_total": 1,
+    "raw_profile_shape": 81444,
+    "raw_profile_weighted_rows": 6,
+    "raw_session_binding": 69,
+    "raw_session_count": 69,
+    "raw_session_rate": 69,
+    "raw_session_total": 1,
+    "runtime_log": 69,
+    "session_scored_rate": 69,
+    "session_whole_arithmetic": 69,
+    "source_identity": 12,
+    "source_manifest": 12,
+    "synthetic_class": 42,
+    "synthetic_completion": 42,
+    "synthetic_returned_share": 42,
+    "total_profile_samples": 1,
+    "unique_regular_member": 9703,
+    "unique_session": 69,
+    "valid_session": 69
+  },
+  "compact_statistics_passed": true,
+  "comparison_sha256": "817f8a2df9766130b4099a6516b975bf6265c73eb4c570a6789c5c9811862d6b",
+  "groups": 21,
+  "independently_reconstructed_peaks": 69,
+  "issues": [],
+  "limits": [
+    "Profiles are diagnostic; flat IP sampling has skid and no caller attribution. Profile weights are not exact cycle cost per operation.",
+    "Synthetic JIT counters are entry witnesses; completion count/share are intentionally null. API explicit completions remain separate.",
+    "Source versions were run sequentially; three repeats and observed ranges do not eliminate order/frequency drift or establish statistical significance.",
+    "Pipe bucket NO_JIT and inline/RCU JIT execute different paths; their rates are not a registry-only speed comparison.",
+    "Archive regular-file hashes and source/record/profile bindings are checked here; directory/symlink inventory correctness is a separate archive review."
+  ],
+  "method": {
+    "aggregate": "Independent sorted median/min/max/spread over three eligible plain sessions per source/workload/worker group",
+    "peak": "Independent earliest eligible endpoint found by binary search; positive full-cohort windows ranked with exact rational arithmetic",
+    "profile": "Independent whitespace/delimiter parsing of every raw sample, period-weighted comm/symbol/DSO sums; all-client kernel and sc_worker denominators stay separate",
+    "whole": "Exact Fraction(completed*1000,wall_ns), then float comparison"
+  },
+  "passed": true,
+  "pipe": {
+    "compact-bucket": {
+      "execution_class": "NO_JIT",
+      "median_whole_mops": 18.138342105184634
+    },
+    "compact-rcu": {
+      "execution_class": "RETURNED_JIT",
+      "median_whole_mops": 4.985666266975828
+    },
+    "precompact-256": {
+      "execution_class": "RETURNED_JIT",
+      "median_whole_mops": 6.842828388491947
+    }
+  },
+  "plain_sessions": 63,
+  "profile_analysis_sha256": "6aa9183242d67eb3aa2b66b8cfc7baf50d7f4bd6c49ae61a4a5cd7dc5f58fabe",
+  "profile_samples": 81444,
+  "profiles": [
+    {
+      "arm": "compact-bucket",
+      "period": 31255116918,
+      "samples": 3218,
+      "threads": 8,
+      "worker_period": 31250091794,
+      "worker_samples": 3216
+    },
+    {
+      "arm": "compact-bucket",
+      "period": 254848612521,
+      "samples": 23391,
+      "threads": 60,
+      "worker_period": 254833615099,
+      "worker_samples": 23386
+    },
+    {
+      "arm": "precompact-256",
+      "period": 31326615821,
+      "samples": 3222,
+      "threads": 8,
+      "worker_period": 31322255614,
+      "worker_samples": 3216
+    },
+    {
+      "arm": "precompact-256",
+      "period": 244802341595,
+      "samples": 24224,
+      "threads": 60,
+      "worker_period": 244787059696,
+      "worker_samples": 24219
+    },
+    {
+      "arm": "compact-rcu",
+      "period": 31331550171,
+      "samples": 3218,
+      "threads": 8,
+      "worker_period": 31326525047,
+      "worker_samples": 3216
+    },
+    {
+      "arm": "compact-rcu",
+      "period": 240166723278,
+      "samples": 24171,
+      "threads": 60,
+      "worker_period": 240149436712,
+      "worker_samples": 24166
+    }
+  ],
+  "raw_archives_available": true,
+  "raw_bound_sessions": 69,
+  "raw_profile_samples": 81444,
+  "schema": 1,
+  "scope": "Independent read-only offline data audit; no archived code, report script, benchmark, build or VM command executed.",
+  "sessions": 69,
+  "source_files_per_collection": {
+    "compact-bucket/pipe": 240,
+    "compact-bucket/profile": 328,
+    "compact-bucket/seek": 240,
+    "compact-bucket/synthetic": 328,
+    "compact-rcu/pipe": 240,
+    "compact-rcu/profile": 328,
+    "compact-rcu/seek": 240,
+    "compact-rcu/synthetic": 328,
+    "precompact-256/pipe": 238,
+    "precompact-256/profile": 324,
+    "precompact-256/seek": 238,
+    "precompact-256/synthetic": 324
+  }
+}

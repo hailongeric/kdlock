@@ -32,6 +32,14 @@ stays local and beats both controls under contention; seek KD returns JIT
 bodies and trails both controls in whole-run medians. The report retains
 execution categories, substantial control variation and one incomplete final
 per-CPU diagnostic row separately from measurement validity.
+The [compact registry investigation](10.176.26.71/bench/mutex32-opt-20261019/README.md)
+then compares fresh 256-byte, initial compact and optimized compact KD versions:
+63 plain timings and six separate profiles, all valid and drained. `fcbacbe`
+removes registry locking from reads and ordinary reference updates, recovering
+1.36–3.69× throughput on the tested c01/c08/seek cases while preserving size,
+alignment and protocol. The report retains remaining gaps versus the old object
+and the pipe regression caused by its local-to-JIT execution change. Exact
+counter meanings, affected checks, failures and source identities remain separate.
 The [2026-10-18 consolidation checks](10.176.26.71/tests/main-consolidation-20261018/README.md)
 validate organization and tooling separately from the measured runtime.
 The [feature reintegration checks](10.176.26.71/tests/feature-reintegration-20261018/README.md)

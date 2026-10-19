@@ -1,0 +1,2202 @@
+{
+  "archive_receipt_sha256": "07923d9776cba753f5e0eec3150e09384de764b986e3a660c04a54af8fbd589b",
+  "archived_groups": [
+    {
+      "bytes": 24421342,
+      "file": "bucket.tar.gz",
+      "members": 3109,
+      "sha256": "cb664e830c8c11edb5a525413d6893bc2231bc6fac3d558cc2f5bf3ca4c53312",
+      "types": {
+        "dir": 409,
+        "file": 2654,
+        "symlink": 46
+      }
+    },
+    {
+      "bytes": 24254515,
+      "file": "old256.tar.gz",
+      "members": 3097,
+      "sha256": "feb6dcaf1f7398a79d306b9aeced90ee3c84dffc7240b17ab7379e88bcd89b6c",
+      "types": {
+        "dir": 409,
+        "file": 2642,
+        "symlink": 46
+      }
+    },
+    {
+      "bytes": 24553049,
+      "file": "rcu.tar.gz",
+      "members": 3109,
+      "sha256": "1ebb0fff3d69a9812663e955051fd87a779d96dedb41c45789b20b34b0f12904",
+      "types": {
+        "dir": 409,
+        "file": 2654,
+        "symlink": 46
+      }
+    },
+    {
+      "bytes": 16064322,
+      "file": "checks.tar.gz",
+      "members": 1869,
+      "sha256": "15e8785f0f6a25748e5fe4ab0afc37dc53cbd448087874e44d2fde9f4956b964",
+      "types": {
+        "dir": 160,
+        "file": 1707,
+        "symlink": 2
+      }
+    },
+    {
+      "bytes": 613853,
+      "file": "metadata.tar.gz",
+      "members": 48,
+      "sha256": "b69e60333cb3716a0bdbf3685da54581a95d6454cbd1b0108adbbf386cf657e1",
+      "types": {
+        "dir": 2,
+        "file": 46
+      }
+    }
+  ],
+  "audit_script_sha256": "c4be1b1291d1a63bb4491339a87ee19c8906eba404972ae180e433b791020b0a",
+  "binary_manifest_entries": 95,
+  "checks": {
+    "archive_bytes": 5,
+    "archive_completed_idle": 1,
+    "archive_hash": 5,
+    "archiver_hash": 1,
+    "binary_manifest_hash": 95,
+    "compact_receipt_hash": 172,
+    "copied_archive_receipt_hash": 1,
+    "current_production_git_hash": 90,
+    "directory_tar_payload_empty": 1389,
+    "first_attempt_dependency_omitted": 1,
+    "first_failure_retained": 1,
+    "generated_provider_manifest_complete": 6,
+    "generated_provider_observation_hash": 18,
+    "generated_provider_prepared_hash": 548,
+    "generated_provider_production_hash": 536,
+    "health_hash": 1,
+    "inventory_exact_set": 1,
+    "inventory_hash": 1,
+    "jit_artifact_triplet": 70,
+    "jit_inventory_exact": 1,
+    "jit_publication_matches_workspace": 27,
+    "jit_publication_pair": 27,
+    "member_assigned_group": 11232,
+    "member_bytes": 9703,
+    "member_in_inventory": 11232,
+    "member_mode": 11232,
+    "member_mtime_exact_tar_projection": 11232,
+    "member_owner": 11232,
+    "member_prefix": 11232,
+    "member_read_bytes": 9703,
+    "member_safe_path": 11232,
+    "member_type": 11232,
+    "member_unique": 11232,
+    "obsolete_aux_source_absent_from_old256": 3,
+    "original_production_complete": 17,
+    "original_source_git_hash": 3947,
+    "original_source_git_paths": 17,
+    "prepared_patch_targets_retained": 7,
+    "prepared_reconstructed_hash": 640,
+    "prepared_source_manifest_hash": 92,
+    "retry_dependency_present_exact": 1,
+    "retry_result_passed": 1,
+    "retry_success_retained": 1,
+    "source_manifest_hash": 4501,
+    "symlink_tar_payload_empty": 140,
+    "symlink_target": 140,
+    "symlink_target_bytes": 140,
+    "symlink_target_retained_in_inventory": 140
+  },
+  "compact_receipts": [
+    {
+      "path": "checks/commands.json",
+      "sha256": "74a3b531bc5a33279dd8fe99bf4621b9b8e6204dc38637784c30e889e8b94773"
+    },
+    {
+      "path": "checks/daemon.log",
+      "sha256": "2be18cb4de0e197a55d6b7bd09475a6f893f98c47de204e44467173a3f846611"
+    },
+    {
+      "path": "checks/dependencies.log",
+      "sha256": "9261363b733079a641c2e4cc9bc46ffa1d8336945a87f807b6cf68847dbc9b09"
+    },
+    {
+      "path": "checks/provider.log",
+      "sha256": "e1d57f6c96f2da84d3704fdb6fd7a26a2a1e6e8f0c8f237147bb5f3011ca9e9e"
+    },
+    {
+      "path": "checks/source-sha256.json",
+      "sha256": "56185844800ad0a9ebe7bdd9f3cff3c9d3ea8adec8a7d64d589848eda6673aa0"
+    },
+    {
+      "path": "checks/unit.log",
+      "sha256": "8da963dba4ecc99502462393137f3dc9518aa902fb86c34fbe4837714610c52d"
+    },
+    {
+      "path": "checks-retry/commands.json",
+      "sha256": "98e33b5b1da5d7ff7030e8de78434795a2831274bfaea7bc8e115fad54fd4f2f"
+    },
+    {
+      "path": "checks-retry/instruction-exit/baseline.json",
+      "sha256": "650d2906508a943d0cb7da2d2f8781f78f09ca9e7533665da0db126276646f06"
+    },
+    {
+      "path": "checks-retry/instruction-exit/binary-sha256.json",
+      "sha256": "9b665c9271366604bac00ee79130c9c5083931a9ceb4319625aa552cdb8ad2da"
+    },
+    {
+      "path": "checks-retry/instruction-exit/environment.json",
+      "sha256": "8c8bea6b91b94a5be1c83346d8ba5aad32a195bdae1e6bf0a49ebbafbba500ac"
+    },
+    {
+      "path": "checks-retry/instruction-exit/result.json",
+      "sha256": "5ace1d6f04517d99db3fa1b9e1c3e2f3c819104b6ddd8e5fb774d64e62e32323"
+    },
+    {
+      "path": "checks-retry/instruction-exit/source-sha256.json",
+      "sha256": "3edd0095612931ce6263de7941eb7edebaebb27b864da564d4fdb7d6c7c16967"
+    },
+    {
+      "path": "checks-retry/instruction-exit.log",
+      "sha256": "edb1c8fa49318e1fc3412f08bcbe229787e62fccb5179f1512d3aaa021fe56f1"
+    },
+    {
+      "path": "checks-retry/local/baseline.json",
+      "sha256": "650d2906508a943d0cb7da2d2f8781f78f09ca9e7533665da0db126276646f06"
+    },
+    {
+      "path": "checks-retry/local/binary-sha256.json",
+      "sha256": "402e87948243d70285f03ad556456c1caa91def8ce91c3c2356ddb06e8800113"
+    },
+    {
+      "path": "checks-retry/local/result.json",
+      "sha256": "4059f6b43f0a665a34a5027d609f90d4acf265f1d9fc0b9dea60408963316fd9"
+    },
+    {
+      "path": "checks-retry/local/source-sha256.json",
+      "sha256": "53cf0111f109e60a6dc5470b5a433606a3b795c0b69082705f7cbb0fb3fe317e"
+    },
+    {
+      "path": "checks-retry/local.log",
+      "sha256": "3fb916ac8baa7cdb2d6d0cc0cd187a7cb12404c97c44926fb516c097f10afe9e"
+    },
+    {
+      "path": "checks-retry/result.json",
+      "sha256": "1b4dd82a73f2114a8df3d754545fb247e0a0272de4b0d6a8b6d979b48eb0e20d"
+    },
+    {
+      "path": "checks-retry/rwsem/baseline.json",
+      "sha256": "650d2906508a943d0cb7da2d2f8781f78f09ca9e7533665da0db126276646f06"
+    },
+    {
+      "path": "checks-retry/rwsem/binary-sha256.json",
+      "sha256": "46d45bf5b2a725c64614bb8e15a8ea9289640232e074c594cf7a6045d92561d1"
+    },
+    {
+      "path": "checks-retry/rwsem/result.json",
+      "sha256": "9c7689b8d77fcc6dc04e82562462aed29a44792d501165dab0c1a73c79d708d7"
+    },
+    {
+      "path": "checks-retry/rwsem/source-sha256.json",
+      "sha256": "d186367585ff9cddf4115ad516a0f0376e4c9d0fa18665ffa653d4fa7f3510b5"
+    },
+    {
+      "path": "checks-retry/rwsem.log",
+      "sha256": "741c185a1a56ffbefba8e6286a7e0f8f60ed8cd083bf3694f62376ae28443689"
+    },
+    {
+      "path": "checks-retry/source-sha256.json",
+      "sha256": "c63b44dad7ad19234edaad29a102f2469b8293de8f40927c33061a3424c907dc"
+    },
+    {
+      "path": "checks-retry/unit.log",
+      "sha256": "145c203418150c0357e57a5752d845d52509a740bca44f118f7d450f1ad17756"
+    },
+    {
+      "path": "compact-bucket/pipe/binaries.json",
+      "sha256": "e7af29ca2f4327fd382113111dfa46a694742af0627509edd2244d1cf9282893"
+    },
+    {
+      "path": "compact-bucket/pipe/build-configuration.json",
+      "sha256": "96402ca3c231f0ad1412624f5d2e865fad6cc328f27abf5df46b229e89f815e0"
+    },
+    {
+      "path": "compact-bucket/pipe/environment.json",
+      "sha256": "fd042ff9eee242b265e2917b9fa64cd88117af9b005fa8f1a7876e9cdd38fc56"
+    },
+    {
+      "path": "compact-bucket/pipe/kernel-identity.json",
+      "sha256": "650d2906508a943d0cb7da2d2f8781f78f09ca9e7533665da0db126276646f06"
+    },
+    {
+      "path": "compact-bucket/pipe/plan.json",
+      "sha256": "fccf1ab35e2ebf362df94e6b41809b5b1f95f03bdff1bcc1e80ed0b49a3c00fb"
+    },
+    {
+      "path": "compact-bucket/pipe/source-sha256.json",
+      "sha256": "a6fe1880641a430b2b39bf4edda2b02ac5ac6eb6fe9564bd6b9ea35cf04a0fc0"
+    },
+    {
+      "path": "compact-bucket/pipe/tclock-mutex-context-audit.json",
+      "sha256": "501879d0a8b2ca7777ee152f1ef5f561633120002a2a9ea45755bdd18e1b3040"
+    },
+    {
+      "path": "compact-bucket/pipe/topology.txt",
+      "sha256": "3b2b1f37ad09efd75dafc4975fc20f79f0aa01a34311cada3904a50321ef0a4a"
+    },
+    {
+      "path": "compact-bucket/pipe-command.json",
+      "sha256": "360252982ebfaca7330f7f1726fd416bd14f02c7811e655997e884c3c00a593a"
+    },
+    {
+      "path": "compact-bucket/pipe-command.log",
+      "sha256": "a368d534e1738ab784502234a4540960f853db2af48c9816a9bb4c19aad45abb"
+    },
+    {
+      "path": "compact-bucket/profile/binary-sha256.json",
+      "sha256": "e83588313ada6280e12c18c8926c6eb8bafc319347b25491aacc742630a4b412"
+    },
+    {
+      "path": "compact-bucket/profile/c08-t08-r00-direct-kdlock-adaptive/perf-report.txt",
+      "sha256": "63dae742a97b9c3d5f5690607137c7cc155cc81b1b152028d9281b9e206d6dd9"
+    },
+    {
+      "path": "compact-bucket/profile/c08-t60-r00-direct-kdlock-adaptive/perf-report.txt",
+      "sha256": "982593486ec7f3cbd295a55f09bc0ec21772f342cd0640a836231d5f241a8c20"
+    },
+    {
+      "path": "compact-bucket/profile/environment.json",
+      "sha256": "aa320dda7c3ba914e7a4ff2c558e5a44575882c9915c337d6b9cf744647805e3"
+    },
+    {
+      "path": "compact-bucket/profile/kdlock-provider-ubsan.json",
+      "sha256": "66c50f028257164293b397573c280d0d8a3d78e7ce69cd3dc275e5fc81c4c5b0"
+    },
+    {
+      "path": "compact-bucket/profile/plan.json",
+      "sha256": "a879d7cd359f4c45a1287e71f8a1c6c972a1b37861c042c170d4c47250023b0e"
+    },
+    {
+      "path": "compact-bucket/profile/source-sha256.json",
+      "sha256": "0b24448701287ca473e889042426bbbb3e6900c243a60896ce4622d1f83bfd82"
+    },
+    {
+      "path": "compact-bucket/profile-command.json",
+      "sha256": "f5c6c31c8cdcd4493558450f25ebf953f513d15d776839bf2e8ff4bfbf002714"
+    },
+    {
+      "path": "compact-bucket/profile-command.log",
+      "sha256": "8b0725f5ad9db4c97c80cc7efe7482ef9d68de43c0407e450bf76f04330f9d69"
+    },
+    {
+      "path": "compact-bucket/seek/binaries.json",
+      "sha256": "a33733f1275b5af7f68d9fd54c87dff905025ae581fa836bfdb98ffe2798f364"
+    },
+    {
+      "path": "compact-bucket/seek/build-configuration.json",
+      "sha256": "96402ca3c231f0ad1412624f5d2e865fad6cc328f27abf5df46b229e89f815e0"
+    },
+    {
+      "path": "compact-bucket/seek/environment.json",
+      "sha256": "f654f44418f562d385170f849c6bd891b3c3a51e8afefc1e2078eb6e6d61c079"
+    },
+    {
+      "path": "compact-bucket/seek/kernel-identity.json",
+      "sha256": "650d2906508a943d0cb7da2d2f8781f78f09ca9e7533665da0db126276646f06"
+    },
+    {
+      "path": "compact-bucket/seek/plan.json",
+      "sha256": "8e5daa6595ed29d5ca3871983a8e59b6075dd5ce6dcdb3f118a088072d169dc8"
+    },
+    {
+      "path": "compact-bucket/seek/source-sha256.json",
+      "sha256": "a6fe1880641a430b2b39bf4edda2b02ac5ac6eb6fe9564bd6b9ea35cf04a0fc0"
+    },
+    {
+      "path": "compact-bucket/seek/tclock-mutex-context-audit.json",
+      "sha256": "501879d0a8b2ca7777ee152f1ef5f561633120002a2a9ea45755bdd18e1b3040"
+    },
+    {
+      "path": "compact-bucket/seek/topology.txt",
+      "sha256": "3b2b1f37ad09efd75dafc4975fc20f79f0aa01a34311cada3904a50321ef0a4a"
+    },
+    {
+      "path": "compact-bucket/seek-command.json",
+      "sha256": "b3c12d23ef7abc1cbb4a960aa40f5c8da03473dbc3c1b15087a49e6db0c90094"
+    },
+    {
+      "path": "compact-bucket/seek-command.log",
+      "sha256": "e2ed80dd34755e2cd15589d658602f54fb97f0f6ef8ad51c72618675a19c6fbe"
+    },
+    {
+      "path": "compact-bucket/synthetic/binary-sha256.json",
+      "sha256": "5fafcdc239be81dd7f29a6612db79b744bc07a911508687a5936a63e59427d51"
+    },
+    {
+      "path": "compact-bucket/synthetic/environment.json",
+      "sha256": "e72d574b64711b7d4d76d74ca91836371bc043d9cb51162f41ffc01d0ee5c1ac"
+    },
+    {
+      "path": "compact-bucket/synthetic/kdlock-provider-ubsan.json",
+      "sha256": "66c50f028257164293b397573c280d0d8a3d78e7ce69cd3dc275e5fc81c4c5b0"
+    },
+    {
+      "path": "compact-bucket/synthetic/plan.json",
+      "sha256": "3a8d0368d05eef86d368291de2ec37f572453a4d5d51b7484d4083edccabb1a0"
+    },
+    {
+      "path": "compact-bucket/synthetic/source-sha256.json",
+      "sha256": "0b24448701287ca473e889042426bbbb3e6900c243a60896ce4622d1f83bfd82"
+    },
+    {
+      "path": "compact-bucket/synthetic-command.json",
+      "sha256": "0411109ab90b295496ab69194d627b6f17c9382e9b59c3e655094aec3ce31c16"
+    },
+    {
+      "path": "compact-bucket/synthetic-command.log",
+      "sha256": "e43e2c8bafa4e60b2d129e9852e0378c1e699118b6c98cdce8bac09aa473cd40"
+    },
+    {
+      "path": "compact-rcu/pipe/binaries.json",
+      "sha256": "71e29e519663850a49a57ed8e69c3b20e550334f84309769908da94414308592"
+    },
+    {
+      "path": "compact-rcu/pipe/build-configuration.json",
+      "sha256": "96402ca3c231f0ad1412624f5d2e865fad6cc328f27abf5df46b229e89f815e0"
+    },
+    {
+      "path": "compact-rcu/pipe/environment.json",
+      "sha256": "7e7cb35d3a5f285be2cb53f0fbb7553d4a3006075f2dcd6626eaf9f0bb4094e7"
+    },
+    {
+      "path": "compact-rcu/pipe/kernel-identity.json",
+      "sha256": "650d2906508a943d0cb7da2d2f8781f78f09ca9e7533665da0db126276646f06"
+    },
+    {
+      "path": "compact-rcu/pipe/plan.json",
+      "sha256": "14f85d513c54009db162c940c4316b8bb6d9d1d2e507bf22e00110c7fc710224"
+    },
+    {
+      "path": "compact-rcu/pipe/source-sha256.json",
+      "sha256": "5cc26e1a21167d637ab0520dd5feffb8fff89b1231baa03752310289ad28a1a3"
+    },
+    {
+      "path": "compact-rcu/pipe/tclock-mutex-context-audit.json",
+      "sha256": "501879d0a8b2ca7777ee152f1ef5f561633120002a2a9ea45755bdd18e1b3040"
+    },
+    {
+      "path": "compact-rcu/pipe/topology.txt",
+      "sha256": "3b2b1f37ad09efd75dafc4975fc20f79f0aa01a34311cada3904a50321ef0a4a"
+    },
+    {
+      "path": "compact-rcu/pipe-command.json",
+      "sha256": "e2601e9d279c29fcb32187db124a47ca6c7e71ab286e8ce5b5becfedaf0d6289"
+    },
+    {
+      "path": "compact-rcu/pipe-command.log",
+      "sha256": "ebeb0440ce7aa25f32b0c4a7c3c94342d5a6c1fc012b8d3b60c31d06a9e45b2b"
+    },
+    {
+      "path": "compact-rcu/profile/binary-sha256.json",
+      "sha256": "328aa8aa48444be15143dfb7b9d0b0d5db25c8510dec3c6c1540f2ce097bd9f6"
+    },
+    {
+      "path": "compact-rcu/profile/c08-t08-r00-direct-kdlock-adaptive/perf-report.txt",
+      "sha256": "8c1c75a0849e9f738065cd374cdc115cd7d5fc054fe9c8f0cb2a256bcddf5ab2"
+    },
+    {
+      "path": "compact-rcu/profile/c08-t60-r00-direct-kdlock-adaptive/perf-report.txt",
+      "sha256": "69db7ad5ff98b4d8567fb57ba7c9f6e8e586062399ac0ec2e1b8b0a56f501db4"
+    },
+    {
+      "path": "compact-rcu/profile/environment.json",
+      "sha256": "02bf25c60e3822f7610fd3f7590e1a9ab7649b71b796073b004090cdbda9e701"
+    },
+    {
+      "path": "compact-rcu/profile/kdlock-provider-ubsan.json",
+      "sha256": "66c50f028257164293b397573c280d0d8a3d78e7ce69cd3dc275e5fc81c4c5b0"
+    },
+    {
+      "path": "compact-rcu/profile/plan.json",
+      "sha256": "a879d7cd359f4c45a1287e71f8a1c6c972a1b37861c042c170d4c47250023b0e"
+    },
+    {
+      "path": "compact-rcu/profile/source-sha256.json",
+      "sha256": "29f342054c3e1348c0a64e6e6df55361fde9ad330310151e30477350c94269c9"
+    },
+    {
+      "path": "compact-rcu/profile-command.json",
+      "sha256": "66077de0d1b5826e2367750d48945221ee7a474028197b9f3ee450309b7007cd"
+    },
+    {
+      "path": "compact-rcu/profile-command.log",
+      "sha256": "412f76f0fd0927813b6ac8cddbbcbf7e3000effd0a32795e4b06fcbb69345c5b"
+    },
+    {
+      "path": "compact-rcu/seek/binaries.json",
+      "sha256": "f7000aa9f3b45eaca10a82f39b7bed2bddb1b30becfe4147ea0cba8fa5b3e2e5"
+    },
+    {
+      "path": "compact-rcu/seek/build-configuration.json",
+      "sha256": "96402ca3c231f0ad1412624f5d2e865fad6cc328f27abf5df46b229e89f815e0"
+    },
+    {
+      "path": "compact-rcu/seek/environment.json",
+      "sha256": "a8c343e62640fd9f920e6f720dd36feff410f5f946c28d14de717c7a4d2d9a4d"
+    },
+    {
+      "path": "compact-rcu/seek/kernel-identity.json",
+      "sha256": "650d2906508a943d0cb7da2d2f8781f78f09ca9e7533665da0db126276646f06"
+    },
+    {
+      "path": "compact-rcu/seek/plan.json",
+      "sha256": "de604dc255f012608b77d9848b84ecd87afbd31d77ba7375a588ffcc6479f2dd"
+    },
+    {
+      "path": "compact-rcu/seek/source-sha256.json",
+      "sha256": "5cc26e1a21167d637ab0520dd5feffb8fff89b1231baa03752310289ad28a1a3"
+    },
+    {
+      "path": "compact-rcu/seek/tclock-mutex-context-audit.json",
+      "sha256": "501879d0a8b2ca7777ee152f1ef5f561633120002a2a9ea45755bdd18e1b3040"
+    },
+    {
+      "path": "compact-rcu/seek/topology.txt",
+      "sha256": "3b2b1f37ad09efd75dafc4975fc20f79f0aa01a34311cada3904a50321ef0a4a"
+    },
+    {
+      "path": "compact-rcu/seek-command.json",
+      "sha256": "e0bcb7a1da29f130fa96c94feeabddb4ce2966bb2bb49809ae5624b530acb4dd"
+    },
+    {
+      "path": "compact-rcu/seek-command.log",
+      "sha256": "740af7c3f93d8398a7a92bc0709d0cfceca55b0caef7de39d6b495e3d4668654"
+    },
+    {
+      "path": "compact-rcu/synthetic/binary-sha256.json",
+      "sha256": "6938b4cdd91c36f4ac8ff22f5ba08e041df4a1ac15e03af8ad17f74bb03a0a4d"
+    },
+    {
+      "path": "compact-rcu/synthetic/environment.json",
+      "sha256": "2508da63ba97bed975dde804fe44c40eabf89f13b4063e9f0437789bae1eb26c"
+    },
+    {
+      "path": "compact-rcu/synthetic/kdlock-provider-ubsan.json",
+      "sha256": "66c50f028257164293b397573c280d0d8a3d78e7ce69cd3dc275e5fc81c4c5b0"
+    },
+    {
+      "path": "compact-rcu/synthetic/plan.json",
+      "sha256": "3a8d0368d05eef86d368291de2ec37f572453a4d5d51b7484d4083edccabb1a0"
+    },
+    {
+      "path": "compact-rcu/synthetic/source-sha256.json",
+      "sha256": "29f342054c3e1348c0a64e6e6df55361fde9ad330310151e30477350c94269c9"
+    },
+    {
+      "path": "compact-rcu/synthetic-command.json",
+      "sha256": "fdcb6a0e0a75bbb2b85ce6788222ba0e4e5e0968843e9d0fbc414ffdc4de0cb7"
+    },
+    {
+      "path": "compact-rcu/synthetic-command.log",
+      "sha256": "99ed2379b7ba7540f5c10fa34d7d0795130ef73ad222ac160d24e6588424d4ea"
+    },
+    {
+      "path": "comparison.csv",
+      "sha256": "e83b570cd52ee766ad811929b2438e2520021fa30ee74ab3b605ccea571b4a2e"
+    },
+    {
+      "path": "comparison.json",
+      "sha256": "817f8a2df9766130b4099a6516b975bf6265c73eb4c570a6789c5c9811862d6b"
+    },
+    {
+      "path": "comparison.png",
+      "sha256": "85d3f4b29f94933b40eab87ac010c99f1651e2419084700a159b5bd1fed1f4c3"
+    },
+    {
+      "path": "comparison.svg",
+      "sha256": "75e213265518604e4a077528a75f614efe5913eb8bf798a584b2a1d693ddb9ef"
+    },
+    {
+      "path": "finalize-command.log",
+      "sha256": "c813c4a361f9bb8a1969a30c42b6e682e128383ec32f8bb4f08cfd0bb4a89346"
+    },
+    {
+      "path": "finalize-retry.log",
+      "sha256": "659224f676a4b3216e820d807020e88f1bd8a52fde58ed7efa83e2670ad7471b"
+    },
+    {
+      "path": "finalize.py",
+      "sha256": "f06a700a1d64f998fcc60e3df6aa9526b04fbdee0a13e04497c0295829263df9"
+    },
+    {
+      "path": "guest-before.json",
+      "sha256": "af93f9c95437328198049de61d19ee15d0804612d33863715534769718a09431"
+    },
+    {
+      "path": "health.json",
+      "sha256": "69efc11b589aac061ce70376ae7a942640485eb5c535ae9e72f64ba86aee0d93"
+    },
+    {
+      "path": "host-after.json",
+      "sha256": "3abd471aac4f71766e5d8cce8cef33d8dbc324b67c41ddb01e439421ee9d2945"
+    },
+    {
+      "path": "host-before.json",
+      "sha256": "d7ebe6f6eeb8077bdd72ec9604b34068923cba322b811f833eec84a38acb0947"
+    },
+    {
+      "path": "pipe-admission.json",
+      "sha256": "e1cfd68c09d9b66570d98728d73337c48258334fd68debe070492e86db426cfc"
+    },
+    {
+      "path": "plot-command.log",
+      "sha256": "ed1fb611cdb8984fae0dd6d26bda2dae560cbb8b39ccd684e08a4e11f9042c64"
+    },
+    {
+      "path": "plot-input.json",
+      "sha256": "db8ec9f377db7944c61ac757ef7c2b1a5568559a1db92858a3e49fa9ecc72989"
+    },
+    {
+      "path": "plot.py",
+      "sha256": "483509ce4d13f3dd17af3819ea360376f6aa2f1ff57ae1878e5fdb2b654c22e5"
+    },
+    {
+      "path": "postprocess.json",
+      "sha256": "daf859a4167ae87386c652a9714e3a9da77c1f275a936c8c6b54ad6662a007ec"
+    },
+    {
+      "path": "precompact-256/pipe/binaries.json",
+      "sha256": "06913df752f3013e160416bfd41894f573f0232113564f4c49de36a606d18341"
+    },
+    {
+      "path": "precompact-256/pipe/build-configuration.json",
+      "sha256": "96402ca3c231f0ad1412624f5d2e865fad6cc328f27abf5df46b229e89f815e0"
+    },
+    {
+      "path": "precompact-256/pipe/environment.json",
+      "sha256": "4eb6d79fd36a014b5d8a5acfa3783e01691cb41ac183b007d5be2c6a75b0b2e3"
+    },
+    {
+      "path": "precompact-256/pipe/kernel-identity.json",
+      "sha256": "650d2906508a943d0cb7da2d2f8781f78f09ca9e7533665da0db126276646f06"
+    },
+    {
+      "path": "precompact-256/pipe/plan.json",
+      "sha256": "35d7c4a62a3bd866f40276e870bff35ca26424bbc6b1814d56cc77473db8e389"
+    },
+    {
+      "path": "precompact-256/pipe/source-sha256.json",
+      "sha256": "bcfd4a07213ebf56c61d6c5ccc2574347629e4372843ab98b67582272b6711be"
+    },
+    {
+      "path": "precompact-256/pipe/tclock-mutex-context-audit.json",
+      "sha256": "501879d0a8b2ca7777ee152f1ef5f561633120002a2a9ea45755bdd18e1b3040"
+    },
+    {
+      "path": "precompact-256/pipe/topology.txt",
+      "sha256": "3b2b1f37ad09efd75dafc4975fc20f79f0aa01a34311cada3904a50321ef0a4a"
+    },
+    {
+      "path": "precompact-256/pipe-command.json",
+      "sha256": "dcbb6a0b6f1592db492d3ad1fd78123c56307b2a25c49ab3a4393bf8ddb23fb2"
+    },
+    {
+      "path": "precompact-256/pipe-command.log",
+      "sha256": "a3b785a211c069c5074108fe7e3a2f6ac8dd6cfcfdb575a8dd26f1ce9d8aab61"
+    },
+    {
+      "path": "precompact-256/profile/binary-sha256.json",
+      "sha256": "88dc79d192793da603c731c4c541eb87c24ab540eae2c4984b5cf79325bbc316"
+    },
+    {
+      "path": "precompact-256/profile/c08-t08-r00-direct-kdlock-adaptive/perf-report.txt",
+      "sha256": "2619d7e617254bbb194fd5764456a3e7010f689b81b17beeb521a92999b9463f"
+    },
+    {
+      "path": "precompact-256/profile/c08-t60-r00-direct-kdlock-adaptive/perf-report.txt",
+      "sha256": "984729ea272f3d90f686e17f0a46ca6ba72744a97a7dcb1d50392c48e540178b"
+    },
+    {
+      "path": "precompact-256/profile/environment.json",
+      "sha256": "61ea257c3bef536431c841c078a9afdc0422ac2fbb237c34333705192447e5f7"
+    },
+    {
+      "path": "precompact-256/profile/kdlock-provider-ubsan.json",
+      "sha256": "66c50f028257164293b397573c280d0d8a3d78e7ce69cd3dc275e5fc81c4c5b0"
+    },
+    {
+      "path": "precompact-256/profile/plan.json",
+      "sha256": "a879d7cd359f4c45a1287e71f8a1c6c972a1b37861c042c170d4c47250023b0e"
+    },
+    {
+      "path": "precompact-256/profile/source-sha256.json",
+      "sha256": "fbe91345445ecdca9c66f39267b974525b9a7c0e82bf5bce038156a19aeb11fe"
+    },
+    {
+      "path": "precompact-256/profile-command.json",
+      "sha256": "3304f1247fadcc7dcb22647c4adfba536f70560aa315923c911c080691880e96"
+    },
+    {
+      "path": "precompact-256/profile-command.log",
+      "sha256": "f78a0423abe161fde1d06a51d913dc490e76b8ca27ecd8665eca59db7b04925a"
+    },
+    {
+      "path": "precompact-256/seek/binaries.json",
+      "sha256": "6d2f9f120f78255ef818d09f63ce600c560e846c1f84438ffb040bdb47c0290c"
+    },
+    {
+      "path": "precompact-256/seek/build-configuration.json",
+      "sha256": "96402ca3c231f0ad1412624f5d2e865fad6cc328f27abf5df46b229e89f815e0"
+    },
+    {
+      "path": "precompact-256/seek/environment.json",
+      "sha256": "398f86597e06c60e30382fe59f8f640299a0e99dc53c9f3be712cc15a878b836"
+    },
+    {
+      "path": "precompact-256/seek/kernel-identity.json",
+      "sha256": "650d2906508a943d0cb7da2d2f8781f78f09ca9e7533665da0db126276646f06"
+    },
+    {
+      "path": "precompact-256/seek/plan.json",
+      "sha256": "fdb729809e4e55499576a82b5d88eb3d2df1f24bf33c3c9e96a32e9f30e1fc34"
+    },
+    {
+      "path": "precompact-256/seek/source-sha256.json",
+      "sha256": "bcfd4a07213ebf56c61d6c5ccc2574347629e4372843ab98b67582272b6711be"
+    },
+    {
+      "path": "precompact-256/seek/tclock-mutex-context-audit.json",
+      "sha256": "501879d0a8b2ca7777ee152f1ef5f561633120002a2a9ea45755bdd18e1b3040"
+    },
+    {
+      "path": "precompact-256/seek/topology.txt",
+      "sha256": "3b2b1f37ad09efd75dafc4975fc20f79f0aa01a34311cada3904a50321ef0a4a"
+    },
+    {
+      "path": "precompact-256/seek-command.json",
+      "sha256": "fe3f9f2c8c633492898b211996ac7aef09737485633c741ab850f2a3546f3108"
+    },
+    {
+      "path": "precompact-256/seek-command.log",
+      "sha256": "960297ee56ac0227764ca6ee7bcfe9693629805b1098eb4020156b0d2c7a1e39"
+    },
+    {
+      "path": "precompact-256/synthetic/binary-sha256.json",
+      "sha256": "dc871fff8a07e6b2eaf86ad66d0a68f860b90049b34e7f64383d7c9369a1d0c6"
+    },
+    {
+      "path": "precompact-256/synthetic/environment.json",
+      "sha256": "0b8d2a4e6592519d2f652117b219bb6e8b9de3aa7fb3cc2fb165fac012c356b2"
+    },
+    {
+      "path": "precompact-256/synthetic/kdlock-provider-ubsan.json",
+      "sha256": "66c50f028257164293b397573c280d0d8a3d78e7ce69cd3dc275e5fc81c4c5b0"
+    },
+    {
+      "path": "precompact-256/synthetic/plan.json",
+      "sha256": "3a8d0368d05eef86d368291de2ec37f572453a4d5d51b7484d4083edccabb1a0"
+    },
+    {
+      "path": "precompact-256/synthetic/source-sha256.json",
+      "sha256": "fbe91345445ecdca9c66f39267b974525b9a7c0e82bf5bce038156a19aeb11fe"
+    },
+    {
+      "path": "precompact-256/synthetic-command.json",
+      "sha256": "4451b0f2387945adb8f57aee45cdfd31ae79a7e3ee1cbded8db65659b5015feb"
+    },
+    {
+      "path": "precompact-256/synthetic-command.log",
+      "sha256": "c1a3117a83b10c92c93fbcab7f029bff8c02d359a369b4f14bafa344fa8f97fd"
+    },
+    {
+      "path": "precompact-obsolete-removal.json",
+      "sha256": "df21d5cebb1c2d0786238da930baeafb5ba677e40f4cefc52be3731ba5e7162e"
+    },
+    {
+      "path": "preflight/baseline.json",
+      "sha256": "650d2906508a943d0cb7da2d2f8781f78f09ca9e7533665da0db126276646f06"
+    },
+    {
+      "path": "preflight/baseline.json.command.json",
+      "sha256": "b7b93dae37d480b84ade861aeeff64f0d86959d3238b7633f1050e43e63deb15"
+    },
+    {
+      "path": "preflight/boot-policy.json",
+      "sha256": "c6a3874b4d3743cfef46d3d3f2e5afaff67b1008161b4f345cfdef20f4f6b71f"
+    },
+    {
+      "path": "preflight/pv-lock-ops.txt",
+      "sha256": "21b0b519c0971fda89805a9c5ebf5e98a0096ae6f0e7885a094bd8cd58dca50b"
+    },
+    {
+      "path": "preflight/pv-lock-ops.txt.command.json",
+      "sha256": "d102f0cc4d65261901989d1a3c6174fedb8bb1a0438dbfeaa55a0e3802d11eaa"
+    },
+    {
+      "path": "preflight/pv-template.txt",
+      "sha256": "13fd429df7b80bdab0b26edd8dc9a43362f9f176933f7a97a5452841b9f3a054"
+    },
+    {
+      "path": "preflight/pv-template.txt.command.json",
+      "sha256": "61b86dad6c6241791346e4c4ba4a4e63f40005bec98a33d5e4d39d649dd0e364"
+    },
+    {
+      "path": "preflight-command.txt",
+      "sha256": "9f8247e190a7a1361ae20c7af9f3ed0b005f2e26e90cc2ff16480109a3b77ec1"
+    },
+    {
+      "path": "profile-analysis-command.log",
+      "sha256": "725e88b997e5c4f21d9a1b52f1f0b61febc1abbf7b189c4f8168fb732ed621c7"
+    },
+    {
+      "path": "profile-analysis.json",
+      "sha256": "6aa9183242d67eb3aa2b66b8cfc7baf50d7f4bd6c49ae61a4a5cd7dc5f58fabe"
+    },
+    {
+      "path": "profile-analysis.py",
+      "sha256": "7385b81d2e29a0b1afcf4f76853b240c27097e4473456db1c63e64f5d9c8fae4"
+    },
+    {
+      "path": "run-baselines.py",
+      "sha256": "9c96ab010a2073fdcb54c7d8f07c9b0afd993d1e485a289dab3ae4c186f30cf5"
+    },
+    {
+      "path": "run-checks-retry.py",
+      "sha256": "d307b055b849a98c46f1e3c0c2f8c4b883399b550e3303764ae147f07e3e8f7f"
+    },
+    {
+      "path": "run-checks.py",
+      "sha256": "5cae16d6b168749bfc208c3e8ddded5beca05211e1048206d0f266491dfcfaa0"
+    },
+    {
+      "path": "sessions.csv",
+      "sha256": "161738206cccd79e69f74471a8b1b98143dec5fd27583a21e3021c7d88d071fc"
+    },
+    {
+      "path": "summarize.py",
+      "sha256": "40c1afd41951904a04c7ceef1a94fb14c2d7ae87bd7fb638a15771b7398cbfe1"
+    },
+    {
+      "path": "summary-command.log",
+      "sha256": "c37883f339d32ceaa976824e8ee95c8b2f7cd52444d6cf0b903f31cc573bf8e4"
+    },
+    {
+      "path": "sync-bucket.log",
+      "sha256": "0c38539b6ddc21d72614f4f2b159f62ada163a609bc3981020180b09d91d1ac7"
+    },
+    {
+      "path": "sync-precompact.log",
+      "sha256": "7b509afb0b9a600ed02f8f9a71ddd8c157b1c50d57f0c0605eb6732cfbd5ad73"
+    },
+    {
+      "path": "sync-rcu.log",
+      "sha256": "964fcd7137bf2d7f2502c3002fd869cbc004156a4be7206dfc9940ce230d68d8"
+    },
+    {
+      "path": "validation.json",
+      "sha256": "bae6ebc88ed8d8ef91087446b0532a60831b278a2078c32f43cb18c2796e1a9a"
+    }
+  ],
+  "host": "380G10",
+  "inventory_members": 11232,
+  "inventory_sha256": "b4a4c8cd820078ad36be01a1d410fea1f6578555eab7961bdc0fce60a4d2b457",
+  "issues": [],
+  "jit_artifacts": [
+    {
+      "assembly_sha256": "f69c519ff7efeccad9142014f71c7038e9fb6b99bb414b200268bd19188e394a",
+      "bytes": 1621,
+      "object_sha256": "d91b5bbda873fd0c7ead3475ec03f29994ac92fa03b3af4f377cd993de0c1584",
+      "path": "checks-retry/instruction-exit/session/workspace/daemon/0xffffffffc079612b/2240730/asm/jit.bin",
+      "sha256": "bb51a76efc78c2eda43c231dbd8a79d78455663c978600502da9de3a56f72d1a"
+    },
+    {
+      "assembly_sha256": "5e96d2ba176ead99ab91eeee9274ef8dc0b82525e2c78d6d2531ad1abecfd89b",
+      "bytes": 1405,
+      "object_sha256": null,
+      "path": "compact-bucket/pipe/pipebytes-query-n16-t08-r0-kdlock/publications/00/jit.bin",
+      "sha256": "880925269b640f2c7975c986823c2b8e6d29b0ffaf0d29bbe5eb232fc757b0d1"
+    },
+    {
+      "assembly_sha256": "5e96d2ba176ead99ab91eeee9274ef8dc0b82525e2c78d6d2531ad1abecfd89b",
+      "bytes": 1405,
+      "object_sha256": "c856c6fa67bdcbc254af3093eb5c49080c61190578f68b4d7930bba9449d21ac",
+      "path": "compact-bucket/pipe/pipebytes-query-n16-t08-r0-kdlock/workspace/daemon/0xffffffffc07961ee/2222244/asm/jit.bin",
+      "sha256": "880925269b640f2c7975c986823c2b8e6d29b0ffaf0d29bbe5eb232fc757b0d1"
+    },
+    {
+      "assembly_sha256": "5e96d2ba176ead99ab91eeee9274ef8dc0b82525e2c78d6d2531ad1abecfd89b",
+      "bytes": 1405,
+      "object_sha256": null,
+      "path": "compact-bucket/pipe/pipebytes-query-n16-t08-r1-kdlock/publications/00/jit.bin",
+      "sha256": "880925269b640f2c7975c986823c2b8e6d29b0ffaf0d29bbe5eb232fc757b0d1"
+    },
+    {
+      "assembly_sha256": "5e96d2ba176ead99ab91eeee9274ef8dc0b82525e2c78d6d2531ad1abecfd89b",
+      "bytes": 1405,
+      "object_sha256": "c856c6fa67bdcbc254af3093eb5c49080c61190578f68b4d7930bba9449d21ac",
+      "path": "compact-bucket/pipe/pipebytes-query-n16-t08-r1-kdlock/workspace/daemon/0xffffffffc07961ee/2222244/asm/jit.bin",
+      "sha256": "880925269b640f2c7975c986823c2b8e6d29b0ffaf0d29bbe5eb232fc757b0d1"
+    },
+    {
+      "assembly_sha256": "5e96d2ba176ead99ab91eeee9274ef8dc0b82525e2c78d6d2531ad1abecfd89b",
+      "bytes": 1405,
+      "object_sha256": null,
+      "path": "compact-bucket/pipe/pipebytes-query-n16-t08-r2-kdlock/publications/00/jit.bin",
+      "sha256": "880925269b640f2c7975c986823c2b8e6d29b0ffaf0d29bbe5eb232fc757b0d1"
+    },
+    {
+      "assembly_sha256": "5e96d2ba176ead99ab91eeee9274ef8dc0b82525e2c78d6d2531ad1abecfd89b",
+      "bytes": 1405,
+      "object_sha256": "c856c6fa67bdcbc254af3093eb5c49080c61190578f68b4d7930bba9449d21ac",
+      "path": "compact-bucket/pipe/pipebytes-query-n16-t08-r2-kdlock/workspace/daemon/0xffffffffc07961ee/2222244/asm/jit.bin",
+      "sha256": "880925269b640f2c7975c986823c2b8e6d29b0ffaf0d29bbe5eb232fc757b0d1"
+    },
+    {
+      "assembly_sha256": "64d38dd7f9f6a2c4d557d9dd89a2d76ce6c789ac662bf7404a2422890d7e219e",
+      "bytes": 1264,
+      "object_sha256": "1b7ac24b7b4116897d4b5afb7917487365b838161862df9954d211a89a4f6a48",
+      "path": "compact-bucket/profile/c08-t08-r00-direct-kdlock-adaptive/workspace/daemon/0xffffffffc07d8385/2215933/asm/jit.bin",
+      "sha256": "5561e1f26e763cac33490694b8a18dd53d3fb77e71ddde89fecef92f30558cec"
+    },
+    {
+      "assembly_sha256": "64d38dd7f9f6a2c4d557d9dd89a2d76ce6c789ac662bf7404a2422890d7e219e",
+      "bytes": 1264,
+      "object_sha256": "1b7ac24b7b4116897d4b5afb7917487365b838161862df9954d211a89a4f6a48",
+      "path": "compact-bucket/profile/c08-t60-r00-direct-kdlock-adaptive/workspace/daemon/0xffffffffc07d8385/2215984/asm/jit.bin",
+      "sha256": "5561e1f26e763cac33490694b8a18dd53d3fb77e71ddde89fecef92f30558cec"
+    },
+    {
+      "assembly_sha256": "cb86e1f74bcc721c09d79323d503e58c37952e874876c27a286a80311dc89296",
+      "bytes": 1543,
+      "object_sha256": null,
+      "path": "compact-bucket/seek/seek-set-n16-t08-r0-kdlock/publications/00/jit.bin",
+      "sha256": "e1bc1ec91e42ef3f7a97f70ac77f809a384f281bfb97e91918b34e1dd38a6b9a"
+    },
+    {
+      "assembly_sha256": "cb86e1f74bcc721c09d79323d503e58c37952e874876c27a286a80311dc89296",
+      "bytes": 1543,
+      "object_sha256": "09090c406f4cb6b207483931a8b5a5cdcf967cbfc2171ea39c06adaf95d423cc",
+      "path": "compact-bucket/seek/seek-set-n16-t08-r0-kdlock/workspace/daemon/0xffffffffc07961f5/2218822/asm/jit.bin",
+      "sha256": "e1bc1ec91e42ef3f7a97f70ac77f809a384f281bfb97e91918b34e1dd38a6b9a"
+    },
+    {
+      "assembly_sha256": "cb86e1f74bcc721c09d79323d503e58c37952e874876c27a286a80311dc89296",
+      "bytes": 1543,
+      "object_sha256": null,
+      "path": "compact-bucket/seek/seek-set-n16-t08-r1-kdlock/publications/00/jit.bin",
+      "sha256": "e1bc1ec91e42ef3f7a97f70ac77f809a384f281bfb97e91918b34e1dd38a6b9a"
+    },
+    {
+      "assembly_sha256": "cb86e1f74bcc721c09d79323d503e58c37952e874876c27a286a80311dc89296",
+      "bytes": 1543,
+      "object_sha256": "09090c406f4cb6b207483931a8b5a5cdcf967cbfc2171ea39c06adaf95d423cc",
+      "path": "compact-bucket/seek/seek-set-n16-t08-r1-kdlock/workspace/daemon/0xffffffffc07961f5/2218822/asm/jit.bin",
+      "sha256": "e1bc1ec91e42ef3f7a97f70ac77f809a384f281bfb97e91918b34e1dd38a6b9a"
+    },
+    {
+      "assembly_sha256": "cb86e1f74bcc721c09d79323d503e58c37952e874876c27a286a80311dc89296",
+      "bytes": 1543,
+      "object_sha256": null,
+      "path": "compact-bucket/seek/seek-set-n16-t08-r2-kdlock/publications/00/jit.bin",
+      "sha256": "e1bc1ec91e42ef3f7a97f70ac77f809a384f281bfb97e91918b34e1dd38a6b9a"
+    },
+    {
+      "assembly_sha256": "cb86e1f74bcc721c09d79323d503e58c37952e874876c27a286a80311dc89296",
+      "bytes": 1543,
+      "object_sha256": "09090c406f4cb6b207483931a8b5a5cdcf967cbfc2171ea39c06adaf95d423cc",
+      "path": "compact-bucket/seek/seek-set-n16-t08-r2-kdlock/workspace/daemon/0xffffffffc07961f5/2218822/asm/jit.bin",
+      "sha256": "e1bc1ec91e42ef3f7a97f70ac77f809a384f281bfb97e91918b34e1dd38a6b9a"
+    },
+    {
+      "assembly_sha256": "cb86e1f74bcc721c09d79323d503e58c37952e874876c27a286a80311dc89296",
+      "bytes": 1543,
+      "object_sha256": null,
+      "path": "compact-bucket/seek/seek-set-n16-t60-r0-kdlock/publications/00/jit.bin",
+      "sha256": "e1bc1ec91e42ef3f7a97f70ac77f809a384f281bfb97e91918b34e1dd38a6b9a"
+    },
+    {
+      "assembly_sha256": "cb86e1f74bcc721c09d79323d503e58c37952e874876c27a286a80311dc89296",
+      "bytes": 1543,
+      "object_sha256": "09090c406f4cb6b207483931a8b5a5cdcf967cbfc2171ea39c06adaf95d423cc",
+      "path": "compact-bucket/seek/seek-set-n16-t60-r0-kdlock/workspace/daemon/0xffffffffc07961f5/2218822/asm/jit.bin",
+      "sha256": "e1bc1ec91e42ef3f7a97f70ac77f809a384f281bfb97e91918b34e1dd38a6b9a"
+    },
+    {
+      "assembly_sha256": "cb86e1f74bcc721c09d79323d503e58c37952e874876c27a286a80311dc89296",
+      "bytes": 1543,
+      "object_sha256": null,
+      "path": "compact-bucket/seek/seek-set-n16-t60-r1-kdlock/publications/00/jit.bin",
+      "sha256": "e1bc1ec91e42ef3f7a97f70ac77f809a384f281bfb97e91918b34e1dd38a6b9a"
+    },
+    {
+      "assembly_sha256": "cb86e1f74bcc721c09d79323d503e58c37952e874876c27a286a80311dc89296",
+      "bytes": 1543,
+      "object_sha256": "09090c406f4cb6b207483931a8b5a5cdcf967cbfc2171ea39c06adaf95d423cc",
+      "path": "compact-bucket/seek/seek-set-n16-t60-r1-kdlock/workspace/daemon/0xffffffffc07961f5/2218822/asm/jit.bin",
+      "sha256": "e1bc1ec91e42ef3f7a97f70ac77f809a384f281bfb97e91918b34e1dd38a6b9a"
+    },
+    {
+      "assembly_sha256": "cb86e1f74bcc721c09d79323d503e58c37952e874876c27a286a80311dc89296",
+      "bytes": 1543,
+      "object_sha256": null,
+      "path": "compact-bucket/seek/seek-set-n16-t60-r2-kdlock/publications/00/jit.bin",
+      "sha256": "e1bc1ec91e42ef3f7a97f70ac77f809a384f281bfb97e91918b34e1dd38a6b9a"
+    },
+    {
+      "assembly_sha256": "cb86e1f74bcc721c09d79323d503e58c37952e874876c27a286a80311dc89296",
+      "bytes": 1543,
+      "object_sha256": "09090c406f4cb6b207483931a8b5a5cdcf967cbfc2171ea39c06adaf95d423cc",
+      "path": "compact-bucket/seek/seek-set-n16-t60-r2-kdlock/workspace/daemon/0xffffffffc07961f5/2218822/asm/jit.bin",
+      "sha256": "e1bc1ec91e42ef3f7a97f70ac77f809a384f281bfb97e91918b34e1dd38a6b9a"
+    },
+    {
+      "assembly_sha256": "52ec6564361bb16df92e585c9dad5176cf715f57193e87a301b61086dc5842a7",
+      "bytes": 1121,
+      "object_sha256": "1493ea63678b01205483879a342c5c992d079681d567a4f944b3464ca85ac586",
+      "path": "compact-bucket/synthetic/c01-t08-r00-direct-kdlock-adaptive/workspace/daemon/0xffffffffc07d867b/2217592/asm/jit.bin",
+      "sha256": "4af4a0c5859d89e43c4a4877a5375435848bb0ea00012e817315c9e96107b3d0"
+    },
+    {
+      "assembly_sha256": "52ec6564361bb16df92e585c9dad5176cf715f57193e87a301b61086dc5842a7",
+      "bytes": 1121,
+      "object_sha256": "1493ea63678b01205483879a342c5c992d079681d567a4f944b3464ca85ac586",
+      "path": "compact-bucket/synthetic/c01-t08-r01-direct-kdlock-adaptive/workspace/daemon/0xffffffffc07d867b/2217639/asm/jit.bin",
+      "sha256": "4af4a0c5859d89e43c4a4877a5375435848bb0ea00012e817315c9e96107b3d0"
+    },
+    {
+      "assembly_sha256": "52ec6564361bb16df92e585c9dad5176cf715f57193e87a301b61086dc5842a7",
+      "bytes": 1121,
+      "object_sha256": "1493ea63678b01205483879a342c5c992d079681d567a4f944b3464ca85ac586",
+      "path": "compact-bucket/synthetic/c01-t08-r02-direct-kdlock-adaptive/workspace/daemon/0xffffffffc07d867b/2217685/asm/jit.bin",
+      "sha256": "4af4a0c5859d89e43c4a4877a5375435848bb0ea00012e817315c9e96107b3d0"
+    },
+    {
+      "assembly_sha256": "52ec6564361bb16df92e585c9dad5176cf715f57193e87a301b61086dc5842a7",
+      "bytes": 1121,
+      "object_sha256": "1493ea63678b01205483879a342c5c992d079681d567a4f944b3464ca85ac586",
+      "path": "compact-bucket/synthetic/c01-t60-r00-direct-kdlock-adaptive/workspace/daemon/0xffffffffc07d867b/2217731/asm/jit.bin",
+      "sha256": "4af4a0c5859d89e43c4a4877a5375435848bb0ea00012e817315c9e96107b3d0"
+    },
+    {
+      "assembly_sha256": "52ec6564361bb16df92e585c9dad5176cf715f57193e87a301b61086dc5842a7",
+      "bytes": 1121,
+      "object_sha256": "1493ea63678b01205483879a342c5c992d079681d567a4f944b3464ca85ac586",
+      "path": "compact-bucket/synthetic/c01-t60-r01-direct-kdlock-adaptive/workspace/daemon/0xffffffffc07d867b/2217939/asm/jit.bin",
+      "sha256": "4af4a0c5859d89e43c4a4877a5375435848bb0ea00012e817315c9e96107b3d0"
+    },
+    {
+      "assembly_sha256": "52ec6564361bb16df92e585c9dad5176cf715f57193e87a301b61086dc5842a7",
+      "bytes": 1121,
+      "object_sha256": "1493ea63678b01205483879a342c5c992d079681d567a4f944b3464ca85ac586",
+      "path": "compact-bucket/synthetic/c01-t60-r02-direct-kdlock-adaptive/workspace/daemon/0xffffffffc07d867b/2218090/asm/jit.bin",
+      "sha256": "4af4a0c5859d89e43c4a4877a5375435848bb0ea00012e817315c9e96107b3d0"
+    },
+    {
+      "assembly_sha256": "64d38dd7f9f6a2c4d557d9dd89a2d76ce6c789ac662bf7404a2422890d7e219e",
+      "bytes": 1264,
+      "object_sha256": "1b7ac24b7b4116897d4b5afb7917487365b838161862df9954d211a89a4f6a48",
+      "path": "compact-bucket/synthetic/c08-t08-r00-direct-kdlock-adaptive/workspace/daemon/0xffffffffc07d8385/2218241/asm/jit.bin",
+      "sha256": "5561e1f26e763cac33490694b8a18dd53d3fb77e71ddde89fecef92f30558cec"
+    },
+    {
+      "assembly_sha256": "64d38dd7f9f6a2c4d557d9dd89a2d76ce6c789ac662bf7404a2422890d7e219e",
+      "bytes": 1264,
+      "object_sha256": "1b7ac24b7b4116897d4b5afb7917487365b838161862df9954d211a89a4f6a48",
+      "path": "compact-bucket/synthetic/c08-t08-r01-direct-kdlock-adaptive/workspace/daemon/0xffffffffc07d8385/2218287/asm/jit.bin",
+      "sha256": "5561e1f26e763cac33490694b8a18dd53d3fb77e71ddde89fecef92f30558cec"
+    },
+    {
+      "assembly_sha256": "64d38dd7f9f6a2c4d557d9dd89a2d76ce6c789ac662bf7404a2422890d7e219e",
+      "bytes": 1264,
+      "object_sha256": "1b7ac24b7b4116897d4b5afb7917487365b838161862df9954d211a89a4f6a48",
+      "path": "compact-bucket/synthetic/c08-t08-r02-direct-kdlock-adaptive/workspace/daemon/0xffffffffc07d8385/2218333/asm/jit.bin",
+      "sha256": "5561e1f26e763cac33490694b8a18dd53d3fb77e71ddde89fecef92f30558cec"
+    },
+    {
+      "assembly_sha256": "64d38dd7f9f6a2c4d557d9dd89a2d76ce6c789ac662bf7404a2422890d7e219e",
+      "bytes": 1264,
+      "object_sha256": "1b7ac24b7b4116897d4b5afb7917487365b838161862df9954d211a89a4f6a48",
+      "path": "compact-bucket/synthetic/c08-t60-r00-direct-kdlock-adaptive/workspace/daemon/0xffffffffc07d8385/2218379/asm/jit.bin",
+      "sha256": "5561e1f26e763cac33490694b8a18dd53d3fb77e71ddde89fecef92f30558cec"
+    },
+    {
+      "assembly_sha256": "64d38dd7f9f6a2c4d557d9dd89a2d76ce6c789ac662bf7404a2422890d7e219e",
+      "bytes": 1264,
+      "object_sha256": "1b7ac24b7b4116897d4b5afb7917487365b838161862df9954d211a89a4f6a48",
+      "path": "compact-bucket/synthetic/c08-t60-r01-direct-kdlock-adaptive/workspace/daemon/0xffffffffc07d8385/2218530/asm/jit.bin",
+      "sha256": "5561e1f26e763cac33490694b8a18dd53d3fb77e71ddde89fecef92f30558cec"
+    },
+    {
+      "assembly_sha256": "64d38dd7f9f6a2c4d557d9dd89a2d76ce6c789ac662bf7404a2422890d7e219e",
+      "bytes": 1264,
+      "object_sha256": "1b7ac24b7b4116897d4b5afb7917487365b838161862df9954d211a89a4f6a48",
+      "path": "compact-bucket/synthetic/c08-t60-r02-direct-kdlock-adaptive/workspace/daemon/0xffffffffc07d8385/2218680/asm/jit.bin",
+      "sha256": "5561e1f26e763cac33490694b8a18dd53d3fb77e71ddde89fecef92f30558cec"
+    },
+    {
+      "assembly_sha256": "585276d3bdc1294061915833c7c6293bd187f4977e8ee4da86f0a580cb81bd72",
+      "bytes": 1405,
+      "object_sha256": null,
+      "path": "compact-rcu/pipe/pipebytes-query-n16-t08-r0-kdlock/publications/00/jit.bin",
+      "sha256": "55f6a29b73ab2cb664af0f57f0cf11015c4abee0a7d7819226c6059d960f6aac"
+    },
+    {
+      "assembly_sha256": "585276d3bdc1294061915833c7c6293bd187f4977e8ee4da86f0a580cb81bd72",
+      "bytes": 1405,
+      "object_sha256": "dd06456860ac653e4d62de64a111b9ae18e1067421f3b393734d0821f2121d72",
+      "path": "compact-rcu/pipe/pipebytes-query-n16-t08-r0-kdlock/workspace/daemon/0xffffffffc07961ee/2250319/asm/jit.bin",
+      "sha256": "55f6a29b73ab2cb664af0f57f0cf11015c4abee0a7d7819226c6059d960f6aac"
+    },
+    {
+      "assembly_sha256": "585276d3bdc1294061915833c7c6293bd187f4977e8ee4da86f0a580cb81bd72",
+      "bytes": 1405,
+      "object_sha256": null,
+      "path": "compact-rcu/pipe/pipebytes-query-n16-t08-r1-kdlock/publications/00/jit.bin",
+      "sha256": "55f6a29b73ab2cb664af0f57f0cf11015c4abee0a7d7819226c6059d960f6aac"
+    },
+    {
+      "assembly_sha256": "585276d3bdc1294061915833c7c6293bd187f4977e8ee4da86f0a580cb81bd72",
+      "bytes": 1405,
+      "object_sha256": "dd06456860ac653e4d62de64a111b9ae18e1067421f3b393734d0821f2121d72",
+      "path": "compact-rcu/pipe/pipebytes-query-n16-t08-r1-kdlock/workspace/daemon/0xffffffffc07961ee/2250319/asm/jit.bin",
+      "sha256": "55f6a29b73ab2cb664af0f57f0cf11015c4abee0a7d7819226c6059d960f6aac"
+    },
+    {
+      "assembly_sha256": "585276d3bdc1294061915833c7c6293bd187f4977e8ee4da86f0a580cb81bd72",
+      "bytes": 1405,
+      "object_sha256": null,
+      "path": "compact-rcu/pipe/pipebytes-query-n16-t08-r2-kdlock/publications/00/jit.bin",
+      "sha256": "55f6a29b73ab2cb664af0f57f0cf11015c4abee0a7d7819226c6059d960f6aac"
+    },
+    {
+      "assembly_sha256": "585276d3bdc1294061915833c7c6293bd187f4977e8ee4da86f0a580cb81bd72",
+      "bytes": 1405,
+      "object_sha256": "dd06456860ac653e4d62de64a111b9ae18e1067421f3b393734d0821f2121d72",
+      "path": "compact-rcu/pipe/pipebytes-query-n16-t08-r2-kdlock/workspace/daemon/0xffffffffc07961ee/2250319/asm/jit.bin",
+      "sha256": "55f6a29b73ab2cb664af0f57f0cf11015c4abee0a7d7819226c6059d960f6aac"
+    },
+    {
+      "assembly_sha256": "37faa22fbc52b3a1b87fe40eb5097b4ac0e3c1c989fc253474bb7b333b33df1e",
+      "bytes": 1264,
+      "object_sha256": "ebe67e5dfa487711e1b555a802ef5d56c448658580c82bb04790c133e2f98bbb",
+      "path": "compact-rcu/profile/c08-t08-r00-direct-kdlock-adaptive/workspace/daemon/0xffffffffc07d8385/2243973/asm/jit.bin",
+      "sha256": "ec1b59e6a28c9076d70f440537e8ee6c282a9c01a4ff1908c97e83e919445c9b"
+    },
+    {
+      "assembly_sha256": "37faa22fbc52b3a1b87fe40eb5097b4ac0e3c1c989fc253474bb7b333b33df1e",
+      "bytes": 1264,
+      "object_sha256": "ebe67e5dfa487711e1b555a802ef5d56c448658580c82bb04790c133e2f98bbb",
+      "path": "compact-rcu/profile/c08-t60-r00-direct-kdlock-adaptive/workspace/daemon/0xffffffffc07d8385/2244072/asm/jit.bin",
+      "sha256": "ec1b59e6a28c9076d70f440537e8ee6c282a9c01a4ff1908c97e83e919445c9b"
+    },
+    {
+      "assembly_sha256": "948ed7f6b3cdd9751f696fae3aa435cce38ed1040302fe681e68ccfedc09369c",
+      "bytes": 1543,
+      "object_sha256": null,
+      "path": "compact-rcu/seek/seek-set-n16-t08-r0-kdlock/publications/00/jit.bin",
+      "sha256": "28dd5a214570afb538b7c8aacec69587bc36a35cb29cb10880146c4ee989066b"
+    },
+    {
+      "assembly_sha256": "948ed7f6b3cdd9751f696fae3aa435cce38ed1040302fe681e68ccfedc09369c",
+      "bytes": 1543,
+      "object_sha256": "a12afab75732f68b6bcf834d6ed321af5522e53d447e3df353b49c6abf2abaf6",
+      "path": "compact-rcu/seek/seek-set-n16-t08-r0-kdlock/workspace/daemon/0xffffffffc07961f5/2246956/asm/jit.bin",
+      "sha256": "28dd5a214570afb538b7c8aacec69587bc36a35cb29cb10880146c4ee989066b"
+    },
+    {
+      "assembly_sha256": "948ed7f6b3cdd9751f696fae3aa435cce38ed1040302fe681e68ccfedc09369c",
+      "bytes": 1543,
+      "object_sha256": null,
+      "path": "compact-rcu/seek/seek-set-n16-t08-r1-kdlock/publications/00/jit.bin",
+      "sha256": "28dd5a214570afb538b7c8aacec69587bc36a35cb29cb10880146c4ee989066b"
+    },
+    {
+      "assembly_sha256": "948ed7f6b3cdd9751f696fae3aa435cce38ed1040302fe681e68ccfedc09369c",
+      "bytes": 1543,
+      "object_sha256": "a12afab75732f68b6bcf834d6ed321af5522e53d447e3df353b49c6abf2abaf6",
+      "path": "compact-rcu/seek/seek-set-n16-t08-r1-kdlock/workspace/daemon/0xffffffffc07961f5/2246956/asm/jit.bin",
+      "sha256": "28dd5a214570afb538b7c8aacec69587bc36a35cb29cb10880146c4ee989066b"
+    },
+    {
+      "assembly_sha256": "948ed7f6b3cdd9751f696fae3aa435cce38ed1040302fe681e68ccfedc09369c",
+      "bytes": 1543,
+      "object_sha256": null,
+      "path": "compact-rcu/seek/seek-set-n16-t08-r2-kdlock/publications/00/jit.bin",
+      "sha256": "28dd5a214570afb538b7c8aacec69587bc36a35cb29cb10880146c4ee989066b"
+    },
+    {
+      "assembly_sha256": "948ed7f6b3cdd9751f696fae3aa435cce38ed1040302fe681e68ccfedc09369c",
+      "bytes": 1543,
+      "object_sha256": "a12afab75732f68b6bcf834d6ed321af5522e53d447e3df353b49c6abf2abaf6",
+      "path": "compact-rcu/seek/seek-set-n16-t08-r2-kdlock/workspace/daemon/0xffffffffc07961f5/2246956/asm/jit.bin",
+      "sha256": "28dd5a214570afb538b7c8aacec69587bc36a35cb29cb10880146c4ee989066b"
+    },
+    {
+      "assembly_sha256": "948ed7f6b3cdd9751f696fae3aa435cce38ed1040302fe681e68ccfedc09369c",
+      "bytes": 1543,
+      "object_sha256": null,
+      "path": "compact-rcu/seek/seek-set-n16-t60-r0-kdlock/publications/00/jit.bin",
+      "sha256": "28dd5a214570afb538b7c8aacec69587bc36a35cb29cb10880146c4ee989066b"
+    },
+    {
+      "assembly_sha256": "948ed7f6b3cdd9751f696fae3aa435cce38ed1040302fe681e68ccfedc09369c",
+      "bytes": 1543,
+      "object_sha256": "a12afab75732f68b6bcf834d6ed321af5522e53d447e3df353b49c6abf2abaf6",
+      "path": "compact-rcu/seek/seek-set-n16-t60-r0-kdlock/workspace/daemon/0xffffffffc07961f5/2246956/asm/jit.bin",
+      "sha256": "28dd5a214570afb538b7c8aacec69587bc36a35cb29cb10880146c4ee989066b"
+    },
+    {
+      "assembly_sha256": "948ed7f6b3cdd9751f696fae3aa435cce38ed1040302fe681e68ccfedc09369c",
+      "bytes": 1543,
+      "object_sha256": null,
+      "path": "compact-rcu/seek/seek-set-n16-t60-r1-kdlock/publications/00/jit.bin",
+      "sha256": "28dd5a214570afb538b7c8aacec69587bc36a35cb29cb10880146c4ee989066b"
+    },
+    {
+      "assembly_sha256": "948ed7f6b3cdd9751f696fae3aa435cce38ed1040302fe681e68ccfedc09369c",
+      "bytes": 1543,
+      "object_sha256": "a12afab75732f68b6bcf834d6ed321af5522e53d447e3df353b49c6abf2abaf6",
+      "path": "compact-rcu/seek/seek-set-n16-t60-r1-kdlock/workspace/daemon/0xffffffffc07961f5/2246956/asm/jit.bin",
+      "sha256": "28dd5a214570afb538b7c8aacec69587bc36a35cb29cb10880146c4ee989066b"
+    },
+    {
+      "assembly_sha256": "948ed7f6b3cdd9751f696fae3aa435cce38ed1040302fe681e68ccfedc09369c",
+      "bytes": 1543,
+      "object_sha256": null,
+      "path": "compact-rcu/seek/seek-set-n16-t60-r2-kdlock/publications/00/jit.bin",
+      "sha256": "28dd5a214570afb538b7c8aacec69587bc36a35cb29cb10880146c4ee989066b"
+    },
+    {
+      "assembly_sha256": "948ed7f6b3cdd9751f696fae3aa435cce38ed1040302fe681e68ccfedc09369c",
+      "bytes": 1543,
+      "object_sha256": "a12afab75732f68b6bcf834d6ed321af5522e53d447e3df353b49c6abf2abaf6",
+      "path": "compact-rcu/seek/seek-set-n16-t60-r2-kdlock/workspace/daemon/0xffffffffc07961f5/2246956/asm/jit.bin",
+      "sha256": "28dd5a214570afb538b7c8aacec69587bc36a35cb29cb10880146c4ee989066b"
+    },
+    {
+      "assembly_sha256": "1c7402cd2f3fa280d1a42a9341066559d4c08e24b93861cd5b2cc62ecc215e87",
+      "bytes": 1121,
+      "object_sha256": "1ea29f8fd114d7974bf3106c09a79c040bd434a38c954f5dba7205884a4b2fb0",
+      "path": "compact-rcu/synthetic/c01-t08-r00-direct-kdlock-adaptive/workspace/daemon/0xffffffffc07d867b/2245682/asm/jit.bin",
+      "sha256": "5f5513b558a3e53893039ff794f9e82157461ff537f1b491eaa0658906c05e8a"
+    },
+    {
+      "assembly_sha256": "1c7402cd2f3fa280d1a42a9341066559d4c08e24b93861cd5b2cc62ecc215e87",
+      "bytes": 1121,
+      "object_sha256": "1ea29f8fd114d7974bf3106c09a79c040bd434a38c954f5dba7205884a4b2fb0",
+      "path": "compact-rcu/synthetic/c01-t08-r01-direct-kdlock-adaptive/workspace/daemon/0xffffffffc07d867b/2245728/asm/jit.bin",
+      "sha256": "5f5513b558a3e53893039ff794f9e82157461ff537f1b491eaa0658906c05e8a"
+    },
+    {
+      "assembly_sha256": "1c7402cd2f3fa280d1a42a9341066559d4c08e24b93861cd5b2cc62ecc215e87",
+      "bytes": 1121,
+      "object_sha256": "1ea29f8fd114d7974bf3106c09a79c040bd434a38c954f5dba7205884a4b2fb0",
+      "path": "compact-rcu/synthetic/c01-t08-r02-direct-kdlock-adaptive/workspace/daemon/0xffffffffc07d867b/2245833/asm/jit.bin",
+      "sha256": "5f5513b558a3e53893039ff794f9e82157461ff537f1b491eaa0658906c05e8a"
+    },
+    {
+      "assembly_sha256": "1c7402cd2f3fa280d1a42a9341066559d4c08e24b93861cd5b2cc62ecc215e87",
+      "bytes": 1121,
+      "object_sha256": "1ea29f8fd114d7974bf3106c09a79c040bd434a38c954f5dba7205884a4b2fb0",
+      "path": "compact-rcu/synthetic/c01-t60-r00-direct-kdlock-adaptive/workspace/daemon/0xffffffffc07d867b/2245879/asm/jit.bin",
+      "sha256": "5f5513b558a3e53893039ff794f9e82157461ff537f1b491eaa0658906c05e8a"
+    },
+    {
+      "assembly_sha256": "1c7402cd2f3fa280d1a42a9341066559d4c08e24b93861cd5b2cc62ecc215e87",
+      "bytes": 1121,
+      "object_sha256": "1ea29f8fd114d7974bf3106c09a79c040bd434a38c954f5dba7205884a4b2fb0",
+      "path": "compact-rcu/synthetic/c01-t60-r01-direct-kdlock-adaptive/workspace/daemon/0xffffffffc07d867b/2246030/asm/jit.bin",
+      "sha256": "5f5513b558a3e53893039ff794f9e82157461ff537f1b491eaa0658906c05e8a"
+    },
+    {
+      "assembly_sha256": "1c7402cd2f3fa280d1a42a9341066559d4c08e24b93861cd5b2cc62ecc215e87",
+      "bytes": 1121,
+      "object_sha256": "1ea29f8fd114d7974bf3106c09a79c040bd434a38c954f5dba7205884a4b2fb0",
+      "path": "compact-rcu/synthetic/c01-t60-r02-direct-kdlock-adaptive/workspace/daemon/0xffffffffc07d867b/2246181/asm/jit.bin",
+      "sha256": "5f5513b558a3e53893039ff794f9e82157461ff537f1b491eaa0658906c05e8a"
+    },
+    {
+      "assembly_sha256": "37faa22fbc52b3a1b87fe40eb5097b4ac0e3c1c989fc253474bb7b333b33df1e",
+      "bytes": 1264,
+      "object_sha256": "ebe67e5dfa487711e1b555a802ef5d56c448658580c82bb04790c133e2f98bbb",
+      "path": "compact-rcu/synthetic/c08-t08-r00-direct-kdlock-adaptive/workspace/daemon/0xffffffffc07d8385/2246332/asm/jit.bin",
+      "sha256": "ec1b59e6a28c9076d70f440537e8ee6c282a9c01a4ff1908c97e83e919445c9b"
+    },
+    {
+      "assembly_sha256": "37faa22fbc52b3a1b87fe40eb5097b4ac0e3c1c989fc253474bb7b333b33df1e",
+      "bytes": 1264,
+      "object_sha256": "ebe67e5dfa487711e1b555a802ef5d56c448658580c82bb04790c133e2f98bbb",
+      "path": "compact-rcu/synthetic/c08-t08-r01-direct-kdlock-adaptive/workspace/daemon/0xffffffffc07d8385/2246375/asm/jit.bin",
+      "sha256": "ec1b59e6a28c9076d70f440537e8ee6c282a9c01a4ff1908c97e83e919445c9b"
+    },
+    {
+      "assembly_sha256": "37faa22fbc52b3a1b87fe40eb5097b4ac0e3c1c989fc253474bb7b333b33df1e",
+      "bytes": 1264,
+      "object_sha256": "ebe67e5dfa487711e1b555a802ef5d56c448658580c82bb04790c133e2f98bbb",
+      "path": "compact-rcu/synthetic/c08-t08-r02-direct-kdlock-adaptive/workspace/daemon/0xffffffffc07d8385/2246466/asm/jit.bin",
+      "sha256": "ec1b59e6a28c9076d70f440537e8ee6c282a9c01a4ff1908c97e83e919445c9b"
+    },
+    {
+      "assembly_sha256": "37faa22fbc52b3a1b87fe40eb5097b4ac0e3c1c989fc253474bb7b333b33df1e",
+      "bytes": 1264,
+      "object_sha256": "ebe67e5dfa487711e1b555a802ef5d56c448658580c82bb04790c133e2f98bbb",
+      "path": "compact-rcu/synthetic/c08-t60-r00-direct-kdlock-adaptive/workspace/daemon/0xffffffffc07d8385/2246512/asm/jit.bin",
+      "sha256": "ec1b59e6a28c9076d70f440537e8ee6c282a9c01a4ff1908c97e83e919445c9b"
+    },
+    {
+      "assembly_sha256": "37faa22fbc52b3a1b87fe40eb5097b4ac0e3c1c989fc253474bb7b333b33df1e",
+      "bytes": 1264,
+      "object_sha256": "ebe67e5dfa487711e1b555a802ef5d56c448658580c82bb04790c133e2f98bbb",
+      "path": "compact-rcu/synthetic/c08-t60-r01-direct-kdlock-adaptive/workspace/daemon/0xffffffffc07d8385/2246663/asm/jit.bin",
+      "sha256": "ec1b59e6a28c9076d70f440537e8ee6c282a9c01a4ff1908c97e83e919445c9b"
+    },
+    {
+      "assembly_sha256": "37faa22fbc52b3a1b87fe40eb5097b4ac0e3c1c989fc253474bb7b333b33df1e",
+      "bytes": 1264,
+      "object_sha256": "ebe67e5dfa487711e1b555a802ef5d56c448658580c82bb04790c133e2f98bbb",
+      "path": "compact-rcu/synthetic/c08-t60-r02-direct-kdlock-adaptive/workspace/daemon/0xffffffffc07d8385/2246814/asm/jit.bin",
+      "sha256": "ec1b59e6a28c9076d70f440537e8ee6c282a9c01a4ff1908c97e83e919445c9b"
+    },
+    {
+      "assembly_sha256": "5d774f345a7e0bce1a67e42ca5f2961a267c1dd2faaf9621b3d3d8410f127c87",
+      "bytes": 1333,
+      "object_sha256": null,
+      "path": "precompact-256/pipe/pipebytes-query-n16-t08-r0-kdlock/publications/00/jit.bin",
+      "sha256": "cc4ae4255e8ea2ddf26c915cde01caf75bdde8a70dd114620532eeca52d730d2"
+    },
+    {
+      "assembly_sha256": "5d774f345a7e0bce1a67e42ca5f2961a267c1dd2faaf9621b3d3d8410f127c87",
+      "bytes": 1333,
+      "object_sha256": "1e6192783084e816165edd534198c79d79b5c15137dac23416984d9c3ca09201",
+      "path": "precompact-256/pipe/pipebytes-query-n16-t08-r0-kdlock/workspace/daemon/0xffffffffc079615a/2233242/asm/jit.bin",
+      "sha256": "cc4ae4255e8ea2ddf26c915cde01caf75bdde8a70dd114620532eeca52d730d2"
+    },
+    {
+      "assembly_sha256": "5d774f345a7e0bce1a67e42ca5f2961a267c1dd2faaf9621b3d3d8410f127c87",
+      "bytes": 1333,
+      "object_sha256": null,
+      "path": "precompact-256/pipe/pipebytes-query-n16-t08-r1-kdlock/publications/00/jit.bin",
+      "sha256": "cc4ae4255e8ea2ddf26c915cde01caf75bdde8a70dd114620532eeca52d730d2"
+    },
+    {
+      "assembly_sha256": "5d774f345a7e0bce1a67e42ca5f2961a267c1dd2faaf9621b3d3d8410f127c87",
+      "bytes": 1333,
+      "object_sha256": "1e6192783084e816165edd534198c79d79b5c15137dac23416984d9c3ca09201",
+      "path": "precompact-256/pipe/pipebytes-query-n16-t08-r1-kdlock/workspace/daemon/0xffffffffc079615a/2233242/asm/jit.bin",
+      "sha256": "cc4ae4255e8ea2ddf26c915cde01caf75bdde8a70dd114620532eeca52d730d2"
+    },
+    {
+      "assembly_sha256": "5d774f345a7e0bce1a67e42ca5f2961a267c1dd2faaf9621b3d3d8410f127c87",
+      "bytes": 1333,
+      "object_sha256": null,
+      "path": "precompact-256/pipe/pipebytes-query-n16-t08-r2-kdlock/publications/00/jit.bin",
+      "sha256": "cc4ae4255e8ea2ddf26c915cde01caf75bdde8a70dd114620532eeca52d730d2"
+    },
+    {
+      "assembly_sha256": "5d774f345a7e0bce1a67e42ca5f2961a267c1dd2faaf9621b3d3d8410f127c87",
+      "bytes": 1333,
+      "object_sha256": "1e6192783084e816165edd534198c79d79b5c15137dac23416984d9c3ca09201",
+      "path": "precompact-256/pipe/pipebytes-query-n16-t08-r2-kdlock/workspace/daemon/0xffffffffc079615a/2233242/asm/jit.bin",
+      "sha256": "cc4ae4255e8ea2ddf26c915cde01caf75bdde8a70dd114620532eeca52d730d2"
+    },
+    {
+      "assembly_sha256": "14c99c4effbb277fa9c947d62362f9c70cc71e74dd88ea7f9f7beba562774b78",
+      "bytes": 1264,
+      "object_sha256": "008473c0fb21be2992d49094f85ca822673bfa08f47061080dbad9c235278dc8",
+      "path": "precompact-256/profile/c08-t08-r00-direct-kdlock-adaptive/workspace/daemon/0xffffffffc07d836e/2227047/asm/jit.bin",
+      "sha256": "69ef3a2d4e5d6eaf9f544761fcb2673567656ebe3af9757e256e4151d4f5f861"
+    },
+    {
+      "assembly_sha256": "14c99c4effbb277fa9c947d62362f9c70cc71e74dd88ea7f9f7beba562774b78",
+      "bytes": 1264,
+      "object_sha256": "008473c0fb21be2992d49094f85ca822673bfa08f47061080dbad9c235278dc8",
+      "path": "precompact-256/profile/c08-t60-r00-direct-kdlock-adaptive/workspace/daemon/0xffffffffc07d836e/2227097/asm/jit.bin",
+      "sha256": "69ef3a2d4e5d6eaf9f544761fcb2673567656ebe3af9757e256e4151d4f5f861"
+    },
+    {
+      "assembly_sha256": "0a019a031e06fb1bd8a3b55af5cc678837d8e60943d4f22d33bfae633e2812db",
+      "bytes": 1543,
+      "object_sha256": null,
+      "path": "precompact-256/seek/seek-set-n16-t08-r0-kdlock/publications/00/jit.bin",
+      "sha256": "5000522a06a87ad7a0d62ce19b5a420379c9a372caece46e53b492afe2731d30"
+    },
+    {
+      "assembly_sha256": "0a019a031e06fb1bd8a3b55af5cc678837d8e60943d4f22d33bfae633e2812db",
+      "bytes": 1543,
+      "object_sha256": "be9f152dda5279482c548a4b01efd9de3a7cc2a258a96aa8c52726cefc1aa458",
+      "path": "precompact-256/seek/seek-set-n16-t08-r0-kdlock/workspace/daemon/0xffffffffc07961ee/2229846/asm/jit.bin",
+      "sha256": "5000522a06a87ad7a0d62ce19b5a420379c9a372caece46e53b492afe2731d30"
+    },
+    {
+      "assembly_sha256": "0a019a031e06fb1bd8a3b55af5cc678837d8e60943d4f22d33bfae633e2812db",
+      "bytes": 1543,
+      "object_sha256": null,
+      "path": "precompact-256/seek/seek-set-n16-t08-r1-kdlock/publications/00/jit.bin",
+      "sha256": "5000522a06a87ad7a0d62ce19b5a420379c9a372caece46e53b492afe2731d30"
+    },
+    {
+      "assembly_sha256": "0a019a031e06fb1bd8a3b55af5cc678837d8e60943d4f22d33bfae633e2812db",
+      "bytes": 1543,
+      "object_sha256": "be9f152dda5279482c548a4b01efd9de3a7cc2a258a96aa8c52726cefc1aa458",
+      "path": "precompact-256/seek/seek-set-n16-t08-r1-kdlock/workspace/daemon/0xffffffffc07961ee/2229846/asm/jit.bin",
+      "sha256": "5000522a06a87ad7a0d62ce19b5a420379c9a372caece46e53b492afe2731d30"
+    },
+    {
+      "assembly_sha256": "0a019a031e06fb1bd8a3b55af5cc678837d8e60943d4f22d33bfae633e2812db",
+      "bytes": 1543,
+      "object_sha256": null,
+      "path": "precompact-256/seek/seek-set-n16-t08-r2-kdlock/publications/00/jit.bin",
+      "sha256": "5000522a06a87ad7a0d62ce19b5a420379c9a372caece46e53b492afe2731d30"
+    },
+    {
+      "assembly_sha256": "0a019a031e06fb1bd8a3b55af5cc678837d8e60943d4f22d33bfae633e2812db",
+      "bytes": 1543,
+      "object_sha256": "be9f152dda5279482c548a4b01efd9de3a7cc2a258a96aa8c52726cefc1aa458",
+      "path": "precompact-256/seek/seek-set-n16-t08-r2-kdlock/workspace/daemon/0xffffffffc07961ee/2229846/asm/jit.bin",
+      "sha256": "5000522a06a87ad7a0d62ce19b5a420379c9a372caece46e53b492afe2731d30"
+    },
+    {
+      "assembly_sha256": "0a019a031e06fb1bd8a3b55af5cc678837d8e60943d4f22d33bfae633e2812db",
+      "bytes": 1543,
+      "object_sha256": null,
+      "path": "precompact-256/seek/seek-set-n16-t60-r0-kdlock/publications/00/jit.bin",
+      "sha256": "5000522a06a87ad7a0d62ce19b5a420379c9a372caece46e53b492afe2731d30"
+    },
+    {
+      "assembly_sha256": "0a019a031e06fb1bd8a3b55af5cc678837d8e60943d4f22d33bfae633e2812db",
+      "bytes": 1543,
+      "object_sha256": "be9f152dda5279482c548a4b01efd9de3a7cc2a258a96aa8c52726cefc1aa458",
+      "path": "precompact-256/seek/seek-set-n16-t60-r0-kdlock/workspace/daemon/0xffffffffc07961ee/2229846/asm/jit.bin",
+      "sha256": "5000522a06a87ad7a0d62ce19b5a420379c9a372caece46e53b492afe2731d30"
+    },
+    {
+      "assembly_sha256": "0a019a031e06fb1bd8a3b55af5cc678837d8e60943d4f22d33bfae633e2812db",
+      "bytes": 1543,
+      "object_sha256": null,
+      "path": "precompact-256/seek/seek-set-n16-t60-r1-kdlock/publications/00/jit.bin",
+      "sha256": "5000522a06a87ad7a0d62ce19b5a420379c9a372caece46e53b492afe2731d30"
+    },
+    {
+      "assembly_sha256": "0a019a031e06fb1bd8a3b55af5cc678837d8e60943d4f22d33bfae633e2812db",
+      "bytes": 1543,
+      "object_sha256": "be9f152dda5279482c548a4b01efd9de3a7cc2a258a96aa8c52726cefc1aa458",
+      "path": "precompact-256/seek/seek-set-n16-t60-r1-kdlock/workspace/daemon/0xffffffffc07961ee/2229846/asm/jit.bin",
+      "sha256": "5000522a06a87ad7a0d62ce19b5a420379c9a372caece46e53b492afe2731d30"
+    },
+    {
+      "assembly_sha256": "0a019a031e06fb1bd8a3b55af5cc678837d8e60943d4f22d33bfae633e2812db",
+      "bytes": 1543,
+      "object_sha256": null,
+      "path": "precompact-256/seek/seek-set-n16-t60-r2-kdlock/publications/00/jit.bin",
+      "sha256": "5000522a06a87ad7a0d62ce19b5a420379c9a372caece46e53b492afe2731d30"
+    },
+    {
+      "assembly_sha256": "0a019a031e06fb1bd8a3b55af5cc678837d8e60943d4f22d33bfae633e2812db",
+      "bytes": 1543,
+      "object_sha256": "be9f152dda5279482c548a4b01efd9de3a7cc2a258a96aa8c52726cefc1aa458",
+      "path": "precompact-256/seek/seek-set-n16-t60-r2-kdlock/workspace/daemon/0xffffffffc07961ee/2229846/asm/jit.bin",
+      "sha256": "5000522a06a87ad7a0d62ce19b5a420379c9a372caece46e53b492afe2731d30"
+    },
+    {
+      "assembly_sha256": "a69f26afed34df12353d0bce2a18ebce797fa06eb03b3257d839d9ad6347d729",
+      "bytes": 1121,
+      "object_sha256": "9de21767d6bbbce4c54057b699a1213e2ec05f529f2d0cc9cbf54e6572a3fad6",
+      "path": "precompact-256/synthetic/c01-t08-r00-direct-kdlock-adaptive/workspace/daemon/0xffffffffc07d8644/2228683/asm/jit.bin",
+      "sha256": "548110ce3a8484b90b8a352b948a078dcf4fb644a6621e7eed41cca4d9322298"
+    },
+    {
+      "assembly_sha256": "a69f26afed34df12353d0bce2a18ebce797fa06eb03b3257d839d9ad6347d729",
+      "bytes": 1121,
+      "object_sha256": "9de21767d6bbbce4c54057b699a1213e2ec05f529f2d0cc9cbf54e6572a3fad6",
+      "path": "precompact-256/synthetic/c01-t08-r01-direct-kdlock-adaptive/workspace/daemon/0xffffffffc07d8644/2228729/asm/jit.bin",
+      "sha256": "548110ce3a8484b90b8a352b948a078dcf4fb644a6621e7eed41cca4d9322298"
+    },
+    {
+      "assembly_sha256": "a69f26afed34df12353d0bce2a18ebce797fa06eb03b3257d839d9ad6347d729",
+      "bytes": 1121,
+      "object_sha256": "9de21767d6bbbce4c54057b699a1213e2ec05f529f2d0cc9cbf54e6572a3fad6",
+      "path": "precompact-256/synthetic/c01-t08-r02-direct-kdlock-adaptive/workspace/daemon/0xffffffffc07d8644/2228775/asm/jit.bin",
+      "sha256": "548110ce3a8484b90b8a352b948a078dcf4fb644a6621e7eed41cca4d9322298"
+    },
+    {
+      "assembly_sha256": "a69f26afed34df12353d0bce2a18ebce797fa06eb03b3257d839d9ad6347d729",
+      "bytes": 1121,
+      "object_sha256": "9de21767d6bbbce4c54057b699a1213e2ec05f529f2d0cc9cbf54e6572a3fad6",
+      "path": "precompact-256/synthetic/c01-t60-r00-direct-kdlock-adaptive/workspace/daemon/0xffffffffc07d8644/2228821/asm/jit.bin",
+      "sha256": "548110ce3a8484b90b8a352b948a078dcf4fb644a6621e7eed41cca4d9322298"
+    },
+    {
+      "assembly_sha256": "a69f26afed34df12353d0bce2a18ebce797fa06eb03b3257d839d9ad6347d729",
+      "bytes": 1121,
+      "object_sha256": "9de21767d6bbbce4c54057b699a1213e2ec05f529f2d0cc9cbf54e6572a3fad6",
+      "path": "precompact-256/synthetic/c01-t60-r01-direct-kdlock-adaptive/workspace/daemon/0xffffffffc07d8644/2228972/asm/jit.bin",
+      "sha256": "548110ce3a8484b90b8a352b948a078dcf4fb644a6621e7eed41cca4d9322298"
+    },
+    {
+      "assembly_sha256": "a69f26afed34df12353d0bce2a18ebce797fa06eb03b3257d839d9ad6347d729",
+      "bytes": 1121,
+      "object_sha256": "9de21767d6bbbce4c54057b699a1213e2ec05f529f2d0cc9cbf54e6572a3fad6",
+      "path": "precompact-256/synthetic/c01-t60-r02-direct-kdlock-adaptive/workspace/daemon/0xffffffffc07d8644/2229122/asm/jit.bin",
+      "sha256": "548110ce3a8484b90b8a352b948a078dcf4fb644a6621e7eed41cca4d9322298"
+    },
+    {
+      "assembly_sha256": "14c99c4effbb277fa9c947d62362f9c70cc71e74dd88ea7f9f7beba562774b78",
+      "bytes": 1264,
+      "object_sha256": "008473c0fb21be2992d49094f85ca822673bfa08f47061080dbad9c235278dc8",
+      "path": "precompact-256/synthetic/c08-t08-r00-direct-kdlock-adaptive/workspace/daemon/0xffffffffc07d836e/2229272/asm/jit.bin",
+      "sha256": "69ef3a2d4e5d6eaf9f544761fcb2673567656ebe3af9757e256e4151d4f5f861"
+    },
+    {
+      "assembly_sha256": "14c99c4effbb277fa9c947d62362f9c70cc71e74dd88ea7f9f7beba562774b78",
+      "bytes": 1264,
+      "object_sha256": "008473c0fb21be2992d49094f85ca822673bfa08f47061080dbad9c235278dc8",
+      "path": "precompact-256/synthetic/c08-t08-r01-direct-kdlock-adaptive/workspace/daemon/0xffffffffc07d836e/2229315/asm/jit.bin",
+      "sha256": "69ef3a2d4e5d6eaf9f544761fcb2673567656ebe3af9757e256e4151d4f5f861"
+    },
+    {
+      "assembly_sha256": "14c99c4effbb277fa9c947d62362f9c70cc71e74dd88ea7f9f7beba562774b78",
+      "bytes": 1264,
+      "object_sha256": "008473c0fb21be2992d49094f85ca822673bfa08f47061080dbad9c235278dc8",
+      "path": "precompact-256/synthetic/c08-t08-r02-direct-kdlock-adaptive/workspace/daemon/0xffffffffc07d836e/2229358/asm/jit.bin",
+      "sha256": "69ef3a2d4e5d6eaf9f544761fcb2673567656ebe3af9757e256e4151d4f5f861"
+    },
+    {
+      "assembly_sha256": "14c99c4effbb277fa9c947d62362f9c70cc71e74dd88ea7f9f7beba562774b78",
+      "bytes": 1264,
+      "object_sha256": "008473c0fb21be2992d49094f85ca822673bfa08f47061080dbad9c235278dc8",
+      "path": "precompact-256/synthetic/c08-t60-r00-direct-kdlock-adaptive/workspace/daemon/0xffffffffc07d836e/2229404/asm/jit.bin",
+      "sha256": "69ef3a2d4e5d6eaf9f544761fcb2673567656ebe3af9757e256e4151d4f5f861"
+    },
+    {
+      "assembly_sha256": "14c99c4effbb277fa9c947d62362f9c70cc71e74dd88ea7f9f7beba562774b78",
+      "bytes": 1264,
+      "object_sha256": "008473c0fb21be2992d49094f85ca822673bfa08f47061080dbad9c235278dc8",
+      "path": "precompact-256/synthetic/c08-t60-r01-direct-kdlock-adaptive/workspace/daemon/0xffffffffc07d836e/2229554/asm/jit.bin",
+      "sha256": "69ef3a2d4e5d6eaf9f544761fcb2673567656ebe3af9757e256e4151d4f5f861"
+    },
+    {
+      "assembly_sha256": "14c99c4effbb277fa9c947d62362f9c70cc71e74dd88ea7f9f7beba562774b78",
+      "bytes": 1264,
+      "object_sha256": "008473c0fb21be2992d49094f85ca822673bfa08f47061080dbad9c235278dc8",
+      "path": "precompact-256/synthetic/c08-t60-r02-direct-kdlock-adaptive/workspace/daemon/0xffffffffc07d836e/2229704/asm/jit.bin",
+      "sha256": "69ef3a2d4e5d6eaf9f544761fcb2673567656ebe3af9757e256e4151d4f5f861"
+    }
+  ],
+  "metadata_checked": [
+    "path/type/mode/uid/gid",
+    "regular file byte length",
+    "symlink target and target byte length",
+    "mtime: (mtime_ns // 1_000_000_000) + (mtime_ns % 1_000_000_000) * 1e-9"
+  ],
+  "metadata_limits": "Tar does not preserve inode, device, ctime, original directory st_size or original link counts; these remain in the hashed source inventory. Inventory contains stat metadata, not per-file hashes. All regular bytes were independently hashed; expected hashes are checked for source/binary manifests and compact copies, while whole-archive hashes bind all other content.",
+  "passed": true,
+  "regular_file_hash_map_sha256": "dda600b3a926e6ce368129a0fa0c1180e557c73d9507669d1e09b423b8567b7c",
+  "regular_files": 9703,
+  "schema": 1,
+  "scope": "Read-only offline archive data audit; tar members read in memory without extraction or execution",
+  "source_manifest_count": 18,
+  "symlinks": [
+    {
+      "path": "compact-bucket/pipe/pipebytes-query-n16-t08-r0-kdlock/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/compact-bucket/pipe/source/disassem",
+      "target_retained": true
+    },
+    {
+      "path": "compact-bucket/pipe/pipebytes-query-n16-t08-r0-kdlock/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/compact-bucket/pipe/source/include",
+      "target_retained": true
+    },
+    {
+      "path": "compact-bucket/pipe/pipebytes-query-n16-t08-r1-kdlock/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/compact-bucket/pipe/source/disassem",
+      "target_retained": true
+    },
+    {
+      "path": "compact-bucket/pipe/pipebytes-query-n16-t08-r1-kdlock/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/compact-bucket/pipe/source/include",
+      "target_retained": true
+    },
+    {
+      "path": "compact-bucket/pipe/pipebytes-query-n16-t08-r2-kdlock/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/compact-bucket/pipe/source/disassem",
+      "target_retained": true
+    },
+    {
+      "path": "compact-bucket/pipe/pipebytes-query-n16-t08-r2-kdlock/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/compact-bucket/pipe/source/include",
+      "target_retained": true
+    },
+    {
+      "path": "compact-bucket/profile/c08-t08-r00-direct-kdlock-adaptive/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/compact-bucket/profile/source/disassem",
+      "target_retained": true
+    },
+    {
+      "path": "compact-bucket/profile/c08-t08-r00-direct-kdlock-adaptive/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/compact-bucket/profile/source/include",
+      "target_retained": true
+    },
+    {
+      "path": "compact-bucket/profile/c08-t60-r00-direct-kdlock-adaptive/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/compact-bucket/profile/source/disassem",
+      "target_retained": true
+    },
+    {
+      "path": "compact-bucket/profile/c08-t60-r00-direct-kdlock-adaptive/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/compact-bucket/profile/source/include",
+      "target_retained": true
+    },
+    {
+      "path": "compact-bucket/seek/seek-set-n16-t08-r0-kdlock/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/compact-bucket/seek/source/disassem",
+      "target_retained": true
+    },
+    {
+      "path": "compact-bucket/seek/seek-set-n16-t08-r0-kdlock/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/compact-bucket/seek/source/include",
+      "target_retained": true
+    },
+    {
+      "path": "compact-bucket/seek/seek-set-n16-t08-r1-kdlock/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/compact-bucket/seek/source/disassem",
+      "target_retained": true
+    },
+    {
+      "path": "compact-bucket/seek/seek-set-n16-t08-r1-kdlock/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/compact-bucket/seek/source/include",
+      "target_retained": true
+    },
+    {
+      "path": "compact-bucket/seek/seek-set-n16-t08-r2-kdlock/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/compact-bucket/seek/source/disassem",
+      "target_retained": true
+    },
+    {
+      "path": "compact-bucket/seek/seek-set-n16-t08-r2-kdlock/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/compact-bucket/seek/source/include",
+      "target_retained": true
+    },
+    {
+      "path": "compact-bucket/seek/seek-set-n16-t60-r0-kdlock/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/compact-bucket/seek/source/disassem",
+      "target_retained": true
+    },
+    {
+      "path": "compact-bucket/seek/seek-set-n16-t60-r0-kdlock/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/compact-bucket/seek/source/include",
+      "target_retained": true
+    },
+    {
+      "path": "compact-bucket/seek/seek-set-n16-t60-r1-kdlock/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/compact-bucket/seek/source/disassem",
+      "target_retained": true
+    },
+    {
+      "path": "compact-bucket/seek/seek-set-n16-t60-r1-kdlock/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/compact-bucket/seek/source/include",
+      "target_retained": true
+    },
+    {
+      "path": "compact-bucket/seek/seek-set-n16-t60-r2-kdlock/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/compact-bucket/seek/source/disassem",
+      "target_retained": true
+    },
+    {
+      "path": "compact-bucket/seek/seek-set-n16-t60-r2-kdlock/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/compact-bucket/seek/source/include",
+      "target_retained": true
+    },
+    {
+      "path": "compact-bucket/synthetic/c01-t08-r00-direct-kdlock-adaptive/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/compact-bucket/synthetic/source/disassem",
+      "target_retained": true
+    },
+    {
+      "path": "compact-bucket/synthetic/c01-t08-r00-direct-kdlock-adaptive/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/compact-bucket/synthetic/source/include",
+      "target_retained": true
+    },
+    {
+      "path": "compact-bucket/synthetic/c01-t08-r01-direct-kdlock-adaptive/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/compact-bucket/synthetic/source/disassem",
+      "target_retained": true
+    },
+    {
+      "path": "compact-bucket/synthetic/c01-t08-r01-direct-kdlock-adaptive/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/compact-bucket/synthetic/source/include",
+      "target_retained": true
+    },
+    {
+      "path": "compact-bucket/synthetic/c01-t08-r02-direct-kdlock-adaptive/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/compact-bucket/synthetic/source/disassem",
+      "target_retained": true
+    },
+    {
+      "path": "compact-bucket/synthetic/c01-t08-r02-direct-kdlock-adaptive/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/compact-bucket/synthetic/source/include",
+      "target_retained": true
+    },
+    {
+      "path": "compact-bucket/synthetic/c01-t60-r00-direct-kdlock-adaptive/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/compact-bucket/synthetic/source/disassem",
+      "target_retained": true
+    },
+    {
+      "path": "compact-bucket/synthetic/c01-t60-r00-direct-kdlock-adaptive/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/compact-bucket/synthetic/source/include",
+      "target_retained": true
+    },
+    {
+      "path": "compact-bucket/synthetic/c01-t60-r01-direct-kdlock-adaptive/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/compact-bucket/synthetic/source/disassem",
+      "target_retained": true
+    },
+    {
+      "path": "compact-bucket/synthetic/c01-t60-r01-direct-kdlock-adaptive/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/compact-bucket/synthetic/source/include",
+      "target_retained": true
+    },
+    {
+      "path": "compact-bucket/synthetic/c01-t60-r02-direct-kdlock-adaptive/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/compact-bucket/synthetic/source/disassem",
+      "target_retained": true
+    },
+    {
+      "path": "compact-bucket/synthetic/c01-t60-r02-direct-kdlock-adaptive/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/compact-bucket/synthetic/source/include",
+      "target_retained": true
+    },
+    {
+      "path": "compact-bucket/synthetic/c08-t08-r00-direct-kdlock-adaptive/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/compact-bucket/synthetic/source/disassem",
+      "target_retained": true
+    },
+    {
+      "path": "compact-bucket/synthetic/c08-t08-r00-direct-kdlock-adaptive/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/compact-bucket/synthetic/source/include",
+      "target_retained": true
+    },
+    {
+      "path": "compact-bucket/synthetic/c08-t08-r01-direct-kdlock-adaptive/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/compact-bucket/synthetic/source/disassem",
+      "target_retained": true
+    },
+    {
+      "path": "compact-bucket/synthetic/c08-t08-r01-direct-kdlock-adaptive/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/compact-bucket/synthetic/source/include",
+      "target_retained": true
+    },
+    {
+      "path": "compact-bucket/synthetic/c08-t08-r02-direct-kdlock-adaptive/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/compact-bucket/synthetic/source/disassem",
+      "target_retained": true
+    },
+    {
+      "path": "compact-bucket/synthetic/c08-t08-r02-direct-kdlock-adaptive/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/compact-bucket/synthetic/source/include",
+      "target_retained": true
+    },
+    {
+      "path": "compact-bucket/synthetic/c08-t60-r00-direct-kdlock-adaptive/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/compact-bucket/synthetic/source/disassem",
+      "target_retained": true
+    },
+    {
+      "path": "compact-bucket/synthetic/c08-t60-r00-direct-kdlock-adaptive/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/compact-bucket/synthetic/source/include",
+      "target_retained": true
+    },
+    {
+      "path": "compact-bucket/synthetic/c08-t60-r01-direct-kdlock-adaptive/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/compact-bucket/synthetic/source/disassem",
+      "target_retained": true
+    },
+    {
+      "path": "compact-bucket/synthetic/c08-t60-r01-direct-kdlock-adaptive/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/compact-bucket/synthetic/source/include",
+      "target_retained": true
+    },
+    {
+      "path": "compact-bucket/synthetic/c08-t60-r02-direct-kdlock-adaptive/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/compact-bucket/synthetic/source/disassem",
+      "target_retained": true
+    },
+    {
+      "path": "compact-bucket/synthetic/c08-t60-r02-direct-kdlock-adaptive/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/compact-bucket/synthetic/source/include",
+      "target_retained": true
+    },
+    {
+      "path": "precompact-256/pipe/pipebytes-query-n16-t08-r0-kdlock/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/precompact-256/pipe/source/disassem",
+      "target_retained": true
+    },
+    {
+      "path": "precompact-256/pipe/pipebytes-query-n16-t08-r0-kdlock/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/precompact-256/pipe/source/include",
+      "target_retained": true
+    },
+    {
+      "path": "precompact-256/pipe/pipebytes-query-n16-t08-r1-kdlock/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/precompact-256/pipe/source/disassem",
+      "target_retained": true
+    },
+    {
+      "path": "precompact-256/pipe/pipebytes-query-n16-t08-r1-kdlock/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/precompact-256/pipe/source/include",
+      "target_retained": true
+    },
+    {
+      "path": "precompact-256/pipe/pipebytes-query-n16-t08-r2-kdlock/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/precompact-256/pipe/source/disassem",
+      "target_retained": true
+    },
+    {
+      "path": "precompact-256/pipe/pipebytes-query-n16-t08-r2-kdlock/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/precompact-256/pipe/source/include",
+      "target_retained": true
+    },
+    {
+      "path": "precompact-256/profile/c08-t08-r00-direct-kdlock-adaptive/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/precompact-256/profile/source/disassem",
+      "target_retained": true
+    },
+    {
+      "path": "precompact-256/profile/c08-t08-r00-direct-kdlock-adaptive/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/precompact-256/profile/source/include",
+      "target_retained": true
+    },
+    {
+      "path": "precompact-256/profile/c08-t60-r00-direct-kdlock-adaptive/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/precompact-256/profile/source/disassem",
+      "target_retained": true
+    },
+    {
+      "path": "precompact-256/profile/c08-t60-r00-direct-kdlock-adaptive/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/precompact-256/profile/source/include",
+      "target_retained": true
+    },
+    {
+      "path": "precompact-256/seek/seek-set-n16-t08-r0-kdlock/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/precompact-256/seek/source/disassem",
+      "target_retained": true
+    },
+    {
+      "path": "precompact-256/seek/seek-set-n16-t08-r0-kdlock/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/precompact-256/seek/source/include",
+      "target_retained": true
+    },
+    {
+      "path": "precompact-256/seek/seek-set-n16-t08-r1-kdlock/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/precompact-256/seek/source/disassem",
+      "target_retained": true
+    },
+    {
+      "path": "precompact-256/seek/seek-set-n16-t08-r1-kdlock/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/precompact-256/seek/source/include",
+      "target_retained": true
+    },
+    {
+      "path": "precompact-256/seek/seek-set-n16-t08-r2-kdlock/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/precompact-256/seek/source/disassem",
+      "target_retained": true
+    },
+    {
+      "path": "precompact-256/seek/seek-set-n16-t08-r2-kdlock/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/precompact-256/seek/source/include",
+      "target_retained": true
+    },
+    {
+      "path": "precompact-256/seek/seek-set-n16-t60-r0-kdlock/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/precompact-256/seek/source/disassem",
+      "target_retained": true
+    },
+    {
+      "path": "precompact-256/seek/seek-set-n16-t60-r0-kdlock/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/precompact-256/seek/source/include",
+      "target_retained": true
+    },
+    {
+      "path": "precompact-256/seek/seek-set-n16-t60-r1-kdlock/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/precompact-256/seek/source/disassem",
+      "target_retained": true
+    },
+    {
+      "path": "precompact-256/seek/seek-set-n16-t60-r1-kdlock/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/precompact-256/seek/source/include",
+      "target_retained": true
+    },
+    {
+      "path": "precompact-256/seek/seek-set-n16-t60-r2-kdlock/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/precompact-256/seek/source/disassem",
+      "target_retained": true
+    },
+    {
+      "path": "precompact-256/seek/seek-set-n16-t60-r2-kdlock/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/precompact-256/seek/source/include",
+      "target_retained": true
+    },
+    {
+      "path": "precompact-256/synthetic/c01-t08-r00-direct-kdlock-adaptive/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/precompact-256/synthetic/source/disassem",
+      "target_retained": true
+    },
+    {
+      "path": "precompact-256/synthetic/c01-t08-r00-direct-kdlock-adaptive/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/precompact-256/synthetic/source/include",
+      "target_retained": true
+    },
+    {
+      "path": "precompact-256/synthetic/c01-t08-r01-direct-kdlock-adaptive/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/precompact-256/synthetic/source/disassem",
+      "target_retained": true
+    },
+    {
+      "path": "precompact-256/synthetic/c01-t08-r01-direct-kdlock-adaptive/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/precompact-256/synthetic/source/include",
+      "target_retained": true
+    },
+    {
+      "path": "precompact-256/synthetic/c01-t08-r02-direct-kdlock-adaptive/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/precompact-256/synthetic/source/disassem",
+      "target_retained": true
+    },
+    {
+      "path": "precompact-256/synthetic/c01-t08-r02-direct-kdlock-adaptive/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/precompact-256/synthetic/source/include",
+      "target_retained": true
+    },
+    {
+      "path": "precompact-256/synthetic/c01-t60-r00-direct-kdlock-adaptive/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/precompact-256/synthetic/source/disassem",
+      "target_retained": true
+    },
+    {
+      "path": "precompact-256/synthetic/c01-t60-r00-direct-kdlock-adaptive/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/precompact-256/synthetic/source/include",
+      "target_retained": true
+    },
+    {
+      "path": "precompact-256/synthetic/c01-t60-r01-direct-kdlock-adaptive/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/precompact-256/synthetic/source/disassem",
+      "target_retained": true
+    },
+    {
+      "path": "precompact-256/synthetic/c01-t60-r01-direct-kdlock-adaptive/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/precompact-256/synthetic/source/include",
+      "target_retained": true
+    },
+    {
+      "path": "precompact-256/synthetic/c01-t60-r02-direct-kdlock-adaptive/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/precompact-256/synthetic/source/disassem",
+      "target_retained": true
+    },
+    {
+      "path": "precompact-256/synthetic/c01-t60-r02-direct-kdlock-adaptive/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/precompact-256/synthetic/source/include",
+      "target_retained": true
+    },
+    {
+      "path": "precompact-256/synthetic/c08-t08-r00-direct-kdlock-adaptive/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/precompact-256/synthetic/source/disassem",
+      "target_retained": true
+    },
+    {
+      "path": "precompact-256/synthetic/c08-t08-r00-direct-kdlock-adaptive/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/precompact-256/synthetic/source/include",
+      "target_retained": true
+    },
+    {
+      "path": "precompact-256/synthetic/c08-t08-r01-direct-kdlock-adaptive/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/precompact-256/synthetic/source/disassem",
+      "target_retained": true
+    },
+    {
+      "path": "precompact-256/synthetic/c08-t08-r01-direct-kdlock-adaptive/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/precompact-256/synthetic/source/include",
+      "target_retained": true
+    },
+    {
+      "path": "precompact-256/synthetic/c08-t08-r02-direct-kdlock-adaptive/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/precompact-256/synthetic/source/disassem",
+      "target_retained": true
+    },
+    {
+      "path": "precompact-256/synthetic/c08-t08-r02-direct-kdlock-adaptive/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/precompact-256/synthetic/source/include",
+      "target_retained": true
+    },
+    {
+      "path": "precompact-256/synthetic/c08-t60-r00-direct-kdlock-adaptive/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/precompact-256/synthetic/source/disassem",
+      "target_retained": true
+    },
+    {
+      "path": "precompact-256/synthetic/c08-t60-r00-direct-kdlock-adaptive/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/precompact-256/synthetic/source/include",
+      "target_retained": true
+    },
+    {
+      "path": "precompact-256/synthetic/c08-t60-r01-direct-kdlock-adaptive/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/precompact-256/synthetic/source/disassem",
+      "target_retained": true
+    },
+    {
+      "path": "precompact-256/synthetic/c08-t60-r01-direct-kdlock-adaptive/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/precompact-256/synthetic/source/include",
+      "target_retained": true
+    },
+    {
+      "path": "precompact-256/synthetic/c08-t60-r02-direct-kdlock-adaptive/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/precompact-256/synthetic/source/disassem",
+      "target_retained": true
+    },
+    {
+      "path": "precompact-256/synthetic/c08-t60-r02-direct-kdlock-adaptive/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/precompact-256/synthetic/source/include",
+      "target_retained": true
+    },
+    {
+      "path": "compact-rcu/pipe/pipebytes-query-n16-t08-r0-kdlock/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/compact-rcu/pipe/source/disassem",
+      "target_retained": true
+    },
+    {
+      "path": "compact-rcu/pipe/pipebytes-query-n16-t08-r0-kdlock/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/compact-rcu/pipe/source/include",
+      "target_retained": true
+    },
+    {
+      "path": "compact-rcu/pipe/pipebytes-query-n16-t08-r1-kdlock/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/compact-rcu/pipe/source/disassem",
+      "target_retained": true
+    },
+    {
+      "path": "compact-rcu/pipe/pipebytes-query-n16-t08-r1-kdlock/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/compact-rcu/pipe/source/include",
+      "target_retained": true
+    },
+    {
+      "path": "compact-rcu/pipe/pipebytes-query-n16-t08-r2-kdlock/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/compact-rcu/pipe/source/disassem",
+      "target_retained": true
+    },
+    {
+      "path": "compact-rcu/pipe/pipebytes-query-n16-t08-r2-kdlock/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/compact-rcu/pipe/source/include",
+      "target_retained": true
+    },
+    {
+      "path": "compact-rcu/profile/c08-t08-r00-direct-kdlock-adaptive/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/compact-rcu/profile/source/disassem",
+      "target_retained": true
+    },
+    {
+      "path": "compact-rcu/profile/c08-t08-r00-direct-kdlock-adaptive/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/compact-rcu/profile/source/include",
+      "target_retained": true
+    },
+    {
+      "path": "compact-rcu/profile/c08-t60-r00-direct-kdlock-adaptive/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/compact-rcu/profile/source/disassem",
+      "target_retained": true
+    },
+    {
+      "path": "compact-rcu/profile/c08-t60-r00-direct-kdlock-adaptive/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/compact-rcu/profile/source/include",
+      "target_retained": true
+    },
+    {
+      "path": "compact-rcu/seek/seek-set-n16-t08-r0-kdlock/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/compact-rcu/seek/source/disassem",
+      "target_retained": true
+    },
+    {
+      "path": "compact-rcu/seek/seek-set-n16-t08-r0-kdlock/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/compact-rcu/seek/source/include",
+      "target_retained": true
+    },
+    {
+      "path": "compact-rcu/seek/seek-set-n16-t08-r1-kdlock/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/compact-rcu/seek/source/disassem",
+      "target_retained": true
+    },
+    {
+      "path": "compact-rcu/seek/seek-set-n16-t08-r1-kdlock/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/compact-rcu/seek/source/include",
+      "target_retained": true
+    },
+    {
+      "path": "compact-rcu/seek/seek-set-n16-t08-r2-kdlock/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/compact-rcu/seek/source/disassem",
+      "target_retained": true
+    },
+    {
+      "path": "compact-rcu/seek/seek-set-n16-t08-r2-kdlock/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/compact-rcu/seek/source/include",
+      "target_retained": true
+    },
+    {
+      "path": "compact-rcu/seek/seek-set-n16-t60-r0-kdlock/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/compact-rcu/seek/source/disassem",
+      "target_retained": true
+    },
+    {
+      "path": "compact-rcu/seek/seek-set-n16-t60-r0-kdlock/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/compact-rcu/seek/source/include",
+      "target_retained": true
+    },
+    {
+      "path": "compact-rcu/seek/seek-set-n16-t60-r1-kdlock/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/compact-rcu/seek/source/disassem",
+      "target_retained": true
+    },
+    {
+      "path": "compact-rcu/seek/seek-set-n16-t60-r1-kdlock/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/compact-rcu/seek/source/include",
+      "target_retained": true
+    },
+    {
+      "path": "compact-rcu/seek/seek-set-n16-t60-r2-kdlock/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/compact-rcu/seek/source/disassem",
+      "target_retained": true
+    },
+    {
+      "path": "compact-rcu/seek/seek-set-n16-t60-r2-kdlock/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/compact-rcu/seek/source/include",
+      "target_retained": true
+    },
+    {
+      "path": "compact-rcu/synthetic/c01-t08-r00-direct-kdlock-adaptive/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/compact-rcu/synthetic/source/disassem",
+      "target_retained": true
+    },
+    {
+      "path": "compact-rcu/synthetic/c01-t08-r00-direct-kdlock-adaptive/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/compact-rcu/synthetic/source/include",
+      "target_retained": true
+    },
+    {
+      "path": "compact-rcu/synthetic/c01-t08-r01-direct-kdlock-adaptive/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/compact-rcu/synthetic/source/disassem",
+      "target_retained": true
+    },
+    {
+      "path": "compact-rcu/synthetic/c01-t08-r01-direct-kdlock-adaptive/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/compact-rcu/synthetic/source/include",
+      "target_retained": true
+    },
+    {
+      "path": "compact-rcu/synthetic/c01-t08-r02-direct-kdlock-adaptive/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/compact-rcu/synthetic/source/disassem",
+      "target_retained": true
+    },
+    {
+      "path": "compact-rcu/synthetic/c01-t08-r02-direct-kdlock-adaptive/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/compact-rcu/synthetic/source/include",
+      "target_retained": true
+    },
+    {
+      "path": "compact-rcu/synthetic/c01-t60-r00-direct-kdlock-adaptive/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/compact-rcu/synthetic/source/disassem",
+      "target_retained": true
+    },
+    {
+      "path": "compact-rcu/synthetic/c01-t60-r00-direct-kdlock-adaptive/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/compact-rcu/synthetic/source/include",
+      "target_retained": true
+    },
+    {
+      "path": "compact-rcu/synthetic/c01-t60-r01-direct-kdlock-adaptive/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/compact-rcu/synthetic/source/disassem",
+      "target_retained": true
+    },
+    {
+      "path": "compact-rcu/synthetic/c01-t60-r01-direct-kdlock-adaptive/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/compact-rcu/synthetic/source/include",
+      "target_retained": true
+    },
+    {
+      "path": "compact-rcu/synthetic/c01-t60-r02-direct-kdlock-adaptive/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/compact-rcu/synthetic/source/disassem",
+      "target_retained": true
+    },
+    {
+      "path": "compact-rcu/synthetic/c01-t60-r02-direct-kdlock-adaptive/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/compact-rcu/synthetic/source/include",
+      "target_retained": true
+    },
+    {
+      "path": "compact-rcu/synthetic/c08-t08-r00-direct-kdlock-adaptive/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/compact-rcu/synthetic/source/disassem",
+      "target_retained": true
+    },
+    {
+      "path": "compact-rcu/synthetic/c08-t08-r00-direct-kdlock-adaptive/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/compact-rcu/synthetic/source/include",
+      "target_retained": true
+    },
+    {
+      "path": "compact-rcu/synthetic/c08-t08-r01-direct-kdlock-adaptive/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/compact-rcu/synthetic/source/disassem",
+      "target_retained": true
+    },
+    {
+      "path": "compact-rcu/synthetic/c08-t08-r01-direct-kdlock-adaptive/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/compact-rcu/synthetic/source/include",
+      "target_retained": true
+    },
+    {
+      "path": "compact-rcu/synthetic/c08-t08-r02-direct-kdlock-adaptive/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/compact-rcu/synthetic/source/disassem",
+      "target_retained": true
+    },
+    {
+      "path": "compact-rcu/synthetic/c08-t08-r02-direct-kdlock-adaptive/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/compact-rcu/synthetic/source/include",
+      "target_retained": true
+    },
+    {
+      "path": "compact-rcu/synthetic/c08-t60-r00-direct-kdlock-adaptive/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/compact-rcu/synthetic/source/disassem",
+      "target_retained": true
+    },
+    {
+      "path": "compact-rcu/synthetic/c08-t60-r00-direct-kdlock-adaptive/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/compact-rcu/synthetic/source/include",
+      "target_retained": true
+    },
+    {
+      "path": "compact-rcu/synthetic/c08-t60-r01-direct-kdlock-adaptive/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/compact-rcu/synthetic/source/disassem",
+      "target_retained": true
+    },
+    {
+      "path": "compact-rcu/synthetic/c08-t60-r01-direct-kdlock-adaptive/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/compact-rcu/synthetic/source/include",
+      "target_retained": true
+    },
+    {
+      "path": "compact-rcu/synthetic/c08-t60-r02-direct-kdlock-adaptive/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/compact-rcu/synthetic/source/disassem",
+      "target_retained": true
+    },
+    {
+      "path": "compact-rcu/synthetic/c08-t60-r02-direct-kdlock-adaptive/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/compact-rcu/synthetic/source/include",
+      "target_retained": true
+    },
+    {
+      "path": "checks-retry/instruction-exit/session/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/checks-retry/instruction-exit/source/disassem",
+      "target_retained": true
+    },
+    {
+      "path": "checks-retry/instruction-exit/session/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/checks-retry/instruction-exit/source/include",
+      "target_retained": true
+    }
+  ],
+  "total_members": 11232
+}

@@ -1,0 +1,30 @@
+{
+  "version": "compact-bucket",
+  "source_commit": "ee38524",
+  "argv": [
+    "/root/kdlock-translation-venv-20261019/bin/python3",
+    "bench/tclock_compare/run_mutex.py",
+    "--cpus",
+    "0-59",
+    "--backends",
+    "kdlock",
+    "--cachelines",
+    "8",
+    "--threads",
+    "8",
+    "60",
+    "--repeats",
+    "1",
+    "--duration-ms",
+    "2000",
+    "--collector-cpu",
+    "63",
+    "--perf-record",
+    "--output",
+    "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/compact-bucket/profile"
+  ],
+  "cwd": "/root/host_fs/kdlock",
+  "started_unix": 1792401297.4278631,
+  "exit_code": 0,
+  "finished_unix": 1792401331.06782
+}

@@ -1,0 +1,13 @@
+1/6 seek-set-n16-t08-r0-kdlock
+  4.611 M/s; peak 4.866; JIT entries 8368843, complete 8368843
+2/6 seek-set-n16-t08-r1-kdlock
+  4.636 M/s; peak 4.657; JIT entries 8639514, complete 8639514
+3/6 seek-set-n16-t08-r2-kdlock
+  4.880 M/s; peak 4.906; JIT entries 8835543, complete 8835543
+4/6 seek-set-n16-t60-r0-kdlock
+  4.004 M/s; peak 4.032; JIT entries 7620635, complete 7620635
+5/6 seek-set-n16-t60-r1-kdlock
+  4.022 M/s; peak 4.037; JIT entries 7663683, complete 7663683
+6/6 seek-set-n16-t60-r2-kdlock
+  3.979 M/s; peak 3.996; JIT entries 7590082, complete 7590082
+All sessions completed and drained.

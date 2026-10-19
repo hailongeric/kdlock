@@ -1,0 +1,38 @@
+{
+  "client": {
+    "path": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/precompact-256/pipe/build/client",
+    "sha256": "58e901442810a274a7e35e835be030c6d01db0d3e1f955682f22a4e752e84442"
+  },
+  "daemon": {
+    "path": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/precompact-256/pipe/build/daemon",
+    "sha256": "bae5dcaf8cfa83b020bec6e2a7a85c0b0496f603dd0789a4cc8f3e31d5305fcb"
+  },
+  "kdlock-pipebytes/real_api.ko": {
+    "path": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/precompact-256/pipe/build/kdlock-pipebytes/real_api.ko",
+    "sha256": "f068e6bef50d8bef969f3ce1760b31b38633463c93cccbd23c7f7333085319a3"
+  },
+  "kdlock_km.ko": {
+    "path": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/precompact-256/pipe/build/kdlock_km.ko",
+    "sha256": "7c41d29ae27631d6feb79d0daafd4b3feaaff32016ebfb1f89c602adf18012cf"
+  },
+  "native-pipebytes/real_api.ko": {
+    "path": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/precompact-256/pipe/build/native-pipebytes/real_api.ko",
+    "sha256": "dd640caec1e5c99ab64966f7ef39e81831f73d7f5a7fdfa6faa8a3a45362064f"
+  },
+  "tc_allocator_guard.ko": {
+    "path": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/precompact-256/pipe/build/tc_allocator_guard.ko",
+    "sha256": "4323537a05b588952ba6800a5b65cf3f0681174c3aa37dd1102e5cc1e963f930"
+  },
+  "tclock-mutex/tclock_mutex_backend_km.ko": {
+    "path": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/precompact-256/pipe/build/tclock-mutex/tclock_mutex_backend_km.ko",
+    "sha256": "0aad02f4313db998b7c282357e43915af14d71bdfd3c7d96cca21abc4e610a82"
+  },
+  "tclock-pipebytes/real_api.ko": {
+    "path": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/precompact-256/pipe/build/tclock-pipebytes/real_api.ko",
+    "sha256": "68f622e4306514dc2c152f5e5616c0baf32c48a18bccf683941d2e0b04723a80"
+  },
+  "tclock_mutex_backend_km.ko": {
+    "path": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/precompact-256/pipe/build/tclock_mutex_backend_km.ko",
+    "sha256": "0aad02f4313db998b7c282357e43915af14d71bdfd3c7d96cca21abc4e610a82"
+  }
+}

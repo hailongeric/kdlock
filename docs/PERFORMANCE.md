@@ -23,8 +23,9 @@ their recorded source versions; acceptance of those results does not measure the
 additional flag-preservation cost in images that contain instruction markers.
 
 The mutex protocol remains KD-only `d2a2304`: KD physical exclusion with the
-legacy delegation queue. Current `7713897` uses a 32-byte object with lazy
-auxiliary delegation state; its focused comparison is below. The
+legacy delegation queue. Current `fcbacbe` keeps the 32-byte object introduced
+by `7713897`, with RCU lookup and exact atomic auxiliary references; its matched
+investigation and the earlier compact screens are below. The
 [2026-10-17 paired report](../bench/results/10.176.26.71/bench/comparison/mutex-kdonly-20261017T140354Z/README.md)
 contains 504 complete, drained sessions: two workloads, 21 worker counts, three
 repetitions and four arms (accepted compatibility baseline, KD-only, Native,
@@ -90,6 +91,43 @@ The earlier 20% taskname mutation control was correct but returned no delegated
 bodies; mutation delegation and full live-task/procfs integration remain
 unaccepted. The checked-helper `c79d84f` round, prior dispatcher round, screens
 and profiles retain separate source identities and are never pooled.
+
+## Compact mutex registry optimization, fcbacbe
+
+The [matched investigation](../bench/results/10.176.26.71/bench/mutex32-opt-20261019/README.md)
+compares the initial compact implementation, its immediate 256-byte parent and
+the optimized compact version on the same VM boot. All 63 plain timing sessions
+and six separate profiles completed and drained. Registry spinlock serialization
+in contention hints, reference updates and frame retirement explains much of
+the regression: queued-spinlock samples fall from 44.616%/19.255% at 8/60 workers
+to zero samples/0.0055% after RCU lookup and atomic references. Flat samples are
+supporting evidence, not exact wall-time attribution.
+
+Median whole-run Mops/s from three repeats:
+
+| Workload | Workers | Initial 32 B | Old 256 B | Optimized 32 B |
+| --- | ---: | ---: | ---: | ---: |
+| c01, post64 | 8 / 60 | 1.991 / 2.997 | 7.206 / 4.970 | 5.610 / 4.085 |
+| c08, post64 | 8 / 60 | 1.317 / 1.521 | 4.495 / 3.639 | 4.863 / 3.843 |
+| SEEK_SET, n16 | 8 / 60 | 1.111 / 1.106 | 4.636 / 4.004 | 3.990 / 3.808 |
+
+The optimized rates are 1.36–3.69× the initial compact rates for those cases.
+c01 still trails the old object by 22.15%/17.81%, and seek by 13.92%/4.89%.
+Pipebytes n16 at eight workers is a material tradeoff: initial compact stays
+local at 18.138 Mops/s; old and optimized versions return JIT bodies at 6.843
+and 4.986. Removing probe serialization changes admission observations under
+the unchanged policy. Those different execution classes are not like-for-like
+registry speed comparisons; optimized pipe also remains 27.14% below old JIT.
+
+Synthetic c01/c08 measure entry witnesses, with completion instrumentation off;
+API workloads separately measure returned bodies. Delegated shares also change
+within those categories, so remaining gaps do not isolate reference overhead.
+Exact counts, classes,
+ranges, profiles, functional checks and retained failures are in the report.
+This is a bounded comparison of three sequential source blocks with no fresh
+Native/TCLock controls; it does not replace historical full-grid measurements.
+The public mutex remains 32 bytes aligned to 8, with automatic auxiliary
+retirement and the same physical/delegation protocol.
 
 ## Compact mutex screen, 7713897
 

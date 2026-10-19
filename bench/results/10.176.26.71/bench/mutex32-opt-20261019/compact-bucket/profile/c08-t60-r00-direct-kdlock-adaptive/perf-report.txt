@@ -1,0 +1,23 @@
+# To display the perf.data header info, please use --header/--header-only options.
+#
+#
+# Total Lost Samples: 0
+#
+# Samples: 23K of event 'cycles:k'
+# Event count (approx.): 254848612521
+#
+# Overhead  Command    Shared Object      Symbol                                                  IPC   [IPC Coverage]
+# ........  .........  .................  ......................................................  ....................
+#
+    77.32%  sc_worker  [kdlock_km]        [k] __kd_mutex_lock_slowpath                            -      -            
+    19.25%  sc_worker  [kernel.vmlinux]   [k] native_queued_spin_lock_slowpath                    -      -            
+     0.76%  sc_worker  [kernel.vmlinux]   [k] __lock_text_start                                   -      -            
+     0.65%  sc_worker  [kdlock_km]        [k] kd_mutex_osq_lock                                   -      -            
+     0.28%  sc_worker  [mutex_cacheline]  [k] mc_body_8                                           -      -            
+     0.25%  sc_worker  [kdlock_km]        [k] kd_mutex_task_put                                   -      -            
+     0.20%  sc_worker  [mutex_cacheline]  [k] sc_ioctl                                            -      -            
+
+
+#
+# (Cannot load tips.txt file, please install perf!)
+#

@@ -1,0 +1,14 @@
+{
+  "argv": [
+    "python3",
+    "/root/host_fs/kdlock/bench/spin_cacheline/kernel_identity.py",
+    "--kernel-source",
+    "/root/linux-6.1.159-kdclobber2",
+    "--kernel-baseline",
+    "/root/kdlock-kernel-baselines/mutex-clobber2-20260919"
+  ],
+  "cwd": "/root/host_fs/kdlock",
+  "pid": 2214345,
+  "started_ns": 358085945717910,
+  "timeout_seconds": 30
+}

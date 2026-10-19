@@ -1,0 +1,24 @@
+[1/12] c01-t08-r00-direct-kdlock-adaptive
+  peak 7.030 Mops/s; whole 5.462 Mops/s; 183.07 ns/op; drained=True
+[2/12] c01-t08-r01-direct-kdlock-adaptive
+  peak 7.228 Mops/s; whole 7.206 Mops/s; 138.77 ns/op; drained=True
+[3/12] c01-t08-r02-direct-kdlock-adaptive
+  peak 7.540 Mops/s; whole 7.514 Mops/s; 133.08 ns/op; drained=True
+[4/12] c01-t60-r00-direct-kdlock-adaptive
+  peak 5.030 Mops/s; whole 4.920 Mops/s; 203.25 ns/op; drained=True
+[5/12] c01-t60-r01-direct-kdlock-adaptive
+  peak 4.989 Mops/s; whole 4.970 Mops/s; 201.20 ns/op; drained=True
+[6/12] c01-t60-r02-direct-kdlock-adaptive
+  peak 4.992 Mops/s; whole 4.981 Mops/s; 200.74 ns/op; drained=True
+[7/12] c08-t08-r00-direct-kdlock-adaptive
+  peak 4.619 Mops/s; whole 4.605 Mops/s; 217.17 ns/op; drained=True
+[8/12] c08-t08-r01-direct-kdlock-adaptive
+  peak 4.395 Mops/s; whole 4.495 Mops/s; 222.46 ns/op; drained=True
+[9/12] c08-t08-r02-direct-kdlock-adaptive
+  peak 4.397 Mops/s; whole 4.458 Mops/s; 224.34 ns/op; drained=True
+[10/12] c08-t60-r00-direct-kdlock-adaptive
+  peak 3.591 Mops/s; whole 3.498 Mops/s; 285.92 ns/op; drained=True
+[11/12] c08-t60-r01-direct-kdlock-adaptive
+  peak 3.665 Mops/s; whole 3.653 Mops/s; 273.73 ns/op; drained=True
+[12/12] c08-t60-r02-direct-kdlock-adaptive
+  peak 3.630 Mops/s; whole 3.639 Mops/s; 274.78 ns/op; drained=True

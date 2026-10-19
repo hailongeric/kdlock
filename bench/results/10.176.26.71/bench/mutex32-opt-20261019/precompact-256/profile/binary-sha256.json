@@ -1,0 +1,8 @@
+{
+  "/root/host_fs/kdlock/bench/spin_cacheline/.build/provider/kernel_module/kdlock_km.ko": "165eb0c83bbff274ef14c8adb81f39cc09b74c91e7190767373c9d0e39d6a11a",
+  "/root/host_fs/kdlock/bench/spin_cacheline/client": "135a1a6779c8313601e839edd99be8ba57dd6a7d718e18b8dca99edc88ab6bff",
+  "/root/host_fs/kdlock/bench/tclock_compare/allocator_guard/tc_allocator_guard.ko": "4323537a05b588952ba6800a5b65cf3f0681174c3aa37dd1102e5cc1e963f930",
+  "/root/host_fs/kdlock/daemon/daemon": "bae5dcaf8cfa83b020bec6e2a7a85c0b0496f603dd0789a4cc8f3e31d5305fcb",
+  "/root/kdlock-evidence/10.176.26.71/bench/mutex-admission-20261013/tools/perf": "be41fc3678db80aa92593a72034ebd6ec4c574c2dca2523f294dff5a0667aca3",
+  "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/precompact-256/profile/variants/kdlock/mutex_cacheline.ko": "142abc3cb879b9f8d9112e1a85510c90cff9c55ee7a77565d8454ac6ee188da5"
+}

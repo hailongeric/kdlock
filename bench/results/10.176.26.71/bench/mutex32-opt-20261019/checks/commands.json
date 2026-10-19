@@ -1,0 +1,61 @@
+[
+  {
+    "name": "dependencies",
+    "argv": [
+      "/root/kdlock-translation-venv-20261019/bin/python3",
+      "-m",
+      "pip",
+      "check"
+    ],
+    "cwd": "/root/host_fs/kdlock",
+    "started_unix": 1792401998.2049603,
+    "timeout_seconds": 60,
+    "exit_code": 0,
+    "finished_unix": 1792401998.8737123
+  },
+  {
+    "name": "provider",
+    "argv": [
+      "make",
+      "-C",
+      "kernel_module",
+      "KDIR=/root/linux-6.1.159-kdclobber2",
+      "W=1",
+      "UBSAN_SANITIZE=n"
+    ],
+    "cwd": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/checks/source",
+    "started_unix": 1792401998.8745112,
+    "timeout_seconds": 240,
+    "exit_code": 0,
+    "finished_unix": 1792402010.8568223
+  },
+  {
+    "name": "daemon",
+    "argv": [
+      "make",
+      "-C",
+      "daemon",
+      "CFLAGS=-O2 -Wall -Wextra -Werror"
+    ],
+    "cwd": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/checks/source",
+    "started_unix": 1792402010.8576026,
+    "timeout_seconds": 60,
+    "exit_code": 0,
+    "finished_unix": 1792402011.075832
+  },
+  {
+    "name": "unit",
+    "argv": [
+      "make",
+      "-C",
+      "tests/unit",
+      "run",
+      "PY_TESTS=mutex/test_mutex_aux.py mutex/test_mutex_resources.py mutex/test_mutex_balances.py mutex/test_mutex_terminal.py mutex/test_mutex_outer_progress.py mutex/test_mutex_outer_api.py mutex/test_mutex_wait_clobber.py mutex/test_mutex_task_cache.py execution/test_exec_capacity.py infrastructure/test_provider_lifecycle.py execution/test_mutex_images.py execution/test_remote_outer.py"
+    ],
+    "cwd": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/checks/source",
+    "started_unix": 1792402011.0765345,
+    "timeout_seconds": 300,
+    "exit_code": 2,
+    "finished_unix": 1792402048.301435
+  }
+]

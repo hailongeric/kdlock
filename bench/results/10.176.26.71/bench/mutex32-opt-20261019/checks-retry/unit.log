@@ -1,0 +1,27 @@
+make: Entering directory '/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/checks-retry/source/tests/unit'
+
+production frame capacity: checks=11044 failures=0 regs=168 frame=656 context=5272
+capacity mutation detected: early-refusal
+capacity mutation detected: reject-writes-parent
+capacity mutation detected: lost-registers
+capacity mutation detected: lost-parent
+capacity mutation detected: stale-owner
+capacity mutation detected: duplicate-ledger-lock
+capacity mutation detected: missing-outer-accepted
+capacity mutation detected: dense-pop-loses-kind
+capacity mutation detected: repeated-unlock-accepted
+capacity mutation detected: premature-completion
+capacity mutation detected: pop-drops-logical-child
+capacity mutation detected: pop-drops-native-request
+capacity mutation detected: pop-drops-native-routing
+capacity mutation detected: mutex-cleanup-double-unlock
+capacity mutation detected: child-observer-before-ack
+capacity mutation detected: child-pop-skips-observer
+capacity mutation detected: retirement-observer-assumes-alive
+capacity mutation detected: retirement-observer-loses-packet-check
+capacity mutation detected: exit-observer-loses-context-check
+capacity mutation detected: exit-observer-leaks-pid
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Unit tests: 1 passed, 0 failed
+make: Leaving directory '/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/checks-retry/source/tests/unit'

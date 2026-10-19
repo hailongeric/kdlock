@@ -8,6 +8,26 @@ Basic plus affected checks are the default; an old pass is not a current full pa
 The [terminology guide](TERMINOLOGY.md) explains status labels and other technical
 terms used in the receipts below.
 
+## Compact mutex RCU lifetime validation
+
+Revision `fcbacbe` retains the 32-byte, native-aligned KD mutex and replaces
+bucket-locked auxiliary reads/reference updates with RCU and exact atomic
+references. Its [focused validation](../bench/results/10.176.26.71/bench/mutex32-opt-20261019/README.md#validation-and-preservation)
+passed provider/daemon builds, dependencies, both basic C programs and 12
+affected drivers. Deterministic races cover lookup across final unlink,
+same-address replacement, no zero-reference revival, competing puts and callback
+drain before slab destruction. The ordinary mutex, rwsem and JIT/native-exit
+live probes passed and drained. All 69 matched timing/profile sessions also
+drained; 72 kernel logs had no matched faults.
+
+The initial frozen test bundle omitted a kernel probe source: 13 checks passed,
+one failed preparation, and that unchanged check passed from a new complete
+bundle. Both attempts remain archived. The report also preserves a finalization
+refusal caused by its own open output log and the successful corrected invocation.
+This is basic plus affected validation, not a full suite or universal performance
+parity. Synthetic timing counters witness entry; API and instruction-exit probes
+separately count returned JIT bodies.
+
 ## Taskname and xattr helper validation
 
 The version 11 direct-call path in `05876a4` passed provider/daemon builds,

@@ -1,0 +1,31 @@
+{
+  "iterations": [
+    {
+      "attempt": 1,
+      "captured_error": "fatal: path 'manifest.json' does not exist in 'ee38524'",
+      "cause": "The audit initially treated the generated private provider manifest as a Git source file.",
+      "correction": "Validate its complete flag and all production/prepared/observation entries against exact retained bytes and Git sources.",
+      "exit_code": 1
+    },
+    {
+      "attempt": 2,
+      "audit_passed": false,
+      "cause": "The audit had not mapped the separately installed perf executable to each retained profile/binaries/perf copy, and assumed API publication copies included jit.o.",
+      "correction": "Resolve the exact recorded perf path to its retained binary and verify its manifest hash. Validate API jit.S/jit.bin publication pairs against the same session workspace; workspace jit.S/jit.o/jit.bin triplets remain required.",
+      "exit_code": 0,
+      "false_findings": {
+        "binary_manifest_hash": 3,
+        "jit_artifact_triplet": 27
+      }
+    },
+    {
+      "attempt": 3,
+      "audit_passed": true,
+      "checks": 133278,
+      "exit_code": 0,
+      "issues": []
+    }
+  ],
+  "schema": 1,
+  "scope": "Offline audit parser development only. No archived benchmark inputs, binaries or measurements were altered."
+}

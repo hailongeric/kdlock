@@ -1,0 +1,78 @@
+{
+  "passed": true,
+  "idle": true,
+  "source_unchanged": true,
+  "unit_basic": 0,
+  "unit_drivers": [
+    "execution/test_exec_capacity.py"
+  ],
+  "full_suite": false,
+  "prior_passes": "../checks/commands.json",
+  "retry_reason": "Frozen test copy omitted tests/kernel/execution/exec_relay_exit_probe.c; production and tests unchanged",
+  "commands": [
+    {
+      "name": "unit",
+      "argv": [
+        "make",
+        "-C",
+        "tests/unit",
+        "run",
+        "TESTS=",
+        "PY_TESTS=execution/test_exec_capacity.py"
+      ],
+      "cwd": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/checks-retry/source",
+      "started_unix": 1792402111.9066007,
+      "timeout_seconds": 300,
+      "exit_code": 0,
+      "finished_unix": 1792402129.4586873
+    },
+    {
+      "name": "local",
+      "argv": [
+        "/root/kdlock-translation-venv-20261019/bin/python3",
+        "tests/kernel/mutex/local/run.py",
+        "--output",
+        "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/checks-retry/local"
+      ],
+      "cwd": "/root/host_fs/kdlock",
+      "started_unix": 1792402129.4593053,
+      "timeout_seconds": 300,
+      "exit_code": 0,
+      "finished_unix": 1792402146.5279849
+    },
+    {
+      "name": "rwsem",
+      "argv": [
+        "/root/kdlock-translation-venv-20261019/bin/python3",
+        "tests/kernel/rwsem/run.py",
+        "--output",
+        "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/checks-retry/rwsem"
+      ],
+      "cwd": "/root/host_fs/kdlock",
+      "started_unix": 1792402146.5287504,
+      "timeout_seconds": 300,
+      "exit_code": 0,
+      "finished_unix": 1792402164.2414174
+    },
+    {
+      "name": "instruction-exit",
+      "argv": [
+        "/root/kdlock-translation-venv-20261019/bin/python3",
+        "tests/kernel/jit_escape/run.py",
+        "--cpus",
+        "0-7,32-39",
+        "--iterations",
+        "200000",
+        "--warmup-iterations",
+        "200000",
+        "--output",
+        "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/checks-retry/instruction-exit"
+      ],
+      "cwd": "/root/host_fs/kdlock",
+      "started_unix": 1792402164.2423508,
+      "timeout_seconds": 900,
+      "exit_code": 0,
+      "finished_unix": 1792402198.1963058
+    }
+  ]
+}

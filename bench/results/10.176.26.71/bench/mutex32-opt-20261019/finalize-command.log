@@ -1,0 +1,8 @@
+Traceback (most recent call last):
+  File "/root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/finalize.py", line 20, in <module>
+    archive['idle'](base,local['idle'])
+  File "/root/host_fs/kdlock/bench/archive_run.py", line 117, in idle
+    require((int(flags, 8) & os.O_ACCMODE) == os.O_RDONLY,
+  File "/root/host_fs/kdlock/bench/archive_run.py", line 28, in require
+    raise RuntimeError(message)
+RuntimeError: evidence still open for writing: /proc/2254003/fd/1 -> /root/kdlock-evidence/10.176.26.71/bench/mutex32-opt-20261019/finalize-command.log
