@@ -126,7 +126,10 @@ static DEFINE_PER_CPU_SHARED_ALIGNED(struct kd_mutex_cpu_state, kd_mutex_shadows
 
 /* Only current's completed physical acquisition orders this pair of reads.
  * Arbitrary-task snapshots could mix different ownership generations. PICKUP
- * names the successor before it actually acquires, so it is not ownership. */
+ * names the successor before it actually acquires, so it is not ownership.
+ * Inline the same predicate into batch entry/retirement without a call around
+ * these ordered reads; retain the external body for separate routing code. */
+__always_inline __gnu_inline
 bool kd_mutex_delegation_owned(struct kd_mutex *lock, struct task_struct *task)
 {
 	unsigned long owner;

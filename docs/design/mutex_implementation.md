@@ -101,6 +101,9 @@ the physical owner, and FREE only afterward. Only current's physical acquisition
 with PICKUP clear and phase HELD/COMBINER, authorizes delegation unlock. This is
 not a remote task ownership snapshot: physical acquire/release ordering is what
 prevents an ordinary owner from observing an earlier delegate's HELD phase.
+The batch path inlines this exact predicate while retaining its current-task,
+physical-owner, PICKUP and phase checks and the separate physical-owner probes
+at body entry and retirement.
 
 | Stage | Source to follow |
 | --- | --- |
