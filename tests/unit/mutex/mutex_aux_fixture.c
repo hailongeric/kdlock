@@ -6,6 +6,7 @@
 #include <errno.h>
 #include <limits.h>
 #include <pthread.h>
+#include <setjmp.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -18,7 +19,7 @@ typedef uint8_t u8;
 typedef uint32_t u32;
 typedef uint64_t u64;
 typedef struct { int counter; } atomic_t;
-typedef unsigned long atomic_long_t;
+typedef struct { long counter; } atomic_long_t;
 typedef unsigned int raw_spinlock_t;
 struct task_struct { unsigned long identity; };
 static _Thread_local struct task_struct *current;
@@ -46,33 +47,40 @@ static void wait_changed(pthread_cond_t *condition,pthread_mutex_t *mutex)
   fprintf(stderr,"ERROR aux pause wait: %s\n",strerror(error));exit(2);
  }
 }
-static void gate_reset(void)
+static struct pause_gate pin_gate=PAUSE_GATE;
+static void gate_reset_on(struct pause_gate *gate)
 {
- CHECK(!pthread_mutex_lock(&pause_gate.mutex));
- pause_gate.reached=0;pause_gate.released=false;
- CHECK(!pthread_mutex_unlock(&pause_gate.mutex));
+ CHECK(!pthread_mutex_lock(&gate->mutex));
+ gate->reached=0;gate->released=false;
+ CHECK(!pthread_mutex_unlock(&gate->mutex));
 }
-static void gate_reach(void)
+static void gate_reach_on(struct pause_gate *gate)
 {
- CHECK(!pthread_mutex_lock(&pause_gate.mutex));pause_gate.reached++;
- CHECK(!pthread_cond_broadcast(&pause_gate.changed));
- while(!pause_gate.released)wait_changed(&pause_gate.changed,&pause_gate.mutex);
- CHECK(!pthread_mutex_unlock(&pause_gate.mutex));
+ CHECK(!pthread_mutex_lock(&gate->mutex));gate->reached++;
+ CHECK(!pthread_cond_broadcast(&gate->changed));
+ while(!gate->released)wait_changed(&gate->changed,&gate->mutex);
+ CHECK(!pthread_mutex_unlock(&gate->mutex));
 }
-static void gate_wait(unsigned int count)
+static void gate_wait_on(struct pause_gate *gate,unsigned int count)
 {
- CHECK(!pthread_mutex_lock(&pause_gate.mutex));
- while(pause_gate.reached<count)wait_changed(&pause_gate.changed,&pause_gate.mutex);
- CHECK(!pthread_mutex_unlock(&pause_gate.mutex));
+ CHECK(!pthread_mutex_lock(&gate->mutex));
+ while(gate->reached<count)wait_changed(&gate->changed,&gate->mutex);
+ CHECK(!pthread_mutex_unlock(&gate->mutex));
 }
-static void gate_release(void)
+static void gate_release_on(struct pause_gate *gate)
 {
- CHECK(!pthread_mutex_lock(&pause_gate.mutex));pause_gate.released=true;
- CHECK(!pthread_cond_broadcast(&pause_gate.changed));
- CHECK(!pthread_mutex_unlock(&pause_gate.mutex));
+ CHECK(!pthread_mutex_lock(&gate->mutex));gate->released=true;
+ CHECK(!pthread_cond_broadcast(&gate->changed));
+ CHECK(!pthread_mutex_unlock(&gate->mutex));
 }
+static void gate_reset(void) { gate_reset_on(&pause_gate); }
+static void gate_reach(void) { gate_reach_on(&pause_gate); }
+static void gate_wait(unsigned int count) { gate_wait_on(&pause_gate,count); }
+static void gate_release(void) { gate_release_on(&pause_gate); }
 
-enum pause_mode { NONE, REF_BEFORE, CLAIM_AFTER, DEC_BEFORE, RETIRE_OWNER_READ, OBSERVER_KEY_READ, OBSERVER_OWNER_READ };
+enum pause_mode { NONE, REF_BEFORE, REF_NEG_AFTER, REF_BEFORE_NEG_AFTER,
+ CLAIM_AFTER, PUBLISH_BEFORE, DEC_BEFORE, ZERO_AFTER, ZERO_PIN_AFTER,
+ RETIRE_OWNER_READ, OBSERVER_KEY_READ, OBSERVER_OWNER_READ };
 static _Thread_local enum pause_mode pause_mode;
 static _Thread_local unsigned int rmw_calls;
 static struct kd_mutex_aux *pause_aux;
@@ -94,37 +102,71 @@ static void read_watch(const volatile void *address)
 #define atomic_set_release(p,v) __atomic_store_n(&(p)->counter,(v),__ATOMIC_RELEASE)
 #define atomic_read(p) __atomic_load_n(&(p)->counter,__ATOMIC_RELAXED)
 #define atomic_read_acquire(p) __atomic_load_n(&(p)->counter,__ATOMIC_ACQUIRE)
-static bool atomic_try_cmpxchg(atomic_t *value,int *old,int next)
+#define atomic_long_set atomic_set
+#define atomic_long_read atomic_read
+static long atomic_long_cmpxchg(atomic_long_t *value,long old,long next)
 {
  rmw_calls++;
- if(pause_aux && value==&pause_aux->refs && pause_mode==REF_BEFORE && *old>0 && next==*old+1) {
+ long expected=old;
+ bool changed=__atomic_compare_exchange_n(&value->counter,&old,next,false,__ATOMIC_SEQ_CST,__ATOMIC_SEQ_CST);
+ if(changed && expected==LONG_MIN && next==-(1L<<62) && pause_mode==CLAIM_AFTER) {
   pause_mode=NONE;gate_reach();
  }
- int expected=*old;
- bool changed=__atomic_compare_exchange_n(&value->counter,old,next,false,__ATOMIC_SEQ_CST,__ATOMIC_SEQ_CST);
- if(changed && expected==-1 && next==0 && pause_mode==CLAIM_AFTER) {
-  pause_mode=NONE;gate_reach();
- }
- return changed;
+ return old;
 }
-#define atomic_try_cmpxchg_acquire atomic_try_cmpxchg
-static inline int atomic_cmpxchg(atomic_t *value,int old,int next)
-{ (void)atomic_try_cmpxchg(value,&old,next);return old; }
-#define atomic_cmpxchg_acquire atomic_cmpxchg
-static int atomic_dec_return(atomic_t *value)
+static long atomic_long_fetch_inc(atomic_long_t *value)
+{
+ rmw_calls++;
+ if(pause_aux && value==&pause_aux->refs &&
+    (pause_mode==REF_BEFORE || pause_mode==REF_BEFORE_NEG_AFTER)) {
+  enum pause_mode next=pause_mode==REF_BEFORE_NEG_AFTER ? REF_NEG_AFTER : NONE;
+  pause_mode=NONE;gate_reach();pause_mode=next;
+ }
+ long old=__atomic_fetch_add(&value->counter,1,__ATOMIC_SEQ_CST);
+ if(pause_aux && value==&pause_aux->refs && pause_mode==REF_NEG_AFTER && old<0) {
+  pause_mode=NONE;gate_reach_on(&pin_gate);
+ }
+ return old;
+}
+static long atomic_long_fetch_dec(atomic_long_t *value)
 {
  rmw_calls++;
  if(pause_aux && value==&pause_aux->refs && pause_mode==DEC_BEFORE) {
   pause_mode=NONE;gate_reach();
  }
- return __atomic_sub_fetch(&value->counter,1,__ATOMIC_SEQ_CST);
+ long old=__atomic_fetch_sub(&value->counter,1,__ATOMIC_SEQ_CST);
+ if(pause_aux && value==&pause_aux->refs && old==1 &&
+    (pause_mode==ZERO_AFTER || pause_mode==ZERO_PIN_AFTER)) {
+  struct pause_gate *gate=pause_mode==ZERO_AFTER ? &pause_gate : &pin_gate;
+  pause_mode=NONE;gate_reach_on(gate);
+ }
+ return old;
+}
+/* Also retain the scheduled publication boundary for destructive mutants
+ * that substitute a store for the production additive transition. */
+static inline void atomic_long_set_release(atomic_long_t *value,long next)
+{
+ if(next==1 && pause_mode==PUBLISH_BEFORE) {
+  pause_mode=NONE;gate_reach();
+ }
+ __atomic_store_n(&value->counter,next,__ATOMIC_RELEASE);
+}
+static long atomic_long_add_return(long amount,atomic_long_t *value)
+{
+ rmw_calls++;
+ if(amount==1+(1L<<62) && pause_mode==PUBLISH_BEFORE) {
+  pause_mode=NONE;gate_reach();
+ }
+ return __atomic_add_fetch(&value->counter,amount,__ATOMIC_SEQ_CST);
 }
 #define cmpxchg(p,o,n) ({ __typeof__(*(p)) old=(o); rmw_calls++; __atomic_compare_exchange_n((p),&old,(n),false,__ATOMIC_SEQ_CST,__ATOMIC_SEQ_CST); old; })
 #define __read_mostly
 #define L1_CACHE_BYTES 64
 #define U64_MAX UINT64_MAX
 #define BUILD_BUG_ON(c) _Static_assert(!(c), "production layout")
-#define BUG_ON(c) CHECK(!(c))
+static _Thread_local bool expected_bug;
+static _Thread_local jmp_buf bug_target;
+#define BUG_ON(c) do { if(c) { if(expected_bug)longjmp(bug_target,1); CHECK(!(c)); } } while(0)
 #define likely(v) (v)
 #define unlikely(v) (v)
 #define hash_ptr(p,b) ((unsigned long)(((uint64_t)(uintptr_t)(p)*UINT64_C(0x61c8864680b583eb))>>(64-(b))))
@@ -150,7 +192,7 @@ static void vfree(void *pointer)
 {
  CHECK(pointer && pointer==allocated_table);
  struct kd_mutex_aux *table=pointer;
- for(size_t i=0;i<allocated_bytes/sizeof(*table);i++)CHECK(atomic_read(&table[i].refs)==-1);
+ for(size_t i=0;i<allocated_bytes/sizeof(*table);i++)CHECK(atomic_long_read(&table[i].refs)==LONG_MIN);
  free(pointer);allocated_table=NULL;allocated_bytes=0;frees++;
 }
 #include "aux_production.h"
@@ -252,7 +294,7 @@ static void *held_lookup(void *unused)
 static void *held_put(void *unused)
 { (void)unused;pause_mode=thread_mode;kd_mutex_aux_put(race_aux);return NULL; }
 static void *held_claim(void *unused)
-{ (void)unused;pause_mode=CLAIM_AFTER;race_result=kd_mutex_aux_get(race_key);return NULL; }
+{ (void)unused;pause_mode=thread_mode;race_result=kd_mutex_aux_get(race_key);return NULL; }
 static void *held_observer(void *unused)
 {
  (void)unused;pause_mode=thread_mode;current=&owner;
@@ -302,7 +344,7 @@ static void check_busy_lifetimes(void)
 {
  pthread_t thread;
  /* Interrupt a creator after claiming BUSY, before initializing its key. */
- race_key=key_a;race_result=NULL;gate_reset();
+ race_key=key_a;race_result=NULL;thread_mode=CLAIM_AFTER;gate_reset();
  CHECK(!pthread_create(&thread,NULL,held_claim,NULL));gate_wait(1);
  CHECK(!kd_mutex_aux_get(key_a) && !kd_mutex_aux_get(key_b));
  CHECK(!kd_mutex_aux_lookup(key_a) && !kd_mutex_aux_all_idle());
@@ -314,6 +356,149 @@ static void check_busy_lifetimes(void)
  CHECK(!kd_mutex_aux_get(key_b) && !kd_mutex_aux_get(key_a));
  CHECK(!kd_mutex_aux_lookup(key_a) && !kd_mutex_aux_all_idle());
  gate_release();CHECK(!pthread_join(thread,NULL));pause_aux=NULL;drained();
+}
+
+/* These pins deliberately pause after the arithmetic, before their negative
+ * result is rejected. They are exact counts even though no caller may use the
+ * record. The second gate lets publication/retirement finish independently. */
+static struct kd_mutex_aux *pin_result;
+static bool direct_pin,stale_pin;
+static void *held_negative_pin(void *unused)
+{
+ (void)unused;
+ pause_mode=stale_pin ? REF_BEFORE_NEG_AFTER : REF_NEG_AFTER;
+ pin_result=direct_pin ? (kd_mutex_aux_try_ref(race_aux)?race_aux:NULL) :
+                        kd_mutex_aux_lookup(race_key);
+ return NULL;
+}
+static void start_pin(pthread_t *thread,bool direct,bool stale)
+{
+ direct_pin=direct;stale_pin=stale;pin_result=NULL;gate_reset_on(&pin_gate);
+ CHECK(!pthread_create(thread,NULL,held_negative_pin,NULL));
+}
+static void finish_pin(pthread_t thread)
+{
+ gate_release_on(&pin_gate);CHECK(!pthread_join(thread,NULL));CHECK(!pin_result);
+}
+static void check_live_zero(void)
+{
+ pthread_t writer;
+ race_aux=kd_mutex_aux_get(key_a);CHECK(race_aux);pause_aux=race_aux;
+ u64 sequence=race_aux->sequence;thread_mode=ZERO_AFTER;gate_reset();
+ CHECK(!pthread_create(&writer,NULL,held_put,NULL));gate_wait(1);
+ CHECK(!atomic_long_read(&race_aux->refs) && !kd_mutex_aux_all_idle());
+ CHECK(!kd_mutex_aux_is_idle(key_a) && race_aux->lock==key_a);
+ unsigned int before=rmw_calls;
+ struct kd_mutex_aux *pin=kd_mutex_aux_lookup(key_a);
+ CHECK(pin==race_aux && atomic_long_read(&pin->refs)==1 && rmw_calls==before+1);
+ /* A resurrecting reference may immediately own live protocol state. A
+  * losing final put must never read it or attempt retirement validation. */
+ WRITE_ONCE(pin->locked,1);WRITE_ONCE(pin->physical_owner,&owner);
+ gate_release();CHECK(!pthread_join(writer,NULL));
+ CHECK(atomic_long_read(&pin->refs)==1 && pin->sequence==sequence);
+ WRITE_ONCE(pin->physical_owner,NULL);WRITE_ONCE(pin->locked,0);
+ pause_aux=NULL;kd_mutex_aux_put(pin);drained();
+}
+static void check_final_cas_aba(void)
+{
+ pthread_t old_put,new_put;
+ race_aux=kd_mutex_aux_get(key_a);CHECK(race_aux);pause_aux=race_aux;
+ thread_mode=ZERO_AFTER;gate_reset();
+ CHECK(!pthread_create(&old_put,NULL,held_put,NULL));gate_wait(1);
+ CHECK(kd_mutex_aux_lookup(key_a)==race_aux);kd_mutex_aux_put(race_aux);drained();
+ CHECK(kd_mutex_aux_get(key_b)==race_aux);
+ u64 generation=race_aux->sequence;
+ thread_mode=ZERO_PIN_AFTER;gate_reset_on(&pin_gate);
+ CHECK(!pthread_create(&new_put,NULL,held_put,NULL));gate_wait_on(&pin_gate,1);
+ CHECK(!atomic_long_read(&race_aux->refs) && race_aux->lock==key_b);
+ /* The old CAS may reserve a later empty generation. Its successful CAS
+  * grants BUSY, independently of its former key or sequence. */
+ gate_release();CHECK(!pthread_join(old_put,NULL));drained();
+ CHECK(race_aux->sequence>generation && !race_aux->lock);
+ gate_release_on(&pin_gate);CHECK(!pthread_join(new_put,NULL));
+ pause_aux=NULL;drained();
+}
+static void check_negative_publication(void)
+{
+ pthread_t creator,pinner;
+ race_aux=kd_mutex_aux_slot(key_a);pause_aux=race_aux;race_key=key_a;
+ thread_mode=PUBLISH_BEFORE;race_result=NULL;gate_reset();
+ CHECK(!pthread_create(&creator,NULL,held_claim,NULL));gate_wait(1);
+ CHECK(race_aux->lock==key_a && atomic_long_read(&race_aux->refs)==KD_MUTEX_AUX_BUSY);
+ start_pin(&pinner,false,false);gate_wait_on(&pin_gate,1);
+ CHECK(atomic_long_read(&race_aux->refs)==KD_MUTEX_AUX_BUSY+1);
+ gate_release();CHECK(!pthread_join(creator,NULL));CHECK(race_result==race_aux);
+ CHECK(atomic_long_read(&race_aux->refs)==2);
+ kd_mutex_aux_put(race_result);
+ CHECK(atomic_long_read(&race_aux->refs)==1 && !kd_mutex_aux_all_idle());
+ /* The rejected pin is now the final LIVE reference and must retire. */
+ finish_pin(pinner);pause_aux=NULL;drained();
+}
+static void check_negative_retirement(void)
+{
+ pthread_t writer,pinner;
+ race_aux=kd_mutex_aux_get(key_a);CHECK(race_aux);pause_aux=race_aux;race_key=key_a;
+ thread_mode=RETIRE_OWNER_READ;gate_reset();
+ CHECK(!pthread_create(&writer,NULL,held_put,NULL));gate_wait(1);
+ start_pin(&pinner,false,false);gate_wait_on(&pin_gate,1);
+ CHECK(atomic_long_read(&race_aux->refs)==KD_MUTEX_AUX_BUSY+1);
+ gate_release();CHECK(!pthread_join(writer,NULL));
+ CHECK(atomic_long_read(&race_aux->refs)==KD_MUTEX_AUX_FREE+1 && !race_aux->lock);
+ CHECK(!kd_mutex_aux_all_idle() && !kd_mutex_aux_is_idle(key_a));
+ CHECK(!kd_mutex_aux_get(key_b));
+ finish_pin(pinner);pause_aux=NULL;drained();
+}
+static void check_negative_free(void)
+{
+ pthread_t pinner;
+ race_aux=kd_mutex_aux_get(key_a);CHECK(race_aux);pause_aux=race_aux;race_key=key_a;
+ gate_reset();start_pin(&pinner,false,true);gate_wait(1);
+ kd_mutex_aux_put(race_aux);drained();
+ gate_release();gate_wait_on(&pin_gate,1);
+ CHECK(atomic_long_read(&race_aux->refs)==KD_MUTEX_AUX_FREE+1);
+ CHECK(!kd_mutex_aux_all_idle() && !kd_mutex_aux_is_idle(key_a));
+ CHECK(!kd_mutex_aux_get(key_a) && !kd_mutex_aux_get(key_b));
+ finish_pin(pinner);pause_aux=NULL;drained();
+}
+static void check_negative_rollback(bool exhausted)
+{
+ pthread_t creator,pinner;
+ race_aux=kd_mutex_aux_slot(key_a);pause_aux=race_aux;race_key=key_a;
+ u64 sequence=race_aux->sequence;
+ if(exhausted)WRITE_ONCE(race_aux->sequence,U64_MAX-1);
+ else kd_mutex_aux_fail_once=1;
+ thread_mode=CLAIM_AFTER;race_result=NULL;gate_reset();
+ CHECK(!pthread_create(&creator,NULL,held_claim,NULL));gate_wait(1);
+ /* A stale prefilter may have seen the prior key before this claim. Invoke
+  * the actual pin helper at that boundary while the new key is unpublished. */
+ start_pin(&pinner,true,false);gate_wait_on(&pin_gate,1);
+ gate_release();CHECK(!pthread_join(creator,NULL));CHECK(!race_result);
+ CHECK(atomic_long_read(&race_aux->refs)==KD_MUTEX_AUX_FREE+1);
+ CHECK(!kd_mutex_aux_all_idle() && !kd_mutex_aux_is_idle(key_a));
+ if(exhausted)CHECK(kd_mutex_aux_waiter_count(key_a)==-EAGAIN);
+ finish_pin(pinner);pause_aux=NULL;drained();
+ if(exhausted) {
+  CHECK(race_aux->sequence==U64_MAX && !kd_mutex_aux_waiter_count(key_a));
+  /* This case isolates rejection arithmetic; saturation is tested for the
+   * rest of the slot lifetime separately at the fixture's final boundary. */
+  WRITE_ONCE(race_aux->sequence,sequence);
+ } else CHECK(!kd_mutex_aux_fail_once);
+}
+static void check_reference_guards(void)
+{
+ struct kd_mutex_aux *aux=kd_mutex_aux_get(key_a);CHECK(aux);
+ for(volatile unsigned int kind=0;kind<3;kind++) {
+  long invalid=kind==0 ? KD_MUTEX_AUX_MAX_REFS :
+               kind==1 ? 1L<<62 : KD_MUTEX_AUX_BUSY;
+  atomic_long_set(&aux->refs,invalid);expected_bug=true;
+  if(!setjmp(bug_target)) {
+   if(kind<2)(void)kd_mutex_aux_try_ref(aux);
+   else kd_mutex_aux_put(aux);
+   CHECK(false);
+  }
+  expected_bug=false;atomic_long_set(&aux->refs,1);
+ }
+ kd_mutex_aux_put(aux);drained();
 }
 static void check_observer_reuse(void)
 {
@@ -449,7 +634,7 @@ static void check_sequence_saturation(void)
  kd_mutex_aux_put(aux);
  CHECK(!kd_mutex_aux_get(key_a) && READ_ONCE(aux->sequence)==U64_MAX);
  CHECK(!kd_mutex_aux_get(key_b) && READ_ONCE(aux->sequence)==U64_MAX);
- CHECK(atomic_read(&aux->refs)==-1 && kd_mutex_aux_is_idle(key_a));
+ CHECK(atomic_long_read(&aux->refs)==KD_MUTEX_AUX_FREE && kd_mutex_aux_is_idle(key_a));
  CHECK(!kd_mutex_combiner_active(key_a) && !kd_mutex_delegation_owned(key_a,&owner));drained();
 }
 int main(void)
@@ -462,11 +647,14 @@ int main(void)
  allocation_failure=false;CHECK(!kd_mutex_aux_init());CHECK(allocations==1 && !frees);
  find_collision();check_lifetime();check_borrowed_owner();check_lookup_reuse(false);check_lookup_reuse(true);
  check_lookup_wins_put();check_two_puts();check_busy_lifetimes();
+ check_live_zero();check_final_cas_aba();check_negative_publication();
+ check_negative_retirement();check_negative_free();
+ check_negative_rollback(false);check_negative_rollback(true);check_reference_guards();
  for(unsigned int kind=0;kind<2;kind++) {
   borrow_observer=kind;check_observer_reuse();check_observer_aba();
  }
  check_refusal();check_capacity_and_reuse();check_duplicate_publication();check_stress();
  check_sequence_saturation();kd_mutex_aux_exit();CHECK(!allocated_table && allocations==frees);
- puts("PASS aux fixed slots: 32-byte/8-byte layout, exact owner/frame/ACK references, current-only borrowed owner with no reference RMW, key-validated lookup across reuse, read-only sequence observations and A-to-B-to-A reuse, busy claim/retirement refusal, racing puts, collision fallback, 2048 objects, lifetime keys beyond capacity, 8 creators and 8x4000 operations, init failure, sequence exhaustion, idle exit");
+ puts("PASS aux fixed slots: 32-byte/8-byte layout, exact owner/frame/ACK references, one-RMW live pin and zero resurrection, generation-neutral final-CAS ABA, rejected pins across publication/retirement/FREE/fault/exhaustion, fail-closed reference guards, current-only borrowed owner with no reference RMW, key-validated lookup across reuse, read-only sequence observations and A-to-B-to-A reuse, busy claim/retirement refusal, racing puts, collision fallback, 2048 objects, lifetime keys beyond capacity, 8 creators and 8x4000 operations, init failure, sequence exhaustion, idle exit");
  return 0;
 }

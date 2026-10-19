@@ -24,6 +24,9 @@ struct task_struct {
 	char comm[16];
 };
 typedef struct task_struct *atomic_long_t;
+/* Auxiliary reference arithmetic is the deterministic mock boundary; retain
+ * its production width while the physical owner uses the pointer substitute. */
+typedef struct { long counter; } fixture_aux_atomic_long_t;
 typedef int raw_spinlock_t;
 struct optimistic_spin_queue { atomic_t tail; };
 struct hlist_node { struct hlist_node *next, **pprev; };

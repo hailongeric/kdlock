@@ -10,7 +10,7 @@
  * native owner ACKs; a retired waiter node is never their lifetime anchor. */
 struct kd_mutex_aux {
 	struct kd_mutex *lock;
-	/* Changes only while the slot is exclusively reserved with refs == 0.
+	/* Changes only while the slot is exclusively reserved in BUSY state.
 	 * Readers reject odd/changing values; U64_MAX permanently retires a slot. */
 	u64 sequence;
 	struct task_struct *physical_owner __attribute__((aligned(64)));
@@ -22,9 +22,10 @@ struct kd_mutex_aux {
 	};
 	u32 tail __attribute__((aligned(64)));
 	atomic_t waiter_count __attribute__((aligned(64)));
-	/* Positive values are exact references; -1 is free and zero reserves
-	 * an unpublished lifecycle transition. No caller waits for a reservation. */
-	atomic_t refs;
+	/* The high bits encode LIVE, BUSY or FREE; the low bits count exact
+	 * references, including rejected pins crossing a lifecycle transition.
+	 * LIVE zero can be pinned until a retiring put reserves BUSY by CAS. */
+	atomic_long_t refs;
 } __attribute__((aligned(128)));
 
 int kd_mutex_aux_init(void);

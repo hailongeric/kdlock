@@ -26,6 +26,10 @@ def main():
     )
     for name in ("include/exe_info.h", "include/kd_call.h", "include/kd_exec.h", "include/kd_mutex.h", "include/kd_mutex_aux.h"):
         types += without_includes(read_source((ROOT / name))) + "\n"
+    # Registry arithmetic is the existing single-thread mock; keep its long
+    # width independently of the fixture's pointer-shaped physical owner.
+    assert types.count('atomic_long_t refs;') == 1
+    types = types.replace('atomic_long_t refs;', 'fixture_aux_atomic_long_t refs;')
     types += without_includes(read_source(ROOT / "include/kd_jit_batch.h")) + "\n"
     kernel = Path(f"/lib/modules/{os.uname().release}/build")
     types += (kernel / "include/linux/kern_levels.h").read_text() + "\n"

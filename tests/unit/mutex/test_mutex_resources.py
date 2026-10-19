@@ -85,6 +85,10 @@ def main():
     types = definition(ptrace, "struct kd_regs {").rstrip() + ";\n"
     types += without_includes(read_source((ROOT / "include/kd_mutex.h")))
     types += without_includes(read_source(ROOT / "include/kd_mutex_aux.h"))
+    # The queue fixture substitutes registry arithmetic separately from the
+    # pointer-shaped physical owner. Actual atomics run in test_mutex_aux.py.
+    assert types.count('atomic_long_t refs;') == 1
+    types = types.replace('atomic_long_t refs;', 'fixture_aux_atomic_long_t refs;')
     code = production()
     # Compile each broken decision first, then require an explicit assertion
     # failure. A crash, compiler error, BUG-only exit or timeout is not a pass.

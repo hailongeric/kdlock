@@ -25,6 +25,7 @@ struct list_head {
 };
 #include "../../../include/kd_regs.h"
 typedef struct task_struct *atomic_long_t;
+typedef struct { long counter; } fixture_aux_atomic_long_t;
 typedef int raw_spinlock_t;
 struct optimistic_spin_queue { atomic_t tail; };
 struct hlist_node { struct hlist_node *next, **pprev; };

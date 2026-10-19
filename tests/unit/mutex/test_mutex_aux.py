@@ -32,8 +32,42 @@ def main():
         ),
         'free-before-retirement': (
             'BUG_ON(READ_ONCE(aux->physical_owner) || atomic_read(&aux->state) ||',
-            'atomic_set_release(&aux->refs, KD_MUTEX_AUX_FREE);\n\t'
+            'atomic_long_set_release(&aux->refs, KD_MUTEX_AUX_FREE);\n\t'
             'BUG_ON(READ_ONCE(aux->physical_owner) || atomic_read(&aux->state) ||',
+        ),
+        'skip-final-zero-reservation': (
+            'if (refs != 1 || atomic_long_cmpxchg(&aux->refs, 0, KD_MUTEX_AUX_BUSY))',
+            'if (refs != 1)',
+        ),
+        'publication-erases-rejected-pin': (
+            'atomic_long_add_return(1 - KD_MUTEX_AUX_BUSY, &aux->refs);',
+            'atomic_long_set_release(&aux->refs, 1);',
+        ),
+        'retirement-erases-rejected-pin': (
+            'never access the slot after this add. */\n\t'
+            'atomic_long_add_return(KD_MUTEX_AUX_FREE - KD_MUTEX_AUX_BUSY, &aux->refs);',
+            'never access the slot after this add. */\n\t'
+            'atomic_long_set_release(&aux->refs, KD_MUTEX_AUX_FREE);',
+        ),
+        'rejected-pin-skips-live-retirement': (
+            'kd_mutex_aux_put(aux);\n\treturn false;',
+            '(void)atomic_long_fetch_dec(&aux->refs);\n\treturn false;',
+        ),
+        'accept-negative-pin': (
+            'if (likely(refs >= 0))',
+            'if (likely(true))',
+        ),
+        'fault-rollback-erases-rejected-pin': (
+            'this_cpu_inc(kd_mutex_aux_injected_failures);\n\t\t'
+            'atomic_long_add_return(KD_MUTEX_AUX_FREE - KD_MUTEX_AUX_BUSY, &aux->refs);',
+            'this_cpu_inc(kd_mutex_aux_injected_failures);\n\t\t'
+            'atomic_long_set_release(&aux->refs, KD_MUTEX_AUX_FREE);',
+        ),
+        'exhaustion-rollback-erases-rejected-pin': (
+            'smp_store_release(&aux->sequence, U64_MAX);\n\t\t'
+            'atomic_long_add_return(KD_MUTEX_AUX_FREE - KD_MUTEX_AUX_BUSY, &aux->refs);',
+            'smp_store_release(&aux->sequence, U64_MAX);\n\t\t'
+            'atomic_long_set_release(&aux->refs, KD_MUTEX_AUX_FREE);',
         ),
         'borrow-ignores-current-owner': (
             'READ_ONCE(aux->physical_owner) == current;',
