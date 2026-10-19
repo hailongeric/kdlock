@@ -330,6 +330,11 @@ prepared:
 	if (frame->batch_lease && kd_exe_mutex_batch_prepare(exe, frame, &call)) {
 		frame->executed = true;
 		kd_jit_clobber_call_v1(&call);
+		/* Queue publication may have displaced the owner line during the
+		 * body. Fetch it read-only while validating completion; the exact
+		 * ownership probes still run at retirement. Our enclosing original
+		 * invocation keeps the object live even after an early outer unlock. */
+		prefetch(lock);
 		if (kd_exe_mutex_batch_completed(&call, frame)) {
 			kd_exe_queue_timing_end(true, &curr_node->queued_at_ns, queue_end);
 			BUG_ON(kd_exec_frame_retire_mutex_batch(frame, lock));
@@ -478,6 +483,9 @@ kd_mutex_run_combiner(struct kd_mutex *lock, struct kd_mutex_node *curr_node)
 			batch.numa_node = -1;
 		}
 		counter++;
+		/* Overlap a read-only owner-line fetch with successor preparation.
+		 * This hint grants no ownership; execute_cs retains every probe. */
+		prefetch(lock);
 		next_node = smp_load_acquire(&curr_node->next);
 		if (next_node) {
 			next_node = kd_mutex_batch_select(&batch, next_node);
