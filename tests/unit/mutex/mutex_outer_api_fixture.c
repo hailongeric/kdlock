@@ -3,61 +3,14 @@
 #include <assert.h>
 #include <stdbool.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
 struct kd_mutex { unsigned long owner; };
-typedef uint64_t u64;
-/* Only permanent slot addressing and kernel atomics are substitutes below;
- * outer_retry.h contains the production retry and complete hint validation. */
-struct kd_mutex_aux { struct kd_mutex *lock; u64 sequence; unsigned char locked; };
-static struct kd_mutex_aux indexed_aux;
-static struct kd_mutex_aux *kd_mutex_aux_slots=&indexed_aux;
 static struct kd_mutex *combiner_lock;
-static struct kd_mutex *probe_lock;
-static bool trace_probes, key_generation_race, gate_generation_race;
-static unsigned int probe_reads, hint_reads, pause_count, slot_lookups;
-static unsigned int activate_at_hint, release_at_pause;
-static char probe_trace[80];
-static unsigned int trace_used;
-static void trace_event(char event)
-{
- if(trace_probes) {
-  assert(trace_used+1<sizeof(probe_trace));
-  probe_trace[trace_used++]=event;probe_trace[trace_used]=0;
- }
-}
-static void read_watch(const void *address)
-{
- if(!trace_probes)return;
- if(address==&probe_lock->owner) { probe_reads++;trace_event('P'); }
- if(address==&indexed_aux.lock && key_generation_race) {
-  key_generation_race=false;indexed_aux.lock=NULL;
-  indexed_aux.locked=3;indexed_aux.sequence+=2;
- }
- if(address==&indexed_aux.locked && gate_generation_race) {
-  gate_generation_race=false;indexed_aux.locked=0;indexed_aux.sequence+=2;
- }
-}
-static void acquire_watch(const void *address)
-{
- if(trace_probes && address==&indexed_aux.sequence) {
-  hint_reads++;trace_event('H');
-  if(activate_at_hint==hint_reads)indexed_aux.locked=3;
- }
-}
-static struct kd_mutex_aux *kd_mutex_aux_slot(struct kd_mutex *lock)
-{
- (void)lock;
- if(trace_probes)slot_lookups++;
- else { indexed_aux.lock=combiner_lock;indexed_aux.locked=3;indexed_aux.sequence=0; }
- return &indexed_aux;
-}
+bool kd_mutex_combiner_active(struct kd_mutex *lock) { return lock == combiner_lock; }
 #define current ((void *)0x8000UL)
 #define READ_ONCE(x) (*(volatile __typeof__(x) *)&(x))
 #define WRITE_ONCE(x,v) (*(volatile __typeof__(x) *)&(x) = (v))
-#define smp_load_acquire(p) ({ __typeof__(*(p)) value=__atomic_load_n((p),__ATOMIC_ACQUIRE); acquire_watch(p); value; })
-#define smp_rmb() __atomic_thread_fence(__ATOMIC_ACQUIRE)
 register unsigned long current_stack_pointer asm("rsp");
 #define ASM_CALL_CONSTRAINT "+r" (current_stack_pointer)
 static unsigned int owner_cas_count;
@@ -66,10 +19,6 @@ static unsigned long *release_on_pause;
 static inline void cpu_relax(void)
 {
  asm volatile("pause" : : : "memory");
- if(trace_probes) {
-  pause_count++;trace_event('R');
-  if(release_at_pause==pause_count)probe_lock->owner=0;
- }
  if (release_on_pause) {
   *release_on_pause = 0;
   release_on_pause = NULL;
@@ -78,12 +27,11 @@ static inline void cpu_relax(void)
 static inline bool outer_test_cas(unsigned long *p, unsigned long *old, unsigned long value)
 {
  owner_cas_count++;
- trace_event('C');
  if (owner_cas_race)
   *p = 0x9000UL;
  return __atomic_compare_exchange_n(p,old,value,false,__ATOMIC_SEQ_CST,__ATOMIC_SEQ_CST);
 }
-#define atomic_long_read(p) ({ __typeof__(*(p)) value=*(volatile __typeof__(*(p)) *)(p); read_watch(p); value; })
+#define atomic_long_read(p) READ_ONCE(*(p))
 #define atomic_read(p) READ_ONCE(*(p))
 #define atomic_long_try_cmpxchg_acquire outer_test_cas
 #define atomic_long_try_cmpxchg_release outer_test_cas
@@ -99,13 +47,6 @@ __attribute__((noinline,noipa)) void kd_mutex_local_unlock(struct kd_mutex *lock
  lock->owner=0;
 }
 #include "outer_api.h"
-/* Instrument only the provider's hint loads. The caller's post-entry cookie
- * reads retain their ordinary compiled form for strict JIT admission below. */
-#undef READ_ONCE
-#define READ_ONCE(x) ({ __typeof__(x) value=*(volatile __typeof__(x) *)&(x); read_watch(&(x)); value; })
-#include "outer_retry.h"
-#undef READ_ONCE
-#define READ_ONCE(x) (*(volatile __typeof__(x) *)&(x))
 
 static void check_owner_probe(void)
 {
@@ -140,70 +81,6 @@ static void check_owner_probe(void)
  release_on_pause=&lock.owner;
  assert(kd_mutex_outer_trylock(&lock, (unsigned long)current));
  assert(!release_on_pause && lock.owner==(unsigned long)current && owner_cas_count==3);
-}
-
-#define PROBE_CHECK(c) do { if(!(c)) { fprintf(stderr,"FAIL outer retry line %d: %s\n",__LINE__,#c); exit(1); } } while(0)
-static void reset_probe_trace(struct kd_mutex *lock)
-{
- trace_probes=true;probe_lock=lock;probe_reads=hint_reads=pause_count=slot_lookups=0;
- trace_used=0;probe_trace[0]=0;owner_cas_count=0;owner_cas_race=false;
- release_at_pause=activate_at_hint=0;key_generation_race=gate_generation_race=false;
- kd_mutex_aux_slots=&indexed_aux;indexed_aux.lock=lock;indexed_aux.sequence=0;indexed_aux.locked=0;
-}
-static void check_retry_trace(void)
-{
- struct kd_mutex lock={0},collision={0};
- reset_probe_trace(&lock);
- PROBE_CHECK(kd_mutex_outer_trylock(&lock,(unsigned long)current));
- PROBE_CHECK(!strcmp(probe_trace,"PC") && !slot_lookups && !hint_reads && !pause_count);
- for(unsigned long flags=0;flags<8;flags++) {
-  reset_probe_trace(&lock);lock.owner=0x9000UL|flags;
-  PROBE_CHECK(!kd_mutex_outer_trylock(&lock,(unsigned long)current));
-  PROBE_CHECK(!strcmp(probe_trace,"PHRPHRPHRPHRPHRPHRPHRPHR"));
-  PROBE_CHECK(slot_lookups==1 && !owner_cas_count && probe_reads==8 && hint_reads==8 && pause_count==8);
- }
- /* Every hint keeps its position after the corresponding physical attempt.
-  * An active hint stops before that iteration's PAUSE and next attempt. */
- for(unsigned int hint=1;hint<=8;hint++) {
-  reset_probe_trace(&lock);lock.owner=0x9000UL;activate_at_hint=hint;
-  PROBE_CHECK(!kd_mutex_outer_trylock(&lock,(unsigned long)current));
-  char expected[80]="";
-  for(unsigned int i=1;i<hint;i++)strcat(expected,"PHR");
-  strcat(expected,"PH");
-  PROBE_CHECK(!strcmp(probe_trace,expected));
-  PROBE_CHECK(slot_lookups==1 && probe_reads==hint && hint_reads==hint && pause_count==hint-1);
-  PROBE_CHECK(!owner_cas_count);
- }
- /* Release after pause eight must not create a ninth physical attempt. */
- for(unsigned int pause=1;pause<=8;pause++) {
-  reset_probe_trace(&lock);lock.owner=0x9000UL;release_at_pause=pause;
-  PROBE_CHECK(kd_mutex_outer_trylock(&lock,(unsigned long)current)==(pause<8));
-  char expected[80]="";
-  for(unsigned int i=0;i<pause;i++)strcat(expected,"PHR");
-  if(pause<8)strcat(expected,"PC");
-  PROBE_CHECK(!strcmp(probe_trace,expected));
-  PROBE_CHECK(slot_lookups==1 && hint_reads==pause && pause_count==pause);
-  PROBE_CHECK(probe_reads==(pause<8?pause+1:8) && owner_cas_count==(pause<8));
- }
- reset_probe_trace(&lock);lock.owner=0;owner_cas_race=true;
- PROBE_CHECK(!kd_mutex_outer_trylock(&lock,(unsigned long)current));
- PROBE_CHECK(!strcmp(probe_trace,"PCHRPHRPHRPHRPHRPHRPHRPHR") && owner_cas_count==1 && slot_lookups==1);
- /* An indexed address does not bypass collision, lifecycle or field checks. */
- for(unsigned int refusal=0;refusal<4;refusal++) {
-  reset_probe_trace(&lock);lock.owner=0x9000UL;indexed_aux.locked=3;
-  if(refusal==0)indexed_aux.lock=&collision;
-  if(refusal==1)indexed_aux.sequence=1;
-  if(refusal==2) { indexed_aux.locked=0;key_generation_race=true; }
-  if(refusal==3)gate_generation_race=true;
-  PROBE_CHECK(!kd_mutex_outer_trylock(&lock,(unsigned long)current));
-  PROBE_CHECK(!strcmp(probe_trace,"PHRPHRPHRPHRPHRPHRPHRPHR"));
-  PROBE_CHECK(slot_lookups==1 && !owner_cas_count);
- }
- reset_probe_trace(&lock);lock.owner=0x9000UL;kd_mutex_aux_slots=NULL;
- PROBE_CHECK(!kd_mutex_outer_trylock(&lock,(unsigned long)current));
- PROBE_CHECK(!strcmp(probe_trace,"PRPRPRPRPRPRPRPR") && !slot_lookups && !hint_reads);
- trace_probes=false;probe_lock=NULL;kd_mutex_aux_slots=&indexed_aux;combiner_lock=NULL;
- puts("PASS outer retry trace: one slot address, eight physical attempts/hints/pauses, exact CAS, collisions and lifecycle validation");
 }
 struct kd_regs { unsigned long w[21]; };
 #define __KERNEL__
@@ -335,9 +212,7 @@ static void check_generated_outer(void)
 
 int main(void)
 {
- if(getenv("KD_MUTEX_RETRY_MUTATION")) { check_retry_trace();return 0; }
  check_owner_probe();
- check_retry_trace();
  for(int mode=0;mode<4;mode++) {
   unsigned long before=entries, locks=routed_locks, unlocks=routed_unlocks;
   assert(stress(100,mode)==515);

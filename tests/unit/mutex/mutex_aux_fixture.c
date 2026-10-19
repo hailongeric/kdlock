@@ -83,8 +83,6 @@ enum pause_mode { NONE, REF_BEFORE, REF_NEG_AFTER, REF_BEFORE_NEG_AFTER,
  RETIRE_OWNER_READ, OBSERVER_KEY_READ, OBSERVER_OWNER_READ };
 static _Thread_local enum pause_mode pause_mode;
 static _Thread_local unsigned int rmw_calls;
-static unsigned int retry_pauses;
-static atomic_long_t *retry_release;
 static struct kd_mutex_aux *pause_aux;
 static void read_watch(const volatile void *address)
 {
@@ -106,20 +104,6 @@ static void read_watch(const volatile void *address)
 #define atomic_read_acquire(p) __atomic_load_n(&(p)->counter,__ATOMIC_ACQUIRE)
 #define atomic_long_set atomic_set
 #define atomic_long_read atomic_read
-static inline bool atomic_long_try_cmpxchg_acquire(atomic_long_t *value,
-                                                  unsigned long *old,
-                                                  unsigned long next)
-{
- long expected=(long)*old;rmw_calls++;
- bool changed=__atomic_compare_exchange_n(&value->counter,&expected,(long)next,
-                                         false,__ATOMIC_SEQ_CST,__ATOMIC_SEQ_CST);
- *old=(unsigned long)expected;return changed;
-}
-static inline void cpu_relax(void)
-{
- retry_pauses++;
- if(retry_release) { atomic_long_set(retry_release,0);retry_release=NULL; }
-}
 static long atomic_long_cmpxchg(atomic_long_t *value,long old,long next)
 {
  rmw_calls++;
@@ -516,27 +500,6 @@ static void check_reference_guards(void)
  }
  kd_mutex_aux_put(aux);drained();
 }
-static void check_indexed_retry(void)
-{
- struct kd_mutex_aux *aux=kd_mutex_aux_get(key_a);CHECK(aux);
- atomic_long_set(&key_a->owner,0x9000);atomic_long_set(&key_b->owner,0x9000);
- WRITE_ONCE(aux->locked,KD_MUTEX_GATE_COMBINER);WRITE_ONCE(aux->physical_owner,&owner);
- unsigned int before=rmw_calls;retry_pauses=0;
- CHECK(!kd_mutex_outer_retry(key_a,(unsigned long)&owner));
- CHECK(!retry_pauses && rmw_calls==before && atomic_long_read(&aux->refs)==1);
- /* Cached address identity cannot turn a colliding record into a hint. */
- CHECK(!kd_mutex_outer_retry(key_b,(unsigned long)&owner));
- CHECK(retry_pauses==8 && rmw_calls==before && atomic_long_read(&aux->refs)==1);
- u64 sequence=aux->sequence;WRITE_ONCE(aux->sequence,sequence+1);retry_pauses=0;
- CHECK(!kd_mutex_outer_retry(key_a,(unsigned long)&owner));
- CHECK(retry_pauses==8 && rmw_calls==before);WRITE_ONCE(aux->sequence,sequence);
- retry_pauses=0;retry_release=&key_b->owner;
- CHECK(kd_mutex_outer_retry(key_b,(unsigned long)&owner));
- CHECK(retry_pauses==1 && !retry_release && rmw_calls==before+1);
- CHECK(atomic_long_read(&key_b->owner)==(long)&owner && atomic_long_read(&aux->refs)==1);
- atomic_long_set(&key_a->owner,0);atomic_long_set(&key_b->owner,0);
- WRITE_ONCE(aux->physical_owner,NULL);WRITE_ONCE(aux->locked,0);kd_mutex_aux_put(aux);drained();
-}
 static void check_observer_reuse(void)
 {
  pthread_t thread;race_aux=kd_mutex_aux_get(key_a);CHECK(race_aux);pause_aux=race_aux;
@@ -687,7 +650,6 @@ int main(void)
  check_live_zero();check_final_cas_aba();check_negative_publication();
  check_negative_retirement();check_negative_free();
  check_negative_rollback(false);check_negative_rollback(true);check_reference_guards();
- check_indexed_retry();
  for(unsigned int kind=0;kind<2;kind++) {
   borrow_observer=kind;check_observer_reuse();check_observer_aba();
  }

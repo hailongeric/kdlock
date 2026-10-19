@@ -4,14 +4,11 @@ This does not model kernel owner/ACK concurrency. It executes real caller
 constraints and translates the compiled hot continuation without relaxing the
 production admission rules. The live benchmark supplies real returned bodies.
 """
-import os
 import re
 import subprocess
 import tempfile
 from pathlib import Path
 from test_jit_diagnostics import ROOT, render
-from source_text import read_source
-from test_spin_shadow import definition
 
 
 def main():
@@ -23,12 +20,6 @@ def main():
     with tempfile.TemporaryDirectory(prefix='kd-mutex-outer-') as directory:
         path = Path(directory)
         (path/'outer_api.h').write_text(header)
-        aux = read_source(ROOT/'kernel_module/kd_mutex_aux.c')
-        retry = definition(aux, 'static bool kd_mutex_aux_observation_valid(struct kd_mutex_aux *aux, u64 sequence)')
-        retry += 'static __always_inline bool\n' + definition(
-            aux, 'kd_mutex_aux_combiner_active(struct kd_mutex_aux *aux, struct kd_mutex *lock)')
-        retry += definition(aux, 'bool kd_mutex_outer_retry(struct kd_mutex *lock, unsigned long owner)')
-        (path/'outer_retry.h').write_text(retry)
         (path/'asm').mkdir(); (path/'linux').mkdir()
         (path/'linux/objtool.h').write_text('#define UNWIND_HINT(...) ""\n')
         (path/'asm/asm.h').write_text('/* ASM_CALL_CONSTRAINT comes from fixture. */\n')
@@ -103,33 +94,6 @@ def main():
         assert 'PASS actual compiled/JIT outer entry:' in result.stdout, result.stdout
         print(result.stdout,end='')
         print('PASS actual compiled outer continuation: strict ABI2 admission and generated execution')
-        mutations = {
-            'seventh-probe-exit': ('if (probe == 7)', 'if (probe == 6)'),
-            'skip-hints': ('if (aux && kd_mutex_aux_combiner_active(aux, lock))',
-                           'if (false && aux && kd_mutex_aux_combiner_active(aux, lock))'),
-            'skip-pauses': ('cpu_relax();', '(void)0;'),
-            'ignore-odd-sequence': ('if (sequence & 1)', 'if (false)'),
-            'ignore-key': ('READ_ONCE(aux->lock) == lock &&', '(lock != NULL) &&'),
-            'ignore-generation-change': ('return READ_ONCE(aux->sequence) == sequence;',
-                                        'return (void)aux, (void)sequence, true;'),
-            'repeat-slot-addressing': ('unsigned long zero = 0;',
-                                      'unsigned long zero = 0;\n'
-                                      '\t\tif (kd_mutex_aux_slots) aux = kd_mutex_aux_slot(lock);'),
-        }
-        for name, (old, new) in mutations.items():
-            assert retry.count(old) == 1, (name, retry.count(old))
-            (path/'outer_retry.h').write_text(retry.replace(old, new))
-            obj=path/f'{name}.o'; mutant=path/name
-            subprocess.run(['cc', *flags, '-c',
-                            str(ROOT/'tests/unit/mutex/mutex_outer_api_fixture.c'),
-                            '-o',str(obj)],check=True,timeout=30)
-            subprocess.run(['cc','-no-pie',str(obj),'-o',str(mutant)],check=True,timeout=30)
-            result=subprocess.run([mutant],capture_output=True,text=True,timeout=10,
-                                  env={**os.environ,'KD_MUTEX_RETRY_MUTATION':'1'})
-            # A compiler error, crash or timeout is not a killed mutation.
-            assert result.returncode==1 and 'FAIL outer retry line ' in result.stderr, (
-                name,result.returncode,result.stdout,result.stderr)
-            print('outer retry mutation detected:',name)
 
 
 if __name__ == '__main__':

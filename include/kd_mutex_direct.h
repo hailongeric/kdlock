@@ -17,7 +17,6 @@ unsigned long kd_mutex_outer_contended_clobber_v1(struct kd_mutex *, unsigned lo
 												  unsigned long, unsigned long);
 void kd_mutex_direct_unlock_clobber_v1(struct kd_mutex *, unsigned long,
 									   unsigned long, unsigned long);
-bool kd_mutex_outer_retry(struct kd_mutex *lock, unsigned long owner);
 
 /* ABI2: compiler-owned spills and the existing lock/SP/IP/BP arguments.
  * The ordinary mutex may sleep; the queue implementation owns waiter pinning.
@@ -57,8 +56,6 @@ struct kd_mutex_outer_cookie
 static __always_inline bool
 kd_mutex_outer_trylock(struct kd_mutex *lock, unsigned long owner)
 {
-	unsigned long zero = 0;
-
 	/* A combiner keeps KD physical exclusion across many bodies. Failed locked
 	 * RMWs from every producer would repeatedly invalidate its owner line.
 	 * The read only declines a busy mutex; the zero-owner CAS still decides
@@ -69,12 +66,17 @@ kd_mutex_outer_trylock(struct kd_mutex *lock, unsigned long owner)
 	 * gate state is only a hint, never permission to acquire or retire.
 	 * Busy owners receive reads rather than repeated locked RMWs. Exhaustion
 	 * enters the unchanged legacy admission and pinned-waiter protocol. */
-	if (!atomic_long_read(&lock->owner) &&
-	    atomic_long_try_cmpxchg_acquire(&lock->owner, &zero, owner))
-		return true;
-	/* The provider caches only the permanent slot address. Each remaining
-	 * hint still validates its key and lifecycle before the next probe. */
-	return kd_mutex_outer_retry(lock, owner);
+	for (unsigned int probe = 0; probe < 8; probe++) {
+		unsigned long zero = 0;
+
+		if (!atomic_long_read(&lock->owner) &&
+		    atomic_long_try_cmpxchg_acquire(&lock->owner, &zero, owner))
+			return true;
+		if (kd_mutex_combiner_active(lock))
+			return false;
+		cpu_relax();
+	}
+	return false;
 }
 
 #define KD_MUTEX_OUTER_LOCK(lock, cookie, continuation)                       \

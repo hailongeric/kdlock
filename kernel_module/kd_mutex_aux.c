@@ -14,7 +14,6 @@
 #include <linux/vmalloc.h>
 
 #include "kd_mutex_aux.h"
-#include "kd_mutex_direct.h"
 #include "kd_mutex_stats.h"
 
 #define KD_MUTEX_AUX_BITS 16
@@ -264,12 +263,15 @@ struct kd_mutex_aux *kd_mutex_aux_borrow_owned(struct kd_mutex *lock)
 	return aux;
 }
 
-static __always_inline bool
-kd_mutex_aux_combiner_active(struct kd_mutex_aux *aux, struct kd_mutex *lock)
+bool kd_mutex_combiner_active(struct kd_mutex *lock)
 {
+	struct kd_mutex_aux *aux;
 	u64 sequence;
 	bool active;
 
+	if (!lock || unlikely(!kd_mutex_aux_slots))
+		return false;
+	aux = kd_mutex_aux_slot(lock);
 	sequence = smp_load_acquire(&aux->sequence);
 	if (sequence & 1)
 		return false;
@@ -277,40 +279,7 @@ kd_mutex_aux_combiner_active(struct kd_mutex_aux *aux, struct kd_mutex *lock)
 		READ_ONCE(aux->locked) == KD_MUTEX_GATE_COMBINER;
 	return kd_mutex_aux_observation_valid(aux, sequence) && active;
 }
-
-bool kd_mutex_combiner_active(struct kd_mutex *lock)
-{
-	if (!lock || unlikely(!kd_mutex_aux_slots))
-		return false;
-	return kd_mutex_aux_combiner_active(kd_mutex_aux_slot(lock), lock);
-}
 EXPORT_SYMBOL_GPL(kd_mutex_combiner_active);
-
-/* The caller already attempted physical probe zero. Cache only permanent
- * storage identity, then preserve H0/PAUSE/P1/.../P7/H7/PAUSE exactly. Each
- * hint independently validates the current key, sequence and combiner state;
- * neither this pointer nor a hint grants ownership or keeps a generation live.
- * Provider teardown joins callers before freeing the table. */
-bool kd_mutex_outer_retry(struct kd_mutex *lock, unsigned long owner)
-{
-	struct kd_mutex_aux *aux = kd_mutex_aux_slots ? kd_mutex_aux_slot(lock) : NULL;
-	unsigned int probe;
-
-	for (probe = 0; probe < 8; probe++) {
-		unsigned long zero = 0;
-
-		if (aux && kd_mutex_aux_combiner_active(aux, lock))
-			return false;
-		cpu_relax();
-		if (probe == 7)
-			break;
-		if (!atomic_long_read(&lock->owner) &&
-		    atomic_long_try_cmpxchg_acquire(&lock->owner, &zero, owner))
-			return true;
-	}
-	return false;
-}
-EXPORT_SYMBOL_GPL(kd_mutex_outer_retry);
 
 int kd_mutex_aux_waiter_count(struct kd_mutex *lock)
 {
