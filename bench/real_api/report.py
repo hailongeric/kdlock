@@ -15,6 +15,7 @@ IDENTITY_FIELDS = ('source_identity', 'kernel_identity', 'topology_identity',
                    'warmup', 'warmup_ms', 'helper_waves', 'helper_cpus', 'file_descriptions',
                    'jit_evidence_version', 'jit_completion_probe',
                    'entry_abi', 'caller_abi', 'mutex_implementation',
+                   'mutex_lock_offset',
                    'mutex_wait_mode', 'mutex_spin_limit', 'owned_mutex_reuse_spins',
                    'owned_mutex_adaptive', 'owned_mutex_object_bytes',
                    'owned_mutex_origin_spin', 'owned_mutex_numa',
@@ -112,6 +113,7 @@ def write_report(out, records):
         key = (row['kind'], row['arm'])
         protocol = tuple(json.dumps(row['identity'][field], sort_keys=True) for field in
                          ('entry_abi', 'caller_abi', 'mutex_implementation',
+                          'mutex_lock_offset',
                           'mutex_wait_mode', 'mutex_spin_limit', 'owned_mutex_reuse_spins',
                           'owned_mutex_adaptive', 'owned_mutex_object_bytes',
                           'owned_mutex_origin_spin', 'owned_mutex_numa',

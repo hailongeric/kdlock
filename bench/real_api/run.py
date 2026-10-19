@@ -64,6 +64,9 @@ def build(out, args):
         previous = args.build_from.resolve()
         require(json.loads((previous/'source-sha256.json').read_text()) == sources(),
                 'source changed since --build-from')
+        previous_args = json.loads((previous/'environment.json').read_text())['arguments']
+        require(previous_args.get('mutex_lock_offset') == args.mutex_lock_offset,
+                'mutex placement changed since --build-from')
         old = json.loads((previous/'binaries.json').read_text())
         for name, item in old.items():
             require(digest(Path(item['path'])) == item['sha256'], 'frozen binary changed: ' + name)
@@ -95,6 +98,8 @@ def build(out, args):
             symvers = (PROVIDER.parent/'Module.symvers' if backend == 'kdlock' else tc_folder/'Module.symvers')
             cmd = ['make', '-C', dest, f'RB_BACKEND={backend}', f'RB_KIND={kind.upper()}',
                    f'KDLOCK_INCLUDE={ROOT}/include', f'TCLOCK_INCLUDE={tc_folder}/include']
+            if backend == 'kdlock' and kind in MUTEX_KINDS and args.mutex_lock_offset is not None:
+                cmd += [f'RB_MUTEX_LOCK_OFFSET={args.mutex_lock_offset}']
             if backend != 'native':
                 cmd += [f'KBUILD_EXTRA_SYMBOLS={symvers}']
             command(cmd, out/f'build-{backend}-{kind}.log', timeout=120, env=env)
@@ -132,6 +137,15 @@ def build(out, args):
                 require(not re.search(r'\bU (?:atomic_dec_and_mutex_lock|mutex\w*|__mutex\w*|kd_mutex_(?:lock|unlock)_clobber_v1|osq_lock|osq_unlock)\b', imports),
                         'KD-only module imports a Linux mutex API: '+name)
     write_json(out/'build-configuration.json', metadata)
+    if args.mutex_lock_offset is not None:
+        placement = {}
+        for kind in args.kinds:
+            module = build_dir/('kdlock-'+kind)/'real_api.ko'
+            value = command(['modinfo', '-F', 'kd_mutex_lock_offset', module],
+                            out/f'kdlock-{kind}-mutex-lock-offset.txt').strip()
+            require(value == str(args.mutex_lock_offset), 'compiled mutex placement differs')
+            placement[kind] = dict(offset=int(value), cache_line_bytes=64, storage_bytes=128)
+        write_json(out/'mutex-lock-placement-build.json', placement)
     # Capture the exact real implementations, not just a moving upstream URL.
     for relative in ('fs/xattr.c', 'fs/locks.c', 'fs/file.c', 'fs/fcntl.c', 'fs/pipe.c',
                      'fs/read_write.c', 'mm/shmem.c', 'include/linux/pipe_fs_i.h', 'include/linux/fs.h',
@@ -305,6 +319,11 @@ class SyscallSession(Session):
                 require(self.tell('bind')['bound'], 'client control bind failed')
                 self.control_bound = True
             s['lock_addr'] = int((PARAM/'lock_addr').read_text())
+            if s.get('mutex_lock_offset') is not None:
+                require(s['lock_addr'] % 64 == s['mutex_lock_offset'],
+                        'loaded mutex placement differs')
+                s['mutex_lock_placement'] = dict(offset=s['lock_addr'] % 64,
+                                                cache_line_bytes=64, storage_bytes=128)
             s['gate_addr'] = int((PARAM/'gate_addr').read_text()) if s['kind'] == 'utsname' else s['lock_addr']
             if self.loaded_tc:
                 (self.tc_params/'target_lock').write_text(str(s['lock_addr']))
@@ -464,6 +483,9 @@ def worker_cpus(args):
 
 def make_plan(args):
     cpus = worker_cpus(args)
+    require(args.mutex_lock_offset is None or
+            (args.backends == ['kdlock'] and set(args.kinds) <= MUTEX_KINDS),
+            '--mutex-lock-offset requires only KD mutex workloads')
     require(args.repeats > 0 and 0 <= args.helper_waves <= 16,
             'invalid repeat/helper configuration')
     require(2 <= args.helper_workers <= 16, 'helper workers must be 2..16')
@@ -497,7 +519,11 @@ def make_plan(args):
                 entry_abi=({'spin': 1, 'mutex': 2, 'rwlock': 3}[lock_kind(kind)] if arm == 'kdlock' else 0),
                 caller_abi='clobber' if arm == 'kdlock' else 'c',
                 mutex_implementation=('kd-only-legacy' if arm == 'kdlock' and kind in MUTEX_KINDS
-                                      else 'not_applicable')))
+                                      else 'not_applicable'),
+                mutex_lock_offset=args.mutex_lock_offset))
+    if args.mutex_lock_offset is not None:
+        for spec in plan:
+            spec['diagnostic'] = True
     return plan
 
 
@@ -523,6 +549,9 @@ def main():
                    help='separate bounded xattr preparation cohort, including single-worker cases')
     p.add_argument('--require-jit', action='store_true',
                    help='require a returned KD body in every multithreaded KD measurement')
+    p.add_argument('--mutex-lock-offset', type=int, choices=[0, 32, 40, 56],
+                   help='diagnostic KD mutex placement within dedicated two-cache-line storage; '
+                        'default retains the ordinary object and natural linker placement')
     p.add_argument('--kernel-source', default='/root/linux-6.1.159-kdclobber2')
     p.add_argument('--kernel-baseline', default='/root/kdlock-kernel-baselines/mutex-clobber2-20260919')
     args = p.parse_args()

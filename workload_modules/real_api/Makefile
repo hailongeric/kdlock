@@ -13,6 +13,9 @@ ccflags-y += -DRB_$(RB_KIND) -I$(KDLOCK_INCLUDE)
 ccflags-y += -I$(TCLOCK_INCLUDE)
 ifeq ($(RB_BACKEND),kdlock)
 ccflags-y += -DRB_KDLOCK
+ifneq ($(RB_MUTEX_LOCK_OFFSET),)
+ccflags-y += -DRB_MUTEX_LOCK_OFFSET=$(RB_MUTEX_LOCK_OFFSET)
+endif
 else ifeq ($(RB_BACKEND),tclock)
 ccflags-y += -DRB_TCLOCK
 endif

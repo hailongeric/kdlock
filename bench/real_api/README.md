@@ -321,11 +321,25 @@ list, whose prefix defines each cohort. Use explicit interleaved NUMA placement
 for a separate placement study. Do not pool different placements, payload sizes,
 source versions, governors or warmup settings. `--build-from RUN` reuses saved
 binaries only when all current source hashes and the previous binary hashes
-match. The output retains all planned sessions, including failures and unrun
-cases; the backend order rotates between rounds.
+match, and the requested mutex placement must match. The output retains all
+planned sessions, including failures and unrun cases; the backend order rotates
+between rounds.
 The planner rejects duplicate thread counts, backends, workload kinds, queries
 and entry counts so distinct requests cannot overwrite one session directory.
 API runs retain the 63-worker maximum and a dedicated collector.
+
+`--mutex-lock-offset {0,32,40,56}` is a separate KD mutex placement diagnostic.
+It requires `--backends kdlock` and pipe or seek workloads. Each diagnostic
+build places the unchanged 32-byte, 8-byte-aligned mutex at the requested byte
+offset inside dedicated, 64-byte-aligned, 128-byte storage. Padding excludes
+neighboring globals from both lines. Offset 0 or 32 keeps owner, gate and tail
+on one line; offsets 40 and 56 put owner on the first line and gate/tail on the
+second. The timed wrappers retain direct addressing. The runner verifies the
+module's compiled offset and loaded address and records both. These records
+are marked diagnostic and excluded from ordinary report scores; distinct
+offsets cannot be pooled. Omitting the option preserves the original object
+declaration and its natural linker placement. This changes only benchmark
+storage, not the public mutex alignment or caller requirements.
 
 New records bind the frozen source manifest, captured kernel identity and topology
 to SHA-256 identities. KD mutex records explicitly name `kd-only-legacy`, ABI2

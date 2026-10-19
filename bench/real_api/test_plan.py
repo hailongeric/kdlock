@@ -14,11 +14,23 @@ def arguments(**changes):
         threads=[1, 60], cpus=','.join(map(str, range(63))), collector_cpu=63,
         repeats=3, backends=['stock', 'native', 'tclock', 'kdlock'], value_size=64,
         duration_ms=2000, warmup=48000, warmup_ms=1000, helper_waves=4,
-        helper_workers=8, require_jit=False)
+        helper_workers=8, require_jit=False, mutex_lock_offset=None)
     return Namespace(**(args | changes))
 
 
 class PlanTests(unittest.TestCase):
+    def test_mutex_placement_diagnostics_cannot_enter_ordinary_comparisons(self):
+        for offset in (0, 32, 40, 56):
+            plan = run.make_plan(arguments(backends=['kdlock'], mutex_lock_offset=offset))
+            self.assertTrue(all(row['diagnostic'] and row['mutex_lock_offset'] == offset
+                                for row in plan))
+        for changes in (dict(backends=['native']), dict(backends=['kdlock', 'native']),
+                        dict(backends=['kdlock'], kinds=['xattr'])):
+            with self.subTest(changes=changes), self.assertRaises(run.Failure):
+                run.make_plan(arguments(mutex_lock_offset=40, **changes))
+        self.assertTrue(all(row['mutex_lock_offset'] is None and not row.get('diagnostic')
+                            for row in run.make_plan(arguments())))
+
     def test_current_mutex_abi_and_dedicated_collector(self):
         plan = run.make_plan(arguments())
         self.assertEqual(len(plan), 24)

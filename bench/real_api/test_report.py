@@ -23,7 +23,7 @@ class ReportTests(unittest.TestCase):
     def test_source_and_protocol_variants_never_pool(self):
         for changes in (dict(source_identity='other-source'),
                         dict(entry_abi=4), dict(mutex_implementation='owned-v1'),
-                        dict(cpus=[2, 3]), dict(pmu=True)):
+                        dict(cpus=[2, 3]), dict(pmu=True), dict(mutex_lock_offset=40)):
             rows = [record(kind='pipebytes', query='query', source_identity='current',
                            entry_abi=2, mutex_implementation='kd-only-legacy', cpus=[0, 1])]
             rows.append(dict(rows[0], **changes))
@@ -43,10 +43,11 @@ class ReportTests(unittest.TestCase):
                     write_report(Path(temporary), rows)
 
     def test_protocol_cannot_change_between_thread_counts(self):
-        rows = [record(entry_abi=2), record(threads=4, entry_abi=4)]
-        with tempfile.TemporaryDirectory() as temporary:
-            with self.assertRaisesRegex(ValueError, 'across cohorts'):
-                write_report(Path(temporary), rows)
+        for changes in (dict(entry_abi=4), dict(mutex_lock_offset=40)):
+            rows = [record(entry_abi=2), record(threads=4, entry_abi=2) | changes]
+            with self.subTest(changes=changes), tempfile.TemporaryDirectory() as temporary:
+                with self.assertRaisesRegex(ValueError, 'across cohorts'):
+                    write_report(Path(temporary), rows)
 
     def test_instrumented_syscall_records_are_unscored(self):
         row, = summarize([record(diagnostic=True)])

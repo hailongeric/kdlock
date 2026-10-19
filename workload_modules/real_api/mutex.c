@@ -40,7 +40,27 @@ static DEFINE_PER_CPU(u64, redirected);
 
 #ifdef RB_KDLOCK
 #include "kd_mutex_direct.h"
+#ifdef RB_MUTEX_LOCK_OFFSET
+/* Placement-only diagnostics keep direct addressing in the timed wrapper.
+ * The full two-line allocation excludes neighboring globals at every offset;
+ * the mutex itself retains its native size and alignment. Ordinary builds
+ * keep the original object below, including its natural linker placement.
+ */
+#if RB_MUTEX_LOCK_OFFSET < 0 || RB_MUTEX_LOCK_OFFSET > 56 || RB_MUTEX_LOCK_OFFSET % 8
+#error "RB_MUTEX_LOCK_OFFSET must be an 8-byte multiple from 0 through 56"
+#endif
+static struct rb_kd_mutex_placement {
+#if RB_MUTEX_LOCK_OFFSET > 0
+	unsigned char before[RB_MUTEX_LOCK_OFFSET];
+#endif
+	struct kd_mutex lock;
+	unsigned char after[128 - RB_MUTEX_LOCK_OFFSET - sizeof(struct kd_mutex)];
+} kd_lock_placement __aligned(64);
+#define kd_lock kd_lock_placement.lock
+MODULE_INFO(kd_mutex_lock_offset, __stringify(RB_MUTEX_LOCK_OFFSET));
+#else
 static struct kd_mutex kd_lock;
+#endif
 #define RA_COOKIE struct kd_mutex_outer_cookie cookie
 #define RA_LOCK() KD_MUTEX_OUTER_LOCK(&kd_lock, cookie, \
 	".globl rb_entry\nrb_entry:\n\t" ANNOTATE_NOENDBR)
@@ -274,6 +294,12 @@ static int __init rb_init(void)
 	komb_mutex_init(&tc_lock);
 	lock_addr = (unsigned long)&tc_lock;
 #elif defined(RB_KDLOCK)
+#ifdef RB_MUTEX_LOCK_OFFSET
+	BUILD_BUG_ON(sizeof(struct kd_mutex) != 32);
+	BUILD_BUG_ON(__alignof__(struct kd_mutex) != 8);
+	BUILD_BUG_ON(offsetof(struct rb_kd_mutex_placement, lock) != RB_MUTEX_LOCK_OFFSET);
+	BUILD_BUG_ON(sizeof(kd_lock_placement) != 128);
+#endif
 	kd_mutex_init(&kd_lock);
 	lock_addr = (unsigned long)&kd_lock;
 #else
