@@ -1,11 +1,12 @@
 /* Deterministic registry boundary for queue/continuation fixtures. The actual
  * concurrent registry and allocator are exercised by test_mutex_aux.py.
- * This single-thread boundary does not simulate RCU. Keep exact references
- * separate from physical ownership and retain retired bytes solely
+ * This single-thread boundary does not model slot publication/reuse. Keep
+ * exact references separate from physical ownership and retain retired bytes solely
  * so existing post-unlock assertions can inspect their final values. */
 static struct kd_mutex_aux fixture_aux_records[16];
 static bool fixture_aux_failure;
 static unsigned int fixture_aux_gets, fixture_aux_puts;
+static unsigned int fixture_aux_refs, fixture_aux_lookups, fixture_aux_borrows;
 
 static struct kd_mutex_aux *fixture_aux(struct kd_mutex *lock)
 {
@@ -27,6 +28,7 @@ static void fixture_aux_reset(void)
 	memset(fixture_aux_records, 0, sizeof(fixture_aux_records));
 	fixture_aux_failure = false;
 	fixture_aux_gets = fixture_aux_puts = 0;
+	fixture_aux_refs = fixture_aux_lookups = fixture_aux_borrows = 0;
 }
 
 struct kd_mutex_aux *kd_mutex_aux_get(struct kd_mutex *lock)
@@ -41,6 +43,7 @@ struct kd_mutex_aux *kd_mutex_aux_get(struct kd_mutex *lock)
 
 struct kd_mutex_aux *kd_mutex_aux_lookup(struct kd_mutex *lock)
 {
+	fixture_aux_lookups++;
 	struct kd_mutex_aux *aux = fixture_aux(lock);
 	if (!aux->refs.counter)
 		return NULL;
@@ -51,7 +54,20 @@ struct kd_mutex_aux *kd_mutex_aux_lookup(struct kd_mutex *lock)
 void kd_mutex_aux_ref(struct kd_mutex_aux *aux)
 {
 	CHECK(aux->refs.counter);
+	fixture_aux_refs++;
 	aux->refs.counter++;
+}
+
+struct kd_mutex_aux *kd_mutex_aux_borrow_owned(struct kd_mutex *lock)
+{
+	fixture_aux_borrows++;
+	for (unsigned int i = 0; i < 16; i++) {
+		struct kd_mutex_aux *aux = &fixture_aux_records[i];
+		if (aux->lock == lock && aux->refs.counter &&
+		    aux->physical_owner == current)
+			return aux;
+	}
+	return NULL;
 }
 
 void kd_mutex_aux_put(struct kd_mutex_aux *aux)

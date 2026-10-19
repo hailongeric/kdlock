@@ -31,6 +31,9 @@ int kd_mutex_aux_init(void);
 void kd_mutex_aux_exit(void);
 struct kd_mutex_aux *kd_mutex_aux_get(struct kd_mutex *lock);
 struct kd_mutex_aux *kd_mutex_aux_lookup(struct kd_mutex *lock);
+/* Current's synchronous unlock may borrow its existing owner reference.
+ * This acquires no reference; only the final owner release may put it. */
+struct kd_mutex_aux *kd_mutex_aux_borrow_owned(struct kd_mutex *lock);
 void kd_mutex_aux_ref(struct kd_mutex_aux *aux);
 void kd_mutex_aux_put(struct kd_mutex_aux *aux);
 bool kd_mutex_delegation_owned(struct kd_mutex *lock, struct task_struct *task);

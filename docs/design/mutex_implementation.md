@@ -181,6 +181,22 @@ generation acquired by the CAS. A mismatched lookup releases its reference.
 Invocation references protect the published queue and its borrowed packet/frame
 storage. A separate gate-owner reference survives scheduling-node retirement and
 follows physical-owner release, including native ACK and early-release processing.
+There is one narrower transfer before node reservation: an immediate successful
+gate CAS in `_kd_mutex_lock_abi()` transfers its invocation reference to the
+owner through `kd_mutex_claim_origin_take_ref()`. No node, frame or ACK exists
+on that path, and the transferred reference protects physical acquisition even
+if it sleeps. Waiting, queued, node-overflow and early-reacquisition paths retain
+their invocation reference and acquire a separate owner reference.
+
+Synchronous checked unlock uses `kd_mutex_aux_borrow_owned()` to borrow the
+current task's established owner reference. The helper validates sequence,
+exact address and `physical_owner == current`; it neither increments a reference
+nor lends another task's lifetime. Successful unlock clears the recorded owner,
+releases physical exclusion, opens the scheduling gate and puts that one owner
+reference, with no subsequent access to the slot. A rejected unlock leaves the
+owner reference intact. Queue/frame/ACK retention and early outer-release
+ordering are unchanged.
+
 Each put atomically decrements the reference count. A resulting zero gives that
 caller exclusive retirement: it verifies that executor, gate, tail and waiter
 state have drained, clears the address, then release-publishes the free state.

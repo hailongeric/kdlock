@@ -190,7 +190,7 @@ _kd_mutex_lock_abi(struct kd_mutex *lock, unsigned long rsp_value,
 	       abi != KD_ENTRY_ABI_MUTEX_CLOBBER_V1);
 	/* This invocation protects queue/frame/ACK state even when a combiner
 	 * releases its gate early. A separate gate-owner reference survives the
-	 * returning lock call until the physical owner's final unlock. */
+	 * returning queued lock call until the physical owner's final unlock. */
 	aux = kd_mutex_aux_get(lock);
 	if (unlikely(!aux)) {
 		kd_mutex_task_put(current);
@@ -202,8 +202,9 @@ _kd_mutex_lock_abi(struct kd_mutex *lock, unsigned long rsp_value,
 	 * after the read-only hint, remains the sole acquisition decision. */
 	if (likely(!READ_ONCE(aux->locked) &&
 		   cmpxchg(&aux->locked, 0, _Q_LOCKED_VAL) == 0)) {
-		kd_mutex_claim_origin(lock, aux);
-		kd_mutex_aux_put(aux);
+		/* No node, frame or ACK was published. Transfer this invocation's
+		 * reference directly to the owner that survives the returning call. */
+		kd_mutex_claim_origin_take_ref(lock, aux);
 		return;
 	}
 
@@ -323,7 +324,7 @@ scheduler_restore:;
 __attribute__((noipa)) noinline notrace int
 _kd_mutex_unlock_checked(struct kd_mutex *lock)
 {
-	struct kd_mutex_aux *aux = kd_mutex_aux_lookup(lock);
+	struct kd_mutex_aux *aux = kd_mutex_aux_borrow_owned(lock);
 	u8 locked;
 
 	if (WARN_ON_ONCE(!aux))
@@ -335,14 +336,13 @@ _kd_mutex_unlock_checked(struct kd_mutex *lock)
 		kd_origin_mutex_unlock(lock, _RET_IP_);
 		this_cpu_inc(kd_mutex_origin_releases);
 		smp_store_release(&aux->locked, 0);
-		/* Drop the gate-owner reference only after physical and gate release.
-		 * The temporary lookup still protects this final put sequence. */
-		kd_mutex_aux_put(aux);
+		/* The borrowed owner reference protects every preceding access.
+		 * Release it last and never access aux after this put. A surviving
+		 * queue invocation independently protects early outer release. */
 		kd_mutex_aux_put(aux);
 		return 0;
 	}
 	KD_PR_ERR("kd_mutex_unlock: unexpected locked state %d\n", locked);
-	kd_mutex_aux_put(aux);
 	return -EINVAL;
 }
 

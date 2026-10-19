@@ -98,15 +98,24 @@ static void kd_mutex_wait_for_result(struct kd_mutex_node *node)
 		cpu_relax();
 }
 
-/* The scheduling gate cannot authorize a CS without the KD physical mutex. */
-static void kd_mutex_claim_origin(struct kd_mutex *lock, struct kd_mutex_aux *aux)
+/* Consume one supplied reference as the exact gate-owner reference. The
+ * scheduling gate cannot authorize a CS without the KD physical mutex, and
+ * this reference protects the record even when that acquisition sleeps. */
+static void kd_mutex_claim_origin_take_ref(struct kd_mutex *lock,
+					 struct kd_mutex_aux *aux)
 {
 	BUG_ON(READ_ONCE(aux->physical_owner));
-	/* The invocation reference protects this increment before sleeping. */
-	kd_mutex_aux_ref(aux);
 	kd_origin_mutex_lock(lock);
 	WRITE_ONCE(aux->physical_owner, current);
 	this_cpu_inc(kd_mutex_origin_acquires);
+}
+
+static void kd_mutex_claim_origin(struct kd_mutex *lock, struct kd_mutex_aux *aux)
+{
+	/* Queue/frame/ACK work keeps its invocation reference independently of
+	 * this owner, including when an early outer release opens the gate. */
+	kd_mutex_aux_ref(aux);
+	kd_mutex_claim_origin_take_ref(lock, aux);
 }
 
 static void kd_mutex_wait_and_lock(struct kd_mutex *lock, struct kd_mutex_aux *aux)

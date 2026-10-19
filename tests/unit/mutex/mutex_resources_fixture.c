@@ -52,6 +52,9 @@ static bool source_open, native_owner_wait;
 static bool fast_available;
 static unsigned int entry_attempts, entry_pins, fast_probes;
 static struct kd_mutex *waiting_gate, *release_gate;
+static struct kd_mutex *reference_gate;
+static unsigned int expected_claim_refs, gate_release_checks;
+static bool handoff_on_gate_release;
 static struct kd_mutex_node *recycle_node, *poll_node;
 static unsigned int polls;
 static struct kd_regs expected_regs, captured_regs;
@@ -85,7 +88,7 @@ static jmp_buf resume_target;
 #define READ_ONCE(v) (v)
 #define WRITE_ONCE(v, value) ((v) = (value))
 #define smp_load_acquire(p) (*(p))
-#define smp_store_release(p, v) (*(p) = (v))
+#define smp_store_release(p, v) do { *(p) = (v); fixture_release_observe(p); } while (0)
 #define atomic_set(p, v) ((p)->counter = (v))
 #define atomic_inc(p) (++(p)->counter)
 #define atomic_dec(p) (--(p)->counter)
@@ -128,6 +131,7 @@ static jmp_buf resume_target;
 	})
 
 static void preempt_enable(void);
+static void fixture_release_observe(const void *address);
 static void preempt_disable(void);
 static void migrate_enable(void);
 static void migrate_disable(void);
@@ -187,6 +191,32 @@ static char shadow_stacks[KD_MUTEX_MAX_NODES][KD_MUTEX_SHADOW_STACK_SIZE];
  * These are finite codec inputs, not a claim about Linux per-CPU concurrency. */
 #define TAIL_TEST_CPUS 40
 static struct kd_mutex_node remote_nodes[TAIL_TEST_CPUS][KD_MUTEX_MAX_NODES];
+
+/* Interleave a successor immediately after gate publication, before the old
+ * owner drops its reference. That final put must preserve the new owner. */
+static void fixture_release_observe(const void *address)
+{
+	if (!reference_gate)
+		return;
+	struct kd_mutex_aux *aux = fixture_aux(reference_gate);
+	if (address != &aux->locked || aux->locked)
+		return;
+	CHECK(!reference_gate->owner && !aux->physical_owner);
+	CHECK(aux->refs.counter == 1 && !fixture_aux_lookups);
+	gate_release_checks++;
+	if (handoff_on_gate_release) {
+		struct task_struct *saved = current;
+		handoff_on_gate_release = false;
+		current = &peer;
+		CHECK(kd_mutex_aux_get(reference_gate) == aux);
+		CHECK(aux->refs.counter == 2);
+		aux->locked = _Q_LOCKED_VAL;
+		expected_claim_refs = 2;
+		kd_mutex_claim_origin_take_ref(reference_gate, aux);
+		expected_claim_refs = 1;
+		current = saved;
+	}
+}
 
 static struct kd_mutex_node *tail_node_for_cpu(struct kd_mutex_node *node,
 					       int cpu)
@@ -280,6 +310,10 @@ static void cpu_relax(void)
 static void kd_origin_mutex_lock(struct kd_mutex *lock)
 {
 	CHECK(lock && !preempt && !table_irq);
+	if (lock == reference_gate) {
+		CHECK(fixture_aux(lock)->refs.counter == (int)expected_claim_refs);
+		CHECK(!fixture_aux_refs && !fixture_aux_lookups);
+	}
 	if (native_owner_wait) {
 		struct kd_mutex *gate = lock;
 
@@ -288,6 +322,7 @@ static void kd_origin_mutex_lock(struct kd_mutex *lock)
 		CHECK(lock->owner == &peer && current == &waiter);
 		CHECK(gate && fixture_aux(gate)->locked == _Q_LOCKED_VAL &&
 		      !fixture_aux(gate)->physical_owner && !release_gate && refs == 1);
+		CHECK(fixture_aux(gate)->refs.counter == 1 && !fixture_aux_refs);
 		native_owner_wait = false;
 		native_waits++;
 		current = &peer;
@@ -302,6 +337,11 @@ static void kd_origin_mutex_unlock(struct kd_mutex *lock, unsigned long ip)
 {
 	(void)ip;
 	CHECK(lock && lock->owner == current && !preempt && !table_irq);
+	if (lock == reference_gate) {
+		CHECK(fixture_aux(lock)->refs.counter == 1);
+		CHECK(!fixture_aux(lock)->physical_owner && fixture_aux(lock)->locked);
+		CHECK(!fixture_aux_lookups);
+	}
 	if (release_gate)
 		CHECK(!fixture_aux(release_gate)->physical_owner && fixture_aux(release_gate)->locked);
 	lock->owner = NULL;
@@ -469,6 +509,9 @@ static void reset(void)
 	task_failure = active_override = borrowed = false;
 	schedule_wanted = recycle_on_enable = direct_packet = false;
 	waiting_gate = release_gate = NULL;
+	reference_gate = NULL;
+	expected_claim_refs = gate_release_checks = 0;
+	handoff_on_gate_release = false;
 	recycle_node = NULL;
 	memset(&expected_regs, 0x51, sizeof(expected_regs));
 	expected_regs.sp = (unsigned long)&native_stack[20];
@@ -971,6 +1014,59 @@ static void check_outer_native_result(void)
 }
 
 
+/* A pre-node acquisition transfers its reference, while a synchronous unlock
+ * borrows that same OWNER lifetime through the last gate access. */
+static void check_reference_transfer_and_borrowed_unlock(void)
+{
+	reset();
+	struct kd_mutex *lock = &origins[0].mutex;
+	reference_gate = lock;
+	expected_claim_refs = 1;
+	__kd_mutex_lock_clobber_v1(lock, (unsigned long)&native_stack[16], 0x8000, 0);
+	struct kd_mutex_aux *aux = fixture_aux(lock);
+	CHECK(aux->refs.counter == 1 && aux->physical_owner == current);
+	CHECK(fixture_aux_gets == 1 && !fixture_aux_refs && !fixture_aux_puts);
+	CHECK(!fixture_aux_lookups && !fixture_aux_borrows && !slow_calls);
+	CHECK(!cpu_shadows.node_slots && !kd_mutex_reserved_nodes);
+
+	/* Neither another task, another object, nor an invalid gate authorizes a
+	 * physical release. Rejection cannot consume the borrowed owner lifetime. */
+	current = &peer;
+	CHECK(_kd_mutex_unlock_checked(lock) == -EINVAL);
+	current = &waiter;
+	CHECK(_kd_mutex_unlock_checked(&origins[1].mutex) == -EINVAL);
+	aux->locked = 2;
+	CHECK(_kd_mutex_unlock_checked(lock) == -EINVAL);
+	CHECK(aux->refs.counter == 1 && aux->physical_owner == current);
+	CHECK(lock->owner == current && !releases && !fixture_aux_puts);
+	CHECK(errors == 3 && !fixture_aux_lookups);
+	aux->locked = _Q_LOCKED_VAL;
+	__kd_mutex_unlock(lock, 0, 0x9000);
+	CHECK(gate_release_checks == 1 && !aux->refs.counter);
+	CHECK(fixture_aux_puts == 1 && fixture_aux_borrows == 4);
+	CHECK(!fixture_aux_refs && !fixture_aux_lookups && !refs);
+	CHECK(!lock->owner && !aux->physical_owner && !aux->locked);
+	CHECK(acquires == 1 && releases == 1 && task_puts == 1);
+
+	/* Publication permits another invocation before the old owner puts. Its
+	 * transferred reference must survive that put, with no temporary lookup. */
+	reset();
+	reference_gate = lock;
+	expected_claim_refs = 1;
+	handoff_on_gate_release = true;
+	__kd_mutex_lock_clobber_v1(lock, (unsigned long)&native_stack[16], 0x8000, 0);
+	aux = fixture_aux(lock);
+	__kd_mutex_unlock(lock, 0, 0x9000);
+	CHECK(aux->refs.counter == 1 && aux->physical_owner == &peer);
+	CHECK(lock->owner == &peer && aux->locked == _Q_LOCKED_VAL);
+	CHECK(fixture_aux_gets == 2 && fixture_aux_puts == 1 && gate_release_checks == 1);
+	CHECK(!fixture_aux_refs && !fixture_aux_lookups && !refs);
+	release_peer(lock);
+	CHECK(!aux->refs.counter && gate_release_checks == 2 && fixture_aux_puts == 2);
+	CHECK(!lock->owner && !aux->physical_owner && !aux->locked);
+	CHECK(acquires == 2 && releases == 2 && !errors);
+}
+
 /* Allocation refusal happens before node publication and releases its task
  * routing reference before taking ordinary KD physical exclusion. */
 static void check_aux_allocation_failure(void)
@@ -1007,6 +1103,7 @@ int main(void)
 	CHECK(!fast_probes && entry_attempts == 1 && samples == 1);
 	CHECK(origins[0].mutex.owner == current && !refs && !gets);
 	__kd_mutex_unlock(&origins[0].mutex, 0, 0x9000);
+	check_reference_transfer_and_borrowed_unlock();
 	check_aux_allocation_failure();
 	check_outer_native_result();
 	check_minimal_entry();

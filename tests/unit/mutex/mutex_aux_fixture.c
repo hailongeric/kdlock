@@ -21,6 +21,7 @@ typedef struct { int counter; } atomic_t;
 typedef unsigned long atomic_long_t;
 typedef unsigned int raw_spinlock_t;
 struct task_struct { unsigned long identity; };
+static _Thread_local struct task_struct *current;
 struct optimistic_spin_queue { atomic_t tail; };
 struct list_head { struct list_head *next, *prev; };
 #include "aux_types.h"
@@ -178,7 +179,7 @@ static void find_collision(void)
 }
 static void check_lifetime(void)
 {
- CHECK(!kd_mutex_aux_get(NULL) && !kd_mutex_aux_lookup(NULL));
+ CHECK(!kd_mutex_aux_get(NULL) && !kd_mutex_aux_lookup(NULL) && !kd_mutex_aux_borrow_owned(NULL));
  CHECK(kd_mutex_aux_waiter_count(NULL)==-EINVAL);
  CHECK(kd_mutex_aux_is_idle(key_a) && !kd_mutex_aux_lookup(key_a));
  CHECK(!kd_mutex_combiner_active(key_a) && !kd_mutex_delegation_owned(key_a,&owner));
@@ -196,11 +197,12 @@ static void check_lifetime(void)
  CHECK(!kd_mutex_delegation_owned(key_b,&owner) && !kd_mutex_combiner_active(key_b));
  CHECK(rmw_calls==before); /* The hot ownership/hint observations remain read-only. */
  CHECK(!kd_mutex_aux_get(key_b) && !kd_mutex_aux_lookup(key_b));
- struct kd_mutex_aux *unlock=kd_mutex_aux_lookup(key_a);
- CHECK(unlock==invocation && atomic_read(&invocation->refs)==3);
+ before=rmw_calls;
+ struct kd_mutex_aux *unlock=kd_mutex_aux_borrow_owned(key_a);
+ CHECK(unlock==invocation && atomic_read(&invocation->refs)==2 && rmw_calls==before);
  WRITE_ONCE(invocation->physical_owner,NULL);atomic_set(&invocation->state,0);
  WRITE_ONCE(invocation->tail,0);atomic_set(&invocation->waiter_count,0);
- kd_mutex_aux_put(unlock);kd_mutex_aux_put(unlock);
+ kd_mutex_aux_put(unlock);
  CHECK(atomic_read(&invocation->refs)==1 && !kd_mutex_aux_is_idle(key_a));
  CHECK(!kd_mutex_aux_all_idle()); /* Pending frame/ACK outlives empty queue. */
  CHECK(!kd_mutex_aux_get(key_b)); /* That exact invocation still reserves the key. */
@@ -219,10 +221,32 @@ static void check_lifetime(void)
  drained();CHECK(allocations==1 && !frees);
 }
 
+static void check_borrowed_owner(void)
+{
+ CHECK(!kd_mutex_aux_borrow_owned(key_a));
+ struct kd_mutex_aux *aux=kd_mutex_aux_get(key_a);CHECK(aux);
+ /* The pre-node acquisition transfers its one invocation reference to OWNER. */
+ WRITE_ONCE(aux->locked,1);WRITE_ONCE(aux->physical_owner,&owner);
+ unsigned int before=rmw_calls;
+ CHECK(kd_mutex_aux_borrow_owned(key_a)==aux);
+ CHECK(!kd_mutex_aux_borrow_owned(key_b));
+ current=&other;CHECK(!kd_mutex_aux_borrow_owned(key_a));current=&owner;
+ CHECK(atomic_read(&aux->refs)==1 && rmw_calls==before);
+ /* Clearing the identity ends borrowing, but the retained OWNER reference
+  * still excludes collision reuse through physical/gate release. */
+ WRITE_ONCE(aux->physical_owner,NULL);
+ CHECK(!kd_mutex_aux_borrow_owned(key_a) && atomic_read(&aux->refs)==1);
+ CHECK(rmw_calls==before && !kd_mutex_aux_get(key_b));
+ atomic_set(&aux->state,0);kd_mutex_aux_put(aux);drained();
+ struct kd_mutex_aux *replacement=kd_mutex_aux_get(key_b);CHECK(replacement==aux);
+ CHECK(!kd_mutex_aux_borrow_owned(key_a) && !kd_mutex_aux_borrow_owned(key_b));
+ kd_mutex_aux_put(replacement);drained();
+}
+
 static struct kd_mutex_aux *race_aux,*race_result;
 static struct kd_mutex *race_key;
 static enum pause_mode thread_mode;
-static bool observed;
+static bool observed,borrow_observer;
 static void *held_lookup(void *unused)
 { (void)unused;pause_mode=REF_BEFORE;race_result=kd_mutex_aux_lookup(race_key);return NULL; }
 static void *held_put(void *unused)
@@ -231,9 +255,10 @@ static void *held_claim(void *unused)
 { (void)unused;pause_mode=CLAIM_AFTER;race_result=kd_mutex_aux_get(race_key);return NULL; }
 static void *held_observer(void *unused)
 {
- (void)unused;pause_mode=thread_mode;
+ (void)unused;pause_mode=thread_mode;current=&owner;
  unsigned int before=rmw_calls;
- observed=kd_mutex_delegation_owned(race_key,&owner);
+ observed=borrow_observer ? kd_mutex_aux_borrow_owned(race_key)!=NULL :
+                           kd_mutex_delegation_owned(race_key,&owner);
  CHECK(rmw_calls==before);return NULL;
 }
 static void check_lookup_reuse(bool same_key)
@@ -429,15 +454,19 @@ static void check_sequence_saturation(void)
 }
 int main(void)
 {
+ current=&owner;
  CHECK(sizeof(struct kd_mutex)==32 && _Alignof(struct kd_mutex)==8);
  struct layout { char prefix; struct kd_mutex lock; char suffix; };
  CHECK(offsetof(struct layout,lock)==8 && offsetof(struct layout,suffix)==40);
  allocation_failure=true;CHECK(kd_mutex_aux_init()==-ENOMEM && kd_mutex_aux_all_idle());
  allocation_failure=false;CHECK(!kd_mutex_aux_init());CHECK(allocations==1 && !frees);
- find_collision();check_lifetime();check_lookup_reuse(false);check_lookup_reuse(true);
- check_lookup_wins_put();check_two_puts();check_busy_lifetimes();check_observer_reuse();check_observer_aba();
+ find_collision();check_lifetime();check_borrowed_owner();check_lookup_reuse(false);check_lookup_reuse(true);
+ check_lookup_wins_put();check_two_puts();check_busy_lifetimes();
+ for(unsigned int kind=0;kind<2;kind++) {
+  borrow_observer=kind;check_observer_reuse();check_observer_aba();
+ }
  check_refusal();check_capacity_and_reuse();check_duplicate_publication();check_stress();
  check_sequence_saturation();kd_mutex_aux_exit();CHECK(!allocated_table && allocations==frees);
- puts("PASS aux fixed slots: 32-byte/8-byte layout, exact owner/frame/ACK references, key-validated lookup across reuse, read-only sequence observations and A-to-B-to-A reuse, busy claim/retirement refusal, racing puts, collision fallback, 2048 objects, lifetime keys beyond capacity, 8 creators and 8x4000 operations, init failure, sequence exhaustion, idle exit");
+ puts("PASS aux fixed slots: 32-byte/8-byte layout, exact owner/frame/ACK references, current-only borrowed owner with no reference RMW, key-validated lookup across reuse, read-only sequence observations and A-to-B-to-A reuse, busy claim/retirement refusal, racing puts, collision fallback, 2048 objects, lifetime keys beyond capacity, 8 creators and 8x4000 operations, init failure, sequence exhaustion, idle exit");
  return 0;
 }

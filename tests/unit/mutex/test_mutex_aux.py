@@ -35,6 +35,18 @@ def main():
             'atomic_set_release(&aux->refs, KD_MUTEX_AUX_FREE);\n\t'
             'BUG_ON(READ_ONCE(aux->physical_owner) || atomic_read(&aux->state) ||',
         ),
+        'borrow-ignores-current-owner': (
+            'READ_ONCE(aux->physical_owner) == current;',
+            'READ_ONCE(aux->physical_owner) != NULL;',
+        ),
+        'borrow-ignores-key': (
+            'owned = READ_ONCE(aux->lock) == lock &&\n\t\tREAD_ONCE(aux->physical_owner) == current;',
+            'owned = READ_ONCE(aux->physical_owner) == current;',
+        ),
+        'borrow-ignores-sequence-validation': (
+            'if (!kd_mutex_aux_observation_valid(aux, sequence) || !owned)',
+            'if (!owned)',
+        ),
     }
     candidates = {'production': source}
     for name, (old, new) in mutations.items():

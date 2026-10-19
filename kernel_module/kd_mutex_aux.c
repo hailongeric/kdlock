@@ -10,6 +10,7 @@
 #include <linux/limits.h>
 #include <linux/module.h>
 #include <linux/moduleparam.h>
+#include <linux/sched.h>
 #include <linux/vmalloc.h>
 
 #include "kd_mutex_aux.h"
@@ -223,6 +224,29 @@ bool kd_mutex_delegation_owned(struct kd_mutex *lock, struct task_struct *task)
 	owned = READ_ONCE(aux->lock) == lock &&
 		READ_ONCE(aux->physical_owner) == task;
 	return kd_mutex_aux_observation_valid(aux, sequence) && owned;
+}
+
+/* Only current can end its established owner lifetime. Its synchronous unlock
+ * therefore borrows that exact reference through physical and gate release,
+ * without acquiring a temporary lookup reference. Sequence validation rejects
+ * mixed generations; this helper never lends another task's owner lifetime. */
+struct kd_mutex_aux *kd_mutex_aux_borrow_owned(struct kd_mutex *lock)
+{
+	struct kd_mutex_aux *aux;
+	u64 sequence;
+	bool owned;
+
+	if (!lock || unlikely(!kd_mutex_aux_slots))
+		return NULL;
+	aux = kd_mutex_aux_slot(lock);
+	sequence = smp_load_acquire(&aux->sequence);
+	if (sequence & 1)
+		return NULL;
+	owned = READ_ONCE(aux->lock) == lock &&
+		READ_ONCE(aux->physical_owner) == current;
+	if (!kd_mutex_aux_observation_valid(aux, sequence) || !owned)
+		return NULL;
+	return aux;
 }
 
 bool kd_mutex_combiner_active(struct kd_mutex *lock)

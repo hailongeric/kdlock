@@ -50,6 +50,7 @@ def production():
     for marker in (
         "void kd_mutex_init(struct kd_mutex *lock)",
         "static void kd_mutex_wait_for_result(struct kd_mutex_node *node)",
+        "static void kd_mutex_claim_origin_take_ref(struct kd_mutex *lock,",
         "static void kd_mutex_claim_origin(struct kd_mutex *lock, struct kd_mutex_aux *aux)",
         "static void kd_mutex_wait_and_lock(struct kd_mutex *lock, struct kd_mutex_aux *aux)",
         "static bool kd_mutex_has_local_predecessor(struct kd_mutex *lock)",
@@ -150,8 +151,29 @@ def main():
         ),
         "release-keeps-gs": ("node->gsbase = 0;", "node->gsbase = 1;"),
         "gate-without-native-lock": (
-            "\t\tkd_mutex_claim_origin(lock, aux);\n\t\tkd_mutex_aux_put(aux);\n\t\treturn;",
+            "\t\tkd_mutex_claim_origin_take_ref(lock, aux);\n\t\treturn;",
             "\t\treturn;",
+        ),
+        "fast-owner-restores-reference-pair": (
+            "\t\tkd_mutex_claim_origin_take_ref(lock, aux);\n\t\treturn;",
+            "\t\tkd_mutex_claim_origin(lock, aux);\n\t\tkd_mutex_aux_put(aux);\n\t\treturn;",
+        ),
+        "fast-owner-drops-transferred-reference": (
+            "\t\tkd_mutex_claim_origin_take_ref(lock, aux);\n\t\treturn;",
+            "\t\tkd_mutex_claim_origin_take_ref(lock, aux);\n\t\tkd_mutex_aux_put(aux);\n\t\treturn;",
+        ),
+        "unlock-restores-temporary-reference": (
+            "struct kd_mutex_aux *aux = kd_mutex_aux_borrow_owned(lock);",
+            "struct kd_mutex_aux *aux = kd_mutex_aux_borrow_owned(lock);\n\t"
+            "if (aux) aux = kd_mutex_aux_lookup(lock);",
+        ),
+        "unlock-error-drops-owner-reference": (
+            'KD_PR_ERR("kd_mutex_unlock: unexpected locked state %d\\n", locked);',
+            'KD_PR_ERR("kd_mutex_unlock: unexpected locked state %d\\n", locked);\n\tkd_mutex_aux_put(aux);',
+        ),
+        "unlock-drops-owner-before-gate": (
+            "\t\tsmp_store_release(&aux->locked, 0);",
+            "\t\tkd_mutex_aux_put(aux);\n\t\tsmp_store_release(&aux->locked, 0);",
         ),
         "resume-loses-register": (
             "resume_regs = resume_node->regs;",
