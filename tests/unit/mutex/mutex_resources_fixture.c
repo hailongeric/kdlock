@@ -140,6 +140,11 @@ static bool need_resched(void) __attribute__((unused));
 static void schedule(void) __attribute__((unused));
 static void cpu_relax(void);
 static void kd_origin_mutex_lock(struct kd_mutex *lock);
+static void kd_mutex_local_lock_node(struct kd_mutex *lock, struct kd_mutex_node *node)
+{
+	CHECK(!node);
+	kd_origin_mutex_lock(lock);
+}
 static void kd_origin_mutex_unlock(struct kd_mutex *lock, unsigned long ip);
 static bool kd_mutex_task_active(struct task_struct *task);
 static bool kd_mutex_task_reroute(struct task_struct *task);
@@ -479,6 +484,8 @@ static void reset(void)
 	memset(&cpu_shadows, 0, sizeof(cpu_shadows));
 	for (int i = 0; i < KD_MUTEX_MAX_NODES; i++) {
 		kd_mutex_nodes[i].slot = i;
+		kd_mutex_nodes[i].osq.tail = kd_mutex_encode_tail(0, i);
+		kd_mutex_nodes[i].osq.locked = KD_MUTEX_OSQ_IDLE;
 		kd_mutex_nodes[i].shadow_stack_base = shadow_stacks[i];
 		kd_mutex_nodes[i].shadow_stack_ptr =
 			(unsigned long)&shadow_stacks[i]

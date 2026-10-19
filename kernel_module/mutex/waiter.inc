@@ -74,7 +74,7 @@ __kd_mutex_lock_slowpath(struct kd_mutex *lock, int tail,
 	}
 
 	/* --- become lock holder / combiner --- */
-	kd_mutex_wait_and_lock(lock);
+	kd_mutex_wait_and_lock_node(lock, curr_node);
 	/* End at physical acquisition, before processing another waiter's CS. */
 	kd_exe_queue_timing_end(true, &curr_node->queued_at_ns,
 				kd_exe_queue_timing_start());

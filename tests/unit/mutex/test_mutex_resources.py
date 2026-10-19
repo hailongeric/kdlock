@@ -31,6 +31,8 @@ def production():
     code = without_includes(read_source(ROOT / "include/kd_comm.h")).replace("kd_comm_matches(", "kd_comm_matches_real(")
     code += '\nstatic bool kd_comm_matches(const struct kd_comm_key *key, const char comm[TASK_COMM_LEN])\n{\n    comm_queries++;\n    if (trace_admission) CHECK(sampled_first);\n    return kd_comm_matches_real(key, comm);\n}\nstruct kd_comm_key kd_spin_target;\n'
     code += "#define kd_mutex_shadows cpu_shadows\n"
+    local = read_source(ROOT / "kernel_module/kd_mutex_local.h")
+    code += local[local.index("#define KD_MUTEX_TAIL_IDX_OFFSET"):local.index("DECLARE_PER_CPU_SHARED_ALIGNED")]
     code += mutex[
         mutex.index("struct kd_mutex_cpu_state {") : mutex.index(
             "static inline struct kd_mutex_node *kd_mutex_decode_tail"
@@ -51,7 +53,9 @@ def production():
         "bool kd_mutex_delegation_owned(struct kd_mutex *lock, struct task_struct *task)",
         "void kd_mutex_init(struct kd_mutex *lock)",
         "static void kd_mutex_wait_for_result(struct kd_mutex_node *node)",
+        "static void kd_mutex_claim_origin_node(struct kd_mutex *lock,",
         "static void kd_mutex_claim_origin(struct kd_mutex *lock)",
+        "static void kd_mutex_wait_and_lock_node(struct kd_mutex *lock,",
         "static void kd_mutex_wait_and_lock(struct kd_mutex *lock)",
         "static bool kd_mutex_has_local_predecessor(struct kd_mutex *lock)",
         "static struct kd_mutex_node *kd_mutex_reserve_node(void)",
@@ -151,12 +155,12 @@ def main():
         "release-keeps-gs": ("node->gsbase = 0;", "node->gsbase = 1;"),
         "release-resets-count-generation": ("node->gsbase = 0;", "node->gsbase = 0; node->count_seq = 0;"),
         "gate-without-native-lock": (
-            "\t\tkd_mutex_claim_origin(lock);\n\t\treturn;",
-            "\t\treturn;",
+            "\t\t\tkd_mutex_claim_origin_node(lock, node);\n\t\t\tpreempt_disable();",
+            "\t\t\t(void)node;\n\t\t\tpreempt_disable();",
         ),
         "claim-publishes-held-before-physical": (
-            "\tkd_origin_mutex_lock(lock);\n\tkd_mutex_gate_set(lock, KD_MUTEX_GATE_HELD);",
-            "\tkd_mutex_gate_set(lock, KD_MUTEX_GATE_HELD);\n\tkd_origin_mutex_lock(lock);",
+            "\tkd_mutex_local_lock_node(lock, node);\n\tkd_mutex_gate_set(lock, KD_MUTEX_GATE_HELD);",
+            "\tkd_mutex_gate_set(lock, KD_MUTEX_GATE_HELD);\n\tkd_mutex_local_lock_node(lock, node);",
         ),
         "unlock-clears-before-physical": (
             "kd_mutex_gate_set(lock, KD_MUTEX_GATE_RELEASING);",

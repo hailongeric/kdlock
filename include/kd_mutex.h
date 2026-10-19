@@ -35,6 +35,16 @@ struct kd_local_waiter;
 
 bool kd_mutex_check_idle(void);
 
+/* Independent abortable-MCS membership inside an existing reserved slot.
+ * Delegation can remain published while this native-spin membership comes
+ * and goes; its links and notification must therefore never alias these. */
+struct kd_mutex_osq_node {
+	struct kd_mutex_osq_node *next;
+	struct kd_mutex_osq_node *prev;
+	int locked;
+	u32 tail; /* immutable encoded CPU and slot, initialized with the pool */
+};
+
 /*
  * kd_mutex_node — per-waiter queue node.
  *
@@ -68,6 +78,7 @@ struct kd_mutex_node {
 	 * cold observations validate it without writing this CPU's cacheline. */
 	u64 count_seq;
 	struct kd_mutex *counted_lock;
+	struct kd_mutex_osq_node osq;
 	/* The combiner writes IP/SP and virtual registers while the producer
 	 * polls locked. Sharing their cacheline makes every packet update fight
 	 * the polling CPU for ownership, especially across NUMA nodes. */

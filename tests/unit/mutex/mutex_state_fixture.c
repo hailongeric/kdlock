@@ -70,6 +70,11 @@ static int fixture_cmpxchg(atomic_t *state, int old, int value)
 #define atomic_fetch_add(v,p) (++rmw_calls, __atomic_fetch_add(&(p)->counter, (v), __ATOMIC_SEQ_CST))
 #define atomic_fetch_sub(v,p) (++rmw_calls, __atomic_fetch_sub(&(p)->counter, (v), __ATOMIC_SEQ_CST))
 static void kd_origin_mutex_lock(struct kd_mutex *lock);
+static void kd_mutex_local_lock_node(struct kd_mutex *lock, struct kd_mutex_node *node)
+{
+ CHECK(!node);
+ kd_origin_mutex_lock(lock);
+}
 static void kd_origin_mutex_unlock(struct kd_mutex *lock, unsigned long ip);
 #include "mutex_state_actual.h"
 

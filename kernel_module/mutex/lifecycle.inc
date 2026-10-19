@@ -57,6 +57,8 @@ int kd_mutex_init_percpu(void)
 	BUILD_BUG_ON(offsetof(struct kd_mutex_node, regs) != 2 * L1_CACHE_BYTES);
 	BUILD_BUG_ON(offsetof(struct kd_mutex_node, count_seq) != 88);
 	BUILD_BUG_ON(offsetof(struct kd_mutex_node, counted_lock) != 96);
+	BUILD_BUG_ON(sizeof(struct kd_mutex_osq_node) != 24);
+	BUILD_BUG_ON(offsetof(struct kd_mutex_node, osq) != 104);
 	BUILD_BUG_ON(sizeof(struct kd_mutex) != 32);
 	BUILD_BUG_ON(sizeof(struct kd_mutex) != sizeof(struct mutex));
 	BUILD_BUG_ON(__alignof__(struct kd_mutex) != __alignof__(struct mutex));
@@ -67,6 +69,7 @@ int kd_mutex_init_percpu(void)
 	BUILD_BUG_ON(offsetof(struct kd_mutex, delegation_state) != 24);
 	BUILD_BUG_ON(offsetof(struct kd_mutex, delegation_tail) != 28);
 	BUILD_BUG_ON(NR_CPUS > INT_MAX / KD_MUTEX_MAX_NODES);
+	BUILD_BUG_ON(NR_CPUS > (INT_MAX >> KD_MUTEX_TAIL_CPU_OFFSET));
 
 	for_each_possible_cpu(i) {
 		struct kd_mutex_cpu_state *p = per_cpu_ptr(&kd_mutex_shadows, i);
@@ -105,6 +108,8 @@ int kd_mutex_init_percpu(void)
 			void *node_stack = vzalloc_node(KD_MUTEX_SHADOW_STACK_SIZE, cpu_to_node(i));
 
 			node->slot = j;
+			node->osq.tail = kd_mutex_encode_tail(i, j);
+			node->osq.locked = KD_MUTEX_OSQ_IDLE;
 			node->numa_node = cpu_to_node(i);
 			node->shadow_stack_base = node_stack;
 			if (!node_stack) {

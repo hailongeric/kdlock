@@ -38,12 +38,12 @@ int kd_mutex_local_runtime_init(void)
 {
 	kd_io_prepare = (void *)kallsyms_lookup_name("io_schedule_prepare");
 	kd_io_finish = (void *)kallsyms_lookup_name("io_schedule_finish");
-	return kd_io_prepare && kd_io_finish ? kd_mutex_osq_init() : -ENOENT;
+	return kd_io_prepare && kd_io_finish ? 0 : -ENOENT;
 }
 
 void kd_mutex_local_runtime_exit(void)
 {
-	kd_mutex_osq_exit();
+	/* The shared preallocated node pool belongs to mutex lifecycle. */
 }
 
 struct kd_local_waiter {
@@ -150,9 +150,11 @@ static void kd_local_wake_add(struct wake_q_head *head, struct task_struct *task
 	head->lastp = &node->next;
 }
 
-static __always_inline bool kd_local_spin(struct kd_mutex *lock, bool waiter)
+static __always_inline bool kd_local_spin(struct kd_mutex *lock, bool waiter,
+					 struct kd_mutex_node *borrowed)
 {
 	struct task_struct *owner;
+	struct kd_mutex_osq_node *node = NULL;
 	bool acquired = false;
 
 	if (!waiter) {
@@ -161,8 +163,11 @@ static __always_inline bool kd_local_spin(struct kd_mutex *lock, bool waiter)
 		owner = kd_owner(lock);
 		if (owner && !owner_on_cpu(owner))
 			goto fail;
-		if (!kd_mutex_osq_lock(&lock->osq))
+		node = borrowed ? &borrowed->osq : kd_mutex_osq_node_get(lock);
+		if (!node)
 			goto fail;
+		if (!kd_mutex_osq_lock(&lock->osq, node))
+			goto release;
 	}
 	for (;;) {
 		owner = kd_try_common(lock, false);
@@ -183,7 +188,12 @@ static __always_inline bool kd_local_spin(struct kd_mutex *lock, bool waiter)
 	}
 done:
 	if (!waiter)
-		kd_mutex_osq_unlock(&lock->osq);
+		kd_mutex_osq_unlock(&lock->osq, node);
+release:
+	/* A cancellation-false return has also finished every queue access.
+	 * Release only temporary native reservations, before any scheduling. */
+	if (node && !borrowed)
+		kd_mutex_osq_node_put(node);
 	if (acquired)
 		return true;
 fail:
@@ -196,13 +206,14 @@ fail:
 
 /* These are internal wait-list spinlocks. Use native raw-spin functions,
  * bypassing the captured kernel's public caller-clobber macro wrappers. */
-static noinline int kd_local_lock_slow(struct kd_mutex *lock, unsigned int state)
+static noinline int kd_local_lock_slow(struct kd_mutex *lock, unsigned int state,
+				      struct kd_mutex_node *node)
 {
 	struct kd_local_waiter waiter = { .task = current };
 	int ret = 0;
 
 	preempt_disable();
-	if (!kd_try_common(lock, false) || kd_local_spin(lock, false))
+	if (!kd_try_common(lock, false) || kd_local_spin(lock, false, node))
 		goto out;
 	_raw_spin_lock(&lock->wait_lock);
 	if (!kd_try_common(lock, false))
@@ -225,7 +236,7 @@ static noinline int kd_local_lock_slow(struct kd_mutex *lock, unsigned int state
 		first = READ_ONCE(lock->wait_head) == &waiter;
 		set_current_state(state);
 		if (!kd_try_common(lock, first) ||
-		    (first && kd_local_spin(lock, true))) {
+		    (first && kd_local_spin(lock, true, NULL))) {
 			_raw_spin_lock(&lock->wait_lock);
 			break;
 		}
@@ -242,7 +253,8 @@ out:
 	return ret;
 }
 
-static int kd_local_lock_state(struct kd_mutex *lock, unsigned int state)
+static int kd_local_lock_state(struct kd_mutex *lock, unsigned int state,
+			       struct kd_mutex_node *node)
 {
 	unsigned long zero = 0;
 
@@ -251,24 +263,30 @@ static int kd_local_lock_state(struct kd_mutex *lock, unsigned int state)
 	if (!atomic_long_read(&lock->owner) &&
 	    atomic_long_try_cmpxchg_acquire(&lock->owner, &zero, (unsigned long)current))
 		return 0;
-	return kd_local_lock_slow(lock, state);
+	return kd_local_lock_slow(lock, state, node);
 }
 
 void kd_mutex_local_lock(struct kd_mutex *lock)
 {
-	kd_local_lock_state(lock, TASK_UNINTERRUPTIBLE);
+	kd_local_lock_state(lock, TASK_UNINTERRUPTIBLE, NULL);
 }
 EXPORT_SYMBOL_GPL(kd_mutex_local_lock);
 
+void kd_mutex_local_lock_node(struct kd_mutex *lock, struct kd_mutex_node *node)
+{
+	BUG_ON(node && (node->lock != lock || node->task_struct_ptr != current));
+	kd_local_lock_state(lock, TASK_UNINTERRUPTIBLE, node);
+}
+
 int kd_mutex_lock_interruptible(struct kd_mutex *lock)
 {
-	return kd_local_lock_state(lock, TASK_INTERRUPTIBLE);
+	return kd_local_lock_state(lock, TASK_INTERRUPTIBLE, NULL);
 }
 EXPORT_SYMBOL_GPL(kd_mutex_lock_interruptible);
 
 int kd_mutex_lock_killable(struct kd_mutex *lock)
 {
-	return kd_local_lock_state(lock, TASK_KILLABLE);
+	return kd_local_lock_state(lock, TASK_KILLABLE, NULL);
 }
 EXPORT_SYMBOL_GPL(kd_mutex_lock_killable);
 

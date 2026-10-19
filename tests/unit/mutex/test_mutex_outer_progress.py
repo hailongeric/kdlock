@@ -70,7 +70,8 @@ def main():
         "static void kd_mutex_batch_retire_current(struct kd_mutex *lock,",
         "static void kd_mutex_prefetch_successor(struct kd_mutex_node *next)",
         "bool kd_mutex_delegation_owned(struct kd_mutex *lock, struct task_struct *task)",
-        "static void kd_mutex_claim_origin(struct kd_mutex *lock)",
+        "static void kd_mutex_claim_origin_node(struct kd_mutex *lock,",
+        "static void kd_mutex_wait_and_lock_node(struct kd_mutex *lock,",
         "static void kd_mutex_wait_and_lock(struct kd_mutex *lock)",
     ):
         code += definition(mutex, marker) + "\n"

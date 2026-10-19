@@ -25,6 +25,7 @@ def main():
         'void kd_mutex_init(struct kd_mutex *lock)',
         'bool kd_mutex_delegation_owned(struct kd_mutex *lock, struct task_struct *task)',
         'bool kd_mutex_combiner_active(struct kd_mutex *lock)',
+        'static void kd_mutex_claim_origin_node(struct kd_mutex *lock,',
         'static void kd_mutex_claim_origin(struct kd_mutex *lock)',
     ):
         source += '\n' + definition(mutex, marker)
@@ -47,8 +48,8 @@ def main():
                                  'return phase == KD_MUTEX_GATE_HELD || phase == KD_MUTEX_GATE_COMBINER || phase == KD_MUTEX_GATE_RELEASING;'),
         'combiner-not-authorized': ('return phase == KD_MUTEX_GATE_HELD || phase == KD_MUTEX_GATE_COMBINER;',
                                     'return phase == KD_MUTEX_GATE_HELD;'),
-        'held-before-physical': ('kd_origin_mutex_lock(lock);\n\tkd_mutex_gate_set(lock, KD_MUTEX_GATE_HELD);',
-                                 'kd_mutex_gate_set(lock, KD_MUTEX_GATE_HELD);\n\tkd_origin_mutex_lock(lock);'),
+        'held-before-physical': ('kd_mutex_local_lock_node(lock, node);\n\tkd_mutex_gate_set(lock, KD_MUTEX_GATE_HELD);',
+                                 'kd_mutex_gate_set(lock, KD_MUTEX_GATE_HELD);\n\tkd_mutex_local_lock_node(lock, node);'),
         'free-before-physical-release': ('kd_mutex_gate_set(lock, KD_MUTEX_GATE_RELEASING);',
                                          'kd_mutex_gate_set(lock, KD_MUTEX_GATE_FREE);'),
         'releasing-phase-skipped': ('kd_mutex_gate_set(lock, KD_MUTEX_GATE_RELEASING);', '(void)lock;'),

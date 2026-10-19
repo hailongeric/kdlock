@@ -197,6 +197,11 @@ static void kd_origin_mutex_lock(struct kd_mutex *lock)
 		CHECK(kd_mutex_gate_read(lock) == KD_MUTEX_GATE_ACQUIRING);
 	lock->owner = current;
 }
+static void kd_mutex_local_lock_node(struct kd_mutex *lock, struct kd_mutex_node *node)
+{
+	CHECK(!node);
+	kd_origin_mutex_lock(lock);
+}
 static void kd_origin_mutex_unlock(struct kd_mutex *lock, unsigned long ip)
 {
 	(void)ip;

@@ -10,12 +10,6 @@
 /* --------------------------------------------------------------------------
  * Tail encoding (same scheme as qspinlock: cpu+idx packed into u32)
  * -------------------------------------------------------------------------- */
-#define KD_MUTEX_TAIL_IDX_OFFSET 2
-#define KD_MUTEX_TAIL_IDX_BITS 2
-#define KD_MUTEX_TAIL_IDX_MASK ((1U << KD_MUTEX_TAIL_IDX_BITS) - 1)
-#define KD_MUTEX_TAIL_CPU_OFFSET \
-	(KD_MUTEX_TAIL_IDX_OFFSET + KD_MUTEX_TAIL_IDX_BITS)
-
 static inline u32 kd_mutex_encode_tail(int cpu, int idx)
 {
 	return (cpu + 1) << KD_MUTEX_TAIL_CPU_OFFSET |
@@ -95,15 +89,22 @@ static void kd_mutex_wait_for_result(struct kd_mutex_node *node)
 
 /* ACQUIRING reserves the gate while physical acquisition can sleep. HELD
  * becomes visible only after current has acquired the authoritative owner word. */
-static void kd_mutex_claim_origin(struct kd_mutex *lock)
+static void kd_mutex_claim_origin_node(struct kd_mutex *lock,
+				       struct kd_mutex_node *node)
 {
 	BUG_ON(kd_mutex_gate_read(lock) != KD_MUTEX_GATE_ACQUIRING);
-	kd_origin_mutex_lock(lock);
+	kd_mutex_local_lock_node(lock, node);
 	kd_mutex_gate_set(lock, KD_MUTEX_GATE_HELD);
 	this_cpu_inc(kd_mutex_origin_acquires);
 }
 
-static void kd_mutex_wait_and_lock(struct kd_mutex *lock)
+static void kd_mutex_claim_origin(struct kd_mutex *lock)
+{
+	kd_mutex_claim_origin_node(lock, NULL);
+}
+
+static void kd_mutex_wait_and_lock_node(struct kd_mutex *lock,
+					struct kd_mutex_node *node)
 {
 	for (;;) {
 		while (kd_mutex_gate_read(lock))
@@ -112,12 +113,17 @@ static void kd_mutex_wait_and_lock(struct kd_mutex *lock)
 			/* This request now owns the gate and cannot be delegated.
 			 * Only the real mutex owner may execute/release its body. */
 			preempt_enable();
-			kd_mutex_claim_origin(lock);
+			kd_mutex_claim_origin_node(lock, node);
 			preempt_disable();
 			return;
 		}
 		cpu_relax();
 	}
+}
+
+static void kd_mutex_wait_and_lock(struct kd_mutex *lock)
+{
+	kd_mutex_wait_and_lock_node(lock, NULL);
 }
 
 /* Reservation is serialized by preemption disable on this migration-pinned
@@ -180,6 +186,7 @@ static void kd_mutex_release_node(struct kd_mutex_node *node)
 	/* Count retirement precedes node reuse. Never reset its version: cold
 	 * observations must distinguish a later invocation in this same slot. */
 	BUG_ON(READ_ONCE(node->counted_lock) || (READ_ONCE(node->count_seq) & 1));
+	BUG_ON(READ_ONCE(node->osq.locked) != KD_MUTEX_OSQ_IDLE);
 
 	node->next = NULL;
 	node->lock = NULL;
@@ -194,4 +201,27 @@ invalid:
 	this_cpu_inc(kd_mutex_frame_failure_count);
 	KD_PR_ERR("kd_mutex invalid waiter slot release node=%px slots=%lx\n",
 		  node, slots);
+}
+
+/* These temporary native reservations never survive preemption enable.
+ * Borrowed delegation heads bypass get/put and retain their original slot,
+ * waiter record, packet and shadow stack throughout physical acquisition. */
+struct kd_mutex_osq_node *kd_mutex_osq_node_get(struct kd_mutex *lock)
+{
+	struct kd_mutex_node *node = kd_mutex_reserve_node();
+
+	if (!node)
+		return NULL;
+	BUG_ON(READ_ONCE(node->osq.locked) != KD_MUTEX_OSQ_IDLE);
+	node->lock = lock;
+	node->task_struct_ptr = current;
+	return &node->osq;
+}
+
+void kd_mutex_osq_node_put(struct kd_mutex_osq_node *osq)
+{
+	struct kd_mutex_node *node = container_of(osq, struct kd_mutex_node, osq);
+
+	BUG_ON(READ_ONCE(osq->locked) != KD_MUTEX_OSQ_IDLE);
+	kd_mutex_release_node(node);
 }

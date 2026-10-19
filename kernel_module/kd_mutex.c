@@ -31,6 +31,7 @@
 
 #include "kd_mutex.h"
 #include "kd_mutex_state.h"
+#include "kd_mutex_local.h"
 #include "kd_mutex_stats.h"
 #include "kd_lock.h"
 #include "kd_exec.h"
@@ -113,7 +114,7 @@ struct kd_mutex_cpu_state {
 	struct kd_mutex_node *resume_node; /* valid while waiter is CPU-pinned */
 };
 
-static DEFINE_PER_CPU_SHARED_ALIGNED(struct kd_mutex_node,
+DEFINE_PER_CPU_SHARED_ALIGNED(struct kd_mutex_node,
 				     kd_mutex_nodes[KD_MUTEX_MAX_NODES]);
 static DEFINE_PER_CPU_SHARED_ALIGNED(struct kd_mutex_cpu_state, kd_mutex_shadows);
 
@@ -176,7 +177,7 @@ kd_mutex_lock_slowpath_asm(struct kd_mutex *lock,
 		KD_PR_ERR(
 			"kd_mutex: waiter shadow stack is NULL on cpu %d slot %d\n",
 			smp_processor_id(), cur_node->slot);
-		kd_mutex_wait_and_lock(lock);
+		kd_mutex_wait_and_lock_node(lock, cur_node);
 		return 0;
 	}
 

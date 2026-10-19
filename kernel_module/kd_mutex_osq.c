@@ -1,73 +1,58 @@
 // SPDX-License-Identifier: GPL-2.0
 #include <linux/percpu.h>
 #include <linux/sched.h>
+#include <linux/bug.h>
 #include "kd_mutex_local.h"
 
 /*
  * An MCS like lock especially tailored for optimistic spinning for sleeping
  * lock implementations (mutex, rwsem, etc).
  *
- * Using a single mcs node per CPU is safe because sleeping locks should not be
- * called from interrupt context and we have preemption disabled while
- * spinning.
+ * Nodes share the preallocated delegation pool but have independent links.
+ * Every member stays preemption-disabled until this abortable queue has
+ * finished all accesses. The caller owns or explicitly borrows its reservation.
  */
-/* The captured kernel has a small reserved module per-CPU arena. Allocate
- * these private, non-JIT nodes dynamically before publishing the provider. */
-static struct optimistic_spin_node __percpu *kd_mutex_osq_node;
-
-int kd_mutex_osq_init(void)
+static inline int node_cpu(struct kd_mutex_osq_node *node)
 {
-	kd_mutex_osq_node = __alloc_percpu(sizeof(struct optimistic_spin_node),
-					 SMP_CACHE_BYTES);
-	return kd_mutex_osq_node ? 0 : -ENOMEM;
+	return (node->tail >> KD_MUTEX_TAIL_CPU_OFFSET) - 1;
 }
 
-void kd_mutex_osq_exit(void)
+static inline struct kd_mutex_osq_node *decode_tail(u32 tail)
 {
-	free_percpu(kd_mutex_osq_node);
-	kd_mutex_osq_node = NULL;
+	int cpu = (tail >> KD_MUTEX_TAIL_CPU_OFFSET) - 1;
+	int slot = (tail >> KD_MUTEX_TAIL_IDX_OFFSET) & KD_MUTEX_TAIL_IDX_MASK;
+
+	return &per_cpu_ptr(&kd_mutex_nodes[slot], cpu)->osq;
 }
 
-/*
- * We use the value 0 to represent "no CPU", thus the encoded value
- * will be the CPU number incremented by 1.
- */
-static inline int encode_cpu(int cpu_nr)
+/* IDLE is exact retirement evidence for the reservation owner. Publish it
+ * only after unlink/handoff has finished; it is never an acquisition grant. */
+static void osq_retire(struct kd_mutex_osq_node *node)
 {
-	return cpu_nr + 1;
-}
-
-static inline int node_cpu(struct optimistic_spin_node *node)
-{
-	return node->cpu - 1;
-}
-
-static inline struct optimistic_spin_node *decode_cpu(int encoded_cpu_val)
-{
-	int cpu_nr = encoded_cpu_val - 1;
-
-	return per_cpu_ptr(kd_mutex_osq_node, cpu_nr);
+	WRITE_ONCE(node->next, NULL);
+	WRITE_ONCE(node->prev, NULL);
+	WRITE_ONCE(node->locked, KD_MUTEX_OSQ_IDLE);
 }
 
 /*
  * Get a stable @node->next pointer, either for unlock() or unqueue() purposes.
  * Can return NULL in case we were the last queued and we updated @lock instead.
  */
-static inline struct optimistic_spin_node *
+static inline struct kd_mutex_osq_node *
 osq_wait_next(struct optimistic_spin_queue *lock,
-	      struct optimistic_spin_node *node,
-	      struct optimistic_spin_node *prev)
+	      struct kd_mutex_osq_node *node,
+	      struct kd_mutex_osq_node *prev)
 {
-	struct optimistic_spin_node *next = NULL;
-	int curr = encode_cpu(smp_processor_id());
+	struct kd_mutex_osq_node *next = NULL;
+	int curr = node->tail;
 	int old;
 
 	/*
 	 * If there is a prev node in queue, then the 'old' value will be
-	 * the prev node's CPU #, else it's set to OSQ_UNLOCKED_VAL since if
+	 * the prev node's encoded CPU/slot, else it's OSQ_UNLOCKED_VAL since if
 	 * we're currently last in queue, then the queue will then become empty.
 	 */
-	old = prev ? prev->cpu : OSQ_UNLOCKED_VAL;
+	old = prev ? prev->tail : OSQ_UNLOCKED_VAL;
 
 	for (;;) {
 		if (atomic_read(&lock->tail) == curr &&
@@ -102,16 +87,18 @@ osq_wait_next(struct optimistic_spin_queue *lock,
 	return next;
 }
 
-bool kd_mutex_osq_lock(struct optimistic_spin_queue *lock)
+bool kd_mutex_osq_lock(struct optimistic_spin_queue *lock,
+		       struct kd_mutex_osq_node *node)
 {
-	struct optimistic_spin_node *node = this_cpu_ptr(kd_mutex_osq_node);
-	struct optimistic_spin_node *prev, *next;
-	int curr = encode_cpu(smp_processor_id());
+	struct kd_mutex_osq_node *prev, *next;
+	int curr = node->tail;
 	int old;
 
-	node->locked = 0;
+	BUG_ON(node_cpu(node) != smp_processor_id());
+	BUG_ON(READ_ONCE(node->locked) != KD_MUTEX_OSQ_IDLE);
+	node->locked = KD_MUTEX_OSQ_WAITING;
 	node->next = NULL;
-	node->cpu = curr;
+	node->prev = NULL;
 
 	/*
 	 * We need both ACQUIRE (pairs with corresponding RELEASE in
@@ -123,7 +110,7 @@ bool kd_mutex_osq_lock(struct optimistic_spin_queue *lock)
 	if (old == OSQ_UNLOCKED_VAL)
 		return true;
 
-	prev = decode_cpu(old);
+	prev = decode_tail(old);
 	node->prev = prev;
 
 	/*
@@ -155,8 +142,10 @@ bool kd_mutex_osq_lock(struct optimistic_spin_queue *lock)
 	 * is implemented with a monitor-wait. vcpu_is_preempted() relies on
 	 * polling, be careful.
 	 */
-	if (smp_cond_load_relaxed(&node->locked, VAL || need_resched() ||
-				  vcpu_is_preempted(node_cpu(node->prev))))
+	if (smp_cond_load_relaxed(&node->locked,
+				  VAL == KD_MUTEX_OSQ_GRANTED || need_resched() ||
+				  vcpu_is_preempted(node_cpu(node->prev))) ==
+	    KD_MUTEX_OSQ_GRANTED)
 		return true;
 
 	/* unqueue */
@@ -182,7 +171,7 @@ bool kd_mutex_osq_lock(struct optimistic_spin_queue *lock)
 		 * in which case we should observe @node->locked becoming
 		 * true.
 		 */
-		if (smp_load_acquire(&node->locked))
+		if (smp_load_acquire(&node->locked) == KD_MUTEX_OSQ_GRANTED)
 			return true;
 
 		cpu_relax();
@@ -202,8 +191,10 @@ bool kd_mutex_osq_lock(struct optimistic_spin_queue *lock)
 	 */
 
 	next = osq_wait_next(lock, node, prev);
-	if (!next)
+	if (!next) {
+		osq_retire(node);
 		return false;
+	}
 
 	/*
 	 * Step - C -- unlink
@@ -216,32 +207,39 @@ bool kd_mutex_osq_lock(struct optimistic_spin_queue *lock)
 	WRITE_ONCE(next->prev, prev);
 	WRITE_ONCE(prev->next, next);
 
+	osq_retire(node);
 	return false;
 }
 
-void kd_mutex_osq_unlock(struct optimistic_spin_queue *lock)
+void kd_mutex_osq_unlock(struct optimistic_spin_queue *lock,
+			 struct kd_mutex_osq_node *node)
 {
-	struct optimistic_spin_node *node, *next;
-	int curr = encode_cpu(smp_processor_id());
+	struct kd_mutex_osq_node *next;
+	int curr = node->tail;
+
+	BUG_ON(READ_ONCE(node->locked) == KD_MUTEX_OSQ_IDLE);
 
 	/*
 	 * Fast path for the uncontended case.
 	 */
 	if (likely(atomic_cmpxchg_release(&lock->tail, curr,
-					  OSQ_UNLOCKED_VAL) == curr))
+					  OSQ_UNLOCKED_VAL) == curr)) {
+		osq_retire(node);
 		return;
+	}
 
 	/*
 	 * Second most likely case.
 	 */
-	node = this_cpu_ptr(kd_mutex_osq_node);
 	next = xchg(&node->next, NULL);
 	if (next) {
-		WRITE_ONCE(next->locked, 1);
+		WRITE_ONCE(next->locked, KD_MUTEX_OSQ_GRANTED);
+		osq_retire(node);
 		return;
 	}
 
 	next = osq_wait_next(lock, node, NULL);
 	if (next)
-		WRITE_ONCE(next->locked, 1);
+		WRITE_ONCE(next->locked, KD_MUTEX_OSQ_GRANTED);
+	osq_retire(node);
 }
