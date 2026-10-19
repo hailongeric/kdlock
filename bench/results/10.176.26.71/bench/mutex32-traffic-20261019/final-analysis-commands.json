@@ -1,0 +1,67 @@
+[
+  {
+    "argv": [
+      "python3",
+      "/root/kdlock-evidence/10.176.26.71/bench/mutex32-traffic-20261019/summarize.py",
+      "--base",
+      "/root/kdlock-evidence/10.176.26.71/bench/mutex32-traffic-20261019",
+      "--arms",
+      "baseline",
+      "fetchadd",
+      "old256",
+      "hint",
+      "inline"
+    ],
+    "cwd": "/root/host_fs/kdlock",
+    "started_unix": 1792411074.4696257,
+    "finished_unix": 1792411075.32091,
+    "exit_code": 0,
+    "stdout": "{\"complete\": true, \"sessions\": 130, \"plain\": 120, \"groups\": 40, \"invalid\": 0, \"issues\": [], \"output\": \"/root/kdlock-evidence/10.176.26.71/bench/mutex32-traffic-20261019\"}\n"
+  },
+  {
+    "argv": [
+      "python3",
+      "/root/kdlock-evidence/10.176.26.71/bench/mutex32-traffic-20261019/profile-analysis.py",
+      "--base",
+      "/root/kdlock-evidence/10.176.26.71/bench/mutex32-traffic-20261019",
+      "--arms",
+      "baseline",
+      "fetchadd",
+      "old256",
+      "hint",
+      "inline"
+    ],
+    "cwd": "/root/host_fs/kdlock",
+    "started_unix": 1792411075.3215008,
+    "finished_unix": 1792411089.987737,
+    "exit_code": 0,
+    "stdout": "{\"complete\": true, \"profiles\": 10, \"parsed_samples\": 136990, \"issues\": [], \"output\": \"/root/kdlock-evidence/10.176.26.71/bench/mutex32-traffic-20261019\"}\n"
+  },
+  {
+    "argv": [
+      "python3",
+      "/root/kdlock-evidence/10.176.26.71/bench/mutex32-traffic-20261019/finalize.py",
+      "--base",
+      "/root/kdlock-evidence/10.176.26.71/bench/mutex32-traffic-20261019",
+      "--arms",
+      "baseline",
+      "fetchadd",
+      "old256",
+      "hint",
+      "inline",
+      "--check",
+      "fetchadd=checks-fetchadd",
+      "--check",
+      "hint=checks-hint",
+      "--check",
+      "inline=checks-inline",
+      "--current-arm",
+      "inline"
+    ],
+    "cwd": "/root/host_fs/kdlock",
+    "started_unix": 1792411089.988455,
+    "finished_unix": 1792411090.7415233,
+    "exit_code": 0,
+    "stdout": "{\"checks\": [\"fetchadd\", \"hint\", \"inline\"], \"current_arm\": \"inline\", \"faults\": 0, \"idle\": true, \"kernel_logs\": 139, \"passed\": true, \"profiles\": 10, \"timing\": 120}\n"
+  }
+]

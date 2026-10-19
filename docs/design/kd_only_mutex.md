@@ -91,10 +91,13 @@ mutex objects, and there is no allocation on acquisition or retirement.
 Exact invocation and gate-owner references retain the slot through queue
 publication, physical ownership, native unlock ACKs and frame retirement. A
 scheduling node may retire before its owner's critical section returns, so node
-retirement alone cannot release the slot. Positive references prevent slot reuse;
-lookup validates the address after acquiring a reference. The last decrement
-reserves retirement, checks exact protocol state, clears the address and makes
-the slot free. Read-only observers validate a lifecycle sequence around their
+retirement alone cannot release the slot. Lookup pins LIVE with one fetch-add and
+then validates the address. LIVE zero can be pinned until a retiring put wins the
+zero-to-BUSY CAS. A losing put returns without inspecting protocol state; the
+winner checks exact drain, clears the address and publishes FREE. Negative-state
+pins reject protocol access, but remain counted until their put. Additive
+creation and retirement transitions preserve those pins, and a slot is reusable
+only at exact FREE. Read-only observers validate a lifecycle sequence around their
 address and field reads; the sequence never wraps into an old identity. Once
 users and their asynchronous obligations drain, caller storage may be freed or
 reinitialized at the same address without another cleanup API. No per-object

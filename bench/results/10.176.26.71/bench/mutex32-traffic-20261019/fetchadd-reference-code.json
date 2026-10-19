@@ -1,0 +1,27 @@
+{
+  "source_revision": "113b317acab178212aa80c671afcf67a26a85beb",
+  "archive_binary": "fetchadd/profile/pipe/build/kdlock_km.ko",
+  "elf_sha256": "5931ef7b1ea645c2202968b96811ae2500c766aee67df891959afe35d184e514",
+  "commands": [
+    [
+      "objdump",
+      "-d",
+      "--disassemble=kd_mutex_aux_try_ref",
+      "/tmp/kdlock-fetchadd-profile.ko"
+    ],
+    [
+      "objdump",
+      "-d",
+      "--disassemble=kd_mutex_aux_put",
+      "/tmp/kdlock-fetchadd-profile.ko"
+    ],
+    [
+      "objdump",
+      "-d",
+      "--disassemble=kd_mutex_aux_get",
+      "/tmp/kdlock-fetchadd-profile.ko"
+    ]
+  ],
+  "output_sha256": "8e01dc5c590bcc6deef11317ea0b7bbd029f08d3a1c620930111a3fe638f9f32",
+  "scope": "Source-host read-only static inspection; relocation targets are retained in the archived ELF."
+}

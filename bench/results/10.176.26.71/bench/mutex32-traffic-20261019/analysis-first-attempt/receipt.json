@@ -1,0 +1,6 @@
+{
+  "summary_exit_code": 1,
+  "profile_exit_code": 0,
+  "workload_failures": false,
+  "reason": "Synthetic collection adds five derived fields after saving session.json; strict equality rejected 24 otherwise completed synthetic rows. This failed analysis output remains unchanged."
+}

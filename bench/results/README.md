@@ -54,6 +54,14 @@ and statistics audits passed. Separate check bundles, source identities,
 first-index results and the controller preparation failure remain retained.
 Synthetic entry witnesses do not prove returned bodies; API completions, mixed execution classes and
 sequential-block limitations are explicit. Earlier RCU measurements are unchanged.
+The [reference-traffic investigation](10.176.26.71/bench/mutex32-traffic-20261019/README.md)
+adds fresh `e999008`/`0324e60` controls, counted fetch-add pins, a rejected cached
+index experiment and final inlined guards. All 120 plain runs and ten unscored
+pipe profiles passed and drained. Final pipe medians improve 3.2%/1.9% at
+eight/60 workers versus the prior 32-byte implementation, but remain
+21.6%/31.0% below the old 256-byte object. Other workloads show mixed changes.
+The report retains source identities, reference lifetime reasoning, three
+affected-check bundles and the corrected summary-analysis refusal.
 The [2026-10-18 consolidation checks](10.176.26.71/tests/main-consolidation-20261018/README.md)
 validate organization and tooling separately from the measured runtime.
 The [feature reintegration checks](10.176.26.71/tests/feature-reintegration-20261018/README.md)

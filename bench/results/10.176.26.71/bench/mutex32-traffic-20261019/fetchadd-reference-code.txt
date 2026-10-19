@@ -1,0 +1,288 @@
+
+/tmp/kdlock-fetchadd-profile.ko:     file format elf64-x86-64
+
+
+Disassembly of section .text:
+
+00000000000173f0 <kd_mutex_aux_try_ref>:
+   173f0:	e8 00 00 00 00       	call   173f5 <kd_mutex_aux_try_ref+0x5>
+   173f5:	ba 01 00 00 00       	mov    $0x1,%edx
+   173fa:	f0 48 0f c1 97 c8 00 	lock xadd %rdx,0xc8(%rdi)
+   17401:	00 00 
+   17403:	48 b9 ff ff ff ff ff 	movabs $0x3fffffffffffffff,%rcx
+   1740a:	ff ff 3f 
+   1740d:	48 89 d0             	mov    %rdx,%rax
+   17410:	48 21 c8             	and    %rcx,%rax
+   17413:	48 3d fe ff ff 7f    	cmp    $0x7ffffffe,%rax
+   17419:	0f 97 c0             	seta   %al
+   1741c:	48 39 ca             	cmp    %rcx,%rdx
+   1741f:	0f 9f c1             	setg   %cl
+   17422:	08 c8                	or     %cl,%al
+   17424:	75 0f                	jne    17435 <kd_mutex_aux_try_ref+0x45>
+   17426:	48 85 d2             	test   %rdx,%rdx
+   17429:	78 0c                	js     17437 <kd_mutex_aux_try_ref+0x47>
+   1742b:	b8 01 00 00 00       	mov    $0x1,%eax
+   17430:	e9 00 00 00 00       	jmp    17435 <kd_mutex_aux_try_ref+0x45>
+   17435:	0f 0b                	ud2    
+   17437:	55                   	push   %rbp
+   17438:	48 89 e5             	mov    %rsp,%rbp
+   1743b:	48 83 ec 08          	sub    $0x8,%rsp
+   1743f:	88 45 ff             	mov    %al,-0x1(%rbp)
+   17442:	e8 00 00 00 00       	call   17447 <kd_mutex_aux_try_ref+0x57>
+   17447:	0f b6 45 ff          	movzbl -0x1(%rbp),%eax
+   1744b:	c9                   	leave  
+   1744c:	e9 00 00 00 00       	jmp    17451 <kd_mutex_aux_try_ref+0x61>
+
+Disassembly of section .exit.text:
+
+Disassembly of section .init.text:
+
+Disassembly of section .text.unlikely:
+
+Disassembly of section .altinstr_replacement:
+
+/tmp/kdlock-fetchadd-profile.ko:     file format elf64-x86-64
+
+
+Disassembly of section .text:
+
+0000000000017320 <kd_mutex_aux_put>:
+   17320:	f3 0f 1e fa          	endbr64 
+   17324:	e8 00 00 00 00       	call   17329 <kd_mutex_aux_put+0x9>
+   17329:	55                   	push   %rbp
+   1732a:	48 c7 c6 ff ff ff ff 	mov    $0xffffffffffffffff,%rsi
+   17331:	48 89 f0             	mov    %rsi,%rax
+   17334:	48 89 e5             	mov    %rsp,%rbp
+   17337:	f0 48 0f c1 87 c8 00 	lock xadd %rax,0xc8(%rdi)
+   1733e:	00 00 
+   17340:	48 b9 ff ff ff ff ff 	movabs $0x3fffffffffffffff,%rcx
+   17347:	ff ff 3f 
+   1734a:	48 85 c8             	test   %rcx,%rax
+   1734d:	0f 84 8b 00 00 00    	je     173de <kd_mutex_aux_put+0xbe>
+   17353:	48 39 c8             	cmp    %rcx,%rax
+   17356:	0f 8f 82 00 00 00    	jg     173de <kd_mutex_aux_put+0xbe>
+   1735c:	48 83 f8 01          	cmp    $0x1,%rax
+   17360:	75 74                	jne    173d6 <kd_mutex_aux_put+0xb6>
+   17362:	48 b9 00 00 00 00 00 	movabs $0xc000000000000000,%rcx
+   17369:	00 00 c0 
+   1736c:	48 89 fa             	mov    %rdi,%rdx
+   1736f:	31 c0                	xor    %eax,%eax
+   17371:	f0 48 0f b1 8f c8 00 	lock cmpxchg %rcx,0xc8(%rdi)
+   17378:	00 00 
+   1737a:	48 85 c0             	test   %rax,%rax
+   1737d:	75 57                	jne    173d6 <kd_mutex_aux_put+0xb6>
+   1737f:	48 8b 47 40          	mov    0x40(%rdi),%rax
+   17383:	48 85 c0             	test   %rax,%rax
+   17386:	75 54                	jne    173dc <kd_mutex_aux_put+0xbc>
+   17388:	8b 47 48             	mov    0x48(%rdi),%eax
+   1738b:	85 c0                	test   %eax,%eax
+   1738d:	75 4d                	jne    173dc <kd_mutex_aux_put+0xbc>
+   1738f:	8b 87 80 00 00 00    	mov    0x80(%rdi),%eax
+   17395:	85 c0                	test   %eax,%eax
+   17397:	75 43                	jne    173dc <kd_mutex_aux_put+0xbc>
+   17399:	8b 87 c0 00 00 00    	mov    0xc0(%rdi),%eax
+   1739f:	85 c0                	test   %eax,%eax
+   173a1:	75 39                	jne    173dc <kd_mutex_aux_put+0xbc>
+   173a3:	48 8b 47 08          	mov    0x8(%rdi),%rax
+   173a7:	a8 01                	test   $0x1,%al
+   173a9:	75 35                	jne    173e0 <kd_mutex_aux_put+0xc0>
+   173ab:	48 8d 78 01          	lea    0x1(%rax),%rdi
+   173af:	48 89 7a 08          	mov    %rdi,0x8(%rdx)
+   173b3:	48 c7 02 00 00 00 00 	movq   $0x0,(%rdx)
+   173ba:	48 8d 78 02          	lea    0x2(%rax),%rdi
+   173be:	48 83 f8 fe          	cmp    $0xfffffffffffffffe,%rax
+   173c2:	48 89 f0             	mov    %rsi,%rax
+   173c5:	48 0f 45 c7          	cmovne %rdi,%rax
+   173c9:	48 89 42 08          	mov    %rax,0x8(%rdx)
+   173cd:	f0 48 0f c1 8a c8 00 	lock xadd %rcx,0xc8(%rdx)
+   173d4:	00 00 
+   173d6:	5d                   	pop    %rbp
+   173d7:	e9 00 00 00 00       	jmp    173dc <kd_mutex_aux_put+0xbc>
+   173dc:	0f 0b                	ud2    
+   173de:	0f 0b                	ud2    
+   173e0:	0f 0b                	ud2    
+
+Disassembly of section .exit.text:
+
+Disassembly of section .init.text:
+
+Disassembly of section .text.unlikely:
+
+Disassembly of section .altinstr_replacement:
+
+/tmp/kdlock-fetchadd-profile.ko:     file format elf64-x86-64
+
+
+Disassembly of section .text:
+
+0000000000017530 <kd_mutex_aux_get>:
+   17530:	f3 0f 1e fa          	endbr64 
+   17534:	e8 00 00 00 00       	call   17539 <kd_mutex_aux_get+0x9>
+   17539:	55                   	push   %rbp
+   1753a:	48 89 e5             	mov    %rsp,%rbp
+   1753d:	41 55                	push   %r13
+   1753f:	41 54                	push   %r12
+   17541:	53                   	push   %rbx
+   17542:	48 85 ff             	test   %rdi,%rdi
+   17545:	0f 84 95 01 00 00    	je     176e0 <kd_mutex_aux_get+0x1b0>
+   1754b:	4c 8b 25 00 00 00 00 	mov    0x0(%rip),%r12        # 17552 <kd_mutex_aux_get+0x22>
+   17552:	4d 85 e4             	test   %r12,%r12
+   17555:	74 3f                	je     17596 <kd_mutex_aux_get+0x66>
+   17557:	48 b8 eb 83 b5 80 46 	movabs $0x61c8864680b583eb,%rax
+   1755e:	86 c8 61 
+   17561:	48 89 fb             	mov    %rdi,%rbx
+   17564:	48 0f af c7          	imul   %rdi,%rax
+   17568:	48 c1 e8 30          	shr    $0x30,%rax
+   1756c:	48 c1 e0 08          	shl    $0x8,%rax
+   17570:	49 01 c4             	add    %rax,%r12
+   17573:	49 8b 04 24          	mov    (%r12),%rax
+   17577:	48 39 c7             	cmp    %rax,%rdi
+   1757a:	75 30                	jne    175ac <kd_mutex_aux_get+0x7c>
+   1757c:	4c 89 e7             	mov    %r12,%rdi
+   1757f:	e8 6c fe ff ff       	call   173f0 <kd_mutex_aux_try_ref>
+   17584:	84 c0                	test   %al,%al
+   17586:	74 24                	je     175ac <kd_mutex_aux_get+0x7c>
+   17588:	49 8b 04 24          	mov    (%r12),%rax
+   1758c:	48 39 c3             	cmp    %rax,%rbx
+   1758f:	75 13                	jne    175a4 <kd_mutex_aux_get+0x74>
+   17591:	4d 85 e4             	test   %r12,%r12
+   17594:	74 16                	je     175ac <kd_mutex_aux_get+0x7c>
+   17596:	5b                   	pop    %rbx
+   17597:	4c 89 e0             	mov    %r12,%rax
+   1759a:	41 5c                	pop    %r12
+   1759c:	41 5d                	pop    %r13
+   1759e:	5d                   	pop    %rbp
+   1759f:	e9 00 00 00 00       	jmp    175a4 <kd_mutex_aux_get+0x74>
+   175a4:	4c 89 e7             	mov    %r12,%rdi
+   175a7:	e8 00 00 00 00       	call   175ac <kd_mutex_aux_get+0x7c>
+   175ac:	4d 8b ac 24 c8 00 00 	mov    0xc8(%r12),%r13
+   175b3:	00 
+   175b4:	48 ba 00 00 00 00 00 	movabs $0x8000000000000000,%rdx
+   175bb:	00 00 80 
+   175be:	49 39 d5             	cmp    %rdx,%r13
+   175c1:	74 4b                	je     1760e <kd_mutex_aux_get+0xde>
+   175c3:	49 8b 04 24          	mov    (%r12),%rax
+   175c7:	48 39 c3             	cmp    %rax,%rbx
+   175ca:	75 1e                	jne    175ea <kd_mutex_aux_get+0xba>
+   175cc:	4c 89 e7             	mov    %r12,%rdi
+   175cf:	e8 1c fe ff ff       	call   173f0 <kd_mutex_aux_try_ref>
+   175d4:	84 c0                	test   %al,%al
+   175d6:	74 12                	je     175ea <kd_mutex_aux_get+0xba>
+   175d8:	49 8b 04 24          	mov    (%r12),%rax
+   175dc:	48 39 c3             	cmp    %rax,%rbx
+   175df:	0f 85 2b 01 00 00    	jne    17710 <kd_mutex_aux_get+0x1e0>
+   175e5:	4d 85 e4             	test   %r12,%r12
+   175e8:	75 ac                	jne    17596 <kd_mutex_aux_get+0x66>
+   175ea:	48 b8 00 00 00 00 00 	movabs $0xc000000000000000,%rax
+   175f1:	00 00 c0 
+   175f4:	49 8b 14 24          	mov    (%r12),%rdx
+   175f8:	49 39 c5             	cmp    %rax,%r13
+   175fb:	0f 82 3e 01 00 00    	jb     1773f <kd_mutex_aux_get+0x20f>
+   17601:	65 48 ff 05 00 00 00 	incq   %gs:0x0(%rip)        # 17609 <kd_mutex_aux_get+0xd9>
+   17608:	00 
+   17609:	45 31 e4             	xor    %r12d,%r12d
+   1760c:	eb 88                	jmp    17596 <kd_mutex_aux_get+0x66>
+   1760e:	49 8d b4 24 c8 00 00 	lea    0xc8(%r12),%rsi
+   17615:	00 
+   17616:	4c 89 e8             	mov    %r13,%rax
+   17619:	48 b9 00 00 00 00 00 	movabs $0xc000000000000000,%rcx
+   17620:	00 00 c0 
+   17623:	f0 49 0f b1 8c 24 c8 	lock cmpxchg %rcx,0xc8(%r12)
+   1762a:	00 00 00 
+   1762d:	49 89 c5             	mov    %rax,%r13
+   17630:	48 39 d0             	cmp    %rdx,%rax
+   17633:	75 8e                	jne    175c3 <kd_mutex_aux_get+0x93>
+   17635:	49 8b 44 24 08       	mov    0x8(%r12),%rax
+   1763a:	48 83 f8 fd          	cmp    $0xfffffffffffffffd,%rax
+   1763e:	0f 87 d9 00 00 00    	ja     1771d <kd_mutex_aux_get+0x1ed>
+   17644:	a8 01                	test   $0x1,%al
+   17646:	0f 85 ef 00 00 00    	jne    1773b <kd_mutex_aux_get+0x20b>
+   1764c:	8b 05 00 00 00 00    	mov    0x0(%rip),%eax        # 17652 <kd_mutex_aux_get+0x122>
+   17652:	83 f8 01             	cmp    $0x1,%eax
+   17655:	0f 84 8d 00 00 00    	je     176e8 <kd_mutex_aux_get+0x1b8>
+   1765b:	49 8b 04 24          	mov    (%r12),%rax
+   1765f:	48 85 c0             	test   %rax,%rax
+   17662:	75 7a                	jne    176de <kd_mutex_aux_get+0x1ae>
+   17664:	49 8b 44 24 40       	mov    0x40(%r12),%rax
+   17669:	48 85 c0             	test   %rax,%rax
+   1766c:	75 70                	jne    176de <kd_mutex_aux_get+0x1ae>
+   1766e:	41 8b 44 24 48       	mov    0x48(%r12),%eax
+   17673:	85 c0                	test   %eax,%eax
+   17675:	75 67                	jne    176de <kd_mutex_aux_get+0x1ae>
+   17677:	41 8b 84 24 80 00 00 	mov    0x80(%r12),%eax
+   1767e:	00 
+   1767f:	85 c0                	test   %eax,%eax
+   17681:	75 5b                	jne    176de <kd_mutex_aux_get+0x1ae>
+   17683:	41 8b 84 24 c0 00 00 	mov    0xc0(%r12),%eax
+   1768a:	00 
+   1768b:	85 c0                	test   %eax,%eax
+   1768d:	75 4f                	jne    176de <kd_mutex_aux_get+0x1ae>
+   1768f:	49 8b 44 24 08       	mov    0x8(%r12),%rax
+   17694:	a8 01                	test   $0x1,%al
+   17696:	0f 85 a1 00 00 00    	jne    1773d <kd_mutex_aux_get+0x20d>
+   1769c:	48 8d 50 01          	lea    0x1(%rax),%rdx
+   176a0:	49 89 54 24 08       	mov    %rdx,0x8(%r12)
+   176a5:	49 89 1c 24          	mov    %rbx,(%r12)
+   176a9:	48 8d 50 02          	lea    0x2(%rax),%rdx
+   176ad:	48 83 f8 fe          	cmp    $0xfffffffffffffffe,%rax
+   176b1:	48 c7 c0 ff ff ff ff 	mov    $0xffffffffffffffff,%rax
+   176b8:	48 0f 45 c2          	cmovne %rdx,%rax
+   176bc:	49 89 44 24 08       	mov    %rax,0x8(%r12)
+   176c1:	48 b8 01 00 00 00 00 	movabs $0x4000000000000001,%rax
+   176c8:	00 00 40 
+   176cb:	f0 48 0f c1 06       	lock xadd %rax,(%rsi)
+   176d0:	5b                   	pop    %rbx
+   176d1:	4c 89 e0             	mov    %r12,%rax
+   176d4:	41 5c                	pop    %r12
+   176d6:	41 5d                	pop    %r13
+   176d8:	5d                   	pop    %rbp
+   176d9:	e9 00 00 00 00       	jmp    176de <kd_mutex_aux_get+0x1ae>
+   176de:	0f 0b                	ud2    
+   176e0:	45 31 e4             	xor    %r12d,%r12d
+   176e3:	e9 ae fe ff ff       	jmp    17596 <kd_mutex_aux_get+0x66>
+   176e8:	31 d2                	xor    %edx,%edx
+   176ea:	f0 0f b1 15 00 00 00 	lock cmpxchg %edx,0x0(%rip)        # 176f2 <kd_mutex_aux_get+0x1c2>
+   176f1:	00 
+   176f2:	83 f8 01             	cmp    $0x1,%eax
+   176f5:	0f 85 60 ff ff ff    	jne    1765b <kd_mutex_aux_get+0x12b>
+   176fb:	65 48 ff 05 00 00 00 	incq   %gs:0x0(%rip)        # 17703 <kd_mutex_aux_get+0x1d3>
+   17702:	00 
+   17703:	f0 48 0f c1 0e       	lock xadd %rcx,(%rsi)
+   17708:	45 31 e4             	xor    %r12d,%r12d
+   1770b:	e9 86 fe ff ff       	jmp    17596 <kd_mutex_aux_get+0x66>
+   17710:	4c 89 e7             	mov    %r12,%rdi
+   17713:	e8 00 00 00 00       	call   17718 <kd_mutex_aux_get+0x1e8>
+   17718:	e9 cd fe ff ff       	jmp    175ea <kd_mutex_aux_get+0xba>
+   1771d:	65 48 ff 05 00 00 00 	incq   %gs:0x0(%rip)        # 17725 <kd_mutex_aux_get+0x1f5>
+   17724:	00 
+   17725:	49 c7 44 24 08 ff ff 	movq   $0xffffffffffffffff,0x8(%r12)
+   1772c:	ff ff 
+   1772e:	f0 48 0f c1 0e       	lock xadd %rcx,(%rsi)
+   17733:	45 31 e4             	xor    %r12d,%r12d
+   17736:	e9 5b fe ff ff       	jmp    17596 <kd_mutex_aux_get+0x66>
+   1773b:	0f 0b                	ud2    
+   1773d:	0f 0b                	ud2    
+   1773f:	48 39 d3             	cmp    %rdx,%rbx
+   17742:	0f 95 c1             	setne  %cl
+   17745:	48 85 d2             	test   %rdx,%rdx
+   17748:	0f 95 c0             	setne  %al
+   1774b:	84 c1                	test   %al,%cl
+   1774d:	74 15                	je     17764 <kd_mutex_aux_get+0x234>
+   1774f:	4d 85 ed             	test   %r13,%r13
+   17752:	78 10                	js     17764 <kd_mutex_aux_get+0x234>
+   17754:	65 48 ff 05 00 00 00 	incq   %gs:0x0(%rip)        # 1775c <kd_mutex_aux_get+0x22c>
+   1775b:	00 
+   1775c:	45 31 e4             	xor    %r12d,%r12d
+   1775f:	e9 32 fe ff ff       	jmp    17596 <kd_mutex_aux_get+0x66>
+   17764:	65 48 ff 05 00 00 00 	incq   %gs:0x0(%rip)        # 1776c <kd_mutex_aux_get+0x23c>
+   1776b:	00 
+   1776c:	45 31 e4             	xor    %r12d,%r12d
+   1776f:	e9 22 fe ff ff       	jmp    17596 <kd_mutex_aux_get+0x66>
+
+Disassembly of section .exit.text:
+
+Disassembly of section .init.text:
+
+Disassembly of section .text.unlikely:
+
+Disassembly of section .altinstr_replacement:

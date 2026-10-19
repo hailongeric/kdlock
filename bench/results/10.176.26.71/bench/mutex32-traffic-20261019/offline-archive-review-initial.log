@@ -1,0 +1,10 @@
+{
+  "passed": true,
+  "members": 21196,
+  "regular_files": 18284,
+  "source_manifests": 35,
+  "binary_manifest_entries": 184,
+  "jit_binaries": 203,
+  "ancillary_exceptions": 0,
+  "issues": []
+}

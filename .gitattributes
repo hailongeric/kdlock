@@ -46,3 +46,12 @@ bench/results/10.176.26.71/bench/mutex32-index-20261019/guest-before.log -whites
 bench/results/10.176.26.71/bench/mutex32-index-20261019/comparison.svg -whitespace
 # Preserve the compact-mutex traffic round's captured preflight output.
 bench/results/10.176.26.71/bench/mutex32-traffic-20261019/guest-before.log -whitespace
+# Preserve exact traffic-round compiler and disassembly evidence.
+bench/results/10.176.26.71/bench/mutex32-traffic-20261019/checks-fetchadd/provider.log -whitespace
+bench/results/10.176.26.71/bench/mutex32-traffic-20261019/checks-fetchadd/unit.log -whitespace
+bench/results/10.176.26.71/bench/mutex32-traffic-20261019/checks-hint/provider.log -whitespace
+bench/results/10.176.26.71/bench/mutex32-traffic-20261019/checks-hint/unit.log -whitespace
+bench/results/10.176.26.71/bench/mutex32-traffic-20261019/checks-inline/provider.log -whitespace
+bench/results/10.176.26.71/bench/mutex32-traffic-20261019/checks-inline/unit.log -whitespace
+bench/results/10.176.26.71/bench/mutex32-traffic-20261019/fetchadd-reference-code.txt -whitespace
+bench/results/10.176.26.71/bench/mutex32-traffic-20261019/inline-reference-code.txt -whitespace

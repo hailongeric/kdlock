@@ -8,6 +8,28 @@ Basic plus affected checks are the default; an old pass is not a current full pa
 The [terminology guide](TERMINOLOGY.md) explains status labels and other technical
 terms used in the receipts below.
 
+## Compact mutex counted-pin validation
+
+The [reference-traffic round](../bench/results/10.176.26.71/bench/mutex32-traffic-20261019/README.md)
+retains separate checks for fetch-add `113b317`, rejected cached-index
+`cd49d65` and final inline-pin `ba98937`. Each passed dependency checks,
+provider/daemon builds, two basic programs and 12 affected drivers (14 passed,
+zero failed), plus ordinary-mutex, rwsem and instruction-exit live probes.
+All 120 timing sessions and ten unscored pipe profiles completed and drained;
+139 retained kernel logs contained no matched runtime faults.
+Independent archive/source and statistics audits passed without issues or
+source exceptions, including all 130 reconstructed windows and 136,990 profile
+samples. The provider builds retain 51 warning lines per check bundle.
+
+The final auxiliary fixture has 20 negative controls and exercises LIVE-zero
+revival, delayed retirement CAS across generation reuse, rejected pins spanning
+publication/retirement/failure, state/count guard boundaries, exact owner/frame/ACK
+references, collisions, allocation refusal and concurrent reuse. These fixture
+checks do not replace kernel ordering review or live validation. The original
+summary refusal and corrected field validation are retained separately from
+workload outcomes. Scope remains basic plus affected checks, not the full suite,
+whole-kernel replacement, RT/ww_mutex or lockdep validation.
+
 ## Compact mutex direct-index and transfer validation
 
 Revisions `44f8eb6` and `e999008` retain the 32-byte, native-aligned caller object.

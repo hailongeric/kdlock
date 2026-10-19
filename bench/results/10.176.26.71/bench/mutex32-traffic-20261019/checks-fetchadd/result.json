@@ -1,0 +1,133 @@
+{
+  "commands": [
+    {
+      "argv": [
+        "/root/kdlock-translation-venv-20261019/bin/python3",
+        "-m",
+        "pip",
+        "check"
+      ],
+      "cwd": "/root/host_fs/kdlock",
+      "exit_code": 0,
+      "finished_unix": 1792408947.0693958,
+      "name": "dependencies",
+      "started_unix": 1792408946.4001303,
+      "timeout_seconds": 60
+    },
+    {
+      "argv": [
+        "make",
+        "-C",
+        "kernel_module",
+        "KDIR=/root/linux-6.1.159-kdclobber2",
+        "W=1",
+        "UBSAN_SANITIZE=n"
+      ],
+      "cwd": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-traffic-20261019/checks-fetchadd/source",
+      "exit_code": 0,
+      "finished_unix": 1792408958.8277154,
+      "name": "provider",
+      "started_unix": 1792408947.1475918,
+      "timeout_seconds": 240
+    },
+    {
+      "argv": [
+        "make",
+        "-C",
+        "daemon",
+        "CFLAGS=-O2 -Wall -Wextra -Werror"
+      ],
+      "cwd": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-traffic-20261019/checks-fetchadd/source",
+      "exit_code": 0,
+      "finished_unix": 1792408959.2254336,
+      "name": "daemon",
+      "started_unix": 1792408958.9077282,
+      "timeout_seconds": 60
+    },
+    {
+      "argv": [
+        "make",
+        "-C",
+        "tests/unit",
+        "run",
+        "PY_TESTS=mutex/test_mutex_aux.py mutex/test_mutex_resources.py mutex/test_mutex_balances.py mutex/test_mutex_terminal.py mutex/test_mutex_outer_progress.py mutex/test_mutex_outer_api.py mutex/test_mutex_wait_clobber.py mutex/test_mutex_task_cache.py execution/test_exec_capacity.py infrastructure/test_provider_lifecycle.py execution/test_mutex_images.py execution/test_remote_outer.py"
+      ],
+      "cwd": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-traffic-20261019/checks-fetchadd/source",
+      "exit_code": 0,
+      "finished_unix": 1792409024.6750658,
+      "name": "unit",
+      "started_unix": 1792408959.3015778,
+      "timeout_seconds": 300
+    },
+    {
+      "argv": [
+        "/root/kdlock-translation-venv-20261019/bin/python3",
+        "tests/kernel/mutex/local/run.py",
+        "--output",
+        "/root/kdlock-evidence/10.176.26.71/bench/mutex32-traffic-20261019/checks-fetchadd/local"
+      ],
+      "cwd": "/root/host_fs/kdlock",
+      "exit_code": 0,
+      "finished_unix": 1792409044.5748756,
+      "name": "local",
+      "started_unix": 1792409024.7533593,
+      "timeout_seconds": 300
+    },
+    {
+      "argv": [
+        "/root/kdlock-translation-venv-20261019/bin/python3",
+        "tests/kernel/rwsem/run.py",
+        "--output",
+        "/root/kdlock-evidence/10.176.26.71/bench/mutex32-traffic-20261019/checks-fetchadd/rwsem"
+      ],
+      "cwd": "/root/host_fs/kdlock",
+      "exit_code": 0,
+      "finished_unix": 1792409062.4650068,
+      "name": "rwsem",
+      "started_unix": 1792409044.6507354,
+      "timeout_seconds": 300
+    },
+    {
+      "argv": [
+        "/root/kdlock-translation-venv-20261019/bin/python3",
+        "tests/kernel/jit_escape/run.py",
+        "--cpus",
+        "0-7,32-39",
+        "--iterations",
+        "200000",
+        "--warmup-iterations",
+        "200000",
+        "--output",
+        "/root/kdlock-evidence/10.176.26.71/bench/mutex32-traffic-20261019/checks-fetchadd/instruction-exit"
+      ],
+      "cwd": "/root/host_fs/kdlock",
+      "exit_code": 0,
+      "finished_unix": 1792409096.5832796,
+      "name": "instruction-exit",
+      "started_unix": 1792409062.5391362,
+      "timeout_seconds": 900
+    }
+  ],
+  "final_idle": true,
+  "full_suite": false,
+  "passed": true,
+  "script_sha256": "d08599fe2964364b2fe02594e7e0314cd44fb5378a17bc52fcd9c56738dc57a8",
+  "snapshot_tag": "before-mutex-kdonly-20261017T140354Z",
+  "source_revision": "113b317acab178212aa80c671afcf67a26a85beb",
+  "source_unchanged": true,
+  "unit_basic": 2,
+  "unit_drivers": [
+    "mutex/test_mutex_aux.py",
+    "mutex/test_mutex_resources.py",
+    "mutex/test_mutex_balances.py",
+    "mutex/test_mutex_terminal.py",
+    "mutex/test_mutex_outer_progress.py",
+    "mutex/test_mutex_outer_api.py",
+    "mutex/test_mutex_wait_clobber.py",
+    "mutex/test_mutex_task_cache.py",
+    "execution/test_exec_capacity.py",
+    "infrastructure/test_provider_lifecycle.py",
+    "execution/test_mutex_images.py",
+    "execution/test_remote_outer.py"
+  ]
+}

@@ -23,9 +23,10 @@ their recorded source versions; acceptance of those results does not measure the
 additional flag-preservation cost in images that contain instruction markers.
 
 The mutex protocol remains KD-only `d2a2304`: KD physical exclusion with the
-legacy delegation queue. Current `e999008` keeps the 32-byte object introduced
+legacy delegation queue. Current `ba98937` keeps the 32-byte object introduced
 by `7713897`, with a preallocated direct-index auxiliary table and exact
-reference transfer/borrowing. Its four-arm comparison, the historical RCU
+reference transfer/borrowing, counted fetch-add pins and inlined guards. Its
+latest five-arm comparison, the prior four-arm comparison, the historical RCU
 investigation and earlier compact screens are below. The
 [2026-10-17 paired report](../bench/results/10.176.26.71/bench/comparison/mutex-kdonly-20261017T140354Z/README.md)
 contains 504 complete, drained sessions: two workloads, 21 worker counts, three
@@ -92,6 +93,42 @@ The earlier 20% taskname mutation control was correct but returned no delegated
 bodies; mutation delegation and full live-task/procfs integration remain
 unaccepted. The checked-helper `c79d84f` round, prior dispatcher round, screens
 and profiles retain separate source identities and are never pooled.
+
+## Compact mutex reference traffic, ba98937
+
+The [reference-traffic investigation](../bench/results/10.176.26.71/bench/mutex32-traffic-20261019/README.md)
+compares fresh `e999008` and old 256-byte `0324e60` controls with fetch-add
+`113b317`, rejected cached-index `cd49d65`, and final inline-pin `ba98937`.
+All 120 plain timings and ten separate pipe profiles passed and drained.
+Median whole-run Mops/s; each pair is eight / 60 workers:
+
+| Workload | Previous 32 B | Final 32 B | Old 256 B |
+| --- | ---: | ---: | ---: |
+| c01, post64 | 5.520 / 4.332 | 5.405 / 4.378 | 7.055 / 4.972 |
+| c08, post64 | 4.899 / 4.054 | 5.070 / 3.964 | 4.792 / 3.649 |
+| SEEK_SET, n16 | 4.261 / 3.871 | 4.115 / 3.814 | 4.968 / 3.995 |
+| Pipebytes, n16 | 5.276 / 3.666 | 5.442 / 3.735 | 6.943 / 5.411 |
+
+Pipe improves by 3.2%/1.9% against the previous compact implementation, while
+remaining 21.6%/31.0% below the old inline object. Other changes are mixed:
+c01 −2.1%/+1.1%, seek −3.4%/−1.5%, and c08 +3.5%/−2.2%. Three repetitions
+in sequential source blocks support descriptive comparisons, not significance
+or a general speedup. All API sessions returned generated bodies; synthetic
+counters witness entry only. Exact ranges and peak windows remain in the report.
+
+The new pin performs one fetch-add instead of a CAS retry loop; inlined helpers
+and common guards reduce instruction work without dropping exact references.
+The fixed direct-index table, 32-byte/8-byte public geometry and queue/frame/ACK
+protocol remain intact, with no registry locks or RCU. Rejected pins remain
+counted across publication and retirement. The cached-index experiment was
+reverted after mixed results and a c08 regression.
+
+Pipe's measured returned-body share rises from 74.63%/85.87% to 87.88%/87.33%,
+but the old object's shares are still 96.83%/94.98%. Flat profiles locate
+reference-path work but do not count coherence traffic or isolate its total
+cost. Sampling substantially changes execution mix in some runs, especially
+the eight-worker baseline; profile timings remain unscored. The report separates
+code evidence, admission counters and timing inferences.
 
 ## Compact mutex direct index and reference transfer, e999008
 

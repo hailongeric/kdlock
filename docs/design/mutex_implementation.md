@@ -171,12 +171,16 @@ requirements.
 
 The table is zeroed by `vzalloc()` during provider initialization; allocation
 failure aborts provider startup with `-ENOMEM`. No allocation occurs on a slot
-lookup or claim. The reference word distinguishes free (`-1`), an exclusive
-lifecycle reservation (`0`) and live exact references (positive). Creation claims
-a free slot, publishes its address and sequence, then release-publishes the first
-reference. Lookup increments only a positive count and rechecks the address after
-that successful increment: an earlier address read alone cannot identify the
-generation acquired by the CAS. A mismatched lookup releases its reference.
+lookup or claim. A 64-bit reference word encodes LIVE, BUSY and FREE states with
+exact counts, including rejected pins during lifecycle transitions. A single
+fetch-add pins LIVE, including zero before retirement reserves it. Negative
+states reject protocol access and release their temporary pin through the same
+put operation. Creation claims only exact FREE, initializes the address and
+sequence, and publishes its first LIVE reference with an ordered additive
+transition that preserves any rejected pins. Lookup rechecks the address after
+pinning: an earlier address read alone cannot identify the acquired generation.
+A mismatched lookup releases its reference. The count admission bound is far
+below the state bits; overflow fails closed.
 
 Invocation references protect the published queue and its borrowed packet/frame
 storage. A separate gate-owner reference survives scheduling-node retirement and
@@ -197,18 +201,21 @@ reference, with no subsequent access to the slot. A rejected unlock leaves the
 owner reference intact. Queue/frame/ACK retention and early outer-release
 ordering are unchanged.
 
-Each put atomically decrements the reference count. A resulting zero gives that
-caller exclusive retirement: it verifies that executor, gate, tail and waiter
-state have drained, clears the address, then release-publishes the free state.
-A lookup racing the final put cannot increment the zero reservation. It may
-instead acquire a later generation, which still requires the post-acquisition
-address check. A held reference prevents reuse through every protocol obligation;
-empty queue fields cannot replace it.
+Each put atomically decrements the exact count. The last LIVE put must win a
+zero-to-BUSY CAS before inspecting or retiring state. A concurrent pin can revive
+LIVE zero first; a losing put returns without further field access. The winner
+verifies that executor, gate, tail and waiter state have drained, clears the
+address, and additively publishes FREE without erasing rejected pins. A rejected
+pin that spans publication can become the last LIVE count, so its put must also
+perform retirement. Cleanup uses the current reserved generation, which remains
+safe if a delayed final CAS crosses a complete intervening generation. A held
+reference prevents reuse through every protocol obligation; empty queue fields
+cannot replace it.
 
 Read-only ownership, combiner and waiter-count observations validate the address
 and observed fields between two lifecycle-sequence reads. Creation and retirement
 publish an odd sequence before changing the address and an even sequence after
-the change. Observers reject odd or changing sequences and retain no pointer.
+the change. Observers reject odd or changing sequences and do not pin a generation.
 The sequence never wraps: exhausting it permanently disables that slot, with
 future delegation attempts falling back locally. The combiner value remains a
 hint, while an actual delegation owner also holds its exact reference.
