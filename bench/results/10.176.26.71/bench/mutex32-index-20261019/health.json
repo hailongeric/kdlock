@@ -1,0 +1,394 @@
+{
+  "added_host_service_threads": [
+    {
+      "affinity": [
+        63
+      ],
+      "comm": "worker",
+      "tid": 390821
+    },
+    {
+      "affinity": [
+        63
+      ],
+      "comm": "worker",
+      "tid": 390587
+    },
+    {
+      "affinity": [
+        63
+      ],
+      "comm": "worker",
+      "tid": 390588
+    },
+    {
+      "affinity": [
+        63
+      ],
+      "comm": "worker",
+      "tid": 390589
+    },
+    {
+      "affinity": [
+        63
+      ],
+      "comm": "worker",
+      "tid": 390590
+    },
+    {
+      "affinity": [
+        63
+      ],
+      "comm": "worker",
+      "tid": 390591
+    },
+    {
+      "affinity": [
+        63
+      ],
+      "comm": "worker",
+      "tid": 390592
+    },
+    {
+      "affinity": [
+        63
+      ],
+      "comm": "worker",
+      "tid": 390593
+    },
+    {
+      "affinity": [
+        63
+      ],
+      "comm": "worker",
+      "tid": 390880
+    },
+    {
+      "affinity": [
+        63
+      ],
+      "comm": "worker",
+      "tid": 390881
+    },
+    {
+      "affinity": [
+        63
+      ],
+      "comm": "worker",
+      "tid": 390882
+    },
+    {
+      "affinity": [
+        63
+      ],
+      "comm": "worker",
+      "tid": 390883
+    },
+    {
+      "affinity": [
+        63
+      ],
+      "comm": "worker",
+      "tid": 390884
+    },
+    {
+      "affinity": [
+        63
+      ],
+      "comm": "worker",
+      "tid": 390885
+    },
+    {
+      "affinity": [
+        63
+      ],
+      "comm": "worker",
+      "tid": 390886
+    },
+    {
+      "affinity": [
+        63
+      ],
+      "comm": "worker",
+      "tid": 390887
+    },
+    {
+      "affinity": [
+        63
+      ],
+      "comm": "worker",
+      "tid": 390888
+    },
+    {
+      "affinity": [
+        63
+      ],
+      "comm": "worker",
+      "tid": 390889
+    },
+    {
+      "affinity": [
+        63
+      ],
+      "comm": "worker",
+      "tid": 390890
+    },
+    {
+      "affinity": [
+        63
+      ],
+      "comm": "worker",
+      "tid": 390891
+    },
+    {
+      "affinity": [
+        63
+      ],
+      "comm": "worker",
+      "tid": 390892
+    }
+  ],
+  "boot_id": "b65f0205-c8f9-4385-8b13-039cbce243a6",
+  "captured_unix": 1792406427.639235,
+  "comparison_sha256": "5a105efe65375bb0ba14a9836fea418619849d8e3a0fe415e0960e50215df345",
+  "expected_kernel_logs": [
+    "checks-transfer/instruction-exit/session/kernel.log",
+    "checks-transfer/local/kernel.log",
+    "checks-transfer/rwsem/local/kernel.log",
+    "checks/instruction-exit/session/kernel.log",
+    "checks/local/kernel.log",
+    "checks/rwsem/local/kernel.log",
+    "compact-index/pipe/pipebytes-query-n16-t08-r0-kdlock/kernel.log",
+    "compact-index/pipe/pipebytes-query-n16-t08-r1-kdlock/kernel.log",
+    "compact-index/pipe/pipebytes-query-n16-t08-r2-kdlock/kernel.log",
+    "compact-index/pipe/pipebytes-query-n16-t60-r0-kdlock/kernel.log",
+    "compact-index/pipe/pipebytes-query-n16-t60-r1-kdlock/kernel.log",
+    "compact-index/pipe/pipebytes-query-n16-t60-r2-kdlock/kernel.log",
+    "compact-index/profile/c01-t08-r00-direct-kdlock-adaptive/kernel.log",
+    "compact-index/profile/c01-t60-r00-direct-kdlock-adaptive/kernel.log",
+    "compact-index/seek/seek-set-n16-t08-r0-kdlock/kernel.log",
+    "compact-index/seek/seek-set-n16-t08-r1-kdlock/kernel.log",
+    "compact-index/seek/seek-set-n16-t08-r2-kdlock/kernel.log",
+    "compact-index/seek/seek-set-n16-t60-r0-kdlock/kernel.log",
+    "compact-index/seek/seek-set-n16-t60-r1-kdlock/kernel.log",
+    "compact-index/seek/seek-set-n16-t60-r2-kdlock/kernel.log",
+    "compact-index/synthetic/c01-t08-r00-direct-kdlock-adaptive/kernel.log",
+    "compact-index/synthetic/c01-t08-r01-direct-kdlock-adaptive/kernel.log",
+    "compact-index/synthetic/c01-t08-r02-direct-kdlock-adaptive/kernel.log",
+    "compact-index/synthetic/c01-t60-r00-direct-kdlock-adaptive/kernel.log",
+    "compact-index/synthetic/c01-t60-r01-direct-kdlock-adaptive/kernel.log",
+    "compact-index/synthetic/c01-t60-r02-direct-kdlock-adaptive/kernel.log",
+    "compact-index/synthetic/c08-t08-r00-direct-kdlock-adaptive/kernel.log",
+    "compact-index/synthetic/c08-t08-r01-direct-kdlock-adaptive/kernel.log",
+    "compact-index/synthetic/c08-t08-r02-direct-kdlock-adaptive/kernel.log",
+    "compact-index/synthetic/c08-t60-r00-direct-kdlock-adaptive/kernel.log",
+    "compact-index/synthetic/c08-t60-r01-direct-kdlock-adaptive/kernel.log",
+    "compact-index/synthetic/c08-t60-r02-direct-kdlock-adaptive/kernel.log",
+    "compact-rcu/pipe/pipebytes-query-n16-t08-r0-kdlock/kernel.log",
+    "compact-rcu/pipe/pipebytes-query-n16-t08-r1-kdlock/kernel.log",
+    "compact-rcu/pipe/pipebytes-query-n16-t08-r2-kdlock/kernel.log",
+    "compact-rcu/pipe/pipebytes-query-n16-t60-r0-kdlock/kernel.log",
+    "compact-rcu/pipe/pipebytes-query-n16-t60-r1-kdlock/kernel.log",
+    "compact-rcu/pipe/pipebytes-query-n16-t60-r2-kdlock/kernel.log",
+    "compact-rcu/profile/c01-t08-r00-direct-kdlock-adaptive/kernel.log",
+    "compact-rcu/profile/c01-t60-r00-direct-kdlock-adaptive/kernel.log",
+    "compact-rcu/seek/seek-set-n16-t08-r0-kdlock/kernel.log",
+    "compact-rcu/seek/seek-set-n16-t08-r1-kdlock/kernel.log",
+    "compact-rcu/seek/seek-set-n16-t08-r2-kdlock/kernel.log",
+    "compact-rcu/seek/seek-set-n16-t60-r0-kdlock/kernel.log",
+    "compact-rcu/seek/seek-set-n16-t60-r1-kdlock/kernel.log",
+    "compact-rcu/seek/seek-set-n16-t60-r2-kdlock/kernel.log",
+    "compact-rcu/synthetic/c01-t08-r00-direct-kdlock-adaptive/kernel.log",
+    "compact-rcu/synthetic/c01-t08-r01-direct-kdlock-adaptive/kernel.log",
+    "compact-rcu/synthetic/c01-t08-r02-direct-kdlock-adaptive/kernel.log",
+    "compact-rcu/synthetic/c01-t60-r00-direct-kdlock-adaptive/kernel.log",
+    "compact-rcu/synthetic/c01-t60-r01-direct-kdlock-adaptive/kernel.log",
+    "compact-rcu/synthetic/c01-t60-r02-direct-kdlock-adaptive/kernel.log",
+    "compact-rcu/synthetic/c08-t08-r00-direct-kdlock-adaptive/kernel.log",
+    "compact-rcu/synthetic/c08-t08-r01-direct-kdlock-adaptive/kernel.log",
+    "compact-rcu/synthetic/c08-t08-r02-direct-kdlock-adaptive/kernel.log",
+    "compact-rcu/synthetic/c08-t60-r00-direct-kdlock-adaptive/kernel.log",
+    "compact-rcu/synthetic/c08-t60-r01-direct-kdlock-adaptive/kernel.log",
+    "compact-rcu/synthetic/c08-t60-r02-direct-kdlock-adaptive/kernel.log",
+    "compact-transfer/pipe/pipebytes-query-n16-t08-r0-kdlock/kernel.log",
+    "compact-transfer/pipe/pipebytes-query-n16-t08-r1-kdlock/kernel.log",
+    "compact-transfer/pipe/pipebytes-query-n16-t08-r2-kdlock/kernel.log",
+    "compact-transfer/pipe/pipebytes-query-n16-t60-r0-kdlock/kernel.log",
+    "compact-transfer/pipe/pipebytes-query-n16-t60-r1-kdlock/kernel.log",
+    "compact-transfer/pipe/pipebytes-query-n16-t60-r2-kdlock/kernel.log",
+    "compact-transfer/profile/c01-t08-r00-direct-kdlock-adaptive/kernel.log",
+    "compact-transfer/profile/c01-t60-r00-direct-kdlock-adaptive/kernel.log",
+    "compact-transfer/seek/seek-set-n16-t08-r0-kdlock/kernel.log",
+    "compact-transfer/seek/seek-set-n16-t08-r1-kdlock/kernel.log",
+    "compact-transfer/seek/seek-set-n16-t08-r2-kdlock/kernel.log",
+    "compact-transfer/seek/seek-set-n16-t60-r0-kdlock/kernel.log",
+    "compact-transfer/seek/seek-set-n16-t60-r1-kdlock/kernel.log",
+    "compact-transfer/seek/seek-set-n16-t60-r2-kdlock/kernel.log",
+    "compact-transfer/synthetic/c01-t08-r00-direct-kdlock-adaptive/kernel.log",
+    "compact-transfer/synthetic/c01-t08-r01-direct-kdlock-adaptive/kernel.log",
+    "compact-transfer/synthetic/c01-t08-r02-direct-kdlock-adaptive/kernel.log",
+    "compact-transfer/synthetic/c01-t60-r00-direct-kdlock-adaptive/kernel.log",
+    "compact-transfer/synthetic/c01-t60-r01-direct-kdlock-adaptive/kernel.log",
+    "compact-transfer/synthetic/c01-t60-r02-direct-kdlock-adaptive/kernel.log",
+    "compact-transfer/synthetic/c08-t08-r00-direct-kdlock-adaptive/kernel.log",
+    "compact-transfer/synthetic/c08-t08-r01-direct-kdlock-adaptive/kernel.log",
+    "compact-transfer/synthetic/c08-t08-r02-direct-kdlock-adaptive/kernel.log",
+    "compact-transfer/synthetic/c08-t60-r00-direct-kdlock-adaptive/kernel.log",
+    "compact-transfer/synthetic/c08-t60-r01-direct-kdlock-adaptive/kernel.log",
+    "compact-transfer/synthetic/c08-t60-r02-direct-kdlock-adaptive/kernel.log",
+    "precompact-256/pipe/pipebytes-query-n16-t08-r0-kdlock/kernel.log",
+    "precompact-256/pipe/pipebytes-query-n16-t08-r1-kdlock/kernel.log",
+    "precompact-256/pipe/pipebytes-query-n16-t08-r2-kdlock/kernel.log",
+    "precompact-256/pipe/pipebytes-query-n16-t60-r0-kdlock/kernel.log",
+    "precompact-256/pipe/pipebytes-query-n16-t60-r1-kdlock/kernel.log",
+    "precompact-256/pipe/pipebytes-query-n16-t60-r2-kdlock/kernel.log",
+    "precompact-256/profile/c01-t08-r00-direct-kdlock-adaptive/kernel.log",
+    "precompact-256/profile/c01-t60-r00-direct-kdlock-adaptive/kernel.log",
+    "precompact-256/seek/seek-set-n16-t08-r0-kdlock/kernel.log",
+    "precompact-256/seek/seek-set-n16-t08-r1-kdlock/kernel.log",
+    "precompact-256/seek/seek-set-n16-t08-r2-kdlock/kernel.log",
+    "precompact-256/seek/seek-set-n16-t60-r0-kdlock/kernel.log",
+    "precompact-256/seek/seek-set-n16-t60-r1-kdlock/kernel.log",
+    "precompact-256/seek/seek-set-n16-t60-r2-kdlock/kernel.log",
+    "precompact-256/synthetic/c01-t08-r00-direct-kdlock-adaptive/kernel.log",
+    "precompact-256/synthetic/c01-t08-r01-direct-kdlock-adaptive/kernel.log",
+    "precompact-256/synthetic/c01-t08-r02-direct-kdlock-adaptive/kernel.log",
+    "precompact-256/synthetic/c01-t60-r00-direct-kdlock-adaptive/kernel.log",
+    "precompact-256/synthetic/c01-t60-r01-direct-kdlock-adaptive/kernel.log",
+    "precompact-256/synthetic/c01-t60-r02-direct-kdlock-adaptive/kernel.log",
+    "precompact-256/synthetic/c08-t08-r00-direct-kdlock-adaptive/kernel.log",
+    "precompact-256/synthetic/c08-t08-r01-direct-kdlock-adaptive/kernel.log",
+    "precompact-256/synthetic/c08-t08-r02-direct-kdlock-adaptive/kernel.log",
+    "precompact-256/synthetic/c08-t60-r00-direct-kdlock-adaptive/kernel.log",
+    "precompact-256/synthetic/c08-t60-r01-direct-kdlock-adaptive/kernel.log",
+    "precompact-256/synthetic/c08-t60-r02-direct-kdlock-adaptive/kernel.log"
+  ],
+  "host_pins_frequency_policy_snapshot_unchanged": true,
+  "idle": true,
+  "kernel_logs": {
+    "checks-transfer/instruction-exit/session/kernel.log": "4b1fa5cc589db945910cfff9b518cb27f369bbd296bb9c60f31440a67d2dc499",
+    "checks-transfer/local/kernel.log": "20f5d529aa87109c7ec4597ff9f7640658dd798b32b53113a91950d4a044b29a",
+    "checks-transfer/rwsem/local/kernel.log": "cf70bfc7ca1e30e7664a8d33b8bf2c99a77106fa0a80cb603e7ecc81878b2821",
+    "checks/instruction-exit/session/kernel.log": "ec94574d53210990ffe4316d33deb43b34c1122191b1b3965cd6dbb97cd80991",
+    "checks/local/kernel.log": "8abe292f90690ee6db3b7b7485defc324c926bc6dd4e2e456f94dfca62d61c64",
+    "checks/rwsem/local/kernel.log": "436ec483eb7996b88b85b8a4e7a2703c25ce060054483f4e18cafd8d7972f76d",
+    "compact-index/pipe/pipebytes-query-n16-t08-r0-kdlock/kernel.log": "4315dc92ad2bee149196c992578606a2718179b50fae10a7d081f611dd3d6c3b",
+    "compact-index/pipe/pipebytes-query-n16-t08-r1-kdlock/kernel.log": "2833ecb9e60eda9989d458165b5100b30fd87e6a4a6545198b96b57b1a7adf59",
+    "compact-index/pipe/pipebytes-query-n16-t08-r2-kdlock/kernel.log": "1b5f2cf8bd856851bb86349e561102057cc7ca15e4cbefbf30772b223afa283a",
+    "compact-index/pipe/pipebytes-query-n16-t60-r0-kdlock/kernel.log": "1ead14939661e87da3fa2743d46506ed62e877f5b13eb62e8f24172ba2569f25",
+    "compact-index/pipe/pipebytes-query-n16-t60-r1-kdlock/kernel.log": "b4a35359710e3fc3887a49f4dc489d15e6bb633f22f87bc170e391d3f3067d9b",
+    "compact-index/pipe/pipebytes-query-n16-t60-r2-kdlock/kernel.log": "ee85fc9d13f4d0d31b15b19aec096679d552770745a5c072168225fb35cbecb4",
+    "compact-index/profile/c01-t08-r00-direct-kdlock-adaptive/kernel.log": "e24356c29139e29e7a74d35f60448905d6a464b1c7fd956c70231610d6795281",
+    "compact-index/profile/c01-t60-r00-direct-kdlock-adaptive/kernel.log": "7a11510af073165a9aa549bc986729697c375f8b8631196d33df8d5cc2436eb1",
+    "compact-index/seek/seek-set-n16-t08-r0-kdlock/kernel.log": "a74b5a6330117b5b72e0b7a28804e650aae59c4bb39f2ffa2981ef63aea507ae",
+    "compact-index/seek/seek-set-n16-t08-r1-kdlock/kernel.log": "23e117fe61127b944ff08e0ddf10dc4e574550aab5c22ceaa3b346ced96b391b",
+    "compact-index/seek/seek-set-n16-t08-r2-kdlock/kernel.log": "9bcc3b57d2c6676bbf8d0b69cd1fbd6ec265d70d9bcd59f5c1ac68f1045f12d5",
+    "compact-index/seek/seek-set-n16-t60-r0-kdlock/kernel.log": "84425bbcd5545f76de0044b3f345d6050f3d9b097e13453f8b0a014c298a0b89",
+    "compact-index/seek/seek-set-n16-t60-r1-kdlock/kernel.log": "77e76052f7bf9111025017fe29aba7cb686cb17319a0267a75e121ef9c05c1d5",
+    "compact-index/seek/seek-set-n16-t60-r2-kdlock/kernel.log": "c46c2f25805978a099e0f93993512ba7d01bdee9653e8af3c63abbeebb49f240",
+    "compact-index/synthetic/c01-t08-r00-direct-kdlock-adaptive/kernel.log": "faded1223247e384d8da3067dde73b71fb490f45c1a012ce63e12476af04dbba",
+    "compact-index/synthetic/c01-t08-r01-direct-kdlock-adaptive/kernel.log": "e32137c45128979aded3ada53b862b2a222668c57bba1dd026ae85c6c091965c",
+    "compact-index/synthetic/c01-t08-r02-direct-kdlock-adaptive/kernel.log": "321d928389a12fbc5ba03e333e2ff599426d651ba78a0b8da48218264de75390",
+    "compact-index/synthetic/c01-t60-r00-direct-kdlock-adaptive/kernel.log": "c450de6593fa9840b20a945c9b27a6cbf1a284c8e231e236df6a539f4ab7b5fd",
+    "compact-index/synthetic/c01-t60-r01-direct-kdlock-adaptive/kernel.log": "7f83eeaf876dfe33b417363df913217ad6d11b80d197664b9f3c2cca2bf2ed37",
+    "compact-index/synthetic/c01-t60-r02-direct-kdlock-adaptive/kernel.log": "089482a3fd611f6512df210ad90ef776dba1e03132130ed055e8c40d1546873e",
+    "compact-index/synthetic/c08-t08-r00-direct-kdlock-adaptive/kernel.log": "30e4dd0a5cde48748ef614225826af958e93559e1e61ef5926faa723e4ac1e56",
+    "compact-index/synthetic/c08-t08-r01-direct-kdlock-adaptive/kernel.log": "4a653ea840031ced20f8dbd40a8f75b5244c59661426562503680a9194d9de4e",
+    "compact-index/synthetic/c08-t08-r02-direct-kdlock-adaptive/kernel.log": "4f2c968d8d983626cc383ecdb0240bac8015b46ad1b48f0b13de75f2e94cc218",
+    "compact-index/synthetic/c08-t60-r00-direct-kdlock-adaptive/kernel.log": "c44bedd8a2fcb76a76a598c6075acbcd18ad15d93b0b4c29a59586fb714b316f",
+    "compact-index/synthetic/c08-t60-r01-direct-kdlock-adaptive/kernel.log": "730993765a396014a15329903c5a7e35f7dcf53db6e478913dcff68a855f9e68",
+    "compact-index/synthetic/c08-t60-r02-direct-kdlock-adaptive/kernel.log": "50bf1684e72d312ff638275ab0883941e292b0f01f167f095a1cc48ebe3ede5f",
+    "compact-rcu/pipe/pipebytes-query-n16-t08-r0-kdlock/kernel.log": "f8242842662246ff364ff4e9649b8a778ae0a7cc9679b4ae32b65c5addd32ab7",
+    "compact-rcu/pipe/pipebytes-query-n16-t08-r1-kdlock/kernel.log": "8437710d6524ab533b7651b2597797b3a5415ecb2f8ab49e3749d5a2af357a3c",
+    "compact-rcu/pipe/pipebytes-query-n16-t08-r2-kdlock/kernel.log": "8d35220875652b1b5ab4691122b87da0035133e97b9f0c89bfdf95c529893490",
+    "compact-rcu/pipe/pipebytes-query-n16-t60-r0-kdlock/kernel.log": "d5b4164b9dd3d3687794f49c2a438f21bc6f5965d60c8a06ca2ed278c8f9595c",
+    "compact-rcu/pipe/pipebytes-query-n16-t60-r1-kdlock/kernel.log": "07d99e5752d04c43ea91e6ddf7cef7b1fae26151fecd912f769a2d62873d682f",
+    "compact-rcu/pipe/pipebytes-query-n16-t60-r2-kdlock/kernel.log": "c5fc6db688a9f4453725d1b58322354381e3545fefc6c5c951a2a264b3cd570f",
+    "compact-rcu/profile/c01-t08-r00-direct-kdlock-adaptive/kernel.log": "64faaa423abb9d19f14edfcc016367a836ff103b26f4c30cf7f41f1a1194694f",
+    "compact-rcu/profile/c01-t60-r00-direct-kdlock-adaptive/kernel.log": "5d6e565e4f64f2af94725bd34465b8be99478718e53af963033b781081940465",
+    "compact-rcu/seek/seek-set-n16-t08-r0-kdlock/kernel.log": "14bd78c2e0dfa8b344797682edb66328c79406a75790bf2528034fe4e0e0fb1e",
+    "compact-rcu/seek/seek-set-n16-t08-r1-kdlock/kernel.log": "301fa62b00fadcb76fb222e0dbd8e500fdd1753a0ca24fe205747e2bdcd35d60",
+    "compact-rcu/seek/seek-set-n16-t08-r2-kdlock/kernel.log": "73a756b7efb4326332ddd7defc7ae18fc7ebe830b7928ab7e77ddc592ee9e144",
+    "compact-rcu/seek/seek-set-n16-t60-r0-kdlock/kernel.log": "3199cdd1733110743de182e678f8e8df10964e748237ccf1639b693312e6a91c",
+    "compact-rcu/seek/seek-set-n16-t60-r1-kdlock/kernel.log": "864230d6e5176d503e8561e953a86b435706e9b2cfac2b3c2da53c6c918d71db",
+    "compact-rcu/seek/seek-set-n16-t60-r2-kdlock/kernel.log": "7ad12402a2d6a0c98395d6c0f91351829917982ec4796168a70ada7927594402",
+    "compact-rcu/synthetic/c01-t08-r00-direct-kdlock-adaptive/kernel.log": "6ab867d01a9edcce66fcc07a3ad21cc721f84441d8d69cf5fed78b4b99914060",
+    "compact-rcu/synthetic/c01-t08-r01-direct-kdlock-adaptive/kernel.log": "c8e468e82b6dfab9eac70a3cc08f721d39de160cc160c9d2bc001dcf8e77715e",
+    "compact-rcu/synthetic/c01-t08-r02-direct-kdlock-adaptive/kernel.log": "046e286bfcfc2733f05f6a6ee7ff49255ce1017f00e0b7e67c89af422ada43e9",
+    "compact-rcu/synthetic/c01-t60-r00-direct-kdlock-adaptive/kernel.log": "b63017e62b88d6fb0dc76b2e34773ae36cf170300529c3709392f1293ff98fda",
+    "compact-rcu/synthetic/c01-t60-r01-direct-kdlock-adaptive/kernel.log": "b4e1397b3da8cbd98df2ea6b4342e9efd97f6a65b6b24e9864c39d88633bdc74",
+    "compact-rcu/synthetic/c01-t60-r02-direct-kdlock-adaptive/kernel.log": "14a407f5d2e54d082821608ac0196563122bfa13ffc1b94cc90283d5244186db",
+    "compact-rcu/synthetic/c08-t08-r00-direct-kdlock-adaptive/kernel.log": "d0dff62e6f790f08a5ea840bff70364abb3e855775d905a041670a494b01ecc4",
+    "compact-rcu/synthetic/c08-t08-r01-direct-kdlock-adaptive/kernel.log": "6d1115b4d2ca7d7bfaf62cc86b019462821631edfe7780e13dd8ce568d2869a1",
+    "compact-rcu/synthetic/c08-t08-r02-direct-kdlock-adaptive/kernel.log": "7402ba3a417fd389f688a499f6a1cbe107c355ef08f647b16fcc5647f27307ba",
+    "compact-rcu/synthetic/c08-t60-r00-direct-kdlock-adaptive/kernel.log": "0423b8b5591386688f187f726c7c3199409cc50ce0a2e9c55e530f86e9f8cbbf",
+    "compact-rcu/synthetic/c08-t60-r01-direct-kdlock-adaptive/kernel.log": "ec0b47dcdfea87785f9f89796ed4d29fc3dbf40e99a97240aa438a3a4c90601d",
+    "compact-rcu/synthetic/c08-t60-r02-direct-kdlock-adaptive/kernel.log": "40ce285d42abb5aa7a47f9bdc314ece937d49d4163bee6a085c4a10955163b55",
+    "compact-transfer/pipe/pipebytes-query-n16-t08-r0-kdlock/kernel.log": "1a18d2495be8dffbc457049cbf6f05047605a999f328bcec4f0e2c987024f822",
+    "compact-transfer/pipe/pipebytes-query-n16-t08-r1-kdlock/kernel.log": "f1d371819e37489a4d43c590c21c2afb6a1e46778ed809d4303f541c60b53e38",
+    "compact-transfer/pipe/pipebytes-query-n16-t08-r2-kdlock/kernel.log": "219231f126500b2e21e6ce568d17b7126bc2b75f69e4976afb818d777206a291",
+    "compact-transfer/pipe/pipebytes-query-n16-t60-r0-kdlock/kernel.log": "65bb0100670d81165e86ac4eb7c7b7a8b8a056e75db1bedf10ade002c0fe5ca7",
+    "compact-transfer/pipe/pipebytes-query-n16-t60-r1-kdlock/kernel.log": "d4313538c70e57071c78279db41c34c4bf63d3fbdef80670bd5e0aabc23a9707",
+    "compact-transfer/pipe/pipebytes-query-n16-t60-r2-kdlock/kernel.log": "2318d9a649c04883c83aa2fc7b6849ea7e26ffa9f0743b676d7651e7a6da1479",
+    "compact-transfer/profile/c01-t08-r00-direct-kdlock-adaptive/kernel.log": "b593250cc7cedf49cd3d405a1938a42afd5c36414c7032c41175b10eefc5d7b0",
+    "compact-transfer/profile/c01-t60-r00-direct-kdlock-adaptive/kernel.log": "dd28ebfc42aadb46ceb6c9770daf6e2fbded23f6659195b6eff39e81302f814b",
+    "compact-transfer/seek/seek-set-n16-t08-r0-kdlock/kernel.log": "80ebac088246e75a148bf05ff5b1dcde2998a460e34441518438e2581053155d",
+    "compact-transfer/seek/seek-set-n16-t08-r1-kdlock/kernel.log": "7daaf76a3b9f02b555f8e01db83b8a22e3fb79f6b06ee96afc1db9f0b5125939",
+    "compact-transfer/seek/seek-set-n16-t08-r2-kdlock/kernel.log": "2a2cc44c0ef7092012cb75989931da36e47b8a185fb9f0eaa2dd2b3963ca10cc",
+    "compact-transfer/seek/seek-set-n16-t60-r0-kdlock/kernel.log": "e8ec5e2482d802a6480ef3ea226defe5e591061b71c02a9b2c411dd46e456149",
+    "compact-transfer/seek/seek-set-n16-t60-r1-kdlock/kernel.log": "baf15bbfe2e05068becc116e9e2ac41347240cee45dbc30ea9d235b1dd1753e1",
+    "compact-transfer/seek/seek-set-n16-t60-r2-kdlock/kernel.log": "b9d6d689e433edf94febd67a6ff6a220975dcdc121f53f82dc51a8cf5e4156ff",
+    "compact-transfer/synthetic/c01-t08-r00-direct-kdlock-adaptive/kernel.log": "e9ccfabebf886117eda455df20cf87a119e27e78530199d50e77d46b36242d52",
+    "compact-transfer/synthetic/c01-t08-r01-direct-kdlock-adaptive/kernel.log": "6ae14c60245efbdf1087f81e1ac824c0f925986153b089bfcc2dd2d95815048d",
+    "compact-transfer/synthetic/c01-t08-r02-direct-kdlock-adaptive/kernel.log": "00ebb83d89e3ad1ffb2e8852cd5c1f3ff6334a90e4ba2a52dfb5d7275af86ba1",
+    "compact-transfer/synthetic/c01-t60-r00-direct-kdlock-adaptive/kernel.log": "615927837028181ca7bb1610257afa370dad0b9fa4cfe4e17279674ea430c844",
+    "compact-transfer/synthetic/c01-t60-r01-direct-kdlock-adaptive/kernel.log": "760c5bc21bda564885ce04802d602a8cd7fad2329681f5db04d2dc54dbab135e",
+    "compact-transfer/synthetic/c01-t60-r02-direct-kdlock-adaptive/kernel.log": "c3a480827d0491f98c991823fd3fb8ee1dccd9d34feb6071e70c6b1aac498cd4",
+    "compact-transfer/synthetic/c08-t08-r00-direct-kdlock-adaptive/kernel.log": "ad40eb27881bdd51ad568e7585bc8221553845d2b75bee04419f5dcf13a0d727",
+    "compact-transfer/synthetic/c08-t08-r01-direct-kdlock-adaptive/kernel.log": "80d32c4f1cc7ba431a23de5082165c6fbd69da85b8a8de8f65cbc06ff7d81395",
+    "compact-transfer/synthetic/c08-t08-r02-direct-kdlock-adaptive/kernel.log": "9cbc283daf99c4c4298813297606650bdc3a8b09a20e1083ff74472eda05db6f",
+    "compact-transfer/synthetic/c08-t60-r00-direct-kdlock-adaptive/kernel.log": "cfb647702634ebc0f43e90aa34e53aefd506c083e2b38cfda13ea49b7351f811",
+    "compact-transfer/synthetic/c08-t60-r01-direct-kdlock-adaptive/kernel.log": "6f724adb0202cf9746369941331c4f26b0dfa484a03e9c274ff4d9f5446cab7f",
+    "compact-transfer/synthetic/c08-t60-r02-direct-kdlock-adaptive/kernel.log": "61a26ad06fa757b44c1db0db633ed06c3f0c329b5b74c8f33fa343496cf5f1f7",
+    "precompact-256/pipe/pipebytes-query-n16-t08-r0-kdlock/kernel.log": "e25cf0a5f96d3ca1047aa75cc87f060eed54efb11bcd026c68cf4a0e4e13bdb7",
+    "precompact-256/pipe/pipebytes-query-n16-t08-r1-kdlock/kernel.log": "9aad00e18d87e3a769bd06e65846bc6d3f8feb11c62f23febf487b60f3e0778c",
+    "precompact-256/pipe/pipebytes-query-n16-t08-r2-kdlock/kernel.log": "c4ed76087521686609223bb634f709dbdf7a9c6acb0470c95c33a0c287e454a4",
+    "precompact-256/pipe/pipebytes-query-n16-t60-r0-kdlock/kernel.log": "e55975add241b7decf3d09ab47af279213f24bfca19d913d7c8bf092d48377fc",
+    "precompact-256/pipe/pipebytes-query-n16-t60-r1-kdlock/kernel.log": "bc29833e1736dd4a42ef89edeb131ca4e4761dab2d0fd3cd5fa601623e8764a2",
+    "precompact-256/pipe/pipebytes-query-n16-t60-r2-kdlock/kernel.log": "f6be2650311149d252f85de05e2e2f7b7f73bfd9fe6a9ee8b6ea69770d5997c9",
+    "precompact-256/profile/c01-t08-r00-direct-kdlock-adaptive/kernel.log": "ad3bdd1754ee820a1025da8f49ddc46f273fd512979caa79434a65b1667a8bf9",
+    "precompact-256/profile/c01-t60-r00-direct-kdlock-adaptive/kernel.log": "3b8f4e6a0b268e1e1423d459710b77fa9066a829482831b009dfdd8716a00d58",
+    "precompact-256/seek/seek-set-n16-t08-r0-kdlock/kernel.log": "f13331b886da434637db69047198c6109473f4090b3d7843bdd5cbc3167ebfbb",
+    "precompact-256/seek/seek-set-n16-t08-r1-kdlock/kernel.log": "7dc819571e1f2a3d4742d95af2e0474fa6e6a379a98c9bb78dba9f5cbfd5bbac",
+    "precompact-256/seek/seek-set-n16-t08-r2-kdlock/kernel.log": "bf687d79b56eabededc1bdce9aee7d5c3c7800aaa46b2a422a6f8661f6aa1de0",
+    "precompact-256/seek/seek-set-n16-t60-r0-kdlock/kernel.log": "1bd71aba5c2a405b6498b5b6f6b0a2447628bca086a344d94f7667e8131e64b2",
+    "precompact-256/seek/seek-set-n16-t60-r1-kdlock/kernel.log": "01bd69e457c3db9f1862204af6e2a1d9da10c0c0cc449ef93c95676ed94aaba9",
+    "precompact-256/seek/seek-set-n16-t60-r2-kdlock/kernel.log": "4a62645526d730cdc4ba865f3ad9427207698d1ac2e93b776eb46413d52c3059",
+    "precompact-256/synthetic/c01-t08-r00-direct-kdlock-adaptive/kernel.log": "dac9f6c65ad5d31a22dadf133a5327db611d381d8bf8cad91f65096dce010794",
+    "precompact-256/synthetic/c01-t08-r01-direct-kdlock-adaptive/kernel.log": "efaafde18854c5210bb9b5cdac10eebf8f08ddd6294561161d13fad7c2ce096e",
+    "precompact-256/synthetic/c01-t08-r02-direct-kdlock-adaptive/kernel.log": "5e8960c42abed36a2186836cf2fa3bb1d97d53ddb8a69bb95fe5a60ca8a14470",
+    "precompact-256/synthetic/c01-t60-r00-direct-kdlock-adaptive/kernel.log": "f4df0767a20f1463343f0deced0ec501a4c832261c3af93810368a72a57cec30",
+    "precompact-256/synthetic/c01-t60-r01-direct-kdlock-adaptive/kernel.log": "452e804a4aef770df2f5d40dd87d11944160a43c12e11b6e9e776fd7276d78ac",
+    "precompact-256/synthetic/c01-t60-r02-direct-kdlock-adaptive/kernel.log": "ed6785b3032d648d42c4b31ac22940314f32bd7d2aabf675f31bd70d0da6ce53",
+    "precompact-256/synthetic/c08-t08-r00-direct-kdlock-adaptive/kernel.log": "eb7929907a768a33a10b4c389cda32e9b9dabfc5ed82d72b354d923412e810b6",
+    "precompact-256/synthetic/c08-t08-r01-direct-kdlock-adaptive/kernel.log": "d2b52f5bbfd1e9bad439e3d261ed280f9fa34bc60d1dc10100c8b9f2b6a8bc11",
+    "precompact-256/synthetic/c08-t08-r02-direct-kdlock-adaptive/kernel.log": "3f081c42450032690ddc6a8e50e3ecee7a98f093222202de6b2d1f58b0e61fa7",
+    "precompact-256/synthetic/c08-t60-r00-direct-kdlock-adaptive/kernel.log": "488f551fe9cd7af31d4083543ab4ddfc5ef948c5698fdfc9cdd2acc76fe65dcd",
+    "precompact-256/synthetic/c08-t60-r01-direct-kdlock-adaptive/kernel.log": "95111808098761e2abff66259cbd835fc9f6b3f4ceeee3f3ad01baa1b7dc6170",
+    "precompact-256/synthetic/c08-t60-r02-direct-kdlock-adaptive/kernel.log": "a91eb6b8bee57d05748b12a03cce6f3d03a5d69791d82b68fa544b220487fc47"
+  },
+  "kernel_release": "6.1.159-kdclobber2",
+  "per_session_kernel_faults": [],
+  "profile_analysis_sha256": "9f7772cf8d3ba4dea0f030e63d43dd4d55272a6b780e7f1a29f7f42d7e99a7cc",
+  "profile_samples": 109687,
+  "removed_host_service_threads": [],
+  "snapshot": "before-mutex-kdonly-20261017T140354Z",
+  "source_revision": "e999008cf7035c03271f8622afa3a9ef88cb197c",
+  "source_unchanged_checks": {
+    "compact-index": true,
+    "compact-transfer": true
+  },
+  "valid_profiles": 8,
+  "valid_timing_sessions": 96,
+  "validation_sha256": "165bd79bb90540d6afbd6541b9281fad5c61bedeeabda459c31ef4eff0d032a8"
+}

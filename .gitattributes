@@ -32,3 +32,15 @@ bench/results/10.176.26.71/bench/mutex32-opt-20261019/compact-rcu/profile/*/perf
 bench/results/10.176.26.71/bench/mutex32-opt-20261019/preflight/pv-lock-ops.txt -whitespace
 bench/results/10.176.26.71/bench/mutex32-opt-20261019/preflight/pv-template.txt -whitespace
 bench/results/10.176.26.71/bench/mutex32-opt-20261019/comparison.svg -whitespace
+# Frozen direct-index comparison diagnostics and plot bytes remain unchanged.
+bench/results/10.176.26.71/bench/mutex32-index-20261019/checks/provider.log -whitespace
+bench/results/10.176.26.71/bench/mutex32-index-20261019/checks/unit.log -whitespace
+bench/results/10.176.26.71/bench/mutex32-index-20261019/checks-transfer/provider.log -whitespace
+bench/results/10.176.26.71/bench/mutex32-index-20261019/checks-transfer/unit.log -whitespace
+bench/results/10.176.26.71/bench/mutex32-index-20261019/compact-rcu/profile/*/perf-report.txt -whitespace
+bench/results/10.176.26.71/bench/mutex32-index-20261019/precompact-256/profile/*/perf-report.txt -whitespace
+bench/results/10.176.26.71/bench/mutex32-index-20261019/compact-index/profile/*/perf-report.txt -whitespace
+bench/results/10.176.26.71/bench/mutex32-index-20261019/compact-transfer/profile/*/perf-report.txt -whitespace
+bench/results/10.176.26.71/bench/mutex32-index-20261019/first-three-profile-screen.log -whitespace
+bench/results/10.176.26.71/bench/mutex32-index-20261019/guest-before.log -whitespace
+bench/results/10.176.26.71/bench/mutex32-index-20261019/comparison.svg -whitespace

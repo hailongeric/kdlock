@@ -1,0 +1,30 @@
+# To display the perf.data header info, please use --header/--header-only options.
+#
+#
+# Total Lost Samples: 0
+#
+# Samples: 3K of event 'cycles:k'
+# Event count (approx.): 31307368740
+#
+# Overhead  Command    Shared Object      Symbol                                                  IPC   [IPC Coverage]
+# ........  .........  .................  ......................................................  ....................
+#
+    73.76%  sc_worker  [kdlock_km]        [k] __kd_mutex_lock_slowpath                            -      -            
+     7.60%  sc_worker  [kdlock_km]        [k] kd_mutex_run_combiner                               -      -            
+     4.05%  sc_worker  [mutex_cacheline]  [k] sc_ioctl                                            -      -            
+     3.67%  sc_worker  [kdlock_km]        [k] kd_mutex_execute_cs                                 -      -            
+     2.95%  sc_worker  [mutex_cacheline]  [k] mc_body_1                                           -      -            
+     1.35%  sc_worker  [kdlock_km]        [k] kd_mutex_task_put                                   -      -            
+     1.10%  sc_worker  [unknown]          [k] 0xffa000000cbca17e                                  -      -            
+     1.00%  sc_worker  [kdlock_km]        [k] 0x0000000000012770                                  -      -            
+     0.45%  sc_worker  [kdlock_km]        [k] 0x0000000000012777                                  -      -            
+     0.41%  sc_worker  [kdlock_km]        [k] kd_mutex_task_get                                   -      -            
+     0.38%  sc_worker  [kdlock_km]        [k] _kd_mutex_lock_abi                                  -      -            
+     0.28%  sc_worker  [kdlock_km]        [k] kd_mutex_task_active                                -      -            
+     0.25%  sc_worker  [kdlock_km]        [k] kd_mutex_contended_acquire                          -      -            
+     0.20%  sc_worker  [kdlock_km]        [k] 0x0000000000012715                                  -      -            
+
+
+#
+# (Cannot load tips.txt file, please install perf!)
+#

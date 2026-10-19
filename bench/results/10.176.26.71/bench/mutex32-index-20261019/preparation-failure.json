@@ -1,0 +1,8 @@
+{
+  "stage": "baseline controller preparation",
+  "exit_code": 1,
+  "error": "FileNotFoundError: <stdin> while hashing __file__",
+  "workloads_started": false,
+  "retained_guest_directory": "compact-rcu-preparation",
+  "resolution": "Copy unchanged reviewed controller to /tmp/kdlock-mutex32-index-run.py and execute the file; fresh compact-rcu directory."
+}

@@ -1,0 +1,44 @@
+{
+  "binaries": {
+    "source/kernel_module/kdlock_km.ko": "3bd80722b38a36fdcd02e2884ea021ca4bcdadd266e97fd4270f2a51e37a20a0",
+    "source/tests/kernel/mutex/local/kd_mutex_local_probe.ko": "57732a21c085a71bce1a36515c0447dcba4fa9d457f4f651ae9075ba83ebb08d"
+  },
+  "drained": true,
+  "execution": "ordinary-local",
+  "final_idle": true,
+  "jit_bodies": 0,
+  "kernel_identity": {
+    "baseline": "/root/kdlock-kernel-baselines/mutex-clobber2-20260919",
+    "build_files": 9,
+    "bundle_files": 7,
+    "config": true,
+    "ok": true,
+    "running_build_id": "5ca28058e156f34a2c7fe91e8e0fbf92f4e51960",
+    "source": "/mnt/kdlock-builds/linux-6.1.159-kdclobber2",
+    "source_files": 20
+  },
+  "passed": true,
+  "probe": {
+    "address_reuse": "PASS",
+    "containing_layout": "PASS",
+    "drain": "PASS",
+    "interruptible": "EINTR",
+    "io": "PASS",
+    "killable": "EINTR",
+    "lock_align": 8,
+    "lock_size": 32,
+    "nested_sleep": "PASS",
+    "no_aux": "PASS",
+    "no_destroy": "PASS",
+    "objects": 2048,
+    "operations": 160000,
+    "workers": 8
+  },
+  "snapshot_tag": "before-mutex-kdonly-20261017T140354Z",
+  "source_retirement": {
+    "frames": 0,
+    "modules": 0,
+    "state": 2,
+    "writers": 0
+  }
+}

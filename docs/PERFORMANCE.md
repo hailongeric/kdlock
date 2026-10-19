@@ -23,9 +23,10 @@ their recorded source versions; acceptance of those results does not measure the
 additional flag-preservation cost in images that contain instruction markers.
 
 The mutex protocol remains KD-only `d2a2304`: KD physical exclusion with the
-legacy delegation queue. Current `fcbacbe` keeps the 32-byte object introduced
-by `7713897`, with RCU lookup and exact atomic auxiliary references; its matched
-investigation and the earlier compact screens are below. The
+legacy delegation queue. Current `e999008` keeps the 32-byte object introduced
+by `7713897`, with a preallocated direct-index auxiliary table and exact
+reference transfer/borrowing. Its four-arm comparison, the historical RCU
+investigation and earlier compact screens are below. The
 [2026-10-17 paired report](../bench/results/10.176.26.71/bench/comparison/mutex-kdonly-20261017T140354Z/README.md)
 contains 504 complete, drained sessions: two workloads, 21 worker counts, three
 repetitions and four arms (accepted compatibility baseline, KD-only, Native,
@@ -91,6 +92,52 @@ The earlier 20% taskname mutation control was correct but returned no delegated
 bodies; mutation delegation and full live-task/procfs integration remain
 unaccepted. The checked-helper `c79d84f` round, prior dispatcher round, screens
 and profiles retain separate source identities and are never pooled.
+
+## Compact mutex direct index and reference transfer, e999008
+
+The [matched comparison](../bench/results/10.176.26.71/bench/mutex32-index-20261019/README.md)
+keeps four source versions separate: the 256-byte inline baseline `0324e60`,
+RCU baseline `f0bd68d`, first direct-index candidate `44f8eb6`, and reference
+transfer candidate `e999008`. The recorded RCU baseline has the same production
+source as `fcbacbe`; its fresh measurements retain the actual `f0bd68d` label.
+All 96 plain timings and eight unscored c01 profiles passed and drained, with
+c01/c08/SEEK_SET n16/pipebytes n16 at eight and 60 workers and three repetitions.
+Both candidates passed basic plus affected VM checks. Independent archive,
+source and statistics audits passed, including all 104 reconstructed peak windows.
+
+Median whole-run Mops/s; each pair is eight / 60 workers:
+
+| Workload | 256 B inline | 32 B RCU | 32 B direct index | 32 B index + transfer |
+| --- | ---: | ---: | ---: | ---: |
+| c01, post64 | 6.987 / 4.998 | 5.321 / 4.141 | 5.760 / 4.238 | 5.685 / 4.234 |
+| c08, post64 | 4.762 / 3.591 | 5.002 / 3.870 | 4.914 / 3.985 | 4.926 / 3.984 |
+| SEEK_SET, n16 | 4.816 / 3.987 | 4.022 / 3.774 | 4.069 / 3.792 | 4.148 / 3.760 |
+| Pipebytes, n16 | 7.020 / 5.394 | 4.993 / 3.470 | 4.977 / 3.631 | 5.361 / 3.716 |
+
+Relative to RCU, the final version changes c01 by +6.8%/+2.2%, seek by
++3.1%/−0.4%, pipe by +7.4%/+7.1%, and c08 by −1.5%/+2.9%. Relative to
+the old inline object, c01 remains 18.6%/15.3% slower, seek 13.9%/5.7%
+slower, and pipe 23.6%/31.1% slower; c08 is 3.4%/11.0% faster. Transfer
+versus the first index candidate changes pipe by +7.7%/+2.4%, with c01
+−1.3%/−0.1%, seek +1.9%/−0.8%, and c08 +0.2%/−0.02%. All API sessions
+returned JIT bodies, so these four fresh arms have no JIT/NO_JIT category change.
+Whole-run medians are primary; observed repetition ranges and 300 ms peaks remain
+separate in the report. Synthetic counters witness JIT entry with completion
+instrumentation disabled. API sessions count
+matching returns separately; a NORMAL image is only publication evidence.
+
+The direct-index provider preallocates 65,536 slots (16 MiB), with no auxiliary
+registry lock or RCU. Collisions and reserved slots use local KD exclusion
+before queue publication. `e999008` transfers the immediate gate acquisition's
+invocation reference to ownership and borrows that existing owner reference
+during synchronous unlock. Queued/frame/ACK lifetimes, task-routing RCU,
+physical exclusion, admission and the native 32-byte/8-byte object geometry
+remain intact. The storage cost and fallback cases remain part of the tradeoff.
+
+The four versions ran in sequential blocks. Three repetitions and observed
+ranges do not eliminate drift or establish statistical significance, and ratios
+of medians are not paired estimates. This is a bounded KD comparison without
+fresh Native/TCLock controls; historical full-grid results are not pooled.
 
 ## Compact mutex registry optimization, fcbacbe
 

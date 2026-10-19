@@ -1,0 +1,5 @@
+Snapshot: 2095 tracked files, 170,037,180 bytes; dry-run=False
+{"changed": [], "guest_changed_files": 0}
+{"approved_files": 2095, "changed": [], "changed_files": 0, "dry_run": false}
+All 2095 approved guest files already match; no writes performed.
+Synchronization complete; subsequent builds, tests and benchmarks run in the new VM.

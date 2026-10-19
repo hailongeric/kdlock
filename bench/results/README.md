@@ -40,6 +40,20 @@ removes registry locking from reads and ordinary reference updates, recovering
 alignment and protocol. The report retains remaining gaps versus the old object
 and the pipe regression caused by its local-to-JIT execution change. Exact
 counter meanings, affected checks, failures and source identities remain separate.
+The [direct-index and reference-transfer comparison](10.176.26.71/bench/mutex32-index-20261019/README.md)
+adds separate `44f8eb6` and `e999008` arms beside fresh `f0bd68d` RCU and
+`0324e60` inline baselines. Both new arms keep the native-aligned 32-byte object;
+the provider preallocates a 65,536-slot, 16 MiB table, and `e999008` transfers
+the immediate gate reference and borrows established ownership during unlock.
+All 96 plain timings and eight c01 profiles passed and drained across c01/c08,
+SEEK_SET n16 and pipebytes n16 at eight/60 workers, three plain repetitions.
+The final version improves pipe medians by 7.4%/7.1% against RCU at eight/60
+workers, but remains 23.6%/31.1% behind the old inline object. c01 and seek
+also retain gaps; all API sessions returned JIT. Independent archive, source
+and statistics audits passed. Separate check bundles, source identities,
+first-index results and the controller preparation failure remain retained.
+Synthetic entry witnesses do not prove returned bodies; API completions, mixed execution classes and
+sequential-block limitations are explicit. Earlier RCU measurements are unchanged.
 The [2026-10-18 consolidation checks](10.176.26.71/tests/main-consolidation-20261018/README.md)
 validate organization and tooling separately from the measured runtime.
 The [feature reintegration checks](10.176.26.71/tests/feature-reintegration-20261018/README.md)

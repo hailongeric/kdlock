@@ -1,0 +1,1197 @@
+{
+  "drained": true,
+  "escape_events": [
+    {
+      "entry": 18446744072643764523,
+      "generation": 1,
+      "rip": 18446744072643764549,
+      "waiter_pid": 2300425
+    }
+  ],
+  "kernel_identity": {
+    "baseline": "/root/kdlock-kernel-baselines/mutex-clobber2-20260919",
+    "build_files": 9,
+    "bundle_files": 7,
+    "config": true,
+    "ok": true,
+    "running_build_id": "5ca28058e156f34a2c7fe91e8e0fbf92f4e51960",
+    "source": "/mnt/kdlock-builds/linux-6.1.159-kdclobber2",
+    "source_files": 20
+  },
+  "passed": true,
+  "phases": [
+    {
+      "after": {
+        "active": 0,
+        "entry": 18446744072643764523,
+        "failures": 0,
+        "hot": 0,
+        "hot_taken": 0,
+        "idle": 1,
+        "lock_address": 18446744072643772512,
+        "marker": 18446744072643764549,
+        "prefix": 3200000,
+        "suffix": 3200000
+      },
+      "before": {
+        "active": 0,
+        "entry": 18446744072643764523,
+        "failures": 0,
+        "hot": 0,
+        "hot_taken": 0,
+        "idle": 1,
+        "lock_address": 18446744072643772512,
+        "marker": 18446744072643764549,
+        "prefix": 0,
+        "suffix": 0
+      },
+      "complete": true,
+      "counters_after": {
+        "bench_jit_bodies": 2290964,
+        "bench_jit_completions": 2290964,
+        "native_escape_count": 0
+      },
+      "counters_before": {
+        "bench_jit_bodies": 0,
+        "bench_jit_completions": 0,
+        "native_escape_count": 0
+      },
+      "hot": 0,
+      "iterations": 200000,
+      "jit_delta": {
+        "bench_jit_bodies": 2290964,
+        "bench_jit_completions": 2290964,
+        "native_escape_count": 0
+      },
+      "name": "cold-warmup",
+      "registry_after": [
+        {
+          "code": 18419722476157173760,
+          "entry": 18446744072643764523,
+          "entry_abi": 2,
+          "generation": 1,
+          "jump_from": 0,
+          "lock_kind": 2,
+          "pid": 0,
+          "requirements": 1,
+          "status": 0,
+          "target": 0,
+          "tgid": 2298806
+        }
+      ],
+      "registry_before": [
+        {
+          "code": 18419722476157173760,
+          "entry": 18446744072643764523,
+          "entry_abi": 2,
+          "generation": 1,
+          "jump_from": 0,
+          "lock_kind": 2,
+          "pid": 0,
+          "requirements": 1,
+          "status": 0,
+          "target": 0,
+          "tgid": 2298806
+        }
+      ],
+      "returncodes": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "source_after": {
+        "frames": 0,
+        "modules": 1,
+        "state": 0,
+        "writers": 1
+      },
+      "workers": [
+        {
+          "comm": "ke_worker",
+          "completed": 200000,
+          "cpu": 0,
+          "errors": 0,
+          "iterations": 200000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 0
+        },
+        {
+          "comm": "ke_worker",
+          "completed": 200000,
+          "cpu": 1,
+          "errors": 0,
+          "iterations": 200000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 1
+        },
+        {
+          "comm": "ke_worker",
+          "completed": 200000,
+          "cpu": 2,
+          "errors": 0,
+          "iterations": 200000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 2
+        },
+        {
+          "comm": "ke_worker",
+          "completed": 200000,
+          "cpu": 3,
+          "errors": 0,
+          "iterations": 200000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 3
+        },
+        {
+          "comm": "ke_worker",
+          "completed": 200000,
+          "cpu": 4,
+          "errors": 0,
+          "iterations": 200000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 4
+        },
+        {
+          "comm": "ke_worker",
+          "completed": 200000,
+          "cpu": 5,
+          "errors": 0,
+          "iterations": 200000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 5
+        },
+        {
+          "comm": "ke_worker",
+          "completed": 200000,
+          "cpu": 6,
+          "errors": 0,
+          "iterations": 200000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 6
+        },
+        {
+          "comm": "ke_worker",
+          "completed": 200000,
+          "cpu": 7,
+          "errors": 0,
+          "iterations": 200000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 7
+        },
+        {
+          "comm": "ke_worker",
+          "completed": 200000,
+          "cpu": 32,
+          "errors": 0,
+          "iterations": 200000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 8
+        },
+        {
+          "comm": "ke_worker",
+          "completed": 200000,
+          "cpu": 33,
+          "errors": 0,
+          "iterations": 200000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 9
+        },
+        {
+          "comm": "ke_worker",
+          "completed": 200000,
+          "cpu": 34,
+          "errors": 0,
+          "iterations": 200000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 10
+        },
+        {
+          "comm": "ke_worker",
+          "completed": 200000,
+          "cpu": 35,
+          "errors": 0,
+          "iterations": 200000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 11
+        },
+        {
+          "comm": "ke_worker",
+          "completed": 200000,
+          "cpu": 36,
+          "errors": 0,
+          "iterations": 200000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 12
+        },
+        {
+          "comm": "ke_worker",
+          "completed": 200000,
+          "cpu": 37,
+          "errors": 0,
+          "iterations": 200000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 13
+        },
+        {
+          "comm": "ke_worker",
+          "completed": 200000,
+          "cpu": 38,
+          "errors": 0,
+          "iterations": 200000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 14
+        },
+        {
+          "comm": "ke_worker",
+          "completed": 200000,
+          "cpu": 39,
+          "errors": 0,
+          "iterations": 200000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 15
+        }
+      ]
+    },
+    {
+      "after": {
+        "active": 0,
+        "entry": 18446744072643764523,
+        "failures": 0,
+        "hot": 0,
+        "hot_taken": 0,
+        "idle": 1,
+        "lock_address": 18446744072643772512,
+        "marker": 18446744072643764549,
+        "prefix": 6400000,
+        "suffix": 6400000
+      },
+      "before": {
+        "active": 0,
+        "entry": 18446744072643764523,
+        "failures": 0,
+        "hot": 0,
+        "hot_taken": 0,
+        "idle": 1,
+        "lock_address": 18446744072643772512,
+        "marker": 18446744072643764549,
+        "prefix": 3200000,
+        "suffix": 3200000
+      },
+      "complete": true,
+      "counters_after": {
+        "bench_jit_bodies": 3805059,
+        "bench_jit_completions": 3805059,
+        "native_escape_count": 0
+      },
+      "counters_before": {
+        "bench_jit_bodies": 2290964,
+        "bench_jit_completions": 2290964,
+        "native_escape_count": 0
+      },
+      "hot": 0,
+      "iterations": 200000,
+      "jit_delta": {
+        "bench_jit_bodies": 1514095,
+        "bench_jit_completions": 1514095,
+        "native_escape_count": 0
+      },
+      "name": "cold-delegated",
+      "registry_after": [
+        {
+          "code": 18419722476157173760,
+          "entry": 18446744072643764523,
+          "entry_abi": 2,
+          "generation": 1,
+          "jump_from": 0,
+          "lock_kind": 2,
+          "pid": 0,
+          "requirements": 1,
+          "status": 0,
+          "target": 0,
+          "tgid": 2298806
+        }
+      ],
+      "registry_before": [
+        {
+          "code": 18419722476157173760,
+          "entry": 18446744072643764523,
+          "entry_abi": 2,
+          "generation": 1,
+          "jump_from": 0,
+          "lock_kind": 2,
+          "pid": 0,
+          "requirements": 1,
+          "status": 0,
+          "target": 0,
+          "tgid": 2298806
+        }
+      ],
+      "returncodes": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "source_after": {
+        "frames": 0,
+        "modules": 1,
+        "state": 0,
+        "writers": 1
+      },
+      "workers": [
+        {
+          "comm": "ke_worker",
+          "completed": 200000,
+          "cpu": 0,
+          "errors": 0,
+          "iterations": 200000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 0
+        },
+        {
+          "comm": "ke_worker",
+          "completed": 200000,
+          "cpu": 1,
+          "errors": 0,
+          "iterations": 200000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 1
+        },
+        {
+          "comm": "ke_worker",
+          "completed": 200000,
+          "cpu": 2,
+          "errors": 0,
+          "iterations": 200000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 2
+        },
+        {
+          "comm": "ke_worker",
+          "completed": 200000,
+          "cpu": 3,
+          "errors": 0,
+          "iterations": 200000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 3
+        },
+        {
+          "comm": "ke_worker",
+          "completed": 200000,
+          "cpu": 4,
+          "errors": 0,
+          "iterations": 200000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 4
+        },
+        {
+          "comm": "ke_worker",
+          "completed": 200000,
+          "cpu": 5,
+          "errors": 0,
+          "iterations": 200000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 5
+        },
+        {
+          "comm": "ke_worker",
+          "completed": 200000,
+          "cpu": 6,
+          "errors": 0,
+          "iterations": 200000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 6
+        },
+        {
+          "comm": "ke_worker",
+          "completed": 200000,
+          "cpu": 7,
+          "errors": 0,
+          "iterations": 200000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 7
+        },
+        {
+          "comm": "ke_worker",
+          "completed": 200000,
+          "cpu": 32,
+          "errors": 0,
+          "iterations": 200000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 8
+        },
+        {
+          "comm": "ke_worker",
+          "completed": 200000,
+          "cpu": 33,
+          "errors": 0,
+          "iterations": 200000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 9
+        },
+        {
+          "comm": "ke_worker",
+          "completed": 200000,
+          "cpu": 34,
+          "errors": 0,
+          "iterations": 200000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 10
+        },
+        {
+          "comm": "ke_worker",
+          "completed": 200000,
+          "cpu": 35,
+          "errors": 0,
+          "iterations": 200000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 11
+        },
+        {
+          "comm": "ke_worker",
+          "completed": 200000,
+          "cpu": 36,
+          "errors": 0,
+          "iterations": 200000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 12
+        },
+        {
+          "comm": "ke_worker",
+          "completed": 200000,
+          "cpu": 37,
+          "errors": 0,
+          "iterations": 200000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 13
+        },
+        {
+          "comm": "ke_worker",
+          "completed": 200000,
+          "cpu": 38,
+          "errors": 0,
+          "iterations": 200000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 14
+        },
+        {
+          "comm": "ke_worker",
+          "completed": 200000,
+          "cpu": 39,
+          "errors": 0,
+          "iterations": 200000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 15
+        }
+      ]
+    },
+    {
+      "after": {
+        "active": 0,
+        "entry": 18446744072643764523,
+        "failures": 0,
+        "hot": 1,
+        "hot_taken": 3200000,
+        "idle": 1,
+        "lock_address": 18446744072643772512,
+        "marker": 18446744072643764549,
+        "prefix": 9600000,
+        "suffix": 9600000
+      },
+      "before": {
+        "active": 0,
+        "entry": 18446744072643764523,
+        "failures": 0,
+        "hot": 1,
+        "hot_taken": 0,
+        "idle": 1,
+        "lock_address": 18446744072643772512,
+        "marker": 18446744072643764549,
+        "prefix": 6400000,
+        "suffix": 6400000
+      },
+      "complete": true,
+      "counters_after": {
+        "bench_jit_bodies": 3805060,
+        "bench_jit_completions": 3805059,
+        "native_escape_count": 1
+      },
+      "counters_before": {
+        "bench_jit_bodies": 3805059,
+        "bench_jit_completions": 3805059,
+        "native_escape_count": 0
+      },
+      "hot": 1,
+      "iterations": 200000,
+      "jit_delta": {
+        "bench_jit_bodies": 1,
+        "bench_jit_completions": 0,
+        "native_escape_count": 1
+      },
+      "name": "hot-escape",
+      "registry_after": [
+        {
+          "code": 18419722476157173760,
+          "entry": 18446744072643764523,
+          "entry_abi": 2,
+          "generation": 1,
+          "jump_from": 0,
+          "lock_kind": 2,
+          "pid": 0,
+          "requirements": 1,
+          "status": -3,
+          "target": 0,
+          "tgid": 2298806
+        }
+      ],
+      "registry_before": [
+        {
+          "code": 18419722476157173760,
+          "entry": 18446744072643764523,
+          "entry_abi": 2,
+          "generation": 1,
+          "jump_from": 0,
+          "lock_kind": 2,
+          "pid": 0,
+          "requirements": 1,
+          "status": 0,
+          "target": 0,
+          "tgid": 2298806
+        }
+      ],
+      "returncodes": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "source_after": {
+        "frames": 0,
+        "modules": 1,
+        "state": 0,
+        "writers": 1
+      },
+      "workers": [
+        {
+          "comm": "ke_worker",
+          "completed": 200000,
+          "cpu": 0,
+          "errors": 0,
+          "iterations": 200000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 0
+        },
+        {
+          "comm": "ke_worker",
+          "completed": 200000,
+          "cpu": 1,
+          "errors": 0,
+          "iterations": 200000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 1
+        },
+        {
+          "comm": "ke_worker",
+          "completed": 200000,
+          "cpu": 2,
+          "errors": 0,
+          "iterations": 200000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 2
+        },
+        {
+          "comm": "ke_worker",
+          "completed": 200000,
+          "cpu": 3,
+          "errors": 0,
+          "iterations": 200000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 3
+        },
+        {
+          "comm": "ke_worker",
+          "completed": 200000,
+          "cpu": 4,
+          "errors": 0,
+          "iterations": 200000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 4
+        },
+        {
+          "comm": "ke_worker",
+          "completed": 200000,
+          "cpu": 5,
+          "errors": 0,
+          "iterations": 200000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 5
+        },
+        {
+          "comm": "ke_worker",
+          "completed": 200000,
+          "cpu": 6,
+          "errors": 0,
+          "iterations": 200000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 6
+        },
+        {
+          "comm": "ke_worker",
+          "completed": 200000,
+          "cpu": 7,
+          "errors": 0,
+          "iterations": 200000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 7
+        },
+        {
+          "comm": "ke_worker",
+          "completed": 200000,
+          "cpu": 32,
+          "errors": 0,
+          "iterations": 200000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 8
+        },
+        {
+          "comm": "ke_worker",
+          "completed": 200000,
+          "cpu": 33,
+          "errors": 0,
+          "iterations": 200000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 9
+        },
+        {
+          "comm": "ke_worker",
+          "completed": 200000,
+          "cpu": 34,
+          "errors": 0,
+          "iterations": 200000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 10
+        },
+        {
+          "comm": "ke_worker",
+          "completed": 200000,
+          "cpu": 35,
+          "errors": 0,
+          "iterations": 200000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 11
+        },
+        {
+          "comm": "ke_worker",
+          "completed": 200000,
+          "cpu": 36,
+          "errors": 0,
+          "iterations": 200000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 12
+        },
+        {
+          "comm": "ke_worker",
+          "completed": 200000,
+          "cpu": 37,
+          "errors": 0,
+          "iterations": 200000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 13
+        },
+        {
+          "comm": "ke_worker",
+          "completed": 200000,
+          "cpu": 38,
+          "errors": 0,
+          "iterations": 200000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 14
+        },
+        {
+          "comm": "ke_worker",
+          "completed": 200000,
+          "cpu": 39,
+          "errors": 0,
+          "iterations": 200000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 15
+        }
+      ]
+    },
+    {
+      "after": {
+        "active": 0,
+        "entry": 18446744072643764523,
+        "failures": 0,
+        "hot": 1,
+        "hot_taken": 6400000,
+        "idle": 1,
+        "lock_address": 18446744072643772512,
+        "marker": 18446744072643764549,
+        "prefix": 12800000,
+        "suffix": 12800000
+      },
+      "before": {
+        "active": 0,
+        "entry": 18446744072643764523,
+        "failures": 0,
+        "hot": 1,
+        "hot_taken": 3200000,
+        "idle": 1,
+        "lock_address": 18446744072643772512,
+        "marker": 18446744072643764549,
+        "prefix": 9600000,
+        "suffix": 9600000
+      },
+      "complete": true,
+      "counters_after": {
+        "bench_jit_bodies": 3805060,
+        "bench_jit_completions": 3805059,
+        "native_escape_count": 1
+      },
+      "counters_before": {
+        "bench_jit_bodies": 3805060,
+        "bench_jit_completions": 3805059,
+        "native_escape_count": 1
+      },
+      "hot": 1,
+      "iterations": 200000,
+      "jit_delta": {
+        "bench_jit_bodies": 0,
+        "bench_jit_completions": 0,
+        "native_escape_count": 0
+      },
+      "name": "post-ban",
+      "registry_after": [
+        {
+          "code": 18419722476157173760,
+          "entry": 18446744072643764523,
+          "entry_abi": 2,
+          "generation": 1,
+          "jump_from": 0,
+          "lock_kind": 2,
+          "pid": 0,
+          "requirements": 1,
+          "status": -3,
+          "target": 0,
+          "tgid": 2298806
+        }
+      ],
+      "registry_before": [
+        {
+          "code": 18419722476157173760,
+          "entry": 18446744072643764523,
+          "entry_abi": 2,
+          "generation": 1,
+          "jump_from": 0,
+          "lock_kind": 2,
+          "pid": 0,
+          "requirements": 1,
+          "status": -3,
+          "target": 0,
+          "tgid": 2298806
+        }
+      ],
+      "returncodes": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "source_after": {
+        "frames": 0,
+        "modules": 1,
+        "state": 0,
+        "writers": 1
+      },
+      "workers": [
+        {
+          "comm": "ke_worker",
+          "completed": 200000,
+          "cpu": 0,
+          "errors": 0,
+          "iterations": 200000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 0
+        },
+        {
+          "comm": "ke_worker",
+          "completed": 200000,
+          "cpu": 1,
+          "errors": 0,
+          "iterations": 200000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 1
+        },
+        {
+          "comm": "ke_worker",
+          "completed": 200000,
+          "cpu": 2,
+          "errors": 0,
+          "iterations": 200000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 2
+        },
+        {
+          "comm": "ke_worker",
+          "completed": 200000,
+          "cpu": 3,
+          "errors": 0,
+          "iterations": 200000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 3
+        },
+        {
+          "comm": "ke_worker",
+          "completed": 200000,
+          "cpu": 4,
+          "errors": 0,
+          "iterations": 200000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 4
+        },
+        {
+          "comm": "ke_worker",
+          "completed": 200000,
+          "cpu": 5,
+          "errors": 0,
+          "iterations": 200000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 5
+        },
+        {
+          "comm": "ke_worker",
+          "completed": 200000,
+          "cpu": 6,
+          "errors": 0,
+          "iterations": 200000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 6
+        },
+        {
+          "comm": "ke_worker",
+          "completed": 200000,
+          "cpu": 7,
+          "errors": 0,
+          "iterations": 200000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 7
+        },
+        {
+          "comm": "ke_worker",
+          "completed": 200000,
+          "cpu": 32,
+          "errors": 0,
+          "iterations": 200000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 8
+        },
+        {
+          "comm": "ke_worker",
+          "completed": 200000,
+          "cpu": 33,
+          "errors": 0,
+          "iterations": 200000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 9
+        },
+        {
+          "comm": "ke_worker",
+          "completed": 200000,
+          "cpu": 34,
+          "errors": 0,
+          "iterations": 200000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 10
+        },
+        {
+          "comm": "ke_worker",
+          "completed": 200000,
+          "cpu": 35,
+          "errors": 0,
+          "iterations": 200000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 11
+        },
+        {
+          "comm": "ke_worker",
+          "completed": 200000,
+          "cpu": 36,
+          "errors": 0,
+          "iterations": 200000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 12
+        },
+        {
+          "comm": "ke_worker",
+          "completed": 200000,
+          "cpu": 37,
+          "errors": 0,
+          "iterations": 200000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 13
+        },
+        {
+          "comm": "ke_worker",
+          "completed": 200000,
+          "cpu": 38,
+          "errors": 0,
+          "iterations": 200000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 14
+        },
+        {
+          "comm": "ke_worker",
+          "completed": 200000,
+          "cpu": 39,
+          "errors": 0,
+          "iterations": 200000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 15
+        }
+      ]
+    }
+  ],
+  "snapshot_tag": "before-mutex-kdonly-20261017T140354Z"
+}

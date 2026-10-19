@@ -1,0 +1,72 @@
+compact-rcu c01-t08-r00-direct-kdlock-adaptive
+    64.41%  sc_worker  [kdlock_km]        [k] __kd_mutex_lock_slowpath                            -      -            
+     8.82%  sc_worker  [kdlock_km]        [k] kd_mutex_aux_try_ref                                -      -            
+     4.96%  sc_worker  [kdlock_km]        [k] kd_mutex_run_combiner                               -      -            
+     4.81%  sc_worker  [kdlock_km]        [k] kd_mutex_aux_put                                    -      -            
+     3.30%  sc_worker  [mutex_cacheline]  [k] sc_ioctl                                            -      -            
+     3.26%  sc_worker  [kdlock_km]        [k] kd_mutex_batch_retire_current.part.0                -      -            
+     2.29%  sc_worker  [kdlock_km]        [k] kd_mutex_execute_cs                                 -      -            
+     2.17%  sc_worker  [mutex_cacheline]  [k] mc_body_1                                           -      -            
+     1.07%  sc_worker  [unknown]          [k] 0xffa000000d1f017e                                  -      -            
+     0.63%  sc_worker  [kdlock_km]        [k] _kd_mutex_lock_abi                                  -      -            
+     0.53%  sc_worker  [kdlock_km]        [k] kd_mutex_task_put                                   -      -            
+     0.45%  sc_worker  [kdlock_km]        [k] kd_mutex_osq_lock                                   -      -            
+     0.29%  sc_worker  [kdlock_km]        [k] kd_mutex_combiner_active                            -      -            
+compact-rcu c01-t60-r00-direct-kdlock-adaptive
+    90.04%  sc_worker  [kdlock_km]        [k] __kd_mutex_lock_slowpath                            -      -            
+     2.95%  sc_worker  [kdlock_km]        [k] kd_mutex_aux_put                                    -      -            
+     2.29%  sc_worker  [kdlock_km]        [k] kd_mutex_aux_try_ref                                -      -            
+     1.18%  sc_worker  [mutex_cacheline]  [k] mc_body_1                                           -      -            
+     0.75%  sc_worker  [kdlock_km]        [k] kd_mutex_run_combiner                               -      -            
+     0.53%  sc_worker  [mutex_cacheline]  [k] sc_ioctl                                            -      -            
+     0.34%  sc_worker  [kdlock_km]        [k] kd_mutex_wait_and_lock                              -      -            
+     0.31%  sc_worker  [kdlock_km]        [k] kd_mutex_combiner_active                            -      -            
+     0.24%  sc_worker  [kdlock_km]        [k] kd_mutex_execute_cs                                 -      -            
+
+precompact-256 c01-t08-r00-direct-kdlock-adaptive
+    73.76%  sc_worker  [kdlock_km]        [k] __kd_mutex_lock_slowpath                            -      -            
+     7.60%  sc_worker  [kdlock_km]        [k] kd_mutex_run_combiner                               -      -            
+     4.05%  sc_worker  [mutex_cacheline]  [k] sc_ioctl                                            -      -            
+     3.67%  sc_worker  [kdlock_km]        [k] kd_mutex_execute_cs                                 -      -            
+     2.95%  sc_worker  [mutex_cacheline]  [k] mc_body_1                                           -      -            
+     1.35%  sc_worker  [kdlock_km]        [k] kd_mutex_task_put                                   -      -            
+     1.10%  sc_worker  [unknown]          [k] 0xffa000000cbca17e                                  -      -            
+     1.00%  sc_worker  [kdlock_km]        [k] 0x0000000000012770                                  -      -            
+     0.45%  sc_worker  [kdlock_km]        [k] 0x0000000000012777                                  -      -            
+     0.41%  sc_worker  [kdlock_km]        [k] kd_mutex_task_get                                   -      -            
+     0.38%  sc_worker  [kdlock_km]        [k] _kd_mutex_lock_abi                                  -      -            
+     0.28%  sc_worker  [kdlock_km]        [k] kd_mutex_task_active                                -      -            
+
+precompact-256 c01-t60-r00-direct-kdlock-adaptive
+    95.66%  sc_worker  [kdlock_km]        [k] __kd_mutex_lock_slowpath                            -      -            
+     0.92%  sc_worker  [mutex_cacheline]  [k] sc_ioctl                                            -      -            
+     0.78%  sc_worker  [mutex_cacheline]  [k] mc_body_1                                           -      -            
+     0.69%  sc_worker  [kdlock_km]        [k] kd_mutex_run_combiner                               -      -            
+     0.50%  sc_worker  [kdlock_km]        [k] kd_mutex_execute_cs                                 -      -            
+
+compact-index c01-t08-r00-direct-kdlock-adaptive
+    66.82%  sc_worker  [kdlock_km]        [k] __kd_mutex_lock_slowpath                            -      -            
+     7.16%  sc_worker  [kdlock_km]        [k] kd_mutex_aux_try_ref                                -      -            
+     4.86%  sc_worker  [kdlock_km]        [k] kd_mutex_run_combiner                               -      -            
+     4.07%  sc_worker  [mutex_cacheline]  [k] sc_ioctl                                            -      -            
+     3.90%  sc_worker  [kdlock_km]        [k] kd_mutex_aux_put                                    -      -            
+     3.61%  sc_worker  [kdlock_km]        [k] kd_mutex_execute_cs                                 -      -            
+     2.38%  sc_worker  [kdlock_km]        [k] kd_mutex_batch_retire_current.part.0                -      -            
+     1.94%  sc_worker  [mutex_cacheline]  [k] mc_body_1                                           -      -            
+     1.23%  sc_worker  [unknown]          [k] 0xffa000000ca8817e                                  -      -            
+     0.66%  sc_worker  [kdlock_km]        [k] _kd_mutex_lock_abi                                  -      -            
+     0.44%  sc_worker  [kdlock_km]        [k] kd_mutex_task_put                                   -      -            
+     0.34%  sc_worker  [kdlock_km]        [k] 0x0000000000012736                                  -      -            
+
+compact-index c01-t60-r00-direct-kdlock-adaptive
+    91.62%  sc_worker  [kdlock_km]        [k] __kd_mutex_lock_slowpath                            -      -            
+     1.97%  sc_worker  [kdlock_km]        [k] kd_mutex_aux_put                                    -      -            
+     1.94%  sc_worker  [kdlock_km]        [k] kd_mutex_aux_try_ref                                -      -            
+     0.83%  sc_worker  [mutex_cacheline]  [k] mc_body_1                                           -      -            
+     0.76%  sc_worker  [mutex_cacheline]  [k] sc_ioctl                                            -      -            
+     0.67%  sc_worker  [kdlock_km]        [k] kd_mutex_run_combiner                               -      -            
+     0.33%  sc_worker  [kdlock_km]        [k] kd_mutex_wait_and_lock                              -      -            
+     0.29%  sc_worker  [kdlock_km]        [k] kd_mutex_combiner_active                            -      -            
+     0.28%  sc_worker  [kdlock_km]        [k] kd_mutex_execute_cs                                 -      -            
+     0.23%  sc_worker  [kdlock_km]        [k] _kd_mutex_lock_abi                                  -      -            
+

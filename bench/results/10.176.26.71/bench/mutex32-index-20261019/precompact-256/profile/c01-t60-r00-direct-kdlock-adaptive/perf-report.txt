@@ -1,0 +1,21 @@
+# To display the perf.data header info, please use --header/--header-only options.
+#
+#
+# Total Lost Samples: 0
+#
+# Samples: 24K of event 'cycles:k'
+# Event count (approx.): 239478292800
+#
+# Overhead  Command    Shared Object      Symbol                                                  IPC   [IPC Coverage]
+# ........  .........  .................  ......................................................  ....................
+#
+    95.66%  sc_worker  [kdlock_km]        [k] __kd_mutex_lock_slowpath                            -      -            
+     0.92%  sc_worker  [mutex_cacheline]  [k] sc_ioctl                                            -      -            
+     0.78%  sc_worker  [mutex_cacheline]  [k] mc_body_1                                           -      -            
+     0.69%  sc_worker  [kdlock_km]        [k] kd_mutex_run_combiner                               -      -            
+     0.50%  sc_worker  [kdlock_km]        [k] kd_mutex_execute_cs                                 -      -            
+
+
+#
+# (Cannot load tips.txt file, please install perf!)
+#

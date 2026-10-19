@@ -1,0 +1,1446 @@
+{
+  "schema": 1,
+  "method": "Read-only tar data extraction, SHA256, readelf section/symbol inspection; no archived code executed. Runtime .bss base inferred from recorded lock_addr minus ELF kd_lock st_value.",
+  "cacheline_bytes": 64,
+  "variants": [
+    {
+      "archive": "bench/results/10.176.26.71/raw/bench/mutex32-opt-20261019/old256.tar.gz",
+      "member": "mutex32-opt-20261019/precompact-256/seek/build/kdlock-seek/real_api.ko",
+      "sha256": "1989c1d10b5eaa4c90b1e95bb57cdd4d0d43f83db708e004100e063692457e3e",
+      "matches_binaries_json": true,
+      "bss_readelf": "[39] .bss              NOBITS          0000000000000000 001a80 0001a0 00  WA  0   0 128",
+      "symbols": {
+        "target_pid": {
+          "offset": 404,
+          "size": 4,
+          "section_index": "39"
+        },
+        "target_fd": {
+          "offset": 400,
+          "size": 4,
+          "section_index": "39"
+        },
+        "lock_addr": {
+          "offset": 384,
+          "size": 8,
+          "section_index": "39"
+        },
+        "kd_lock": {
+          "offset": 128,
+          "size": 256,
+          "section_index": "39"
+        },
+        "hook_addr": {
+          "offset": 0,
+          "size": 8,
+          "section_index": "39"
+        },
+        "target_file": {
+          "offset": 392,
+          "size": 8,
+          "section_index": "39"
+        },
+        "target_path": {
+          "offset": 408,
+          "size": 8,
+          "section_index": "39"
+        }
+      },
+      "origfn_present": false,
+      "original_lock_present": false,
+      "sessions": [
+        {
+          "path": "mutex32-opt-20261019/precompact-256/seek/seek-set-n16-t08-r0-kdlock/session.json",
+          "sha256": "aa9ef6e03e70497debf257e3c0511136c83b903b17db2e408aee1a9fadd66c57",
+          "name": "seek-set-n16-t08-r0-kdlock",
+          "lock_addr": "0xffffffffc0798580",
+          "inferred_bss_base": "0xffffffffc0798500",
+          "bss_base_mod64": 0,
+          "symbols": {
+            "target_pid": {
+              "offset": 404,
+              "size": 4,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc0798694",
+              "cacheline": "0xffffffffc0798680",
+              "shares_owner_cacheline": false
+            },
+            "target_fd": {
+              "offset": 400,
+              "size": 4,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc0798690",
+              "cacheline": "0xffffffffc0798680",
+              "shares_owner_cacheline": false
+            },
+            "lock_addr": {
+              "offset": 384,
+              "size": 8,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc0798680",
+              "cacheline": "0xffffffffc0798680",
+              "shares_owner_cacheline": false
+            },
+            "kd_lock": {
+              "offset": 128,
+              "size": 256,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc0798580",
+              "cacheline": "0xffffffffc0798580",
+              "shares_owner_cacheline": true
+            },
+            "hook_addr": {
+              "offset": 0,
+              "size": 8,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc0798500",
+              "cacheline": "0xffffffffc0798500",
+              "shares_owner_cacheline": false
+            },
+            "target_file": {
+              "offset": 392,
+              "size": 8,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc0798688",
+              "cacheline": "0xffffffffc0798680",
+              "shares_owner_cacheline": false
+            },
+            "target_path": {
+              "offset": 408,
+              "size": 8,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc0798698",
+              "cacheline": "0xffffffffc0798680",
+              "shares_owner_cacheline": false
+            }
+          }
+        },
+        {
+          "path": "mutex32-opt-20261019/precompact-256/seek/seek-set-n16-t08-r1-kdlock/session.json",
+          "sha256": "0e478125dbd18a6a593caf7beec06ed0503dcbb4ac67b44c69c88dd3008c87a6",
+          "name": "seek-set-n16-t08-r1-kdlock",
+          "lock_addr": "0xffffffffc0798580",
+          "inferred_bss_base": "0xffffffffc0798500",
+          "bss_base_mod64": 0,
+          "symbols": {
+            "target_pid": {
+              "offset": 404,
+              "size": 4,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc0798694",
+              "cacheline": "0xffffffffc0798680",
+              "shares_owner_cacheline": false
+            },
+            "target_fd": {
+              "offset": 400,
+              "size": 4,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc0798690",
+              "cacheline": "0xffffffffc0798680",
+              "shares_owner_cacheline": false
+            },
+            "lock_addr": {
+              "offset": 384,
+              "size": 8,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc0798680",
+              "cacheline": "0xffffffffc0798680",
+              "shares_owner_cacheline": false
+            },
+            "kd_lock": {
+              "offset": 128,
+              "size": 256,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc0798580",
+              "cacheline": "0xffffffffc0798580",
+              "shares_owner_cacheline": true
+            },
+            "hook_addr": {
+              "offset": 0,
+              "size": 8,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc0798500",
+              "cacheline": "0xffffffffc0798500",
+              "shares_owner_cacheline": false
+            },
+            "target_file": {
+              "offset": 392,
+              "size": 8,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc0798688",
+              "cacheline": "0xffffffffc0798680",
+              "shares_owner_cacheline": false
+            },
+            "target_path": {
+              "offset": 408,
+              "size": 8,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc0798698",
+              "cacheline": "0xffffffffc0798680",
+              "shares_owner_cacheline": false
+            }
+          }
+        },
+        {
+          "path": "mutex32-opt-20261019/precompact-256/seek/seek-set-n16-t08-r2-kdlock/session.json",
+          "sha256": "ef4a2a5e67d7ac9f6409fa50a626a7be1416c36924530e5050a4501e33eaa9e0",
+          "name": "seek-set-n16-t08-r2-kdlock",
+          "lock_addr": "0xffffffffc0798580",
+          "inferred_bss_base": "0xffffffffc0798500",
+          "bss_base_mod64": 0,
+          "symbols": {
+            "target_pid": {
+              "offset": 404,
+              "size": 4,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc0798694",
+              "cacheline": "0xffffffffc0798680",
+              "shares_owner_cacheline": false
+            },
+            "target_fd": {
+              "offset": 400,
+              "size": 4,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc0798690",
+              "cacheline": "0xffffffffc0798680",
+              "shares_owner_cacheline": false
+            },
+            "lock_addr": {
+              "offset": 384,
+              "size": 8,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc0798680",
+              "cacheline": "0xffffffffc0798680",
+              "shares_owner_cacheline": false
+            },
+            "kd_lock": {
+              "offset": 128,
+              "size": 256,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc0798580",
+              "cacheline": "0xffffffffc0798580",
+              "shares_owner_cacheline": true
+            },
+            "hook_addr": {
+              "offset": 0,
+              "size": 8,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc0798500",
+              "cacheline": "0xffffffffc0798500",
+              "shares_owner_cacheline": false
+            },
+            "target_file": {
+              "offset": 392,
+              "size": 8,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc0798688",
+              "cacheline": "0xffffffffc0798680",
+              "shares_owner_cacheline": false
+            },
+            "target_path": {
+              "offset": 408,
+              "size": 8,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc0798698",
+              "cacheline": "0xffffffffc0798680",
+              "shares_owner_cacheline": false
+            }
+          }
+        },
+        {
+          "path": "mutex32-opt-20261019/precompact-256/seek/seek-set-n16-t60-r0-kdlock/session.json",
+          "sha256": "15eac602ff6c0799d9e0bcd2bf78b00cbf39a67e5c191adee7add38708945639",
+          "name": "seek-set-n16-t60-r0-kdlock",
+          "lock_addr": "0xffffffffc0798580",
+          "inferred_bss_base": "0xffffffffc0798500",
+          "bss_base_mod64": 0,
+          "symbols": {
+            "target_pid": {
+              "offset": 404,
+              "size": 4,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc0798694",
+              "cacheline": "0xffffffffc0798680",
+              "shares_owner_cacheline": false
+            },
+            "target_fd": {
+              "offset": 400,
+              "size": 4,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc0798690",
+              "cacheline": "0xffffffffc0798680",
+              "shares_owner_cacheline": false
+            },
+            "lock_addr": {
+              "offset": 384,
+              "size": 8,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc0798680",
+              "cacheline": "0xffffffffc0798680",
+              "shares_owner_cacheline": false
+            },
+            "kd_lock": {
+              "offset": 128,
+              "size": 256,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc0798580",
+              "cacheline": "0xffffffffc0798580",
+              "shares_owner_cacheline": true
+            },
+            "hook_addr": {
+              "offset": 0,
+              "size": 8,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc0798500",
+              "cacheline": "0xffffffffc0798500",
+              "shares_owner_cacheline": false
+            },
+            "target_file": {
+              "offset": 392,
+              "size": 8,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc0798688",
+              "cacheline": "0xffffffffc0798680",
+              "shares_owner_cacheline": false
+            },
+            "target_path": {
+              "offset": 408,
+              "size": 8,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc0798698",
+              "cacheline": "0xffffffffc0798680",
+              "shares_owner_cacheline": false
+            }
+          }
+        },
+        {
+          "path": "mutex32-opt-20261019/precompact-256/seek/seek-set-n16-t60-r1-kdlock/session.json",
+          "sha256": "a9ddba9b308fc84fb96ae68ca77b894c4fef1f375681a9b13dc37442166caeb8",
+          "name": "seek-set-n16-t60-r1-kdlock",
+          "lock_addr": "0xffffffffc0798580",
+          "inferred_bss_base": "0xffffffffc0798500",
+          "bss_base_mod64": 0,
+          "symbols": {
+            "target_pid": {
+              "offset": 404,
+              "size": 4,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc0798694",
+              "cacheline": "0xffffffffc0798680",
+              "shares_owner_cacheline": false
+            },
+            "target_fd": {
+              "offset": 400,
+              "size": 4,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc0798690",
+              "cacheline": "0xffffffffc0798680",
+              "shares_owner_cacheline": false
+            },
+            "lock_addr": {
+              "offset": 384,
+              "size": 8,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc0798680",
+              "cacheline": "0xffffffffc0798680",
+              "shares_owner_cacheline": false
+            },
+            "kd_lock": {
+              "offset": 128,
+              "size": 256,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc0798580",
+              "cacheline": "0xffffffffc0798580",
+              "shares_owner_cacheline": true
+            },
+            "hook_addr": {
+              "offset": 0,
+              "size": 8,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc0798500",
+              "cacheline": "0xffffffffc0798500",
+              "shares_owner_cacheline": false
+            },
+            "target_file": {
+              "offset": 392,
+              "size": 8,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc0798688",
+              "cacheline": "0xffffffffc0798680",
+              "shares_owner_cacheline": false
+            },
+            "target_path": {
+              "offset": 408,
+              "size": 8,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc0798698",
+              "cacheline": "0xffffffffc0798680",
+              "shares_owner_cacheline": false
+            }
+          }
+        },
+        {
+          "path": "mutex32-opt-20261019/precompact-256/seek/seek-set-n16-t60-r2-kdlock/session.json",
+          "sha256": "e8aa05f506f3b27b6c1d1a7c49725ae53e5ed2fbbcf082e2251515fb32f5dd0f",
+          "name": "seek-set-n16-t60-r2-kdlock",
+          "lock_addr": "0xffffffffc0798580",
+          "inferred_bss_base": "0xffffffffc0798500",
+          "bss_base_mod64": 0,
+          "symbols": {
+            "target_pid": {
+              "offset": 404,
+              "size": 4,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc0798694",
+              "cacheline": "0xffffffffc0798680",
+              "shares_owner_cacheline": false
+            },
+            "target_fd": {
+              "offset": 400,
+              "size": 4,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc0798690",
+              "cacheline": "0xffffffffc0798680",
+              "shares_owner_cacheline": false
+            },
+            "lock_addr": {
+              "offset": 384,
+              "size": 8,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc0798680",
+              "cacheline": "0xffffffffc0798680",
+              "shares_owner_cacheline": false
+            },
+            "kd_lock": {
+              "offset": 128,
+              "size": 256,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc0798580",
+              "cacheline": "0xffffffffc0798580",
+              "shares_owner_cacheline": true
+            },
+            "hook_addr": {
+              "offset": 0,
+              "size": 8,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc0798500",
+              "cacheline": "0xffffffffc0798500",
+              "shares_owner_cacheline": false
+            },
+            "target_file": {
+              "offset": 392,
+              "size": 8,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc0798688",
+              "cacheline": "0xffffffffc0798680",
+              "shares_owner_cacheline": false
+            },
+            "target_path": {
+              "offset": 408,
+              "size": 8,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc0798698",
+              "cacheline": "0xffffffffc0798680",
+              "shares_owner_cacheline": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "archive": "bench/results/10.176.26.71/raw/bench/mutex32-opt-20261019/old256.tar.gz",
+      "member": "mutex32-opt-20261019/precompact-256/pipe/build/kdlock-pipebytes/real_api.ko",
+      "sha256": "f068e6bef50d8bef969f3ce1760b31b38633463c93cccbd23c7f7333085319a3",
+      "matches_binaries_json": true,
+      "bss_readelf": "[39] .bss              NOBITS          0000000000000000 001a00 0001a8 00  WA  0   0 128",
+      "symbols": {
+        "target_pid": {
+          "offset": 412,
+          "size": 4,
+          "section_index": "39"
+        },
+        "target_pipe": {
+          "offset": 392,
+          "size": 8,
+          "section_index": "39"
+        },
+        "lock_addr": {
+          "offset": 384,
+          "size": 8,
+          "section_index": "39"
+        },
+        "kd_lock": {
+          "offset": 128,
+          "size": 256,
+          "section_index": "39"
+        },
+        "hook_addr": {
+          "offset": 0,
+          "size": 8,
+          "section_index": "39"
+        },
+        "target_file": {
+          "offset": 400,
+          "size": 8,
+          "section_index": "39"
+        },
+        "target_path": {
+          "offset": 416,
+          "size": 8,
+          "section_index": "39"
+        },
+        "target_fd": {
+          "offset": 408,
+          "size": 4,
+          "section_index": "39"
+        }
+      },
+      "origfn_present": false,
+      "original_lock_present": false,
+      "sessions": [
+        {
+          "path": "mutex32-opt-20261019/precompact-256/pipe/pipebytes-query-n16-t08-r0-kdlock/session.json",
+          "sha256": "73e473b6a0577ce6e6366746119540e3516452f59426a9a9cdc6b3e81b1a00be",
+          "name": "pipebytes-query-n16-t08-r0-kdlock",
+          "lock_addr": "0xffffffffc0798580",
+          "inferred_bss_base": "0xffffffffc0798500",
+          "bss_base_mod64": 0,
+          "symbols": {
+            "target_pid": {
+              "offset": 412,
+              "size": 4,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc079869c",
+              "cacheline": "0xffffffffc0798680",
+              "shares_owner_cacheline": false
+            },
+            "target_pipe": {
+              "offset": 392,
+              "size": 8,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc0798688",
+              "cacheline": "0xffffffffc0798680",
+              "shares_owner_cacheline": false
+            },
+            "lock_addr": {
+              "offset": 384,
+              "size": 8,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc0798680",
+              "cacheline": "0xffffffffc0798680",
+              "shares_owner_cacheline": false
+            },
+            "kd_lock": {
+              "offset": 128,
+              "size": 256,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc0798580",
+              "cacheline": "0xffffffffc0798580",
+              "shares_owner_cacheline": true
+            },
+            "hook_addr": {
+              "offset": 0,
+              "size": 8,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc0798500",
+              "cacheline": "0xffffffffc0798500",
+              "shares_owner_cacheline": false
+            },
+            "target_file": {
+              "offset": 400,
+              "size": 8,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc0798690",
+              "cacheline": "0xffffffffc0798680",
+              "shares_owner_cacheline": false
+            },
+            "target_path": {
+              "offset": 416,
+              "size": 8,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc07986a0",
+              "cacheline": "0xffffffffc0798680",
+              "shares_owner_cacheline": false
+            },
+            "target_fd": {
+              "offset": 408,
+              "size": 4,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc0798698",
+              "cacheline": "0xffffffffc0798680",
+              "shares_owner_cacheline": false
+            }
+          }
+        },
+        {
+          "path": "mutex32-opt-20261019/precompact-256/pipe/pipebytes-query-n16-t08-r1-kdlock/session.json",
+          "sha256": "cf6e7254d92f72621b06dc9a5dd1878b9884bc544f401ac45594031acd5b66b7",
+          "name": "pipebytes-query-n16-t08-r1-kdlock",
+          "lock_addr": "0xffffffffc0798580",
+          "inferred_bss_base": "0xffffffffc0798500",
+          "bss_base_mod64": 0,
+          "symbols": {
+            "target_pid": {
+              "offset": 412,
+              "size": 4,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc079869c",
+              "cacheline": "0xffffffffc0798680",
+              "shares_owner_cacheline": false
+            },
+            "target_pipe": {
+              "offset": 392,
+              "size": 8,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc0798688",
+              "cacheline": "0xffffffffc0798680",
+              "shares_owner_cacheline": false
+            },
+            "lock_addr": {
+              "offset": 384,
+              "size": 8,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc0798680",
+              "cacheline": "0xffffffffc0798680",
+              "shares_owner_cacheline": false
+            },
+            "kd_lock": {
+              "offset": 128,
+              "size": 256,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc0798580",
+              "cacheline": "0xffffffffc0798580",
+              "shares_owner_cacheline": true
+            },
+            "hook_addr": {
+              "offset": 0,
+              "size": 8,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc0798500",
+              "cacheline": "0xffffffffc0798500",
+              "shares_owner_cacheline": false
+            },
+            "target_file": {
+              "offset": 400,
+              "size": 8,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc0798690",
+              "cacheline": "0xffffffffc0798680",
+              "shares_owner_cacheline": false
+            },
+            "target_path": {
+              "offset": 416,
+              "size": 8,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc07986a0",
+              "cacheline": "0xffffffffc0798680",
+              "shares_owner_cacheline": false
+            },
+            "target_fd": {
+              "offset": 408,
+              "size": 4,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc0798698",
+              "cacheline": "0xffffffffc0798680",
+              "shares_owner_cacheline": false
+            }
+          }
+        },
+        {
+          "path": "mutex32-opt-20261019/precompact-256/pipe/pipebytes-query-n16-t08-r2-kdlock/session.json",
+          "sha256": "f05ceb54dcc45eb85e2b26be45b8f82d1aed81d6520ca66d8b6bd7dc7bcdf87c",
+          "name": "pipebytes-query-n16-t08-r2-kdlock",
+          "lock_addr": "0xffffffffc0798580",
+          "inferred_bss_base": "0xffffffffc0798500",
+          "bss_base_mod64": 0,
+          "symbols": {
+            "target_pid": {
+              "offset": 412,
+              "size": 4,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc079869c",
+              "cacheline": "0xffffffffc0798680",
+              "shares_owner_cacheline": false
+            },
+            "target_pipe": {
+              "offset": 392,
+              "size": 8,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc0798688",
+              "cacheline": "0xffffffffc0798680",
+              "shares_owner_cacheline": false
+            },
+            "lock_addr": {
+              "offset": 384,
+              "size": 8,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc0798680",
+              "cacheline": "0xffffffffc0798680",
+              "shares_owner_cacheline": false
+            },
+            "kd_lock": {
+              "offset": 128,
+              "size": 256,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc0798580",
+              "cacheline": "0xffffffffc0798580",
+              "shares_owner_cacheline": true
+            },
+            "hook_addr": {
+              "offset": 0,
+              "size": 8,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc0798500",
+              "cacheline": "0xffffffffc0798500",
+              "shares_owner_cacheline": false
+            },
+            "target_file": {
+              "offset": 400,
+              "size": 8,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc0798690",
+              "cacheline": "0xffffffffc0798680",
+              "shares_owner_cacheline": false
+            },
+            "target_path": {
+              "offset": 416,
+              "size": 8,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc07986a0",
+              "cacheline": "0xffffffffc0798680",
+              "shares_owner_cacheline": false
+            },
+            "target_fd": {
+              "offset": 408,
+              "size": 4,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc0798698",
+              "cacheline": "0xffffffffc0798680",
+              "shares_owner_cacheline": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "archive": "bench/results/10.176.26.71/raw/bench/mutex32-opt-20261019/rcu.tar.gz",
+      "member": "mutex32-opt-20261019/compact-rcu/seek/build/kdlock-seek/real_api.ko",
+      "sha256": "d34802649a44b9902d6ace7df4995eadef12ecb688002b6925f009d78bbdc2d1",
+      "matches_binaries_json": true,
+      "bss_readelf": "[39] .bss              NOBITS          0000000000000000 001ac0 000060 00  WA  0   0 32",
+      "symbols": {
+        "target_pid": {
+          "offset": 84,
+          "size": 4,
+          "section_index": "39"
+        },
+        "target_fd": {
+          "offset": 80,
+          "size": 4,
+          "section_index": "39"
+        },
+        "lock_addr": {
+          "offset": 64,
+          "size": 8,
+          "section_index": "39"
+        },
+        "kd_lock": {
+          "offset": 32,
+          "size": 32,
+          "section_index": "39"
+        },
+        "hook_addr": {
+          "offset": 0,
+          "size": 8,
+          "section_index": "39"
+        },
+        "target_file": {
+          "offset": 72,
+          "size": 8,
+          "section_index": "39"
+        },
+        "target_path": {
+          "offset": 88,
+          "size": 8,
+          "section_index": "39"
+        }
+      },
+      "origfn_present": false,
+      "original_lock_present": false,
+      "sessions": [
+        {
+          "path": "mutex32-opt-20261019/compact-rcu/seek/seek-set-n16-t08-r0-kdlock/session.json",
+          "sha256": "d148136d46e48aec1b1f8e3784d27bbd88659d1dc72dda28398089371e16b618",
+          "name": "seek-set-n16-t08-r0-kdlock",
+          "lock_addr": "0xffffffffc07984e0",
+          "inferred_bss_base": "0xffffffffc07984c0",
+          "bss_base_mod64": 0,
+          "symbols": {
+            "target_pid": {
+              "offset": 84,
+              "size": 4,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc0798514",
+              "cacheline": "0xffffffffc0798500",
+              "shares_owner_cacheline": false
+            },
+            "target_fd": {
+              "offset": 80,
+              "size": 4,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc0798510",
+              "cacheline": "0xffffffffc0798500",
+              "shares_owner_cacheline": false
+            },
+            "lock_addr": {
+              "offset": 64,
+              "size": 8,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc0798500",
+              "cacheline": "0xffffffffc0798500",
+              "shares_owner_cacheline": false
+            },
+            "kd_lock": {
+              "offset": 32,
+              "size": 32,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc07984e0",
+              "cacheline": "0xffffffffc07984c0",
+              "shares_owner_cacheline": true
+            },
+            "hook_addr": {
+              "offset": 0,
+              "size": 8,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc07984c0",
+              "cacheline": "0xffffffffc07984c0",
+              "shares_owner_cacheline": true
+            },
+            "target_file": {
+              "offset": 72,
+              "size": 8,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc0798508",
+              "cacheline": "0xffffffffc0798500",
+              "shares_owner_cacheline": false
+            },
+            "target_path": {
+              "offset": 88,
+              "size": 8,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc0798518",
+              "cacheline": "0xffffffffc0798500",
+              "shares_owner_cacheline": false
+            }
+          }
+        },
+        {
+          "path": "mutex32-opt-20261019/compact-rcu/seek/seek-set-n16-t08-r1-kdlock/session.json",
+          "sha256": "dc04ccd00447ea4ad5ad5da04f52e2ce3af59fde854bdda572d947a36b01055c",
+          "name": "seek-set-n16-t08-r1-kdlock",
+          "lock_addr": "0xffffffffc07984e0",
+          "inferred_bss_base": "0xffffffffc07984c0",
+          "bss_base_mod64": 0,
+          "symbols": {
+            "target_pid": {
+              "offset": 84,
+              "size": 4,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc0798514",
+              "cacheline": "0xffffffffc0798500",
+              "shares_owner_cacheline": false
+            },
+            "target_fd": {
+              "offset": 80,
+              "size": 4,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc0798510",
+              "cacheline": "0xffffffffc0798500",
+              "shares_owner_cacheline": false
+            },
+            "lock_addr": {
+              "offset": 64,
+              "size": 8,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc0798500",
+              "cacheline": "0xffffffffc0798500",
+              "shares_owner_cacheline": false
+            },
+            "kd_lock": {
+              "offset": 32,
+              "size": 32,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc07984e0",
+              "cacheline": "0xffffffffc07984c0",
+              "shares_owner_cacheline": true
+            },
+            "hook_addr": {
+              "offset": 0,
+              "size": 8,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc07984c0",
+              "cacheline": "0xffffffffc07984c0",
+              "shares_owner_cacheline": true
+            },
+            "target_file": {
+              "offset": 72,
+              "size": 8,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc0798508",
+              "cacheline": "0xffffffffc0798500",
+              "shares_owner_cacheline": false
+            },
+            "target_path": {
+              "offset": 88,
+              "size": 8,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc0798518",
+              "cacheline": "0xffffffffc0798500",
+              "shares_owner_cacheline": false
+            }
+          }
+        },
+        {
+          "path": "mutex32-opt-20261019/compact-rcu/seek/seek-set-n16-t08-r2-kdlock/session.json",
+          "sha256": "de6105c91667e3ae50ff31f23fcad1bb7df276e8467918e3bcb6d9754288355c",
+          "name": "seek-set-n16-t08-r2-kdlock",
+          "lock_addr": "0xffffffffc07984e0",
+          "inferred_bss_base": "0xffffffffc07984c0",
+          "bss_base_mod64": 0,
+          "symbols": {
+            "target_pid": {
+              "offset": 84,
+              "size": 4,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc0798514",
+              "cacheline": "0xffffffffc0798500",
+              "shares_owner_cacheline": false
+            },
+            "target_fd": {
+              "offset": 80,
+              "size": 4,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc0798510",
+              "cacheline": "0xffffffffc0798500",
+              "shares_owner_cacheline": false
+            },
+            "lock_addr": {
+              "offset": 64,
+              "size": 8,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc0798500",
+              "cacheline": "0xffffffffc0798500",
+              "shares_owner_cacheline": false
+            },
+            "kd_lock": {
+              "offset": 32,
+              "size": 32,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc07984e0",
+              "cacheline": "0xffffffffc07984c0",
+              "shares_owner_cacheline": true
+            },
+            "hook_addr": {
+              "offset": 0,
+              "size": 8,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc07984c0",
+              "cacheline": "0xffffffffc07984c0",
+              "shares_owner_cacheline": true
+            },
+            "target_file": {
+              "offset": 72,
+              "size": 8,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc0798508",
+              "cacheline": "0xffffffffc0798500",
+              "shares_owner_cacheline": false
+            },
+            "target_path": {
+              "offset": 88,
+              "size": 8,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc0798518",
+              "cacheline": "0xffffffffc0798500",
+              "shares_owner_cacheline": false
+            }
+          }
+        },
+        {
+          "path": "mutex32-opt-20261019/compact-rcu/seek/seek-set-n16-t60-r0-kdlock/session.json",
+          "sha256": "c82c7b90e77101fbba2ec6f9e63f70c8e46084a172c94720dfb7db9f4e3cd049",
+          "name": "seek-set-n16-t60-r0-kdlock",
+          "lock_addr": "0xffffffffc07984e0",
+          "inferred_bss_base": "0xffffffffc07984c0",
+          "bss_base_mod64": 0,
+          "symbols": {
+            "target_pid": {
+              "offset": 84,
+              "size": 4,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc0798514",
+              "cacheline": "0xffffffffc0798500",
+              "shares_owner_cacheline": false
+            },
+            "target_fd": {
+              "offset": 80,
+              "size": 4,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc0798510",
+              "cacheline": "0xffffffffc0798500",
+              "shares_owner_cacheline": false
+            },
+            "lock_addr": {
+              "offset": 64,
+              "size": 8,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc0798500",
+              "cacheline": "0xffffffffc0798500",
+              "shares_owner_cacheline": false
+            },
+            "kd_lock": {
+              "offset": 32,
+              "size": 32,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc07984e0",
+              "cacheline": "0xffffffffc07984c0",
+              "shares_owner_cacheline": true
+            },
+            "hook_addr": {
+              "offset": 0,
+              "size": 8,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc07984c0",
+              "cacheline": "0xffffffffc07984c0",
+              "shares_owner_cacheline": true
+            },
+            "target_file": {
+              "offset": 72,
+              "size": 8,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc0798508",
+              "cacheline": "0xffffffffc0798500",
+              "shares_owner_cacheline": false
+            },
+            "target_path": {
+              "offset": 88,
+              "size": 8,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc0798518",
+              "cacheline": "0xffffffffc0798500",
+              "shares_owner_cacheline": false
+            }
+          }
+        },
+        {
+          "path": "mutex32-opt-20261019/compact-rcu/seek/seek-set-n16-t60-r1-kdlock/session.json",
+          "sha256": "3959be55121dd68c95460531c93b793b9d830d421653c5d181fa58cc9c2f6d4d",
+          "name": "seek-set-n16-t60-r1-kdlock",
+          "lock_addr": "0xffffffffc07984e0",
+          "inferred_bss_base": "0xffffffffc07984c0",
+          "bss_base_mod64": 0,
+          "symbols": {
+            "target_pid": {
+              "offset": 84,
+              "size": 4,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc0798514",
+              "cacheline": "0xffffffffc0798500",
+              "shares_owner_cacheline": false
+            },
+            "target_fd": {
+              "offset": 80,
+              "size": 4,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc0798510",
+              "cacheline": "0xffffffffc0798500",
+              "shares_owner_cacheline": false
+            },
+            "lock_addr": {
+              "offset": 64,
+              "size": 8,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc0798500",
+              "cacheline": "0xffffffffc0798500",
+              "shares_owner_cacheline": false
+            },
+            "kd_lock": {
+              "offset": 32,
+              "size": 32,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc07984e0",
+              "cacheline": "0xffffffffc07984c0",
+              "shares_owner_cacheline": true
+            },
+            "hook_addr": {
+              "offset": 0,
+              "size": 8,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc07984c0",
+              "cacheline": "0xffffffffc07984c0",
+              "shares_owner_cacheline": true
+            },
+            "target_file": {
+              "offset": 72,
+              "size": 8,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc0798508",
+              "cacheline": "0xffffffffc0798500",
+              "shares_owner_cacheline": false
+            },
+            "target_path": {
+              "offset": 88,
+              "size": 8,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc0798518",
+              "cacheline": "0xffffffffc0798500",
+              "shares_owner_cacheline": false
+            }
+          }
+        },
+        {
+          "path": "mutex32-opt-20261019/compact-rcu/seek/seek-set-n16-t60-r2-kdlock/session.json",
+          "sha256": "abcef7bfac31dad37c36e66370e7d7b67f2d81c95af1429bf31c3b8ff4209608",
+          "name": "seek-set-n16-t60-r2-kdlock",
+          "lock_addr": "0xffffffffc07984e0",
+          "inferred_bss_base": "0xffffffffc07984c0",
+          "bss_base_mod64": 0,
+          "symbols": {
+            "target_pid": {
+              "offset": 84,
+              "size": 4,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc0798514",
+              "cacheline": "0xffffffffc0798500",
+              "shares_owner_cacheline": false
+            },
+            "target_fd": {
+              "offset": 80,
+              "size": 4,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc0798510",
+              "cacheline": "0xffffffffc0798500",
+              "shares_owner_cacheline": false
+            },
+            "lock_addr": {
+              "offset": 64,
+              "size": 8,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc0798500",
+              "cacheline": "0xffffffffc0798500",
+              "shares_owner_cacheline": false
+            },
+            "kd_lock": {
+              "offset": 32,
+              "size": 32,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc07984e0",
+              "cacheline": "0xffffffffc07984c0",
+              "shares_owner_cacheline": true
+            },
+            "hook_addr": {
+              "offset": 0,
+              "size": 8,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc07984c0",
+              "cacheline": "0xffffffffc07984c0",
+              "shares_owner_cacheline": true
+            },
+            "target_file": {
+              "offset": 72,
+              "size": 8,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc0798508",
+              "cacheline": "0xffffffffc0798500",
+              "shares_owner_cacheline": false
+            },
+            "target_path": {
+              "offset": 88,
+              "size": 8,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc0798518",
+              "cacheline": "0xffffffffc0798500",
+              "shares_owner_cacheline": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "archive": "bench/results/10.176.26.71/raw/bench/mutex32-opt-20261019/rcu.tar.gz",
+      "member": "mutex32-opt-20261019/compact-rcu/pipe/build/kdlock-pipebytes/real_api.ko",
+      "sha256": "4c78c3af0755764d90754b82778c6e765db08560bb7459dd253bf806e7de9d7c",
+      "matches_binaries_json": true,
+      "bss_readelf": "[39] .bss              NOBITS          0000000000000000 001a00 000068 00  WA  0   0 32",
+      "symbols": {
+        "target_pid": {
+          "offset": 92,
+          "size": 4,
+          "section_index": "39"
+        },
+        "target_pipe": {
+          "offset": 72,
+          "size": 8,
+          "section_index": "39"
+        },
+        "lock_addr": {
+          "offset": 64,
+          "size": 8,
+          "section_index": "39"
+        },
+        "kd_lock": {
+          "offset": 32,
+          "size": 32,
+          "section_index": "39"
+        },
+        "hook_addr": {
+          "offset": 0,
+          "size": 8,
+          "section_index": "39"
+        },
+        "target_file": {
+          "offset": 80,
+          "size": 8,
+          "section_index": "39"
+        },
+        "target_path": {
+          "offset": 96,
+          "size": 8,
+          "section_index": "39"
+        },
+        "target_fd": {
+          "offset": 88,
+          "size": 4,
+          "section_index": "39"
+        }
+      },
+      "origfn_present": false,
+      "original_lock_present": false,
+      "sessions": [
+        {
+          "path": "mutex32-opt-20261019/compact-rcu/pipe/pipebytes-query-n16-t08-r0-kdlock/session.json",
+          "sha256": "bf133776ea3df0a0bb7213a1b58b3e51637f58dbee72d7360deb86a58109b436",
+          "name": "pipebytes-query-n16-t08-r0-kdlock",
+          "lock_addr": "0xffffffffc07984e0",
+          "inferred_bss_base": "0xffffffffc07984c0",
+          "bss_base_mod64": 0,
+          "symbols": {
+            "target_pid": {
+              "offset": 92,
+              "size": 4,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc079851c",
+              "cacheline": "0xffffffffc0798500",
+              "shares_owner_cacheline": false
+            },
+            "target_pipe": {
+              "offset": 72,
+              "size": 8,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc0798508",
+              "cacheline": "0xffffffffc0798500",
+              "shares_owner_cacheline": false
+            },
+            "lock_addr": {
+              "offset": 64,
+              "size": 8,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc0798500",
+              "cacheline": "0xffffffffc0798500",
+              "shares_owner_cacheline": false
+            },
+            "kd_lock": {
+              "offset": 32,
+              "size": 32,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc07984e0",
+              "cacheline": "0xffffffffc07984c0",
+              "shares_owner_cacheline": true
+            },
+            "hook_addr": {
+              "offset": 0,
+              "size": 8,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc07984c0",
+              "cacheline": "0xffffffffc07984c0",
+              "shares_owner_cacheline": true
+            },
+            "target_file": {
+              "offset": 80,
+              "size": 8,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc0798510",
+              "cacheline": "0xffffffffc0798500",
+              "shares_owner_cacheline": false
+            },
+            "target_path": {
+              "offset": 96,
+              "size": 8,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc0798520",
+              "cacheline": "0xffffffffc0798500",
+              "shares_owner_cacheline": false
+            },
+            "target_fd": {
+              "offset": 88,
+              "size": 4,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc0798518",
+              "cacheline": "0xffffffffc0798500",
+              "shares_owner_cacheline": false
+            }
+          }
+        },
+        {
+          "path": "mutex32-opt-20261019/compact-rcu/pipe/pipebytes-query-n16-t08-r1-kdlock/session.json",
+          "sha256": "31362390b3485edc2e2bb819382259d34998e32ba84ffb6497f7aec8a643f660",
+          "name": "pipebytes-query-n16-t08-r1-kdlock",
+          "lock_addr": "0xffffffffc07984e0",
+          "inferred_bss_base": "0xffffffffc07984c0",
+          "bss_base_mod64": 0,
+          "symbols": {
+            "target_pid": {
+              "offset": 92,
+              "size": 4,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc079851c",
+              "cacheline": "0xffffffffc0798500",
+              "shares_owner_cacheline": false
+            },
+            "target_pipe": {
+              "offset": 72,
+              "size": 8,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc0798508",
+              "cacheline": "0xffffffffc0798500",
+              "shares_owner_cacheline": false
+            },
+            "lock_addr": {
+              "offset": 64,
+              "size": 8,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc0798500",
+              "cacheline": "0xffffffffc0798500",
+              "shares_owner_cacheline": false
+            },
+            "kd_lock": {
+              "offset": 32,
+              "size": 32,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc07984e0",
+              "cacheline": "0xffffffffc07984c0",
+              "shares_owner_cacheline": true
+            },
+            "hook_addr": {
+              "offset": 0,
+              "size": 8,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc07984c0",
+              "cacheline": "0xffffffffc07984c0",
+              "shares_owner_cacheline": true
+            },
+            "target_file": {
+              "offset": 80,
+              "size": 8,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc0798510",
+              "cacheline": "0xffffffffc0798500",
+              "shares_owner_cacheline": false
+            },
+            "target_path": {
+              "offset": 96,
+              "size": 8,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc0798520",
+              "cacheline": "0xffffffffc0798500",
+              "shares_owner_cacheline": false
+            },
+            "target_fd": {
+              "offset": 88,
+              "size": 4,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc0798518",
+              "cacheline": "0xffffffffc0798500",
+              "shares_owner_cacheline": false
+            }
+          }
+        },
+        {
+          "path": "mutex32-opt-20261019/compact-rcu/pipe/pipebytes-query-n16-t08-r2-kdlock/session.json",
+          "sha256": "f3df76fdd0534eb5b423ae7c553f8c27b826c6c2c007421125a2ec6017224cd6",
+          "name": "pipebytes-query-n16-t08-r2-kdlock",
+          "lock_addr": "0xffffffffc07984e0",
+          "inferred_bss_base": "0xffffffffc07984c0",
+          "bss_base_mod64": 0,
+          "symbols": {
+            "target_pid": {
+              "offset": 92,
+              "size": 4,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc079851c",
+              "cacheline": "0xffffffffc0798500",
+              "shares_owner_cacheline": false
+            },
+            "target_pipe": {
+              "offset": 72,
+              "size": 8,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc0798508",
+              "cacheline": "0xffffffffc0798500",
+              "shares_owner_cacheline": false
+            },
+            "lock_addr": {
+              "offset": 64,
+              "size": 8,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc0798500",
+              "cacheline": "0xffffffffc0798500",
+              "shares_owner_cacheline": false
+            },
+            "kd_lock": {
+              "offset": 32,
+              "size": 32,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc07984e0",
+              "cacheline": "0xffffffffc07984c0",
+              "shares_owner_cacheline": true
+            },
+            "hook_addr": {
+              "offset": 0,
+              "size": 8,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc07984c0",
+              "cacheline": "0xffffffffc07984c0",
+              "shares_owner_cacheline": true
+            },
+            "target_file": {
+              "offset": 80,
+              "size": 8,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc0798510",
+              "cacheline": "0xffffffffc0798500",
+              "shares_owner_cacheline": false
+            },
+            "target_path": {
+              "offset": 96,
+              "size": 8,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc0798520",
+              "cacheline": "0xffffffffc0798500",
+              "shares_owner_cacheline": false
+            },
+            "target_fd": {
+              "offset": 88,
+              "size": 4,
+              "section_index": "39",
+              "runtime_address": "0xffffffffc0798518",
+              "cacheline": "0xffffffffc0798500",
+              "shares_owner_cacheline": false
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "conclusion": "All 18 retained old256/compact-rcu seek/pipe sessions place hot target globals on a cacheline distinct from kd_lock. Compact kd_lock shares only setup/teardown hook_addr in this symbol set. This falsifies that particular adjacent-hot-global false-sharing lead for these binaries; it does not measure general coherence costs or guarantee identical candidate placement."
+}

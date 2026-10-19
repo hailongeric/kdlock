@@ -463,9 +463,13 @@ unchanged. Build/use instructions belong in the
 The selected `d2a2304` c01/post64 and pipebytes n16 comparison, returned-body
 evidence and regression limits are in the
 [KD-only report](../../bench/results/10.176.26.71/bench/comparison/mutex-kdonly-20261017T140354Z/README.md).
-That report measures the prior 256-byte, 128-byte-aligned object. It does not
-measure the compact layout or its auxiliary table/lookup costs; no performance
-gain is established for the direct-index change.
+That report measures the prior 256-byte, 128-byte-aligned object. The separate
+[compact comparison](../../bench/results/10.176.26.71/bench/mutex32-index-20261019/README.md)
+measures the RCU registry, direct-index table and reference transfer against a
+fresh inline baseline. The final compact version improves pipe medians over
+RCU but retains c01, seek and pipe gaps against the inline object. Its basic
+plus affected checks, profiles, variation and sequential-run limits remain
+with that report; the historical full-grid results are not compact measurements.
 Earlier grouping/cache candidates remain in
 [fixed benchmark records](../../bench/results/380G10/bench/tclock_compare/HISTORY.md#mutex-followup).
 The earlier [mandatory-JIT trials](../../bench/results/380G10/bench/tclock_compare/20261008-mutex-priority-trials.md)

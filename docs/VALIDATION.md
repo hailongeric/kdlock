@@ -8,6 +8,43 @@ Basic plus affected checks are the default; an old pass is not a current full pa
 The [terminology guide](TERMINOLOGY.md) explains status labels and other technical
 terms used in the receipts below.
 
+## Compact mutex direct-index and transfer validation
+
+Revisions `44f8eb6` and `e999008` retain the 32-byte, native-aligned caller object.
+The first preallocates 65,536 auxiliary slots (16 MiB), removes auxiliary
+registry locking/RCU, and uses exact references plus sequence-validated
+observations. The second transfers an invocation reference only on immediate
+gate acquisition before node reservation and borrows the current task's existing
+owner reference for synchronous unlock. Queued/frame/native-ACK references and
+the KD physical protocol remain unchanged; caller cleanup does not increase.
+
+Their [separate frozen check bundles](../bench/results/10.176.26.71/bench/mutex32-index-20261019/README.md#checks-and-retained-evidence)
+each cover provider/daemon builds, dependencies, two basic C programs and 12
+affected drivers, plus live ordinary-mutex, rwsem and instruction-exit probes.
+Each bundle passed 14 unit checks with zero failures, and all six live probes
+passed and drained. The original working-tree labels remain in their receipts;
+exact production hashes bind each bundle to its own benchmark commit.
+
+The index fixture covers collision and lifecycle-reservation refusal, reference
+acquisition versus retirement, post-acquisition key checks, sequence-validated
+observations including A→B→A reuse, allocation failure at provider startup,
+sequence exhaustion and concurrent publication/retirement. Its three negative
+controls remove key validation, sequence validation or ordered retirement.
+The transfer bundle adds three borrowed-owner controls and five transfer/unlock
+controls, including wrong-owner/key/sequence borrowing, a dropped transferred
+reference, release before opening the gate and an erroneous owner put on failure.
+Exact retained frame/ACK references remain independently exercised.
+
+All 104 benchmark sessions passed and drained: 96 plain timings and eight
+diagnostic profiles. All 110 required kernel logs were retained with no matched
+faults. Profiles reported zero lost samples. Independent audits verified source
+and archive identities, all 104 peak windows and 109,687 weighted sample lines.
+The retained controller preparation failure happened before workloads started;
+its original directory and the corrected fresh invocation remain separate evidence. This is
+basic plus affected validation, not a full suite or universal performance-parity
+claim. Synthetic timing counters witness entry; real API and instruction-exit
+checks separately count returned JIT bodies.
+
 ## Compact mutex RCU lifetime validation
 
 Revision `fcbacbe` retains the 32-byte, native-aligned KD mutex and replaces

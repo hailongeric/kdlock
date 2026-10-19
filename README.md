@@ -34,7 +34,14 @@ disabled for the source session. Earlier updates are retained. The
 [validation record](bench/results/10.176.26.71/tests/native-instruction-exit-20261018/README.md)
 separates correctness checks from the accepted performance measurements below.
 
-The accepted [504-session comparison](bench/results/10.176.26.71/bench/comparison/mutex-kdonly-20261017T140354Z/README.md)
+The current mutex is 32 bytes with native 8-byte alignment. Delegation uses a
+preallocated address-indexed table without auxiliary registry locks or RCU,
+and exact references retire its state automatically. The
+[compact comparison](bench/results/10.176.26.71/bench/mutex32-index-20261019/README.md)
+records the 16 MiB provider storage tradeoff, improvements over the preceding
+RCU version, and remaining c01, seek and pipe gaps against the old inline object.
+
+The historical accepted [504-session comparison](bench/results/10.176.26.71/bench/comparison/mutex-kdonly-20261017T140354Z/README.md)
 covers c01/post64 and `api-pipebytes-query-n16` at 1–8 workers and 12–60 by four,
 with three repetitions and Native/TCLock controls. The
 [performance guide](docs/PERFORMANCE.md) retains variation and regression limits.

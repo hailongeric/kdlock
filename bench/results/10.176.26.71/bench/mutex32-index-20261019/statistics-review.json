@@ -1,0 +1,306 @@
+{
+  "archives": {
+    "checks-transfer.tar.gz": {
+      "bytes": 15429684,
+      "sha256": "edc5196e9269fa9ec1aeb718679d01c42b168f39158e83aff21746fdee8498e9"
+    },
+    "checks.tar.gz": {
+      "bytes": 15411041,
+      "sha256": "f9dd7133ae5c9e570aa28f53a7bd1f659f5df68a1b838eeba007c699916b9d0b"
+    },
+    "index.tar.gz": {
+      "bytes": 24765824,
+      "sha256": "35fbe449d5d85f813d4079222786f8b34638fe24edc2d99864ad6c3e789138d6"
+    },
+    "metadata.tar.gz": {
+      "bytes": 664378,
+      "sha256": "027e1997e02379fe3303f1ca93d01d2e52cc92aa050cb4e0c9c9c634d9e4e13a"
+    },
+    "old256.tar.gz": {
+      "bytes": 24525847,
+      "sha256": "8a054f22d845de04f7bf79534878637cbb3ef8de0fec4627096f7234a57c0b0b"
+    },
+    "rcu.tar.gz": {
+      "bytes": 24824737,
+      "sha256": "19fd274edc4e7e30f3da172a4fe3f2d52df6d6f6c9370f6a19e8caff0e198bbf"
+    },
+    "transfer.tar.gz": {
+      "bytes": 24823620,
+      "sha256": "bfcb9bd12de5dd75a04715f3b72462337bdc18d260281d776fea2037754b2847"
+    }
+  },
+  "checked_utc": "2026-10-19T10:41:57.718767+00:00",
+  "checks": {
+    "api_class": 48,
+    "api_counter_bounds": 48,
+    "api_returned_share": 48,
+    "archived_comparison": 1,
+    "archived_profiles": 1,
+    "body_counter_semantics": 104,
+    "body_entry_share": 104,
+    "comparison_complete": 1,
+    "completion_probe": 104,
+    "compressed_archive_hash": 7,
+    "compressed_archive_size": 7,
+    "cross_arm_classes": 32,
+    "cross_arm_same_class": 32,
+    "csv_cell": 4648,
+    "csv_columns": 2,
+    "csv_keys": 2,
+    "csv_row_count": 2,
+    "csv_row_shape": 136,
+    "csv_unique_columns": 2,
+    "csv_unique_keys": 2,
+    "eligibility": 104,
+    "exported_group_count": 1,
+    "exported_group_keys": 1,
+    "frozen_source_hash": 4532,
+    "group_auxiliary_diagnostics": 32,
+    "group_body_count": 32,
+    "group_body_share": 32,
+    "group_class": 32,
+    "group_class_count": 32,
+    "group_complete": 32,
+    "group_completed": 32,
+    "group_completion_count": 32,
+    "group_repeats": 32,
+    "group_returned_count": 32,
+    "group_returned_share": 32,
+    "group_source_identity": 32,
+    "group_statistics": 320,
+    "indexed_refusal_diagnostics": 52,
+    "indexed_table_diagnostics": 52,
+    "matrix_arms": 1,
+    "matrix_group_keys": 1,
+    "matrix_groups": 1,
+    "matrix_plain": 1,
+    "matrix_sessions": 1,
+    "plan_order": 16,
+    "planned_identity": 104,
+    "profile_all_percent": 410,
+    "profile_complete": 1,
+    "profile_count": 1,
+    "profile_focus_all_percent": 64,
+    "profile_focus_sums": 64,
+    "profile_focus_worker_percent": 64,
+    "profile_loss": 8,
+    "profile_period_total": 8,
+    "profile_report_period": 8,
+    "profile_row_complete": 8,
+    "profile_samples": 8,
+    "profile_source_commit": 8,
+    "profile_source_identity": 8,
+    "profile_symbol_sums": 409,
+    "profile_version_workers": 1,
+    "profile_worker_percent": 410,
+    "profile_worker_total": 8,
+    "profile_workload": 8,
+    "provenance_input_hash": 104,
+    "raw_body_count": 104,
+    "raw_completion_count": 48,
+    "raw_completion_disabled": 56,
+    "raw_entry_witness_delta": 56,
+    "raw_final_diagnostic_lines": 312,
+    "raw_final_diagnostics": 312,
+    "raw_peak_exists": 104,
+    "raw_peak_rate": 104,
+    "raw_peak_selection": 104,
+    "raw_profile_artifact_hash": 48,
+    "raw_profile_lost": 8,
+    "raw_profile_no_loss": 109687,
+    "raw_profile_payload": 8,
+    "raw_profile_sample_total": 1,
+    "raw_profile_shape": 109687,
+    "raw_profile_weighted_rows": 8,
+    "raw_session_binding": 104,
+    "raw_session_count": 104,
+    "raw_session_rate": 104,
+    "raw_session_total": 1,
+    "runtime_log": 104,
+    "session_scored_rate": 104,
+    "session_whole_arithmetic": 104,
+    "source_identity": 16,
+    "source_manifest": 16,
+    "synthetic_class": 56,
+    "synthetic_completion": 56,
+    "synthetic_returned_share": 56,
+    "total_profile_samples": 1,
+    "unique_exported_groups": 1,
+    "unique_profiles": 1,
+    "unique_regular_member": 13887,
+    "unique_session": 104,
+    "valid_session": 104
+  },
+  "compact_statistics_passed": true,
+  "comparison_complete": true,
+  "comparison_sha256": "5a105efe65375bb0ba14a9836fea418619849d8e3a0fe415e0960e50215df345",
+  "groups": 32,
+  "independently_reconstructed_peaks": 104,
+  "issues": [],
+  "limits": [
+    "Profiles are diagnostic; flat IP sampling has skid and no caller attribution. Profile weights are not exact cycle cost per operation.",
+    "Synthetic JIT counters are entry witnesses; completion count/share are intentionally null. API explicit completions remain separate.",
+    "Source versions were run sequentially; three repeats and observed ranges do not eliminate order/frequency drift or establish statistical significance.",
+    "Any API JIT/NO_JIT category change remains explicit; different execution classes are not a registry-only speed comparison.",
+    "Archive regular-file hashes and source/record/profile bindings are checked here; directory/symlink inventory correctness is a separate archive review."
+  ],
+  "method": {
+    "aggregate": "Independent sorted median/min/max/spread over three eligible plain sessions per source/workload/worker group",
+    "peak": "Independent earliest eligible endpoint found by binary search; positive full-cohort windows ranked with exact rational arithmetic",
+    "profile": "Independent whitespace/delimiter parsing of every raw sample, period-weighted comm/symbol/DSO sums; all-client kernel and sc_worker denominators stay separate",
+    "whole": "Exact Fraction(completed*1000,wall_ns), then float comparison"
+  },
+  "mixed_groups": 0,
+  "passed": true,
+  "pipe": [
+    {
+      "arm": "compact-rcu",
+      "execution_class": "RETURNED_JIT",
+      "median_whole_mops": 4.99317580727679,
+      "same_execution_class_across_arms": true,
+      "threads": 8
+    },
+    {
+      "arm": "compact-rcu",
+      "execution_class": "RETURNED_JIT",
+      "median_whole_mops": 3.470065050370509,
+      "same_execution_class_across_arms": true,
+      "threads": 60
+    },
+    {
+      "arm": "precompact-256",
+      "execution_class": "RETURNED_JIT",
+      "median_whole_mops": 7.020257133349639,
+      "same_execution_class_across_arms": true,
+      "threads": 8
+    },
+    {
+      "arm": "precompact-256",
+      "execution_class": "RETURNED_JIT",
+      "median_whole_mops": 5.394328307050555,
+      "same_execution_class_across_arms": true,
+      "threads": 60
+    },
+    {
+      "arm": "compact-index",
+      "execution_class": "RETURNED_JIT",
+      "median_whole_mops": 4.976531670604661,
+      "same_execution_class_across_arms": true,
+      "threads": 8
+    },
+    {
+      "arm": "compact-index",
+      "execution_class": "RETURNED_JIT",
+      "median_whole_mops": 3.630953675926032,
+      "same_execution_class_across_arms": true,
+      "threads": 60
+    },
+    {
+      "arm": "compact-transfer",
+      "execution_class": "RETURNED_JIT",
+      "median_whole_mops": 5.361312139790902,
+      "same_execution_class_across_arms": true,
+      "threads": 8
+    },
+    {
+      "arm": "compact-transfer",
+      "execution_class": "RETURNED_JIT",
+      "median_whole_mops": 3.716357343514294,
+      "same_execution_class_across_arms": true,
+      "threads": 60
+    }
+  ],
+  "plain_sessions": 96,
+  "profile_analysis_sha256": "9f7772cf8d3ba4dea0f030e63d43dd4d55272a6b780e7f1a29f7f42d7e99a7cc",
+  "profile_samples": 109687,
+  "profiles": [
+    {
+      "arm": "compact-rcu",
+      "period": 31265736441,
+      "samples": 3218,
+      "threads": 8,
+      "worker_period": 31260711317,
+      "worker_samples": 3216
+    },
+    {
+      "arm": "compact-rcu",
+      "period": 245571018345,
+      "samples": 24179,
+      "threads": 60,
+      "worker_period": 245561123520,
+      "worker_samples": 24175
+    },
+    {
+      "arm": "precompact-256",
+      "period": 31307368740,
+      "samples": 3218,
+      "threads": 8,
+      "worker_period": 31302343616,
+      "worker_samples": 3216
+    },
+    {
+      "arm": "precompact-256",
+      "period": 239478292800,
+      "samples": 24202,
+      "threads": 60,
+      "worker_period": 239464554060,
+      "worker_samples": 24197
+    },
+    {
+      "arm": "compact-index",
+      "period": 31288070944,
+      "samples": 3218,
+      "threads": 8,
+      "worker_period": 31283045820,
+      "worker_samples": 3216
+    },
+    {
+      "arm": "compact-index",
+      "period": 245244573130,
+      "samples": 24232,
+      "threads": 60,
+      "worker_period": 245231148284,
+      "worker_samples": 24227
+    },
+    {
+      "arm": "compact-transfer",
+      "period": 31304887634,
+      "samples": 3218,
+      "threads": 8,
+      "worker_period": 31299862510,
+      "worker_samples": 3216
+    },
+    {
+      "arm": "compact-transfer",
+      "period": 245062389215,
+      "samples": 24202,
+      "threads": 60,
+      "worker_period": 245051581122,
+      "worker_samples": 24198
+    }
+  ],
+  "raw_archives_available": true,
+  "raw_bound_sessions": 104,
+  "raw_profile_samples": 109687,
+  "schema": 1,
+  "scope": "Independent read-only offline data audit; no archived code, report script, benchmark, build or VM command executed.",
+  "sessions": 104,
+  "source_files_per_collection": {
+    "compact-index/pipe": 240,
+    "compact-index/profile": 328,
+    "compact-index/seek": 240,
+    "compact-index/synthetic": 328,
+    "compact-rcu/pipe": 240,
+    "compact-rcu/profile": 328,
+    "compact-rcu/seek": 240,
+    "compact-rcu/synthetic": 328,
+    "compact-transfer/pipe": 240,
+    "compact-transfer/profile": 328,
+    "compact-transfer/seek": 240,
+    "compact-transfer/synthetic": 328,
+    "precompact-256/pipe": 238,
+    "precompact-256/profile": 324,
+    "precompact-256/seek": 238,
+    "precompact-256/synthetic": 324
+  }
+}
