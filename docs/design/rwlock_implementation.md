@@ -6,8 +6,24 @@ CPUs. A writer can run locally or let a combiner execute its critical section
 through KD's spin JIT engine. Both routes use the same exclusion rules.
 
 This is an x86_64 spinning lock for ordinary task context. Code inside it must
-not sleep. The [design overview](../DESIGN.md#terms-used-in-these-guides) explains
+not sleep. The [lock catalog](../LOCKS.md) distinguishes this lock from sleeping
+rwsem. The [design overview](../DESIGN.md#terms-used-in-these-guides) explains
 terms such as combiner, continuation, source lease and ACK.
+
+## Source and execution paths
+
+| Stage | Implementation |
+| --- | --- |
+| Object, reader operations and native writer admission | [kd_rwlock.h](../../include/kd_rwlock.h): reader count, writer bits, spin gate and all public pairs |
+| Writer preparation and pinned local entry | [spin/direct.inc](../../kernel_module/spin/direct.inc): `kd_spin_prepare` and `kd_rwlock_lock_pinned_clobber_v1` |
+| Delegated writer admission, refusal and retry | [spin/combiner.inc](../../kernel_module/spin/combiner.inc): `kd_spin_rw_begin`, `kd_spin_rw_cancel`, `kd_spin_rw_retry` |
+| Generated execution and waiter restoration | [spin/execute.inc](../../kernel_module/spin/execute.inc), [spin/restore.inc](../../kernel_module/spin/restore.inc), and shared execution frames |
+
+There is no separate `kd_rwlock.c` or rwlock queue implementation. The embedded
+gate uses KD's spin engine, while the header and writer-admission helpers add
+read/write exclusion. A gated writer needs both writer admission and exact spin
+ownership. The ungated fast writer instead retains its writer byte and exact
+nondelegated reference through unlock; it does not acquire the gate.
 
 ## Public API
 
@@ -154,6 +170,11 @@ release it before a reader's application body. Both also have a native writer fa
 path that skips the gate. KD handles slow readers locally and delegates writers
 through JIT; TCLock delegates by switching native stacks. KD retains its existing
 packet, source lease, completion and ACK rules.
+
+ABI3 support does not include the ABI1-only direct string-helper path or checked
+pointer-load exits. Their shared spin implementation is not sufficient to admit
+those features under another entry ABI. Consult [instruction admission](admission.md)
+for the exact generated-code requirements.
 
 ## Scope and lifetime
 

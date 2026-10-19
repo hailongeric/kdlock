@@ -56,7 +56,8 @@ scaling results and the still-unaccepted taskname mutation delegation case.
 
 - [Documentation index](docs/README.md) and [project guide](docs/PROJECT_GUIDE.md)
 - [Terminology](docs/TERMINOLOGY.md): lock, execution and measurement terms used in these guides
-- [Design](docs/DESIGN.md), [nine lock protocols](docs/design/lock_protocols.md)
+- [Current lock catalog](docs/LOCKS.md): spinlock, mutex, rwlock and rwsem APIs and implementation guides
+- [Design](docs/DESIGN.md), [lock protocol comparisons](docs/design/lock_protocols.md)
   and [code map](docs/CODE_MAP.md)
 - [Benchmark workloads](docs/BENCHMARK_WORKLOADS.md) and [benchmark commands](bench/README.md)
 - [Tests](tests/README.md), [validation](docs/VALIDATION.md) and [known limitations](docs/TODO.md)

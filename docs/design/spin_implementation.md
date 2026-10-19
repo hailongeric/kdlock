@@ -3,6 +3,8 @@
 This guide follows storage and the ordinary spin path. [Lock protocols](lock_protocols.md)
 defines exclusion and handoff; [register ABI](../JIT_REGISTER_ABI.md) defines JIT state.
 All measurements belong to their recorded source versions in [benchmarks](../../bench/README.md).
+The [lock catalog](../LOCKS.md) compares the four KD families, and
+[terminology](../TERMINOLOGY.md) defines the queue and machine-state terms below.
 
 The same KD engine also serves [rwlock writers](rwlock_implementation.md). Their
 ABI3 prelude acquires writer admission before dispatch; the count and embedded
@@ -19,6 +21,44 @@ gate belong to a separate 128-byte object, not the four-byte spin object below.
 The three workload arms share payload, post-lock work, timing and verification.
 Each target lock belongs exclusively to its backend; equal word size does not
 make the node pools or unlock protocols interchangeable.
+
+## Public API and caller state
+
+Use [`kd_spin_type.h`](../../include/kd_spin_type.h) for object initialization and
+[`kd_spin_direct.h`](../../include/kd_spin_direct.h) for paired operations.
+
+| Operation | Interface and contract |
+| --- | --- |
+| Initialize unused storage | `DEFINE_KD_SPINLOCK`, `KD_SPINLOCK_INITIALIZER` or `kd_spin_init` |
+| Ordinary acquisition/release | `KD_SPIN_DIRECT_LOCK(lock, kd_spin_direct_cookie, continuation)` and `KD_SPIN_DIRECT_UNLOCK(lock, kd_spin_direct_cookie)`; pin once, preserve IRQ/BH state, permit eligible delegation |
+| Opt-in helper entry | `KD_SPIN_DIRECT_HELPER_LOCK` with the ordinary direct unlock; establishes five scratch-register values in the original hot-entry code for callers that need that contract |
+| Save/restore interrupt state | `kd_spin_lock_irqsave` / `kd_spin_unlock_irqrestore`; original caller executes locally |
+| Disable/enable interrupts | `kd_spin_lock_irq` / `kd_spin_unlock_irq`; original caller executes locally |
+| Disable/enable bottom halves | `kd_spin_lock_bh` / `kd_spin_unlock_bh`; original caller executes locally |
+| Prepare a body | `kd_spin_prepare(lock, entry, KD_ENTRY_ABI_SPIN_CLOBBER_V1)` after the source module is live |
+
+The ordinary pair uses a unique named continuation in a `noipa` function so
+compiler cloning cannot duplicate that entry label. Preparation does not force
+delegation: source admission, a ready image and the current heat policy also
+apply. `kd_spin_direct_cookie` names the provider's per-CPU heat indicator, not
+an acquisition result. Unlock reads actual ownership rather than that indicator.
+
+The helper-entry macro is a different caller contract, not a prerequisite for
+ordinary taskname delegation. The current taskname comparison retains its
+ordinary call shell. Native/IRQ variants use the same KD word and queue with
+non-combinable nodes, so matching KD pairs can share one object. Never call Linux
+or TCLock spin APIs on it. Internal `kd_spin_direct_native_lock` assumes a caller
+already pinned; it is not a drop-in ordinary lock function.
+
+## Following one request in source
+
+| Stage | Source and responsibility |
+| --- | --- |
+| Public entry and source registration | [direct.inc](../../kernel_module/spin/direct.inc), [entry.inc](../../kernel_module/spin/entry.inc): select local execution or a clobber entry, where the compiler owns live-value spills |
+| Stable request and queue publication | [request.inc](../../kernel_module/spin/request.inc), [queue.inc](../../kernel_module/spin/queue.inc), [slowpath.inc](../../kernel_module/spin/slowpath.inc): reserve continuation storage, link the node and retain acquisition identity |
+| Selection and execution | [combiner.inc](../../kernel_module/spin/combiner.inc), [execute.inc](../../kernel_module/spin/execute.inc): acquire physical exclusion, choose eligible followers and run their bodies |
+| Completion or native continuation | [restore.inc](../../kernel_module/spin/restore.inc), [unlock.inc](../../kernel_module/spin/unlock.inc), [ticket state](../../kernel_module/spin/ticket_state.inc): publish results only after the required ownership and frame transitions |
+| Allocation and final drain | [lifecycle.inc](../../kernel_module/spin/lifecycle.inc), [kd_spin_entry.c](../../kernel_module/kd_spin_entry.c): allocate CPU storage and verify exact outstanding references |
 
 ## Storage and cachelines
 
@@ -85,6 +125,22 @@ root packet. [KD locking](locking.md) covers early unlock and exact native ACKs.
 Unlock always enters the generic broad-clobber endpoint. Byte-5 native ownership
 uses its short release path; delegated/ticketed ownership follows the existing
 ledger/ACK route. Current heat is never used to choose which acquisition to unlock.
+
+### Original helper calls inside generated code
+
+The `05876a4` execution path lets eligible ABI1 spin bodies call original
+`strcmp` and `strscpy_pad` without leaving generated code for each helper.
+Code residency is retained at immutable-image publication. The wrapper preserves
+the required registers, the original CALL return word and call quotas; it adds
+no helper-code inspection, string scan or runtime destination check. Quota
+exhaustion transfers the unexecuted call to the original waiter, which finishes
+under the existing ownership/acknowledgement protocol. The complete eligibility
+and exit rules belong to [direct helper calls](admission.md#direct-original-helper-calls).
+
+This is an execution optimization, not a queue or locking protocol change.
+It applies to the audited taskname/xattr spin bodies and does not automatically
+apply to rwlock ABI3 or mutex ABI2. The [completed comparison](../../bench/results/10.176.26.71/bench/taskname-xattr-direct-api-20261019/README.md)
+retains the remaining low-count and TCLock gaps.
 
 ## Batch and NUMA selection
 

@@ -5,7 +5,9 @@ required lock. The waiting thread then continues after that critical section,
 without running it again. A background daemon translates the original machine
 code, and the lock holder runs the generated code through the JIT engine.
 
-KD supports spinlocks, ordinary mutexes and read-write locks on x86_64. Callers
+KD provides spinlocks, ordinary mutexes, spinning read-write locks and sleeping
+reader/writer semaphores on x86_64. The [lock catalog](LOCKS.md) maps each family
+to its API and implementation guide. Callers
 use explicit KD APIs, built against the recorded caller-clobber kernel interfaces.
 Loading the provider does not intercept other Linux locks.
 The separate [sleeping rwsem](design/rwsem_implementation.md) provides ordinary
@@ -73,7 +75,7 @@ Each lock type has its own ownership rules:
 
 The frame's lock ledger records acquisitions and releases that actually happened.
 Changing the ledger does not itself acquire or release a lock. See
-[all nine protocols](design/lock_protocols.md) and [KD ownership](design/locking.md).
+[lock protocol comparisons](design/lock_protocols.md) and [KD ownership](design/locking.md).
 
 KD's heat counters help decide whether a new request is worth delegating. If a
 request is cold or refused, it uses the appropriate native path. Once a request

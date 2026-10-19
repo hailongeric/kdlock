@@ -28,6 +28,36 @@ is no longer needed, unlock acknowledgements confirm release, and execution
 records are retired only after their final user finishes. These ownership and
 lifetime rules are unchanged. The [terminology guide](../TERMINOLOGY.md) explains
 other code and evidence terms used below.
+The [lock catalog](../LOCKS.md) compares this sleeping API with the spinning
+rwlock and the two exclusive lock families.
+
+## Source and object layout
+
+| Source | Responsibility |
+| --- | --- |
+| [kd_rwsem.h](../../include/kd_rwsem.h) | Object layout, static initializer and ordinary public operations |
+| [kd_rwsem.c](../../kernel_module/kd_rwsem.c) | Reader acquisition, exact writer reservations, bounded polling, sleeping waits, cancellation, downgrade and idle inspection |
+| [kd_rwsem_direct.h](../../include/kd_rwsem_direct.h) | Outer-writer pair: reserve/drain before the mutex call, release the reservation on the origin after mutex unlock completes |
+| [KD mutex implementation](mutex_implementation.md) | Physical writer ownership, legacy delegation queue, generated execution and unlock acknowledgements |
+| [direct_rwsem.h](../../workload_modules/rwlock_bench/direct_rwsem.h) | Benchmark caller mapping for Linux Native, ordinary KD and delegation-capable KD |
+
+The captured 512-byte object has 128-byte overall alignment. The
+[layout receipt](../../bench/results/10.176.26.71/bench/rwsem-optimization-20261018/object-layout.json)
+retains the accepted build's size evidence; the current header places its fields
+as follows:
+
+| Field | Offset | Purpose |
+| --- | ---: | --- |
+| `gate` | 0 | Embedded 256-byte KD mutex; serializes writer bodies |
+| `readers` | 256 | Exact reader count, including temporary speculative increments |
+| `admission` | 320 | Open, ordinary-writer or outer-writer phase |
+| `phase_wait` | 384 | Sleeping callers waiting for an eligible admission phase |
+| `reader_drain` | 448 | Reserved writers waiting for existing readers to finish |
+
+The last four fields start on separate 64-byte lines. These offsets describe
+the recorded build, not a Linux rwsem-compatible layout. The embedded mutex's
+provider-wide queues and execution stacks are additional storage. There is no
+separate rwsem delegation queue or new generated-code ABI.
 
 ## API and scope
 

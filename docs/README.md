@@ -11,13 +11,13 @@ adds validated original-waiter continuation without changing that lock protocol.
 | Guide | Responsibility |
 | --- | --- |
 | [Project guide](PROJECT_GUIDE.md) | Reading order, source ownership and quick setup |
+| [Current lock catalog](LOCKS.md) | All four KD lock families, public interfaces, shared engines and compatibility limits |
 | [Terminology](TERMINOLOGY.md) | Plain-language definitions of lock, execution and benchmark terms |
 | [VM operations](operations/VM.md) | Environment, identity, builds, recovery and drain |
 | [Development rules](../AGENTS.md) | Repository-wide contribution constraints |
 | [Design](DESIGN.md), [code map](CODE_MAP.md) | Architecture, terms and file responsibilities |
-| [Lock protocols](design/lock_protocols.md) | KD/TCLock/Native spin, mutex and rwlock behavior |
-| [Spin](design/spin_implementation.md), [mutex](design/mutex_implementation.md), [rwlock](design/rwlock_implementation.md) | Implementation and storage details |
-| [Sleeping rwsem](design/rwsem_implementation.md) | Accepted reader/writer semaphore; writers stop new readers and wait for existing readers before delegating; replacing the kernel's real memory-map lock remains separate |
+| [Lock protocols](design/lock_protocols.md) | KD/TCLock/Native comparisons for spin, mutex and rwlock, plus KD/Native sleeping rwsem; no TCLock rwsem port |
+| [Spin](design/spin_implementation.md), [mutex](design/mutex_implementation.md), [rwlock](design/rwlock_implementation.md), [rwsem](design/rwsem_implementation.md) | Canonical implementation guides: API, source paths, state, ordering, storage and limits |
 | [KD-only mutex](design/kd_only_mutex.md) | Object replacement, ordinary aliases and delegation |
 | [Locking](design/locking.md), [frames](design/frames.md), [lifetimes](design/lifetimes.md) | Ownership and retirement |
 | [JIT execution](JIT_EXECUTION.md), [register ABI](JIT_REGISTER_ABI.md), [admission](design/admission.md) | Translation and execution contracts |
@@ -27,3 +27,9 @@ adds validated original-waiter continuation without changing that lock protocol.
 | [Limitations](TODO.md) | Known failures and deferred work |
 | [History](history/README.md), [branch consolidation](history/main-consolidation-20261018.md) | Superseded designs and exact branch dispositions |
 | [Feature reintegration](history/feature-reintegration-20261018.md) | Branch content audit, restored independent features and rwsem port boundary |
+
+For a lock implementation review, start with the catalog, choose its canonical
+implementation guide, then follow the ownership and execution references as
+needed. Benchmark numbers belong in performance/result records; they do not
+define API guarantees. The current direct string-helper optimization is a spin
+ABI1 execution feature and preserves the selected mutex and rwsem protocols.

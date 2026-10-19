@@ -1,17 +1,21 @@
 # Mutex implementation: KD, TCLock and Linux Native
 
-`master` retains the accepted legacy lock protocol and ABI0/2 interfaces.
+`master` retains the accepted KD-only legacy lock protocol. New delegation
+callers use ABI2; ABI0 remains an internal legacy compatibility interface.
 The [compatibility backport](../history/legacy_mutex_compatibility.md) adds fail-closed
 processor-state admission, immutable mutex images and generation-bound frames.
 The [KD-only extension](kd_only_mutex.md) embeds physical exclusion and scheduling
 in each KD object while retaining the queue and pinned producer.
 
 Read [lock protocols](lock_protocols.md) for the algorithm/ownership comparison
-and [KD locking](locking.md#5-mutex-delegation-protocol) for nested owner/ACK
+and [KD locking](locking.md#mutex-delegation-protocol) for nested owner/ACK
 details. This page maps the current ordinary mutex paths to their data and
-source. [Spin implementation](spin_implementation.md) owns the shared wrapper,
-code-pool and spin-continuation geometry; those allocations are not duplicated
-per mutex request.
+source. [Register ABI](../JIT_REGISTER_ABI.md) defines the shared wrapper, and
+[lifetimes](lifetimes.md) owns executable-image storage. The spin continuation
+pool and mutex waiter stacks have separate layouts; shared execution machinery
+does not imply copying a spin continuation into every mutex request.
+The [lock catalog](../LOCKS.md) locates the other lock families;
+[terminology](../TERMINOLOGY.md) defines the queue and machine-state terms.
 
 ## Source and call paths
 
@@ -19,10 +23,11 @@ per mutex request.
 | --- | --- | --- |
 | Native | `(mutex_lock)` / `(mutex_unlock)` | Captured kernel `kernel/locking/mutex.c`, `include/linux/mutex.h` |
 | TCLock | `komb_mutex_lock` / `komb_mutex_unlock` | [komb_mutex.c](../../tclock_backend/komb_mutex.c), [combiner.c](../../tclock_backend/combiner.c), [mutex_provider.c](../../tclock_backend/mutex_provider.c) |
+| KD ordinary/local | `kd_mutex_local_lock/unlock` and ordinary API variants | [kd_mutex_local.c](../../kernel_module/kd_mutex_local.c), [kd_mutex_osq.c](../../kernel_module/kd_mutex_osq.c) |
 | KD outer | `KD_MUTEX_OUTER_LOCK/UNLOCK` | [kd_mutex_direct.h](../../include/kd_mutex_direct.h), [mutex_calls.inc](../../kernel_module/lock/mutex_calls.inc) |
 | KD general/nested | `KD_MUTEX_DIRECT_LOCK/UNLOCK` and internal ABI0/2 entries | Same routing file, [kd_mutex.c](../../kernel_module/kd_mutex.c), [native.inc](../../kernel_module/execution/native.inc) |
 
-All three use distinct compiled functions in
+The Native, TCLock and KD benchmark arms use distinct compiled functions in
 [mutex_cacheline/module.c](../../workload_modules/mutex_cacheline/module.c).
 The mutex translation unit reuses payload, ioctl runner and timing sources;
 there is no per-operation runtime `is_mutex` branch. Measurement runs through
@@ -37,99 +42,73 @@ paths above refer to that build. The KD physical core is a separately namespaced
 port of its ordinary mutex/OSQ algorithms; it owns KD objects and makes no Linux
 mutex API calls.
 
-## Linux Native implementation
+## Public KD API
 
-`struct mutex` contains `owner`, `wait_lock`, an optimistic spin queue when
-configured, and `wait_list`. With the captured configuration it is 32 bytes;
-debug/RT configurations change the layout and implementation. Owner low bits
-are WAITERS=1, HANDOFF=2, PICKUP=4; pointer comparisons mask all three.
+[`kd_mutex.h`](../../include/kd_mutex.h) defines ordinary operations;
+[`kd_mutex_direct.h`](../../include/kd_mutex_direct.h) defines delegation-capable
+calls. These share physical exclusion when used with their matching unlocks.
 
-The original lock function's successful owner CAS returns directly. Its
-slowpath first retries acquisition and optimistic spinning, then installs a
-stack `mutex_waiter` under `wait_lock`. Sleep state publication, rechecking
-ownership and wait-list insertion prevent a missing unlock wake. A first
-waiter can request handoff instead of repeatedly losing to a fresh contender.
-The unlock slowpath preserves flagged state, prepares a wake queue and
-performs handoff when requested; the receiving task consumes PICKUP with
-acquire ordering.
-
-The Native arm deliberately parenthesizes function names to bypass the
-experimental caller-clobber macros. No KD selector is installed, so it reaches
-the original Linux algorithm. It does not allocate a KD task record/shadow,
-use a JIT frame, or move to a TCLock shadow stack.
-
-## TCLock implementation
-
-The fixed upstream source is commit
-`bbfb9f00a12af51dff6ca291cb9829a82960c2ef`, retained byte-for-byte in
-[upstream](../../tclock_backend/upstream) with hashes in
-[UPSTREAM.json](../../tclock_backend/UPSTREAM.json). The external module
-replaces custom `task_struct` fields with
-[tc_mutex_context](../../tclock_backend/mutex_compat.h). It retains ordinary
-mutex parking, wakeup, NUMA selection and real stack switching. The provenance
-and build boundary are in the [backend README](../../tclock_backend/README.md).
-
-| Storage | Location and purpose |
+| Operation | Interface and result |
 | --- | --- |
-| `komb_mutex` | 24 bytes; workload-owned pointer tail, state/locked byte and combiner task; no original Linux mutex owner |
-| `tc_mutex_context` | 336 bytes, preallocated per possible CPU on its preferred NUMA node; registered task, stack pointer, waiter links, lock-address stack, batch counter, observations and embedded node |
-| `komb_mutex_node` | 160 bytes embedded in that context; next/task/lock, CPU/socket, real RSP and completion/locked notification |
-| Shadow stack | 8 KiB per possible CPU, NUMA-local allocation with allocator fallback; retained until controlled backend unload |
-| Native context | Six callee-saved GPRs plus CALL return address on existing task/shadow stacks; no KD register packet or software frame |
+| Initialization and teardown | `DEFINE_KD_MUTEX`, `KD_MUTEX_INITIALIZER`, `kd_mutex_init`; `kd_mutex_destroy` diagnoses a busy object and does not drain users |
+| Ordinary blocking acquisition | `kd_mutex_local_lock` / `kd_mutex_local_unlock`; executes the caller's body locally |
+| Cancellable acquisition | `kd_mutex_lock_interruptible` or `kd_mutex_lock_killable`; zero on success, `-EINTR` on cancellation; successful calls pair with local unlock |
+| Trylock | `kd_mutex_trylock`; 1 on success, 0 otherwise; success pairs with local unlock |
+| I/O wait accounting | `kd_mutex_lock_io`; local acquisition with scheduler I/O accounting, paired with local unlock |
+| Last-reference acquisition | `kd_atomic_dec_and_mutex_lock`; returns 1 with the local mutex held only when the count reaches zero; otherwise returns 0 without ownership |
+| Ownership observations | `kd_mutex_is_locked` observes a physical owner; `kd_mutex_is_idle` additionally checks local/delegation state after all users join; neither acquires the lock |
+| Outer delegation | `KD_MUTEX_OUTER_LOCK/UNLOCK`; opaque same-task cookie for one lexical acquisition |
+| General direct delegation | `KD_MUTEX_DIRECT_LOCK/UNLOCK`; explicit clobber interface also recognized for supported nested translated controls |
 
-These sizes are verified from the cleanup's guest-built DWARF. The node starts
-at context offset 176; its completion/locked bytes are at node offsets 136/137.
-The type has no KD-style 64-byte alignment/whole-line stride requirement.
-Allocator overhead, alignment and existing task stacks are separate from
-`sizeof`, and object geometry does not measure cache misses.
+Prepare named direct continuations with `kd_mutex_prepare` and
+`KD_ENTRY_ABI_MUTEX_CLOBBER_V1` after the source module is live. The containing
+function uses `noipa` to prevent duplicate continuation labels. Ordinary aliases
+in [`kd_mutex_compat.h`](../../include/kd_mutex_compat.h) select local operations;
+they do not turn arbitrary ordinary C calls into delegation. Interruptible and
+killable forms retain their original-task result and cancellation semantics.
 
-`tc_mutex_worker_register()` requires single-CPU affinity and an unused
-context, takes a task reference, and binds the context before workers report
-ready. `tc_mutex_task(task)` looks up by `task_cpu(task)`; registration and
-fixed affinity are part of its correctness contract, not approximate
-profiling information. Only ordinary operations on registered workers are
-supported. Interruptible/killable/IO, rwsem and general unregistered kernel
-callers are not ported APIs.
-
-`komb_mutex_lock()` CASes the locked byte. On failure it disables preemption,
-sets node CPU/socket/task identity, and enters `__komb_mutex_lock()`. The
-assembly saves six GPRs, records RSP through the original implicit helper
-CALLs, switches to the context shadow stack and calls the queue slowpath.
-That slowpath exchanges `lock->tail`, links behind the predecessor and waits
-on the node. Parking/scheduling follows the state machine in
-[the protocol](lock_protocols.md#tclock-mutex); it is not a Linux mutex wait-list
-implementation.
-
-A queue head obtains the gate. A terminal follower with no successor is
-handed physical control; otherwise the combiner records `combiner_task` and
-calls `execute_cs()`. `komb_context_switch()` moves physical RSP to the
-waiter's native acquisition return. On delegated unlock, WWJUMP records the
-waiter's post-unlock RSP and either switches directly to the next eligible
-waiter or returns to the combiner. Previous waiter completion is published
-only after its stack is no longer executing. Out-of-order state/lock-address
-handling remains in the port but does not expand the comparator's single-lock
-validation scope.
-
-NUMA selection walks linked successors, defers remote nodes in the context
-list and rejoins that list before physical handoff. The default WWJUMP value
-1024 is checked against a counter starting at zero, allowing 1025 bodies.
-There is no separate KD-style scan limit. Selected waiter stacks receive six
-`prefetchw` hints at saved RSP through RSP+320, plus a successor-node hint.
-Switching stacks does not switch hardware task/GS identity.
-
-`parks` counts actual successful parking transitions. `batches` and
-`delegated` update once after a returned batch, using `counter_val + 1`.
-Whole-session deltas prove delegation but do not identify the selected
-300 ms peak's delegation share. They are observational values; context
-lifetime is checked independently.
-
-`tc_mutex_workers_drain()` requires all workers to have exited and the lock,
-queue, saved waiter links, lock-address stack and shadow stack pointer to be
-idle. A still-live exiting task yields EBUSY for a bounded retry outside
-measurement. Only after cohort drain are task references released. Backend
-unload frees preallocated contexts/stacks; no forced context release is used.
+The [replacement contract](kd_only_mutex.md) owns alias coverage and rebuild
+requirements. There is no Linux mutex fallback. The outer cookie's nonzero value
+records exact local ownership; zero means provider-routed unlock and can also
+occur after a local fallback. It is not a delegation-success flag.
 
 ## KD implementation
+
+### Physical exclusion for ordinary and delegated callers
+
+The `owner` word stores the actual owning task plus three low flag bits:
+`WAITERS=1` records a sleeping wait list, `HANDOFF=2` requests ownership transfer,
+and `PICKUP=4` reserves that transfer for the selected task. A successful
+zero-owner acquire compare-and-exchange grants the fast path. A busy caller
+may optimistically spin while the owner is running, using a private optimistic
+spin queue (OSQ) to order competing spinners.
+
+When spinning cannot acquire, `kd_local_lock_slow` links a stack waiter under
+`wait_lock`, publishes its sleep state and rechecks acquisition before sleeping.
+Signal cancellation removes that waiter under the same lock. A designated
+handoff must be picked up before checking signals, so cancellation cannot abandon
+ownership already assigned to that task. Release clears the owner with release
+ordering or wakes/transfers to the first sleeper; the wake queue retains a task
+reference until wakeup. The local physical path allocates no delegation node or
+JIT frame. Callers entering through the delegation engine retain that engine's
+separate request records while using this same physical primitive.
+
+The delegation gate is separate from this owner word. A queue head first takes
+the gate, then acquires the same physical mutex through `kd_mutex_claim_origin`.
+`physical_owner` records the delegation executor; it is not the ordinary
+`owner` word and is not set for every local acquisition. Gate values 1 and 3
+identify ordinary gate ownership and an active combiner respectively. Neither
+value alone grants permission to execute protected data. Physical unlock must
+precede opening the gate.
+
+| Stage | Source to follow |
+| --- | --- |
+| Local acquire, cancellation, unlock and idle | [kd_mutex_local.c](../../kernel_module/kd_mutex_local.c); private [OSQ](../../kernel_module/kd_mutex_osq.c) |
+| Direct entry policy and exact unlock routing | [lock/mutex_calls.inc](../../kernel_module/lock/mutex_calls.inc); [kd_mutex_tasks.c](../../kernel_module/kd_mutex_tasks.c) retains task/acquisition references |
+| Node reservation and physical-owner acquisition | [mutex/queue.inc](../../kernel_module/mutex/queue.inc), coordinated by [kd_mutex.c](../../kernel_module/kd_mutex.c) |
+| Batch selection, execution and node retirement | [mutex/combiner.inc](../../kernel_module/mutex/combiner.inc) |
+| Waiter execution stacks and continuation restore | [mutex/clobber.inc](../../kernel_module/mutex/clobber.inc), [mutex/waiter.inc](../../kernel_module/mutex/waiter.inc) |
+| Object/per-CPU initialization and drain | [mutex/lifecycle.inc](../../kernel_module/mutex/lifecycle.inc) |
 
 ### Entry and native routing
 
@@ -277,7 +256,7 @@ resume first detaches frame-owned state, copies the resume packet, retires the
 queue node and publishes native readiness. The combiner then services the
 exact physical-owner unlock/final ACK and pops the retained frame. Early A
 release uses the same saved batch state and reacquires A for the combiner's
-own operation after B finishes. [The detailed protocol](locking.md#53-nested-ab-and-native-continuation)
+own operation after B finishes. [The detailed protocol](locking.md#nested-ab-and-native-continuation)
 defines that ownership ordering.
 
 Exact per-CPU active-waiter/reserved-node balances and slot bitmaps are
@@ -292,6 +271,98 @@ Refusal and ordinary completion publish that value before waking a successor;
 early outer release reacquires it before returning. Terminal and outer-progress
 fixtures check this contract independently of the caller's repeated restoration.
 
+## Linux Native implementation
+
+`struct mutex` contains `owner`, `wait_lock`, an optimistic spin queue when
+configured, and `wait_list`. With the captured configuration it is 32 bytes;
+debug/RT configurations change the layout and implementation. Owner low bits
+are WAITERS=1, HANDOFF=2, PICKUP=4; pointer comparisons mask all three.
+
+The original lock function's successful owner CAS returns directly. Its
+slowpath first retries acquisition and optimistic spinning, then installs a
+stack `mutex_waiter` under `wait_lock`. Sleep state publication, rechecking
+ownership and wait-list insertion prevent a missing unlock wake. A first
+waiter can request handoff instead of repeatedly losing to a fresh contender.
+The unlock slowpath preserves flagged state, prepares a wake queue and
+performs handoff when requested; the receiving task consumes PICKUP with
+acquire ordering.
+
+The Native arm deliberately parenthesizes function names to bypass the
+experimental caller-clobber macros. No KD selector is installed, so it reaches
+the original Linux algorithm. It does not allocate a KD task record/shadow,
+use a JIT frame, or move to a TCLock shadow stack.
+
+## TCLock implementation
+
+The fixed upstream source is commit
+`bbfb9f00a12af51dff6ca291cb9829a82960c2ef`, retained byte-for-byte in
+[upstream](../../tclock_backend/upstream) with hashes in
+[UPSTREAM.json](../../tclock_backend/UPSTREAM.json). The external module
+replaces custom `task_struct` fields with
+[tc_mutex_context](../../tclock_backend/mutex_compat.h). It retains ordinary
+mutex parking, wakeup, NUMA selection and real stack switching. The provenance
+and build boundary are in the [backend README](../../tclock_backend/README.md).
+
+| Storage | Location and purpose |
+| --- | --- |
+| `komb_mutex` | 24 bytes; workload-owned pointer tail, state/locked byte and combiner task; no original Linux mutex owner |
+| `tc_mutex_context` | 336 bytes, preallocated per possible CPU on its preferred NUMA node; registered task, stack pointer, waiter links, lock-address stack, batch counter, observations and embedded node |
+| `komb_mutex_node` | 160 bytes embedded in that context; next/task/lock, CPU/socket, real RSP and completion/locked notification |
+| Shadow stack | 8 KiB per possible CPU, NUMA-local allocation with allocator fallback; retained until controlled backend unload |
+| Native context | Six callee-saved GPRs plus CALL return address on existing task/shadow stacks; no KD register packet or software frame |
+
+These sizes are verified from the cleanup's guest-built DWARF. The node starts
+at context offset 176; its completion/locked bytes are at node offsets 136/137.
+The type has no KD-style 64-byte alignment/whole-line stride requirement.
+Allocator overhead, alignment and existing task stacks are separate from
+`sizeof`, and object geometry does not measure cache misses.
+
+`tc_mutex_worker_register()` requires single-CPU affinity and an unused
+context, takes a task reference, and binds the context before workers report
+ready. `tc_mutex_task(task)` looks up by `task_cpu(task)`; registration and
+fixed affinity are part of its correctness contract, not approximate
+profiling information. Only ordinary operations on registered workers are
+supported. Interruptible/killable/IO, rwsem and general unregistered kernel
+callers are not ported APIs.
+
+`komb_mutex_lock()` CASes the locked byte. On failure it disables preemption,
+sets node CPU/socket/task identity, and enters `__komb_mutex_lock()`. The
+assembly saves six GPRs, records RSP through the original implicit helper
+CALLs, switches to the context shadow stack and calls the queue slowpath.
+That slowpath exchanges `lock->tail`, links behind the predecessor and waits
+on the node. Parking/scheduling follows the state machine in
+[the protocol](lock_protocols.md#tclock-mutex); it is not a Linux mutex wait-list
+implementation.
+
+A queue head obtains the gate. A terminal follower with no successor is
+handed physical control; otherwise the combiner records `combiner_task` and
+calls `execute_cs()`. `komb_context_switch()` moves physical RSP to the
+waiter's native acquisition return. On delegated unlock, WWJUMP records the
+waiter's post-unlock RSP and either switches directly to the next eligible
+waiter or returns to the combiner. Previous waiter completion is published
+only after its stack is no longer executing. Out-of-order state/lock-address
+handling remains in the port but does not expand the comparator's single-lock
+validation scope.
+
+NUMA selection walks linked successors, defers remote nodes in the context
+list and rejoins that list before physical handoff. The default WWJUMP value
+1024 is checked against a counter starting at zero, allowing 1025 bodies.
+There is no separate KD-style scan limit. Selected waiter stacks receive six
+`prefetchw` hints at saved RSP through RSP+320, plus a successor-node hint.
+Switching stacks does not switch hardware task/GS identity.
+
+`parks` counts actual successful parking transitions. `batches` and
+`delegated` update once after a returned batch, using `counter_val + 1`.
+Whole-session deltas prove delegation but do not identify the selected
+300 ms peak's delegation share. They are observational values; context
+lifetime is checked independently.
+
+`tc_mutex_workers_drain()` requires all workers to have exited and the lock,
+queue, saved waiter links, lock-address stack and shadow stack pointer to be
+idle. A still-live exiting task yields EBUSY for a bounded retry outside
+measurement. Only after cohort drain are task references released. Backend
+unload frees preallocated contexts/stacks; no forced context release is used.
+
 ## Scope and evidence
 
 KD keeps pinned published waiters and bounded NUMA queue grouping. Stack
@@ -299,6 +370,15 @@ allocation, request selection and KD physical ownership have separate roles.
 TCLock supports parking, but this port's fixed-affinity context contract does
 not validate arbitrary oversubscription. Both stack/context protocols require
 independently runnable dependencies and controlled drain.
+
+Reviewed special instructions can use the [checked instruction-exit contract](admission.md#checked-instruction-exits)
+instead of rejecting an entire body because an untaken branch contains one.
+If execution reaches the marker, the original waiter resumes before that
+instruction and future delegation of the entry is disabled for the source
+session. Other unsupported instructions remain refused. This translation policy
+does not change the mutex queue, physical ownership or pinned-waiter protocol.
+The direct string-helper optimization is restricted to spin ABI1 and is not a
+new mutex execution path.
 
 The benchmark KD provider defaults to UBSAN off; a standalone provider build
 inherits the existing kernel configuration. Backend/workload ELF identity

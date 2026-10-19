@@ -3,8 +3,10 @@
 The main branch is `master`, selecting KD-only implementation `d2a2304` with
 the accepted `555b8b7` compatibility baseline. Immutable tags
 `accepted/kd-only-mutex-20261018` and `accepted/kd-mutex-compat-20261017` retain
-those measured versions; `current/kd-mutex` follows main. The earlier
-owned/adaptive experiment is archived; see [branch dispositions](../history/main-consolidation-20261018.md).
+those measured versions. `master` is authoritative for current code;
+`current/kd-mutex` retains the earlier `af330db` instruction-exit checkpoint at
+this review. The owned/adaptive experiment is archived; see
+[branch dispositions](../history/main-consolidation-20261018.md).
 
 The replacement assumes every user of an object uses KD. Each `struct kd_mutex`
 contains physical exclusion and legacy delegation scheduling. There is no Linux
@@ -12,9 +14,17 @@ contains physical exclusion and legacy delegation scheduling. There is no Linux
 Cold calls, admission refusals, task-record shortages, same-CPU predecessor
 refusals, nested calls and source closure all retain KD physical exclusion.
 
+This guide owns the object-replacement and ordinary-alias contract. The
+[mutex implementation](mutex_implementation.md) explains current acquisition,
+queue and release paths; the [lock catalog](../LOCKS.md) compares all four KD
+families. The revision comparison below records the KD-only replacement boundary.
+Its v4/v5 capability numbers are historical checkpoints, not the current provider
+version. Later checked instruction exits and spin helper execution have separate
+capabilities and preserve this mutex protocol.
+
 ## What changes and what stays the same
 
-| Boundary | Accepted baseline `555b8b7` | KD-only implementation |
+| Boundary | Accepted baseline `555b8b7` | KD-only change selected at `d2a2304` |
 | --- | --- | --- |
 | Physical exclusion | Linux owner word, optimistic spinning and sleeping wait list | KD-owned owner word, private optimistic spin queue and sleeping wait list |
 | Scheduling storage | 1,024 resident shadow entries indexed by original address | Legacy gate and queue embedded in each KD object |

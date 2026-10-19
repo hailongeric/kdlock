@@ -3,7 +3,8 @@
 Use this map to find the source file responsible for a feature. Start with
 [Design](DESIGN.md) for the execution model and [lock protocols](design/lock_protocols.md)
 for how each lock works. The tables list maintained source, not generated build
-files or benchmark archives.
+files or benchmark archives. The [lock catalog](LOCKS.md) organizes the four
+public lock families and their canonical implementation guides.
 
 ## Provider and execution
 
@@ -34,6 +35,9 @@ objects. Follow the ordinary spin path from
 `lock/mutex_calls.inc` → `mutex/queue.inc` → combiner/waiter/clobber. Rwlock's
 public count/gate protocol is in its header; the spin components acquire writer
 admission before ABI3 execution and preserve it across native continuation.
+Rwsem admission starts in `kd_rwsem.c` before `KD_MUTEX_OUTER_LOCK` and ends on
+the origin after the matching mutex unlock/acknowledgement. Its `gate` member
+uses the same physical mutex and delegation queue, not a separate writer engine.
 
 ## Translation and reference backends
 
@@ -56,7 +60,7 @@ admission before ABI3 execution and preserve it across native continuation.
 
 | Directory | Contents |
 | --- | --- |
-| [workload_modules](../workload_modules/README.md) | Separate spin/mutex/rwlock payloads; shared timing and business logic |
+| [workload_modules](../workload_modules/README.md) | Spin/mutex/rwlock/rwsem payloads and API adapters; shared timing and business logic |
 | [bench/tclock_compare](../bench/tclock_compare/README.md) | Three-arm spin/mutex runners, sessions and result reports |
 | [bench/rwlock_compare](../bench/rwlock_compare/README.md) | RCUHT/cacheline rwlock and Native/KD rwsem comparisons, proc spin snapshots, exact oracles and complete-body JIT evidence |
 | [bench/spin_cacheline](../bench/spin_cacheline/README.md) | Shared client, peak selection, provider preparation and offline readers |

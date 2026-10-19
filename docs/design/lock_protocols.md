@@ -1,13 +1,14 @@
 # KD, TCLock and Linux Native lock protocols
 
-This guide compares how KD, TCLock and Linux Native acquire, delegate and release
-spinlocks, mutexes and rwlocks: nine benchmark backends in total. It describes the
-current x86_64 implementation. Start with the
-[glossary](../DESIGN.md#terms-used-in-these-guides) for terms such as combiner,
-frame, native suffix and ACK.
-Read [spin](spin_implementation.md), [mutex](mutex_implementation.md) and
-[rwlock](rwlock_implementation.md) for storage, source files and
-execution details. KD's nested ownership, recovery and ACK contract remains in
+This guide compares how the maintained backends acquire, delegate and release
+spinlocks, mutexes, rwlocks and sleeping rwsems. Linux Native and KD cover all four
+families; the TCLock port covers spin, mutex and rwlock only. It describes the
+captured x86_64 implementation, not interchangeable object layouts. Start with
+the [lock catalog](../LOCKS.md) for current KD APIs and the
+[glossary](../TERMINOLOGY.md) for terms such as combiner, frame, native suffix and ACK.
+Read [spin](spin_implementation.md), [mutex](mutex_implementation.md),
+[rwlock](rwlock_implementation.md) and [rwsem](rwsem_implementation.md) for
+storage, source files and execution details. KD's nested ownership, recovery and ACK contract remains in
 [locking](locking.md) and [frames](frames.md).
 
 ## Backend and ownership matrix
@@ -23,6 +24,8 @@ execution details. KD's nested ownership, recovery and ACK contract remains in
 | Linux Native rwlock | Linux `rwlock_t` / queued rwlock | Each reader or writer executes its own body | Concurrent readers; spinning reader/writer admission | Ordinary compatible Linux rwlock APIs |
 | TCLock rwlock | Separate `struct komb_rwlock` count and gate | Readers run locally; queued writer bodies may run on a borrowed waiter stack | Pinned polling and upstream gate delegation | TCLock rwlock pairs only |
 | KD rwlock | 128-byte `kd_rwlock_t`, count and KD gate on separate cache lines | Readers run locally; writers run natively or through ABI3 JIT | Pinned readers/writers; KD gate queues contended admission | KD native and direct pairs only; no Linux/TCLock mixing |
+| Linux Native rwsem | Linux `struct rw_semaphore` | Readers and writers execute their own bodies | Concurrent readers or one writer; blocked callers may sleep | Ordinary compatible Linux rwsem APIs |
+| KD rwsem | 512-byte `struct kd_rwsem`, reader count and phase reservations around a KD mutex | Readers and ordinary writers run locally; outer writers may use mutex ABI2 delegation | Admission/drain waits may sleep; published mutex waiters poll pinned | KD ordinary and outer-writer pairs only; no Linux/TCLock mixing |
 
 A queue-head notification tells a waiter it may try to acquire the lock. It does
 not mean the waiter owns the lock or that its body has run. A completion
@@ -263,6 +266,52 @@ object, each with its matching unlock. Recursive reads, upgrades/downgrades,
 IRQ/BH variants and sleeping bodies are unsupported. The full state machine,
 API and lifetime contract live in [rwlock implementation](rwlock_implementation.md).
 
+## Linux Native rwsem
+
+The comparison uses `down_read/up_read` and `down_write/up_write` on a Linux
+`struct rw_semaphore`. Readers share access and writers exclude all readers and
+other writers. Blocked tasks can sleep; acquisition and release use the kernel's
+own reader/writer synchronization. The body runs on the acquiring task, without
+translation or delegation. The benchmark mappings are in
+[direct_rwsem.h](../../workload_modules/rwlock_bench/direct_rwsem.h).
+
+This arm is a sleeping semaphore, not the spinning Native rwlock above. Results
+must retain the lock kind even when both protect identical c01/c08/RCUHT payloads.
+There is no sleeping TCLock rwsem port in this repository; TCLock rwlock results
+are a separately labelled reference and cannot serve as its replacement.
+
+## KD rwsem
+
+The reader count and writer-admission word sit outside the embedded KD mutex.
+Admission `0` lets readers enter; `-1` reserves one ordinary writer; a positive
+value counts exact outer-writer reservations. Readers increment and recheck
+admission before touching data, undoing speculative increments if a writer won.
+They always execute locally and may sleep while holding read access.
+
+An ordinary writer reserves `-1`, takes the physical mutex locally and waits for
+existing readers to finish. It retains local cancellation, trylock and downgrade
+semantics. Downgrade publishes its reader count before releasing the mutex and
+reopening admission, so no writer can enter between exclusive and shared access.
+
+An outer writer joins a positive phase and drains readers while still
+schedulable, before `KD_MUTEX_OUTER_LOCK` can publish a pinned request. The phase
+prevents new admitted readers and ordinary downgrades during that cohort.
+Writers then use the unchanged KD mutex exclusion, queue and ABI2 execution.
+After the matching mutex unlock/acknowledgement returns, the original task
+releases its reservation. Only the final reservation reopens reader admission.
+
+The accepted wait policy uses separate phase and reader-drain waitqueues. Before
+an uninterruptible sleeping wait, a caller checks its condition at most 16,384
+times, stopping early when scheduling is needed. A predicate can retain its own
+atomic retry loop, so this is not an elapsed-time bound. Published mutex waiters
+do not adopt this sleeping policy. Outer writers cannot cancel after publication,
+downgrade or act as nested rwsem controls inside a translated body.
+
+New outer writers may extend a positive phase while readers or ordinary writers
+wait; this does not reproduce Linux's fairness policy. No bounded wait or general
+oversubscription guarantee follows. See the [rwsem implementation](rwsem_implementation.md)
+for ordering, exact reservations, wakeups and retained performance limitations.
+
 ## Publication, lifetime and validation
 
 KD uses acquire/release queue/result publication and exact ownership,
@@ -279,11 +328,16 @@ EBUSY, keep its storage and references alive; never force unload.
 
 Returned-body KD JIT evidence and TCLock mutex returned-batch delegation
 counts are separate from payload correctness. TCLock spin and rwlock delegation
-counts remain unmeasured. KD rwlock JIT share uses completed writes as its
-denominator. Performance acceptance, failed candidates and remaining gaps live in
+counts remain unmeasured. For KD rwlock and rwsem, JIT share uses completed writes
+as its denominator. Performance acceptance, failed candidates and remaining gaps live in
 the [current performance status](../PERFORMANCE.md),
 [RCUHT rwlock report](../../bench/results/380G10/bench/rwlock_compare/20261010-rcuht/README.md) and
-[final spin/mutex report](../../bench/results/380G10/bench/tclock_compare/20261008-protocol-simplification/README.md).
+[historical spin/mutex report](../../bench/results/380G10/bench/tclock_compare/20261008-protocol-simplification/README.md).
 Those original-host reports retain their historical source and topology. The
 [current mutex report](../../bench/results/10.176.26.71/bench/comparison/mutex-kdonly-20261017T140354Z/README.md)
 compares accepted compatibility and KD-only mutexes on c01/post64 and pipebytes n16.
+The [accepted rwsem report](../../bench/results/10.176.26.71/bench/rwsem-optimization-20261018/README.md)
+retains its sleeping-semaphore comparison and separate spinning-rwlock reference.
+The [current taskname/xattr report](../../bench/results/10.176.26.71/bench/taskname-xattr-direct-api-20261019/README.md)
+measures the direct original-helper path on spinlocks. These source revisions,
+lock families and workload results are not pooled.

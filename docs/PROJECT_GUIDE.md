@@ -3,11 +3,15 @@
 The primary checkout on `380G10` is the source of truth. `master` contains the
 accepted KD-only mutex from `d2a2304`, with its legacy delegation protocol and
 compatibility backports. `accepted/kd-only-mutex-20261018` preserves the measured
-implementation; `current/kd-mutex` follows the consolidated main version.
-See [branch dispositions](history/main-consolidation-20261018.md).
+implementation. Use `master` for current code: at this documentation review,
+`current/kd-mutex` retains the earlier `af330db` instruction-exit checkpoint and
+does not include the later spin helper work. The earlier consolidation is retained
+in [branch dispositions](history/main-consolidation-20261018.md).
 
-Start with [design](DESIGN.md), [lock protocols](design/lock_protocols.md) and
-the [code map](CODE_MAP.md). The [documentation index](README.md) separates API,
+Start with the [current lock catalog](LOCKS.md), then its implementation guide
+for spinlock, mutex, rwlock or rwsem. [Design](DESIGN.md) explains shared execution;
+[lock protocols](design/lock_protocols.md) compares backends, and the
+[code map](CODE_MAP.md) locates source. The [documentation index](README.md) separates API,
 execution, operations, benchmark and historical material.
 
 ## Guest workflow
