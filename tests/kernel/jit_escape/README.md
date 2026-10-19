@@ -40,12 +40,18 @@ The four phases remain in one provider/source session:
    registry must remain `NATIVE_ONLY`. Operations still execute correctly on
    their original tasks.
 
-The runner accepts capability versions 6, 7, 8, 9 or 10 only when feature bit 5
-(native instruction exit) is present. The current provider advertises version 10;
+The runner accepts capability versions 6 through 11 only when feature bit 5
+(native instruction exit) is present. The current provider advertises version 11;
 the version alone does not establish support. The private benchmark observation
 overlay supplies entry/completion counts, including validated root completions
 after helper services; the production `native_escape_count` counts validated
 marker events.
+Version 11's optional [direct original-helper route](../../../docs/design/admission.md#direct-original-helper-calls)
+is a separate ABI1 spin feature; it does not change this ABI2 mutex marker or
+the selected mutex protocol. This probe remains an affected regression check,
+not a measurement of direct-call performance. Current focused results are linked
+from [validation](../../../docs/VALIDATION.md#taskname-and-xattr-helper-validation);
+the direct-route standard-grid comparison is pending.
 That count does not by itself prove that a native continuation completed. The
 operation and final-retirement checks supply the additional evidence. The marker
 log is rate limited, so the test does not require one printed line per count.

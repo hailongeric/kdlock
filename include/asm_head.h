@@ -45,6 +45,12 @@
 /* Reuse one vacated slot for the per-invocation block budget. Other vacated
  * words stay reserved so independent control/context offsets do not move. */
 #define Stack_BUDGET QWORD PTR[RBP - 8 * 8]
+/* Direct string images reuse private reserved words; no packet/args growth.
+ * Remaining quotas are exported only once after this wrapper invocation. */
+#define Stack_STRCMP_LEFT QWORD PTR[RBP - 8 * 9]
+#define Stack_PAD_LEFT QWORD PTR[RBP - 8 * 10]
+/* Slots 11 and 12 remain reserved; direct calls align the wrapper once and
+ * use flag-neutral register bookkeeping rather than per-call stack scratch. */
 
 #define Stack_RGS QWORD PTR[RBP - 8 * 15]
 #define Stack_TASK QWORD PTR[RBP - 8 * 16]

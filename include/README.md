@@ -59,7 +59,7 @@ The optional helper entry and the separate
 [source constant proof](../docs/design/admission.md#source-branches-with-proven-constant-inputs)
 remain available for other translated code.
 
-The current version without helper-specific checks passed
+The version 10 dispatcher implementation without helper-specific checks passed
 [focused correctness checks](../docs/VALIDATION.md#taskname-and-xattr-helper-validation)
 through candidate 6 and completed the
 [`88bb5a4` standard-grid comparison](../bench/results/10.176.26.71/bench/taskname-xattr-native-api-20261019/README.md).
@@ -71,6 +71,10 @@ results and drained but completed no delegated bodies during measurement.
 Those [historical receipts](../bench/results/10.176.26.71/bench/taskname-xattr-20261018/DEVELOPMENT.md)
 and the [comparison record](../bench/results/10.176.26.71/bench/taskname-xattr-20261018/README.md)
 remain evidence for that earlier source version.
+The initial version 11 direct-call path passed 14 focused live sessions; its
+later bridge-instruction reduction awaits focused validation, and its standard
+worker-grid performance comparison is pending. It retains the
+ordinary taskname call shell and the same original APIs.
 
 Mutex outer callers pair `KD_MUTEX_OUTER_LOCK/UNLOCK` with one opaque
 `kd_mutex_outer_cookie` per acquisition. Do not copy, modify, transfer or reuse it
@@ -80,13 +84,13 @@ prepare uses `kd_mutex_prepare(..., KD_ENTRY_ABI_MUTEX_CLOBBER_V1)`. Registratio
 can succeed before immutable image allocation; only complete NORMAL publication
 allows JIT execution. Provider, daemon and translator must agree on
 immutable-image and exclusive-KD-object capabilities. Ordinary mutex images
-accept compatible capability versions 5 through 10. Images with checked
-instruction-exit markers require version 6 through 10 with feature bit 5 and declare
+accept compatible capability versions 5 through 11. Images with checked
+instruction-exit markers require version 6 through 11 with feature bit 5 and declare
 image requirement bit 0; see
 [the admission contract](../docs/design/admission.md#checked-instruction-exits).
 [Ownership](../docs/design/locking.md#mutex-outer-direct) explains the routing.
 
-Restricted ABI1 spin pointer-load checks require provider version 7 through 10 feature
+Restricted ABI1 spin pointer-load checks require provider version 7 through 11 feature
 bit 6 and image requirement bit 1. A failed check resumes the exact load on the
 original waiter and disables delegation for that entry; it does not change the
 object's lock protocol. The source must prove its incoming arithmetic flags are
@@ -97,22 +101,49 @@ onward; ordinary spin and ABI3 rwlock entries do not all gain that lifetime
 contract. The packet and two-word wrapper stay unchanged. See the
 [complete guard contract](../docs/JIT_REGISTER_ABI.md#checked-spin-address-exit).
 
-The current provider reports capability version 10. Feature bit 9 means that
+The current provider reports capability version 11. Feature bit 9 means that
 original string APIs use the native caller's memory and lifetime guarantees,
 without helper-specific checks. `strcmp` also requires feature bit 7 and image
 requirement bit 2; `strscpy_pad` requires feature bit 8 and image requirement bit
-3. No new image field or wrapper argument is added.
+3. Optional bit 10 enables direct original-helper calls inside one generated
+invocation; these images add requirement bit 4, value 16. It does not add a
+wrapper argument. Direct calls require a pristine ABI1 spin root and cannot
+combine with address guards, scalar dispatcher services or nonterminal lock
+controls. Other eligible string bodies keep the dispatcher route.
 
 The caller supplies valid, stable ordinary strings and a valid destination.
 The `strscpy_pad(..., 64)` analysis accounts for all 64 destination bytes,
 including truncation and padding. KD does not inspect either helper's
-instructions, scan strings or recheck destination bounds. It still verifies the
-physical owner, frame and saved CALL return word before invocation, then consumes
-that same word once. One invocation permits at most 128 comparisons and 16 other
-continuations, including writing services. See
+instructions, scan strings or recheck destination bounds. It retains the exact
+physical owner and frame. The dispatcher checks the pending CALL word before
+invocation; the direct route preserves the source CALL store and checks the
+actual saved return after the helper. Either route consumes the word once.
+One invocation permits at most 128 comparisons and 16 other continuations,
+including writing services. See
 [read-only API admission](../docs/design/admission.md#original-strcmp-service)
 and [writing API admission](../docs/design/admission.md#original-strscpy_pad-writing-service)
 for the complete caller and continuation contracts.
+
+The private `kd_jit_batch_call` descriptor is 112 bytes: its original 96-byte
+prefix is unchanged, and offsets 96 and 104 hold direct comparison and padding
+call counts. The wrapper uses previously reserved stack slots for the remaining
+allowances and aligns the executor stack once at direct entry. Its quota and
+return checks preserve RCX and arithmetic flags through register operations,
+without per-call stack alignment or flags scratch. Its two argument words,
+0/1 body witness and register packet remain unchanged. A direct image exports
+counts once on return; counts do not replace ownership or completion evidence.
+
+Direct generated CALLs initially contain zero displacement operands. The
+`KDNC0001` directory names these slots; the provider fills their relative helper
+addresses in separate preallocated executable storage near kernel text before
+immutable publication. The upload hash therefore does not identify the loaded
+bytes by itself. Benchmark evidence captures the loaded generated image outside
+timing and checks its reconstruction from the original upload and symbol
+addresses. No helper instructions or arguments are inspected. Allocation and
+entry restrictions are defined in
+[direct-call admission](../docs/design/admission.md#direct-original-helper-calls);
+[the register guide](../docs/JIT_REGISTER_ABI.md) owns exact offsets and exit 10,
+which resumes an unexecuted excess call on the waiter without JIT reentry.
 
 Rwlock readers pair `kd_read_lock/unlock`; explicitly native writers pair
 `kd_write_lock/unlock`. Delegating writers use `KD_RWLOCK_DIRECT_WRITE_LOCK/UNLOCK`

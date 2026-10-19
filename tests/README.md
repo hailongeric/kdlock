@@ -185,19 +185,22 @@ complete delegated bodies from the same image, with the original comparison
 result and no permanent refusal. Both probes require exact operation counts,
 task identity, lock exclusion and final drain; their delegated phases require
 positive matching entry and completed-body counts. Neither is a
-performance benchmark or a general pointer-safety test. The string probe does
+performance benchmark or a general pointer-safety test. The current string
+probe additionally requires the version 11 direct-call route, with generated
+image requirement 20 (read-only API bit 2 plus direct-call bit 4). The string probe does
 not exercise the separate `strscpy_pad` writing service.
 
-The current provider advertises capability version 10. Each runner also checks
+The current provider advertises capability version 11. Each runner also checks
 its required feature in the provider's feature-bit mask; a version number alone
 is insufficient. The supported compatibility ranges are:
 
 | Boundary or service | Accepted capability versions | Required feature bit |
 | --- | --- | --- |
-| Mutex instruction marker | 6, 7, 8, 9, 10 | 5: native instruction exit |
-| Checked spin pointer load | 7, 8, 9, 10 | 6: address guard |
-| Original `strcmp` | 10 | 7: string services and 9: original API contract |
-| Original `strscpy_pad(..., 64)` | 10 | 8: string writing service and 9: original API contract |
+| Mutex instruction marker | 6, 7, 8, 9, 10, 11 | 5: native instruction exit |
+| Checked spin pointer load | 7, 8, 9, 10, 11 | 6: address guard |
+| Original `strcmp` API contract | 10, 11 | 7: string services and 9: original API contract |
+| Original `strscpy_pad(..., 64)` API contract | 10, 11 | 8: string writing service and 9: original API contract |
+| Direct original-helper calls | 11 | 10: direct calls, plus the corresponding API bits above |
 
 The writing-service capability is separate from the read-only comparison
 capability. Its focused unit checks and exact taskname workload are separate
@@ -206,6 +209,12 @@ from the `strcmp` continuation probe. See the
 [writing contract](../docs/design/admission.md#original-strscpy_pad-writing-service)
 for the single-lock, source-lifetime and stable-memory limits. Publication and
 unit success do not imply live workload or performance acceptance.
+The [direct-call contract](../docs/design/admission.md#direct-original-helper-calls)
+preserves the original arguments, actual CALL return word and two-word wrapper
+ABI. Generated-image readback validates relocated CALL operands outside timing;
+it does not inspect helper instructions or string arguments. Focused outcomes
+are recorded in [validation](../docs/VALIDATION.md#taskname-and-xattr-helper-validation).
+The current standard-grid performance comparison remains pending.
 
 The [mutex task/ACK probe](kernel/mutex/run_task_selftest.py) and selected SELFTEST
 hotlock/entry probes check resource/routing/drain without executing JIT bodies;

@@ -36,6 +36,11 @@ typedef unsigned long long u64;
 #define S64_MAX LLONG_MAX
 #define module_param_named(...)
 #define MODULE_PARM_DESC(...)
+struct kernel_param;
+struct kernel_param_ops { int (*get)(char *, const struct kernel_param *); };
+#define module_param_cb(name, ops, ...) \
+ static const void *name##_parameter __attribute__((unused)) = (ops)
+#define scnprintf snprintf
 #define likely(x) (x)
 #define unlikely(x) (x)
 
@@ -79,6 +84,12 @@ static int load_acquire_int(const int *pointer)
 	} while (0)
 #define PAGE_SIZE 4096
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof((a)[0]))
+static unsigned int get_unaligned_le32(const void *source)
+{
+	unsigned int value;
+	memcpy(&value, source, sizeof(value));
+	return value;
+}
 #define ATOMIC_INIT(value) { value }
 #define READ_ONCE(x) __atomic_load_n(&(x), __ATOMIC_RELAXED)
 #define smp_load_acquire(p) _Generic((p), int*:load_acquire_int((const int*)(p)), const int*:load_acquire_int((const int*)(p)), default:__atomic_load_n(p,__ATOMIC_ACQUIRE))

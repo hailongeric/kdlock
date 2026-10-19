@@ -153,6 +153,7 @@ static unsigned long kd_hostcall_exits, kd_hostcall_executed,
 	kd_hostcall_resumed;
 static unsigned long kd_hostcall_limit, kd_hostcall_rejected,
 	kd_hostcall_failed;
+static unsigned long kd_direct_strcmp, kd_direct_pad;
 
 #define READ_ONCE(x) (x)
 #define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
@@ -168,6 +169,7 @@ static unsigned long kd_hostcall_limit, kd_hostcall_rejected,
 	__atomic_compare_exchange_n(p, old, value, false, __ATOMIC_SEQ_CST, \
 				    __ATOMIC_SEQ_CST)
 #define atomic64_inc(p) (++*(p))
+#define atomic64_add(v, p) (*(p) += (v))
 #define atomic64_read(p) (*(p))
 #define atomic64_set(p, v) (*(p) = (v))
 #define atomic_set(p, v) (*(p) = (v))
@@ -345,7 +347,8 @@ const struct kd_jit_image *kd_image_current(const struct kd_exe_info *exe)
 	*slot = (struct kd_jit_image){ .code = exe->code_block,
 		.entry = (struct kd_exe_info *)exe, .entry_abi = exe->entry_abi,
 		.requirements = exe->requirements, .generation = exe->generation,
-		.immutable = exe->lock_kind == KD_EXE_LOCK_MUTEX || exe->requirements };
+		.immutable = exe->lock_kind == KD_EXE_LOCK_MUTEX || exe->requirements,
+		.near_text = !!(exe->requirements & KD_IMAGE_REQUIRE_DIRECT_STRINGS) };
 	return slot;
 }
 void kd_image_report(struct kd_exe_info *exe, const struct kd_jit_image *image,
@@ -411,6 +414,7 @@ void kd_spin_jit_prepare_complex(struct kd_exec_frame *frame)
 #include "jit_entry_scope/address_guard.inc"
 #include "jit_entry_scope/strings.inc"
 #include "jit_entry_scope/string_copy.inc"
+#include "jit_entry_scope/direct_strings.inc"
 #ifdef KD_BENCH_COMPLETION_FIXTURE
 #include "jit_entry_scope/bench_completion.inc"
 #endif
@@ -421,6 +425,7 @@ int main(void)
 	check_address_guard();
 	check_string_services();
 	check_string_copy();
+	check_direct_strings();
 	check_mutex_batch();
 	check_batch_admission();
 	check_batch_metadata();

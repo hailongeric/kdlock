@@ -19,6 +19,24 @@ static atomic64_t kd_hostcall_resumed;
 static atomic64_t kd_hostcall_rejected;
 static atomic64_t kd_hostcall_failed;
 static atomic64_t kd_hostcall_limit;
+/* Completed original helper calls reported once per direct wrapper return.
+ * These observations never substitute for frame/physical-owner records. */
+static atomic64_t kd_direct_strcmp;
+static atomic64_t kd_direct_pad;
+static int kd_direct_strcmp_get(char *buffer, const struct kernel_param *kp)
+{
+	(void)kp;
+	return scnprintf(buffer, PAGE_SIZE, "%lld\n", (long long)atomic64_read(&kd_direct_strcmp));
+}
+static int kd_direct_pad_get(char *buffer, const struct kernel_param *kp)
+{
+	(void)kp;
+	return scnprintf(buffer, PAGE_SIZE, "%lld\n", (long long)atomic64_read(&kd_direct_pad));
+}
+static const struct kernel_param_ops kd_direct_strcmp_ops = { .get = kd_direct_strcmp_get };
+static const struct kernel_param_ops kd_direct_pad_ops = { .get = kd_direct_pad_get };
+module_param_cb(direct_strcmp, &kd_direct_strcmp_ops, NULL, 0444);
+module_param_cb(direct_pad, &kd_direct_pad_ops, NULL, 0444);
 
 /* The same-device capability authorizes only bounded mutex stack facts, not
  * arbitrary callee memory preservation. Exclude the consumed CALL word, whose

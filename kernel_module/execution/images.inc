@@ -1,36 +1,134 @@
 /* Mutex image lifetime is session-wide. Only private, never-published uploads
  * can return a block to the bounded pool. The publication gate also serializes
  * generation-scoped miss metadata; it is never held across copying or JIT. */
-struct kd_jit_image *kd_image_alloc(void)
+static struct kd_jit_image *kd_image_alloc_pool(bool near_text)
 {
 	unsigned long publish_flags;
 	struct kd_jit_image *image = NULL;
 	unsigned int i;
+	int *free = near_text ? &kd_near_block_free : &kd_code_block_free;
+	void **pool = near_text ? kd_near_block_pool : kd_code_block_pool;
 
 	publish_flags = kd_code_block_gate_lock();
-	if (kd_code_block_free)
+	if (*free)
 		for (i = 0; i < KD_CODE_BLOCK_POOL; i++)
 			if (!kd_images[i].code) {
 				image = &kd_images[i];
-				image->code = kd_code_block_pool[--kd_code_block_free];
+				image->code = pool[--*free];
 				image->entry = NULL;
 				image->immutable = 1;
+				image->near_text = near_text;
 				break;
 			}
 	kd_code_block_gate_unlock(publish_flags);
 	return image;
 }
 
+struct kd_jit_image *kd_image_alloc(void)
+{
+	return kd_image_alloc_pool(false);
+}
+
+struct kd_jit_image *kd_image_alloc_direct(void)
+{
+	return kd_image_alloc_pool(true);
+}
+
+int kd_image_direct_available(void)
+{
+	/* Allocations survive the entire provider session, even when the free
+	 * count reaches zero. Capability does not promise remaining capacity. */
+	return kd_near_block_allocations[0] != NULL;
+}
+
 void kd_image_discard(struct kd_jit_image *image)
 {
 	unsigned long publish_flags;
+	int *free;
+	void **pool;
 	if (!image)
 		return;
+	free = image->near_text ? &kd_near_block_free : &kd_code_block_free;
+	pool = image->near_text ? kd_near_block_pool : kd_code_block_pool;
 	publish_flags = kd_code_block_gate_lock();
-	BUG_ON(image->entry || !image->code || kd_code_block_free >= KD_CODE_BLOCK_POOL);
-	kd_code_block_pool[kd_code_block_free++] = image->code;
+	BUG_ON(image->entry || !image->code || *free >= KD_CODE_BLOCK_POOL);
+	pool[(*free)++] = image->code;
 	image->code = NULL;
 	kd_code_block_gate_unlock(publish_flags);
+}
+
+/* The daemon supplies private generated CALL slots. Resolve only manifest
+ * service identities, pin their source continuations, then patch signed rel32
+ * displacements before publication. No helper or source CALL bytes are read. */
+int kd_image_relocate_direct(struct kd_jit_image *image)
+{
+	const struct kd_direct_call_site *sites;
+	unsigned int count, i, j, seen = 0;
+	unsigned long target, next, directory;
+	unsigned char *code = image->code;
+	int displacement, ret;
+
+	if (!(image->requirements & KD_IMAGE_REQUIRE_DIRECT_STRINGS))
+		return 0;
+	if (!image->near_text || !image->immutable || image->entry ||
+	    image->entry_abi != KD_ENTRY_ABI_SPIN_CLOBBER_V1 ||
+	    !kd_image_requirements_valid(KD_EXE_LOCK_SPIN, image->entry_abi,
+					image->requirements))
+		return -EPROTO;
+	sites = kd_image_direct_sites(image, &count);
+	if (!sites)
+		return -EPROTO;
+	directory = (const unsigned char *)sites - code;
+	/* Validate every generated slot before writing any relocation. Duplicate
+	 * or overlapping slots would otherwise turn a later row into code data. */
+	for (i = 0; i < count; i++) {
+		unsigned int requirement;
+
+		if (sites[i].service_id == KD_HOSTCALL_STRCMP)
+			requirement = KD_IMAGE_REQUIRE_STRING_SERVICES;
+		else if (sites[i].service_id == KD_HOSTCALL_STRSCPY_PAD)
+			requirement = KD_IMAGE_REQUIRE_STRING_WRITE;
+		else
+			return -EPROTO;
+		if (!(image->requirements & requirement) || !sites[i].return_ip ||
+		    sites[i].call_offset < KD_IMAGE_HEADER_SIZE ||
+		    directory < 5 || sites[i].call_offset > directory - 5 ||
+		    code[sites[i].call_offset] != 0xe8 ||
+		    get_unaligned_le32(code + sites[i].call_offset + 1))
+			return -EPROTO;
+		for (j = 0; j < i; j++)
+			if (sites[i].call_offset < sites[j].call_offset + 5 &&
+			    sites[j].call_offset < sites[i].call_offset + 5)
+				return -EPROTO;
+		seen |= requirement;
+	}
+	if (seen != (image->requirements &
+		     (KD_IMAGE_REQUIRE_STRING_SERVICES | KD_IMAGE_REQUIRE_STRING_WRITE)))
+		return -EPROTO;
+	for (i = 0; i < count; i++) {
+		target = 0;
+		for (j = 0; j < ARRAY_SIZE(kd_hostcalls); j++)
+			if (kd_hostcalls[j].id == sites[i].service_id)
+				target = kd_hostcalls[j].addr;
+		if (!target)
+			return -ENOENT;
+		next = (unsigned long)code + sites[i].call_offset + 5;
+		/* Unsigned subtraction avoids signed overflow for malformed inputs. */
+		if (target >= next ? target - next > 0x7fffffffUL :
+				     next - target > 0x80000000UL)
+			return -ERANGE;
+		ret = kd_source_pin_root(target);
+		if (!ret)
+			ret = kd_source_pin_root(sites[i].return_ip);
+		if (ret)
+			return ret;
+		displacement = (int)(target - next);
+		memcpy(code + sites[i].call_offset + 1, &displacement, sizeof(displacement));
+		KD_PR_INFO("JIT direct relocation: code=%px length=%lu offset=%u service=%u target=%lx return=%lx rel32=%d\n",
+			   code, image->length, sites[i].call_offset, sites[i].service_id,
+			   target, sites[i].return_ip, displacement);
+	}
+	return 0;
 }
 
 const struct kd_jit_image *kd_image_current(const struct kd_exe_info *entry)
@@ -90,6 +188,10 @@ int kd_image_publish(struct kd_exe_info *entry, struct kd_jit_image *image,
 		entry->generation = image->generation;
 		entry->tgt_addr = 0;
 		entry->jump_from = 0;
+		if (image->requirements & KD_IMAGE_REQUIRE_DIRECT_STRINGS)
+			KD_PR_INFO("JIT direct published: entry=%lx generation=%lu code=%px length=%lu requirements=%u\n",
+				   entry->RIP, image->generation, image->code, image->length,
+				   image->requirements);
 		smp_store_release(&kd_published_images[entry - kd_exes], image);
 		smp_store_release(&entry->status_code, KD_EXE_NORMAL);
 	}

@@ -372,6 +372,51 @@ static bool kd_jit_minimal_complete_allowed(const struct kd_exec_frame *frame)
 	       (!frame->complex_ready || !kd_exec_frame_remote_pending(frame));
 }
 
+static bool kd_jit_direct_image(const struct kd_exec_frame *frame)
+{
+	return frame->image &&
+	       (frame->image->requirements & KD_IMAGE_REQUIRE_DIRECT_STRINGS);
+}
+
+/* Direct code can enter only once from an untouched spin request. The simple
+ * request binding already retains its physical owner and source/batch lease;
+ * deferred routing fields must not be read until a real FULL exit promotes it. */
+static bool kd_jit_direct_entry(const struct kd_exec_frame *frame)
+{
+	const struct kd_regs *regs = kd_exec_frame_regs(frame);
+
+	if (!kd_jit_direct_image(frame))
+		return true;
+	return frame->image->immutable && frame->image->near_text &&
+	       frame->entry_abi == KD_ENTRY_ABI_SPIN_CLOBBER_V1 &&
+	       frame->spin_simple && !frame->complex_ready && frame->request_frame &&
+	       !frame->mutex_backend && !frame->parent && !frame->depth &&
+	       !frame->executed && !frame->completion_seen &&
+	       frame->logical_task && frame->logical_task != current &&
+	       frame->state == KD_EXEC_FRAME_RUNNING && frame->outer_lock_addr &&
+	       frame->packet_state == KD_PACKET_MINIMAL && regs == &frame->regs &&
+	       regs->ip == frame->entry_ip && regs->sp;
+}
+
+static bool kd_jit_note_direct_calls(const struct kd_jit_batch_call *call,
+				     const struct kd_exec_frame *frame)
+{
+	if (!kd_jit_direct_image(frame))
+		return true;
+	if (!call->direct_strcmp && !call->direct_pad)
+		return true;
+	if (call->direct_strcmp > KD_STRCMP_MAX_CALLS ||
+	    call->direct_pad > KD_EXE_HL_MAX_HOSTCALLS ||
+	    (call->direct_strcmp && !(frame->image->requirements & KD_IMAGE_REQUIRE_STRING_SERVICES)) ||
+	    (call->direct_pad && !(frame->image->requirements & KD_IMAGE_REQUIRE_STRING_WRITE)))
+		return false;
+	if (call->direct_strcmp)
+		atomic64_add(call->direct_strcmp, &kd_direct_strcmp);
+	if (call->direct_pad)
+		atomic64_add(call->direct_pad, &kd_direct_pad);
+	return true;
+}
+
 static void kd_jit_prepare_clobber(struct kd_jit_batch_call *call,
                                   struct kd_exec_frame *frame, void *code)
 {
@@ -386,6 +431,10 @@ static void kd_jit_prepare_clobber(struct kd_jit_batch_call *call,
 	call->entry_abi = frame->entry_abi;
 	call->packet_state = &frame->packet_state;
 	call->complete = kd_jit_minimal_complete_allowed(frame);
+	if (kd_jit_direct_image(frame)) {
+		call->direct_strcmp = 0;
+		call->direct_pad = 0;
+	}
 }
 
 /* GNU inline retains the external definition for other execution clients;
@@ -413,6 +462,10 @@ bool kd_exe_spin_batch_prepare(struct kd_exe_info *exe,
 	    !kd_jit_image_matches(exe, frame))
 		return false;
 	code = kd_jit_bound_code(exe, frame);
+	if (!kd_jit_direct_entry(frame)) {
+		frame->image = previous_image;
+		return false;
+	}
 	/* Check exactly KDWB002: overlapping unaligned words cover bytes 9..15.
 	 * This avoids the out-of-line seven-byte memcmp without reading byte 16. */
 	if (!code || get_unaligned_le32((char *)code + 9) != 0x4257444bU ||
@@ -436,6 +489,10 @@ bool kd_exe_spin_batch_prepare(struct kd_exe_info *exe,
 	call->entry_abi = frame->entry_abi;
 	call->packet_state = &frame->packet_state;
 	call->complete = clobber;
+	if (kd_jit_direct_image(frame)) {
+		call->direct_strcmp = 0;
+		call->direct_pad = 0;
+	}
 	/* The load-time timing switch is immutable during a session. Avoid
 	 * two out-of-line disabled helpers for every ordinary delegated body,
 	 * but retain distinct, ordered endpoints when timing is enabled. */
@@ -458,6 +515,8 @@ bool kd_exe_spin_batch_completed(const struct kd_jit_batch_call *call,
 	     *call->packet_state != KD_PACKET_COMPLETE || !call->complete) :
 	    (call->args[0] != KD_EXE_CALL_MISS ||
 	     call->regs->ip != call->unlock || call->regs->di != call->lock))
+		return false;
+	if (!kd_jit_note_direct_calls(call, frame))
 		return false;
 	/* Only prepared batch calls reach here. Their local endpoint is zero
 	 * exactly when the immutable timing policy is off; avoid reloading it. */

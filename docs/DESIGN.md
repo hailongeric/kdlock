@@ -100,7 +100,7 @@ original waiter runs that function and the rest of the invocation natively. A
 later compilation may include the function. Known lock operations and approved
 services can instead return to JIT at a registered continuation.
 
-Provider capability version 10 includes separately negotiated ABI1 spin services
+Provider capability version 11 retains separately negotiated ABI1 spin services
 for the original [`strcmp`](design/admission.md#original-strcmp-service)
 and [`strscpy_pad`](design/admission.md#original-strscpy_pad-writing-service)
 helpers. A service invokes the original function on the current lock holder. These
@@ -109,6 +109,16 @@ source strings valid and unchanged. They use the original C caller's memory and
 lifetime guarantees without checking helper instructions, rescanning strings or
 rechecking destination buffers. KD still preserves ownership, memory effects and
 the saved return state. This does not replace the physical locking protocol.
+Optional capability bit 10 permits a
+[direct-call route](design/admission.md#direct-original-helper-calls) within one
+generated invocation, avoiding a dispatcher return per helper. It uses a
+pristine ABI1 spin root and an immutable image whose generated relative CALL
+operands are filled before publication. Quota exhaustion returns the unexecuted
+call to the waiter without JIT reentry. Helper checks remain absent, the
+two-word wrapper ABI is unchanged, and the selected KD mutex protocol is
+unchanged. Focused validation is tracked in
+[the validation guide](VALIDATION.md#taskname-and-xattr-helper-validation);
+the new standard-grid performance comparison remains pending.
 
 The register packet has three states:
 

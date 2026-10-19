@@ -33,6 +33,7 @@ static void reset(void)
 	failed_service_calls = 0;
 	kd_hostcall_exits = kd_hostcall_executed = kd_hostcall_resumed = 0;
 	kd_hostcall_limit = kd_hostcall_rejected = kd_hostcall_failed = 0;
+	kd_direct_strcmp = kd_direct_pad = 0;
 	/* Whole-object checks below include padding around narrow frame fields.
 	 * Zero it deterministically and preserve it in snapshots with memcpy;
 	 * C structure assignment is allowed to leave padding unspecified. */

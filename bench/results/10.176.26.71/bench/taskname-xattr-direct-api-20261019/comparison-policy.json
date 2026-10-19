@@ -1,0 +1,52 @@
+{
+  "schema": 2,
+  "ready": false,
+  "pending": [
+    "Final current implementation commit and Git-derived source changes for each runner selection.",
+    "Exact current source-manifest IDs and file counts, checked against the frozen runner snapshots.",
+    "Final current raw replay script SHA-256 and its complete additional loaded-image validator dependency hashes.",
+    "Independently captured current round-symbol receipt SHA-256."
+  ],
+  "purpose": "Compare the exact completed original-API 88 baseline against the direct-helper revision. Fresh Native and TCLock arms remain the current denominators. Never pool source versions, settings or execution statuses.",
+  "source_derivation": "Pending final commit. Fill from read-only Git blobs using the exact runner source-selection rules, then verify the captured frozen manifests. Unknown source changes are not equivalent.",
+  "old_commit": "88bb5a4d9b52eec8ed52982ea4039b981d0e5814",
+  "new_commit": null,
+  "old_replay_sha256": "ca29dc4dc8595c051d13fcaf68860927e92730239dbc1c6724764aef231d5af9",
+  "new_round_symbols_sha256": null,
+  "analysis_dependencies": {
+    "bench/real_api/evidence.py": "374f10b93786d587e2514819b5ede540106c7b99d271ecee2573e249075002d7",
+    "bench/real_api/report.py": "36608f8ed72abeccece867a25e1c3ffd929ddb922be6bdfd4b6976cf6ad35b87",
+    "bench/rwlock_compare/oracle.py": "06944b376837ab4f16a08835fe4142dac0c131d3d5ebae1acb264f94037cb092",
+    "bench/spin_cacheline/peak.py": "fa90dc91b33c7a52b99168565baad0b210d56e2005cd615047d939414c596ad2"
+  },
+  "replay_programs": {
+    "old": {
+      "script_sha256": "7841454a2047597e7f9d9bb03c67dd737dc1c425b3408da95dfca7e6e5f00585",
+      "additional_dependency_sha256": {}
+    },
+    "new": {
+      "script_sha256": null,
+      "additional_dependency_sha256": null
+    }
+  },
+  "identity_allowed_differences": {
+    "taskname": [],
+    "xattr": ["source_identity"]
+  },
+  "sources": {
+    "taskname": {
+      "old_source_id": "5c1e9e7b2e4df88413ba16261787627c010a81ef415796c8db7df6ad429bbdb9",
+      "old_files": 239,
+      "new_source_id": null,
+      "new_files": null,
+      "changes": {}
+    },
+    "xattr": {
+      "old_source_id": "197408c8c7d040b39a6cefb1c006802b4123b3d64492e6e5b02c2f468fb5e680",
+      "old_files": 236,
+      "new_source_id": null,
+      "new_files": null,
+      "changes": {}
+    }
+  }
+}

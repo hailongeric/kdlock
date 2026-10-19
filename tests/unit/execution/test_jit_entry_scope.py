@@ -68,6 +68,9 @@ def main(executor=None, benchmark=False):
             "static inline bool kd_jit_bind_image(const struct kd_exe_info *exe,",
             "static __always_inline bool kd_jit_image_matches(const struct kd_exe_info *exe,",
             "static bool kd_jit_minimal_complete_allowed(const struct kd_exec_frame *frame)",
+            "static bool kd_jit_direct_image(const struct kd_exec_frame *frame)",
+            "static bool kd_jit_direct_entry(const struct kd_exec_frame *frame)",
+            "static bool kd_jit_note_direct_calls(const struct kd_jit_batch_call *call,",
             "static void kd_jit_prepare_clobber(struct kd_jit_batch_call *call,",
             "bool kd_exe_spin_batch_prepare(struct kd_exe_info *exe,",
             "bool kd_exe_spin_batch_completed(const struct kd_jit_batch_call *call,",
@@ -122,6 +125,22 @@ def main(executor=None, benchmark=False):
         "\tregistry_lookups++;\n\tpos = zz_hash(pid, ip) % KD_MAX_EXE;",
     )
     mutations = {
+        "direct-entry-executor-is-waiter": (
+            "frame->logical_task && frame->logical_task != current &&",
+            "frame->logical_task &&",
+        ),
+        "direct-counts-not-observed": (
+            "atomic64_add(call->direct_strcmp, &kd_direct_strcmp);",
+            "(void)call->direct_strcmp;",
+        ),
+        "direct-limit-accepts-under-quota": (
+            "direct_strcmp == KD_STRCMP_MAX_CALLS)",
+            "direct_strcmp <= KD_STRCMP_MAX_CALLS)",
+        ),
+        "direct-image-needs-pristine-packet": (
+            "frame->packet_state == KD_PACKET_MINIMAL && regs == &frame->regs &&",
+            "regs == &frame->regs &&",
+        ),
         "mutex-generic-skips-materialization": (
             "kd_exec_frame_prepare_mutex_complex(frame))",
             "(false && kd_exec_frame_prepare_mutex_complex(frame)))",

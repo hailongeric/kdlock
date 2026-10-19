@@ -125,6 +125,8 @@ int kd_exe_init(void)
 	atomic64_set(&kd_hostcall_rejected, 0);
 	atomic64_set(&kd_hostcall_failed, 0);
 	atomic64_set(&kd_hostcall_limit, 0);
+	atomic64_set(&kd_direct_strcmp, 0);
+	atomic64_set(&kd_direct_pad, 0);
 	atomic64_set(&kd_mutex_stack_equal, 0);
 	atomic64_set(&kd_mutex_stack_changed, 0);
 	atomic64_set(&kd_mutex_stack_unavailable, 0);
@@ -173,6 +175,36 @@ int kd_exe_init(void)
 		kd_exes = NULL;
 		return -ENOMEM;
 	}
+	/* module_alloc supplies the x86 module address region for direct rel32
+	 * calls. Keep the established vmalloc/mutex pool intact. At most another
+	 * 64 * 640 KiB = 40 MiB is reserved; shared descriptors still cap all live
+	 * image generations at 64. A missing pool disables only this capability.
+	 * Call-depth instrumentation requires a different generated prologue. */
+	kd_near_block_free = 0;
+#if defined(CONFIG_X86_64) && !defined(CONFIG_CALL_DEPTH_TRACKING)
+	{
+		void *(*allocate_near)(unsigned long) =
+			(void *)kallsyms_lookup_name("module_alloc");
+		kd_near_memfree = (void *)kallsyms_lookup_name("module_memfree");
+
+		if (allocate_near && kd_near_memfree)
+			for (i = 0; i < KD_CODE_BLOCK_POOL; i++) {
+				void *block = allocate_near(KD_CODE_BLOCK_SIZE);
+
+				if (!block)
+					break;
+				ret = set_memory_x((unsigned long)block, KD_CODE_BLOCK_PAGES);
+				if (ret) {
+					kd_near_memfree(block);
+					break;
+				}
+				kd_near_block_allocations[kd_near_block_free] = block;
+				kd_near_block_pool[kd_near_block_free++] = block;
+			}
+	}
+#endif
+	KD_PR_INFO("JIT direct-call pool ready: %d/%d; shared image limit=%d\n",
+		   kd_near_block_free, KD_CODE_BLOCK_POOL, KD_CODE_BLOCK_POOL);
 
 	return 0;
 }
@@ -190,6 +222,9 @@ void kd_exe_exit(void)
 		(long long)atomic64_read(&kd_hostcall_rejected),
 		(long long)atomic64_read(&kd_hostcall_failed),
 		(long long)atomic64_read(&kd_hostcall_limit));
+	KD_PR_INFO("kd_direct_call stats: strcmp=%lld strscpy_pad=%lld\n",
+		(long long)atomic64_read(&kd_direct_strcmp),
+		(long long)atomic64_read(&kd_direct_pad));
 	KD_PR_INFO(
 		"kd_mutex stack checks: bytes=%u equal=%lld changed=%lld unavailable=%lld\n",
 		KD_MUTEX_CALL_STACK_BYTES,
@@ -206,6 +241,12 @@ void kd_exe_exit(void)
 		vfree(kd_code_block_allocations[i]);
 		kd_code_block_allocations[i] = NULL;
 		kd_code_block_pool[i] = NULL;
+		if (kd_near_block_allocations[i])
+			kd_near_memfree(kd_near_block_allocations[i]);
+		kd_near_block_allocations[i] = NULL;
+		kd_near_block_pool[i] = NULL;
 	}
 	kd_code_block_free = 0;
+	kd_near_block_free = 0;
+	kd_near_memfree = NULL;
 }

@@ -10,7 +10,16 @@ terms used in the receipts below.
 
 ## Taskname and xattr helper validation
 
-The current version removes helper-specific instruction checks, string scans and
+The version 11 direct-call path has passed its first focused VM checks:
+provider/daemon builds, basic plus affected unit coverage, and 14 drained live
+sessions. It keeps original string calls inside one generated invocation while
+preserving their caller contract and the selected KD mutex protocol. The
+[development record](../bench/results/10.176.26.71/bench/taskname-xattr-direct-api-20261019/DEVELOPMENT.md)
+retains the initial three fixture failures, successful corrections, executable
+wrapper checks and exact live counts. Further bridge tuning and the new standard
+grid are in progress; these checks do not establish performance parity.
+
+The preceding version 10 removes helper-specific instruction checks, string scans and
 runtime destination checks. It relies on the original callers' memory and
 lifetime guarantees while retaining KD ownership and saved-return bookkeeping.
 Focused correctness validation passed through candidate 6. The subsequent
@@ -23,7 +32,7 @@ kernel logs had no matched fault reports. The independent archive audit verified
 retirement records and 315 captured images without pointer or stack-alias guards.
 The comparison preserves remaining performance gaps and low-count regressions.
 
-The [current development record](../bench/results/10.176.26.71/bench/taskname-xattr-native-api-20261019/DEVELOPMENT.md)
+Its [development record](../bench/results/10.176.26.71/bench/taskname-xattr-native-api-20261019/DEVELOPMENT.md)
 retains each frozen candidate's checks and failures. Candidate 2 passed all 11
 focused unit programs/drivers, the 300-character `strcmp` probe, the spin
 address-guard and mutex-marker probes, and read-only taskname correctness on

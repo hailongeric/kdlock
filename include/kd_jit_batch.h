@@ -22,6 +22,10 @@ struct kd_jit_batch_call {
 	unsigned long entry_abi;
 	unsigned int *packet_state;
 	unsigned long complete;
+	/* Private invocation results, consumed once by the completed batch OR
+	 * its pending dispatcher. They do not extend the two-word wrapper ABI. */
+	unsigned long direct_strcmp;
+	unsigned long direct_pad;
 };
 #ifdef __KERNEL__
 #include <linux/objtool.h>

@@ -15,7 +15,7 @@ The earlier audit is in [VALIDATION](https://github.com/hailongeric/kdlock/blob/
 | Resource | What keeps it alive | Limit |
 | --- | --- | --- |
 | JIT entry and source code | Entries use `(0, RIP)`. Registration, text reads and ordinary call targets pin up to 64 LIVE modules for the session. Retirement invalidates every used entry before dropping those pins. | No concurrent source-code versions or source replacement within a session. Init and unknown source are refused. |
-| Generated image | Frames bind an image descriptor independently of their acquisition ticket. Mutex images and ABI1 spin entries that publish checked pointer loads, `strcmp` or `strscpy_pad` retain immutable generations in the existing code pool until session teardown. | Ordinary spin/rwlock descriptors initially refer to in-place code. Binding that descriptor alone does not make its bytes immutable. Image lifetime does not pin source data or lock allocations. |
+| Generated image | Frames bind an image descriptor independently of their acquisition ticket. Mutex images and ABI1 spin entries that publish checked pointer loads, `strcmp` or `strscpy_pad` retain immutable generations until session teardown. Direct helper images use a separate preallocated pool near kernel text; both pools share 64 descriptors. | Ordinary spin/rwlock descriptors initially refer to in-place code. Binding that descriptor alone does not make its bytes immutable. Image lifetime does not pin source data or lock allocations. |
 | Translation session | The daemon, cache and translator children share one writer-open device description. Real kcore reads pin source before inspecting it. | Publishers must follow this path. A pin keeps a module loaded; it does not prove its bytes are unchanged or arbitrary pointers remain valid. |
 | Hotlock record | Per-CPU records match exact typed addresses, have bounded capacity and reset their sampling windows without eviction. | Reusing an address does not identify a new allocation. Statistics cannot authorize unlock or request retirement. |
 | KD mutex object | The caller owns physical and scheduling state in one object. | Join callers and drain physical/OSQ/sleeping/delegation queues, ACKs and frames before destroy or reuse. `kd_mutex_is_idle` checks stopped objects; it does not pin storage. |
@@ -107,6 +107,10 @@ individual image versions. Its lifecycle is:
    including rollback after a failed push. An ordinary CALL miss pins its target
    before native transfer or learning. If that pin fails after progress, execution
    cannot continue or restart from entry.
+   For a direct original-helper image, publication pins the original helper and
+   each source continuation while holding the device writer lease. The frame or
+   batch lease keeps these session references resident throughout the direct
+   invocation; the generated helper calls do not repeat source lookups.
 3. **Close new work and wait for users.** Retirement serializes with uploads and
    closes new selection and registration. It refuses to finish while source
    writers, frames or known queue/task/origin state remain. Existing task/origin
@@ -144,8 +148,9 @@ Ordinary recompilation may still replace that initial block in place.
 The first ABI1 image requiring [checked pointer loads](admission.md#checked-spin-pointer-loads),
 [`strcmp`](admission.md#original-strcmp-service) or
 [`strscpy_pad`](admission.md#original-strscpy_pad-writing-service)
-is staged in a separate block and validated before publication. Each guard's
-source instruction is pinned and its bytes checked while source admission is
+is staged in a separate block and validated before publication. This includes
+the [direct original-helper route](admission.md#direct-original-helper-calls).
+Each guard's source instruction is pinned and its bytes checked while source admission is
 open. Publishing the new descriptor does not overwrite the earlier block or
 redirect frames already bound to it. Every subsequent image for that entry uses
 another immutable block, even if it no longer requires guards or typed services.
@@ -154,24 +159,54 @@ cannot overwrite a newly published immutable image. Old-generation misses cannot
 change the current generation's metadata.
 
 An address-guard exit validates its source target again under the active frame's
-source lease before native transfer. A typed string service validates ownership
-and saves the pending CALL's return state before invocation. The original C
-caller supplies argument validity and lifetime; publication and execution perform
+source lease before native transfer. A dispatcher-based string service validates
+ownership and saves the pending CALL's return state before invocation. The direct
+route establishes its pristine root ownership once before entry, retains the
+source CALL word, then consumes its actual value in generated return handling.
+It cannot reenter from a full register packet after leaving that invocation.
+The original C caller supplies argument validity and lifetime; publication and execution perform
 no helper-specific code, string or buffer checks. A failed address guard disables
 the stable entry under the same publication gate that installs images, preventing
 a concurrent upload from reenabling delegation.
 Already admitted frames keep their own code, exact owners and source references
-until retirement. All generations share the existing
-64-block pool and remain allocated until session teardown; there is no in-session
-generation reclamation. These rules do not extend immutable publication to
+until retirement. All generations share 64 descriptors and remain allocated until
+session teardown; there is no in-session generation reclamation. The original
+64-block pool remains in use for ordinary and mutex images. Direct helper images
+use up to 64 additional blocks, each 640 KiB, allocated near kernel text so a
+generated relative CALL can reach the original helper. This reserves at most
+40 MiB of additional memory without increasing the number of published images.
+The provider pairs `module_alloc` with `module_memfree` for this pool; the original
+pool keeps its existing allocator. Only a private, unpublished upload may return
+its block to its own free pool. Registration and uploads refuse descriptor
+exhaustion even when either pool still has spare blocks.
+
+Version 11 bit 10 advertises direct-call support only when the startup allocation
+is available and the kernel does not require call-depth tracking, which adds
+special accounting to CALL instructions that this bridge does not implement.
+Without it, eligible string APIs use the existing dispatcher path. Relocation
+or source-pin failure also prevents publication; it never rewrites an older
+generation. The generated CALL directory describes patch locations and source
+continuations, not validated helper instructions. Its lifetime is the immutable
+image's lifetime. These rules do not extend immutable publication to
 ordinary spin/rwlock entries that have never made this transition.
 
 Source-code pins do not keep arbitrary string allocations alive or stop writers.
 The string-service caller must establish both properties under its physical
 source lock. Translation models a known 64-byte local destination; the reviewed
-caller supplies its validity and lifetime. Runtime validates common ownership
-and saved return state before invoking the helper. These obligations preserve
-the existing ownership and retirement rules without a new lock API.
+caller supplies its validity and lifetime. Both routes retain common ownership
+and actual return-word handling; the direct route moves code-residency work to
+publication while the dispatcher saves the pending token before each helper.
+Exhausted direct quotas and untranslated CALLs retain the original waiter,
+physical exclusion and source lease through the native suffix and final unlock
+acknowledgement. Neither completion counters nor direct-call totals can release
+those references. These obligations preserve the existing ownership and
+retirement rules without a new lock API.
+
+The first direct-call candidate passed [focused VM correctness checks](../VALIDATION.md#taskname-and-xattr-helper-validation).
+Further bridge tuning and standard-grid performance validation are in progress. The completed
+version 10 taskname/xattr comparison records the preceding dispatcher path;
+it is not validation of the new allocation or execution path. The selected KD
+mutex protocol and its source/owner retirement rules are unchanged.
 
 The source limit is 64 distinct modules, with no hook-time allocation; each
 read is limited to 256 KiB. Built-in resident ranges need no module ref. These

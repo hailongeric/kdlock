@@ -67,7 +67,7 @@ checks and the same selected graph is emitted. The diagnostic
 `CONSTANT_PATH_SPECIALIZATION` records the changed branch addresses.
 
 These source proofs do not establish support for the complete procfs task-name
-operation. The current extracted taskname caller uses the original API service
+operation. The version 10 extracted taskname caller uses the original API service
 without helper-specific checks and passed
 [focused correctness validation](../VALIDATION.md#taskname-and-xattr-helper-validation)
 through candidate 6. The
@@ -291,8 +291,9 @@ not evidence of accepted kernel delegation. Existing return-dispatch tests also
 retain all allowed continuations for uncertain return words and verify that an
 unlisted actual target exits the JIT.
 
-The negotiated version 10 string APIs have a separate, explicit selected-caller
-contract. Through ordinary data accesses, the caller and its helpers do not
+The string API contract introduced in version 10 and retained in version 11 has
+a separate, explicit contract for the selected caller. Through ordinary data
+accesses, the caller and its helpers do not
 inspect, retain pointers into, or mutate those services' temporary return-token
 and discarded helper-stack storage below the stack pointer before CALL. This
 storage holds temporary control state, not caller objects. Normal CALL/RET
@@ -341,7 +342,7 @@ outside the audited C caller contract above, `address_guards.py` permits a limit
 retry that checks the particular overlap immediately before the load.
 
 This retry requires ABI1 spin, complete selected source text, no learned indirect
-control and provider capability versions 7 through 10 with bit 6. It handles only an explicit
+control and provider capability versions 7 through 11 with bit 6. It handles only an explicit
 64-bit `MOV` memory load addressed by one register plus a fixed displacement.
 The retry is disabled if source constant-branch proof changed any branch during
 this translation. A simplified branch could otherwise hide a flags read in the
@@ -449,13 +450,16 @@ not the arena's address classification. This does not pin or validate an object.
 
 The provider reports this bound using the existing 16-byte CAPS packet on the
 same device lease. The module bound was introduced in version 2; the current provider
-uses version 10. Translation requires immutable mutex images plus exclusive KD
+uses version 11. Translation requires immutable mutex images plus exclusive KD
 objects (`KD_JIT_CAP_MUTEX_EXCLUSIVE`, bit 4); ordinary images still accept the
-version 5 through 10 contracts. Instruction-marker images require version 6 through 10
-with bit 5. Spin address-check images require version 7 through 10 with bit 6.
-The current original string API summaries require version 10 bit 9 plus bit 7
+version 5 through 11 contracts. Instruction-marker images require version 6 through 11
+with bit 5. Spin address-check images require version 7 through 11 with bit 6.
+The original string API summaries require version 10 or 11 bit 9 plus bit 7
 for `strcmp` or bit 8 for `strscpy_pad`. Bit 9 identifies the caller-guaranteed
-memory and lifetime contract without helper-specific checks. Version 4 remains readable by observers but
+memory and lifetime contract without helper-specific checks. Version 11 bit 10
+also permits [direct calls inside the wrapper](#direct-original-helper-calls).
+Without that optional bit, the original API uses the existing service dispatcher.
+Version 4 remains readable by observers but
 cannot open a translation session for this object contract. It checks the build constants and the non-NULL
 `pcpu_reserved_chunk` pointer, which is read-only after init; it never dereferences
 the private chunk layout. Translation adds `[base + ALIGN(core_size, 4),
@@ -506,7 +510,10 @@ image's metadata. Published versions remain in the bounded pool until teardown.
 Publishing the first address-check or string-service image also moves that ABI1
 spin entry to immutable versions; every later image for that entry remains
 immutable, even without optional checks or services. Active frames retain their
-bound image and any address-check site directory. String services add no site table.
+bound image and any address-check site directory. The dispatcher-based string
+services add no site table. Direct-call images add a directory of generated
+call locations so publication can resolve their relative addresses; these are
+not checks of source CALL instructions or helper implementations.
 Ordinary spin entries that have not made this transition and ABI3 rwlock images
 retain in-place storage. Independent locks sharing an entry address do not
 establish image lifetime through lock serialization.
@@ -560,7 +567,7 @@ flow end at each marker. Therefore an untaken eligible instruction can cease to
 be the reason for rejection, while an unsafe or undecodable suffix can still
 reject the entry.
 
-Provider capability versions 6 through 10 advertise this contract on bit 5; the image
+Provider capability versions 6 through 11 advertise this contract on bit 5; the image
 requires it on directory bit 0. Earlier providers cannot accept such images.
 Spin/rwlock images retain their existing static instruction policy. Unknown
 encodings, unreviewed prefixes, control-register moves, flags-stack operations,
@@ -587,12 +594,14 @@ stack. Analysis retains it as exact control state under the explicit
 [selected-caller scratch contract](#original-call-word-aliases), separately from
 ordinary caller objects. No emitted write or runtime return-token check is removed.
 
-Version 10 capability bit 9 selects the native API contract described here,
+Version 10 or 11 capability bit 9 selects the native API contract described here,
 together with bit 7 for read-only string services. The image retains requirement
 bit 2. The translator resolves the original kernel symbol without inspecting
 its implementation. Neither translation, publication nor execution checks
 helper bytes, helper-specific CALL encodings, string contents or string lengths.
-There is no extra per-call registration table. The original caller supplies the
+The dispatcher route needs no per-call registration table; the optional direct
+route has only the [generated-call relocation directory](#direct-original-helper-calls).
+The original caller supplies the
 same valid, terminated, allocated and stable strings required by native
 `strcmp`. In the xattr workload, the source lock protects stored names and the
 pinned waiter owns the syscall's copied search name. An unrelated lock does not
@@ -613,16 +622,20 @@ proof from the original source instructions or remain refused.
 Both string services require one top-level physical lock hold. A source graph
 containing a nested acquisition or another nonterminal lock-control call is
 refused before publication; the terminal outer clobber unlock remains allowed.
-Runtime checks still establish the physical owner, frame and immutable image,
-read and consume the actual pending CALL return word, and preserve the common
-source-continuation lifetime. These are the shared delegation protocol, not
-helper validation. Successful `strcmp` changes the saved return register to its
+Both execution routes establish the physical owner, frame and immutable image,
+consume the actual pending CALL return word, and preserve the common
+source-continuation lifetime. The dispatcher saves the word before invoking the
+helper; direct generated code reads it after the helper and checks the permitted
+continuation before resuming. These are the shared delegation protocol, not
+helper validation. Successful `strcmp` changes the return register to its
 integer result and resumes the caller once. Invalid ownership or continuation
 state remains an error.
 
-Each delegated body permits at most 128 `strcmp` calls. All other services and
-ordinary continuations share the existing limit of 16, so their combined maximum
-is 144. `strscpy_pad` uses that ordinary allowance. `strscpy_pad` and `memcpy`
+Each delegated body permits at most 128 `strcmp` calls. Other dispatcher services
+and resumed lock-control calls share the existing limit of 16, so their combined
+maximum is 144. `strscpy_pad` uses that allowance. The direct route admits only
+these string APIs and gives `strscpy_pad` the same limit of 16. Ordinary decoded
+callees still undergo the generated block budget. `strscpy_pad` and `memcpy`
 write memory and do not inherit the read-only contract. Publication alone is
 not evidence that an entire benchmark body completed in generated code.
 
@@ -648,7 +661,7 @@ establish the revised implementation's throughput or replace its own receipts.
 The supported API call is the original `strscpy_pad(destination, source, 64)`.
 It copies a string and zero-fills the unused destination bytes; when the source
 does not fit, the original API's truncation result and destination contents are
-preserved. Version 10 bit 9 selects the native API contract, together with bit 8
+preserved. Version 10 or 11 bit 9 selects the native API contract, together with bit 8
 for writing string services. The image retains requirement bit 3. Read-only
 string capability alone cannot enable this writing summary.
 
@@ -682,7 +695,7 @@ helper's discarded temporary stack storage: the helper runs on the executor's
 stack. This does not declare arbitrary waiter memory private or read-only.
 The entry uses immutable images. General writing helpers, including `memcpy`,
 do not automatically receive this summary. Writing services share the limit of
-16 scalar services and ordinary continuations; only `strcmp` has the separate
+16 scalar services and resumed lock-control calls; only `strcmp` has the separate
 128-comparison allowance.
 
 The ordinary taskname shell uses `KD_SPIN_DIRECT_LOCK`, without helper-specific
@@ -700,3 +713,82 @@ completions were followed by zero measured completions. That strict measured-
 delegation check remains failed. The [validation record](../../bench/results/10.176.26.71/bench/taskname-xattr-20261018/DEVELOPMENT.md)
 retains those source-specific results and earlier failures; the completed
 comparison identifies the revised `88bb5a4` version separately.
+
+### Direct original-helper calls
+
+Version 11 capability bit 10 permits the generated caller to invoke original
+`strcmp` and `strscpy_pad` directly, without returning to the C service dispatcher
+for each helper. The caller and memory-effect contracts above are unchanged.
+No phase checks helper instructions or source CALL encodings, scans strings,
+or repeats buffer-bound or overlap checks at execution time. Ordinary source
+admission still proves the required captured inputs and modeled memory effects.
+
+The image adds requirement bit 4, value 16, alongside its existing read or write
+service requirement. The first implementation supports only ABI1 spin and one
+pristine request: a request that has not executed its body or created a nested
+continuation. Before entry, the provider requires a single root, a different
+original waiter from the current executor, the minimal register packet (with
+only its entry instruction and stack/frame pointers guaranteed), and an
+immutable bound image. Its physical binding retains the exact lock owner and
+source lease. Direct-call graphs cannot contain scalar dispatcher services or
+nonterminal lock controls, and cannot combine this route with address guards.
+Ordinary decoded callees and the final outer clobber unlock remain allowed.
+Other eligible string graphs keep the existing dispatcher route.
+
+Each generated native CALL uses an x86 signed 32-bit relative displacement: an
+offset from the instruction following CALL to the original helper. A separate
+pool, allocated near kernel text during provider startup with `module_alloc`,
+makes these offsets possible without an indirect call. It reserves at most
+64 blocks of 640 KiB, an extra 40 MiB. The existing pool and mutex allocation
+remain unchanged, and both pools share the same 64 image descriptors. Missing
+allocator support, no usable block at startup, or a kernel configured for
+call-depth tracking leaves bit 10 absent; translation then uses the dispatcher.
+Call-depth tracking adds kernel-specific call accounting that this generated
+bridge does not implement. Later pool or descriptor exhaustion refuses the
+upload instead of replacing an image that a frame may still use.
+
+The `KDNC0001` directory records at most 64 generated CALL locations, service IDs
+and original return addresses. Publication checks this generated layout and
+each displacement's range, selects the resolved original helper address, pins helper
+and return-source code under the device writer lease, and fills the private
+CALL operands. A failed upload cannot publish partially relocated code. These
+are image construction and code-residency operations; publication reads no
+helper or source CALL bytes. The immutable image and existing frame or batch
+lease then retain those references through execution and native continuation.
+Publication logs identify the loaded address and every relocation. Uploaded
+`jit.bin` contains placeholder operands, so its hash alone does not identify
+the relocated executable bytes; measurement evidence must retain the loaded
+image or explicitly identify a reconstruction from the relocation records.
+
+The wrapper preserves its register-storage pointer and source argument state
+around the original C helper. It keeps the actual source return-word store,
+reads and consumes that word once after the helper, and resumes only its allowed
+continuation. Quota bookkeeping and this return comparison preserve the
+arithmetic flags surrounding them. This does not fix the separately documented
+flag effects of general entry dispatch and block-budget instrumentation.
+
+One wrapper invocation allows 128 comparisons and 16 padding calls. On quota
+exhaustion, exit 10 captures the full packet before the pending helper executes,
+leaving its actual CALL word in place. The provider validates the owned request
+and continuation, and the original waiter completes that call and the native
+suffix under the existing lock. An untranslated ordinary CALL similarly ends
+the invocation and may teach a future image about its target. The direct image
+never reenters from a full packet or resets its quota after an exit. Instruction
+limits, invalid returns and malformed state remain errors, not permission to
+replay the body.
+
+Completed direct helper calls are exported once per wrapper return through two
+appended private result fields. A successful batch consumes them on completion;
+other exits consume them in the pending dispatcher. The two wrapper argument
+words and the body/completion evidence remain unchanged. Separate
+`direct_strcmp` and `direct_pad` observations count these calls; the existing
+hostcall counters continue to count actual dispatcher exits and resumptions.
+These observations never replace physical ownership or retirement records.
+
+The first direct-call candidate passed focused VM builds, affected unit checks
+and 14 live sessions; the [development record](../../bench/results/10.176.26.71/bench/taskname-xattr-direct-api-20261019/DEVELOPMENT.md)
+retains its counts and fixture failures. Further bridge tuning and its standard-grid
+performance comparison are in progress. The completed `88bb5a4` comparison above measures the
+dispatcher path and does not establish a result for direct calls. KD mutex's
+physical protocol, whole-kernel replacement limits and unestablished mutation
+delegation are unchanged.

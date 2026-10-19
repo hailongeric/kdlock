@@ -20,6 +20,7 @@ import indirect_jump
 import memread
 import normal
 import native_escape
+import native_calls
 import solve_bug
 import strcmp_service
 import strscpy_service
@@ -504,6 +505,29 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0):
         except indirect_jump.ReturnFlowError as error:
             diagnostics.set_instruction(error.offset, "<native escape return dispatch>")
             return reject_translation(str(error))
+    # A direct image has no path back through the service dispatcher. Its
+    # budgets are local to this single pristine wrapper invocation. Ordinary
+    # missing callees continue entirely on the original waiter; scalar services
+    # and nonterminal lock control retain the existing dispatcher image.
+    direct_calls = None
+    typed_sites = [(line, target) for line, target in call_sites
+                   if target in checked_string_targets]
+    source_pcs = {line.offset for block in block_dict.values() for line in block.lines}
+    direct_eligible = (
+        abi == 1 and typed_sites and not has_escapes
+        and not (memory_guards is not None and memory_guards.sites)
+        and len(typed_sites) <= native_calls.MAX_SITES
+        and all(line.offset + line.l in source_pcs for line, _ in typed_sites)
+        and not any(target in resolved_hostcalls and target not in checked_string_targets
+                    for _, target in call_sites)
+    )
+    if direct_eligible and memread.device_session.direct_strings():
+        direct_calls = native_calls.NativeCalls(
+            {target: resolved_hostcalls[target] for _, target in typed_sites})
+        diagnostics.warn("DIRECT_STRING_CALLS", "emit_single_invocation",
+                         "original APIs run on the executor stack; quotas exit "
+                         "before an unexecuted CALL and never reenter this image",
+                         sites=len(typed_sites))
     assembly = emit_jit_assembly(
         entry, block_dict, db_dict, jump_table, missing_callees,
         resolved_hostcalls, keep_call_stack,
@@ -512,6 +536,7 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0):
                                  {direct_mutex_unlock or clobber_mutex_unlock} if abi == 2 else set()),
         native_escapes=has_escapes,
         address_guards=memory_guards,
+        native_calls=direct_calls,
     )
     Path("./asm/jit.S").write_text(assembly, encoding="utf-8")
 
@@ -536,7 +561,8 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0):
                       | (checked_addresses.REQUIREMENT if memory_guards is not None
                          and memory_guards.sites else 0)
                       | (strcmp_service.REQUIREMENT if uses_string_service else 0)
-                      | (strscpy_service.REQUIREMENT if uses_string_write else 0)))
+                      | (strscpy_service.REQUIREMENT if uses_string_write else 0)
+                      | (native_calls.REQUIREMENT if direct_calls is not None else 0)))
     return 0
 
 

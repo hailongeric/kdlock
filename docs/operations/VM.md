@@ -143,13 +143,24 @@ original descriptor and code. This does not permit
 editing frozen inputs or replacing source while work is active. Owners, ACKs,
 source leases and generated images have distinct [lifetimes](../design/lifetimes.md#executable-images-and-guarded-spin-transition).
 
-The provider currently advertises capability version 10. Current string-service
+The provider currently advertises capability version 11. String-service
 runners must require bit 9 plus bit 7 for `strcmp` or bit 8 for `strscpy_pad`.
 Bit 9 means that the original caller guarantees valid memory and lifetime;
 KD performs no helper instruction checks, string scans or destination-bound
 rechecks. Common lock ownership, frame and pending CALL continuation checks
-remain. Version alone does not prove a feature is available. See the
+remain. Optional bit 10 allows direct calls inside one generated invocation;
+the direct-string probe requires it. Images using it add requirement value 16.
+Its separate near-text pool may be unavailable, in which case translation keeps
+the existing dispatcher route. Version alone does not prove a feature is available. See the
 [API admission contracts](../design/admission.md#original-strcmp-service).
+
+Direct CALL operands are filled before publication. The uploaded `jit.bin` has
+placeholder operands and therefore differs from the executable image. Current
+benchmark sessions capture actual loaded bytes from `/proc/kcore` under a
+readonly provider reference, outside worker timing, and retain both hashes.
+Replay compares every byte against the uploaded image with only the recorded
+relative CALL operands changed. Capture the exact original helper symbol
+addresses and kernel identity separately for independent reconstruction.
 
 The v10 implementation passed
 [focused correctness checks](../VALIDATION.md#taskname-and-xattr-helper-validation)

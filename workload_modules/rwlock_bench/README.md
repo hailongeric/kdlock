@@ -47,7 +47,7 @@ lock; a snapshot "read" does not use a shared reader lock. Post-work remains
 four arithmetic rounds by default and is recorded separately from the payload.
 
 The current KD shell uses ordinary `KD_SPIN_DIRECT_LOCK`, without helper-specific
-register setup. Version 10 invokes the original kernel API without checking
+register setup. The API contract introduced in version 10 invokes the original kernel helper without checking
 helper code, scanning the source string or checking destination bounds at
 runtime. The original caller supplies valid, stable source storage and a live,
 disjoint local destination. Translation still requires count 64 and a known
@@ -55,6 +55,14 @@ local output span to model the original CALL-stack write and all 64 destination
 writes. Ordinary instruction/address admission and common owner/frame/return
 checks remain active. See the
 [writing-service contract](../../docs/design/admission.md#original-strscpy_pad-writing-service).
+Version 11 optionally uses a
+[direct-call route](../../docs/design/admission.md#direct-original-helper-calls)
+inside one generated invocation. It preserves this payload, its 64-byte output
+effect and actual CALL return word; it adds no helper or argument checks.
+The two-word wrapper ABI and selected KD mutex protocol remain unchanged.
+The runner records uploaded code and relocated loaded bytes outside timing.
+Focused validation is tracked [centrally](../../docs/VALIDATION.md#taskname-and-xattr-helper-validation);
+direct-route standard-grid performance remains pending.
 
 Version 10 candidate 6 passed read-only taskname correctness on Linux Native,
 TCLock and KD; KD recorded matching generated-body entries and completions.
@@ -62,7 +70,7 @@ A separate 20% mutation check with `--helper-waves 0` passed correctness on all
 three backends but recorded zero KD generated bodies. It validates the resulting
 names and padding, not mutation-case delegation, and does not supersede earlier
 strict delegation failures. The
-[current development record](../../bench/results/10.176.26.71/bench/taskname-xattr-native-api-20261019/DEVELOPMENT.md)
+[version 10 development record](../../bench/results/10.176.26.71/bench/taskname-xattr-native-api-20261019/DEVELOPMENT.md)
 records the focused checks. The separate
 [`88bb5a4` standard-grid comparison](../../bench/results/10.176.26.71/bench/taskname-xattr-native-api-20261019/README.md)
 is complete for read-only taskname; mutation-case delegation remains unaccepted.

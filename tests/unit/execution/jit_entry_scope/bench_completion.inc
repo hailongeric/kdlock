@@ -115,6 +115,19 @@ static void check_bench_completions(void)
 		CHECK(kd_exe_spin_batch_completed(&pending, &active));
 		CHECK(kd_bench_bodies == 1 && kd_bench_completions == 1);
 	}
+	/* Direct helpers retain one completed body; a quota/native suffix retains
+	 * its executed-call observations but cannot count as a completed body. */
+	direct_packet(&pending);
+	pending.complete = true;
+	pending.args[0] = KD_EXE_CLOBBER_COMPLETE;
+	pending.direct_strcmp = 16;
+	active.packet_state = KD_PACKET_COMPLETE;
+	CHECK(kd_exe_spin_batch_completed(&pending, &active));
+	CHECK(kd_bench_bodies == 1 && kd_bench_completions == 1 && kd_direct_strcmp == 16);
+	direct_packet(&pending);
+	CHECK(!kd_exe_spin_batch_completed(&pending, &active));
+	CHECK(kd_exe_spin_batch_resume(entry, &pending) == KD_EXE_RUN_NATIVE);
+	CHECK(kd_bench_bodies == 1 && !kd_bench_completions && kd_direct_strcmp == 128);
 	/* Keep the selected ABI2 batch accounting, without altering its protocol. */
 	escape_packet(&pending);
 	pending.args[0] = KD_EXE_CLOBBER_COMPLETE;

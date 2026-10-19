@@ -51,6 +51,8 @@ enum kd_packet_state {
 #define KD_EXE_NATIVE_ESCAPE 8
 /* Checked spin address predicate failed before its source memory load. */
 #define KD_EXE_ADDRESS_GUARD 9
+/* Direct helper quota expired with the original CALL still pending. */
+#define KD_EXE_DIRECT_CALL_LIMIT 10
 
 enum kd_exe_lock_kind {
 	KD_EXE_LOCK_UNKNOWN = 0,
@@ -121,7 +123,8 @@ struct kd_recv_pkt {
 #define KD_IMAGE_REQUIRE_ADDRESS_GUARD (1U << 1)
 #define KD_IMAGE_REQUIRE_STRING_SERVICES (1U << 2)
 #define KD_IMAGE_REQUIRE_STRING_WRITE (1U << 3)
-#define KD_IMAGE_REQUIREMENTS (KD_IMAGE_REQUIRE_NATIVE_ESCAPE | KD_IMAGE_REQUIRE_ADDRESS_GUARD | KD_IMAGE_REQUIRE_STRING_SERVICES | KD_IMAGE_REQUIRE_STRING_WRITE)
+#define KD_IMAGE_REQUIRE_DIRECT_STRINGS (1U << 4)
+#define KD_IMAGE_REQUIREMENTS (KD_IMAGE_REQUIRE_NATIVE_ESCAPE | KD_IMAGE_REQUIRE_ADDRESS_GUARD | KD_IMAGE_REQUIRE_STRING_SERVICES | KD_IMAGE_REQUIRE_STRING_WRITE | KD_IMAGE_REQUIRE_DIRECT_STRINGS)
 
 static inline int kd_image_requirements_valid(int kind, unsigned int abi,
 					     unsigned int requirements)
@@ -134,7 +137,11 @@ static inline int kd_image_requirements_valid(int kind, unsigned int abi,
 	       (!(requirements & KD_IMAGE_REQUIRE_STRING_SERVICES) ||
 		(kind == KD_EXE_LOCK_SPIN && abi == KD_ENTRY_ABI_SPIN_CLOBBER_V1)) &&
 	       (!(requirements & KD_IMAGE_REQUIRE_STRING_WRITE) ||
-		(kind == KD_EXE_LOCK_SPIN && abi == KD_ENTRY_ABI_SPIN_CLOBBER_V1));
+		(kind == KD_EXE_LOCK_SPIN && abi == KD_ENTRY_ABI_SPIN_CLOBBER_V1)) &&
+	       (!(requirements & KD_IMAGE_REQUIRE_DIRECT_STRINGS) ||
+		(kind == KD_EXE_LOCK_SPIN && abi == KD_ENTRY_ABI_SPIN_CLOBBER_V1 &&
+		 !(requirements & KD_IMAGE_REQUIRE_ADDRESS_GUARD) &&
+		 (requirements & (KD_IMAGE_REQUIRE_STRING_SERVICES | KD_IMAGE_REQUIRE_STRING_WRITE))));
 }
 #define KD_IMAGE_HEADER_SIZE 48U
 #define KD_IMAGE_VERSION_OFFSET 46U

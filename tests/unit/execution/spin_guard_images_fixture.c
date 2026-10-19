@@ -16,8 +16,9 @@
 #define try_cmpxchg(p,o,v) __atomic_compare_exchange_n(p,o,v,0,__ATOMIC_SEQ_CST,__ATOMIC_SEQ_CST)
 #define BUG_ON(x) assert(!(x))
 #define __user
-#define KD_PR_INFO(...)
-#define KD_PR_ERR(...)
+#define KD_PR_INFO(...) do { } while (0)
+#define KD_PR_ERR(...) do { } while (0)
+#include "image_direct_support.h"
 static struct kd_exe_info entries[KD_MAX_EXE], *kd_exes = entries;
 static struct kd_jit_image kd_images[64];
 static const struct kd_jit_image *kd_published_images[KD_MAX_EXE];

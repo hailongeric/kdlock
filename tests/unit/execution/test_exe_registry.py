@@ -105,8 +105,8 @@ def main():
             ),
         ),
         "pool-stops-early": (
-            "if (kind != KD_EXE_LOCK_MUTEX && kd_code_block_free > 0)\n\t\tmem =",
-            "if (kind != KD_EXE_LOCK_MUTEX && kd_code_block_free > 1)\n\t\tmem =",
+            "if (kind != KD_EXE_LOCK_MUTEX && kd_code_block_free > 0) {",
+            "if (kind != KD_EXE_LOCK_MUTEX && kd_code_block_free > 1) {",
         ),
         "premature-readiness": (
             "smp_store_release(&exe->status_code, KD_EXE_UNINIT);",

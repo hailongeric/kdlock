@@ -59,7 +59,7 @@ boundaries remain separate for reading.
 | [kd_rwsem.c](kd_rwsem.c) | Sleeping APIs, ordinary cancellation/downgrade and outer-writer phase admission before the unchanged mutex queue |
 | [lock](lock) via [kd_lock.c](kd_lock.c) | Direct KD mutex routes and nested spin/mutex control CALLs |
 | [execution](execution) | Registry, wrapper preparation, frame/ledger, control/services, native and remote ACK |
-| [execution/images.inc](execution/images.inc) | Immutable mutex publication and ABI1 guard/service images, bound generations, stale-miss rejection and permanent delegation refusal |
+| [execution/images.inc](execution/images.inc) | Immutable mutex and ABI1 guard/service images, direct-call relocation in separate near-text storage, bound generations, stale-miss rejection and permanent delegation refusal |
 | [kd_source.c](kd_source.c), [sys.c](sys.c) | Text pins, device session, capabilities, publication and retirement |
 | [kd_hotlock.c](kd_hotlock.c) | Exact-address per-type tables and approximate sampling |
 | [kd_mutex_tasks.c](kd_mutex_tasks.c) | Exact task/acquisition refs and RCU lifetime |
@@ -107,7 +107,7 @@ does not stop delegation. If execution reaches it, the provider preserves the
 current registers and resumes the original waiter at that instruction, without
 repeating earlier writes.
 
-The current provider advertises capability version 10, retaining the instruction
+The current provider advertises capability version 11, retaining the instruction
 exit feature introduced in version 6. The translator requires the matching
 capability bit and image requirement, which declares what the compiled code needs
 from the provider. The existing two-word wrapper interface and ABI2
@@ -130,7 +130,7 @@ describes the exact saved state and validation conditions.
 
 ## Checked spin pointer loads
 
-Version 10 retains the checked pointer-load feature introduced in version 7.
+Version 11 retains the checked pointer-load feature introduced in version 7.
 A limited ABI1 spin translation may check a pointer load against tracked stack
 writes immediately before executing it. A
 failed check resumes the original waiter at the same instruction and stack
@@ -150,7 +150,7 @@ performance acceptance requires separate workload measurements.
 
 ## Original string API services
 
-Version 10 uses the original [`strcmp` service](../docs/design/admission.md#original-strcmp-service)
+The contract introduced in version 10 uses the original [`strcmp` service](../docs/design/admission.md#original-strcmp-service)
 and [`strscpy_pad` writing service](../docs/design/admission.md#original-strscpy_pad-writing-service)
 without helper-specific instruction, CALL-encoding, string or runtime buffer
 checks. Feature bit 9 identifies this contract; translation also requires bit 7
@@ -167,16 +167,16 @@ destination, including padding or truncation. Ordinary `memcpy` retains its
 decoded copy effects and normal return dispatch.
 
 The provider retains common frame, physical-owner and source-lifetime checks.
-It reads the pending CALL return word before invoking the original helper with
-the original arguments, then consumes that saved return exactly once. It does
-not rescan strings or recheck destination bounds. A helper that has run cannot
-be retried through native fallback. The admission guides define the caller
-obligations and the remaining static memory analysis.
+The dispatcher route reads the pending CALL return word before invoking the
+original helper with the original arguments, then consumes that saved return
+exactly once. It does not rescan strings or recheck destination bounds. A helper
+that has run cannot be retried through native fallback. The admission guides
+define the caller obligations and the remaining static memory analysis.
 
 Only `strcmp` has the separate 128-call allowance. `strscpy_pad`, scalar services
 and lock controls share the existing 16-call allowance, for at most 144 such
 continuations before final unlock. These services preserve the two-word wrapper
-ABI, exact owners, source leases and final acknowledgements. The
+ABI, exact owners, source leases and final acknowledgements. The version 10
 [focused correctness checks](../docs/VALIDATION.md#taskname-and-xattr-helper-validation)
 passed through candidate 6. The
 [`88bb5a4` standard-grid comparison](../bench/results/10.176.26.71/bench/taskname-xattr-native-api-20261019/README.md)
@@ -185,6 +185,54 @@ Linux Native and TCLock at 60 workers in all three measured workloads; taskname
 mutation delegation remains unestablished.
 The former helper prechecks and their fallback probe remain historical evidence
 for `c79d84f`.
+
+Version 11 adds optional capability bit 10 and image requirement bit 4, value 16,
+for direct original-helper calls. A generated body can call `strcmp` or
+`strscpy_pad` on the executor's stack without a dispatcher round trip per helper.
+This is restricted to an immutable ABI1 spin image, a pristine single root with
+a MINIMAL packet, and a waiter different from the executor. Its graph cannot
+contain address guards, scalar services or nonterminal lock controls. Other
+eligible string images retain the dispatcher path. The selected KD mutex
+protocol and its allocation path are unchanged.
+
+The provider preallocates a separate pool near kernel text, using `module_alloc`
+and its matching `module_memfree`. It reserves up to 64 blocks of 640 KiB, at
+most 40 MiB, while sharing the existing 64 image descriptors. A direct CALL uses
+a signed 32-bit displacement from its following instruction, so publication must
+check that the helper is within reach. Missing allocator support, no usable
+startup block or kernel call-depth tracking disables capability bit 10. Later
+exhaustion refuses publication rather than overwriting a retained image.
+
+Publication reads the generated `KDNC0001` directory, fills only its private
+CALL operands and pins the resolved helper and return-source addresses before
+making the image immutable. These checks inspect generated code layout, not
+helper instructions, source CALL encodings or arguments. The uploaded image
+contains zero operands; publication records alone are not a hash of the loaded
+image. Outside timing, the benchmark saves loaded generated bytes and checks
+their reconstruction from the upload and independent symbol addresses.
+
+The wrapper preserves its packet pointer and source argument state across each
+helper. It retains the real virtual CALL store and reads and consumes that word
+once after the helper, requiring the exact allowed return. Previously reserved
+wrapper slots hold the remaining 128 comparison and 16 padding-call allowances,
+while the executor stack is aligned once at direct entry. Flag-neutral register
+operations check quotas and return equality, preserving RCX on every path;
+there is no per-call alignment or flags scratch. The private invocation descriptor grows
+from 96 to 112 bytes, with completed-call counts at offsets 96 and 104; its old
+prefix, two argument words and body witness are unchanged. Counts are consumed
+once on return and remain separate from actual dispatcher exits and body
+completion evidence.
+
+Quota exhaustion produces FULL exit 10 before the excess helper runs. The
+original waiter finishes its pending CALL and native suffix under the existing
+owner; the direct image cannot reenter with a full packet and reset the limits.
+A successful invocation may reach minimal terminal completion without an
+intermediate FULL export. See
+[direct-call admission](../docs/design/admission.md#direct-original-helper-calls)
+for the complete entry, lifetime and error contracts. The initial route passed
+14 focused live sessions. Its later bridge-instruction reduction awaits focused
+validation, and the standard worker-grid performance comparison is pending.
+Earlier performance results do not measure direct calls.
 
 ## Validation and shutdown
 

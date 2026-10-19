@@ -20,7 +20,7 @@ PIN = 0x40104B70
 INFO = 0x80104B71
 RETIRE = 0x4B72
 CAPS = 0x80104B73
-CAPS_VERSION = 10
+CAPS_VERSION = 11
 CAP_MUTEX_STACK = 1
 CAP_PERCPU_MODULE = 2
 CAP_MUTEX_IMAGES = 8
@@ -30,6 +30,7 @@ CAP_ADDRESS_GUARD = 64
 CAP_STRING_SERVICES = 128
 CAP_STRING_WRITE = 256
 CAP_AUDITED_STRINGS = 512
+CAP_DIRECT_STRINGS = 1024
 MUTEX_STACK_BYTES = 256
 PERCPU_MODULE_BYTES = 8192
 PERCPU_ALIGNMENT = 4
@@ -45,6 +46,7 @@ _address_guard = False
 _string_services = False
 _string_write = False
 _audited_strings = False
+_direct_strings = False
 
 
 class SourceRefused(RuntimeError):
@@ -80,7 +82,7 @@ def query_capabilities(fd):
                 "mutex_images": False, "mutex_exclusive": False,
                 "native_escape": False, "address_guard": False,
                 "string_services": False, "string_write": False,
-                "audited_strings": False}
+                "audited_strings": False, "direct_strings": False}
     packet = bytearray(b"\xff" * CAPS_STRUCT.size)
     try:
         result = fcntl.ioctl(fd, CAPS, packet, True)
@@ -95,28 +97,32 @@ def query_capabilities(fd):
         return disabled
     if result == 0 and len(packet) == CAPS_STRUCT.size:
         version, features, stack_bytes, module_bytes = CAPS_STRUCT.unpack(packet)
-        known = CAP_MUTEX_STACK | (CAP_PERCPU_MODULE if version in (2, 3, 4, 5, 6, 7, 8, 9, CAPS_VERSION) else 0)
+        known = CAP_MUTEX_STACK | (CAP_PERCPU_MODULE if 2 <= version <= CAPS_VERSION else 0)
         if version == 3:
             known |= 4  # historical owned-image capability, not this backend
-        if version in (4, 5, 6, 7, 8, 9, CAPS_VERSION):
+        if 4 <= version <= CAPS_VERSION:
             known |= CAP_MUTEX_IMAGES
-        if version in (5, 6, 7, 8, 9, CAPS_VERSION):
+        if 5 <= version <= CAPS_VERSION:
             known |= CAP_MUTEX_EXCLUSIVE
-        if version in (6, 7, 8, 9, CAPS_VERSION):
+        if 6 <= version <= CAPS_VERSION:
             known |= CAP_NATIVE_ESCAPE
-        if version in (7, 8, 9, CAPS_VERSION):
+        if 7 <= version <= CAPS_VERSION:
             known |= CAP_ADDRESS_GUARD
-        if version in (8, 9, CAPS_VERSION):
+        if 8 <= version <= CAPS_VERSION:
             known |= CAP_STRING_SERVICES
-        if version in (9, CAPS_VERSION):
+        if 9 <= version <= CAPS_VERSION:
             known |= CAP_STRING_WRITE
-        if version == CAPS_VERSION:
+        if 10 <= version <= CAPS_VERSION:
             known |= CAP_AUDITED_STRINGS
+        if version == CAPS_VERSION:
+            known |= CAP_DIRECT_STRINGS
         if (
-            version in (1, 2, 3, 4, 5, 6, 7, 8, 9, CAPS_VERSION)
+            1 <= version <= CAPS_VERSION
             and not features & ~known
             and (not features & CAP_AUDITED_STRINGS
                  or features & (CAP_STRING_SERVICES | CAP_STRING_WRITE))
+            and (not features & CAP_DIRECT_STRINGS
+                 or features & CAP_AUDITED_STRINGS)
             and stack_bytes == (MUTEX_STACK_BYTES if features & CAP_MUTEX_STACK else 0)
             and module_bytes
             == (PERCPU_MODULE_BYTES if features & CAP_PERCPU_MODULE else 0)
@@ -131,6 +137,7 @@ def query_capabilities(fd):
                 "string_services": bool(features & CAP_STRING_SERVICES),
                 "string_write": bool(features & CAP_STRING_WRITE),
                 "audited_strings": bool(features & CAP_AUDITED_STRINGS),
+                "direct_strings": bool(features & CAP_DIRECT_STRINGS),
             }
     print(
         f"[KD_JIT][WARN] reason=JIT_CAPABILITY_INVALID "
@@ -193,6 +200,12 @@ def audited_strings():
     return _audited_strings
 
 
+def direct_strings():
+    """One pristine immutable spin invocation can call original APIs directly."""
+    require()
+    return _direct_strings
+
+
 def pin_range(address, size):
     """The writer lease spans this ioctl and the following kcore read."""
     try:
@@ -208,7 +221,7 @@ def pin_range(address, size):
 
 @contextmanager
 def session():
-    global _fd, _mutex_stack_bytes, _percpu_module_bytes, _native_escape, _address_guard, _string_services, _string_write, _audited_strings
+    global _fd, _mutex_stack_bytes, _percpu_module_bytes, _native_escape, _address_guard, _string_services, _string_write, _audited_strings, _direct_strings
     if _fd is not None:
         raise RuntimeError("kd_dev session is already active")
     inherited = os.environ.get("KD_DEVICE_FD")
@@ -253,6 +266,7 @@ def session():
         _string_services = caps["string_services"]
         _string_write = caps["string_write"]
         _audited_strings = caps["audited_strings"]
+        _direct_strings = caps["direct_strings"]
         _fd = fd
         print(f"Translation device session: inherited={int(inherited is not None)}")
         print(
@@ -260,7 +274,8 @@ def session():
             f"percpu_module_bytes={_percpu_module_bytes} "
             f"native_escape={int(_native_escape)} address_guard={int(_address_guard)} "
             f"string_services={int(_string_services)} "
-            f"string_write={int(_string_write)} audited_strings={int(_audited_strings)}"
+            f"string_write={int(_string_write)} audited_strings={int(_audited_strings)} "
+            f"direct_strings={int(_direct_strings)}"
         )
         yield fd
     finally:
@@ -272,6 +287,7 @@ def session():
         _string_services = False
         _string_write = False
         _audited_strings = False
+        _direct_strings = False
         if fd is not None:
             os.close(fd)
 

@@ -166,7 +166,8 @@ def registry():
     require(ctypes.sizeof(__import__("native_only_protocol").Entry) == 64,
             "unexpected registry ABI")
     return [dict(entry=e.rip, code=e.code, status=e.status, pid=e.pid,
-                 tgid=e.tgid, lock_kind=e.lock_kind, entry_abi=e.entry_abi) for e in entries()]
+                 tgid=e.tgid, lock_kind=e.lock_kind, entry_abi=e.entry_abi,
+                 requirements=e.requirements, generation=e.generation) for e in entries()]
 
 
 def children(pid):

@@ -16,6 +16,8 @@
 #define kzalloc(n,f) calloc(1,n)
 #define kfree(p) free(p)
 void kd_image_discard(struct kd_jit_image *image) { if (image) abort(); }
+static bool direct_pool_available;
+int kd_image_direct_available(void) { return direct_pool_available; }
 #include "kd_source_api.h"
 
 typedef long long s64;
@@ -245,7 +247,8 @@ static void check_caps(struct file *file)
 	CHECK(!kd_dev_ioctl(file, KD_JIT_CAPS, (unsigned long)&caps));
 	CHECK(caps.version == KD_JIT_CAPS_VERSION);
 	CHECK(caps.features == (KD_JIT_CAP_MUTEX_STACK | KD_JIT_CAP_MUTEX_IMAGES | KD_JIT_CAP_MUTEX_EXCLUSIVE | KD_JIT_CAP_NATIVE_ESCAPE | KD_JIT_CAP_ADDRESS_GUARD | KD_JIT_CAP_STRING_SERVICES | KD_JIT_CAP_STRING_WRITE | KD_JIT_CAP_AUDITED_STRINGS |
-				(module_bytes ? KD_JIT_CAP_PERCPU_MODULE : 0)));
+				(module_bytes ? KD_JIT_CAP_PERCPU_MODULE : 0) |
+				(direct_pool_available ? KD_JIT_CAP_DIRECT_STRINGS : 0)));
 	CHECK(caps.mutex_stack_bytes == KD_JIT_MUTEX_STACK_BYTES);
 	CHECK(caps.percpu_module_bytes == module_bytes);
 	after = status();
@@ -513,12 +516,12 @@ int main(void)
 	_Static_assert(KD_SOURCE_RETIRE == 0x4b72, "Python RETIRE ABI");
 	_Static_assert(sizeof(struct kd_jit_caps) == 16, "capability ABI");
 	_Static_assert(KD_JIT_CAPS == 0x80104b73, "Python capability ioctl");
-	_Static_assert(KD_JIT_CAPS_VERSION == 10 &&
+	_Static_assert(KD_JIT_CAPS_VERSION == 11 &&
 			       KD_JIT_CAP_MUTEX_STACK == 1 &&
 			       KD_JIT_CAP_PERCPU_MODULE == 2 &&
 			       KD_JIT_CAP_NATIVE_ESCAPE == 32 && KD_JIT_CAP_ADDRESS_GUARD == 64 &&
 			       KD_JIT_CAP_STRING_SERVICES == 128 && KD_JIT_CAP_STRING_WRITE == 256 &&
-			       KD_JIT_CAP_AUDITED_STRINGS == 512,
+			       KD_JIT_CAP_AUDITED_STRINGS == 512 && KD_JIT_CAP_DIRECT_STRINGS == 1024,
 		       "Python capability semantics");
 	_Static_assert(KD_JIT_PERCPU_MODULE_BYTES == 8192 &&
 			       KD_JIT_PERCPU_ALIGNMENT == 4,
@@ -528,6 +531,9 @@ int main(void)
 	_Static_assert(sizeof(struct kd_exe_info) == 64, "entry ABI");
 	_Static_assert(sizeof(struct kd_recv_pkt) == 64, "upload ABI");
 	residency();
+	direct_pool_available = true;
+	check_caps(&(struct file){ 0 });
+	direct_pool_available = false;
 	draining();
 	concurrent_pins();
 	atomic_frame_admission();

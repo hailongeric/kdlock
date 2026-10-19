@@ -73,7 +73,7 @@ for real source inspection must explicitly enter `device_session.session()`. A
 missing, closed or wrong inherited descriptor is an infrastructure error, not a
 successful decision to run the body natively.
 
-CAPS version 10 retains the checked mutex stack bound and static module per-CPU
+CAPS version 11 retains the checked mutex stack bound and static module per-CPU
 arena introduced in v1/v2. Bits 3 and 4 describe immutable mutex images and
 exclusive KD mutex objects; bits 5 and 6 describe checked instruction exits and
 restricted ABI1 spin address exits. Bits 7 and 8 identify the original `strcmp`
@@ -81,10 +81,12 @@ and `strscpy_pad` APIs. Bit 9 states that these APIs rely on the original C
 caller's valid memory and lifetime, without helper-specific checks. Current
 translation requires bit 9 as well as the appropriate API bit before using
 these service summaries.
+Optional bit 10 permits direct original-helper calls inside one generated
+invocation; otherwise eligible string bodies retain the dispatcher route.
 
-Ordinary images accept compatible versions 5 through 10. Mutex instruction
-markers require versions 6 through 10 with bit 5; spin address-check images
-require versions 7 through 10 with bit 6. Older service contracts remain readable
+Ordinary images accept compatible versions 5 through 11. Mutex instruction
+markers require versions 6 through 11 with bit 5; spin address-check images
+require versions 7 through 11 with bit 6. Older service contracts remain readable
 by observers, but do not authorize the current string summaries. Rebuild/reload
 the provider, daemon and translator together. Fixed stack and module bounds
 describe implementation behavior; they do not establish arbitrary object validity.
@@ -119,6 +121,13 @@ daemon and translator together. Mutex instruction markers set directory
 requirement bit 0; spin address checks set bit 1 and include a validated source
 instruction directory. Read-only string services set bit 2; writing services
 set bit 3 and cannot run on a provider advertising only the read-only contract.
+Direct string-call images additionally set bit 4, value 16, and contain a
+`KDNC0001` directory naming generated CALL operands. Publication fills their
+relative helper addresses in separate preallocated storage near kernel text.
+The uploaded `jit.bin` still contains zero placeholders: evidence for executed
+bytes must also retain the loaded generated image and its relocation receipt.
+The benchmark reads these bytes outside worker timing. This checks generated
+image construction and residency; it reads no helper or source CALL instructions.
 A reached instruction marker or failed address check disables the stable entry
 under the publication gate, so a concurrent upload cannot reopen it.
 Translation refuses bodies needing both source constant-branch simplification
@@ -136,7 +145,16 @@ CALL and earlier effects. Every session must drain and retire normally. The
 [API admission rules](../docs/design/admission.md#original-strcmp-service)
 define the caller's obligations and separate writing effects.
 
-The current v10 implementation passed
+The optional [direct-call route](../docs/design/admission.md#direct-original-helper-calls)
+accepts only a pristine ABI1 spin root and cannot reenter after a FULL exit.
+It preserves the actual source CALL word and enforces the same invocation
+allowances, returning an excess unexecuted call to the original waiter. Its
+private result counters do not change the two-word wrapper ABI or KD mutex
+protocol. Current focused validation is recorded
+[centrally](../docs/VALIDATION.md#taskname-and-xattr-helper-validation);
+the direct-route standard-grid comparison remains pending.
+
+The preceding v10 dispatcher implementation passed
 [focused VM correctness checks](../docs/VALIDATION.md#taskname-and-xattr-helper-validation)
 through candidate 6 and completed all 567 sessions of the
 [`88bb5a4` standard-grid comparison](../bench/results/10.176.26.71/bench/taskname-xattr-native-api-20261019/README.md)

@@ -29,7 +29,8 @@ def main():
     with tempfile.TemporaryDirectory(prefix='kd-mutex-images-') as tmp:
         tmp = Path(tmp)
         (tmp / 'production.h').write_text(code)
-        for fixture in ('mutex_images_fixture.c', 'spin_guard_images_fixture.c'):
+        for fixture in ('mutex_images_fixture.c', 'spin_guard_images_fixture.c',
+                        'direct_images_fixture.c'):
             binary = tmp / fixture.removesuffix('.c')
             subprocess.run(shlex.split(os.environ.get('CC', 'cc')) + [
                 '-std=gnu11', '-O2', '-Wall', '-Wextra', '-Werror', '-Wno-sign-compare',
@@ -37,6 +38,29 @@ def main():
                 str(ROOT / 'tests/unit/execution' / fixture),
                 '-o', str(binary)], check=True, timeout=30)
             subprocess.run([str(binary)], check=True, timeout=20)
+        # Exercise the actual private relocation writer, including source
+        # lifetime pins and generated displacement rather than a model of it.
+        mutations = {
+            'missing-helper-pin': ('ret = kd_source_pin_root(target);', 'ret = 0;'),
+            'missing-return-pin': ('ret = kd_source_pin_root(sites[i].return_ip);', 'ret = 0;'),
+            'wrong-relocation-origin': ('displacement = (int)(target - next);',
+                                        'displacement = (int)(target - next + 1);'),
+            'missing-generated-opcode': ('code[sites[i].call_offset] != 0xe8 ||',
+                                        'false ||'),
+            'wrong-pool-selection': ('return kd_image_alloc_pool(true);',
+                                     'return kd_image_alloc_pool(false);'),
+        }
+        for name, (before, after) in mutations.items():
+            assert code.count(before) == 1, (name, code.count(before))
+            (tmp / 'production.h').write_text(code.replace(before, after))
+            binary = tmp / name
+            subprocess.run(shlex.split(os.environ.get('CC', 'cc')) + [
+                '-std=gnu11', '-O2', '-Wall', '-Wextra', '-Werror', '-Wno-sign-compare',
+                '-I', str(ROOT / 'include'), '-I', str(tmp),
+                str(ROOT / 'tests/unit/execution/direct_images_fixture.c'),
+                '-o', str(binary)], check=True, timeout=30)
+            result = subprocess.run([str(binary)], text=True, capture_output=True, timeout=20)
+            assert result.returncode != 0 and 'Assertion' in result.stderr, (name, result)
 
 
 if __name__ == '__main__':

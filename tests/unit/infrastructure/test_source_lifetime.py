@@ -112,6 +112,14 @@ def main():
             "KD_JIT_CAP_STRING_WRITE | KD_JIT_CAP_AUDITED_STRINGS,",
             "KD_JIT_CAP_STRING_WRITE,",
         ),
+        "missing-direct-string-feature": (
+            "caps.features |= KD_JIT_CAP_DIRECT_STRINGS;",
+            "(void)caps.features;",
+        ),
+        "direct-feature-without-pool": (
+            "if (kd_image_direct_available())",
+            "if (true)",
+        ),
     }
     with tempfile.TemporaryDirectory(prefix="kdlock-source-unit-") as tmp:
         directory = Path(tmp)

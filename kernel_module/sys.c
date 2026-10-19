@@ -93,6 +93,8 @@ static struct kd_jit_caps kd_jit_capabilities(void)
 		caps.percpu_module_bytes = PERCPU_MODULE_RESERVE;
 	}
 #endif
+	if (kd_image_direct_available())
+		caps.features |= KD_JIT_CAP_DIRECT_STRINGS;
 	return caps;
 }
 
@@ -254,7 +256,8 @@ static ssize_t kd_dev_write_locked(struct kd_image_upload *upload,
 		upload->code = entry->code_block;
 		if (entry->lock_kind == KD_EXE_LOCK_MUTEX || head.requirements ||
 		    (kd_image_current(entry) && kd_image_current(entry)->immutable)) {
-			upload->image = kd_image_alloc();
+			upload->image = head.requirements & KD_IMAGE_REQUIRE_DIRECT_STRINGS ?
+				kd_image_alloc_direct() : kd_image_alloc();
 			if (!upload->image)
 				return -ENOSPC;
 		}
@@ -303,6 +306,9 @@ static ssize_t kd_dev_write_locked(struct kd_image_upload *upload,
 			upload->image->requirements = head.requirements;
 			upload->image->entry_abi = head.entry_abi;
 			ret = kd_image_validate_address_guards(upload->image);
+			if (ret)
+				return ret;
+			ret = kd_image_relocate_direct(upload->image);
 			if (ret)
 				return ret;
 			ret = kd_image_publish(entry, upload->image, head.base_generation);

@@ -42,12 +42,18 @@ clobber_entry_v1:
 	.byte KD_GENERATED_REQUIREMENTS
 	.balign 16
 batch_body:
+#if KD_GENERATED_REQUIREMENTS & 16
+	jmp native_entry_refused
+#endif
 	/* The lock-side clobber caller owns the native combiner live values.
 	 * Reserve the same frame slots without writing six redundant values. */
 	sub rsp, 6*8
 	lea rbp, [rsp + 5*8]
 	jmp load_packet
 regular_entry:
+#if KD_GENERATED_REQUIREMENTS & 16
+	jmp native_entry_refused
+#endif
 	push rbp
 	mov rbp, rsp
 	push rbx
@@ -122,6 +128,15 @@ clobber_body:
 #endif
 	mov Stack_JIT_WITNESS, 0
 	/* The fixed directory is usable only by a matching generated image. */
+#if KD_GENERATED_REQUIREMENTS & 16
+	/* This image runs once, only through the pristine clobber entry. */
+	mov Stack_STRCMP_LEFT, 128
+	mov Stack_PAD_LEFT, 16
+	/* Source stack instructions use virtual R13; emitted temporaries are
+	 * balanced. Align once so eight GPR saves keep every native CALL aligned.
+	 * All private slots and the eventual restore remain RBP-relative. */
+	and rsp, -16
+#endif
 #if KD_GENERATED_ENTRY_ABI != 1 && KD_GENERATED_ENTRY_ABI != 2 && KD_GENERATED_ENTRY_ABI != 3
 	ud2
 #endif
@@ -272,6 +287,17 @@ legacy_return:
 clobber_invalid:
 	ud2
 clobber_return:
+#if KD_GENERATED_REQUIREMENTS & 16
+	/* Packet export/COMPLETE already consumed logical GPR values. Preserve
+	 * args[1]'s existing witness; these are private call-metadata results. */
+	mov r15, Stack_CLOBBER
+	mov rax, 128
+	sub rax, Stack_STRCMP_LEFT
+	mov QWORD PTR[r15 + 96], rax
+	mov rax, 16
+	sub rax, Stack_PAD_LEFT
+	mov QWORD PTR[r15 + 104], rax
+#endif
 	mov rsp, rbp
 	pop rbp
 	ret
@@ -279,6 +305,16 @@ clobber_return:
 batch_return:
 	lea rsp, [rbp + 8]
 	ret
+
+#if KD_GENERATED_REQUIREMENTS & 16
+native_entry_refused:
+	/* A regular/FULL entry cannot reset this image's per-invocation quotas. */
+	mov QWORD PTR[rsi], 6
+	mov QWORD PTR[rsi + 8], 0
+	ret
+#define KD_EMIT_NATIVE_DIRECTORY 1
+#include "jit.S"
+#endif
 
 #if KD_GENERATED_REQUIREMENTS & 2
 #define KD_EMIT_GUARD_DIRECTORY 1

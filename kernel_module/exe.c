@@ -97,6 +97,12 @@ MODULE_PARM_DESC(address_guard_count, "Validated spin address-guard native conti
 
 static void *kd_code_block_pool[KD_CODE_BLOCK_POOL];
 static void *kd_code_block_allocations[KD_CODE_BLOCK_POOL];
+/* Direct E8 calls need addresses in the kernel/module rel32 region. This cold
+ * pool has separate storage, but shares the same 64 image descriptors. */
+static void *kd_near_block_pool[KD_CODE_BLOCK_POOL];
+static void *kd_near_block_allocations[KD_CODE_BLOCK_POOL];
+static int kd_near_block_free;
+static void (*kd_near_memfree)(void *);
 static struct kd_jit_image kd_images[KD_CODE_BLOCK_POOL];
 static const struct kd_jit_image *kd_published_images[KD_MAX_EXE];
 static int kd_code_block_free;
@@ -160,6 +166,10 @@ static int kd_exe_dispatch(struct kd_exe_info *exe, struct kd_regs *regs,
 	int continuation_count = 0;
 	int hostcall_count = 0;
 	unsigned int string_count = 0;
+	unsigned long direct_strcmp = 0, direct_pad = 0;
+	bool direct_image;
+	bool direct_returned = false;
+	const struct kd_jit_image *previous_image;
 	bool resume_after_hostcall = false;
 	bool body_reported = false;
 	bool pristine_root;
@@ -203,8 +213,14 @@ static int kd_exe_dispatch(struct kd_exe_info *exe, struct kd_regs *regs,
 				    -EINVAL, 0, 0);
 		return KD_EXE_NO_RUN;
 	}
+	previous_image = frame->image;
 	if (!kd_jit_image_matches(exe, frame))
 		return frame->executed ? KD_EXE_RUN_ERROR : KD_EXE_NO_RUN;
+	direct_image = kd_jit_direct_image(frame);
+	if (!pending && !kd_jit_direct_entry(frame)) {
+		frame->image = previous_image;
+		return frame->executed ? KD_EXE_RUN_ERROR : KD_EXE_NO_RUN;
+	}
 
 	/* Exclude pre-entry rejections and the caller's frame setup/teardown. */
 	dispatch_start = pending ? pending->dispatch_start : kd_jit_timing_start();
@@ -216,9 +232,20 @@ static int kd_exe_dispatch(struct kd_exe_info *exe, struct kd_regs *regs,
 		unsigned long entry_sp = regs->sp;
 		u64 boundary_start;
 
+		if (direct_image && direct_returned) {
+			ret_flag = KD_EXE_RUN_ERROR;
+			break;
+		}
+
 		/* The batch wrapper already ran. Consume that exit exactly once; an
 		 * extra invocation here would repeat stores before handling the miss. */
 		if (pending) {
+			if (direct_image && !kd_jit_note_direct_calls(pending, frame))
+				return KD_EXE_RUN_ERROR;
+			if (direct_image) {
+				direct_strcmp = pending->direct_strcmp;
+				direct_pad = pending->direct_pad;
+			}
 			kd_jit_timing_end(KD_JIT_TIME_WRAPPER, pending->wrapper_start);
 			args[0] = pending->args[0];
 			args[1] = pending->args[1];
@@ -261,6 +288,12 @@ static int kd_exe_dispatch(struct kd_exe_info *exe, struct kd_regs *regs,
 
 				kd_jit_prepare_clobber(&call, frame, (void *)translated);
 				kd_jit_clobber_call_v1(&call);
+				if (direct_image && !kd_jit_note_direct_calls(&call, frame))
+					return KD_EXE_RUN_ERROR;
+				if (direct_image) {
+					direct_strcmp = call.direct_strcmp;
+					direct_pad = call.direct_pad;
+				}
 				args[0] = call.args[0];
 				args[1] = call.args[1];
 			} else {
@@ -268,13 +301,15 @@ static int kd_exe_dispatch(struct kd_exe_info *exe, struct kd_regs *regs,
 			}
 			kd_jit_timing_end(KD_JIT_TIME_WRAPPER, boundary_start);
 returned_wrapper:
+			direct_returned = direct_image;
 			if (args[0] == KD_EXE_ENTRY_REFUSED) {
 				/* Only this explicit pre-body exit can undo our conservative
 				 * executed mark. A zero witness by itself never permits replay.
 				 * Root packet preservation is part of the generated guard ABI.
 				 */
 				if (pristine_root && !continuation_count &&
-				    !hostcall_count && !string_count && regs->ip == entry_ip &&
+				    !hostcall_count && !string_count && !direct_strcmp && !direct_pad &&
+				    regs->ip == entry_ip &&
 				    regs->sp == entry_sp && args[1] == 0) {
 					frame->executed = false;
 					pr_warn_ratelimited(
@@ -329,7 +364,7 @@ returned_wrapper:
 			regs = kd_exec_frame_regs(frame);
 		}
 		if (frame->spin_simple) {
-			if (args[0] == KD_EXE_CALL_MISS &&
+			if (!direct_image && args[0] == KD_EXE_CALL_MISS &&
 			    regs->ip == raw_spin_unlock_addr &&
 			    regs->di == outer_lock_addr) {
 				ret_flag = KD_EXE_RUN_TO_UNLOCK;
@@ -338,8 +373,42 @@ returned_wrapper:
 			kd_spin_jit_prepare_complex(frame);
 			regs = kd_exec_frame_regs(frame);
 		}
+		if (direct_image &&
+		    (!frame->image->immutable || !frame->image->near_text ||
+		     frame->entry_abi != KD_ENTRY_ABI_SPIN_CLOBBER_V1 ||
+		     frame->mutex_backend || frame->parent || frame->depth ||
+		     frame->resume_target || !frame->executed ||
+		     frame->logical_task == current || frame->outer_unlock_seen ||
+		     frame->jit_lock_depth != 1 || frame->outer_lock_index ||
+		     !kd_exec_frame_can_borrow_locks(frame) ||
+		     kd_exec_frame_remote_pending(frame) || frame->remote_request ||
+		     frame->native_request || frame->control_call.phase != KD_CALL_NONE)) {
+			ret_flag = KD_EXE_RUN_ERROR;
+			break;
+		}
 
-		if (args[0] == KD_EXE_NORMAL) {
+		if (args[0] == KD_EXE_DIRECT_CALL_LIMIT) {
+			const struct kd_hostcall_desc *service = kd_hostcall_lookup(regs->ip);
+
+			/* Only a negotiated direct image can report this boundary. Its
+			 * exhausted per-invocation quota has not executed the pending CALL. */
+			call_ret = !direct_image || !service ||
+				!((service->id == KD_HOSTCALL_STRCMP && direct_strcmp == KD_STRCMP_MAX_CALLS) ||
+				  (service->id == KD_HOSTCALL_STRSCPY_PAD && direct_pad == KD_EXE_HL_MAX_HOSTCALLS)) ?
+				-EINVAL : kd_jit_call_limit_native(frame, regs, true);
+			if (!call_ret)
+				atomic64_inc(&kd_hostcall_limit);
+			else
+				kd_jit_log_hl_error("INVALID_DIRECT_CALL_LIMIT", frame, regs,
+					args[0], call_ret, continuation_count, hostcall_count);
+			ret_flag = call_ret ? KD_EXE_RUN_ERROR : KD_EXE_RUN_NATIVE;
+		} else if (direct_image && args[0] == KD_EXE_HOSTCALL) {
+			/* Direct images never reset quotas by entering the old service
+			 * dispatcher or by invoking the wrapper again from FULL. */
+			kd_jit_log_hl_error("DIRECT_IMAGE_HOSTCALL", frame, regs, args[0],
+				-EINVAL, continuation_count, hostcall_count);
+			ret_flag = KD_EXE_RUN_ERROR;
+		} else if (args[0] == KD_EXE_NORMAL) {
 			kd_jit_log_hl_error("UNSUPPORTED_SYSCALL", frame, regs,
 					    args[0], regs->ax,
 					    continuation_count, hostcall_count);
@@ -431,6 +500,16 @@ returned_wrapper:
 			resume_after_hostcall = true;
 			continue;
 		} else if (args[0] == KD_EXE_CALL_MISS) {
+			if (direct_image && !is_outer_lock_unlock(regs, outer_lock_addr)) {
+				/* Preserve the actual source CALL word and physical owner for
+				 * the original waiter. Learning affects a future generation;
+				 * this invocation cannot return to generated direct code. */
+				call_ret = kd_jit_call_limit_native(frame, regs, false);
+				if (!call_ret && !is_end_point(regs->ip))
+					kd_image_report(exe, frame->image, KD_EXE_CALL_MISS, regs->ip, 0);
+				ret_flag = call_ret ? KD_EXE_RUN_ERROR : KD_EXE_RUN_NATIVE;
+				break;
+			}
 			if (outer_lock_addr &&
 			    is_outer_lock_unlock(regs, outer_lock_addr)) {
 				call_ret = kd_jit_timed_control(regs, outer_lock_addr);
@@ -443,6 +522,10 @@ returned_wrapper:
 					break;
 				}
 				if (call_ret > 0) {
+					if (direct_image) {
+						ret_flag = KD_EXE_RUN_ERROR;
+						break;
+					}
 					continuation_count++;
 					continue;
 				}

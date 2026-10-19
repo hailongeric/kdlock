@@ -137,7 +137,7 @@ class EscapeSession(Session):
         self.record["capabilities"] = dict(version=version, features=features,
                                            mutex_stack_bytes=stack_bytes, percpu_module_bytes=module_bytes)
         self.save()
-        rt.require(version in (6, 7, 8, 9, 10) and features & (1 << 5), "native-escape capability v6+/bit5 missing")
+        rt.require(version in (6, 7, 8, 9, 10, 11) and features & (1 << 5), "native-escape capability v6+/bit5 missing")
         self.run(["insmod", self.workload_module], "load-workload.log")
         self.loaded_source = True
         layout = self.counts("initial")

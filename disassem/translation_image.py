@@ -40,10 +40,11 @@ def wrapper_context_inputs(assembly):
 
 def write_entry_dispatch(
     f, entry, block_dict, continuation_targets=None, *, body_witness=False,
-    preserve_flags=False,
+    preserve_flags=False, root_only=False,
 ):
-    dispatch_targets = set(block_dict)
-    dispatch_targets.update(continuation_targets or set())
+    dispatch_targets = {entry} if root_only else set(block_dict)
+    if not root_only:
+        dispatch_targets.update(continuation_targets or set())
     ordered_targets = [entry] + sorted(dispatch_targets - {entry})
 
     # R11 addresses shared kd_regs spill slots; the budget is independent state.
@@ -84,6 +85,7 @@ def emit_jit_assembly(
     terminal_clobber_unlocks=(),
     native_escapes=False,
     address_guards=None,
+    native_calls=None,
 ):
     continuation_targets = find_resumable_call_continuations(
         block_dict, db_dict, keep_call_stack
@@ -105,6 +107,7 @@ def emit_jit_assembly(
     write_entry_dispatch(
         f, entry, block_dict, continuation_targets, body_witness=body_witness,
         preserve_flags=native_escapes,
+        root_only=native_calls is not None,
     )
     budget_rips = []
 
@@ -182,6 +185,8 @@ def emit_jit_assembly(
                 f.write(special_inst.native_escape_marker(line, reg_map))
             elif target in terminal_clobber_unlocks and offset not in emitted_offsets:
                 f.write(special_inst.terminal_clobber_unlock(target, offset, reg_map))
+            elif native_calls is not None and target in native_calls.services:
+                f.write(native_calls.emit(line, offset, target, reg_map))
             else:
                 f.write(special_inst.translate(line, offset, db, reg_map, block_end))
             temp_i += 1
@@ -191,7 +196,10 @@ def emit_jit_assembly(
                     f.write("POPFQ\n")
         f.write("\n\n")
     f.write(indirect_jump.make_jump_table(jump_table, preserve_flags=native_escapes))
-    f.write(indirect_jump.make_callee_table(missing_callees, resolved_hostcalls))
+    direct_targets = set(native_calls.services) if native_calls is not None else set()
+    f.write(indirect_jump.make_callee_table(
+        [target for target in missing_callees if target not in direct_targets],
+        resolved_hostcalls))
     # The source RIP is needed only if the budget expires. Keep its material-
     # ization off the frequently executed branch-block path; the exit resumes
     # at the same untouched source block as the previous INC/TEST sequence.
@@ -227,6 +235,11 @@ def emit_jit_assembly(
         ),
     )
     result = f.getvalue()
+    if native_calls is not None:
+        # The provider fills these generated rel32 operands while the image is
+        # private. No relocation or code mutation occurs after publication.
+        result = ("#ifndef KD_EMIT_NATIVE_DIRECTORY\n" + result + "#else\n"
+                  + native_calls.metadata() + "#endif\n")
     if address_guards is not None and address_guards.sites:
         # wrapper.S includes the same self-contained artifact a second time
         # after its exit code, placing the validated directory at image end.

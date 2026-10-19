@@ -15,7 +15,44 @@ struct kd_jit_image {
 	/* Initial spin images retain historical in-place updates. Once a guarded
 	 * generation is published, this entry only publishes immutable images. */
 	unsigned int immutable;
+	unsigned int near_text;
 };
+
+#define KD_DIRECT_CALL_MAX 64U
+struct kd_direct_call_site {
+	unsigned int call_offset;
+	unsigned int service_id;
+	unsigned long return_ip;
+} __attribute__((packed));
+struct kd_direct_call_footer {
+	unsigned char magic[8];
+	unsigned int offset;
+	unsigned int count;
+} __attribute__((packed));
+
+/* Relocations describe generated E8 slots, not instructions in a helper or
+ * source caller. The source return PC is pinned only for continuation lifetime. */
+static inline const struct kd_direct_call_site *
+kd_image_direct_sites(const struct kd_jit_image *image, unsigned int *count)
+{
+	const unsigned char *code;
+	const struct kd_direct_call_footer *footer;
+
+	if (!image || !image->code ||
+	    image->length < KD_IMAGE_HEADER_SIZE + sizeof(*footer) ||
+	    !(image->requirements & KD_IMAGE_REQUIRE_DIRECT_STRINGS))
+		return 0;
+	code = image->code;
+	footer = (const void *)(code + image->length - sizeof(*footer));
+	if (__builtin_memcmp(footer->magic, "KDNC0001", 8) ||
+	    !footer->count || footer->count > KD_DIRECT_CALL_MAX ||
+	    footer->offset < KD_IMAGE_HEADER_SIZE ||
+	    (unsigned long)footer->offset + footer->count * sizeof(struct kd_direct_call_site) !=
+		image->length - sizeof(*footer))
+		return 0;
+	*count = footer->count;
+	return (const void *)(code + footer->offset);
+}
 
 #define KD_ADDRESS_GUARD_MAX 64U
 #define KD_ADDRESS_GUARD_PROOF 1U
@@ -101,8 +138,11 @@ struct kd_image_upload {
 };
 
 struct kd_jit_image *kd_image_alloc(void);
+struct kd_jit_image *kd_image_alloc_direct(void);
+int kd_image_direct_available(void);
 void kd_image_discard(struct kd_jit_image *image);
 int kd_image_validate_address_guards(const struct kd_jit_image *image);
+int kd_image_relocate_direct(struct kd_jit_image *image);
 int kd_image_publish(struct kd_exe_info *entry, struct kd_jit_image *image,
 		     unsigned long base_generation);
 int kd_image_publish_mutable(struct kd_exe_info *entry, void *code,

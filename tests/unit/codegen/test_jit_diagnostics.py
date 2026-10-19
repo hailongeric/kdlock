@@ -58,6 +58,7 @@ def render(
     string_services_capable=False,
     string_write_capable=False,
     audited_strings_capable=False,
+    direct_strings_capable=False,
     build_options=None,
 ):
     output = io.StringIO()
@@ -97,6 +98,8 @@ def render(
                                         "string_write", return_value=string_write_capable))
         stack.enter_context(patch.object(translator.memread.device_session,
                                         "audited_strings", return_value=audited_strings_capable))
+        stack.enter_context(patch.object(translator.memread.device_session,
+                                        "direct_strings", return_value=direct_strings_capable))
         stack.enter_context(
             patch.object(
                 translator.memread.device_session,

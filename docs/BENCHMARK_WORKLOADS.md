@@ -92,9 +92,9 @@ instruction refusal. These mutex markers are separate from the spin-specific
 taskname/xattr changes described below. Neither mechanism enables shared-reader
 delegation or supplies the missing full mmap interfaces.
 
-Taskname and xattr use the original kernel string APIs through services whose
+Taskname and xattr use the original kernel string APIs with effects
 known effects are described in the [admission guide](design/admission.md#original-strcmp-service).
-Version 10 performs no helper-code, helper-specific CALL, string-content or
+Versions 10 and 11 perform no helper-code, helper-specific CALL, string-content or
 runtime destination checks. It uses the same valid storage and lifetime
 guarantees as the native API caller. Ordinary address/register analysis and the
 common physical-owner, frame and return-continuation checks remain active.
@@ -116,6 +116,15 @@ A body needing an address guard still needs independent proof that native
 continuation does not consume incoming arithmetic flags; the string APIs do
 not supply that proof. These changes do not validate arbitrary callers or
 whole-kernel replacement.
+
+Version 11 adds [direct original-helper calls](design/admission.md#direct-original-helper-calls):
+eligible spin bodies call the original API without leaving generated code for
+each comparison or copy. Source-code references are retained when the immutable
+image is published. Ownership, the actual source return word, call limits and
+completion evidence remain required. The original payload and KD mutex protocol
+are unchanged. The [new development record](../bench/results/10.176.26.71/bench/taskname-xattr-direct-api-20261019/DEVELOPMENT.md)
+records focused correctness checks and ongoing performance work; the completed
+`88bb5a4` numbers below describe the preceding dispatcher implementation.
 
 Version 10 candidate 6 passed all eight xattr controls at 16 workers: front hit,
 tail hit, missing name and size-only query, each with 16 and 128 attributes and

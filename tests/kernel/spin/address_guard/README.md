@@ -24,8 +24,8 @@ prepared-provider and binary hashes. It also records kernel identity, CPU
 placement and dependency versions. These inputs must remain unchanged until
 the session ends.
 
-The provider must advertise capability version 7, 8, 9 or 10 with feature bit 6
-(address guards). The current provider is version 10. The published entry must
+The provider must advertise capability version 7 through 11 with feature bit 6
+(address guards). The current provider is version 11. The published entry must
 use the spin clobber interface, called ABI1, and image requirement value 2.
 That requirement selects an immutable generated image: active frames retain the
 same code and guard-site records until retirement. The runner checks a positive
@@ -69,6 +69,12 @@ original CALL-word aliases does not remove this check. The
 [string-service probe](../string_service/README.md) separately requires both
 short and valid 300-character strings to complete through the original `strcmp`
 API without helper prechecks. Neither contract removes this pointer-load probe.
+That string probe now requires the optional version 11
+[direct-call route](../../../../docs/design/admission.md#direct-original-helper-calls).
+Direct-call images cannot also contain address guards; the two probes test
+separate execution paths. Focused results are linked from
+[validation](../../../../docs/VALIDATION.md#taskname-and-xattr-helper-validation),
+while direct-route standard-grid performance remains pending.
 
 A successful run additionally requires all workers to join, zero active
 execution records, source retirement, ordinary module unload and a final idle

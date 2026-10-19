@@ -159,10 +159,15 @@ class Session:
         state = status()
         require(state["state"] == 0 and state["frames"] == 0,
                 "source is not OPEN/drained", "UNDRAINED")
-        return dict(entry=entry, source=state,
+        result = dict(entry=entry, source=state,
                     # Hash the inspection disassembly at the same boundaries;
                     # exporting it later never adds I/O to the measured batch.
                     images={p.name: digest(p) for p in (image, assembly, disassembly)})
+        if entry['requirements'] & 16:
+            from native_image import capture
+            result['loaded_image'] = capture(self.path, entry, image)
+            require(status() == state, 'source state changed during image readback', 'UNDRAINED')
+        return result
 
     def measure(self):
         """Count returned JIT bodies only across the joined measurement batch."""

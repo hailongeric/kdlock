@@ -76,8 +76,18 @@ void kd_exe_add_abi(int pid, unsigned long rip, enum kd_exe_lock_kind kind,
 			exe->status_code, exe->pid, exe->RIP, pid, rip);
 
 	/* The pool makes registration safe while a lock hook has IRQs disabled. */
-	if (kind != KD_EXE_LOCK_MUTEX && kd_code_block_free > 0)
-		mem = kd_code_block_pool[--kd_code_block_free];
+	image = NULL;
+	if (kind != KD_EXE_LOCK_MUTEX && kd_code_block_free > 0) {
+		for (i = 0; i < KD_CODE_BLOCK_POOL; i++)
+			if (!kd_images[i].code) {
+				image = &kd_images[i];
+				break;
+			}
+		/* Direct generations share these descriptors with ordinary blocks.
+		 * Spare bytes in either pool cannot exceed the live-image ceiling. */
+		if (image)
+			mem = kd_code_block_pool[--kd_code_block_free];
+	}
 
 	if (!mem && kind != KD_EXE_LOCK_MUTEX) {
 		kd_code_block_gate_unlock(publish_flags);
@@ -98,12 +108,6 @@ void kd_exe_add_abi(int pid, unsigned long rip, enum kd_exe_lock_kind kind,
 	if (mem) {
 		/* Even the historical in-place spin block has stable identity. A
 		 * later guarded image must not redirect its already-bound frames. */
-		image = NULL;
-		for (i = 0; i < KD_CODE_BLOCK_POOL; i++)
-			if (!kd_images[i].code) {
-				image = &kd_images[i];
-				break;
-			}
 		BUG_ON(!image);
 		image->code = mem;
 		image->entry = exe;
@@ -112,6 +116,7 @@ void kd_exe_add_abi(int pid, unsigned long rip, enum kd_exe_lock_kind kind,
 		image->generation = 0;
 		image->length = 0;
 		image->immutable = 0;
+		image->near_text = 0;
 		smp_store_release(&kd_published_images[exe - kd_exes], image);
 	}
 
