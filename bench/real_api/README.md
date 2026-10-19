@@ -20,7 +20,12 @@ These are API microbenchmarks with real kernel metadata, not end-to-end
 application measurements or a global replacement of Linux locks. Neither loading
 KD nor loading TCLock alone changes ordinary syscall locking.
 
-The current selected mutex result is the [KD-only pipebytes n16 comparison](../results/10.176.26.71/bench/comparison/mutex-kdonly-20261017T140354Z/README.md).
+The current compact-mutex result is the [pipebytes, pipecap and seek screen](../results/10.176.26.71/bench/mutex32-api-screen-20261019/README.md):
+144 valid, drained sessions with fresh Native/TCLock controls. Pipe KD uses
+local physical locking without measured JIT; contended seek returns JIT bodies.
+The report keeps these categories, repeat variation and one final diagnostic-row
+gap explicit. The historical [256-byte KD-only pipebytes comparison](../results/10.176.26.71/bench/comparison/mutex-kdonly-20261017T140354Z/README.md)
+retains its original source and measurements.
 The [workload catalog](../../docs/BENCHMARK_WORKLOADS.md) defines each label.
 Broader historical API coverage retains its original adapter/provider identity;
 it is not validation of every current KD mutex scenario.

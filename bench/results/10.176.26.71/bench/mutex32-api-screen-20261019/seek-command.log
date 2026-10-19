@@ -1,0 +1,145 @@
+1/72 seek-set-n16-t01-r0-native
+  3.485 M/s; peak 5.395; JIT entries 0, complete 0
+2/72 seek-set-n16-t01-r0-tclock
+  5.792 M/s; peak 5.818; JIT entries 0, complete 0
+3/72 seek-set-n16-t01-r0-kdlock
+  5.692 M/s; peak 5.716; JIT entries 0, complete 0
+4/72 seek-set-n16-t01-r1-tclock
+  5.803 M/s; peak 5.837; JIT entries 0, complete 0
+5/72 seek-set-n16-t01-r1-kdlock
+  5.693 M/s; peak 5.723; JIT entries 0, complete 0
+6/72 seek-set-n16-t01-r1-native
+  5.643 M/s; peak 5.664; JIT entries 0, complete 0
+7/72 seek-set-n16-t01-r2-kdlock
+  5.706 M/s; peak 5.736; JIT entries 0, complete 0
+8/72 seek-set-n16-t01-r2-native
+  5.618 M/s; peak 5.640; JIT entries 0, complete 0
+9/72 seek-set-n16-t01-r2-tclock
+  5.799 M/s; peak 5.826; JIT entries 0, complete 0
+10/72 seek-set-n16-t08-r0-native
+  3.188 M/s; peak 3.209; JIT entries 0, complete 0
+11/72 seek-set-n16-t08-r0-tclock
+  2.604 M/s; peak 2.614; JIT entries 0, complete 0
+12/72 seek-set-n16-t08-r0-kdlock
+  1.091 M/s; peak 1.111; JIT entries 2123748, complete 2123748
+13/72 seek-set-n16-t08-r1-tclock
+  2.722 M/s; peak 2.735; JIT entries 0, complete 0
+14/72 seek-set-n16-t08-r1-kdlock
+  1.124 M/s; peak 1.137; JIT entries 2150283, complete 2150283
+15/72 seek-set-n16-t08-r1-native
+  3.237 M/s; peak 3.249; JIT entries 0, complete 0
+16/72 seek-set-n16-t08-r2-kdlock
+  1.190 M/s; peak 1.203; JIT entries 2310324, complete 2310324
+17/72 seek-set-n16-t08-r2-native
+  2.789 M/s; peak 2.801; JIT entries 0, complete 0
+18/72 seek-set-n16-t08-r2-tclock
+  2.666 M/s; peak 2.680; JIT entries 0, complete 0
+19/72 seek-set-n16-t32-r0-native
+  2.686 M/s; peak 2.803; JIT entries 0, complete 0
+20/72 seek-set-n16-t32-r0-tclock
+  2.560 M/s; peak 2.575; JIT entries 0, complete 0
+21/72 seek-set-n16-t32-r0-kdlock
+  1.003 M/s; peak 1.013; JIT entries 1997897, complete 1997897
+22/72 seek-set-n16-t32-r1-tclock
+  2.722 M/s; peak 2.741; JIT entries 0, complete 0
+23/72 seek-set-n16-t32-r1-kdlock
+  1.004 M/s; peak 1.012; JIT entries 1997716, complete 1997716
+24/72 seek-set-n16-t32-r1-native
+  2.812 M/s; peak 2.870; JIT entries 0, complete 0
+25/72 seek-set-n16-t32-r2-kdlock
+  0.988 M/s; peak 0.999; JIT entries 1966140, complete 1966140
+26/72 seek-set-n16-t32-r2-native
+  2.782 M/s; peak 2.843; JIT entries 0, complete 0
+27/72 seek-set-n16-t32-r2-tclock
+  2.491 M/s; peak 2.503; JIT entries 0, complete 0
+28/72 seek-set-n16-t60-r0-native
+  0.471 M/s; peak 0.484; JIT entries 0, complete 0
+29/72 seek-set-n16-t60-r0-tclock
+  1.699 M/s; peak 2.469; JIT entries 0, complete 0
+30/72 seek-set-n16-t60-r0-kdlock
+  1.095 M/s; peak 0.984; JIT entries 1580384, complete 1580384
+31/72 seek-set-n16-t60-r1-tclock
+  2.469 M/s; peak 2.479; JIT entries 0, complete 0
+32/72 seek-set-n16-t60-r1-kdlock
+  1.101 M/s; peak 0.978; JIT entries 1568854, complete 1568854
+33/72 seek-set-n16-t60-r1-native
+  1.382 M/s; peak 1.424; JIT entries 0, complete 0
+34/72 seek-set-n16-t60-r2-kdlock
+  1.056 M/s; peak 1.002; JIT entries 1742048, complete 1742048
+35/72 seek-set-n16-t60-r2-native
+  1.410 M/s; peak 1.457; JIT entries 0, complete 0
+36/72 seek-set-n16-t60-r2-tclock
+  2.464 M/s; peak 2.482; JIT entries 0, complete 0
+37/72 seek-end-n16-t01-r0-native
+  5.634 M/s; peak 5.660; JIT entries 0, complete 0
+38/72 seek-end-n16-t01-r0-tclock
+  5.834 M/s; peak 5.849; JIT entries 0, complete 0
+39/72 seek-end-n16-t01-r0-kdlock
+  5.692 M/s; peak 5.727; JIT entries 0, complete 0
+40/72 seek-end-n16-t01-r1-tclock
+  5.773 M/s; peak 5.795; JIT entries 0, complete 0
+41/72 seek-end-n16-t01-r1-kdlock
+  5.695 M/s; peak 5.730; JIT entries 0, complete 0
+42/72 seek-end-n16-t01-r1-native
+  5.624 M/s; peak 5.648; JIT entries 0, complete 0
+43/72 seek-end-n16-t01-r2-kdlock
+  5.707 M/s; peak 5.724; JIT entries 0, complete 0
+44/72 seek-end-n16-t01-r2-native
+  5.650 M/s; peak 5.677; JIT entries 0, complete 0
+45/72 seek-end-n16-t01-r2-tclock
+  5.821 M/s; peak 5.857; JIT entries 0, complete 0
+46/72 seek-end-n16-t08-r0-native
+  2.904 M/s; peak 2.925; JIT entries 0, complete 0
+47/72 seek-end-n16-t08-r0-tclock
+  2.874 M/s; peak 2.908; JIT entries 0, complete 0
+48/72 seek-end-n16-t08-r0-kdlock
+  1.117 M/s; peak 1.131; JIT entries 2173714, complete 2173714
+49/72 seek-end-n16-t08-r1-tclock
+  2.664 M/s; peak 2.675; JIT entries 0, complete 0
+50/72 seek-end-n16-t08-r1-kdlock
+  1.195 M/s; peak 1.209; JIT entries 2308925, complete 2308925
+51/72 seek-end-n16-t08-r1-native
+  2.585 M/s; peak 2.593; JIT entries 0, complete 0
+52/72 seek-end-n16-t08-r2-kdlock
+  1.161 M/s; peak 1.179; JIT entries 2249601, complete 2249601
+53/72 seek-end-n16-t08-r2-native
+  3.406 M/s; peak 3.420; JIT entries 0, complete 0
+54/72 seek-end-n16-t08-r2-tclock
+  2.615 M/s; peak 2.626; JIT entries 0, complete 0
+55/72 seek-end-n16-t32-r0-native
+  2.651 M/s; peak 2.690; JIT entries 0, complete 0
+56/72 seek-end-n16-t32-r0-tclock
+  2.624 M/s; peak 2.637; JIT entries 0, complete 0
+57/72 seek-end-n16-t32-r0-kdlock
+  1.001 M/s; peak 1.010; JIT entries 1976183, complete 1976183
+58/72 seek-end-n16-t32-r1-tclock
+  2.460 M/s; peak 2.474; JIT entries 0, complete 0
+59/72 seek-end-n16-t32-r1-kdlock
+  1.058 M/s; peak 0.999; JIT entries 1896193, complete 1896193
+60/72 seek-end-n16-t32-r1-native
+  2.787 M/s; peak 2.850; JIT entries 0, complete 0
+61/72 seek-end-n16-t32-r2-kdlock
+  1.001 M/s; peak 1.009; JIT entries 1994424, complete 1994424
+62/72 seek-end-n16-t32-r2-native
+  2.829 M/s; peak 2.894; JIT entries 0, complete 0
+63/72 seek-end-n16-t32-r2-tclock
+  2.588 M/s; peak 2.600; JIT entries 0, complete 0
+64/72 seek-end-n16-t60-r0-native
+  0.463 M/s; peak 0.474; JIT entries 0, complete 0
+65/72 seek-end-n16-t60-r0-tclock
+  1.674 M/s; peak 2.393; JIT entries 0, complete 0
+66/72 seek-end-n16-t60-r0-kdlock
+  1.157 M/s; peak 1.196; JIT entries 1493506, complete 1493506
+67/72 seek-end-n16-t60-r1-tclock
+  2.520 M/s; peak 2.533; JIT entries 0, complete 0
+68/72 seek-end-n16-t60-r1-kdlock
+  1.058 M/s; peak 0.997; JIT entries 1707813, complete 1707813
+69/72 seek-end-n16-t60-r1-native
+  1.335 M/s; peak 1.380; JIT entries 0, complete 0
+70/72 seek-end-n16-t60-r2-kdlock
+  1.193 M/s; peak 1.497; JIT entries 1367420, complete 1367420
+71/72 seek-end-n16-t60-r2-native
+  1.385 M/s; peak 1.400; JIT entries 0, complete 0
+72/72 seek-end-n16-t60-r2-tclock
+  2.545 M/s; peak 2.558; JIT entries 0, complete 0
+All sessions completed and drained.

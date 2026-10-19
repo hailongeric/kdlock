@@ -26,6 +26,12 @@ The subsequent [compact-mutex screen](10.176.26.71/bench/mutex32-screen-20261019
 compares c01, c08 and RCUHT against fresh Native/TCLock controls at 1/8/32/60 workers.
 All 108 sessions passed and drained; KD's contended whole-run medians trail both
 controls. Peak results and all variation remain separate in that report.
+The [additional compact-mutex API screen](10.176.26.71/bench/mutex32-api-screen-20261019/README.md)
+adds 144 valid, drained pipebytes/pipecap/seek SET/seek END sessions. Pipe KD
+stays local and beats both controls under contention; seek KD returns JIT
+bodies and trails both controls in whole-run medians. The report retains
+execution categories, substantial control variation and one incomplete final
+per-CPU diagnostic row separately from measurement validity.
 The [2026-10-18 consolidation checks](10.176.26.71/tests/main-consolidation-20261018/README.md)
 validate organization and tooling separately from the measured runtime.
 The [feature reintegration checks](10.176.26.71/tests/feature-reintegration-20261018/README.md)

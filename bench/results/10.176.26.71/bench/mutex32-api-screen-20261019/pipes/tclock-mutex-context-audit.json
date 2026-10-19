@@ -1,0 +1,5 @@
+{
+  "hidden_helpers_preserve_lock": true,
+  "six_register_switch": true,
+  "slowpath_inline_returns": 2
+}

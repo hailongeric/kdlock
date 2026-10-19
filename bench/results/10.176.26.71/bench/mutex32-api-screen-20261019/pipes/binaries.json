@@ -1,0 +1,50 @@
+{
+  "client": {
+    "path": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-api-screen-20261019/pipes/build/client",
+    "sha256": "58e901442810a274a7e35e835be030c6d01db0d3e1f955682f22a4e752e84442"
+  },
+  "daemon": {
+    "path": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-api-screen-20261019/pipes/build/daemon",
+    "sha256": "bae5dcaf8cfa83b020bec6e2a7a85c0b0496f603dd0789a4cc8f3e31d5305fcb"
+  },
+  "kdlock-pipebytes/real_api.ko": {
+    "path": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-api-screen-20261019/pipes/build/kdlock-pipebytes/real_api.ko",
+    "sha256": "63473a991b6c0feda8b675b321128edec7f3d6f4c7a97b554b7b5881cc7534cb"
+  },
+  "kdlock-pipecap/real_api.ko": {
+    "path": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-api-screen-20261019/pipes/build/kdlock-pipecap/real_api.ko",
+    "sha256": "85cd4f1f4fdd1504034df88b55d3cf37351334db199b47538f6b312ae47b5f44"
+  },
+  "kdlock_km.ko": {
+    "path": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-api-screen-20261019/pipes/build/kdlock_km.ko",
+    "sha256": "2fa636e52b6012fbeb391265fa2f2fcac584411a619d63422245954059d750dd"
+  },
+  "native-pipebytes/real_api.ko": {
+    "path": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-api-screen-20261019/pipes/build/native-pipebytes/real_api.ko",
+    "sha256": "21d5b35b783d34a157922bd43e30e3116eb88761ec93fe764bfb82d34a8eae0c"
+  },
+  "native-pipecap/real_api.ko": {
+    "path": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-api-screen-20261019/pipes/build/native-pipecap/real_api.ko",
+    "sha256": "98c67e1dd9b4612d4ffb370f025c34a99be33744245569c16228553f0009af93"
+  },
+  "tc_allocator_guard.ko": {
+    "path": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-api-screen-20261019/pipes/build/tc_allocator_guard.ko",
+    "sha256": "4323537a05b588952ba6800a5b65cf3f0681174c3aa37dd1102e5cc1e963f930"
+  },
+  "tclock-mutex/tclock_mutex_backend_km.ko": {
+    "path": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-api-screen-20261019/pipes/build/tclock-mutex/tclock_mutex_backend_km.ko",
+    "sha256": "49dabea2847ffbe35299d68e4c09f034a569ad509f93b1644fc58810d46f268a"
+  },
+  "tclock-pipebytes/real_api.ko": {
+    "path": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-api-screen-20261019/pipes/build/tclock-pipebytes/real_api.ko",
+    "sha256": "cfd31a395a39b395480cd5af4bf3da8895017e942326231e842df65551a64d6b"
+  },
+  "tclock-pipecap/real_api.ko": {
+    "path": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-api-screen-20261019/pipes/build/tclock-pipecap/real_api.ko",
+    "sha256": "bc702099339fc23c593172823062378fa6e202f87887dcd5e5228914857fcfe3"
+  },
+  "tclock_mutex_backend_km.ko": {
+    "path": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-api-screen-20261019/pipes/build/tclock_mutex_backend_km.ko",
+    "sha256": "49dabea2847ffbe35299d68e4c09f034a569ad509f93b1644fc58810d46f268a"
+  }
+}

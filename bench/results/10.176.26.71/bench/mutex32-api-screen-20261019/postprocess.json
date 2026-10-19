@@ -1,0 +1,36 @@
+[
+  {
+    "name": "summary",
+    "argv": [
+      "/usr/bin/python3",
+      "/root/kdlock-evidence/10.176.26.71/bench/mutex32-api-screen-20261019/summarize.py",
+      "--base",
+      "/root/kdlock-evidence/10.176.26.71/bench/mutex32-api-screen-20261019",
+      "--output",
+      "/root/kdlock-evidence/10.176.26.71/bench/mutex32-api-screen-20261019"
+    ],
+    "exit_code": 0
+  },
+  {
+    "name": "admission",
+    "argv": [
+      "/usr/bin/python3",
+      "/root/kdlock-evidence/10.176.26.71/bench/mutex32-api-screen-20261019/collect_admission.py",
+      "--base",
+      "/root/kdlock-evidence/10.176.26.71/bench/mutex32-api-screen-20261019",
+      "--output",
+      "/root/kdlock-evidence/10.176.26.71/bench/mutex32-api-screen-20261019/admission.json"
+    ],
+    "exit_code": 1
+  },
+  {
+    "name": "plot",
+    "argv": [
+      "/root/kdlock-plot-venv-20261019/bin/python3",
+      "/root/kdlock-evidence/10.176.26.71/bench/mutex32-api-screen-20261019/plot.py",
+      "--input",
+      "/root/kdlock-evidence/10.176.26.71/bench/mutex32-api-screen-20261019/comparison.json"
+    ],
+    "exit_code": 0
+  }
+]

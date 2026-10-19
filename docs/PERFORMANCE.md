@@ -112,6 +112,27 @@ and the host's `ondemand` policy stayed unchanged, while actual VM memory had
 some pages on the opposite NUMA node despite binding. No matched old-layout
 KD arm was run; this screen cannot isolate the cost of shrinking the object.
 
+The [additional API screen](../bench/results/10.176.26.71/bench/mutex32-api-screen-20261019/README.md)
+completed 144 valid, drained sessions at the same four worker counts and three
+repetitions, using fresh controls. At 60 workers, median whole-run Mops/s is:
+
+| Workload | Native | TCLock | Compact KD | KD execution |
+| --- | ---: | ---: | ---: | --- |
+| pipebytes n16 | 1.844 | 2.423 | 4.735 | NO_JIT, local KD |
+| pipecap n16 | 1.824 | 2.559 | 5.686 | NO_JIT, local KD |
+| seek SET | 1.382 | 2.464 | 1.095 | Returned JIT |
+| seek END | 1.335 | 2.520 | 1.157 | Returned JIT |
+
+Pipe KD medians exceed both controls at every tested contended point, while
+seek KD medians trail both. All 30 KD NO_JIT sessions have complete evidence
+that CPU admission never reached its first contention heat check; all 18
+contended seek sessions returned JIT bodies. One returned-JIT seek session
+lacks a final per-CPU diagnostic row, retained as incomplete diagnostic evidence
+without affecting its checked measurement and drain. Native's 60-worker
+repeat spreads reach 72.7%; all ranges and separate peaks are retained.
+These API results are not pooled with synthetic or historical measurements,
+and do not isolate the cost of the compact layout.
+
 ## Historical 256-byte mutex result, d2a2304
 
 At 60 workers, median whole-run throughput in Mops/s is:

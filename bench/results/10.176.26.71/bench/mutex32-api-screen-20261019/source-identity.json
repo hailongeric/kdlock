@@ -1,0 +1,8 @@
+{
+  "checkout": "/home/eric/vm/vm-shared/kdlock",
+  "branch": "master",
+  "head": "a803592a2fa20f08291fa5cc1cb768fdd6c63436",
+  "implementation_commit": "7713897b6f4d76873c94af2429da9be8f39ec4af",
+  "initial_worktree_clean": true,
+  "runtime_changes_since_implementation": ""
+}

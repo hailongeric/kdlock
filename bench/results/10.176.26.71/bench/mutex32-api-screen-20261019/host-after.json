@@ -1,0 +1,1035 @@
+{
+  "captured_utc": "2026-10-19T08:17:34.734956+00:00",
+  "qemu": [
+    {
+      "pid": 257489,
+      "args": [
+        "qemu-system-x86_64",
+        "-name",
+        "ubuntu-build,debug-threads=on",
+        "-enable-kvm",
+        "-cpu",
+        "host",
+        "-smp",
+        "64,maxcpus=64,sockets=2,cores=32,threads=1",
+        "-m",
+        "24G",
+        "-object",
+        "memory-backend-ram,id=mem0,size=12G,host-nodes=0,policy=bind",
+        "-object",
+        "memory-backend-ram,id=mem1,size=12G,host-nodes=1,policy=bind",
+        "-numa",
+        "node,nodeid=0,cpus=0-31,memdev=mem0",
+        "-numa",
+        "node,nodeid=1,cpus=32-63,memdev=mem1",
+        "-device",
+        "virtio-scsi-pci,id=scsi0",
+        "-drive",
+        "file=/home/eric/vm/qemu-disks/ubuntu22.04.img,format=qcow2,if=none,id=drive_system",
+        "-device",
+        "scsi-hd,drive=drive_system,bus=scsi0.0,bootindex=0",
+        "-drive",
+        "file=/home/eric/vm/qemu-disks/sda.qcow2,format=qcow2,if=none,id=drive_data1",
+        "-device",
+        "scsi-hd,drive=drive_data1,bus=scsi0.0",
+        "-netdev",
+        "user,id=n1,hostfwd=tcp:0.0.0.0:2222-:22,hostfwd=tcp:0.0.0.0:9090-:9090,hostfwd=tcp:0.0.0.0:9091-:9091",
+        "-device",
+        "virtio-net-pci,netdev=n1",
+        "-display",
+        "none",
+        "-serial",
+        "file:/tmp/qemu-serial.log",
+        "-monitor",
+        "unix:/tmp/qemu-monitor.sock,server=on,wait=off",
+        "-gdb",
+        "tcp:127.0.0.1:1234",
+        "-pidfile",
+        "/tmp/kdlock-qemu.pid",
+        "-daemonize"
+      ],
+      "tasks": [
+        {
+          "tid": 257489,
+          "comm": "qemu-system-x86",
+          "affinity": [
+            63
+          ]
+        },
+        {
+          "tid": 257490,
+          "comm": "call_rcu",
+          "affinity": [
+            63
+          ]
+        },
+        {
+          "tid": 257495,
+          "comm": "CPU 0/KVM",
+          "affinity": [
+            0
+          ]
+        },
+        {
+          "tid": 257496,
+          "comm": "CPU 1/KVM",
+          "affinity": [
+            1
+          ]
+        },
+        {
+          "tid": 257497,
+          "comm": "CPU 2/KVM",
+          "affinity": [
+            2
+          ]
+        },
+        {
+          "tid": 257498,
+          "comm": "CPU 3/KVM",
+          "affinity": [
+            3
+          ]
+        },
+        {
+          "tid": 257499,
+          "comm": "CPU 4/KVM",
+          "affinity": [
+            4
+          ]
+        },
+        {
+          "tid": 257500,
+          "comm": "CPU 5/KVM",
+          "affinity": [
+            5
+          ]
+        },
+        {
+          "tid": 257501,
+          "comm": "CPU 6/KVM",
+          "affinity": [
+            6
+          ]
+        },
+        {
+          "tid": 257502,
+          "comm": "CPU 7/KVM",
+          "affinity": [
+            7
+          ]
+        },
+        {
+          "tid": 257503,
+          "comm": "CPU 8/KVM",
+          "affinity": [
+            8
+          ]
+        },
+        {
+          "tid": 257504,
+          "comm": "CPU 9/KVM",
+          "affinity": [
+            9
+          ]
+        },
+        {
+          "tid": 257505,
+          "comm": "CPU 10/KVM",
+          "affinity": [
+            10
+          ]
+        },
+        {
+          "tid": 257506,
+          "comm": "CPU 11/KVM",
+          "affinity": [
+            11
+          ]
+        },
+        {
+          "tid": 257507,
+          "comm": "CPU 12/KVM",
+          "affinity": [
+            12
+          ]
+        },
+        {
+          "tid": 257508,
+          "comm": "CPU 13/KVM",
+          "affinity": [
+            13
+          ]
+        },
+        {
+          "tid": 257509,
+          "comm": "CPU 14/KVM",
+          "affinity": [
+            14
+          ]
+        },
+        {
+          "tid": 257510,
+          "comm": "CPU 15/KVM",
+          "affinity": [
+            15
+          ]
+        },
+        {
+          "tid": 257511,
+          "comm": "CPU 16/KVM",
+          "affinity": [
+            16
+          ]
+        },
+        {
+          "tid": 257512,
+          "comm": "CPU 17/KVM",
+          "affinity": [
+            17
+          ]
+        },
+        {
+          "tid": 257513,
+          "comm": "CPU 18/KVM",
+          "affinity": [
+            18
+          ]
+        },
+        {
+          "tid": 257514,
+          "comm": "CPU 19/KVM",
+          "affinity": [
+            19
+          ]
+        },
+        {
+          "tid": 257515,
+          "comm": "CPU 20/KVM",
+          "affinity": [
+            20
+          ]
+        },
+        {
+          "tid": 257516,
+          "comm": "CPU 21/KVM",
+          "affinity": [
+            21
+          ]
+        },
+        {
+          "tid": 257517,
+          "comm": "CPU 22/KVM",
+          "affinity": [
+            22
+          ]
+        },
+        {
+          "tid": 257518,
+          "comm": "CPU 23/KVM",
+          "affinity": [
+            23
+          ]
+        },
+        {
+          "tid": 257519,
+          "comm": "CPU 24/KVM",
+          "affinity": [
+            24
+          ]
+        },
+        {
+          "tid": 257520,
+          "comm": "CPU 25/KVM",
+          "affinity": [
+            25
+          ]
+        },
+        {
+          "tid": 257521,
+          "comm": "CPU 26/KVM",
+          "affinity": [
+            26
+          ]
+        },
+        {
+          "tid": 257522,
+          "comm": "CPU 27/KVM",
+          "affinity": [
+            27
+          ]
+        },
+        {
+          "tid": 257523,
+          "comm": "CPU 28/KVM",
+          "affinity": [
+            28
+          ]
+        },
+        {
+          "tid": 257524,
+          "comm": "CPU 29/KVM",
+          "affinity": [
+            29
+          ]
+        },
+        {
+          "tid": 257525,
+          "comm": "CPU 30/KVM",
+          "affinity": [
+            30
+          ]
+        },
+        {
+          "tid": 257526,
+          "comm": "CPU 31/KVM",
+          "affinity": [
+            31
+          ]
+        },
+        {
+          "tid": 257527,
+          "comm": "CPU 32/KVM",
+          "affinity": [
+            32
+          ]
+        },
+        {
+          "tid": 257528,
+          "comm": "CPU 33/KVM",
+          "affinity": [
+            33
+          ]
+        },
+        {
+          "tid": 257529,
+          "comm": "CPU 34/KVM",
+          "affinity": [
+            34
+          ]
+        },
+        {
+          "tid": 257530,
+          "comm": "CPU 35/KVM",
+          "affinity": [
+            35
+          ]
+        },
+        {
+          "tid": 257531,
+          "comm": "CPU 36/KVM",
+          "affinity": [
+            36
+          ]
+        },
+        {
+          "tid": 257532,
+          "comm": "CPU 37/KVM",
+          "affinity": [
+            37
+          ]
+        },
+        {
+          "tid": 257533,
+          "comm": "CPU 38/KVM",
+          "affinity": [
+            38
+          ]
+        },
+        {
+          "tid": 257534,
+          "comm": "CPU 39/KVM",
+          "affinity": [
+            39
+          ]
+        },
+        {
+          "tid": 257535,
+          "comm": "CPU 40/KVM",
+          "affinity": [
+            40
+          ]
+        },
+        {
+          "tid": 257536,
+          "comm": "CPU 41/KVM",
+          "affinity": [
+            41
+          ]
+        },
+        {
+          "tid": 257537,
+          "comm": "CPU 42/KVM",
+          "affinity": [
+            42
+          ]
+        },
+        {
+          "tid": 257538,
+          "comm": "CPU 43/KVM",
+          "affinity": [
+            43
+          ]
+        },
+        {
+          "tid": 257539,
+          "comm": "CPU 44/KVM",
+          "affinity": [
+            44
+          ]
+        },
+        {
+          "tid": 257540,
+          "comm": "CPU 45/KVM",
+          "affinity": [
+            45
+          ]
+        },
+        {
+          "tid": 257541,
+          "comm": "CPU 46/KVM",
+          "affinity": [
+            46
+          ]
+        },
+        {
+          "tid": 257542,
+          "comm": "CPU 47/KVM",
+          "affinity": [
+            47
+          ]
+        },
+        {
+          "tid": 257543,
+          "comm": "CPU 48/KVM",
+          "affinity": [
+            48
+          ]
+        },
+        {
+          "tid": 257544,
+          "comm": "CPU 49/KVM",
+          "affinity": [
+            49
+          ]
+        },
+        {
+          "tid": 257545,
+          "comm": "CPU 50/KVM",
+          "affinity": [
+            50
+          ]
+        },
+        {
+          "tid": 257546,
+          "comm": "CPU 51/KVM",
+          "affinity": [
+            51
+          ]
+        },
+        {
+          "tid": 257547,
+          "comm": "CPU 52/KVM",
+          "affinity": [
+            52
+          ]
+        },
+        {
+          "tid": 257548,
+          "comm": "CPU 53/KVM",
+          "affinity": [
+            53
+          ]
+        },
+        {
+          "tid": 257549,
+          "comm": "CPU 54/KVM",
+          "affinity": [
+            54
+          ]
+        },
+        {
+          "tid": 257550,
+          "comm": "CPU 55/KVM",
+          "affinity": [
+            55
+          ]
+        },
+        {
+          "tid": 257551,
+          "comm": "CPU 56/KVM",
+          "affinity": [
+            56
+          ]
+        },
+        {
+          "tid": 257552,
+          "comm": "CPU 57/KVM",
+          "affinity": [
+            57
+          ]
+        },
+        {
+          "tid": 257553,
+          "comm": "CPU 58/KVM",
+          "affinity": [
+            58
+          ]
+        },
+        {
+          "tid": 257554,
+          "comm": "CPU 59/KVM",
+          "affinity": [
+            59
+          ]
+        },
+        {
+          "tid": 257555,
+          "comm": "CPU 60/KVM",
+          "affinity": [
+            60
+          ]
+        },
+        {
+          "tid": 257556,
+          "comm": "CPU 61/KVM",
+          "affinity": [
+            61
+          ]
+        },
+        {
+          "tid": 257557,
+          "comm": "CPU 62/KVM",
+          "affinity": [
+            62
+          ]
+        },
+        {
+          "tid": 257558,
+          "comm": "CPU 63/KVM",
+          "affinity": [
+            63
+          ]
+        },
+        {
+          "tid": 257560,
+          "comm": "kvm-nx-lpage-re",
+          "affinity": [
+            63
+          ]
+        },
+        {
+          "tid": 383978,
+          "comm": "worker",
+          "affinity": [
+            63
+          ]
+        },
+        {
+          "tid": 383979,
+          "comm": "worker",
+          "affinity": [
+            63
+          ]
+        },
+        {
+          "tid": 383982,
+          "comm": "worker",
+          "affinity": [
+            63
+          ]
+        },
+        {
+          "tid": 383983,
+          "comm": "worker",
+          "affinity": [
+            63
+          ]
+        },
+        {
+          "tid": 384554,
+          "comm": "worker",
+          "affinity": [
+            63
+          ]
+        },
+        {
+          "tid": 384691,
+          "comm": "worker",
+          "affinity": [
+            63
+          ]
+        },
+        {
+          "tid": 384694,
+          "comm": "worker",
+          "affinity": [
+            63
+          ]
+        }
+      ]
+    }
+  ],
+  "cpufreq": {
+    "policy11": {
+      "scaling_driver": "intel_cpufreq",
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000",
+      "affected_cpus": "11"
+    },
+    "policy8": {
+      "scaling_driver": "intel_cpufreq",
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000",
+      "affected_cpus": "8"
+    },
+    "policy58": {
+      "scaling_driver": "intel_cpufreq",
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000",
+      "affected_cpus": "58"
+    },
+    "policy48": {
+      "scaling_driver": "intel_cpufreq",
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000",
+      "affected_cpus": "48"
+    },
+    "policy38": {
+      "scaling_driver": "intel_cpufreq",
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000",
+      "affected_cpus": "38"
+    },
+    "policy6": {
+      "scaling_driver": "intel_cpufreq",
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000",
+      "affected_cpus": "6"
+    },
+    "policy28": {
+      "scaling_driver": "intel_cpufreq",
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000",
+      "affected_cpus": "28"
+    },
+    "policy56": {
+      "scaling_driver": "intel_cpufreq",
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000",
+      "affected_cpus": "56"
+    },
+    "policy18": {
+      "scaling_driver": "intel_cpufreq",
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000",
+      "affected_cpus": "18"
+    },
+    "policy46": {
+      "scaling_driver": "intel_cpufreq",
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000",
+      "affected_cpus": "46"
+    },
+    "policy36": {
+      "scaling_driver": "intel_cpufreq",
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000",
+      "affected_cpus": "36"
+    },
+    "policy4": {
+      "scaling_driver": "intel_cpufreq",
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000",
+      "affected_cpus": "4"
+    },
+    "policy26": {
+      "scaling_driver": "intel_cpufreq",
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000",
+      "affected_cpus": "26"
+    },
+    "policy54": {
+      "scaling_driver": "intel_cpufreq",
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000",
+      "affected_cpus": "54"
+    },
+    "policy16": {
+      "scaling_driver": "intel_cpufreq",
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000",
+      "affected_cpus": "16"
+    },
+    "policy44": {
+      "scaling_driver": "intel_cpufreq",
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000",
+      "affected_cpus": "44"
+    },
+    "policy34": {
+      "scaling_driver": "intel_cpufreq",
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000",
+      "affected_cpus": "34"
+    },
+    "policy2": {
+      "scaling_driver": "intel_cpufreq",
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000",
+      "affected_cpus": "2"
+    },
+    "policy62": {
+      "scaling_driver": "intel_cpufreq",
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000",
+      "affected_cpus": "62"
+    },
+    "policy24": {
+      "scaling_driver": "intel_cpufreq",
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000",
+      "affected_cpus": "24"
+    },
+    "policy52": {
+      "scaling_driver": "intel_cpufreq",
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000",
+      "affected_cpus": "52"
+    },
+    "policy14": {
+      "scaling_driver": "intel_cpufreq",
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000",
+      "affected_cpus": "14"
+    },
+    "policy42": {
+      "scaling_driver": "intel_cpufreq",
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000",
+      "affected_cpus": "42"
+    },
+    "policy32": {
+      "scaling_driver": "intel_cpufreq",
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000",
+      "affected_cpus": "32"
+    },
+    "policy0": {
+      "scaling_driver": "intel_cpufreq",
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000",
+      "affected_cpus": "0"
+    },
+    "policy60": {
+      "scaling_driver": "intel_cpufreq",
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000",
+      "affected_cpus": "60"
+    },
+    "policy22": {
+      "scaling_driver": "intel_cpufreq",
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000",
+      "affected_cpus": "22"
+    },
+    "policy50": {
+      "scaling_driver": "intel_cpufreq",
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000",
+      "affected_cpus": "50"
+    },
+    "policy12": {
+      "scaling_driver": "intel_cpufreq",
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000",
+      "affected_cpus": "12"
+    },
+    "policy40": {
+      "scaling_driver": "intel_cpufreq",
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000",
+      "affected_cpus": "40"
+    },
+    "policy9": {
+      "scaling_driver": "intel_cpufreq",
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000",
+      "affected_cpus": "9"
+    },
+    "policy30": {
+      "scaling_driver": "intel_cpufreq",
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000",
+      "affected_cpus": "30"
+    },
+    "policy59": {
+      "scaling_driver": "intel_cpufreq",
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000",
+      "affected_cpus": "59"
+    },
+    "policy20": {
+      "scaling_driver": "intel_cpufreq",
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000",
+      "affected_cpus": "20"
+    },
+    "policy49": {
+      "scaling_driver": "intel_cpufreq",
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000",
+      "affected_cpus": "49"
+    },
+    "policy10": {
+      "scaling_driver": "intel_cpufreq",
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000",
+      "affected_cpus": "10"
+    },
+    "policy39": {
+      "scaling_driver": "intel_cpufreq",
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000",
+      "affected_cpus": "39"
+    },
+    "policy7": {
+      "scaling_driver": "intel_cpufreq",
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000",
+      "affected_cpus": "7"
+    },
+    "policy29": {
+      "scaling_driver": "intel_cpufreq",
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000",
+      "affected_cpus": "29"
+    },
+    "policy57": {
+      "scaling_driver": "intel_cpufreq",
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000",
+      "affected_cpus": "57"
+    },
+    "policy19": {
+      "scaling_driver": "intel_cpufreq",
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000",
+      "affected_cpus": "19"
+    },
+    "policy47": {
+      "scaling_driver": "intel_cpufreq",
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000",
+      "affected_cpus": "47"
+    },
+    "policy37": {
+      "scaling_driver": "intel_cpufreq",
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000",
+      "affected_cpus": "37"
+    },
+    "policy5": {
+      "scaling_driver": "intel_cpufreq",
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000",
+      "affected_cpus": "5"
+    },
+    "policy27": {
+      "scaling_driver": "intel_cpufreq",
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000",
+      "affected_cpus": "27"
+    },
+    "policy55": {
+      "scaling_driver": "intel_cpufreq",
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000",
+      "affected_cpus": "55"
+    },
+    "policy17": {
+      "scaling_driver": "intel_cpufreq",
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000",
+      "affected_cpus": "17"
+    },
+    "policy45": {
+      "scaling_driver": "intel_cpufreq",
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000",
+      "affected_cpus": "45"
+    },
+    "policy35": {
+      "scaling_driver": "intel_cpufreq",
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000",
+      "affected_cpus": "35"
+    },
+    "policy3": {
+      "scaling_driver": "intel_cpufreq",
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000",
+      "affected_cpus": "3"
+    },
+    "policy63": {
+      "scaling_driver": "intel_cpufreq",
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000",
+      "affected_cpus": "63"
+    },
+    "policy25": {
+      "scaling_driver": "intel_cpufreq",
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000",
+      "affected_cpus": "25"
+    },
+    "policy53": {
+      "scaling_driver": "intel_cpufreq",
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000",
+      "affected_cpus": "53"
+    },
+    "policy15": {
+      "scaling_driver": "intel_cpufreq",
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000",
+      "affected_cpus": "15"
+    },
+    "policy43": {
+      "scaling_driver": "intel_cpufreq",
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000",
+      "affected_cpus": "43"
+    },
+    "policy33": {
+      "scaling_driver": "intel_cpufreq",
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000",
+      "affected_cpus": "33"
+    },
+    "policy1": {
+      "scaling_driver": "intel_cpufreq",
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000",
+      "affected_cpus": "1"
+    },
+    "policy61": {
+      "scaling_driver": "intel_cpufreq",
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000",
+      "affected_cpus": "61"
+    },
+    "policy23": {
+      "scaling_driver": "intel_cpufreq",
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000",
+      "affected_cpus": "23"
+    },
+    "policy51": {
+      "scaling_driver": "intel_cpufreq",
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000",
+      "affected_cpus": "51"
+    },
+    "policy13": {
+      "scaling_driver": "intel_cpufreq",
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000",
+      "affected_cpus": "13"
+    },
+    "policy41": {
+      "scaling_driver": "intel_cpufreq",
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000",
+      "affected_cpus": "41"
+    },
+    "policy31": {
+      "scaling_driver": "intel_cpufreq",
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000",
+      "affected_cpus": "31"
+    },
+    "policy21": {
+      "scaling_driver": "intel_cpufreq",
+      "scaling_governor": "ondemand",
+      "scaling_min_freq": "800000",
+      "scaling_max_freq": "3600000",
+      "affected_cpus": "21"
+    }
+  },
+  "numa": {
+    "node0": "0-31",
+    "node1": "32-63"
+  },
+  "serial_pv_boot_lines": [
+    "[    0.118699] kvm-guest: PV spinlocks disabled, forced by \"nopvspin\" parameter"
+  ],
+  "monitor_banner": "QEMU 8.2.2 monitor - type 'help' for more information\r\n(qemu) ",
+  "snapshots": "i\u001b[K\u001b[Din\u001b[K\u001b[D\u001b[Dinf\u001b[K\u001b[D\u001b[D\u001b[Dinfo\u001b[K\u001b[D\u001b[D\u001b[D\u001b[Dinfo \u001b[K\u001b[D\u001b[D\u001b[D\u001b[D\u001b[Dinfo s\u001b[K\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[Dinfo sn\u001b[K\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[Dinfo sna\u001b[K\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[Dinfo snap\u001b[K\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[Dinfo snaps\u001b[K\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[Dinfo snapsh\u001b[K\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[Dinfo snapsho\u001b[K\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[Dinfo snapshot\u001b[K\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[Dinfo snapshots\u001b[K\r\nList of snapshots present on all disks:\r\nID        TAG               VM SIZE                DATE     VM CLOCK     ICOUNT\r\n--        migration-ready-20261010T070707Z  2.3 GiB 2026-10-10 15:07:07 00:04:06.627           \r\n--        topology64-ready-20261010 5.07 GiB 2026-10-10 15:51:06 00:06:12.455           \r\n--        topology64-source-ready-20261010 5.06 GiB 2026-10-10 16:03:52 00:18:51.640           \r\n--        perf64-20261010T081816Z 5.06 GiB 2026-10-10 16:19:56 00:34:49.030           \r\n--        full64-20261010T094831Z 2.33 GiB 2026-10-10 17:50:13 00:00:54.398           \r\n--        normal64-after-fullmatrix-20261010T140110Z 2.32 GiB 2026-10-10 22:01:10 00:09:48.638           \r\n--        full66-20261011T025525Z  2.3 GiB 2026-10-11 10:58:23 00:00:55.005           \r\n--        normal64-after-rerun-20261011T025525Z 2.27 GiB 2026-10-11 12:33:11 00:00:19.922           \r\n--        mutex-opt-normal64-20261011T045425Z 2.34 GiB 2026-10-11 12:58:20 00:25:24.456           \r\n--        mutex-opt-full66-20261011T045425Z 2.32 GiB 2026-10-11 14:51:01 00:00:19.890           \r\n--        normal64-after-mutex-opt-20261011T045425Z 2.27 GiB 2026-10-11 15:20:52 00:00:18.377           \r\n--        real-api-20261011-v1 2.69 GiB 2026-10-11 16:22:00 01:01:21.306           \r\n--        real-sync-20261011-v1 3.08 GiB 2026-10-11 22:33:05 07:12:20.922           \r\n--        mutex-blocking-20261012-v1 3.72 GiB 2026-10-12 00:38:33 09:17:43.571           \r\n--        full-wait-66cpu-20261012-v1 2.41 GiB 2026-10-12 11:36:43 00:02:45.155           \r\n--        mutex-blocking-only-20261012 2.52 GiB 2026-10-12 21:34:47 00:28:32.388           \r\n--        mutex-admission-20261013 2.64 GiB 2026-10-13 00:16:23 03:10:03.855           \r\n--        mutex-c01-cost-20261013 4.96 GiB 2026-10-13 02:20:23 05:13:59.395           \r\n--        mutex-optimistic-c01-20261013 6.46 GiB 2026-10-13 10:09:24 13:02:54.188           \r\n--        mutex-protocol-c01-20261013 6.77 GiB 2026-10-13 12:34:09 15:27:30.330           \r\n--        mutex-protocol-c01-post8-20261013 7.18 GiB 2026-10-13 13:32:15 16:25:27.331           \r\n--        mutex-owned-v1-20261013 7.79 GiB 2026-10-13 15:58:22 18:51:25.279           \r\n--        mutex-owned-hybrid-20261014 9.18 GiB 2026-10-14 00:26:20 26:03:01.953           \r\n--        mutex-native-first-20261014   10 GiB 2026-10-14 10:14:52 35:42:25.337           \r\n--        mutex-owned-c01-full66-20261014 1.61 GiB 2026-10-14 20:07:50 00:01:21.847           \r\n--        normal64-after-mutex-owned-full-20261014 2.32 GiB 2026-10-14 20:28:22 00:03:43.173           \r\n--        owned-origin-before-20261015 3.02 GiB 2026-10-15 12:33:24 16:08:41.415           \r\n--        owned-origin-66-20261015 2.02 GiB 2026-10-15 13:13:36 00:00:42.231           \r\n--        owned-origin-regular64-final-20261015  1.7 GiB 2026-10-15 13:36:39 00:00:34.630           \r\n--        rwsem-snapshots-20261015 3.48 GiB 2026-10-15 14:27:54 00:51:46.100           \r\n--        rwsem-snapshots-ready-20261015 4.17 GiB 2026-10-15 14:56:07 01:19:52.975           \r\n--        rwsem-snapshots-current-20261015 4.53 GiB 2026-10-15 15:14:38 01:38:17.040           \r\n--        mutex-numa-c01-rerun-20261015 4.94 GiB 2026-10-15 17:21:47 03:45:19.941           \r\n--        rwlock-c01-grid-20261015 4.99 GiB 2026-10-15 22:21:40 08:45:05.322           \r\n--        before-mutex-legacy-removal-20261015 5.36 GiB 2026-10-15 23:53:02 10:16:20.030           \r\n--        workloads-20261015T172603Z 5.36 GiB 2026-10-16 01:29:37 11:43:35.462           \r\n--        before-mutex-coverage-20261016T034903Z 10.6 GiB 2026-10-16 11:53:54 22:02:25.721           \r\n--        before-mutex-adaptive-20261016T075356Z 11.9 GiB 2026-10-16 16:15:44 26:24:02.842           \r\n--        before-mutex-legacy-recovery-20261016T113518Z 17.3 GiB 2026-10-16 19:39:52 29:47:55.300           \r\n--        before-mutex-legacy-grid-20261016T125529Z 17.3 GiB 2026-10-16 20:57:28 31:05:10.661           \r\n--        before-mutex-legacy-compat-20261017T122742Z 17.7 GiB 2026-10-17 20:32:39 54:40:02.263           \r\n--        before-mutex-kdonly-20261017T140354Z 18.1 GiB 2026-10-17 22:09:19 56:16:21.455           \r\n(qemu) ",
+  "recovery_snapshot": "before-mutex-kdonly-20261017T140354Z",
+  "snapshot_listed": true,
+  "pins_verified": true
+}

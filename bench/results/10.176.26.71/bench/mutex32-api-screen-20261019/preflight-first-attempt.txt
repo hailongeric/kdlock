@@ -1,0 +1,1 @@
+Custom preflight adapter failed after kernel identity command: AttributeError: 'str' object has no attribute 'resolve' at kernel_identity.capture line 37. No modules loaded. Retry uses pathlib.Path arguments.

@@ -22,3 +22,4 @@ bench/results/10.176.26.71/bench/mutex32-screen-20261019/cacheline/summary.csv w
 bench/results/10.176.26.71/bench/mutex32-screen-20261019/rcuht/summary.csv whitespace=cr-at-eol
 # Preserve the plotted artifact's exact Matplotlib path serialization.
 bench/results/10.176.26.71/bench/mutex32-screen-20261019/comparison.svg -whitespace
+bench/results/10.176.26.71/bench/mutex32-api-screen-20261019/comparison.svg -whitespace
