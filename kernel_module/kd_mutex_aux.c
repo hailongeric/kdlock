@@ -1,144 +1,176 @@
 // SPDX-License-Identifier: GPL-2.0
 /*
- * Address-indexed delegation records for the native-sized KD physical mutex.
- * RCU protects lookup until an exact reference is acquired. Bucket locks
- * serialize publication with the final zero transition and unlink; readers
- * cannot resurrect a retired record. Deferred frees outlive all RCU readers.
- * Ordinary physical locking needs neither a record nor registry allocation.
+ * Direct-indexed delegation records for the native-sized KD physical mutex.
+ * Permanent table storage needs neither a lookup lock nor deferred freeing.
+ * Exact references protect each active generation. A collision or an in-flight
+ * lifecycle reservation falls back before publishing any queue state.
  */
 #include <linux/cache.h>
 #include <linux/hash.h>
 #include <linux/limits.h>
 #include <linux/module.h>
 #include <linux/moduleparam.h>
-#include <linux/rculist.h>
-#include <linux/slab.h>
+#include <linux/vmalloc.h>
 
 #include "kd_mutex_aux.h"
+#include "kd_mutex_stats.h"
 
-#define KD_MUTEX_AUX_BITS 8
-#define KD_MUTEX_AUX_BUCKETS (1U << KD_MUTEX_AUX_BITS)
+#define KD_MUTEX_AUX_BITS 16
+#define KD_MUTEX_AUX_SLOTS (1U << KD_MUTEX_AUX_BITS)
+#define KD_MUTEX_AUX_FREE (-1)
+#define KD_MUTEX_AUX_BUSY 0
 
-struct kd_mutex_aux_bucket {
-	raw_spinlock_t lock;
-	struct hlist_head records;
-	unsigned int count;
-} ____cacheline_aligned_in_smp;
-
-static struct kd_mutex_aux_bucket kd_mutex_aux_buckets[KD_MUTEX_AUX_BUCKETS] = {
-	[0 ... KD_MUTEX_AUX_BUCKETS - 1] = {
-		.lock = __RAW_SPIN_LOCK_UNLOCKED(kd_mutex_aux_buckets.lock),
-	},
-};
-static struct kmem_cache *kd_mutex_aux_cache;
+/* One deterministic slot per address prevents duplicate live records without
+ * an insertion arbiter. The 16 MiB allocation serves every lock until provider
+ * teardown; unrelated colliding locks keep the ordinary KD physical path. */
+static struct kd_mutex_aux *kd_mutex_aux_slots;
 static int kd_mutex_aux_fail_once __read_mostly;
 module_param_named(mutex_aux_fail_once, kd_mutex_aux_fail_once, int, 0644);
 
-static struct kd_mutex_aux_bucket *kd_mutex_aux_bucket(struct kd_mutex *lock)
+/* Refusal observations only. Successful lookups/references never write these
+ * counters, and no ownership, reclamation or idle decision reads them. */
+KD_MUTEX_STAT(kd_mutex_aux_collisions);
+KD_MUTEX_STAT(kd_mutex_aux_busy);
+KD_MUTEX_STAT(kd_mutex_aux_generation_races);
+KD_MUTEX_STAT(kd_mutex_aux_exhausted);
+KD_MUTEX_STAT(kd_mutex_aux_injected_failures);
+
+static struct kd_mutex_aux *kd_mutex_aux_slot(struct kd_mutex *lock)
 {
-	return &kd_mutex_aux_buckets[hash_ptr(lock, KD_MUTEX_AUX_BITS)];
+	return &kd_mutex_aux_slots[hash_ptr(lock, KD_MUTEX_AUX_BITS)];
 }
 
-/* Caller holds the bucket's native raw spinlock. */
-static struct kd_mutex_aux *
-kd_mutex_aux_find_locked(struct kd_mutex_aux_bucket *bucket, struct kd_mutex *lock)
-{
-	struct kd_mutex_aux *aux;
-
-	hlist_for_each_entry(aux, &bucket->records, link)
-		if (aux->lock == lock)
-			return aux;
-	return NULL;
-}
-
-/* Caller holds RCU, the bucket, or an existing reference. A zero count may
- * still be visible to an old RCU reader, but must never become live again. */
+/* Storage is permanent, but its key can change between the first load and the
+ * CAS. A successful caller must validate the key after acquiring its reference.
+ * Existing holders already exclude all generation changes. */
 static bool kd_mutex_aux_try_ref(struct kd_mutex_aux *aux)
 {
 	int refs = atomic_read(&aux->refs);
 
 	for (;;) {
-		BUG_ON(refs < 0 || refs == INT_MAX);
-		if (!refs)
+		BUG_ON(refs < KD_MUTEX_AUX_FREE || refs == INT_MAX);
+		if (refs <= KD_MUTEX_AUX_BUSY)
 			return false;
 		if (atomic_try_cmpxchg(&aux->refs, &refs, refs + 1))
 			return true;
 	}
 }
 
-/* Caller holds an RCU read-side section for the returned borrowed pointer. */
 static struct kd_mutex_aux *
-kd_mutex_aux_find_rcu(struct kd_mutex_aux_bucket *bucket, struct kd_mutex *lock)
+kd_mutex_aux_find_ref(struct kd_mutex_aux *aux, struct kd_mutex *lock)
 {
-	struct kd_mutex_aux *aux;
-
-	hlist_for_each_entry_rcu(aux, &bucket->records, link)
-		if (aux->lock == lock)
-			return aux;
+	/* Reject ordinary collisions without writing the other lock's ref line.
+	 * This load alone never grants a reference or authorizes field access. */
+	if (READ_ONCE(aux->lock) != lock || !kd_mutex_aux_try_ref(aux))
+		return NULL;
+	/* A stale positive-count CAS may pin a newer generation. It is usable
+	 * only when this post-acquisition key check identifies the requested lock. */
+	if (likely(READ_ONCE(aux->lock) == lock))
+		return aux;
+	kd_mutex_aux_put(aux);
 	return NULL;
+}
+
+static void kd_mutex_aux_note_refusal(struct kd_mutex_aux *aux,
+				    struct kd_mutex *lock, int refs)
+{
+	struct kd_mutex *key = READ_ONCE(aux->lock);
+
+	/* The sampled key can change after the failed reference attempt. Keep
+	 * such races separate from an observed collision or BUSY reservation. */
+	if (refs == KD_MUTEX_AUX_BUSY)
+		this_cpu_inc(kd_mutex_aux_busy);
+	else if (refs > KD_MUTEX_AUX_BUSY && key && key != lock)
+		this_cpu_inc(kd_mutex_aux_collisions);
+	else
+		this_cpu_inc(kd_mutex_aux_generation_races);
+}
+
+/* Caller exclusively owns BUSY. The begin barrier orders the odd marker before
+ * key changes; a release store alone would only order preceding writes. */
+static u64 kd_mutex_aux_sequence_begin(struct kd_mutex_aux *aux)
+{
+	u64 sequence = READ_ONCE(aux->sequence);
+
+	BUG_ON(sequence & 1);
+	WRITE_ONCE(aux->sequence, sequence + 1);
+	smp_wmb();
+	return sequence;
+}
+
+static void kd_mutex_aux_sequence_end(struct kd_mutex_aux *aux, u64 sequence)
+{
+	/* Never wrap and admit an A -> B -> A observational ABA. The final odd
+	 * value permanently disables this slot, with no active reference left. */
+	smp_store_release(&aux->sequence,
+		sequence == U64_MAX - 1 ? U64_MAX : sequence + 2);
+}
+
+static bool kd_mutex_aux_observation_valid(struct kd_mutex_aux *aux, u64 sequence)
+{
+	/* Key and protocol-field reads must finish before the second sequence
+	 * load. Naturally aligned u64 loads are atomic on the supported x86-64. */
+	smp_rmb();
+	return READ_ONCE(aux->sequence) == sequence;
 }
 
 struct kd_mutex_aux *kd_mutex_aux_lookup(struct kd_mutex *lock)
 {
-	struct kd_mutex_aux_bucket *bucket;
-	struct kd_mutex_aux *aux;
-
-	if (!lock)
+	if (!lock || unlikely(!kd_mutex_aux_slots))
 		return NULL;
-	bucket = kd_mutex_aux_bucket(lock);
-	rcu_read_lock();
-	aux = kd_mutex_aux_find_rcu(bucket, lock);
-	if (aux && !kd_mutex_aux_try_ref(aux))
-		aux = NULL;
-	/* Successful reference acquisition extends storage lifetime beyond RCU.
-	 * A miss races only publication/retirement; get rechecks under the bucket. */
-	rcu_read_unlock();
-	return aux;
+	return kd_mutex_aux_find_ref(kd_mutex_aux_slot(lock), lock);
 }
 
 struct kd_mutex_aux *kd_mutex_aux_get(struct kd_mutex *lock)
 {
-	struct kd_mutex_aux_bucket *bucket;
-	struct kd_mutex_aux *aux, *candidate;
-	unsigned long flags;
+	struct kd_mutex_aux *aux, *found;
+	u64 sequence;
+	int refs;
 
-	if (!lock)
+	if (!lock || unlikely(!kd_mutex_aux_slots))
 		return NULL;
-	aux = kd_mutex_aux_lookup(lock);
-	if (aux)
-		return aux;
-	/* Allocation precedes all publication and occurs outside bucket locks.
-	 * Refusal leaves the original KD physical primitive fully available. */
-	if (unlikely(READ_ONCE(kd_mutex_aux_fail_once) == 1) &&
-	    cmpxchg(&kd_mutex_aux_fail_once, 1, 0) == 1)
-		return NULL;
-	candidate = kmem_cache_alloc(kd_mutex_aux_cache, GFP_ATOMIC);
-	if (!candidate)
-		return kd_mutex_aux_lookup(lock);
-	candidate->lock = lock;
-	atomic_set(&candidate->refs, 1);
-	candidate->physical_owner = NULL;
-	atomic_set(&candidate->state, 0);
-	candidate->tail = 0;
-	atomic_set(&candidate->waiter_count, 0);
-	bucket = kd_mutex_aux_bucket(lock);
-	flags = _raw_spin_lock_irqsave(&bucket->lock);
-	aux = kd_mutex_aux_find_locked(bucket, lock);
-	if (aux) {
-		/* The final decrement and unlink share this lock, so every linked
-		 * record is live here. A racing creator supplies the unique record. */
-		BUG_ON(!kd_mutex_aux_try_ref(aux));
-	} else {
-		aux = candidate;
-		BUG_ON(bucket->count == UINT_MAX);
-		/* Publish only after the key, exact reference and all state fields
-		 * are initialized. RCU readers observe one initialized generation. */
-		hlist_add_head_rcu(&aux->link, &bucket->records);
-		bucket->count++;
+	aux = kd_mutex_aux_slot(lock);
+	found = kd_mutex_aux_find_ref(aux, lock);
+	if (found)
+		return found;
+	refs = atomic_read(&aux->refs);
+	if (refs == KD_MUTEX_AUX_FREE)
+		refs = atomic_cmpxchg(&aux->refs, KD_MUTEX_AUX_FREE, KD_MUTEX_AUX_BUSY);
+	if (refs != KD_MUTEX_AUX_FREE) {
+		/* A creator may already have finished. Take one ordinary lookup;
+		 * a collision or BUSY result never waits for that creator to run. */
+		found = kd_mutex_aux_find_ref(aux, lock);
+		if (!found)
+			kd_mutex_aux_note_refusal(aux, lock, refs);
+		return found;
 	}
-	_raw_spin_unlock_irqrestore(&bucket->lock, flags);
-	if (aux != candidate)
-		kmem_cache_free(kd_mutex_aux_cache, candidate);
+	/* Only a new slot claim consumes the fault-injection request. Existing
+	 * live references, ordinary collisions and exhausted slots do not. */
+	sequence = READ_ONCE(aux->sequence);
+	if (unlikely(sequence >= U64_MAX - 1)) {
+		this_cpu_inc(kd_mutex_aux_exhausted);
+		smp_store_release(&aux->sequence, U64_MAX);
+		atomic_set_release(&aux->refs, KD_MUTEX_AUX_FREE);
+		return NULL;
+	}
+	BUG_ON(sequence & 1);
+	if (unlikely(READ_ONCE(kd_mutex_aux_fail_once) == 1) &&
+	    cmpxchg(&kd_mutex_aux_fail_once, 1, 0) == 1) {
+		this_cpu_inc(kd_mutex_aux_injected_failures);
+		atomic_set_release(&aux->refs, KD_MUTEX_AUX_FREE);
+		return NULL;
+	}
+	/* The initial table is zeroed once. Every final put verifies the same
+	 * empty protocol state before making a slot reusable; no packet clear or
+	 * mutable-field initialization occurs after publication. */
+	BUG_ON(READ_ONCE(aux->lock) || READ_ONCE(aux->physical_owner) ||
+	       atomic_read(&aux->state) || READ_ONCE(aux->tail) ||
+	       atomic_read(&aux->waiter_count));
+	sequence = kd_mutex_aux_sequence_begin(aux);
+	WRITE_ONCE(aux->lock, lock);
+	kd_mutex_aux_sequence_end(aux, sequence);
+	/* A getter's successful ref CAS acquires this initialized generation. */
+	atomic_set_release(&aux->refs, 1);
 	return aux;
 }
 
@@ -148,123 +180,120 @@ void kd_mutex_aux_ref(struct kd_mutex_aux *aux)
 	BUG_ON(!kd_mutex_aux_try_ref(aux));
 }
 
-static void kd_mutex_aux_free(struct rcu_head *rcu)
-{
-	struct kd_mutex_aux *aux = container_of(rcu, struct kd_mutex_aux, rcu);
-
-	/* The lock object may already have been destroyed or reused. Only this
-	 * retired allocation is touched; exit retains the slab through callbacks. */
-	kmem_cache_free(kd_mutex_aux_cache, aux);
-}
-
 void kd_mutex_aux_put(struct kd_mutex_aux *aux)
 {
-	struct kd_mutex_aux_bucket *bucket;
-	unsigned long flags;
-	int refs = atomic_read(&aux->refs);
-	bool retire;
+	int refs = atomic_dec_return(&aux->refs);
+	u64 sequence;
 
-	/* Every caller owns the reference it drops. Nonfinal puts need no writer
-	 * lock; retaining the last reference until locked prevents a creator from
-	 * finding a zero-count record still linked in the bucket. */
-	for (;;) {
-		BUG_ON(refs <= 0);
-		if (refs == 1)
-			break;
-		if (atomic_try_cmpxchg(&aux->refs, &refs, refs - 1))
-			return;
-	}
-	bucket = kd_mutex_aux_bucket(aux->lock);
-	flags = _raw_spin_lock_irqsave(&bucket->lock);
-	/* An RCU getter may have acquired another reference while we took the
-	 * bucket. Only this decrement's zero result authorizes retirement. */
-	BUG_ON(atomic_read(&aux->refs) <= 0);
-	retire = atomic_dec_and_test(&aux->refs);
-	if (retire) {
-		/* References cover reservations before tail publication, all delayed
-		 * links, physical ownership and frames after early gate release.
-		 * Empty queue fields alone cannot establish any of those lifetimes. */
-		BUG_ON(READ_ONCE(aux->physical_owner) || atomic_read(&aux->state) ||
-		       READ_ONCE(aux->tail) || atomic_read(&aux->waiter_count));
-		BUG_ON(!bucket->count);
-		hlist_del_rcu(&aux->link);
-		bucket->count--;
-	}
-	_raw_spin_unlock_irqrestore(&bucket->lock, flags);
-	if (retire)
-		call_rcu(&aux->rcu, kd_mutex_aux_free);
+	/* Every put owns a positive reference. A getter racing the last put
+	 * either increments it first, or sees BUSY and cannot revive the record.
+	 * Ordinary nonfinal releases therefore need one RMW without a CAS loop. */
+	BUG_ON(refs < KD_MUTEX_AUX_BUSY);
+	if (refs > KD_MUTEX_AUX_BUSY)
+		return;
+	/* References cover unpublished reservations, delayed links, physical
+	 * owners and frames after early gate release. Zero queue fields cannot
+	 * replace those references as a retirement decision. */
+	BUG_ON(READ_ONCE(aux->physical_owner) || atomic_read(&aux->state) ||
+	       READ_ONCE(aux->tail) || atomic_read(&aux->waiter_count));
+	sequence = kd_mutex_aux_sequence_begin(aux);
+	WRITE_ONCE(aux->lock, NULL);
+	kd_mutex_aux_sequence_end(aux, sequence);
+	/* A new creator may own the slot immediately after this release. Never
+	 * touch its key, sequence or fields again from the retiring generation. */
+	atomic_set_release(&aux->refs, KD_MUTEX_AUX_FREE);
 }
 
-/* Observations borrow storage only inside RCU and never retain a pointer.
- * Retirement requires these owner/queue fields already clear. The exact owner
- * comparison is unchanged; a combiner hint never authorizes acquisition. */
+/* Read-only observations never write the reference line. Lifecycle sequence
+ * validation rejects a key/field mix from different generations. An actual
+ * delegation owner retains its exact reference, so its generation cannot
+ * change during the ownership check. Combiner state remains only a hint. */
 bool kd_mutex_delegation_owned(struct kd_mutex *lock, struct task_struct *task)
 {
-	struct kd_mutex_aux_bucket *bucket = kd_mutex_aux_bucket(lock);
 	struct kd_mutex_aux *aux;
+	u64 sequence;
 	bool owned;
 
-	rcu_read_lock();
-	aux = kd_mutex_aux_find_rcu(bucket, lock);
-	owned = aux && task && READ_ONCE(aux->physical_owner) == task;
-	rcu_read_unlock();
-	return owned;
+	if (!lock || !task || unlikely(!kd_mutex_aux_slots))
+		return false;
+	aux = kd_mutex_aux_slot(lock);
+	sequence = smp_load_acquire(&aux->sequence);
+	if (sequence & 1)
+		return false;
+	owned = READ_ONCE(aux->lock) == lock &&
+		READ_ONCE(aux->physical_owner) == task;
+	return kd_mutex_aux_observation_valid(aux, sequence) && owned;
 }
 
 bool kd_mutex_combiner_active(struct kd_mutex *lock)
 {
-	struct kd_mutex_aux_bucket *bucket = kd_mutex_aux_bucket(lock);
 	struct kd_mutex_aux *aux;
+	u64 sequence;
 	bool active;
 
-	rcu_read_lock();
-	aux = kd_mutex_aux_find_rcu(bucket, lock);
-	active = aux && READ_ONCE(aux->locked) == KD_MUTEX_GATE_COMBINER;
-	rcu_read_unlock();
-	return active;
+	if (!lock || unlikely(!kd_mutex_aux_slots))
+		return false;
+	aux = kd_mutex_aux_slot(lock);
+	sequence = smp_load_acquire(&aux->sequence);
+	if (sequence & 1)
+		return false;
+	active = READ_ONCE(aux->lock) == lock &&
+		READ_ONCE(aux->locked) == KD_MUTEX_GATE_COMBINER;
+	return kd_mutex_aux_observation_valid(aux, sequence) && active;
 }
 EXPORT_SYMBOL_GPL(kd_mutex_combiner_active);
 
 int kd_mutex_aux_waiter_count(struct kd_mutex *lock)
 {
-	struct kd_mutex_aux_bucket *bucket;
 	struct kd_mutex_aux *aux;
+	u64 sequence;
 	int count;
 
 	if (!lock)
 		return -EINVAL;
-	bucket = kd_mutex_aux_bucket(lock);
-	rcu_read_lock();
-	aux = kd_mutex_aux_find_rcu(bucket, lock);
-	count = aux ? atomic_read(&aux->waiter_count) : 0;
-	rcu_read_unlock();
-	return count;
+	if (unlikely(!kd_mutex_aux_slots))
+		return 0;
+	aux = kd_mutex_aux_slot(lock);
+	sequence = smp_load_acquire(&aux->sequence);
+	if (sequence & 1)
+		return sequence == U64_MAX &&
+			atomic_read(&aux->refs) == KD_MUTEX_AUX_FREE ? 0 : -EAGAIN;
+	count = READ_ONCE(aux->lock) == lock ? atomic_read(&aux->waiter_count) : 0;
+	return kd_mutex_aux_observation_valid(aux, sequence) ? count : -EAGAIN;
 }
 
 bool kd_mutex_aux_is_idle(struct kd_mutex *lock)
 {
-	struct kd_mutex_aux_bucket *bucket = kd_mutex_aux_bucket(lock);
-	unsigned long flags = _raw_spin_lock_irqsave(&bucket->lock);
-	bool idle = !kd_mutex_aux_find_locked(bucket, lock);
+	struct kd_mutex_aux *aux;
+	u64 sequence;
+	int refs;
+	bool different;
 
-	_raw_spin_unlock_irqrestore(&bucket->lock, flags);
-	return idle;
+	if (unlikely(!kd_mutex_aux_slots))
+		return true;
+	aux = kd_mutex_aux_slot(lock);
+	refs = atomic_read(&aux->refs);
+	if (refs == KD_MUTEX_AUX_FREE)
+		return true;
+	if (refs == KD_MUTEX_AUX_BUSY)
+		return false;
+	sequence = smp_load_acquire(&aux->sequence);
+	if (sequence & 1)
+		return false;
+	different = READ_ONCE(aux->lock) != lock;
+	return kd_mutex_aux_observation_valid(aux, sequence) && different;
 }
 
-/* Exact membership at each bucket, suitable only after callers stop and join.
- * No globally contended approximate counter substitutes for those records. */
+/* Exact slot reservations/references, suitable only after callers stop and
+ * join. BUSY is counted as active; an exhausted, free-reference slot is idle. */
 unsigned int kd_mutex_debug_aux_count(void)
 {
 	unsigned int i, count = 0;
 
-	for (i = 0; i < KD_MUTEX_AUX_BUCKETS; i++) {
-		struct kd_mutex_aux_bucket *bucket = &kd_mutex_aux_buckets[i];
-		unsigned long flags = _raw_spin_lock_irqsave(&bucket->lock);
-
-		BUG_ON(UINT_MAX - count < bucket->count);
-		count += bucket->count;
-		_raw_spin_unlock_irqrestore(&bucket->lock, flags);
-	}
+	if (unlikely(!kd_mutex_aux_slots))
+		return 0;
+	for (i = 0; i < KD_MUTEX_AUX_SLOTS; i++)
+		count += atomic_read(&kd_mutex_aux_slots[i].refs) != KD_MUTEX_AUX_FREE;
 	return count;
 }
 EXPORT_SYMBOL_GPL(kd_mutex_debug_aux_count);
@@ -273,41 +302,48 @@ bool kd_mutex_aux_all_idle(void)
 {
 	unsigned int i;
 
-	for (i = 0; i < KD_MUTEX_AUX_BUCKETS; i++) {
-		struct kd_mutex_aux_bucket *bucket = &kd_mutex_aux_buckets[i];
-		unsigned long flags = _raw_spin_lock_irqsave(&bucket->lock);
-		bool idle = hlist_empty(&bucket->records);
-
-		_raw_spin_unlock_irqrestore(&bucket->lock, flags);
-		if (!idle)
+	if (unlikely(!kd_mutex_aux_slots))
+		return true;
+	for (i = 0; i < KD_MUTEX_AUX_SLOTS; i++)
+		if (atomic_read(&kd_mutex_aux_slots[i].refs) != KD_MUTEX_AUX_FREE)
 			return false;
-	}
 	return true;
 }
 
 int kd_mutex_aux_init(void)
 {
+	struct kd_mutex_aux *slots;
+	unsigned int i;
+
 	BUILD_BUG_ON(sizeof(struct kd_mutex_aux) != 4 * L1_CACHE_BYTES);
+	BUILD_BUG_ON(offsetof(struct kd_mutex_aux, sequence) != sizeof(void *));
 	BUILD_BUG_ON(offsetof(struct kd_mutex_aux, physical_owner) != L1_CACHE_BYTES);
 	BUILD_BUG_ON(offsetof(struct kd_mutex_aux, tail) != 2 * L1_CACHE_BYTES);
 	BUILD_BUG_ON(offsetof(struct kd_mutex_aux, waiter_count) != 3 * L1_CACHE_BYTES);
 	BUILD_BUG_ON(offsetof(struct kd_mutex_aux, refs) !=
 		     3 * L1_CACHE_BYTES + sizeof(atomic_t));
-	BUG_ON(kd_mutex_aux_cache || !kd_mutex_aux_all_idle());
-	kd_mutex_aux_cache = kmem_cache_create("kd_mutex_aux", sizeof(struct kd_mutex_aux),
-					     __alignof__(struct kd_mutex_aux), 0, NULL);
-	return kd_mutex_aux_cache ? 0 : -ENOMEM;
+	BUG_ON(kd_mutex_aux_slots);
+	slots = vzalloc(KD_MUTEX_AUX_SLOTS * sizeof(*slots));
+	if (!slots)
+		return -ENOMEM;
+	for (i = 0; i < KD_MUTEX_AUX_SLOTS; i++)
+		atomic_set(&slots[i].refs, KD_MUTEX_AUX_FREE);
+	kd_mutex_aux_slots = slots;
+	return 0;
 }
 
 void kd_mutex_aux_exit(void)
 {
-	/* Provider teardown has stopped callers and verified every exact lease.
-	 * Empty membership permits callbacks still awaiting their RCU readers. */
+	/* Provider teardown has stopped/joined callers, including observations.
+	 * Empty references alone cannot authorize freeing beneath a new caller. */
 	BUG_ON(!kd_mutex_aux_all_idle());
-	if (kd_mutex_aux_cache) {
-		/* Keep both callback code and its slab alive through the last free. */
-		rcu_barrier();
-		kmem_cache_destroy(kd_mutex_aux_cache);
-		kd_mutex_aux_cache = NULL;
-	}
+	pr_info("kd_mutex aux: slots=%u bytes=%zu collision=%llu busy=%llu generation_race=%llu exhausted=%llu injected=%llu\n",
+		KD_MUTEX_AUX_SLOTS, KD_MUTEX_AUX_SLOTS * sizeof(*kd_mutex_aux_slots),
+		(unsigned long long)KD_MUTEX_STAT_READ(kd_mutex_aux_collisions),
+		(unsigned long long)KD_MUTEX_STAT_READ(kd_mutex_aux_busy),
+		(unsigned long long)KD_MUTEX_STAT_READ(kd_mutex_aux_generation_races),
+		(unsigned long long)KD_MUTEX_STAT_READ(kd_mutex_aux_exhausted),
+		(unsigned long long)KD_MUTEX_STAT_READ(kd_mutex_aux_injected_failures));
+	vfree(kd_mutex_aux_slots);
+	kd_mutex_aux_slots = NULL;
 }

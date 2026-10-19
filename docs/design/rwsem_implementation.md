@@ -58,8 +58,11 @@ are arranged as follows:
 | `reader_drain` | 256 | Reserved writers waiting for existing readers to finish |
 
 The last four fields start on separate 64-byte lines. These offsets do not
-describe a Linux rwsem-compatible layout. The embedded mutex's lazy auxiliary
-records, provider-wide queues and execution stacks are additional storage.
+describe a Linux rwsem-compatible layout. The embedded mutex shares the provider's
+preallocated 65,536-slot, 16 MiB auxiliary table; delegation claims one address's
+slot when needed, and a collision takes the local KD writer-lock path. This does
+not limit the number of ordinary rwsem objects. The auxiliary table, provider-wide
+queues and execution stacks are additional storage.
 Existing rwsem performance records measure the previous containing layout and
 do not establish performance for this refactor. There is no
 separate rwsem delegation queue or new generated-code ABI.

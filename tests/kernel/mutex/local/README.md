@@ -20,7 +20,9 @@ offsets at compile time. Live checks cover 160,000 operations by eight workers,
 exclusion, sleeping and nested owners, interruptible and killable cancellation,
 I/O accounting and trylock. It initializes 2,048 independent objects twice at
 the same addresses, then frees them without calling destroy. The exact auxiliary
-index must stay empty during ordinary ownership and after drain.
+table is preallocated by the provider, but every slot must stay unclaimed during
+ordinary ownership and after drain. The ordinary lock path does not access that
+table; the probe's explicit diagnostics inspect it.
 
 Module initialization prints its exact PASS record only after the workers join
 and the lock state drains. The runner requires all layout, address-reuse,
@@ -30,6 +32,8 @@ and verifies final idle. A timeout, missing PASS record or kernel fault never
 proves drain: the runner retains remaining modules and records the failure.
 
 These checks do not demonstrate delegation or performance. The separate
-[auxiliary unit fixture](../../../unit/mutex/test_mutex_aux.py) checks lazy
-allocation, same-address retirement, allocation failures, exact owner/invocation
-references and concurrent lookup/publication.
+[auxiliary unit fixture](../../../unit/mutex/test_mutex_aux.py) exercises the
+separate delegation-storage lifetime. Its direct-index cases cover initialization
+failure, collision fallback, lifecycle reservations, same-address slot reuse,
+exact owner/invocation references and concurrent publication/retirement. These
+checks are separate from the ordinary-API probe.

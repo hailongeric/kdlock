@@ -1,8 +1,10 @@
 # KD, TCLock and Linux Native comparison
 
 The current KD mutex arm uses a 32-byte `struct kd_mutex` with native 8-byte
-alignment and no Linux mutex imports. Delegation uses lazy auxiliary records
-indexed by lock address, retired automatically after their final reference.
+alignment and no Linux mutex imports. Delegation claims one of 65,536 preallocated
+auxiliary slots indexed by lock address; a collision uses local KD locking. The
+16 MiB table uses exact references and lifecycle sequences without registry locks
+or auxiliary RCU, and the final reference retires a slot automatically.
 The shared client validates the embedded object extent; other lock types keep
 their own sizes. The recorded `d2a2304` KD-only arm used a 256-byte,
 128-byte-aligned object; those measurements do not cover this storage refactor.

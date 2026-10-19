@@ -2,8 +2,6 @@
 #ifndef KD_MUTEX_AUX_H
 #define KD_MUTEX_AUX_H
 
-#include <linux/list.h>
-#include <linux/rcupdate.h>
 #include "kd_mutex.h"
 
 /* Delegation storage is separate from the caller's native-sized KD primitive.
@@ -12,8 +10,9 @@
  * native owner ACKs; a retired waiter node is never their lifetime anchor. */
 struct kd_mutex_aux {
 	struct kd_mutex *lock;
-	struct hlist_node link;
-	struct rcu_head rcu;
+	/* Changes only while the slot is exclusively reserved with refs == 0.
+	 * Readers reject odd/changing values; U64_MAX permanently retires a slot. */
+	u64 sequence;
 	struct task_struct *physical_owner __attribute__((aligned(64)));
 	union {
 		atomic_t state;
@@ -23,8 +22,8 @@ struct kd_mutex_aux {
 	};
 	u32 tail __attribute__((aligned(64)));
 	atomic_t waiter_count __attribute__((aligned(64)));
-	/* Reference changes share the producer-written line, not the immutable
-	 * lookup key. Only the final transition to zero takes the bucket lock. */
+	/* Positive values are exact references; -1 is free and zero reserves
+	 * an unpublished lifecycle transition. No caller waits for a reservation. */
 	atomic_t refs;
 } __attribute__((aligned(128)));
 

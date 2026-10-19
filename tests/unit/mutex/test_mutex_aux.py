@@ -1,9 +1,10 @@
-"""Guest-only production auxiliary registry with concurrent lookup and retirement.
+"""Guest-only production fixed-slot auxiliary registry and deterministic races.
 
-The fixture uses real pthread contention and atomic bucket locks. Its conservative
-RCU substitute defers callbacks until all readers leave, without preventing
-concurrent unlink/publication. Slab allocation, kernel RCU and physical ownership
-still require live mutex probes.
+Permanent table storage, real pthread atomics and scheduled pause points expose
+reference/key ABA, cross-generation observations and premature slot reuse. The
+fixture also checks contention, refusal and exact owner/frame lifetimes. Kernel
+allocation, weak-memory ordering and physical fallback need the affected live
+and queue probes; this fixture does not substitute for them.
 """
 import os
 import shlex
@@ -21,18 +22,18 @@ def main():
         types += without_includes(read_source(ROOT / f'include/{name}.h')) + '\n'
     source = without_includes(read_source(ROOT / 'kernel_module/kd_mutex_aux.c'))
     mutations = {
-        'zero-reference-resurrected': (
-            'if (!refs)\n\t\t\treturn false;',
-            'if (false && !refs)\n\t\t\treturn false;',
+        'missing-post-pin-key-validation': (
+            'if (likely(READ_ONCE(aux->lock) == lock))',
+            'if (likely(true))',
         ),
-        'free-before-grace-period': (
-            'call_rcu(&aux->rcu, kd_mutex_aux_free);',
-            '{ if (false) call_rcu(&aux->rcu, kd_mutex_aux_free);\n'
-            '\t\t  else kd_mutex_aux_free(&aux->rcu); }',
+        'missing-observation-sequence-validation': (
+            'return READ_ONCE(aux->sequence) == sequence;',
+            'return (void)aux, (void)sequence, true;',
         ),
-        'missing-exit-callback-drain': (
-            '\t\trcu_barrier();',
-            '\t\t/* Mutation: destroy the cache before callbacks drain. */',
+        'free-before-retirement': (
+            'BUG_ON(READ_ONCE(aux->physical_owner) || atomic_read(&aux->state) ||',
+            'atomic_set_release(&aux->refs, KD_MUTEX_AUX_FREE);\n\t'
+            'BUG_ON(READ_ONCE(aux->physical_owner) || atomic_read(&aux->state) ||',
         ),
     }
     candidates = {'production': source}

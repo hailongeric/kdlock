@@ -63,8 +63,9 @@ The [code map](CODE_MAP.md) shows where each component is implemented.
 Each lock type has its own ownership rules:
 
 - KD spin uses one KD lock word for native acquisition and delegated execution.
-- KD mutex embeds physical exclusion and uses a lazy auxiliary legacy scheduling gate. Every
-  delegation executor must own the KD physical primitive as well as that gate.
+- KD mutex embeds physical exclusion and claims a legacy scheduling gate in a
+  preallocated direct-index slot when needed. Every delegation executor must own
+  the KD physical primitive as well as that gate; slot collisions fall back locally.
   See the [KD-only object and API contract](design/kd_only_mutex.md).
 - KD rwlock uses a reader/writer count and a KD spin gate. Readers run locally;
   every writer must exclude readers, whether it runs natively or through JIT.
