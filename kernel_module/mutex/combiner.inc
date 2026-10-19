@@ -27,8 +27,9 @@ struct kd_mutex_batch {
 /* Only detach a fully linked node. Its successor remains the published tail
  * chain, so no enqueuer can subsequently write the detached node's next link.
  * A finite scan and a 128-body local cohort bound keep remote requests from
- * being bypassed indefinitely. Deferred requests are serviced or handed off
- * first at that boundary; a small remote cohort does not move the owner. */
+ * being bypassed indefinitely. Rejoin deferred requests first at that boundary
+ * and continue FIFO under the same physical owner, up to the total batch bound.
+ * Queue membership and physical-owner lifetime remain separate obligations. */
 static struct kd_mutex_node *
 kd_mutex_batch_select(struct kd_mutex_batch *batch, struct kd_mutex_node *node)
 {
@@ -465,15 +466,14 @@ kd_mutex_run_combiner(struct kd_mutex *lock, struct kd_mutex_node *curr_node)
 		curr_node = kd_mutex_batch_select(&batch, curr_node);
 		next_node = curr_node;
 		/* Keep a real terminal tail while private deferred nodes exist.
-		 * The next physical owner receives that entire joined chain. */
+		 * At the locality bound, service that prefix under this owner before
+		 * allowing any more bypass. FIFO then permits a longer bounded batch
+		 * without repeatedly moving physical ownership between sockets. */
 		if (batch.deferred_head &&
 		    (counter >= 128 || !smp_load_acquire(&curr_node->next))) {
-			if (batch.deferred_count >= 8)
-				break;
-			/* A small remote cohort cannot amortize moving the real owner
-			 * and frame stack to its socket. Service it here at the same
-			 * fairness boundary, then keep FIFO for this batch's remainder.
-			 * Rejoin before execution so the terminal tail remains linked. */
+			/* Rejoin before execution so the terminal tail remains linked.
+			 * Native/refused work and early outer release retain their normal
+			 * handoff boundaries; this changes only NUMA cohort scheduling. */
 			curr_node = kd_mutex_batch_rejoin(&batch, curr_node);
 			batch.numa_node = -1;
 		}

@@ -1,6 +1,6 @@
 """Guest-only terminal mutex queue retirement with deterministic publishers.
 
-Compile the real retirement helper and FIFO loop. JIT/body and Linux owner
+Compile the real retirement helper and FIFO loop. JIT/body and KD owner
 operations are substitutes; these controlled interleavings do not prove kernel
 concurrency, native ACK scheduling, or hardware performance.
 """
@@ -44,6 +44,13 @@ def main():
             'skip-deferred-rejoin': (helpers.replace('if (batch->deferred_head) {', 'if (false) {'), loop),
             'lose-refused-successor': (helpers, loop.replace('WRITE_ONCE(curr_node->next, next_node);', '')),
             'unbounded-local-cohort': (helpers, loop.replace('counter >= 128', 'false')),
+            'force-numa-owner-handoff': (helpers, loop.replace(
+                'curr_node = kd_mutex_batch_rejoin(&batch, curr_node);',
+                'if (batch.deferred_count >= 8) break;\n'
+                '\t\t\tcurr_node = kd_mutex_batch_rejoin(&batch, curr_node);')),
+            'bypass-rejoined-prefix': (helpers, loop.replace('batch.numa_node = -1;', 'batch.numa_node = 0;')),
+            'overrun-total-batch': (helpers, loop.replace(
+                'counter >= kd_mutex_batch_size', 'counter >= kd_mutex_batch_size + 1')),
             # Each combiner return must establish the normal gate value
             # independently, including source refusal before caller cleanup.
             'skip-refusal-gate': (helpers, loop.replace('kd_mutex_set_locked(lock);', '', 1)),

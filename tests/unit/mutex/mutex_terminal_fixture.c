@@ -43,6 +43,7 @@ static struct kd_mutex_node nodes[1030];
 static const int kd_mutex_batch_size=1024;
 static unsigned long kd_mutex_combiner_count,kd_mutex_handoff_count,kd_mutex_jit_success_count;
 static unsigned int leases,lease_gets,lease_puts,calls,completed,wakes,reclaims,polls,cas_calls;
+static unsigned int order[1030];
 static bool source_open,delayed_link,new_head_after_cas,new_head_pending;
 static int refusal_at,native_at,early_at;
 static struct kd_mutex_node *delayed_from,*delayed_to;
@@ -94,7 +95,7 @@ static int kd_mutex_execute_cs(struct kd_mutex *p,struct kd_mutex_node *node,str
 {
     int i=node-nodes;
     CHECK(p==&lock && leases==1 && lock.owner==current);
-    calls++;
+    CHECK(calls<1030);order[calls++]=i;
     if(i==refusal_at)return KD_EXE_NO_RUN;
     if(i==early_at) {
         struct kd_exec_frame frame={.mutex_backend=true,.logical_task=&waiter,
@@ -193,16 +194,36 @@ int main(void)
     scenario=15;reset(140);
     for(unsigned int i=0;i<8;i++)nodes[i].numa_node=1;
     kd_mutex_run_combiner(&lock,&nodes[0]);
-    CHECK(calls==128 && completed==128 && wakes==1 && !nodes[0].locked);
-    CHECK(nodes[7].next==&nodes[136] && nodes[136].locked && !cas_calls);finish();
+    CHECK(calls==140 && completed==140 && !wakes && !lock.delegation_tail && cas_calls==1);
+    for(unsigned int i=0;i<128;i++)CHECK(order[i]==i+8);
+    for(unsigned int i=0;i<8;i++)CHECK(order[128+i]==i);
+    for(unsigned int i=136;i<140;i++)CHECK(order[i]==i);
+    finish();
     scenario=16;reset(200);
     for(unsigned int i=0;i<200;i++)nodes[i].numa_node=1;
     kd_mutex_run_combiner(&lock,&nodes[0]);
-    CHECK(calls==128 && completed==128 && wakes==1 && !nodes[0].locked);
-    for(unsigned int i=0;i<63;i++)CHECK(nodes[i].next==&nodes[i+1] && !nodes[i].completed);
-    CHECK(nodes[63].next==&nodes[192] && nodes[192].locked && !cas_calls);finish();
+    CHECK(calls==200 && completed==200 && !wakes && !lock.delegation_tail && cas_calls==1);
+    for(unsigned int i=0;i<128;i++)CHECK(order[i]==i+64);
+    for(unsigned int i=0;i<64;i++)CHECK(order[128+i]==i);
+    for(unsigned int i=192;i<200;i++)CHECK(order[i]==i);
+    finish();
     scenario=17;reset(140);nodes[0].numa_node=1;
     kd_mutex_run_combiner(&lock,&nodes[0]);
     CHECK(calls==140 && completed==140 && !wakes && !lock.delegation_tail && cas_calls==1);finish();
+    /* Rejoining a remote prefix extends service, but never the total bound. */
+    scenario=18;reset(1026);
+    for(unsigned int i=0;i<8;i++)nodes[i].numa_node=1;
+    kd_mutex_run_combiner(&lock,&nodes[0]);
+    CHECK(calls==1024 && completed==1024 && wakes==1 && !nodes[1024].locked && !cas_calls);
+    CHECK(order[127]==135 && order[128]==0 && order[135]==7 && order[136]==136);
+    CHECK(order[1023]==1023 && nodes[1024].next==&nodes[1025] && nodes[1025].locked);finish();
+    /* A refused deferred request retains the entire joined chain for handoff. */
+    scenario=19;reset(140);refusal_at=0;
+    for(unsigned int i=0;i<8;i++)nodes[i].numa_node=1;
+    kd_mutex_run_combiner(&lock,&nodes[0]);
+    CHECK(calls==129 && completed==128 && wakes==1 && !nodes[0].locked && !cas_calls);
+    CHECK(order[128]==0 && !nodes[0].completed);
+    for(unsigned int i=0;i<7;i++)CHECK(nodes[i].next==&nodes[i+1] && !nodes[i].completed);
+    CHECK(nodes[7].next==&nodes[136] && nodes[136].locked);finish();
     printf("PASS terminal queue: %u checks; singleton, delayed link, independent new head, refusal, native reuse, early release, bounds and packet boundaries\n",checks);
 }
