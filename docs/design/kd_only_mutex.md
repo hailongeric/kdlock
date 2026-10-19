@@ -50,9 +50,9 @@ Linux mutex APIs.
 Outer entry uses a fixed, short probe window to resolve transient clashes before
 paying queue-admission costs. Only a zero-owner acquire CAS grants ownership;
 busy owner reads do not modify that word. The active-combiner hint reads the
-address index under its bucket lock without retaining an auxiliary pointer.
-The existing active-combiner gate state (3)
-ends retries immediately, so a running batch receives new work promptly. A
+address index inside RCU without taking the bucket writer lock or retaining an
+auxiliary pointer. The existing active-combiner gate state (3) ends retries
+immediately, so a running batch receives new work promptly. A
 lone gate owner (state 1) may finish during the bounded retry window. The state
 is only a hint; it never authorizes ownership or retirement. Exhausting eight probes
 also enters accepted legacy admission. This uses no worker-count threshold and changes
@@ -80,20 +80,26 @@ matching the native `struct mutex` size and alignment:
 
 Ordinary physical operations need only the embedded object. Delegation creates
 an auxiliary record lazily using GFP_ATOMIC allocation and an address-indexed
-bucket lookup. Allocation failure takes the existing local KD fallback before
-queue publication. It neither changes physical ownership nor introduces a fixed
+RCU lookup. A successful lookup acquires an exact atomic reference before leaving
+RCU; publication rechecks under the bucket writer lock. Allocation failure takes
+the existing local KD fallback before queue publication. It neither changes
+physical ownership nor introduces a fixed
 number of supported mutex objects. Existing records are shared by concurrent
 delegation requests for the same address.
 
 Exact invocation and gate-owner references retain the record through queue
 publication, physical ownership, native unlock ACKs and frame retirement. A
 scheduling node may retire before its owner's critical section returns, so node
-retirement alone cannot release the record. The final put removes the record
-from the index and frees it; lookup and retirement serialize within the bucket.
-No auxiliary allocation survives completed use solely because the caller omitted
-`kd_mutex_destroy()`. Once users and their asynchronous obligations drain, caller
-storage may be freed or reinitialized at the same address without another cleanup
-API.
+retirement alone cannot release the record. The final transition to zero and
+unlink serialize with publication under the bucket writer lock; an RCU reader
+cannot revive a zero-reference record. Reclamation waits for an RCU grace period.
+Once users and their asynchronous obligations drain, caller storage may be freed
+or reinitialized at the same address without another cleanup API. A pending
+callback touches only its retired auxiliary allocation, so it does not retain the
+caller object or require `kd_mutex_destroy()`. Exact idle membership can precede
+callback completion; controlled provider teardown calls `rcu_barrier()` before
+destroying the auxiliary slab. See the [implementation guide](mutex_implementation.md#current-storage-and-lookup)
+for lookup and final-reference ordering.
 
 The selected `d2a2304` object occupied 256 bytes aligned to 128 bytes, separating
 physical ownership and producer writes across four cachelines. Its measurements

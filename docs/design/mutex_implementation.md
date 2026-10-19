@@ -118,9 +118,9 @@ precede opening the gate.
 The outer pair probes the KD `owner` word at most eight times, attempting an
 acquire CAS only when the entire owner/flags word is zero. Each failed probe
 pauses before the next attempt; a busy owner read does not modify that word, and a
-racing owner still defeats the CAS. The active-combiner hint uses the address
-index's bucket lock to read the auxiliary state without letting an unreferenced
-pointer escape. The existing active-combiner gate state (3) ends
+racing owner still defeats the CAS. The active-combiner hint reads the address
+index inside an RCU read-side section, without taking the bucket writer lock or
+retaining an auxiliary pointer. The existing active-combiner gate state (3) ends
 retries; a lone gate owner (state 1) may finish during the bounded window.
 The observed state is a hint and never grants ownership or retirement. This window
 has no worker-count threshold. Success increments the CPU-local entry observation
@@ -150,7 +150,7 @@ unmodelled native result.
 | Object | Current storage/lifetime |
 | --- | --- |
 | KD mutex object | 32 bytes, aligned to 8 bytes in the captured configuration, owned by the caller; physical owner, OSQ, wait-list spinlock and sleeping wait list |
-| Delegation auxiliary record | 256 bytes, aligned to 128 bytes; lazily allocated and indexed by the KD object address; delegation tail, executor/gate, exact waiter count and exact lifetime references; removed and freed on the last reference |
+| Delegation auxiliary record | 256 bytes, aligned to 128 bytes; lazily allocated and indexed by the KD object address; delegation tail, executor/gate, exact waiter count and atomic lifetime references; unlinked on the last reference and freed after an RCU grace period |
 | Physical waiting | Private per-CPU OSQ nodes and stack-resident sleeping waiters; ordinary Linux mutex APIs never participate |
 | Task routing record | RCU hash with 256 cacheline-aligned buckets in [kd_mutex_tasks.c](../../kernel_module/kd_mutex_tasks.c); cached identities retain an atomic acquisition count and a `task_struct` ref; insertion/eviction use the bucket writer lock |
 | `kd_mutex_node` | Four independently bitmap-reserved slots per possible CPU; 320 bytes each, 64-byte aligned |
@@ -164,16 +164,30 @@ object identity remains the KD pointer itself. The [KD-only guide](kd_only_mutex
 records field offsets, ordinary API aliases, initialization, drain and full-rebuild
 requirements.
 
-Auxiliary misses allocate with GFP_ATOMIC, then recheck under the bucket lock
-before publication. Allocation failure retains the existing local KD fallback
-without publishing a delegation waiter. Invocation references protect the
-published queue and its borrowed packet/frame storage. A separate gate-owner
-reference survives scheduling-node retirement and follows physical-owner release,
-including native ACK and early-release processing. The last put verifies idle
-delegation state, unlinks the record under its bucket lock and frees it after
-unlock. Thus neither ordinary nor delegation callers must add a destruction call
-to reclaim auxiliary storage. Callers must still drain all uses before freeing
-or reinitializing their lock object.
+Auxiliary lookup traverses the index inside RCU and atomically increments only a
+positive exact reference count before leaving that read-side section. A record
+whose count reached zero cannot be revived. Misses allocate with GFP_ATOMIC,
+then recheck under the bucket lock before publishing fully initialized state.
+Allocation failure retains the existing local KD fallback without publishing a
+delegation waiter. Ownership and combiner observations borrow storage only while
+inside RCU; they allocate nothing and retain no pointer.
+
+Invocation references protect the published queue and its borrowed packet/frame
+storage. A separate gate-owner reference survives scheduling-node retirement and
+follows physical-owner release, including native ACK and early-release processing.
+Reference increments and nonfinal puts use atomic operations without the bucket
+writer lock. A put that observes one reference retains it until holding that lock,
+then performs the decrement: a concurrent lookup may have acquired another reference.
+Only a resulting zero count authorizes the idle-state checks and RCU unlink.
+The deferred callback frees the record after prior RCU readers finish and never
+dereferences the caller's lock object.
+
+Neither ordinary nor delegation callers need a destruction call to reclaim
+auxiliary storage. They must still stop and join users and drain all uses before
+freeing or reinitializing the lock object. The exact idle checks inspect registry
+membership under bucket locks; an empty index can coexist with deferred frees.
+Controlled provider teardown waits for those callbacks with `rcu_barrier()` before
+destroying the auxiliary slab. This barrier does not replace caller drain.
 
 `kd_mutex_task_get()` first attempts an RCU lookup and atomic acquisition-reference
 increment. Cache hits require neither allocation nor the bucket writer lock.
@@ -226,8 +240,9 @@ The auxiliary gate also uses a read before its acquire CAS. Together with the
 physical-owner guard, this keeps failed producer RMWs from invalidating ownership
 lines held across a batch. Tail exchanges and exact waiter-count updates retain
 their original atomic operations on separate lines within the auxiliary record.
-Auxiliary lifetime references are independent of those queue observations and
-exact ownership records.
+Atomic lifetime references share the waiter-count line at offset 196, keeping
+reference writes away from the immutable lookup key and the executor/gate line.
+They remain independent of queue observations and exact ownership records.
 
 ### Queue, batch execution and recovery
 

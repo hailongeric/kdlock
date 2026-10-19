@@ -1,6 +1,7 @@
 /* Deterministic registry boundary for queue/continuation fixtures. The actual
- * concurrent registry and allocator are exercised by test_mutex_aux.py. Keep
- * references separate from physical ownership and retain retired bytes solely
+ * concurrent registry and allocator are exercised by test_mutex_aux.py.
+ * This single-thread boundary does not simulate RCU. Keep exact references
+ * separate from physical ownership and retain retired bytes solely
  * so existing post-unlock assertions can inspect their final values. */
 static struct kd_mutex_aux fixture_aux_records[16];
 static bool fixture_aux_failure;
@@ -34,35 +35,35 @@ struct kd_mutex_aux *kd_mutex_aux_get(struct kd_mutex *lock)
 	if (fixture_aux_failure)
 		return NULL;
 	struct kd_mutex_aux *aux = fixture_aux(lock);
-	aux->refs++;
+	aux->refs.counter++;
 	return aux;
 }
 
 struct kd_mutex_aux *kd_mutex_aux_lookup(struct kd_mutex *lock)
 {
 	struct kd_mutex_aux *aux = fixture_aux(lock);
-	if (!aux->refs)
+	if (!aux->refs.counter)
 		return NULL;
-	aux->refs++;
+	aux->refs.counter++;
 	return aux;
 }
 
 void kd_mutex_aux_ref(struct kd_mutex_aux *aux)
 {
-	CHECK(aux->refs);
-	aux->refs++;
+	CHECK(aux->refs.counter);
+	aux->refs.counter++;
 }
 
 void kd_mutex_aux_put(struct kd_mutex_aux *aux)
 {
-	CHECK(aux->refs);
+	CHECK(aux->refs.counter);
 	fixture_aux_puts++;
-	if (!--aux->refs)
+	if (!--aux->refs.counter)
 		CHECK(!aux->physical_owner && !aux->locked && !aux->tail);
 }
 
 bool kd_mutex_delegation_owned(struct kd_mutex *lock, struct task_struct *task)
 {
 	struct kd_mutex_aux *aux = fixture_aux(lock);
-	return aux->refs && aux->physical_owner == task;
+	return aux->refs.counter && aux->physical_owner == task;
 }

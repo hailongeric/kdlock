@@ -17,6 +17,7 @@ typedef unsigned long atomic_long_t;
 typedef int raw_spinlock_t;
 struct optimistic_spin_queue { atomic_t tail; };
 struct hlist_node { struct hlist_node *next, **pprev; };
+struct rcu_head { struct rcu_head *next; void (*fn)(struct rcu_head *); };
 struct task_struct { int pid; };
 struct list_head { struct list_head *next, *prev; };
 #include "types.h"

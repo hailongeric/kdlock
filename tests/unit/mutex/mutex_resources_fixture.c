@@ -26,6 +26,7 @@ typedef struct task_struct *atomic_long_t;
 typedef int raw_spinlock_t;
 struct optimistic_spin_queue { atomic_t tail; };
 struct hlist_node { struct hlist_node *next, **pprev; };
+struct rcu_head { struct rcu_head *next; void (*fn)(struct rcu_head *); };
 struct list_head { struct list_head *next, *prev; };
 #include "mutex_resource_types.h"
 
@@ -721,7 +722,7 @@ static void check_promotion_and_routing(void)
 	strcpy(current->comm, "renamed");
 	__kd_mutex_unlock(lock, 0, 0x9000);
 	CHECK(!lock->owner && !fixture_aux(gate)->physical_owner && !fixture_aux(gate)->locked);
-	CHECK(!fixture_aux(gate)->refs);
+	CHECK(!fixture_aux(gate)->refs.counter);
 	CHECK(!refs && task_puts == 1);
 	strcpy(current->comm, "target");
 	source_open = true;
@@ -772,7 +773,7 @@ static void check_hook_nodes(void)
 		release_gate = gate;
 		__kd_mutex_unlock(lock, 0, 0x9000);
 		CHECK(!lock->owner && !fixture_aux(gate)->physical_owner && !fixture_aux(gate)->locked);
-		CHECK(!fixture_aux(gate)->refs);
+		CHECK(!fixture_aux(gate)->refs.counter);
 		CHECK(task_puts == 1 && !refs &&
 		      kd_mutex_origin_acquires == kd_mutex_origin_releases);
 		CHECK(!errors && !kd_mutex_frame_failure_count);
@@ -878,7 +879,7 @@ static void check_slowpath_packets(void)
 			}
 		}
 		CHECK(!lock->owner && !fixture_aux(gate)->physical_owner && !fixture_aux(gate)->locked);
-		CHECK(!fixture_aux(gate)->refs);
+		CHECK(!fixture_aux(gate)->refs.counter);
 		CHECK(kd_mutex_origin_acquires == kd_mutex_origin_releases);
 	}
 }
@@ -977,7 +978,7 @@ static void check_aux_allocation_failure(void)
  struct kd_mutex *lock = &origins[0].mutex;
  fixture_aux_failure = true;
  __kd_mutex_lock_clobber_v1(lock, (unsigned long)&native_stack[16], 0x8000, 0xabc0);
- CHECK(lock->owner == current && fixture_aux_gets == 1 && !fixture_aux(lock)->refs);
+ CHECK(lock->owner == current && fixture_aux_gets == 1 && !fixture_aux(lock)->refs.counter);
  CHECK(gets == 1 && task_puts == 1 && !refs && !slow_calls && !cpu_shadows.node_slots);
  CHECK(!preempt && !migration && !fixture_aux(lock)->locked);
  __kd_mutex_unlock(lock, 0, 0x9000);

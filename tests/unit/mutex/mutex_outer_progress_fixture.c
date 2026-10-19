@@ -28,6 +28,7 @@ typedef struct task_struct *atomic_long_t;
 typedef int raw_spinlock_t;
 struct optimistic_spin_queue { atomic_t tail; };
 struct hlist_node { struct hlist_node *next, **pprev; };
+struct rcu_head { struct rcu_head *next; void (*fn)(struct rcu_head *); };
 #include "mutex_outer_types.h"
 
 static struct task_struct executor = { 1 }, waiter = { 2 }, other = { 3 };
@@ -443,12 +444,12 @@ int main(void)
 		CHECK(_kd_mutex_unlock_checked(&gate) == 0);
 		CHECK(!gate_aux.locked && !gate.owner && !gate_aux.physical_owner);
 		CHECK(kd_mutex_origin_acquires == kd_mutex_origin_releases);
-		CHECK(gate_aux.refs == 1); /* Invocation survives every early owner release. */
+		CHECK(gate_aux.refs.counter == 1); /* Invocation survives every early owner release. */
 		/* Remaining unexecuted nodes belong to substituted peers; discard them
 		 * only after the queue assertions, then close this fixture invocation. */
 		gate_aux.tail = 0;
 		kd_mutex_aux_put(&gate_aux);
-		CHECK(!gate_aux.refs);
+		CHECK(!gate_aux.refs.counter);
 	}
 	CHECK(!kd_exec_invariant_failures && !kd_mutex_frame_failure_count);
 	CHECK(routine_traces == 12);

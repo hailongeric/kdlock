@@ -3,6 +3,7 @@
 #define KD_MUTEX_AUX_H
 
 #include <linux/list.h>
+#include <linux/rcupdate.h>
 #include "kd_mutex.h"
 
 /* Delegation storage is separate from the caller's native-sized KD primitive.
@@ -12,7 +13,7 @@
 struct kd_mutex_aux {
 	struct kd_mutex *lock;
 	struct hlist_node link;
-	unsigned int refs; /* Protected by this address's registry bucket. */
+	struct rcu_head rcu;
 	struct task_struct *physical_owner __attribute__((aligned(64)));
 	union {
 		atomic_t state;
@@ -22,6 +23,9 @@ struct kd_mutex_aux {
 	};
 	u32 tail __attribute__((aligned(64)));
 	atomic_t waiter_count __attribute__((aligned(64)));
+	/* Reference changes share the producer-written line, not the immutable
+	 * lookup key. Only the final transition to zero takes the bucket lock. */
+	atomic_t refs;
 } __attribute__((aligned(128)));
 
 int kd_mutex_aux_init(void);
