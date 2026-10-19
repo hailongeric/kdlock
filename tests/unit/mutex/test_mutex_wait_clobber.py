@@ -21,6 +21,7 @@ FIXTURE = r'''
 #include <stdio.h>
 typedef uint8_t u8;
 typedef uint32_t u32;
+typedef uint64_t u64;
 typedef struct { int counter; } atomic_t;
 typedef unsigned long atomic_long_t;
 typedef int raw_spinlock_t;
