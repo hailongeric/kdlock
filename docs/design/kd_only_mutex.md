@@ -76,23 +76,26 @@ matching the native `struct mutex` size and alignment:
 | Physical wait lock (`raw_spinlock_t`) | 8 | 4 |
 | OSQ (`optimistic_spin_queue`) | 12 | 4 |
 | Sleeping ring head (`kd_local_waiter *`) | 16 | 8 |
-| Delegation phase/exact waiter count (`atomic_t`) | 24 | 4 |
+| Delegation phase (`atomic_t`) | 24 | 4 |
 | Encoded delegation tail (`u32`) | 28 | 4 |
 
 The ring head replaces Linux's list sentinel while preserving O(1) append,
 removal and cancellation. Internal list representation differs from Linux.
-The embedded phase/count and tail remove the auxiliary hash and shared reference
+The embedded phase and tail remove the auxiliary hash and shared reference
 count entirely. There is no per-object allocation or retirement callback and no
 new caller cleanup. The existing task routing and frame/source/ACK lifetimes
 remain. See the [implementation guide](mutex_implementation.md#current-storage-and-lookup)
-for phase ordering, exact ownership and count packing.
+for phase ordering, exact ownership and versioned per-node waiter records.
 
 The selected `d2a2304` object occupied 256 bytes aligned to 128 bytes. The later
 hash-based compact layout at `6341999` also required a 16 MiB auxiliary table.
 Measurements for both remain specific to those layouts and source identities.
 
-The per-request node remains 320 bytes, with its packet at offset 128 and
-completion/polling bytes at 304/305. Caller-owned object storage must remain alive
+The per-request node remains 320 bytes, with its exact waiter sequence/key at
+offsets 88/96, packet at offset 128 and completion/polling bytes at 304/305.
+The diagnostic count verifies a consistent snapshot or returns an explicit
+`-EAGAIN`/`-ENOMEM`; hot-path counting needs no shared atomic updates.
+Caller-owned object storage must remain alive
 until callers, both queues, physical ownership, ACKs and frames have drained.
 `kd_mutex_is_idle()` is a checked teardown observation after callers join, not an
 admission or lifetime mechanism. `kd_mutex_destroy()` diagnoses a busy object.

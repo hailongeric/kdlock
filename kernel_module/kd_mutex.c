@@ -19,6 +19,7 @@
 #include <linux/atomic.h>
 #include <asm/byteorder.h>
 #include <linux/vmalloc.h>
+#include <linux/slab.h>
 #include <linux/sched/stat.h>
 #include <linux/sched/task.h>
 #include <linux/sched.h>
@@ -117,6 +118,7 @@ static DEFINE_PER_CPU_SHARED_ALIGNED(struct kd_mutex_node,
 static DEFINE_PER_CPU_SHARED_ALIGNED(struct kd_mutex_cpu_state, kd_mutex_shadows);
 
 #include "mutex/queue.inc"
+#include "mutex/count.inc"
 
 #include "mutex/combiner.inc"
 

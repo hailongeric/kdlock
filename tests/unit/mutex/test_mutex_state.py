@@ -1,7 +1,7 @@
 """Guest-only actual embedded mutex state and current-owner interleavings.
 
-Compile the production helpers and ownership/acquire/release functions. Real
-pthread atomics cover concurrent count/phase traffic; deterministic primitive
+Compile the production helpers and ownership/acquire/release functions. Versioned
+node records retain exact waiter lifetimes; deterministic primitive
 callbacks place ordinary owners in acquisition/release windows. Physical
 sleeping, kernel scheduling and weak-memory hardware remain live-probe duties.
 """
@@ -30,22 +30,13 @@ def main():
         source += '\n' + definition(mutex, marker)
     source += '\nint ' + definition(mutex, '_kd_mutex_unlock_checked(struct kd_mutex *lock)')
     mutations = {
-        'gate-read-includes-count': ('& KD_MUTEX_PHASE_MASK;', '& ~0U;'),
-        'gate-claim-overwrites-count': ('old | KD_MUTEX_GATE_ACQUIRING',
-                                      'KD_MUTEX_GATE_ACQUIRING'),
-        'gate-claim-accepts-held': ('while (!(old & KD_MUTEX_PHASE_MASK))',
-                                 'while (!(old & KD_MUTEX_PHASE_MASK) || (old & KD_MUTEX_PHASE_MASK) == KD_MUTEX_GATE_HELD)'),
-        'gate-set-overwrites-count': ('(old & ~KD_MUTEX_PHASE_MASK) | phase', 'phase'),
-        'gate-claim-skips-cas-retry': ('\t\told = seen;\n\t}\n\treturn false;',
-                                     '\t\treturn false;\n\t}\n\treturn false;'),
-        'gate-set-skips-cas-retry': ('\t\told = seen;\n\t}\n}\n\nstatic __always_inline int',
-                                   '\t\treturn;\n\t}\n}\n\nstatic __always_inline int'),
-        'count-signed-shift': ('return (u32)atomic_read(&lock->delegation_state) >>',
-                               'return atomic_read(&lock->delegation_state) >>'),
-        'enter-changes-phase': ('atomic_fetch_add(KD_MUTEX_WAITER_ONE,', 'atomic_fetch_add(1,'),
-        'exit-changes-phase': ('atomic_fetch_sub(KD_MUTEX_WAITER_ONE,', 'atomic_fetch_sub(1,'),
-        'overflow-not-rejected': ('BUG_ON((old >> KD_MUTEX_WAITER_SHIFT) == KD_MUTEX_WAITER_MAX);', '(void)old;'),
-        'underflow-not-rejected': ('BUG_ON(!(old >> KD_MUTEX_WAITER_SHIFT));', '(void)old;'),
+        'gate-claim-accepts-held': ('atomic_cmpxchg(&lock->delegation_state, KD_MUTEX_GATE_FREE,',
+                                 'atomic_cmpxchg(&lock->delegation_state, kd_mutex_gate_read(lock),'),
+        'record-overflow-not-rejected': ('BUG_ON((seq & 1) || seq > U64_MAX - 2);', 'BUG_ON(seq & 1);'),
+        'record-odd-not-rejected': ('BUG_ON((seq & 1) || seq > U64_MAX - 2);', 'BUG_ON(seq > U64_MAX - 2);'),
+        'record-identity-not-checked': ('BUG_ON(READ_ONCE(node->counted_lock) != expected);', '(void)expected;'),
+        'record-generation-not-advanced': ('WRITE_ONCE(node->count_seq, seq + 2);', 'WRITE_ONCE(node->count_seq, seq);'),
+        'record-exit-keeps-key': ('kd_mutex_count_transition(node, lock, NULL);', 'kd_mutex_count_transition(node, lock, lock);'),
         'invalid-phase-not-rejected': ('BUG_ON(phase > KD_MUTEX_GATE_RELEASING);', '(void)phase;'),
         'foreign-task-query-authorized': ('if (!lock || task != current)', 'if (!lock || (false && task != current))'),
         'pickup-authorized': ('(owner & 4UL)', '(owner & 0UL)'),

@@ -55,6 +55,8 @@ int kd_mutex_init_percpu(void)
 	BUILD_BUG_ON(offsetof(struct kd_mutex_node, completed) != 304);
 	BUILD_BUG_ON(offsetof(struct kd_mutex_node, locked) != 305);
 	BUILD_BUG_ON(offsetof(struct kd_mutex_node, regs) != 2 * L1_CACHE_BYTES);
+	BUILD_BUG_ON(offsetof(struct kd_mutex_node, count_seq) != 88);
+	BUILD_BUG_ON(offsetof(struct kd_mutex_node, counted_lock) != 96);
 	BUILD_BUG_ON(sizeof(struct kd_mutex) != 32);
 	BUILD_BUG_ON(sizeof(struct kd_mutex) != sizeof(struct mutex));
 	BUILD_BUG_ON(__alignof__(struct kd_mutex) != __alignof__(struct mutex));
@@ -64,7 +66,7 @@ int kd_mutex_init_percpu(void)
 	BUILD_BUG_ON(offsetof(struct kd_mutex, wait_head) != 16);
 	BUILD_BUG_ON(offsetof(struct kd_mutex, delegation_state) != 24);
 	BUILD_BUG_ON(offsetof(struct kd_mutex, delegation_tail) != 28);
-	BUILD_BUG_ON(NR_CPUS > KD_MUTEX_WAITER_MAX / KD_MUTEX_MAX_NODES);
+	BUILD_BUG_ON(NR_CPUS > INT_MAX / KD_MUTEX_MAX_NODES);
 
 	for_each_possible_cpu(i) {
 		struct kd_mutex_cpu_state *p = per_cpu_ptr(&kd_mutex_shadows, i);
@@ -141,7 +143,7 @@ bool kd_mutex_check_idle(void)
 	/* Every admitted call retains its existing task reference through final
 	 * owner unlock or completion. This includes immediate owners without nodes
 	 * and detached batches. Frame/source/ACK checks remain in provider drain. */
-	return kd_mutex_tasks_idle();
+	return kd_mutex_count_records_idle() && kd_mutex_tasks_idle();
 }
 
 void kd_mutex_exit(void)

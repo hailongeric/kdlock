@@ -64,6 +64,10 @@ struct kd_mutex_node {
 	int tail; /* encoded tail (cpu+idx)            */
 	int slot; /* reserved per-CPU slot index       */
 	int numa_node; /* immutable slot locality, set before source publication */
+	/* Origin-only exact waiter record. The version never resets on slot reuse;
+	 * cold observations validate it without writing this CPU's cacheline. */
+	u64 count_seq;
+	struct kd_mutex *counted_lock;
 	/* The combiner writes IP/SP and virtual registers while the producer
 	 * polls locked. Sharing their cacheline makes every packet update fight
 	 * the polling CPU for ownership, especially across NUMA nodes. */
@@ -83,7 +87,7 @@ struct kd_mutex_node {
  * The complete KD physical primitive has the native size and alignment.
  * No auxiliary allocation or address registry is needed. The physical waiters
  * form a circular ring whose first real node replaces the native list sentinel.
- * The freed eight bytes hold the gate/count and encoded delegation queue tail.
+ * The freed eight bytes hold the gate phase and encoded delegation queue tail.
  * Equal geometry does not permit mixing KD and Linux protocols on an object.
  */
 struct kd_mutex {
@@ -91,7 +95,7 @@ struct kd_mutex {
 	raw_spinlock_t wait_lock;
 	struct optimistic_spin_queue osq;
 	struct kd_local_waiter *wait_head;
-	atomic_t delegation_state; /* low 8 bits: phase; high 24: exact waiters */
+	atomic_t delegation_state; /* gate phase; only the reserved owner stores */
 	u32 delegation_tail; /* (CPU + 1) and reserved per-CPU node slot */
 };
 
@@ -129,7 +133,11 @@ int kd_mutex_debug_nested_waiters(void);
 int kd_mutex_nested_lock(struct kd_mutex *lock);
 int kd_mutex_nested_unlock(struct kd_mutex *lock);
 void kd_mutex_note_nested_jit(void);
+/* Cold exact snapshot; -EAGAIN on repeated changes, -ENOMEM on scratch failure.
+ * Neither a successful zero nor an error is an admission/lifetime barrier. */
 int kd_mutex_waiter_count(struct kd_mutex *lock);
+/* Stopped/joined object only: inspect exact node records without allocation. */
+bool kd_mutex_waiters_idle(struct kd_mutex *lock);
 void kd_mutex_note_nested_abort_release(void);
 
 #endif /* _LINUX_KD_MUTEX_H */

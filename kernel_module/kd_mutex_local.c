@@ -357,7 +357,8 @@ bool kd_mutex_is_idle(struct kd_mutex *lock)
 {
 	return !atomic_long_read(&lock->owner) && !atomic_read(&lock->osq.tail) &&
 		!READ_ONCE(lock->wait_head) && !raw_spin_is_locked(&lock->wait_lock) &&
-		!atomic_read(&lock->delegation_state) && !READ_ONCE(lock->delegation_tail);
+		!atomic_read(&lock->delegation_state) && !READ_ONCE(lock->delegation_tail) &&
+		kd_mutex_waiters_idle(lock);
 }
 EXPORT_SYMBOL_GPL(kd_mutex_is_idle);
 

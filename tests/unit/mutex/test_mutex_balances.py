@@ -20,13 +20,15 @@ def main():
         assert f'static DEFINE_PER_CPU(int, kd_mutex_{name});' in source
     markers = (
         'static void kd_mutex_update_max_waiters(int active)',
-        'static void kd_mutex_waiter_enter(struct kd_mutex *lock)',
-        'static void kd_mutex_waiter_exit(struct kd_mutex *lock)',
+        'static void kd_mutex_waiter_enter(struct kd_mutex *lock, struct kd_mutex_node *node)',
+        'static void kd_mutex_waiter_exit(struct kd_mutex *lock, struct kd_mutex_node *node)',
+        'static bool kd_mutex_count_records_idle(void)',
         'bool kd_mutex_check_idle(void)',
     )
     code = '\n'.join(definition(source, marker) for marker in markers)
     mutations = {
-        'ignores-active-task': ('return kd_mutex_tasks_idle();', 'return (kd_mutex_tasks_idle(), true);'),
+        'ignores-active-task': ('&& kd_mutex_tasks_idle();', '&& (kd_mutex_tasks_idle(), true);'),
+        'ignores-count-records': ('return kd_mutex_count_records_idle() &&', 'return (kd_mutex_count_records_idle(), true) &&'),
         'ignores-second-cpu': ('for_each_possible_cpu(cpu)',
                               'for (cpu = 0; cpu < 1; cpu++)'),
         'ignores-reservation': (
@@ -49,7 +51,7 @@ def main():
             candidate = code
             if mutation:
                 before, after = mutation
-                assert candidate.count(before) == 1
+                assert candidate.count(before) == (2 if name == 'ignores-second-cpu' else 1)
                 candidate = candidate.replace(before, after)
             (path / 'mutex_balances_production.h').write_text(candidate)
             binary = path / name

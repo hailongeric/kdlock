@@ -106,7 +106,7 @@ prevents an ordinary owner from observing an earlier delegate's HELD phase.
 | --- | --- |
 | Local acquire, cancellation, unlock and idle | [kd_mutex_local.c](../../kernel_module/kd_mutex_local.c); private [OSQ](../../kernel_module/kd_mutex_osq.c) |
 | Direct entry policy and exact unlock routing | [lock/mutex_calls.inc](../../kernel_module/lock/mutex_calls.inc); [kd_mutex_tasks.c](../../kernel_module/kd_mutex_tasks.c) retains task/acquisition references |
-| Packed delegation phase and exact waiter count | [kd_mutex_state.h](../../include/kd_mutex_state.h); masked atomic transitions preserve concurrent count updates |
+| Delegation phase and exact waiter records | [kd_mutex_state.h](../../include/kd_mutex_state.h); gate acquisition uses CAS, owner phase updates use release stores, and each reserved node owns its waiter record |
 | Node reservation and physical-owner acquisition | [mutex/queue.inc](../../kernel_module/mutex/queue.inc), coordinated by [kd_mutex.c](../../kernel_module/kd_mutex.c) |
 | Batch selection, execution and node retirement | [mutex/combiner.inc](../../kernel_module/mutex/combiner.inc) |
 | Waiter execution stacks and continuation restore | [mutex/clobber.inc](../../kernel_module/mutex/clobber.inc), [mutex/waiter.inc](../../kernel_module/mutex/waiter.inc) |
@@ -154,7 +154,7 @@ configuration. Its complete fields are:
 | `raw_spinlock_t wait_lock` | 8 | 4 | Existing physical sleeping-waiter serialization |
 | `struct optimistic_spin_queue osq` | 12 | 4 | Independent physical optimistic-spinning tail |
 | `struct kd_local_waiter *wait_head` | 16 | 8 | First real stack waiter in a circular doubly linked ring; NULL means empty |
-| `atomic_t delegation_state` | 24 | 4 | Low 8 bits phase; high 24 bits exact published waiter count |
+| `atomic_t delegation_state` | 24 | 4 | Delegation phase: FREE, ACQUIRING, HELD, COMBINER or RELEASING |
 | `u32 delegation_tail` | 28 | 4 | `(CPU + 1) << 4` combined with `slot << 2`; zero means empty |
 
 The sleeping waiter remains a stack `list_head` plus task pointer (24 bytes).
@@ -163,12 +163,31 @@ lock first-waiter check compares pointers only; it never follows a potentially
 retired stack node. The OSQ algorithm and its per-CPU nodes are unchanged.
 Internal list representation differs from Linux despite equal object geometry.
 
-All phase changes use masked full-word atomic compare-and-exchange, preserving
-concurrent exact count updates. Count entry/exit add/subtract 256 and fail closed
-on overflow/underflow. A compile-time bound proves four reserved nodes per possible
-CPU fit the count. Count RMW traffic remains; auxiliary reference traffic does not.
-There is no auxiliary hash, slot pool, lock address key, generation sequence,
-shared auxiliary reference count, allocation, retirement callback or lookup.
+FREE to ACQUIRING uses full-word compare-and-exchange. Only the gate owner
+changes an occupied phase, so subsequent phase changes use release stores.
+HELD follows physical acquisition; RELEASING precedes physical release, and FREE
+is the releasing owner's final gate access. Ordinary physical owners cannot
+inherit authorization from an old HELD phase. The queue tail still uses the
+existing encoded-node exchange and terminal compare-and-exchange.
+
+Each reserved node records its exact counted interval in `counted_lock` at offset
+96 and a nonwrapping 64-bit `count_seq` at offset 88. Both use existing padding;
+the node remains 320 bytes. Only its pinned origin changes this record: entry
+follows the queue-tail exchange and exit precedes every published queue-path return. A
+combiner remains counted across early outer release and physical reacquisition;
+queue removal or frame retirement alone does not clear the record. Ordered odd
+and even sequence stores bracket each pointer change. No shared waiter counter
+is updated by enqueue or completion.
+
+The cold debug count allocates temporary sequence storage with GFP_ATOMIC and
+collects every preallocated node's key and sequence, then verifies all sequences
+again. Unchanged even sequences establish one common instant for the exact
+count, including address reuse between scans. Eight unsuccessful attempts return
+`-EAGAIN`; allocation failure returns `-ENOMEM`. Errors never become an estimated
+count or zero. The hot path does not allocate or scan remote nodes. Per-object
+idle checks scan exact records only after callers stop and join, as before.
+There is no auxiliary hash, shared lock reference count, auxiliary registry lock
+or auxiliary RCU mechanism, per-object allocation or retirement callback.
 
 | Other storage | Lifetime |
 | --- | --- |

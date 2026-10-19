@@ -577,6 +577,9 @@ static void check_nodes(void)
 				kd_mutex_nodes[i].lock =
 					&origins[0].mutex;
 				kd_mutex_nodes[i].gsbase = 0xabcd;
+				/* A later reservation must not erase the generation that
+				 * lets a cold reader detect same-address slot reuse. */
+				kd_mutex_nodes[i].count_seq = 4 * (i + 1);
 				if (chosen < 0 && !(occupied & BIT(i)) &&
 				    (available & BIT(i)))
 					chosen = i;
@@ -613,7 +616,10 @@ static void check_nodes(void)
 	for (int i = 0; i < 1000; i++) {
 		node = kd_mutex_reserve_node();
 		CHECK(node == &kd_mutex_nodes[0]);
+		kd_mutex_count_enter(&origins[0].mutex, node);
+		kd_mutex_count_exit(&origins[0].mutex, node);
 		kd_mutex_release_node(node);
+		CHECK(node->count_seq == (u64)(i + 1) * 4 && !node->counted_lock);
 	}
 	node = kd_mutex_reserve_node();
 	CHECK(kd_mutex_reserve_node() == &kd_mutex_nodes[1]);

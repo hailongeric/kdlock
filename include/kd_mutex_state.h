@@ -6,66 +6,60 @@
 #include <linux/bug.h>
 #include <linux/limits.h>
 
-#define KD_MUTEX_PHASE_MASK 0xffU
-#define KD_MUTEX_WAITER_SHIFT 8
-#define KD_MUTEX_WAITER_ONE (1U << KD_MUTEX_WAITER_SHIFT)
-#define KD_MUTEX_WAITER_MAX (U32_MAX >> KD_MUTEX_WAITER_SHIFT)
-
 static __always_inline u32 kd_mutex_gate_read(struct kd_mutex *lock)
 {
-	return (u32)atomic_read_acquire(&lock->delegation_state) & KD_MUTEX_PHASE_MASK;
+	return (u32)atomic_read_acquire(&lock->delegation_state);
 }
 
-/* Every phase change preserves concurrent exact waiter accounting. Never use
- * byte stores on this atomic word: enqueue/retirement can update its high bits. */
+/* Only this CAS claims a free gate. Waiter records are independently owned by
+ * reserved nodes, so a claim no longer retries against unrelated count writes. */
 static __always_inline bool kd_mutex_gate_trylock(struct kd_mutex *lock)
 {
-	u32 old = atomic_read(&lock->delegation_state);
-
-	while (!(old & KD_MUTEX_PHASE_MASK)) {
-		u32 seen = atomic_cmpxchg(&lock->delegation_state, old,
-					 old | KD_MUTEX_GATE_ACQUIRING);
-		if (seen == old)
-			return true;
-		old = seen;
-	}
-	return false;
+	return atomic_cmpxchg(&lock->delegation_state, KD_MUTEX_GATE_FREE,
+			      KD_MUTEX_GATE_ACQUIRING) == KD_MUTEX_GATE_FREE;
 }
 
-/* Only the gate owner changes an occupied phase. The full atomic operation
- * orders ACQUIRING -> physical acquire -> HELD and RELEASING -> physical
- * release -> FREE. An ordinary physical owner cannot inherit a stale HELD. */
+/* Only the gate owner stores an occupied phase. HELD release-publishes its
+ * completed physical acquisition. RELEASING precedes the physical owner's
+ * release operation, which orders that phase before an ordinary successor's
+ * acquisition. FREE release follows the full physical unlock; this owner must
+ * never touch the gate afterward because a new claimant can already own it. */
 static __always_inline void kd_mutex_gate_set(struct kd_mutex *lock, u32 phase)
 {
-	u32 old = atomic_read(&lock->delegation_state);
-
 	BUG_ON(phase > KD_MUTEX_GATE_RELEASING);
-	for (;;) {
-		u32 seen = atomic_cmpxchg(&lock->delegation_state, old,
-					 (old & ~KD_MUTEX_PHASE_MASK) | phase);
-		if (seen == old)
-			return;
-		old = seen;
-	}
+	atomic_set_release(&lock->delegation_state, phase);
 }
 
-static __always_inline int kd_mutex_state_waiter_count(struct kd_mutex *lock)
+/* Only the migration-pinned origin updates this reserved node. Sequence
+ * bracketing makes a reused slot distinguishable even when its key repeats.
+ * No lock-wide RMW is needed; readers never dereference the sampled key. */
+static __always_inline void
+kd_mutex_count_transition(struct kd_mutex_node *node,
+			  struct kd_mutex *expected, struct kd_mutex *next)
 {
-	return (u32)atomic_read(&lock->delegation_state) >> KD_MUTEX_WAITER_SHIFT;
+	u64 seq = READ_ONCE(node->count_seq);
+
+	BUG_ON((seq & 1) || seq > U64_MAX - 2);
+	BUG_ON(READ_ONCE(node->counted_lock) != expected);
+	WRITE_ONCE(node->count_seq, seq + 1);
+	smp_wmb();
+	WRITE_ONCE(node->counted_lock, next);
+	smp_wmb();
+	WRITE_ONCE(node->count_seq, seq + 2);
 }
 
-static __always_inline void kd_mutex_state_waiter_enter(struct kd_mutex *lock)
+static __always_inline void kd_mutex_count_enter(struct kd_mutex *lock,
+						struct kd_mutex_node *node)
 {
-	u32 old = atomic_fetch_add(KD_MUTEX_WAITER_ONE, &lock->delegation_state);
-
-	BUG_ON((old >> KD_MUTEX_WAITER_SHIFT) == KD_MUTEX_WAITER_MAX);
+	BUG_ON(!lock);
+	kd_mutex_count_transition(node, NULL, lock);
 }
 
-static __always_inline void kd_mutex_state_waiter_exit(struct kd_mutex *lock)
+static __always_inline void kd_mutex_count_exit(struct kd_mutex *lock,
+					       struct kd_mutex_node *node)
 {
-	u32 old = atomic_fetch_sub(KD_MUTEX_WAITER_ONE, &lock->delegation_state);
-
-	BUG_ON(!(old >> KD_MUTEX_WAITER_SHIFT));
+	BUG_ON(!lock);
+	kd_mutex_count_transition(node, lock, NULL);
 }
 
 #endif

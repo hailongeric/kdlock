@@ -25,7 +25,7 @@ def production():
     slowpath = definition(
         mutex, "__kd_mutex_lock_slowpath(struct kd_mutex *lock, int tail,"
     )
-    assert "release:\n\tkd_mutex_waiter_exit(lock);\n\treturn 2;" in slowpath
+    assert "release:\n\tkd_mutex_waiter_exit(lock, curr_node);\n\treturn 2;" in slowpath
     # These statics belong to separate production translation units. Rename
     # only the per-CPU symbol so both unchanged paths can share one fixture.
     code = without_includes(read_source(ROOT / "include/kd_comm.h")).replace("kd_comm_matches(", "kd_comm_matches_real(")
@@ -149,6 +149,7 @@ def main():
             "if (smp_load_acquire(&node->locked))",
         ),
         "release-keeps-gs": ("node->gsbase = 0;", "node->gsbase = 1;"),
+        "release-resets-count-generation": ("node->gsbase = 0;", "node->gsbase = 0; node->count_seq = 0;"),
         "gate-without-native-lock": (
             "\t\tkd_mutex_claim_origin(lock);\n\t\treturn;",
             "\t\treturn;",

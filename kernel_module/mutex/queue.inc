@@ -63,19 +63,19 @@ static void kd_mutex_update_max_waiters(int active)
 	}
 }
 
-static void kd_mutex_waiter_enter(struct kd_mutex *lock)
+static void kd_mutex_waiter_enter(struct kd_mutex *lock, struct kd_mutex_node *node)
 {
 	/* This is an origin-CPU balance, not a queue publication primitive.
 	 * The tail exchange/link and result release/acquire keep their ordering. */
 	int active = this_cpu_inc_return(kd_mutex_active_waiters);
 
-	kd_mutex_state_waiter_enter(lock);
+	kd_mutex_count_enter(lock, node);
 	kd_mutex_update_max_waiters(active);
 }
 
-static void kd_mutex_waiter_exit(struct kd_mutex *lock)
+static void kd_mutex_waiter_exit(struct kd_mutex *lock, struct kd_mutex_node *node)
 {
-	kd_mutex_state_waiter_exit(lock);
+	kd_mutex_count_exit(lock, node);
 	if (unlikely(this_cpu_dec_return(kd_mutex_active_waiters) < 0)) {
 		this_cpu_write(kd_mutex_active_waiters, 0);
 		this_cpu_inc(kd_mutex_frame_failure_count);
@@ -177,6 +177,9 @@ static void kd_mutex_release_node(struct kd_mutex_node *node)
 	bit = BIT(node->slot);
 	if (unlikely(!(slots & bit)))
 		goto invalid;
+	/* Count retirement precedes node reuse. Never reset its version: cold
+	 * observations must distinguish a later invocation in this same slot. */
+	BUG_ON(READ_ONCE(node->counted_lock) || (READ_ONCE(node->count_seq) & 1));
 
 	node->next = NULL;
 	node->lock = NULL;

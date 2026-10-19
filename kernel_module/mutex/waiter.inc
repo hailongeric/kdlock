@@ -22,7 +22,7 @@ __kd_mutex_lock_slowpath(struct kd_mutex *lock, int tail,
 
 	curr_node->queued_at_ns = kd_exe_queue_timing_start();
 	old_tail = kd_mutex_xchg_tail(lock, tail);
-	kd_mutex_waiter_enter(lock);
+	kd_mutex_waiter_enter(lock, curr_node);
 
 	if (old_tail) {
 		/* --- waiter path: link behind prev, spin until woken --- */
@@ -33,14 +33,14 @@ __kd_mutex_lock_slowpath(struct kd_mutex *lock, int tail,
 		kd_mutex_wait_for_result(curr_node);
 		if (READ_ONCE(curr_node->native_resume)) {
 			WRITE_ONCE(ptr->resume_node, curr_node);
-			kd_mutex_waiter_exit(lock);
+			kd_mutex_waiter_exit(lock, curr_node);
 			return 5;
 		}
 
 		/* CS was processed by combiner via JIT sandbox → done */
 		if (curr_node->completed) {
 			WRITE_ONCE(ptr->resume_node, curr_node);
-			kd_mutex_waiter_exit(lock);
+			kd_mutex_waiter_exit(lock, curr_node);
 			return 3;
 		}
 		/* Fall through: become combiner */
@@ -74,7 +74,7 @@ __kd_mutex_lock_slowpath(struct kd_mutex *lock, int tail,
 	BUG_ON(kd_mutex_gate_read(lock) != KD_MUTEX_GATE_HELD);
 
 release:
-	kd_mutex_waiter_exit(lock);
+	kd_mutex_waiter_exit(lock, curr_node);
 	return 2;
 }
 #pragma GCC pop_options
@@ -125,11 +125,6 @@ int kd_mutex_nested_unlock(struct kd_mutex *lock)
 void kd_mutex_note_nested_jit(void)
 {
 	this_cpu_inc(kd_mutex_nested_jit_count);
-}
-
-int kd_mutex_waiter_count(struct kd_mutex *lock)
-{
-	return lock ? kd_mutex_state_waiter_count(lock) : -EINVAL;
 }
 
 void kd_mutex_note_nested_abort_release(void)

@@ -36,7 +36,7 @@ static struct task_struct executor = { 1 }, waiter = { 2 }, other = { 3 };
 static struct task_struct *current = &executor;
 static struct kd_mutex b;
 static struct kd_mutex gate;
-static struct kd_mutex_node request, successor;
+static struct kd_mutex_node request, successor, enclosing;
 static struct kd_exec_frame active;
 static unsigned long kd_exec_invariant_failures;
 static unsigned long kd_mutex_origin_acquires, kd_mutex_origin_releases;
@@ -399,7 +399,10 @@ int main(void)
 		bool early = mode >= 1 && mode <= 3;
 
 		memset(&gate, 0, sizeof(gate));
-		kd_mutex_state_waiter_enter(&gate); /* Enclosing queued combiner. */
+		/* A separate producer owns this record across early physical release
+		 * and reacquisition, independently of the executed request's slot. */
+		memset(&enclosing, 0, sizeof(enclosing));
+		kd_mutex_count_enter(&gate, &enclosing);
 		memset(&request, 0, sizeof(request));
 		memset(&successor, 0, sizeof(successor));
 		gate.owner = NULL;
@@ -447,11 +450,12 @@ int main(void)
 		CHECK(_kd_mutex_unlock_checked(&gate) == 0);
 		CHECK(!kd_mutex_gate_read(&gate) && !gate.owner);
 		CHECK(kd_mutex_origin_acquires == kd_mutex_origin_releases);
-		CHECK(kd_mutex_state_waiter_count(&gate) == 1); /* Enclosing waiter survives early release. */
+		CHECK(enclosing.counted_lock == &gate && !(enclosing.count_seq & 1));
 		/* Remaining unexecuted nodes belong to substituted peers; discard them
 		 * only after the queue assertions, then finish this enclosing waiter. */
 		gate.delegation_tail = 0;
-		kd_mutex_state_waiter_exit(&gate);
+		kd_mutex_count_exit(&gate, &enclosing);
+		CHECK(!enclosing.counted_lock && !(enclosing.count_seq & 1));
 		CHECK(!atomic_read(&gate.delegation_state));
 	}
 	CHECK(!kd_exec_invariant_failures && !kd_mutex_frame_failure_count);
