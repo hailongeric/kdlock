@@ -52,21 +52,23 @@ static struct kd_mutex_aux *kd_mutex_aux_slot(struct kd_mutex *lock)
  * A negative result never authorizes protocol-field access. Its rejected pin
  * must use the ordinary put: publication can turn it into the last LIVE count
  * before it is released. No retry loop writes this shared line under load. */
-static bool kd_mutex_aux_try_ref(struct kd_mutex_aux *aux)
+static __always_inline bool kd_mutex_aux_try_ref(struct kd_mutex_aux *aux)
 {
 	long refs = atomic_long_fetch_inc(&aux->refs);
 
-	/* Fail closed at the admission bound, with an enormous guard band to
-	 * the state bits. The unused positive quadrant is invalid as well. */
-	BUG_ON(((unsigned long)refs & KD_MUTEX_AUX_COUNT_MASK) >=
-	       KD_MUTEX_AUX_MAX_REFS || refs > (long)KD_MUTEX_AUX_COUNT_MASK);
-	if (likely(refs >= 0))
+	/* One unsigned comparison admits only bounded LIVE counts, including
+	 * zero. State decoding and its guard remain on the rejection path. */
+	if (likely((unsigned long)refs < KD_MUTEX_AUX_MAX_REFS))
 		return true;
+	/* Fail closed at the admission bound, with an enormous guard band to
+	 * the state bits. Every positive value reaching here is invalid. */
+	BUG_ON(refs >= 0 || ((unsigned long)refs & KD_MUTEX_AUX_COUNT_MASK) >=
+	       KD_MUTEX_AUX_MAX_REFS);
 	kd_mutex_aux_put(aux);
 	return false;
 }
 
-static struct kd_mutex_aux *
+static __always_inline struct kd_mutex_aux *
 kd_mutex_aux_find_ref(struct kd_mutex_aux *aux, struct kd_mutex *lock)
 {
 	/* Reject ordinary collisions without writing the other lock's ref line.
@@ -196,6 +198,13 @@ void kd_mutex_aux_put(struct kd_mutex_aux *aux)
 	long refs = atomic_long_fetch_dec(&aux->refs);
 	u64 sequence;
 
+	/* The usual nonfinal LIVE put needs no state decoding. Unsigned
+	 * subtraction excludes zero, one and all negative encodings. Larger
+	 * valid LIVE counts still use the full guard below, without imposing
+	 * the getter's admission bound on a creator's additive publication. */
+	if (likely((unsigned long)refs - 2 <
+		   (unsigned long)KD_MUTEX_AUX_MAX_REFS - 1))
+		return;
 	/* Every put owns one low-bit count, whether accepted or rejected. Only
 	 * LIVE's last count can start retirement. A pin from zero can win first;
 	 * the losing put then owns nothing and must not inspect protocol fields. */

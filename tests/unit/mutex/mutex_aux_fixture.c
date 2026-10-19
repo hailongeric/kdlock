@@ -484,19 +484,83 @@ static void check_negative_rollback(bool exhausted)
   WRITE_ONCE(race_aux->sequence,sequence);
  } else CHECK(!kd_mutex_aux_fail_once);
 }
+static void expect_reference_bug(struct kd_mutex_aux *aux,long refs,bool pin)
+{
+ unsigned int before=rmw_calls;
+ atomic_long_set(&aux->refs,refs);expected_bug=true;
+ if(!setjmp(bug_target)) {
+  if(pin)(void)kd_mutex_aux_try_ref(aux);
+  else kd_mutex_aux_put(aux);
+  CHECK(false);
+ }
+ expected_bug=false;
+ /* Invalid encodings fail immediately after their original RMW, before
+  * another put, claim or lifecycle transition can obscure the failure. */
+ CHECK(rmw_calls==before+1);
+ CHECK((unsigned long)atomic_long_read(&aux->refs)==
+       (unsigned long)refs+(pin?1UL:-1UL));
+ atomic_long_set(&aux->refs,1);
+}
 static void check_reference_guards(void)
 {
  struct kd_mutex_aux *aux=kd_mutex_aux_get(key_a);CHECK(aux);
- for(volatile unsigned int kind=0;kind<3;kind++) {
-  long invalid=kind==0 ? KD_MUTEX_AUX_MAX_REFS :
-               kind==1 ? 1L<<62 : KD_MUTEX_AUX_BUSY;
-  atomic_long_set(&aux->refs,invalid);expected_bug=true;
-  if(!setjmp(bug_target)) {
-   if(kind<2)(void)kd_mutex_aux_try_ref(aux);
-   else kd_mutex_aux_put(aux);
-   CHECK(false);
-  }
-  expected_bug=false;atomic_long_set(&aux->refs,1);
+ u64 sequence=aux->sequence;
+ const long accepted_pins[]={0,1,KD_MUTEX_AUX_MAX_REFS-1};
+ const long rejected_pins[]={
+  KD_MUTEX_AUX_FREE,KD_MUTEX_AUX_FREE+1,
+  KD_MUTEX_AUX_FREE+KD_MUTEX_AUX_MAX_REFS-1,
+  KD_MUTEX_AUX_BUSY,KD_MUTEX_AUX_BUSY+1,
+  KD_MUTEX_AUX_BUSY+KD_MUTEX_AUX_MAX_REFS-1,
+ };
+ const long invalid_pins[]={
+  KD_MUTEX_AUX_MAX_REFS,(long)KD_MUTEX_AUX_MAX_REFS+1,
+  KD_MUTEX_AUX_COUNT_MASK,1L<<62,LONG_MAX,
+  KD_MUTEX_AUX_FREE+KD_MUTEX_AUX_MAX_REFS,
+  KD_MUTEX_AUX_BUSY+KD_MUTEX_AUX_MAX_REFS,
+  KD_MUTEX_AUX_FREE+(long)KD_MUTEX_AUX_COUNT_MASK,
+  KD_MUTEX_AUX_BUSY+(long)KD_MUTEX_AUX_COUNT_MASK,
+ };
+ const long nonfinal_puts[]={
+  2,KD_MUTEX_AUX_MAX_REFS-1,KD_MUTEX_AUX_MAX_REFS,
+  (long)KD_MUTEX_AUX_MAX_REFS+1,KD_MUTEX_AUX_COUNT_MASK,
+  KD_MUTEX_AUX_FREE+1,KD_MUTEX_AUX_FREE+KD_MUTEX_AUX_MAX_REFS-1,
+  KD_MUTEX_AUX_FREE+KD_MUTEX_AUX_MAX_REFS,
+  KD_MUTEX_AUX_FREE+(long)KD_MUTEX_AUX_COUNT_MASK,
+  KD_MUTEX_AUX_BUSY+1,KD_MUTEX_AUX_BUSY+KD_MUTEX_AUX_MAX_REFS-1,
+  KD_MUTEX_AUX_BUSY+KD_MUTEX_AUX_MAX_REFS,
+  KD_MUTEX_AUX_BUSY+(long)KD_MUTEX_AUX_COUNT_MASK,
+ };
+ const long invalid_puts[]={
+  0,KD_MUTEX_AUX_FREE,KD_MUTEX_AUX_BUSY,1L<<62,(1L<<62)+1,LONG_MAX,
+ };
+ /* These synthetic count boundaries isolate the production guards without
+  * manufacturing billions of callers. Restore the exact creator reference
+  * after each call; the scheduled races above exercise actual lifetimes. */
+ for(unsigned int i=0;i<sizeof(accepted_pins)/sizeof(*accepted_pins);i++) {
+  atomic_long_set(&aux->refs,accepted_pins[i]);unsigned int before=rmw_calls;
+  CHECK(kd_mutex_aux_try_ref(aux));
+  CHECK(atomic_long_read(&aux->refs)==accepted_pins[i]+1 && rmw_calls==before+1);
+  CHECK(aux->lock==key_a && aux->sequence==sequence);atomic_long_set(&aux->refs,1);
+ }
+ for(unsigned int i=0;i<sizeof(rejected_pins)/sizeof(*rejected_pins);i++) {
+  atomic_long_set(&aux->refs,rejected_pins[i]);unsigned int before=rmw_calls;
+  CHECK(!kd_mutex_aux_try_ref(aux));
+  CHECK(atomic_long_read(&aux->refs)==rejected_pins[i] && rmw_calls==before+2);
+  CHECK(aux->lock==key_a && aux->sequence==sequence);atomic_long_set(&aux->refs,1);
+ }
+ for(unsigned int i=0;i<sizeof(invalid_pins)/sizeof(*invalid_pins);i++) {
+  expect_reference_bug(aux,invalid_pins[i],true);
+  CHECK(aux->lock==key_a && aux->sequence==sequence);
+ }
+ for(unsigned int i=0;i<sizeof(nonfinal_puts)/sizeof(*nonfinal_puts);i++) {
+  atomic_long_set(&aux->refs,nonfinal_puts[i]);unsigned int before=rmw_calls;
+  kd_mutex_aux_put(aux);
+  CHECK(atomic_long_read(&aux->refs)==nonfinal_puts[i]-1 && rmw_calls==before+1);
+  CHECK(aux->lock==key_a && aux->sequence==sequence);atomic_long_set(&aux->refs,1);
+ }
+ for(unsigned int i=0;i<sizeof(invalid_puts)/sizeof(*invalid_puts);i++) {
+  expect_reference_bug(aux,invalid_puts[i],false);
+  CHECK(aux->lock==key_a && aux->sequence==sequence);
  }
  kd_mutex_aux_put(aux);drained();
 }
