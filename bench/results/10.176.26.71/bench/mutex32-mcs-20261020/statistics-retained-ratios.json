@@ -1,0 +1,214 @@
+{
+  "audited_samples": 72,
+  "groups": 24,
+  "method": "Independent arithmetic from archived records: completed*1000/wall_ns, median of three whole-run Mops/s samples, ratio of source-specific medians. No retained code executed.",
+  "passed": true,
+  "ratios": [
+    {
+      "comparisons": {
+        "baseline": {
+          "change_percent": -2.0957602709130634,
+          "observed_ranges_overlap": true,
+          "range": [
+            4.858899074389554,
+            6.373431062406418
+          ],
+          "throughput_ratio": 0.9790423972908694,
+          "whole_mops": 6.133725649692892
+        },
+        "old256": {
+          "change_percent": -19.869598594460072,
+          "observed_ranges_overlap": true,
+          "range": [
+            5.378079689081048,
+            7.5756931520133115
+          ],
+          "throughput_ratio": 0.8013040140553993,
+          "whole_mops": 7.494256061451162
+        }
+      },
+      "retained_range": [
+        4.149724402043863,
+        6.15170565975911
+      ],
+      "retained_whole_mops": 6.005177464399823,
+      "workers": 8,
+      "workload": "c01"
+    },
+    {
+      "comparisons": {
+        "baseline": {
+          "change_percent": 14.257948178164188,
+          "observed_ranges_overlap": false,
+          "range": [
+            4.192301250242082,
+            4.273420765688778
+          ],
+          "throughput_ratio": 1.142579481781642,
+          "whole_mops": 4.25079277769642
+        },
+        "old256": {
+          "change_percent": -2.050590441942505,
+          "observed_ranges_overlap": true,
+          "range": [
+            4.826680039977158,
+            5.0198884076908525
+          ],
+          "throughput_ratio": 0.979494095580575,
+          "whole_mops": 4.958548122970269
+        }
+      },
+      "retained_range": [
+        4.7968016728890595,
+        4.872485964475658
+      ],
+      "retained_whole_mops": 4.856868609101522,
+      "workers": 60,
+      "workload": "c01"
+    },
+    {
+      "comparisons": {
+        "baseline": {
+          "change_percent": 8.802309170000859,
+          "observed_ranges_overlap": true,
+          "range": [
+            4.241966631586591,
+            4.361302578920591
+          ],
+          "throughput_ratio": 1.0880230917000087,
+          "whole_mops": 4.290229937595096
+        },
+        "old256": {
+          "change_percent": -4.255122763582514,
+          "observed_ranges_overlap": true,
+          "range": [
+            4.542647537523197,
+            4.9910400416786596
+          ],
+          "throughput_ratio": 0.9574487723641748,
+          "whole_mops": 4.875320096008941
+        }
+      },
+      "retained_range": [
+        3.679014213133122,
+        4.736105625560957
+      ],
+      "retained_whole_mops": 4.6678692408061515,
+      "workers": 8,
+      "workload": "seek-set-n16"
+    },
+    {
+      "comparisons": {
+        "baseline": {
+          "change_percent": 13.550489934091363,
+          "observed_ranges_overlap": false,
+          "range": [
+            3.6960569508195884,
+            3.7133286367343112
+          ],
+          "throughput_ratio": 1.1355048993409136,
+          "whole_mops": 3.7083010887607224
+        },
+        "old256": {
+          "change_percent": 4.988298648530777,
+          "observed_ranges_overlap": false,
+          "range": [
+            3.8907624852994873,
+            4.031074205628225
+          ],
+          "throughput_ratio": 1.0498829864853079,
+          "whole_mops": 4.0107270131269726
+        }
+      },
+      "retained_range": [
+        4.053388065517048,
+        4.21985611216652
+      ],
+      "retained_whole_mops": 4.210794054519044,
+      "workers": 60,
+      "workload": "seek-set-n16"
+    },
+    {
+      "comparisons": {
+        "baseline": {
+          "change_percent": 4.215197779327015,
+          "observed_ranges_overlap": true,
+          "range": [
+            5.068715310833609,
+            5.811989063848624
+          ],
+          "throughput_ratio": 1.0421519777932702,
+          "whole_mops": 5.375597208156069
+        },
+        "old256": {
+          "change_percent": -18.289047132452094,
+          "observed_ranges_overlap": false,
+          "range": [
+            6.532273936429186,
+            6.892731055979828
+          ],
+          "throughput_ratio": 0.817109528675479,
+          "whole_mops": 6.856105657439688
+        }
+      },
+      "retained_range": [
+        5.24018037497603,
+        5.861510505529094
+      ],
+      "retained_whole_mops": 5.602189262299829,
+      "workers": 8,
+      "workload": "pipebytes-query-n16"
+    },
+    {
+      "comparisons": {
+        "baseline": {
+          "change_percent": 16.468858642993187,
+          "observed_ranges_overlap": false,
+          "range": [
+            4.194839701874066,
+            4.208678346693644
+          ],
+          "throughput_ratio": 1.164688586429932,
+          "whole_mops": 4.198683319452491
+        },
+        "old256": {
+          "change_percent": -9.182775322023318,
+          "observed_ranges_overlap": false,
+          "range": [
+            5.337138727847854,
+            5.411490034787785
+          ],
+          "throughput_ratio": 0.9081722467797668,
+          "whole_mops": 5.384615702076092
+        }
+      },
+      "retained_range": [
+        4.878241200720151,
+        4.906840068497851
+      ],
+      "retained_whole_mops": 4.890158540200056,
+      "workers": 60,
+      "workload": "pipebytes-query-n16"
+    }
+  ],
+  "records_sha256": {
+    "mutex32-mcs-20261020/baseline/pipe/records.json": "4233d887c54ff6b167f43b44fdd41b3422c032a4d32989500f404fadcb2f8be2",
+    "mutex32-mcs-20261020/baseline/seek/records.json": "64f06899048e50b64bf3c2c42aa47aa0e65f4205c57dc57d6ee536502f9c5b9f",
+    "mutex32-mcs-20261020/baseline/synthetic/records.json": "b93f5a222c2e1df048257688a09d4511a4ed9c8586cf01aec166dae66f76daa8",
+    "mutex32-mcs-20261020/candidate/pipe/records.json": "e067b8b768ad117fcb85acee3cc6076119f594057d136fbb0f4bf5e7e83aa884",
+    "mutex32-mcs-20261020/candidate/seek/records.json": "a627ade1b84c2e45337c73cf65353c0c5ae3860904b5ddc0cb4a19dbe416f140",
+    "mutex32-mcs-20261020/candidate/synthetic/records.json": "a5562216ab2336978e55c1c167ce036f6288269d8e86f115e1703ffcf47e7dee",
+    "mutex32-mcs-20261020/locality256/pipe/records.json": "953c3ae9f09e461a4f85af60e5b253c01e363789a68a4bb3e7a4a2f860d33e5a",
+    "mutex32-mcs-20261020/locality256/seek/records.json": "10cd056bfe951746e198a15367b175edad322f0d611cc209eef9d07cd9b140c3",
+    "mutex32-mcs-20261020/locality256/synthetic/records.json": "42ed80ed3690b5f511999e19bf4c1d1e541dd48f1146e2159cff8be0a156002e",
+    "mutex32-mcs-20261020/old256/pipe/records.json": "97e3d7bf4b0e096c6affe9727530e32a0ea991c71760ac285b5fc6bb138406b7",
+    "mutex32-mcs-20261020/old256/seek/records.json": "3a8feed6c6e63ca58f9d7bd5f1af5253aff73a77eeb2277eb38e717d5e42a9f1",
+    "mutex32-mcs-20261020/old256/synthetic/records.json": "058b2eddecf3dc652b84fa1094560ce8ae48e2511080b44bb0bf944da5de52f1"
+  },
+  "source_commits": {
+    "baseline": "826faa6",
+    "candidate": "f4d359d",
+    "locality256": "752fec1",
+    "old256": "0324e60d6791948e9762a9916a50e8e026f073b0"
+  }
+}

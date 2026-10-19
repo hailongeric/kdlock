@@ -1,0 +1,6 @@
+START locality256 synthetic
+FINISH locality256 synthetic 0
+START locality256 seek
+FINISH locality256 seek 0
+START locality256 pipe
+FINISH locality256 pipe 0

@@ -1,12 +1,15 @@
 # Mutex implementation: KD, TCLock and Linux Native
 
-`master` retains the accepted KD-only legacy lock protocol. New delegation
-callers use ABI2; ABI0 remains an internal legacy compatibility interface.
+`master` retains KD-only physical ownership and pinned published delegation
+waiters. New delegation callers use ABI2; ABI0 remains an internal legacy
+compatibility interface. The current OSQ and delegation queues share reserved
+node storage while keeping independent memberships. Bounded NUMA selection
+hands larger deferred cohorts to the next owner at a 256-body local boundary;
+a smaller rejoined prefix is followed by FIFO service under the current owner.
 The [compatibility backport](../history/legacy_mutex_compatibility.md) adds fail-closed
 processor-state admission, immutable mutex images and generation-bound frames.
 The [KD-only extension](kd_only_mutex.md) embeds physical exclusion in a native-sized
-KD object together with the delegation scheduling root, while
-retaining the queue and pinned producer.
+KD object together with the delegation scheduling root.
 
 Read [lock protocols](lock_protocols.md) for the algorithm/ownership comparison
 and [KD locking](locking.md#mutex-delegation-protocol) for nested owner/ACK
@@ -90,9 +93,15 @@ Signal cancellation removes that waiter under the same lock. A designated
 handoff must be picked up before checking signals, so cancellation cannot abandon
 ownership already assigned to that task. Release clears the owner with release
 ordering or wakes/transfers to the first sleeper; the wake queue retains a task
-reference until wakeup. The local physical path allocates no delegation node or
-JIT frame. Callers entering through the delegation engine retain that engine's
-separate request records while using this same physical primitive.
+reference until wakeup. An ordinary optimistic spinner temporarily reserves a
+slot from the preallocated mutex node pool, using only its OSQ subrecord; it
+publishes no delegation request and creates no JIT frame. If all four local
+slots are reserved, it skips OSQ and continues through the sleeping path.
+An initial delegation head explicitly lends its already reserved slot during
+physical acquisition. The OSQ membership retires before that acquisition sleeps
+or returns, while the delegation reservation and exact waiter record remain live.
+Early outer reacquisition uses an ordinary temporary reservation or the sleeping
+fallback; it never borrows a completed waiter's node.
 
 The delegation phase is separate from physical ownership. A queue head changes
 FREE (0) to ACQUIRING (2), acquires the physical mutex, then publishes HELD (1).
@@ -155,7 +164,7 @@ configuration. Its complete fields are:
 | --- | ---: | ---: | --- |
 | `atomic_long_t owner` | 0 | 8 | Physical task pointer and WAITERS/HANDOFF/PICKUP flags |
 | `raw_spinlock_t wait_lock` | 8 | 4 | Existing physical sleeping-waiter serialization |
-| `struct optimistic_spin_queue osq` | 12 | 4 | Independent physical optimistic-spinning tail |
+| `struct optimistic_spin_queue osq` | 12 | 4 | Independent physical optimistic-spinning tail, encoding CPU and shared-pool slot |
 | `struct kd_local_waiter *wait_head` | 16 | 8 | First real stack waiter in a circular doubly linked ring; NULL means empty |
 | `atomic_t delegation_state` | 24 | 4 | Delegation phase: FREE, ACQUIRING, HELD, COMBINER or RELEASING |
 | `u32 delegation_tail` | 28 | 4 | `(CPU + 1) << 4` combined with `slot << 2`; zero means empty |
@@ -163,8 +172,33 @@ configuration. Its complete fields are:
 The sleeping waiter remains a stack `list_head` plus task pointer (24 bytes).
 Append, cancellation and head removal remain O(1) under `wait_lock`. The outside-
 lock first-waiter check compares pointers only; it never follows a potentially
-retired stack node. The OSQ algorithm and its per-CPU nodes are unchanged.
+retired stack node. OSQ keeps the captured abortable-MCS unlink algorithm, using
+explicit reserved nodes instead of a separate one-node-per-CPU allocation.
 Internal list representation differs from Linux despite equal object geometry.
+
+Each preallocated `kd_mutex_node` contains this independent OSQ subrecord in its
+former padding, without increasing the 320-byte node or changing packet offsets:
+
+| OSQ subrecord field | Node offset | Bytes | Purpose |
+| --- | ---: | ---: | --- |
+| `struct kd_mutex_osq_node *next` | 104 | 8 | OSQ successor; separate from delegation `next` at offset 0 |
+| `struct kd_mutex_osq_node *prev` | 112 | 8 | OSQ predecessor for cancellation |
+| `int locked` | 120 | 4 | Initial/waiting state 0, predecessor grant 1, retired IDLE state 2 |
+| `u32 tail` | 124 | 4 | Immutable `(CPU + 1) << 4` combined with `slot << 2`, initialized with the pool |
+
+OSQ acquisition, cancellation and unlock receive the explicit subrecord. The
+queue's atomic tail uses that encoded identity; predecessor vCPU checks decode
+the CPU separately from its slot. An empty-tail acquisition becomes OSQ head
+without a predecessor grant, so its state remains 0 until retirement. An OSQ
+member stays preemption-disabled until its unlink or handoff accesses complete.
+Only then does it publish IDLE and
+release a temporary reservation. A borrowed delegation head publishes IDLE but
+keeps its original reservation, packet, waiter record and shadow stack. IDLE is
+retirement evidence for the reservation owner, not physical mutex ownership.
+Residual predecessor vCPU checks can read the immutable identity safely because
+the pool storage remains resident and that identity never changes on reuse.
+The two queue tails and their links remain independent; OSQ cancellation cannot
+unlink or complete a published delegation request.
 
 FREE to ACQUIRING uses full-word compare-and-exchange. Only the gate owner
 changes an occupied phase, so subsequent phase changes use release stores.
@@ -195,7 +229,7 @@ or auxiliary RCU mechanism, per-object allocation or retirement callback.
 | Other storage | Lifetime |
 | --- | --- |
 | Task routing record | Existing task-keyed RCU cache with exact acquisition references; unchanged by this refactor |
-| `kd_mutex_node` | Four independently reserved 320-byte, 64-byte-aligned slots per possible CPU; packet offset 128, completion/polling offsets 304/305; no auxiliary pointer |
+| `kd_mutex_node` | Four independently reserved 320-byte, 64-byte-aligned slots per possible CPU; shared by OSQ and delegation, with independent links/status; packet offset 128, completion/polling offsets 304/305 |
 | Shadow stacks | Four preallocated 8 KiB stacks per possible CPU |
 | Execution frames | Existing per-CPU frame stack; borrowed packets detach before node reuse; native ACK and immutable image/source leases retain their existing lifetime |
 | Batch | Executor stack stores mutex pointer, successor/retirement flag, deferred NUMA chain and outer-release hook |
@@ -203,7 +237,8 @@ or auxiliary RCU mechanism, per-object allocation or retirement callback.
 The embedded root shares the caller-owned mutex's existing lifetime. Stop and join
 callers and drain physical ownership, both queues, frames and ACKs before freeing
 or reinitializing an object. No destroy call or new caller cleanup is required.
-Provider drain checks each CPU's exact nodes/waiters and the existing exact task
+Provider drain checks each CPU's exact reservations, including temporary OSQ
+users, its published delegation waiters and the existing exact task
 acquisition records, including immediate gate owners without a node and detached
 batches; independent frame/source/ACK checks remain. No approximate owner totals
 replace these records. No auxiliary registry lock or RCU mechanism is introduced;
@@ -238,8 +273,9 @@ see [heat and roles](../JIT_EXECUTION.md#heat-and-roles) for the full policy.
 ### Packet/cacheline and prefetch layout
 
 The node's first line contains next, GS base, saved physical RSP, stack
-base/top, lock, task and saved entry identity. ABI/packet/tail/slot state and
-immutable NUMA identity occupy the second line; `regs` begins at offset 128.
+base/top, lock, task and saved entry identity. ABI/packet/tail/slot state,
+immutable NUMA identity, exact waiter record and the independent 24-byte OSQ
+subrecord occupy the second line; `regs` begins at offset 128.
 IP/SP/BP and five virtual GPR slots share its first aligned line.
 `completed/locked/native_resume` occupy offsets 304/305/306, after the 168-byte
 packet in the node's existing fifth line. Minimal packet and metadata writes
@@ -286,11 +322,14 @@ full CAS is skipped; the producer's full tail exchange precedes publication.
 
 [combiner.inc](../../kernel_module/mutex/combiner.inc) selects local requests
 when built with NUMA enabled. It can defer at most 64 fully linked remote nodes;
-an unlinked global tail is never detached. At 128 completed bodies, or when the
+an unlinked global tail is never detached. At 256 completed bodies, or when the
 retained successor has no link, deferred requests take priority. Eight or more
-deferred requests receive physical handoff; a smaller remote cohort is rejoined
-and serviced on the current owner, with FIFO selection for the rest of that
-batch. This avoids moving the owner and frame stack for only a few requests.
+deferred requests receive physical handoff with the prefix rejoined first.
+A smaller prefix is rejoined and serviced by the current owner, with FIFO
+selection for the rest of the batch. The total cap remains 1024 by default.
+The physical owner, source lease and frame checks remain authoritative throughout.
+The finite scan budget can be exhausted, so a locality cohort is not a guarantee
+that every executed request belongs to the owner's NUMA node.
 All refusal, ordinary handoff and early-release exits rejoin deferred requests
 before publishing a wake. These bounds constrain bypass within a batch; they
 do not prove scheduler-independent starvation freedom.
@@ -452,7 +491,22 @@ unchanged. Build/use instructions belong in the
 [workload README](../../workload_modules/mutex_cacheline/README.md) and
 [runner README](../../bench/tclock_compare/README.md).
 
-The current [cache-line comparison](../../bench/results/10.176.26.71/bench/mutex32-cacheline-20261019/README.md)
+The [shared-node comparison](../../bench/results/10.176.26.71/bench/mutex32-mcs-20261020/README.md)
+retains `752fec1`: shared OSQ storage, a 256-body locality boundary and handoff
+for eight or more deferred requests. It passed 17 basic/affected checks,
+11/13-case runner programs and three live probes. Fresh sixty-worker medians
+improve 14.3%/13.6%/16.5% over the preceding compact version for c01/seek/pipe;
+pipe remains 9.2% below old256. Eight-worker ranges overlap, and the c01 median
+is 2.1% lower. See [performance status](../PERFORMANCE.md#mutex-shared-node-and-locality-comparison)
+for the six-point table and measurement limits. Synthetic c01 counters witness
+entry; API sessions separately count returned bodies.
+The first shared-node trial `f4d359d` included `7290327`'s all-cohort FIFO rejoin
+at 128 bodies. Its sixty-worker regressions are retained separately at
+`archive/mutex32-fifo-20261020`. Both sources passed their own checks; their
+timings are not pooled. The four-arm comparison contains 72 valid, drained
+timings and 78 kernel logs without matched runtime faults.
+
+The preceding [cache-line comparison](../../bench/results/10.176.26.71/bench/mutex32-cacheline-20261019/README.md)
 records `76af844` basic/affected checks and fresh pipe comparisons against the
 previous 32-byte and old 256-byte versions. It removes redundant queue-head tail
 RMWs and inlines the gate hint and unchanged ownership predicate. The object

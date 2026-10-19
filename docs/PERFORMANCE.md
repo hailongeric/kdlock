@@ -22,14 +22,15 @@ It does not have a new timed comparison. The throughput values below belong to
 their recorded source versions; acceptance of those results does not measure the
 additional flag-preservation cost in images that contain instruction markers.
 
-The mutex protocol remains KD-only `d2a2304`: KD physical exclusion with the
-legacy delegation queue. Current `76af844` keeps the 32-byte, native-aligned
-object and exact versioned node records, avoids redundant queue-head tail
-updates, and inlines the existing gate hint and ownership predicate. Its fresh
-pipe medians are 5.0% and 0.9% above the preceding compact implementation at
-eight and sixty workers, with overlapping repetition ranges. It remains 18.8%
-and 22.4% below the fresh old-256-byte control. The earlier `c2f0d9c`,
-`372be89` and `ba98937` comparisons remain separate historical rounds below.
+The retained mutex implementation is `752fec1`, preserving KD-only physical
+ownership and the 32-byte object with native 8-byte alignment. Independent OSQ
+and delegation memberships share the existing preallocated node pool. A
+256-body locality boundary retains physical handoff for larger deferred NUMA
+cohorts; smaller prefixes continue FIFO within the total 1024-body limit.
+Fresh sixty-worker medians improve over the preceding compact implementation
+by 14.3% for c01, 13.6% for seek and 16.5% for pipe. Pipe remains 9.2% behind
+the fresh old-256-byte control. Earlier compact rounds below retain their own
+source identities and measurements.
 The
 [2026-10-17 paired report](../bench/results/10.176.26.71/bench/comparison/mutex-kdonly-20261017T140354Z/README.md)
 contains 504 complete, drained sessions: two workloads, 21 worker counts, three
@@ -37,7 +38,54 @@ repetitions and four arms (accepted compatibility baseline, KD-only, Native,
 TCLock). It uses the regular 64-vCPU VM and collector 63, and measures the former
 256-byte object. Those results do not measure the compact layout.
 
-## Mutex owner, gate and tail comparison
+## Mutex shared-node and locality comparison
+
+The [shared-node investigation](../bench/results/10.176.26.71/bench/mutex32-mcs-20261020/README.md)
+retains four separate source blocks: preceding compact `826faa6` (production
+`76af844`), rejected FIFO trial `f4d359d`, old256 `0324e60`, and retained
+`752fec1`. Each workload/worker/source point has three 2000 ms plain repetitions
+in the same 64-vCPU VM with collector 63. Whole-run median Mops/s for the retained
+comparison is:
+
+| Workload | Workers | Previous 32-byte | Retained 32-byte | Old 256-byte | Retained / previous | Retained / old |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| c01/post64 | 8 | 6.134 | 6.005 | 7.494 | 0.979× | 0.801× |
+| c01/post64 | 60 | 4.251 | 4.857 | 4.959 | 1.143× | 0.979× |
+| SEEK_SET n16 | 8 | 4.290 | 4.668 | 4.875 | 1.088× | 0.957× |
+| SEEK_SET n16 | 60 | 3.708 | 4.211 | 4.011 | 1.136× | 1.050× |
+| Pipebytes/query n16 | 8 | 5.376 | 5.602 | 6.856 | 1.042× | 0.817× |
+| Pipebytes/query n16 | 60 | 4.199 | 4.890 | 5.385 | 1.165× | 0.908× |
+
+The shared OSQ subrecord occupies existing node padding: nodes remain 320 bytes,
+aligned to 64 bytes. The two queues retain separate links, cancellation and
+retirement. No auxiliary hash, shared lock reference count, registry lock or
+new RCU mechanism is added. At the locality boundary, eight or more deferred
+requests receive handoff; a smaller prefix is serviced before FIFO continuation.
+Exact ownership, admission, frames, source leases and unlock ACKs remain.
+
+The earlier `f4d359d` trial instead kept every deferred cohort on the current
+owner after 128 bodies. Its sixty-worker c01/seek/pipe medians fell
+28.8%/30.9%/13.3% versus the preceding compact arm, despite longer batches.
+That rejected policy remains reachable as `archive/mutex32-fifo-20261020`;
+its timings are not pooled with `752fec1`. These experiments do not isolate
+the shared-node storage contribution or establish a cache-transfer cause.
+
+All eight-worker retained/baseline repetition ranges overlap, including the
+2.1% lower c01 median. At sixty workers, c01 remains 2.1% below old256 with
+overlapping ranges, seek is descriptively 5.0% above it, and pipe retains a
+9.2% gap. Three sequential repetitions are not confidence intervals or a
+uniform speedup claim; this focused comparison does not establish full-grid
+parity. No profiles or hardware cache-transfer counts were collected.
+
+All 72 timings passed and drained. The 48 real-API sessions counted returned
+JIT bodies; the 24 synthetic c01 sessions witnessed generated-body entry only.
+At sixty workers, retained seek/pipe returned-body shares are 97.30%/97.44%.
+Whole-session batch ratios include warmup and are not measured-phase batch
+distributions. Both new sources passed their own 17 basic/affected checks,
+11/13-case runner programs and three live probes. All 78 retained kernel logs
+have no matched runtime faults; detailed receipts remain with the report.
+
+## Earlier mutex owner, gate and tail comparison
 
 The [cache-line investigation](../bench/results/10.176.26.71/bench/mutex32-cacheline-20261019/README.md)
 compares fresh `0987358` (production `c2f0d9c`), retained `76af844`, old256

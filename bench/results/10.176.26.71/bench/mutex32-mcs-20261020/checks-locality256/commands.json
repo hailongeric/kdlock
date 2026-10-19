@@ -1,0 +1,133 @@
+[
+  {
+    "argv": [
+      "/root/kdlock-translation-venv-20261019/bin/python3",
+      "-m",
+      "pip",
+      "check"
+    ],
+    "cwd": "/root/host_fs/kdlock",
+    "exit_code": 0,
+    "finished_unix": 1792431788.5571985,
+    "name": "dependencies",
+    "started_unix": 1792431788.0390239,
+    "timeout_seconds": 60
+  },
+  {
+    "argv": [
+      "make",
+      "-C",
+      "kernel_module",
+      "KDIR=/root/linux-6.1.159-kdclobber2",
+      "W=1",
+      "UBSAN_SANITIZE=n"
+    ],
+    "cwd": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-mcs-20261020/checks-locality256/source",
+    "exit_code": 0,
+    "finished_unix": 1792431800.013789,
+    "name": "provider",
+    "started_unix": 1792431788.6358707,
+    "timeout_seconds": 240
+  },
+  {
+    "argv": [
+      "make",
+      "-C",
+      "daemon",
+      "CFLAGS=-O2 -Wall -Wextra -Werror"
+    ],
+    "cwd": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-mcs-20261020/checks-locality256/source",
+    "exit_code": 0,
+    "finished_unix": 1792431800.4135194,
+    "name": "daemon",
+    "started_unix": 1792431800.096297,
+    "timeout_seconds": 60
+  },
+  {
+    "argv": [
+      "make",
+      "-C",
+      "tests/unit",
+      "run",
+      "PY_TESTS=mutex/test_mutex_state.py mutex/test_mutex_count.py mutex/test_mutex_resources.py mutex/test_mutex_head.py mutex/test_mutex_osq.py mutex/test_mutex_balances.py mutex/test_mutex_terminal.py mutex/test_mutex_outer_progress.py mutex/test_mutex_outer_api.py mutex/test_mutex_wait_clobber.py mutex/test_mutex_task_cache.py execution/test_exec_capacity.py infrastructure/test_provider_lifecycle.py execution/test_mutex_images.py execution/test_remote_outer.py"
+    ],
+    "cwd": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-mcs-20261020/checks-locality256/source",
+    "exit_code": 0,
+    "finished_unix": 1792431869.1228983,
+    "name": "unit",
+    "started_unix": 1792431800.4926765,
+    "timeout_seconds": 300
+  },
+  {
+    "argv": [
+      "/root/kdlock-translation-venv-20261019/bin/python3",
+      "bench/real_api/test_plan.py"
+    ],
+    "cwd": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-mcs-20261020/checks-locality256/source",
+    "exit_code": 0,
+    "finished_unix": 1792431869.3708446,
+    "name": "runner-plan",
+    "started_unix": 1792431869.2045784,
+    "timeout_seconds": 90
+  },
+  {
+    "argv": [
+      "/root/kdlock-translation-venv-20261019/bin/python3",
+      "bench/real_api/test_report.py"
+    ],
+    "cwd": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-mcs-20261020/checks-locality256/source",
+    "exit_code": 0,
+    "finished_unix": 1792431869.5648096,
+    "name": "runner-report",
+    "started_unix": 1792431869.4490097,
+    "timeout_seconds": 90
+  },
+  {
+    "argv": [
+      "/root/kdlock-translation-venv-20261019/bin/python3",
+      "tests/kernel/mutex/local/run.py",
+      "--output",
+      "/root/kdlock-evidence/10.176.26.71/bench/mutex32-mcs-20261020/checks-locality256/local"
+    ],
+    "cwd": "/root/host_fs/kdlock",
+    "exit_code": 0,
+    "finished_unix": 1792431886.6963756,
+    "name": "local",
+    "started_unix": 1792431869.637864,
+    "timeout_seconds": 300
+  },
+  {
+    "argv": [
+      "/root/kdlock-translation-venv-20261019/bin/python3",
+      "tests/kernel/rwsem/run.py",
+      "--output",
+      "/root/kdlock-evidence/10.176.26.71/bench/mutex32-mcs-20261020/checks-locality256/rwsem"
+    ],
+    "cwd": "/root/host_fs/kdlock",
+    "exit_code": 0,
+    "finished_unix": 1792431903.8327405,
+    "name": "rwsem",
+    "started_unix": 1792431886.7743092,
+    "timeout_seconds": 300
+  },
+  {
+    "argv": [
+      "/root/kdlock-translation-venv-20261019/bin/python3",
+      "tests/kernel/jit_escape/run.py",
+      "--cpus",
+      "0-7,32-39",
+      "--iterations",
+      "200000",
+      "--warmup-iterations",
+      "200000",
+      "--output",
+      "/root/kdlock-evidence/10.176.26.71/bench/mutex32-mcs-20261020/checks-locality256/instruction-exit"
+    ],
+    "cwd": "/root/host_fs/kdlock",
+    "exit_code": 0,
+    "finished_unix": 1792431937.0004,
+    "name": "instruction-exit",
+    "started_unix": 1792431903.9099963,
+    "timeout_seconds": 900
+  }
+]

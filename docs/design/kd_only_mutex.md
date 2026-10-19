@@ -1,15 +1,17 @@
-# KD-only mutex with the accepted legacy delegation protocol
+# KD-only mutex replacement contract
 
-The main branch is `master`, retaining the KD-only protocol selected at `d2a2304` with
-the accepted `555b8b7` compatibility baseline. Immutable tags
+The main branch is `master`, retaining the KD physical-ownership foundation
+selected at `d2a2304` with the accepted `555b8b7` compatibility baseline. The tags
 `accepted/kd-only-mutex-20261018` and `accepted/kd-mutex-compat-20261017` retain
-those measured versions. `master` is authoritative for current code;
+those measured versions. Current code shares preallocated OSQ/delegation node
+storage and retains handoff for larger deferred NUMA cohorts at a 256-body local
+boundary. `master` is authoritative;
 `current/kd-mutex` retains the earlier `af330db` instruction-exit checkpoint at
 this review. The owned/adaptive experiment is archived; see
 [branch dispositions](../history/main-consolidation-20261018.md).
 
 The replacement assumes every user of an object uses KD. Each `struct kd_mutex`
-contains physical exclusion and the embedded legacy delegation root. The object is
+contains physical exclusion and the embedded delegation root. The object is
 32 bytes with native alignment in the captured configuration. There is no Linux
 `struct mutex` backing or Linux mutex fallback in this path.
 Cold calls, admission refusals, task-record shortages, same-CPU predecessor
@@ -22,9 +24,11 @@ queue and release paths; the [lock catalog](../LOCKS.md) compares all four KD
 families. The revision comparison below records the KD-only replacement boundary.
 Its v4/v5 capability numbers are historical checkpoints, not the current provider
 version. Later checked instruction exits and spin helper execution have separate
-capabilities and preserve this mutex protocol.
+capabilities and preserve its ownership and retirement obligations. The table
+records the original replacement boundary; later storage and batching changes
+are described below and in the implementation guide.
 
-## What changes and what stays the same
+## Historical KD-only replacement boundary
 
 | Boundary | Accepted baseline `555b8b7` | KD-only change selected at `d2a2304` |
 | --- | --- | --- |
@@ -58,12 +62,31 @@ neither queued ownership nor batch selection. The physical implementation inline
 its small acquisition helpers and uses raw-spin functions for its private wait
 list, avoiding the captured kernel's public spin-clobber wrappers.
 
-Private OSQ nodes are allocated per CPU during provider initialization and freed
-after drain. This keeps their storage outside the captured kernel's small reserved
-module per-CPU arena. All lock and execution services initialize before the control
-device is published; shutdown removes that device before freeing the private
-runtime. Published delegation waiters still poll while pinned; delegation requests
-do not enter the physical sleeping wait list.
+OSQ and delegation now use the same four preallocated 320-byte node slots per
+possible CPU. Each slot contains separate links and notification state for its
+two MCS memberships; the physical OSQ and delegation tails remain independent.
+An ordinary spinner reserves a temporary slot or uses the existing sleeping
+path when none is available. An initial delegation head explicitly lends its
+already reserved slot to OSQ during physical acquisition. OSQ cancellation or
+unlock completes its unlink or handoff accesses before marking that membership IDLE and
+releasing a temporary slot. Borrowed slots keep their delegation reservation.
+There is no separate OSQ allocation or new per-object allocation.
+
+All lock and execution services initialize before the control device is
+published; shutdown removes that device before releasing runtime storage.
+Ordinary OSQ reservations retire before scheduling. Published delegation
+waiters still poll while pinned, and their packets and links cannot be removed
+by OSQ cancellation. Their physical executor may sleep while acquiring the
+mutex, retaining its original reserved node and exact waiter record.
+
+NUMA selection can defer at most 64 fully linked remote requests. At the
+256-body locality boundary, or earlier terminal-link exhaustion, a deferred
+cohort of eight or more requests receives handoff with its prefix rejoined
+first. A smaller prefix is rejoined and serviced by the current owner, followed
+by FIFO selection for the rest of that batch. The configured total batch cap
+remains 1024 by default. Refusal, native continuation, early outer release and
+source/frame/ACK retirement retain their separate boundaries. This scheduling
+change does not expand instruction admission or park published producers.
 
 ## Object and API contract
 
@@ -92,7 +115,12 @@ hash-based compact layout at `6341999` also required a 16 MiB auxiliary table.
 Measurements for both remain specific to those layouts and source identities.
 
 The per-request node remains 320 bytes, with its exact waiter sequence/key at
-offsets 88/96, packet at offset 128 and completion/polling bytes at 304/305.
+offsets 88/96, independent OSQ subrecord at 104, packet at offset 128 and
+completion/polling bytes at 304/305. OSQ occupies 24 bytes of existing padding;
+its CPU/slot identity stays immutable across reuse. The reservation bitmap
+and exact per-CPU balances cover both temporary OSQ users and published
+delegation nodes. No shared lock reference count, auxiliary hash, registry lock
+or RCU mechanism is added.
 The diagnostic count verifies a consistent snapshot or returns an explicit
 `-EAGAIN`/`-ENOMEM`; hot-path counting needs no shared atomic updates.
 Caller-owned object storage must remain alive
@@ -125,8 +153,30 @@ experiment.
 
 ## Validation and measurement boundary
 
-The [embedded-state receipt](../../bench/results/10.176.26.71/bench/mutex32-embedded-20261019/README.md)
-records current `372be89` basic and affected checks, live native geometry,
+The [shared-node receipt](../../bench/results/10.176.26.71/bench/mutex32-mcs-20261020/README.md)
+retains `752fec1` with its 256-body locality policy. Both it and the first FIFO
+trial passed separate 17-check basic/affected bundles, 11/13-case runner
+programs and three live probes. Four separate source arms completed 72 valid,
+drained c01/seek/pipe timings; all 78 retained kernel logs have no matched faults.
+Real API sessions count returned JIT bodies; synthetic c01 sessions witness
+entry only. The [current performance table](../PERFORMANCE.md#mutex-shared-node-and-locality-comparison)
+retains eight-worker variation, c01's low-count regression, and the remaining
+9.2% sixty-worker pipe gap against old256.
+
+The first shared-node trial `f4d359d`, including `7290327`, serviced every
+deferred cohort before a FIFO remainder after 128 bodies. Its sixty-worker
+regressions remain at `archive/mutex32-fifo-20261020`. The retained version
+keeps shared OSQ storage and restores larger-cohort handoff. These policies,
+source identities and results remain separate.
+
+The preceding [cache-line comparison](../../bench/results/10.176.26.71/bench/mutex32-cacheline-20261019/README.md)
+records checked `76af844` queue-head and inline-predicate changes with fresh
+pipe comparisons, placement diagnostics and the separately archived prefetch
+trial. Its retained candidate still uses separate OSQ storage and the earlier
+NUMA physical-handoff policy.
+
+The earlier [embedded-state receipt](../../bench/results/10.176.26.71/bench/mutex32-embedded-20261019/README.md)
+records `372be89` basic and affected checks, live native geometry,
 ring cancellation/handoff, JIT/native recovery, exact drain and fresh pipe
 comparisons. It retains the performance deficit against the old 256-byte object.
 

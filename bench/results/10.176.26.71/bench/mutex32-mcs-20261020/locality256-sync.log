@@ -1,0 +1,5 @@
+Snapshot: 2626 tracked files, 198,446,641 bytes; dry-run=False
+{"changed": ["kernel_module/mutex/combiner.inc", "tests/unit/mutex/mutex_terminal_fixture.c", "tests/unit/mutex/test_mutex_terminal.py"], "guest_changed_files": 3}
+{"approved_files": 2626, "changed": ["kernel_module/mutex/combiner.inc", "tests/unit/mutex/mutex_terminal_fixture.c", "tests/unit/mutex/test_mutex_terminal.py"], "changed_files": 3, "dry_run": false}
+Copied 3 changed files; verified all 2626 approved hashes. No project files deleted.
+Synchronization complete; subsequent builds, tests and benchmarks run in the new VM.

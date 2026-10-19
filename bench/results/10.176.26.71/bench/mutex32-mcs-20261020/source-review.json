@@ -1,0 +1,290 @@
+{
+  "ancillary_exceptions": [],
+  "audit_script_sha256": "c49fde375222b1c68d391e75f5d2d52b5b2710fd570b18c99eee3ed3c29e2c9c",
+  "binary_manifest_entries": 108,
+  "commits": {
+    "baseline": {
+      "recorded": "826faa6",
+      "resolved": "826faa6896f8d1fb725caa9797c0af3800b232ee"
+    },
+    "candidate": {
+      "recorded": "f4d359d",
+      "resolved": "f4d359d83e6b9ce54b4c4a10053f4e5c681ac204"
+    },
+    "locality256": {
+      "recorded": "752fec1",
+      "resolved": "752fec1e5cbb0d54144fa995987424afabf11b46"
+    },
+    "old256": {
+      "recorded": "0324e60d6791948e9762a9916a50e8e026f073b0",
+      "resolved": "0324e60d6791948e9762a9916a50e8e026f073b0"
+    }
+  },
+  "current_production": {
+    "arm": "locality256",
+    "commit": "752fec1",
+    "files": 90,
+    "private_inc_files": 40
+  },
+  "issues": [],
+  "numeric_limit": "This audit binds reported statistics and profiles to raw inputs; it does not independently reparse sample periods or recompute throughput/peak statistics.",
+  "original_manifests": [
+    {
+      "allowed_ancillary": [],
+      "commit": "826faa6",
+      "files": 240,
+      "manifest": "baseline/pipe/source-sha256.json",
+      "mismatches": [],
+      "private_inc_files": 40,
+      "production_files": 90
+    },
+    {
+      "allowed_ancillary": [],
+      "commit": "826faa6",
+      "files": 240,
+      "manifest": "baseline/seek/source-sha256.json",
+      "mismatches": [],
+      "private_inc_files": 40,
+      "production_files": 90
+    },
+    {
+      "allowed_ancillary": [],
+      "commit": "826faa6",
+      "files": 235,
+      "manifest": "baseline/synthetic/source-sha256.json",
+      "mismatches": [],
+      "private_inc_files": 40,
+      "production_files": 90
+    },
+    {
+      "allowed_ancillary": [],
+      "commit": "f4d359d",
+      "files": 240,
+      "manifest": "candidate/pipe/source-sha256.json",
+      "mismatches": [],
+      "private_inc_files": 40,
+      "production_files": 90
+    },
+    {
+      "allowed_ancillary": [],
+      "commit": "f4d359d",
+      "files": 240,
+      "manifest": "candidate/seek/source-sha256.json",
+      "mismatches": [],
+      "private_inc_files": 40,
+      "production_files": 90
+    },
+    {
+      "allowed_ancillary": [],
+      "commit": "f4d359d",
+      "files": 235,
+      "manifest": "candidate/synthetic/source-sha256.json",
+      "mismatches": [],
+      "private_inc_files": 40,
+      "production_files": 90
+    },
+    {
+      "allowed_ancillary": [],
+      "commit": "f4d359d",
+      "files": 186,
+      "manifest": "checks-candidate/instruction-exit/source-sha256.json",
+      "mismatches": [],
+      "private_inc_files": 40,
+      "production_files": 90
+    },
+    {
+      "allowed_ancillary": [],
+      "commit": "f4d359d",
+      "files": 164,
+      "manifest": "checks-candidate/local/source-sha256.json",
+      "mismatches": [],
+      "private_inc_files": 40,
+      "production_files": 90
+    },
+    {
+      "allowed_ancillary": [],
+      "commit": "f4d359d",
+      "files": 164,
+      "manifest": "checks-candidate/rwsem/source-sha256.json",
+      "mismatches": [],
+      "private_inc_files": 40,
+      "production_files": 90
+    },
+    {
+      "allowed_ancillary": [],
+      "commit": "f4d359d",
+      "files": 361,
+      "manifest": "checks-candidate/source-sha256.json",
+      "mismatches": [],
+      "private_inc_files": 40,
+      "production_files": 90
+    },
+    {
+      "allowed_ancillary": [],
+      "commit": "752fec1",
+      "files": 186,
+      "manifest": "checks-locality256/instruction-exit/source-sha256.json",
+      "mismatches": [],
+      "private_inc_files": 40,
+      "production_files": 90
+    },
+    {
+      "allowed_ancillary": [],
+      "commit": "752fec1",
+      "files": 164,
+      "manifest": "checks-locality256/local/source-sha256.json",
+      "mismatches": [],
+      "private_inc_files": 40,
+      "production_files": 90
+    },
+    {
+      "allowed_ancillary": [],
+      "commit": "752fec1",
+      "files": 164,
+      "manifest": "checks-locality256/rwsem/source-sha256.json",
+      "mismatches": [],
+      "private_inc_files": 40,
+      "production_files": 90
+    },
+    {
+      "allowed_ancillary": [],
+      "commit": "752fec1",
+      "files": 361,
+      "manifest": "checks-locality256/source-sha256.json",
+      "mismatches": [],
+      "private_inc_files": 40,
+      "production_files": 90
+    },
+    {
+      "allowed_ancillary": [],
+      "commit": "752fec1",
+      "files": 240,
+      "manifest": "locality256/pipe/source-sha256.json",
+      "mismatches": [],
+      "private_inc_files": 40,
+      "production_files": 90
+    },
+    {
+      "allowed_ancillary": [],
+      "commit": "752fec1",
+      "files": 240,
+      "manifest": "locality256/seek/source-sha256.json",
+      "mismatches": [],
+      "private_inc_files": 40,
+      "production_files": 90
+    },
+    {
+      "allowed_ancillary": [],
+      "commit": "752fec1",
+      "files": 235,
+      "manifest": "locality256/synthetic/source-sha256.json",
+      "mismatches": [],
+      "private_inc_files": 40,
+      "production_files": 90
+    },
+    {
+      "allowed_ancillary": [],
+      "commit": "0324e60d6791948e9762a9916a50e8e026f073b0",
+      "files": 238,
+      "manifest": "old256/pipe/source-sha256.json",
+      "mismatches": [],
+      "private_inc_files": 39,
+      "production_files": 88
+    },
+    {
+      "allowed_ancillary": [],
+      "commit": "0324e60d6791948e9762a9916a50e8e026f073b0",
+      "files": 238,
+      "manifest": "old256/seek/source-sha256.json",
+      "mismatches": [],
+      "private_inc_files": 39,
+      "production_files": 88
+    },
+    {
+      "allowed_ancillary": [],
+      "commit": "0324e60d6791948e9762a9916a50e8e026f073b0",
+      "files": 233,
+      "manifest": "old256/synthetic/source-sha256.json",
+      "mismatches": [],
+      "private_inc_files": 39,
+      "production_files": 88
+    }
+  ],
+  "passed": true,
+  "prepared_limit": "Only retained expanded provider snapshots are reconstructed. API collections retain original source, preparation recipes and built binaries, but may omit expanded private provider trees.",
+  "prepared_snapshots": [
+    {
+      "classification": {
+        "benchmark_overlay": 2,
+        "generated_manifest": 1,
+        "observation_patch": 12,
+        "unchanged_original": 78
+      },
+      "commit": "826faa6",
+      "files": 93,
+      "folder": "baseline/synthetic",
+      "patch_sha256": "a70fb88790e48a8c88a77bfbfa8260bf436c9da7a3590828eb0d8ffe4238955d"
+    },
+    {
+      "classification": {
+        "benchmark_overlay": 2,
+        "generated_manifest": 1,
+        "observation_patch": 12,
+        "unchanged_original": 78
+      },
+      "commit": "f4d359d",
+      "files": 93,
+      "folder": "candidate/synthetic",
+      "patch_sha256": "a70fb88790e48a8c88a77bfbfa8260bf436c9da7a3590828eb0d8ffe4238955d"
+    },
+    {
+      "classification": {
+        "benchmark_overlay": 2,
+        "observation_patch": 12,
+        "unchanged_original": 78
+      },
+      "commit": "f4d359d",
+      "files": 92,
+      "folder": "checks-candidate/instruction-exit",
+      "patch_sha256": "a70fb88790e48a8c88a77bfbfa8260bf436c9da7a3590828eb0d8ffe4238955d"
+    },
+    {
+      "classification": {
+        "benchmark_overlay": 2,
+        "observation_patch": 12,
+        "unchanged_original": 78
+      },
+      "commit": "752fec1",
+      "files": 92,
+      "folder": "checks-locality256/instruction-exit",
+      "patch_sha256": "a70fb88790e48a8c88a77bfbfa8260bf436c9da7a3590828eb0d8ffe4238955d"
+    },
+    {
+      "classification": {
+        "benchmark_overlay": 2,
+        "generated_manifest": 1,
+        "observation_patch": 12,
+        "unchanged_original": 78
+      },
+      "commit": "752fec1",
+      "files": 93,
+      "folder": "locality256/synthetic",
+      "patch_sha256": "a70fb88790e48a8c88a77bfbfa8260bf436c9da7a3590828eb0d8ffe4238955d"
+    },
+    {
+      "classification": {
+        "benchmark_overlay": 2,
+        "generated_manifest": 1,
+        "observation_patch": 12,
+        "unchanged_original": 76
+      },
+      "commit": "0324e60d6791948e9762a9916a50e8e026f073b0",
+      "files": 91,
+      "folder": "old256/synthetic",
+      "patch_sha256": "a70fb88790e48a8c88a77bfbfa8260bf436c9da7a3590828eb0d8ffe4238955d"
+    }
+  ],
+  "schema": 1,
+  "scope": "Offline inert-byte/Git-object audit; no archive extraction, execution, build, test or VM command",
+  "source_manifests": 22
+}

@@ -1,9 +1,14 @@
 # Development rules
 
-The maintained branch is `master`. Preserve the selected `d2a2304` KD-only mutex:
-KD physical exclusion with legacy queue/batching, ABI2, pinned published waiters,
-immutable mutex images and fail-closed instruction admission. Do not restore
-the rejected owned/adaptive protocol, Linux mutex backing, or parked producers.
+The maintained branch is `master`. Preserve the KD-only foundation selected at
+`d2a2304`: KD physical exclusion, ABI2, pinned published delegation waiters,
+immutable mutex images and fail-closed instruction admission. The current mutex
+keeps its 32-byte native-aligned layout, shares preallocated CPU/slot storage
+between independent OSQ and delegation memberships, and uses a 256-body NUMA
+locality boundary. At that boundary, eight or more deferred requests receive
+handoff; a smaller prefix is serviced before a bounded FIFO remainder. Keep the
+separate links, cancellation and retirement obligations. Do not restore the rejected
+owned/adaptive protocol, Linux mutex backing, or parked delegation producers.
 Ordinary API aliases use KD physical locking locally; clobber callers permit JIT.
 All users of an object must follow one protocol. Whole-kernel replacement,
 RT/ww_mutex and lockdep integration remain separately unvalidated.

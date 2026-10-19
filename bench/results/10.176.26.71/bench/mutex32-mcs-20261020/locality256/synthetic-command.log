@@ -1,0 +1,12 @@
+[1/6] c01-t08-r00-direct-kdlock-adaptive
+  peak 5.804 Mops/s; whole 4.150 Mops/s; 240.98 ns/op; drained=True
+[2/6] c01-t08-r01-direct-kdlock-adaptive
+  peak 6.020 Mops/s; whole 6.005 Mops/s; 166.52 ns/op; drained=True
+[3/6] c01-t08-r02-direct-kdlock-adaptive
+  peak 6.172 Mops/s; whole 6.152 Mops/s; 162.56 ns/op; drained=True
+[4/6] c01-t60-r00-direct-kdlock-adaptive
+  peak 4.971 Mops/s; whole 4.797 Mops/s; 208.47 ns/op; drained=True
+[5/6] c01-t60-r01-direct-kdlock-adaptive
+  peak 4.916 Mops/s; whole 4.857 Mops/s; 205.89 ns/op; drained=True
+[6/6] c01-t60-r02-direct-kdlock-adaptive
+  peak 4.936 Mops/s; whole 4.872 Mops/s; 205.23 ns/op; drained=True

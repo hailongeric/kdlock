@@ -8,10 +8,40 @@ Basic plus affected checks are the default; an old pass is not a current full pa
 The [terminology guide](TERMINOLOGY.md) explains status labels and other technical
 terms used in the receipts below.
 
-## Mutex queue-head and ownership-validation checks
+## Mutex shared-node and bounded-locality checks
+
+The [shared-node receipt](../bench/results/10.176.26.71/bench/mutex32-mcs-20261020/README.md)
+records retained `752fec1` and the separately checked FIFO trial `f4d359d`.
+The object remains 32 bytes with native 8-byte alignment; four preallocated
+320-byte, 64-byte-aligned nodes per CPU now contain independent OSQ membership
+in existing padding. Borrowed delegation heads retain their reservation and
+packet, temporary native slots retire before scheduling, and full pools fall
+back to the existing physical sleeping path. The retained policy uses a
+256-body locality boundary with larger-cohort handoff and a total 1024-body cap.
+
+Each frozen source passed dependencies, provider/daemon builds, two basic
+programs and fifteen directly affected drivers (17 passed, zero failed),
+11 runner-plan and 13 runner-report cases, and the ordinary mutex, rwsem and
+instruction-exit live probes with drain. The added OSQ fixture covers
+13 scenarios and detects ten mutation controls, including delayed links,
+cancellation losing to grant, predecessor movement, encoded slots, pool
+exhaustion and borrowed versus temporary retirement. The retained terminal
+fixture detects 13 controls for bounded cohort/handoff and existing retirement
+rules. Each provider build retains 48 warning lines.
+
+All four source blocks completed 72 valid, drained timings. The 48 API sessions
+counted returned JIT bodies; the 24 c01 sessions witnessed entry only and do not
+prove returned bodies. All 78 retained kernel logs have no matched runtime
+faults, and final health records the unchanged captured kernel/topology and an
+idle VM. The rejected FIFO trial remains at `archive/mutex32-fifo-20261020`;
+correctness passes do not erase its measured regressions. Scope is basic plus
+affected checks, not a full suite, weak-memory proof, whole-kernel
+replacement, RT/ww_mutex, lockdep or oversubscription validation.
+
+## Earlier mutex queue-head and ownership-validation checks
 
 The [cache-line investigation](../bench/results/10.176.26.71/bench/mutex32-cacheline-20261019/README.md)
-checks and times `76af844`, whose production is retained after reverting the
+checks and times `76af844`, whose production was retained after reverting the
 separate `de30588` prefetch trial with `044e351`. The mutex remains 32 bytes with
 native 8-byte alignment. The queue head avoids a tail RMW when a successor is
 known; the gate hint and unchanged exact ownership predicate are inlined.

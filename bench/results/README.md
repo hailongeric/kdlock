@@ -1,10 +1,25 @@
 # Results by physical machine
 
-`master` retains the accepted KD-only mutex protocol from `d2a2304` and the accepted
+`master` retains the KD-only mutex foundation from `d2a2304`, with the shared-node
+and bounded-locality implementation measured at `752fec1`, and the accepted
 reader/writer semaphore (rwsem) waiting implementation from `c21345b`. See
 [current performance](../../docs/PERFORMANCE.md) for results and retained
 regressions, and [terminology](../../docs/TERMINOLOGY.md) for execution and
 measurement definitions.
+The [shared-node mutex comparison](10.176.26.71/bench/mutex32-mcs-20261020/README.md)
+records 72 valid, drained timings across separate preceding-compact,
+rejected-FIFO, old256 and retained `752fec1` sources: c01/post64, SEEK_SET n16
+and pipebytes/query n16 at eight/sixty workers, three repetitions. The retained
+32-byte, native-aligned mutex shares preallocated node storage between separate
+OSQ/delegation memberships and uses a 256-body locality boundary. At sixty
+workers its c01/seek/pipe medians improve 14.3%/13.6%/16.5% over the preceding
+compact arm; pipe remains 9.2% below old256. Eight-worker ranges overlap and
+c01's median is 2.1% lower. The rejected all-cohort FIFO policy remains at
+`archive/mutex32-fifo-20261020`; results are never pooled. Each new source passed
+17 basic/affected checks, runner programs and three live probes. The report
+separates synthetic entry witnesses from API returned-body counts and preserves
+the sequential-block, limited-repetition and remaining-gap qualifications.
+
 The [`05876a4` taskname/xattr comparison](10.176.26.71/bench/taskname-xattr-direct-api-20261019/README.md)
 records direct calls to the original string APIs within generated spin bodies:
 567 validated, drained sessions with fresh Native/TCLock controls. At 60 workers,
