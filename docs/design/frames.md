@@ -135,7 +135,8 @@ allow that lease to be released.
 
 Ordinary CALL miss preserves the virtual CALL word and enters the original callee
 on the waiter. The remainder of that invocation stays native. Known controls and
-typed services can resume JIT at validated registered continuations instead.
+dispatcher services can resume JIT at validated registered continuations instead.
+The direct-helper route below does not permit such reentry.
 
 Native registration accepts only supported NONE/PENDING and distinct validated
 post-acquisition/STACK_CHANGED/remote COMPLETE tags. It verifies callee, token,
@@ -162,14 +163,31 @@ references and unlock acknowledgements through normal retirement, and disables
 future delegation of the entry. This is a specific checked boundary, not recovery
 from arbitrary faults or exhausted execution limits.
 
-The separately negotiated [string services](admission.md#original-strcmp-service)
-also retain the frame's single outer spin owner, acquisition ticket and source
-lease. They save and validate the pending CALL's return state before invoking
-the original helper; success consumes that saved return exactly once. The
-[writing service](admission.md#original-strscpy_pad-writing-service)
-uses the original caller's valid-buffer contract and never retries a completed
-helper. Neither service checks helper instructions or scans argument strings.
-These services add no packet, frame or continuation fields.
+Original [string APIs](admission.md#original-strcmp-service) retain the frame's
+single outer spin owner, acquisition ticket and source lease. The dispatcher
+route saves and validates the pending CALL return state before invoking the
+helper; success consumes that saved return once. The
+[writing API](admission.md#original-strscpy_pad-writing-service) relies on the
+original caller's valid-buffer contract. Neither route checks helper instructions,
+scans argument strings, rechecks destination bounds or retries completed effects.
+
+The optional [direct-helper route](admission.md#direct-original-helper-calls)
+starts only with a fresh ABI1 spin root, a minimal entry packet and one physical
+lock hold. Original helpers run inside one generated invocation; their actual
+source CALL return words remain on the waiter stack and are consumed once.
+Publication pins helper and return-source code, and the immutable image's existing
+frame or batch lease keeps that code resident through completion or native
+continuation. These calls create no child owner or replacement frame, and leave
+the shared packet and two-word wrapper interface unchanged.
+
+A comparison beyond its 128-call limit, or a padding call beyond its 16-call
+limit, exits before its effects and continues on the original waiter with the
+native suffix. The direct
+image cannot reenter from FULL state and restart its allowance. Exact owners,
+root-ticket references, source leases and unlock acknowledgements survive that
+handoff until normal retirement. Invalid returns and exhausted instruction
+budgets remain errors. [Image lifetimes](lifetimes.md#executable-images-and-guarded-spin-transition)
+defines the publication and storage obligations.
 
 Before a supported local mutex control, KD snapshots 256 bytes within the
 waiter's live stack. After the call, it compares those bytes and checks the exact

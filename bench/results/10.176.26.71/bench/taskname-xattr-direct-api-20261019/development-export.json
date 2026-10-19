@@ -1,0 +1,40 @@
+{
+  "complete": true,
+  "archives": [
+    {
+      "label": "tests",
+      "directory": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/taskname-xattr-direct-api-20261019/taskname-xattr-direct-api-20261019-archives-final-direct-development-20261019",
+      "receipt_sha256": "b653a177acdb890f945cbfb8e8c45a055a2c2291992f536bfd876eada8bd5172"
+    },
+    {
+      "label": "baseline-profile-first",
+      "directory": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/taskname-xattr-direct-api-20261019/development/api-opt-baseline-profile-20261019-archives-final-direct-development-20261019",
+      "receipt_sha256": "1dac0b6de002c092a5ae3392309b9dda59855def0da4d7cc1e4d89ae0ac19913"
+    },
+    {
+      "label": "baseline-profile-v2",
+      "directory": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/taskname-xattr-direct-api-20261019/development/api-opt-baseline-profile-v2-20261019-archives-final-direct-development-20261019",
+      "receipt_sha256": "2af558b76233bcb5aebd29ab2ba948aa3b4e0caba7b42a21f342166c13992605"
+    },
+    {
+      "label": "candidate2-screen",
+      "directory": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/taskname-xattr-direct-api-20261019/development/api-opt-candidate2-screen-20261019-archives-final-direct-development-20261019",
+      "receipt_sha256": "87fe76bbf0416378c3bdd46b19b351c085622e17d97257c9108c365e70a83960"
+    },
+    {
+      "label": "candidate3-screen",
+      "directory": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/taskname-xattr-direct-api-20261019/development/api-opt-candidate3-screen-20261019-archives-final-direct-development-20261019",
+      "receipt_sha256": "66ba449fbae5c654fa07c65f813465aae88ab46196a995ab243d873854be4a6b"
+    },
+    {
+      "label": "direct-profile",
+      "directory": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/taskname-xattr-direct-api-20261019/development/api-opt-direct-profile-20261019-archives-final-direct-development-20261019",
+      "receipt_sha256": "315ff320097fd124ab8561cfd2d1447c7852a34c5ec87005c94f2f4848130bde"
+    },
+    {
+      "label": "quota",
+      "directory": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/taskname-xattr-direct-api-20261019/taskname-xattr-direct-quota-20261019-archives-final-20261019",
+      "receipt_sha256": "07912d66d9da11cd94d6fd6f2a2b980b1a72a6af58e204ca73b59c6f7cf89c88"
+    }
+  ]
+}

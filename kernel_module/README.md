@@ -180,8 +180,9 @@ ABI, exact owners, source leases and final acknowledgements. The version 10
 [focused correctness checks](../docs/VALIDATION.md#taskname-and-xattr-helper-validation)
 passed through candidate 6. The
 [`88bb5a4` standard-grid comparison](../bench/results/10.176.26.71/bench/taskname-xattr-native-api-20261019/README.md)
-completed all 567 sessions with validation and drain. KD remains slower than
-Linux Native and TCLock at 60 workers in all three measured workloads; taskname
+completed all 567 sessions with validation and drain. In that historical
+dispatcher round, KD was slower than Linux Native and TCLock at 60 workers in
+all three measured workloads; taskname
 mutation delegation remains unestablished.
 The former helper prechecks and their fallback probe remain historical evidence
 for `c79d84f`.
@@ -229,10 +230,21 @@ owner; the direct image cannot reenter with a full packet and reset the limits.
 A successful invocation may reach minimal terminal completion without an
 intermediate FULL export. See
 [direct-call admission](../docs/design/admission.md#direct-original-helper-calls)
-for the complete entry, lifetime and error contracts. The initial route passed
-14 focused live sessions. Its later bridge-instruction reduction awaits focused
-validation, and the standard worker-grid performance comparison is pending.
-Earlier performance results do not measure direct calls.
+for the complete entry, lifetime and error contracts. The final bridge passed
+its focused unit and live checks and separate KD screen. All 18 diagnostic
+profiles completed and drained with tracing restored. During direct-body
+measurement, the source-pin lookup, full-frame validator, continuation saver and
+both C string-service adapters recorded zero calls. Their repeated dispatcher
+work is avoided; exact physical ownership and lifetime checks remain at request
+binding and completion. The
+[development record](../bench/results/10.176.26.71/bench/taskname-xattr-direct-api-20261019/DEVELOPMENT.md#final-diagnostic-profiles)
+retains the observations and earlier failures. The separate
+[`05876a4` standard-grid comparison](../bench/results/10.176.26.71/bench/taskname-xattr-direct-api-20261019/README.md)
+completed all 567 sessions with validation and drain for the three API
+workloads. Archive verification and the separate n129 quota control are complete;
+that control verified native waiter completion after quota exhaustion and drain.
+That comparison supplies the direct-call throughput measurements; diagnostic
+timings and earlier dispatcher results remain separate evidence.
 
 ## Validation and shutdown
 

@@ -30,44 +30,63 @@ TCLock). It uses the regular 64-vCPU VM and collector 63.
 
 ## Taskname and xattr comparison
 
-Revision `88bb5a4` removes helper instruction checks, argument scans and runtime
-destination checks from `strcmp` and `strscpy_pad`, relying on their original C
-caller contracts. Its [Native/TCLock/KD comparison](../bench/results/10.176.26.71/bench/taskname-xattr-native-api-20261019/README.md)
-completed all 567 sessions on the standard grid. The 189 KD sessions include
-167 with returned delegated bodies and 22 with no generated-code entry. These
-execution states remain separate; mixed repetitions do not supply a pooled
-three-run median. All sessions passed evidence replay and drained.
+Revision `05876a4` keeps original `strcmp` and `strscpy_pad` calls inside one
+generated invocation. The selected KD mutex protocol is unchanged; these two
+workloads use spin delegation. Neither this revision nor its `88bb5a4` baseline
+performs helper-code checks, string scans or runtime destination checks.
+
+The [completed comparison](../bench/results/10.176.26.71/bench/taskname-xattr-direct-api-20261019/README.md)
+contains **567 correct, drained sessions**: read-only taskname and xattr tail
+queries with 16/128 attributes and 64-byte values, all three backends, the
+standard 21 worker counts and three repetitions. Of 189 KD sessions, 168 returned
+generated bodies and 21 had no generated entry; none entered without completing
+a body. Mixed repetitions at three workers for taskname and xattr n16 remain
+separate, leaving 61 complete comparable points.
 
 At 60 workers, median whole-run throughput in Mops/s is:
 
 | Workload | Fresh Linux Native | Fresh TCLock | Current KD | KD / Native | KD / TCLock |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| Taskname, read-only | 3.754 | 5.024 | 2.460 | 0.655× | 0.490× |
-| Xattr tail, 16 attributes, 64-byte values | 2.200 | 2.414 | 0.483 | 0.220× | 0.200× |
-| Xattr tail, 128 attributes, 64-byte values | 0.564 | 0.603 | 0.088 | 0.156× | 0.146× |
+| Taskname, read-only | 3.860 | 5.008 | 4.521 | 1.171× | 0.903× |
+| Xattr tail, 16 attributes, 64-byte values | 2.182 | 2.412 | 2.368 | 1.085× | 0.982× |
+| Xattr tail, 128 attributes, 64-byte values | 0.562 | 0.600 | 0.573 | 1.020× | 0.956× |
 
-Current KD remains below both fresh controls at 60 workers. Its rates there are
-2.178×, 4.184× and 1.910× the separate
-[`c79d84f` checked-helper baseline](../bench/results/10.176.26.71/bench/taskname-xattr-20261018/README.md),
-respectively. This is a comparison of observed whole-run rates, not a measurement
-of the isolated cost of helper checks. Returned-body shares also changed: for
-xattr with 128 attributes, the 60-worker share rose from 29.23% to 91.03%.
+These KD rates are **1.838×, 4.901× and 6.528×** the corresponding
+[`88bb5a4` rates](../bench/results/10.176.26.71/bench/taskname-xattr-native-api-20261019/README.md)
+of 2.460, 0.483 and 0.088 Mops/s. At 60 workers, returned-body shares are
+99.89%, 99.90% and 99.89%. KD exceeds fresh Native there but remains below
+TCLock by approximately 9.7%, 1.8% and 4.4%.
 
-Low-count regressions remain visible. At four workers, xattr with 16 attributes
-fell from 2.659 to 0.597 Mops/s while its returned-body share changed from 0.03%
-to 98.41%; five workers also regressed. The
-[full-grid tables](../bench/results/10.176.26.71/bench/taskname-xattr-native-api-20261019/tables.md)
-retain these outcomes, peak rates and status-based exclusions. The
-[current full-grid CSV](../bench/results/10.176.26.71/bench/taskname-xattr-native-api-20261019/current-full-grid.csv)
-and [historical KD CSV](../bench/results/10.176.26.71/bench/taskname-xattr-native-api-20261019/historical-kd-full-grid.csv)
-also retain the minimum and maximum repetition rates.
-Each delegated comparison still crosses the common service dispatcher; the
-report explains that remaining work without claiming a profiled cost breakdown.
+The improvement is not uniform. Across 61 compatible points, 55 meet or exceed
+both the old KD whole-run and 300 ms peak medians. Six have a lower whole-run
+rate: taskname at four/five workers, xattr n16 at one/two, and xattr n128 at
+one/three. The largest is taskname at five workers, 3.529 versus 3.662 Mops/s,
+about 3.65% lower. Fresh-control gaps remain larger: taskname at six workers
+reaches only 0.433× Native and 0.704× TCLock. Across the same 61 current points,
+KD meets both observed throughput criteria at 16 versus Native and one versus
+TCLock. These are descriptive comparisons, not statistical significance tests.
+The [full-grid tables](../bench/results/10.176.26.71/bench/taskname-xattr-direct-api-20261019/tables.md),
+[current CSV](../bench/results/10.176.26.71/bench/taskname-xattr-direct-api-20261019/current-full-grid.csv)
+and [historical KD CSV](../bench/results/10.176.26.71/bench/taskname-xattr-direct-api-20261019/historical-kd-full-grid.csv)
+retain status groups, repetition ranges, peak rates and exclusions.
 
-[Focused checks](VALIDATION.md#taskname-and-xattr-helper-validation) passed for
-read-only taskname and all eight xattr controls. The separate 20% taskname
-mutation control was correct but returned no delegated bodies. Both revisions
-retain the selected KD mutex protocol; their timings are never pooled.
+Separate function profiles identified repeated dispatcher work in the old path:
+1/16/128 source-pin lookups and 7/37/261 frame validations per returned
+taskname/xattr-n16/xattr-n128 body. All six new KD diagnostic cases returned
+bodies with zero measured calls to those routines. The original helper now runs
+directly; its source references are retained when immutable code is published.
+Register saves, actual source CALL return words, quotas, exact ownership and
+completion checks remain. TCLock runs native instructions on the waiter's stack
+and avoids this translated helper bridge. The profiles explain removed work;
+their instrumented timings are not benchmark scores or an isolated cost estimate.
+
+[Focused checks](VALIDATION.md#taskname-and-xattr-helper-validation), loaded-image
+verification and a separate 129-comparison quota control passed. The latter
+correctly returns the unfinished suffix to the original waiter and is unscored.
+The earlier 20% taskname mutation control was correct but returned no delegated
+bodies; mutation delegation and full live-task/procfs integration remain
+unaccepted. The checked-helper `c79d84f` round, prior dispatcher round, screens
+and profiles retain separate source identities and are never pooled.
 
 ## Current mutex result
 

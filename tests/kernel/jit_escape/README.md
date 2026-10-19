@@ -45,16 +45,21 @@ The runner accepts capability versions 6 through 11 only when feature bit 5
 the version alone does not establish support. The private benchmark observation
 overlay supplies entry/completion counts, including validated root completions
 after helper services; the production `native_escape_count` counts validated
-marker events.
+marker events. That count does not by itself prove that a native continuation
+completed. The operation and final-retirement checks supply the additional
+evidence. The marker log is rate limited, so the test does not require one
+printed line per count.
+
 Version 11's optional [direct original-helper route](../../../docs/design/admission.md#direct-original-helper-calls)
 is a separate ABI1 spin feature; it does not change this ABI2 mutex marker or
 the selected mutex protocol. This probe remains an affected regression check,
-not a measurement of direct-call performance. Current focused results are linked
-from [validation](../../../docs/VALIDATION.md#taskname-and-xattr-helper-validation);
-the direct-route standard-grid comparison is pending.
-That count does not by itself prove that a native continuation completed. The
-operation and final-retirement checks supply the additional evidence. The marker
-log is rate limited, so the test does not require one printed line per count.
+not a measurement of direct-call performance. It passed and drained in
+[candidate 2](../../../bench/results/10.176.26.71/bench/taskname-xattr-direct-api-20261019/DEVELOPMENT.md#candidate-2-checks).
+The final bridge's [candidate 3 checks](../../../bench/results/10.176.26.71/bench/taskname-xattr-direct-api-20261019/DEVELOPMENT.md#candidate-3-checks)
+passed separately; they did not rerun this unchanged mutex path. The separate
+[direct-route comparison](../../../bench/results/10.176.26.71/bench/taskname-xattr-direct-api-20261019/README.md)
+completed 567 validated sessions for read-only taskname and xattr tail with 16
+and 128 entries. Those spin workloads do not measure this mutex marker path.
 
 Every phase records worker process identifiers, exact per-worker progress,
 counter snapshots, registry state and kernel messages. The payload checks all

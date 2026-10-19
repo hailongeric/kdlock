@@ -10,14 +10,56 @@ terms used in the receipts below.
 
 ## Taskname and xattr helper validation
 
-The version 11 direct-call path has passed its first focused VM checks:
-provider/daemon builds, basic plus affected unit coverage, and 14 drained live
-sessions. It keeps original string calls inside one generated invocation while
-preserving their caller contract and the selected KD mutex protocol. The
+The version 11 direct-call path in `05876a4` passed provider/daemon builds,
+basic plus affected unit coverage, and focused live checks. It keeps original
+string calls inside one generated invocation while preserving their caller
+contract and the selected KD mutex protocol. The
 [development record](../bench/results/10.176.26.71/bench/taskname-xattr-direct-api-20261019/DEVELOPMENT.md)
 retains the initial three fixture failures, successful corrections, executable
-wrapper checks and exact live counts. Further bridge tuning and the new standard
-grid are in progress; these checks do not establish performance parity.
+wrapper checks and exact live counts. Candidate 2 completed 14 drained live
+checks, including the unchanged recovery probes and Native/TCLock controls.
+Candidate 3 passed both basic C programs and six affected drivers; its generated
+wrapper fixture completed 15,663 assertions covering both incoming stack
+alignments, registers, flags, actual CALL return words, quotas, truncation and
+bad-return rejection. Its ten affected live checks passed and drained.
+
+The final 18 diagnostic profile sessions completed, drained and restored tracing
+controls. All six KD cases returned generated bodies with zero measured calls
+to the repeated source-pin lookup, full-frame validation, continuation-save and
+C string adapters. These counts explain removed dispatcher work; they do not
+measure uninstrumented throughput. Two separate 36-session KD screens retain
+their own generated code and are not pooled. The [full standard-grid comparison](../bench/results/10.176.26.71/bench/taskname-xattr-direct-api-20261019/README.md)
+completed all 567 sessions with correct results, complete drain and successful
+evidence replay. KD returned 751,832,469 bodies across 168 sessions; 21 KD
+sessions recorded no generated entry, and none entered without a completion.
+All 567 session kernel logs had no matched fault reports. The independent
+[archive audit](../bench/results/10.176.26.71/bench/taskname-xattr-direct-api-20261019/archive-audit.json)
+verified 265 source files against `05876a4`, 16 binaries and 315 actual loaded
+images, including their generated direct CALL targets. No helper bodies or
+arguments are scanned by this image check. Matching before/after VM placement
+and frequency policy do not establish equal effective frequencies or host load.
+
+The separate [quota control](../bench/results/10.176.26.71/bench/taskname-xattr-direct-api-20261019/quota-result.json)
+reused the measured binaries for a 129-attribute tail query at 16 workers. It
+completed 329,728 correct measured operations; 329,228 generated prefixes reached
+the 128-call quota and returned to the original waiter, with zero completed JIT
+bodies. Its `PARTIAL_JIT` status is expected for this unscored continuation check.
+Including warmup and checks, 1,070,524 quota exits matched native starts,
+completions and unlocks, and 137,027,072 direct comparisons equal 128 per exit.
+Exact empty frame/source retirement and final idle passed; aggregate counters
+do not replace the runtime ownership and acknowledgement checks. These are
+focused results, not a full-suite, universal delegation or performance-parity
+claim.
+
+Separate [development preservation checks](../bench/results/10.176.26.71/bench/taskname-xattr-direct-api-20261019/development-archive-audit.json)
+cover 133 drained sessions, including the failed first profile, and eleven
+planned-but-unrun sessions. The first failed profiler predates its pre-refusal
+tracing snapshot: outer controls match, but its per-session before/after
+comparison is unavailable. The initial audit failure and the narrowly corrected
+audit remain in the development record; successful-profile requirements are
+unchanged. [Quota preservation](../bench/results/10.176.26.71/bench/taskname-xattr-direct-api-20261019/quota-archive-audit.json)
+passed separately. These audits verify retained evidence and do not relabel
+failed checks as passes.
 
 The preceding version 10 removes helper-specific instruction checks, string scans and
 runtime destination checks. It relies on the original callers' memory and

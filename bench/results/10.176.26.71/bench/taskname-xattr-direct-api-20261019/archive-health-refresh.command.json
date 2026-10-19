@@ -1,0 +1,14 @@
+{
+  "argv": [
+    "/root/kdlock-translation-venv-20261019/bin/python3",
+    "/tmp/final-health.py",
+    "--base",
+    "/root/kdlock-evidence/10.176.26.71/bench/taskname-xattr-direct-api-05876a4"
+  ],
+  "cwd": "/root/host_fs/kdlock",
+  "timeout_seconds": 180,
+  "started_ns": 1792386340282730018,
+  "returncode": 0,
+  "pid": 2167855,
+  "finished_ns": 1792386340697633668
+}

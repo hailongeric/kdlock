@@ -53,8 +53,8 @@ context checks remain unchanged; selecting it does not authorize arbitrary helpe
 functions. Ordinary `KD_SPIN_DIRECT_LOCK` has no added instructions.
 
 Taskname uses the ordinary `KD_SPIN_DIRECT_LOCK` pair. Its
-`strscpy_pad(..., 64)` service invokes the original kernel API, so generated code
-does not enter the helper prologue or need the five register initializations.
+`strscpy_pad(..., 64)` service invokes the original kernel API. The translator
+does not translate the helper prologue or need the five register initializations.
 The optional helper entry and the separate
 [source constant proof](../docs/design/admission.md#source-branches-with-proven-constant-inputs)
 remain available for other translated code.
@@ -71,10 +71,15 @@ results and drained but completed no delegated bodies during measurement.
 Those [historical receipts](../bench/results/10.176.26.71/bench/taskname-xattr-20261018/DEVELOPMENT.md)
 and the [comparison record](../bench/results/10.176.26.71/bench/taskname-xattr-20261018/README.md)
 remain evidence for that earlier source version.
-The initial version 11 direct-call path passed 14 focused live sessions; its
-later bridge-instruction reduction awaits focused validation, and its standard
-worker-grid performance comparison is pending. It retains the
-ordinary taskname call shell and the same original APIs.
+The final version 11 direct bridge passed its focused unit and live checks,
+separate KD screen and all 18 diagnostic profiles. The
+[development record](../bench/results/10.176.26.71/bench/taskname-xattr-direct-api-20261019/DEVELOPMENT.md#candidate-3-checks)
+retains exact counts and earlier failures. The separate
+[`05876a4` standard-grid comparison](../bench/results/10.176.26.71/bench/taskname-xattr-direct-api-20261019/README.md)
+completed all 567 sessions with validation and drain for the three API
+workloads. Archive verification and the separate n129 quota control are complete;
+that control verified native waiter completion after quota exhaustion and drain.
+The ordinary taskname call shell and original APIs are unchanged.
 
 Mutex outer callers pair `KD_MUTEX_OUTER_LOCK/UNLOCK` with one opaque
 `kd_mutex_outer_cookie` per acquisition. Do not copy, modify, transfer or reuse it

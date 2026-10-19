@@ -202,11 +202,19 @@ acknowledgement. Neither completion counters nor direct-call totals can release
 those references. These obligations preserve the existing ownership and
 retirement rules without a new lock API.
 
-The first direct-call candidate passed [focused VM correctness checks](../VALIDATION.md#taskname-and-xattr-helper-validation).
-Further bridge tuning and standard-grid performance validation are in progress. The completed
-version 10 taskname/xattr comparison records the preceding dispatcher path;
-it is not validation of the new allocation or execution path. The selected KD
-mutex protocol and its source/owner retirement rules are unchanged.
+The final direct bridge passed [focused VM correctness checks](../VALIDATION.md#taskname-and-xattr-helper-validation),
+its separate KD screen and all 18 diagnostic profiles. Those profiles recorded
+no source-pin lookup during direct-body measurement: residency was established
+before publication, not omitted. The [development record](../../bench/results/10.176.26.71/bench/taskname-xattr-direct-api-20261019/DEVELOPMENT.md#final-diagnostic-profiles)
+retains the counts and earlier failures. The separate
+[`05876a4` standard-grid comparison](../../bench/results/10.176.26.71/bench/taskname-xattr-direct-api-20261019/README.md)
+completed all 567 sessions with validation and drain across its three API
+workloads. Archive verification is complete. The separate n129 quota control
+also passed: the original waiter finished each quota-limited body and released
+its ownership records; generated prefixes were not counted as completed bodies.
+The completed version 10 comparison is historical evidence for the
+dispatcher path; the selected KD mutex protocol and its source/owner retirement
+rules are unchanged.
 
 The source limit is 64 distinct modules, with no hook-time allocation; each
 read is limited to 256 KiB. Built-in resident ranges need no module ref. These

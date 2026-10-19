@@ -1,0 +1,409 @@
+{
+  "archives": {
+    "baseline-profile-first": {
+      "archives": [
+        {
+          "bytes": 11104884,
+          "file": "sessions.tar.gz",
+          "sha256": "6d02560f5723bceeee4361fa2f7685a9ca756ee1b594c07f1054d3564f2391ec"
+        },
+        {
+          "bytes": 60695,
+          "file": "metadata.tar.gz",
+          "sha256": "0388b9b53110a78a4f32f95a73d197b8e4998dc7b6d1d20539da414dd0ad99b9"
+        }
+      ],
+      "complete": false,
+      "errors": [
+        "KeyError: 'xattr/xattr-tail-n16-t16-r0-native/function-profile/controls-observed.json'"
+      ],
+      "hardlinks": 0,
+      "hashed_regular_files": 2076,
+      "input": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/taskname-xattr-direct-api-20261019/development/api-opt-baseline-profile-20261019-archives-final-direct-development-20261019",
+      "paths": 2261,
+      "private_include_files": 184,
+      "receipt_sha256": "1dac0b6de002c092a5ae3392309b9dda59855def0da4d7cc1e4d89ae0ac19913",
+      "symlinks": 4
+    },
+    "baseline-profile-v2": {
+      "archives": [
+        {
+          "bytes": 7819529,
+          "file": "sessions.tar.gz",
+          "sha256": "55b109ddda7059dd11e95300804f302a6f17fa936aaff1e2099c2ab0624921b6"
+        },
+        {
+          "bytes": 62057,
+          "file": "metadata.tar.gz",
+          "sha256": "79a23ff5068fd0398494932d9cc04c6a3d53050a70c132d660b6324d402ecf2e"
+        }
+      ],
+      "complete": true,
+      "drained": 12,
+      "empty_retirements": 4,
+      "errors": [],
+      "hardlinks": 0,
+      "hashed_regular_files": 2426,
+      "health_path": "archive-health-final-direct-development-20261019.json",
+      "health_sha256": "6e6edfa721c81fe2c060e4edb7f6abe4e60f9c3afe48728f316f41df864267b4",
+      "input": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/taskname-xattr-direct-api-20261019/development/api-opt-baseline-profile-v2-20261019-archives-final-direct-development-20261019",
+      "kernel_faults": [],
+      "kernel_logs": 12,
+      "paths": 2582,
+      "planned_not_run": 0,
+      "preserved_failures": [],
+      "private_include_files": 72,
+      "profile_restores": 12,
+      "raw_profile_files": 768,
+      "receipt_sha256": "2af558b76233bcb5aebd29ab2ba948aa3b4e0caba7b42a21f342166c13992605",
+      "session_statuses": {
+        "OK": 12
+      },
+      "sessions": 12,
+      "source_manifests": [
+        {
+          "files": 236,
+          "path": "xattr/source-sha256.json",
+          "private_includes": 57,
+          "sha256": "0fa31caad419922a5b276713124f67c9bafb11d0e4fe9a597102d75ffba2aa83",
+          "source_id": "197408c8c7d040b39a6cefb1c006802b4123b3d64492e6e5b02c2f468fb5e680"
+        }
+      ],
+      "symlinks": 8
+    },
+    "candidate2-screen": {
+      "archives": [
+        {
+          "bytes": 10184673,
+          "file": "sessions.tar.gz",
+          "sha256": "40c41b392872cac6d96ba9d02c69abb71c2cd916b9ac260a1f3b10d28103fdd7"
+        },
+        {
+          "bytes": 49302,
+          "file": "metadata.tar.gz",
+          "sha256": "2685150ff80612203620ded3d03ed86ef294fcb4458a29a47daec34a2364fb79"
+        }
+      ],
+      "complete": true,
+      "drained": 36,
+      "empty_retirements": 36,
+      "errors": [],
+      "hardlinks": 0,
+      "hashed_regular_files": 2431,
+      "health_path": "archive-health-final-direct-development-20261019.json",
+      "health_sha256": "04f362d827c362b3f32a281880740951a18955fa00ccde7183dc6f9e86f0f318",
+      "input": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/taskname-xattr-direct-api-20261019/development/api-opt-candidate2-screen-20261019-archives-final-direct-development-20261019",
+      "kernel_faults": [],
+      "kernel_logs": 36,
+      "paths": 2975,
+      "planned_not_run": 0,
+      "preserved_failures": [],
+      "private_include_files": 169,
+      "profile_restores": 0,
+      "raw_profile_files": 0,
+      "receipt_sha256": "87fe76bbf0416378c3bdd46b19b351c085622e17d97257c9108c365e70a83960",
+      "session_statuses": {
+        "OK": 36
+      },
+      "sessions": 36,
+      "source_manifests": [
+        {
+          "files": 241,
+          "path": "taskname/source-sha256.json",
+          "private_includes": 58,
+          "sha256": "79600fa2a1d64f7c1af8beeb24c14a07fc9f6870ce6ed9fe98cbea299210941a",
+          "source_id": "96d4450c84897668ff6bf859f54596cd3c286a36ddf441bb2aa7579b2c16faa4"
+        },
+        {
+          "files": 238,
+          "path": "xattr/source-sha256.json",
+          "private_includes": 57,
+          "sha256": "7cfd99aecdde302635d484e5f8ef1994d2c06127a55006adca16358745cd0847",
+          "source_id": "50da404390a855ea3ad89f5d5fba7a4a4ad80b1490a2a538aead7b994d7a704d"
+        }
+      ],
+      "symlinks": 72
+    },
+    "candidate3-screen": {
+      "archives": [
+        {
+          "bytes": 10332782,
+          "file": "sessions.tar.gz",
+          "sha256": "845f418331c54c0fe4ee2a25ce704ebeae19f985e8a0fb91e2f2398419e30308"
+        },
+        {
+          "bytes": 49340,
+          "file": "metadata.tar.gz",
+          "sha256": "7fdc2abe8c877ffd28705e37144d4abae89c7d5d16df25940ae61924ecd53a3f"
+        }
+      ],
+      "complete": true,
+      "drained": 36,
+      "empty_retirements": 36,
+      "errors": [],
+      "hardlinks": 0,
+      "hashed_regular_files": 2431,
+      "health_path": "archive-health-final-direct-development-20261019.json",
+      "health_sha256": "b7ea951bb8f8c1446f1f9a1ca16d0fb1a7389ada1ff3eb9187a985111b54c65b",
+      "input": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/taskname-xattr-direct-api-20261019/development/api-opt-candidate3-screen-20261019-archives-final-direct-development-20261019",
+      "kernel_faults": [],
+      "kernel_logs": 36,
+      "paths": 2975,
+      "planned_not_run": 0,
+      "preserved_failures": [],
+      "private_include_files": 169,
+      "profile_restores": 0,
+      "raw_profile_files": 0,
+      "receipt_sha256": "66ba449fbae5c654fa07c65f813465aae88ab46196a995ab243d873854be4a6b",
+      "session_statuses": {
+        "OK": 36
+      },
+      "sessions": 36,
+      "source_manifests": [
+        {
+          "files": 241,
+          "path": "taskname/source-sha256.json",
+          "private_includes": 58,
+          "sha256": "195cf6441a98e157967910b0561fe5216c1cf3a7c51b52c6b53c6ad3839f02ee",
+          "source_id": "694be6f5e2304057450ec69698c380d8efdb2717e56ed95f77a0a0f60b8c3c33"
+        },
+        {
+          "files": 238,
+          "path": "xattr/source-sha256.json",
+          "private_includes": 57,
+          "sha256": "8108aebdcc7b045f7a15a850a52d089f50cdb3ae2fc0eacec67dadd543522a2d",
+          "source_id": "14addb38eaf17d4b406053d923f88a9ff747d205724cf20008006083b871389a"
+        }
+      ],
+      "symlinks": 72
+    },
+    "direct-profile": {
+      "archives": [
+        {
+          "bytes": 15550086,
+          "file": "sessions.tar.gz",
+          "sha256": "d586bd34479dbafa50744be6e8600000f77bc54e79e733599350cac0005e186e"
+        },
+        {
+          "bytes": 63745,
+          "file": "metadata.tar.gz",
+          "sha256": "c81594a9409da8bb4a8a83814f841444887caa4382dd34e40a5d8b23e6306369"
+        }
+      ],
+      "complete": true,
+      "drained": 18,
+      "empty_retirements": 6,
+      "errors": [],
+      "hardlinks": 0,
+      "hashed_regular_files": 4069,
+      "health_path": "archive-health-final-direct-development-20261019.json",
+      "health_sha256": "84dd8524bc085cb2a94d564981c89b0c7011addb08558f82874123a2de981d8b",
+      "input": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/taskname-xattr-direct-api-20261019/development/api-opt-direct-profile-20261019-archives-final-direct-development-20261019",
+      "kernel_faults": [],
+      "kernel_logs": 18,
+      "paths": 4347,
+      "planned_not_run": 0,
+      "preserved_failures": [],
+      "private_include_files": 184,
+      "profile_restores": 18,
+      "raw_profile_files": 1152,
+      "receipt_sha256": "315ff320097fd124ab8561cfd2d1447c7852a34c5ec87005c94f2f4848130bde",
+      "session_statuses": {
+        "OK": 18
+      },
+      "sessions": 18,
+      "source_manifests": [
+        {
+          "files": 241,
+          "path": "taskname/source-sha256.json",
+          "private_includes": 58,
+          "sha256": "195cf6441a98e157967910b0561fe5216c1cf3a7c51b52c6b53c6ad3839f02ee",
+          "source_id": "694be6f5e2304057450ec69698c380d8efdb2717e56ed95f77a0a0f60b8c3c33"
+        },
+        {
+          "files": 238,
+          "path": "xattr/source-sha256.json",
+          "private_includes": 57,
+          "sha256": "90f3d00d6133a9f32abe87db65451e2881ce0c1f43236d4fc4a03c4da4f545a3",
+          "source_id": "c0f61f63ec40d68a92a0f3b7f57436c95d3999ebb8de94de24128066cbebe00a"
+        }
+      ],
+      "symlinks": 12
+    },
+    "tests": {
+      "archives": [
+        {
+          "bytes": 6448019,
+          "file": "checks.tar.gz",
+          "sha256": "c59ab60e7ccea5da8d6d3166f0c2601abf9a0e6e240c2ff6e0b34e78a0520d77"
+        },
+        {
+          "bytes": 34482937,
+          "file": "live.tar.gz",
+          "sha256": "95c75c310c3d0960b4331e29bde3daa95fca3277febd4d0f752b7da226ffb7ac"
+        },
+        {
+          "bytes": 47943,
+          "file": "metadata.tar.gz",
+          "sha256": "9eb851df29f7d0df175c9754d70734b501859e4e1c905be5450d99cd00de842a"
+        }
+      ],
+      "complete": true,
+      "drained": 24,
+      "empty_retirements": 22,
+      "errors": [],
+      "hardlinks": 0,
+      "hashed_regular_files": 6209,
+      "health_path": "archive-health-final-direct-development-20261019.json",
+      "health_sha256": "2e6a1294d7a6856e4457fcd14c838dcced6db5134a7995d9b19a10a87ff03295",
+      "input": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/taskname-xattr-direct-api-20261019/taskname-xattr-direct-api-20261019-archives-final-direct-development-20261019",
+      "kernel_faults": [],
+      "kernel_logs": 24,
+      "paths": 7067,
+      "planned_not_run": 0,
+      "preserved_failures": [
+        {
+          "outcome": {
+            "passed": false
+          },
+          "path": "candidate1-checks/result.json",
+          "sha256": "e4d414e3aa551df28b9f08336c91002b316babd0627465f6e08547b45f0fcbd2"
+        },
+        {
+          "outcome": {
+            "returncode": 2
+          },
+          "path": "candidate1-checks/units.command.json",
+          "sha256": "234803cc8b2e738dd85f472f8b2e89c5f76bb95276c7856f34ede5acae50696d"
+        }
+      ],
+      "private_include_files": 839,
+      "profile_restores": 0,
+      "raw_profile_files": 0,
+      "receipt_sha256": "b653a177acdb890f945cbfb8e8c45a055a2c2291992f536bfd876eada8bd5172",
+      "session_statuses": {
+        "OK": 24
+      },
+      "sessions": 24,
+      "source_manifests": [
+        {
+          "files": 395,
+          "path": "candidate1-checks/source-sha256.json",
+          "private_includes": 54,
+          "sha256": "fac11d5d2f55a2ea7feaa8a7ea05f6e4d6d58b389e5461deddd16c33f258c5cb",
+          "source_id": "26c04575e14dbfb4daddab6cb047591300c1e905078c4ab1081488a1cc80adfb"
+        },
+        {
+          "files": 395,
+          "path": "candidate2-checks/source-sha256.json",
+          "private_includes": 54,
+          "sha256": "439d2a55788e9255f5b4ea5f9601150268c1e97b3349e9f43ab5db5d4a0a56a7",
+          "source_id": "23d195223b89ad3b7d319186bc8bbc90ff1192452c5bbce934a5d556cf2b3923"
+        },
+        {
+          "files": 183,
+          "path": "candidate2-live/address-guard/source-sha256.json",
+          "private_includes": 42,
+          "sha256": "d288b69549b1324841ed49aa8641145f42fc0861e9d74e002a27e56e6d79c946",
+          "source_id": "9babcacee1d67826e41cdfed829fd13ee2f8e97e9ea598b24c1c7d1966594e28"
+        },
+        {
+          "files": 184,
+          "path": "candidate2-live/mutex-marker/source-sha256.json",
+          "private_includes": 42,
+          "sha256": "82e5a7425c54d8dc5abadca5f5b0f4f5e33ba7018246a7649fd6ade48988ec7b",
+          "source_id": "d6c40503d0996fe204a2a7dbd6399402cd821c3db48bd907d403896a5b1bf963"
+        },
+        {
+          "files": 185,
+          "path": "candidate2-live/strcmp/source-sha256.json",
+          "private_includes": 42,
+          "sha256": "4f5ecd04a851959d7fe3dc8ceb282474d95d9d105efb5ba05d32fb196c289a24",
+          "source_id": "a59f7f6f52c11202800aeb50daade46af3020eccdc7cffb6e686fd7016ca409c"
+        },
+        {
+          "files": 241,
+          "path": "candidate2-live/taskname-read/source-sha256.json",
+          "private_includes": 58,
+          "sha256": "79600fa2a1d64f7c1af8beeb24c14a07fc9f6870ce6ed9fe98cbea299210941a",
+          "source_id": "96d4450c84897668ff6bf859f54596cd3c286a36ddf441bb2aa7579b2c16faa4"
+        },
+        {
+          "files": 238,
+          "path": "candidate2-live/xattr-controls/source-sha256.json",
+          "private_includes": 57,
+          "sha256": "7cfd99aecdde302635d484e5f8ef1994d2c06127a55006adca16358745cd0847",
+          "source_id": "50da404390a855ea3ad89f5d5fba7a4a4ad80b1490a2a538aead7b994d7a704d"
+        },
+        {
+          "files": 395,
+          "path": "candidate3-checks/source-sha256.json",
+          "private_includes": 54,
+          "sha256": "a9eba95acdf8f7f9eebf425f6f86f2e9d1ab610cfab58745d5807b076d4babc0",
+          "source_id": "519706c1be20697da18a57033c8fc350b231929e4d2b9af577d879b5982e4583"
+        },
+        {
+          "files": 185,
+          "path": "candidate3-live/strcmp/source-sha256.json",
+          "private_includes": 42,
+          "sha256": "33f47052baea455a162248488989d8f9e5eca5a6ae3353d84963054bf574afd4",
+          "source_id": "2ee34c684fbfb9bbd597236d2045a2ed426fee57099acc3d9bba22c02a9a2ec3"
+        },
+        {
+          "files": 241,
+          "path": "candidate3-live/taskname-read/source-sha256.json",
+          "private_includes": 58,
+          "sha256": "195cf6441a98e157967910b0561fe5216c1cf3a7c51b52c6b53c6ad3839f02ee",
+          "source_id": "694be6f5e2304057450ec69698c380d8efdb2717e56ed95f77a0a0f60b8c3c33"
+        },
+        {
+          "files": 238,
+          "path": "candidate3-live/xattr-controls/source-sha256.json",
+          "private_includes": 57,
+          "sha256": "8108aebdcc7b045f7a15a850a52d089f50cdb3ae2fc0eacec67dadd543522a2d",
+          "source_id": "14addb38eaf17d4b406053d923f88a9ff747d205724cf20008006083b871389a"
+        }
+      ],
+      "symlinks": 44
+    }
+  },
+  "audited_utc": "2026-10-19T05:12:42.694903+00:00",
+  "complete": false,
+  "direct_profile_source_commit": "05876a44f841979eae776f0146f0fe9e5c3c8f26",
+  "errors": [
+    "baseline-profile-first: KeyError: 'xattr/xattr-tail-n16-t16-r0-native/function-profile/controls-observed.json'"
+  ],
+  "independently_pinned_receipts": [
+    "baseline-profile-first",
+    "baseline-profile-v2",
+    "candidate2-screen",
+    "candidate3-screen",
+    "direct-profile",
+    "tests"
+  ],
+  "limits": [
+    "No archive extraction or captured/project-code import or execution.",
+    "No tests, builds, VM actions, performance estimator or loaded-image replay.",
+    "Recorded idleness/drain is cross-checked; no present VM ownership claim.",
+    "Candidate source hashes match captured manifests; no candidate Git equality is required.",
+    "Failed outcomes remain failed even when preservation is complete.",
+    "Receipt authenticity beyond supplied independent pins is outside this audit."
+  ],
+  "schema": 1,
+  "scope": "Development archive preservation, not benchmark replay or acceptance",
+  "script_sha256": "3c0705d9fea7bd831678db9c28532099552baa397355c1e8b33770552edad9b6",
+  "totals": {
+    "drained": 126,
+    "empty_retirements": 104,
+    "hardlinks": 0,
+    "hashed_regular_files": 19642,
+    "kernel_logs": 126,
+    "paths": 22207,
+    "planned_not_run": 0,
+    "private_include_files": 1617,
+    "profile_restores": 30,
+    "raw_profile_files": 1920,
+    "sessions": 126,
+    "symlinks": 212
+  }
+}

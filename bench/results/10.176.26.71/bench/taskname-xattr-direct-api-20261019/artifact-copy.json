@@ -1,0 +1,231 @@
+{
+  "complete": true,
+  "archive": "bench/results/10.176.26.71/raw/bench/taskname-xattr-direct-api-20261019",
+  "metadata_sha256": "f4caff1ddcdad513d337839f82a976673b4fbe60517700c42207377f4dc2e365",
+  "script_sha256": "06465d9d7630b6ed4d9d83de4cad529a91fb44ba5ed368c46025afef46179ca8",
+  "scope": "Selected byte-identical inert artifacts; no extraction of executable inputs or code execution.",
+  "files": [
+    {
+      "source": "replay-final/sessions.csv",
+      "target": "sessions.csv",
+      "bytes": 821459,
+      "sha256": "131e5207ad2e73daaed7fc6b2acd689d1b96e2ed254c54b18d6861a71f6faad6"
+    },
+    {
+      "source": "replay-final/groups.csv",
+      "target": "groups.csv",
+      "bytes": 277170,
+      "sha256": "3ec1862971534aa48250b1cd4b8c4a7a9d96c78feae87d43a92b9d87967e4413"
+    },
+    {
+      "source": "replay-final/comparison.csv",
+      "target": "comparison.csv",
+      "bytes": 25193,
+      "sha256": "78ff6a8b411e135f8c4f52743c364338999470306bfb44d504b4ce72497ee1a8"
+    },
+    {
+      "source": "replay-final/taskname.png",
+      "target": "taskname.png",
+      "bytes": 120356,
+      "sha256": "8067339ea889e050090eb7d310f2e6c6ea2b44fb6000bda25dff7dbfcb87de23"
+    },
+    {
+      "source": "replay-final/taskname.svg",
+      "target": "taskname.svg",
+      "bytes": 73865,
+      "sha256": "b5241f48c6fbc0ceb6d7341db6408da47b9131df323202804abd30796c43eb29"
+    },
+    {
+      "source": "replay-final/xattr-tail-n16-v64.png",
+      "target": "xattr-tail-n16-v64.png",
+      "bytes": 187966,
+      "sha256": "ee1b237830c6c5b2346d8a22f632d0f1f403845cf9d9b1537e0829e7979eaf14"
+    },
+    {
+      "source": "replay-final/xattr-tail-n16-v64.svg",
+      "target": "xattr-tail-n16-v64.svg",
+      "bytes": 82002,
+      "sha256": "6965cde4f2cbc5309888093d5ee31d9b1a40104d5e9cb0b35db6d0af617b6454"
+    },
+    {
+      "source": "replay-final/xattr-tail-n128-v64.png",
+      "target": "xattr-tail-n128-v64.png",
+      "bytes": 187128,
+      "sha256": "9cb9c666e79f1c6745e64aa144de803ae98073b272c459c890e582d1a322b97d"
+    },
+    {
+      "source": "replay-final/xattr-tail-n128-v64.svg",
+      "target": "xattr-tail-n128-v64.svg",
+      "bytes": 73910,
+      "sha256": "63edc69714d4d1309f7356d77d300a60a8a6eeaca50cd8fcaf2c63bbe1a85a48"
+    },
+    {
+      "source": "comparison-final/current-full-grid.csv",
+      "target": "current-full-grid.csv",
+      "bytes": 53059,
+      "sha256": "9fcaac1e0edfabdeaaa7543f5f13a659820c9798a9dcb6b10824eec0608edd59"
+    },
+    {
+      "source": "comparison-final/current-60-workers.csv",
+      "target": "current-60-workers.csv",
+      "bytes": 3832,
+      "sha256": "2fc58250deeb7427ad3097883c9f1e3d80d7ee9cbab389d80090188794220551"
+    },
+    {
+      "source": "comparison-final/historical-kd-full-grid.csv",
+      "target": "historical-kd-full-grid.csv",
+      "bytes": 58555,
+      "sha256": "1dfd80200b1d1bdd348091d9513b8ae2131248f4d4ea1e41a806a9d01647f7f9"
+    },
+    {
+      "source": "comparison-final/historical-kd-60-workers.csv",
+      "target": "historical-kd-60-workers.csv",
+      "bytes": 3682,
+      "sha256": "5f3c73d186d0bbc1c49216c0effc6070e40ff2dbe6e0e4728b65bd8e7aa58972"
+    },
+    {
+      "source": "comparison-final/tables.md",
+      "target": "tables.md",
+      "bytes": 25022,
+      "sha256": "75baa2dbd37565e3f913bc7f92b3848e1ae8423642230e9dc7900a750473435a"
+    },
+    {
+      "source": "comparison-final/comparison-audit.json",
+      "target": "comparison-audit.json",
+      "bytes": 24849,
+      "sha256": "b7bd739489ecab73dc01d76f4cfa42a5f21b4709d6f579208cbde947a5ebd1bf"
+    },
+    {
+      "source": "health.json",
+      "target": "health.json",
+      "bytes": 736,
+      "sha256": "71ab9640222df2747a7f22aa6a5a07f82da9443ad93a70f8fbd837c6e64818b7"
+    },
+    {
+      "source": "round.json",
+      "target": "round.json",
+      "bytes": 530,
+      "sha256": "e727d03a0c9a19c1a4e9a0d48f7eb121d890c3d5ac1d052387ea4aab1b24f319"
+    },
+    {
+      "source": "round-symbols.json",
+      "target": "round-symbols.json",
+      "bytes": 533,
+      "sha256": "3e0ee693638d2433ae9fe00da43941baf4319b3d80ac44d2a6e2bbdf2074bd3b"
+    },
+    {
+      "source": "round-kallsyms.txt",
+      "target": "round-kallsyms.txt",
+      "bytes": 57,
+      "sha256": "38052394eef347edcbfdee4e0b3ea34aaabf11f9b53e9b6bf6c3c1a5af2af6d2"
+    },
+    {
+      "source": "round-kernel-notes.bin",
+      "target": "round-kernel-notes.bin",
+      "bytes": 492,
+      "sha256": "470196ba7d5d668e441f807358efa00ad3857893a03c14bb367b9190bd022322"
+    },
+    {
+      "source": "taskname.command.json",
+      "target": "taskname.command.json",
+      "bytes": 882,
+      "sha256": "605454020a32305c55b2072fca44ce8ff37294e4a9e6e39878b61a6168d02947"
+    },
+    {
+      "source": "xattr.command.json",
+      "target": "xattr.command.json",
+      "bytes": 897,
+      "sha256": "b02c99568e19bf9316162e07f8147c6c55d09a89ff2951021868b255c73d4e50"
+    },
+    {
+      "source": "replay-final.command.json",
+      "target": "replay-final.command.json",
+      "bytes": 711,
+      "sha256": "2bdd429876fcdd6461e309c7f87482bda275fba169e9a099f369cf58eed076d2"
+    },
+    {
+      "source": "final-health.command.json",
+      "target": "final-health.command.json",
+      "bytes": 332,
+      "sha256": "31ebb1c3d3c9a5955a034590eb3c12938dc066b709ffc0a6e0aeced4593fb7dd"
+    },
+    {
+      "source": "comparison-final.command.json",
+      "target": "comparison-final.command.json",
+      "bytes": 632,
+      "sha256": "2152cd8bf990d982bb87e62b7932facb1dfff5ea87979ea452f7cf811630583f"
+    },
+    {
+      "source": "archive-health-refresh.command.json",
+      "target": "archive-health-refresh.command.json",
+      "bytes": 372,
+      "sha256": "c7de18b2ac935f778041b6b141cc9747f14fc8ddd90fe59110d128398611d356"
+    },
+    {
+      "source": "translation-python.txt",
+      "target": "translation-python.txt",
+      "bytes": 15,
+      "sha256": "f6b75e07f1488db28a89724a522725e3e01af3dc78f6fd365f17eb4059e41056"
+    },
+    {
+      "source": "translation-packages.txt",
+      "target": "translation-packages.txt",
+      "bytes": 61,
+      "sha256": "87b9e1a7b3694670f9e1c3556ef50a8644a69da0674106c2a323b74740d8a90a"
+    },
+    {
+      "source": "plot-python.txt",
+      "target": "plot-python.txt",
+      "bytes": 15,
+      "sha256": "f6b75e07f1488db28a89724a522725e3e01af3dc78f6fd365f17eb4059e41056"
+    },
+    {
+      "source": "plot-packages.txt",
+      "target": "plot-packages.txt",
+      "bytes": 189,
+      "sha256": "6524d9f38752c1cac26ab8e13206c2d3f6ae35fe1a961d9707040181447daaf3"
+    },
+    {
+      "source": "host-metadata/host-before.json",
+      "target": "host-before.json",
+      "bytes": 18667,
+      "sha256": "e03b163271a98e38f5a6fc8170030a1ef5c8231f8c4a0e58671ab80cb0a68c26"
+    },
+    {
+      "source": "host-metadata/host-after.json",
+      "target": "host-after.json",
+      "bytes": 21667,
+      "sha256": "5e4616e6e25d32efc1e82a8750067b7216b2830e177486cdb4f3304ee4d9d199"
+    },
+    {
+      "source": "host-metadata/host-comparison.json",
+      "target": "host-comparison.json",
+      "bytes": 9399,
+      "sha256": "d9bf9c16370cc5035b759d65e9de537f2cb2d174eecd9ce91f2b0c37d477cc04"
+    },
+    {
+      "source": "host-metadata/historical-host-comparison.json",
+      "target": "historical-host-comparison.json",
+      "bytes": 9399,
+      "sha256": "74cf3d8c7d27a5dbf233adf50532add857f0c4524e03b66ba732fd387cb210c8"
+    },
+    {
+      "source": "host-metadata/recovery-before.json",
+      "target": "recovery-before.json",
+      "bytes": 5638,
+      "sha256": "6da3c0a31f939fb872aaa830792628094f259a45b58c40d7126c905bc378d212"
+    },
+    {
+      "source": "host-metadata/recovery-after.json",
+      "target": "recovery-after.json",
+      "bytes": 5638,
+      "sha256": "6da3c0a31f939fb872aaa830792628094f259a45b58c40d7126c905bc378d212"
+    },
+    {
+      "source": "export/archives.json",
+      "target": "archives.json",
+      "bytes": 4017,
+      "sha256": "02209c9b225b3ae024f8aef4c94338c802b212721145cd4283a0a96b5fb1c888"
+    }
+  ]
+}

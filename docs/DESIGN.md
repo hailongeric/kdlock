@@ -116,9 +116,13 @@ pristine ABI1 spin root and an immutable image whose generated relative CALL
 operands are filled before publication. Quota exhaustion returns the unexecuted
 call to the waiter without JIT reentry. Helper checks remain absent, the
 two-word wrapper ABI is unchanged, and the selected KD mutex protocol is
-unchanged. Focused validation is tracked in
-[the validation guide](VALIDATION.md#taskname-and-xattr-helper-validation);
-the new standard-grid performance comparison remains pending.
+unchanged. The final `05876a4` bridge passed its
+[focused wrapper and live checks](../bench/results/10.176.26.71/bench/taskname-xattr-direct-api-20261019/DEVELOPMENT.md#candidate-3-checks).
+Its completed [diagnostic profiles](../bench/results/10.176.26.71/bench/taskname-xattr-direct-api-20261019/DEVELOPMENT.md#final-diagnostic-profiles)
+are separate from the [standard-grid comparison](../bench/results/10.176.26.71/bench/taskname-xattr-direct-api-20261019/README.md),
+which completed 567 validated sessions for read-only taskname and xattr tail
+with 16 and 128 entries. These three cases do not establish general performance
+parity or whole-kernel support.
 
 The register packet has three states:
 
@@ -147,7 +151,9 @@ image descriptor, which identifies their generated code independently of the
 entry's current publication. Mutex images are immutable after publication.
 
 The registry has 511 slots. Provider initialization allocates up to 64 page-aligned
-code blocks of 640 KiB each, or 40 MiB in total. The daemon uploads an image in
+ordinary code blocks of 640 KiB each, or 40 MiB in that pool. Direct helper calls
+use a separate optional pool of up to 64 blocks of the same size near kernel
+text, while retaining the shared 64-image limit. The daemon uploads an image in
 chunks and marks it NORMAL after the last complete chunk. NORMAL means that code
 was published; it does not mean a request executed that code.
 
@@ -158,8 +164,9 @@ Publishing the first ABI1 image with [checked pointer loads](design/admission.md
 the `strcmp` service or the `strscpy_pad` service instead allocates
 a separate immutable block. Existing spin frames retain their
 earlier descriptor and code; every later image for that entry is also immutable,
-even if it needs no guards or typed services. All versions remain in the same bounded pool
-until session teardown. [Lifetimes](design/lifetimes.md#executable-images-and-guarded-spin-transition)
+even if it needs no guards or typed services. All versions retain their allocated
+storage and consume the shared image limit until session teardown.
+[Lifetimes](design/lifetimes.md#executable-images-and-guarded-spin-transition)
 explains publication, source pins and frame leases.
 
 ## Limits and evidence

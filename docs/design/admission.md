@@ -785,10 +785,25 @@ words and the body/completion evidence remain unchanged. Separate
 hostcall counters continue to count actual dispatcher exits and resumptions.
 These observations never replace physical ownership or retirement records.
 
-The first direct-call candidate passed focused VM builds, affected unit checks
-and 14 live sessions; the [development record](../../bench/results/10.176.26.71/bench/taskname-xattr-direct-api-20261019/DEVELOPMENT.md)
-retains its counts and fixture failures. Further bridge tuning and its standard-grid
-performance comparison are in progress. The completed `88bb5a4` comparison above measures the
-dispatcher path and does not establish a result for direct calls. KD mutex's
-physical protocol, whole-kernel replacement limits and unestablished mutation
-delegation are unchanged.
+The final bridge at `05876a4` passed the affected VM unit checks and all ten
+candidate 3 live checks. Its 36-session KD screen and 18 diagnostic profiles also
+completed and drained. The [development record](../../bench/results/10.176.26.71/bench/taskname-xattr-direct-api-20261019/DEVELOPMENT.md)
+retains earlier candidates and fixture failures. The separate
+[`05876a4` standard-grid comparison](../../bench/results/10.176.26.71/bench/taskname-xattr-direct-api-20261019/README.md)
+completed all 567 sessions with validation and drain for read-only taskname and
+xattr tail queries with 16 or 128 entries. KD improved over the earlier
+dispatcher at 60 workers but remained below TCLock on these three workloads.
+Archive verification is complete. The separate n129 quota control passed with
+native waiter completion and full drain; its generated prefixes are correctly
+classified as partial execution, not completed delegated bodies.
+
+The [profile comparison](../../bench/results/10.176.26.71/bench/taskname-xattr-direct-api-20261019/DEVELOPMENT.md#final-diagnostic-profiles)
+confirms that the measured direct bodies no longer call the source-pin lookup,
+full-frame validator, continuation saver or C string-service adapters. The
+historical `88bb5a4` dispatcher repeated those operations for each string call.
+Moving helper calls into one generated invocation removes those repeated
+transitions; code is pinned before publication and exact ownership is still
+checked when binding and completing requests. Instrumented timings are unscored
+and cannot establish an exclusive cost or throughput gain. KD mutex's physical
+protocol, whole-kernel replacement limits and unestablished mutation delegation
+are unchanged.

@@ -55,6 +55,7 @@ check, missing dependency, crash or compile failure must not be reported as a pa
 | Wrapper, typed service and batch |`execution/test_jit_entry_scope.py`, `codegen/test_clobber_abi.py`, `test_jit_body_witness.py` |
 | Checked spin pointer loads | `admission/test_address_guards.py`, `admission/test_guard_flags.py`, `execution/test_jit_entry_scope.py`, `execution/test_mutex_images.py`; [live check](kernel/spin/address_guard/README.md) |
 | Original string helpers | `admission/test_strcmp_service.py`, `admission/test_strscpy_service.py`, `admission/test_text_regions.py`, `codegen/test_hostcall_codegen.py`, `execution/test_jit_entry_scope.py`; [live strcmp check](kernel/spin/string_service/README.md) |
+| Direct original-helper calls | `admission/test_native_calls.py`, `codegen/test_native_call_execution.py`, `execution/test_mutex_images.py`, `execution/test_jit_entry_scope.py`, `infrastructure/test_native_image.py` |
 | Completed-body observation overlay | `execution/test_bench_completion.py`; applies the real benchmark patch and checks dispatcher/batch counting |
 | Conditional instruction exit | `admission/test_native_escape.py`, `codegen/test_native_escape_codegen.py`, `execution/test_jit_entry_scope.py`, `execution/test_native_escape_restore.py`, `execution/test_mutex_images.py`; [live check](kernel/jit_escape/README.md) |
 | Mutex resources/terminal path |`mutex/test_mutex_resources.py`, `test_mutex_task_cache.py`, `test_mutex_terminal.py`, `test_mutex_outer_progress.py` |
@@ -106,7 +107,7 @@ cases refuse known full or partial observers, lost control identities and
 exhausted analysis budgets. Ordinary calls and data writes remain conservative.
 Decoded `memcpy` retains ordinary analysis and every copy effect; no separate
 copy classification or special RET extension is tested as maintained behavior.
-Focused validation passed through candidate 6, whose production code is unchanged
+Version 10 focused validation passed through candidate 6, whose production code is unchanged
 from candidate 5; only one regression-test operand was corrected. The
 [development record](../bench/results/10.176.26.71/bench/taskname-xattr-native-api-20261019/DEVELOPMENT.md)
 retains earlier failures and explains why the candidate 4 assertions requiring
@@ -212,9 +213,22 @@ unit success do not imply live workload or performance acceptance.
 The [direct-call contract](../docs/design/admission.md#direct-original-helper-calls)
 preserves the original arguments, actual CALL return word and two-word wrapper
 ABI. Generated-image readback validates relocated CALL operands outside timing;
-it does not inspect helper instructions or string arguments. Focused outcomes
-are recorded in [validation](../docs/VALIDATION.md#taskname-and-xattr-helper-validation).
-The current standard-grid performance comparison remains pending.
+it does not inspect helper instructions or string arguments. Final candidate 3
+passed both basic C programs and six affected drivers. Its executable wrapper
+fixture completed 15,663 assertions, covering both incoming stack alignments,
+register/flag preservation, quotas and actual return-word handling. All ten
+affected live checks and the separate 36-session KD screen passed and drained.
+All 18 diagnostic profiles also completed with tracing restored; their timings
+are excluded from scored throughput. The
+[development record](../bench/results/10.176.26.71/bench/taskname-xattr-direct-api-20261019/DEVELOPMENT.md#candidate-3-checks)
+retains earlier failed batches and source-specific outcomes. The separate
+[`05876a4` standard-grid comparison](../bench/results/10.176.26.71/bench/taskname-xattr-direct-api-20261019/README.md)
+completed all 567 sessions with validation and drain for read-only taskname and
+the two xattr tail workloads. Archive verification is complete. The separate
+n129 quota control also passed with native waiter completion and full drain;
+its partial generated execution is excluded from throughput comparisons.
+These focused checks and three workload comparisons
+are not a full-suite or whole-kernel acceptance claim.
 
 The [mutex task/ACK probe](kernel/mutex/run_task_selftest.py) and selected SELFTEST
 hotlock/entry probes check resource/routing/drain without executing JIT bodies;

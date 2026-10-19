@@ -184,9 +184,12 @@ The original [`strcmp`](design/admission.md#original-strcmp-service) and
 [`strscpy_pad`](design/admission.md#original-strscpy_pad-writing-service)
 services require stable, resident ordinary source strings and one outer spin
 owner. They do not infer object lifetime or authorize general copying. `strcmp`
-has a private 128-call allowance; `strscpy_pad`, scalar services and lock controls
-share the existing 16-call allowance. The current revision removes helper code
-checks, argument scans and runtime destination checks, using the original C
+has a private 128-call allowance; on the dispatcher route, `strscpy_pad`, scalar
+services and lock controls share the existing 16-call allowance. The direct-call
+route has separate per-invocation limits of 128 comparisons and 16 padding calls;
+exhaustion transfers the pending original call to the waiter before its effects.
+The implementation removes helper code checks, argument scans and runtime
+destination checks, using the original C
 caller's guarantees. For these two services in selected reviewed C callers,
 analysis records temporary CALL return-address storage separately from ordinary
 object data. The source
@@ -199,17 +202,32 @@ behavior and separate control storage only for `strcmp` and `strscpy_pad`.
 Decoded `memcpy` has no special classification or return handling; its original
 loads and writes remain analyzed. Focused VM validation passed for read-only
 taskname, all eight xattr controls and the string/exit probes; the
-[current development record](../bench/results/10.176.26.71/bench/taskname-xattr-native-api-20261019/DEVELOPMENT.md)
+[preceding development record](../bench/results/10.176.26.71/bench/taskname-xattr-native-api-20261019/DEVELOPMENT.md)
 preserves the failed intermediate checks and the final receipts. See the
 [selected-caller contract](design/admission.md#original-call-word-aliases).
-The [`88bb5a4` standard-grid comparison](../bench/results/10.176.26.71/bench/taskname-xattr-native-api-20261019/README.md)
+The preceding [`88bb5a4` standard-grid comparison](../bench/results/10.176.26.71/bench/taskname-xattr-native-api-20261019/README.md)
 is complete: 567 correct, fully drained sessions cover read-only taskname and
 xattr tail queries at 16 and 128 attributes, with fresh Linux Native and TCLock
 controls. KD returned generated bodies in 167 of its 189 sessions; 22 recorded
 no generated entry. These execution outcomes remain separate in the report.
-KD's whole-run throughput at 60 workers is below both comparators in all three
-cases. Explaining that remaining performance gap requires profiling; the
-comparison alone does not isolate the cost of service dispatch or locking.
+That version's whole-run throughput at 60 workers is below both comparators in
+all three cases. Subsequent profiles identified repeated dispatcher work: one
+source-pin lookup per string call and 7/37/261 frame validations per returned
+taskname/xattr-n16/xattr-n128 body. Version 11 calls the original helpers within
+one generated invocation and pins the code at immutable-image publication.
+All six new KD diagnostic cases returned bodies with zero calls to those
+dispatcher routines. Registers, actual source CALL words, exact ownership,
+quotas and completion checks remain. Fixed request and translated-call costs
+remain visible in source, but their individual time costs are unmeasured. The
+[current report](../bench/results/10.176.26.71/bench/taskname-xattr-direct-api-20261019/README.md)
+keeps the new full grid, earlier screens and diagnostic profiles separate.
+Its 567-session matrix is complete: 168 KD sessions returned bodies and 21 had
+no generated entry. At 60 workers, KD reaches 4.521/2.368/0.573 Mops/s for
+taskname/xattr n16/xattr n128, above fresh Native but below TCLock. Six of the
+61 compatible historical points have lower whole-run throughput, with the
+largest regression about 3.65%; low- and mid-count gaps to fresh controls remain.
+The unscored 129-comparison control passed original-waiter continuation and
+exact retirement, but its generated prefixes do not count as completed bodies.
 
 The 20% taskname mutation control is correct but has no returned delegated
 bodies; its delegation acceptance remains open, and the earlier strict failure

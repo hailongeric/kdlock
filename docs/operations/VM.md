@@ -162,9 +162,22 @@ Replay compares every byte against the uploaded image with only the recorded
 relative CALL operands changed. Capture the exact original helper symbol
 addresses and kernel identity separately for independent reconstruction.
 
-The v10 implementation passed
-[focused correctness checks](../VALIDATION.md#taskname-and-xattr-helper-validation)
-through candidate 6. The
+The final direct-helper implementation `05876a4` passed its
+[focused wrapper and live checks](../../bench/results/10.176.26.71/bench/taskname-xattr-direct-api-20261019/DEVELOPMENT.md#candidate-3-checks)
+and completed all 18 [diagnostic profiles](../../bench/results/10.176.26.71/bench/taskname-xattr-direct-api-20261019/DEVELOPMENT.md#final-diagnostic-profiles)
+with drain and tracing restored. Profiles and the separate KD-only screen do not
+establish performance against fresh controls. The separate
+[standard-grid comparison](../../bench/results/10.176.26.71/bench/taskname-xattr-direct-api-20261019/README.md)
+completed 567 validated, drained sessions for read-only taskname and xattr tail
+with 16 and 128 entries. Main-round and development archives passed independent
+preservation checks. The separate n129 quota control and its archive check also
+passed; its generated prefixes and native completion are unscored. Retain the
+failed early profile and its missing pre-refusal tracing snapshot as documented
+in the [development record](../../bench/results/10.176.26.71/bench/taskname-xattr-direct-api-20261019/DEVELOPMENT.md#development-and-quota-archive-preservation).
+
+The historical v10 dispatcher passed
+[focused correctness checks](../../bench/results/10.176.26.71/bench/taskname-xattr-native-api-20261019/DEVELOPMENT.md#final-live-acceptance)
+through candidate 6. Its
 [`88bb5a4` standard-grid comparison](../../bench/results/10.176.26.71/bench/taskname-xattr-native-api-20261019/README.md)
 completed all 567 sessions with validation and drain, and its per-session kernel
 logs contained no recorded fault matches. This does not establish taskname

@@ -342,16 +342,23 @@ publication, lifetime and execution restrictions.
 
 The v10 implementation passed focused correctness checks and completed all 567
 sessions of the [standard-grid comparison](../bench/results/10.176.26.71/bench/taskname-xattr-native-api-20261019/README.md)
-with validation and drain. KD remains slower than Linux Native and TCLock at
-60 workers in all three measured workloads. Earlier
+with validation and drain. In that historical dispatcher round, KD was slower
+than Linux Native and TCLock at 60 workers in all three measured workloads. Earlier
 [functional checks](../bench/results/10.176.26.71/bench/taskname-xattr-20261018/DEVELOPMENT.md)
 and the [comparison record](../bench/results/10.176.26.71/bench/taskname-xattr-20261018/README.md)
 belong to the frozen `c79d84f` checked implementation. Its probe for native return
 after a failed string check does not describe current behavior.
-The initial version 11 direct route passed 14 focused live sessions. The later
-reduction of bridge instructions awaits focused validation. Its standard
-worker-grid performance comparison is pending; neither historical round measures
-this route. Taskname mutation delegation remains unestablished.
+The final version 11 bridge passed its affected unit checks, including 15,663
+executable-wrapper assertions, and all ten candidate 3 live checks. Its separate
+36-session KD screen and 18 diagnostic profiles completed and drained; the
+[development record](../bench/results/10.176.26.71/bench/taskname-xattr-direct-api-20261019/DEVELOPMENT.md#candidate-3-checks)
+retains the exact source versions and earlier failures. The separate
+[`05876a4` standard-grid comparison](../bench/results/10.176.26.71/bench/taskname-xattr-direct-api-20261019/README.md)
+completed all 567 sessions with validation and drain for read-only taskname and
+the two xattr tail workloads. Archive verification and the separate n129 quota
+control are complete. That control verified native waiter completion after
+quota exhaustion and full drain. Taskname mutation delegation remains
+unestablished.
 
 ## Native continuation and final restore
 

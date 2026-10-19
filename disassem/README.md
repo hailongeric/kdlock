@@ -129,7 +129,7 @@ words. The maintained revision keeps conservative ordinary-CALL analysis and sep
 control storage only for the two string services. It changes no source load or
 store and does not make arbitrary pointers safe. Focused unit and live correctness
 checks passed, as recorded in the
-[current development record](../bench/results/10.176.26.71/bench/taskname-xattr-native-api-20261019/DEVELOPMENT.md);
+[version 10 development record](../bench/results/10.176.26.71/bench/taskname-xattr-native-api-20261019/DEVELOPMENT.md);
 see the [admission guide](../docs/design/admission.md#original-call-word-aliases)
 and [archived candidate 4](../bench/results/10.176.26.71/bench/taskname-xattr-native-api-20261019/DEVELOPMENT.md#archived-alias-experiment-and-next-scope).
 
@@ -140,12 +140,19 @@ A separate 20% taskname mutation control with preparation disabled passed
 correctness on Linux Native, TCLock and KD but recorded zero KD generated bodies;
 it does not establish delegation or supersede the earlier strict failure. The
 [`88bb5a4` standard-grid comparison](../bench/results/10.176.26.71/bench/taskname-xattr-native-api-20261019/README.md)
-completed all 567 sessions with validation and drain. KD remains slower than
-Linux Native and TCLock at 60 workers in all three measured workloads.
-The initial version 11 direct-call route passed 14 focused live sessions.
-Its later bridge-instruction reduction awaits focused validation. Standard
-worker-grid performance remains pending; the completed version 10 results above
-measure the dispatcher route.
+completed all 567 sessions with validation and drain. In that historical
+dispatcher round, KD was slower than Linux Native and TCLock at 60 workers in
+all three measured workloads.
+The final version 11 direct bridge passed the affected unit and live checks,
+its separate KD screen and all 18 diagnostic profiles. The
+[current development record](../bench/results/10.176.26.71/bench/taskname-xattr-direct-api-20261019/DEVELOPMENT.md#candidate-3-checks)
+retains the generated-wrapper checks and earlier failures. The separate
+[`05876a4` standard-grid comparison](../bench/results/10.176.26.71/bench/taskname-xattr-direct-api-20261019/README.md)
+completed all 567 sessions with validation and drain for the three API
+workloads. Archive verification and the separate n129 quota control are complete;
+that control verified native waiter completion after quota exhaustion and drain.
+Profile timings are unscored, and the completed version 10 results above measure
+the dispatcher route.
 
 The preceding
 `c79d84f` implementation passed the ordinary taskname shell's 16-worker read-only

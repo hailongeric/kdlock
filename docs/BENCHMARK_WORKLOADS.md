@@ -56,8 +56,8 @@ body proves actual delegated execution. Keep runs with no such completions
 | `seek` | Mutex outer pair above | Eligible offset checks and `f_pos`/`f_version` stores. File-reference acquisition/release stays outside the protected body. |
 | `utsname` | Rwlock writer pair and local read pair above | Only the fixed-size name update may delegate. User copies, permission checks, entropy mixing and notification execute on the original caller outside the lock. The current KD adapter uses a spinning rwlock, not KD rwsem. |
 | `argbounds` | Spin direct pair above | Eligible four-word copy under exclusive spin ownership. Optional mutations execute locally through the same KD physical lock. This is an extracted record, not a live process's memory map. |
-| `taskname` | `KD_SPIN_DIRECT_LOCK` / `KD_SPIN_DIRECT_UNLOCK` | The original `strscpy_pad(..., 64)` runs through a native API service that models all 64 destination writes. Read-only correctness, returned-body checks and the `88bb5a4` standard-grid comparison are complete. Its separate 20% mutation control passed correctness with zero KD generated bodies; strict mutation-case delegation remains unestablished. |
-| `xattr` | Spin direct pair above | Original list traversal and `strcmp` calls remain unchanged; the native API service relies on the reviewed caller contract below. The real `memcpy` value copy remains in the learned body. All eight query/list-size correctness controls passed with matching generated entries and completions. The `88bb5a4` tail-query standard-grid comparison is complete. |
+| `taskname` | `KD_SPIN_DIRECT_LOCK` / `KD_SPIN_DIRECT_UNLOCK` | Generated code calls the original `strscpy_pad(..., 64)` and models all 64 destination writes. Read-only correctness, returned-body checks and the `05876a4` standard-grid comparison are complete. The preceding version's separate 20% mutation control passed correctness with zero KD generated bodies; mutation-case delegation remains unestablished. |
+| `xattr` | Spin direct pair above | Original list traversal, `strcmp` calls and the real `memcpy` value copy remain present. Generated code calls `strcmp` directly using the reviewed caller contract below. All eight query/list-size correctness controls passed with matching entries and completions; the `05876a4` tail-query standard-grid comparison is complete. |
 
 The corresponding source is in the [spin shell](../workload_modules/spin_cacheline/direct.h),
 [mutex shell](../workload_modules/mutex_cacheline/module.c),
@@ -92,10 +92,10 @@ instruction refusal. These mutex markers are separate from the spin-specific
 taskname/xattr changes described below. Neither mechanism enables shared-reader
 delegation or supplies the missing full mmap interfaces.
 
-Taskname and xattr use the original kernel string APIs with effects
-known effects are described in the [admission guide](design/admission.md#original-strcmp-service).
+Taskname and xattr use the original kernel string APIs. Their effects are
+described in the [admission guide](design/admission.md#original-strcmp-service).
 Versions 10 and 11 perform no helper-code, helper-specific CALL, string-content or
-runtime destination checks. It uses the same valid storage and lifetime
+runtime destination checks. They use the same valid storage and lifetime
 guarantees as the native API caller. Ordinary address/register analysis and the
 common physical-owner, frame and return-continuation checks remain active.
 The taskname writer retains a statically known count of 64 and models all 64
@@ -111,7 +111,7 @@ and RET dispatch. It has no special classification or return path. Generic
 partial-CALL-alias refinement remains archived; the maintained revision keeps conservative
 ordinary-CALL analysis and separate control storage only for the two string
 services. Its focused unit and live correctness checks passed, as recorded in the
-[current development record](../bench/results/10.176.26.71/bench/taskname-xattr-native-api-20261019/DEVELOPMENT.md).
+[preceding development record](../bench/results/10.176.26.71/bench/taskname-xattr-native-api-20261019/DEVELOPMENT.md).
 A body needing an address guard still needs independent proof that native
 continuation does not consume incoming arithmetic flags; the string APIs do
 not supply that proof. These changes do not validate arbitrary callers or
@@ -122,32 +122,55 @@ eligible spin bodies call the original API without leaving generated code for
 each comparison or copy. Source-code references are retained when the immutable
 image is published. Ownership, the actual source return word, call limits and
 completion evidence remain required. The original payload and KD mutex protocol
-are unchanged. The [new development record](../bench/results/10.176.26.71/bench/taskname-xattr-direct-api-20261019/DEVELOPMENT.md)
-records focused correctness checks and ongoing performance work; the completed
-`88bb5a4` numbers below describe the preceding dispatcher implementation.
+are unchanged. The [current development record](../bench/results/10.176.26.71/bench/taskname-xattr-direct-api-20261019/DEVELOPMENT.md)
+records completed focused checks, separate screening runs and diagnostic profiles.
+The final bridge fixture passed 15,663 assertions, including register and flag
+preservation, both incoming stack alignments, actual source return words and
+quota exits. Profiles confirmed removal of the repeated source-pin lookups and
+full-frame validations while generated bodies returned. Those diagnostic timings
+are unscored. The [standard-grid report](../bench/results/10.176.26.71/bench/taskname-xattr-direct-api-20261019/README.md)
+now records the completed comparison against fresh Linux Native and TCLock runs.
 
-Version 10 candidate 6 passed all eight xattr controls at 16 workers: front hit,
+Version 11 passed all eight xattr controls at 16 workers: front hit,
 tail hit, missing name and size-only query, each with 16 and 128 attributes and
 64-byte values. Each recorded correct results and matching generated-body
 entries and completions. Read-only taskname passed on Linux Native, TCLock and
 KD, including returned KD bodies. The original-string service, spin address-guard
-recovery and mutex instruction-marker probes also passed. A separate 20%
+recovery and mutex instruction-marker probes also passed. The preceding version's separate 20%
 taskname mutation control with `--helper-waves 0` passed correctness on all
 three backends but recorded zero KD generated bodies. That control does not
 establish mutation-case delegation or replace the earlier strict failure.
-These focused checks are separate from the completed
-[`88bb5a4` performance comparison](../bench/results/10.176.26.71/bench/taskname-xattr-native-api-20261019/README.md).
-That round contains 567 correct, fully drained sessions: read-only taskname and
-xattr tail queries at n16/n128, each with Linux Native, TCLock and KD on the
-standard worker grid and three repetitions. Of its 189 KD sessions, 167 returned
-generated bodies and 22 recorded no generated entry (`NO_JIT`). Repetitions with
-different execution statuses remain separate. At 60 workers, KD's whole-run
-throughput is below both fresh comparators in all three workloads. The report
-contains the full results and the separately matched historical comparison;
-completion of the matrix does not establish a performance advantage.
 
-The preceding
-implementation frozen in `c79d84f` has separate
+The current [`05876a4` comparison](../bench/results/10.176.26.71/bench/taskname-xattr-direct-api-20261019/README.md)
+contains 567 correct, fully drained sessions: read-only taskname and
+xattr tail queries at n16/n128, each with Linux Native, TCLock and KD on the
+standard worker grid and three repetitions. Of its 189 KD sessions, 168 returned
+at least one complete generated body (`PASS`) and 21 recorded no generated entry
+(`NO_JIT`). None recorded entries without a completed body (`PARTIAL_JIT`).
+`PASS` does not imply that most operations delegated: all three workloads had
+zero generated entries at one and two workers, and some other low-worker cases
+had few completed bodies. Taskname and xattr n16 had mixed statuses at three
+workers; those repetitions are not pooled into one median.
+
+At 60 workers, KD's whole-run medians were 4.521, 2.368 and 0.573 million
+operations per second for taskname, xattr n16 and xattr n128 respectively.
+Each exceeded its fresh Linux Native comparator and remained below TCLock.
+These results do not imply the same ordering at other worker counts or for
+peak rates. The [tables](../bench/results/10.176.26.71/bench/taskname-xattr-direct-api-20261019/tables.md)
+retain the full grid, completed-body shares and separate peak measurements.
+The main archive audit passed, checking 265 Git source files, 16 binaries and
+315 actual loaded image captures. Separate development and quota archive checks
+also passed preservation; their failed attempts and missing historical tracing
+snapshot remain explicit in the [development record](../bench/results/10.176.26.71/bench/taskname-xattr-direct-api-20261019/DEVELOPMENT.md#development-and-quota-archive-preservation).
+
+The preceding [`88bb5a4` dispatcher comparison](../bench/results/10.176.26.71/bench/taskname-xattr-native-api-20261019/README.md)
+remains historical evidence: its 567 sessions were correct and drained, with
+167 KD `PASS` and 22 `NO_JIT` results. At 60 workers its KD whole-run rates were
+below both fresh comparators in all three cases. Current and historical samples
+are kept separate; the current report compares compatible three-repetition
+groups without pooling source revisions.
+
+The older implementation frozen in `c79d84f` has separate
 [functional evidence](../bench/results/10.176.26.71/bench/taskname-xattr-20261018/DEVELOPMENT.md)
 for the ordinary taskname shell and all eight xattr query/list-size combinations.
 At 16 workers, taskname's read-only check completed 3,200,000 operations with
@@ -544,18 +567,32 @@ successful value queries. These are independent dimensions. The current main
 comparison uses tail queries at n16/n128 and v64: each operation searches the
 list and copies the real 64-byte value. It is not the `size` query. A front hit
 uses one `strcmp`; tail, miss and size queries use N comparisons. At n128, the
-search reaches the allowance of 128 `strcmp` service calls per body; ordinary
-helper/control continuations retain a separate allowance of 16.
+search reaches the allowance of 128 direct `strcmp` calls per generated
+invocation. An additional comparison transfers the unexecuted call to the
+original waiter, which finishes the native suffix under the existing lock.
+The direct route cannot reenter to reset its quota. Other service/control
+continuations use their own dispatcher route and allowance.
 
-Version 10 candidate 6 passed all eight front/tail/miss/size controls at n16/n128,
+The separate n129 tail-query control passed at 16 workers with 64-byte values.
+Of 329,728 correct measured operations, 329,228 entered generated code, reached
+the 128-comparison limit and then completed the remaining original API calls on
+the waiter. No complete generated body was recorded: this expected
+`PARTIAL_JIT` result tests native continuation after earlier effects, not
+full-body delegation or throughput. The session drained with exact source and
+frame retirement. The [current report](../bench/results/10.176.26.71/bench/taskname-xattr-direct-api-20261019/README.md)
+keeps this unscored control separate from the n16/n128 matrix.
+
+Version 11 passed all eight front/tail/miss/size controls at n16/n128,
 v64 and 16 workers, with correct results and matching generated entries and
 completed bodies. The original value-copy path remained present. These
-[focused checks](../bench/results/10.176.26.71/bench/taskname-xattr-native-api-20261019/DEVELOPMENT.md)
-establish correctness and actual delegation. The separate
+[focused checks](../bench/results/10.176.26.71/bench/taskname-xattr-direct-api-20261019/DEVELOPMENT.md)
+establish correctness and actual delegation. The current
+[`05876a4` comparison](../bench/results/10.176.26.71/bench/taskname-xattr-direct-api-20261019/README.md)
+completed the standard-grid tail-query measurements. The preceding
 [`88bb5a4` comparison](../bench/results/10.176.26.71/bench/taskname-xattr-native-api-20261019/README.md)
 completed the standard-grid tail-query measurements for n16/n128. Front, miss
 and size-only cases remain correctness controls, without their own throughput
-matrix in that round.
+matrix in either round.
 
 The historical address-analysis refusal is retained in its source-specific
 reports. Before the version 10 revision, candidate 11 passed all eight front/tail/miss/size
@@ -576,7 +613,7 @@ automatically added to an ordinary rwlock or full-catalog sweep.
 | --- | --- | --- |
 | `--lock-kind rwsem` | c01/c08 or RCUHT; `--backends native kdlock` | Sleeping local readers and explicit writers that may delegate. KD blocks new readers and waits for existing readers before entering the unchanged mutex delegation queue. `--delegate off` selects a distinct ordinary-local KD control with zero JIT. No TCLock sleeping-rwsem port. |
 | `--lock-kind spin --workloads argbounds` | Four-word argument-boundary snapshot; Native/TCLock/KD | Every snapshot takes an exclusive spinlock; KD may delegate reads. Controlled optional mutations use the same selected lock. |
-| `--lock-kind spin --workloads taskname` | Exact `strscpy_pad()` copy from a 16-byte name field to a 64-byte padded buffer; Native/TCLock/KD | Read-only correctness, returned-body checks and the `88bb5a4` standard-grid comparison are complete. Its 20% mutation control passed correctness with zero KD generated bodies and does not supersede earlier strict delegation failures. Explicit `--delegate off` gives a separate KD local control. |
+| `--lock-kind spin --workloads taskname` | Exact `strscpy_pad()` copy from a 16-byte name field to a 64-byte padded buffer; Native/TCLock/KD | Read-only correctness, returned-body checks and the `05876a4` standard-grid comparison are complete. The preceding version's 20% mutation control passed correctness with zero KD generated bodies and does not supersede earlier strict delegation failures. Explicit `--delegate off` gives a separate KD local control. |
 
 Snapshots use module-owned records, fixed lifetimes and worker-local kernel
 outputs. They do not operate on live task/MM structures, invoke procfs, fetch
@@ -826,7 +863,7 @@ identifies the expensive shared object before a real-object adapter is designed.
 | Proposed case | Measured operation and controls | Feasibility |
 | --- | --- | --- |
 | `proc-arg-bounds` | Copy four words under one module-owned exclusive spinlock into stable worker-local kernel storage; optionally alternate valid tuples under the same lock. Distinct-record control remains an extension. | Implemented as `--lock-kind spin --workloads argbounds`; require fresh returned-body evidence for current delegation claims. |
-| `proc-comm-snapshot` | Exact `strscpy_pad()` name copy, 16-byte source and 64-byte padded destination, with separately labelled mutations; distinct-record control remains an extension | Implemented as `--lock-kind spin --workloads taskname`, including KD local control. Read-only correctness, returned-body checks and the `88bb5a4` standard-grid comparison are complete. Mutation correctness passed with zero KD generated bodies; earlier strict delegation failures remain recorded. A different copy loop is a different payload. |
+| `proc-comm-snapshot` | Exact `strscpy_pad()` name copy, 16-byte source and 64-byte padded destination, with separately labelled mutations; distinct-record control remains an extension | Implemented as `--lock-kind spin --workloads taskname`, including KD local control. Read-only correctness, returned-body checks and the `05876a4` standard-grid comparison are complete. The preceding version's mutation correctness control passed with zero KD generated bodies; earlier strict delegation failures remain recorded. A different copy loop is a different payload. |
 | `proc-stat` / `proc-status` | Independent observers read the same large thread group versus distinct groups; idle, CPU-active and exit/reaping variants kept separate | Native-only candidates requiring implementation; preserve actual seqlock/RCU/IRQ paths. No full-path KD adapter. |
 | `proc-cmdline-mmap` | Read stable arguments while target threads map/unmap disjoint scratch regions in that same MM. Include a no-writer control; vary argument length and VMA count. | Native mmap-contention candidate; no full mmap adapter for KD or TCLock. The synthetic KD rwsem comparison does not implement this path. |
 | `proc-maps` / `proc-smaps` | Complete proc-file reads while a target changes separate mappings; vary actual VMA count and resident bytes independently | Native workloads; distinguish VMA formatting from page-table accounting and preserve allowed concurrent-update semantics |
@@ -842,11 +879,14 @@ In that historical version, the exact task-name helper was refused because
 explicit local execution. Image publication and an entry witness did not
 establish a complete delegated body. Later API-service implementations are
 distinct source versions and do not retroactively change those outcomes. The
-current version 10 removes helper-specific checks. Its focused correctness and
+preceding version 10 removed helper-specific checks. Its focused correctness and
 read-only delegation checks passed, and the
 [`88bb5a4` comparison](../bench/results/10.176.26.71/bench/taskname-xattr-native-api-20261019/README.md)
-records the completed extracted-taskname and xattr tail-query matrix. This does
-not measure full procfs or end-to-end `ps` performance.
+records its completed extracted-taskname and xattr tail-query matrix. The current
+version 11 calls the original helpers directly inside generated code; its
+[`05876a4` comparison](../bench/results/10.176.26.71/bench/taskname-xattr-direct-api-20261019/README.md)
+also completed those three cases. Neither round measures full procfs or
+end-to-end `ps` performance.
 
 For a future round, use the standard 1–8 and 12–60-by-four observer/worker grid
 and three repetitions, keeping target population independent of worker count:

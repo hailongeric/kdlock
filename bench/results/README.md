@@ -5,12 +5,15 @@ reader/writer semaphore (rwsem) waiting implementation from `c21345b`. See
 [current performance](../../docs/PERFORMANCE.md) for results and retained
 regressions, and [terminology](../../docs/TERMINOLOGY.md) for execution and
 measurement definitions.
-The [`88bb5a4` taskname/xattr comparison](10.176.26.71/bench/taskname-xattr-native-api-20261019/README.md)
-records the removal of helper-specific checks: 567 validated, drained sessions
-with fresh Native/TCLock controls and a separate historical KD comparison. It
-preserves low-count regressions, execution shares and the remaining 60-worker whole-run
-gap to both controls. The [checked-helper baseline](10.176.26.71/bench/taskname-xattr-20261018/README.md)
-retains its own source and evidence.
+The [`05876a4` taskname/xattr comparison](10.176.26.71/bench/taskname-xattr-direct-api-20261019/README.md)
+records direct calls to the original string APIs within generated spin bodies:
+567 validated, drained sessions with fresh Native/TCLock controls. At 60 workers,
+KD reaches 4.521/2.368/0.573 Mops/s for taskname/xattr n16/xattr n128, above Native
+and below TCLock. The report retains low-count regressions, execution shares,
+profiles, failed development attempts and a separate quota-continuation check.
+The [preceding dispatcher comparison](10.176.26.71/bench/taskname-xattr-native-api-20261019/README.md)
+and [checked-helper baseline](10.176.26.71/bench/taskname-xattr-20261018/README.md)
+retain their own source and evidence; their timings are never pooled.
 
 The [instruction-exit receipt](10.176.26.71/tests/native-instruction-exit-20261018/README.md)
 records the later checked waiter-continuation feature and its failures/final

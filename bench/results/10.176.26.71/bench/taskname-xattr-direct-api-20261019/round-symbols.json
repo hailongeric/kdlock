@@ -1,0 +1,14 @@
+{
+  "schema": 1,
+  "boot_id": "b65f0205-c8f9-4385-8b13-039cbce243a6",
+  "kernel_release": "6.1.159-kdclobber2",
+  "running_build_id": "5ca28058e156f34a2c7fe91e8e0fbf92f4e51960",
+  "notes_path": "round-kernel-notes.bin",
+  "notes_sha256": "470196ba7d5d668e441f807358efa00ad3857893a03c14bb367b9190bd022322",
+  "kallsyms_path": "round-kallsyms.txt",
+  "kallsyms_sha256": "38052394eef347edcbfdee4e0b3ea34aaabf11f9b53e9b6bf6c3c1a5af2af6d2",
+  "symbols": {
+    "strscpy_pad": 18446744071586069776,
+    "strcmp": 18446744071593528208
+  }
+}

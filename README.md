@@ -39,14 +39,18 @@ covers c01/post64 and `api-pipebytes-query-n16` at 1–8 workers and 12–60 by 
 with three repetitions and Native/TCLock controls. The
 [performance guide](docs/PERFORMANCE.md) retains variation and regression limits.
 
-The original `strcmp` and `strscpy_pad` services now rely on the reviewed caller's
-memory and lifetime guarantees, without helper-code checks, string pre-scans or
-runtime destination checks. The
-[`88bb5a4` taskname/xattr comparison](bench/results/10.176.26.71/bench/taskname-xattr-native-api-20261019/README.md)
-contains 567 validated, drained sessions. At 60 workers the revised KD whole-run rates
-improve over the checked implementation but remain below fresh Native and TCLock
-controls. The report preserves low-count regressions and the separate taskname
-mutation case, which remains unaccepted for delegated execution.
+Eligible spin-delegated bodies now call the original `strcmp` and `strscpy_pad`
+inside the same generated invocation, removing repeated dispatcher transitions.
+No helper-code checks, string pre-scans or runtime destination checks are added;
+exact ownership, source lifetime and return bookkeeping remain. The KD mutex
+protocol is unchanged.
+
+The [`05876a4` taskname/xattr comparison](bench/results/10.176.26.71/bench/taskname-xattr-direct-api-20261019/README.md)
+contains 567 validated, drained sessions. At 60 workers, KD reaches
+4.521/2.368/0.573 Mops/s for taskname/xattr n16/xattr n128: 1.838×/4.901×/6.528×
+the preceding dispatcher implementation. All three exceed fresh Native there
+and remain below TCLock. The report retains low-count regressions, complete
+scaling results and the still-unaccepted taskname mutation delegation case.
 
 ## Documentation
 

@@ -1,0 +1,12 @@
+{
+  "archive_receipt_sha256": "07912d66d9da11cd94d6fd6f2a2b980b1a72a6af58e204ca73b59c6f7cf89c88",
+  "complete": true,
+  "errors": [],
+  "hashed_files": 496,
+  "jit_completions": 0,
+  "jit_status": "PARTIAL_JIT",
+  "paths": 575,
+  "reader_sha256": "3c0705d9fea7bd831678db9c28532099552baa397355c1e8b33770552edad9b6",
+  "scope": "Quota archive preservation; not a performance score",
+  "sessions": 1
+}

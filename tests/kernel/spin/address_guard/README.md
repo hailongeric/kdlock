@@ -72,9 +72,14 @@ API without helper prechecks. Neither contract removes this pointer-load probe.
 That string probe now requires the optional version 11
 [direct-call route](../../../../docs/design/admission.md#direct-original-helper-calls).
 Direct-call images cannot also contain address guards; the two probes test
-separate execution paths. Focused results are linked from
-[validation](../../../../docs/VALIDATION.md#taskname-and-xattr-helper-validation),
-while direct-route standard-grid performance remains pending.
+separate execution paths. This address-guard probe passed and drained in
+[candidate 2](../../../../bench/results/10.176.26.71/bench/taskname-xattr-direct-api-20261019/DEVELOPMENT.md#candidate-2-checks).
+The final bridge's [candidate 3 checks](../../../../bench/results/10.176.26.71/bench/taskname-xattr-direct-api-20261019/DEVELOPMENT.md#candidate-3-checks)
+passed separately; they did not rerun this unchanged guard path. The separate
+[direct-route comparison](../../../../bench/results/10.176.26.71/bench/taskname-xattr-direct-api-20261019/README.md)
+completed 567 validated sessions for read-only taskname and xattr tail with 16
+and 128 entries. Those images contain no address guards and do not measure this
+guard path.
 
 A successful run additionally requires all workers to join, zero active
 execution records, source retirement, ordinary module unload and a final idle

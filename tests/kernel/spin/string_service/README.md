@@ -67,13 +67,16 @@ checks. It does not treat unreadable, expired or concurrently mutated strings
 as valid input. General helper admission and checked-address refusal retain
 separate probes.
 
-The version 10 candidate 6 run passed all four phases through the dispatcher
-with correct effects, complete
-delegated bodies and normal retirement. The
-[current validation record](../../../../docs/VALIDATION.md#taskname-and-xattr-helper-validation)
-links the frozen source and raw receipts and preserves earlier failed attempts.
-Version 11 tests the direct route separately. Its standard-grid performance
-comparison remains pending; the historical result does not measure direct calls.
+The current version 11 probe passed all four phases with the final `05876a4`
+direct-helper bridge: correct effects, complete delegated bodies and normal
+retirement. The [candidate 3 record](../../../../bench/results/10.176.26.71/bench/taskname-xattr-direct-api-20261019/DEVELOPMENT.md#candidate-3-checks)
+also records the generated-wrapper fixture and affected live workloads.
+The earlier version 10 candidate 6 dispatcher result remains
+[historical evidence](../../../../bench/results/10.176.26.71/bench/taskname-xattr-native-api-20261019/DEVELOPMENT.md#final-live-acceptance).
+The separate [direct-route standard-grid comparison](../../../../bench/results/10.176.26.71/bench/taskname-xattr-direct-api-20261019/README.md)
+completed 567 validated sessions for read-only taskname and xattr tail with 16
+and 128 entries. Neither this probe nor the diagnostic profiles supplies those
+throughput measurements.
 
 Acceptance requires workers to join, zero active execution records, source
 retirement, ordinary module unload and final idle inspection. A timeout retains

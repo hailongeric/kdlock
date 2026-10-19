@@ -150,12 +150,17 @@ accepts only a pristine ABI1 spin root and cannot reenter after a FULL exit.
 It preserves the actual source CALL word and enforces the same invocation
 allowances, returning an excess unexecuted call to the original waiter. Its
 private result counters do not change the two-word wrapper ABI or KD mutex
-protocol. Current focused validation is recorded
-[centrally](../docs/VALIDATION.md#taskname-and-xattr-helper-validation);
-the direct-route standard-grid comparison remains pending.
+protocol. The final `05876a4` bridge passed its
+[focused wrapper and live checks](../bench/results/10.176.26.71/bench/taskname-xattr-direct-api-20261019/DEVELOPMENT.md#candidate-3-checks).
+Its [diagnostic profiles](../bench/results/10.176.26.71/bench/taskname-xattr-direct-api-20261019/DEVELOPMENT.md#final-diagnostic-profiles)
+completed with tracing restored. The separate
+[standard-grid comparison](../bench/results/10.176.26.71/bench/taskname-xattr-direct-api-20261019/README.md)
+completed 567 validated sessions for read-only taskname and xattr tail with 16
+and 128 entries. Archive audits and the additional live quota control remain
+separate from these throughput results.
 
 The preceding v10 dispatcher implementation passed
-[focused VM correctness checks](../docs/VALIDATION.md#taskname-and-xattr-helper-validation)
+[focused VM correctness checks](../bench/results/10.176.26.71/bench/taskname-xattr-native-api-20261019/DEVELOPMENT.md#final-live-acceptance)
 through candidate 6 and completed all 567 sessions of the
 [`88bb5a4` standard-grid comparison](../bench/results/10.176.26.71/bench/taskname-xattr-native-api-20261019/README.md)
 with validation and drain. This does not establish mutation-case delegation,

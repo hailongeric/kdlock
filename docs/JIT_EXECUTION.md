@@ -66,9 +66,9 @@ The final clobber unlock can combine CALL handling and completion checks. When
 those checks pass, the wrapper returns only IP/SP/BP and skips writing a virtual
 return address. If the checks fail, it constructs the original CALL exactly once,
 saves FULL state and uses the general recovery path. Nested and other complex
-exits also use the general dispatcher. Known controls and approved services can
-resume JIT at registered continuations; an ordinary untranslated call finishes
-natively.
+exits also use the general dispatcher. Dispatcher controls and approved services
+can resume JIT at registered continuations; an ordinary untranslated call finishes
+natively. The direct-helper route below permits only one generated invocation.
 
 A [checked spin pointer load](design/admission.md#checked-spin-pointer-loads) can
 also stop before the original load when its address may overlap tracked stack
@@ -77,19 +77,33 @@ and stack position, retains earlier effects and existing lock ownership, and
 permanently disables delegation for the entry. It does not construct a CALL or
 retry the body. Generic faults and execution-limit exits cannot use this path.
 
-The [original `strcmp` service](design/admission.md#original-strcmp-service)
-uses the existing CALL exit and original helper. It relies on the original C
-caller's valid memory and lifetime guarantees; it does not check helper code or
-scan argument strings. Before invocation, KD validates ownership and saves the
-pending CALL's return state. Success consumes that saved return once. `strcmp`
-has a separate allowance of
-128 calls per invocation. The separately negotiated
-[`strscpy_pad` service](design/admission.md#original-strscpy_pad-writing-service)
-shares the existing 16-call allowance with scalar services and lock controls.
-The translator describes its 64-byte write effect; runtime does not recheck its
-destination or scan its source. Once invoked, its effects cannot be replayed
-through native fallback. Together
-the two allowances permit at most 144 such continuations before final unlock.
+The original [`strcmp`](design/admission.md#original-strcmp-service) and
+[`strscpy_pad`](design/admission.md#original-strscpy_pad-writing-service) APIs
+rely on the original C caller's valid memory and lifetime guarantees. Neither
+route checks helper instructions, scans strings or rechecks destination bounds.
+The translator retains their memory effects, including the padding call's
+64-byte write. The dispatcher route uses the existing CALL exit: KD validates
+ownership, saves the pending return state, invokes the helper and consumes that
+saved return once. It permits 128 comparisons plus 16 other services or controls,
+with padding calls sharing the latter allowance.
+
+The optional [direct-helper route](design/admission.md#direct-original-helper-calls)
+keeps these original calls inside one generated invocation. It requires a fresh
+ABI1 spin request: the body has not started, one physical lock is held, the
+original waiter differs from the executor, and only the entry instruction and
+stack/frame pointers need be captured in the MINIMAL packet. The bound image is
+immutable; helper and return-source pins are acquired at publication and retained
+by the existing leases. Exact physical-owner and acquisition records still apply.
+The wrapper consumes the actual source CALL return word after each helper and
+can finish through the minimal terminal unlock without a dispatcher round trip.
+
+Direct calls have the same limits of 128 comparisons and 16 padding calls. Quota
+exhaustion exits before executing the pending helper; the original waiter runs
+that call and the remaining native instructions under the existing lock. The
+image cannot reenter from FULL state or reset its quota after an exit. Completed
+helper effects are never replayed; invalid returns and instruction-limit failures
+remain errors. See [image lifetimes](design/lifetimes.md#executable-images-and-guarded-spin-transition)
+for source residency and publication rules.
 
 Completion removes the frame from the active stack before publishing DONE. The
 waiter must read its return state before reusing the continuation or enabling

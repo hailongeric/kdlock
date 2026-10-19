@@ -1,0 +1,79 @@
+{
+  "archive_prefix": "taskname-xattr-direct-api-05876a4",
+  "boot_id": "b65f0205-c8f9-4385-8b13-039cbce243a6",
+  "completed": true,
+  "finished_ns": 1792386347906387637,
+  "groups": [
+    {
+      "bytes": 15602605,
+      "file": "taskname.tar.gz",
+      "group": "taskname",
+      "path": "/root/kdlock-evidence/10.176.26.71/bench/taskname-xattr-direct-api-05876a4-archives-final-20261019/taskname.tar.gz",
+      "roots": [
+        "taskname-xattr-direct-api-05876a4/taskname"
+      ],
+      "sha256": "09e50c19616b8029e5f1ade36fe2605e4d73f7ba9d35bd06b951551db744e8e5"
+    },
+    {
+      "bytes": 19663550,
+      "file": "xattr.tar.gz",
+      "group": "xattr",
+      "path": "/root/kdlock-evidence/10.176.26.71/bench/taskname-xattr-direct-api-05876a4-archives-final-20261019/xattr.tar.gz",
+      "roots": [
+        "taskname-xattr-direct-api-05876a4/xattr"
+      ],
+      "sha256": "62e303e6a8c6c9a88c60e618f30726d0c2b6029a22c5a460584f1a9957f9badd"
+    },
+    {
+      "bytes": 1024488,
+      "file": "metadata.tar.gz",
+      "group": "metadata",
+      "path": "/root/kdlock-evidence/10.176.26.71/bench/taskname-xattr-direct-api-05876a4-archives-final-20261019/metadata.tar.gz",
+      "roots": [
+        "taskname-xattr-direct-api-05876a4/archive-health-refresh-command.log",
+        "taskname-xattr-direct-api-05876a4/archive-health-refresh.command.json",
+        "taskname-xattr-direct-api-05876a4/compare.py",
+        "taskname-xattr-direct-api-05876a4/comparison-final",
+        "taskname-xattr-direct-api-05876a4/comparison-final-command.log",
+        "taskname-xattr-direct-api-05876a4/comparison-final.command.json",
+        "taskname-xattr-direct-api-05876a4/comparison-policy.json",
+        "taskname-xattr-direct-api-05876a4/dmesg-final.txt",
+        "taskname-xattr-direct-api-05876a4/final-health-command.log",
+        "taskname-xattr-direct-api-05876a4/final-health.command.json",
+        "taskname-xattr-direct-api-05876a4/final-health.py",
+        "taskname-xattr-direct-api-05876a4/finish-main.py",
+        "taskname-xattr-direct-api-05876a4/health.json",
+        "taskname-xattr-direct-api-05876a4/host-metadata",
+        "taskname-xattr-direct-api-05876a4/main-round.py",
+        "taskname-xattr-direct-api-05876a4/plot-packages.txt",
+        "taskname-xattr-direct-api-05876a4/plot-python.txt",
+        "taskname-xattr-direct-api-05876a4/replay-final",
+        "taskname-xattr-direct-api-05876a4/replay-final-command.log",
+        "taskname-xattr-direct-api-05876a4/replay-final.command.json",
+        "taskname-xattr-direct-api-05876a4/round-kallsyms.txt",
+        "taskname-xattr-direct-api-05876a4/round-kernel-notes.bin",
+        "taskname-xattr-direct-api-05876a4/round-symbols.json",
+        "taskname-xattr-direct-api-05876a4/round.json",
+        "taskname-xattr-direct-api-05876a4/run-map.json",
+        "taskname-xattr-direct-api-05876a4/taskname-command.log",
+        "taskname-xattr-direct-api-05876a4/taskname.command.json",
+        "taskname-xattr-direct-api-05876a4/translation-packages.txt",
+        "taskname-xattr-direct-api-05876a4/translation-python.txt",
+        "taskname-xattr-direct-api-05876a4/xattr-command.log",
+        "taskname-xattr-direct-api-05876a4/xattr.command.json"
+      ],
+      "sha256": "f4caff1ddcdad513d337839f82a976673b4fbe60517700c42207377f4dc2e365"
+    }
+  ],
+  "guest_base": "/root/kdlock-evidence/10.176.26.71/bench/taskname-xattr-direct-api-05876a4",
+  "guest_idle": true,
+  "health_path": "health.json",
+  "health_sha256": "71ab9640222df2747a7f22aa6a5a07f82da9443ad93a70f8fbd837c6e64818b7",
+  "idle_source_sha256": "1cf807072fb588b17f24e18ea37cb16146766346b0b6bc61e994295804c18ccf",
+  "input_inventory_sha256": "f054fc023a1af8605effcb4a4b726dabe1646ee185f1e6688f00bcd44102ebb4",
+  "kernel_release": "6.1.159-kdclobber2",
+  "schema": 1,
+  "scope": "Complete evidence preservation; no deletion, module action, test or timing",
+  "script_sha256": "8d666f148a10d7fe19294cc7d193464c8bb53d4c3aec64b7518b9d335966c952",
+  "started_ns": 1792386341164906899
+}

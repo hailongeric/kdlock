@@ -1,52 +1,311 @@
 {
-  "schema": 2,
-  "ready": false,
-  "pending": [
-    "Final current implementation commit and Git-derived source changes for each runner selection.",
-    "Exact current source-manifest IDs and file counts, checked against the frozen runner snapshots.",
-    "Final current raw replay script SHA-256 and its complete additional loaded-image validator dependency hashes.",
-    "Independently captured current round-symbol receipt SHA-256."
-  ],
-  "purpose": "Compare the exact completed original-API 88 baseline against the direct-helper revision. Fresh Native and TCLock arms remain the current denominators. Never pool source versions, settings or execution statuses.",
-  "source_derivation": "Pending final commit. Fill from read-only Git blobs using the exact runner source-selection rules, then verify the captured frozen manifests. Unknown source changes are not equivalent.",
-  "old_commit": "88bb5a4d9b52eec8ed52982ea4039b981d0e5814",
-  "new_commit": null,
-  "old_replay_sha256": "ca29dc4dc8595c051d13fcaf68860927e92730239dbc1c6724764aef231d5af9",
-  "new_round_symbols_sha256": null,
   "analysis_dependencies": {
     "bench/real_api/evidence.py": "374f10b93786d587e2514819b5ede540106c7b99d271ecee2573e249075002d7",
     "bench/real_api/report.py": "36608f8ed72abeccece867a25e1c3ffd929ddb922be6bdfd4b6976cf6ad35b87",
     "bench/rwlock_compare/oracle.py": "06944b376837ab4f16a08835fe4142dac0c131d3d5ebae1acb264f94037cb092",
     "bench/spin_cacheline/peak.py": "fa90dc91b33c7a52b99168565baad0b210d56e2005cd615047d939414c596ad2"
   },
-  "replay_programs": {
-    "old": {
-      "script_sha256": "7841454a2047597e7f9d9bb03c67dd737dc1c425b3408da95dfca7e6e5f00585",
-      "additional_dependency_sha256": {}
+  "captured_round": {
+    "bindings_sha256": "ed8f0111a7ca1d33685f5372793f2820ecd5fdf6ba81bf0fa8c1b7070e1019fc",
+    "boot_id": "b65f0205-c8f9-4385-8b13-039cbce243a6",
+    "kallsyms_sha256": "38052394eef347edcbfdee4e0b3ea34aaabf11f9b53e9b6bf6c3c1a5af2af6d2",
+    "kernel_release": "6.1.159-kdclobber2",
+    "notes_sha256": "470196ba7d5d668e441f807358efa00ad3857893a03c14bb367b9190bd022322",
+    "round_sha256": "e727d03a0c9a19c1a4e9a0d48f7eb121d890c3d5ac1d052387ea4aab1b24f319",
+    "running_build_id": "5ca28058e156f34a2c7fe91e8e0fbf92f4e51960",
+    "scope": "Captured source and symbol identity binding; this does not establish round completion. Comparison still requires two complete validated replays.",
+    "source_manifest_sha256": {
+      "taskname": "195cf6441a98e157967910b0561fe5216c1cf3a7c51b52c6b53c6ad3839f02ee",
+      "xattr": "90f3d00d6133a9f32abe87db65451e2881ce0c1f43236d4fc4a03c4da4f545a3"
     },
-    "new": {
-      "script_sha256": null,
-      "additional_dependency_sha256": null
+    "symbols": {
+      "strcmp": 18446744071593528208,
+      "strscpy_pad": 18446744071586069776
     }
   },
   "identity_allowed_differences": {
     "taskname": [],
-    "xattr": ["source_identity"]
+    "xattr": [
+      "source_identity"
+    ]
   },
+  "new_commit": "05876a44f841979eae776f0146f0fe9e5c3c8f26",
+  "new_round_symbols_sha256": "3e0ee693638d2433ae9fe00da43941baf4319b3d80ac44d2a6e2bbdf2074bd3b",
+  "old_commit": "88bb5a4d9b52eec8ed52982ea4039b981d0e5814",
+  "old_replay_sha256": "ca29dc4dc8595c051d13fcaf68860927e92730239dbc1c6724764aef231d5af9",
+  "pending": [],
+  "purpose": "Compare the exact completed original-API 88 baseline against the direct-helper revision. Fresh Native and TCLock arms remain the current denominators. Never pool source versions, settings or execution statuses.",
+  "ready": true,
+  "replay_programs": {
+    "new": {
+      "additional_dependency_sha256": {
+        "bench/spin_cacheline/bench_runtime.py": "1cf807072fb588b17f24e18ea37cb16146766346b0b6bc61e994295804c18ccf",
+        "bench/spin_cacheline/native_image.py": "63a4abae3ceec28d0b74f1898c9b8b5f779c60dc798ae7fe60720655bf2e43ac",
+        "bench/spin_cacheline/summarize.py": "3535df0ad59016f097488693528313f99546353676633fbf39d38ca7d846ca06",
+        "disassem/device_session.py": "f2101836bc3268eef90f921cf5743c1af49dcf84e7bf61537a2d072b256cedd4",
+        "tests/protocols/cpu_placement.py": "73abd05f1f9be74a7387c73c3f51ec20784bf45dd60282fb34aab04e7fe0b306",
+        "tests/protocols/native_only_protocol.py": "54a6f5b41e28b6d19468ef9d04d95f82c9618f19fda3ef9140341d6329da52f2"
+      },
+      "script_sha256": "9ff5bec13ef12a67df5e01fd28af9e4b1109a68034cc179ea9c56b0cbdb7de25"
+    },
+    "old": {
+      "additional_dependency_sha256": {},
+      "script_sha256": "7841454a2047597e7f9d9bb03c67dd737dc1c425b3408da95dfca7e6e5f00585"
+    }
+  },
+  "schema": 2,
+  "source_derivation": "Read git ls-tree and git cat-file blobs at the two named commits; reproduced each unchanged runner sources() filter without importing or executing project code. Both baseline selections exactly match the hash-pinned 88 replay manifests. Taskname excludes Markdown/results and includes guest.config; xattr includes Markdown and omits guest.config. Both include private .inc files. No selected symlinks, non-regular blobs, or baseline selection anomalies were found. The independently copied full-round manifests match every Git-derived path/hash exactly: taskname 241 files including 58 private .inc files, xattr 238 files including 57 private .inc files. Rechecked all 265 distinct captured paths directly against Git05876, the exact 21/26 source-change lists against baseline88, and the report program plus shared/additional dependency hashes. Captured manifest byte hashes and source IDs use their respective recorded encodings; compact canonical report IDs are not confused with the real API runner's default-spaced JSON identity.",
   "sources": {
     "taskname": {
-      "old_source_id": "5c1e9e7b2e4df88413ba16261787627c010a81ef415796c8db7df6ad429bbdb9",
+      "changes": {
+        "bench/spin_cacheline/bench_runtime.py": {
+          "new": "1cf807072fb588b17f24e18ea37cb16146766346b0b6bc61e994295804c18ccf",
+          "old": "395592b8e72f700696034ed16182b74481bdebfcab56cd58a5fc7eed91b88da5",
+          "reason": "Cold registry/generated-image capture and relocation evidence; worker payload and measured interval settings are unchanged."
+        },
+        "bench/spin_cacheline/bench_session.py": {
+          "new": "5f51eb92827b2f025e85c7ab94006fd8f53f758de1d14f67cf8eee26bd3113c7",
+          "old": "6aacf778a27432560ca8b9f026690b50ad573a2822c06bb51f327dc6813851b6",
+          "reason": "Cold registry/generated-image capture and relocation evidence; worker payload and measured interval settings are unchanged."
+        },
+        "bench/spin_cacheline/native_image.py": {
+          "new": "63a4abae3ceec28d0b74f1898c9b8b5f779c60dc798ae7fe60720655bf2e43ac",
+          "old": null,
+          "reason": "Cold registry/generated-image capture and relocation evidence; worker payload and measured interval settings are unchanged."
+        },
+        "disassem/device_session.py": {
+          "new": "f2101836bc3268eef90f921cf5743c1af49dcf84e7bf61537a2d072b256cedd4",
+          "old": "31786b8244c7e4f1e2993bdf3a313c4b7742c38bf84bcc2fd0738050e8d35afd",
+          "reason": "Intentional direct native-API bridge, pristine entry, private call accounting, capability negotiation, and immutable image allocation/relocation changes."
+        },
+        "disassem/disassem.py": {
+          "new": "291be158a4cd181af7329c16e2af37b860dcd80f985bad89c10608bc996762ee",
+          "old": "36825cc80cc0ad6d76ec61991ce74761fe667972fc6bb5c6e45a62c17e789cac",
+          "reason": "Intentional direct native-API bridge, pristine entry, private call accounting, capability negotiation, and immutable image allocation/relocation changes."
+        },
+        "disassem/native_calls.py": {
+          "new": "e66f51bbd5318b7cb2e2df5c52ea43ea3de36ada552912a0da63266babd0cc5b",
+          "old": null,
+          "reason": "Intentional direct native-API bridge, pristine entry, private call accounting, capability negotiation, and immutable image allocation/relocation changes."
+        },
+        "disassem/translation_image.py": {
+          "new": "5de9614fe192a444345d91ebfbe646f88d7119f2096f2b314b0016d6922e6cc7",
+          "old": "6d910ed7cf02480aad1cfbf38cb15951bd45d418e944bc035b20c010dc7dc505",
+          "reason": "Intentional direct native-API bridge, pristine entry, private call accounting, capability negotiation, and immutable image allocation/relocation changes."
+        },
+        "include/asm_head.h": {
+          "new": "e856b72758dc5420c7c0f7a59f5e7c7007e6e7288d53043170b87c7dfa7bd036",
+          "old": "eebacea7a2c217548b617101e9549cbd87143506404cf97f1b5045e0b452baeb",
+          "reason": "Intentional direct native-API bridge, pristine entry, private call accounting, capability negotiation, and immutable image allocation/relocation changes."
+        },
+        "include/exe_info.h": {
+          "new": "374ead5ec56dd9cbd19de7d0159d7d042127802d0087e05eb0382e6af303d045",
+          "old": "620b00ce214e464e08ca2c7c64fe8d26159aeb7eb38f8eaedccd9dbdcc7a4671",
+          "reason": "Intentional direct native-API bridge, pristine entry, private call accounting, capability negotiation, and immutable image allocation/relocation changes."
+        },
+        "include/kd_image.h": {
+          "new": "b35e06ff5420c5b9a53f8e0a1a63aff2c79e05d631dc402cdab3418076a49b4f",
+          "old": "a90935c04f44da596540f329a8fdfd1744cf753dbd55c07b982fe7a174076759",
+          "reason": "Intentional direct native-API bridge, pristine entry, private call accounting, capability negotiation, and immutable image allocation/relocation changes."
+        },
+        "include/kd_jit_batch.h": {
+          "new": "16b35ddd9ee520b22fba4d2c0548c8e9983e2b091fc727546de005303439ace2",
+          "old": "bdf914a39a97488091177892883e71f0c4057b9b6a156a77445dd23d774721ca",
+          "reason": "Intentional direct native-API bridge, pristine entry, private call accounting, capability negotiation, and immutable image allocation/relocation changes."
+        },
+        "include/kd_source_api.h": {
+          "new": "9ef5c584573e36338263a3cfb87e9751dcaa1fb28a8f73845555b831446518fa",
+          "old": "eabeea1c8f566b2ba9d51dd25fbef23153b2d5df38254a26c7af93ba0fc9f8f9",
+          "reason": "Intentional direct native-API bridge, pristine entry, private call accounting, capability negotiation, and immutable image allocation/relocation changes."
+        },
+        "include/wrapper.S": {
+          "new": "f6a0f6c3e9cf7c5b0902178ea618c94815dffd90ffc9e86af518f0b8ccbfd215",
+          "old": "61a04a5cf9dd749b139a31e5d4f9553e99b1708f0021e51aae25dafc19627e5a",
+          "reason": "Intentional direct native-API bridge, pristine entry, private call accounting, capability negotiation, and immutable image allocation/relocation changes."
+        },
+        "kernel_module/exe.c": {
+          "new": "5354456d876c330b9274d73d12c4f2c1e0d0318ce4e03c23c812b77079062d0a",
+          "old": "e34bfd57e99c913baca6d72d6a822c85436b1ed62d36d95860d7898366f45e6c",
+          "reason": "Intentional direct native-API bridge, pristine entry, private call accounting, capability negotiation, and immutable image allocation/relocation changes."
+        },
+        "kernel_module/execution/hostcalls.inc": {
+          "new": "d741d98ac14479eb51016501053604512baf7009b7d3ee5b52c0acd0a88884eb",
+          "old": "e975953b9b11a4f5ac7faf5549542b339e94660de142276b172857f072aca9f9",
+          "reason": "Intentional direct native-API bridge, pristine entry, private call accounting, capability negotiation, and immutable image allocation/relocation changes."
+        },
+        "kernel_module/execution/images.inc": {
+          "new": "c1abbc497e27f42387d45a5bfa8fc24fc4c7dd5080844b3dd92359e49606ea3c",
+          "old": "445d582091e24d61d2c098f1688f8cc2578cf75c69373101468855beb9033c55",
+          "reason": "Intentional direct native-API bridge, pristine entry, private call accounting, capability negotiation, and immutable image allocation/relocation changes."
+        },
+        "kernel_module/execution/registry_lifecycle.inc": {
+          "new": "b87cadc6057780b25eff8c704eced43fbc463e2844f05ef2488c4e535489f7f6",
+          "old": "f745d6af2129f4e4a042115a07901be9359864e65d7b2beb8979c1eeee9eb8db",
+          "reason": "Intentional direct native-API bridge, pristine entry, private call accounting, capability negotiation, and immutable image allocation/relocation changes."
+        },
+        "kernel_module/execution/registry_publish.inc": {
+          "new": "f907bb8cb7956f5af50e42934d94e63b4decdeb3ad69ab18674ce0f4aa8ec676",
+          "old": "e6cbe92970791368fa939bcc6b19a39551bf00953fb68eaf7b913de732620137",
+          "reason": "Intentional direct native-API bridge, pristine entry, private call accounting, capability negotiation, and immutable image allocation/relocation changes."
+        },
+        "kernel_module/execution/wrapper_entry.inc": {
+          "new": "cf0648c1513fb681e2c7a9676c0d626bf8f625d309243ac9f99a58d95b38a3f3",
+          "old": "0bb741ac767fe1a343ea1c3ad59b52f23a94c6c54aacc0586d07733e457ce901",
+          "reason": "Intentional direct native-API bridge, pristine entry, private call accounting, capability negotiation, and immutable image allocation/relocation changes."
+        },
+        "kernel_module/sys.c": {
+          "new": "7bd2a894b93339d0d93e7f632876c57f5e822283c5b88a1f780d4f316ed849e8",
+          "old": "94d0b6d0f7e947c4905c2e892e327b79500451c3bc71af8f3b7357b5249d7350",
+          "reason": "Intentional direct native-API bridge, pristine entry, private call accounting, capability negotiation, and immutable image allocation/relocation changes."
+        },
+        "tests/protocols/native_only_protocol.py": {
+          "new": "54a6f5b41e28b6d19468ef9d04d95f82c9618f19fda3ef9140341d6329da52f2",
+          "old": "628211807eb2cea031a2da2e072641f931cfec835cb2664bb8714203dfa2692e",
+          "reason": "Cold registry/generated-image capture and relocation evidence; worker payload and measured interval settings are unchanged."
+        }
+      },
+      "new_files": 241,
+      "new_source_id": "694be6f5e2304057450ec69698c380d8efdb2717e56ed95f77a0a0f60b8c3c33",
       "old_files": 239,
-      "new_source_id": null,
-      "new_files": null,
-      "changes": {}
+      "old_source_id": "5c1e9e7b2e4df88413ba16261787627c010a81ef415796c8db7df6ad429bbdb9"
     },
     "xattr": {
-      "old_source_id": "197408c8c7d040b39a6cefb1c006802b4123b3d64492e6e5b02c2f468fb5e680",
+      "changes": {
+        "bench/real_api/README.md": {
+          "new": "74b8578fe6872b6ff1ac139666a9f036c438b78b9b51dacad9423ac0952b0a6f",
+          "old": "bfdf449ad50b59e040752494052f2a255ae2a4aeba59443464a755cbdef6644a",
+          "reason": "Maintained documentation for the direct native-API bridge; not a payload or timing-setting change."
+        },
+        "bench/spin_cacheline/bench_runtime.py": {
+          "new": "1cf807072fb588b17f24e18ea37cb16146766346b0b6bc61e994295804c18ccf",
+          "old": "395592b8e72f700696034ed16182b74481bdebfcab56cd58a5fc7eed91b88da5",
+          "reason": "Cold registry/generated-image capture and relocation evidence; worker payload and measured interval settings are unchanged."
+        },
+        "bench/spin_cacheline/bench_session.py": {
+          "new": "5f51eb92827b2f025e85c7ab94006fd8f53f758de1d14f67cf8eee26bd3113c7",
+          "old": "6aacf778a27432560ca8b9f026690b50ad573a2822c06bb51f327dc6813851b6",
+          "reason": "Cold registry/generated-image capture and relocation evidence; worker payload and measured interval settings are unchanged."
+        },
+        "bench/spin_cacheline/native_image.py": {
+          "new": "63a4abae3ceec28d0b74f1898c9b8b5f779c60dc798ae7fe60720655bf2e43ac",
+          "old": null,
+          "reason": "Cold registry/generated-image capture and relocation evidence; worker payload and measured interval settings are unchanged."
+        },
+        "daemon/README.md": {
+          "new": "8e8b505f9fe3068b6857935993e19c4d87d68a1bd8aa73582c3c648a90bdbdf9",
+          "old": "d3271600f3d2d2562039452176e329d655a2ab55364990c365f3bd3071e57ed3",
+          "reason": "Maintained documentation for the direct native-API bridge; not a payload or timing-setting change."
+        },
+        "disassem/README.md": {
+          "new": "b544375208e62f83d53ed0f92e456dfa69e9598c4599972cfb9efaf0ccddf438",
+          "old": "f0bf6d9f16e476a465c799d205d19ad3bff479bf6e1536aab3c65b9bd26ef9d9",
+          "reason": "Maintained documentation for the direct native-API bridge; not a payload or timing-setting change."
+        },
+        "disassem/device_session.py": {
+          "new": "f2101836bc3268eef90f921cf5743c1af49dcf84e7bf61537a2d072b256cedd4",
+          "old": "31786b8244c7e4f1e2993bdf3a313c4b7742c38bf84bcc2fd0738050e8d35afd",
+          "reason": "Intentional direct native-API bridge, pristine entry, private call accounting, capability negotiation, and immutable image allocation/relocation changes."
+        },
+        "disassem/disassem.py": {
+          "new": "291be158a4cd181af7329c16e2af37b860dcd80f985bad89c10608bc996762ee",
+          "old": "36825cc80cc0ad6d76ec61991ce74761fe667972fc6bb5c6e45a62c17e789cac",
+          "reason": "Intentional direct native-API bridge, pristine entry, private call accounting, capability negotiation, and immutable image allocation/relocation changes."
+        },
+        "disassem/native_calls.py": {
+          "new": "e66f51bbd5318b7cb2e2df5c52ea43ea3de36ada552912a0da63266babd0cc5b",
+          "old": null,
+          "reason": "Intentional direct native-API bridge, pristine entry, private call accounting, capability negotiation, and immutable image allocation/relocation changes."
+        },
+        "disassem/translation_image.py": {
+          "new": "5de9614fe192a444345d91ebfbe646f88d7119f2096f2b314b0016d6922e6cc7",
+          "old": "6d910ed7cf02480aad1cfbf38cb15951bd45d418e944bc035b20c010dc7dc505",
+          "reason": "Intentional direct native-API bridge, pristine entry, private call accounting, capability negotiation, and immutable image allocation/relocation changes."
+        },
+        "include/README.md": {
+          "new": "7f387b7036e9e37ff22d0115577bf19096553ca36e237aff155ac90e4c2337e9",
+          "old": "e271487d7ca4ed3b596d02d1d7e2a47ab886a30ba829764023c5fb1029bee094",
+          "reason": "Maintained documentation for the direct native-API bridge; not a payload or timing-setting change."
+        },
+        "include/asm_head.h": {
+          "new": "e856b72758dc5420c7c0f7a59f5e7c7007e6e7288d53043170b87c7dfa7bd036",
+          "old": "eebacea7a2c217548b617101e9549cbd87143506404cf97f1b5045e0b452baeb",
+          "reason": "Intentional direct native-API bridge, pristine entry, private call accounting, capability negotiation, and immutable image allocation/relocation changes."
+        },
+        "include/exe_info.h": {
+          "new": "374ead5ec56dd9cbd19de7d0159d7d042127802d0087e05eb0382e6af303d045",
+          "old": "620b00ce214e464e08ca2c7c64fe8d26159aeb7eb38f8eaedccd9dbdcc7a4671",
+          "reason": "Intentional direct native-API bridge, pristine entry, private call accounting, capability negotiation, and immutable image allocation/relocation changes."
+        },
+        "include/kd_image.h": {
+          "new": "b35e06ff5420c5b9a53f8e0a1a63aff2c79e05d631dc402cdab3418076a49b4f",
+          "old": "a90935c04f44da596540f329a8fdfd1744cf753dbd55c07b982fe7a174076759",
+          "reason": "Intentional direct native-API bridge, pristine entry, private call accounting, capability negotiation, and immutable image allocation/relocation changes."
+        },
+        "include/kd_jit_batch.h": {
+          "new": "16b35ddd9ee520b22fba4d2c0548c8e9983e2b091fc727546de005303439ace2",
+          "old": "bdf914a39a97488091177892883e71f0c4057b9b6a156a77445dd23d774721ca",
+          "reason": "Intentional direct native-API bridge, pristine entry, private call accounting, capability negotiation, and immutable image allocation/relocation changes."
+        },
+        "include/kd_source_api.h": {
+          "new": "9ef5c584573e36338263a3cfb87e9751dcaa1fb28a8f73845555b831446518fa",
+          "old": "eabeea1c8f566b2ba9d51dd25fbef23153b2d5df38254a26c7af93ba0fc9f8f9",
+          "reason": "Intentional direct native-API bridge, pristine entry, private call accounting, capability negotiation, and immutable image allocation/relocation changes."
+        },
+        "include/wrapper.S": {
+          "new": "f6a0f6c3e9cf7c5b0902178ea618c94815dffd90ffc9e86af518f0b8ccbfd215",
+          "old": "61a04a5cf9dd749b139a31e5d4f9553e99b1708f0021e51aae25dafc19627e5a",
+          "reason": "Intentional direct native-API bridge, pristine entry, private call accounting, capability negotiation, and immutable image allocation/relocation changes."
+        },
+        "kernel_module/README.md": {
+          "new": "e87bb06d15b6c6b9dba7bf5d12b974aebbff530b4044c0f020bddb29525b6fdc",
+          "old": "03d26ccdfccc6b7eaa8ee8b16c37a37e34dfef1528efc25e0dae865d884cd1a2",
+          "reason": "Maintained documentation for the direct native-API bridge; not a payload or timing-setting change."
+        },
+        "kernel_module/exe.c": {
+          "new": "5354456d876c330b9274d73d12c4f2c1e0d0318ce4e03c23c812b77079062d0a",
+          "old": "e34bfd57e99c913baca6d72d6a822c85436b1ed62d36d95860d7898366f45e6c",
+          "reason": "Intentional direct native-API bridge, pristine entry, private call accounting, capability negotiation, and immutable image allocation/relocation changes."
+        },
+        "kernel_module/execution/hostcalls.inc": {
+          "new": "d741d98ac14479eb51016501053604512baf7009b7d3ee5b52c0acd0a88884eb",
+          "old": "e975953b9b11a4f5ac7faf5549542b339e94660de142276b172857f072aca9f9",
+          "reason": "Intentional direct native-API bridge, pristine entry, private call accounting, capability negotiation, and immutable image allocation/relocation changes."
+        },
+        "kernel_module/execution/images.inc": {
+          "new": "c1abbc497e27f42387d45a5bfa8fc24fc4c7dd5080844b3dd92359e49606ea3c",
+          "old": "445d582091e24d61d2c098f1688f8cc2578cf75c69373101468855beb9033c55",
+          "reason": "Intentional direct native-API bridge, pristine entry, private call accounting, capability negotiation, and immutable image allocation/relocation changes."
+        },
+        "kernel_module/execution/registry_lifecycle.inc": {
+          "new": "b87cadc6057780b25eff8c704eced43fbc463e2844f05ef2488c4e535489f7f6",
+          "old": "f745d6af2129f4e4a042115a07901be9359864e65d7b2beb8979c1eeee9eb8db",
+          "reason": "Intentional direct native-API bridge, pristine entry, private call accounting, capability negotiation, and immutable image allocation/relocation changes."
+        },
+        "kernel_module/execution/registry_publish.inc": {
+          "new": "f907bb8cb7956f5af50e42934d94e63b4decdeb3ad69ab18674ce0f4aa8ec676",
+          "old": "e6cbe92970791368fa939bcc6b19a39551bf00953fb68eaf7b913de732620137",
+          "reason": "Intentional direct native-API bridge, pristine entry, private call accounting, capability negotiation, and immutable image allocation/relocation changes."
+        },
+        "kernel_module/execution/wrapper_entry.inc": {
+          "new": "cf0648c1513fb681e2c7a9676c0d626bf8f625d309243ac9f99a58d95b38a3f3",
+          "old": "0bb741ac767fe1a343ea1c3ad59b52f23a94c6c54aacc0586d07733e457ce901",
+          "reason": "Intentional direct native-API bridge, pristine entry, private call accounting, capability negotiation, and immutable image allocation/relocation changes."
+        },
+        "kernel_module/sys.c": {
+          "new": "7bd2a894b93339d0d93e7f632876c57f5e822283c5b88a1f780d4f316ed849e8",
+          "old": "94d0b6d0f7e947c4905c2e892e327b79500451c3bc71af8f3b7357b5249d7350",
+          "reason": "Intentional direct native-API bridge, pristine entry, private call accounting, capability negotiation, and immutable image allocation/relocation changes."
+        },
+        "tests/protocols/native_only_protocol.py": {
+          "new": "54a6f5b41e28b6d19468ef9d04d95f82c9618f19fda3ef9140341d6329da52f2",
+          "old": "628211807eb2cea031a2da2e072641f931cfec835cb2664bb8714203dfa2692e",
+          "reason": "Cold registry/generated-image capture and relocation evidence; worker payload and measured interval settings are unchanged."
+        }
+      },
+      "new_files": 238,
+      "new_source_id": "c0f61f63ec40d68a92a0f3b7f57436c95d3999ebb8de94de24128066cbebe00a",
       "old_files": 236,
-      "new_source_id": null,
-      "new_files": null,
-      "changes": {}
+      "old_source_id": "197408c8c7d040b39a6cefb1c006802b4123b3d64492e6e5b02c2f468fb5e680"
     }
   }
 }
