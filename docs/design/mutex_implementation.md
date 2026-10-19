@@ -118,7 +118,7 @@ The outer pair probes the KD `owner` word at most eight times, attempting an
 acquire CAS only when the entire owner/flags word is zero. Each failed probe
 pauses before the next attempt; a busy owner read does not modify that word, and a
 racing owner still defeats the CAS. The active-combiner hint reads the embedded
-phase without a lookup or reference operation. The existing active-combiner gate state (3) ends retries; a lone gate owner (state 1) may finish
+phase inline, without a function call, lookup or reference operation. The existing active-combiner gate state (3) ends retries; a lone gate owner (state 1) may finish
 during the bounded window.
 The observed state is a hint and never grants ownership or retirement. This window
 has no worker-count threshold. Success increments the CPU-local entry observation
@@ -257,8 +257,8 @@ does not fetch the entire FULL packet on every minimal request. The pointer is q
 current-node read is allowed after its completion/native publication. Prefetch
 grants no ownership, admission or lifetime.
 
-The embedded gate uses a read before its acquire CAS. Tail exchanges and exact
-waiter-count updates share the last eight bytes with the phase. Physical ownership
+The embedded gate uses a read before its acquire CAS. The phase and encoded tail
+occupy the last eight bytes; exact waiter records live in reserved nodes. Physical ownership
 can share that cacheline; native alignment also permits the object to straddle
 two lines. This trades cacheline separation for native geometry; performance
 claims require the matching VM comparison, not an inference from fewer atomics.
@@ -272,6 +272,14 @@ before publication so a pinned follower cannot prevent a sleeping head from
 resuming. [clobber.inc](../../kernel_module/mutex/clobber.inc) switches to the
 reserved waiter stack before publication and restores the post-completion
 boundary without returning through potentially overwritten hook frames.
+
+After acquiring physical exclusion, a queue head acquire-loads its successor
+link first. A linked successor avoids touching the shared tail. If the link is
+still absent, only a tail equal to this reserved slot needs a retirement CAS.
+A different tail proves a publisher owes the link: the slot cannot be reused
+while this invocation retains its reservation. Losing the CAS likewise waits
+for that link. Acquire link reads preserve initialization ordering when the
+full CAS is skipped; the producer's full tail exchange precedes publication.
 
 [combiner.inc](../../kernel_module/mutex/combiner.inc) selects local requests
 when built with NUMA enabled. It can defer at most 64 fully linked remote nodes;

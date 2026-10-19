@@ -72,7 +72,10 @@ kd_mutex_outer_trylock(struct kd_mutex *lock, unsigned long owner)
 		if (!atomic_long_read(&lock->owner) &&
 		    atomic_long_try_cmpxchg_acquire(&lock->owner, &zero, owner))
 			return true;
-		if (kd_mutex_combiner_active(lock))
+		/* This is the same read-only hint as the exported helper. Keep it
+		 * inline in every producer's bounded probe sequence. */
+		if (atomic_read_acquire(&lock->delegation_state) ==
+		    KD_MUTEX_GATE_COMBINER)
 			return false;
 		cpu_relax();
 	}

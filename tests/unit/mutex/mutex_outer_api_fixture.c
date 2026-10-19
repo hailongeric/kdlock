@@ -5,9 +5,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <string.h>
-struct kd_mutex { unsigned long owner; };
-static struct kd_mutex *combiner_lock;
-bool kd_mutex_combiner_active(struct kd_mutex *lock) { return lock == combiner_lock; }
+struct kd_mutex { unsigned long owner; unsigned int delegation_state; };
 #define current ((void *)0x8000UL)
 #define READ_ONCE(x) (*(volatile __typeof__(x) *)&(x))
 #define WRITE_ONCE(x,v) (*(volatile __typeof__(x) *)&(x) = (v))
@@ -33,6 +31,7 @@ static inline bool outer_test_cas(unsigned long *p, unsigned long *old, unsigned
 }
 #define atomic_long_read(p) READ_ONCE(*(p))
 #define atomic_read(p) READ_ONCE(*(p))
+#define atomic_read_acquire(p) __atomic_load_n((p), __ATOMIC_ACQUIRE)
 #define atomic_long_try_cmpxchg_acquire outer_test_cas
 #define atomic_long_try_cmpxchg_release outer_test_cas
 #define might_sleep() do { } while (0)
@@ -70,17 +69,34 @@ static void check_owner_probe(void)
  assert(lock.owner==0x9000UL && owner_cas_count==2);
  owner_cas_race=false;
  /* An active combiner ends retries without waiting for a physical release. */
- combiner_lock=&lock;
+ lock.delegation_state=KD_MUTEX_GATE_COMBINER;
  release_on_pause=&lock.owner;
  assert(!kd_mutex_outer_trylock(&lock, (unsigned long)current));
  assert(release_on_pause && lock.owner==0x9000UL && owner_cas_count==2);
  release_on_pause=NULL;
  /* A lone gate owner may finish between probes; hints never grant the
   * acquisition, which still requires the exact zero-owner CAS. */
- combiner_lock=NULL;
+ lock.delegation_state=1;
  release_on_pause=&lock.owner;
  assert(kd_mutex_outer_trylock(&lock, (unsigned long)current));
  assert(!release_on_pause && lock.owner==(unsigned long)current && owner_cas_count==3);
+ /* Every phase is a hint only. COMBINER stops retries; other phases can
+  * observe a later physical release and still need the zero-owner CAS. */
+ for (unsigned int phase=0;phase<=4;phase++) {
+  unsigned int before=owner_cas_count;
+  lock.owner=0x9000UL;
+  lock.delegation_state=phase;
+  release_on_pause=&lock.owner;
+  assert(kd_mutex_outer_trylock(&lock, (unsigned long)current) ==
+         (phase != KD_MUTEX_GATE_COMBINER));
+  if (phase == KD_MUTEX_GATE_COMBINER) {
+   assert(release_on_pause && lock.owner==0x9000UL && owner_cas_count==before);
+   release_on_pause=NULL;
+  } else {
+   assert(!release_on_pause && lock.owner==(unsigned long)current &&
+          owner_cas_count==before+1);
+  }
+ }
 }
 struct kd_regs { unsigned long w[21]; };
 #define __KERNEL__

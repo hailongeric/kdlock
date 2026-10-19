@@ -10,6 +10,33 @@
 /* --------------------------------------------------------------------------
  * Slowpath: queue as waiter, spin, possibly become combiner
  * -------------------------------------------------------------------------- */
+/* A published successor already proves this reserved node is no longer the
+ * tail. Prefer its private link before touching the shared owner/gate/tail
+ * line. Even when the link is delayed, a different tail cannot become this
+ * node's encoded slot again until the origin releases the reservation. Only
+ * the still-current tail needs the retirement CAS; a racing publisher makes
+ * that CAS fail and must finish its link before this head can proceed. The
+ * producer's full tail exchange orders node initialization before its link;
+ * acquire link loads retain publication ordering when no full CAS runs here. */
+static __always_inline struct kd_mutex_node *
+kd_mutex_head_successor(struct kd_mutex *lock, struct kd_mutex_node *curr_node)
+{
+	struct kd_mutex_node *next = smp_load_acquire(&curr_node->next);
+
+	if (next)
+		return next;
+	if (READ_ONCE(lock->delegation_tail) == (u32)curr_node->tail &&
+	    cmpxchg(&lock->delegation_tail, (u32)curr_node->tail, 0) ==
+		    (u32)curr_node->tail)
+		return NULL;
+	do {
+		next = smp_load_acquire(&curr_node->next);
+		if (!next)
+			cpu_relax();
+	} while (!next);
+	return next;
+}
+
 #pragma GCC push_options
 #pragma GCC optimize("O3")
 __attribute__((noipa)) noinline notrace static int
@@ -52,19 +79,9 @@ __kd_mutex_lock_slowpath(struct kd_mutex *lock, int tail,
 	kd_exe_queue_timing_end(true, &curr_node->queued_at_ns,
 				kd_exe_queue_timing_start());
 
-	/* Only waiter in queue? */
-	if (cmpxchg(&lock->delegation_tail,
-		    (u32)curr_node->tail,
-		    0) ==
-	    (u32)curr_node->tail)
+	next_node = kd_mutex_head_successor(lock, curr_node);
+	if (!next_node)
 		goto release;
-
-	/* Wait for next waiter to appear */
-	while (!next_node) {
-		next_node = READ_ONCE(curr_node->next);
-		if (!next_node)
-			cpu_relax();
-	}
 
 	/* --- combiner path --- */
 	kd_mutex_gate_set(lock, KD_MUTEX_GATE_COMBINER);
