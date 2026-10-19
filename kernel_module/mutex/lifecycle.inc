@@ -9,14 +9,10 @@
 
 void kd_mutex_init(struct kd_mutex *lock)
 {
-	lock->tail = 0;
-	atomic_set(&lock->state, 0);
-	lock->physical_owner = NULL;
 	atomic_long_set(&lock->owner, 0);
 	osq_lock_init(&lock->osq);
 	raw_spin_lock_init(&lock->wait_lock);
 	INIT_LIST_HEAD(&lock->wait_list);
-	atomic_set(&lock->waiter_count, 0);
 }
 
 EXPORT_SYMBOL_GPL(kd_mutex_init);
@@ -57,11 +53,19 @@ int kd_mutex_init_percpu(void)
 	BUILD_BUG_ON(offsetof(struct kd_mutex_node, completed) != 304);
 	BUILD_BUG_ON(offsetof(struct kd_mutex_node, locked) != 305);
 	BUILD_BUG_ON(offsetof(struct kd_mutex_node, regs) != 2 * L1_CACHE_BYTES);
-	BUILD_BUG_ON(sizeof(struct kd_mutex) != 4 * L1_CACHE_BYTES);
-	BUILD_BUG_ON(__alignof__(struct kd_mutex) < 2 * L1_CACHE_BYTES);
-	BUILD_BUG_ON(offsetof(struct kd_mutex, tail) != 2 * L1_CACHE_BYTES);
-	BUILD_BUG_ON(offsetof(struct kd_mutex, physical_owner) != L1_CACHE_BYTES);
-	BUILD_BUG_ON(offsetof(struct kd_mutex, waiter_count) != 3 * L1_CACHE_BYTES);
+	BUILD_BUG_ON(sizeof(struct kd_mutex) != 32);
+	BUILD_BUG_ON(sizeof(struct kd_mutex) != sizeof(struct mutex));
+	BUILD_BUG_ON(__alignof__(struct kd_mutex) != __alignof__(struct mutex));
+	BUILD_BUG_ON(offsetof(struct kd_mutex, owner) != offsetof(struct mutex, owner));
+	BUILD_BUG_ON(offsetof(struct kd_mutex, wait_lock) != offsetof(struct mutex, wait_lock));
+	BUILD_BUG_ON(offsetof(struct kd_mutex, osq) != offsetof(struct mutex, osq));
+	BUILD_BUG_ON(offsetof(struct kd_mutex, wait_list) != offsetof(struct mutex, wait_list));
+
+	ret = kd_mutex_aux_init();
+	if (ret) {
+		kd_mutex_local_runtime_exit();
+		return ret;
+	}
 
 	for_each_possible_cpu(i) {
 		struct kd_mutex_cpu_state *p = per_cpu_ptr(&kd_mutex_shadows, i);
@@ -118,6 +122,7 @@ int kd_mutex_init_percpu(void)
 
 err_free:
 	kd_mutex_free_percpu_stacks();
+	kd_mutex_aux_exit();
 	kd_mutex_local_runtime_exit();
 	return -ENOMEM;
 }
@@ -135,7 +140,7 @@ bool kd_mutex_check_idle(void)
 		    READ_ONCE(per_cpu(kd_mutex_shadows, cpu).node_slots))
 			return false;
 	}
-	return true;
+	return kd_mutex_aux_all_idle();
 }
 
 void kd_mutex_exit(void)
@@ -189,5 +194,6 @@ void kd_mutex_exit(void)
 				  i, READ_ONCE(p->node_slots));
 	}
 	kd_mutex_free_percpu_stacks();
+	kd_mutex_aux_exit();
 	kd_mutex_local_runtime_exit();
 }

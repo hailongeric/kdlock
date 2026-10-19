@@ -25,6 +25,7 @@ struct task_struct {
 typedef struct task_struct *atomic_long_t;
 typedef int raw_spinlock_t;
 struct optimistic_spin_queue { atomic_t tail; };
+struct hlist_node { struct hlist_node *next, **pprev; };
 struct list_head { struct list_head *next, *prev; };
 #include "mutex_resource_types.h"
 
@@ -169,6 +170,8 @@ static bool kd_mutex_trylock_fast(struct kd_mutex *lock)
 #define osq_lock_init(p) ((p)->tail.counter = 0)
 #define raw_spin_lock_init(p) (*(p) = 0)
 #define INIT_LIST_HEAD(p) ((p)->next = (p)->prev = (p))
+#define WARN_ON_ONCE(c) ({ bool warn = !!(c); if (warn) errors++; warn; })
+#include "mutex_aux_mock.h"
 #include "mutex_resource_code.h"
 
 /* Independent initialized objects replace the historical shadow-map fixture.
@@ -268,7 +271,7 @@ static void cpu_relax(void)
 		return;
 	}
 	CHECK(waiting_gate && preempt == 1 && migration == 1);
-	CHECK(waiting_gate->physical_owner == &peer);
+	CHECK(fixture_aux(waiting_gate)->physical_owner == &peer);
 	release_peer(waiting_gate);
 	waiting_gate = NULL;
 }
@@ -281,8 +284,8 @@ static void kd_origin_mutex_lock(struct kd_mutex *lock)
 		/* A native peer acquired L between private-queue owners. Claiming
 		 * S cannot bypass that owner; substitute only its eventual unlock. */
 		CHECK(lock->owner == &peer && current == &waiter);
-		CHECK(gate && gate->locked == _Q_LOCKED_VAL &&
-		      !gate->physical_owner && !release_gate && refs == 1);
+		CHECK(gate && fixture_aux(gate)->locked == _Q_LOCKED_VAL &&
+		      !fixture_aux(gate)->physical_owner && !release_gate && refs == 1);
 		native_owner_wait = false;
 		native_waits++;
 		current = &peer;
@@ -298,7 +301,7 @@ static void kd_origin_mutex_unlock(struct kd_mutex *lock, unsigned long ip)
 	(void)ip;
 	CHECK(lock && lock->owner == current && !preempt && !table_irq);
 	if (release_gate)
-		CHECK(!release_gate->physical_owner && release_gate->locked);
+		CHECK(!fixture_aux(release_gate)->physical_owner && fixture_aux(release_gate)->locked);
 	lock->owner = NULL;
 	releases++;
 }
@@ -375,9 +378,9 @@ static int kd_mutex_lock_slowpath_asm(struct kd_mutex *lock,
 	CHECK(memcmp(&node->regs, &entry, sizeof(entry)) == 0);
 	if (mode == 2) {
 		release_peer(lock);
-		lock->locked = _Q_LOCKED_VAL;
+		fixture_aux(lock)->locked = _Q_LOCKED_VAL;
 		preempt_enable();
-		kd_mutex_claim_origin(lock);
+		kd_mutex_claim_origin(lock, fixture_aux(lock));
 		preempt_disable();
 	} else {
 		CHECK(mode == 3 || mode == 5);
@@ -403,9 +406,9 @@ static int kd_mutex_clobber_wait(struct kd_mutex *lock, struct kd_mutex_node *no
 	memset(&poison, 0xa7, sizeof(poison));
 	CHECK(!memcmp(&before, &poison, sizeof(before)));
 	release_peer(lock);
-	lock->locked = _Q_LOCKED_VAL;
+	fixture_aux(lock)->locked = _Q_LOCKED_VAL;
 	preempt_enable();
-	kd_mutex_claim_origin(lock);
+	kd_mutex_claim_origin(lock, fixture_aux(lock));
 	preempt_disable();
 	return 2;
 }
@@ -430,6 +433,7 @@ static void jump_to_saved_regs_in_cs(struct kd_regs *regs)
 
 static void reset(void)
 {
+	fixture_aux_reset();
 	memset(origins, 0, sizeof(origins));
 	for (unsigned int i = 0; i < 2048; i++) kd_mutex_init(&origins[i].mutex);
 	memset(kd_mutex_nodes, 0, sizeof(kd_mutex_nodes));
@@ -551,6 +555,7 @@ static void check_nodes(void)
 				kd_mutex_release_node(node);
 				before[chosen].next = NULL;
 				before[chosen].lock = NULL;
+				before[chosen].aux = NULL;
 				before[chosen].task_struct_ptr = NULL;
 				before[chosen].gsbase = 0;
 				CHECK(memcmp(before, kd_mutex_nodes,
@@ -632,17 +637,18 @@ static void check_local_predecessor(void)
 	preempt = migration = 1;
 	head = kd_mutex_reserve_node();
 	head->lock = gate;
+	head->aux = kd_mutex_aux_get(gate);
 	head->task_struct_ptr = &peer;
-	gate->locked = _Q_LOCKED_VAL;
+	fixture_aux(gate)->locked = _Q_LOCKED_VAL;
 	CHECK(kd_mutex_has_local_predecessor(gate));
 	CHECK(!kd_mutex_has_local_predecessor(&other));
 	preempt = migration = 0;
 	__kd_mutex_lock(lock, (unsigned long)&native_stack[16], 0x8000);
 	CHECK(!preempt && !migration && !slow_calls && !refs && task_puts == 1);
-	CHECK(lock->owner == current && gate->locked && !gate->physical_owner);
+	CHECK(lock->owner == current && fixture_aux(gate)->locked && !fixture_aux(gate)->physical_owner);
 	CHECK(head->lock == gate && cpu_shadows.node_slots == BIT(head->slot));
 	__kd_mutex_unlock(lock, 0, 0x9000);
-	CHECK(!lock->owner && gate->locked && !gate->physical_owner);
+	CHECK(!lock->owner && fixture_aux(gate)->locked && !fixture_aux(gate)->physical_owner);
 	CHECK(task_puts == 1 && releases == 1 && !errors);
 	preempt = migration = 1;
 	kd_mutex_release_node(head);
@@ -651,8 +657,9 @@ static void check_local_predecessor(void)
 
 static void hold_peer(struct kd_mutex *gate)
 {
-	gate->locked = _Q_LOCKED_COMBINER_VAL;
-	gate->physical_owner = &peer;
+	CHECK(kd_mutex_aux_get(gate)); /* Peer's gate-owner reference. */
+	fixture_aux(gate)->locked = _Q_LOCKED_COMBINER_VAL;
+	fixture_aux(gate)->physical_owner = &peer;
 	gate->owner = &peer;
 	kd_mutex_origin_acquires = 1;
 }
@@ -706,14 +713,15 @@ static void check_promotion_and_routing(void)
 	__kd_mutex_lock(lock, (unsigned long)&native_stack[16], 0x8000);
 	gate = lock;
 	CHECK(!native_owner_wait && native_waits == 1);
-	CHECK(gate && gate->physical_owner == current && lock->owner == current);
+	CHECK(gate && fixture_aux(gate)->physical_owner == current && lock->owner == current);
 	CHECK(refs == 1 && gets == 1 && !task_puts);
 
 	cpu_hot = false;
 	source_open = false;
 	strcpy(current->comm, "renamed");
 	__kd_mutex_unlock(lock, 0, 0x9000);
-	CHECK(!lock->owner && !gate->physical_owner && !gate->locked);
+	CHECK(!lock->owner && !fixture_aux(gate)->physical_owner && !fixture_aux(gate)->locked);
+	CHECK(!fixture_aux(gate)->refs);
 	CHECK(!refs && task_puts == 1);
 	strcpy(current->comm, "target");
 	source_open = true;
@@ -754,8 +762,8 @@ static void check_hook_nodes(void)
 		CHECK(gets == 1 && refs == 1 && adds == 1 && !slow_calls &&
 		      !task_puts);
 		CHECK(lock->owner == current &&
-		      gate->physical_owner == current &&
-		      gate->locked == _Q_LOCKED_VAL);
+		      fixture_aux(gate)->physical_owner == current &&
+		      fixture_aux(gate)->locked == _Q_LOCKED_VAL);
 		CHECK(acquires == 1 && kd_mutex_node_overflow_count ==
 					       (unsigned long)(resource != 0));
 		CHECK(!schedules && !preempt && !migration);
@@ -763,7 +771,8 @@ static void check_hook_nodes(void)
 		      memcmp(before, kd_mutex_nodes, sizeof(before)) == 0);
 		release_gate = gate;
 		__kd_mutex_unlock(lock, 0, 0x9000);
-		CHECK(!lock->owner && !gate->physical_owner && !gate->locked);
+		CHECK(!lock->owner && !fixture_aux(gate)->physical_owner && !fixture_aux(gate)->locked);
+		CHECK(!fixture_aux(gate)->refs);
 		CHECK(task_puts == 1 && !refs &&
 		      kd_mutex_origin_acquires == kd_mutex_origin_releases);
 		CHECK(!errors && !kd_mutex_frame_failure_count);
@@ -815,13 +824,13 @@ static void check_slowpath_packets(void)
 		CHECK(gets == 1 && adds == (unsigned int)!direct_packet);
 		CHECK(kd_mutex_jit_resume_count == (unsigned long)(mode == 3));
 		if (mode == 2) {
-			CHECK(gate->physical_owner == current &&
+			CHECK(fixture_aux(gate)->physical_owner == current &&
 			      lock->owner == current);
 			release_gate = gate;
 			__kd_mutex_unlock(lock, 0, 0x9000);
 			CHECK(task_puts == 1 && !refs);
 		} else {
-			CHECK(gate->physical_owner == &peer &&
+			CHECK(fixture_aux(gate)->physical_owner == &peer &&
 			      lock->owner == &peer);
 			CHECK(task_puts == (unsigned int)(mode == 3) &&
 			      refs == (unsigned int)(mode == 5));
@@ -851,13 +860,13 @@ static void check_slowpath_packets(void)
 				CHECK(!nested->owner && releases == 1);
 				CHECK(refs == 1 && gets == 1 && !task_puts &&
 				      count == 0 && !errors);
-				CHECK(gate->physical_owner == &peer &&
+				CHECK(fixture_aux(gate)->physical_owner == &peer &&
 				      lock->owner == &peer);
 				borrowed = true;
 				__kd_mutex_unlock(lock, 0, 0x9000);
 				CHECK(notify_calls == 2 && releases == 1 &&
 				      !task_puts && refs == 1);
-				CHECK(gate->physical_owner == &peer &&
+				CHECK(fixture_aux(gate)->physical_owner == &peer &&
 				      lock->owner == &peer);
 			}
 			release_peer(gate);
@@ -868,7 +877,8 @@ static void check_slowpath_packets(void)
 				CHECK(!refs && task_puts == 1);
 			}
 		}
-		CHECK(!lock->owner && !gate->physical_owner && !gate->locked);
+		CHECK(!lock->owner && !fixture_aux(gate)->physical_owner && !fixture_aux(gate)->locked);
+		CHECK(!fixture_aux(gate)->refs);
 		CHECK(kd_mutex_origin_acquires == kd_mutex_origin_releases);
 	}
 }
@@ -902,9 +912,9 @@ static void check_minimal_entry(void)
 		memset(&kd_mutex_nodes[i].regs, 0xa7, sizeof(struct kd_regs));
 	__kd_mutex_lock_clobber_v1(lock, (unsigned long)&native_stack[16], 0x8000, 0xabc0);
 	CHECK(!preempt && !migration && !cpu_shadows.node_slots);
-	CHECK(gate->physical_owner == current && refs == 1);
+	CHECK(fixture_aux(gate)->physical_owner == current && refs == 1);
 	__kd_mutex_unlock(lock, 0, 0x9000);
-	CHECK(!refs && !gate->locked);
+	CHECK(!refs && !fixture_aux(gate)->locked);
 }
 
 /* Only pre-reference native fallbacks may return a native cookie. Existing
@@ -933,9 +943,9 @@ static void check_outer_native_result(void)
 	unsigned long route = kd_mutex_outer_contended_clobber_v1(
 		lock, (unsigned long)&native_stack[16], 0x8000, 0);
 	struct kd_mutex *gate = lock;
-	CHECK(!route && refs == 1 && gate && gate->physical_owner == current);
+	CHECK(!route && refs == 1 && gate && fixture_aux(gate)->physical_owner == current);
 	__kd_mutex_unlock(lock, 0, 0x9000);
-	CHECK(!refs && task_puts == 1 && !gate->locked);
+	CHECK(!refs && task_puts == 1 && !fixture_aux(gate)->locked);
 
 	/* A later native fallback has already entered the KD queue contract.
 	 * Keep ROUTED even though local-predecessor refusal drops its own ref. */
@@ -944,17 +954,34 @@ static void check_outer_native_result(void)
 	preempt = migration = 1;
 	struct kd_mutex_node *head = kd_mutex_reserve_node();
 	head->lock = gate;
+	head->aux = kd_mutex_aux_get(gate);
 	head->task_struct_ptr = &peer;
-	gate->locked = _Q_LOCKED_VAL;
+	fixture_aux(gate)->locked = _Q_LOCKED_VAL;
 	preempt = migration = 0;
 	route = kd_mutex_outer_contended_clobber_v1(
 		lock, (unsigned long)&native_stack[16], 0x8000, 0);
 	CHECK(!route && !refs && task_puts == 1 && lock->owner == current);
-	CHECK(gate->locked && !gate->physical_owner && !slow_calls);
+	CHECK(fixture_aux(gate)->locked && !fixture_aux(gate)->physical_owner && !slow_calls);
 	__kd_mutex_unlock(lock, 0, 0x9000);
-	CHECK(!lock->owner && gate->locked && task_puts == 1);
+	CHECK(!lock->owner && fixture_aux(gate)->locked && task_puts == 1);
 	preempt = migration = 1;
 	kd_mutex_release_node(head);
+}
+
+
+/* Allocation refusal happens before node publication and releases its task
+ * routing reference before taking ordinary KD physical exclusion. */
+static void check_aux_allocation_failure(void)
+{
+ reset();
+ struct kd_mutex *lock = &origins[0].mutex;
+ fixture_aux_failure = true;
+ __kd_mutex_lock_clobber_v1(lock, (unsigned long)&native_stack[16], 0x8000, 0xabc0);
+ CHECK(lock->owner == current && fixture_aux_gets == 1 && !fixture_aux(lock)->refs);
+ CHECK(gets == 1 && task_puts == 1 && !refs && !slow_calls && !cpu_shadows.node_slots);
+ CHECK(!preempt && !migration && !fixture_aux(lock)->locked);
+ __kd_mutex_unlock(lock, 0, 0x9000);
+ CHECK(!lock->owner && releases == 1 && !notify_calls && !errors);
 }
 
 int main(void)
@@ -965,7 +992,7 @@ int main(void)
 	fast_available = true;
 	__kd_mutex_lock_clobber_v1(&origins[0].mutex, 0x7000, 0x8000, 0);
 	CHECK(origins[0].mutex.owner == current && entry_attempts == 1);
-	CHECK(!samples && !gets && !adds && !refs && !comm_queries && !entry_pins);
+	CHECK(!samples && !gets && !adds && !refs && !comm_queries && !entry_pins && !fixture_aux_gets);
 	CHECK(!preempt && !migration);
 	__kd_mutex_unlock(&origins[0].mutex, 0, 0x9000);
 	CHECK(!origins[0].mutex.owner && acquires == 1 && releases == 1);
@@ -978,6 +1005,7 @@ int main(void)
 	CHECK(!fast_probes && entry_attempts == 1 && samples == 1);
 	CHECK(origins[0].mutex.owner == current && !refs && !gets);
 	__kd_mutex_unlock(&origins[0].mutex, 0, 0x9000);
+	check_aux_allocation_failure();
 	check_outer_native_result();
 	check_minimal_entry();
 	check_poll_result();

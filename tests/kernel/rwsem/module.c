@@ -10,6 +10,7 @@
 #include <linux/sched/task.h>
 #include <linux/sched/signal.h>
 #include <linux/uaccess.h>
+#include "kd_lock.h"
 #include "kd_rwsem.h"
 #include "kd_rwsem_direct.h"
 
@@ -268,13 +269,13 @@ static void join_workers(void)
 
 static void unpublished(struct result *r)
 {
-	/* These are the queue's exact publication fields, not estimates from a
-	 * timing window. Phase/drain waiters have not entered its pinned protocol.
+	/* This controlled probe has no registered JIT body or other delegation
+	 * callers. An empty exact auxiliary index proves that no gate has even
+	 * reserved delegation state; phase/drain waiters cannot publish a tail.
+	 * Keep the independent exact waiter count through its safe accessor.
 	 */
-	check(!READ_ONCE(sem.gate.tail));
-	/* The internal accessor is not an exported module API. Read the same
-	 * exact atomic field directly in this probe, without changing the gate. */
-	check(!atomic_read(&sem.gate.waiter_count));
+	check(!kd_mutex_debug_aux_count());
+	check(!kd_mutex_debug_waiter_count(&sem.gate));
 	r->publication_checks++;
 }
 

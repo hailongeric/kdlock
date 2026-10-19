@@ -57,7 +57,7 @@ struct qspinlock {
 	bool held;
 };
 typedef struct qspinlock raw_spinlock_t;
-struct mutex {
+struct kd_mutex {
 	int unused;
 };
 #include "remote_types.h"
@@ -212,7 +212,7 @@ static void kd_mutex_task_put(struct task_struct *task)
 	CHECK(task == &logical && list_empty(&kd_native_frames));
 	mutex_puts++;
 }
-static int kd_mutex_jit_nested_unlock_ctx(struct mutex *lock,
+static int kd_mutex_jit_nested_unlock_ctx(struct kd_mutex *lock,
 					  struct kd_exec_frame *frame)
 {
 	(void)lock;

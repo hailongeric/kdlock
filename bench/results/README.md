@@ -18,6 +18,10 @@ retain their own source and evidence; their timings are never pooled.
 The [instruction-exit receipt](10.176.26.71/tests/native-instruction-exit-20261018/README.md)
 records the later checked waiter-continuation feature and its failures/final
 correctness checks separately from accepted throughput measurements.
+The [32-byte mutex receipt](10.176.26.71/tests/mutex32-20261019/README.md)
+records native geometry, automatic auxiliary-state retirement, basic and affected
+VM checks, live JIT/native continuation and preserved failures. It does not
+extend historical performance claims to the compact object.
 The [2026-10-18 consolidation checks](10.176.26.71/tests/main-consolidation-20261018/README.md)
 validate organization and tooling separately from the measured runtime.
 The [feature reintegration checks](10.176.26.71/tests/feature-reintegration-20261018/README.md)

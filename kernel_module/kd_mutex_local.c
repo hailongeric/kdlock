@@ -16,6 +16,7 @@
 #include <linux/sched/task.h>
 #include <linux/sched/wake_q.h>
 #include "kd_mutex.h"
+#include "kd_mutex_aux.h"
 #include "kd_mutex_local.h"
 
 #if defined(CONFIG_PREEMPT_RT) || defined(CONFIG_DEBUG_MUTEXES) || defined(CONFIG_DEBUG_LOCK_ALLOC)
@@ -319,8 +320,7 @@ bool kd_mutex_is_idle(struct kd_mutex *lock)
 {
 	return !atomic_long_read(&lock->owner) && !atomic_read(&lock->osq.tail) &&
 		list_empty(&lock->wait_list) && !raw_spin_is_locked(&lock->wait_lock) &&
-		!READ_ONCE(lock->tail) && !READ_ONCE(lock->physical_owner) &&
-		!atomic_read(&lock->state) && !atomic_read(&lock->waiter_count);
+		kd_mutex_aux_is_idle(lock);
 }
 EXPORT_SYMBOL_GPL(kd_mutex_is_idle);
 

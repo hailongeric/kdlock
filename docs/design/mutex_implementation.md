@@ -4,8 +4,9 @@
 callers use ABI2; ABI0 remains an internal legacy compatibility interface.
 The [compatibility backport](../history/legacy_mutex_compatibility.md) adds fail-closed
 processor-state admission, immutable mutex images and generation-bound frames.
-The [KD-only extension](kd_only_mutex.md) embeds physical exclusion and scheduling
-in each KD object while retaining the queue and pinned producer.
+The [KD-only extension](kd_only_mutex.md) embeds physical exclusion in a native-sized
+KD object and allocates delegation scheduling state only when needed, while
+retaining the queue and pinned producer.
 
 Read [lock protocols](lock_protocols.md) for the algorithm/ownership comparison
 and [KD locking](locking.md#mutex-delegation-protocol) for nested owner/ACK
@@ -95,8 +96,9 @@ separate request records while using this same physical primitive.
 
 The delegation gate is separate from this owner word. A queue head first takes
 the gate, then acquires the same physical mutex through `kd_mutex_claim_origin`.
-`physical_owner` records the delegation executor; it is not the ordinary
-`owner` word and is not set for every local acquisition. Gate values 1 and 3
+The auxiliary record's `physical_owner` records the delegation executor; it is
+not the ordinary `owner` word and is not set for every local acquisition. Gate
+values 1 and 3
 identify ordinary gate ownership and an active combiner respectively. Neither
 value alone grants permission to execute protected data. Physical unlock must
 precede opening the gate.
@@ -105,6 +107,7 @@ precede opening the gate.
 | --- | --- |
 | Local acquire, cancellation, unlock and idle | [kd_mutex_local.c](../../kernel_module/kd_mutex_local.c); private [OSQ](../../kernel_module/kd_mutex_osq.c) |
 | Direct entry policy and exact unlock routing | [lock/mutex_calls.inc](../../kernel_module/lock/mutex_calls.inc); [kd_mutex_tasks.c](../../kernel_module/kd_mutex_tasks.c) retains task/acquisition references |
+| Auxiliary delegation lookup and retirement | [kd_mutex_aux.c](../../kernel_module/kd_mutex_aux.c); [kd_mutex_aux.h](../../include/kd_mutex_aux.h) defines the shared record |
 | Node reservation and physical-owner acquisition | [mutex/queue.inc](../../kernel_module/mutex/queue.inc), coordinated by [kd_mutex.c](../../kernel_module/kd_mutex.c) |
 | Batch selection, execution and node retirement | [mutex/combiner.inc](../../kernel_module/mutex/combiner.inc) |
 | Waiter execution stacks and continuation restore | [mutex/clobber.inc](../../kernel_module/mutex/clobber.inc), [mutex/waiter.inc](../../kernel_module/mutex/waiter.inc) |
@@ -114,8 +117,10 @@ precede opening the gate.
 
 The outer pair probes the KD `owner` word at most eight times, attempting an
 acquire CAS only when the entire owner/flags word is zero. Each failed probe
-pauses before the next attempt; a busy read issues no locked RMW, and a racing
-owner still defeats the CAS. The existing active-combiner gate state (3) ends
+pauses before the next attempt; a busy owner read does not modify that word, and a
+racing owner still defeats the CAS. The active-combiner hint uses the address
+index's bucket lock to read the auxiliary state without letting an unreferenced
+pointer escape. The existing active-combiner gate state (3) ends
 retries; a lone gate owner (state 1) may finish during the bounded window.
 The observed state is a hint and never grants ownership or retirement. This window
 has no worker-count threshold. Success increments the CPU-local entry observation
@@ -144,7 +149,8 @@ unmodelled native result.
 
 | Object | Current storage/lifetime |
 | --- | --- |
-| KD mutex object | 256 bytes, aligned to 128 bytes, owned by the caller; physical exclusion, delegation tail, executor/gate and exact waiter count occupy four separate cachelines |
+| KD mutex object | 32 bytes, aligned to 8 bytes in the captured configuration, owned by the caller; physical owner, OSQ, wait-list spinlock and sleeping wait list |
+| Delegation auxiliary record | 256 bytes, aligned to 128 bytes; lazily allocated and indexed by the KD object address; delegation tail, executor/gate, exact waiter count and exact lifetime references; removed and freed on the last reference |
 | Physical waiting | Private per-CPU OSQ nodes and stack-resident sleeping waiters; ordinary Linux mutex APIs never participate |
 | Task routing record | RCU hash with 256 cacheline-aligned buckets in [kd_mutex_tasks.c](../../kernel_module/kd_mutex_tasks.c); cached identities retain an atomic acquisition count and a `task_struct` ref; insertion/eviction use the bucket writer lock |
 | `kd_mutex_node` | Four independently bitmap-reserved slots per possible CPU; 320 bytes each, 64-byte aligned |
@@ -152,9 +158,22 @@ unmodelled native result.
 | Execution frames | Shared per-CPU context, up to eight frames; physical owner remains fixed through sleep/ACK; root borrows node packet until FULL detachment |
 | Batch state | Physical combiner's stack; retains current retirement flag, exact successor, bounded NUMA deferred chain, outer-release callback and image-slot identity |
 
-There is no shadow lookup or fixed object-count ceiling. Object identity is the
-KD pointer itself. The [KD-only guide](kd_only_mutex.md) records field offsets,
-ordinary API aliases, initialization, drain and full-rebuild requirements.
+Physical operations use the embedded fields without an auxiliary lookup.
+Delegation uses a bucketed address index with no fixed object-count ceiling;
+object identity remains the KD pointer itself. The [KD-only guide](kd_only_mutex.md)
+records field offsets, ordinary API aliases, initialization, drain and full-rebuild
+requirements.
+
+Auxiliary misses allocate with GFP_ATOMIC, then recheck under the bucket lock
+before publication. Allocation failure retains the existing local KD fallback
+without publishing a delegation waiter. Invocation references protect the
+published queue and its borrowed packet/frame storage. A separate gate-owner
+reference survives scheduling-node retirement and follows physical-owner release,
+including native ACK and early-release processing. The last put verifies idle
+delegation state, unlinks the record under its bucket lock and frees it after
+unlock. Thus neither ordinary nor delegation callers must add a destruction call
+to reclaim auxiliary storage. Callers must still drain all uses before freeing
+or reinitializing their lock object.
 
 `kd_mutex_task_get()` first attempts an RCU lookup and atomic acquisition-reference
 increment. Cache hits require neither allocation nor the bucket writer lock.
@@ -203,11 +222,12 @@ does not fetch the entire FULL packet on every minimal request. The pointer is q
 current-node read is allowed after its completion/native publication. Prefetch
 grants no ownership, admission or lifetime.
 
-The private gate also uses a read before its acquire CAS. Together with the
+The auxiliary gate also uses a read before its acquire CAS. Together with the
 physical-owner guard, this keeps failed producer RMWs from invalidating ownership
 lines held across a batch. Tail exchanges and exact waiter-count updates retain
-their original atomic operations on separate lines; no probe or ownership check
-is removed.
+their original atomic operations on separate lines within the auxiliary record.
+Auxiliary lifetime references are independent of those queue observations and
+exact ownership records.
 
 ### Queue, batch execution and recovery
 
@@ -387,9 +407,12 @@ unchanged. Build/use instructions belong in the
 [workload README](../../workload_modules/mutex_cacheline/README.md) and
 [runner README](../../bench/tclock_compare/README.md).
 
-The current c01/post64 and pipebytes n16 comparison, returned-body evidence
-and regression limits are in the
+The selected `d2a2304` c01/post64 and pipebytes n16 comparison, returned-body
+evidence and regression limits are in the
 [KD-only report](../../bench/results/10.176.26.71/bench/comparison/mutex-kdonly-20261017T140354Z/README.md).
+That report measures the prior 256-byte, 128-byte-aligned object. It does not
+measure the compact layout or its auxiliary allocation/lookup costs; no
+performance gain is established for the storage refactor.
 Earlier grouping/cache candidates remain in
 [fixed benchmark records](../../bench/results/380G10/bench/tclock_compare/HISTORY.md#mutex-followup).
 The earlier [mandatory-JIT trials](../../bench/results/380G10/bench/tclock_compare/20261008-mutex-priority-trials.md)

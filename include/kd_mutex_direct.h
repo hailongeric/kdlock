@@ -72,7 +72,7 @@ kd_mutex_outer_trylock(struct kd_mutex *lock, unsigned long owner)
 		if (!atomic_long_read(&lock->owner) &&
 		    atomic_long_try_cmpxchg_acquire(&lock->owner, &zero, owner))
 			return true;
-		if (READ_ONCE(lock->locked) == KD_MUTEX_GATE_COMBINER)
+		if (kd_mutex_combiner_active(lock))
 			return false;
 		cpu_relax();
 	}

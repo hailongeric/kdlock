@@ -1,0 +1,299 @@
+{
+  "archive_groups": [
+    {
+      "compressed_bytes": 3518731,
+      "file": "local.tar.gz",
+      "group": "local",
+      "members": 271,
+      "regular_bytes": 13017506,
+      "sha256": "a7039b866571747fe6bbd0ab7f0308acc0c3d2d159636472d46642193f9a719b",
+      "types": {
+        "directory": 23,
+        "regular": 248
+      }
+    },
+    {
+      "compressed_bytes": 3738132,
+      "file": "rwsem.tar.gz",
+      "group": "rwsem",
+      "members": 284,
+      "regular_bytes": 13752195,
+      "sha256": "3dcd5a9d7cdd9436327823e792eefdefd127dc4280ba0b507c85dae2d4d9a9cc",
+      "types": {
+        "directory": 26,
+        "regular": 258
+      }
+    },
+    {
+      "compressed_bytes": 90819,
+      "file": "jit-failed.tar.gz",
+      "group": "jit-failed",
+      "members": 44,
+      "regular_bytes": 365684,
+      "sha256": "027889b0b329556d100086782e977aee850a34a66eedd4504a46e831fc2856ec",
+      "types": {
+        "directory": 4,
+        "regular": 40
+      }
+    },
+    {
+      "compressed_bytes": 2253839,
+      "file": "jit-nojit.tar.gz",
+      "group": "jit-nojit",
+      "members": 522,
+      "regular_bytes": 8118384,
+      "sha256": "e2b28e762d1d711dcd5df51ad046f3f11d2ca45946bb4120b46ca95692b63be7",
+      "types": {
+        "directory": 64,
+        "regular": 456,
+        "symlink": 2
+      }
+    },
+    {
+      "compressed_bytes": 2254840,
+      "file": "jit.tar.gz",
+      "group": "jit",
+      "members": 521,
+      "regular_bytes": 8128088,
+      "sha256": "8e9df72b5674d17148c483839aebeb0e300f4368a9f04f7913ae198cfa4a05ea",
+      "types": {
+        "directory": 64,
+        "regular": 455,
+        "symlink": 2
+      }
+    },
+    {
+      "compressed_bytes": 4285244,
+      "file": "instruction-exit.tar.gz",
+      "group": "instruction-exit",
+      "members": 563,
+      "regular_bytes": 15572268,
+      "sha256": "ef18daf0feaf1e2c9d9c27a1842b7eb2892c87b16e1d86ad5b899c44a544de11",
+      "types": {
+        "directory": 46,
+        "regular": 515,
+        "symlink": 2
+      }
+    },
+    {
+      "compressed_bytes": 14380,
+      "file": "metadata.tar.gz",
+      "group": "metadata",
+      "members": 16,
+      "regular_bytes": 50359,
+      "sha256": "9b861008d7c25ad4ce231e3fd03b603a7626d79291c57ba9ad4cdcb45e497781",
+      "types": {
+        "regular": 16
+      }
+    }
+  ],
+  "archive_root": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/mutex32-20261019",
+  "archive_script_sha256": "8d666f148a10d7fe19294cc7d193464c8bb53d4c3aec64b7518b9d335966c952",
+  "archives_manifest_sha256": "931d43b8bde6957ea96709aabefaf189e54be0cb672136570c8e62488e5d781f",
+  "binary_manifest_checks": [
+    {
+      "files": [
+        {
+          "archive_path": "instruction-exit/build/guard/tc_allocator_guard.ko",
+          "recorded_path": "/root/kdlock-evidence/10.176.26.71/tests/mutex32-20261019/instruction-exit/build/guard/tc_allocator_guard.ko",
+          "sha256": "ec7fc0110a0af5737b6b419832b5f32205a9de7d08e48c5fdb79db16bf1eadcb"
+        },
+        {
+          "archive_path": "instruction-exit/build/provider/kernel_module/kdlock_km.ko",
+          "recorded_path": "/root/kdlock-evidence/10.176.26.71/tests/mutex32-20261019/instruction-exit/build/provider/kernel_module/kdlock_km.ko",
+          "sha256": "885f728847e9c0b2564a6309e4894595cbb7740d0bf72bb9e0b861eac0e4d6d5"
+        },
+        {
+          "archive_path": "instruction-exit/source/daemon/daemon",
+          "recorded_path": "/root/kdlock-evidence/10.176.26.71/tests/mutex32-20261019/instruction-exit/source/daemon/daemon",
+          "sha256": "bae5dcaf8cfa83b020bec6e2a7a85c0b0496f603dd0789a4cc8f3e31d5305fcb"
+        },
+        {
+          "archive_path": "instruction-exit/source/workload_modules/jit_escape/jit_escape_test.ko",
+          "recorded_path": "/root/kdlock-evidence/10.176.26.71/tests/mutex32-20261019/instruction-exit/source/workload_modules/jit_escape/jit_escape_test.ko",
+          "sha256": "402e2c1fc409bae74328b230432d2a5f177c72333b44251e5c99d5e051200724"
+        }
+      ],
+      "manifest": "instruction-exit/binary-sha256.json",
+      "sha256": "ecc9e44a5ab22423932a2cac2acea60e435ba518c877fd9957a72a50f969d0af"
+    },
+    {
+      "files": [
+        {
+          "archive_path": "jit-c08/binaries/kdlock_km.ko",
+          "recorded_path": "/root/host_fs/kdlock/bench/spin_cacheline/.build/provider/kernel_module/kdlock_km.ko",
+          "sha256": "e2af6a3c42ab5fea728cbfe5aa12f14aca4bff0af89f2fc02875fc28727fd7fb"
+        },
+        {
+          "archive_path": "jit-c08/binaries/client",
+          "recorded_path": "/root/host_fs/kdlock/bench/spin_cacheline/client",
+          "sha256": "135a1a6779c8313601e839edd99be8ba57dd6a7d718e18b8dca99edc88ab6bff"
+        },
+        {
+          "archive_path": "jit-c08/binaries/tc_allocator_guard.ko",
+          "recorded_path": "/root/host_fs/kdlock/bench/tclock_compare/allocator_guard/tc_allocator_guard.ko",
+          "sha256": "4323537a05b588952ba6800a5b65cf3f0681174c3aa37dd1102e5cc1e963f930"
+        },
+        {
+          "archive_path": "jit-c08/binaries/daemon",
+          "recorded_path": "/root/host_fs/kdlock/daemon/daemon",
+          "sha256": "bae5dcaf8cfa83b020bec6e2a7a85c0b0496f603dd0789a4cc8f3e31d5305fcb"
+        },
+        {
+          "archive_path": "jit-c08/variants/kdlock/mutex_cacheline.ko",
+          "recorded_path": "/root/kdlock-evidence/10.176.26.71/tests/mutex32-20261019/jit-c08/variants/kdlock/mutex_cacheline.ko",
+          "sha256": "8e8b3aa26a35bdfc2388f0f42f1560965fda892be280c89c7807aa43e4774fc1"
+        }
+      ],
+      "manifest": "jit-c08/binary-sha256.json",
+      "sha256": "89cd6d2096906ffd208d1adb19d3b5368a987b6c0e5d65c53ac85b193744dbf3"
+    },
+    {
+      "files": [
+        {
+          "archive_path": "jit-retry/binaries/kdlock_km.ko",
+          "recorded_path": "/root/host_fs/kdlock/bench/spin_cacheline/.build/provider/kernel_module/kdlock_km.ko",
+          "sha256": "7e408c8d756bb7f3ba3fd2696a1f958269c65bd720c3647772493244b0135c25"
+        },
+        {
+          "archive_path": "jit-retry/binaries/client",
+          "recorded_path": "/root/host_fs/kdlock/bench/spin_cacheline/client",
+          "sha256": "135a1a6779c8313601e839edd99be8ba57dd6a7d718e18b8dca99edc88ab6bff"
+        },
+        {
+          "archive_path": "jit-retry/binaries/tc_allocator_guard.ko",
+          "recorded_path": "/root/host_fs/kdlock/bench/tclock_compare/allocator_guard/tc_allocator_guard.ko",
+          "sha256": "4323537a05b588952ba6800a5b65cf3f0681174c3aa37dd1102e5cc1e963f930"
+        },
+        {
+          "archive_path": "jit-retry/binaries/daemon",
+          "recorded_path": "/root/host_fs/kdlock/daemon/daemon",
+          "sha256": "bae5dcaf8cfa83b020bec6e2a7a85c0b0496f603dd0789a4cc8f3e31d5305fcb"
+        },
+        {
+          "archive_path": "jit-retry/variants/kdlock/mutex_cacheline.ko",
+          "recorded_path": "/root/kdlock-evidence/10.176.26.71/tests/mutex32-20261019/jit-retry/variants/kdlock/mutex_cacheline.ko",
+          "sha256": "170dfcd824e402bb32772bfc093ba86a6a7a3cff4348ebf10fa6ff4e02732c06"
+        }
+      ],
+      "manifest": "jit-retry/binary-sha256.json",
+      "sha256": "3a0802b4f77ac89e70fcbb85ea232ad27d048765df7a4a7f7db0c82ae0d38dbc"
+    },
+    {
+      "files": [
+        {
+          "archive_path": "local/source/kernel_module/kdlock_km.ko",
+          "recorded_path": "source/kernel_module/kdlock_km.ko",
+          "sha256": "5ab9f0182e700908b0a07626bb9246bb1431a8f20a6829153aaf2571521cbdb8"
+        },
+        {
+          "archive_path": "local/source/tests/kernel/mutex/local/kd_mutex_local_probe.ko",
+          "recorded_path": "source/tests/kernel/mutex/local/kd_mutex_local_probe.ko",
+          "sha256": "3f8ca35b5598746c18f93cc36172770f4c752907d5583609d0f01a62a0dcfd68"
+        }
+      ],
+      "manifest": "local/binary-sha256.json",
+      "sha256": "7c807e2cf42b8d75b6f831ab2351bd9da1e82474ae9b39be926340eb0f966b64"
+    },
+    {
+      "files": [
+        {
+          "archive_path": "rwsem/source/kernel_module/kdlock_km.ko",
+          "recorded_path": "/root/kdlock-evidence/10.176.26.71/tests/mutex32-20261019/rwsem/source/kernel_module/kdlock_km.ko",
+          "sha256": "2a54ed34eb7742d130d21b5c5c1e19dd3bf33672f20cdabd92a9f1a5eaffc67c"
+        },
+        {
+          "archive_path": "rwsem/source/tests/kernel/rwsem/rwsem_probe.ko",
+          "recorded_path": "/root/kdlock-evidence/10.176.26.71/tests/mutex32-20261019/rwsem/source/tests/kernel/rwsem/rwsem_probe.ko",
+          "sha256": "f93804f37da63af38fe1748afcc033f8889a4906e189771e693244d8b190b4e3"
+        }
+      ],
+      "manifest": "rwsem/binary-sha256.json",
+      "sha256": "de34ba89e2340e19b5586386c77e346f0ac46689effb6c87bebce9b88356501e"
+    }
+  ],
+  "failures": [],
+  "input_inventory_sha256": "482d77361a49085d49fd52b2919a9bf22a67d38c122f346c40b9f8ce997d8f90",
+  "limits": [
+    "Integrity and completeness are checked against supplied manifests/inventory, not against a new live guest scan or independent trusted signature.",
+    "The initial failed JIT archive has no source or binary manifest; its 44 archived entries are fully covered by inventory, metadata and compressed archive checks.",
+    "Directory inode allocation sizes, inode/device identity, link counts and nanosecond filesystem timestamps are not compared with portable tar metadata.",
+    "This audit does not rerun tests, execute archived code, validate performance claims or independently reconstruct generated executable images."
+  ],
+  "membership": {
+    "duplicate_or_metadata_errors": [],
+    "omitted": [],
+    "unexpected": []
+  },
+  "passed": true,
+  "review_host": "380G10",
+  "review_method": "Independent Python stdlib tarfile streaming and SHA256; no archive extraction or archived code execution.",
+  "reviewed_utc": "2026-10-19T07:16:50.430059+00:00",
+  "schema": 1,
+  "source_manifest_checks": [
+    {
+      "files": 92,
+      "manifest": "instruction-exit/prepared-source-sha256.json",
+      "private_inc_files": 39,
+      "sha256": "cec4427242a0c6b1a14d462fa024f5e99bcf05b195f4e65e2dd0ac7177a1bf8d",
+      "snapshot_root": "instruction-exit/build/provider"
+    },
+    {
+      "files": 186,
+      "manifest": "instruction-exit/source-sha256.json",
+      "private_inc_files": 42,
+      "sha256": "d486d71ebb774f1b78cd087482d6dd68fce7f33f54bbd6c2dc4fee41314375ea",
+      "snapshot_root": "instruction-exit/source"
+    },
+    {
+      "files": 328,
+      "manifest": "jit-c08/source-sha256.json",
+      "private_inc_files": 97,
+      "sha256": "0b24448701287ca473e889042426bbbb3e6900c243a60896ce4622d1f83bfd82",
+      "snapshot_root": "jit-c08/source"
+    },
+    {
+      "files": 328,
+      "manifest": "jit-retry/source-sha256.json",
+      "private_inc_files": 97,
+      "sha256": "0b24448701287ca473e889042426bbbb3e6900c243a60896ce4622d1f83bfd82",
+      "snapshot_root": "jit-retry/source"
+    },
+    {
+      "files": 164,
+      "manifest": "local/source-sha256.json",
+      "private_inc_files": 39,
+      "sha256": "fcdbaae3528109b9a161bd09d1d6426383609d81c890aa2b7173866022c7d3d5",
+      "snapshot_root": "local/source"
+    },
+    {
+      "files": 164,
+      "manifest": "rwsem/source-sha256.json",
+      "private_inc_files": 39,
+      "sha256": "585004e76dc43a5fcf2edf9a5b138a9f6c7af6f86bc3d1eb572af025307a03c8",
+      "snapshot_root": "rwsem/source"
+    }
+  ],
+  "totals": {
+    "archives": 7,
+    "binary_manifest_entries": 18,
+    "compressed_bytes": 16155985,
+    "directories": 227,
+    "inventory_members": 2221,
+    "members": 2221,
+    "private_inc_manifest_entries": 353,
+    "regular_bytes": 59004484,
+    "regular_files": 1988,
+    "source_manifest_entries": 1262,
+    "symlinks": 6
+  },
+  "verified": [
+    "All seven compressed archive SHA256 values and byte sizes match archives.json.",
+    "Inventory and archive script SHA256 values match archives.json; archived health receipt matches its declared hash.",
+    "Every inventoried path occurs exactly once across groups, with exact per-group root coverage and no extra members.",
+    "All member types, permission modes, uid/gid, regular file sizes and all symlink targets/target lengths match inventory.",
+    "Every regular member was streamed fully and SHA256 hashed; no hardlink/device/other unsupported entries occur.",
+    "All five session source manifests plus prepared-provider source manifest match archived bytes, including private .inc files.",
+    "All five binary manifests map to preserved artifacts and match their hashes."
+  ]
+}

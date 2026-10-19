@@ -105,7 +105,7 @@ void __kd_mutex_unlock(struct kd_mutex *lock, unsigned long ret_rsp,
 	if (kd_exec_native_unlock((unsigned long)lock, true))
 		return;
 	kd_mtx = lock;
-	if (READ_ONCE(kd_mtx->physical_owner) == current) {
+	if (kd_mutex_delegation_owned(kd_mtx, current)) {
 		_kd_mutex_unlock(kd_mtx);
 		kd_mutex_task_put(current);
 		return;

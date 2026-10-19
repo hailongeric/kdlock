@@ -1,0 +1,50 @@
+make: Entering directory '/root/host_fs/kdlock/tests/unit'
+
+production mutex resources: 4809 checks, 0 failures; nodes=4 objects=2048 regs=168
+mutex resource mutation detected: outer-entry-retries-native-cas
+mutex resource mutation detected: outer-native-result-routed
+mutex resource mutation detected: outer-queued-result-native
+mutex resource mutation detected: native-success-still-samples
+mutex resource mutation detected: local-predecessor-still-publishes
+mutex resource mutation detected: tail-loses-empty-sentinel
+mutex resource mutation detected: tail-loses-slot
+mutex resource mutation detected: tail-decodes-next-cpu
+mutex resource mutation detected: tail-truncates-slot
+mutex resource mutation detected: tail-ignores-remote-cpu
+mutex resource mutation detected: missing-stack-accepted
+mutex resource mutation detected: reservation-not-published
+mutex resource mutation detected: poll-enables-preemption
+mutex resource mutation detected: poll-returns-before-publication
+mutex resource mutation detected: release-keeps-gs
+mutex resource mutation detected: gate-without-native-lock
+mutex resource mutation detected: resume-loses-register
+mutex resource mutation detected: native-drops-task-record
+mutex resource mutation detected: hook-ignores-task-failure
+mutex resource mutation detected: unlock-drops-retained-task
+mutex resource mutation detected: hook-admits-closed-source
+mutex resource mutation detected: borrowed-unlock-bypasses-notification
+
+mutex outer production progress: 639 checks, 0 failures, 12 scenarios
+mutex routine INFO traces retained: 12
+mutation detected: alert-regression
+mutation detected: disabled-trace
+
+remote outer production: 6185 checks, 0 failures
+remote packet/publication: regs=168 packet_checks=2175 done=59
+remote mutation detected: spin-done-before-pop
+remote mutation detected: remote-poll-clobbers-r12
+remote mutation detected: cancel-clobbers-r13
+remote mutation detected: done-before-detach
+remote mutation detected: write-after-done
+remote mutation detected: advance-loses-r15
+remote mutation detected: terminal-packet-loses-rax
+remote mutation detected: native-begin-clobbers-r10
+remote mutation detected: native-ack-clobbers-rbx
+remote mutation detected: native-wait-not-measured
+remote mutation detected: native-wait-wrong-backend
+remote mutation detected: native-wait-loses-error
+remote control: BUG-only exit is not assertion detection
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Unit tests: 3 passed, 0 failed
+make: Leaving directory '/root/host_fs/kdlock/tests/unit'

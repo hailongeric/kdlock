@@ -29,9 +29,9 @@ static inline struct kd_mutex_node *kd_mutex_decode_tail(u32 tail)
 	return per_cpu_ptr(&kd_mutex_nodes[idx], cpu);
 }
 
-static inline u32 kd_mutex_xchg_tail(struct kd_mutex *lock, u32 tail)
+static inline u32 kd_mutex_xchg_tail(struct kd_mutex_aux *aux, u32 tail)
 {
-	return xchg(&lock->tail, tail);
+	return xchg(&aux->tail, tail);
 }
 
 /* --------------------------------------------------------------------------
@@ -44,9 +44,9 @@ kd_mutex_clear_locked_set_completed(struct kd_mutex_node *node)
 	smp_store_release(&node->locked, 0);
 }
 
-static __always_inline void kd_mutex_set_locked(struct kd_mutex *lock)
+static __always_inline void kd_mutex_set_locked(struct kd_mutex_aux *aux)
 {
-	smp_store_release(&lock->locked, _Q_LOCKED_VAL);
+	smp_store_release(&aux->locked, _Q_LOCKED_VAL);
 }
 
 static void kd_mutex_update_max_waiters(int active)
@@ -63,23 +63,23 @@ static void kd_mutex_update_max_waiters(int active)
 	}
 }
 
-static void kd_mutex_waiter_enter(struct kd_mutex *lock)
+static void kd_mutex_waiter_enter(struct kd_mutex_aux *aux)
 {
 	/* This is an origin-CPU balance, not a queue publication primitive.
 	 * The tail exchange/link and result release/acquire keep their ordering. */
 	int active = this_cpu_inc_return(kd_mutex_active_waiters);
 
-	atomic_inc(&lock->waiter_count);
+	atomic_inc(&aux->waiter_count);
 	kd_mutex_update_max_waiters(active);
 }
 
-static void kd_mutex_waiter_exit(struct kd_mutex *lock)
+static void kd_mutex_waiter_exit(struct kd_mutex_aux *aux)
 {
-	if (unlikely(atomic_dec_return(&lock->waiter_count) < 0)) {
-		atomic_set(&lock->waiter_count, 0);
+	if (unlikely(atomic_dec_return(&aux->waiter_count) < 0)) {
+		atomic_set(&aux->waiter_count, 0);
 		this_cpu_inc(kd_mutex_frame_failure_count);
 		KD_PR_ERR("kd_mutex lock waiter count underflow lock=%px\n",
-			  lock);
+			  aux->lock);
 	}
 	if (unlikely(this_cpu_dec_return(kd_mutex_active_waiters) < 0)) {
 		this_cpu_write(kd_mutex_active_waiters, 0);
@@ -99,24 +99,26 @@ static void kd_mutex_wait_for_result(struct kd_mutex_node *node)
 }
 
 /* The scheduling gate cannot authorize a CS without the KD physical mutex. */
-static void kd_mutex_claim_origin(struct kd_mutex *lock)
+static void kd_mutex_claim_origin(struct kd_mutex *lock, struct kd_mutex_aux *aux)
 {
-	BUG_ON(READ_ONCE(lock->physical_owner));
+	BUG_ON(READ_ONCE(aux->physical_owner));
+	/* The invocation reference protects this increment before sleeping. */
+	kd_mutex_aux_ref(aux);
 	kd_origin_mutex_lock(lock);
-	WRITE_ONCE(lock->physical_owner, current);
+	WRITE_ONCE(aux->physical_owner, current);
 	this_cpu_inc(kd_mutex_origin_acquires);
 }
 
-static void kd_mutex_wait_and_lock(struct kd_mutex *lock)
+static void kd_mutex_wait_and_lock(struct kd_mutex *lock, struct kd_mutex_aux *aux)
 {
 	for (;;) {
-		while (smp_load_acquire(&lock->locked))
+		while (smp_load_acquire(&aux->locked))
 			cpu_relax();
-		if (cmpxchg(&lock->locked, 0, _Q_LOCKED_VAL) == 0) {
+		if (cmpxchg(&aux->locked, 0, _Q_LOCKED_VAL) == 0) {
 			/* This request now owns the gate and cannot be delegated.
 			 * Only the real mutex owner may execute/release its body. */
 			preempt_enable();
-			kd_mutex_claim_origin(lock);
+			kd_mutex_claim_origin(lock, aux);
 			preempt_disable();
 			return;
 		}
@@ -184,6 +186,7 @@ static void kd_mutex_release_node(struct kd_mutex_node *node)
 
 	node->next = NULL;
 	node->lock = NULL;
+	node->aux = NULL;
 	node->task_struct_ptr = NULL;
 	node->gsbase = 0;
 	WRITE_ONCE(shadow->node_slots, slots & ~bit);

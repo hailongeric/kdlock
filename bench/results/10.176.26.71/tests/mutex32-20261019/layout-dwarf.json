@@ -1,0 +1,130 @@
+{
+  "dwarf_dump_sha256": "cbfb2a3a55d163d6b58a71d6a59f1001d2dd4517c3eff58406247bce309c6316",
+  "elf_sha256": "5ab9f0182e700908b0a07626bb9246bb1431a8f20a6829153aaf2571521cbdb8",
+  "elf_size_bytes": 3450728,
+  "inspection": "read-only offline DWARF inspection on 380G10",
+  "layouts": {
+    "kd_mutex": {
+      "alignment_bytes": 8,
+      "alignment_evidence": "Natural alignment inferred from pointer/atomic_long members and captured x86_64 C ABI; native equality is also enforced by the live probe compile-time assertions.",
+      "dwarf_alignment_bytes": null,
+      "dwarf_die_offsets": [
+        "0xd8a0",
+        "0x20771",
+        "0x28c58",
+        "0x8b66f",
+        "0x992b0",
+        "0xa9557"
+      ],
+      "member_offsets": {
+        "osq": 12,
+        "owner": 0,
+        "wait_list": 16,
+        "wait_lock": 8
+      },
+      "size_bytes": 32
+    },
+    "kd_mutex_aux": {
+      "alignment_bytes": 128,
+      "alignment_evidence": "DW_AT_alignment",
+      "dwarf_alignment_bytes": 128,
+      "dwarf_die_offsets": [
+        "0x28c9f",
+        "0x8b6b6"
+      ],
+      "member_offsets": {
+        "link": 8,
+        "lock": 0,
+        "locked": 72,
+        "physical_owner": 64,
+        "refs": 24,
+        "state": 72,
+        "tail": 128,
+        "waiter_count": 192
+      },
+      "size_bytes": 256
+    },
+    "kd_mutex_node": {
+      "alignment_bytes": 64,
+      "alignment_evidence": "DW_AT_alignment",
+      "dwarf_alignment_bytes": 64,
+      "dwarf_die_offsets": [
+        "0x28b47"
+      ],
+      "member_offsets": {
+        "aux": 88,
+        "completed": 304,
+        "entry_abi": 64,
+        "gsbase": 8,
+        "lock": 40,
+        "locked": 305,
+        "native_resume": 306,
+        "next": 0,
+        "numa_node": 80,
+        "packet_state": 68,
+        "queued_at_ns": 296,
+        "regs": 128,
+        "rsp": 16,
+        "saved_ret_addr": 56,
+        "shadow_stack_base": 24,
+        "shadow_stack_ptr": 32,
+        "slot": 76,
+        "tail": 72,
+        "task_struct_ptr": 48
+      },
+      "size_bytes": 320
+    },
+    "kd_rwsem": {
+      "alignment_bytes": 64,
+      "alignment_evidence": "DW_AT_alignment",
+      "dwarf_alignment_bytes": 64,
+      "dwarf_die_offsets": [
+        "0xa959e"
+      ],
+      "member_offsets": {
+        "admission": 128,
+        "gate": 0,
+        "phase_wait": 192,
+        "reader_drain": 256,
+        "readers": 64
+      },
+      "size_bytes": 320
+    },
+    "mutex": {
+      "alignment_bytes": 8,
+      "alignment_evidence": "Natural alignment inferred from pointer/atomic_long members and captured x86_64 C ABI; native equality is also enforced by the live probe compile-time assertions.",
+      "dwarf_alignment_bytes": null,
+      "dwarf_die_offsets": [
+        "0x2d10",
+        "0x9977",
+        "0x16d55",
+        "0x2629c",
+        "0x6d004",
+        "0x78c87",
+        "0x8025d",
+        "0x87f5a",
+        "0x911e9",
+        "0xa2561",
+        "0xa7327",
+        "0xb30e1"
+      ],
+      "member_offsets": {
+        "osq": 12,
+        "owner": 0,
+        "wait_list": 16,
+        "wait_lock": 8
+      },
+      "size_bytes": 32
+    }
+  },
+  "local_elf": "/tmp/mutex32-provider.ko",
+  "native_mutex_geometry_matches_kd": true,
+  "notes": [
+    "System pyelftools could not parse this DWARF version; GNU readelf decoded it successfully.",
+    "DWARF omits natural alignment for kd_mutex and mutex; explicit alignment is available for kd_mutex_node, kd_mutex_aux and kd_rwsem.",
+    "No build, test, module or guest mutation was performed for this inspection."
+  ],
+  "schema": 1,
+  "source_elf": "/root/kdlock-evidence/10.176.26.71/tests/mutex32-20261019/local/source/kernel_module/kdlock_km.ko",
+  "tool": "GNU readelf (GNU Binutils for Ubuntu) 2.38"
+}

@@ -365,7 +365,7 @@ int kd_exec_frame_retire_mutex_batch(struct kd_exec_frame *frame,
 	      frame->remote_request || frame->native_request ||
 	      !list_empty(&frame->native_link))) ||
 	    !frame->outer_unlock_hook || frame->outer_unlock_hook->released ||
-	    READ_ONCE(lock->physical_owner) != current ||
+	    !kd_mutex_delegation_owned(lock, current) ||
 	    !kd_origin_mutex_owned(lock, current))
 		return -EINVAL;
 	frame->jit_lock_released[0] = true;

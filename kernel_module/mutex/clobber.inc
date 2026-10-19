@@ -6,6 +6,7 @@ static __attribute__((noipa, used, noreturn)) noinline notrace void
 kd_mutex_resume_completed(struct kd_mutex_node *node)
 {
 	struct kd_regs full;
+	struct kd_mutex_aux *aux = node->aux;
 	bool native = READ_ONCE(node->native_resume);
 	bool minimal = node->packet_state == KD_PACKET_COMPLETE;
 	unsigned long sp = node->regs.sp, ip = node->regs.ip, bp = node->regs.bp;
@@ -18,6 +19,9 @@ kd_mutex_resume_completed(struct kd_mutex_node *node)
 		full = node->regs;
 	WRITE_ONCE(this_cpu_ptr(&kd_mutex_shadows)->resume_node, NULL);
 	kd_mutex_release_node(node);
+	/* The original lock C frame is overwritten on completion. Its reference
+	 * travels through the node and is retired here, after packet restoration. */
+	kd_mutex_aux_put(aux);
 	if (!native)
 		this_cpu_inc(kd_mutex_jit_resume_count);
 	preempt_enable();

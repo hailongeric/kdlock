@@ -20,18 +20,18 @@ storage, source files and execution details. KD's nested ownership, recovery and
 | KD spin | Explicit four-byte `kd_spinlock_t` | Caller or combiner running translated code | Pinned polling | KD native variants only; no Linux/TCLock mixing |
 | Linux Native mutex | Original `struct mutex` | Its actual Linux owner | Optimistic spinning and sleeping | Ordinary compatible Linux APIs |
 | TCLock mutex | Separate `struct komb_mutex` | Caller or combiner on the waiter's real stack | Polling, scheduling and parking | Not supported |
-| KD mutex | KD physical owner and embedded legacy scheduling gate | Actual KD owner executes JIT, or services a borrowed native suffix | Published KD waiters poll pinned; physical owners may sleep | Every caller must use the KD object and APIs |
+| KD mutex | 32-byte KD physical mutex and lazy auxiliary legacy scheduling gate | Actual KD owner executes JIT, or services a borrowed native suffix | Published KD waiters poll pinned; physical owners may sleep | Every caller must use the KD object and APIs |
 | Linux Native rwlock | Linux `rwlock_t` / queued rwlock | Each reader or writer executes its own body | Concurrent readers; spinning reader/writer admission | Ordinary compatible Linux rwlock APIs |
 | TCLock rwlock | Separate `struct komb_rwlock` count and gate | Readers run locally; queued writer bodies may run on a borrowed waiter stack | Pinned polling and upstream gate delegation | TCLock rwlock pairs only |
 | KD rwlock | 128-byte `kd_rwlock_t`, count and KD gate on separate cache lines | Readers run locally; writers run natively or through ABI3 JIT | Pinned readers/writers; KD gate queues contended admission | KD native and direct pairs only; no Linux/TCLock mixing |
 | Linux Native rwsem | Linux `struct rw_semaphore` | Readers and writers execute their own bodies | Concurrent readers or one writer; blocked callers may sleep | Ordinary compatible Linux rwsem APIs |
-| KD rwsem | 512-byte `struct kd_rwsem`, reader count and phase reservations around a KD mutex | Readers and ordinary writers run locally; outer writers may use mutex ABI2 delegation | Admission/drain waits may sleep; published mutex waiters poll pinned | KD ordinary and outer-writer pairs only; no Linux/TCLock mixing |
+| KD rwsem | 320-byte `struct kd_rwsem`, reader count and phase reservations around a KD mutex | Readers and ordinary writers run locally; outer writers may use mutex ABI2 delegation | Admission/drain waits may sleep; published mutex waiters poll pinned | KD ordinary and outer-writer pairs only; no Linux/TCLock mixing |
 
 A queue-head notification tells a waiter it may try to acquire the lock. It does
 not mean the waiter owns the lock or that its body has run. A completion
 notification tells the original caller that its body has already run and must be
 skipped. For KD mutex, the scheduling gate and physical exclusion have
-separate roles in one object: the executor must own both before running a body.
+separate roles for the same KD lock: the executor must own both before running a body.
 
 The workload builds a separate version for each backend. Every operation on a
 lock uses that backend's matching API. Loading KD or TCLock does not redirect

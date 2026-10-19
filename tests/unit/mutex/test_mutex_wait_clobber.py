@@ -43,7 +43,10 @@ register unsigned long current_stack_pointer asm("rsp");
 static struct { struct kd_mutex_node *resume_node; } kd_mutex_shadows;
 static unsigned long kd_mutex_jit_resume_count;
 static void *current;
-static int mode, entered, after_bridge, released, task_put;
+static int mode, entered, after_bridge, released, task_put, aux_put;
+static void kd_mutex_aux_put(struct kd_mutex_aux *aux) {
+    assert(aux==(void *)0x4560); aux_put++;
+}
 static struct kd_mutex_node node;
 static unsigned char shadow[KD_MUTEX_SHADOW_STACK_SIZE] __attribute__((aligned(16)));
 static void preempt_enable(void) {}
@@ -75,7 +78,7 @@ bridge(struct kd_mutex *lock, unsigned long sp, unsigned long ip, unsigned long 
     memset(&node, 0xa5, sizeof(node));
     node.entry_abi=KD_ENTRY_ABI_MUTEX_CLOBBER_V1;
     node.packet_state=KD_PACKET_MINIMAL;
-    node.native_resume=false; node.completed=0;
+    node.native_resume=false; node.completed=0; node.aux=(void *)0x4560;
     node.regs.sp=sp; node.regs.ip=ip; node.regs.bp=bp;
     node.shadow_stack_ptr=(unsigned long)(shadow+sizeof(shadow));
     int result=kd_mutex_clobber_wait(lock,&node);
@@ -103,7 +106,7 @@ int main(void) {
         mode=3; assert(run()==expected);
     }
     assert(entered==64 && after_bridge==32 && released==32 && task_put==32);
-    assert(kd_mutex_jit_resume_count==32);
+    assert(kd_mutex_jit_resume_count==32 && aux_put==32);
     puts("[PASS] production mutex shadow switch: 32 intact returns, 32 destroyed-frame minimal resumes");
 }
 '''

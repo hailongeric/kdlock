@@ -1,0 +1,182 @@
+{
+  "base_commit": "0324e60",
+  "builds": [
+    {
+      "command": "make -C kernel_module KDIR=/root/linux-6.1.159-kdclobber2 W=1 UBSAN_SANITIZE=n",
+      "exit_code": 0,
+      "logs": [
+        "build-first.log",
+        "build-final.log"
+      ],
+      "warning_free": false
+    },
+    {
+      "command": "make -C daemon CFLAGS='-O2 -Wall -Wextra -Werror'",
+      "exit_code": 0,
+      "log": "daemon.log"
+    },
+    {
+      "command": "python3 -m pip check (isolated translation environment)",
+      "exit_code": 0,
+      "log": "dependencies.log"
+    }
+  ],
+  "execution_host": "VM on 10.176.26.71",
+  "layout": {
+    "alignment_bytes": 8,
+    "bytes": 32,
+    "native_offsets_equal": true
+  },
+  "limits": [
+    "Captured x86-64 non-RT non-debug-mutex non-lockdep configuration only",
+    "All users of an object must use KD and retain storage until users finish",
+    "Auxiliary allocation and bucket lookup overhead not benchmarked",
+    "Raw failures and NO_JIT are preserved, not counted as passes",
+    "Initial failing unit source was not separately frozen; output retained",
+    "Early PV-spinlock boot line absent from retained ring buffer; not new timing-policy evidence"
+  ],
+  "live": {
+    "instruction-exit": {
+      "drained": true,
+      "passed": true,
+      "receipt": "instruction-exit/result.json"
+    },
+    "jit": {
+      "completed": 0,
+      "drained": false,
+      "jit_acceptance": "NOT_RUN",
+      "jit_bodies": 0,
+      "receipt": "jit/functional.json",
+      "status": "NOT_RUN"
+    },
+    "jit-c08": {
+      "completed": 8000000,
+      "drained": true,
+      "jit_acceptance": "PASS",
+      "jit_bodies": 5312488,
+      "receipt": "jit-c08/functional.json",
+      "status": "OK"
+    },
+    "jit-retry": {
+      "completed": 800000,
+      "drained": true,
+      "jit_acceptance": "NO_JIT",
+      "jit_bodies": 0,
+      "receipt": "jit-retry/functional.json",
+      "status": "NO_JIT"
+    },
+    "local": {
+      "drained": true,
+      "passed": true,
+      "receipt": "local/result.json"
+    },
+    "rwsem": {
+      "drained": true,
+      "passed": true,
+      "receipt": "rwsem/result.json"
+    }
+  },
+  "offline_review": {
+    "archive_integrity": "archive-review.json",
+    "private_inc_files_per_live_run": 39,
+    "production_files_per_live_run": 90,
+    "production_review": "source-review.txt",
+    "source_match": "tested-source-match.json",
+    "unexplained_source_mismatches": 0
+  },
+  "receipt_sha256": {
+    "archive-review.json": "dcaf788acc2d549153f35b9700286185ed3e20f25f811d9269b833058155647a",
+    "archives.json": "931d43b8bde6957ea96709aabefaf189e54be0cb672136570c8e62488e5d781f",
+    "build-final.log": "f288d1bee88aeb491032c1a4f25c2072e2b8870f83c0942b169e0f36b9979362",
+    "build-first.log": "af0312018c3b8a6b17f228412ae664ff5cf6c38b79e6cb6d2859b0bcd1e193e8",
+    "daemon.log": "bf5063723402548f111948545f1f861cc9dd789e10e75c86d45648f0efbce9eb",
+    "dependencies.log": "9261363b733079a641c2e4cc9bc46ffa1d8336945a87f807b6cf68847dbc9b09",
+    "health.json": "d8fb76a8f239bd4bc4fe52b5d3bd3bb03d1c6ace1d9a2816ce45e2f1ab1178fa",
+    "instruction-exit-command.log": "b2142235a857a7ddadd37e30f408a5a7cb49d7623e2afd484549d38a6f9b6804",
+    "instruction-exit/baseline.json": "650d2906508a943d0cb7da2d2f8781f78f09ca9e7533665da0db126276646f06",
+    "instruction-exit/binary-sha256.json": "ecc9e44a5ab22423932a2cac2acea60e435ba518c877fd9957a72a50f969d0af",
+    "instruction-exit/environment.json": "86d9323227c11d47a080eaa526a022a966b3a4c4c20a0d4e0cecc683ef471a6b",
+    "instruction-exit/prepared-source-sha256.json": "cec4427242a0c6b1a14d462fa024f5e99bcf05b195f4e65e2dd0ac7177a1bf8d",
+    "instruction-exit/result.json": "71a0f9bfea72c2ec446bb8d44c490fd0a3f390b3a2fca3af70c424f61689a22d",
+    "instruction-exit/source-sha256.json": "d486d71ebb774f1b78cd087482d6dd68fce7f33f54bbd6c2dc4fee41314375ea",
+    "jit-c08-command.log": "72d170ba5da83a0448dfb5b5b464c9bd25fd0fe0782b101a0d15536b3fbdf3ea",
+    "jit-c08/baseline.json": "650d2906508a943d0cb7da2d2f8781f78f09ca9e7533665da0db126276646f06",
+    "jit-c08/binary-sha256.json": "89cd6d2096906ffd208d1adb19d3b5368a987b6c0e5d65c53ac85b193744dbf3",
+    "jit-c08/environment.json": "10c465afefc82a37411021cb9cb911fa3d47d01a9a80a53425935f7032199c7f",
+    "jit-c08/functional.json": "f462f9b7dcbb621f38745c79e503d2b8527d5e6fbfe982d7cfb52078e88cf1e1",
+    "jit-c08/plan.json": "16d1b76df73a3fa34dc4bb26fe578a43cb39d1c92674eeebd3cecd2bcc6abca1",
+    "jit-c08/source-sha256.json": "0b24448701287ca473e889042426bbbb3e6900c243a60896ce4622d1f83bfd82",
+    "jit-command.log": "6ab9519f3ba2462b3670b657dd17d27e0ac23f29c8529d530d29196b88a38e3f",
+    "jit-retry-command.log": "a5222bff06f182e2e4d84fb53a531ad2a92e04c2d053e7289572efabf0ff425e",
+    "jit-retry/baseline.json": "650d2906508a943d0cb7da2d2f8781f78f09ca9e7533665da0db126276646f06",
+    "jit-retry/binary-sha256.json": "3a0802b4f77ac89e70fcbb85ea232ad27d048765df7a4a7f7db0c82ae0d38dbc",
+    "jit-retry/environment.json": "d9fb46266fd12f2f83c38be0ed821973c891449b75ca2af983e56958e4eeec83",
+    "jit-retry/failure.json": "6c6cee3ae22783ec94157053dd8c16c6d3e87cf4d1caa4168e32b1dad95c3833",
+    "jit-retry/functional.json": "42c14bd588fd32880ad3a37900cc9725b91e48a4c501d077e04b389c53292f94",
+    "jit-retry/plan.json": "4225fd13dfdec315650019e6171a165116a10ec8a93daa32885d935894a789dc",
+    "jit-retry/source-sha256.json": "0b24448701287ca473e889042426bbbb3e6900c243a60896ce4622d1f83bfd82",
+    "jit/baseline.json": "650d2906508a943d0cb7da2d2f8781f78f09ca9e7533665da0db126276646f06",
+    "jit/environment.json": "050b24f4780d39453c8f7cbe18fd3188a799450e4568b6d0b5bb99f589c5613e",
+    "jit/failure.json": "8e3eaaaf6228d03eeb84a27453642539d15ab07c9c9b058f0a212c735173afba",
+    "jit/functional.json": "1955eb0b856b96029b2f33ec04d1fd40187b55c9b8b859dcd48351dfae503774",
+    "jit/plan.json": "4225fd13dfdec315650019e6171a165116a10ec8a93daa32885d935894a789dc",
+    "layout-dwarf.json": "40dba9a1634d3e3be7222a7d3cfe14ba6dac73b9885c96b5498de5ea40aeabb9",
+    "local-command.log": "3fb916ac8baa7cdb2d6d0cc0cd187a7cb12404c97c44926fb516c097f10afe9e",
+    "local/baseline.json": "650d2906508a943d0cb7da2d2f8781f78f09ca9e7533665da0db126276646f06",
+    "local/binary-sha256.json": "7c807e2cf42b8d75b6f831ab2351bd9da1e82474ae9b39be926340eb0f966b64",
+    "local/result.json": "ff094a365062b3cc087eb529ccd87cf35447af027a2bc94865d6c7c356eaeded",
+    "local/source-sha256.json": "fcdbaae3528109b9a161bd09d1d6426383609d81c890aa2b7173866022c7d3d5",
+    "rwsem-command.log": "741c185a1a56ffbefba8e6286a7e0f8f60ed8cd083bf3694f62376ae28443689",
+    "rwsem/baseline.json": "650d2906508a943d0cb7da2d2f8781f78f09ca9e7533665da0db126276646f06",
+    "rwsem/binary-sha256.json": "de34ba89e2340e19b5586386c77e346f0ac46689effb6c87bebce9b88356501e",
+    "rwsem/result.json": "28472d877d00d7554e16e1f00c635808738fd385895c1c2b2407ab8177190bfe",
+    "rwsem/source-sha256.json": "585004e76dc43a5fcf2edf9a5b138a9f6c7af6f86bc3d1eb572af025307a03c8",
+    "snapshot-recheck.json": "fd0e58a419825ec65f0462f00764a450bf0968ad90beb59bcd05763e8dc316cf",
+    "tested-source-match.json": "1c25c4e30ed908bfdd113b148ff21d6c6485ac49a02a6e0e1adec44d8afdce4d",
+    "unit-first.log": "8903281ff461f21791c8e6241b217f29a904bc520bfaf3ab307ff51d3f10c17f",
+    "unit-retry1.log": "acf3d589cbda26e74faa3117eb0da902e83fdf35517e8f5572e1175aeb53e6d5"
+  },
+  "schema": 1,
+  "scope": "basic plus directly affected functional checks; no full suite or performance claim",
+  "source_host": "380G10",
+  "unit": {
+    "basic": [
+      "test_control_call",
+      "test_daemon_policy"
+    ],
+    "failed_only_retry": {
+      "failed": 0,
+      "log": "unit-retry1.log",
+      "passed": 3
+    },
+    "final": {
+      "failed": 0,
+      "passed": 14,
+      "skipped": 0
+    },
+    "first_batch": {
+      "failed": 3,
+      "failures": {
+        "execution/test_remote_outer.py": "stale native mutex pointer type in mock",
+        "mutex/test_mutex_outer_progress.py": "WARN mock triggers unused-value under -Werror",
+        "mutex/test_mutex_resources.py": "stale source-extraction assertion"
+      },
+      "log": "unit-first.log",
+      "passed": 11
+    },
+    "selected_python_drivers": [
+      "mutex/test_mutex_aux.py",
+      "mutex/test_mutex_resources.py",
+      "mutex/test_mutex_balances.py",
+      "mutex/test_mutex_terminal.py",
+      "mutex/test_mutex_outer_progress.py",
+      "mutex/test_mutex_outer_api.py",
+      "mutex/test_mutex_wait_clobber.py",
+      "mutex/test_mutex_task_cache.py",
+      "execution/test_exec_capacity.py",
+      "infrastructure/test_provider_lifecycle.py",
+      "execution/test_mutex_images.py",
+      "execution/test_remote_outer.py"
+    ]
+  }
+}

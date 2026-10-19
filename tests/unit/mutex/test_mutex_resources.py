@@ -25,7 +25,7 @@ def production():
     slowpath = definition(
         mutex, "__kd_mutex_lock_slowpath(struct kd_mutex *lock, int tail,"
     )
-    assert "release:\n\tkd_mutex_waiter_exit(lock);\n\treturn 2;" in slowpath
+    assert "release:\n\tkd_mutex_waiter_exit(aux);\n\treturn 2;" in slowpath
     # These statics belong to separate production translation units. Rename
     # only the per-CPU symbol so both unchanged paths can share one fixture.
     code = without_includes(read_source(ROOT / "include/kd_comm.h")).replace("kd_comm_matches(", "kd_comm_matches_real(")
@@ -50,8 +50,8 @@ def production():
     for marker in (
         "void kd_mutex_init(struct kd_mutex *lock)",
         "static void kd_mutex_wait_for_result(struct kd_mutex_node *node)",
-        "static void kd_mutex_claim_origin(struct kd_mutex *lock)",
-        "static void kd_mutex_wait_and_lock(struct kd_mutex *lock)",
+        "static void kd_mutex_claim_origin(struct kd_mutex *lock, struct kd_mutex_aux *aux)",
+        "static void kd_mutex_wait_and_lock(struct kd_mutex *lock, struct kd_mutex_aux *aux)",
         "static bool kd_mutex_has_local_predecessor(struct kd_mutex *lock)",
         "static struct kd_mutex_node *kd_mutex_reserve_node(void)",
         "static void kd_mutex_release_node(struct kd_mutex_node *node)",
@@ -83,6 +83,7 @@ def main():
     ptrace = (ROOT / "include/kd_regs.h").read_text()
     types = definition(ptrace, "struct kd_regs {").rstrip() + ";\n"
     types += without_includes(read_source((ROOT / "include/kd_mutex.h")))
+    types += without_includes(read_source(ROOT / "include/kd_mutex_aux.h"))
     code = production()
     # Compile each broken decision first, then require an explicit assertion
     # failure. A crash, compiler error, BUG-only exit or timeout is not a pass.
@@ -149,7 +150,7 @@ def main():
         ),
         "release-keeps-gs": ("node->gsbase = 0;", "node->gsbase = 1;"),
         "gate-without-native-lock": (
-            "\t\tkd_mutex_claim_origin(lock);\n\t\treturn;",
+            "\t\tkd_mutex_claim_origin(lock, aux);\n\t\tkd_mutex_aux_put(aux);\n\t\treturn;",
             "\t\treturn;",
         ),
         "resume-loses-register": (

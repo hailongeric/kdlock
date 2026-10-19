@@ -1,10 +1,11 @@
 # Current KD lock catalog
 
 This is the entry point for the four lock families maintained on `master`.
-The inventory was checked against implementation revision `05876a4`; its
+The protocol inventory was checked against implementation revision `05876a4`; its
 documentation and benchmark checkpoint is `40a0f36`. The selected KD-only mutex
 protocol comes from `d2a2304`, and the accepted rwsem waiting policy from
-`c21345b`. Later translation changes do not replace those lock protocols.
+`c21345b`. Later translation changes and the compact mutex storage refactor do
+not replace those lock protocols. Current object sizes below include that refactor.
 
 **Delegation** means that a lock holder executes a waiting caller's protected
 work. The **origin** is that caller; the **executor** runs the work. Local or
@@ -16,12 +17,12 @@ the separate Linux implementation used as a benchmark comparator.
 | KD family | Exclusion and object storage | Execution and waiting | Implementation guide |
 | --- | --- | --- | --- |
 | Spinlock | One four-byte `kd_spinlock_t` contains ownership, pending and queue-tail state | Exclusive body; callers poll with preemption disabled. An eligible body may delegate. The body must not sleep. | [Spinlock](design/spin_implementation.md) |
-| Mutex | A 256-byte `struct kd_mutex` contains KD physical ownership, a sleeping wait list and the legacy delegation queue/gate | Ordinary calls execute locally and may sleep. Explicit delegation callers can publish pinned polling requests; physical owners and supported service paths may sleep. | [Mutex](design/mutex_implementation.md) |
+| Mutex | A 32-byte, native-aligned `struct kd_mutex` contains KD physical ownership and a sleeping wait list; lazy auxiliary records hold the legacy delegation queue/gate | Ordinary calls execute locally and may sleep. Explicit delegation callers can publish pinned polling requests; physical owners and supported service paths may sleep. | [Mutex](design/mutex_implementation.md) |
 | Rwlock | A 128-byte `kd_rwlock_t` separates the reader/writer count from a KD spin gate | Readers run concurrently and locally. Writers exclude readers and may delegate through the spin engine. Neither body may sleep. | [Reader/writer spinlock](design/rwlock_implementation.md) |
-| Rwsem | A 512-byte `struct kd_rwsem` contains a KD mutex, reader count, writer reservations and two sleeping waitqueues | Readers and ordinary writers run locally. Explicit outer writers drain readers before entering mutex delegation. Published delegation waiters still poll pinned. | [Reader/writer semaphore](design/rwsem_implementation.md) |
+| Rwsem | A 320-byte `struct kd_rwsem` contains a KD mutex, reader count, writer reservations and two sleeping waitqueues | Readers and ordinary writers run locally. Explicit outer writers drain readers before entering mutex delegation. Published delegation waiters still poll pinned. | [Reader/writer semaphore](design/rwsem_implementation.md) |
 
 Sizes describe the captured x86_64 configuration, not a portable binary
-interface. They exclude per-CPU queues, stacks, execution frames and translated
+interface. They exclude auxiliary delegation records, per-CPU queues, stacks, execution frames and translated
 code. The four implementation guides describe those additional resources.
 Preemption is the scheduler's ability to pause a task; a pinned polling waiter
 retains its CPU while waiting. This restriction matters even for a sleeping lock.

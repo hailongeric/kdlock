@@ -13,3 +13,6 @@ tclock_backend/port.patch -whitespace
 bench/tclock_compare/workload-observation.patch -whitespace
 # Historical QEMU terminal capture retains CRLF/control bytes exactly.
 bench/results/10.176.26.71/bench/mutex_owned/20261015-origin/snapshots-final.txt -whitespace
+# Captured compiler and disassembly diagnostics retain their exact whitespace.
+bench/results/10.176.26.71/tests/mutex32-20261019/build-first.log -whitespace
+bench/results/10.176.26.71/tests/mutex32-20261019/unit-first.log -whitespace

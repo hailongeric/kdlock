@@ -20,8 +20,8 @@ def main():
         assert f'static DEFINE_PER_CPU(int, kd_mutex_{name});' in source
     markers = (
         'static void kd_mutex_update_max_waiters(int active)',
-        'static void kd_mutex_waiter_enter(struct kd_mutex *lock)',
-        'static void kd_mutex_waiter_exit(struct kd_mutex *lock)',
+        'static void kd_mutex_waiter_enter(struct kd_mutex_aux *aux)',
+        'static void kd_mutex_waiter_exit(struct kd_mutex_aux *aux)',
         'bool kd_mutex_check_idle(void)',
     )
     code = '\n'.join(definition(source, marker) for marker in markers)

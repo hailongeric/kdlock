@@ -57,6 +57,8 @@ struct qspinlock {
 typedef struct qspinlock raw_spinlock_t;
 
 struct kd_mutex { bool locked; struct task_struct *physical_owner; };
+static bool kd_mutex_delegation_owned(struct kd_mutex *lock, struct task_struct *task)
+{ return lock->physical_owner == task; }
 static bool kd_origin_mutex_owned(struct kd_mutex *lock, struct task_struct *task)
 { return lock->locked && task == current; }
 #define ATOMIC_INIT(value) (value)

@@ -41,23 +41,30 @@ rwlock and the two exclusive lock families.
 | [KD mutex implementation](mutex_implementation.md) | Physical writer ownership, legacy delegation queue, generated execution and unlock acknowledgements |
 | [direct_rwsem.h](../../workload_modules/rwlock_bench/direct_rwsem.h) | Benchmark caller mapping for Linux Native, ordinary KD and delegation-capable KD |
 
-The captured 512-byte object has 128-byte overall alignment. The
+The current header gives a 320-byte object with 64-byte overall alignment in
+the captured configuration. The previous 512-byte object had 128-byte alignment;
+the
 [layout receipt](../../bench/results/10.176.26.71/bench/rwsem-optimization-20261018/object-layout.json)
-retains the accepted build's size evidence; the current header places its fields
-as follows:
+retains that accepted build's size evidence. Shrinking the embedded mutex changes
+the containing layout without changing the rwsem waiting protocol. Current fields
+are arranged as follows:
 
 | Field | Offset | Purpose |
 | --- | ---: | --- |
-| `gate` | 0 | Embedded 256-byte KD mutex; serializes writer bodies |
-| `readers` | 256 | Exact reader count, including temporary speculative increments |
-| `admission` | 320 | Open, ordinary-writer or outer-writer phase |
-| `phase_wait` | 384 | Sleeping callers waiting for an eligible admission phase |
-| `reader_drain` | 448 | Reserved writers waiting for existing readers to finish |
+| `gate` | 0 | Embedded 32-byte KD mutex; serializes writer bodies |
+| `readers` | 64 | Exact reader count, including temporary speculative increments |
+| `admission` | 128 | Open, ordinary-writer or outer-writer phase |
+| `phase_wait` | 192 | Sleeping callers waiting for an eligible admission phase |
+| `reader_drain` | 256 | Reserved writers waiting for existing readers to finish |
 
-The last four fields start on separate 64-byte lines. These offsets describe
-the recorded build, not a Linux rwsem-compatible layout. The embedded mutex's
-provider-wide queues and execution stacks are additional storage. There is no
+The last four fields start on separate 64-byte lines. These offsets do not
+describe a Linux rwsem-compatible layout. The embedded mutex's lazy auxiliary
+records, provider-wide queues and execution stacks are additional storage.
+Existing rwsem performance records measure the previous containing layout and
+do not establish performance for this refactor. There is no
 separate rwsem delegation queue or new generated-code ABI.
+The [compact mutex DWARF receipt](../../bench/results/10.176.26.71/tests/mutex32-20261019/layout-dwarf.json)
+also records this containing layout from the built provider.
 
 ## API and scope
 
@@ -146,9 +153,11 @@ from the executor.
 ## Waiting and wakeups
 
 Reader counts, admission reservations, and the two waitqueue heads occupy
-separate 64-byte-aligned regions. In the captured x86_64 build, this increases
-the object from 384 to 512 bytes; both layouts have 128-byte overall alignment
-through the embedded mutex. `phase_wait` contains readers and writers
+separate 64-byte-aligned regions. In the recorded accepted x86_64 build, this
+increased the object from 384 to 512 bytes; both historical layouts had 128-byte
+overall alignment through the former embedded mutex. The current compact gate
+reduces the containing object to 320 bytes while retaining those separate regions.
+`phase_wait` contains readers and writers
 waiting for an eligible admission phase. `reader_drain` contains writers that
 already hold an ordinary or outer reservation and are waiting for readers to
 finish. The final reader wakes only `reader_drain`; an ordinary phase release

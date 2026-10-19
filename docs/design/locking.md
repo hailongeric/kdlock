@@ -93,10 +93,13 @@ reclamation state. Mutex exact lifecycle balances remain separate.
 
 ### Physical lock and scheduling gate
 
-KD owns a 256-byte `struct kd_mutex`, with its physical owner, sleeping wait list,
-private OSQ and legacy delegation gate. Every delegation executor acquires physical
+KD owns a 32-byte, native-aligned `struct kd_mutex`, with its physical owner,
+sleeping wait list and private OSQ. Lazy address-indexed auxiliary records hold
+the legacy delegation gate and queue until all exact invocation and owner
+references retire. Every delegation executor acquires physical
 exclusion as well as the gate; ordinary local callers acquire physical exclusion
-without joining that gate. There is no Linux mutex object or shadow lookup.
+without joining that gate or allocating auxiliary storage. There is no Linux
+mutex backing object.
 Every caller must obey the [KD-only object/API contract](kd_only_mutex.md); loading the module
 does not replace objects in the running kernel.
 

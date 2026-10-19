@@ -5,7 +5,9 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <string.h>
-struct kd_mutex { unsigned long owner; unsigned int tail; unsigned char locked; int waiter_count; };
+struct kd_mutex { unsigned long owner; };
+static struct kd_mutex *combiner_lock;
+bool kd_mutex_combiner_active(struct kd_mutex *lock) { return lock == combiner_lock; }
 #define current ((void *)0x8000UL)
 #define READ_ONCE(x) (*(volatile __typeof__(x) *)&(x))
 #define WRITE_ONCE(x,v) (*(volatile __typeof__(x) *)&(x) = (v))
@@ -68,15 +70,14 @@ static void check_owner_probe(void)
  assert(lock.owner==0x9000UL && owner_cas_count==2);
  owner_cas_race=false;
  /* An active combiner ends retries without waiting for a physical release. */
- lock.locked=KD_MUTEX_GATE_COMBINER;
+ combiner_lock=&lock;
  release_on_pause=&lock.owner;
  assert(!kd_mutex_outer_trylock(&lock, (unsigned long)current));
  assert(release_on_pause && lock.owner==0x9000UL && owner_cas_count==2);
  release_on_pause=NULL;
  /* A lone gate owner may finish between probes; hints never grant the
   * acquisition, which still requires the exact zero-owner CAS. */
- lock.tail=1;
- lock.locked=1;
+ combiner_lock=NULL;
  release_on_pause=&lock.owner;
  assert(kd_mutex_outer_trylock(&lock, (unsigned long)current));
  assert(!release_on_pause && lock.owner==(unsigned long)current && owner_cas_count==3);

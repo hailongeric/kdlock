@@ -4,11 +4,16 @@ JIT means just-in-time compilation: KD generates machine code so one lock holder
 can perform another waiting task's protected work. The [terminology guide](../docs/TERMINOLOGY.md)
 explains the lock, execution-state and measurement terms used below.
 
-The [KD-only local mutex probe](kernel/mutex/local/kd_mutex_local_probe.c) checks
+The [KD-only local mutex probe and runner](kernel/mutex/local/README.md) check
 ordinary API aliases, exclusion, sleeping/nested owners, interruptible/killable
-cancellation, I/O accounting, trylock and 2,048 independent objects. It checks
-exact drain before unload. The [current receipt](../bench/results/10.176.26.71/bench/comparison/mutex-kdonly-20261017T140354Z/validation.json)
-keeps the live probe separate from unit fixtures and returned-body JIT benchmarks.
+cancellation, I/O accounting, trylock and 2,048 independent objects. The compact
+layout checks native size/alignment and containing offsets, exact-address reuse
+without destroy, no auxiliary records for ordinary owners and exact drain before
+unload. The [historical receipt](../bench/results/10.176.26.71/bench/comparison/mutex-kdonly-20261017T140354Z/validation.json)
+records the earlier 256-byte layout separately from current checks and JIT benchmarks.
+The [compact mutex receipt](../bench/results/10.176.26.71/tests/mutex32-20261019/README.md)
+records the basic and affected VM checks, live JIT and native continuation,
+preserved failures and automatic auxiliary retirement.
 The [provider lifecycle fixture](unit/infrastructure/test_provider_lifecycle.py)
 checks publication after runtime initialization, failed-start cleanup, and device
 removal before teardown in ordinary and SELFTEST control flow.
@@ -59,6 +64,7 @@ check, missing dependency, crash or compile failure must not be reported as a pa
 | Completed-body observation overlay | `execution/test_bench_completion.py`; applies the real benchmark patch and checks dispatcher/batch counting |
 | Conditional instruction exit | `admission/test_native_escape.py`, `codegen/test_native_escape_codegen.py`, `execution/test_jit_entry_scope.py`, `execution/test_native_escape_restore.py`, `execution/test_mutex_images.py`; [live check](kernel/jit_escape/README.md) |
 | Mutex resources/terminal path |`mutex/test_mutex_resources.py`, `test_mutex_task_cache.py`, `test_mutex_terminal.py`, `test_mutex_outer_progress.py` |
+| Compact mutex auxiliary lifetime | `mutex/test_mutex_aux.py`: native layout, exact invocation/owner references, same-address reuse, allocation failures, 2,048 simultaneous records and concurrent publication/retirement |
 | Provider initialization/publication | `infrastructure/test_provider_lifecycle.py` |
 | Task/source/registry lifetime |`infrastructure/test_source_lifetime.py`, `execution/test_exe_registry.py` |
 | Native ACK and remote continuation |`execution/test_remote_outer.py`, `test_remote_depth_protocol.py`, `test_remote_outer_protocol.py` |

@@ -17,13 +17,14 @@ __kd_mutex_lock_slowpath(struct kd_mutex *lock, int tail,
 			 struct kd_mutex_node *curr_node)
 {
 	struct kd_mutex_node *prev_node = NULL, *next_node = NULL;
+	struct kd_mutex_aux *aux = curr_node->aux;
 	struct kd_mutex_cpu_state *ptr = this_cpu_ptr(&kd_mutex_shadows);
 	u32 old_tail;
 	int old_locked;
 
 	curr_node->queued_at_ns = kd_exe_queue_timing_start();
-	old_tail = kd_mutex_xchg_tail(lock, tail);
-	kd_mutex_waiter_enter(lock);
+	old_tail = kd_mutex_xchg_tail(aux, tail);
+	kd_mutex_waiter_enter(aux);
 
 	if (old_tail) {
 		/* --- waiter path: link behind prev, spin until woken --- */
@@ -34,27 +35,27 @@ __kd_mutex_lock_slowpath(struct kd_mutex *lock, int tail,
 		kd_mutex_wait_for_result(curr_node);
 		if (READ_ONCE(curr_node->native_resume)) {
 			WRITE_ONCE(ptr->resume_node, curr_node);
-			kd_mutex_waiter_exit(lock);
+			kd_mutex_waiter_exit(aux);
 			return 5;
 		}
 
 		/* CS was processed by combiner via JIT sandbox → done */
 		if (curr_node->completed) {
 			WRITE_ONCE(ptr->resume_node, curr_node);
-			kd_mutex_waiter_exit(lock);
+			kd_mutex_waiter_exit(aux);
 			return 3;
 		}
 		/* Fall through: become combiner */
 	}
 
 	/* --- become lock holder / combiner --- */
-	kd_mutex_wait_and_lock(lock);
+	kd_mutex_wait_and_lock(lock, aux);
 	/* End at physical acquisition, before processing another waiter's CS. */
 	kd_exe_queue_timing_end(true, &curr_node->queued_at_ns,
 				kd_exe_queue_timing_start());
 
 	/* Only waiter in queue? */
-	if (cmpxchg(&lock->tail,
+	if (cmpxchg(&aux->tail,
 		    (u32)curr_node->tail,
 		    0) ==
 	    (u32)curr_node->tail)
@@ -68,15 +69,15 @@ __kd_mutex_lock_slowpath(struct kd_mutex *lock, int tail,
 	}
 
 	/* --- combiner path --- */
-	old_locked = lock->locked;
-	lock->locked = _Q_LOCKED_COMBINER_VAL;
+	old_locked = aux->locked;
+	aux->locked = _Q_LOCKED_COMBINER_VAL;
 
-	kd_mutex_run_combiner(lock, next_node);
+	kd_mutex_run_combiner(lock, next_node, aux);
 
-	WRITE_ONCE(lock->locked, old_locked);
+	WRITE_ONCE(aux->locked, old_locked);
 
 release:
-	kd_mutex_waiter_exit(lock);
+	kd_mutex_waiter_exit(aux);
 	return 2;
 }
 #pragma GCC pop_options
@@ -131,7 +132,7 @@ void kd_mutex_note_nested_jit(void)
 
 int kd_mutex_waiter_count(struct kd_mutex *lock)
 {
-	return lock ? atomic_read(&lock->waiter_count) : -EINVAL;
+	return lock ? kd_mutex_aux_waiter_count(lock) : -EINVAL;
 }
 
 void kd_mutex_note_nested_abort_release(void)

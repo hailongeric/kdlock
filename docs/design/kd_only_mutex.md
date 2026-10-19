@@ -1,6 +1,6 @@
 # KD-only mutex with the accepted legacy delegation protocol
 
-The main branch is `master`, selecting KD-only implementation `d2a2304` with
+The main branch is `master`, retaining the KD-only protocol selected at `d2a2304` with
 the accepted `555b8b7` compatibility baseline. Immutable tags
 `accepted/kd-only-mutex-20261018` and `accepted/kd-mutex-compat-20261017` retain
 those measured versions. `master` is authoritative for current code;
@@ -9,10 +9,13 @@ this review. The owned/adaptive experiment is archived; see
 [branch dispositions](../history/main-consolidation-20261018.md).
 
 The replacement assumes every user of an object uses KD. Each `struct kd_mutex`
-contains physical exclusion and legacy delegation scheduling. There is no Linux
-`struct mutex`, address-to-shadow map, or Linux mutex fallback in this path.
+contains physical exclusion; an auxiliary record indexed by its address holds
+legacy delegation scheduling only while that state is needed. The object is
+32 bytes with native alignment in the captured configuration. There is no Linux
+`struct mutex` backing or Linux mutex fallback in this path.
 Cold calls, admission refusals, task-record shortages, same-CPU predecessor
-refusals, nested calls and source closure all retain KD physical exclusion.
+refusals, auxiliary allocation failures, nested calls and source closure all
+retain KD physical exclusion.
 
 This guide owns the object-replacement and ordinary-alias contract. The
 [mutex implementation](mutex_implementation.md) explains current acquisition,
@@ -46,7 +49,9 @@ Linux mutex APIs.
 
 Outer entry uses a fixed, short probe window to resolve transient clashes before
 paying queue-admission costs. Only a zero-owner acquire CAS grants ownership;
-busy reads do not issue locked RMWs. The existing active-combiner gate state (3)
+busy owner reads do not modify that word. The active-combiner hint reads the
+address index under its bucket lock without retaining an auxiliary pointer.
+The existing active-combiner gate state (3)
 ends retries immediately, so a running batch receives new work promptly. A
 lone gate owner (state 1) may finish during the bounded retry window. The state
 is only a hint; it never authorizes ownership or retirement. Exhausting eight probes
@@ -64,18 +69,37 @@ do not enter the physical sleeping wait list.
 
 ## Object and API contract
 
-`struct kd_mutex` is 256 bytes, aligned to 128 bytes in the captured configuration:
+`struct kd_mutex` is 32 bytes, aligned to 8 bytes in the captured configuration,
+matching the native `struct mutex` size and alignment:
 
-| Cacheline | State |
+| Storage | State |
 | --- | --- |
-| 0 | Physical owner at offset 0, private OSQ, wait-list spinlock and wait list |
-| 1 | Delegation executor at offset 64 and gate state at offset 72 |
-| 2 | Legacy encoded delegation tail at offset 128 |
-| 3 | Exact delegation waiter count at offset 192 |
+| Embedded object | Physical owner at offset 0, private OSQ and wait-list spinlock, sleeping wait list at offset 16 |
+| Auxiliary delegation record | 256 bytes aligned to 128 bytes; lock address, exact references, delegation executor, gate state, legacy encoded tail and exact delegation waiter count |
+| Per-request node | Existing per-CPU linked queue node, packet, stack identity and completion state |
 
-The first aligned 128-byte region groups physical ownership; the second groups
-producer-written tail and waiter counts. This separates those writes from the
-physical owner even for adjacent-cacheline prefetch.
+Ordinary physical operations need only the embedded object. Delegation creates
+an auxiliary record lazily using GFP_ATOMIC allocation and an address-indexed
+bucket lookup. Allocation failure takes the existing local KD fallback before
+queue publication. It neither changes physical ownership nor introduces a fixed
+number of supported mutex objects. Existing records are shared by concurrent
+delegation requests for the same address.
+
+Exact invocation and gate-owner references retain the record through queue
+publication, physical ownership, native unlock ACKs and frame retirement. A
+scheduling node may retire before its owner's critical section returns, so node
+retirement alone cannot release the record. The final put removes the record
+from the index and frees it; lookup and retirement serialize within the bucket.
+No auxiliary allocation survives completed use solely because the caller omitted
+`kd_mutex_destroy()`. Once users and their asynchronous obligations drain, caller
+storage may be freed or reinitialized at the same address without another cleanup
+API.
+
+The selected `d2a2304` object occupied 256 bytes aligned to 128 bytes, separating
+physical ownership and producer writes across four cachelines. Its measurements
+remain evidence for that layout. The compact layout reduces embedded storage;
+auxiliary allocations and lookup costs are additional, and no performance gain
+has been established for this change.
 
 The per-request node remains 320 bytes, with its packet at offset 128 and
 completion/polling bytes at 304/305. Caller-owned object storage must remain alive
@@ -97,20 +121,30 @@ retained for routing/report compatibility; they now refer to KD physical locking
 Likewise, a native continuation means original compiled code on the producer,
 using KD exclusion. It does not mean a Linux Native mutex fallback.
 
-This changes object layout and requires rebuilding containing structures and every
-caller. Casting an existing Linux object, mixing old and new callers, or changing
-only a function pointer is invalid. The supported build is the captured x86-64,
+Changing from the previous KD layout requires rebuilding containing structures
+and every caller. Matching native size and alignment preserves the corresponding
+embedding geometry, but does not permit casting an existing Linux object,
+mixing old and new callers, or changing only a function pointer. The supported
+build is the captured x86-64,
 non-RT, non-debug-mutex, non-lockdep configuration. RT mutexes and wound/wait mutexes
 are separate integration work. No kernel image is rebuilt or installed in this
 experiment.
 
 ## Validation and measurement boundary
 
+The [compact-object validation receipt](../../bench/results/10.176.26.71/tests/mutex32-20261019/README.md)
+records the basic and affected VM checks, live delegation and native continuation,
+the initial failed attempts, and source/ELF/archive identities. It makes no
+performance claim for the changed layout.
+
 The live ordinary-API probe is
 [tests/kernel/mutex/local](../../tests/kernel/mutex/local/kd_mutex_local_probe.c).
-It checks 160,000 operations across eight workers, sleeping owners, nested locking,
-2,048 initialized objects, interruptible and killable cancellation, I/O state,
-trylock and final drain. Unit checks retain compiled/JIT caller execution,
+It checks native size/alignment and containing-structure offsets at compile time,
+160,000 operations across eight workers, sleeping owners, nested locking,
+2,048 initialized objects reused at the same addresses and freed without destroy,
+an empty auxiliary index during ordinary ownership and after drain, interruptible
+and killable cancellation, I/O state and trylock.
+Unit checks retain compiled/JIT caller execution,
 queue-resource failures, terminal retirement, FULL recovery, frame capacity,
 immutable images and source leases. Provider and KD workload import audits reject
 Linux mutex imports. The provider-lifecycle fixture executes production startup
@@ -118,8 +152,9 @@ and teardown with observable service boundaries and injected initialization fail
 it checks that device publication follows private-runtime initialization. These
 checks do not establish whole-kernel compatibility.
 
-The c01 comparison uses the unchanged one-cacheline business payload and 64 rounds
-of common post-work. The lock's four cachelines are separate from that payload.
+The historical c01 comparison uses the unchanged one-cacheline business payload
+and 64 rounds of common post-work. Its 256-byte lock is separate from that payload;
+those results do not measure the current compact object and auxiliary allocation.
 For pipebytes n16, Native uses the actual pipe mutex; KD and TCLock each protect the
 same redirected FIONREAD business body with their own private lock. The pipe is
 private to the controlled cohort; no reads, writes, resize or independent consumer

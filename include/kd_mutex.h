@@ -10,7 +10,7 @@
  * reaches mutex_unlock. JIT replaces the body handoff, while queue execution
  * still uses physical shadow stacks with their own lifetime constraints.
  *
- * Each KD object owns its physical exclusion and legacy delegation state.
+ * Each KD object owns physical exclusion; active delegation has indexed state.
  * Every executor acquires the KD owner word; only that task releases it.
  * Linux mutex objects and waiters never participate in this protocol.
  */
@@ -27,6 +27,7 @@
 
 struct kd_exec_frame;
 struct kd_mutex;
+struct kd_mutex_aux;
 
 bool kd_mutex_check_idle(void);
 
@@ -59,6 +60,8 @@ struct kd_mutex_node {
 	int tail; /* encoded tail (cpu+idx)            */
 	int slot; /* reserved per-CPU slot index       */
 	int numa_node; /* immutable slot locality, set before source publication */
+	/* Borrowed from this lock invocation until packet/node restoration. */
+	struct kd_mutex_aux *aux;
 	/* The combiner writes IP/SP and virtual registers while the producer
 	 * polls locked. Sharing their cacheline makes every packet update fight
 	 * the polling CPU for ownership, especially across NUMA nodes. */
@@ -75,35 +78,22 @@ struct kd_mutex_node {
 };
 
 /*
- * KD-only physical exclusion and legacy delegation scheduling, in one object.
+ * The complete KD physical primitive has the native size and alignment.
+ * Ordinary calls need no allocation. Admitted delegation obtains temporary
+ * indexed state, automatically retired after its last invocation and owner.
+ * Equal geometry does not permit mixing KD and Linux protocols on an object.
  */
 struct kd_mutex {
-	/* KD-owned physical exclusion for every local and delegated executor. */
 	atomic_long_t owner;
-	struct optimistic_spin_queue osq;
 	raw_spinlock_t wait_lock;
+	struct optimistic_spin_queue osq;
 	struct list_head wait_list;
-	/* Keep physical ownership in the first 128-byte region. The other
-	 * region contains producer-written queue and waiter-count fields, so
-	 * 128-byte alignment keeps adjacent-line pairs within each group. */
-	struct task_struct *physical_owner __attribute__((aligned(64)));
-	union {
-		atomic_t state;
-		struct {
-			u8 locked;
-		};
-	};
-	u32 tail __attribute__((aligned(64))); /* encoded CPU/slot; zero means no queued tail */
-	/* Exact probe count, independent of both queue publication and ownership.
-	 * Its enter/exit RMWs must not invalidate either of those cachelines. */
-	atomic_t waiter_count __attribute__((aligned(64)));
-} __attribute__((aligned(128)));
+};
 
 #define KD_MUTEX_INITIALIZER(name) { \
  .owner = ATOMIC_LONG_INIT(0), .osq = OSQ_LOCK_UNLOCKED, \
  .wait_lock = __RAW_SPIN_LOCK_UNLOCKED(name.wait_lock), \
- .wait_list = LIST_HEAD_INIT(name.wait_list), \
- .state = ATOMIC_INIT(0), .waiter_count = ATOMIC_INIT(0) }
+ .wait_list = LIST_HEAD_INIT(name.wait_list) }
 #define DEFINE_KD_MUTEX(name) struct kd_mutex name = KD_MUTEX_INITIALIZER(name)
 
 void kd_mutex_init(struct kd_mutex *lock);
@@ -117,6 +107,10 @@ int kd_atomic_dec_and_mutex_lock(atomic_t *count, struct kd_mutex *lock);
 int kd_mutex_trylock(struct kd_mutex *lock);
 bool kd_mutex_is_locked(struct kd_mutex *lock);
 bool kd_mutex_is_idle(struct kd_mutex *lock);
+/* Observations never authorize acquisition or auxiliary-state retirement. */
+bool kd_mutex_combiner_active(struct kd_mutex *lock);
+bool kd_mutex_delegation_owned(struct kd_mutex *lock, struct task_struct *task);
+unsigned int kd_mutex_debug_aux_count(void);
 int kd_mutex_init_percpu(void);
 int kd_mutex_local_runtime_init(void);
 void kd_mutex_local_runtime_exit(void);

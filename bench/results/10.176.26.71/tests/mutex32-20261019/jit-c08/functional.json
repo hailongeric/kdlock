@@ -1,0 +1,18 @@
+[
+  {
+    "caller_shell": "mutex_outer_cookie",
+    "completed": 8000000,
+    "cookie_storage": "outer_acquisition_local",
+    "cpu_heat_policy": "mutex_contention1024_ratio256",
+    "drained": true,
+    "hotlock_mode": "adaptive",
+    "jit_acceptance": "PASS",
+    "jit_bodies": 5312488,
+    "kd_provider_ubsan": "off",
+    "name": "c08-t16-r00-direct-kdlock-adaptive",
+    "scenario": "plain",
+    "spin_contention_pct": "unrecorded",
+    "spin_entry_ratio_limit": 2,
+    "status": "OK"
+  }
+]

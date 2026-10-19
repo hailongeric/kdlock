@@ -29,6 +29,7 @@
 #include <linux/objtool.h>
 
 #include "kd_mutex.h"
+#include "kd_mutex_aux.h"
 #include "kd_mutex_stats.h"
 #include "kd_lock.h"
 #include "kd_exec.h"
@@ -146,7 +147,7 @@ kd_mutex_lock_slowpath_asm(struct kd_mutex *lock,
 		KD_PR_ERR(
 			"kd_mutex: waiter shadow stack is NULL on cpu %d slot %d\n",
 			smp_processor_id(), cur_node->slot);
-		kd_mutex_wait_and_lock(lock);
+		kd_mutex_wait_and_lock(lock, curr_node->aux);
 		return 0;
 	}
 
@@ -180,18 +181,29 @@ _kd_mutex_lock_abi(struct kd_mutex *lock, unsigned long rsp_value,
 	       unsigned long ret_addr, unsigned long bp, unsigned int abi)
 {
 	struct kd_regs resume_regs;
+	struct kd_mutex_aux *aux;
 	bool resume_ready = false;
 	bool native_resume = false;
 	int ret_val;
 
 	BUG_ON(abi != KD_ENTRY_ABI_LEGACY &&
 	       abi != KD_ENTRY_ABI_MUTEX_CLOBBER_V1);
+	/* This invocation protects queue/frame/ACK state even when a combiner
+	 * releases its gate early. A separate gate-owner reference survives the
+	 * returning lock call until the physical owner's final unlock. */
+	aux = kd_mutex_aux_get(lock);
+	if (unlikely(!aux)) {
+		kd_mutex_task_put(current);
+		kd_origin_mutex_lock(lock);
+		return;
+	}
 	/* A queued producer must not request exclusive ownership of a busy gate
 	 * just to discover that the current combiner still owns it. The CAS,
 	 * after the read-only hint, remains the sole acquisition decision. */
-	if (likely(!READ_ONCE(lock->locked) &&
-		   cmpxchg(&lock->locked, 0, _Q_LOCKED_VAL) == 0)) {
-		kd_mutex_claim_origin(lock);
+	if (likely(!READ_ONCE(aux->locked) &&
+		   cmpxchg(&aux->locked, 0, _Q_LOCKED_VAL) == 0)) {
+		kd_mutex_claim_origin(lock, aux);
+		kd_mutex_aux_put(aux);
 		return;
 	}
 
@@ -206,6 +218,7 @@ _kd_mutex_lock_abi(struct kd_mutex *lock, unsigned long rsp_value,
 		preempt_enable();
 		migrate_enable();
 		kd_mutex_task_put(current);
+		kd_mutex_aux_put(aux);
 		kd_origin_mutex_lock(lock);
 		return;
 	}
@@ -224,7 +237,7 @@ _kd_mutex_lock_abi(struct kd_mutex *lock, unsigned long rsp_value,
 				current->pid, ret_addr, (unsigned long)lock,
 				smp_processor_id(),
 				READ_ONCE(this_cpu_ptr(&kd_mutex_shadows)->node_slots));
-			kd_mutex_wait_and_lock(lock);
+			kd_mutex_wait_and_lock(lock, aux);
 			ret_val = 0;
 			goto scheduler_restore;
 		}
@@ -247,6 +260,7 @@ _kd_mutex_lock_abi(struct kd_mutex *lock, unsigned long rsp_value,
 		curr_node->tail =
 			kd_mutex_encode_tail(smp_processor_id(), curr_node->slot);
 		curr_node->lock = lock;
+		curr_node->aux = aux;
 		curr_node->task_struct_ptr = current;
 		curr_node->gsbase = kd_read_kernel_gsbase();
 		curr_node->saved_ret_addr = ret_addr;
@@ -277,6 +291,7 @@ _kd_mutex_lock_abi(struct kd_mutex *lock, unsigned long rsp_value,
 		}
 scheduler_restore:;
 	}
+	kd_mutex_aux_put(aux);
 	preempt_enable();
 	migrate_enable();
 
@@ -308,19 +323,26 @@ scheduler_restore:;
 __attribute__((noipa)) noinline notrace int
 _kd_mutex_unlock_checked(struct kd_mutex *lock)
 {
-	u8 locked = smp_load_acquire(&lock->locked);
+	struct kd_mutex_aux *aux = kd_mutex_aux_lookup(lock);
+	u8 locked;
 
+	if (WARN_ON_ONCE(!aux))
+		return -EINVAL;
+	locked = smp_load_acquire(&aux->locked);
 	if (locked == _Q_LOCKED_VAL || locked == _Q_LOCKED_COMBINER_VAL) {
-		BUG_ON(READ_ONCE(lock->physical_owner) != current);
-		WRITE_ONCE(lock->physical_owner, NULL);
-		kd_origin_mutex_unlock(lock,
-				       _RET_IP_);
+		BUG_ON(READ_ONCE(aux->physical_owner) != current);
+		WRITE_ONCE(aux->physical_owner, NULL);
+		kd_origin_mutex_unlock(lock, _RET_IP_);
 		this_cpu_inc(kd_mutex_origin_releases);
-		smp_store_release(&lock->locked, 0);
+		smp_store_release(&aux->locked, 0);
+		/* Drop the gate-owner reference only after physical and gate release.
+		 * The temporary lookup still protects this final put sequence. */
+		kd_mutex_aux_put(aux);
+		kd_mutex_aux_put(aux);
 		return 0;
 	}
-	/* Should not reach here in JIT sandbox model */
 	KD_PR_ERR("kd_mutex_unlock: unexpected locked state %d\n", locked);
+	kd_mutex_aux_put(aux);
 	return -EINVAL;
 }
 

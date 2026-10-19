@@ -7,8 +7,10 @@
 #define CHECK(c) do { if (!(c)) { \
  fprintf(stderr, "FAIL line %d: %s\n", __LINE__, #c); exit(1); } } while (0)
 typedef struct { int value; } atomic_t;
-struct kd_mutex { atomic_t waiter_count; };
+struct kd_mutex_aux { void *lock; atomic_t waiter_count; };
 static int cpu_id, pinned, errors;
+static bool registry_idle = true;
+static bool kd_mutex_aux_all_idle(void) { return registry_idle; }
 static int kd_mutex_active_waiters[2], kd_mutex_reserved_nodes[2];
 static int kd_mutex_max_waiters[2], kd_mutex_frame_failure_count[2];
 static struct { unsigned long node_slots; } kd_mutex_shadows[2];
@@ -33,8 +35,11 @@ static void CHECK_PIN(void) { CHECK(pinned); }
 
 int main(void)
 {
- struct kd_mutex lock = {0};
+ struct kd_mutex_aux lock = {0};
  CHECK(kd_mutex_check_idle());
+ registry_idle = false;
+ CHECK(!kd_mutex_check_idle()); /* unpublished invocation still owns a record */
+ registry_idle = true;
  /* CPU 1 can retain a reserved stack while its executor sleeps. CPU 0
   * progressing through many requests must neither hide nor consume it. */
  kd_mutex_reserved_nodes[1] = 1;

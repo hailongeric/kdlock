@@ -31,7 +31,8 @@
 #if defined(SC_DIRECT_KDLOCK)
 #include <linux/objtool.h>
 #include "kd_mutex_direct.h"
-static struct kd_mutex sc_lock;
+/* Preserve this workload's deliberate separation from its business payload. */
+static struct kd_mutex sc_lock __aligned(SC_LINE_BYTES);
 #define SC_LOCK(n) struct kd_mutex_outer_cookie sc_outer_cookie; \
 	KD_MUTEX_OUTER_LOCK(&sc_lock, sc_outer_cookie, \
 	".globl mc_entry_" #n "\nmc_entry_" #n ":\n\t" ANNOTATE_NOENDBR)

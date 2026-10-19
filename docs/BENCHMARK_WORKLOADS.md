@@ -211,9 +211,13 @@ sleep in the plain payload. The `cNN` suffix counts payload cachelines only,
 excluding lock storage and other metadata. Padding separates different counters;
 every worker still shares the same counter in c01.
 
-The current KD mutex occupies 256 bytes aligned to 128 bytes, with lock storage
-separate from counters and controls. Native uses its own object layout. The c01
-name counts payload cachelines only. Spin/mutex loops currently include 64 dependent arithmetic rounds
+The current KD mutex occupies 32 bytes aligned to 8 bytes in the captured
+configuration, matching Native's embedded footprint. KD delegation state uses
+auxiliary allocations indexed by lock address, with automatic retirement after
+all references drain. Lock storage is separate from counters and controls. The
+recorded `d2a2304` KD-only comparisons used a 256-byte, 128-byte-aligned object;
+they do not measure the compact layout or establish a performance gain for it.
+The c01 name counts payload cachelines only. Spin/mutex loops currently include 64 dependent arithmetic rounds
 after each unlock, defined in [post_work.h](../workload_modules/spin_cacheline/post_work.h).
 The accepted c01 1–8-worker profile, later 22-count comparison and expanded
 21-count mutex comparison use this post64 setting. An eight-round variant is

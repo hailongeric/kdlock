@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0
-/* Live ordinary API semantics, sleeping owners, cancellation, and >1024 objects.
+/* Native layout, ordinary API semantics, sleeping owners and cancellation.
  * The compatibility header is deliberately included after all Linux headers.
  */
 #include <linux/module.h>
@@ -8,7 +8,24 @@
 #include <linux/delay.h>
 #include <linux/sched/signal.h>
 #include <linux/slab.h>
+#include <linux/mutex.h>
+
+/* Preserve the native type before the compatibility header aliases its tag. */
+typedef struct mutex kd_native_mutex_layout;
+
 #include "kd_mutex_compat.h"
+
+struct native_container {
+	u8 prefix;
+	kd_native_mutex_layout lock;
+	u8 suffix;
+};
+
+struct kd_container {
+	u8 prefix;
+	struct mutex lock;
+	u8 suffix;
+};
 
 static DEFINE_MUTEX(test_lock);
 static DEFINE_MUTEX(nested);
@@ -92,10 +109,25 @@ static int __init probe_init(void)
 	struct task_struct *tasks[8];
 	struct mutex *many;
 	atomic_t ref = ATOMIC_INIT(2);
-	int i, started = 0, ret = 0, old_io = current->in_iowait;
+	int i, pass, started = 0, ret = 0, old_io = current->in_iowait;
 
+	BUILD_BUG_ON(sizeof(struct mutex) != 32);
+	BUILD_BUG_ON(__alignof__(struct mutex) != 8);
+	BUILD_BUG_ON(sizeof(struct mutex) != sizeof(kd_native_mutex_layout));
+	BUILD_BUG_ON(__alignof__(struct mutex) !=
+		     __alignof__(kd_native_mutex_layout));
+	BUILD_BUG_ON(offsetof(struct kd_container, lock) !=
+		     offsetof(struct native_container, lock));
+	BUILD_BUG_ON(offsetof(struct kd_container, suffix) !=
+		     offsetof(struct native_container, suffix));
+	BUILD_BUG_ON(sizeof(struct kd_container) != sizeof(struct native_container));
+
+	/* This controlled probe has no delegation callers. Exact registry
+	 * membership must remain empty even while ordinary owners are live. */
+	if (kd_mutex_debug_aux_count())
+		return -EINVAL;
 	if (!mutex_trylock(&test_lock) || !mutex_is_locked(&test_lock) ||
-	    mutex_trylock(&test_lock))
+	    kd_mutex_debug_aux_count() || mutex_trylock(&test_lock))
 		return -EINVAL;
 	mutex_unlock(&test_lock);
 	mutex_lock_io(&test_lock);
@@ -109,13 +141,19 @@ static int __init probe_init(void)
 	many = kcalloc(2048, sizeof(*many), GFP_KERNEL);
 	if (!many)
 		return -ENOMEM;
-	for (i = 0; i < 2048; i++) {
-		mutex_init(&many[i]);
-		mutex_lock(&many[i]);
-		mutex_unlock(&many[i]);
-		if (!kd_mutex_is_idle(&many[i]))
-			ret = -EINVAL;
-		mutex_destroy(&many[i]);
+	/* Reuse every exact address after drain, then release caller storage
+	 * without destroy. Ordinary Linux callers have no extra cleanup duty.
+	 */
+	for (pass = 0; pass < 2; pass++) {
+		for (i = 0; i < 2048; i++) {
+			mutex_init(&many[i]);
+			mutex_lock(&many[i]);
+			if (kd_mutex_debug_aux_count())
+				ret = -EINVAL;
+			mutex_unlock(&many[i]);
+			if (!kd_mutex_is_idle(&many[i]))
+				ret = -EINVAL;
+		}
 	}
 	kfree(many);
 	if (ret || cancellation(SIGUSR1) || cancellation(SIGKILL))
@@ -138,9 +176,11 @@ static int __init probe_init(void)
 		put_task_struct(tasks[i]);
 	}
 	if (ret || operations != 160000 || atomic_read(&errors) ||
-	    !kd_mutex_is_idle(&test_lock) || !kd_mutex_is_idle(&nested))
+	    !kd_mutex_is_idle(&test_lock) || !kd_mutex_is_idle(&nested) ||
+	    kd_mutex_debug_aux_count())
 		return -EINVAL;
-	pr_info("KD_LOCAL_PROBE PASS operations=%lu workers=8 objects=2048 interruptible=EINTR killable=EINTR nested_sleep=PASS io=PASS drain=PASS\n", operations);
+	pr_info("KD_LOCAL_PROBE PASS operations=%lu workers=8 objects=2048 lock_size=%zu lock_align=%zu containing_layout=PASS address_reuse=PASS no_destroy=PASS no_aux=PASS interruptible=EINTR killable=EINTR nested_sleep=PASS io=PASS drain=PASS\n",
+		operations, sizeof(struct mutex), (size_t)__alignof__(struct mutex));
 	return 0;
 }
 static void __exit probe_exit(void) { }
