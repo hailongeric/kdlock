@@ -22,6 +22,10 @@ The [32-byte mutex receipt](10.176.26.71/tests/mutex32-20261019/README.md)
 records native geometry, automatic auxiliary-state retirement, basic and affected
 VM checks, live JIT/native continuation and preserved failures. It does not
 extend historical performance claims to the compact object.
+The subsequent [compact-mutex screen](10.176.26.71/bench/mutex32-screen-20261019/README.md)
+compares c01, c08 and RCUHT against fresh Native/TCLock controls at 1/8/32/60 workers.
+All 108 sessions passed and drained; KD's contended whole-run medians trail both
+controls. Peak results and all variation remain separate in that report.
 The [2026-10-18 consolidation checks](10.176.26.71/tests/main-consolidation-20261018/README.md)
 validate organization and tooling separately from the measured runtime.
 The [feature reintegration checks](10.176.26.71/tests/feature-reintegration-20261018/README.md)

@@ -1,0 +1,144 @@
+[1/72] c01-t01-r00-direct-native
+  peak 7.697 Mops/s; whole 7.684 Mops/s; 130.14 ns/op; drained=True
+[2/72] c01-t01-r00-direct-tclock
+  peak 13.949 Mops/s; whole 9.054 Mops/s; 110.45 ns/op; drained=True
+[3/72] c01-t01-r00-direct-kdlock-adaptive
+  peak 13.914 Mops/s; whole 13.865 Mops/s; 72.12 ns/op; drained=True
+[4/72] c01-t01-r01-direct-kdlock-adaptive
+  peak 13.910 Mops/s; whole 13.867 Mops/s; 72.11 ns/op; drained=True
+[5/72] c01-t01-r01-direct-tclock
+  peak 13.969 Mops/s; whole 13.915 Mops/s; 71.87 ns/op; drained=True
+[6/72] c01-t01-r01-direct-native
+  peak 13.908 Mops/s; whole 13.870 Mops/s; 72.10 ns/op; drained=True
+[7/72] c01-t01-r02-direct-native
+  peak 13.901 Mops/s; whole 13.861 Mops/s; 72.14 ns/op; drained=True
+[8/72] c01-t01-r02-direct-tclock
+  peak 13.969 Mops/s; whole 13.914 Mops/s; 71.87 ns/op; drained=True
+[9/72] c01-t01-r02-direct-kdlock-adaptive
+  peak 13.912 Mops/s; whole 13.872 Mops/s; 72.09 ns/op; drained=True
+[10/72] c01-t08-r00-direct-native
+  peak 9.325 Mops/s; whole 7.874 Mops/s; 127.00 ns/op; drained=True
+[11/72] c01-t08-r00-direct-tclock
+  peak 3.714 Mops/s; whole 3.710 Mops/s; 269.52 ns/op; drained=True
+[12/72] c01-t08-r00-direct-kdlock-adaptive
+  peak 1.151 Mops/s; whole 1.754 Mops/s; 570.14 ns/op; drained=True
+[13/72] c01-t08-r01-direct-kdlock-adaptive
+  peak 1.249 Mops/s; whole 1.708 Mops/s; 585.56 ns/op; drained=True
+[14/72] c01-t08-r01-direct-tclock
+  peak 3.939 Mops/s; whole 3.901 Mops/s; 256.34 ns/op; drained=True
+[15/72] c01-t08-r01-direct-native
+  peak 9.734 Mops/s; whole 9.662 Mops/s; 103.50 ns/op; drained=True
+[16/72] c01-t08-r02-direct-native
+  peak 8.934 Mops/s; whole 8.891 Mops/s; 112.48 ns/op; drained=True
+[17/72] c01-t08-r02-direct-tclock
+  peak 3.777 Mops/s; whole 3.765 Mops/s; 265.60 ns/op; drained=True
+[18/72] c01-t08-r02-direct-kdlock-adaptive
+  peak 1.255 Mops/s; whole 1.932 Mops/s; 517.59 ns/op; drained=True
+[19/72] c01-t32-r00-direct-native
+  peak 7.706 Mops/s; whole 6.795 Mops/s; 147.17 ns/op; drained=True
+[20/72] c01-t32-r00-direct-tclock
+  peak 3.229 Mops/s; whole 3.188 Mops/s; 313.63 ns/op; drained=True
+[21/72] c01-t32-r00-direct-kdlock-adaptive
+  peak 5.214 Mops/s; whole 2.542 Mops/s; 393.32 ns/op; drained=True
+[22/72] c01-t32-r01-direct-kdlock-adaptive
+  peak 7.596 Mops/s; whole 3.585 Mops/s; 278.91 ns/op; drained=True
+[23/72] c01-t32-r01-direct-tclock
+  peak 3.220 Mops/s; whole 3.207 Mops/s; 311.83 ns/op; drained=True
+[24/72] c01-t32-r01-direct-native
+  peak 7.601 Mops/s; whole 6.934 Mops/s; 144.22 ns/op; drained=True
+[25/72] c01-t32-r02-direct-native
+  peak 7.774 Mops/s; whole 7.358 Mops/s; 135.91 ns/op; drained=True
+[26/72] c01-t32-r02-direct-tclock
+  peak 3.259 Mops/s; whole 3.224 Mops/s; 310.20 ns/op; drained=True
+[27/72] c01-t32-r02-direct-kdlock-adaptive
+  peak 7.276 Mops/s; whole 3.145 Mops/s; 317.95 ns/op; drained=True
+[28/72] c01-t60-r00-direct-native
+  peak 3.556 Mops/s; whole 3.024 Mops/s; 330.74 ns/op; drained=True
+[29/72] c01-t60-r00-direct-tclock
+  peak 3.162 Mops/s; whole 3.036 Mops/s; 329.39 ns/op; drained=True
+[30/72] c01-t60-r00-direct-kdlock-adaptive
+  peak 4.783 Mops/s; whole 2.674 Mops/s; 374.04 ns/op; drained=True
+[31/72] c01-t60-r01-direct-kdlock-adaptive
+  peak 4.956 Mops/s; whole 3.104 Mops/s; 322.17 ns/op; drained=True
+[32/72] c01-t60-r01-direct-tclock
+  peak 3.142 Mops/s; whole 3.128 Mops/s; 319.65 ns/op; drained=True
+[33/72] c01-t60-r01-direct-native
+  peak 4.559 Mops/s; whole 3.983 Mops/s; 251.08 ns/op; drained=True
+[34/72] c01-t60-r02-direct-native
+  peak 4.747 Mops/s; whole 3.991 Mops/s; 250.54 ns/op; drained=True
+[35/72] c01-t60-r02-direct-tclock
+  peak 3.152 Mops/s; whole 3.136 Mops/s; 318.86 ns/op; drained=True
+[36/72] c01-t60-r02-direct-kdlock-adaptive
+  peak 4.810 Mops/s; whole 2.381 Mops/s; 420.02 ns/op; drained=True
+[37/72] c08-t01-r00-direct-native
+  peak 13.913 Mops/s; whole 13.864 Mops/s; 72.13 ns/op; drained=True
+[38/72] c08-t01-r00-direct-tclock
+  peak 13.953 Mops/s; whole 13.900 Mops/s; 71.94 ns/op; drained=True
+[39/72] c08-t01-r00-direct-kdlock-adaptive
+  peak 13.894 Mops/s; whole 13.861 Mops/s; 72.14 ns/op; drained=True
+[40/72] c08-t01-r01-direct-kdlock-adaptive
+  peak 13.917 Mops/s; whole 13.886 Mops/s; 72.01 ns/op; drained=True
+[41/72] c08-t01-r01-direct-tclock
+  peak 13.964 Mops/s; whole 13.920 Mops/s; 71.84 ns/op; drained=True
+[42/72] c08-t01-r01-direct-native
+  peak 13.914 Mops/s; whole 13.879 Mops/s; 72.05 ns/op; drained=True
+[43/72] c08-t01-r02-direct-native
+  peak 13.914 Mops/s; whole 13.885 Mops/s; 72.02 ns/op; drained=True
+[44/72] c08-t01-r02-direct-tclock
+  peak 13.964 Mops/s; whole 13.945 Mops/s; 71.71 ns/op; drained=True
+[45/72] c08-t01-r02-direct-kdlock-adaptive
+  peak 13.916 Mops/s; whole 13.869 Mops/s; 72.10 ns/op; drained=True
+[46/72] c08-t08-r00-direct-native
+  peak 9.160 Mops/s; whole 7.072 Mops/s; 141.41 ns/op; drained=True
+[47/72] c08-t08-r00-direct-tclock
+  peak 3.034 Mops/s; whole 3.024 Mops/s; 330.70 ns/op; drained=True
+[48/72] c08-t08-r00-direct-kdlock-adaptive
+  peak 1.249 Mops/s; whole 1.439 Mops/s; 694.84 ns/op; drained=True
+[49/72] c08-t08-r01-direct-kdlock-adaptive
+  peak 1.181 Mops/s; whole 1.317 Mops/s; 759.15 ns/op; drained=True
+[50/72] c08-t08-r01-direct-tclock
+  peak 3.168 Mops/s; whole 3.147 Mops/s; 317.81 ns/op; drained=True
+[51/72] c08-t08-r01-direct-native
+  peak 7.444 Mops/s; whole 7.416 Mops/s; 134.85 ns/op; drained=True
+[52/72] c08-t08-r02-direct-native
+  peak 8.429 Mops/s; whole 8.389 Mops/s; 119.20 ns/op; drained=True
+[53/72] c08-t08-r02-direct-tclock
+  peak 3.004 Mops/s; whole 2.977 Mops/s; 335.95 ns/op; drained=True
+[54/72] c08-t08-r02-direct-kdlock-adaptive
+  peak 1.138 Mops/s; whole 1.292 Mops/s; 774.21 ns/op; drained=True
+[55/72] c08-t32-r00-direct-native
+  peak 5.980 Mops/s; whole 4.698 Mops/s; 212.83 ns/op; drained=True
+[56/72] c08-t32-r00-direct-tclock
+  peak 2.802 Mops/s; whole 2.785 Mops/s; 359.03 ns/op; drained=True
+[57/72] c08-t32-r00-direct-kdlock-adaptive
+  peak 1.007 Mops/s; whole 1.243 Mops/s; 804.73 ns/op; drained=True
+[58/72] c08-t32-r01-direct-kdlock-adaptive
+  peak 1.026 Mops/s; whole 1.049 Mops/s; 953.00 ns/op; drained=True
+[59/72] c08-t32-r01-direct-tclock
+  peak 2.836 Mops/s; whole 2.812 Mops/s; 355.56 ns/op; drained=True
+[60/72] c08-t32-r01-direct-native
+  peak 6.042 Mops/s; whole 5.685 Mops/s; 175.91 ns/op; drained=True
+[61/72] c08-t32-r02-direct-native
+  peak 6.169 Mops/s; whole 5.893 Mops/s; 169.69 ns/op; drained=True
+[62/72] c08-t32-r02-direct-tclock
+  peak 2.811 Mops/s; whole 2.787 Mops/s; 358.82 ns/op; drained=True
+[63/72] c08-t32-r02-direct-kdlock-adaptive
+  peak 1.030 Mops/s; whole 1.195 Mops/s; 836.95 ns/op; drained=True
+[64/72] c08-t60-r00-direct-native
+  peak 2.599 Mops/s; whole 2.208 Mops/s; 452.84 ns/op; drained=True
+[65/72] c08-t60-r00-direct-tclock
+  peak 2.803 Mops/s; whole 2.682 Mops/s; 372.85 ns/op; drained=True
+[66/72] c08-t60-r00-direct-kdlock-adaptive
+  peak 1.059 Mops/s; whole 1.423 Mops/s; 702.84 ns/op; drained=True
+[67/72] c08-t60-r01-direct-kdlock-adaptive
+  peak 1.090 Mops/s; whole 1.069 Mops/s; 935.65 ns/op; drained=True
+[68/72] c08-t60-r01-direct-tclock
+  peak 2.746 Mops/s; whole 2.730 Mops/s; 366.36 ns/op; drained=True
+[69/72] c08-t60-r01-direct-native
+  peak 3.282 Mops/s; whole 3.031 Mops/s; 329.93 ns/op; drained=True
+[70/72] c08-t60-r02-direct-native
+  peak 2.947 Mops/s; whole 2.921 Mops/s; 342.38 ns/op; drained=True
+[71/72] c08-t60-r02-direct-tclock
+  peak 2.749 Mops/s; whole 2.732 Mops/s; 365.99 ns/op; drained=True
+[72/72] c08-t60-r02-direct-kdlock-adaptive
+  peak 1.713 Mops/s; whole 1.634 Mops/s; 612.06 ns/op; drained=True

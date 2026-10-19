@@ -1,0 +1,8 @@
+{
+  "commit": "7713897",
+  "full_suite": false,
+  "mutex_alignment": 8,
+  "mutex_size": 32,
+  "protocol": "kd-only-legacy",
+  "source_host": "380G10"
+}

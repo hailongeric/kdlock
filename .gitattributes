@@ -16,3 +16,9 @@ bench/results/10.176.26.71/bench/mutex_owned/20261015-origin/snapshots-final.txt
 # Captured compiler and disassembly diagnostics retain their exact whitespace.
 bench/results/10.176.26.71/tests/mutex32-20261019/build-first.log -whitespace
 bench/results/10.176.26.71/tests/mutex32-20261019/unit-first.log -whitespace
+# Captured comparison CSVs retain the writer's CRLF record terminators.
+bench/results/10.176.26.71/bench/mutex32-screen-20261019/*.csv whitespace=cr-at-eol
+bench/results/10.176.26.71/bench/mutex32-screen-20261019/cacheline/summary.csv whitespace=cr-at-eol
+bench/results/10.176.26.71/bench/mutex32-screen-20261019/rcuht/summary.csv whitespace=cr-at-eol
+# Preserve the plotted artifact's exact Matplotlib path serialization.
+bench/results/10.176.26.71/bench/mutex32-screen-20261019/comparison.svg -whitespace

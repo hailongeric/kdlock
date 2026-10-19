@@ -22,11 +22,14 @@ It does not have a new timed comparison. The throughput values below belong to
 their recorded source versions; acceptance of those results does not measure the
 additional flag-preservation cost in images that contain instruction markers.
 
-The accepted current mutex is KD-only `d2a2304`: KD physical exclusion with the
-legacy delegation queue. The [2026-10-17 paired report](../bench/results/10.176.26.71/bench/comparison/mutex-kdonly-20261017T140354Z/README.md)
+The mutex protocol remains KD-only `d2a2304`: KD physical exclusion with the
+legacy delegation queue. Current `7713897` uses a 32-byte object with lazy
+auxiliary delegation state; its focused comparison is below. The
+[2026-10-17 paired report](../bench/results/10.176.26.71/bench/comparison/mutex-kdonly-20261017T140354Z/README.md)
 contains 504 complete, drained sessions: two workloads, 21 worker counts, three
 repetitions and four arms (accepted compatibility baseline, KD-only, Native,
-TCLock). It uses the regular 64-vCPU VM and collector 63.
+TCLock). It uses the regular 64-vCPU VM and collector 63, and measures the former
+256-byte object. Those results do not measure the compact layout.
 
 ## Taskname and xattr comparison
 
@@ -88,11 +91,32 @@ bodies; mutation delegation and full live-task/procfs integration remain
 unaccepted. The checked-helper `c79d84f` round, prior dispatcher round, screens
 and profiles retain separate source identities and are never pooled.
 
-## Current mutex result
+## Compact mutex screen, 7713897
+
+The [focused comparison](../bench/results/10.176.26.71/bench/mutex32-screen-20261019/README.md)
+completed 108 valid, drained sessions for c01, c08 and write-only RCUHT, using
+fresh Native/TCLock/KD controls at 1/8/32/60 workers and three repetitions.
+KD's whole-run median is roughly level with Native at one worker, but below
+both controls at every tested contended point. At 60 workers:
+
+| Workload | Native | TCLock | Compact KD | KD / Native | KD / TCLock |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| c01, post64 | 3.983 | 3.128 | 2.674 | 0.671× | 0.855× |
+| c08, post64 | 2.921 | 2.730 | 1.423 | 0.487× | 0.521× |
+| RCUHT | 1.695 | 1.746 | 0.986 | 0.582× | 0.565× |
+
+These are median whole-run Mops/s. The c01 best warmed KD peak is 4.956 Mops/s,
+above Native's 4.747, despite the lower whole-run median. The report retains
+both metrics and all observed ranges, including substantial variation. CPU pins
+and the host's `ondemand` policy stayed unchanged, while actual VM memory had
+some pages on the opposite NUMA node despite binding. No matched old-layout
+KD arm was run; this screen cannot isolate the cost of shrinking the object.
+
+## Historical 256-byte mutex result, d2a2304
 
 At 60 workers, median whole-run throughput in Mops/s is:
 
-| Workload | Linux Native | TCLock | Compatibility baseline | Current KD-only | Change vs baseline |
+| Workload | Linux Native | TCLock | Compatibility baseline | KD-only d2a2304 | Change vs baseline |
 | --- | ---: | ---: | ---: | ---: | ---: |
 | c01, post64 | 4.276 | 3.107 | 4.856 | 4.838 | −0.39% |
 | api-pipebytes-query-n16 | 1.821 | 2.447 | 5.371 | 5.130 | −4.48% |
