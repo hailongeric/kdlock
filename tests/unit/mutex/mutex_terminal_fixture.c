@@ -26,8 +26,6 @@ struct list_head { struct list_head *next, *prev; };
 #define KD_EXE_NATIVE_DONE 7
 #define READ_ONCE(x) (x)
 #define WRITE_ONCE(x, v) ((x) = (v))
-/* A cache hint has no effect in this deterministic protocol fixture. */
-#define prefetch(p) ((void)(p))
 #define NUMA_AWARE 1
 static int numa_node_id(void) { return 0; }
 #define smp_load_acquire(p) (*(p))
