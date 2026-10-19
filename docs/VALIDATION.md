@@ -8,6 +8,27 @@ Basic plus affected checks are the default; an old pass is not a current full pa
 The [terminology guide](TERMINOLOGY.md) explains status labels and other technical
 terms used in the receipts below.
 
+## Embedded mutex validation
+
+Runtime `372be89` removes the auxiliary hash and shared reference count while
+keeping native 32-byte size and 8-byte alignment. Its
+[basic plus affected VM checks](../bench/results/10.176.26.71/bench/mutex32-embedded-20261019/README.md#validation-and-preserved-evidence)
+passed dependencies, provider/daemon builds, two basic programs, twelve affected
+drivers (14 passed, zero failed), and live ordinary-mutex, rwsem and
+instruction-exit probes. The local probe adds head/middle/tail ring cancellation
+and HANDOFF, retaining address reuse without destruction and exact drain.
+Embedded-state, resources and balance fixtures detect 22, 26 and six negative
+controls respectively. Provider diagnostics retain 48 warning lines.
+
+All twelve fresh pipe sessions returned JIT bodies and drained. Fifteen retained
+kernel logs contain no matched runtime faults. Independent archive/source review
+passed with zero exceptions/issues, and the independent arithmetic audit passed
+17,613 checks, reconstructing all twelve windows. The VM was restored to the
+checked source and remains idle. The measured pipe slowdown is retained as a
+performance limitation, separate from correctness checks. No full suite,
+whole-kernel replacement, RT/ww_mutex, lockdep or oversubscription validation is
+claimed.
+
 ## Compact mutex counted-pin validation
 
 The [reference-traffic round](../bench/results/10.176.26.71/bench/mutex32-traffic-20261019/README.md)

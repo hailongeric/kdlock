@@ -1,0 +1,15 @@
+{
+  "files": [
+    {
+      "action": "removed",
+      "expected_sha256": "0e232ea6665d1ddeb6ab62544822fb46f93b7716cf5b5a30ecd8e33fee03506c",
+      "observed_sha256": "0e232ea6665d1ddeb6ab62544822fb46f93b7716cf5b5a30ecd8e33fee03506c",
+      "path": "include/kd_mutex_state.h"
+    }
+  ],
+  "final_idle": true,
+  "finished_unix": 1792419826.6860504,
+  "passed": true,
+  "started_unix": 1792419826.6318562,
+  "target": "old256"
+}

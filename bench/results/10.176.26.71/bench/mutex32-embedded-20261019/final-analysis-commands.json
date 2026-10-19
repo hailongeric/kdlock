@@ -1,0 +1,40 @@
+[
+  {
+    "argv": [
+      "python3",
+      "/root/kdlock-evidence/10.176.26.71/bench/mutex32-embedded-20261019/summarize.py",
+      "--base",
+      "/root/kdlock-evidence/10.176.26.71/bench/mutex32-embedded-20261019",
+      "--arms",
+      "embedded32",
+      "old256"
+    ],
+    "cwd": "/root/host_fs/kdlock",
+    "started_unix": 1792419997.0151331,
+    "timeout_seconds": 240,
+    "finished_unix": 1792419997.1630552,
+    "exit_code": 0,
+    "stdout": "{\"complete\": true, \"sessions\": 12, \"plain\": 12, \"groups\": 4, \"invalid\": 0, \"issues\": [], \"output\": \"/root/kdlock-evidence/10.176.26.71/bench/mutex32-embedded-20261019\"}\n"
+  },
+  {
+    "argv": [
+      "python3",
+      "/root/kdlock-evidence/10.176.26.71/bench/mutex32-embedded-20261019/finalize.py",
+      "--base",
+      "/root/kdlock-evidence/10.176.26.71/bench/mutex32-embedded-20261019",
+      "--arms",
+      "embedded32",
+      "old256",
+      "--check",
+      "embedded32=checks-embedded32",
+      "--current-arm",
+      "embedded32"
+    ],
+    "cwd": "/root/host_fs/kdlock",
+    "started_unix": 1792419997.163703,
+    "timeout_seconds": 240,
+    "finished_unix": 1792419997.5745938,
+    "exit_code": 0,
+    "stdout": "{\"checks\": [\"embedded32\"], \"current_arm\": \"embedded32\", \"faults\": 0, \"idle\": true, \"kernel_logs\": 15, \"passed\": true, \"profiles\": 0, \"timing\": 12}\n"
+  }
+]

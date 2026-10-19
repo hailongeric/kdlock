@@ -1,0 +1,171 @@
+{
+  "all_sessions_returned_jit": true,
+  "checks_by_arm": {
+    "embedded32": {
+      "checked_source_label": "372be89",
+      "commands_sha256": "e46b00e11355e342d1c1e57d2aa985829aaba0519197795e17566795bb0e228e",
+      "directory": "checks-embedded32",
+      "frozen_source_files": 342,
+      "full_suite": false,
+      "live": {
+        "instruction-exit": {
+          "drained": true,
+          "passed": true,
+          "result_sha256": "4d6a68f93790c613d03c5fc08ae7c75ace9fa0b6cbde0dcd054795fbf560f357"
+        },
+        "local": {
+          "drained": true,
+          "passed": true,
+          "result_sha256": "d3f5c65fcbcfdade1b2c8b3c9d6f11ab0908b9d20e0e904dff4928e2d627bc90"
+        },
+        "rwsem": {
+          "drained": true,
+          "passed": true,
+          "result_sha256": "cb580ccd0839bd5d4f903e01d7329c0fb67acff4542746d9faf2f14e9284b71e"
+        }
+      },
+      "logs_sha256": {
+        "daemon": "76944d5a6d3530f630377c9e3a5a87d116dc4fd7dd06452e2a7a453e53844e34",
+        "dependencies": "9261363b733079a641c2e4cc9bc46ffa1d8336945a87f807b6cf68847dbc9b09",
+        "instruction-exit": "040ab36beae46397ce3af014f6606402dd17834af4cb59cd94278353eb0be06e",
+        "local": "3fb916ac8baa7cdb2d6d0cc0cd187a7cb12404c97c44926fb516c097f10afe9e",
+        "provider": "484ef0fd8694b61ad19820f393e21147fdb805886c4a1b0f57301c07d6c1566e",
+        "rwsem": "741c185a1a56ffbefba8e6286a7e0f8f60ed8cd083bf3694f62376ae28443689",
+        "unit": "f88a97f8b06aa02a6bec1ff94c44b40ea629036b6503c0b80f6fdaef547251f8"
+      },
+      "negative_controls": {
+        "mutex/test_mutex_balances.py": [
+          "ignores-active-task",
+          "ignores-second-cpu",
+          "ignores-reservation",
+          "ignores-slot-lifetime",
+          "drops-exit-balance",
+          "opposite-balances-cancel"
+        ],
+        "mutex/test_mutex_resources.py": [
+          "outer-entry-retries-native-cas",
+          "outer-native-result-routed",
+          "outer-queued-result-native",
+          "native-success-still-samples",
+          "local-predecessor-still-publishes",
+          "tail-loses-empty-sentinel",
+          "tail-loses-slot",
+          "tail-decodes-next-cpu",
+          "tail-truncates-slot",
+          "tail-ignores-remote-cpu",
+          "missing-stack-accepted",
+          "reservation-not-published",
+          "poll-enables-preemption",
+          "poll-returns-before-publication",
+          "release-keeps-gs",
+          "gate-without-native-lock",
+          "claim-publishes-held-before-physical",
+          "unlock-clears-before-physical",
+          "unlock-skips-releasing-phase",
+          "unlock-clears-successor",
+          "resume-loses-register",
+          "native-drops-task-record",
+          "hook-ignores-task-failure",
+          "unlock-drops-retained-task",
+          "hook-admits-closed-source",
+          "borrowed-unlock-bypasses-notification"
+        ],
+        "mutex/test_mutex_state.py": [
+          "gate-read-includes-count",
+          "gate-claim-overwrites-count",
+          "gate-claim-accepts-held",
+          "gate-set-overwrites-count",
+          "gate-claim-skips-cas-retry",
+          "gate-set-skips-cas-retry",
+          "count-signed-shift",
+          "enter-changes-phase",
+          "exit-changes-phase",
+          "overflow-not-rejected",
+          "underflow-not-rejected",
+          "invalid-phase-not-rejected",
+          "foreign-task-query-authorized",
+          "pickup-authorized",
+          "physical-owner-ignored",
+          "acquiring-authorized",
+          "releasing-authorized",
+          "combiner-not-authorized",
+          "held-before-physical",
+          "free-before-physical-release",
+          "releasing-phase-skipped",
+          "post-release-clears-successor"
+        ]
+      },
+      "passed": true,
+      "production_matches_benchmark": true,
+      "provider_warning_lines": 48,
+      "result_sha256": "71e72515a78f3771b432a84af26ee43d6db9d2a4e8e55f5a88c9652964719bc3",
+      "source_commit": "372be89",
+      "source_manifest_sha256": "3b3f29de34a1effd652af23e758e12baabd09aae2ec1764a68d973e456a7eb32",
+      "source_unchanged": true,
+      "unit_affected_drivers": [
+        "mutex/test_mutex_state.py",
+        "mutex/test_mutex_resources.py",
+        "mutex/test_mutex_balances.py",
+        "mutex/test_mutex_terminal.py",
+        "mutex/test_mutex_outer_progress.py",
+        "mutex/test_mutex_outer_api.py",
+        "mutex/test_mutex_wait_clobber.py",
+        "mutex/test_mutex_task_cache.py",
+        "execution/test_exec_capacity.py",
+        "infrastructure/test_provider_lifecycle.py",
+        "execution/test_mutex_images.py",
+        "execution/test_remote_outer.py"
+      ],
+      "unit_basic": 2,
+      "unit_failed": 0,
+      "unit_passed": 14
+    }
+  },
+  "comparison_sha256": "e6ebbef0129a0367b8ff5887bed8d1cd4d6919cfae0a7c9e950f3368fcdd4855",
+  "current_arm": "embedded32",
+  "full_suite": false,
+  "helper_sha256": "a70f34d489a9eb32ac39139ff932420652e8cf3078d29f06e691acd6656f4ba1",
+  "matrices": {
+    "embedded32": {
+      "collections": {
+        "pipe": {
+          "command_sha256": "114efcc065b1a06c2dc9845d988d98c791bc028bb78da21f8d61df4c67fbc8fa",
+          "path": "embedded32/pipe/source-sha256.json",
+          "records_sha256": "5cb5c77327e270646cc439cc6e65a844df7aef591dde7e5ca3613199923bbf67",
+          "sessions": 6,
+          "sha256": "d7132a90e9738b7cc1548e460d3557f9d692bcbcdb5d7d12edaed52f71eb79c4"
+        }
+      },
+      "matrix_sha256": "3909044bca026972bd32853875163ad77af864bb0c6aaab1fddcc24c6172b802",
+      "plain_sessions": 6,
+      "production_files": 90,
+      "production_manifest_sha256": "e038ec068cb22f013120c2a9ccfab0ad00284afebf4ba092dc208098e7dd576c",
+      "production_private_includes": 39,
+      "profile_sessions": 0,
+      "source_commit": "372be89"
+    },
+    "old256": {
+      "collections": {
+        "pipe": {
+          "command_sha256": "4c2e6dd10e6f2c4f557363675e29ceac3dabeb861e290336117e85ed16c4df10",
+          "path": "old256/pipe/source-sha256.json",
+          "records_sha256": "ae1d366b23f258b5c1d998fbab6be2bd585ce26475e372c4a1497e5e18d5f6b8",
+          "sessions": 6,
+          "sha256": "bcfd4a07213ebf56c61d6c5ccc2574347629e4372843ab98b67582272b6711be"
+        }
+      },
+      "matrix_sha256": "b275e8055881a2e60c33627ac97e6109ba6f4cee36f464e89cb62f414dc7eab9",
+      "plain_sessions": 6,
+      "production_files": 89,
+      "production_manifest_sha256": "4d7d87504d383bfb9d7913dc5c772bedaf82d74c1695acd48eef513ac85e7a1e",
+      "production_private_includes": 39,
+      "profile_sessions": 0,
+      "source_commit": "0324e60d6791948e9762a9916a50e8e026f073b0"
+    }
+  },
+  "note": "Basic plus the twelve listed affected drivers and three live probes only. Only fresh plain pipe timings; API returned JIT counters remain explicit.",
+  "passed": true,
+  "returned_jit_sessions": 12,
+  "schema": 1,
+  "source_revision": "372be89"
+}

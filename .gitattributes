@@ -55,3 +55,8 @@ bench/results/10.176.26.71/bench/mutex32-traffic-20261019/checks-inline/provider
 bench/results/10.176.26.71/bench/mutex32-traffic-20261019/checks-inline/unit.log -whitespace
 bench/results/10.176.26.71/bench/mutex32-traffic-20261019/fetchadd-reference-code.txt -whitespace
 bench/results/10.176.26.71/bench/mutex32-traffic-20261019/inline-reference-code.txt -whitespace
+# Preserve embedded-state VM boot, compiler and disassembly evidence verbatim.
+bench/results/10.176.26.71/bench/mutex32-embedded-20261019/guest-before.log -whitespace
+bench/results/10.176.26.71/bench/mutex32-embedded-20261019/build-initial/provider.log -whitespace
+bench/results/10.176.26.71/bench/mutex32-embedded-20261019/checks-embedded32/provider.log -whitespace
+bench/results/10.176.26.71/bench/mutex32-embedded-20261019/checks-embedded32/unit.log -whitespace

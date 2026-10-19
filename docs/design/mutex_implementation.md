@@ -239,8 +239,9 @@ current-node read is allowed after its completion/native publication. Prefetch
 grants no ownership, admission or lifetime.
 
 The embedded gate uses a read before its acquire CAS. Tail exchanges and exact
-waiter-count updates now share the object's cacheline with physical ownership.
-This trades cacheline separation for the requested native geometry; performance
+waiter-count updates share the last eight bytes with the phase. Physical ownership
+can share that cacheline; native alignment also permits the object to straddle
+two lines. This trades cacheline separation for native geometry; performance
 claims require the matching VM comparison, not an inference from fewer atomics.
 
 ### Queue, batch execution and recovery
@@ -420,6 +421,13 @@ and instrumentation policy are recorded separately. The captured kernel is
 unchanged. Build/use instructions belong in the
 [workload README](../../workload_modules/mutex_cacheline/README.md) and
 [runner README](../../bench/tclock_compare/README.md).
+
+The current [embedded-state comparison](../../bench/results/10.176.26.71/bench/mutex32-embedded-20261019/README.md)
+records `372be89` basic/affected checks and twelve fresh pipe sessions against
+old-256-byte `0324e60`. The 32-byte version trails by 40.7% at eight workers and
+37.0% at sixty; removing the auxiliary references has not established parity.
+Its measured returned-JIT share is higher at sixty workers, so lower delegation
+cannot explain that point. Packed-state coherence cost remains a hypothesis.
 
 The selected `d2a2304` c01/post64 and pipebytes n16 comparison, returned-body
 evidence and regression limits are in the

@@ -23,16 +23,38 @@ their recorded source versions; acceptance of those results does not measure the
 additional flag-preservation cost in images that contain instruction markers.
 
 The mutex protocol remains KD-only `d2a2304`: KD physical exclusion with the
-legacy delegation queue. Current `ba98937` keeps the 32-byte object introduced
-by `7713897`, with a preallocated direct-index auxiliary table and exact
-reference transfer/borrowing, counted fetch-add pins and inlined guards. Its
-latest five-arm comparison, the prior four-arm comparison, the historical RCU
-investigation and earlier compact screens are below. The
+legacy delegation queue. Current `372be89` embeds the gate/count and encoded tail
+in the 32-byte, native-aligned object, removing the auxiliary hash and shared
+reference count. Its fresh pipe comparison still trails the old 256-byte version
+by 40.7% at eight workers and 37.0% at sixty workers. The earlier `ba98937`
+counted-pin comparison and preceding compact experiments remain separate below.
+The
 [2026-10-17 paired report](../bench/results/10.176.26.71/bench/comparison/mutex-kdonly-20261017T140354Z/README.md)
 contains 504 complete, drained sessions: two workloads, 21 worker counts, three
 repetitions and four arms (accepted compatibility baseline, KD-only, Native,
 TCLock). It uses the regular 64-vCPU VM and collector 63, and measures the former
 256-byte object. Those results do not measure the compact layout.
+
+## Embedded 32-byte mutex pipe comparison
+
+The [embedded-state report](../bench/results/10.176.26.71/bench/mutex32-embedded-20261019/README.md)
+compares fresh `372be89` and old-256-byte `0324e60` source blocks in the same
+64-vCPU recovery VM, collector 63, with three 2000 ms repetitions per point.
+All twelve sessions returned JIT bodies, passed the oracles and drained.
+Whole-run median Mops/s is:
+
+| Workers | Old 256-byte | Embedded 32-byte | New / old |
+| ---: | ---: | ---: | ---: |
+| 8 | 6.994 | 4.147 | 0.593× |
+| 60 | 5.409 | 3.408 | 0.630× |
+
+At sixty workers measured returned-JIT share increases from 94.899% to 96.187%,
+while whole-session bodies per combiner remain about 127.5–127.9. Lower delegation
+therefore cannot explain that throughput deficit. Packed gate/count/tail traffic
+is a source-backed hypothesis; this round contains no profiling or isolated
+ablation to attribute the cost. The report retains ranges and phase-accounting
+limits. Source/archive and independent arithmetic audits passed. Prior rounds
+are not pooled; no fresh pre-change 32-byte arm or full grid was run.
 
 ## Taskname and xattr comparison
 

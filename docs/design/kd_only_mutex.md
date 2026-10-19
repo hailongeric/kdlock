@@ -122,7 +122,12 @@ experiment.
 
 ## Validation and measurement boundary
 
-The [compact-object validation receipt](../../bench/results/10.176.26.71/tests/mutex32-20261019/README.md)
+The [embedded-state receipt](../../bench/results/10.176.26.71/bench/mutex32-embedded-20261019/README.md)
+records current `372be89` basic and affected checks, live native geometry,
+ring cancellation/handoff, JIT/native recovery, exact drain and fresh pipe
+comparisons. It retains the performance deficit against the old 256-byte object.
+
+The historical [compact-object validation receipt](../../bench/results/10.176.26.71/tests/mutex32-20261019/README.md)
 records the basic and affected VM checks, live delegation and native continuation,
 the initial failed attempts, and source/ELF/archive identities. It makes no
 performance claim for the changed layout.
