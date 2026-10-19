@@ -26,10 +26,10 @@ struct kd_mutex_batch {
 
 /* Only detach a fully linked node. Its successor remains the published tail
  * chain, so no enqueuer can subsequently write the detached node's next link.
- * A finite scan and a 128-body local cohort bound keep remote requests from
- * being bypassed indefinitely. Rejoin deferred requests first at that boundary
- * and continue FIFO under the same physical owner, up to the total batch bound.
- * Queue membership and physical-owner lifetime remain separate obligations. */
+ * A finite scan and a 256-body local cohort bound keep remote requests from
+ * being bypassed indefinitely. Deferred requests receive service or physical
+ * handoff first at that boundary. Longer local cohorts amortize owner transfer
+ * while keeping a substantial remote cohort on its own socket. */
 static struct kd_mutex_node *
 kd_mutex_batch_select(struct kd_mutex_batch *batch, struct kd_mutex_node *node)
 {
@@ -466,14 +466,15 @@ kd_mutex_run_combiner(struct kd_mutex *lock, struct kd_mutex_node *curr_node)
 		curr_node = kd_mutex_batch_select(&batch, curr_node);
 		next_node = curr_node;
 		/* Keep a real terminal tail while private deferred nodes exist.
-		 * At the locality bound, service that prefix under this owner before
-		 * allowing any more bypass. FIFO then permits a longer bounded batch
-		 * without repeatedly moving physical ownership between sockets. */
+		 * A substantial remote cohort receives the next physical owner;
+		 * that owner can serve the cohort on its own socket. */
 		if (batch.deferred_head &&
-		    (counter >= 128 || !smp_load_acquire(&curr_node->next))) {
-			/* Rejoin before execution so the terminal tail remains linked.
-			 * Native/refused work and early outer release retain their normal
-			 * handoff boundaries; this changes only NUMA cohort scheduling. */
+		    (counter >= 256 || !smp_load_acquire(&curr_node->next))) {
+			if (batch.deferred_count >= 8)
+				break;
+			/* Small prefixes cannot amortize owner transfer. Rejoin before
+			 * execution, then service the rest in FIFO order. The total cap,
+			 * refusal, native and early-outer boundaries remain unchanged. */
 			curr_node = kd_mutex_batch_rejoin(&batch, curr_node);
 			batch.numa_node = -1;
 		}

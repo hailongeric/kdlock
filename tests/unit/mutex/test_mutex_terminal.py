@@ -43,11 +43,10 @@ def main():
             'repeat-after-native-reuse': (helpers.replace('if (batch->current_retired)', 'if (false)'), loop),
             'skip-deferred-rejoin': (helpers.replace('if (batch->deferred_head) {', 'if (false) {'), loop),
             'lose-refused-successor': (helpers, loop.replace('WRITE_ONCE(curr_node->next, next_node);', '')),
-            'unbounded-local-cohort': (helpers, loop.replace('counter >= 128', 'false')),
-            'force-numa-owner-handoff': (helpers, loop.replace(
-                'curr_node = kd_mutex_batch_rejoin(&batch, curr_node);',
-                'if (batch.deferred_count >= 8) break;\n'
-                '\t\t\tcurr_node = kd_mutex_batch_rejoin(&batch, curr_node);')),
+            'unbounded-local-cohort': (helpers, loop.replace('counter >= 256', 'false')),
+            'short-local-cohort': (helpers, loop.replace('counter >= 256', 'counter >= 128')),
+            'late-local-cohort': (helpers, loop.replace('counter >= 256', 'counter >= 512')),
+            'skip-numa-owner-handoff': (helpers, loop.replace('if (batch.deferred_count >= 8)', 'if (false)')),
             'bypass-rejoined-prefix': (helpers, loop.replace('batch.numa_node = -1;', 'batch.numa_node = 0;')),
             'overrun-total-batch': (helpers, loop.replace(
                 'counter >= kd_mutex_batch_size', 'counter >= kd_mutex_batch_size + 1')),
