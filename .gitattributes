@@ -44,3 +44,5 @@ bench/results/10.176.26.71/bench/mutex32-index-20261019/compact-transfer/profile
 bench/results/10.176.26.71/bench/mutex32-index-20261019/first-three-profile-screen.log -whitespace
 bench/results/10.176.26.71/bench/mutex32-index-20261019/guest-before.log -whitespace
 bench/results/10.176.26.71/bench/mutex32-index-20261019/comparison.svg -whitespace
+# Preserve the compact-mutex traffic round's captured preflight output.
+bench/results/10.176.26.71/bench/mutex32-traffic-20261019/guest-before.log -whitespace
