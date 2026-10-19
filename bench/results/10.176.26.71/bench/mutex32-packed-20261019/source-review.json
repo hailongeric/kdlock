@@ -1,0 +1,146 @@
+{
+  "ancillary_exceptions": [],
+  "audit_script_sha256": "b4e28f90fec2474956c5365f83b67d919ea5d5e94262341d7b835c70dcab5a7f",
+  "binary_manifest_entries": 62,
+  "commits": {
+    "candidate": {
+      "recorded": "35718f5",
+      "resolved": "35718f59175112c46b53f74c1f1b3d93b26c03de"
+    },
+    "embedded32": {
+      "recorded": "cb0e8e6",
+      "resolved": "cb0e8e67778a26eb4814c700cb7f4938150bd04d"
+    },
+    "old256": {
+      "recorded": "0324e60d6791948e9762a9916a50e8e026f073b0",
+      "resolved": "0324e60d6791948e9762a9916a50e8e026f073b0"
+    }
+  },
+  "current_production": {
+    "arm": "candidate",
+    "commit": "35718f5",
+    "files": 90,
+    "private_inc_files": 40
+  },
+  "issues": [],
+  "numeric_limit": "This audit binds reported statistics to raw inputs; it does not independently reparse API phase arithmetic or recompute throughput/peak statistics.",
+  "original_manifests": [
+    {
+      "allowed_ancillary": [],
+      "commit": "35718f5",
+      "files": 240,
+      "manifest": "candidate/pipe/source-sha256.json",
+      "mismatches": [],
+      "private_inc_files": 40,
+      "production_files": 90
+    },
+    {
+      "allowed_ancillary": [],
+      "commit": "35718f5",
+      "files": 240,
+      "manifest": "candidate/profile/pipe/source-sha256.json",
+      "mismatches": [],
+      "private_inc_files": 40,
+      "production_files": 90
+    },
+    {
+      "allowed_ancillary": [],
+      "commit": "35718f5",
+      "files": 186,
+      "manifest": "checks-candidate-r2/instruction-exit/source-sha256.json",
+      "mismatches": [],
+      "private_inc_files": 40,
+      "production_files": 90
+    },
+    {
+      "allowed_ancillary": [],
+      "commit": "35718f5",
+      "files": 164,
+      "manifest": "checks-candidate-r2/local/source-sha256.json",
+      "mismatches": [],
+      "private_inc_files": 40,
+      "production_files": 90
+    },
+    {
+      "allowed_ancillary": [],
+      "commit": "35718f5",
+      "files": 164,
+      "manifest": "checks-candidate-r2/rwsem/source-sha256.json",
+      "mismatches": [],
+      "private_inc_files": 40,
+      "production_files": 90
+    },
+    {
+      "allowed_ancillary": [],
+      "commit": "35718f5",
+      "files": 345,
+      "manifest": "checks-candidate-r2/source-sha256.json",
+      "mismatches": [],
+      "private_inc_files": 40,
+      "production_files": 90
+    },
+    {
+      "allowed_ancillary": [],
+      "commit": "c2f0d9c",
+      "files": 345,
+      "manifest": "checks-candidate/source-sha256.json",
+      "mismatches": [],
+      "private_inc_files": 40,
+      "production_files": 90
+    },
+    {
+      "allowed_ancillary": [],
+      "commit": "cb0e8e6",
+      "files": 239,
+      "manifest": "embedded32/pipe/source-sha256.json",
+      "mismatches": [],
+      "private_inc_files": 39,
+      "production_files": 89
+    },
+    {
+      "allowed_ancillary": [],
+      "commit": "cb0e8e6",
+      "files": 239,
+      "manifest": "embedded32/profile/pipe/source-sha256.json",
+      "mismatches": [],
+      "private_inc_files": 39,
+      "production_files": 89
+    },
+    {
+      "allowed_ancillary": [],
+      "commit": "0324e60d6791948e9762a9916a50e8e026f073b0",
+      "files": 238,
+      "manifest": "old256/pipe/source-sha256.json",
+      "mismatches": [],
+      "private_inc_files": 39,
+      "production_files": 88
+    },
+    {
+      "allowed_ancillary": [],
+      "commit": "0324e60d6791948e9762a9916a50e8e026f073b0",
+      "files": 238,
+      "manifest": "old256/profile/pipe/source-sha256.json",
+      "mismatches": [],
+      "private_inc_files": 39,
+      "production_files": 88
+    }
+  ],
+  "passed": true,
+  "prepared_limit": "Only retained expanded provider snapshots are reconstructed. API collections retain original source, preparation recipes and built binaries, but may omit expanded private provider trees.",
+  "prepared_snapshots": [
+    {
+      "classification": {
+        "benchmark_overlay": 2,
+        "observation_patch": 12,
+        "unchanged_original": 78
+      },
+      "commit": "35718f5",
+      "files": 92,
+      "folder": "checks-candidate-r2/instruction-exit",
+      "patch_sha256": "a70fb88790e48a8c88a77bfbfa8260bf436c9da7a3590828eb0d8ffe4238955d"
+    }
+  ],
+  "schema": 1,
+  "scope": "Offline inert-byte/Git-object audit; no archive extraction, execution, build, test or VM command",
+  "source_manifests": 12
+}

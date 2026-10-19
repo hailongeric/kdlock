@@ -1,0 +1,60 @@
+[
+  {
+    "argv": [
+      "python3",
+      "/root/kdlock-evidence/10.176.26.71/bench/mutex32-packed-20261019/summarize.py",
+      "--base",
+      "/root/kdlock-evidence/10.176.26.71/bench/mutex32-packed-20261019",
+      "--arms",
+      "embedded32",
+      "candidate",
+      "old256"
+    ],
+    "cwd": "/root/host_fs/kdlock",
+    "started_unix": 1792422520.3424382,
+    "timeout_seconds": 240,
+    "finished_unix": 1792422520.529673,
+    "exit_code": 0,
+    "stdout": "{\"complete\": true, \"sessions\": 18, \"plain\": 18, \"groups\": 6, \"invalid\": 0, \"issues\": [], \"output\": \"/root/kdlock-evidence/10.176.26.71/bench/mutex32-packed-20261019\"}\n"
+  },
+  {
+    "argv": [
+      "python3",
+      "/root/kdlock-evidence/10.176.26.71/bench/mutex32-packed-20261019/profile-analysis.py",
+      "--base",
+      "/root/kdlock-evidence/10.176.26.71/bench/mutex32-packed-20261019",
+      "--arms",
+      "embedded32",
+      "candidate",
+      "old256"
+    ],
+    "cwd": "/root/host_fs/kdlock",
+    "started_unix": 1792422520.5304267,
+    "timeout_seconds": 240,
+    "finished_unix": 1792422531.7448971,
+    "exit_code": 0,
+    "stdout": "{\"complete\": true, \"profiles\": 6, \"parsed_samples\": 82268, \"issues\": [], \"output\": \"/root/kdlock-evidence/10.176.26.71/bench/mutex32-packed-20261019\"}\n"
+  },
+  {
+    "argv": [
+      "python3",
+      "/root/kdlock-evidence/10.176.26.71/bench/mutex32-packed-20261019/finalize.py",
+      "--base",
+      "/root/kdlock-evidence/10.176.26.71/bench/mutex32-packed-20261019",
+      "--arms",
+      "embedded32",
+      "candidate",
+      "old256",
+      "--check",
+      "candidate=checks-candidate-r2",
+      "--current-arm",
+      "candidate"
+    ],
+    "cwd": "/root/host_fs/kdlock",
+    "started_unix": 1792422531.745578,
+    "timeout_seconds": 240,
+    "finished_unix": 1792422532.3320148,
+    "exit_code": 0,
+    "stdout": "{\"checks\": [\"candidate\"], \"current_arm\": \"candidate\", \"faults\": 0, \"idle\": true, \"kernel_logs\": 27, \"passed\": true, \"profiles\": 6, \"timing\": 18}\n"
+  }
+]

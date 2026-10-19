@@ -23,10 +23,11 @@ their recorded source versions; acceptance of those results does not measure the
 additional flag-preservation cost in images that contain instruction markers.
 
 The mutex protocol remains KD-only `d2a2304`: KD physical exclusion with the
-legacy delegation queue. Current `372be89` embeds the gate/count and encoded tail
-in the 32-byte, native-aligned object, removing the auxiliary hash and shared
-reference count. Its fresh pipe comparison still trails the old 256-byte version
-by 40.7% at eight workers and 37.0% at sixty workers. The earlier `ba98937`
+legacy delegation queue. Current `c2f0d9c` keeps the 32-byte, native-aligned object
+and removes shared waiter-count updates using exact versioned node records.
+Its fresh pipe medians improve 19.4% and 20.7% over the embedded-count baseline
+at eight and sixty workers, while remaining 22.4% and 22.6% below the old
+256-byte version. The earlier `372be89` embedded-count and `ba98937`
 counted-pin comparison and preceding compact experiments remain separate below.
 The
 [2026-10-17 paired report](../bench/results/10.176.26.71/bench/comparison/mutex-kdonly-20261017T140354Z/README.md)
@@ -35,7 +36,36 @@ repetitions and four arms (accepted compatibility baseline, KD-only, Native,
 TCLock). It uses the regular 64-vCPU VM and collector 63, and measures the former
 256-byte object. Those results do not measure the compact layout.
 
-## Embedded 32-byte mutex pipe comparison
+## Mutex waiter-record pipe comparison
+
+The [packed-state investigation](../bench/results/10.176.26.71/bench/mutex32-packed-20261019/README.md)
+compares fresh baseline `cb0e8e6` (runtime `372be89`), candidate `35718f5`
+(runtime `c2f0d9c`) and old-256-byte `0324e60` source blocks in the same 64-vCPU
+VM. Each point has three 2000 ms plain repetitions with collector 63. All 18
+timings returned JIT bodies and drained; six separate profiles are unscored.
+Whole-run median Mops/s is:
+
+| Workers | Old 256-byte | Previous 32-byte | Current 32-byte | Current / previous | Current / old |
+| ---: | ---: | ---: | ---: | ---: | ---: |
+| 8 | 6.922 | 4.498 | 5.370 | 1.194× | 0.776× |
+| 60 | 5.387 | 3.456 | 4.171 | 1.207× | 0.774× |
+
+The candidate removes two shared count RMWs per published request and replaces
+owner-only phase CAS loops with release stores. Exact waiter records use existing
+node padding; ownership, admission, queue, frame and ACK rules remain. This is a
+combined change, so the timings do not isolate the two mechanisms' contributions.
+Measured returned-JIT shares are slightly lower than the previous 32-byte arm,
+while throughput rises. At sixty workers all three arms have median whole-session
+ratios near 128 bodies per combiner. Neither higher delegation nor larger batches
+explains the improvement there.
+
+Polling dominates the flat profiles. They do not measure CAS retries or cache-line
+transfer costs, and the old256 eight-worker profile changes the execution mix.
+The remaining gap is explicit; no parity or full-grid claim is made. The report
+retains ranges, exact placement evidence and phase-accounting limitations.
+Independent archive/source and arithmetic/profile audits passed.
+
+## Earlier embedded 32-byte mutex pipe comparison
 
 The [embedded-state report](../bench/results/10.176.26.71/bench/mutex32-embedded-20261019/README.md)
 compares fresh `372be89` and old-256-byte `0324e60` source blocks in the same

@@ -60,3 +60,10 @@ bench/results/10.176.26.71/bench/mutex32-embedded-20261019/guest-before.log -whi
 bench/results/10.176.26.71/bench/mutex32-embedded-20261019/build-initial/provider.log -whitespace
 bench/results/10.176.26.71/bench/mutex32-embedded-20261019/checks-embedded32/provider.log -whitespace
 bench/results/10.176.26.71/bench/mutex32-embedded-20261019/checks-embedded32/unit.log -whitespace
+# Preserve packed-state investigation boot, compiler and disassembly receipts.
+bench/results/10.176.26.71/bench/mutex32-packed-20261019/guest-before.log -whitespace
+bench/results/10.176.26.71/bench/mutex32-packed-20261019/kdlock-packed-guest-before.log -whitespace
+bench/results/10.176.26.71/bench/mutex32-packed-20261019/checks-candidate/provider.log -whitespace
+bench/results/10.176.26.71/bench/mutex32-packed-20261019/checks-candidate/unit.log -whitespace
+bench/results/10.176.26.71/bench/mutex32-packed-20261019/checks-candidate-r2/provider.log -whitespace
+bench/results/10.176.26.71/bench/mutex32-packed-20261019/checks-candidate-r2/unit.log -whitespace

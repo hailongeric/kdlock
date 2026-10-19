@@ -17,7 +17,8 @@ public lock families and their canonical implementation guides.
 | [kd_spin_entry.c](../kernel_module/kd_spin_entry.c) → `spin/ticket_*.inc` | Exact acquisition tickets, native borrowing and final retirement |
 | [kd_mutex.c](../kernel_module/kd_mutex.c) → [mutex](../kernel_module/mutex) | KD physical owner, legacy scheduling gate, queue and waiter restore |
 | [kd_mutex_local.c](../kernel_module/kd_mutex_local.c), [kd_mutex_osq.c](../kernel_module/kd_mutex_osq.c) | KD-owned ordinary mutex exclusion, sleeping waiters, signal cancellation and private OSQ |
-| [kd_mutex_state.h](../include/kd_mutex_state.h) | Embedded delegation phase/count with masked atomic transitions; encoded tail lives in the 32-byte mutex |
+| [kd_mutex_state.h](../include/kd_mutex_state.h) | Embedded gate claim and owner phase stores; versioned waiter records in reserved nodes |
+| [mutex/count.inc](../kernel_module/mutex/count.inc) | Cold exact waiter snapshots and controlled drain checks; no shared waiter-count updates |
 | [kd_mutex_compat.h](../include/kd_mutex_compat.h) | Source aliases for an exclusively KD ordinary-mutex build |
 | [kd_rwsem.h](../include/kd_rwsem.h), [kd_rwsem_direct.h](../include/kd_rwsem_direct.h), [kd_rwsem.c](../kernel_module/kd_rwsem.c) | Sleeping readers, ordinary writers and outer ABI2 writers; phase reservations drain readers before the unchanged mutex queue |
 | [kd_mutex_tasks.c](../kernel_module/kd_mutex_tasks.c) | Exact task/acquisition references and RCU removal |

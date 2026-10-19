@@ -8,7 +8,34 @@ Basic plus affected checks are the default; an old pass is not a current full pa
 The [terminology guide](TERMINOLOGY.md) explains status labels and other technical
 terms used in the receipts below.
 
-## Embedded mutex validation
+## Versioned mutex waiter-record validation
+
+Runtime `c2f0d9c`, checked as `35718f5`, keeps the native 32-byte size and 8-byte
+alignment while moving exact waiter accounting into existing node padding.
+Its [focused VM validation](../bench/results/10.176.26.71/bench/mutex32-packed-20261019/README.md)
+passed dependencies, provider/daemon builds, two basic programs and thirteen
+affected drivers (15 passed, zero failed), plus live ordinary mutex, rwsem and
+instruction-exit probes. State, snapshot, resource and balance tests detect
+17, 12, 27 and seven negative controls. Snapshot tests cover same-key reuse,
+impossible mixed counts, sparse CPU IDs, concurrent writers and explicit
+`-EAGAIN`/`-ENOMEM`; existing ownership, frame and ACK checks remain.
+
+The initial check attempt is preserved: 14/15 unit checks passed, and the
+shadow-stack harness failed to compile because it lacked `u64`. Test-only fix
+`35718f5` supplied that typedef; the successful rerun used a new frozen snapshot.
+Neither the compile failure nor a skipped live probe is counted as a pass.
+The provider build retains 48 warning lines.
+
+All 18 plain pipe timings and six separate profiles returned JIT bodies and
+drained. Twenty-seven kernel logs have no matched runtime faults; the captured
+kernel, boot, topology and frequency policy remained unchanged. The source/archive
+audit passed over 6,175 members and 12 source manifests with zero exceptions or
+issues. The independent arithmetic/profile audit passed 34,386 checks, reconstructing
+24 windows and 82,268 profile samples. The checked source remains in the idle VM.
+No full suite, full workload grid, whole-kernel replacement, RT/ww_mutex, lockdep
+or oversubscription validation is claimed.
+
+## Earlier embedded mutex validation
 
 Runtime `372be89` removes the auxiliary hash and shared reference count while
 keeping native 32-byte size and 8-byte alignment. Its

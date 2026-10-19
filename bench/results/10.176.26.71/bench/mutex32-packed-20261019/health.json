@@ -1,0 +1,176 @@
+{
+  "additional_retained_kernel_logs": [],
+  "boot_id": "b65f0205-c8f9-4385-8b13-039cbce243a6",
+  "captured_unix": 1792422532.3246484,
+  "comparison_sha256": "19338df54a454f0d5525e7033e71967a1590c5a7859c5561e614dc35052e92fb",
+  "current_arm": "candidate",
+  "expected_kernel_logs": [
+    "candidate/pipe/pipebytes-query-n16-t08-r0-kdlock/kernel.log",
+    "candidate/pipe/pipebytes-query-n16-t08-r1-kdlock/kernel.log",
+    "candidate/pipe/pipebytes-query-n16-t08-r2-kdlock/kernel.log",
+    "candidate/pipe/pipebytes-query-n16-t60-r0-kdlock/kernel.log",
+    "candidate/pipe/pipebytes-query-n16-t60-r1-kdlock/kernel.log",
+    "candidate/pipe/pipebytes-query-n16-t60-r2-kdlock/kernel.log",
+    "candidate/profile/pipe/pipebytes-query-n16-t08-r0-kdlock/kernel.log",
+    "candidate/profile/pipe/pipebytes-query-n16-t60-r0-kdlock/kernel.log",
+    "checks-candidate-r2/instruction-exit/session/kernel.log",
+    "checks-candidate-r2/local/kernel.log",
+    "checks-candidate-r2/rwsem/local/kernel.log",
+    "embedded32/pipe/pipebytes-query-n16-t08-r0-kdlock/kernel.log",
+    "embedded32/pipe/pipebytes-query-n16-t08-r1-kdlock/kernel.log",
+    "embedded32/pipe/pipebytes-query-n16-t08-r2-kdlock/kernel.log",
+    "embedded32/pipe/pipebytes-query-n16-t60-r0-kdlock/kernel.log",
+    "embedded32/pipe/pipebytes-query-n16-t60-r1-kdlock/kernel.log",
+    "embedded32/pipe/pipebytes-query-n16-t60-r2-kdlock/kernel.log",
+    "embedded32/profile/pipe/pipebytes-query-n16-t08-r0-kdlock/kernel.log",
+    "embedded32/profile/pipe/pipebytes-query-n16-t60-r0-kdlock/kernel.log",
+    "old256/pipe/pipebytes-query-n16-t08-r0-kdlock/kernel.log",
+    "old256/pipe/pipebytes-query-n16-t08-r1-kdlock/kernel.log",
+    "old256/pipe/pipebytes-query-n16-t08-r2-kdlock/kernel.log",
+    "old256/pipe/pipebytes-query-n16-t60-r0-kdlock/kernel.log",
+    "old256/pipe/pipebytes-query-n16-t60-r1-kdlock/kernel.log",
+    "old256/pipe/pipebytes-query-n16-t60-r2-kdlock/kernel.log",
+    "old256/profile/pipe/pipebytes-query-n16-t08-r0-kdlock/kernel.log",
+    "old256/profile/pipe/pipebytes-query-n16-t60-r0-kdlock/kernel.log"
+  ],
+  "guest_before_sha256": "a34d9d0d7ba2fd79c1dc34f1a99f19e5785bfd5eb449527c4920f25c79a4efb9",
+  "idle": true,
+  "kernel_logs": {
+    "candidate/pipe/pipebytes-query-n16-t08-r0-kdlock/kernel.log": "dc995867d6d4d46a8949a225c1975766e3f482cd96956df209d3b6476e6f8ccb",
+    "candidate/pipe/pipebytes-query-n16-t08-r1-kdlock/kernel.log": "82bd94497ad3f41a09db811c37ebf644bbb08c2397ffe7609fe1a2a4d1898e4e",
+    "candidate/pipe/pipebytes-query-n16-t08-r2-kdlock/kernel.log": "63895c72df4290b5388d16e1c8f57748dae2986625426538b6d1c44f8924a370",
+    "candidate/pipe/pipebytes-query-n16-t60-r0-kdlock/kernel.log": "590fa33911f593bc1d46bd3d9200513676acaf0d8991c0c4ed555db5c7f92762",
+    "candidate/pipe/pipebytes-query-n16-t60-r1-kdlock/kernel.log": "22570c1be4b55bc11e1b804c3f4c757a231fca79738c43d6b77e9b5f6535b495",
+    "candidate/pipe/pipebytes-query-n16-t60-r2-kdlock/kernel.log": "3e3d1f44bd32c46fdb93aa660b0e792255c29538f50a0453d7b2773e2b02bcd9",
+    "candidate/profile/pipe/pipebytes-query-n16-t08-r0-kdlock/kernel.log": "7d3cd34ca4780d1d8632537b1de0837c1996cd8b6398e372cd880241572df482",
+    "candidate/profile/pipe/pipebytes-query-n16-t60-r0-kdlock/kernel.log": "c76b0ed3481c6ce3e6a82dbe94c3514bc34877df3bc8bead4987daebd13c0816",
+    "checks-candidate-r2/instruction-exit/session/kernel.log": "c68f70b1b2c9ca1f789cef972765a83753bd5d860587daef19fb11eb00a974ac",
+    "checks-candidate-r2/local/kernel.log": "81075f7de839729aa5a1dfd6950c2afc1f9d814a59a87a8792113371b653564a",
+    "checks-candidate-r2/rwsem/local/kernel.log": "e7a0b78aa329ec5028ce690d7d24ea910a5d44e40153100f2735d3a90df4be82",
+    "embedded32/pipe/pipebytes-query-n16-t08-r0-kdlock/kernel.log": "8539cb871ef0545ff0e25483cdd593af635273db1a0a9f20dd773a89b430599c",
+    "embedded32/pipe/pipebytes-query-n16-t08-r1-kdlock/kernel.log": "5f5b6db2ebce5ae4d091c0e7677c7216b986d9811017a08b7c680e3c0a9430c8",
+    "embedded32/pipe/pipebytes-query-n16-t08-r2-kdlock/kernel.log": "041929a868c208d2dd1ba50dad96f7e1b4831d6ca9b252a0faea38b6e85aab8a",
+    "embedded32/pipe/pipebytes-query-n16-t60-r0-kdlock/kernel.log": "3aff99a886782295ac3f204bc70bf04846bae26183f32bbeda11a265db2661e8",
+    "embedded32/pipe/pipebytes-query-n16-t60-r1-kdlock/kernel.log": "89fddfaccc4c916d52c8f9ed15b5770189d2ee5198ea3360e0ac12dc35592432",
+    "embedded32/pipe/pipebytes-query-n16-t60-r2-kdlock/kernel.log": "c2ffe5452b3bf05e1e0d2f80608d0ef72bff09e7dcddc18b022291f5cb864c47",
+    "embedded32/profile/pipe/pipebytes-query-n16-t08-r0-kdlock/kernel.log": "9b3f79c1681abd90a98bffd639f1fc3aa3ae0ff61252cef5ba47a595eee5aab7",
+    "embedded32/profile/pipe/pipebytes-query-n16-t60-r0-kdlock/kernel.log": "8e6c841bde2292bd8b113e01104eb05740d83f62fd63e0b5bbe38fce64234e05",
+    "old256/pipe/pipebytes-query-n16-t08-r0-kdlock/kernel.log": "24dddbf63035a58ce21d57e7a265b9691d5a481b8037c173c699763eb3f38e47",
+    "old256/pipe/pipebytes-query-n16-t08-r1-kdlock/kernel.log": "cfe1aa0bdf01770a324da58de051253281387908c4cacafee981fdba4789f798",
+    "old256/pipe/pipebytes-query-n16-t08-r2-kdlock/kernel.log": "a654ae0d39b537a6dab9797a3bf9d1d8ca156fbeccf838b017c26b0fdd3e0e1c",
+    "old256/pipe/pipebytes-query-n16-t60-r0-kdlock/kernel.log": "8824e4d438ba5608dcbd8b80c45fd0e6123c3cfc2fc03b3fbe94eeaedfad18dd",
+    "old256/pipe/pipebytes-query-n16-t60-r1-kdlock/kernel.log": "b162ee948aff651e5db430a51fe5945e3528160a75ccd527250c122be8240d04",
+    "old256/pipe/pipebytes-query-n16-t60-r2-kdlock/kernel.log": "99b62a5f72c8db36e8783adcba84673c3352058b26e15e1951348adf55487cb9",
+    "old256/profile/pipe/pipebytes-query-n16-t08-r0-kdlock/kernel.log": "4c183f12aca25a87882362645d05bb3a2072175cfb02eeb8e6b6ef212a7b6b8a",
+    "old256/profile/pipe/pipebytes-query-n16-t60-r0-kdlock/kernel.log": "42281912a911f470dc944cce260105096ffab3c6907c2a6e2b0c44b7066916a8"
+  },
+  "kernel_release": "6.1.159-kdclobber2",
+  "per_session_kernel_faults": [],
+  "profile_analysis_sha256": "b33b75ee29f1d01781d7ed10d64bb5b401cc271ce51835f1b9854b95af1faaaa",
+  "schema": 1,
+  "snapshot": "before-mutex-kdonly-20261017T140354Z",
+  "source_revision": "35718f5",
+  "topology": {
+    "added_service_threads": [
+      {
+        "affinity": [
+          63
+        ],
+        "comm": "worker",
+        "tid": 398183
+      },
+      {
+        "affinity": [
+          63
+        ],
+        "comm": "worker",
+        "tid": 398370
+      },
+      {
+        "affinity": [
+          63
+        ],
+        "comm": "worker",
+        "tid": 398371
+      },
+      {
+        "affinity": [
+          63
+        ],
+        "comm": "worker",
+        "tid": 398372
+      },
+      {
+        "affinity": [
+          63
+        ],
+        "comm": "worker",
+        "tid": 398373
+      },
+      {
+        "affinity": [
+          63
+        ],
+        "comm": "worker",
+        "tid": 398375
+      },
+      {
+        "affinity": [
+          63
+        ],
+        "comm": "worker",
+        "tid": 398386
+      },
+      {
+        "affinity": [
+          63
+        ],
+        "comm": "worker",
+        "tid": 398387
+      },
+      {
+        "affinity": [
+          63
+        ],
+        "comm": "worker",
+        "tid": 398388
+      },
+      {
+        "affinity": [
+          63
+        ],
+        "comm": "worker",
+        "tid": 398389
+      },
+      {
+        "affinity": [
+          63
+        ],
+        "comm": "worker",
+        "tid": 398390
+      },
+      {
+        "affinity": [
+          63
+        ],
+        "comm": "worker",
+        "tid": 398391
+      },
+      {
+        "affinity": [
+          63
+        ],
+        "comm": "worker",
+        "tid": 398392
+      }
+    ],
+    "after_sha256": "c05eeb983362adfee158321080097bc0e7a676f99a1e5a0308a7dcb555361466",
+    "before_sha256": "260b68496f493654cba6f61af48c5d9e7b4f9eb6f99e7fa97231e8bfdeaf5604",
+    "removed_service_threads": [],
+    "snapshot": "before-mutex-kdonly-20261017T140354Z",
+    "unchanged": true
+  },
+  "valid_profiles": 6,
+  "valid_timing_sessions": 18,
+  "validation_sha256": "7d8a32241abc86e53d8e5598f807dcbae7f535a1d6889eb111d3272ebe8d3663"
+}

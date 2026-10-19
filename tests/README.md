@@ -6,14 +6,16 @@ explains the lock, execution-state and measurement terms used below.
 
 The [KD-only local mutex probe and runner](kernel/mutex/local/README.md) check
 ordinary API aliases, exclusion, sleeping/nested owners, interruptible/killable
-cancellation, I/O accounting, trylock and 2,048 independent objects. The compact
-layout checks native size/alignment and containing offsets, exact-address reuse
+cancellation, sleeping-ring head/middle/tail removal and handoff, I/O accounting,
+trylock and 2,048 independent objects. The compact layout checks native
+size/alignment and containing offsets, exact-address reuse
 without destroy, no auxiliary records for ordinary owners and exact drain before
 unload. The [historical receipt](../bench/results/10.176.26.71/bench/comparison/mutex-kdonly-20261017T140354Z/validation.json)
 records the earlier 256-byte layout separately from current checks and JIT benchmarks.
-The [compact mutex receipt](../bench/results/10.176.26.71/tests/mutex32-20261019/README.md)
-records the basic and affected VM checks, live JIT and native continuation,
-preserved failures and automatic auxiliary retirement.
+The [earlier compact mutex receipt](../bench/results/10.176.26.71/tests/mutex32-20261019/README.md)
+records basic and affected VM checks, live JIT and native continuation,
+preserved failures and automatic auxiliary retirement for the historical
+indexed auxiliary layout.
 The [provider lifecycle fixture](unit/infrastructure/test_provider_lifecycle.py)
 checks publication after runtime initialization, failed-start cleanup, and device
 removal before teardown in ordinary and SELFTEST control flow.
@@ -64,7 +66,8 @@ check, missing dependency, crash or compile failure must not be reported as a pa
 | Completed-body observation overlay | `execution/test_bench_completion.py`; applies the real benchmark patch and checks dispatcher/batch counting |
 | Conditional instruction exit | `admission/test_native_escape.py`, `codegen/test_native_escape_codegen.py`, `execution/test_jit_entry_scope.py`, `execution/test_native_escape_restore.py`, `execution/test_mutex_images.py`; [live check](kernel/jit_escape/README.md) |
 | Mutex resources/terminal path |`mutex/test_mutex_resources.py`, `test_mutex_task_cache.py`, `test_mutex_terminal.py`, `test_mutex_outer_progress.py` |
-| Embedded mutex state | `mutex/test_mutex_state.py`: production packed phase/count atomics, current-only ownership, ordinary/delegated acquisition overlap, PICKUP rejection, count/phase interleavings and exact bounds. Resource and outer-progress fixtures retain node, frame, task and ACK obligations. Live cancellation and physical handoff use [the local probe](kernel/mutex/local/README.md). Historical auxiliary registry checks remain at `6341999`. |
+| Embedded mutex state | `mutex/test_mutex_state.py`: production gate claim and phase stores, current-only ownership, ordinary/delegated acquisition overlap, PICKUP rejection and exact node-record guards. Resource and outer-progress fixtures retain node, frame, task and ACK obligations. Live cancellation and physical handoff use [the local probe](kernel/mutex/local/README.md). Historical auxiliary registry checks remain at `6341999`. |
+| Exact mutex waiter observations | `mutex/test_mutex_count.py`: production `mutex/count.inc` snapshots across moving records, same-key reuse, odd versions, sparse CPU IDs and concurrent writers; explicit `-EAGAIN`/`-ENOMEM` refusal. `mutex/test_mutex_balances.py` checks independent CPU, slot, record and task drain obligations. |
 | Provider initialization/publication | `infrastructure/test_provider_lifecycle.py` |
 | Task/source/registry lifetime |`infrastructure/test_source_lifetime.py`, `execution/test_exe_registry.py` |
 | Native ACK and remote continuation |`execution/test_remote_outer.py`, `test_remote_depth_protocol.py`, `test_remote_outer_protocol.py` |

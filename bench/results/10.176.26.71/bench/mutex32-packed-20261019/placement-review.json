@@ -1,0 +1,719 @@
+{
+  "formula": "line_base = (lock_addr + field_offset) & ~63",
+  "offset_sources": {
+    "candidate": "35718f5 include/kd_mutex.h, owner+0 gate+24 delegation_tail+28",
+    "embedded32": "cb0e8e6 include/kd_mutex.h, owner+0 gate+24 delegation_tail+28",
+    "old256": "0324e60 include/kd_mutex.h and retained ELF: owner+0 gate+72 tail+128 waiter_count+192"
+  },
+  "records": [
+    {
+      "archive": "embedded32.tar.gz",
+      "archive_sha256": "c1fe47227c412b1e4f4299a35e1193e4793475b98159ff425c555a45f1a58dfc",
+      "count": 6,
+      "member": "mutex32-packed-20261019/embedded32/pipe/records.json",
+      "records_sha256": "38b63fae7a54e4a179c35edb5f430c61c0a0d98aa5b4bee9fd985d9bafa77be6"
+    },
+    {
+      "archive": "embedded32.tar.gz",
+      "archive_sha256": "c1fe47227c412b1e4f4299a35e1193e4793475b98159ff425c555a45f1a58dfc",
+      "count": 2,
+      "member": "mutex32-packed-20261019/embedded32/profile/pipe/records.json",
+      "records_sha256": "9ae7c7b55ce885f385481a0d7d758ec69a1892b18a930db1c5229071dcde5381"
+    },
+    {
+      "archive": "old256.tar.gz",
+      "archive_sha256": "95d0c53f937f60360444ef163eebec47b0517c7c901e7c478c2d1ccbc1912ae3",
+      "count": 6,
+      "member": "mutex32-packed-20261019/old256/pipe/records.json",
+      "records_sha256": "b38e400ee93a0237d6230dcca91936567bf4c00276c5a890c7f67afbb431f734"
+    },
+    {
+      "archive": "old256.tar.gz",
+      "archive_sha256": "95d0c53f937f60360444ef163eebec47b0517c7c901e7c478c2d1ccbc1912ae3",
+      "count": 2,
+      "member": "mutex32-packed-20261019/old256/profile/pipe/records.json",
+      "records_sha256": "5fa129fa735eccfc903a3f2efca6cec22efefb5a6428cf0d60a5b9fd984c5be7"
+    },
+    {
+      "archive": "candidate.tar.gz",
+      "archive_sha256": "b709e224d00d02b3132d8b3232cdc5bde3fecd62c48dbe2aa9617c86ac961146",
+      "count": 6,
+      "member": "mutex32-packed-20261019/candidate/pipe/records.json",
+      "records_sha256": "2dfe1f8faf3c6d86f6100bb83888370ff452d13db0009846636ff178cd6d8b68"
+    },
+    {
+      "archive": "candidate.tar.gz",
+      "archive_sha256": "b709e224d00d02b3132d8b3232cdc5bde3fecd62c48dbe2aa9617c86ac961146",
+      "count": 2,
+      "member": "mutex32-packed-20261019/candidate/profile/pipe/records.json",
+      "records_sha256": "85d37d2c2d1f99babfeaa388e473f7f6ec64430fc5dbb59ce59767edf401cc23"
+    }
+  ],
+  "scope": "Read-only inspection of archived data; 64-byte line mapping is placement evidence, not a cache-coherence event measurement.",
+  "sessions": [
+    {
+      "arm": "embedded32",
+      "collection": "pipe",
+      "fields": {
+        "gate": {
+          "address": "0xffffffffc07984f8",
+          "line_base": "0xffffffffc07984c0",
+          "offset": 24
+        },
+        "owner": {
+          "address": "0xffffffffc07984e0",
+          "line_base": "0xffffffffc07984c0",
+          "offset": 0
+        },
+        "tail": {
+          "address": "0xffffffffc07984fc",
+          "line_base": "0xffffffffc07984c0",
+          "offset": 28
+        }
+      },
+      "lock_addr": "0xffffffffc07984e0",
+      "name": "pipebytes-query-n16-t08-r0-kdlock",
+      "object_modulo_64": 32,
+      "repeat": 0,
+      "threads": 8
+    },
+    {
+      "arm": "embedded32",
+      "collection": "pipe",
+      "fields": {
+        "gate": {
+          "address": "0xffffffffc07984f8",
+          "line_base": "0xffffffffc07984c0",
+          "offset": 24
+        },
+        "owner": {
+          "address": "0xffffffffc07984e0",
+          "line_base": "0xffffffffc07984c0",
+          "offset": 0
+        },
+        "tail": {
+          "address": "0xffffffffc07984fc",
+          "line_base": "0xffffffffc07984c0",
+          "offset": 28
+        }
+      },
+      "lock_addr": "0xffffffffc07984e0",
+      "name": "pipebytes-query-n16-t08-r1-kdlock",
+      "object_modulo_64": 32,
+      "repeat": 1,
+      "threads": 8
+    },
+    {
+      "arm": "embedded32",
+      "collection": "pipe",
+      "fields": {
+        "gate": {
+          "address": "0xffffffffc07984f8",
+          "line_base": "0xffffffffc07984c0",
+          "offset": 24
+        },
+        "owner": {
+          "address": "0xffffffffc07984e0",
+          "line_base": "0xffffffffc07984c0",
+          "offset": 0
+        },
+        "tail": {
+          "address": "0xffffffffc07984fc",
+          "line_base": "0xffffffffc07984c0",
+          "offset": 28
+        }
+      },
+      "lock_addr": "0xffffffffc07984e0",
+      "name": "pipebytes-query-n16-t08-r2-kdlock",
+      "object_modulo_64": 32,
+      "repeat": 2,
+      "threads": 8
+    },
+    {
+      "arm": "embedded32",
+      "collection": "pipe",
+      "fields": {
+        "gate": {
+          "address": "0xffffffffc07984f8",
+          "line_base": "0xffffffffc07984c0",
+          "offset": 24
+        },
+        "owner": {
+          "address": "0xffffffffc07984e0",
+          "line_base": "0xffffffffc07984c0",
+          "offset": 0
+        },
+        "tail": {
+          "address": "0xffffffffc07984fc",
+          "line_base": "0xffffffffc07984c0",
+          "offset": 28
+        }
+      },
+      "lock_addr": "0xffffffffc07984e0",
+      "name": "pipebytes-query-n16-t60-r0-kdlock",
+      "object_modulo_64": 32,
+      "repeat": 0,
+      "threads": 60
+    },
+    {
+      "arm": "embedded32",
+      "collection": "pipe",
+      "fields": {
+        "gate": {
+          "address": "0xffffffffc07984f8",
+          "line_base": "0xffffffffc07984c0",
+          "offset": 24
+        },
+        "owner": {
+          "address": "0xffffffffc07984e0",
+          "line_base": "0xffffffffc07984c0",
+          "offset": 0
+        },
+        "tail": {
+          "address": "0xffffffffc07984fc",
+          "line_base": "0xffffffffc07984c0",
+          "offset": 28
+        }
+      },
+      "lock_addr": "0xffffffffc07984e0",
+      "name": "pipebytes-query-n16-t60-r1-kdlock",
+      "object_modulo_64": 32,
+      "repeat": 1,
+      "threads": 60
+    },
+    {
+      "arm": "embedded32",
+      "collection": "pipe",
+      "fields": {
+        "gate": {
+          "address": "0xffffffffc07984f8",
+          "line_base": "0xffffffffc07984c0",
+          "offset": 24
+        },
+        "owner": {
+          "address": "0xffffffffc07984e0",
+          "line_base": "0xffffffffc07984c0",
+          "offset": 0
+        },
+        "tail": {
+          "address": "0xffffffffc07984fc",
+          "line_base": "0xffffffffc07984c0",
+          "offset": 28
+        }
+      },
+      "lock_addr": "0xffffffffc07984e0",
+      "name": "pipebytes-query-n16-t60-r2-kdlock",
+      "object_modulo_64": 32,
+      "repeat": 2,
+      "threads": 60
+    },
+    {
+      "arm": "embedded32",
+      "collection": "profile/pipe",
+      "fields": {
+        "gate": {
+          "address": "0xffffffffc07984f8",
+          "line_base": "0xffffffffc07984c0",
+          "offset": 24
+        },
+        "owner": {
+          "address": "0xffffffffc07984e0",
+          "line_base": "0xffffffffc07984c0",
+          "offset": 0
+        },
+        "tail": {
+          "address": "0xffffffffc07984fc",
+          "line_base": "0xffffffffc07984c0",
+          "offset": 28
+        }
+      },
+      "lock_addr": "0xffffffffc07984e0",
+      "name": "pipebytes-query-n16-t08-r0-kdlock",
+      "object_modulo_64": 32,
+      "repeat": 0,
+      "threads": 8
+    },
+    {
+      "arm": "embedded32",
+      "collection": "profile/pipe",
+      "fields": {
+        "gate": {
+          "address": "0xffffffffc07984f8",
+          "line_base": "0xffffffffc07984c0",
+          "offset": 24
+        },
+        "owner": {
+          "address": "0xffffffffc07984e0",
+          "line_base": "0xffffffffc07984c0",
+          "offset": 0
+        },
+        "tail": {
+          "address": "0xffffffffc07984fc",
+          "line_base": "0xffffffffc07984c0",
+          "offset": 28
+        }
+      },
+      "lock_addr": "0xffffffffc07984e0",
+      "name": "pipebytes-query-n16-t60-r0-kdlock",
+      "object_modulo_64": 32,
+      "repeat": 0,
+      "threads": 60
+    },
+    {
+      "arm": "old256",
+      "collection": "pipe",
+      "fields": {
+        "gate": {
+          "address": "0xffffffffc07985c8",
+          "line_base": "0xffffffffc07985c0",
+          "offset": 72
+        },
+        "owner": {
+          "address": "0xffffffffc0798580",
+          "line_base": "0xffffffffc0798580",
+          "offset": 0
+        },
+        "tail": {
+          "address": "0xffffffffc0798600",
+          "line_base": "0xffffffffc0798600",
+          "offset": 128
+        },
+        "waiter_count": {
+          "address": "0xffffffffc0798640",
+          "line_base": "0xffffffffc0798640",
+          "offset": 192
+        }
+      },
+      "lock_addr": "0xffffffffc0798580",
+      "name": "pipebytes-query-n16-t08-r0-kdlock",
+      "object_modulo_64": 0,
+      "repeat": 0,
+      "threads": 8
+    },
+    {
+      "arm": "old256",
+      "collection": "pipe",
+      "fields": {
+        "gate": {
+          "address": "0xffffffffc07985c8",
+          "line_base": "0xffffffffc07985c0",
+          "offset": 72
+        },
+        "owner": {
+          "address": "0xffffffffc0798580",
+          "line_base": "0xffffffffc0798580",
+          "offset": 0
+        },
+        "tail": {
+          "address": "0xffffffffc0798600",
+          "line_base": "0xffffffffc0798600",
+          "offset": 128
+        },
+        "waiter_count": {
+          "address": "0xffffffffc0798640",
+          "line_base": "0xffffffffc0798640",
+          "offset": 192
+        }
+      },
+      "lock_addr": "0xffffffffc0798580",
+      "name": "pipebytes-query-n16-t08-r1-kdlock",
+      "object_modulo_64": 0,
+      "repeat": 1,
+      "threads": 8
+    },
+    {
+      "arm": "old256",
+      "collection": "pipe",
+      "fields": {
+        "gate": {
+          "address": "0xffffffffc07985c8",
+          "line_base": "0xffffffffc07985c0",
+          "offset": 72
+        },
+        "owner": {
+          "address": "0xffffffffc0798580",
+          "line_base": "0xffffffffc0798580",
+          "offset": 0
+        },
+        "tail": {
+          "address": "0xffffffffc0798600",
+          "line_base": "0xffffffffc0798600",
+          "offset": 128
+        },
+        "waiter_count": {
+          "address": "0xffffffffc0798640",
+          "line_base": "0xffffffffc0798640",
+          "offset": 192
+        }
+      },
+      "lock_addr": "0xffffffffc0798580",
+      "name": "pipebytes-query-n16-t08-r2-kdlock",
+      "object_modulo_64": 0,
+      "repeat": 2,
+      "threads": 8
+    },
+    {
+      "arm": "old256",
+      "collection": "pipe",
+      "fields": {
+        "gate": {
+          "address": "0xffffffffc07985c8",
+          "line_base": "0xffffffffc07985c0",
+          "offset": 72
+        },
+        "owner": {
+          "address": "0xffffffffc0798580",
+          "line_base": "0xffffffffc0798580",
+          "offset": 0
+        },
+        "tail": {
+          "address": "0xffffffffc0798600",
+          "line_base": "0xffffffffc0798600",
+          "offset": 128
+        },
+        "waiter_count": {
+          "address": "0xffffffffc0798640",
+          "line_base": "0xffffffffc0798640",
+          "offset": 192
+        }
+      },
+      "lock_addr": "0xffffffffc0798580",
+      "name": "pipebytes-query-n16-t60-r0-kdlock",
+      "object_modulo_64": 0,
+      "repeat": 0,
+      "threads": 60
+    },
+    {
+      "arm": "old256",
+      "collection": "pipe",
+      "fields": {
+        "gate": {
+          "address": "0xffffffffc07985c8",
+          "line_base": "0xffffffffc07985c0",
+          "offset": 72
+        },
+        "owner": {
+          "address": "0xffffffffc0798580",
+          "line_base": "0xffffffffc0798580",
+          "offset": 0
+        },
+        "tail": {
+          "address": "0xffffffffc0798600",
+          "line_base": "0xffffffffc0798600",
+          "offset": 128
+        },
+        "waiter_count": {
+          "address": "0xffffffffc0798640",
+          "line_base": "0xffffffffc0798640",
+          "offset": 192
+        }
+      },
+      "lock_addr": "0xffffffffc0798580",
+      "name": "pipebytes-query-n16-t60-r1-kdlock",
+      "object_modulo_64": 0,
+      "repeat": 1,
+      "threads": 60
+    },
+    {
+      "arm": "old256",
+      "collection": "pipe",
+      "fields": {
+        "gate": {
+          "address": "0xffffffffc07985c8",
+          "line_base": "0xffffffffc07985c0",
+          "offset": 72
+        },
+        "owner": {
+          "address": "0xffffffffc0798580",
+          "line_base": "0xffffffffc0798580",
+          "offset": 0
+        },
+        "tail": {
+          "address": "0xffffffffc0798600",
+          "line_base": "0xffffffffc0798600",
+          "offset": 128
+        },
+        "waiter_count": {
+          "address": "0xffffffffc0798640",
+          "line_base": "0xffffffffc0798640",
+          "offset": 192
+        }
+      },
+      "lock_addr": "0xffffffffc0798580",
+      "name": "pipebytes-query-n16-t60-r2-kdlock",
+      "object_modulo_64": 0,
+      "repeat": 2,
+      "threads": 60
+    },
+    {
+      "arm": "old256",
+      "collection": "profile/pipe",
+      "fields": {
+        "gate": {
+          "address": "0xffffffffc07985c8",
+          "line_base": "0xffffffffc07985c0",
+          "offset": 72
+        },
+        "owner": {
+          "address": "0xffffffffc0798580",
+          "line_base": "0xffffffffc0798580",
+          "offset": 0
+        },
+        "tail": {
+          "address": "0xffffffffc0798600",
+          "line_base": "0xffffffffc0798600",
+          "offset": 128
+        },
+        "waiter_count": {
+          "address": "0xffffffffc0798640",
+          "line_base": "0xffffffffc0798640",
+          "offset": 192
+        }
+      },
+      "lock_addr": "0xffffffffc0798580",
+      "name": "pipebytes-query-n16-t08-r0-kdlock",
+      "object_modulo_64": 0,
+      "repeat": 0,
+      "threads": 8
+    },
+    {
+      "arm": "old256",
+      "collection": "profile/pipe",
+      "fields": {
+        "gate": {
+          "address": "0xffffffffc07985c8",
+          "line_base": "0xffffffffc07985c0",
+          "offset": 72
+        },
+        "owner": {
+          "address": "0xffffffffc0798580",
+          "line_base": "0xffffffffc0798580",
+          "offset": 0
+        },
+        "tail": {
+          "address": "0xffffffffc0798600",
+          "line_base": "0xffffffffc0798600",
+          "offset": 128
+        },
+        "waiter_count": {
+          "address": "0xffffffffc0798640",
+          "line_base": "0xffffffffc0798640",
+          "offset": 192
+        }
+      },
+      "lock_addr": "0xffffffffc0798580",
+      "name": "pipebytes-query-n16-t60-r0-kdlock",
+      "object_modulo_64": 0,
+      "repeat": 0,
+      "threads": 60
+    },
+    {
+      "arm": "candidate",
+      "collection": "pipe",
+      "fields": {
+        "gate": {
+          "address": "0xffffffffc07984f8",
+          "line_base": "0xffffffffc07984c0",
+          "offset": 24
+        },
+        "owner": {
+          "address": "0xffffffffc07984e0",
+          "line_base": "0xffffffffc07984c0",
+          "offset": 0
+        },
+        "tail": {
+          "address": "0xffffffffc07984fc",
+          "line_base": "0xffffffffc07984c0",
+          "offset": 28
+        }
+      },
+      "lock_addr": "0xffffffffc07984e0",
+      "name": "pipebytes-query-n16-t08-r0-kdlock",
+      "object_modulo_64": 32,
+      "repeat": 0,
+      "threads": 8
+    },
+    {
+      "arm": "candidate",
+      "collection": "pipe",
+      "fields": {
+        "gate": {
+          "address": "0xffffffffc07984f8",
+          "line_base": "0xffffffffc07984c0",
+          "offset": 24
+        },
+        "owner": {
+          "address": "0xffffffffc07984e0",
+          "line_base": "0xffffffffc07984c0",
+          "offset": 0
+        },
+        "tail": {
+          "address": "0xffffffffc07984fc",
+          "line_base": "0xffffffffc07984c0",
+          "offset": 28
+        }
+      },
+      "lock_addr": "0xffffffffc07984e0",
+      "name": "pipebytes-query-n16-t08-r1-kdlock",
+      "object_modulo_64": 32,
+      "repeat": 1,
+      "threads": 8
+    },
+    {
+      "arm": "candidate",
+      "collection": "pipe",
+      "fields": {
+        "gate": {
+          "address": "0xffffffffc07984f8",
+          "line_base": "0xffffffffc07984c0",
+          "offset": 24
+        },
+        "owner": {
+          "address": "0xffffffffc07984e0",
+          "line_base": "0xffffffffc07984c0",
+          "offset": 0
+        },
+        "tail": {
+          "address": "0xffffffffc07984fc",
+          "line_base": "0xffffffffc07984c0",
+          "offset": 28
+        }
+      },
+      "lock_addr": "0xffffffffc07984e0",
+      "name": "pipebytes-query-n16-t08-r2-kdlock",
+      "object_modulo_64": 32,
+      "repeat": 2,
+      "threads": 8
+    },
+    {
+      "arm": "candidate",
+      "collection": "pipe",
+      "fields": {
+        "gate": {
+          "address": "0xffffffffc07984f8",
+          "line_base": "0xffffffffc07984c0",
+          "offset": 24
+        },
+        "owner": {
+          "address": "0xffffffffc07984e0",
+          "line_base": "0xffffffffc07984c0",
+          "offset": 0
+        },
+        "tail": {
+          "address": "0xffffffffc07984fc",
+          "line_base": "0xffffffffc07984c0",
+          "offset": 28
+        }
+      },
+      "lock_addr": "0xffffffffc07984e0",
+      "name": "pipebytes-query-n16-t60-r0-kdlock",
+      "object_modulo_64": 32,
+      "repeat": 0,
+      "threads": 60
+    },
+    {
+      "arm": "candidate",
+      "collection": "pipe",
+      "fields": {
+        "gate": {
+          "address": "0xffffffffc07984f8",
+          "line_base": "0xffffffffc07984c0",
+          "offset": 24
+        },
+        "owner": {
+          "address": "0xffffffffc07984e0",
+          "line_base": "0xffffffffc07984c0",
+          "offset": 0
+        },
+        "tail": {
+          "address": "0xffffffffc07984fc",
+          "line_base": "0xffffffffc07984c0",
+          "offset": 28
+        }
+      },
+      "lock_addr": "0xffffffffc07984e0",
+      "name": "pipebytes-query-n16-t60-r1-kdlock",
+      "object_modulo_64": 32,
+      "repeat": 1,
+      "threads": 60
+    },
+    {
+      "arm": "candidate",
+      "collection": "pipe",
+      "fields": {
+        "gate": {
+          "address": "0xffffffffc07984f8",
+          "line_base": "0xffffffffc07984c0",
+          "offset": 24
+        },
+        "owner": {
+          "address": "0xffffffffc07984e0",
+          "line_base": "0xffffffffc07984c0",
+          "offset": 0
+        },
+        "tail": {
+          "address": "0xffffffffc07984fc",
+          "line_base": "0xffffffffc07984c0",
+          "offset": 28
+        }
+      },
+      "lock_addr": "0xffffffffc07984e0",
+      "name": "pipebytes-query-n16-t60-r2-kdlock",
+      "object_modulo_64": 32,
+      "repeat": 2,
+      "threads": 60
+    },
+    {
+      "arm": "candidate",
+      "collection": "profile/pipe",
+      "fields": {
+        "gate": {
+          "address": "0xffffffffc07984f8",
+          "line_base": "0xffffffffc07984c0",
+          "offset": 24
+        },
+        "owner": {
+          "address": "0xffffffffc07984e0",
+          "line_base": "0xffffffffc07984c0",
+          "offset": 0
+        },
+        "tail": {
+          "address": "0xffffffffc07984fc",
+          "line_base": "0xffffffffc07984c0",
+          "offset": 28
+        }
+      },
+      "lock_addr": "0xffffffffc07984e0",
+      "name": "pipebytes-query-n16-t08-r0-kdlock",
+      "object_modulo_64": 32,
+      "repeat": 0,
+      "threads": 8
+    },
+    {
+      "arm": "candidate",
+      "collection": "profile/pipe",
+      "fields": {
+        "gate": {
+          "address": "0xffffffffc07984f8",
+          "line_base": "0xffffffffc07984c0",
+          "offset": 24
+        },
+        "owner": {
+          "address": "0xffffffffc07984e0",
+          "line_base": "0xffffffffc07984c0",
+          "offset": 0
+        },
+        "tail": {
+          "address": "0xffffffffc07984fc",
+          "line_base": "0xffffffffc07984c0",
+          "offset": 28
+        }
+      },
+      "lock_addr": "0xffffffffc07984e0",
+      "name": "pipebytes-query-n16-t60-r0-kdlock",
+      "object_modulo_64": 32,
+      "repeat": 0,
+      "threads": 60
+    }
+  ]
+}

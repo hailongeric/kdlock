@@ -59,8 +59,9 @@ are arranged as follows:
 
 The last four fields start on separate 64-byte lines. These offsets do not
 describe a Linux rwsem-compatible layout. The embedded mutex now holds its own
-delegation phase/count and encoded tail without an auxiliary table. Provider-wide
-queues and execution stacks remain additional storage.
+delegation phase and encoded tail without an auxiliary table. Exact waiter
+records occupy reserved queue nodes; provider-wide queues and execution stacks
+remain additional storage.
 Existing rwsem performance records measure the previous containing layout and
 do not establish performance for this refactor. There is no
 separate rwsem delegation queue or new generated-code ABI.

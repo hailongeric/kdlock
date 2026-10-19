@@ -1,0 +1,20 @@
+{
+  "argv": [
+    "/root/kdlock-translation-venv-20261019/bin/python3",
+    "/root/kdlock-evidence/10.176.26.71/bench/mutex32-packed-20261019/mutex_profile.py",
+    "--source-root",
+    "/root/host_fs/kdlock",
+    "--commit",
+    "0324e60d6791948e9762a9916a50e8e026f073b0",
+    "--output",
+    "/root/kdlock-evidence/10.176.26.71/bench/mutex32-packed-20261019/old256/profile"
+  ],
+  "cwd": "/root/host_fs/kdlock",
+  "exit_code": 0,
+  "expected_sessions": 2,
+  "finished_unix": 1792421722.3162513,
+  "source_commit": "0324e60d6791948e9762a9916a50e8e026f073b0",
+  "started_unix": 1792421685.1518126,
+  "timeout_seconds": 900,
+  "version": "old256"
+}

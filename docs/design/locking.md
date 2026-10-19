@@ -94,14 +94,17 @@ reclamation state. Mutex exact lifecycle balances remain separate.
 ### Physical lock and scheduling gate
 
 KD owns a 32-byte, native-aligned `struct kd_mutex` containing physical ownership,
-OSQ, a sleeping-waiter ring head and the embedded delegation phase/count and tail.
+OSQ, a sleeping-waiter ring head and the embedded delegation phase and tail.
 Every delegation executor acquires physical exclusion as well as the gate;
 ordinary local callers acquire physical exclusion without joining that gate.
 ACQUIRING precedes physical acquisition, HELD/COMBINER denotes current's completed
 acquisition, and RELEASING precedes physical release before FREE opens the gate.
-There is no auxiliary hash/refcount, registry lock or auxiliary RCU lifetime.
-The existing task/frame/source/ACK records still determine exact drain. There is
-no Linux mutex backing object. See the [layout and ordering](mutex_implementation.md#current-storage-and-lookup).
+A CAS claims FREE; the gate owner publishes later phases with release stores.
+Versioned records in reserved nodes retain the exact waiter interval without
+updating a shared count. There is no auxiliary hash/refcount, auxiliary registry
+lock or auxiliary RCU lifetime. The existing task/frame/source/ACK records still
+determine exact drain. There is no Linux mutex backing object. See the
+[layout and ordering](mutex_implementation.md#current-storage-and-lookup).
 Every caller must obey the [KD-only object/API contract](kd_only_mutex.md); loading the module
 does not replace objects in the running kernel.
 

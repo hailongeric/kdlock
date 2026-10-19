@@ -1,0 +1,1 @@
+PASS: sleeping readers, ordinary/outer writer admission, same-CPU progress, trylocks, downgrade before publication, cancellation and drain

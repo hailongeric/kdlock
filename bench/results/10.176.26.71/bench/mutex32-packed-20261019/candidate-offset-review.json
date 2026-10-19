@@ -1,0 +1,341 @@
+{
+  "command": [
+    "objdump",
+    "-d",
+    "--no-show-raw-insn",
+    "--disassemble=__kd_mutex_lock_slowpath",
+    "/tmp/kdlock-packed-candidate-profile/build/kdlock_km.ko"
+  ],
+  "disassembly_sha256": "1b061ce4940862bec81207ab3640c3827aa0392d3e3a0fd8061ee24ce385a803",
+  "elf_sha256": "452f6b25738b32dd57ab344874e24512b7c623325352d629be8d4bd24e3a46c9",
+  "helper_sha256": "db866706d84d0fd7d17ab15636a0aa24862901baae881ecc014b1eaec0615c94",
+  "limitations": [
+    "The independent full profile audit checks loss, parsing, period totals and source binding.",
+    "Sampled IPs are subject to skid; instruction adjacency is not direct cycle cost or CAS retry count.",
+    "The worker denominator includes polling; reduced wait time need not appear as time spent in an atomic instruction."
+  ],
+  "passed": true,
+  "profiles": [
+    {
+      "input_sha256": {
+        "kallsyms": "05c32db8c9a0a1c76024232aef8d8e2334b54a3b606c33159f8b8d0e1b87706a",
+        "perf-report.txt": "3a854c08a2786eb4b835b84695b3d3d9377b2de914b30b3f1f2fc992d68da804",
+        "perf-samples.txt": "1d0c6cbd15437b2be9915d6673085879b61418dd40574e07ded65cb4434981d3"
+      },
+      "measured_returned_jit_share": 0.9366086004987659,
+      "name": "pipebytes-query-n16-t08-r0-kdlock",
+      "offsets": [
+        {
+          "instruction": "movzbl 0x131(%rbx),%eax",
+          "offset": "0xe3",
+          "period": 19209296908,
+          "samples": 1123,
+          "worker_percent": 36.1990281798454
+        },
+        {
+          "instruction": "test   %al,%al",
+          "offset": "0xea",
+          "period": 6003070345,
+          "samples": 351,
+          "worker_percent": 11.3125073564639
+        },
+        {
+          "instruction": "cmp    $0xfffffffffffffffd,%rax",
+          "offset": "0x248",
+          "period": 2390197999,
+          "samples": 139,
+          "worker_percent": 4.504217157743933
+        },
+        {
+          "instruction": "mov    $0x1,%ecx",
+          "offset": "0x38",
+          "period": 1989015007,
+          "samples": 117,
+          "worker_percent": 3.748206435319491
+        },
+        {
+          "instruction": "pause  ",
+          "offset": "0xe1",
+          "period": 194193960,
+          "samples": 12,
+          "worker_percent": 0.365949501643039
+        },
+        {
+          "instruction": "movzbl 0x132(%rbx),%eax",
+          "offset": "0xee",
+          "period": 190957366,
+          "samples": 11,
+          "worker_percent": 0.3598502905176217
+        },
+        {
+          "instruction": "cmpb   $0x0,0x0(%rip)        # 1464a <__kd_mutex_lock_slowpath+0xda>",
+          "offset": "0xd3",
+          "period": 87282969,
+          "samples": 5,
+          "worker_percent": 0.16448070273387919
+        },
+        {
+          "instruction": "cmp    %rdx,%r13",
+          "offset": "0x25e",
+          "period": 34918072,
+          "samples": 2,
+          "worker_percent": 0.06580148551858025
+        },
+        {
+          "instruction": "test   %al,%al",
+          "offset": "0xf5",
+          "period": 34392555,
+          "samples": 2,
+          "worker_percent": 0.06481117313062058
+        },
+        {
+          "instruction": "cmp    %eax,0x48(%rbx)",
+          "offset": "0x12a",
+          "period": 27289863,
+          "samples": 2,
+          "worker_percent": 0.05142647981820243
+        },
+        {
+          "instruction": "sub    $0x1,%eax",
+          "offset": "0x288",
+          "period": 17476184,
+          "samples": 1,
+          "worker_percent": 0.0329330573691481
+        },
+        {
+          "instruction": "call   14130 <kd_mutex_run_combiner>",
+          "offset": "0x146",
+          "period": 17473816,
+          "samples": 1,
+          "worker_percent": 0.03292859498308887
+        },
+        {
+          "instruction": "jmp    14611 <__kd_mutex_lock_slowpath+0xa1>",
+          "offset": "0x8f",
+          "period": 17473287,
+          "samples": 1,
+          "worker_percent": 0.03292759810714912
+        },
+        {
+          "instruction": "add    %gs:0x0(%rip),%r12        # 14590 <__kd_mutex_lock_slowpath+0x20>",
+          "offset": "0x18",
+          "period": 17467685,
+          "samples": 1,
+          "worker_percent": 0.03291704139823704
+        },
+        {
+          "instruction": "cmpb   $0x0,0x130(%rbx)",
+          "offset": "0xfd",
+          "period": 17466745,
+          "samples": 1,
+          "worker_percent": 0.03291527001187907
+        },
+        {
+          "instruction": "test   $0x1,%al",
+          "offset": "0x252",
+          "period": 17462988,
+          "samples": 1,
+          "worker_percent": 0.032908190119807904
+        },
+        {
+          "instruction": "lea    0x1(%rax),%rdx",
+          "offset": "0x263",
+          "period": 17456867,
+          "samples": 1,
+          "worker_percent": 0.03289665537949179
+        },
+        {
+          "instruction": "mov    0x58(%rbx),%rax",
+          "offset": "0x4e",
+          "period": 17447572,
+          "samples": 1,
+          "worker_percent": 0.03287913938353717
+        },
+        {
+          "instruction": "mov    %r13,0x60(%rbx)",
+          "offset": "0x7c",
+          "period": 17433067,
+          "samples": 1,
+          "worker_percent": 0.03285180538447081
+        },
+        {
+          "instruction": "cmp    $0x1,%eax",
+          "offset": "0x14f",
+          "period": 8553998,
+          "samples": 1,
+          "worker_percent": 0.016119612088633203
+        }
+      ],
+      "sc_worker_period": 53065780696,
+      "symbol": "__kd_mutex_lock_slowpath",
+      "symbol_period": 30326327253,
+      "symbol_worker_percent": 57.14855572696011,
+      "threads": 8
+    },
+    {
+      "input_sha256": {
+        "kallsyms": "05c32db8c9a0a1c76024232aef8d8e2334b54a3b606c33159f8b8d0e1b87706a",
+        "perf-report.txt": "5f4450895e7384ebbd5160953c31e5cae44e95903cff1a4620bcd5b5eeaa5d00",
+        "perf-samples.txt": "11a5dc42f5cf304f749e022f516221cbea1908f5ed751f157a88f93fe3786be8"
+      },
+      "measured_returned_jit_share": 0.9489112500821368,
+      "name": "pipebytes-query-n16-t60-r0-kdlock",
+      "offsets": [
+        {
+          "instruction": "movzbl 0x131(%rbx),%eax",
+          "offset": "0xe3",
+          "period": 220048070525,
+          "samples": 19143,
+          "worker_percent": 79.2358209037566
+        },
+        {
+          "instruction": "test   %al,%al",
+          "offset": "0xea",
+          "period": 34498895377,
+          "samples": 2996,
+          "worker_percent": 12.422505177834976
+        },
+        {
+          "instruction": "pause  ",
+          "offset": "0xe1",
+          "period": 3483055977,
+          "samples": 309,
+          "worker_percent": 1.2541932266567006
+        },
+        {
+          "instruction": "mov    $0x1,%ecx",
+          "offset": "0x38",
+          "period": 1359624832,
+          "samples": 121,
+          "worker_percent": 0.48957934249376966
+        },
+        {
+          "instruction": "cmp    $0xfffffffffffffffd,%rax",
+          "offset": "0x248",
+          "period": 1284321975,
+          "samples": 114,
+          "worker_percent": 0.4624639777620652
+        },
+        {
+          "instruction": "movzbl 0x132(%rbx),%eax",
+          "offset": "0xee",
+          "period": 98951979,
+          "samples": 8,
+          "worker_percent": 0.03563103856084713
+        },
+        {
+          "instruction": "test   %al,%al",
+          "offset": "0xf5",
+          "period": 91283403,
+          "samples": 9,
+          "worker_percent": 0.032869705943509714
+        },
+        {
+          "instruction": "cmpb   $0x0,0x0(%rip)        # 1464a <__kd_mutex_lock_slowpath+0xda>",
+          "offset": "0xd3",
+          "period": 59279604,
+          "samples": 5,
+          "worker_percent": 0.021345645406402106
+        },
+        {
+          "instruction": "mov    0x58(%rbx),%rax",
+          "offset": "0x4e",
+          "period": 32736173,
+          "samples": 3,
+          "worker_percent": 0.011787776801286235
+        },
+        {
+          "instruction": "test   %rdx,%rdx",
+          "offset": "0x68",
+          "period": 24437770,
+          "samples": 2,
+          "worker_percent": 0.008799653468387056
+        },
+        {
+          "instruction": "mov    0x58(%rbx),%rax",
+          "offset": "0x244",
+          "period": 23028039,
+          "samples": 2,
+          "worker_percent": 0.008292031689327725
+        },
+        {
+          "instruction": "sub    $0x1,%eax",
+          "offset": "0x288",
+          "period": 23007975,
+          "samples": 2,
+          "worker_percent": 0.008284806961081666
+        },
+        {
+          "instruction": "jmp    14611 <__kd_mutex_lock_slowpath+0xa1>",
+          "offset": "0x8f",
+          "period": 23006694,
+          "samples": 2,
+          "worker_percent": 0.008284345693294424
+        },
+        {
+          "instruction": "mov    $0xffffffff,%eax",
+          "offset": "0x27b",
+          "period": 13360244,
+          "samples": 1,
+          "worker_percent": 0.004810812011615518
+        },
+        {
+          "instruction": "push   %r13",
+          "offset": "0x0",
+          "period": 13261910,
+          "samples": 1,
+          "worker_percent": 0.004775403497493306
+        },
+        {
+          "instruction": "mov    0x60(%rbx),%rdx",
+          "offset": "0x25a",
+          "period": 13247910,
+          "samples": 1,
+          "worker_percent": 0.004770362319490673
+        },
+        {
+          "instruction": "cmp    $0x1,%eax",
+          "offset": "0x14f",
+          "period": 13208964,
+          "samples": 1,
+          "worker_percent": 0.004756338482455632
+        },
+        {
+          "instruction": "cmp    %rdx,%r13",
+          "offset": "0x25e",
+          "period": 9776381,
+          "samples": 1,
+          "worker_percent": 0.003520319774468919
+        },
+        {
+          "instruction": "cmpb   $0x0,0x130(%rbx)",
+          "offset": "0xfd",
+          "period": 9768729,
+          "samples": 1,
+          "worker_percent": 0.003517564410606337
+        },
+        {
+          "instruction": "mov    %r13,0x60(%rbx)",
+          "offset": "0x7c",
+          "period": 9762212,
+          "samples": 1,
+          "worker_percent": 0.003515217742246111
+        },
+        {
+          "instruction": "mov    %rbx,(%rdx)",
+          "offset": "0xd0",
+          "period": 9754209,
+          "samples": 1,
+          "worker_percent": 0.00351233598884932
+        }
+      ],
+      "sc_worker_period": 277712867760,
+      "symbol": "__kd_mutex_lock_slowpath",
+      "symbol_period": 261141840882,
+      "symbol_worker_percent": 94.03303598725547,
+      "threads": 60
+    }
+  ],
+  "records_sha256": "85d37d2c2d1f99babfeaa388e473f7f6ec64430fc5dbb59ce59767edf401cc23",
+  "scope": "Read-only ELF disassembly and inert text inspection on source host"
+}
