@@ -21,3 +21,12 @@ The fixed correctness order is Native and KD first, then a separate TCLock
 validation if both pass. Each invocation runs basic plus directly affected
 checks, preserves frozen inputs and retains every failed attempt. No parallel
 test or comparison runs are authorized by this plan.
+
+## Retained attempts
+
+`live-1`, source `581ff9c`, stopped in the basic build because the snapshot
+omitted `daemon/`, required by `basic/test_daemon_policy`. The control-call
+program compiled, but neither basic suite completion nor module correctness is
+claimed. No project module was loaded. The failure, source snapshot and logs
+remain untouched; actual VM idle was checked before correcting the runner's
+snapshot dependency list.

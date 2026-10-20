@@ -15,7 +15,7 @@ sys.path.insert(0,str(ROOT/'bench/spin_cacheline'))
 import bench_runtime as rt
 import kernel_identity
 
-DIRECTORIES = ('include','kernel_module','tclock_backend','workload_modules/mmap_fault',
+DIRECTORIES = ('include','kernel_module','daemon','tclock_backend','workload_modules/mmap_fault',
                'bench/mmap_fault','tests/kernel/mmap_fault','tests/unit','disassem',
                'tests/protocols','kernel_baseline','bench/spin_cacheline')
 
