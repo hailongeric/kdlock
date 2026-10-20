@@ -13,7 +13,7 @@ The [terminology guide](../docs/TERMINOLOGY.md) explains execution-state terms.
 | --- | --- |
 | [disassem.py](disassem.py) |CLI, input coordination, assembly/link and diagnostics |
 | [instruction_policy.py](instruction_policy.py) | Scalar instruction, hardware-register and raw-encoding admission |
-| [native_escape.py](native_escape.py) | Reviewed mutex instruction markers, scalar input/output proof and terminal generated paths |
+| [native_escape.py](native_escape.py) | Reviewed instruction markers, scalar input/output proof, root-only spin scope and terminal generated paths |
 | [constant_paths.py](constant_paths.py) | Prove source branches impossible from exact register constants before ordinary admission; no runtime memory assumptions |
 | [address_guards.py](address_guards.py) | Restricted spin pointer-load checks against recorded stack writes and immutable source-site records |
 | [guard_flags.py](guard_flags.py) | Prove incoming arithmetic flags are overwritten before source code reads them at a checked spin continuation |
@@ -40,13 +40,13 @@ This admits the current RCUHT writer without translating reader-drain atomics;
 it does not resolve the general dynamic-pointer screening gap.
 
 KD-only mutex translation requires exclusive KD objects and immutable images
-(capability versions 5 through 11). Checked mutex instruction markers require
-versions 6 through 11 bit 5. Checked spin address exits require versions 7 through
-11 bit 6 and image requirement bit 1; mutex instruction markers use image
+(capability versions 5 through 12). Checked mutex instruction markers require
+versions 6 through 12 bit 5. Checked spin address exits require versions 7 through
+12 bit 6 and image requirement bit 1; mutex instruction markers use image
 requirement bit 0. A capability is a provider's advertised execution support;
 an image requirement identifies support that its generated code needs.
 
-Original string API services require version 10 or 11 bit 9, together with bit 7 for
+Original string API services require versions 10 through 12 bit 9, together with bit 7 for
 `strcmp` or bit 8 for `strscpy_pad`. Their image requirements remain bit 2 and
 bit 3 respectively. A service invokes the original kernel function with its
 original arguments while the generated caller retains its analyzed memory
@@ -175,13 +175,17 @@ not by itself upload a published image. Importing helpers
 for byte fixtures does not establish actual kernel JIT evidence.
 
 The translator does not check every memory address when it is used or restore all
-processor state. Reviewed mutex instructions can end generated execution with a
+processor state. Reviewed instructions can end generated execution with a
 checked marker; the waiter then executes the instruction and future delegation
 of that entry is disabled. Other unsupported state still fails static admission.
 See [the exact policy](../docs/design/admission.md#checked-instruction-exits).
-Mutex images and spin entries that have published an address-check or typed
+Version 12 bit 11 permits ABI1/3 root markers only with exact image requirements
+33 and a pristine physical root. Full-source checks reject services, nested and
+indirect control before trimming marker successors; generated dispatch admits
+only the original root. This does not extend ABI2 nested relay to spin/rwlock.
+Mutex images and spin entries that have published a root marker, address-check or typed
 string-service image use
-separate immutable versions. Other spin entries and ABI3 rwlock images retain
+separate immutable versions. Other spin/rwlock entries retain
 in-place publication. The narrow spin checks do not close the general dynamic
 address gap or repair arbitrary processor state. Context checks are not a
 security sandbox; see

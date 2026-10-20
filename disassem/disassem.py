@@ -196,14 +196,28 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0):
     mutex_stack_bytes = (
         memread.device_session.mutex_stack_bytes() if lock_kind == "mutex" else 0
     )
-    escape_capable = (lock_kind == "mutex" and abi == 2
-                      and memread.device_session.native_escape())
+    root_escape_capable = (lock_kind == "spin" and abi in {1, 3}
+                           and memread.device_session.root_native_escape())
+    escape_capable = (root_escape_capable or
+                      (lock_kind == "mutex" and abi == 2
+                       and memread.device_session.native_escape()))
+    root_controls = {address: name for address, (_, name) in lock_symbols.items()}
+    if root_escape_capable:
+        root_controls.update(
+            {address: name for name in native_escape.ROOT_CONTROL_SYMBOLS
+             if (address := get_kernel_symbol(name))})
+    native_terminal_controls = (
+        {get_kernel_symbol("kd_rwlock_fast_write_unlock")} - {0}
+        if root_escape_capable and abi == 3 else set())
     jump_table = {}
     diagnostics.set_instruction(entry, "<CFG text coverage>")
     try:
         rets = memread.read(entry, jump_table, excluded_callees=hostcall_targets)
     except (memread.TextReadLimit, memread.device_session.SourceRefused) as error:
         return reject_translation(str(error))
+    # indirect_jump.find later adds ordinary decoded RET edges to this table.
+    # Preserve only the learned input history for root-marker admission.
+    learned_indirect = bool(jump_table)
     if any(checked_string_targets.intersection(targets) for targets in jump_table.values()):
         return reject_translation("typed string services cannot use learned indirect-call targets")
 
@@ -245,8 +259,24 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0):
         if entry not in block_dict:
             return reject_translation("entry has no reachable decoded block")
 
+        source_has_escapes = escape_capable and any(
+            native_escape.descriptor(line)
+            for block in block_dict.values() for line in block.lines)
+        if root_escape_capable and source_has_escapes:
+            # Recheck each expanded original graph before any pruning. ABI3's
+            # standard unlock has a native fast-writer branch: only its
+            # terminal CALL can leave the image, never a learned helper body
+            # or a continuation. No writer-byte value is assumed here.
+            scope_error = native_escape.root_scope_rejection(
+                block_dict, db_dict, clobber_unlock, root_controls,
+                hostcall_targets, learned_indirect=learned_indirect,
+                native_terminal_controls=native_terminal_controls)
+            if scope_error:
+                offset, reason = scope_error
+                diagnostics.set_instruction(offset, "<root instruction-marker scope>")
+                return reject_translation(reason)
         specialized_branches = ()
-        if abi == 1 and not jump_table and any(
+        if abi == 1 and not jump_table and not source_has_escapes and any(
                 line.name.upper() == "UD2"
                 for block in block_dict.values() for line in block.lines):
             # A helper assertion can be impossible for the exact source CALL
@@ -394,6 +424,7 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0):
         # Until the original native graph is retained separately, never combine
         # these two admission mechanisms in the same selected image.
         if (segment_error and abi == 1 and not jump_table and not missing
+                and not source_has_escapes
                 and not specialized_branches
                 and segment_error[1].startswith("bounded register-address alternatives")
                 and memread.device_session.address_guard()):
@@ -441,6 +472,16 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0):
         except (memread.TextReadLimit, memread.device_session.SourceRefused) as error:
             return reject_translation(str(error))
 
+    has_escapes = escape_capable and any(
+        native_escape.descriptor(line)
+        for block in block_dict.values() for line in block.lines
+    )
+    root_escapes = root_escape_capable and has_escapes
+    if root_escapes:
+        if memory_guards is not None and memory_guards.sites:
+            return reject_translation(
+                "root instruction markers cannot combine address guards")
+
     # Final emission must also refuse an incomplete return graph when the
     # unconditional admission path did not need a scoped-call comparison.
     try:
@@ -471,10 +512,6 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0):
             return reject_translation(
                 "typed string services require a top-level single-lock scope; "
                 "nested or nonterminal lock control is unsupported")
-    has_escapes = escape_capable and any(
-        native_escape.descriptor(line)
-        for block in block_dict.values() for line in block.lines
-    )
     if abi in {1, 2, 3}:
         reason = entry_abi.check_minimal_entry(
             block_dict, db_dict, entry, clobber_targets,
@@ -535,6 +572,7 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0):
         terminal_clobber_unlocks=({clobber_unlock} if abi in {1, 3} else
                                  {direct_mutex_unlock or clobber_mutex_unlock} if abi == 2 else set()),
         native_escapes=has_escapes,
+        root_native_escape=root_escapes,
         address_guards=memory_guards,
         native_calls=direct_calls,
     )
@@ -558,6 +596,7 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0):
     build_jit_binary(abi, context_inputs=wrapper_context_inputs(
         Path('./asm/jit.S').read_text(encoding='utf-8')),
         requirements=((native_escape.REQUIREMENT if has_escapes else 0)
+                      | (native_escape.ROOT_REQUIREMENT if root_escapes else 0)
                       | (checked_addresses.REQUIREMENT if memory_guards is not None
                          and memory_guards.sites else 0)
                       | (strcmp_service.REQUIREMENT if uses_string_service else 0)

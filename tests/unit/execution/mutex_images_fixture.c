@@ -99,6 +99,13 @@ int main(void) {
   * images; unrelated/older entries cannot silently accept that contract. */
  assert(!kd_image_requirements_valid(KD_EXE_LOCK_SPIN,1,KD_IMAGE_REQUIRE_NATIVE_ESCAPE));
  assert(!kd_image_requirements_valid(KD_EXE_LOCK_MUTEX,0,KD_IMAGE_REQUIRE_NATIVE_ESCAPE));
+ /* Root markers use exactly the paired requirement on ABI1/3 spin objects.
+  * No mixed optional service/guard contract or foreign backend is implied. */
+ for(unsigned int kind=1;kind<=2;kind++)
+  for(unsigned int abi=0;abi<=3;abi++)
+   for(unsigned int req=32;req<64;req++)
+    assert(!!kd_image_requirements_valid(kind,abi,req) ==
+           (kind==KD_EXE_LOCK_SPIN && (abi==1 || abi==3) && req==33));
  start(10,2,KD_IMAGE_REQUIRE_NATIVE_ESCAPE); assert(send_bytes(128)>0);
  fresh.image=NULL;
  assert(kd_jit_bind_image(entry,&fresh) && fresh.image->requirements==KD_IMAGE_REQUIRE_NATIVE_ESCAPE);

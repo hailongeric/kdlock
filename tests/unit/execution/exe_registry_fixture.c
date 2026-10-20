@@ -213,6 +213,7 @@ static void kd_spin_unlock(void) { CHECK(!"unexpected unlock call"); }
 static void kd_spin_lock_clobber_v1(void) { CHECK(!"unexpected lock call"); }
 static void kd_spin_lock_pinned_clobber_v1(void) { CHECK(!"unexpected lock call"); }
 static void kd_spin_direct_native_unlock(void) { CHECK(!"unexpected unlock call"); }
+static void kd_rwlock_fast_write_unlock(void) { CHECK(!"unexpected rwlock fast unlock"); }
 static void kd_spin_unlock_clobber_v1(void) { CHECK(!"unexpected unlock call"); }
 static void kd_mutex_direct_lock_clobber_v1(void) { CHECK(!"unexpected mutex lock call"); }
 static void kd_mutex_direct_contended_clobber_v1(void) { CHECK(!"unexpected contended mutex lock call"); }

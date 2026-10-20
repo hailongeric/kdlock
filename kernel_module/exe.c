@@ -47,6 +47,7 @@
 #include "kd_mutex.h"
 #include "kd_mutex_direct.h"
 #include "kd_spinlock.h"
+#include "kd_rwlock.h"
 #include "kd_hostcall.h"
 
 /*
@@ -134,6 +135,7 @@ static unsigned long clobber_spin_lock_addr;
 static unsigned long clobber_spin_unlock_addr;
 static unsigned long pinned_spin_lock_addr;
 static unsigned long cold_spin_unlock_addr;
+static unsigned long rwlock_fast_unlock_addr;
 static unsigned long mutex_lock_addr;
 static unsigned long mutex_unlock_addr;
 static unsigned long clobber_mutex_lock_addr;
@@ -169,6 +171,8 @@ static int kd_exe_dispatch(struct kd_exe_info *exe, struct kd_regs *regs,
 	unsigned long direct_strcmp = 0, direct_pad = 0;
 	bool direct_image;
 	bool direct_returned = false;
+	bool root_escape_image;
+	bool root_escape_returned = false;
 	const struct kd_jit_image *previous_image;
 	bool resume_after_hostcall = false;
 	bool body_reported = false;
@@ -217,7 +221,9 @@ static int kd_exe_dispatch(struct kd_exe_info *exe, struct kd_regs *regs,
 	if (!kd_jit_image_matches(exe, frame))
 		return frame->executed ? KD_EXE_RUN_ERROR : KD_EXE_NO_RUN;
 	direct_image = kd_jit_direct_image(frame);
-	if (!pending && !kd_jit_direct_entry(frame)) {
+	root_escape_image = kd_jit_root_escape_image(frame);
+	if (!pending && (!kd_jit_direct_entry(frame) ||
+			 !kd_jit_root_escape_entry(frame))) {
 		frame->image = previous_image;
 		return frame->executed ? KD_EXE_RUN_ERROR : KD_EXE_NO_RUN;
 	}
@@ -232,7 +238,8 @@ static int kd_exe_dispatch(struct kd_exe_info *exe, struct kd_regs *regs,
 		unsigned long entry_sp = regs->sp;
 		u64 boundary_start;
 
-		if (direct_image && direct_returned) {
+		if ((direct_image && direct_returned) ||
+		    (root_escape_image && root_escape_returned)) {
 			ret_flag = KD_EXE_RUN_ERROR;
 			break;
 		}
@@ -302,6 +309,7 @@ static int kd_exe_dispatch(struct kd_exe_info *exe, struct kd_regs *regs,
 			kd_jit_timing_end(KD_JIT_TIME_WRAPPER, boundary_start);
 returned_wrapper:
 			direct_returned = direct_image;
+			root_escape_returned = root_escape_image;
 			if (args[0] == KD_EXE_ENTRY_REFUSED) {
 				/* Only this explicit pre-body exit can undo our conservative
 				 * executed mark. A zero witness by itself never permits replay.
@@ -364,7 +372,8 @@ returned_wrapper:
 			regs = kd_exec_frame_regs(frame);
 		}
 		if (frame->spin_simple) {
-			if (!direct_image && args[0] == KD_EXE_CALL_MISS &&
+			if (!direct_image && !root_escape_image &&
+			    args[0] == KD_EXE_CALL_MISS &&
 			    regs->ip == raw_spin_unlock_addr &&
 			    regs->di == outer_lock_addr) {
 				ret_flag = KD_EXE_RUN_TO_UNLOCK;
@@ -372,6 +381,29 @@ returned_wrapper:
 			}
 			kd_spin_jit_prepare_complex(frame);
 			regs = kd_exec_frame_regs(frame);
+		}
+		/* A root-marker image has no dispatcher control or hostcall path.
+		 * Refuse malformed exits before servicing a control operation.
+		 * Missing ordinary CALLs can still finish natively on the waiter. */
+		if (root_escape_image &&
+		    (!kd_jit_root_escape_owner(frame) ||
+		     args[0] == KD_EXE_HOSTCALL ||
+		     (args[0] == KD_EXE_CALL_MISS &&
+		      (regs->ip == raw_spin_lock_addr ||
+		       regs->ip == clobber_spin_lock_addr ||
+		       regs->ip == pinned_spin_lock_addr ||
+		       regs->ip == raw_spin_unlock_addr ||
+		       (regs->ip == clobber_spin_unlock_addr &&
+			regs->di != outer_lock_addr) ||
+		       regs->ip == cold_spin_unlock_addr ||
+		       regs->ip == rwlock_fast_unlock_addr ||
+		       regs->ip == mutex_lock_addr || regs->ip == mutex_unlock_addr ||
+		       regs->ip == direct_mutex_lock_addr ||
+		       regs->ip == contended_mutex_lock_addr ||
+		       regs->ip == outer_mutex_lock_addr ||
+		       regs->ip == direct_mutex_unlock_addr)))) {
+			ret_flag = KD_EXE_RUN_ERROR;
+			break;
 		}
 		if (direct_image &&
 		    (!frame->image->immutable || !frame->image->near_text ||
@@ -647,7 +679,8 @@ returned_wrapper:
 	/* Only a validated marker may request flags-aware waiter restoration.
 	 * CALL packets can carry old/uninitialized orig_ax bytes; never interpret
 	 * them as an instruction-continuation tag when publishing a native suffix. */
-	if (frame->mutex_backend && ret_flag == KD_EXE_RUN_NATIVE &&
+	if ((frame->mutex_backend || root_escape_image) &&
+	    ret_flag == KD_EXE_RUN_NATIVE &&
 	    args[0] != KD_EXE_NATIVE_ESCAPE)
 		regs->orig_ax = 0;
 

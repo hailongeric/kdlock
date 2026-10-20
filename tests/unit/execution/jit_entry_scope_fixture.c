@@ -56,9 +56,22 @@ static unsigned long direct_mutex_lock_addr = 0x4130;
 static unsigned long direct_mutex_unlock_addr = 0x4140;
 static unsigned long clobber_spin_lock_addr = 0x3110;
 static unsigned long clobber_spin_unlock_addr = 0x3120;
+static unsigned long raw_spin_lock_addr = 0x3130;
+static unsigned long pinned_spin_lock_addr = 0x3140;
+static unsigned long cold_spin_unlock_addr = 0x3150;
+static unsigned long rwlock_fast_unlock_addr = 0x3160;
+static unsigned long mutex_lock_addr = 0x4110;
+static unsigned long mutex_unlock_addr = 0x4120;
+static unsigned long contended_mutex_lock_addr = 0x4150;
+static unsigned long outer_mutex_lock_addr = 0x4160;
+static bool root_escape_wrapper;
+static void fixture_root_escape_wrapper(struct kd_jit_batch_call *call);
 static void kd_jit_clobber_call_v1(struct kd_jit_batch_call *call)
 {
-	(void)call;
+	if (root_escape_wrapper) {
+		fixture_root_escape_wrapper(call);
+		return;
+	}
 	/* Real MINIMAL code belongs to test_clobber_abi. A readiness mutation
 	 * can reach this forbidden boundary; report an assertion, not a signal. */
 	fprintf(stderr, "FAIL line %d: unexpected clobber wrapper invocation\n",
@@ -325,6 +338,18 @@ static void fixture_wrapper_dispatch(void (*wrapper)(struct kd_regs *, unsigned 
 	}
 }
 
+/* This double returns a scripted boundary packet, without executing a source
+ * instruction. The generated-code/restore fixtures supply that separate proof. */
+static void fixture_root_escape_wrapper(struct kd_jit_batch_call *call)
+{
+	CHECK(call->regs == &active.regs &&
+	      call->code == (char *)active.image->code + KD_JIT_CLOBBER_OFFSET);
+	translated(call->regs, call->args);
+	if (call->args[0] != KD_EXE_ENTRY_REFUSED)
+		*call->packet_state = call->args[0] == KD_EXE_CLOBBER_COMPLETE ?
+			KD_PACKET_COMPLETE : KD_PACKET_FULL;
+}
+
 struct kd_exec_frame *kd_exec_current_frame(void)
 {
 	current_frame_reads++;
@@ -365,7 +390,8 @@ void kd_image_disable(struct kd_exe_info *exe)
 }
 static bool is_end_point(unsigned long ip)
 {
-	return ip == 0x9000;
+	return ip == 0x9000 ||
+	       (root_escape_wrapper && ip == clobber_spin_unlock_addr);
 }
 static bool is_outer_lock_unlock(struct kd_regs *regs, unsigned long lock)
 {
@@ -411,6 +437,7 @@ void kd_spin_jit_prepare_complex(struct kd_exec_frame *frame)
 #include "jit_entry_scope/spin.inc"
 #include "jit_entry_scope/mutex.inc"
 #include "jit_entry_scope/native_escape.inc"
+#include "jit_entry_scope/root_native_escape.inc"
 #include "jit_entry_scope/address_guard.inc"
 #include "jit_entry_scope/strings.inc"
 #include "jit_entry_scope/string_copy.inc"
@@ -422,6 +449,7 @@ void kd_spin_jit_prepare_complex(struct kd_exec_frame *frame)
 int main(void)
 {
 	check_native_escape();
+	check_root_native_escape();
 	check_address_guard();
 	check_string_services();
 	check_string_copy();

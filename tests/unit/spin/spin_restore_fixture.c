@@ -26,13 +26,24 @@ static struct kd_spin_continuation_stack storage;
 static _Alignas(16) unsigned char stack[16384];
 static jmp_buf caller;
 static unsigned int extra_user, restores, initial_top;
-static bool minimal;
+static bool minimal, marker;
 static unsigned long expected_sp;
 unsigned long observed_sp;
 unsigned long observed[15];
+unsigned long observed_flags;
+static unsigned long expected_arithmetic, caller_flags;
+static struct kd_jit_image marker_image = {
+	.requirements = KD_IMAGE_REQUIRE_NATIVE_ESCAPE | KD_IMAGE_REQUIRE_ROOT_NATIVE_ESCAPE,
+	.immutable = 1,
+};
+static struct kd_jit_image ordinary_image;
 
 static unsigned int unpins;
 static bool expected_unpin;
+#ifdef CONFIG_RETHUNK
+/* The live probe separately exercises the kernel's actual configured thunk. */
+asm(".text\n.globl __x86_return_thunk\n__x86_return_thunk:\nretq\nint3\n");
+#endif
 static void final_unpin(void)
 {
 	assert(execution.retired && !storage.top);
@@ -51,6 +62,12 @@ static __attribute__((used, noipa, noreturn)) void restored(void)
 	assert(execution.retired == !extra_user);
 	assert(storage.top == (extra_user ? initial_top : 0));
 	assert(observed_sp == expected_sp);
+	if (marker) {
+		assert((observed_flags & KD_REG_ARITHMETIC_FLAGS) == expected_arithmetic);
+		assert((observed_flags & ~KD_REG_ARITHMETIC_FLAGS) ==
+		       (caller_flags & ~KD_REG_ARITHMETIC_FLAGS));
+		assert(execution.frame.regs.orig_ax == KD_REG_NATIVE_ESCAPE_TAG);
+	}
 	for (unsigned int i = 0; i < 15; i++)
 		if (!minimal || i == 4)
 			assert(observed[i] == 0x12340000UL + i);
@@ -64,6 +81,7 @@ static __attribute__((used, noipa, noreturn)) void restored(void)
 }
 extern void capture(void);
 asm(".text\n.type capture,@function\ncapture:\n"
+    "pushfq\npopq observed_flags(%rip)\n"
     "movq %rsp,observed_sp(%rip)\n"
     "movq %r15,observed+0(%rip)\n"
     "movq %r14,observed+8(%rip)\n"
@@ -84,13 +102,16 @@ asm(".text\n.type capture,@function\ncapture:\n"
 
 int main(void)
 {
+	static const unsigned int bits[] = {0, 2, 4, 6, 7, 11};
 	volatile unsigned int iteration;
 	_Static_assert(offsetof(struct kd_spin_continuation, frame.regs) == 40,
 		       "restore packet follows request metadata and the admission header");
-	for (iteration = 0; iteration < 192; iteration++) {
-		volatile unsigned int mode = iteration < 128 ? iteration % 4 : iteration % 2;
+	for (iteration = 0; iteration < 320; iteration++) {
+		volatile unsigned int mode = iteration < 128 ? iteration % 4 :
+			iteration < 192 ? iteration % 2 : 2;
 
-		minimal = iteration >= 128;
+		minimal = iteration >= 128 && iteration < 192;
+		marker = iteration >= 192;
 		unpins = 0;
 		expected_unpin = mode == 0 || mode == 3;
 
@@ -110,6 +131,26 @@ int main(void)
 		execution.frame.regs.dx = 0x12340000UL + 12;
 		execution.frame.regs.si = 0x12340000UL + 13;
 		execution.frame.regs.di = 0x12340000UL + 14;
+		/* An ordinary image's stale bytes and a normal ROOT image's FULL
+		 * completion must never select the flags-aware native path. */
+		execution.frame.regs.orig_ax = KD_REG_NATIVE_ESCAPE_TAG;
+		if (iteration < 128 && (mode == 0 || (mode == 2 && iteration % 8 == 2))) {
+			execution.frame.image = &marker_image;
+			execution.frame.entry_abi = KD_ENTRY_ABI_SPIN_CLOBBER_V1;
+			marker_image.entry_abi = execution.frame.entry_abi;
+			if (mode == 2)
+				execution.frame.regs.orig_ax = 0; /* ordinary native CALL */
+		}
+		if (iteration < 128 && mode == 2 && iteration % 8 == 6) {
+			/* A real ordinary descriptor must ignore stale marker bytes.
+			 * NULL alone would not exercise the image requirement filter. */
+			execution.frame.entry_abi = iteration & 8 ?
+				KD_ENTRY_ABI_SPIN_CLOBBER_V1 : KD_ENTRY_ABI_RWLOCK_CLOBBER_V1;
+			ordinary_image.entry_abi = execution.frame.entry_abi;
+			execution.frame.image = &ordinary_image;
+		}
+		if (mode == 2)
+			execution.result = KD_SPIN_RES_NATIVE_READY;
 		extra_user = mode == 2;
 		execution.storage = &storage;
 		initial_top = iteration & 1 ? 3 : 1;
@@ -127,11 +168,25 @@ int main(void)
 				KD_ENTRY_ABI_RWLOCK_CLOBBER_V1;
 			execution.frame.packet_state = mode ? KD_PACKET_MINIMAL : KD_PACKET_COMPLETE;
 		}
+		if (marker) {
+			expected_arithmetic = 0;
+			for (unsigned int bit = 0; bit < 6; bit++)
+				if ((iteration - 192) % 64 & (1U << bit))
+					expected_arithmetic |= 1UL << bits[bit];
+			execution.frame.entry_abi = iteration < 256 ?
+				KD_ENTRY_ABI_SPIN_CLOBBER_V1 : KD_ENTRY_ABI_RWLOCK_CLOBBER_V1;
+			marker_image.entry_abi = execution.frame.entry_abi;
+			execution.frame.image = &marker_image;
+			execution.frame.spin_kind = KD_SPIN_CONT_ROOT;
+			execution.frame.regs.flags = ~KD_REG_ARITHMETIC_FLAGS | expected_arithmetic;
+		}
 		expected_sp = execution.frame.regs.sp + (!minimal && !mode ? 8 : 0);
-		if (!setjmp(caller))
+		if (!setjmp(caller)) {
+			asm volatile("pushfq\npopq %0" : "=m"(caller_flags) : : "memory");
 			kd_spin_restore_request(&execution, mode);
+		}
 	}
-	assert(restores == 192);
-	puts("production continuation restore: completed=32 retry=32 native=32 native_retired=32 minimal_complete=32 minimal_retry=32 PASS");
+	assert(restores == 320);
+	puts("production continuation restore: 192 ordinary/stale-tag cases, ABI1/ABI3 64 arithmetic patterns each, exact GPR/SP, retained mode2 storage and zero premature unpins PASS");
 	return 0;
 }

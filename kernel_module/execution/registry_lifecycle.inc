@@ -99,6 +99,9 @@ int kd_exe_init(void)
 		end_points[end_point_count++] = clobber_spin_unlock_addr;
 	pinned_spin_lock_addr = (unsigned long)kd_spin_lock_pinned_clobber_v1;
 	cold_spin_unlock_addr = (unsigned long)kd_spin_direct_native_unlock;
+	/* A delegated ABI3 writer owns the gate and 0xff writer byte. The native
+	 * 0xf0 fast-unlock helper cannot acknowledge that retained gate owner. */
+	rwlock_fast_unlock_addr = (unsigned long)kd_rwlock_fast_write_unlock;
 	end_points[end_point_count++] = cold_spin_unlock_addr;
 	mutex_lock_addr = (unsigned long)kd_mutex_local_lock;
 	mutex_unlock_addr = (unsigned long)kd_mutex_local_unlock;

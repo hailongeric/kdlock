@@ -194,6 +194,23 @@ static __attribute__((noipa, noreturn)) noinline notrace void
 kd_spin_restore_request(struct kd_spin_continuation *execution,
 						unsigned int mode)
 {
+	/* Only a validated native publication from this immutable root contract
+	 * may interpret orig_ax. Ordinary FULL completions and older spin images
+	 * can contain stale tag bytes and have no instruction-flags contract.
+	 * The retained root's final unlock still owns retirement and unpinning. */
+	if (execution->result == KD_SPIN_RES_NATIVE_READY &&
+	    execution->frame.image &&
+	    execution->frame.image->requirements ==
+		    (KD_IMAGE_REQUIRE_NATIVE_ESCAPE | KD_IMAGE_REQUIRE_ROOT_NATIVE_ESCAPE)) {
+		BUG_ON(execution->frame.packet_state != KD_PACKET_FULL);
+		if (execution->frame.regs.orig_ax == KD_REG_NATIVE_ESCAPE_TAG) {
+			BUG_ON(mode != 2 || !execution->frame.image->immutable ||
+			       !kd_entry_abi_spin_clobber(execution->frame.entry_abi) ||
+			       execution->frame.image->entry_abi != execution->frame.entry_abi ||
+			       execution->frame.spin_kind != KD_SPIN_CONT_ROOT);
+			kd_jump_to_saved_regs_with_flags(&execution->frame.regs);
+		}
+	}
 	if (kd_entry_abi_spin_clobber(execution->frame.entry_abi) &&
 		execution->frame.packet_state != KD_PACKET_FULL)
 	{

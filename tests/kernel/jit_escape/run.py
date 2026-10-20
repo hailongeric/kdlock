@@ -27,9 +27,15 @@ from mutex_api_audit import audit_public_entries
 DEVICE = "/dev/kd_jit_escape_test"
 WORKER_COMM = "ke_worker"
 RUN, SNAPSHOT, PREPARE, HOT = 0xC0204501, 0x80504502, 0x4503, 0x4504
+READ = 0xC0204505
 PARAMETERS = Path("/sys/module/kdlock_km/parameters")
 FIELDS = ("prefix", "suffix", "hot_taken", "lock_address", "entry", "marker",
           "failures", "active", "hot", "idle")
+
+def publish_barrier(path, value):
+    temporary = path.with_suffix(".tmp")
+    rt.write_json(temporary, value)
+    temporary.replace(path)
 
 
 def image_registry():
@@ -48,7 +54,10 @@ def snapshot():
 
 
 def worker(arguments):
-    cpu, iterations, index, start_ns = map(int, arguments)
+    cpu, iterations, index = map(int, arguments[:3])
+    barrier = Path(arguments[3])
+    role = arguments[4]
+    rt.require(role in ("writer", "reader"), "invalid worker role")
     libc = ctypes.CDLL(None, use_errno=True)
     if libc.prctl(15, ctypes.c_char_p(WORKER_COMM.encode()), 0, 0, 0):
         error = ctypes.get_errno()
@@ -56,13 +65,21 @@ def worker(arguments):
     comm = Path("/proc/self/comm").read_text().strip()
     rt.require(comm == WORKER_COMM, "worker task name differs from provider eligibility")
     os.sched_setaffinity(0, {cpu})
+    rt.require(os.sched_getaffinity(0) == {cpu}, "worker affinity differs")
     buffer = bytearray(struct.pack("=4I2Q", iterations, index, 0, 0, 0, 0))
     with open(DEVICE, "rb", buffering=0) as device:
+        publish_barrier(barrier / f"ready-{index}.json",
+                        dict(pid=os.getpid(), cpu=cpu, role=role, comm=comm))
+        deadline = time.monotonic() + 30
+        while not (barrier / "go.json").exists():
+            rt.require(time.monotonic() < deadline, "worker start barrier expired", "TIMEOUT")
+            time.sleep(.001)
+        start_ns = json.loads((barrier / "go.json").read_text())["start_ns"]
         while time.monotonic_ns() < start_ns:
             time.sleep(.001)
-        fcntl.ioctl(device, RUN, buffer, True)
+        fcntl.ioctl(device, READ if role == "reader" else RUN, buffer, True)
     returned, returned_index, reserved0, reserved1, completed, errors = struct.unpack("=4I2Q", buffer)
-    print(json.dumps(dict(cpu=cpu, comm=comm, iterations=returned, worker=returned_index,
+    print(json.dumps(dict(cpu=cpu, comm=comm, role=role, iterations=returned, worker=returned_index,
                          reserved=[reserved0, reserved1], completed=completed, errors=errors)))
 
 
@@ -108,7 +125,7 @@ class EscapeSession(Session):
         row = snapshot()
         rt.write_json(self.path / (label + ".counts.json"), row)
         rt.require(row["active"] == 0 and row["idle"] == 1,
-                   "workload or mutex still active: " + str(row), "UNDRAINED")
+                   "workload or lock still active: " + str(row), "UNDRAINED")
         rt.require(row["failures"] == 0 and row["prefix"] == row["suffix"],
                    "exclusion/effect/continuation failure: " + str(row), "DATA_ERROR")
         return row
@@ -121,7 +138,8 @@ class EscapeSession(Session):
         rows = image_registry()
         rt.write_json(self.path / (label + ".registry.json"), rows)
         rt.require(len(rows) == 1 and rows[0]["entry"] == self.record["layout"]["entry"] and
-                   rows[0]["lock_kind"] == 2 and rows[0]["entry_abi"] == 2 and
+                   rows[0]["lock_kind"] == self.record["registry_kind"] and
+                   rows[0]["entry_abi"] == self.record["entry_abi"] and
                    rows[0]["status"] == expected,
                    f"unexpected registry at {label}: {rows}", "DATA_ERROR")
         return rows
@@ -141,7 +159,11 @@ class EscapeSession(Session):
         self.record["capabilities"] = dict(version=version, features=features,
                                            mutex_stack_bytes=stack_bytes, percpu_module_bytes=module_bytes)
         self.save()
-        rt.require(version in (6, 7, 8, 9, 10, 11) and features & (1 << 5), "native-escape capability v6+/bit5 missing")
+        rt.require(version in (6, 7, 8, 9, 10, 11, 12) and features & (1 << 5),
+                   "native-escape capability v6+/bit5 missing")
+        if self.record["lock_kind"] != "mutex":
+            rt.require(version == 12 and features & (1 << 11),
+                       "ordinary spin/rwlock root escape requires v12/bit11 plus bit5")
         self.run(["insmod", self.workload_module], "load-workload.log")
         self.loaded_source = True
         layout = self.counts("initial")
@@ -149,7 +171,7 @@ class EscapeSession(Session):
                    "nonzero initial workload state")
         rt.require(layout["lock_address"] and layout["entry"] and layout["marker"], "missing source labels")
         self.record.update(layout=layout, entry_range=[layout["entry"], layout["entry"] + 1],
-                           caller_abi="clobber", entry_abi=2)
+                           caller_abi="clobber")
         (PARAMETERS / "bench_lock_addr").write_text(str(layout["lock_address"]))
         with open(DEVICE, "rb", buffering=0) as device:
             fcntl.ioctl(device, PREPARE)
@@ -164,7 +186,8 @@ class EscapeSession(Session):
             if rows[0]["status"] == 0 and not rt.children(self.daemon.pid):
                 self.record["publication"] = self.publication()
                 self.record["image_registry"] = self.registry("initial", 0)
-                rt.require(self.record["image_registry"][0]["requirements"] == 1 and
+                rt.require(self.record["image_registry"][0]["requirements"] ==
+                           self.record["image_requirements"] and
                            self.record["image_registry"][0]["generation"] > 0,
                            "marker image lacks the required native-exit contract")
                 self.record["initial_parameters"] = rt.parameters()
@@ -184,25 +207,49 @@ class EscapeSession(Session):
                       counters_before=counts_before, registry_before=image_registry(), complete=False)
         self.record.setdefault("phases", []).append(result)
         self.save()
-        start_ns = time.monotonic_ns() + 1000000000
+        barrier = self.path / (name + "-barrier")
+        barrier.mkdir()
+        requested = [self.record["reader_iterations"] if role == "reader" else iterations
+                     for role in self.record["worker_roles"]]
         processes, logs = [], []
+
+        def callers():
+            return [dict(pid=p.pid, argv=p.args, role=self.record["worker_roles"][i],
+                         cpu=self.record["cpus"][i]) for i, p in enumerate(processes)]
+
         try:
             for index, cpu in enumerate(self.record["cpus"]):
                 log = (self.path / f"{name}-worker-{index}.json").open("w")
                 logs.append(log)
                 argv = [sys.executable, self.translation_source / "tests/kernel/jit_escape/run.py",
-                        "--worker", str(cpu), str(iterations), str(index), str(start_ns)]
+                        "--worker", str(cpu), str(requested[index]), str(index), str(barrier),
+                        self.record["worker_roles"][index]]
                 processes.append(subprocess.Popen(list(map(str, argv)), stdout=log,
                     stderr=subprocess.STDOUT, start_new_session=True))
         except OSError as error:
             for log in logs:
                 log.close()
-            rt.write_json(self.path / (name + "-callers.json"), [dict(pid=p.pid, argv=p.args) for p in processes])
+            rt.write_json(self.path / (name + "-callers.json"), callers())
             raise rt.Failure("CALLER_START_FAILED", f"retain caller PIDs {[p.pid for p in processes]}",
                              unsafe=True) from error
-        rt.write_json(self.path / (name + "-callers.json"), [dict(pid=p.pid, argv=p.args) for p in processes])
+        rt.write_json(self.path / (name + "-callers.json"), callers())
         deadline = time.monotonic() + self.record["phase_timeout"]
         try:
+            ready_deadline = min(deadline, time.monotonic() + 20)
+            while not all((barrier / f"ready-{i}.json").exists() for i in range(len(processes))):
+                if time.monotonic() >= ready_deadline or any(p.poll() is not None for p in processes):
+                    raise rt.Failure("TIMEOUT", "retain callers: start readiness barrier failed",
+                                     unsafe=True)
+                time.sleep(.01)
+            ready = [json.loads((barrier / f"ready-{i}.json").read_text())
+                     for i in range(len(processes))]
+            if not all(row == dict(pid=processes[i].pid, cpu=self.record["cpus"][i],
+                                   role=self.record["worker_roles"][i], comm=WORKER_COMM)
+                       for i, row in enumerate(ready)):
+                raise rt.Failure("DATA_ERROR", "retain callers: worker readiness identity differs",
+                                 unsafe=True)
+            result["ready"] = ready
+            publish_barrier(barrier / "go.json", dict(start_ns=time.monotonic_ns() + 100000000))
             for process in processes:
                 process.wait(timeout=max(.01, deadline - time.monotonic()))
         except subprocess.TimeoutExpired as error:
@@ -222,10 +269,13 @@ class EscapeSession(Session):
                       registry_after=image_registry())
         self.save()
         for index, worker_result in enumerate(workers):
-            rt.require(worker_result == dict(cpu=self.record["cpus"][index], comm=WORKER_COMM, iterations=iterations,
-                       worker=index, reserved=[0, 0], completed=iterations, errors=0),
+            rt.require(worker_result == dict(cpu=self.record["cpus"][index], comm=WORKER_COMM, iterations=requested[index],
+                       role=self.record["worker_roles"][index], worker=index,
+                       reserved=[0, 0], completed=requested[index], errors=0),
                        f"worker {index} progress/context/flags failure: {worker_result}", "DATA_ERROR")
-        operations = iterations * len(workers)
+        operations = iterations * self.record["worker_roles"].count("writer")
+        read_operations = self.record["reader_iterations"] * self.record["worker_roles"].count("reader")
+        result.update(write_operations=operations, read_operations=read_operations)
         rt.require(after["prefix"] - before["prefix"] == operations and
                    after["suffix"] - before["suffix"] == operations and
                    after["hot_taken"] - before["hot_taken"] == hot * operations,
@@ -242,7 +292,8 @@ class EscapeSession(Session):
         result["complete"] = True
         self.save()
         self.verify()
-        print(json.dumps(dict(name=name, operations=operations, jit_delta=delta)), flush=True)
+        print(json.dumps(dict(name=name, write_operations=operations,
+                              read_operations=read_operations, jit_delta=delta)), flush=True)
         return result
 
     def measure(self):
@@ -266,7 +317,8 @@ class EscapeSession(Session):
                   for m in pattern.finditer(self.messages)]
         self.record["escape_events"] = events
         self.save()
-        pids = {row["pid"] for row in json.loads((self.path / "hot-escape-callers.json").read_text())}
+        pids = {row["pid"] for row in json.loads((self.path / "hot-escape-callers.json").read_text())
+                if row["role"] == "writer"}
         rt.require(events and len(events) <= hot["jit_delta"]["native_escape_count"] and
                    all(event["entry"] == self.record["layout"]["entry"] and
                    event["rip"] == self.record["layout"]["marker"] and
@@ -292,6 +344,11 @@ def main():
     parser.add_argument("--iterations", type=int, default=100000)
     parser.add_argument("--warmup-iterations", type=int, default=100000)
     parser.add_argument("--phase-timeout", type=int, default=120)
+    parser.add_argument("--family", choices=("mutex", "spin", "rwlock"), default="mutex")
+    parser.add_argument("--reader-count", type=int,
+                        help="rwlock only: dedicate the last N selected CPUs to readers (default 1)")
+    parser.add_argument("--reader-iterations", type=int, default=10000000,
+                        help="rwlock shared operations per reader and phase; hot writers require a pending reader")
     parser.add_argument("--mutex-api", choices=("outer", "public"), default="outer")
     kernel_identity.arguments(parser)
     args = parser.parse_args()
@@ -300,6 +357,13 @@ def main():
                "verified recovery guest and recorded snapshot tag required")
     rt.require(4 <= len(args.cpus) <= 60 and len(set(args.cpus)) == len(args.cpus) and
                set(args.cpus) <= os.sched_getaffinity(0), "select 4..60 distinct available worker CPUs")
+    reader_count = args.reader_count if args.reader_count is not None else int(args.family == "rwlock")
+    rt.require((args.family == "rwlock" and 1 <= reader_count <= len(args.cpus) - 4) or
+               (args.family != "rwlock" and reader_count == 0),
+               "rwlock needs at least one reader and four writers; other families have no readers")
+    rt.require(args.family == "mutex" or args.mutex_api == "outer",
+               "--mutex-api public requires --family mutex")
+    rt.require(0 < args.reader_iterations <= 10000000, "reader iterations out of bounds")
     rt.require(0 < args.iterations <= 10000000 and 0 < args.warmup_iterations <= 10000000 and
                1 <= args.phase_timeout <= 600, "invalid iteration/timeout bounds")
     out = args.output.resolve()
@@ -336,14 +400,30 @@ def main():
         workload = source / "workload_modules/jit_escape/jit_escape_test.ko"
         rt.command(["make", "-C", workload.parent, f"KDIR={args.kernel_source}",
                     f"KDLOCK_INCLUDE={source / 'include'}",
+                    f"JIT_ESCAPE_FAMILY={args.family}",
                     f"JIT_ESCAPE_MUTEX_API={args.mutex_api}",
                     f"KBUILD_EXTRA_SYMBOLS={provider.parent / 'Module.symvers'}"], out / "build-workload.log", timeout=180)
         compiled_api = rt.command(["modinfo", "-F", "kd_mutex_api", workload],
                                   out / "mutex-api.txt").strip()
-        rt.require(compiled_api == args.mutex_api, "compiled mutex API differs")
+        rt.require(compiled_api == (args.mutex_api if args.family == "mutex" else "not_applicable"),
+                   "compiled mutex API differs")
+        compiled_family = rt.command(["modinfo", "-F", "kd_escape_family", workload],
+                                     out / "family.txt").strip()
+        rt.require(compiled_family == args.family, "compiled escape family differs")
         imported = rt.command(["nm", "-u", workload], out / "workload-imports.txt")
         rt.command(["objdump", "-dr", workload], out / "workload-disassembly.txt")
-        if args.mutex_api == "public":
+        if args.family != "mutex":
+            names = set(imported.split())
+            acquire = ("kd_spin_lock_pinned_clobber_v1" if args.family == "spin"
+                       else "kd_rwlock_lock_pinned_clobber_v1")
+            opposite = ("kd_rwlock_lock_pinned_clobber_v1" if args.family == "spin"
+                        else "kd_spin_lock_pinned_clobber_v1")
+            rt.require({acquire, "kd_spin_unlock_clobber_v1", "kd_spin_prepare"} <= names and
+                       opposite not in names and
+                       (args.family != "rwlock" or "kd_rwlock_fast_write_unlock" in names) and
+                       not any(name.startswith(("kd_mutex_", "mutex", "__mutex")) for name in names),
+                       "spin/rwlock marker caller imports another lock family")
+        elif args.mutex_api == "public":
             names = set(imported.split())
             rt.require({"kd_mutex_direct_lock_clobber_v1", "kd_mutex_direct_unlock_clobber_v1"} <= names and
                        not names & {"kd_mutex_outer_contended_clobber_v1", "kd_mutex_local_unlock",
@@ -377,10 +457,18 @@ def main():
 
         verify()
         idle()
-        spec = dict(name="session", arm="kdlock", lock_kind="mutex", delegate=True,
-                    mutex_api=args.mutex_api,
-                    caller_shell="mutex_public_direct" if args.mutex_api == "public" else "mutex_outer_cookie",
-                    cookie_storage="provider_acquisition_ledger" if args.mutex_api == "public" else "outer_acquisition_local",
+        shell = (("mutex_public_direct" if args.mutex_api == "public" else "mutex_outer_cookie")
+                 if args.family == "mutex" else args.family + "_direct")
+        cookie = (("provider_acquisition_ledger" if args.mutex_api == "public" else "outer_acquisition_local")
+                  if args.family == "mutex" else "provider_cpu_heat")
+        spec = dict(name="session", arm="kdlock", lock_kind=args.family, delegate=True,
+                    registry_kind=2 if args.family == "mutex" else 1,
+                    entry_abi={"mutex": 2, "spin": 1, "rwlock": 3}[args.family],
+                    image_requirements=1 if args.family == "mutex" else 33,
+                    mutex_api=args.mutex_api if args.family == "mutex" else "not_applicable",
+                    caller_shell=shell, cookie_storage=cookie,
+                    worker_roles=["writer"] * (len(args.cpus) - reader_count) + ["reader"] * reader_count,
+                    reader_iterations=args.reader_iterations,
                     cpus=args.cpus, iterations=args.iterations, warmup_iterations=args.warmup_iterations,
                     phase_timeout=args.phase_timeout, kernel_identity=identity)
         session = EscapeSession(out, spec, binaries, verify)
@@ -388,7 +476,10 @@ def main():
         verify()
         idle()
         rt.write_json(out / "result.json", dict(passed=True, drained=True, phases=session.record["phases"],
-            mutex_api=args.mutex_api, caller_shell=session.record["caller_shell"],
+            family=args.family, entry_abi=session.record["entry_abi"],
+            image_requirements=session.record["image_requirements"],
+            worker_roles=session.record["worker_roles"],
+            mutex_api=session.record["mutex_api"], caller_shell=session.record["caller_shell"],
             cookie_storage=session.record["cookie_storage"],
             escape_events=session.record["escape_events"], kernel_identity=identity,
             snapshot_tag=os.environ["KDLOCK_SNAPSHOT_TAG"]))

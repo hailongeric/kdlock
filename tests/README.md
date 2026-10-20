@@ -176,7 +176,8 @@ reader consistency while entry and matching-unlock completion counters record
 actual delegated execution. Whole-kernel mmap replacement is outside this scope.
 
 The [conditional instruction-exit check](kernel/jit_escape/README.md) uses a
-mutex operation containing a branch to `RDTSC`, the x86 processor-counter read.
+mutex, ordinary spin or rwlock writer operation containing a branch to `RDTSC`,
+the x86 processor-counter read.
 With the branch untaken, it requires completed delegated bodies. Taking the
 branch must stop generated execution immediately before that instruction,
 resume the original waiter without repeating earlier updates, and disable
@@ -184,7 +185,9 @@ future delegation for that operation. After all earlier calls finish, a final
 phase requires correct local execution and no further generated-code entries.
 The check also verifies task identity, arithmetic flags, mutual exclusion and
 complete release of execution records before unloading modules. It supplies
-correctness evidence, not a throughput comparison.
+correctness evidence, not a throughput comparison. The spin/rwlock cases require
+a pristine physical root with no nested control or service; rwlock additionally
+checks competing readers throughout the writer's native continuation.
 
 The [checked-address probe](kernel/spin/address_guard/README.md) exercises one
 supported spin pointer load. Its cold address is disjoint from a stack pointer
@@ -198,21 +201,22 @@ result and no permanent refusal. Both probes require exact operation counts,
 task identity, lock exclusion and final drain; their delegated phases require
 positive matching entry and completed-body counts. Neither is a
 performance benchmark or a general pointer-safety test. The current string
-probe additionally requires the version 11 direct-call route, with generated
+probe additionally requires the version 11/12 direct-call route, with generated
 image requirement 20 (read-only API bit 2 plus direct-call bit 4). The string probe does
 not exercise the separate `strscpy_pad` writing service.
 
-The current provider advertises capability version 11. Each runner also checks
+The current provider advertises capability version 12. Each runner also checks
 its required feature in the provider's feature-bit mask; a version number alone
 is insufficient. The supported compatibility ranges are:
 
 | Boundary or service | Accepted capability versions | Required feature bit |
 | --- | --- | --- |
-| Mutex instruction marker | 6, 7, 8, 9, 10, 11 | 5: native instruction exit |
-| Checked spin pointer load | 7, 8, 9, 10, 11 | 6: address guard |
-| Original `strcmp` API contract | 10, 11 | 7: string services and 9: original API contract |
-| Original `strscpy_pad(..., 64)` API contract | 10, 11 | 8: string writing service and 9: original API contract |
-| Direct original-helper calls | 11 | 10: direct calls, plus the corresponding API bits above |
+| Mutex instruction marker | 6, 7, 8, 9, 10, 11, 12 | 5: native instruction exit |
+| Ordinary spin/rwlock root instruction marker | 12 | 11: root instruction exit and 5: native instruction exit |
+| Checked spin pointer load | 7, 8, 9, 10, 11, 12 | 6: address guard |
+| Original `strcmp` API contract | 10, 11, 12 | 7: string services and 9: original API contract |
+| Original `strscpy_pad(..., 64)` API contract | 10, 11, 12 | 8: string writing service and 9: original API contract |
+| Direct original-helper calls | 11, 12 | 10: direct calls, plus the corresponding API bits above |
 
 The writing-service capability is separate from the read-only comparison
 capability. Its focused unit checks and exact taskname workload are separate

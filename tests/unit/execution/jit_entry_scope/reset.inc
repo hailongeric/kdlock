@@ -23,6 +23,7 @@ static void reset(void)
 	string_result = string_read_error = 0;
 	string_change_return = false;
 	string_wrapper = false;
+	root_escape_wrapper = false;
 	pad_calls = string_read_extent = 0;
 	pad_result = 15;
 	string_readable = STRING_BYTES;

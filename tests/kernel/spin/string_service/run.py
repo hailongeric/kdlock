@@ -17,7 +17,7 @@ probe.WORKER_COMM = "ks_worker"
 probe.RUNNER = "tests/kernel/spin/string_service"
 probe.PAYLOAD = "workload_modules/jit_string_service"
 probe.MODULE = "jit_string_service_test"
-probe.CAP_VERSIONS, probe.CAP_BIT, probe.IMAGE_REQUIREMENT = (11,), 10, 4 | 16
+probe.CAP_VERSIONS, probe.CAP_BIT, probe.IMAGE_REQUIREMENT = (11, 12), 10, 4 | 16
 probe.SUCCESS_MESSAGE = (
     "PASS: original strcmp delegated with short and long valid strings; "
     "exact effects/task/value; unchanged image; final drain")

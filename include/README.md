@@ -89,24 +89,31 @@ prepare uses `kd_mutex_prepare(..., KD_ENTRY_ABI_MUTEX_CLOBBER_V1)`. Registratio
 can succeed before immutable image allocation; only complete NORMAL publication
 allows JIT execution. Provider, daemon and translator must agree on
 immutable-image and exclusive-KD-object capabilities. Ordinary mutex images
-accept compatible capability versions 5 through 11. Images with checked
-instruction-exit markers require version 6 through 11 with feature bit 5 and declare
+accept compatible capability versions 5 through 12. Images with checked
+instruction-exit markers require version 6 through 12 with feature bit 5 and declare
 image requirement bit 0; see
 [the admission contract](../docs/design/admission.md#checked-instruction-exits).
 [Ownership](../docs/design/locking.md#mutex-outer-direct) explains the routing.
 
-Restricted ABI1 spin pointer-load checks require provider version 7 through 11 feature
+Restricted ABI1 spin pointer-load checks require provider version 7 through 12 feature
 bit 6 and image requirement bit 1. A failed check resumes the exact load on the
 original waiter and disables delegation for that entry; it does not change the
 object's lock protocol. The source must prove its incoming arithmetic flags are
 no longer needed. Bodies that also need source constant-branch simplification
 remain refused, because a removed branch could hide a native flags read.
-Entries use immutable images from their first address-check or typed string-service version
+Entries use immutable images from their first address-check, typed string-service
+or root instruction-marker version
 onward; ordinary spin and ABI3 rwlock entries do not all gain that lifetime
 contract. The packet and two-word wrapper stay unchanged. See the
 [complete guard contract](../docs/JIT_REGISTER_ABI.md#checked-spin-address-exit).
 
-The current provider reports capability version 11. Feature bit 9 means that
+ABI1 spin and ABI3 rwlock writers can use reviewed instruction markers only from
+a pristine physical root. Version 12 feature bit 11 plus bit 5 negotiates this
+separate contract; image requirements must be exactly 33. Root markers preserve
+the acquisition pin and owner ACK through native continuation. Nested/remote
+marker relay and reader delegation remain unsupported; ABI2 nesting is unchanged.
+
+The current provider reports capability version 12. Feature bit 9 means that
 original string APIs use the native caller's memory and lifetime guarantees,
 without helper-specific checks. `strcmp` also requires feature bit 7 and image
 requirement bit 2; `strscpy_pad` requires feature bit 8 and image requirement bit

@@ -24,8 +24,8 @@ prepared-provider and binary hashes. It also records kernel identity, CPU
 placement and dependency versions. These inputs must remain unchanged until
 the session ends.
 
-The provider must advertise capability version 7 through 11 with feature bit 6
-(address guards). The current provider is version 11. The published entry must
+The provider must advertise capability version 7 through 12 with feature bit 6
+(address guards). The current provider is version 12. The published entry must
 use the spin clobber interface, called ABI1, and image requirement value 2.
 That requirement selects an immutable generated image: active frames retain the
 same code and guard-site records until retirement. The runner checks a positive

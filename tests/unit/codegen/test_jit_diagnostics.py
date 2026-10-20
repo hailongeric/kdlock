@@ -54,6 +54,7 @@ def render(
     mutex_stack_bytes=0,
     abi=0,
     native_escape_capable=False,
+    root_native_escape_capable=False,
     address_guard_capable=False,
     string_services_capable=False,
     string_write_capable=False,
@@ -90,6 +91,8 @@ def render(
         )
         stack.enter_context(patch.object(translator.memread.device_session,
                                         "native_escape", return_value=native_escape_capable))
+        stack.enter_context(patch.object(translator.memread.device_session,
+                                        "root_native_escape", return_value=root_native_escape_capable))
         stack.enter_context(patch.object(translator.memread.device_session,
                                         "address_guard", return_value=address_guard_capable))
         stack.enter_context(patch.object(translator.memread.device_session,

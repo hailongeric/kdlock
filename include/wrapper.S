@@ -42,7 +42,7 @@ clobber_entry_v1:
 	.byte KD_GENERATED_REQUIREMENTS
 	.balign 16
 batch_body:
-#if KD_GENERATED_REQUIREMENTS & 16
+#if KD_GENERATED_REQUIREMENTS & (16 | 32)
 	jmp native_entry_refused
 #endif
 	/* The lock-side clobber caller owns the native combiner live values.
@@ -51,7 +51,7 @@ batch_body:
 	lea rbp, [rsp + 5*8]
 	jmp load_packet
 regular_entry:
-#if KD_GENERATED_REQUIREMENTS & 16
+#if KD_GENERATED_REQUIREMENTS & (16 | 32)
 	jmp native_entry_refused
 #endif
 	push rbp
@@ -306,9 +306,9 @@ batch_return:
 	lea rsp, [rbp + 8]
 	ret
 
-#if KD_GENERATED_REQUIREMENTS & 16
+#if KD_GENERATED_REQUIREMENTS & (16 | 32)
 native_entry_refused:
-	/* A regular/FULL entry cannot reset this image's per-invocation quotas. */
+	/* Root-only images cannot enter from a regular/FULL or batch packet. */
 	mov QWORD PTR[rsi], 6
 	mov QWORD PTR[rsi + 8], 0
 	ret

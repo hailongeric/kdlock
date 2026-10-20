@@ -169,17 +169,49 @@ static int kd_jit_native_escape_opcode(unsigned long ip)
 	return -EILSEQ;
 }
 
+static bool kd_jit_root_escape_image(const struct kd_exec_frame *frame)
+{
+	return frame->image &&
+	       frame->image->requirements == (KD_IMAGE_REQUIRE_NATIVE_ESCAPE |
+					       KD_IMAGE_REQUIRE_ROOT_NATIVE_ESCAPE);
+}
+
+/* Only initialized complex fields describe ownership. The first batch entry
+ * leaves them cold; its retained physical root supplies this ledger on FULL. */
+static bool kd_jit_root_escape_owner(const struct kd_exec_frame *frame)
+{
+	return frame->complex_ready && !frame->mutex_backend &&
+	       frame->spin_kind == KD_SPIN_CONT_ROOT &&
+	       !frame->parent && !frame->depth && !frame->resume_target &&
+	       !frame->outer_unlock_seen && !frame->completion_seen &&
+	       frame->held_lock_depth == 1 && frame->outer_lock_depth == 1 &&
+	       frame->jit_lock_depth == 1 && !frame->outer_lock_index &&
+	       frame->jit_lock_addr[0] == frame->outer_lock_addr &&
+	       frame->jit_lock_kind[0] == KD_EXEC_LOCK_QUEUE_OWNER &&
+	       !frame->jit_lock_released[0] &&
+	       !kd_exec_frame_remote_pending(frame) && !frame->remote_request &&
+	       !frame->native_request && frame->control_call.phase == KD_CALL_NONE;
+}
+
 static int kd_jit_native_escape(struct kd_exe_info *exe,
 				struct kd_exec_frame *frame, struct kd_regs *regs)
 {
 	unsigned long base, end;
 	int ret;
 
-	if (!exe || !frame || !regs || !frame->mutex_backend ||
-	    frame->entry_abi != KD_ENTRY_ABI_MUTEX_CLOBBER_V1 ||
+	if (!exe || !frame || !regs ||
 	    frame->packet_state != KD_PACKET_FULL || !frame->image ||
-	    frame->image->entry != exe ||
+	    !frame->image->immutable || frame->image->entry != exe ||
+	    frame->image->entry_abi != frame->entry_abi ||
 	    !(frame->image->requirements & KD_IMAGE_REQUIRE_NATIVE_ESCAPE) ||
+	    !((frame->mutex_backend &&
+	       frame->entry_abi == KD_ENTRY_ABI_MUTEX_CLOBBER_V1) ||
+	      (kd_jit_root_escape_image(frame) &&
+	       kd_entry_abi_spin_clobber(frame->entry_abi) &&
+	       !frame->regs_borrowed && regs == &frame->regs &&
+	       (frame->entry_abi != KD_ENTRY_ABI_RWLOCK_CLOBBER_V1 ||
+		frame->rwlock_admitted) &&
+	       kd_jit_root_escape_owner(frame))) ||
 	    !kd_exec_frame_can_borrow_locks(frame) || !frame->executed ||
 	    frame->logical_task == current || !regs->ip || !regs->sp ||
 	    kd_exec_frame_remote_pending(frame) || frame->remote_request ||
@@ -305,6 +337,8 @@ static const struct kd_jit_image *kd_jit_select_image(const struct kd_exe_info *
 	image = frame->image ? frame->image : kd_image_current(exe);
 	if (!image || image->entry != exe ||
 	    image->entry_abi != frame->entry_abi ||
+	    ((image->requirements & KD_IMAGE_REQUIRE_ROOT_NATIVE_ESCAPE) &&
+	     !image->immutable) ||
 	    !kd_image_requirements_valid(frame->mutex_backend ? KD_EXE_LOCK_MUTEX :
 					KD_EXE_LOCK_SPIN, frame->entry_abi,
 					image->requirements))
@@ -376,6 +410,32 @@ static bool kd_jit_direct_image(const struct kd_exec_frame *frame)
 {
 	return frame->image &&
 	       (frame->image->requirements & KD_IMAGE_REQUIRE_DIRECT_STRINGS);
+}
+
+/* Check before any body instruction, on both batch and general dispatch.
+ * Batch admission precedes frame binding and writer admission. Do not read
+ * cold routing/ledger fields there or require an already admitted writer. */
+static bool kd_jit_root_escape_entry(const struct kd_exec_frame *frame)
+{
+	const struct kd_regs *regs = kd_exec_frame_regs(frame);
+
+	if (!kd_jit_root_escape_image(frame))
+		return true;
+	if (!frame->image->immutable ||
+	    !kd_entry_abi_spin_clobber(frame->entry_abi) ||
+	    frame->mutex_backend || frame->spin_kind != KD_SPIN_CONT_ROOT ||
+	    !frame->spin_regs_decoded || !frame->request_frame ||
+	    frame->regs_borrowed ||
+	    frame->parent || frame->depth || frame->executed ||
+	    frame->completion_seen || !frame->logical_task ||
+	    frame->logical_task == current ||
+	    frame->state != KD_EXEC_FRAME_RUNNING || !frame->outer_lock_addr ||
+	    frame->packet_state != KD_PACKET_MINIMAL || regs != &frame->regs ||
+	    regs->ip != frame->entry_ip || !regs->sp)
+		return false;
+	if (!frame->complex_ready)
+		return frame->spin_simple;
+	return kd_jit_root_escape_owner(frame);
 }
 
 /* Direct code can enter only once from an untouched spin request. The simple
@@ -462,7 +522,7 @@ bool kd_exe_spin_batch_prepare(struct kd_exe_info *exe,
 	    !kd_jit_image_matches(exe, frame))
 		return false;
 	code = kd_jit_bound_code(exe, frame);
-	if (!kd_jit_direct_entry(frame)) {
+	if (!kd_jit_direct_entry(frame) || !kd_jit_root_escape_entry(frame)) {
 		frame->image = previous_image;
 		return false;
 	}

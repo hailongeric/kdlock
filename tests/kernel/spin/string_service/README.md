@@ -20,7 +20,7 @@ timeout 900s python3 tests/kernel/spin/string_service/run.py \
   --output /root/kdlock-evidence/10.176.26.71/tests/string-service-NEW
 ```
 
-The provider must advertise version 11 and optional feature bit 10 for direct
+The provider must advertise version 11 or 12 and optional feature bit 10 for direct
 original-helper calls. Translation also requires bits 7 and 9 for the original
 read-only API contract without helper prechecks. The generated image uses
 ABI1, the spin clobber calling agreement, and requirement 20: read-only API bit 2

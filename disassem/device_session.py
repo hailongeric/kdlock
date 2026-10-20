@@ -20,7 +20,7 @@ PIN = 0x40104B70
 INFO = 0x80104B71
 RETIRE = 0x4B72
 CAPS = 0x80104B73
-CAPS_VERSION = 11
+CAPS_VERSION = 12
 CAP_MUTEX_STACK = 1
 CAP_PERCPU_MODULE = 2
 CAP_MUTEX_IMAGES = 8
@@ -31,6 +31,7 @@ CAP_STRING_SERVICES = 128
 CAP_STRING_WRITE = 256
 CAP_AUDITED_STRINGS = 512
 CAP_DIRECT_STRINGS = 1024
+CAP_ROOT_NATIVE_ESCAPE = 2048
 MUTEX_STACK_BYTES = 256
 PERCPU_MODULE_BYTES = 8192
 PERCPU_ALIGNMENT = 4
@@ -47,6 +48,7 @@ _string_services = False
 _string_write = False
 _audited_strings = False
 _direct_strings = False
+_root_native_escape = False
 
 
 class SourceRefused(RuntimeError):
@@ -82,7 +84,8 @@ def query_capabilities(fd):
                 "mutex_images": False, "mutex_exclusive": False,
                 "native_escape": False, "address_guard": False,
                 "string_services": False, "string_write": False,
-                "audited_strings": False, "direct_strings": False}
+                "audited_strings": False, "direct_strings": False,
+                "root_native_escape": False}
     packet = bytearray(b"\xff" * CAPS_STRUCT.size)
     try:
         result = fcntl.ioctl(fd, CAPS, packet, True)
@@ -114,8 +117,10 @@ def query_capabilities(fd):
             known |= CAP_STRING_WRITE
         if 10 <= version <= CAPS_VERSION:
             known |= CAP_AUDITED_STRINGS
-        if version == CAPS_VERSION:
+        if 11 <= version <= CAPS_VERSION:
             known |= CAP_DIRECT_STRINGS
+        if 12 <= version <= CAPS_VERSION:
+            known |= CAP_ROOT_NATIVE_ESCAPE
         if (
             1 <= version <= CAPS_VERSION
             and not features & ~known
@@ -123,6 +128,8 @@ def query_capabilities(fd):
                  or features & (CAP_STRING_SERVICES | CAP_STRING_WRITE))
             and (not features & CAP_DIRECT_STRINGS
                  or features & CAP_AUDITED_STRINGS)
+            and (not features & CAP_ROOT_NATIVE_ESCAPE
+                 or features & CAP_NATIVE_ESCAPE)
             and stack_bytes == (MUTEX_STACK_BYTES if features & CAP_MUTEX_STACK else 0)
             and module_bytes
             == (PERCPU_MODULE_BYTES if features & CAP_PERCPU_MODULE else 0)
@@ -138,6 +145,7 @@ def query_capabilities(fd):
                 "string_write": bool(features & CAP_STRING_WRITE),
                 "audited_strings": bool(features & CAP_AUDITED_STRINGS),
                 "direct_strings": bool(features & CAP_DIRECT_STRINGS),
+                "root_native_escape": bool(features & CAP_ROOT_NATIVE_ESCAPE),
             }
     print(
         f"[KD_JIT][WARN] reason=JIT_CAPABILITY_INVALID "
@@ -174,6 +182,12 @@ def native_escape():
     """The original waiter's flags restore must be negotiated on this lease."""
     require()
     return _native_escape
+
+
+def root_native_escape():
+    """ABI1/3 retain one physical root until the original waiter's final ACK."""
+    require()
+    return _root_native_escape
 
 
 def address_guard():
@@ -221,7 +235,7 @@ def pin_range(address, size):
 
 @contextmanager
 def session():
-    global _fd, _mutex_stack_bytes, _percpu_module_bytes, _native_escape, _address_guard, _string_services, _string_write, _audited_strings, _direct_strings
+    global _fd, _mutex_stack_bytes, _percpu_module_bytes, _native_escape, _address_guard, _string_services, _string_write, _audited_strings, _direct_strings, _root_native_escape
     if _fd is not None:
         raise RuntimeError("kd_dev session is already active")
     inherited = os.environ.get("KD_DEVICE_FD")
@@ -267,6 +281,7 @@ def session():
         _string_write = caps["string_write"]
         _audited_strings = caps["audited_strings"]
         _direct_strings = caps["direct_strings"]
+        _root_native_escape = caps["root_native_escape"]
         _fd = fd
         print(f"Translation device session: inherited={int(inherited is not None)}")
         print(
@@ -275,7 +290,8 @@ def session():
             f"native_escape={int(_native_escape)} address_guard={int(_address_guard)} "
             f"string_services={int(_string_services)} "
             f"string_write={int(_string_write)} audited_strings={int(_audited_strings)} "
-            f"direct_strings={int(_direct_strings)}"
+            f"direct_strings={int(_direct_strings)} "
+            f"root_native_escape={int(_root_native_escape)}"
         )
         yield fd
     finally:
@@ -288,6 +304,7 @@ def session():
         _string_write = False
         _audited_strings = False
         _direct_strings = False
+        _root_native_escape = False
         if fd is not None:
             os.close(fd)
 

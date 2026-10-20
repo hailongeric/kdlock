@@ -30,4 +30,6 @@ struct jit_escape_snapshot {
 #define JIT_ESCAPE_SNAPSHOT _IOR('E', 2, struct jit_escape_snapshot)
 #define JIT_ESCAPE_PREPARE _IO('E', 3)
 #define JIT_ESCAPE_HOT _IO('E', 4)
+/* Rwlock-only shared-reader control; the existing command layouts stay fixed. */
+#define JIT_ESCAPE_READ _IOWR('E', 5, struct jit_escape_run)
 #endif

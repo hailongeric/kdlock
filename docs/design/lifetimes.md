@@ -151,10 +151,14 @@ The first ABI1 image requiring [checked pointer loads](admission.md#checked-spin
 [`strscpy_pad`](admission.md#original-strscpy_pad-writing-service)
 is staged in a separate block and validated before publication. This includes
 the [direct original-helper route](admission.md#direct-original-helper-calls).
+An ABI1/3 root instruction-marker image (requirements exactly 33) makes the same
+immutable transition. A frame bound to an older descriptor retains that exact
+image; a marker in it disables the stable entry even after a newer publication.
 Each guard's source instruction is pinned and its bytes checked while source admission is
 open. Publishing the new descriptor does not overwrite the earlier block or
 redirect frames already bound to it. Every subsequent image for that entry uses
-another immutable block, even if it no longer requires guards or typed services.
+another immutable block, even if it no longer requires guards, typed services
+or root markers.
 The upload destination is fixed by the first chunk; an older in-place upload
 cannot overwrite a newly published immutable image. Old-generation misses cannot
 change the current generation's metadata.

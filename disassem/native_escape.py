@@ -1,4 +1,4 @@
-"""Reviewed instructions that can end a mutex JIT before native execution.
+"""Reviewed instructions that can end a JIT before native execution.
 
 The instruction itself never runs in generated code. Its scalar effects below
 are used only to check the original waiter's remaining source instructions for
@@ -6,12 +6,30 @@ uncaptured inputs. Unknown encodings and nonlocal state transitions stay refused
 """
 from copy import copy
 
-from miasm.expression.expression import ExprId
+from miasm.expression.expression import ExprId, ExprInt, ExprLoc, ExprMem
 
 EXIT = 8
 REQUIREMENT = 1
+ROOT_REQUIREMENT = 1 << 5
 ARITHMETIC_FLAGS = ("cf", "pf", "af", "zf", "nf", "of")
 MASK32 = (1 << 32) - 1
+
+# These native helpers are not ordinary translated nested controls. A missing
+# callee normally transfers execution to the waiter, but must not hide a known
+# acquisition/release from the bounded root-marker scope check. The ABI3 caller
+# separately permits its fast-unlock helper only as a terminal native CALL;
+# the helper body must never become part of this root image.
+ROOT_CONTROL_SYMBOLS = (
+    "kd_spin_direct_native_lock",
+    "kd_spin_direct_native_contended",
+    "kd_spin_direct_native_unlock",
+    "kd_rwlock_lock_pinned_clobber_v1",
+    "kd_rwlock_fast_write_unlock",
+    "kd_read_lock",
+    "kd_read_unlock",
+    "kd_write_lock",
+    "kd_write_unlock",
+)
 
 # Exact, unprefixed encodings only. Values are (implicit scalar inputs,
 # completely defined scalar outputs). Native hardware state remains on the
@@ -98,6 +116,58 @@ def apply_context_effects(line, constants):
                 | {ExprId(name, 1) for name in flags}):
         constants.values.pop(reg, None)
         constants.origins.pop(reg, None)
+
+
+def root_scope_rejection(blocks, databases, terminal_unlock, controls,
+                         hostcalls, *, learned_indirect=False,
+                         native_terminal_controls=()):
+    """Check the full selected source before cutting native-marker successors.
+
+    Ordinary decoded callees remain in the same invocation. A missing direct
+    callee is a terminal native exit; its unselected native suffix is outside
+    this proof. Services, nested controls and learned/indirect control could
+    resume a progressed frame, so none can appear anywhere in a marker image.
+    The ordinary context and minimal-entry proofs still check every selected
+    source instruction, including the suffix following an instruction marker.
+    """
+    # Import after module initialization: context_values also uses the reviewed
+    # instruction effects above while propagating source facts.
+    from context_values import static_address
+
+    if learned_indirect:
+        return min(blocks), "root instruction markers reject learned indirect control"
+    source_pcs = {line.offset for block in blocks.values() for line in block.lines}
+    for start, block in sorted(blocks.items()):
+        db = databases[block]
+        for line in block.lines:
+            name = line.name.upper()
+            next_ip = line.offset + line.l
+            branch = name == "CALL" or name.startswith("J")
+            if branch and (len(line.args) != 1
+                           or not isinstance(line.args[0], (ExprLoc, ExprInt))):
+                return line.offset, "root instruction markers reject indirect control"
+            if name == "RET" and line.args:
+                return line.offset, "root instruction markers require plain RET"
+            target = (static_address(line.args[0], db, next_ip)
+                      if branch else None)
+            if branch and target is None:
+                return line.offset, "root instruction markers reject unresolved control"
+            if branch and target in hostcalls:
+                return line.offset, "root instruction markers reject hostcall services"
+            terminal = (name == "CALL" and next_ip not in source_pcs
+                        and (target == terminal_unlock
+                             or (target in native_terminal_controls
+                                 and target not in blocks)))
+            # This includes direct tail calls and address-taking, so a known
+            # control cannot be relabelled as an ordinary missing helper.
+            for arg in line.args:
+                address = static_address(arg.ptr if isinstance(arg, ExprMem) else arg,
+                                         db, next_ip)
+                if address in controls and not (terminal and arg is line.args[0]):
+                    return line.offset, (
+                        "root instruction markers reject nested or nonterminal "
+                        f"lock control: {controls[address]}")
+    return None
 
 
 def emitted_scope(blocks, databases):

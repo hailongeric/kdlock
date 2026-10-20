@@ -27,6 +27,54 @@ the existing cookie shell. Public runs audit the compiled lock capture, named
 continuation and unlock imports before loading the module; metadata and result
 files keep the two shells distinct. Both execute the same four phases below.
 
+`--family spin` selects ordinary task-context ABI1 DIRECT acquisitions;
+`--family rwlock` selects ABI3 DIRECT writers and concurrent local readers.
+The default remains `--family mutex`. Spin/rwlock runs require capability
+version 12, both native-exit bit 5 and root-exit bit 11, and an immutable
+generation with image requirements exactly 33. Older providers or a static
+translation refusal cannot satisfy these positive probes. Mutex runs retain
+their requirement-1 image and existing OUTER/public controls.
+
+For example, after the same recovery and kernel-identity checks:
+
+```sh
+timeout 900s python3 tests/kernel/jit_escape/run.py \
+  --family spin --cpus 0-15 \
+  --output /root/kdlock-evidence/10.176.26.71/tests/jit-escape-spin-NEW
+timeout 900s python3 tests/kernel/jit_escape/run.py \
+  --family rwlock --cpus 0-15 --reader-count 2 \
+  --output /root/kdlock-evidence/10.176.26.71/tests/jit-escape-rwlock-NEW
+```
+
+Rwlock defaults to one reader, using the last selected CPU. `--reader-count`
+can reserve more of the selected CPUs, while retaining at least four writers.
+Every phase waits for all workers to report readiness before releasing a shared
+start barrier and checks every worker's exact progress. Readers default to ten
+million operations per phase (`--reader-iterations`), so they can continue
+competing through the writer phase. Every hot writer additionally waits a bounded
+number of polls for an announced unfinished read attempt before the named marker; zero
+worker errors requires that overlap for every hot operation, including each
+delegated marker. This announces a request; it does not prove queue membership.
+Read completion is recorded inside shared ownership, and the writer explicitly
+requires its completion snapshot to remain unchanged through the native suffix.
+Early reader exhaustion or missing overlap fails the probe.
+Reader operations use a separate READ ioctl and hold shared access
+while checking that no writer is active and prefix/suffix values agree.
+Writers check that no reader is active at entry and before release. Only writer
+operations contribute to prefix, suffix and taken-branch totals or qualify as
+marker-event tasks. Joined readers, zero active counts, zero rwlock admission
+count and a clear embedded gate are required before phase changes and retirement.
+
+Spin/rwlock workers must start with preemption and IRQs enabled and singleton
+CPU affinity. Each returned operation must preserve its CPU, full preemption
+count, IRQ state and non-arithmetic processor flags. These observations stay
+outside the captured critical section. In the hot native suffix, `RDTSCP`
+records TSC_AUX after all arithmetic-flag observations; it is compared with a
+native baseline on the same pinned worker CPU without assuming TSC_AUX's
+encoding. The named first marker remains `RDTSC`, and the suffix still records
+the physical current task. These new families do not use IRQ/BH lock variants,
+nested acquisition, cancellation or a checked memory-fault continuation.
+
 The four phases remain in one provider/source session:
 
 1. `cold-warmup`: run with the unusual-instruction branch disabled, leaving it
@@ -46,9 +94,10 @@ The four phases remain in one provider/source session:
    registry must remain `NATIVE_ONLY`. Operations still execute correctly on
    their original tasks.
 
-The runner accepts capability versions 6 through 11 only when feature bit 5
-(native instruction exit) is present. The current provider advertises version 11;
-the version alone does not establish support. The private benchmark observation
+The mutex control accepts capability versions 6 through 12 only when feature
+bit 5 (native instruction exit) is present. Spin/rwlock require the additional
+contract described above; the version alone does not establish support.
+The private benchmark observation
 overlay supplies entry/completion counts, including validated root completions
 after helper services; the production `native_escape_count` counts validated
 marker events. That count does not by itself prove that a native continuation
@@ -80,7 +129,8 @@ unload. Successful completion requires workers to join, zero active execution
 records, successful source retirement, ordinary module unload, and final idle
 inspection. This is a focused correctness check; no throughput result is claimed.
 
-This check covers the selected KD mutex ABI2 instruction-marker path. The
+This check covers the selected KD mutex ABI2 instruction-marker path and the
+separately negotiated ordinary spin/rwlock root-marker paths. The
 [spin address-guard probe](../spin/address_guard/README.md) and
 [original strcmp service probe](../spin/string_service/README.md) exercise
 separate negotiated boundaries. Their feature bits do not authorize arbitrary

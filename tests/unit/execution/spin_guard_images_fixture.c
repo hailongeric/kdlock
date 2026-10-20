@@ -42,10 +42,10 @@ static struct kd_exe_info *entry;
 static void start(unsigned long id, unsigned long generation, unsigned int requirements) {
  memset(&packet,0,sizeof(packet));
  packet.head=(struct kd_recv_pkt){.status_code=KD_EXE_NORMAL,.RIP=0x1000,
-  .version=KD_IMAGE_PROTOCOL,.entry_abi=1,.requirements=requirements,
+  .version=KD_IMAGE_PROTOCOL,.entry_abi=entry->entry_abi,.requirements=requirements,
   .image_length=128,.upload_id=id,.base_generation=generation};
  memcpy(packet.code+9,"KDWB002",7); memcpy(packet.code+25,"KDWC002",7);
- memcpy(packet.code+41,"KDAB",4); packet.code[45]=1; packet.code[46]=2;
+ memcpy(packet.code+41,"KDAB",4); packet.code[45]=entry->entry_abi; packet.code[46]=2;
  packet.code[47]=requirements;
  if(requirements & KD_IMAGE_REQUIRE_ADDRESS_GUARD) {
   struct kd_address_guard_site *site=(void*)(packet.code+80);
@@ -124,6 +124,51 @@ int main(void) {
  assert(send_bytes(128)>0);
  assert(kd_image_current(entry)!=latest && kd_image_current(entry)->immutable &&
         kd_image_current(entry)->requirements==KD_IMAGE_REQUIRE_STRING_WRITE);
+ /* Requirement33 promotes either ordinary spin ABI to immutable publication.
+  * The prior mutable descriptor remains valid for its already bound frame. */
+ for(unsigned int abi=1;abi<=3;abi+=2) {
+  const unsigned int req=KD_IMAGE_REQUIRE_NATIVE_ESCAPE|KD_IMAGE_REQUIRE_ROOT_NATIVE_ESCAPE;
+  unsigned long rip=0x3000+abi*0x1000;
+  entry=kd_get_exe(0,rip);
+  *entry=(struct kd_exe_info){.status_code=KD_EXE_UNINIT,.RIP=rip,.lock_kind=1,.entry_abi=abi};
+  initial=kd_image_alloc(); initial->entry=entry; initial->entry_abi=abi; initial->immutable=0;
+  entry->code_block=initial->code; kd_published_images[entry-entries]=initial;
+  memset(&upload,0,sizeof(upload));
+  start(30,0,0); packet.head.RIP=rip; assert(send_bytes(128)>0);
+  struct kd_exec_frame prior={.entry_abi=abi}, marker={.entry_abi=abi};
+  assert(kd_jit_bind_image(entry,&prior) && prior.image==initial);
+  memcpy(saved,initial->code,sizeof(saved));
+  start(31,0,req); packet.head.RIP=rip; packet.code[47]=1;
+  assert(send_bytes(128)==-EPROTO && kd_image_current(entry)==initial);
+  start(32,0,0); packet.head.RIP=rip; packet.head.status_code=KD_EXE_UNINIT;
+  assert(send_bytes(64)>0); stale=upload; memset(&upload,0,sizeof(upload));
+  start(33,0,req); packet.head.RIP=rip; assert(send_bytes(128)>0);
+  guarded=kd_image_current(entry);
+  assert(guarded!=initial && guarded->immutable && guarded->requirements==req &&
+         guarded->entry_abi==abi && guarded->generation==1);
+  assert(kd_jit_bind_image(entry,&marker) && marker.image==guarded);
+  assert(kd_jit_bind_image(entry,&prior) && prior.image==initial &&
+         !memcmp(initial->code,saved,sizeof(saved)));
+  /* Even a forged current/bound descriptor cannot present this contract
+   * through mutable storage. Refusal must not silently bind another image. */
+  struct kd_jit_image mutable=*guarded; mutable.immutable=0;
+  struct kd_exec_frame refused={.entry_abi=abi,.image=&mutable};
+  assert(!kd_jit_bind_image(entry,&refused) && refused.image==&mutable);
+  upload=stale; start(32,0,0); packet.head.RIP=rip; packet.head.offset=64;
+  assert(send_bytes(64)==-ESTALE && kd_image_current(entry)==guarded);
+  start(34,1,0); packet.head.RIP=rip; assert(send_bytes(128)>0);
+  latest=kd_image_current(entry);
+  assert(latest!=guarded && latest->immutable && latest->generation==2 &&
+         !latest->requirements && kd_jit_bound_code(entry,&marker)==guarded->code);
+  start(35,2,0); packet.head.RIP=rip; packet.head.status_code=KD_EXE_UNINIT;
+  assert(send_bytes(64)>0);
+  kd_image_disable(guarded->entry);
+  packet.head.status_code=KD_EXE_NORMAL; packet.head.offset=64;
+  assert(send_bytes(64)==-EPERM && kd_image_current(entry)==latest);
+  kd_image_report(entry,guarded,KD_EXE_CALL_MISS,0xfeed,0);
+  assert(entry->status_code==KD_EXE_NATIVE_ONLY && !gate &&
+         kd_jit_bound_code(entry,&marker)==guarded->code);
+ }
  for(int i=0;i<64;i++) free(allocations[i]);
- puts("spin guard images: exact trailer, stable prior image, immutable transition, stale upload/miss and terminal ban passed");
+ puts("spin guard/root-marker images: exact contracts, stable prior images, ABI1/3 immutable transitions, stale upload/miss and terminal bans passed");
 }

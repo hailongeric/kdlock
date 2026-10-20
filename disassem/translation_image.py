@@ -84,6 +84,7 @@ def emit_jit_assembly(
     resolved_hostcalls, keep_call_stack, *, entry_guards=None, body_witness=False,
     terminal_clobber_unlocks=(),
     native_escapes=False,
+    root_native_escape=False,
     address_guards=None,
     native_calls=None,
 ):
@@ -107,7 +108,7 @@ def emit_jit_assembly(
     write_entry_dispatch(
         f, entry, block_dict, continuation_targets, body_witness=body_witness,
         preserve_flags=native_escapes,
-        root_only=native_calls is not None,
+        root_only=root_native_escape or native_calls is not None,
     )
     budget_rips = []
 

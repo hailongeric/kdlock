@@ -138,12 +138,13 @@ Replace workload, provider and JIT session together. Mutex frames bind immutable
 generations until session teardown. Ordinary spin/rwlock images remain keyed by
 RIP with in-place replacement; an ABI1 spin entry that publishes checked pointer
 loads or either original string API service (`strcmp` or `strscpy_pad`) transitions to
-immutable images for that and every later generation. Earlier frames keep their
+immutable images for that and every later generation. ABI1/3 root instruction
+markers (requirements exactly 33) make the same transition. Earlier frames keep their
 original descriptor and code. This does not permit
 editing frozen inputs or replacing source while work is active. Owners, ACKs,
 source leases and generated images have distinct [lifetimes](../design/lifetimes.md#executable-images-and-guarded-spin-transition).
 
-The provider currently advertises capability version 11. String-service
+The provider currently advertises capability version 12. String-service
 runners must require bit 9 plus bit 7 for `strcmp` or bit 8 for `strscpy_pad`.
 Bit 9 means that the original caller guarantees valid memory and lifetime;
 KD performs no helper instruction checks, string scans or destination-bound
@@ -153,6 +154,9 @@ the direct-string probe requires it. Images using it add requirement value 16.
 Its separate near-text pool may be unavailable, in which case translation keeps
 the existing dispatcher route. Version alone does not prove a feature is available. See the
 [API admission contracts](../design/admission.md#original-strcmp-service).
+Bit 11 plus bit 5 separately enables ordinary task-context ABI1/3 root
+instruction exits; their positive probes must require both and an immutable
+requirement-33 image.
 
 Direct CALL operands are filled before publication. The uploaded `jit.bin` has
 placeholder operands and therefore differs from the executable image. Current

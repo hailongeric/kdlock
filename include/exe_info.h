@@ -124,14 +124,24 @@ struct kd_recv_pkt {
 #define KD_IMAGE_REQUIRE_STRING_SERVICES (1U << 2)
 #define KD_IMAGE_REQUIRE_STRING_WRITE (1U << 3)
 #define KD_IMAGE_REQUIRE_DIRECT_STRINGS (1U << 4)
-#define KD_IMAGE_REQUIREMENTS (KD_IMAGE_REQUIRE_NATIVE_ESCAPE | KD_IMAGE_REQUIRE_ADDRESS_GUARD | KD_IMAGE_REQUIRE_STRING_SERVICES | KD_IMAGE_REQUIRE_STRING_WRITE | KD_IMAGE_REQUIRE_DIRECT_STRINGS)
+/* ABI1/3 markers require one pristine physical root and one invocation.
+ * This is separate from ABI2, whose nested continuation contract is unchanged. */
+#define KD_IMAGE_REQUIRE_ROOT_NATIVE_ESCAPE (1U << 5)
+#define KD_IMAGE_REQUIREMENTS (KD_IMAGE_REQUIRE_NATIVE_ESCAPE | KD_IMAGE_REQUIRE_ADDRESS_GUARD | KD_IMAGE_REQUIRE_STRING_SERVICES | KD_IMAGE_REQUIRE_STRING_WRITE | KD_IMAGE_REQUIRE_DIRECT_STRINGS | KD_IMAGE_REQUIRE_ROOT_NATIVE_ESCAPE)
 
 static inline int kd_image_requirements_valid(int kind, unsigned int abi,
 					     unsigned int requirements)
 {
 	return !(requirements & ~KD_IMAGE_REQUIREMENTS) &&
 	       (!(requirements & KD_IMAGE_REQUIRE_NATIVE_ESCAPE) ||
-		(kind == KD_EXE_LOCK_MUTEX && abi == KD_ENTRY_ABI_MUTEX_CLOBBER_V1)) &&
+		(kind == KD_EXE_LOCK_MUTEX && abi == KD_ENTRY_ABI_MUTEX_CLOBBER_V1) ||
+		(kind == KD_EXE_LOCK_SPIN && kd_entry_abi_spin_clobber(abi) &&
+		 requirements == (KD_IMAGE_REQUIRE_NATIVE_ESCAPE |
+				  KD_IMAGE_REQUIRE_ROOT_NATIVE_ESCAPE))) &&
+	       (!(requirements & KD_IMAGE_REQUIRE_ROOT_NATIVE_ESCAPE) ||
+		(kind == KD_EXE_LOCK_SPIN && kd_entry_abi_spin_clobber(abi) &&
+		 requirements == (KD_IMAGE_REQUIRE_NATIVE_ESCAPE |
+				  KD_IMAGE_REQUIRE_ROOT_NATIVE_ESCAPE))) &&
 	       (!(requirements & KD_IMAGE_REQUIRE_ADDRESS_GUARD) ||
 		(kind == KD_EXE_LOCK_SPIN && abi == KD_ENTRY_ABI_SPIN_CLOBBER_V1)) &&
 	       (!(requirements & KD_IMAGE_REQUIRE_STRING_SERVICES) ||

@@ -148,7 +148,7 @@ inside one C batch loop. Neither is callable as an ordinary C function pointer.
 Direct-call images accept only the clobber entry at offset 32 with a pristine
 MINIMAL packet; their ordinary and legacy entries deliberately reject execution.
 
-The separate 16-byte `KD_JIT_CAPS` ioctl reports version 11. Bits 0 and 1 describe
+The separate 16-byte `KD_JIT_CAPS` ioctl reports version 12. Bits 0 and 1 describe
 the checked mutex stack bound and static module per-CPU range; bits 3 and 4
 advertise immutable mutex images and exclusive KD mutex objects. Bits 5 and 6
 support mutex instruction exits and checked spin address exits. Bits 7 and 8
@@ -163,10 +163,15 @@ the provider cannot allocate suitable executable storage or the kernel enables
 call-depth tracking, whose additional call accounting this bridge does not
 implement. Eligible images then use the existing dispatcher route.
 
-Ordinary images accept compatible versions 5 through 11. Optional image
+Bit 11 separately enables pristine ABI1/3 root instruction exits. These images
+require exactly bits 0 and 5 (value 33), immutable storage and the MINIMAL
+clobber entry. Their regular and batch directories refuse execution.
+
+Ordinary images accept compatible versions 5 through 12. Optional image
 requirements still need their corresponding capabilities. Bit 9 adds no image
-requirement or packet field: image bit 0 remains mutex ABI2 only; image bits 1,
-2, 3 and 4 remain spin ABI1 only. Unknown requirements or mismatched backend/ABI
+requirement or packet field: image bit 0 alone remains mutex ABI2 only; its
+pair with bit 5 is restricted to spin ABI1/3. Image bits 1, 2, 3 and 4 remain
+spin ABI1 only. Unknown requirements or mismatched backend/ABI
 combinations are refused.
 
 The private `kd_jit_batch_call` descriptor is now 112 bytes. Its original
@@ -393,7 +398,7 @@ reused after unpin; its ACK/task references must outlive the native suffix.
 For mutex entry ABI2, an image can replace a reviewed processor instruction with
 a marker: generated code that saves current state and returns exit 8 before that
 instruction executes. The image declares requirement bit 0, and the provider must
-advertise capability version 6 through 11 with `KD_JIT_CAP_NATIVE_ESCAPE` (bit 5).
+advertise capability version 6 through 12 with `KD_JIT_CAP_NATIVE_ESCAPE` (bit 5).
 The [instruction policy](design/admission.md#checked-instruction-exits) lists the
 exact eligible instructions and the static checks that still apply.
 
@@ -421,6 +426,22 @@ the rest of this invocation remains native. Final unlock acknowledgements and
 frame retirement still follow the existing mutex protocol. The two-word wrapper
 interface and 168-byte packet do not grow.
 
+ABI1 spin and ABI3 rwlock writers have a separate root-only contract negotiated
+by version 12 `KD_JIT_CAP_ROOT_NATIVE_ESCAPE` (bit 11). The exact requirement pair
+is 33. Both entry paths check a pristine physical root before execution; the
+generated dispatcher admits only that entry. A FULL marker must retain one
+unreleased queue owner and, for ABI3, writer admission. Only a published
+`NATIVE_READY` result from this image can interpret the instruction tag during
+spin restoration. Ordinary images and normal FULL completions may contain
+stale `orig_ax` bytes and never select that path. Non-marker native CALL exits
+clear the tag.
+
+The flags-aware spin restore requires mode 2 and leaves its acquisition pin and
+continuation storage live for final unlock ACK; it neither retires nor unpins
+before resuming. The same two-word scratch bound and arithmetic-only merge
+apply. Mode-3 or nested marker relay is outside this contract. This does not
+change ABI2 nesting or ordinary spin/rwlock packet restoration.
+
 The read-only `native_escape_count` module parameter counts validated markers.
 It is diagnostic evidence, not an ownership record. Publication, a marker count,
 a returned JIT body and complete drain remain distinct observations.
@@ -429,7 +450,7 @@ a returned JIT body and complete drain remain distinct observations.
 
 ABI1 spin images may check a restricted 64-bit `MOV` pointer load for overlap
 with recorded source-stack writes. Such images set requirement bit 1 and require
-provider version 7 through 11 with `KD_JIT_CAP_ADDRESS_GUARD` (bit 6). This is distinct from
+provider version 7 through 12 with `KD_JIT_CAP_ADDRESS_GUARD` (bit 6). This is distinct from
 the mutex instruction marker. The [admission guide](design/admission.md#checked-spin-pointer-loads)
 defines the address and source flag proofs. The
 [historical address-check probe](../bench/results/10.176.26.71/bench/taskname-xattr-20261018/DEVELOPMENT.md)

@@ -73,7 +73,7 @@ for real source inspection must explicitly enter `device_session.session()`. A
 missing, closed or wrong inherited descriptor is an infrastructure error, not a
 successful decision to run the body natively.
 
-CAPS version 11 retains the checked mutex stack bound and static module per-CPU
+CAPS version 12 retains the checked mutex stack bound and static module per-CPU
 arena introduced in v1/v2. Bits 3 and 4 describe immutable mutex images and
 exclusive KD mutex objects; bits 5 and 6 describe checked instruction exits and
 restricted ABI1 spin address exits. Bits 7 and 8 identify the original `strcmp`
@@ -83,10 +83,13 @@ translation requires bit 9 as well as the appropriate API bit before using
 these service summaries.
 Optional bit 10 permits direct original-helper calls inside one generated
 invocation; otherwise eligible string bodies retain the dispatcher route.
+Bit 11 separately permits immutable ABI1/3 root instruction exits, requiring
+bit 5 as well. These images require exactly 33 and admit no nested control or
+service continuation.
 
-Ordinary images accept compatible versions 5 through 11. Mutex instruction
-markers require versions 6 through 11 with bit 5; spin address-check images
-require versions 7 through 11 with bit 6. Older service contracts remain readable
+Ordinary images accept compatible versions 5 through 12. Mutex instruction
+markers require versions 6 through 12 with bit 5; spin address-check images
+require versions 7 through 12 with bit 6. Older service contracts remain readable
 by observers, but do not authorize the current string summaries. Rebuild/reload
 the provider, daemon and translator together. Fixed stack and module bounds
 describe implementation behavior; they do not establish arbitrary object validity.
@@ -115,12 +118,14 @@ In the current implementation, mutex uploads stage a new immutable block and bin
 its generation to each frame. Old versions remain until session teardown, and old
 misses cannot overwrite current generation metadata. The first address-check
 or string-service image similarly moves its ABI1 spin entry to immutable versions.
-Later uploads remain immutable even without optional checks or services. Other spin entries
-and ABI3 rwlock images retain in-place storage. Deploy the matching provider,
+An ABI1/3 root instruction-marker image makes the same transition. Later uploads
+remain immutable even without optional requirements. Other spin/rwlock entries
+retain in-place storage. Deploy the matching provider,
 daemon and translator together. Mutex instruction markers set directory
 requirement bit 0; spin address checks set bit 1 and include a validated source
 instruction directory. Read-only string services set bit 2; writing services
 set bit 3 and cannot run on a provider advertising only the read-only contract.
+ABI1/3 root instruction markers require exactly bits 0 and 5, value 33.
 Direct string-call images additionally set bit 4, value 16, and contain a
 `KDNC0001` directory naming generated CALL operands. Publication fills their
 relative helper addresses in separate preallocated storage near kernel text.

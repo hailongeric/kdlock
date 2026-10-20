@@ -352,7 +352,7 @@ outside the audited C caller contract above, `address_guards.py` permits a limit
 retry that checks the particular overlap immediately before the load.
 
 This retry requires ABI1 spin, complete selected source text, no learned indirect
-control and provider capability versions 7 through 11 with bit 6. It handles only an explicit
+control and provider capability versions 7 through 12 with bit 6. It handles only an explicit
 64-bit `MOV` memory load addressed by one register plus a fixed displacement.
 The retry is disabled if source constant-branch proof changed any branch during
 this translation. A simplified branch could otherwise hide a flags read in the
@@ -460,11 +460,12 @@ not the arena's address classification. This does not pin or validate an object.
 
 The provider reports this bound using the existing 16-byte CAPS packet on the
 same device lease. The module bound was introduced in version 2; the current provider
-uses version 11. Translation requires immutable mutex images plus exclusive KD
+uses version 12. Translation requires immutable mutex images plus exclusive KD
 objects (`KD_JIT_CAP_MUTEX_EXCLUSIVE`, bit 4); ordinary images still accept the
-version 5 through 11 contracts. Instruction-marker images require version 6 through 11
-with bit 5. Spin address-check images require version 7 through 11 with bit 6.
-The original string API summaries require version 10 or 11 bit 9 plus bit 7
+version 5 through 12 contracts. Mutex instruction-marker images require version 6 through 12
+with bit 5. Spin address-check images require version 7 through 12 with bit 6.
+ABI1/3 root instruction markers additionally require version 12 bit 11.
+The original string API summaries require version 10 through 12 bit 9 plus bit 7
 for `strcmp` or bit 8 for `strscpy_pad`. Bit 9 identifies the caller-guaranteed
 memory and lifetime contract without helper-specific checks. Version 11 bit 10
 also permits [direct calls inside the wrapper](#direct-original-helper-calls).
@@ -577,9 +578,32 @@ flow end at each marker. Therefore an untaken eligible instruction can cease to
 be the reason for rejection, while an unsafe or undecodable suffix can still
 reject the entry.
 
-Provider capability versions 6 through 11 advertise this contract on bit 5; the image
+Provider capability versions 6 through 12 advertise the ABI2 contract on bit 5; the image
 requires it on directory bit 0. Earlier providers cannot accept such images.
-Spin/rwlock images retain their existing static instruction policy. Unknown
+Ordinary task-context ABI1 spin and ABI3 rwlock writer roots can use the same
+reviewed encodings only with the additional version-12 capability bit 11 and
+image requirement bit 5. Their image requires exactly `33` (bits 0 and 5), is
+immutable from its first such publication onward, and executes once through
+the MINIMAL clobber entry. Before any body executes, both batch and general
+dispatch require one exact physical root with no parent, virtual child,
+released lock, remote request or prior control transaction.
+
+The complete selected source must contain no hostcall service, learned or
+indirect control, nested acquisition, nonterminal unlock or combined optional
+image contract. Marker-bearing source cannot use constant-branch specialization
+or address-guard retries. Ordinary inlined callees remain subject to the full
+source proof; missing direct callees can end the generated invocation through
+the existing native CALL handback. The standard ABI3 unlock's cold native fast
+branch is retained in source analysis, but reaching its helper from this
+delegated image is a runtime error: that helper cannot acknowledge the retained
+gate owner. Only the exact outer clobber unlock can complete the root.
+
+At a reached spin/rwlock marker, the original waiter retains its acquisition
+pin and continuation until owner-serviced unlock ACK. ABI3 additionally retains
+writer admission through the native suffix; its paired unlock clears the writer
+byte before releasing the gate. This bounded contract does not add nested marker
+relay, reader delegation, explicit IRQ/BH support or a rwsem control ledger.
+Existing ABI2 nested behavior is unchanged. Unknown
 encodings, unreviewed prefixes, control-register moves, flags-stack operations,
 interrupt/trap instructions, transactional operations and floating-point/vector
 state remain outside this reviewed marker set. Runtime validation failures and

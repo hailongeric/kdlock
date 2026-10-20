@@ -109,13 +109,23 @@ does not stop delegation. If execution reaches it, the provider preserves the
 current registers and resumes the original waiter at that instruction, without
 repeating earlier writes.
 
-The current provider advertises capability version 11, retaining the instruction
+The current provider advertises capability version 12, retaining the instruction
 exit feature introduced in version 6. The translator requires the matching
 capability bit and image requirement, which declares what the compiled code needs
 from the provider. The existing two-word wrapper interface and ABI2
 mutex protocol remain unchanged. The waiter regains arithmetic flags, which
 describe calculation results, while retaining its own control flags, which
 govern matters such as interrupts and access checks.
+
+Version 12 bit 11 additionally permits instruction exits from pristine physical
+ABI1 spin and ABI3 rwlock writer roots. These images are immutable, require
+exactly bits 0 and 5 (value 33), and cannot enter a nested/remote continuation
+or dispatcher service. Both entry paths reject incompatible frames before any
+body progress. A validated FULL marker restores the original spin waiter with
+arithmetic flags while retaining its pin and continuation until owner ACK.
+ABI3 writer admission remains held through that suffix. Existing ABI2 nesting
+and ordinary spin images keep their contracts; see
+[admission](../docs/design/admission.md#checked-instruction-exits).
 
 Reaching a valid marker changes the operation's registry state to `NATIVE_ONLY`,
 meaning delegation is disabled for the rest of that source session. This change
