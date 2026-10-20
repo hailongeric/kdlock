@@ -1,0 +1,28 @@
+{
+  "absent_measurement_paths": [
+    "measurements",
+    "records.json",
+    "plan.json",
+    "execution-order.json",
+    "status.json"
+  ],
+  "error": "ValueError: replay QEMU thread placement differs",
+  "error_origin": "Operator transcript of original failed invocation; not a reconstructed traceback",
+  "later_health_sha256": "91af588e657771c8cff33fc0e038c8c3c4e7cb7f6197a7e38807c4c83b1a05bb",
+  "measured_sessions": 0,
+  "original_partial_file_sha256": {
+    "environment.json": "eba43302c7db7912295964dcd811433dd4d694bfff222bce79b6021ffc453b6c",
+    "frozen-inputs.json": "df8b56e19893cb2e42d92bad41de8876ff4b1b6a915b2fe67336ba761a99ea73",
+    "host-state.json": "deaa55602dc2ac99b345ab6bb6596134e33a37bbac382a0797b3eaf7602a46d3",
+    "kernel-identity.json": "650d2906508a943d0cb7da2d2f8781f78f09ca9e7533665da0db126276646f06",
+    "kernel-identity.json.command.json": "b54e9fe4e4800da1b24b6a733fd34df919b118dc8ebe73d009e1d2d04633d562",
+    "replay-provenance.json": "29249dd83395d5febf277b449ee7c469652c8661a1bbbeb35011c5a4d2d4daf1",
+    "replay-scheduler.py": "9e873d2db48f2b4e8216fdf3eedbd4b9fd03f677af4f7d66da78790cb21046ed",
+    "topology.json": "a1375dd2e696fdc379fe2d3bddbd77247638d6a82946aa9ff14da45384d41816"
+  },
+  "reason": "Two extra QEMU worker threads, both on CPU 63. Exact thread-set comparison refused.",
+  "recorded_unix": 1792498637.9553819,
+  "related_completed_run": "/root/kdlock-evidence/10.176.26.71/bench/mutex-public-20261020-replay-2",
+  "resolution": "Workers retired naturally before replay-2; no placement/admission check changed.",
+  "state": "PREFLIGHT_FAILED"
+}

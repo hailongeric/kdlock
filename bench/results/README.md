@@ -14,6 +14,16 @@ orders. Both live probes drained; they do not claim live JIT bodies or throughpu
 The receipt preserves failed development attempts and the allocator preparation
 used for the successful retries.
 
+The [continuation correctness stage](10.176.26.71/tests/native-continuation-20261020/README.md)
+completed basic/affected checks, nine live probes and 16 resident-list sessions
+at their recorded revisions. The separate
+[public-mutex regression replay](10.176.26.71/bench/mutex-public-regressions-20261020/README.md)
+completed 120 serial, valid, drained timings using the original `d21a1e3` inputs.
+Four of seven losses remained separated, two overlapped, and one fell below
+the provisional screen. All seven causes, two class gaps, latency and dynamic
+host-worker variability remain unresolved; performance acceptance stays open.
+Original and follow-up archives, failures and ranges remain distinguishable.
+
 The [fresh 32-byte mutex / Native / TCLock comparison](10.176.26.71/bench/mutex32-native-tclock-20261020/README.md)
 records 567 accepted, drained sessions from `bd9d4ce` with unchanged `752fec1`
 production: c01, c08, RCUHT, seek SET/END, pipe bytes and pipe capacity at nine

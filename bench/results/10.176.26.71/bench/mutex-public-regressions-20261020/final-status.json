@@ -1,0 +1,39 @@
+{
+  "correctness": "COMPLETE for selected exact-revision checks",
+  "controlled_replay": "COMPLETE: 120 OK, valid, drained sessions",
+  "performance_acceptance": "OPEN",
+  "regressions": {
+    "separated_losses_reproduced": 4,
+    "median_losses_with_overlapping_ranges": 2,
+    "below_provisional_5_percent_screen": 1,
+    "all_seven_causal_resolutions": "UNRESOLVED"
+  },
+  "execution_class_gaps": {
+    "c08-t02": "UNRESOLVED",
+    "pipebytes-t04": "UNRESOLVED",
+    "pipecap-t04": "Comparable in replay only; 6.09% median loss, overlapping ranges"
+  },
+  "latency_p95": "UNMEASURED",
+  "host_thread_variability": "UNRESOLVED; see environment-gap.json",
+  "offline_review": {
+    "checks": 886984,
+    "issues": 1,
+    "issue": "post-run QEMU worker-thread set differs; archive/source/session/arithmetic checks have no issues"
+  },
+  "correctness_source": "cee947b plus separately retained live-6 at 96f81ac",
+  "performance_measured_source": "d21a1e3; OUTER production 752fec1",
+  "analysis": "No optimization or performance claim for later continuation/prefetch revisions",
+  "workflow": {
+    "sole_writer": "root",
+    "helper_files_touched": [],
+    "tests_serial": true,
+    "runs_interrupted": false
+  },
+  "references": {
+    "correctness": "../../tests/native-continuation-20261020/README.md",
+    "replay1": "replay-1/archives.json",
+    "replay2": "replay-2/archives.json",
+    "results": "investigation.json",
+    "host_gap": "environment-gap.json"
+  }
+}

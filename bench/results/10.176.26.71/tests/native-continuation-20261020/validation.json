@@ -291,7 +291,7 @@
     },
     "passed_sessions": 16
   },
-  "performance_acceptance": "OPEN; original seven regressions and incomplete classes require diagnosis; p95 unmeasured",
+  "performance_acceptance": "OPEN: all seven causal resolutions, two class comparisons, p95 latency and host worker variability remain unresolved.",
   "live_3": {
     "source": "52ceb5a",
     "status": "PREPARATION_FAILED",
@@ -309,7 +309,7 @@
     "read_operations": 40000000,
     "kernel_fault_matches": 0
   },
-  "next": "Controlled original-input performance replay; acceptance remains OPEN.",
+  "next": "Selected correctness and controlled rerun stages complete. Performance acceptance remains OPEN; follow-up requires causal work and resolution of the documented gaps.",
   "live_5": {
     "source": "6f97b3c",
     "status": "NO_JIT",
@@ -403,5 +403,18 @@
     "prefetch_hint_abi_assemblies": 15,
     "FS_hint_refusal_cases": 3
   },
-  "correctness_stage": "COMPLETE for selected basic/affected/live/list cases at their recorded revisions"
+  "correctness_stage": "COMPLETE for selected basic/affected/live/list cases at their recorded revisions",
+  "performance_replay": {
+    "state": "COMPLETE",
+    "run": "mutex-public-20261020-replay-2",
+    "sessions": 120,
+    "valid": 120,
+    "drained": 120,
+    "measured_collection": "d21a1e3",
+    "outer_production": "752fec1",
+    "separated_losses_reproduced": 4,
+    "median_losses_overlapping": 2,
+    "below_provisional_screen": 1,
+    "report": "../../bench/mutex-public-regressions-20261020/README.md"
+  }
 }

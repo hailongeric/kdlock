@@ -6,6 +6,10 @@ The selected correctness stage is complete: all nine live continuation/ownership
 probes and all 16 resident-list functional sessions passed at their recorded
 source revisions. This is separate from the completed
 [`d21a1e3` public-mutex performance matrix](../../bench/mutex-public-20261020/README.md).
+The subsequent [controlled replay](../../bench/mutex-public-regressions-20261020/README.md)
+completed 120 valid, drained sessions using those original performance inputs.
+Performance acceptance remains open, including seven unresolved causal
+resolutions, two class gaps, p95 latency and dynamic host worker variability.
 No whole-kernel replacement, mmap/fault integration, RT/ww_mutex or lockdep
 acceptance follows from this work.
 
@@ -170,8 +174,9 @@ matched faults in the nine kernel logs. Complete archives are retained under
 raw `native-continuation-20261020/live-6/` and the same VM evidence run identifier.
 
 The basic/affected unit results above remain bound to their original exact
-sources. Resident-list functional coverage is the remaining correctness stage;
-performance acceptance is still open. The separately retained offline-review
+sources. At this point resident-list functional coverage remained to be
+completed; its final outcomes appear below. Performance acceptance is still
+open. The separately retained offline-review
 script and per-attempt receipts check archive consistency, not live correctness
 or generic kernel replacement support.
 
@@ -205,12 +210,12 @@ the policy's Intel mnemonic `PREFETCHT0`. No business phase ran for that case.
 Independent verification found idle, exact zero retirement counts, 678 unchanged
 frozen hashes, 188 reconstructed provider files and no matched kernel faults.
 
-The pending instruction-policy correction normalizes only `PREFETCH0/1/2`
+The ensuing instruction-policy correction normalizes only `PREFETCH0/1/2`
 whose bytes encode the corresponding `0F 18 /1,/2,/3` memory hint, excluding
 LOCK/REP prefixes and register operands. The existing scalar, hardware-register,
 address and context checks still apply. Positive emission and mismatched-byte
 refusal tests are added. This is an explicit decoder-alias correction, not a
-general admission exemption. Its unit and remaining live results are pending.
+general admission exemption. Its unit and remaining live results follow below.
 
 Both attempts have complete raw archives and compact receipts under
 [list-functional-1](list-functional-1/archives.json) and
@@ -255,7 +260,7 @@ retirement. Together with the two earlier plain n16 passes, all 16 planned
 resident-list cases are covered.
 Provider exclusion, ownership, queue/ACK semantics and admission thresholds are
 unchanged. The translation correction is separate from the original frozen
-performance inputs, which the planned replay will retain.
+performance inputs, which the completed controlled replay retained.
 
 [Final health](list-functional-4/health.json) confirms idle, zero retirement
 references, 2,544 unchanged frozen source/binary hashes, 564 reconstructed
@@ -271,4 +276,7 @@ remains retained.
 The selected correctness stage is complete; full suites and whole-kernel
 replacement remain outside this validation. The separate
 [controlled performance replay](../../bench/mutex-public-regressions-20261020/README.md)
-must retain the seven regressions, three class gaps, and unmeasured latency.
+retains all seven original regressions and three original class gaps. Four
+losses reproduced with separated ranges, two overlapped, and one fell below the
+provisional screen; none establishes a causal fix. Two class gaps, p95 latency
+and host worker variability remain unresolved.

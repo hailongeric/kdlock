@@ -1,0 +1,14 @@
+{
+  "argv": [
+    "/root/kdlock-translation-venv-20261019/bin/python3",
+    "/root/kdlock-evidence/10.176.26.71/bench/mutex-public-20261020-r2/harness/bench/spin_cacheline/kernel_identity.py",
+    "--kernel-source",
+    "/root/linux-6.1.159-kdclobber2",
+    "--kernel-baseline",
+    "/root/kdlock-kernel-baselines/mutex-clobber2-20260919"
+  ],
+  "cwd": "/root/kdlock-evidence/10.176.26.71/bench/mutex-public-20261020-r2/harness",
+  "pid": 2838984,
+  "started_ns": 454468951524279,
+  "timeout_seconds": 120
+}

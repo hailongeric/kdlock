@@ -129,16 +129,18 @@ preserves the first preparation failure, executable-copy correction and
 
 ## Open follow-up
 
-Complete continuation correctness validation first. Then diagnose and perform
-controlled reruns of all seven separated losses above, plus the incomplete
-c08/two-worker, pipe-bytes/four-worker and pipe-capacity/four-worker comparisons.
-Retain the original matrix unchanged. Use equivalent work/data, the same worker
-and NUMA placement, fresh repeat groups and interleaved or randomized arms where
-practical. Bind each new result to exact source, binary, harness and execution
-class; do not pool the original revision with continuation or fix revisions.
-Check business results, every worker, idle/drain and kernel logs for every run.
+The subsequent [correctness validation](../../tests/native-continuation-20261020/README.md)
+completed its selected cases. The separate
+[controlled replay](../mutex-public-regressions-20261020/README.md) then completed
+120 valid, drained sessions for all seven losses and three class-gap points
+using these original inputs on the same VM. It reproduced four separated
+losses; two had overlapping ranges and one fell below the provisional screen.
+The original matrix, numeric results and source identities above remain
+unchanged. No later implementation revision is pooled into either collection.
 
 Only evidence-supported focused changes should follow diagnosis, with affected
 correctness and performance checks rerun serially. The source of these losses,
-incomplete comparisons and p95 latency gap remain unresolved. No dependent
-performance acceptance follows from the sixty-worker results alone.
+two remaining class gaps and p95 latency remain unresolved. The replay also
+retains a post-run host worker-thread discrepancy as an unresolved timing
+confounder. Other full-grid losses were outside the focused rerun. No performance
+acceptance follows from the sixty-worker results alone.

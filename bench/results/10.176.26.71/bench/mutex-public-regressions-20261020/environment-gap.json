@@ -1,0 +1,276 @@
+{
+  "state": "UNRESOLVED_FOR_PERFORMANCE_ACCEPTANCE",
+  "rows": [
+    {
+      "phase": "original_before",
+      "captured_utc": "2026-10-20T06:41:31.284829+00:00",
+      "qemu_pid": 257489,
+      "threads": 67,
+      "extra_workers": [],
+      "file": "bench/results/10.176.26.71/bench/mutex-public-20261020/host-matrix-before.json",
+      "sha256": "9296fa0ed435ab5c17e12fec405edcb810e178382b30908711044200f81b7314"
+    },
+    {
+      "phase": "original_after",
+      "captured_utc": "2026-10-20T10:01:22.772993+00:00",
+      "qemu_pid": 257489,
+      "threads": 97,
+      "extra_workers": [
+        {
+          "tid": 409018,
+          "comm": "worker",
+          "affinity": [
+            63
+          ]
+        },
+        {
+          "tid": 409021,
+          "comm": "worker",
+          "affinity": [
+            63
+          ]
+        },
+        {
+          "tid": 409022,
+          "comm": "worker",
+          "affinity": [
+            63
+          ]
+        },
+        {
+          "tid": 409031,
+          "comm": "worker",
+          "affinity": [
+            63
+          ]
+        },
+        {
+          "tid": 409034,
+          "comm": "worker",
+          "affinity": [
+            63
+          ]
+        },
+        {
+          "tid": 409036,
+          "comm": "worker",
+          "affinity": [
+            63
+          ]
+        },
+        {
+          "tid": 409037,
+          "comm": "worker",
+          "affinity": [
+            63
+          ]
+        },
+        {
+          "tid": 409039,
+          "comm": "worker",
+          "affinity": [
+            63
+          ]
+        },
+        {
+          "tid": 409041,
+          "comm": "worker",
+          "affinity": [
+            63
+          ]
+        },
+        {
+          "tid": 409042,
+          "comm": "worker",
+          "affinity": [
+            63
+          ]
+        },
+        {
+          "tid": 409048,
+          "comm": "worker",
+          "affinity": [
+            63
+          ]
+        },
+        {
+          "tid": 409049,
+          "comm": "worker",
+          "affinity": [
+            63
+          ]
+        },
+        {
+          "tid": 409052,
+          "comm": "worker",
+          "affinity": [
+            63
+          ]
+        },
+        {
+          "tid": 409053,
+          "comm": "worker",
+          "affinity": [
+            63
+          ]
+        },
+        {
+          "tid": 409056,
+          "comm": "worker",
+          "affinity": [
+            63
+          ]
+        },
+        {
+          "tid": 409229,
+          "comm": "worker",
+          "affinity": [
+            63
+          ]
+        },
+        {
+          "tid": 409247,
+          "comm": "worker",
+          "affinity": [
+            63
+          ]
+        },
+        {
+          "tid": 409271,
+          "comm": "worker",
+          "affinity": [
+            63
+          ]
+        },
+        {
+          "tid": 409273,
+          "comm": "worker",
+          "affinity": [
+            63
+          ]
+        },
+        {
+          "tid": 409277,
+          "comm": "worker",
+          "affinity": [
+            63
+          ]
+        },
+        {
+          "tid": 409278,
+          "comm": "worker",
+          "affinity": [
+            63
+          ]
+        },
+        {
+          "tid": 409279,
+          "comm": "worker",
+          "affinity": [
+            63
+          ]
+        },
+        {
+          "tid": 409280,
+          "comm": "worker",
+          "affinity": [
+            63
+          ]
+        },
+        {
+          "tid": 409282,
+          "comm": "worker",
+          "affinity": [
+            63
+          ]
+        },
+        {
+          "tid": 409283,
+          "comm": "worker",
+          "affinity": [
+            63
+          ]
+        },
+        {
+          "tid": 409287,
+          "comm": "worker",
+          "affinity": [
+            63
+          ]
+        },
+        {
+          "tid": 409326,
+          "comm": "worker",
+          "affinity": [
+            63
+          ]
+        },
+        {
+          "tid": 409330,
+          "comm": "worker",
+          "affinity": [
+            63
+          ]
+        },
+        {
+          "tid": 409332,
+          "comm": "worker",
+          "affinity": [
+            63
+          ]
+        },
+        {
+          "tid": 409465,
+          "comm": "worker",
+          "affinity": [
+            63
+          ]
+        }
+      ],
+      "file": "bench/results/10.176.26.71/bench/mutex-public-20261020/host-matrix-after.json",
+      "sha256": "5f354211c7605de3ddbe51bd20aec6f8508e04f2b2596cc96c44159d4ad6a8a9"
+    },
+    {
+      "phase": "replay_before",
+      "captured_utc": "2026-10-20T11:59:27.527946+00:00",
+      "qemu_pid": 257489,
+      "threads": 67,
+      "extra_workers": [],
+      "file": "bench/results/10.176.26.71/bench/mutex-public-regressions-20261020/host-replay2-before.json",
+      "sha256": "cd6b0fbfadda64eba66c2c6984ffa6702b2ec4de8e5c39d6fefe96370ddbb50b"
+    },
+    {
+      "phase": "replay_after",
+      "captured_utc": "2026-10-20T12:09:48.021956+00:00",
+      "qemu_pid": 257489,
+      "threads": 68,
+      "extra_workers": [
+        {
+          "tid": 415041,
+          "comm": "worker",
+          "affinity": [
+            63
+          ]
+        }
+      ],
+      "file": "bench/results/10.176.26.71/bench/mutex-public-regressions-20261020/host-replay2-after.json",
+      "sha256": "33a7c95c8806361cbaa2f18073e6ed8cf5f035e35f838e6e4ef05542ebf0e2ee"
+    },
+    {
+      "phase": "later_idle",
+      "captured_utc": "2026-10-20T12:22:31.148366+00:00",
+      "qemu_pid": 257489,
+      "threads": 67,
+      "extra_workers": [],
+      "file": "bench/results/10.176.26.71/bench/mutex-public-regressions-20261020/host-after-archive.json",
+      "sha256": "99625494ebcbbc7ca01c20987d5c7c051a7f98da89852cc66b3ff3f0220411f2"
+    }
+  ],
+  "original_after_archive_member": "mutex-public-20261020-r2/host-matrix-after.json",
+  "replay_before_matches": true,
+  "replay_after_exact_thread_set_matches": false,
+  "later_idle_thread_set_matches": true,
+  "interpretation": "Same QEMU process, CPU pins, frequency policy and guest configuration; dynamic worker count varied. Later retirement does not prove absence during measurement. Original post-run receipt also had additional workers. CPU-63 collector interference was not measured.",
+  "checks_retained": "offline-review.json retains qemu_thread_placement failure; no check changed or removed.",
+  "scope": "Post-archive read-only diagnosis; no benchmark rerun or configuration change."
+}

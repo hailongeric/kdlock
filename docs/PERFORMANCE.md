@@ -22,7 +22,7 @@ It does not have a new timed comparison. The throughput values below belong to
 their recorded source versions; acceptance of those results does not measure the
 additional flag-preservation cost in images that contain instruction markers.
 
-The retained mutex implementation is `752fec1`, preserving KD-only physical
+The retained mutex performance baseline is `752fec1`, preserving KD-only physical
 ownership and the 32-byte object with native 8-byte alignment. Independent OSQ
 and delegation memberships share the existing preallocated node pool. A
 256-body locality boundary retains physical handoff for larger deferred NUMA
@@ -37,6 +37,27 @@ contains 504 complete, drained sessions: two workloads, 21 worker counts, three
 repetitions and four arms (accepted compatibility baseline, KD-only, Native,
 TCLock). It uses the regular 64-vCPU VM and collector 63, and measures the former
 256-byte object. Those results do not measure the compact layout.
+
+## Unified public mutex: acceptance remains open
+
+The [public DIRECT comparison](../bench/results/10.176.26.71/bench/mutex-public-20261020/README.md)
+measured collection `d21a1e3` against frozen OUTER, Native and TCLock in 1,764
+valid, drained sessions. Seven public/OUTER losses were separated across the
+three-repeat ranges at the provisional 5% screen. This threshold was not
+user-approved, and p95 latency was not measured.
+
+After the selected [continuation correctness checks](../bench/results/10.176.26.71/tests/native-continuation-20261020/README.md)
+completed, the [controlled original-input replay](../bench/results/10.176.26.71/bench/mutex-public-regressions-20261020/README.md)
+completed 120 valid, drained sessions on the same VM. Four losses remained
+separated; two had overlapping ranges; one fell below the provisional screen.
+All seven causal resolutions remain unresolved. Two class comparisons and
+p95 latency remain gaps. An additional QEMU worker on collector CPU 63 in the
+post-run receipt is retained as an unresolved timing confounder; its later
+retirement does not prove absence during measurement. No checks were weakened.
+
+The original matrix and replay have separate records and archives. Neither
+measures the later continuation/prefetch corrections, and neither establishes
+whole-kernel replacement or performance acceptance for the unified API.
 
 ## Fresh 32-byte mutex comparison with Native and TCLock
 

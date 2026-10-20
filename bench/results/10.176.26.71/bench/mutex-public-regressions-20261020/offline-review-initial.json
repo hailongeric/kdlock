@@ -1,0 +1,8 @@
+{
+  "state": "REVIEW_SCRIPT_ERROR",
+  "script_sha256": "2e3d11ecba934c24d1b7e8db2b83e5392607c685de3d17dc0762c4d8bd77b2d6",
+  "error": "TypeError: unhashable type: 'list'",
+  "location": "base_threads Counter at line 159",
+  "cause": "Host affinity is a list; Counter keys must use its immutable tuple.",
+  "scope": "Inert archive review only; no live session failure, no archived input changed."
+}
