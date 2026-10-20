@@ -1,0 +1,140 @@
+{
+  "idle": true,
+  "captured_ns": 1792530425477031631,
+  "boot_id": "b65f0205-c8f9-4385-8b13-039cbce243a6",
+  "kernel": "6.1.159-kdclobber2",
+  "online": "0-63",
+  "cmdline": "BOOT_IMAGE=/boot/vmlinuz-6.1.159-kdclobber2 root=UUID=aa0bde06-47f6-4049-aaaf-13d052e53961 ro nokaslr nopvspin console=tty1 console=ttyS0",
+  "processes": [
+    {
+      "pid": 1,
+      "comm": "systemd",
+      "args": "/lib/systemd/systemd --system --deserialize 40 nokaslr "
+    },
+    {
+      "pid": 1006,
+      "comm": "multipathd",
+      "args": "/sbin/multipathd -d -s "
+    },
+    {
+      "pid": 1340,
+      "comm": "dbus-daemon",
+      "args": "@dbus-daemon --system --address=systemd: --nofork --nopidfile --systemd-activation --syslog-only "
+    },
+    {
+      "pid": 1346,
+      "comm": "irqbalance",
+      "args": "/usr/sbin/irqbalance --foreground "
+    },
+    {
+      "pid": 1347,
+      "comm": "networkd-dispat",
+      "args": "/usr/bin/python3 /usr/bin/networkd-dispatcher --run-startup-triggers "
+    },
+    {
+      "pid": 1349,
+      "comm": "rsyslogd",
+      "args": "/usr/sbin/rsyslogd -n -iNONE "
+    },
+    {
+      "pid": 1363,
+      "comm": "systemd-logind",
+      "args": "/lib/systemd/systemd-logind "
+    },
+    {
+      "pid": 1388,
+      "comm": "unattended-upgr",
+      "args": "/usr/bin/python3 /usr/share/unattended-upgrades/unattended-upgrade-shutdown --wait-for-signal "
+    },
+    {
+      "pid": 1423,
+      "comm": "cron",
+      "args": "/usr/sbin/cron -f -P "
+    },
+    {
+      "pid": 1436,
+      "comm": "agetty",
+      "args": "/sbin/agetty -o -p -- \\u --keep-baud 115200,57600,38400,9600 ttyS0 vt220 "
+    },
+    {
+      "pid": 1439,
+      "comm": "agetty",
+      "args": "/sbin/agetty -o -p -- \\u --noclear tty1 linux "
+    },
+    {
+      "pid": 69589,
+      "comm": "sshd",
+      "args": "sshd: /usr/sbin/sshd -D [listener] 0 of 10-100 startups "
+    },
+    {
+      "pid": 69647,
+      "comm": "packagekitd",
+      "args": "/usr/libexec/packagekitd "
+    },
+    {
+      "pid": 69651,
+      "comm": "polkitd",
+      "args": "/usr/libexec/polkitd --no-debug "
+    },
+    {
+      "pid": 70001,
+      "comm": "systemd-network",
+      "args": "/lib/systemd/systemd-networkd "
+    },
+    {
+      "pid": 70009,
+      "comm": "systemd-journal",
+      "args": "/lib/systemd/systemd-journald "
+    },
+    {
+      "pid": 70113,
+      "comm": "systemd-udevd",
+      "args": "/lib/systemd/systemd-udevd "
+    },
+    {
+      "pid": 237394,
+      "comm": "snapd",
+      "args": "/snap/snapd/current/usr/lib/snapd/snapd "
+    },
+    {
+      "pid": 237398,
+      "comm": "systemd-resolve",
+      "args": "/lib/systemd/systemd-resolved "
+    },
+    {
+      "pid": 237420,
+      "comm": "systemd-timesyn",
+      "args": "/lib/systemd/systemd-timesyncd "
+    },
+    {
+      "pid": 3043378,
+      "comm": "sshd",
+      "args": "sshd: root@notty     "
+    },
+    {
+      "pid": 3043381,
+      "comm": "systemd",
+      "args": "/lib/systemd/systemd --user "
+    },
+    {
+      "pid": 3043382,
+      "comm": "(sd-pam)",
+      "args": "(sd-pam) "
+    },
+    {
+      "pid": 3043444,
+      "comm": "timeout",
+      "args": "timeout 35 env PYTHONDONTWRITEBYTECODE=1 /root/kdlock-translation-venv-20261019/bin/python3 - "
+    },
+    {
+      "pid": 3043445,
+      "comm": "python3",
+      "args": "/root/kdlock-translation-venv-20261019/bin/python3 - "
+    }
+  ],
+  "modules": "tls 131072 0 - Live 0xffffffffc07b7000\nnfnetlink 20480 0 - Live 0xffffffffc079d000\nintel_rapl_msr 20480 0 - Live 0xffffffffc07a7000\nintel_rapl_common 40960 1 intel_rapl_msr, Live 0xffffffffc0846000\nintel_uncore_frequency_common 16384 0 - Live 0xffffffffc07e0000\nskx_edac_common 24576 0 - Live 0xffffffffc07b0000\nnfit 69632 1 skx_edac_common, Live 0xffffffffc0769000\nkvm_intel 421888 0 - Live 0xffffffffc6438000\nbinfmt_misc 24576 1 - Live 0xffffffffc0762000\nppdev 24576 0 - Live 0xffffffffc0756000\nnls_iso8859_1 16384 1 - Live 0xffffffffc074b000\nkvm 1138688 1 kvm_intel, Live 0xffffffffc32a3000\njoydev 32768 0 - Live 0xffffffffc0cb1000\ninput_leds 16384 0 - Live 0xffffffffc0751000\nparport_pc 53248 0 - Live 0xffffffffc0ca3000\nserio_raw 20480 0 - Live 0xffffffffc07fd000\nparport 73728 2 ppdev,parport_pc, Live 0xffffffffc0c7c000\nrapl 20480 0 - Live 0xffffffffc0c97000\nmac_hid 16384 0 - Live 0xffffffffc07f1000\nqemu_fw_cfg 20480 0 - Live 0xffffffffc0745000\ndm_multipath 40960 0 - Live 0xffffffffc073a000\nscsi_dh_rdac 20480 0 - Live 0xffffffffc0730000\nsch_fq_codel 24576 2 - Live 0xffffffffc0725000\nscsi_dh_emc 16384 0 - Live 0xffffffffc0714000\nscsi_dh_alua 24576 0 - Live 0xffffffffc0634000\nefi_pstore 16384 0 - Live 0xffffffffc05cf000\nip_tables 32768 0 - Live 0xffffffffc071c000\nx_tables 57344 1 ip_tables, Live 0xffffffffc0705000\nautofs4 49152 2 - Live 0xffffffffc069b000\nbtrfs 1695744 0 - Live 0xffffffffc08db000\nblake2b_generic 20480 0 - Live 0xffffffffc063b000\nzstd_compress 348160 1 btrfs, Live 0xffffffffc06af000\nraid10 65536 0 - Live 0xffffffffc068a000\nraid456 163840 0 - Live 0xffffffffc060b000\nasync_raid6_recov 24576 1 raid456, Live 0xffffffffc0604000\nasync_memcpy 20480 2 raid456,async_raid6_recov, Live 0xffffffffc0568000\nasync_pq 24576 2 raid456,async_raid6_recov, Live 0xffffffffc05f7000\nasync_xor 20480 3 raid456,async_raid6_recov,async_pq, Live 0xffffffffc05ef000\nasync_tx 20480 5 raid456,async_raid6_recov,async_memcpy,async_pq,async_xor, Live 0xffffffffc05db000\nxor 24576 2 btrfs,async_xor, Live 0xffffffffc05d4000\nraid6_pq 122880 4 btrfs,raid456,async_raid6_recov,async_pq, Live 0xffffffffc05b0000\nlibcrc32c 16384 2 btrfs,raid456, Live 0xffffffffc05ab000\nraid1 49152 0 - Live 0xffffffffc059e000\nraid0 24576 0 - Live 0xffffffffc0597000\nmultipath 20480 0 - Live 0xffffffffc04df000\nlinear 20480 0 - Live 0xffffffffc04cd000\nbochs 16384 0 - Live 0xffffffffc04f6000\ndrm_vram_helper 24576 1 bochs, Live 0xffffffffc04eb000\ndrm_ttm_helper 16384 2 bochs,drm_vram_helper, Live 0xffffffffc04d6000\ncrct10dif_pclmul 16384 1 - Live 0xffffffffc04c8000\nttm 102400 2 drm_vram_helper,drm_ttm_helper, Live 0xffffffffc077c000\ncrc32_pclmul 16384 0 - Live 0xffffffffc0651000\nghash_clmulni_intel 16384 0 - Live 0xffffffffc06aa000\nsha512_ssse3 53248 0 - Live 0xffffffffc0643000\ndrm_kms_helper 208896 4 bochs,drm_vram_helper, Live 0xffffffffc0656000\nsha256_ssse3 32768 0 - Live 0xffffffffc05e6000\nsha1_ssse3 32768 0 - Live 0xffffffffc058c000\nsyscopyarea 16384 1 drm_kms_helper, Live 0xffffffffc057a000\nsysfillrect 20480 1 drm_kms_helper, Live 0xffffffffc0562000\nsysimgblt 16384 1 drm_kms_helper, Live 0xffffffffc0424000\naesni_intel 389120 0 - Live 0xffffffffc1d98000\nfb_sys_fops 16384 1 drm_kms_helper, Live 0xffffffffc055d000\ncrypto_simd 16384 1 aesni_intel, Live 0xffffffffc0587000\nvirtio_net 73728 0 - Live 0xffffffffc08c8000\nnet_failover 20480 1 virtio_net, Live 0xffffffffc08b5000\ncryptd 24576 2 ghash_clmulni_intel,crypto_simd, Live 0xffffffffc0573000\nfloppy 118784 0 - Live 0xffffffffc053f000\npsmouse 180224 0 - Live 0xffffffffc0512000\nvirtio_scsi 24576 3 - Live 0xffffffffc0506000\nfailover 16384 1 net_failover, Live 0xffffffffc04fd000\ndrm 647168 6 bochs,drm_vram_helper,drm_ttm_helper,ttm,drm_kms_helper, Live 0xffffffffc0429000\ni2c_piix4 28672 0 - Live 0xffffffffc041c000\npata_acpi 16384 0 - Live 0xffffffffc0413000\n",
+  "source_hashes": {
+    "bench/archive_run.py": "8d666f148a10d7fe19294cc7d193464c8bb53d4c3aec64b7518b9d335966c952",
+    "bench/spin_cacheline/bench_runtime.py": "c6f7dc17a41bc5c34bff35d3aaed7b4a995ba3e5225d2c48d032417ca3f1510e"
+  }
+}

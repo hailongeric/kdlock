@@ -51,8 +51,10 @@ def profile_spec(spec, perf_hash):
 
 
 class Profile:
-    def __init__(self, session, perf):
+    def __init__(self, session, perf, *, clock_id=None):
         self.session, self.perf = session, perf
+        require(clock_id in (None, 'mono'), 'only the original or monotonic perf clock is supported')
+        self.clock_id = clock_id
         self.process = self.log = None
         self.control = self.ack = None
         self.ack_data = b''
@@ -87,6 +89,9 @@ class Profile:
                 '-F', '199', '--inherit', '--pid', str(session.client.pid), '--delay=-1',
                 '--control=fifo:' + str(session.path / 'perf-control') + ',' + str(session.path / 'perf-ack'),
                 '-o', str(session.path / 'perf.data')]
+        if self.clock_id is not None:
+            argv.extend(['--clockid', self.clock_id])
+            session.record['perf_clock_id'] = self.clock_id
         session.record['perf_command'] = argv
         session.record['perf_binary_sha256'] = hashlib.sha256(Path(self.perf).read_bytes()).hexdigest()
         session.save()

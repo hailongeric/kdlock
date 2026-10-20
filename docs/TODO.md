@@ -345,6 +345,12 @@ with this revision.
 
 ### Main-plan acceptance audit
 
+The [focused five-worker pipecap investigation](../bench/results/10.176.26.71/bench/pipecap-causal-20261021/README.md)
+is active. It must distinguish original route counts, queue waits and observer
+effects before proposing a production change. The initial host receipt fails;
+planned diagnostics are not passes. Remaining mutex, shared-lock, nano and real
+mmap/fault work retains explicit unresolved dispositions.
+
 The [seven-point latency stage](../bench/results/10.176.26.71/bench/mutex-latency-20261021/README.md)
 completed its separate 252-session follow-up after a retained capacity failure.
 The larger buffer passed basic/affected checks; 4,073,421 observations and 126

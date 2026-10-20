@@ -40,6 +40,12 @@ TCLock). It uses the regular 64-vCPU VM and collector 63, and measures the forme
 
 ## Unified public mutex: acceptance remains open
 
+The [focused pipecap investigation](../bench/results/10.176.26.71/bench/pipecap-causal-20261021/README.md)
+now examines five-worker path counts and waiting with unchanged original
+binaries. Its initial 74-versus-67 host check failed before any new execution;
+the separate diagnostic plan is awaiting basic/affected validation and a fresh
+strict gate. No cause or production optimization is established.
+
 A separate [operation-latency diagnostic](../bench/results/10.176.26.71/bench/mutex-latency-20261021/README.md)
 completed all 252 serial sessions with frozen original providers and plain,
 sampling-disabled and sampling-enabled callers. It retains 126 exact KD
