@@ -1,0 +1,14 @@
+{
+  "binary": "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/list-functional-4/spin-list-n128/variants/kdlock/spin_cacheline.ko",
+  "functions": {
+    "sc_body_0": {
+      "bytes": 203,
+      "hints": [],
+      "section": ".text",
+      "sha256": "050b1faaeb3661ed7ad96e88be07cf9f1a4f01b5c7688ff2a5d61a9567d4d428",
+      "start": 64
+    }
+  },
+  "prefetch": false,
+  "sha256": "06b8a99b888298bd6f6b69837e9ab4c9f775396b083b61d2255d3c29f1de43d3"
+}

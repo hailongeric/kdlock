@@ -1,0 +1,8 @@
+[1/4] list-n16-kdlock-w020-t16-r00
+  reads=1280000 writes=320000 JIT_entries=376 JIT_complete=376 drained=True
+[2/4] list-n128-kdlock-w020-t16-r00
+  reads=1280000 writes=320000 JIT_entries=15467 JIT_complete=15467 drained=True
+[3/4] list-prefetch-n16-kdlock-w020-t16-r00
+  reads=1280000 writes=320000 JIT_entries=15079 JIT_complete=15079 drained=True
+[4/4] list-prefetch-n128-kdlock-w020-t16-r00
+  reads=1280000 writes=320000 JIT_entries=10177 JIT_complete=10177 drained=True

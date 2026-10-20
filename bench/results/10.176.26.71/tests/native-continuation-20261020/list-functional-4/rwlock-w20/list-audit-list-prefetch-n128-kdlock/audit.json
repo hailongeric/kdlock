@@ -1,0 +1,33 @@
+{
+  "binary": "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/list-functional-4/rwlock-w20/build/list-prefetch-n128-kdlock/rwlock_bench.ko",
+  "functions": {
+    "rb_read": {
+      "bytes": 241,
+      "hints": [
+        {
+          "mnemonic": "prefetcht0",
+          "offset": 68,
+          "operand": "(%rax)"
+        }
+      ],
+      "section": ".text",
+      "sha256": "d6dd10b9657a720f96461227369e600616e4e61e565e8b14af8ea7c6047c4a5d",
+      "start": 0
+    },
+    "rb_write": {
+      "bytes": 365,
+      "hints": [
+        {
+          "mnemonic": "prefetcht0",
+          "offset": 491,
+          "operand": "(%rax)"
+        }
+      ],
+      "section": ".text",
+      "sha256": "d40c62da55c7fc311d26bdfc0e47817c452434bc6cbeda5aac707250d24a1734",
+      "start": 256
+    }
+  },
+  "prefetch": true,
+  "sha256": "bd453716f0de278ff63bc47a4b760be582340bbb2ea9a83c88c76e9c8b3380ad"
+}

@@ -2,8 +2,9 @@
 
 Continuation implementation `9a0fdd4`, with fixture-only corrections through
 `a4eb4eb`, passed basic and directly affected checks in the recovery VM.
-All nine live continuation/ownership probes passed in `live-6`. Resident-list
-coverage is in progress. This is separate from the completed
+The selected correctness stage is complete: all nine live continuation/ownership
+probes and all 16 resident-list functional sessions passed at their recorded
+source revisions. This is separate from the completed
 [`d21a1e3` public-mutex performance matrix](../../bench/mutex-public-20261020/README.md).
 No whole-kernel replacement, mmap/fault integration, RT/ww_mutex or lockdep
 acceptance follows from this work.
@@ -22,6 +23,7 @@ The guest kernel has not been modified or rebooted.
 | checks-3 | `d7d65c1` | Spin/cacheline, list-image audit and direct-comparison drivers passed. Rwlock/rwsem benchmark driver failed on missing fixture metadata. |
 | checks-4 | `a4eb4eb` | All 26 rwlock/rwsem benchmark tests passed; final idle and source hashes verified. |
 | checks-5 | `b345db3` | Dependencies, provider/daemon, both basic programs, eight selected unit drivers and three benchmark drivers passed. Includes 12 focused replay tests. The emission-only prefetch test missed an assembler failure found by the next live run. |
+| checks-6 | `cee947b` | Both basic programs, eight affected unit drivers, provider/daemon and two list benchmark drivers passed. The actual wrapper compiles for all 15 read-hint/backend/ABI combinations; three FS-hint cases are refused. |
 
 All failed attempts and original results remain under their numbered
 directories. Each failed process exited; a separate `post-failure-health.json`
@@ -237,3 +239,36 @@ the original failure is not rewritten as a drained pass.
 The two earlier resident-list archives also passed inert local review:
 8,057 and 16,434 checks respectively, zero inconsistencies. These counts concern
 archive consistency, not additional live test executions.
+
+Attempt 3 is preserved in [its complete archives](list-functional-3/archives.json),
+including [the separate drain receipt](list-functional-3/post-failure-drain.json).
+Independent source/hash/idle checks found 339 unchanged frozen hashes and 94
+exactly reconstructed provider files. The inert archive review performed 7,887
+checks with zero inconsistencies.
+
+`cee947b` implements the assembler spelling correction and strengthened tests.
+After `checks-6` passed, `list-functional-4` completed the same remaining
+14-session plan. All six spin/public-mutex cases and all eight mixed rwlock/rwsem
+cases passed. Each session has positive, exactly matching JIT entry/completion
+counts, complete workers, list-integrity and loaded-image checks, and exact
+retirement. Together with the two earlier plain n16 passes, all 16 planned
+resident-list cases are covered.
+Provider exclusion, ownership, queue/ACK semantics and admission thresholds are
+unchanged. The translation correction is separate from the original frozen
+performance inputs, which the planned replay will retain.
+
+[Final health](list-functional-4/health.json) confirms idle, zero retirement
+references, 2,544 unchanged frozen source/binary hashes, 564 reconstructed
+provider files, and no matched kernel faults in the 14 session logs.
+[Complete archives](list-functional-4/archives.json) have manifest SHA-256
+`4e8c2a0e28fe2fb776e9eb7a37562697ec5870d66e599abbc5eafca1d9b95b16`.
+The final inert list archive review completed 71,854 checks with zero
+inconsistencies. Its initial filename search ambiguously matched both the
+workspace image and the intentionally preserved publication history. The
+corrected review verifies the exact workspace path and every history copy
+separately; [the initial review](list-functional-4/offline-review-initial.json)
+remains retained.
+The selected correctness stage is complete; full suites and whole-kernel
+replacement remain outside this validation. The separate
+[controlled performance replay](../../bench/mutex-public-regressions-20261020/README.md)
+must retain the seven regressions, three class gaps, and unmeasured latency.

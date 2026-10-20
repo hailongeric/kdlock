@@ -1,0 +1,120 @@
+6,614056,454068856418,-;end_point[0] = ffffffffc0865a50
+
+6,614057,454068856426,-;end_point[1] = ffffffffc0865b00
+
+6,614058,454068856428,-;end_point[2] = ffffffffc0853fd0
+
+6,614059,454068856429,-;end_point[3] = ffffffffc0868f40
+
+6,614060,454068856430,-;end_point[4] = ffffffffc0851560
+
+6,614061,454068856431,-;mutex_lock addr = ffffffffc0869830
+
+6,614062,454068856446,-;hostcall service id=1 symbol=ktime_get addr=ffffffff8119c150 flags=7
+
+6,614063,454068856679,-;hostcall service unavailable id=2 symbol=ktime_get_ns
+
+6,614064,454068856697,-;hostcall service id=3 symbol=int_sqrt addr=ffffffff816e55f0 flags=7
+
+6,614065,454068856710,-;hostcall service id=4 symbol=strcmp addr=ffffffff81e00b90 flags=7
+
+6,614066,454068856723,-;hostcall service id=5 symbol=strscpy_pad addr=ffffffff816e3d10 flags=7
+
+6,614067,454068883715,-;JIT code block pool ready: 64/64
+
+6,614068,454068909643,-;JIT direct-call pool ready: 64/64; shared image limit=64
+
+6,614069,454068911841,-;kd kernel module init: direct spin/mutex APIs; global hooks disabled
+
+6,614070,454068927068,-;exe added 0 ffffffffc07d80dd 2835473 lock_kind=2
+
+6,614071,454071516112,-;install JIT chunk: pid=0 rip=ffffffffc07d80dd status=0 offset=0 bytes=1202
+
+6,614072,454073093472,-;kd_source retire: result=0 state=2 modules=0 frames=0 writers=0
+
+6,614073,454073191027,-;kd_mutex stats: slowpath=131658 combiner=38933 handoff=0 jit_success=63810 jit_not_ready=0 jit_failure=0 jit_resume=63810 frame_failure=0 node_overflow=0 multi_slot=0 context_busy=0 nested_lock=0 nested_fast=0 nested_queued=0 nested_jit=0 nested_unlock=0 nested_abort_release=0 active_waiters=0 max_waiters_per_cpu=1 reserved_nodes=0 origin_acquires=165042 origin_releases=165042
+
+6,614074,454073211116,-;kd_mutex tasks: active_tasks=0 task_alloc_failure=0 task_reroutes=165042
+
+6,614075,454073211166,-;kd_spin batch: entries=0 ww_jumps=0
+
+6,614076,454073211170,-;kd_spin diag overflow=0
+
+6,614077,454073211173,-;kd_spin diag invariant_failures=0
+
+6,614078,454073211404,-;kd_native stats: started=0 completed=0 unlocks=0
+
+6,614079,454073211464,-;kd_exec invariant_failures=0
+
+6,614080,454073211472,-;kd_hostcall stats: exits=0 executed=0 resumed=0 rejected=0 failed=0 limit=0
+
+6,614081,454073211477,-;kd_direct_call stats: strcmp=0 strscpy_pad=0
+
+6,614082,454073211479,-;kd_mutex stack checks: bytes=256 equal=0 changed=0 unavailable=0
+
+6,614083,454073231037,-;kd_hotlock mutex ratio: cpu=0 entries=348 contentions=34 last_entries=2015 checks=16 cpu_hot=1 window=1024 scope=unfinished_batch role=DONE
+
+6,614084,454073231042,-;kd_hotlock final: cpu=0 type=mutex address=ffffffffc07da0c0 count=20 cpu_hot=1 lock_hot=1 role=DONE
+
+6,614085,454073231045,-;kd_hotlock mutex ratio: cpu=1 entries=2231 contentions=918 last_entries=1879 checks=15 cpu_hot=1 window=1024 scope=unfinished_batch role=DONE
+
+6,614086,454073231048,-;kd_hotlock final: cpu=1 type=mutex address=ffffffffc07da0c0 count=905 cpu_hot=1 lock_hot=1 role=DONE
+
+6,614087,454073231050,-;kd_hotlock mutex ratio: cpu=2 entries=1566 contentions=712 last_entries=1882 checks=15 cpu_hot=1 window=1024 scope=unfinished_batch role=DONE
+
+6,614088,454073231052,-;kd_hotlock final: cpu=2 type=mutex address=ffffffffc07da0c0 count=699 cpu_hot=1 lock_hot=1 role=DONE
+
+6,614089,454073231054,-;kd_hotlock mutex ratio: cpu=3 entries=600 contentions=277 last_entries=1836 checks=16 cpu_hot=1 window=1024 scope=unfinished_batch role=DONE
+
+6,614090,454073231056,-;kd_hotlock final: cpu=3 type=mutex address=ffffffffc07da0c0 count=263 cpu_hot=1 lock_hot=1 role=DONE
+
+6,614091,454073231058,-;kd_hotlock mutex ratio: cpu=4 entries=137 contentions=61 last_entries=2012 checks=16 cpu_hot=1 window=1024 scope=unfinished_batch role=DONE
+
+6,614092,454073231059,-;kd_hotlock final: cpu=4 type=mutex address=ffffffffc07da0c0 count=47 cpu_hot=1 lock_hot=1 role=DONE
+
+6,614093,454073231061,-;kd_hotlock mutex ratio: cpu=5 entries=633 contentions=232 last_entries=1864 checks=16 cpu_hot=1 window=1024 scope=unfinished_batch role=DONE
+
+6,614094,454073231063,-;kd_hotlock final: cpu=5 type=mutex address=ffffffffc07da0c0 count=218 cpu_hot=1 lock_hot=1 role=DONE
+
+6,614095,454073231064,-;kd_hotlock mutex ratio: cpu=6 entries=2223 contentions=1008 last_entries=1836 checks=15 cpu_hot=1 window=1024 scope=unfinished_batch role=DONE
+
+6,614096,454073231066,-;kd_hotlock final: cpu=6 type=mutex address=ffffffffc07da0c0 count=995 cpu_hot=1 lock_hot=1 role=DONE
+
+6,614097,454073231067,-;kd_hotlock mutex ratio: cpu=7 entries=1850 contentions=935 last_entries=1919 checks=15 cpu_hot=1 window=1024 scope=unfinished_batch role=DONE
+
+6,614098,454073231069,-;kd_hotlock final: cpu=7 type=mutex address=ffffffffc07da0c0 count=922 cpu_hot=1 lock_hot=1 role=DONE
+
+6,614099,454073231070,-;kd_hotlock mutex ratio: cpu=8 entries=1468 contentions=755 last_entries=1876 checks=15 cpu_hot=1 window=1024 scope=unfinished_batch role=DONE
+
+6,614100,454073231072,-;kd_hotlock final: cpu=8 type=mutex address=ffffffffc07da0c0 count=742 cpu_hot=1 lock_hot=1 role=DONE
+
+6,614101,454073231074,-;kd_hotlock mutex ratio: cpu=9 entries=649 contentions=315 last_entries=1856 checks=16 cpu_hot=1 window=1024 scope=unfinished_batch role=DONE
+
+6,614102,454073231075,-;kd_hotlock final: cpu=9 type=mutex address=ffffffffc07da0c0 count=301 cpu_hot=1 lock_hot=1 role=DONE
+
+6,614103,454073231076,-;kd_hotlock mutex ratio: cpu=10 entries=395 contentions=201 last_entries=1909 checks=16 cpu_hot=1 window=1024 scope=unfinished_batch role=DONE
+
+6,614104,454073231078,-;kd_hotlock final: cpu=10 type=mutex address=ffffffffc07da0c0 count=187 cpu_hot=1 lock_hot=1 role=DONE
+
+6,614105,454073231080,-;kd_hotlock mutex ratio: cpu=11 entries=1478 contentions=718 last_entries=2010 checks=15 cpu_hot=1 window=1024 scope=unfinished_batch role=DONE
+
+6,614106,454073231081,-;kd_hotlock final: cpu=11 type=mutex address=ffffffffc07da0c0 count=705 cpu_hot=1 lock_hot=1 role=DONE
+
+6,614107,454073231083,-;kd_hotlock mutex ratio: cpu=12 entries=890 contentions=441 last_entries=1888 checks=15 cpu_hot=1 window=1024 scope=unfinished_batch role=DONE
+
+6,614108,454073231085,-;kd_hotlock final: cpu=12 type=mutex address=ffffffffc07da0c0 count=428 cpu_hot=1 lock_hot=1 role=DONE
+
+6,614109,454073231086,-;kd_hotlock mutex ratio: cpu=13 entries=1957 contentions=1015 last_entries=2012 checks=15 cpu_hot=1 window=1024 scope=unfinished_batch role=DONE
+
+6,614110,454073231088,-;kd_hotlock final: cpu=13 type=mutex address=ffffffffc07da0c0 count=1002 cpu_hot=1 lock_hot=1 role=DONE
+
+6,614111,454073231089,-;kd_hotlock mutex ratio: cpu=14 entries=1798 contentions=880 last_entries=2071 checks=15 cpu_hot=1 window=1024 scope=unfinished_batch role=DONE
+
+6,614112,454073231091,-;kd_hotlock final: cpu=14 type=mutex address=ffffffffc07da0c0 count=867 cpu_hot=1 lock_hot=1 role=DONE
+
+6,614113,454073231092,-;kd_hotlock mutex ratio: cpu=15 entries=321 contentions=174 last_entries=1892 checks=16 cpu_hot=1 window=1024 scope=unfinished_batch role=DONE
+
+6,614114,454073231094,-;kd_hotlock final: cpu=15 type=mutex address=ffffffffc07da0c0 count=160 cpu_hot=1 lock_hot=1 role=DONE
+
+6,614115,454073231108,-;kd kernel module exit
+

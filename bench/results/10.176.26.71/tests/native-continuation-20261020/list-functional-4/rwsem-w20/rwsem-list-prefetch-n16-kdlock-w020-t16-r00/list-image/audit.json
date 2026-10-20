@@ -1,0 +1,29 @@
+{
+  "byte_for_byte_match": true,
+  "bytes": 491,
+  "entry": {
+    "code": 18419722476162441216,
+    "entry": 18446744072644034784,
+    "entry_abi": 2,
+    "generation": 1,
+    "lock_kind": 2,
+    "pid": 0,
+    "requirements": 0,
+    "status": 0,
+    "tgid": 2835473
+  },
+  "hints": [
+    {
+      "mnemonic": "prefetcht0",
+      "offset": 440,
+      "operand": "(%rdx)"
+    }
+  ],
+  "jit_object_sha256": "9e63fecd7d4e1bad4e7aae550b9382b2d7952463ab36585c282369aba6885f15",
+  "loaded_sha256": "565a48c04a81008336c7d6e3bfd86408bf80b7ca4abacadf986920985d645750",
+  "method": "Quiescent /proc/kcore read under readonly provider reference before warmup",
+  "prefetch": true,
+  "sha256": "1048fd279ce9ee06dd95872d632d1a2435bad549546aee5db0850136a340bb58",
+  "start": 240,
+  "uploaded_sha256": "565a48c04a81008336c7d6e3bfd86408bf80b7ca4abacadf986920985d645750"
+}

@@ -1,0 +1,49 @@
+{
+  "boot_id": "b65f0205-c8f9-4385-8b13-039cbce243a6",
+  "failed_task": "spin-list-prefetch-n16",
+  "final_idle": false,
+  "passed": false,
+  "phase": "functional",
+  "script_sha256": "778b94f6b7ffa0bc725bc36a1e3dc5a15f49f29aba084085aa08aebe71cac7a7",
+  "source_commit": "b345db373af2bd7c8ca1409a2c5791ff506eec72",
+  "state": "FAILED",
+  "tasks": [
+    {
+      "argv": [
+        "/root/kdlock-translation-venv-20261019/bin/python3",
+        "/root/host_fs/kdlock/bench/tclock_compare/run.py",
+        "--kernel-source",
+        "/root/linux-6.1.159-kdclobber2",
+        "--kernel-baseline",
+        "/root/kdlock-kernel-baselines/mutex-clobber2-20260919",
+        "--functional",
+        "--backends",
+        "kdlock",
+        "--repeats",
+        "1",
+        "--threads",
+        "16",
+        "--iterations",
+        "100000",
+        "--collector-cpu",
+        "63",
+        "--cpus",
+        "0-15",
+        "--workload",
+        "list-prefetch",
+        "--list-nodes",
+        "16",
+        "--output",
+        "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/list-functional-3/spin-list-prefetch-n16"
+      ],
+      "exit_code": 1,
+      "finished_unix": 1792496450.02477,
+      "name": "spin-list-prefetch-n16",
+      "output": "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/list-functional-3/spin-list-prefetch-n16",
+      "pid": 2818692,
+      "started_unix": 1792496428.2237394,
+      "state": "FINISHED",
+      "timeout_seconds": 1800
+    }
+  ]
+}

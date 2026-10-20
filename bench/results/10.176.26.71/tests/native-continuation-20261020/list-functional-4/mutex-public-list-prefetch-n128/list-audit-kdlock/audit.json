@@ -1,0 +1,20 @@
+{
+  "binary": "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/list-functional-4/mutex-public-list-prefetch-n128/variants/kdlock/mutex_cacheline.ko",
+  "functions": {
+    "mc_body_0": {
+      "bytes": 121,
+      "hints": [
+        {
+          "mnemonic": "prefetcht0",
+          "offset": 129,
+          "operand": "(%rax)"
+        }
+      ],
+      "section": ".text",
+      "sha256": "22cc041fd32c7b26a34e4eb016e966c1aaf5615f714dd59ceba30e275a102f7b",
+      "start": 64
+    }
+  },
+  "prefetch": true,
+  "sha256": "c929203c1fc09948ac984317036a6a8107976c479ffbc820e36acdab712a69d2"
+}

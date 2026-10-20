@@ -1,6 +1,4 @@
 {
-  "source_commit": "a4eb4eb0fc744e8105bdd429e1d4bf0fb03ae0a4",
-  "production_source_unchanged_since": "9a0fdd4dba6ca1901e716259917b0e03ef0da22b",
   "full_suite": false,
   "basic_and_affected": "PASS across preserved exact-source attempts",
   "checks": [
@@ -28,6 +26,11 @@
       "attempt": 5,
       "source": "b345db373af2bd7c8ca1409a2c5791ff506eec72",
       "result_sha256": "8366c5ca570528ac7c3852b482b35303f9d36d42633bcd9ed5653a68600cb428"
+    },
+    {
+      "attempt": 6,
+      "source": "cee947b7f7b07d96793ab3ca38f33ea139405351",
+      "result_sha256": "9e1a7d4677e443543c8fc649c220d67f30e910463eee70d3626b50f5242e93fa"
     }
   ],
   "changes_from_passed_builds_and_units": [
@@ -39,11 +42,254 @@
     "live-2": "rwlock PREPARATION_FAILED pre-marker result store; fully drained and archived"
   },
   "resident_list": {
-    "state": "INCOMPLETE",
+    "state": "COMPLETE",
     "list-functional-1": "spin list/n16 passed; supervisor stopped on generated source binding; independent reconstruction verified all generated files",
     "list-functional-2": "public mutex list/n16 passed; spin list-prefetch/n16 PREPARATION_FAILED on PREFETCH0 decoder alias; all drained",
-    "remaining_sessions": 14,
-    "list-functional-3": "PREPARATION_FAILED: GNU assembler rejects emitted PREFETCH0; original cleanup could not stop active translator; later natural translator exit and exact retirement confirmed separately."
+    "remaining_sessions": 0,
+    "list-functional-3": "PREPARATION_FAILED: GNU assembler rejects emitted PREFETCH0; original cleanup could not stop active translator; later natural translator exit and exact retirement confirmed separately.",
+    "list-functional-4": {
+      "status": "COMPLETE",
+      "source": "cee947b",
+      "passed_sessions": 14,
+      "archive": "list-functional-4/archives.json",
+      "health": {
+        "idle": true,
+        "boot_id": "b65f0205-c8f9-4385-8b13-039cbce243a6",
+        "checked_unix": 1792497231.735679,
+        "sessions": [
+          {
+            "task": "spin-list-prefetch-n16",
+            "name": "list-prefetch-n16-t16-r00-direct-kdlock-adaptive",
+            "status": "OK",
+            "passed": true,
+            "original_drained": true,
+            "independent_drain_confirmed": true,
+            "jit_bodies": 1596840,
+            "jit_completions": 1596840,
+            "retired": {
+              "frames": 0,
+              "modules": 0,
+              "state": 2,
+              "writers": 0
+            }
+          },
+          {
+            "task": "mutex-public-list-prefetch-n16",
+            "name": "list-prefetch-n16-t16-r00-direct-kdlock-adaptive-public",
+            "status": "OK",
+            "passed": true,
+            "original_drained": true,
+            "independent_drain_confirmed": true,
+            "jit_bodies": 1520574,
+            "jit_completions": 1520574,
+            "retired": {
+              "frames": 0,
+              "modules": 0,
+              "state": 2,
+              "writers": 0
+            }
+          },
+          {
+            "task": "spin-list-n128",
+            "name": "list-n128-t16-r00-direct-kdlock-adaptive",
+            "status": "OK",
+            "passed": true,
+            "original_drained": true,
+            "independent_drain_confirmed": true,
+            "jit_bodies": 1597904,
+            "jit_completions": 1597904,
+            "retired": {
+              "frames": 0,
+              "modules": 0,
+              "state": 2,
+              "writers": 0
+            }
+          },
+          {
+            "task": "mutex-public-list-n128",
+            "name": "list-n128-t16-r00-direct-kdlock-adaptive-public",
+            "status": "OK",
+            "passed": true,
+            "original_drained": true,
+            "independent_drain_confirmed": true,
+            "jit_bodies": 718616,
+            "jit_completions": 718616,
+            "retired": {
+              "frames": 0,
+              "modules": 0,
+              "state": 2,
+              "writers": 0
+            }
+          },
+          {
+            "task": "spin-list-prefetch-n128",
+            "name": "list-prefetch-n128-t16-r00-direct-kdlock-adaptive",
+            "status": "OK",
+            "passed": true,
+            "original_drained": true,
+            "independent_drain_confirmed": true,
+            "jit_bodies": 1598091,
+            "jit_completions": 1598091,
+            "retired": {
+              "frames": 0,
+              "modules": 0,
+              "state": 2,
+              "writers": 0
+            }
+          },
+          {
+            "task": "mutex-public-list-prefetch-n128",
+            "name": "list-prefetch-n128-t16-r00-direct-kdlock-adaptive-public",
+            "status": "OK",
+            "passed": true,
+            "original_drained": true,
+            "independent_drain_confirmed": true,
+            "jit_bodies": 670795,
+            "jit_completions": 670795,
+            "retired": {
+              "frames": 0,
+              "modules": 0,
+              "state": 2,
+              "writers": 0
+            }
+          },
+          {
+            "task": "rwlock-w20",
+            "name": "list-n16-kdlock-w020-t16-r00",
+            "status": "OK",
+            "passed": true,
+            "original_drained": true,
+            "independent_drain_confirmed": true,
+            "jit_bodies": 376,
+            "jit_completions": 376,
+            "retired": {
+              "frames": 0,
+              "modules": 0,
+              "state": 2,
+              "writers": 0
+            }
+          },
+          {
+            "task": "rwlock-w20",
+            "name": "list-n128-kdlock-w020-t16-r00",
+            "status": "OK",
+            "passed": true,
+            "original_drained": true,
+            "independent_drain_confirmed": true,
+            "jit_bodies": 15467,
+            "jit_completions": 15467,
+            "retired": {
+              "frames": 0,
+              "modules": 0,
+              "state": 2,
+              "writers": 0
+            }
+          },
+          {
+            "task": "rwlock-w20",
+            "name": "list-prefetch-n16-kdlock-w020-t16-r00",
+            "status": "OK",
+            "passed": true,
+            "original_drained": true,
+            "independent_drain_confirmed": true,
+            "jit_bodies": 15079,
+            "jit_completions": 15079,
+            "retired": {
+              "frames": 0,
+              "modules": 0,
+              "state": 2,
+              "writers": 0
+            }
+          },
+          {
+            "task": "rwlock-w20",
+            "name": "list-prefetch-n128-kdlock-w020-t16-r00",
+            "status": "OK",
+            "passed": true,
+            "original_drained": true,
+            "independent_drain_confirmed": true,
+            "jit_bodies": 10177,
+            "jit_completions": 10177,
+            "retired": {
+              "frames": 0,
+              "modules": 0,
+              "state": 2,
+              "writers": 0
+            }
+          },
+          {
+            "task": "rwsem-w20",
+            "name": "rwsem-list-n16-kdlock-w020-t16-r00",
+            "status": "OK",
+            "passed": true,
+            "original_drained": true,
+            "independent_drain_confirmed": true,
+            "jit_bodies": 48657,
+            "jit_completions": 48657,
+            "retired": {
+              "frames": 0,
+              "modules": 0,
+              "state": 2,
+              "writers": 0
+            }
+          },
+          {
+            "task": "rwsem-w20",
+            "name": "rwsem-list-n128-kdlock-w020-t16-r00",
+            "status": "OK",
+            "passed": true,
+            "original_drained": true,
+            "independent_drain_confirmed": true,
+            "jit_bodies": 111511,
+            "jit_completions": 111511,
+            "retired": {
+              "frames": 0,
+              "modules": 0,
+              "state": 2,
+              "writers": 0
+            }
+          },
+          {
+            "task": "rwsem-w20",
+            "name": "rwsem-list-prefetch-n16-kdlock-w020-t16-r00",
+            "status": "OK",
+            "passed": true,
+            "original_drained": true,
+            "independent_drain_confirmed": true,
+            "jit_bodies": 43542,
+            "jit_completions": 43542,
+            "retired": {
+              "frames": 0,
+              "modules": 0,
+              "state": 2,
+              "writers": 0
+            }
+          },
+          {
+            "task": "rwsem-w20",
+            "name": "rwsem-list-prefetch-n128-kdlock-w020-t16-r00",
+            "status": "OK",
+            "passed": true,
+            "original_drained": true,
+            "independent_drain_confirmed": true,
+            "jit_bodies": 108653,
+            "jit_completions": 108653,
+            "retired": {
+              "frames": 0,
+              "modules": 0,
+              "state": 2,
+              "writers": 0
+            }
+          }
+        ],
+        "per_session_kernel_faults": [],
+        "committed_source_hashes_checked": 490,
+        "frozen_source_binary_hashes_checked": 2544,
+        "reconstructed_provider_files": 564,
+        "scope": "Exact committed source plus independently reconstructed generated observation overlay; retained session outcomes, not a rewritten supervisor status"
+      }
+    },
+    "passed_sessions": 16
   },
   "performance_acceptance": "OPEN; original seven regressions and incomplete classes require diagnosis; p95 unmeasured",
   "live_3": {
@@ -63,7 +309,7 @@
     "read_operations": 40000000,
     "kernel_fault_matches": 0
   },
-  "next": "Finish serial affected probes, archive and verify; resident-list correctness; then controlled replay of seven original regressions and three incomplete comparison points",
+  "next": "Controlled original-input performance replay; acceptance remains OPEN.",
   "live_5": {
     "source": "6f97b3c",
     "status": "NO_JIT",
@@ -120,11 +366,18 @@
     "list-functional-2": {
       "checks": 16434,
       "issues": 0
+    },
+    "list-functional-3": {
+      "checks": 7887,
+      "issues": 0
+    },
+    "list-functional-4": {
+      "checks": 71854,
+      "issues": 0,
+      "initial_review": "64 ambiguous publication-name matches; resolved by exact workspace and independent publication-history paths. Initial receipt retained."
     }
   },
-  "pending_changes": [
-    "emit admitted Miasm read-prefetch aliases with GNU assembler names; actually build all 15 hint/ABI combinations in unit test"
-  ],
+  "pending_changes": [],
   "single_writer": {
     "writer": "root",
     "helpers_read_only": true,
@@ -138,5 +391,17 @@
     "benchmark_drivers": 3,
     "replay_tests": 12,
     "limits": "Emission-only prefetch test passed but missed the subsequent assembler failure."
-  }
+  },
+  "initial_fixture_source_commit": "a4eb4eb0fc744e8105bdd429e1d4bf0fb03ae0a4",
+  "provider_protocol_unchanged_since": "9a0fdd4dba6ca1901e716259917b0e03ef0da22b",
+  "current_translation_source": "cee947b7f7b07d96793ab3ca38f33ea139405351",
+  "checks_6": {
+    "passed": true,
+    "basic_programs": 2,
+    "selected_unit_drivers": 8,
+    "benchmark_drivers": 2,
+    "prefetch_hint_abi_assemblies": 15,
+    "FS_hint_refusal_cases": 3
+  },
+  "correctness_stage": "COMPLETE for selected basic/affected/live/list cases at their recorded revisions"
 }

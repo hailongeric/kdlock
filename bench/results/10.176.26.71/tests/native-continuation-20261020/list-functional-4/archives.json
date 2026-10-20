@@ -1,0 +1,80 @@
+{
+  "archive_prefix": "list-functional-4",
+  "boot_id": "b65f0205-c8f9-4385-8b13-039cbce243a6",
+  "completed": true,
+  "finished_ns": 1792497283362045940,
+  "groups": [
+    {
+      "bytes": 23695193,
+      "file": "probes.tar.gz",
+      "group": "probes",
+      "path": "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/list-functional-4-archives/probes.tar.gz",
+      "roots": [
+        "list-functional-4/mutex-public-list-n128",
+        "list-functional-4/mutex-public-list-prefetch-n128",
+        "list-functional-4/mutex-public-list-prefetch-n16",
+        "list-functional-4/rwlock-w20",
+        "list-functional-4/rwsem-w20",
+        "list-functional-4/spin-list-n128",
+        "list-functional-4/spin-list-prefetch-n128",
+        "list-functional-4/spin-list-prefetch-n16"
+      ],
+      "sha256": "02f1487c29c3a9a86a471326f0dce08ba7d8d44491ff76f2c9ec92aa3bc4ef04"
+    },
+    {
+      "bytes": 1994930,
+      "file": "reconstruction.tar.gz",
+      "group": "reconstruction",
+      "path": "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/list-functional-4-archives/reconstruction.tar.gz",
+      "roots": [
+        "list-functional-4/mutex-public-list-n128-audit-provider",
+        "list-functional-4/mutex-public-list-n128-provider-reconstruction",
+        "list-functional-4/mutex-public-list-prefetch-n128-audit-provider",
+        "list-functional-4/mutex-public-list-prefetch-n128-provider-reconstruction",
+        "list-functional-4/mutex-public-list-prefetch-n16-audit-provider",
+        "list-functional-4/mutex-public-list-prefetch-n16-provider-reconstruction",
+        "list-functional-4/spin-list-n128-audit-provider",
+        "list-functional-4/spin-list-n128-provider-reconstruction",
+        "list-functional-4/spin-list-prefetch-n128-audit-provider",
+        "list-functional-4/spin-list-prefetch-n128-provider-reconstruction",
+        "list-functional-4/spin-list-prefetch-n16-audit-provider",
+        "list-functional-4/spin-list-prefetch-n16-provider-reconstruction"
+      ],
+      "sha256": "91015f7a6766f48612abb5b869bb1cfea56e9bb676e9c2c3e2ea8c60378e0606"
+    },
+    {
+      "bytes": 45485,
+      "file": "metadata.tar.gz",
+      "group": "metadata",
+      "path": "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/list-functional-4-archives/metadata.tar.gz",
+      "roots": [
+        "list-functional-4/committed-source.json",
+        "list-functional-4/health.json",
+        "list-functional-4/host-before.json",
+        "list-functional-4/mutex-public-list-n128.console.log",
+        "list-functional-4/mutex-public-list-prefetch-n128.console.log",
+        "list-functional-4/mutex-public-list-prefetch-n16.console.log",
+        "list-functional-4/run-tasks.py",
+        "list-functional-4/rwlock-w20.console.log",
+        "list-functional-4/rwsem-w20.console.log",
+        "list-functional-4/spin-list-n128.console.log",
+        "list-functional-4/spin-list-prefetch-n128.console.log",
+        "list-functional-4/spin-list-prefetch-n16.console.log",
+        "list-functional-4/task-plan.json",
+        "list-functional-4/tasks.json"
+      ],
+      "sha256": "bd0e4e07c5a355bea1e118e84bd69bd8963cc3775aa77671b6f151a10230527c"
+    }
+  ],
+  "guest_base": "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/list-functional-4",
+  "guest_idle": true,
+  "health_path": "health.json",
+  "health_sha256": "d6d8d3da7e8a2990816d70fa482f1393d509417386adf16081b322dd7057e449",
+  "idle_source_sha256": "c6f7dc17a41bc5c34bff35d3aaed7b4a995ba3e5225d2c48d032417ca3f1510e",
+  "input_inventory_sha256": "21a713bd6092763a140a6fec4ea0e054b89e5ccb8bf03ad0004f9460e2b9102c",
+  "kernel_release": "6.1.159-kdclobber2",
+  "schema": 1,
+  "scope": "Complete evidence preservation; no deletion, module action, test or timing",
+  "script_sha256": "8d666f148a10d7fe19294cc7d193464c8bb53d4c3aec64b7518b9d335966c952",
+  "started_ns": 1792497278849329516
+}

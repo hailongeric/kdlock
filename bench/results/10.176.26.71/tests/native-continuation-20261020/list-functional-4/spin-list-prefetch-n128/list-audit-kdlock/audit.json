@@ -1,0 +1,20 @@
+{
+  "binary": "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/list-functional-4/spin-list-prefetch-n128/variants/kdlock/spin_cacheline.ko",
+  "functions": {
+    "sc_body_0": {
+      "bytes": 206,
+      "hints": [
+        {
+          "mnemonic": "prefetcht0",
+          "offset": 166,
+          "operand": "(%rax)"
+        }
+      ],
+      "section": ".text",
+      "sha256": "1059b51279dbb6f33b42353c250c0a3d0479f95be25bf59c29f71d3908d92dd4",
+      "start": 64
+    }
+  },
+  "prefetch": true,
+  "sha256": "70affe5e0f3fff52df2237e5f8534cc956dba508a52819c2c1825d2a7ad5cc52"
+}
