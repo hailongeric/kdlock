@@ -107,7 +107,9 @@ Before launching, inspection against the retained client's actual JSON found
 a second diagnostic mismatch: worker timestamps are named `active_started_ns`,
 not `started_ns`. The boundary verifier now checks the original enclosing and
 per-worker intervals, including reversed and overlapping observations. This
-correction requires a separately recorded validation revision before execution.
+correction passed `checks-3` at `6c90e7adbae6e3e4ba19ff01c1803e6969b1fff7`: both
+basic programs, all 28 affected Python checks, dependencies, unchanged source
+and final idle. This is the diagnostic source revision selected for `run-2`.
 
 The next diagnostic uses a new `run-2` output and the full fixed 48-session
 plan. The first host observer must finish its planned 900 seconds before a

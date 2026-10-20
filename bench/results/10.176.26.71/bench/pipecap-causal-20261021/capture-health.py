@@ -95,7 +95,7 @@ def main():
             exact_retirements=retirements, source_commit=result['source_commit'])
     assert not faults, faults
     checks = {}
-    for name in ('checks-1', 'checks-2'):
+    for name in ('checks-1', 'checks-2', 'checks-3'):
         result = read(BASE/name/'result.json')
         assert result['passed'] and result['final_idle'] and result['source_unchanged']
         for path, digest in read(BASE/name/'source-sha256.json').items():
