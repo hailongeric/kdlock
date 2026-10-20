@@ -426,13 +426,16 @@ class CachelineTests(unittest.TestCase):
 #include <stddef.h>
 typedef uint64_t u64;
 static int cpu, logs;
-struct kernel_param { int unused; };
+struct kernel_param { void *arg; };
 struct kernel_param_ops { int (*get)(char *, const struct kernel_param *); };
 #define PERM_bench_quiet 0444
 #define PERM_bench_lock_addr 0644
+#define PERM_bench_complete_probe 0444
 #define module_param_named(name, var, type, mode) _Static_assert(mode == PERM_##name, "parameter permission")
 #define MODULE_PARM_DESC(name, text)
-#define module_param_cb(name, ops, arg, mode) _Static_assert(mode == 0444, "read only")
+#define module_param_cb(name, ops, value, mode) \
+    _Static_assert(mode == 0444, "read only"); \
+    static const struct kernel_param param_##name = {.arg = value}
 #define DECLARE_PER_CPU(type, name) extern type name[3]
 #define DEFINE_PER_CPU(type, name) type name[3]
 #define per_cpu(name, id) name[id]
@@ -471,7 +474,7 @@ struct kernel_param_ops { int (*get)(char *, const struct kernel_param *); };
 int main(void) {
     char buffer[4096]; void *lock = NULL; bool reported;
     (void)lock;
-    assert(!kd_bench_quiet && !kd_bench_lock_addr);
+    assert(!kd_bench_quiet && !kd_bench_lock_addr && !kd_bench_complete_probe);
     assert(observe(0x123, 1, false));
     assert(kd_bench_bodies[0] == 0 && logs == 1);
     kd_bench_lock_addr = 0x123;
@@ -482,7 +485,21 @@ int main(void) {
     assert(observe(0x456, 1, false));
     assert(kd_bench_bodies[0] == 1 && logs == 1);
     cpu = 2; assert(observe(0x123, 1, false));
-    assert(kd_bench_bodies_ops.get(buffer, NULL) > 0 && !strcmp(buffer, "2\n"));
+    assert(kd_bench_bodies_ops.get(buffer, &param_bench_jit_bodies) > 0 &&
+           !strcmp(buffer, "2\n"));
+    kd_bench_note_completion(0x123);
+    assert(kd_bench_bodies_ops.get(buffer, &param_bench_jit_completions) > 0 &&
+           !strcmp(buffer, "0\n"));
+    kd_bench_complete_probe = true;
+    kd_bench_note_completion(0x456);
+    assert(kd_bench_completions[2] == 0);
+    kd_bench_note_completion(0x123);
+    cpu = 0; kd_bench_note_completion(0x123);
+    assert(kd_bench_completions[0] == 1 && kd_bench_completions[2] == 1);
+    assert(kd_bench_bodies_ops.get(buffer, &param_bench_jit_completions) > 0 &&
+           !strcmp(buffer, "2\n"));
+    assert(kd_bench_bodies_ops.get(buffer, &param_bench_jit_bodies) > 0 &&
+           !strcmp(buffer, "2\n"));
     KD_PR_DEBUG("routine"); KD_PR_ROUTINE("routine"); print_debug("routine");
     assert(logs == 1);
     KD_PR_ERR("error"); KD_PR_DEBUG_ALWAYS("error"); print_debug_always("error");
