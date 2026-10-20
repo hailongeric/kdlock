@@ -18,7 +18,7 @@
  */
 #define KD_LATENCY_VERSION 1U
 #define KD_LATENCY_STRIDE 256U
-#define KD_LATENCY_CAPACITY 32768U
+#define KD_LATENCY_CAPACITY 131072U
 #define KD_LATENCY_CHUNK 256U
 
 struct kd_latency_sample {

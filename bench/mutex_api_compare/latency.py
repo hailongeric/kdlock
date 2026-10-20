@@ -7,12 +7,13 @@ different interval from a native acquisition. Never subtract clock overhead
 from individual observations or derive latency from inverse throughput.
 """
 import fcntl
+import json
 import math
 from pathlib import Path
 import statistics
 import struct
 
-VERSION, STRIDE, CAPACITY, CHUNK = 1, 256, 32768, 256
+VERSION, STRIDE, CAPACITY, CHUNK = 1, 256, 131072, 256
 HEADER = struct.Struct('<4I4Q2IQ')
 SAMPLE = struct.Struct('<3Q')
 SIZE = HEADER.size + CHUNK * SAMPLE.size
@@ -90,36 +91,44 @@ def summarize(rows, measurement, enabled, scope):
         limitations='Sampled completed-operation latency; no acquisition-time or unsampled-tail claim')
 
 
-def read_synthetic(path, measurement, enabled):
+def read_synthetic(path, measurement, enabled, failure_path):
     """An open device pins its source module until every drained chunk is read."""
     rows = []
-    with Path(path).open('rb', buffering=0) as source:
-        for worker in range(len(measurement['workers'])):
-            first, row = 0, None
-            while True:
-                buffer = bytearray(SIZE)
-                struct.pack_into('<4I', buffer, 0, VERSION, worker, first, CHUNK)
-                fcntl.ioctl(source.fileno(), READ, buffer, True)
-                values = HEADER.unpack_from(buffer)
-                version, index, offset, capacity, begin, done, selected, dropped, count, active, reserved = values
-                if ((version, index, offset, capacity) != (VERSION, worker, first, CHUNK) or
-                        reserved or active not in (0, 1) or count > CHUNK or
-                        selected > CAPACITY or dropped or begin != measurement['started_ns']):
-                    raise ValueError('invalid latency chunk metadata or overflow')
-                identity = dict(worker=worker, completed=done, selected=selected,
-                                dropped=dropped, enabled=bool(active))
-                if row is None:
-                    row = dict(identity, samples=[])
-                elif any(row[k] != v for k, v in identity.items()):
-                    raise ValueError('latency identity changed while reading')
-                row['samples'].extend(list(SAMPLE.unpack_from(buffer, HEADER.size+i*SAMPLE.size))
-                                      for i in range(count))
-                first += count
-                if first == selected:
-                    break
-                if not count or first > selected:
-                    raise ValueError('incomplete latency stream')
-            rows.append(row)
-    summary = summarize(rows, measurement, enabled,
-        'Kernel body call through body return; includes lock, business body, unlock/ACK; excludes post-work')
-    return dict(rows=rows, summary=summary)
+    row, buffer, values = None, bytearray(), None
+    try:
+        with Path(path).open('rb', buffering=0) as source:
+            for worker in range(len(measurement['workers'])):
+                first, row = 0, None
+                while True:
+                    buffer = bytearray(SIZE)
+                    struct.pack_into('<4I', buffer, 0, VERSION, worker, first, CHUNK)
+                    fcntl.ioctl(source.fileno(), READ, buffer, True)
+                    values = HEADER.unpack_from(buffer)
+                    version, index, offset, capacity, begin, done, selected, dropped, count, active, reserved = values
+                    if ((version, index, offset, capacity) != (VERSION, worker, first, CHUNK) or
+                            reserved or active not in (0, 1) or count > CHUNK or
+                            selected > CAPACITY or dropped or begin != measurement['started_ns']):
+                        raise ValueError('invalid latency chunk metadata or overflow: '+repr(values))
+                    identity = dict(worker=worker, completed=done, selected=selected,
+                                    dropped=dropped, enabled=bool(active))
+                    if row is None:
+                        row = dict(identity, samples=[])
+                    elif any(row[k] != v for k, v in identity.items()):
+                        raise ValueError('latency identity changed while reading')
+                    row['samples'].extend(list(SAMPLE.unpack_from(buffer, HEADER.size+i*SAMPLE.size))
+                                          for i in range(count))
+                    first += count
+                    if first == selected:
+                        break
+                    if not count or first > selected:
+                        raise ValueError('incomplete latency stream')
+                rows.append(row)
+        summary = summarize(rows, measurement, enabled,
+            'Kernel body call through body return; includes lock, business body, unlock/ACK; excludes post-work')
+        return dict(rows=rows, summary=summary)
+    except (ValueError, OSError) as error:
+        # Preserve rejected metadata and already-read samples before ordinary
+        # session cleanup unloads the source. Failure still stops the plan.
+        Path(failure_path).write_text(json.dumps(dict(error=repr(error), rows=rows,
+            current_worker=row, last_header=values, last_chunk_hex=buffer.hex()), indent=2)+'\n')
+        raise

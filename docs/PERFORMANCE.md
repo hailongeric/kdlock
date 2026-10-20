@@ -41,11 +41,17 @@ TCLock). It uses the regular 64-vCPU VM and collector 63, and measures the forme
 ## Unified public mutex: acceptance remains open
 
 A separate [operation-latency diagnostic](../bench/results/10.176.26.71/bench/mutex-latency-20261021/README.md)
-is being prepared for the seven original losses. It retains frozen original
+is under follow-up validation for the seven original losses. It retains frozen original
 providers and compares plain, sampling-disabled and sampling-enabled callers
 with all four controls. The fixed 252-session plan will measure complete
 operations, keep instrumentation overhead visible and retain strict admission,
-retirement and host checks. No p95 results are available yet.
+retirement and host checks. Basic and affected VM tests and all eight compiled
+body comparisons passed. Two failed host preflights remain recorded; a fresh
+exact 67-thread gate passed before timing. The first run stopped after eight
+completed sessions when the first sampled TCLock worker exceeded diagnostic
+capacity; it drained and is retained as failed. Its host endpoint also failed.
+A separate capacity revision preserves the overflow check and sampling rate.
+No completed p95 report is available yet.
 
 The [public DIRECT comparison](../bench/results/10.176.26.71/bench/mutex-public-20261020/README.md)
 measured collection `d21a1e3` against frozen OUTER, Native and TCLock in 1,764

@@ -1,7 +1,7 @@
 # Seven-regression operation-latency diagnostic
 
-Status: private caller preparation in progress. No latency measurement or performance acceptance
-is claimed. The completed correctness, strict rwlock refusal diagnosis and
+Status: `run-1` stopped on sample capacity; revised input preparation is pending. No completed latency
+result or performance acceptance is claimed. The completed correctness, strict rwlock refusal diagnosis and
 earlier mutex results remain in the
 [continuation record](../mutex-regression-diagnosis-20261020/README.md).
 Only the main agent edits files or operates the VM; all three helpers finished
@@ -46,7 +46,8 @@ calls can resume after the corresponding unlock.
 
 Each physical worker chooses one pseudorandom position per 256 operations from
 a deterministic independent seed. Storage is preallocated before timing, with
-32,768 three-word samples per worker. Record ordinal, start and end in nanoseconds.
+131,072 three-word samples per worker in the follow-up revision (32,768 in
+`inputs-1` through `inputs-3`). Record ordinal, start and end in nanoseconds.
 Retain raw observations, exact selected/completed counts and overflow counters.
 Reject missing/duplicate ordinals, unexpected mode, overflow, unordered clocks,
 out-of-worker intervals and changed identities. Publish nearest-rank p95 and
@@ -95,3 +96,30 @@ then found that relocating the retained scheduler changes its inferred checkout
 root. The driver now explicitly restores the original checkout path for the
 collector-origin guard. Recreate inputs with that reviewed driver before timing;
 `inputs-2` has no measured sessions and remains separate.
+
+`checks-3` and `inputs-3`, source `0cc479b`, passed the two basic programs,
+eight latency tests, 13 original-input/provenance tests, all builds, all three
+CRC comparisons and all eight body/relocation comparisons. The final manifest
+SHA-256 is `9a6ef21ced0af3171ed7a990ba0acdaffa4bcf4274a32b1dcf87b69d20cf702c`.
+The first two host preflights failed with 80 and 68 threads at
+20:01:33.865361 and 20:02:27.501002 UTC on 2026-10-20. They started zero sessions.
+After natural retirement, the fresh 20:05:13.157212 UTC receipt passed with the
+exact original 67-thread set, snapshot and placement. `run-1` then began;
+no threshold or host configuration changed.
+
+`run-1` completed eight plain/disabled sessions, then stopped on
+`c08-t03-r0-tclock-sampled`. Its ninth timed body measurement completed correctly
+with 12,926,464 total operations; worker 2 completed 9,059,840, requiring 35,390
+samples at the fixed rate, beyond the 32,768 capacity. The strict reader rejected
+chunk metadata/overflow and the original collector labelled the session
+`PREPARATION_FAILED`; cleanup drained normally and the VM was independently
+confirmed idle. This is a failed diagnostic, not a pass. The first reader did
+not retain rejected chunk bytes or the already-read worker samples; that evidence
+gap is explicit. All four earlier KD sessions retain exact retirement.
+
+The immediate host receipt at 20:06:11.056569 UTC also fails with 82 threads.
+The follow-up increases only preallocated diagnostic capacity to 131,072
+(about 192 MiB for 64 slots) and retains rejected chunk bytes on future failure.
+Sampling rate, clocks, body identity, original ownership/admission checks and
+overflow refusal remain unchanged. Rebuild and revalidate into new inputs, then
+run a separately identified full fixed plan. Do not pool `run-1` with its revision.

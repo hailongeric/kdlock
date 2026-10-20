@@ -2,12 +2,14 @@
 from collections import Counter
 from copy import deepcopy
 import os
+import json
 from pathlib import Path
 import shlex
 import subprocess
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(ROOT/'bench/mutex_api_compare'))
@@ -70,6 +72,23 @@ class LatencyTests(unittest.TestCase):
                          (latency.CAPACITY+1, 1, latency.CAPACITY))
         with self.assertRaises(ValueError):
             latency.validate_worker(row, 3, done, 99, 104+done*4, True)
+
+    def test_rejected_chunk_is_preserved_before_source_cleanup(self):
+        device = Path(self.temporary.name)/'fake-device'
+        device.touch()
+        evidence = Path(self.temporary.name)/'failure.json'
+        header = (1, 0, 0, 256, 100, 123, latency.CAPACITY+1, 1, 0, 1, 0)
+
+        def ioctl(fd, request, data, mutable):
+            self.assertEqual(request, latency.READ)
+            latency.HEADER.pack_into(data, 0, *header)
+
+        with patch.object(latency.fcntl, 'ioctl', side_effect=ioctl):
+            with self.assertRaisesRegex(ValueError, 'overflow'):
+                latency.read_synthetic(device, dict(started_ns=100, workers=[{}]), True, evidence)
+        saved = json.loads(evidence.read_text())
+        self.assertEqual(saved['last_header'], list(header))
+        self.assertEqual(latency.HEADER.unpack_from(bytes.fromhex(saved['last_chunk_hex'])), header)
 
     def test_changed_schedule_counts_modes_and_intervals_are_rejected(self):
         good = self.sample(0, 4096)

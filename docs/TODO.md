@@ -344,8 +344,9 @@ with this revision.
 ### Main-plan acceptance audit
 
 The [seven-point latency stage](../bench/results/10.176.26.71/bench/mutex-latency-20261021/README.md)
-is in preparation. Validate the private caller instrumentation in the same VM,
-then run the fixed serial plain/disabled/sampled comparison and preserve every
+requires follow-up after the first run hit a strict sample-capacity refusal and
+drained. Preserve that failed run; validate the larger preallocated buffer and
+complete a separate fixed serial plain/disabled/sampled comparison. Preserve every
 observation, overhead comparison, class shift, insufficient-sample group and
 host failure. The seven regressions remain unresolved; planned tests are not
 passes and operation latency must not be inferred from throughput.

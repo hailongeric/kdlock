@@ -142,7 +142,8 @@ def run(args):
             measured = super().phase(label, *positional, **keywords)
             if label == 'measure' and self.record['latency_mode'] != 'plain':
                 result = latency.read_synthetic('/dev/mutex_cacheline', measured,
-                                                self.record['latency_mode'] == 'sampled')
+                                                self.record['latency_mode'] == 'sampled',
+                                                self.path/'latency-read-failure.json')
                 save(self.path/'latency.json', result)
                 self.record['operation_latency'] = result['summary']
                 self.save()
