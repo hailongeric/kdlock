@@ -1,0 +1,1483 @@
+{
+  "accepted": false,
+  "archives": [
+    {
+      "bytes": 3614594,
+      "file": "checks.tar.gz",
+      "members": 1716,
+      "sha256": "21441d9a8a6a2519ae033b8a069287902535551309202a07fbb84fff7faa48e8",
+      "types": {
+        "dir": 222,
+        "file": 1494
+      }
+    },
+    {
+      "bytes": 10170664,
+      "file": "failed.tar.gz",
+      "members": 292,
+      "sha256": "3f047d8fa48c53f7b123414175c80a68cdd507c8d429e7028975d418fcdac7b0",
+      "types": {
+        "dir": 48,
+        "file": 204,
+        "symlink": 40
+      }
+    },
+    {
+      "bytes": 49572688,
+      "file": "completed.tar.gz",
+      "members": 1786,
+      "sha256": "74fcbbfbf506c2f2735e1ac42ac32be344a07d74fdfd81dcfb0101b0180ddd9d",
+      "types": {
+        "dir": 236,
+        "file": 1468,
+        "symlink": 82
+      }
+    },
+    {
+      "bytes": 163407,
+      "file": "host.tar.gz",
+      "members": 24,
+      "sha256": "8ec342f5d3728c9c4c0b0a0c7062b906e6d89721434139602a82e92c92ca448c",
+      "types": {
+        "dir": 1,
+        "file": 23
+      }
+    },
+    {
+      "bytes": 222832,
+      "file": "metadata.tar.gz",
+      "members": 7,
+      "sha256": "6d7935a58bb6c66c14f9b38d26a3d4db0f347c4d379989731dd209551bd527c2",
+      "types": {
+        "file": 7
+      }
+    }
+  ],
+  "archives_sha256": "67046e41174b5bd1feb73ec118879e1ea993bc4c3fa84ad4e92dfb3fde5f196f",
+  "check_counts": {
+    "affected_counts": 3,
+    "all_reconstructed_peak_fields": 54,
+    "archive_bytes": 5,
+    "archive_completed_idle": 1,
+    "archive_hash": 5,
+    "archived_health_hash": 1,
+    "archiver_hash": 1,
+    "basic_affected_success": 3,
+    "basic_count": 3,
+    "business_result": 54,
+    "capture_outside_measurement": 18,
+    "check_frozen_source": 1548,
+    "check_revision": 3,
+    "check_source_git": 1548,
+    "collector_identity": 54,
+    "collector_separate": 54,
+    "corrected_completed": 1,
+    "counter_cpu_domain": 36,
+    "counter_cpu_sum": 36,
+    "counter_delta_arithmetic": 18,
+    "counter_delta_receipt": 18,
+    "diagnostic_acceptance": 2,
+    "diagnostic_only": 54,
+    "directory_empty_payload": 507,
+    "drained": 55,
+    "eligible_interval": 54,
+    "entry_completion_bounds": 54,
+    "exact_redirected_work": 54,
+    "exact_retirement": 27,
+    "failed_attempt": 1,
+    "final_idle": 1,
+    "health_original_files": 1,
+    "host_receipt_valid": 4,
+    "host_settings": 12,
+    "immutable_image": 26,
+    "inventory_exact_set": 1,
+    "inventory_hash": 1,
+    "kernel_clean": 55,
+    "measurement_deadline": 54,
+    "measurement_setting": 216,
+    "member_assigned_group": 3825,
+    "member_bytes": 3196,
+    "member_in_inventory": 3825,
+    "member_mode": 3825,
+    "member_mtime_tar_projection": 3825,
+    "member_owner": 3825,
+    "member_prefix": 3825,
+    "member_read_bytes": 3196,
+    "member_safe_path": 3825,
+    "member_type": 3825,
+    "member_unique": 3825,
+    "native_delta_arithmetic": 18,
+    "nonnegative_deltas": 18,
+    "original_archive_hash": 5,
+    "original_settings": 54,
+    "plan_fields": 96,
+    "plan_length": 2,
+    "positive_peak_exists": 54,
+    "progress_batch": 54,
+    "public_counter_witness": 18,
+    "qemu_identity": 8,
+    "quiescent_reservations": 36,
+    "record_peak_rate": 54,
+    "record_whole_rate": 54,
+    "sample_count": 54,
+    "sample_count_order": 10800,
+    "sample_time_order": 10800,
+    "sample_worker_lifetime": 10800,
+    "session_record": 55,
+    "strict_preflight": 2,
+    "symlink_empty_payload": 122,
+    "symlink_target": 122,
+    "symlink_target_retained": 122,
+    "three_fixed_repeats": 16,
+    "timing_delta_arithmetic": 18,
+    "timing_policy": 36,
+    "timing_valid": 18,
+    "tool_commit": 8,
+    "tool_copy": 8,
+    "whole_positive": 54,
+    "whole_wall": 54,
+    "window_settings": 54,
+    "worker_count": 54,
+    "worker_cpu_order": 54,
+    "worker_interval": 270,
+    "worker_operation_sum": 54,
+    "worker_oracle": 270
+  },
+  "checks": 79776,
+  "completed_sessions": 54,
+  "consistent": false,
+  "corrected_sessions": 48,
+  "counter_sessions": 18,
+  "failures": [
+    {
+      "name": "pipecap-t05-r0-baseline-kd-counts",
+      "run": "run-1",
+      "status": "PREPARATION_FAILED"
+    }
+  ],
+  "files": 3196,
+  "functional_checks": [
+    {
+      "affected": 26,
+      "basic": 2,
+      "name": "checks-1",
+      "revision": "290b5bcd9be4aef3c24154c64a6fc2123464fcfa"
+    },
+    {
+      "affected": 27,
+      "basic": 2,
+      "name": "checks-2",
+      "revision": "cbb5b63581784824e6d365b6d3219bb6048242b8"
+    },
+    {
+      "affected": 28,
+      "basic": 2,
+      "name": "checks-3",
+      "revision": "6c90e7adbae6e3e4ba19ff01c1803e6969b1fff7"
+    }
+  ],
+  "host_checks": {
+    "run-1": {
+      "after": {
+        "captured_utc": "2026-10-20T21:26:36.431066+00:00",
+        "exact_match": false,
+        "pins_verified": true,
+        "snapshot_listed": true,
+        "threads": 76
+      },
+      "before": {
+        "captured_utc": "2026-10-20T21:25:44.680642+00:00",
+        "exact_match": true,
+        "pins_verified": true,
+        "snapshot_listed": true,
+        "threads": 67
+      }
+    },
+    "run-2": {
+      "after": {
+        "captured_utc": "2026-10-20T21:45:31.890155+00:00",
+        "exact_match": false,
+        "pins_verified": true,
+        "snapshot_listed": true,
+        "threads": 95
+      },
+      "before": {
+        "captured_utc": "2026-10-20T21:41:08.201163+00:00",
+        "exact_match": true,
+        "pins_verified": true,
+        "snapshot_listed": true,
+        "threads": 67
+      }
+    }
+  },
+  "issues": [
+    {
+      "check": "check_frozen_source",
+      "detail": {
+        "actual": null,
+        "expected": "f953f278249407b26443ad1f900ff03a0fac53ecacffbcd057c299bcc059730e",
+        "item": [
+          "checks-1",
+          "bench/real_api/README.md"
+        ]
+      }
+    },
+    {
+      "check": "check_frozen_source",
+      "detail": {
+        "actual": null,
+        "expected": "03a9e27fbfdfc1fe6af10434b4d1b43212db86579824d63939f8240baea9349f",
+        "item": [
+          "checks-1",
+          "bench/rwlock_compare/README.md"
+        ]
+      }
+    },
+    {
+      "check": "check_frozen_source",
+      "detail": {
+        "actual": null,
+        "expected": "4c368b388d345b54cda9f5e0100ab416053e5710afe0d24419b815ee2cfb8a06",
+        "item": [
+          "checks-1",
+          "bench/spin_cacheline/README.md"
+        ]
+      }
+    },
+    {
+      "check": "check_frozen_source",
+      "detail": {
+        "actual": null,
+        "expected": "6e2257b89e6ca596cadc81bbdb98f504843c516626f5bbffaee666308c61aaa0",
+        "item": [
+          "checks-1",
+          "bench/tclock_compare/README.md"
+        ]
+      }
+    },
+    {
+      "check": "check_frozen_source",
+      "detail": {
+        "actual": null,
+        "expected": "cc71567abc03af2e245214a3043b7c7e3410f54fbb9b70497832650bf84620bc",
+        "item": [
+          "checks-1",
+          "daemon/README.md"
+        ]
+      }
+    },
+    {
+      "check": "check_frozen_source",
+      "detail": {
+        "actual": null,
+        "expected": "f32c2b78fd0fe489773b51158e6bd0f07d4902f3601b9a4786f765d1a12ad32a",
+        "item": [
+          "checks-1",
+          "disassem/README.md"
+        ]
+      }
+    },
+    {
+      "check": "check_frozen_source",
+      "detail": {
+        "actual": null,
+        "expected": "0f3f8795acaaf986271e04840bf81a9bd2a4f32c82d44778c144f95852d00ca2",
+        "item": [
+          "checks-1",
+          "include/README.md"
+        ]
+      }
+    },
+    {
+      "check": "check_frozen_source",
+      "detail": {
+        "actual": null,
+        "expected": "56204ffb2f575d574c4b7db59f47e38bb0b00b141f800e0ce1d10384e4b39a03",
+        "item": [
+          "checks-1",
+          "kernel_baseline/README.md"
+        ]
+      }
+    },
+    {
+      "check": "check_frozen_source",
+      "detail": {
+        "actual": null,
+        "expected": "e5d86f7955465f83e6f0380b8c4983a2c626fd02eece5bda94b8bc764efd42e5",
+        "item": [
+          "checks-1",
+          "kernel_baseline/experiments/README.md"
+        ]
+      }
+    },
+    {
+      "check": "check_frozen_source",
+      "detail": {
+        "actual": null,
+        "expected": "9ed2362d0c8833066d4e7b0982fbb35860bdc6e94823e0b7d93a2fef09fcca87",
+        "item": [
+          "checks-1",
+          "kernel_baseline/experiments/mutex_clobber/README.md"
+        ]
+      }
+    },
+    {
+      "check": "check_frozen_source",
+      "detail": {
+        "actual": null,
+        "expected": "de873f9d62cb8335241e39ddb4fa1ab464340916e2ea519463966094117d83a4",
+        "item": [
+          "checks-1",
+          "kernel_baseline/experiments/spin_clobber/README.md"
+        ]
+      }
+    },
+    {
+      "check": "check_frozen_source",
+      "detail": {
+        "actual": null,
+        "expected": "b2815321b229b0c60f8649bcae1b9daa706c53946b76e8a901ee51acbc3f3a92",
+        "item": [
+          "checks-1",
+          "kernel_baseline/experiments/spin_static/README.md"
+        ]
+      }
+    },
+    {
+      "check": "check_frozen_source",
+      "detail": {
+        "actual": null,
+        "expected": "d5b7635640aacf248211c597b67345d6c0e68d4cb160497bb18c043833721f6d",
+        "item": [
+          "checks-1",
+          "kernel_baseline/nopvspin-grub.cfg"
+        ]
+      }
+    },
+    {
+      "check": "check_frozen_source",
+      "detail": {
+        "actual": null,
+        "expected": "5aa1b8b89080e80a1fec2edf9f759c2bfacfa20c5e1673df17eab56e11394204",
+        "item": [
+          "checks-1",
+          "kernel_module/README.md"
+        ]
+      }
+    },
+    {
+      "check": "check_frozen_source",
+      "detail": {
+        "actual": null,
+        "expected": "2481a5d71e2488f2bbc0d1ad2faa0f54f3aedce1ebeb7da361368ed586736774",
+        "item": [
+          "checks-1",
+          "tclock_backend/README.md"
+        ]
+      }
+    },
+    {
+      "check": "check_frozen_source",
+      "detail": {
+        "actual": null,
+        "expected": "10a79b3ca6ff6e9c0a0079a01d0c6cf3706011c6b8693e1c9d8fa2827eb880b1",
+        "item": [
+          "checks-1",
+          "tests/kernel/jit_escape/README.md"
+        ]
+      }
+    },
+    {
+      "check": "check_frozen_source",
+      "detail": {
+        "actual": null,
+        "expected": "02272250e17f9d3c3d07a51eab3c53fc39508a88497438ed20c619c33161523e",
+        "item": [
+          "checks-1",
+          "tests/kernel/mutex/local/README.md"
+        ]
+      }
+    },
+    {
+      "check": "check_frozen_source",
+      "detail": {
+        "actual": null,
+        "expected": "81750b4d5d83e8659bf066b64e4b35ba6033790abf5abc09b0bb4304d6245ba3",
+        "item": [
+          "checks-1",
+          "tests/kernel/rwlock/README.md"
+        ]
+      }
+    },
+    {
+      "check": "check_frozen_source",
+      "detail": {
+        "actual": null,
+        "expected": "69838b15768daaa1198d1b83878b8d81476266cbe1396d9fc27fb9554f9261a1",
+        "item": [
+          "checks-1",
+          "tests/kernel/rwsem/README.md"
+        ]
+      }
+    },
+    {
+      "check": "check_frozen_source",
+      "detail": {
+        "actual": null,
+        "expected": "09f9d107959efff997e18c5e0cae385d4a0cbc6a391727c59c263d1be5b1061a",
+        "item": [
+          "checks-1",
+          "tests/kernel/spin/address_guard/README.md"
+        ]
+      }
+    },
+    {
+      "check": "check_frozen_source",
+      "detail": {
+        "actual": null,
+        "expected": "eaa67f3d31d9aac946b8aa86615df8e06bd2ccc98b53381a0078006103b15add",
+        "item": [
+          "checks-1",
+          "tests/kernel/spin/irq_api/README.md"
+        ]
+      }
+    },
+    {
+      "check": "check_frozen_source",
+      "detail": {
+        "actual": null,
+        "expected": "6fcc12d87c5a1a92287c09643bc20194fa2107bbcc8745ee05506f834a09b162",
+        "item": [
+          "checks-1",
+          "tests/kernel/spin/string_service/README.md"
+        ]
+      }
+    },
+    {
+      "check": "check_frozen_source",
+      "detail": {
+        "actual": null,
+        "expected": "8e1ea5d9987ce22e9e7ddfb45c6b57670ed45727c737765ddd2be2fa63ed40a0",
+        "item": [
+          "checks-1",
+          "tests/unit/admission/fixtures/xattr-memcpy-caller.bin"
+        ]
+      }
+    },
+    {
+      "check": "check_frozen_source",
+      "detail": {
+        "actual": null,
+        "expected": "e89947113d6232f9fdacd43088f29fa97e92b74a0dfe60d8aaad507f2c796a0e",
+        "item": [
+          "checks-1",
+          "tests/unit/admission/fixtures/xattr-memcpy-kernel.bin"
+        ]
+      }
+    },
+    {
+      "check": "check_frozen_source",
+      "detail": {
+        "actual": null,
+        "expected": "c3a462c445e5d7a50684e482c8c9ab227b3abdbc02ab6cae2904387bfb5d012c",
+        "item": [
+          "checks-1",
+          "workload_modules/README.md"
+        ]
+      }
+    },
+    {
+      "check": "check_frozen_source",
+      "detail": {
+        "actual": null,
+        "expected": "0cd102a56e0a57b3514d57c19f4c8fd4c4d29b8857cb1c48e0cd2d49310144d6",
+        "item": [
+          "checks-1",
+          "workload_modules/jit_escape/README.md"
+        ]
+      }
+    },
+    {
+      "check": "check_frozen_source",
+      "detail": {
+        "actual": null,
+        "expected": "297cae91e0332415f4c4dde50d3f808446fbc0cb394ef592dbeb25b0147e3cf8",
+        "item": [
+          "checks-1",
+          "workload_modules/mutex_cacheline/README.md"
+        ]
+      }
+    },
+    {
+      "check": "check_frozen_source",
+      "detail": {
+        "actual": null,
+        "expected": "b5e65ea9cd8a941c348b5d9469d0fe2df454d1eaa2a39de0680c650216b7bbba",
+        "item": [
+          "checks-1",
+          "workload_modules/rwlock/README.md"
+        ]
+      }
+    },
+    {
+      "check": "check_frozen_source",
+      "detail": {
+        "actual": null,
+        "expected": "741dbdd900e4dad651e20add8b452b827ec268ec70d9bc83ab0f06f8f85aa36b",
+        "item": [
+          "checks-1",
+          "workload_modules/rwlock_bench/README.md"
+        ]
+      }
+    },
+    {
+      "check": "check_frozen_source",
+      "detail": {
+        "actual": null,
+        "expected": "e45f523e5805136e080e8c371f04d6b39eb0882f10f599afb10416d9bd337acc",
+        "item": [
+          "checks-1",
+          "workload_modules/spin_cacheline/README.md"
+        ]
+      }
+    },
+    {
+      "check": "check_frozen_source",
+      "detail": {
+        "actual": null,
+        "expected": "f953f278249407b26443ad1f900ff03a0fac53ecacffbcd057c299bcc059730e",
+        "item": [
+          "checks-2",
+          "bench/real_api/README.md"
+        ]
+      }
+    },
+    {
+      "check": "check_frozen_source",
+      "detail": {
+        "actual": null,
+        "expected": "03a9e27fbfdfc1fe6af10434b4d1b43212db86579824d63939f8240baea9349f",
+        "item": [
+          "checks-2",
+          "bench/rwlock_compare/README.md"
+        ]
+      }
+    },
+    {
+      "check": "check_frozen_source",
+      "detail": {
+        "actual": null,
+        "expected": "4c368b388d345b54cda9f5e0100ab416053e5710afe0d24419b815ee2cfb8a06",
+        "item": [
+          "checks-2",
+          "bench/spin_cacheline/README.md"
+        ]
+      }
+    },
+    {
+      "check": "check_frozen_source",
+      "detail": {
+        "actual": null,
+        "expected": "6e2257b89e6ca596cadc81bbdb98f504843c516626f5bbffaee666308c61aaa0",
+        "item": [
+          "checks-2",
+          "bench/tclock_compare/README.md"
+        ]
+      }
+    },
+    {
+      "check": "check_frozen_source",
+      "detail": {
+        "actual": null,
+        "expected": "cc71567abc03af2e245214a3043b7c7e3410f54fbb9b70497832650bf84620bc",
+        "item": [
+          "checks-2",
+          "daemon/README.md"
+        ]
+      }
+    },
+    {
+      "check": "check_frozen_source",
+      "detail": {
+        "actual": null,
+        "expected": "f32c2b78fd0fe489773b51158e6bd0f07d4902f3601b9a4786f765d1a12ad32a",
+        "item": [
+          "checks-2",
+          "disassem/README.md"
+        ]
+      }
+    },
+    {
+      "check": "check_frozen_source",
+      "detail": {
+        "actual": null,
+        "expected": "0f3f8795acaaf986271e04840bf81a9bd2a4f32c82d44778c144f95852d00ca2",
+        "item": [
+          "checks-2",
+          "include/README.md"
+        ]
+      }
+    },
+    {
+      "check": "check_frozen_source",
+      "detail": {
+        "actual": null,
+        "expected": "56204ffb2f575d574c4b7db59f47e38bb0b00b141f800e0ce1d10384e4b39a03",
+        "item": [
+          "checks-2",
+          "kernel_baseline/README.md"
+        ]
+      }
+    },
+    {
+      "check": "check_frozen_source",
+      "detail": {
+        "actual": null,
+        "expected": "e5d86f7955465f83e6f0380b8c4983a2c626fd02eece5bda94b8bc764efd42e5",
+        "item": [
+          "checks-2",
+          "kernel_baseline/experiments/README.md"
+        ]
+      }
+    },
+    {
+      "check": "check_frozen_source",
+      "detail": {
+        "actual": null,
+        "expected": "9ed2362d0c8833066d4e7b0982fbb35860bdc6e94823e0b7d93a2fef09fcca87",
+        "item": [
+          "checks-2",
+          "kernel_baseline/experiments/mutex_clobber/README.md"
+        ]
+      }
+    },
+    {
+      "check": "check_frozen_source",
+      "detail": {
+        "actual": null,
+        "expected": "de873f9d62cb8335241e39ddb4fa1ab464340916e2ea519463966094117d83a4",
+        "item": [
+          "checks-2",
+          "kernel_baseline/experiments/spin_clobber/README.md"
+        ]
+      }
+    },
+    {
+      "check": "check_frozen_source",
+      "detail": {
+        "actual": null,
+        "expected": "b2815321b229b0c60f8649bcae1b9daa706c53946b76e8a901ee51acbc3f3a92",
+        "item": [
+          "checks-2",
+          "kernel_baseline/experiments/spin_static/README.md"
+        ]
+      }
+    },
+    {
+      "check": "check_frozen_source",
+      "detail": {
+        "actual": null,
+        "expected": "d5b7635640aacf248211c597b67345d6c0e68d4cb160497bb18c043833721f6d",
+        "item": [
+          "checks-2",
+          "kernel_baseline/nopvspin-grub.cfg"
+        ]
+      }
+    },
+    {
+      "check": "check_frozen_source",
+      "detail": {
+        "actual": null,
+        "expected": "5aa1b8b89080e80a1fec2edf9f759c2bfacfa20c5e1673df17eab56e11394204",
+        "item": [
+          "checks-2",
+          "kernel_module/README.md"
+        ]
+      }
+    },
+    {
+      "check": "check_frozen_source",
+      "detail": {
+        "actual": null,
+        "expected": "2481a5d71e2488f2bbc0d1ad2faa0f54f3aedce1ebeb7da361368ed586736774",
+        "item": [
+          "checks-2",
+          "tclock_backend/README.md"
+        ]
+      }
+    },
+    {
+      "check": "check_frozen_source",
+      "detail": {
+        "actual": null,
+        "expected": "10a79b3ca6ff6e9c0a0079a01d0c6cf3706011c6b8693e1c9d8fa2827eb880b1",
+        "item": [
+          "checks-2",
+          "tests/kernel/jit_escape/README.md"
+        ]
+      }
+    },
+    {
+      "check": "check_frozen_source",
+      "detail": {
+        "actual": null,
+        "expected": "02272250e17f9d3c3d07a51eab3c53fc39508a88497438ed20c619c33161523e",
+        "item": [
+          "checks-2",
+          "tests/kernel/mutex/local/README.md"
+        ]
+      }
+    },
+    {
+      "check": "check_frozen_source",
+      "detail": {
+        "actual": null,
+        "expected": "81750b4d5d83e8659bf066b64e4b35ba6033790abf5abc09b0bb4304d6245ba3",
+        "item": [
+          "checks-2",
+          "tests/kernel/rwlock/README.md"
+        ]
+      }
+    },
+    {
+      "check": "check_frozen_source",
+      "detail": {
+        "actual": null,
+        "expected": "69838b15768daaa1198d1b83878b8d81476266cbe1396d9fc27fb9554f9261a1",
+        "item": [
+          "checks-2",
+          "tests/kernel/rwsem/README.md"
+        ]
+      }
+    },
+    {
+      "check": "check_frozen_source",
+      "detail": {
+        "actual": null,
+        "expected": "09f9d107959efff997e18c5e0cae385d4a0cbc6a391727c59c263d1be5b1061a",
+        "item": [
+          "checks-2",
+          "tests/kernel/spin/address_guard/README.md"
+        ]
+      }
+    },
+    {
+      "check": "check_frozen_source",
+      "detail": {
+        "actual": null,
+        "expected": "eaa67f3d31d9aac946b8aa86615df8e06bd2ccc98b53381a0078006103b15add",
+        "item": [
+          "checks-2",
+          "tests/kernel/spin/irq_api/README.md"
+        ]
+      }
+    },
+    {
+      "check": "check_frozen_source",
+      "detail": {
+        "actual": null,
+        "expected": "6fcc12d87c5a1a92287c09643bc20194fa2107bbcc8745ee05506f834a09b162",
+        "item": [
+          "checks-2",
+          "tests/kernel/spin/string_service/README.md"
+        ]
+      }
+    },
+    {
+      "check": "check_frozen_source",
+      "detail": {
+        "actual": null,
+        "expected": "8e1ea5d9987ce22e9e7ddfb45c6b57670ed45727c737765ddd2be2fa63ed40a0",
+        "item": [
+          "checks-2",
+          "tests/unit/admission/fixtures/xattr-memcpy-caller.bin"
+        ]
+      }
+    },
+    {
+      "check": "check_frozen_source",
+      "detail": {
+        "actual": null,
+        "expected": "e89947113d6232f9fdacd43088f29fa97e92b74a0dfe60d8aaad507f2c796a0e",
+        "item": [
+          "checks-2",
+          "tests/unit/admission/fixtures/xattr-memcpy-kernel.bin"
+        ]
+      }
+    },
+    {
+      "check": "check_frozen_source",
+      "detail": {
+        "actual": null,
+        "expected": "c3a462c445e5d7a50684e482c8c9ab227b3abdbc02ab6cae2904387bfb5d012c",
+        "item": [
+          "checks-2",
+          "workload_modules/README.md"
+        ]
+      }
+    },
+    {
+      "check": "check_frozen_source",
+      "detail": {
+        "actual": null,
+        "expected": "0cd102a56e0a57b3514d57c19f4c8fd4c4d29b8857cb1c48e0cd2d49310144d6",
+        "item": [
+          "checks-2",
+          "workload_modules/jit_escape/README.md"
+        ]
+      }
+    },
+    {
+      "check": "check_frozen_source",
+      "detail": {
+        "actual": null,
+        "expected": "297cae91e0332415f4c4dde50d3f808446fbc0cb394ef592dbeb25b0147e3cf8",
+        "item": [
+          "checks-2",
+          "workload_modules/mutex_cacheline/README.md"
+        ]
+      }
+    },
+    {
+      "check": "check_frozen_source",
+      "detail": {
+        "actual": null,
+        "expected": "b5e65ea9cd8a941c348b5d9469d0fe2df454d1eaa2a39de0680c650216b7bbba",
+        "item": [
+          "checks-2",
+          "workload_modules/rwlock/README.md"
+        ]
+      }
+    },
+    {
+      "check": "check_frozen_source",
+      "detail": {
+        "actual": null,
+        "expected": "741dbdd900e4dad651e20add8b452b827ec268ec70d9bc83ab0f06f8f85aa36b",
+        "item": [
+          "checks-2",
+          "workload_modules/rwlock_bench/README.md"
+        ]
+      }
+    },
+    {
+      "check": "check_frozen_source",
+      "detail": {
+        "actual": null,
+        "expected": "e45f523e5805136e080e8c371f04d6b39eb0882f10f599afb10416d9bd337acc",
+        "item": [
+          "checks-2",
+          "workload_modules/spin_cacheline/README.md"
+        ]
+      }
+    },
+    {
+      "check": "check_frozen_source",
+      "detail": {
+        "actual": null,
+        "expected": "f953f278249407b26443ad1f900ff03a0fac53ecacffbcd057c299bcc059730e",
+        "item": [
+          "checks-3",
+          "bench/real_api/README.md"
+        ]
+      }
+    },
+    {
+      "check": "check_frozen_source",
+      "detail": {
+        "actual": null,
+        "expected": "03a9e27fbfdfc1fe6af10434b4d1b43212db86579824d63939f8240baea9349f",
+        "item": [
+          "checks-3",
+          "bench/rwlock_compare/README.md"
+        ]
+      }
+    },
+    {
+      "check": "check_frozen_source",
+      "detail": {
+        "actual": null,
+        "expected": "4c368b388d345b54cda9f5e0100ab416053e5710afe0d24419b815ee2cfb8a06",
+        "item": [
+          "checks-3",
+          "bench/spin_cacheline/README.md"
+        ]
+      }
+    },
+    {
+      "check": "check_frozen_source",
+      "detail": {
+        "actual": null,
+        "expected": "6e2257b89e6ca596cadc81bbdb98f504843c516626f5bbffaee666308c61aaa0",
+        "item": [
+          "checks-3",
+          "bench/tclock_compare/README.md"
+        ]
+      }
+    },
+    {
+      "check": "check_frozen_source",
+      "detail": {
+        "actual": null,
+        "expected": "cc71567abc03af2e245214a3043b7c7e3410f54fbb9b70497832650bf84620bc",
+        "item": [
+          "checks-3",
+          "daemon/README.md"
+        ]
+      }
+    },
+    {
+      "check": "check_frozen_source",
+      "detail": {
+        "actual": null,
+        "expected": "f32c2b78fd0fe489773b51158e6bd0f07d4902f3601b9a4786f765d1a12ad32a",
+        "item": [
+          "checks-3",
+          "disassem/README.md"
+        ]
+      }
+    },
+    {
+      "check": "check_frozen_source",
+      "detail": {
+        "actual": null,
+        "expected": "0f3f8795acaaf986271e04840bf81a9bd2a4f32c82d44778c144f95852d00ca2",
+        "item": [
+          "checks-3",
+          "include/README.md"
+        ]
+      }
+    },
+    {
+      "check": "check_frozen_source",
+      "detail": {
+        "actual": null,
+        "expected": "56204ffb2f575d574c4b7db59f47e38bb0b00b141f800e0ce1d10384e4b39a03",
+        "item": [
+          "checks-3",
+          "kernel_baseline/README.md"
+        ]
+      }
+    },
+    {
+      "check": "check_frozen_source",
+      "detail": {
+        "actual": null,
+        "expected": "e5d86f7955465f83e6f0380b8c4983a2c626fd02eece5bda94b8bc764efd42e5",
+        "item": [
+          "checks-3",
+          "kernel_baseline/experiments/README.md"
+        ]
+      }
+    },
+    {
+      "check": "check_frozen_source",
+      "detail": {
+        "actual": null,
+        "expected": "9ed2362d0c8833066d4e7b0982fbb35860bdc6e94823e0b7d93a2fef09fcca87",
+        "item": [
+          "checks-3",
+          "kernel_baseline/experiments/mutex_clobber/README.md"
+        ]
+      }
+    },
+    {
+      "check": "check_frozen_source",
+      "detail": {
+        "actual": null,
+        "expected": "de873f9d62cb8335241e39ddb4fa1ab464340916e2ea519463966094117d83a4",
+        "item": [
+          "checks-3",
+          "kernel_baseline/experiments/spin_clobber/README.md"
+        ]
+      }
+    },
+    {
+      "check": "check_frozen_source",
+      "detail": {
+        "actual": null,
+        "expected": "b2815321b229b0c60f8649bcae1b9daa706c53946b76e8a901ee51acbc3f3a92",
+        "item": [
+          "checks-3",
+          "kernel_baseline/experiments/spin_static/README.md"
+        ]
+      }
+    },
+    {
+      "check": "check_frozen_source",
+      "detail": {
+        "actual": null,
+        "expected": "d5b7635640aacf248211c597b67345d6c0e68d4cb160497bb18c043833721f6d",
+        "item": [
+          "checks-3",
+          "kernel_baseline/nopvspin-grub.cfg"
+        ]
+      }
+    },
+    {
+      "check": "check_frozen_source",
+      "detail": {
+        "actual": null,
+        "expected": "5aa1b8b89080e80a1fec2edf9f759c2bfacfa20c5e1673df17eab56e11394204",
+        "item": [
+          "checks-3",
+          "kernel_module/README.md"
+        ]
+      }
+    },
+    {
+      "check": "check_frozen_source",
+      "detail": {
+        "actual": null,
+        "expected": "2481a5d71e2488f2bbc0d1ad2faa0f54f3aedce1ebeb7da361368ed586736774",
+        "item": [
+          "checks-3",
+          "tclock_backend/README.md"
+        ]
+      }
+    },
+    {
+      "check": "check_frozen_source",
+      "detail": {
+        "actual": null,
+        "expected": "10a79b3ca6ff6e9c0a0079a01d0c6cf3706011c6b8693e1c9d8fa2827eb880b1",
+        "item": [
+          "checks-3",
+          "tests/kernel/jit_escape/README.md"
+        ]
+      }
+    },
+    {
+      "check": "check_frozen_source",
+      "detail": {
+        "actual": null,
+        "expected": "02272250e17f9d3c3d07a51eab3c53fc39508a88497438ed20c619c33161523e",
+        "item": [
+          "checks-3",
+          "tests/kernel/mutex/local/README.md"
+        ]
+      }
+    },
+    {
+      "check": "check_frozen_source",
+      "detail": {
+        "actual": null,
+        "expected": "81750b4d5d83e8659bf066b64e4b35ba6033790abf5abc09b0bb4304d6245ba3",
+        "item": [
+          "checks-3",
+          "tests/kernel/rwlock/README.md"
+        ]
+      }
+    },
+    {
+      "check": "check_frozen_source",
+      "detail": {
+        "actual": null,
+        "expected": "69838b15768daaa1198d1b83878b8d81476266cbe1396d9fc27fb9554f9261a1",
+        "item": [
+          "checks-3",
+          "tests/kernel/rwsem/README.md"
+        ]
+      }
+    },
+    {
+      "check": "check_frozen_source",
+      "detail": {
+        "actual": null,
+        "expected": "09f9d107959efff997e18c5e0cae385d4a0cbc6a391727c59c263d1be5b1061a",
+        "item": [
+          "checks-3",
+          "tests/kernel/spin/address_guard/README.md"
+        ]
+      }
+    },
+    {
+      "check": "check_frozen_source",
+      "detail": {
+        "actual": null,
+        "expected": "eaa67f3d31d9aac946b8aa86615df8e06bd2ccc98b53381a0078006103b15add",
+        "item": [
+          "checks-3",
+          "tests/kernel/spin/irq_api/README.md"
+        ]
+      }
+    },
+    {
+      "check": "check_frozen_source",
+      "detail": {
+        "actual": null,
+        "expected": "6fcc12d87c5a1a92287c09643bc20194fa2107bbcc8745ee05506f834a09b162",
+        "item": [
+          "checks-3",
+          "tests/kernel/spin/string_service/README.md"
+        ]
+      }
+    },
+    {
+      "check": "check_frozen_source",
+      "detail": {
+        "actual": null,
+        "expected": "8e1ea5d9987ce22e9e7ddfb45c6b57670ed45727c737765ddd2be2fa63ed40a0",
+        "item": [
+          "checks-3",
+          "tests/unit/admission/fixtures/xattr-memcpy-caller.bin"
+        ]
+      }
+    },
+    {
+      "check": "check_frozen_source",
+      "detail": {
+        "actual": null,
+        "expected": "e89947113d6232f9fdacd43088f29fa97e92b74a0dfe60d8aaad507f2c796a0e",
+        "item": [
+          "checks-3",
+          "tests/unit/admission/fixtures/xattr-memcpy-kernel.bin"
+        ]
+      }
+    },
+    {
+      "check": "check_frozen_source",
+      "detail": {
+        "actual": null,
+        "expected": "c3a462c445e5d7a50684e482c8c9ab227b3abdbc02ab6cae2904387bfb5d012c",
+        "item": [
+          "checks-3",
+          "workload_modules/README.md"
+        ]
+      }
+    },
+    {
+      "check": "check_frozen_source",
+      "detail": {
+        "actual": null,
+        "expected": "0cd102a56e0a57b3514d57c19f4c8fd4c4d29b8857cb1c48e0cd2d49310144d6",
+        "item": [
+          "checks-3",
+          "workload_modules/jit_escape/README.md"
+        ]
+      }
+    },
+    {
+      "check": "check_frozen_source",
+      "detail": {
+        "actual": null,
+        "expected": "297cae91e0332415f4c4dde50d3f808446fbc0cb394ef592dbeb25b0147e3cf8",
+        "item": [
+          "checks-3",
+          "workload_modules/mutex_cacheline/README.md"
+        ]
+      }
+    },
+    {
+      "check": "check_frozen_source",
+      "detail": {
+        "actual": null,
+        "expected": "b5e65ea9cd8a941c348b5d9469d0fe2df454d1eaa2a39de0680c650216b7bbba",
+        "item": [
+          "checks-3",
+          "workload_modules/rwlock/README.md"
+        ]
+      }
+    },
+    {
+      "check": "check_frozen_source",
+      "detail": {
+        "actual": null,
+        "expected": "741dbdd900e4dad651e20add8b452b827ec268ec70d9bc83ab0f06f8f85aa36b",
+        "item": [
+          "checks-3",
+          "workload_modules/rwlock_bench/README.md"
+        ]
+      }
+    },
+    {
+      "check": "check_frozen_source",
+      "detail": {
+        "actual": null,
+        "expected": "e45f523e5805136e080e8c371f04d6b39eb0882f10f599afb10416d9bd337acc",
+        "item": [
+          "checks-3",
+          "workload_modules/spin_cacheline/README.md"
+        ]
+      }
+    }
+  ],
+  "limits": "Class changes and failed endpoint checks remain unresolved. Counters are observations, not ownership authority. Inclusive timings overlap and change contention. No causal fix or performance acceptance is established.",
+  "members": 3825,
+  "original_archives_sha256": "7b7dad099d06b2c8964d9e1831b9e02e7f0bba0e209420982a5904972330c3c4",
+  "retired": 27,
+  "retirements": [
+    {
+      "name": "pipecap-t05-r0-baseline-kd-plain",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      },
+      "run": "run-1"
+    },
+    {
+      "name": "pipecap-t05-r0-public-kd-plain",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      },
+      "run": "run-1"
+    },
+    {
+      "name": "pipecap-t05-r0-baseline-kd-counts",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      },
+      "run": "run-1"
+    },
+    {
+      "name": "pipecap-t05-r0-baseline-kd-plain",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      },
+      "run": "run-2"
+    },
+    {
+      "name": "pipecap-t05-r0-public-kd-plain",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      },
+      "run": "run-2"
+    },
+    {
+      "name": "pipecap-t05-r0-baseline-kd-counts",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      },
+      "run": "run-2"
+    },
+    {
+      "name": "pipecap-t05-r0-public-kd-counts",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      },
+      "run": "run-2"
+    },
+    {
+      "name": "pipecap-t05-r0-baseline-kd-profile",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      },
+      "run": "run-2"
+    },
+    {
+      "name": "pipecap-t05-r0-public-kd-profile",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      },
+      "run": "run-2"
+    },
+    {
+      "name": "pipecap-t05-r0-baseline-kd-timing",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      },
+      "run": "run-2"
+    },
+    {
+      "name": "pipecap-t05-r0-public-kd-timing",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      },
+      "run": "run-2"
+    },
+    {
+      "name": "pipecap-t05-r1-baseline-kd-counts",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      },
+      "run": "run-2"
+    },
+    {
+      "name": "pipecap-t05-r1-public-kd-counts",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      },
+      "run": "run-2"
+    },
+    {
+      "name": "pipecap-t05-r1-baseline-kd-profile",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      },
+      "run": "run-2"
+    },
+    {
+      "name": "pipecap-t05-r1-public-kd-profile",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      },
+      "run": "run-2"
+    },
+    {
+      "name": "pipecap-t05-r1-baseline-kd-timing",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      },
+      "run": "run-2"
+    },
+    {
+      "name": "pipecap-t05-r1-public-kd-timing",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      },
+      "run": "run-2"
+    },
+    {
+      "name": "pipecap-t05-r1-baseline-kd-plain",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      },
+      "run": "run-2"
+    },
+    {
+      "name": "pipecap-t05-r1-public-kd-plain",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      },
+      "run": "run-2"
+    },
+    {
+      "name": "pipecap-t05-r2-baseline-kd-profile",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      },
+      "run": "run-2"
+    },
+    {
+      "name": "pipecap-t05-r2-public-kd-profile",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      },
+      "run": "run-2"
+    },
+    {
+      "name": "pipecap-t05-r2-baseline-kd-timing",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      },
+      "run": "run-2"
+    },
+    {
+      "name": "pipecap-t05-r2-public-kd-timing",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      },
+      "run": "run-2"
+    },
+    {
+      "name": "pipecap-t05-r2-baseline-kd-plain",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      },
+      "run": "run-2"
+    },
+    {
+      "name": "pipecap-t05-r2-public-kd-plain",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      },
+      "run": "run-2"
+    },
+    {
+      "name": "pipecap-t05-r2-baseline-kd-counts",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      },
+      "run": "run-2"
+    },
+    {
+      "name": "pipecap-t05-r2-public-kd-counts",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      },
+      "run": "run-2"
+    }
+  ],
+  "source_sha256": "dc32576b2972b5c2e487cde6372712e9933921fb960892caa8ca9332e0f2e6dc",
+  "symlinks": 122
+}

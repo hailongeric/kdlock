@@ -1,0 +1,124 @@
+{
+  "complete": true,
+  "limits": "Offset bounds include SSH RTT. Between-calibration clock drift and polling gaps must remain explicit; no clock setting is changed.",
+  "samples": [
+    {
+      "repetition": 0,
+      "source_after_ns": 9627637657069332,
+      "source_before_ns": 9627637356238186,
+      "source_minus_target_bounds_ns": [
+        8707757156177958,
+        8707757457009104
+      ],
+      "target": "host",
+      "target_clock": {
+        "affinity": [
+          62
+        ],
+        "boot_id": "2b39cf56-2146-4c87-9fa5-28c66dcee12c",
+        "monotonic_ns": 919880200060228,
+        "realtime_after_ns": 1792532753524390097,
+        "realtime_before_ns": 1792532753524383903
+      }
+    },
+    {
+      "repetition": 0,
+      "source_after_ns": 9627638156365988,
+      "source_before_ns": 9627637657158407,
+      "source_minus_target_bounds_ns": [
+        9138023395545859,
+        9138023894753440
+      ],
+      "target": "guest",
+      "target_clock": {
+        "affinity": [
+          62
+        ],
+        "boot_id": "b65f0205-c8f9-4385-8b13-039cbce243a6",
+        "monotonic_ns": 489614261612548,
+        "realtime_after_ns": 1792532754015794354,
+        "realtime_before_ns": 1792532754015785954
+      }
+    },
+    {
+      "repetition": 1,
+      "source_after_ns": 9627638462058167,
+      "source_before_ns": 9627638156412466,
+      "source_minus_target_bounds_ns": [
+        8707757150023462,
+        8707757455669163
+      ],
+      "target": "host",
+      "target_clock": {
+        "affinity": [
+          62
+        ],
+        "boot_id": "2b39cf56-2146-4c87-9fa5-28c66dcee12c",
+        "monotonic_ns": 919881006389004,
+        "realtime_after_ns": 1792532754330719781,
+        "realtime_before_ns": 1792532754330713809
+      }
+    },
+    {
+      "repetition": 1,
+      "source_after_ns": 9627638806821547,
+      "source_before_ns": 9627638462114503,
+      "source_minus_target_bounds_ns": [
+        9138023549466657,
+        9138023894173701
+      ],
+      "target": "guest",
+      "target_clock": {
+        "affinity": [
+          62
+        ],
+        "boot_id": "b65f0205-c8f9-4385-8b13-039cbce243a6",
+        "monotonic_ns": 489614912647846,
+        "realtime_after_ns": 1792532754666829477,
+        "realtime_before_ns": 1792532754666821678
+      }
+    },
+    {
+      "repetition": 2,
+      "source_after_ns": 9627639113372403,
+      "source_before_ns": 9627638806894045,
+      "source_minus_target_bounds_ns": [
+        8707757148847864,
+        8707757455326222
+      ],
+      "target": "host",
+      "target_clock": {
+        "affinity": [
+          62
+        ],
+        "boot_id": "2b39cf56-2146-4c87-9fa5-28c66dcee12c",
+        "monotonic_ns": 919881658046181,
+        "realtime_after_ns": 1792532754982375866,
+        "realtime_before_ns": 1792532754982369849
+      }
+    },
+    {
+      "repetition": 2,
+      "source_after_ns": 9627639438696271,
+      "source_before_ns": 9627639113417159,
+      "source_minus_target_bounds_ns": [
+        9138023559678384,
+        9138023884957496
+      ],
+      "target": "guest",
+      "target_clock": {
+        "affinity": [
+          62
+        ],
+        "boot_id": "b65f0205-c8f9-4385-8b13-039cbce243a6",
+        "monotonic_ns": 489615553738775,
+        "realtime_after_ns": 1792532755307920544,
+        "realtime_before_ns": 1792532755307896729
+      }
+    }
+  ],
+  "schema": 1,
+  "source_boot_id": "6d1e4881-6622-4001-8460-c3d4f244c33f",
+  "source_host": "380G10",
+  "source_sha256": "6fac113713665051b2188e51bcdc4d4a7601e4028417fd4c91e2cf4e7d95a637"
+}

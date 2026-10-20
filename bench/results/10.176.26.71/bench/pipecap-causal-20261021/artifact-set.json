@@ -1,0 +1,176 @@
+{
+  "guest_archives": "/root/kdlock-evidence/10.176.26.71/bench/pipecap-causal-20261021-archives-1",
+  "host_observer_streams": [
+    {
+      "compressed_bytes": 3845031,
+      "file": "host-observation-1.jsonl.gz",
+      "sha256": "cd0b532f16effa60f6995d0baff1243e6083f8c977dcc183ab4f8e51033544c3",
+      "summary": "host-observation-1-summary.json",
+      "uncompressed_bytes": 279364586,
+      "uncompressed_sha256": "c42441586f21db40154682e2d7527ddf7dc356e8a53f0a2cb5a83663ee086836"
+    },
+    {
+      "compressed_bytes": 5455696,
+      "file": "host-observation-2.jsonl.gz",
+      "sha256": "e3eda847026e08f3e3f85513a257c680fe61dfdc705b7462f324fcdde6033320",
+      "summary": "host-observation-2-summary.json",
+      "uncompressed_bytes": 302826446,
+      "uncompressed_sha256": "964e549a1ce4daff2f521ce4148673203af628799f11167d92fbbad253e4df22"
+    }
+  ],
+  "original_archive_manifest": "../mutex-public-20261020-r2/archives.json",
+  "original_archive_manifest_sha256": "7b7dad099d06b2c8964d9e1831b9e02e7f0bba0e209420982a5904972330c3c4",
+  "raw_directory": "bench/results/10.176.26.71/raw/bench/pipecap-causal-20261021",
+  "sidecars": {
+    "archive_run.py": {
+      "bytes": 10968,
+      "sha256": "8d666f148a10d7fe19294cc7d193464c8bb53d4c3aec64b7518b9d335966c952"
+    },
+    "archives.json": {
+      "bytes": 3150,
+      "sha256": "67046e41174b5bd1feb73ec118879e1ea993bc4c3fa84ad4e92dfb3fde5f196f"
+    },
+    "clock-after-1.json": {
+      "bytes": 3536,
+      "sha256": "3bf8c97f12df1072ad1d8769d6ee5ebe5ee1c6687ed6d2c4c49688f250204082"
+    },
+    "clock-after-2.json": {
+      "bytes": 3536,
+      "sha256": "b81b4a3b63c44d66b24a7c3e98e12ef4560ab354d180c5f532fea2d3a841349b"
+    },
+    "clock-before-1.json": {
+      "bytes": 3536,
+      "sha256": "4dc1f3cd5fe8e4f5ef4eecf6bf70d844ffa2f260c066ecdd93b1989cb2a29cd4"
+    },
+    "clock-before-2.json": {
+      "bytes": 3536,
+      "sha256": "0be46c455571987af4dec6eaaf0494a2bc3ce1fcadadcbe71ffa9338d08600fe"
+    },
+    "host-observation-1.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "host-observation-2.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "host-original.json": {
+      "bytes": 129649,
+      "sha256": "18d28845cf8a468d7ee37206f2f7c23327ebfd51fe1b6c2123de0c76d2b2d883"
+    },
+    "input-inventory.json": {
+      "bytes": 1157331,
+      "sha256": "61511c6207cfbd4afa607af62a7a17ed47a4b0a1966d4305ecab75fb4067b252"
+    },
+    "original-elf/baseline-pipecap-nm.txt": {
+      "bytes": 47134,
+      "sha256": "d6f4ba2b60ae74cc266d78b76b03afe76718ad97356b80de836f57c31d96796a"
+    },
+    "original-elf/current-pipecap-nm.txt": {
+      "bytes": 47854,
+      "sha256": "f59e997cd2f8ef5386ee821840cbb798e3ec418d8714c3299d559cc0c48bf3c8"
+    },
+    "original-elf/module-symbol-sizes.json": {
+      "bytes": 389679,
+      "sha256": "5af7bd091eb6c7a219230dad58ba798aa767660a516628b03f49791d099c3ebe"
+    },
+    "perf-help.txt": {
+      "bytes": 6464,
+      "sha256": "5cadad304e9db902f3b658408f361fe557774cf2aea94e0f1fd1470672344156"
+    },
+    "run-1-records.json": {
+      "bytes": 411811,
+      "sha256": "8f3734f0671430244c4230292985e8cd9fff97b353bee4fcac7245d5234e574d"
+    },
+    "run-2-records.json": {
+      "bytes": 2750739,
+      "sha256": "5c9cf1846d47e7abce80bce47c6b5a10e0a2eaaa0c5c04a8b0e7d411c4d2eca8"
+    },
+    "source-host-logs/kdlock-pipecap-archive-1-console.log": {
+      "bytes": 2055,
+      "sha256": "6c35d1477e1e4ff20a43cd4b143b683d5603644cd9ae86219c0fb3a169f634f2"
+    },
+    "source-host-logs/kdlock-pipecap-checks-1-console.log": {
+      "bytes": 354,
+      "sha256": "1a928de70fd3c8d62a2bffe5a4050fe25ef579a0622c69b561cf674920d99dab"
+    },
+    "source-host-logs/kdlock-pipecap-checks-2-console.log": {
+      "bytes": 354,
+      "sha256": "1a928de70fd3c8d62a2bffe5a4050fe25ef579a0622c69b561cf674920d99dab"
+    },
+    "source-host-logs/kdlock-pipecap-checks-3-console.log": {
+      "bytes": 354,
+      "sha256": "1a928de70fd3c8d62a2bffe5a4050fe25ef579a0622c69b561cf674920d99dab"
+    },
+    "source-host-logs/kdlock-pipecap-clock-after-1-console.log": {
+      "bytes": 85,
+      "sha256": "93adf03e8fcd8ab493a5a327794900fcd00269908ed3a6ad5b5204108e260ca6"
+    },
+    "source-host-logs/kdlock-pipecap-clock-after-2-console.log": {
+      "bytes": 85,
+      "sha256": "ed35d8c84d67b3e2b9fc91fd59df4ca284d0e931f4747e5016e5ac8ee07309a7"
+    },
+    "source-host-logs/kdlock-pipecap-clock-before-1-console.log": {
+      "bytes": 86,
+      "sha256": "a7bc726401b20d4c013bd04312a8ff88fa8131fa537f75ad33672c4df7085c97"
+    },
+    "source-host-logs/kdlock-pipecap-clock-before-2-console.log": {
+      "bytes": 86,
+      "sha256": "5de1a70da7c5c223ed00763703109f3a1ccdb5bb77b5c9157abaf5501f014da0"
+    },
+    "source-host-logs/kdlock-pipecap-health-1-console.log": {
+      "bytes": 3463,
+      "sha256": "6713d87c5c5ffda2e023c09ec6aefcdf8ceb64369f6c8702a6196619a3f6f5e2"
+    },
+    "source-host-logs/kdlock-pipecap-host-analysis-1.log": {
+      "bytes": 643,
+      "sha256": "aa345851fdefea0183dc59a1450b47a8b59ce5b871dd56656d2efcf5c624257e"
+    },
+    "source-host-logs/kdlock-pipecap-host-analysis-2.log": {
+      "bytes": 649,
+      "sha256": "c506dcf045516c9c994ffe1247e20eb13f3742c09c97eca0dd92c915a09345a5"
+    },
+    "source-host-logs/kdlock-pipecap-offline-review-1.log": {
+      "bytes": 824,
+      "sha256": "be0295edc8eecf443cd129ba15f8513d0cced842bf831f8aeecfd52edc268a96"
+    },
+    "source-host-logs/kdlock-pipecap-offline-review-2.log": {
+      "bytes": 796,
+      "sha256": "388aa44a66187af43247a2dff4ed46050021b0fcfe2a49812843e64364cc0bbe"
+    },
+    "source-host-logs/kdlock-pipecap-profile-analysis-1.log": {
+      "bytes": 273,
+      "sha256": "076f548d2bbcc53efbf81f403080285ecae1809cdd5dc57aff2f09b5961d96af"
+    },
+    "source-host-logs/kdlock-pipecap-run-1-console.log": {
+      "bytes": 3163,
+      "sha256": "cacc879c2a143e1b3924cfe477542027a2e2e0c41f18a5641a050d1ce3415a2d"
+    },
+    "source-host-logs/kdlock-pipecap-run-2-console.log": {
+      "bytes": 2756,
+      "sha256": "f5e4e31b25ffb3a70212ac2899016e904c986573154b70cd22869781e5a2f3b0"
+    },
+    "source-host-logs/kdlock-pipecap-sync-1.log": {
+      "bytes": 11914,
+      "sha256": "250b5a4997703ec0711383e9aab2e1e12c336200b4d3e557da0d5760117e013d"
+    },
+    "source-host-logs/kdlock-pipecap-sync-2.log": {
+      "bytes": 497,
+      "sha256": "3ea2a622d21c9a2dbbbd72bc1d960ed320bf975d179361b752795bdbf8aa5c2e"
+    },
+    "source-host-logs/kdlock-pipecap-sync-3.log": {
+      "bytes": 497,
+      "sha256": "83414c76d5596004d44f4a4796656fc8c24e49b6a8631f6154c97b9781975818"
+    },
+    "source-host-logs/kdlock-pipecap-sync-4.log": {
+      "bytes": 2260,
+      "sha256": "45a5749a7b01faebf4d21a5420c6d8c4182e3da1e467ecde5fa853685990abaf"
+    },
+    "source-host-logs/kdlock-pipecap-sync-5.log": {
+      "bytes": 3758,
+      "sha256": "cba5f4252dd29e0937a2ae7cf57474cfd1933ccb3a33f6cfa1020c10da41c5db"
+    }
+  },
+  "vm_archive_manifest": "archives.json",
+  "vm_archive_manifest_sha256": "67046e41174b5bd1feb73ec118879e1ea993bc4c3fa84ad4e92dfb3fde5f196f"
+}

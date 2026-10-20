@@ -1,0 +1,243 @@
+
+bench/results/10.176.26.71/raw/bench/mutex-public-20261020-profiles-1/original-elf/current-pipecap-provider.ko:     file format elf64-x86-64
+
+
+Disassembly of section .text:
+
+00000000000127c0 <__kd_mutex_lock_slowpath>:
+   127c0:	41 55                	push   %r13
+   127c2:	31 c0                	xor    %eax,%eax
+   127c4:	49 89 fd             	mov    %rdi,%r13
+   127c7:	41 54                	push   %r12
+   127c9:	49 c7 c4 00 00 00 00 	mov    $0x0,%r12
+   127d0:	53                   	push   %rbx
+   127d1:	48 89 d3             	mov    %rdx,%rbx
+   127d4:	48 83 ec 08          	sub    $0x8,%rsp
+   127d8:	65 4c 03 25 00 00 00 	add    %gs:0x0(%rip),%r12        # 127e0 <__kd_mutex_lock_slowpath+0x20>
+   127df:	00 
+   127e0:	80 3d 00 00 00 00 00 	cmpb   $0x0,0x0(%rip)        # 127e7 <__kd_mutex_lock_slowpath+0x27>
+   127e7:	0f 85 b2 01 00 00    	jne    1299f <__kd_mutex_lock_slowpath+0x1df>
+   127ed:	48 89 83 28 01 00 00 	mov    %rax,0x128(%rbx)
+   127f4:	41 87 75 1c          	xchg   %esi,0x1c(%r13)
+   127f8:	b9 01 00 00 00       	mov    $0x1,%ecx
+   127fd:	65 0f c1 0d 00 00 00 	xadd   %ecx,%gs:0x0(%rip)        # 12805 <__kd_mutex_lock_slowpath+0x45>
+   12804:	00 
+   12805:	4d 85 ed             	test   %r13,%r13
+   12808:	0f 84 8f 01 00 00    	je     1299d <__kd_mutex_lock_slowpath+0x1dd>
+   1280e:	48 8b 43 58          	mov    0x58(%rbx),%rax
+   12812:	48 83 f8 fd          	cmp    $0xfffffffffffffffd,%rax
+   12816:	0f 87 7f 01 00 00    	ja     1299b <__kd_mutex_lock_slowpath+0x1db>
+   1281c:	a8 01                	test   $0x1,%al
+   1281e:	0f 85 77 01 00 00    	jne    1299b <__kd_mutex_lock_slowpath+0x1db>
+   12824:	48 8b 53 60          	mov    0x60(%rbx),%rdx
+   12828:	48 85 d2             	test   %rdx,%rdx
+   1282b:	0f 85 e0 01 00 00    	jne    12a11 <__kd_mutex_lock_slowpath+0x251>
+   12831:	48 8d 50 01          	lea    0x1(%rax),%rdx
+   12835:	83 c1 01             	add    $0x1,%ecx
+   12838:	48 89 53 58          	mov    %rdx,0x58(%rbx)
+   1283c:	4c 89 6b 60          	mov    %r13,0x60(%rbx)
+   12840:	48 83 c0 02          	add    $0x2,%rax
+   12844:	48 89 43 58          	mov    %rax,0x58(%rbx)
+   12848:	65 8b 15 00 00 00 00 	mov    %gs:0x0(%rip),%edx        # 1284f <__kd_mutex_lock_slowpath+0x8f>
+   1284f:	eb 10                	jmp    12861 <__kd_mutex_lock_slowpath+0xa1>
+   12851:	89 d0                	mov    %edx,%eax
+   12853:	65 0f b1 0d 00 00 00 	cmpxchg %ecx,%gs:0x0(%rip)        # 1285b <__kd_mutex_lock_slowpath+0x9b>
+   1285a:	00 
+   1285b:	39 c2                	cmp    %eax,%edx
+   1285d:	74 06                	je     12865 <__kd_mutex_lock_slowpath+0xa5>
+   1285f:	89 c2                	mov    %eax,%edx
+   12861:	39 d1                	cmp    %edx,%ecx
+   12863:	7f ec                	jg     12851 <__kd_mutex_lock_slowpath+0x91>
+   12865:	85 f6                	test   %esi,%esi
+   12867:	74 61                	je     128ca <__kd_mutex_lock_slowpath+0x10a>
+   12869:	89 f0                	mov    %esi,%eax
+   1286b:	c1 ee 04             	shr    $0x4,%esi
+   1286e:	c1 e8 02             	shr    $0x2,%eax
+   12871:	83 ee 01             	sub    $0x1,%esi
+   12874:	83 e0 03             	and    $0x3,%eax
+   12877:	48 63 f6             	movslq %esi,%rsi
+   1287a:	48 8d 04 80          	lea    (%rax,%rax,4),%rax
+   1287e:	48 c1 e0 06          	shl    $0x6,%rax
+   12882:	48 05 00 00 00 00    	add    $0x0,%rax
+   12888:	48 03 04 f5 00 00 00 	add    0x0(,%rsi,8),%rax
+   1288f:	00 
+   12890:	48 89 18             	mov    %rbx,(%rax)
+   12893:	80 3d 00 00 00 00 00 	cmpb   $0x0,0x0(%rip)        # 1289a <__kd_mutex_lock_slowpath+0xda>
+   1289a:	75 07                	jne    128a3 <__kd_mutex_lock_slowpath+0xe3>
+   1289c:	e9 00 00 00 00       	jmp    128a1 <__kd_mutex_lock_slowpath+0xe1>
+   128a1:	f3 90                	pause  
+   128a3:	0f b6 83 31 01 00 00 	movzbl 0x131(%rbx),%eax
+   128aa:	84 c0                	test   %al,%al
+   128ac:	75 f3                	jne    128a1 <__kd_mutex_lock_slowpath+0xe1>
+   128ae:	0f b6 83 32 01 00 00 	movzbl 0x132(%rbx),%eax
+   128b5:	84 c0                	test   %al,%al
+   128b7:	0f 85 f4 00 00 00    	jne    129b1 <__kd_mutex_lock_slowpath+0x1f1>
+   128bd:	80 bb 30 01 00 00 00 	cmpb   $0x0,0x130(%rbx)
+   128c4:	0f 85 49 01 00 00    	jne    12a13 <__kd_mutex_lock_slowpath+0x253>
+   128ca:	48 89 de             	mov    %rbx,%rsi
+   128cd:	4c 89 ef             	mov    %r13,%rdi
+   128d0:	e8 7b 13 ff ff       	call   3c50 <kd_mutex_wait_and_lock_node>
+   128d5:	80 3d 00 00 00 00 00 	cmpb   $0x0,0x0(%rip)        # 128dc <__kd_mutex_lock_slowpath+0x11c>
+   128dc:	0f 85 af 01 00 00    	jne    12a91 <__kd_mutex_lock_slowpath+0x2d1>
+   128e2:	48 8b 33             	mov    (%rbx),%rsi
+   128e5:	48 85 f6             	test   %rsi,%rsi
+   128e8:	0f 84 85 00 00 00    	je     12973 <__kd_mutex_lock_slowpath+0x1b3>
+   128ee:	41 c7 45 18 03 00 00 	movl   $0x3,0x18(%r13)
+   128f5:	00 
+   128f6:	4c 89 ef             	mov    %r13,%rdi
+   128f9:	e8 82 fa ff ff       	call   12380 <kd_mutex_run_combiner>
+   128fe:	41 8b 45 18          	mov    0x18(%r13),%eax
+   12902:	83 f8 01             	cmp    $0x1,%eax
+   12905:	0f 85 19 02 00 00    	jne    12b24 <__kd_mutex_lock_slowpath+0x364>
+   1290b:	48 8b 43 58          	mov    0x58(%rbx),%rax
+   1290f:	48 83 f8 fd          	cmp    $0xfffffffffffffffd,%rax
+   12913:	0f 87 f6 00 00 00    	ja     12a0f <__kd_mutex_lock_slowpath+0x24f>
+   12919:	a8 01                	test   $0x1,%al
+   1291b:	0f 85 ee 00 00 00    	jne    12a0f <__kd_mutex_lock_slowpath+0x24f>
+   12921:	48 8b 53 60          	mov    0x60(%rbx),%rdx
+   12925:	49 39 d5             	cmp    %rdx,%r13
+   12928:	0f 85 f8 01 00 00    	jne    12b26 <__kd_mutex_lock_slowpath+0x366>
+   1292e:	48 8d 50 01          	lea    0x1(%rax),%rdx
+   12932:	48 89 53 58          	mov    %rdx,0x58(%rbx)
+   12936:	48 c7 43 60 00 00 00 	movq   $0x0,0x60(%rbx)
+   1293d:	00 
+   1293e:	48 83 c0 02          	add    $0x2,%rax
+   12942:	48 89 43 58          	mov    %rax,0x58(%rbx)
+   12946:	b8 ff ff ff ff       	mov    $0xffffffff,%eax
+   1294b:	65 0f c1 05 00 00 00 	xadd   %eax,%gs:0x0(%rip)        # 12953 <__kd_mutex_lock_slowpath+0x193>
+   12952:	00 
+   12953:	83 e8 01             	sub    $0x1,%eax
+   12956:	41 bc 02 00 00 00    	mov    $0x2,%r12d
+   1295c:	0f 88 09 01 00 00    	js     12a6b <__kd_mutex_lock_slowpath+0x2ab>
+   12962:	48 83 c4 08          	add    $0x8,%rsp
+   12966:	44 89 e0             	mov    %r12d,%eax
+   12969:	5b                   	pop    %rbx
+   1296a:	41 5c                	pop    %r12
+   1296c:	41 5d                	pop    %r13
+   1296e:	e9 00 00 00 00       	jmp    12973 <__kd_mutex_lock_slowpath+0x1b3>
+   12973:	41 8b 45 1c          	mov    0x1c(%r13),%eax
+   12977:	3b 43 48             	cmp    0x48(%rbx),%eax
+   1297a:	75 11                	jne    1298d <__kd_mutex_lock_slowpath+0x1cd>
+   1297c:	31 d2                	xor    %edx,%edx
+   1297e:	f0 41 0f b1 55 1c    	lock cmpxchg %edx,0x1c(%r13)
+   12984:	3b 43 48             	cmp    0x48(%rbx),%eax
+   12987:	75 04                	jne    1298d <__kd_mutex_lock_slowpath+0x1cd>
+   12989:	eb 80                	jmp    1290b <__kd_mutex_lock_slowpath+0x14b>
+   1298b:	f3 90                	pause  
+   1298d:	48 8b 33             	mov    (%rbx),%rsi
+   12990:	48 85 f6             	test   %rsi,%rsi
+   12993:	0f 85 55 ff ff ff    	jne    128ee <__kd_mutex_lock_slowpath+0x12e>
+   12999:	eb f0                	jmp    1298b <__kd_mutex_lock_slowpath+0x1cb>
+   1299b:	0f 0b                	ud2    
+   1299d:	0f 0b                	ud2    
+   1299f:	89 74 24 04          	mov    %esi,0x4(%rsp)
+   129a3:	e8 00 00 00 00       	call   129a8 <__kd_mutex_lock_slowpath+0x1e8>
+   129a8:	8b 74 24 04          	mov    0x4(%rsp),%esi
+   129ac:	e9 3c fe ff ff       	jmp    127ed <__kd_mutex_lock_slowpath+0x2d>
+   129b1:	49 89 5c 24 08       	mov    %rbx,0x8(%r12)
+   129b6:	48 8b 43 58          	mov    0x58(%rbx),%rax
+   129ba:	48 83 f8 fd          	cmp    $0xfffffffffffffffd,%rax
+   129be:	0f 87 73 01 00 00    	ja     12b37 <__kd_mutex_lock_slowpath+0x377>
+   129c4:	a8 01                	test   $0x1,%al
+   129c6:	0f 85 6b 01 00 00    	jne    12b37 <__kd_mutex_lock_slowpath+0x377>
+   129cc:	48 8b 53 60          	mov    0x60(%rbx),%rdx
+   129d0:	49 39 d5             	cmp    %rdx,%r13
+   129d3:	0f 85 62 01 00 00    	jne    12b3b <__kd_mutex_lock_slowpath+0x37b>
+   129d9:	48 8d 50 01          	lea    0x1(%rax),%rdx
+   129dd:	48 89 53 58          	mov    %rdx,0x58(%rbx)
+   129e1:	48 c7 43 60 00 00 00 	movq   $0x0,0x60(%rbx)
+   129e8:	00 
+   129e9:	48 83 c0 02          	add    $0x2,%rax
+   129ed:	48 89 43 58          	mov    %rax,0x58(%rbx)
+   129f1:	b8 ff ff ff ff       	mov    $0xffffffff,%eax
+   129f6:	65 0f c1 05 00 00 00 	xadd   %eax,%gs:0x0(%rip)        # 129fe <__kd_mutex_lock_slowpath+0x23e>
+   129fd:	00 
+   129fe:	83 e8 01             	sub    $0x1,%eax
+   12a01:	41 bc 05 00 00 00    	mov    $0x5,%r12d
+   12a07:	0f 89 55 ff ff ff    	jns    12962 <__kd_mutex_lock_slowpath+0x1a2>
+   12a0d:	eb 5c                	jmp    12a6b <__kd_mutex_lock_slowpath+0x2ab>
+   12a0f:	0f 0b                	ud2    
+   12a11:	0f 0b                	ud2    
+   12a13:	49 89 5c 24 08       	mov    %rbx,0x8(%r12)
+   12a18:	48 8b 43 58          	mov    0x58(%rbx),%rax
+   12a1c:	48 83 f8 fd          	cmp    $0xfffffffffffffffd,%rax
+   12a20:	0f 87 13 01 00 00    	ja     12b39 <__kd_mutex_lock_slowpath+0x379>
+   12a26:	a8 01                	test   $0x1,%al
+   12a28:	0f 85 0b 01 00 00    	jne    12b39 <__kd_mutex_lock_slowpath+0x379>
+   12a2e:	48 8b 53 60          	mov    0x60(%rbx),%rdx
+   12a32:	49 39 d5             	cmp    %rdx,%r13
+   12a35:	75 58                	jne    12a8f <__kd_mutex_lock_slowpath+0x2cf>
+   12a37:	48 8d 50 01          	lea    0x1(%rax),%rdx
+   12a3b:	48 89 53 58          	mov    %rdx,0x58(%rbx)
+   12a3f:	48 c7 43 60 00 00 00 	movq   $0x0,0x60(%rbx)
+   12a46:	00 
+   12a47:	48 83 c0 02          	add    $0x2,%rax
+   12a4b:	48 89 43 58          	mov    %rax,0x58(%rbx)
+   12a4f:	b8 ff ff ff ff       	mov    $0xffffffff,%eax
+   12a54:	65 0f c1 05 00 00 00 	xadd   %eax,%gs:0x0(%rip)        # 12a5c <__kd_mutex_lock_slowpath+0x29c>
+   12a5b:	00 
+   12a5c:	83 e8 01             	sub    $0x1,%eax
+   12a5f:	41 bc 03 00 00 00    	mov    $0x3,%r12d
+   12a65:	0f 89 f7 fe ff ff    	jns    12962 <__kd_mutex_lock_slowpath+0x1a2>
+   12a6b:	65 c7 05 00 00 00 00 	movl   $0x0,%gs:0x0(%rip)        # 12a76 <__kd_mutex_lock_slowpath+0x2b6>
+   12a72:	00 00 00 00 
+   12a76:	65 48 ff 05 00 00 00 	incq   %gs:0x0(%rip)        # 12a7e <__kd_mutex_lock_slowpath+0x2be>
+   12a7d:	00 
+   12a7e:	48 c7 c7 00 00 00 00 	mov    $0x0,%rdi
+   12a85:	e8 00 00 00 00       	call   12a8a <__kd_mutex_lock_slowpath+0x2ca>
+   12a8a:	e9 d3 fe ff ff       	jmp    12962 <__kd_mutex_lock_slowpath+0x1a2>
+   12a8f:	0f 0b                	ud2    
+   12a91:	e8 00 00 00 00       	call   12a96 <__kd_mutex_lock_slowpath+0x2d6>
+   12a96:	80 3d 00 00 00 00 00 	cmpb   $0x0,0x0(%rip)        # 12a9d <__kd_mutex_lock_slowpath+0x2dd>
+   12a9d:	48 89 c2             	mov    %rax,%rdx
+   12aa0:	0f 84 3c fe ff ff    	je     128e2 <__kd_mutex_lock_slowpath+0x122>
+   12aa6:	48 8b 8b 28 01 00 00 	mov    0x128(%rbx),%rcx
+   12aad:	48 85 c9             	test   %rcx,%rcx
+   12ab0:	0f 84 2c fe ff ff    	je     128e2 <__kd_mutex_lock_slowpath+0x122>
+   12ab6:	48 c7 83 28 01 00 00 	movq   $0x0,0x128(%rbx)
+   12abd:	00 00 00 00 
+   12ac1:	48 8b 05 00 00 00 00 	mov    0x0(%rip),%rax        # 12ac8 <__kd_mutex_lock_slowpath+0x308>
+   12ac8:	48 bf fe ff ff ff ff 	movabs $0x7ffffffffffffffe,%rdi
+   12acf:	ff ff 7f 
+   12ad2:	48 39 f8             	cmp    %rdi,%rax
+   12ad5:	77 66                	ja     12b3d <__kd_mutex_lock_slowpath+0x37d>
+   12ad7:	48 8d 70 01          	lea    0x1(%rax),%rsi
+   12adb:	f0 48 0f b1 35 00 00 	lock cmpxchg %rsi,0x0(%rip)        # 12ae4 <__kd_mutex_lock_slowpath+0x324>
+   12ae2:	00 00 
+   12ae4:	75 ec                	jne    12ad2 <__kd_mutex_lock_slowpath+0x312>
+   12ae6:	48 39 d1             	cmp    %rdx,%rcx
+   12ae9:	77 3d                	ja     12b28 <__kd_mutex_lock_slowpath+0x368>
+   12aeb:	48 8b 05 00 00 00 00 	mov    0x0(%rip),%rax        # 12af2 <__kd_mutex_lock_slowpath+0x332>
+   12af2:	48 29 ca             	sub    %rcx,%rdx
+   12af5:	48 be ff ff ff ff ff 	movabs $0x7fffffffffffffff,%rsi
+   12afc:	ff ff 7f 
+   12aff:	48 85 c0             	test   %rax,%rax
+   12b02:	78 24                	js     12b28 <__kd_mutex_lock_slowpath+0x368>
+   12b04:	48 89 f1             	mov    %rsi,%rcx
+   12b07:	48 29 c1             	sub    %rax,%rcx
+   12b0a:	48 39 ca             	cmp    %rcx,%rdx
+   12b0d:	77 19                	ja     12b28 <__kd_mutex_lock_slowpath+0x368>
+   12b0f:	48 8d 0c 02          	lea    (%rdx,%rax,1),%rcx
+   12b13:	f0 48 0f b1 0d 00 00 	lock cmpxchg %rcx,0x0(%rip)        # 12b1c <__kd_mutex_lock_slowpath+0x35c>
+   12b1a:	00 00 
+   12b1c:	0f 84 c0 fd ff ff    	je     128e2 <__kd_mutex_lock_slowpath+0x122>
+   12b22:	eb db                	jmp    12aff <__kd_mutex_lock_slowpath+0x33f>
+   12b24:	0f 0b                	ud2    
+   12b26:	0f 0b                	ud2    
+   12b28:	c7 05 00 00 00 00 01 	movl   $0x1,0x0(%rip)        # 12b32 <__kd_mutex_lock_slowpath+0x372>
+   12b2f:	00 00 00 
+   12b32:	e9 ab fd ff ff       	jmp    128e2 <__kd_mutex_lock_slowpath+0x122>
+   12b37:	0f 0b                	ud2    
+   12b39:	0f 0b                	ud2    
+   12b3b:	0f 0b                	ud2    
+   12b3d:	c7 05 00 00 00 00 01 	movl   $0x1,0x0(%rip)        # 12b47 <__kd_mutex_lock_slowpath+0x387>
+   12b44:	00 00 00 
+   12b47:	eb 9d                	jmp    12ae6 <__kd_mutex_lock_slowpath+0x326>
+
+Disassembly of section .exit.text:
+
+Disassembly of section .init.text:
+
+Disassembly of section .text.unlikely:
+
+Disassembly of section .altinstr_replacement:

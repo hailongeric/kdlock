@@ -1,0 +1,4595 @@
+{
+  "complete": true,
+  "cross_clock": {
+    "condition": "Projection assumes offsets between endpoint calibrations remain inside the envelope of all observed RTT bounds. Intervening drift is unproven.",
+    "host_minus_guest_envelope_ns": [
+      430265938536755,
+      430266749025888
+    ],
+    "rtt_ns": {
+      "guest": [
+        350240833,
+        346414471,
+        306471081,
+        499207581,
+        344707044,
+        325279112
+      ],
+      "host": [
+        294111812,
+        303058111,
+        310185204,
+        300831146,
+        305645701,
+        306478358
+      ]
+    },
+    "source_minus_target_envelope_ns": {
+      "guest": [
+        9138023395545859,
+        9138023894753440
+      ],
+      "host": [
+        8707757145727552,
+        8707757457009104
+      ]
+    }
+  },
+  "final": {
+    "elapsed_ns": 900024792492,
+    "failures": 0,
+    "kind": "final",
+    "monotonic_ns": 920434622928408,
+    "observer_cpu_ns": 121900390208,
+    "realtime_ns": 1792533307947256005,
+    "samples": 17964,
+    "stopped_by_signal": false
+  },
+  "guest_boot": "b65f0205-c8f9-4385-8b13-039cbce243a6",
+  "header": {
+    "boot_id": "2b39cf56-2146-4c87-9fa5-28c66dcee12c",
+    "clock_tick_hz": 100,
+    "command_sha256": "08a7ad4ddad7da7d6437c5ebcc2987894c2e69b1cd8abd31db0bd491f30ce917",
+    "identity": {
+      "comm": "qemu-system-x86",
+      "last_cpu": 63,
+      "start_ticks": 42969155,
+      "state": "S",
+      "system_ticks": 4714695,
+      "tid": 257489,
+      "user_ticks": 190311673
+    },
+    "interval_ms": 50,
+    "kind": "header",
+    "limits": "Polling may miss short-lived tasks. Runtime is cumulative; runqueue wait requires enabled scheduler stats. No QEMU affinity or kernel setting is changed.",
+    "monotonic_ns": 919534598134287,
+    "observer_affinity": [
+      62
+    ],
+    "observer_pid": 430200,
+    "pid": 257489,
+    "realtime_ns": 1792532407922984445,
+    "scheduler_stats": "0",
+    "schema": 1,
+    "source_sha256": "1b243c3a94fcaec2ccaf1ae2e83e427dad982cfe86a893b690513e5c168e1594"
+  },
+  "host_boot": "2b39cf56-2146-4c87-9fa5-28c66dcee12c",
+  "input_sha256": {
+    "clock-after-2.json": "b81b4a3b63c44d66b24a7c3e98e12ef4560ab354d180c5f532fea2d3a841349b",
+    "clock-before-2.json": "0be46c455571987af4dec6eaaf0494a2bc3ce1fcadadcbe71ffa9338d08600fe",
+    "host-observation-2.jsonl.gz": "e3eda847026e08f3e3f85513a257c680fe61dfdc705b7462f324fcdde6033320",
+    "host-original.json": "18d28845cf8a468d7ee37206f2f7c23327ebfd51fe1b6c2123de0c76d2b2d883",
+    "run-2-records.json": "5c9cf1846d47e7abce80bce47c6b5a10e0a2eaaa0c5c04a8b0e7d411c4d2eca8"
+  },
+  "inter_sample_gap_ns": {
+    "max": 46928697,
+    "median": 43900095,
+    "min": 17550988
+  },
+  "issues": [],
+  "limits": [
+    "Polling can miss entire short-lived tasks and CPU use after their last sample.",
+    "Overlapping-interval totals are observed deltas, not global upper bounds.",
+    "Birth-to-first-sample CPU and final-to-exit CPU are excluded from interval deltas.",
+    "Only QEMU threads were sampled; other host tasks and all sources of interference were not measured. Presence, runtime or correlation does not prove causation.",
+    "No task-count/placement admission check is waived by this report.",
+    "Observer overhead and clock-bracket instrumentation distinguish this collection from the original matrix and plain replay; do not pool their timings."
+  ],
+  "measured_collection": "d21a1e3",
+  "measured_run": "pipecap-causal-20261021/run-2",
+  "observed_task_count": {
+    "max": 95,
+    "median": 71.0,
+    "min": 67
+  },
+  "observer_cpu_fraction": 0.13544114698271884,
+  "runqueue_delay": "UNMEASURED: scheduler statistics disabled",
+  "runtime_observed_deltas_ns": {
+    "additional_service": 778922749,
+    "collector_vcpu_63": 8929002097,
+    "original_service": 1316510525,
+    "other_vcpus": 154239002739,
+    "worker_vcpus_0_4": 725731629114
+  },
+  "sample_duration_ns": {
+    "max": 32533211,
+    "median": 6203816.0,
+    "min": 3161704
+  },
+  "samples": 17964,
+  "schema": 1,
+  "sessions": [
+    {
+      "additional_task_ids": [
+        "430316:91960905",
+        "430317:91961369",
+        "430318:91961369",
+        "430319:91961470",
+        "430320:91961471",
+        "430321:91961471",
+        "430322:91961474",
+        "430323:91961474",
+        "430324:91961474",
+        "430325:91961474",
+        "430326:91961474",
+        "430327:91961474",
+        "430328:91961474",
+        "430329:91961474",
+        "430330:91961474",
+        "430331:91961474",
+        "430332:91961474",
+        "430333:91961474",
+        "430334:91961474",
+        "430335:91961474",
+        "430336:91961474",
+        "430337:91961474",
+        "430338:91961474"
+      ],
+      "arm": "native",
+      "common_host_interior_ns": [
+        919613139913510,
+        919614329497933
+      ],
+      "disappeared_during_sample": [],
+      "guest_measurement_ns": [
+        489346390887622,
+        489348390961178
+      ],
+      "max_sample_gap_ns": 44465375,
+      "name": "pipecap-t05-r0-native-plain",
+      "observed_samples": 56,
+      "possible_host_window_ns": [
+        919612329424377,
+        919615139987066
+      ],
+      "runtime_in_fully_contained_intervals_ns": {
+        "additional_service": 3033194,
+        "collector_vcpu_63": 14093764,
+        "original_service": 6181611,
+        "other_vcpus": 31256978,
+        "worker_vcpus_0_4": 5753404561
+      },
+      "runtime_in_overlapping_intervals_ns": {
+        "additional_service": 20665876,
+        "collector_vcpu_63": 34578530,
+        "original_service": 16124005,
+        "other_vcpus": 456789399,
+        "worker_vcpus_0_4": 12367423353
+      },
+      "task_count_range": [
+        68,
+        90
+      ],
+      "threads": 5,
+      "workload": "pipecap"
+    },
+    {
+      "additional_task_ids": [
+        "430316:91960905",
+        "430317:91961369",
+        "430318:91961369",
+        "430319:91961470",
+        "430320:91961471",
+        "430321:91961471",
+        "430322:91961474",
+        "430323:91961474",
+        "430324:91961474",
+        "430325:91961474",
+        "430326:91961474",
+        "430327:91961474",
+        "430328:91961474",
+        "430329:91961474",
+        "430330:91961474",
+        "430331:91961474",
+        "430332:91961474",
+        "430333:91961474",
+        "430334:91961474",
+        "430335:91961474",
+        "430336:91961474",
+        "430337:91961474",
+        "430338:91961474"
+      ],
+      "arm": "tclock",
+      "common_host_interior_ns": [
+        919616557925369,
+        919617747620093
+      ],
+      "disappeared_during_sample": [],
+      "guest_measurement_ns": [
+        489349808899481,
+        489351809083338
+      ],
+      "max_sample_gap_ns": 42746538,
+      "name": "pipecap-t05-r0-tclock-plain",
+      "observed_samples": 56,
+      "possible_host_window_ns": [
+        919615747436236,
+        919618558109226
+      ],
+      "runtime_in_fully_contained_intervals_ns": {
+        "additional_service": 0,
+        "collector_vcpu_63": 13086251,
+        "original_service": 291729,
+        "other_vcpus": 20545076,
+        "worker_vcpus_0_4": 5506798167
+      },
+      "runtime_in_overlapping_intervals_ns": {
+        "additional_service": 491628,
+        "collector_vcpu_63": 30173964,
+        "original_service": 1833133,
+        "other_vcpus": 279770996,
+        "worker_vcpus_0_4": 12413482138
+      },
+      "task_count_range": [
+        90,
+        90
+      ],
+      "threads": 5,
+      "workload": "pipecap"
+    },
+    {
+      "additional_task_ids": [
+        "430316:91960905",
+        "430317:91961369",
+        "430318:91961369",
+        "430319:91961470",
+        "430320:91961471",
+        "430321:91961471",
+        "430322:91961474",
+        "430323:91961474",
+        "430324:91961474",
+        "430325:91961474",
+        "430326:91961474",
+        "430327:91961474",
+        "430328:91961474",
+        "430329:91961474",
+        "430330:91961474",
+        "430331:91961474",
+        "430332:91961474",
+        "430333:91961474",
+        "430334:91961474",
+        "430335:91961474",
+        "430336:91961474",
+        "430337:91961474",
+        "430338:91961474"
+      ],
+      "arm": "baseline-kd",
+      "common_host_interior_ns": [
+        919622237309170,
+        919623426880138
+      ],
+      "disappeared_during_sample": [],
+      "guest_measurement_ns": [
+        489355488283282,
+        489357488343383
+      ],
+      "max_sample_gap_ns": 42745804,
+      "name": "pipecap-t05-r0-baseline-kd-plain",
+      "observed_samples": 56,
+      "possible_host_window_ns": [
+        919621426820037,
+        919624237369271
+      ],
+      "runtime_in_fully_contained_intervals_ns": {
+        "additional_service": 0,
+        "collector_vcpu_63": 14444498,
+        "original_service": 309695,
+        "other_vcpus": 21889416,
+        "worker_vcpus_0_4": 5755392936
+      },
+      "runtime_in_overlapping_intervals_ns": {
+        "additional_service": 1987124,
+        "collector_vcpu_63": 34135500,
+        "original_service": 4529578,
+        "other_vcpus": 535417093,
+        "worker_vcpus_0_4": 12208377566
+      },
+      "task_count_range": [
+        90,
+        90
+      ],
+      "threads": 5,
+      "workload": "pipecap"
+    },
+    {
+      "additional_task_ids": [
+        "430316:91960905",
+        "430317:91961369",
+        "430318:91961369",
+        "430319:91961470",
+        "430320:91961471",
+        "430321:91961471",
+        "430322:91961474",
+        "430323:91961474",
+        "430324:91961474",
+        "430325:91961474",
+        "430326:91961474",
+        "430327:91961474",
+        "430328:91961474",
+        "430329:91961474",
+        "430330:91961474",
+        "430331:91961474",
+        "430332:91961474",
+        "430333:91961474",
+        "430334:91961474",
+        "430335:91961474",
+        "430336:91961474",
+        "430337:91961474",
+        "430338:91961474"
+      ],
+      "arm": "public-kd",
+      "common_host_interior_ns": [
+        919627721514096,
+        919628911101898
+      ],
+      "disappeared_during_sample": [],
+      "guest_measurement_ns": [
+        489360972488208,
+        489362972565143
+      ],
+      "max_sample_gap_ns": 42751447,
+      "name": "pipecap-t05-r0-public-kd-plain",
+      "observed_samples": 56,
+      "possible_host_window_ns": [
+        919626911024963,
+        919629721591031
+      ],
+      "runtime_in_fully_contained_intervals_ns": {
+        "additional_service": 0,
+        "collector_vcpu_63": 14812001,
+        "original_service": 308444,
+        "other_vcpus": 26149322,
+        "worker_vcpus_0_4": 5756676036
+      },
+      "runtime_in_overlapping_intervals_ns": {
+        "additional_service": 4009244,
+        "collector_vcpu_63": 35225095,
+        "original_service": 6927594,
+        "other_vcpus": 549172019,
+        "worker_vcpus_0_4": 12334325442
+      },
+      "task_count_range": [
+        90,
+        90
+      ],
+      "threads": 5,
+      "workload": "pipecap"
+    },
+    {
+      "additional_task_ids": [
+        "430316:91960905",
+        "430317:91961369",
+        "430318:91961369",
+        "430319:91961470",
+        "430320:91961471",
+        "430321:91961471",
+        "430322:91961474",
+        "430323:91961474",
+        "430324:91961474",
+        "430325:91961474",
+        "430326:91961474",
+        "430327:91961474",
+        "430328:91961474",
+        "430329:91961474",
+        "430330:91961474",
+        "430331:91961474",
+        "430332:91961474",
+        "430333:91961474",
+        "430334:91961474",
+        "430335:91961474",
+        "430336:91961474",
+        "430337:91961474",
+        "430338:91961474"
+      ],
+      "arm": "native",
+      "common_host_interior_ns": [
+        919631308549407,
+        919632498165131
+      ],
+      "disappeared_during_sample": [],
+      "guest_measurement_ns": [
+        489364559523519,
+        489366559628376
+      ],
+      "max_sample_gap_ns": 42734382,
+      "name": "pipecap-t05-r0-native-counts",
+      "observed_samples": 56,
+      "possible_host_window_ns": [
+        919630498060274,
+        919633308654264
+      ],
+      "runtime_in_fully_contained_intervals_ns": {
+        "additional_service": 0,
+        "collector_vcpu_63": 14261401,
+        "original_service": 278184,
+        "other_vcpus": 18357724,
+        "worker_vcpus_0_4": 5755752559
+      },
+      "runtime_in_overlapping_intervals_ns": {
+        "additional_service": 2166389,
+        "collector_vcpu_63": 31836021,
+        "original_service": 3045499,
+        "other_vcpus": 365953565,
+        "worker_vcpus_0_4": 12287756403
+      },
+      "task_count_range": [
+        90,
+        90
+      ],
+      "threads": 5,
+      "workload": "pipecap"
+    },
+    {
+      "additional_task_ids": [
+        "430316:91960905",
+        "430317:91961369",
+        "430318:91961369",
+        "430319:91961470",
+        "430320:91961471",
+        "430321:91961471",
+        "430322:91961474",
+        "430323:91961474",
+        "430324:91961474",
+        "430325:91961474",
+        "430326:91961474",
+        "430327:91961474",
+        "430328:91961474",
+        "430329:91961474",
+        "430330:91961474",
+        "430331:91961474",
+        "430332:91961474",
+        "430333:91961474",
+        "430334:91961474",
+        "430335:91961474",
+        "430336:91961474",
+        "430337:91961474",
+        "430338:91961474"
+      ],
+      "arm": "tclock",
+      "common_host_interior_ns": [
+        919634780143729,
+        919635969848629
+      ],
+      "disappeared_during_sample": [],
+      "guest_measurement_ns": [
+        489368031117841,
+        489370031311874
+      ],
+      "max_sample_gap_ns": 42750151,
+      "name": "pipecap-t05-r0-tclock-counts",
+      "observed_samples": 56,
+      "possible_host_window_ns": [
+        919633969654596,
+        919636780337762
+      ],
+      "runtime_in_fully_contained_intervals_ns": {
+        "additional_service": 0,
+        "collector_vcpu_63": 20913402,
+        "original_service": 4883544,
+        "other_vcpus": 500808283,
+        "worker_vcpus_0_4": 5758602441
+      },
+      "runtime_in_overlapping_intervals_ns": {
+        "additional_service": 3695143,
+        "collector_vcpu_63": 37428648,
+        "original_service": 10045249,
+        "other_vcpus": 773270964,
+        "worker_vcpus_0_4": 12363730269
+      },
+      "task_count_range": [
+        90,
+        90
+      ],
+      "threads": 5,
+      "workload": "pipecap"
+    },
+    {
+      "additional_task_ids": [
+        "430316:91960905",
+        "430317:91961369",
+        "430318:91961369",
+        "430319:91961470",
+        "430320:91961471",
+        "430321:91961471",
+        "430322:91961474",
+        "430323:91961474",
+        "430324:91961474",
+        "430325:91961474",
+        "430326:91961474",
+        "430327:91961474",
+        "430328:91961474",
+        "430329:91961474",
+        "430330:91961474",
+        "430331:91961474",
+        "430332:91961474",
+        "430333:91961474",
+        "430334:91961474",
+        "430335:91961474",
+        "430336:91961474",
+        "430337:91961474",
+        "430338:91961474"
+      ],
+      "arm": "baseline-kd",
+      "common_host_interior_ns": [
+        919640638254434,
+        919641827833573
+      ],
+      "disappeared_during_sample": [],
+      "guest_measurement_ns": [
+        489373889228546,
+        489375889296818
+      ],
+      "max_sample_gap_ns": 42747230,
+      "name": "pipecap-t05-r0-baseline-kd-counts",
+      "observed_samples": 56,
+      "possible_host_window_ns": [
+        919639827765301,
+        919642638322706
+      ],
+      "runtime_in_fully_contained_intervals_ns": {
+        "additional_service": 0,
+        "collector_vcpu_63": 14817060,
+        "original_service": 301590,
+        "other_vcpus": 17879182,
+        "worker_vcpus_0_4": 5756648788
+      },
+      "runtime_in_overlapping_intervals_ns": {
+        "additional_service": 5748973,
+        "collector_vcpu_63": 35134201,
+        "original_service": 7172344,
+        "other_vcpus": 514994792,
+        "worker_vcpus_0_4": 12272625851
+      },
+      "task_count_range": [
+        90,
+        90
+      ],
+      "threads": 5,
+      "workload": "pipecap"
+    },
+    {
+      "additional_task_ids": [
+        "430316:91960905",
+        "430317:91961369",
+        "430318:91961369",
+        "430319:91961470",
+        "430320:91961471",
+        "430321:91961471",
+        "430322:91961474",
+        "430323:91961474",
+        "430324:91961474",
+        "430325:91961474",
+        "430326:91961474",
+        "430327:91961474",
+        "430328:91961474",
+        "430329:91961474",
+        "430330:91961474",
+        "430331:91961474",
+        "430332:91961474",
+        "430333:91961474",
+        "430334:91961474",
+        "430335:91961474",
+        "430336:91961474",
+        "430337:91961474",
+        "430338:91961474"
+      ],
+      "arm": "public-kd",
+      "common_host_interior_ns": [
+        919646042807031,
+        919647232504418
+      ],
+      "disappeared_during_sample": [],
+      "guest_measurement_ns": [
+        489379293781143,
+        489381293967663
+      ],
+      "max_sample_gap_ns": 42788491,
+      "name": "pipecap-t05-r0-public-kd-counts",
+      "observed_samples": 56,
+      "possible_host_window_ns": [
+        919645232317898,
+        919648042993551
+      ],
+      "runtime_in_fully_contained_intervals_ns": {
+        "additional_service": 0,
+        "collector_vcpu_63": 16497565,
+        "original_service": 328953,
+        "other_vcpus": 28562822,
+        "worker_vcpus_0_4": 5756537975
+      },
+      "runtime_in_overlapping_intervals_ns": {
+        "additional_service": 5699717,
+        "collector_vcpu_63": 39981562,
+        "original_service": 7386806,
+        "other_vcpus": 645497796,
+        "worker_vcpus_0_4": 12262591091
+      },
+      "task_count_range": [
+        90,
+        90
+      ],
+      "threads": 5,
+      "workload": "pipecap"
+    },
+    {
+      "additional_task_ids": [
+        "430316:91960905",
+        "430317:91961369",
+        "430318:91961369",
+        "430319:91961470",
+        "430320:91961471",
+        "430321:91961471",
+        "430322:91961474",
+        "430323:91961474",
+        "430324:91961474",
+        "430325:91961474",
+        "430326:91961474",
+        "430327:91961474",
+        "430328:91961474",
+        "430329:91961474",
+        "430330:91961474",
+        "430331:91961474",
+        "430332:91961474",
+        "430333:91961474",
+        "430334:91961474",
+        "430335:91961474",
+        "430336:91961474",
+        "430337:91961474",
+        "430338:91961474"
+      ],
+      "arm": "native",
+      "common_host_interior_ns": [
+        919650127401058,
+        919651317086778
+      ],
+      "disappeared_during_sample": [],
+      "guest_measurement_ns": [
+        489383378375170,
+        489385378550023
+      ],
+      "max_sample_gap_ns": 42741806,
+      "name": "pipecap-t05-r0-native-profile",
+      "observed_samples": 57,
+      "possible_host_window_ns": [
+        919649316911925,
+        919652127575911
+      ],
+      "runtime_in_fully_contained_intervals_ns": {
+        "additional_service": 1387800,
+        "collector_vcpu_63": 26064149,
+        "original_service": 1997243,
+        "other_vcpus": 24152933,
+        "worker_vcpus_0_4": 5505719506
+      },
+      "runtime_in_overlapping_intervals_ns": {
+        "additional_service": 12921804,
+        "collector_vcpu_63": 485919414,
+        "original_service": 37988959,
+        "other_vcpus": 1725405704,
+        "worker_vcpus_0_4": 10128413876
+      },
+      "task_count_range": [
+        90,
+        90
+      ],
+      "threads": 5,
+      "workload": "pipecap"
+    },
+    {
+      "additional_task_ids": [
+        "430316:91960905",
+        "430317:91961369",
+        "430318:91961369",
+        "430319:91961470",
+        "430320:91961471",
+        "430321:91961471",
+        "430322:91961474",
+        "430323:91961474",
+        "430324:91961474",
+        "430325:91961474",
+        "430326:91961474",
+        "430327:91961474",
+        "430328:91961474",
+        "430329:91961474",
+        "430330:91961474",
+        "430331:91961474",
+        "430332:91961474",
+        "430333:91961474",
+        "430334:91961474",
+        "430335:91961474",
+        "430336:91961474",
+        "430337:91961474",
+        "430338:91961474"
+      ],
+      "arm": "tclock",
+      "common_host_interior_ns": [
+        919655386288921,
+        919656575977218
+      ],
+      "disappeared_during_sample": [],
+      "guest_measurement_ns": [
+        489388637263033,
+        489390637440463
+      ],
+      "max_sample_gap_ns": 42746394,
+      "name": "pipecap-t05-r0-tclock-profile",
+      "observed_samples": 57,
+      "possible_host_window_ns": [
+        919654575799788,
+        919657386466351
+      ],
+      "runtime_in_fully_contained_intervals_ns": {
+        "additional_service": 1288504,
+        "collector_vcpu_63": 25349729,
+        "original_service": 1742587,
+        "other_vcpus": 17668621,
+        "worker_vcpus_0_4": 5505955166
+      },
+      "runtime_in_overlapping_intervals_ns": {
+        "additional_service": 1477865,
+        "collector_vcpu_63": 607422859,
+        "original_service": 2821833,
+        "other_vcpus": 1346210729,
+        "worker_vcpus_0_4": 10078088177
+      },
+      "task_count_range": [
+        90,
+        90
+      ],
+      "threads": 5,
+      "workload": "pipecap"
+    },
+    {
+      "additional_task_ids": [
+        "430316:91960905",
+        "430317:91961369",
+        "430318:91961369",
+        "430319:91961470",
+        "430320:91961471",
+        "430321:91961471",
+        "430322:91961474",
+        "430323:91961474",
+        "430324:91961474",
+        "430325:91961474",
+        "430326:91961474",
+        "430327:91961474",
+        "430328:91961474",
+        "430329:91961474",
+        "430330:91961474",
+        "430331:91961474",
+        "430332:91961474",
+        "430333:91961474",
+        "430334:91961474",
+        "430335:91961474",
+        "430336:91961474",
+        "430337:91961474",
+        "430338:91961474"
+      ],
+      "arm": "baseline-kd",
+      "common_host_interior_ns": [
+        919662923843290,
+        919664113416039
+      ],
+      "disappeared_during_sample": [],
+      "guest_measurement_ns": [
+        489396174817402,
+        489398174879284
+      ],
+      "max_sample_gap_ns": 42748936,
+      "name": "pipecap-t05-r0-baseline-kd-profile",
+      "observed_samples": 56,
+      "possible_host_window_ns": [
+        919662113354157,
+        919664923905172
+      ],
+      "runtime_in_fully_contained_intervals_ns": {
+        "additional_service": 628494,
+        "collector_vcpu_63": 29058768,
+        "original_service": 1464963,
+        "other_vcpus": 17831201,
+        "worker_vcpus_0_4": 5752995236
+      },
+      "runtime_in_overlapping_intervals_ns": {
+        "additional_service": 1425873,
+        "collector_vcpu_63": 444033326,
+        "original_service": 3449737,
+        "other_vcpus": 1604000972,
+        "worker_vcpus_0_4": 10349978932
+      },
+      "task_count_range": [
+        90,
+        90
+      ],
+      "threads": 5,
+      "workload": "pipecap"
+    },
+    {
+      "additional_task_ids": [
+        "430316:91960905",
+        "430317:91961369",
+        "430318:91961369",
+        "430319:91961470",
+        "430320:91961471",
+        "430321:91961471",
+        "430322:91961474",
+        "430323:91961474",
+        "430324:91961474",
+        "430325:91961474",
+        "430326:91961474",
+        "430327:91961474",
+        "430328:91961474",
+        "430329:91961474",
+        "430330:91961474",
+        "430331:91961474",
+        "430332:91961474",
+        "430333:91961474",
+        "430334:91961474",
+        "430335:91961474",
+        "430336:91961474",
+        "430337:91961474",
+        "430338:91961474"
+      ],
+      "arm": "public-kd",
+      "common_host_interior_ns": [
+        919670516416684,
+        919671706035860
+      ],
+      "disappeared_during_sample": [],
+      "guest_measurement_ns": [
+        489403767390796,
+        489405767499105
+      ],
+      "max_sample_gap_ns": 42724515,
+      "name": "pipecap-t05-r0-public-kd-profile",
+      "observed_samples": 57,
+      "possible_host_window_ns": [
+        919669705927551,
+        919672516524993
+      ],
+      "runtime_in_fully_contained_intervals_ns": {
+        "additional_service": 8296169,
+        "collector_vcpu_63": 25674614,
+        "original_service": 4085148,
+        "other_vcpus": 36373015,
+        "worker_vcpus_0_4": 5504824794
+      },
+      "runtime_in_overlapping_intervals_ns": {
+        "additional_service": 9384086,
+        "collector_vcpu_63": 454662481,
+        "original_service": 6105209,
+        "other_vcpus": 1754573810,
+        "worker_vcpus_0_4": 10411836318
+      },
+      "task_count_range": [
+        90,
+        90
+      ],
+      "threads": 5,
+      "workload": "pipecap"
+    },
+    {
+      "additional_task_ids": [
+        "430316:91960905",
+        "430317:91961369",
+        "430318:91961369",
+        "430319:91961470",
+        "430320:91961471",
+        "430321:91961471",
+        "430322:91961474",
+        "430323:91961474",
+        "430324:91961474",
+        "430325:91961474",
+        "430326:91961474",
+        "430327:91961474",
+        "430328:91961474",
+        "430329:91961474",
+        "430330:91961474",
+        "430331:91961474",
+        "430332:91961474",
+        "430333:91961474",
+        "430334:91961474",
+        "430335:91961474",
+        "430336:91961474",
+        "430337:91961474",
+        "430338:91961474"
+      ],
+      "arm": "native",
+      "common_host_interior_ns": [
+        919675295685530,
+        919676485366380
+      ],
+      "disappeared_during_sample": [],
+      "guest_measurement_ns": [
+        489408546659642,
+        489410546829625
+      ],
+      "max_sample_gap_ns": 42730320,
+      "name": "pipecap-t05-r0-native-timing",
+      "observed_samples": 56,
+      "possible_host_window_ns": [
+        919674485196397,
+        919677295855513
+      ],
+      "runtime_in_fully_contained_intervals_ns": {
+        "additional_service": 9128178,
+        "collector_vcpu_63": 14818612,
+        "original_service": 4648485,
+        "other_vcpus": 24213669,
+        "worker_vcpus_0_4": 5749646367
+      },
+      "runtime_in_overlapping_intervals_ns": {
+        "additional_service": 11465462,
+        "collector_vcpu_63": 34293491,
+        "original_service": 7684729,
+        "other_vcpus": 413465211,
+        "worker_vcpus_0_4": 12317994799
+      },
+      "task_count_range": [
+        90,
+        90
+      ],
+      "threads": 5,
+      "workload": "pipecap"
+    },
+    {
+      "additional_task_ids": [
+        "430316:91960905",
+        "430317:91961369",
+        "430318:91961369",
+        "430319:91961470",
+        "430320:91961471",
+        "430321:91961471",
+        "430322:91961474",
+        "430323:91961474",
+        "430324:91961474",
+        "430325:91961474",
+        "430326:91961474",
+        "430327:91961474",
+        "430328:91961474",
+        "430329:91961474",
+        "430330:91961474",
+        "430331:91961474",
+        "430332:91961474",
+        "430333:91961474",
+        "430334:91961474",
+        "430335:91961474",
+        "430336:91961474",
+        "430337:91961474",
+        "430338:91961474"
+      ],
+      "arm": "tclock",
+      "common_host_interior_ns": [
+        919678751247161,
+        919679941012884
+      ],
+      "disappeared_during_sample": [],
+      "guest_measurement_ns": [
+        489412002221273,
+        489414002476129
+      ],
+      "max_sample_gap_ns": 42735818,
+      "name": "pipecap-t05-r0-tclock-timing",
+      "observed_samples": 56,
+      "possible_host_window_ns": [
+        919677940758028,
+        919680751502017
+      ],
+      "runtime_in_fully_contained_intervals_ns": {
+        "additional_service": 0,
+        "collector_vcpu_63": 15155417,
+        "original_service": 213563,
+        "other_vcpus": 23873490,
+        "worker_vcpus_0_4": 5756761832
+      },
+      "runtime_in_overlapping_intervals_ns": {
+        "additional_service": 3856004,
+        "collector_vcpu_63": 30784613,
+        "original_service": 4597669,
+        "other_vcpus": 303509566,
+        "worker_vcpus_0_4": 12314179319
+      },
+      "task_count_range": [
+        90,
+        90
+      ],
+      "threads": 5,
+      "workload": "pipecap"
+    },
+    {
+      "additional_task_ids": [
+        "430316:91960905",
+        "430317:91961369",
+        "430318:91961369",
+        "430319:91961470",
+        "430320:91961471",
+        "430321:91961471",
+        "430322:91961474",
+        "430323:91961474",
+        "430324:91961474",
+        "430325:91961474",
+        "430326:91961474",
+        "430327:91961474",
+        "430328:91961474",
+        "430329:91961474",
+        "430330:91961474",
+        "430331:91961474",
+        "430332:91961474",
+        "430333:91961474",
+        "430334:91961474",
+        "430335:91961474",
+        "430336:91961474",
+        "430337:91961474",
+        "430338:91961474"
+      ],
+      "arm": "baseline-kd",
+      "common_host_interior_ns": [
+        919684603204165,
+        919685792764251
+      ],
+      "disappeared_during_sample": [],
+      "guest_measurement_ns": [
+        489417854178277,
+        489419854227496
+      ],
+      "max_sample_gap_ns": 42726617,
+      "name": "pipecap-t05-r0-baseline-kd-timing",
+      "observed_samples": 56,
+      "possible_host_window_ns": [
+        919683792715032,
+        919686603253384
+      ],
+      "runtime_in_fully_contained_intervals_ns": {
+        "additional_service": 0,
+        "collector_vcpu_63": 15346598,
+        "original_service": 295704,
+        "other_vcpus": 17228186,
+        "worker_vcpus_0_4": 5755768368
+      },
+      "runtime_in_overlapping_intervals_ns": {
+        "additional_service": 5325285,
+        "collector_vcpu_63": 36145846,
+        "original_service": 6765305,
+        "other_vcpus": 573722452,
+        "worker_vcpus_0_4": 12209962404
+      },
+      "task_count_range": [
+        90,
+        90
+      ],
+      "threads": 5,
+      "workload": "pipecap"
+    },
+    {
+      "additional_task_ids": [
+        "430316:91960905",
+        "430317:91961369",
+        "430318:91961369",
+        "430319:91961470",
+        "430320:91961471",
+        "430321:91961471",
+        "430322:91961474",
+        "430323:91961474",
+        "430324:91961474",
+        "430325:91961474",
+        "430326:91961474",
+        "430327:91961474",
+        "430328:91961474",
+        "430329:91961474",
+        "430330:91961474",
+        "430331:91961474",
+        "430332:91961474",
+        "430333:91961474",
+        "430334:91961474",
+        "430335:91961474",
+        "430336:91961474",
+        "430337:91961474",
+        "430338:91961474"
+      ],
+      "arm": "public-kd",
+      "common_host_interior_ns": [
+        919690397787589,
+        919691587645556
+      ],
+      "disappeared_during_sample": [],
+      "guest_measurement_ns": [
+        489423648761701,
+        489425649108801
+      ],
+      "max_sample_gap_ns": 42772620,
+      "name": "pipecap-t05-r0-public-kd-timing",
+      "observed_samples": 57,
+      "possible_host_window_ns": [
+        919689587298456,
+        919692398134689
+      ],
+      "runtime_in_fully_contained_intervals_ns": {
+        "additional_service": 2702898,
+        "collector_vcpu_63": 13955734,
+        "original_service": 3023996,
+        "other_vcpus": 29584602,
+        "worker_vcpus_0_4": 5507787527
+      },
+      "runtime_in_overlapping_intervals_ns": {
+        "additional_service": 17007432,
+        "collector_vcpu_63": 34210947,
+        "original_service": 11141710,
+        "other_vcpus": 546985687,
+        "worker_vcpus_0_4": 12376283679
+      },
+      "task_count_range": [
+        90,
+        90
+      ],
+      "threads": 5,
+      "workload": "pipecap"
+    },
+    {
+      "additional_task_ids": [
+        "430316:91960905",
+        "430317:91961369",
+        "430318:91961369",
+        "430319:91961470",
+        "430320:91961471",
+        "430321:91961471",
+        "430322:91961474",
+        "430323:91961474",
+        "430324:91961474",
+        "430325:91961474",
+        "430326:91961474",
+        "430327:91961474",
+        "430328:91961474",
+        "430329:91961474",
+        "430330:91961474",
+        "430331:91961474",
+        "430332:91961474",
+        "430333:91961474",
+        "430334:91961474",
+        "430335:91961474",
+        "430336:91961474",
+        "430337:91961474",
+        "430338:91961474"
+      ],
+      "arm": "tclock",
+      "common_host_interior_ns": [
+        919694053931487,
+        919695243636460
+      ],
+      "disappeared_during_sample": [],
+      "guest_measurement_ns": [
+        489427304905599,
+        489429305099705
+      ],
+      "max_sample_gap_ns": 42767544,
+      "name": "pipecap-t05-r1-tclock-counts",
+      "observed_samples": 57,
+      "possible_host_window_ns": [
+        919693243442354,
+        919696054125593
+      ],
+      "runtime_in_fully_contained_intervals_ns": {
+        "additional_service": 0,
+        "collector_vcpu_63": 14824341,
+        "original_service": 270617,
+        "other_vcpus": 20290438,
+        "worker_vcpus_0_4": 5506718032
+      },
+      "runtime_in_overlapping_intervals_ns": {
+        "additional_service": 3625827,
+        "collector_vcpu_63": 33057526,
+        "original_service": 3336313,
+        "other_vcpus": 313108776,
+        "worker_vcpus_0_4": 12445669898
+      },
+      "task_count_range": [
+        90,
+        90
+      ],
+      "threads": 5,
+      "workload": "pipecap"
+    },
+    {
+      "additional_task_ids": [
+        "430316:91960905",
+        "430317:91961369",
+        "430318:91961369",
+        "430319:91961470",
+        "430320:91961471",
+        "430321:91961471",
+        "430322:91961474",
+        "430323:91961474",
+        "430324:91961474",
+        "430325:91961474",
+        "430326:91961474",
+        "430327:91961474",
+        "430328:91961474",
+        "430329:91961474",
+        "430330:91961474",
+        "430331:91961474",
+        "430332:91961474",
+        "430333:91961474",
+        "430334:91961474",
+        "430335:91961474",
+        "430336:91961474",
+        "430337:91961474",
+        "430338:91961474"
+      ],
+      "arm": "baseline-kd",
+      "common_host_interior_ns": [
+        919699940977079,
+        919701130557280
+      ],
+      "disappeared_during_sample": [],
+      "guest_measurement_ns": [
+        489433191951191,
+        489435192020525
+      ],
+      "max_sample_gap_ns": 42755903,
+      "name": "pipecap-t05-r1-baseline-kd-counts",
+      "observed_samples": 56,
+      "possible_host_window_ns": [
+        919699130487946,
+        919701941046413
+      ],
+      "runtime_in_fully_contained_intervals_ns": {
+        "additional_service": 0,
+        "collector_vcpu_63": 16810556,
+        "original_service": 285997,
+        "other_vcpus": 24335662,
+        "worker_vcpus_0_4": 5756520676
+      },
+      "runtime_in_overlapping_intervals_ns": {
+        "additional_service": 2178855,
+        "collector_vcpu_63": 38446160,
+        "original_service": 3562818,
+        "other_vcpus": 451233941,
+        "worker_vcpus_0_4": 12255382543
+      },
+      "task_count_range": [
+        90,
+        90
+      ],
+      "threads": 5,
+      "workload": "pipecap"
+    },
+    {
+      "additional_task_ids": [
+        "430316:91960905",
+        "430317:91961369",
+        "430318:91961369",
+        "430319:91961470",
+        "430320:91961471",
+        "430321:91961471",
+        "430322:91961474",
+        "430323:91961474",
+        "430324:91961474",
+        "430325:91961474",
+        "430326:91961474",
+        "430327:91961474",
+        "430328:91961474",
+        "430329:91961474",
+        "430330:91961474",
+        "430331:91961474",
+        "430332:91961474",
+        "430333:91961474",
+        "430334:91961474",
+        "430335:91961474",
+        "430336:91961474",
+        "430337:91961474",
+        "430338:91961474"
+      ],
+      "arm": "public-kd",
+      "common_host_interior_ns": [
+        919705926842654,
+        919707116437217
+      ],
+      "disappeared_during_sample": [],
+      "guest_measurement_ns": [
+        489439177816766,
+        489441177900462
+      ],
+      "max_sample_gap_ns": 42762685,
+      "name": "pipecap-t05-r1-public-kd-counts",
+      "observed_samples": 57,
+      "possible_host_window_ns": [
+        919705116353521,
+        919707926926350
+      ],
+      "runtime_in_fully_contained_intervals_ns": {
+        "additional_service": 0,
+        "collector_vcpu_63": 14485386,
+        "original_service": 281108,
+        "other_vcpus": 35167969,
+        "worker_vcpus_0_4": 5506718430
+      },
+      "runtime_in_overlapping_intervals_ns": {
+        "additional_service": 11766748,
+        "collector_vcpu_63": 39615748,
+        "original_service": 9859852,
+        "other_vcpus": 661481225,
+        "worker_vcpus_0_4": 12276823455
+      },
+      "task_count_range": [
+        90,
+        90
+      ],
+      "threads": 5,
+      "workload": "pipecap"
+    },
+    {
+      "additional_task_ids": [
+        "430316:91960905",
+        "430317:91961369",
+        "430318:91961369",
+        "430319:91961470",
+        "430320:91961471",
+        "430321:91961471",
+        "430322:91961474",
+        "430323:91961474",
+        "430324:91961474",
+        "430325:91961474",
+        "430326:91961474",
+        "430327:91961474",
+        "430328:91961474",
+        "430329:91961474",
+        "430330:91961474",
+        "430331:91961474",
+        "430332:91961474",
+        "430333:91961474",
+        "430334:91961474",
+        "430335:91961474",
+        "430336:91961474",
+        "430337:91961474",
+        "430338:91961474"
+      ],
+      "arm": "native",
+      "common_host_interior_ns": [
+        919709525560673,
+        919710715178515
+      ],
+      "disappeared_during_sample": [],
+      "guest_measurement_ns": [
+        489442776534785,
+        489444776641760
+      ],
+      "max_sample_gap_ns": 42750925,
+      "name": "pipecap-t05-r1-native-counts",
+      "observed_samples": 56,
+      "possible_host_window_ns": [
+        919708715071540,
+        919711525667648
+      ],
+      "runtime_in_fully_contained_intervals_ns": {
+        "additional_service": 0,
+        "collector_vcpu_63": 13920221,
+        "original_service": 284704,
+        "other_vcpus": 17376257,
+        "worker_vcpus_0_4": 5506780220
+      },
+      "runtime_in_overlapping_intervals_ns": {
+        "additional_service": 5085580,
+        "collector_vcpu_63": 31634721,
+        "original_service": 3895953,
+        "other_vcpus": 324063615,
+        "worker_vcpus_0_4": 12414062302
+      },
+      "task_count_range": [
+        90,
+        90
+      ],
+      "threads": 5,
+      "workload": "pipecap"
+    },
+    {
+      "additional_task_ids": [
+        "430316:91960905",
+        "430317:91961369",
+        "430318:91961369",
+        "430319:91961470",
+        "430320:91961471",
+        "430321:91961471",
+        "430322:91961474",
+        "430323:91961474",
+        "430324:91961474",
+        "430325:91961474",
+        "430326:91961474",
+        "430327:91961474",
+        "430328:91961474",
+        "430329:91961474",
+        "430330:91961474",
+        "430331:91961474",
+        "430332:91961474",
+        "430333:91961474",
+        "430334:91961474",
+        "430335:91961474",
+        "430336:91961474",
+        "430337:91961474",
+        "430338:91961474"
+      ],
+      "arm": "tclock",
+      "common_host_interior_ns": [
+        919713572277008,
+        919714761858537
+      ],
+      "disappeared_during_sample": [],
+      "guest_measurement_ns": [
+        489446823251120,
+        489448823321782
+      ],
+      "max_sample_gap_ns": 42747637,
+      "name": "pipecap-t05-r1-tclock-profile",
+      "observed_samples": 56,
+      "possible_host_window_ns": [
+        919712761787875,
+        919715572347670
+      ],
+      "runtime_in_fully_contained_intervals_ns": {
+        "additional_service": 0,
+        "collector_vcpu_63": 27467306,
+        "original_service": 297487,
+        "other_vcpus": 15258895,
+        "worker_vcpus_0_4": 5755655777
+      },
+      "runtime_in_overlapping_intervals_ns": {
+        "additional_service": 81721,
+        "collector_vcpu_63": 595471245,
+        "original_service": 848281,
+        "other_vcpus": 1433009764,
+        "worker_vcpus_0_4": 10089090444
+      },
+      "task_count_range": [
+        90,
+        90
+      ],
+      "threads": 5,
+      "workload": "pipecap"
+    },
+    {
+      "additional_task_ids": [
+        "430316:91960905",
+        "430317:91961369",
+        "430318:91961369",
+        "430319:91961470",
+        "430320:91961471",
+        "430321:91961471",
+        "430322:91961474",
+        "430323:91961474",
+        "430324:91961474",
+        "430325:91961474",
+        "430326:91961474",
+        "430327:91961474",
+        "430328:91961474",
+        "430329:91961474",
+        "430330:91961474",
+        "430331:91961474",
+        "430332:91961474",
+        "430333:91961474",
+        "430334:91961474",
+        "430335:91961474",
+        "430336:91961474",
+        "430337:91961474",
+        "430338:91961474"
+      ],
+      "arm": "baseline-kd",
+      "common_host_interior_ns": [
+        919721175855490,
+        919722365417624
+      ],
+      "disappeared_during_sample": [],
+      "guest_measurement_ns": [
+        489454426829602,
+        489456426880869
+      ],
+      "max_sample_gap_ns": 42735761,
+      "name": "pipecap-t05-r1-baseline-kd-profile",
+      "observed_samples": 56,
+      "possible_host_window_ns": [
+        919720365366357,
+        919723175906757
+      ],
+      "runtime_in_fully_contained_intervals_ns": {
+        "additional_service": 656336,
+        "collector_vcpu_63": 27668887,
+        "original_service": 1429858,
+        "other_vcpus": 20275517,
+        "worker_vcpus_0_4": 5755495415
+      },
+      "runtime_in_overlapping_intervals_ns": {
+        "additional_service": 12929597,
+        "collector_vcpu_63": 435323958,
+        "original_service": 8705240,
+        "other_vcpus": 1599327846,
+        "worker_vcpus_0_4": 10390986391
+      },
+      "task_count_range": [
+        90,
+        90
+      ],
+      "threads": 5,
+      "workload": "pipecap"
+    },
+    {
+      "additional_task_ids": [
+        "430316:91960905",
+        "430317:91961369",
+        "430318:91961369",
+        "430319:91961470",
+        "430320:91961471",
+        "430321:91961471",
+        "430322:91961474",
+        "430323:91961474",
+        "430324:91961474",
+        "430325:91961474",
+        "430326:91961474",
+        "430327:91961474",
+        "430328:91961474",
+        "430329:91961474",
+        "430330:91961474",
+        "430331:91961474",
+        "430332:91961474",
+        "430333:91961474",
+        "430334:91961474",
+        "430335:91961474",
+        "430336:91961474",
+        "430337:91961474",
+        "430338:91961474"
+      ],
+      "arm": "public-kd",
+      "common_host_interior_ns": [
+        919728842944482,
+        919730032577560
+      ],
+      "disappeared_during_sample": [],
+      "guest_measurement_ns": [
+        489462093918594,
+        489464094040805
+      ],
+      "max_sample_gap_ns": 42724063,
+      "name": "pipecap-t05-r1-public-kd-profile",
+      "observed_samples": 56,
+      "possible_host_window_ns": [
+        919728032455349,
+        919730843066693
+      ],
+      "runtime_in_fully_contained_intervals_ns": {
+        "additional_service": 1686610,
+        "collector_vcpu_63": 29097529,
+        "original_service": 2283792,
+        "other_vcpus": 21086105,
+        "worker_vcpus_0_4": 5754605801
+      },
+      "runtime_in_overlapping_intervals_ns": {
+        "additional_service": 3059019,
+        "collector_vcpu_63": 441168819,
+        "original_service": 4963476,
+        "other_vcpus": 1692114598,
+        "worker_vcpus_0_4": 10422504655
+      },
+      "task_count_range": [
+        90,
+        90
+      ],
+      "threads": 5,
+      "workload": "pipecap"
+    },
+    {
+      "additional_task_ids": [
+        "430316:91960905",
+        "430317:91961369",
+        "430318:91961369",
+        "430319:91961470",
+        "430320:91961471",
+        "430321:91961471",
+        "430322:91961474",
+        "430323:91961474",
+        "430324:91961474",
+        "430325:91961474",
+        "430326:91961474",
+        "430327:91961474",
+        "430328:91961474",
+        "430329:91961474",
+        "430330:91961474",
+        "430331:91961474",
+        "430332:91961474",
+        "430333:91961474",
+        "430334:91961474",
+        "430335:91961474",
+        "430336:91961474",
+        "430337:91961474",
+        "430338:91961474"
+      ],
+      "arm": "native",
+      "common_host_interior_ns": [
+        919734122629969,
+        919735312191746
+      ],
+      "disappeared_during_sample": [],
+      "guest_measurement_ns": [
+        489467373604081,
+        489469373654991
+      ],
+      "max_sample_gap_ns": 42736766,
+      "name": "pipecap-t05-r1-native-profile",
+      "observed_samples": 57,
+      "possible_host_window_ns": [
+        919733312140836,
+        919736122680879
+      ],
+      "runtime_in_fully_contained_intervals_ns": {
+        "additional_service": 0,
+        "collector_vcpu_63": 26733513,
+        "original_service": 292771,
+        "other_vcpus": 19515068,
+        "worker_vcpus_0_4": 5505791494
+      },
+      "runtime_in_overlapping_intervals_ns": {
+        "additional_service": 1499126,
+        "collector_vcpu_63": 452269080,
+        "original_service": 3492139,
+        "other_vcpus": 1581452333,
+        "worker_vcpus_0_4": 10522411591
+      },
+      "task_count_range": [
+        90,
+        90
+      ],
+      "threads": 5,
+      "workload": "pipecap"
+    },
+    {
+      "additional_task_ids": [
+        "430316:91960905",
+        "430317:91961369",
+        "430318:91961369",
+        "430319:91961470",
+        "430320:91961471",
+        "430321:91961471",
+        "430322:91961474",
+        "430323:91961474",
+        "430324:91961474",
+        "430325:91961474",
+        "430326:91961474",
+        "430327:91961474",
+        "430328:91961474",
+        "430329:91961474",
+        "430330:91961474",
+        "430331:91961474",
+        "430332:91961474",
+        "430333:91961474",
+        "430334:91961474",
+        "430335:91961474",
+        "430336:91961474",
+        "430337:91961474",
+        "430338:91961474"
+      ],
+      "arm": "tclock",
+      "common_host_interior_ns": [
+        919738792057370,
+        919739981840684
+      ],
+      "disappeared_during_sample": [],
+      "guest_measurement_ns": [
+        489472043031482,
+        489474043303929
+      ],
+      "max_sample_gap_ns": 42754671,
+      "name": "pipecap-t05-r1-tclock-timing",
+      "observed_samples": 57,
+      "possible_host_window_ns": [
+        919737981568237,
+        919740792329817
+      ],
+      "runtime_in_fully_contained_intervals_ns": {
+        "additional_service": 0,
+        "collector_vcpu_63": 14558567,
+        "original_service": 283968,
+        "other_vcpus": 15385613,
+        "worker_vcpus_0_4": 5506871745
+      },
+      "runtime_in_overlapping_intervals_ns": {
+        "additional_service": 4876659,
+        "collector_vcpu_63": 31859855,
+        "original_service": 3642942,
+        "other_vcpus": 327874196,
+        "worker_vcpus_0_4": 12483669753
+      },
+      "task_count_range": [
+        90,
+        90
+      ],
+      "threads": 5,
+      "workload": "pipecap"
+    },
+    {
+      "additional_task_ids": [
+        "430316:91960905",
+        "430317:91961369",
+        "430318:91961369",
+        "430319:91961470",
+        "430320:91961471",
+        "430321:91961471",
+        "430322:91961474",
+        "430323:91961474",
+        "430324:91961474",
+        "430325:91961474",
+        "430326:91961474",
+        "430327:91961474",
+        "430328:91961474",
+        "430329:91961474",
+        "430330:91961474",
+        "430331:91961474",
+        "430332:91961474",
+        "430333:91961474",
+        "430334:91961474",
+        "430335:91961474",
+        "430336:91961474",
+        "430337:91961474",
+        "430338:91961474"
+      ],
+      "arm": "baseline-kd",
+      "common_host_interior_ns": [
+        919744957598817,
+        919746147456047
+      ],
+      "disappeared_during_sample": [],
+      "guest_measurement_ns": [
+        489478208572929,
+        489480208919292
+      ],
+      "max_sample_gap_ns": 42747562,
+      "name": "pipecap-t05-r1-baseline-kd-timing",
+      "observed_samples": 56,
+      "possible_host_window_ns": [
+        919744147109684,
+        919746957945180
+      ],
+      "runtime_in_fully_contained_intervals_ns": {
+        "additional_service": 531506,
+        "collector_vcpu_63": 14852068,
+        "original_service": 1650839,
+        "other_vcpus": 19129072,
+        "worker_vcpus_0_4": 5756422320
+      },
+      "runtime_in_overlapping_intervals_ns": {
+        "additional_service": 3300407,
+        "collector_vcpu_63": 39343206,
+        "original_service": 5415508,
+        "other_vcpus": 529415993,
+        "worker_vcpus_0_4": 12191275475
+      },
+      "task_count_range": [
+        90,
+        90
+      ],
+      "threads": 5,
+      "workload": "pipecap"
+    },
+    {
+      "additional_task_ids": [
+        "430316:91960905",
+        "430317:91961369",
+        "430318:91961369",
+        "430319:91961470",
+        "430320:91961471",
+        "430321:91961471",
+        "430322:91961474",
+        "430323:91961474",
+        "430324:91961474",
+        "430325:91961474",
+        "430326:91961474",
+        "430327:91961474",
+        "430328:91961474",
+        "430329:91961474",
+        "430330:91961474",
+        "430331:91961474",
+        "430332:91961474",
+        "430333:91961474",
+        "430334:91961474",
+        "430335:91961474",
+        "430336:91961474",
+        "430337:91961474",
+        "430338:91961474"
+      ],
+      "arm": "public-kd",
+      "common_host_interior_ns": [
+        919750822567985,
+        919752012382105
+      ],
+      "disappeared_during_sample": [],
+      "guest_measurement_ns": [
+        489484073542097,
+        489486073845350
+      ],
+      "max_sample_gap_ns": 42742655,
+      "name": "pipecap-t05-r1-public-kd-timing",
+      "observed_samples": 56,
+      "possible_host_window_ns": [
+        919750012078852,
+        919752822871238
+      ],
+      "runtime_in_fully_contained_intervals_ns": {
+        "additional_service": 2088063,
+        "collector_vcpu_63": 14461806,
+        "original_service": 3989493,
+        "other_vcpus": 53357461,
+        "worker_vcpus_0_4": 5756575645
+      },
+      "runtime_in_overlapping_intervals_ns": {
+        "additional_service": 5608784,
+        "collector_vcpu_63": 38054297,
+        "original_service": 7363490,
+        "other_vcpus": 606378751,
+        "worker_vcpus_0_4": 12206075998
+      },
+      "task_count_range": [
+        90,
+        90
+      ],
+      "threads": 5,
+      "workload": "pipecap"
+    },
+    {
+      "additional_task_ids": [
+        "430316:91960905",
+        "430317:91961369",
+        "430318:91961369",
+        "430319:91961470",
+        "430320:91961471",
+        "430321:91961471",
+        "430322:91961474",
+        "430323:91961474",
+        "430324:91961474",
+        "430325:91961474",
+        "430326:91961474",
+        "430327:91961474",
+        "430328:91961474",
+        "430329:91961474",
+        "430330:91961474",
+        "430331:91961474",
+        "430332:91961474",
+        "430333:91961474",
+        "430334:91961474",
+        "430335:91961474",
+        "430336:91961474",
+        "430337:91961474",
+        "430338:91961474"
+      ],
+      "arm": "native",
+      "common_host_interior_ns": [
+        919754433146796,
+        919755622752597
+      ],
+      "disappeared_during_sample": [],
+      "guest_measurement_ns": [
+        489487684120908,
+        489489684215842
+      ],
+      "max_sample_gap_ns": 42739259,
+      "name": "pipecap-t05-r1-native-timing",
+      "observed_samples": 56,
+      "possible_host_window_ns": [
+        919753622657663,
+        919756433241730
+      ],
+      "runtime_in_fully_contained_intervals_ns": {
+        "additional_service": 0,
+        "collector_vcpu_63": 16502189,
+        "original_service": 272180,
+        "other_vcpus": 22080686,
+        "worker_vcpus_0_4": 5755619807
+      },
+      "runtime_in_overlapping_intervals_ns": {
+        "additional_service": 3392142,
+        "collector_vcpu_63": 34886790,
+        "original_service": 2896487,
+        "other_vcpus": 360654711,
+        "worker_vcpus_0_4": 12292689684
+      },
+      "task_count_range": [
+        90,
+        90
+      ],
+      "threads": 5,
+      "workload": "pipecap"
+    },
+    {
+      "additional_task_ids": [
+        "430316:91960905",
+        "430317:91961369",
+        "430318:91961369",
+        "430319:91961470",
+        "430320:91961471",
+        "430321:91961471",
+        "430322:91961474",
+        "430323:91961474",
+        "430324:91961474",
+        "430325:91961474",
+        "430326:91961474",
+        "430327:91961474",
+        "430328:91961474",
+        "430329:91961474",
+        "430330:91961474",
+        "430331:91961474",
+        "430332:91961474",
+        "430333:91961474",
+        "430334:91961474",
+        "430335:91961474",
+        "430336:91961474",
+        "430337:91961474",
+        "430338:91961474"
+      ],
+      "arm": "tclock",
+      "common_host_interior_ns": [
+        919757936358465,
+        919759126142362
+      ],
+      "disappeared_during_sample": [],
+      "guest_measurement_ns": [
+        489491187332577,
+        489493187605607
+      ],
+      "max_sample_gap_ns": 42734950,
+      "name": "pipecap-t05-r1-tclock-plain",
+      "observed_samples": 56,
+      "possible_host_window_ns": [
+        919757125869332,
+        919759936631495
+      ],
+      "runtime_in_fully_contained_intervals_ns": {
+        "additional_service": 0,
+        "collector_vcpu_63": 14853623,
+        "original_service": 280959,
+        "other_vcpus": 22719781,
+        "worker_vcpus_0_4": 5755605994
+      },
+      "runtime_in_overlapping_intervals_ns": {
+        "additional_service": 4286605,
+        "collector_vcpu_63": 31372161,
+        "original_service": 3760977,
+        "other_vcpus": 310304905,
+        "worker_vcpus_0_4": 12231753452
+      },
+      "task_count_range": [
+        90,
+        90
+      ],
+      "threads": 5,
+      "workload": "pipecap"
+    },
+    {
+      "additional_task_ids": [
+        "430316:91960905",
+        "430317:91961369",
+        "430318:91961369",
+        "430319:91961470",
+        "430320:91961471",
+        "430321:91961471",
+        "430322:91961474",
+        "430323:91961474",
+        "430324:91961474",
+        "430325:91961474",
+        "430326:91961474",
+        "430327:91961474",
+        "430328:91961474",
+        "430329:91961474",
+        "430330:91961474",
+        "430331:91961474",
+        "430332:91961474",
+        "430333:91961474",
+        "430334:91961474",
+        "430335:91961474",
+        "430336:91961474",
+        "430337:91961474",
+        "430338:91961474"
+      ],
+      "arm": "baseline-kd",
+      "common_host_interior_ns": [
+        919763742635108,
+        919764932199359
+      ],
+      "disappeared_during_sample": [],
+      "guest_measurement_ns": [
+        489496993609220,
+        489498993662604
+      ],
+      "max_sample_gap_ns": 42742398,
+      "name": "pipecap-t05-r1-baseline-kd-plain",
+      "observed_samples": 56,
+      "possible_host_window_ns": [
+        919762932145975,
+        919765742688492
+      ],
+      "runtime_in_fully_contained_intervals_ns": {
+        "additional_service": 0,
+        "collector_vcpu_63": 14214380,
+        "original_service": 293621,
+        "other_vcpus": 25129262,
+        "worker_vcpus_0_4": 5505789870
+      },
+      "runtime_in_overlapping_intervals_ns": {
+        "additional_service": 3689221,
+        "collector_vcpu_63": 38149097,
+        "original_service": 4790124,
+        "other_vcpus": 564068944,
+        "worker_vcpus_0_4": 12224459906
+      },
+      "task_count_range": [
+        90,
+        90
+      ],
+      "threads": 5,
+      "workload": "pipecap"
+    },
+    {
+      "additional_task_ids": [
+        "430316:91960905",
+        "430317:91961369",
+        "430318:91961369",
+        "430319:91961470",
+        "430320:91961471",
+        "430321:91961471",
+        "430322:91961474",
+        "430323:91961474",
+        "430324:91961474",
+        "430325:91961474",
+        "430326:91961474",
+        "430327:91961474",
+        "430328:91961474",
+        "430329:91961474",
+        "430330:91961474",
+        "430331:91961474",
+        "430332:91961474",
+        "430333:91961474",
+        "430334:91961474",
+        "430335:91961474",
+        "430336:91961474",
+        "430337:91961474",
+        "430338:91961474"
+      ],
+      "arm": "public-kd",
+      "common_host_interior_ns": [
+        919768982512810,
+        919770172134936
+      ],
+      "disappeared_during_sample": [],
+      "guest_measurement_ns": [
+        489502233486922,
+        489504233598181
+      ],
+      "max_sample_gap_ns": 42748435,
+      "name": "pipecap-t05-r1-public-kd-plain",
+      "observed_samples": 56,
+      "possible_host_window_ns": [
+        919768172023677,
+        919770982624069
+      ],
+      "runtime_in_fully_contained_intervals_ns": {
+        "additional_service": 0,
+        "collector_vcpu_63": 14112042,
+        "original_service": 269512,
+        "other_vcpus": 24297915,
+        "worker_vcpus_0_4": 5508752643
+      },
+      "runtime_in_overlapping_intervals_ns": {
+        "additional_service": 3453082,
+        "collector_vcpu_63": 38102892,
+        "original_service": 4877561,
+        "other_vcpus": 521214820,
+        "worker_vcpus_0_4": 12354610449
+      },
+      "task_count_range": [
+        90,
+        90
+      ],
+      "threads": 5,
+      "workload": "pipecap"
+    },
+    {
+      "additional_task_ids": [
+        "430316:91960905",
+        "430317:91961369",
+        "430318:91961369",
+        "430319:91961470",
+        "430320:91961471",
+        "430321:91961471",
+        "430322:91961474",
+        "430323:91961474",
+        "430324:91961474",
+        "430325:91961474",
+        "430326:91961474",
+        "430327:91961474",
+        "430328:91961474",
+        "430329:91961474",
+        "430330:91961474",
+        "430331:91961474",
+        "430332:91961474",
+        "430333:91961474",
+        "430334:91961474",
+        "430335:91961474",
+        "430336:91961474",
+        "430337:91961474",
+        "430338:91961474"
+      ],
+      "arm": "native",
+      "common_host_interior_ns": [
+        919772590745756,
+        919773780432427
+      ],
+      "disappeared_during_sample": [],
+      "guest_measurement_ns": [
+        489505841719868,
+        489507841895672
+      ],
+      "max_sample_gap_ns": 42761382,
+      "name": "pipecap-t05-r1-native-plain",
+      "observed_samples": 56,
+      "possible_host_window_ns": [
+        919771780256623,
+        919774590921560
+      ],
+      "runtime_in_fully_contained_intervals_ns": {
+        "additional_service": 0,
+        "collector_vcpu_63": 13905034,
+        "original_service": 210645,
+        "other_vcpus": 15988046,
+        "worker_vcpus_0_4": 5503786307
+      },
+      "runtime_in_overlapping_intervals_ns": {
+        "additional_service": 2670690,
+        "collector_vcpu_63": 30004885,
+        "original_service": 3254150,
+        "other_vcpus": 328192277,
+        "worker_vcpus_0_4": 12393912110
+      },
+      "task_count_range": [
+        90,
+        90
+      ],
+      "threads": 5,
+      "workload": "pipecap"
+    },
+    {
+      "additional_task_ids": [
+        "430316:91960905",
+        "430317:91961369",
+        "430318:91961369",
+        "430319:91961470",
+        "430320:91961471",
+        "430321:91961471",
+        "430322:91961474",
+        "430323:91961474",
+        "430324:91961474",
+        "430325:91961474",
+        "430326:91961474",
+        "430327:91961474",
+        "430328:91961474",
+        "430329:91961474",
+        "430330:91961474",
+        "430331:91961474",
+        "430332:91961474",
+        "430333:91961474",
+        "430334:91961474",
+        "430335:91961474",
+        "430336:91961474",
+        "430337:91961474",
+        "430338:91961474"
+      ],
+      "arm": "baseline-kd",
+      "common_host_interior_ns": [
+        919778718076579,
+        919779907659239
+      ],
+      "disappeared_during_sample": [],
+      "guest_measurement_ns": [
+        489511969050691,
+        489513969122484
+      ],
+      "max_sample_gap_ns": 42743008,
+      "name": "pipecap-t05-r2-baseline-kd-profile",
+      "observed_samples": 56,
+      "possible_host_window_ns": [
+        919777907587446,
+        919780718148372
+      ],
+      "runtime_in_fully_contained_intervals_ns": {
+        "additional_service": 0,
+        "collector_vcpu_63": 26956795,
+        "original_service": 297132,
+        "other_vcpus": 16585927,
+        "worker_vcpus_0_4": 5503662845
+      },
+      "runtime_in_overlapping_intervals_ns": {
+        "additional_service": 378867,
+        "collector_vcpu_63": 444675976,
+        "original_service": 2200311,
+        "other_vcpus": 1584404581,
+        "worker_vcpus_0_4": 10236103999
+      },
+      "task_count_range": [
+        90,
+        90
+      ],
+      "threads": 5,
+      "workload": "pipecap"
+    },
+    {
+      "additional_task_ids": [
+        "430316:91960905",
+        "430317:91961369",
+        "430318:91961369",
+        "430319:91961470",
+        "430320:91961471",
+        "430321:91961471",
+        "430322:91961474",
+        "430323:91961474",
+        "430324:91961474",
+        "430325:91961474",
+        "430326:91961474",
+        "430327:91961474",
+        "430328:91961474",
+        "430329:91961474",
+        "430330:91961474",
+        "430331:91961474",
+        "430332:91961474",
+        "430333:91961474",
+        "430334:91961474",
+        "430335:91961474",
+        "430336:91961474",
+        "430337:91961474",
+        "430338:91961474"
+      ],
+      "arm": "public-kd",
+      "common_host_interior_ns": [
+        919786345660679,
+        919787535301663
+      ],
+      "disappeared_during_sample": [],
+      "guest_measurement_ns": [
+        489519596634791,
+        489521596764908
+      ],
+      "max_sample_gap_ns": 42731136,
+      "name": "pipecap-t05-r2-public-kd-profile",
+      "observed_samples": 56,
+      "possible_host_window_ns": [
+        919785535171546,
+        919788345790796
+      ],
+      "runtime_in_fully_contained_intervals_ns": {
+        "additional_service": 547016,
+        "collector_vcpu_63": 27342825,
+        "original_service": 1285735,
+        "other_vcpus": 26850850,
+        "worker_vcpus_0_4": 5755708681
+      },
+      "runtime_in_overlapping_intervals_ns": {
+        "additional_service": 6574569,
+        "collector_vcpu_63": 455630162,
+        "original_service": 7017509,
+        "other_vcpus": 1689496249,
+        "worker_vcpus_0_4": 10217574702
+      },
+      "task_count_range": [
+        90,
+        90
+      ],
+      "threads": 5,
+      "workload": "pipecap"
+    },
+    {
+      "additional_task_ids": [
+        "430316:91960905",
+        "430317:91961369",
+        "430318:91961369",
+        "430319:91961470",
+        "430320:91961471",
+        "430321:91961471",
+        "430322:91961474",
+        "430323:91961474",
+        "430324:91961474",
+        "430325:91961474",
+        "430326:91961474",
+        "430327:91961474",
+        "430328:91961474",
+        "430329:91961474",
+        "430330:91961474",
+        "430331:91961474",
+        "430332:91961474",
+        "430333:91961474",
+        "430334:91961474",
+        "430335:91961474",
+        "430336:91961474",
+        "430337:91961474",
+        "430338:91961474"
+      ],
+      "arm": "native",
+      "common_host_interior_ns": [
+        919791762189651,
+        919792951784232
+      ],
+      "disappeared_during_sample": [],
+      "guest_measurement_ns": [
+        489525013163763,
+        489527013247477
+      ],
+      "max_sample_gap_ns": 42737467,
+      "name": "pipecap-t05-r2-native-profile",
+      "observed_samples": 56,
+      "possible_host_window_ns": [
+        919790951700518,
+        919793762273365
+      ],
+      "runtime_in_fully_contained_intervals_ns": {
+        "additional_service": 2204962,
+        "collector_vcpu_63": 28713102,
+        "original_service": 2201286,
+        "other_vcpus": 19756608,
+        "worker_vcpus_0_4": 5755195384
+      },
+      "runtime_in_overlapping_intervals_ns": {
+        "additional_service": 2296983,
+        "collector_vcpu_63": 594412193,
+        "original_service": 3279127,
+        "other_vcpus": 1554920834,
+        "worker_vcpus_0_4": 10100928310
+      },
+      "task_count_range": [
+        90,
+        90
+      ],
+      "threads": 5,
+      "workload": "pipecap"
+    },
+    {
+      "additional_task_ids": [
+        "430316:91960905",
+        "430317:91961369",
+        "430318:91961369",
+        "430319:91961470",
+        "430320:91961471",
+        "430321:91961471",
+        "430322:91961474",
+        "430323:91961474",
+        "430324:91961474",
+        "430325:91961474",
+        "430326:91961474",
+        "430327:91961474",
+        "430328:91961474",
+        "430329:91961474",
+        "430330:91961474",
+        "430331:91961474",
+        "430332:91961474",
+        "430333:91961474",
+        "430334:91961474",
+        "430335:91961474",
+        "430336:91961474",
+        "430337:91961474",
+        "430338:91961474"
+      ],
+      "arm": "tclock",
+      "common_host_interior_ns": [
+        919797201802537,
+        919798391439995
+      ],
+      "disappeared_during_sample": [],
+      "guest_measurement_ns": [
+        489530452776649,
+        489532452903240
+      ],
+      "max_sample_gap_ns": 42740693,
+      "name": "pipecap-t05-r2-tclock-profile",
+      "observed_samples": 56,
+      "possible_host_window_ns": [
+        919796391313404,
+        919799201929128
+      ],
+      "runtime_in_fully_contained_intervals_ns": {
+        "additional_service": 1548961,
+        "collector_vcpu_63": 25865124,
+        "original_service": 1898455,
+        "other_vcpus": 23088290,
+        "worker_vcpus_0_4": 5501930671
+      },
+      "runtime_in_overlapping_intervals_ns": {
+        "additional_service": 1641840,
+        "collector_vcpu_63": 575205755,
+        "original_service": 2468973,
+        "other_vcpus": 1464310984,
+        "worker_vcpus_0_4": 10081349272
+      },
+      "task_count_range": [
+        90,
+        90
+      ],
+      "threads": 5,
+      "workload": "pipecap"
+    },
+    {
+      "additional_task_ids": [
+        "430316:91960905",
+        "430317:91961369",
+        "430318:91961369",
+        "430319:91961470",
+        "430320:91961471",
+        "430321:91961471",
+        "430322:91961474",
+        "430323:91961474",
+        "430324:91961474",
+        "430325:91961474",
+        "430326:91961474",
+        "430327:91961474",
+        "430328:91961474",
+        "430329:91961474",
+        "430330:91961474",
+        "430331:91961474",
+        "430332:91961474",
+        "430333:91961474",
+        "430334:91961474",
+        "430335:91961474",
+        "430336:91961474",
+        "430337:91961474",
+        "430338:91961474"
+      ],
+      "arm": "baseline-kd",
+      "common_host_interior_ns": [
+        919804593367561,
+        919805782916883
+      ],
+      "disappeared_during_sample": [],
+      "guest_measurement_ns": [
+        489537844341673,
+        489539844380128
+      ],
+      "max_sample_gap_ns": 42753971,
+      "name": "pipecap-t05-r2-baseline-kd-timing",
+      "observed_samples": 56,
+      "possible_host_window_ns": [
+        919803782878428,
+        919806593406016
+      ],
+      "runtime_in_fully_contained_intervals_ns": {
+        "additional_service": 592843,
+        "collector_vcpu_63": 16034446,
+        "original_service": 1782367,
+        "other_vcpus": 17951526,
+        "worker_vcpus_0_4": 5755774626
+      },
+      "runtime_in_overlapping_intervals_ns": {
+        "additional_service": 1184257,
+        "collector_vcpu_63": 40794368,
+        "original_service": 3588523,
+        "other_vcpus": 537736005,
+        "worker_vcpus_0_4": 12336287234
+      },
+      "task_count_range": [
+        90,
+        90
+      ],
+      "threads": 5,
+      "workload": "pipecap"
+    },
+    {
+      "additional_task_ids": [
+        "430316:91960905",
+        "430317:91961369",
+        "430318:91961369",
+        "430319:91961470",
+        "430320:91961471",
+        "430321:91961471",
+        "430322:91961474",
+        "430323:91961474",
+        "430324:91961474",
+        "430325:91961474",
+        "430326:91961474",
+        "430327:91961474",
+        "430328:91961474",
+        "430329:91961474",
+        "430330:91961474",
+        "430331:91961474",
+        "430332:91961474",
+        "430333:91961474",
+        "430334:91961474",
+        "430335:91961474",
+        "430336:91961474",
+        "430337:91961474",
+        "430338:91961474",
+        "430352:91980824",
+        "430353:91980824",
+        "430354:91980824",
+        "430355:91980824",
+        "430356:91980824"
+      ],
+      "arm": "public-kd",
+      "common_host_interior_ns": [
+        919810637523613,
+        919811827252882
+      ],
+      "disappeared_during_sample": [],
+      "guest_measurement_ns": [
+        489543888497725,
+        489545888716127
+      ],
+      "max_sample_gap_ns": 42374565,
+      "name": "pipecap-t05-r2-public-kd-timing",
+      "observed_samples": 56,
+      "possible_host_window_ns": [
+        919809827034480,
+        919812637742015
+      ],
+      "runtime_in_fully_contained_intervals_ns": {
+        "additional_service": 1847798,
+        "collector_vcpu_63": 14970937,
+        "original_service": 2374107,
+        "other_vcpus": 30262157,
+        "worker_vcpus_0_4": 5756698275
+      },
+      "runtime_in_overlapping_intervals_ns": {
+        "additional_service": 2460618,
+        "collector_vcpu_63": 38542624,
+        "original_service": 4499513,
+        "other_vcpus": 468058078,
+        "worker_vcpus_0_4": 12241605383
+      },
+      "task_count_range": [
+        95,
+        95
+      ],
+      "threads": 5,
+      "workload": "pipecap"
+    },
+    {
+      "additional_task_ids": [
+        "430316:91960905",
+        "430317:91961369",
+        "430318:91961369",
+        "430319:91961470",
+        "430320:91961471",
+        "430321:91961471",
+        "430322:91961474",
+        "430323:91961474",
+        "430324:91961474",
+        "430325:91961474",
+        "430326:91961474",
+        "430327:91961474",
+        "430328:91961474",
+        "430329:91961474",
+        "430330:91961474",
+        "430331:91961474",
+        "430332:91961474",
+        "430333:91961474",
+        "430334:91961474",
+        "430335:91961474",
+        "430336:91961474",
+        "430337:91961474",
+        "430338:91961474",
+        "430352:91980824",
+        "430353:91980824",
+        "430354:91980824",
+        "430355:91980824",
+        "430356:91980824"
+      ],
+      "arm": "native",
+      "common_host_interior_ns": [
+        919814321540877,
+        919815511156803
+      ],
+      "disappeared_during_sample": [],
+      "guest_measurement_ns": [
+        489547572514989,
+        489549572620048
+      ],
+      "max_sample_gap_ns": 42402831,
+      "name": "pipecap-t05-r2-native-timing",
+      "observed_samples": 57,
+      "possible_host_window_ns": [
+        919813511051744,
+        919816321645936
+      ],
+      "runtime_in_fully_contained_intervals_ns": {
+        "additional_service": 0,
+        "collector_vcpu_63": 14173672,
+        "original_service": 297494,
+        "other_vcpus": 20567466,
+        "worker_vcpus_0_4": 5506800133
+      },
+      "runtime_in_overlapping_intervals_ns": {
+        "additional_service": 5653875,
+        "collector_vcpu_63": 31197882,
+        "original_service": 4038769,
+        "other_vcpus": 387873407,
+        "worker_vcpus_0_4": 12440392549
+      },
+      "task_count_range": [
+        95,
+        95
+      ],
+      "threads": 5,
+      "workload": "pipecap"
+    },
+    {
+      "additional_task_ids": [
+        "430316:91960905",
+        "430317:91961369",
+        "430318:91961369",
+        "430319:91961470",
+        "430320:91961471",
+        "430321:91961471",
+        "430322:91961474",
+        "430323:91961474",
+        "430324:91961474",
+        "430325:91961474",
+        "430326:91961474",
+        "430327:91961474",
+        "430328:91961474",
+        "430329:91961474",
+        "430330:91961474",
+        "430331:91961474",
+        "430332:91961474",
+        "430333:91961474",
+        "430334:91961474",
+        "430335:91961474",
+        "430336:91961474",
+        "430337:91961474",
+        "430338:91961474",
+        "430352:91980824",
+        "430353:91980824",
+        "430354:91980824",
+        "430355:91980824",
+        "430356:91980824"
+      ],
+      "arm": "tclock",
+      "common_host_interior_ns": [
+        919817843782258,
+        919819033612448
+      ],
+      "disappeared_during_sample": [],
+      "guest_measurement_ns": [
+        489551094756370,
+        489553095075693
+      ],
+      "max_sample_gap_ns": 42389350,
+      "name": "pipecap-t05-r2-tclock-timing",
+      "observed_samples": 56,
+      "possible_host_window_ns": [
+        919817033293125,
+        919819844101581
+      ],
+      "runtime_in_fully_contained_intervals_ns": {
+        "additional_service": 15679009,
+        "collector_vcpu_63": 13881067,
+        "original_service": 4535883,
+        "other_vcpus": 35085522,
+        "worker_vcpus_0_4": 5756688754
+      },
+      "runtime_in_overlapping_intervals_ns": {
+        "additional_service": 19922077,
+        "collector_vcpu_63": 30100753,
+        "original_service": 8464937,
+        "other_vcpus": 331476707,
+        "worker_vcpus_0_4": 12271668704
+      },
+      "task_count_range": [
+        95,
+        95
+      ],
+      "threads": 5,
+      "workload": "pipecap"
+    },
+    {
+      "additional_task_ids": [
+        "430316:91960905",
+        "430317:91961369",
+        "430318:91961369",
+        "430319:91961470",
+        "430320:91961471",
+        "430321:91961471",
+        "430322:91961474",
+        "430323:91961474",
+        "430324:91961474",
+        "430325:91961474",
+        "430326:91961474",
+        "430327:91961474",
+        "430328:91961474",
+        "430329:91961474",
+        "430330:91961474",
+        "430331:91961474",
+        "430332:91961474",
+        "430333:91961474",
+        "430334:91961474",
+        "430335:91961474",
+        "430336:91961474",
+        "430337:91961474",
+        "430338:91961474",
+        "430352:91980824",
+        "430353:91980824",
+        "430354:91980824",
+        "430355:91980824",
+        "430356:91980824"
+      ],
+      "arm": "baseline-kd",
+      "common_host_interior_ns": [
+        919823642545738,
+        919824832112875
+      ],
+      "disappeared_during_sample": [],
+      "guest_measurement_ns": [
+        489556893519850,
+        489558893576120
+      ],
+      "max_sample_gap_ns": 42401949,
+      "name": "pipecap-t05-r2-baseline-kd-plain",
+      "observed_samples": 57,
+      "possible_host_window_ns": [
+        919822832056605,
+        919825642602008
+      ],
+      "runtime_in_fully_contained_intervals_ns": {
+        "additional_service": 0,
+        "collector_vcpu_63": 14305525,
+        "original_service": 218707,
+        "other_vcpus": 21937793,
+        "worker_vcpus_0_4": 5506600343
+      },
+      "runtime_in_overlapping_intervals_ns": {
+        "additional_service": 15793233,
+        "collector_vcpu_63": 39086009,
+        "original_service": 8425903,
+        "other_vcpus": 644916785,
+        "worker_vcpus_0_4": 12420316605
+      },
+      "task_count_range": [
+        95,
+        95
+      ],
+      "threads": 5,
+      "workload": "pipecap"
+    },
+    {
+      "additional_task_ids": [
+        "430316:91960905",
+        "430317:91961369",
+        "430318:91961369",
+        "430319:91961470",
+        "430320:91961471",
+        "430321:91961471",
+        "430322:91961474",
+        "430323:91961474",
+        "430324:91961474",
+        "430325:91961474",
+        "430326:91961474",
+        "430327:91961474",
+        "430328:91961474",
+        "430329:91961474",
+        "430330:91961474",
+        "430331:91961474",
+        "430332:91961474",
+        "430333:91961474",
+        "430334:91961474",
+        "430335:91961474",
+        "430336:91961474",
+        "430337:91961474",
+        "430338:91961474",
+        "430352:91980824",
+        "430353:91980824",
+        "430354:91980824",
+        "430355:91980824",
+        "430356:91980824"
+      ],
+      "arm": "public-kd",
+      "common_host_interior_ns": [
+        919829507510451,
+        919830697110322
+      ],
+      "disappeared_during_sample": [],
+      "guest_measurement_ns": [
+        489562758484563,
+        489564758573567
+      ],
+      "max_sample_gap_ns": 42353819,
+      "name": "pipecap-t05-r2-public-kd-plain",
+      "observed_samples": 57,
+      "possible_host_window_ns": [
+        919828697021318,
+        919831507599455
+      ],
+      "runtime_in_fully_contained_intervals_ns": {
+        "additional_service": 1051398,
+        "collector_vcpu_63": 14401982,
+        "original_service": 2372895,
+        "other_vcpus": 16798454,
+        "worker_vcpus_0_4": 5506737096
+      },
+      "runtime_in_overlapping_intervals_ns": {
+        "additional_service": 13542684,
+        "collector_vcpu_63": 39658347,
+        "original_service": 8042525,
+        "other_vcpus": 637752253,
+        "worker_vcpus_0_4": 12446489728
+      },
+      "task_count_range": [
+        95,
+        95
+      ],
+      "threads": 5,
+      "workload": "pipecap"
+    },
+    {
+      "additional_task_ids": [
+        "430316:91960905",
+        "430317:91961369",
+        "430318:91961369",
+        "430319:91961470",
+        "430320:91961471",
+        "430321:91961471",
+        "430322:91961474",
+        "430323:91961474",
+        "430324:91961474",
+        "430325:91961474",
+        "430326:91961474",
+        "430327:91961474",
+        "430328:91961474",
+        "430329:91961474",
+        "430330:91961474",
+        "430331:91961474",
+        "430332:91961474",
+        "430333:91961474",
+        "430334:91961474",
+        "430335:91961474",
+        "430336:91961474",
+        "430337:91961474",
+        "430338:91961474",
+        "430352:91980824",
+        "430353:91980824",
+        "430354:91980824",
+        "430355:91980824",
+        "430356:91980824"
+      ],
+      "arm": "native",
+      "common_host_interior_ns": [
+        919833142357673,
+        919834331966384
+      ],
+      "disappeared_during_sample": [],
+      "guest_measurement_ns": [
+        489566393331785,
+        489568393429629
+      ],
+      "max_sample_gap_ns": 42357143,
+      "name": "pipecap-t05-r2-native-plain",
+      "observed_samples": 56,
+      "possible_host_window_ns": [
+        919832331868540,
+        919835142455517
+      ],
+      "runtime_in_fully_contained_intervals_ns": {
+        "additional_service": 10317229,
+        "collector_vcpu_63": 16074435,
+        "original_service": 4364147,
+        "other_vcpus": 23397236,
+        "worker_vcpus_0_4": 5755579471
+      },
+      "runtime_in_overlapping_intervals_ns": {
+        "additional_service": 15930444,
+        "collector_vcpu_63": 33130159,
+        "original_service": 8008766,
+        "other_vcpus": 338648403,
+        "worker_vcpus_0_4": 12373663595
+      },
+      "task_count_range": [
+        95,
+        95
+      ],
+      "threads": 5,
+      "workload": "pipecap"
+    },
+    {
+      "additional_task_ids": [
+        "430316:91960905",
+        "430317:91961369",
+        "430318:91961369",
+        "430319:91961470",
+        "430320:91961471",
+        "430321:91961471",
+        "430322:91961474",
+        "430323:91961474",
+        "430324:91961474",
+        "430325:91961474",
+        "430326:91961474",
+        "430327:91961474",
+        "430328:91961474",
+        "430329:91961474",
+        "430330:91961474",
+        "430331:91961474",
+        "430332:91961474",
+        "430333:91961474",
+        "430334:91961474",
+        "430335:91961474",
+        "430336:91961474",
+        "430337:91961474",
+        "430338:91961474",
+        "430352:91980824",
+        "430353:91980824",
+        "430354:91980824",
+        "430355:91980824",
+        "430356:91980824"
+      ],
+      "arm": "tclock",
+      "common_host_interior_ns": [
+        919836711357957,
+        919837901154445
+      ],
+      "disappeared_during_sample": [],
+      "guest_measurement_ns": [
+        489569962332069,
+        489571962617690
+      ],
+      "max_sample_gap_ns": 42344607,
+      "name": "pipecap-t05-r2-tclock-plain",
+      "observed_samples": 57,
+      "possible_host_window_ns": [
+        919835900868824,
+        919838711643578
+      ],
+      "runtime_in_fully_contained_intervals_ns": {
+        "additional_service": 0,
+        "collector_vcpu_63": 15469148,
+        "original_service": 182658,
+        "other_vcpus": 19435126,
+        "worker_vcpus_0_4": 5505764684
+      },
+      "runtime_in_overlapping_intervals_ns": {
+        "additional_service": 6290178,
+        "collector_vcpu_63": 32209356,
+        "original_service": 4212194,
+        "other_vcpus": 271442253,
+        "worker_vcpus_0_4": 12440077126
+      },
+      "task_count_range": [
+        95,
+        95
+      ],
+      "threads": 5,
+      "workload": "pipecap"
+    },
+    {
+      "additional_task_ids": [
+        "430316:91960905",
+        "430317:91961369",
+        "430318:91961369",
+        "430319:91961470",
+        "430320:91961471",
+        "430321:91961471",
+        "430322:91961474",
+        "430323:91961474",
+        "430324:91961474",
+        "430325:91961474",
+        "430326:91961474",
+        "430327:91961474",
+        "430328:91961474",
+        "430329:91961474",
+        "430330:91961474",
+        "430331:91961474",
+        "430332:91961474",
+        "430333:91961474",
+        "430334:91961474",
+        "430335:91961474",
+        "430336:91961474",
+        "430337:91961474",
+        "430338:91961474",
+        "430352:91980824",
+        "430353:91980824",
+        "430354:91980824",
+        "430355:91980824",
+        "430356:91980824"
+      ],
+      "arm": "baseline-kd",
+      "common_host_interior_ns": [
+        919842645927083,
+        919843835487097
+      ],
+      "disappeared_during_sample": [],
+      "guest_measurement_ns": [
+        489575896901195,
+        489577896950342
+      ],
+      "max_sample_gap_ns": 42394044,
+      "name": "pipecap-t05-r2-baseline-kd-counts",
+      "observed_samples": 56,
+      "possible_host_window_ns": [
+        919841835437950,
+        919844645976230
+      ],
+      "runtime_in_fully_contained_intervals_ns": {
+        "additional_service": 0,
+        "collector_vcpu_63": 14425632,
+        "original_service": 290836,
+        "other_vcpus": 22756603,
+        "worker_vcpus_0_4": 5756594720
+      },
+      "runtime_in_overlapping_intervals_ns": {
+        "additional_service": 11084955,
+        "collector_vcpu_63": 37468806,
+        "original_service": 7009619,
+        "other_vcpus": 597473038,
+        "worker_vcpus_0_4": 12253914735
+      },
+      "task_count_range": [
+        95,
+        95
+      ],
+      "threads": 5,
+      "workload": "pipecap"
+    },
+    {
+      "additional_task_ids": [
+        "430316:91960905",
+        "430317:91961369",
+        "430318:91961369",
+        "430319:91961470",
+        "430320:91961471",
+        "430321:91961471",
+        "430322:91961474",
+        "430323:91961474",
+        "430324:91961474",
+        "430325:91961474",
+        "430326:91961474",
+        "430327:91961474",
+        "430328:91961474",
+        "430329:91961474",
+        "430330:91961474",
+        "430331:91961474",
+        "430332:91961474",
+        "430333:91961474",
+        "430334:91961474",
+        "430335:91961474",
+        "430336:91961474",
+        "430337:91961474",
+        "430338:91961474",
+        "430352:91980824",
+        "430353:91980824",
+        "430354:91980824",
+        "430355:91980824",
+        "430356:91980824"
+      ],
+      "arm": "public-kd",
+      "common_host_interior_ns": [
+        919848501508038,
+        919849691110764
+      ],
+      "disappeared_during_sample": [],
+      "guest_measurement_ns": [
+        489581752482150,
+        489583752574009
+      ],
+      "max_sample_gap_ns": 42385078,
+      "name": "pipecap-t05-r2-public-kd-counts",
+      "observed_samples": 56,
+      "possible_host_window_ns": [
+        919847691018905,
+        919850501599897
+      ],
+      "runtime_in_fully_contained_intervals_ns": {
+        "additional_service": 6091950,
+        "collector_vcpu_63": 14714311,
+        "original_service": 6395524,
+        "other_vcpus": 22148142,
+        "worker_vcpus_0_4": 5756617418
+      },
+      "runtime_in_overlapping_intervals_ns": {
+        "additional_service": 8124503,
+        "collector_vcpu_63": 36974960,
+        "original_service": 9604104,
+        "other_vcpus": 492359805,
+        "worker_vcpus_0_4": 12221782202
+      },
+      "task_count_range": [
+        95,
+        95
+      ],
+      "threads": 5,
+      "workload": "pipecap"
+    },
+    {
+      "additional_task_ids": [
+        "430316:91960905",
+        "430317:91961369",
+        "430318:91961369",
+        "430319:91961470",
+        "430320:91961471",
+        "430321:91961471",
+        "430322:91961474",
+        "430323:91961474",
+        "430324:91961474",
+        "430325:91961474",
+        "430326:91961474",
+        "430327:91961474",
+        "430328:91961474",
+        "430329:91961474",
+        "430330:91961474",
+        "430331:91961474",
+        "430332:91961474",
+        "430333:91961474",
+        "430334:91961474",
+        "430335:91961474",
+        "430336:91961474",
+        "430337:91961474",
+        "430338:91961474",
+        "430352:91980824",
+        "430353:91980824",
+        "430354:91980824",
+        "430355:91980824",
+        "430356:91980824"
+      ],
+      "arm": "native",
+      "common_host_interior_ns": [
+        919852199649452,
+        919853389230756
+      ],
+      "disappeared_during_sample": [],
+      "guest_measurement_ns": [
+        489585450623564,
+        489587450694001
+      ],
+      "max_sample_gap_ns": 42411074,
+      "name": "pipecap-t05-r2-native-counts",
+      "observed_samples": 56,
+      "possible_host_window_ns": [
+        919851389160319,
+        919854199719889
+      ],
+      "runtime_in_fully_contained_intervals_ns": {
+        "additional_service": 0,
+        "collector_vcpu_63": 14459590,
+        "original_service": 284540,
+        "other_vcpus": 16737108,
+        "worker_vcpus_0_4": 5506814893
+      },
+      "runtime_in_overlapping_intervals_ns": {
+        "additional_service": 5599977,
+        "collector_vcpu_63": 31817119,
+        "original_service": 4595602,
+        "other_vcpus": 360187812,
+        "worker_vcpus_0_4": 12243164075
+      },
+      "task_count_range": [
+        95,
+        95
+      ],
+      "threads": 5,
+      "workload": "pipecap"
+    },
+    {
+      "additional_task_ids": [
+        "430316:91960905",
+        "430317:91961369",
+        "430318:91961369",
+        "430319:91961470",
+        "430320:91961471",
+        "430321:91961471",
+        "430322:91961474",
+        "430323:91961474",
+        "430324:91961474",
+        "430325:91961474",
+        "430326:91961474",
+        "430327:91961474",
+        "430328:91961474",
+        "430329:91961474",
+        "430330:91961474",
+        "430331:91961474",
+        "430332:91961474",
+        "430333:91961474",
+        "430334:91961474",
+        "430335:91961474",
+        "430336:91961474",
+        "430337:91961474",
+        "430338:91961474",
+        "430352:91980824",
+        "430353:91980824",
+        "430354:91980824",
+        "430355:91980824",
+        "430356:91980824"
+      ],
+      "arm": "tclock",
+      "common_host_interior_ns": [
+        919855739056571,
+        919856928928150
+      ],
+      "disappeared_during_sample": [],
+      "guest_measurement_ns": [
+        489588990030683,
+        489590990391395
+      ],
+      "max_sample_gap_ns": 42396584,
+      "name": "pipecap-t05-r2-tclock-counts",
+      "observed_samples": 56,
+      "possible_host_window_ns": [
+        919854928567438,
+        919857739417283
+      ],
+      "runtime_in_fully_contained_intervals_ns": {
+        "additional_service": 0,
+        "collector_vcpu_63": 16379512,
+        "original_service": 1920093,
+        "other_vcpus": 307150297,
+        "worker_vcpus_0_4": 5506748241
+      },
+      "runtime_in_overlapping_intervals_ns": {
+        "additional_service": 6781808,
+        "collector_vcpu_63": 38172233,
+        "original_service": 9084774,
+        "other_vcpus": 1136473179,
+        "worker_vcpus_0_4": 12410958543
+      },
+      "task_count_range": [
+        95,
+        95
+      ],
+      "threads": 5,
+      "workload": "pipecap"
+    }
+  ],
+  "source_sha256": "8a318fb0f56e3c126eba29a4d4ac3ae7918a1a528daa617ab66b33e86409f337",
+  "tasks": [
+    {
+      "category": "original_service",
+      "comm": "qemu-system-x86",
+      "first_runtime_ns": 663670542370,
+      "first_seen_ns": 919534598994137,
+      "last_runtime_ns": 664987052895,
+      "last_seen_ns": 920434578238315,
+      "samples": 17964,
+      "start_ticks": 42969155,
+      "tid": 257489
+    },
+    {
+      "category": "original_service",
+      "comm": "call_rcu",
+      "first_runtime_ns": 64126528,
+      "first_seen_ns": 919534598994137,
+      "last_runtime_ns": 64126528,
+      "last_seen_ns": 920434578238315,
+      "samples": 17964,
+      "start_ticks": 42969155,
+      "tid": 257490
+    },
+    {
+      "category": "worker_vcpus_0_4",
+      "comm": "CPU 0/KVM",
+      "first_runtime_ns": 76344170899113,
+      "first_seen_ns": 919534598994137,
+      "last_runtime_ns": 76489659590235,
+      "last_seen_ns": 920434578238315,
+      "samples": 17964,
+      "start_ticks": 42969159,
+      "tid": 257495
+    },
+    {
+      "category": "worker_vcpus_0_4",
+      "comm": "CPU 1/KVM",
+      "first_runtime_ns": 72329666985230,
+      "first_seen_ns": 919534598994137,
+      "last_runtime_ns": 72475015022709,
+      "last_seen_ns": 920434578238315,
+      "samples": 17964,
+      "start_ticks": 42969159,
+      "tid": 257496
+    },
+    {
+      "category": "worker_vcpus_0_4",
+      "comm": "CPU 2/KVM",
+      "first_runtime_ns": 68785086464914,
+      "first_seen_ns": 919534598994137,
+      "last_runtime_ns": 68930033569964,
+      "last_seen_ns": 920434578238315,
+      "samples": 17964,
+      "start_ticks": 42969159,
+      "tid": 257497
+    },
+    {
+      "category": "worker_vcpus_0_4",
+      "comm": "CPU 3/KVM",
+      "first_runtime_ns": 66014676124887,
+      "first_seen_ns": 919534598994137,
+      "last_runtime_ns": 66159655894165,
+      "last_seen_ns": 920434578238315,
+      "samples": 17964,
+      "start_ticks": 42969159,
+      "tid": 257498
+    },
+    {
+      "category": "worker_vcpus_0_4",
+      "comm": "CPU 4/KVM",
+      "first_runtime_ns": 62506545407665,
+      "first_seen_ns": 919534598994137,
+      "last_runtime_ns": 62651513433850,
+      "last_seen_ns": 920434578238315,
+      "samples": 17964,
+      "start_ticks": 42969159,
+      "tid": 257499
+    },
+    {
+      "category": "other_vcpus",
+      "comm": "CPU 5/KVM",
+      "first_runtime_ns": 59626775887468,
+      "first_seen_ns": 919534598994137,
+      "last_runtime_ns": 59629031214605,
+      "last_seen_ns": 920434578238315,
+      "samples": 17964,
+      "start_ticks": 42969159,
+      "tid": 257500
+    },
+    {
+      "category": "other_vcpus",
+      "comm": "CPU 6/KVM",
+      "first_runtime_ns": 57079629877676,
+      "first_seen_ns": 919534598994137,
+      "last_runtime_ns": 57080615078434,
+      "last_seen_ns": 920434578238315,
+      "samples": 17964,
+      "start_ticks": 42969159,
+      "tid": 257501
+    },
+    {
+      "category": "other_vcpus",
+      "comm": "CPU 7/KVM",
+      "first_runtime_ns": 54006890961379,
+      "first_seen_ns": 919534598994137,
+      "last_runtime_ns": 54007851553091,
+      "last_seen_ns": 920434578238315,
+      "samples": 17964,
+      "start_ticks": 42969159,
+      "tid": 257502
+    },
+    {
+      "category": "other_vcpus",
+      "comm": "CPU 8/KVM",
+      "first_runtime_ns": 49469494324312,
+      "first_seen_ns": 919534598994137,
+      "last_runtime_ns": 49470441357564,
+      "last_seen_ns": 920434578238315,
+      "samples": 17964,
+      "start_ticks": 42969159,
+      "tid": 257503
+    },
+    {
+      "category": "other_vcpus",
+      "comm": "CPU 9/KVM",
+      "first_runtime_ns": 49335939810577,
+      "first_seen_ns": 919534598994137,
+      "last_runtime_ns": 49336910561000,
+      "last_seen_ns": 920434578238315,
+      "samples": 17964,
+      "start_ticks": 42969160,
+      "tid": 257504
+    },
+    {
+      "category": "other_vcpus",
+      "comm": "CPU 10/KVM",
+      "first_runtime_ns": 49328785411170,
+      "first_seen_ns": 919534598994137,
+      "last_runtime_ns": 49329835069609,
+      "last_seen_ns": 920434578238315,
+      "samples": 17964,
+      "start_ticks": 42969160,
+      "tid": 257505
+    },
+    {
+      "category": "other_vcpus",
+      "comm": "CPU 11/KVM",
+      "first_runtime_ns": 49290169615005,
+      "first_seen_ns": 919534598994137,
+      "last_runtime_ns": 49291522547664,
+      "last_seen_ns": 920434578238315,
+      "samples": 17964,
+      "start_ticks": 42969160,
+      "tid": 257506
+    },
+    {
+      "category": "other_vcpus",
+      "comm": "CPU 12/KVM",
+      "first_runtime_ns": 46857849264240,
+      "first_seen_ns": 919534598994137,
+      "last_runtime_ns": 46858946948574,
+      "last_seen_ns": 920434578238315,
+      "samples": 17964,
+      "start_ticks": 42969160,
+      "tid": 257507
+    },
+    {
+      "category": "other_vcpus",
+      "comm": "CPU 13/KVM",
+      "first_runtime_ns": 46774776035943,
+      "first_seen_ns": 919534598994137,
+      "last_runtime_ns": 46775759121758,
+      "last_seen_ns": 920434578238315,
+      "samples": 17964,
+      "start_ticks": 42969160,
+      "tid": 257508
+    },
+    {
+      "category": "other_vcpus",
+      "comm": "CPU 14/KVM",
+      "first_runtime_ns": 46823734365386,
+      "first_seen_ns": 919534598994137,
+      "last_runtime_ns": 46824785745682,
+      "last_seen_ns": 920434578238315,
+      "samples": 17964,
+      "start_ticks": 42969160,
+      "tid": 257509
+    },
+    {
+      "category": "other_vcpus",
+      "comm": "CPU 15/KVM",
+      "first_runtime_ns": 46566758861643,
+      "first_seen_ns": 919534598994137,
+      "last_runtime_ns": 46567794713107,
+      "last_seen_ns": 920434578238315,
+      "samples": 17964,
+      "start_ticks": 42969160,
+      "tid": 257510
+    },
+    {
+      "category": "other_vcpus",
+      "comm": "CPU 16/KVM",
+      "first_runtime_ns": 38466584843821,
+      "first_seen_ns": 919534598994137,
+      "last_runtime_ns": 38467716341188,
+      "last_seen_ns": 920434578238315,
+      "samples": 17964,
+      "start_ticks": 42969160,
+      "tid": 257511
+    },
+    {
+      "category": "other_vcpus",
+      "comm": "CPU 17/KVM",
+      "first_runtime_ns": 38401481769368,
+      "first_seen_ns": 919534598994137,
+      "last_runtime_ns": 38402575817856,
+      "last_seen_ns": 920434578238315,
+      "samples": 17964,
+      "start_ticks": 42969160,
+      "tid": 257512
+    },
+    {
+      "category": "other_vcpus",
+      "comm": "CPU 18/KVM",
+      "first_runtime_ns": 38340835067821,
+      "first_seen_ns": 919534598994137,
+      "last_runtime_ns": 38341983997194,
+      "last_seen_ns": 920434578238315,
+      "samples": 17964,
+      "start_ticks": 42969160,
+      "tid": 257513
+    },
+    {
+      "category": "other_vcpus",
+      "comm": "CPU 19/KVM",
+      "first_runtime_ns": 38283030888410,
+      "first_seen_ns": 919534598994137,
+      "last_runtime_ns": 38284046698596,
+      "last_seen_ns": 920434578238315,
+      "samples": 17964,
+      "start_ticks": 42969160,
+      "tid": 257514
+    },
+    {
+      "category": "other_vcpus",
+      "comm": "CPU 20/KVM",
+      "first_runtime_ns": 35600186807553,
+      "first_seen_ns": 919534598994137,
+      "last_runtime_ns": 35609659104718,
+      "last_seen_ns": 920434578238315,
+      "samples": 17964,
+      "start_ticks": 42969160,
+      "tid": 257515
+    },
+    {
+      "category": "other_vcpus",
+      "comm": "CPU 21/KVM",
+      "first_runtime_ns": 35625312026320,
+      "first_seen_ns": 919534598994137,
+      "last_runtime_ns": 35626328479724,
+      "last_seen_ns": 920434578238315,
+      "samples": 17964,
+      "start_ticks": 42969160,
+      "tid": 257516
+    },
+    {
+      "category": "other_vcpus",
+      "comm": "CPU 22/KVM",
+      "first_runtime_ns": 35611881310884,
+      "first_seen_ns": 919534598994137,
+      "last_runtime_ns": 35612882166457,
+      "last_seen_ns": 920434578238315,
+      "samples": 17964,
+      "start_ticks": 42969160,
+      "tid": 257517
+    },
+    {
+      "category": "other_vcpus",
+      "comm": "CPU 23/KVM",
+      "first_runtime_ns": 35591274356940,
+      "first_seen_ns": 919534598994137,
+      "last_runtime_ns": 35592558720025,
+      "last_seen_ns": 920434578238315,
+      "samples": 17964,
+      "start_ticks": 42969160,
+      "tid": 257518
+    },
+    {
+      "category": "other_vcpus",
+      "comm": "CPU 24/KVM",
+      "first_runtime_ns": 32850151648594,
+      "first_seen_ns": 919534598994137,
+      "last_runtime_ns": 32851192109669,
+      "last_seen_ns": 920434578238315,
+      "samples": 17964,
+      "start_ticks": 42969161,
+      "tid": 257519
+    },
+    {
+      "category": "other_vcpus",
+      "comm": "CPU 25/KVM",
+      "first_runtime_ns": 32808187794095,
+      "first_seen_ns": 919534598994137,
+      "last_runtime_ns": 32809167297092,
+      "last_seen_ns": 920434578238315,
+      "samples": 17964,
+      "start_ticks": 42969161,
+      "tid": 257520
+    },
+    {
+      "category": "other_vcpus",
+      "comm": "CPU 26/KVM",
+      "first_runtime_ns": 32802060301318,
+      "first_seen_ns": 919534598994137,
+      "last_runtime_ns": 32803042510044,
+      "last_seen_ns": 920434578238315,
+      "samples": 17964,
+      "start_ticks": 42969161,
+      "tid": 257521
+    },
+    {
+      "category": "other_vcpus",
+      "comm": "CPU 27/KVM",
+      "first_runtime_ns": 32751313311912,
+      "first_seen_ns": 919534598994137,
+      "last_runtime_ns": 32752722368607,
+      "last_seen_ns": 920434578238315,
+      "samples": 17964,
+      "start_ticks": 42969161,
+      "tid": 257522
+    },
+    {
+      "category": "other_vcpus",
+      "comm": "CPU 28/KVM",
+      "first_runtime_ns": 30053774943905,
+      "first_seen_ns": 919534598994137,
+      "last_runtime_ns": 30054762477174,
+      "last_seen_ns": 920434578238315,
+      "samples": 17964,
+      "start_ticks": 42969161,
+      "tid": 257523
+    },
+    {
+      "category": "other_vcpus",
+      "comm": "CPU 29/KVM",
+      "first_runtime_ns": 29984812237562,
+      "first_seen_ns": 919534598994137,
+      "last_runtime_ns": 29985758719330,
+      "last_seen_ns": 920434578238315,
+      "samples": 17964,
+      "start_ticks": 42969161,
+      "tid": 257524
+    },
+    {
+      "category": "other_vcpus",
+      "comm": "CPU 30/KVM",
+      "first_runtime_ns": 29996171568784,
+      "first_seen_ns": 919534598994137,
+      "last_runtime_ns": 29997109167023,
+      "last_seen_ns": 920434578238315,
+      "samples": 17964,
+      "start_ticks": 42969161,
+      "tid": 257525
+    },
+    {
+      "category": "other_vcpus",
+      "comm": "CPU 31/KVM",
+      "first_runtime_ns": 29835378558936,
+      "first_seen_ns": 919534598994137,
+      "last_runtime_ns": 29836728441095,
+      "last_seen_ns": 920434578238315,
+      "samples": 17964,
+      "start_ticks": 42969161,
+      "tid": 257526
+    },
+    {
+      "category": "other_vcpus",
+      "comm": "CPU 32/KVM",
+      "first_runtime_ns": 28062539390060,
+      "first_seen_ns": 919534598994137,
+      "last_runtime_ns": 28065141474524,
+      "last_seen_ns": 920434578238315,
+      "samples": 17964,
+      "start_ticks": 42969161,
+      "tid": 257527
+    },
+    {
+      "category": "other_vcpus",
+      "comm": "CPU 33/KVM",
+      "first_runtime_ns": 27328963347701,
+      "first_seen_ns": 919534598994137,
+      "last_runtime_ns": 27330454874138,
+      "last_seen_ns": 920434578238315,
+      "samples": 17964,
+      "start_ticks": 42969161,
+      "tid": 257528
+    },
+    {
+      "category": "other_vcpus",
+      "comm": "CPU 34/KVM",
+      "first_runtime_ns": 26806662073526,
+      "first_seen_ns": 919534598994137,
+      "last_runtime_ns": 26808873808479,
+      "last_seen_ns": 920434578238315,
+      "samples": 17964,
+      "start_ticks": 42969161,
+      "tid": 257529
+    },
+    {
+      "category": "other_vcpus",
+      "comm": "CPU 35/KVM",
+      "first_runtime_ns": 26988910202670,
+      "first_seen_ns": 919534598994137,
+      "last_runtime_ns": 26990252228409,
+      "last_seen_ns": 920434578238315,
+      "samples": 17964,
+      "start_ticks": 42969161,
+      "tid": 257530
+    },
+    {
+      "category": "other_vcpus",
+      "comm": "CPU 36/KVM",
+      "first_runtime_ns": 23952556840019,
+      "first_seen_ns": 919534598994137,
+      "last_runtime_ns": 23953807614082,
+      "last_seen_ns": 920434578238315,
+      "samples": 17964,
+      "start_ticks": 42969161,
+      "tid": 257531
+    },
+    {
+      "category": "other_vcpus",
+      "comm": "CPU 37/KVM",
+      "first_runtime_ns": 23736397666219,
+      "first_seen_ns": 919534598994137,
+      "last_runtime_ns": 23737751681690,
+      "last_seen_ns": 920434578238315,
+      "samples": 17964,
+      "start_ticks": 42969161,
+      "tid": 257532
+    },
+    {
+      "category": "other_vcpus",
+      "comm": "CPU 38/KVM",
+      "first_runtime_ns": 23951166650175,
+      "first_seen_ns": 919534598994137,
+      "last_runtime_ns": 23952454342565,
+      "last_seen_ns": 920434578238315,
+      "samples": 17964,
+      "start_ticks": 42969161,
+      "tid": 257533
+    },
+    {
+      "category": "other_vcpus",
+      "comm": "CPU 39/KVM",
+      "first_runtime_ns": 23972702548609,
+      "first_seen_ns": 919534598994137,
+      "last_runtime_ns": 23974859845778,
+      "last_seen_ns": 920434578238315,
+      "samples": 17964,
+      "start_ticks": 42969161,
+      "tid": 257534
+    },
+    {
+      "category": "other_vcpus",
+      "comm": "CPU 40/KVM",
+      "first_runtime_ns": 21433127005580,
+      "first_seen_ns": 919534598994137,
+      "last_runtime_ns": 21434552971652,
+      "last_seen_ns": 920434578238315,
+      "samples": 17964,
+      "start_ticks": 42969161,
+      "tid": 257535
+    },
+    {
+      "category": "other_vcpus",
+      "comm": "CPU 41/KVM",
+      "first_runtime_ns": 20937451851407,
+      "first_seen_ns": 919534598994137,
+      "last_runtime_ns": 20938931016151,
+      "last_seen_ns": 920434578238315,
+      "samples": 17964,
+      "start_ticks": 42969161,
+      "tid": 257536
+    },
+    {
+      "category": "other_vcpus",
+      "comm": "CPU 42/KVM",
+      "first_runtime_ns": 20799182295603,
+      "first_seen_ns": 919534598994137,
+      "last_runtime_ns": 20800348036469,
+      "last_seen_ns": 920434578238315,
+      "samples": 17964,
+      "start_ticks": 42969161,
+      "tid": 257537
+    },
+    {
+      "category": "other_vcpus",
+      "comm": "CPU 43/KVM",
+      "first_runtime_ns": 20553798503313,
+      "first_seen_ns": 919534598994137,
+      "last_runtime_ns": 20555181010642,
+      "last_seen_ns": 920434578238315,
+      "samples": 17964,
+      "start_ticks": 42969161,
+      "tid": 257538
+    },
+    {
+      "category": "other_vcpus",
+      "comm": "CPU 44/KVM",
+      "first_runtime_ns": 17851915862616,
+      "first_seen_ns": 919534598994137,
+      "last_runtime_ns": 17853098791540,
+      "last_seen_ns": 920434578238315,
+      "samples": 17964,
+      "start_ticks": 42969161,
+      "tid": 257539
+    },
+    {
+      "category": "other_vcpus",
+      "comm": "CPU 45/KVM",
+      "first_runtime_ns": 17479367897727,
+      "first_seen_ns": 919534598994137,
+      "last_runtime_ns": 17480518015941,
+      "last_seen_ns": 920434578238315,
+      "samples": 17964,
+      "start_ticks": 42969161,
+      "tid": 257540
+    },
+    {
+      "category": "other_vcpus",
+      "comm": "CPU 46/KVM",
+      "first_runtime_ns": 17452859023921,
+      "first_seen_ns": 919534598994137,
+      "last_runtime_ns": 17454021089026,
+      "last_seen_ns": 920434578238315,
+      "samples": 17964,
+      "start_ticks": 42969161,
+      "tid": 257541
+    },
+    {
+      "category": "other_vcpus",
+      "comm": "CPU 47/KVM",
+      "first_runtime_ns": 17303923260832,
+      "first_seen_ns": 919534598994137,
+      "last_runtime_ns": 17305086077717,
+      "last_seen_ns": 920434578238315,
+      "samples": 17964,
+      "start_ticks": 42969162,
+      "tid": 257542
+    },
+    {
+      "category": "other_vcpus",
+      "comm": "CPU 48/KVM",
+      "first_runtime_ns": 14707681234451,
+      "first_seen_ns": 919534598994137,
+      "last_runtime_ns": 14709033039151,
+      "last_seen_ns": 920434578238315,
+      "samples": 17964,
+      "start_ticks": 42969162,
+      "tid": 257543
+    },
+    {
+      "category": "other_vcpus",
+      "comm": "CPU 49/KVM",
+      "first_runtime_ns": 14198194762223,
+      "first_seen_ns": 919534598994137,
+      "last_runtime_ns": 14218973893677,
+      "last_seen_ns": 920434578238315,
+      "samples": 17964,
+      "start_ticks": 42969162,
+      "tid": 257544
+    },
+    {
+      "category": "other_vcpus",
+      "comm": "CPU 50/KVM",
+      "first_runtime_ns": 14187426496300,
+      "first_seen_ns": 919534598994137,
+      "last_runtime_ns": 14192498435301,
+      "last_seen_ns": 920434578238315,
+      "samples": 17964,
+      "start_ticks": 42969162,
+      "tid": 257545
+    },
+    {
+      "category": "other_vcpus",
+      "comm": "CPU 51/KVM",
+      "first_runtime_ns": 14153623697149,
+      "first_seen_ns": 919534598994137,
+      "last_runtime_ns": 14158511722227,
+      "last_seen_ns": 920434578238315,
+      "samples": 17964,
+      "start_ticks": 42969162,
+      "tid": 257546
+    },
+    {
+      "category": "other_vcpus",
+      "comm": "CPU 52/KVM",
+      "first_runtime_ns": 11139315939327,
+      "first_seen_ns": 919534598994137,
+      "last_runtime_ns": 11143625938791,
+      "last_seen_ns": 920434578238315,
+      "samples": 17964,
+      "start_ticks": 42969162,
+      "tid": 257547
+    },
+    {
+      "category": "other_vcpus",
+      "comm": "CPU 53/KVM",
+      "first_runtime_ns": 11150086457615,
+      "first_seen_ns": 919534598994137,
+      "last_runtime_ns": 11151886523559,
+      "last_seen_ns": 920434578238315,
+      "samples": 17964,
+      "start_ticks": 42969162,
+      "tid": 257548
+    },
+    {
+      "category": "other_vcpus",
+      "comm": "CPU 54/KVM",
+      "first_runtime_ns": 11162748874598,
+      "first_seen_ns": 919534598994137,
+      "last_runtime_ns": 11164646490044,
+      "last_seen_ns": 920434578238315,
+      "samples": 17964,
+      "start_ticks": 42969162,
+      "tid": 257549
+    },
+    {
+      "category": "other_vcpus",
+      "comm": "CPU 55/KVM",
+      "first_runtime_ns": 11058128593060,
+      "first_seen_ns": 919534598994137,
+      "last_runtime_ns": 11063022585301,
+      "last_seen_ns": 920434578238315,
+      "samples": 17964,
+      "start_ticks": 42969162,
+      "tid": 257550
+    },
+    {
+      "category": "other_vcpus",
+      "comm": "CPU 56/KVM",
+      "first_runtime_ns": 8064878622485,
+      "first_seen_ns": 919534598994137,
+      "last_runtime_ns": 8081804398148,
+      "last_seen_ns": 920434578238315,
+      "samples": 17964,
+      "start_ticks": 42969163,
+      "tid": 257551
+    },
+    {
+      "category": "other_vcpus",
+      "comm": "CPU 57/KVM",
+      "first_runtime_ns": 7995166439171,
+      "first_seen_ns": 919534598994137,
+      "last_runtime_ns": 8004985401124,
+      "last_seen_ns": 920434578238315,
+      "samples": 17964,
+      "start_ticks": 42969163,
+      "tid": 257552
+    },
+    {
+      "category": "other_vcpus",
+      "comm": "CPU 58/KVM",
+      "first_runtime_ns": 7971242451464,
+      "first_seen_ns": 919534598994137,
+      "last_runtime_ns": 7980174897629,
+      "last_seen_ns": 920434578238315,
+      "samples": 17964,
+      "start_ticks": 42969163,
+      "tid": 257553
+    },
+    {
+      "category": "other_vcpus",
+      "comm": "CPU 59/KVM",
+      "first_runtime_ns": 7855655894228,
+      "first_seen_ns": 919534598994137,
+      "last_runtime_ns": 7857933213986,
+      "last_seen_ns": 920434578238315,
+      "samples": 17964,
+      "start_ticks": 42969163,
+      "tid": 257554
+    },
+    {
+      "category": "other_vcpus",
+      "comm": "CPU 60/KVM",
+      "first_runtime_ns": 1952779538390,
+      "first_seen_ns": 919534598994137,
+      "last_runtime_ns": 1958437263894,
+      "last_seen_ns": 920434578238315,
+      "samples": 17964,
+      "start_ticks": 42969163,
+      "tid": 257555
+    },
+    {
+      "category": "other_vcpus",
+      "comm": "CPU 61/KVM",
+      "first_runtime_ns": 1999754589997,
+      "first_seen_ns": 919534598994137,
+      "last_runtime_ns": 2001532697917,
+      "last_seen_ns": 920434578238315,
+      "samples": 17964,
+      "start_ticks": 42969163,
+      "tid": 257556
+    },
+    {
+      "category": "other_vcpus",
+      "comm": "CPU 62/KVM",
+      "first_runtime_ns": 1838053997459,
+      "first_seen_ns": 919534598994137,
+      "last_runtime_ns": 1839615155224,
+      "last_seen_ns": 920434578238315,
+      "samples": 17964,
+      "start_ticks": 42969163,
+      "tid": 257557
+    },
+    {
+      "category": "collector_vcpu_63",
+      "comm": "CPU 63/KVM",
+      "first_runtime_ns": 2839964522892,
+      "first_seen_ns": 919534598994137,
+      "last_runtime_ns": 2848893524989,
+      "last_seen_ns": 920434578238315,
+      "samples": 17964,
+      "start_ticks": 42969163,
+      "tid": 257558
+    },
+    {
+      "category": "original_service",
+      "comm": "kvm-nx-lpage-re",
+      "first_runtime_ns": 4260,
+      "first_seen_ns": 919534598994137,
+      "last_runtime_ns": 4260,
+      "last_seen_ns": 920434578238315,
+      "samples": 17964,
+      "start_ticks": 42969168,
+      "tid": 257560
+    },
+    {
+      "category": "additional_service",
+      "comm": "worker",
+      "first_runtime_ns": 8723100,
+      "first_seen_ns": 919534598994137,
+      "last_runtime_ns": 9059608,
+      "last_seen_ns": 919570171461304,
+      "samples": 711,
+      "start_ticks": 91944831,
+      "tid": 429797
+    },
+    {
+      "category": "additional_service",
+      "comm": "worker",
+      "first_runtime_ns": 653189,
+      "first_seen_ns": 919534598994137,
+      "last_runtime_ns": 846365,
+      "last_seen_ns": 919556344903358,
+      "samples": 435,
+      "start_ticks": 91951539,
+      "tid": 430146
+    },
+    {
+      "category": "additional_service",
+      "comm": "worker",
+      "first_runtime_ns": 703496,
+      "first_seen_ns": 919534598994137,
+      "last_runtime_ns": 703496,
+      "last_seen_ns": 919539462474078,
+      "samples": 98,
+      "start_ticks": 91951539,
+      "tid": 430148
+    },
+    {
+      "category": "additional_service",
+      "comm": "worker",
+      "first_runtime_ns": 567303,
+      "first_seen_ns": 919534598994137,
+      "last_runtime_ns": 603169,
+      "last_seen_ns": 919545073177830,
+      "samples": 210,
+      "start_ticks": 91951539,
+      "tid": 430149
+    },
+    {
+      "category": "additional_service",
+      "comm": "worker",
+      "first_runtime_ns": 938553,
+      "first_seen_ns": 919534598994137,
+      "last_runtime_ns": 1229153,
+      "last_seen_ns": 919580140406677,
+      "samples": 910,
+      "start_ticks": 91951539,
+      "tid": 430150
+    },
+    {
+      "category": "additional_service",
+      "comm": "worker",
+      "first_runtime_ns": 436993,
+      "first_seen_ns": 919534598994137,
+      "last_runtime_ns": 677827,
+      "last_seen_ns": 919556344903358,
+      "samples": 435,
+      "start_ticks": 91951539,
+      "tid": 430151
+    },
+    {
+      "category": "additional_service",
+      "comm": "worker",
+      "first_runtime_ns": 534617,
+      "first_seen_ns": 919534598994137,
+      "last_runtime_ns": 634352,
+      "last_seen_ns": 919555092553805,
+      "samples": 410,
+      "start_ticks": 91951539,
+      "tid": 430152
+    },
+    {
+      "category": "additional_service",
+      "comm": "worker",
+      "first_runtime_ns": 452311,
+      "first_seen_ns": 919534598994137,
+      "last_runtime_ns": 452311,
+      "last_seen_ns": 919539462474078,
+      "samples": 98,
+      "start_ticks": 91951539,
+      "tid": 430153
+    },
+    {
+      "category": "additional_service",
+      "comm": "worker",
+      "first_runtime_ns": 82741,
+      "first_seen_ns": 919609092393479,
+      "last_runtime_ns": 34805448,
+      "last_seen_ns": 919959019882160,
+      "samples": 6986,
+      "start_ticks": 91960905,
+      "tid": 430316
+    },
+    {
+      "category": "additional_service",
+      "comm": "worker",
+      "first_runtime_ns": 292657,
+      "first_seen_ns": 919613701604580,
+      "last_runtime_ns": 30297404,
+      "last_seen_ns": 919907058746660,
+      "samples": 5857,
+      "start_ticks": 91961369,
+      "tid": 430317
+    },
+    {
+      "category": "additional_service",
+      "comm": "worker",
+      "first_runtime_ns": 118212,
+      "first_seen_ns": 919613701604580,
+      "last_runtime_ns": 30707992,
+      "last_seen_ns": 919911419900839,
+      "samples": 5944,
+      "start_ticks": 91961369,
+      "tid": 430318
+    },
+    {
+      "category": "additional_service",
+      "comm": "worker",
+      "first_runtime_ns": 1889202,
+      "first_seen_ns": 919614753532565,
+      "last_runtime_ns": 24600209,
+      "last_seen_ns": 919907058746660,
+      "samples": 5836,
+      "start_ticks": 91961470,
+      "tid": 430319
+    },
+    {
+      "category": "additional_service",
+      "comm": "worker",
+      "first_runtime_ns": 2623591,
+      "first_seen_ns": 919614753532565,
+      "last_runtime_ns": 25783289,
+      "last_seen_ns": 919942134308103,
+      "samples": 6536,
+      "start_ticks": 91961471,
+      "tid": 430320
+    },
+    {
+      "category": "additional_service",
+      "comm": "worker",
+      "first_runtime_ns": 1210828,
+      "first_seen_ns": 919614753532565,
+      "last_runtime_ns": 33506753,
+      "last_seen_ns": 919936270763229,
+      "samples": 6419,
+      "start_ticks": 91961471,
+      "tid": 430321
+    },
+    {
+      "category": "additional_service",
+      "comm": "worker",
+      "first_runtime_ns": 127358,
+      "first_seen_ns": 919614753532565,
+      "last_runtime_ns": 21664981,
+      "last_seen_ns": 919870431415327,
+      "samples": 5105,
+      "start_ticks": 91961474,
+      "tid": 430322
+    },
+    {
+      "category": "additional_service",
+      "comm": "worker",
+      "first_runtime_ns": 841864,
+      "first_seen_ns": 919614753532565,
+      "last_runtime_ns": 28885544,
+      "last_seen_ns": 919941331817594,
+      "samples": 6520,
+      "start_ticks": 91961474,
+      "tid": 430323
+    },
+    {
+      "category": "additional_service",
+      "comm": "worker",
+      "first_runtime_ns": 852119,
+      "first_seen_ns": 919614753532565,
+      "last_runtime_ns": 51059356,
+      "last_seen_ns": 920062735696107,
+      "samples": 8943,
+      "start_ticks": 91961474,
+      "tid": 430324
+    },
+    {
+      "category": "additional_service",
+      "comm": "worker",
+      "first_runtime_ns": 720252,
+      "first_seen_ns": 919614753532565,
+      "last_runtime_ns": 28520665,
+      "last_seen_ns": 919913221022920,
+      "samples": 5959,
+      "start_ticks": 91961474,
+      "tid": 430325
+    },
+    {
+      "category": "additional_service",
+      "comm": "worker",
+      "first_runtime_ns": 154729,
+      "first_seen_ns": 919614753532565,
+      "last_runtime_ns": 35088846,
+      "last_seen_ns": 919942134308103,
+      "samples": 6536,
+      "start_ticks": 91961474,
+      "tid": 430326
+    },
+    {
+      "category": "additional_service",
+      "comm": "worker",
+      "first_runtime_ns": 210345,
+      "first_seen_ns": 919614753532565,
+      "last_runtime_ns": 54954611,
+      "last_seen_ns": 920023304044915,
+      "samples": 8156,
+      "start_ticks": 91961474,
+      "tid": 430327
+    },
+    {
+      "category": "additional_service",
+      "comm": "worker",
+      "first_runtime_ns": 778037,
+      "first_seen_ns": 919614753532565,
+      "last_runtime_ns": 27426301,
+      "last_seen_ns": 919870431415327,
+      "samples": 5105,
+      "start_ticks": 91961474,
+      "tid": 430328
+    },
+    {
+      "category": "additional_service",
+      "comm": "worker",
+      "first_runtime_ns": 909016,
+      "first_seen_ns": 919614753532565,
+      "last_runtime_ns": 25351175,
+      "last_seen_ns": 919907058746660,
+      "samples": 5836,
+      "start_ticks": 91961474,
+      "tid": 430329
+    },
+    {
+      "category": "additional_service",
+      "comm": "worker",
+      "first_runtime_ns": 485727,
+      "first_seen_ns": 919614753532565,
+      "last_runtime_ns": 30817194,
+      "last_seen_ns": 919907058746660,
+      "samples": 5836,
+      "start_ticks": 91961474,
+      "tid": 430330
+    },
+    {
+      "category": "additional_service",
+      "comm": "worker",
+      "first_runtime_ns": 32096,
+      "first_seen_ns": 919614753532565,
+      "last_runtime_ns": 27408317,
+      "last_seen_ns": 919964131299115,
+      "samples": 6975,
+      "start_ticks": 91961474,
+      "tid": 430331
+    },
+    {
+      "category": "additional_service",
+      "comm": "worker",
+      "first_runtime_ns": 79970,
+      "first_seen_ns": 919614753532565,
+      "last_runtime_ns": 34339736,
+      "last_seen_ns": 919911419900839,
+      "samples": 5923,
+      "start_ticks": 91961474,
+      "tid": 430332
+    },
+    {
+      "category": "additional_service",
+      "comm": "worker",
+      "first_runtime_ns": 797722,
+      "first_seen_ns": 919614753532565,
+      "last_runtime_ns": 28021793,
+      "last_seen_ns": 919870431415327,
+      "samples": 5105,
+      "start_ticks": 91961474,
+      "tid": 430333
+    },
+    {
+      "category": "additional_service",
+      "comm": "worker",
+      "first_runtime_ns": 1261697,
+      "first_seen_ns": 919614753532565,
+      "last_runtime_ns": 24002000,
+      "last_seen_ns": 919911419900839,
+      "samples": 5923,
+      "start_ticks": 91961474,
+      "tid": 430334
+    },
+    {
+      "category": "additional_service",
+      "comm": "worker",
+      "first_runtime_ns": 64508,
+      "first_seen_ns": 919614753532565,
+      "last_runtime_ns": 24154662,
+      "last_seen_ns": 919895534776949,
+      "samples": 5606,
+      "start_ticks": 91961474,
+      "tid": 430335
+    },
+    {
+      "category": "additional_service",
+      "comm": "worker",
+      "first_runtime_ns": 64507,
+      "first_seen_ns": 919614753532565,
+      "last_runtime_ns": 25381088,
+      "last_seen_ns": 919870431415327,
+      "samples": 5105,
+      "start_ticks": 91961474,
+      "tid": 430336
+    },
+    {
+      "category": "additional_service",
+      "comm": "worker",
+      "first_runtime_ns": 72362,
+      "first_seen_ns": 919614753532565,
+      "last_runtime_ns": 25071457,
+      "last_seen_ns": 919870431415327,
+      "samples": 5105,
+      "start_ticks": 91961474,
+      "tid": 430337
+    },
+    {
+      "category": "additional_service",
+      "comm": "worker",
+      "first_runtime_ns": 11059,
+      "first_seen_ns": 919614753532565,
+      "last_runtime_ns": 22866685,
+      "last_seen_ns": 919947245514103,
+      "samples": 6638,
+      "start_ticks": 91961474,
+      "tid": 430338
+    },
+    {
+      "category": "additional_service",
+      "comm": "worker",
+      "first_runtime_ns": 1109750,
+      "first_seen_ns": 919808254160033,
+      "last_runtime_ns": 11617961,
+      "last_seen_ns": 919941331817594,
+      "samples": 2657,
+      "start_ticks": 91980824,
+      "tid": 430352
+    },
+    {
+      "category": "additional_service",
+      "comm": "worker",
+      "first_runtime_ns": 61322,
+      "first_seen_ns": 919808254160033,
+      "last_runtime_ns": 9514669,
+      "last_seen_ns": 919911419900839,
+      "samples": 2060,
+      "start_ticks": 91980824,
+      "tid": 430353
+    },
+    {
+      "category": "additional_service",
+      "comm": "worker",
+      "first_runtime_ns": 945654,
+      "first_seen_ns": 919808254160033,
+      "last_runtime_ns": 7558343,
+      "last_seen_ns": 919911419900839,
+      "samples": 2060,
+      "start_ticks": 91980824,
+      "tid": 430354
+    },
+    {
+      "category": "additional_service",
+      "comm": "worker",
+      "first_runtime_ns": 919832,
+      "first_seen_ns": 919808254160033,
+      "last_runtime_ns": 7912245,
+      "last_seen_ns": 919870431415327,
+      "samples": 1242,
+      "start_ticks": 91980824,
+      "tid": 430355
+    },
+    {
+      "category": "additional_service",
+      "comm": "worker",
+      "first_runtime_ns": 49260,
+      "first_seen_ns": 919808254160033,
+      "last_runtime_ns": 33953397,
+      "last_seen_ns": 920052764150315,
+      "samples": 4881,
+      "start_ticks": 91980824,
+      "tid": 430356
+    },
+    {
+      "category": "additional_service",
+      "comm": "worker",
+      "first_runtime_ns": 1353681,
+      "first_seen_ns": 920007812981213,
+      "last_runtime_ns": 17020379,
+      "last_seen_ns": 920042743239240,
+      "samples": 698,
+      "start_ticks": 92000779,
+      "tid": 430582
+    },
+    {
+      "category": "additional_service",
+      "comm": "worker",
+      "first_runtime_ns": 4438422,
+      "first_seen_ns": 920007812981213,
+      "last_runtime_ns": 10891452,
+      "last_seen_ns": 920042743239240,
+      "samples": 698,
+      "start_ticks": 92000779,
+      "tid": 430583
+    },
+    {
+      "category": "additional_service",
+      "comm": "worker",
+      "first_runtime_ns": 552729,
+      "first_seen_ns": 920065835453204,
+      "last_runtime_ns": 3772622,
+      "last_seen_ns": 920092397605539,
+      "samples": 531,
+      "start_ticks": 92006580,
+      "tid": 430584
+    },
+    {
+      "category": "additional_service",
+      "comm": "worker",
+      "first_runtime_ns": 218943,
+      "first_seen_ns": 920070946374722,
+      "last_runtime_ns": 939828,
+      "last_seen_ns": 920112090108701,
+      "samples": 822,
+      "start_ticks": 92007093,
+      "tid": 430585
+    },
+    {
+      "category": "additional_service",
+      "comm": "worker",
+      "first_runtime_ns": 211484,
+      "first_seen_ns": 920070946374722,
+      "last_runtime_ns": 1148122,
+      "last_seen_ns": 920112090108701,
+      "samples": 822,
+      "start_ticks": 92007093,
+      "tid": 430586
+    },
+    {
+      "category": "additional_service",
+      "comm": "worker",
+      "first_runtime_ns": 205088,
+      "first_seen_ns": 920070946374722,
+      "last_runtime_ns": 836484,
+      "last_seen_ns": 920122109486916,
+      "samples": 1022,
+      "start_ticks": 92007093,
+      "tid": 430587
+    },
+    {
+      "category": "additional_service",
+      "comm": "worker",
+      "first_runtime_ns": 110331,
+      "first_seen_ns": 920070946374722,
+      "last_runtime_ns": 721369,
+      "last_seen_ns": 920132130348192,
+      "samples": 1222,
+      "start_ticks": 92007093,
+      "tid": 430588
+    },
+    {
+      "category": "additional_service",
+      "comm": "worker",
+      "first_runtime_ns": 117841,
+      "first_seen_ns": 920070946374722,
+      "last_runtime_ns": 117841,
+      "last_seen_ns": 920080923696740,
+      "samples": 200,
+      "start_ticks": 92007093,
+      "tid": 430589
+    },
+    {
+      "category": "additional_service",
+      "comm": "worker",
+      "first_runtime_ns": 107502,
+      "first_seen_ns": 920070946374722,
+      "last_runtime_ns": 107502,
+      "last_seen_ns": 920080923696740,
+      "samples": 200,
+      "start_ticks": 92007093,
+      "tid": 430590
+    },
+    {
+      "category": "additional_service",
+      "comm": "worker",
+      "first_runtime_ns": 53384,
+      "first_seen_ns": 920070946374722,
+      "last_runtime_ns": 656266,
+      "last_seen_ns": 920106477932302,
+      "samples": 710,
+      "start_ticks": 92007093,
+      "tid": 430591
+    },
+    {
+      "category": "additional_service",
+      "comm": "worker",
+      "first_runtime_ns": 98481,
+      "first_seen_ns": 920070946374722,
+      "last_runtime_ns": 98481,
+      "last_seen_ns": 920080923696740,
+      "samples": 200,
+      "start_ticks": 92007093,
+      "tid": 430592
+    },
+    {
+      "category": "additional_service",
+      "comm": "worker",
+      "first_runtime_ns": 161446,
+      "first_seen_ns": 920132876035937,
+      "last_runtime_ns": 202515,
+      "last_seen_ns": 920152819767366,
+      "samples": 399,
+      "start_ticks": 92013284,
+      "tid": 430595
+    },
+    {
+      "category": "additional_service",
+      "comm": "worker",
+      "first_runtime_ns": 46950,
+      "first_seen_ns": 920132876035937,
+      "last_runtime_ns": 46950,
+      "last_seen_ns": 920142804487286,
+      "samples": 199,
+      "start_ticks": 92013284,
+      "tid": 430596
+    },
+    {
+      "category": "additional_service",
+      "comm": "worker",
+      "first_runtime_ns": 38715,
+      "first_seen_ns": 920132876035937,
+      "last_runtime_ns": 38715,
+      "last_seen_ns": 920142804487286,
+      "samples": 199,
+      "start_ticks": 92013284,
+      "tid": 430597
+    },
+    {
+      "category": "additional_service",
+      "comm": "worker",
+      "first_runtime_ns": 9650,
+      "first_seen_ns": 920132876035937,
+      "last_runtime_ns": 73868,
+      "last_seen_ns": 920162839160803,
+      "samples": 599,
+      "start_ticks": 92013284,
+      "tid": 430598
+    },
+    {
+      "category": "additional_service",
+      "comm": "worker",
+      "first_runtime_ns": 192301,
+      "first_seen_ns": 920296956185393,
+      "last_runtime_ns": 384387,
+      "last_seen_ns": 920306939647545,
+      "samples": 200,
+      "start_ticks": 92029694,
+      "tid": 430601
+    },
+    {
+      "category": "additional_service",
+      "comm": "worker",
+      "first_runtime_ns": 87719,
+      "first_seen_ns": 920327678858473,
+      "last_runtime_ns": 87719,
+      "last_seen_ns": 920337663185123,
+      "samples": 200,
+      "start_ticks": 92032766,
+      "tid": 430602
+    },
+    {
+      "category": "additional_service",
+      "comm": "worker",
+      "first_runtime_ns": 345596,
+      "first_seen_ns": 920365816267557,
+      "last_runtime_ns": 426089,
+      "last_seen_ns": 920375796242628,
+      "samples": 200,
+      "start_ticks": 92036581,
+      "tid": 430603
+    },
+    {
+      "category": "additional_service",
+      "comm": "worker",
+      "first_runtime_ns": 86654,
+      "first_seen_ns": 920396531700268,
+      "last_runtime_ns": 86654,
+      "last_seen_ns": 920406511198009,
+      "samples": 200,
+      "start_ticks": 92039652,
+      "tid": 430604
+    }
+  ]
+}

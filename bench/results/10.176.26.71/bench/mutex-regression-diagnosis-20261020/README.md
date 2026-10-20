@@ -450,6 +450,13 @@ Acquisition-only latency and isolated instrumentation cost remain unmeasured.
 Whole-kernel replacement, RT/ww_mutex, lockdep and
 oversubscription remain separately unvalidated.
 
+The subsequent [five-worker pipecap diagnosis](../pipecap-causal-20261021/README.md)
+completed 48 serial original-binary sessions across four separate observation
+modes. It preserves the 0.30325 plain DIRECT/OUTER median ratio, large variance,
+observer-mode class changes and a failed 95-thread endpoint. Existing
+counters and aligned profiles narrow the observation to queue/owner polling;
+the initiating cause remains unresolved and no production fix was introduced.
+
 All stages used a sole source writer and serial VM execution. The three
 helpers (`native_api_inventory`, `rw_and_mm_audit`, `unified_api_review`) finished
 read-only reviews and each reported **no files touched**. No run is active.

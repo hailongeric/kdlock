@@ -17,7 +17,7 @@ assert hashlib.sha256(program.read_bytes()).digest()==hashlib.sha256(source.read
 command=[sys.executable,program,'--prepared',
  '/root/kdlock-evidence/10.176.26.71/bench/mutex-public-20261020-r2',
  '--output','/root/kdlock-evidence/10.176.26.71/bench/pipecap-causal-20261021/run-2',
- '--host-state','/tmp/kdlock-pipecap-host-before-3.json',
+ '--host-state','/tmp/kdlock-pipecap-host-before-4.json',
  '--source-commit','6c90e7adbae6e3e4ba19ff01c1803e6969b1fff7']
 log=Path('/tmp/kdlock-pipecap-run-2-supervision.log')
 try:

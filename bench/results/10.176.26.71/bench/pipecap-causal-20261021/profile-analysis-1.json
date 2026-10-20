@@ -1,0 +1,4399 @@
+{
+  "count": 12,
+  "overall_acceptance": "OPEN",
+  "ranges_helper_sha256": "03400fd9e01dc8c64c28c28a9fbcd61dc47cb229bc61e286a176312c253d7e42",
+  "records_sha256": "5c9cf1846d47e7abce80bce47c6b5a10e0a2eaaa0c5c04a8b0e7d411c4d2eca8",
+  "run": "pipecap-causal-20261021/run-2",
+  "scope": "Flat event-period weights, not isolated function timings or p95 latency. Three separate instrumented repeats. Interrupts inside each active worker interval can contribute. Host interference remains uncertain. RCU and return-thunk costs cannot be assigned exclusively to task routing. Profile and plain execution shares can differ.",
+  "script_sha256": "9175a34eb9b8b96fc7ac549b95ea018f162f25a9d35946eb4b9cdcf5f424b597",
+  "sessions": [
+    {
+      "all_sampled_period": 34666422399,
+      "arm": "native",
+      "categories": {
+        "admission": {
+          "sampled_period": 0,
+          "worker_weight_pct": 0.0
+        },
+        "combine_release": {
+          "sampled_period": 0,
+          "worker_weight_pct": 0.0
+        },
+        "direct_lock_entry": {
+          "sampled_period": 0,
+          "worker_weight_pct": 0.0
+        },
+        "direct_unlock_route": {
+          "sampled_period": 0,
+          "worker_weight_pct": 0.0
+        },
+        "exact_task_identity": {
+          "sampled_period": 0,
+          "worker_weight_pct": 0.0
+        },
+        "physical_mutex": {
+          "sampled_period": 0,
+          "worker_weight_pct": 0.0
+        },
+        "queue": {
+          "sampled_period": 0,
+          "worker_weight_pct": 0.0
+        },
+        "rcu_read_helpers_all_uses": {
+          "sampled_period": 34934975,
+          "worker_weight_pct": 0.1007884188694967
+        },
+        "return_thunk_all_uses": {
+          "sampled_period": 0,
+          "worker_weight_pct": 0.0
+        }
+      },
+      "clock_alignment": "Explicit perf --clockid mono and client CLOCK_MONOTONIC; retain only samples wholly inside the worker CPU active interval, including printed timestamp precision.",
+      "command_periods": {
+        "client": 4726748,
+        "sc_worker": 34661695651
+      },
+      "completed": 8179968,
+      "excluded_worker_period": 0,
+      "excluded_worker_samples": 0,
+      "guest_measurement_seconds": [
+        489383.37837517,
+        489385.378550023
+      ],
+      "hashes": {
+        "kallsyms": "fc7dab8de5d52e280babb504b0b5a86ac6a7c71d025ca58b0839f8804d33674e",
+        "perf-report.txt": "1216ceefcee62815e4d4d1d8ed84a01ee98afd3e473e66e5fed48727a7567c05",
+        "perf-samples.txt": "cfc4246e2ec85f51067fc437ab982975ea5ab6aa8e2b153b291ebf29396709fc",
+        "perf.data": "aee0693e18affebf2c118e0ec9ce23e8d7513fad5c51877fa7d36cfa65567206",
+        "session.json": "4f6be44a9365141689e9680d24c91a7cbb2809de59a28b68ef2f28fdba611a50"
+      },
+      "issues": [],
+      "jit_bodies": 0,
+      "jit_completions": 0,
+      "lost_count": [
+        0
+      ],
+      "lost_records": [],
+      "name": "pipecap-t05-r0-native-profile",
+      "parse_errors": [],
+      "perf_timestamp_span": [
+        489383.381502,
+        489385.378362
+      ],
+      "provider_elf_sha256": null,
+      "provider_hot_offsets": [],
+      "repeat": 0,
+      "sampled_period_per_operation": 4237.387683056951,
+      "threads": 5,
+      "tid_to_cpu": {
+        "3046508": 0,
+        "3046509": 1,
+        "3046510": 2,
+        "3046511": 3,
+        "3046512": 4
+      },
+      "top_symbols": [
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 18236068445,
+          "samples": 1047,
+          "symbol": "osq_lock",
+          "worker_weight_pct": 52.611587813286576
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 3429365924,
+          "samples": 196,
+          "symbol": "mutex_unlock",
+          "worker_weight_pct": 9.893820425086624
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 3425277847,
+          "samples": 196,
+          "symbol": "__mutex_lock",
+          "worker_weight_pct": 9.882026204050348
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 2346900119,
+          "samples": 135,
+          "symbol": "mutex_lock",
+          "worker_weight_pct": 6.770875096909148
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 1317301283,
+          "samples": 77,
+          "symbol": "osq_unlock",
+          "worker_weight_pct": 3.800452511797401
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 859011313,
+          "samples": 50,
+          "symbol": "clear_bhb_loop",
+          "worker_weight_pct": 2.4782726201544536
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 843605463,
+          "samples": 48,
+          "symbol": "__raw_callee_save___kvm_vcpu_is_preempted",
+          "worker_weight_pct": 2.433826294864665
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 810076800,
+          "samples": 47,
+          "symbol": "syscall_exit_to_user_mode",
+          "worker_weight_pct": 2.33709512701416
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 562237383,
+          "samples": 32,
+          "symbol": "arch_exit_to_user_mode_prepare",
+          "worker_weight_pct": 1.6220712011928917
+        },
+        {
+          "dso": "/usr/lib/x86_64-linux-gnu/libc.so.6",
+          "sampled_period": 335690361,
+          "samples": 20,
+          "symbol": "[unknown]",
+          "worker_weight_pct": 0.9684764541815346
+        },
+        {
+          "dso": "[unknown]",
+          "sampled_period": 297881482,
+          "samples": 17,
+          "symbol": "[unknown]",
+          "worker_weight_pct": 0.8593967386918823
+        },
+        {
+          "dso": "[real_api]",
+          "sampled_period": 283460828,
+          "samples": 16,
+          "symbol": "rb_redirected",
+          "worker_weight_pct": 0.8177927325140023
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 245172473,
+          "samples": 14,
+          "symbol": "__fget_light",
+          "worker_weight_pct": 0.7073297148200155
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 211182895,
+          "samples": 12,
+          "symbol": "its_return_thunk",
+          "worker_weight_pct": 0.6092687937899752
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 209472989,
+          "samples": 12,
+          "symbol": "entry_SYSCALL_64",
+          "worker_weight_pct": 0.6043356652517277
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 159795816,
+          "samples": 9,
+          "symbol": "mutex_spin_on_owner",
+          "worker_weight_pct": 0.4610155764130652
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 125300483,
+          "samples": 7,
+          "symbol": "fput",
+          "worker_weight_pct": 0.36149553749943286
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 122509489,
+          "samples": 7,
+          "symbol": "ftrace_ops_assist_func",
+          "worker_weight_pct": 0.35344343864050276
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 122476629,
+          "samples": 7,
+          "symbol": "entry_SYSCALL_64_after_hwframe",
+          "worker_weight_pct": 0.3533486365848536
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 120961007,
+          "samples": 7,
+          "symbol": "__x64_sys_fcntl",
+          "worker_weight_pct": 0.3489760230368598
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 71979584,
+          "samples": 4,
+          "symbol": "security_file_fcntl",
+          "worker_weight_pct": 0.20766319318230864
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 69790425,
+          "samples": 4,
+          "symbol": "syscall_enter_from_user_mode",
+          "worker_weight_pct": 0.20134740580121194
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 53140922,
+          "samples": 3,
+          "symbol": "do_syscall_64",
+          "worker_weight_pct": 0.153313105437953
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 52409220,
+          "samples": 3,
+          "symbol": "entry_SYSCALL_64_safe_stack",
+          "worker_weight_pct": 0.15120212388826967
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 51465062,
+          "samples": 3,
+          "symbol": "x64_sys_call",
+          "worker_weight_pct": 0.14847820059984634
+        }
+      ],
+      "usable": true,
+      "whole_ops_s": 4089626.458272446,
+      "worker_cpus": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "worker_pids": [
+        3046496
+      ],
+      "worker_sampled_period": 34661695651,
+      "worker_samples": 1990,
+      "worker_tids": [
+        3046508,
+        3046509,
+        3046510,
+        3046511,
+        3046512
+      ],
+      "workload": "pipecap"
+    },
+    {
+      "all_sampled_period": 35122722016,
+      "arm": "tclock",
+      "categories": {
+        "admission": {
+          "sampled_period": 0,
+          "worker_weight_pct": 0.0
+        },
+        "combine_release": {
+          "sampled_period": 0,
+          "worker_weight_pct": 0.0
+        },
+        "direct_lock_entry": {
+          "sampled_period": 0,
+          "worker_weight_pct": 0.0
+        },
+        "direct_unlock_route": {
+          "sampled_period": 0,
+          "worker_weight_pct": 0.0
+        },
+        "exact_task_identity": {
+          "sampled_period": 0,
+          "worker_weight_pct": 0.0
+        },
+        "physical_mutex": {
+          "sampled_period": 0,
+          "worker_weight_pct": 0.0
+        },
+        "queue": {
+          "sampled_period": 0,
+          "worker_weight_pct": 0.0
+        },
+        "rcu_read_helpers_all_uses": {
+          "sampled_period": 0,
+          "worker_weight_pct": 0.0
+        },
+        "return_thunk_all_uses": {
+          "sampled_period": 0,
+          "worker_weight_pct": 0.0
+        }
+      },
+      "clock_alignment": "Explicit perf --clockid mono and client CLOCK_MONOTONIC; retain only samples wholly inside the worker CPU active interval, including printed timestamp precision.",
+      "command_periods": {
+        "client": 4407778,
+        "sc_worker": 35118314238
+      },
+      "completed": 4521472,
+      "excluded_worker_period": 0,
+      "excluded_worker_samples": 0,
+      "guest_measurement_seconds": [
+        489388.637263033,
+        489390.637440463
+      ],
+      "hashes": {
+        "kallsyms": "78a5925cf46296f25002c60c41d41a0ecf3164d2726a08bdade7cb29369bc035",
+        "perf-report.txt": "4f5eae07786cff29a832dda1273e870af9c7dd471b3b66d52d6cdfae5e4ed91c",
+        "perf-samples.txt": "51917d709b5cb1f8f1be8aa3212f6f8698a1fe776831934aa39f551ed0d611bb",
+        "perf.data": "88f926d007b310e003db67fbd0eb8cee8f3cbc457a977c7b2509222811b106b1",
+        "session.json": "551be65aef0386e1f098ace685d8789ed90c7f21cdb99c20482d7c916d08841a"
+      },
+      "issues": [],
+      "jit_bodies": 0,
+      "jit_completions": 0,
+      "lost_count": [
+        0
+      ],
+      "lost_records": [],
+      "name": "pipecap-t05-r0-tclock-profile",
+      "parse_errors": [],
+      "perf_timestamp_span": [
+        489388.640368,
+        489390.637133
+      ],
+      "provider_elf_sha256": null,
+      "provider_hot_offsets": [],
+      "repeat": 0,
+      "sampled_period_per_operation": 7767.009115173112,
+      "threads": 5,
+      "tid_to_cpu": {
+        "3046532": 0,
+        "3046533": 1,
+        "3046534": 2,
+        "3046535": 3,
+        "3046536": 4
+      },
+      "top_symbols": [
+        {
+          "dso": "[tclock_mutex_backend_km]",
+          "sampled_period": 23754917026,
+          "samples": 1360,
+          "symbol": "__komb_mutex_lock_slowpath",
+          "worker_weight_pct": 67.64253222694795
+        },
+        {
+          "dso": "[tclock_mutex_backend_km]",
+          "sampled_period": 3267961740,
+          "samples": 186,
+          "symbol": "komb_mutex_lock",
+          "worker_weight_pct": 9.30557690740144
+        },
+        {
+          "dso": "[tclock_mutex_backend_km]",
+          "sampled_period": 2126329558,
+          "samples": 121,
+          "symbol": "komb_mutex_unlock",
+          "worker_weight_pct": 6.054759757514759
+        },
+        {
+          "dso": "[real_api]",
+          "sampled_period": 1479290446,
+          "samples": 89,
+          "symbol": "redirect",
+          "worker_weight_pct": 4.2123048275458626
+        },
+        {
+          "dso": "[tclock_mutex_backend_km]",
+          "sampled_period": 775636944,
+          "samples": 45,
+          "symbol": "run_combiner",
+          "worker_weight_pct": 2.2086394544551258
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 722860485,
+          "samples": 41,
+          "symbol": "fput",
+          "worker_weight_pct": 2.058357585449885
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 424671364,
+          "samples": 25,
+          "symbol": "clear_bhb_loop",
+          "worker_weight_pct": 1.2092589670505356
+        },
+        {
+          "dso": "[tclock_mutex_backend_km]",
+          "sampled_period": 353470478,
+          "samples": 20,
+          "symbol": "execute_cs",
+          "worker_weight_pct": 1.0065132272708153
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 351317494,
+          "samples": 20,
+          "symbol": "__fget_light",
+          "worker_weight_pct": 1.0003825685341543
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 280920266,
+          "samples": 16,
+          "symbol": "arch_exit_to_user_mode_prepare",
+          "worker_weight_pct": 0.7999252586447569
+        },
+        {
+          "dso": "[tclock_mutex_backend_km]",
+          "sampled_period": 247363343,
+          "samples": 14,
+          "symbol": "__komb_mutex_lock",
+          "worker_weight_pct": 0.7043713468807079
+        },
+        {
+          "dso": "[real_api]",
+          "sampled_period": 159112536,
+          "samples": 9,
+          "symbol": "rb_redirected",
+          "worker_weight_pct": 0.4530756656531971
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 159063766,
+          "samples": 9,
+          "symbol": "entry_SYSCALL_64",
+          "worker_weight_pct": 0.4529367922446688
+        },
+        {
+          "dso": "[tclock_mutex_backend_km]",
+          "sampled_period": 123728573,
+          "samples": 7,
+          "symbol": "komb_context_switch",
+          "worker_weight_pct": 0.3523192262631977
+        },
+        {
+          "dso": "[tclock_mutex_backend_km]",
+          "sampled_period": 88393099,
+          "samples": 5,
+          "symbol": "get_komb_mutex_node",
+          "worker_weight_pct": 0.25170086012942405
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 88380762,
+          "samples": 5,
+          "symbol": "syscall_return_via_sysret",
+          "worker_weight_pct": 0.25166573031107237
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 88338715,
+          "samples": 5,
+          "symbol": "ftrace_ops_assist_func",
+          "worker_weight_pct": 0.2515460007599468
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 70724736,
+          "samples": 4,
+          "symbol": "do_fcntl",
+          "worker_weight_pct": 0.20138989451683828
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 70718954,
+          "samples": 4,
+          "symbol": "__x64_sys_fcntl",
+          "worker_weight_pct": 0.2013734301730181
+        },
+        {
+          "dso": "[real_api]",
+          "sampled_period": 70639443,
+          "samples": 4,
+          "symbol": "rb_body",
+          "worker_weight_pct": 0.20114702124159517
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 58684270,
+          "samples": 4,
+          "symbol": "entry_SYSCALL_64_safe_stack",
+          "worker_weight_pct": 0.16710446179816998
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 53021747,
+          "samples": 3,
+          "symbol": "x64_sys_call",
+          "worker_weight_pct": 0.15098033077745934
+        },
+        {
+          "dso": "[unknown]",
+          "sampled_period": 53017820,
+          "samples": 3,
+          "symbol": "[unknown]",
+          "worker_weight_pct": 0.15096914857784297
+        },
+        {
+          "dso": "/usr/lib/x86_64-linux-gnu/libc.so.6",
+          "sampled_period": 53002612,
+          "samples": 3,
+          "symbol": "[unknown]",
+          "worker_weight_pct": 0.15092584353792296
+        },
+        {
+          "dso": "[tclock_mutex_backend_km]",
+          "sampled_period": 35368011,
+          "samples": 2,
+          "symbol": "get_shadow_stack_ptr",
+          "worker_weight_pct": 0.10071101579736369
+        }
+      ],
+      "usable": true,
+      "whole_ops_s": 2260535.456596968,
+      "worker_cpus": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "worker_pids": [
+        3046518
+      ],
+      "worker_sampled_period": 35118314238,
+      "worker_samples": 2014,
+      "worker_tids": [
+        3046532,
+        3046533,
+        3046534,
+        3046535,
+        3046536
+      ],
+      "workload": "pipecap"
+    },
+    {
+      "all_sampled_period": 31789369127,
+      "arm": "baseline-kd",
+      "categories": {
+        "admission": {
+          "sampled_period": 0,
+          "worker_weight_pct": 0.0
+        },
+        "combine_release": {
+          "sampled_period": 0,
+          "worker_weight_pct": 0.0
+        },
+        "direct_lock_entry": {
+          "sampled_period": 0,
+          "worker_weight_pct": 0.0
+        },
+        "direct_unlock_route": {
+          "sampled_period": 0,
+          "worker_weight_pct": 0.0
+        },
+        "exact_task_identity": {
+          "sampled_period": 0,
+          "worker_weight_pct": 0.0
+        },
+        "physical_mutex": {
+          "sampled_period": 1100646281,
+          "worker_weight_pct": 3.4628085098804564
+        },
+        "queue": {
+          "sampled_period": 0,
+          "worker_weight_pct": 0.0
+        },
+        "rcu_read_helpers_all_uses": {
+          "sampled_period": 128216983,
+          "worker_weight_pct": 0.4033910507926368
+        },
+        "return_thunk_all_uses": {
+          "sampled_period": 0,
+          "worker_weight_pct": 0.0
+        }
+      },
+      "clock_alignment": "Explicit perf --clockid mono and client CLOCK_MONOTONIC; retain only samples wholly inside the worker CPU active interval, including printed timestamp precision.",
+      "command_periods": {
+        "client": 4582938,
+        "sc_worker": 31784786189
+      },
+      "completed": 39181568,
+      "excluded_worker_period": 0,
+      "excluded_worker_samples": 0,
+      "guest_measurement_seconds": [
+        489396.174817402,
+        489398.174879284
+      ],
+      "hashes": {
+        "kallsyms": "07a3686b1942a3271a6e54114664abd627c4217614d51aec8d8fc329010f1faa",
+        "perf-report.txt": "e66ee452b45253543baf8148e3b540f80cbcc74cd349266f1c451a18199b4e91",
+        "perf-samples.txt": "4e015131593730403b57440589347c4f8efcbcc594d59cd405f5952c43262a0e",
+        "perf.data": "0499e66dd351f6b0db77fcfcaa267f0bad8609e783e7666500db2c754dcc8be1",
+        "session.json": "1181975e9f12da6b37ebb31137e246c4f1f4c9d9b98314b4828d3af9300a3a9f"
+      },
+      "issues": [],
+      "jit_bodies": 0,
+      "jit_completions": 0,
+      "lost_count": [
+        0
+      ],
+      "lost_records": [],
+      "name": "pipecap-t05-r0-baseline-kd-profile",
+      "parse_errors": [],
+      "perf_timestamp_span": [
+        489396.178143,
+        489398.171816
+      ],
+      "provider_elf_sha256": "cf7f9a47c5b36c762e732641b4e33459bf46ef11f6a67fbbcbc7c9a807757988",
+      "provider_hot_offsets": [
+        {
+          "offset": "0x19",
+          "sampled_period": 940760123,
+          "symbol": "kd_mutex_local_unlock",
+          "worker_weight_pct": 2.95978119030285
+        },
+        {
+          "offset": "0xc2",
+          "sampled_period": 47779270,
+          "symbol": "kd_mutex_osq_lock",
+          "worker_weight_pct": 0.15032119365501767
+        },
+        {
+          "offset": "0x1b",
+          "sampled_period": 32202562,
+          "symbol": "kd_mutex_local_unlock",
+          "worker_weight_pct": 0.10131438924432527
+        },
+        {
+          "offset": "0x1b",
+          "sampled_period": 32041921,
+          "symbol": "kd_mutex_local_lock",
+          "worker_weight_pct": 0.10080898707158517
+        },
+        {
+          "offset": "0x0",
+          "sampled_period": 31999256,
+          "symbol": "kd_mutex_local_unlock",
+          "worker_weight_pct": 0.10067475618594604
+        },
+        {
+          "offset": "0x34e",
+          "sampled_period": 31623292,
+          "symbol": "kd_local_lock_slow",
+          "worker_weight_pct": 0.0994919135587708
+        },
+        {
+          "offset": "0xad",
+          "sampled_period": 16157012,
+          "symbol": "kd_mutex_osq_lock",
+          "worker_weight_pct": 0.05083253322494137
+        },
+        {
+          "offset": "0x7f",
+          "sampled_period": 16032396,
+          "symbol": "kd_local_unlock_slow",
+          "worker_weight_pct": 0.05044047144022775
+        },
+        {
+          "offset": "0x20",
+          "sampled_period": 15986731,
+          "symbol": "kd_mutex_local_unlock",
+          "worker_weight_pct": 0.05029680207675158
+        },
+        {
+          "offset": "0x4d",
+          "sampled_period": 15955558,
+          "symbol": "kd_mutex_osq_lock",
+          "worker_weight_pct": 0.05019872685354687
+        }
+      ],
+      "repeat": 0,
+      "sampled_period_per_operation": 811.2178203026484,
+      "threads": 5,
+      "tid_to_cpu": {
+        "3046571": 0,
+        "3046572": 1,
+        "3046573": 2,
+        "3046574": 3,
+        "3046575": 4
+      },
+      "top_symbols": [
+        {
+          "dso": "[real_api]",
+          "sampled_period": 12044764149,
+          "samples": 763,
+          "symbol": "rb_body",
+          "worker_weight_pct": 37.89474649091213
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 3593293943,
+          "samples": 230,
+          "symbol": "clear_bhb_loop",
+          "worker_weight_pct": 11.305075080994436
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 2177874016,
+          "samples": 137,
+          "symbol": "arch_exit_to_user_mode_prepare",
+          "worker_weight_pct": 6.851938543961995
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 1471108744,
+          "samples": 92,
+          "symbol": "__fget_light",
+          "worker_weight_pct": 4.6283424253743055
+        },
+        {
+          "dso": "[real_api]",
+          "sampled_period": 1405721667,
+          "samples": 88,
+          "symbol": "rb_redirected",
+          "worker_weight_pct": 4.422624266343149
+        },
+        {
+          "dso": "/usr/lib/x86_64-linux-gnu/libc.so.6",
+          "sampled_period": 1359465140,
+          "samples": 85,
+          "symbol": "[unknown]",
+          "worker_weight_pct": 4.277093864707136
+        },
+        {
+          "dso": "[unknown]",
+          "sampled_period": 1226235458,
+          "samples": 78,
+          "symbol": "[unknown]",
+          "worker_weight_pct": 3.8579320644427444
+        },
+        {
+          "dso": "[kdlock_km]",
+          "sampled_period": 1020948672,
+          "samples": 65,
+          "symbol": "kd_mutex_local_unlock",
+          "worker_weight_pct": 3.2120671378098726
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 984793379,
+          "samples": 62,
+          "symbol": "entry_SYSCALL_64",
+          "worker_weight_pct": 3.098316827252451
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 752183658,
+          "samples": 47,
+          "symbol": "fput",
+          "worker_weight_pct": 2.3664895951394316
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 652857534,
+          "samples": 42,
+          "symbol": "ftrace_ops_assist_func",
+          "worker_weight_pct": 2.0539937884683312
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 559424731,
+          "samples": 35,
+          "symbol": "entry_SYSCALL_64_after_hwframe",
+          "worker_weight_pct": 1.7600393083455894
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 448003356,
+          "samples": 28,
+          "symbol": "do_syscall_64",
+          "worker_weight_pct": 1.4094899155088352
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 431539750,
+          "samples": 27,
+          "symbol": "syscall_enter_from_user_mode",
+          "worker_weight_pct": 1.3576927887259038
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 414598736,
+          "samples": 26,
+          "symbol": "syscall_return_via_sysret",
+          "worker_weight_pct": 1.3043936603338968
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 404218087,
+          "samples": 26,
+          "symbol": "x64_sys_call",
+          "worker_weight_pct": 1.271734485160359
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 400141915,
+          "samples": 25,
+          "symbol": "entry_SYSCALL_64_safe_stack",
+          "worker_weight_pct": 1.2589101987997016
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 393668734,
+          "samples": 25,
+          "symbol": "syscall_exit_to_user_mode",
+          "worker_weight_pct": 1.238544540331814
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 299364253,
+          "samples": 19,
+          "symbol": "__x64_sys_fcntl",
+          "worker_weight_pct": 0.9418476223810599
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 239706153,
+          "samples": 15,
+          "symbol": "do_fcntl",
+          "worker_weight_pct": 0.7541537374977118
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 224060610,
+          "samples": 14,
+          "symbol": "its_return_thunk",
+          "worker_weight_pct": 0.7049303672130485
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 223135839,
+          "samples": 14,
+          "symbol": "fpregs_assert_state_consistent",
+          "worker_weight_pct": 0.7020208903504354
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 175503520,
+          "samples": 11,
+          "symbol": "__cond_resched",
+          "worker_weight_pct": 0.552162027947628
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 159824856,
+          "samples": 10,
+          "symbol": "security_file_fcntl",
+          "worker_weight_pct": 0.5028344537214845
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 96083638,
+          "samples": 6,
+          "symbol": "entry_SYSRETQ_unsafe_stack",
+          "worker_weight_pct": 0.30229442925512706
+        }
+      ],
+      "usable": true,
+      "whole_ops_s": 19590177.860306825,
+      "worker_cpus": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "worker_pids": [
+        3046543
+      ],
+      "worker_sampled_period": 31784786189,
+      "worker_samples": 2010,
+      "worker_tids": [
+        3046571,
+        3046572,
+        3046573,
+        3046574,
+        3046575
+      ],
+      "workload": "pipecap"
+    },
+    {
+      "all_sampled_period": 34451112971,
+      "arm": "public-kd",
+      "categories": {
+        "admission": {
+          "sampled_period": 121400887,
+          "worker_weight_pct": 0.35243160166336207
+        },
+        "combine_release": {
+          "sampled_period": 675143171,
+          "worker_weight_pct": 1.9599674680104369
+        },
+        "direct_lock_entry": {
+          "sampled_period": 14771971468,
+          "worker_weight_pct": 42.88362048123031
+        },
+        "direct_unlock_route": {
+          "sampled_period": 86578582,
+          "worker_weight_pct": 0.251341065769995
+        },
+        "exact_task_identity": {
+          "sampled_period": 468081851,
+          "worker_weight_pct": 1.3588602236281948
+        },
+        "physical_mutex": {
+          "sampled_period": 4942432525,
+          "worker_weight_pct": 14.348078123175862
+        },
+        "queue": {
+          "sampled_period": 4516485619,
+          "worker_weight_pct": 13.11153732009974
+        },
+        "rcu_read_helpers_all_uses": {
+          "sampled_period": 156054145,
+          "worker_weight_pct": 0.4530313873946946
+        },
+        "return_thunk_all_uses": {
+          "sampled_period": 0,
+          "worker_weight_pct": 0.0
+        }
+      },
+      "clock_alignment": "Explicit perf --clockid mono and client CLOCK_MONOTONIC; retain only samples wholly inside the worker CPU active interval, including printed timestamp precision.",
+      "command_periods": {
+        "client": 4461074,
+        "sc_worker": 34446651897
+      },
+      "completed": 10903808,
+      "excluded_worker_period": 0,
+      "excluded_worker_samples": 0,
+      "guest_measurement_seconds": [
+        489403.767390796,
+        489405.767499105
+      ],
+      "hashes": {
+        "kallsyms": "d8f1c1864e0c7e8dbc18b441c13c55553adc0b78ee6a4e0f037e2e230d72190c",
+        "perf-report.txt": "35491b0e2fdde3fb55e2718b9bdf6ba478e1dea3d0536635bba04401b285b511",
+        "perf-samples.txt": "ffb40496a2de81dc48ec7d309df3ff727c50e248e8fe55f11fb6ede9c5443d6a",
+        "perf.data": "b259f763c67e233d997d4175bc2085984bafc281c0b376d0f50a63ba32be2804",
+        "session.json": "2de51f6eafe9211849828c3785886b90add16898381d3789e80e27469fe7a713"
+      },
+      "issues": [],
+      "jit_bodies": 1163315,
+      "jit_completions": 1163315,
+      "lost_count": [
+        0
+      ],
+      "lost_records": [],
+      "name": "pipecap-t05-r0-public-kd-profile",
+      "parse_errors": [],
+      "perf_timestamp_span": [
+        489403.770584,
+        489405.766551
+      ],
+      "provider_elf_sha256": "d834f9087bb50526fa6635233af260173ff0fac6f56632624155fe0de8d478a4",
+      "provider_hot_offsets": [
+        {
+          "offset": "0x38",
+          "sampled_period": 10843124915,
+          "symbol": "kd_mutex_lock_entry",
+          "worker_weight_pct": 31.478022733304716
+        },
+        {
+          "offset": "0x19",
+          "sampled_period": 3017285768,
+          "symbol": "kd_mutex_local_unlock",
+          "worker_weight_pct": 8.759300546892277
+        },
+        {
+          "offset": "0x68",
+          "sampled_period": 1862454132,
+          "symbol": "kd_mutex_lock_entry",
+          "worker_weight_pct": 5.406778393351498
+        },
+        {
+          "offset": "0xe3",
+          "sampled_period": 1756238103,
+          "symbol": "__kd_mutex_lock_slowpath",
+          "worker_weight_pct": 5.0984290381874615
+        },
+        {
+          "offset": "0x43",
+          "sampled_period": 1194569972,
+          "symbol": "kd_mutex_lock_entry",
+          "worker_weight_pct": 3.467884122880565
+        },
+        {
+          "offset": "0x1f",
+          "sampled_period": 831389968,
+          "symbol": "kd_mutex_wait_and_lock_node",
+          "worker_weight_pct": 2.4135581318206625
+        },
+        {
+          "offset": "0x37",
+          "sampled_period": 646755374,
+          "symbol": "_kd_mutex_lock_abi",
+          "worker_weight_pct": 1.8775565646666714
+        },
+        {
+          "offset": "0x34e",
+          "sampled_period": 624383348,
+          "symbol": "kd_local_lock_slow",
+          "worker_weight_pct": 1.8126096837132037
+        },
+        {
+          "offset": "0xea",
+          "sampled_period": 623257136,
+          "symbol": "__kd_mutex_lock_slowpath",
+          "worker_weight_pct": 1.8093402455008414
+        },
+        {
+          "offset": "0x38",
+          "sampled_period": 606629536,
+          "symbol": "__kd_mutex_lock_slowpath",
+          "worker_weight_pct": 1.7610696616144343
+        },
+        {
+          "offset": "0x314",
+          "sampled_period": 346880610,
+          "symbol": "kd_local_lock_slow",
+          "worker_weight_pct": 1.0070082022404339
+        },
+        {
+          "offset": "0x1c",
+          "sampled_period": 329444873,
+          "symbol": "kd_mutex_wait_and_lock_node",
+          "worker_weight_pct": 0.9563915645128105
+        },
+        {
+          "offset": "0x4d",
+          "sampled_period": 329427955,
+          "symbol": "kd_mutex_osq_lock",
+          "worker_weight_pct": 0.9563424508861782
+        },
+        {
+          "offset": "0x73",
+          "sampled_period": 329341929,
+          "symbol": "kd_mutex_task_put",
+          "worker_weight_pct": 0.956092713987924
+        },
+        {
+          "offset": "0x3d",
+          "sampled_period": 232725392,
+          "symbol": "kd_mutex_lock_entry",
+          "worker_weight_pct": 0.6756110657601192
+        },
+        {
+          "offset": "0x61",
+          "sampled_period": 230370733,
+          "symbol": "kd_mutex_lock_entry",
+          "worker_weight_pct": 0.6687753970656964
+        },
+        {
+          "offset": "0x46",
+          "sampled_period": 225553933,
+          "symbol": "kd_mutex_local_lock_node",
+          "worker_weight_pct": 0.654792035157541
+        },
+        {
+          "offset": "0x337",
+          "sampled_period": 225412600,
+          "symbol": "kd_local_lock_slow",
+          "worker_weight_pct": 0.6543817398393701
+        },
+        {
+          "offset": "0x21",
+          "sampled_period": 207718226,
+          "symbol": "kd_mutex_delegation_owned",
+          "worker_weight_pct": 0.6030142686177591
+        },
+        {
+          "offset": "0x25c",
+          "sampled_period": 207594865,
+          "symbol": "__kd_mutex_lock_slowpath",
+          "worker_weight_pct": 0.6026561467301258
+        },
+        {
+          "offset": "0x35e",
+          "sampled_period": 190793097,
+          "symbol": "kd_local_lock_slow",
+          "worker_weight_pct": 0.5538799462150816
+        },
+        {
+          "offset": "0x54",
+          "sampled_period": 173415313,
+          "symbol": "_kd_mutex_lock_abi",
+          "worker_weight_pct": 0.5034315483505756
+        },
+        {
+          "offset": "0x9d",
+          "sampled_period": 155989174,
+          "symbol": "kd_local_lock_slow",
+          "worker_weight_pct": 0.45284277399855305
+        },
+        {
+          "offset": "0x34",
+          "sampled_period": 155765086,
+          "symbol": "kd_mutex_lock_entry",
+          "worker_weight_pct": 0.45219223762517763
+        },
+        {
+          "offset": "0x13e",
+          "sampled_period": 152611682,
+          "symbol": "kd_mutex_run_combiner",
+          "worker_weight_pct": 0.44303778043894926
+        },
+        {
+          "offset": "0x23",
+          "sampled_period": 121533236,
+          "symbol": "kd_mutex_osq_unlock",
+          "worker_weight_pct": 0.3528158160723437
+        },
+        {
+          "offset": "0x5c",
+          "sampled_period": 121364694,
+          "symbol": "kd_mutex_lock_entry",
+          "worker_weight_pct": 0.3523265319453871
+        },
+        {
+          "offset": "0x264",
+          "sampled_period": 104148261,
+          "symbol": "_kd_mutex_lock_abi",
+          "worker_weight_pct": 0.30234654244893505
+        },
+        {
+          "offset": "0x5c",
+          "sampled_period": 104057888,
+          "symbol": "kd_local_lock_slow",
+          "worker_weight_pct": 0.30208418603685117
+        },
+        {
+          "offset": "0x5b",
+          "sampled_period": 86662028,
+          "symbol": "_kd_mutex_lock_abi",
+          "worker_weight_pct": 0.2515833128256726
+        }
+      ],
+      "repeat": 0,
+      "sampled_period_per_operation": 3159.139623239881,
+      "threads": 5,
+      "tid_to_cpu": {
+        "3046610": 0,
+        "3046611": 1,
+        "3046612": 2,
+        "3046613": 3,
+        "3046614": 4
+      },
+      "top_symbols": [
+        {
+          "dso": "[kdlock_km]",
+          "sampled_period": 14727098300,
+          "samples": 862,
+          "symbol": "kd_mutex_lock_entry",
+          "worker_weight_pct": 42.75335189044193
+        },
+        {
+          "dso": "[kdlock_km]",
+          "sampled_period": 3418965218,
+          "samples": 198,
+          "symbol": "__kd_mutex_lock_slowpath",
+          "worker_weight_pct": 9.92539196036571
+        },
+        {
+          "dso": "[kdlock_km]",
+          "sampled_period": 3034646266,
+          "samples": 178,
+          "symbol": "kd_mutex_local_unlock",
+          "worker_weight_pct": 8.80969876281152
+        },
+        {
+          "dso": "[kdlock_km]",
+          "sampled_period": 1907786259,
+          "samples": 110,
+          "symbol": "kd_local_lock_slow",
+          "worker_weight_pct": 5.538379360364342
+        },
+        {
+          "dso": "[kdlock_km]",
+          "sampled_period": 1299411903,
+          "samples": 75,
+          "symbol": "kd_mutex_wait_and_lock_node",
+          "worker_weight_pct": 3.7722444169186944
+        },
+        {
+          "dso": "[kdlock_km]",
+          "sampled_period": 1097520401,
+          "samples": 64,
+          "symbol": "_kd_mutex_lock_abi",
+          "worker_weight_pct": 3.186145359734031
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 892740413,
+          "samples": 53,
+          "symbol": "clear_bhb_loop",
+          "worker_weight_pct": 2.591660912849849
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 705622634,
+          "samples": 41,
+          "symbol": "arch_exit_to_user_mode_prepare",
+          "worker_weight_pct": 2.04845056091345
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 669553894,
+          "samples": 40,
+          "symbol": "__fget_light",
+          "worker_weight_pct": 1.9437415746588487
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 554737444,
+          "samples": 32,
+          "symbol": "syscall_exit_to_user_mode",
+          "worker_weight_pct": 1.6104248553930223
+        },
+        {
+          "dso": "/usr/lib/x86_64-linux-gnu/libc.so.6",
+          "sampled_period": 496997803,
+          "samples": 29,
+          "symbol": "[unknown]",
+          "worker_weight_pct": 1.4428043819355463
+        },
+        {
+          "dso": "[kdlock_km]",
+          "sampled_period": 488096540,
+          "samples": 29,
+          "symbol": "kd_mutex_run_combiner",
+          "worker_weight_pct": 1.416963661546767
+        },
+        {
+          "dso": "[real_api]",
+          "sampled_period": 432048506,
+          "samples": 25,
+          "symbol": "rb_redirected",
+          "worker_weight_pct": 1.2542539904658416
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 407298961,
+          "samples": 26,
+          "symbol": "entry_SYSCALL_64",
+          "worker_weight_pct": 1.1824050773290746
+        },
+        {
+          "dso": "[kdlock_km]",
+          "sampled_period": 381328842,
+          "samples": 22,
+          "symbol": "kd_mutex_task_put",
+          "worker_weight_pct": 1.1070127893422652
+        },
+        {
+          "dso": "[kdlock_km]",
+          "sampled_period": 346787682,
+          "samples": 20,
+          "symbol": "kd_mutex_osq_lock",
+          "worker_weight_pct": 1.0067384285617673
+        },
+        {
+          "dso": "[unknown]",
+          "sampled_period": 329385758,
+          "samples": 19,
+          "symbol": "[unknown]",
+          "worker_weight_pct": 0.9562199513174939
+        },
+        {
+          "dso": "[kdlock_km]",
+          "sampled_period": 312151751,
+          "samples": 18,
+          "symbol": "kd_mutex_local_lock_node",
+          "worker_weight_pct": 0.9061889438003281
+        },
+        {
+          "dso": "[real_api]",
+          "sampled_period": 259862247,
+          "samples": 15,
+          "symbol": "rb_entry",
+          "worker_weight_pct": 0.7543904347424596
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 242686831,
+          "samples": 14,
+          "symbol": "fput",
+          "worker_weight_pct": 0.704529519227777
+        },
+        {
+          "dso": "[kdlock_km]",
+          "sampled_period": 225040164,
+          "samples": 13,
+          "symbol": "kd_mutex_delegation_owned",
+          "worker_weight_pct": 0.6533005433239188
+        },
+        {
+          "dso": "[kdlock_km]",
+          "sampled_period": 187046631,
+          "samples": 11,
+          "symbol": "kd_mutex_execute_cs",
+          "worker_weight_pct": 0.5430038064636701
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 138784823,
+          "samples": 8,
+          "symbol": "__x64_sys_fcntl",
+          "worker_weight_pct": 0.40289785902846176
+        },
+        {
+          "dso": "[kdlock_km]",
+          "sampled_period": 121533236,
+          "samples": 7,
+          "symbol": "kd_mutex_osq_unlock",
+          "worker_weight_pct": 0.3528158160723437
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 121498088,
+          "samples": 7,
+          "symbol": "its_return_thunk",
+          "worker_weight_pct": 0.3527137800309162
+        }
+      ],
+      "usable": true,
+      "whole_ops_s": 5451608.770852819,
+      "worker_cpus": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "worker_pids": [
+        3046583
+      ],
+      "worker_sampled_period": 34446651897,
+      "worker_samples": 2013,
+      "worker_tids": [
+        3046610,
+        3046611,
+        3046612,
+        3046613,
+        3046614
+      ],
+      "workload": "pipecap"
+    },
+    {
+      "all_sampled_period": 35075496672,
+      "arm": "tclock",
+      "categories": {
+        "admission": {
+          "sampled_period": 0,
+          "worker_weight_pct": 0.0
+        },
+        "combine_release": {
+          "sampled_period": 0,
+          "worker_weight_pct": 0.0
+        },
+        "direct_lock_entry": {
+          "sampled_period": 0,
+          "worker_weight_pct": 0.0
+        },
+        "direct_unlock_route": {
+          "sampled_period": 0,
+          "worker_weight_pct": 0.0
+        },
+        "exact_task_identity": {
+          "sampled_period": 0,
+          "worker_weight_pct": 0.0
+        },
+        "physical_mutex": {
+          "sampled_period": 0,
+          "worker_weight_pct": 0.0
+        },
+        "queue": {
+          "sampled_period": 0,
+          "worker_weight_pct": 0.0
+        },
+        "rcu_read_helpers_all_uses": {
+          "sampled_period": 35337769,
+          "worker_weight_pct": 0.10076217239233341
+        },
+        "return_thunk_all_uses": {
+          "sampled_period": 0,
+          "worker_weight_pct": 0.0
+        }
+      },
+      "clock_alignment": "Explicit perf --clockid mono and client CLOCK_MONOTONIC; retain only samples wholly inside the worker CPU active interval, including printed timestamp precision.",
+      "command_periods": {
+        "client": 5025124,
+        "sc_worker": 35070471548
+      },
+      "completed": 4412928,
+      "excluded_worker_period": 0,
+      "excluded_worker_samples": 0,
+      "guest_measurement_seconds": [
+        489446.82325112,
+        489448.823321782
+      ],
+      "hashes": {
+        "kallsyms": "78a5925cf46296f25002c60c41d41a0ecf3164d2726a08bdade7cb29369bc035",
+        "perf-report.txt": "faca25cc1cb6658d71f230da0ba81e0fffd2551bc7a715cba42251201e13a808",
+        "perf-samples.txt": "625065e9398edf384ca81c7d94c8d3ab317815053e84e0797e0b08ee2228313b",
+        "perf.data": "e5f0c9bc9866387702b16b7d67393b2ee38502435389993b02da81c2af00488f",
+        "session.json": "549b80fc1e038ad089237a31a95416e2f65c21773ee1c911a52ae0e29b820d46"
+      },
+      "issues": [],
+      "jit_bodies": 0,
+      "jit_completions": 0,
+      "lost_count": [
+        0
+      ],
+      "lost_records": [],
+      "name": "pipecap-t05-r1-tclock-profile",
+      "parse_errors": [],
+      "perf_timestamp_span": [
+        489446.826402,
+        489448.822864
+      ],
+      "provider_elf_sha256": null,
+      "provider_hot_offsets": [],
+      "repeat": 1,
+      "sampled_period_per_operation": 7947.211363521,
+      "threads": 5,
+      "tid_to_cpu": {
+        "3046906": 0,
+        "3046907": 1,
+        "3046908": 2,
+        "3046909": 3,
+        "3046910": 4
+      },
+      "top_symbols": [
+        {
+          "dso": "[tclock_mutex_backend_km]",
+          "sampled_period": 24638689850,
+          "samples": 1411,
+          "symbol": "__komb_mutex_lock_slowpath",
+          "worker_weight_pct": 70.25480058423992
+        },
+        {
+          "dso": "[tclock_mutex_backend_km]",
+          "sampled_period": 2902384367,
+          "samples": 167,
+          "symbol": "komb_mutex_lock",
+          "worker_weight_pct": 8.275863536729426
+        },
+        {
+          "dso": "[tclock_mutex_backend_km]",
+          "sampled_period": 1585643336,
+          "samples": 94,
+          "symbol": "komb_mutex_unlock",
+          "worker_weight_pct": 4.521306004767496
+        },
+        {
+          "dso": "[real_api]",
+          "sampled_period": 996636327,
+          "samples": 57,
+          "symbol": "redirect",
+          "worker_weight_pct": 2.8418104548036403
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 815279623,
+          "samples": 47,
+          "symbol": "fput",
+          "worker_weight_pct": 2.324689652045736
+        },
+        {
+          "dso": "[tclock_mutex_backend_km]",
+          "sampled_period": 704520435,
+          "samples": 40,
+          "symbol": "run_combiner",
+          "worker_weight_pct": 2.008870722013937
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 405766972,
+          "samples": 23,
+          "symbol": "__fget_light",
+          "worker_weight_pct": 1.1570046084057861
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 388822463,
+          "samples": 22,
+          "symbol": "arch_exit_to_user_mode_prepare",
+          "worker_weight_pct": 1.108689007696487
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 335421522,
+          "samples": 19,
+          "symbol": "clear_bhb_loop",
+          "worker_weight_pct": 0.9564214770848396
+        },
+        {
+          "dso": "/usr/lib/x86_64-linux-gnu/libc.so.6",
+          "sampled_period": 317983739,
+          "samples": 18,
+          "symbol": "[unknown]",
+          "worker_weight_pct": 0.9066993540842024
+        },
+        {
+          "dso": "[real_api]",
+          "sampled_period": 247025003,
+          "samples": 14,
+          "symbol": "rb_redirected",
+          "worker_weight_pct": 0.7043674980585978
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 228153362,
+          "samples": 13,
+          "symbol": "entry_SYSCALL_64",
+          "worker_weight_pct": 0.6505568700088127
+        },
+        {
+          "dso": "[unknown]",
+          "sampled_period": 194065362,
+          "samples": 11,
+          "symbol": "[unknown]",
+          "worker_weight_pct": 0.5533582909895809
+        },
+        {
+          "dso": "[tclock_mutex_backend_km]",
+          "sampled_period": 143762726,
+          "samples": 9,
+          "symbol": "__komb_mutex_lock",
+          "worker_weight_pct": 0.40992527232841985
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 106110354,
+          "samples": 6,
+          "symbol": "entry_SYSCALL_64_after_hwframe",
+          "worker_weight_pct": 0.30256323715171507
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 106077080,
+          "samples": 6,
+          "symbol": "syscall_return_via_sysret",
+          "worker_weight_pct": 0.3024683596136288
+        },
+        {
+          "dso": "[tclock_mutex_backend_km]",
+          "sampled_period": 88380485,
+          "samples": 5,
+          "symbol": "get_komb_mutex_node",
+          "worker_weight_pct": 0.252008259652386
+        },
+        {
+          "dso": "[tclock_mutex_backend_km]",
+          "sampled_period": 88321185,
+          "samples": 5,
+          "symbol": "execute_cs",
+          "worker_weight_pct": 0.251839171535282
+        },
+        {
+          "dso": "[tclock_mutex_backend_km]",
+          "sampled_period": 88291807,
+          "samples": 5,
+          "symbol": "komb_context_switch",
+          "worker_weight_pct": 0.25175540305797545
+        },
+        {
+          "dso": "[real_api]",
+          "sampled_period": 87818537,
+          "samples": 5,
+          "symbol": "rb_body",
+          "worker_weight_pct": 0.25040592020499397
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 86574944,
+          "samples": 5,
+          "symbol": "syscall_exit_to_user_mode",
+          "worker_weight_pct": 0.24685993708840565
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 70710395,
+          "samples": 4,
+          "symbol": "entry_SYSCALL_64_safe_stack",
+          "worker_weight_pct": 0.2016237360915453
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 70683296,
+          "samples": 4,
+          "symbol": "syscall_enter_from_user_mode",
+          "worker_weight_pct": 0.20154646595857056
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 70635503,
+          "samples": 4,
+          "symbol": "__x64_sys_fcntl",
+          "worker_weight_pct": 0.20141018892010937
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 53037124,
+          "samples": 3,
+          "symbol": "do_syscall_64",
+          "worker_weight_pct": 0.1512301422220957
+        }
+      ],
+      "usable": true,
+      "whole_ops_s": 2206386.0461746026,
+      "worker_cpus": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "worker_pids": [
+        3046893
+      ],
+      "worker_sampled_period": 35070471548,
+      "worker_samples": 2012,
+      "worker_tids": [
+        3046906,
+        3046907,
+        3046908,
+        3046909,
+        3046910
+      ],
+      "workload": "pipecap"
+    },
+    {
+      "all_sampled_period": 34293207189,
+      "arm": "baseline-kd",
+      "categories": {
+        "admission": {
+          "sampled_period": 69163877,
+          "worker_weight_pct": 0.20171110983093304
+        },
+        "combine_release": {
+          "sampled_period": 345233402,
+          "worker_weight_pct": 1.0068465749560087
+        },
+        "direct_lock_entry": {
+          "sampled_period": 0,
+          "worker_weight_pct": 0.0
+        },
+        "direct_unlock_route": {
+          "sampled_period": 0,
+          "worker_weight_pct": 0.0
+        },
+        "exact_task_identity": {
+          "sampled_period": 310256221,
+          "worker_weight_pct": 0.9048383257905169
+        },
+        "physical_mutex": {
+          "sampled_period": 3766298625,
+          "worker_weight_pct": 10.984119291107223
+        },
+        "queue": {
+          "sampled_period": 3175892665,
+          "worker_weight_pct": 9.262245870934471
+        },
+        "rcu_read_helpers_all_uses": {
+          "sampled_period": 171826070,
+          "worker_weight_pct": 0.5011174731802208
+        },
+        "return_thunk_all_uses": {
+          "sampled_period": 0,
+          "worker_weight_pct": 0.0
+        }
+      },
+      "clock_alignment": "Explicit perf --clockid mono and client CLOCK_MONOTONIC; retain only samples wholly inside the worker CPU active interval, including printed timestamp precision.",
+      "command_periods": {
+        "client": 4626328,
+        "sc_worker": 34288580861
+      },
+      "completed": 12895744,
+      "excluded_worker_period": 0,
+      "excluded_worker_samples": 0,
+      "guest_measurement_seconds": [
+        489454.426829602,
+        489456.426880869
+      ],
+      "hashes": {
+        "kallsyms": "07a3686b1942a3271a6e54114664abd627c4217614d51aec8d8fc329010f1faa",
+        "perf-report.txt": "c1737991cc5dcc1c10ef33edea7eab2531a3cb005530002348b7e02951fb8b60",
+        "perf-samples.txt": "76c3e05c07dc717292c2863b42eea0c39b1637777d65504b8ec0ba2cb9768248",
+        "perf.data": "f5d4029936de94e2893de8cdcc8e5ceb9824b22ba986f2befef2533f2e189625",
+        "session.json": "21fe68b7c00f35186f713b0bc164ab2ca8cb070bd195c04bf37042dd0e6190c3"
+      },
+      "issues": [],
+      "jit_bodies": 501809,
+      "jit_completions": 501809,
+      "lost_count": [
+        0
+      ],
+      "lost_records": [],
+      "name": "pipecap-t05-r1-baseline-kd-profile",
+      "parse_errors": [],
+      "perf_timestamp_span": [
+        489454.42955,
+        489456.426828
+      ],
+      "provider_elf_sha256": "cf7f9a47c5b36c762e732641b4e33459bf46ef11f6a67fbbcbc7c9a807757988",
+      "provider_hot_offsets": [
+        {
+          "offset": "0x19",
+          "sampled_period": 2886420677,
+          "symbol": "kd_mutex_local_unlock",
+          "worker_weight_pct": 8.418023156750209
+        },
+        {
+          "offset": "0x37",
+          "sampled_period": 843663229,
+          "symbol": "_kd_mutex_lock_abi",
+          "worker_weight_pct": 2.46047870111646
+        },
+        {
+          "offset": "0xe3",
+          "sampled_period": 813535651,
+          "symbol": "__kd_mutex_lock_slowpath",
+          "worker_weight_pct": 2.372613944852175
+        },
+        {
+          "offset": "0x21",
+          "sampled_period": 398910454,
+          "symbol": "kd_mutex_delegation_owned",
+          "worker_weight_pct": 1.1633915548068736
+        },
+        {
+          "offset": "0x38",
+          "sampled_period": 396342159,
+          "symbol": "__kd_mutex_lock_slowpath",
+          "worker_weight_pct": 1.1559013206370448
+        },
+        {
+          "offset": "0x25c",
+          "sampled_period": 362701881,
+          "symbol": "__kd_mutex_lock_slowpath",
+          "worker_weight_pct": 1.0577920459010273
+        },
+        {
+          "offset": "0x34e",
+          "sampled_period": 327513780,
+          "symbol": "kd_local_lock_slow",
+          "worker_weight_pct": 0.9551686648324247
+        },
+        {
+          "offset": "0x1f",
+          "sampled_period": 276533385,
+          "symbol": "kd_mutex_wait_and_lock_node",
+          "worker_weight_pct": 0.8064882770185757
+        },
+        {
+          "offset": "0xea",
+          "sampled_period": 275891778,
+          "symbol": "__kd_mutex_lock_slowpath",
+          "worker_weight_pct": 0.804617079716474
+        },
+        {
+          "offset": "0x4d",
+          "sampled_period": 207476130,
+          "symbol": "kd_mutex_osq_lock",
+          "worker_weight_pct": 0.6050881220225255
+        },
+        {
+          "offset": "0x25",
+          "sampled_period": 207392229,
+          "symbol": "kd_mutex_local_lock_node",
+          "worker_weight_pct": 0.6048434312307422
+        },
+        {
+          "offset": "0x54",
+          "sampled_period": 207383885,
+          "symbol": "_kd_mutex_lock_abi",
+          "worker_weight_pct": 0.6048190965986564
+        },
+        {
+          "offset": "0x39",
+          "sampled_period": 207316983,
+          "symbol": "kd_mutex_wait_and_lock_node",
+          "worker_weight_pct": 0.6046239820785448
+        },
+        {
+          "offset": "0x5c",
+          "sampled_period": 172807708,
+          "symbol": "kd_local_lock_slow",
+          "worker_weight_pct": 0.5039803446533196
+        },
+        {
+          "offset": "0x9d",
+          "sampled_period": 86391971,
+          "symbol": "kd_local_lock_slow",
+          "worker_weight_pct": 0.2519555164741818
+        },
+        {
+          "offset": "0x314",
+          "sampled_period": 86366568,
+          "symbol": "kd_local_lock_slow",
+          "worker_weight_pct": 0.2518814305850545
+        },
+        {
+          "offset": "0x73",
+          "sampled_period": 86140754,
+          "symbol": "kd_mutex_task_put",
+          "worker_weight_pct": 0.2512228614803272
+        },
+        {
+          "offset": "0x337",
+          "sampled_period": 85853473,
+          "symbol": "kd_local_lock_slow",
+          "worker_weight_pct": 0.2503850286135644
+        },
+        {
+          "offset": "0x46",
+          "sampled_period": 69152811,
+          "symbol": "kd_mutex_local_lock_node",
+          "worker_weight_pct": 0.2016788366959064
+        },
+        {
+          "offset": "0x54",
+          "sampled_period": 69107355,
+          "symbol": "kd_mutex_execute_cs",
+          "worker_weight_pct": 0.20154626777978743
+        },
+        {
+          "offset": "0x1c4",
+          "sampled_period": 51880454,
+          "symbol": "__kd_mutex_lock_slowpath",
+          "worker_weight_pct": 0.15130534042897378
+        },
+        {
+          "offset": "0x3d",
+          "sampled_period": 51876971,
+          "symbol": "kd_mutex_run_combiner",
+          "worker_weight_pct": 0.15129518252826007
+        },
+        {
+          "offset": "0x23",
+          "sampled_period": 51829083,
+          "symbol": "kd_mutex_osq_unlock",
+          "worker_weight_pct": 0.15115552087182077
+        },
+        {
+          "offset": "0x142",
+          "sampled_period": 51680927,
+          "symbol": "__kd_mutex_lock_slowpath",
+          "worker_weight_pct": 0.15072343533115465
+        },
+        {
+          "offset": "0x13e",
+          "sampled_period": 51432317,
+          "symbol": "kd_mutex_run_combiner",
+          "worker_weight_pct": 0.14999838345161542
+        },
+        {
+          "offset": "0x8c",
+          "sampled_period": 51238811,
+          "symbol": "kd_mutex_task_get",
+          "worker_weight_pct": 0.1494340381356502
+        },
+        {
+          "offset": "0x16",
+          "sampled_period": 34594835,
+          "symbol": "kd_mutex_task_put",
+          "worker_weight_pct": 0.10089316656248185
+        },
+        {
+          "offset": "0x26",
+          "sampled_period": 34587396,
+          "symbol": "kd_mutex_task_active",
+          "worker_weight_pct": 0.10087147129305626
+        },
+        {
+          "offset": "0x17",
+          "sampled_period": 34584573,
+          "symbol": "kd_hotlock_record_mutex",
+          "worker_weight_pct": 0.10086323823140976
+        },
+        {
+          "offset": "0x224",
+          "sampled_period": 34575289,
+          "symbol": "kd_mutex_run_combiner",
+          "worker_weight_pct": 0.10083616216186451
+        }
+      ],
+      "repeat": 1,
+      "sampled_period_per_operation": 2658.906757221607,
+      "threads": 5,
+      "tid_to_cpu": {
+        "3046945": 0,
+        "3046946": 1,
+        "3046947": 2,
+        "3046948": 3,
+        "3046949": 4
+      },
+      "top_symbols": [
+        {
+          "dso": "[real_api]",
+          "sampled_period": 18528853333,
+          "samples": 1090,
+          "symbol": "rb_body",
+          "worker_weight_pct": 54.03797085715731
+        },
+        {
+          "dso": "[kdlock_km]",
+          "sampled_period": 2886420677,
+          "samples": 168,
+          "symbol": "kd_mutex_local_unlock",
+          "worker_weight_pct": 8.418023156750209
+        },
+        {
+          "dso": "[kdlock_km]",
+          "sampled_period": 2038412291,
+          "samples": 119,
+          "symbol": "__kd_mutex_lock_slowpath",
+          "worker_weight_pct": 5.944872140562983
+        },
+        {
+          "dso": "[kdlock_km]",
+          "sampled_period": 1137480374,
+          "samples": 66,
+          "symbol": "_kd_mutex_lock_abi",
+          "worker_weight_pct": 3.3173737303714885
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 1014478641,
+          "samples": 60,
+          "symbol": "clear_bhb_loop",
+          "worker_weight_pct": 2.9586486682330824
+        },
+        {
+          "dso": "[kdlock_km]",
+          "sampled_period": 879877948,
+          "samples": 51,
+          "symbol": "kd_local_lock_slow",
+          "worker_weight_pct": 2.5660961343570143
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 855661920,
+          "samples": 50,
+          "symbol": "arch_exit_to_user_mode_prepare",
+          "worker_weight_pct": 2.4954719574680153
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 685853440,
+          "samples": 40,
+          "symbol": "__fget_light",
+          "worker_weight_pct": 2.0002386298235315
+        },
+        {
+          "dso": "[kdlock_km]",
+          "sampled_period": 535677485,
+          "samples": 31,
+          "symbol": "kd_mutex_wait_and_lock_node",
+          "worker_weight_pct": 1.5622620462816592
+        },
+        {
+          "dso": "/usr/lib/x86_64-linux-gnu/libc.so.6",
+          "sampled_period": 449116120,
+          "samples": 27,
+          "symbol": "[unknown]",
+          "worker_weight_pct": 1.3098125052787672
+        },
+        {
+          "dso": "[real_api]",
+          "sampled_period": 424321913,
+          "samples": 26,
+          "symbol": "rb_redirected",
+          "worker_weight_pct": 1.23750211395487
+        },
+        {
+          "dso": "[kdlock_km]",
+          "sampled_period": 416213147,
+          "samples": 25,
+          "symbol": "kd_mutex_delegation_owned",
+          "worker_weight_pct": 1.2138535236767494
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 398120114,
+          "samples": 24,
+          "symbol": "syscall_exit_to_user_mode",
+          "worker_weight_pct": 1.1610865891881335
+        },
+        {
+          "dso": "[unknown]",
+          "sampled_period": 383306828,
+          "samples": 23,
+          "symbol": "[unknown]",
+          "worker_weight_pct": 1.1178847837239454
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 376410985,
+          "samples": 22,
+          "symbol": "entry_SYSCALL_64",
+          "worker_weight_pct": 1.0977735897729488
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 306622953,
+          "samples": 19,
+          "symbol": "fput",
+          "worker_weight_pct": 0.8942421800511273
+        },
+        {
+          "dso": "[kdlock_km]",
+          "sampled_period": 276545040,
+          "samples": 16,
+          "symbol": "kd_mutex_local_lock_node",
+          "worker_weight_pct": 0.8065222679266487
+        },
+        {
+          "dso": "[kdlock_km]",
+          "sampled_period": 241525097,
+          "samples": 14,
+          "symbol": "kd_mutex_run_combiner",
+          "worker_weight_pct": 0.7043893066881395
+        },
+        {
+          "dso": "[kdlock_km]",
+          "sampled_period": 207476130,
+          "samples": 12,
+          "symbol": "kd_mutex_osq_lock",
+          "worker_weight_pct": 0.6050881220225255
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 172805750,
+          "samples": 10,
+          "symbol": "entry_SYSCALL_64_safe_stack",
+          "worker_weight_pct": 0.5039746342974203
+        },
+        {
+          "dso": "[kdlock_km]",
+          "sampled_period": 172582220,
+          "samples": 10,
+          "symbol": "kd_mutex_task_put",
+          "worker_weight_pct": 0.5033227263024346
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 164627757,
+          "samples": 10,
+          "symbol": "ftrace_ops_assist_func",
+          "worker_weight_pct": 0.48012414881611043
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 155430499,
+          "samples": 9,
+          "symbol": "__x64_sys_fcntl",
+          "worker_weight_pct": 0.4533010556199117
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 138310918,
+          "samples": 8,
+          "symbol": "do_fcntl",
+          "worker_weight_pct": 0.4033731187671156
+        },
+        {
+          "dso": "[real_api]",
+          "sampled_period": 121066048,
+          "samples": 7,
+          "symbol": "redirect",
+          "worker_weight_pct": 0.3530797862144861
+        }
+      ],
+      "usable": true,
+      "whole_ops_s": 6447706.722709724,
+      "worker_cpus": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "worker_pids": [
+        3046917
+      ],
+      "worker_sampled_period": 34288580861,
+      "worker_samples": 2014,
+      "worker_tids": [
+        3046945,
+        3046946,
+        3046947,
+        3046948,
+        3046949
+      ],
+      "workload": "pipecap"
+    },
+    {
+      "all_sampled_period": 34488342503,
+      "arm": "public-kd",
+      "categories": {
+        "admission": {
+          "sampled_period": 138989403,
+          "worker_weight_pct": 0.4030627374750295
+        },
+        "combine_release": {
+          "sampled_period": 832894499,
+          "worker_weight_pct": 2.4153549087107975
+        },
+        "direct_lock_entry": {
+          "sampled_period": 13958730165,
+          "worker_weight_pct": 40.479661546428616
+        },
+        "direct_unlock_route": {
+          "sampled_period": 34744708,
+          "worker_weight_pct": 0.10075802051794235
+        },
+        "exact_task_identity": {
+          "sampled_period": 327683947,
+          "worker_weight_pct": 0.9502680481650999
+        },
+        "physical_mutex": {
+          "sampled_period": 4897084646,
+          "worker_weight_pct": 14.201315355413792
+        },
+        "queue": {
+          "sampled_period": 5431843487,
+          "worker_weight_pct": 15.752090865561383
+        },
+        "rcu_read_helpers_all_uses": {
+          "sampled_period": 120442929,
+          "worker_weight_pct": 0.34927883438891105
+        },
+        "return_thunk_all_uses": {
+          "sampled_period": 0,
+          "worker_weight_pct": 0.0
+        }
+      },
+      "clock_alignment": "Explicit perf --clockid mono and client CLOCK_MONOTONIC; retain only samples wholly inside the worker CPU active interval, including printed timestamp precision.",
+      "command_periods": {
+        "client": 5025124,
+        "sc_worker": 34483317379
+      },
+      "completed": 9945856,
+      "excluded_worker_period": 0,
+      "excluded_worker_samples": 0,
+      "guest_measurement_seconds": [
+        489462.093918594,
+        489464.094040805
+      ],
+      "hashes": {
+        "kallsyms": "d8f1c1864e0c7e8dbc18b441c13c55553adc0b78ee6a4e0f037e2e230d72190c",
+        "perf-report.txt": "152bcbd1c55aefa47b0abd0ed2121a78926aa567c964d2758709bed8291e094a",
+        "perf-samples.txt": "56078db645230be60c2eb39dc33a153df43f4a1b5c4e293dadf93183aa9e1ac5",
+        "perf.data": "ed6c31521ef5acfae136e1e87212eaeaae8debf5d93839bb06625da54fd7c9be",
+        "session.json": "c66763c10daf38b4d7646c1cda080a76690b7ab25f182a319c3a8a9f72fa52ff"
+      },
+      "issues": [],
+      "jit_bodies": 1286780,
+      "jit_completions": 1286780,
+      "lost_count": [
+        0
+      ],
+      "lost_records": [],
+      "name": "pipecap-t05-r1-public-kd-profile",
+      "parse_errors": [],
+      "perf_timestamp_span": [
+        489462.097211,
+        489464.093877
+      ],
+      "provider_elf_sha256": "d834f9087bb50526fa6635233af260173ff0fac6f56632624155fe0de8d478a4",
+      "provider_hot_offsets": [
+        {
+          "offset": "0x38",
+          "sampled_period": 10760205152,
+          "symbol": "kd_mutex_lock_entry",
+          "worker_weight_pct": 31.204089310017658
+        },
+        {
+          "offset": "0x19",
+          "sampled_period": 2951936578,
+          "symbol": "kd_mutex_local_unlock",
+          "worker_weight_pct": 8.560477362301866
+        },
+        {
+          "offset": "0xe3",
+          "sampled_period": 2395093935,
+          "symbol": "__kd_mutex_lock_slowpath",
+          "worker_weight_pct": 6.945659864090073
+        },
+        {
+          "offset": "0x68",
+          "sampled_period": 1763282102,
+          "symbol": "kd_mutex_lock_entry",
+          "worker_weight_pct": 5.113435237741428
+        },
+        {
+          "offset": "0x37",
+          "sampled_period": 960082008,
+          "symbol": "_kd_mutex_lock_abi",
+          "worker_weight_pct": 2.7841927081664144
+        },
+        {
+          "offset": "0x1f",
+          "sampled_period": 848303793,
+          "symbol": "kd_mutex_wait_and_lock_node",
+          "worker_weight_pct": 2.460041137215553
+        },
+        {
+          "offset": "0xea",
+          "sampled_period": 725279840,
+          "symbol": "__kd_mutex_lock_slowpath",
+          "worker_weight_pct": 2.1032774545110566
+        },
+        {
+          "offset": "0x43",
+          "sampled_period": 710742188,
+          "symbol": "kd_mutex_lock_entry",
+          "worker_weight_pct": 2.0611189468471354
+        },
+        {
+          "offset": "0x38",
+          "sampled_period": 623750251,
+          "symbol": "__kd_mutex_lock_slowpath",
+          "worker_weight_pct": 1.8088464173689325
+        },
+        {
+          "offset": "0x34e",
+          "sampled_period": 623524377,
+          "symbol": "kd_local_lock_slow",
+          "worker_weight_pct": 1.8081913933829354
+        },
+        {
+          "offset": "0x4d",
+          "sampled_period": 381426906,
+          "symbol": "kd_mutex_osq_lock",
+          "worker_weight_pct": 1.1061201038397925
+        },
+        {
+          "offset": "0x314",
+          "sampled_period": 312686509,
+          "symbol": "kd_local_lock_slow",
+          "worker_weight_pct": 0.9067761827068964
+        },
+        {
+          "offset": "0x337",
+          "sampled_period": 259346893,
+          "symbol": "kd_local_lock_slow",
+          "worker_weight_pct": 0.7520938027787886
+        },
+        {
+          "offset": "0x1c",
+          "sampled_period": 259124091,
+          "symbol": "kd_mutex_wait_and_lock_node",
+          "worker_weight_pct": 0.7514476874484356
+        },
+        {
+          "offset": "0x25c",
+          "sampled_period": 225120284,
+          "symbol": "__kd_mutex_lock_slowpath",
+          "worker_weight_pct": 0.6528382450149534
+        },
+        {
+          "offset": "0x21",
+          "sampled_period": 223158014,
+          "symbol": "kd_mutex_delegation_owned",
+          "worker_weight_pct": 0.6471477542236149
+        },
+        {
+          "offset": "0x35e",
+          "sampled_period": 208623286,
+          "symbol": "kd_local_lock_slow",
+          "worker_weight_pct": 0.6049977260222925
+        },
+        {
+          "offset": "0x54",
+          "sampled_period": 173775252,
+          "symbol": "_kd_mutex_lock_abi",
+          "worker_weight_pct": 0.5039400649597229
+        },
+        {
+          "offset": "0x34",
+          "sampled_period": 173754282,
+          "symbol": "kd_mutex_lock_entry",
+          "worker_weight_pct": 0.5038792529451201
+        },
+        {
+          "offset": "0x46",
+          "sampled_period": 173714578,
+          "symbol": "kd_mutex_local_lock_node",
+          "worker_weight_pct": 0.5037641132108434
+        },
+        {
+          "offset": "0x61",
+          "sampled_period": 169946856,
+          "symbol": "kd_mutex_lock_entry",
+          "worker_weight_pct": 0.4928378964591613
+        },
+        {
+          "offset": "0x13e",
+          "sampled_period": 138998411,
+          "symbol": "kd_mutex_run_combiner",
+          "worker_weight_pct": 0.4030888602517363
+        },
+        {
+          "offset": "0x9d",
+          "sampled_period": 138866615,
+          "symbol": "kd_local_lock_slow",
+          "worker_weight_pct": 0.4027066580449374
+        },
+        {
+          "offset": "0x3d",
+          "sampled_period": 138215649,
+          "symbol": "kd_mutex_lock_entry",
+          "worker_weight_pct": 0.4008188872343586
+        },
+        {
+          "offset": "0x603",
+          "sampled_period": 121645541,
+          "symbol": "kd_local_lock_slow",
+          "worker_weight_pct": 0.35276635267719614
+        },
+        {
+          "offset": "0x23",
+          "sampled_period": 121568630,
+          "symbol": "kd_mutex_osq_unlock",
+          "worker_weight_pct": 0.3525433143913065
+        },
+        {
+          "offset": "0x5c",
+          "sampled_period": 104284162,
+          "symbol": "kd_local_lock_slow",
+          "worker_weight_pct": 0.3024191694025008
+        },
+        {
+          "offset": "0x3d",
+          "sampled_period": 104213539,
+          "symbol": "kd_mutex_run_combiner",
+          "worker_weight_pct": 0.30221436602113294
+        },
+        {
+          "offset": "0x39",
+          "sampled_period": 104205324,
+          "symbol": "kd_mutex_wait_and_lock_node",
+          "worker_weight_pct": 0.30219054290716246
+        },
+        {
+          "offset": "0x25",
+          "sampled_period": 104202833,
+          "symbol": "kd_mutex_local_lock_node",
+          "worker_weight_pct": 0.3021833191242166
+        }
+      ],
+      "repeat": 1,
+      "sampled_period_per_operation": 3467.104025938039,
+      "threads": 5,
+      "tid_to_cpu": {
+        "3046984": 0,
+        "3046985": 1,
+        "3046986": 2,
+        "3046987": 3,
+        "3046988": 4
+      },
+      "top_symbols": [
+        {
+          "dso": "[kdlock_km]",
+          "sampled_period": 13958730165,
+          "samples": 816,
+          "symbol": "kd_mutex_lock_entry",
+          "worker_weight_pct": 40.479661546428616
+        },
+        {
+          "dso": "[kdlock_km]",
+          "sampled_period": 4124165999,
+          "samples": 240,
+          "symbol": "__kd_mutex_lock_slowpath",
+          "worker_weight_pct": 11.959887599188981
+        },
+        {
+          "dso": "[kdlock_km]",
+          "sampled_period": 2986729186,
+          "samples": 175,
+          "symbol": "kd_mutex_local_unlock",
+          "worker_weight_pct": 8.661374290568949
+        },
+        {
+          "dso": "[kdlock_km]",
+          "sampled_period": 1910355460,
+          "samples": 111,
+          "symbol": "kd_local_lock_slow",
+          "worker_weight_pct": 5.539941064844845
+        },
+        {
+          "dso": "[kdlock_km]",
+          "sampled_period": 1315916091,
+          "samples": 76,
+          "symbol": "kd_mutex_wait_and_lock_node",
+          "worker_weight_pct": 3.816094827933753
+        },
+        {
+          "dso": "[kdlock_km]",
+          "sampled_period": 1307677488,
+          "samples": 76,
+          "symbol": "_kd_mutex_lock_abi",
+          "worker_weight_pct": 3.7922032663724017
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 975526717,
+          "samples": 58,
+          "symbol": "clear_bhb_loop",
+          "worker_weight_pct": 2.8289816385069906
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 624200491,
+          "samples": 36,
+          "symbol": "syscall_exit_to_user_mode",
+          "worker_weight_pct": 1.810152092211789
+        },
+        {
+          "dso": "[kdlock_km]",
+          "sampled_period": 572216658,
+          "samples": 33,
+          "symbol": "kd_mutex_run_combiner",
+          "worker_weight_pct": 1.6594014192743367
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 524701739,
+          "samples": 31,
+          "symbol": "__fget_light",
+          "worker_weight_pct": 1.5216103869389845
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 466007289,
+          "samples": 28,
+          "symbol": "arch_exit_to_user_mode_prepare",
+          "worker_weight_pct": 1.351399240038877
+        },
+        {
+          "dso": "/usr/lib/x86_64-linux-gnu/libc.so.6",
+          "sampled_period": 438991943,
+          "samples": 26,
+          "symbol": "[unknown]",
+          "worker_weight_pct": 1.2730560061119345
+        },
+        {
+          "dso": "[kdlock_km]",
+          "sampled_period": 433558157,
+          "samples": 25,
+          "symbol": "kd_mutex_osq_lock",
+          "worker_weight_pct": 1.2572982820499534
+        },
+        {
+          "dso": "[kdlock_km]",
+          "sampled_period": 399650979,
+          "samples": 23,
+          "symbol": "kd_mutex_local_lock_node",
+          "worker_weight_pct": 1.1589690591757957
+        },
+        {
+          "dso": "[real_api]",
+          "sampled_period": 329224036,
+          "samples": 19,
+          "symbol": "rb_redirected",
+          "worker_weight_pct": 0.9547342338950666
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 320557238,
+          "samples": 19,
+          "symbol": "entry_SYSCALL_64",
+          "worker_weight_pct": 0.929600926954946
+        },
+        {
+          "dso": "[unknown]",
+          "sampled_period": 228106808,
+          "samples": 14,
+          "symbol": "[unknown]",
+          "worker_weight_pct": 0.6614990242757641
+        },
+        {
+          "dso": "[real_api]",
+          "sampled_period": 225896216,
+          "samples": 13,
+          "symbol": "rb_entry",
+          "worker_weight_pct": 0.6550884113532782
+        },
+        {
+          "dso": "[kdlock_km]",
+          "sampled_period": 223158014,
+          "samples": 13,
+          "symbol": "kd_mutex_delegation_owned",
+          "worker_weight_pct": 0.6471477542236149
+        },
+        {
+          "dso": "[kdlock_km]",
+          "sampled_period": 208553325,
+          "samples": 12,
+          "symbol": "kd_mutex_execute_cs",
+          "worker_weight_pct": 0.6047948424098167
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 173582797,
+          "samples": 10,
+          "symbol": "fput",
+          "worker_weight_pct": 0.5033819545033397
+        },
+        {
+          "dso": "[kdlock_km]",
+          "sampled_period": 173520672,
+          "samples": 10,
+          "symbol": "kd_mutex_task_put",
+          "worker_weight_pct": 0.5032017949226439
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 173505971,
+          "samples": 10,
+          "symbol": "syscall_enter_from_user_mode",
+          "worker_weight_pct": 0.5031591627134558
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 173386871,
+          "samples": 10,
+          "symbol": "ftrace_ops_assist_func",
+          "worker_weight_pct": 0.5028137783100616
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 156427276,
+          "samples": 9,
+          "symbol": "its_return_thunk",
+          "worker_weight_pct": 0.45363174975520965
+        }
+      ],
+      "usable": true,
+      "whole_ops_s": 4972624.145315289,
+      "worker_cpus": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "worker_pids": [
+        3046957
+      ],
+      "worker_sampled_period": 34483317379,
+      "worker_samples": 2013,
+      "worker_tids": [
+        3046984,
+        3046985,
+        3046986,
+        3046987,
+        3046988
+      ],
+      "workload": "pipecap"
+    },
+    {
+      "all_sampled_period": 34666516025,
+      "arm": "native",
+      "categories": {
+        "admission": {
+          "sampled_period": 0,
+          "worker_weight_pct": 0.0
+        },
+        "combine_release": {
+          "sampled_period": 0,
+          "worker_weight_pct": 0.0
+        },
+        "direct_lock_entry": {
+          "sampled_period": 0,
+          "worker_weight_pct": 0.0
+        },
+        "direct_unlock_route": {
+          "sampled_period": 0,
+          "worker_weight_pct": 0.0
+        },
+        "exact_task_identity": {
+          "sampled_period": 0,
+          "worker_weight_pct": 0.0
+        },
+        "physical_mutex": {
+          "sampled_period": 0,
+          "worker_weight_pct": 0.0
+        },
+        "queue": {
+          "sampled_period": 0,
+          "worker_weight_pct": 0.0
+        },
+        "rcu_read_helpers_all_uses": {
+          "sampled_period": 17438280,
+          "worker_weight_pct": 0.05031024213530555
+        },
+        "return_thunk_all_uses": {
+          "sampled_period": 0,
+          "worker_weight_pct": 0.0
+        }
+      },
+      "clock_alignment": "Explicit perf --clockid mono and client CLOCK_MONOTONIC; retain only samples wholly inside the worker CPU active interval, including printed timestamp precision.",
+      "command_periods": {
+        "client": 5025124,
+        "sc_worker": 34661490901
+      },
+      "completed": 8339712,
+      "excluded_worker_period": 0,
+      "excluded_worker_samples": 0,
+      "guest_measurement_seconds": [
+        489467.373604081,
+        489469.373654991
+      ],
+      "hashes": {
+        "kallsyms": "fc7dab8de5d52e280babb504b0b5a86ac6a7c71d025ca58b0839f8804d33674e",
+        "perf-report.txt": "6c199c3e35a41c7cddb464eb5ad0166a5c5149a26603afee4c9a3692d434270d",
+        "perf-samples.txt": "df2ddbc7be4b10b9dcac9dee808d69f743b183118671b452956ff4f2fdfb0594",
+        "perf.data": "098b1ebed16ce4a530597638203be0d9e807d2d697566eed7e1906de4dca9913",
+        "session.json": "9f049846436d84f98985153b04d71b8bc826a5ed3bfb28e498b7cd8d9a600353"
+      },
+      "issues": [],
+      "jit_bodies": 0,
+      "jit_completions": 0,
+      "lost_count": [
+        0
+      ],
+      "lost_records": [],
+      "name": "pipecap-t05-r1-native-profile",
+      "parse_errors": [],
+      "perf_timestamp_span": [
+        489467.376683,
+        489469.372344
+      ],
+      "provider_elf_sha256": null,
+      "provider_hot_offsets": [],
+      "repeat": 1,
+      "sampled_period_per_operation": 4156.197588238059,
+      "threads": 5,
+      "tid_to_cpu": {
+        "3047009": 0,
+        "3047010": 1,
+        "3047011": 2,
+        "3047012": 3,
+        "3047013": 4
+      },
+      "top_symbols": [
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 17500600104,
+          "samples": 1017,
+          "symbol": "osq_lock",
+          "worker_weight_pct": 50.49003850984119
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 3532808395,
+          "samples": 206,
+          "symbol": "mutex_unlock",
+          "worker_weight_pct": 10.192315169276451
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 3298203656,
+          "samples": 191,
+          "symbol": "__mutex_lock",
+          "worker_weight_pct": 9.515469676189968
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 2475170283,
+          "samples": 144,
+          "symbol": "mutex_lock",
+          "worker_weight_pct": 7.140980432923588
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 1490230708,
+          "samples": 87,
+          "symbol": "osq_unlock",
+          "worker_weight_pct": 4.299384329013401
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 893145407,
+          "samples": 52,
+          "symbol": "__raw_callee_save___kvm_vcpu_is_preempted",
+          "worker_weight_pct": 2.5767656952524
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 808274393,
+          "samples": 48,
+          "symbol": "syscall_exit_to_user_mode",
+          "worker_weight_pct": 2.331908905212963
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 688508483,
+          "samples": 40,
+          "symbol": "clear_bhb_loop",
+          "worker_weight_pct": 1.9863787306971732
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 540564225,
+          "samples": 31,
+          "symbol": "arch_exit_to_user_mode_prepare",
+          "worker_weight_pct": 1.559552722483742
+        },
+        {
+          "dso": "/usr/lib/x86_64-linux-gnu/libc.so.6",
+          "sampled_period": 449803868,
+          "samples": 26,
+          "symbol": "[unknown]",
+          "worker_weight_pct": 1.2977049062451695
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 383757433,
+          "samples": 22,
+          "symbol": "__fget_light",
+          "worker_weight_pct": 1.1071578948986538
+        },
+        {
+          "dso": "[unknown]",
+          "sampled_period": 366208609,
+          "samples": 21,
+          "symbol": "[unknown]",
+          "worker_weight_pct": 1.0565287282245401
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 296418595,
+          "samples": 17,
+          "symbol": "entry_SYSCALL_64",
+          "worker_weight_pct": 0.8551813187915935
+        },
+        {
+          "dso": "[real_api]",
+          "sampled_period": 226676947,
+          "samples": 13,
+          "symbol": "rb_redirected",
+          "worker_weight_pct": 0.6539734474995138
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 159176795,
+          "samples": 10,
+          "symbol": "mutex_spin_on_owner",
+          "worker_weight_pct": 0.45923239555574824
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 157094095,
+          "samples": 9,
+          "symbol": "fput",
+          "worker_weight_pct": 0.4532237099918508
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 156879375,
+          "samples": 9,
+          "symbol": "ftrace_ops_assist_func",
+          "worker_weight_pct": 0.4526042328879568
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 139588796,
+          "samples": 8,
+          "symbol": "do_syscall_64",
+          "worker_weight_pct": 0.4027201149503145
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 139444071,
+          "samples": 8,
+          "symbol": "__x64_sys_fcntl",
+          "worker_weight_pct": 0.40230257664991836
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 122057546,
+          "samples": 7,
+          "symbol": "entry_SYSCALL_64_after_hwframe",
+          "worker_weight_pct": 0.35214165007679626
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 122047529,
+          "samples": 7,
+          "symbol": "do_fcntl",
+          "worker_weight_pct": 0.3521127505697652
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 104627912,
+          "samples": 6,
+          "symbol": "syscall_enter_from_user_mode",
+          "worker_weight_pct": 0.3018563520502848
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 87256633,
+          "samples": 5,
+          "symbol": "its_return_thunk",
+          "worker_weight_pct": 0.2517394108903798
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 69769645,
+          "samples": 4,
+          "symbol": "fpregs_assert_state_consistent",
+          "worker_weight_pct": 0.20128864392843274
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 69761582,
+          "samples": 4,
+          "symbol": "syscall_return_via_sysret",
+          "worker_weight_pct": 0.20126538180152934
+        }
+      ],
+      "usable": true,
+      "whole_ops_s": 4169749.8590173386,
+      "worker_cpus": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "worker_pids": [
+        3046997
+      ],
+      "worker_sampled_period": 34661490901,
+      "worker_samples": 2014,
+      "worker_tids": [
+        3047009,
+        3047010,
+        3047011,
+        3047012,
+        3047013
+      ],
+      "workload": "pipecap"
+    },
+    {
+      "all_sampled_period": 33749440492,
+      "arm": "baseline-kd",
+      "categories": {
+        "admission": {
+          "sampled_period": 34447766,
+          "worker_weight_pct": 0.10208434677065702
+        },
+        "combine_release": {
+          "sampled_period": 324585679,
+          "worker_weight_pct": 0.9618945104255866
+        },
+        "direct_lock_entry": {
+          "sampled_period": 0,
+          "worker_weight_pct": 0.0
+        },
+        "direct_unlock_route": {
+          "sampled_period": 17230606,
+          "worker_weight_pct": 0.05106209668204793
+        },
+        "exact_task_identity": {
+          "sampled_period": 308434439,
+          "worker_weight_pct": 0.9140310645076102
+        },
+        "physical_mutex": {
+          "sampled_period": 3497284392,
+          "worker_weight_pct": 10.364039067977133
+        },
+        "queue": {
+          "sampled_period": 1797858794,
+          "worker_weight_pct": 5.327870625089918
+        },
+        "rcu_read_helpers_all_uses": {
+          "sampled_period": 119475239,
+          "worker_weight_pct": 0.35405929454418394
+        },
+        "return_thunk_all_uses": {
+          "sampled_period": 0,
+          "worker_weight_pct": 0.0
+        }
+      },
+      "clock_alignment": "Explicit perf --clockid mono and client CLOCK_MONOTONIC; retain only samples wholly inside the worker CPU active interval, including printed timestamp precision.",
+      "command_periods": {
+        "client": 5025124,
+        "sc_worker": 33744415368
+      },
+      "completed": 18944512,
+      "excluded_worker_period": 0,
+      "excluded_worker_samples": 0,
+      "guest_measurement_seconds": [
+        489511.969050691,
+        489513.969122484
+      ],
+      "hashes": {
+        "kallsyms": "07a3686b1942a3271a6e54114664abd627c4217614d51aec8d8fc329010f1faa",
+        "perf-report.txt": "2591ef08bd837f323e000658cbcf690a54672fc976fe1544d685e74a31d9b416",
+        "perf-samples.txt": "8a7d186571fcca763fa8b6138c81f76d99340ce4ddc1d992c965b935830c90a6",
+        "perf.data": "c9501dee4c69c211e6034eac2da66d395222e571f3a2bfc85eb335ceb13ec695",
+        "session.json": "fa540cc9393a75b0bf74ac6e8ad827cda9ee15c396678043b81df1b14ad55bcb"
+      },
+      "issues": [],
+      "jit_bodies": 314340,
+      "jit_completions": 314340,
+      "lost_count": [
+        0
+      ],
+      "lost_records": [],
+      "name": "pipecap-t05-r2-baseline-kd-profile",
+      "parse_errors": [],
+      "perf_timestamp_span": [
+        489511.97216,
+        489513.966683
+      ],
+      "provider_elf_sha256": "cf7f9a47c5b36c762e732641b4e33459bf46ef11f6a67fbbcbc7c9a807757988",
+      "provider_hot_offsets": [
+        {
+          "offset": "0x19",
+          "sampled_period": 2579708569,
+          "symbol": "kd_mutex_local_unlock",
+          "worker_weight_pct": 7.6448459422602735
+        },
+        {
+          "offset": "0xe3",
+          "sampled_period": 685275586,
+          "symbol": "__kd_mutex_lock_slowpath",
+          "worker_weight_pct": 2.0307822154472714
+        },
+        {
+          "offset": "0x37",
+          "sampled_period": 530321476,
+          "symbol": "_kd_mutex_lock_abi",
+          "worker_weight_pct": 1.571582942589388
+        },
+        {
+          "offset": "0x34e",
+          "sampled_period": 358448151,
+          "symbol": "kd_local_lock_slow",
+          "worker_weight_pct": 1.0622443657444964
+        },
+        {
+          "offset": "0x4d",
+          "sampled_period": 342787257,
+          "symbol": "kd_mutex_osq_lock",
+          "worker_weight_pct": 1.015834037311747
+        },
+        {
+          "offset": "0x1f",
+          "sampled_period": 274423187,
+          "symbol": "kd_mutex_wait_and_lock_node",
+          "worker_weight_pct": 0.813240306602665
+        },
+        {
+          "offset": "0x73",
+          "sampled_period": 222393710,
+          "symbol": "kd_mutex_task_put",
+          "worker_weight_pct": 0.6590533798694793
+        },
+        {
+          "offset": "0x21",
+          "sampled_period": 188841703,
+          "symbol": "kd_mutex_delegation_owned",
+          "worker_weight_pct": 0.5596235730878287
+        },
+        {
+          "offset": "0x46",
+          "sampled_period": 154274378,
+          "symbol": "kd_mutex_local_lock_node",
+          "worker_weight_pct": 0.4571849188008134
+        },
+        {
+          "offset": "0x38",
+          "sampled_period": 154001175,
+          "symbol": "__kd_mutex_lock_slowpath",
+          "worker_weight_pct": 0.4563752944614358
+        },
+        {
+          "offset": "0x337",
+          "sampled_period": 137358675,
+          "symbol": "kd_local_lock_slow",
+          "worker_weight_pct": 0.4070560224618914
+        },
+        {
+          "offset": "0x54",
+          "sampled_period": 137251901,
+          "symbol": "_kd_mutex_lock_abi",
+          "worker_weight_pct": 0.40673960269632253
+        },
+        {
+          "offset": "0xea",
+          "sampled_period": 120315883,
+          "symbol": "__kd_mutex_lock_slowpath",
+          "worker_weight_pct": 0.3565505038030564
+        },
+        {
+          "offset": "0x39",
+          "sampled_period": 120283450,
+          "symbol": "kd_mutex_wait_and_lock_node",
+          "worker_weight_pct": 0.3564543901212922
+        },
+        {
+          "offset": "0x314",
+          "sampled_period": 102565779,
+          "symbol": "kd_local_lock_slow",
+          "worker_weight_pct": 0.3039488990443842
+        },
+        {
+          "offset": "0x54",
+          "sampled_period": 85746628,
+          "symbol": "kd_mutex_execute_cs",
+          "worker_weight_pct": 0.25410613005111937
+        },
+        {
+          "offset": "0x8c",
+          "sampled_period": 68831961,
+          "symbol": "kd_mutex_task_get",
+          "worker_weight_pct": 0.20398030384984442
+        },
+        {
+          "offset": "0x1c",
+          "sampled_period": 68757153,
+          "symbol": "kd_mutex_wait_and_lock_node",
+          "worker_weight_pct": 0.203758613833336
+        },
+        {
+          "offset": "0x29",
+          "sampled_period": 68670927,
+          "symbol": "kd_mutex_wait_and_lock_node",
+          "worker_weight_pct": 0.20350308710673645
+        },
+        {
+          "offset": "0x9d",
+          "sampled_period": 68125762,
+          "symbol": "kd_local_lock_slow",
+          "worker_weight_pct": 0.20188751607356045
+        },
+        {
+          "offset": "0x1112",
+          "sampled_period": 51638829,
+          "symbol": "kd_mutex_execute_cs",
+          "worker_weight_pct": 0.15302925961778363
+        },
+        {
+          "offset": "0x5c",
+          "sampled_period": 51481501,
+          "symbol": "kd_local_lock_slow",
+          "worker_weight_pct": 0.1525630254327066
+        },
+        {
+          "offset": "0x25c",
+          "sampled_period": 50628271,
+          "symbol": "__kd_mutex_lock_slowpath",
+          "worker_weight_pct": 0.15003451815025678
+        },
+        {
+          "offset": "0x23",
+          "sampled_period": 50618950,
+          "symbol": "kd_mutex_osq_unlock",
+          "worker_weight_pct": 0.15000689580179305
+        },
+        {
+          "offset": "0x35e",
+          "sampled_period": 50174922,
+          "symbol": "kd_local_lock_slow",
+          "worker_weight_pct": 0.1486910395477799
+        },
+        {
+          "offset": "0x0",
+          "sampled_period": 48746646,
+          "symbol": "kd_mutex_local_unlock",
+          "worker_weight_pct": 0.1444584102832811
+        },
+        {
+          "offset": "0x3ea",
+          "sampled_period": 34442754,
+          "symbol": "kd_mutex_run_combiner",
+          "worker_weight_pct": 0.10206949394258061
+        },
+        {
+          "offset": "0x25",
+          "sampled_period": 34386072,
+          "symbol": "kd_mutex_local_lock_node",
+          "worker_weight_pct": 0.10190151948108275
+        },
+        {
+          "offset": "0x46b",
+          "sampled_period": 34357653,
+          "symbol": "kd_local_lock_slow",
+          "worker_weight_pct": 0.10181730110097428
+        },
+        {
+          "offset": "0x1a",
+          "sampled_period": 34272803,
+          "symbol": "_kd_mutex_unlock_checked",
+          "worker_weight_pct": 0.10156585208615311
+        }
+      ],
+      "repeat": 2,
+      "sampled_period_per_operation": 1781.223784914597,
+      "threads": 5,
+      "tid_to_cpu": {
+        "3047262": 0,
+        "3047263": 1,
+        "3047264": 2,
+        "3047265": 3,
+        "3047266": 4
+      },
+      "top_symbols": [
+        {
+          "dso": "[real_api]",
+          "sampled_period": 17703642725,
+          "samples": 1054,
+          "symbol": "rb_body",
+          "worker_weight_pct": 52.46391893868297
+        },
+        {
+          "dso": "[kdlock_km]",
+          "sampled_period": 2660323413,
+          "samples": 160,
+          "symbol": "kd_mutex_local_unlock",
+          "worker_weight_pct": 7.883744269941622
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 1408625281,
+          "samples": 85,
+          "symbol": "clear_bhb_loop",
+          "worker_weight_pct": 4.174395275894471
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 1129329440,
+          "samples": 67,
+          "symbol": "arch_exit_to_user_mode_prepare",
+          "worker_weight_pct": 3.346715086582738
+        },
+        {
+          "dso": "[kdlock_km]",
+          "sampled_period": 1095949692,
+          "samples": 64,
+          "symbol": "__kd_mutex_lock_slowpath",
+          "worker_weight_pct": 3.2477957613077946
+        },
+        {
+          "dso": "[kdlock_km]",
+          "sampled_period": 836960979,
+          "samples": 49,
+          "symbol": "kd_local_lock_slow",
+          "worker_weight_pct": 2.4802947980355126
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 709625093,
+          "samples": 43,
+          "symbol": "__fget_light",
+          "worker_weight_pct": 2.102940842984469
+        },
+        {
+          "dso": "[kdlock_km]",
+          "sampled_period": 701909102,
+          "samples": 41,
+          "symbol": "_kd_mutex_lock_abi",
+          "worker_weight_pct": 2.080074863782124
+        },
+        {
+          "dso": "/usr/lib/x86_64-linux-gnu/libc.so.6",
+          "sampled_period": 651878091,
+          "samples": 39,
+          "symbol": "[unknown]",
+          "worker_weight_pct": 1.9318102977661284
+        },
+        {
+          "dso": "[kdlock_km]",
+          "sampled_period": 566534789,
+          "samples": 33,
+          "symbol": "kd_mutex_wait_and_lock_node",
+          "worker_weight_pct": 1.6788994054916946
+        },
+        {
+          "dso": "[real_api]",
+          "sampled_period": 540214120,
+          "samples": 33,
+          "symbol": "rb_redirected",
+          "worker_weight_pct": 1.600899331366955
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 536138242,
+          "samples": 32,
+          "symbol": "fput",
+          "worker_weight_pct": 1.5888206571461974
+        },
+        {
+          "dso": "[unknown]",
+          "sampled_period": 505650375,
+          "samples": 31,
+          "symbol": "[unknown]",
+          "worker_weight_pct": 1.4984712862428513
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 470832257,
+          "samples": 28,
+          "symbol": "syscall_exit_to_user_mode",
+          "worker_weight_pct": 1.3952894186055231
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 368740397,
+          "samples": 22,
+          "symbol": "entry_SYSCALL_64",
+          "worker_weight_pct": 1.0927449563985583
+        },
+        {
+          "dso": "[kdlock_km]",
+          "sampled_period": 359050536,
+          "samples": 21,
+          "symbol": "kd_mutex_osq_lock",
+          "worker_weight_pct": 1.0640295055770603
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 301914702,
+          "samples": 18,
+          "symbol": "ftrace_ops_assist_func",
+          "worker_weight_pct": 0.8947101282018571
+        },
+        {
+          "dso": "[kdlock_km]",
+          "sampled_period": 239602478,
+          "samples": 14,
+          "symbol": "kd_mutex_task_put",
+          "worker_weight_pct": 0.7100507606577657
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 239125339,
+          "samples": 14,
+          "symbol": "do_syscall_64",
+          "worker_weight_pct": 0.7086367815006325
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 216180793,
+          "samples": 13,
+          "symbol": "x64_sys_call",
+          "worker_weight_pct": 0.6406416903136077
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 206024633,
+          "samples": 13,
+          "symbol": "entry_SYSCALL_64_after_hwframe",
+          "worker_weight_pct": 0.6105443841690444
+        },
+        {
+          "dso": "[kdlock_km]",
+          "sampled_period": 205987829,
+          "samples": 12,
+          "symbol": "kd_mutex_delegation_owned",
+          "worker_weight_pct": 0.6104353172327867
+        },
+        {
+          "dso": "[kdlock_km]",
+          "sampled_period": 205770127,
+          "samples": 12,
+          "symbol": "kd_mutex_local_lock_node",
+          "worker_weight_pct": 0.6097901675165274
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 200113001,
+          "samples": 12,
+          "symbol": "__x64_sys_fcntl",
+          "worker_weight_pct": 0.5930255386488876
+        },
+        {
+          "dso": "[kdlock_km]",
+          "sampled_period": 171834665,
+          "samples": 10,
+          "symbol": "kd_mutex_execute_cs",
+          "worker_weight_pct": 0.509224009739258
+        }
+      ],
+      "usable": true,
+      "whole_ops_s": 9471915.991367616,
+      "worker_cpus": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "worker_pids": [
+        3047235
+      ],
+      "worker_sampled_period": 33744415368,
+      "worker_samples": 2010,
+      "worker_tids": [
+        3047262,
+        3047263,
+        3047264,
+        3047265,
+        3047266
+      ],
+      "workload": "pipecap"
+    },
+    {
+      "all_sampled_period": 34474390873,
+      "arm": "public-kd",
+      "categories": {
+        "admission": {
+          "sampled_period": 69416700,
+          "worker_weight_pct": 0.2013866472202607
+        },
+        "combine_release": {
+          "sampled_period": 537949366,
+          "worker_weight_pct": 1.5606593109871962
+        },
+        "direct_lock_entry": {
+          "sampled_period": 14714568351,
+          "worker_weight_pct": 42.688828271889186
+        },
+        "direct_unlock_route": {
+          "sampled_period": 52069302,
+          "worker_weight_pct": 0.15105964635137098
+        },
+        "exact_task_identity": {
+          "sampled_period": 612826303,
+          "worker_weight_pct": 1.7778867979831594
+        },
+        "physical_mutex": {
+          "sampled_period": 4838459598,
+          "worker_weight_pct": 14.036984704716739
+        },
+        "queue": {
+          "sampled_period": 4373488080,
+          "worker_weight_pct": 12.688043382773529
+        },
+        "rcu_read_helpers_all_uses": {
+          "sampled_period": 138799434,
+          "worker_weight_pct": 0.402674754768375
+        },
+        "return_thunk_all_uses": {
+          "sampled_period": 0,
+          "worker_weight_pct": 0.0
+        }
+      },
+      "clock_alignment": "Explicit perf --clockid mono and client CLOCK_MONOTONIC; retain only samples wholly inside the worker CPU active interval, including printed timestamp precision.",
+      "command_periods": {
+        "client": 5025124,
+        "sc_worker": 34469365749
+      },
+      "completed": 10659072,
+      "excluded_worker_period": 0,
+      "excluded_worker_samples": 0,
+      "guest_measurement_seconds": [
+        489519.596634791,
+        489521.596764908
+      ],
+      "hashes": {
+        "kallsyms": "d8f1c1864e0c7e8dbc18b441c13c55553adc0b78ee6a4e0f037e2e230d72190c",
+        "perf-report.txt": "6c92b5809acd68fc0fe37d10a60e14028d10b03041d78fff8099e6c741fa8463",
+        "perf-samples.txt": "d68164c57ebe08f7675f6d3bae1b4eb6e6f6ac324b6997eae9ec25cca10a49b6",
+        "perf.data": "b825d9ca2fed13b4cda66d10e7a81b45865498b659017b78e38048dafb38e43e",
+        "session.json": "d56c771ab009bc81857de9161eec1e9103c23f8c3b40d345b5353d4c8563bc6c"
+      },
+      "issues": [],
+      "jit_bodies": 1028883,
+      "jit_completions": 1028883,
+      "lost_count": [
+        0
+      ],
+      "lost_records": [],
+      "name": "pipecap-t05-r2-public-kd-profile",
+      "parse_errors": [],
+      "perf_timestamp_span": [
+        489519.59976,
+        489521.596146
+      ],
+      "provider_elf_sha256": "d834f9087bb50526fa6635233af260173ff0fac6f56632624155fe0de8d478a4",
+      "provider_hot_offsets": [
+        {
+          "offset": "0x38",
+          "sampled_period": 11313891644,
+          "symbol": "kd_mutex_lock_entry",
+          "worker_weight_pct": 32.823034013407195
+        },
+        {
+          "offset": "0x19",
+          "sampled_period": 2693138909,
+          "symbol": "kd_mutex_local_unlock",
+          "worker_weight_pct": 7.8131374061564545
+        },
+        {
+          "offset": "0xe3",
+          "sampled_period": 1901939179,
+          "symbol": "__kd_mutex_lock_slowpath",
+          "worker_weight_pct": 5.51776668259461
+        },
+        {
+          "offset": "0x68",
+          "sampled_period": 1665744557,
+          "symbol": "kd_mutex_lock_entry",
+          "worker_weight_pct": 4.832536139857245
+        },
+        {
+          "offset": "0x43",
+          "sampled_period": 1193988914,
+          "symbol": "kd_mutex_lock_entry",
+          "worker_weight_pct": 3.4639132112102735
+        },
+        {
+          "offset": "0x1f",
+          "sampled_period": 908604499,
+          "symbol": "kd_mutex_wait_and_lock_node",
+          "worker_weight_pct": 2.635976842789339
+        },
+        {
+          "offset": "0x34e",
+          "sampled_period": 742173496,
+          "symbol": "kd_local_lock_slow",
+          "worker_weight_pct": 2.153139403272981
+        },
+        {
+          "offset": "0x37",
+          "sampled_period": 678903690,
+          "symbol": "_kd_mutex_lock_abi",
+          "worker_weight_pct": 1.9695856748385219
+        },
+        {
+          "offset": "0xea",
+          "sampled_period": 606402146,
+          "symbol": "__kd_mutex_lock_slowpath",
+          "worker_weight_pct": 1.7592495040834701
+        },
+        {
+          "offset": "0x38",
+          "sampled_period": 450014648,
+          "symbol": "__kd_mutex_lock_slowpath",
+          "worker_weight_pct": 1.305549545869017
+        },
+        {
+          "offset": "0x337",
+          "sampled_period": 329658144,
+          "symbol": "kd_local_lock_slow",
+          "worker_weight_pct": 0.9563800691910433
+        },
+        {
+          "offset": "0x25c",
+          "sampled_period": 276883334,
+          "symbol": "__kd_mutex_lock_slowpath",
+          "worker_weight_pct": 0.8032736546886788
+        },
+        {
+          "offset": "0x73",
+          "sampled_period": 260385959,
+          "symbol": "kd_mutex_task_put",
+          "worker_weight_pct": 0.7554126783071259
+        },
+        {
+          "offset": "0x4d",
+          "sampled_period": 260328737,
+          "symbol": "kd_mutex_osq_lock",
+          "worker_weight_pct": 0.7552466700306271
+        },
+        {
+          "offset": "0x314",
+          "sampled_period": 259616222,
+          "symbol": "kd_local_lock_slow",
+          "worker_weight_pct": 0.7531795736842991
+        },
+        {
+          "offset": "0x35e",
+          "sampled_period": 243017716,
+          "symbol": "kd_local_lock_slow",
+          "worker_weight_pct": 0.7050252034505458
+        },
+        {
+          "offset": "0x21",
+          "sampled_period": 190809204,
+          "symbol": "kd_mutex_delegation_owned",
+          "worker_weight_pct": 0.5535616912403897
+        },
+        {
+          "offset": "0x61",
+          "sampled_period": 176464685,
+          "symbol": "kd_mutex_lock_entry",
+          "worker_weight_pct": 0.5119464230499207
+        },
+        {
+          "offset": "0x1c",
+          "sampled_period": 156100131,
+          "symbol": "kd_mutex_wait_and_lock_node",
+          "worker_weight_pct": 0.4528662701155987
+        },
+        {
+          "offset": "0x9d",
+          "sampled_period": 151971441,
+          "symbol": "kd_local_lock_slow",
+          "worker_weight_pct": 0.44088841699795095
+        },
+        {
+          "offset": "0x25",
+          "sampled_period": 150954106,
+          "symbol": "kd_mutex_local_lock_node",
+          "worker_weight_pct": 0.4379369991871097
+        },
+        {
+          "offset": "0x29",
+          "sampled_period": 138910905,
+          "symbol": "kd_mutex_wait_and_lock_node",
+          "worker_weight_pct": 0.4029981462714613
+        },
+        {
+          "offset": "0x603",
+          "sampled_period": 138897812,
+          "symbol": "kd_local_lock_slow",
+          "worker_weight_pct": 0.4029601618185551
+        },
+        {
+          "offset": "0x54",
+          "sampled_period": 121499277,
+          "symbol": "_kd_mutex_lock_abi",
+          "worker_weight_pct": 0.3524848060296115
+        },
+        {
+          "offset": "0x46",
+          "sampled_period": 104200349,
+          "symbol": "kd_mutex_local_lock_node",
+          "worker_weight_pct": 0.3022984227756584
+        },
+        {
+          "offset": "0x13e",
+          "sampled_period": 104143141,
+          "symbol": "kd_mutex_run_combiner",
+          "worker_weight_pct": 0.3021324551149344
+        },
+        {
+          "offset": "0x5b",
+          "sampled_period": 104132506,
+          "symbol": "_kd_mutex_lock_abi",
+          "worker_weight_pct": 0.30210160163164884
+        },
+        {
+          "offset": "0x39",
+          "sampled_period": 104116621,
+          "symbol": "kd_mutex_wait_and_lock_node",
+          "worker_weight_pct": 0.30205551723277807
+        },
+        {
+          "offset": "0x46b",
+          "sampled_period": 101125798,
+          "symbol": "kd_local_lock_slow",
+          "worker_weight_pct": 0.29337876053879464
+        },
+        {
+          "offset": "0x8c",
+          "sampled_period": 86872945,
+          "symbol": "kd_mutex_task_get",
+          "worker_weight_pct": 0.25202942703557085
+        }
+      ],
+      "repeat": 2,
+      "sampled_period_per_operation": 3233.8055084907955,
+      "threads": 5,
+      "tid_to_cpu": {
+        "3047301": 0,
+        "3047302": 1,
+        "3047303": 2,
+        "3047304": 3,
+        "3047305": 4
+      },
+      "top_symbols": [
+        {
+          "dso": "[kdlock_km]",
+          "sampled_period": 14662565114,
+          "samples": 858,
+          "symbol": "kd_mutex_lock_entry",
+          "worker_weight_pct": 42.537960288478416
+        },
+        {
+          "dso": "[kdlock_km]",
+          "sampled_period": 3426225779,
+          "samples": 199,
+          "symbol": "__kd_mutex_lock_slowpath",
+          "worker_weight_pct": 9.939915355417874
+        },
+        {
+          "dso": "[kdlock_km]",
+          "sampled_period": 2715780090,
+          "samples": 160,
+          "symbol": "kd_mutex_local_unlock",
+          "worker_weight_pct": 7.878822342644318
+        },
+        {
+          "dso": "[kdlock_km]",
+          "sampled_period": 2122679508,
+          "samples": 123,
+          "symbol": "kd_local_lock_slow",
+          "worker_weight_pct": 6.15816236207242
+        },
+        {
+          "dso": "[kdlock_km]",
+          "sampled_period": 1307732156,
+          "samples": 76,
+          "symbol": "kd_mutex_wait_and_lock_node",
+          "worker_weight_pct": 3.793896776409177
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 1107320301,
+          "samples": 65,
+          "symbol": "clear_bhb_loop",
+          "worker_weight_pct": 3.212476577211534
+        },
+        {
+          "dso": "[kdlock_km]",
+          "sampled_period": 947262301,
+          "samples": 56,
+          "symbol": "_kd_mutex_lock_abi",
+          "worker_weight_pct": 2.7481280273556563
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 710206493,
+          "samples": 41,
+          "symbol": "syscall_exit_to_user_mode",
+          "worker_weight_pct": 2.0603990748527305
+        },
+        {
+          "dso": "/usr/lib/x86_64-linux-gnu/libc.so.6",
+          "sampled_period": 604390287,
+          "samples": 35,
+          "symbol": "[unknown]",
+          "worker_weight_pct": 1.7534128460647238
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 519265179,
+          "samples": 30,
+          "symbol": "arch_exit_to_user_mode_prepare",
+          "worker_weight_pct": 1.5064541157536806
+        },
+        {
+          "dso": "[unknown]",
+          "sampled_period": 503081798,
+          "samples": 29,
+          "symbol": "[unknown]",
+          "worker_weight_pct": 1.4595040757737037
+        },
+        {
+          "dso": "[real_api]",
+          "sampled_period": 485320885,
+          "samples": 28,
+          "symbol": "rb_redirected",
+          "worker_weight_pct": 1.4079774154651505
+        },
+        {
+          "dso": "[kdlock_km]",
+          "sampled_period": 399035160,
+          "samples": 23,
+          "symbol": "kd_mutex_run_combiner",
+          "worker_weight_pct": 1.1576515880962404
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 364608852,
+          "samples": 21,
+          "symbol": "entry_SYSCALL_64",
+          "worker_weight_pct": 1.0577765040848708
+        },
+        {
+          "dso": "[kdlock_km]",
+          "sampled_period": 359196058,
+          "samples": 21,
+          "symbol": "kd_mutex_local_lock_node",
+          "worker_weight_pct": 1.0420733024669036
+        },
+        {
+          "dso": "[kdlock_km]",
+          "sampled_period": 352239809,
+          "samples": 21,
+          "symbol": "kd_mutex_task_put",
+          "worker_weight_pct": 1.021892342217579
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 324008200,
+          "samples": 19,
+          "symbol": "__fget_light",
+          "worker_weight_pct": 0.9399888653576397
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 277709669,
+          "samples": 16,
+          "symbol": "do_syscall_64",
+          "worker_weight_pct": 0.8056709572848949
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 260404690,
+          "samples": 15,
+          "symbol": "entry_SYSCALL_64_after_hwframe",
+          "worker_weight_pct": 0.7554670193128072
+        },
+        {
+          "dso": "[kdlock_km]",
+          "sampled_period": 260328737,
+          "samples": 15,
+          "symbol": "kd_mutex_osq_lock",
+          "worker_weight_pct": 0.7552466700306271
+        },
+        {
+          "dso": "[real_api]",
+          "sampled_period": 229609126,
+          "samples": 14,
+          "symbol": "rb_entry",
+          "worker_weight_pct": 0.6661251839444167
+        },
+        {
+          "dso": "[kdlock_km]",
+          "sampled_period": 190809204,
+          "samples": 11,
+          "symbol": "kd_mutex_delegation_owned",
+          "worker_weight_pct": 0.5535616912403897
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 173476219,
+          "samples": 10,
+          "symbol": "fput",
+          "worker_weight_pct": 0.5032765043117533
+        },
+        {
+          "dso": "[kdlock_km]",
+          "sampled_period": 138914206,
+          "samples": 8,
+          "symbol": "kd_mutex_execute_cs",
+          "worker_weight_pct": 0.40300772289095593
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 138836674,
+          "samples": 8,
+          "symbol": "do_fcntl",
+          "worker_weight_pct": 0.402782792729593
+        }
+      ],
+      "usable": true,
+      "whole_ops_s": 5329189.290938515,
+      "worker_cpus": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "worker_pids": [
+        3047274
+      ],
+      "worker_sampled_period": 34469365749,
+      "worker_samples": 2011,
+      "worker_tids": [
+        3047301,
+        3047302,
+        3047303,
+        3047304,
+        3047305
+      ],
+      "workload": "pipecap"
+    },
+    {
+      "all_sampled_period": 34352255084,
+      "arm": "native",
+      "categories": {
+        "admission": {
+          "sampled_period": 0,
+          "worker_weight_pct": 0.0
+        },
+        "combine_release": {
+          "sampled_period": 0,
+          "worker_weight_pct": 0.0
+        },
+        "direct_lock_entry": {
+          "sampled_period": 0,
+          "worker_weight_pct": 0.0
+        },
+        "direct_unlock_route": {
+          "sampled_period": 0,
+          "worker_weight_pct": 0.0
+        },
+        "exact_task_identity": {
+          "sampled_period": 0,
+          "worker_weight_pct": 0.0
+        },
+        "physical_mutex": {
+          "sampled_period": 0,
+          "worker_weight_pct": 0.0
+        },
+        "queue": {
+          "sampled_period": 0,
+          "worker_weight_pct": 0.0
+        },
+        "rcu_read_helpers_all_uses": {
+          "sampled_period": 52048975,
+          "worker_weight_pct": 0.15153762053188874
+        },
+        "return_thunk_all_uses": {
+          "sampled_period": 0,
+          "worker_weight_pct": 0.0
+        }
+      },
+      "clock_alignment": "Explicit perf --clockid mono and client CLOCK_MONOTONIC; retain only samples wholly inside the worker CPU active interval, including printed timestamp precision.",
+      "command_periods": {
+        "client": 5025124,
+        "sc_worker": 34347229960
+      },
+      "completed": 10598400,
+      "excluded_worker_period": 0,
+      "excluded_worker_samples": 0,
+      "guest_measurement_seconds": [
+        489525.013163763,
+        489527.013247477
+      ],
+      "hashes": {
+        "kallsyms": "fc7dab8de5d52e280babb504b0b5a86ac6a7c71d025ca58b0839f8804d33674e",
+        "perf-report.txt": "86d9b3b2addefbe60f2a059e382fffd0be13a82cf0552be70abd11807b7d36b8",
+        "perf-samples.txt": "1a23a3a500a56d116160689e4cea82187927c17e49d59391ae117bd908834354",
+        "perf.data": "3719407720c257877b32db2e75315f579679c9475338347aeb00a67aaf1783c4",
+        "session.json": "8d3e0f16ee3771d6c0f8c2ee866295ef6eaa400c25e20ce7535e76a90388bfb1"
+      },
+      "issues": [],
+      "jit_bodies": 0,
+      "jit_completions": 0,
+      "lost_count": [
+        0
+      ],
+      "lost_records": [],
+      "name": "pipecap-t05-r2-native-profile",
+      "parse_errors": [],
+      "perf_timestamp_span": [
+        489525.016329,
+        489527.01001
+      ],
+      "provider_elf_sha256": null,
+      "provider_hot_offsets": [],
+      "repeat": 2,
+      "sampled_period_per_operation": 3240.79388964372,
+      "threads": 5,
+      "tid_to_cpu": {
+        "3047325": 0,
+        "3047326": 1,
+        "3047327": 2,
+        "3047328": 3,
+        "3047329": 4
+      },
+      "top_symbols": [
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 15429109428,
+          "samples": 904,
+          "symbol": "osq_lock",
+          "worker_weight_pct": 44.920971635757496
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 3491224663,
+          "samples": 204,
+          "symbol": "__mutex_lock",
+          "worker_weight_pct": 10.164501379196519
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 3215990423,
+          "samples": 186,
+          "symbol": "mutex_unlock",
+          "worker_weight_pct": 9.363172595709374
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 2936446490,
+          "samples": 175,
+          "symbol": "mutex_lock",
+          "worker_weight_pct": 8.549296386985846
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 1177190136,
+          "samples": 69,
+          "symbol": "syscall_exit_to_user_mode",
+          "worker_weight_pct": 3.4273219044765146
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 969032782,
+          "samples": 56,
+          "symbol": "osq_unlock",
+          "worker_weight_pct": 2.821283646828328
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 865485031,
+          "samples": 50,
+          "symbol": "mutex_spin_on_owner",
+          "worker_weight_pct": 2.5198102787558825
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 846068475,
+          "samples": 49,
+          "symbol": "arch_exit_to_user_mode_prepare",
+          "worker_weight_pct": 2.463280083969834
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 798280711,
+          "samples": 47,
+          "symbol": "__raw_callee_save___kvm_vcpu_is_preempted",
+          "worker_weight_pct": 2.3241487360979605
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 777650902,
+          "samples": 45,
+          "symbol": "clear_bhb_loop",
+          "worker_weight_pct": 2.2640862244368307
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 516995012,
+          "samples": 30,
+          "symbol": "__fget_light",
+          "worker_weight_pct": 1.5052014750595044
+        },
+        {
+          "dso": "[real_api]",
+          "sampled_period": 465000916,
+          "samples": 27,
+          "symbol": "rb_redirected",
+          "worker_weight_pct": 1.3538236316044392
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 346305400,
+          "samples": 20,
+          "symbol": "entry_SYSCALL_64",
+          "worker_weight_pct": 1.008248410143407
+        },
+        {
+          "dso": "/usr/lib/x86_64-linux-gnu/libc.so.6",
+          "sampled_period": 257082750,
+          "samples": 15,
+          "symbol": "[unknown]",
+          "worker_weight_pct": 0.7484817561689624
+        },
+        {
+          "dso": "[unknown]",
+          "sampled_period": 226740285,
+          "samples": 14,
+          "symbol": "[unknown]",
+          "worker_weight_pct": 0.6601414008176396
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 207716957,
+          "samples": 12,
+          "symbol": "fput",
+          "worker_weight_pct": 0.6047560669139911
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 190579753,
+          "samples": 11,
+          "symbol": "entry_SYSCALL_64_after_hwframe",
+          "worker_weight_pct": 0.5548620754044644
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 189766897,
+          "samples": 11,
+          "symbol": "its_return_thunk",
+          "worker_weight_pct": 0.5524954915461835
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 177622371,
+          "samples": 11,
+          "symbol": "__x64_sys_fcntl",
+          "worker_weight_pct": 0.5171373971259253
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 173069649,
+          "samples": 10,
+          "symbol": "ftrace_ops_assist_func",
+          "worker_weight_pct": 0.5038824068245182
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 121561115,
+          "samples": 7,
+          "symbol": "syscall_enter_from_user_mode",
+          "worker_weight_pct": 0.353918249423803
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 120670097,
+          "samples": 7,
+          "symbol": "do_syscall_64",
+          "worker_weight_pct": 0.35132410136284536
+        },
+        {
+          "dso": "[real_api]",
+          "sampled_period": 103992859,
+          "samples": 6,
+          "symbol": "rb_body",
+          "worker_weight_pct": 0.3027692746143072
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 86606503,
+          "samples": 5,
+          "symbol": "fpregs_assert_state_consistent",
+          "worker_weight_pct": 0.2521498912746674
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 86578158,
+          "samples": 5,
+          "symbol": "syscall_return_via_sysret",
+          "worker_weight_pct": 0.25206736642467803
+        }
+      ],
+      "usable": true,
+      "whole_ops_s": 5298978.200669454,
+      "worker_cpus": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "worker_pids": [
+        3047313
+      ],
+      "worker_sampled_period": 34347229960,
+      "worker_samples": 2010,
+      "worker_tids": [
+        3047325,
+        3047326,
+        3047327,
+        3047328,
+        3047329
+      ],
+      "workload": "pipecap"
+    },
+    {
+      "all_sampled_period": 35076204714,
+      "arm": "tclock",
+      "categories": {
+        "admission": {
+          "sampled_period": 0,
+          "worker_weight_pct": 0.0
+        },
+        "combine_release": {
+          "sampled_period": 0,
+          "worker_weight_pct": 0.0
+        },
+        "direct_lock_entry": {
+          "sampled_period": 0,
+          "worker_weight_pct": 0.0
+        },
+        "direct_unlock_route": {
+          "sampled_period": 0,
+          "worker_weight_pct": 0.0
+        },
+        "exact_task_identity": {
+          "sampled_period": 0,
+          "worker_weight_pct": 0.0
+        },
+        "physical_mutex": {
+          "sampled_period": 0,
+          "worker_weight_pct": 0.0
+        },
+        "queue": {
+          "sampled_period": 0,
+          "worker_weight_pct": 0.0
+        },
+        "rcu_read_helpers_all_uses": {
+          "sampled_period": 17687158,
+          "worker_weight_pct": 0.05043217310273538
+        },
+        "return_thunk_all_uses": {
+          "sampled_period": 0,
+          "worker_weight_pct": 0.0
+        }
+      },
+      "clock_alignment": "Explicit perf --clockid mono and client CLOCK_MONOTONIC; retain only samples wholly inside the worker CPU active interval, including printed timestamp precision.",
+      "command_periods": {
+        "client": 5025124,
+        "sc_worker": 35071179590
+      },
+      "completed": 4481536,
+      "excluded_worker_period": 0,
+      "excluded_worker_samples": 0,
+      "guest_measurement_seconds": [
+        489530.452776649,
+        489532.45290324
+      ],
+      "hashes": {
+        "kallsyms": "78a5925cf46296f25002c60c41d41a0ecf3164d2726a08bdade7cb29369bc035",
+        "perf-report.txt": "3485a8f5ed4f7a2cb497f010a10e2616347e50c885bdf3afec7d3da172c621fe",
+        "perf-samples.txt": "4fd0257f5eddee715b896be77ecfd7ba1afc36f794da5c09cefd2584b1ed7b82",
+        "perf.data": "6aae5822c2581085e45c9ea571a43cad8e2411102fd7254f49d34664e59e86cc",
+        "session.json": "75d066e3f31aae8c46ce76fdb9aabf1e46ac6d769b15ea586e1f4d7d5aecada4"
+      },
+      "issues": [],
+      "jit_bodies": 0,
+      "jit_completions": 0,
+      "lost_count": [
+        0
+      ],
+      "lost_records": [],
+      "name": "pipecap-t05-r2-tclock-profile",
+      "parse_errors": [],
+      "perf_timestamp_span": [
+        489530.455843,
+        489532.452557
+      ],
+      "provider_elf_sha256": null,
+      "provider_hot_offsets": [],
+      "repeat": 2,
+      "sampled_period_per_operation": 7825.705202412744,
+      "threads": 5,
+      "tid_to_cpu": {
+        "3047348": 0,
+        "3047349": 1,
+        "3047350": 2,
+        "3047351": 3,
+        "3047352": 4
+      },
+      "top_symbols": [
+        {
+          "dso": "[tclock_mutex_backend_km]",
+          "sampled_period": 24388522036,
+          "samples": 1392,
+          "symbol": "__komb_mutex_lock_slowpath",
+          "worker_weight_pct": 69.54006771689541
+        },
+        {
+          "dso": "[tclock_mutex_backend_km]",
+          "sampled_period": 3068785488,
+          "samples": 176,
+          "symbol": "komb_mutex_lock",
+          "worker_weight_pct": 8.750163307523925
+        },
+        {
+          "dso": "[tclock_mutex_backend_km]",
+          "sampled_period": 1772843487,
+          "samples": 103,
+          "symbol": "komb_mutex_unlock",
+          "worker_weight_pct": 5.0549867661294705
+        },
+        {
+          "dso": "[real_api]",
+          "sampled_period": 1139462226,
+          "samples": 70,
+          "symbol": "redirect",
+          "worker_weight_pct": 3.248998862658443
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 882120240,
+          "samples": 51,
+          "symbol": "fput",
+          "worker_weight_pct": 2.5152283165620206
+        },
+        {
+          "dso": "[tclock_mutex_backend_km]",
+          "sampled_period": 565078254,
+          "samples": 32,
+          "symbol": "run_combiner",
+          "worker_weight_pct": 1.6112325294046377
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 529062776,
+          "samples": 31,
+          "symbol": "clear_bhb_loop",
+          "worker_weight_pct": 1.5085400097316772
+        },
+        {
+          "dso": "[tclock_mutex_backend_km]",
+          "sampled_period": 300396068,
+          "samples": 17,
+          "symbol": "execute_cs",
+          "worker_weight_pct": 0.8565325475555241
+        },
+        {
+          "dso": "[tclock_mutex_backend_km]",
+          "sampled_period": 281367891,
+          "samples": 16,
+          "symbol": "__komb_mutex_lock",
+          "worker_weight_pct": 0.8022766678775403
+        },
+        {
+          "dso": "/usr/lib/x86_64-linux-gnu/libc.so.6",
+          "sampled_period": 245571436,
+          "samples": 14,
+          "symbol": "[unknown]",
+          "worker_weight_pct": 0.7002086581371243
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 226607645,
+          "samples": 13,
+          "symbol": "arch_exit_to_user_mode_prepare",
+          "worker_weight_pct": 0.6461363650985199
+        },
+        {
+          "dso": "[unknown]",
+          "sampled_period": 202160565,
+          "samples": 12,
+          "symbol": "[unknown]",
+          "worker_weight_pct": 0.5764293284781414
+        },
+        {
+          "dso": "[tclock_mutex_backend_km]",
+          "sampled_period": 176595503,
+          "samples": 10,
+          "symbol": "komb_context_switch",
+          "worker_weight_pct": 0.5035345405101613
+        },
+        {
+          "dso": "[real_api]",
+          "sampled_period": 174333418,
+          "samples": 10,
+          "symbol": "rb_redirected",
+          "worker_weight_pct": 0.4970845578564699
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 158812041,
+          "samples": 9,
+          "symbol": "__fget_light",
+          "worker_weight_pct": 0.4528277715679765
+        },
+        {
+          "dso": "[tclock_mutex_backend_km]",
+          "sampled_period": 141304683,
+          "samples": 8,
+          "symbol": "get_komb_mutex_node",
+          "worker_weight_pct": 0.402908270129274
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 108644480,
+          "samples": 7,
+          "symbol": "do_syscall_64",
+          "worker_weight_pct": 0.30978279393538927
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 106079075,
+          "samples": 6,
+          "symbol": "ftrace_ops_assist_func",
+          "worker_weight_pct": 0.3024679415979689
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 106051292,
+          "samples": 6,
+          "symbol": "entry_SYSCALL_64",
+          "worker_weight_pct": 0.302388722705634
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 88414491,
+          "samples": 5,
+          "symbol": "syscall_exit_to_user_mode",
+          "worker_weight_pct": 0.2521001347363007
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 70708538,
+          "samples": 4,
+          "symbol": "entry_SYSCALL_64_after_hwframe",
+          "worker_weight_pct": 0.2016143706217439
+        },
+        {
+          "dso": "[real_api]",
+          "sampled_period": 53023175,
+          "samples": 3,
+          "symbol": "rb_body",
+          "worker_weight_pct": 0.15118731568161664
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 35354343,
+          "samples": 2,
+          "symbol": "syscall_return_via_sysret",
+          "worker_weight_pct": 0.10080739631033322
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 35351883,
+          "samples": 2,
+          "symbol": "__x64_sys_fcntl",
+          "worker_weight_pct": 0.10080038200391765
+        },
+        {
+          "dso": "/lib/modules/6.1.159-kdclobber2/build/vmlinux",
+          "sampled_period": 35344910,
+          "samples": 2,
+          "symbol": "syscall_enter_from_user_mode",
+          "worker_weight_pct": 0.10078049958170797
+        }
+      ],
+      "usable": true,
+      "whole_ops_s": 2240626.178445722,
+      "worker_cpus": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "worker_pids": [
+        3047335
+      ],
+      "worker_sampled_period": 35071179590,
+      "worker_samples": 2012,
+      "worker_tids": [
+        3047348,
+        3047349,
+        3047350,
+        3047351,
+        3047352
+      ],
+      "workload": "pipecap"
+    }
+  ],
+  "symbol_sizes_sha256": "5af7bd091eb6c7a219230dad58ba798aa767660a516628b03f49791d099c3ebe",
+  "usable": 12
+}

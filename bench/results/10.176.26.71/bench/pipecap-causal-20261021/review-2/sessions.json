@@ -1,0 +1,2504 @@
+[
+  {
+    "arm": "native",
+    "completed": 8544256,
+    "execution_class": "CONTROL",
+    "jit_bodies": 0,
+    "jit_completions": 0,
+    "mode": "plain",
+    "name": "pipecap-t05-r0-native-plain",
+    "observation_ns": null,
+    "peak_ops_s": 4367355.006657442,
+    "repeat": 0,
+    "returned_fraction": 0.0,
+    "route": null,
+    "run": "run-1",
+    "timings": null,
+    "whole_ops_s": 4271972.455346915
+  },
+  {
+    "arm": "tclock",
+    "completed": 4532992,
+    "execution_class": "CONTROL",
+    "jit_bodies": 0,
+    "jit_completions": 0,
+    "mode": "plain",
+    "name": "pipecap-t05-r0-tclock-plain",
+    "observation_ns": null,
+    "peak_ops_s": 2274084.1979540964,
+    "repeat": 0,
+    "returned_fraction": 0.0,
+    "route": null,
+    "run": "run-1",
+    "timings": null,
+    "whole_ops_s": 2266278.0713012465
+  },
+  {
+    "arm": "baseline-kd",
+    "completed": 34849536,
+    "execution_class": "RETURNED_JIT",
+    "jit_bodies": 53362,
+    "jit_completions": 53362,
+    "mode": "plain",
+    "name": "pipecap-t05-r0-baseline-kd-plain",
+    "observation_ns": null,
+    "peak_ops_s": 20359581.52749068,
+    "repeat": 0,
+    "returned_fraction": 0.0015312112046484635,
+    "route": null,
+    "run": "run-1",
+    "timings": null,
+    "whole_ops_s": 17424346.644449443
+  },
+  {
+    "arm": "public-kd",
+    "completed": 9327872,
+    "execution_class": "RETURNED_JIT",
+    "jit_bodies": 1476250,
+    "jit_completions": 1476250,
+    "mode": "plain",
+    "name": "pipecap-t05-r0-public-kd-plain",
+    "observation_ns": null,
+    "peak_ops_s": 4678587.902730698,
+    "repeat": 0,
+    "returned_fraction": 0.15826224888163132,
+    "route": null,
+    "run": "run-1",
+    "timings": null,
+    "whole_ops_s": 4663800.521258658
+  },
+  {
+    "arm": "native",
+    "completed": 8618496,
+    "execution_class": "CONTROL",
+    "jit_bodies": 0,
+    "jit_completions": 0,
+    "mode": "counts",
+    "name": "pipecap-t05-r0-native-counts",
+    "observation_ns": null,
+    "peak_ops_s": 4331339.245888392,
+    "repeat": 0,
+    "returned_fraction": 0.0,
+    "route": null,
+    "run": "run-1",
+    "timings": null,
+    "whole_ops_s": 4308843.888612641
+  },
+  {
+    "arm": "tclock",
+    "completed": 4721664,
+    "execution_class": "CONTROL",
+    "jit_bodies": 0,
+    "jit_completions": 0,
+    "mode": "counts",
+    "name": "pipecap-t05-r0-tclock-counts",
+    "observation_ns": null,
+    "peak_ops_s": 2370819.565088335,
+    "repeat": 0,
+    "returned_fraction": 0.0,
+    "route": null,
+    "run": "run-1",
+    "timings": null,
+    "whole_ops_s": 2360545.9832656644
+  },
+  {
+    "arm": "native",
+    "completed": 8457216,
+    "execution_class": "CONTROL",
+    "jit_bodies": 0,
+    "jit_completions": 0,
+    "mode": "plain",
+    "name": "pipecap-t05-r0-native-plain",
+    "observation_ns": null,
+    "peak_ops_s": 4333163.1863187365,
+    "repeat": 0,
+    "returned_fraction": 0.0,
+    "route": null,
+    "run": "run-2",
+    "timings": null,
+    "whole_ops_s": 4228452.485974471
+  },
+  {
+    "arm": "tclock",
+    "completed": 4790272,
+    "execution_class": "CONTROL",
+    "jit_bodies": 0,
+    "jit_completions": 0,
+    "mode": "plain",
+    "name": "pipecap-t05-r0-tclock-plain",
+    "observation_ns": null,
+    "peak_ops_s": 2403699.7280962006,
+    "repeat": 0,
+    "returned_fraction": 0.0,
+    "route": null,
+    "run": "run-2",
+    "timings": null,
+    "whole_ops_s": 2394915.8389792964
+  },
+  {
+    "arm": "baseline-kd",
+    "completed": 32779264,
+    "execution_class": "RETURNED_JIT",
+    "jit_bodies": 33934,
+    "jit_completions": 33934,
+    "mode": "plain",
+    "name": "pipecap-t05-r0-baseline-kd-plain",
+    "observation_ns": null,
+    "peak_ops_s": 18751460.131242532,
+    "repeat": 0,
+    "returned_fraction": 0.001035227636593671,
+    "route": null,
+    "run": "run-2",
+    "timings": null,
+    "whole_ops_s": 16389139.49816351
+  },
+  {
+    "arm": "public-kd",
+    "completed": 9736960,
+    "execution_class": "RETURNED_JIT",
+    "jit_bodies": 1115908,
+    "jit_completions": 1115908,
+    "mode": "plain",
+    "name": "pipecap-t05-r0-public-kd-plain",
+    "observation_ns": null,
+    "peak_ops_s": 4878694.926398301,
+    "repeat": 0,
+    "returned_fraction": 0.11460537991323781,
+    "route": null,
+    "run": "run-2",
+    "timings": null,
+    "whole_ops_s": 4868292.728949449
+  },
+  {
+    "arm": "native",
+    "completed": 8322048,
+    "execution_class": "CONTROL",
+    "jit_bodies": 0,
+    "jit_completions": 0,
+    "mode": "counts",
+    "name": "pipecap-t05-r0-native-counts",
+    "observation_ns": null,
+    "peak_ops_s": 4173990.191033729,
+    "repeat": 0,
+    "returned_fraction": 0.0,
+    "route": null,
+    "run": "run-2",
+    "timings": null,
+    "whole_ops_s": 4160805.855190221
+  },
+  {
+    "arm": "tclock",
+    "completed": 4350208,
+    "execution_class": "CONTROL",
+    "jit_bodies": 0,
+    "jit_completions": 0,
+    "mode": "counts",
+    "name": "pipecap-t05-r0-tclock-counts",
+    "observation_ns": null,
+    "peak_ops_s": 2182774.3164626434,
+    "repeat": 0,
+    "returned_fraction": 0.0,
+    "route": null,
+    "run": "run-2",
+    "timings": null,
+    "whole_ops_s": 2174892.999493315
+  },
+  {
+    "arm": "baseline-kd",
+    "completed": 35927296,
+    "execution_class": "RETURNED_JIT",
+    "jit_bodies": 20543,
+    "jit_completions": 20543,
+    "mode": "counts",
+    "name": "pipecap-t05-r0-baseline-kd-counts",
+    "observation_ns": {
+      "after": 6499770,
+      "before": 3377549
+    },
+    "peak_ops_s": 19694299.899000917,
+    "repeat": 0,
+    "returned_fraction": 0.000571793657947428,
+    "route": {
+      "counters": {
+        "kd_bench_bodies": 20543,
+        "kd_bench_completions": 20543,
+        "kd_hotlock_mutex_checks": 170,
+        "kd_mutex_active_waiters": 0,
+        "kd_mutex_combiner_count": 5185,
+        "kd_mutex_context_busy_count": 0,
+        "kd_mutex_frame_failure_count": 0,
+        "kd_mutex_handoff_count": 0,
+        "kd_mutex_jit_failure_count": 0,
+        "kd_mutex_jit_not_ready_count": 0,
+        "kd_mutex_jit_resume_count": 20543,
+        "kd_mutex_jit_success_count": 20543,
+        "kd_mutex_multi_slot_count": 0,
+        "kd_mutex_nested_abort_release_count": 0,
+        "kd_mutex_nested_fast_count": 0,
+        "kd_mutex_nested_jit_count": 0,
+        "kd_mutex_nested_lock_count": 0,
+        "kd_mutex_nested_queued_count": 0,
+        "kd_mutex_nested_unlock_count": 0,
+        "kd_mutex_node_overflow_count": 0,
+        "kd_mutex_origin_acquires": 99053,
+        "kd_mutex_origin_releases": 99053,
+        "kd_mutex_reserved_nodes": 0,
+        "kd_mutex_slowpath_count": 40091,
+        "kd_mutex_task_failures": 0,
+        "kd_mutex_task_reroutes": 99053
+      },
+      "native": {
+        "kd_native_completed": 0,
+        "kd_native_started": 0,
+        "kd_native_unlocks": 0
+      }
+    },
+    "run": "run-2",
+    "timings": {
+      "control": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "dispatch": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "hostcall": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "mutex_queue": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "native_mutex_handoff": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "native_mutex_wait": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "native_spin_handoff": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "native_spin_wait": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "spin_queue": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "wrapper": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      }
+    },
+    "whole_ops_s": 17963034.813843593
+  },
+  {
+    "arm": "public-kd",
+    "completed": 9729280,
+    "execution_class": "RETURNED_JIT",
+    "jit_bodies": 1120022,
+    "jit_completions": 1120022,
+    "mode": "counts",
+    "name": "pipecap-t05-r0-public-kd-counts",
+    "observation_ns": {
+      "after": 6705526,
+      "before": 3412697
+    },
+    "peak_ops_s": 4878544.908978424,
+    "repeat": 0,
+    "returned_fraction": 0.11511869326404421,
+    "route": {
+      "counters": {
+        "kd_bench_bodies": 1120022,
+        "kd_bench_completions": 1120022,
+        "kd_hotlock_mutex_checks": 2073,
+        "kd_mutex_active_waiters": 0,
+        "kd_mutex_combiner_count": 285866,
+        "kd_mutex_context_busy_count": 0,
+        "kd_mutex_frame_failure_count": 0,
+        "kd_mutex_handoff_count": 0,
+        "kd_mutex_jit_failure_count": 0,
+        "kd_mutex_jit_not_ready_count": 0,
+        "kd_mutex_jit_resume_count": 1120022,
+        "kd_mutex_jit_success_count": 1120022,
+        "kd_mutex_multi_slot_count": 0,
+        "kd_mutex_nested_abort_release_count": 0,
+        "kd_mutex_nested_fast_count": 0,
+        "kd_mutex_nested_jit_count": 0,
+        "kd_mutex_nested_lock_count": 0,
+        "kd_mutex_nested_queued_count": 0,
+        "kd_mutex_nested_unlock_count": 0,
+        "kd_mutex_node_overflow_count": 0,
+        "kd_mutex_origin_acquires": 1002721,
+        "kd_mutex_origin_releases": 1002721,
+        "kd_mutex_reserved_nodes": 0,
+        "kd_mutex_slowpath_count": 1564439,
+        "kd_mutex_task_failures": 0,
+        "kd_mutex_task_reroutes": 1002721
+      },
+      "native": {
+        "kd_native_completed": 0,
+        "kd_native_started": 0,
+        "kd_native_unlocks": 0
+      }
+    },
+    "run": "run-2",
+    "timings": {
+      "control": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "dispatch": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "hostcall": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "mutex_queue": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "native_mutex_handoff": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "native_mutex_wait": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "native_spin_handoff": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "native_spin_wait": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "spin_queue": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "wrapper": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      }
+    },
+    "whole_ops_s": 4864186.3659795085
+  },
+  {
+    "arm": "native",
+    "completed": 8179968,
+    "execution_class": "CONTROL",
+    "jit_bodies": 0,
+    "jit_completions": 0,
+    "mode": "profile",
+    "name": "pipecap-t05-r0-native-profile",
+    "observation_ns": null,
+    "peak_ops_s": 4125956.4390055384,
+    "repeat": 0,
+    "returned_fraction": 0.0,
+    "route": null,
+    "run": "run-2",
+    "timings": null,
+    "whole_ops_s": 4089626.458272446
+  },
+  {
+    "arm": "tclock",
+    "completed": 4521472,
+    "execution_class": "CONTROL",
+    "jit_bodies": 0,
+    "jit_completions": 0,
+    "mode": "profile",
+    "name": "pipecap-t05-r0-tclock-profile",
+    "observation_ns": null,
+    "peak_ops_s": 2283361.199839755,
+    "repeat": 0,
+    "returned_fraction": 0.0,
+    "route": null,
+    "run": "run-2",
+    "timings": null,
+    "whole_ops_s": 2260535.456596968
+  },
+  {
+    "arm": "baseline-kd",
+    "completed": 39181568,
+    "execution_class": "NO_JIT",
+    "jit_bodies": 0,
+    "jit_completions": 0,
+    "mode": "profile",
+    "name": "pipecap-t05-r0-baseline-kd-profile",
+    "observation_ns": {
+      "after": 5228283,
+      "before": 4709420
+    },
+    "peak_ops_s": 20090043.91933889,
+    "repeat": 0,
+    "returned_fraction": 0.0,
+    "route": {
+      "counters": {
+        "kd_bench_bodies": 0,
+        "kd_bench_completions": 0,
+        "kd_hotlock_mutex_checks": 38,
+        "kd_mutex_active_waiters": 0,
+        "kd_mutex_combiner_count": 0,
+        "kd_mutex_context_busy_count": 0,
+        "kd_mutex_frame_failure_count": 0,
+        "kd_mutex_handoff_count": 0,
+        "kd_mutex_jit_failure_count": 0,
+        "kd_mutex_jit_not_ready_count": 0,
+        "kd_mutex_jit_resume_count": 0,
+        "kd_mutex_jit_success_count": 0,
+        "kd_mutex_multi_slot_count": 0,
+        "kd_mutex_nested_abort_release_count": 0,
+        "kd_mutex_nested_fast_count": 0,
+        "kd_mutex_nested_jit_count": 0,
+        "kd_mutex_nested_lock_count": 0,
+        "kd_mutex_nested_queued_count": 0,
+        "kd_mutex_nested_unlock_count": 0,
+        "kd_mutex_node_overflow_count": 0,
+        "kd_mutex_origin_acquires": 0,
+        "kd_mutex_origin_releases": 0,
+        "kd_mutex_reserved_nodes": 0,
+        "kd_mutex_slowpath_count": 0,
+        "kd_mutex_task_failures": 0,
+        "kd_mutex_task_reroutes": 0
+      },
+      "native": {
+        "kd_native_completed": 0,
+        "kd_native_started": 0,
+        "kd_native_unlocks": 0
+      }
+    },
+    "run": "run-2",
+    "timings": {
+      "control": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "dispatch": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "hostcall": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "mutex_queue": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "native_mutex_handoff": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "native_mutex_wait": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "native_spin_handoff": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "native_spin_wait": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "spin_queue": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "wrapper": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      }
+    },
+    "whole_ops_s": 19590177.860306825
+  },
+  {
+    "arm": "public-kd",
+    "completed": 10903808,
+    "execution_class": "RETURNED_JIT",
+    "jit_bodies": 1163315,
+    "jit_completions": 1163315,
+    "mode": "profile",
+    "name": "pipecap-t05-r0-public-kd-profile",
+    "observation_ns": {
+      "after": 5738609,
+      "before": 4902445
+    },
+    "peak_ops_s": 5450113.884364716,
+    "repeat": 0,
+    "returned_fraction": 0.10668887419881201,
+    "route": {
+      "counters": {
+        "kd_bench_bodies": 1163315,
+        "kd_bench_completions": 1163315,
+        "kd_hotlock_mutex_checks": 2267,
+        "kd_mutex_active_waiters": 0,
+        "kd_mutex_combiner_count": 296428,
+        "kd_mutex_context_busy_count": 0,
+        "kd_mutex_frame_failure_count": 0,
+        "kd_mutex_handoff_count": 0,
+        "kd_mutex_jit_failure_count": 0,
+        "kd_mutex_jit_not_ready_count": 0,
+        "kd_mutex_jit_resume_count": 1163315,
+        "kd_mutex_jit_success_count": 1163315,
+        "kd_mutex_multi_slot_count": 0,
+        "kd_mutex_nested_abort_release_count": 0,
+        "kd_mutex_nested_fast_count": 0,
+        "kd_mutex_nested_jit_count": 0,
+        "kd_mutex_nested_lock_count": 0,
+        "kd_mutex_nested_queued_count": 0,
+        "kd_mutex_nested_unlock_count": 0,
+        "kd_mutex_node_overflow_count": 0,
+        "kd_mutex_origin_acquires": 1157571,
+        "kd_mutex_origin_releases": 1157571,
+        "kd_mutex_reserved_nodes": 0,
+        "kd_mutex_slowpath_count": 1648891,
+        "kd_mutex_task_failures": 0,
+        "kd_mutex_task_reroutes": 1157571
+      },
+      "native": {
+        "kd_native_completed": 0,
+        "kd_native_started": 0,
+        "kd_native_unlocks": 0
+      }
+    },
+    "run": "run-2",
+    "timings": {
+      "control": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "dispatch": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "hostcall": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "mutex_queue": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "native_mutex_handoff": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "native_mutex_wait": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "native_spin_handoff": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "native_spin_wait": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "spin_queue": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "wrapper": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      }
+    },
+    "whole_ops_s": 5451608.770852819
+  },
+  {
+    "arm": "native",
+    "completed": 8616448,
+    "execution_class": "CONTROL",
+    "jit_bodies": 0,
+    "jit_completions": 0,
+    "mode": "timing",
+    "name": "pipecap-t05-r0-native-timing",
+    "observation_ns": null,
+    "peak_ops_s": 4345044.966221548,
+    "repeat": 0,
+    "returned_fraction": 0.0,
+    "route": null,
+    "run": "run-2",
+    "timings": null,
+    "whole_ops_s": 4307857.8686979525
+  },
+  {
+    "arm": "tclock",
+    "completed": 4295424,
+    "execution_class": "CONTROL",
+    "jit_bodies": 0,
+    "jit_completions": 0,
+    "mode": "timing",
+    "name": "pipecap-t05-r0-tclock-timing",
+    "observation_ns": null,
+    "peak_ops_s": 2156285.019086568,
+    "repeat": 0,
+    "returned_fraction": 0.0,
+    "route": null,
+    "run": "run-2",
+    "timings": null,
+    "whole_ops_s": 2147438.3562251427
+  },
+  {
+    "arm": "baseline-kd",
+    "completed": 41076224,
+    "execution_class": "NO_JIT",
+    "jit_bodies": 0,
+    "jit_completions": 0,
+    "mode": "timing",
+    "name": "pipecap-t05-r0-baseline-kd-timing",
+    "observation_ns": {
+      "after": 6121123,
+      "before": 3142187
+    },
+    "peak_ops_s": 20639426.155387405,
+    "repeat": 0,
+    "returned_fraction": 0.0,
+    "route": {
+      "counters": {
+        "kd_bench_bodies": 0,
+        "kd_bench_completions": 0,
+        "kd_hotlock_mutex_checks": 5,
+        "kd_mutex_active_waiters": 0,
+        "kd_mutex_combiner_count": 0,
+        "kd_mutex_context_busy_count": 0,
+        "kd_mutex_frame_failure_count": 0,
+        "kd_mutex_handoff_count": 0,
+        "kd_mutex_jit_failure_count": 0,
+        "kd_mutex_jit_not_ready_count": 0,
+        "kd_mutex_jit_resume_count": 0,
+        "kd_mutex_jit_success_count": 0,
+        "kd_mutex_multi_slot_count": 0,
+        "kd_mutex_nested_abort_release_count": 0,
+        "kd_mutex_nested_fast_count": 0,
+        "kd_mutex_nested_jit_count": 0,
+        "kd_mutex_nested_lock_count": 0,
+        "kd_mutex_nested_queued_count": 0,
+        "kd_mutex_nested_unlock_count": 0,
+        "kd_mutex_node_overflow_count": 0,
+        "kd_mutex_origin_acquires": 0,
+        "kd_mutex_origin_releases": 0,
+        "kd_mutex_reserved_nodes": 0,
+        "kd_mutex_slowpath_count": 0,
+        "kd_mutex_task_failures": 0,
+        "kd_mutex_task_reroutes": 0
+      },
+      "native": {
+        "kd_native_completed": 0,
+        "kd_native_started": 0,
+        "kd_native_unlocks": 0
+      }
+    },
+    "run": "run-2",
+    "timings": {
+      "control": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "dispatch": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "hostcall": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "mutex_queue": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "native_mutex_handoff": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "native_mutex_wait": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "native_spin_handoff": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "native_spin_wait": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "spin_queue": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "wrapper": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      }
+    },
+    "whole_ops_s": 20537606.579770874
+  },
+  {
+    "arm": "public-kd",
+    "completed": 4686336,
+    "execution_class": "RETURNED_JIT",
+    "jit_bodies": 4620221,
+    "jit_completions": 4620221,
+    "mode": "timing",
+    "name": "pipecap-t05-r0-public-kd-timing",
+    "observation_ns": {
+      "after": 6809986,
+      "before": 3236041
+    },
+    "peak_ops_s": 2351932.327082104,
+    "repeat": 0,
+    "returned_fraction": 0.985891963359008,
+    "route": {
+      "counters": {
+        "kd_bench_bodies": 4620221,
+        "kd_bench_completions": 4620221,
+        "kd_hotlock_mutex_checks": 4524,
+        "kd_mutex_active_waiters": 0,
+        "kd_mutex_combiner_count": 6167,
+        "kd_mutex_context_busy_count": 0,
+        "kd_mutex_frame_failure_count": 0,
+        "kd_mutex_handoff_count": 0,
+        "kd_mutex_jit_failure_count": 0,
+        "kd_mutex_jit_not_ready_count": 0,
+        "kd_mutex_jit_resume_count": 4620221,
+        "kd_mutex_jit_success_count": 4620221,
+        "kd_mutex_multi_slot_count": 0,
+        "kd_mutex_nested_abort_release_count": 0,
+        "kd_mutex_nested_fast_count": 0,
+        "kd_mutex_nested_jit_count": 0,
+        "kd_mutex_nested_lock_count": 0,
+        "kd_mutex_nested_queued_count": 0,
+        "kd_mutex_nested_unlock_count": 0,
+        "kd_mutex_node_overflow_count": 0,
+        "kd_mutex_origin_acquires": 11344,
+        "kd_mutex_origin_releases": 11344,
+        "kd_mutex_reserved_nodes": 0,
+        "kd_mutex_slowpath_count": 4628022,
+        "kd_mutex_task_failures": 0,
+        "kd_mutex_task_reroutes": 11344
+      },
+      "native": {
+        "kd_native_completed": 0,
+        "kd_native_started": 0,
+        "kd_native_unlocks": 0
+      }
+    },
+    "run": "run-2",
+    "timings": {
+      "control": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "dispatch": {
+        "mean_ns": 185.2468351622141,
+        "ns": 855881318,
+        "samples": 4620221
+      },
+      "hostcall": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "mutex_queue": {
+        "mean_ns": 769.9562020232402,
+        "ns": 3563374242,
+        "samples": 4628022
+      },
+      "native_mutex_handoff": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "native_mutex_wait": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "native_spin_handoff": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "native_spin_wait": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "spin_queue": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "wrapper": {
+        "mean_ns": 31.519141183939038,
+        "ns": 145625398,
+        "samples": 4620221
+      }
+    },
+    "whole_ops_s": 2342761.4137566425
+  },
+  {
+    "arm": "tclock",
+    "completed": 4391168,
+    "execution_class": "CONTROL",
+    "jit_bodies": 0,
+    "jit_completions": 0,
+    "mode": "counts",
+    "name": "pipecap-t05-r1-tclock-counts",
+    "observation_ns": null,
+    "peak_ops_s": 2202443.17272883,
+    "repeat": 1,
+    "returned_fraction": 0.0,
+    "route": null,
+    "run": "run-2",
+    "timings": null,
+    "whole_ops_s": 2195370.932664872
+  },
+  {
+    "arm": "baseline-kd",
+    "completed": 15062528,
+    "execution_class": "RETURNED_JIT",
+    "jit_bodies": 266864,
+    "jit_completions": 266864,
+    "mode": "counts",
+    "name": "pipecap-t05-r1-baseline-kd-counts",
+    "observation_ns": {
+      "after": 4923120,
+      "before": 3130551
+    },
+    "peak_ops_s": 7569302.0667578215,
+    "repeat": 1,
+    "returned_fraction": 0.017717079098541758,
+    "route": {
+      "counters": {
+        "kd_bench_bodies": 266864,
+        "kd_bench_completions": 266864,
+        "kd_hotlock_mutex_checks": 1234,
+        "kd_mutex_active_waiters": 0,
+        "kd_mutex_combiner_count": 68884,
+        "kd_mutex_context_busy_count": 0,
+        "kd_mutex_frame_failure_count": 0,
+        "kd_mutex_handoff_count": 0,
+        "kd_mutex_jit_failure_count": 0,
+        "kd_mutex_jit_not_ready_count": 0,
+        "kd_mutex_jit_resume_count": 266864,
+        "kd_mutex_jit_success_count": 266864,
+        "kd_mutex_multi_slot_count": 0,
+        "kd_mutex_nested_abort_release_count": 0,
+        "kd_mutex_nested_fast_count": 0,
+        "kd_mutex_nested_jit_count": 0,
+        "kd_mutex_nested_lock_count": 0,
+        "kd_mutex_nested_queued_count": 0,
+        "kd_mutex_nested_unlock_count": 0,
+        "kd_mutex_node_overflow_count": 0,
+        "kd_mutex_origin_acquires": 997645,
+        "kd_mutex_origin_releases": 997645,
+        "kd_mutex_reserved_nodes": 0,
+        "kd_mutex_slowpath_count": 509574,
+        "kd_mutex_task_failures": 0,
+        "kd_mutex_task_reroutes": 997645
+      },
+      "native": {
+        "kd_native_completed": 0,
+        "kd_native_started": 0,
+        "kd_native_unlocks": 0
+      }
+    },
+    "run": "run-2",
+    "timings": {
+      "control": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "dispatch": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "hostcall": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "mutex_queue": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "native_mutex_handoff": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "native_mutex_wait": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "native_spin_handoff": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "native_spin_wait": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "spin_queue": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "wrapper": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      }
+    },
+    "whole_ops_s": 7531002.922721678
+  },
+  {
+    "arm": "public-kd",
+    "completed": 11148288,
+    "execution_class": "RETURNED_JIT",
+    "jit_bodies": 898488,
+    "jit_completions": 898488,
+    "mode": "counts",
+    "name": "pipecap-t05-r1-public-kd-counts",
+    "observation_ns": {
+      "after": 6489611,
+      "before": 4797534
+    },
+    "peak_ops_s": 5584636.817170849,
+    "repeat": 1,
+    "returned_fraction": 0.08059425806007164,
+    "route": {
+      "counters": {
+        "kd_bench_bodies": 898488,
+        "kd_bench_completions": 898488,
+        "kd_hotlock_mutex_checks": 1983,
+        "kd_mutex_active_waiters": 0,
+        "kd_mutex_combiner_count": 229459,
+        "kd_mutex_context_busy_count": 0,
+        "kd_mutex_frame_failure_count": 0,
+        "kd_mutex_handoff_count": 0,
+        "kd_mutex_jit_failure_count": 0,
+        "kd_mutex_jit_not_ready_count": 0,
+        "kd_mutex_jit_resume_count": 898488,
+        "kd_mutex_jit_success_count": 898488,
+        "kd_mutex_multi_slot_count": 0,
+        "kd_mutex_nested_abort_release_count": 0,
+        "kd_mutex_nested_fast_count": 0,
+        "kd_mutex_nested_jit_count": 0,
+        "kd_mutex_nested_lock_count": 0,
+        "kd_mutex_nested_queued_count": 0,
+        "kd_mutex_nested_unlock_count": 0,
+        "kd_mutex_node_overflow_count": 0,
+        "kd_mutex_origin_acquires": 1130974,
+        "kd_mutex_origin_releases": 1130974,
+        "kd_mutex_reserved_nodes": 0,
+        "kd_mutex_slowpath_count": 1339873,
+        "kd_mutex_task_failures": 0,
+        "kd_mutex_task_reroutes": 1130974
+      },
+      "native": {
+        "kd_native_completed": 0,
+        "kd_native_started": 0,
+        "kd_native_unlocks": 0
+      }
+    },
+    "run": "run-2",
+    "timings": {
+      "control": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "dispatch": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "hostcall": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "mutex_queue": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "native_mutex_handoff": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "native_mutex_wait": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "native_spin_handoff": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "native_spin_wait": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "spin_queue": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "wrapper": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      }
+    },
+    "whole_ops_s": 5573910.742983228
+  },
+  {
+    "arm": "native",
+    "completed": 9099776,
+    "execution_class": "CONTROL",
+    "jit_bodies": 0,
+    "jit_completions": 0,
+    "mode": "counts",
+    "name": "pipecap-t05-r1-native-counts",
+    "observation_ns": null,
+    "peak_ops_s": 4591525.776172064,
+    "repeat": 1,
+    "returned_fraction": 0.0,
+    "route": null,
+    "run": "run-2",
+    "timings": null,
+    "whole_ops_s": 4549644.650881736
+  },
+  {
+    "arm": "tclock",
+    "completed": 4412928,
+    "execution_class": "CONTROL",
+    "jit_bodies": 0,
+    "jit_completions": 0,
+    "mode": "profile",
+    "name": "pipecap-t05-r1-tclock-profile",
+    "observation_ns": null,
+    "peak_ops_s": 2261331.2001442346,
+    "repeat": 1,
+    "returned_fraction": 0.0,
+    "route": null,
+    "run": "run-2",
+    "timings": null,
+    "whole_ops_s": 2206386.0461746026
+  },
+  {
+    "arm": "baseline-kd",
+    "completed": 12895744,
+    "execution_class": "RETURNED_JIT",
+    "jit_bodies": 501809,
+    "jit_completions": 501809,
+    "mode": "profile",
+    "name": "pipecap-t05-r1-baseline-kd-profile",
+    "observation_ns": {
+      "after": 6893398,
+      "before": 4792607
+    },
+    "peak_ops_s": 6334182.4556882,
+    "repeat": 1,
+    "returned_fraction": 0.03891276067514988,
+    "route": {
+      "counters": {
+        "kd_bench_bodies": 501809,
+        "kd_bench_completions": 501809,
+        "kd_hotlock_mutex_checks": 1635,
+        "kd_mutex_active_waiters": 0,
+        "kd_mutex_combiner_count": 123657,
+        "kd_mutex_context_busy_count": 0,
+        "kd_mutex_frame_failure_count": 0,
+        "kd_mutex_handoff_count": 0,
+        "kd_mutex_jit_failure_count": 0,
+        "kd_mutex_jit_not_ready_count": 0,
+        "kd_mutex_jit_resume_count": 501809,
+        "kd_mutex_jit_success_count": 501809,
+        "kd_mutex_multi_slot_count": 0,
+        "kd_mutex_nested_abort_release_count": 0,
+        "kd_mutex_nested_fast_count": 0,
+        "kd_mutex_nested_jit_count": 0,
+        "kd_mutex_nested_lock_count": 0,
+        "kd_mutex_nested_queued_count": 0,
+        "kd_mutex_nested_unlock_count": 0,
+        "kd_mutex_node_overflow_count": 0,
+        "kd_mutex_origin_acquires": 1172075,
+        "kd_mutex_origin_releases": 1172075,
+        "kd_mutex_reserved_nodes": 0,
+        "kd_mutex_slowpath_count": 844590,
+        "kd_mutex_task_failures": 0,
+        "kd_mutex_task_reroutes": 1172075
+      },
+      "native": {
+        "kd_native_completed": 0,
+        "kd_native_started": 0,
+        "kd_native_unlocks": 0
+      }
+    },
+    "run": "run-2",
+    "timings": {
+      "control": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "dispatch": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "hostcall": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "mutex_queue": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "native_mutex_handoff": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "native_mutex_wait": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "native_spin_handoff": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "native_spin_wait": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "spin_queue": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "wrapper": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      }
+    },
+    "whole_ops_s": 6447706.722709724
+  },
+  {
+    "arm": "public-kd",
+    "completed": 9945856,
+    "execution_class": "RETURNED_JIT",
+    "jit_bodies": 1286780,
+    "jit_completions": 1286780,
+    "mode": "profile",
+    "name": "pipecap-t05-r1-public-kd-profile",
+    "observation_ns": {
+      "after": 5901968,
+      "before": 6349299
+    },
+    "peak_ops_s": 4973887.477395375,
+    "repeat": 1,
+    "returned_fraction": 0.1293785069882371,
+    "route": {
+      "counters": {
+        "kd_bench_bodies": 1286780,
+        "kd_bench_completions": 1286780,
+        "kd_hotlock_mutex_checks": 2278,
+        "kd_mutex_active_waiters": 0,
+        "kd_mutex_combiner_count": 329648,
+        "kd_mutex_context_busy_count": 0,
+        "kd_mutex_frame_failure_count": 0,
+        "kd_mutex_handoff_count": 0,
+        "kd_mutex_jit_failure_count": 0,
+        "kd_mutex_jit_not_ready_count": 0,
+        "kd_mutex_jit_resume_count": 1286780,
+        "kd_mutex_jit_success_count": 1286780,
+        "kd_mutex_multi_slot_count": 0,
+        "kd_mutex_nested_abort_release_count": 0,
+        "kd_mutex_nested_fast_count": 0,
+        "kd_mutex_nested_jit_count": 0,
+        "kd_mutex_nested_lock_count": 0,
+        "kd_mutex_nested_queued_count": 0,
+        "kd_mutex_nested_unlock_count": 0,
+        "kd_mutex_node_overflow_count": 0,
+        "kd_mutex_origin_acquires": 1046981,
+        "kd_mutex_origin_releases": 1046981,
+        "kd_mutex_reserved_nodes": 0,
+        "kd_mutex_slowpath_count": 1753553,
+        "kd_mutex_task_failures": 0,
+        "kd_mutex_task_reroutes": 1046981
+      },
+      "native": {
+        "kd_native_completed": 0,
+        "kd_native_started": 0,
+        "kd_native_unlocks": 0
+      }
+    },
+    "run": "run-2",
+    "timings": {
+      "control": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "dispatch": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "hostcall": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "mutex_queue": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "native_mutex_handoff": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "native_mutex_wait": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "native_spin_handoff": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "native_spin_wait": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "spin_queue": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "wrapper": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      }
+    },
+    "whole_ops_s": 4972624.145315289
+  },
+  {
+    "arm": "native",
+    "completed": 8339712,
+    "execution_class": "CONTROL",
+    "jit_bodies": 0,
+    "jit_completions": 0,
+    "mode": "profile",
+    "name": "pipecap-t05-r1-native-profile",
+    "observation_ns": null,
+    "peak_ops_s": 4226555.576205163,
+    "repeat": 1,
+    "returned_fraction": 0.0,
+    "route": null,
+    "run": "run-2",
+    "timings": null,
+    "whole_ops_s": 4169749.8590173386
+  },
+  {
+    "arm": "tclock",
+    "completed": 4302336,
+    "execution_class": "CONTROL",
+    "jit_bodies": 0,
+    "jit_completions": 0,
+    "mode": "timing",
+    "name": "pipecap-t05-r1-tclock-timing",
+    "observation_ns": null,
+    "peak_ops_s": 2159737.528657035,
+    "repeat": 1,
+    "returned_fraction": 0.0,
+    "route": null,
+    "run": "run-2",
+    "timings": null,
+    "whole_ops_s": 2150875.0002793996
+  },
+  {
+    "arm": "baseline-kd",
+    "completed": 7101952,
+    "execution_class": "RETURNED_JIT",
+    "jit_bodies": 4257549,
+    "jit_completions": 4257549,
+    "mode": "timing",
+    "name": "pipecap-t05-r1-baseline-kd-timing",
+    "observation_ns": {
+      "after": 6133127,
+      "before": 3123716
+    },
+    "peak_ops_s": 2489682.6099811425,
+    "repeat": 1,
+    "returned_fraction": 0.5994899712079158,
+    "route": {
+      "counters": {
+        "kd_bench_bodies": 4257549,
+        "kd_bench_completions": 4257549,
+        "kd_hotlock_mutex_checks": 4200,
+        "kd_mutex_active_waiters": 0,
+        "kd_mutex_combiner_count": 5362,
+        "kd_mutex_context_busy_count": 0,
+        "kd_mutex_frame_failure_count": 0,
+        "kd_mutex_handoff_count": 0,
+        "kd_mutex_jit_failure_count": 0,
+        "kd_mutex_jit_not_ready_count": 0,
+        "kd_mutex_jit_resume_count": 4257549,
+        "kd_mutex_jit_success_count": 4257549,
+        "kd_mutex_multi_slot_count": 0,
+        "kd_mutex_nested_abort_release_count": 0,
+        "kd_mutex_nested_fast_count": 0,
+        "kd_mutex_nested_jit_count": 0,
+        "kd_mutex_nested_lock_count": 0,
+        "kd_mutex_nested_queued_count": 0,
+        "kd_mutex_nested_unlock_count": 0,
+        "kd_mutex_node_overflow_count": 0,
+        "kd_mutex_origin_acquires": 26066,
+        "kd_mutex_origin_releases": 26066,
+        "kd_mutex_reserved_nodes": 0,
+        "kd_mutex_slowpath_count": 4266584,
+        "kd_mutex_task_failures": 0,
+        "kd_mutex_task_reroutes": 26066
+      },
+      "native": {
+        "kd_native_completed": 0,
+        "kd_native_started": 0,
+        "kd_native_unlocks": 0
+      }
+    },
+    "run": "run-2",
+    "timings": {
+      "control": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "dispatch": {
+        "mean_ns": 180.90518793794269,
+        "ns": 770212702,
+        "samples": 4257549
+      },
+      "hostcall": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "mutex_queue": {
+        "mean_ns": 746.576120615462,
+        "ns": 3185329731,
+        "samples": 4266584
+      },
+      "native_mutex_handoff": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "native_mutex_wait": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "native_spin_handoff": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "native_spin_wait": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "spin_queue": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "wrapper": {
+        "mean_ns": 31.694391773294917,
+        "ns": 134940426,
+        "samples": 4257549
+      }
+    },
+    "whole_ops_s": 3550361.1431316906
+  },
+  {
+    "arm": "public-kd",
+    "completed": 4446464,
+    "execution_class": "RETURNED_JIT",
+    "jit_bodies": 4371882,
+    "jit_completions": 4371882,
+    "mode": "timing",
+    "name": "pipecap-t05-r1-public-kd-timing",
+    "observation_ns": {
+      "after": 6172590,
+      "before": 3146918
+    },
+    "peak_ops_s": 2230525.889283387,
+    "repeat": 1,
+    "returned_fraction": 0.983226671800334,
+    "route": {
+      "counters": {
+        "kd_bench_bodies": 4371882,
+        "kd_bench_completions": 4371882,
+        "kd_hotlock_mutex_checks": 4281,
+        "kd_mutex_active_waiters": 0,
+        "kd_mutex_combiner_count": 5951,
+        "kd_mutex_context_busy_count": 0,
+        "kd_mutex_frame_failure_count": 0,
+        "kd_mutex_handoff_count": 0,
+        "kd_mutex_jit_failure_count": 0,
+        "kd_mutex_jit_not_ready_count": 0,
+        "kd_mutex_jit_resume_count": 4371882,
+        "kd_mutex_jit_success_count": 4371882,
+        "kd_mutex_multi_slot_count": 0,
+        "kd_mutex_nested_abort_release_count": 0,
+        "kd_mutex_nested_fast_count": 0,
+        "kd_mutex_nested_jit_count": 0,
+        "kd_mutex_nested_lock_count": 0,
+        "kd_mutex_nested_queued_count": 0,
+        "kd_mutex_nested_unlock_count": 0,
+        "kd_mutex_node_overflow_count": 0,
+        "kd_mutex_origin_acquires": 11780,
+        "kd_mutex_origin_releases": 11780,
+        "kd_mutex_reserved_nodes": 0,
+        "kd_mutex_slowpath_count": 4379530,
+        "kd_mutex_task_failures": 0,
+        "kd_mutex_task_reroutes": 11780
+      },
+      "native": {
+        "kd_native_completed": 0,
+        "kd_native_started": 0,
+        "kd_native_unlocks": 0
+      }
+    },
+    "run": "run-2",
+    "timings": {
+      "control": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "dispatch": {
+        "mean_ns": 189.2364457686644,
+        "ns": 827319411,
+        "samples": 4371882
+      },
+      "hostcall": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "mutex_queue": {
+        "mean_ns": 834.5559813495969,
+        "ns": 3654962957,
+        "samples": 4379530
+      },
+      "native_mutex_handoff": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "native_mutex_wait": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "native_spin_handoff": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "native_spin_wait": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "spin_queue": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "wrapper": {
+        "mean_ns": 31.052145048745597,
+        "ns": 135756314,
+        "samples": 4371882
+      }
+    },
+    "whole_ops_s": 2222894.9502188307
+  },
+  {
+    "arm": "native",
+    "completed": 8791808,
+    "execution_class": "CONTROL",
+    "jit_bodies": 0,
+    "jit_completions": 0,
+    "mode": "timing",
+    "name": "pipecap-t05-r1-native-timing",
+    "observation_ns": null,
+    "peak_ops_s": 4415121.073681509,
+    "repeat": 1,
+    "returned_fraction": 0.0,
+    "route": null,
+    "run": "run-2",
+    "timings": null,
+    "whole_ops_s": 4395695.349528844
+  },
+  {
+    "arm": "tclock",
+    "completed": 4387072,
+    "execution_class": "CONTROL",
+    "jit_bodies": 0,
+    "jit_completions": 0,
+    "mode": "plain",
+    "name": "pipecap-t05-r1-tclock-plain",
+    "observation_ns": null,
+    "peak_ops_s": 2202452.9735993478,
+    "repeat": 1,
+    "returned_fraction": 0.0,
+    "route": null,
+    "run": "run-2",
+    "timings": null,
+    "whole_ops_s": 2193236.5903068744
+  },
+  {
+    "arm": "baseline-kd",
+    "completed": 32108032,
+    "execution_class": "RETURNED_JIT",
+    "jit_bodies": 49589,
+    "jit_completions": 49589,
+    "mode": "plain",
+    "name": "pipecap-t05-r1-baseline-kd-plain",
+    "observation_ns": null,
+    "peak_ops_s": 19001905.666706625,
+    "repeat": 1,
+    "returned_fraction": 0.0015444422130886128,
+    "route": null,
+    "run": "run-2",
+    "timings": null,
+    "whole_ops_s": 16053587.497642513
+  },
+  {
+    "arm": "public-kd",
+    "completed": 9314048,
+    "execution_class": "RETURNED_JIT",
+    "jit_bodies": 1248860,
+    "jit_completions": 1248860,
+    "mode": "plain",
+    "name": "pipecap-t05-r1-public-kd-plain",
+    "observation_ns": null,
+    "peak_ops_s": 4671995.717337259,
+    "repeat": 1,
+    "returned_fraction": 0.13408348335761208,
+    "route": null,
+    "run": "run-2",
+    "timings": null,
+    "whole_ops_s": 4656764.946494409
+  },
+  {
+    "arm": "native",
+    "completed": 10392064,
+    "execution_class": "CONTROL",
+    "jit_bodies": 0,
+    "jit_completions": 0,
+    "mode": "plain",
+    "name": "pipecap-t05-r1-native-plain",
+    "observation_ns": null,
+    "peak_ops_s": 5220247.128460989,
+    "repeat": 1,
+    "returned_fraction": 0.0,
+    "route": null,
+    "run": "run-2",
+    "timings": null,
+    "whole_ops_s": 5195575.298540108
+  },
+  {
+    "arm": "baseline-kd",
+    "completed": 18944512,
+    "execution_class": "RETURNED_JIT",
+    "jit_bodies": 314340,
+    "jit_completions": 314340,
+    "mode": "profile",
+    "name": "pipecap-t05-r2-baseline-kd-profile",
+    "observation_ns": {
+      "after": 6677553,
+      "before": 4365872
+    },
+    "peak_ops_s": 14454834.074944766,
+    "repeat": 2,
+    "returned_fraction": 0.01659266810356477,
+    "route": {
+      "counters": {
+        "kd_bench_bodies": 314340,
+        "kd_bench_completions": 314340,
+        "kd_hotlock_mutex_checks": 1139,
+        "kd_mutex_active_waiters": 0,
+        "kd_mutex_combiner_count": 79697,
+        "kd_mutex_context_busy_count": 0,
+        "kd_mutex_frame_failure_count": 0,
+        "kd_mutex_handoff_count": 0,
+        "kd_mutex_jit_failure_count": 0,
+        "kd_mutex_jit_not_ready_count": 0,
+        "kd_mutex_jit_resume_count": 314340,
+        "kd_mutex_jit_success_count": 314340,
+        "kd_mutex_multi_slot_count": 0,
+        "kd_mutex_nested_abort_release_count": 0,
+        "kd_mutex_nested_fast_count": 0,
+        "kd_mutex_nested_jit_count": 0,
+        "kd_mutex_nested_lock_count": 0,
+        "kd_mutex_nested_queued_count": 0,
+        "kd_mutex_nested_unlock_count": 0,
+        "kd_mutex_node_overflow_count": 0,
+        "kd_mutex_origin_acquires": 843053,
+        "kd_mutex_origin_releases": 843053,
+        "kd_mutex_reserved_nodes": 0,
+        "kd_mutex_slowpath_count": 550143,
+        "kd_mutex_task_failures": 0,
+        "kd_mutex_task_reroutes": 843053
+      },
+      "native": {
+        "kd_native_completed": 0,
+        "kd_native_started": 0,
+        "kd_native_unlocks": 0
+      }
+    },
+    "run": "run-2",
+    "timings": {
+      "control": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "dispatch": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "hostcall": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "mutex_queue": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "native_mutex_handoff": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "native_mutex_wait": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "native_spin_handoff": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "native_spin_wait": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "spin_queue": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "wrapper": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      }
+    },
+    "whole_ops_s": 9471915.991367616
+  },
+  {
+    "arm": "public-kd",
+    "completed": 10659072,
+    "execution_class": "RETURNED_JIT",
+    "jit_bodies": 1028883,
+    "jit_completions": 1028883,
+    "mode": "profile",
+    "name": "pipecap-t05-r2-public-kd-profile",
+    "observation_ns": {
+      "after": 5800825,
+      "before": 4695245
+    },
+    "peak_ops_s": 5335021.683092222,
+    "repeat": 2,
+    "returned_fraction": 0.09652650812378413,
+    "route": {
+      "counters": {
+        "kd_bench_bodies": 1028883,
+        "kd_bench_completions": 1028883,
+        "kd_hotlock_mutex_checks": 2127,
+        "kd_mutex_active_waiters": 0,
+        "kd_mutex_combiner_count": 269232,
+        "kd_mutex_context_busy_count": 0,
+        "kd_mutex_frame_failure_count": 0,
+        "kd_mutex_handoff_count": 0,
+        "kd_mutex_jit_failure_count": 0,
+        "kd_mutex_jit_not_ready_count": 0,
+        "kd_mutex_jit_resume_count": 1028883,
+        "kd_mutex_jit_success_count": 1028883,
+        "kd_mutex_multi_slot_count": 0,
+        "kd_mutex_nested_abort_release_count": 0,
+        "kd_mutex_nested_fast_count": 0,
+        "kd_mutex_nested_jit_count": 0,
+        "kd_mutex_nested_lock_count": 0,
+        "kd_mutex_nested_queued_count": 0,
+        "kd_mutex_nested_unlock_count": 0,
+        "kd_mutex_node_overflow_count": 0,
+        "kd_mutex_origin_acquires": 1150353,
+        "kd_mutex_origin_releases": 1150353,
+        "kd_mutex_reserved_nodes": 0,
+        "kd_mutex_slowpath_count": 1494229,
+        "kd_mutex_task_failures": 0,
+        "kd_mutex_task_reroutes": 1150353
+      },
+      "native": {
+        "kd_native_completed": 0,
+        "kd_native_started": 0,
+        "kd_native_unlocks": 0
+      }
+    },
+    "run": "run-2",
+    "timings": {
+      "control": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "dispatch": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "hostcall": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "mutex_queue": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "native_mutex_handoff": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "native_mutex_wait": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "native_spin_handoff": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "native_spin_wait": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "spin_queue": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "wrapper": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      }
+    },
+    "whole_ops_s": 5329189.290938515
+  },
+  {
+    "arm": "native",
+    "completed": 10598400,
+    "execution_class": "CONTROL",
+    "jit_bodies": 0,
+    "jit_completions": 0,
+    "mode": "profile",
+    "name": "pipecap-t05-r2-native-profile",
+    "observation_ns": null,
+    "peak_ops_s": 5442512.940404776,
+    "repeat": 2,
+    "returned_fraction": 0.0,
+    "route": null,
+    "run": "run-2",
+    "timings": null,
+    "whole_ops_s": 5298978.200669454
+  },
+  {
+    "arm": "tclock",
+    "completed": 4481536,
+    "execution_class": "CONTROL",
+    "jit_bodies": 0,
+    "jit_completions": 0,
+    "mode": "profile",
+    "name": "pipecap-t05-r2-tclock-profile",
+    "observation_ns": null,
+    "peak_ops_s": 2242048.03345978,
+    "repeat": 2,
+    "returned_fraction": 0.0,
+    "route": null,
+    "run": "run-2",
+    "timings": null,
+    "whole_ops_s": 2240626.178445722
+  },
+  {
+    "arm": "baseline-kd",
+    "completed": 41137152,
+    "execution_class": "NO_JIT",
+    "jit_bodies": 0,
+    "jit_completions": 0,
+    "mode": "timing",
+    "name": "pipecap-t05-r2-baseline-kd-timing",
+    "observation_ns": {
+      "after": 6785803,
+      "before": 3093922
+    },
+    "peak_ops_s": 20654932.22868124,
+    "repeat": 2,
+    "returned_fraction": 0.0,
+    "route": {
+      "counters": {
+        "kd_bench_bodies": 0,
+        "kd_bench_completions": 0,
+        "kd_hotlock_mutex_checks": 5,
+        "kd_mutex_active_waiters": 0,
+        "kd_mutex_combiner_count": 0,
+        "kd_mutex_context_busy_count": 0,
+        "kd_mutex_frame_failure_count": 0,
+        "kd_mutex_handoff_count": 0,
+        "kd_mutex_jit_failure_count": 0,
+        "kd_mutex_jit_not_ready_count": 0,
+        "kd_mutex_jit_resume_count": 0,
+        "kd_mutex_jit_success_count": 0,
+        "kd_mutex_multi_slot_count": 0,
+        "kd_mutex_nested_abort_release_count": 0,
+        "kd_mutex_nested_fast_count": 0,
+        "kd_mutex_nested_jit_count": 0,
+        "kd_mutex_nested_lock_count": 0,
+        "kd_mutex_nested_queued_count": 0,
+        "kd_mutex_nested_unlock_count": 0,
+        "kd_mutex_node_overflow_count": 0,
+        "kd_mutex_origin_acquires": 0,
+        "kd_mutex_origin_releases": 0,
+        "kd_mutex_reserved_nodes": 0,
+        "kd_mutex_slowpath_count": 0,
+        "kd_mutex_task_failures": 0,
+        "kd_mutex_task_reroutes": 0
+      },
+      "native": {
+        "kd_native_completed": 0,
+        "kd_native_started": 0,
+        "kd_native_unlocks": 0
+      }
+    },
+    "run": "run-2",
+    "timings": {
+      "control": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "dispatch": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "hostcall": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "mutex_queue": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "native_mutex_handoff": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "native_mutex_wait": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "native_spin_handoff": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "native_spin_wait": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "spin_queue": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "wrapper": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      }
+    },
+    "whole_ops_s": 20568180.525308948
+  },
+  {
+    "arm": "public-kd",
+    "completed": 4642048,
+    "execution_class": "RETURNED_JIT",
+    "jit_bodies": 4568953,
+    "jit_completions": 4568953,
+    "mode": "timing",
+    "name": "pipecap-t05-r2-public-kd-timing",
+    "observation_ns": {
+      "after": 4798118,
+      "before": 3139654
+    },
+    "peak_ops_s": 2330285.7857853356,
+    "repeat": 2,
+    "returned_fraction": 0.984253717324767,
+    "route": {
+      "counters": {
+        "kd_bench_bodies": 4568953,
+        "kd_bench_completions": 4568953,
+        "kd_hotlock_mutex_checks": 4474,
+        "kd_mutex_active_waiters": 0,
+        "kd_mutex_combiner_count": 5981,
+        "kd_mutex_context_busy_count": 0,
+        "kd_mutex_frame_failure_count": 0,
+        "kd_mutex_handoff_count": 0,
+        "kd_mutex_jit_failure_count": 0,
+        "kd_mutex_jit_not_ready_count": 0,
+        "kd_mutex_jit_resume_count": 4568953,
+        "kd_mutex_jit_success_count": 4568953,
+        "kd_mutex_multi_slot_count": 0,
+        "kd_mutex_nested_abort_release_count": 0,
+        "kd_mutex_nested_fast_count": 0,
+        "kd_mutex_nested_jit_count": 0,
+        "kd_mutex_nested_lock_count": 0,
+        "kd_mutex_nested_queued_count": 0,
+        "kd_mutex_nested_unlock_count": 0,
+        "kd_mutex_node_overflow_count": 0,
+        "kd_mutex_origin_acquires": 11848,
+        "kd_mutex_origin_releases": 11848,
+        "kd_mutex_reserved_nodes": 0,
+        "kd_mutex_slowpath_count": 4576764,
+        "kd_mutex_task_failures": 0,
+        "kd_mutex_task_reroutes": 11848
+      },
+      "native": {
+        "kd_native_completed": 0,
+        "kd_native_started": 0,
+        "kd_native_unlocks": 0
+      }
+    },
+    "run": "run-2",
+    "timings": {
+      "control": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "dispatch": {
+        "mean_ns": 184.16278193275352,
+        "ns": 841431095,
+        "samples": 4568953
+      },
+      "hostcall": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "mutex_queue": {
+        "mean_ns": 786.9457452907775,
+        "ns": 3601664957,
+        "samples": 4576764
+      },
+      "native_mutex_handoff": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "native_mutex_wait": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "native_spin_handoff": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "native_spin_wait": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "spin_queue": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "wrapper": {
+        "mean_ns": 31.368013415765056,
+        "ns": 143318979,
+        "samples": 4568953
+      }
+    },
+    "whole_ops_s": 2320770.5695330366
+  },
+  {
+    "arm": "native",
+    "completed": 9007104,
+    "execution_class": "CONTROL",
+    "jit_bodies": 0,
+    "jit_completions": 0,
+    "mode": "timing",
+    "name": "pipecap-t05-r2-native-timing",
+    "observation_ns": null,
+    "peak_ops_s": 4520945.728881316,
+    "repeat": 2,
+    "returned_fraction": 0.0,
+    "route": null,
+    "run": "run-2",
+    "timings": null,
+    "whole_ops_s": 4503315.443091433
+  },
+  {
+    "arm": "tclock",
+    "completed": 4491776,
+    "execution_class": "CONTROL",
+    "jit_bodies": 0,
+    "jit_completions": 0,
+    "mode": "timing",
+    "name": "pipecap-t05-r2-tclock-timing",
+    "observation_ns": null,
+    "peak_ops_s": 2257701.542387461,
+    "repeat": 2,
+    "returned_fraction": 0.0,
+    "route": null,
+    "run": "run-2",
+    "timings": null,
+    "whole_ops_s": 2245529.475395664
+  },
+  {
+    "arm": "baseline-kd",
+    "completed": 15143936,
+    "execution_class": "RETURNED_JIT",
+    "jit_bodies": 299023,
+    "jit_completions": 299023,
+    "mode": "plain",
+    "name": "pipecap-t05-r2-baseline-kd-plain",
+    "observation_ns": null,
+    "peak_ops_s": 9390757.256634772,
+    "repeat": 2,
+    "returned_fraction": 0.01974539512052877,
+    "route": null,
+    "run": "run-2",
+    "timings": null,
+    "whole_ops_s": 7571754.968673957
+  },
+  {
+    "arm": "public-kd",
+    "completed": 10906624,
+    "execution_class": "RETURNED_JIT",
+    "jit_bodies": 1174528,
+    "jit_completions": 1174528,
+    "mode": "plain",
+    "name": "pipecap-t05-r2-public-kd-plain",
+    "observation_ns": null,
+    "peak_ops_s": 5472400.855175966,
+    "repeat": 2,
+    "returned_fraction": 0.10768941883391231,
+    "route": null,
+    "run": "run-2",
+    "timings": null,
+    "whole_ops_s": 5453069.327508788
+  },
+  {
+    "arm": "native",
+    "completed": 8370688,
+    "execution_class": "CONTROL",
+    "jit_bodies": 0,
+    "jit_completions": 0,
+    "mode": "plain",
+    "name": "pipecap-t05-r2-native-plain",
+    "observation_ns": null,
+    "peak_ops_s": 4195313.096643816,
+    "repeat": 2,
+    "returned_fraction": 0.0,
+    "route": null,
+    "run": "run-2",
+    "timings": null,
+    "whole_ops_s": 4185139.2546173856
+  },
+  {
+    "arm": "tclock",
+    "completed": 4374272,
+    "execution_class": "CONTROL",
+    "jit_bodies": 0,
+    "jit_completions": 0,
+    "mode": "plain",
+    "name": "pipecap-t05-r2-tclock-plain",
+    "observation_ns": null,
+    "peak_ops_s": 2195781.551980184,
+    "repeat": 2,
+    "returned_fraction": 0.0,
+    "route": null,
+    "run": "run-2",
+    "timings": null,
+    "whole_ops_s": 2186823.698614189
+  },
+  {
+    "arm": "baseline-kd",
+    "completed": 13803776,
+    "execution_class": "RETURNED_JIT",
+    "jit_bodies": 385931,
+    "jit_completions": 385931,
+    "mode": "counts",
+    "name": "pipecap-t05-r2-baseline-kd-counts",
+    "observation_ns": {
+      "after": 5985816,
+      "before": 3116991
+    },
+    "peak_ops_s": 6992568.63262009,
+    "repeat": 2,
+    "returned_fraction": 0.027958364435934052,
+    "route": {
+      "counters": {
+        "kd_bench_bodies": 385931,
+        "kd_bench_completions": 385931,
+        "kd_hotlock_mutex_checks": 1421,
+        "kd_mutex_active_waiters": 0,
+        "kd_mutex_combiner_count": 97362,
+        "kd_mutex_context_busy_count": 0,
+        "kd_mutex_frame_failure_count": 0,
+        "kd_mutex_handoff_count": 0,
+        "kd_mutex_jit_failure_count": 0,
+        "kd_mutex_jit_not_ready_count": 0,
+        "kd_mutex_jit_resume_count": 385931,
+        "kd_mutex_jit_success_count": 385931,
+        "kd_mutex_multi_slot_count": 0,
+        "kd_mutex_nested_abort_release_count": 0,
+        "kd_mutex_nested_fast_count": 0,
+        "kd_mutex_nested_jit_count": 0,
+        "kd_mutex_nested_lock_count": 0,
+        "kd_mutex_nested_queued_count": 0,
+        "kd_mutex_nested_unlock_count": 0,
+        "kd_mutex_node_overflow_count": 0,
+        "kd_mutex_origin_acquires": 1069929,
+        "kd_mutex_origin_releases": 1069929,
+        "kd_mutex_reserved_nodes": 0,
+        "kd_mutex_slowpath_count": 686485,
+        "kd_mutex_task_failures": 0,
+        "kd_mutex_task_reroutes": 1069929
+      },
+      "native": {
+        "kd_native_completed": 0,
+        "kd_native_started": 0,
+        "kd_native_unlocks": 0
+      }
+    },
+    "run": "run-2",
+    "timings": {
+      "control": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "dispatch": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "hostcall": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "mutex_queue": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "native_mutex_handoff": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "native_mutex_wait": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "native_spin_handoff": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "native_spin_wait": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "spin_queue": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "wrapper": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      }
+    },
+    "whole_ops_s": 6901718.400622882
+  },
+  {
+    "arm": "public-kd",
+    "completed": 9352960,
+    "execution_class": "RETURNED_JIT",
+    "jit_bodies": 1311152,
+    "jit_completions": 1311152,
+    "mode": "counts",
+    "name": "pipecap-t05-r2-public-kd-counts",
+    "observation_ns": {
+      "after": 6786888,
+      "before": 3152983
+    },
+    "peak_ops_s": 4691625.493760293,
+    "repeat": 2,
+    "returned_fraction": 0.1401857807581771,
+    "route": {
+      "counters": {
+        "kd_bench_bodies": 1311152,
+        "kd_bench_completions": 1311152,
+        "kd_hotlock_mutex_checks": 2294,
+        "kd_mutex_active_waiters": 0,
+        "kd_mutex_combiner_count": 336659,
+        "kd_mutex_context_busy_count": 0,
+        "kd_mutex_frame_failure_count": 0,
+        "kd_mutex_handoff_count": 0,
+        "kd_mutex_jit_failure_count": 0,
+        "kd_mutex_jit_not_ready_count": 0,
+        "kd_mutex_jit_resume_count": 1311152,
+        "kd_mutex_jit_success_count": 1311152,
+        "kd_mutex_multi_slot_count": 0,
+        "kd_mutex_nested_abort_release_count": 0,
+        "kd_mutex_nested_fast_count": 0,
+        "kd_mutex_nested_jit_count": 0,
+        "kd_mutex_nested_lock_count": 0,
+        "kd_mutex_nested_queued_count": 0,
+        "kd_mutex_nested_unlock_count": 0,
+        "kd_mutex_node_overflow_count": 0,
+        "kd_mutex_origin_acquires": 1039405,
+        "kd_mutex_origin_releases": 1039405,
+        "kd_mutex_reserved_nodes": 0,
+        "kd_mutex_slowpath_count": 1792491,
+        "kd_mutex_task_failures": 0,
+        "kd_mutex_task_reroutes": 1039405
+      },
+      "native": {
+        "kd_native_completed": 0,
+        "kd_native_started": 0,
+        "kd_native_unlocks": 0
+      }
+    },
+    "run": "run-2",
+    "timings": {
+      "control": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "dispatch": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "hostcall": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "mutex_queue": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "native_mutex_handoff": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "native_mutex_wait": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "native_spin_handoff": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "native_spin_wait": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "spin_queue": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      },
+      "wrapper": {
+        "mean_ns": null,
+        "ns": 0,
+        "samples": 0
+      }
+    },
+    "whole_ops_s": 4676265.22147651
+  },
+  {
+    "arm": "native",
+    "completed": 9058816,
+    "execution_class": "CONTROL",
+    "jit_bodies": 0,
+    "jit_completions": 0,
+    "mode": "counts",
+    "name": "pipecap-t05-r2-native-counts",
+    "observation_ns": null,
+    "peak_ops_s": 4543022.97529446,
+    "repeat": 2,
+    "returned_fraction": 0.0,
+    "route": null,
+    "run": "run-2",
+    "timings": null,
+    "whole_ops_s": 4529248.486662173
+  },
+  {
+    "arm": "tclock",
+    "completed": 4604416,
+    "execution_class": "CONTROL",
+    "jit_bodies": 0,
+    "jit_completions": 0,
+    "mode": "counts",
+    "name": "pipecap-t05-r2-tclock-counts",
+    "observation_ns": null,
+    "peak_ops_s": 2310812.347332821,
+    "repeat": 2,
+    "returned_fraction": 0.0,
+    "route": null,
+    "run": "run-2",
+    "timings": null,
+    "whole_ops_s": 2301792.85784733
+  }
+]
