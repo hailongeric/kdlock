@@ -97,6 +97,10 @@ static bool escape_idle(void)
 
 static __attribute__((noipa)) void escape_body(struct escape_result *result)
 {
+#ifdef JIT_ESCAPE_SHARED
+	unsigned int reader_tries;
+	u32 read_completed_before;
+#endif
 #ifdef JIT_ESCAPE_RWLOCK
 	KD_RWLOCK_DIRECT_WRITE_LOCK(&test_lock, kd_rwlock_direct_cookie,
 		".globl jit_escape_entry\njit_escape_entry:\n\t" ANNOTATE_NOENDBR);
@@ -144,17 +148,12 @@ static __attribute__((noipa)) void escape_body(struct escape_result *result)
 		 * writer sees an outstanding attempt it cannot complete until the
 		 * writer admission and gate are released. Bound the probe wait; failure
 		 * is observable after return, never permission to replay a body. */
-		{
-			unsigned int tries;
-
-			for (tries = 0; tries < 100000; tries++) {
-				if (atomic_read(&read_attempts) != atomic_read(&read_completions))
-					break;
-				cpu_relax();
-			}
-			result->reader_pending = tries != 100000;
-			result->read_completed_before = (u32)atomic_read(&read_completions);
+		for (reader_tries = 0; reader_tries < 100000; reader_tries++) {
+			if (atomic_read(&read_attempts) != atomic_read(&read_completions))
+				break;
+			cpu_relax();
 		}
+		read_completed_before = (u32)atomic_read(&read_completions);
 #endif
 		/* CMP defines CF/PF/AF/ZF/SF/OF: 1 - 2 gives status mask 0x95.
 		 * The unconditional branch tests flag preservation across a JIT
@@ -206,6 +205,11 @@ static __attribute__((noipa)) void escape_body(struct escape_result *result)
 			     "cc", "memory");
 		WRITE_ONCE(hot_taken, READ_ONCE(hot_taken) + 1);
 #ifdef JIT_ESCAPE_SHARED
+		/* Sample before the marker, then report through the restored
+		 * native continuation. The loop must not dereference a result
+		 * pointer whose bounded analysis has widened at its back edge. */
+		result->reader_pending = reader_tries != 100000;
+		result->read_completed_before = read_completed_before;
 		/* Keep the competing-reader observation through the suffix write
 		 * on the native branch. Re-reading the result pointer at the cold
 		 * merge loses its bounded address proof after the polling loop.
