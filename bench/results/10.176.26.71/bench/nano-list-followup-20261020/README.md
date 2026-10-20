@@ -11,6 +11,9 @@ prefixes. This is a focused 264-session comparison, not the full 21-count grid.
 Its geometry is unchanged; source identity is now validated `f48b90e`, whose
 497 manifest files equal restored `a768361`. The original plan and all earlier
 functional failures remain separate evidence.
+The prepared [preflight](preflight.py) requires the original host configuration,
+actual recovery snapshot, unchanged manifest and exact historical arguments,
+then checks all ten dry-run plans before allowing the serial supervisor.
 
 | Family | Variants | Controls | Mix | Sessions |
 | --- | --- | --- | --- | ---: |
