@@ -266,7 +266,7 @@ captured kernel inputs, not an independently verified current guest tree.
 
 | Native participant | Branch contract that a replacement must preserve |
 | --- | --- |
-| `include/linux/mm_types.h:597`, `include/linux/mmap_lock.h:11`, `kernel/fork.c:mm_init` | The object is a native rwsem, with static/dynamic initialization, nested/killable/try acquisition, downgrade, non-owner read release, assertions and contention helpers. Maple tree also receives its address as an external lock. Every participant and its object/layout, initialization and lockdep contract must be converted together. |
+| `include/linux/mm_types.h:597`, `include/linux/mmap_lock.h:11`, `kernel/fork.c:mm_init` | The object is a native rwsem, with static/dynamic initialization, nested/killable/try acquisition, downgrade, non-owner read release, assertions and contention helpers. Maple tree uses its `dep_map` as an external lock only with `CONFIG_LOCKDEP`; the macro is a no-op in the current configuration. Every participant and its object/layout, initialization and supported lockdep contract must be converted together. |
 | `arch/x86/mm/fault.c:do_user_addr_fault` | Fault handling uses `current->mm`, saved registers, IRQ state, signal/accounting context and exception fixups. Capturing an `mm` pointer does not preserve these originating-task requirements or establish sleep eligibility. |
 | `mm/memory.c:lock_mm_and_find_vma` | Read trylock can fall back to killable acquisition. Stack growth drops read ownership, acquires write killably, refinds the VMA and downgrades on success; failures return unlocked. `mmap_upgrade_trylock()` always returns false in this capture. Old VMA references cannot survive the drop by assumption. |
 | `arch/x86/mm/fault.c:1311`, `__bad_area` | Access-error handling releases the read lock. Signal-pending and `VM_FAULT_COMPLETED` exits are already unlocked. `VM_FAULT_RETRY` reacquires and refinds the VMA; ordinary completion explicitly unlocks. Each implicit release needs one exact ownership/ACK transition, and each retry needs a fresh acquisition. |
@@ -280,9 +280,12 @@ captured kernel inputs, not an independently verified current guest tree.
 The x86 fault handler never sets `FAULT_FLAG_RETRY_NOWAIT`; its inference that
 `VM_FAULT_RETRY` means unlocked is therefore valid for that caller. Applying the
 same inference to GUP would lose the documented NOWAIT exception. Userfault
-handling can also release and reacquire without returning `VM_FAULT_RETRY`.
-A lexical acquisition/release pair or a retry counter cannot represent these
-transitions.
+copying in `__mcopy_atomic()` also releases and reacquires internally, while
+returning bytes/errno rather than fault flags. In the newly captured
+`handle_userfault()` implementation, the blocking drop path returns `RETRY`
+without reacquisition; NOWAIT returns `RETRY` while still held. Its architecture
+comment alone does not prove a different branch. A lexical acquisition/release
+pair or a retry counter cannot represent these transitions.
 
 The audit was captured on 2026-10-15 against `6.1.159-kdclobber2`, with recorded
 live/source Build ID `5ca28058e156f34a2c7fe91e8e0fbf92f4e51960`. A read-only
@@ -291,11 +294,17 @@ unchanged audit hashes and the baseline manifest to SHA-256
 `0f44870efd7ff604067a2436edcfd95ac8c4e413b42e3d534a51e3c011d3d013`.
 That configuration enables `LOCK_MM_AND_FIND_VMA`, `USERFAULTFD` and
 `PREEMPT_DYNAMIC`; `PROVE_LOCKING` and `DEBUG_LOCK_ALLOC` are disabled.
-These historical identity checks and native syscall probes establish neither
-current guest identity nor KD mmap/fault execution. The missing filemap/folio,
-userfault and selected filesystem callback implementations must be captured
-and audited before proposing kernel integration. Generic fault replay remains
-unsupported.
+These historical checks and native syscall probes do not establish KD
+mmap/fault execution. The subsequent
+[current-source capture and review](../../bench/results/10.176.26.71/tests/mmap-fault-followup-20261020/README.md)
+rechecked the live identity and all 25 files, adding 21 callback/helper files.
+Its 1,470 archive checks passed and 24 hashed source intervals document implicit
+release, NOWAIT, file/context pins, nested resources, retry and downgrade.
+Real integration remains unresolved: the native mm object and full helper
+surface are not converted, delegated rwsem mode/ownership transitions are
+absent, origin context and transitive filesystem/DAX/journal lifetimes are
+unproved, and no KD mmap/fault execution has run. The existing fail-closed
+rwsem-call admission stays intact. Generic fault replay remains unsupported.
 
 The [API probe](../../tests/kernel/rwsem/README.md) covers sleeping readers,
 writer/late-reader exclusion, same-CPU scheduling progress, cancellation,

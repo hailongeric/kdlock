@@ -1,0 +1,29 @@
+{
+  "additional_source_files": 21,
+  "boot_id": "b65f0205-c8f9-4385-8b13-039cbce243a6",
+  "builds": 0,
+  "capture_script_sha256": "a629b07eccece28eed499817b93a7d6bfac9d9cf391f69e7140151b4c5fb21ba",
+  "captured_source_files": 46,
+  "completed_unix": 1792515174.8239713,
+  "historical_source_files": 25,
+  "idle": true,
+  "kernel_identity": {
+    "baseline": "/root/kdlock-kernel-baselines/mutex-clobber2-20260919",
+    "build_files": 9,
+    "bundle_files": 7,
+    "config": true,
+    "ok": true,
+    "running_build_id": "5ca28058e156f34a2c7fe91e8e0fbf92f4e51960",
+    "source": "/mnt/kdlock-builds/linux-6.1.159-kdclobber2",
+    "source_files": 20
+  },
+  "kernel_modified": false,
+  "kernel_source_manifest_sha256": "b86398958fa80cd8d030c30413f2ce1c9c6a2cf9c18d6080a82a01423b8b1881",
+  "measured_sessions": 0,
+  "passed": true,
+  "scope": "Read-only kernel identity and source capture; no KD mmap execution.",
+  "source_commit": "f48b90e42e1538a5204d215b573a238ebd95f391",
+  "source_unchanged": true,
+  "started_unix": 1792515172.5704858,
+  "tests": 0
+}

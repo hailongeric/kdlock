@@ -125,8 +125,11 @@ interval and runtime interference remain unobserved. These results cannot
 resolve the mutex comparison by implication.
 The [mmap/fault source capture](../bench/results/10.176.26.71/tests/mmap-fault-followup-20261020/README.md)
 completed in the idle guest: 46 source/configuration files, including 21 newly
-captured callback/helper files, with unchanged kernel identity. Offline review
-is pending; no kernel was changed and no KD mmap/fault test ran. The
+captured callback/helper files, with unchanged kernel identity. The independent
+1,470-check review passed and 24 hashed source intervals establish concrete
+object/API, ownership/mode, context/lifetime and validation blockers. Real
+integration remains explicitly unresolved; no kernel was changed and no KD
+mmap/fault test ran. The
 [resident-list timing plan](../bench/results/10.176.26.71/bench/nano-list-followup-20261020/README.md)
 retains the previously selected 264 sessions at eight and 60 workers; timing
 has not run yet.
