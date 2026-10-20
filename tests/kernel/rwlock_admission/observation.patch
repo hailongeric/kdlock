@@ -1,7 +1,6 @@
 --- a/kernel_module/Makefile
 +++ b/kernel_module/Makefile
-@@ -23,7 +23,8 @@
- 	kd_main.o \
+@@ -24,6 +24,7 @@
  	kd_bench.o \
  	kd_lock.o \
  	kd_hotlock.o \

@@ -89,3 +89,9 @@ The zero-fuzz application correctly rejected that hunk; all other hunks applied.
 No module was built or loaded and no case ran. The partial tree and rejection
 are retained. The corrected hunk includes that existing object; preparation
 must use a new `admission-2` directory rather than rewriting the failed input.
+That manual context correction also failed at the Makefile hunk, again before
+compilation or any measurement. The complete hunk is now regenerated from the
+observed provider's actual Makefile, with its original balanced context.
+Both failed preparations remain intact; the next bundle is `admission-3`.
+`checks-1` passed dependency validation, both basic programs and all four
+selected drivers (hot-lock sampling, rwlock, native MCS path and spin ownership).
