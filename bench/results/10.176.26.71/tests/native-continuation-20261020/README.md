@@ -117,6 +117,21 @@ diagnostic attempt enables only the existing final heat statistics; thresholds,
 instruction admission, positive returned-body checks and reader checks remain
 unchanged. Baseline attempts retain their original instrumentation identities.
 
+`live-5` (`6f97b3c`, final heat diagnostics enabled) repeated the drained
+`NO_JIT` result. The affected caller-lifetime runner's three tests passed first.
+No delegated batch or native exit was observed. Final CPU heat gates were cold;
+writer residual windows contained roughly three to four entries per MCS
+publication. These are unfinished-window observations, not lifetime counts or
+proof of every historical gate decision. They support insufficient qualified
+contention, while no generated-entry refusal appeared in the kernel log.
+
+The next payload revision adds 32 bounded reader-exclusion observations with
+`cpu_relax()` to each shared-family writer body, on both cold and hot branches.
+This extends the checked exclusion window and allows genuine queue contention
+to develop. It changes no provider/admission threshold, skips no check, and
+retains the original fixed worker counts, affinities and operation counts.
+It is a distinct correctness-probe revision, not a performance measurement.
+
 The serialized plan covers checked native exits for mutex OUTER, public DIRECT,
 spin, rwlock and rwsem; address-
 guard and string-service regressions; ordinary mutex and rwsem ownership

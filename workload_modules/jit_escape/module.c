@@ -130,8 +130,15 @@ static __attribute__((noipa)) void escape_body(struct escape_result *result)
 	if (atomic_inc_return(&writers) != 1)
 		atomic_inc(&failures);
 #ifdef JIT_ESCAPE_SHARED
-	if (atomic_read(&readers))
-		atomic_inc(&failures);
+	/* Keep a bounded exclusion-observation window on both cold and hot
+	 * writes. A nearly empty cold body can repeatedly win the ungated
+	 * writer path and never qualify for delegation, even with many callers.
+	 * Exercise real queue contention without changing any admission gate. */
+	for (reader_tries = 0; reader_tries < 32; reader_tries++) {
+		if (atomic_read(&readers))
+			atomic_inc(&failures);
+		cpu_relax();
+	}
 #endif
 #ifdef JIT_ESCAPE_RWSEM
 	/* Other outer writers may reserve the same phase. Rejected readers can
