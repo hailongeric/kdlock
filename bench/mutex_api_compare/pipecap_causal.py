@@ -69,6 +69,19 @@ def specification(original_spec, args, kwargs, perf_hash):
                 inclusive_jit_timing=mode == 'timing' and arm.endswith('-kd'))
 
 
+def validate_measurement_bounds(before, after, measured):
+    # The retained client names each worker's actual entry active_started_ns.
+    # Its enclosing started_ns precedes barrier release and every worker entry.
+    workers = measured['workers']
+    require(bool(workers) and
+            before['finished_ns'] <= measured['started_ns'] <=
+            min(w['active_started_ns'] for w in workers) and
+            max(w['finished_ns'] for w in workers) <= measured['finished_ns'] <=
+            after['started_ns'] and
+            all(w['active_started_ns'] <= w['finished_ns'] for w in workers),
+            'counter capture overlaps or reverses measured worker bounds')
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--prepared', type=Path, required=True)
@@ -161,9 +174,7 @@ def main():
                 if before is not None:
                     delta = snapshot.difference(before,after)
                     require(before['timing_enabled'] == self.record['inclusive_jit_timing'], 'timing mode differs')
-                    require(before['finished_ns'] <= min(w['started_ns'] for w in measured['workers']) and
-                            after['started_ns'] >= max(w['finished_ns'] for w in measured['workers']),
-                            'counter capture overlaps measured workers')
+                    validate_measurement_bounds(before,after,measured)
                     self.record['route_delta'] = delta
                     scheduler.save(self.path/'route-snapshots.json',dict(before=before,after=after,delta=delta))
                 return measured

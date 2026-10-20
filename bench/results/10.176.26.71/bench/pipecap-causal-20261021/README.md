@@ -103,6 +103,12 @@ hashes and final idle passed. The added negative check requires the active
 five-level flag before accepting its canonical addresses and still refuses
 unmapped, short and ambiguous reads. No provider or workload binary changes.
 
+Before launching, inspection against the retained client's actual JSON found
+a second diagnostic mismatch: worker timestamps are named `active_started_ns`,
+not `started_ns`. The boundary verifier now checks the original enclosing and
+per-worker intervals, including reversed and overlapping observations. This
+correction requires a separately recorded validation revision before execution.
+
 The next diagnostic uses a new `run-2` output and the full fixed 48-session
 plan. The first host observer must finish its planned 900 seconds before a
 separately identified second observation begins. No run is interrupted.

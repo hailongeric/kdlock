@@ -63,6 +63,18 @@ class CausalTests(unittest.TestCase):
                     struct.pack('<qqi4x',1,-1,0)*10,struct.pack('<qqi4x',1,1,1)*10):
             with self.assertRaises(ValueError):snapshot.decode_timing(bad)
 
+    def test_retained_client_clock_schema_and_overlap_refusal(self):
+        measured=dict(started_ns=20,finished_ns=40,workers=[
+            dict(active_started_ns=21,finished_ns=39),
+            dict(active_started_ns=22,finished_ns=40)])
+        plan.validate_measurement_bounds(dict(finished_ns=19),dict(started_ns=41),measured)
+        for before,after in ((21,41),(19,39)):
+            with self.assertRaises(ValueError):
+                plan.validate_measurement_bounds(dict(finished_ns=before),dict(started_ns=after),measured)
+        measured['workers'][0]['active_started_ns']=41
+        with self.assertRaises(ValueError):
+            plan.validate_measurement_bounds(dict(finished_ns=19),dict(started_ns=42),measured)
+
     def test_delta_refuses_decrease_policy_change_or_reversed_boundary(self):
         before,after=observation(),observation();after.update(started_ns=3,finished_ns=4)
         before['totals']['kd_hotlock_mutex_entries']=1024
