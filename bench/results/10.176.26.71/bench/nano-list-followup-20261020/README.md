@@ -3,7 +3,10 @@
 Status: `timing-1` stopped at a strict rwlock `NO_JIT` failure after 147 attempts:
 146 successful sessions and one failed session. Its immediate host endpoint
 also failed, with 83 QEMU threads against the original 67. Evidence preservation
-and independent verification are complete; acceptance remains open. Shared-lock
+and independent verification are complete; acceptance remains open. The separate
+`rwsem-1` continuation completed all 48 original rwsem cases, with its own
+failed host endpoint (86 versus 67). The 69 unrun rwlock cases remain unresolved.
+Shared-lock
 collection and the mmap/fault source review are complete, with their documented
 limits. The original recovery VM remains the only test environment.
 
@@ -248,8 +251,55 @@ admission. It does not replace the failed preflight.
 A fresh full capture at **17:52:31.389155 UTC** matched the original 67-thread
 configuration. `rwsem-preflight-2` passed the unchanged 497-file manifest,
 kernel/boot/dependencies/topology and exact 48-case task. Serial `rwsem-1`
-collection is now running from guest snapshot `09cc06d`; no measured source
+collection completed from guest snapshot `09cc06d`; no measured source
 or collector changed. Its launcher captures the host endpoint on supervisor
 return, with SHA-256
 `d5b90383e5a447ca1cdf0b296841d32ed582f4822fdef22a571f139ab08ae20b`.
-No result is claimed until exact retirement and independent verification finish.
+The task ran from **17:53:20.915420 to 17:57:58.103925 UTC**. Its original
+host endpoint at **17:57:58.509466 UTC**, 0.405541 seconds after child exit,
+failed at 86 versus 67 threads. The failed endpoint is retained without a
+later replacement.
+
+[VM health](rwsem-1/health.json) verifies all 48 functional/drained sessions,
+838 source hashes, 11 binaries, eight compiled-body audits and 24 KD loaded
+images with exact source retirement. All 24 KD sessions returned generated
+bodies; the other 24 are Native controls. The counters match at 6,734,206
+entries/completions. Measured work totals 209,223,424 operations:
+167,378,798 reads and 41,844,626 writes. No retained kernel fault matches were
+found. The [independent review](rwsem-1/offline-review.json) completes 71,582
+checks over 2,179 files and 48 symlinks, with evidence integrity passing and
+the original host-thread mismatch as its sole remaining issue.
+
+The [rwsem comparisons](rwsem-1/comparisons.csv) meet observed median-whole
+and best-peak parity against Native at four of eight points. All four misses
+are retained:
+
+| Rwsem case | Median whole ratio | Best peak ratio | Separated 5% loss |
+| --- | ---: | ---: | --- |
+| 16 nodes, plain, 60 workers | 0.9215 | 0.8705 | No |
+| 16 nodes, prefetch, 60 workers | 0.9107 | 0.8813 | No |
+| 128 nodes, plain, 8 workers | 0.7264 | 0.6455 | Yes |
+| 128 nodes, prefetch, 8 workers | 0.6535 | 0.6353 | Yes |
+
+Maximum whole-rate spread is **165.98% for KD** (plain 16 nodes/eight workers,
+1.539–4.094 Mops/s; sample CV 43.87%) and **22.91% for Native** (plain
+128 nodes/eight workers, 2.191–2.693 Mops/s; CV 10.46%). All three observations
+remain in the [groups](rwsem-1/groups.csv). Payload prefetch meets the two-rate
+rule in two of four KD and two of four Native groups; see the separate
+[hint comparisons](rwsem-1/prefetch.csv). These rates remain descriptive under
+the failed host endpoint and large variance. They are not pooled with
+`timing-1` or earlier shared-lock measurements.
+
+The [rwsem archive manifest](rwsem-1/archives.json) is
+`44850df72436613118fc38ab41ec9376888410f42543a73e61399c61e40b8100`.
+Raw files are under
+`bench/results/10.176.26.71/raw/bench/nano-list-followup-20261020/rwsem-1/archives/`.
+The 9,751,344-byte matrix archive is
+`75876fb5fee83844d879f584bced2e776c9705bd5e2d7ff8476a40e98d497326`;
+the 132,115-byte metadata archive is
+`802d03f7b2f403b9c1d28047d55b8b803898c6f975c6e07f30a56d6679574bcf`.
+
+No run is active. The original failed rwlock requirement, its remaining 69
+unrun cases, both failed timing endpoints, the seven separate mutex regressions,
+execution-class gaps, p95 latency and runtime host interference remain
+explicitly unresolved. No admission threshold, probe or required check changed.

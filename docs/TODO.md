@@ -134,13 +134,23 @@ mmap/fault test ran. The
 retains the previously selected 264 sessions at eight and 60 workers.
 `timing-1` stopped after 147 attempts: 144 spin/mutex sessions and two shared
 controls passed, then the first KD rwlock case failed the retained JIT
-requirement. The remaining 69 rwlock and 48 rwsem cases were not run. Its
+requirement. The remaining 69 rwlock cases are unresolved; its 48 unstarted
+rwsem cases subsequently ran as the separate `rwsem-1` continuation. Its
 immediate host endpoint failed at 83 versus 67 QEMU threads. The independent
 250,374-check review preserves all failures, verifies evidence integrity and
 reports separate ranges/CVs; no acceptance is claimed. Its first strict preflight failed at 70 versus 67
 QEMU threads with zero measured sessions; the failure and later thread turnover
 are preserved. A fresh full 67-thread receipt and exact unchanged-plan preflight
 passed before `timing-1` started. No admission check or host setting was relaxed.
+The rwsem continuation separately passed all 48 cases with 24 exact KD
+retirements and 6,734,206 matching entries/completions. Its 71,582-check
+independent review passes evidence integrity but preserves an immediate
+86-versus-67 host-thread failure. Four of eight Native parity comparisons miss;
+maximum KD/Native spreads are 165.98%/22.91%. The prior 73-thread admission
+failure and subsequent strict 67-thread admission both remain recorded.
+All runs are idle. The failed rwlock execution requirement and 69 missing cases,
+host endpoint mismatches, variance and earlier mutex/class/latency gaps remain
+open; do not weaken a gate or repeat a failed case for a favorable class.
 
 Keep the two-word wrapper ABI, separate backend identities, exact KD physical owners,
 exact acquisition references and final ACKs. Shared storage must survive its final

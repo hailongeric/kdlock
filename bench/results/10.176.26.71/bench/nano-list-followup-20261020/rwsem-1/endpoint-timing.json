@@ -1,0 +1,9 @@
+{
+  "child_finished_unix": 1792519078.103925,
+  "host_capture_utc": "2026-10-20T17:57:58.509466+00:00",
+  "capture_delay_seconds": 0.40554094314575195,
+  "host_threads": 86,
+  "original_host_threads": 67,
+  "endpoint_verdict": "FAIL",
+  "scope": "Original immediate endpoint; no later receipt substitutes for it."
+}

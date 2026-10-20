@@ -1,6 +1,7 @@
 # Mutex regression diagnosis after the controlled replay
 
-Status: active. The user reopened all seven mutex points and requested subsequent
+Status: validation and investigation evidence recorded; performance acceptance
+remains open. The user reopened all seven mutex points and requested subsequent
 rwlock/rwsem, real mmap, page-fault and nano/list work. The completed correctness
 checks and [original-input replay](../mutex-public-regressions-20261020/README.md)
 retain their exact source and artifact identities. This stage starts at
@@ -401,3 +402,41 @@ All seven mutex regressions, execution-class gaps, p95 latency and the strict
 post-measurement host thread-set mismatch remain explicitly unresolved.
 Subsequent rwlock/rwsem, real mmap/fault and list work must retain those limits
 and cannot imply acceptance of the mutex comparison.
+
+## Follow-up stage evidence and unresolved scope
+
+The [shared-lock comparison](../shared-lock-followup-20261020/README.md)
+completed 756 rwsem and 270 rwlock sessions on the same recovery VM, using
+restored, validated inputs. Functional checks and exact retirement pass.
+The rwsem post-run host thread set fails; rwlock's matching after receipt is
+117.556 seconds late. Their ranges, misses and execution classes remain separate
+from this mutex investigation.
+
+The [current mmap/fault review](../../tests/mmap-fault-followup-20261020/README.md)
+captures 46 kernel files, verifies unchanged kernel identity and documents
+four concrete blockers: full-object/API migration, ownership/mode transitions,
+origin-context/resource lifetime, and unvalidated transitive callbacks.
+Its 1,470-check source review passes; real KD mmap/fault integration remains
+explicitly unresolved, with no guest kernel changes.
+
+The [resident-list stage](../nano-list-followup-20261020/README.md) preserves
+`timing-1` (146 strict successes, one strict rwlock `NO_JIT` failure) and the
+separate `rwsem-1` (48 strict successes). Both have complete archives and
+independent evidence-integrity checks, and both retain immediate host-thread
+mismatches. The first run's remaining 69 rwlock cases are unrun; this is an
+explicit coverage gap, not a pass or a silently dropped requirement.
+The 48 rwsem cases were the untouched original task, not repetitions of
+failed attempts. Reports retain every range, CV, miss and prefetch comparison.
+
+All seven original mutex points remain unresolved: c08 at 3/4/5 workers,
+pipebytes at 3/5, pipecap at 5 and RCUHT at 2. The inline-entry experiment
+remains rejected, and the maintained implementation is the restored entry.
+No supported-family timing result resolves those losses, the execution-class
+gaps or missing p95 latency. Whole-kernel replacement, RT/ww_mutex, lockdep and
+oversubscription remain separately unvalidated.
+
+All stages used a sole source writer and serial VM execution. The three
+helpers (`native_api_inventory`, `rw_and_mm_audit`, `unified_api_review`) finished
+read-only reviews and each reported **no files touched**. No run is active.
+Acceptance remains open; no probe, admission threshold, ownership record or
+ACK/retirement check was removed or weakened.

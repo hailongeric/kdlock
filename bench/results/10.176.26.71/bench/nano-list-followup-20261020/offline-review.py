@@ -306,17 +306,19 @@ def main():
     verifier_sha = ('6a77cdf92a0c398b5cb3bf642254e66de64e92102ea34472115ca1d362d17921'
                     if stopped else helper.hashfile(args.repo/STAGE/'verify.py'))
     a.check(health['verifier_sha256'] == a.files['verify.py'] == verifier_sha, 'verifier_binding')
-    if stopped:
+    if stopped or rwsem_only:
         endpoint = a.jread('endpoint-timing.json')
         captured = a.jread('host-after.json')
         delay = datetime.fromisoformat(captured['captured_utc']).timestamp()-tasks['tasks'][-1]['finished_unix']
-        a.check(a.files['launch.sh'] == '215d64e540040a69bb647e2f2afc446be5a4ee30937a8b8b2f27a14215ce1213'
-                and a.jread('launch-exit.json') == dict(supervisor_ssh_exit=1, host_capture_exit=0),
-                'unchanged_single_launcher_failed_exit')
+        launcher = ('215d64e540040a69bb647e2f2afc446be5a4ee30937a8b8b2f27a14215ce1213' if stopped else
+                    'd5b90383e5a447ca1cdf0b296841d32ed582f4822fdef22a571f139ab08ae20b')
+        a.check(a.files['launch.sh'] == launcher and
+                a.jread('launch-exit.json') == dict(supervisor_ssh_exit=int(stopped), host_capture_exit=0),
+                'single_launcher_exit_binding')
         a.check(endpoint['child_finished_unix'] == tasks['tasks'][-1]['finished_unix'] and
                 endpoint['host_capture_utc'] == captured['captured_utc'] and
                 endpoint['capture_delay_seconds'] == delay and 0 <= delay < 1 and
-                endpoint['host_threads'] == len(captured['qemu'][0]['tasks']) == 83 and
+                endpoint['host_threads'] == len(captured['qemu'][0]['tasks']) == (83 if stopped else 86) and
                 endpoint['original_host_threads'] == 67 and endpoint['endpoint_verdict'] == 'FAIL',
                 'original_immediate_failed_endpoint')
     cold, images, retired, loaded, faults, sessions, failures, not_run = [], [], [], [], [], [], [], []

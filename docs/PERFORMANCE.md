@@ -78,6 +78,28 @@ spreads are rwsem KD/Native 89.10%/227.88%, and rwlock KD/Native/TCLock
 stage report. p95 latency, runtime interference and the seven separate mutex
 regressions remain unresolved; these results do not establish blanket acceptance.
 
+## Resident-list follow-up: incomplete rwlock coverage
+
+The [same-VM resident-list report](../bench/results/10.176.26.71/bench/nano-list-followup-20261020/README.md)
+retains two separate runs on validated `f48b90e` inputs. `timing-1` completed
+144 spin/mutex sessions and two shared controls, then stopped at the first KD
+rwlock case because its required complete JIT body did not execute. Its data,
+published/loaded image and exact retirement checks pass; the strict failure is
+preserved and excluded from scoring. Its remaining 69 rwlock cases are unrun.
+The untouched rwsem task subsequently completed all 48 sessions in `rwsem-1`,
+with 24 returned-JIT KD sessions and exact retirements.
+
+Independent reviews verify evidence integrity with 250,374 and 71,582 checks.
+Both immediate host endpoints fail the original thread-set check, at 83 and
+86 threads versus 67. Descriptive parity counts are spin 8/8 against each
+control, mutex 4/8 Native and 7/8 TCLock, and rwsem 4/8 Native. Maximum
+three-run whole-rate spreads are KD/Native/TCLock spin 5.56%/12.86%/4.09%,
+mutex 4.79%/1326.48%/35.90%, and KD/Native rwsem 165.98%/22.91%.
+All misses, ranges, sample CVs and separate plain/prefetch comparisons remain
+in the report. No blanket prefetch benefit or performance acceptance follows.
+The seven earlier mutex regressions, strict rwlock coverage failure and
+latency/runtime-interference gaps remain unresolved.
+
 ## Fresh 32-byte mutex comparison with Native and TCLock
 
 The [2026-10-20 comparison](../bench/results/10.176.26.71/bench/mutex32-native-tclock-20261020/README.md)

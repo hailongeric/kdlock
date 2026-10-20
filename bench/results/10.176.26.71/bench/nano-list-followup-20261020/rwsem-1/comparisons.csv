@@ -1,0 +1,9 @@
+family,nodes,threads,variant,comparator,status,reason,whole_ratio,peak_ratio,separated_loss_5pct
+rwsem,16,8,list,native,PASS,,1.3300065391921225,1.595632558088372,False
+rwsem,16,8,list-prefetch,native,PASS,,1.5810864733806784,1.5889893677804865,False
+rwsem,16,60,list,native,FAIL,,0.9214673498820444,0.8705365819984722,False
+rwsem,16,60,list-prefetch,native,FAIL,,0.9107033322530798,0.8813273537982848,False
+rwsem,128,8,list,native,FAIL,,0.7264391801314027,0.645467657847262,True
+rwsem,128,8,list-prefetch,native,FAIL,,0.6534891872755154,0.6352666191293028,True
+rwsem,128,60,list,native,PASS,,2.556481143331529,2.5251032747751005,False
+rwsem,128,60,list-prefetch,native,PASS,,2.4883769457297795,2.5804809644464926,False
