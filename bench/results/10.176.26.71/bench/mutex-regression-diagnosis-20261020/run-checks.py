@@ -16,7 +16,9 @@ import time
 ROOT = Path('/root/host_fs/kdlock')
 BASE = Path('/root/kdlock-evidence/10.176.26.71/tests/mutex-observation-20261020')
 DRIVERS = []
-RUNNER_TESTS = ['bench/mutex_api_compare/test_compare.py', 'bench/mutex_api_compare/test_host_observer.py']
+RUNNER_TESTS = ['bench/mutex_api_compare/test_compare.py',
+                'bench/mutex_api_compare/test_host_observer.py',
+                'bench/mutex_api_compare/test_profile_replay.py']
 
 
 def digest(path):

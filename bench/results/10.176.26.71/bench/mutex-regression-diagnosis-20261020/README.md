@@ -69,3 +69,65 @@ are retained separately. The archive manifest SHA-256 is
 the inert source/archive review passed 6,410 checks with no issues. The first
 archive download failed because the local parent directory was absent; creating
 that destination and repeating the copy did not rerun any test.
+
+## Observed original-input reproduction
+
+`mutex-public-20261020-observed-1` completed 120/120 sessions at scheduler
+`bc72912`, using the original `d21a1e3` measured collection. All functional
+oracles passed and every session drained. The 60 KD retirements have exactly
+zero modules, writers and frames; no kernel fault matches were found. Independent
+post-run verification matched all 4,088 original files and 336 retained collector
+files. This is an instrumented reproduction, not a revised mutex implementation.
+
+The [separate comparisons](observed-1/comparisons.json) and
+[360 per-repeat rows](observed-1/per-repeat.csv) keep the original matrix, plain
+replay and observed reproduction distinct:
+
+| Original regression | Original public/OUTER | Plain replay | Observed reproduction |
+| --- | ---: | ---: | ---: |
+| c08, 3 workers | 0.812460 | 0.681982 | 0.863191 |
+| c08, 4 workers | 0.706642 | 0.533785 | 0.642315 |
+| c08, 5 workers | 0.789000 | 0.764036 | 0.748420 |
+| pipebytes, 3 workers | 0.840544 | 0.967176 | 1.010601 |
+| pipebytes, 5 workers | 0.874075 | 0.919470 | 0.879555 |
+| pipecap, 5 workers | 0.597685 | 0.748197 | 0.635819 |
+| RCUHT, 2 workers | 0.919323 | 0.887614 | 0.708436 |
+
+These are ratios of three-repeat medians within comparable execution classes.
+The observed c08/4, c08/5, pipecap/5 and RCUHT/2 public maxima remain below 95%
+of their OUTER minima. c08/3 and pipebytes/5 retain overlapping ranges. The
+pipebytes/3 loss did not reproduce at that provisional screen. The c08/2 and
+pipebytes/4 class gaps remain; pipecap/4 is same-class with ratio 0.953764.
+None of these observations establishes a causal correction or p95 latency.
+
+The [host observation](observed-1/host-observation-summary.json) completed
+17,966 samples over 900 seconds with no placement error or interruption.
+QEMU had 67–98 observed threads, including 61 distinct additional task
+identities over the window. All service threads remained on CPU 63.
+Additional-service observed CPU deltas sum to 0.817 seconds; the maximum
+per-session sum in intervals overlapping the projected measurement window is
+9.278 ms. These are sampled deltas, not complete interference bounds.
+The immediate post-run snapshot had 69 threads; the final snapshot restored
+the original 67 naturally. The strict post-run thread-set match therefore
+remains a recorded environment difference, not a waived check.
+
+Clock projection retains the entire 1.277-second envelope of endpoint RTT
+bounds. Intervening drift is unproven, tasks can escape polling, and other host
+processes were not observed. Host scheduler statistics were disabled, leaving
+runqueue delay unmeasured. The observer consumed 12.62% of one CPU, pinned to
+otherwise unused host CPU 62. This overhead is an additional reason to keep
+this collection separate. The samples establish transient QEMU activity; they
+do not explain the seven losses.
+
+## Matched causal profiles
+
+The next diagnostic selects repeat zero of all ten original points, retaining
+the original four-arm rotation: 40 sessions. Original provider, workload,
+client, daemon, translator and collector bytes remain pinned. Flat `cycles:k`
+profiles use 199 Hz sampling; API recording attaches to the idle persistent
+client and acknowledges enable before its measured workers are created.
+Inherited worker sampling is disabled and stopped before module teardown.
+Synthetic sampling uses the retained collector's existing profiling path.
+The exact perf binary is copied and hashed; all results are explicitly
+diagnostic and excluded from throughput acceptance. No task-routing,
+admission, publication, business or retirement predicate is changed.
