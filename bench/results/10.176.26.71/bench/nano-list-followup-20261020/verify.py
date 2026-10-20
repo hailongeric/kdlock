@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Verify completed resident-list timing in the idle original recovery VM."""
+"""Verify resident-list evidence in the idle original VM, preserving failures."""
 import argparse
 from collections import Counter
 import hashlib
@@ -38,6 +38,8 @@ def main():
     p = argparse.ArgumentParser(description=__doc__)
     for name in ('base', 'preflight', 'host-after'):
         p.add_argument('--'+name, type=Path, required=True)
+    p.add_argument('--stopped-rwlock', action='store_true',
+                   help='Audit the exact timing-1 failure; never accept it as a completed run.')
     args = p.parse_args()
     base = args.base.resolve()
     assert Path.cwd() == ROOT and os.geteuid() == 0
@@ -50,8 +52,15 @@ def main():
     archive['idle'](base, rt.idle)
     tasks, manifest, plan = (read(base/n) for n in
                              ('tasks.json', 'committed-source.json', 'task-plan.json'))
-    assert tasks['state'] == 'COMPLETE' and tasks['passed'] and tasks['final_idle']
-    assert tasks['phase'] == 'timing' and len(tasks['tasks']) == len(plan['phases']['timing']) == 10
+    stopped = args.stopped_rwlock
+    if stopped:
+        assert base.name == 'timing-1'
+        assert tasks['state'] == 'FAILED' and tasks['passed'] is False and tasks['final_idle'] is False
+        assert tasks['failed_task'] == 'rwlock-w20' and len(tasks['tasks']) == 9
+    else:
+        assert tasks['state'] == 'COMPLETE' and tasks['passed'] and tasks['final_idle']
+        assert len(tasks['tasks']) == 10
+    assert tasks['phase'] == 'timing' and len(plan['phases']['timing']) == 10
     assert tasks['source_commit'] == manifest['commit'] == plan['source_commit']
     assert sha(base/'committed-source.json') == plan['source_manifest_sha256']
     assert sha(base/'run-tasks.py') == tasks['script_sha256'] == plan['supervisor_sha256']
@@ -68,13 +77,17 @@ def main():
     assert read(args.preflight/'host-state.json') == read(base/'host-before.json')
     assert sha(args.preflight/'preflight.py') == pf['script_sha256']
     rw_oracle = load('list_rw_oracle', ROOT/'bench/rwlock_compare/oracle.py')
-    faults, retired, images, results = [], [], [], []
+    faults, retired, images, results, failures, not_run = [], [], [], [], [], []
     totals, classes = Counter(), Counter()
     for task, planned_task in zip(tasks['tasks'], plan['phases']['timing']):
         name = task['name']
         assert name == planned_task['name'] and Path(task['output']) == base/name
-        assert task['state'] == 'FINISHED' and task['exit_code'] == 0
-        assert task['completed_sessions'] == planned_task['expected_sessions']
+        failed_child = stopped and name == 'rwlock-w20'
+        assert task['state'] == 'FINISHED' and task['exit_code'] == int(failed_child)
+        if failed_child:
+            assert 'completed_sessions' not in task and 'committed_source_files' not in task
+        else:
+            assert task['completed_sessions'] == planned_task['expected_sessions']
         child = base/name
         source = read(child/'source-sha256.json')
         for path, digest in source.items():
@@ -91,7 +104,9 @@ def main():
             expected = {overlay+p: h for p, h in prepared['prepared'].items()}
             expected[overlay+'manifest.json'] = sha(provider/'manifest.json')
             assert extra == expected and len(extra) == task['reconstructed_provider_files']
-        assert len(source)-len(extra) == task['committed_source_files']
+        assert len(source)-len(extra) == (248 if failed_child else task['committed_source_files'])
+        if failed_child:
+            assert not extra and len(prepared['prepared']) == 93
         for path, digest in prepared['prepared'].items():
             assert sha(provider/path) == digest, path
             source_hashes += 1
@@ -119,7 +134,8 @@ def main():
             compiled_audits += 1
         specs, records = read(child/'plan.json'), read(child/'records.json')
         dry = read(args.preflight/(name+'.plan.json'))
-        assert len(specs) == len(records) == len(dry) == task['completed_sessions']
+        assert len(specs) == len(records) == len(dry) == planned_task['expected_sessions']
+        completed = 0
         env = read(child/'environment.json')
         assert env['kernel_identity']['ok'] and env['kernel_identity']['running_build_id'] == \
             '5ca28058e156f34a2c7fe91e8e0fbf92f4e51960'
@@ -127,9 +143,22 @@ def main():
             tag = name+'/'+spec['name']
             assert all(spec[k] == v for k, v in saved_plan.items())
             assert all(row[k] == v for k, v in spec.items())
+            if failed_child and row['execution_status'] == 'NOT_RUN':
+                assert completed == 3 and not (child/spec['name']).exists()
+                not_run.append(name+'/'+spec['name'])
+                continue
+            completed += 1
+            failed_session = failed_child and completed == 3
             saved = read(child/spec['name']/'session.json')
             assert all(row[k] == v for k, v in saved.items())
-            assert row['execution_status'] == 'OK' and row['drained'] and not row.get('cleanup_error')
+            assert row['execution_status'] == ('NO_JIT' if failed_session else 'OK')
+            assert row['drained'] and not row.get('cleanup_error')
+            if failed_session:
+                assert spec['name'] == 'list-n16-kdlock-w020-t08-r00'
+                assert row['error'] == 'required complete KD body did not execute'
+                assert row['require_jit'] is True and row['helper_waves'] == 0
+                failures.append(dict(path=tag, status=row['execution_status'], error=row['error']))
+                assert read(child/'failure.json') == dict(status='NO_JIT', error=row['error'])
             assert not any(row.get(k) for k in ('functional', 'diagnostic', 'pmu', 'perf_record'))
             assert row['workload'] in ('list', 'list-prefetch') and row['list_nodes'] in (16, 128)
             m = row['measurement']
@@ -174,7 +203,10 @@ def main():
                 kind = 'RETURNED_JIT' if completions else 'PARTIAL_JIT' if entries else 'NO_JIT'
                 assert kind != 'PARTIAL_JIT'
                 required = shared or row['lock_kind'] == 'mutex' or row['threads'] >= 20
-                assert not required or completions > 0
+                if failed_session:
+                    assert required and entries == completions == 0 and kind == 'NO_JIT'
+                else:
+                    assert not required or completions > 0
                 assert row['retired'] == RETIRED
                 retired.append(dict(task=name, name=row['name'], retired=row['retired']))
                 publication = row['published_before']
@@ -206,10 +238,19 @@ def main():
             for line in (child/row['name']/'kernel.log').read_text().splitlines():
                 if rt.FAULT.search(line):
                     faults.append(dict(session=tag, line=line))
-        results.append(dict(task=name, sessions=len(records), source_files=len(source),
+        assert completed == (3 if failed_child else planned_task['expected_sessions'])
+        results.append(dict(task=name, sessions=completed, source_files=len(source),
                             binary_files=len(binaries), compiled_list_audits=len(cold)))
-    assert len(retired) == len(images) == 96 and sum(r['sessions'] for r in results) == 264
-    assert compiled_audits == 44 and not faults
+    if stopped:
+        remaining = plan['phases']['timing'][-1]
+        assert remaining['name'] == 'rwsem-w20' and not (base/'rwsem-w20').exists()
+        not_run += ['rwsem-w20/'+s['name'] for s in read(args.preflight/'rwsem-w20.plan.json')]
+    count = 147 if stopped else 264
+    assert len(retired) == len(images) == (49 if stopped else 96)
+    assert sum(r['sessions'] for r in results) == count
+    assert compiled_audits == (36 if stopped else 44) and not faults
+    assert len(failures) == int(stopped) and len(not_run) == (117 if stopped else 0)
+    assert len(set(not_run)) == len(not_run)
     scheduler = load('list_environment', ROOT/'bench/mutex_api_compare/run.py')
     for name, digest in scheduler.REPLAY_ENVIRONMENT_SHA256.items():
         assert sha(ORIGINAL/name) == digest
@@ -249,7 +290,9 @@ def main():
     rt.write_json(base/'topology-after.json', topology)
     archive['idle'](base, rt.idle)
     health = dict(idle=True, boot_id=boot, source_commit=manifest['commit'],
-        checked_unix=time.time(), sessions=264, functionally_valid=264, drained=264,
+        checked_unix=time.time(), sessions=count, functionally_valid=count-int(stopped), drained=count,
+        planned_sessions=264, business_oracles_valid=count, strict_failures=failures, not_run=not_run,
+        supervisor_state=tasks['state'], stopped_rwlock=stopped,
         tasks=results, source_hashes_checked=source_hashes, binary_hashes_checked=binary_hashes,
         compiled_list_audits=compiled_audits, loaded_images=images, exact_retirements=retired,
         per_session_kernel_faults=faults, totals=dict(totals), execution_classes=dict(classes),

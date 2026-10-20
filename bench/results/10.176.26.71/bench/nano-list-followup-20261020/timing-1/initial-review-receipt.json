@@ -1,0 +1,15 @@
+{
+  "path": "bench/results/10.176.26.71/raw/bench/nano-list-followup-20261020/timing-1/review-initial",
+  "files": {
+    "comparisons.csv": "0224dc6d26025daf61aa1c33c287b79a81c59cf66b7bf39eae9e8a86204d65c4",
+    "console.log": "8a0045cd315f409cb554e3775ee0e99549583d87c3372b0086c20a2665719c91",
+    "groups.csv": "69e190cb45586197edce3db1a6c15aadccd52100d3d9b3cdfa6ff41f105939eb",
+    "offline-review.json": "4a0119482f2854d6e683aef6e3fa03f1deacb3fc371a3c98b73d984a4bb67e36",
+    "offline-review.py": "b228a47a3180d9817f0dbe221ad41fa1375c3f8ddb0838fa84ad7e300b7d4ddf",
+    "prefetch.csv": "aeb9ce2b0fd0e2ad13d2f09788c53c0b25520caf545e504f109a991a25ad7be7"
+  },
+  "issues": 26,
+  "checker_schema_errors": 25,
+  "retained_host_endpoint_failures": 1,
+  "scope": "Inert checker errors corrected; no measurement or archive changed."
+}

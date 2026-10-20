@@ -3,6 +3,7 @@
 import argparse
 from collections import Counter, defaultdict
 import csv
+from datetime import datetime
 import hashlib
 import importlib.util
 import json
@@ -154,6 +155,10 @@ def measurement(a, arithmetic, row, name):
         a.check(w['cpu_ns'] > 0 and w['completed'] % 256 == 0,
                 'whole_batches_worker_time', [name, i])
         if shared:
+            # The shared Python client records successful calls as JSON null;
+            # the exclusive ioctl client records integer zero. Check the raw
+            # schema before adapting a copy for the common timing reader.
+            a.check(w['error'] is None, 'shared_worker_error_schema', [name, i])
             writes = ((i*17) % 100+w['completed']*20)//100
             a.check(w['writes'] == writes and w['reads']+writes == w['completed'] and
                     w['read_errors'] == w['read_hits'] == 0 and
@@ -185,8 +190,14 @@ def measurement(a, arithmetic, row, name):
             before[1:] == after[1:] == [0]*15, 'protected_list_effects', name)
     extra = {'writes', 'reads', 'worker_writes', 'read_ops_s', 'write_ops_s'}
     plain = dict(m, peak={k: v for k, v in m['peak'].items() if k not in extra})
+    if shared:
+        plain['workers'] = [dict(w, error=0 if w['error'] is None else w['error'])
+                            for w in m['workers']]
     whole = m['completed']*1e9/m['wall_ns']
-    _, peak = a.peak(dict(row, measurement=plain, whole_throughput_ops_s=whole), name)
+    # Failed samples retain their failure status and no accepted whole rate.
+    # Their raw measurement can still be reconstructed without scoring it.
+    _, peak = a.peak(dict(row, measurement=plain,
+                          whole_throughput_ops_s=whole if row['execution_status'] == 'OK' else None), name)
     if shared:
         first = m['samples'][peak['start_sample_index']]['completed']
         last = m['samples'][peak['end_sample_index']]['completed']
@@ -236,6 +247,8 @@ def main():
     p = argparse.ArgumentParser(description=__doc__)
     for name in ('repo', 'raw', 'report'):
         p.add_argument('--'+name, type=Path, required=True)
+    p.add_argument('--stopped-rwlock', action='store_true',
+                   help='Preserve the exact 147-attempt timing-1 failure and its 117 unrun cases.')
     args = p.parse_args()
     assert socket.gethostname() == '380G10' and not args.report.exists()
     sys.dont_write_bytecode = True
@@ -246,8 +259,16 @@ def main():
     sources, binaries = a.manifests()
     tasks, plan, manifest, health = (a.jread(n+'.json') for n in
                                    ('tasks', 'task-plan', 'committed-source', 'health'))
-    a.check(tasks['state'] == 'COMPLETE' and tasks['passed'] and tasks['final_idle'] and
-            tasks['phase'] == 'timing' and len(tasks['tasks']) == 10, 'completed_supervisor')
+    stopped = args.stopped_rwlock
+    if stopped:
+        a.check(Path(a.archive['guest_base']).name == 'timing-1' and tasks['state'] == 'FAILED' and
+                tasks['passed'] is False and tasks['final_idle'] is False and
+                tasks['failed_task'] == 'rwlock-w20' and len(tasks['tasks']) == 9,
+                'retained_failed_supervisor')
+    else:
+        a.check(tasks['state'] == 'COMPLETE' and tasks['passed'] and tasks['final_idle'] and
+                len(tasks['tasks']) == 10, 'completed_supervisor')
+    a.check(tasks['phase'] == 'timing' and len(plan['phases']['timing']) == 10, 'full_original_plan')
     a.check(tasks['source_commit'] == plan['source_commit'] == manifest['commit'] ==
             health['source_commit'] == shared.SOURCE and len(manifest['files']) == 497,
             'source_identity')
@@ -272,14 +293,31 @@ def main():
             a.jread('preflight/host-state.json') == a.jread('host-before.json'), 'preflight_inputs')
     a.check(health['verifier_sha256'] == a.files['verify.py'] ==
             helper.hashfile(args.repo/STAGE/'verify.py'), 'verifier_binding')
-    cold, images, retired, loaded, faults, sessions = [], [], [], [], [], []
+    if stopped:
+        endpoint = a.jread('endpoint-timing.json')
+        captured = a.jread('host-after.json')
+        delay = datetime.fromisoformat(captured['captured_utc']).timestamp()-tasks['tasks'][-1]['finished_unix']
+        a.check(a.files['launch.sh'] == '215d64e540040a69bb647e2f2afc446be5a4ee30937a8b8b2f27a14215ce1213'
+                and a.jread('launch-exit.json') == dict(supervisor_ssh_exit=1, host_capture_exit=0),
+                'unchanged_single_launcher_failed_exit')
+        a.check(endpoint['child_finished_unix'] == tasks['tasks'][-1]['finished_unix'] and
+                endpoint['host_capture_utc'] == captured['captured_utc'] and
+                endpoint['capture_delay_seconds'] == delay and 0 <= delay < 1 and
+                endpoint['host_threads'] == len(captured['qemu'][0]['tasks']) == 83 and
+                endpoint['original_host_threads'] == 67 and endpoint['endpoint_verdict'] == 'FAIL',
+                'original_immediate_failed_endpoint')
+    cold, images, retired, loaded, faults, sessions, failures, not_run = [], [], [], [], [], [], [], []
     totals, classes, family_counts = Counter(), Counter(), Counter()
     source_checks = len(manifest['files'])
     a.windows = []
     for task, selected in zip(tasks['tasks'], plan['phases']['timing']):
         name, root = task['name'], task['name']+'/'
-        a.check(name == selected['name'] and task['state'] == 'FINISHED' and task['exit_code'] == 0 and
-                task['completed_sessions'] == selected['expected_sessions'], 'completed_child', name)
+        failed_child = stopped and name == 'rwlock-w20'
+        a.check(name == selected['name'] and task['state'] == 'FINISHED' and
+                task['exit_code'] == int(failed_child), 'child_exit_verdict', name)
+        a.check(('completed_sessions' not in task and 'committed_source_files' not in task)
+                if failed_child else task['completed_sessions'] == selected['expected_sessions'],
+                'supervisor_counts_preserved', name)
         original = root+'source/'
         source = a.jread(root+'source-sha256.json')
         overlay = 'bench/spin_cacheline/.build/provider/'
@@ -291,8 +329,11 @@ def main():
             expected[overlay+'manifest.json'] = a.files[provider+'manifest.json']
             a.check(extra == expected and len(extra) == task['reconstructed_provider_files'],
                     'exact_generated_snapshot_set', name)
-        a.check(len(source)-len(extra) == task['committed_source_files'] and prepared['complete'],
+        a.check(len(source)-len(extra) == (248 if failed_child else task['committed_source_files'])
+                and prepared['complete'],
                 'snapshot_source_count', name)
+        if failed_child:
+            a.check(not extra and len(prepared['prepared']) == 93, 'failed_child_exact_sources', name)
         source_checks += len(source)+len(prepared['prepared'])
         for path, digest in source.items():
             if path not in extra:
@@ -317,15 +358,29 @@ def main():
             tag, prefix = name+'/'+row['name'], root+row['name']+'/'
             a.check(all(spec.get(k) == v for k, v in dry_spec.items()) and
                     all(row.get(k) == v for k, v in spec.items()), 'frozen_plan_binding', tag)
+            if failed_child and row['execution_status'] == 'NOT_RUN':
+                a.check(len(failures) == 1 and not any(p.startswith(prefix) for p in a.files),
+                        'not_run_has_no_session', tag)
+                not_run.append(tag)
+                continue
+            failed_session = failed_child and row['name'] == 'list-n16-kdlock-w020-t08-r00'
             saved = a.jread(prefix+'session.json')
             a.check(all(row.get(k) == v for k, v in saved.items()), 'session_binding', tag)
             raw = a.jread(prefix+'measure.json')
             m = row['measurement']
             a.check({k: v for k, v in m.items() if k != 'peak'} ==
                     {k: v for k, v in raw.items() if k != 'peak'}, 'raw_client_binding', tag)
-            a.check(row['execution_status'] == 'OK' and row['drained'] and not row.get('cleanup_error') and
+            a.check(row['execution_status'] == ('NO_JIT' if failed_session else 'OK') and
+                    row['drained'] and not row.get('cleanup_error') and
                     not any(row.get(k) for k in ('functional', 'diagnostic', 'pmu', 'perf_record')) and
-                    row.get('score_eligible') is not False, 'valid_unprofiled_session', tag)
+                    (failed_session or row.get('score_eligible') is not False),
+                    'unprofiled_session_verdict_and_drain', tag)
+            if failed_session:
+                a.check(row['error'] == 'required complete KD body did not execute' and
+                        row['require_jit'] is True and row['helper_waves'] == 0 and
+                        a.jread(root+'failure.json') == dict(status='NO_JIT', error=row['error']),
+                        'strict_no_jit_failure_preserved', tag)
+                failures.append(dict(path=tag, status=row['execution_status'], error=row['error']))
             a.check(row['workload'] in ('list', 'list-prefetch') and row['list_nodes'] in (16, 128) and
                     row['threads'] in (8, 60) and row['cpus'] == list(range(row['threads'])) and
                     (row['collector_cpu'], row['duration_ms'], row['peak_window_ms'],
@@ -372,7 +427,12 @@ def main():
                         completions == row[key+'_after']-row[key+'_before'], 'jit_counter_delta', tag)
                 kind = 'RETURNED_JIT' if completions else 'PARTIAL_JIT' if entries else 'NO_JIT'
                 required = is_shared or row['lock_kind'] == 'mutex' or row['threads'] >= 20
-                a.check(kind != 'PARTIAL_JIT' and (not required or completions > 0), 'original_jit_requirement', tag)
+                if failed_session:
+                    a.check(required and entries == completions == 0 and kind == 'NO_JIT',
+                            'failed_original_jit_requirement', tag)
+                else:
+                    a.check(kind != 'PARTIAL_JIT' and (not required or completions > 0),
+                            'original_jit_requirement', tag)
                 a.check(row['retired'] == shared.RETIRED, 'exact_retirement', tag)
                 retired.append(dict(task=name, name=row['name'], retired=row['retired']))
                 publication, image = row['published_before'], row['list_image_audit']
@@ -410,9 +470,23 @@ def main():
                 workload=row['workload'], threads=row['threads'], arm=row['arm'], repeat=row['repeat'],
                 execution_class=kind, whole_ops_s=whole, peak_ops_s=peak, cpu_ns_per_op=cpu,
                 operations=m['completed'], jit_entries=entries, jit_completions=completions,
+                strict_result=row['execution_status'],
                 tclock_native_delegated=native_delegated))
-    a.check(len(sessions) == health['sessions'] == health['functionally_valid'] == health['drained'] == 264 and
-            family_counts == dict(spin=72, mutex=72, rwlock=72, rwsem=48), 'all_families_completed')
+    if stopped:
+        not_run += ['rwsem-w20/'+s['name'] for s in a.jread('preflight/rwsem-w20.plan.json')]
+        a.check(not any(p.startswith('rwsem-w20/') for p in a.files), 'rwsem_never_started')
+    count = 147 if stopped else 264
+    a.check(len(sessions) == health['sessions'] == health['drained'] ==
+            health['business_oracles_valid'] == count and
+            health['functionally_valid'] == count-int(stopped) and
+            family_counts == (dict(spin=72, mutex=72, rwlock=3) if stopped else
+                              dict(spin=72, mutex=72, rwlock=72, rwsem=48)),
+            'exact_attempted_scope')
+    a.check(health['planned_sessions'] == 264 and health['stopped_rwlock'] == stopped and
+            health['supervisor_state'] == tasks['state'] and health['strict_failures'] == failures and
+            len(failures) == int(stopped) and health['not_run'] == not_run and
+            len(set(not_run)) == len(not_run) == (117 if stopped else 0),
+            'failure_and_missing_scope')
     fields = ('family', 'workload', 'nodes', 'threads', 'arm', 'repeat')
     expected = {(family, workload, nodes, threads, arm, repeat)
                 for family in ('spin', 'mutex', 'rwlock', 'rwsem')
@@ -420,9 +494,13 @@ def main():
                 for threads in (8, 60)
                 for arm in (('native', 'kdlock') if family == 'rwsem' else ('native', 'tclock', 'kdlock'))
                 for repeat in range(3)}
+    if stopped:
+        expected = {point for point in expected if point[0] in ('spin', 'mutex') or
+                    point[:4] == ('rwlock', 'list', 16, 8) and point[-1] == 0}
     a.check({tuple(row[k] for k in fields) for row in sessions} == expected and
-            len(sessions) == len(expected) == 264, 'exact_supported_matrix')
-    a.check(len(cold) == health['compiled_list_audits'] == 44 and len(images) == len(retired) == 96 and
+            len(sessions) == len(expected) == count, 'exact_attempted_matrix')
+    a.check(len(cold) == health['compiled_list_audits'] == (36 if stopped else 44) and
+            len(images) == len(retired) == (49 if stopped else 96) and
             loaded == health['loaded_images'] and retired == health['exact_retirements'], 'image_retirement_totals')
     a.check(dict(totals) == health['totals'] and dict(classes) == health['execution_classes'], 'health_arithmetic')
     a.check(source_checks == health['source_hashes_checked'] and len(binaries) == health['binary_hashes_checked'],
@@ -438,6 +516,8 @@ def main():
     endpoints = shared.environments(a, health)
     buckets = defaultdict(list)
     for row in sessions:
+        if row['strict_result'] != 'OK':
+            continue
         buckets[tuple(row[k] for k in ('family', 'nodes', 'workload', 'threads', 'arm', 'execution_class'))].append(row)
     groups = []
     for key, rows in sorted(buckets.items()):
@@ -464,6 +544,7 @@ def main():
         regular_file_hash_map_sha256=helper.canonical(a.files), totals=dict(totals),
         execution_classes=dict(classes), family_counts=dict(family_counts),
         host_endpoints=endpoints, sessions=sessions, groups=groups, comparisons=points, prefetch_comparisons=hints,
+        supervisor_state=tasks['state'], strict_failures=failures, not_run=not_run, planned_sessions=264,
         comparison_counts=dict(Counter(r['family']+':'+r['comparator']+':'+r['status'] for r in points)),
         prefetch_counts=dict(Counter(r['family']+':'+r['status'] for r in hints)),
         script_sha256=helper.hashfile(Path(__file__)), helper_sha256=SHARED_SHA, overall_acceptance='OPEN',

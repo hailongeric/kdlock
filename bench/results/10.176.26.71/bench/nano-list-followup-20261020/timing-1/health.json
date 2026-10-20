@@ -1,0 +1,1028 @@
+{
+  "binary_hashes_checked": 80,
+  "boot_id": "b65f0205-c8f9-4385-8b13-039cbce243a6",
+  "business_oracles_valid": 147,
+  "checked_unix": 1792517850.3491235,
+  "compiled_list_audits": 36,
+  "control_completion_scope": "TCLock exclusive has no KD completion counter; its native mutex delegation is checked separately.",
+  "drained": 147,
+  "exact_retirements": [
+    {
+      "name": "list-n16-t08-r00-direct-kdlock-adaptive",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      },
+      "task": "spin-list-n16"
+    },
+    {
+      "name": "list-n16-t08-r01-direct-kdlock-adaptive",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      },
+      "task": "spin-list-n16"
+    },
+    {
+      "name": "list-n16-t08-r02-direct-kdlock-adaptive",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      },
+      "task": "spin-list-n16"
+    },
+    {
+      "name": "list-n16-t60-r00-direct-kdlock-adaptive",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      },
+      "task": "spin-list-n16"
+    },
+    {
+      "name": "list-n16-t60-r01-direct-kdlock-adaptive",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      },
+      "task": "spin-list-n16"
+    },
+    {
+      "name": "list-n16-t60-r02-direct-kdlock-adaptive",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      },
+      "task": "spin-list-n16"
+    },
+    {
+      "name": "list-n16-t08-r00-direct-kdlock-adaptive-public",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      },
+      "task": "mutex-public-list-n16"
+    },
+    {
+      "name": "list-n16-t08-r01-direct-kdlock-adaptive-public",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      },
+      "task": "mutex-public-list-n16"
+    },
+    {
+      "name": "list-n16-t08-r02-direct-kdlock-adaptive-public",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      },
+      "task": "mutex-public-list-n16"
+    },
+    {
+      "name": "list-n16-t60-r00-direct-kdlock-adaptive-public",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      },
+      "task": "mutex-public-list-n16"
+    },
+    {
+      "name": "list-n16-t60-r01-direct-kdlock-adaptive-public",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      },
+      "task": "mutex-public-list-n16"
+    },
+    {
+      "name": "list-n16-t60-r02-direct-kdlock-adaptive-public",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      },
+      "task": "mutex-public-list-n16"
+    },
+    {
+      "name": "list-prefetch-n16-t08-r00-direct-kdlock-adaptive",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      },
+      "task": "spin-list-prefetch-n16"
+    },
+    {
+      "name": "list-prefetch-n16-t08-r01-direct-kdlock-adaptive",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      },
+      "task": "spin-list-prefetch-n16"
+    },
+    {
+      "name": "list-prefetch-n16-t08-r02-direct-kdlock-adaptive",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      },
+      "task": "spin-list-prefetch-n16"
+    },
+    {
+      "name": "list-prefetch-n16-t60-r00-direct-kdlock-adaptive",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      },
+      "task": "spin-list-prefetch-n16"
+    },
+    {
+      "name": "list-prefetch-n16-t60-r01-direct-kdlock-adaptive",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      },
+      "task": "spin-list-prefetch-n16"
+    },
+    {
+      "name": "list-prefetch-n16-t60-r02-direct-kdlock-adaptive",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      },
+      "task": "spin-list-prefetch-n16"
+    },
+    {
+      "name": "list-prefetch-n16-t08-r00-direct-kdlock-adaptive-public",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      },
+      "task": "mutex-public-list-prefetch-n16"
+    },
+    {
+      "name": "list-prefetch-n16-t08-r01-direct-kdlock-adaptive-public",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      },
+      "task": "mutex-public-list-prefetch-n16"
+    },
+    {
+      "name": "list-prefetch-n16-t08-r02-direct-kdlock-adaptive-public",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      },
+      "task": "mutex-public-list-prefetch-n16"
+    },
+    {
+      "name": "list-prefetch-n16-t60-r00-direct-kdlock-adaptive-public",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      },
+      "task": "mutex-public-list-prefetch-n16"
+    },
+    {
+      "name": "list-prefetch-n16-t60-r01-direct-kdlock-adaptive-public",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      },
+      "task": "mutex-public-list-prefetch-n16"
+    },
+    {
+      "name": "list-prefetch-n16-t60-r02-direct-kdlock-adaptive-public",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      },
+      "task": "mutex-public-list-prefetch-n16"
+    },
+    {
+      "name": "list-n128-t08-r00-direct-kdlock-adaptive",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      },
+      "task": "spin-list-n128"
+    },
+    {
+      "name": "list-n128-t08-r01-direct-kdlock-adaptive",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      },
+      "task": "spin-list-n128"
+    },
+    {
+      "name": "list-n128-t08-r02-direct-kdlock-adaptive",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      },
+      "task": "spin-list-n128"
+    },
+    {
+      "name": "list-n128-t60-r00-direct-kdlock-adaptive",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      },
+      "task": "spin-list-n128"
+    },
+    {
+      "name": "list-n128-t60-r01-direct-kdlock-adaptive",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      },
+      "task": "spin-list-n128"
+    },
+    {
+      "name": "list-n128-t60-r02-direct-kdlock-adaptive",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      },
+      "task": "spin-list-n128"
+    },
+    {
+      "name": "list-n128-t08-r00-direct-kdlock-adaptive-public",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      },
+      "task": "mutex-public-list-n128"
+    },
+    {
+      "name": "list-n128-t08-r01-direct-kdlock-adaptive-public",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      },
+      "task": "mutex-public-list-n128"
+    },
+    {
+      "name": "list-n128-t08-r02-direct-kdlock-adaptive-public",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      },
+      "task": "mutex-public-list-n128"
+    },
+    {
+      "name": "list-n128-t60-r00-direct-kdlock-adaptive-public",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      },
+      "task": "mutex-public-list-n128"
+    },
+    {
+      "name": "list-n128-t60-r01-direct-kdlock-adaptive-public",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      },
+      "task": "mutex-public-list-n128"
+    },
+    {
+      "name": "list-n128-t60-r02-direct-kdlock-adaptive-public",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      },
+      "task": "mutex-public-list-n128"
+    },
+    {
+      "name": "list-prefetch-n128-t08-r00-direct-kdlock-adaptive",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      },
+      "task": "spin-list-prefetch-n128"
+    },
+    {
+      "name": "list-prefetch-n128-t08-r01-direct-kdlock-adaptive",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      },
+      "task": "spin-list-prefetch-n128"
+    },
+    {
+      "name": "list-prefetch-n128-t08-r02-direct-kdlock-adaptive",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      },
+      "task": "spin-list-prefetch-n128"
+    },
+    {
+      "name": "list-prefetch-n128-t60-r00-direct-kdlock-adaptive",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      },
+      "task": "spin-list-prefetch-n128"
+    },
+    {
+      "name": "list-prefetch-n128-t60-r01-direct-kdlock-adaptive",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      },
+      "task": "spin-list-prefetch-n128"
+    },
+    {
+      "name": "list-prefetch-n128-t60-r02-direct-kdlock-adaptive",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      },
+      "task": "spin-list-prefetch-n128"
+    },
+    {
+      "name": "list-prefetch-n128-t08-r00-direct-kdlock-adaptive-public",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      },
+      "task": "mutex-public-list-prefetch-n128"
+    },
+    {
+      "name": "list-prefetch-n128-t08-r01-direct-kdlock-adaptive-public",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      },
+      "task": "mutex-public-list-prefetch-n128"
+    },
+    {
+      "name": "list-prefetch-n128-t08-r02-direct-kdlock-adaptive-public",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      },
+      "task": "mutex-public-list-prefetch-n128"
+    },
+    {
+      "name": "list-prefetch-n128-t60-r00-direct-kdlock-adaptive-public",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      },
+      "task": "mutex-public-list-prefetch-n128"
+    },
+    {
+      "name": "list-prefetch-n128-t60-r01-direct-kdlock-adaptive-public",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      },
+      "task": "mutex-public-list-prefetch-n128"
+    },
+    {
+      "name": "list-prefetch-n128-t60-r02-direct-kdlock-adaptive-public",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      },
+      "task": "mutex-public-list-prefetch-n128"
+    },
+    {
+      "name": "list-n16-kdlock-w020-t08-r00",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      },
+      "task": "rwlock-w20"
+    }
+  ],
+  "execution_classes": {
+    "mutex:kdlock:RETURNED_JIT": 24,
+    "mutex:native:NATIVE": 24,
+    "mutex:tclock:NATIVE": 24,
+    "rwlock:kdlock:NO_JIT": 1,
+    "rwlock:native:NATIVE": 1,
+    "rwlock:tclock:NATIVE": 1,
+    "spin:kdlock:RETURNED_JIT": 24,
+    "spin:native:NATIVE": 24,
+    "spin:tclock:NATIVE": 24
+  },
+  "functionally_valid": 146,
+  "host_endpoints": {
+    "after": {
+      "error": "replay QEMU thread placement differs",
+      "passed": false
+    },
+    "before": {
+      "comparison": {
+        "configuration_matches": true,
+        "original_memory": [
+          {
+            "address": "7469b7c00000",
+            "page_kb": 4,
+            "policy": "bind:1",
+            "resident_pages": {
+              "N0": 132756,
+              "N1": 3012972
+            }
+          },
+          {
+            "address": "746cb7e00000",
+            "page_kb": 4,
+            "policy": "bind:0",
+            "resident_pages": {
+              "N0": 2873535,
+              "N1": 271561
+            }
+          }
+        ],
+        "replay_memory": [
+          {
+            "address": "7469b7c00000",
+            "page_kb": 4,
+            "policy": "bind:1",
+            "resident_pages": {
+              "N0": 126024,
+              "N1": 3019704
+            }
+          },
+          {
+            "address": "746cb7e00000",
+            "page_kb": 4,
+            "policy": "bind:0",
+            "resident_pages": {
+              "N0": 2939931,
+              "N1": 205165
+            }
+          }
+        ],
+        "scope": "Same QEMU process/configuration, pins, frequency policy, memory bindings, guest boot, dependencies and topology. Resident pages are recorded, not fixed."
+      },
+      "passed": true
+    }
+  },
+  "idle": true,
+  "loaded_images": [
+    {
+      "loaded_sha256": "ef221eee07f77083d9ead9a7a1f1c156b5f84040a67bd718f00ed55a2de6dbe2",
+      "name": "list-n16-t08-r00-direct-kdlock-adaptive",
+      "task": "spin-list-n16"
+    },
+    {
+      "loaded_sha256": "ef221eee07f77083d9ead9a7a1f1c156b5f84040a67bd718f00ed55a2de6dbe2",
+      "name": "list-n16-t08-r01-direct-kdlock-adaptive",
+      "task": "spin-list-n16"
+    },
+    {
+      "loaded_sha256": "ef221eee07f77083d9ead9a7a1f1c156b5f84040a67bd718f00ed55a2de6dbe2",
+      "name": "list-n16-t08-r02-direct-kdlock-adaptive",
+      "task": "spin-list-n16"
+    },
+    {
+      "loaded_sha256": "ef221eee07f77083d9ead9a7a1f1c156b5f84040a67bd718f00ed55a2de6dbe2",
+      "name": "list-n16-t60-r00-direct-kdlock-adaptive",
+      "task": "spin-list-n16"
+    },
+    {
+      "loaded_sha256": "ef221eee07f77083d9ead9a7a1f1c156b5f84040a67bd718f00ed55a2de6dbe2",
+      "name": "list-n16-t60-r01-direct-kdlock-adaptive",
+      "task": "spin-list-n16"
+    },
+    {
+      "loaded_sha256": "ef221eee07f77083d9ead9a7a1f1c156b5f84040a67bd718f00ed55a2de6dbe2",
+      "name": "list-n16-t60-r02-direct-kdlock-adaptive",
+      "task": "spin-list-n16"
+    },
+    {
+      "loaded_sha256": "38345ec45da3e97820a5104391775f51924b3873756ef7ed4110001af35c0996",
+      "name": "list-n16-t08-r00-direct-kdlock-adaptive-public",
+      "task": "mutex-public-list-n16"
+    },
+    {
+      "loaded_sha256": "38345ec45da3e97820a5104391775f51924b3873756ef7ed4110001af35c0996",
+      "name": "list-n16-t08-r01-direct-kdlock-adaptive-public",
+      "task": "mutex-public-list-n16"
+    },
+    {
+      "loaded_sha256": "38345ec45da3e97820a5104391775f51924b3873756ef7ed4110001af35c0996",
+      "name": "list-n16-t08-r02-direct-kdlock-adaptive-public",
+      "task": "mutex-public-list-n16"
+    },
+    {
+      "loaded_sha256": "38345ec45da3e97820a5104391775f51924b3873756ef7ed4110001af35c0996",
+      "name": "list-n16-t60-r00-direct-kdlock-adaptive-public",
+      "task": "mutex-public-list-n16"
+    },
+    {
+      "loaded_sha256": "38345ec45da3e97820a5104391775f51924b3873756ef7ed4110001af35c0996",
+      "name": "list-n16-t60-r01-direct-kdlock-adaptive-public",
+      "task": "mutex-public-list-n16"
+    },
+    {
+      "loaded_sha256": "38345ec45da3e97820a5104391775f51924b3873756ef7ed4110001af35c0996",
+      "name": "list-n16-t60-r02-direct-kdlock-adaptive-public",
+      "task": "mutex-public-list-n16"
+    },
+    {
+      "loaded_sha256": "b2869a13e259af38ee9fc5fa21b3bbcf3059b15f0b6f89bd52625982d8338cb2",
+      "name": "list-prefetch-n16-t08-r00-direct-kdlock-adaptive",
+      "task": "spin-list-prefetch-n16"
+    },
+    {
+      "loaded_sha256": "b2869a13e259af38ee9fc5fa21b3bbcf3059b15f0b6f89bd52625982d8338cb2",
+      "name": "list-prefetch-n16-t08-r01-direct-kdlock-adaptive",
+      "task": "spin-list-prefetch-n16"
+    },
+    {
+      "loaded_sha256": "b2869a13e259af38ee9fc5fa21b3bbcf3059b15f0b6f89bd52625982d8338cb2",
+      "name": "list-prefetch-n16-t08-r02-direct-kdlock-adaptive",
+      "task": "spin-list-prefetch-n16"
+    },
+    {
+      "loaded_sha256": "b2869a13e259af38ee9fc5fa21b3bbcf3059b15f0b6f89bd52625982d8338cb2",
+      "name": "list-prefetch-n16-t60-r00-direct-kdlock-adaptive",
+      "task": "spin-list-prefetch-n16"
+    },
+    {
+      "loaded_sha256": "b2869a13e259af38ee9fc5fa21b3bbcf3059b15f0b6f89bd52625982d8338cb2",
+      "name": "list-prefetch-n16-t60-r01-direct-kdlock-adaptive",
+      "task": "spin-list-prefetch-n16"
+    },
+    {
+      "loaded_sha256": "b2869a13e259af38ee9fc5fa21b3bbcf3059b15f0b6f89bd52625982d8338cb2",
+      "name": "list-prefetch-n16-t60-r02-direct-kdlock-adaptive",
+      "task": "spin-list-prefetch-n16"
+    },
+    {
+      "loaded_sha256": "552fb23fefd52b6346d6cb8e729f82768dba36505f85dc1a224ed85c6bcb5d26",
+      "name": "list-prefetch-n16-t08-r00-direct-kdlock-adaptive-public",
+      "task": "mutex-public-list-prefetch-n16"
+    },
+    {
+      "loaded_sha256": "552fb23fefd52b6346d6cb8e729f82768dba36505f85dc1a224ed85c6bcb5d26",
+      "name": "list-prefetch-n16-t08-r01-direct-kdlock-adaptive-public",
+      "task": "mutex-public-list-prefetch-n16"
+    },
+    {
+      "loaded_sha256": "552fb23fefd52b6346d6cb8e729f82768dba36505f85dc1a224ed85c6bcb5d26",
+      "name": "list-prefetch-n16-t08-r02-direct-kdlock-adaptive-public",
+      "task": "mutex-public-list-prefetch-n16"
+    },
+    {
+      "loaded_sha256": "552fb23fefd52b6346d6cb8e729f82768dba36505f85dc1a224ed85c6bcb5d26",
+      "name": "list-prefetch-n16-t60-r00-direct-kdlock-adaptive-public",
+      "task": "mutex-public-list-prefetch-n16"
+    },
+    {
+      "loaded_sha256": "552fb23fefd52b6346d6cb8e729f82768dba36505f85dc1a224ed85c6bcb5d26",
+      "name": "list-prefetch-n16-t60-r01-direct-kdlock-adaptive-public",
+      "task": "mutex-public-list-prefetch-n16"
+    },
+    {
+      "loaded_sha256": "552fb23fefd52b6346d6cb8e729f82768dba36505f85dc1a224ed85c6bcb5d26",
+      "name": "list-prefetch-n16-t60-r02-direct-kdlock-adaptive-public",
+      "task": "mutex-public-list-prefetch-n16"
+    },
+    {
+      "loaded_sha256": "a9d730bc5fd6e53e3d644685611d31b65e2195a690f0ca1d67e5fa100f35615c",
+      "name": "list-n128-t08-r00-direct-kdlock-adaptive",
+      "task": "spin-list-n128"
+    },
+    {
+      "loaded_sha256": "a9d730bc5fd6e53e3d644685611d31b65e2195a690f0ca1d67e5fa100f35615c",
+      "name": "list-n128-t08-r01-direct-kdlock-adaptive",
+      "task": "spin-list-n128"
+    },
+    {
+      "loaded_sha256": "a9d730bc5fd6e53e3d644685611d31b65e2195a690f0ca1d67e5fa100f35615c",
+      "name": "list-n128-t08-r02-direct-kdlock-adaptive",
+      "task": "spin-list-n128"
+    },
+    {
+      "loaded_sha256": "a9d730bc5fd6e53e3d644685611d31b65e2195a690f0ca1d67e5fa100f35615c",
+      "name": "list-n128-t60-r00-direct-kdlock-adaptive",
+      "task": "spin-list-n128"
+    },
+    {
+      "loaded_sha256": "a9d730bc5fd6e53e3d644685611d31b65e2195a690f0ca1d67e5fa100f35615c",
+      "name": "list-n128-t60-r01-direct-kdlock-adaptive",
+      "task": "spin-list-n128"
+    },
+    {
+      "loaded_sha256": "a9d730bc5fd6e53e3d644685611d31b65e2195a690f0ca1d67e5fa100f35615c",
+      "name": "list-n128-t60-r02-direct-kdlock-adaptive",
+      "task": "spin-list-n128"
+    },
+    {
+      "loaded_sha256": "8e1365dfa5cbe06dc7fc1eb191bdc373872496645f4e212e295ad6a8d1f4f739",
+      "name": "list-n128-t08-r00-direct-kdlock-adaptive-public",
+      "task": "mutex-public-list-n128"
+    },
+    {
+      "loaded_sha256": "8e1365dfa5cbe06dc7fc1eb191bdc373872496645f4e212e295ad6a8d1f4f739",
+      "name": "list-n128-t08-r01-direct-kdlock-adaptive-public",
+      "task": "mutex-public-list-n128"
+    },
+    {
+      "loaded_sha256": "8e1365dfa5cbe06dc7fc1eb191bdc373872496645f4e212e295ad6a8d1f4f739",
+      "name": "list-n128-t08-r02-direct-kdlock-adaptive-public",
+      "task": "mutex-public-list-n128"
+    },
+    {
+      "loaded_sha256": "8e1365dfa5cbe06dc7fc1eb191bdc373872496645f4e212e295ad6a8d1f4f739",
+      "name": "list-n128-t60-r00-direct-kdlock-adaptive-public",
+      "task": "mutex-public-list-n128"
+    },
+    {
+      "loaded_sha256": "8e1365dfa5cbe06dc7fc1eb191bdc373872496645f4e212e295ad6a8d1f4f739",
+      "name": "list-n128-t60-r01-direct-kdlock-adaptive-public",
+      "task": "mutex-public-list-n128"
+    },
+    {
+      "loaded_sha256": "8e1365dfa5cbe06dc7fc1eb191bdc373872496645f4e212e295ad6a8d1f4f739",
+      "name": "list-n128-t60-r02-direct-kdlock-adaptive-public",
+      "task": "mutex-public-list-n128"
+    },
+    {
+      "loaded_sha256": "40d06d6980d960c899b966dbeff2bfded7fb4ab0d0ce9e13ce665b1e3e1bca7f",
+      "name": "list-prefetch-n128-t08-r00-direct-kdlock-adaptive",
+      "task": "spin-list-prefetch-n128"
+    },
+    {
+      "loaded_sha256": "40d06d6980d960c899b966dbeff2bfded7fb4ab0d0ce9e13ce665b1e3e1bca7f",
+      "name": "list-prefetch-n128-t08-r01-direct-kdlock-adaptive",
+      "task": "spin-list-prefetch-n128"
+    },
+    {
+      "loaded_sha256": "40d06d6980d960c899b966dbeff2bfded7fb4ab0d0ce9e13ce665b1e3e1bca7f",
+      "name": "list-prefetch-n128-t08-r02-direct-kdlock-adaptive",
+      "task": "spin-list-prefetch-n128"
+    },
+    {
+      "loaded_sha256": "40d06d6980d960c899b966dbeff2bfded7fb4ab0d0ce9e13ce665b1e3e1bca7f",
+      "name": "list-prefetch-n128-t60-r00-direct-kdlock-adaptive",
+      "task": "spin-list-prefetch-n128"
+    },
+    {
+      "loaded_sha256": "40d06d6980d960c899b966dbeff2bfded7fb4ab0d0ce9e13ce665b1e3e1bca7f",
+      "name": "list-prefetch-n128-t60-r01-direct-kdlock-adaptive",
+      "task": "spin-list-prefetch-n128"
+    },
+    {
+      "loaded_sha256": "40d06d6980d960c899b966dbeff2bfded7fb4ab0d0ce9e13ce665b1e3e1bca7f",
+      "name": "list-prefetch-n128-t60-r02-direct-kdlock-adaptive",
+      "task": "spin-list-prefetch-n128"
+    },
+    {
+      "loaded_sha256": "8f5b1ec0f9ea7a568895f954c442bcce08111c837aa2cc88382bdc9e00056c65",
+      "name": "list-prefetch-n128-t08-r00-direct-kdlock-adaptive-public",
+      "task": "mutex-public-list-prefetch-n128"
+    },
+    {
+      "loaded_sha256": "8f5b1ec0f9ea7a568895f954c442bcce08111c837aa2cc88382bdc9e00056c65",
+      "name": "list-prefetch-n128-t08-r01-direct-kdlock-adaptive-public",
+      "task": "mutex-public-list-prefetch-n128"
+    },
+    {
+      "loaded_sha256": "8f5b1ec0f9ea7a568895f954c442bcce08111c837aa2cc88382bdc9e00056c65",
+      "name": "list-prefetch-n128-t08-r02-direct-kdlock-adaptive-public",
+      "task": "mutex-public-list-prefetch-n128"
+    },
+    {
+      "loaded_sha256": "8f5b1ec0f9ea7a568895f954c442bcce08111c837aa2cc88382bdc9e00056c65",
+      "name": "list-prefetch-n128-t60-r00-direct-kdlock-adaptive-public",
+      "task": "mutex-public-list-prefetch-n128"
+    },
+    {
+      "loaded_sha256": "8f5b1ec0f9ea7a568895f954c442bcce08111c837aa2cc88382bdc9e00056c65",
+      "name": "list-prefetch-n128-t60-r01-direct-kdlock-adaptive-public",
+      "task": "mutex-public-list-prefetch-n128"
+    },
+    {
+      "loaded_sha256": "8f5b1ec0f9ea7a568895f954c442bcce08111c837aa2cc88382bdc9e00056c65",
+      "name": "list-prefetch-n128-t60-r02-direct-kdlock-adaptive-public",
+      "task": "mutex-public-list-prefetch-n128"
+    },
+    {
+      "loaded_sha256": "5dacec6101e9ccfdbced0788dbe721c2ec0c651b3c5b8f14e3743450f426e4bd",
+      "name": "list-n16-kdlock-w020-t08-r00",
+      "task": "rwlock-w20"
+    }
+  ],
+  "not_run": [
+    "rwlock-w20/list-n16-kdlock-w020-t08-r01",
+    "rwlock-w20/list-n16-tclock-w020-t08-r01",
+    "rwlock-w20/list-n16-native-w020-t08-r01",
+    "rwlock-w20/list-n16-native-w020-t08-r02",
+    "rwlock-w20/list-n16-tclock-w020-t08-r02",
+    "rwlock-w20/list-n16-kdlock-w020-t08-r02",
+    "rwlock-w20/list-n16-native-w020-t60-r00",
+    "rwlock-w20/list-n16-tclock-w020-t60-r00",
+    "rwlock-w20/list-n16-kdlock-w020-t60-r00",
+    "rwlock-w20/list-n16-kdlock-w020-t60-r01",
+    "rwlock-w20/list-n16-tclock-w020-t60-r01",
+    "rwlock-w20/list-n16-native-w020-t60-r01",
+    "rwlock-w20/list-n16-native-w020-t60-r02",
+    "rwlock-w20/list-n16-tclock-w020-t60-r02",
+    "rwlock-w20/list-n16-kdlock-w020-t60-r02",
+    "rwlock-w20/list-n128-native-w020-t08-r00",
+    "rwlock-w20/list-n128-tclock-w020-t08-r00",
+    "rwlock-w20/list-n128-kdlock-w020-t08-r00",
+    "rwlock-w20/list-n128-kdlock-w020-t08-r01",
+    "rwlock-w20/list-n128-tclock-w020-t08-r01",
+    "rwlock-w20/list-n128-native-w020-t08-r01",
+    "rwlock-w20/list-n128-native-w020-t08-r02",
+    "rwlock-w20/list-n128-tclock-w020-t08-r02",
+    "rwlock-w20/list-n128-kdlock-w020-t08-r02",
+    "rwlock-w20/list-n128-native-w020-t60-r00",
+    "rwlock-w20/list-n128-tclock-w020-t60-r00",
+    "rwlock-w20/list-n128-kdlock-w020-t60-r00",
+    "rwlock-w20/list-n128-kdlock-w020-t60-r01",
+    "rwlock-w20/list-n128-tclock-w020-t60-r01",
+    "rwlock-w20/list-n128-native-w020-t60-r01",
+    "rwlock-w20/list-n128-native-w020-t60-r02",
+    "rwlock-w20/list-n128-tclock-w020-t60-r02",
+    "rwlock-w20/list-n128-kdlock-w020-t60-r02",
+    "rwlock-w20/list-prefetch-n16-native-w020-t08-r00",
+    "rwlock-w20/list-prefetch-n16-tclock-w020-t08-r00",
+    "rwlock-w20/list-prefetch-n16-kdlock-w020-t08-r00",
+    "rwlock-w20/list-prefetch-n16-kdlock-w020-t08-r01",
+    "rwlock-w20/list-prefetch-n16-tclock-w020-t08-r01",
+    "rwlock-w20/list-prefetch-n16-native-w020-t08-r01",
+    "rwlock-w20/list-prefetch-n16-native-w020-t08-r02",
+    "rwlock-w20/list-prefetch-n16-tclock-w020-t08-r02",
+    "rwlock-w20/list-prefetch-n16-kdlock-w020-t08-r02",
+    "rwlock-w20/list-prefetch-n16-native-w020-t60-r00",
+    "rwlock-w20/list-prefetch-n16-tclock-w020-t60-r00",
+    "rwlock-w20/list-prefetch-n16-kdlock-w020-t60-r00",
+    "rwlock-w20/list-prefetch-n16-kdlock-w020-t60-r01",
+    "rwlock-w20/list-prefetch-n16-tclock-w020-t60-r01",
+    "rwlock-w20/list-prefetch-n16-native-w020-t60-r01",
+    "rwlock-w20/list-prefetch-n16-native-w020-t60-r02",
+    "rwlock-w20/list-prefetch-n16-tclock-w020-t60-r02",
+    "rwlock-w20/list-prefetch-n16-kdlock-w020-t60-r02",
+    "rwlock-w20/list-prefetch-n128-native-w020-t08-r00",
+    "rwlock-w20/list-prefetch-n128-tclock-w020-t08-r00",
+    "rwlock-w20/list-prefetch-n128-kdlock-w020-t08-r00",
+    "rwlock-w20/list-prefetch-n128-kdlock-w020-t08-r01",
+    "rwlock-w20/list-prefetch-n128-tclock-w020-t08-r01",
+    "rwlock-w20/list-prefetch-n128-native-w020-t08-r01",
+    "rwlock-w20/list-prefetch-n128-native-w020-t08-r02",
+    "rwlock-w20/list-prefetch-n128-tclock-w020-t08-r02",
+    "rwlock-w20/list-prefetch-n128-kdlock-w020-t08-r02",
+    "rwlock-w20/list-prefetch-n128-native-w020-t60-r00",
+    "rwlock-w20/list-prefetch-n128-tclock-w020-t60-r00",
+    "rwlock-w20/list-prefetch-n128-kdlock-w020-t60-r00",
+    "rwlock-w20/list-prefetch-n128-kdlock-w020-t60-r01",
+    "rwlock-w20/list-prefetch-n128-tclock-w020-t60-r01",
+    "rwlock-w20/list-prefetch-n128-native-w020-t60-r01",
+    "rwlock-w20/list-prefetch-n128-native-w020-t60-r02",
+    "rwlock-w20/list-prefetch-n128-tclock-w020-t60-r02",
+    "rwlock-w20/list-prefetch-n128-kdlock-w020-t60-r02",
+    "rwsem-w20/rwsem-list-n16-native-w020-t08-r00",
+    "rwsem-w20/rwsem-list-n16-kdlock-w020-t08-r00",
+    "rwsem-w20/rwsem-list-n16-kdlock-w020-t08-r01",
+    "rwsem-w20/rwsem-list-n16-native-w020-t08-r01",
+    "rwsem-w20/rwsem-list-n16-native-w020-t08-r02",
+    "rwsem-w20/rwsem-list-n16-kdlock-w020-t08-r02",
+    "rwsem-w20/rwsem-list-n16-native-w020-t60-r00",
+    "rwsem-w20/rwsem-list-n16-kdlock-w020-t60-r00",
+    "rwsem-w20/rwsem-list-n16-kdlock-w020-t60-r01",
+    "rwsem-w20/rwsem-list-n16-native-w020-t60-r01",
+    "rwsem-w20/rwsem-list-n16-native-w020-t60-r02",
+    "rwsem-w20/rwsem-list-n16-kdlock-w020-t60-r02",
+    "rwsem-w20/rwsem-list-n128-native-w020-t08-r00",
+    "rwsem-w20/rwsem-list-n128-kdlock-w020-t08-r00",
+    "rwsem-w20/rwsem-list-n128-kdlock-w020-t08-r01",
+    "rwsem-w20/rwsem-list-n128-native-w020-t08-r01",
+    "rwsem-w20/rwsem-list-n128-native-w020-t08-r02",
+    "rwsem-w20/rwsem-list-n128-kdlock-w020-t08-r02",
+    "rwsem-w20/rwsem-list-n128-native-w020-t60-r00",
+    "rwsem-w20/rwsem-list-n128-kdlock-w020-t60-r00",
+    "rwsem-w20/rwsem-list-n128-kdlock-w020-t60-r01",
+    "rwsem-w20/rwsem-list-n128-native-w020-t60-r01",
+    "rwsem-w20/rwsem-list-n128-native-w020-t60-r02",
+    "rwsem-w20/rwsem-list-n128-kdlock-w020-t60-r02",
+    "rwsem-w20/rwsem-list-prefetch-n16-native-w020-t08-r00",
+    "rwsem-w20/rwsem-list-prefetch-n16-kdlock-w020-t08-r00",
+    "rwsem-w20/rwsem-list-prefetch-n16-kdlock-w020-t08-r01",
+    "rwsem-w20/rwsem-list-prefetch-n16-native-w020-t08-r01",
+    "rwsem-w20/rwsem-list-prefetch-n16-native-w020-t08-r02",
+    "rwsem-w20/rwsem-list-prefetch-n16-kdlock-w020-t08-r02",
+    "rwsem-w20/rwsem-list-prefetch-n16-native-w020-t60-r00",
+    "rwsem-w20/rwsem-list-prefetch-n16-kdlock-w020-t60-r00",
+    "rwsem-w20/rwsem-list-prefetch-n16-kdlock-w020-t60-r01",
+    "rwsem-w20/rwsem-list-prefetch-n16-native-w020-t60-r01",
+    "rwsem-w20/rwsem-list-prefetch-n16-native-w020-t60-r02",
+    "rwsem-w20/rwsem-list-prefetch-n16-kdlock-w020-t60-r02",
+    "rwsem-w20/rwsem-list-prefetch-n128-native-w020-t08-r00",
+    "rwsem-w20/rwsem-list-prefetch-n128-kdlock-w020-t08-r00",
+    "rwsem-w20/rwsem-list-prefetch-n128-kdlock-w020-t08-r01",
+    "rwsem-w20/rwsem-list-prefetch-n128-native-w020-t08-r01",
+    "rwsem-w20/rwsem-list-prefetch-n128-native-w020-t08-r02",
+    "rwsem-w20/rwsem-list-prefetch-n128-kdlock-w020-t08-r02",
+    "rwsem-w20/rwsem-list-prefetch-n128-native-w020-t60-r00",
+    "rwsem-w20/rwsem-list-prefetch-n128-kdlock-w020-t60-r00",
+    "rwsem-w20/rwsem-list-prefetch-n128-kdlock-w020-t60-r01",
+    "rwsem-w20/rwsem-list-prefetch-n128-native-w020-t60-r01",
+    "rwsem-w20/rwsem-list-prefetch-n128-native-w020-t60-r02",
+    "rwsem-w20/rwsem-list-prefetch-n128-kdlock-w020-t60-r02"
+  ],
+  "overall_acceptance": "OPEN",
+  "p95_latency": "UNMEASURED",
+  "per_session_kernel_faults": [],
+  "planned_sessions": 264,
+  "reference_environment_sha256": {
+    "environment.json": "7c19cf8989a5cf56d78edec014f991354ec0ba929f8bd5d1f495fd5ae942bbf5",
+    "host-state.json": "478e0dfa20602093ff849ae2c195bc5248101d9190d70fe63dd269e41633ba0a",
+    "topology.json": "a1375dd2e696fdc379fe2d3bddbd77247638d6a82946aa9ff14da45384d41816"
+  },
+  "sessions": 147,
+  "source_commit": "f48b90e42e1538a5204d215b573a238ebd95f391",
+  "source_hashes_checked": 4254,
+  "stopped_rwlock": true,
+  "strict_failures": [
+    {
+      "error": "required complete KD body did not execute",
+      "path": "rwlock-w20/list-n16-kdlock-w020-t08-r00",
+      "status": "NO_JIT"
+    }
+  ],
+  "supervisor_state": "FAILED",
+  "tasks": [
+    {
+      "binary_files": 8,
+      "compiled_list_audits": 3,
+      "sessions": 18,
+      "source_files": 334,
+      "task": "spin-list-n16"
+    },
+    {
+      "binary_files": 8,
+      "compiled_list_audits": 3,
+      "sessions": 18,
+      "source_files": 334,
+      "task": "mutex-public-list-n16"
+    },
+    {
+      "binary_files": 8,
+      "compiled_list_audits": 3,
+      "sessions": 18,
+      "source_files": 334,
+      "task": "spin-list-prefetch-n16"
+    },
+    {
+      "binary_files": 8,
+      "compiled_list_audits": 3,
+      "sessions": 18,
+      "source_files": 334,
+      "task": "mutex-public-list-prefetch-n16"
+    },
+    {
+      "binary_files": 8,
+      "compiled_list_audits": 3,
+      "sessions": 18,
+      "source_files": 334,
+      "task": "spin-list-n128"
+    },
+    {
+      "binary_files": 8,
+      "compiled_list_audits": 3,
+      "sessions": 18,
+      "source_files": 334,
+      "task": "mutex-public-list-n128"
+    },
+    {
+      "binary_files": 8,
+      "compiled_list_audits": 3,
+      "sessions": 18,
+      "source_files": 334,
+      "task": "spin-list-prefetch-n128"
+    },
+    {
+      "binary_files": 8,
+      "compiled_list_audits": 3,
+      "sessions": 18,
+      "source_files": 334,
+      "task": "mutex-public-list-prefetch-n128"
+    },
+    {
+      "binary_files": 16,
+      "compiled_list_audits": 12,
+      "sessions": 3,
+      "source_files": 248,
+      "task": "rwlock-w20"
+    }
+  ],
+  "totals": {
+    "jit_completions": 438339643,
+    "jit_entries": 438339643,
+    "operations": 940407808,
+    "reads": 28360092,
+    "writes": 912047716
+  },
+  "verifier_sha256": "6a77cdf92a0c398b5cb3bf642254e66de64e92102ea34472115ca1d362d17921",
+  "within_run_host_interference": "UNMEASURED"
+}
