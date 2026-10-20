@@ -96,10 +96,26 @@ archives remain separate under the analogous raw `live-2/` directory:
 
 `fafad5c` keeps the pending-reader poll and completion snapshot before the
 marker, carries their scalar values through the unchanged native continuation,
-and stores them in the result afterward. It retains the complete observation
-window and tests the restored live values. Strict compiled-image admission
-and all positive execution checks remain required; this correction is pending
-live validation.
+and stores them in the result afterward. `live-3` (collection commit `52ceb5a`)
+still failed strict admission, now at the result-pointer store immediately
+after RDTSC. It ran no business phases and drained completely. Its preserved
+archives and exact refusal are under [live-3](live-3/archives.json).
+
+`cf1e858` moves observations to a private local record on the retained caller
+frame, copying the record to the caller only after the exact unlock returns.
+The actual rwlock disassembly uses BP-relative fields through the marker,
+with the caller-pointer copy after both unlock routes. `live-4` passed strict
+ABI3/requirement-33 admission but failed the unchanged positive execution check:
+both cold phases had zero JIT entries and completions. All 2,800,000 writes and
+40,000,000 reads completed without business errors. This is **NO_JIT**, not a
+correctness pass. The remaining planned tasks did not run.
+
+Independent health verification found complete retirement, idle, 194 unchanged
+source/binary hashes and no matched kernel faults. The [live-4 archives](live-4/archives.json)
+retain the generated image, disassembly, worker receipts and failure. The next
+diagnostic attempt enables only the existing final heat statistics; thresholds,
+instruction admission, positive returned-body checks and reader checks remain
+unchanged. Baseline attempts retain their original instrumentation identities.
 
 The serialized plan covers checked native exits for mutex OUTER, public DIRECT,
 spin, rwlock and rwsem; address-

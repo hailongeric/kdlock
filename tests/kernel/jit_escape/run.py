@@ -150,6 +150,7 @@ class EscapeSession(Session):
         self.run(["rmmod", "tc_allocator_guard"], "unload-allocator-guard.log")
         self.run(["insmod", self.binaries["provider"], "bench_quiet=1",
                   "bench_complete_probe=1", "jit_timing=0",
+                  f"hotlock_stats={int(self.record['hotlock_stats'])}",
                   f"target_process={WORKER_COMM}"], "load-provider.log")
         self.loaded_kd = True
         caps = bytearray(16)
@@ -361,6 +362,8 @@ def main():
     parser.add_argument("--reader-iterations", type=int, default=10000000,
                         help="shared operations per reader and phase; hot writers require a pending reader")
     parser.add_argument("--mutex-api", choices=("outer", "public"), default="outer")
+    parser.add_argument("--hotlock-stats", action="store_true",
+                        help="retain final heat observations for diagnosis; admission is unchanged")
     kernel_identity.arguments(parser)
     args = parser.parse_args()
     rt.require(os.geteuid() == 0 and str(ROOT).startswith("/root/") and
@@ -497,7 +500,7 @@ def main():
                     entry_abi={"mutex": 2, "spin": 1, "rwlock": 3, "rwsem": 2}[args.family],
                     image_requirements=1 if args.family in ("mutex", "rwsem") else 33,
                     mutex_api=args.mutex_api if args.family == "mutex" else "not_applicable",
-                    caller_shell=shell, cookie_storage=cookie,
+                    caller_shell=shell, cookie_storage=cookie, hotlock_stats=args.hotlock_stats,
                     worker_roles=["writer"] * (len(args.cpus) - reader_count) + ["reader"] * reader_count,
                     reader_iterations=args.reader_iterations,
                     cpus=args.cpus, iterations=args.iterations, warmup_iterations=args.warmup_iterations,

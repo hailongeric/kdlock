@@ -1,0 +1,712 @@
+
+/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-3/rwlock/source/workload_modules/jit_escape/jit_escape_test.ko:     file format elf64-x86-64
+
+
+Disassembly of section .text:
+
+0000000000000000 <reader_body>:
+   0:	e8 00 00 00 00       	call   5 <reader_body+0x5>
+			1: R_X86_64_PLT32	__fentry__-0x4
+   5:	55                   	push   %rbp
+   6:	48 89 e5             	mov    %rsp,%rbp
+   9:	f0 ff 05 00 00 00 00 	lock incl 0x0(%rip)        # 10 <reader_body+0x10>
+			c: R_X86_64_PC32	.bss+0x50
+  10:	65 ff 05 00 00 00 00 	incl   %gs:0x0(%rip)        # 17 <reader_body+0x17>
+			13: R_X86_64_PC32	__preempt_count-0x4
+  17:	b8 00 02 00 00       	mov    $0x200,%eax
+  1c:	f0 0f c1 05 00 00 00 	lock xadd %eax,0x0(%rip)        # 24 <reader_body+0x24>
+  23:	00 
+			20: R_X86_64_PC32	.bss+0x7c
+  24:	a9 ff 01 00 00       	test   $0x1ff,%eax
+  29:	75 5d                	jne    88 <reader_body+0x88>
+  2b:	f0 ff 05 00 00 00 00 	lock incl 0x0(%rip)        # 32 <reader_body+0x32>
+			2e: R_X86_64_PC32	.bss+0x54
+  32:	8b 15 00 00 00 00    	mov    0x0(%rip),%edx        # 38 <reader_body+0x38>
+			34: R_X86_64_PC32	.bss+0x58
+  38:	b8 01 00 00 00       	mov    $0x1,%eax
+  3d:	85 d2                	test   %edx,%edx
+  3f:	75 14                	jne    55 <reader_body+0x55>
+  41:	48 8b 15 00 00 00 00 	mov    0x0(%rip),%rdx        # 48 <reader_body+0x48>
+			44: R_X86_64_PC32	.bss+0x3c
+  48:	48 8b 05 00 00 00 00 	mov    0x0(%rip),%rax        # 4f <reader_body+0x4f>
+			4b: R_X86_64_PC32	.bss+0x4
+  4f:	48 39 c2             	cmp    %rax,%rdx
+  52:	0f 95 c0             	setne  %al
+  55:	f0 ff 05 00 00 00 00 	lock incl 0x0(%rip)        # 5c <reader_body+0x5c>
+			58: R_X86_64_PC32	.bss+0x4c
+  5c:	f0 ff 0d 00 00 00 00 	lock decl 0x0(%rip)        # 63 <reader_body+0x63>
+			5f: R_X86_64_PC32	.bss+0x54
+  63:	f0 81 2d 00 00 00 00 	lock subl $0x200,0x0(%rip)        # 6e <reader_body+0x6e>
+  6a:	00 02 00 00 
+			66: R_X86_64_PC32	.bss+0x78
+  6e:	65 ff 0d 00 00 00 00 	decl   %gs:0x0(%rip)        # 75 <reader_body+0x75>
+			71: R_X86_64_PC32	__preempt_count-0x4
+  75:	74 06                	je     7d <reader_body+0x7d>
+  77:	5d                   	pop    %rbp
+  78:	e9 00 00 00 00       	jmp    7d <reader_body+0x7d>
+			79: R_X86_64_PLT32	__x86_return_thunk-0x4
+  7d:	e8 00 00 00 00       	call   82 <reader_body+0x82>
+			7e: R_X86_64_PLT32	__SCT__preempt_schedule-0x4
+  82:	5d                   	pop    %rbp
+  83:	e9 00 00 00 00       	jmp    88 <reader_body+0x88>
+			84: R_X86_64_PLT32	__x86_return_thunk-0x4
+  88:	f0 81 2d 00 00 00 00 	lock subl $0x200,0x0(%rip)        # 93 <reader_body+0x93>
+  8f:	00 02 00 00 
+			8b: R_X86_64_PC32	.bss+0x78
+  93:	65 ff 05 00 00 00 00 	incl   %gs:0x0(%rip)        # 9a <reader_body+0x9a>
+			96: R_X86_64_PC32	kd_spin_fast_cpu+0xc
+  9a:	31 c0                	xor    %eax,%eax
+  9c:	ba 05 00 00 00       	mov    $0x5,%edx
+  a1:	f0 0f b1 15 00 00 00 	lock cmpxchg %edx,0x0(%rip)        # a9 <reader_body+0xa9>
+  a8:	00 
+			a5: R_X86_64_PC32	.bss+0xbc
+  a9:	65 48 ff 05 00 00 00 	incq   %gs:0x0(%rip)        # b1 <reader_body+0xb1>
+  b0:	00 
+			ad: R_X86_64_PC32	kd_hotlock_spin_entries-0x4
+  b1:	85 c0                	test   %eax,%eax
+  b3:	75 34                	jne    e9 <reader_body+0xe9>
+  b5:	f0 81 05 00 00 00 00 	lock addl $0x200,0x0(%rip)        # c0 <reader_body+0xc0>
+  bc:	00 02 00 00 
+			b8: R_X86_64_PC32	.bss+0x78
+  c0:	8b 05 00 00 00 00    	mov    0x0(%rip),%eax        # c6 <reader_body+0xc6>
+			c2: R_X86_64_PC32	.bss+0x7c
+  c6:	84 c0                	test   %al,%al
+  c8:	74 0c                	je     d6 <reader_body+0xd6>
+  ca:	f3 90                	pause  
+  cc:	8b 05 00 00 00 00    	mov    0x0(%rip),%eax        # d2 <reader_body+0xd2>
+			ce: R_X86_64_PC32	.bss+0x7c
+  d2:	84 c0                	test   %al,%al
+  d4:	75 f4                	jne    ca <reader_body+0xca>
+  d6:	c6 05 00 00 00 00 00 	movb   $0x0,0x0(%rip)        # dd <reader_body+0xdd>
+			d8: R_X86_64_PC32	.bss+0xbb
+  dd:	65 ff 0d 00 00 00 00 	decl   %gs:0x0(%rip)        # e4 <reader_body+0xe4>
+			e0: R_X86_64_PC32	kd_spin_fast_cpu+0xc
+  e4:	e9 42 ff ff ff       	jmp    2b <reader_body+0x2b>
+  e9:	89 c6                	mov    %eax,%esi
+  eb:	48 c7 c7 00 00 00 00 	mov    $0x0,%rdi
+			ee: R_X86_64_32S	.bss+0xc0
+  f2:	e8 00 00 00 00       	call   f7 <reader_body+0xf7>
+			f3: R_X86_64_PLT32	kd_spin_direct_native_contended-0x4
+  f7:	eb bc                	jmp    b5 <reader_body+0xb5>
+  f9:	0f 1f 80 00 00 00 00 	nopl   0x0(%rax)
+
+0000000000000100 <escape_body>:
+ 100:	e8 00 00 00 00       	call   105 <escape_body+0x5>
+			101: R_X86_64_PLT32	__fentry__-0x4
+ 105:	55                   	push   %rbp
+ 106:	48 89 e5             	mov    %rsp,%rbp
+ 109:	41 57                	push   %r15
+ 10b:	41 56                	push   %r14
+ 10d:	41 55                	push   %r13
+ 10f:	41 54                	push   %r12
+ 111:	53                   	push   %rbx
+ 112:	48 83 ec 08          	sub    $0x8,%rsp
+ 116:	48 89 7d d0          	mov    %rdi,-0x30(%rbp)
+ 11a:	65 ff 05 00 00 00 00 	incl   %gs:0x0(%rip)        # 121 <escape_body+0x21>
+			11d: R_X86_64_PC32	__preempt_count-0x4
+ 121:	8b 05 00 00 00 00    	mov    0x0(%rip),%eax        # 127 <escape_body+0x27>
+			123: R_X86_64_PC32	.bss+0x7c
+ 127:	85 c0                	test   %eax,%eax
+ 129:	75 23                	jne    14e <escape_body+0x4e>
+ 12b:	65 ff 05 00 00 00 00 	incl   %gs:0x0(%rip)        # 132 <escape_body+0x32>
+			12e: R_X86_64_PC32	kd_spin_fast_cpu+0xc
+ 132:	ba f0 00 00 00       	mov    $0xf0,%edx
+ 137:	f0 0f b1 15 00 00 00 	lock cmpxchg %edx,0x0(%rip)        # 13f <escape_body+0x3f>
+ 13e:	00 
+			13b: R_X86_64_PC32	.bss+0x7c
+ 13f:	85 c0                	test   %eax,%eax
+ 141:	0f 84 1a 02 00 00    	je     361 <jit_escape_marker+0x15b>
+ 147:	65 ff 0d 00 00 00 00 	decl   %gs:0x0(%rip)        # 14e <escape_body+0x4e>
+			14a: R_X86_64_PC32	kd_spin_fast_cpu+0xc
+ 14e:	65 8b 05 00 00 00 00 	mov    %gs:0x0(%rip),%eax        # 155 <escape_body+0x55>
+			151: R_X86_64_PC32	kd_hotlock_spin_gate-0x4
+ 155:	85 c0                	test   %eax,%eax
+ 157:	0f 84 87 01 00 00    	je     2e4 <jit_escape_marker+0xde>
+ 15d:	48 c7 c7 00 00 00 00 	mov    $0x0,%rdi
+			160: R_X86_64_32S	.bss+0xc0
+ 164:	48 89 e6             	mov    %rsp,%rsi
+ 167:	48 8d 15 08 00 00 00 	lea    0x8(%rip),%rdx        # 176 <jit_escape_entry>
+ 16e:	48 89 e9             	mov    %rbp,%rcx
+ 171:	e8 00 00 00 00       	call   176 <jit_escape_entry>
+			172: R_X86_64_PLT32	kd_rwlock_lock_pinned_clobber_v1-0x4
+
+0000000000000176 <jit_escape_entry>:
+ 176:	b8 01 00 00 00       	mov    $0x1,%eax
+ 17b:	f0 0f c1 05 00 00 00 	lock xadd %eax,0x0(%rip)        # 183 <jit_escape_entry+0xd>
+ 182:	00 
+			17f: R_X86_64_PC32	.bss+0x58
+ 183:	85 c0                	test   %eax,%eax
+ 185:	74 07                	je     18e <jit_escape_entry+0x18>
+ 187:	f0 ff 05 00 00 00 00 	lock incl 0x0(%rip)        # 18e <jit_escape_entry+0x18>
+			18a: R_X86_64_PC32	.bss+0x48
+ 18e:	8b 05 00 00 00 00    	mov    0x0(%rip),%eax        # 194 <jit_escape_entry+0x1e>
+			190: R_X86_64_PC32	.bss+0x54
+ 194:	85 c0                	test   %eax,%eax
+ 196:	74 07                	je     19f <jit_escape_entry+0x29>
+ 198:	f0 ff 05 00 00 00 00 	lock incl 0x0(%rip)        # 19f <jit_escape_entry+0x29>
+			19b: R_X86_64_PC32	.bss+0x48
+ 19f:	48 8b 05 00 00 00 00 	mov    0x0(%rip),%rax        # 1a6 <jit_escape_entry+0x30>
+			1a2: R_X86_64_PC32	.bss+0x3c
+ 1a6:	48 8b 5d d0          	mov    -0x30(%rbp),%rbx
+ 1aa:	48 83 c0 01          	add    $0x1,%rax
+ 1ae:	c6 03 00             	movb   $0x0,(%rbx)
+ 1b1:	48 89 05 00 00 00 00 	mov    %rax,0x0(%rip)        # 1b8 <jit_escape_entry+0x42>
+			1b4: R_X86_64_PC32	.bss+0x3c
+ 1b8:	8b 05 00 00 00 00    	mov    0x0(%rip),%eax        # 1be <jit_escape_entry+0x48>
+			1ba: R_X86_64_PC32	.bss+0x44
+ 1be:	85 c0                	test   %eax,%eax
+ 1c0:	0f 84 a8 01 00 00    	je     36e <jit_escape_marker+0x168>
+ 1c6:	c6 03 01             	movb   $0x1,(%rbx)
+ 1c9:	31 c0                	xor    %eax,%eax
+ 1cb:	eb 10                	jmp    1dd <jit_escape_entry+0x67>
+ 1cd:	f3 90                	pause  
+ 1cf:	83 c0 01             	add    $0x1,%eax
+ 1d2:	3d a0 86 01 00       	cmp    $0x186a0,%eax
+ 1d7:	0f 84 da 01 00 00    	je     3b7 <jit_escape_marker+0x1b1>
+ 1dd:	8b 15 00 00 00 00    	mov    0x0(%rip),%edx        # 1e3 <jit_escape_entry+0x6d>
+			1df: R_X86_64_PC32	.bss+0x50
+ 1e3:	8b 0d 00 00 00 00    	mov    0x0(%rip),%ecx        # 1e9 <jit_escape_entry+0x73>
+			1e5: R_X86_64_PC32	.bss+0x4c
+ 1e9:	39 d1                	cmp    %edx,%ecx
+ 1eb:	74 e0                	je     1cd <jit_escape_entry+0x57>
+ 1ed:	bf 01 00 00 00       	mov    $0x1,%edi
+ 1f2:	8b 35 00 00 00 00    	mov    0x0(%rip),%esi        # 1f8 <jit_escape_entry+0x82>
+			1f4: R_X86_64_PC32	.bss+0x4c
+ 1f8:	48 8b 5d d0          	mov    -0x30(%rbp),%rbx
+ 1fc:	b8 01 00 00 00       	mov    $0x1,%eax
+ 201:	83 f8 02             	cmp    $0x2,%eax
+ 204:	eb 00                	jmp    206 <jit_escape_marker>
+
+0000000000000206 <jit_escape_marker>:
+ 206:	0f 31                	rdtsc  
+ 208:	89 43 0c             	mov    %eax,0xc(%rbx)
+ 20b:	89 53 10             	mov    %edx,0x10(%rbx)
+ 20e:	0f 92 43 01          	setb   0x1(%rbx)
+ 212:	0f 9a 43 02          	setp   0x2(%rbx)
+ 216:	0f 94 43 03          	sete   0x3(%rbx)
+ 21a:	0f 98 43 04          	sets   0x4(%rbx)
+ 21e:	0f 90 43 05          	seto   0x5(%rbx)
+ 222:	9f                   	lahf   
+ 223:	0f b6 c4             	movzbl %ah,%eax
+ 226:	89 43 08             	mov    %eax,0x8(%rbx)
+ 229:	0f 01 f9             	rdtscp 
+ 22c:	89 4b 20             	mov    %ecx,0x20(%rbx)
+ 22f:	65 48 8b 04 25 00 00 	mov    %gs:0x0,%rax
+ 236:	00 00 
+			234: R_X86_64_32S	current_task
+ 238:	48 89 43 18          	mov    %rax,0x18(%rbx)
+ 23c:	48 8b 05 00 00 00 00 	mov    0x0(%rip),%rax        # 243 <jit_escape_marker+0x3d>
+			23f: R_X86_64_PC32	.bss-0x4
+ 243:	40 88 7b 24          	mov    %dil,0x24(%rbx)
+ 247:	89 73 28             	mov    %esi,0x28(%rbx)
+ 24a:	48 83 c0 01          	add    $0x1,%rax
+ 24e:	48 89 05 00 00 00 00 	mov    %rax,0x0(%rip)        # 255 <jit_escape_marker+0x4f>
+			251: R_X86_64_PC32	.bss-0x4
+ 255:	48 8b 05 00 00 00 00 	mov    0x0(%rip),%rax        # 25c <jit_escape_marker+0x56>
+			258: R_X86_64_PC32	.bss+0x4
+ 25c:	48 83 c0 01          	add    $0x1,%rax
+ 260:	48 89 05 00 00 00 00 	mov    %rax,0x0(%rip)        # 267 <jit_escape_marker+0x61>
+			263: R_X86_64_PC32	.bss+0x4
+ 267:	8b 05 00 00 00 00    	mov    0x0(%rip),%eax        # 26d <jit_escape_marker+0x67>
+			269: R_X86_64_PC32	.bss+0x4c
+ 26d:	39 f0                	cmp    %esi,%eax
+ 26f:	74 07                	je     278 <jit_escape_marker+0x72>
+ 271:	f0 ff 05 00 00 00 00 	lock incl 0x0(%rip)        # 278 <jit_escape_marker+0x72>
+			274: R_X86_64_PC32	.bss+0x48
+ 278:	8b 05 00 00 00 00    	mov    0x0(%rip),%eax        # 27e <jit_escape_marker+0x78>
+			27a: R_X86_64_PC32	.bss+0x54
+ 27e:	85 c0                	test   %eax,%eax
+ 280:	74 07                	je     289 <jit_escape_marker+0x83>
+ 282:	f0 ff 05 00 00 00 00 	lock incl 0x0(%rip)        # 289 <jit_escape_marker+0x83>
+			285: R_X86_64_PC32	.bss+0x48
+ 289:	b8 ff ff ff ff       	mov    $0xffffffff,%eax
+ 28e:	f0 0f c1 05 00 00 00 	lock xadd %eax,0x0(%rip)        # 296 <jit_escape_marker+0x90>
+ 295:	00 
+			292: R_X86_64_PC32	.bss+0x58
+ 296:	83 f8 01             	cmp    $0x1,%eax
+ 299:	74 07                	je     2a2 <jit_escape_marker+0x9c>
+ 29b:	f0 ff 05 00 00 00 00 	lock incl 0x0(%rip)        # 2a2 <jit_escape_marker+0x9c>
+			29e: R_X86_64_PC32	.bss+0x48
+ 2a2:	0f b6 05 00 00 00 00 	movzbl 0x0(%rip),%eax        # 2a9 <jit_escape_marker+0xa3>
+			2a5: R_X86_64_PC32	.bss+0x7c
+ 2a9:	3c f0                	cmp    $0xf0,%al
+ 2ab:	0f 84 d4 00 00 00    	je     385 <jit_escape_marker+0x17f>
+ 2b1:	c6 05 00 00 00 00 00 	movb   $0x0,0x0(%rip)        # 2b8 <jit_escape_marker+0xb2>
+			2b3: R_X86_64_PC32	.bss+0x7b
+ 2b8:	48 c7 c7 00 00 00 00 	mov    $0x0,%rdi
+			2bb: R_X86_64_32S	.bss+0xc0
+ 2bf:	48 89 e6             	mov    %rsp,%rsi
+ 2c2:	48 8d 15 08 00 00 00 	lea    0x8(%rip),%rdx        # 2d1 <jit_escape_marker+0xcb>
+ 2c9:	48 89 e9             	mov    %rbp,%rcx
+ 2cc:	e8 00 00 00 00       	call   2d1 <jit_escape_marker+0xcb>
+			2cd: R_X86_64_PLT32	kd_spin_unlock_clobber_v1-0x4
+ 2d1:	48 83 c4 08          	add    $0x8,%rsp
+ 2d5:	5b                   	pop    %rbx
+ 2d6:	41 5c                	pop    %r12
+ 2d8:	41 5d                	pop    %r13
+ 2da:	41 5e                	pop    %r14
+ 2dc:	41 5f                	pop    %r15
+ 2de:	5d                   	pop    %rbp
+ 2df:	e9 00 00 00 00       	jmp    2e4 <jit_escape_marker+0xde>
+			2e0: R_X86_64_PLT32	__x86_return_thunk-0x4
+ 2e4:	65 ff 05 00 00 00 00 	incl   %gs:0x0(%rip)        # 2eb <jit_escape_marker+0xe5>
+			2e7: R_X86_64_PC32	kd_spin_fast_cpu+0xc
+ 2eb:	ba 05 00 00 00       	mov    $0x5,%edx
+ 2f0:	f0 0f b1 15 00 00 00 	lock cmpxchg %edx,0x0(%rip)        # 2f8 <jit_escape_marker+0xf2>
+ 2f7:	00 
+			2f4: R_X86_64_PC32	.bss+0xbc
+ 2f8:	65 48 ff 05 00 00 00 	incq   %gs:0x0(%rip)        # 300 <jit_escape_marker+0xfa>
+ 2ff:	00 
+			2fc: R_X86_64_PC32	kd_hotlock_spin_entries-0x4
+ 300:	85 c0                	test   %eax,%eax
+ 302:	0f 85 9c 00 00 00    	jne    3a4 <jit_escape_marker+0x19e>
+ 308:	31 c0                	xor    %eax,%eax
+ 30a:	ba ff 00 00 00       	mov    $0xff,%edx
+ 30f:	f0 0f b1 15 00 00 00 	lock cmpxchg %edx,0x0(%rip)        # 317 <jit_escape_marker+0x111>
+ 316:	00 
+			313: R_X86_64_PC32	.bss+0x7c
+ 317:	85 c0                	test   %eax,%eax
+ 319:	0f 84 57 fe ff ff    	je     176 <jit_escape_entry>
+ 31f:	f0 81 05 00 00 00 00 	lock addl $0x100,0x0(%rip)        # 32a <jit_escape_marker+0x124>
+ 326:	00 01 00 00 
+			322: R_X86_64_PC32	.bss+0x78
+ 32a:	b9 00 01 00 00       	mov    $0x100,%ecx
+ 32f:	8b 05 00 00 00 00    	mov    0x0(%rip),%eax        # 335 <jit_escape_marker+0x12f>
+			331: R_X86_64_PC32	.bss+0x7c
+ 335:	3d 00 01 00 00       	cmp    $0x100,%eax
+ 33a:	74 0f                	je     34b <jit_escape_marker+0x145>
+ 33c:	f3 90                	pause  
+ 33e:	8b 05 00 00 00 00    	mov    0x0(%rip),%eax        # 344 <jit_escape_marker+0x13e>
+			340: R_X86_64_PC32	.bss+0x7c
+ 344:	3d 00 01 00 00       	cmp    $0x100,%eax
+ 349:	75 f1                	jne    33c <jit_escape_marker+0x136>
+ 34b:	89 c8                	mov    %ecx,%eax
+ 34d:	f0 0f b1 15 00 00 00 	lock cmpxchg %edx,0x0(%rip)        # 355 <jit_escape_marker+0x14f>
+ 354:	00 
+			351: R_X86_64_PC32	.bss+0x7c
+ 355:	3d 00 01 00 00       	cmp    $0x100,%eax
+ 35a:	75 d3                	jne    32f <jit_escape_marker+0x129>
+ 35c:	e9 15 fe ff ff       	jmp    176 <jit_escape_entry>
+ 361:	65 48 ff 05 00 00 00 	incq   %gs:0x0(%rip)        # 369 <jit_escape_marker+0x163>
+ 368:	00 
+			365: R_X86_64_PC32	kd_hotlock_spin_entries-0x4
+ 369:	e9 08 fe ff ff       	jmp    176 <jit_escape_entry>
+ 36e:	48 8b 05 00 00 00 00 	mov    0x0(%rip),%rax        # 375 <jit_escape_marker+0x16f>
+			371: R_X86_64_PC32	.bss+0x4
+ 375:	48 83 c0 01          	add    $0x1,%rax
+ 379:	48 89 05 00 00 00 00 	mov    %rax,0x0(%rip)        # 380 <jit_escape_marker+0x17a>
+			37c: R_X86_64_PC32	.bss+0x4
+ 380:	e9 f3 fe ff ff       	jmp    278 <jit_escape_marker+0x72>
+ 385:	48 c7 c7 00 00 00 00 	mov    $0x0,%rdi
+			388: R_X86_64_32S	.bss+0x80
+ 38c:	e8 00 00 00 00       	call   391 <jit_escape_marker+0x18b>
+			38d: R_X86_64_PLT32	kd_rwlock_fast_write_unlock-0x4
+ 391:	48 83 c4 08          	add    $0x8,%rsp
+ 395:	5b                   	pop    %rbx
+ 396:	41 5c                	pop    %r12
+ 398:	41 5d                	pop    %r13
+ 39a:	41 5e                	pop    %r14
+ 39c:	41 5f                	pop    %r15
+ 39e:	5d                   	pop    %rbp
+ 39f:	e9 00 00 00 00       	jmp    3a4 <jit_escape_marker+0x19e>
+			3a0: R_X86_64_PLT32	__x86_return_thunk-0x4
+ 3a4:	89 c6                	mov    %eax,%esi
+ 3a6:	48 c7 c7 00 00 00 00 	mov    $0x0,%rdi
+			3a9: R_X86_64_32S	.bss+0xc0
+ 3ad:	e8 00 00 00 00       	call   3b2 <jit_escape_marker+0x1ac>
+			3ae: R_X86_64_PLT32	kd_spin_direct_native_contended-0x4
+ 3b2:	e9 51 ff ff ff       	jmp    308 <jit_escape_marker+0x102>
+ 3b7:	31 ff                	xor    %edi,%edi
+ 3b9:	e9 34 fe ff ff       	jmp    1f2 <jit_escape_entry+0x7c>
+ 3be:	66 90                	xchg   %ax,%ax
+
+00000000000003c0 <escape_ioctl>:
+ 3c0:	f3 0f 1e fa          	endbr64 
+ 3c4:	e8 00 00 00 00       	call   3c9 <escape_ioctl+0x9>
+			3c5: R_X86_64_PLT32	__fentry__-0x4
+ 3c9:	55                   	push   %rbp
+ 3ca:	b9 0a 00 00 00       	mov    $0xa,%ecx
+ 3cf:	48 89 e5             	mov    %rsp,%rbp
+ 3d2:	41 57                	push   %r15
+ 3d4:	41 56                	push   %r14
+ 3d6:	41 55                	push   %r13
+ 3d8:	49 89 d5             	mov    %rdx,%r13
+ 3db:	41 54                	push   %r12
+ 3dd:	53                   	push   %rbx
+ 3de:	89 f3                	mov    %esi,%ebx
+ 3e0:	48 8d b5 60 ff ff ff 	lea    -0xa0(%rbp),%rsi
+ 3e7:	48 89 f7             	mov    %rsi,%rdi
+ 3ea:	48 81 ec c0 00 00 00 	sub    $0xc0,%rsp
+ 3f1:	65 48 8b 04 25 28 00 	mov    %gs:0x28,%rax
+ 3f8:	00 00 
+ 3fa:	48 89 45 d0          	mov    %rax,-0x30(%rbp)
+ 3fe:	31 c0                	xor    %eax,%eax
+ 400:	f3 48 ab             	rep stos %rax,%es:(%rdi)
+ 403:	89 d8                	mov    %ebx,%eax
+ 405:	83 e0 fb             	and    $0xfffffffb,%eax
+ 408:	3d 01 45 20 c0       	cmp    $0xc0204501,%eax
+ 40d:	0f 84 13 01 00 00    	je     526 <escape_ioctl+0x166>
+ 413:	8d 83 fd ba ff ff    	lea    -0x4503(%rbx),%eax
+ 419:	83 f8 01             	cmp    $0x1,%eax
+ 41c:	76 0c                	jbe    42a <escape_ioctl+0x6a>
+ 41e:	81 fb 02 45 50 80    	cmp    $0x80504502,%ebx
+ 424:	0f 85 9a 04 00 00    	jne    8c4 <escape_ioctl+0x504>
+ 42a:	31 c0                	xor    %eax,%eax
+ 42c:	ba ff ff ff ff       	mov    $0xffffffff,%edx
+ 431:	f0 0f b1 15 00 00 00 	lock cmpxchg %edx,0x0(%rip)        # 439 <escape_ioctl+0x79>
+ 438:	00 
+			435: R_X86_64_PC32	.bss+0x5c
+ 439:	85 c0                	test   %eax,%eax
+ 43b:	0f 85 8f 04 00 00    	jne    8d0 <escape_ioctl+0x510>
+ 441:	81 fb 03 45 00 00    	cmp    $0x4503,%ebx
+ 447:	0f 84 58 04 00 00    	je     8a5 <escape_ioctl+0x4e5>
+ 44d:	81 fb 04 45 00 00    	cmp    $0x4504,%ebx
+ 453:	0f 84 5c 03 00 00    	je     7b5 <escape_ioctl+0x3f5>
+ 459:	48 8b 05 00 00 00 00 	mov    0x0(%rip),%rax        # 460 <escape_ioctl+0xa0>
+			45c: R_X86_64_PC32	.bss+0x3c
+ 460:	48 c7 45 80 00 00 00 	movq   $0x0,-0x80(%rbp)
+ 467:	00 
+			464: R_X86_64_32S	jit_escape_entry
+ 468:	48 c7 85 78 ff ff ff 	movq   $0x0,-0x88(%rbp)
+ 46f:	00 00 00 00 
+			46f: R_X86_64_32S	.bss+0xc0
+ 473:	48 89 85 60 ff ff ff 	mov    %rax,-0xa0(%rbp)
+ 47a:	48 8b 05 00 00 00 00 	mov    0x0(%rip),%rax        # 481 <escape_ioctl+0xc1>
+			47d: R_X86_64_PC32	.bss+0x4
+ 481:	48 c7 45 88 00 00 00 	movq   $0x0,-0x78(%rbp)
+ 488:	00 
+			485: R_X86_64_32S	jit_escape_marker
+ 489:	48 89 85 68 ff ff ff 	mov    %rax,-0x98(%rbp)
+ 490:	48 8b 05 00 00 00 00 	mov    0x0(%rip),%rax        # 497 <escape_ioctl+0xd7>
+			493: R_X86_64_PC32	.bss-0x4
+ 497:	48 89 85 70 ff ff ff 	mov    %rax,-0x90(%rbp)
+ 49e:	48 63 05 00 00 00 00 	movslq 0x0(%rip),%rax        # 4a5 <escape_ioctl+0xe5>
+			4a1: R_X86_64_PC32	.bss+0x48
+ 4a5:	48 89 45 90          	mov    %rax,-0x70(%rbp)
+ 4a9:	48 63 05 00 00 00 00 	movslq 0x0(%rip),%rax        # 4b0 <escape_ioctl+0xf0>
+			4ac: R_X86_64_PC32	.bss+0x58
+ 4b0:	48 63 15 00 00 00 00 	movslq 0x0(%rip),%rdx        # 4b7 <escape_ioctl+0xf7>
+			4b3: R_X86_64_PC32	.bss+0x54
+ 4b7:	48 01 d0             	add    %rdx,%rax
+ 4ba:	48 89 45 98          	mov    %rax,-0x68(%rbp)
+ 4be:	8b 05 00 00 00 00    	mov    0x0(%rip),%eax        # 4c4 <escape_ioctl+0x104>
+			4c0: R_X86_64_PC32	.bss+0x44
+ 4c4:	8b 15 00 00 00 00    	mov    0x0(%rip),%edx        # 4ca <escape_ioctl+0x10a>
+			4c6: R_X86_64_PC32	.bss+0x7c
+ 4ca:	48 89 45 a0          	mov    %rax,-0x60(%rbp)
+ 4ce:	31 c0                	xor    %eax,%eax
+ 4d0:	85 d2                	test   %edx,%edx
+ 4d2:	0f 84 33 03 00 00    	je     80b <escape_ioctl+0x44b>
+ 4d8:	ba 50 00 00 00       	mov    $0x50,%edx
+ 4dd:	4c 89 ef             	mov    %r13,%rdi
+ 4e0:	48 89 45 a8          	mov    %rax,-0x58(%rbp)
+ 4e4:	e8 00 00 00 00       	call   4e9 <escape_ioctl+0x129>
+			4e5: R_X86_64_PLT32	_copy_to_user-0x4
+ 4e9:	48 f7 d8             	neg    %rax
+ 4ec:	48 19 c0             	sbb    %rax,%rax
+ 4ef:	48 83 e0 f2          	and    $0xfffffffffffffff2,%rax
+ 4f3:	c7 05 00 00 00 00 00 	movl   $0x0,0x0(%rip)        # 4fd <escape_ioctl+0x13d>
+ 4fa:	00 00 00 
+			4f5: R_X86_64_PC32	.bss+0x58
+ 4fd:	48 8b 55 d0          	mov    -0x30(%rbp),%rdx
+ 501:	65 48 2b 14 25 28 00 	sub    %gs:0x28,%rdx
+ 508:	00 00 
+ 50a:	0f 85 d8 03 00 00    	jne    8e8 <escape_ioctl+0x528>
+ 510:	48 81 c4 c0 00 00 00 	add    $0xc0,%rsp
+ 517:	5b                   	pop    %rbx
+ 518:	41 5c                	pop    %r12
+ 51a:	41 5d                	pop    %r13
+ 51c:	41 5e                	pop    %r14
+ 51e:	41 5f                	pop    %r15
+ 520:	5d                   	pop    %rbp
+ 521:	e9 00 00 00 00       	jmp    526 <escape_ioctl+0x166>
+			522: R_X86_64_PLT32	__x86_return_thunk-0x4
+ 526:	ba 20 00 00 00       	mov    $0x20,%edx
+ 52b:	4c 89 ee             	mov    %r13,%rsi
+ 52e:	48 8d 7d b0          	lea    -0x50(%rbp),%rdi
+ 532:	e8 00 00 00 00       	call   537 <escape_ioctl+0x177>
+			533: R_X86_64_PLT32	_copy_from_user-0x4
+ 537:	48 85 c0             	test   %rax,%rax
+ 53a:	0f 85 42 02 00 00    	jne    782 <escape_ioctl+0x3c2>
+ 540:	8b 45 b0             	mov    -0x50(%rbp),%eax
+ 543:	83 e8 01             	sub    $0x1,%eax
+ 546:	3d 7f 96 98 00       	cmp    $0x98967f,%eax
+ 54b:	0f 87 8b 03 00 00    	ja     8dc <escape_ioctl+0x51c>
+ 551:	83 7d b4 3f          	cmpl   $0x3f,-0x4c(%rbp)
+ 555:	0f 87 81 03 00 00    	ja     8dc <escape_ioctl+0x51c>
+ 55b:	48 83 7d b8 00       	cmpq   $0x0,-0x48(%rbp)
+ 560:	0f 85 76 03 00 00    	jne    8dc <escape_ioctl+0x51c>
+ 566:	65 8b 05 00 00 00 00 	mov    %gs:0x0(%rip),%eax        # 56d <escape_ioctl+0x1ad>
+			569: R_X86_64_PC32	__preempt_count-0x4
+ 56d:	a9 ff ff ff 7f       	test   $0x7fffffff,%eax
+ 572:	0f 85 64 03 00 00    	jne    8dc <escape_ioctl+0x51c>
+ 578:	ff 15 00 00 00 00    	call   *0x0(%rip)        # 57e <escape_ioctl+0x1be>
+			57a: R_X86_64_PC32	pv_ops+0xec
+ 57e:	f6 c4 02             	test   $0x2,%ah
+ 581:	0f 84 55 03 00 00    	je     8dc <escape_ioctl+0x51c>
+ 587:	65 48 8b 04 25 00 00 	mov    %gs:0x0,%rax
+ 58e:	00 00 
+			58c: R_X86_64_32S	current_task
+ 590:	8b 35 00 00 00 00    	mov    0x0(%rip),%esi        # 596 <escape_ioctl+0x1d6>
+			592: R_X86_64_PC32	nr_cpu_ids-0x4
+ 596:	48 8b b8 18 04 00 00 	mov    0x418(%rax),%rdi
+ 59d:	e8 00 00 00 00       	call   5a2 <escape_ioctl+0x1e2>
+			59e: R_X86_64_PLT32	__bitmap_weight-0x4
+ 5a2:	83 f8 01             	cmp    $0x1,%eax
+ 5a5:	0f 85 31 03 00 00    	jne    8dc <escape_ioctl+0x51c>
+ 5ab:	65 8b 05 00 00 00 00 	mov    %gs:0x0(%rip),%eax        # 5b2 <escape_ioctl+0x1f2>
+			5ae: R_X86_64_PC32	cpu_number-0x4
+ 5b2:	89 85 2c ff ff ff    	mov    %eax,-0xd4(%rbp)
+ 5b8:	0f 01 f9             	rdtscp 
+ 5bb:	8b 05 00 00 00 00    	mov    0x0(%rip),%eax        # 5c1 <escape_ioctl+0x201>
+			5bd: R_X86_64_PC32	.bss+0x5c
+ 5c1:	41 89 cf             	mov    %ecx,%r15d
+ 5c4:	83 f8 ff             	cmp    $0xffffffff,%eax
+ 5c7:	0f 84 03 03 00 00    	je     8d0 <escape_ioctl+0x510>
+ 5cd:	8d 50 01             	lea    0x1(%rax),%edx
+ 5d0:	f0 0f b1 15 00 00 00 	lock cmpxchg %edx,0x0(%rip)        # 5d8 <escape_ioctl+0x218>
+ 5d7:	00 
+			5d4: R_X86_64_PC32	.bss+0x5c
+ 5d8:	75 ea                	jne    5c4 <escape_ioctl+0x204>
+ 5da:	65 8b 05 00 00 00 00 	mov    %gs:0x0(%rip),%eax        # 5e1 <escape_ioctl+0x221>
+			5dd: R_X86_64_PC32	__preempt_count-0x4
+ 5e1:	25 ff ff ff 7f       	and    $0x7fffffff,%eax
+ 5e6:	89 85 28 ff ff ff    	mov    %eax,-0xd8(%rbp)
+ 5ec:	ff 15 00 00 00 00    	call   *0x0(%rip)        # 5f2 <escape_ioctl+0x232>
+			5ee: R_X86_64_PC32	pv_ops+0xec
+ 5f2:	48 c1 e8 09          	shr    $0x9,%rax
+ 5f6:	48 c7 45 c8 00 00 00 	movq   $0x0,-0x38(%rbp)
+ 5fd:	00 
+ 5fe:	45 31 f6             	xor    %r14d,%r14d
+ 601:	48 83 f0 01          	xor    $0x1,%rax
+ 605:	48 c7 45 c0 00 00 00 	movq   $0x0,-0x40(%rbp)
+ 60c:	00 
+ 60d:	83 e0 01             	and    $0x1,%eax
+ 610:	88 85 1f ff ff ff    	mov    %al,-0xe1(%rbp)
+ 616:	8b 45 b0             	mov    -0x50(%rbp),%eax
+ 619:	85 c0                	test   %eax,%eax
+ 61b:	0f 84 05 01 00 00    	je     726 <escape_ioctl+0x366>
+ 621:	65 48 8b 04 25 00 00 	mov    %gs:0x0,%rax
+ 628:	00 00 
+			626: R_X86_64_32S	current_task
+ 62a:	48 89 85 20 ff ff ff 	mov    %rax,-0xe0(%rbp)
+ 631:	eb 21                	jmp    654 <escape_ioctl+0x294>
+ 633:	48 83 45 c8 01       	addq   $0x1,-0x38(%rbp)
+ 638:	48 83 45 c0 01       	addq   $0x1,-0x40(%rbp)
+ 63d:	45 84 f6             	test   %r14b,%r14b
+ 640:	0f 84 cd 00 00 00    	je     713 <escape_ioctl+0x353>
+ 646:	41 83 c6 01          	add    $0x1,%r14d
+ 64a:	44 39 75 b0          	cmp    %r14d,-0x50(%rbp)
+ 64e:	0f 86 d2 00 00 00    	jbe    726 <escape_ioctl+0x366>
+ 654:	9c                   	pushf  
+ 655:	41 5c                	pop    %r12
+ 657:	81 fb 05 45 20 c0    	cmp    $0xc0204505,%ebx
+ 65d:	0f 84 a5 00 00 00    	je     708 <escape_ioctl+0x348>
+ 663:	48 8d bd 30 ff ff ff 	lea    -0xd0(%rbp),%rdi
+ 66a:	e8 91 fa ff ff       	call   100 <escape_body>
+ 66f:	0f b6 b5 30 ff ff ff 	movzbl -0xd0(%rbp),%esi
+ 676:	8b 0d 00 00 00 00    	mov    0x0(%rip),%ecx        # 67c <escape_ioctl+0x2bc>
+			678: R_X86_64_PC32	.bss+0x44
+ 67c:	39 ce                	cmp    %ecx,%esi
+ 67e:	0f 84 0a 01 00 00    	je     78e <escape_ioctl+0x3ce>
+ 684:	48 83 45 c8 01       	addq   $0x1,-0x38(%rbp)
+ 689:	40 84 f6             	test   %sil,%sil
+ 68c:	74 1c                	je     6aa <escape_ioctl+0x2ea>
+ 68e:	44 39 bd 50 ff ff ff 	cmp    %r15d,-0xb0(%rbp)
+ 695:	74 05                	je     69c <escape_ioctl+0x2dc>
+ 697:	48 83 45 c8 01       	addq   $0x1,-0x38(%rbp)
+ 69c:	80 bd 54 ff ff ff 00 	cmpb   $0x0,-0xac(%rbp)
+ 6a3:	75 05                	jne    6aa <escape_ioctl+0x2ea>
+ 6a5:	48 83 45 c8 01       	addq   $0x1,-0x38(%rbp)
+ 6aa:	9c                   	pushf  
+ 6ab:	58                   	pop    %rax
+ 6ac:	4c 31 e0             	xor    %r12,%rax
+ 6af:	48 a9 2a f7 ff ff    	test   $0xfffffffffffff72a,%rax
+ 6b5:	0f 85 78 ff ff ff    	jne    633 <escape_ioctl+0x273>
+ 6bb:	65 8b 05 00 00 00 00 	mov    %gs:0x0(%rip),%eax        # 6c2 <escape_ioctl+0x302>
+			6be: R_X86_64_PC32	cpu_number-0x4
+ 6c2:	39 85 2c ff ff ff    	cmp    %eax,-0xd4(%rbp)
+ 6c8:	0f 85 65 ff ff ff    	jne    633 <escape_ioctl+0x273>
+ 6ce:	65 8b 05 00 00 00 00 	mov    %gs:0x0(%rip),%eax        # 6d5 <escape_ioctl+0x315>
+			6d1: R_X86_64_PC32	__preempt_count-0x4
+ 6d5:	25 ff ff ff 7f       	and    $0x7fffffff,%eax
+ 6da:	39 85 28 ff ff ff    	cmp    %eax,-0xd8(%rbp)
+ 6e0:	0f 85 4d ff ff ff    	jne    633 <escape_ioctl+0x273>
+ 6e6:	ff 15 00 00 00 00    	call   *0x0(%rip)        # 6ec <escape_ioctl+0x32c>
+			6e8: R_X86_64_PC32	pv_ops+0xec
+ 6ec:	48 c1 e8 09          	shr    $0x9,%rax
+ 6f0:	48 83 f0 01          	xor    $0x1,%rax
+ 6f4:	83 e0 01             	and    $0x1,%eax
+ 6f7:	38 85 1f ff ff ff    	cmp    %al,-0xe1(%rbp)
+ 6fd:	0f 85 30 ff ff ff    	jne    633 <escape_ioctl+0x273>
+ 703:	e9 30 ff ff ff       	jmp    638 <escape_ioctl+0x278>
+ 708:	e8 f3 f8 ff ff       	call   0 <reader_body>
+ 70d:	84 c0                	test   %al,%al
+ 70f:	74 99                	je     6aa <escape_ioctl+0x2ea>
+ 711:	eb 92                	jmp    6a5 <escape_ioctl+0x2e5>
+ 713:	e8 00 00 00 00       	call   718 <escape_ioctl+0x358>
+			714: R_X86_64_PLT32	__SCT__cond_resched-0x4
+ 718:	41 83 c6 01          	add    $0x1,%r14d
+ 71c:	44 39 75 b0          	cmp    %r14d,-0x50(%rbp)
+ 720:	0f 87 2e ff ff ff    	ja     654 <escape_ioctl+0x294>
+ 726:	65 8b 05 00 00 00 00 	mov    %gs:0x0(%rip),%eax        # 72d <escape_ioctl+0x36d>
+			729: R_X86_64_PC32	__preempt_count-0x4
+ 72d:	25 ff ff ff 7f       	and    $0x7fffffff,%eax
+ 732:	39 85 28 ff ff ff    	cmp    %eax,-0xd8(%rbp)
+ 738:	0f 84 02 01 00 00    	je     840 <escape_ioctl+0x480>
+ 73e:	48 8b 45 c8          	mov    -0x38(%rbp),%rax
+ 742:	48 83 c0 01          	add    $0x1,%rax
+ 746:	48 89 45 c8          	mov    %rax,-0x38(%rbp)
+ 74a:	48 85 c0             	test   %rax,%rax
+ 74d:	74 07                	je     756 <escape_ioctl+0x396>
+ 74f:	f0 ff 05 00 00 00 00 	lock incl 0x0(%rip)        # 756 <escape_ioctl+0x396>
+			752: R_X86_64_PC32	.bss+0x48
+ 756:	b8 ff ff ff ff       	mov    $0xffffffff,%eax
+ 75b:	f0 0f c1 05 00 00 00 	lock xadd %eax,0x0(%rip)        # 763 <escape_ioctl+0x3a3>
+ 762:	00 
+			75f: R_X86_64_PC32	.bss+0x5c
+ 763:	ba 20 00 00 00       	mov    $0x20,%edx
+ 768:	48 8d 75 b0          	lea    -0x50(%rbp),%rsi
+ 76c:	4c 89 ef             	mov    %r13,%rdi
+ 76f:	e8 00 00 00 00       	call   774 <escape_ioctl+0x3b4>
+			770: R_X86_64_PLT32	_copy_to_user-0x4
+ 774:	49 89 c0             	mov    %rax,%r8
+ 777:	31 c0                	xor    %eax,%eax
+ 779:	4d 85 c0             	test   %r8,%r8
+ 77c:	0f 84 7b fd ff ff    	je     4fd <escape_ioctl+0x13d>
+ 782:	48 c7 c0 f2 ff ff ff 	mov    $0xfffffffffffffff2,%rax
+ 789:	e9 6f fd ff ff       	jmp    4fd <escape_ioctl+0x13d>
+ 78e:	40 84 f6             	test   %sil,%sil
+ 791:	0f 84 13 ff ff ff    	je     6aa <escape_ioctl+0x2ea>
+ 797:	48 8b 85 20 ff ff ff 	mov    -0xe0(%rbp),%rax
+ 79e:	48 39 85 48 ff ff ff 	cmp    %rax,-0xb8(%rbp)
+ 7a5:	0f 84 bb 00 00 00    	je     866 <escape_ioctl+0x4a6>
+ 7ab:	48 83 45 c8 01       	addq   $0x1,-0x38(%rbp)
+ 7b0:	e9 d9 fe ff ff       	jmp    68e <escape_ioctl+0x2ce>
+ 7b5:	8b 15 00 00 00 00    	mov    0x0(%rip),%edx        # 7bb <escape_ioctl+0x3fb>
+			7b7: R_X86_64_PC32	.bss+0x7c
+ 7bb:	48 c7 c0 f0 ff ff ff 	mov    $0xfffffffffffffff0,%rax
+ 7c2:	85 d2                	test   %edx,%edx
+ 7c4:	0f 85 29 fd ff ff    	jne    4f3 <escape_ioctl+0x133>
+ 7ca:	8b 15 00 00 00 00    	mov    0x0(%rip),%edx        # 7d0 <escape_ioctl+0x410>
+			7cc: R_X86_64_PC32	.bss+0xbc
+ 7d0:	85 d2                	test   %edx,%edx
+ 7d2:	0f 85 1b fd ff ff    	jne    4f3 <escape_ioctl+0x133>
+ 7d8:	8b 15 00 00 00 00    	mov    0x0(%rip),%edx        # 7de <escape_ioctl+0x41e>
+			7da: R_X86_64_PC32	.bss+0x54
+ 7de:	85 d2                	test   %edx,%edx
+ 7e0:	0f 85 0d fd ff ff    	jne    4f3 <escape_ioctl+0x133>
+ 7e6:	8b 0d 00 00 00 00    	mov    0x0(%rip),%ecx        # 7ec <escape_ioctl+0x42c>
+			7e8: R_X86_64_PC32	.bss+0x50
+ 7ec:	8b 15 00 00 00 00    	mov    0x0(%rip),%edx        # 7f2 <escape_ioctl+0x432>
+			7ee: R_X86_64_PC32	.bss+0x4c
+ 7f2:	39 d1                	cmp    %edx,%ecx
+ 7f4:	0f 85 f9 fc ff ff    	jne    4f3 <escape_ioctl+0x133>
+ 7fa:	c7 05 00 00 00 00 01 	movl   $0x1,0x0(%rip)        # 804 <escape_ioctl+0x444>
+ 801:	00 00 00 
+			7fc: R_X86_64_PC32	.bss+0x40
+ 804:	31 c0                	xor    %eax,%eax
+ 806:	e9 e8 fc ff ff       	jmp    4f3 <escape_ioctl+0x133>
+ 80b:	8b 15 00 00 00 00    	mov    0x0(%rip),%edx        # 811 <escape_ioctl+0x451>
+			80d: R_X86_64_PC32	.bss+0xbc
+ 811:	85 d2                	test   %edx,%edx
+ 813:	0f 85 bf fc ff ff    	jne    4d8 <escape_ioctl+0x118>
+ 819:	8b 15 00 00 00 00    	mov    0x0(%rip),%edx        # 81f <escape_ioctl+0x45f>
+			81b: R_X86_64_PC32	.bss+0x54
+ 81f:	85 d2                	test   %edx,%edx
+ 821:	0f 85 b1 fc ff ff    	jne    4d8 <escape_ioctl+0x118>
+ 827:	8b 15 00 00 00 00    	mov    0x0(%rip),%edx        # 82d <escape_ioctl+0x46d>
+			829: R_X86_64_PC32	.bss+0x50
+ 82d:	8b 05 00 00 00 00    	mov    0x0(%rip),%eax        # 833 <escape_ioctl+0x473>
+			82f: R_X86_64_PC32	.bss+0x4c
+ 833:	39 c2                	cmp    %eax,%edx
+ 835:	0f 94 c0             	sete   %al
+ 838:	0f b6 c0             	movzbl %al,%eax
+ 83b:	e9 98 fc ff ff       	jmp    4d8 <escape_ioctl+0x118>
+ 840:	ff 15 00 00 00 00    	call   *0x0(%rip)        # 846 <escape_ioctl+0x486>
+			842: R_X86_64_PC32	pv_ops+0xec
+ 846:	48 c1 e8 09          	shr    $0x9,%rax
+ 84a:	48 83 f0 01          	xor    $0x1,%rax
+ 84e:	83 e0 01             	and    $0x1,%eax
+ 851:	38 85 1f ff ff ff    	cmp    %al,-0xe1(%rbp)
+ 857:	0f 85 e1 fe ff ff    	jne    73e <escape_ioctl+0x37e>
+ 85d:	48 8b 45 c8          	mov    -0x38(%rbp),%rax
+ 861:	e9 e4 fe ff ff       	jmp    74a <escape_ioctl+0x38a>
+ 866:	48 b8 00 ff ff ff ff 	movabs $0xffffffffff00,%rax
+ 86d:	ff 00 00 
+ 870:	48 b9 00 01 01 00 01 	movabs $0x100010100,%rcx
+ 877:	00 00 00 
+ 87a:	48 23 85 30 ff ff ff 	and    -0xd0(%rbp),%rax
+ 881:	48 39 c8             	cmp    %rcx,%rax
+ 884:	0f 85 21 ff ff ff    	jne    7ab <escape_ioctl+0x3eb>
+ 88a:	8b 85 38 ff ff ff    	mov    -0xc8(%rbp),%eax
+ 890:	25 d5 00 00 00       	and    $0xd5,%eax
+ 895:	3d 95 00 00 00       	cmp    $0x95,%eax
+ 89a:	0f 85 0b ff ff ff    	jne    7ab <escape_ioctl+0x3eb>
+ 8a0:	e9 e9 fd ff ff       	jmp    68e <escape_ioctl+0x2ce>
+ 8a5:	ba 03 00 00 00       	mov    $0x3,%edx
+ 8aa:	48 c7 c6 00 00 00 00 	mov    $0x0,%rsi
+			8ad: R_X86_64_32S	jit_escape_entry
+ 8b1:	48 c7 c7 00 00 00 00 	mov    $0x0,%rdi
+			8b4: R_X86_64_32S	.bss+0xc0
+ 8b8:	e8 00 00 00 00       	call   8bd <escape_ioctl+0x4fd>
+			8b9: R_X86_64_PLT32	kd_spin_prepare-0x4
+ 8bd:	48 98                	cltq   
+ 8bf:	e9 2f fc ff ff       	jmp    4f3 <escape_ioctl+0x133>
+ 8c4:	48 c7 c0 e7 ff ff ff 	mov    $0xffffffffffffffe7,%rax
+ 8cb:	e9 2d fc ff ff       	jmp    4fd <escape_ioctl+0x13d>
+ 8d0:	48 c7 c0 f0 ff ff ff 	mov    $0xfffffffffffffff0,%rax
+ 8d7:	e9 21 fc ff ff       	jmp    4fd <escape_ioctl+0x13d>
+ 8dc:	48 c7 c0 ea ff ff ff 	mov    $0xffffffffffffffea,%rax
+ 8e3:	e9 15 fc ff ff       	jmp    4fd <escape_ioctl+0x13d>
+ 8e8:	e8 00 00 00 00       	call   8ed <escape_ioctl+0x52d>
+			8e9: R_X86_64_PLT32	__stack_chk_fail-0x4
+
+Disassembly of section .init.text:
+
+0000000000000000 <init_module>:
+   0:	f3 0f 1e fa          	endbr64 
+   4:	e8 00 00 00 00       	call   9 <init_module+0x9>
+			5: R_X86_64_PLT32	__fentry__-0x4
+   9:	48 8b 15 00 00 00 00 	mov    0x0(%rip),%rdx        # 10 <init_module+0x10>
+			c: R_X86_64_PC32	boot_cpu_data+0x24
+  10:	48 0f ba e2 3b       	bt     $0x3b,%rdx
+  15:	73 16                	jae    2d <init_module+0x2d>
+  17:	55                   	push   %rbp
+  18:	48 c7 c7 00 00 00 00 	mov    $0x0,%rdi
+			1b: R_X86_64_32S	.data
+  1f:	48 89 e5             	mov    %rsp,%rbp
+  22:	e8 00 00 00 00       	call   27 <init_module+0x27>
+			23: R_X86_64_PLT32	misc_register-0x4
+  27:	5d                   	pop    %rbp
+  28:	e9 00 00 00 00       	jmp    2d <init_module+0x2d>
+			29: R_X86_64_PLT32	__x86_return_thunk-0x4
+  2d:	b8 a1 ff ff ff       	mov    $0xffffffa1,%eax
+  32:	e9 00 00 00 00       	jmp    37 <__UNIQUE_ID_description280+0x3>
+			33: R_X86_64_PLT32	__x86_return_thunk-0x4
+
+Disassembly of section .exit.text:
+
+0000000000000000 <cleanup_module>:
+   0:	f3 0f 1e fa          	endbr64 
+   4:	55                   	push   %rbp
+   5:	48 c7 c7 00 00 00 00 	mov    $0x0,%rdi
+			8: R_X86_64_32S	.data
+   c:	48 89 e5             	mov    %rsp,%rbp
+   f:	e8 00 00 00 00       	call   14 <cleanup_module+0x14>
+			10: R_X86_64_PLT32	misc_deregister-0x4
+  14:	5d                   	pop    %rbp
+  15:	e9 00 00 00 00       	jmp    1a <_note_9+0x2>
+			16: R_X86_64_PLT32	__x86_return_thunk-0x4
+
+Disassembly of section .altinstr_replacement:
+
+0000000000000000 <.altinstr_replacement>:
+   0:	9c                   	pushf  
+   1:	58                   	pop    %rax
+   2:	9c                   	pushf  
+   3:	58                   	pop    %rax
+   4:	9c                   	pushf  
+   5:	58                   	pop    %rax
+   6:	9c                   	pushf  
+   7:	58                   	pop    %rax

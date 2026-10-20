@@ -35,5 +35,23 @@
     "next": "fafad5c shared payload-only correction pending validation"
   },
   "resident_list": "NOT_RUN",
-  "performance_acceptance": "OPEN; original seven regressions and incomplete classes require diagnosis; p95 unmeasured"
+  "performance_acceptance": "OPEN; original seven regressions and incomplete classes require diagnosis; p95 unmeasured",
+  "live_3": {
+    "source": "52ceb5a",
+    "status": "PREPARATION_FAILED",
+    "reason": "widened result pointer store immediately after RDTSC",
+    "drained": true,
+    "archive": "live-3/archives.json"
+  },
+  "live_4": {
+    "source": "cf1e858",
+    "status": "NO_JIT",
+    "reason": "strict admission succeeded; two cold phases had zero entries/completions",
+    "drained": true,
+    "archive": "live-4/archives.json",
+    "write_operations": 2800000,
+    "read_operations": 40000000,
+    "kernel_fault_matches": 0
+  },
+  "next": "Separate rwlock attempt with existing final hotlock diagnostics; all admission and positive-execution checks unchanged"
 }
