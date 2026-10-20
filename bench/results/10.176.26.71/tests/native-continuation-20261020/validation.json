@@ -23,6 +23,11 @@
       "attempt": 4,
       "source": "a4eb4eb0fc744e8105bdd429e1d4bf0fb03ae0a4",
       "result_sha256": "21cfa93afbc24386ea3078a3f78b3bad84ffcc288d5a2c0161d7bc5060a3d19b"
+    },
+    {
+      "attempt": 5,
+      "source": "b345db373af2bd7c8ca1409a2c5791ff506eec72",
+      "result_sha256": "8366c5ca570528ac7c3852b482b35303f9d36d42633bcd9ed5653a68600cb428"
     }
   ],
   "changes_from_passed_builds_and_units": [
@@ -37,7 +42,8 @@
     "state": "INCOMPLETE",
     "list-functional-1": "spin list/n16 passed; supervisor stopped on generated source binding; independent reconstruction verified all generated files",
     "list-functional-2": "public mutex list/n16 passed; spin list-prefetch/n16 PREPARATION_FAILED on PREFETCH0 decoder alias; all drained",
-    "remaining_sessions": 14
+    "remaining_sessions": 14,
+    "list-functional-3": "PREPARATION_FAILED: GNU assembler rejects emitted PREFETCH0; original cleanup could not stop active translator; later natural translator exit and exact retirement confirmed separately."
   },
   "performance_acceptance": "OPEN; original seven regressions and incomplete classes require diagnosis; p95 unmeasured",
   "live_3": {
@@ -106,16 +112,31 @@
     "live-5": {
       "checks": 7021,
       "issues": 0
+    },
+    "list-functional-1": {
+      "checks": 8057,
+      "issues": 0
+    },
+    "list-functional-2": {
+      "checks": 16434,
+      "issues": 0
     }
   },
   "pending_changes": [
-    "exact-byte read-prefetch decoder alias mapping and directly affected tests",
-    "focused original-input replay scheduler and provenance checks"
+    "emit admitted Miasm read-prefetch aliases with GNU assembler names; actually build all 15 hint/ABI combinations in unit test"
   ],
   "single_writer": {
     "writer": "root",
     "helpers_read_only": true,
     "helper_files_touched": [],
     "parallel_tests": false
+  },
+  "checks_5": {
+    "passed": true,
+    "basic_programs": 2,
+    "selected_unit_drivers": 8,
+    "benchmark_drivers": 3,
+    "replay_tests": 12,
+    "limits": "Emission-only prefetch test passed but missed the subsequent assembler failure."
   }
 }

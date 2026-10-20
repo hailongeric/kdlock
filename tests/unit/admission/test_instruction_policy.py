@@ -1,5 +1,8 @@
 """Refuse processor-state bytes before emission; never execute these fixtures."""
 import struct
+import os
+from pathlib import Path
+import tempfile
 import unittest
 from types import SimpleNamespace
 from unittest.mock import mock_open, patch
@@ -119,12 +122,29 @@ class InstructionPolicyTests(unittest.TestCase):
             self.assertIsNone(instruction_policy.rejection(line))
             # The same admitted scalar hint still traverses address/context
             # analysis and emission, with its source bytes retained.
-            assembly, log, status = render("4889e0" + encoded + "c3", return_status=True)
-            self.assertEqual(status, 0, log)
-            self.assertTrue(assembly)
+            for kind, abi in ENTRIES:
+                assembly, log, status = render("4889e0" + encoded + "c3",
+                    lock_kind=kind, abi=abi, kernel_symbols=SYMBOLS, return_status=True)
+                self.assertEqual(status, 0, log)
+                self.assertIn(("PREFETCHT" + str(hint)).encode(), assembly)
+                # render() deliberately mocks the compiler. Assemble the real
+                # wrapper too, so a decoder-only spelling cannot pass this test.
+                previous = Path.cwd()
+                with tempfile.TemporaryDirectory(prefix="kd-prefetch-assembly-") as temporary:
+                    directory = Path(temporary)
+                    (directory / "asm").mkdir()
+                    (directory / "asm/jit.S").write_bytes(assembly)
+                    os.chdir(directory)
+                    try:
+                        translator.build_jit_binary(abi, context_inputs=
+                            translator.wrapper_context_inputs(assembly.decode()))
+                        self.assertTrue((directory / "asm/jit.bin").stat().st_size)
+                    finally:
+                        os.chdir(previous)
             for wrong in ("", "0f1800", "0f18c8", "0f0d08", "f00f1808", "f30f1808"):
                 alias = SimpleNamespace(name=line.name, args=line.args, b=bytes.fromhex(wrong))
                 self.assertIsNotNone(instruction_policy.rejection(alias))
+            self.refuse("4889e064" + encoded + "c3" + "90" * 16)
         for name in ("PREFETCH3", "PREFETCH_READ_FUTURE"):
             self.assertIsNotNone(instruction_policy.rejection(
                 SimpleNamespace(name=name, args=decode("0f1808").args, b=bytes.fromhex("0f1808"))))

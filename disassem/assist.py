@@ -2,6 +2,7 @@
 # These helpers serialize the lowerer's decisions; they do not admit a kernel
 # instruction or establish that a warning-only lowering preserves its semantics.
 import diagnostics
+from instruction_policy import READ_PREFETCH_ALIASES
 from miasm.expression.expression import ExprId, ExprInt
 from miasm_compat import make_expr_int
 
@@ -94,7 +95,9 @@ def make_inst(name, args):
 
 
 def get_inst_name(inst):
-    o = inst.name
+    # Admission already checked the exact read-hint bytes. GNU assembler uses
+    # Intel's T0/T1/T2 names rather than Miasm 0.1.5's decoder aliases.
+    o = READ_PREFETCH_ALIASES.get(inst.name, inst.name)
     if inst.additional_info.g1.value & 1:
         o = f"LOCK {o}"
     if inst.additional_info.g1.value & 2 and get_prefixed_default(inst) != b"\xf2":

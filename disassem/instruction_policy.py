@@ -11,6 +11,11 @@ rejects copying those instructions into generated code.
 """
 from miasm.expression.expression import ExprId, ExprMem
 
+READ_PREFETCH_ALIASES = {
+    "PREFETCH0": "PREFETCHT0",
+    "PREFETCH1": "PREFETCHT1",
+    "PREFETCH2": "PREFETCHT2",
+}
 
 SCALAR_INSTRUCTIONS = frozenset("""
     MOV MOVABS MOVSX MOVZX MOVSXD MOVBE LEA XCHG XADD
@@ -115,7 +120,7 @@ def rejection(line):
     # Miasm 0.1.5 spells the existing T0/T1/T2 read hints PREFETCH0/1/2.
     # Normalize only their actual memory encodings; a new decoder name or
     # unrelated opcode cannot borrow the scalar prefetch contract.
-    if name in ("PREFETCH0", "PREFETCH1", "PREFETCH2"):
+    if name in READ_PREFETCH_ALIASES:
         prefixes, opcode = opcode_bytes(getattr(line, "b", b""))
         hint = int(name[-1]) + 1
         if (len(opcode) < 3 or opcode[:2] != b"\x0f\x18" or
@@ -123,7 +128,7 @@ def rejection(line):
                 any(prefix in prefixes for prefix in (0xF0, 0xF2, 0xF3)) or
                 len(line.args) != 1 or not isinstance(line.args[0], ExprMem)):
             return "prefetch decoder alias does not match its read-hint encoding"
-        name = "PREFETCHT" + name[-1]
+        name = READ_PREFETCH_ALIASES[name]
     if name not in SCALAR_INSTRUCTIONS:
         return f"instruction {name} has no delegated CPU-state contract"
     if name == "NOP":

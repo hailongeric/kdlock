@@ -21,6 +21,7 @@ The guest kernel has not been modified or rebooted.
 | checks-2 | `390d04c` | Dependencies, provider, daemon, both basic programs and all 29 selected unit drivers passed. First benchmark driver failed compiling a stale observation fixture. |
 | checks-3 | `d7d65c1` | Spin/cacheline, list-image audit and direct-comparison drivers passed. Rwlock/rwsem benchmark driver failed on missing fixture metadata. |
 | checks-4 | `a4eb4eb` | All 26 rwlock/rwsem benchmark tests passed; final idle and source hashes verified. |
+| checks-5 | `b345db3` | Dependencies, provider/daemon, both basic programs, eight selected unit drivers and three benchmark drivers passed. Includes 12 focused replay tests. The emission-only prefetch test missed an assembler failure found by the next live run. |
 
 All failed attempts and original results remain under their numbered
 directories. Each failed process exited; a separate `post-failure-health.json`
@@ -215,3 +216,24 @@ Both attempts have complete raw archives and compact receipts under
 invocations for attempt 2 used invalid health/group arguments and ran no tests;
 the failed wrapper directory remains on the VM. The successful complete
 archive directory is `list-functional-2-archives-v2`.
+
+`a4eec9a` added the exact-byte alias admission. `checks-5` on collection source
+`b345db3` passed, but `list-functional-3` exposed a second part of the decoder
+compatibility issue: GNU assembler rejects emitted `PREFETCH0`. No measured
+business phase ran. The existing fixture mocks `build_jit_binary`, so successful
+text generation did not establish successful assembly. This gap is retained
+explicitly; the next correction shares the reviewed alias mapping with
+instruction spelling and compiles the actual wrapper for all three hints in
+all five backend/ABI combinations. An FS-prefixed hint remains a refusal test.
+
+The original attempt-3 receipt reports `drained=false` and
+`cleanup_error="translator has not exited"`. The failed supervisor exited;
+there were no active workers or frames. A separate cleanup waited for the
+current translator to finish naturally, stopped only the failed coordinator,
+verified zero writers/frames, retired through the ordinary ioctl, and unloaded
+normally. Its separate receipt records exact `state=2, modules=writers=frames=0`;
+the original failure is not rewritten as a drained pass.
+
+The two earlier resident-list archives also passed inert local review:
+8,057 and 16,434 checks respectively, zero inconsistencies. These counts concern
+archive consistency, not additional live test executions.
