@@ -343,6 +343,13 @@ with this revision.
 
 ### Main-plan acceptance audit
 
+The [seven-point latency stage](../bench/results/10.176.26.71/bench/mutex-latency-20261021/README.md)
+is in preparation. Validate the private caller instrumentation in the same VM,
+then run the fixed serial plain/disabled/sampled comparison and preserve every
+observation, overhead comparison, class shift, insufficient-sample group and
+host failure. The seven regressions remain unresolved; planned tests are not
+passes and operation latency must not be inferred from throughput.
+
 A JIT pass requires the generated and published identities to match, an observed
 returned JIT body, correct data, the required physical-owner ACKs and complete
 drain. Report publication, native controls and refusals separately. Combining
