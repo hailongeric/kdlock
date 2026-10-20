@@ -1,0 +1,7 @@
+{
+  "idle": true,
+  "checked_unix": 1792491995.5615468,
+  "failed_task": "rwlock",
+  "task_status": "PREPARATION_FAILED",
+  "kernel_modules_unloaded": true
+}

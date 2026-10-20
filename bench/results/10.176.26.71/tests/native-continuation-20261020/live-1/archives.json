@@ -1,0 +1,52 @@
+{
+  "archive_prefix": "live-1",
+  "boot_id": "b65f0205-c8f9-4385-8b13-039cbce243a6",
+  "completed": true,
+  "finished_ns": 1792492131077874110,
+  "groups": [
+    {
+      "bytes": 16588171,
+      "file": "probes.tar.gz",
+      "group": "probes",
+      "path": "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-1-archives/probes.tar.gz",
+      "roots": [
+        "live-1/mutex-outer",
+        "live-1/mutex-public",
+        "live-1/rwlock",
+        "live-1/spin"
+      ],
+      "sha256": "ad1c2e77e30191e6c6f94a3a1dbaa14e321516747f1b92b09f92d80de087f22d"
+    },
+    {
+      "bytes": 43529,
+      "file": "metadata.tar.gz",
+      "group": "metadata",
+      "path": "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-1-archives/metadata.tar.gz",
+      "roots": [
+        "live-1/committed-source.json",
+        "live-1/health.json",
+        "live-1/host-before.json",
+        "live-1/mutex-outer.console.log",
+        "live-1/mutex-public.console.log",
+        "live-1/post-failure-idle.json",
+        "live-1/run-tasks.py",
+        "live-1/rwlock.console.log",
+        "live-1/spin.console.log",
+        "live-1/task-plan.json",
+        "live-1/tasks.json"
+      ],
+      "sha256": "2c9411ef48c884cc646787104c29a6634d1de66b9f23a012eb8541169fb1e9ad"
+    }
+  ],
+  "guest_base": "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-1",
+  "guest_idle": true,
+  "health_path": "health.json",
+  "health_sha256": "4532d7d889d4472ebb68f47bc3135d27d99f64d1d84ad18db239aa5d81eb857c",
+  "idle_source_sha256": "c6f7dc17a41bc5c34bff35d3aaed7b4a995ba3e5225d2c48d032417ca3f1510e",
+  "input_inventory_sha256": "5753eb2faf1ba77951250ccefa373b83e7ed9128af91c5cf651e0de22717191e",
+  "kernel_release": "6.1.159-kdclobber2",
+  "schema": 1,
+  "scope": "Complete evidence preservation; no deletion, module action, test or timing",
+  "script_sha256": "8d666f148a10d7fe19294cc7d193464c8bb53d4c3aec64b7518b9d335966c952",
+  "started_ns": 1792492128085732612
+}

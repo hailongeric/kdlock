@@ -1,0 +1,10 @@
+[KD_JIT][WARN] reason=STATIC_PERCPU_SCREENING pid=0 entry="0xffffffffc079616b" rip="0xffffffffc079616b" inst="<context symbol resolution>" action="extend_static_ranges" detail="core static/module reserved arenas only; dynamic allocations, object lifetimes and unknown pointers are not validated" cpus=64 bytes_per_cpu=229376 core_bytes=221184 module_bytes=8192
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFF822024E0
+[KD_JIT][WARN] reason=NATIVE_ESCAPE_MARKER pid=0 entry="0xffffffffc079616b" rip="0xffffffffc079609c" inst="RDTSC      " action="emit_waiter_exit" detail="stop before source instruction and disable future delegation" source_ip="0xffffffffc079609c" instruction="RDTSC"
+[KD_JIT][WARN] reason=CONTEXT_SCREENING_ONLY pid=0 entry="0xffffffffc079616b" rip="0xffffffffc079616b" inst="<context admission scope>" action="emit_unchanged" detail="static context screening does not validate runtime pointer targets or concurrent memory freshness; use only audited experimental workloads" runtime_address_guard=false concurrent_memory_validated=false
+[KD_JIT][WARN] reason=NATIVE_ESCAPE_FLAGS pid=0 entry="0xffffffffc079616b" rip="0xffffffffc079616b" inst="<entry/branch instrumentation>" action="preserve_arithmetic_flags" detail="marker images preserve dispatch/budget flags and require defined source flags" budget_blocks=6 first_budget_rip="0xffffffffc0796054"
+Translation device session: inherited=1
+Translation runtime capability: mutex_stack_bytes=256 percpu_module_bytes=8192 native_escape=1 address_guard=1 string_services=1 string_write=1 audited_strings=1 direct_strings=1 root_native_escape=1
+Translation input: entry=0xffffffffc079616b targets=1 regions=1 bytes=8192
+KD_TRANSLATION_METRICS {"schema":1,"pid":0,"tgid":2780444,"entry":"0xffffffffc079616b","lock_kind":2,"child":2782043,"started_ns":448675999810960,"finished_ns":448678312307793,"wall_ns":2312496833,"user_ns":1638083000,"system_ns":673724000,"maxrss_kib":50580,"minor_faults":14593,"major_faults":0,"voluntary_cs":19,"involuntary_cs":11,"status":0,"result":0}

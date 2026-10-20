@@ -1,0 +1,5 @@
+{
+  "error": "cold branch rejected: [{'entry': 18446744072643764598, 'code': 18419722476154183680, 'status': -3, 'pid': 0, 'tgid': 2785532, 'lock_kind': 1, 'entry_abi': 3, 'requirements': 0, 'generation': 0}]",
+  "status": "PREPARATION_FAILED",
+  "unsafe": false
+}

@@ -48,11 +48,61 @@ their validation is retained under that exact revision, not relabeled as a
 new run. Skips, missing dependencies and compile failures are not passes.
 The successful benchmark drivers contain 16, five, 58 and 26 tests respectively,
 with no reported skips.
+The provider build exited successfully with existing locale-fallback warnings
+and the `_Q_LOCKED_COMBINER_VAL` redefinition warning retained verbatim in its
+log; this is not a warning-free build claim.
 
-## Remaining live scope
+## Live attempts
 
-After the selected benchmark checks pass, the serialized plan covers checked
-native exits for mutex OUTER, public DIRECT, spin, rwlock and rwsem; address-
+`live-1` used `a4eb4eb`. Mutex OUTER, public DIRECT and spin passed all four
+phases and drained. Their cold-delegated matching entry/completion counts were
+1,590,509, 1,589,501 and 1,595,512 respectively. Each hot phase recorded one
+checked native exit and no completed JIT body; the post-ban phases recorded
+zero new entries, completions or exits. Every phase completed 1,600,000 writes
+with exact prefix/suffix effects. Exact task, arithmetic flags and spinning
+CPU/control-state checks remained active.
+
+Rwlock stopped during preparation: strict admission refused a widened result
+pointer at the cold-path join (`CMP BYTE PTR [RSI], 0`). No positive rwlock
+execution was established. Cleanup retired all source frames, modules and
+writers; independent idle and hash verification followed. The two archives
+retain all four tasks, including that failure:
+
+| Archive | Bytes | SHA-256 |
+| --- | ---: | --- |
+| probes.tar.gz | 16588171 | `ad1c2e77e30191e6c6f94a3a1dbaa14e321516747f1b92b09f92d80de087f22d` |
+| metadata.tar.gz | 43529 | `2c9411ef48c884cc646787104c29a6634d1de66b9f23a012eb8541169fb1e9ad` |
+
+Raw copies are under
+`bench/results/10.176.26.71/raw/tests/native-continuation-20261020/live-1/`.
+The VM archiver verified unchanged inventory and final idle. The separate
+health check verified 776 source/binary hashes and found no matched faults in
+the four kernel logs.
+
+`eea0260` changes the shared probe payload only: the hot path increments suffix
+and then checks that competing-reader completions are unchanged; the cold path
+increments suffix separately. This preserves the observation window through the
+suffix while removing a result-pointer dereference from the cold merge. Pending
+reader, active-reader/writer, rwsem reservation and exact unlock checks remain.
+Provider and admission code are unchanged. `live-2` also stopped at rwlock
+preparation: the first refusal moved to the pre-marker store of
+`reader_pending` after the polling loop. It drained and retired completely,
+with 194 source/binary hashes verified and no matched kernel faults. Its
+archives remain separate under the analogous raw `live-2/` directory:
+`probes.tar.gz` is 4,153,930 bytes, SHA-256
+`cfdf13c04d85d9018ff437ae81eaeb470f6570045b014cc032fc0cb77b9ca50f`;
+`metadata.tar.gz` is 42,773 bytes, SHA-256
+`b73780671a1f5ac8272c93cac7f43e0a105f6fc2764639ccf39c6646294f28cf`.
+
+`fafad5c` keeps the pending-reader poll and completion snapshot before the
+marker, carries their scalar values through the unchanged native continuation,
+and stores them in the result afterward. It retains the complete observation
+window and tests the restored live values. Strict compiled-image admission
+and all positive execution checks remain required; this correction is pending
+live validation.
+
+The serialized plan covers checked native exits for mutex OUTER, public DIRECT,
+spin, rwlock and rwsem; address-
 guard and string-service regressions; ordinary mutex and rwsem ownership
 probes. Positive JIT probes must demonstrate returned cold bodies, the exact
 hot native continuation, sticky refusal and final drain. Publication alone

@@ -1,0 +1,45 @@
+{
+  "archive_prefix": "live-2",
+  "boot_id": "b65f0205-c8f9-4385-8b13-039cbce243a6",
+  "completed": true,
+  "finished_ns": 1792492387964703397,
+  "groups": [
+    {
+      "bytes": 4153930,
+      "file": "probes.tar.gz",
+      "group": "probes",
+      "path": "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-2-archives/probes.tar.gz",
+      "roots": [
+        "live-2/rwlock"
+      ],
+      "sha256": "cfdf13c04d85d9018ff437ae81eaeb470f6570045b014cc032fc0cb77b9ca50f"
+    },
+    {
+      "bytes": 42773,
+      "file": "metadata.tar.gz",
+      "group": "metadata",
+      "path": "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-2-archives/metadata.tar.gz",
+      "roots": [
+        "live-2/committed-source.json",
+        "live-2/health.json",
+        "live-2/host-before.json",
+        "live-2/run-tasks.py",
+        "live-2/rwlock.console.log",
+        "live-2/task-plan.json",
+        "live-2/tasks.json"
+      ],
+      "sha256": "b73780671a1f5ac8272c93cac7f43e0a105f6fc2764639ccf39c6646294f28cf"
+    }
+  ],
+  "guest_base": "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-2",
+  "guest_idle": true,
+  "health_path": "health.json",
+  "health_sha256": "acdc8b28e5ba35ed98d901c3b32a730748bee8d89d5f5ae7c4b9ba97a45840b9",
+  "idle_source_sha256": "c6f7dc17a41bc5c34bff35d3aaed7b4a995ba3e5225d2c48d032417ca3f1510e",
+  "input_inventory_sha256": "32ab95964d03f7f4b0c5aa0e0e8438a6a459771bfb98afa1bf47ad081a1f5a53",
+  "kernel_release": "6.1.159-kdclobber2",
+  "schema": 1,
+  "scope": "Complete evidence preservation; no deletion, module action, test or timing",
+  "script_sha256": "8d666f148a10d7fe19294cc7d193464c8bb53d4c3aec64b7518b9d335966c952",
+  "started_ns": 1792492386584930214
+}

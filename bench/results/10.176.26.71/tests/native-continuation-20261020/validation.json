@@ -30,8 +30,9 @@
     "bench/spin_cacheline/test_spin_cacheline.py"
   ],
   "live": {
-    "state": "RUNNING",
-    "output": "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-1"
+    "live-1": "3 passes; rwlock PREPARATION_FAILED; fully drained and archived",
+    "live-2": "rwlock PREPARATION_FAILED pre-marker result store; fully drained and archived",
+    "next": "fafad5c shared payload-only correction pending validation"
   },
   "resident_list": "NOT_RUN",
   "performance_acceptance": "OPEN; original seven regressions and incomplete classes require diagnosis; p95 unmeasured"
