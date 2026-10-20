@@ -230,5 +230,26 @@ eight/60 workers, three repetitions and strict returned-JIT enforcement.
 The same supervisor and 497-file measured source manifest apply. This new
 `rwsem-1` run requires its own fresh strict preflight and immediate host endpoint.
 It repeats none of the 147 attempted sessions and does not resume or relabel
-`timing-1`. The 69 unrun rwlock cases remain unresolved. Preparation and exact
-selection checks are ready; collection has not started.
+`timing-1`. The 69 unrun rwlock cases remain unresolved.
+
+The first rwsem preflight failed at **17:47:45.106041 UTC**, with 73 QEMU
+threads against 67. All original thread identities/pins remained unchanged;
+the six additional threads were named `worker`, pinned to CPU 63.
+[Health](rwsem-preflight-1/health.json) confirms idle, no timing directory,
+zero sessions and all 497 measured-source hashes unchanged.
+The [635-check preservation audit](rwsem-preflight-1/offline-review.json) passes;
+the preflight itself remains failed. Its [archive manifest](rwsem-preflight-1/archives.json)
+is `52e570548a350df355e0d9fdbf76a246ad364f18cc7869a8a63bcc0a3928bf48`;
+raw files remain under `raw/bench/nano-list-followup-20261020/rwsem-preflight-1/archives/`.
+A separate [17:50:43 host receipt](rwsem-preflight-1/later-host-receipt.json)
+shows those six worker TIDs gone but 68 total threads, still insufficient for
+admission. It does not replace the failed preflight.
+
+A fresh full capture at **17:52:31.389155 UTC** matched the original 67-thread
+configuration. `rwsem-preflight-2` passed the unchanged 497-file manifest,
+kernel/boot/dependencies/topology and exact 48-case task. Serial `rwsem-1`
+collection is now running from guest snapshot `09cc06d`; no measured source
+or collector changed. Its launcher captures the host endpoint on supervisor
+return, with SHA-256
+`d5b90383e5a447ca1cdf0b296841d32ed582f4822fdef22a571f139ab08ae20b`.
+No result is claimed until exact retirement and independent verification finish.

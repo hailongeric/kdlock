@@ -1,0 +1,13 @@
+{
+  "idle": true,
+  "boot_id": "b65f0205-c8f9-4385-8b13-039cbce243a6",
+  "preflight_passed": false,
+  "timing_output_absent": true,
+  "measured_sessions": 0,
+  "unchanged_source_hashes": 497,
+  "qemu_threads": 73,
+  "result_sha256": "87dfef4ff845906d4abc0c420e322c9e3943528bf9bf6e2d5623be018437d777",
+  "checked_unix": 1792518556.0211952,
+  "per_session_kernel_faults": [],
+  "scope": "Failed admission preserved; no timing, build or live session started."
+}

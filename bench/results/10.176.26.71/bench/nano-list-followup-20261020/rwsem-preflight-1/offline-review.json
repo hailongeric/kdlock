@@ -1,0 +1,104 @@
+{
+  "archives_manifest_sha256": "52e570548a350df355e0d9fdbf76a246ad364f18cc7869a8a63bcc0a3928bf48",
+  "check_counts": {
+    "archive_bytes": 2,
+    "archive_completed_idle": 1,
+    "archive_hash": 2,
+    "archived_health_hash": 1,
+    "archiver_hash": 1,
+    "committed_git_source": 497,
+    "guest_host_identity": 1,
+    "idle_zero_session_receipt": 1,
+    "inventory_exact_set": 1,
+    "inventory_hash": 1,
+    "member_assigned_group": 11,
+    "member_bytes": 11,
+    "member_in_inventory": 11,
+    "member_mode": 11,
+    "member_mtime_tar_projection": 11,
+    "member_owner": 11,
+    "member_prefix": 11,
+    "member_read_bytes": 11,
+    "member_safe_path": 11,
+    "member_type": 11,
+    "member_unique": 11,
+    "original_admission_failure": 1,
+    "original_reference_hash": 1,
+    "original_thread_identity_and_rwsem_selection": 1,
+    "retained_extra_worker_threads": 1,
+    "source_identity": 1,
+    "unchanged_preflight_inputs": 1
+  },
+  "checks": 635,
+  "consistent": true,
+  "extra_threads": [
+    {
+      "affinity": [
+        63
+      ],
+      "comm": "worker",
+      "tid": 422314
+    },
+    {
+      "affinity": [
+        63
+      ],
+      "comm": "worker",
+      "tid": 422594
+    },
+    {
+      "affinity": [
+        63
+      ],
+      "comm": "worker",
+      "tid": 422595
+    },
+    {
+      "affinity": [
+        63
+      ],
+      "comm": "worker",
+      "tid": 422596
+    },
+    {
+      "affinity": [
+        63
+      ],
+      "comm": "worker",
+      "tid": 422597
+    },
+    {
+      "affinity": [
+        63
+      ],
+      "comm": "worker",
+      "tid": 422598
+    }
+  ],
+  "files": 11,
+  "groups": [
+    {
+      "bytes": 13903,
+      "file": "admission.tar.gz",
+      "members": 1,
+      "sha256": "93ed970135e4f42d15fd79506ee4050ea4667308b4e2ca729377b9f9d88038a9",
+      "types": {
+        "file": 1
+      }
+    },
+    {
+      "bytes": 46877,
+      "file": "metadata.tar.gz",
+      "members": 10,
+      "sha256": "1af5079050b8ad599fe4e92fdb77f0da6e106d97fa8aa2fa8ff9ea2ec512522f",
+      "types": {
+        "file": 10
+      }
+    }
+  ],
+  "issues": [],
+  "regular_file_hash_map_sha256": "9a76eb2430872c261ccc7f001c5b8daf42ae4cd478670c789f4415358b852515",
+  "scope": "Preservation PASS; original preflight remains FAILED with zero timing sessions.",
+  "script_sha256": "9f6908de98e3a0fd259dff49700902c22a0ab84204e7fcd25e3feb094b36fcfc",
+  "symlinks": 0
+}

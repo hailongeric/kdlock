@@ -12,6 +12,7 @@ from types import SimpleNamespace
 p = argparse.ArgumentParser(description=__doc__)
 for name in ('repo', 'raw', 'report'):
     p.add_argument('--'+name, type=Path, required=True)
+p.add_argument('--rwsem-only', action='store_true')
 args = p.parse_args()
 assert socket.gethostname() == '380G10' and not args.report.exists()
 sys.dont_write_bytecode = True
@@ -39,15 +40,31 @@ for path, digest in manifest['files'].items():
 a.check(a.files['preflight.py'] == result['script_sha256'] and
         a.files['committed-source.json'] == plan['source_manifest_sha256'] and
         a.files['historical-plan.json'] == plan['historical_plan_sha256'] and
-        plan['phases']['timing'] == a.jread('historical-plan.json')['phases']['timing'],
+        plan['phases']['timing'] == (a.jread('historical-plan.json')['phases']['timing'][-1:]
+                                   if args.rwsem_only else a.jread('historical-plan.json')['phases']['timing']),
         'unchanged_preflight_inputs')
 host = a.jread('host-state.json')
 assert len(host['qemu']) == 1
 qemu = host['qemu'][0]
 cpu_threads = [t for t in qemu['tasks'] if t['comm'].startswith('CPU ')]
-extras = [t for t in qemu['tasks'] if t['tid'] in (421142, 421144, 421145)]
-a.check(len(qemu['tasks']) == health['qemu_threads'] == 70 and qemu['pid'] == 257489 and
-        len(cpu_threads) == 64 and len(extras) == 3 and
+if args.rwsem_only:
+    a.check(a.files['reference-host-state.json'] ==
+            '478e0dfa20602093ff849ae2c195bc5248101d9190d70fe63dd269e41633ba0a',
+            'original_reference_hash')
+    original = a.jread('reference-host-state.json')['qemu'][0]
+    original_tids = {t['tid'] for t in original['tasks']}
+    extras = [t for t in qemu['tasks'] if t['tid'] not in original_tids]
+    a.check([t for t in qemu['tasks'] if t['tid'] in original_tids] == original['tasks']
+            and qemu['args'] == original['args'] and result['rwsem_only'] is True and
+            len(plan['phases']['timing']) == 1 and
+            plan['phases']['timing'][0]['name'] == 'rwsem-w20' and
+            plan['phases']['timing'][0]['expected_sessions'] == 48,
+            'original_thread_identity_and_rwsem_selection')
+else:
+    extras = [t for t in qemu['tasks'] if t['tid'] in (421142, 421144, 421145)]
+a.check(len(qemu['tasks']) == health['qemu_threads'] == (73 if args.rwsem_only else 70) and
+        qemu['pid'] == 257489 and
+        len(cpu_threads) == 64 and len(extras) == (6 if args.rwsem_only else 3) and
         all(t['comm'] == 'worker' and t['affinity'] == [63] for t in extras),
         'retained_extra_worker_threads')
 a.check(host['snapshot_listed'] and host['pins_verified'] and

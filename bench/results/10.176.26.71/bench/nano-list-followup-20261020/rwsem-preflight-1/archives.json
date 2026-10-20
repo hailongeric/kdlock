@@ -1,0 +1,48 @@
+{
+  "archive_prefix": "rwsem-preflight-1",
+  "boot_id": "b65f0205-c8f9-4385-8b13-039cbce243a6",
+  "completed": true,
+  "finished_ns": 1792518556435738578,
+  "groups": [
+    {
+      "bytes": 13903,
+      "file": "admission.tar.gz",
+      "group": "admission",
+      "path": "/root/kdlock-evidence/10.176.26.71/bench/nano-list-followup-20261020/rwsem-preflight-1-archives/admission.tar.gz",
+      "roots": [
+        "rwsem-preflight-1/host-state.json"
+      ],
+      "sha256": "93ed970135e4f42d15fd79506ee4050ea4667308b4e2ca729377b9f9d88038a9"
+    },
+    {
+      "bytes": 46877,
+      "file": "metadata.tar.gz",
+      "group": "metadata",
+      "path": "/root/kdlock-evidence/10.176.26.71/bench/nano-list-followup-20261020/rwsem-preflight-1-archives/metadata.tar.gz",
+      "roots": [
+        "rwsem-preflight-1/committed-source.json",
+        "rwsem-preflight-1/console.log",
+        "rwsem-preflight-1/environment.json",
+        "rwsem-preflight-1/health.json",
+        "rwsem-preflight-1/historical-plan.json",
+        "rwsem-preflight-1/preflight.py",
+        "rwsem-preflight-1/reference-host-state.json",
+        "rwsem-preflight-1/result.json",
+        "rwsem-preflight-1/task-plan.json",
+        "rwsem-preflight-1/topology.json"
+      ],
+      "sha256": "1af5079050b8ad599fe4e92fdb77f0da6e106d97fa8aa2fa8ff9ea2ec512522f"
+    }
+  ],
+  "guest_base": "/root/kdlock-evidence/10.176.26.71/bench/nano-list-followup-20261020/rwsem-preflight-1",
+  "guest_idle": true,
+  "health_path": "health.json",
+  "health_sha256": "09cb9c90dff246ce46a27d378ae4e685653d6ce94c39842083da999394dd6926",
+  "idle_source_sha256": "c6f7dc17a41bc5c34bff35d3aaed7b4a995ba3e5225d2c48d032417ca3f1510e",
+  "input_inventory_sha256": "00e926085c532d02d7095547d19c7b0f6bd2083e71d485eca5ea6d1c8bc28518",
+  "kernel_release": "6.1.159-kdclobber2",
+  "schema": 1,
+  "scope": "Complete evidence preservation; no deletion, module action, test or timing",
+  "script_sha256": "8d666f148a10d7fe19294cc7d193464c8bb53d4c3aec64b7518b9d335966c952",
+  "started_ns": 1792518556083223116
+}
