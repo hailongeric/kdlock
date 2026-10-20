@@ -191,6 +191,179 @@ outer returning entry has a separate physical C return and JIT continuation
 which defines route zero, so a nested translated call never consumes an
 unmodelled native result.
 
+### Unified lock/unlock protocol
+
+The following pseudocode describes control flow, not a replacement for the
+atomic operations and lifetime checks in the source. `physical_lock` denotes
+KD's owner/OSQ/sleeping-waiter implementation, not a Linux mutex call.
+
+```text
+kd_mutex_lock(A):
+    capture compiler-spilled ABI2 continuation (SP, IP, BP)
+    enter the recognized DIRECT control
+    if this is a nested translated CALL:
+        validate the CALL token and waiter stack bounds
+        if a valid PENDING call lacks the 256-byte checkpoint window:
+            hand back that unexecuted CALL to the original task
+        snapshot the checkpoint; reject recursion or invalid state
+        if a valid PENDING call exceeds lock capacity:
+            hand back that unexecuted CALL to the original task
+        acquire A physically as the executor
+        publish A's exact frame ledger entry
+        consume the CALL only after acquisition and ledger publication
+        verify the original token and exact post-CALL IP/SP
+        if checkpoint bytes are equal: resume JIT
+        else: hand back AFTER the completed CALL, keeping all current effects
+    else:
+        check sleep context
+        if the bounded eight-probe physical acquisition succeeds:
+            return to the caller with A physically owned
+        record contention once
+        if heat/source/task admission refuses:
+            physical_lock(A); return
+        retain the exact task routing reference and register the continuation
+        if the delegation gate can be reserved:
+            acquire A physically; publish gate HELD; return
+        pin migration and disable preemption before publishing any request
+        if a same-CPU predecessor makes publication unsafe:
+            restore scheduler state and drop the unused routing reference
+            physical_lock(A); return
+        reserve a preallocated node and shadow stack
+        if reservation fails:
+            wait for the delegation gate and acquire A physically
+        else:
+            initialize MINIMAL packet, task/GS identity and independent links
+            exchange delegation_tail; record this exact counted interval
+            if there is a predecessor:
+                publish predecessor.next; poll node.locked with acquire ordering
+                if native_resume:
+                    retire counted interval; preserve FULL before node reuse
+                    release node; restore scheduler state; resume native suffix
+                    retain routing until the exact owner/ACK obligations finish
+                if completed:
+                    retire counted interval; preserve COMPLETE coordinates or FULL
+                    release node; restore scheduler state; put task reference
+                    resume after the consumed matching unlock
+            acquire the delegation gate and A physically
+            retire this head's tail position or wait for its successor link
+            if a successor exists: service the bounded delegation batch
+            retire the counted interval and node
+        restore scheduler state; return to execute this owner's original body
+
+kd_mutex_unlock(A):
+    if the current task has a routed native frame owning A:
+        request release from that exact physical owner; wait for its ACK
+    else if current physically owns A's live delegation gate:
+        publish RELEASING; release physical A; publish FREE
+        retire the matching task routing reference
+    else:
+        release physical A using the owner/flags and sleeping-waiter protocol
+```
+
+The batch decision uses the packet state and whether execution has already
+started. A reduced packet is not permission to infer missing register values.
+
+```text
+service_one_queued_request(node):
+    require the exact physical owner and a retained source lease
+    if node has no linked successor and is not ABI2 MINIMAL:
+        leave it uncompleted for the next queue head
+    bind a checked frame, its lock ledger and an immutable image
+    if pre-body admission refuses:
+        leave the original request uncompleted for handoff
+    invoke the checked body boundary once
+    if the batch wrapper returns COMPLETE:
+        retire completed body state; retire queue links
+        set completed; release-store node.locked = 0
+    else if the wrapper reports ENTRY_REFUSED:
+        validate the pristine MINIMAL state and absence of body progress
+        leave the unchanged request uncompleted for handoff
+    else:
+        dispatch the FULL return once, without rerunning the first body
+        if it reaches the matching unlock:
+            complete/retire frame; retire links
+            set completed; release-store node.locked = 0
+        else if it has a validated native continuation:
+            detach borrowed packet storage; preserve FULL for the waiter
+            retire every link that an enqueuer could still write
+            set native_resume; release-store node.locked = 0
+            never touch this node again
+            service exact owner release requests and ACKs; then retire frame
+        else:
+            fail closed; do not replay an entered body
+```
+
+Successful nested JIT unlocks update the same exact frame ledger. A native
+suffix requests an ACK instead of releasing an executor's mutex itself.
+Releasing outer A before nested B invokes the existing outer-release hook;
+the frame and B remain live until their obligations finish. The original
+combiner then reacquires A for its own body. None of these paths replays an
+already executed prefix.
+
+```mermaid
+flowchart TD
+    E["Public lock: DIRECT ABI2 boundary"] --> J{"Nested translated CALL?"}
+    J -->|yes| N["Validate token; acquire physically; record exact ledger entry"]
+    N --> NJ["Consume CALL; continue through generated lock controls"]
+    NJ -->|validated native exit| S
+    J -->|no| F{"Eight-probe physical acquire succeeds?"}
+    F -->|yes| B["Run caller's original body"]
+    F -->|no| A{"Contention admission accepts?"}
+    A -->|no| L["Acquire KD physical mutex locally"]
+    L --> B
+    A -->|yes| G{"Reserve delegation gate immediately?"}
+    G -->|yes| H["Acquire physically; publish HELD"]
+    H --> B
+    G -->|no| PIN["Pin migration; disable preemption"]
+    PIN --> PRED{"Same-CPU predecessor?"}
+    PRED -->|yes| FB["Restore scheduler state; put routing reference; acquire locally"]
+    FB --> B
+    PRED -->|no| R{"Preallocated slot available?"}
+    R -->|no| GW["Retain routing reference; wait for gate; acquire physically"]
+    GW --> RS["Restore scheduler state"]
+    RS --> B
+    R -->|yes| Q["Initialize packet; exchange tail; link predecessor; poll"]
+    Q --> W{"Published result"}
+    W -->|completed| C["Retire node; resume after unlock"]
+    W -->|native suffix| S["Retire node; restore scheduler state; resume exact FULL state"]
+    S --> SU["Execute saved native suffix once"]
+    W -->|new queue head| O["Acquire gate and physical mutex"]
+    O --> D["Service eligible successors within batch bounds"]
+    D --> RT["Retire counted interval and node; restore scheduler state"]
+    RT --> B
+    B --> U["Public unlock: exact provider routing"]
+    SU --> U
+    U --> K{"Native frame retains this lock?"}
+    K -->|yes| ACK["Owner release request and ACK"]
+    K -->|no| P{"Current owns delegation gate?"}
+    P -->|yes| GU["RELEASING; physical release; FREE; reference retirement"]
+    P -->|no| PU["KD physical unlock"]
+```
+
+The batch keeps a real tail while it temporarily defers remote-NUMA requests.
+At 256 serviced bodies, or when reaching a terminal node with deferred work,
+eight or more deferred requests cause handoff. A smaller deferred prefix
+rejoins ahead of the remainder, which is then served in FIFO order within the
+total batch cap. Normal handoff elects the next queue head; the current owner
+keeps physical A and HELD for its own original body until it unlocks.
+Refusal before body execution hands off the unchanged request;
+an entered body must reach its matching unlock or a validated forward native
+continuation. Source leases, immutable images, frames and ACKs remain live
+through that continuation. The OSQ links and cancellation path never remove a
+published delegation node; its result and counted interval must retire before
+the shared slot can be reused.
+
+An unsupported entry may be refused before executing a body. For nested
+controls, a valid PENDING `-E2BIG`/`-ENOMEM` result or an unavailable checkpoint
+window can select native execution before the CALL. Recursion, invalid tokens
+and unreadable state do not select that fallback. After the CALL, only an intact
+token and exact post-CALL state permit a changed-checkpoint native continuation.
+These cases do not authorize replay after progress: an invalid token or an
+unrecoverable post-execution state remains an error. In generated execution,
+the outer unlock can complete a delegated body while the combiner retains
+physical A for the batch; it does not take the native public-unlock path shown
+for the caller's original body or native suffix.
+
 ### Current storage and lookup
 
 The public object is 32 bytes, aligned to 8 bytes on the captured non-RT x86-64
