@@ -544,7 +544,10 @@ class TextRegionTests(unittest.TestCase):
                                 side_effect=AssertionError("refused root reached emission")))
                         assembly, log, status = self.translate(
                             lock_kind="spin", abi=abi, root_native_escape_capable=True,
-                            kernel_symbols={"kd_spin_lock_clobber_v1": lock},
+                            kernel_symbols={
+                                "kd_spin_lock_clobber_v1": lock,
+                                "kd_spin_unlock_clobber_v1": BASE + 0xA000,
+                            },
                             build_options=options)
                     self.assertEqual(status, 2 if forbidden else 0, log)
                     if forbidden:

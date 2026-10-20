@@ -48,8 +48,14 @@ def main():
         (path / "restore_production.h").write_text(
             "static __attribute__((noipa, used, no_caller_saved_registers)) noinline notrace void\n"
             + definition(source, "kd_spin_restore_unpin(void)")
+            # The flags helper consumes its incoming regs argument through
+            # the fixed %rdi ABI in assembly. Keep warnings for the fixture
+            # and final restore while admitting that exact production helper.
+            + '\n#pragma GCC diagnostic push\n'
+            + '#pragma GCC diagnostic ignored "-Wunused-parameter"\n'
             + source[source.index("#define KD_RESTORE_REG_OPERANDS"):
                      source.index("#pragma GCC push_options", source.index("#define KD_RESTORE_REG_OPERANDS"))]
+            + '\n#pragma GCC diagnostic pop\n'
             + macros + "static __attribute__((noipa, noreturn)) noinline notrace void\n" + code)
         for thunk in (False, True):
             binary = path / ("spin-restore-thunk" if thunk else "spin-restore")

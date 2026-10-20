@@ -146,9 +146,9 @@ def main():
         selected = {k:v for k,v in symbols.items() if
                     (k.startswith('kd_mutex') if abi == 2 else k.startswith('kd_spin'))}
         if abi == 2:
-            selected['mutex_unlock'] = 0x6000
+            selected['kd_mutex_local_unlock'] = 0x6000
             if native:
-                selected['mutex_lock'] = 0x5000
+                selected['kd_mutex_local_lock'] = 0x5000
         assembly, log, status = render(code.hex(), kernel_symbols=selected, abi=abi,
                                        lock_kind='mutex' if abi == 2 else 'spin',
                                        body_witness=True, return_status=True)
@@ -183,6 +183,7 @@ def main():
                             f'-DFINAL_IP={final_ip}', '-I'+str(path), '-I'+str(ROOT/'include'),
                             str(path/'fixture.c'), str(path/'wrapper.o'), '-o', str(path/'test')],
                            check=True, timeout=30)
+            print(f"Execute paired JIT: ABI={abi} native={native} failure={failure}", flush=True)
             subprocess.run([path/'test'], check=True, timeout=10)
 
 
