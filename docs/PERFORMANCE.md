@@ -100,6 +100,13 @@ in the report. No blanket prefetch benefit or performance acceptance follows.
 The seven earlier mutex regressions, strict rwlock coverage failure and
 latency/runtime-interference gaps remain unresolved.
 
+The [separate 2026-10-21 diagnostic stage](../bench/results/10.176.26.71/bench/nano-rwlock-diagnosis-20261021/README.md)
+binds the running QEMU executable and records extra workers with positive
+disk-write counters. Background writes also occur in its RAM control; the
+historical timing effect is still unmeasured. Planned provider gate counters
+and their matched overhead measurements will be reported separately from
+unchanged-binary coverage and performance acceptance.
+
 ## Fresh 32-byte mutex comparison with Native and TCLock
 
 The [2026-10-20 comparison](../bench/results/10.176.26.71/bench/mutex32-native-tclock-20261020/README.md)

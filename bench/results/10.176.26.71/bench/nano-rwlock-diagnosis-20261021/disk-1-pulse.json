@@ -1,0 +1,114 @@
+{
+  "boot_id": "b65f0205-c8f9-4385-8b13-039cbce243a6",
+  "bytes_per_worker": 4194304,
+  "complete": true,
+  "filesystem": "ext4",
+  "finished_ns": 1792520705356721641,
+  "output": "/root/kdlock-evidence/10.176.26.71/tests/qemu-io-diagnostic-20261021/disk-1",
+  "pid": 3003438,
+  "pulse_started_ns": 1792520705079932120,
+  "results": [
+    {
+      "affinity": [
+        0
+      ],
+      "bytes": 4194304,
+      "cpu": 0,
+      "fsync_finished_ns": 1792520705341002182,
+      "sha256": "2b07811057df887086f06a67edc6ebf911de8b6741156e7a2eb1416a4b8b1b2e",
+      "started_ns": 1792520705094904198,
+      "tid": 3003440,
+      "verification_finished_ns": 1792520705353306949
+    },
+    {
+      "affinity": [
+        1
+      ],
+      "bytes": 4194304,
+      "cpu": 1,
+      "fsync_finished_ns": 1792520705341820324,
+      "sha256": "2b07811057df887086f06a67edc6ebf911de8b6741156e7a2eb1416a4b8b1b2e",
+      "started_ns": 1792520705089980371,
+      "tid": 3003441,
+      "verification_finished_ns": 1792520705353651573
+    },
+    {
+      "affinity": [
+        2
+      ],
+      "bytes": 4194304,
+      "cpu": 2,
+      "fsync_finished_ns": 1792520705343219940,
+      "sha256": "2b07811057df887086f06a67edc6ebf911de8b6741156e7a2eb1416a4b8b1b2e",
+      "started_ns": 1792520705091518754,
+      "tid": 3003442,
+      "verification_finished_ns": 1792520705354484118
+    },
+    {
+      "affinity": [
+        3
+      ],
+      "bytes": 4194304,
+      "cpu": 3,
+      "fsync_finished_ns": 1792520705341964397,
+      "sha256": "2b07811057df887086f06a67edc6ebf911de8b6741156e7a2eb1416a4b8b1b2e",
+      "started_ns": 1792520705092743959,
+      "tid": 3003443,
+      "verification_finished_ns": 1792520705354937111
+    },
+    {
+      "affinity": [
+        4
+      ],
+      "bytes": 4194304,
+      "cpu": 4,
+      "fsync_finished_ns": 1792520705341498875,
+      "sha256": "2b07811057df887086f06a67edc6ebf911de8b6741156e7a2eb1416a4b8b1b2e",
+      "started_ns": 1792520705090324286,
+      "tid": 3003444,
+      "verification_finished_ns": 1792520705354339561
+    },
+    {
+      "affinity": [
+        5
+      ],
+      "bytes": 4194304,
+      "cpu": 5,
+      "fsync_finished_ns": 1792520705341201322,
+      "sha256": "2b07811057df887086f06a67edc6ebf911de8b6741156e7a2eb1416a4b8b1b2e",
+      "started_ns": 1792520705090693567,
+      "tid": 3003445,
+      "verification_finished_ns": 1792520705353968661
+    },
+    {
+      "affinity": [
+        6
+      ],
+      "bytes": 4194304,
+      "cpu": 6,
+      "fsync_finished_ns": 1792520705337195206,
+      "sha256": "2b07811057df887086f06a67edc6ebf911de8b6741156e7a2eb1416a4b8b1b2e",
+      "started_ns": 1792520705091135439,
+      "tid": 3003446,
+      "verification_finished_ns": 1792520705348669498
+    },
+    {
+      "affinity": [
+        7
+      ],
+      "bytes": 4194304,
+      "cpu": 7,
+      "fsync_finished_ns": 1792520705341075995,
+      "sha256": "2b07811057df887086f06a67edc6ebf911de8b6741156e7a2eb1416a4b8b1b2e",
+      "started_ns": 1792520705089663750,
+      "tid": 3003447,
+      "verification_finished_ns": 1792520705354680231
+    }
+  ],
+  "scope": "Diagnostic I/O stimulus only; no KD module or lock workload.",
+  "settle_seconds": 12,
+  "setup_finished_ns": 1792520693067653900,
+  "storage": "disk",
+  "total_bytes": 33554432,
+  "workers": 8
+}

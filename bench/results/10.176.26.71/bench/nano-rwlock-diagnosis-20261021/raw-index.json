@@ -1,0 +1,100 @@
+{
+  "scope": "Retained read-only host snapshots and original diagnostic stderr; no performance pass",
+  "files": [
+    {
+      "name": "disk-1-host-after.json",
+      "path": "bench/results/10.176.26.71/raw/bench/nano-rwlock-diagnosis-20261021/host-io/disk-1-host-after.json",
+      "bytes": 608994,
+      "sha256": "6714b0a743ebf604f52b6fdc060295ef2ed220a681fed9e2449f2c87b930bf20"
+    },
+    {
+      "name": "disk-1-host-after.stderr",
+      "path": "bench/results/10.176.26.71/raw/bench/nano-rwlock-diagnosis-20261021/host-io/disk-1-host-after.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "disk-1-host-before.json",
+      "path": "bench/results/10.176.26.71/raw/bench/nano-rwlock-diagnosis-20261021/host-io/disk-1-host-before.json",
+      "bytes": 601864,
+      "sha256": "c88b75462666c8e2207f53e617a92e431ea2132aa63db2f68341324b1fb8908a"
+    },
+    {
+      "name": "disk-1-host-before.stderr",
+      "path": "bench/results/10.176.26.71/raw/bench/nano-rwlock-diagnosis-20261021/host-io/disk-1-host-before.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "disk-1-host-settled.json",
+      "path": "bench/results/10.176.26.71/raw/bench/nano-rwlock-diagnosis-20261021/host-io/disk-1-host-settled.json",
+      "bytes": 609007,
+      "sha256": "099e2b49132ac6339fd7cb1d652b2563fb48cd04997574be98140b79b24e053c"
+    },
+    {
+      "name": "disk-1-host-settled.stderr",
+      "path": "bench/results/10.176.26.71/raw/bench/nano-rwlock-diagnosis-20261021/host-io/disk-1-host-settled.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "disk-1-pulse.stderr",
+      "path": "bench/results/10.176.26.71/raw/bench/nano-rwlock-diagnosis-20261021/host-io/disk-1-pulse.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "host-inventory-1.json",
+      "path": "bench/results/10.176.26.71/raw/bench/nano-rwlock-diagnosis-20261021/host-io/host-inventory-1.json",
+      "bytes": 580262,
+      "sha256": "cd4bb83754993e725d907f0f3407769aafee40937033e809f0660ea231bf5f36"
+    },
+    {
+      "name": "ram-1-host-after.json",
+      "path": "bench/results/10.176.26.71/raw/bench/nano-rwlock-diagnosis-20261021/host-io/ram-1-host-after.json",
+      "bytes": 580307,
+      "sha256": "534d237e733dac3d3eddcf196cb3567950915bbfac58f11a6e793ba28b2c9dba"
+    },
+    {
+      "name": "ram-1-host-after.stderr",
+      "path": "bench/results/10.176.26.71/raw/bench/nano-rwlock-diagnosis-20261021/host-io/ram-1-host-after.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "ram-1-host-before.json",
+      "path": "bench/results/10.176.26.71/raw/bench/nano-rwlock-diagnosis-20261021/host-io/ram-1-host-before.json",
+      "bytes": 573218,
+      "sha256": "6f3c822be35892e65861f293df4768d8c621faa9ed41afc5b73e0c406118e0bc"
+    },
+    {
+      "name": "ram-1-host-before.stderr",
+      "path": "bench/results/10.176.26.71/raw/bench/nano-rwlock-diagnosis-20261021/host-io/ram-1-host-before.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "ram-1-host-settled.json",
+      "path": "bench/results/10.176.26.71/raw/bench/nano-rwlock-diagnosis-20261021/host-io/ram-1-host-settled.json",
+      "bytes": 580307,
+      "sha256": "622908b236c24192d17aefbad488f905c49024439f62c887f8d826f396c7b63e"
+    },
+    {
+      "name": "ram-1-host-settled.stderr",
+      "path": "bench/results/10.176.26.71/raw/bench/nano-rwlock-diagnosis-20261021/host-io/ram-1-host-settled.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "ram-1-pulse.stderr",
+      "path": "bench/results/10.176.26.71/raw/bench/nano-rwlock-diagnosis-20261021/host-io/ram-1-pulse.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "archive": {
+    "path": "bench/results/10.176.26.71/raw/bench/nano-rwlock-diagnosis-20261021/host-io/captures.tar.gz",
+    "bytes": 268489,
+    "sha256": "0ad70baada318e865e8d84d0457c65db318f76d030f92ca893530cedda460e23"
+  }
+}

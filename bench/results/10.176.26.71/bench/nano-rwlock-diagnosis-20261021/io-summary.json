@@ -1,0 +1,397 @@
+{
+  "scope": "Diagnostic only; endpoint thread-set failures are unchanged",
+  "runs": [
+    {
+      "arm": "ram",
+      "pulse_complete": true,
+      "verified_bytes": 33554432,
+      "boot_id": "b65f0205-c8f9-4385-8b13-039cbce243a6",
+      "host": [
+        {
+          "receipt": "ram-1-host-before.json",
+          "captured_utc": "2026-10-20T18:24:05.116459+00:00",
+          "thread_count": 67,
+          "workers": [],
+          "system_disk": {
+            "rd_bytes": 16480682496,
+            "wr_bytes": 261687266304,
+            "rd_operations": 1084846,
+            "wr_operations": 3261538,
+            "flush_operations": 89537,
+            "wr_total_time_ns": 15597650593952,
+            "rd_total_time_ns": 169063917259,
+            "flush_total_time_ns": 488935306744,
+            "rd_merged": 0,
+            "wr_merged": 0,
+            "idle_time_ns": 92928184576
+          }
+        },
+        {
+          "receipt": "ram-1-host-after.json",
+          "captured_utc": "2026-10-20T18:24:18.709991+00:00",
+          "thread_count": 68,
+          "workers": [
+            {
+              "tid": 423070,
+              "affinity": [
+                63
+              ],
+              "wchan": "futex_wait_queue",
+              "io": {
+                "rchar": 65536,
+                "wchar": 1012472,
+                "syscr": 1,
+                "syscw": 271,
+                "read_bytes": 0,
+                "write_bytes": 1011712,
+                "cancelled_write_bytes": 0
+              }
+            }
+          ],
+          "system_disk": {
+            "rd_bytes": 16480682496,
+            "wr_bytes": 261688278016,
+            "rd_operations": 1084846,
+            "wr_operations": 3261714,
+            "flush_operations": 89543,
+            "wr_total_time_ns": 15597674244679,
+            "rd_total_time_ns": 169063917259,
+            "flush_total_time_ns": 489019479513,
+            "rd_merged": 0,
+            "wr_merged": 0,
+            "idle_time_ns": 2581876754
+          }
+        },
+        {
+          "receipt": "ram-1-host-settled.json",
+          "captured_utc": "2026-10-20T18:24:31.187633+00:00",
+          "thread_count": 68,
+          "workers": [
+            {
+              "tid": 423070,
+              "affinity": [
+                63
+              ],
+              "wchan": "futex_wait_queue",
+              "io": {
+                "rchar": 65536,
+                "wchar": 1459296,
+                "syscr": 1,
+                "syscw": 405,
+                "read_bytes": 0,
+                "write_bytes": 1458176,
+                "cancelled_write_bytes": 0
+              }
+            }
+          ],
+          "system_disk": {
+            "rd_bytes": 16480682496,
+            "wr_bytes": 261688724480,
+            "rd_operations": 1084846,
+            "wr_operations": 3261803,
+            "flush_operations": 89547,
+            "wr_total_time_ns": 15597687512908,
+            "rd_total_time_ns": 169063917259,
+            "flush_total_time_ns": 489160594311,
+            "rd_merged": 0,
+            "wr_merged": 0,
+            "idle_time_ns": 2803447222
+          }
+        }
+      ]
+    },
+    {
+      "arm": "disk",
+      "pulse_complete": true,
+      "verified_bytes": 33554432,
+      "boot_id": "b65f0205-c8f9-4385-8b13-039cbce243a6",
+      "host": [
+        {
+          "receipt": "disk-1-host-before.json",
+          "captured_utc": "2026-10-20T18:24:52.286957+00:00",
+          "thread_count": 71,
+          "workers": [
+            {
+              "tid": 423187,
+              "affinity": [
+                63
+              ],
+              "wchan": "futex_wait_queue",
+              "io": {
+                "rchar": 0,
+                "wchar": 180240,
+                "syscr": 0,
+                "syscw": 30,
+                "read_bytes": 0,
+                "write_bytes": 180224,
+                "cancelled_write_bytes": 0
+              }
+            },
+            {
+              "tid": 423190,
+              "affinity": [
+                63
+              ],
+              "wchan": "futex_wait_queue",
+              "io": {
+                "rchar": 0,
+                "wchar": 57368,
+                "syscr": 0,
+                "syscw": 17,
+                "read_bytes": 0,
+                "write_bytes": 57344,
+                "cancelled_write_bytes": 0
+              }
+            },
+            {
+              "tid": 423191,
+              "affinity": [
+                63
+              ],
+              "wchan": "futex_wait_queue",
+              "io": {
+                "rchar": 0,
+                "wchar": 24592,
+                "syscr": 0,
+                "syscw": 8,
+                "read_bytes": 0,
+                "write_bytes": 24576,
+                "cancelled_write_bytes": 0
+              }
+            },
+            {
+              "tid": 423193,
+              "affinity": [
+                63
+              ],
+              "wchan": "futex_wait_queue",
+              "io": {
+                "rchar": 0,
+                "wchar": 217248,
+                "syscr": 0,
+                "syscw": 49,
+                "read_bytes": 0,
+                "write_bytes": 217088,
+                "cancelled_write_bytes": 0
+              }
+            }
+          ],
+          "system_disk": {
+            "rd_bytes": 16480682496,
+            "wr_bytes": 261689564160,
+            "rd_operations": 1084846,
+            "wr_operations": 3261953,
+            "flush_operations": 89551,
+            "wr_total_time_ns": 15597723893134,
+            "rd_total_time_ns": 169063917259,
+            "flush_total_time_ns": 489226448906,
+            "rd_merged": 0,
+            "wr_merged": 0,
+            "idle_time_ns": 12861016942
+          }
+        },
+        {
+          "receipt": "disk-1-host-after.json",
+          "captured_utc": "2026-10-20T18:25:05.703655+00:00",
+          "thread_count": 72,
+          "workers": [
+            {
+              "tid": 423187,
+              "affinity": [
+                63
+              ],
+              "wchan": "futex_wait_queue",
+              "io": {
+                "rchar": 196608,
+                "wchar": 13976384,
+                "syscr": 3,
+                "syscw": 271,
+                "read_bytes": 0,
+                "write_bytes": 13975552,
+                "cancelled_write_bytes": 0
+              }
+            },
+            {
+              "tid": 423190,
+              "affinity": [
+                63
+              ],
+              "wchan": "futex_wait_queue",
+              "io": {
+                "rchar": 655360,
+                "wchar": 13267880,
+                "syscr": 10,
+                "syscw": 268,
+                "read_bytes": 0,
+                "write_bytes": 13266944,
+                "cancelled_write_bytes": 0
+              }
+            },
+            {
+              "tid": 423193,
+              "affinity": [
+                63
+              ],
+              "wchan": "futex_wait_queue",
+              "io": {
+                "rchar": 131072,
+                "wchar": 10621832,
+                "syscr": 2,
+                "syscw": 254,
+                "read_bytes": 0,
+                "write_bytes": 10620928,
+                "cancelled_write_bytes": 0
+              }
+            },
+            {
+              "tid": 423257,
+              "affinity": [
+                63
+              ],
+              "wchan": "futex_wait_queue",
+              "io": {
+                "rchar": 262144,
+                "wchar": 6611376,
+                "syscr": 4,
+                "syscw": 110,
+                "read_bytes": 0,
+                "write_bytes": 6610944,
+                "cancelled_write_bytes": 0
+              }
+            },
+            {
+              "tid": 423258,
+              "affinity": [
+                63
+              ],
+              "wchan": "futex_wait_queue",
+              "io": {
+                "rchar": 65536,
+                "wchar": 1441984,
+                "syscr": 1,
+                "syscw": 46,
+                "read_bytes": 0,
+                "write_bytes": 1441792,
+                "cancelled_write_bytes": 0
+              }
+            }
+          ],
+          "system_disk": {
+            "rd_bytes": 16480682496,
+            "wr_bytes": 261724212224,
+            "rd_operations": 1084846,
+            "wr_operations": 3262169,
+            "flush_operations": 89559,
+            "wr_total_time_ns": 15600113183741,
+            "rd_total_time_ns": 169063917259,
+            "flush_total_time_ns": 489255475119,
+            "rd_merged": 0,
+            "wr_merged": 0,
+            "idle_time_ns": 458491606
+          }
+        },
+        {
+          "receipt": "disk-1-host-settled.json",
+          "captured_utc": "2026-10-20T18:25:18.182676+00:00",
+          "thread_count": 72,
+          "workers": [
+            {
+              "tid": 423187,
+              "affinity": [
+                63
+              ],
+              "wchan": "futex_wait_queue",
+              "io": {
+                "rchar": 393216,
+                "wchar": 14037872,
+                "syscr": 6,
+                "syscw": 289,
+                "read_bytes": 0,
+                "write_bytes": 14036992,
+                "cancelled_write_bytes": 0
+              }
+            },
+            {
+              "tid": 423190,
+              "affinity": [
+                63
+              ],
+              "wchan": "futex_wait_queue",
+              "io": {
+                "rchar": 655360,
+                "wchar": 13370288,
+                "syscr": 10,
+                "syscw": 287,
+                "read_bytes": 0,
+                "write_bytes": 13369344,
+                "cancelled_write_bytes": 0
+              }
+            },
+            {
+              "tid": 423193,
+              "affinity": [
+                63
+              ],
+              "wchan": "futex_wait_queue",
+              "io": {
+                "rchar": 131072,
+                "wchar": 10711952,
+                "syscr": 2,
+                "syscw": 273,
+                "read_bytes": 0,
+                "write_bytes": 10711040,
+                "cancelled_write_bytes": 0
+              }
+            },
+            {
+              "tid": 423257,
+              "affinity": [
+                63
+              ],
+              "wchan": "futex_wait_queue",
+              "io": {
+                "rchar": 327680,
+                "wchar": 6685144,
+                "syscr": 5,
+                "syscw": 133,
+                "read_bytes": 0,
+                "write_bytes": 6684672,
+                "cancelled_write_bytes": 0
+              }
+            },
+            {
+              "tid": 423258,
+              "affinity": [
+                63
+              ],
+              "wchan": "futex_wait_queue",
+              "io": {
+                "rchar": 131072,
+                "wchar": 1589488,
+                "syscr": 2,
+                "syscw": 79,
+                "read_bytes": 0,
+                "write_bytes": 1589248,
+                "cancelled_write_bytes": 0
+              }
+            }
+          ],
+          "system_disk": {
+            "rd_bytes": 16480682496,
+            "wr_bytes": 261724687360,
+            "rd_operations": 1084846,
+            "wr_operations": 3262262,
+            "flush_operations": 89563,
+            "wr_total_time_ns": 15600153716371,
+            "rd_total_time_ns": 169063917259,
+            "flush_total_time_ns": 489288422384,
+            "rd_merged": 0,
+            "wr_merged": 0,
+            "idle_time_ns": 2606070623
+          }
+        }
+      ]
+    }
+  ],
+  "conclusion": "Both arms are exposed to background root-disk I/O. Extra workers perform writes, but these endpoints alone do not establish the source or timing of workers in the historical performance runs."
+}

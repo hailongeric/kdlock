@@ -152,6 +152,15 @@ All runs are idle. The failed rwlock execution requirement and 69 missing cases,
 host endpoint mismatches, variance and earlier mutex/class/latency gaps remain
 open; do not weaken a gate or repeat a failed case for a favorable class.
 
+The [2026-10-21 diagnosis](../bench/results/10.176.26.71/bench/nano-rwlock-diagnosis-20261021/README.md)
+continues that unfinished work. Read-only host captures bind the QEMU binary
+and show extra workers performing disk writes. Matched RAM/ext4 diagnostics
+also observe background root-disk writes, so historical timing interference
+remains unresolved. An isolated provider observation patch and fixed matched
+comparison will distinguish rwlock ratio/time, lock-heat and queue-prefix
+refusals. The original 69 unstarted cases remain a separate strict coverage
+plan. No admission threshold, failed record or acceptance gate is changed.
+
 Keep the two-word wrapper ABI, separate backend identities, exact KD physical owners,
 exact acquisition references and final ACKs. Shared storage must survive its final
 reader. Builds/tests/benchmarks run in the recovery guest; default work does not
