@@ -33,6 +33,9 @@ typedef pthread_spinlock_t spinlock_t;
 #define spin_unlock(p) pthread_spin_unlock(p)
 #define READ_ONCE(x) (*(volatile __typeof__(x) *)&(x))
 #define WRITE_ONCE(x, v) (*(volatile __typeof__(x) *)&(x) = (v))
+typedef __u64 u64;
+#define __aligned(n) __attribute__((aligned(n)))
+#define BUILD_BUG_ON(c) _Static_assert(!(c), #c)
 #include "../../workload_modules/spin_cacheline/payload.h"
 #include "../../workload_modules/spin_cacheline/post_work.h"
 
@@ -117,17 +120,34 @@ int fixture_ioctl(int fd, unsigned long cmd, ...)
 		*l = (struct sc_layout){ .version = SC_VERSION, .line_bytes = 64, .slots = 16, .lock_kind = 1,
 			.lock_bytes = sizeof(sc_lock), .lock_addr = (uintptr_t)&sc_lock,
 			.control_addr = (uintptr_t)control, .data_addr = (uintptr_t)sc_data };
+#ifdef SC_LIST_PAYLOAD
+		l->workload = SC_LIST_PREFETCH ? SC_WORKLOAD_LIST_PREFETCH : SC_WORKLOAD_LIST;
+		l->entries = SC_LIST_NODES;
+		l->data_addr = (uintptr_t)sc_list_nodes;
+		if (fault_is("layout"))
+			l->entries++;
+#else
 		for (int i = 0; i < 16; i++)
 			l->slot_addr[i] = (uintptr_t)&sc_data[i];
 		if (fault && !strcmp(fault, "layout"))
 			l->slot_addr[1]++;
+#endif
 		return 0;
 	}
 	if (cmd == SC_COUNTS) {
 		struct sc_counts *c = packet;
 		memset(c, 0, sizeof(*c));
+#ifdef SC_LIST_PAYLOAD
+		if (snapshots && fault_is("links"))
+			sc_list_nodes[0].next = (void *)1;
+		if (sc_list_snapshot(c->values)) {
+			errno = EUCLEAN;
+			return -1;
+		}
+#else
 		for (int i = 0; i < 16; i++)
 			c->values[i] = sc_data[i].value;
+#endif
 		if (snapshots++ && fault) {
 			if (!strcmp(fault, "inactive"))
 				c->values[15]++;
@@ -147,11 +167,15 @@ int fixture_ioctl(int fd, unsigned long cmd, ...)
 		    !atomic_load_explicit(&start_gate->go, memory_order_acquire))
 			abort();
 		switch (r->cachelines) {
+#ifdef SC_LIST_PAYLOAD
+		case 0: body = sc_body_0; break;
+#else
 		case 1: body = sc_body_1; break;
 		case 2: body = sc_body_2; break;
 		case 4: body = sc_body_4; break;
 		case 8: body = sc_body_8; break;
 		case 16: body = sc_body_16; break;
+#endif
 		}
 		if (!body)
 			return -1;
@@ -178,8 +202,14 @@ int main(int argc, char **argv)
 				expected_workers += *p == ',';
 		}
 	}
+#ifdef SC_LIST_PAYLOAD
+	sc_list_init();
+	for (int i = 0; i < SC_LIST_NODES; i++)
+		sc_list_nodes[i].value = 100;
+#else
 	for (int i = 0; i < 16; i++)
 		sc_data[i].value = 100 + i;
+#endif
 	int result = client_main(argc, argv);
 	if (getenv("SC_FIXTURE_COUNTS"))
 		fprintf(stderr, "{\"layout\":%u,\"counts\":%d,\"run\":%u,"

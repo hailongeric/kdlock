@@ -8,6 +8,8 @@
 #define RB_MAX_WORKERS 64
 #define RB_BATCH 256
 #define RB_SLOTS 16
+#define RB_WORKLOAD_LIST 4
+#define RB_WORKLOAD_LIST_PREFETCH 5
 
 struct rw_bench_config {
 	__u64 started_ns, deadline_ns; /* deadline 0 selects fixed iterations */

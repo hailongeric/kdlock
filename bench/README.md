@@ -9,10 +9,10 @@ The [terminology guide](../docs/TERMINOLOGY.md) defines lock names, just-in-time
 
 | Comparison | Entry point | Payloads |
 | --- | --- | --- |
-| Spin | [tclock_compare/run.py](tclock_compare/run.py) | c01/c08 and RCUHT |
+| Spin | [tclock_compare/run.py](tclock_compare/run.py) | c01/c08, resident list with matched prefetch variants, and RCUHT |
 | Mutex | [tclock_compare/run_mutex.py](tclock_compare/run_mutex.py) | Same payloads, selected KD-only mutex |
-| Rwlock | [rwlock_compare/run.py](rwlock_compare/run.py) | c01/c08 and RCUHT, default 1%/20% writes |
-| Sleeping reader/writer semaphore (rwsem) | [rwlock_compare/run.py](rwlock_compare/run.py), `--lock-kind rwsem --backends native kdlock` | c01/c08 or RCUHT; local readers and writers that may delegate, with `--delegate off` local control; no TCLock implementation |
+| Rwlock | [rwlock_compare/run.py](rwlock_compare/run.py) | c01/c08, resident list and RCUHT, default 1%/20% writes |
+| Sleeping reader/writer semaphore (rwsem) | [rwlock_compare/run.py](rwlock_compare/run.py), `--lock-kind rwsem --backends native kdlock` | Same synthetic payloads; local readers and writers that may delegate, with `--delegate off` local control; no TCLock implementation |
 | Proc snapshots | [rwlock_compare/run.py](rwlock_compare/run.py), `--lock-kind spin` | `argbounds` and exact `taskname`; separate from full procfs/ps |
 | Syscall/API | [real_api/run.py](real_api/run.py) | OFD, setfd, pipebytes, pipecap, seek, bounded UTS and xattr controls |
 
@@ -49,6 +49,11 @@ Before live execution, confirm a recoverable snapshot and set the documented
 recovery variables, then omit `--dry-run` and use an outer timeout. For other
 synthetic sizes select `--cachelines 1 8`; for RCUHT use `--workload rcuht`
 and omit `--cachelines`. These choices define different workloads.
+For [resident-list variants](../docs/BENCHMARK_WORKLOADS.md#resident-linked-list-traversal),
+select `--workload list` or `list-prefetch` and `--list-nodes 16` or `128`,
+also omitting `--cachelines`. Add `--mutex-api public` for literal public mutex
+calls. The rwlock/rwsem runner uses plural `--workloads` and can plan both list
+variants and sizes together.
 
 The public mutex acceptance driver, [mutex_api_compare/run.py](mutex_api_compare/run.py),
 has separate `prepare`, `smoke` and `measure` actions with one `--output` directory.
@@ -84,9 +89,9 @@ Spin/mutex uses post64; rwlock/rwsem uses post4. Retain actual host governor, CP
 placement, source and ELF hashes, kernel identity and instrumentation policy.
 
 Validate business results, every worker's progress, required execution evidence
-and complete drain. Synthetic mutex counters witness generated-body entry;
-they do not prove returned bodies. The real API runner separately records
-matching returned completions. Keep entry-only, returned-body and NO_JIT
+and complete drain. Retained c01/c08/RCUHT mutex receipts witness generated-body
+entry; they do not prove returned bodies. New list profiles and the real API
+runner separately record matching returned completions. Keep entry-only, returned-body and NO_JIT
 controls/refusals distinct.
 Preserve failures, partial attempts and all valid rounds. Never pool different
 source versions, workloads, topologies, call shells or instrumentation settings.

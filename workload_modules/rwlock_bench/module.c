@@ -141,6 +141,8 @@ static long rb_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 		.workload = 2,
 #elif defined(RB_SNAPSHOT_PAYLOAD)
 		.workload = 3,
+#elif defined(RB_LIST)
+		.workload = SC_LIST_PREFETCH ? RB_WORKLOAD_LIST_PREFETCH : RB_WORKLOAD_LIST,
 #endif
 	};
 	unsigned int i;
@@ -185,6 +187,8 @@ static long rb_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 		rb_lock_snapshot(&snap);
 #ifdef RB_HASH
 		error = sc_hash_snapshot(&snap);
+#elif defined(RB_LIST)
+		error = sc_list_snapshot(snap.values);
 #else
 		for (i = 0; i < RB_SLOTS; i++)
 			snap.values[i] = READ_ONCE(rb_values[i].value);
@@ -212,6 +216,8 @@ static int __init rb_init(void)
 	BUILD_BUG_ON(sizeof(struct rb_progress_slot) != 128);
 #ifdef RB_HASH
 	sc_hash_init();
+#elif defined(RB_LIST)
+	sc_list_init();
 #endif
 	return misc_register(&rb_device);
 }

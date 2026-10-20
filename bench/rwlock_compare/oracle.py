@@ -31,12 +31,16 @@ def post_work_checksum(completed, rounds):
 def check_snapshot(row, spec):
     require((row['version'], row['backend'], row['workload'], row['lines'], row['post_work_rounds']) ==
             (1, {'native': 0, 'tclock': 1, 'kdlock': 2}[spec['arm']],
-             {'cacheline': 0, 'rcuht': 1, 'taskname': 2, 'argbounds': 3}[spec['workload']],
+             {'cacheline': 0, 'rcuht': 1, 'taskname': 2, 'argbounds': 3,
+              'list': 4, 'list-prefetch': 5}[spec['workload']],
              spec['cachelines'], spec['post_work_rounds']),
             'workload identity differs')
     require(all(row[name] == 0 for name in ('active', 'cnts', 'gate')), 'rwlock did not drain')
     require(len(row['values']) == 16 and all(type(v) is int and 0 <= v < 2**64 for v in row['values']),
             'invalid payload snapshot')
+    if spec['workload'] in ('list', 'list-prefetch'):
+        require(spec.get('list_nodes') == row['lines'] and row['lines'] in (16, 128) and
+                row['values'][1:] == [0] * 15, 'invalid list identity/unused counters')
 
 
 def validate(measurement, spec):
@@ -74,7 +78,7 @@ def validate(measurement, spec):
         require(delta == [m['writes']] * spec['cachelines'] + [0] * (16 - spec['cachelines']),
                 'lost/duplicated write or inactive-line update')
         require(all(w['read_hits'] == 0 for w in workers), 'cacheline reader returned hash hits')
-    elif spec['workload'] in ('taskname', 'argbounds'):
+    elif spec['workload'] in ('taskname', 'argbounds', 'list', 'list-prefetch'):
         require(delta == [m['writes']] + [0] * 15, 'lost/duplicated snapshot mutation')
         require(all(w['read_hits'] == 0 for w in workers), 'snapshot returned hash hits')
     else:

@@ -127,6 +127,9 @@ static bool layout_valid(const struct sc_layout *l)
 	if (l->workload == SC_WORKLOAD_HASH)
 		return l->buckets == SC_HASH_BUCKETS && l->entries == SC_HASH_ENTRIES &&
 		       l->key_range == SC_HASH_KEY_RANGE && l->resched <= 1;
+	if (l->workload == SC_WORKLOAD_LIST || l->workload == SC_WORKLOAD_LIST_PREFETCH)
+		return (l->entries == 16 || l->entries == 128) &&
+		       !l->buckets && !l->key_range && !l->resched;
 	if (l->workload != SC_WORKLOAD_CACHELINE)
 		return false;
 	for (int i = 0; i < SC_SLOTS; i++)
@@ -197,6 +200,7 @@ int main(int argc, char **argv)
 		{ "sample-ms", required_argument, NULL, 'P' },
 		{ "collector-cpu", required_argument, NULL, 'C' },
 		{ "share-collector", no_argument, NULL, 1000 },
+		{ "list-nodes", required_argument, NULL, 1001 },
 		{ NULL, 0, NULL, 0 },
 	};
 	struct worker workers[CPU_SETSIZE] = { 0 };
@@ -210,12 +214,16 @@ int main(int argc, char **argv)
 	uint64_t iterations = 10000, lines = 0, completed = 0, cpu_ns = 0;
 	uint64_t duration_ms = 0, window_ms = 300, settle_ms = 300, sample_ms = 10;
 	uint64_t collector_cpu = 30;
+	uint64_t list_nodes = 16;
 	uint64_t started, finished = 0, elapsed;
 	unsigned int count = 0, created = 0;
 	bool layout_only = false, counts_only = false, prepare_only = false, valid = true;
-	bool hash = false, timed_options = false, iterations_set = false;
+	bool hash, list, timed_options = false, iterations_set = false;
+	bool list_nodes_set = false;
 	bool share_collector = false;
 	unsigned int lock_kind = 1;
+	unsigned int workload_id = SC_WORKLOAD_CACHELINE;
+	const char *workload_name = "cacheline";
 	char *cpu_text = NULL, *token, *save;
 	int fd, option, error = 0, collector_observed_cpu = -1, collector_error = 0;
 
@@ -238,14 +246,27 @@ int main(int argc, char **argv)
 		case 'P': sample_ms = number(optarg); timed_options = true; break;
 		case 'C': collector_cpu = number(optarg); timed_options = true; break;
 		case 1000: share_collector = true; timed_options = true; break;
+		case 1001: list_nodes = number(optarg); list_nodes_set = true; break;
 		case 'w':
-			if (strcmp(optarg, "rcuht") && strcmp(optarg, "cacheline"))
+			if (!strcmp(optarg, "cacheline"))
+				workload_id = SC_WORKLOAD_CACHELINE;
+			else if (!strcmp(optarg, "rcuht"))
+				workload_id = SC_WORKLOAD_HASH;
+			else if (!strcmp(optarg, "list"))
+				workload_id = SC_WORKLOAD_LIST;
+			else if (!strcmp(optarg, "list-prefetch"))
+				workload_id = SC_WORKLOAD_LIST_PREFETCH;
+			else
 				return 2;
-			hash = !strcmp(optarg, "rcuht");
+			workload_name = optarg;
 			break;
 		default: return 2;
 		}
 	}
+	hash = workload_id == SC_WORKLOAD_HASH;
+	list = workload_id == SC_WORKLOAD_LIST || workload_id == SC_WORKLOAD_LIST_PREFETCH;
+	if ((list_nodes_set && !list) || (list && list_nodes != 16 && list_nodes != 128))
+		return 2;
 	if (optind != argc || layout_only + counts_only + prepare_only > 1)
 		return 2;
 	if (timed_options && (!duration_ms ||
@@ -254,11 +275,11 @@ int main(int argc, char **argv)
 	    !sample_ms || sample_ms > window_ms || collector_cpu >= CPU_SETSIZE ||
 	    iterations_set || layout_only || counts_only || prepare_only))
 		return 2;
-	if (prepare_only && !(hash ? lines == 0 :
+	if (prepare_only && !((hash || list) ? lines == 0 :
 		(lines == 1 || lines == 2 || lines == 4 || lines == 8 || lines == 16)))
 		return 2;
 	if (!layout_only && !counts_only && !prepare_only) {
-		if (!(hash ? lines == 0 :
+		if (!((hash || list) ? lines == 0 :
 		      (lines == 1 || lines == 2 || lines == 4 || lines == 8 || lines == 16)) ||
 		    (!duration_ms && (!iterations || iterations > SC_MAX_ITERATIONS)) || !cpu_text ||
 		    !*cpu_text || cpu_text[0] == ',' || cpu_text[strlen(cpu_text)-1] == ',' ||
@@ -309,7 +330,7 @@ int main(int argc, char **argv)
 		close(fd);
 		return 1;
 	}
-	if (layout.workload != (hash ? SC_WORKLOAD_HASH : SC_WORKLOAD_CACHELINE)) {
+	if (layout.workload != workload_id || (list && layout.entries != list_nodes)) {
 		fprintf(stderr, "Loaded workload differs from --workload\n");
 		close(fd);
 		return 1;
@@ -333,7 +354,7 @@ int main(int argc, char **argv)
 		values_json(layout.slot_addr);
 		printf(",\"lock_kind\":%u", layout.lock_kind);
 		printf(",\"workload\":\"%s\",\"buckets\":%u,\"entries\":%u,"
-		       "\"key_range\":%u,\"resched\":%u}\n", hash ? "rcuht" : "cacheline",
+		       "\"key_range\":%u,\"resched\":%u}\n", workload_name,
 		       layout.buckets, layout.entries, layout.key_range, layout.resched);
 		close(fd);
 		return 0;
@@ -462,6 +483,11 @@ int main(int argc, char **argv)
 			after.values[0] == after.values[1] + after.values[2] + after.values[3];
 		for (int i = 4; i < SC_SLOTS; i++)
 			data_ok &= !before.values[i] && !after.values[i];
+	} else if (list) {
+		data_ok &= after.values[0] >= before.values[0] &&
+			after.values[0] - before.values[0] == completed;
+		for (int i = 1; i < SC_SLOTS; i++)
+			data_ok &= !before.values[i] && !after.values[i];
 	} else {
 		for (int i = 0; i < SC_SLOTS; i++)
 			data_ok &= after.values[i] >= before.values[i] &&
@@ -482,7 +508,10 @@ int main(int argc, char **argv)
 	printf(",\"after\":");
 	values_json(after.values);
 	printf(",\"workload\":\"%s\",\"hash_integrity_ok\":%s",
-	       hash ? "rcuht" : "cacheline", hash && data_ok ? "true" : "false");
+	       workload_name, hash && data_ok ? "true" : "false");
+	printf(",\"list_nodes\":%llu,\"list_integrity_ok\":%s",
+	       (unsigned long long)(list ? list_nodes : 0),
+	       list && data_ok ? "true" : "false");
 	printf(",\"workers\":[");
 	for (unsigned int i = 0; i < created; i++) {
 		struct worker *w = &workers[i];

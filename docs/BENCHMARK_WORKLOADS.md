@@ -42,8 +42,9 @@ remain proposals, outside the runnable standard catalog.
 
 The 2026-10-18 source review, against `af330db`, confirms that the implemented
 workloads below **already call KD APIs**. Delegation means another executor
-runs the protected body on behalf of the waiting caller. Using a KD lock does
-not by itself enable delegation: ordinary mutex compatibility aliases,
+runs the protected body on behalf of the waiting caller. Current direct
+`kd_mutex_lock/unlock` calls and blocking compatibility aliases use the unified
+DIRECT ABI2 boundary. Callable mutex functions and signal/try/I/O acquisitions,
 `kd_write_lock()` and `kd_down_write()` execute locally. Readers of KD rwlock
 and KD rwsem also execute locally while holding shared read access.
 
@@ -53,15 +54,15 @@ the captured inputs and execution context. It can still refuse a body, and an
 eligible call can execute locally because of contention or admission policy.
 An image labelled `NORMAL` proves publication only. Where completion probes are
 enabled, a completed, returned JIT body proves successful delegated execution;
-entry without completion is `PARTIAL_JIT`, and no entry is `NO_JIT`. Synthetic
-mutex counters witness generated-body entry without a matching completion
-probe, so their return count remains unknown. Keep these evidence classes
-separate in performance reports.
+entry without completion is `PARTIAL_JIT`, and no entry is `NO_JIT`. The retained
+synthetic mutex rounds cited here record entry witnesses only, so their return
+count remains unknown. New resident-list profiles also read the existing root
+completion counter. Keep these evidence classes separate in performance reports.
 
 | Workload and lock | KD API already used | Delegation decision and protected boundary |
 | --- | --- | --- |
 | c01, c08, RCUHT: spin | `KD_SPIN_DIRECT_LOCK` / `KD_SPIN_DIRECT_UNLOCK` | Exclusive counter updates and hash searches/moves are eligible. Storage is preallocated; there is no per-operation allocation or reclamation. |
-| c01, c08, RCUHT: mutex | `KD_MUTEX_OUTER_LOCK` / `KD_MUTEX_OUTER_UNLOCK` | The same bounded payloads are eligible through the selected KD mutex protocol. |
+| c01, c08, RCUHT: mutex | OUTER by default; `--mutex-api public` uses literal `kd_mutex_lock/unlock` | The same bounded payloads are eligible through the selected KD mutex protocol. Caller shells remain separate measurement identities. |
 | c01, c08, RCUHT: rwlock | `KD_RWLOCK_DIRECT_WRITE_LOCK` / `KD_RWLOCK_DIRECT_WRITE_UNLOCK`; `kd_read_lock` / `kd_read_unlock` | Writers may delegate; shared readers stay local. |
 | c01, c08, RCUHT: rwsem | `KD_RWSEM_OUTER_WRITE_LOCK` / `KD_RWSEM_OUTER_WRITE_UNLOCK`; `kd_down_read` / `kd_up_read` | Writers may delegate after existing readers finish. Shared readers stay local. `--delegate off` uses ordinary local writers instead. |
 | `ofd` | Spin direct pair above | Eligible list search and conflict-result copy, limited to the bound file's fixed OFD locks without callbacks. |
@@ -252,6 +253,59 @@ those results.
 
 At completion, each selected counter must match the total completed increments;
 unselected counters must remain unchanged.
+
+## Resident linked-list traversal
+
+`list` and `list-prefetch` use the same
+[shared payload](../workload_modules/spin_cacheline/list_payload.h) with 16 or
+128 preallocated, 64-byte-aligned nodes. An immutable circular next-pointer
+permutation advances five array slots per link. Each write holds one exclusive
+lock and visits exactly N nodes, incrementing every node once. Rwlock/rwsem
+readers hold shared ownership and verify that all N values equal the first
+value. There is no allocation, link mutation, reclamation, user-memory access
+or deliberate scheduling point inside this payload.
+
+`list-prefetch` adds a read-prefetch of the already loaded next pointer on each
+iteration; `list` omits it. All compared backends compile the same variant.
+These hints target retained module storage and add no lifetime guarantee.
+They are separate from KD's provider queue-prefetch option `--spin-prefetch`.
+The traversal is bounded by N rather than by reaching a null pointer.
+
+After callers join, the snapshot checks the independent expected permutation
+before dereferencing each pointer, confirms every link and common value, and
+returns that value in slot zero with the other 15 slots zero. Its measured
+delta must equal completed operations for spin/mutex or completed writes for
+rwlock/rwsem. Reader errors, damaged links, skipped nodes, lost/duplicated
+increments and nonzero unused snapshot fields fail validation. The object and
+payload stay resident until workers, source leases, frames and ACKs drain.
+
+Spin and mutex support Native, TCLock and KD; rwlock supports all three with
+local readers. Rwsem supports Native and KD, retaining its ordinary/local and
+explicit outer-writer modes. There is no TCLock sleeping-rwsem port.
+The public mutex example uses `--mutex-api public`. New list profiles record
+both JIT entry and matching root-completion counts; entry-only execution does
+not satisfy strict functional delegation acceptance. Workload, node count,
+prefetch mode, lock family and caller shell remain distinct report identities.
+This is a resident-memory microbenchmark, not an mmap or page-fault workload.
+
+Before loading each backend, the runner decodes the exact compiled payload
+functions and checks the requested read-prefetch variant. After stopping the
+translator and before warmup, KD sessions compare uploaded and loaded image
+bytes under a provider reference. The saved generated-object symbols delimit
+the payload instruction interval, excluding wrapper headers and metadata from
+the prefetch check. Ordinary spin/rwlock images retain their existing mutable
+contract; this observation does not make them immutable. Publication checks
+still bracket measurement, and returned-body evidence remains separate.
+
+In spin/mutex runners select `--workload list` or `--workload list-prefetch`,
+`--list-nodes 16` or `128`, and omit `--cachelines`. The reader/writer runner
+accepts both names through `--workloads` and both sizes through `--list-nodes`;
+its snapshot `lines` field records N for these workload IDs. No ioctl structure
+grows. Use the [standard worker grid](../bench/README.md#standard-worker-grid)
+and matched backend/setup/post-work settings for performance comparisons.
+Operation p95 latency is not sampled by these runners; inverse throughput
+must not be reported as latency. Source eligibility and tests do not establish
+a prefetch or delegation performance gain.
 
 ## Synthetic hash updates (`rcuht`)
 

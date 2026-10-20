@@ -28,6 +28,10 @@ endif
 ifeq ($(RB_WORKLOAD),rcuht)
 ccflags-y += -DRB_HASH
 endif
+ifneq ($(filter list list-prefetch,$(RB_WORKLOAD)),)
+ccflags-y += -DRB_LIST -DSC_LIST_NODES=$(RB_LINES)
+ccflags-y += -DSC_LIST_PREFETCH=$(if $(filter list-prefetch,$(RB_WORKLOAD)),1,0)
+endif
 ifeq ($(RB_BACKEND),kdlock)
 ccflags-y += -DRB_KDLOCK -I$(KDLOCK_INCLUDE)
 else ifeq ($(RB_BACKEND),tclock)

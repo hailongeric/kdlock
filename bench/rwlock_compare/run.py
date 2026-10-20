@@ -32,7 +32,9 @@ def parser():
     p.add_argument('--output', type=Path)
     p.add_argument('--backends', nargs='+', choices=('native', 'tclock', 'kdlock'),
                    default=['native', 'tclock', 'kdlock'])
-    p.add_argument('--workloads', nargs='+', choices=('cacheline', 'rcuht', 'taskname', 'argbounds'), default=['rcuht'])
+    p.add_argument('--workloads', nargs='+', choices=('cacheline', 'rcuht', 'taskname', 'argbounds',
+                                                   'list', 'list-prefetch'), default=['rcuht'])
+    p.add_argument('--list-nodes', nargs='+', type=int, choices=(16, 128), default=[16])
     p.add_argument('--lock-kind', choices=('rwlock', 'spin', 'rwsem'), default='rwlock')
     p.add_argument('--helper-waves', type=int, default=8,
                    help='maximum drain-separated task-name helper-learning rounds; 0 diagnoses the initial image')
@@ -75,6 +77,9 @@ def make_plan(args):
     require(args.lock_kind != 'rwsem' or 'tclock' not in args.backends,
             'the TCLock backend has no sleeping rwsem port; use native/kdlock')
     threads = FULL_THREADS if args.full_matrix else args.threads
+    list_nodes = getattr(args, 'list_nodes', [16])
+    require(list_nodes and len(list_nodes) == len(set(list_nodes)) and
+            all(n in (16, 128) for n in list_nodes), 'list nodes must be distinct 16 or 128')
     for values, name in ((threads, 'threads'), (args.backends, 'backends'), (args.workloads, 'workloads'),
                          (args.cachelines, 'cachelines'), (args.write_percent, 'write percentages')):
         require(values and len(values) == len(set(values)), 'empty/duplicate ' + name)
@@ -103,11 +108,13 @@ def make_plan(args):
     require(0 < args.sample_ms <= args.peak_window_ms and args.peak_settle_ms >= 0 and
             (not duration or args.peak_settle_ms + args.peak_window_ms < duration), 'invalid peak intervals')
     cases = [(workload, lines) for workload in args.workloads
-             for lines in (args.cachelines if workload == 'cacheline' else [0])]
+             for lines in (args.cachelines if workload == 'cacheline' else
+                           list_nodes if workload in ('list', 'list-prefetch') else [0])]
     plan = []
     for (workload, lines), percent, n, repeat in itertools.product(cases, args.write_percent, threads, range(args.repeats)):
         for arm in (args.backends if repeat % 2 == 0 else list(reversed(args.backends))):
-            variant = f'{workload}-c{lines:02d}-{arm}'
+            variant = (f'{workload}-n{lines}-{arm}' if workload in ('list', 'list-prefetch')
+                       else f'{workload}-c{lines:02d}-{arm}')
             if args.lock_kind != 'rwlock':
                 variant = args.lock_kind + '-' + variant
             rwsem_direct = args.lock_kind == 'rwsem' and arm == 'kdlock' and args.delegate == 'on'
@@ -117,6 +124,7 @@ def make_plan(args):
                 {'rwlock': 3, 'spin': 1}[args.lock_kind]
             plan.append(dict(name=f'{variant}-w{percent:03d}-t{n:02d}-r{repeat:02d}', variant=variant,
                 arm=arm, workload=workload, cachelines=lines, write_percent=percent, threads=n, repeat=repeat,
+                list_nodes=lines if workload in ('list', 'list-prefetch') else 0,
                 cpus=cpus[:n], collector_cpu=args.collector_cpu, iterations=args.iterations,
                 duration_ms=duration, peak_window_ms=args.peak_window_ms, peak_settle_ms=args.peak_settle_ms,
                 sample_ms=args.sample_ms, functional=args.functional, post_work_rounds=args.post_work_rounds,
@@ -148,6 +156,20 @@ def valid(row):
             row.get('measurement', {}).get('complete') is True)
 
 
+def list_execution_class(row):
+    if row.get('workload') not in ('list', 'list-prefetch'):
+        return None
+    if row['arm'] != 'kdlock':
+        return 'NATIVE'
+    bodies, completed = row.get('jit_bodies'), row.get('jit_completions')
+    if bodies is None or completed is None:
+        return 'UNMEASURED'
+    require(type(bodies) is int and type(completed) is int and
+            0 <= completed <= bodies <= row['measurement']['writes'],
+            'invalid list entry/completion evidence')
+    return 'RETURNED_JIT' if completed else 'PARTIAL_JIT' if bodies else 'NO_JIT'
+
+
 def report(out):
     records, groups = [], {}
     for spec in json.loads((out / 'plan.json').read_text()):
@@ -161,6 +183,12 @@ def report(out):
         row['read_ops_s'] = m['reads'] * 1e9 / m['wall_ns']
         row['write_ops_s'] = m['writes'] * 1e9 / m['wall_ns']
         row['peak_ops_s'] = m['peak']['throughput_ops_s']
+        evidence = list_execution_class(row)
+        if evidence is not None:
+            row['execution_class'] = evidence
+            row['score_eligible'] = evidence not in ('PARTIAL_JIT', 'UNMEASURED')
+            if not row['score_eligible']:
+                continue
         # No pooling of JIT positives and native-admitted runs, or different
         # placement/mixes/post-work. This report consumes one frozen plan only.
         key = (row['variant'], row['write_percent'], row['threads'], row['jit_status'])
@@ -170,6 +198,7 @@ def report(out):
         peaks = [row['peak_ops_s'] for row in rows]
         whole = [row['whole_ops_s'] for row in rows]
         summary.append(dict(variant=key[0], write_percent=key[1], threads=key[2], jit_status=key[3],
+            score_eligible=True,
             valid_rounds=len(rows), expected_rounds=3, complete=len(rows) == 3,
             best_peak_ops_s=max(peaks), peak_min_ops_s=min(peaks), peak_median_ops_s=statistics.median(peaks),
             peak_max_ops_s=max(peaks), peak_spread_pct=(max(peaks) - min(peaks)) * 100 / min(peaks),
@@ -262,6 +291,10 @@ def build(args, out, plan):
                 out / ('build-' + variant + '.log'), timeout=180)
         binary = folder / 'rwlock_bench.ko'
         binaries['workloads'][variant] = binary
+        if spec['workload'] in ('list', 'list-prefetch'):
+            from list_audit import functions as audit_list_functions
+            audit_list_functions(binary, ['rb_write', 'rb_read'],
+                                 spec['workload'] == 'list-prefetch', out/('list-audit-' + variant))
         imports = command(['nm', '-u', binary], out / ('imports-' + variant + '.txt'))
         expected = {'native': (), 'tclock': ('komb_read_lock', 'komb_read_unlock', 'komb_write_lock', 'komb_write_unlock'),
                     'kdlock': ('kd_spin_prepare', 'kd_rwlock_lock_pinned_clobber_v1', 'kd_spin_unlock_clobber_v1')}[backend]

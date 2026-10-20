@@ -21,9 +21,13 @@ def assess(plan, summary):
                    for arm, variant in variants.items()}
         # Mixed JIT/NO_JIT groups remain separate. A partial group is never
         # promoted to a three-round result or pooled to manufacture parity.
+        list_profile = workload in ('list', 'list-prefetch')
         if (set(cohorts) != required or
                 any(len(groups) != 1 or not groups[0]['complete'] or
-                    groups[0]['valid_rounds'] != 3 for groups in cohorts.values())):
+                    groups[0]['valid_rounds'] != 3 or
+                    (list_profile and (groups[0].get('score_eligible') is not True or
+                                       groups[0]['jit_status'] in ('PARTIAL_JIT', 'UNMEASURED')))
+                    for groups in cohorts.values())):
             row['reason'] = ('Need three validated rounds for ' + ', '.join(sorted(required)) +
                              ' in one execution-status group per backend')
         else:

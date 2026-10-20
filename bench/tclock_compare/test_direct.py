@@ -12,7 +12,7 @@ import unittest
 import subprocess
 
 import run
-from session import (BackendSession, hash_layout, tc_quiescent, check_jit_evidence,
+from session import (BackendSession, hash_layout, list_layout, tc_quiescent, check_jit_evidence,
                      check_kd_parameters)
 from bench_session import Session
 from context_audit import audit as audit_context
@@ -20,6 +20,75 @@ from mutex_api_audit import audit_public_entries
 
 
 class DirectTests(unittest.TestCase):
+    def test_list_plans_and_reports_do_not_pool_size_or_prefetch(self):
+        plans = []
+        for workload in ('list', 'list-prefetch'):
+            for nodes in (16, 128):
+                plan = run.make_plan(Namespace(workload=workload, list_nodes=nodes,
+                    cachelines=None, threads=[1], repeats=1, iterations=100,
+                    backends=['native', 'tclock', 'kdlock'], lock_kind='mutex',
+                    mutex_api='public'))
+                self.assertEqual({r['list_nodes'] for r in plan}, {nodes})
+                self.assertEqual({r['cachelines'] for r in plan}, {0})
+                self.assertTrue(all(workload in r['name'] and f'n{nodes}' in r['name']
+                                    for r in plan))
+                plans += plan
+        self.assertEqual(len({r['name'] for r in plans}), 12)
+        with tempfile.TemporaryDirectory() as temporary:
+            out = Path(temporary)
+            run.write_json(out/'plan.json', plans)
+            for spec in plans:
+                folder = out/spec['name']
+                folder.mkdir()
+                rate = spec['list_nodes'] * (2 if spec['workload'] == 'list-prefetch' else 1)
+                if spec['arm'] != 'native':
+                    rate *= 3
+                run.write_json(folder/'session.json', dict(spec,
+                    execution_status='OK', drained=True, jit_bodies=0, jit_completions=0,
+                    measurement=dict(completed=100, wall_ns=100000/rate,
+                                     data_ok=True, complete=True)))
+            run.report(out)
+            rows = json.loads((out/'summary.json').read_text())
+            self.assertEqual(len(rows), 12)
+            for row in rows:
+                self.assertAlmostEqual(row['throughput_over_linux'],
+                                       1 if row['arm'] == 'native' else 3)
+
+    def test_list_layout_and_exact_payload_oracle(self):
+        for workload in ('list', 'list-prefetch'):
+            for nodes in (16, 128):
+                spec = dict(workload=workload, list_nodes=nodes, cachelines=0)
+                layout = dict(workload=workload, buckets=0, entries=nodes, key_range=0, resched=0)
+                list_layout(layout, spec)
+                measurement = dict(workload=workload, list_nodes=nodes, list_integrity_ok=True,
+                    completed=10, before=[100]+[0]*15, after=[110]+[0]*15)
+                run.runtime.validate_payload(measurement, spec)
+                for mutation in (
+                        lambda m: m.__setitem__('list_nodes', 128 if nodes == 16 else 16),
+                        lambda m: m.__setitem__('list_integrity_ok', False),
+                        lambda m: m['after'].__setitem__(0, 109),
+                        lambda m: m['after'].__setitem__(15, 1)):
+                    broken = copy.deepcopy(measurement)
+                    mutation(broken)
+                    with self.assertRaises(run.Failure):
+                        run.runtime.validate_payload(broken, spec)
+                with self.assertRaises(run.Failure):
+                    list_layout(dict(layout, workload='rcuht'), spec)
+
+    def test_list_jit_requires_returned_bodies_and_separates_local_repeats(self):
+        base = dict(workload='list', arm='kdlock', threads=8, jit_bodies=10,
+                    jit_completions=10, lock_kind='mutex', functional=True)
+        check_jit_evidence(base)
+        self.assertEqual(base['jit_acceptance'], 'PASS')
+        for values in (dict(jit_completions=0), dict(jit_completions=11),
+                       dict(jit_bodies=0, jit_completions=0)):
+            with self.assertRaises(run.Failure):
+                check_jit_evidence(dict(base, **values))
+        self.assertEqual(run.list_execution_class(base), 'RETURNED_JIT')
+        self.assertEqual(run.list_execution_class(dict(base, jit_bodies=0, jit_completions=0)),
+                         'NO_JIT')
+        self.assertEqual(run.list_execution_class(dict(base, jit_completions=0)), 'PARTIAL_JIT')
+
     def test_public_mutex_plan_is_distinct_on_every_standard_cohort(self):
         threads = [*range(1, 9), *range(12, 61, 4)]
         args = dict(cachelines=[1], threads=threads, repeats=3, iterations=100,
@@ -125,6 +194,12 @@ ret
         params = dict(bench_quiet='Y', jit_timing='N', bench_lock_addr='4096',
                       spin_entry_ratio_limit='2', spin_prefetch='2', spin_delegate='Y')
         check_kd_parameters(params, record, 4096)
+        for workload in ('list', 'list-prefetch'):
+            list_record = dict(record, workload=workload)
+            check_kd_parameters(dict(params, bench_complete_probe='Y'), list_record, 4096)
+            for incomplete in (params, dict(params, bench_complete_probe='N')):
+                with self.assertRaises(run.Failure):
+                    check_kd_parameters(incomplete, list_record, 4096)
         for value in ('0', '1'):
             with self.subTest(value=value), self.assertRaises(run.Failure):
                 check_kd_parameters(dict(params, mutex_jit=value), record, 4096)
@@ -1060,6 +1135,24 @@ ret
         self.assertIn('spin_entry_ratio_limit=4', args)
         self.assertIn('spin_delegate=1', args)
         self.assertIn('spin_prefetch=0', args)
+        self.assertNotIn('bench_complete_probe=1', args)
+
+    def test_list_provider_enables_returned_body_probe(self):
+        for workload in ('list', 'list-prefetch'):
+            session = BackendSession.__new__(BackendSession)
+            session.record = dict(arm='kdlock', workload=workload,
+                                  spin_entry_ratio_limit=2, spin_delegate='on', spin_prefetch=2)
+            commands = []
+
+            def command(args, log):
+                if log == 'load-kdlock.log':
+                    commands.append(args)
+                    raise RuntimeError('stop after provider command')
+
+            session.run = command
+            with self.assertRaisesRegex(RuntimeError, 'stop after provider command'):
+                session.prepare()
+            self.assertIn('bench_complete_probe=1', commands[0])
 
 
 if __name__ == '__main__':

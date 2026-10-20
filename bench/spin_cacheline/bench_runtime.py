@@ -212,6 +212,14 @@ def validate_payload(m, spec):
                 before[0] == sum(before[1:4]) and after[0] == sum(after[1:4]) and
                 not any(before[4:] + after[4:]),
                 'hash outcome/integrity mismatch', 'DATA_ERROR')
+    elif workload in ('list', 'list-prefetch'):
+        before, after = m['before'], m['after']
+        require(n == 0 and spec.get('list_nodes') in (16, 128) and
+                m.get('list_nodes') == spec['list_nodes'] and
+                m.get('list_integrity_ok') is True and
+                after[0] >= before[0] and after[0] - before[0] == m['completed'] and
+                not any(before[1:] + after[1:]),
+                'list count/integrity mismatch', 'DATA_ERROR')
     else:
         require(all(after - before == (m["completed"] if i < n else 0)
                     for i, (before, after) in enumerate(zip(m["before"], m["after"]))),
@@ -226,7 +234,7 @@ def validate_timed_measurement(m, spec):
             m['complete'] is True and m['data_ok'] is True,
             'client reported an incomplete/incorrect timed workload', 'DATA_ERROR')
     require(spec.get('workload', 'cacheline') == m['workload'] and
-            m['workload'] in ('cacheline', 'rcuht') and
+            m['workload'] in ('cacheline', 'rcuht', 'list', 'list-prefetch') and
             spec.get('scenario', 'plain') == 'plain' and
             (m['cachelines'], m['threads'], m['iterations']) ==
             (spec['cachelines'], spec['threads'], 0),

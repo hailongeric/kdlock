@@ -40,6 +40,82 @@ def fixture(workload='cacheline', percent=50):
 
 
 class BenchTests(unittest.TestCase):
+    def test_list_report_requires_returned_evidence_and_preserves_local_controls(self):
+        for family, arms in (('rwlock', ['native', 'tclock', 'kdlock']),
+                             ('rwsem', ['native', 'kdlock'])):
+            args = run.parser().parse_args(['--lock-kind', family, '--workloads', 'list',
+                '--backends', *arms, '--threads', '8', '--write-percent', '20'])
+            plan = run.make_plan(args)
+            for bodies, completions, expected in ((10, 10, 'PASS'), (10, 0, 'INCOMPLETE'),
+                                                 (10, None, 'INCOMPLETE'), (0, 0, 'PASS')):
+                with self.subTest(family=family, bodies=bodies, completions=completions), \
+                     tempfile.TemporaryDirectory() as temporary:
+                    out = Path(temporary)
+                    run.write_json(out/'plan.json', plan)
+                    for spec in plan:
+                        _, measurement = fixture('cacheline', 20)
+                        kd = spec['arm'] == 'kdlock'
+                        measurement['wall_ns'] = 100 if kd else 200
+                        measurement['peak'] = dict(throughput_ops_s=2000 if kd else 1000)
+                        evidence = jit_evidence(0, bodies if kd else 0, measurement['writes'],
+                            backend=spec['arm'], delegate=kd,
+                            completed=completions if kd else 0)
+                        folder = out/spec['name']
+                        folder.mkdir()
+                        run.write_json(folder/'session.json', dict(spec, execution_status='OK',
+                            drained=True, measurement=measurement, **evidence))
+                    result = run.report(out)
+                    self.assertEqual(result['status'], expected)
+                    records = json.loads((out/'records.json').read_text())
+                    kd_records = [r for r in records if r['arm'] == 'kdlock']
+                    self.assertEqual(len(kd_records), 3)
+                    self.assertTrue(all('whole_ops_s' in r for r in kd_records))
+                    self.assertEqual({r['score_eligible'] for r in kd_records}, {expected == 'PASS'})
+                    if completions == 0 and bodies:
+                        # Even a manually supplied full three-round summary
+                        # cannot turn entry-only evidence into parity success.
+                        summary = json.loads((out/'summary.json').read_text())
+                        summary.append(dict(summary[0], variant=kd_records[0]['variant'],
+                                            jit_status='PARTIAL_JIT', score_eligible=True))
+                        self.assertEqual(run.assess(plan, summary)['status'], 'INCOMPLETE')
+
+    def test_list_variants_keep_size_hint_and_lock_family_identity(self):
+        for family, arms in (('rwlock', ['native', 'tclock', 'kdlock']),
+                             ('rwsem', ['native', 'kdlock'])):
+            args = run.parser().parse_args(['--lock-kind', family, '--functional',
+                '--repeats', '1', '--workloads', 'list', 'list-prefetch',
+                '--list-nodes', '16', '128', '--backends', *arms,
+                '--threads', '8', '--write-percent', '20'])
+            plan = run.make_plan(args)
+            self.assertEqual(len(plan), 4 * len(arms))
+            self.assertEqual(len({r['variant'] for r in plan}), len(plan))
+            self.assertEqual({r['list_nodes'] for r in plan}, {16, 128})
+            self.assertTrue(all(r['cachelines'] == r['list_nodes'] and
+                                r['workload'] in r['name'] for r in plan))
+        args = run.parser().parse_args(['--lock-kind', 'rwsem', '--workloads', 'list'])
+        with self.assertRaises(run.Failure):
+            run.make_plan(args)
+
+    def test_list_oracle_checks_writer_totals_read_consistency_and_identity(self):
+        for workload, code in (('list', 4), ('list-prefetch', 5)):
+            for nodes in (16, 128):
+                for percent in (0, 20, 100):
+                    spec, measurement = fixture('cacheline', percent)
+                    spec.update(workload=workload, list_nodes=nodes, cachelines=nodes)
+                    for label in ('before', 'after'):
+                        measurement[label].update(workload=code, lines=nodes, values=[0]*16)
+                    measurement['after']['values'][0] = 2 * percent
+                    validate(measurement, spec)
+                    for mutate in (
+                            lambda m: m['after']['values'].__setitem__(0, 2*percent+1),
+                            lambda m: m['after']['values'].__setitem__(1, 1),
+                            lambda m: m['after'].__setitem__('lines', 128 if nodes == 16 else 16),
+                            lambda m: m['workers'][0].__setitem__('read_errors', 1)):
+                        bad = copy.deepcopy(measurement)
+                        mutate(bad)
+                        with self.assertRaises(ValueError):
+                            validate(bad, spec)
+
     def test_cold_normal_image_does_not_finish_helper_learning(self):
         # Reproduce a NORMAL CALL-miss image that has never executed. Only a
         # later complete returned body can make preparation successful.
