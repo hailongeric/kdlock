@@ -11,6 +11,7 @@ from pathlib import Path
 import posixpath
 import socket
 from statistics import median, mean, stdev
+import struct
 import sys
 import tarfile
 from types import SimpleNamespace
@@ -38,6 +39,82 @@ def stats(values):
 
 def quantile(values):
     return sorted(values)[math.ceil(.95*len(values))-1] if values else None
+
+
+def elf(data):
+    """Minimal independent ELF64 reader; no execution or archived imports."""
+    def cstring(strings, offset):
+        return strings[offset:strings.index(b'\0', offset)].decode()
+    h = struct.unpack_from('<16sHHIQQQIHHHHHH', data)
+    assert h[0][:6] == b'\x7fELF\x02\x01' and h[1] == 1 and h[2] == 62
+    sections = [struct.unpack_from('<IIQQQQIIQQ', data, h[6]+i*h[11]) for i in range(h[12])]
+    strings = sections[h[13]]
+    strings = data[strings[4]:strings[4]+strings[5]]
+    names = [cstring(strings, s[0]) for s in sections]
+    symindex = next(i for i, s in enumerate(sections) if s[1] == 2)
+    syms = sections[symindex]
+    strings = sections[syms[6]]
+    strings = data[strings[4]:strings[4]+strings[5]]
+    symbols = []
+    for offset in range(syms[4], syms[4]+syms[5], syms[9]):
+        row = struct.unpack_from('<IBBHQQ', data, offset)
+        symbols.append((cstring(strings, row[0]), *row[1:]))
+    return sections, names, symbols, symindex
+
+
+def body(data, name):
+    sections, names, symbols, symindex = elf(data)
+    candidates = [s for s in symbols if s[0] == name]
+    assert len(candidates) == 1
+    function = candidates[0]
+    section_index, start, size = function[3:]
+    assert function[1] & 15 == 2 and size > 0
+    section = sections[section_index]
+    code = bytearray(data[section[4]+start:section[4]+start+size])
+    relocations = []
+    for table in sections:
+        if table[1] != 4 or table[7] != section_index:
+            continue
+        assert table[6] == symindex
+        for offset in range(table[4], table[4]+table[5], table[9]):
+            where, info, addend = struct.unpack_from('<QQq', data, offset)
+            if not start <= where < start+size:
+                continue
+            kind = info & 0xffffffff
+            assert kind in (1, 2, 4, 10, 11)
+            width = 8 if kind == 1 else 4
+            assert where+width <= start+size
+            target = symbols[info >> 32]
+            if target[1] & 15 == 3:
+                value = target[4]+addend+(4 if kind in (2, 4) else 0)
+                objects = [s for s in symbols if s[3] == target[3] and
+                           s[1] & 15 in (1, 2) and s[5] > 0 and s[4] <= value < s[4]+s[5]]
+                assert len(objects) == 1
+                canonical = [objects[0][0], value-objects[0][4]]
+            else:
+                canonical = [target[0], addend]
+            code[where-start:where-start+width] = bytes(width)
+            relocations.append([where-start, kind, canonical])
+    return dict(bytes=len(code), normalized_sha256=hashlib.sha256(code).hexdigest(),
+                relocations=relocations)
+
+
+def crc_words(data):
+    sections, names, symbols, _ = elf(data)
+    exports = {s[0].removeprefix('__ksymtab_') for s in symbols if s[0].startswith('__ksymtab_')}
+    result = {}
+    for symbol in symbols:
+        if not symbol[0].startswith('__crc_'):
+            continue
+        section, offset = sections[symbol[3]], symbol[4]
+        assert names[symbol[3]] in ('__kcrctab', '__kcrctab_gpl')
+        assert offset % 4 == 0 and 0 <= offset <= section[5]-4
+        assert not any(s[1] in (4, 9) and s[7] == symbol[3] for s in sections)
+        name = symbol[0].removeprefix('__crc_')
+        assert name not in result
+        result[name] = struct.unpack_from('<I', data, section[4]+offset)[0]
+    assert exports and set(result) == exports
+    return result
 
 
 def main():
@@ -108,8 +185,38 @@ def main():
         groups, links = item.load_archives()
         archives[name] = dict(groups=groups, links=len(links), files=len(item.files),
                               manifest_sha256=helper.hashfile(item.raw/'archives.json'))
+    def member(item, path):
+        with tarfile.open(item.raw/item.members[path]['archive']) as archive:
+            data = archive.extractfile(item.prefix+path).read()
+        assert helper.sha(data) == item.files[path]
+        return data
     check, equal = audit.check, audit.equal
     j = audit.jread
+    failed_state = j('run-1/status.json')
+    check(failed_state['state'] == 'FAILED' and failed_state['completed'] == 8 and
+          not failed_state['complete'] and 'overflow' in failed_state['error'],
+          'original_diagnostic_failure_retained')
+    failed_spec = j('run-1/current.json')
+    failed_path = failed_spec['evidence_path'].removeprefix(audit.guest_base)
+    failed_session = j(failed_path+'/session.json')
+    check(failed_session['execution_status'] == 'PREPARATION_FAILED' and failed_session['drained'],
+          'failed_sample_session_drained')
+    failed_measure = j(failed_path+'/measure.json')
+    equal('failed_measurement_worker_sum', sum(w['completed'] for w in failed_measure['workers']),
+          failed_measure['completed'])
+    equal('failed_measurement_total', failed_measure['completed'], 12926464)
+    equal('failed_measurement_protected_effect',
+          [b-a for a, b in zip(failed_measure['before'], failed_measure['after'])],
+          [12926464]*8+[0]*8)
+    equal('overflow_required_samples', failed_measure['workers'][2]['completed']//256, 35390)
+    check(35390 > 32768 and failed_measure['complete'] and failed_measure['data_ok'],
+          'failed_measurement_capacity_exceeded')
+    for record in j('run-1/records.json'):
+        check(record['drained'] and record['execution_status'] == 'OK',
+              'partial_original_run_success', record['name'])
+        if record['arm'] == 'kdlock':
+            equal('partial_original_retirement', record['retired'],
+                  dict(state=2, modules=0, writers=0, frames=0), record['name'])
     base, inp = args.run+'/', args.inputs+'/'
     inputs = j(inp+'inputs.json')
     check(inputs['complete'] and j(inp+'state.json')['complete'], 'prepared_complete')
@@ -120,22 +227,50 @@ def main():
     for filename in ('latency.py', 'latency_inputs.py', 'latency_overlay.py', 'latency_run.py'):
         equal('tool_git_binding', audit.files[inp+'tools/'+filename],
               helper.sha(audit.git_bytes(inputs['source_commit'], 'bench/mutex_api_compare/'+filename)), filename)
+    overlay_path = repo/'bench/mutex_api_compare/latency_overlay.py'
+    assert helper.hashfile(overlay_path) == audit.files[inp+'tools/latency_overlay.py']
+    overlay_spec = importlib.util.spec_from_file_location('maintained_latency_text_recipe', overlay_path)
+    overlay = importlib.util.module_from_spec(overlay_spec)
+    overlay_spec.loader.exec_module(overlay)
     for name in ('operation_latency.h', 'kernel.inc', 'client.inc'):
         equal('payload_git_binding', audit.files[inp+'tools/'+name],
               helper.sha(audit.git_bytes(inputs['source_commit'], 'workload_modules/latency/'+name)), name)
     for name in ('baseline', 'current', 'tclock'):
         crc = j(inp+'exports-'+name+'.crc.json')
         check(crc['equal'] and crc['original'] and crc['original'] == crc['rebuilt'], 'export_crc_receipt', name)
+        original_module = (name+'/c08/binaries/kdlock_km.ko' if name != 'tclock' else
+                           'current/c08/binaries/tclock_mutex_backend_km.ko')
+        actual = crc_words(member(original, original_module))
+        equal('independent_original_crc_words', actual, crc['original'], name)
+        symvers = (inp+'export-builds/'+name+'/provider/kernel_module/Module.symvers'
+                   if name != 'tclock' else inp+'export-builds/tclock/Module.symvers')
+        rows_crc = [line.split() for line in member(audit, symvers).decode().splitlines()]
+        equal('independent_export_metadata', {r[1]: int(r[0], 16) for r in rows_crc}, actual, name)
     bodies = j(inp+'body-audits.json')
     equal('eight_compiled_bodies', len(bodies), 8)
-    for key, body in bodies.items():
-        check(body['equal'] and body['before'] == body['after'], 'compiled_body_receipt', key)
+    for key, receipt in bodies.items():
+        check(receipt['equal'] and receipt['before'] == receipt['after'], 'compiled_body_receipt', key)
+        version, group, backend = key.split('/')
+        relative = f'{version}/{group}/variants/{backend}/mutex_cacheline.ko'
+        symbol = 'mc_body_8' if group == 'c08' else 'mc_body_0'
+        before = body(member(original, relative), symbol)
+        after = body(member(audit, inp+'bundles/'+relative), symbol)
+        equal('independent_original_body', before, receipt['before'], key)
+        equal('independent_instrumented_body', after, receipt['after'], key)
+        equal('independent_compiled_body_equality', after, before, key)
     for key, item in inputs['bundles'].items():
         prefix = inp+'bundles/'+key+'/'
         source, old = j(prefix+'source-sha256.json'), original.jread(key+'/source-sha256.json')
         equal('source_additions', set(source)-set(old), set(item['source_additions']), key)
         equal('one_allowed_source_change', {p for p in old if source.get(p) != old[p]},
               {item['changed_source']}, key)
+        changed = item['changed_source']
+        transform = overlay.synthetic if key.split('/')[1] in ('c08', 'rcuht') else overlay.api_client
+        equal('exact_reviewed_source_transformation',
+              helper.sha(audit.contents[prefix+'source/'+changed]),
+              helper.sha(transform(original.contents[key+'/source/'+changed])), key)
+        equal('source_manifest_identity', hashlib.sha256(json.dumps(source, sort_keys=True).encode()).hexdigest(),
+              item['source_identity'], key)
         for p, h in source.items():
             equal('prepared_source_hash', audit.files[prefix+'source/'+p], h, [key, p])
             if p in old and p != item['changed_source']:
@@ -182,7 +317,7 @@ def main():
             expected_order.extend([*r, mode] for r in group)
     equal('fixed_plan', j(base+'execution-order.json'), expected_order)
     records, state = j(base+'records.json'), j(base+'status.json')
-    equal('completed_plan', [state['state'], state['complete'], state['planned'], state['completed'],
+    equal('completed_plan', [state['state'], state['complete'], state['planned'], state['completed']],
           ['COMPLETE', True, 252, 252])
     equal('record_count', len(records), 252)
     equal('unique_sessions', len({r['name'] for r in records}), 252)
@@ -349,9 +484,12 @@ def main():
         host_failures=host_failures, archives=archives, sessions=len(records), samples=sample_total,
         execution_classes=dict(execution), insufficient_sampled_sessions=[r['name'] for r in rows
             if r['mode'] == 'sampled' and not r['sufficient']], accepted=False,
+        failed_original_run=dict(completed_sessions=8, failed_attempt=9, drained=True,
+            required_samples=35390, capacity=32768, rejected_raw_samples_retained=False,
+            host_threads=len(j('run-1/host-after.json')['qemu'][0]['tasks'])),
         source_host=socket.gethostname(), script_sha256=helper.hashfile(Path(__file__)),
-        limits='Observation receipt/body equality is not an independent ELF reconstruction. '
-               'Synthetic JIT evidence is entry-only. No causal fix or whole-kernel acceptance.')
+        limits='Synthetic JIT evidence is entry-only. Raw completed-operation samples do not '
+               'measure acquisition latency. No causal fix or whole-kernel acceptance.')
     save(args.output/'review.json', result)
     print(json.dumps({k: result[k] for k in ('evidence_consistent', 'checks', 'sessions', 'samples',
                                             'host_failures', 'insufficient_sampled_sessions')}, indent=2))

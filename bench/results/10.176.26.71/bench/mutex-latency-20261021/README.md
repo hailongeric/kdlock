@@ -1,6 +1,6 @@
 # Seven-regression operation-latency diagnostic
 
-Status: `run-1` stopped on sample capacity; revised input preparation is pending. No completed latency
+Status: `run-1` stopped on sample capacity; the separate revised `run-2` is active. No completed latency
 result or performance acceptance is claimed. The completed correctness, strict rwlock refusal diagnosis and
 earlier mutex results remain in the
 [continuation record](../mutex-regression-diagnosis-20261020/README.md).
@@ -123,3 +123,14 @@ The follow-up increases only preallocated diagnostic capacity to 131,072
 Sampling rate, clocks, body identity, original ownership/admission checks and
 overflow refusal remain unchanged. Rebuild and revalidate into new inputs, then
 run a separately identified full fixed plan. Do not pool `run-1` with its revision.
+
+`checks-4` / `inputs-4`, source `39b9333`, passed the two basic programs and
+all nine affected latency tests, caller builds, original CRC checks and eight
+body comparisons. The new input manifest is
+`5c83db1396330baef1f1ffa553d5bbb1e22e72afd2b94f5e93f87de4a22a6137`.
+Host preflight 4 failed with 131 threads at 20:12:53.564271 UTC. After natural
+retirement, preflight 5 passed at 20:14:16.584659 UTC with the exact 67-thread
+set and snapshot. `run-2` then began the full separate 252-session plan. The
+first eight sampled sessions passed sampling/count/clock checks and the
+per-worker 1,000-sample sufficiency rule. Final results and archive review remain
+pending.

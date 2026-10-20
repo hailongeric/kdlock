@@ -50,7 +50,8 @@ body comparisons passed. Two failed host preflights remain recorded; a fresh
 exact 67-thread gate passed before timing. The first run stopped after eight
 completed sessions when the first sampled TCLock worker exceeded diagnostic
 capacity; it drained and is retained as failed. Its host endpoint also failed.
-A separate capacity revision preserves the overflow check and sampling rate.
+A separate capacity revision preserves the overflow check and sampling rate;
+its basic/affected checks passed and `run-2` is active after a fresh strict gate.
 No completed p95 report is available yet.
 
 The [public DIRECT comparison](../bench/results/10.176.26.71/bench/mutex-public-20261020/README.md)
