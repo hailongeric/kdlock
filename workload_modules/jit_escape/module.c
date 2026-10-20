@@ -205,12 +205,23 @@ static __attribute__((noipa)) void escape_body(struct escape_result *result)
 #endif
 			     "cc", "memory");
 		WRITE_ONCE(hot_taken, READ_ONCE(hot_taken) + 1);
+#ifdef JIT_ESCAPE_SHARED
+		/* Keep the competing-reader observation through the suffix write
+		 * on the native branch. Re-reading the result pointer at the cold
+		 * merge loses its bounded address proof after the polling loop.
+		 * Both paths still increment suffix exactly once before release. */
+		WRITE_ONCE(suffix, READ_ONCE(suffix) + 1);
+		if (result->read_completed_before != (u32)atomic_read(&read_completions))
+			atomic_inc(&failures);
+	} else {
+		WRITE_ONCE(suffix, READ_ONCE(suffix) + 1);
+#endif
 	}
+#ifndef JIT_ESCAPE_SHARED
 	WRITE_ONCE(suffix, READ_ONCE(suffix) + 1);
+#endif
 #ifdef JIT_ESCAPE_SHARED
 	if (atomic_read(&readers))
-		atomic_inc(&failures);
-	if (result->taken && result->read_completed_before != (u32)atomic_read(&read_completions))
 		atomic_inc(&failures);
 #endif
 #ifdef JIT_ESCAPE_RWSEM
