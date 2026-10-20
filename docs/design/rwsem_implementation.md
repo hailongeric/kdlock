@@ -246,6 +246,13 @@ producers.
 
 ## Mmap and validation boundaries
 
+The [conditional instruction probe](../../tests/kernel/jit_escape/README.md)
+has a rwsem family using the same outer-writer pair, ABI2 and requirement-1
+image as the mutex continuation. It requires returned cold-path bodies, a
+validated hot instruction marker, exact native suffix effects, competing
+accepted-reader exclusion and final reservation/gate drain. It does not add
+delegated reader or nested rwsem control support.
+
 The API does not integrate this object into `mm_struct::mmap_lock`. That requires
 coordinated replacement of every reader/writer, Linux helper and lockdep
 contracts, fault/VMA lifetimes, retry and lock-mode transitions, and kernel

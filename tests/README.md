@@ -176,7 +176,7 @@ reader consistency while entry and matching-unlock completion counters record
 actual delegated execution. Whole-kernel mmap replacement is outside this scope.
 
 The [conditional instruction-exit check](kernel/jit_escape/README.md) uses a
-mutex, ordinary spin or rwlock writer operation containing a branch to `RDTSC`,
+mutex, ordinary spin, rwlock writer or rwsem outer-writer operation containing a branch to `RDTSC`,
 the x86 processor-counter read.
 With the branch untaken, it requires completed delegated bodies. Taking the
 branch must stop generated execution immediately before that instruction,
@@ -187,7 +187,8 @@ The check also verifies task identity, arithmetic flags, mutual exclusion and
 complete release of execution records before unloading modules. It supplies
 correctness evidence, not a throughput comparison. The spin/rwlock cases require
 a pristine physical root with no nested control or service; rwlock additionally
-checks competing readers throughout the writer's native continuation.
+checks competing readers throughout the writer's native continuation. The rwsem
+case checks its existing ABI2 writer reservation with sleeping local readers.
 
 The [checked-address probe](kernel/spin/address_guard/README.md) exercises one
 supported spin pointer load. Its cold address is disjoint from a stack pointer

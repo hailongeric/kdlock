@@ -29,11 +29,12 @@ files keep the two shells distinct. Both execute the same four phases below.
 
 `--family spin` selects ordinary task-context ABI1 DIRECT acquisitions;
 `--family rwlock` selects ABI3 DIRECT writers and concurrent local readers.
+`--family rwsem` selects the existing ABI2 OUTER writer and sleeping local readers.
 The default remains `--family mutex`. Spin/rwlock runs require capability
 version 12, both native-exit bit 5 and root-exit bit 11, and an immutable
 generation with image requirements exactly 33. Older providers or a static
-translation refusal cannot satisfy these positive probes. Mutex runs retain
-their requirement-1 image and existing OUTER/public controls.
+translation refusal cannot satisfy these positive probes. Mutex/rwsem runs retain
+their requirement-1 image; only mutex supports the public/OUTER selection.
 
 For example, after the same recovery and kernel-identity checks:
 
@@ -44,9 +45,12 @@ timeout 900s python3 tests/kernel/jit_escape/run.py \
 timeout 900s python3 tests/kernel/jit_escape/run.py \
   --family rwlock --cpus 0-15 --reader-count 2 \
   --output /root/kdlock-evidence/10.176.26.71/tests/jit-escape-rwlock-NEW
+timeout 900s python3 tests/kernel/jit_escape/run.py \
+  --family rwsem --cpus 0-15 --reader-count 2 \
+  --output /root/kdlock-evidence/10.176.26.71/tests/jit-escape-rwsem-NEW
 ```
 
-Rwlock defaults to one reader, using the last selected CPU. `--reader-count`
+Rwlock/rwsem default to one reader, using the last selected CPU. `--reader-count`
 can reserve more of the selected CPUs, while retaining at least four writers.
 Every phase waits for all workers to report readiness before releasing a shared
 start barrier and checks every worker's exact progress. Readers default to ten
@@ -64,6 +68,17 @@ Writers check that no reader is active at entry and before release. Only writer
 operations contribute to prefix, suffix and taken-branch totals or qualify as
 marker-event tasks. Joined readers, zero active counts, zero rwlock admission
 count and a clear embedded gate are required before phase changes and retirement.
+
+For rwsem, the OUTER wrapper reserves its writer phase and drains accepted
+readers before publishing the mutex request. Native continuation uses the
+unchanged ABI2 protocol; the original task releases the reservation only after
+the gate unlock ACK. The body checks positive admission, which can include other
+outer writers, and the probe's accepted-reader count. It does not demand a zero
+internal reader count during the body: rejected readers can briefly publish a
+speculative count without accessing the payload. After all workers join,
+`kd_rwsem_is_idle()` must confirm zero reservations/readers, empty wait queues
+and an idle gate. This probe adds no rwsem control ledger, cancellation,
+downgrade, mmap integration or fault continuation.
 
 Spin/rwlock workers must start with preemption and IRQs enabled and singleton
 CPU affinity. Each returned operation must preserve its CPU, full preemption
@@ -94,7 +109,7 @@ The four phases remain in one provider/source session:
    registry must remain `NATIVE_ONLY`. Operations still execute correctly on
    their original tasks.
 
-The mutex control accepts capability versions 6 through 12 only when feature
+The mutex/rwsem controls accept capability versions 6 through 12 only when feature
 bit 5 (native instruction exit) is present. Spin/rwlock require the additional
 contract described above; the version alone does not establish support.
 The private benchmark observation
@@ -129,7 +144,7 @@ unload. Successful completion requires workers to join, zero active execution
 records, successful source retirement, ordinary module unload, and final idle
 inspection. This is a focused correctness check; no throughput result is claimed.
 
-This check covers the selected KD mutex ABI2 instruction-marker path and the
+This check covers the selected KD mutex/rwsem ABI2 instruction-marker path and the
 separately negotiated ordinary spin/rwlock root-marker paths. The
 [spin address-guard probe](../spin/address_guard/README.md) and
 [original strcmp service probe](../spin/string_service/README.md) exercise

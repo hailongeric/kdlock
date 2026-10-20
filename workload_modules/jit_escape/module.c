@@ -7,6 +7,9 @@
 #include <linux/preempt.h>
 #include <linux/sched.h>
 #include <linux/uaccess.h>
+#if defined(JIT_ESCAPE_RWLOCK) || defined(JIT_ESCAPE_RWSEM)
+#define JIT_ESCAPE_SHARED
+#endif
 #if defined(JIT_ESCAPE_SPIN) || defined(JIT_ESCAPE_RWLOCK)
 #define JIT_ESCAPE_SPINNING
 #include <asm/cpufeature.h>
@@ -18,6 +21,9 @@ static DEFINE_KD_RWLOCK(test_lock);
 #include "kd_spin_direct.h"
 static DEFINE_KD_SPINLOCK(test_lock);
 #endif
+#elif defined(JIT_ESCAPE_RWSEM)
+#include "kd_rwsem_direct.h"
+static DEFINE_KD_RWSEM(test_lock);
 #else
 #include "kd_mutex_api.h"
 static DEFINE_KD_MUTEX(test_lock);
@@ -26,7 +32,7 @@ static DEFINE_KD_MUTEX(test_lock);
 
 static atomic_t control = ATOMIC_INIT(0);
 static atomic_t writers = ATOMIC_INIT(0);
-#ifdef JIT_ESCAPE_RWLOCK
+#ifdef JIT_ESCAPE_SHARED
 static atomic_t readers = ATOMIC_INIT(0);
 static atomic_t read_attempts = ATOMIC_INIT(0);
 static atomic_t read_completions = ATOMIC_INIT(0);
@@ -47,7 +53,7 @@ struct escape_result {
 #ifdef JIT_ESCAPE_SPINNING
 	u32 cpu_aux;
 #endif
-#ifdef JIT_ESCAPE_RWLOCK
+#ifdef JIT_ESCAPE_SHARED
 	u8 reader_pending;
 	u32 read_completed_before;
 #endif
@@ -79,6 +85,9 @@ static bool escape_idle(void)
 	return !atomic_read(&test_lock.cnts) &&
 	       !atomic_read(&test_lock.gate.val) && !atomic_read(&readers) &&
 	       atomic_read(&read_attempts) == atomic_read(&read_completions);
+#elif defined(JIT_ESCAPE_RWSEM)
+	return kd_rwsem_is_idle(&test_lock) && !atomic_read(&readers) &&
+	       atomic_read(&read_attempts) == atomic_read(&read_completions);
 #elif defined(JIT_ESCAPE_SPIN)
 	return !atomic_read(&test_lock.val);
 #else
@@ -90,6 +99,11 @@ static __attribute__((noipa)) void escape_body(struct escape_result *result)
 {
 #ifdef JIT_ESCAPE_RWLOCK
 	KD_RWLOCK_DIRECT_WRITE_LOCK(&test_lock, kd_rwlock_direct_cookie,
+		".globl jit_escape_entry\njit_escape_entry:\n\t" ANNOTATE_NOENDBR);
+#elif defined(JIT_ESCAPE_RWSEM)
+	struct kd_rwsem_outer_cookie cookie;
+
+	KD_RWSEM_OUTER_WRITE_LOCK(&test_lock, cookie,
 		".globl jit_escape_entry\njit_escape_entry:\n\t" ANNOTATE_NOENDBR);
 #elif defined(JIT_ESCAPE_SPIN)
 	KD_SPIN_DIRECT_LOCK(&test_lock, kd_spin_direct_cookie,
@@ -110,19 +124,25 @@ static __attribute__((noipa)) void escape_body(struct escape_result *result)
 #endif
 	if (atomic_inc_return(&writers) != 1)
 		atomic_inc(&failures);
-#ifdef JIT_ESCAPE_RWLOCK
+#ifdef JIT_ESCAPE_SHARED
 	if (atomic_read(&readers))
+		atomic_inc(&failures);
+#endif
+#ifdef JIT_ESCAPE_RWSEM
+	/* Other outer writers may reserve the same phase. Rejected readers can
+	 * transiently publish speculative counts, but cannot enter their body. */
+	if (atomic_long_read(&test_lock.admission) <= 0)
 		atomic_inc(&failures);
 #endif
 	WRITE_ONCE(prefix, READ_ONCE(prefix) + 1);
 	result->taken = 0;
 	if (READ_ONCE(hot)) {
 		result->taken = 1;
-#ifdef JIT_ESCAPE_RWLOCK
+#ifdef JIT_ESCAPE_SHARED
 		/* Require an actual competing read attempt at every hot marker.
 		 * Completions are recorded inside the shared lock, so once this
 		 * writer sees an outstanding attempt it cannot complete until the
-		 * writer byte and gate are released. Bound the probe wait; failure
+		 * writer admission and gate are released. Bound the probe wait; failure
 		 * is observable after return, never permission to replay a body. */
 		{
 			unsigned int tries;
@@ -187,16 +207,22 @@ static __attribute__((noipa)) void escape_body(struct escape_result *result)
 		WRITE_ONCE(hot_taken, READ_ONCE(hot_taken) + 1);
 	}
 	WRITE_ONCE(suffix, READ_ONCE(suffix) + 1);
-#ifdef JIT_ESCAPE_RWLOCK
+#ifdef JIT_ESCAPE_SHARED
 	if (atomic_read(&readers))
 		atomic_inc(&failures);
 	if (result->taken && result->read_completed_before != (u32)atomic_read(&read_completions))
+		atomic_inc(&failures);
+#endif
+#ifdef JIT_ESCAPE_RWSEM
+	if (atomic_long_read(&test_lock.admission) <= 0)
 		atomic_inc(&failures);
 #endif
 	if (atomic_dec_return(&writers))
 		atomic_inc(&failures);
 #ifdef JIT_ESCAPE_RWLOCK
 	KD_RWLOCK_DIRECT_WRITE_UNLOCK(&test_lock, kd_rwlock_direct_cookie);
+#elif defined(JIT_ESCAPE_RWSEM)
+	KD_RWSEM_OUTER_WRITE_UNLOCK(&test_lock, cookie);
 #elif defined(JIT_ESCAPE_SPIN)
 	KD_SPIN_DIRECT_UNLOCK(&test_lock, kd_spin_direct_cookie);
 #elif defined(JIT_ESCAPE_PUBLIC_API)
@@ -206,20 +232,28 @@ static __attribute__((noipa)) void escape_body(struct escape_result *result)
 #endif
 }
 
-#ifdef JIT_ESCAPE_RWLOCK
+#ifdef JIT_ESCAPE_SHARED
 static __attribute__((noipa)) bool reader_body(void)
 {
 	bool bad;
 
 	atomic_inc(&read_attempts);
+#ifdef JIT_ESCAPE_RWSEM
+	kd_down_read(&test_lock);
+#else
 	kd_read_lock(&test_lock);
+#endif
 	atomic_inc(&readers);
 	/* A writer retains admission throughout native continuation and ACK.
 	 * A reader must never observe its active interval or partial effects. */
 	bad = atomic_read(&writers) || READ_ONCE(prefix) != READ_ONCE(suffix);
 	atomic_inc(&read_completions);
 	atomic_dec(&readers);
+#ifdef JIT_ESCAPE_RWSEM
+	kd_up_read(&test_lock);
+#else
 	kd_read_unlock(&test_lock);
+#endif
 	return bad;
 }
 #endif
@@ -241,7 +275,7 @@ static long escape_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 
 	(void)file;
 	if (cmd == JIT_ESCAPE_RUN
-#ifdef JIT_ESCAPE_RWLOCK
+#ifdef JIT_ESCAPE_SHARED
 	    || cmd == JIT_ESCAPE_READ
 #endif
 	   ) {
@@ -267,7 +301,7 @@ static long escape_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 #ifdef JIT_ESCAPE_SPINNING
 			before_flags = native_control_flags();
 #endif
-#ifdef JIT_ESCAPE_RWLOCK
+#ifdef JIT_ESCAPE_SHARED
 			if (cmd == JIT_ESCAPE_READ) {
 				if (reader_body())
 					run.errors++;
@@ -289,7 +323,7 @@ static long escape_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 				if (result.taken && result.cpu_aux != expected_aux)
 					run.errors++;
 #endif
-#ifdef JIT_ESCAPE_RWLOCK
+#ifdef JIT_ESCAPE_SHARED
 				if (result.taken && !result.reader_pending)
 					run.errors++;
 #endif
@@ -322,6 +356,9 @@ static long escape_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 #ifdef JIT_ESCAPE_RWLOCK
 		ret = kd_rwlock_prepare(&test_lock, (unsigned long)jit_escape_entry,
 				       KD_ENTRY_ABI_RWLOCK_CLOBBER_V1);
+#elif defined(JIT_ESCAPE_RWSEM)
+		ret = kd_mutex_prepare(&test_lock.gate, (unsigned long)jit_escape_entry,
+				      KD_ENTRY_ABI_MUTEX_CLOBBER_V1);
 #elif defined(JIT_ESCAPE_SPIN)
 		ret = kd_spin_prepare(&test_lock, (unsigned long)jit_escape_entry,
 				     KD_ENTRY_ABI_SPIN_CLOBBER_V1);
@@ -338,7 +375,7 @@ static long escape_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 		snapshot.prefix = prefix;
 		snapshot.suffix = suffix;
 		snapshot.hot_taken = hot_taken;
-#ifdef JIT_ESCAPE_RWLOCK
+#ifdef JIT_ESCAPE_SHARED
 		snapshot.lock_address = (unsigned long)&test_lock.gate;
 #else
 		snapshot.lock_address = (unsigned long)&test_lock;
@@ -347,7 +384,7 @@ static long escape_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 		snapshot.marker = (unsigned long)jit_escape_marker;
 		snapshot.failures = atomic_read(&failures);
 		snapshot.active = atomic_read(&writers);
-#ifdef JIT_ESCAPE_RWLOCK
+#ifdef JIT_ESCAPE_SHARED
 		snapshot.active += atomic_read(&readers);
 #endif
 		snapshot.hot = READ_ONCE(hot);
@@ -385,6 +422,9 @@ MODULE_LICENSE("GPL");
 MODULE_DESCRIPTION("Conditional JIT instruction escape and exact native continuation");
 #ifdef JIT_ESCAPE_RWLOCK
 MODULE_INFO(kd_escape_family, "rwlock");
+MODULE_INFO(kd_mutex_api, "not_applicable");
+#elif defined(JIT_ESCAPE_RWSEM)
+MODULE_INFO(kd_escape_family, "rwsem");
 MODULE_INFO(kd_mutex_api, "not_applicable");
 #elif defined(JIT_ESCAPE_SPIN)
 MODULE_INFO(kd_escape_family, "spin");

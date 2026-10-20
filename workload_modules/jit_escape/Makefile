@@ -9,8 +9,10 @@ ifeq ($(JIT_ESCAPE_FAMILY),spin)
 ccflags-y += -DJIT_ESCAPE_SPIN
 else ifeq ($(JIT_ESCAPE_FAMILY),rwlock)
 ccflags-y += -DJIT_ESCAPE_RWLOCK
+else ifeq ($(JIT_ESCAPE_FAMILY),rwsem)
+ccflags-y += -DJIT_ESCAPE_RWSEM
 else ifneq ($(JIT_ESCAPE_FAMILY),mutex)
-$(error JIT_ESCAPE_FAMILY must be mutex, spin or rwlock)
+$(error JIT_ESCAPE_FAMILY must be mutex, spin, rwlock or rwsem)
 endif
 ifeq ($(JIT_ESCAPE_MUTEX_API),public)
 ifneq ($(JIT_ESCAPE_FAMILY),mutex)

@@ -161,7 +161,7 @@ class EscapeSession(Session):
         self.save()
         rt.require(version in (6, 7, 8, 9, 10, 11, 12) and features & (1 << 5),
                    "native-escape capability v6+/bit5 missing")
-        if self.record["lock_kind"] != "mutex":
+        if self.record["lock_kind"] in ("spin", "rwlock"):
             rt.require(version == 12 and features & (1 << 11),
                        "ordinary spin/rwlock root escape requires v12/bit11 plus bit5")
         self.run(["insmod", self.workload_module], "load-workload.log")
@@ -344,11 +344,11 @@ def main():
     parser.add_argument("--iterations", type=int, default=100000)
     parser.add_argument("--warmup-iterations", type=int, default=100000)
     parser.add_argument("--phase-timeout", type=int, default=120)
-    parser.add_argument("--family", choices=("mutex", "spin", "rwlock"), default="mutex")
+    parser.add_argument("--family", choices=("mutex", "spin", "rwlock", "rwsem"), default="mutex")
     parser.add_argument("--reader-count", type=int,
-                        help="rwlock only: dedicate the last N selected CPUs to readers (default 1)")
+                        help="rwlock/rwsem: dedicate the last N selected CPUs to readers (default 1)")
     parser.add_argument("--reader-iterations", type=int, default=10000000,
-                        help="rwlock shared operations per reader and phase; hot writers require a pending reader")
+                        help="shared operations per reader and phase; hot writers require a pending reader")
     parser.add_argument("--mutex-api", choices=("outer", "public"), default="outer")
     kernel_identity.arguments(parser)
     args = parser.parse_args()
@@ -357,10 +357,11 @@ def main():
                "verified recovery guest and recorded snapshot tag required")
     rt.require(4 <= len(args.cpus) <= 60 and len(set(args.cpus)) == len(args.cpus) and
                set(args.cpus) <= os.sched_getaffinity(0), "select 4..60 distinct available worker CPUs")
-    reader_count = args.reader_count if args.reader_count is not None else int(args.family == "rwlock")
-    rt.require((args.family == "rwlock" and 1 <= reader_count <= len(args.cpus) - 4) or
-               (args.family != "rwlock" and reader_count == 0),
-               "rwlock needs at least one reader and four writers; other families have no readers")
+    shared = args.family in ("rwlock", "rwsem")
+    reader_count = args.reader_count if args.reader_count is not None else int(shared)
+    rt.require((shared and 1 <= reader_count <= len(args.cpus) - 4) or
+               (not shared and reader_count == 0),
+               "rwlock/rwsem need at least one reader and four writers; other families have no readers")
     rt.require(args.family == "mutex" or args.mutex_api == "outer",
                "--mutex-api public requires --family mutex")
     rt.require(0 < args.reader_iterations <= 10000000, "reader iterations out of bounds")
@@ -412,7 +413,7 @@ def main():
         rt.require(compiled_family == args.family, "compiled escape family differs")
         imported = rt.command(["nm", "-u", workload], out / "workload-imports.txt")
         rt.command(["objdump", "-dr", workload], out / "workload-disassembly.txt")
-        if args.family != "mutex":
+        if args.family in ("spin", "rwlock"):
             names = set(imported.split())
             acquire = ("kd_spin_lock_pinned_clobber_v1" if args.family == "spin"
                        else "kd_rwlock_lock_pinned_clobber_v1")
@@ -423,6 +424,22 @@ def main():
                        (args.family != "rwlock" or "kd_rwlock_fast_write_unlock" in names) and
                        not any(name.startswith(("kd_mutex_", "mutex", "__mutex")) for name in names),
                        "spin/rwlock marker caller imports another lock family")
+        elif args.family == "rwsem":
+            names = set(imported.split())
+            rt.require({"kd_rwsem_delegate_enter", "kd_rwsem_delegate_exit",
+                        "kd_down_read", "kd_up_read", "kd_rwsem_is_idle",
+                        "kd_mutex_outer_contended_clobber_v1",
+                        "kd_mutex_direct_unlock_clobber_v1", "kd_mutex_local_unlock",
+                        "kd_mutex_prepare"} <= names and
+                       not names & {"kd_mutex_direct_lock_clobber_v1", "kd_mutex_api_lock",
+                                    "kd_mutex_api_unlock", "kd_mutex_lock_clobber_v1",
+                                    "kd_mutex_unlock_clobber_v1",
+                                    "kd_spin_lock_pinned_clobber_v1",
+                                    "kd_rwlock_lock_pinned_clobber_v1"} and
+                       not any(re.fullmatch(
+                           r"(?:mutex\w*|__mutex\w*|down_(?:read|write)\w*|up_(?:read|write)|"
+                           r"rwsem\w*|__rwsem\w*|osq_lock|osq_unlock)", name) for name in names),
+                       "rwsem marker caller lacks the phase reservation or uses another lock shell")
         elif args.mutex_api == "public":
             names = set(imported.split())
             rt.require({"kd_mutex_direct_lock_clobber_v1", "kd_mutex_direct_unlock_clobber_v1"} <= names and
@@ -457,14 +474,17 @@ def main():
 
         verify()
         idle()
-        shell = (("mutex_public_direct" if args.mutex_api == "public" else "mutex_outer_cookie")
-                 if args.family == "mutex" else args.family + "_direct")
-        cookie = (("provider_acquisition_ledger" if args.mutex_api == "public" else "outer_acquisition_local")
-                  if args.family == "mutex" else "provider_cpu_heat")
+        if args.family == "mutex":
+            shell = "mutex_public_direct" if args.mutex_api == "public" else "mutex_outer_cookie"
+            cookie = "provider_acquisition_ledger" if args.mutex_api == "public" else "outer_acquisition_local"
+        elif args.family == "rwsem":
+            shell, cookie = "rwsem_outer_cookie", "outer_acquisition_local"
+        else:
+            shell, cookie = args.family + "_direct", "provider_cpu_heat"
         spec = dict(name="session", arm="kdlock", lock_kind=args.family, delegate=True,
-                    registry_kind=2 if args.family == "mutex" else 1,
-                    entry_abi={"mutex": 2, "spin": 1, "rwlock": 3}[args.family],
-                    image_requirements=1 if args.family == "mutex" else 33,
+                    registry_kind=2 if args.family in ("mutex", "rwsem") else 1,
+                    entry_abi={"mutex": 2, "spin": 1, "rwlock": 3, "rwsem": 2}[args.family],
+                    image_requirements=1 if args.family in ("mutex", "rwsem") else 33,
                     mutex_api=args.mutex_api if args.family == "mutex" else "not_applicable",
                     caller_shell=shell, cookie_storage=cookie,
                     worker_roles=["writer"] * (len(args.cpus) - reader_count) + ["reader"] * reader_count,
