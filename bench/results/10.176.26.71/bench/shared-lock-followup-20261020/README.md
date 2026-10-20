@@ -1,7 +1,7 @@
 # Shared-lock comparison after mutex correctness restoration
 
 Status: rwsem collection, verification and archival complete; rwlock reference
-not started. The rwsem post-run host-thread check failed and acceptance is open. This stage
+running. The rwsem post-run host-thread check failed and acceptance is open. This stage
 follows the validated `a768361` mutex restoration, recorded in `f48b90e`.
 The seven public-mutex performance regressions and the
 environment/execution-class/latency gaps remain
@@ -155,3 +155,17 @@ at c08/1%/36 workers (5.317–10.055 Mops/s); the largest Native spread is
 criteria, with whole-run KD/Native ratios from 1.5072 to 2.3916.
 These observations remain subject to the failed host endpoint and are not
 pooled with the historical 2026-10-18 source or the separate mutex reruns.
+
+## Rwlock reference in progress
+
+`rwlock-preflight-1` passed after rwsem completion, archival and independent
+review. Its host receipt was captured at 2026-10-20 16:31:19.687477 UTC and
+again matched the original 67-thread QEMU configuration, pins, frequency and
+memory policies, boot, dependencies and real recovery snapshot. It checked
+all 497 source hashes and the exact 270-session dry-run plan.
+
+The unchanged serial supervisor started `rwlock-1/rwlock-reference` at
+16:32:10 UTC, using the same source manifest and the planned five worker counts.
+There is one active benchmark and no observer or profiler. This fresh admission
+does not replace or repair the failed immediate rwsem post-run check.
+Rwlock results are not complete or accepted yet.

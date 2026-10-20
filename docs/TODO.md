@@ -117,8 +117,9 @@ completed correctly and drained, with 378 exact KD retirements. Its independent
 failed post-run host-thread comparison (115 versus 67). The observed Native
 comparison has 118/126 throughput passes, six misses and two split-class
 points, with substantial repetition variation. Acceptance remains open.
-The rwlock reference has not started. These results cannot resolve the mutex
-comparison by implication.
+The separate 270-session rwlock reference is running after a fresh strict
+preflight matched the original 67-thread host configuration and all source
+hashes. These results cannot resolve the mutex comparison by implication.
 The [mmap/fault source capture](../bench/results/10.176.26.71/tests/mmap-fault-followup-20261020/README.md)
 is prepared for an idle interval, without changing the guest kernel. The
 [resident-list timing plan](../bench/results/10.176.26.71/bench/nano-list-followup-20261020/README.md)
