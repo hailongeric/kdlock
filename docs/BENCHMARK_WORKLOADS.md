@@ -286,6 +286,9 @@ The public mutex example uses `--mutex-api public`. New list profiles record
 both JIT entry and matching root-completion counts; entry-only execution does
 not satisfy strict functional delegation acceptance. Workload, node count,
 prefetch mode, lock family and caller shell remain distinct report identities.
+`RETURNED_JIT` means a positive completion count; it does not require every
+entry to return through that path. Keep both counts and the completion share.
+Whole-interval counters do not establish the execution mix of the peak window.
 This is a resident-memory microbenchmark, not an mmap or page-fault workload.
 
 Before loading each backend, the runner decodes the exact compiled payload
@@ -296,6 +299,12 @@ the payload instruction interval, excluding wrapper headers and metadata from
 the prefetch check. Ordinary spin/rwlock images retain their existing mutable
 contract; this observation does not make them immutable. Publication checks
 still bracket measurement, and returned-body evidence remains separate.
+The decoder records hint opcodes and operands and proves their presence or
+absence within those bounds. It does not prove the hint's pointer provenance
+or loop placement; the shared source supplies the next-node traversal contract.
+Native/TCLock ELF checks precede module relocations and alternatives and do not
+claim to inspect their loaded text. Decoder failures retain diagnostics and fail
+preparation through the runner's normal drain and failure-reporting path.
 
 In spin/mutex runners select `--workload list` or `--workload list-prefetch`,
 `--list-nodes 16` or `128`, and omit `--cachelines`. The reader/writer runner

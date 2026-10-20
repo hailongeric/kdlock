@@ -1,5 +1,6 @@
 """Guest-only ELF interval, prefetch and quiescent-image evidence checks."""
 import copy
+import os
 from pathlib import Path
 import subprocess
 import tempfile
@@ -7,6 +8,7 @@ import unittest
 from unittest.mock import patch
 
 import list_audit as audit
+from bench_session import Session
 
 
 class ListAuditTests(unittest.TestCase):
@@ -43,6 +45,50 @@ ret
                 else:
                     with self.assertRaises(RuntimeError):
                         audit.functions(binary, ["payload"], expected, self.root/"source-audit")
+
+    def test_decoder_failures_reach_session_reporting_and_cleanup(self):
+        # Substitute only the file-decoder process and physical cleanup here.
+        # Production Session must classify failure and attempt its drain path;
+        # the live runner still has to prove actual worker/source/module drain.
+        for error in (
+                subprocess.CalledProcessError(1, ["objdump"], output="decoder failed"),
+                subprocess.TimeoutExpired(["objdump"], 15, output=b"partial decode")):
+            with self.subTest(error=type(error).__name__):
+                output = self.root / type(error).__name__
+
+                class AuditSession(Session):
+                    def __init__(self):
+                        self.record = dict(execution_status="PREPARING")
+                        self.kmsg = os.open(os.devnull, os.O_RDONLY)
+                        self.cleaned = False
+                        self.saved = []
+
+                    def prepare(self):
+                        audit.inspect_bytes(b"\x90", 48, False, output)
+
+                    def measure(self):
+                        raise AssertionError("failed audit reached measurement")
+
+                    def cleanup(self):
+                        self.cleaned = True
+
+                    def save(self):
+                        self.saved.append(dict(self.record))
+
+                session = AuditSession()
+                with patch.object(audit.subprocess, "check_output", side_effect=error), \
+                        self.assertRaises(audit.Failure) as caught:
+                    session.execute()
+                self.assertEqual(caught.exception.status, "PREPARATION_FAILED")
+                self.assertFalse(caught.exception.unsafe)
+                self.assertTrue(session.cleaned)
+                self.assertEqual(session.saved[-1]["execution_status"], "PREPARATION_FAILED")
+                self.assertIn("finished_ns", session.saved[-1])
+                self.assertIn("resident-list disassembly failed", session.saved[-1]["error"])
+                self.assertEqual(output.with_suffix(".bin").read_bytes(), b"\x90")
+                self.assertIn(str(error), output.with_suffix(".txt").read_text())
+                with self.assertRaises(OSError):
+                    os.fstat(session.kmsg)
 
     def generated(self, hint="prefetcht0 (%rax)", abi=2, requirements=0):
         obj = self.assemble("generated", f"""

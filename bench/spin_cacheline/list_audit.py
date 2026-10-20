@@ -6,7 +6,7 @@ import re
 import subprocess
 
 from elftools.elf.elffile import ELFFile
-from bench_runtime import digest, registry, require, status
+from bench_runtime import Failure, digest, registry, require, status
 from native_image import read_image
 from summarize import write_json
 
@@ -28,10 +28,21 @@ def inspect_bytes(code, start, prefetch, output):
     output = Path(output)
     output.parent.mkdir(parents=True, exist_ok=True)
     output.with_suffix(".bin").write_bytes(code)
-    text = subprocess.check_output(
-        ["objdump", "-D", "-w", "-z", "--insn-width=16", "-b", "binary", "-m", "i386:x86-64",
-         "--adjust-vma=" + str(start), str(output.with_suffix(".bin"))],
-        text=True, timeout=15)
+    try:
+        text = subprocess.check_output(
+            ["objdump", "-D", "-w", "-z", "--insn-width=16", "-b", "binary", "-m", "i386:x86-64",
+             "--adjust-vma=" + str(start), str(output.with_suffix(".bin"))],
+            text=True, stderr=subprocess.STDOUT, timeout=15)
+    except (subprocess.CalledProcessError, subprocess.TimeoutExpired) as error:
+        # This process only decodes saved bytes; check_output has reaped it.
+        # Route failure through Session's ordinary drain checks and reporting,
+        # never leave a loaded session mislabeled PREPARING or accept a skip.
+        partial = error.output or ""
+        if isinstance(partial, bytes):
+            partial = partial.decode(errors="replace")
+        output.with_suffix(".txt").write_text(partial + "\n" + str(error) + "\n")
+        raise Failure("PREPARATION_FAILED",
+                      "resident-list disassembly failed: " + str(error)) from error
     output.with_suffix(".txt").write_text(text)
     hints, cursor = [], start
     for match in re.finditer(r"^\s*([0-9a-f]+):\s+((?:[0-9a-f]{2}\s+)+)([^\n]*)$", text, re.M):
