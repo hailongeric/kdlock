@@ -367,6 +367,8 @@ def main(lock_kind='spin'):
     perf_mode.add_argument('--perf-record', action='store_true',
                    help='unscored 199 Hz kernel cycle samples around measured client and workers')
     p.add_argument('--dry-run', action='store_true')
+    p.add_argument('--build-only', action='store_true',
+                   help='freeze and audit binaries without loading modules or running sessions')
     p.add_argument('--functional', action='store_true',
                    help='KD functional acceptance only; requires --backends kdlock --repeats 1; no throughput report')
     kernel_identity.arguments(p)
@@ -551,6 +553,10 @@ def main(lock_kind='spin'):
             target = out/'source'/relative; target.parent.mkdir(parents=True,exist_ok=True)
             shutil.copyfile(ROOT/relative,target)
         hashes = {str(p):digest(p) for p in binaries}; write_json(out/'binary-sha256.json',hashes)
+        if args.build_only:
+            write_json(out/'build-ready.json', dict(passed=True, sessions_run=0,
+                mutex_api=args.mutex_api if lock_kind == 'mutex' else 'not_applicable'))
+            return 0
         rejected_no_jit = []
         for index,spec in enumerate(plan):
             require(not (out/'STOP').exists(),'STOP requested at drained boundary','STOPPED')

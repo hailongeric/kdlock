@@ -50,6 +50,25 @@ recovery variables, then omit `--dry-run` and use an outer timeout. For other
 synthetic sizes select `--cachelines 1 8`; for RCUHT use `--workload rcuht`
 and omit `--cachelines`. These choices define different workloads.
 
+The public mutex acceptance driver, [mutex_api_compare/run.py](mutex_api_compare/run.py),
+has separate `prepare`, `smoke` and `measure` actions with one `--output` directory.
+Live actions require `--host-state` pointing to the recorded host
+placement/snapshot JSON captured within the preceding five minutes.
+After the same snapshot and host-policy verification, `prepare` freezes fresh
+public/Native/TCLock builds and copies hash-verified pre-unification OUTER inputs
+from the retained seven-workload round. `smoke` runs 16 fresh binding checks;
+`measure` rotates four arms at all 21 worker counts with three repetitions
+(1,764 sessions). Each session regenerates JIT from its matching translator
+and fully drains before the next arm. STOP requests and the time budget stop at
+a drained boundary. Unsafe failures stop immediately without forced unload.
+The selected input trees must remain unchanged through the collection.
+Use [mutex_api_compare/report.py](mutex_api_compare/report.py) on the resulting
+`matrix` directory for separate source/caller/execution-class summaries.
+It reports the provisional coordinator-proposed 5% median-throughput criterion,
+observed variation and missing repetitions. Individual operation latency is
+not sampled: p95 remains unmeasured and overall performance acceptance remains
+open. Earlier OUTER gains or losses are retained under their original identity.
+
 The optional synthetic spin/mutex 64-worker point requires `--cpus 0-63
 --collector-cpu 63 --share-collector`, timed mode and a 64-vCPU guest. Smaller
 cohorts keep a separate collector; only the 64-worker point records

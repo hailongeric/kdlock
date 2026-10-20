@@ -561,6 +561,8 @@ def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('--output', type=Path, required=True)
     p.add_argument('--build-from', type=Path)
+    p.add_argument('--build-only', action='store_true',
+                   help='freeze and audit binaries without loading modules or running sessions')
     p.add_argument('--kinds', nargs='+', choices=['xattr', 'ofd', 'setfd', 'utsname', *sorted(MUTEX_KINDS)], default=['ofd'])
     p.add_argument('--queries', nargs='+', choices=['tail', 'miss', 'front', 'size', 'toggle', 'query', 'set', 'end', 'host', 'domain'], default=['tail'])
     p.add_argument('--entries', nargs='+', type=int, default=[16, 128])
@@ -633,6 +635,10 @@ def main():
                     kernel_identity=digest(out/'kernel-identity.json'),
                     topology_identity=digest(out/'topology.txt'))
     write_json(out/'plan.json', plan)
+    if args.build_only:
+        write_json(out/'build-ready.json', dict(passed=True, sessions_run=0,
+                                               mutex_api=args.mutex_api))
+        return
     try:
         for i, spec in enumerate(plan):
             print(f'{i+1}/{len(plan)} {spec["name"]}', flush=True)

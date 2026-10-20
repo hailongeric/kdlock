@@ -1,0 +1,15 @@
+Prepared c01
+Prepared c08
+Prepared rcuht
+Prepared seek-set
+Prepared seek-end
+Prepared pipebytes
+Prepared pipecap
+Traceback (most recent call last):
+  File "/root/host_fs/kdlock/bench/mutex_api_compare/run.py", line 432, in <module>
+    raise SystemExit(main())
+  File "/root/host_fs/kdlock/bench/mutex_api_compare/run.py", line 422, in main
+    prepare(out, args.baseline.resolve(), syn)
+  File "/root/host_fs/kdlock/bench/mutex_api_compare/run.py", line 199, in prepare
+    raise ValueError('retained baseline executables lost their modes')
+ValueError: retained baseline executables lost their modes

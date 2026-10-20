@@ -1,0 +1,49 @@
+[
+  {
+    "name": "basic",
+    "argv": [
+      "make",
+      "-C",
+      "/root/host_fs/kdlock/tests/unit",
+      "run"
+    ],
+    "status": 0,
+    "elapsed_s": 0.6691615581512451
+  },
+  {
+    "name": "direct",
+    "argv": [
+      "python3",
+      "/root/host_fs/kdlock/bench/tclock_compare/test_direct.py"
+    ],
+    "status": 0,
+    "elapsed_s": 0.46819376945495605
+  },
+  {
+    "name": "api-plan",
+    "argv": [
+      "python3",
+      "/root/host_fs/kdlock/bench/real_api/test_plan.py"
+    ],
+    "status": 0,
+    "elapsed_s": 0.2171030044555664
+  },
+  {
+    "name": "api-report",
+    "argv": [
+      "python3",
+      "/root/host_fs/kdlock/bench/real_api/test_report.py"
+    ],
+    "status": 0,
+    "elapsed_s": 0.11598801612854004
+  },
+  {
+    "name": "comparison",
+    "argv": [
+      "python3",
+      "/root/host_fs/kdlock/bench/mutex_api_compare/test_compare.py"
+    ],
+    "status": 0,
+    "elapsed_s": 0.11599135398864746
+  }
+]
