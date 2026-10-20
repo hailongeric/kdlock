@@ -87,6 +87,20 @@ def replay_order():
     return [row for row in execution_order() if row[:2] in REPLAY_POINTS]
 
 
+def bundle_key(group, arm, candidate=None):
+    # A provider experiment changes only public KD. Native/TCLock must retain
+    # the original current bundle and identity, despite sharing its old view.
+    version = ('candidate-public' if candidate is not None and arm == 'public-kd'
+               else 'baseline' if arm == 'baseline-kd' else 'current')
+    return version + '/' + group
+
+
+def candidate_output(manifest_path, out):
+    base, out = manifest_path.resolve().parent, out.resolve()
+    if out.is_relative_to(base) or base.is_relative_to(out):
+        raise ValueError('measurement output overlaps frozen candidate inputs')
+
+
 def retained_harness(prepared):
     """Bind historical absolute names to their retained bytes, never today's checkout."""
     prepared = prepared.resolve()
@@ -453,7 +467,11 @@ def specification(template, group, count, repeat, arm, inputs, topology):
 
 
 def measure(prepared, out, syn, syn_session, bench_session, api, budget, smoke, host_state,
-            replay=False):
+            replay=False, candidate=None):
+    if candidate is not None and not replay:
+        raise ValueError('isolated provider candidates require the original replay gates')
+    if candidate is not None:
+        candidate_output(Path(candidate['manifest_path']), out)
     if not load(prepared/'prepared.json')['passed'] or out.exists():
         raise ValueError('new, completely prepared comparison required')
     out.mkdir()
@@ -480,6 +498,12 @@ def measure(prepared, out, syn, syn_session, bench_session, api, budget, smoke, 
         snapshot_tag=os.environ['KDLOCK_SNAPSHOT_TAG'],
         collector_topology=syn.collector_topology(63), argv=sys.argv))
     frozen = load(prepared/'frozen-inputs.json')
+    if candidate is not None:
+        # The original fourteen bundles remain independently bound and checked.
+        # Dedicated derived views never modify or relabel a control bundle.
+        if set(frozen) & set(candidate['bundles']):
+            raise ValueError('candidate would replace an original bundle')
+        frozen.update(candidate['bundles'])
     collector_root = prepared/'harness' if replay else ROOT
     harness = retained_harness(prepared) if replay else load(prepared/'harness-inputs.json')
     verify(harness)
@@ -494,9 +518,13 @@ def measure(prepared, out, syn, syn_session, bench_session, api, budget, smoke, 
             original_matrix_status=load(prepared/'matrix/status.json'),
             scheduler_sha256=sha(Path(__file__)),
             selection='seven separated regressions plus three incomparable points',
-            scope='Original provider/caller/client/daemon/translator and collector bytes; new focused scheduler'))
+            candidate_manifest_sha256=candidate['manifest_sha256'] if candidate else None,
+            scope=('Original inputs with a separately verified public-only provider candidate'
+                   if candidate else 'Original provider/caller/client/daemon/translator and collector bytes; new focused scheduler')))
         shutil.copyfile(Path(__file__), out/'replay-scheduler.py')
         shutil.copyfile(prepared/'frozen-inputs.json', out/'frozen-inputs.json')
+        if candidate is not None:
+            shutil.copyfile(candidate['manifest_path'], out/'candidate.json')
     syn.command([sys.executable, collector_root/'bench/spin_cacheline/kernel_identity.py',
                  '--kernel-source', '/root/linux-6.1.159-kdclobber2',
                  '--kernel-baseline',
@@ -535,14 +563,17 @@ def measure(prepared, out, syn, syn_session, bench_session, api, budget, smoke, 
         templates[key] = {row['arm']: row for row in load(bundle/'plan.json')}
     planned = []
     for index, (group, count, repeat, arm) in enumerate(order):
-        version = 'baseline' if arm == 'baseline-kd' else 'current'
-        key = version+'/'+group
+        key = bundle_key(group, arm, candidate)
         backend = 'kdlock' if arm.endswith('-kd') else arm
         spec = specification(templates[key][backend], group, count, repeat,
                              arm, frozen[key], nodes)
         spec.update(sequence=index, evidence_path=str(views[key]/spec['name']),
                     kernel_identity=sha(out/'kernel-identity.json'),
                     topology_identity=sha(out/'topology.json'))
+        if candidate is not None and arm == 'public-kd':
+            spec.update(provider_candidate=candidate['manifest_sha256'],
+                        provider_sha256=candidate['provider_sha256'],
+                        provider_revision='d21-plus-selected-003d71c-entry-patch')
         planned.append(spec)
     save(out/'plan.json', planned)
     deadline = time.monotonic() + budget
@@ -558,8 +589,7 @@ def measure(prepared, out, syn, syn_session, bench_session, api, budget, smoke, 
             if (out/'STOP').exists() or time.monotonic() + 180 > deadline:
                 state.update(state='STOPPED', boundary='drained')
                 break
-            version = 'baseline' if arm == 'baseline-kd' else 'current'
-            key = version+'/'+group
+            key = bundle_key(group, arm, candidate)
             inputs, view = frozen[key], views[key]
             verify(harness)
             if replay:
@@ -593,6 +623,10 @@ def measure(prepared, out, syn, syn_session, bench_session, api, budget, smoke, 
         syn.idle()
         if Path('/sys/module/real_api').exists():
             raise RuntimeError('real API module remains at final boundary')
+        if candidate is not None:
+            for inputs in frozen.values():
+                verify(inputs['files'])
+            verify(harness)
     except BaseException as error:
         state.update(state='FAILED', error=repr(error), failed_utc=utc())
         raise
@@ -613,6 +647,9 @@ def main():
     parser.add_argument('--baseline', type=Path, default=BASELINE)
     parser.add_argument('--prepared', type=Path,
                         help='original frozen comparison directory for focused replay')
+    parser.add_argument('--candidate-manifest', type=Path,
+                        help='explicit public-only provider experiment, with original replay controls')
+    parser.add_argument('--candidate-manifest-sha256')
     parser.add_argument('--budget-seconds', type=int, default=14400)
     parser.add_argument('--host-state', type=Path,
                         help='host placement/snapshot JSON captured within five minutes')
@@ -624,10 +661,16 @@ def main():
     if args.budget_seconds < 180:
         raise ValueError('budget must leave one bounded session')
     os.environ['PYTHONDONTWRITEBYTECODE'] = '1'
+    sys.dont_write_bytecode = True
     out = args.output.resolve()
     if out == ROOT or out.is_relative_to(ROOT):
         raise ValueError('output must be outside source checkout')
     replay = args.action == 'replay'
+    candidate = None
+    if bool(args.candidate_manifest) != bool(args.candidate_manifest_sha256):
+        raise ValueError('candidate path and exact manifest hash are required together')
+    if args.candidate_manifest and not replay:
+        raise ValueError('candidate selection is only supported by focused replay')
     if replay:
         if args.prepared is None:
             raise ValueError('--prepared is required for replay')
@@ -641,6 +684,15 @@ def main():
             raise ValueError('replay requires the completed original 1764-session comparison')
         harness = retained_harness(prepared)
         collector_root = prepared/'harness'
+        if args.candidate_manifest:
+            candidate_output(args.candidate_manifest, out)
+            spec = importlib.util.spec_from_file_location(
+                'entry_candidate_inputs', ROOT/'bench/mutex_api_compare/entry_candidate.py')
+            validator = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(validator)
+            candidate = validator.candidate_inputs(
+                sys.modules[__name__], prepared, args.candidate_manifest.resolve(),
+                args.candidate_manifest_sha256)
     else:
         if args.prepared is not None:
             raise ValueError('--prepared is only valid for replay')
@@ -654,7 +706,7 @@ def main():
         raise ValueError('--host-state is required before live measurement')
     return measure(prepared, out if replay else out/('smoke' if smoke else 'matrix'),
                    syn, syn_session, bench_session, api, args.budget_seconds,
-                   smoke, args.host_state, replay=replay)
+                   smoke, args.host_state, replay=replay, candidate=candidate)
 
 
 if __name__ == '__main__':

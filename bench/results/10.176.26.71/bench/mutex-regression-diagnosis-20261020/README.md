@@ -249,3 +249,26 @@ Complete checks/live/metadata archives are retained in the guest's sibling
 [independent inert review](../../tests/mutex-entry-inline-20261020/offline-review.json)
 completed 27,261 checks with zero issues. This validates the selected candidate
 scope, not whole-kernel replacement or resolution of the seven throughput losses.
+
+## Isolated provider comparison
+
+The next bounded experiment uses the original `r2` d21 inputs plus only the
+entry-inlining change selected from `003d71c`; it is not a full `003d71c` build.
+The four selected public groups share an identical 99-file raw provider and
+observation recipe. [entry_candidate.py](../../../../mutex_api_compare/entry_candidate.py)
+builds a new private observed provider with NUMA=1, batch=1024, SELFTEST=0 and
+UBSAN off. Each public group keeps its original workload, client, daemon,
+translator and plan. Synthetic source identities include the refreshed
+prepared entry and prepared manifest as well as the raw entry; API identities
+retain their original source scope. The new provider has its own binary hash.
+
+Dedicated public-only views preserve the original OUTER, Native and TCLock
+bundles and identities. The existing host, boot, topology, dependency, import,
+admission, business and retirement checks remain. Both original and candidate
+bytes are verified. Preparation and focused runner checks precede a new host
+receipt and the same 120-session, ten-point, three-repeat schedule.
+
+This schedule has no simultaneous original-public fifth arm. Candidate/OUTER
+comparisons are freshly matched, while changes from earlier public results
+remain observational. Execution classes and repetitions stay separate; p95,
+within-run host interference and unresolved losses remain explicit gaps.
