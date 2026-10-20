@@ -201,7 +201,7 @@ they do not establish acceptance.
 
 ## Initial combiner diagnostic extension
 
-The next fixed plan, `admission-4`, keeps the same twelve original/observed
+The second fixed plan, `admission-4`, keeps the same twelve original/observed
 pairs and all original arguments. The private provider extends its 35 fields
 to 50, observing pending/queue routing, ticket and continuation capacity,
 single/multiple queue heads, and every initial combiner outcome. The original
@@ -211,3 +211,62 @@ The runner requires every combiner call to have exactly one recorded outcome.
 This diagnostic is intended to explain the 19,699 ready slowpath entries
 that the first instrumented run could not classify. Its new instructions and
 layout have separate matched controls; no admission policy is changed.
+
+`checks-2` passed dependencies, both basic programs and all four selected
+drivers. Its [inert source check](checks-2/offline-review.json) binds 270
+files to `c0bbefd`. The isolated provider built successfully in the VM.
+The first preflight at 19:22:24.324271 UTC had 71 threads and admitted no
+session. The next receipt at 19:23:16.009039 UTC had exactly 67, with the same
+pins, policy and real recovery snapshot. Both receipts are archived.
+
+All twelve sessions completed with correct business effects and exact
+retirement. All six eight-worker sessions remain strict NO_JIT failures;
+all six sixty-worker sessions passed. Original/observed returned-body totals
+are 10,362/18,377, with 174,980,608 measured operations overall.
+The immediate host endpoint at 19:24:56.707128 UTC fails at 74 versus 67 threads.
+
+The [counter totals](admission-4/admission-totals.json) close the later-branch
+question in this instrumented reproduction. At eight workers:
+
+- 8,711 CPU boundaries produced 8,694 hot outcomes, 17 ratio refusals and zero
+  time refusals. Only 69 of 8,672 native queue-prefix checks passed; 5,831
+  stopped at a short prefix, 2,771 observed an unheld gate, and one lacked a link.
+- All 30 per-lock time samples passed. Of 44,894 clobber entries, 34,453
+  remained cold and 10,441 reached a ready delegated queue.
+- All 10,441 reached a multi-node queue head and called the combiner helper.
+  Every call refused because its **first follower was non-combinable**.
+  `combiner_native_current` names the helper's first follower: the original
+  acquiring head passes `next_node` to `run_combiner()`. It does not mean that
+  the acquiring writer's own continuation had a native kind.
+- There were no ticket, node/frame-capacity or image-readiness refusals.
+  The source-lease condition was short-circuited by the follower-kind refusal,
+  so zero source-lease refusals do not establish that a lease was attempted.
+
+Native reader gate requests and cold writers publish non-combinable nodes.
+The counters identify the node kind, not the reader/writer identity of each
+follower. Combining across one of these nodes would violate the existing
+queue contract. At sixty workers the same observed provider admitted 14,565
+combiner calls and returned 18,377 bodies during measurement. These observations
+explain reproduced admission behavior without changing policy. They do not
+retroactively identify every decision in the uninstrumented historical failure,
+guarantee JIT at eight workers, or repair any failed test.
+
+| Workers | Provider | Median Mops/s | Range Mops/s | Spread / median | Sample CV |
+| ---: | --- | ---: | ---: | ---: | ---: |
+| 8 | Original | 8.764 | 6.757–8.809 | 23.41% | 14.45% |
+| 8 | Observed | 9.282 | 9.271–9.303 | 0.35% | 0.18% |
+| 60 | Original | 5.726 | 5.576–5.949 | 6.51% | 3.26% |
+| 60 | Observed | 5.880 | 5.870–5.883 | 0.22% | 0.11% |
+
+The observed/original median ratios are 1.0591 and 1.0269. These measure the
+combined effects of diagnostic instructions, layout, admission mix and noise;
+they neither isolate counter cost nor establish an optimization gain.
+All eight-worker rows remain failed tests.
+
+The [archive manifest](admission-4/archives.json) has SHA-256
+`69982055d7e65913d8d0e8ddd54b150a2befc2bdd47664dc10cb3b3b87ee5ba7`.
+The [inert review](admission-4/offline-review.json) passes 83,603 integrity checks
+over 711 files and 25 symlinks, including every phase classification, loaded
+image, original-input hash, business result and exact retirement. Raw files
+remain under `raw/bench/nano-rwlock-diagnosis-20261021/admission-4/archives/`.
+Strict run success and the host endpoint remain false. No VM test is in flight.

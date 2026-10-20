@@ -119,6 +119,12 @@ At sixty workers, both n16 variants meet observed two-rate parity against
 both controls; both n128 variants miss it. Maximum three-repeat spreads are
 7.25% KD, 9.49% Native and 7.42% TCLock. These remain descriptive results under
 the failed endpoint. The seven mutex regressions and latency gaps are unresolved.
+The second admission diagnostic classifies all 10,441 ready eight-worker
+combiner attempts as first-follower non-combinable refusals. All six low-count
+sessions still fail NO_JIT; all six sixty-worker sessions pass. Its 83,603
+integrity checks and 12 exact retirements pass, with a failed 74-thread endpoint.
+Matched observed/original median ratios are 1.0591/1.0269; counter, layout,
+admission and noise effects are inseparable, so no optimization is claimed.
 
 ## Fresh 32-byte mutex comparison with Native and TCLock
 

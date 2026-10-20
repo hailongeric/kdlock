@@ -172,6 +172,13 @@ retirements pass. Missing-case coverage is closed; strict execution, host
 interference and performance acceptance remain open. A 50-field diagnostic
 extension now observes the unchanged initial combiner decisions and exact
 source-lease refusal, with separate fixed matched controls.
+That extension completed: all 10,441 ready eight-worker calls refused the
+first non-combinable follower before evaluating the source-lease condition.
+Capacity, ticket and image-readiness refusals were zero. The six eight-worker
+cases still fail NO_JIT, while all six sixty-worker cases pass. All 83,603
+integrity checks and 12 exact retirements pass; the 74-thread endpoint fails.
+This closes the later-branch diagnosis for the observed reproduction, not
+the strict execution or host-interference acceptance gaps.
 
 Keep the two-word wrapper ABI, separate backend identities, exact KD physical owners,
 exact acquisition references and final ACKs. Shared storage must survive its final

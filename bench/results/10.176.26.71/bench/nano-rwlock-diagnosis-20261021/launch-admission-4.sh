@@ -14,7 +14,7 @@ import bench_runtime as rt
 command = [sys.executable, 'bench/rwlock_compare/admission.py', 'run',
            '--mode', 'diagnostic',
            '--output', '/root/kdlock-evidence/10.176.26.71/bench/nano-rwlock-diagnosis-20261021/admission-4',
-           '--host-state', '/tmp/kdlock-admission-4-host-before-1.json']
+           '--host-state', '/tmp/kdlock-admission-4-host-before-2.json']
 log = Path('/root/kdlock-evidence/10.176.26.71/bench/nano-rwlock-diagnosis-20261021/admission-4-supervision.log')
 try:
     print(rt.command(command, log, timeout=1800), end='')

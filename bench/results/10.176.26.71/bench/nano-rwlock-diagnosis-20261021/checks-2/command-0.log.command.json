@@ -1,0 +1,12 @@
+{
+  "argv": [
+    "python3",
+    "-m",
+    "pip",
+    "check"
+  ],
+  "cwd": "/root/host_fs/kdlock",
+  "pid": 3013877,
+  "started_ns": 480942091010721,
+  "timeout_seconds": 600
+}

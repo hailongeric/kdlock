@@ -1,0 +1,13 @@
+{
+  "argv": [
+    "make",
+    "-C",
+    "tests/unit",
+    "run",
+    "PY_TESTS=infrastructure/test_hotlock_sampling.py rwlock/test_rwlock.py spin/test_spin_nondelegated.py spin/test_spin_entry.py"
+  ],
+  "cwd": "/root/host_fs/kdlock",
+  "pid": 3013878,
+  "started_ns": 480942676835651,
+  "timeout_seconds": 600
+}

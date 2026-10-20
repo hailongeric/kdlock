@@ -1,5 +1,11 @@
 # Resident-list measurements after correctness validation
 
+Continuation: the separate [rwlock diagnosis and coverage stage](../nano-rwlock-diagnosis-20261021/README.md)
+has now executed all 69 previously unstarted cases, retaining ten strict NO_JIT
+failures. Its observed reproduction identifies non-combinable first followers
+at the initial combiner check. The historical results and failed endpoints
+below remain unchanged; neither run is accepted.
+
 Status: `timing-1` stopped at a strict rwlock `NO_JIT` failure after 147 attempts:
 146 successful sessions and one failed session. Its immediate host endpoint
 also failed, with 83 QEMU threads against the original 67. Evidence preservation
