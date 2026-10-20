@@ -32,6 +32,7 @@
 struct kd_exec_frame;
 struct kd_mutex;
 struct kd_local_waiter;
+struct lock_class_key;
 
 bool kd_mutex_check_idle(void);
 
@@ -117,7 +118,19 @@ struct kd_mutex {
 #define DEFINE_KD_MUTEX(name) struct kd_mutex name = KD_MUTEX_INITIALIZER(name)
 
 void kd_mutex_init(struct kd_mutex *lock);
+void __kd_mutex_init(struct kd_mutex *lock, const char *name,
+		     struct lock_class_key *key);
 void kd_mutex_destroy(struct kd_mutex *lock);
+/* Conventional C ABI for indirect calls and cleanup helpers. Acquisition is
+ * local; unlock still routes retained owners and borrowed continuation ACKs.
+ * Include kd_mutex_api.h for the DIRECT-backed source call interface. */
+/* The captured kernel already exports legacy bridge names kd_mutex_lock and
+ * kd_mutex_unlock for Linux objects. Public C identifiers must link to the
+ * KD-only provider even when used through a pointer or parenthesized call. */
+void kd_mutex_lock(struct kd_mutex *lock) __asm__("kd_mutex_api_lock");
+void kd_mutex_unlock(struct kd_mutex *lock) __asm__("kd_mutex_api_unlock");
+void kd_mutex_api_lock(struct kd_mutex *lock);
+void kd_mutex_api_unlock(struct kd_mutex *lock);
 void kd_mutex_local_lock(struct kd_mutex *lock);
 void kd_mutex_local_unlock(struct kd_mutex *lock);
 int kd_mutex_lock_interruptible(struct kd_mutex *lock);

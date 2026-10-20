@@ -170,6 +170,13 @@ mutex owner word provides interoperability for `struct komb_mutex`.
 
 ## KD mutex
 
+The unified `kd_mutex_lock/unlock` source interface uses direct ABI2 calls and
+supports the same nested lock ledger as `KD_MUTEX_DIRECT_LOCK/UNLOCK`. It has
+one lock argument and an internal continuation, without an outer cookie.
+Callable lock symbols and signal/try/I/O variants acquire locally; public unlock
+preserves provider routing for local, gate-owner and native-continuation cases.
+See the [API contract](kd_only_mutex.md#object-and-api-contract).
+
 The outer benchmark uses `KD_MUTEX_OUTER_LOCK/UNLOCK`. A successful caller-side
 acquire CAS on the KD physical owner bypasses admission, queue/task
 records and translation. Its lexical cookie holds the exact native owner

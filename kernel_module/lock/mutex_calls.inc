@@ -120,6 +120,14 @@ void __kd_mutex_unlock_clobber_v1(struct kd_mutex *lock, unsigned long sp,
 	__kd_mutex_unlock(lock, sp, ip);
 }
 
+/* Address-taking and cleanup users retain a conventional C ABI, but must not
+ * bypass owner records or a borrowed continuation's unlock request/ACK. */
+void kd_mutex_api_unlock(struct kd_mutex *lock)
+{
+	__kd_mutex_unlock(lock, 0, _RET_IP_);
+}
+EXPORT_SYMBOL_GPL(kd_mutex_api_unlock);
+
 /* Explicit module callers work with global interception disabled. Keep the
  * captured kernel bridge aliases above for existing generic FULL exits. */
 __attribute__((noipa)) noinline notrace void
@@ -157,6 +165,7 @@ __attribute__((noipa)) noinline notrace void
 kd_mutex_direct_unlock_clobber_v1(struct kd_mutex *lock, unsigned long sp,
 				unsigned long ip, unsigned long bp)
 {
+	(void)bp;
 	__kd_mutex_unlock(lock, sp, ip);
 }
 EXPORT_SYMBOL_GPL(kd_mutex_direct_unlock_clobber_v1);

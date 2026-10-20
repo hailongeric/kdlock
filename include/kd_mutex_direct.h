@@ -20,17 +20,21 @@ void kd_mutex_direct_unlock_clobber_v1(struct kd_mutex *, unsigned long,
 
 /* ABI2: compiler-owned spills and the existing lock/SP/IP/BP arguments.
  * The ordinary mutex may sleep; the queue implementation owns waiter pinning.
- * A named continuation is used only once, in a noipa workload function. */
+ * A named continuation is used only once, in a noipa workload function.
+ * __auto_type keeps the capture variable out of scope during its initializer:
+ * a caller may itself name its lock pointer kd_arg. The typed second variable
+ * retains the original pointer-type check before entering the assembly ABI. */
 #define KD_MUTEX_DIRECT_CALL(symbol, lock, continuation)            \
 	do                                                              \
 	{                                                               \
-		struct kd_mutex *kd_arg = (lock);                              \
+		__auto_type kd_arg = (lock);                                   \
+		struct kd_mutex *kd_lock_arg = kd_arg;                         \
 		unsigned long kd_sp, kd_ip, kd_bp;                          \
 		asm volatile("movq %%rsp, %%rsi\n\t"                        \
 					 "leaq 1f(%%rip), %%rdx\n\t"                    \
 					 "movq %%rbp, %%rcx\n\t"                        \
 					 "call " #symbol "\n\t1:\n\t" continuation      \
-					 : "+D"(kd_arg), "=S"(kd_sp), "=d"(kd_ip),      \
+					 : "+D"(kd_lock_arg), "=S"(kd_sp), "=d"(kd_ip), \
 					   "=c"(kd_bp), ASM_CALL_CONSTRAINT             \
 					 :                                              \
 					 : "rax", "rbx", "r8", "r9", "r10", "r11",      \

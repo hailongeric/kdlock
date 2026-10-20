@@ -67,3 +67,5 @@ bench/results/10.176.26.71/bench/mutex32-packed-20261019/checks-candidate/provid
 bench/results/10.176.26.71/bench/mutex32-packed-20261019/checks-candidate/unit.log -whitespace
 bench/results/10.176.26.71/bench/mutex32-packed-20261019/checks-candidate-r2/provider.log -whitespace
 bench/results/10.176.26.71/bench/mutex32-packed-20261019/checks-candidate-r2/unit.log -whitespace
+# Preserve unified-API compiler, disassembly and kernel diagnostics verbatim.
+bench/results/10.176.26.71/tests/mutex-api-20261020/**/*.log -whitespace

@@ -1,0 +1,15 @@
+{
+  "argv": [
+    "make",
+    "-C",
+    "/root/host_fs/kdlock/kernel_module",
+    "KDIR=/root/linux-6.1.159-kdclobber2",
+    "KDLOCK_SELFTEST=1",
+    "UBSAN_SANITIZE=n",
+    "W=1"
+  ],
+  "cwd": "/root/host_fs/kdlock",
+  "pid": 2600761,
+  "started_ns": 432189487992721,
+  "timeout_seconds": 180
+}

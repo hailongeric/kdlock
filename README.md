@@ -21,9 +21,10 @@ includes this measured tradeoff. This port has no sleeping TCLock rwsem.
 
 `master` is the maintained version. Its KD mutex uses **KD-owned physical
 exclusion and the accepted legacy delegation protocol**, selected at `d2a2304`.
-All callers of a KD mutex object must use KD APIs; ordinary mutex aliases execute
-locally, while explicit clobber callers permit delegation. Loading the provider
-does not replace locks throughout an existing kernel. See the
+All callers of a KD mutex object must use KD APIs. Direct calls to the unified
+`kd_mutex_lock/unlock` interface and ordinary blocking aliases permit delegation;
+signal/try/I/O acquisitions and function-pointer lock calls execute locally.
+Loading the provider does not replace locks throughout an existing kernel. See the
 [mutex contract](docs/design/kd_only_mutex.md) for supported APIs and scope.
 
 Mutex translation now supports [checked instruction exits](docs/design/admission.md#checked-instruction-exits).

@@ -8,6 +8,35 @@ Basic plus affected checks are the default; an old pass is not a current full pa
 The [terminology guide](TERMINOLOGY.md) explains status labels and other technical
 terms used in the receipts below.
 
+## Unified mutex API checks
+
+The [unified API receipt](../bench/results/10.176.26.71/tests/mutex-api-20261020/validation.json)
+records provider/daemon builds, two basic programs and nine affected drivers
+(11 passed, zero failed) on the captured `6.1.159-kdclobber2` VM. The new fixture
+compiles the actual public headers, translates anonymous DIRECT continuations
+under production admission, and executes generated root COMPLETE/FULL and nested
+B-A/A-B control paths. Physical control services are substituted in that fixture.
+Production routing/frame tests retain their mutation controls. Public C
+identifiers link to distinct `kd_mutex_api_lock/unlock` exports; the live probe's
+symbol audit rejects accidental references to the kernel's legacy mutex symbols.
+
+The live API probe passed 160,000 operations with eight workers, 2048 reused
+objects, native 32-byte/8-byte geometry, sleeping nested owners, cancellation,
+ring handoff, initialization, function-pointer and real cleanup-macro coverage.
+The separate owner/ACK probe used CPUs 0/32/33 and confirmed both release orders,
+four ACKs, two deferred frees and three registry workers with 4096 iterations
+each. Both probes retired sources and unloaded normally; final health was idle.
+They execute zero JIT bodies and do not replace live delegated-body validation.
+
+Failed attempts remain in the receipt: a legacy export-name collision, two
+fixture compile/extraction failures, and an initial reserved-per-CPU allocation
+failure before provider initialization. The existing allocator guard's ordinary
+page allocation/free enabled the live retries; no kernel changes, reboot or
+system-module removal occurred. Final provider builds retain 15 macro/objtool
+warning lines. Recorded source hashes match the checked-in source. Scope remains
+basic plus affected validation, with no performance, whole-kernel, RT/ww_mutex,
+lockdep or oversubscription claim.
+
 ## Fresh mutex benchmark and report validation
 
 The [Native/TCLock/KD comparison](../bench/results/10.176.26.71/bench/mutex32-native-tclock-20261020/README.md)

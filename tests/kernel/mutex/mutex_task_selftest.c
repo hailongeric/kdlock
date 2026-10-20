@@ -169,8 +169,8 @@ static void kd_task_owner(void)
 			kd_origin_mutex_owned(&kd_task_test.locks[0], current));
 		kd_origin_mutex_unlock(&kd_task_test.locks[0], _RET_IP_);
 	}
-	KD_TASK_CHECK(!mutex_is_locked(&kd_task_test.locks[0]) &&
-		      !mutex_is_locked(&kd_task_test.locks[1]));
+	KD_TASK_CHECK(!kd_mutex_is_locked(&kd_task_test.locks[0]) &&
+		      !kd_mutex_is_locked(&kd_task_test.locks[1]));
 	/* Evict while the reader still pins the inactive identity. Cache
 	 * retention must not replace the proof of actual RCU reclamation. */
 	kd_task_wait(&kd_task_test.reader_zero, false);
@@ -211,7 +211,7 @@ static void kd_task_waiter(void)
 	KD_TASK_REQUIRE(kd_exec_native_unlock(
 		(unsigned long)&kd_task_test.locks[first], true));
 	kd_task_test.acks++;
-	KD_TASK_CHECK(!mutex_is_locked(&kd_task_test.locks[first]));
+	KD_TASK_CHECK(!kd_mutex_is_locked(&kd_task_test.locks[first]));
 	KD_TASK_CHECK(kd_origin_mutex_owned(&kd_task_test.locks[last], owner));
 	KD_TASK_CHECK(kd_mutex_task_reroute(current) &&
 		      kd_task_refs(current) == 1);
@@ -229,10 +229,10 @@ static void kd_task_waiter(void)
 		      kd_task_test.frees_before);
 	KD_TASK_CHECK(!kd_exec_native_unlock(
 		(unsigned long)&kd_task_test.locks[last], true));
-	KD_TASK_CHECK(!mutex_is_locked(&kd_task_test.locks[1]));
+	KD_TASK_CHECK(!kd_mutex_is_locked(&kd_task_test.locks[1]));
 	KD_TASK_CHECK(
 		kd_task_test.outer_first ?
-			!mutex_is_locked(&kd_task_test.locks[0]) :
+			!kd_mutex_is_locked(&kd_task_test.locks[0]) :
 			kd_origin_mutex_owned(&kd_task_test.locks[0], owner));
 	smp_store_release(&kd_task_test.waiter_done, true);
 }

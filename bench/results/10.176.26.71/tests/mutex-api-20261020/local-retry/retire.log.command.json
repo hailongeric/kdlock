@@ -1,0 +1,11 @@
+{
+  "argv": [
+    "/root/kdlock-translation-venv-20261019/bin/python3",
+    "/root/kdlock-evidence/10.176.26.71/tests/mutex-api-20261020/local-retry/source/disassem/device_session.py",
+    "retire"
+  ],
+  "cwd": "/root/host_fs/kdlock",
+  "pid": 2600755,
+  "started_ns": 432186747707682,
+  "timeout_seconds": 30
+}

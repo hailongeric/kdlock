@@ -1,0 +1,36 @@
+{
+  "passed": false,
+  "inputs_unchanged": true,
+  "commands": [
+    {
+      "name": "dependencies",
+      "command": [
+        "python3",
+        "-m",
+        "pip",
+        "check"
+      ],
+      "returncode": 0
+    },
+    {
+      "name": "kernel-identity",
+      "command": [
+        "python3",
+        "bench/spin_cacheline/kernel_identity.py"
+      ],
+      "returncode": 0
+    },
+    {
+      "name": "provider",
+      "command": [
+        "make",
+        "-C",
+        "kernel_module",
+        "KDIR=/root/linux-6.1.159-kdclobber2",
+        "W=1",
+        "UBSAN_SANITIZE=n"
+      ],
+      "returncode": 2
+    }
+  ]
+}

@@ -17,7 +17,7 @@ EXPECTED = dict(operations='160000', workers='8', objects='2048', lock_size='32'
                 lock_align='8', containing_layout='PASS', address_reuse='PASS',
                 no_destroy='PASS', no_aux='PASS', interruptible='EINTR',
                 killable='EINTR', ring_cancel='PASS', ring_handoff='PASS',
-                nested_sleep='PASS', io='PASS', drain='PASS')
+                nested_sleep='PASS', io='PASS', api_helpers='PASS', drain='PASS')
 MODULES = ('kd_mutex_local_probe', 'rwsem_probe', 'rwlock_bench', 'rwlock_test',
            'real_api', 'tclock_backend_km', 'tclock_mutex_backend_km',
            'tclock_rwlock_backend_km', 'tc_allocator_guard', 'kd_spin_irq_api_test')

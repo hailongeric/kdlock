@@ -272,6 +272,14 @@ void kd_mutex_local_lock(struct kd_mutex *lock)
 }
 EXPORT_SYMBOL_GPL(kd_mutex_local_lock);
 
+/* An indirect call cannot advertise the clobber ABI at its caller. Preserve
+ * the conventional C ABI and acquire physically on that task instead. */
+void kd_mutex_api_lock(struct kd_mutex *lock)
+{
+	kd_mutex_local_lock(lock);
+}
+EXPORT_SYMBOL_GPL(kd_mutex_api_lock);
+
 void kd_mutex_local_lock_node(struct kd_mutex *lock, struct kd_mutex_node *node)
 {
 	BUG_ON(node && (node->lock != lock || node->task_struct_ptr != current));

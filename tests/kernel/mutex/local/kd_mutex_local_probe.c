@@ -240,6 +240,71 @@ release:
 	return ret;
 }
 
+/* Compile and execute the captured kernel's real cleanup macros. Constructors
+ * must acquire KD objects through the conventional ABI and destructors must
+ * return through the shared router, including direct CLASS/__free token paste. */
+static int api_helpers(void)
+{
+	void (*lock_fn)(struct mutex *) = &mutex_lock;
+	void (*unlock_fn)(struct mutex *) = &mutex_unlock;
+	unsigned int annotations = 0;
+
+	__mutex_init(&nested, "kd-api", NULL);
+	if (devm_mutex_init(NULL, &nested) ||
+	    __devm_mutex_init(NULL, &nested))
+		return -EINVAL;
+	lock_fn(&nested);
+	mutex_unlock(&nested);
+	mutex_lock(&nested);
+	unlock_fn(&nested);
+	(mutex_lock)(&nested);
+	(mutex_unlock)(&nested);
+	{
+		guard(mutex)(&nested);
+		if (!mutex_is_locked(&nested))
+			return -EINVAL;
+	}
+	if (!kd_mutex_is_idle(&nested))
+		return -EINVAL;
+	{
+		CLASS(mutex, held)(&nested);
+		if (!held || !mutex_is_locked(&nested))
+			return -EINVAL;
+	}
+	if (!kd_mutex_is_idle(&nested))
+		return -EINVAL;
+	scoped_guard(mutex, &nested) {
+		if (!mutex_is_locked(&nested))
+			return -EINVAL;
+	}
+	if (!kd_mutex_is_idle(&nested))
+		return -EINVAL;
+	{
+		struct mutex *held __free(mutex) = &nested;
+
+		mutex_lock(held);
+	}
+	if (!kd_mutex_is_idle(&nested))
+		return -EINVAL;
+	mutex_lock_nested(&test_lock, ++annotations);
+	mutex_lock_nest_lock(&nested, ++annotations);
+	/* Release the earlier acquisition first: records must identify the lock,
+	 * not assume a caller-side stack of cookies. */
+	mutex_unlock(&test_lock);
+	mutex_unlock(&nested);
+	if (mutex_lock_interruptible_nested(&nested, ++annotations))
+		return -EINVAL;
+	mutex_unlock(&nested);
+	if (mutex_lock_killable_nested(&nested, ++annotations))
+		return -EINVAL;
+	mutex_unlock(&nested);
+	mutex_lock_io_nested(&nested, ++annotations);
+	mutex_unlock(&nested);
+	mutex_destroy(&nested);
+	return !annotations && kd_mutex_is_idle(&nested) &&
+		kd_mutex_is_idle(&test_lock) ? 0 : -EINVAL;
+}
+
 static int __init probe_init(void)
 {
 	struct task_struct *tasks[8];
@@ -258,8 +323,9 @@ static int __init probe_init(void)
 		     offsetof(struct native_container, suffix));
 	BUILD_BUG_ON(sizeof(struct kd_container) != sizeof(struct native_container));
 
-	/* Ordinary callers never publish the embedded delegation gate or tail. */
-	if (!no_delegation(&test_lock))
+	/* This probe is outside the selected delegation comm. Unified calls still
+	 * take the production DIRECT entry, then use local physical exclusion. */
+	if (api_helpers() || !no_delegation(&test_lock))
 		return -EINVAL;
 	if (!mutex_trylock(&test_lock) || !mutex_is_locked(&test_lock) ||
 	    !no_delegation(&test_lock) || mutex_trylock(&test_lock))
@@ -317,7 +383,7 @@ static int __init probe_init(void)
 	    !kd_mutex_is_idle(&test_lock) || !kd_mutex_is_idle(&nested) ||
 	    !no_delegation(&test_lock) || !no_delegation(&nested))
 		return -EINVAL;
-	pr_info("KD_LOCAL_PROBE PASS operations=%lu workers=8 objects=2048 lock_size=%zu lock_align=%zu containing_layout=PASS address_reuse=PASS no_destroy=PASS no_aux=PASS interruptible=EINTR killable=EINTR ring_cancel=PASS ring_handoff=PASS nested_sleep=PASS io=PASS drain=PASS\n",
+	pr_info("KD_LOCAL_PROBE PASS operations=%lu workers=8 objects=2048 lock_size=%zu lock_align=%zu containing_layout=PASS address_reuse=PASS no_destroy=PASS no_aux=PASS interruptible=EINTR killable=EINTR ring_cancel=PASS ring_handoff=PASS nested_sleep=PASS io=PASS api_helpers=PASS drain=PASS\n",
 		operations, sizeof(struct mutex), (size_t)__alignof__(struct mutex));
 	return 0;
 }

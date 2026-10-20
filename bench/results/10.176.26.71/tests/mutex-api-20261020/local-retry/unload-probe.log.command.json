@@ -1,0 +1,10 @@
+{
+  "argv": [
+    "rmmod",
+    "kd_mutex_local_probe"
+  ],
+  "cwd": "/root/host_fs/kdlock",
+  "pid": 2600754,
+  "started_ns": 432186680862098,
+  "timeout_seconds": 30
+}

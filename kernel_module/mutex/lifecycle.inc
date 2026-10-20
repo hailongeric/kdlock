@@ -19,6 +19,16 @@ void kd_mutex_init(struct kd_mutex *lock)
 
 EXPORT_SYMBOL_GPL(kd_mutex_init);
 
+void __kd_mutex_init(struct kd_mutex *lock, const char *name,
+		     struct lock_class_key *key)
+{
+	/* Lockdep is not enabled in the supported configuration. */
+	(void)name;
+	(void)key;
+	kd_mutex_init(lock);
+}
+EXPORT_SYMBOL_GPL(__kd_mutex_init);
+
 static void kd_mutex_free_percpu_stacks(void)
 {
 	int cpu;

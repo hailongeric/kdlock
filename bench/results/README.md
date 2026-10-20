@@ -6,6 +6,14 @@ reader/writer semaphore (rwsem) waiting implementation from `c21345b`. See
 [current performance](../../docs/PERFORMANCE.md) for results and retained
 regressions, and [terminology](../../docs/TERMINOLOGY.md) for execution and
 measurement definitions.
+
+The [unified mutex API receipt](10.176.26.71/tests/mutex-api-20261020/validation.json)
+records 11 basic/affected VM checks, compiled anonymous DIRECT continuations,
+160,000 live API operations and four real owner ACKs across both nested release
+orders. Both live probes drained; they do not claim live JIT bodies or throughput.
+The receipt preserves failed development attempts and the allocator preparation
+used for the successful retries.
+
 The [fresh 32-byte mutex / Native / TCLock comparison](10.176.26.71/bench/mutex32-native-tclock-20261020/README.md)
 records 567 accepted, drained sessions from `bd9d4ce` with unchanged `752fec1`
 production: c01, c08, RCUHT, seek SET/END, pipe bytes and pipe capacity at nine

@@ -27,6 +27,7 @@ The [lock catalog](../LOCKS.md) locates the other lock families;
 | --- | --- | --- |
 | Native | `(mutex_lock)` / `(mutex_unlock)` | Captured kernel `kernel/locking/mutex.c`, `include/linux/mutex.h` |
 | TCLock | `komb_mutex_lock` / `komb_mutex_unlock` | [komb_mutex.c](../../tclock_backend/komb_mutex.c), [combiner.c](../../tclock_backend/combiner.c), [mutex_provider.c](../../tclock_backend/mutex_provider.c) |
+| KD public | `kd_mutex_lock/unlock`, ordinary blocking aliases and non-lockdep nested forms | [kd_mutex_api.h](../../include/kd_mutex_api.h), direct ABI2 entry and exact provider unlock routing |
 | KD ordinary/local | `kd_mutex_local_lock/unlock` and ordinary API variants | [kd_mutex_local.c](../../kernel_module/kd_mutex_local.c), [kd_mutex_osq.c](../../kernel_module/kd_mutex_osq.c) |
 | KD outer | `KD_MUTEX_OUTER_LOCK/UNLOCK` | [kd_mutex_direct.h](../../include/kd_mutex_direct.h), [mutex_calls.inc](../../kernel_module/lock/mutex_calls.inc) |
 | KD general/nested | `KD_MUTEX_DIRECT_LOCK/UNLOCK` and internal ABI0/2 entries | Same routing file, [kd_mutex.c](../../kernel_module/kd_mutex.c), [native.inc](../../kernel_module/execution/native.inc) |
@@ -48,28 +49,56 @@ mutex API calls.
 
 ## Public KD API
 
-[`kd_mutex.h`](../../include/kd_mutex.h) defines ordinary operations;
-[`kd_mutex_direct.h`](../../include/kd_mutex_direct.h) defines delegation-capable
-calls. These share physical exclusion when used with their matching unlocks.
+[`kd_mutex.h`](../../include/kd_mutex.h) defines the object and callable operations.
+[`kd_mutex_api.h`](../../include/kd_mutex_api.h) supplies the unified one-argument
+public lock/unlock macros through the ABI2 direct interface.
+[`kd_mutex_direct.h`](../../include/kd_mutex_direct.h) retains explicit direct
+and outer-cookie calls. All use the same KD physical exclusion.
 
 | Operation | Interface and result |
 | --- | --- |
-| Initialization and teardown | `DEFINE_KD_MUTEX`, `KD_MUTEX_INITIALIZER`, `kd_mutex_init`; `kd_mutex_destroy` diagnoses a busy object and does not drain users |
-| Ordinary blocking acquisition | `kd_mutex_local_lock` / `kd_mutex_local_unlock`; executes the caller's body locally |
-| Cancellable acquisition | `kd_mutex_lock_interruptible` or `kd_mutex_lock_killable`; zero on success, `-EINTR` on cancellation; successful calls pair with local unlock |
-| Trylock | `kd_mutex_trylock`; 1 on success, 0 otherwise; success pairs with local unlock |
-| I/O wait accounting | `kd_mutex_lock_io`; local acquisition with scheduler I/O accounting, paired with local unlock |
+| Initialization and teardown | `DEFINE_KD_MUTEX`, `KD_MUTEX_INITIALIZER`, `kd_mutex_init`, non-lockdep `__kd_mutex_init`, and non-debug `kd_devm_mutex_init` / `__kd_devm_mutex_init`; `kd_mutex_destroy` diagnoses a busy object and does not drain users |
+| Public blocking acquisition | Direct `kd_mutex_lock(lock)` / `kd_mutex_unlock(lock)` calls use ABI2 and permit delegation, including supported translated nesting |
+| Explicit local acquisition | `kd_mutex_local_lock` / `kd_mutex_local_unlock`; executes the caller's body locally |
+| Cancellable acquisition | `kd_mutex_lock_interruptible` or `kd_mutex_lock_killable`; local, zero on success, `-EINTR` on cancellation; unlock only after success |
+| Trylock | `kd_mutex_trylock`; local, 1 on success, 0 otherwise; unlock only after success |
+| I/O wait accounting | `kd_mutex_lock_io`; local acquisition with scheduler I/O accounting |
 | Last-reference acquisition | `kd_atomic_dec_and_mutex_lock`; returns 1 with the local mutex held only when the count reaches zero; otherwise returns 0 without ownership |
 | Ownership observations | `kd_mutex_is_locked` observes a physical owner; `kd_mutex_is_idle` additionally checks local/delegation state after all users join; neither acquires the lock |
 | Outer delegation | `KD_MUTEX_OUTER_LOCK/UNLOCK`; opaque same-task cookie for one lexical acquisition |
 | General direct delegation | `KD_MUTEX_DIRECT_LOCK/UNLOCK`; explicit clobber interface also recognized for supported nested translated controls |
+| Scope cleanup | `guard(kd_mutex)` and `CLASS(kd_mutex, ...)` acquire locally; guard cleanup and `__free(kd_mutex)` use routed public unlock |
 
-Prepare named direct continuations with `kd_mutex_prepare` and
+All successful public acquisition forms can use `kd_mutex_unlock`. Its provider
+routing handles a local physical owner, a delegation gate owner and a native
+continuation whose lock remains physically owned by an executor. The last case
+requires an exact frame/lock match and an unlock ACK. Task membership is routing
+state, not a new admission decision at unlock.
+
+The public macros evaluate the lock expression once and provide a void
+expression. Their internal numeric continuation requires no named label or
+caller cookie. Calls through a function pointer, or with the function name
+parenthesized, use the addressable ordinary-C-ABI lock function and execute locally;
+the callable unlock function still routes exactly. Their assembler/export names
+are `kd_mutex_api_lock/unlock`, keeping the public C names separate from the
+captured kernel's legacy exports. Non-lockdep nested annotations
+use the public blocking interface but do not implement lockdep classes.
+Interruptible, killable, I/O, trylock and last-reference calls retain local
+semantics and remain refused inside translated bodies.
+The conventional public C entry points are also native-only admission
+boundaries under their assembler names. The translator does not learn their C bodies;
+nested JIT execution uses the direct control endpoints. Scope guards and cleanup
+helpers intentionally use these conventional functions, without introducing a
+hidden delegation boundary inside a constructor or destructor.
+
+For explicit named direct continuations, use `kd_mutex_prepare` and
 `KD_ENTRY_ABI_MUTEX_CLOBBER_V1` after the source module is live. The containing
-function uses `noipa` to prevent duplicate continuation labels. Ordinary aliases
-in [`kd_mutex_compat.h`](../../include/kd_mutex_compat.h) select local operations;
-they do not turn arbitrary ordinary C calls into delegation. Interruptible and
-killable forms retain their original-task result and cancellation semantics.
+function uses `noipa` to prevent duplicate global continuation labels.
+The unified direct entry can register its own captured continuation when
+contention admission accepts it; registration is not translation or proof of
+executed JIT bodies. Source aliases in
+[`kd_mutex_compat.h`](../../include/kd_mutex_compat.h) map to the unified public
+interfaces and local task-sensitive variants.
 
 The [replacement contract](kd_only_mutex.md) owns alias coverage and rebuild
 requirements. There is no Linux mutex fallback. The outer cookie's nonzero value
@@ -125,6 +154,13 @@ at body entry and retirement.
 | Object/per-CPU initialization and drain | [mutex/lifecycle.inc](../../kernel_module/mutex/lifecycle.inc) |
 
 ### Entry and native routing
+
+The unified public pair expands to the direct ABI2 interface with an internal
+continuation. Its provider first attempts physical acquisition, then uses the
+same contention admission, queue and nested controls as explicit direct calls.
+It supplies no outer cookie and does not inline the outer probe window below.
+Public unlock always preserves exact routing; an addressable local lock call
+therefore remains compatible with that same unlock interface.
 
 The outer pair probes the KD `owner` word at most eight times, attempting an
 acquire CAS only when the entire owner/flags word is zero. Each failed probe

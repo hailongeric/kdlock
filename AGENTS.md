@@ -9,7 +9,9 @@ locality boundary. At that boundary, eight or more deferred requests receive
 handoff; a smaller prefix is serviced before a bounded FIFO remainder. Keep the
 separate links, cancellation and retirement obligations. Do not restore the rejected
 owned/adaptive protocol, Linux mutex backing, or parked delegation producers.
-Ordinary API aliases use KD physical locking locally; clobber callers permit JIT.
+Direct `kd_mutex_lock/unlock` calls and ordinary blocking aliases use the unified
+ABI2 interface; callable lock symbols and signal/try/I/O APIs execute locally.
+Public unlock retains exact provider routing for every successful acquisition.
 All users of an object must follow one protocol. Whole-kernel replacement,
 RT/ww_mutex and lockdep integration remain separately unvalidated.
 

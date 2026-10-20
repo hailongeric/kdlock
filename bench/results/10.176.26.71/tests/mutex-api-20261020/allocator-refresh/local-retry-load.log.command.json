@@ -1,0 +1,10 @@
+{
+  "argv": [
+    "insmod",
+    "/root/kdlock-evidence/10.176.26.71/tests/mutex-api-20261020/allocator-refresh/source/tc_allocator_guard.ko"
+  ],
+  "cwd": "/root/host_fs/kdlock",
+  "pid": 2599646,
+  "started_ns": 432170081087126,
+  "timeout_seconds": 30
+}

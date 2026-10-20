@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Recovery-guest task lifetime / physical-owner ACK resource probe.
 
-The in-provider fixture uses real pinned tasks and original Linux mutexes. Its
+The in-provider fixture uses real pinned tasks and KD physical mutexes. Its
 continuation packet is constructed and executes no JIT bodies. The provider
 always enables mutex JIT; this probe cannot replace returned-body JIT tests.
 """

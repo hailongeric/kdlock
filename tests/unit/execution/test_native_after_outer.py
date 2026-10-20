@@ -204,8 +204,8 @@ def main():
         "kernel_module/kd_lock.c": (
             "static int kd_jit_begin_call(struct kd_exec_frame *frame, struct kd_regs *regs)",
             "static int kd_jit_advance_call(struct kd_exec_frame *frame,",
-            "int kd_mutex_jit_nested_lock_ctx(struct mutex *lock, struct kd_regs *regs,",
-            "int kd_mutex_jit_nested_unlock_ctx(struct mutex *lock,",
+            "int kd_mutex_jit_nested_lock_ctx(struct kd_mutex *lock, struct kd_regs *regs,",
+            "int kd_mutex_jit_nested_unlock_ctx(struct kd_mutex *lock,",
         ),
         "kernel_module/exe.c": (
             "static int advance_after_known_call(struct kd_regs *regs)",

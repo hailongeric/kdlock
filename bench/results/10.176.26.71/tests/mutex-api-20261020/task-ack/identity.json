@@ -1,0 +1,14 @@
+{
+  "cpus": [
+    0,
+    32,
+    33
+  ],
+  "jit": false,
+  "jit_bodies": 0,
+  "module_sha256": "b6fd7ec10895222ef2d84502fb5617edcfba1642d343af7ceeb159920ee58eb8",
+  "mutex_jit_required": true,
+  "provider_ubsan": "off",
+  "scope": "task_owner_ack_resource_probe",
+  "snapshot_tag": "before-mutex-kdonly-20261017T140354Z"
+}

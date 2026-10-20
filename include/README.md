@@ -14,7 +14,7 @@ it does not mean using the Linux Native backend.
 | --- | --- | --- |
 | Explicit spin object/API | [kd_spin_type.h](kd_spin_type.h), [kd_spin_direct.h](kd_spin_direct.h), [kd_spin_fast.h](kd_spin_fast.h) | One KD word; ordinary preemption pair; no Linux/TCLock mixing |
 | Spin queue and ticket | [kd_spinlock.h](kd_spinlock.h), [kd_spin_entry.h](kd_spin_entry.h), [qspinlock_i.h](qspinlock_i.h) | Reusable nodes, stable continuation and exact native borrowing |
-| Mutex | [kd_mutex.h](kd_mutex.h), [kd_mutex_direct.h](kd_mutex_direct.h), [kd_mutex_compat.h](kd_mutex_compat.h) | KD-only object, ordinary API aliases, ABI2 and opaque outer cookie |
+| Mutex | [kd_mutex.h](kd_mutex.h), [kd_mutex_api.h](kd_mutex_api.h), [kd_mutex_direct.h](kd_mutex_direct.h), [kd_mutex_compat.h](kd_mutex_compat.h) | KD-only object, unified ABI2 blocking calls, local task-sensitive APIs and separate outer cookie |
 | Read-write lock | [kd_rwlock.h](kd_rwlock.h) | 128-byte object, 64-byte alignment; local readers, native fast writers and ABI3 JIT writers |
 | Sleeping semaphore | [kd_rwsem.h](kd_rwsem.h), [kd_rwsem_direct.h](kd_rwsem_direct.h) | Ordinary sleeping APIs and outer ABI2 writers; phase reservations and reader drain precede the unchanged KD mutex queue |
 | Frames and controls | [kd_exec.h](kd_exec.h), [kd_call.h](kd_call.h), [kd_lock.h](kd_lock.h) | Logical state, held-lock ledger, source CALL and final ACK |
@@ -172,10 +172,19 @@ See [the rwsem API and ordering](../docs/design/rwsem_implementation.md).
 
 ## Preparing a delegating body
 
-Ordinary mutex aliases in `kd_mutex_compat.h`, ordinary rwlock writers and
-ordinary rwsem writers run locally. Use an explicit direct/outer pair above
-when the body is eligible for delegation; see the
+Direct calls to `kd_mutex_lock/unlock` in `kd_mutex_api.h`, including ordinary
+blocking aliases in `kd_mutex_compat.h`, use ABI2 with an internal continuation.
+They need no caller cookie or named label and permit supported nested translated
+locking. Addressable lock calls and signal/try/I/O acquisitions remain local;
+public unlock retains exact provider routing for all successful acquisitions.
+Scope guards acquire locally and guard/free cleanup uses routed public unlock;
+their C symbols remain native-only admission boundaries. The compatibility
+header explicitly redirects the captured Linux cleanup helper names to KD.
+Ordinary rwlock and rwsem writers run locally. Use an explicit direct/outer pair
+for those delegation interfaces, or to prepare named mutex entries; see the
 [workload decisions](../docs/BENCHMARK_WORKLOADS.md#kd-api-use-and-delegation).
+
+The following steps describe explicit named entries:
 
 1. Initialize the appropriate KD object and make every reader/writer use the
    same protocol. Rebuild callers when changing object types; casting a Linux

@@ -115,6 +115,30 @@ through final ACK. A profiling value cannot authorize release.
 
 ### Entry, completion and task routing
 
+#### Unified public pair
+
+Direct `kd_mutex_lock(lock)` and `kd_mutex_unlock(lock)` calls from
+[`kd_mutex_api.h`](../../include/kd_mutex_api.h) use the ABI2 direct interface.
+Ordinary blocking source aliases and non-lockdep nested annotations use this
+same pair. The compiler sees the required clobbers, while an internal numeric
+label supplies the continuation without a caller cookie. A nested translated
+acquisition enters the existing exact lock ledger; it never executes an inline
+physical-owner update outside that ledger.
+
+The addressable lock symbol, function-pointer calls and signal/try/I/O variants
+acquire locally. Their successful acquisitions can share public unlock: it checks
+retained native requests first, then exact gate ownership, otherwise local
+physical ownership. Native continuations retain their owner ACKs, and gate owners
+retire their task reference only through the checked gate release. An explicit
+`kd_mutex_local_lock/unlock` pair remains local.
+Scope guards acquire through the conventional local lock function; guard/free
+cleanup uses routed public unlock. Their assembler names
+`kd_mutex_api_lock/unlock` are native-only admission boundaries; the translator
+never substitutes their bodies for the explicit direct controls.
+
+This interface uses the provider's fast acquisition. The separate outer pair
+below retains its inline probes and cookie-based routing optimization.
+
 <a id="mutex-outer-direct"></a>
 
 #### Outer direct pair
@@ -136,7 +160,8 @@ Zero tells the matching unlock to use KD's ownership routing.
 
 The physical return preserves its result. The separate JIT entry defines zero
 before using the cookie, avoiding an incoming-RAX dependency under MINIMAL. Nested
-JIT controls use `KD_MUTEX_DIRECT_LOCK/UNLOCK`, not the outer result-returning entry.
+JIT controls use the unified pair or explicit `KD_MUTEX_DIRECT_LOCK/UNLOCK`,
+not the outer result-returning entry.
 The void direct interfaces retain ABI2; generic control recovery uses FULL state.
 Linux mutex bridge symbols are refused by the KD-only translator.
 

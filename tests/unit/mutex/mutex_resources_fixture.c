@@ -189,6 +189,15 @@ static bool kd_mutex_trylock_fast(struct kd_mutex *lock)
 #include "mutex_state_mock.h"
 #include "mutex_resource_code.h"
 
+static bool conventional_unlock;
+static void public_unlock(struct kd_mutex *lock)
+{
+	if (conventional_unlock)
+		kd_mutex_unlock(lock);
+	else
+		kd_mutex_direct_unlock_clobber_v1(lock, 0, 0x9000, 0);
+}
+
 /* Independent initialized objects replace the historical shadow-map fixture.
  * The live local probe exercises all 2048 objects against the actual kernel. */
 struct origin_slot { struct kd_mutex mutex; };
@@ -669,7 +678,7 @@ static void check_hook_fallbacks(void)
 			CHECK(samples == 1);
 			CHECK(!slow_calls && !cpu_shadows.node_slots &&
 			      !kd_mutex_reserved_nodes);
-			__kd_mutex_unlock(lock, 0, 0x9000);
+			public_unlock(lock);
 			CHECK(!lock->owner && releases == 1 && !task_puts);
 			CHECK(!errors && !preempt && !migration && !table_irq);
 		}
@@ -700,7 +709,7 @@ static void check_local_predecessor(void)
 	CHECK(!preempt && !migration && !slow_calls && !refs && task_puts == 1);
 	CHECK(lock->owner == current && kd_mutex_gate_read(gate) && !fixture_gate_owner(gate));
 	CHECK(head->lock == gate && cpu_shadows.node_slots == BIT(head->slot));
-	__kd_mutex_unlock(lock, 0, 0x9000);
+	public_unlock(lock);
 	CHECK(!lock->owner && kd_mutex_gate_read(gate) && !fixture_gate_owner(gate));
 	CHECK(task_puts == 1 && releases == 1 && !errors);
 	preempt = migration = 1;
@@ -734,7 +743,7 @@ static void check_frequency_order(void)
 			CHECK(samples == 1 && lock->owner == current && !gets && !adds);
 			CHECK(comm_queries == (stage == 2));
 			unsigned int queries = comm_queries;
-			__kd_mutex_unlock(lock, 0, 0x9000);
+			public_unlock(lock);
 			CHECK(!lock->owner && comm_queries == queries && samples == 1);
 			CHECK(!notify_calls && !refs);
 		}
@@ -751,7 +760,7 @@ static void check_promotion_and_routing(void)
 	__kd_mutex_lock(lock, (unsigned long)&native_stack[16], 0x8000);
 	CHECK(lock->owner == current && !refs);
 	promoted = true;
-	__kd_mutex_unlock(lock, 0, 0x9000);
+	public_unlock(lock);
 	CHECK(!lock->owner && !task_puts);
 
 	/* A native peer may win L before the promoted target's next acquisition;
@@ -770,7 +779,7 @@ static void check_promotion_and_routing(void)
 	cpu_hot = false;
 	source_open = false;
 	strcpy(current->comm, "renamed");
-	__kd_mutex_unlock(lock, 0, 0x9000);
+	public_unlock(lock);
 	CHECK(!lock->owner && !fixture_gate_owner(gate) && !kd_mutex_gate_read(gate));
 
 	CHECK(!refs && task_puts == 1);
@@ -821,7 +830,7 @@ static void check_hook_nodes(void)
 		CHECK(cpu_shadows.node_slots == occupied &&
 		      memcmp(before, kd_mutex_nodes, sizeof(before)) == 0);
 		release_gate = gate;
-		__kd_mutex_unlock(lock, 0, 0x9000);
+		public_unlock(lock);
 		CHECK(!lock->owner && !fixture_gate_owner(gate) && !kd_mutex_gate_read(gate));
 
 		CHECK(task_puts == 1 && !refs &&
@@ -878,7 +887,7 @@ static void check_slowpath_packets(void)
 			CHECK(fixture_gate_owner(gate) == current &&
 			      lock->owner == current);
 			release_gate = gate;
-			__kd_mutex_unlock(lock, 0, 0x9000);
+			public_unlock(lock);
 			CHECK(task_puts == 1 && !refs);
 		} else {
 			CHECK(fixture_gate_owner(gate) == &peer &&
@@ -907,14 +916,14 @@ static void check_slowpath_packets(void)
 					0x8000);
 				CHECK(nested->owner == current &&
 				      acquires == 1);
-				__kd_mutex_unlock(nested, 0, 0x9000);
+				public_unlock(nested);
 				CHECK(!nested->owner && releases == 1);
 				CHECK(refs == 1 && gets == 1 && !task_puts &&
 				      count == 0 && !errors);
 				CHECK(fixture_gate_owner(gate) == &peer &&
 				      lock->owner == &peer);
 				borrowed = true;
-				__kd_mutex_unlock(lock, 0, 0x9000);
+				public_unlock(lock);
 				CHECK(notify_calls == 2 && releases == 1 &&
 				      !task_puts && refs == 1);
 				CHECK(fixture_gate_owner(gate) == &peer &&
@@ -964,7 +973,7 @@ static void check_minimal_entry(void)
 	__kd_mutex_lock_clobber_v1(lock, (unsigned long)&native_stack[16], 0x8000, 0xabc0);
 	CHECK(!preempt && !migration && !cpu_shadows.node_slots);
 	CHECK(fixture_gate_owner(gate) == current && refs == 1);
-	__kd_mutex_unlock(lock, 0, 0x9000);
+	public_unlock(lock);
 	CHECK(!refs && !kd_mutex_gate_read(gate));
 }
 
@@ -995,7 +1004,7 @@ static void check_outer_native_result(void)
 		lock, (unsigned long)&native_stack[16], 0x8000, 0);
 	struct kd_mutex *gate = lock;
 	CHECK(!route && refs == 1 && gate && fixture_gate_owner(gate) == current);
-	__kd_mutex_unlock(lock, 0, 0x9000);
+	public_unlock(lock);
 	CHECK(!refs && task_puts == 1 && !kd_mutex_gate_read(gate));
 
 	/* A later native fallback has already entered the KD queue contract.
@@ -1012,7 +1021,7 @@ static void check_outer_native_result(void)
 		lock, (unsigned long)&native_stack[16], 0x8000, 0);
 	CHECK(!route && !refs && task_puts == 1 && lock->owner == current);
 	CHECK(kd_mutex_gate_read(gate) && !fixture_gate_owner(gate) && !slow_calls);
-	__kd_mutex_unlock(lock, 0, 0x9000);
+	public_unlock(lock);
 	CHECK(!lock->owner && kd_mutex_gate_read(gate) && task_puts == 1);
 	preempt = migration = 1;
 	kd_mutex_release_node(head);
@@ -1037,7 +1046,7 @@ static void check_gate_phases_and_owner_unlock(void)
  CHECK(_kd_mutex_unlock_checked(lock) == -EINVAL);
  CHECK(lock->owner == current && !releases && errors == 3);
  kd_mutex_gate_set(lock, KD_MUTEX_GATE_HELD);
- __kd_mutex_unlock(lock, 0, 0x9000);
+ public_unlock(lock);
  CHECK(gate_release_checks == 1 && !refs && !lock->owner);
  CHECK(!kd_mutex_gate_read(lock) && acquires == 1 && releases == 1 && task_puts == 1);
 
@@ -1045,7 +1054,7 @@ static void check_gate_phases_and_owner_unlock(void)
  reference_gate = lock;
  handoff_on_gate_release = true;
  __kd_mutex_lock_clobber_v1(lock, (unsigned long)&native_stack[16], 0x8000, 0);
- __kd_mutex_unlock(lock, 0, 0x9000);
+ public_unlock(lock);
  CHECK(lock->owner == &peer && kd_mutex_gate_read(lock) == KD_MUTEX_GATE_HELD);
  CHECK(gate_release_checks == 1 && !refs);
  release_peer(lock);
@@ -1053,7 +1062,7 @@ static void check_gate_phases_and_owner_unlock(void)
  CHECK(acquires == 2 && releases == 2 && !errors);
 }
 
-int main(void)
+static void check_routing(void)
 {
 	/* Even a hot lock with task/shadow work otherwise eligible must bypass all
 	 * of it when the original owner CAS succeeds. Unlock still uses the KD physical primitive. */
@@ -1063,7 +1072,7 @@ int main(void)
 	CHECK(origins[0].mutex.owner == current && entry_attempts == 1);
 	CHECK(!samples && !gets && !adds && !refs && !comm_queries && !entry_pins);
 	CHECK(!preempt && !migration);
-	__kd_mutex_unlock(&origins[0].mutex, 0, 0x9000);
+	public_unlock(&origins[0].mutex);
 	CHECK(!origins[0].mutex.owner && acquires == 1 && releases == 1);
 	/* This endpoint consumes a caller's failed CAS; it must not retry the CAS
 	 * or count twice even if the original mutex becomes free before entry. */
@@ -1073,7 +1082,7 @@ int main(void)
 	kd_mutex_direct_contended_clobber_v1(&origins[0].mutex, 0x7000, 0x8000, 0);
 	CHECK(!fast_probes && entry_attempts == 1 && samples == 1);
 	CHECK(origins[0].mutex.owner == current && !refs && !gets);
-	__kd_mutex_unlock(&origins[0].mutex, 0, 0x9000);
+	public_unlock(&origins[0].mutex);
 	check_gate_phases_and_owner_unlock();
 	check_outer_native_result();
 	check_minimal_entry();
@@ -1086,6 +1095,13 @@ int main(void)
 	check_promotion_and_routing();
 	check_hook_nodes();
 	check_slowpath_packets();
+}
+
+int main(void)
+{
+	check_routing();
+	conventional_unlock = true;
+	check_routing();
 	printf("production mutex resources: %u checks, 0 failures; nodes=%d objects=%d regs=%zu\n",
 	       checks, KD_MUTEX_MAX_NODES, 2048,
 	       sizeof(struct kd_regs));

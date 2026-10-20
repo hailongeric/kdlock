@@ -36,6 +36,9 @@ CONTEXT_SYMBOLS = (
     # native mutex calls as ordinary remote services or control endpoints.
     "mutex_*", "__mutex_*", "atomic_dec_and_mutex_lock",
     "kd_mutex_lock_clobber_v1", "kd_mutex_unlock_clobber_v1",
+    # Conventional C entry points deliberately remain local. Only the explicit
+    # DIRECT clobber controls can acquire/release through the nested ledger.
+    "kd_mutex_lock", "kd_mutex_unlock", "kd_mutex_api_lock", "kd_mutex_api_unlock",
     # Return-valued or task-signal/I/O APIs stay on the original task.
     "kd_mutex_lock_interruptible", "kd_mutex_lock_killable", "kd_mutex_lock_io",
     "kd_mutex_trylock", "kd_atomic_dec_and_mutex_lock",

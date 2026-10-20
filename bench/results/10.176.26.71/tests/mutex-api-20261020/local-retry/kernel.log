@@ -1,0 +1,54 @@
+6,545387,432193236583,-;end_point[0] = ffffffffc0863e60
+
+6,545388,432193236590,-;end_point[1] = ffffffffc0863f00
+
+6,545389,432193236592,-;end_point[2] = ffffffffc0853f50
+
+6,545390,432193236593,-;end_point[3] = ffffffffc08672c0
+
+6,545391,432193236594,-;end_point[4] = ffffffffc08514c0
+
+6,545392,432193236595,-;mutex_lock addr = ffffffffc0867bb0
+
+6,545393,432193236612,-;hostcall service id=1 symbol=ktime_get addr=ffffffff8119c150 flags=7
+
+6,545394,432193236879,-;hostcall service unavailable id=2 symbol=ktime_get_ns
+
+6,545395,432193236902,-;hostcall service id=3 symbol=int_sqrt addr=ffffffff816e55f0 flags=7
+
+6,545396,432193236917,-;hostcall service id=4 symbol=strcmp addr=ffffffff81e00b90 flags=7
+
+6,545397,432193236931,-;hostcall service id=5 symbol=strscpy_pad addr=ffffffff816e3d10 flags=7
+
+6,545398,432193271429,-;JIT code block pool ready: 64/64
+
+6,545399,432193302387,-;JIT direct-call pool ready: 64/64; shared image limit=64
+
+6,545400,432193305793,-;kd kernel module init: direct spin/mutex APIs; global hooks disabled
+
+6,545401,432193535954,-;KD_LOCAL_PROBE PASS operations=160000 workers=8 objects=2048 lock_size=32 lock_align=8 containing_layout=PASS address_reuse=PASS no_destroy=PASS no_aux=PASS interruptible=EINTR killable=EINTR ring_cancel=PASS ring_handoff=PASS nested_sleep=PASS io=PASS api_helpers=PASS drain=PASS
+
+6,545402,432193699920,-;kd_source retire: result=0 state=2 modules=0 frames=0 writers=0
+
+6,545403,432193748256,-;kd_mutex stats: slowpath=0 combiner=0 handoff=0 jit_success=0 jit_not_ready=0 jit_failure=0 jit_resume=0 frame_failure=0 node_overflow=0 multi_slot=0 context_busy=0 nested_lock=0 nested_fast=0 nested_queued=0 nested_jit=0 nested_unlock=0 nested_abort_release=0 active_waiters=0 max_waiters_per_cpu=0 reserved_nodes=0 origin_acquires=0 origin_releases=0
+
+6,545404,432193764309,-;kd_mutex tasks: active_tasks=0 task_alloc_failure=0 task_reroutes=0
+
+6,545405,432193764363,-;kd_spin batch: entries=0 ww_jumps=0
+
+6,545406,432193764366,-;kd_spin diag overflow=0
+
+6,545407,432193764367,-;kd_spin diag invariant_failures=0
+
+6,545408,432193764598,-;kd_native stats: started=0 completed=0 unlocks=0
+
+6,545409,432193764664,-;kd_exec invariant_failures=0
+
+6,545410,432193764668,-;kd_hostcall stats: exits=0 executed=0 resumed=0 rejected=0 failed=0 limit=0
+
+6,545411,432193764671,-;kd_direct_call stats: strcmp=0 strscpy_pad=0
+
+6,545412,432193764672,-;kd_mutex stack checks: bytes=256 equal=0 changed=0 unavailable=0
+
+6,545413,432193788595,-;kd kernel module exit
+

@@ -1,0 +1,10 @@
+{
+  "argv": [
+    "rmmod",
+    "kdlock_km"
+  ],
+  "cwd": "/root/host_fs/kdlock",
+  "pid": 2601448,
+  "started_ns": 432202774500949,
+  "timeout_seconds": 30
+}

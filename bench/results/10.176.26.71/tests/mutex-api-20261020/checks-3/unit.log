@@ -1,0 +1,641 @@
+make: Entering directory '/root/host_fs/kdlock/tests/unit'
+
+[PASS] test_control_call (56 phase/error combinations, post-CALL bounds)
+
+chdir translator workspace: No such file or directory
+daemon: translator failed: workspace=./0x1234 status=32256
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "/usr/lib/python3.10/runpy.py", line 288, in run_path
+    code, fname = _get_code_from_file(run_name, path_name)
+  File "/usr/lib/python3.10/runpy.py", line 252, in _get_code_from_file
+    with io.open_code(decoded_path) as f:
+FileNotFoundError: [Errno 2] No such file or directory: '/tmp/kdlock-compiler-launch.NGm5QI/disassem/disassem.py'
+daemon: translator failed: workspace=./0x1234 status=256
+daemon: translator failed: workspace=./0x1234 status=256
+daemon: translator failed: workspace=./0x1234 status=256
+daemon: translator failed: workspace=./0x1234 status=256
+chdir translator workspace: No such file or directory
+KD_TRANSLATION_METRICS {"schema":1,"pid":0,"tgid":42,"entry":"0x1234","lock_kind":2,"child":2597166,"started_ns":431926638392840,"finished_ns":431926639816485,"wall_ns":1423645,"user_ns":941000,"system_ns":0,"maxrss_kib":1460,"minor_faults":38,"major_faults":0,"voluntary_cs":1,"involuntary_cs":0,"status":32256,"result":-1}
+daemon: translator failed: workspace=./0x1234/42 status=32256
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "/usr/lib/python3.10/runpy.py", line 288, in run_path
+    code, fname = _get_code_from_file(run_name, path_name)
+  File "/usr/lib/python3.10/runpy.py", line 252, in _get_code_from_file
+    with io.open_code(decoded_path) as f:
+FileNotFoundError: [Errno 2] No such file or directory: '/tmp/kdlock-compiler-launch.NGm5QI/disassem/disassem.py'
+KD_TRANSLATION_METRICS {"schema":1,"pid":0,"tgid":42,"entry":"0x1234","lock_kind":2,"child":2597167,"started_ns":431926640055806,"finished_ns":431926667060572,"wall_ns":27004766,"user_ns":26433000,"system_ns":0,"maxrss_kib":9156,"minor_faults":986,"major_faults":0,"voluntary_cs":1,"involuntary_cs":0,"status":256,"result":-1}
+daemon: translator failed: workspace=./0x1234/42 status=256
+KD_TRANSLATION_METRICS {"schema":1,"pid":0,"tgid":42,"entry":"0x1234","lock_kind":0,"child":2597168,"started_ns":431926667260107,"finished_ns":431926694561551,"wall_ns":27301444,"user_ns":15346000,"system_ns":11520000,"maxrss_kib":9212,"minor_faults":1049,"major_faults":0,"voluntary_cs":1,"involuntary_cs":0,"status":0,"result":0}
+KD_TRANSLATION_METRICS {"schema":1,"pid":0,"tgid":42,"entry":"0x1234","lock_kind":0,"child":2597169,"started_ns":431926694916660,"finished_ns":431926721117256,"wall_ns":26200596,"user_ns":18397000,"system_ns":7367000,"maxrss_kib":9188,"minor_faults":1046,"major_faults":0,"voluntary_cs":1,"involuntary_cs":0,"status":256,"result":-1}
+daemon: translator failed: workspace=./0x1234/42 status=256
+KD_TRANSLATION_METRICS {"schema":1,"pid":0,"tgid":42,"entry":"0x1234","lock_kind":0,"child":2597170,"started_ns":431926721407874,"finished_ns":431926747130512,"wall_ns":25722638,"user_ns":21073000,"system_ns":4208000,"maxrss_kib":9140,"minor_faults":1045,"major_faults":0,"voluntary_cs":1,"involuntary_cs":0,"status":512,"result":2}
+KD_TRANSLATION_METRICS {"schema":1,"pid":0,"tgid":42,"entry":"0x1234","lock_kind":1,"child":2597171,"started_ns":431926747462674,"finished_ns":431926772632027,"wall_ns":25169353,"user_ns":21160000,"system_ns":3540000,"maxrss_kib":9144,"minor_faults":1046,"major_faults":0,"voluntary_cs":1,"involuntary_cs":0,"status":0,"result":0}
+KD_TRANSLATION_METRICS {"schema":1,"pid":0,"tgid":42,"entry":"0x1234","lock_kind":1,"child":2597172,"started_ns":431926772994833,"finished_ns":431926801264594,"wall_ns":28269761,"user_ns":23814000,"system_ns":3987000,"maxrss_kib":9180,"minor_faults":1047,"major_faults":0,"voluntary_cs":1,"involuntary_cs":0,"status":256,"result":-1}
+daemon: translator failed: workspace=./0x1234/42 status=256
+KD_TRANSLATION_METRICS {"schema":1,"pid":0,"tgid":42,"entry":"0x1234","lock_kind":1,"child":2597173,"started_ns":431926801548916,"finished_ns":431926828553991,"wall_ns":27005075,"user_ns":15164000,"system_ns":11392000,"maxrss_kib":9228,"minor_faults":1048,"major_faults":0,"voluntary_cs":1,"involuntary_cs":0,"status":512,"result":2}
+KD_TRANSLATION_METRICS {"schema":1,"pid":0,"tgid":42,"entry":"0x1234","lock_kind":2,"child":2597174,"started_ns":431926828890534,"finished_ns":431926855581640,"wall_ns":26691106,"user_ns":21834000,"system_ns":4393000,"maxrss_kib":9092,"minor_faults":1045,"major_faults":0,"voluntary_cs":1,"involuntary_cs":0,"status":0,"result":0}
+KD_TRANSLATION_METRICS {"schema":1,"pid":0,"tgid":42,"entry":"0x1234","lock_kind":2,"child":2597175,"started_ns":431926855944234,"finished_ns":431926884256010,"wall_ns":28311776,"user_ns":15885000,"system_ns":11939000,"maxrss_kib":9132,"minor_faults":1045,"major_faults":0,"voluntary_cs":1,"involuntary_cs":0,"status":256,"result":-1}
+daemon: translator failed: workspace=./0x1234/42 status=256
+KD_TRANSLATION_METRICS {"schema":1,"pid":0,"tgid":42,"entry":"0x1234","lock_kind":2,"child":2597176,"started_ns":431926884541746,"finished_ns":431926912880434,"wall_ns":28338688,"user_ns":23865000,"system_ns":3997000,"maxrss_kib":9152,"minor_faults":1046,"major_faults":0,"voluntary_cs":1,"involuntary_cs":0,"status":512,"result":2}
+daemon: invalid translation monotonic clock
+daemon: invalid translation monotonic clock
+daemon: invalid translation resource record
+daemon: invalid translation resource record
+daemon: invalid translation resource record
+write /dev/kd_dev: Bad file descriptor
+read /dev/kd_dev: Bad file descriptor
+open /dev/kd_dev session: No such file or directory
+daemon: native-only status write failed: -1
+[PASS] daemon opt-in metrics, real children and observation faults
+[PASS] test_daemon_policy
+
+PASS unified source API: single evaluation, void expression, nested/early release, addressable C symbols and local-result variants
+PASS unified macro hygiene: caller temporary names, selected object and once-only argument evaluation
+ENTRY 1000554
+PASS unified ABI2 facade: preserved compiler live values and exact SP/IP/BP
+
+/tmp/kd-mutex-api-0-rr45xc34/fixture:     file format elf64-x86-64
+
+
+Disassembly of section .text:
+
+0000000001000520 <api_jit_case>:
+ 1000520:	f3 0f 1e fa          	endbr64 
+ 1000524:	55                   	push   %rbp
+ 1000525:	bf 00 00 00 60       	mov    $0x60000000,%edi
+ 100052a:	48 89 e5             	mov    %rsp,%rbp
+ 100052d:	41 57                	push   %r15
+ 100052f:	41 56                	push   %r14
+ 1000531:	41 55                	push   %r13
+ 1000533:	41 54                	push   %r12
+ 1000535:	53                   	push   %rbx
+ 1000536:	48 83 ec 10          	sub    $0x10,%rsp
+ 100053a:	48 c7 45 d0 15 01 00 	movq   $0x115,-0x30(%rbp)
+ 1000541:	00 
+ 1000542:	48 89 e6             	mov    %rsp,%rsi
+ 1000545:	48 8d 15 08 00 00 00 	lea    0x8(%rip),%rdx        # 1000554 <api_jit_case+0x34>
+ 100054c:	48 89 e9             	mov    %rbp,%rcx
+ 100054f:	e8 a4 fe ff ff       	call   10003f8 <kd_mutex_direct_lock_clobber_v1>
+ 1000554:	48 8b 45 d0          	mov    -0x30(%rbp),%rax
+ 1000558:	bf 00 00 00 60       	mov    $0x60000000,%edi
+ 100055d:	48 83 c0 01          	add    $0x1,%rax
+ 1000561:	48 89 45 d0          	mov    %rax,-0x30(%rbp)
+ 1000565:	48 89 e6             	mov    %rsp,%rsi
+ 1000568:	48 8d 15 08 00 00 00 	lea    0x8(%rip),%rdx        # 1000577 <api_jit_case+0x57>
+ 100056f:	48 89 e9             	mov    %rbp,%rcx
+ 1000572:	e8 a2 fe ff ff       	call   1000419 <kd_mutex_direct_unlock_clobber_v1>
+ 1000577:	48 8b 45 d0          	mov    -0x30(%rbp),%rax
+ 100057b:	48 83 c4 10          	add    $0x10,%rsp
+ 100057f:	5b                   	pop    %rbx
+ 1000580:	41 5c                	pop    %r12
+ 1000582:	41 5d                	pop    %r13
+ 1000584:	41 5e                	pop    %r14
+ 1000586:	41 5f                	pop    %r15
+ 1000588:	5d                   	pop    %rbp
+ 1000589:	c3                   	ret    
+
+Disassembly of section .init:
+
+Disassembly of section .plt:
+
+Disassembly of section .plt.sec:
+
+Disassembly of section .fini:
+
+PASS unified source API: single evaluation, void expression, nested/early release, addressable C symbols and local-result variants
+PASS unified macro hygiene: caller temporary names, selected object and once-only argument evaluation
+ENTRY 1000554
+PASS compiled unified root entry: anonymous continuation, poisoned GPRs, untouched owner, COMPLETE and exact FULL
+PASS unified ABI2 facade: preserved compiler live values and exact SP/IP/BP
+PASS unified source API: single evaluation, void expression, nested/early release, addressable C symbols and local-result variants
+PASS unified macro hygiene: caller temporary names, selected object and once-only argument evaluation
+ENTRY 1000554
+PASS unified ABI2 facade: preserved compiler live values and exact SP/IP/BP
+
+/tmp/kd-mutex-api-1-02c3bbxd/fixture:     file format elf64-x86-64
+
+
+Disassembly of section .text:
+
+0000000001000520 <api_jit_case>:
+ 1000520:	f3 0f 1e fa          	endbr64 
+ 1000524:	55                   	push   %rbp
+ 1000525:	bf 00 00 00 60       	mov    $0x60000000,%edi
+ 100052a:	48 89 e5             	mov    %rsp,%rbp
+ 100052d:	41 57                	push   %r15
+ 100052f:	41 56                	push   %r14
+ 1000531:	41 55                	push   %r13
+ 1000533:	41 54                	push   %r12
+ 1000535:	53                   	push   %rbx
+ 1000536:	48 83 ec 10          	sub    $0x10,%rsp
+ 100053a:	48 c7 45 d0 15 01 00 	movq   $0x115,-0x30(%rbp)
+ 1000541:	00 
+ 1000542:	48 89 e6             	mov    %rsp,%rsi
+ 1000545:	48 8d 15 08 00 00 00 	lea    0x8(%rip),%rdx        # 1000554 <api_jit_case+0x34>
+ 100054c:	48 89 e9             	mov    %rbp,%rcx
+ 100054f:	e8 a4 fe ff ff       	call   10003f8 <kd_mutex_direct_lock_clobber_v1>
+ 1000554:	48 8b 45 d0          	mov    -0x30(%rbp),%rax
+ 1000558:	bf 10 00 00 60       	mov    $0x60000010,%edi
+ 100055d:	48 83 c0 01          	add    $0x1,%rax
+ 1000561:	48 89 45 d0          	mov    %rax,-0x30(%rbp)
+ 1000565:	48 89 e6             	mov    %rsp,%rsi
+ 1000568:	48 8d 15 08 00 00 00 	lea    0x8(%rip),%rdx        # 1000577 <api_jit_case+0x57>
+ 100056f:	48 89 e9             	mov    %rbp,%rcx
+ 1000572:	e8 81 fe ff ff       	call   10003f8 <kd_mutex_direct_lock_clobber_v1>
+ 1000577:	48 8b 45 d0          	mov    -0x30(%rbp),%rax
+ 100057b:	bf 10 00 00 60       	mov    $0x60000010,%edi
+ 1000580:	48 83 c0 02          	add    $0x2,%rax
+ 1000584:	48 89 45 d0          	mov    %rax,-0x30(%rbp)
+ 1000588:	48 89 e6             	mov    %rsp,%rsi
+ 100058b:	48 8d 15 08 00 00 00 	lea    0x8(%rip),%rdx        # 100059a <api_jit_case+0x7a>
+ 1000592:	48 89 e9             	mov    %rbp,%rcx
+ 1000595:	e8 7f fe ff ff       	call   1000419 <kd_mutex_direct_unlock_clobber_v1>
+ 100059a:	48 8b 45 d0          	mov    -0x30(%rbp),%rax
+ 100059e:	bf 00 00 00 60       	mov    $0x60000000,%edi
+ 10005a3:	48 83 c0 04          	add    $0x4,%rax
+ 10005a7:	48 89 45 d0          	mov    %rax,-0x30(%rbp)
+ 10005ab:	48 89 e6             	mov    %rsp,%rsi
+ 10005ae:	48 8d 15 08 00 00 00 	lea    0x8(%rip),%rdx        # 10005bd <api_jit_case+0x9d>
+ 10005b5:	48 89 e9             	mov    %rbp,%rcx
+ 10005b8:	e8 5c fe ff ff       	call   1000419 <kd_mutex_direct_unlock_clobber_v1>
+ 10005bd:	48 8b 45 d0          	mov    -0x30(%rbp),%rax
+ 10005c1:	48 83 c4 10          	add    $0x10,%rsp
+ 10005c5:	5b                   	pop    %rbx
+ 10005c6:	41 5c                	pop    %r12
+ 10005c8:	41 5d                	pop    %r13
+ 10005ca:	41 5e                	pop    %r14
+ 10005cc:	41 5f                	pop    %r15
+ 10005ce:	5d                   	pop    %rbp
+ 10005cf:	c3                   	ret    
+
+Disassembly of section .init:
+
+Disassembly of section .plt:
+
+Disassembly of section .plt.sec:
+
+Disassembly of section .fini:
+
+PASS unified source API: single evaluation, void expression, nested/early release, addressable C symbols and local-result variants
+PASS unified macro hygiene: caller temporary names, selected object and once-only argument evaluation
+ENTRY 1000554
+PASS compiled unified nested entry: strict admission, exact B control exits, FULL resume and no replay
+PASS unified ABI2 facade: preserved compiler live values and exact SP/IP/BP
+PASS unified source API: single evaluation, void expression, nested/early release, addressable C symbols and local-result variants
+PASS unified macro hygiene: caller temporary names, selected object and once-only argument evaluation
+ENTRY 1000554
+PASS unified ABI2 facade: preserved compiler live values and exact SP/IP/BP
+
+/tmp/kd-mutex-api-2-_39tof6q/fixture:     file format elf64-x86-64
+
+
+Disassembly of section .text:
+
+0000000001000520 <api_jit_case>:
+ 1000520:	f3 0f 1e fa          	endbr64 
+ 1000524:	55                   	push   %rbp
+ 1000525:	bf 00 00 00 60       	mov    $0x60000000,%edi
+ 100052a:	48 89 e5             	mov    %rsp,%rbp
+ 100052d:	41 57                	push   %r15
+ 100052f:	41 56                	push   %r14
+ 1000531:	41 55                	push   %r13
+ 1000533:	41 54                	push   %r12
+ 1000535:	53                   	push   %rbx
+ 1000536:	48 83 ec 10          	sub    $0x10,%rsp
+ 100053a:	48 c7 45 d0 15 01 00 	movq   $0x115,-0x30(%rbp)
+ 1000541:	00 
+ 1000542:	48 89 e6             	mov    %rsp,%rsi
+ 1000545:	48 8d 15 08 00 00 00 	lea    0x8(%rip),%rdx        # 1000554 <api_jit_case+0x34>
+ 100054c:	48 89 e9             	mov    %rbp,%rcx
+ 100054f:	e8 a4 fe ff ff       	call   10003f8 <kd_mutex_direct_lock_clobber_v1>
+ 1000554:	48 8b 45 d0          	mov    -0x30(%rbp),%rax
+ 1000558:	bf 10 00 00 60       	mov    $0x60000010,%edi
+ 100055d:	48 83 c0 01          	add    $0x1,%rax
+ 1000561:	48 89 45 d0          	mov    %rax,-0x30(%rbp)
+ 1000565:	48 89 e6             	mov    %rsp,%rsi
+ 1000568:	48 8d 15 08 00 00 00 	lea    0x8(%rip),%rdx        # 1000577 <api_jit_case+0x57>
+ 100056f:	48 89 e9             	mov    %rbp,%rcx
+ 1000572:	e8 81 fe ff ff       	call   10003f8 <kd_mutex_direct_lock_clobber_v1>
+ 1000577:	48 8b 45 d0          	mov    -0x30(%rbp),%rax
+ 100057b:	bf 00 00 00 60       	mov    $0x60000000,%edi
+ 1000580:	48 83 c0 02          	add    $0x2,%rax
+ 1000584:	48 89 45 d0          	mov    %rax,-0x30(%rbp)
+ 1000588:	48 89 e6             	mov    %rsp,%rsi
+ 100058b:	48 8d 15 08 00 00 00 	lea    0x8(%rip),%rdx        # 100059a <api_jit_case+0x7a>
+ 1000592:	48 89 e9             	mov    %rbp,%rcx
+ 1000595:	e8 7f fe ff ff       	call   1000419 <kd_mutex_direct_unlock_clobber_v1>
+ 100059a:	48 8b 45 d0          	mov    -0x30(%rbp),%rax
+ 100059e:	bf 10 00 00 60       	mov    $0x60000010,%edi
+ 10005a3:	48 83 c0 04          	add    $0x4,%rax
+ 10005a7:	48 89 45 d0          	mov    %rax,-0x30(%rbp)
+ 10005ab:	48 89 e6             	mov    %rsp,%rsi
+ 10005ae:	48 8d 15 08 00 00 00 	lea    0x8(%rip),%rdx        # 10005bd <api_jit_case+0x9d>
+ 10005b5:	48 89 e9             	mov    %rbp,%rcx
+ 10005b8:	e8 5c fe ff ff       	call   1000419 <kd_mutex_direct_unlock_clobber_v1>
+ 10005bd:	48 8b 45 d0          	mov    -0x30(%rbp),%rax
+ 10005c1:	48 83 c4 10          	add    $0x10,%rsp
+ 10005c5:	5b                   	pop    %rbx
+ 10005c6:	41 5c                	pop    %r12
+ 10005c8:	41 5d                	pop    %r13
+ 10005ca:	41 5e                	pop    %r14
+ 10005cc:	41 5f                	pop    %r15
+ 10005ce:	5d                   	pop    %rbp
+ 10005cf:	c3                   	ret    
+
+Disassembly of section .init:
+
+Disassembly of section .plt:
+
+Disassembly of section .plt.sec:
+
+Disassembly of section .fini:
+
+PASS unified source API: single evaluation, void expression, nested/early release, addressable C symbols and local-result variants
+PASS unified macro hygiene: caller temporary names, selected object and once-only argument evaluation
+ENTRY 1000554
+PASS compiled unified nested entry: strict admission, exact B control exits, FULL resume and no replay
+PASS unified ABI2 facade: preserved compiler live values and exact SP/IP/BP
+PASS unified facade: actual root/nested/early-unlock compiler output, strict ABI2 admission and generated execution
+
+PASS outer native/routed cookies, once-only observation, flags fallback, live registers and metadata
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 1000BD4
+
+/tmp/kd-mutex-outer-wesoxe9y/fixture:     file format elf64-x86-64
+
+
+Disassembly of section .text:
+
+0000000001000a90 <outer_jit_case>:
+ 1000a90:	f3 0f 1e fa          	endbr64 
+ 1000a94:	55                   	push   %rbp
+ 1000a95:	ba 08 00 00 00       	mov    $0x8,%edx
+ 1000a9a:	31 c9                	xor    %ecx,%ecx
+ 1000a9c:	be 00 80 00 00       	mov    $0x8000,%esi
+ 1000aa1:	48 89 e5             	mov    %rsp,%rbp
+ 1000aa4:	41 57                	push   %r15
+ 1000aa6:	41 56                	push   %r14
+ 1000aa8:	41 55                	push   %r13
+ 1000aaa:	41 54                	push   %r12
+ 1000aac:	53                   	push   %rbx
+ 1000aad:	48 83 ec 28          	sub    $0x28,%rsp
+ 1000ab1:	64 48 8b 04 25 28 00 	mov    %fs:0x28,%rax
+ 1000ab8:	00 00 
+ 1000aba:	48 89 45 c8          	mov    %rax,-0x38(%rbp)
+ 1000abe:	31 c0                	xor    %eax,%eax
+ 1000ac0:	48 8d 45 b8          	lea    -0x48(%rbp),%rax
+ 1000ac4:	48 c7 45 c0 15 01 00 	movq   $0x115,-0x40(%rbp)
+ 1000acb:	00 
+ 1000acc:	48 89 05 cd 35 00 00 	mov    %rax,0x35cd(%rip)        # 10040a0 <test_cookie_address>
+ 1000ad3:	0f 1f 44 00 00       	nopl   0x0(%rax,%rax,1)
+ 1000ad8:	48 8b 05 21 f5 ff 5e 	mov    0x5efff521(%rip),%rax        # 60000000 <test_lock>
+ 1000adf:	48 85 c0             	test   %rax,%rax
+ 1000ae2:	75 2d                	jne    1000b11 <outer_jit_case+0x81>
+ 1000ae4:	83 05 f5 37 00 00 01 	addl   $0x1,0x37f5(%rip)        # 10042e0 <owner_cas_count>
+ 1000aeb:	80 3d f2 37 00 00 00 	cmpb   $0x0,0x37f2(%rip)        # 10042e4 <owner_cas_race>
+ 1000af2:	74 0b                	je     1000aff <outer_jit_case+0x6f>
+ 1000af4:	48 c7 05 01 f5 ff 5e 	movq   $0x9000,0x5efff501(%rip)        # 60000000 <test_lock>
+ 1000afb:	00 90 00 00 
+ 1000aff:	48 89 c8             	mov    %rcx,%rax
+ 1000b02:	f0 48 0f b1 35 f5 f4 	lock cmpxchg %rsi,0x5efff4f5(%rip)        # 60000000 <test_lock>
+ 1000b09:	ff 5e 
+ 1000b0b:	0f 84 9f 00 00 00    	je     1000bb0 <outer_jit_entry+0x5a>
+ 1000b11:	8b 05 f1 f4 ff 5e    	mov    0x5efff4f1(%rip),%eax        # 60000008 <test_lock+0x8>
+ 1000b17:	83 f8 03             	cmp    $0x3,%eax
+ 1000b1a:	74 21                	je     1000b3d <outer_jit_case+0xad>
+ 1000b1c:	f3 90                	pause  
+ 1000b1e:	48 8b 05 c3 37 00 00 	mov    0x37c3(%rip),%rax        # 10042e8 <release_on_pause>
+ 1000b25:	48 85 c0             	test   %rax,%rax
+ 1000b28:	74 0e                	je     1000b38 <outer_jit_case+0xa8>
+ 1000b2a:	48 c7 00 00 00 00 00 	movq   $0x0,(%rax)
+ 1000b31:	48 89 0d b0 37 00 00 	mov    %rcx,0x37b0(%rip)        # 10042e8 <release_on_pause>
+ 1000b38:	83 ea 01             	sub    $0x1,%edx
+ 1000b3b:	75 9b                	jne    1000ad8 <outer_jit_case+0x48>
+ 1000b3d:	bf 00 00 00 60       	mov    $0x60000000,%edi
+ 1000b42:	48 89 e6             	mov    %rsp,%rsi
+ 1000b45:	48 8d 15 0a 00 00 00 	lea    0xa(%rip),%rdx        # 1000b56 <outer_jit_entry>
+ 1000b4c:	48 89 e9             	mov    %rbp,%rcx
+ 1000b4f:	e8 fb fd ff ff       	call   100094f <kd_mutex_outer_contended_clobber_v1>
+ 1000b54:	eb 02                	jmp    1000b58 <outer_jit_entry+0x2>
+
+0000000001000b56 <outer_jit_entry>:
+ 1000b56:	31 c0                	xor    %eax,%eax
+ 1000b58:	48 89 45 b8          	mov    %rax,-0x48(%rbp)
+ 1000b5c:	48 8b 45 c0          	mov    -0x40(%rbp),%rax
+ 1000b60:	bf 00 00 00 60       	mov    $0x60000000,%edi
+ 1000b65:	48 83 c0 01          	add    $0x1,%rax
+ 1000b69:	48 89 45 c0          	mov    %rax,-0x40(%rbp)
+ 1000b6d:	48 8b 45 b8          	mov    -0x48(%rbp),%rax
+ 1000b71:	48 85 c0             	test   %rax,%rax
+ 1000b74:	75 52                	jne    1000bc8 <outer_jit_entry+0x72>
+ 1000b76:	48 89 e6             	mov    %rsp,%rsi
+ 1000b79:	48 8d 15 08 00 00 00 	lea    0x8(%rip),%rdx        # 1000b88 <outer_jit_entry+0x32>
+ 1000b80:	48 89 e9             	mov    %rbp,%rcx
+ 1000b83:	e8 f3 fd ff ff       	call   100097b <kd_mutex_direct_unlock_clobber_v1>
+ 1000b88:	48 8b 45 c0          	mov    -0x40(%rbp),%rax
+ 1000b8c:	48 8b 55 c8          	mov    -0x38(%rbp),%rdx
+ 1000b90:	64 48 2b 14 25 28 00 	sub    %fs:0x28,%rdx
+ 1000b97:	00 00 
+ 1000b99:	75 34                	jne    1000bcf <outer_jit_entry+0x79>
+ 1000b9b:	48 83 c4 28          	add    $0x28,%rsp
+ 1000b9f:	5b                   	pop    %rbx
+ 1000ba0:	41 5c                	pop    %r12
+ 1000ba2:	41 5d                	pop    %r13
+ 1000ba4:	41 5e                	pop    %r14
+ 1000ba6:	41 5f                	pop    %r15
+ 1000ba8:	5d                   	pop    %rbp
+ 1000ba9:	c3                   	ret    
+ 1000baa:	66 0f 1f 44 00 00    	nopw   0x0(%rax,%rax,1)
+ 1000bb0:	48 83 05 c8 34 00 00 	addq   $0x1,0x34c8(%rip)        # 1004080 <entries>
+ 1000bb7:	01 
+ 1000bb8:	48 c7 45 b8 00 80 00 	movq   $0x8000,-0x48(%rbp)
+ 1000bbf:	00 
+ 1000bc0:	eb 9a                	jmp    1000b5c <outer_jit_entry+0x6>
+ 1000bc2:	66 0f 1f 44 00 00    	nopw   0x0(%rax,%rax,1)
+ 1000bc8:	e8 d3 f6 ff ff       	call   10002a0 <kd_mutex_local_unlock>
+ 1000bcd:	eb b9                	jmp    1000b88 <outer_jit_entry+0x32>
+ 1000bcf:	e8 ac 04 40 ff       	call   401080 <__stack_chk_fail@plt>
+
+Disassembly of section .init:
+
+Disassembly of section .plt:
+
+Disassembly of section .plt.sec:
+
+Disassembly of section .fini:
+
+PASS actual compiled/JIT outer entry: poisoned registers, routed cookie, untouched Linux owner, COMPLETE and exact FULL
+PASS outer native/routed cookies, once-only observation, flags fallback, live registers and metadata
+PASS actual compiled outer continuation: strict ABI2 admission and generated execution
+
+production mutex resources: 11504 checks, 0 failures; nodes=4 objects=2048 regs=168
+mutex resource mutation detected: outer-entry-retries-native-cas
+mutex resource mutation detected: outer-native-result-routed
+mutex resource mutation detected: outer-queued-result-native
+mutex resource mutation detected: native-success-still-samples
+mutex resource mutation detected: local-predecessor-still-publishes
+mutex resource mutation detected: tail-loses-empty-sentinel
+mutex resource mutation detected: tail-loses-slot
+mutex resource mutation detected: tail-decodes-next-cpu
+mutex resource mutation detected: tail-truncates-slot
+mutex resource mutation detected: tail-ignores-remote-cpu
+mutex resource mutation detected: missing-stack-accepted
+mutex resource mutation detected: reservation-not-published
+mutex resource mutation detected: poll-enables-preemption
+mutex resource mutation detected: poll-returns-before-publication
+mutex resource mutation detected: release-keeps-gs
+mutex resource mutation detected: release-resets-count-generation
+mutex resource mutation detected: gate-without-native-lock
+mutex resource mutation detected: claim-publishes-held-before-physical
+mutex resource mutation detected: unlock-clears-before-physical
+mutex resource mutation detected: unlock-skips-releasing-phase
+mutex resource mutation detected: unlock-clears-successor
+mutex resource mutation detected: resume-loses-register
+mutex resource mutation detected: native-drops-task-record
+mutex resource mutation detected: hook-ignores-task-failure
+mutex resource mutation detected: unlock-drops-retained-task
+mutex resource mutation detected: hook-admits-closed-source
+mutex resource mutation detected: borrowed-unlock-bypasses-notification
+
+mutex outer production progress: 603 checks, 0 failures, 12 scenarios
+mutex routine INFO traces retained: 12
+mutation detected: alert-regression
+mutation detected: disabled-trace
+
+PASS embedded mutex state: 32 bytes/8 alignment; versioned node records, owner phases, PICKUP, release handoff, 131072 independent roots
+mutex state mutation detected: gate-claim-accepts-held
+mutex state mutation detected: record-overflow-not-rejected
+mutex state mutation detected: record-odd-not-rejected
+mutex state mutation detected: record-identity-not-checked
+mutex state mutation detected: record-generation-not-advanced
+mutex state mutation detected: record-exit-keeps-key
+mutex state mutation detected: invalid-phase-not-rejected
+mutex state mutation detected: foreign-task-query-authorized
+mutex state mutation detected: pickup-authorized
+mutex state mutation detected: physical-owner-ignored
+mutex state mutation detected: acquiring-authorized
+mutex state mutation detected: releasing-authorized
+mutex state mutation detected: combiner-not-authorized
+mutex state mutation detected: held-before-physical
+mutex state mutation detected: free-before-physical-release
+mutex state mutation detected: releasing-phase-skipped
+mutex state mutation detected: post-release-clears-successor
+
+after-outer production functions: 3438 checks, 0 failures
+....
+----------------------------------------------------------------------
+Ran 4 tests in 0.008s
+
+OK
+
+./root/kdlock-translation-venv-20261019/lib/python3.10/site-packages/miasm/jitter/jitcore_cc_base.py:8: DeprecationWarning: The distutils package is deprecated and slated for removal in Python 3.12. Use setuptools or check PEP 632 for potential alternatives
+  from distutils.sysconfig import get_python_inc
+/root/kdlock-translation-venv-20261019/lib/python3.10/site-packages/miasm/jitter/jitcore_cc_base.py:8: DeprecationWarning: The distutils.sysconfig module is deprecated, use sysconfig instead
+  from distutils.sysconfig import get_python_inc
+.............................
+----------------------------------------------------------------------
+Ran 30 tests in 1.421s
+
+OK
+
+...............[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 4008
+..............[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3000
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3000
+...................[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3000
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3000
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3000
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3000
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3000
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3000
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3000
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3000
+..[WARNING ]: cannot disasm at 1000
+[WARNING ]: cannot disasm at 1000
+...[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3000
+.....[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+.........[KD_JIT][WARN] reason=STATIC_PERCPU_SCREENING pid=0 entry="0x1000" rip="0x1005" inst="CALL       loc_key_3" action="extend_static_ranges" detail="core static/module reserved arenas only; dynamic allocations, object lifetimes and unknown pointers are not validated" cpus=2 bytes_per_cpu=8449 core_bytes=257 module_bytes=8192
+...................[KD_JIT][WARN] reason=STATIC_PERCPU_SCREENING pid=0 entry="0x1000" rip="0x1000" inst="MOV        RAX, QWORD PTR [RIP + 0x1FF9]" action="extend_static_ranges" detail="core static/module reserved arenas only; dynamic allocations, object lifetimes and unknown pointers are not validated" cpus=2 bytes_per_cpu=256 core_bytes=256 module_bytes=0
+..[KD_JIT][WARN] reason=STATIC_PERCPU_SCREENING pid=0 entry="0x1000" rip="0x1000" inst="<entry/branch instrumentation>" action="extend_static_ranges" detail="core static/module reserved arenas only; dynamic allocations, object lifetimes and unknown pointers are not validated" cpus=2 bytes_per_cpu=256 core_bytes=256 module_bytes=0
+................
+----------------------------------------------------------------------
+Ran 104 tests in 3.903s
+
+OK
+
+production JIT entry scope: 7962 checks, 0 failures
+entry/hostcall mutation detected: direct-entry-executor-is-waiter
+entry/hostcall mutation detected: direct-counts-not-observed
+entry/hostcall mutation detected: direct-limit-accepts-under-quota
+entry/hostcall mutation detected: direct-image-needs-pristine-packet
+entry/hostcall mutation detected: mutex-generic-skips-materialization
+entry/hostcall mutation detected: mutex-batch-final-completion-disabled
+entry/hostcall mutation detected: mutex-batch-wrong-backend-endpoint
+entry/hostcall mutation detected: mutex-batch-uses-private-stack
+entry/hostcall mutation detected: mutex-batch-skips-ledger-admission
+entry/hostcall mutation detected: batch-clobber-uses-legacy-entry
+entry/hostcall mutation detected: batch-clobber-uses-legacy-unlock
+entry/hostcall mutation detected: batch-completion-abi-inverted
+entry/hostcall mutation detected: dispatch-rehashes-entry
+entry/hostcall mutation detected: dispatch-reuses-old-ready-result
+entry/hostcall mutation detected: ready-ignores-closing
+entry/hostcall mutation detected: ready-plain-status-read
+entry/hostcall mutation detected: timing-clock-ignores-disable
+entry/hostcall mutation detected: timing-wrapper-not-counted
+entry/hostcall mutation detected: timing-overflow-not-marked
+entry/hostcall mutation detected: timing-hostcall-misclassified
+entry/hostcall mutation detected: scalar-argument-truncated
+entry/hostcall mutation detected: scalar-wrong-argument-register
+entry/hostcall mutation detected: scalar-result-sign-extended
+entry/hostcall mutation detected: service-flags-bypassed
+entry/hostcall mutation detected: unresolved-service-matched
+entry/hostcall mutation detected: shared-service-budget-bypassed
+entry/hostcall mutation detected: service-return-not-consumed
+entry/hostcall mutation detected: service-error-ignored
+entry/hostcall mutation detected: service-error-allows-replay
+entry/hostcall mutation detected: quota-invokes-excess-service
+entry/hostcall mutation detected: quota-consumes-pending-return
+entry/hostcall mutation detected: quota-retains-stale-control-phase
+entry/hostcall mutation detected: quota-skips-return-source-pin
+entry/hostcall mutation detected: quota-requests-callee-learning
+entry/hostcall mutation detected: string-result-sign-extended
+entry/hostcall mutation detected: string-quota-bypassed
+entry/hostcall mutation detected: string-requirement-bypassed
+entry/hostcall mutation detected: string-return-pin-bypassed
+entry/hostcall mutation detected: copy-result-truncated
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Unit tests: 11 passed, 0 failed
+make: Leaving directory '/root/host_fs/kdlock/tests/unit'

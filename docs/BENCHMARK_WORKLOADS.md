@@ -831,7 +831,9 @@ access checks. This is distinct from the mmap read batches and from the plain
 Replacing every Linux **mutex** with KD mutex does not replace `alloc_lock`,
 `siglock`, raw spinlocks, seqlocks or the **rwsem** `mmap_lock`. The current
 [mutex aliases](../include/kd_mutex_compat.h) operate on rebuilt KD mutex objects;
-ordinary C aliases execute locally, while explicit clobber callers permit JIT.
+direct blocking calls use the unified ABI2 interface and permit JIT. Callable
+lock symbols and signal/try/I/O acquisitions remain local, with public unlock
+retaining exact ownership routing.
 The closest APIs for a future real-object conversion are listed below. These
 are integration choices, **not implemented procfs/mmap adapters**. A killable
 wait can return without acquiring the lock when a fatal signal is pending;

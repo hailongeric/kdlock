@@ -1,0 +1,12 @@
+{
+  "argv": [
+    "insmod",
+    "/root/host_fs/kdlock/kernel_module/kdlock_km.ko",
+    "mutex_task_selftest=1",
+    "mutex_task_cpus=0,32,33"
+  ],
+  "cwd": "/root/host_fs/kdlock",
+  "pid": 2601410,
+  "started_ns": 432202388861534,
+  "timeout_seconds": 30
+}

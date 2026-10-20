@@ -1,0 +1,20 @@
+{
+  "passed": true,
+  "inputs": [
+    {
+      "manifest": "checks-3/source-sha256.json",
+      "matched_files": 277,
+      "mismatches": []
+    },
+    {
+      "manifest": "local-retry/source-sha256.json",
+      "matched_files": 165,
+      "mismatches": []
+    },
+    {
+      "manifest": "task-ack/sources.json",
+      "matched_files": 95,
+      "mismatches": []
+    }
+  ]
+}

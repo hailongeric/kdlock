@@ -76,9 +76,11 @@ def production():
         "void __kd_mutex_lock(struct kd_mutex *lock, unsigned long ret_rsp,",
         "void __kd_mutex_lock_clobber_v1(struct kd_mutex *lock, unsigned long sp,",
         "void __kd_mutex_unlock(struct kd_mutex *lock, unsigned long ret_rsp,",
+        "void kd_mutex_api_unlock(struct kd_mutex *lock)",
     ):
         code += definition(hook, marker)
     code += "void " + definition(hook, "kd_mutex_direct_contended_clobber_v1(struct kd_mutex *lock, unsigned long sp,")
+    code += "void " + definition(hook, "kd_mutex_direct_unlock_clobber_v1(struct kd_mutex *lock, unsigned long sp,")
     code += "unsigned long " + definition(hook, "kd_mutex_outer_contended_clobber_v1(struct kd_mutex *lock, unsigned long sp,")
     return code
 

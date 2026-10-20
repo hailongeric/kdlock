@@ -1,0 +1,11 @@
+{
+  "argv": [
+    "/root/kdlock-translation-venv-20261019/bin/python3",
+    "/root/host_fs/kdlock/disassem/device_session.py",
+    "retire"
+  ],
+  "cwd": "/root/host_fs/kdlock",
+  "pid": 2601447,
+  "started_ns": 432202707708491,
+  "timeout_seconds": 30
+}

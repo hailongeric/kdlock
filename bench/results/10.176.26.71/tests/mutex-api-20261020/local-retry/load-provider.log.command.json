@@ -1,0 +1,10 @@
+{
+  "argv": [
+    "insmod",
+    "/root/kdlock-evidence/10.176.26.71/tests/mutex-api-20261020/local-retry/source/kernel_module/kdlock_km.ko"
+  ],
+  "cwd": "/root/host_fs/kdlock",
+  "pid": 2600730,
+  "started_ns": 432186264082129,
+  "timeout_seconds": 30
+}

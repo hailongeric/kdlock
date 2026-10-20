@@ -1,0 +1,15 @@
+{
+  "argv": [
+    "make",
+    "-C",
+    "/root/kdlock-evidence/10.176.26.71/tests/mutex-api-20261020/local-retry/source/kernel_module",
+    "KDIR=/root/linux-6.1.159-kdclobber2",
+    "W=1",
+    "KDLOCK_SELFTEST=0",
+    "UBSAN_SANITIZE=n"
+  ],
+  "cwd": "/root/host_fs/kdlock",
+  "pid": 2599651,
+  "started_ns": 432172606460864,
+  "timeout_seconds": 180
+}

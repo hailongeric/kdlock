@@ -131,10 +131,51 @@ admission or lifetime mechanism. `kd_mutex_destroy()` diagnoses a busy object.
 [kd_mutex_compat.h](../../include/kd_mutex_compat.h) provides source aliases for
 ordinary init/static-init/destroy, lock/unlock, trylock/is-locked,
 interruptible/killable/I/O locking, non-lockdep nested forms and
-`atomic_dec_and_mutex_lock`. Ordinary C aliases execute locally. Explicit
-[kd_mutex_direct.h](../../include/kd_mutex_direct.h) clobber callers enable JIT
-delegation on the same object; the benchmark retains its accepted outer-cookie
-caller shell. Return-valued and task-sensitive APIs stay on the original task.
+`atomic_dec_and_mutex_lock`. Direct blocking calls use the unified
+[`kd_mutex_lock/unlock`](../../include/kd_mutex_api.h) ABI2 macros, backed by
+`KD_MUTEX_DIRECT_LOCK/UNLOCK`. The caller supplies one lock argument, with no
+cookie or named continuation. Nested translated calls use the same exact lock
+ledger as the direct interface. Signal/try/I/O and last-reference acquisitions
+stay on the original task; every successful public acquisition can pair with
+`kd_mutex_unlock`, which retains native-owner ACK and gate-owner retirement.
+
+The addressable `kd_mutex_lock` C function has the ordinary C ABI and acquires
+locally. Taking its address, calling it indirectly, or writing
+`(kd_mutex_lock)(lock)` does not establish the caller-clobber contract needed
+for delegation. The addressable `kd_mutex_unlock` still performs exact provider
+routing. Their declarations use the assembler/export names `kd_mutex_api_lock`
+and `kd_mutex_api_unlock`, avoiding the captured kernel's legacy
+`kd_mutex_lock/unlock` exports. The source-level API names stay unchanged.
+Compatibility aliases map bare function names to these KD functions as
+well as mapping direct calls to the macros. Explicit
+`kd_mutex_local_lock/unlock` remains available for internal and intentionally
+local pairs. The conventional public C entry points are native-only admission
+boundaries: the translator does not learn their implementations as critical
+section bodies. Supported translated nesting uses the ABI2 direct control
+endpoints emitted by the public macros.
+
+The captured non-lockdep initialization spellings also map to KD:
+`__mutex_init` uses `__kd_mutex_init`, and `devm_mutex_init` /
+`__devm_mutex_init` use their KD counterparts. Name and class-key parameters do
+not create lockdep state. `kd_devm_mutex_init` initializes the object before
+calling `__kd_devm_mutex_init`, which returns zero without adding a device
+cleanup action in the captured non-debug configuration. Neither supplies a new
+object-lifetime guarantee.
+
+`guard(kd_mutex)` and `CLASS(kd_mutex, ...)` acquire through the conventional
+local lock function. Guard cleanup and `__free(kd_mutex)` use routed public
+unlock. The compatibility header explicitly
+maps the captured `class_mutex_t`, constructor/destructor and `__free_mutex`
+helpers so `guard(mutex)`, `CLASS(mutex, ...)` and `__free(mutex)` remain KD-only.
+These cleanup helpers do not establish an ABI2 delegation boundary. They must
+not be used to mix existing Linux objects with converted KD objects.
+
+The existing `KD_MUTEX_OUTER_LOCK/UNLOCK` pair remains a separate optimization
+with its inline bounded probes and exact acquisition cookie; existing benchmark
+shells retain that pair. The unified direct interface uses the provider's
+physical fast acquisition and does not claim the outer cookie's routing cost
+or its measured performance. Return-valued and task-sensitive controls remain
+ineligible for translated execution.
 The translator refuses Linux mutex APIs and the old kernel mutex bridge.
 
 Historical `kd_origin_mutex_*` helper and `mutex_origin_*` observation names are

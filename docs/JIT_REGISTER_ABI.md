@@ -78,11 +78,20 @@ The contended outer entry returns an exact native owner only before taking a KD
 reference/gate; entry into the KD queue returns zero. The separate JIT continuation
 defines zero before writing the cookie, so MINIMAL never depends on incoming RAX.
 
-Nested translated operations keep `KD_MUTEX_DIRECT_LOCK/UNLOCK`. Ordinary aliases
-use local KD physical locking; they do not restore a Linux-mutex backing object.
-Interruptible, killable, I/O-related, trylock and explicit nested interfaces keep
-their documented contracts. See
-[mutex routing](design/locking.md#mutex-outer-direct).
+The unified `kd_mutex_lock/unlock` macros and ordinary blocking aliases expand
+to `KD_MUTEX_DIRECT_LOCK/UNLOCK` with an internal numeric continuation. They use
+ABI2 for both outer and supported nested translated operations, without a caller
+cookie or named global label. The explicit outer pair remains separate.
+Addressable/function-pointer lock calls preserve the ordinary C ABI and acquire
+locally because those callers have not declared ABI2 clobbers. Callable public
+unlock still uses exact provider routing. These C declarations use the distinct
+assembler/export names `kd_mutex_api_lock/unlock`; both remain native-only
+admission boundaries, and the translator does not learn their implementations.
+Scope guard/free helpers use these conventional functions.
+Interruptible, killable, I/O-related,
+trylock and last-reference acquisitions remain local; non-lockdep nested blocking
+annotations use the unified direct interface. No Linux mutex object participates.
+See [mutex routing](design/locking.md#entry-completion-and-task-routing).
 
 ## Private packet layout
 

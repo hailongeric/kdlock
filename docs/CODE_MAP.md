@@ -19,7 +19,7 @@ public lock families and their canonical implementation guides.
 | [kd_mutex_local.c](../kernel_module/kd_mutex_local.c), [kd_mutex_osq.c](../kernel_module/kd_mutex_osq.c) | KD-owned ordinary mutex exclusion, sleeping waiters, signal cancellation and private OSQ |
 | [kd_mutex_state.h](../include/kd_mutex_state.h) | Embedded gate claim and owner phase stores; versioned waiter records in reserved nodes |
 | [mutex/count.inc](../kernel_module/mutex/count.inc) | Cold exact waiter snapshots and controlled drain checks; no shared waiter-count updates |
-| [kd_mutex_compat.h](../include/kd_mutex_compat.h) | Source aliases for an exclusively KD ordinary-mutex build |
+| [kd_mutex_api.h](../include/kd_mutex_api.h), [kd_mutex_compat.h](../include/kd_mutex_compat.h) | Unified ABI2 blocking calls, callable local acquisition and source aliases for an exclusively KD mutex build |
 | [kd_rwsem.h](../include/kd_rwsem.h), [kd_rwsem_direct.h](../include/kd_rwsem_direct.h), [kd_rwsem.c](../kernel_module/kd_rwsem.c) | Sleeping readers, ordinary writers and outer ABI2 writers; phase reservations drain readers before the unchanged mutex queue |
 | [kd_mutex_tasks.c](../kernel_module/kd_mutex_tasks.c) | Exact task/acquisition references and RCU removal |
 | [kd_lock.c](../kernel_module/kd_lock.c) → [lock](../kernel_module/lock) | Nested control CALLs and direct KD mutex routing; no Linux mutex bridge |

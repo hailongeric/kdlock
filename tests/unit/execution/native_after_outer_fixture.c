@@ -23,7 +23,7 @@ struct list_head {
 typedef struct {
 	int value;
 } raw_spinlock_t;
-struct mutex {
+struct kd_mutex {
 	int value;
 };
 
@@ -53,7 +53,7 @@ static unsigned long direct_mutex_lock_addr = 0x320, direct_mutex_unlock_addr = 
 static unsigned long contended_mutex_lock_addr = 0x330;
 static unsigned long outer_mutex_lock_addr = 0x340;
 static unsigned long mutex_lock_addr = 0x300, mutex_unlock_addr = 0x400;
-static struct mutex a, b;
+static struct kd_mutex a, b;
 static struct task_struct native_peer = { .pid = 13 }, *nested_owner;
 static bool track_nested_owner;
 static unsigned int nested_acquires, nested_waits;
@@ -146,7 +146,7 @@ struct kd_exec_frame *kd_exec_current_frame(void)
 {
 	return active;
 }
-static int kd_mutex_nested_unlock(struct mutex *lock)
+static int kd_mutex_nested_unlock(struct kd_mutex *lock)
 {
 	if (lock != &b)
 		return -EINVAL;
@@ -164,7 +164,7 @@ static void kd_mutex_note_nested_jit(void)
 {
 	nested_jit++;
 }
-static int kd_mutex_nested_lock(struct mutex *lock);
+static int kd_mutex_nested_lock(struct kd_mutex *lock);
 static int kd_spin_jit_nested_lock_ctx(raw_spinlock_t *lock,
 				       struct kd_regs *regs,
 				       struct kd_exec_frame *frame)
@@ -205,7 +205,7 @@ static int kd_spin_jit_outer_unlock_ooo_ctx(raw_spinlock_t *lock,
 
 /* The native wait is deterministic. The actual nested-call producer must not
  * publish B or consume its CALL until this substituted acquisition returns. */
-static int kd_mutex_nested_lock(struct mutex *lock)
+static int kd_mutex_nested_lock(struct kd_mutex *lock)
 {
 	CHECK(track_nested_owner && lock == &b && current == &executor);
 	CHECK(active->control_call.phase == KD_CALL_ENTERED);
@@ -820,8 +820,10 @@ static void check_acquired_spin_native(void)
  * native peer wait. It resumes after lock(B), never after a remote unlock(B). */
 static void check_mutex_call_pair(void)
 {
-	/* Original Linux, captured kernel bridge and explicit module endpoints
-	 * must preserve the same ownership/continuation contract through FULL. */
+	/* Local KD and explicit clobber controls preserve exact ownership through
+	 * FULL. Synthetic nonzero bridge addresses additionally retain coverage
+	 * of historical recovery branches; the current registry disables those
+	 * bridge endpoints, and admission refuses Linux mutex calls. */
 	const unsigned long locks[] = { mutex_lock_addr, clobber_mutex_lock_addr, direct_mutex_lock_addr, contended_mutex_lock_addr };
 	const unsigned long unlocks[] = { mutex_unlock_addr, clobber_mutex_unlock_addr, direct_mutex_unlock_addr, direct_mutex_unlock_addr };
 	for (unsigned int endpoint = 0; endpoint < sizeof(locks) / sizeof(locks[0]); endpoint++)
