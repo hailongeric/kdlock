@@ -173,7 +173,52 @@
  	kd_hotlock_cool_spin_pinned();
 --- a/kernel_module/spin/entry.inc
 +++ b/kernel_module/spin/entry.inc
-@@ -171,20 +171,33 @@
+@@ -105,8 +105,10 @@
+ 	u32 cnt;
+ 
+ 	if (preempt_count() != 1) {
+-		if (kd_spin_entry_begin_pinned((raw_spinlock_t *)lock, &request.ref))
++		if (kd_spin_entry_begin_pinned((raw_spinlock_t *)lock, &request.ref)) {
++			KD_ADMISSION_NOTE(contended_ticket_refused);
+ 			goto native;
++		}
+ 		val = atomic_cmpxchg_acquire(&word->val, 0, _Q_LOCKED_VAL_HL);
+ 		if (!val)
+ 			goto acquired;
+@@ -130,24 +132,30 @@
+ 		atomic_cond_read_acquire(&word->val,
+ 								 !(VAL & _Q_LOCKED_MASK_HL));
+ 	clear_pending_set_locked(word);
++	KD_ADMISSION_NOTE(contended_pending);
+ 	goto acquired;
+ queue:
++	KD_ADMISSION_NOTE(contended_queue);
+ 	/* A sole pending owner never publishes a continuation or lends its
+ 	 * ownership to a remote executor. Defer its ticket until MCS admission;
+ 	 * fast/pending success can use the same CPU-local physical owner record.
+ 	 * Nested callers reserved above and retain their independent ticket. */
+ 	if (!request.ref.entry &&
+-	    kd_spin_entry_begin_pinned((raw_spinlock_t *)lock, &request.ref))
+-		goto native;
++	    kd_spin_entry_begin_pinned((raw_spinlock_t *)lock, &request.ref)) {
++		KD_ADMISSION_NOTE(contended_ticket_refused);
++		goto native;
++	}
+ 	/* Before publication, an absent/refused translation needs only an MCS
+ 	 * node. Keep registration for later admission, but allocate no logical
+ 	 * packet/frame and never lend this caller's stack to a combiner. */
+ 	if (preempt_count() != 1 ||
+ 	    !kd_exe_entry_is_ready(kd_get_exe(0, rip), 0, rip)) {
++		KD_ADMISSION_NOTE(contended_notready);
+ 		kd_exe_add_abi(0, rip, KD_EXE_LOCK_SPIN, abi);
+ 		kd_spin_acquire_nondelegated(word);
+ 		goto acquired;
+ 	}
++	KD_ADMISSION_NOTE(contended_ready);
+ 	kd_spin_lock_slowpath(lock, rsp_value, &request, rip, bp, abi);
+ 	/* Every intact slowpath return has already claimed (or reclaimed) the
+ 	 * ticket, including capacity fallback. Remote completion never returns
+@@ -171,20 +179,33 @@
  	u32 val = 0;
  
  	kd_hotlock_spin_entry_pinned();
@@ -213,3 +258,65 @@
  	kd_spin_lock_contended(lock, rsp_value, rip, bp, abi, val);
  	return;
  native:
+--- a/kernel_module/spin/slowpath.inc
++++ b/kernel_module/spin/slowpath.inc
+@@ -159,11 +159,13 @@
+ 
+ 	if (((val & _Q_TAIL_MASK_HL) == tail) &&
+ 	    atomic_try_cmpxchg_relaxed(&word->val, &val, _Q_LOCKED_VAL_HL)) {
++		KD_ADMISSION_NOTE(head_single);
+ 		goto release; /* No contention */
+ 	}
+ 
+ 	/* Either somebody is queued behind us or _Q_PENDING_VAL_HL is set */
+ 	check_and_set_combiner(word);
++	KD_ADMISSION_NOTE(head_multiple);
+ 	kd_spin_claim_origin(request);
+ 	/* This request now owns Linux L. Record before releasing/reusing its node
+ 	 * to process followers; the combiner's batch is not this queue interval. */
+@@ -303,6 +305,7 @@
+ 	idx = this_cpu_inc_return(kd_spin_cpu.node_count) - 1;
+ 	barrier();
+ 	if (unlikely(idx >= MAX_NODES)) {
++		KD_ADMISSION_NOTE(slow_node_full);
+ 		this_cpu_dec(kd_spin_cpu.node_count);
+ 		kd_spin_selftest_node_event(KD_NODE_NATIVE_FULL);
+ 		while (!kd_spin_trylock(word))
+@@ -312,6 +315,7 @@
+ 	}
+ 	execution = kd_spin_continuation_reserve();
+ 	if (unlikely(!execution)) {
++		KD_ADMISSION_NOTE(slow_frame_full);
+ 		this_cpu_dec(kd_spin_cpu.node_count);
+ 		/* Continuation exhaustion does not exhaust independent MCS nodes. */
+ 		kd_spin_acquire_nondelegated(word);
+--- a/kernel_module/spin/combiner.inc
++++ b/kernel_module/spin/combiner.inc
+@@ -397,8 +397,19 @@
+ 		.numa_scan_left = kd_combiner_batch_size,
+ 	};
+ 
++	KD_ADMISSION_NOTE(combiner_calls);
+ 	if (next_node == NULL || check_irq_node(curr_node) ||
+ 	    check_irq_node(next_node) || !kd_source_frame_get()) {
++		/* Node kind is immutable while this head owns the queue. Classify
++		 * the original refusal without repeating source-lease acquisition. */
++		if (next_node == NULL)
++			KD_ADMISSION_NOTE(combiner_missing_next);
++		else if (check_irq_node(curr_node))
++			KD_ADMISSION_NOTE(combiner_native_current);
++		else if (check_irq_node(next_node))
++			KD_ADMISSION_NOTE(combiner_native_next);
++		else
++			KD_ADMISSION_NOTE(combiner_source_refused);
+ 		set_locked(request->word);
+ 		/*
+ 		 * Make this node spin on the locked variable and then it will
+@@ -410,6 +421,7 @@
+ 	}
+ 
+ 	struct kd_spin_cpu_state *ptr = this_cpu_ptr(&kd_spin_cpu);
++	KD_ADMISSION_NOTE(combiner_admitted);
+ 	batch.diag = diag;
+ 	kd_spin_debug_combiner(batch.diag, kd_spin_lock_stack_depth(ptr));
+ 

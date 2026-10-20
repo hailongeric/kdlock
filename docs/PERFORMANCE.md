@@ -113,8 +113,12 @@ these are instrumentation observations, not an optimization claim.
 All 12 exact retirements and 59,561 inert evidence checks pass, while the
 72-versus-67 host endpoint fails. The separate remaining-coverage run has now
 completed all 69 cases: 59 strict successes, ten strict NO_JIT failures and a
-76-versus-67 host mismatch. Its audit and descriptive variance report are
-pending. The seven mutex regressions and latency gaps remain unresolved.
+76-versus-67 host mismatch. Its 12,155 evidence checks pass, including 23 exact
+retirements. Eight-worker KD results lack three successful same-class repeats.
+At sixty workers, both n16 variants meet observed two-rate parity against
+both controls; both n128 variants miss it. Maximum three-repeat spreads are
+7.25% KD, 9.49% Native and 7.42% TCLock. These remain descriptive results under
+the failed endpoint. The seven mutex regressions and latency gaps are unresolved.
 
 ## Fresh 32-byte mutex comparison with Native and TCLock
 

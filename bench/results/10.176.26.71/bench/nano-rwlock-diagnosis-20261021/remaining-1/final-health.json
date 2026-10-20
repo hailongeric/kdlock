@@ -1,0 +1,435 @@
+{
+  "boot_id": "b65f0205-c8f9-4385-8b13-039cbce243a6",
+  "cases": [
+    {
+      "drained": true,
+      "error": "required complete KD body did not execute",
+      "name": "list-n16-kdlock-w020-t08-r01",
+      "status": "NO_JIT"
+    },
+    {
+      "drained": true,
+      "error": null,
+      "name": "list-n16-tclock-w020-t08-r01",
+      "status": "OK"
+    },
+    {
+      "drained": true,
+      "error": null,
+      "name": "list-n16-native-w020-t08-r01",
+      "status": "OK"
+    },
+    {
+      "drained": true,
+      "error": null,
+      "name": "list-n16-native-w020-t08-r02",
+      "status": "OK"
+    },
+    {
+      "drained": true,
+      "error": null,
+      "name": "list-n16-tclock-w020-t08-r02",
+      "status": "OK"
+    },
+    {
+      "drained": true,
+      "error": null,
+      "name": "list-n16-kdlock-w020-t08-r02",
+      "status": "OK"
+    },
+    {
+      "drained": true,
+      "error": null,
+      "name": "list-n16-native-w020-t60-r00",
+      "status": "OK"
+    },
+    {
+      "drained": true,
+      "error": null,
+      "name": "list-n16-tclock-w020-t60-r00",
+      "status": "OK"
+    },
+    {
+      "drained": true,
+      "error": null,
+      "name": "list-n16-kdlock-w020-t60-r00",
+      "status": "OK"
+    },
+    {
+      "drained": true,
+      "error": null,
+      "name": "list-n16-kdlock-w020-t60-r01",
+      "status": "OK"
+    },
+    {
+      "drained": true,
+      "error": null,
+      "name": "list-n16-tclock-w020-t60-r01",
+      "status": "OK"
+    },
+    {
+      "drained": true,
+      "error": null,
+      "name": "list-n16-native-w020-t60-r01",
+      "status": "OK"
+    },
+    {
+      "drained": true,
+      "error": null,
+      "name": "list-n16-native-w020-t60-r02",
+      "status": "OK"
+    },
+    {
+      "drained": true,
+      "error": null,
+      "name": "list-n16-tclock-w020-t60-r02",
+      "status": "OK"
+    },
+    {
+      "drained": true,
+      "error": null,
+      "name": "list-n16-kdlock-w020-t60-r02",
+      "status": "OK"
+    },
+    {
+      "drained": true,
+      "error": null,
+      "name": "list-n128-native-w020-t08-r00",
+      "status": "OK"
+    },
+    {
+      "drained": true,
+      "error": null,
+      "name": "list-n128-tclock-w020-t08-r00",
+      "status": "OK"
+    },
+    {
+      "drained": true,
+      "error": "required complete KD body did not execute",
+      "name": "list-n128-kdlock-w020-t08-r00",
+      "status": "NO_JIT"
+    },
+    {
+      "drained": true,
+      "error": "required complete KD body did not execute",
+      "name": "list-n128-kdlock-w020-t08-r01",
+      "status": "NO_JIT"
+    },
+    {
+      "drained": true,
+      "error": null,
+      "name": "list-n128-tclock-w020-t08-r01",
+      "status": "OK"
+    },
+    {
+      "drained": true,
+      "error": null,
+      "name": "list-n128-native-w020-t08-r01",
+      "status": "OK"
+    },
+    {
+      "drained": true,
+      "error": null,
+      "name": "list-n128-native-w020-t08-r02",
+      "status": "OK"
+    },
+    {
+      "drained": true,
+      "error": null,
+      "name": "list-n128-tclock-w020-t08-r02",
+      "status": "OK"
+    },
+    {
+      "drained": true,
+      "error": "required complete KD body did not execute",
+      "name": "list-n128-kdlock-w020-t08-r02",
+      "status": "NO_JIT"
+    },
+    {
+      "drained": true,
+      "error": null,
+      "name": "list-n128-native-w020-t60-r00",
+      "status": "OK"
+    },
+    {
+      "drained": true,
+      "error": null,
+      "name": "list-n128-tclock-w020-t60-r00",
+      "status": "OK"
+    },
+    {
+      "drained": true,
+      "error": null,
+      "name": "list-n128-kdlock-w020-t60-r00",
+      "status": "OK"
+    },
+    {
+      "drained": true,
+      "error": null,
+      "name": "list-n128-kdlock-w020-t60-r01",
+      "status": "OK"
+    },
+    {
+      "drained": true,
+      "error": null,
+      "name": "list-n128-tclock-w020-t60-r01",
+      "status": "OK"
+    },
+    {
+      "drained": true,
+      "error": null,
+      "name": "list-n128-native-w020-t60-r01",
+      "status": "OK"
+    },
+    {
+      "drained": true,
+      "error": null,
+      "name": "list-n128-native-w020-t60-r02",
+      "status": "OK"
+    },
+    {
+      "drained": true,
+      "error": null,
+      "name": "list-n128-tclock-w020-t60-r02",
+      "status": "OK"
+    },
+    {
+      "drained": true,
+      "error": null,
+      "name": "list-n128-kdlock-w020-t60-r02",
+      "status": "OK"
+    },
+    {
+      "drained": true,
+      "error": null,
+      "name": "list-prefetch-n16-native-w020-t08-r00",
+      "status": "OK"
+    },
+    {
+      "drained": true,
+      "error": null,
+      "name": "list-prefetch-n16-tclock-w020-t08-r00",
+      "status": "OK"
+    },
+    {
+      "drained": true,
+      "error": "required complete KD body did not execute",
+      "name": "list-prefetch-n16-kdlock-w020-t08-r00",
+      "status": "NO_JIT"
+    },
+    {
+      "drained": true,
+      "error": "required complete KD body did not execute",
+      "name": "list-prefetch-n16-kdlock-w020-t08-r01",
+      "status": "NO_JIT"
+    },
+    {
+      "drained": true,
+      "error": null,
+      "name": "list-prefetch-n16-tclock-w020-t08-r01",
+      "status": "OK"
+    },
+    {
+      "drained": true,
+      "error": null,
+      "name": "list-prefetch-n16-native-w020-t08-r01",
+      "status": "OK"
+    },
+    {
+      "drained": true,
+      "error": null,
+      "name": "list-prefetch-n16-native-w020-t08-r02",
+      "status": "OK"
+    },
+    {
+      "drained": true,
+      "error": null,
+      "name": "list-prefetch-n16-tclock-w020-t08-r02",
+      "status": "OK"
+    },
+    {
+      "drained": true,
+      "error": "required complete KD body did not execute",
+      "name": "list-prefetch-n16-kdlock-w020-t08-r02",
+      "status": "NO_JIT"
+    },
+    {
+      "drained": true,
+      "error": null,
+      "name": "list-prefetch-n16-native-w020-t60-r00",
+      "status": "OK"
+    },
+    {
+      "drained": true,
+      "error": null,
+      "name": "list-prefetch-n16-tclock-w020-t60-r00",
+      "status": "OK"
+    },
+    {
+      "drained": true,
+      "error": null,
+      "name": "list-prefetch-n16-kdlock-w020-t60-r00",
+      "status": "OK"
+    },
+    {
+      "drained": true,
+      "error": null,
+      "name": "list-prefetch-n16-kdlock-w020-t60-r01",
+      "status": "OK"
+    },
+    {
+      "drained": true,
+      "error": null,
+      "name": "list-prefetch-n16-tclock-w020-t60-r01",
+      "status": "OK"
+    },
+    {
+      "drained": true,
+      "error": null,
+      "name": "list-prefetch-n16-native-w020-t60-r01",
+      "status": "OK"
+    },
+    {
+      "drained": true,
+      "error": null,
+      "name": "list-prefetch-n16-native-w020-t60-r02",
+      "status": "OK"
+    },
+    {
+      "drained": true,
+      "error": null,
+      "name": "list-prefetch-n16-tclock-w020-t60-r02",
+      "status": "OK"
+    },
+    {
+      "drained": true,
+      "error": null,
+      "name": "list-prefetch-n16-kdlock-w020-t60-r02",
+      "status": "OK"
+    },
+    {
+      "drained": true,
+      "error": null,
+      "name": "list-prefetch-n128-native-w020-t08-r00",
+      "status": "OK"
+    },
+    {
+      "drained": true,
+      "error": null,
+      "name": "list-prefetch-n128-tclock-w020-t08-r00",
+      "status": "OK"
+    },
+    {
+      "drained": true,
+      "error": "required complete KD body did not execute",
+      "name": "list-prefetch-n128-kdlock-w020-t08-r00",
+      "status": "NO_JIT"
+    },
+    {
+      "drained": true,
+      "error": "required complete KD body did not execute",
+      "name": "list-prefetch-n128-kdlock-w020-t08-r01",
+      "status": "NO_JIT"
+    },
+    {
+      "drained": true,
+      "error": null,
+      "name": "list-prefetch-n128-tclock-w020-t08-r01",
+      "status": "OK"
+    },
+    {
+      "drained": true,
+      "error": null,
+      "name": "list-prefetch-n128-native-w020-t08-r01",
+      "status": "OK"
+    },
+    {
+      "drained": true,
+      "error": null,
+      "name": "list-prefetch-n128-native-w020-t08-r02",
+      "status": "OK"
+    },
+    {
+      "drained": true,
+      "error": null,
+      "name": "list-prefetch-n128-tclock-w020-t08-r02",
+      "status": "OK"
+    },
+    {
+      "drained": true,
+      "error": "required complete KD body did not execute",
+      "name": "list-prefetch-n128-kdlock-w020-t08-r02",
+      "status": "NO_JIT"
+    },
+    {
+      "drained": true,
+      "error": null,
+      "name": "list-prefetch-n128-native-w020-t60-r00",
+      "status": "OK"
+    },
+    {
+      "drained": true,
+      "error": null,
+      "name": "list-prefetch-n128-tclock-w020-t60-r00",
+      "status": "OK"
+    },
+    {
+      "drained": true,
+      "error": null,
+      "name": "list-prefetch-n128-kdlock-w020-t60-r00",
+      "status": "OK"
+    },
+    {
+      "drained": true,
+      "error": null,
+      "name": "list-prefetch-n128-kdlock-w020-t60-r01",
+      "status": "OK"
+    },
+    {
+      "drained": true,
+      "error": null,
+      "name": "list-prefetch-n128-tclock-w020-t60-r01",
+      "status": "OK"
+    },
+    {
+      "drained": true,
+      "error": null,
+      "name": "list-prefetch-n128-native-w020-t60-r01",
+      "status": "OK"
+    },
+    {
+      "drained": true,
+      "error": null,
+      "name": "list-prefetch-n128-native-w020-t60-r02",
+      "status": "OK"
+    },
+    {
+      "drained": true,
+      "error": null,
+      "name": "list-prefetch-n128-tclock-w020-t60-r02",
+      "status": "OK"
+    },
+    {
+      "drained": true,
+      "error": null,
+      "name": "list-prefetch-n128-kdlock-w020-t60-r02",
+      "status": "OK"
+    }
+  ],
+  "exact_retirements": 23,
+  "final_metadata_observed_unix": 1792523357.8475184,
+  "host_endpoint_pass": false,
+  "idle": true,
+  "immutable_hashes_checked": 361,
+  "jit_completions": 161561,
+  "operations": 451947520,
+  "per_session_kernel_faults": [],
+  "prior_health_sha256": "8e70bc1005009bb0a76322a69b3c635630501c8c31ef51b37033d22fa3934db4",
+  "reads": 361558082,
+  "scope": "Fresh idle check after final metadata attachment; strict NO_JIT failures remain failures",
+  "status_counts": {
+    "NO_JIT": 10,
+    "OK": 59
+  },
+  "writes": 90389438
+}

@@ -243,6 +243,12 @@ def main():
                            ('queue_unheld', 'queue_missing_tail', 'queue_short',
                             'queue_missing_link', 'queue_pass')),
                            'incomplete native queue-prefix classification')
+                if 'combiner_calls' in delta:
+                    rt.require(count('combiner_calls') == sum(count(k) for k in
+                               ('combiner_missing_next', 'combiner_native_current',
+                                'combiner_native_next', 'combiner_source_refused',
+                                'combiner_admitted')),
+                               'incomplete initial combiner classification')
             self.record.setdefault('admission', {})[label] = dict(before=before, after=after, delta=delta)
             self.save()
             return result

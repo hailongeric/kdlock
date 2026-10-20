@@ -167,8 +167,11 @@ Queue-prefix vetoes dominate the eight-worker heat behavior, while 19,699 hot
 slowpath entries still never start a combiner; a focused extension is needed
 to classify that later refusal. The original remaining 69 cases then completed
 with 59 strict successes and ten strict NO_JIT failures, all drained. Their
-76-thread endpoint fails too. Missing-case coverage is closed; strict execution,
-host interference and performance acceptance remain open pending final audit.
+76-thread endpoint fails too. Its 12,155 evidence-integrity checks and 23 exact
+retirements pass. Missing-case coverage is closed; strict execution, host
+interference and performance acceptance remain open. A 50-field diagnostic
+extension now observes the unchanged initial combiner decisions and exact
+source-lease refusal, with separate fixed matched controls.
 
 Keep the two-word wrapper ABI, separate backend identities, exact KD physical owners,
 exact acquisition references and final ACKs. Shared storage must survive its final

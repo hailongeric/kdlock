@@ -10,10 +10,11 @@ The first targets are the strict `list-n16-kdlock-w020-t08-r00` failure and
 the original 83/86-versus-67 host endpoint failures. Their data, images,
 retirements, receipts and complete archives remain unchanged in the
 [prior report](../nano-list-followup-20261020/README.md).
-The remaining 69 rwlock cases, seven mutex regressions, p95 measurement and
-overhead, shared-family acceptance and real mmap/fault integration remain
-required work. Diagnostic instrumentation and its overhead will be identified
-separately from acceptance results.
+The original 69-case rwlock coverage gap is now closed, with ten strict
+failures retained. The seven mutex regressions, p95 measurement and overhead,
+shared-family acceptance and real mmap/fault integration remain required work.
+Diagnostic instrumentation and its overhead are identified separately from
+acceptance results.
 
 The initial host hypothesis comes from the
 [QEMU 8.2.2 thread-pool source](https://raw.githubusercontent.com/qemu/qemu/v8.2.2/util/thread-pool.c):
@@ -81,7 +82,7 @@ exact source retirement. Every other error stops the sequence. Completing
 coverage does not convert a failed case into a pass; overall success still
 requires every planned case to pass. Both plans retain the strict 67-thread
 host admission check and require fresh recovery-snapshot confirmation.
-Preparation, basic/affected checks and live runs are not yet complete.
+The completed checks and both live plans are reported below.
 
 `admission-1` preparation failed before compilation: the Makefile hunk described
 production context and omitted the original benchmark overlay's `kd_bench.o`.
@@ -162,6 +163,51 @@ This closes the missing-case coverage gap. It does not resolve the original
 failure or convert any of these ten cases into passes. The immediate host
 endpoint contains 76 threads versus the required 67. A preceding 68-thread
 preflight rejection and the successful fresh 67-thread receipt are preserved.
-Archival and independent review are in progress; per-case variation and any
-split execution classes must remain separate from the earlier three cases
-and from the instrumented diagnostic runs.
+The [archive manifest](remaining-1/archives.json) has SHA-256
+`0a331dce9b46915433672fc19d3ea1d47d5975d22b51b88166f60063ce5f72ac`.
+Raw archives remain under
+`raw/bench/nano-rwlock-diagnosis-20261021/remaining-1/archives/`.
+The [independent review](remaining-1/offline-review.json) passed 12,155
+evidence-integrity checks over 2,243 files and 47 symlinks. All 23 KD sessions
+retired exactly; measured entries/completions match at 161,561. The 69 sessions
+completed 451,947,520 operations (361,558,082 reads and 90,389,438 writes).
+No retained kernel fault matches were found.
+
+All twelve sixty-worker KD sessions passed the returned-body requirement.
+At eight workers, ten of eleven KD sessions failed it; plain n16 repeat 2
+returned seven bodies. Its single positive sample is kept separate from
+repeat 1's zero-body result and the earlier run's repeat 0. No eight-worker
+KD point has three successful, same-class repetitions here.
+
+The [groups](remaining-1/groups.csv) retain every class, repetition, range,
+spread and sample CV. The [comparisons](remaining-1/comparisons.csv) describe
+only complete three-repeat groups. Among the four eligible sixty-worker
+points, the two n16 variants meet observed median-whole/best-peak parity
+against both controls. Both n128 variants miss it:
+
+| Variant, 60 workers | Control | Median whole ratio | Best peak ratio |
+| --- | --- | ---: | ---: |
+| Plain, 128 nodes | Native | 0.9262 | 0.9327 |
+| Plain, 128 nodes | TCLock | 0.3396 | 0.3388 |
+| Prefetch, 128 nodes | Native | 0.8892 | 0.9007 |
+| Prefetch, 128 nodes | TCLock | 0.3353 | 0.3417 |
+
+Each miss also has separated whole-run ranges below 95% of its control.
+Maximum three-repeat whole-rate spreads `(max/min−1)×100` are 7.25% for KD
+(sample CV 3.91%), 9.49% for Native (4.53%) and 7.42% for TCLock (4.05%).
+These are descriptive results under a failed host endpoint. They are not
+pooled with the earlier three cases or either instrumented provider, and
+they do not establish acceptance.
+
+## Initial combiner diagnostic extension
+
+The next fixed plan, `admission-4`, keeps the same twelve original/observed
+pairs and all original arguments. The private provider extends its 35 fields
+to 50, observing pending/queue routing, ticket and continuation capacity,
+single/multiple queue heads, and every initial combiner outcome. The original
+condition and its source-lease acquisition stay unchanged. Refusal counters
+classify immutable node kinds without acquiring a source lease a second time.
+The runner requires every combiner call to have exactly one recorded outcome.
+This diagnostic is intended to explain the 19,699 ready slowpath entries
+that the first instrumented run could not classify. Its new instructions and
+layout have separate matched controls; no admission policy is changed.
