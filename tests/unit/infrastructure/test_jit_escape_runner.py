@@ -63,7 +63,8 @@ class Caller:
         return self.returncode
 
     def wait(self, timeout):
-        if self.failure == "wait-timeout":
+        if self.failure == "wait-timeout" or (
+                self.failure == "partial-join" and self.pid == 1001):
             raise subprocess.TimeoutExpired(self.args, timeout)
         if self.failure == "wait-io":
             raise OSError("wait failed")
@@ -125,7 +126,7 @@ class CallerLifetimeTests(unittest.TestCase):
 
     def test_every_unjoined_failure_retains_callers_and_skips_cleanup(self):
         for failure in ("spawn", "receipt", "ready-json", "ready-io", "go",
-                        "wait-timeout", "wait-io"):
+                        "wait-timeout", "wait-io", "partial-join"):
             with self.subTest(failure=failure):
                 session, callers, error = self.exercise(failure)
                 self.assertTrue(error.unsafe)
