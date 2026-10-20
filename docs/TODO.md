@@ -160,6 +160,15 @@ remains unresolved. An isolated provider observation patch and fixed matched
 comparison will distinguish rwlock ratio/time, lock-heat and queue-prefix
 refusals. The original 69 unstarted cases remain a separate strict coverage
 plan. No admission threshold, failed record or acceptance gate is changed.
+The first fixed 12-case diagnosis completed: six eight-worker strict NO_JIT
+failures, six sixty-worker successes, 12 exact retirements and 59,561 passing
+evidence-integrity checks. Its endpoint still fails at 72 versus 67 threads.
+Queue-prefix vetoes dominate the eight-worker heat behavior, while 19,699 hot
+slowpath entries still never start a combiner; a focused extension is needed
+to classify that later refusal. The original remaining 69 cases then completed
+with 59 strict successes and ten strict NO_JIT failures, all drained. Their
+76-thread endpoint fails too. Missing-case coverage is closed; strict execution,
+host interference and performance acceptance remain open pending final audit.
 
 Keep the two-word wrapper ABI, separate backend identities, exact KD physical owners,
 exact acquisition references and final ACKs. Shared storage must survive its final

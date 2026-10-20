@@ -1,0 +1,87 @@
+make: Entering directory '/root/host_fs/kdlock/tests/unit'
+cc -g -O0 -Wall -Wextra -std=gnu11 -I../../include -o basic/test_daemon_policy basic/test_daemon_policy.c
+
+[PASS] test_control_call (56 phase/error combinations, post-CALL bounds)
+
+chdir translator workspace: No such file or directory
+daemon: translator failed: workspace=./0x1234 status=32256
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "/usr/lib/python3.10/runpy.py", line 288, in run_path
+    code, fname = _get_code_from_file(run_name, path_name)
+  File "/usr/lib/python3.10/runpy.py", line 252, in _get_code_from_file
+    with io.open_code(decoded_path) as f:
+FileNotFoundError: [Errno 2] No such file or directory: '/tmp/kdlock-compiler-launch.UopGH5/disassem/disassem.py'
+daemon: translator failed: workspace=./0x1234 status=256
+daemon: translator failed: workspace=./0x1234 status=256
+daemon: translator failed: workspace=./0x1234 status=256
+daemon: translator failed: workspace=./0x1234 status=256
+chdir translator workspace: No such file or directory
+KD_TRANSLATION_METRICS {"schema":1,"pid":0,"tgid":42,"entry":"0x1234","lock_kind":2,"child":3003967,"started_ns":478393696337516,"finished_ns":478393697605210,"wall_ns":1267694,"user_ns":831000,"system_ns":0,"maxrss_kib":1460,"minor_faults":38,"major_faults":0,"voluntary_cs":1,"involuntary_cs":0,"status":32256,"result":-1}
+daemon: translator failed: workspace=./0x1234/42 status=32256
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "/usr/lib/python3.10/runpy.py", line 288, in run_path
+    code, fname = _get_code_from_file(run_name, path_name)
+  File "/usr/lib/python3.10/runpy.py", line 252, in _get_code_from_file
+    with io.open_code(decoded_path) as f:
+FileNotFoundError: [Errno 2] No such file or directory: '/tmp/kdlock-compiler-launch.UopGH5/disassem/disassem.py'
+KD_TRANSLATION_METRICS {"schema":1,"pid":0,"tgid":42,"entry":"0x1234","lock_kind":2,"child":3003968,"started_ns":478393697825976,"finished_ns":478393723363297,"wall_ns":25537321,"user_ns":20873000,"system_ns":4193000,"maxrss_kib":9088,"minor_faults":986,"major_faults":0,"voluntary_cs":1,"involuntary_cs":0,"status":256,"result":-1}
+daemon: translator failed: workspace=./0x1234/42 status=256
+KD_TRANSLATION_METRICS {"schema":1,"pid":0,"tgid":42,"entry":"0x1234","lock_kind":0,"child":3003969,"started_ns":478393723591202,"finished_ns":478393751838421,"wall_ns":28247219,"user_ns":23016000,"system_ns":4598000,"maxrss_kib":9092,"minor_faults":1045,"major_faults":0,"voluntary_cs":1,"involuntary_cs":1,"status":0,"result":0}
+KD_TRANSLATION_METRICS {"schema":1,"pid":0,"tgid":42,"entry":"0x1234","lock_kind":0,"child":3003970,"started_ns":478393752154153,"finished_ns":478393778252585,"wall_ns":26098432,"user_ns":25576000,"system_ns":0,"maxrss_kib":9248,"minor_faults":1049,"major_faults":0,"voluntary_cs":1,"involuntary_cs":0,"status":256,"result":-1}
+daemon: translator failed: workspace=./0x1234/42 status=256
+KD_TRANSLATION_METRICS {"schema":1,"pid":0,"tgid":42,"entry":"0x1234","lock_kind":0,"child":3003971,"started_ns":478393778550646,"finished_ns":478393804981368,"wall_ns":26430722,"user_ns":25844000,"system_ns":0,"maxrss_kib":9224,"minor_faults":1047,"major_faults":0,"voluntary_cs":1,"involuntary_cs":0,"status":512,"result":2}
+KD_TRANSLATION_METRICS {"schema":1,"pid":0,"tgid":42,"entry":"0x1234","lock_kind":1,"child":3003972,"started_ns":478393805276747,"finished_ns":478393831850865,"wall_ns":26574118,"user_ns":21603000,"system_ns":4344000,"maxrss_kib":9124,"minor_faults":1045,"major_faults":0,"voluntary_cs":1,"involuntary_cs":0,"status":0,"result":0}
+KD_TRANSLATION_METRICS {"schema":1,"pid":0,"tgid":42,"entry":"0x1234","lock_kind":1,"child":3003973,"started_ns":478393832185307,"finished_ns":478393860531431,"wall_ns":28346124,"user_ns":15954000,"system_ns":11988000,"maxrss_kib":9184,"minor_faults":1048,"major_faults":0,"voluntary_cs":1,"involuntary_cs":0,"status":256,"result":-1}
+daemon: translator failed: workspace=./0x1234/42 status=256
+KD_TRANSLATION_METRICS {"schema":1,"pid":0,"tgid":42,"entry":"0x1234","lock_kind":1,"child":3003974,"started_ns":478393860861202,"finished_ns":478393888495140,"wall_ns":27633938,"user_ns":23296000,"system_ns":3885000,"maxrss_kib":9272,"minor_faults":1048,"major_faults":0,"voluntary_cs":1,"involuntary_cs":0,"status":512,"result":2}
+KD_TRANSLATION_METRICS {"schema":1,"pid":0,"tgid":42,"entry":"0x1234","lock_kind":2,"child":3003975,"started_ns":478393888849945,"finished_ns":478393916359988,"wall_ns":27510043,"user_ns":23185000,"system_ns":3855000,"maxrss_kib":9312,"minor_faults":1049,"major_faults":0,"voluntary_cs":1,"involuntary_cs":0,"status":0,"result":0}
+KD_TRANSLATION_METRICS {"schema":1,"pid":0,"tgid":42,"entry":"0x1234","lock_kind":2,"child":3003976,"started_ns":478393916538740,"finished_ns":478393943886015,"wall_ns":27347275,"user_ns":17936000,"system_ns":8995000,"maxrss_kib":9120,"minor_faults":1044,"major_faults":0,"voluntary_cs":1,"involuntary_cs":0,"status":256,"result":-1}
+daemon: translator failed: workspace=./0x1234/42 status=256
+KD_TRANSLATION_METRICS {"schema":1,"pid":0,"tgid":42,"entry":"0x1234","lock_kind":2,"child":3003977,"started_ns":478393944223641,"finished_ns":478393970829542,"wall_ns":26605901,"user_ns":17374000,"system_ns":8692000,"maxrss_kib":9184,"minor_faults":1046,"major_faults":0,"voluntary_cs":1,"involuntary_cs":0,"status":512,"result":2}
+daemon: invalid translation monotonic clock
+daemon: invalid translation monotonic clock
+daemon: invalid translation resource record
+daemon: invalid translation resource record
+daemon: invalid translation resource record
+write /dev/kd_dev: Bad file descriptor
+read /dev/kd_dev: Bad file descriptor
+open /dev/kd_dev session: No such file or directory
+daemon: native-only status write failed: -1
+[PASS] daemon opt-in metrics, real children and observation faults
+[PASS] test_daemon_policy
+
+PASS hotlock: shared MCS1024/ratio/CPU clock, independent spin512 and mutex1025 windows, exact keys/capacity, pins, read-only queries
+PASS contention admission: native denominator, shifted ratio boundaries, first-window rejection, cold recovery, CPU isolation, zero ratio bypass, busy retry
+hotlock mutation detected: missing-mutex-entry
+hotlock mutation detected: missing-mutex-contention
+hotlock mutation detected: mutex-ratio-equality
+hotlock mutation detected: missing-mutex-reset
+hotlock mutation detected: table-busy-guard
+hotlock mutation detected: late-spin-threshold
+hotlock mutation detected: mutex-uses-spin-target
+hotlock mutation detected: ignore-lock-time
+hotlock mutation detected: missing-mcs-count
+hotlock mutation detected: early-mcs-comparison
+hotlock mutation detected: missed-busy-retry
+hotlock mutation detected: missing-entry-count
+hotlock mutation detected: missing-entry-reset
+hotlock mutation detected: missing-mcs-reset
+hotlock mutation detected: wrong-ratio-shift
+hotlock mutation detected: threshold-equality-admitted
+hotlock mutation detected: ignore-contention-ratio
+
+PASS rwlock: concurrent readers, writer exclusion/intent, mixed progress, release ordering and balanced pins
+
+PASS mixed native MCS (ordinary/paired byte 5): 1 threads, MCS-entry sampling, 50000 exact operations, 0 queued, 0 local waits, 0 CPU samples, balanced pins/counts, no CAS retry storm
+PASS mixed native MCS (ordinary/paired byte 5): 2 threads, MCS-entry sampling, 100000 exact operations, 90052 queued, 85735 local waits, 90052 CPU samples, balanced pins/counts, no CAS retry storm
+PASS mixed native MCS (ordinary/paired byte 5): 3 threads, MCS-entry sampling, 150000 exact operations, 149073 queued, 148041 local waits, 149073 CPU samples, balanced pins/counts, no CAS retry storm
+PASS mixed native MCS (ordinary/paired byte 5): 8 threads, MCS-entry sampling, 400000 exact operations, 398003 queued, 397998 local waits, 398003 CPU samples, balanced pins/counts, no CAS retry storm
+PASS nondelegated owner: root, nested, IRQ/pinned and direct bridge release balanced
+
+[PASS] test_spin_entry (380 checks, production single-word tickets)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Unit tests: 6 passed, 0 failed
+make: Leaving directory '/root/host_fs/kdlock/tests/unit'

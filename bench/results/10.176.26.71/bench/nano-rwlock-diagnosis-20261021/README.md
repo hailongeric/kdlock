@@ -95,3 +95,73 @@ observed provider's actual Makefile, with its original balanced context.
 Both failed preparations remain intact; the next bundle is `admission-3`.
 `checks-1` passed dependency validation, both basic programs and all four
 selected drivers (hot-lock sampling, rwlock, native MCS path and spin ownership).
+
+## First admission diagnostic: completed, strict failures retained
+
+`admission-3` built the isolated provider and completed all 12 planned sessions.
+All business checks passed and every session retired exactly
+`state=2, modules=writers=frames=0`. All six eight-worker sessions remain strict
+`NO_JIT` failures; all six sixty-worker sessions returned complete bodies.
+The original and observed providers returned 16,886 and 17,747 bodies respectively.
+The total measured work was 171,862,784 operations. No threshold was changed.
+
+The three observed eight-worker measurements recorded 8,024 CPU checks:
+45 ratio refusals, zero CPU-time refusals and 7,979 CPU-hot outcomes.
+Native queue heads then performed 7,944 prefix checks: 5,318 stopped at a short
+captured prefix, 2,556 observed no held gate, one observed a missing link, and
+only 69 passed. These vetoes repeatedly cool CPU admission and reset lock heat.
+All 73 per-lock time samples passed. Nevertheless, 19,699 hot clobber entries
+did reach the delegated slowpath without a single combiner starting. Thus heat
+and prefix observations alone do not close the diagnosis: the next isolated
+extension observes continuation capacity and the unchanged initial combiner
+conditions, including the required consecutive combinable nodes. The original
+loaded image is byte-for-byte correct; NORMAL publication remains distinct
+from returned execution.
+
+Counter overhead was measured through fixed matched runs, not subtracted from
+acceptance results. Whole-run rates use completed operations divided by the
+recorded `wall_ns`, including the full recorded interval:
+
+| Workers | Provider | Median Mops/s | Range Mops/s | Spread | Sample CV |
+| ---: | --- | ---: | ---: | ---: | ---: |
+| 8 | Original | 8.233 | 7.037–9.076 | 24.76% | 12.62% |
+| 8 | Observed | 9.065 | 8.069–9.234 | 12.86% | 7.16% |
+| 60 | Original | 5.845 | 5.557–5.857 | 5.14% | 2.96% |
+| 60 | Observed | 5.849 | 5.810–5.884 | 1.28% | 0.64% |
+
+Observed medians are 10.10% and 0.055% higher. These overlapping ranges and
+three repetitions do not establish a gain or zero instrumentation cost.
+Counter instructions, code layout, admission mix and background I/O can all
+affect the result. Eight-worker measurements remain failed tests, used here
+only to describe diagnostic behavior.
+
+The [complete archive manifest](admission-3/archives.json) has SHA-256
+`165afed66f8f81dc328514f479a319198b1fb95d2642ada0dc1325d89b36b048`.
+The [inert review](admission-3/offline-review.json) passed 59,561 evidence checks
+covering source reconstruction, unchanged inputs, worker/business arithmetic,
+phase counter identities, loaded images and retirement. It retains the sole
+endpoint discrepancy: 72 versus 67 host threads. Overall strict success is
+false. The 75-thread preflight rejection is preserved in [its receipt](preflight-1.json).
+A first archive attempt refused because a copied command receipt was newer
+than the original health receipt; [that refusal](admission-3/archive-refusal.json)
+remains intact. A fresh idle check after metadata attachment authorized the
+separate successful archive, without backdating or changing the old health.
+
+The [guest I/O observation](guest-io-1.json) sampled 12.066 seconds of idle
+process metadata. `jbd2/sda1-8` accounted for 32,768 disk-write bytes;
+`multipathd` issued 208 bytes of writes with no accounted block writes.
+There were no new/exited processes or access errors. Deferred journal/writeback
+activity does not identify the original file writer or the historical timing
+effect, so this evidence does not clear any failed host endpoint.
+
+## Original remaining coverage
+
+`remaining-1` completed all 69 previously unstarted cases with unchanged frozen
+binaries: **59 strict successes and 10 strict NO_JIT failures**, all drained.
+This closes the missing-case coverage gap. It does not resolve the original
+failure or convert any of these ten cases into passes. The immediate host
+endpoint contains 76 threads versus the required 67. A preceding 68-thread
+preflight rejection and the successful fresh 67-thread receipt are preserved.
+Archival and independent review are in progress; per-case variation and any
+split execution classes must remain separate from the earlier three cases
+and from the instrumented diagnostic runs.

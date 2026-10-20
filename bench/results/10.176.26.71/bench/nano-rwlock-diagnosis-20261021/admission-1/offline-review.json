@@ -1,0 +1,12 @@
+{
+  "preservation_consistent": true,
+  "checks": 492,
+  "measured_cases": 0,
+  "preparation_status": "PREPARATION_FAILED",
+  "files": 110,
+  "links": {
+    "source": "/root/kdlock-evidence/10.176.26.71/bench/nano-list-followup-20261020/timing-1/rwlock-w20/source"
+  },
+  "archive_manifest_sha256": "b85d2d6a0e82dcbe29584dbdd30c8de557c30af522c7aed3a4f9d69df155e2b7",
+  "scope": "Inert archive inventory, retained failed hunk and exact diagnostic source binding; no guest test or successful preparation inferred"
+}

@@ -1,0 +1,9 @@
+{
+  "consistent": true,
+  "source_commit": "d98d6bb2a2665b450a73fb8cc49fae1c947605e7",
+  "source_hashes_checked": 265,
+  "selected_programs_and_drivers": 6,
+  "dependency_check_passed": true,
+  "unit_log_sha256": "0034f41021fbae626a26221610b62cb4c891c40014e1e725a53eb8676dc1bb2d",
+  "scope": "Inert check of retained source bindings and VM test receipts; no unit test executed on source host"
+}

@@ -1,0 +1,17 @@
+{
+  "archive_prefix": "admission-3",
+  "boot_id": "b65f0205-c8f9-4385-8b13-039cbce243a6",
+  "completed": false,
+  "error": "RuntimeError('command receipt is newer than final health')",
+  "finished_ns": 1792522466728272917,
+  "groups": [],
+  "guest_base": "/root/kdlock-evidence/10.176.26.71/bench/nano-rwlock-diagnosis-20261021/admission-3",
+  "health_path": "health.json",
+  "health_sha256": "c55c31ff87961849448afaf3ffc966995c34012b43d135cd5d788e77e4173182",
+  "idle_source_sha256": "c6f7dc17a41bc5c34bff35d3aaed7b4a995ba3e5225d2c48d032417ca3f1510e",
+  "kernel_release": "6.1.159-kdclobber2",
+  "schema": 1,
+  "scope": "Complete evidence preservation; no deletion, module action, test or timing",
+  "script_sha256": "8d666f148a10d7fe19294cc7d193464c8bb53d4c3aec64b7518b9d335966c952",
+  "started_ns": 1792522466629266819
+}

@@ -1,0 +1,86 @@
+{
+  "boot_id": "b65f0205-c8f9-4385-8b13-039cbce243a6",
+  "cases": [
+    {
+      "drained": true,
+      "error": "required complete KD body did not execute",
+      "name": "original-list-n16-kdlock-w020-t08-r00",
+      "status": "NO_JIT"
+    },
+    {
+      "drained": true,
+      "error": "required complete KD body did not execute",
+      "name": "diagnostic-list-n16-kdlock-w020-t08-r00",
+      "status": "NO_JIT"
+    },
+    {
+      "drained": true,
+      "error": "required complete KD body did not execute",
+      "name": "diagnostic-list-n16-kdlock-w020-t08-r01",
+      "status": "NO_JIT"
+    },
+    {
+      "drained": true,
+      "error": "required complete KD body did not execute",
+      "name": "original-list-n16-kdlock-w020-t08-r01",
+      "status": "NO_JIT"
+    },
+    {
+      "drained": true,
+      "error": "required complete KD body did not execute",
+      "name": "original-list-n16-kdlock-w020-t08-r02",
+      "status": "NO_JIT"
+    },
+    {
+      "drained": true,
+      "error": "required complete KD body did not execute",
+      "name": "diagnostic-list-n16-kdlock-w020-t08-r02",
+      "status": "NO_JIT"
+    },
+    {
+      "drained": true,
+      "error": null,
+      "name": "original-list-n16-kdlock-w020-t60-r00",
+      "status": "OK"
+    },
+    {
+      "drained": true,
+      "error": null,
+      "name": "diagnostic-list-n16-kdlock-w020-t60-r00",
+      "status": "OK"
+    },
+    {
+      "drained": true,
+      "error": null,
+      "name": "diagnostic-list-n16-kdlock-w020-t60-r01",
+      "status": "OK"
+    },
+    {
+      "drained": true,
+      "error": null,
+      "name": "original-list-n16-kdlock-w020-t60-r01",
+      "status": "OK"
+    },
+    {
+      "drained": true,
+      "error": null,
+      "name": "original-list-n16-kdlock-w020-t60-r02",
+      "status": "OK"
+    },
+    {
+      "drained": true,
+      "error": null,
+      "name": "diagnostic-list-n16-kdlock-w020-t60-r02",
+      "status": "OK"
+    }
+  ],
+  "final_metadata_observed_unix": 1792522511.8823898,
+  "host_endpoint_pass": false,
+  "idle": true,
+  "immutable_hashes_checked": 462,
+  "per_session_kernel_faults": [],
+  "prior_health_sha256": "c55c31ff87961849448afaf3ffc966995c34012b43d135cd5d788e77e4173182",
+  "scope": "Fresh idle check after final metadata attachment; original health and first archive refusal remain unchanged",
+  "strict_failures": 6,
+  "strict_successes": 6
+}

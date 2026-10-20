@@ -106,6 +106,15 @@ disk-write counters. Background writes also occur in its RAM control; the
 historical timing effect is still unmeasured. Planned provider gate counters
 and their matched overhead measurements will be reported separately from
 unchanged-binary coverage and performance acceptance.
+The first fixed 12-case diagnosis preserves six eight-worker NO_JIT failures
+and six sixty-worker successes. Measured diagnostic/original whole-run medians
+are 1.1010/1.00055 at eight/sixty workers, with overlapping three-run ranges;
+these are instrumentation observations, not an optimization claim.
+All 12 exact retirements and 59,561 inert evidence checks pass, while the
+72-versus-67 host endpoint fails. The separate remaining-coverage run has now
+completed all 69 cases: 59 strict successes, ten strict NO_JIT failures and a
+76-versus-67 host mismatch. Its audit and descriptive variance report are
+pending. The seven mutex regressions and latency gaps remain unresolved.
 
 ## Fresh 32-byte mutex comparison with Native and TCLock
 
