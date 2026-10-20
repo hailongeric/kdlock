@@ -1,0 +1,125 @@
+[
+  {
+    "argv": [
+      "gcc",
+      "--version"
+    ],
+    "exit_code": 0,
+    "finished_unix": 1792506929.124584,
+    "name": "compiler",
+    "pid": 2858055,
+    "started_unix": 1792506929.1200807,
+    "state": "FINISHED",
+    "timeout_seconds": 10
+  },
+  {
+    "argv": [
+      "/root/kdlock-translation-venv-20261019/bin/python3",
+      "/root/kdlock-evidence/10.176.26.71/bench/mutex-public-20261020-r2/harness/bench/spin_cacheline/kernel_identity.py",
+      "--kernel-source",
+      "/root/linux-6.1.159-kdclobber2",
+      "--kernel-baseline",
+      "/root/kdlock-kernel-baselines/mutex-clobber2-20260919"
+    ],
+    "exit_code": 0,
+    "finished_unix": 1792506930.261441,
+    "name": "kernel-identity",
+    "pid": 2858056,
+    "started_unix": 1792506929.1404092,
+    "state": "FINISHED",
+    "timeout_seconds": 120
+  },
+  {
+    "argv": [
+      "make",
+      "-C",
+      "/root/kdlock-evidence/10.176.26.71/bench/mutex-public-20261020-inline-inputs-1/provider/kernel_module",
+      "KDIR=/root/linux-6.1.159-kdclobber2",
+      "W=1",
+      "KDLOCK_SELFTEST=0",
+      "KDLOCK_NUMA=1",
+      "KDLOCK_SPIN_BATCH=1024",
+      "UBSAN_SANITIZE=n"
+    ],
+    "exit_code": 0,
+    "finished_unix": 1792506942.0585108,
+    "name": "build",
+    "pid": 2858057,
+    "started_unix": 1792506930.2807767,
+    "state": "FINISHED",
+    "timeout_seconds": 240
+  },
+  {
+    "argv": [
+      "nm",
+      "-u",
+      "/root/kdlock-evidence/10.176.26.71/bench/mutex-public-20261020-inline-inputs-1/provider/kernel_module/kdlock_km.ko"
+    ],
+    "exit_code": 0,
+    "finished_unix": 1792506942.0948594,
+    "name": "imports",
+    "pid": 2858731,
+    "started_unix": 1792506942.089535,
+    "state": "FINISHED",
+    "timeout_seconds": 30
+  },
+  {
+    "argv": [
+      "nm",
+      "-S",
+      "--defined-only",
+      "/root/kdlock-evidence/10.176.26.71/bench/mutex-public-20261020-inline-inputs-1/provider/kernel_module/kdlock_km.ko"
+    ],
+    "exit_code": 0,
+    "finished_unix": 1792506942.1322448,
+    "name": "symbols",
+    "pid": 2858732,
+    "started_unix": 1792506942.1228642,
+    "state": "FINISHED",
+    "timeout_seconds": 30
+  },
+  {
+    "argv": [
+      "objdump",
+      "-dr",
+      "/root/kdlock-evidence/10.176.26.71/bench/mutex-public-20261020-inline-inputs-1/provider/kernel_module/kdlock_km.ko"
+    ],
+    "exit_code": 0,
+    "finished_unix": 1792506942.278892,
+    "name": "disassembly",
+    "pid": 2858733,
+    "started_unix": 1792506942.1623714,
+    "state": "FINISHED",
+    "timeout_seconds": 30
+  },
+  {
+    "argv": [
+      "modinfo",
+      "-F",
+      "spin_numa",
+      "/root/kdlock-evidence/10.176.26.71/bench/mutex-public-20261020-inline-inputs-1/provider/kernel_module/kdlock_km.ko"
+    ],
+    "exit_code": 0,
+    "finished_unix": 1792506942.314846,
+    "name": "spin_numa",
+    "pid": 2858734,
+    "started_unix": 1792506942.3092928,
+    "state": "FINISHED",
+    "timeout_seconds": 10
+  },
+  {
+    "argv": [
+      "modinfo",
+      "-F",
+      "spin_batch",
+      "/root/kdlock-evidence/10.176.26.71/bench/mutex-public-20261020-inline-inputs-1/provider/kernel_module/kdlock_km.ko"
+    ],
+    "exit_code": 0,
+    "finished_unix": 1792506942.350619,
+    "name": "spin_batch",
+    "pid": 2858735,
+    "started_unix": 1792506942.3448431,
+    "state": "FINISHED",
+    "timeout_seconds": 10
+  }
+]

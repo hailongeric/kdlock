@@ -4,16 +4,18 @@ Status: active. The user reopened all seven mutex points and requested subsequen
 rwlock/rwsem, real mmap, page-fault and nano/list work. The completed correctness
 checks and [original-input replay](../mutex-public-regressions-20261020/README.md)
 retain their exact source and artifact identities. This stage starts at
-`226e2a6`; no new performance result or candidate correction is claimed yet.
+`226e2a6`. The observed reproduction, matched profiles and isolated entry-inlining
+comparison are complete. The inlining experiment is not accepted as a regression
+fix; all seven points and the remaining environment/class/latency gaps remain open.
 
 The source checkout on `380G10` is the only writer. The recovery VM remains
 `root@10.176.26.71:2222`, kernel `6.1.159-kdclobber2`, boot
 `b65f0205-c8f9-4385-8b13-039cbce243a6`. All tests and timings remain serial in
 that VM. Helpers may review read-only; they do not edit or execute VM work.
 
-The immediate dependency is environment observation. The original-input replay
+The initial dependency was environment observation. The original-input replay
 matched the original thread set before measurement but retained an extra QEMU
-worker on collector CPU 63 afterward. A bounded host observer will read exact
+worker on collector CPU 63 afterward. A bounded host observer recorded exact
 thread identities, affinities, CPU runtime and available runqueue accounting
 through `/proc`. It changes only its own affinity to unused host CPU 62 for
 this focused 2–5-worker plan. It changes no QEMU, kernel or frequency setting.
@@ -252,7 +254,7 @@ scope, not whole-kernel replacement or resolution of the seven throughput losses
 
 ## Isolated provider comparison
 
-The next bounded experiment uses the original `r2` d21 inputs plus only the
+The completed bounded experiment used the original `r2` d21 inputs plus only the
 entry-inlining change selected from `003d71c`; it is not a full `003d71c` build.
 The four selected public groups share an identical 99-file raw provider and
 observation recipe. [entry_candidate.py](../../../../mutex_api_compare/entry_candidate.py)
@@ -265,10 +267,73 @@ retain their original source scope. The new provider has its own binary hash.
 Dedicated public-only views preserve the original OUTER, Native and TCLock
 bundles and identities. The existing host, boot, topology, dependency, import,
 admission, business and retirement checks remain. Both original and candidate
-bytes are verified. Preparation and focused runner checks precede a new host
+bytes were verified. Preparation and focused runner checks preceded a new host
 receipt and the same 120-session, ten-point, three-repeat schedule.
 
 This schedule has no simultaneous original-public fifth arm. Candidate/OUTER
 comparisons are freshly matched, while changes from earlier public results
 remain observational. Execution classes and repetitions stay separate; p95,
 within-run host interference and unresolved losses remain explicit gaps.
+
+Driver `d1a976a` passed two basic programs, 13 comparison checks and four
+candidate-boundary checks in
+[`mutex-candidate-runner-20261020/checks-1`](../../tests/mutex-candidate-runner-20261020/checks-1/result.json).
+Its archive manifest SHA-256 is
+`6921689425fb7dd8824c4019dd303491882e58407bf76b79ee327dc6a9ca4572`;
+the offline review passed 6,943 checks.
+
+Prepared inputs are `mutex-public-20261020-inline-inputs-1`, manifest
+`d8b5b56daa3110cf3e276ca8c2198c2b05eda1bd79630210142163f57bc8f9ac`,
+provider `7ed3022ae9c631f22c26aa9c54293f949a2e36ac53790b162782f72b47e0eefc`.
+The [preparation archives](inline-inputs-1/archives.json) have manifest SHA-256
+`e84308527775fac8a26c2eaf0e524868431b0a6eb5179a9419f5e81e8e6b7035`.
+The [independent review](inline-inputs-1/offline-review.json) passed 22,223 checks.
+Its first reader stopped because extensionless Makefiles beneath
+`provider-inputs/` were hashed but omitted from its text cache. The initial
+reader and [failure log](inline-inputs-1/offline-review-initial.log) are retained;
+the corrected reader fetches and rehashes those archive members. No input or
+measurement was changed.
+
+`mutex-public-20261020-inline-1` completed 120/120 functionally valid, drained
+sessions, including 60 exact KD retirements and zero kernel fault matches.
+Classes are 60 controls, 22 NO_JIT, 24 WITNESSED_JIT and 14 RETURNED_JIT. The
+original 67-thread host configuration matched before admission. The immediate
+post-run receipt at 14:47:45.714152 UTC had 99 QEMU threads; that strict check
+failed. All thread affinities still matched the placement policy. Runtime
+interference remains unmeasured.
+
+The [four-collection analysis](inline-1/comparisons.json) keeps all 480 samples
+and source versions separate. Candidate ranges below are observed whole-run
+throughput in millions of operations/second, not confidence intervals.
+
+| Original regression point | Candidate / OUTER median | Candidate range | OUTER range |
+| --- | ---: | ---: | ---: |
+| c08 / 3 | 0.7824 | 5.125–5.697 | 6.321–8.607 |
+| c08 / 4 | 0.7125 | 4.698–6.134 | 6.384–7.258 |
+| c08 / 5 | 0.7064 | 4.061–4.288 | 5.776–9.200 |
+| pipebytes / 3 | 0.9769 | 11.287–11.610 | 11.421–12.041 |
+| pipebytes / 5 | 0.9598 | 4.641–5.049 | 4.563–5.464 |
+| pipecap / 5 | Incomplete class match | 5.541–6.027, three returned-JIT samples | Two returned-JIT samples, one NO_JIT |
+| RCUHT / 2 | Incomplete class match | Two witnessed-JIT samples, one NO_JIT | 5.382–5.670, three witnessed-JIT samples |
+
+All three c08 losses remain. The c08/3 and c08/5 losses exceed the provisional
+5% observed-range margin; c08/4 does not meet that margin despite its median
+loss. Public/OUTER spreads reach 29.1%/56.6% among those points. Both pipebytes
+points meet the provisional median screen in this run, without establishing
+repeatable correction. Pipecap/5 and RCUHT/2 cannot satisfy the unchanged
+three-repeat class gate. Existing c08/2 and pipebytes/4 class gaps also persist;
+pipecap/4 is comparable at 0.9281. P95 remains unmeasured. All seven original
+points therefore remain unresolved for acceptance.
+
+The [run archives](inline-1/archives.json) have manifest SHA-256
+`5fd2c1c0f9f5819e3f62671ca79272d86a5c72a3dc729ea5ee6e31d532964c58`.
+The [independent run audit](inline-1/offline-review.json) performed 124,584
+checks with exactly one failed check, the retained post-run thread-set mismatch.
+All archive/input binding, worker, business, retirement and summary-arithmetic
+checks reported no other issue. Archives remain in the corresponding guest
+`-archives` directories and source-host `raw/bench/` directories.
+
+The candidate is rejected as a solution to the seven regressions. Preserve
+this implementation and evidence on an explicit archive ref, restore only
+the common entry declaration/comment and its extraction marker to the prior
+validated source, and validate that restored state before subsequent work.

@@ -1,0 +1,8 @@
+Traceback (most recent call last):
+  File "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/bench/mutex-regression-diagnosis-20261020/offline-candidate.py", line 136, in <module>
+    main()
+  File "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/bench/mutex-regression-diagnosis-20261020/offline-candidate.py", line 65, in main
+    changes = a.reconstruct('provider-inputs/',
+  File "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/bench/mutex32-native-tclock-20261020/offline-review.py", line 197, in reconstruct
+    original = self.contents[original_root + path].decode().splitlines(keepends=True)
+KeyError: 'provider-inputs/kernel_module/Makefile'

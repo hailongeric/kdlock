@@ -95,6 +95,13 @@ tracks those dependencies and results. Their prior deferred status is not a
 reason to skip the requested investigation; unsupported behavior still requires
 an explicit ownership/context design and validation before execution.
 
+The entry-inlining experiment passed focused correctness checks but did not
+resolve the seven mutex losses in its separate 120-session comparison. It is
+not accepted as a performance fix. The stage record retains all repetitions,
+class gaps and the failed post-run QEMU thread-set check; latency and runtime
+host interference remain unmeasured. Preserve the experiment before restoring
+the prior entry and validating the maintained state.
+
 Keep the two-word wrapper ABI, separate backend identities, exact KD physical owners,
 exact acquisition references and final ACKs. Shared storage must survive its final
 reader. Builds/tests/benchmarks run in the recovery guest; default work does not

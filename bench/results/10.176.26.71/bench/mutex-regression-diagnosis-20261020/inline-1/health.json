@@ -1,0 +1,649 @@
+{
+  "boot_id": "b65f0205-c8f9-4385-8b13-039cbce243a6",
+  "candidate_immutable_files": 1439,
+  "candidate_provider_sha256": "7ed3022ae9c631f22c26aa9c54293f949a2e36ac53790b162782f72b47e0eefc",
+  "candidate_sessions": [
+    "c08-t02-r0-public-kd",
+    "c08-t02-r1-public-kd",
+    "c08-t02-r2-public-kd",
+    "c08-t03-r0-public-kd",
+    "c08-t03-r1-public-kd",
+    "c08-t03-r2-public-kd",
+    "c08-t04-r0-public-kd",
+    "c08-t04-r1-public-kd",
+    "c08-t04-r2-public-kd",
+    "c08-t05-r0-public-kd",
+    "c08-t05-r1-public-kd",
+    "c08-t05-r2-public-kd",
+    "rcuht-t02-r0-public-kd",
+    "rcuht-t02-r1-public-kd",
+    "rcuht-t02-r2-public-kd",
+    "pipebytes-t03-r0-public-kd",
+    "pipebytes-t03-r1-public-kd",
+    "pipebytes-t03-r2-public-kd",
+    "pipebytes-t04-r0-public-kd",
+    "pipebytes-t04-r1-public-kd",
+    "pipebytes-t04-r2-public-kd",
+    "pipebytes-t05-r0-public-kd",
+    "pipebytes-t05-r1-public-kd",
+    "pipebytes-t05-r2-public-kd",
+    "pipecap-t04-r0-public-kd",
+    "pipecap-t04-r1-public-kd",
+    "pipecap-t04-r2-public-kd",
+    "pipecap-t05-r0-public-kd",
+    "pipecap-t05-r1-public-kd",
+    "pipecap-t05-r2-public-kd"
+  ],
+  "checked_unix": 1792507703.4507346,
+  "classes": {
+    "NOT_APPLICABLE": 60,
+    "NO_JIT": 22,
+    "RETURNED_JIT": 14,
+    "WITNESSED_JIT": 24
+  },
+  "exact_retirements": [
+    {
+      "name": "c08-t02-r0-baseline-kd",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      }
+    },
+    {
+      "name": "c08-t02-r0-public-kd",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      }
+    },
+    {
+      "name": "c08-t02-r1-baseline-kd",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      }
+    },
+    {
+      "name": "c08-t02-r1-public-kd",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      }
+    },
+    {
+      "name": "c08-t02-r2-baseline-kd",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      }
+    },
+    {
+      "name": "c08-t02-r2-public-kd",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      }
+    },
+    {
+      "name": "c08-t03-r0-baseline-kd",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      }
+    },
+    {
+      "name": "c08-t03-r0-public-kd",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      }
+    },
+    {
+      "name": "c08-t03-r1-baseline-kd",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      }
+    },
+    {
+      "name": "c08-t03-r1-public-kd",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      }
+    },
+    {
+      "name": "c08-t03-r2-public-kd",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      }
+    },
+    {
+      "name": "c08-t03-r2-baseline-kd",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      }
+    },
+    {
+      "name": "c08-t04-r0-baseline-kd",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      }
+    },
+    {
+      "name": "c08-t04-r0-public-kd",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      }
+    },
+    {
+      "name": "c08-t04-r1-public-kd",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      }
+    },
+    {
+      "name": "c08-t04-r1-baseline-kd",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      }
+    },
+    {
+      "name": "c08-t04-r2-baseline-kd",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      }
+    },
+    {
+      "name": "c08-t04-r2-public-kd",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      }
+    },
+    {
+      "name": "c08-t05-r0-public-kd",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      }
+    },
+    {
+      "name": "c08-t05-r0-baseline-kd",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      }
+    },
+    {
+      "name": "c08-t05-r1-baseline-kd",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      }
+    },
+    {
+      "name": "c08-t05-r1-public-kd",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      }
+    },
+    {
+      "name": "c08-t05-r2-baseline-kd",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      }
+    },
+    {
+      "name": "c08-t05-r2-public-kd",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      }
+    },
+    {
+      "name": "rcuht-t02-r0-baseline-kd",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      }
+    },
+    {
+      "name": "rcuht-t02-r0-public-kd",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      }
+    },
+    {
+      "name": "rcuht-t02-r1-baseline-kd",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      }
+    },
+    {
+      "name": "rcuht-t02-r1-public-kd",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      }
+    },
+    {
+      "name": "rcuht-t02-r2-public-kd",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      }
+    },
+    {
+      "name": "rcuht-t02-r2-baseline-kd",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      }
+    },
+    {
+      "name": "pipebytes-t03-r0-baseline-kd",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      }
+    },
+    {
+      "name": "pipebytes-t03-r0-public-kd",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      }
+    },
+    {
+      "name": "pipebytes-t03-r1-baseline-kd",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      }
+    },
+    {
+      "name": "pipebytes-t03-r1-public-kd",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      }
+    },
+    {
+      "name": "pipebytes-t03-r2-public-kd",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      }
+    },
+    {
+      "name": "pipebytes-t03-r2-baseline-kd",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      }
+    },
+    {
+      "name": "pipebytes-t04-r0-baseline-kd",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      }
+    },
+    {
+      "name": "pipebytes-t04-r0-public-kd",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      }
+    },
+    {
+      "name": "pipebytes-t04-r1-public-kd",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      }
+    },
+    {
+      "name": "pipebytes-t04-r1-baseline-kd",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      }
+    },
+    {
+      "name": "pipebytes-t04-r2-baseline-kd",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      }
+    },
+    {
+      "name": "pipebytes-t04-r2-public-kd",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      }
+    },
+    {
+      "name": "pipebytes-t05-r0-public-kd",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      }
+    },
+    {
+      "name": "pipebytes-t05-r0-baseline-kd",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      }
+    },
+    {
+      "name": "pipebytes-t05-r1-baseline-kd",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      }
+    },
+    {
+      "name": "pipebytes-t05-r1-public-kd",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      }
+    },
+    {
+      "name": "pipebytes-t05-r2-baseline-kd",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      }
+    },
+    {
+      "name": "pipebytes-t05-r2-public-kd",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      }
+    },
+    {
+      "name": "pipecap-t04-r0-public-kd",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      }
+    },
+    {
+      "name": "pipecap-t04-r0-baseline-kd",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      }
+    },
+    {
+      "name": "pipecap-t04-r1-baseline-kd",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      }
+    },
+    {
+      "name": "pipecap-t04-r1-public-kd",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      }
+    },
+    {
+      "name": "pipecap-t04-r2-baseline-kd",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      }
+    },
+    {
+      "name": "pipecap-t04-r2-public-kd",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      }
+    },
+    {
+      "name": "pipecap-t05-r0-baseline-kd",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      }
+    },
+    {
+      "name": "pipecap-t05-r0-public-kd",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      }
+    },
+    {
+      "name": "pipecap-t05-r1-baseline-kd",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      }
+    },
+    {
+      "name": "pipecap-t05-r1-public-kd",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      }
+    },
+    {
+      "name": "pipecap-t05-r2-baseline-kd",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      }
+    },
+    {
+      "name": "pipecap-t05-r2-public-kd",
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      }
+    }
+  ],
+  "functionally_valid": 120,
+  "host_endpoints": {
+    "after": {
+      "error": "replay QEMU thread placement differs",
+      "passed": false
+    },
+    "before": {
+      "comparison": {
+        "configuration_matches": true,
+        "original_memory": [
+          {
+            "address": "7469b7c00000",
+            "page_kb": 4,
+            "policy": "bind:1",
+            "resident_pages": {
+              "N0": 132756,
+              "N1": 3012972
+            }
+          },
+          {
+            "address": "746cb7e00000",
+            "page_kb": 4,
+            "policy": "bind:0",
+            "resident_pages": {
+              "N0": 2873535,
+              "N1": 271561
+            }
+          }
+        ],
+        "replay_memory": [
+          {
+            "address": "7469b7c00000",
+            "page_kb": 4,
+            "policy": "bind:1",
+            "resident_pages": {
+              "N0": 120025,
+              "N1": 3025703
+            }
+          },
+          {
+            "address": "746cb7e00000",
+            "page_kb": 4,
+            "policy": "bind:0",
+            "resident_pages": {
+              "N0": 2953864,
+              "N1": 191232
+            }
+          }
+        ],
+        "scope": "Same QEMU process/configuration, pins, frequency policy, memory bindings, guest boot, dependencies and topology. Resident pages are recorded, not fixed."
+      },
+      "passed": true
+    }
+  },
+  "idle": true,
+  "original_input_files": 4088,
+  "overall_acceptance": "OPEN",
+  "p95_latency": "UNMEASURED",
+  "per_session_kernel_faults": [],
+  "score_eligible": 120,
+  "script_sha256": "cbdf7f107f20b7da53167ce46177b47ecb0919c2a6ba1e3447dfcae49d6f9af0",
+  "sessions": 120,
+  "within_run_host_interference": "UNMEASURED"
+}
