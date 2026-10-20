@@ -273,7 +273,8 @@ class BenchTests(unittest.TestCase):
             (folder / 'jit.bin').write_bytes(b'\x90\xc3')
             (folder / 'jit.S').write_text('MOV             Stack_JIT_WITNESS, 1\nloc_2000:\n')
             (folder / 'bin.txt').write_text('nop\nret\n')
-            entry = dict(entry=0x2000, tgid=0, pid=0, lock_kind=2, entry_abi=2, status=0, code=1)
+            entry = dict(entry=0x2000, tgid=0, pid=0, lock_kind=2, entry_abi=2,
+                         status=0, code=1, requirements=0)
             state = dict(state=0, frames=0, writers=0)
             with patch.object(bench_session, 'registry', return_value=[entry]), \
                     patch.object(bench_session, 'status', return_value=state):
