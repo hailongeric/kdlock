@@ -141,20 +141,24 @@ def main():
             write(out / 'commands.json', receipts)
             try:
                 with (out / (name + '.log')).open('w') as log:
-                    result = subprocess.run(command, cwd=cwd, stdout=log,
-                                            stderr=subprocess.STDOUT, timeout=timeout)
+                    process = subprocess.Popen(command, cwd=cwd, stdout=log,
+                                               stderr=subprocess.STDOUT,
+                                               start_new_session=True)
+                    receipt['pid'] = process.pid
+                    write(out / 'commands.json', receipts)
+                    returncode = process.wait(timeout=timeout)
             except subprocess.TimeoutExpired:
                 receipt.update(error='TIMEOUT: drain not established', finished_unix=time.time())
                 write(out / 'commands.json', receipts)
                 raise
-            receipt.update(exit_code=result.returncode, finished_unix=time.time())
+            receipt.update(exit_code=returncode, finished_unix=time.time())
             write(out / 'commands.json', receipts)
-            print('FINISH checks', name, result.returncode, flush=True)
-            if result.returncode:
+            print('FINISH checks', name, returncode, flush=True)
+            if returncode:
                 print((out / (name + '.log')).read_text()[-12000:], flush=True)
-                result_record['error'] = f'{name} exited {result.returncode}'
+                result_record['error'] = f'{name} exited {returncode}'
                 write(out / 'result.json', result_record)
-                return result.returncode
+                return returncode
         verify_sources()
         idle()
         result_record.update(passed=True, final_idle=True, source_unchanged=True)
