@@ -1,0 +1,14 @@
+[
+  {
+    "argv": [
+      "/root/kdlock-translation-venv-20261019/bin/python3",
+      "bench/rwlock_compare/test_bench.py"
+    ],
+    "cwd": "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/checks-4/source",
+    "exit_code": 0,
+    "finished_unix": 1792491747.2168772,
+    "name": "test_bench",
+    "started_unix": 1792491746.648298,
+    "timeout_seconds": 180
+  }
+]

@@ -1,0 +1,29 @@
+{
+  "commands": [
+    {
+      "argv": [
+        "/root/kdlock-translation-venv-20261019/bin/python3",
+        "bench/rwlock_compare/test_bench.py"
+      ],
+      "cwd": "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/checks-4/source",
+      "exit_code": 0,
+      "finished_unix": 1792491747.2168772,
+      "name": "test_bench",
+      "started_unix": 1792491746.648298,
+      "timeout_seconds": 180
+    }
+  ],
+  "committed_manifest_sha256": "05d3f162f1ac7d6d78a55c9afea26e3ebd57d30d08c2900e78cd7ca5bd2b1a8d",
+  "final_idle": true,
+  "full_suite": false,
+  "passed": true,
+  "runner_tests": [
+    "bench/rwlock_compare/test_bench.py"
+  ],
+  "script_sha256": "0d3221054a0917e5091362d048d1d8e2c5900bccdd0eb53d0a36ff8cc63705ad",
+  "snapshot_tag": "before-mutex-kdonly-20261017T140354Z",
+  "source_revision": "a4eb4eb0fc744e8105bdd429e1d4bf0fb03ae0a4",
+  "source_unchanged": true,
+  "unit_basic": 0,
+  "unit_drivers": []
+}

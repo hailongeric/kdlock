@@ -1,0 +1,3881 @@
+make: Entering directory '/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/checks-2/source/tests/unit'
+cc -g -O0 -Wall -Wextra -std=gnu11 -I../../include -o basic/test_control_call basic/test_control_call.c
+cc -g -O0 -Wall -Wextra -std=gnu11 -I../../include -o basic/test_daemon_policy basic/test_daemon_policy.c
+
+[PASS] test_control_call (56 phase/error combinations, post-CALL bounds)
+
+chdir translator workspace: No such file or directory
+daemon: translator failed: workspace=./0x1234 status=32256
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "/usr/lib/python3.10/runpy.py", line 288, in run_path
+    code, fname = _get_code_from_file(run_name, path_name)
+  File "/usr/lib/python3.10/runpy.py", line 252, in _get_code_from_file
+    with io.open_code(decoded_path) as f:
+FileNotFoundError: [Errno 2] No such file or directory: '/tmp/kdlock-compiler-launch.g1p0b7/disassem/disassem.py'
+daemon: translator failed: workspace=./0x1234 status=256
+daemon: translator failed: workspace=./0x1234 status=256
+daemon: translator failed: workspace=./0x1234 status=256
+daemon: translator failed: workspace=./0x1234 status=256
+chdir translator workspace: No such file or directory
+KD_TRANSLATION_METRICS {"schema":1,"pid":0,"tgid":42,"entry":"0x1234","lock_kind":2,"child":2776324,"started_ns":448189267505395,"finished_ns":448189268912147,"wall_ns":1406752,"user_ns":0,"system_ns":950000,"maxrss_kib":1380,"minor_faults":37,"major_faults":0,"voluntary_cs":1,"involuntary_cs":0,"status":32256,"result":-1}
+daemon: translator failed: workspace=./0x1234/42 status=32256
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "/usr/lib/python3.10/runpy.py", line 288, in run_path
+    code, fname = _get_code_from_file(run_name, path_name)
+  File "/usr/lib/python3.10/runpy.py", line 252, in _get_code_from_file
+    with io.open_code(decoded_path) as f:
+FileNotFoundError: [Errno 2] No such file or directory: '/tmp/kdlock-compiler-launch.g1p0b7/disassem/disassem.py'
+KD_TRANSLATION_METRICS {"schema":1,"pid":0,"tgid":42,"entry":"0x1234","lock_kind":2,"child":2776325,"started_ns":448189269138531,"finished_ns":448189293330996,"wall_ns":24192465,"user_ns":15850000,"system_ns":7906000,"maxrss_kib":8968,"minor_faults":984,"major_faults":0,"voluntary_cs":1,"involuntary_cs":0,"status":256,"result":-1}
+daemon: translator failed: workspace=./0x1234/42 status=256
+KD_TRANSLATION_METRICS {"schema":1,"pid":0,"tgid":42,"entry":"0x1234","lock_kind":0,"child":2776326,"started_ns":448189293547015,"finished_ns":448189319916884,"wall_ns":26369869,"user_ns":25805000,"system_ns":0,"maxrss_kib":9136,"minor_faults":1046,"major_faults":0,"voluntary_cs":1,"involuntary_cs":1,"status":0,"result":0}
+KD_TRANSLATION_METRICS {"schema":1,"pid":0,"tgid":42,"entry":"0x1234","lock_kind":0,"child":2776327,"started_ns":448189320251815,"finished_ns":448189349564532,"wall_ns":29312717,"user_ns":28866000,"system_ns":0,"maxrss_kib":9136,"minor_faults":1043,"major_faults":0,"voluntary_cs":1,"involuntary_cs":0,"status":256,"result":-1}
+daemon: translator failed: workspace=./0x1234/42 status=256
+KD_TRANSLATION_METRICS {"schema":1,"pid":0,"tgid":42,"entry":"0x1234","lock_kind":0,"child":2776328,"started_ns":448189349895304,"finished_ns":448189376482240,"wall_ns":26586936,"user_ns":18637000,"system_ns":7480000,"maxrss_kib":9220,"minor_faults":1047,"major_faults":0,"voluntary_cs":1,"involuntary_cs":0,"status":512,"result":2}
+KD_TRANSLATION_METRICS {"schema":1,"pid":0,"tgid":42,"entry":"0x1234","lock_kind":1,"child":2776329,"started_ns":448189376795917,"finished_ns":448189405241597,"wall_ns":28445680,"user_ns":23987000,"system_ns":3990000,"maxrss_kib":9148,"minor_faults":1043,"major_faults":0,"voluntary_cs":1,"involuntary_cs":0,"status":0,"result":0}
+KD_TRANSLATION_METRICS {"schema":1,"pid":0,"tgid":42,"entry":"0x1234","lock_kind":1,"child":2776330,"started_ns":448189405746090,"finished_ns":448189431946403,"wall_ns":26200313,"user_ns":17167000,"system_ns":8569000,"maxrss_kib":9144,"minor_faults":1044,"major_faults":0,"voluntary_cs":1,"involuntary_cs":0,"status":256,"result":-1}
+daemon: translator failed: workspace=./0x1234/42 status=256
+KD_TRANSLATION_METRICS {"schema":1,"pid":0,"tgid":42,"entry":"0x1234","lock_kind":1,"child":2776331,"started_ns":448189432344578,"finished_ns":448189459752414,"wall_ns":27407836,"user_ns":22559000,"system_ns":4503000,"maxrss_kib":9312,"minor_faults":1048,"major_faults":0,"voluntary_cs":1,"involuntary_cs":0,"status":512,"result":2}
+KD_TRANSLATION_METRICS {"schema":1,"pid":0,"tgid":42,"entry":"0x1234","lock_kind":2,"child":2776332,"started_ns":448189460118204,"finished_ns":448189487930079,"wall_ns":27811875,"user_ns":22820000,"system_ns":4565000,"maxrss_kib":9124,"minor_faults":1045,"major_faults":0,"voluntary_cs":1,"involuntary_cs":0,"status":0,"result":0}
+KD_TRANSLATION_METRICS {"schema":1,"pid":0,"tgid":42,"entry":"0x1234","lock_kind":2,"child":2776333,"started_ns":448189488258512,"finished_ns":448189513042534,"wall_ns":24784022,"user_ns":20242000,"system_ns":4069000,"maxrss_kib":9200,"minor_faults":1044,"major_faults":0,"voluntary_cs":1,"involuntary_cs":1,"status":256,"result":-1}
+daemon: translator failed: workspace=./0x1234/42 status=256
+KD_TRANSLATION_METRICS {"schema":1,"pid":0,"tgid":42,"entry":"0x1234","lock_kind":2,"child":2776334,"started_ns":448189513400915,"finished_ns":448189541459624,"wall_ns":28058709,"user_ns":19687000,"system_ns":7918000,"maxrss_kib":9300,"minor_faults":1048,"major_faults":0,"voluntary_cs":1,"involuntary_cs":0,"status":512,"result":2}
+daemon: invalid translation monotonic clock
+daemon: invalid translation monotonic clock
+daemon: invalid translation resource record
+daemon: invalid translation resource record
+daemon: invalid translation resource record
+write /dev/kd_dev: Bad file descriptor
+read /dev/kd_dev: Bad file descriptor
+open /dev/kd_dev session: No such file or directory
+daemon: native-only status write failed: -1
+[PASS] daemon opt-in metrics, real children and observation faults
+[PASS] test_daemon_policy
+
+test_contract_is_only_mutex_abi2_and_negotiated (__main__.NativeEscapeAdmissionTests) ... ok
+test_native_suffix_and_cold_branch_keep_original_context_checks (__main__.NativeEscapeAdmissionTests) ... ok
+test_only_exact_rdtscp_decoder_alias_is_normalized (__main__.NativeEscapeAdmissionTests) ... ok
+test_prefixed_misdecoded_unknown_and_nonlocal_instructions_still_refuse (__main__.NativeEscapeAdmissionTests) ... [WARNING ]: cannot disasm at 1009
+[WARNING ]: cannot disasm at 1009
+[WARNING ]: cannot disasm at 1009
+[WARNING ]: cannot disasm at 1009
+[WARNING ]: cannot disasm (guess) at 1009
+[WARNING ]: cannot disasm at 1009
+[WARNING ]: cannot disasm (guess) at 1009
+[WARNING ]: cannot disasm at 1009
+[WARNING ]: cannot disasm (guess) at 1009
+[WARNING ]: cannot disasm at 1009
+[WARNING ]: cannot disasm at 1009
+[WARNING ]: cannot disasm at 1009
+[WARNING ]: cannot disasm at 1009
+[WARNING ]: cannot disasm at 1009
+ok
+test_reviewed_instructions_emit_exit_before_source_instruction (__main__.NativeEscapeAdmissionTests) ... ok
+test_source_flags_and_implicit_inputs_must_be_defined (__main__.NativeEscapeAdmissionTests) ... ok
+test_taken_and_untaken_paths_share_a_checked_marker_image (__main__.NativeEscapeAdmissionTests) ... ok
+test_early_unlock_with_a_nested_hold_is_refused_before_trimming (__main__.RootNativeEscapeAdmissionTests) ... ok
+test_indirect_history_tail_controls_and_address_taking_refuse (__main__.RootNativeEscapeAdmissionTests) ... [WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 2000000
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 2000000
+ok
+test_marker_images_do_not_prune_source_before_flag_and_control_proof (__main__.RootNativeEscapeAdmissionTests) ... ok
+test_nested_controls_and_services_before_or_after_marker_refuse (__main__.RootNativeEscapeAdmissionTests) ... ok
+test_reviewed_set_and_source_proofs_remain_required (__main__.RootNativeEscapeAdmissionTests) ... [WARNING ]: cannot disasm at 1009
+[WARNING ]: cannot disasm at 1009
+[WARNING ]: cannot disasm at 1009
+[WARNING ]: cannot disasm at 1009
+[WARNING ]: cannot disasm at 1009
+[WARNING ]: cannot disasm at 1009
+[WARNING ]: cannot disasm at 1009
+[WARNING ]: cannot disasm at 1009
+ok
+test_rwlock_fast_unlock_is_only_an_unlearned_terminal_abi3_call (__main__.RootNativeEscapeAdmissionTests) ... ok
+test_separate_capability_and_exact_image_requirement (__main__.RootNativeEscapeAdmissionTests) ... ok
+test_terminal_unlock_and_missing_direct_callee_stay_admissible (__main__.RootNativeEscapeAdmissionTests) ... ok
+
+----------------------------------------------------------------------
+Ran 15 tests in 1.220s
+
+OK
+
+test_aliases_operands_and_future_mnemonics_fail_closed (__main__.InstructionPolicyTests) ... ok
+test_branches_learned_callees_and_indirect_targets_are_checked (__main__.InstructionPolicyTests) ... [WARNING ]: cannot disasm at 1003
+[WARNING ]: cannot disasm at 1003
+[WARNING ]: cannot disasm at 2000
+[WARNING ]: cannot disasm at 2000
+[WARNING ]: cannot disasm at 2000
+[WARNING ]: cannot disasm at 2000
+ok
+test_direct_lowering_cannot_copy_state_instructions (__main__.InstructionPolicyTests) ... ok
+test_helper_symbols_cannot_hide_context_effects (__main__.InstructionPolicyTests) ... ok
+test_known_undecodable_opcodes_need_no_extra_text_read (__main__.InstructionPolicyTests) ... [WARNING ]: cannot disasm at 1000
+[WARNING ]: cannot disasm at 1000
+[WARNING ]: cannot disasm at 1000
+[WARNING ]: cannot disasm at 1000
+[WARNING ]: cannot disasm at 1000
+[WARNING ]: cannot disasm at 1000
+[WARNING ]: cannot disasm at 1000
+[WARNING ]: cannot disasm at 1000
+[WARNING ]: cannot disasm at 1000
+[WARNING ]: cannot disasm at 1000
+ok
+test_native_suffix_and_post_unlock_bytes_remain_outside_the_episode (__main__.InstructionPolicyTests) ... [WARNING ]: cannot disasm at 1005
+[WARNING ]: cannot disasm at 1005
+[WARNING ]: cannot disasm at 1005
+[WARNING ]: cannot disasm at 1005
+ok
+test_other_unvirtualized_state_and_effects_are_refused (__main__.InstructionPolicyTests) ... [WARNING ]: cannot disasm (guess) at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm (guess) at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm (guess) at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm (guess) at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm (guess) at 1007
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm (guess) at 1007
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm (guess) at 1007
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm (guess) at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm (guess) at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm (guess) at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm (guess) at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm (guess) at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm (guess) at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+ok
+test_paired_enable_disable_is_still_native_only (__main__.InstructionPolicyTests) ... [WARNING ]: cannot disasm at 1000
+[WARNING ]: cannot disasm at 1000
+ok
+test_prefixes_and_misdecoded_names_cannot_bypass_checks (__main__.InstructionPolicyTests) ... [WARNING ]: cannot disasm at 1000
+[WARNING ]: cannot disasm at 1000
+[WARNING ]: cannot disasm at 1000
+[WARNING ]: cannot disasm at 1000
+ok
+test_state_instructions_are_refused_for_every_backend_and_abi (__main__.InstructionPolicyTests) ... [WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+[WARNING ]: cannot disasm at 1006
+ok
+test_supported_integer_code_still_emits_for_every_entry (__main__.InstructionPolicyTests) ... ok
+
+----------------------------------------------------------------------
+Ran 11 tests in 0.678s
+
+OK
+
+...............[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 4008
+..............[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3000
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3000
+...................[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3000
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3000
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3000
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3000
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3000
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3000
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3000
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3000
+..[WARNING ]: cannot disasm at 1000
+[WARNING ]: cannot disasm at 1000
+...[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3000
+.............[KD_JIT][WARN] reason=STATIC_PERCPU_SCREENING pid=0 entry="0x1000" rip="0x1005" inst="CALL       loc_key_3" action="extend_static_ranges" detail="core static/module reserved arenas only; dynamic allocations, object lifetimes and unknown pointers are not validated" cpus=2 bytes_per_cpu=8449 core_bytes=257 module_bytes=8192
+...................[KD_JIT][WARN] reason=STATIC_PERCPU_SCREENING pid=0 entry="0x1000" rip="0x1000" inst="MOV        RAX, QWORD PTR [RIP + 0x1FF9]" action="extend_static_ranges" detail="core static/module reserved arenas only; dynamic allocations, object lifetimes and unknown pointers are not validated" cpus=2 bytes_per_cpu=256 core_bytes=256 module_bytes=0
+..[KD_JIT][WARN] reason=STATIC_PERCPU_SCREENING pid=0 entry="0x1000" rip="0x1000" inst="<entry/branch instrumentation>" action="extend_static_ranges" detail="core static/module reserved arenas only; dynamic allocations, object lifetimes and unknown pointers are not validated" cpus=2 bytes_per_cpu=256 core_bytes=256 module_bytes=0
+...[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3008
+...............
+----------------------------------------------------------------------
+Ran 105 tests in 4.764s
+
+OK
+
+test_address_guard_capability_is_optional_and_versioned (__main__.DeviceSessionTests) ... ok
+test_audited_string_calls_require_new_capability_and_same_lease (__main__.DeviceSessionTests) ... ok
+test_capability_io_failure_closes_without_inspection_or_cached_state (__main__.DeviceSessionTests) ... ok
+test_capability_is_cached_only_for_the_validated_lease (__main__.DeviceSessionTests) ... ok
+test_direct_cli_lease_closes_after_normal_exit (__main__.DeviceSessionTests) ... ok
+test_direct_string_calls_require_a_new_optional_capability_and_lease (__main__.DeviceSessionTests) ... ok
+test_exception_closes_lease_and_allows_the_next_translation (__main__.DeviceSessionTests) ... ok
+test_inherited_lease_never_reopens_or_closes_the_original (__main__.DeviceSessionTests) ... ok
+test_invalid_inherited_descriptor_is_not_a_new_session (__main__.DeviceSessionTests) ... ok
+test_known_versions_never_infer_an_unadvertised_module_arena (__main__.DeviceSessionTests) ... ok
+test_leased_kcore_read_preserves_the_existing_elf_mapping (__main__.DeviceSessionTests) ... ok
+test_marker_capability_is_optional_and_versioned (__main__.DeviceSessionTests) ... ok
+test_matching_regular_file_is_not_a_device (__main__.DeviceSessionTests) ... ok
+test_nested_session_cannot_discard_the_outer_lease (__main__.DeviceSessionTests) ... ok
+test_old_optional_capability_does_not_enable_preservation (__main__.DeviceSessionTests) ... ok
+test_partial_unknown_and_inconsistent_capabilities_stay_disabled (__main__.DeviceSessionTests) ... ok
+test_pin_refusal_precedes_kcore_read (__main__.DeviceSessionTests) ... ok
+test_retired_or_incompatible_provider_closes_before_inspection (__main__.DeviceSessionTests) ... ok
+test_root_markers_require_separate_capability_on_this_lease (__main__.DeviceSessionTests) ... ok
+test_shared_linux_object_provider_is_refused (__main__.DeviceSessionTests) ... ok
+test_string_service_capability_requires_current_provider_and_lease (__main__.DeviceSessionTests) ... ok
+test_string_writer_requires_its_separate_capability_and_lease (__main__.DeviceSessionTests) ... ok
+test_unleased_kcore_read_is_refused_before_open (__main__.DeviceSessionTests) ... ok
+test_wrong_or_readonly_device_is_rejected_without_fd_leak (__main__.DeviceSessionTests) ... ok
+test_additional_root_inside_existing_block_gets_a_dispatch_label (__main__.TextRegionTests) ... ok
+test_backward_page_branch_contains_the_actual_body (__main__.TextRegionTests) ... [WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1001F63
+ok
+test_byte_budget_refuses_before_read_or_codegen (__main__.TextRegionTests) ... [WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1001F63
+ok
+test_cached_window_reseeding_shares_the_cfg_expansion_budget (__main__.TextRegionTests) ... [WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007000
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002020
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007000
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007020
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002020
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007000
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007020
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002020
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002040
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007000
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007020
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007040
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002020
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002040
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007000
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007020
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007040
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002020
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002040
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002060
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007000
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007020
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007040
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007060
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002020
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002040
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002060
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007000
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007020
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007040
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007060
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002020
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002040
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002060
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002080
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007000
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007020
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007040
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007060
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007080
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002020
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002040
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002060
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002080
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007000
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007020
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007040
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007060
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007080
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002020
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002040
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002060
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002080
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC10020A0
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007000
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007020
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007040
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007060
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007080
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC10070A0
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002020
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002040
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002060
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002080
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC10020A0
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007000
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007020
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007040
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007060
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007080
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC10070A0
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002020
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002040
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002060
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002080
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC10020A0
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC10020C0
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007000
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007020
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007040
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007060
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007080
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC10070A0
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC10070C0
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002020
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002040
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002060
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002080
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC10020A0
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC10020C0
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007000
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007020
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007040
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007060
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007080
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC10070A0
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC10070C0
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002020
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002040
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002060
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002080
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC10020A0
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC10020C0
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC10020E0
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007000
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007020
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007040
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007060
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007080
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC10070A0
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC10070C0
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC10070E0
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002020
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002040
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002060
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002080
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC10020A0
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC10020C0
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC10020E0
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007000
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007020
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007040
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007060
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007080
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC10070A0
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC10070C0
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC10070E0
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002020
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002040
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002060
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002080
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC10020A0
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC10020C0
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC10020E0
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007000
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007020
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007040
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007060
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007080
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC10070A0
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC10070C0
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC10070E0
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007100
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002020
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002040
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002060
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002080
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC10020A0
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC10020C0
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC10020E0
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007000
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007020
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007040
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007060
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007080
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC10070A0
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC10070C0
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC10070E0
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007100
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002020
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002040
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002060
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002080
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC10020A0
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC10020C0
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC10020E0
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002100
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002120
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007000
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007020
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007040
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007060
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007080
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC10070A0
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC10070C0
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC10070E0
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007120
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002020
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002040
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002060
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002080
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC10020A0
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC10020C0
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC10020E0
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002100
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002120
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007000
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007020
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007040
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007060
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007080
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC10070A0
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC10070C0
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC10070E0
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007120
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002020
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002040
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002060
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002080
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC10020A0
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC10020C0
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC10020E0
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002100
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002120
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002140
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007000
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007020
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007040
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007060
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007080
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC10070A0
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC10070C0
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC10070E0
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007120
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007140
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002020
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002040
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002060
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002080
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC10020A0
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC10020C0
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC10020E0
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002100
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002120
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002140
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007000
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007020
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007040
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007060
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007080
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC10070A0
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC10070C0
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC10070E0
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007120
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007140
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002020
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002040
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002060
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002080
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC10020A0
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC10020C0
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC10020E0
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002100
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002120
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002140
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002160
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007000
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007020
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007040
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007060
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007080
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC10070A0
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC10070C0
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC10070E0
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007120
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007140
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007160
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002020
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002040
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002060
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002080
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC10020A0
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC10020C0
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC10020E0
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002100
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002120
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002140
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002160
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007000
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007020
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007040
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007060
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007080
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC10070A0
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC10070C0
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC10070E0
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007120
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007140
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007160
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002020
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002040
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002060
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002080
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC10020A0
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC10020C0
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC10020E0
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002100
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002120
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002140
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002160
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002180
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007000
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007020
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007040
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007060
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007080
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC10070A0
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC10070C0
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC10070E0
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007120
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007140
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007160
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007180
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002020
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002040
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002060
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002080
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC10020A0
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC10020C0
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC10020E0
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002100
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002120
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002140
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002160
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002180
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007000
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007020
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007040
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007060
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007080
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC10070A0
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC10070C0
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC10070E0
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007120
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007140
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007160
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007180
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002020
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002040
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002060
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002080
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC10020A0
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC10020C0
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC10020E0
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002100
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002120
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002140
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002160
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002180
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC10021A0
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007000
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007020
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007040
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007060
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007080
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC10070A0
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC10070C0
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC10070E0
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007120
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007140
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007160
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007180
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC10071A0
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002020
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002040
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002060
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002080
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC10020A0
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC10020C0
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC10020E0
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002100
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002120
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002140
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002160
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002180
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC10021A0
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007000
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007020
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007040
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007060
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007080
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC10070A0
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC10070C0
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC10070E0
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007120
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007140
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007160
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007180
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC10071A0
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002020
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002040
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002060
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002080
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC10020A0
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC10020C0
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC10020E0
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002100
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002120
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002140
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002160
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002180
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC10021A0
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC10021C0
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007000
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007020
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007040
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007060
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007080
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC10070A0
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC10070C0
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC10070E0
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007120
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007140
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007160
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007180
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC10071A0
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC10071C0
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002020
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002040
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002060
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002080
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC10020A0
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC10020C0
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC10020E0
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002100
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002120
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002140
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002160
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002180
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC10021A0
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC10021C0
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007000
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007020
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007040
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007060
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007080
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC10070A0
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC10070C0
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC10070E0
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007120
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007140
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007160
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007180
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC10071A0
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC10071C0
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002020
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002040
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002060
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002080
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC10020A0
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC10020C0
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC10020E0
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002100
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002120
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002140
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002160
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002180
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC10021A0
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC10021C0
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC10021E0
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007000
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007020
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007040
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007060
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007080
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC10070A0
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC10070C0
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC10070E0
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007120
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007140
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007160
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007180
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC10071A0
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC10071C0
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC10071E0
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002020
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002040
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002060
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002080
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC10020A0
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC10020C0
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC10020E0
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002100
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002120
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002140
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002160
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002180
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC10021A0
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC10021C0
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC10021E0
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007000
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007020
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007040
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007060
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007080
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC10070A0
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC10070C0
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC10070E0
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007120
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007140
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007160
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007180
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC10071A0
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC10071C0
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC10071E0
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002020
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002040
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002060
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002080
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC10020A0
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC10020C0
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC10020E0
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002100
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002120
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002140
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002160
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002180
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC10021A0
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC10021C0
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC10021E0
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002200
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007000
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007020
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007040
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007060
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007080
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC10070A0
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC10070C0
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC10070E0
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007120
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007140
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007160
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007180
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC10071A0
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC10071C0
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC10071E0
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007200
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002020
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002040
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002060
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002080
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC10020A0
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC10020C0
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC10020E0
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002100
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002120
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002140
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002160
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002180
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC10021A0
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC10021C0
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC10021E0
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002200
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007000
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007020
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007040
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007060
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007080
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC10070A0
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC10070C0
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC10070E0
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007120
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007140
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007160
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007180
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC10071A0
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC10071C0
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC10071E0
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007200
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002020
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002040
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002060
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002080
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC10020A0
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC10020C0
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC10020E0
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002100
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002120
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002140
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002160
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002180
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC10021A0
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC10021C0
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC10021E0
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002200
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1002220
+ok
+test_cold_source_refusal_is_terminal_policy_not_partial_code (__main__.TextRegionTests) ... [WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1001F63
+ok
+test_expanded_root_marker_rechecks_later_lock_control (__main__.TextRegionTests) ... [WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1001F63
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007100
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1001F63
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007100
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1001F63
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007100
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1001F63
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007100
+ok
+test_expansion_count_is_bounded_even_when_byte_budget_allows_more (__main__.TextRegionTests) ... [WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1004100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1004100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1008100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1004100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1008100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC100C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1004100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1008100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC100C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1010100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1004100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1008100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC100C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1010100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1014100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1004100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1008100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC100C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1010100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1014100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1018100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1004100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1008100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC100C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1010100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1014100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1018100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC101C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1004100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1008100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC100C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1010100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1014100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1018100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC101C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1020100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1004100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1008100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC100C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1010100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1014100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1018100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC101C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1020100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1024100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1004100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1008100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC100C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1010100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1014100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1018100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC101C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1020100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1024100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1028100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1004100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1008100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC100C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1010100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1014100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1018100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC101C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1020100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1024100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1028100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC102C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1004100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1008100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC100C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1010100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1014100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1018100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC101C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1020100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1024100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1028100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC102C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1030100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1004100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1008100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC100C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1010100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1014100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1018100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC101C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1020100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1024100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1028100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC102C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1030100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1034100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1004100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1008100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC100C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1010100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1014100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1018100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC101C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1020100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1024100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1028100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC102C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1030100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1034100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1038100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1004100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1008100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC100C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1010100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1014100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1018100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC101C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1020100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1024100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1028100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC102C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1030100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1034100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1038100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC103C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1004100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1008100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC100C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1010100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1014100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1018100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC101C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1020100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1024100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1028100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC102C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1030100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1034100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1038100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC103C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1040100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1004100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1008100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC100C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1010100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1014100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1018100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC101C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1020100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1024100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1028100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC102C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1030100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1034100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1038100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC103C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1040100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1044100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1004100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1008100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC100C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1010100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1014100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1018100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC101C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1020100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1024100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1028100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC102C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1030100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1034100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1038100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC103C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1040100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1044100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1048100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1004100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1008100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC100C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1010100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1014100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1018100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC101C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1020100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1024100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1028100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC102C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1030100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1034100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1038100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC103C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1040100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1044100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1048100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC104C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1004100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1008100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC100C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1010100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1014100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1018100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC101C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1020100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1024100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1028100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC102C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1030100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1034100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1038100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC103C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1040100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1044100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1048100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC104C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1050100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1004100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1008100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC100C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1010100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1014100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1018100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC101C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1020100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1024100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1028100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC102C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1030100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1034100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1038100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC103C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1040100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1044100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1048100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC104C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1050100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1054100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1004100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1008100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC100C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1010100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1014100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1018100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC101C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1020100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1024100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1028100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC102C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1030100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1034100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1038100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC103C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1040100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1044100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1048100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC104C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1050100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1054100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1058100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1004100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1008100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC100C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1010100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1014100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1018100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC101C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1020100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1024100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1028100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC102C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1030100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1034100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1038100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC103C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1040100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1044100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1048100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC104C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1050100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1054100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1058100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC105C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1004100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1008100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC100C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1010100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1014100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1018100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC101C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1020100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1024100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1028100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC102C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1030100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1034100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1038100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC103C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1040100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1044100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1048100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC104C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1050100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1054100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1058100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC105C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1060100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1004100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1008100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC100C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1010100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1014100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1018100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC101C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1020100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1024100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1028100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC102C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1030100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1034100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1038100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC103C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1040100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1044100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1048100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC104C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1050100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1054100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1058100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC105C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1060100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1064100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1004100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1008100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC100C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1010100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1014100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1018100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC101C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1020100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1024100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1028100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC102C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1030100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1034100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1038100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC103C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1040100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1044100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1048100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC104C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1050100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1054100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1058100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC105C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1060100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1064100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1068100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1004100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1008100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC100C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1010100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1014100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1018100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC101C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1020100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1024100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1028100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC102C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1030100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1034100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1038100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC103C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1040100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1044100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1048100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC104C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1050100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1054100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1058100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC105C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1060100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1064100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1068100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC106C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1004100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1008100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC100C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1010100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1014100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1018100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC101C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1020100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1024100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1028100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC102C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1030100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1034100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1038100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC103C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1040100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1044100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1048100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC104C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1050100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1054100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1058100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC105C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1060100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1064100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1068100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC106C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1070100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1004100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1008100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC100C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1010100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1014100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1018100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC101C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1020100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1024100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1028100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC102C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1030100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1034100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1038100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC103C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1040100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1044100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1048100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC104C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1050100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1054100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1058100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC105C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1060100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1064100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1068100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC106C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1070100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1074100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1004100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1008100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC100C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1010100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1014100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1018100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC101C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1020100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1024100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1028100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC102C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1030100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1034100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1038100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC103C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1040100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1044100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1048100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC104C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1050100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1054100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1058100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC105C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1060100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1064100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1068100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC106C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1070100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1074100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1078100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1004100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1008100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC100C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1010100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1014100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1018100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC101C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1020100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1024100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1028100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC102C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1030100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1034100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1038100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC103C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1040100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1044100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1048100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC104C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1050100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1054100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1058100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC105C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1060100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1064100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1068100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC106C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1070100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1074100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1078100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC107C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1004100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1008100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC100C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1010100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1014100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1018100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC101C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1020100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1024100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1028100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC102C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1030100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1034100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1038100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC103C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1040100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1044100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1048100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC104C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1050100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1054100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1058100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC105C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1060100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1064100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1068100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC106C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1070100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1074100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1078100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC107C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1080100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1004100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1008100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC100C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1010100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1014100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1018100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC101C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1020100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1024100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1028100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC102C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1030100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1034100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1038100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC103C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1040100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1044100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1048100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC104C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1050100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1054100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1058100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC105C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1060100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1064100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1068100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC106C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1070100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1074100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1078100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC107C100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1080100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1084100
+ok
+test_fetched_branch_is_not_promoted_to_a_full_scan_callee (__main__.TextRegionTests) ... [WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1001F63
+ok
+test_instruction_split_at_read_boundary_is_fetched_before_rejection (__main__.TextRegionTests) ... [WARNING ]: cannot disasm at FFFFFFFFC1003FFF
+[WARNING ]: cannot disasm at FFFFFFFFC1003FFF
+ok
+test_new_hot_path_seeds_another_block_in_already_fetched_cold_window (__main__.TextRegionTests) ... [WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007100
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1001100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007200
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007200
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007100
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1001100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007200
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007200
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007100
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1001100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007200
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007100
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007200
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at FFFFFFFFC1007100
+[WARNING ]: cannot disasm (guess) at FFFFFFFFC1007200
+[WARNING ]: cannot disasm at FFFFFFFFC1007200
+ok
+test_new_text_is_checked_for_context_dependencies (__main__.TextRegionTests) ... [WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1001F63
+ok
+test_non_kernel_branch_target_is_not_read (__main__.TextRegionTests) ... ok
+test_overlapping_windows_are_merged_and_roots_preserved (__main__.TextRegionTests) ... ok
+test_real_block_wins_over_cross_region_bad_placeholder_in_both_orders (__main__.TextRegionTests) ... [WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1001F63
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFFC1001F63
+ok
+test_short_reads_are_errors_not_executable_placeholders (__main__.TextRegionTests) ... ok
+
+----------------------------------------------------------------------
+Ran 39 tests in 0.449s
+
+OK
+
+test_absolute_guard_and_saved_register_offsets (__main__.EntryGuardTests) ... ok
+test_analysis_refuses_exhausted_guard_collection_before_emission (__main__.EntryGuardTests) ... ok
+test_automatic_nested_admission_checks_aliases_before_real_stores (__main__.EntryGuardTests) ... ok
+test_checked_capability_marks_only_guarded_mutex_control_targets (__main__.EntryGuardTests) ... ok
+test_checked_mutex_requires_all_numeric_stack_paths_and_known_ir (__main__.EntryGuardTests) ... ok
+test_checked_mutex_uses_post_push_memory_not_the_pre_call_snapshot (__main__.EntryGuardTests) ... ok
+test_collected_conditions_never_drop_a_requested_separation (__main__.EntryGuardTests) ... ok
+test_control_effects_preserve_only_saved_registers_not_memory (__main__.EntryGuardTests) ... ok
+test_entry_guards_require_one_explicit_root (__main__.EntryGuardTests) ... ok
+test_failure_keeps_all_registers_stack_and_memory_unchanged (__main__.EntryGuardTests) ... ok
+test_guarded_analysis_keeps_explicit_context_rejections (__main__.EntryGuardTests) ... ok
+test_guards_do_not_hide_unknown_writes_or_callee_memory_clobbers (__main__.EntryGuardTests) ... ok
+test_missing_identity_and_budgets_are_not_assumptions (__main__.EntryGuardTests) ... ok
+test_nested_precision_retry_fetches_and_checks_cold_paths (__main__.EntryGuardTests) ... [WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3000
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3000
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3000
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 3000
+ok
+test_no_guard_and_continuation_dispatch (__main__.EntryGuardTests) ... ok
+test_overlap_adjacency_and_modular_wrap (__main__.EntryGuardTests) ... ok
+test_real_wrapper_predicate_matches_reference (__main__.EntryGuardTests) ... ok
+test_stack_guard_reads_saved_virtual_rsp_not_wrapper_rsp (__main__.EntryGuardTests) ... ok
+test_store_guard_covers_every_byte_not_only_the_write_start (__main__.EntryGuardTests) ... ok
+test_all_generated_return_targets_must_have_checked_effect_edges (__main__.ScopedCallTests) ... ok
+test_call_packet_and_ret_effects_replace_fabricated_fallthrough (__main__.ScopedCallTests) ... ok
+test_callee_memory_writes_reach_caller_admission (__main__.ScopedCallTests) ... ok
+test_checked_nested_control_keeps_sensitive_spill_and_unknown_alias_refusals (__main__.ScopedCallTests) ... [WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 102F
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 102F
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 4000
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 4000
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 102F
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 102F
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 4000
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 4000
+ok
+test_checked_nested_control_returns_execute_with_shared_or_private_ret (__main__.ScopedCallTests) ... [WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 102F
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 102F
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 4000
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 4000
+ok
+test_disconnected_learned_target_cannot_inherit_root_facts (__main__.ScopedCallTests) ... ok
+test_final_emission_refuses_return_budget_without_guarded_retry (__main__.ScopedCallTests) ... ok
+test_guarded_learned_callee_really_executes_before_lock_exit (__main__.ScopedCallTests) ... ok
+test_helper_only_retry_executes_and_refuses_alias_before_any_store (__main__.ScopedCallTests) ... ok
+test_helper_only_retry_keeps_context_and_indirect_history_refusals (__main__.ScopedCallTests) ... ok
+test_incomplete_return_graph_never_publishes_a_partial_whitelist (__main__.ScopedCallTests) ... ok
+test_indirect_history_cannot_enable_guarded_callee_admission (__main__.ScopedCallTests) ... ok
+test_long_callee_return_discovery_is_not_python_recursion_limited (__main__.ScopedCallTests) ... ok
+test_multisite_shared_tail_and_redirected_return_execute_real_images (__main__.ScopedCallTests) ... [WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 4000
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 4000
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 4000
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 4000
+ok
+test_nested_control_spill_clobber_is_not_mislabelled_as_a_shared_ret_fix (__main__.ScopedCallTests) ... [WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 102F
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 102F
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 4000
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 4000
+ok
+test_nested_ret_partition_budget_refuses_without_publishing (__main__.ScopedCallTests) ... [WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 102F
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 4000
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 4000
+ok
+test_nested_shared_ret_executes_with_proven_stack_partitions (__main__.ScopedCallTests) ... [WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 4000
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 4000
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 102F
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 4000
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 4000
+ok
+test_return_discovery_preserves_history_and_bounds_cycles_and_work (__main__.ScopedCallTests) ... ok
+test_return_slot_alias_cannot_hide_a_different_callers_context_pointer (__main__.ScopedCallTests) ... ok
+test_scoped_graph_rejects_indirect_and_adjusting_returns (__main__.ScopedCallTests) ... ok
+test_scoped_recursion_keeps_the_flow_budget (__main__.ScopedCallTests) ... ok
+test_skipped_return_blocks_still_receive_unconditional_context_checks (__main__.ScopedCallTests) ... [WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 103E
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 1036
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 1036
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 1037
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 1037
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 1036
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 1039
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 1038
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 1037
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 1038
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 103D
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 103A
+ok
+test_unknown_return_word_keeps_whitelist_and_misses_unlisted_target (__main__.ScopedCallTests) ... ok
+test_unknown_shared_ret_joins_effects_without_unbounded_stack_partitions (__main__.ScopedCallTests) ... [WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 4000
+[WARNING ]: not enough bytes in str
+[WARNING ]: cannot disasm at 4000
+ok
+
+----------------------------------------------------------------------
+Ran 43 tests in 2.570s
+
+OK
+
+/root/kdlock-translation-venv-20261019/lib/python3.10/site-packages/miasm/jitter/jitcore_cc_base.py:8: DeprecationWarning: The distutils package is deprecated and slated for removal in Python 3.12. Use setuptools or check PEP 632 for potential alternatives
+  from distutils.sysconfig import get_python_inc
+/root/kdlock-translation-venv-20261019/lib/python3.10/site-packages/miasm/jitter/jitcore_cc_base.py:8: DeprecationWarning: The distutils.sysconfig module is deprecated, use sysconfig instead
+  from distutils.sysconfig import get_python_inc
+.........
+----------------------------------------------------------------------
+Ran 9 tests in 0.050s
+
+OK
+
+./root/kdlock-translation-venv-20261019/lib/python3.10/site-packages/miasm/jitter/jitcore_cc_base.py:8: DeprecationWarning: The distutils package is deprecated and slated for removal in Python 3.12. Use setuptools or check PEP 632 for potential alternatives
+  from distutils.sysconfig import get_python_inc
+/root/kdlock-translation-venv-20261019/lib/python3.10/site-packages/miasm/jitter/jitcore_cc_base.py:8: DeprecationWarning: The distutils.sysconfig module is deprecated, use sysconfig instead
+  from distutils.sysconfig import get_python_inc
+.............................
+----------------------------------------------------------------------
+Ran 30 tests in 0.869s
+
+OK
+
+test_budget_expiry_stays_a_nonresumable_budget_exit (__main__.NativeEscapeCodegenTests) ... ok
+test_flags_cross_branch_budget_reserved_registers_and_lea_rewrite (__main__.NativeEscapeCodegenTests) ... ok
+test_indirect_dispatch_and_entry_dispatch_preserve_arithmetic_flags (__main__.NativeEscapeCodegenTests) ... ok
+test_mutable_cold_branch_and_exactly_once_prefix_stores (__main__.NativeEscapeCodegenTests) ... ok
+test_actual_clobber_packet_preserves_flags_and_exactly_once_prefix (__main__.RootNativeEscapeCodegenTests) ... ok
+test_budget_exit_does_not_become_an_instruction_marker (__main__.RootNativeEscapeCodegenTests) ... ok
+test_only_root_minimal_directory_can_execute_body (__main__.RootNativeEscapeCodegenTests) ... ok
+
+----------------------------------------------------------------------
+Ran 7 tests in 1.157s
+
+OK
+
+test_address_widening_distinguishes_actual_work_exhaustion (__main__.JitDiagnosticsTests) ... ok
+test_address_widening_reports_explicit_and_implicit_accesses (__main__.JitDiagnosticsTests) ... ok
+test_admitted_unknown_address_reports_screening_not_precision_failure (__main__.JitDiagnosticsTests) ... ok
+test_build_failure_is_reraised (__main__.JitDiagnosticsTests) ... ok
+test_build_success_keeps_checked_subprocess_arguments (__main__.JitDiagnosticsTests) ... ok
+test_dedup_is_per_reason_location_and_translation (__main__.JitDiagnosticsTests) ... ok
+test_failure_details_are_bounded_and_do_not_modify_analysis (__main__.JitDiagnosticsTests) ... ok
+test_flags_summary_and_lea_diagnostic (__main__.JitDiagnosticsTests) ... ok
+test_int_is_refused_with_source_location (__main__.JitDiagnosticsTests) ... ok
+test_operand_warning_retains_existing_result (__main__.JitDiagnosticsTests) ... ok
+test_pre_log_miasm_015_assembly_baselines (__main__.JitDiagnosticsTests) ... ok
+test_segment_rejection_does_not_generate_an_error_stub (__main__.JitDiagnosticsTests) ... ok
+test_unhandled_special_names_cannot_be_silently_omitted (__main__.JitDiagnosticsTests) ... ok
+
+----------------------------------------------------------------------
+Ran 13 tests in 0.148s
+
+OK
+
+[PASS] clobber caller spills/metadata, minimal completion/refusal, full hostcall/native packets (128 poisoned entries)
+[PASS] mixed legacy/clobber handoffs in old shells and unified C loop (16 entries)
+[PASS] clobber caller spills/metadata, minimal completion/refusal, full hostcall/native packets (128 poisoned entries)
+[PASS] mixed legacy/clobber handoffs in old shells and unified C loop (16 entries)
+[PASS] clobber caller spills/metadata, minimal completion/refusal, full hostcall/native packets (128 poisoned entries)
+[PASS] mixed legacy/clobber handoffs in old shells and unified C loop (16 entries)
+caller-clobber ABI 1: PASS
+direct spin caller-clobber shell with IRQ-stack overwrite: PASS
+premature wrapper frame release detected: PASS
+caller-clobber ABI 2: PASS
+
+native-call executable wrapper: 15663 checks, 0 failures; userspace lowering only
+[PASS] actual native-call wrapper execution; userspace lowering fixture only
+
+Execute paired JIT: ABI=1 native=False failure=0
+PASS clobber JIT unlock: ABI1/2/3 metadata, COMPLETE/refusal and native FULL continuation
+Execute paired JIT: ABI=1 native=False failure=1
+PASS clobber JIT unlock: ABI1/2/3 metadata, COMPLETE/refusal and native FULL continuation
+Execute paired JIT: ABI=1 native=False failure=2
+PASS clobber JIT unlock: ABI1/2/3 metadata, COMPLETE/refusal and native FULL continuation
+Execute paired JIT: ABI=1 native=False failure=3
+PASS clobber JIT unlock: ABI1/2/3 metadata, COMPLETE/refusal and native FULL continuation
+Execute paired JIT: ABI=1 native=False failure=4
+PASS clobber JIT unlock: ABI1/2/3 metadata, COMPLETE/refusal and native FULL continuation
+Execute paired JIT: ABI=1 native=False failure=5
+PASS clobber JIT unlock: ABI1/2/3 metadata, COMPLETE/refusal and native FULL continuation
+Execute paired JIT: ABI=1 native=False failure=6
+PASS clobber JIT unlock: ABI1/2/3 metadata, COMPLETE/refusal and native FULL continuation
+Execute paired JIT: ABI=2 native=False failure=0
+PASS clobber JIT unlock: ABI1/2/3 metadata, COMPLETE/refusal and native FULL continuation
+Execute paired JIT: ABI=2 native=False failure=1
+PASS clobber JIT unlock: ABI1/2/3 metadata, COMPLETE/refusal and native FULL continuation
+Execute paired JIT: ABI=2 native=False failure=2
+PASS clobber JIT unlock: ABI1/2/3 metadata, COMPLETE/refusal and native FULL continuation
+Execute paired JIT: ABI=2 native=False failure=3
+PASS clobber JIT unlock: ABI1/2/3 metadata, COMPLETE/refusal and native FULL continuation
+Execute paired JIT: ABI=2 native=False failure=4
+PASS clobber JIT unlock: ABI1/2/3 metadata, COMPLETE/refusal and native FULL continuation
+Execute paired JIT: ABI=2 native=False failure=5
+PASS clobber JIT unlock: ABI1/2/3 metadata, COMPLETE/refusal and native FULL continuation
+Execute paired JIT: ABI=2 native=False failure=6
+PASS clobber JIT unlock: ABI1/2/3 metadata, COMPLETE/refusal and native FULL continuation
+Execute paired JIT: ABI=3 native=False failure=0
+PASS clobber JIT unlock: ABI1/2/3 metadata, COMPLETE/refusal and native FULL continuation
+Execute paired JIT: ABI=3 native=False failure=1
+PASS clobber JIT unlock: ABI1/2/3 metadata, COMPLETE/refusal and native FULL continuation
+Execute paired JIT: ABI=3 native=False failure=2
+PASS clobber JIT unlock: ABI1/2/3 metadata, COMPLETE/refusal and native FULL continuation
+Execute paired JIT: ABI=3 native=False failure=3
+PASS clobber JIT unlock: ABI1/2/3 metadata, COMPLETE/refusal and native FULL continuation
+Execute paired JIT: ABI=3 native=False failure=4
+PASS clobber JIT unlock: ABI1/2/3 metadata, COMPLETE/refusal and native FULL continuation
+Execute paired JIT: ABI=3 native=False failure=5
+PASS clobber JIT unlock: ABI1/2/3 metadata, COMPLETE/refusal and native FULL continuation
+Execute paired JIT: ABI=3 native=False failure=6
+PASS clobber JIT unlock: ABI1/2/3 metadata, COMPLETE/refusal and native FULL continuation
+Execute paired JIT: ABI=1 native=True failure=0
+PASS clobber JIT unlock: ABI1/2/3 metadata, COMPLETE/refusal and native FULL continuation
+Execute paired JIT: ABI=2 native=True failure=0
+PASS clobber JIT unlock: ABI1/2/3 metadata, COMPLETE/refusal and native FULL continuation
+Execute paired JIT: ABI=3 native=True failure=0
+PASS clobber JIT unlock: ABI1/2/3 metadata, COMPLETE/refusal and native FULL continuation
+
+production JIT entry scope: 8597 checks, 0 failures
+entry/hostcall mutation detected: direct-entry-executor-is-waiter
+entry/hostcall mutation detected: direct-counts-not-observed
+entry/hostcall mutation detected: direct-limit-accepts-under-quota
+entry/hostcall mutation detected: direct-image-needs-pristine-packet
+entry/hostcall mutation detected: mutex-generic-skips-materialization
+entry/hostcall mutation detected: mutex-batch-final-completion-disabled
+entry/hostcall mutation detected: mutex-batch-wrong-backend-endpoint
+entry/hostcall mutation detected: mutex-batch-uses-private-stack
+entry/hostcall mutation detected: mutex-batch-skips-ledger-admission
+entry/hostcall mutation detected: batch-clobber-uses-legacy-entry
+entry/hostcall mutation detected: batch-clobber-uses-legacy-unlock
+entry/hostcall mutation detected: batch-completion-abi-inverted
+entry/hostcall mutation detected: dispatch-rehashes-entry
+entry/hostcall mutation detected: dispatch-reuses-old-ready-result
+entry/hostcall mutation detected: ready-ignores-closing
+entry/hostcall mutation detected: ready-plain-status-read
+entry/hostcall mutation detected: timing-clock-ignores-disable
+entry/hostcall mutation detected: timing-wrapper-not-counted
+entry/hostcall mutation detected: timing-overflow-not-marked
+entry/hostcall mutation detected: timing-hostcall-misclassified
+entry/hostcall mutation detected: scalar-argument-truncated
+entry/hostcall mutation detected: scalar-wrong-argument-register
+entry/hostcall mutation detected: scalar-result-sign-extended
+entry/hostcall mutation detected: service-flags-bypassed
+entry/hostcall mutation detected: unresolved-service-matched
+entry/hostcall mutation detected: shared-service-budget-bypassed
+entry/hostcall mutation detected: service-return-not-consumed
+entry/hostcall mutation detected: service-error-ignored
+entry/hostcall mutation detected: service-error-allows-replay
+entry/hostcall mutation detected: quota-invokes-excess-service
+entry/hostcall mutation detected: quota-consumes-pending-return
+entry/hostcall mutation detected: quota-retains-stale-control-phase
+entry/hostcall mutation detected: quota-skips-return-source-pin
+entry/hostcall mutation detected: quota-requests-callee-learning
+entry/hostcall mutation detected: string-result-sign-extended
+entry/hostcall mutation detected: string-quota-bypassed
+entry/hostcall mutation detected: string-requirement-bypassed
+entry/hostcall mutation detected: string-return-pin-bypassed
+entry/hostcall mutation detected: copy-result-truncated
+
+mutex images: immutable replacement, marker contract, terminal ban, stale misses and 64-block exhaustion passed
+spin guard/root-marker images: exact contracts, stable prior images, ABI1/3 immutable transitions, stale upload/miss and terminal bans passed
+direct images: generated slots, source pins, rel32 range, immutable lifetime and shared 64-image ceiling passed
+
+production exe registry: 30917 checks, 0 failures; pool=64 table=511
+registry mutation detected: timing-session-not-reset
+registry mutation detected: timing-unload-not-reported
+registry mutation detected: partial-publish
+registry mutation detected: duplicate-consumes-block
+registry mutation detected: pool-stops-early
+registry mutation detected: premature-readiness
+registry mutation detected: lost-terminal-rejection
+registry mutation detected: last-slot-invisible
+registry mutation detected: upload-past-end
+registry mutation detected: repeat-enters-registration-gate
+registry mutation detected: unpublished-registration-hit
+registry mutation detected: registered-wrong-pid
+registry mutation detected: registered-wrong-rip
+registry mutation detected: registered-wrong-backend
+registry mutation detected: registered-after-close
+
+patching file include/utils.h
+patching file kernel_module/Makefile
+Hunk #1 succeeded at 21 (offset 3 lines).
+patching file kernel_module/exe.c
+Hunk #1 succeeded at 177 (offset 12 lines).
+Hunk #2 succeeded at 199 (offset 13 lines).
+Hunk #3 succeeded at 232 (offset 20 lines).
+Hunk #4 succeeded at 682 (offset 99 lines).
+patching file kernel_module/execution/native.inc
+Hunk #2 succeeded at 163 (offset 20 lines).
+Hunk #3 succeeded at 181 (offset 20 lines).
+patching file kernel_module/execution/remote.inc
+patching file kernel_module/execution/wrapper_entry.inc
+Hunk #1 succeeded at 315 (offset 215 lines).
+Hunk #2 succeeded at 587 (offset 308 lines).
+Hunk #3 succeeded at 656 (offset 305 lines).
+patching file kernel_module/kd_exec.c
+Hunk #1 succeeded at 18 (offset 1 line).
+patching file kernel_module/kd_mutex.c
+Hunk #1 succeeded at 51 (offset 6 lines).
+Hunk #2 succeeded at 250 (offset 35 lines).
+patching file kernel_module/spin/restore.inc
+Hunk #1 succeeded at 291 (offset 86 lines).
+patching file kernel_module/mutex/combiner.inc
+Hunk #1 succeeded at 178 (offset 144 lines).
+Hunk #2 succeeded at 266 (offset 140 lines).
+Hunk #3 succeeded at 425 (offset 164 lines).
+patching file kernel_module/spin/combiner.inc
+Hunk #1 succeeded at 100 (offset 1 line).
+Hunk #2 succeeded at 348 (offset 87 lines).
+patching file kernel_module/spin/execute.inc
+Hunk #1 succeeded at 118 (offset -9 lines).
+Hunk #3 succeeded at 272 (offset -1 lines).
+production JIT entry scope: 9488 checks, 0 failures
+entry/hostcall mutation detected: completion-omitted
+entry/hostcall mutation detected: completion-counts-native-or-error
+entry/hostcall mutation detected: completion-without-witness
+entry/hostcall mutation detected: completion-counts-remote-suffix
+entry/hostcall mutation detected: completion-counts-physical-child
+entry/hostcall mutation detected: completion-per-wrapper
+entry/hostcall mutation detected: completion-counts-unfinished-batch
+
+native marker restore: 64 arithmetic-flag combinations, all GPRs, exact SP and waiter control flags passed; return=direct
+native marker restore: 64 arithmetic-flag combinations, all GPRs, exact SP and waiter control flags passed; return=configured-thunk-stand-in
+
+after-outer production functions: 3438 checks, 0 failures
+....
+----------------------------------------------------------------------
+Ran 4 tests in 0.008s
+
+OK
+
+production source lifetime: 43108 checks, 0 failures; cap=64
+source lifetime mutation detected: duplicate-pins
+source lifetime mutation detected: early-cap
+source lifetime mutation detected: coming-text
+source lifetime mutation detected: kernel-init-text
+source lifetime mutation detected: busy-writer-ignored
+source lifetime mutation detected: busy-frame-ignored
+source lifetime mutation detected: stale-entry
+source lifetime mutation detected: writer-after-close
+source lifetime mutation detected: frame-leak
+source lifetime mutation detected: frame-after-close
+source lifetime mutation detected: wrong-stack-capability
+source lifetime mutation detected: missing-stack-feature
+source lifetime mutation detected: wrong-module-arena
+source lifetime mutation detected: missing-module-feature
+source lifetime mutation detected: missing-native-escape-feature
+source lifetime mutation detected: missing-address-guard-feature
+source lifetime mutation detected: missing-string-service-feature
+source lifetime mutation detected: missing-string-write-feature
+source lifetime mutation detected: missing-audited-string-feature
+source lifetime mutation detected: missing-root-native-escape-feature
+source lifetime mutation detected: missing-direct-string-feature
+source lifetime mutation detected: direct-feature-without-pool
+
+production shadow-stack wait: sampled=96 head=32 completed=32 native=32 PASS
+production continuation restore: 192 ordinary/stale-tag cases, ABI1/ABI3 64 arithmetic patterns each, exact GPR/SP, retained mode2 storage and zero premature unpins PASS
+production continuation restore: 192 ordinary/stale-tag cases, ABI1/ABI3 64 arithmetic patterns each, exact GPR/SP, retained mode2 storage and zero premature unpins PASS
+
+PASS preemption: entry pinned before admission, 3 entries x 19 routes retain one pin; sole pending skips tickets; queued/nested preserve tickets
+
+PASS IRQ/BH header: saved flags, nested pins/BH, ordered release, single evaluation and native-only hot/contended routing
+PASS IRQ flags: unsigned-long lvalue required by real kernel typecheck
+
+PASS direct unlock: fast S/L, native ACK, queued ticket, KD nondelegated fallback
+
+spin batch PASS: cache invalidation, per-CPU sum/max, physical/virtual prefetch
+spin batch PASS: cache invalidation, per-CPU sum/max, physical/virtual prefetch
+
+.
+----------------------------------------------------------------------
+Ran 1 test in 0.539s
+
+OK
+
+PASS rwlock: concurrent readers, writer exclusion/intent, mixed progress, release ordering and balanced pins
+
+PASS unified source API: single evaluation, void expression, nested/early release, addressable C symbols and local-result variants
+PASS unified macro hygiene: caller temporary names, selected object and once-only argument evaluation
+ENTRY 1000554
+PASS unified ABI2 facade: preserved compiler live values and exact SP/IP/BP
+
+/tmp/kd-mutex-api-0-4183c82x/fixture:     file format elf64-x86-64
+
+
+Disassembly of section .text:
+
+0000000001000520 <api_jit_case>:
+ 1000520:	f3 0f 1e fa          	endbr64 
+ 1000524:	55                   	push   %rbp
+ 1000525:	bf 00 00 00 60       	mov    $0x60000000,%edi
+ 100052a:	48 89 e5             	mov    %rsp,%rbp
+ 100052d:	41 57                	push   %r15
+ 100052f:	41 56                	push   %r14
+ 1000531:	41 55                	push   %r13
+ 1000533:	41 54                	push   %r12
+ 1000535:	53                   	push   %rbx
+ 1000536:	48 83 ec 10          	sub    $0x10,%rsp
+ 100053a:	48 c7 45 d0 15 01 00 	movq   $0x115,-0x30(%rbp)
+ 1000541:	00 
+ 1000542:	48 89 e6             	mov    %rsp,%rsi
+ 1000545:	48 8d 15 08 00 00 00 	lea    0x8(%rip),%rdx        # 1000554 <api_jit_case+0x34>
+ 100054c:	48 89 e9             	mov    %rbp,%rcx
+ 100054f:	e8 a4 fe ff ff       	call   10003f8 <kd_mutex_direct_lock_clobber_v1>
+ 1000554:	48 8b 45 d0          	mov    -0x30(%rbp),%rax
+ 1000558:	bf 00 00 00 60       	mov    $0x60000000,%edi
+ 100055d:	48 83 c0 01          	add    $0x1,%rax
+ 1000561:	48 89 45 d0          	mov    %rax,-0x30(%rbp)
+ 1000565:	48 89 e6             	mov    %rsp,%rsi
+ 1000568:	48 8d 15 08 00 00 00 	lea    0x8(%rip),%rdx        # 1000577 <api_jit_case+0x57>
+ 100056f:	48 89 e9             	mov    %rbp,%rcx
+ 1000572:	e8 a2 fe ff ff       	call   1000419 <kd_mutex_direct_unlock_clobber_v1>
+ 1000577:	48 8b 45 d0          	mov    -0x30(%rbp),%rax
+ 100057b:	48 83 c4 10          	add    $0x10,%rsp
+ 100057f:	5b                   	pop    %rbx
+ 1000580:	41 5c                	pop    %r12
+ 1000582:	41 5d                	pop    %r13
+ 1000584:	41 5e                	pop    %r14
+ 1000586:	41 5f                	pop    %r15
+ 1000588:	5d                   	pop    %rbp
+ 1000589:	c3                   	ret    
+
+Disassembly of section .init:
+
+Disassembly of section .plt:
+
+Disassembly of section .plt.sec:
+
+Disassembly of section .fini:
+
+PASS unified source API: single evaluation, void expression, nested/early release, addressable C symbols and local-result variants
+PASS unified macro hygiene: caller temporary names, selected object and once-only argument evaluation
+ENTRY 1000554
+PASS compiled unified root entry: anonymous continuation, poisoned GPRs, untouched owner, COMPLETE and exact FULL
+PASS unified ABI2 facade: preserved compiler live values and exact SP/IP/BP
+PASS unified source API: single evaluation, void expression, nested/early release, addressable C symbols and local-result variants
+PASS unified macro hygiene: caller temporary names, selected object and once-only argument evaluation
+ENTRY 1000554
+PASS unified ABI2 facade: preserved compiler live values and exact SP/IP/BP
+
+/tmp/kd-mutex-api-1-fev7qpmo/fixture:     file format elf64-x86-64
+
+
+Disassembly of section .text:
+
+0000000001000520 <api_jit_case>:
+ 1000520:	f3 0f 1e fa          	endbr64 
+ 1000524:	55                   	push   %rbp
+ 1000525:	bf 00 00 00 60       	mov    $0x60000000,%edi
+ 100052a:	48 89 e5             	mov    %rsp,%rbp
+ 100052d:	41 57                	push   %r15
+ 100052f:	41 56                	push   %r14
+ 1000531:	41 55                	push   %r13
+ 1000533:	41 54                	push   %r12
+ 1000535:	53                   	push   %rbx
+ 1000536:	48 83 ec 10          	sub    $0x10,%rsp
+ 100053a:	48 c7 45 d0 15 01 00 	movq   $0x115,-0x30(%rbp)
+ 1000541:	00 
+ 1000542:	48 89 e6             	mov    %rsp,%rsi
+ 1000545:	48 8d 15 08 00 00 00 	lea    0x8(%rip),%rdx        # 1000554 <api_jit_case+0x34>
+ 100054c:	48 89 e9             	mov    %rbp,%rcx
+ 100054f:	e8 a4 fe ff ff       	call   10003f8 <kd_mutex_direct_lock_clobber_v1>
+ 1000554:	48 8b 45 d0          	mov    -0x30(%rbp),%rax
+ 1000558:	bf 10 00 00 60       	mov    $0x60000010,%edi
+ 100055d:	48 83 c0 01          	add    $0x1,%rax
+ 1000561:	48 89 45 d0          	mov    %rax,-0x30(%rbp)
+ 1000565:	48 89 e6             	mov    %rsp,%rsi
+ 1000568:	48 8d 15 08 00 00 00 	lea    0x8(%rip),%rdx        # 1000577 <api_jit_case+0x57>
+ 100056f:	48 89 e9             	mov    %rbp,%rcx
+ 1000572:	e8 81 fe ff ff       	call   10003f8 <kd_mutex_direct_lock_clobber_v1>
+ 1000577:	48 8b 45 d0          	mov    -0x30(%rbp),%rax
+ 100057b:	bf 10 00 00 60       	mov    $0x60000010,%edi
+ 1000580:	48 83 c0 02          	add    $0x2,%rax
+ 1000584:	48 89 45 d0          	mov    %rax,-0x30(%rbp)
+ 1000588:	48 89 e6             	mov    %rsp,%rsi
+ 100058b:	48 8d 15 08 00 00 00 	lea    0x8(%rip),%rdx        # 100059a <api_jit_case+0x7a>
+ 1000592:	48 89 e9             	mov    %rbp,%rcx
+ 1000595:	e8 7f fe ff ff       	call   1000419 <kd_mutex_direct_unlock_clobber_v1>
+ 100059a:	48 8b 45 d0          	mov    -0x30(%rbp),%rax
+ 100059e:	bf 00 00 00 60       	mov    $0x60000000,%edi
+ 10005a3:	48 83 c0 04          	add    $0x4,%rax
+ 10005a7:	48 89 45 d0          	mov    %rax,-0x30(%rbp)
+ 10005ab:	48 89 e6             	mov    %rsp,%rsi
+ 10005ae:	48 8d 15 08 00 00 00 	lea    0x8(%rip),%rdx        # 10005bd <api_jit_case+0x9d>
+ 10005b5:	48 89 e9             	mov    %rbp,%rcx
+ 10005b8:	e8 5c fe ff ff       	call   1000419 <kd_mutex_direct_unlock_clobber_v1>
+ 10005bd:	48 8b 45 d0          	mov    -0x30(%rbp),%rax
+ 10005c1:	48 83 c4 10          	add    $0x10,%rsp
+ 10005c5:	5b                   	pop    %rbx
+ 10005c6:	41 5c                	pop    %r12
+ 10005c8:	41 5d                	pop    %r13
+ 10005ca:	41 5e                	pop    %r14
+ 10005cc:	41 5f                	pop    %r15
+ 10005ce:	5d                   	pop    %rbp
+ 10005cf:	c3                   	ret    
+
+Disassembly of section .init:
+
+Disassembly of section .plt:
+
+Disassembly of section .plt.sec:
+
+Disassembly of section .fini:
+
+PASS unified source API: single evaluation, void expression, nested/early release, addressable C symbols and local-result variants
+PASS unified macro hygiene: caller temporary names, selected object and once-only argument evaluation
+ENTRY 1000554
+PASS compiled unified nested entry: strict admission, exact B control exits, FULL resume and no replay
+PASS unified ABI2 facade: preserved compiler live values and exact SP/IP/BP
+PASS unified source API: single evaluation, void expression, nested/early release, addressable C symbols and local-result variants
+PASS unified macro hygiene: caller temporary names, selected object and once-only argument evaluation
+ENTRY 1000554
+PASS unified ABI2 facade: preserved compiler live values and exact SP/IP/BP
+
+/tmp/kd-mutex-api-2-9w2wog7l/fixture:     file format elf64-x86-64
+
+
+Disassembly of section .text:
+
+0000000001000520 <api_jit_case>:
+ 1000520:	f3 0f 1e fa          	endbr64 
+ 1000524:	55                   	push   %rbp
+ 1000525:	bf 00 00 00 60       	mov    $0x60000000,%edi
+ 100052a:	48 89 e5             	mov    %rsp,%rbp
+ 100052d:	41 57                	push   %r15
+ 100052f:	41 56                	push   %r14
+ 1000531:	41 55                	push   %r13
+ 1000533:	41 54                	push   %r12
+ 1000535:	53                   	push   %rbx
+ 1000536:	48 83 ec 10          	sub    $0x10,%rsp
+ 100053a:	48 c7 45 d0 15 01 00 	movq   $0x115,-0x30(%rbp)
+ 1000541:	00 
+ 1000542:	48 89 e6             	mov    %rsp,%rsi
+ 1000545:	48 8d 15 08 00 00 00 	lea    0x8(%rip),%rdx        # 1000554 <api_jit_case+0x34>
+ 100054c:	48 89 e9             	mov    %rbp,%rcx
+ 100054f:	e8 a4 fe ff ff       	call   10003f8 <kd_mutex_direct_lock_clobber_v1>
+ 1000554:	48 8b 45 d0          	mov    -0x30(%rbp),%rax
+ 1000558:	bf 10 00 00 60       	mov    $0x60000010,%edi
+ 100055d:	48 83 c0 01          	add    $0x1,%rax
+ 1000561:	48 89 45 d0          	mov    %rax,-0x30(%rbp)
+ 1000565:	48 89 e6             	mov    %rsp,%rsi
+ 1000568:	48 8d 15 08 00 00 00 	lea    0x8(%rip),%rdx        # 1000577 <api_jit_case+0x57>
+ 100056f:	48 89 e9             	mov    %rbp,%rcx
+ 1000572:	e8 81 fe ff ff       	call   10003f8 <kd_mutex_direct_lock_clobber_v1>
+ 1000577:	48 8b 45 d0          	mov    -0x30(%rbp),%rax
+ 100057b:	bf 00 00 00 60       	mov    $0x60000000,%edi
+ 1000580:	48 83 c0 02          	add    $0x2,%rax
+ 1000584:	48 89 45 d0          	mov    %rax,-0x30(%rbp)
+ 1000588:	48 89 e6             	mov    %rsp,%rsi
+ 100058b:	48 8d 15 08 00 00 00 	lea    0x8(%rip),%rdx        # 100059a <api_jit_case+0x7a>
+ 1000592:	48 89 e9             	mov    %rbp,%rcx
+ 1000595:	e8 7f fe ff ff       	call   1000419 <kd_mutex_direct_unlock_clobber_v1>
+ 100059a:	48 8b 45 d0          	mov    -0x30(%rbp),%rax
+ 100059e:	bf 10 00 00 60       	mov    $0x60000010,%edi
+ 10005a3:	48 83 c0 04          	add    $0x4,%rax
+ 10005a7:	48 89 45 d0          	mov    %rax,-0x30(%rbp)
+ 10005ab:	48 89 e6             	mov    %rsp,%rsi
+ 10005ae:	48 8d 15 08 00 00 00 	lea    0x8(%rip),%rdx        # 10005bd <api_jit_case+0x9d>
+ 10005b5:	48 89 e9             	mov    %rbp,%rcx
+ 10005b8:	e8 5c fe ff ff       	call   1000419 <kd_mutex_direct_unlock_clobber_v1>
+ 10005bd:	48 8b 45 d0          	mov    -0x30(%rbp),%rax
+ 10005c1:	48 83 c4 10          	add    $0x10,%rsp
+ 10005c5:	5b                   	pop    %rbx
+ 10005c6:	41 5c                	pop    %r12
+ 10005c8:	41 5d                	pop    %r13
+ 10005ca:	41 5e                	pop    %r14
+ 10005cc:	41 5f                	pop    %r15
+ 10005ce:	5d                   	pop    %rbp
+ 10005cf:	c3                   	ret    
+
+Disassembly of section .init:
+
+Disassembly of section .plt:
+
+Disassembly of section .plt.sec:
+
+Disassembly of section .fini:
+
+PASS unified source API: single evaluation, void expression, nested/early release, addressable C symbols and local-result variants
+PASS unified macro hygiene: caller temporary names, selected object and once-only argument evaluation
+ENTRY 1000554
+PASS compiled unified nested entry: strict admission, exact B control exits, FULL resume and no replay
+PASS unified ABI2 facade: preserved compiler live values and exact SP/IP/BP
+PASS unified facade: actual root/nested/early-unlock compiler output, strict ABI2 admission and generated execution
+
+production mutex resources: 11504 checks, 0 failures; nodes=4 objects=2048 regs=168
+mutex resource mutation detected: outer-entry-retries-native-cas
+mutex resource mutation detected: outer-native-result-routed
+mutex resource mutation detected: outer-queued-result-native
+mutex resource mutation detected: native-success-still-samples
+mutex resource mutation detected: local-predecessor-still-publishes
+mutex resource mutation detected: tail-loses-empty-sentinel
+mutex resource mutation detected: tail-loses-slot
+mutex resource mutation detected: tail-decodes-next-cpu
+mutex resource mutation detected: tail-truncates-slot
+mutex resource mutation detected: tail-ignores-remote-cpu
+mutex resource mutation detected: missing-stack-accepted
+mutex resource mutation detected: reservation-not-published
+mutex resource mutation detected: poll-enables-preemption
+mutex resource mutation detected: poll-returns-before-publication
+mutex resource mutation detected: release-keeps-gs
+mutex resource mutation detected: release-resets-count-generation
+mutex resource mutation detected: gate-without-native-lock
+mutex resource mutation detected: claim-publishes-held-before-physical
+mutex resource mutation detected: unlock-clears-before-physical
+mutex resource mutation detected: unlock-skips-releasing-phase
+mutex resource mutation detected: unlock-clears-successor
+mutex resource mutation detected: resume-loses-register
+mutex resource mutation detected: native-drops-task-record
+mutex resource mutation detected: hook-ignores-task-failure
+mutex resource mutation detected: unlock-drops-retained-task
+mutex resource mutation detected: hook-admits-closed-source
+mutex resource mutation detected: borrowed-unlock-bypasses-notification
+
+...
+----------------------------------------------------------------------
+Ran 3 tests in 0.041s
+
+OK
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Unit tests: 31 passed, 0 failed
+make: Leaving directory '/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/checks-2/source/tests/unit'

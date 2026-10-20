@@ -1,0 +1,111 @@
+{
+  "commands": [
+    {
+      "argv": [
+        "/root/kdlock-translation-venv-20261019/bin/python3",
+        "-m",
+        "pip",
+        "check"
+      ],
+      "cwd": "/root/host_fs/kdlock",
+      "exit_code": 0,
+      "finished_unix": 1792490935.8263588,
+      "name": "dependencies",
+      "started_unix": 1792490935.2577765,
+      "timeout_seconds": 60
+    },
+    {
+      "argv": [
+        "make",
+        "-C",
+        "kernel_module",
+        "KDIR=/root/linux-6.1.159-kdclobber2",
+        "W=1",
+        "UBSAN_SANITIZE=n"
+      ],
+      "cwd": "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/checks-1/source",
+      "exit_code": 0,
+      "finished_unix": 1792490947.4680076,
+      "name": "provider",
+      "started_unix": 1792490935.939688,
+      "timeout_seconds": 240
+    },
+    {
+      "argv": [
+        "make",
+        "-C",
+        "daemon",
+        "CFLAGS=-O2 -Wall -Wextra -Werror"
+      ],
+      "cwd": "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/checks-1/source",
+      "exit_code": 0,
+      "finished_unix": 1792490947.8985968,
+      "name": "daemon",
+      "started_unix": 1792490947.581231,
+      "timeout_seconds": 60
+    },
+    {
+      "argv": [
+        "make",
+        "-C",
+        "tests/unit",
+        "run",
+        "PYTHON=/root/kdlock-translation-venv-20261019/bin/python3",
+        "PY_TESTS=admission/test_native_escape.py admission/test_instruction_policy.py admission/test_context_policy.py admission/test_text_regions.py admission/test_context_guards.py admission/test_constant_paths.py admission/test_clobber_entry.py codegen/test_native_escape_codegen.py codegen/test_jit_diagnostics.py codegen/test_clobber_abi.py codegen/test_native_call_execution.py codegen/test_spin_paired_jit.py execution/test_jit_entry_scope.py execution/test_mutex_images.py execution/test_exe_registry.py execution/test_bench_completion.py execution/test_native_escape_restore.py execution/test_native_after_outer.py infrastructure/test_source_lifetime.py spin/test_spin_wait.py spin/test_spin_preempt.py spin/test_spin_irq.py spin/test_spin_direct.py spin/test_spin_batch.py spin/test_list_payload.py rwlock/test_rwlock.py mutex/test_mutex_api.py mutex/test_mutex_resources.py infrastructure/test_jit_escape_runner.py"
+      ],
+      "cwd": "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/checks-1/source",
+      "exit_code": 2,
+      "finished_unix": 1792491089.0230694,
+      "name": "unit",
+      "started_unix": 1792490948.0074837,
+      "timeout_seconds": 1500
+    }
+  ],
+  "committed_manifest_sha256": "b67250f233217c0fb10e1caaee8d4313093fc237f03d8a0ae1a01361b6a189a9",
+  "error": "unit exited 2",
+  "final_idle": false,
+  "full_suite": false,
+  "passed": false,
+  "runner_tests": [
+    "bench/spin_cacheline/test_spin_cacheline.py",
+    "bench/spin_cacheline/test_list_audit.py",
+    "bench/tclock_compare/test_direct.py",
+    "bench/rwlock_compare/test_bench.py"
+  ],
+  "script_sha256": "28ee2468475e65e95e04c3d7ca6f23d658c23ee788f64d0e3791c95f9d9bef39",
+  "snapshot_tag": "before-mutex-kdonly-20261017T140354Z",
+  "source_revision": "9a0fdd4dba6ca1901e716259917b0e03ef0da22b",
+  "source_unchanged": false,
+  "unit_basic": 2,
+  "unit_drivers": [
+    "admission/test_native_escape.py",
+    "admission/test_instruction_policy.py",
+    "admission/test_context_policy.py",
+    "admission/test_text_regions.py",
+    "admission/test_context_guards.py",
+    "admission/test_constant_paths.py",
+    "admission/test_clobber_entry.py",
+    "codegen/test_native_escape_codegen.py",
+    "codegen/test_jit_diagnostics.py",
+    "codegen/test_clobber_abi.py",
+    "codegen/test_native_call_execution.py",
+    "codegen/test_spin_paired_jit.py",
+    "execution/test_jit_entry_scope.py",
+    "execution/test_mutex_images.py",
+    "execution/test_exe_registry.py",
+    "execution/test_bench_completion.py",
+    "execution/test_native_escape_restore.py",
+    "execution/test_native_after_outer.py",
+    "infrastructure/test_source_lifetime.py",
+    "spin/test_spin_wait.py",
+    "spin/test_spin_preempt.py",
+    "spin/test_spin_irq.py",
+    "spin/test_spin_direct.py",
+    "spin/test_spin_batch.py",
+    "spin/test_list_payload.py",
+    "rwlock/test_rwlock.py",
+    "mutex/test_mutex_api.py",
+    "mutex/test_mutex_resources.py",
+    "infrastructure/test_jit_escape_runner.py"
+  ]
+}

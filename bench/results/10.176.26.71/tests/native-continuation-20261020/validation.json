@@ -1,0 +1,38 @@
+{
+  "source_commit": "a4eb4eb0fc744e8105bdd429e1d4bf0fb03ae0a4",
+  "production_source_unchanged_since": "9a0fdd4dba6ca1901e716259917b0e03ef0da22b",
+  "full_suite": false,
+  "basic_and_affected": "PASS across preserved exact-source attempts",
+  "checks": [
+    {
+      "attempt": 1,
+      "source": "9a0fdd4dba6ca1901e716259917b0e03ef0da22b",
+      "result_sha256": "430b2a4eaf24dcb6e1d0107eb96918049360ccb1d562c83c6e15373ad60fe526"
+    },
+    {
+      "attempt": 2,
+      "source": "390d04c0f929c0d37dfac3bee5d51b0ee827c932",
+      "result_sha256": "9b5c5883014ce37e3bc8c2510398fbe764cc47217ac5a61137231026d667d44e"
+    },
+    {
+      "attempt": 3,
+      "source": "d7d65c10e3260013461af7cca1e7c6e521714a7b",
+      "result_sha256": "31e34e2d764a29c10ebb50117df178b4fe755e116204cb359b0d0727efca7c07"
+    },
+    {
+      "attempt": 4,
+      "source": "a4eb4eb0fc744e8105bdd429e1d4bf0fb03ae0a4",
+      "result_sha256": "21cfa93afbc24386ea3078a3f78b3bad84ffcc288d5a2c0161d7bc5060a3d19b"
+    }
+  ],
+  "changes_from_passed_builds_and_units": [
+    "bench/rwlock_compare/test_bench.py",
+    "bench/spin_cacheline/test_spin_cacheline.py"
+  ],
+  "live": {
+    "state": "RUNNING",
+    "output": "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-1"
+  },
+  "resident_list": "NOT_RUN",
+  "performance_acceptance": "OPEN; original seven regressions and incomplete classes require diagnosis; p95 unmeasured"
+}
