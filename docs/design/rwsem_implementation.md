@@ -260,6 +260,43 @@ configuration validation. Safe admission does not establish that
 `access_remote_vm()` or another task-dependent body can be delegated; existing
 instruction and context admission still apply.
 
+The retained [native mmap audit](../../bench/results/10.176.26.71/tests/proc-mmap-audit-20261015/README.md)
+identifies the following dependencies. Paths and line numbers refer to its
+captured kernel inputs, not an independently verified current guest tree.
+
+| Native participant | Branch contract that a replacement must preserve |
+| --- | --- |
+| `include/linux/mm_types.h:597`, `include/linux/mmap_lock.h:11`, `kernel/fork.c:mm_init` | The object is a native rwsem, with static/dynamic initialization, nested/killable/try acquisition, downgrade, non-owner read release, assertions and contention helpers. Maple tree also receives its address as an external lock. Every participant and its object/layout, initialization and lockdep contract must be converted together. |
+| `arch/x86/mm/fault.c:do_user_addr_fault` | Fault handling uses `current->mm`, saved registers, IRQ state, signal/accounting context and exception fixups. Capturing an `mm` pointer does not preserve these originating-task requirements or establish sleep eligibility. |
+| `mm/memory.c:lock_mm_and_find_vma` | Read trylock can fall back to killable acquisition. Stack growth drops read ownership, acquires write killably, refinds the VMA and downgrades on success; failures return unlocked. `mmap_upgrade_trylock()` always returns false in this capture. Old VMA references cannot survive the drop by assumption. |
+| `arch/x86/mm/fault.c:1311`, `__bad_area` | Access-error handling releases the read lock. Signal-pending and `VM_FAULT_COMPLETED` exits are already unlocked. `VM_FAULT_RETRY` reacquires and refinds the VMA; ordinary completion explicitly unlocks. Each implicit release needs one exact ownership/ACK transition, and each retry needs a fresh acquisition. |
+| `mm/memory.c:fault_dirty_shared_page`, `__do_fault`, `handle_mm_fault` | Filemap/folio retries, filesystem fault callbacks and userfault handling can drop the lock while allocating, waiting or doing I/O. Complete callback, reference and origin-context proofs are needed. Their internal implementations are not fully retained in this capture. |
+| `mm/gup.c:faultin_page`, `__get_user_pages_locked` | `COMPLETED` clears `*locked` and returns `-EAGAIN`. `RETRY` returns `-EBUSY` and clears `*locked` except with `RETRY_NOWAIT`. The wrapper can reacquire killably, then release again to report the interrupted critical section. Return flags alone do not identify ownership; page references, partial progress and VMA invalidation must also be preserved. |
+| `mm/gup.c:fixup_user_fault` | Internal `COMPLETED`/`RETRY` paths reacquire the read lock and set `*unlocked`; retries refind the VMA. Returning with the lock held does not mean ownership was uninterrupted. |
+| `mm/mmap.c:expand_stack`, `mm/memory.c:__access_remote_vm` | Legacy stack expansion drops read, takes write killably, and returns read-held after downgrade or unlocked on failure. Remote access requires an `mm` reference and must preserve both exits and page references. Its GUP call supplies `locked=NULL`; retry-driven unlock cannot be inferred for that call. |
+| `mm/mmap.c:do_mas_align_munmap`, `__vm_munmap`, `brk`; `mm/mremap.c` | Unmapping may downgrade and return `1`, selecting read rather than write unlock. Some stack-growth neighbors suppress downgrade. `vm_munmap()` disables downgrade while the munmap syscall enables it. Current delegated outer writers cannot downgrade; these paths require ordinary ownership or a separately established protocol. |
+| `mm/util.c:vm_mmap_pgoff`, `mm/mprotect.c:do_mprotect_pkey`, `kernel/fork.c:dup_mmap`, `fs/proc/task_mmu.c` | mmap/mprotect have killable acquisition, mmap population follows unlock, fork nests old/new-mm write ownership, and proc iteration retains task/mm references across callbacks. Smaps rollup can drop and reacquire on contention. Cancellation, cross-object nesting, post-unlock work and iterator invalidation remain required. |
+
+The x86 fault handler never sets `FAULT_FLAG_RETRY_NOWAIT`; its inference that
+`VM_FAULT_RETRY` means unlocked is therefore valid for that caller. Applying the
+same inference to GUP would lose the documented NOWAIT exception. Userfault
+handling can also release and reacquire without returning `VM_FAULT_RETRY`.
+A lexical acquisition/release pair or a retry counter cannot represent these
+transitions.
+
+The audit was captured on 2026-10-15 against `6.1.159-kdclobber2`, with recorded
+live/source Build ID `5ca28058e156f34a2c7fe91e8e0fbf92f4e51960`. A read-only
+recheck on 2026-10-20 matched all 25 retained source/configuration files to the
+unchanged audit hashes and the baseline manifest to SHA-256
+`0f44870efd7ff604067a2436edcfd95ac8c4e413b42e3d534a51e3c011d3d013`.
+That configuration enables `LOCK_MM_AND_FIND_VMA`, `USERFAULTFD` and
+`PREEMPT_DYNAMIC`; `PROVE_LOCKING` and `DEBUG_LOCK_ALLOC` are disabled.
+These historical identity checks and native syscall probes establish neither
+current guest identity nor KD mmap/fault execution. The missing filemap/folio,
+userfault and selected filesystem callback implementations must be captured
+and audited before proposing kernel integration. Generic fault replay remains
+unsupported.
+
 The [API probe](../../tests/kernel/rwsem/README.md) covers sleeping readers,
 writer/late-reader exclusion, same-CPU scheduling progress, cancellation,
 trylocks, downgrade and drain. Its phase-specific checks distinguish the two
