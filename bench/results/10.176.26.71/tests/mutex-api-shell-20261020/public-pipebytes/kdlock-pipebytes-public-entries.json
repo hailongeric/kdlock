@@ -1,0 +1,12 @@
+{
+  "rb_entry": {
+    "body": "rb_body",
+    "call_offset": 46,
+    "entry_offset": 51,
+    "relocation_type": 4,
+    "section": ".text",
+    "unlock_offsets": [
+      129
+    ]
+  }
+}

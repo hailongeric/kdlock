@@ -20,6 +20,14 @@ These are API microbenchmarks with real kernel metadata, not end-to-end
 application measurements or a global replacement of Linux locks. Neither loading
 KD nor loading TCLock alone changes ordinary syscall locking.
 
+Mutex adapters default to `--mutex-api outer`, preserving the historical
+explicit OUTER cookie. Select `--mutex-api public` to measure literal
+`kd_mutex_lock/unlock` calls for pipebytes, pipecap and seek. Each build records
+its caller shell and cookie/ledger identity. Public builds must pass the
+saved-continuation ELF audit before loading; `--build-from` rejects a different
+API selection. Reports keep these identities separate. The earlier OUTER
+measurements below do not establish public-facade performance.
+
 The [current mutex comparison](../results/10.176.26.71/bench/mutex32-native-tclock-20261020/README.md)
 includes 324 valid, drained API sessions for pipebytes n16, pipecap n16,
 `SEEK_SET` and `SEEK_END`, with fresh Native/TCLock/KD controls and three

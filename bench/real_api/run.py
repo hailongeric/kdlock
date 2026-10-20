@@ -25,6 +25,7 @@ from summarize import write_json
 import kernel_identity
 sys.path.insert(0, str(ROOT / 'bench/tclock_compare'))
 from context_audit import audit as audit_tclock
+from mutex_api_audit import audit_public_entries
 from evidence import helper_ready, jit_evidence
 
 TC = ROOT / 'tclock_backend/tclock_backend_km.ko'
@@ -67,6 +68,8 @@ def build(out, args):
         previous_args = json.loads((previous/'environment.json').read_text())['arguments']
         require(previous_args.get('mutex_lock_offset') == args.mutex_lock_offset,
                 'mutex placement changed since --build-from')
+        require(previous_args.get('mutex_api', 'outer') == args.mutex_api,
+                'mutex API changed since --build-from')
         old = json.loads((previous/'binaries.json').read_text())
         for name, item in old.items():
             require(digest(Path(item['path'])) == item['sha256'], 'frozen binary changed: ' + name)
@@ -97,6 +100,7 @@ def build(out, args):
             tc_folder = build_dir/('tclock-'+lock_kind(kind))
             symvers = (PROVIDER.parent/'Module.symvers' if backend == 'kdlock' else tc_folder/'Module.symvers')
             cmd = ['make', '-C', dest, f'RB_BACKEND={backend}', f'RB_KIND={kind.upper()}',
+                   f'RB_MUTEX_API={args.mutex_api}',
                    f'KDLOCK_INCLUDE={ROOT}/include', f'TCLOCK_INCLUDE={tc_folder}/include']
             if backend == 'kdlock' and kind in MUTEX_KINDS and args.mutex_lock_offset is not None:
                 cmd += [f'RB_MUTEX_LOCK_OFFSET={args.mutex_lock_offset}']
@@ -137,6 +141,22 @@ def build(out, args):
                 require(not re.search(r'\bU (?:atomic_dec_and_mutex_lock|mutex\w*|__mutex\w*|kd_mutex_(?:lock|unlock)_clobber_v1|osq_lock|osq_unlock)\b', imports),
                         'KD-only module imports a Linux mutex API: '+name)
     write_json(out/'build-configuration.json', metadata)
+    for kind in sorted(set(args.kinds) & MUTEX_KINDS):
+        module = build_dir/('kdlock-'+kind)/'real_api.ko'
+        compiled_api = command(['modinfo', '-F', 'kd_mutex_api', module],
+                               out/f'kdlock-{kind}-mutex-api.txt').strip()
+        require(compiled_api == args.mutex_api, 'compiled mutex API differs')
+        if args.mutex_api == 'public':
+            imports = command(['nm', '-u', module], out/f'kdlock-{kind}-public-imports.txt')
+            require({'kd_mutex_direct_lock_clobber_v1',
+                     'kd_mutex_direct_unlock_clobber_v1', 'kd_mutex_prepare'} <= set(imports.split()),
+                    'public mutex caller is missing a DIRECT endpoint')
+            require(not set(imports.split()) & {
+                'kd_mutex_outer_contended_clobber_v1', 'kd_mutex_local_unlock',
+                'kd_mutex_api_lock', 'kd_mutex_api_unlock'},
+                'public mutex caller imports another call shell')
+            write_json(out/f'kdlock-{kind}-public-entries.json',
+                       audit_public_entries(module, {'rb_entry': 'rb_body'}))
     if args.mutex_lock_offset is not None:
         placement = {}
         for kind in args.kinds:
@@ -483,6 +503,10 @@ def worker_cpus(args):
 
 def make_plan(args):
     cpus = worker_cpus(args)
+    mutex_api = getattr(args, 'mutex_api', 'outer')
+    require(mutex_api in ('outer', 'public') and
+            (mutex_api == 'outer' or set(args.kinds) <= MUTEX_KINDS),
+            'public mutex API requires only mutex workloads')
     require(args.mutex_lock_offset is None or
             (args.backends == ['kdlock'] and set(args.kinds) <= MUTEX_KINDS),
             '--mutex-lock-offset requires only KD mutex workloads')
@@ -503,7 +527,8 @@ def make_plan(args):
     for kind, query, count, n, repeat in itertools.product(args.kinds, args.queries, args.entries, args.threads, range(args.repeats)):
         order = args.backends[repeat % len(args.backends):] + args.backends[:repeat % len(args.backends)]
         for arm in order:
-            plan.append(dict(name=f'{kind}-{query}-n{count}-t{n:02d}-r{repeat}-{arm}', kind=kind,
+            suffix = '-public' if arm == 'kdlock' and mutex_api == 'public' else ''
+            plan.append(dict(name=f'{kind}-{query}-n{count}-t{n:02d}-r{repeat}-{arm}{suffix}', kind=kind,
                 query=query, entries=count, threads=n, repeat=repeat, arm=arm, value_size=args.value_size,
                 cpus=cpus[:n], collector_cpu=args.collector_cpu, duration_ms=args.duration_ms,
                 peak_window_ms=300, peak_settle_ms=300, sample_ms=10,
@@ -518,6 +543,11 @@ def make_plan(args):
                 lock_kind=lock_kind(kind),
                 entry_abi=({'spin': 1, 'mutex': 2, 'rwlock': 3}[lock_kind(kind)] if arm == 'kdlock' else 0),
                 caller_abi='clobber' if arm == 'kdlock' else 'c',
+                caller_shell=(('mutex_public_direct' if mutex_api == 'public' else 'mutex_outer_cookie')
+                              if arm == 'kdlock' and kind in MUTEX_KINDS else
+                              'explicit_clobber' if arm == 'kdlock' else 'c'),
+                cookie_storage=(('provider_acquisition_ledger' if mutex_api == 'public' else 'outer_acquisition_local')
+                                if arm == 'kdlock' and kind in MUTEX_KINDS else 'not_applicable'),
                 mutex_implementation=('kd-only-legacy' if arm == 'kdlock' and kind in MUTEX_KINDS
                                       else 'not_applicable'),
                 mutex_lock_offset=args.mutex_lock_offset))
@@ -541,6 +571,8 @@ def main():
     p.add_argument('--backends', nargs='+', choices=['native', 'tclock', 'kdlock', 'stock'],
                    default=['native', 'tclock', 'kdlock'])
     p.add_argument('--repeats', type=int, default=3)
+    p.add_argument('--mutex-api', choices=('outer', 'public'), default='outer',
+                   help='KD mutex compiled caller; public invokes kd_mutex_lock/unlock')
     p.add_argument('--duration-ms', type=int, default=2000)
     p.add_argument('--warmup', type=int, default=48000)
     p.add_argument('--warmup-ms', type=int, default=1000)

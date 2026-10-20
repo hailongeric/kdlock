@@ -24,6 +24,7 @@ from bench_runtime import HERE, WORKLOAD, PROVIDER, require, command, digest, Fa
 from summarize import write_json, csv_file, valid
 from session import BackendSession, TC_MODULE, TC_MUTEX_MODULE, GUARD_MODULE
 from context_audit import audit as audit_context
+from mutex_api_audit import audit_public_entries
 
 DEFAULT_SPIN_ENTRY_RATIO_LIMIT = 2
 DEFAULT_KD_PROVIDER_UBSAN = 'off'
@@ -142,6 +143,10 @@ def make_plan(args):
     timing = timing_settings(args)
     workload = getattr(args, 'workload', 'cacheline')
     lock_kind = getattr(args, 'lock_kind', 'spin')
+    mutex_api = getattr(args, 'mutex_api', 'outer')
+    require(mutex_api in ('outer', 'public') and
+            (mutex_api == 'outer' or lock_kind == 'mutex'),
+            'public mutex API requires the mutex runner')
     require(lock_kind != 'mutex' or getattr(args, 'spin_delegate', 'on') == 'on',
             '--spin-delegate off is a spin-only control; mutex JIT is required')
     sizes = [0] if workload == 'rcuht' else (args.cachelines or [1])
@@ -156,11 +161,13 @@ def make_plan(args):
         for backend, mode in arms:
             prefix = 'hash1024' if workload == 'rcuht' else f'c{n:02d}'
             suffix = f'-{mode}' if backend == 'kdlock' else ''
+            if backend == 'kdlock' and lock_kind == 'mutex' and mutex_api == 'public':
+                suffix += '-public'
             result.append(dict(name=f'{prefix}-t{t:02d}-r{repeat:02d}-direct-{backend}{suffix}',
                 cachelines=n, threads=t, repeat=repeat, arm=backend, caller_abi='clobber' if backend == 'kdlock' else 'c',
                 api_mode='direct', workload=workload, lock_kind=lock_kind, hotlock_mode=mode,
-                caller_shell=('mutex_outer_cookie' if lock_kind == 'mutex' else 'cold_clobber') if backend == 'kdlock' else 'c',
-                cookie_storage=('outer_acquisition_local' if lock_kind == 'mutex' else 'percpu_direct_gate') if backend == 'kdlock' else 'not_applicable',
+                caller_shell=(('mutex_public_direct' if mutex_api == 'public' else 'mutex_outer_cookie') if lock_kind == 'mutex' else 'cold_clobber') if backend == 'kdlock' else 'c',
+                cookie_storage=(('provider_acquisition_ledger' if mutex_api == 'public' else 'outer_acquisition_local') if lock_kind == 'mutex' else 'percpu_direct_gate') if backend == 'kdlock' else 'not_applicable',
                 cpu_heat_policy=('mutex_contention1024_ratio256' if lock_kind == 'mutex' else 'mcs_reset1024_shift10_lock512_head6') if backend == 'kdlock' else 'not_applicable',
                 spin_entry_ratio_limit=ratio_limit if backend == 'kdlock' else None,
                 spin_prefetch=prefetch if backend == 'kdlock' else None,
@@ -352,6 +359,8 @@ def main(lock_kind='spin'):
                    help='explicitly share CPU 63 at the 64-worker point only; '
                         'requires timed workers 0-63 on the 64-vCPU VM')
     p.add_argument('--backends', nargs='+', choices=('native','tclock','kdlock'), default=['native','tclock','kdlock'])
+    p.add_argument('--mutex-api', choices=('outer', 'public'), default='outer',
+                   help='KD mutex compiled caller; public invokes kd_mutex_lock/unlock')
     perf_mode = p.add_mutually_exclusive_group()
     perf_mode.add_argument('--pmu', action='store_true',
                    help='separate long-batch diagnostic: perf stat around measured client only')
@@ -484,6 +493,7 @@ def main(lock_kind='spin'):
                 extra = [f'KBUILD_EXTRA_SYMBOLS={module.parent / "Module.symvers"}']
             command(['make','-C',folder,f'KDIR={args.kernel_source}',
                      f'SC_BACKEND={backend}', f'SC_WORKLOAD={args.workload}',
+                     f'SC_MUTEX_API={args.mutex_api}',
                      f'SC_SCENARIO={dict(plain=0, nested=1, early=2)[args.scenario]}',
                      f'KDLOCK_INCLUDE={ROOT / "include"}',
                      f'SC_SHARED={WORKLOAD}',
@@ -507,6 +517,20 @@ def main(lock_kind='spin'):
                                        'tc_mutex_worker_register', 'tc_mutex_workers_drain'),
                             'native': ('mutex_lock', 'mutex_unlock')}[backend]
                 if backend == 'kdlock':
+                    compiled_api = command(['modinfo', '-F', 'kd_mutex_api', binary],
+                                           out/'mutex-api.txt').strip()
+                    require(compiled_api == args.mutex_api, 'compiled mutex API differs')
+                    if args.mutex_api == 'public':
+                        expected = ('kd_mutex_direct_lock_clobber_v1',
+                                    'kd_mutex_direct_unlock_clobber_v1', 'kd_mutex_prepare')
+                        require(not set(imported.split()) & {
+                            'kd_mutex_outer_contended_clobber_v1', 'kd_mutex_local_unlock',
+                            'kd_mutex_api_lock', 'kd_mutex_api_unlock'},
+                            'public mutex caller imports another call shell')
+                        sizes = (0,) if args.workload == 'rcuht' else (1, 2, 4, 8, 16)
+                        write_json(out/'mutex-public-entries.json',
+                                   audit_public_entries(binary, {
+                                       f'mc_entry_{n}': f'mc_body_{n}' for n in sizes}))
                     require(not re.search(r'\bU (?:atomic_dec_and_mutex_lock|mutex\w*|__mutex\w*|kd_mutex_(?:lock|unlock)_clobber_v1|osq_lock|osq_unlock)\b', imported),
                             'KD-only caller imports a Linux mutex API')
                 require('kd_mutex_lock_clobber_v1' not in imported.split() and

@@ -9,15 +9,73 @@ import json
 from pathlib import Path
 import tempfile
 import unittest
+import subprocess
 
 import run
 from session import (BackendSession, hash_layout, tc_quiescent, check_jit_evidence,
                      check_kd_parameters)
 from bench_session import Session
 from context_audit import audit as audit_context
+from mutex_api_audit import audit_public_entries
 
 
 class DirectTests(unittest.TestCase):
+    def test_public_mutex_plan_is_distinct_on_every_standard_cohort(self):
+        threads = [*range(1, 9), *range(12, 61, 4)]
+        args = dict(cachelines=[1], threads=threads, repeats=3, iterations=100,
+                    backends=['native', 'tclock', 'kdlock'], lock_kind='mutex')
+        public = run.make_plan(Namespace(**args, mutex_api='public'))
+        outer = run.make_plan(Namespace(**args, mutex_api='outer'))
+        self.assertEqual(len(public), 21 * 3 * 3)
+        self.assertEqual(len({r['name'] for r in public}), len(public))
+        for row, control in zip(public, outer):
+            if row['arm'] == 'kdlock':
+                self.assertEqual(row['caller_shell'], 'mutex_public_direct')
+                self.assertEqual(row['cookie_storage'], 'provider_acquisition_ledger')
+                self.assertNotEqual(row['name'], control['name'])
+            else:
+                self.assertEqual(row, control)
+        with self.assertRaises(run.Failure):
+            run.make_plan(Namespace(**(args | dict(lock_kind='spin')), mutex_api='public'))
+
+    def test_public_entry_audit_rejects_shifted_label_and_wrong_saved_rip(self):
+        # Real relocatable ELF, with independent faults in the named entry and
+        # in the RIP captured for the provider. Never execute these fixtures.
+        assembly = """
+.text
+.globl body
+.type body,@function
+body:
+mov %rsp,%rsi
+lea saved(%rip),%rdx
+mov %rbp,%rcx
+call kd_mutex_direct_lock_clobber_v1
+after:
+nop
+shifted:
+call kd_mutex_direct_unlock_clobber_v1
+ret
+.size body,.-body
+.globl entry
+.set entry,ENTRY
+.set saved,SAVED
+"""
+        with tempfile.TemporaryDirectory() as temporary:
+            folder = Path(temporary)
+            for entry, saved in (('after', 'after'), ('shifted', 'after'),
+                                 ('after', 'shifted')):
+                source, binary = folder/'entry.S', folder/'entry.o'
+                source.write_text(assembly.replace('ENTRY', entry).replace('SAVED', saved))
+                subprocess.run(['gcc', '-c', str(source), '-o', str(binary)], check=True,
+                               capture_output=True)
+                if entry == saved == 'after':
+                    result = audit_public_entries(binary, {'entry': 'body'})
+                    self.assertEqual(result['entry']['entry_offset'],
+                                     result['entry']['call_offset'] + 5)
+                else:
+                    with self.assertRaisesRegex(ValueError, 'captured RIP'):
+                        audit_public_entries(binary, {'entry': 'body'})
+
     def test_performance_diagnostics_are_unscored_for_every_backend(self):
         for mode in ('pmu', 'perf_record'):
             plan = run.make_plan(Namespace(cachelines=[1], threads=[16], repeats=1,

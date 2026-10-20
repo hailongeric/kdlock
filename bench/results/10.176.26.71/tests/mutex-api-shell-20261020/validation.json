@@ -1,0 +1,131 @@
+{
+  "base_commit": "e25c338",
+  "scope": "literal public mutex benchmark caller selection and mandatory continuation ELF audit",
+  "unit": [
+    {
+      "name": "basic-and-api",
+      "argv": [
+        "make",
+        "-C",
+        "/root/host_fs/kdlock/tests/unit",
+        "run",
+        "PY_TESTS=mutex/test_mutex_api.py"
+      ],
+      "status": 0,
+      "elapsed_s": 2.4286131858825684
+    },
+    {
+      "name": "direct",
+      "argv": [
+        "python3",
+        "/root/host_fs/kdlock/bench/tclock_compare/test_direct.py"
+      ],
+      "status": 0,
+      "elapsed_s": 0.4678671360015869
+    },
+    {
+      "name": "peak",
+      "argv": [
+        "python3",
+        "/root/host_fs/kdlock/bench/spin_cacheline/test_peak.py"
+      ],
+      "status": 0,
+      "elapsed_s": 0.4685940742492676
+    },
+    {
+      "name": "api-plan",
+      "argv": [
+        "python3",
+        "/root/host_fs/kdlock/bench/real_api/test_plan.py"
+      ],
+      "status": 0,
+      "elapsed_s": 0.21703171730041504
+    },
+    {
+      "name": "api-report",
+      "argv": [
+        "python3",
+        "/root/host_fs/kdlock/bench/real_api/test_report.py"
+      ],
+      "status": 0,
+      "elapsed_s": 0.11626672744750977
+    }
+  ],
+  "synthetic": [
+    {
+      "caller_shell": "mutex_public_direct",
+      "completed": 100000,
+      "cookie_storage": "provider_acquisition_ledger",
+      "cpu_heat_policy": "mutex_contention1024_ratio256",
+      "drained": true,
+      "hotlock_mode": "adaptive",
+      "jit_acceptance": "NO_JIT",
+      "jit_bodies": 0,
+      "kd_provider_ubsan": "off",
+      "name": "c01-t01-r00-direct-kdlock-adaptive-public",
+      "scenario": "plain",
+      "spin_contention_pct": "unrecorded",
+      "spin_entry_ratio_limit": 2,
+      "status": "OK"
+    },
+    {
+      "caller_shell": "mutex_public_direct",
+      "completed": 800000,
+      "cookie_storage": "provider_acquisition_ledger",
+      "cpu_heat_policy": "mutex_contention1024_ratio256",
+      "drained": true,
+      "hotlock_mode": "adaptive",
+      "jit_acceptance": "PASS",
+      "jit_bodies": 744082,
+      "kd_provider_ubsan": "off",
+      "name": "c01-t08-r00-direct-kdlock-adaptive-public",
+      "scenario": "plain",
+      "spin_contention_pct": "unrecorded",
+      "spin_entry_ratio_limit": 2,
+      "status": "OK"
+    }
+  ],
+  "pipebytes": [
+    {
+      "name": "pipebytes-query-n16-t01-r0-kdlock-public",
+      "execution_status": "OK",
+      "drained": true,
+      "jit_bodies": 0,
+      "jit_completions": 0,
+      "caller_shell": "mutex_public_direct",
+      "cookie_storage": "provider_acquisition_ledger"
+    },
+    {
+      "name": "pipebytes-query-n16-t08-r0-kdlock-public",
+      "execution_status": "OK",
+      "drained": true,
+      "jit_bodies": 2932751,
+      "jit_completions": 2932751,
+      "caller_shell": "mutex_public_direct",
+      "cookie_storage": "provider_acquisition_ledger"
+    }
+  ],
+  "source_code_match": {
+    "public-c01": {
+      "files": 209,
+      "matched": true,
+      "prepared_build_inputs": "separately retained and checked against archive manifest"
+    },
+    "public-pipebytes": {
+      "files": 216,
+      "matched": true,
+      "prepared_build_inputs": "separately retained and checked against archive manifest"
+    }
+  },
+  "vm_idle": true,
+  "archive": {
+    "path": "bench/results/10.176.26.71/raw/tests/mutex-api-shell-20261020/mutex-api-shell-20261020.tar.gz",
+    "sha256": "28e3ec0a8aae4543cac42af705ba34306a8194923b18eba269d664777440dfa0",
+    "checked_files": 1053
+  },
+  "limits": [
+    "No comparative performance acceptance",
+    "Synthetic witnesses record entries, not returned bodies",
+    "Pipebytes is a scoped private-object syscall adapter, not global kernel replacement"
+  ]
+}

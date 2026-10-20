@@ -19,6 +19,19 @@ def arguments(**changes):
 
 
 class PlanTests(unittest.TestCase):
+    def test_public_mutex_shell_is_recorded_without_changing_native_controls(self):
+        public = run.make_plan(arguments(mutex_api='public'))
+        outer = run.make_plan(arguments(mutex_api='outer'))
+        for row, control in zip(public, outer):
+            if row['arm'] == 'kdlock':
+                self.assertEqual(row['caller_shell'], 'mutex_public_direct')
+                self.assertEqual(row['cookie_storage'], 'provider_acquisition_ledger')
+                self.assertNotEqual(row['name'], control['name'])
+            else:
+                self.assertEqual(row, control)
+        with self.assertRaises(run.Failure):
+            run.make_plan(arguments(mutex_api='public', kinds=['xattr'], queries=['tail']))
+
     def test_mutex_placement_diagnostics_cannot_enter_ordinary_comparisons(self):
         for offset in (0, 32, 40, 56):
             plan = run.make_plan(arguments(backends=['kdlock'], mutex_lock_offset=offset))

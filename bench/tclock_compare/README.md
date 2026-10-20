@@ -67,6 +67,14 @@ KDLOCK_RECOVERY_CONFIRMED=1 KDLOCK_SNAPSHOT_TAG=YOUR_CONFIRMED_SNAPSHOT \
 ```
 
 For mutex, replace the entry with `run_mutex.py` and choose a new output directory.
+Add `--mutex-api public` to measure the unified `kd_mutex_lock/unlock` facade.
+The default `--mutex-api outer` retains the explicit OUTER cookie comparison.
+These are separate compiled caller identities; earlier OUTER results do not
+measure the public facade. Public workload bodies invoke the actual macros.
+Their preparation aliases refer to DIRECT's saved continuation, and a mandatory
+ELF audit checks the capture instructions, CALL relocation, entry/body bounds
+and DIRECT unlock before loading the module. A label after the macro alone
+would not prove that compiler restore instructions remain inside the image.
 For hash, use `--workload rcuht` and omit `--cachelines`. Mutex accepts only ordinary
 `plain` operations. Its default batch cap is 1,024 bodies; `--kd-batch-size`
 sets the compile-time cap, checked against `mutex_batch` provider metadata. KD mutex
@@ -85,6 +93,7 @@ has no `mutex_jit` parameter.
 | `--spin-prefetch 2` |KD producer-prepared hints |
 | `--spin-entry-ratio-limit 2` | Adaptive ratio rule; 0 bypasses only ratio filtering |
 | `--kd-provider-ubsan off` | Private KD provider only; `kernel` inherits kernel policy |
+| `--mutex-api outer` | Explicit OUTER cookie; `public` measures literal unified mutex macros |
 | `--cpus LIST` | Ordered worker placement; each cohort takes its prefix. Choose node membership from the verified topology |
 | `--pmu` / `--perf-record` | Separate, unscored counter or flat CPU-sampling run; mutually exclusive |
 | `--dry-run` | Print plan without live execution |
@@ -122,7 +131,7 @@ policy. Static snapshots check complete structure and exact operation totals.
 | --- | --- | --- |
 | Native | Original kernel functions, no provider | Original mutex functions bypass experimental clobber macros |
 | TCLock | Native waiter-stack delegation | Actual upstream ordinary mutex port with parking |
-| KD | Explicit KD word, ABI1/JIT | KD-owned physical mutex and embedded delegation gate/tail, ABI2/outer cookie/JIT |
+| KD | Explicit KD word, ABI1/JIT | KD-owned physical mutex and embedded delegation gate/tail, ABI2/JIT with selected OUTER or public caller |
 
 TCLock retains NUMA/WWJUMP and configured 1,024; zero-based jumps can execute 1,025
 bodies. The shared port header currently enables NUMA even when Makefile's variable

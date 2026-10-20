@@ -9,6 +9,11 @@ ccflags-y += -DSC_HASH_PAYLOAD
 endif
 ifeq ($(SC_BACKEND),kdlock)
 ccflags-y += -DSC_DIRECT_KDLOCK -I$(KDLOCK_INCLUDE)
+ifeq ($(SC_MUTEX_API),public)
+ccflags-y += -DSC_MUTEX_PUBLIC_API
+else ifneq ($(filter-out outer,$(SC_MUTEX_API)),)
+$(error SC_MUTEX_API must be outer or public)
+endif
 else ifeq ($(SC_BACKEND),tclock)
 ccflags-y += -DSC_DIRECT_TCLOCK
 else ifeq ($(SC_BACKEND),native)

@@ -30,13 +30,28 @@
 
 #if defined(SC_DIRECT_KDLOCK)
 #include <linux/objtool.h>
-#include "kd_mutex_direct.h"
+#include "kd_mutex_api.h"
 /* Preserve this workload's deliberate separation from its business payload. */
 static struct kd_mutex sc_lock __aligned(SC_LINE_BYTES);
+#ifdef SC_MUTEX_PUBLIC_API
+/* Observe DIRECT's saved continuation without adding a named argument to the
+ * public call. The runner must verify this alias against the compiled CALL:
+ * a label after the macro could otherwise skip compiler restore instructions.
+ */
+#define SC_LOCK(n) kd_mutex_lock(&sc_lock); \
+	asm volatile(".globl mc_entry_" #n "\n.set mc_entry_" #n ", 1b\n\t" \
+		     ".pushsection .discard.noendbr\n\t" \
+		     _ASM_PTR " mc_entry_" #n "\n\t.popsection\n\t" \
+		     : : : "memory")
+#define SC_UNLOCK() kd_mutex_unlock(&sc_lock)
+MODULE_INFO(kd_mutex_api, "public");
+#else
 #define SC_LOCK(n) struct kd_mutex_outer_cookie sc_outer_cookie; \
 	KD_MUTEX_OUTER_LOCK(&sc_lock, sc_outer_cookie, \
 	".globl mc_entry_" #n "\nmc_entry_" #n ":\n\t" ANNOTATE_NOENDBR)
 #define SC_UNLOCK() KD_MUTEX_OUTER_UNLOCK(&sc_lock, sc_outer_cookie)
+MODULE_INFO(kd_mutex_api, "outer");
+#endif
 extern char mc_entry_0[], mc_entry_1[], mc_entry_2[], mc_entry_4[];
 extern char mc_entry_8[], mc_entry_16[];
 static void sc_lock_init(void) { kd_mutex_init(&sc_lock); }

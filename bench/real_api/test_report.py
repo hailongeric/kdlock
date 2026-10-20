@@ -23,6 +23,8 @@ class ReportTests(unittest.TestCase):
     def test_source_and_protocol_variants_never_pool(self):
         for changes in (dict(source_identity='other-source'),
                         dict(entry_abi=4), dict(mutex_implementation='owned-v1'),
+                        dict(caller_shell='mutex_public_direct'),
+                        dict(cookie_storage='provider_acquisition_ledger'),
                         dict(cpus=[2, 3]), dict(pmu=True), dict(mutex_lock_offset=40)):
             rows = [record(kind='pipebytes', query='query', source_identity='current',
                            entry_abi=2, mutex_implementation='kd-only-legacy', cpus=[0, 1])]

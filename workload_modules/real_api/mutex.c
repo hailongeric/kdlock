@@ -39,7 +39,7 @@ module_param(lock_addr, ulong, 0400);
 static DEFINE_PER_CPU(u64, redirected);
 
 #ifdef RB_KDLOCK
-#include "kd_mutex_direct.h"
+#include "kd_mutex_api.h"
 #ifdef RB_MUTEX_LOCK_OFFSET
 /* Placement-only diagnostics keep direct addressing in the timed wrapper.
  * The full two-line allocation excludes neighboring globals at every offset;
@@ -61,10 +61,26 @@ MODULE_INFO(kd_mutex_lock_offset, __stringify(RB_MUTEX_LOCK_OFFSET));
 #else
 static struct kd_mutex kd_lock;
 #endif
+#ifdef RB_MUTEX_PUBLIC_API
+#define RA_COOKIE do { } while (0)
+/* Alias the public macro's actual ABI2 continuation. The build audit checks
+ * the saved RIP, CALL relocation and body bounds before any module is loaded.
+ */
+#define RA_LOCK() do { \
+	kd_mutex_lock(&kd_lock); \
+	asm volatile(".globl rb_entry\n.set rb_entry, 1b\n\t" \
+		     ".pushsection .discard.noendbr\n\t" \
+		     _ASM_PTR " rb_entry\n\t.popsection\n\t" : : : "memory"); \
+} while (0)
+#define RA_UNLOCK() kd_mutex_unlock(&kd_lock)
+MODULE_INFO(kd_mutex_api, "public");
+#else
 #define RA_COOKIE struct kd_mutex_outer_cookie cookie
 #define RA_LOCK() KD_MUTEX_OUTER_LOCK(&kd_lock, cookie, \
 	".globl rb_entry\nrb_entry:\n\t" ANNOTATE_NOENDBR)
 #define RA_UNLOCK() KD_MUTEX_OUTER_UNLOCK(&kd_lock, cookie)
+MODULE_INFO(kd_mutex_api, "outer");
+#endif
 extern char rb_entry[];
 #elif defined(RB_TCLOCK)
 #include "mutex/komb_mutex.h"

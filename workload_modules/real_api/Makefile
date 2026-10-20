@@ -13,6 +13,11 @@ ccflags-y += -DRB_$(RB_KIND) -I$(KDLOCK_INCLUDE)
 ccflags-y += -I$(TCLOCK_INCLUDE)
 ifeq ($(RB_BACKEND),kdlock)
 ccflags-y += -DRB_KDLOCK
+ifeq ($(RB_MUTEX_API),public)
+ccflags-y += -DRB_MUTEX_PUBLIC_API
+else ifneq ($(filter-out outer,$(RB_MUTEX_API)),)
+$(error RB_MUTEX_API must be outer or public)
+endif
 ifneq ($(RB_MUTEX_LOCK_OFFSET),)
 ccflags-y += -DRB_MUTEX_LOCK_OFFSET=$(RB_MUTEX_LOCK_OFFSET)
 endif
