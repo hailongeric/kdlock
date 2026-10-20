@@ -7,7 +7,7 @@
 #include <linux/preempt.h>
 #include <linux/sched.h>
 #include <linux/uaccess.h>
-#include "kd_mutex_direct.h"
+#include "kd_mutex_api.h"
 #include "api.h"
 
 static DEFINE_KD_MUTEX(test_lock);
@@ -30,10 +30,20 @@ struct escape_result {
 
 static __attribute__((noipa)) void escape_body(struct escape_result *result)
 {
+#ifdef JIT_ESCAPE_PUBLIC_API
+	kd_mutex_lock(&test_lock);
+	/* Alias the actual DIRECT continuation; the runner checks the emitted
+	 * capture/CALL bytes before loading this source. */
+	asm volatile(".globl jit_escape_entry\n.set jit_escape_entry, 1b\n\t"
+		     ".pushsection .discard.noendbr\n\t"
+		     _ASM_PTR " jit_escape_entry\n\t.popsection\n\t"
+		     : : : "memory");
+#else
 	struct kd_mutex_outer_cookie cookie;
 
 	KD_MUTEX_OUTER_LOCK(&test_lock, cookie,
 		".globl jit_escape_entry\njit_escape_entry:\n\t" ANNOTATE_NOENDBR);
+#endif
 	if (atomic_inc_return(&writers) != 1)
 		atomic_inc(&failures);
 	WRITE_ONCE(prefix, READ_ONCE(prefix) + 1);
@@ -80,7 +90,11 @@ static __attribute__((noipa)) void escape_body(struct escape_result *result)
 	WRITE_ONCE(suffix, READ_ONCE(suffix) + 1);
 	if (atomic_dec_return(&writers))
 		atomic_inc(&failures);
+#ifdef JIT_ESCAPE_PUBLIC_API
+	kd_mutex_unlock(&test_lock);
+#else
 	KD_MUTEX_OUTER_UNLOCK(&test_lock, cookie);
+#endif
 }
 
 static long escape_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
@@ -180,3 +194,8 @@ module_init(escape_init);
 module_exit(escape_exit);
 MODULE_LICENSE("GPL");
 MODULE_DESCRIPTION("Conditional JIT instruction escape and exact native continuation");
+#ifdef JIT_ESCAPE_PUBLIC_API
+MODULE_INFO(kd_mutex_api, "public");
+#else
+MODULE_INFO(kd_mutex_api, "outer");
+#endif

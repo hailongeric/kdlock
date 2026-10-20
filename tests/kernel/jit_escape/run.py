@@ -21,6 +21,8 @@ from bench_session import Session
 import kernel_identity
 from provider.prepare import prepare as prepare_provider
 from native_only_protocol import entries
+sys.path.insert(0, str(ROOT / "bench/tclock_compare"))
+from mutex_api_audit import audit_public_entries
 
 DEVICE = "/dev/kd_jit_escape_test"
 WORKER_COMM = "ke_worker"
@@ -77,6 +79,8 @@ def sources(root):
             if (path.suffix in (".c", ".h", ".inc", ".S", ".def", ".py", ".json", ".patch", ".md") or
                     path.name in ("Makefile", "requirements.txt", "guest.config")):
                 hashes[str(relative)] = rt.digest(path)
+    audit_path = "bench/tclock_compare/mutex_api_audit.py"
+    hashes[audit_path] = rt.digest(root / audit_path)
     return hashes
 
 
@@ -288,6 +292,7 @@ def main():
     parser.add_argument("--iterations", type=int, default=100000)
     parser.add_argument("--warmup-iterations", type=int, default=100000)
     parser.add_argument("--phase-timeout", type=int, default=120)
+    parser.add_argument("--mutex-api", choices=("outer", "public"), default="outer")
     kernel_identity.arguments(parser)
     args = parser.parse_args()
     rt.require(os.geteuid() == 0 and str(ROOT).startswith("/root/") and
@@ -331,7 +336,24 @@ def main():
         workload = source / "workload_modules/jit_escape/jit_escape_test.ko"
         rt.command(["make", "-C", workload.parent, f"KDIR={args.kernel_source}",
                     f"KDLOCK_INCLUDE={source / 'include'}",
+                    f"JIT_ESCAPE_MUTEX_API={args.mutex_api}",
                     f"KBUILD_EXTRA_SYMBOLS={provider.parent / 'Module.symvers'}"], out / "build-workload.log", timeout=180)
+        compiled_api = rt.command(["modinfo", "-F", "kd_mutex_api", workload],
+                                  out / "mutex-api.txt").strip()
+        rt.require(compiled_api == args.mutex_api, "compiled mutex API differs")
+        imported = rt.command(["nm", "-u", workload], out / "workload-imports.txt")
+        rt.command(["objdump", "-dr", workload], out / "workload-disassembly.txt")
+        if args.mutex_api == "public":
+            names = set(imported.split())
+            rt.require({"kd_mutex_direct_lock_clobber_v1", "kd_mutex_direct_unlock_clobber_v1"} <= names and
+                       not names & {"kd_mutex_outer_contended_clobber_v1", "kd_mutex_local_unlock",
+                                    "kd_mutex_api_lock", "kd_mutex_api_unlock",
+                                    "kd_mutex_lock_clobber_v1", "kd_mutex_unlock_clobber_v1"} and
+                       not any(re.fullmatch(r"(?:mutex\w*|__mutex\w*|atomic_dec_and_mutex_lock|osq_lock|osq_unlock)",
+                                            name) for name in names),
+                       "public marker caller imports another call shell")
+            rt.write_json(out / "public-entry-audit.json",
+                          audit_public_entries(workload, {"jit_escape_entry": "escape_body"}))
         rt.command(["make", "-C", source / "daemon", "CFLAGS=-O2 -Wall -Wextra -Werror"],
                    out / "build-daemon.log", timeout=120)
         binaries = dict(provider=provider, workload=workload, daemon=source / "daemon/daemon",
@@ -356,6 +378,9 @@ def main():
         verify()
         idle()
         spec = dict(name="session", arm="kdlock", lock_kind="mutex", delegate=True,
+                    mutex_api=args.mutex_api,
+                    caller_shell="mutex_public_direct" if args.mutex_api == "public" else "mutex_outer_cookie",
+                    cookie_storage="provider_acquisition_ledger" if args.mutex_api == "public" else "outer_acquisition_local",
                     cpus=args.cpus, iterations=args.iterations, warmup_iterations=args.warmup_iterations,
                     phase_timeout=args.phase_timeout, kernel_identity=identity)
         session = EscapeSession(out, spec, binaries, verify)
@@ -363,6 +388,8 @@ def main():
         verify()
         idle()
         rt.write_json(out / "result.json", dict(passed=True, drained=True, phases=session.record["phases"],
+            mutex_api=args.mutex_api, caller_shell=session.record["caller_shell"],
+            cookie_storage=session.record["cookie_storage"],
             escape_events=session.record["escape_events"], kernel_identity=identity,
             snapshot_tag=os.environ["KDLOCK_SNAPSHOT_TAG"]))
         print("PASS: cold branch delegated; hot instruction resumed on original task; exact effects/flags; permanent native-only state; final drain")

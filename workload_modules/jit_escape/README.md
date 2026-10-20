@@ -13,8 +13,11 @@ the reviewed instruction itself. The original task continues at that instruction
 The protected operation increments a prefix counter, checks a mutable condition,
 and increments a suffix counter before unlocking. The condition starts false:
 the unusual instruction is present in the original code, but normal calls never
-reach it. The explicit KD outer mutex pair uses ABI2, the existing machine-level
-calling agreement for delegated mutex operations. Atomic active-writer counts
+reach it. `JIT_ESCAPE_MUTEX_API=outer` selects the existing explicit outer pair;
+`public` selects literal `kd_mutex_lock/unlock` calls. Both use ABI2, the existing
+machine-level calling agreement for delegated mutex operations. The public
+shell's named entry aliases DIRECT's actual captured continuation and must pass
+the runner's ELF audit before loading. Atomic active-writer counts
 check that no two tasks execute the protected operation simultaneously.
 
 After all workers finish, the runner makes the condition true. That branch uses

@@ -21,6 +21,12 @@ timeout 900s python3 tests/kernel/jit_escape/run.py \
   --output /root/kdlock-evidence/10.176.26.71/tests/jit-escape-NEW
 ```
 
+Add `--mutex-api public` to exercise literal `kd_mutex_lock/unlock` calls and
+their exact native-continuation unlock routing. The default `outer` retains
+the existing cookie shell. Public runs audit the compiled lock capture, named
+continuation and unlock imports before loading the module; metadata and result
+files keep the two shells distinct. Both execute the same four phases below.
+
 The four phases remain in one provider/source session:
 
 1. `cold-warmup`: run with the unusual-instruction branch disabled, leaving it
