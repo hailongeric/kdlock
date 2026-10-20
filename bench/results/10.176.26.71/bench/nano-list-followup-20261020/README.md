@@ -14,6 +14,10 @@ functional failures remain separate evidence.
 The prepared [preflight](preflight.py) requires the original host configuration,
 actual recovery snapshot, unchanged manifest and exact historical arguments,
 then checks all ten dry-run plans before allowing the serial supervisor.
+The prepared [post-run verifier](verify.py) checks all 264 results, frozen
+sources/binaries, 44 compiled-function audits, 96 KD loaded-image receipts and
+exact retirements. It retains both strict environment endpoints; a failed
+post-run check remains a failure. It has not yet run against timing evidence.
 
 | Family | Variants | Controls | Mix | Sessions |
 | --- | --- | --- | --- | ---: |
