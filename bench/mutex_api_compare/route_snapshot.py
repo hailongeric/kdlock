@@ -48,10 +48,10 @@ def parse_symbols(text, module='kdlock_km'):
         if len(parts) == 4 and parts[3] == '['+module+']' and parts[2] in PERCPU | GLOBALS:
             require(parts[2] not in selected, 'duplicate provider symbol: '+parts[2])
             selected[parts[2]] = dict(address=int(parts[0], 16), kind=parts[1])
-        if len(parts) == 3 and parts[2] == '__per_cpu_offset':
-            require('__per_cpu_offset' not in selected, 'duplicate CPU offset array')
+        if len(parts) == 3 and parts[2] in ('__per_cpu_offset', '__pgtable_l5_enabled'):
+            require(parts[2] not in selected, 'duplicate kernel observation symbol')
             selected[parts[2]] = dict(address=int(parts[0], 16), kind=parts[1])
-    require(set(selected) == set(PERCPU) | set(GLOBALS) | {'__per_cpu_offset'},
+    require(set(selected) == set(PERCPU) | set(GLOBALS) | {'__per_cpu_offset', '__pgtable_l5_enabled'},
             'incomplete original provider symbol set')
     return selected
 
@@ -75,6 +75,7 @@ class Kcore:
             elf = ELFFile(self.stream)
             require(elf.elfclass == 64 and elf.little_endian and
                     elf['e_machine'] == 'EM_X86_64', 'unexpected kcore ELF')
+            self.kernel_floor = 0xffff800000000000
             self.segments = [dict(address=s['p_vaddr'], size=s['p_memsz'],
                                   offset=s['p_offset'], file_size=s['p_filesz'])
                              for s in elf.iter_segments() if s['p_type'] == 'PT_LOAD']
@@ -83,7 +84,7 @@ class Kcore:
             raise
 
     def read(self, address, size):
-        require(0 < size <= 1024*1024 and 0xffff800000000000 <= address < 2**64-size,
+        require(0 < size <= 1024*1024 and self.kernel_floor <= address < 2**64-size,
                 'invalid kernel observation extent')
         candidates = [s for s in self.segments if s['address'] <= address and
                       address+size <= s['address']+min(s['size'], s['file_size'])]
@@ -96,6 +97,16 @@ class Kcore:
 
     def close(self):
         self.stream.close()
+
+    def configure_paging(self, address):
+        # Bootstrap from the fixed kernel-image mapping, valid in both modes.
+        # Hardware LA57 support alone does not establish active five-level paging.
+        enabled = int.from_bytes(self.read(address, 4), 'little')
+        require(enabled in (0, 1), 'invalid live paging-mode flag')
+        self.kernel_floor = 0xff00000000000000 if enabled else 0xffff800000000000
+        return dict(flag_address=address, l5_enabled=enabled,
+                    virtual_address_bits=57 if enabled else 48,
+                    kernel_floor=self.kernel_floor)
 
 
 class Snapshot:
@@ -136,6 +147,7 @@ class Snapshot:
         self.layouts = layouts
         self.core = Kcore()
         try:
+            self.paging = self.core.configure_paging(self.symbols['__pgtable_l5_enabled']['address'])
             require(Path('/sys/devices/system/cpu/possible').read_text().strip() == '0-63',
                     'original 64-CPU domain required')
             self.offsets = list(struct.unpack('<64Q', self.core.read(self.symbols['__per_cpu_offset']['address'], 512)))
@@ -178,6 +190,7 @@ class Snapshot:
 
     def receipt(self):
         return dict(provider_sha256=self.provider_sha256, layouts=self.layouts,
+                    paging=self.paging,
                     per_cpu_offsets=self.offsets, per_cpu_offset_symbol=self.symbols['__per_cpu_offset'],
                     kcore_segments=self.core.segments,
                     kallsyms_sha256=hashlib.sha256(self.kallsyms.encode()).hexdigest(),

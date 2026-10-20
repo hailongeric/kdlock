@@ -48,9 +48,9 @@ class CausalTests(unittest.TestCase):
         self.assertEqual(Profile(None,'perf',clock_id='mono').clock_id,'mono')
 
     def test_symbols_reject_duplicates_missing_and_wrong_module(self):
-        text='ffffffff82900000 D __per_cpu_offset\n'+'\n'.join(
+        text='ffffffff82900000 D __per_cpu_offset\nffffffff82900100 D __pgtable_l5_enabled\n'+'\n'.join(
             f'0000000000036000 a {n} [kdlock_km]' for n in snapshot.PERCPU | snapshot.GLOBALS)
-        self.assertEqual(set(snapshot.parse_symbols(text)),set(snapshot.PERCPU)|set(snapshot.GLOBALS)|{'__per_cpu_offset'})
+        self.assertEqual(set(snapshot.parse_symbols(text)),set(snapshot.PERCPU)|set(snapshot.GLOBALS)|{'__per_cpu_offset','__pgtable_l5_enabled'})
         for invalid in (text+'\nffffffff82900000 D __per_cpu_offset',
                         text.replace('kd_mutex_slowpath_count','unrelated_count'),
                         text.replace('[kdlock_km]','[another_module]')):
@@ -78,6 +78,7 @@ class CausalTests(unittest.TestCase):
 
     def test_kcore_rejects_unmapped_ambiguous_and_short_reads(self):
         core=snapshot.Kcore.__new__(snapshot.Kcore)
+        core.kernel_floor=0xffff800000000000
         base=0xffff888000000000
         core.segments=[dict(address=base,size=16,file_size=16,offset=0)]
         core.stream=io.BytesIO(b'0123456789abcdef')
@@ -88,6 +89,23 @@ class CausalTests(unittest.TestCase):
         with self.assertRaises(ValueError):core.read(base,4)
         core.segments=core.segments[:1];core.stream=io.BytesIO(b'1')
         with self.assertRaises(ValueError):core.read(base,4)
+
+    def test_five_level_addresses_require_live_enabled_flag_and_retained_mapping(self):
+        core=snapshot.Kcore.__new__(snapshot.Kcore)
+        high=0xffff888000000000; extended=0xff11000333600000
+        core.kernel_floor=0xffff800000000000
+        core.segments=[dict(address=high,size=4,file_size=4,offset=0),
+                       dict(address=extended,size=4,file_size=4,offset=4)]
+        core.stream=io.BytesIO(struct.pack('<II',1,123))
+        with self.assertRaises(ValueError):core.read(extended,4)
+        self.assertEqual(core.configure_paging(high)['virtual_address_bits'],57)
+        self.assertEqual(int.from_bytes(core.read(extended,4),'little'),123)
+        with self.assertRaises(ValueError):core.read(extended+4,4)
+        core.stream=io.BytesIO(struct.pack('<II',0,123))
+        self.assertEqual(core.configure_paging(high)['virtual_address_bits'],48)
+        with self.assertRaises(ValueError):core.read(extended,4)
+        core.stream=io.BytesIO(struct.pack('<II',2,123))
+        with self.assertRaises(ValueError):core.configure_paging(high)
 
     def test_unstable_snapshot_rejected_and_provider_pin_closed(self):
         reader=snapshot.Snapshot.__new__(snapshot.Snapshot)

@@ -70,9 +70,34 @@ placement and polling gaps on unused host CPU 62, with clock brackets and its
 own overhead. Thread-count or runtime correlation alone cannot establish
 interference causality. Preserve every failed attempt and unavailable field.
 
+## First validation and retained failure
+
+`checks-1` at `290b5bc` passed both basic programs and 26 directly affected
+Python checks (comparison 13, observer 4, profile 2, diagnostic 7), dependency
+validation and unchanged-source checks. A fresh host receipt at
+`2026-10-20T21:23:49.950724+00:00` failed with 74 threads and started no test.
+Natural retirement was observed without configuration changes. The next
+receipt, `21:25:44.680642+00:00`, passed with the exact original 67-thread set.
+
+`run-1` completed six valid, drained sessions. The seventh, OUTER/counts,
+stopped before its measured workers started: the read-only counter tool
+incorrectly assumed 48-bit kernel virtual addresses. Its ELF checks and
+layout capture succeeded, but it rejected the first per-CPU address beginning
+`0xff110003336...`. The session is `PREPARATION_FAILED`, with exact retirement;
+an independent module/task check confirmed final idle. The immediate host
+endpoint failed at `21:26:36.431066+00:00` with 76 versus 67 threads.
+
+The retained live paging receipt reads `__pgtable_l5_enabled = 1` from the
+unchanged kernel. The reader correction must derive 48/57-bit canonical bounds
+from that active flag, while retaining the exact original ELF identities,
+unique mapped extents, sizes, stable reads and all admission/ownership checks.
+The failed original run and its six measurements remain separate. A corrected
+revision requires basic and affected tests and a fresh strict gate.
+
 ## Disposition
 
-Implementation and validation are in progress. No diagnostic timing has run.
+The corrected reader is under validation; no successful counter/timing matrix
+is available yet.
 The seven mutex causes, shared-lock comparative acceptance, remaining nano
 conclusions and real mmap/page-fault integration retain their documented
 unresolved status. This stage proposes no production change. Only a demonstrated

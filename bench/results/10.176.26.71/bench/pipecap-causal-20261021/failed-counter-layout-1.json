@@ -1,0 +1,371 @@
+{
+  "kallsyms_sha256": "07a3686b1942a3271a6e54114664abd627c4217614d51aec8d8fc329010f1faa",
+  "kcore_segments": [
+    {
+      "address": 18446744071578845184,
+      "file_size": 58916864,
+      "offset": 72057591907237888,
+      "size": 58916864
+    },
+    {
+      "address": 18419722475945328640,
+      "file_size": 14073748835532799,
+      "offset": 45035996273721344,
+      "size": 14073748835532799
+    },
+    {
+      "address": 18446744072635809792,
+      "file_size": 1056964608,
+      "offset": 72057592964202496,
+      "size": 1056964608
+    },
+    {
+      "address": 18379471554275708928,
+      "file_size": 647168,
+      "offset": 4785074604101632,
+      "size": 647168
+    },
+    {
+      "address": 18434359174734282752,
+      "file_size": 12288,
+      "offset": 59672695062675456,
+      "size": 12288
+    },
+    {
+      "address": 18379471554276753408,
+      "file_size": 3220033536,
+      "offset": 4785074605146112,
+      "size": 3220033536
+    },
+    {
+      "address": 18434359174734299136,
+      "file_size": 50315264,
+      "offset": 59672695062691840,
+      "size": 50315264
+    },
+    {
+      "address": 18379471558570672128,
+      "file_size": 22548578304,
+      "offset": 4785078899064832,
+      "size": 22548578304
+    },
+    {
+      "address": 18434359174801391616,
+      "file_size": 352321536,
+      "offset": 59672695129784320,
+      "size": 352321536
+    }
+  ],
+  "layouts": {
+    "kd_bench_bodies": {
+      "address": 221320,
+      "kind": "a",
+      "offset": 8,
+      "section": ".data..percpu",
+      "size": 8
+    },
+    "kd_bench_completions": {
+      "address": 221312,
+      "kind": "a",
+      "offset": 0,
+      "section": ".data..percpu",
+      "size": 8
+    },
+    "kd_hotlock_mutex_checks": {
+      "address": 221352,
+      "kind": "a",
+      "offset": 40,
+      "section": ".data..percpu",
+      "size": 8
+    },
+    "kd_hotlock_mutex_contentions": {
+      "address": 221368,
+      "kind": "a",
+      "offset": 56,
+      "section": ".data..percpu",
+      "size": 8
+    },
+    "kd_hotlock_mutex_entries": {
+      "address": 221376,
+      "kind": "a",
+      "offset": 64,
+      "section": ".data..percpu",
+      "size": 8
+    },
+    "kd_hotlock_mutex_last_entries": {
+      "address": 221360,
+      "kind": "a",
+      "offset": 48,
+      "section": ".data..percpu",
+      "size": 8
+    },
+    "kd_jit_times": {
+      "address": 18446744072644674592,
+      "kind": "b",
+      "offset": 4640,
+      "section": ".bss",
+      "size": 240
+    },
+    "kd_jit_timing": {
+      "address": 18446744072644674832,
+      "kind": "b",
+      "offset": 4880,
+      "section": ".bss",
+      "size": 1
+    },
+    "kd_mutex_active_waiters": {
+      "address": 221464,
+      "kind": "a",
+      "offset": 152,
+      "section": ".data..percpu",
+      "size": 4
+    },
+    "kd_mutex_combiner_count": {
+      "address": 221608,
+      "kind": "a",
+      "offset": 296,
+      "section": ".data..percpu",
+      "size": 8
+    },
+    "kd_mutex_context_busy_count": {
+      "address": 221536,
+      "kind": "a",
+      "offset": 224,
+      "section": ".data..percpu",
+      "size": 8
+    },
+    "kd_mutex_frame_failure_count": {
+      "address": 221560,
+      "kind": "a",
+      "offset": 248,
+      "section": ".data..percpu",
+      "size": 8
+    },
+    "kd_mutex_handoff_count": {
+      "address": 221600,
+      "kind": "a",
+      "offset": 288,
+      "section": ".data..percpu",
+      "size": 8
+    },
+    "kd_mutex_jit_failure_count": {
+      "address": 221576,
+      "kind": "a",
+      "offset": 264,
+      "section": ".data..percpu",
+      "size": 8
+    },
+    "kd_mutex_jit_not_ready_count": {
+      "address": 221584,
+      "kind": "a",
+      "offset": 272,
+      "section": ".data..percpu",
+      "size": 8
+    },
+    "kd_mutex_jit_resume_count": {
+      "address": 221568,
+      "kind": "a",
+      "offset": 256,
+      "section": ".data..percpu",
+      "size": 8
+    },
+    "kd_mutex_jit_success_count": {
+      "address": 221592,
+      "kind": "a",
+      "offset": 280,
+      "section": ".data..percpu",
+      "size": 8
+    },
+    "kd_mutex_multi_slot_count": {
+      "address": 221544,
+      "kind": "a",
+      "offset": 232,
+      "section": ".data..percpu",
+      "size": 8
+    },
+    "kd_mutex_nested_abort_release_count": {
+      "address": 221472,
+      "kind": "a",
+      "offset": 160,
+      "section": ".data..percpu",
+      "size": 8
+    },
+    "kd_mutex_nested_fast_count": {
+      "address": 221520,
+      "kind": "a",
+      "offset": 208,
+      "section": ".data..percpu",
+      "size": 8
+    },
+    "kd_mutex_nested_jit_count": {
+      "address": 221504,
+      "kind": "a",
+      "offset": 192,
+      "section": ".data..percpu",
+      "size": 8
+    },
+    "kd_mutex_nested_lock_count": {
+      "address": 221528,
+      "kind": "a",
+      "offset": 216,
+      "section": ".data..percpu",
+      "size": 8
+    },
+    "kd_mutex_nested_queued_count": {
+      "address": 221512,
+      "kind": "a",
+      "offset": 200,
+      "section": ".data..percpu",
+      "size": 8
+    },
+    "kd_mutex_nested_unlock_count": {
+      "address": 221480,
+      "kind": "a",
+      "offset": 168,
+      "section": ".data..percpu",
+      "size": 8
+    },
+    "kd_mutex_node_overflow_count": {
+      "address": 221552,
+      "kind": "a",
+      "offset": 240,
+      "section": ".data..percpu",
+      "size": 8
+    },
+    "kd_mutex_origin_acquires": {
+      "address": 221496,
+      "kind": "a",
+      "offset": 184,
+      "section": ".data..percpu",
+      "size": 8
+    },
+    "kd_mutex_origin_releases": {
+      "address": 221488,
+      "kind": "a",
+      "offset": 176,
+      "section": ".data..percpu",
+      "size": 8
+    },
+    "kd_mutex_reserved_nodes": {
+      "address": 221456,
+      "kind": "a",
+      "offset": 144,
+      "section": ".data..percpu",
+      "size": 4
+    },
+    "kd_mutex_slowpath_count": {
+      "address": 221616,
+      "kind": "a",
+      "offset": 304,
+      "section": ".data..percpu",
+      "size": 8
+    },
+    "kd_mutex_task_failures": {
+      "address": 228896,
+      "kind": "a",
+      "offset": 7584,
+      "section": ".data..percpu",
+      "size": 8
+    },
+    "kd_mutex_task_reroutes": {
+      "address": 228888,
+      "kind": "a",
+      "offset": 7576,
+      "section": ".data..percpu",
+      "size": 8
+    },
+    "kd_native_completed": {
+      "address": 18446744072644684416,
+      "kind": "b",
+      "offset": 14464,
+      "section": ".bss",
+      "size": 8
+    },
+    "kd_native_started": {
+      "address": 18446744072644684424,
+      "kind": "b",
+      "offset": 14472,
+      "section": ".bss",
+      "size": 8
+    },
+    "kd_native_unlocks": {
+      "address": 18446744072644684408,
+      "kind": "b",
+      "offset": 14456,
+      "section": ".bss",
+      "size": 8
+    }
+  },
+  "method": "Read-only original counter bytes; two stable reads outside worker intervals",
+  "per_cpu_offset_symbol": {
+    "address": 18446744071605078880,
+    "kind": "D"
+  },
+  "per_cpu_offsets": [
+    18379471568022536192,
+    18379471568022798336,
+    18379471568023060480,
+    18379471568023322624,
+    18379471568023584768,
+    18379471568023846912,
+    18379471568024109056,
+    18379471568024371200,
+    18379471568024633344,
+    18379471568024895488,
+    18379471568025157632,
+    18379471568025419776,
+    18379471568025681920,
+    18379471568025944064,
+    18379471568026206208,
+    18379471568026468352,
+    18379471568026730496,
+    18379471568026992640,
+    18379471568027254784,
+    18379471568027516928,
+    18379471568027779072,
+    18379471568028041216,
+    18379471568028303360,
+    18379471568028565504,
+    18379471568028827648,
+    18379471568029089792,
+    18379471568029351936,
+    18379471568029614080,
+    18379471568029876224,
+    18379471568030138368,
+    18379471568030400512,
+    18379471568030662656,
+    18379471580907438080,
+    18379471580907700224,
+    18379471580907962368,
+    18379471580908224512,
+    18379471580908486656,
+    18379471580908748800,
+    18379471580909010944,
+    18379471580909273088,
+    18379471580909535232,
+    18379471580909797376,
+    18379471580910059520,
+    18379471580910321664,
+    18379471580910583808,
+    18379471580910845952,
+    18379471580911108096,
+    18379471580911370240,
+    18379471580911632384,
+    18379471580911894528,
+    18379471580912156672,
+    18379471580912418816,
+    18379471580912680960,
+    18379471580912943104,
+    18379471580913205248,
+    18379471580913467392,
+    18379471580913729536,
+    18379471580913991680,
+    18379471580914253824,
+    18379471580914515968,
+    18379471580914778112,
+    18379471580915040256,
+    18379471580915302400,
+    18379471580915564544
+  ],
+  "provider_sha256": "cf7f9a47c5b36c762e732641b4e33459bf46ef11f6a67fbbcbc7c9a807757988"
+}
