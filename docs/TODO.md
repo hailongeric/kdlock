@@ -114,6 +114,11 @@ retains the current recovery VM and pinned environment, with separate fresh
 Native/KD rwsem and Native/TCLock/KD rwlock controls. The exact-environment
 rwsem preflight passed and its 756-session grid is running; the rwlock reference
 has not started. These results cannot resolve the mutex comparison by implication.
+The [mmap/fault source capture](../bench/results/10.176.26.71/tests/mmap-fault-followup-20261020/README.md)
+is prepared for an idle interval, without changing the guest kernel. The
+[resident-list timing plan](../bench/results/10.176.26.71/bench/nano-list-followup-20261020/README.md)
+retains the previously selected 264 sessions at eight and 60 workers. Neither
+stage has run yet.
 
 Keep the two-word wrapper ABI, separate backend identities, exact KD physical owners,
 exact acquisition references and final ACKs. Shared storage must survive its final
