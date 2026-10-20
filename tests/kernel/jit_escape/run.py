@@ -212,6 +212,8 @@ class EscapeSession(Session):
         requested = [self.record["reader_iterations"] if role == "reader" else iterations
                      for role in self.record["worker_roles"]]
         processes, logs = [], []
+        joined = False
+        failure_stage = "CALLER_START_FAILED"
 
         def callers():
             return [dict(pid=p.pid, argv=p.args, role=self.record["worker_roles"][i],
@@ -226,15 +228,12 @@ class EscapeSession(Session):
                         self.record["worker_roles"][index]]
                 processes.append(subprocess.Popen(list(map(str, argv)), stdout=log,
                     stderr=subprocess.STDOUT, start_new_session=True))
-        except OSError as error:
-            for log in logs:
-                log.close()
+                # Keep identities in memory even if publishing a receipt fails.
+                # Session.execute saves this record on the failure path.
+                result["callers"] = callers()
             rt.write_json(self.path / (name + "-callers.json"), callers())
-            raise rt.Failure("CALLER_START_FAILED", f"retain caller PIDs {[p.pid for p in processes]}",
-                             unsafe=True) from error
-        rt.write_json(self.path / (name + "-callers.json"), callers())
-        deadline = time.monotonic() + self.record["phase_timeout"]
-        try:
+            failure_stage = "CALLER_CONTROL_FAILED"
+            deadline = time.monotonic() + self.record["phase_timeout"]
             ready_deadline = min(deadline, time.monotonic() + 20)
             while not all((barrier / f"ready-{i}.json").exists() for i in range(len(processes))):
                 if time.monotonic() >= ready_deadline or any(p.poll() is not None for p in processes):
@@ -252,11 +251,23 @@ class EscapeSession(Session):
             publish_barrier(barrier / "go.json", dict(start_ns=time.monotonic_ns() + 100000000))
             for process in processes:
                 process.wait(timeout=max(.01, deadline - time.monotonic()))
-        except subprocess.TimeoutExpired as error:
-            raise rt.Failure("TIMEOUT", f"retain caller PIDs {[p.pid for p in processes]}", unsafe=True) from error
+            joined = True
+        except Exception as error:
+            # Until every caller joins, even barrier/receipt I/O or JSON errors
+            # leave live device users possible. A zero payload active count
+            # before GO does not prove those users drained.
+            if isinstance(error, rt.Failure):
+                error.unsafe = True
+                raise
+            status = "TIMEOUT" if isinstance(error, subprocess.TimeoutExpired) else failure_stage
+            raise rt.Failure(status, f"retain caller PIDs {[p.pid for p in processes]}: {error}",
+                             unsafe=True) from error
         finally:
             for log in logs:
-                log.close()
+                try:
+                    log.close()
+                except OSError as error:
+                    raise rt.Failure("CALLER_LOG_FAILED", str(error), unsafe=not joined) from error
         self.faults()
         result["returncodes"] = [p.returncode for p in processes]
         self.save()

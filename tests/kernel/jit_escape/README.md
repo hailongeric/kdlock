@@ -79,6 +79,10 @@ speculative count without accessing the payload. After all workers join,
 `kd_rwsem_is_idle()` must confirm zero reservations/readers, empty wait queues
 and an idle gate. This probe adds no rwsem control ledger, cancellation,
 downgrade, mmap integration or fault continuation.
+The body observations do not independently isolate reservation release versus
+unlock ACK: another writer's reservation could mask an early release of this
+writer's reservation. That ordering remains a provider protocol obligation
+supported here by source inspection, not an independent result of this probe.
 
 Spin/rwlock workers must start with preemption and IRQs enabled and singleton
 CPU affinity. Each returned operation must preserve its CPU, full preemption
@@ -138,8 +142,13 @@ unconditional branch, the marker exit and `RDTSC`; see its README for the flag
 names and expected values. Existing mutex ownership, release acknowledgements
 and source-lifetime rules remain in force.
 
-A timeout or kernel fault preserves running callers and loaded modules for
-diagnosis. It does not prove that work finished and does not authorize forced
+A timeout, kernel fault or caller-control error before every worker joins
+preserves running callers and loaded modules for diagnosis. Barrier and receipt
+I/O errors follow the same rule: before GO, a worker can hold a device reference
+while the payload's active count is still zero. The affected
+`infrastructure/test_jit_escape_runner.py` unit driver exercises these failures
+through the production phase and cleanup dispatcher with substituted callers.
+These failures do not prove that work finished and do not authorize forced
 unload. Successful completion requires workers to join, zero active execution
 records, successful source retirement, ordinary module unload, and final idle
 inspection. This is a focused correctness check; no throughput result is claimed.
