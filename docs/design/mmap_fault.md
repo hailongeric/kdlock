@@ -1,0 +1,109 @@
+# Opt-in mapping and fault transactions
+
+This integration owns a small, preallocated device mapping. It does **not**
+replace `mm_struct::mmap_lock`. A virtual memory area (**VMA**) describes a
+mapped address range; the kernel's native mmap rwsem still protects every VMA
+and all of its existing participants. A separate private lock protects this
+driver's backing pages, metadata and active fault-in request. These are distinct
+objects with distinct responsibilities, not two protocols for one lock.
+
+The payload is [mapping.c](../../workload_modules/mmap_fault/mapping.c). Its
+fixed-width [interface](../../workload_modules/mmap_fault/mmap_fault_uapi.h)
+creates one backing object per open file. Creation initializes the chosen lock
+and all pages before a release-store publishes the object. Reconfiguration is
+rejected. Pages contain immutable values, making missing, stale or corrupted
+mapping contents observable without introducing a page-writeback protocol.
+
+## Supported cases and fallback
+
+KD uses ordinary `kd_down_read/write`, matching releases and ordinary write-to-read
+downgrade. No generated image is prepared, no fault runs on a combiner's task,
+and no rwsem call-admission refusal is removed. The currently supported KD
+mapping is shared, read-only, non-executable and not inherited across fork.
+Permission increases to writable or executable are prevented through the VMA's
+maximum permission bits. Allocation, user copies and page-table insertion occur
+outside the private lock.
+
+Native uses a private Linux rwsem for equivalent backing work. Explicit requests
+for private writable mappings and fork inheritance can fall back to that backend
+**before publication**, if `MF_ALLOW_FALLBACK` is set. The reply records both
+requested and selected backend and the fallback decision. Without permission,
+unsupported requests fail with `EOPNOTSUPP`; an existing KD object is never
+reinterpreted or protected by a Native lock. Shared writable mappings are rejected
+for every backend because this module has no shared writeback/page-mkwrite contract.
+
+TCLock uses the maintained task-context rwlock only for the short, non-sleeping
+backing critical sections. It is not a sleeping rwsem replacement. Its supported
+mapping shape matches KD's read-only shared shape. A request requiring downgrade
+selects a fresh Native object before publication or fails; a live TCLock object
+cannot switch backend. Only equivalent supported cases are eligible for a future
+comparison, and execution classes and observation settings must remain separate.
+
+The normal CPU fault callback obtains a backing-page reference under the chosen
+reader lock, releases that lock, and transfers the reference to the kernel's
+ordinary fault completion. The original task executes this callback. Remote-mm
+fault callbacks are refused; this stage does not establish remote access, DAX,
+filesystem callbacks, userfaultfd, huge pages or generic fault replay.
+
+## Exact fault-in scope
+
+The controlled fault-in ioctl calls the real `handle_mm_fault()` on the caller's
+own mapping. It retains the ioctl's VFS file reference and an explicit `mmget()`
+reference. One request per backing object is admitted at a time. A stack scope
+is published under the backing writer lock and binds the exact originating task,
+`mm`, request and native mmap acquisition. Only that task's callback may use it.
+The scope is removed before returning from the ioctl, after its final unlock.
+
+The scope's `held` field records its own successful native mmap acquisition.
+Return flags check that record; they never overwrite ownership or independently
+authorize an unlock. The controlled outcomes are:
+
+| Outcome | Native mmap ownership on callback return | Ioctl continuation |
+| --- | --- | --- |
+| Ordinary page completion | Held | Release once after completion |
+| RETRY | Explicitly released | Reacquire and refind/revalidate the VMA |
+| RETRY with NOWAIT | Retained | Return `EAGAIN` after one matching release |
+| COMPLETED | Page inserted, then explicitly released | Return without another unlock |
+
+COMPLETED returns `NOPAGE | COMPLETED`: the captured kernel's `__do_fault()`
+recognizes NOPAGE as a callback that has already supplied the page-table entry.
+The COMPLETED bit records the separate mmap release. Returning COMPLETED alone
+would not satisfy that callback interface. This path is restricted to the
+validated shared read-only mapping with `VM_MIXEDMAP` set at mmap creation.
+
+After a drop, no VMA pointer is reused. The ioctl finds the current VMA, checks
+address containment, file identity, callback identity, private object and access
+mode again. Replacing the VMA at the same address causes `ESTALE`. The focused
+test pauses one request after its actual release so another thread can replace
+the mapping; a bounded pause timeout reports failure and never establishes drain.
+
+Normal CPU faults have no active scope, so these controlled drop/completion
+branches are unavailable to them. They use ordinary callback completion. This
+restriction avoids attributing ownership to a request that does not retain the
+file and `mm` through the entire transition. It does not emulate all architecture
+fault-handler branches or claim those branches ran in the hardware-fault path.
+
+## Lifetime, modes and validation limits
+
+VFS references protect the backing object through open descriptors, VMAs and
+ioctls. The initial VMA and clone/split callbacks maintain explicit VMA counts.
+Page references survive independently when the kernel installs PTEs or creates
+private copy-on-write (**COW**) pages. Closing the last descriptor while a VMA
+remains must still permit a later fault. Only final file release can inspect idle
+and free backing storage. An invariant failure retains storage and a module pin
+for diagnosis instead of freeing live state.
+
+The private KD downgrade uses ordinary exclusive admission, changes to a reader,
+and finishes with `kd_up_read()`. No delegated downgrade, cancellation after
+publication, non-owner release or nested rwsem JIT ledger is introduced. Native
+mmap acquisition remains killable; cancellation must leave the scope unowned.
+Signal-driven cancellation and additional mapping-option combinations require
+separate coverage and must not be inferred from successful ordinary cases.
+
+The [focused runner](../../tests/kernel/mmap_fault/README.md) keeps source, binary,
+kernel and callback receipts. Correctness, returned-JIT evidence and performance
+acceptance are separate. This driver is a real callback integration for owned
+mapping state, not a coordinated kernel mmap-lock adapter; the four blockers in
+the [retained full-mm review](../../bench/results/10.176.26.71/tests/mmap-fault-followup-20261020/README.md)
+remain for that wider task. Whole-kernel replacement, RT, lockdep and the seven
+mutex regressions remain open.
