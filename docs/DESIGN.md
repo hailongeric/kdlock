@@ -14,6 +14,9 @@ The separate [sleeping rwsem](design/rwsem_implementation.md) provides ordinary
 local readers/writers and explicit outer writers using the existing mutex ABI2.
 Writer reservations drain readers before the unchanged mutex queue can publish
 and pin a caller. This does not replace the kernel's mmap rwsem.
+The opt-in [mapping and fault integration](design/mmap_fault.md) applies a
+private backing-state lock to module-owned mappings while retaining native mmap
+ownership and originating-task callbacks.
 
 ## Terms used in these guides
 

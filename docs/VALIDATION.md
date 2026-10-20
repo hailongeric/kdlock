@@ -8,6 +8,18 @@ Basic plus affected checks are the default; an old pass is not a current full pa
 The [terminology guide](TERMINOLOGY.md) explains status labels and other technical
 terms used in the receipts below.
 
+## Opt-in module-owned mapping and faults
+
+The [focused mmap/fault receipt](../bench/results/10.176.26.71/tests/mmap-fault-optin-20261021/README.md)
+records Native/KD `live-4` and TCLock `live-5` at `21451da` in the unchanged VM.
+Both basic programs passed in each run; clients passed 96/96/100 checks with
+exact ownership, VMA revalidation, explicit Native fallback and lifetime drain.
+KD observed zero generated bodies and exact source retirement; TCLock contexts
+were quiescent before unload. Three preparation failures remain archived.
+The [design](design/mmap_fault.md) preserves the native mmap lock and confines
+private locks to owned backing state. These results do not validate full-mm
+replacement, generic fault delegation or performance parity.
+
 ## Unified mutex API checks
 
 The [unified API receipt](../bench/results/10.176.26.71/tests/mutex-api-20261020/validation.json)

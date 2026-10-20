@@ -128,9 +128,15 @@ The [mmap/fault source capture](../bench/results/10.176.26.71/tests/mmap-fault-f
 completed in the idle guest: 46 source/configuration files, including 21 newly
 captured callback/helper files, with unchanged kernel identity. The independent
 1,470-check review passed and 24 hashed source intervals establish concrete
-object/API, ownership/mode, context/lifetime and validation blockers. Real
-integration remains explicitly unresolved; no kernel was changed and no KD
-mmap/fault test ran. The
+object/API, ownership/mode, context/lifetime and validation blockers. That review
+made no kernel changes and ran no KD mmap/fault test. The subsequent
+[opt-in mapping stage](../bench/results/10.176.26.71/tests/mmap-fault-optin-20261021/README.md)
+implemented module-owned backing state and passed Native/KD/TCLock functional
+checks at `21451da`, preserving three failed preparation attempts. Native mmap
+ownership, origin-task callbacks, exact retry/completion releases and explicit
+Native fallback remain separate from private backing locking. Full-mm conversion,
+signal cancellation, generic callbacks and timed comparison remain unresolved.
+The
 [resident-list timing plan](../bench/results/10.176.26.71/bench/nano-list-followup-20261020/README.md)
 retains the previously selected 264 sessions at eight and 60 workers.
 `timing-1` stopped after 147 attempts: 144 spin/mutex sessions and two shared

@@ -300,11 +300,15 @@ mmap/fault execution. The subsequent
 rechecked the live identity and all 25 files, adding 21 callback/helper files.
 Its 1,470 archive checks passed and 24 hashed source intervals document implicit
 release, NOWAIT, file/context pins, nested resources, retry and downgrade.
-Real integration remains unresolved: the native mm object and full helper
+Full-mm integration remains unresolved: the native mm object and full helper
 surface are not converted, delegated rwsem mode/ownership transitions are
 absent, origin context and transitive filesystem/DAX/journal lifetimes are
-unproved, and no KD mmap/fault execution has run. The existing fail-closed
-rwsem-call admission stays intact. Generic fault replay remains unsupported.
+unproved. The subsequent opt-in [module-owned mapping integration](mmap_fault.md)
+passed Native/KD/TCLock functional checks for its private backing state and
+originating-task fault transactions. Its native `mm->mmap_lock` remains intact;
+that bounded integration does not resolve the full-mm blockers. The existing
+fail-closed rwsem-call admission stays intact. Generic fault replay remains
+unsupported.
 
 The [API probe](../../tests/kernel/rwsem/README.md) covers sleeping readers,
 writer/late-reader exclusion, same-CPU scheduling progress, cancellation,

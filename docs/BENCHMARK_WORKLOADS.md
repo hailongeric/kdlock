@@ -1034,3 +1034,9 @@ evidence. The extracted snapshots and phase-admitted rwsem have their
 own runner contracts. Historical snapshot delegation does not validate current
 performance, live task/MM replacement or a large-container deployment. Full
 procfs/mmap candidates still need implementation and fresh VM validation.
+
+The separate [opt-in mapping payload](design/mmap_fault.md) now supplies real
+module-owned VMA callbacks and controlled fault-in transactions, validated with
+Native/KD/TCLock private backing locks. It leaves `mm_struct::mmap_lock` native.
+Its [focused runner](../tests/kernel/mmap_fault/README.md) measures correctness
+only; it does not implement the full procfs/mmap proposals or a timed benchmark.

@@ -1,0 +1,87 @@
+{
+  "accepted": false,
+  "boot_id": "b65f0205-c8f9-4385-8b13-039cbce243a6",
+  "finished_ns": 1792540225720314614,
+  "idle": true,
+  "kernel_release": "6.1.159-kdclobber2",
+  "limits": "Functional validation only; three preparation failures retained; timing not run.",
+  "per_session_kernel_faults": [],
+  "retained_allocation_failures": [
+    {
+      "line": "4,670126,496051451684,-;percpu: allocation failed, size=520 align=64 atomic=0, alloc from reserved chunk failed",
+      "run": "live-2"
+    },
+    {
+      "line": "4,670170,496051451902,-;tclock_rwlock_backend_km: Could not allocate 520 bytes percpu data",
+      "run": "live-2"
+    },
+    {
+      "line": "4,670197,496561158281,-;percpu: allocation failed, size=4096 align=32 atomic=0, alloc from reserved chunk failed",
+      "run": "live-3"
+    },
+    {
+      "line": "4,670237,496561158749,-;tc_allocator_guard: Could not allocate 4096 bytes percpu data",
+      "run": "live-3"
+    }
+  ],
+  "runs": [
+    {
+      "name": "live-1",
+      "passed": false,
+      "result_sha256": "df878fa1717f194e533f8e5f2ae22df16c6b38767bcdd6028313662ce1df3324",
+      "source_commit": "581ff9c8d7cb2e1320adf0c908ac1233e4f4ef22",
+      "state": "FAILED",
+      "verified": {
+        "source-sha256.json": 385
+      }
+    },
+    {
+      "name": "live-2",
+      "passed": false,
+      "result_sha256": "571d5475ebab19410a062f1c33bc44e2652022b39a0ba318d863f2342adcba81",
+      "source_commit": "7077fcf29036c507cacc037198d52562c665715e",
+      "state": "FAILED",
+      "verified": {
+        "binary-sha256.json": 4,
+        "source-sha256.json": 391
+      }
+    },
+    {
+      "name": "live-3",
+      "passed": false,
+      "result_sha256": "4c839b458e17dff6bb419e1aabbc91c2a98ad886f4e992a91f2984f9974292f5",
+      "source_commit": "6afa68f3c2bb0224a5cf36d8150aa34fdfcf1d4a",
+      "state": "FAILED",
+      "verified": {
+        "binary-sha256.json": 5,
+        "prepared-source-sha256.json": 93,
+        "source-sha256.json": 394
+      }
+    },
+    {
+      "name": "live-4",
+      "passed": true,
+      "result_sha256": "95da30e5081e696bcf6f892c803c3ecdab39f4be6d1a125d2894e57d6d92bb44",
+      "source_commit": "21451da38347dd8b1375ca7570ebb56df1e29f98",
+      "state": "COMPLETE",
+      "verified": {
+        "binary-sha256.json": 4,
+        "prepared-source-sha256.json": 93,
+        "source-sha256.json": 394
+      }
+    },
+    {
+      "name": "live-5",
+      "passed": true,
+      "result_sha256": "b2ac8d6f18650bb68a03c283317bb9206b78f0c48c7a7a1b99407e15ad9d772c",
+      "source_commit": "21451da38347dd8b1375ca7570ebb56df1e29f98",
+      "state": "COMPLETE",
+      "verified": {
+        "binary-sha256.json": 4,
+        "source-sha256.json": 394
+      }
+    }
+  ],
+  "source_sha256": "9eb0c637d4648c32f3dc86b03da650c9acf96b9bfdff63581cfaa4ee431aa506",
+  "verified_hashes": 2161
+}

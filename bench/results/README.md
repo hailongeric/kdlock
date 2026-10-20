@@ -25,6 +25,13 @@ host-worker variability remain unresolved; that replay did not sample latency.
 Performance acceptance stays open.
 Original and follow-up archives, failures and ranges remain distinguishable.
 
+The [opt-in mmap/fault stage](10.176.26.71/tests/mmap-fault-optin-20261021/README.md)
+passed Native/KD and then TCLock functional validation of module-owned mappings
+at `21451da`. All five attempts, including three preparation failures, are
+preserved. The native mmap lock remains intact; timed comparisons and full-mm
+replacement remain unvalidated. This stage does not resolve the seven mutex
+performance regressions.
+
 The later [seven-point latency diagnostic](10.176.26.71/bench/mutex-latency-20261021/README.md)
 completed 252 serial sessions, 126 exact KD retirements and 4,073,421 sampled
 complete-operation observations. All basic/affected VM checks and 5,218,772
