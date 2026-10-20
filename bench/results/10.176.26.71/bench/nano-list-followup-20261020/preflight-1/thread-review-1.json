@@ -1,0 +1,19 @@
+{
+  "captured_utc": "2026-10-20T17:03:36.341053+00:00",
+  "qemu_pid": 257489,
+  "total_threads": 68,
+  "previous_extra": [
+    {
+      "tid": 421142,
+      "present": false
+    },
+    {
+      "tid": 421144,
+      "present": false
+    },
+    {
+      "tid": 421145,
+      "present": false
+    }
+  ]
+}

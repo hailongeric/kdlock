@@ -1,0 +1,8 @@
+{
+  "error": "ValueError('replay QEMU thread placement differs')",
+  "measured_sessions": 0,
+  "passed": false,
+  "planned_output": "/root/kdlock-evidence/10.176.26.71/bench/nano-list-followup-20261020/timing-1",
+  "script_sha256": "cf4cced4eb2d8601077c6a302a3b35a2398f50f3c0260709c15615fca98ad082",
+  "source_commit": "f48b90e42e1538a5204d215b573a238ebd95f391"
+}

@@ -132,7 +132,10 @@ integration remains explicitly unresolved; no kernel was changed and no KD
 mmap/fault test ran. The
 [resident-list timing plan](../bench/results/10.176.26.71/bench/nano-list-followup-20261020/README.md)
 retains the previously selected 264 sessions at eight and 60 workers; timing
-has not run yet.
+is now running serially. Its first strict preflight failed at 70 versus 67
+QEMU threads with zero measured sessions; the failure and later thread turnover
+are preserved. A fresh full 67-thread receipt and exact unchanged-plan preflight
+passed before `timing-1` started. No admission check or host setting was relaxed.
 
 Keep the two-word wrapper ABI, separate backend identities, exact KD physical owners,
 exact acquisition references and final ACKs. Shared storage must survive its final

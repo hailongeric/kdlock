@@ -1,0 +1,48 @@
+{
+  "archive_prefix": "preflight-1",
+  "boot_id": "b65f0205-c8f9-4385-8b13-039cbce243a6",
+  "completed": true,
+  "finished_ns": 1792515802723308179,
+  "groups": [
+    {
+      "bytes": 478,
+      "file": "admission.tar.gz",
+      "group": "admission",
+      "path": "/root/kdlock-evidence/10.176.26.71/bench/nano-list-followup-20261020/preflight-1-archives/admission.tar.gz",
+      "roots": [
+        "preflight-1/result.json"
+      ],
+      "sha256": "03fe40b2faf181585424928727010504df220cd0be05082a789af3aee271af9d"
+    },
+    {
+      "bytes": 47445,
+      "file": "metadata.tar.gz",
+      "group": "metadata",
+      "path": "/root/kdlock-evidence/10.176.26.71/bench/nano-list-followup-20261020/preflight-1-archives/metadata.tar.gz",
+      "roots": [
+        "preflight-1/committed-source.json",
+        "preflight-1/console.log",
+        "preflight-1/environment.json",
+        "preflight-1/failure-health.py",
+        "preflight-1/health.json",
+        "preflight-1/historical-plan.json",
+        "preflight-1/host-state.json",
+        "preflight-1/preflight.py",
+        "preflight-1/task-plan.json",
+        "preflight-1/topology.json"
+      ],
+      "sha256": "10f938aae84e2d8ea394f25bca46e230854dcf51846a57aab33a9a0a62de1424"
+    }
+  ],
+  "guest_base": "/root/kdlock-evidence/10.176.26.71/bench/nano-list-followup-20261020/preflight-1",
+  "guest_idle": true,
+  "health_path": "health.json",
+  "health_sha256": "0821bec76b9024d0f264d962a854cf271c91f4f46b9aa80299891eb1e407c057",
+  "idle_source_sha256": "c6f7dc17a41bc5c34bff35d3aaed7b4a995ba3e5225d2c48d032417ca3f1510e",
+  "input_inventory_sha256": "a066f3a0f0952080cd503e96903eb73a837c795096ba525aa150e7d3bd836e0f",
+  "kernel_release": "6.1.159-kdclobber2",
+  "schema": 1,
+  "scope": "Complete evidence preservation; no deletion, module action, test or timing",
+  "script_sha256": "8d666f148a10d7fe19294cc7d193464c8bb53d4c3aec64b7518b9d335966c952",
+  "started_ns": 1792515802343558405
+}
