@@ -97,6 +97,7 @@ static bool escape_idle(void)
 
 static __attribute__((noipa)) void escape_body(struct escape_result *result)
 {
+	struct escape_result observed = { 0 };
 #ifdef JIT_ESCAPE_SHARED
 	unsigned int reader_tries;
 	u32 read_completed_before;
@@ -139,9 +140,9 @@ static __attribute__((noipa)) void escape_body(struct escape_result *result)
 		atomic_inc(&failures);
 #endif
 	WRITE_ONCE(prefix, READ_ONCE(prefix) + 1);
-	result->taken = 0;
+	observed.taken = 0;
 	if (READ_ONCE(hot)) {
-		result->taken = 1;
+		observed.taken = 1;
 #ifdef JIT_ESCAPE_SHARED
 		/* Require an actual competing read attempt at every hot marker.
 		 * Completions are recorded inside the shared lock, so once this
@@ -186,17 +187,17 @@ static __attribute__((noipa)) void escape_body(struct escape_result *result)
 #endif
 			     "movq %%gs:current_task, %%rax\n\t"
 			     "movq %%rax, %[task]\n\t"
-			     : [low] "=m" (result->tsc_low),
-			       [high] "=m" (result->tsc_high),
-			       [carry] "=m" (result->carry),
-			       [parity] "=m" (result->parity),
-			       [zero] "=m" (result->zero),
-			       [sign] "=m" (result->sign),
-			       [overflow] "=m" (result->overflow),
-			       [ah] "=m" (result->ah),
-			       [task] "=m" (result->task)
+			     : [low] "=m" (observed.tsc_low),
+			       [high] "=m" (observed.tsc_high),
+			       [carry] "=m" (observed.carry),
+			       [parity] "=m" (observed.parity),
+			       [zero] "=m" (observed.zero),
+			       [sign] "=m" (observed.sign),
+			       [overflow] "=m" (observed.overflow),
+			       [ah] "=m" (observed.ah),
+			       [task] "=m" (observed.task)
 #ifdef JIT_ESCAPE_SPINNING
-			       , [aux] "=m" (result->cpu_aux)
+			       , [aux] "=m" (observed.cpu_aux)
 #endif
 			     : : "rax", "rdx",
 #ifdef JIT_ESCAPE_SPINNING
@@ -205,17 +206,15 @@ static __attribute__((noipa)) void escape_body(struct escape_result *result)
 			     "cc", "memory");
 		WRITE_ONCE(hot_taken, READ_ONCE(hot_taken) + 1);
 #ifdef JIT_ESCAPE_SHARED
-		/* Sample before the marker, then report through the restored
-		 * native continuation. The loop must not dereference a result
-		 * pointer whose bounded analysis has widened at its back edge. */
-		result->reader_pending = reader_tries != 100000;
-		result->read_completed_before = read_completed_before;
+		/* Sample before the marker, then carry those exact live values
+		 * through the restored native continuation. */
+		observed.reader_pending = reader_tries != 100000;
+		observed.read_completed_before = read_completed_before;
 		/* Keep the competing-reader observation through the suffix write
-		 * on the native branch. Re-reading the result pointer at the cold
-		 * merge loses its bounded address proof after the polling loop.
-		 * Both paths still increment suffix exactly once before release. */
+		 * on the native branch. The cold path needs no loop-carried
+		 * snapshot. Both paths increment suffix once before release. */
 		WRITE_ONCE(suffix, READ_ONCE(suffix) + 1);
-		if (result->read_completed_before != (u32)atomic_read(&read_completions))
+		if (observed.read_completed_before != (u32)atomic_read(&read_completions))
 			atomic_inc(&failures);
 	} else {
 		WRITE_ONCE(suffix, READ_ONCE(suffix) + 1);
@@ -245,6 +244,10 @@ static __attribute__((noipa)) void escape_body(struct escape_result *result)
 #else
 	KD_MUTEX_OUTER_UNLOCK(&test_lock, cookie);
 #endif
+	/* The admitted body uses frame-relative observations. Copy to the
+	 * caller only after the exact unlock continuation has returned; the
+	 * private frame remains live and cannot race another lock holder. */
+	*result = observed;
 }
 
 #ifdef JIT_ESCAPE_SHARED
