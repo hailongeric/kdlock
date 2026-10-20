@@ -1,0 +1,135 @@
+
+bench/results/10.176.26.71/raw/bench/pipecap-owner-20261021/retained/baseline/provider.ko:     file format elf64-x86-64
+
+
+Disassembly of section .text:
+
+0000000000013f80 <kd_exec_native_unlock>:
+   13f80:	f3 0f 1e fa          	endbr64
+   13f84:	e8 00 00 00 00       	call   13f89 <kd_exec_native_unlock+0x9>
+   13f89:	55                   	push   %rbp
+   13f8a:	48 89 e5             	mov    %rsp,%rbp
+   13f8d:	41 55                	push   %r13
+   13f8f:	41 54                	push   %r12
+   13f91:	53                   	push   %rbx
+   13f92:	48 83 ec 28          	sub    $0x28,%rsp
+   13f96:	65 48 8b 04 25 28 00 	mov    %gs:0x28,%rax
+   13f9d:	00 00
+   13f9f:	48 89 45 e0          	mov    %rax,-0x20(%rbp)
+   13fa3:	31 c0                	xor    %eax,%eax
+   13fa5:	48 c7 45 c8 00 00 00 	movq   $0x0,-0x38(%rbp)
+   13fac:	00
+   13fad:	48 c7 45 d0 00 00 00 	movq   $0x0,-0x30(%rbp)
+   13fb4:	00
+   13fb5:	48 8b 05 00 00 00 00 	mov    0x0(%rip),%rax        # 13fbc <kd_exec_native_unlock+0x3c>
+   13fbc:	48 c7 45 d8 00 00 00 	movq   $0x0,-0x28(%rbp)
+   13fc3:	00
+   13fc4:	48 89 7d c0          	mov    %rdi,-0x40(%rbp)
+   13fc8:	48 3d 00 00 00 00    	cmp    $0x0,%rax
+   13fce:	0f 84 3f 01 00 00    	je     14113 <kd_exec_native_unlock+0x193>
+   13fd4:	48 89 fb             	mov    %rdi,%rbx
+   13fd7:	48 c7 c7 00 00 00 00 	mov    $0x0,%rdi
+   13fde:	41 89 f5             	mov    %esi,%r13d
+   13fe1:	41 89 f4             	mov    %esi,%r12d
+   13fe4:	e8 00 00 00 00       	call   13fe9 <kd_exec_native_unlock+0x69>
+   13fe9:	48 8b 15 00 00 00 00 	mov    0x0(%rip),%rdx        # 13ff0 <kd_exec_native_unlock+0x70>
+   13ff0:	49 89 c0             	mov    %rax,%r8
+   13ff3:	48 8d 82 a0 fd ff ff 	lea    -0x260(%rdx),%rax
+   13ffa:	48 81 fa 00 00 00 00 	cmp    $0x0,%rdx
+   14001:	0f 84 10 01 00 00    	je     14117 <kd_exec_native_unlock+0x197>
+   14007:	65 48 8b 0c 25 00 00 	mov    %gs:0x0,%rcx
+   1400e:	00 00
+   14010:	eb 1b                	jmp    1402d <kd_exec_native_unlock+0xad>
+   14012:	48 8b 90 60 02 00 00 	mov    0x260(%rax),%rdx
+   14019:	48 8d 82 a0 fd ff ff 	lea    -0x260(%rdx),%rax
+   14020:	48 81 fa 00 00 00 00 	cmp    $0x0,%rdx
+   14027:	0f 84 ea 00 00 00    	je     14117 <kd_exec_native_unlock+0x197>
+   1402d:	48 39 88 e0 00 00 00 	cmp    %rcx,0xe0(%rax)
+   14034:	75 dc                	jne    14012 <kd_exec_native_unlock+0x92>
+   14036:	44 38 60 20          	cmp    %r12b,0x20(%rax)
+   1403a:	75 d6                	jne    14012 <kd_exec_native_unlock+0x92>
+   1403c:	44 8b 88 20 02 00 00 	mov    0x220(%rax),%r9d
+   14043:	8b b0 24 02 00 00    	mov    0x224(%rax),%esi
+   14049:	44 39 ce             	cmp    %r9d,%esi
+   1404c:	76 c4                	jbe    14012 <kd_exec_native_unlock+0x92>
+   1404e:	44 89 cf             	mov    %r9d,%edi
+   14051:	83 ee 01             	sub    $0x1,%esi
+   14054:	44 29 ce             	sub    %r9d,%esi
+   14057:	48 8d 14 38          	lea    (%rax,%rdi,1),%rdx
+   1405b:	48 8d 7c 38 01       	lea    0x1(%rax,%rdi,1),%rdi
+   14060:	48 01 fe             	add    %rdi,%rsi
+   14063:	4c 8d 0c c5 00 00 00 	lea    0x0(,%rax,8),%r9
+   1406a:	00
+   1406b:	48 89 c7             	mov    %rax,%rdi
+   1406e:	4c 29 cf             	sub    %r9,%rdi
+   14071:	48 39 9c d7 70 01 00 	cmp    %rbx,0x170(%rdi,%rdx,8)
+   14078:	00
+   14079:	75 7f                	jne    140fa <kd_exec_native_unlock+0x17a>
+   1407b:	80 ba 10 02 00 00 00 	cmpb   $0x0,0x210(%rdx)
+   14082:	75 76                	jne    140fa <kd_exec_native_unlock+0x17a>
+   14084:	48 83 b8 70 02 00 00 	cmpq   $0x0,0x270(%rax)
+   1408b:	00
+   1408c:	0f 85 b9 00 00 00    	jne    1414b <kd_exec_native_unlock+0x1cb>
+   14092:	48 8d 55 c0          	lea    -0x40(%rbp),%rdx
+   14096:	4c 89 c6             	mov    %r8,%rsi
+   14099:	48 c7 c7 00 00 00 00 	mov    $0x0,%rdi
+   140a0:	48 89 90 70 02 00 00 	mov    %rdx,0x270(%rax)
+   140a7:	e8 00 00 00 00       	call   140ac <kd_exec_native_unlock+0x12c>
+   140ac:	eb 07                	jmp    140b5 <kd_exec_native_unlock+0x135>
+   140ae:	f3 90                	pause
+   140b0:	45 84 e4             	test   %r12b,%r12b
+   140b3:	75 57                	jne    1410c <kd_exec_native_unlock+0x18c>
+   140b5:	0f b6 5d dc          	movzbl -0x24(%rbp),%ebx
+   140b9:	84 db                	test   %bl,%bl
+   140bb:	74 f1                	je     140ae <kd_exec_native_unlock+0x12e>
+   140bd:	8b 45 d8             	mov    -0x28(%rbp),%eax
+   140c0:	85 c0                	test   %eax,%eax
+   140c2:	0f 85 85 00 00 00    	jne    1414d <kd_exec_native_unlock+0x1cd>
+   140c8:	45 84 ed             	test   %r13b,%r13b
+   140cb:	74 5d                	je     1412a <kd_exec_native_unlock+0x1aa>
+   140cd:	0f b6 05 00 00 00 00 	movzbl 0x0(%rip),%eax        # 140d4 <kd_exec_native_unlock+0x154>
+   140d4:	84 c0                	test   %al,%al
+   140d6:	0f 84 00 00 00 00    	je     140dc <kd_exec_native_unlock+0x15c>
+   140dc:	48 8b 55 e0          	mov    -0x20(%rbp),%rdx
+   140e0:	65 48 2b 14 25 28 00 	sub    %gs:0x28,%rdx
+   140e7:	00 00
+   140e9:	75 64                	jne    1414f <kd_exec_native_unlock+0x1cf>
+   140eb:	48 83 c4 28          	add    $0x28,%rsp
+   140ef:	5b                   	pop    %rbx
+   140f0:	41 5c                	pop    %r12
+   140f2:	41 5d                	pop    %r13
+   140f4:	5d                   	pop    %rbp
+   140f5:	e9 00 00 00 00       	jmp    140fa <kd_exec_native_unlock+0x17a>
+   140fa:	48 83 c2 01          	add    $0x1,%rdx
+   140fe:	48 39 f2             	cmp    %rsi,%rdx
+   14101:	0f 85 6a ff ff ff    	jne    14071 <kd_exec_native_unlock+0xf1>
+   14107:	e9 06 ff ff ff       	jmp    14012 <kd_exec_native_unlock+0x92>
+   1410c:	e8 00 00 00 00       	call   14111 <kd_exec_native_unlock+0x191>
+   14111:	eb a2                	jmp    140b5 <kd_exec_native_unlock+0x135>
+   14113:	31 c0                	xor    %eax,%eax
+   14115:	eb c5                	jmp    140dc <kd_exec_native_unlock+0x15c>
+   14117:	4c 89 c6             	mov    %r8,%rsi
+   1411a:	48 c7 c7 00 00 00 00 	mov    $0x0,%rdi
+   14121:	e8 00 00 00 00       	call   14126 <kd_exec_native_unlock+0x1a6>
+   14126:	31 c0                	xor    %eax,%eax
+   14128:	eb b2                	jmp    140dc <kd_exec_native_unlock+0x15c>
+   1412a:	65 48 8b 3c 25 00 00 	mov    %gs:0x0,%rdi
+   14131:	00 00
+   14133:	e8 00 00 00 00       	call   14138 <kd_exec_native_unlock+0x1b8>
+   14138:	84 c0                	test   %al,%al
+   1413a:	75 91                	jne    140cd <kd_exec_native_unlock+0x14d>
+   1413c:	48 8d 7d c8          	lea    -0x38(%rbp),%rdi
+   14140:	c6 45 dd 01          	movb   $0x1,-0x23(%rbp)
+   14144:	e8 00 00 00 00       	call   14149 <kd_exec_native_unlock+0x1c9>
+   14149:	eb 82                	jmp    140cd <kd_exec_native_unlock+0x14d>
+   1414b:	0f 0b                	ud2
+   1414d:	0f 0b                	ud2
+   1414f:	e8 00 00 00 00       	call   14154 <kd_exec_native_unlock+0x1d4>
+
+Disassembly of section .exit.text:
+
+Disassembly of section .init.text:
+
+Disassembly of section .text.unlikely:
+
+Disassembly of section .altinstr_replacement:

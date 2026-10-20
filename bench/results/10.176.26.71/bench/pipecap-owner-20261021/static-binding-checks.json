@@ -1,0 +1,96 @@
+{
+  "limits": "Relocatable ELF paths; patchable fentry sites are not assumed to execute as emitted calls, and no timing is inferred from instruction counts.",
+  "provider_and_workload_hashes_match_previous_verified_original": true,
+  "source_checks": [
+    {
+      "sha256": "e4f74118652d7c6e3c956e0eb0a07d3fae0ebb42d9a30774e549016c857c3703",
+      "source": "kernel_module/kd_mutex_tasks.c",
+      "version": "baseline"
+    },
+    {
+      "sha256": "b660a41b2a1548c445fab4910083a51111b38944bc42f01ed0568d0ad3d39ef9",
+      "source": "kernel_module/kd_mutex_local.c",
+      "version": "baseline"
+    },
+    {
+      "sha256": "b9deb4c557fe900ebadd60e61a9c0d8639c633c643428f658dfad9a1b6b569d1",
+      "source": "kernel_module/kd_mutex.c",
+      "version": "baseline"
+    },
+    {
+      "sha256": "ee69fda6c0591db7f5823a08e81b3e5a1725dda7ab360f96b5d5cd4104fc06ee",
+      "source": "kernel_module/lock/mutex_calls.inc",
+      "version": "baseline"
+    },
+    {
+      "sha256": "fc3851c98d5c848acb0eb8807f9baf0e2f1d3792fb79f5162038725a65ad8408",
+      "source": "kernel_module/execution/native.inc",
+      "version": "baseline"
+    },
+    {
+      "sha256": "4e71dacc09f6fea7c8548b21a6b841b61d9d2b7d171f847bb205aaf97cf55d11",
+      "source": "kernel_module/mutex/clobber.inc",
+      "version": "baseline"
+    },
+    {
+      "sha256": "03599176ab5205dbadd1b657a390fa24f7f2d38e6e4051c9c3402eba76680eba",
+      "source": "include/kd_mutex.h",
+      "version": "baseline"
+    },
+    {
+      "sha256": "f7ab9d0c140a93d7d6f0e755da7a142f6e191a93d8e92c274f1e5a61054735e4",
+      "source": "include/kd_mutex_direct.h",
+      "version": "baseline"
+    },
+    {
+      "sha256": "78ea089c8c6e103068f9a4d166e015d0587890a6d78723e96d4a92298dd3ba9e",
+      "source": "workload_modules/real_api/mutex.c",
+      "version": "baseline"
+    },
+    {
+      "sha256": "e4f74118652d7c6e3c956e0eb0a07d3fae0ebb42d9a30774e549016c857c3703",
+      "source": "kernel_module/kd_mutex_tasks.c",
+      "version": "current"
+    },
+    {
+      "sha256": "0d1333a8edb5ffaf751b670b59b891f182f2612a2d6634ac54c3ae1eace99f87",
+      "source": "kernel_module/kd_mutex_local.c",
+      "version": "current"
+    },
+    {
+      "sha256": "b9deb4c557fe900ebadd60e61a9c0d8639c633c643428f658dfad9a1b6b569d1",
+      "source": "kernel_module/kd_mutex.c",
+      "version": "current"
+    },
+    {
+      "sha256": "0d201fc6fbb0514e1cefdea2237e35ff2b9dc67432db53592224552fd269ace3",
+      "source": "kernel_module/lock/mutex_calls.inc",
+      "version": "current"
+    },
+    {
+      "sha256": "fc3851c98d5c848acb0eb8807f9baf0e2f1d3792fb79f5162038725a65ad8408",
+      "source": "kernel_module/execution/native.inc",
+      "version": "current"
+    },
+    {
+      "sha256": "4e71dacc09f6fea7c8548b21a6b841b61d9d2b7d171f847bb205aaf97cf55d11",
+      "source": "kernel_module/mutex/clobber.inc",
+      "version": "current"
+    },
+    {
+      "sha256": "91d4f8afbc2c9779ff7bc6594df1f436eb7c3bfc2b99afd79ff857d3a4224335",
+      "source": "include/kd_mutex.h",
+      "version": "current"
+    },
+    {
+      "sha256": "2e4719f7f8e2928d60fe3ba1ae4ea99b84763b944cb14055153843e895c52d63",
+      "source": "include/kd_mutex_direct.h",
+      "version": "current"
+    },
+    {
+      "sha256": "9425995cb4471343c4871daf98a00791e40d721efc608ba6239a955eb255db5a",
+      "source": "workload_modules/real_api/mutex.c",
+      "version": "current"
+    }
+  ]
+}

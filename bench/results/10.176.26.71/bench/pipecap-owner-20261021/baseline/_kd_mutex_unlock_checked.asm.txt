@@ -1,0 +1,49 @@
+
+bench/results/10.176.26.71/raw/bench/pipecap-owner-20261021/retained/baseline/provider.ko:     file format elf64-x86-64
+
+
+Disassembly of section .text:
+
+0000000000015890 <_kd_mutex_unlock_checked>:
+   15890:	f3 0f 1e fa          	endbr64
+   15894:	55                   	push   %rbp
+   15895:	65 48 8b 04 25 00 00 	mov    %gs:0x0,%rax
+   1589c:	00 00
+   1589e:	48 89 e5             	mov    %rsp,%rbp
+   158a1:	53                   	push   %rbx
+   158a2:	48 85 ff             	test   %rdi,%rdi
+   158a5:	74 49                	je     158f0 <_kd_mutex_unlock_checked+0x60>
+   158a7:	48 8b 17             	mov    (%rdi),%rdx
+   158aa:	48 89 fb             	mov    %rdi,%rbx
+   158ad:	48 89 d1             	mov    %rdx,%rcx
+   158b0:	48 83 e1 f8          	and    $0xfffffffffffffff8,%rcx
+   158b4:	48 39 c1             	cmp    %rax,%rcx
+   158b7:	75 37                	jne    158f0 <_kd_mutex_unlock_checked+0x60>
+   158b9:	83 e2 04             	and    $0x4,%edx
+   158bc:	75 32                	jne    158f0 <_kd_mutex_unlock_checked+0x60>
+   158be:	8b 47 18             	mov    0x18(%rdi),%eax
+   158c1:	83 e0 fd             	and    $0xfffffffd,%eax
+   158c4:	83 f8 01             	cmp    $0x1,%eax
+   158c7:	75 27                	jne    158f0 <_kd_mutex_unlock_checked+0x60>
+   158c9:	c7 47 18 04 00 00 00 	movl   $0x4,0x18(%rdi)
+   158d0:	e8 00 00 00 00       	call   158d5 <_kd_mutex_unlock_checked+0x45>
+   158d5:	65 48 ff 05 00 00 00 	incq   %gs:0x0(%rip)        # 158dd <_kd_mutex_unlock_checked+0x4d>
+   158dc:	00
+   158dd:	31 c0                	xor    %eax,%eax
+   158df:	c7 43 18 00 00 00 00 	movl   $0x0,0x18(%rbx)
+   158e6:	48 8b 5d f8          	mov    -0x8(%rbp),%rbx
+   158ea:	c9                   	leave
+   158eb:	e9 00 00 00 00       	jmp    158f0 <_kd_mutex_unlock_checked+0x60>
+   158f0:	0f 0b                	ud2
+   158f2:	b8 ea ff ff ff       	mov    $0xffffffea,%eax
+   158f7:	48 8b 5d f8          	mov    -0x8(%rbp),%rbx
+   158fb:	c9                   	leave
+   158fc:	e9 00 00 00 00       	jmp    15901 <_kd_mutex_unlock_checked+0x71>
+
+Disassembly of section .exit.text:
+
+Disassembly of section .init.text:
+
+Disassembly of section .text.unlikely:
+
+Disassembly of section .altinstr_replacement:

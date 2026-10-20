@@ -1,0 +1,28 @@
+
+bench/results/10.176.26.71/raw/bench/pipecap-owner-20261021/retained/baseline/provider.ko:     file format elf64-x86-64
+
+
+Disassembly of section .text:
+
+0000000000017940 <kd_mutex_local_unlock>:
+   17940:	f3 0f 1e fa          	endbr64
+   17944:	e8 00 00 00 00       	call   17949 <kd_mutex_local_unlock+0x9>
+   17949:	31 d2                	xor    %edx,%edx
+   1794b:	65 48 8b 04 25 00 00 	mov    %gs:0x0,%rax
+   17952:	00 00
+   17954:	f0 48 0f b1 17       	lock cmpxchg %rdx,(%rdi)
+   17959:	75 05                	jne    17960 <kd_mutex_local_unlock+0x20>
+   1795b:	e9 00 00 00 00       	jmp    17960 <kd_mutex_local_unlock+0x20>
+   17960:	55                   	push   %rbp
+   17961:	48 89 e5             	mov    %rsp,%rbp
+   17964:	e8 17 fe ff ff       	call   17780 <kd_local_unlock_slow>
+   17969:	5d                   	pop    %rbp
+   1796a:	e9 00 00 00 00       	jmp    1796f <kd_mutex_local_unlock+0x2f>
+
+Disassembly of section .exit.text:
+
+Disassembly of section .init.text:
+
+Disassembly of section .text.unlikely:
+
+Disassembly of section .altinstr_replacement:

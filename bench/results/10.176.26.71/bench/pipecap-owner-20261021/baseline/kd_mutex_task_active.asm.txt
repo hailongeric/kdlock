@@ -1,0 +1,55 @@
+
+bench/results/10.176.26.71/raw/bench/pipecap-owner-20261021/retained/baseline/provider.ko:     file format elf64-x86-64
+
+
+Disassembly of section .text:
+
+0000000000017150 <kd_mutex_task_active>:
+   17150:	f3 0f 1e fa          	endbr64
+   17154:	e8 00 00 00 00       	call   17159 <kd_mutex_task_active+0x9>
+   17159:	55                   	push   %rbp
+   1715a:	48 89 e5             	mov    %rsp,%rbp
+   1715d:	41 54                	push   %r12
+   1715f:	49 bc eb 83 b5 80 46 	movabs $0x61c8864680b583eb,%r12
+   17166:	86 c8 61
+   17169:	4c 0f af e7          	imul   %rdi,%r12
+   1716d:	53                   	push   %rbx
+   1716e:	48 89 fb             	mov    %rdi,%rbx
+   17171:	e8 00 00 00 00       	call   17176 <kd_mutex_task_active+0x26>
+   17176:	49 c1 ec 38          	shr    $0x38,%r12
+   1717a:	49 c1 e4 06          	shl    $0x6,%r12
+   1717e:	49 8b 84 24 00 00 00 	mov    0x0(%r12),%rax
+   17185:	00
+   17186:	45 31 e4             	xor    %r12d,%r12d
+   17189:	48 85 c0             	test   %rax,%rax
+   1718c:	75 0a                	jne    17198 <kd_mutex_task_active+0x48>
+   1718e:	eb 17                	jmp    171a7 <kd_mutex_task_active+0x57>
+   17190:	48 8b 00             	mov    (%rax),%rax
+   17193:	48 85 c0             	test   %rax,%rax
+   17196:	74 20                	je     171b8 <kd_mutex_task_active+0x68>
+   17198:	48 39 58 20          	cmp    %rbx,0x20(%rax)
+   1719c:	75 f2                	jne    17190 <kd_mutex_task_active+0x40>
+   1719e:	8b 40 28             	mov    0x28(%rax),%eax
+   171a1:	85 c0                	test   %eax,%eax
+   171a3:	41 0f 9f c4          	setg   %r12b
+   171a7:	e8 00 00 00 00       	call   171ac <kd_mutex_task_active+0x5c>
+   171ac:	44 89 e0             	mov    %r12d,%eax
+   171af:	5b                   	pop    %rbx
+   171b0:	41 5c                	pop    %r12
+   171b2:	5d                   	pop    %rbp
+   171b3:	e9 00 00 00 00       	jmp    171b8 <kd_mutex_task_active+0x68>
+   171b8:	e8 00 00 00 00       	call   171bd <kd_mutex_task_active+0x6d>
+   171bd:	45 31 e4             	xor    %r12d,%r12d
+   171c0:	5b                   	pop    %rbx
+   171c1:	44 89 e0             	mov    %r12d,%eax
+   171c4:	41 5c                	pop    %r12
+   171c6:	5d                   	pop    %rbp
+   171c7:	e9 00 00 00 00       	jmp    171cc <kd_mutex_task_active+0x7c>
+
+Disassembly of section .exit.text:
+
+Disassembly of section .init.text:
+
+Disassembly of section .text.unlikely:
+
+Disassembly of section .altinstr_replacement:

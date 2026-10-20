@@ -1,0 +1,21 @@
+
+bench/results/10.176.26.71/raw/bench/pipecap-owner-20261021/retained/baseline/provider.ko:     file format elf64-x86-64
+
+
+Disassembly of section .text:
+
+0000000000000540 <kd_mutex_direct_unlock_clobber_v1>:
+     540:	f3 0f 1e fa          	endbr64
+     544:	55                   	push   %rbp
+     545:	48 89 e5             	mov    %rsp,%rbp
+     548:	e8 00 00 00 00       	call   54d <kd_mutex_direct_unlock_clobber_v1+0xd>
+     54d:	5d                   	pop    %rbp
+     54e:	e9 00 00 00 00       	jmp    553 <kd_mutex_direct_unlock_clobber_v1+0x13>
+
+Disassembly of section .exit.text:
+
+Disassembly of section .init.text:
+
+Disassembly of section .text.unlikely:
+
+Disassembly of section .altinstr_replacement:

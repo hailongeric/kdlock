@@ -1,0 +1,56 @@
+
+bench/results/10.176.26.71/raw/bench/pipecap-owner-20261021/retained/baseline/provider.ko:     file format elf64-x86-64
+
+
+Disassembly of section .text:
+
+00000000000004c0 <__kd_mutex_unlock>:
+     4c0:	f3 0f 1e fa          	endbr64
+     4c4:	e8 00 00 00 00       	call   4c9 <__kd_mutex_unlock+0x9>
+     4c9:	55                   	push   %rbp
+     4ca:	48 89 e5             	mov    %rsp,%rbp
+     4cd:	41 55                	push   %r13
+     4cf:	41 54                	push   %r12
+     4d1:	49 89 fc             	mov    %rdi,%r12
+     4d4:	65 4c 8b 2c 25 00 00 	mov    %gs:0x0,%r13
+     4db:	00 00
+     4dd:	4c 89 ef             	mov    %r13,%rdi
+     4e0:	e8 00 00 00 00       	call   4e5 <__kd_mutex_unlock+0x25>
+     4e5:	84 c0                	test   %al,%al
+     4e7:	74 2a                	je     513 <__kd_mutex_unlock+0x53>
+     4e9:	be 01 00 00 00       	mov    $0x1,%esi
+     4ee:	4c 89 e7             	mov    %r12,%rdi
+     4f1:	e8 00 00 00 00       	call   4f6 <__kd_mutex_unlock+0x36>
+     4f6:	84 c0                	test   %al,%al
+     4f8:	74 0a                	je     504 <__kd_mutex_unlock+0x44>
+     4fa:	41 5c                	pop    %r12
+     4fc:	41 5d                	pop    %r13
+     4fe:	5d                   	pop    %rbp
+     4ff:	e9 00 00 00 00       	jmp    504 <__kd_mutex_unlock+0x44>
+     504:	4c 89 ee             	mov    %r13,%rsi
+     507:	4c 89 e7             	mov    %r12,%rdi
+     50a:	e8 00 00 00 00       	call   50f <__kd_mutex_unlock+0x4f>
+     50f:	84 c0                	test   %al,%al
+     511:	75 12                	jne    525 <__kd_mutex_unlock+0x65>
+     513:	4c 89 e7             	mov    %r12,%rdi
+     516:	e8 00 00 00 00       	call   51b <__kd_mutex_unlock+0x5b>
+     51b:	41 5c                	pop    %r12
+     51d:	41 5d                	pop    %r13
+     51f:	5d                   	pop    %rbp
+     520:	e9 00 00 00 00       	jmp    525 <__kd_mutex_unlock+0x65>
+     525:	4c 89 e7             	mov    %r12,%rdi
+     528:	e8 00 00 00 00       	call   52d <__kd_mutex_unlock+0x6d>
+     52d:	4c 89 ef             	mov    %r13,%rdi
+     530:	e8 00 00 00 00       	call   535 <__kd_mutex_unlock+0x75>
+     535:	41 5c                	pop    %r12
+     537:	41 5d                	pop    %r13
+     539:	5d                   	pop    %rbp
+     53a:	e9 00 00 00 00       	jmp    53f <__kd_mutex_unlock+0x7f>
+
+Disassembly of section .exit.text:
+
+Disassembly of section .init.text:
+
+Disassembly of section .text.unlikely:
+
+Disassembly of section .altinstr_replacement:

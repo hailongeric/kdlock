@@ -1,0 +1,26 @@
+
+bench/results/10.176.26.71/raw/bench/pipecap-owner-20261021/retained/baseline/provider.ko:     file format elf64-x86-64
+
+
+Disassembly of section .text:
+
+00000000000171d0 <kd_mutex_task_reroute>:
+   171d0:	f3 0f 1e fa          	endbr64
+   171d4:	e8 00 00 00 00       	call   171d9 <kd_mutex_task_reroute+0x9>
+   171d9:	55                   	push   %rbp
+   171da:	48 89 e5             	mov    %rsp,%rbp
+   171dd:	e8 00 00 00 00       	call   171e2 <kd_mutex_task_reroute+0x12>
+   171e2:	84 c0                	test   %al,%al
+   171e4:	74 08                	je     171ee <kd_mutex_task_reroute+0x1e>
+   171e6:	65 48 ff 05 00 00 00 	incq   %gs:0x0(%rip)        # 171ee <kd_mutex_task_reroute+0x1e>
+   171ed:	00
+   171ee:	5d                   	pop    %rbp
+   171ef:	e9 00 00 00 00       	jmp    171f4 <kd_mutex_task_reroute+0x24>
+
+Disassembly of section .exit.text:
+
+Disassembly of section .init.text:
+
+Disassembly of section .text.unlikely:
+
+Disassembly of section .altinstr_replacement:
