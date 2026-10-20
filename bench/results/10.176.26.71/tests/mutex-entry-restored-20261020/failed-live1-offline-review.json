@@ -1,0 +1,90 @@
+{
+  "archive_manifest_sha256": "26a592b9766758e8a92db8f621c276d9c8379a80e7c446985807a0d84e045b70",
+  "binary_entries": 2,
+  "check_counts": {
+    "allocation_failure_before_probe": 1,
+    "archive_bytes": 3,
+    "archive_completed_idle": 1,
+    "archive_hash": 3,
+    "archived_health_hash": 1,
+    "archiver_hash": 1,
+    "binary_is_elf": 2,
+    "binary_manifest_hash": 2,
+    "committed_source_hash": 497,
+    "directory_empty_payload": 97,
+    "failed_file_binding": 246,
+    "failed_health_scope": 1,
+    "failed_task_unchanged": 1,
+    "inventory_exact_set": 1,
+    "inventory_hash": 1,
+    "member_assigned_group": 867,
+    "member_bytes": 770,
+    "member_in_inventory": 867,
+    "member_mode": 867,
+    "member_mtime_tar_projection": 867,
+    "member_owner": 867,
+    "member_prefix": 867,
+    "member_read_bytes": 770,
+    "member_safe_path": 867,
+    "member_type": 867,
+    "member_unique": 867,
+    "snapshot_binding": 633,
+    "source_identity": 1,
+    "source_manifest_hash": 633
+  },
+  "checks": 11468,
+  "consistent": true,
+  "files": 770,
+  "groups": [
+    {
+      "bytes": 4032553,
+      "file": "checks.tar.gz",
+      "members": 590,
+      "sha256": "75781b2c154b1c6a2a4e9710edc3d1b4488ba70fc275b42f3868753dedaad349",
+      "types": {
+        "dir": 72,
+        "file": 518
+      }
+    },
+    {
+      "bytes": 3525385,
+      "file": "failed.tar.gz",
+      "members": 270,
+      "sha256": "fb5f747b583f52d6e8f1e212429a3489d068ee5bc19849e9bc48246c384bc3ef",
+      "types": {
+        "dir": 24,
+        "file": 246
+      }
+    },
+    {
+      "bytes": 17068,
+      "file": "metadata.tar.gz",
+      "members": 7,
+      "sha256": "3333c040c9ac0b291c3b9e43d39afcdfd5b13880dde01234998fd66eae109ff0",
+      "types": {
+        "dir": 1,
+        "file": 6
+      }
+    }
+  ],
+  "helper_sha256": "05b87daa59dd00c658b042f8e6bf30ee60d5c811956a5a132053d9708ae4ebf6",
+  "issues": [],
+  "live_probe_passes": 0,
+  "members": 867,
+  "probe_status": "PREPARATION_FAILED",
+  "source_commit": "a768361f91259f35a11743350662b5d862e35292",
+  "sources": [
+    {
+      "entries": 466,
+      "path": "checks-1/source-sha256.json",
+      "prepared": false,
+      "sha256": "db041cf9ac582baa3b948ce60057cc7d12f87dfbacc56c87c1b7d70968b79001"
+    },
+    {
+      "entries": 167,
+      "path": "live-1/mutex-local/source-sha256.json",
+      "prepared": false,
+      "sha256": "3e1f52401475c42215919edbf2816b4d277c81d889423930bd43418a727da6b4"
+    }
+  ]
+}

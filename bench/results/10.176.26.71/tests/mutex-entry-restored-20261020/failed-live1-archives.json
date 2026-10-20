@@ -1,0 +1,50 @@
+{
+  "archive_prefix": "mutex-entry-restored-20261020",
+  "boot_id": "b65f0205-c8f9-4385-8b13-039cbce243a6",
+  "completed": true,
+  "finished_ns": 1792509291925964817,
+  "groups": [
+    {
+      "bytes": 4032553,
+      "file": "checks.tar.gz",
+      "group": "checks",
+      "path": "/root/kdlock-evidence/10.176.26.71/tests/mutex-entry-restored-20261020-failed-live1-archives/checks.tar.gz",
+      "roots": [
+        "mutex-entry-restored-20261020/checks-1"
+      ],
+      "sha256": "75781b2c154b1c6a2a4e9710edc3d1b4488ba70fc275b42f3868753dedaad349"
+    },
+    {
+      "bytes": 3525385,
+      "file": "failed.tar.gz",
+      "group": "failed",
+      "path": "/root/kdlock-evidence/10.176.26.71/tests/mutex-entry-restored-20261020-failed-live1-archives/failed.tar.gz",
+      "roots": [
+        "mutex-entry-restored-20261020/live-1"
+      ],
+      "sha256": "fb5f747b583f52d6e8f1e212429a3489d068ee5bc19849e9bc48246c384bc3ef"
+    },
+    {
+      "bytes": 17068,
+      "file": "metadata.tar.gz",
+      "group": "metadata",
+      "path": "/root/kdlock-evidence/10.176.26.71/tests/mutex-entry-restored-20261020-failed-live1-archives/metadata.tar.gz",
+      "roots": [
+        "mutex-entry-restored-20261020/failed-live1-health.json",
+        "mutex-entry-restored-20261020/failure-diagnostics"
+      ],
+      "sha256": "3333c040c9ac0b291c3b9e43d39afcdfd5b13880dde01234998fd66eae109ff0"
+    }
+  ],
+  "guest_base": "/root/kdlock-evidence/10.176.26.71/tests/mutex-entry-restored-20261020",
+  "guest_idle": true,
+  "health_path": "failed-live1-health.json",
+  "health_sha256": "43b66a768bb2b2fc057f8f2cfde8a6dfe3498619428b628034f753d7155ee695",
+  "idle_source_sha256": "c6f7dc17a41bc5c34bff35d3aaed7b4a995ba3e5225d2c48d032417ca3f1510e",
+  "input_inventory_sha256": "28b3b62e56e929b5ed05aaa57758d323343b3afbb5838a0601e41c741bb1643b",
+  "kernel_release": "6.1.159-kdclobber2",
+  "schema": 1,
+  "scope": "Complete evidence preservation; no deletion, module action, test or timing",
+  "script_sha256": "8d666f148a10d7fe19294cc7d193464c8bb53d4c3aec64b7518b9d335966c952",
+  "started_ns": 1792509290343825447
+}

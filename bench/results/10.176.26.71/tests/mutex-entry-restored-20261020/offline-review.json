@@ -1,0 +1,346 @@
+{
+  "archives_manifest_sha256": "3aabb6b7408ce69a392c7587d2001636382eba12057b0857eb84dc78b689439a",
+  "binary_entries": 13,
+  "check_counts": {
+    "ack_provider_binding": 1,
+    "ack_retirement": 1,
+    "allocator_preparation_and_retry": 1,
+    "archive_bytes": 5,
+    "archive_completed_idle": 1,
+    "archive_hash": 5,
+    "archived_health_hash": 1,
+    "archiver_hash": 1,
+    "basic_affected_pass": 1,
+    "binary_is_elf": 13,
+    "binary_manifest_hash": 13,
+    "business_counts": 8,
+    "check_receipts": 1,
+    "child_pass_drain": 4,
+    "child_snapshot_binding": 642,
+    "counter_arithmetic": 8,
+    "directory_empty_payload": 231,
+    "exact_ack_oracle": 1,
+    "failed_attempt_unchanged": 246,
+    "four_task_pass": 1,
+    "health_binding": 1,
+    "health_task_binding": 4,
+    "inventory_exact_set": 1,
+    "inventory_hash": 1,
+    "kernel_retirement": 4,
+    "local_api_oracle": 1,
+    "local_kernel_receipt": 1,
+    "maintained_verifier_bytes": 3,
+    "member_assigned_group": 2529,
+    "member_bytes": 2294,
+    "member_in_inventory": 2529,
+    "member_mode": 2529,
+    "member_mtime_tar_projection": 2529,
+    "member_owner": 2529,
+    "member_prefix": 2529,
+    "member_read_bytes": 2294,
+    "member_safe_path": 2529,
+    "member_type": 2529,
+    "member_unique": 2529,
+    "native_completion_ack": 2,
+    "phase_complete": 8,
+    "phase_execution": 8,
+    "phase_order": 2,
+    "prepared_patch_targets": 2,
+    "prepared_reconstruction": 186,
+    "prepared_source_manifest_hash": 186,
+    "preserved_preparation_failure": 1,
+    "restored_entry_hash": 1,
+    "revision_binding": 1,
+    "runner_git_binding": 2,
+    "session_accept_drain": 2,
+    "snapshot_git_binding": 1182,
+    "source_git_hash": 497,
+    "source_manifest_hash": 1182,
+    "symlink_empty_payload": 4,
+    "symlink_target": 4,
+    "symlink_target_retained": 4,
+    "task_source_count": 4,
+    "unchanged_candidate_task_arguments": 1,
+    "worker_oracle": 128
+  },
+  "checks": 31957,
+  "consistent": true,
+  "files": 2294,
+  "groups": [
+    {
+      "bytes": 4032553,
+      "file": "checks.tar.gz",
+      "members": 590,
+      "sha256": "1b53c76ceb4256ed4917c0e94e172f44549f60ec54f01a1a4602542dbba1c164",
+      "types": {
+        "dir": 72,
+        "file": 518
+      }
+    },
+    {
+      "bytes": 3525385,
+      "file": "failed.tar.gz",
+      "members": 270,
+      "sha256": "ec9945953ce906080e25ab6a0c529db647669e2cf8e354bc1016eadcb2941e4c",
+      "types": {
+        "dir": 24,
+        "file": 246
+      }
+    },
+    {
+      "bytes": 13202096,
+      "file": "live.tar.gz",
+      "members": 1627,
+      "sha256": "65564c3a0cb4fb799a56b76a7df4aee36bfe2e515e122c462a3732b927ed8fa0",
+      "types": {
+        "dir": 129,
+        "file": 1494,
+        "symlink": 4
+      }
+    },
+    {
+      "bytes": 110778,
+      "file": "preparation.tar.gz",
+      "members": 32,
+      "sha256": "9747c7d7d78d5574164840ec437cf6422e98e11594a13a3055f3095009db59ee",
+      "types": {
+        "dir": 5,
+        "file": 27
+      }
+    },
+    {
+      "bytes": 35931,
+      "file": "metadata.tar.gz",
+      "members": 10,
+      "sha256": "5590b37c54c4835272c12906fe6a6b8c796ec63a1e35f95a5b05d375ae293f04",
+      "types": {
+        "dir": 1,
+        "file": 9
+      }
+    }
+  ],
+  "helper_sha256": "05b87daa59dd00c658b042f8e6bf30ee60d5c811956a5a132053d9708ae4ebf6",
+  "issues": [],
+  "members": 2529,
+  "prepared": [
+    {
+      "classes": {
+        "overlay": 2,
+        "patched": 12,
+        "unchanged": 79
+      },
+      "name": "mutex-outer"
+    },
+    {
+      "classes": {
+        "overlay": 2,
+        "patched": 12,
+        "unchanged": 79
+      },
+      "name": "mutex-public"
+    }
+  ],
+  "source_commit": "a768361f91259f35a11743350662b5d862e35292",
+  "sources": [
+    {
+      "entries": 2,
+      "path": "allocator-refresh/source-sha256.json",
+      "prepared": false,
+      "sha256": "40c79b106ac02333eda0cf759cf5d5055e9519aaf88e26c62333d38b2cf472c4"
+    },
+    {
+      "entries": 466,
+      "path": "checks-1/source-sha256.json",
+      "prepared": false,
+      "sha256": "db041cf9ac582baa3b948ce60057cc7d12f87dfbacc56c87c1b7d70968b79001"
+    },
+    {
+      "entries": 167,
+      "path": "live-1/mutex-local/source-sha256.json",
+      "prepared": false,
+      "sha256": "3e1f52401475c42215919edbf2816b4d277c81d889423930bd43418a727da6b4"
+    },
+    {
+      "entries": 167,
+      "path": "live-2/mutex-local/source-sha256.json",
+      "prepared": false,
+      "sha256": "3e1f52401475c42215919edbf2816b4d277c81d889423930bd43418a727da6b4"
+    },
+    {
+      "entries": 93,
+      "path": "live-2/mutex-outer/prepared-source-sha256.json",
+      "prepared": true,
+      "sha256": "c54aaf9bbcb4c5a4cf4d09b76c250d81c04706c3e655c6a7785d22b03794eea7"
+    },
+    {
+      "entries": 190,
+      "path": "live-2/mutex-outer/source-sha256.json",
+      "prepared": false,
+      "sha256": "ddf78ccde118e88c06085a45dce138754e290601dbbdf23be8d84b4f89434bd3"
+    },
+    {
+      "entries": 93,
+      "path": "live-2/mutex-public/prepared-source-sha256.json",
+      "prepared": true,
+      "sha256": "c54aaf9bbcb4c5a4cf4d09b76c250d81c04706c3e655c6a7785d22b03794eea7"
+    },
+    {
+      "entries": 190,
+      "path": "live-2/mutex-public/source-sha256.json",
+      "prepared": false,
+      "sha256": "ddf78ccde118e88c06085a45dce138754e290601dbbdf23be8d84b4f89434bd3"
+    }
+  ],
+  "symlinks": 4,
+  "tasks": [
+    {
+      "drained": true,
+      "name": "mutex-local",
+      "passed": true,
+      "probe": {
+        "address_reuse": "PASS",
+        "api_helpers": "PASS",
+        "containing_layout": "PASS",
+        "drain": "PASS",
+        "interruptible": "EINTR",
+        "io": "PASS",
+        "killable": "EINTR",
+        "lock_align": 8,
+        "lock_size": 32,
+        "nested_sleep": "PASS",
+        "no_aux": "PASS",
+        "no_destroy": "PASS",
+        "objects": 2048,
+        "operations": 160000,
+        "ring_cancel": "PASS",
+        "ring_handoff": "PASS",
+        "workers": 8
+      },
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      }
+    },
+    {
+      "drained": true,
+      "name": "mutex-outer",
+      "passed": true,
+      "phases": [
+        {
+          "counters": {
+            "bench_jit_bodies": 1539422,
+            "bench_jit_completions": 1539422,
+            "native_escape_count": 0
+          },
+          "name": "cold-warmup"
+        },
+        {
+          "counters": {
+            "bench_jit_bodies": 1590301,
+            "bench_jit_completions": 1590301,
+            "native_escape_count": 0
+          },
+          "name": "cold-delegated"
+        },
+        {
+          "counters": {
+            "bench_jit_bodies": 1,
+            "bench_jit_completions": 0,
+            "native_escape_count": 1
+          },
+          "name": "hot-escape"
+        },
+        {
+          "counters": {
+            "bench_jit_bodies": 0,
+            "bench_jit_completions": 0,
+            "native_escape_count": 0
+          },
+          "name": "post-ban"
+        }
+      ],
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      }
+    },
+    {
+      "drained": true,
+      "name": "mutex-public",
+      "passed": true,
+      "phases": [
+        {
+          "counters": {
+            "bench_jit_bodies": 1546751,
+            "bench_jit_completions": 1546751,
+            "native_escape_count": 0
+          },
+          "name": "cold-warmup"
+        },
+        {
+          "counters": {
+            "bench_jit_bodies": 1589757,
+            "bench_jit_completions": 1589757,
+            "native_escape_count": 0
+          },
+          "name": "cold-delegated"
+        },
+        {
+          "counters": {
+            "bench_jit_bodies": 1,
+            "bench_jit_completions": 0,
+            "native_escape_count": 1
+          },
+          "name": "hot-escape"
+        },
+        {
+          "counters": {
+            "bench_jit_bodies": 0,
+            "bench_jit_completions": 0,
+            "native_escape_count": 0
+          },
+          "name": "post-ban"
+        }
+      ],
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      }
+    },
+    {
+      "drained": true,
+      "name": "owner-ack",
+      "passed": true,
+      "probe": {
+        "acks": 4,
+        "deferred_frees": 2,
+        "drained": true,
+        "jit": false,
+        "jit_bodies": 0,
+        "mutex_jit_required": true,
+        "orders": [
+          "B-A",
+          "A-B"
+        ],
+        "passed": true,
+        "registry_stress_deferred_frees": 3,
+        "registry_stress_iterations": 4096,
+        "registry_stress_workers": 3,
+        "scope": "task_owner_ack_resource_probe"
+      },
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      }
+    }
+  ],
+  "verifier_sha256": "9a2dbc496e74922de278e19459e031e2a776e93d83a958af7f759cb7ee0d328e"
+}

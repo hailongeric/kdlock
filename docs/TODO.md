@@ -102,7 +102,13 @@ class gaps and the failed post-run QEMU thread-set check; latency and runtime
 host interference remain unmeasured. The experiment is preserved at
 `archive/mutex-entry-inline-20261020` (`7062887`). The common entry and its test
 extraction marker are restored to their pre-experiment bytes; the separate
-`mutex-entry-restored-20261020` basic, affected and live validation is pending.
+`mutex-entry-restored-20261020/checks-1` basic and affected checks passed.
+Its first live attempt failed before provider initialization with reserved
+per-CPU ENOMEM and is preserved. After the unchanged allocator guard completed
+normal allocation/free preparation, all four `live-2` probes passed with exact
+retirement and final idle. The complete archive review passed 31,957 checks.
+This restores validated correctness scope, while all seven performance points
+and the remaining environment/class/latency gaps stay explicitly unresolved.
 
 Keep the two-word wrapper ABI, separate backend identities, exact KD physical owners,
 exact acquisition references and final ACKs. Shared storage must survive its final

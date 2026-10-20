@@ -344,5 +344,60 @@ The restored entry has SHA-256
 
 The restoration validation stage is `mutex-entry-restored-20261020`. It reuses
 the same two basic programs, six affected drivers and four serial live probes
-(local, OUTER, public DIRECT and owner/ACK) in the original recovery VM. Results
-are pending; earlier candidate passes do not certify this restored source.
+(local, OUTER, public DIRECT and owner/ACK) in the original recovery VM.
+At restored commit `a768361`, dependencies, provider/daemon builds and all eight
+selected unit programs/drivers passed in `checks-1`. Provider warnings include
+locale fallback, `_Q_LOCKED_COMBINER_VAL` redefinition and assembly/objtool
+diagnostics; this is not a warning-free build.
+
+`live-1` stopped at the first provider load: reserved per-CPU allocation of
+7,592 bytes at alignment 128 returned ENOMEM before provider initialization.
+The local workload was never loaded; OUTER, public and owner/ACK never started.
+The original `PREPARATION_FAILED` result remains unchanged. A later observation
+confirmed no project modules/tasks and an idle VM. The failed attempt, checks,
+kernel trace and input hashes were archived before retry.
+
+This matches the previously documented reserved-per-CPU preparation failure in
+the [unified API validation](../../tests/mutex-api-20261020/validation.json).
+The unchanged `tc_allocator_guard` performed its normal page-sized allocation
+and free, then unloaded. Its private source/build/command receipts are retained
+in `allocator-refresh`; neither the kernel nor allocator metadata was patched.
+The same four-task plan completed in `live-2`, with identical source and
+arguments and a fresh snapshot/placement receipt. All four probes passed:
+
+| Probe | Restored-source result |
+| --- | --- |
+| Local API | 160,000 operations, eight workers, 2,048 objects, 32-byte/8-byte layout; nested sleeping, cancellation, ring handoff, I/O and API helper checks passed |
+| OUTER | 1,539,422 warmup and 1,590,301 cold-delegated returned bodies; exactly one hot native exit, zero hot completions and zero post-ban activity |
+| Public DIRECT | 1,546,751 warmup and 1,589,757 cold-delegated returned bodies; exactly one hot native exit, zero hot completions and zero post-ban activity |
+| Owner/ACK | Both B-A/A-B orders, four ACKs, two deferred frees; three registry workers completed 4,096 iterations each with three deferred frees; constructed frames, zero JIT bodies |
+
+The [final health receipt](../../tests/mutex-entry-restored-20261020/health.json)
+binds 1,616 source/binary hashes, all 246 files from the failed first attempt,
+and the allocator preparation. All four successful probes retired exactly
+`state=2, modules=writers=frames=0`; no matched runtime kernel faults were found.
+The [ELF section comparison](../../tests/mutex-entry-restored-20261020/percpu-section-comparison.json)
+shows identical per-CPU size, alignment and contents between the earlier
+successful inline candidate and the initially rejected restored provider.
+Successful retry after normal allocator preparation supports the known
+allocator-hint diagnosis; it does not erase the original failure.
+
+The [complete archives](../../tests/mutex-entry-restored-20261020/archives.json)
+have manifest SHA-256
+`3aabb6b7408ce69a392c7587d2001636382eba12057b0857eb84dc78b689439a`.
+Their [inert source/receipt review](../../tests/mutex-entry-restored-20261020/offline-review.json)
+passed 31,957 checks with zero inconsistencies. The separate pre-retry
+[failure archive](../../tests/mutex-entry-restored-20261020/failed-live1-archives.json)
+has manifest SHA-256
+`26a592b9766758e8a92db8f621c276d9c8379a80e7c446985807a0d84e045b70`;
+its review passed 11,468 preservation checks while explicitly retaining
+`PREPARATION_FAILED`, zero live probe passes and no claimed source retirement.
+Both complete archive sets remain in the corresponding guest sibling
+directories and source-host `raw/tests/mutex-entry-restored-20261020/`.
+
+The maintained entry is restored and its affected correctness scope is
+validated. No performance measurement was rerun in this restoration stage.
+All seven mutex regressions, execution-class gaps, p95 latency and the strict
+post-measurement host thread-set mismatch remain explicitly unresolved.
+Subsequent rwlock/rwsem, real mmap/fault and list work must retain those limits
+and cannot imply acceptance of the mutex comparison.

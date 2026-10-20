@@ -1,0 +1,53 @@
+{
+  "basic_affected_passed": true,
+  "boot_id": "b65f0205-c8f9-4385-8b13-039cbce243a6",
+  "checked_unix": 1792509280.9003384,
+  "completed_live_probes": 0,
+  "failed_task": "mutex-local",
+  "failure_inventory_sha256": "37afe8490fd06d8317cb6d29b1561e6f26355a15d32e8d83b27070f0257738ae",
+  "idle": true,
+  "kernel_allocation_failure": {
+    "alignment": 128,
+    "area": "reserved per-CPU chunk",
+    "bytes": 7592,
+    "kernel_log": "live-1/mutex-local/kernel.log",
+    "provider_initialized": false
+  },
+  "live_passed": false,
+  "original_result": {
+    "binaries": {
+      "source/kernel_module/kdlock_km.ko": "82684a947e70ecaf0961d476dabbd12bdf5e58d4c0eb1cd900f52f476d85a031",
+      "source/tests/kernel/mutex/local/kd_mutex_local_probe.ko": "3b26038bfc633d8fc5a5a09de523a1a4dc203063294ecf2a53ac08adaa1d7161"
+    },
+    "drained": false,
+    "error": "command exited 1: ['insmod', PosixPath('/root/kdlock-evidence/10.176.26.71/tests/mutex-entry-restored-20261020/live-1/mutex-local/source/kernel_module/kdlock_km.ko')]; see /root/kdlock-evidence/10.176.26.71/tests/mutex-entry-restored-20261020/live-1/mutex-local/load-provider.log",
+    "execution": "ordinary-local",
+    "final_idle": false,
+    "jit_bodies": 0,
+    "kernel_identity": {
+      "baseline": "/root/kdlock-kernel-baselines/mutex-clobber2-20260919",
+      "build_files": 9,
+      "bundle_files": 7,
+      "config": true,
+      "ok": true,
+      "running_build_id": "5ca28058e156f34a2c7fe91e8e0fbf92f4e51960",
+      "source": "/mnt/kdlock-builds/linux-6.1.159-kdclobber2",
+      "source_files": 20
+    },
+    "modules_remaining": [],
+    "passed": false,
+    "snapshot_tag": "before-mutex-kdonly-20261017T140354Z",
+    "status": "PREPARATION_FAILED"
+  },
+  "passed": false,
+  "per_session_kernel_faults": [],
+  "percpu_debug_stats_available": false,
+  "scope": "Later idle verification and preservation of a failed provider load. No live probe passed and no source retirement is claimed.",
+  "script_sha256": "3023f0b81f8abc9fe36bfde55d76746faa5c3e75be32773f81fbf54992acc015",
+  "source_commit": "a768361f91259f35a11743350662b5d862e35292",
+  "unstarted_probes": [
+    "mutex-outer",
+    "mutex-public",
+    "owner-ack"
+  ]
+}

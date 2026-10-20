@@ -1,0 +1,272 @@
+{
+  "boot_id": "b65f0205-c8f9-4385-8b13-039cbce243a6",
+  "checked_unix": 1792509631.229327,
+  "checks": {
+    "commands": [
+      {
+        "argv": [
+          "/root/kdlock-translation-venv-20261019/bin/python3",
+          "-m",
+          "pip",
+          "check"
+        ],
+        "cwd": "/root/host_fs/kdlock",
+        "exit_code": 0,
+        "finished_unix": 1792508885.7093873,
+        "name": "dependencies",
+        "started_unix": 1792508885.1408935,
+        "timeout_seconds": 60
+      },
+      {
+        "argv": [
+          "make",
+          "-C",
+          "kernel_module",
+          "KDIR=/root/linux-6.1.159-kdclobber2",
+          "W=1",
+          "UBSAN_SANITIZE=n"
+        ],
+        "cwd": "/root/kdlock-evidence/10.176.26.71/tests/mutex-entry-restored-20261020/checks-1/source",
+        "exit_code": 0,
+        "finished_unix": 1792508897.4016924,
+        "name": "provider",
+        "started_unix": 1792508885.82119,
+        "timeout_seconds": 240
+      },
+      {
+        "argv": [
+          "make",
+          "-C",
+          "daemon",
+          "CFLAGS=-O2 -Wall -Wextra -Werror"
+        ],
+        "cwd": "/root/kdlock-evidence/10.176.26.71/tests/mutex-entry-restored-20261020/checks-1/source",
+        "exit_code": 0,
+        "finished_unix": 1792508897.8310547,
+        "name": "daemon",
+        "started_unix": 1792508897.5135696,
+        "timeout_seconds": 60
+      },
+      {
+        "argv": [
+          "make",
+          "-C",
+          "tests/unit",
+          "run",
+          "PYTHON=/root/kdlock-translation-venv-20261019/bin/python3",
+          "PY_TESTS=mutex/test_mutex_resources.py mutex/test_mutex_api.py mutex/test_mutex_outer_api.py mutex/test_mutex_wait_clobber.py execution/test_native_after_outer.py admission/test_clobber_entry.py"
+        ],
+        "cwd": "/root/kdlock-evidence/10.176.26.71/tests/mutex-entry-restored-20261020/checks-1/source",
+        "exit_code": 0,
+        "finished_unix": 1792508921.0364318,
+        "name": "unit",
+        "started_unix": 1792508897.9402828,
+        "timeout_seconds": 1500
+      }
+    ],
+    "committed_manifest_sha256": "6c1e66881b72b292f693a56a1c1910d6443806bdf0f84426ac475aaa607d1491",
+    "final_idle": true,
+    "full_suite": false,
+    "passed": true,
+    "runner_tests": [],
+    "script_sha256": "c12c4f8b139c63b0dd077ae9324d4784cb1aaf0ed4b0d910b986872880ee88c7",
+    "snapshot_tag": "before-mutex-kdonly-20261017T140354Z",
+    "source_revision": "a768361f91259f35a11743350662b5d862e35292",
+    "source_unchanged": true,
+    "unit_basic": 2,
+    "unit_drivers": [
+      "mutex/test_mutex_resources.py",
+      "mutex/test_mutex_api.py",
+      "mutex/test_mutex_outer_api.py",
+      "mutex/test_mutex_wait_clobber.py",
+      "execution/test_native_after_outer.py",
+      "admission/test_clobber_entry.py"
+    ]
+  },
+  "idle": true,
+  "live_attempt": "live-2",
+  "per_session_kernel_faults": [],
+  "previous_attempt": {
+    "allocator_refresh": {
+      "boot_id": "b65f0205-c8f9-4385-8b13-039cbce243a6",
+      "commands": [
+        {
+          "exit_code": 0,
+          "name": "build"
+        },
+        {
+          "exit_code": 0,
+          "name": "load"
+        },
+        {
+          "exit_code": 0,
+          "name": "unload"
+        }
+      ],
+      "failed_attempt_unchanged": true,
+      "failure_health_sha256": "43b66a768bb2b2fc057f8f2cfde8a6dfe3498619428b628034f753d7155ee695",
+      "idle": true,
+      "passed": true,
+      "scope": "Preparation only: normal page-sized allocation/free through the unchanged guard, unloaded before retry. This is not a mutex probe pass.",
+      "source_commit": "a768361f91259f35a11743350662b5d862e35292",
+      "source_unchanged": true
+    },
+    "failure_health_sha256": "43b66a768bb2b2fc057f8f2cfde8a6dfe3498619428b628034f753d7155ee695",
+    "passed": false,
+    "state": "PREPARATION_FAILED",
+    "unchanged_failed_files": 246
+  },
+  "source_binary_hashes_checked": 1616,
+  "source_commit": "a768361f91259f35a11743350662b5d862e35292",
+  "tasks": [
+    {
+      "drained": true,
+      "name": "mutex-local",
+      "passed": true,
+      "probe": {
+        "address_reuse": "PASS",
+        "api_helpers": "PASS",
+        "containing_layout": "PASS",
+        "drain": "PASS",
+        "interruptible": "EINTR",
+        "io": "PASS",
+        "killable": "EINTR",
+        "lock_align": 8,
+        "lock_size": 32,
+        "nested_sleep": "PASS",
+        "no_aux": "PASS",
+        "no_destroy": "PASS",
+        "objects": 2048,
+        "operations": 160000,
+        "ring_cancel": "PASS",
+        "ring_handoff": "PASS",
+        "workers": 8
+      },
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      }
+    },
+    {
+      "drained": true,
+      "name": "mutex-outer",
+      "passed": true,
+      "phases": [
+        {
+          "counters": {
+            "bench_jit_bodies": 1539422,
+            "bench_jit_completions": 1539422,
+            "native_escape_count": 0
+          },
+          "name": "cold-warmup"
+        },
+        {
+          "counters": {
+            "bench_jit_bodies": 1590301,
+            "bench_jit_completions": 1590301,
+            "native_escape_count": 0
+          },
+          "name": "cold-delegated"
+        },
+        {
+          "counters": {
+            "bench_jit_bodies": 1,
+            "bench_jit_completions": 0,
+            "native_escape_count": 1
+          },
+          "name": "hot-escape"
+        },
+        {
+          "counters": {
+            "bench_jit_bodies": 0,
+            "bench_jit_completions": 0,
+            "native_escape_count": 0
+          },
+          "name": "post-ban"
+        }
+      ],
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      }
+    },
+    {
+      "drained": true,
+      "name": "mutex-public",
+      "passed": true,
+      "phases": [
+        {
+          "counters": {
+            "bench_jit_bodies": 1546751,
+            "bench_jit_completions": 1546751,
+            "native_escape_count": 0
+          },
+          "name": "cold-warmup"
+        },
+        {
+          "counters": {
+            "bench_jit_bodies": 1589757,
+            "bench_jit_completions": 1589757,
+            "native_escape_count": 0
+          },
+          "name": "cold-delegated"
+        },
+        {
+          "counters": {
+            "bench_jit_bodies": 1,
+            "bench_jit_completions": 0,
+            "native_escape_count": 1
+          },
+          "name": "hot-escape"
+        },
+        {
+          "counters": {
+            "bench_jit_bodies": 0,
+            "bench_jit_completions": 0,
+            "native_escape_count": 0
+          },
+          "name": "post-ban"
+        }
+      ],
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      }
+    },
+    {
+      "drained": true,
+      "name": "owner-ack",
+      "passed": true,
+      "probe": {
+        "acks": 4,
+        "deferred_frees": 2,
+        "drained": true,
+        "jit": false,
+        "jit_bodies": 0,
+        "mutex_jit_required": true,
+        "orders": [
+          "B-A",
+          "A-B"
+        ],
+        "passed": true,
+        "registry_stress_deferred_frees": 3,
+        "registry_stress_iterations": 4096,
+        "registry_stress_workers": 3,
+        "scope": "task_owner_ack_resource_probe"
+      },
+      "retired": {
+        "frames": 0,
+        "modules": 0,
+        "state": 2,
+        "writers": 0
+      }
+    }
+  ],
+  "verifier_sha256": "5e192de2cdf64fd0b37e1eec92adac5884f784d3c9208c9ebb8c2c2ae6c503d6"
+}

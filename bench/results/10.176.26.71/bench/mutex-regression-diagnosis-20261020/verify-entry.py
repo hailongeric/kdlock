@@ -25,6 +25,8 @@ def sha(path):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('base', type=Path)
+    parser.add_argument('--live', choices=('live-1', 'live-2'), default='live-1',
+                        help='live-2 additionally requires the preserved load failure and guard receipts')
     args = parser.parse_args()
     base = args.base.resolve()
     assert os.geteuid() == 0 and os.uname().release == '6.1.159-kdclobber2'
@@ -39,10 +41,38 @@ def main():
         except (FileNotFoundError, ProcessLookupError):
             continue
         assert name not in ('ke_worker', 'kg_worker', 'ks_worker'), str(path)
-    checks, live = base/'checks-1', base/'live-1'
+    checks, live = base/'checks-1', base/args.live
     manifest = read(checks/'committed-source.json')
     assert read(live/'committed-source.json') == manifest
     count = 0
+    previous = None
+    if args.live == 'live-2':
+        failure = read(base/'failed-live1-health.json')
+        first = read(base/'live-1/tasks.json')
+        guard = read(base/'allocator-refresh/result.json')
+        assert failure['passed'] is False and failure['completed_live_probes'] == 0
+        assert failure['kernel_allocation_failure']['bytes'] == 7592
+        assert failure['original_result'] == read(base/'live-1/mutex-local/result.json')
+        assert first['state'] == 'FAILED' and first['failed_task'] == 'mutex-local'
+        assert len(first['tasks']) == 1 and first['tasks'][0]['exit_code'] == 1
+        assert guard['passed'] and guard['idle'] and guard['source_unchanged']
+        assert guard['failed_attempt_unchanged']
+        assert guard['source_commit'] == failure['source_commit'] == manifest['commit']
+        assert guard['boot_id'] == failure['boot_id']
+        assert guard['failure_health_sha256'] == sha(base/'failed-live1-health.json')
+        failed_hashes = base/'failure-diagnostics/failed-live1-file-sha256.json'
+        assert sha(failed_hashes) == failure['failure_inventory_sha256']
+        for relative, expected in read(failed_hashes).items():
+            assert sha(base/relative) == expected, relative
+        for relative, expected in read(base/'allocator-refresh/source-sha256.json').items():
+            assert manifest['files'][relative] == expected
+            assert sha(base/'allocator-refresh/source'/relative) == expected
+        for relative, expected in read(base/'allocator-refresh/binary-sha256.json').items():
+            assert sha(base/'allocator-refresh'/relative) == expected
+        previous = dict(state='PREPARATION_FAILED', passed=False,
+                        failure_health_sha256=sha(base/'failed-live1-health.json'),
+                        unchanged_failed_files=len(read(failed_hashes)),
+                        allocator_refresh=guard)
     for relative, expected in manifest['files'].items():
         assert sha(ROOT/relative) == expected, relative
         count += 1
@@ -148,6 +178,9 @@ def main():
                   verifier_sha256=sha(Path(__file__)),
                   source_commit=manifest['commit'], source_binary_hashes_checked=count,
                   checks=result, tasks=rows, per_session_kernel_faults=faults)
+    if previous is not None:
+        assert previous['allocator_refresh']['boot_id'] == boot
+        health.update(live_attempt=args.live, previous_attempt=previous)
     (base/'health.json').write_text(json.dumps(health, indent=2, sort_keys=True)+'\n')
     print(json.dumps(health, sort_keys=True))
 
