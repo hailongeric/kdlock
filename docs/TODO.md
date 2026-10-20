@@ -99,16 +99,17 @@ The entry-inlining experiment passed focused correctness checks but did not
 resolve the seven mutex losses in its separate 120-session comparison. It is
 not accepted as a performance fix. The stage record retains all repetitions,
 class gaps and the failed post-run QEMU thread-set check; latency and runtime
-host interference remain unmeasured. The experiment is preserved at
-`archive/mutex-entry-inline-20261020` (`7062887`). The common entry and its test
-extraction marker are restored to their pre-experiment bytes; the separate
+host interference were unmeasured in that experiment. The archive ref
+`archive/mutex-entry-inline-20261020` preserves it at `7062887`. The common entry
+and its test extraction marker are restored to their pre-experiment bytes; the separate
 `mutex-entry-restored-20261020/checks-1` basic and affected checks passed.
 Its first live attempt failed before provider initialization with reserved
 per-CPU ENOMEM and is preserved. After the unchanged allocator guard completed
 normal allocation/free preparation, all four `live-2` probes passed with exact
 retirement and final idle. The complete archive review passed 31,957 checks.
-This restores validated correctness scope, while all seven performance points
-and the remaining environment/class/latency gaps stay explicitly unresolved.
+This restores validated correctness scope, while all seven causal performance
+points and the remaining environment/class gaps stay explicitly unresolved.
+The later latency stage records complete-operation p95 within its stated scope.
 The next [shared-lock comparison stage](../bench/results/10.176.26.71/bench/shared-lock-followup-20261020/README.md)
 retains the current recovery VM and pinned environment, with separate fresh
 Native/KD rwsem and Native/TCLock/KD rwlock controls. All 756 rwsem sessions
@@ -134,8 +135,9 @@ mmap/fault test ran. The
 retains the previously selected 264 sessions at eight and 60 workers.
 `timing-1` stopped after 147 attempts: 144 spin/mutex sessions and two shared
 controls passed, then the first KD rwlock case failed the retained JIT
-requirement. The remaining 69 rwlock cases are unresolved; its 48 unstarted
-rwsem cases subsequently ran as the separate `rwsem-1` continuation. Its
+requirement. The remaining 69 rwlock cases did not run in `timing-1`; their
+separate continuation is recorded below. Its 48 unstarted rwsem cases
+subsequently ran as the separate `rwsem-1` continuation. Its
 immediate host endpoint failed at 83 versus 67 QEMU threads. The independent
 250,374-check review preserves all failures, verifies evidence integrity and
 reports separate ranges/CVs; no acceptance is claimed. Its first strict preflight failed at 70 versus 67
@@ -148,24 +150,24 @@ independent review passes evidence integrity but preserves an immediate
 86-versus-67 host-thread failure. Four of eight Native parity comparisons miss;
 maximum KD/Native spreads are 165.98%/22.91%. The prior 73-thread admission
 failure and subsequent strict 67-thread admission both remain recorded.
-All runs are idle. The failed rwlock execution requirement and 69 missing cases,
-host endpoint mismatches, variance and earlier mutex/class/latency gaps remain
-open; do not weaken a gate or repeat a failed case for a favorable class.
+All runs are idle. The failed rwlock execution requirement, host endpoint
+mismatches, variance and earlier mutex/class gaps remain open; do not weaken a
+gate or repeat a failed case for a favorable class.
 
 The [2026-10-21 diagnosis](../bench/results/10.176.26.71/bench/nano-rwlock-diagnosis-20261021/README.md)
-continues that unfinished work. Read-only host captures bind the QEMU binary
+records the subsequent investigation. Read-only host captures bind the QEMU binary
 and show extra workers performing disk writes. Matched RAM/ext4 diagnostics
 also observe background root-disk writes, so historical timing interference
 remains unresolved. An isolated provider observation patch and fixed matched
-comparison will distinguish rwlock ratio/time, lock-heat and queue-prefix
-refusals. The original 69 unstarted cases remain a separate strict coverage
-plan. No admission threshold, failed record or acceptance gate is changed.
+comparison distinguish rwlock ratio/time, lock-heat and queue-prefix refusals.
+The original 69 unstarted cases use a separate strict coverage plan. No
+admission threshold, failed record or acceptance gate is changed.
 The first fixed 12-case diagnosis completed: six eight-worker strict NO_JIT
 failures, six sixty-worker successes, 12 exact retirements and 59,561 passing
 evidence-integrity checks. Its endpoint still fails at 72 versus 67 threads.
 Queue-prefix vetoes dominate the eight-worker heat behavior, while 19,699 hot
-slowpath entries still never start a combiner; a focused extension is needed
-to classify that later refusal. The original remaining 69 cases then completed
+slowpath entries never start a combiner; the later focused extension classifies
+that refusal. The original remaining 69 cases then completed
 with 59 strict successes and ten strict NO_JIT failures, all drained. Their
 76-thread endpoint fails too. Its 12,155 evidence-integrity checks and 23 exact
 retirements pass. Missing-case coverage is closed; strict execution, host
@@ -344,12 +346,14 @@ with this revision.
 ### Main-plan acceptance audit
 
 The [seven-point latency stage](../bench/results/10.176.26.71/bench/mutex-latency-20261021/README.md)
-requires follow-up after the first run hit a strict sample-capacity refusal and
-drained. The larger preallocated buffer passed basic/affected checks and its
-separate fixed serial plain/disabled/sampled comparison is active. Preserve every
-observation, overhead comparison, class shift, insufficient-sample group and
-host failure. The seven regressions remain unresolved; planned tests are not
-passes and operation latency must not be inferred from throughput.
+completed its separate 252-session follow-up after a retained capacity failure.
+The larger buffer passed basic/affected checks; 4,073,421 observations and 126
+exact KD retirements passed 5,218,772 independent integrity checks. The host
+endpoint failed at 125 versus 67 threads. Preserve all observations, observer
+effects, class changes, variance, failed preflights and missing samples from
+the failed first run. Sampled complete-operation p95 is available; the seven
+causes, acquisition latency, isolated observer cost and runtime interference
+remain unresolved. No performance acceptance is declared.
 
 A JIT pass requires the generated and published identities to match, an observed
 returned JIT body, correct data, the required physical-owner ACKs and complete

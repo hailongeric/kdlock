@@ -1,0 +1,47 @@
+[
+  {
+    "receipt": "host-before-1.json",
+    "captured_utc": "2026-10-20T20:01:33.865361+00:00",
+    "threads": 80,
+    "pins_verified": true,
+    "snapshot_listed": true,
+    "strict_passed": false,
+    "started_run": null
+  },
+  {
+    "receipt": "host-before-2.json",
+    "captured_utc": "2026-10-20T20:02:27.501002+00:00",
+    "threads": 68,
+    "pins_verified": true,
+    "snapshot_listed": true,
+    "strict_passed": false,
+    "started_run": null
+  },
+  {
+    "receipt": "host-before-3.json",
+    "captured_utc": "2026-10-20T20:05:13.157212+00:00",
+    "threads": 67,
+    "pins_verified": true,
+    "snapshot_listed": true,
+    "strict_passed": true,
+    "started_run": "run-1"
+  },
+  {
+    "receipt": "host-before-4.json",
+    "captured_utc": "2026-10-20T20:12:53.564271+00:00",
+    "threads": 131,
+    "pins_verified": true,
+    "snapshot_listed": true,
+    "strict_passed": false,
+    "started_run": null
+  },
+  {
+    "receipt": "host-before-5.json",
+    "captured_utc": "2026-10-20T20:14:16.584659+00:00",
+    "threads": 67,
+    "pins_verified": true,
+    "snapshot_listed": true,
+    "strict_passed": true,
+    "started_run": "run-2"
+  }
+]

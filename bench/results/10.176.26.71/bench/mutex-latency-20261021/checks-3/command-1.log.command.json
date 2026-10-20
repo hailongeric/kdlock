@@ -1,0 +1,16 @@
+{
+  "argv": [
+    "/root/kdlock-translation-venv-20261019/bin/python3",
+    "-m",
+    "unittest",
+    "discover",
+    "-s",
+    "bench/mutex_api_compare",
+    "-p",
+    "test_compare.py"
+  ],
+  "cwd": "/root/host_fs/kdlock",
+  "pid": 3023611,
+  "started_ns": 483236627256859,
+  "timeout_seconds": 180
+}

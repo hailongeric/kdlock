@@ -1,0 +1,98 @@
+{
+  "archive_prefix": "mutex-latency-20261021",
+  "boot_id": "b65f0205-c8f9-4385-8b13-039cbce243a6",
+  "completed": true,
+  "finished_ns": 1792528869747977484,
+  "groups": [
+    {
+      "bytes": 26974894,
+      "file": "inputs.tar.gz",
+      "group": "inputs",
+      "path": "/root/kdlock-evidence/10.176.26.71/bench/mutex-latency-20261021-archives-1/inputs.tar.gz",
+      "roots": [
+        "mutex-latency-20261021/inputs-4"
+      ],
+      "sha256": "3f2cd75766a0cfc926e4113ec8b78675c61f4fb239b329f145ab954c9ca997b4"
+    },
+    {
+      "bytes": 57060985,
+      "file": "previous.tar.gz",
+      "group": "previous",
+      "path": "/root/kdlock-evidence/10.176.26.71/bench/mutex-latency-20261021-archives-1/previous.tar.gz",
+      "roots": [
+        "mutex-latency-20261021/inputs-1",
+        "mutex-latency-20261021/inputs-2",
+        "mutex-latency-20261021/inputs-3"
+      ],
+      "sha256": "55981e1d67a76a1b539eb244fee1fb97a899c345525691b89dd39893fede2c32"
+    },
+    {
+      "bytes": 516309,
+      "file": "failed.tar.gz",
+      "group": "failed",
+      "path": "/root/kdlock-evidence/10.176.26.71/bench/mutex-latency-20261021-archives-1/failed.tar.gz",
+      "roots": [
+        "mutex-latency-20261021/run-1"
+      ],
+      "sha256": "9b0ab73b80667fb3cfb5b745b472d8163307a90382d3192ef47c49b3e1c639ec"
+    },
+    {
+      "bytes": 145862867,
+      "file": "measured.tar.gz",
+      "group": "measured",
+      "path": "/root/kdlock-evidence/10.176.26.71/bench/mutex-latency-20261021-archives-1/measured.tar.gz",
+      "roots": [
+        "mutex-latency-20261021/run-2"
+      ],
+      "sha256": "c99b2d8bf67c11bc2a297073fe33cc8bd645db4820bc214d78c4c15f9bbfd08f"
+    },
+    {
+      "bytes": 49863,
+      "file": "checks.tar.gz",
+      "group": "checks",
+      "path": "/root/kdlock-evidence/10.176.26.71/bench/mutex-latency-20261021-archives-1/checks.tar.gz",
+      "roots": [
+        "mutex-latency-20261021/checks-1",
+        "mutex-latency-20261021/checks-2",
+        "mutex-latency-20261021/checks-3",
+        "mutex-latency-20261021/checks-4"
+      ],
+      "sha256": "e8e2711380a6a95db91fa82a7b45154afb6417ca1006db570b93fe9fc5d62df6"
+    },
+    {
+      "bytes": 85977,
+      "file": "metadata.tar.gz",
+      "group": "metadata",
+      "path": "/root/kdlock-evidence/10.176.26.71/bench/mutex-latency-20261021-archives-1/metadata.tar.gz",
+      "roots": [
+        "mutex-latency-20261021/capture-health.py",
+        "mutex-latency-20261021/capture-host.py",
+        "mutex-latency-20261021/final-health.json",
+        "mutex-latency-20261021/launch-run-1.sh",
+        "mutex-latency-20261021/launch-run-2.sh",
+        "mutex-latency-20261021/preflights",
+        "mutex-latency-20261021/prepare-1.log",
+        "mutex-latency-20261021/prepare-1.log.command.json",
+        "mutex-latency-20261021/prepare-2.log",
+        "mutex-latency-20261021/prepare-2.log.command.json",
+        "mutex-latency-20261021/prepare-3.log",
+        "mutex-latency-20261021/prepare-3.log.command.json",
+        "mutex-latency-20261021/prepare-4.log",
+        "mutex-latency-20261021/prepare-4.log.command.json",
+        "mutex-latency-20261021/review.py"
+      ],
+      "sha256": "ac3c6bd94a5bb440a0be093464d1c90fbea0a4324d2d317429f19a5474732d54"
+    }
+  ],
+  "guest_base": "/root/kdlock-evidence/10.176.26.71/bench/mutex-latency-20261021",
+  "guest_idle": true,
+  "health_path": "final-health.json",
+  "health_sha256": "54115a92d56dfd1d0906f77f45681b1585e699fcb2c261fd244fb5b8e576015f",
+  "idle_source_sha256": "c6f7dc17a41bc5c34bff35d3aaed7b4a995ba3e5225d2c48d032417ca3f1510e",
+  "input_inventory_sha256": "26572d879e726fb8357814f8901b07db385f6a394fdf9e3ce175469acecd6bb2",
+  "kernel_release": "6.1.159-kdclobber2",
+  "schema": 1,
+  "scope": "Complete evidence preservation; no deletion, module action, test or timing",
+  "script_sha256": "8d666f148a10d7fe19294cc7d193464c8bb53d4c3aec64b7518b9d335966c952",
+  "started_ns": 1792528838195175505
+}

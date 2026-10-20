@@ -261,9 +261,9 @@ def main():
     for key, item in inputs['bundles'].items():
         prefix = inp+'bundles/'+key+'/'
         source, old = j(prefix+'source-sha256.json'), original.jread(key+'/source-sha256.json')
-        equal('source_additions', set(source)-set(old), set(item['source_additions']), key)
-        equal('one_allowed_source_change', {p for p in old if source.get(p) != old[p]},
-              {item['changed_source']}, key)
+        equal('source_additions', sorted(set(source)-set(old)), sorted(item['source_additions']), key)
+        equal('one_allowed_source_change', sorted(p for p in old if source.get(p) != old[p]),
+              [item['changed_source']], key)
         changed = item['changed_source']
         transform = overlay.synthetic if key.split('/')[1] in ('c08', 'rcuht') else overlay.api_client
         equal('exact_reviewed_source_transformation',
@@ -427,12 +427,16 @@ def main():
                 max_ns=max(values) if values else None, workers=per_worker, calibration_subtracted=False)
             equal('independent_latency_arithmetic', {k: summary[k] for k in expected}, expected, name)
             if not synthetic:
+                equal('client_observation_version', raw_measure['operation_latency']['version'], 1, name)
+                equal('client_observation_mode', raw_measure['operation_latency']['enabled'],
+                      mode == 'sampled', name)
                 equal('client_observation_binding', raw_measure['operation_latency']['rows'], observed, name)
             sample_total += sample_count
         row = dict(name=record['name'], workload=group, threads=record['threads'],
             repeat=record['repeat'], arm=record['comparison_arm'], mode=mode, execution_class=cls,
             whole_mops=rate/1e6, peak_mops=measured['peak']['throughput_ops_s']/1e6,
-            jit_entries=record.get('jit_bodies'), jit_returns=record.get('jit_completions'),
+            jit_entries=record.get('jit_bodies'),
+            jit_returns=record.get('jit_completions') if not synthetic and record['arm'] == 'kdlock' else None,
             latency_samples=sample_count, p95_ns=p95, sufficient=sufficient)
         rows.append(row)
         grouped[group, record['threads'], record['comparison_arm'], mode, cls].append(row)
@@ -482,6 +486,11 @@ def main():
         checks=sum(audit.counts.values())+sum(original.counts.values()),
         check_counts=dict(audit.counts), issues=audit.issues, original_issues=original.issues,
         host_failures=host_failures, archives=archives, sessions=len(records), samples=sample_total,
+        operations=sum(r['measurement']['completed'] for r in records),
+        kd_entry_witnesses=sum(r['jit_bodies'] for r in records if r['arm'] == 'kdlock'),
+        api_kd_returns=sum(r.get('jit_completions', 0) for r in records
+                           if r['comparison_workload'] in ('pipebytes', 'pipecap') and r['arm'] == 'kdlock'),
+        exact_retirements=sum(r['arm'] == 'kdlock' for r in records),
         execution_classes=dict(execution), insufficient_sampled_sessions=[r['name'] for r in rows
             if r['mode'] == 'sampled' and not r['sufficient']], accepted=False,
         failed_original_run=dict(completed_sessions=8, failed_attempt=9, drained=True,

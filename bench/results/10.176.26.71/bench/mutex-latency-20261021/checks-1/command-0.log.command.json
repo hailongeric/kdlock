@@ -1,0 +1,12 @@
+{
+  "argv": [
+    "/root/kdlock-translation-venv-20261019/bin/python3",
+    "-m",
+    "pip",
+    "check"
+  ],
+  "cwd": "/root/host_fs/kdlock",
+  "pid": 3016697,
+  "started_ns": 482808036641918,
+  "timeout_seconds": 180
+}

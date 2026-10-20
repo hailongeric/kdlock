@@ -1,11 +1,84 @@
 # Seven-regression operation-latency diagnostic
 
-Status: `run-1` stopped on sample capacity; the separate revised `run-2` is active. No completed latency
-result or performance acceptance is claimed. The completed correctness, strict rwlock refusal diagnosis and
-earlier mutex results remain in the
+`run-2` completed **252/252 valid, drained sessions** on the original VM,
+with 126 exact KD retirements and **4,073,421 latency samples**.
+The independent review passed **5,218,772 evidence-integrity checks**.
+The immediate host endpoint failed at **125 versus 67 QEMU threads**.
+All seven causal regressions remain **unresolved**, and performance acceptance
+remains open. The failed `run-1`, failed preflights and earlier input revisions
+are preserved separately. The completed correctness, strict rwlock refusal
+diagnosis and earlier mutex results remain in the
 [continuation record](../mutex-regression-diagnosis-20261020/README.md).
 Only the main agent edits files or operates the VM; all three helpers finished
 read-only review and report no files touched.
+
+## Results and variation
+
+All values below come from the separate `run-2` revision. Throughput ratios use
+the three plain, original-caller repetitions. Latency values are the medians of
+three per-session sampled p95 values; they are not pooled across repetitions.
+Lower latency ratios favor DIRECT; higher throughput ratios favor DIRECT.
+Every row remains causally unresolved.
+
+| Point | Plain DIRECT/OUTER throughput | Sampled OUTER p95, µs | Sampled DIRECT p95, µs | Sampled p95 ratio |
+| --- | ---: | ---: | ---: | ---: |
+| c08 / 3 workers | 0.7524× | 1.049 | 3.381 | 3.2231× |
+| c08 / 4 workers | 0.6551× | 2.510 | 4.528 | 1.8040× |
+| c08 / 5 workers | 0.7929× | 2.321 | 2.597 | 1.1189× |
+| pipebytes / 3 workers | 0.9520× | 0.290 | 0.377 | 1.3000× |
+| pipebytes / 5 workers | 1.0593× | 2.956 | 3.301 | 1.1167× |
+| pipecap / 5 workers | 0.3219× | 1.116 | 3.228 | 2.8925× |
+| RCUHT / 2 workers | Split execution classes | 1.268 | 1.361 | 1.0733× |
+
+Five of six comparable plain points have lower DIRECT medians. Pipebytes/5
+changes sign relative to the original collection; the providers are unchanged,
+so this is not evidence of a code correction. Both plain RCUHT arms have
+`NO_JIT` in repetition 1 and `WITNESSED_JIT` in repetitions 0 and 2. Neither
+has three same-class plain repetitions. Both instrumented RCUHT modes have
+three `WITNESSED_JIT` repetitions. Synthetic evidence establishes entry only;
+the original synthetic provider does not probe returned JIT bodies. Pipebytes/3
+is `NO_JIT`; the five-worker pipe cases have returned-body evidence.
+
+[Every repetition](review-1/per-repeat.csv), [class-separated ranges and CVs](review-1/groups.json),
+[DIRECT/OUTER comparisons](review-1/comparisons.json) and
+[instrumentation comparisons](review-1/overhead.json) are retained.
+Across complete three-repeat groups, maximum whole-throughput spreads are
+107.98% OUTER, 30.47% DIRECT, 17.55% Native and 64.21% TCLock. Their corresponding
+sample CVs are 45.90%, 15.03%, 8.78% and 30.17%. Maximum sampled-p95 spreads are
+178.07%, 37.30%, 39.94% and 57.89%, respectively; corresponding CVs are
+65.55%, 18.33%, 22.40% and 32.40%. Spread is `(max−min)/median`; CV is sample
+standard deviation divided by mean. Three repetitions do not provide a
+confidence interval or establish significance.
+
+Observer effects are material:
+
+| Arm | Disabled/plain whole-median ratio range | Sampled/disabled ratio range |
+| --- | ---: | ---: |
+| OUTER | 0.4864–1.1281× | 0.8025–1.6474× |
+| DIRECT | 0.8805–1.0414× | 0.9390–1.2172× |
+| Native | 0.8032–1.1531× | 0.8616–1.0576× |
+| TCLock | 0.9065–1.0215× | 0.9556–1.0635× |
+
+The first two disabled/plain ranges exclude the split plain RCUHT groups.
+These observations combine instrumentation/layout effects, admission and
+delegation-mix changes, and run variation. Clock cost cannot be isolated.
+Retaining samples also adds between-session I/O whose effect on later timing
+was not isolated. The failed host endpoint remains a separate timing confounder.
+No measured improvement is accepted as a fix.
+
+All 84 sampled sessions satisfy the predeclared minimum of 1,000 observations
+per worker. Total completed operations across the 252 sessions are
+3,140,835,072; KD entry witnesses total 142,705,412 and the API completion
+probes record 33,341,045 returned bodies. These are distinct metrics.
+The [health receipt](final-health.json) verifies idle, 4,088 original bundle
+files, 336 retained collector files, 2,921 derived immutable files and no
+matched kernel faults. The [independent review](review-1/review.json) reconstructs
+all eight compiled body/relocation fingerprints and all three exported-CRC
+comparisons, checks exact source recipes, sampling schedules, worker results,
+peaks, p95 arithmetic and retirements. Its integrity pass does not waive the
+strict host failure. `run-2/status.json` records the collector/session checks
+as passed; the final disposition also includes the subsequent failed host
+receipt.
 
 ## Fixed comparison
 
@@ -59,8 +132,8 @@ modules, translators and collectors remain byte-identical. Synthetic modules
 are rebuilt against matching export metadata in the VM; canonical body bytes
 and relocation targets must match the original ELF for every measured backend.
 Export-metadata builds are never loaded. Both instrumented modes use the same
-binary. Compare disabled/plain and sampled/disabled throughput, returned JIT
-counts and execution classes to expose observer effects. A class shift prevents
+binary. Compare disabled/plain and sampled/disabled throughput, JIT entry
+evidence, available completion counts and execution classes to expose observer effects. A class shift prevents
 a same-class latency comparison; all raw results and variance remain visible.
 
 ## Required evidence
@@ -86,15 +159,15 @@ preparer incorrectly assumed a non-MODVERSIONS kernel. The real kernel has
 `CONFIG_MODVERSIONS=y`. Preserve that failed tree and `prepare-1.log`.
 The correction compares each rebuilt export-metadata CRC with the corresponding
 word in the original module's `__kcrctab` section; no original backend is
-replaced and no version check is omitted. A new input run will retain its own
-identity and validation results.
+replaced and no version check is omitted. The later input runs retain their own
+identities and validation results.
 
 `checks-2`, source `457ad4c`, passed both basic programs and all eight affected
 tests. `inputs-2` completed all caller builds, all three original/export CRC
 comparisons and all eight synthetic body/relocation comparisons. Static review
 then found that relocating the retained scheduler changes its inferred checkout
 root. The driver now explicitly restores the original checkout path for the
-collector-origin guard. Recreate inputs with that reviewed driver before timing;
+collector-origin guard. Inputs were recreated with that reviewed driver before timing;
 `inputs-2` has no measured sessions and remains separate.
 
 `checks-3` and `inputs-3`, source `0cc479b`, passed the two basic programs,
@@ -121,8 +194,8 @@ The immediate host receipt at 20:06:11.056569 UTC also fails with 82 threads.
 The follow-up increases only preallocated diagnostic capacity to 131,072
 (about 192 MiB for 64 slots) and retains rejected chunk bytes on future failure.
 Sampling rate, clocks, body identity, original ownership/admission checks and
-overflow refusal remain unchanged. Rebuild and revalidate into new inputs, then
-run a separately identified full fixed plan. Do not pool `run-1` with its revision.
+overflow refusal remain unchanged. The rebuild and full fixed plan use separate
+identities. `run-1` is not pooled with its revision.
 
 `checks-4` / `inputs-4`, source `39b9333`, passed the two basic programs and
 all nine affected latency tests, caller builds, original CRC checks and eight
@@ -130,7 +203,35 @@ body comparisons. The new input manifest is
 `5c83db1396330baef1f1ffa553d5bbb1e22e72afd2b94f5e93f87de4a22a6137`.
 Host preflight 4 failed with 131 threads at 20:12:53.564271 UTC. After natural
 retirement, preflight 5 passed at 20:14:16.584659 UTC with the exact 67-thread
-set and snapshot. `run-2` then began the full separate 252-session plan. The
-first eight sampled sessions passed sampling/count/clock checks and the
-per-worker 1,000-sample sufficiency rule. Final results and archive review remain
-pending.
+set and snapshot. `run-2` completed the full separate 252-session plan. Its
+immediate endpoint at 20:38:06.334351 UTC failed with 125 threads. All five
+[preflight receipts](preflights/outcomes.json), both host failures, the early
+capacity failure and the unavailable rejected samples remain recorded.
+
+## Artifacts and disposition
+
+The [archive manifest](archives.json) SHA-256 is
+`7883a0603a7a1a2e84c34d8e50e5755e6e161d10d3aab6f707c8fefe1be17bfa`.
+The immutable guest archive directory is
+`/root/kdlock-evidence/10.176.26.71/bench/mutex-latency-20261021-archives-1`.
+The [compact-file map](compact-files.json) binds 49 report copies to exact
+archive members and hashes.
+
+| Artifact | Contents |
+| --- | --- |
+| [inputs.tar.gz](../../raw/bench/mutex-latency-20261021/inputs.tar.gz) | `inputs-4`, frozen callers, original providers, build logs and body/CRC evidence |
+| [previous.tar.gz](../../raw/bench/mutex-latency-20261021/previous.tar.gz) | Separate `inputs-1`, `inputs-2`, `inputs-3`, including the failed preparation |
+| [failed.tar.gz](../../raw/bench/mutex-latency-20261021/failed.tar.gz) | Failed `run-1`, eight completed sessions, ninth attempt, host failure and supervision |
+| [measured.tar.gz](../../raw/bench/mutex-latency-20261021/measured.tar.gz) | Complete `run-2`, all samples, session logs, oracles and host endpoint |
+| [checks.tar.gz](../../raw/bench/mutex-latency-20261021/checks.tar.gz) | Four separately identified basic/affected validation runs |
+| [metadata.tar.gz](../../raw/bench/mutex-latency-20261021/metadata.tar.gz) | Failed preflights, preparation receipts, final health and orchestration/review sources |
+
+The [final status](final-status.json) keeps every original point unresolved.
+Sampled complete-operation p95 is now measured within the stated scopes.
+Acquisition-only latency, isolated observer cost, causal fixes for the seven
+losses and runtime host interference remain unresolved. The earlier class gaps,
+strict low-count rwlock refusals, shared-lock parity misses, real mmap/fault
+integration, whole-kernel replacement, RT/ww_mutex, lockdep and oversubscription
+retain their documented limits. No admission predicate, ownership record,
+ACK or retirement check was relaxed. All work is idle; no parallel test ran
+and no in-flight run was interrupted.

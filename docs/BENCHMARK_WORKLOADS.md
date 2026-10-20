@@ -315,6 +315,10 @@ and matched backend/setup/post-work settings for performance comparisons.
 Operation p95 latency is not sampled by these runners; inverse throughput
 must not be reported as latency. Source eligibility and tests do not establish
 a prefetch or delegation performance gain.
+The separate [seven-point mutex diagnostic](../bench/results/10.176.26.71/bench/mutex-latency-20261021/README.md)
+uses private caller copies to sample complete operations for c08, RCUHT and
+pipe queries, with plain/disabled/sampled controls. It does not add latency
+sampling to the resident-list runners or establish acquisition-only latency.
 
 ## Synthetic hash updates (`rcuht`)
 

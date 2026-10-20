@@ -41,18 +41,19 @@ TCLock). It uses the regular 64-vCPU VM and collector 63, and measures the forme
 ## Unified public mutex: acceptance remains open
 
 A separate [operation-latency diagnostic](../bench/results/10.176.26.71/bench/mutex-latency-20261021/README.md)
-is under follow-up validation for the seven original losses. It retains frozen original
-providers and compares plain, sampling-disabled and sampling-enabled callers
-with all four controls. The fixed 252-session plan will measure complete
-operations, keep instrumentation overhead visible and retain strict admission,
-retirement and host checks. Basic and affected VM tests and all eight compiled
-body comparisons passed. Two failed host preflights remain recorded; a fresh
-exact 67-thread gate passed before timing. The first run stopped after eight
-completed sessions when the first sampled TCLock worker exceeded diagnostic
-capacity; it drained and is retained as failed. Its host endpoint also failed.
-A separate capacity revision preserves the overflow check and sampling rate;
-its basic/affected checks passed and `run-2` is active after a fresh strict gate.
-No completed p95 report is available yet.
+completed all 252 serial sessions with frozen original providers and plain,
+sampling-disabled and sampling-enabled callers. It retains 126 exact KD
+retirements and 4,073,421 observations; all sampled workers meet the predeclared
+minimum. Basic/affected VM checks passed, and the 5,218,772-check independent
+audit verifies evidence integrity, including eight compiled body comparisons.
+The immediate host endpoint fails at 125 versus 67 threads. The earlier capacity
+failure, missing rejected samples and three failed preflights remain recorded.
+Plain DIRECT/OUTER median ratios range from 0.3219 to 1.0593 across six comparable
+points; plain RCUHT has split classes. Sampled p95 ratios range from 1.0733 to
+3.2231, with substantial observer effects and variation. The report retains all
+repetitions, range/CV and control comparisons. Sampled complete-operation p95 is
+now available; causal fixes, acquisition latency and host interference remain
+unresolved. All seven points remain unaccepted.
 
 The [public DIRECT comparison](../bench/results/10.176.26.71/bench/mutex-public-20261020/README.md)
 measured collection `d21a1e3` against frozen OUTER, Native and TCLock in 1,764
@@ -64,8 +65,8 @@ After the selected [continuation correctness checks](../bench/results/10.176.26.
 completed, the [controlled original-input replay](../bench/results/10.176.26.71/bench/mutex-public-regressions-20261020/README.md)
 completed 120 valid, drained sessions on the same VM. Four losses remained
 separated; two had overlapping ranges; one fell below the provisional screen.
-All seven causal resolutions remain unresolved. Two class comparisons and
-p95 latency remain gaps. An additional QEMU worker on collector CPU 63 in the
+All seven causal resolutions remain unresolved. Two class comparisons remain
+gaps; p95 was unmeasured in that replay. An additional QEMU worker on collector CPU 63 in the
 post-run receipt is retained as an unresolved timing confounder; its later
 retirement does not prove absence during measurement. No checks were weakened.
 
@@ -89,17 +90,18 @@ match, but the after receipt was captured 117.556 seconds after completion;
 the intervening interval remains unobserved. Largest three-round whole-rate
 spreads are rwsem KD/Native 89.10%/227.88%, and rwlock KD/Native/TCLock
 10.72%/83.70%/43.63%. Full ranges, all misses and artifact hashes are in the
-stage report. p95 latency, runtime interference and the seven separate mutex
+stage report. Shared-lock latency, runtime interference and the seven separate mutex
 regressions remain unresolved; these results do not establish blanket acceptance.
 
-## Resident-list follow-up: incomplete rwlock coverage
+## Resident-list follow-up: coverage completed with strict refusals
 
 The [same-VM resident-list report](../bench/results/10.176.26.71/bench/nano-list-followup-20261020/README.md)
 retains two separate runs on validated `f48b90e` inputs. `timing-1` completed
 144 spin/mutex sessions and two shared controls, then stopped at the first KD
 rwlock case because its required complete JIT body did not execute. Its data,
 published/loaded image and exact retirement checks pass; the strict failure is
-preserved and excluded from scoring. Its remaining 69 rwlock cases are unrun.
+preserved and excluded from scoring. Its remaining 69 rwlock cases subsequently
+completed in the separate diagnostic continuation described below.
 The untouched rwsem task subsequently completed all 48 sessions in `rwsem-1`,
 with 24 returned-JIT KD sessions and exact retirements.
 
@@ -111,15 +113,15 @@ three-run whole-rate spreads are KD/Native/TCLock spin 5.56%/12.86%/4.09%,
 mutex 4.79%/1326.48%/35.90%, and KD/Native rwsem 165.98%/22.91%.
 All misses, ranges, sample CVs and separate plain/prefetch comparisons remain
 in the report. No blanket prefetch benefit or performance acceptance follows.
-The seven earlier mutex regressions, strict rwlock coverage failure and
-latency/runtime-interference gaps remain unresolved.
+The seven earlier mutex regressions, strict rwlock execution failures and
+family-specific latency/runtime-interference gaps remain unresolved.
 
 The [separate 2026-10-21 diagnostic stage](../bench/results/10.176.26.71/bench/nano-rwlock-diagnosis-20261021/README.md)
 binds the running QEMU executable and records extra workers with positive
 disk-write counters. Background writes also occur in its RAM control; the
-historical timing effect is still unmeasured. Planned provider gate counters
-and their matched overhead measurements will be reported separately from
-unchanged-binary coverage and performance acceptance.
+historical timing effect is still unmeasured. Provider gate counters and their
+matched overhead measurements remain separate from unchanged-binary coverage
+and performance acceptance.
 The first fixed 12-case diagnosis preserves six eight-worker NO_JIT failures
 and six sixty-worker successes. Measured diagnostic/original whole-run medians
 are 1.1010/1.00055 at eight/sixty workers, with overlapping three-run ranges;
@@ -132,7 +134,8 @@ retirements. Eight-worker KD results lack three successful same-class repeats.
 At sixty workers, both n16 variants meet observed two-rate parity against
 both controls; both n128 variants miss it. Maximum three-repeat spreads are
 7.25% KD, 9.49% Native and 7.42% TCLock. These remain descriptive results under
-the failed endpoint. The seven mutex regressions and latency gaps are unresolved.
+the failed endpoint. The seven mutex causal regressions remain unresolved;
+their later sampled operation-latency evidence is recorded above.
 The second admission diagnostic classifies all 10,441 ready eight-worker
 combiner attempts as first-follower non-combinable refusals. All six low-count
 sessions still fail NO_JIT; all six sixty-worker sessions pass. Its 83,603

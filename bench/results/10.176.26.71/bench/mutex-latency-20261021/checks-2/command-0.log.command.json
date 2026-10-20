@@ -1,0 +1,13 @@
+{
+  "argv": [
+    "make",
+    "-C",
+    "tests/unit",
+    "run",
+    "PY_TESTS=infrastructure/test_operation_latency.py"
+  ],
+  "cwd": "/root/host_fs/kdlock",
+  "pid": 3017833,
+  "started_ns": 483017605737719,
+  "timeout_seconds": 180
+}

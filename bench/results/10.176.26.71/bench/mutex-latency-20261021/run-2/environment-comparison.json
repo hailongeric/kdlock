@@ -1,0 +1,44 @@
+{
+  "configuration_matches": true,
+  "original_memory": [
+    {
+      "address": "7469b7c00000",
+      "page_kb": 4,
+      "policy": "bind:1",
+      "resident_pages": {
+        "N0": 132756,
+        "N1": 3012972
+      }
+    },
+    {
+      "address": "746cb7e00000",
+      "page_kb": 4,
+      "policy": "bind:0",
+      "resident_pages": {
+        "N0": 2873535,
+        "N1": 271561
+      }
+    }
+  ],
+  "replay_memory": [
+    {
+      "address": "7469b7c00000",
+      "page_kb": 4,
+      "policy": "bind:1",
+      "resident_pages": {
+        "N0": 132839,
+        "N1": 3012889
+      }
+    },
+    {
+      "address": "746cb7e00000",
+      "page_kb": 4,
+      "policy": "bind:0",
+      "resident_pages": {
+        "N0": 2937659,
+        "N1": 207437
+      }
+    }
+  ],
+  "scope": "Same QEMU process/configuration, pins, frequency policy, memory bindings, guest boot, dependencies and topology. Resident pages are recorded, not fixed."
+}

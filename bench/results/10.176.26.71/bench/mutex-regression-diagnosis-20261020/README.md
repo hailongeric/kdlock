@@ -7,7 +7,11 @@ checks and [original-input replay](../mutex-public-regressions-20261020/README.m
 retain their exact source and artifact identities. This stage starts at
 `226e2a6`. The observed reproduction, matched profiles and isolated entry-inlining
 comparison are complete. The inlining experiment is not accepted as a regression
-fix; all seven points and the remaining environment/class/latency gaps remain open.
+fix; all seven causes and remaining environment/class gaps remain open.
+The later [operation-latency stage](../mutex-latency-20261021/README.md) completed
+252 serial sessions and measured sampled complete-operation p95. Its exact
+scope, observer effects, variance and failed host endpoint remain separate from
+the historical measurements below.
 
 The source checkout on `380G10` is the only writer. The recovery VM remains
 `root@10.176.26.71:2222`, kernel `6.1.159-kdclobber2`, boot
@@ -423,16 +427,27 @@ The [resident-list stage](../nano-list-followup-20261020/README.md) preserves
 `timing-1` (146 strict successes, one strict rwlock `NO_JIT` failure) and the
 separate `rwsem-1` (48 strict successes). Both have complete archives and
 independent evidence-integrity checks, and both retain immediate host-thread
-mismatches. The first run's remaining 69 rwlock cases are unrun; this is an
-explicit coverage gap, not a pass or a silently dropped requirement.
+mismatches. The first run's remaining 69 rwlock cases subsequently completed
+in the [strict continuation](../nano-rwlock-diagnosis-20261021/README.md):
+59 successes, ten NO_JIT failures, 23 exact retirements and a failed 76-thread
+endpoint. Missing-case coverage is closed. The second gate diagnostic records
+10,441 first-follower non-combinable refusals at eight workers; it preserves
+all strict failures and does not relax admission.
 The 48 rwsem cases were the untouched original task, not repetitions of
 failed attempts. Reports retain every range, CV, miss and prefetch comparison.
 
 All seven original mutex points remain unresolved: c08 at 3/4/5 workers,
 pipebytes at 3/5, pipecap at 5 and RCUHT at 2. The inline-entry experiment
 remains rejected, and the maintained implementation is the restored entry.
-No supported-family timing result resolves those losses, the execution-class
-gaps or missing p95 latency. Whole-kernel replacement, RT/ww_mutex, lockdep and
+The later [latency diagnostic](../mutex-latency-20261021/README.md) completed
+252 sessions, 126 exact KD retirements and 4,073,421 observations. Its independent
+5,218,772-check audit passes integrity, while its host endpoint fails at
+125 versus 67 threads. Plain DIRECT/OUTER throughput ratios span 0.3219–1.0593
+across six comparable points; plain RCUHT splits execution classes. Sampled
+p95 ratios span 1.0733–3.2231 with substantial observer effects and variance.
+All seven causes and the earlier execution-class gaps remain unresolved.
+Acquisition-only latency and isolated instrumentation cost remain unmeasured.
+Whole-kernel replacement, RT/ww_mutex, lockdep and
 oversubscription remain separately unvalidated.
 
 All stages used a sole source writer and serial VM execution. The three

@@ -1,0 +1,844 @@
+[
+  {
+    "after": "disabled",
+    "after_classes": [
+      "WITNESSED_JIT"
+    ],
+    "arm": "baseline-kd",
+    "before": "plain",
+    "before_classes": [
+      "WITNESSED_JIT"
+    ],
+    "comparable": true,
+    "threads": 3,
+    "whole_ratio": 1.049473305668935,
+    "workload": "c08"
+  },
+  {
+    "after": "sampled",
+    "after_classes": [
+      "WITNESSED_JIT"
+    ],
+    "arm": "baseline-kd",
+    "before": "disabled",
+    "before_classes": [
+      "WITNESSED_JIT"
+    ],
+    "comparable": true,
+    "threads": 3,
+    "whole_ratio": 1.174702818795674,
+    "workload": "c08"
+  },
+  {
+    "after": "disabled",
+    "after_classes": [
+      "WITNESSED_JIT"
+    ],
+    "arm": "public-kd",
+    "before": "plain",
+    "before_classes": [
+      "WITNESSED_JIT"
+    ],
+    "comparable": true,
+    "threads": 3,
+    "whole_ratio": 1.0145305054305378,
+    "workload": "c08"
+  },
+  {
+    "after": "sampled",
+    "after_classes": [
+      "WITNESSED_JIT"
+    ],
+    "arm": "public-kd",
+    "before": "disabled",
+    "before_classes": [
+      "WITNESSED_JIT"
+    ],
+    "comparable": true,
+    "threads": 3,
+    "whole_ratio": 1.0349253910912206,
+    "workload": "c08"
+  },
+  {
+    "after": "disabled",
+    "after_classes": [
+      "NOT_APPLICABLE"
+    ],
+    "arm": "native",
+    "before": "plain",
+    "before_classes": [
+      "NOT_APPLICABLE"
+    ],
+    "comparable": true,
+    "threads": 3,
+    "whole_ratio": 1.1531494258202977,
+    "workload": "c08"
+  },
+  {
+    "after": "sampled",
+    "after_classes": [
+      "NOT_APPLICABLE"
+    ],
+    "arm": "native",
+    "before": "disabled",
+    "before_classes": [
+      "NOT_APPLICABLE"
+    ],
+    "comparable": true,
+    "threads": 3,
+    "whole_ratio": 0.8616340600761982,
+    "workload": "c08"
+  },
+  {
+    "after": "disabled",
+    "after_classes": [
+      "NOT_APPLICABLE"
+    ],
+    "arm": "tclock",
+    "before": "plain",
+    "before_classes": [
+      "NOT_APPLICABLE"
+    ],
+    "comparable": true,
+    "threads": 3,
+    "whole_ratio": 0.954344637834465,
+    "workload": "c08"
+  },
+  {
+    "after": "sampled",
+    "after_classes": [
+      "NOT_APPLICABLE"
+    ],
+    "arm": "tclock",
+    "before": "disabled",
+    "before_classes": [
+      "NOT_APPLICABLE"
+    ],
+    "comparable": true,
+    "threads": 3,
+    "whole_ratio": 1.0635032415620989,
+    "workload": "c08"
+  },
+  {
+    "after": "disabled",
+    "after_classes": [
+      "WITNESSED_JIT"
+    ],
+    "arm": "baseline-kd",
+    "before": "plain",
+    "before_classes": [
+      "WITNESSED_JIT"
+    ],
+    "comparable": true,
+    "threads": 4,
+    "whole_ratio": 1.1280649812106627,
+    "workload": "c08"
+  },
+  {
+    "after": "sampled",
+    "after_classes": [
+      "WITNESSED_JIT"
+    ],
+    "arm": "baseline-kd",
+    "before": "disabled",
+    "before_classes": [
+      "WITNESSED_JIT"
+    ],
+    "comparable": true,
+    "threads": 4,
+    "whole_ratio": 0.8024800330342257,
+    "workload": "c08"
+  },
+  {
+    "after": "disabled",
+    "after_classes": [
+      "WITNESSED_JIT"
+    ],
+    "arm": "public-kd",
+    "before": "plain",
+    "before_classes": [
+      "WITNESSED_JIT"
+    ],
+    "comparable": true,
+    "threads": 4,
+    "whole_ratio": 1.0413534120259649,
+    "workload": "c08"
+  },
+  {
+    "after": "sampled",
+    "after_classes": [
+      "WITNESSED_JIT"
+    ],
+    "arm": "public-kd",
+    "before": "disabled",
+    "before_classes": [
+      "WITNESSED_JIT"
+    ],
+    "comparable": true,
+    "threads": 4,
+    "whole_ratio": 0.9390344557511651,
+    "workload": "c08"
+  },
+  {
+    "after": "disabled",
+    "after_classes": [
+      "NOT_APPLICABLE"
+    ],
+    "arm": "native",
+    "before": "plain",
+    "before_classes": [
+      "NOT_APPLICABLE"
+    ],
+    "comparable": true,
+    "threads": 4,
+    "whole_ratio": 0.8032312107858298,
+    "workload": "c08"
+  },
+  {
+    "after": "sampled",
+    "after_classes": [
+      "NOT_APPLICABLE"
+    ],
+    "arm": "native",
+    "before": "disabled",
+    "before_classes": [
+      "NOT_APPLICABLE"
+    ],
+    "comparable": true,
+    "threads": 4,
+    "whole_ratio": 1.0202440924869294,
+    "workload": "c08"
+  },
+  {
+    "after": "disabled",
+    "after_classes": [
+      "NOT_APPLICABLE"
+    ],
+    "arm": "tclock",
+    "before": "plain",
+    "before_classes": [
+      "NOT_APPLICABLE"
+    ],
+    "comparable": true,
+    "threads": 4,
+    "whole_ratio": 1.000568219279744,
+    "workload": "c08"
+  },
+  {
+    "after": "sampled",
+    "after_classes": [
+      "NOT_APPLICABLE"
+    ],
+    "arm": "tclock",
+    "before": "disabled",
+    "before_classes": [
+      "NOT_APPLICABLE"
+    ],
+    "comparable": true,
+    "threads": 4,
+    "whole_ratio": 0.9593484967596148,
+    "workload": "c08"
+  },
+  {
+    "after": "disabled",
+    "after_classes": [
+      "WITNESSED_JIT"
+    ],
+    "arm": "baseline-kd",
+    "before": "plain",
+    "before_classes": [
+      "WITNESSED_JIT"
+    ],
+    "comparable": true,
+    "threads": 5,
+    "whole_ratio": 1.079775850366859,
+    "workload": "c08"
+  },
+  {
+    "after": "sampled",
+    "after_classes": [
+      "WITNESSED_JIT"
+    ],
+    "arm": "baseline-kd",
+    "before": "disabled",
+    "before_classes": [
+      "WITNESSED_JIT"
+    ],
+    "comparable": true,
+    "threads": 5,
+    "whole_ratio": 1.1063505142359529,
+    "workload": "c08"
+  },
+  {
+    "after": "disabled",
+    "after_classes": [
+      "WITNESSED_JIT"
+    ],
+    "arm": "public-kd",
+    "before": "plain",
+    "before_classes": [
+      "WITNESSED_JIT"
+    ],
+    "comparable": true,
+    "threads": 5,
+    "whole_ratio": 0.9836073977744221,
+    "workload": "c08"
+  },
+  {
+    "after": "sampled",
+    "after_classes": [
+      "WITNESSED_JIT"
+    ],
+    "arm": "public-kd",
+    "before": "disabled",
+    "before_classes": [
+      "WITNESSED_JIT"
+    ],
+    "comparable": true,
+    "threads": 5,
+    "whole_ratio": 0.9902041247381187,
+    "workload": "c08"
+  },
+  {
+    "after": "disabled",
+    "after_classes": [
+      "NOT_APPLICABLE"
+    ],
+    "arm": "native",
+    "before": "plain",
+    "before_classes": [
+      "NOT_APPLICABLE"
+    ],
+    "comparable": true,
+    "threads": 5,
+    "whole_ratio": 0.9834547427607734,
+    "workload": "c08"
+  },
+  {
+    "after": "sampled",
+    "after_classes": [
+      "NOT_APPLICABLE"
+    ],
+    "arm": "native",
+    "before": "disabled",
+    "before_classes": [
+      "NOT_APPLICABLE"
+    ],
+    "comparable": true,
+    "threads": 5,
+    "whole_ratio": 0.9592139316380137,
+    "workload": "c08"
+  },
+  {
+    "after": "disabled",
+    "after_classes": [
+      "NOT_APPLICABLE"
+    ],
+    "arm": "tclock",
+    "before": "plain",
+    "before_classes": [
+      "NOT_APPLICABLE"
+    ],
+    "comparable": true,
+    "threads": 5,
+    "whole_ratio": 1.0214554353081138,
+    "workload": "c08"
+  },
+  {
+    "after": "sampled",
+    "after_classes": [
+      "NOT_APPLICABLE"
+    ],
+    "arm": "tclock",
+    "before": "disabled",
+    "before_classes": [
+      "NOT_APPLICABLE"
+    ],
+    "comparable": true,
+    "threads": 5,
+    "whole_ratio": 0.9556471427982568,
+    "workload": "c08"
+  },
+  {
+    "after": "disabled",
+    "after_classes": [
+      "NO_JIT"
+    ],
+    "arm": "baseline-kd",
+    "before": "plain",
+    "before_classes": [
+      "NO_JIT"
+    ],
+    "comparable": true,
+    "threads": 3,
+    "whole_ratio": 1.026663549360815,
+    "workload": "pipebytes"
+  },
+  {
+    "after": "sampled",
+    "after_classes": [
+      "NO_JIT"
+    ],
+    "arm": "baseline-kd",
+    "before": "disabled",
+    "before_classes": [
+      "NO_JIT"
+    ],
+    "comparable": true,
+    "threads": 3,
+    "whole_ratio": 0.9671529546508173,
+    "workload": "pipebytes"
+  },
+  {
+    "after": "disabled",
+    "after_classes": [
+      "NO_JIT"
+    ],
+    "arm": "public-kd",
+    "before": "plain",
+    "before_classes": [
+      "NO_JIT"
+    ],
+    "comparable": true,
+    "threads": 3,
+    "whole_ratio": 0.999587390448566,
+    "workload": "pipebytes"
+  },
+  {
+    "after": "sampled",
+    "after_classes": [
+      "NO_JIT"
+    ],
+    "arm": "public-kd",
+    "before": "disabled",
+    "before_classes": [
+      "NO_JIT"
+    ],
+    "comparable": true,
+    "threads": 3,
+    "whole_ratio": 1.010378771054276,
+    "workload": "pipebytes"
+  },
+  {
+    "after": "disabled",
+    "after_classes": [
+      "NOT_APPLICABLE"
+    ],
+    "arm": "native",
+    "before": "plain",
+    "before_classes": [
+      "NOT_APPLICABLE"
+    ],
+    "comparable": true,
+    "threads": 3,
+    "whole_ratio": 0.9728348393978942,
+    "workload": "pipebytes"
+  },
+  {
+    "after": "sampled",
+    "after_classes": [
+      "NOT_APPLICABLE"
+    ],
+    "arm": "native",
+    "before": "disabled",
+    "before_classes": [
+      "NOT_APPLICABLE"
+    ],
+    "comparable": true,
+    "threads": 3,
+    "whole_ratio": 0.9915047900116966,
+    "workload": "pipebytes"
+  },
+  {
+    "after": "disabled",
+    "after_classes": [
+      "NOT_APPLICABLE"
+    ],
+    "arm": "tclock",
+    "before": "plain",
+    "before_classes": [
+      "NOT_APPLICABLE"
+    ],
+    "comparable": true,
+    "threads": 3,
+    "whole_ratio": 0.9065268446111613,
+    "workload": "pipebytes"
+  },
+  {
+    "after": "sampled",
+    "after_classes": [
+      "NOT_APPLICABLE"
+    ],
+    "arm": "tclock",
+    "before": "disabled",
+    "before_classes": [
+      "NOT_APPLICABLE"
+    ],
+    "comparable": true,
+    "threads": 3,
+    "whole_ratio": 0.9677154285573174,
+    "workload": "pipebytes"
+  },
+  {
+    "after": "disabled",
+    "after_classes": [
+      "RETURNED_JIT"
+    ],
+    "arm": "baseline-kd",
+    "before": "plain",
+    "before_classes": [
+      "RETURNED_JIT"
+    ],
+    "comparable": true,
+    "threads": 5,
+    "whole_ratio": 0.9499157455152994,
+    "workload": "pipebytes"
+  },
+  {
+    "after": "sampled",
+    "after_classes": [
+      "RETURNED_JIT"
+    ],
+    "arm": "baseline-kd",
+    "before": "disabled",
+    "before_classes": [
+      "RETURNED_JIT"
+    ],
+    "comparable": true,
+    "threads": 5,
+    "whole_ratio": 1.0426871073877007,
+    "workload": "pipebytes"
+  },
+  {
+    "after": "disabled",
+    "after_classes": [
+      "RETURNED_JIT"
+    ],
+    "arm": "public-kd",
+    "before": "plain",
+    "before_classes": [
+      "RETURNED_JIT"
+    ],
+    "comparable": true,
+    "threads": 5,
+    "whole_ratio": 0.8804568981551721,
+    "workload": "pipebytes"
+  },
+  {
+    "after": "sampled",
+    "after_classes": [
+      "RETURNED_JIT"
+    ],
+    "arm": "public-kd",
+    "before": "disabled",
+    "before_classes": [
+      "RETURNED_JIT"
+    ],
+    "comparable": true,
+    "threads": 5,
+    "whole_ratio": 0.9784859129746196,
+    "workload": "pipebytes"
+  },
+  {
+    "after": "disabled",
+    "after_classes": [
+      "NOT_APPLICABLE"
+    ],
+    "arm": "native",
+    "before": "plain",
+    "before_classes": [
+      "NOT_APPLICABLE"
+    ],
+    "comparable": true,
+    "threads": 5,
+    "whole_ratio": 1.034167853641566,
+    "workload": "pipebytes"
+  },
+  {
+    "after": "sampled",
+    "after_classes": [
+      "NOT_APPLICABLE"
+    ],
+    "arm": "native",
+    "before": "disabled",
+    "before_classes": [
+      "NOT_APPLICABLE"
+    ],
+    "comparable": true,
+    "threads": 5,
+    "whole_ratio": 1.0575825017359028,
+    "workload": "pipebytes"
+  },
+  {
+    "after": "disabled",
+    "after_classes": [
+      "NOT_APPLICABLE"
+    ],
+    "arm": "tclock",
+    "before": "plain",
+    "before_classes": [
+      "NOT_APPLICABLE"
+    ],
+    "comparable": true,
+    "threads": 5,
+    "whole_ratio": 0.947982325799005,
+    "workload": "pipebytes"
+  },
+  {
+    "after": "sampled",
+    "after_classes": [
+      "NOT_APPLICABLE"
+    ],
+    "arm": "tclock",
+    "before": "disabled",
+    "before_classes": [
+      "NOT_APPLICABLE"
+    ],
+    "comparable": true,
+    "threads": 5,
+    "whole_ratio": 1.033825800276158,
+    "workload": "pipebytes"
+  },
+  {
+    "after": "disabled",
+    "after_classes": [
+      "RETURNED_JIT"
+    ],
+    "arm": "baseline-kd",
+    "before": "plain",
+    "before_classes": [
+      "RETURNED_JIT"
+    ],
+    "comparable": true,
+    "threads": 5,
+    "whole_ratio": 0.48639530854827284,
+    "workload": "pipecap"
+  },
+  {
+    "after": "sampled",
+    "after_classes": [
+      "RETURNED_JIT"
+    ],
+    "arm": "baseline-kd",
+    "before": "disabled",
+    "before_classes": [
+      "RETURNED_JIT"
+    ],
+    "comparable": true,
+    "threads": 5,
+    "whole_ratio": 1.64741643146027,
+    "workload": "pipecap"
+  },
+  {
+    "after": "disabled",
+    "after_classes": [
+      "RETURNED_JIT"
+    ],
+    "arm": "public-kd",
+    "before": "plain",
+    "before_classes": [
+      "RETURNED_JIT"
+    ],
+    "comparable": true,
+    "threads": 5,
+    "whole_ratio": 0.9598560585834367,
+    "workload": "pipecap"
+  },
+  {
+    "after": "sampled",
+    "after_classes": [
+      "RETURNED_JIT"
+    ],
+    "arm": "public-kd",
+    "before": "disabled",
+    "before_classes": [
+      "RETURNED_JIT"
+    ],
+    "comparable": true,
+    "threads": 5,
+    "whole_ratio": 1.0472395416900377,
+    "workload": "pipecap"
+  },
+  {
+    "after": "disabled",
+    "after_classes": [
+      "NOT_APPLICABLE"
+    ],
+    "arm": "native",
+    "before": "plain",
+    "before_classes": [
+      "NOT_APPLICABLE"
+    ],
+    "comparable": true,
+    "threads": 5,
+    "whole_ratio": 1.0291599321198015,
+    "workload": "pipecap"
+  },
+  {
+    "after": "sampled",
+    "after_classes": [
+      "NOT_APPLICABLE"
+    ],
+    "arm": "native",
+    "before": "disabled",
+    "before_classes": [
+      "NOT_APPLICABLE"
+    ],
+    "comparable": true,
+    "threads": 5,
+    "whole_ratio": 0.9761681678713587,
+    "workload": "pipecap"
+  },
+  {
+    "after": "disabled",
+    "after_classes": [
+      "NOT_APPLICABLE"
+    ],
+    "arm": "tclock",
+    "before": "plain",
+    "before_classes": [
+      "NOT_APPLICABLE"
+    ],
+    "comparable": true,
+    "threads": 5,
+    "whole_ratio": 0.9789501823508006,
+    "workload": "pipecap"
+  },
+  {
+    "after": "sampled",
+    "after_classes": [
+      "NOT_APPLICABLE"
+    ],
+    "arm": "tclock",
+    "before": "disabled",
+    "before_classes": [
+      "NOT_APPLICABLE"
+    ],
+    "comparable": true,
+    "threads": 5,
+    "whole_ratio": 1.0007640101153408,
+    "workload": "pipecap"
+  },
+  {
+    "after": "disabled",
+    "after_classes": [
+      "WITNESSED_JIT"
+    ],
+    "arm": "baseline-kd",
+    "before": "plain",
+    "before_classes": [
+      "NO_JIT",
+      "WITNESSED_JIT"
+    ],
+    "comparable": false,
+    "threads": 2,
+    "whole_ratio": null,
+    "workload": "rcuht"
+  },
+  {
+    "after": "sampled",
+    "after_classes": [
+      "WITNESSED_JIT"
+    ],
+    "arm": "baseline-kd",
+    "before": "disabled",
+    "before_classes": [
+      "WITNESSED_JIT"
+    ],
+    "comparable": true,
+    "threads": 2,
+    "whole_ratio": 1.0024838222616597,
+    "workload": "rcuht"
+  },
+  {
+    "after": "disabled",
+    "after_classes": [
+      "WITNESSED_JIT"
+    ],
+    "arm": "public-kd",
+    "before": "plain",
+    "before_classes": [
+      "NO_JIT",
+      "WITNESSED_JIT"
+    ],
+    "comparable": false,
+    "threads": 2,
+    "whole_ratio": null,
+    "workload": "rcuht"
+  },
+  {
+    "after": "sampled",
+    "after_classes": [
+      "WITNESSED_JIT"
+    ],
+    "arm": "public-kd",
+    "before": "disabled",
+    "before_classes": [
+      "WITNESSED_JIT"
+    ],
+    "comparable": true,
+    "threads": 2,
+    "whole_ratio": 1.2172284680557548,
+    "workload": "rcuht"
+  },
+  {
+    "after": "disabled",
+    "after_classes": [
+      "NOT_APPLICABLE"
+    ],
+    "arm": "native",
+    "before": "plain",
+    "before_classes": [
+      "NOT_APPLICABLE"
+    ],
+    "comparable": true,
+    "threads": 2,
+    "whole_ratio": 1.0571420592564609,
+    "workload": "rcuht"
+  },
+  {
+    "after": "sampled",
+    "after_classes": [
+      "NOT_APPLICABLE"
+    ],
+    "arm": "native",
+    "before": "disabled",
+    "before_classes": [
+      "NOT_APPLICABLE"
+    ],
+    "comparable": true,
+    "threads": 2,
+    "whole_ratio": 0.9539821693298114,
+    "workload": "rcuht"
+  },
+  {
+    "after": "disabled",
+    "after_classes": [
+      "NOT_APPLICABLE"
+    ],
+    "arm": "tclock",
+    "before": "plain",
+    "before_classes": [
+      "NOT_APPLICABLE"
+    ],
+    "comparable": true,
+    "threads": 2,
+    "whole_ratio": 0.9202800374434308,
+    "workload": "rcuht"
+  },
+  {
+    "after": "sampled",
+    "after_classes": [
+      "NOT_APPLICABLE"
+    ],
+    "arm": "tclock",
+    "before": "disabled",
+    "before_classes": [
+      "NOT_APPLICABLE"
+    ],
+    "comparable": true,
+    "threads": 2,
+    "whole_ratio": 1.0439968778537845,
+    "workload": "rcuht"
+  }
+]
