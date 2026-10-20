@@ -1,0 +1,1040 @@
+{
+  "archives_manifest_sha256": "608709986aa7cbdcfcfcbc13b3ed6f1e68b80961525da00b5d7f7eab874647ff",
+  "check_counts": {
+    "all_reconstructed_peak_fields": 40,
+    "all_samples_usable": 1,
+    "analysis_source": 1,
+    "analyzed_record_bytes": 1,
+    "archive_bytes": 4,
+    "archive_completed_idle": 1,
+    "archive_hash": 4,
+    "archived_health_hash": 1,
+    "archiver_hash": 1,
+    "business_result": 40,
+    "collector_identity": 40,
+    "collector_separate": 40,
+    "compact_profile_analysis": 1,
+    "completed_profiles": 1,
+    "diagnostic_scope": 40,
+    "directory_empty_payload": 181,
+    "eligible_interval": 40,
+    "exact_retirement_health": 1,
+    "functional_health": 1,
+    "health_verifier": 1,
+    "host_configuration": 6,
+    "immutable_publication": 20,
+    "inventory_exact_set": 1,
+    "inventory_hash": 1,
+    "jit_bounds": 20,
+    "kernel_log_clean": 40,
+    "measurement_deadline": 40,
+    "measurement_setting": 160,
+    "member_assigned_group": 1804,
+    "member_bytes": 1549,
+    "member_in_inventory": 1804,
+    "member_mode": 1804,
+    "member_mtime_tar_projection": 1804,
+    "member_owner": 1804,
+    "member_prefix": 1804,
+    "member_read_bytes": 1549,
+    "member_safe_path": 1804,
+    "member_type": 1804,
+    "member_unique": 1804,
+    "no_lost_samples": 40,
+    "original_inputs_manifest": 1,
+    "original_reference": 1,
+    "original_round_zero_order": 40,
+    "perf_control": 20,
+    "pinned_original_archive_hash": 5,
+    "plan_fields": 40,
+    "positive_peak_exists": 40,
+    "profile_artifact_binding": 200,
+    "profile_counts": 1,
+    "profile_source_git": 1,
+    "profile_source_receipt": 1,
+    "progress_batch": 40,
+    "qemu_identity": 4,
+    "qemu_thread_placement": 2,
+    "range_helper_source": 1,
+    "range_sizes_source": 1,
+    "record_peak_rate": 20,
+    "record_whole_rate": 40,
+    "retained_perf": 1,
+    "retirement": 20,
+    "return_bounds": 10,
+    "sample_arithmetic": 40,
+    "sample_cohort": 40,
+    "sample_count": 40,
+    "sample_count_order": 8020,
+    "sample_time_order": 8020,
+    "sample_worker_lifetime": 8020,
+    "scheduler_copies": 1,
+    "scheduler_source_git": 1,
+    "session_finished": 40,
+    "session_record": 40,
+    "symlink_empty_payload": 74,
+    "symlink_target": 74,
+    "symlink_target_retained": 74,
+    "valid_sample": 59772,
+    "verified_exact_harness": 1,
+    "verified_exact_inputs": 1,
+    "verified_input_counts": 1,
+    "whole_positive": 40,
+    "whole_wall": 40,
+    "window_settings": 40,
+    "worker_count": 40,
+    "worker_cpu_order": 40,
+    "worker_interval": 148,
+    "worker_operation_sum": 40,
+    "worker_oracle": 148,
+    "worker_progress": 40,
+    "worker_sum": 40,
+    "workers": 40
+  },
+  "checks": 105506,
+  "consistent": false,
+  "groups": [
+    {
+      "bytes": 54527520,
+      "file": "matrix.tar.gz",
+      "members": 1786,
+      "sha256": "de9cead9bc1d9a7ddc1ea9f45acac3caf6d91972791c87185bd92c3a86cb4cd6",
+      "types": {
+        "dir": 178,
+        "file": 1534,
+        "symlink": 74
+      }
+    },
+    {
+      "bytes": 128353,
+      "file": "analysis.tar.gz",
+      "members": 5,
+      "sha256": "69de8b9ad53485ecb2ff3935024f6b0489b7813cfde752ece72195dea9a2ba24",
+      "types": {
+        "dir": 1,
+        "file": 4
+      }
+    },
+    {
+      "bytes": 8381377,
+      "file": "tools.tar.gz",
+      "members": 2,
+      "sha256": "a69b2c6c6ba8e20ab5ddf839a5af104085155b6a5a23fac3db4d5d6be0ce69a6",
+      "types": {
+        "dir": 1,
+        "file": 1
+      }
+    },
+    {
+      "bytes": 273926,
+      "file": "metadata.tar.gz",
+      "members": 11,
+      "sha256": "8e34c8f8066ce3bc1d40fc4cf2a4c74d284fa7e5ce05c3a920a485c72d61bfb0",
+      "types": {
+        "dir": 1,
+        "file": 10
+      }
+    }
+  ],
+  "issues": [
+    {
+      "check": "qemu_thread_placement",
+      "detail": {
+        "actual": [
+          [
+            "CPU 0/KVM",
+            [
+              0
+            ]
+          ],
+          [
+            "CPU 1/KVM",
+            [
+              1
+            ]
+          ],
+          [
+            "CPU 10/KVM",
+            [
+              10
+            ]
+          ],
+          [
+            "CPU 11/KVM",
+            [
+              11
+            ]
+          ],
+          [
+            "CPU 12/KVM",
+            [
+              12
+            ]
+          ],
+          [
+            "CPU 13/KVM",
+            [
+              13
+            ]
+          ],
+          [
+            "CPU 14/KVM",
+            [
+              14
+            ]
+          ],
+          [
+            "CPU 15/KVM",
+            [
+              15
+            ]
+          ],
+          [
+            "CPU 16/KVM",
+            [
+              16
+            ]
+          ],
+          [
+            "CPU 17/KVM",
+            [
+              17
+            ]
+          ],
+          [
+            "CPU 18/KVM",
+            [
+              18
+            ]
+          ],
+          [
+            "CPU 19/KVM",
+            [
+              19
+            ]
+          ],
+          [
+            "CPU 2/KVM",
+            [
+              2
+            ]
+          ],
+          [
+            "CPU 20/KVM",
+            [
+              20
+            ]
+          ],
+          [
+            "CPU 21/KVM",
+            [
+              21
+            ]
+          ],
+          [
+            "CPU 22/KVM",
+            [
+              22
+            ]
+          ],
+          [
+            "CPU 23/KVM",
+            [
+              23
+            ]
+          ],
+          [
+            "CPU 24/KVM",
+            [
+              24
+            ]
+          ],
+          [
+            "CPU 25/KVM",
+            [
+              25
+            ]
+          ],
+          [
+            "CPU 26/KVM",
+            [
+              26
+            ]
+          ],
+          [
+            "CPU 27/KVM",
+            [
+              27
+            ]
+          ],
+          [
+            "CPU 28/KVM",
+            [
+              28
+            ]
+          ],
+          [
+            "CPU 29/KVM",
+            [
+              29
+            ]
+          ],
+          [
+            "CPU 3/KVM",
+            [
+              3
+            ]
+          ],
+          [
+            "CPU 30/KVM",
+            [
+              30
+            ]
+          ],
+          [
+            "CPU 31/KVM",
+            [
+              31
+            ]
+          ],
+          [
+            "CPU 32/KVM",
+            [
+              32
+            ]
+          ],
+          [
+            "CPU 33/KVM",
+            [
+              33
+            ]
+          ],
+          [
+            "CPU 34/KVM",
+            [
+              34
+            ]
+          ],
+          [
+            "CPU 35/KVM",
+            [
+              35
+            ]
+          ],
+          [
+            "CPU 36/KVM",
+            [
+              36
+            ]
+          ],
+          [
+            "CPU 37/KVM",
+            [
+              37
+            ]
+          ],
+          [
+            "CPU 38/KVM",
+            [
+              38
+            ]
+          ],
+          [
+            "CPU 39/KVM",
+            [
+              39
+            ]
+          ],
+          [
+            "CPU 4/KVM",
+            [
+              4
+            ]
+          ],
+          [
+            "CPU 40/KVM",
+            [
+              40
+            ]
+          ],
+          [
+            "CPU 41/KVM",
+            [
+              41
+            ]
+          ],
+          [
+            "CPU 42/KVM",
+            [
+              42
+            ]
+          ],
+          [
+            "CPU 43/KVM",
+            [
+              43
+            ]
+          ],
+          [
+            "CPU 44/KVM",
+            [
+              44
+            ]
+          ],
+          [
+            "CPU 45/KVM",
+            [
+              45
+            ]
+          ],
+          [
+            "CPU 46/KVM",
+            [
+              46
+            ]
+          ],
+          [
+            "CPU 47/KVM",
+            [
+              47
+            ]
+          ],
+          [
+            "CPU 48/KVM",
+            [
+              48
+            ]
+          ],
+          [
+            "CPU 49/KVM",
+            [
+              49
+            ]
+          ],
+          [
+            "CPU 5/KVM",
+            [
+              5
+            ]
+          ],
+          [
+            "CPU 50/KVM",
+            [
+              50
+            ]
+          ],
+          [
+            "CPU 51/KVM",
+            [
+              51
+            ]
+          ],
+          [
+            "CPU 52/KVM",
+            [
+              52
+            ]
+          ],
+          [
+            "CPU 53/KVM",
+            [
+              53
+            ]
+          ],
+          [
+            "CPU 54/KVM",
+            [
+              54
+            ]
+          ],
+          [
+            "CPU 55/KVM",
+            [
+              55
+            ]
+          ],
+          [
+            "CPU 56/KVM",
+            [
+              56
+            ]
+          ],
+          [
+            "CPU 57/KVM",
+            [
+              57
+            ]
+          ],
+          [
+            "CPU 58/KVM",
+            [
+              58
+            ]
+          ],
+          [
+            "CPU 59/KVM",
+            [
+              59
+            ]
+          ],
+          [
+            "CPU 6/KVM",
+            [
+              6
+            ]
+          ],
+          [
+            "CPU 60/KVM",
+            [
+              60
+            ]
+          ],
+          [
+            "CPU 61/KVM",
+            [
+              61
+            ]
+          ],
+          [
+            "CPU 62/KVM",
+            [
+              62
+            ]
+          ],
+          [
+            "CPU 63/KVM",
+            [
+              63
+            ]
+          ],
+          [
+            "CPU 7/KVM",
+            [
+              7
+            ]
+          ],
+          [
+            "CPU 8/KVM",
+            [
+              8
+            ]
+          ],
+          [
+            "CPU 9/KVM",
+            [
+              9
+            ]
+          ],
+          [
+            "call_rcu",
+            [
+              63
+            ]
+          ],
+          [
+            "kvm-nx-lpage-re",
+            [
+              63
+            ]
+          ],
+          [
+            "qemu-system-x86",
+            [
+              63
+            ]
+          ],
+          [
+            "worker",
+            [
+              63
+            ]
+          ],
+          [
+            "worker",
+            [
+              63
+            ]
+          ],
+          [
+            "worker",
+            [
+              63
+            ]
+          ],
+          [
+            "worker",
+            [
+              63
+            ]
+          ],
+          [
+            "worker",
+            [
+              63
+            ]
+          ],
+          [
+            "worker",
+            [
+              63
+            ]
+          ],
+          [
+            "worker",
+            [
+              63
+            ]
+          ],
+          [
+            "worker",
+            [
+              63
+            ]
+          ],
+          [
+            "worker",
+            [
+              63
+            ]
+          ],
+          [
+            "worker",
+            [
+              63
+            ]
+          ],
+          [
+            "worker",
+            [
+              63
+            ]
+          ],
+          [
+            "worker",
+            [
+              63
+            ]
+          ],
+          [
+            "worker",
+            [
+              63
+            ]
+          ]
+        ],
+        "expected": [
+          [
+            "CPU 0/KVM",
+            [
+              0
+            ]
+          ],
+          [
+            "CPU 1/KVM",
+            [
+              1
+            ]
+          ],
+          [
+            "CPU 10/KVM",
+            [
+              10
+            ]
+          ],
+          [
+            "CPU 11/KVM",
+            [
+              11
+            ]
+          ],
+          [
+            "CPU 12/KVM",
+            [
+              12
+            ]
+          ],
+          [
+            "CPU 13/KVM",
+            [
+              13
+            ]
+          ],
+          [
+            "CPU 14/KVM",
+            [
+              14
+            ]
+          ],
+          [
+            "CPU 15/KVM",
+            [
+              15
+            ]
+          ],
+          [
+            "CPU 16/KVM",
+            [
+              16
+            ]
+          ],
+          [
+            "CPU 17/KVM",
+            [
+              17
+            ]
+          ],
+          [
+            "CPU 18/KVM",
+            [
+              18
+            ]
+          ],
+          [
+            "CPU 19/KVM",
+            [
+              19
+            ]
+          ],
+          [
+            "CPU 2/KVM",
+            [
+              2
+            ]
+          ],
+          [
+            "CPU 20/KVM",
+            [
+              20
+            ]
+          ],
+          [
+            "CPU 21/KVM",
+            [
+              21
+            ]
+          ],
+          [
+            "CPU 22/KVM",
+            [
+              22
+            ]
+          ],
+          [
+            "CPU 23/KVM",
+            [
+              23
+            ]
+          ],
+          [
+            "CPU 24/KVM",
+            [
+              24
+            ]
+          ],
+          [
+            "CPU 25/KVM",
+            [
+              25
+            ]
+          ],
+          [
+            "CPU 26/KVM",
+            [
+              26
+            ]
+          ],
+          [
+            "CPU 27/KVM",
+            [
+              27
+            ]
+          ],
+          [
+            "CPU 28/KVM",
+            [
+              28
+            ]
+          ],
+          [
+            "CPU 29/KVM",
+            [
+              29
+            ]
+          ],
+          [
+            "CPU 3/KVM",
+            [
+              3
+            ]
+          ],
+          [
+            "CPU 30/KVM",
+            [
+              30
+            ]
+          ],
+          [
+            "CPU 31/KVM",
+            [
+              31
+            ]
+          ],
+          [
+            "CPU 32/KVM",
+            [
+              32
+            ]
+          ],
+          [
+            "CPU 33/KVM",
+            [
+              33
+            ]
+          ],
+          [
+            "CPU 34/KVM",
+            [
+              34
+            ]
+          ],
+          [
+            "CPU 35/KVM",
+            [
+              35
+            ]
+          ],
+          [
+            "CPU 36/KVM",
+            [
+              36
+            ]
+          ],
+          [
+            "CPU 37/KVM",
+            [
+              37
+            ]
+          ],
+          [
+            "CPU 38/KVM",
+            [
+              38
+            ]
+          ],
+          [
+            "CPU 39/KVM",
+            [
+              39
+            ]
+          ],
+          [
+            "CPU 4/KVM",
+            [
+              4
+            ]
+          ],
+          [
+            "CPU 40/KVM",
+            [
+              40
+            ]
+          ],
+          [
+            "CPU 41/KVM",
+            [
+              41
+            ]
+          ],
+          [
+            "CPU 42/KVM",
+            [
+              42
+            ]
+          ],
+          [
+            "CPU 43/KVM",
+            [
+              43
+            ]
+          ],
+          [
+            "CPU 44/KVM",
+            [
+              44
+            ]
+          ],
+          [
+            "CPU 45/KVM",
+            [
+              45
+            ]
+          ],
+          [
+            "CPU 46/KVM",
+            [
+              46
+            ]
+          ],
+          [
+            "CPU 47/KVM",
+            [
+              47
+            ]
+          ],
+          [
+            "CPU 48/KVM",
+            [
+              48
+            ]
+          ],
+          [
+            "CPU 49/KVM",
+            [
+              49
+            ]
+          ],
+          [
+            "CPU 5/KVM",
+            [
+              5
+            ]
+          ],
+          [
+            "CPU 50/KVM",
+            [
+              50
+            ]
+          ],
+          [
+            "CPU 51/KVM",
+            [
+              51
+            ]
+          ],
+          [
+            "CPU 52/KVM",
+            [
+              52
+            ]
+          ],
+          [
+            "CPU 53/KVM",
+            [
+              53
+            ]
+          ],
+          [
+            "CPU 54/KVM",
+            [
+              54
+            ]
+          ],
+          [
+            "CPU 55/KVM",
+            [
+              55
+            ]
+          ],
+          [
+            "CPU 56/KVM",
+            [
+              56
+            ]
+          ],
+          [
+            "CPU 57/KVM",
+            [
+              57
+            ]
+          ],
+          [
+            "CPU 58/KVM",
+            [
+              58
+            ]
+          ],
+          [
+            "CPU 59/KVM",
+            [
+              59
+            ]
+          ],
+          [
+            "CPU 6/KVM",
+            [
+              6
+            ]
+          ],
+          [
+            "CPU 60/KVM",
+            [
+              60
+            ]
+          ],
+          [
+            "CPU 61/KVM",
+            [
+              61
+            ]
+          ],
+          [
+            "CPU 62/KVM",
+            [
+              62
+            ]
+          ],
+          [
+            "CPU 63/KVM",
+            [
+              63
+            ]
+          ],
+          [
+            "CPU 7/KVM",
+            [
+              7
+            ]
+          ],
+          [
+            "CPU 8/KVM",
+            [
+              8
+            ]
+          ],
+          [
+            "CPU 9/KVM",
+            [
+              9
+            ]
+          ],
+          [
+            "call_rcu",
+            [
+              63
+            ]
+          ],
+          [
+            "kvm-nx-lpage-re",
+            [
+              63
+            ]
+          ],
+          [
+            "qemu-system-x86",
+            [
+              63
+            ]
+          ]
+        ],
+        "item": "after"
+      }
+    }
+  ],
+  "limits": "Post-run thread-set mismatch remains a failed check. Flat profiles do not establish causal attribution, plain-throughput acceptance or latency.",
+  "original_manifest_sha256": "7b7dad099d06b2c8964d9e1831b9e02e7f0bba0e209420982a5904972330c3c4",
+  "reconstructed_windows": 40,
+  "reviewer_host": "380G10",
+  "script_sha256": "15b91477c56fb8f1a36ca55cfce6064d4fb6e11135960610bf94edc22a2a4a44",
+  "sessions": 40,
+  "symlinks": 74
+}

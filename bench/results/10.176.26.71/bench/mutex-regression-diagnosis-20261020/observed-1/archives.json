@@ -1,0 +1,75 @@
+{
+  "archive_prefix": "mutex-public-20261020-observed-1",
+  "boot_id": "b65f0205-c8f9-4385-8b13-039cbce243a6",
+  "completed": true,
+  "finished_ns": 1792503109047146891,
+  "groups": [
+    {
+      "bytes": 2689761,
+      "file": "measurements.tar.gz",
+      "group": "measurements",
+      "path": "/root/kdlock-evidence/10.176.26.71/bench/mutex-public-20261020-observed-1-archives/measurements.tar.gz",
+      "roots": [
+        "mutex-public-20261020-observed-1/measurements"
+      ],
+      "sha256": "1c4aaae97a00284a80649c032ac314c2a1e6a6840c6a81f630a0fb33d1d6c8e7"
+    },
+    {
+      "bytes": 6496226,
+      "file": "observation.tar.gz",
+      "group": "observation",
+      "path": "/root/kdlock-evidence/10.176.26.71/bench/mutex-public-20261020-observed-1-archives/observation.tar.gz",
+      "roots": [
+        "mutex-public-20261020-observed-1/host-observation"
+      ],
+      "sha256": "6eb3a42437e4ec04d96cf8cbbbb93f1683119c1a4d12694976b4f990a7010e36"
+    },
+    {
+      "bytes": 95286,
+      "file": "analysis.tar.gz",
+      "group": "analysis",
+      "path": "/root/kdlock-evidence/10.176.26.71/bench/mutex-public-20261020-observed-1-archives/analysis.tar.gz",
+      "roots": [
+        "mutex-public-20261020-observed-1/analysis",
+        "mutex-public-20261020-observed-1/analysis-final"
+      ],
+      "sha256": "e856e863b2440225c037e1a01975d1d9ac29eba06ecdefaf79274aa06dbcd4e1"
+    },
+    {
+      "bytes": 1466405,
+      "file": "metadata.tar.gz",
+      "group": "metadata",
+      "path": "/root/kdlock-evidence/10.176.26.71/bench/mutex-public-20261020-observed-1-archives/metadata.tar.gz",
+      "roots": [
+        "mutex-public-20261020-observed-1/environment-comparison.json",
+        "mutex-public-20261020-observed-1/environment.json",
+        "mutex-public-20261020-observed-1/execution-order.json",
+        "mutex-public-20261020-observed-1/frozen-inputs.json",
+        "mutex-public-20261020-observed-1/health.json",
+        "mutex-public-20261020-observed-1/host-state.json",
+        "mutex-public-20261020-observed-1/kernel-identity.json",
+        "mutex-public-20261020-observed-1/kernel-identity.json.command.json",
+        "mutex-public-20261020-observed-1/original-archives.json",
+        "mutex-public-20261020-observed-1/plan.json",
+        "mutex-public-20261020-observed-1/records.json",
+        "mutex-public-20261020-observed-1/replay-provenance.json",
+        "mutex-public-20261020-observed-1/replay-scheduler.py",
+        "mutex-public-20261020-observed-1/session-clocks.jsonl",
+        "mutex-public-20261020-observed-1/status.json",
+        "mutex-public-20261020-observed-1/topology.json"
+      ],
+      "sha256": "10fe5e13766337f3d05b14946c09144ee7d5fb9a746fef3c58e1e7ecd1731423"
+    }
+  ],
+  "guest_base": "/root/kdlock-evidence/10.176.26.71/bench/mutex-public-20261020-observed-1",
+  "guest_idle": true,
+  "health_path": "health.json",
+  "health_sha256": "5694135cabf52206088083bd8a5e651cdc7f6895f3c4abe690349fb30c1dcfb7",
+  "idle_source_sha256": "c6f7dc17a41bc5c34bff35d3aaed7b4a995ba3e5225d2c48d032417ca3f1510e",
+  "input_inventory_sha256": "18c6f90889833a428d31f4dae29992b152084ffa4d827c26ecff39c21f748632",
+  "kernel_release": "6.1.159-kdclobber2",
+  "schema": 1,
+  "scope": "Complete evidence preservation; no deletion, module action, test or timing",
+  "script_sha256": "8d666f148a10d7fe19294cc7d193464c8bb53d4c3aec64b7518b9d335966c952",
+  "started_ns": 1792503105324872471
+}

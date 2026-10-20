@@ -119,6 +119,25 @@ otherwise unused host CPU 62. This overhead is an additional reason to keep
 this collection separate. The samples establish transient QEMU activity; they
 do not explain the seven losses.
 
+The [archive manifest](observed-1/archives.json) has SHA-256
+`196a8f829a4bcf462352754a82d348ab2decf1cc96e981778fb9472dca93e7b9`.
+Its four archives contain measurements, raw host observations, both analysis
+format versions and metadata. They remain under the guest run's sibling
+`-archives` directory and source-host `raw/bench/mutex-public-20261020-observed-1/`.
+The [independent review](observed-1/offline-review.json) performed 886,743 checks:
+exactly one failed, the preserved immediate post-run QEMU thread-set comparison.
+Archive integrity, original-input binding, all worker/business/retirement
+receipts and arithmetic checks reported no other issue. Therefore the review's
+overall `consistent` field is false.
+
+The first offline review stopped when its reader requested CSV bytes from a
+cache that retains only selected text extensions. Its
+[failure receipt](observed-1/offline-review-initial.json) and initial reader are
+preserved. The corrected reader hashes the CSV member directly. The first CSV
+also used default CRLF formatting; its original bytes and producer remain in
+the archive alongside the final LF-formatted version, with all 360 parsed rows
+verified identical. Neither issue reran or changed a measurement.
+
 ## Matched causal profiles
 
 The next diagnostic selects repeat zero of all ten original points, retaining
@@ -131,3 +150,69 @@ Synthetic sampling uses the retained collector's existing profiling path.
 The exact perf binary is copied and hashed; all results are explicitly
 diagnostic and excluded from throughput acceptance. No task-routing,
 admission, publication, business or retirement predicate is changed.
+
+`d3806e4` passed [checks-2](../../tests/mutex-observation-20261020/checks-2/result.json):
+both basic programs, 13 comparison checks, four observation checks and two
+profile-plan checks. All 464 frozen source files remained unchanged and final
+idle was confirmed. The checks'
+[archive manifest](../../tests/mutex-observation-20261020/checks-2/archives.json)
+has SHA-256
+`196271be811fb3cebc86a72f6796a8fb29da7a0297b57da84c70a3758e5b920b`;
+the inert review passed 6,932 checks with no issues.
+
+`mutex-public-20261020-profiles-1` completed all 40 sessions serially with that driver.
+The first preparation-time host receipt had 76 threads, so no session was
+started then. A fresh receipt at 13:40:06 UTC had the exact original 67-thread
+set after natural retirement; the unchanged preflight admitted that receipt.
+Both receipts are retained. This run does not use the host observer; interference
+within its intervals remains uncertain even if endpoint placement matches.
+
+All 40 sessions passed functional checks and drained, including exact retirement
+for all 20 KD sessions. All 4,424 original/collector input hashes remained
+unchanged. The [sample analysis](profiles-1/profile-analysis.json) found zero
+reported loss and valid worker PID/TID/CPU cohorts in all 40 profiles. Exact
+provider ELF sizes and loaded symbols bound attribution; generated code uses
+the exact published image range. The perf tool SHA-256 is
+`be41fc3678db80aa92593a72034ebd6ec4c574c2dca2523f294dff5a0667aca3`.
+Perf's default timestamps differ from the clients' CLOCK_MONOTONIC timestamps;
+their alignment remains unvalidated. The analysis does not filter them as
+though they shared one clock.
+
+The samples are not a reproduction of every plain-run ordering. Public/OUTER
+ratios in this one diagnostic repetition are c08/3 0.839, c08/4 1.027, c08/5
+1.335, pipebytes/3 0.964, pipebytes/5 1.168 and RCUHT/2 0.935. Pipecap/5 is
+incomparable: public returned JIT bodies while OUTER had zero JIT entries.
+Pipebytes/4 remains incomparable too. Profiling and variance can affect the
+physical-to-delegated mix, so these ratios cannot replace the plain comparisons.
+
+The DIRECT lock-entry functions account for 5.76–46.64% of public worker
+event-period weight; much of that is busy-owner polling. Exact task-identity
+functions account for 0.37–2.22%. Sample weights are not isolated function
+timings. The old compiled DIRECT fast path has a public-entry CALL into
+`kd_mutex_lock_entry`, followed by two return layers after a successful
+physical acquisition. This supports testing an entry-inlining candidate;
+it does not establish the cause or recoverable fraction of any loss.
+
+The [profile archive manifest](profiles-1/archives.json) has SHA-256
+`608709986aa7cbdcfcfcbc13b3ed6f1e68b80961525da00b5d7f7eab874647ff`.
+The [inert review](profiles-1/offline-review.json) performed 105,506 checks,
+with exactly one failed check: the immediate post-run thread set had 80 QEMU
+threads rather than the original 67. This remains an environment limitation.
+Archive integrity, source/tool binding, workers, business results, retirement,
+sample sums and loss counts reported no other issue.
+
+## Entry-inlining candidate
+
+The next candidate forces the unchanged common lock-entry decision to inline
+into each existing ABI entry. It preserves the public DIRECT CALL, captured
+IP/SP/BP, sleep-before-acquire ordering, up-to-eight probes and early COMBINER
+exit, exact contention counts, nested admission and unlock ACK paths. The
+source-extraction test marker follows the declaration; all mutation checks
+remain. No lookup or admission condition is removed.
+
+The existing unified-API reviewer found no source-level protocol change and
+reported no files touched or VM activity. Compilation still needs to prove
+that the extra helper CALL disappears. Basic and affected resource, API,
+clobber and continuation checks, then the local/OUTER/public and owner-ACK
+probes, precede any new plain performance comparison. No candidate validation
+or performance improvement is claimed yet.
