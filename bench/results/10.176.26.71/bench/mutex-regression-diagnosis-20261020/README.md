@@ -203,7 +203,7 @@ sample sums and loss counts reported no other issue.
 
 ## Entry-inlining candidate
 
-The next candidate forces the unchanged common lock-entry decision to inline
+Candidate `003d71c` forces the unchanged common lock-entry decision to inline
 into each existing ABI entry. It preserves the public DIRECT CALL, captured
 IP/SP/BP, sleep-before-acquire ordering, up-to-eight probes and early COMBINER
 exit, exact contention counts, nested admission and unlock ACK paths. The
@@ -211,11 +211,10 @@ source-extraction test marker follows the declaration; all mutation checks
 remain. No lookup or admission condition is removed.
 
 The existing unified-API reviewer found no source-level protocol change and
-reported no files touched or VM activity. Compilation still needs to prove
-that the extra helper CALL disappears. Basic and affected resource, API,
-clobber and continuation checks, then the local/OUTER/public and owner-ACK
-probes, precede any new plain performance comparison. No candidate validation
-or performance improvement is claimed yet.
+reported no files touched or VM activity. The VM-built provider confirms that
+the extra helper CALL disappears from all three affected entries. Its public
+entry preserves the incoming SP/IP/BP in registers and forwards those same
+values into contention, with ABI2. Performance improvement remains unmeasured.
 
 The candidate check runner is [check-entry-candidate.py](check-entry-candidate.py):
 two basic programs and six affected drivers, with provider/daemon builds and
@@ -223,5 +222,30 @@ source verification before and after each step. The serial
 [live supervisor](run-entry-tasks.py) retains the original stop-on-failure and
 idle/source checks. It also binds the owner/ACK fixture's `sources.json` map
 explicitly and verifies each retained source byte and child success/drain
-receipt. The planned order is ordinary local mutex, OUTER continuation, public
+receipt. The completed order is ordinary local mutex, OUTER continuation, public
 DIRECT continuation, and the real-owner ACK fixture on CPUs 0, 32 and 33.
+
+`mutex-entry-inline-20261020/checks-1` passed both basic programs and all six
+affected drivers, including 11,504 resource checks and 3,438 after-OUTER checks.
+Provider `W=1` and daemon `-Werror` builds passed. The provider log retains locale
+fallback and `_Q_LOCKED_COMBINER_VAL` redefinition warnings; this is not a
+warning-free build claim. Byte-exact compiler/disassembly logs remain in the
+raw archive. `live-1` passed all four
+probes serially: the ordinary probe completed 160,000 operations across eight
+workers and 2,048 32-byte mutexes; OUTER/public cold-delegated phases returned
+1,586,349 / 1,591,541 JIT bodies. Each continuation probe recorded exactly one
+hot native exit and zero post-ban JIT activity. The real-task fixture passed
+both B-A/A-B release orders, four ACKs, and its three-worker, 4,096-iteration
+registry stress. That constructed-frame fixture executes zero JIT bodies.
+
+The [health receipt](../../tests/mutex-entry-inline-20261020/health.json) binds
+1,612 source/binary hashes, reports no per-probe kernel fault matches and exact
+retirement `state=2, modules=writers=frames=0` for all four probes. The
+[archive manifest](../../tests/mutex-entry-inline-20261020/archives.json) has
+SHA-256 `6fb8361828f44362e0ba16a5796308e267e3df1ca6a82b3f6ba57d9bc3c1b7a9`.
+Complete checks/live/metadata archives are retained in the guest's sibling
+`mutex-entry-inline-20261020-archives` directory and source-host
+`raw/tests/mutex-entry-inline-20261020/archives/`. An
+[independent inert review](../../tests/mutex-entry-inline-20261020/offline-review.json)
+completed 27,261 checks with zero issues. This validates the selected candidate
+scope, not whole-kernel replacement or resolution of the seven throughput losses.

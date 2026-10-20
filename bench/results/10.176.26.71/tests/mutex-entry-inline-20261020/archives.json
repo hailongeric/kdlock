@@ -1,0 +1,55 @@
+{
+  "archive_prefix": "mutex-entry-inline-20261020",
+  "boot_id": "b65f0205-c8f9-4385-8b13-039cbce243a6",
+  "completed": true,
+  "finished_ns": 1792506140767167952,
+  "groups": [
+    {
+      "bytes": 4343847,
+      "file": "checks.tar.gz",
+      "group": "checks",
+      "path": "/root/kdlock-evidence/10.176.26.71/tests/mutex-entry-inline-20261020-archives/checks.tar.gz",
+      "roots": [
+        "mutex-entry-inline-20261020/checks-1"
+      ],
+      "sha256": "d2dbe25ae1e9f6f15cb683f5173d244834738b7b9abc84bb1d8901092ff34214"
+    },
+    {
+      "bytes": 13221088,
+      "file": "live.tar.gz",
+      "group": "live",
+      "path": "/root/kdlock-evidence/10.176.26.71/tests/mutex-entry-inline-20261020-archives/live.tar.gz",
+      "roots": [
+        "mutex-entry-inline-20261020/live-1"
+      ],
+      "sha256": "ffda7c1c407b4ef5951c7248b0c99ef528f3d96439a015372066c3dd6ee16205"
+    },
+    {
+      "bytes": 32554,
+      "file": "metadata.tar.gz",
+      "group": "metadata",
+      "path": "/root/kdlock-evidence/10.176.26.71/tests/mutex-entry-inline-20261020-archives/metadata.tar.gz",
+      "roots": [
+        "mutex-entry-inline-20261020/health.json",
+        "mutex-entry-inline-20261020/kdlock-entry-inline-checks1-console.log",
+        "mutex-entry-inline-20261020/kdlock-entry-inline-host-after-live.json",
+        "mutex-entry-inline-20261020/kdlock-entry-inline-host-before-checks.json",
+        "mutex-entry-inline-20261020/kdlock-entry-inline-live1-console.log",
+        "mutex-entry-inline-20261020/kdlock-entry-inline-sync.log",
+        "mutex-entry-inline-20261020/verify-entry.py"
+      ],
+      "sha256": "7430c0bfbd0e0f5862105f827f1f18b810cbdc5ea519d16ac4e15afb2572ec79"
+    }
+  ],
+  "guest_base": "/root/kdlock-evidence/10.176.26.71/tests/mutex-entry-inline-20261020",
+  "guest_idle": true,
+  "health_path": "health.json",
+  "health_sha256": "96320e8d51ae22c847291a8ed4b0928991901f461755f1ef76dca95277f770e6",
+  "idle_source_sha256": "c6f7dc17a41bc5c34bff35d3aaed7b4a995ba3e5225d2c48d032417ca3f1510e",
+  "input_inventory_sha256": "dbe7d6ab0db45f4c520760f132717951e7533963997c4a0d2116ff5d3081b6d6",
+  "kernel_release": "6.1.159-kdclobber2",
+  "schema": 1,
+  "scope": "Complete evidence preservation; no deletion, module action, test or timing",
+  "script_sha256": "8d666f148a10d7fe19294cc7d193464c8bb53d4c3aec64b7518b9d335966c952",
+  "started_ns": 1792506137150873457
+}
