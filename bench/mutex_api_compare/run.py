@@ -8,6 +8,7 @@ import importlib.util
 import json
 import os
 from pathlib import Path
+import re
 import shutil
 import subprocess
 import sys
@@ -17,6 +18,19 @@ ROOT = Path(__file__).resolve().parents[2]
 THREADS = [*range(1, 9), *range(12, 61, 4)]
 GROUPS = ('c01', 'c08', 'rcuht', 'seek-set', 'seek-end', 'pipebytes', 'pipecap')
 ARMS = ('baseline-kd', 'public-kd', 'native', 'tclock')
+# Seven separated losses plus the three original incomparable class groups.
+# Filter the original order so every selected repeat keeps its arm rotation.
+REPLAY_POINTS = frozenset({
+    ('c08', 2), ('c08', 3), ('c08', 4), ('c08', 5), ('rcuht', 2),
+    ('pipebytes', 3), ('pipebytes', 4), ('pipebytes', 5), ('pipecap', 4), ('pipecap', 5),
+})
+REPLAY_INPUTS_SHA256 = 'df8b56e19893cb2e42d92bad41de8876ff4b1b6a915b2fe67336ba761a99ea73'
+REPLAY_HARNESS_SHA256 = '8081cbed66833c59e0c58f0aa62d9f6ff87e8c28438ac7b1252584881879bf20'
+REPLAY_ENVIRONMENT_SHA256 = {
+    'host-state.json': '478e0dfa20602093ff849ae2c195bc5248101d9190d70fe63dd269e41633ba0a',
+    'environment.json': '7c19cf8989a5cf56d78edec014f991354ec0ba929f8bd5d1f495fd5ae942bbf5',
+    'topology.json': 'a1375dd2e696fdc379fe2d3bddbd77247638d6a82946aa9ff14da45384d41816',
+}
 BASELINE = Path('/root/kdlock-evidence/10.176.26.71/bench/'
                 'mutex32-native-tclock-20261020/current')
 
@@ -49,6 +63,123 @@ def execution_order(groups=GROUPS, threads=THREADS, repeats=3):
             for repeat in range(repeats)
             for arm in (ARMS[(gi + ti + repeat) % 4:] +
                         ARMS[:(gi + ti + repeat) % 4])]
+
+
+def replay_order():
+    return [row for row in execution_order() if row[:2] in REPLAY_POINTS]
+
+
+def retained_harness(prepared):
+    """Bind historical absolute names to their retained bytes, never today's checkout."""
+    prepared = prepared.resolve()
+    if sha(prepared/'harness-inputs.json') != REPLAY_HARNESS_SHA256:
+        raise ValueError('retained harness manifest differs from the reviewed original')
+    original = load(prepared/'harness-inputs.json')
+    checkout = Path('/root/host_fs/kdlock')
+    retained = {}
+    for filename, digest in original.items():
+        path = Path(filename)
+        if not path.is_absolute() or '..' in path.parts or not path.is_relative_to(checkout):
+            raise ValueError('unexpected original collector path: ' + filename)
+        copy = prepared/'harness'/path.relative_to(checkout)
+        if copy.is_symlink() or not copy.resolve().is_relative_to((prepared/'harness').resolve()):
+            raise ValueError('collector path escapes retained tree: ' + filename)
+        retained[str(copy.resolve())] = digest
+    verify(retained)
+    return retained
+
+
+def verify_collector_modules(collector_root, manifest, loaded=()):
+    """Reject accidental imports from the later checkout or unbound retained code."""
+    collector_root = collector_root.resolve()
+    bound = {Path(filename).resolve() for filename in manifest}
+    names = {}
+    for path in bound:
+        if path.suffix == '.py':
+            names.setdefault(path.stem, set()).add(path)
+    for name, module in tuple(sys.modules.items()):
+        filename = getattr(module, '__file__', None)
+        expected = names.get(name.rsplit('.', 1)[-1])
+        if expected and (not filename or Path(filename).resolve() not in expected):
+            raise ValueError('collector module has unexpected origin: ' + name)
+        if not filename:
+            continue
+        path = Path(filename).resolve()
+        if path.is_relative_to(ROOT) and path != Path(__file__).resolve():
+            raise ValueError('replay imported current collector code: ' + str(path))
+        if path.is_relative_to(collector_root) and path not in bound:
+            raise ValueError('unbound retained collector module: ' + str(path))
+    # The two spec-loaded runners are intentionally not in sys.modules.
+    for module, relative in loaded:
+        path = Path(module.__file__).resolve()
+        if path != collector_root/relative or path not in bound:
+            raise ValueError('explicit collector has unexpected origin: ' + str(path))
+
+
+def replay_inputs(prepared, out):
+    """Prevent copied metadata from redirecting views into another original run."""
+    prepared, out = prepared.resolve(), out.resolve()
+    if out.exists() or out.is_relative_to(prepared) or prepared.is_relative_to(out):
+        raise ValueError('replay needs a new output independent of prepared inputs')
+    if sha(prepared/'frozen-inputs.json') != REPLAY_INPUTS_SHA256:
+        raise ValueError('replay inputs differ from the reviewed original comparison')
+    frozen = load(prepared/'frozen-inputs.json')
+    if set(frozen) != {v+'/'+g for v in ('baseline', 'current') for g in GROUPS}:
+        raise ValueError('replay bundle set differs')
+    for key, inputs in frozen.items():
+        bundle = Path(inputs['bundle']).resolve()
+        if bundle != prepared/key:
+            raise ValueError('replay bundle is outside selected prepared root: ' + key)
+        for filename in inputs['files']:
+            path = Path(filename)
+            if (not path.is_absolute() or '..' in path.parts or
+                    not path.resolve().is_relative_to(bundle)):
+                raise ValueError('replay input escapes its original bundle: ' + filename)
+    return frozen
+
+
+def same_environment(original_host, host, original_env, environment, original_topology, topology):
+    """Compare configuration exactly and retain changing resident-page counts."""
+    for key in ('cpufreq', 'numa', 'recovery_snapshot'):
+        if host[key] != original_host[key]:
+            raise ValueError('replay host configuration differs: ' + key)
+    if len(host['qemu']) != 1 or len(original_host['qemu']) != 1:
+        raise ValueError('replay requires the same single QEMU')
+    original, current = original_host['qemu'][0], host['qemu'][0]
+    for key in ('pid', 'args'):
+        if original[key] != current[key]:
+            raise ValueError('replay QEMU identity/configuration differs: ' + key)
+    def pins(qemu):
+        return sorted((t['comm'], t['affinity']) for t in qemu['tasks'])
+    if pins(original) != pins(current):
+        raise ValueError('replay QEMU thread placement differs')
+    def memory(qemu):
+        rows = []
+        for line in qemu['numa_maps'].splitlines():
+            fields = line.split()
+            if len(fields) < 2 or not fields[1].startswith('bind:'):
+                continue
+            values = dict(field.split('=', 1) for field in fields[2:] if '=' in field)
+            rows.append(dict(address=fields[0], policy=fields[1],
+                             page_kb=int(values['kernelpagesize_kB']),
+                             resident_pages={k: int(v) for k, v in values.items()
+                                             if re.fullmatch(r'N[0-9]+', k)}))
+        if not rows:
+            raise ValueError('missing actual host NUMA memory placement')
+        return rows
+    before, after = memory(original), memory(current)
+    configuration = lambda rows: [(r['address'], r['policy'], r['page_kb']) for r in rows]
+    if configuration(before) != configuration(after):
+        raise ValueError('replay host memory binding differs')
+    for key in ('boot_id', 'cmdline', 'preemption', 'packages', 'python',
+                'snapshot_tag', 'collector_topology'):
+        if original_env[key] != environment[key]:
+            raise ValueError('replay guest environment differs: ' + key)
+    if original_topology != topology:
+        raise ValueError('replay guest topology differs')
+    return dict(configuration_matches=True, original_memory=before, replay_memory=after,
+                scope='Same QEMU process/configuration, pins, frequency policy, memory bindings, '
+                      'guest boot, dependencies and topology. Resident pages are recorded, not fixed.')
 
 
 def binary_paths(bundle, synthetic):
@@ -143,20 +274,28 @@ def prepare_command(group, output):
     return command + common
 
 
-def runners():
+def runners(collector_root=ROOT, harness=None):
+    collector_root = collector_root.resolve()
     sys.dont_write_bytecode = True
-    sys.path.insert(0, str(ROOT/'bench/tclock_compare'))
+    if harness is not None:
+        verify_collector_modules(collector_root, harness)
+    sys.path.insert(0, str(collector_root/'bench/tclock_compare'))
     spec = importlib.util.spec_from_file_location('mutex_comparison_synthetic',
-                                                ROOT/'bench/tclock_compare/run.py')
+                                                collector_root/'bench/tclock_compare/run.py')
     synthetic = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(synthetic)
     import session as syn_session
     import bench_session
-    sys.path.insert(0, str(ROOT/'bench/real_api'))
+    sys.path.insert(0, str(collector_root/'bench/real_api'))
     spec = importlib.util.spec_from_file_location('mutex_comparison_api',
-                                                ROOT/'bench/real_api/run.py')
+                                                collector_root/'bench/real_api/run.py')
     api = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(api)
+    if harness is not None:
+        verify_collector_modules(collector_root, harness, (
+            (synthetic, 'bench/tclock_compare/run.py'),
+            (api, 'bench/real_api/run.py'),
+        ))
     return synthetic, syn_session, bench_session, api
 
 
@@ -295,7 +434,8 @@ def specification(template, group, count, repeat, arm, inputs, topology):
     return result
 
 
-def measure(prepared, out, syn, syn_session, bench_session, api, budget, smoke, host_state):
+def measure(prepared, out, syn, syn_session, bench_session, api, budget, smoke, host_state,
+            replay=False):
     if not load(prepared/'prepared.json')['passed'] or out.exists():
         raise ValueError('new, completely prepared comparison required')
     out.mkdir()
@@ -322,9 +462,24 @@ def measure(prepared, out, syn, syn_session, bench_session, api, budget, smoke, 
         snapshot_tag=os.environ['KDLOCK_SNAPSHOT_TAG'],
         collector_topology=syn.collector_topology(63), argv=sys.argv))
     frozen = load(prepared/'frozen-inputs.json')
-    harness = load(prepared/'harness-inputs.json')
+    collector_root = prepared/'harness' if replay else ROOT
+    harness = retained_harness(prepared) if replay else load(prepared/'harness-inputs.json')
     verify(harness)
-    syn.command([sys.executable, ROOT/'bench/spin_cacheline/kernel_identity.py',
+    if replay:
+        verify_collector_modules(collector_root, harness)
+        save(out/'replay-provenance.json', dict(
+            prepared=str(prepared), measured_revision='d21a1e3',
+            original_harness_manifest=load(prepared/'harness-inputs.json'),
+            retained_collector_files=harness,
+            frozen_inputs_manifest_sha256=sha(prepared/'frozen-inputs.json'),
+            harness_manifest_sha256=sha(prepared/'harness-inputs.json'),
+            original_matrix_status=load(prepared/'matrix/status.json'),
+            scheduler_sha256=sha(Path(__file__)),
+            selection='seven separated regressions plus three incomparable points',
+            scope='Original provider/caller/client/daemon/translator and collector bytes; new focused scheduler'))
+        shutil.copyfile(Path(__file__), out/'replay-scheduler.py')
+        shutil.copyfile(prepared/'frozen-inputs.json', out/'frozen-inputs.json')
+    syn.command([sys.executable, collector_root/'bench/spin_cacheline/kernel_identity.py',
                  '--kernel-source', '/root/linux-6.1.159-kdclobber2',
                  '--kernel-baseline',
                  '/root/kdlock-kernel-baselines/mutex-clobber2-20260919'],
@@ -335,8 +490,19 @@ def measure(prepared, out, syn, syn_session, bench_session, api, budget, smoke, 
     syn.runtime.annotate_topology(probe, topology)
     nodes = probe[0]['cpu_nodes']
     save(out/'topology.json', topology)
-    order = (execution_order(('c01', 'pipebytes'), (1, 8), 1) if smoke
-             else execution_order())
+    if replay:
+        for filename, digest in REPLAY_ENVIRONMENT_SHA256.items():
+            if sha(prepared/'matrix'/filename) != digest:
+                raise ValueError('original environment evidence changed: ' + filename)
+        comparison = same_environment(load(prepared/'matrix/host-state.json'), host,
+            load(prepared/'matrix/environment.json'), load(out/'environment.json'),
+            load(prepared/'matrix/topology.json'), topology)
+        save(out/'environment-comparison.json', comparison)
+        order = replay_order()
+    elif smoke:
+        order = execution_order(('c01', 'pipebytes'), (1, 8), 1)
+    else:
+        order = execution_order()
     save(out/'execution-order.json', order)
     views, templates = {}, {}
     for key, inputs in frozen.items():
@@ -378,6 +544,8 @@ def measure(prepared, out, syn, syn_session, bench_session, api, budget, smoke, 
             key = version+'/'+group
             inputs, view = frozen[key], views[key]
             verify(harness)
+            if replay:
+                verify_collector_modules(collector_root, harness)
             verify(inputs['files'])
             spec = planned[index]
             state['current'] = dict(workload=group, threads=count, repeat=repeat, arm=arm)
@@ -418,9 +586,11 @@ def measure(prepared, out, syn, syn_session, bench_session, api, budget, smoke, 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('action', choices=('prepare', 'smoke', 'measure'))
+    parser.add_argument('action', choices=('prepare', 'smoke', 'measure', 'replay'))
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--baseline', type=Path, default=BASELINE)
+    parser.add_argument('--prepared', type=Path,
+                        help='original frozen comparison directory for focused replay')
     parser.add_argument('--budget-seconds', type=int, default=14400)
     parser.add_argument('--host-state', type=Path,
                         help='host placement/snapshot JSON captured within five minutes')
@@ -432,18 +602,37 @@ def main():
     if args.budget_seconds < 180:
         raise ValueError('budget must leave one bounded session')
     os.environ['PYTHONDONTWRITEBYTECODE'] = '1'
-    syn, syn_session, bench_session, api = runners()
     out = args.output.resolve()
     if out == ROOT or out.is_relative_to(ROOT):
         raise ValueError('output must be outside source checkout')
+    replay = args.action == 'replay'
+    if replay:
+        if args.prepared is None:
+            raise ValueError('--prepared is required for replay')
+        prepared = args.prepared.resolve(strict=True)
+        replay_inputs(prepared, out)
+        if (Path(sys.executable) != Path('/root/kdlock-translation-venv-20261019/bin/python3') or
+                shutil.which('python3') != sys.executable):
+            raise ValueError('replay driver and daemon must use the original pinned Python')
+        status = load(prepared/'matrix/status.json')
+        if status['state'] != 'COMPLETE' or status['completed'] != 1764:
+            raise ValueError('replay requires the completed original 1764-session comparison')
+        harness = retained_harness(prepared)
+        collector_root = prepared/'harness'
+    else:
+        if args.prepared is not None:
+            raise ValueError('--prepared is only valid for replay')
+        prepared, collector_root = out, ROOT
+    syn, syn_session, bench_session, api = runners(collector_root, harness if replay else None)
     if args.action == 'prepare':
         prepare(out, args.baseline.resolve(), syn)
         return 0
     smoke = args.action == 'smoke'
     if args.host_state is None:
         raise ValueError('--host-state is required before live measurement')
-    return measure(out, out/('smoke' if smoke else 'matrix'), syn, syn_session,
-                   bench_session, api, args.budget_seconds, smoke, args.host_state)
+    return measure(prepared, out if replay else out/('smoke' if smoke else 'matrix'),
+                   syn, syn_session, bench_session, api, args.budget_seconds,
+                   smoke, args.host_state, replay=replay)
 
 
 if __name__ == '__main__':

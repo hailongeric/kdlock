@@ -67,6 +67,18 @@ from the retained seven-workload round. `smoke` runs 16 fresh binding checks;
 and fully drains before the next arm. STOP requests and the time budget stop at
 a drained boundary. Unsafe failures stop immediately without forced unload.
 The selected input trees must remain unchanged through the collection.
+Focused reruns of the original seven public-mutex regressions use
+`mutex_api_compare/run.py replay --prepared <original-r2> --output <new-directory>
+--host-state <fresh-host-receipt>`. The fixed selection also includes the three
+incomparable points: ten points, three repetitions and four original arms,
+120 serialized sessions in the original arm order. Replay uses the pinned
+original binaries, translation sources and retained collector, with separate
+scheduler provenance. It refuses changed manifests, unexpected imports, output
+overlap, or a changed VM/host configuration. Resident NUMA page counts are
+recorded separately from the unchanged binding policy. Preserve NO_JIT and
+failed sessions; do not extend repeats to obtain a favorable execution class.
+These reruns do not validate performance of later source revisions.
+
 Use [mutex_api_compare/report.py](mutex_api_compare/report.py) on the resulting
 `matrix` directory for separate source/caller/execution-class summaries.
 It reports the provisional coordinator-proposed 5% median-throughput criterion,
