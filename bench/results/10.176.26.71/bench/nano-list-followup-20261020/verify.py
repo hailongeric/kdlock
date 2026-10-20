@@ -134,6 +134,9 @@ def main():
             assert row['workload'] in ('list', 'list-prefetch') and row['list_nodes'] in (16, 128)
             m = row['measurement']
             shared = row['lock_kind'] in ('rwlock', 'rwsem')
+            variant = row['variant'] if shared else row['arm']
+            compiled = read(child/('list-audit-'+variant)/'audit.json')
+            assert compiled['prefetch'] == (row['workload'] == 'list-prefetch')
             assert m['schema'] == (1 if shared else 2)
             assert m['complete'] is True and m['data_ok'] is True
             raw = read(child/spec['name']/'measure.json')

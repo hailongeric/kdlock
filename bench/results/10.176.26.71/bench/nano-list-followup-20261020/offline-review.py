@@ -258,6 +258,8 @@ def main():
             helper.sha(a.git_bytes(shared.SOURCE, plan['supervisor'])), 'supervisor_binding')
     a.check(a.files['committed-source.json'] == plan['source_manifest_sha256'], 'manifest_binding')
     a.check(a.files['preflight/historical-plan.json'] == plan['historical_plan_sha256'] and
+            a.files['preflight/historical-plan.json'] ==
+            helper.sha(a.git_bytes(shared.SOURCE, plan['historical_plan'])) and
             plan['phases']['timing'] == a.jread('preflight/historical-plan.json')['phases']['timing'],
             'unchanged_historical_arguments')
     pf = a.jread('preflight/result.json')
@@ -330,6 +332,10 @@ def main():
                      row['peak_settle_ms'], row['sample_ms'], row['warmup_iterations_per_worker']) ==
                     (63, 2000, 300, 300, 10, 48000), 'retained_geometry', tag)
             is_shared = row['lock_kind'] in ('rwlock', 'rwsem')
+            variant = row['variant'] if is_shared else row['arm']
+            compiled = a.jread(root+'list-audit-'+variant+'/audit.json')
+            a.check(compiled['prefetch'] == (row['workload'] == 'list-prefetch'),
+                    'compiled_variant_prefetch_binding', tag)
             if is_shared:
                 a.check(row['write_percent'] == 20 and row['post_work_rounds'] == 4, 'shared_mix_postwork', tag)
             whole, peak, cpu = measurement(a, arithmetic, row, tag)
@@ -407,6 +413,15 @@ def main():
                 tclock_native_delegated=native_delegated))
     a.check(len(sessions) == health['sessions'] == health['functionally_valid'] == health['drained'] == 264 and
             family_counts == dict(spin=72, mutex=72, rwlock=72, rwsem=48), 'all_families_completed')
+    fields = ('family', 'workload', 'nodes', 'threads', 'arm', 'repeat')
+    expected = {(family, workload, nodes, threads, arm, repeat)
+                for family in ('spin', 'mutex', 'rwlock', 'rwsem')
+                for workload in ('list', 'list-prefetch') for nodes in (16, 128)
+                for threads in (8, 60)
+                for arm in (('native', 'kdlock') if family == 'rwsem' else ('native', 'tclock', 'kdlock'))
+                for repeat in range(3)}
+    a.check({tuple(row[k] for k in fields) for row in sessions} == expected and
+            len(sessions) == len(expected) == 264, 'exact_supported_matrix')
     a.check(len(cold) == health['compiled_list_audits'] == 44 and len(images) == len(retired) == 96 and
             loaded == health['loaded_images'] and retired == health['exact_retirements'], 'image_retirement_totals')
     a.check(dict(totals) == health['totals'] and dict(classes) == health['execution_classes'], 'health_arithmetic')
@@ -434,6 +449,10 @@ def main():
                 field = metric.replace('_ops_s', '_'+label+'_ops_s') if metric != 'cpu_ns_per_op' else metric+'_'+label
                 group[field] = function(values)
         group['whole_spread_pct'] = (group['whole_max_ops_s']/group['whole_min_ops_s']-1)*100
+        values = [r['whole_ops_s'] for r in rows]
+        deviation = statistics.stdev(values) if len(values) > 1 else None
+        group['whole_sample_stddev_ops_s'] = deviation
+        group['whole_cv_pct'] = deviation/statistics.mean(values)*100 if deviation is not None else None
         groups.append(group)
     points, hints = compare(groups), compare(groups, prefetch=True)
     output = dict(run_id='nano-list-followup-20261020/'+Path(a.archive['guest_base']).name,
