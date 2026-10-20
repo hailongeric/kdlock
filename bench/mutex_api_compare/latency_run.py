@@ -69,6 +69,9 @@ def run(args):
             sha(ROOT/'bench/mutex_api_compare/latency_run.py'), 'latency driver changed')
     preparer = load(tools/'latency_inputs.py', 'latency_inputs')
     scheduler = load(tools/'scheduler.py', 'latency_scheduler')
+    # The retained scheduler normally derives ROOT from its file location.
+    # Its origin guard must still reject today's checkout after relocation.
+    scheduler.ROOT = ROOT
     latency = load(tools/'latency.py', 'operation_latency')
     archive = load(tools/'archive_run.py', 'latency_archive')
     inputs, originals, harness = preparer.validate(scheduler, inputs_path, args.inputs_sha256)

@@ -87,3 +87,11 @@ The correction compares each rebuilt export-metadata CRC with the corresponding
 word in the original module's `__kcrctab` section; no original backend is
 replaced and no version check is omitted. A new input run will retain its own
 identity and validation results.
+
+`checks-2`, source `457ad4c`, passed both basic programs and all eight affected
+tests. `inputs-2` completed all caller builds, all three original/export CRC
+comparisons and all eight synthetic body/relocation comparisons. Static review
+then found that relocating the retained scheduler changes its inferred checkout
+root. The driver now explicitly restores the original checkout path for the
+collector-origin guard. Recreate inputs with that reviewed driver before timing;
+`inputs-2` has no measured sessions and remains separate.
