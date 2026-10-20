@@ -65,3 +65,19 @@ exact 756-session dry-run plan. Driver `f8aede3` then started the unchanged seri
 supervisor as `rwsem-1`, with workload evidence under `rwsem-1/rwsem-grid`.
 The rwlock phase requires a separate fresh preflight after this run completes
 and drains. No parallel test, observer or profiler is running.
+
+The prepared [VM verifier](verify-comparison.py) checks the completed task,
+all frozen sources and binaries, every worker oracle, immutable publication,
+exact retirement and both environment endpoints. It retains a failed endpoint
+as a failure and leaves acceptance open. It copies the hash-pinned original
+environment receipts into the completed evidence for independent review.
+
+The [source-host audit](offline-comparison.py) checks the complete archive
+inventory, binds sources to both `f48b90e` and validated `a768361`, reconstructs
+the observation provider, and independently recomputes worker effects, peaks,
+execution classes and repetition ranges. Its raw arithmetic reader is pinned
+to SHA-256 `425e5bf0b637e9a20dede0ecda32ef085cdd9ae15d59f1c011c506785a4ee1cc`.
+No archived code is executed. Only homogeneous three-repetition groups receive
+ratios; partial or unmeasured KD execution remains unscored. TCLock comparisons
+will keep its delegation evidence labelled `UNMEASURED`. These scripts are
+prepared for the completed runs and do not change the running inputs.
