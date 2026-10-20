@@ -18,8 +18,9 @@ reader/writer runner's historical default and `--full-matrix` stop at 36 workers
 Synthetic bodies run repeatedly inside one ioctl per phase; API workers issue
 syscalls individually. Include both categories when requesting the full catalog.
 
-The current accepted [KD-only matrix](../bench/results/10.176.26.71/bench/comparison/mutex-kdonly-20261017T140354Z/README.md)
-covers c01/post64 and `api-pipebytes-query-n16`. Broader historical owned-mutex
+The historical [KD-only matrix](../bench/results/10.176.26.71/bench/comparison/mutex-kdonly-20261017T140354Z/README.md)
+covers c01/post64 and `api-pipebytes-query-n16` on its recorded 256-byte mutex.
+It does not measure the current shared-node 32-byte implementation. Broader historical owned-mutex
 coverage remains in [history](history/README.md), with its original implementation
 identity. The rwsem waiting implementation in **`c21345b` is accepted as current**,
 including its documented two-worker throughput regressions. Sleeping rwsem with
@@ -40,9 +41,12 @@ The explicit pairs below permit delegation of admitted bodies. Admission is
 the translator/runtime check that the compiled body can execute safely with
 the captured inputs and execution context. It can still refuse a body, and an
 eligible call can execute locally because of contention or admission policy.
-An image labelled `NORMAL` proves publication only; a completed, returned JIT
-body proves actual delegated execution. Keep runs with no such completions
-(`NO_JIT`) separate in performance reports.
+An image labelled `NORMAL` proves publication only. Where completion probes are
+enabled, a completed, returned JIT body proves successful delegated execution;
+entry without completion is `PARTIAL_JIT`, and no entry is `NO_JIT`. Synthetic
+mutex counters witness generated-body entry without a matching completion
+probe, so their return count remains unknown. Keep these evidence classes
+separate in performance reports.
 
 | Workload and lock | KD API already used | Delegation decision and protected boundary |
 | --- | --- | --- |
@@ -74,9 +78,11 @@ ordinary API rename, an extra private lock around only some consumers, or a
 cast from a Linux mutex to KD mutex does not implement that conversion.
 
 Eligibility in this table is a source assessment, not a fresh benchmark result.
-The selected mutex measurements cover c01/post64 and pipebytes n16; the accepted
-rwsem matrix covers c01, c08 and RCUHT. Other API measurements retain their
-historical source identities. The latest [instruction-exit validation](../bench/results/10.176.26.71/tests/native-instruction-exit-20261018/README.md)
+The historical KD-only matrix cited above covers c01/post64 and pipebytes n16;
+current mutex results and their source identities are listed in
+[performance status](PERFORMANCE.md). The accepted rwsem matrix covers c01,
+c08 and RCUHT. Other API measurements retain their historical source identities.
+The latest [instruction-exit validation](../bench/results/10.176.26.71/tests/native-instruction-exit-20261018/README.md)
 also completed delegated rwsem c08 and RCUHT writers, but it is a functional
 check, not a new throughput matrix. The snapshot and API sections below retain
 their successful execution evidence and refusals.
@@ -194,8 +200,9 @@ same selected counters under one lock. The bodies contain explicit updates:
 
 Future synthetic cacheline benchmarks use only c01 and c08 for spin, mutex,
 rwlock and rwsem. Select `--cachelines 1 8` in the
-[spin/mutex runner](../bench/tclock_compare/README.md). KD mutex uses the selected
-legacy delegation protocol.
+[spin/mutex runner](../bench/tclock_compare/README.md). KD mutex retains exact KD
+physical ownership and pinned published delegation waiters; its OSQ and
+delegation queues share preallocated storage with separate links and lifetimes.
 
 For example, c01 performs a protected load/add/store:
 
@@ -213,9 +220,14 @@ every worker still shares the same counter in c01.
 
 The current KD mutex occupies 32 bytes aligned to 8 bytes in the captured
 configuration, matching Native's embedded footprint. Its delegation phase
-and encoded tail are embedded; versioned waiter records use reserved node
-padding. There is no auxiliary lookup, auxiliary reference count or shared
-waiter-count update. Lock storage is separate from workload counters and controls. The
+and encoded tail are embedded; versioned waiter records and an independent
+24-byte OSQ subrecord use existing node space. Four 320-byte slots per CPU serve
+both memberships without changing their separate cancellation/retirement rules.
+NUMA selection has a 64-node scan budget and a 256-body locality boundary;
+larger deferred cohorts receive handoff and smaller prefixes continue FIFO,
+within the configured total cap of 1024. There is no auxiliary lookup, shared
+lock reference count or shared waiter-count update. Lock storage is separate
+from workload counters and controls. The
 recorded `d2a2304` KD-only comparisons used a 256-byte, 128-byte-aligned object;
 they do not measure the compact layout or establish a performance gain for it.
 The c01 name counts payload cachelines only. Spin/mutex loops currently include 64 dependent arithmetic rounds

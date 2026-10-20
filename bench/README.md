@@ -21,11 +21,18 @@ Runner contracts: [spin/mutex](tclock_compare/README.md), [rwlock](rwlock_compar
 [spin_cacheline](spin_cacheline/README.md). Kernel payloads live in
 [workload_modules](../workload_modules/README.md).
 
+The retained KD mutex has a 32-byte object with native 8-byte alignment. Its
+OSQ and delegation queues share four preallocated node slots per CPU while
+keeping independent links and retirement. The NUMA locality boundary is 256
+bodies, with larger deferred cohorts handed off and smaller prefixes followed
+by FIFO service within the total 1024-body cap. See the
+[mutex implementation guide](../docs/design/mutex_implementation.md).
+
 ## Standard worker grid
 
 Use 21 counts: `1 2 3 4 5 6 7 8 12 16 20 24 28 32 36 40 44 48 52 56 60`.
 Workers use the CPU prefix 0 through N−1; collector 63 is separate. Use three
-repetitions per configuration. A plan preview for the accepted mutex c01 case is:
+repetitions per configuration. A plan preview for the mutex c01 case is:
 
 ```sh
 python3 bench/tclock_compare/run_mutex.py --dry-run \
@@ -57,17 +64,20 @@ per worker, two-second measurements and the highest valid 300 ms window after
 Spin/mutex uses post64; rwlock/rwsem uses post4. Retain actual host governor, CPU/NUMA
 placement, source and ELF hashes, kernel identity and instrumentation policy.
 
-Validate business results, every worker's progress, required returned JIT bodies
-and complete drain. Keep NO_JIT controls/refusals distinct from JIT acceptance.
+Validate business results, every worker's progress, required execution evidence
+and complete drain. Synthetic mutex counters witness generated-body entry;
+they do not prove returned bodies. The real API runner separately records
+matching returned completions. Keep entry-only, returned-body and NO_JIT
+controls/refusals distinct.
 Preserve failures, partial attempts and all valid rounds. Never pool different
 source versions, workloads, topologies, call shells or instrumentation settings.
 Functional mode uses one explicit round and produces no performance claim.
 
 ## Results
 
-The [current KD-only report](results/10.176.26.71/bench/comparison/mutex-kdonly-20261017T140354Z/README.md)
+The [historical KD-only report](results/10.176.26.71/bench/comparison/mutex-kdonly-20261017T140354Z/README.md)
 contains 504 sessions for c01/post64 and pipebytes n16 with accepted KD baseline,
-Native and TCLock controls. Use the [results index](results/README.md) for other
+Native and TCLock controls on the older 256-byte object. Use the [results index](results/README.md) for current
 versions and lock families; historical results retain their own frozen inputs.
 
 The [accepted rwsem report](results/10.176.26.71/bench/rwsem-optimization-20261018/README.md)

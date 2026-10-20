@@ -1,10 +1,16 @@
 # KD, TCLock and Linux Native comparison
 
 The current KD mutex arm uses a 32-byte `struct kd_mutex` with native 8-byte
-alignment and no Linux mutex imports. Delegation claims one of 65,536 preallocated
-auxiliary slots indexed by lock address; a collision uses local KD locking. The
-16 MiB table uses exact references and lifecycle sequences without registry locks
-or auxiliary RCU, and the final reference retires a slot automatically.
+alignment and no Linux mutex imports. The physical owner, delegation phase and
+encoded tail are embedded in the object. Four preallocated 320-byte node slots
+per CPU hold independent OSQ and delegation memberships, addressed directly by
+encoded CPU/slot identity. Ordinary optimistic spinners temporarily reserve a
+slot; an initial delegation head explicitly lends its existing reservation.
+OSQ unlink/handoff finishes before temporary release or scheduling. There is no
+auxiliary hash, shared lock reference count, registry lock or new RCU mechanism.
+The retained `752fec1` policy uses a 256-body NUMA locality boundary: eight or more
+deferred requests receive handoff, while a smaller prefix precedes FIFO service
+for the rest of the bounded batch. The total cap remains 1024 by default.
 The shared client validates the embedded object extent; other lock types keep
 their own sizes. The recorded `d2a2304` KD-only arm used a 256-byte,
 128-byte-aligned object; those measurements do not cover this storage refactor.
@@ -110,7 +116,7 @@ policy. Static snapshots check complete structure and exact operation totals.
 | --- | --- | --- |
 | Native | Original kernel functions, no provider | Original mutex functions bypass experimental clobber macros |
 | TCLock | Native waiter-stack delegation | Actual upstream ordinary mutex port with parking |
-| KD | Explicit KD word, ABI1/JIT | KD-owned physical mutex and auxiliary legacy gate, ABI2/outer cookie/JIT |
+| KD | Explicit KD word, ABI1/JIT | KD-owned physical mutex and embedded delegation gate/tail, ABI2/outer cookie/JIT |
 
 TCLock retains NUMA/WWJUMP and configured 1,024; zero-based jumps can execute 1,025
 bodies. The shared port header currently enables NUMA even when Makefile's variable
@@ -142,9 +148,13 @@ right-shift rules. [Execution flow](../../docs/JIT_EXECUTION.md#heat-and-roles)
 defines the current counters. Session-end counters may include warmup and are not
 selected-window counts.
 
-A configuration that requires KD delegation must record JIT bodies returned by
-the wrapper. With little contention, a native run may have valid throughput but
-is marked NO_JIT, not a JIT pass. Contended mutex cases require returned bodies.
+A configuration that requires KD delegation must record generated-body entries.
+This synthetic runner's `jit_bodies` counter witnesses entry, not a completed
+return; its `jit_acceptance=PASS` cannot establish returned-body execution.
+Report those observations as `WITNESSED_JIT`. With little contention, local KD
+execution can have valid throughput while retaining its explicit `NO_JIT` or
+`NO_JIT_LOW_CONTENTION` status. The real API runner separately counts matching
+returned completions and can require them with `--require-jit`.
 TCLock spin delegation is `UNMEASURED`; that does not mean zero. TCLock mutex reports
 returned delegated bodies and successful parks, and must show delegation under
 contention. `--keep-going-no-jit` keeps drained failures and continues collecting,
@@ -155,7 +165,7 @@ Keep whole-run per-worker and node shares too, especially cohorts with unequal
 NUMA membership (24 threads in the original 40-vCPU setup). A bounded batch and
 positive observed counts do not prove starvation freedom.
 
-The [current KD-only comparison](../results/10.176.26.71/bench/comparison/mutex-kdonly-20261017T140354Z/README.md)
+The [historical KD-only comparison](../results/10.176.26.71/bench/comparison/mutex-kdonly-20261017T140354Z/README.md)
 retains 504 sessions for c01/post64 and pipebytes n16 over the standard grid,
 including the compatibility baseline and Native/TCLock controls. Use
 [performance status](../../docs/PERFORMANCE.md) for outcomes and
