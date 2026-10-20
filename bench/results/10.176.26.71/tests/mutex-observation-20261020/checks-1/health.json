@@ -1,0 +1,78 @@
+{
+  "boot_id": "b65f0205-c8f9-4385-8b13-039cbce243a6",
+  "idle": true,
+  "per_session_kernel_faults": [],
+  "result": {
+    "commands": [
+      {
+        "argv": [
+          "/root/kdlock-translation-venv-20261019/bin/python3",
+          "-m",
+          "pip",
+          "check"
+        ],
+        "cwd": "/root/host_fs/kdlock",
+        "exit_code": 0,
+        "finished_unix": 1792501528.4048922,
+        "name": "dependencies",
+        "started_unix": 1792501527.836489,
+        "timeout_seconds": 60
+      },
+      {
+        "argv": [
+          "make",
+          "-C",
+          "tests/unit",
+          "run",
+          "PYTHON=/root/kdlock-translation-venv-20261019/bin/python3",
+          "PY_TESTS="
+        ],
+        "cwd": "/root/kdlock-evidence/10.176.26.71/tests/mutex-observation-20261020/checks-1/source",
+        "exit_code": 0,
+        "finished_unix": 1792501529.3869076,
+        "name": "unit",
+        "started_unix": 1792501528.5163782,
+        "timeout_seconds": 180
+      },
+      {
+        "argv": [
+          "/root/kdlock-translation-venv-20261019/bin/python3",
+          "bench/mutex_api_compare/test_compare.py"
+        ],
+        "cwd": "/root/kdlock-evidence/10.176.26.71/tests/mutex-observation-20261020/checks-1/source",
+        "exit_code": 0,
+        "finished_unix": 1792501529.8148918,
+        "name": "test_compare",
+        "started_unix": 1792501529.497774,
+        "timeout_seconds": 180
+      },
+      {
+        "argv": [
+          "/root/kdlock-translation-venv-20261019/bin/python3",
+          "bench/mutex_api_compare/test_host_observer.py"
+        ],
+        "cwd": "/root/kdlock-evidence/10.176.26.71/tests/mutex-observation-20261020/checks-1/source",
+        "exit_code": 0,
+        "finished_unix": 1792501530.0410476,
+        "name": "test_host_observer",
+        "started_unix": 1792501529.9250646,
+        "timeout_seconds": 180
+      }
+    ],
+    "committed_manifest_sha256": "10ea11898b319ee1de02358022161c426466238288beebf951648aea751cf363",
+    "final_idle": true,
+    "full_suite": false,
+    "passed": true,
+    "runner_tests": [
+      "bench/mutex_api_compare/test_compare.py",
+      "bench/mutex_api_compare/test_host_observer.py"
+    ],
+    "script_sha256": "4b310e52d7439c3b0a66fdcf6835a073235035b6102f96b2904ab95ff27e1dfc",
+    "snapshot_tag": "before-mutex-kdonly-20261017T140354Z",
+    "source_revision": "bc729124baa479c006c448c0baaf3e965e591b33",
+    "source_unchanged": true,
+    "unit_basic": 2,
+    "unit_drivers": []
+  },
+  "scope": "Basic and focused userspace checks only; no modules loaded."
+}

@@ -52,3 +52,20 @@ Subsequent stages retain these dependencies:
 5. Compare equivalent 16/128-node plain/prefetch list work across supported lock
    families and worker configurations. Functional success alone is not evidence
    of a throughput advantage; losses and variation remain reportable.
+
+## Observation-tool checks
+
+`bc72912` passed dependency checks, both basic programs, 13 comparison tests
+and four observer/clock tests in the VM. The latter cover proc-stat parsing,
+exact task identity, affinity refusal and conservative clock projection.
+The frozen copy contains 462 source files matched to the committed manifest;
+both that copy and the maintained guest source stayed unchanged. Final idle
+was confirmed. No live modules or new throughput measurement ran in this step.
+
+[Checks and logs](../../tests/mutex-observation-20261020/checks-1/result.json)
+and [complete archive metadata](../../tests/mutex-observation-20261020/checks-1/archives.json)
+are retained separately. The archive manifest SHA-256 is
+`7992c1243992f81918cf0f877cc8df7b6a1c5477d5d2b17305eaa66688b1b651`;
+the inert source/archive review passed 6,410 checks with no issues. The first
+archive download failed because the local parent directory was absent; creating
+that destination and repeating the copy did not rerun any test.
