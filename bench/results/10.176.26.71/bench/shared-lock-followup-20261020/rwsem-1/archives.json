@@ -1,0 +1,51 @@
+{
+  "archive_prefix": "rwsem-1",
+  "boot_id": "b65f0205-c8f9-4385-8b13-039cbce243a6",
+  "completed": true,
+  "finished_ns": 1792513509435032286,
+  "groups": [
+    {
+      "bytes": 53997201,
+      "file": "matrix.tar.gz",
+      "group": "matrix",
+      "path": "/root/kdlock-evidence/10.176.26.71/bench/shared-lock-followup-20261020/rwsem-1-archives/matrix.tar.gz",
+      "roots": [
+        "rwsem-1/rwsem-grid"
+      ],
+      "sha256": "a54631ebd0f3bd70490450d198959c0d756bc874c7af0faa2d7f070033c61340"
+    },
+    {
+      "bytes": 154443,
+      "file": "metadata.tar.gz",
+      "group": "metadata",
+      "path": "/root/kdlock-evidence/10.176.26.71/bench/shared-lock-followup-20261020/rwsem-1-archives/metadata.tar.gz",
+      "roots": [
+        "rwsem-1/committed-source.json",
+        "rwsem-1/environment-after.json",
+        "rwsem-1/health.json",
+        "rwsem-1/host-after.json",
+        "rwsem-1/host-before.json",
+        "rwsem-1/preflight",
+        "rwsem-1/reference-environment",
+        "rwsem-1/run-tasks.py",
+        "rwsem-1/rwsem-grid.console.log",
+        "rwsem-1/task-plan.json",
+        "rwsem-1/tasks.json",
+        "rwsem-1/topology-after.json",
+        "rwsem-1/verify-comparison.py"
+      ],
+      "sha256": "07b9f8c556b85701a2efc822ac78dce68833443f837ea2c79bc811b697beb553"
+    }
+  ],
+  "guest_base": "/root/kdlock-evidence/10.176.26.71/bench/shared-lock-followup-20261020/rwsem-1",
+  "guest_idle": true,
+  "health_path": "health.json",
+  "health_sha256": "44141b22400a74945ac5bd98745e7cf65374de8835bfbea0c753bbfcc4be7200",
+  "idle_source_sha256": "c6f7dc17a41bc5c34bff35d3aaed7b4a995ba3e5225d2c48d032417ca3f1510e",
+  "input_inventory_sha256": "5dc292473fdeb3d47a128820a996bd01690e6b3c5f74ca32780b2db7cf9863b3",
+  "kernel_release": "6.1.159-kdclobber2",
+  "schema": 1,
+  "scope": "Complete evidence preservation; no deletion, module action, test or timing",
+  "script_sha256": "8d666f148a10d7fe19294cc7d193464c8bb53d4c3aec64b7518b9d335966c952",
+  "started_ns": 1792513499781873213
+}

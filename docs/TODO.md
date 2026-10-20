@@ -111,9 +111,14 @@ This restores validated correctness scope, while all seven performance points
 and the remaining environment/class/latency gaps stay explicitly unresolved.
 The next [shared-lock comparison stage](../bench/results/10.176.26.71/bench/shared-lock-followup-20261020/README.md)
 retains the current recovery VM and pinned environment, with separate fresh
-Native/KD rwsem and Native/TCLock/KD rwlock controls. The exact-environment
-rwsem preflight passed and its 756-session grid is running; the rwlock reference
-has not started. These results cannot resolve the mutex comparison by implication.
+Native/KD rwsem and Native/TCLock/KD rwlock controls. All 756 rwsem sessions
+completed correctly and drained, with 378 exact KD retirements. Its independent
+562,530-check review passed archive/source/arithmetic checks and retained one
+failed post-run host-thread comparison (115 versus 67). The observed Native
+comparison has 118/126 throughput passes, six misses and two split-class
+points, with substantial repetition variation. Acceptance remains open.
+The rwlock reference has not started. These results cannot resolve the mutex
+comparison by implication.
 The [mmap/fault source capture](../bench/results/10.176.26.71/tests/mmap-fault-followup-20261020/README.md)
 is prepared for an idle interval, without changing the guest kernel. The
 [resident-list timing plan](../bench/results/10.176.26.71/bench/nano-list-followup-20261020/README.md)

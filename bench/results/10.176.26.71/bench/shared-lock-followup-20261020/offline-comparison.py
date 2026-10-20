@@ -271,6 +271,7 @@ def main():
             'Every ratio needs three repetitions per arm in a single execution class.',
             'PASS is the runner label for at least one completed KD body; NO_JIT remains separate.',
             'PARTIAL_JIT or unmeasured KD evidence has no score; TCLock delegation is UNMEASURED.',
+            'Whole-interval JIT counters do not establish the execution mix inside the selected peak window.',
             'Throughput parity requires median whole and best peak ratios at least one.',
             'Three-repetition spreads/ranges are observed variance, not confidence intervals.',
             'Any failed endpoint check remains failed; runtime interference and p95 latency are unmeasured.',
@@ -279,7 +280,7 @@ def main():
     (args.report/'offline-review.json').write_text(json.dumps(output, indent=2, sort_keys=True)+'\n')
     fields = list(dict.fromkeys(k for p in points for k in p if k != 'groups'))
     with (args.report/'comparisons.csv').open('x', newline='') as stream:
-        writer = csv.DictWriter(stream, fields, extrasaction='ignore')
+        writer = csv.DictWriter(stream, fields, extrasaction='ignore', lineterminator='\n')
         writer.writeheader()
         writer.writerows(points)
     print(json.dumps(dict(
