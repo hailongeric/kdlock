@@ -2,7 +2,8 @@
 
 Continuation implementation `9a0fdd4`, with fixture-only corrections through
 `a4eb4eb`, passed basic and directly affected checks in the recovery VM.
-Live continuation probes are in progress. This is separate from the completed
+All nine live continuation/ownership probes passed in `live-6`. Resident-list
+coverage is in progress. This is separate from the completed
 [`d21a1e3` public-mutex performance matrix](../../bench/mutex-public-20261020/README.md).
 No whole-kernel replacement, mmap/fault integration, RT/ww_mutex or lockdep
 acceptance follows from this work.
@@ -144,3 +145,73 @@ Resident-list functional and matched prefetch measurements remain separate
 subsequent stages. The seven original mutex regressions, incomplete comparisons
 and unmeasured p95 gap remain open; correctness progress is not performance
 acceptance.
+
+## Completed affected live probes
+
+`live-6`, source `96f81ac`, completed all nine serialized tasks successfully:
+all five instruction-exit families, address guards, string services, ordinary
+mutex ownership/API checks, and rwsem sleeping/admission/cancellation checks.
+The two shared-family bodies use the additional bounded exclusion window;
+the other three marker bodies retain the frame-local correction from `cf1e858`.
+No production provider or instruction-admission rule changed during diagnosis.
+
+Rwlock's cold-delegated phase returned 1,549 JIT bodies; rwsem returned
+1,030,743. Each then recorded exactly one hot native exit, no hot returned body,
+and zero entries/completions/exits after the sticky ban. Cold warmup is allowed
+to establish contention without returned bodies; rwlock's warmup returned zero.
+Every shared-family phase completed 1,400,000 writes and 20,000,000 reads with
+the full task/flags/exclusion checks. All ownership probes completed and retired.
+Independent verification found the VM idle, all source/module/writer/frame
+retirement records zero, all 1,694 frozen source/binary hashes unchanged, and no
+matched faults in the nine kernel logs. Complete archives are retained under
+raw `native-continuation-20261020/live-6/` and the same VM evidence run identifier.
+
+The basic/affected unit results above remain bound to their original exact
+sources. Resident-list functional coverage is the remaining correctness stage;
+performance acceptance is still open. The separately retained offline-review
+script and per-attempt receipts check archive consistency, not live correctness
+or generic kernel replacement support.
+
+The [live-6 archive manifest](live-6/archives.json) has SHA-256
+`c0e2809ffa0c7fbd007b26766032c3351a5f41e6c7b454ef98d62f3acb59f4ba`.
+The read-only helper reviewed 4,655 archive members, all source/binary bindings,
+448 worker receipts and nine exact retirement records. Its separate corrected
+compiled-image review checked all five complete ELF `.text` listings and the
+1,472-byte loaded string-service image. The initial optional relocation audit
+used an incorrect offset convention; the corrected review uses CALL opcode
+offset + 1 for the displacement write and + 5 for the continuation. This was
+an offline review error, not a runtime failure. All helpers report no files
+touched; the main agent remains the only writer.
+
+## Resident-list attempts
+
+`list-functional-1`, source `96f81ac`, passed spin list/n16 with 1,595,966
+matching JIT entries/completions. Its supervisor then stopped because the
+source snapshot includes 94 generated observation-provider files. Independent
+reconstruction from the exact committed production source and observation
+patch verified all 94; 339 frozen source/binary hashes and final retirement
+were also verified. The original STOPPED receipt is preserved.
+
+The revised external supervisor verifies that complete generated set by
+reconstructing it in a new evidence directory. It still checks every other
+snapshot file against the committed manifest; no unknown extra file is ignored.
+`list-functional-2`, on the same source, passed public mutex list/n16 with
+1,503,219 returned JIT bodies. Spin list-prefetch/n16 then failed preparation:
+Miasm 0.1.5 decoded the existing T0 read hint as `PREFETCH0`, which did not match
+the policy's Intel mnemonic `PREFETCHT0`. No business phase ran for that case.
+Independent verification found idle, exact zero retirement counts, 678 unchanged
+frozen hashes, 188 reconstructed provider files and no matched kernel faults.
+
+The pending instruction-policy correction normalizes only `PREFETCH0/1/2`
+whose bytes encode the corresponding `0F 18 /1,/2,/3` memory hint, excluding
+LOCK/REP prefixes and register operands. The existing scalar, hardware-register,
+address and context checks still apply. Positive emission and mismatched-byte
+refusal tests are added. This is an explicit decoder-alias correction, not a
+general admission exemption. Its unit and remaining live results are pending.
+
+Both attempts have complete raw archives and compact receipts under
+[list-functional-1](list-functional-1/archives.json) and
+[list-functional-2](list-functional-2/archives.json). The first archive-wrapper
+invocations for attempt 2 used invalid health/group arguments and ran no tests;
+the failed wrapper directory remains on the VM. The successful complete
+archive directory is `list-functional-2-archives-v2`.

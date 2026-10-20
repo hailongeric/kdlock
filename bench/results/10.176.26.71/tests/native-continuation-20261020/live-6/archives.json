@@ -1,0 +1,61 @@
+{
+  "archive_prefix": "live-6",
+  "boot_id": "b65f0205-c8f9-4385-8b13-039cbce243a6",
+  "completed": true,
+  "finished_ns": 1792494264352266435,
+  "groups": [
+    {
+      "bytes": 36181373,
+      "file": "probes.tar.gz",
+      "group": "probes",
+      "path": "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6-archives/probes.tar.gz",
+      "roots": [
+        "live-6/address-guard",
+        "live-6/mutex-local",
+        "live-6/mutex-outer",
+        "live-6/mutex-public",
+        "live-6/rwlock",
+        "live-6/rwsem",
+        "live-6/rwsem-admission",
+        "live-6/spin",
+        "live-6/string-service"
+      ],
+      "sha256": "73bd8291efc85c273873329c732fd6237470892e76a59df4c754c2fc081f26e9"
+    },
+    {
+      "bytes": 44631,
+      "file": "metadata.tar.gz",
+      "group": "metadata",
+      "path": "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6-archives/metadata.tar.gz",
+      "roots": [
+        "live-6/address-guard.console.log",
+        "live-6/committed-source.json",
+        "live-6/health.json",
+        "live-6/host-before.json",
+        "live-6/mutex-local.console.log",
+        "live-6/mutex-outer.console.log",
+        "live-6/mutex-public.console.log",
+        "live-6/run-tasks.py",
+        "live-6/rwlock.console.log",
+        "live-6/rwsem-admission.console.log",
+        "live-6/rwsem.console.log",
+        "live-6/spin.console.log",
+        "live-6/string-service.console.log",
+        "live-6/task-plan.json",
+        "live-6/tasks.json"
+      ],
+      "sha256": "ef24ffd97814aa127f2b7e9e8424067cdc2e13f20b63a0fd2f20f012ebac524c"
+    }
+  ],
+  "guest_base": "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6",
+  "guest_idle": true,
+  "health_path": "health.json",
+  "health_sha256": "614cdca0a4b62a1e79a255fc78b8e398a14cbf28728f752bf806d9656cac745b",
+  "idle_source_sha256": "c6f7dc17a41bc5c34bff35d3aaed7b4a995ba3e5225d2c48d032417ca3f1510e",
+  "input_inventory_sha256": "5cd2c4b2df7c634cc49e77439c240dad531166faf6bbbdbb34f273faec50c808",
+  "kernel_release": "6.1.159-kdclobber2",
+  "schema": 1,
+  "scope": "Complete evidence preservation; no deletion, module action, test or timing",
+  "script_sha256": "8d666f148a10d7fe19294cc7d193464c8bb53d4c3aec64b7518b9d335966c952",
+  "started_ns": 1792494258521319246
+}

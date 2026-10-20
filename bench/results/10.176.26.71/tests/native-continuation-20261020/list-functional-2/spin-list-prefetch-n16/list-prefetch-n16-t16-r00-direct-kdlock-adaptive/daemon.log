@@ -1,0 +1,9 @@
+[KD_JIT][WARN] reason=STATIC_PERCPU_SCREENING pid=0 entry="0xffffffffc07d80fc" rip="0xffffffffc07d80fc" inst="<context symbol resolution>" action="extend_static_ranges" detail="core static/module reserved arenas only; dynamic allocations, object lifetimes and unknown pointers are not validated" cpus=64 bytes_per_cpu=229376 core_bytes=221184 module_bytes=8192
+[WARNING ]: Negative offset
+[WARNING ]: cannot disasm at FFFFFFFF822024E0
+[KD_JIT][WARN] reason=CONTEXT_NATIVE_ONLY pid=0 entry="0xffffffffc07d80fc" rip="0xffffffffc07d80a6" inst="PREFETCH0  BYTE PTR [RAX]" action="reject_entry" detail="instruction PREFETCH0 has no delegated CPU-state contract at 0xffffffffc07d80a6"
+Translation device session: inherited=1
+Translation runtime capability: mutex_stack_bytes=256 percpu_module_bytes=8192 native_escape=1 address_guard=1 string_services=1 string_write=1 audited_strings=1 direct_strings=1 root_native_escape=1
+Translation input: entry=0xffffffffc07d80fc targets=1 regions=1 bytes=8192
+KD_TRANSLATION_METRICS {"schema":1,"pid":0,"tgid":2815922,"entry":"0xffffffffc07d80fc","lock_kind":1,"child":2815928,"started_ns":451577779566872,"finished_ns":451580503064166,"wall_ns":2723497294,"user_ns":1723167000,"system_ns":999897000,"maxrss_kib":50324,"minor_faults":12489,"major_faults":0,"voluntary_cs":1,"involuntary_cs":5,"status":512,"result":2}
+daemon: native-only pid=0 entry=0xffffffffc07d80fc

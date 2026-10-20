@@ -1,0 +1,2113 @@
+{
+  "accepted": true,
+  "arm": "kdlock",
+  "caller_abi": "clobber",
+  "capabilities": {
+    "features": 4091,
+    "mutex_stack_bytes": 256,
+    "percpu_module_bytes": 8192,
+    "version": 12
+  },
+  "cpus": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15
+  ],
+  "daemon_pid": 2806665,
+  "delegate": true,
+  "drained": true,
+  "entry_abi": 1,
+  "entry_range": [
+    18446744072643764608,
+    18446744072643764609
+  ],
+  "escape_events": [
+    {
+      "entry": 18446744072643764608,
+      "generation": 1,
+      "rip": 18446744072643764425,
+      "waiter_pid": 2806716
+    }
+  ],
+  "execution_status": "OK",
+  "final_parameters": {
+    "address_guard_count": "1",
+    "bench_complete_probe": "Y",
+    "bench_jit_bodies": "2982260",
+    "bench_jit_completions": "2982259",
+    "bench_lock_addr": "18446744072643775852",
+    "bench_quiet": "Y",
+    "direct_pad": "0",
+    "direct_strcmp": "0",
+    "hotlock_stats": "N",
+    "jit_fail_pending_lock": "0",
+    "jit_hl_fault_after_known_call": "0",
+    "jit_timing": "N",
+    "mutex_task_fail_once": "0",
+    "native_escape_count": "0",
+    "spin_delegate": "Y",
+    "spin_entry_ratio_limit": "2",
+    "spin_jit_fail_after_nested_lock": "0",
+    "spin_prefetch": "2",
+    "target_process": "kg_worker"
+  },
+  "finished_ns": 451027490264626,
+  "image_registry": [
+    {
+      "code": 18419722476154183680,
+      "entry": 18446744072643764608,
+      "entry_abi": 1,
+      "generation": 1,
+      "jump_from": 0,
+      "lock_kind": 1,
+      "pid": 0,
+      "requirements": 2,
+      "status": 0,
+      "target": 0,
+      "tgid": 2805062
+    }
+  ],
+  "initial_parameters": {
+    "address_guard_count": "0",
+    "bench_complete_probe": "Y",
+    "bench_jit_bodies": "0",
+    "bench_jit_completions": "0",
+    "bench_lock_addr": "18446744072643775852",
+    "bench_quiet": "Y",
+    "direct_pad": "0",
+    "direct_strcmp": "0",
+    "hotlock_stats": "N",
+    "jit_fail_pending_lock": "0",
+    "jit_hl_fault_after_known_call": "0",
+    "jit_timing": "N",
+    "mutex_task_fail_once": "0",
+    "native_escape_count": "0",
+    "spin_delegate": "Y",
+    "spin_entry_ratio_limit": "2",
+    "spin_jit_fail_after_nested_lock": "0",
+    "spin_prefetch": "2",
+    "target_process": "kg_worker"
+  },
+  "iterations": 100000,
+  "jit_status": "COLD_JIT_THEN_NATIVE_ONLY",
+  "kernel_identity": {
+    "baseline": "/root/kdlock-kernel-baselines/mutex-clobber2-20260919",
+    "build_files": 9,
+    "bundle_files": 7,
+    "config": true,
+    "ok": true,
+    "running_build_id": "5ca28058e156f34a2c7fe91e8e0fbf92f4e51960",
+    "source": "/mnt/kdlock-builds/linux-6.1.159-kdclobber2",
+    "source_files": 20
+  },
+  "layout": {
+    "active": 0,
+    "entry": 18446744072643764608,
+    "failures": 0,
+    "hot": 0,
+    "hot_taken": 0,
+    "idle": 1,
+    "lock_address": 18446744072643775852,
+    "marker": 18446744072643764425,
+    "prefix": 0,
+    "suffix": 0
+  },
+  "lock_kind": "spin",
+  "name": "session",
+  "phase_timeout": 120,
+  "phases": [
+    {
+      "after": {
+        "active": 0,
+        "entry": 18446744072643764608,
+        "failures": 0,
+        "hot": 0,
+        "hot_taken": 0,
+        "idle": 1,
+        "lock_address": 18446744072643775852,
+        "marker": 18446744072643764425,
+        "prefix": 1600000,
+        "suffix": 1600000
+      },
+      "before": {
+        "active": 0,
+        "entry": 18446744072643764608,
+        "failures": 0,
+        "hot": 0,
+        "hot_taken": 0,
+        "idle": 1,
+        "lock_address": 18446744072643775852,
+        "marker": 18446744072643764425,
+        "prefix": 0,
+        "suffix": 0
+      },
+      "callers": [
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/address-guard/source/tests/kernel/spin/address_guard/run.py",
+            "--worker",
+            "0",
+            "100000",
+            "0",
+            "451019860473935"
+          ],
+          "pid": 2806677
+        },
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/address-guard/source/tests/kernel/spin/address_guard/run.py",
+            "--worker",
+            "1",
+            "100000",
+            "1",
+            "451019860473935"
+          ],
+          "pid": 2806678
+        },
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/address-guard/source/tests/kernel/spin/address_guard/run.py",
+            "--worker",
+            "2",
+            "100000",
+            "2",
+            "451019860473935"
+          ],
+          "pid": 2806679
+        },
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/address-guard/source/tests/kernel/spin/address_guard/run.py",
+            "--worker",
+            "3",
+            "100000",
+            "3",
+            "451019860473935"
+          ],
+          "pid": 2806680
+        },
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/address-guard/source/tests/kernel/spin/address_guard/run.py",
+            "--worker",
+            "4",
+            "100000",
+            "4",
+            "451019860473935"
+          ],
+          "pid": 2806681
+        },
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/address-guard/source/tests/kernel/spin/address_guard/run.py",
+            "--worker",
+            "5",
+            "100000",
+            "5",
+            "451019860473935"
+          ],
+          "pid": 2806682
+        },
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/address-guard/source/tests/kernel/spin/address_guard/run.py",
+            "--worker",
+            "6",
+            "100000",
+            "6",
+            "451019860473935"
+          ],
+          "pid": 2806683
+        },
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/address-guard/source/tests/kernel/spin/address_guard/run.py",
+            "--worker",
+            "7",
+            "100000",
+            "7",
+            "451019860473935"
+          ],
+          "pid": 2806684
+        },
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/address-guard/source/tests/kernel/spin/address_guard/run.py",
+            "--worker",
+            "8",
+            "100000",
+            "8",
+            "451019860473935"
+          ],
+          "pid": 2806685
+        },
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/address-guard/source/tests/kernel/spin/address_guard/run.py",
+            "--worker",
+            "9",
+            "100000",
+            "9",
+            "451019860473935"
+          ],
+          "pid": 2806686
+        },
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/address-guard/source/tests/kernel/spin/address_guard/run.py",
+            "--worker",
+            "10",
+            "100000",
+            "10",
+            "451019860473935"
+          ],
+          "pid": 2806687
+        },
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/address-guard/source/tests/kernel/spin/address_guard/run.py",
+            "--worker",
+            "11",
+            "100000",
+            "11",
+            "451019860473935"
+          ],
+          "pid": 2806688
+        },
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/address-guard/source/tests/kernel/spin/address_guard/run.py",
+            "--worker",
+            "12",
+            "100000",
+            "12",
+            "451019860473935"
+          ],
+          "pid": 2806689
+        },
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/address-guard/source/tests/kernel/spin/address_guard/run.py",
+            "--worker",
+            "13",
+            "100000",
+            "13",
+            "451019860473935"
+          ],
+          "pid": 2806690
+        },
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/address-guard/source/tests/kernel/spin/address_guard/run.py",
+            "--worker",
+            "14",
+            "100000",
+            "14",
+            "451019860473935"
+          ],
+          "pid": 2806691
+        },
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/address-guard/source/tests/kernel/spin/address_guard/run.py",
+            "--worker",
+            "15",
+            "100000",
+            "15",
+            "451019860473935"
+          ],
+          "pid": 2806692
+        }
+      ],
+      "complete": true,
+      "counters_after": {
+        "address_guard_count": 0,
+        "bench_jit_bodies": 1435639,
+        "bench_jit_completions": 1435639
+      },
+      "counters_before": {
+        "address_guard_count": 0,
+        "bench_jit_bodies": 0,
+        "bench_jit_completions": 0
+      },
+      "hot": 0,
+      "iterations": 100000,
+      "jit_delta": {
+        "address_guard_count": 0,
+        "bench_jit_bodies": 1435639,
+        "bench_jit_completions": 1435639
+      },
+      "name": "cold-warmup",
+      "registry_after": [
+        {
+          "code": 18419722476154183680,
+          "entry": 18446744072643764608,
+          "entry_abi": 1,
+          "generation": 1,
+          "jump_from": 0,
+          "lock_kind": 1,
+          "pid": 0,
+          "requirements": 2,
+          "status": 0,
+          "target": 0,
+          "tgid": 2805062
+        }
+      ],
+      "registry_before": [
+        {
+          "code": 18419722476154183680,
+          "entry": 18446744072643764608,
+          "entry_abi": 1,
+          "generation": 1,
+          "jump_from": 0,
+          "lock_kind": 1,
+          "pid": 0,
+          "requirements": 2,
+          "status": 0,
+          "target": 0,
+          "tgid": 2805062
+        }
+      ],
+      "returncodes": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "source_after": {
+        "frames": 0,
+        "modules": 1,
+        "state": 0,
+        "writers": 1
+      },
+      "workers": [
+        {
+          "comm": "kg_worker",
+          "completed": 100000,
+          "cpu": 0,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 0
+        },
+        {
+          "comm": "kg_worker",
+          "completed": 100000,
+          "cpu": 1,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 1
+        },
+        {
+          "comm": "kg_worker",
+          "completed": 100000,
+          "cpu": 2,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 2
+        },
+        {
+          "comm": "kg_worker",
+          "completed": 100000,
+          "cpu": 3,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 3
+        },
+        {
+          "comm": "kg_worker",
+          "completed": 100000,
+          "cpu": 4,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 4
+        },
+        {
+          "comm": "kg_worker",
+          "completed": 100000,
+          "cpu": 5,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 5
+        },
+        {
+          "comm": "kg_worker",
+          "completed": 100000,
+          "cpu": 6,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 6
+        },
+        {
+          "comm": "kg_worker",
+          "completed": 100000,
+          "cpu": 7,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 7
+        },
+        {
+          "comm": "kg_worker",
+          "completed": 100000,
+          "cpu": 8,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 8
+        },
+        {
+          "comm": "kg_worker",
+          "completed": 100000,
+          "cpu": 9,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 9
+        },
+        {
+          "comm": "kg_worker",
+          "completed": 100000,
+          "cpu": 10,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 10
+        },
+        {
+          "comm": "kg_worker",
+          "completed": 100000,
+          "cpu": 11,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 11
+        },
+        {
+          "comm": "kg_worker",
+          "completed": 100000,
+          "cpu": 12,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 12
+        },
+        {
+          "comm": "kg_worker",
+          "completed": 100000,
+          "cpu": 13,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 13
+        },
+        {
+          "comm": "kg_worker",
+          "completed": 100000,
+          "cpu": 14,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 14
+        },
+        {
+          "comm": "kg_worker",
+          "completed": 100000,
+          "cpu": 15,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 15
+        }
+      ]
+    },
+    {
+      "after": {
+        "active": 0,
+        "entry": 18446744072643764608,
+        "failures": 0,
+        "hot": 0,
+        "hot_taken": 0,
+        "idle": 1,
+        "lock_address": 18446744072643775852,
+        "marker": 18446744072643764425,
+        "prefix": 3200000,
+        "suffix": 3200000
+      },
+      "before": {
+        "active": 0,
+        "entry": 18446744072643764608,
+        "failures": 0,
+        "hot": 0,
+        "hot_taken": 0,
+        "idle": 1,
+        "lock_address": 18446744072643775852,
+        "marker": 18446744072643764425,
+        "prefix": 1600000,
+        "suffix": 1600000
+      },
+      "callers": [
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/address-guard/source/tests/kernel/spin/address_guard/run.py",
+            "--worker",
+            "0",
+            "100000",
+            "0",
+            "451022132767197"
+          ],
+          "pid": 2806693
+        },
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/address-guard/source/tests/kernel/spin/address_guard/run.py",
+            "--worker",
+            "1",
+            "100000",
+            "1",
+            "451022132767197"
+          ],
+          "pid": 2806694
+        },
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/address-guard/source/tests/kernel/spin/address_guard/run.py",
+            "--worker",
+            "2",
+            "100000",
+            "2",
+            "451022132767197"
+          ],
+          "pid": 2806695
+        },
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/address-guard/source/tests/kernel/spin/address_guard/run.py",
+            "--worker",
+            "3",
+            "100000",
+            "3",
+            "451022132767197"
+          ],
+          "pid": 2806696
+        },
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/address-guard/source/tests/kernel/spin/address_guard/run.py",
+            "--worker",
+            "4",
+            "100000",
+            "4",
+            "451022132767197"
+          ],
+          "pid": 2806697
+        },
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/address-guard/source/tests/kernel/spin/address_guard/run.py",
+            "--worker",
+            "5",
+            "100000",
+            "5",
+            "451022132767197"
+          ],
+          "pid": 2806698
+        },
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/address-guard/source/tests/kernel/spin/address_guard/run.py",
+            "--worker",
+            "6",
+            "100000",
+            "6",
+            "451022132767197"
+          ],
+          "pid": 2806699
+        },
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/address-guard/source/tests/kernel/spin/address_guard/run.py",
+            "--worker",
+            "7",
+            "100000",
+            "7",
+            "451022132767197"
+          ],
+          "pid": 2806700
+        },
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/address-guard/source/tests/kernel/spin/address_guard/run.py",
+            "--worker",
+            "8",
+            "100000",
+            "8",
+            "451022132767197"
+          ],
+          "pid": 2806701
+        },
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/address-guard/source/tests/kernel/spin/address_guard/run.py",
+            "--worker",
+            "9",
+            "100000",
+            "9",
+            "451022132767197"
+          ],
+          "pid": 2806702
+        },
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/address-guard/source/tests/kernel/spin/address_guard/run.py",
+            "--worker",
+            "10",
+            "100000",
+            "10",
+            "451022132767197"
+          ],
+          "pid": 2806703
+        },
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/address-guard/source/tests/kernel/spin/address_guard/run.py",
+            "--worker",
+            "11",
+            "100000",
+            "11",
+            "451022132767197"
+          ],
+          "pid": 2806704
+        },
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/address-guard/source/tests/kernel/spin/address_guard/run.py",
+            "--worker",
+            "12",
+            "100000",
+            "12",
+            "451022132767197"
+          ],
+          "pid": 2806705
+        },
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/address-guard/source/tests/kernel/spin/address_guard/run.py",
+            "--worker",
+            "13",
+            "100000",
+            "13",
+            "451022132767197"
+          ],
+          "pid": 2806706
+        },
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/address-guard/source/tests/kernel/spin/address_guard/run.py",
+            "--worker",
+            "14",
+            "100000",
+            "14",
+            "451022132767197"
+          ],
+          "pid": 2806707
+        },
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/address-guard/source/tests/kernel/spin/address_guard/run.py",
+            "--worker",
+            "15",
+            "100000",
+            "15",
+            "451022132767197"
+          ],
+          "pid": 2806708
+        }
+      ],
+      "complete": true,
+      "counters_after": {
+        "address_guard_count": 0,
+        "bench_jit_bodies": 2982259,
+        "bench_jit_completions": 2982259
+      },
+      "counters_before": {
+        "address_guard_count": 0,
+        "bench_jit_bodies": 1435639,
+        "bench_jit_completions": 1435639
+      },
+      "hot": 0,
+      "iterations": 100000,
+      "jit_delta": {
+        "address_guard_count": 0,
+        "bench_jit_bodies": 1546620,
+        "bench_jit_completions": 1546620
+      },
+      "name": "cold-delegated",
+      "registry_after": [
+        {
+          "code": 18419722476154183680,
+          "entry": 18446744072643764608,
+          "entry_abi": 1,
+          "generation": 1,
+          "jump_from": 0,
+          "lock_kind": 1,
+          "pid": 0,
+          "requirements": 2,
+          "status": 0,
+          "target": 0,
+          "tgid": 2805062
+        }
+      ],
+      "registry_before": [
+        {
+          "code": 18419722476154183680,
+          "entry": 18446744072643764608,
+          "entry_abi": 1,
+          "generation": 1,
+          "jump_from": 0,
+          "lock_kind": 1,
+          "pid": 0,
+          "requirements": 2,
+          "status": 0,
+          "target": 0,
+          "tgid": 2805062
+        }
+      ],
+      "returncodes": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "source_after": {
+        "frames": 0,
+        "modules": 1,
+        "state": 0,
+        "writers": 1
+      },
+      "workers": [
+        {
+          "comm": "kg_worker",
+          "completed": 100000,
+          "cpu": 0,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 0
+        },
+        {
+          "comm": "kg_worker",
+          "completed": 100000,
+          "cpu": 1,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 1
+        },
+        {
+          "comm": "kg_worker",
+          "completed": 100000,
+          "cpu": 2,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 2
+        },
+        {
+          "comm": "kg_worker",
+          "completed": 100000,
+          "cpu": 3,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 3
+        },
+        {
+          "comm": "kg_worker",
+          "completed": 100000,
+          "cpu": 4,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 4
+        },
+        {
+          "comm": "kg_worker",
+          "completed": 100000,
+          "cpu": 5,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 5
+        },
+        {
+          "comm": "kg_worker",
+          "completed": 100000,
+          "cpu": 6,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 6
+        },
+        {
+          "comm": "kg_worker",
+          "completed": 100000,
+          "cpu": 7,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 7
+        },
+        {
+          "comm": "kg_worker",
+          "completed": 100000,
+          "cpu": 8,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 8
+        },
+        {
+          "comm": "kg_worker",
+          "completed": 100000,
+          "cpu": 9,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 9
+        },
+        {
+          "comm": "kg_worker",
+          "completed": 100000,
+          "cpu": 10,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 10
+        },
+        {
+          "comm": "kg_worker",
+          "completed": 100000,
+          "cpu": 11,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 11
+        },
+        {
+          "comm": "kg_worker",
+          "completed": 100000,
+          "cpu": 12,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 12
+        },
+        {
+          "comm": "kg_worker",
+          "completed": 100000,
+          "cpu": 13,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 13
+        },
+        {
+          "comm": "kg_worker",
+          "completed": 100000,
+          "cpu": 14,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 14
+        },
+        {
+          "comm": "kg_worker",
+          "completed": 100000,
+          "cpu": 15,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 15
+        }
+      ]
+    },
+    {
+      "after": {
+        "active": 0,
+        "entry": 18446744072643764608,
+        "failures": 0,
+        "hot": 1,
+        "hot_taken": 1600000,
+        "idle": 1,
+        "lock_address": 18446744072643775852,
+        "marker": 18446744072643764425,
+        "prefix": 4800000,
+        "suffix": 4800000
+      },
+      "before": {
+        "active": 0,
+        "entry": 18446744072643764608,
+        "failures": 0,
+        "hot": 1,
+        "hot_taken": 0,
+        "idle": 1,
+        "lock_address": 18446744072643775852,
+        "marker": 18446744072643764425,
+        "prefix": 3200000,
+        "suffix": 3200000
+      },
+      "callers": [
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/address-guard/source/tests/kernel/spin/address_guard/run.py",
+            "--worker",
+            "0",
+            "100000",
+            "0",
+            "451024425067587"
+          ],
+          "pid": 2806709
+        },
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/address-guard/source/tests/kernel/spin/address_guard/run.py",
+            "--worker",
+            "1",
+            "100000",
+            "1",
+            "451024425067587"
+          ],
+          "pid": 2806710
+        },
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/address-guard/source/tests/kernel/spin/address_guard/run.py",
+            "--worker",
+            "2",
+            "100000",
+            "2",
+            "451024425067587"
+          ],
+          "pid": 2806711
+        },
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/address-guard/source/tests/kernel/spin/address_guard/run.py",
+            "--worker",
+            "3",
+            "100000",
+            "3",
+            "451024425067587"
+          ],
+          "pid": 2806712
+        },
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/address-guard/source/tests/kernel/spin/address_guard/run.py",
+            "--worker",
+            "4",
+            "100000",
+            "4",
+            "451024425067587"
+          ],
+          "pid": 2806713
+        },
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/address-guard/source/tests/kernel/spin/address_guard/run.py",
+            "--worker",
+            "5",
+            "100000",
+            "5",
+            "451024425067587"
+          ],
+          "pid": 2806714
+        },
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/address-guard/source/tests/kernel/spin/address_guard/run.py",
+            "--worker",
+            "6",
+            "100000",
+            "6",
+            "451024425067587"
+          ],
+          "pid": 2806715
+        },
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/address-guard/source/tests/kernel/spin/address_guard/run.py",
+            "--worker",
+            "7",
+            "100000",
+            "7",
+            "451024425067587"
+          ],
+          "pid": 2806716
+        },
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/address-guard/source/tests/kernel/spin/address_guard/run.py",
+            "--worker",
+            "8",
+            "100000",
+            "8",
+            "451024425067587"
+          ],
+          "pid": 2806717
+        },
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/address-guard/source/tests/kernel/spin/address_guard/run.py",
+            "--worker",
+            "9",
+            "100000",
+            "9",
+            "451024425067587"
+          ],
+          "pid": 2806718
+        },
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/address-guard/source/tests/kernel/spin/address_guard/run.py",
+            "--worker",
+            "10",
+            "100000",
+            "10",
+            "451024425067587"
+          ],
+          "pid": 2806719
+        },
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/address-guard/source/tests/kernel/spin/address_guard/run.py",
+            "--worker",
+            "11",
+            "100000",
+            "11",
+            "451024425067587"
+          ],
+          "pid": 2806720
+        },
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/address-guard/source/tests/kernel/spin/address_guard/run.py",
+            "--worker",
+            "12",
+            "100000",
+            "12",
+            "451024425067587"
+          ],
+          "pid": 2806721
+        },
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/address-guard/source/tests/kernel/spin/address_guard/run.py",
+            "--worker",
+            "13",
+            "100000",
+            "13",
+            "451024425067587"
+          ],
+          "pid": 2806722
+        },
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/address-guard/source/tests/kernel/spin/address_guard/run.py",
+            "--worker",
+            "14",
+            "100000",
+            "14",
+            "451024425067587"
+          ],
+          "pid": 2806723
+        },
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/address-guard/source/tests/kernel/spin/address_guard/run.py",
+            "--worker",
+            "15",
+            "100000",
+            "15",
+            "451024425067587"
+          ],
+          "pid": 2806724
+        }
+      ],
+      "complete": true,
+      "counters_after": {
+        "address_guard_count": 1,
+        "bench_jit_bodies": 2982260,
+        "bench_jit_completions": 2982259
+      },
+      "counters_before": {
+        "address_guard_count": 0,
+        "bench_jit_bodies": 2982259,
+        "bench_jit_completions": 2982259
+      },
+      "hot": 1,
+      "iterations": 100000,
+      "jit_delta": {
+        "address_guard_count": 1,
+        "bench_jit_bodies": 1,
+        "bench_jit_completions": 0
+      },
+      "name": "hot-escape",
+      "registry_after": [
+        {
+          "code": 18419722476154183680,
+          "entry": 18446744072643764608,
+          "entry_abi": 1,
+          "generation": 1,
+          "jump_from": 0,
+          "lock_kind": 1,
+          "pid": 0,
+          "requirements": 2,
+          "status": -3,
+          "target": 0,
+          "tgid": 2805062
+        }
+      ],
+      "registry_before": [
+        {
+          "code": 18419722476154183680,
+          "entry": 18446744072643764608,
+          "entry_abi": 1,
+          "generation": 1,
+          "jump_from": 0,
+          "lock_kind": 1,
+          "pid": 0,
+          "requirements": 2,
+          "status": 0,
+          "target": 0,
+          "tgid": 2805062
+        }
+      ],
+      "returncodes": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "source_after": {
+        "frames": 0,
+        "modules": 1,
+        "state": 0,
+        "writers": 1
+      },
+      "workers": [
+        {
+          "comm": "kg_worker",
+          "completed": 100000,
+          "cpu": 0,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 0
+        },
+        {
+          "comm": "kg_worker",
+          "completed": 100000,
+          "cpu": 1,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 1
+        },
+        {
+          "comm": "kg_worker",
+          "completed": 100000,
+          "cpu": 2,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 2
+        },
+        {
+          "comm": "kg_worker",
+          "completed": 100000,
+          "cpu": 3,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 3
+        },
+        {
+          "comm": "kg_worker",
+          "completed": 100000,
+          "cpu": 4,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 4
+        },
+        {
+          "comm": "kg_worker",
+          "completed": 100000,
+          "cpu": 5,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 5
+        },
+        {
+          "comm": "kg_worker",
+          "completed": 100000,
+          "cpu": 6,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 6
+        },
+        {
+          "comm": "kg_worker",
+          "completed": 100000,
+          "cpu": 7,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 7
+        },
+        {
+          "comm": "kg_worker",
+          "completed": 100000,
+          "cpu": 8,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 8
+        },
+        {
+          "comm": "kg_worker",
+          "completed": 100000,
+          "cpu": 9,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 9
+        },
+        {
+          "comm": "kg_worker",
+          "completed": 100000,
+          "cpu": 10,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 10
+        },
+        {
+          "comm": "kg_worker",
+          "completed": 100000,
+          "cpu": 11,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 11
+        },
+        {
+          "comm": "kg_worker",
+          "completed": 100000,
+          "cpu": 12,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 12
+        },
+        {
+          "comm": "kg_worker",
+          "completed": 100000,
+          "cpu": 13,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 13
+        },
+        {
+          "comm": "kg_worker",
+          "completed": 100000,
+          "cpu": 14,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 14
+        },
+        {
+          "comm": "kg_worker",
+          "completed": 100000,
+          "cpu": 15,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 15
+        }
+      ]
+    },
+    {
+      "after": {
+        "active": 0,
+        "entry": 18446744072643764608,
+        "failures": 0,
+        "hot": 1,
+        "hot_taken": 3200000,
+        "idle": 1,
+        "lock_address": 18446744072643775852,
+        "marker": 18446744072643764425,
+        "prefix": 6400000,
+        "suffix": 6400000
+      },
+      "before": {
+        "active": 0,
+        "entry": 18446744072643764608,
+        "failures": 0,
+        "hot": 1,
+        "hot_taken": 1600000,
+        "idle": 1,
+        "lock_address": 18446744072643775852,
+        "marker": 18446744072643764425,
+        "prefix": 4800000,
+        "suffix": 4800000
+      },
+      "callers": [
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/address-guard/source/tests/kernel/spin/address_guard/run.py",
+            "--worker",
+            "0",
+            "100000",
+            "0",
+            "451026365383518"
+          ],
+          "pid": 2806725
+        },
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/address-guard/source/tests/kernel/spin/address_guard/run.py",
+            "--worker",
+            "1",
+            "100000",
+            "1",
+            "451026365383518"
+          ],
+          "pid": 2806726
+        },
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/address-guard/source/tests/kernel/spin/address_guard/run.py",
+            "--worker",
+            "2",
+            "100000",
+            "2",
+            "451026365383518"
+          ],
+          "pid": 2806727
+        },
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/address-guard/source/tests/kernel/spin/address_guard/run.py",
+            "--worker",
+            "3",
+            "100000",
+            "3",
+            "451026365383518"
+          ],
+          "pid": 2806728
+        },
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/address-guard/source/tests/kernel/spin/address_guard/run.py",
+            "--worker",
+            "4",
+            "100000",
+            "4",
+            "451026365383518"
+          ],
+          "pid": 2806729
+        },
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/address-guard/source/tests/kernel/spin/address_guard/run.py",
+            "--worker",
+            "5",
+            "100000",
+            "5",
+            "451026365383518"
+          ],
+          "pid": 2806730
+        },
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/address-guard/source/tests/kernel/spin/address_guard/run.py",
+            "--worker",
+            "6",
+            "100000",
+            "6",
+            "451026365383518"
+          ],
+          "pid": 2806731
+        },
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/address-guard/source/tests/kernel/spin/address_guard/run.py",
+            "--worker",
+            "7",
+            "100000",
+            "7",
+            "451026365383518"
+          ],
+          "pid": 2806732
+        },
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/address-guard/source/tests/kernel/spin/address_guard/run.py",
+            "--worker",
+            "8",
+            "100000",
+            "8",
+            "451026365383518"
+          ],
+          "pid": 2806733
+        },
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/address-guard/source/tests/kernel/spin/address_guard/run.py",
+            "--worker",
+            "9",
+            "100000",
+            "9",
+            "451026365383518"
+          ],
+          "pid": 2806734
+        },
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/address-guard/source/tests/kernel/spin/address_guard/run.py",
+            "--worker",
+            "10",
+            "100000",
+            "10",
+            "451026365383518"
+          ],
+          "pid": 2806735
+        },
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/address-guard/source/tests/kernel/spin/address_guard/run.py",
+            "--worker",
+            "11",
+            "100000",
+            "11",
+            "451026365383518"
+          ],
+          "pid": 2806736
+        },
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/address-guard/source/tests/kernel/spin/address_guard/run.py",
+            "--worker",
+            "12",
+            "100000",
+            "12",
+            "451026365383518"
+          ],
+          "pid": 2806737
+        },
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/address-guard/source/tests/kernel/spin/address_guard/run.py",
+            "--worker",
+            "13",
+            "100000",
+            "13",
+            "451026365383518"
+          ],
+          "pid": 2806738
+        },
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/address-guard/source/tests/kernel/spin/address_guard/run.py",
+            "--worker",
+            "14",
+            "100000",
+            "14",
+            "451026365383518"
+          ],
+          "pid": 2806739
+        },
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/address-guard/source/tests/kernel/spin/address_guard/run.py",
+            "--worker",
+            "15",
+            "100000",
+            "15",
+            "451026365383518"
+          ],
+          "pid": 2806740
+        }
+      ],
+      "complete": true,
+      "counters_after": {
+        "address_guard_count": 1,
+        "bench_jit_bodies": 2982260,
+        "bench_jit_completions": 2982259
+      },
+      "counters_before": {
+        "address_guard_count": 1,
+        "bench_jit_bodies": 2982260,
+        "bench_jit_completions": 2982259
+      },
+      "hot": 1,
+      "iterations": 100000,
+      "jit_delta": {
+        "address_guard_count": 0,
+        "bench_jit_bodies": 0,
+        "bench_jit_completions": 0
+      },
+      "name": "post-ban",
+      "registry_after": [
+        {
+          "code": 18419722476154183680,
+          "entry": 18446744072643764608,
+          "entry_abi": 1,
+          "generation": 1,
+          "jump_from": 0,
+          "lock_kind": 1,
+          "pid": 0,
+          "requirements": 2,
+          "status": -3,
+          "target": 0,
+          "tgid": 2805062
+        }
+      ],
+      "registry_before": [
+        {
+          "code": 18419722476154183680,
+          "entry": 18446744072643764608,
+          "entry_abi": 1,
+          "generation": 1,
+          "jump_from": 0,
+          "lock_kind": 1,
+          "pid": 0,
+          "requirements": 2,
+          "status": -3,
+          "target": 0,
+          "tgid": 2805062
+        }
+      ],
+      "returncodes": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "source_after": {
+        "frames": 0,
+        "modules": 1,
+        "state": 0,
+        "writers": 1
+      },
+      "workers": [
+        {
+          "comm": "kg_worker",
+          "completed": 100000,
+          "cpu": 0,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 0
+        },
+        {
+          "comm": "kg_worker",
+          "completed": 100000,
+          "cpu": 1,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 1
+        },
+        {
+          "comm": "kg_worker",
+          "completed": 100000,
+          "cpu": 2,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 2
+        },
+        {
+          "comm": "kg_worker",
+          "completed": 100000,
+          "cpu": 3,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 3
+        },
+        {
+          "comm": "kg_worker",
+          "completed": 100000,
+          "cpu": 4,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 4
+        },
+        {
+          "comm": "kg_worker",
+          "completed": 100000,
+          "cpu": 5,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 5
+        },
+        {
+          "comm": "kg_worker",
+          "completed": 100000,
+          "cpu": 6,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 6
+        },
+        {
+          "comm": "kg_worker",
+          "completed": 100000,
+          "cpu": 7,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 7
+        },
+        {
+          "comm": "kg_worker",
+          "completed": 100000,
+          "cpu": 8,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 8
+        },
+        {
+          "comm": "kg_worker",
+          "completed": 100000,
+          "cpu": 9,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 9
+        },
+        {
+          "comm": "kg_worker",
+          "completed": 100000,
+          "cpu": 10,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 10
+        },
+        {
+          "comm": "kg_worker",
+          "completed": 100000,
+          "cpu": 11,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 11
+        },
+        {
+          "comm": "kg_worker",
+          "completed": 100000,
+          "cpu": 12,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 12
+        },
+        {
+          "comm": "kg_worker",
+          "completed": 100000,
+          "cpu": 13,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 13
+        },
+        {
+          "comm": "kg_worker",
+          "completed": 100000,
+          "cpu": 14,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 14
+        },
+        {
+          "comm": "kg_worker",
+          "completed": 100000,
+          "cpu": 15,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 15
+        }
+      ]
+    }
+  ],
+  "publication": {
+    "entry": {
+      "code": 18419722476154183680,
+      "entry": 18446744072643764608,
+      "entry_abi": 1,
+      "generation": 1,
+      "lock_kind": 1,
+      "pid": 0,
+      "requirements": 2,
+      "status": 0,
+      "tgid": 2805062
+    },
+    "images": {
+      "bin.txt": "e2ff5573d79ad7c1bdcbc368f5abd00fc46eea487aa0010731c69e09e9464406",
+      "jit.S": "50d53d42a1530bbd68c456a3833d7b826e32060786cb62708c0651238eaffceb",
+      "jit.bin": "ea577c3aeb5232e55dd2bc1e4b8eb6c31922be7920f393e09191c830a40574dd"
+    },
+    "source": {
+      "frames": 0,
+      "modules": 1,
+      "state": 0,
+      "writers": 1
+    }
+  },
+  "retired": {
+    "frames": 0,
+    "modules": 0,
+    "state": 2,
+    "writers": 0
+  },
+  "schema": 1,
+  "warmup_iterations": 100000
+}

@@ -1,0 +1,2128 @@
+{
+  "accepted": true,
+  "arm": "kdlock",
+  "caller_abi": "clobber",
+  "capabilities": {
+    "features": 4091,
+    "mutex_stack_bytes": 256,
+    "percpu_module_bytes": 8192,
+    "version": 12
+  },
+  "cpus": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15
+  ],
+  "daemon_pid": 2808336,
+  "delegate": true,
+  "drained": true,
+  "entry_abi": 1,
+  "entry_range": [
+    18446744072643764537,
+    18446744072643764538
+  ],
+  "escape_events": [],
+  "execution_status": "OK",
+  "final_parameters": {
+    "address_guard_count": "0",
+    "bench_complete_probe": "Y",
+    "bench_jit_bodies": "5644195",
+    "bench_jit_completions": "5644195",
+    "bench_lock_addr": "18446744072643775404",
+    "bench_quiet": "Y",
+    "direct_pad": "0",
+    "direct_strcmp": "5644195",
+    "hotlock_stats": "N",
+    "jit_fail_pending_lock": "0",
+    "jit_hl_fault_after_known_call": "0",
+    "jit_timing": "N",
+    "mutex_task_fail_once": "0",
+    "native_escape_count": "0",
+    "spin_delegate": "Y",
+    "spin_entry_ratio_limit": "2",
+    "spin_jit_fail_after_nested_lock": "0",
+    "spin_prefetch": "2",
+    "target_process": "ks_worker"
+  },
+  "finished_ns": 451060729221296,
+  "image_registry": [
+    {
+      "code": 18446744072691367936,
+      "entry": 18446744072643764537,
+      "entry_abi": 1,
+      "generation": 1,
+      "jump_from": 0,
+      "lock_kind": 1,
+      "pid": 0,
+      "requirements": 20,
+      "status": 0,
+      "target": 0,
+      "tgid": 2806745
+    }
+  ],
+  "initial_parameters": {
+    "address_guard_count": "0",
+    "bench_complete_probe": "Y",
+    "bench_jit_bodies": "0",
+    "bench_jit_completions": "0",
+    "bench_lock_addr": "18446744072643775404",
+    "bench_quiet": "Y",
+    "direct_pad": "0",
+    "direct_strcmp": "0",
+    "hotlock_stats": "N",
+    "jit_fail_pending_lock": "0",
+    "jit_hl_fault_after_known_call": "0",
+    "jit_timing": "N",
+    "mutex_task_fail_once": "0",
+    "native_escape_count": "0",
+    "spin_delegate": "Y",
+    "spin_entry_ratio_limit": "2",
+    "spin_jit_fail_after_nested_lock": "0",
+    "spin_prefetch": "2",
+    "target_process": "ks_worker"
+  },
+  "iterations": 100000,
+  "jit_status": "SHORT_AND_LONG_COMPLETE",
+  "kernel_identity": {
+    "baseline": "/root/kdlock-kernel-baselines/mutex-clobber2-20260919",
+    "build_files": 9,
+    "bundle_files": 7,
+    "config": true,
+    "ok": true,
+    "running_build_id": "5ca28058e156f34a2c7fe91e8e0fbf92f4e51960",
+    "source": "/mnt/kdlock-builds/linux-6.1.159-kdclobber2",
+    "source_files": 20
+  },
+  "layout": {
+    "active": 0,
+    "entry": 18446744072643764537,
+    "failures": 0,
+    "hot": 0,
+    "hot_taken": 0,
+    "idle": 1,
+    "lock_address": 18446744072643775404,
+    "marker": 18446744071593528208,
+    "prefix": 0,
+    "suffix": 0
+  },
+  "lock_kind": "spin",
+  "name": "session",
+  "phase_timeout": 120,
+  "phases": [
+    {
+      "after": {
+        "active": 0,
+        "entry": 18446744072643764537,
+        "failures": 0,
+        "hot": 0,
+        "hot_taken": 0,
+        "idle": 1,
+        "lock_address": 18446744072643775404,
+        "marker": 18446744071593528208,
+        "prefix": 1600000,
+        "suffix": 1600000
+      },
+      "before": {
+        "active": 0,
+        "entry": 18446744072643764537,
+        "failures": 0,
+        "hot": 0,
+        "hot_taken": 0,
+        "idle": 1,
+        "lock_address": 18446744072643775404,
+        "marker": 18446744071593528208,
+        "prefix": 0,
+        "suffix": 0
+      },
+      "callers": [
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/string-service/source/tests/kernel/spin/string_service/run.py",
+            "--worker",
+            "0",
+            "100000",
+            "0",
+            "451051853752660"
+          ],
+          "pid": 2808348
+        },
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/string-service/source/tests/kernel/spin/string_service/run.py",
+            "--worker",
+            "1",
+            "100000",
+            "1",
+            "451051853752660"
+          ],
+          "pid": 2808349
+        },
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/string-service/source/tests/kernel/spin/string_service/run.py",
+            "--worker",
+            "2",
+            "100000",
+            "2",
+            "451051853752660"
+          ],
+          "pid": 2808350
+        },
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/string-service/source/tests/kernel/spin/string_service/run.py",
+            "--worker",
+            "3",
+            "100000",
+            "3",
+            "451051853752660"
+          ],
+          "pid": 2808351
+        },
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/string-service/source/tests/kernel/spin/string_service/run.py",
+            "--worker",
+            "4",
+            "100000",
+            "4",
+            "451051853752660"
+          ],
+          "pid": 2808352
+        },
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/string-service/source/tests/kernel/spin/string_service/run.py",
+            "--worker",
+            "5",
+            "100000",
+            "5",
+            "451051853752660"
+          ],
+          "pid": 2808353
+        },
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/string-service/source/tests/kernel/spin/string_service/run.py",
+            "--worker",
+            "6",
+            "100000",
+            "6",
+            "451051853752660"
+          ],
+          "pid": 2808354
+        },
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/string-service/source/tests/kernel/spin/string_service/run.py",
+            "--worker",
+            "7",
+            "100000",
+            "7",
+            "451051853752660"
+          ],
+          "pid": 2808355
+        },
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/string-service/source/tests/kernel/spin/string_service/run.py",
+            "--worker",
+            "8",
+            "100000",
+            "8",
+            "451051853752660"
+          ],
+          "pid": 2808356
+        },
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/string-service/source/tests/kernel/spin/string_service/run.py",
+            "--worker",
+            "9",
+            "100000",
+            "9",
+            "451051853752660"
+          ],
+          "pid": 2808357
+        },
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/string-service/source/tests/kernel/spin/string_service/run.py",
+            "--worker",
+            "10",
+            "100000",
+            "10",
+            "451051853752660"
+          ],
+          "pid": 2808358
+        },
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/string-service/source/tests/kernel/spin/string_service/run.py",
+            "--worker",
+            "11",
+            "100000",
+            "11",
+            "451051853752660"
+          ],
+          "pid": 2808359
+        },
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/string-service/source/tests/kernel/spin/string_service/run.py",
+            "--worker",
+            "12",
+            "100000",
+            "12",
+            "451051853752660"
+          ],
+          "pid": 2808360
+        },
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/string-service/source/tests/kernel/spin/string_service/run.py",
+            "--worker",
+            "13",
+            "100000",
+            "13",
+            "451051853752660"
+          ],
+          "pid": 2808361
+        },
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/string-service/source/tests/kernel/spin/string_service/run.py",
+            "--worker",
+            "14",
+            "100000",
+            "14",
+            "451051853752660"
+          ],
+          "pid": 2808362
+        },
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/string-service/source/tests/kernel/spin/string_service/run.py",
+            "--worker",
+            "15",
+            "100000",
+            "15",
+            "451051853752660"
+          ],
+          "pid": 2808363
+        }
+      ],
+      "complete": true,
+      "counters_after": {
+        "address_guard_count": 0,
+        "bench_jit_bodies": 1101460,
+        "bench_jit_completions": 1101460
+      },
+      "counters_before": {
+        "address_guard_count": 0,
+        "bench_jit_bodies": 0,
+        "bench_jit_completions": 0
+      },
+      "hot": 0,
+      "iterations": 100000,
+      "jit_delta": {
+        "address_guard_count": 0,
+        "bench_jit_bodies": 1101460,
+        "bench_jit_completions": 1101460
+      },
+      "name": "cold-warmup",
+      "registry_after": [
+        {
+          "code": 18446744072691367936,
+          "entry": 18446744072643764537,
+          "entry_abi": 1,
+          "generation": 1,
+          "jump_from": 0,
+          "lock_kind": 1,
+          "pid": 0,
+          "requirements": 20,
+          "status": 0,
+          "target": 0,
+          "tgid": 2806745
+        }
+      ],
+      "registry_before": [
+        {
+          "code": 18446744072691367936,
+          "entry": 18446744072643764537,
+          "entry_abi": 1,
+          "generation": 1,
+          "jump_from": 0,
+          "lock_kind": 1,
+          "pid": 0,
+          "requirements": 20,
+          "status": 0,
+          "target": 0,
+          "tgid": 2806745
+        }
+      ],
+      "returncodes": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "source_after": {
+        "frames": 0,
+        "modules": 1,
+        "state": 0,
+        "writers": 1
+      },
+      "workers": [
+        {
+          "comm": "ks_worker",
+          "completed": 100000,
+          "cpu": 0,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 0
+        },
+        {
+          "comm": "ks_worker",
+          "completed": 100000,
+          "cpu": 1,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 1
+        },
+        {
+          "comm": "ks_worker",
+          "completed": 100000,
+          "cpu": 2,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 2
+        },
+        {
+          "comm": "ks_worker",
+          "completed": 100000,
+          "cpu": 3,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 3
+        },
+        {
+          "comm": "ks_worker",
+          "completed": 100000,
+          "cpu": 4,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 4
+        },
+        {
+          "comm": "ks_worker",
+          "completed": 100000,
+          "cpu": 5,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 5
+        },
+        {
+          "comm": "ks_worker",
+          "completed": 100000,
+          "cpu": 6,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 6
+        },
+        {
+          "comm": "ks_worker",
+          "completed": 100000,
+          "cpu": 7,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 7
+        },
+        {
+          "comm": "ks_worker",
+          "completed": 100000,
+          "cpu": 8,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 8
+        },
+        {
+          "comm": "ks_worker",
+          "completed": 100000,
+          "cpu": 9,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 9
+        },
+        {
+          "comm": "ks_worker",
+          "completed": 100000,
+          "cpu": 10,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 10
+        },
+        {
+          "comm": "ks_worker",
+          "completed": 100000,
+          "cpu": 11,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 11
+        },
+        {
+          "comm": "ks_worker",
+          "completed": 100000,
+          "cpu": 12,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 12
+        },
+        {
+          "comm": "ks_worker",
+          "completed": 100000,
+          "cpu": 13,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 13
+        },
+        {
+          "comm": "ks_worker",
+          "completed": 100000,
+          "cpu": 14,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 14
+        },
+        {
+          "comm": "ks_worker",
+          "completed": 100000,
+          "cpu": 15,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 15
+        }
+      ]
+    },
+    {
+      "after": {
+        "active": 0,
+        "entry": 18446744072643764537,
+        "failures": 0,
+        "hot": 0,
+        "hot_taken": 0,
+        "idle": 1,
+        "lock_address": 18446744072643775404,
+        "marker": 18446744071593528208,
+        "prefix": 3200000,
+        "suffix": 3200000
+      },
+      "before": {
+        "active": 0,
+        "entry": 18446744072643764537,
+        "failures": 0,
+        "hot": 0,
+        "hot_taken": 0,
+        "idle": 1,
+        "lock_address": 18446744072643775404,
+        "marker": 18446744071593528208,
+        "prefix": 1600000,
+        "suffix": 1600000
+      },
+      "callers": [
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/string-service/source/tests/kernel/spin/string_service/run.py",
+            "--worker",
+            "0",
+            "100000",
+            "0",
+            "451054185223868"
+          ],
+          "pid": 2808411
+        },
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/string-service/source/tests/kernel/spin/string_service/run.py",
+            "--worker",
+            "1",
+            "100000",
+            "1",
+            "451054185223868"
+          ],
+          "pid": 2808412
+        },
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/string-service/source/tests/kernel/spin/string_service/run.py",
+            "--worker",
+            "2",
+            "100000",
+            "2",
+            "451054185223868"
+          ],
+          "pid": 2808413
+        },
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/string-service/source/tests/kernel/spin/string_service/run.py",
+            "--worker",
+            "3",
+            "100000",
+            "3",
+            "451054185223868"
+          ],
+          "pid": 2808414
+        },
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/string-service/source/tests/kernel/spin/string_service/run.py",
+            "--worker",
+            "4",
+            "100000",
+            "4",
+            "451054185223868"
+          ],
+          "pid": 2808415
+        },
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/string-service/source/tests/kernel/spin/string_service/run.py",
+            "--worker",
+            "5",
+            "100000",
+            "5",
+            "451054185223868"
+          ],
+          "pid": 2808416
+        },
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/string-service/source/tests/kernel/spin/string_service/run.py",
+            "--worker",
+            "6",
+            "100000",
+            "6",
+            "451054185223868"
+          ],
+          "pid": 2808417
+        },
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/string-service/source/tests/kernel/spin/string_service/run.py",
+            "--worker",
+            "7",
+            "100000",
+            "7",
+            "451054185223868"
+          ],
+          "pid": 2808418
+        },
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/string-service/source/tests/kernel/spin/string_service/run.py",
+            "--worker",
+            "8",
+            "100000",
+            "8",
+            "451054185223868"
+          ],
+          "pid": 2808419
+        },
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/string-service/source/tests/kernel/spin/string_service/run.py",
+            "--worker",
+            "9",
+            "100000",
+            "9",
+            "451054185223868"
+          ],
+          "pid": 2808420
+        },
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/string-service/source/tests/kernel/spin/string_service/run.py",
+            "--worker",
+            "10",
+            "100000",
+            "10",
+            "451054185223868"
+          ],
+          "pid": 2808421
+        },
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/string-service/source/tests/kernel/spin/string_service/run.py",
+            "--worker",
+            "11",
+            "100000",
+            "11",
+            "451054185223868"
+          ],
+          "pid": 2808422
+        },
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/string-service/source/tests/kernel/spin/string_service/run.py",
+            "--worker",
+            "12",
+            "100000",
+            "12",
+            "451054185223868"
+          ],
+          "pid": 2808423
+        },
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/string-service/source/tests/kernel/spin/string_service/run.py",
+            "--worker",
+            "13",
+            "100000",
+            "13",
+            "451054185223868"
+          ],
+          "pid": 2808424
+        },
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/string-service/source/tests/kernel/spin/string_service/run.py",
+            "--worker",
+            "14",
+            "100000",
+            "14",
+            "451054185223868"
+          ],
+          "pid": 2808425
+        },
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/string-service/source/tests/kernel/spin/string_service/run.py",
+            "--worker",
+            "15",
+            "100000",
+            "15",
+            "451054185223868"
+          ],
+          "pid": 2808426
+        }
+      ],
+      "complete": true,
+      "counters_after": {
+        "address_guard_count": 0,
+        "bench_jit_bodies": 2472999,
+        "bench_jit_completions": 2472999
+      },
+      "counters_before": {
+        "address_guard_count": 0,
+        "bench_jit_bodies": 1101460,
+        "bench_jit_completions": 1101460
+      },
+      "hot": 0,
+      "iterations": 100000,
+      "jit_delta": {
+        "address_guard_count": 0,
+        "bench_jit_bodies": 1371539,
+        "bench_jit_completions": 1371539
+      },
+      "name": "cold-delegated",
+      "registry_after": [
+        {
+          "code": 18446744072691367936,
+          "entry": 18446744072643764537,
+          "entry_abi": 1,
+          "generation": 1,
+          "jump_from": 0,
+          "lock_kind": 1,
+          "pid": 0,
+          "requirements": 20,
+          "status": 0,
+          "target": 0,
+          "tgid": 2806745
+        }
+      ],
+      "registry_before": [
+        {
+          "code": 18446744072691367936,
+          "entry": 18446744072643764537,
+          "entry_abi": 1,
+          "generation": 1,
+          "jump_from": 0,
+          "lock_kind": 1,
+          "pid": 0,
+          "requirements": 20,
+          "status": 0,
+          "target": 0,
+          "tgid": 2806745
+        }
+      ],
+      "returncodes": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "source_after": {
+        "frames": 0,
+        "modules": 1,
+        "state": 0,
+        "writers": 1
+      },
+      "workers": [
+        {
+          "comm": "ks_worker",
+          "completed": 100000,
+          "cpu": 0,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 0
+        },
+        {
+          "comm": "ks_worker",
+          "completed": 100000,
+          "cpu": 1,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 1
+        },
+        {
+          "comm": "ks_worker",
+          "completed": 100000,
+          "cpu": 2,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 2
+        },
+        {
+          "comm": "ks_worker",
+          "completed": 100000,
+          "cpu": 3,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 3
+        },
+        {
+          "comm": "ks_worker",
+          "completed": 100000,
+          "cpu": 4,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 4
+        },
+        {
+          "comm": "ks_worker",
+          "completed": 100000,
+          "cpu": 5,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 5
+        },
+        {
+          "comm": "ks_worker",
+          "completed": 100000,
+          "cpu": 6,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 6
+        },
+        {
+          "comm": "ks_worker",
+          "completed": 100000,
+          "cpu": 7,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 7
+        },
+        {
+          "comm": "ks_worker",
+          "completed": 100000,
+          "cpu": 8,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 8
+        },
+        {
+          "comm": "ks_worker",
+          "completed": 100000,
+          "cpu": 9,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 9
+        },
+        {
+          "comm": "ks_worker",
+          "completed": 100000,
+          "cpu": 10,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 10
+        },
+        {
+          "comm": "ks_worker",
+          "completed": 100000,
+          "cpu": 11,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 11
+        },
+        {
+          "comm": "ks_worker",
+          "completed": 100000,
+          "cpu": 12,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 12
+        },
+        {
+          "comm": "ks_worker",
+          "completed": 100000,
+          "cpu": 13,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 13
+        },
+        {
+          "comm": "ks_worker",
+          "completed": 100000,
+          "cpu": 14,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 14
+        },
+        {
+          "comm": "ks_worker",
+          "completed": 100000,
+          "cpu": 15,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 15
+        }
+      ]
+    },
+    {
+      "after": {
+        "active": 0,
+        "entry": 18446744072643764537,
+        "failures": 0,
+        "hot": 1,
+        "hot_taken": 1600000,
+        "idle": 1,
+        "lock_address": 18446744072643775404,
+        "marker": 18446744071593528208,
+        "prefix": 4800000,
+        "suffix": 4800000
+      },
+      "before": {
+        "active": 0,
+        "entry": 18446744072643764537,
+        "failures": 0,
+        "hot": 1,
+        "hot_taken": 0,
+        "idle": 1,
+        "lock_address": 18446744072643775404,
+        "marker": 18446744071593528208,
+        "prefix": 3200000,
+        "suffix": 3200000
+      },
+      "callers": [
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/string-service/source/tests/kernel/spin/string_service/run.py",
+            "--worker",
+            "0",
+            "100000",
+            "0",
+            "451056709066291"
+          ],
+          "pid": 2808427
+        },
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/string-service/source/tests/kernel/spin/string_service/run.py",
+            "--worker",
+            "1",
+            "100000",
+            "1",
+            "451056709066291"
+          ],
+          "pid": 2808428
+        },
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/string-service/source/tests/kernel/spin/string_service/run.py",
+            "--worker",
+            "2",
+            "100000",
+            "2",
+            "451056709066291"
+          ],
+          "pid": 2808429
+        },
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/string-service/source/tests/kernel/spin/string_service/run.py",
+            "--worker",
+            "3",
+            "100000",
+            "3",
+            "451056709066291"
+          ],
+          "pid": 2808430
+        },
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/string-service/source/tests/kernel/spin/string_service/run.py",
+            "--worker",
+            "4",
+            "100000",
+            "4",
+            "451056709066291"
+          ],
+          "pid": 2808431
+        },
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/string-service/source/tests/kernel/spin/string_service/run.py",
+            "--worker",
+            "5",
+            "100000",
+            "5",
+            "451056709066291"
+          ],
+          "pid": 2808432
+        },
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/string-service/source/tests/kernel/spin/string_service/run.py",
+            "--worker",
+            "6",
+            "100000",
+            "6",
+            "451056709066291"
+          ],
+          "pid": 2808433
+        },
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/string-service/source/tests/kernel/spin/string_service/run.py",
+            "--worker",
+            "7",
+            "100000",
+            "7",
+            "451056709066291"
+          ],
+          "pid": 2808434
+        },
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/string-service/source/tests/kernel/spin/string_service/run.py",
+            "--worker",
+            "8",
+            "100000",
+            "8",
+            "451056709066291"
+          ],
+          "pid": 2808435
+        },
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/string-service/source/tests/kernel/spin/string_service/run.py",
+            "--worker",
+            "9",
+            "100000",
+            "9",
+            "451056709066291"
+          ],
+          "pid": 2808436
+        },
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/string-service/source/tests/kernel/spin/string_service/run.py",
+            "--worker",
+            "10",
+            "100000",
+            "10",
+            "451056709066291"
+          ],
+          "pid": 2808437
+        },
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/string-service/source/tests/kernel/spin/string_service/run.py",
+            "--worker",
+            "11",
+            "100000",
+            "11",
+            "451056709066291"
+          ],
+          "pid": 2808438
+        },
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/string-service/source/tests/kernel/spin/string_service/run.py",
+            "--worker",
+            "12",
+            "100000",
+            "12",
+            "451056709066291"
+          ],
+          "pid": 2808439
+        },
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/string-service/source/tests/kernel/spin/string_service/run.py",
+            "--worker",
+            "13",
+            "100000",
+            "13",
+            "451056709066291"
+          ],
+          "pid": 2808440
+        },
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/string-service/source/tests/kernel/spin/string_service/run.py",
+            "--worker",
+            "14",
+            "100000",
+            "14",
+            "451056709066291"
+          ],
+          "pid": 2808441
+        },
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/string-service/source/tests/kernel/spin/string_service/run.py",
+            "--worker",
+            "15",
+            "100000",
+            "15",
+            "451056709066291"
+          ],
+          "pid": 2808442
+        }
+      ],
+      "complete": true,
+      "counters_after": {
+        "address_guard_count": 0,
+        "bench_jit_bodies": 4059753,
+        "bench_jit_completions": 4059753
+      },
+      "counters_before": {
+        "address_guard_count": 0,
+        "bench_jit_bodies": 2472999,
+        "bench_jit_completions": 2472999
+      },
+      "hot": 1,
+      "iterations": 100000,
+      "jit_delta": {
+        "address_guard_count": 0,
+        "bench_jit_bodies": 1586754,
+        "bench_jit_completions": 1586754
+      },
+      "name": "long-delegated",
+      "registry_after": [
+        {
+          "code": 18446744072691367936,
+          "entry": 18446744072643764537,
+          "entry_abi": 1,
+          "generation": 1,
+          "jump_from": 0,
+          "lock_kind": 1,
+          "pid": 0,
+          "requirements": 20,
+          "status": 0,
+          "target": 0,
+          "tgid": 2806745
+        }
+      ],
+      "registry_before": [
+        {
+          "code": 18446744072691367936,
+          "entry": 18446744072643764537,
+          "entry_abi": 1,
+          "generation": 1,
+          "jump_from": 0,
+          "lock_kind": 1,
+          "pid": 0,
+          "requirements": 20,
+          "status": 0,
+          "target": 0,
+          "tgid": 2806745
+        }
+      ],
+      "returncodes": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "source_after": {
+        "frames": 0,
+        "modules": 1,
+        "state": 0,
+        "writers": 1
+      },
+      "workers": [
+        {
+          "comm": "ks_worker",
+          "completed": 100000,
+          "cpu": 0,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 0
+        },
+        {
+          "comm": "ks_worker",
+          "completed": 100000,
+          "cpu": 1,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 1
+        },
+        {
+          "comm": "ks_worker",
+          "completed": 100000,
+          "cpu": 2,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 2
+        },
+        {
+          "comm": "ks_worker",
+          "completed": 100000,
+          "cpu": 3,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 3
+        },
+        {
+          "comm": "ks_worker",
+          "completed": 100000,
+          "cpu": 4,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 4
+        },
+        {
+          "comm": "ks_worker",
+          "completed": 100000,
+          "cpu": 5,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 5
+        },
+        {
+          "comm": "ks_worker",
+          "completed": 100000,
+          "cpu": 6,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 6
+        },
+        {
+          "comm": "ks_worker",
+          "completed": 100000,
+          "cpu": 7,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 7
+        },
+        {
+          "comm": "ks_worker",
+          "completed": 100000,
+          "cpu": 8,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 8
+        },
+        {
+          "comm": "ks_worker",
+          "completed": 100000,
+          "cpu": 9,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 9
+        },
+        {
+          "comm": "ks_worker",
+          "completed": 100000,
+          "cpu": 10,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 10
+        },
+        {
+          "comm": "ks_worker",
+          "completed": 100000,
+          "cpu": 11,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 11
+        },
+        {
+          "comm": "ks_worker",
+          "completed": 100000,
+          "cpu": 12,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 12
+        },
+        {
+          "comm": "ks_worker",
+          "completed": 100000,
+          "cpu": 13,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 13
+        },
+        {
+          "comm": "ks_worker",
+          "completed": 100000,
+          "cpu": 14,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 14
+        },
+        {
+          "comm": "ks_worker",
+          "completed": 100000,
+          "cpu": 15,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 15
+        }
+      ]
+    },
+    {
+      "after": {
+        "active": 0,
+        "entry": 18446744072643764537,
+        "failures": 0,
+        "hot": 1,
+        "hot_taken": 3200000,
+        "idle": 1,
+        "lock_address": 18446744072643775404,
+        "marker": 18446744071593528208,
+        "prefix": 6400000,
+        "suffix": 6400000
+      },
+      "before": {
+        "active": 0,
+        "entry": 18446744072643764537,
+        "failures": 0,
+        "hot": 1,
+        "hot_taken": 1600000,
+        "idle": 1,
+        "lock_address": 18446744072643775404,
+        "marker": 18446744071593528208,
+        "prefix": 4800000,
+        "suffix": 4800000
+      },
+      "callers": [
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/string-service/source/tests/kernel/spin/string_service/run.py",
+            "--worker",
+            "0",
+            "100000",
+            "0",
+            "451059160608250"
+          ],
+          "pid": 2808443
+        },
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/string-service/source/tests/kernel/spin/string_service/run.py",
+            "--worker",
+            "1",
+            "100000",
+            "1",
+            "451059160608250"
+          ],
+          "pid": 2808444
+        },
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/string-service/source/tests/kernel/spin/string_service/run.py",
+            "--worker",
+            "2",
+            "100000",
+            "2",
+            "451059160608250"
+          ],
+          "pid": 2808445
+        },
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/string-service/source/tests/kernel/spin/string_service/run.py",
+            "--worker",
+            "3",
+            "100000",
+            "3",
+            "451059160608250"
+          ],
+          "pid": 2808446
+        },
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/string-service/source/tests/kernel/spin/string_service/run.py",
+            "--worker",
+            "4",
+            "100000",
+            "4",
+            "451059160608250"
+          ],
+          "pid": 2808447
+        },
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/string-service/source/tests/kernel/spin/string_service/run.py",
+            "--worker",
+            "5",
+            "100000",
+            "5",
+            "451059160608250"
+          ],
+          "pid": 2808448
+        },
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/string-service/source/tests/kernel/spin/string_service/run.py",
+            "--worker",
+            "6",
+            "100000",
+            "6",
+            "451059160608250"
+          ],
+          "pid": 2808449
+        },
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/string-service/source/tests/kernel/spin/string_service/run.py",
+            "--worker",
+            "7",
+            "100000",
+            "7",
+            "451059160608250"
+          ],
+          "pid": 2808450
+        },
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/string-service/source/tests/kernel/spin/string_service/run.py",
+            "--worker",
+            "8",
+            "100000",
+            "8",
+            "451059160608250"
+          ],
+          "pid": 2808451
+        },
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/string-service/source/tests/kernel/spin/string_service/run.py",
+            "--worker",
+            "9",
+            "100000",
+            "9",
+            "451059160608250"
+          ],
+          "pid": 2808452
+        },
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/string-service/source/tests/kernel/spin/string_service/run.py",
+            "--worker",
+            "10",
+            "100000",
+            "10",
+            "451059160608250"
+          ],
+          "pid": 2808453
+        },
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/string-service/source/tests/kernel/spin/string_service/run.py",
+            "--worker",
+            "11",
+            "100000",
+            "11",
+            "451059160608250"
+          ],
+          "pid": 2808454
+        },
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/string-service/source/tests/kernel/spin/string_service/run.py",
+            "--worker",
+            "12",
+            "100000",
+            "12",
+            "451059160608250"
+          ],
+          "pid": 2808455
+        },
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/string-service/source/tests/kernel/spin/string_service/run.py",
+            "--worker",
+            "13",
+            "100000",
+            "13",
+            "451059160608250"
+          ],
+          "pid": 2808456
+        },
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/string-service/source/tests/kernel/spin/string_service/run.py",
+            "--worker",
+            "14",
+            "100000",
+            "14",
+            "451059160608250"
+          ],
+          "pid": 2808457
+        },
+        {
+          "argv": [
+            "/root/kdlock-translation-venv-20261019/bin/python3",
+            "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/live-6/string-service/source/tests/kernel/spin/string_service/run.py",
+            "--worker",
+            "15",
+            "100000",
+            "15",
+            "451059160608250"
+          ],
+          "pid": 2808458
+        }
+      ],
+      "complete": true,
+      "counters_after": {
+        "address_guard_count": 0,
+        "bench_jit_bodies": 5644195,
+        "bench_jit_completions": 5644195
+      },
+      "counters_before": {
+        "address_guard_count": 0,
+        "bench_jit_bodies": 4059753,
+        "bench_jit_completions": 4059753
+      },
+      "hot": 1,
+      "iterations": 100000,
+      "jit_delta": {
+        "address_guard_count": 0,
+        "bench_jit_bodies": 1584442,
+        "bench_jit_completions": 1584442
+      },
+      "name": "long-repeat",
+      "registry_after": [
+        {
+          "code": 18446744072691367936,
+          "entry": 18446744072643764537,
+          "entry_abi": 1,
+          "generation": 1,
+          "jump_from": 0,
+          "lock_kind": 1,
+          "pid": 0,
+          "requirements": 20,
+          "status": 0,
+          "target": 0,
+          "tgid": 2806745
+        }
+      ],
+      "registry_before": [
+        {
+          "code": 18446744072691367936,
+          "entry": 18446744072643764537,
+          "entry_abi": 1,
+          "generation": 1,
+          "jump_from": 0,
+          "lock_kind": 1,
+          "pid": 0,
+          "requirements": 20,
+          "status": 0,
+          "target": 0,
+          "tgid": 2806745
+        }
+      ],
+      "returncodes": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "source_after": {
+        "frames": 0,
+        "modules": 1,
+        "state": 0,
+        "writers": 1
+      },
+      "workers": [
+        {
+          "comm": "ks_worker",
+          "completed": 100000,
+          "cpu": 0,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 0
+        },
+        {
+          "comm": "ks_worker",
+          "completed": 100000,
+          "cpu": 1,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 1
+        },
+        {
+          "comm": "ks_worker",
+          "completed": 100000,
+          "cpu": 2,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 2
+        },
+        {
+          "comm": "ks_worker",
+          "completed": 100000,
+          "cpu": 3,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 3
+        },
+        {
+          "comm": "ks_worker",
+          "completed": 100000,
+          "cpu": 4,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 4
+        },
+        {
+          "comm": "ks_worker",
+          "completed": 100000,
+          "cpu": 5,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 5
+        },
+        {
+          "comm": "ks_worker",
+          "completed": 100000,
+          "cpu": 6,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 6
+        },
+        {
+          "comm": "ks_worker",
+          "completed": 100000,
+          "cpu": 7,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 7
+        },
+        {
+          "comm": "ks_worker",
+          "completed": 100000,
+          "cpu": 8,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 8
+        },
+        {
+          "comm": "ks_worker",
+          "completed": 100000,
+          "cpu": 9,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 9
+        },
+        {
+          "comm": "ks_worker",
+          "completed": 100000,
+          "cpu": 10,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 10
+        },
+        {
+          "comm": "ks_worker",
+          "completed": 100000,
+          "cpu": 11,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 11
+        },
+        {
+          "comm": "ks_worker",
+          "completed": 100000,
+          "cpu": 12,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 12
+        },
+        {
+          "comm": "ks_worker",
+          "completed": 100000,
+          "cpu": 13,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 13
+        },
+        {
+          "comm": "ks_worker",
+          "completed": 100000,
+          "cpu": 14,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 14
+        },
+        {
+          "comm": "ks_worker",
+          "completed": 100000,
+          "cpu": 15,
+          "errors": 0,
+          "iterations": 100000,
+          "reserved": [
+            0,
+            0
+          ],
+          "worker": 15
+        }
+      ]
+    }
+  ],
+  "publication": {
+    "entry": {
+      "code": 18446744072691367936,
+      "entry": 18446744072643764537,
+      "entry_abi": 1,
+      "generation": 1,
+      "lock_kind": 1,
+      "pid": 0,
+      "requirements": 20,
+      "status": 0,
+      "tgid": 2806745
+    },
+    "images": {
+      "bin.txt": "ca391cb5c1094eb0842ce8e2c0a5147232f103d06907f57c22d2243d28068347",
+      "jit.S": "7d358cadefb7ca4ee8729610aae0993f11353962f33b9e3158cf8c90f2f50268",
+      "jit.bin": "d36cf944de3d1fa60e79d2e326a0d9c2e48f081fdfc08608469a06e28087856d"
+    },
+    "loaded_image": {
+      "base": 18446744072691367936,
+      "byte_for_byte_match": true,
+      "bytes": 1472,
+      "entry": 18446744072643764537,
+      "generation": 1,
+      "loaded_sha256": "3a76f422c074380ae5ad894f90e75da81f531b6fddc6b11610126064d63be92e",
+      "method": "Live /proc/kcore read under readonly provider reference, outside worker timing",
+      "path": "loaded-images/ffffffffc0796139-g1.bin",
+      "relocations": [
+        {
+          "continuation": 18446744072643764377,
+          "displacement": -1097840239,
+          "offset": 506,
+          "service": 4,
+          "symbol": "strcmp",
+          "target": 18446744071593528208
+        }
+      ],
+      "requirements": 20,
+      "uploaded_sha256": "d36cf944de3d1fa60e79d2e326a0d9c2e48f081fdfc08608469a06e28087856d"
+    },
+    "source": {
+      "frames": 0,
+      "modules": 1,
+      "state": 0,
+      "writers": 1
+    }
+  },
+  "retired": {
+    "frames": 0,
+    "modules": 0,
+    "state": 2,
+    "writers": 0
+  },
+  "schema": 1,
+  "warmup_iterations": 100000
+}

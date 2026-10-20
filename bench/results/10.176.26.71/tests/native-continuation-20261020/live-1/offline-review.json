@@ -1,0 +1,261 @@
+{
+  "scope": "Archive consistency only; live outcomes remain separate. No archived code executed.",
+  "run": "live-1",
+  "source_commit": "a4eb4eb0fc744e8105bdd429e1d4bf0fb03ae0a4",
+  "consistent": true,
+  "issues": [],
+  "total_checks": 28250,
+  "check_counts": {
+    "archive_completed_idle": 1,
+    "inventory_hash": 1,
+    "archiver_hash": 1,
+    "archive_bytes": 2,
+    "archive_hash": 2,
+    "member_prefix": 2284,
+    "member_safe_path": 2284,
+    "member_unique": 2284,
+    "member_assigned_group": 2284,
+    "member_in_inventory": 2284,
+    "member_type": 2284,
+    "member_mode": 2284,
+    "member_owner": 2284,
+    "member_mtime_tar_projection": 2284,
+    "directory_empty_payload": 180,
+    "member_bytes": 2096,
+    "member_read_bytes": 2096,
+    "symlink_target": 8,
+    "symlink_empty_payload": 8,
+    "symlink_target_retained": 8,
+    "inventory_exact_set": 1,
+    "archived_health_hash": 1,
+    "binary_manifest_hash": 16,
+    "binary_is_elf": 16,
+    "prepared_source_manifest_hash": 372,
+    "source_manifest_hash": 760,
+    "committed_source_git_hash": 487,
+    "task_runner_binding": 1,
+    "source_manifest_binding": 760,
+    "prepared_reconstructed_hash": 372,
+    "patch_targets_retained": 4,
+    "exact_retirement": 4,
+    "accepted_result": 3,
+    "complete_phase_order": 3,
+    "phase_complete": 12,
+    "caller_receipt": 12,
+    "worker_progress_receipt": 192,
+    "worker_ready_identity": 192,
+    "phase_counts": 12,
+    "exact_business_effects": 12,
+    "exact_hot_effects": 12,
+    "counter_arithmetic": 12,
+    "warmup_complete_bodies": 3,
+    "phase_frames_drained": 12,
+    "cold_returned_bodies": 3,
+    "single_native_exit": 3,
+    "sticky_ban": 3,
+    "publication_hash": 9,
+    "failed_case_not_pass": 1,
+    "later_health_identity": 1
+  },
+  "groups": [
+    {
+      "file": "probes.tar.gz",
+      "sha256": "ad1c2e77e30191e6c6f94a3a1dbaa14e321516747f1b92b09f92d80de087f22d",
+      "bytes": 16588171,
+      "members": 2273,
+      "types": {
+        "dir": 180,
+        "file": 2085,
+        "symlink": 8
+      }
+    },
+    {
+      "file": "metadata.tar.gz",
+      "sha256": "2c9411ef48c884cc646787104c29a6634d1de66b9f23a012eb8541169fb1e9ad",
+      "bytes": 43529,
+      "members": 11,
+      "types": {
+        "file": 11
+      }
+    }
+  ],
+  "members": 2284,
+  "files": 2096,
+  "symlinks": 8,
+  "archives_manifest_sha256": "86998113b61d5a8d05dfecff09aa62a988f0663fb5ee3cf79c0523db66a16200",
+  "regular_file_hash_map_sha256": "36bdd46eb7f619b9935ca32439755c53e31a58c598450b963626f3f4ab197d4f",
+  "helper_sha256": "05b87daa59dd00c658b042f8e6bf30ee60d5c811956a5a132053d9708ae4ebf6",
+  "cases": [
+    {
+      "name": "mutex-outer",
+      "execution_status": "OK",
+      "source_files": 190,
+      "private_inc_files": 43,
+      "prepared_classes": {
+        "unchanged": 79,
+        "overlay": 2,
+        "patched": 12
+      },
+      "phases": [
+        {
+          "name": "cold-warmup",
+          "writes": 1600000,
+          "reads": 0,
+          "counters": {
+            "bench_jit_bodies": 1546752,
+            "bench_jit_completions": 1546752,
+            "native_escape_count": 0
+          }
+        },
+        {
+          "name": "cold-delegated",
+          "writes": 1600000,
+          "reads": 0,
+          "counters": {
+            "bench_jit_bodies": 1590509,
+            "bench_jit_completions": 1590509,
+            "native_escape_count": 0
+          }
+        },
+        {
+          "name": "hot-escape",
+          "writes": 1600000,
+          "reads": 0,
+          "counters": {
+            "bench_jit_bodies": 1,
+            "bench_jit_completions": 0,
+            "native_escape_count": 1
+          }
+        },
+        {
+          "name": "post-ban",
+          "writes": 1600000,
+          "reads": 0,
+          "counters": {
+            "bench_jit_bodies": 0,
+            "bench_jit_completions": 0,
+            "native_escape_count": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "mutex-public",
+      "execution_status": "OK",
+      "source_files": 190,
+      "private_inc_files": 43,
+      "prepared_classes": {
+        "unchanged": 79,
+        "overlay": 2,
+        "patched": 12
+      },
+      "phases": [
+        {
+          "name": "cold-warmup",
+          "writes": 1600000,
+          "reads": 0,
+          "counters": {
+            "bench_jit_bodies": 1545606,
+            "bench_jit_completions": 1545606,
+            "native_escape_count": 0
+          }
+        },
+        {
+          "name": "cold-delegated",
+          "writes": 1600000,
+          "reads": 0,
+          "counters": {
+            "bench_jit_bodies": 1589501,
+            "bench_jit_completions": 1589501,
+            "native_escape_count": 0
+          }
+        },
+        {
+          "name": "hot-escape",
+          "writes": 1600000,
+          "reads": 0,
+          "counters": {
+            "bench_jit_bodies": 1,
+            "bench_jit_completions": 0,
+            "native_escape_count": 1
+          }
+        },
+        {
+          "name": "post-ban",
+          "writes": 1600000,
+          "reads": 0,
+          "counters": {
+            "bench_jit_bodies": 0,
+            "bench_jit_completions": 0,
+            "native_escape_count": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "spin",
+      "execution_status": "OK",
+      "source_files": 190,
+      "private_inc_files": 43,
+      "prepared_classes": {
+        "unchanged": 79,
+        "overlay": 2,
+        "patched": 12
+      },
+      "phases": [
+        {
+          "name": "cold-warmup",
+          "writes": 1600000,
+          "reads": 0,
+          "counters": {
+            "bench_jit_bodies": 1308180,
+            "bench_jit_completions": 1308180,
+            "native_escape_count": 0
+          }
+        },
+        {
+          "name": "cold-delegated",
+          "writes": 1600000,
+          "reads": 0,
+          "counters": {
+            "bench_jit_bodies": 1595512,
+            "bench_jit_completions": 1595512,
+            "native_escape_count": 0
+          }
+        },
+        {
+          "name": "hot-escape",
+          "writes": 1600000,
+          "reads": 0,
+          "counters": {
+            "bench_jit_bodies": 1,
+            "bench_jit_completions": 0,
+            "native_escape_count": 1
+          }
+        },
+        {
+          "name": "post-ban",
+          "writes": 1600000,
+          "reads": 0,
+          "counters": {
+            "bench_jit_bodies": 0,
+            "bench_jit_completions": 0,
+            "native_escape_count": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "rwlock",
+      "execution_status": "PREPARATION_FAILED",
+      "source_files": 190,
+      "private_inc_files": 43,
+      "prepared_classes": {
+        "unchanged": 79,
+        "overlay": 2,
+        "patched": 12
+      },
+      "phases": []
+    }
+  ]
+}

@@ -1,0 +1,43 @@
+{
+  "status": "NOT_RUN",
+  "cwd": "/root/host_fs/kdlock",
+  "python": "/root/kdlock-translation-venv-20261019/bin/python3",
+  "source_commit": "6f97b3c043e7d2b7ea3de97b2704a5e9c38099e1",
+  "tasks": [
+    {
+      "name": "rwlock",
+      "runner": "tests/kernel/jit_escape/run.py",
+      "arguments": [
+        "--kernel-source",
+        "/root/linux-6.1.159-kdclobber2",
+        "--kernel-baseline",
+        "/root/kdlock-kernel-baselines/mutex-clobber2-20260919",
+        "--cpus",
+        "0-15",
+        "--iterations",
+        "100000",
+        "--warmup-iterations",
+        "100000",
+        "--phase-timeout",
+        "120",
+        "--family",
+        "rwlock",
+        "--reader-count",
+        "2",
+        "--reader-iterations",
+        "10000000",
+        "--hotlock-stats"
+      ],
+      "timeout_seconds": 1800
+    }
+  ],
+  "requirements": [
+    "matrix archived and guest idle",
+    "reviewed committed source verified and synchronized",
+    "basic and selected affected checks pass",
+    "actual recovery snapshot rechecked",
+    "stop on first failure; timeout never proves drain",
+    "keep every task output in a new external directory; retain command and PID before waiting"
+  ],
+  "scope": "Single rwlock diagnostic; original workload and strict checks, existing final heat statistics enabled"
+}

@@ -112,6 +112,23 @@ class InstructionPolicyTests(unittest.TestCase):
         for raw in ("f30faec0", "f30faec8", "f30faed0", "f30faed8", "66f3480faed8"):
             self.refuse(raw + "c3" + "90" * 16)
 
+    def test_read_prefetch_decoder_aliases_require_the_exact_memory_encoding(self):
+        for hint, encoded in enumerate(("0f1808", "0f1810", "0f1818")):
+            line = decode(encoded)
+            self.assertEqual(line.name, "PREFETCH" + str(hint))
+            self.assertIsNone(instruction_policy.rejection(line))
+            # The same admitted scalar hint still traverses address/context
+            # analysis and emission, with its source bytes retained.
+            assembly, log, status = render("4889e0" + encoded + "c3", return_status=True)
+            self.assertEqual(status, 0, log)
+            self.assertTrue(assembly)
+            for wrong in ("", "0f1800", "0f18c8", "0f0d08", "f00f1808", "f30f1808"):
+                alias = SimpleNamespace(name=line.name, args=line.args, b=bytes.fromhex(wrong))
+                self.assertIsNotNone(instruction_policy.rejection(alias))
+        for name in ("PREFETCH3", "PREFETCH_READ_FUTURE"):
+            self.assertIsNotNone(instruction_policy.rejection(
+                SimpleNamespace(name=name, args=decode("0f1808").args, b=bytes.fromhex("0f1808"))))
+
     def test_known_undecodable_opcodes_need_no_extra_text_read(self):
         # Miasm 0.1.5 does not decode these opcodes. Refuse at their selected
         # instruction boundary even in a short window; never scan arbitrary

@@ -31,10 +31,14 @@
   ],
   "live": {
     "live-1": "3 passes; rwlock PREPARATION_FAILED; fully drained and archived",
-    "live-2": "rwlock PREPARATION_FAILED pre-marker result store; fully drained and archived",
-    "next": "fafad5c shared payload-only correction pending validation"
+    "live-2": "rwlock PREPARATION_FAILED pre-marker result store; fully drained and archived"
   },
-  "resident_list": "NOT_RUN",
+  "resident_list": {
+    "state": "INCOMPLETE",
+    "list-functional-1": "spin list/n16 passed; supervisor stopped on generated source binding; independent reconstruction verified all generated files",
+    "list-functional-2": "public mutex list/n16 passed; spin list-prefetch/n16 PREPARATION_FAILED on PREFETCH0 decoder alias; all drained",
+    "remaining_sessions": 14
+  },
   "performance_acceptance": "OPEN; original seven regressions and incomplete classes require diagnosis; p95 unmeasured",
   "live_3": {
     "source": "52ceb5a",
@@ -53,5 +57,65 @@
     "read_operations": 40000000,
     "kernel_fault_matches": 0
   },
-  "next": "Separate rwlock attempt with existing final hotlock diagnostics; all admission and positive-execution checks unchanged"
+  "next": "Finish serial affected probes, archive and verify; resident-list correctness; then controlled replay of seven original regressions and three incomplete comparison points",
+  "live_5": {
+    "source": "6f97b3c",
+    "status": "NO_JIT",
+    "drained": true,
+    "instrumentation": "existing final hotlock_stats enabled",
+    "archive": "live-5/archives.json",
+    "runner_tests": 3
+  },
+  "live_6": {
+    "source": "96f81ac0a63505f737d1cbefa7e5d1a5eaed318e",
+    "state": "COMPLETE",
+    "passed": true,
+    "families": [
+      "rwlock",
+      "rwsem",
+      "mutex-outer",
+      "mutex-public",
+      "spin",
+      "address-guard",
+      "string-service",
+      "mutex-local",
+      "rwsem-admission"
+    ],
+    "drained": true,
+    "frozen_source_binary_hashes_checked": 1694,
+    "archive": "live-6/archives.json",
+    "archive_manifest_sha256": "c0e2809ffa0c7fbd007b26766032c3351a5f41e6c7b454ef98d62f3acb59f4ba"
+  },
+  "offline_reviews": {
+    "live-1": {
+      "checks": 28250,
+      "issues": 0
+    },
+    "live-2": {
+      "checks": 6073,
+      "issues": 0
+    },
+    "live-3": {
+      "checks": 6073,
+      "issues": 0
+    },
+    "live-4": {
+      "checks": 7021,
+      "issues": 0
+    },
+    "live-5": {
+      "checks": 7021,
+      "issues": 0
+    }
+  },
+  "pending_changes": [
+    "exact-byte read-prefetch decoder alias mapping and directly affected tests",
+    "focused original-input replay scheduler and provenance checks"
+  ],
+  "single_writer": {
+    "writer": "root",
+    "helpers_read_only": true,
+    "helper_files_touched": [],
+    "parallel_tests": false
+  }
 }

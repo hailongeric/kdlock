@@ -1,0 +1,5 @@
+{"name": "cold-warmup", "operations": 1600000, "jit_delta": {"bench_jit_bodies": 1435639, "bench_jit_completions": 1435639, "address_guard_count": 0}}
+{"name": "cold-delegated", "operations": 1600000, "jit_delta": {"bench_jit_bodies": 1546620, "bench_jit_completions": 1546620, "address_guard_count": 0}}
+{"name": "hot-escape", "operations": 1600000, "jit_delta": {"bench_jit_bodies": 1, "bench_jit_completions": 0, "address_guard_count": 1}}
+{"name": "post-ban", "operations": 1600000, "jit_delta": {"bench_jit_bodies": 0, "bench_jit_completions": 0, "address_guard_count": 0}}
+PASS: cold branch delegated; aliasing load resumed on original task; exact effects/values; permanent native-only state; final drain

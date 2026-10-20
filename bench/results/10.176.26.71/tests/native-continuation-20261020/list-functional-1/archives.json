@@ -1,0 +1,55 @@
+{
+  "archive_prefix": "list-functional-1",
+  "boot_id": "b65f0205-c8f9-4385-8b13-039cbce243a6",
+  "completed": true,
+  "finished_ns": 1792494623013527290,
+  "groups": [
+    {
+      "bytes": 2169123,
+      "file": "probes.tar.gz",
+      "group": "probes",
+      "path": "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/list-functional-1-archives/probes.tar.gz",
+      "roots": [
+        "list-functional-1/spin-list-n16"
+      ],
+      "sha256": "2c67e33a7119abb8e34c78b626244b351b66c8931d119b7b1956379b269ede6c"
+    },
+    {
+      "bytes": 166318,
+      "file": "reconstruction.tar.gz",
+      "group": "reconstruction",
+      "path": "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/list-functional-1-archives/reconstruction.tar.gz",
+      "roots": [
+        "list-functional-1/spin-list-n16-audit-provider"
+      ],
+      "sha256": "a44cddd2d48302b2f8867dbed3993b7732f5c801a65e8e336932bba577c2cee0"
+    },
+    {
+      "bytes": 43967,
+      "file": "metadata.tar.gz",
+      "group": "metadata",
+      "path": "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/list-functional-1-archives/metadata.tar.gz",
+      "roots": [
+        "list-functional-1/committed-source.json",
+        "list-functional-1/health.json",
+        "list-functional-1/host-before.json",
+        "list-functional-1/run-tasks.py",
+        "list-functional-1/spin-list-n16.console.log",
+        "list-functional-1/task-plan.json",
+        "list-functional-1/tasks.json"
+      ],
+      "sha256": "d1319208bfd1ddd95e77a2d38e573a0b6923f7e0754e829c217d26a4eb83007f"
+    }
+  ],
+  "guest_base": "/root/kdlock-evidence/10.176.26.71/tests/native-continuation-20261020/list-functional-1",
+  "guest_idle": true,
+  "health_path": "health.json",
+  "health_sha256": "df3aa6d69bf91191a972328df73e2ba277af0e4828516f4826efd9ac52cdfe6d",
+  "idle_source_sha256": "c6f7dc17a41bc5c34bff35d3aaed7b4a995ba3e5225d2c48d032417ca3f1510e",
+  "input_inventory_sha256": "bc85ab1aedb1a11a3339cc68e00c886acb80755c3a5f83fed439ee43e7a1425b",
+  "kernel_release": "6.1.159-kdclobber2",
+  "schema": 1,
+  "scope": "Complete evidence preservation; no deletion, module action, test or timing",
+  "script_sha256": "8d666f148a10d7fe19294cc7d193464c8bb53d4c3aec64b7518b9d335966c952",
+  "started_ns": 1792494621937119223
+}

@@ -1,0 +1,58 @@
+6,613100,450970454947,-;end_point[0] = ffffffffc0865a50
+
+6,613101,450970454955,-;end_point[1] = ffffffffc0865b00
+
+6,613102,450970454956,-;end_point[2] = ffffffffc0853fd0
+
+6,613103,450970454958,-;end_point[3] = ffffffffc0868f40
+
+6,613104,450970454958,-;end_point[4] = ffffffffc0851560
+
+6,613105,450970454960,-;mutex_lock addr = ffffffffc0869830
+
+6,613106,450970454979,-;hostcall service id=1 symbol=ktime_get addr=ffffffff8119c150 flags=7
+
+6,613107,450970455233,-;hostcall service unavailable id=2 symbol=ktime_get_ns
+
+6,613108,450970455254,-;hostcall service id=3 symbol=int_sqrt addr=ffffffff816e55f0 flags=7
+
+6,613109,450970455269,-;hostcall service id=4 symbol=strcmp addr=ffffffff81e00b90 flags=7
+
+6,613110,450970455284,-;hostcall service id=5 symbol=strscpy_pad addr=ffffffff816e3d10 flags=7
+
+6,613111,450970483781,-;JIT code block pool ready: 64/64
+
+6,613112,450970511336,-;JIT direct-call pool ready: 64/64; shared image limit=64
+
+6,613113,450970513567,-;kd kernel module init: direct spin/mutex APIs; global hooks disabled
+
+6,613114,450970524618,-;exe added 0 ffffffffc0796062 2801806 lock_kind=2
+
+6,613115,450972894493,-;install JIT chunk: pid=0 rip=ffffffffc0796062 status=0 offset=0 bytes=1377
+
+4,613116,450975910959,-;[KD_JIT][WARN] reason=NATIVE_ESCAPE entry=0xffffffffc0796062 rip=0xffffffffc07960a8 generation=1 waiter_pid=2803400 action=native_suffix_and_disable
+
+6,613117,450977754304,-;kd_source retire: result=0 state=2 modules=0 frames=0 writers=0
+
+6,613118,450977843209,-;kd_mutex stats: slowpath=3153206 combiner=15705 handoff=12347 jit_success=3137244 jit_not_ready=12347 jit_failure=0 jit_resume=3137244 frame_failure=0 node_overflow=0 multi_slot=0 context_busy=0 nested_lock=0 nested_fast=0 nested_queued=0 nested_jit=0 nested_unlock=0 nested_abort_release=0 active_waiters=0 max_waiters_per_cpu=1 reserved_nodes=0 origin_acquires=18257 origin_releases=18257
+
+6,613119,450977859634,-;kd_mutex tasks: active_tasks=0 task_alloc_failure=0 task_reroutes=18258
+
+6,613120,450977859703,-;kd_spin batch: entries=0 ww_jumps=0
+
+6,613121,450977859707,-;kd_spin diag overflow=0
+
+6,613122,450977859710,-;kd_spin diag invariant_failures=0
+
+6,613123,450977860033,-;kd_native stats: started=1 completed=1 unlocks=1
+
+6,613124,450977860128,-;kd_exec invariant_failures=0
+
+6,613125,450977860133,-;kd_hostcall stats: exits=0 executed=0 resumed=0 rejected=0 failed=0 limit=0
+
+6,613126,450977860137,-;kd_direct_call stats: strcmp=0 strscpy_pad=0
+
+6,613127,450977860140,-;kd_mutex stack checks: bytes=256 equal=0 changed=0 unavailable=0
+
+6,613128,450977884416,-;kd kernel module exit
+

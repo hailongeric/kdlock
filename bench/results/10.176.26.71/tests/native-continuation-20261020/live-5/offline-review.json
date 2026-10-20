@@ -1,0 +1,117 @@
+{
+  "scope": "Archive consistency only; live outcomes remain separate. No archived code executed.",
+  "run": "live-5",
+  "source_commit": "6f97b3c043e7d2b7ea3de97b2704a5e9c38099e1",
+  "consistent": true,
+  "issues": [],
+  "total_checks": 7021,
+  "check_counts": {
+    "archive_completed_idle": 1,
+    "inventory_hash": 1,
+    "archiver_hash": 1,
+    "archive_bytes": 2,
+    "archive_hash": 2,
+    "member_prefix": 537,
+    "member_safe_path": 537,
+    "member_unique": 537,
+    "member_assigned_group": 537,
+    "member_in_inventory": 537,
+    "member_type": 537,
+    "member_mode": 537,
+    "member_owner": 537,
+    "member_mtime_tar_projection": 537,
+    "directory_empty_payload": 44,
+    "member_bytes": 491,
+    "member_read_bytes": 491,
+    "symlink_target": 2,
+    "symlink_empty_payload": 2,
+    "symlink_target_retained": 2,
+    "inventory_exact_set": 1,
+    "archived_health_hash": 1,
+    "binary_manifest_hash": 4,
+    "binary_is_elf": 4,
+    "prepared_source_manifest_hash": 93,
+    "source_manifest_hash": 190,
+    "committed_source_git_hash": 487,
+    "task_runner_binding": 1,
+    "source_manifest_binding": 190,
+    "prepared_reconstructed_hash": 93,
+    "patch_targets_retained": 1,
+    "exact_retirement": 1,
+    "failed_case_not_pass": 1,
+    "phase_complete": 2,
+    "caller_receipt": 2,
+    "worker_progress_receipt": 32,
+    "worker_ready_identity": 32,
+    "phase_counts": 2,
+    "exact_business_effects": 2,
+    "exact_hot_effects": 2,
+    "counter_arithmetic": 2,
+    "phase_frames_drained": 2,
+    "publication_hash": 3,
+    "later_health_identity": 1
+  },
+  "groups": [
+    {
+      "file": "probes.tar.gz",
+      "sha256": "835f4b9712934f45c55cf49eba255fb15af76cfd0f0e47b15ac26a9dc973186e",
+      "bytes": 4169574,
+      "members": 530,
+      "types": {
+        "dir": 44,
+        "file": 484,
+        "symlink": 2
+      }
+    },
+    {
+      "file": "metadata.tar.gz",
+      "sha256": "4c837c595866629057186e88293f0b918912b0e90528c4d5c531e3c097bd85e9",
+      "bytes": 42564,
+      "members": 7,
+      "types": {
+        "file": 7
+      }
+    }
+  ],
+  "members": 537,
+  "files": 491,
+  "symlinks": 2,
+  "archives_manifest_sha256": "342a7ef8a90d1e3dfd732442d36823b57ee5a8a6f7a5809525909ef16ade4457",
+  "regular_file_hash_map_sha256": "e6141952d9a1555bfca294ada943413c0e9297bea3794df351323bf630a5358e",
+  "helper_sha256": "05b87daa59dd00c658b042f8e6bf30ee60d5c811956a5a132053d9708ae4ebf6",
+  "cases": [
+    {
+      "name": "rwlock",
+      "execution_status": "NO_JIT",
+      "source_files": 190,
+      "private_inc_files": 43,
+      "prepared_classes": {
+        "unchanged": 79,
+        "overlay": 2,
+        "patched": 12
+      },
+      "phases": [
+        {
+          "name": "cold-warmup",
+          "writes": 1400000,
+          "reads": 20000000,
+          "counters": {
+            "bench_jit_bodies": 0,
+            "bench_jit_completions": 0,
+            "native_escape_count": 0
+          }
+        },
+        {
+          "name": "cold-delegated",
+          "writes": 1400000,
+          "reads": 20000000,
+          "counters": {
+            "bench_jit_bodies": 0,
+            "bench_jit_completions": 0,
+            "native_escape_count": 0
+          }
+        }
+      ]
+    }
+  ]
+}
