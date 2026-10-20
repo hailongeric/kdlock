@@ -38,6 +38,10 @@ mapping shape matches KD's read-only shared shape. A request requiring downgrade
 selects a fresh Native object before publication or fails; a live TCLock object
 cannot switch backend. Only equivalent supported cases are eligible for a future
 comparison, and execution classes and observation settings must remain separate.
+The common payload is compiled against one provider at a time, with Native
+available in either build; the selected build mode is recorded in module info.
+TCLock may combine only the short backing writer work. The fault handler and
+native mmap ownership transitions still execute on the originating task.
 
 The normal CPU fault callback obtains a backing-page reference under the chosen
 reader lock, releases that lock, and transfers the reference to the kernel's

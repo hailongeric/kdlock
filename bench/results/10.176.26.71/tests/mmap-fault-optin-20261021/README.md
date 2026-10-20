@@ -52,3 +52,19 @@ requires `VM_READ` and adds a negative `PROT_NONE` case with zero callback
 attempts and exactly one native mmap acquisition/release. No unsafe probe was
 run against the earlier implementation. Native/KD validation must pass on the
 new revision before the separate TCLock case is eligible.
+
+`live-3`, source `6afa68f`, passed both basic programs and built the observed
+provider, allocator helper, TCLock, payload and client. After KD loaded, a
+second allocator helper failed to reserve 4,096 per-CPU bytes. No mmap client
+ran. The ELF per-CPU sections were 7,592 bytes for observed KD and 520 bytes for
+TCLock; the evidence does not distinguish remaining capacity from allocator
+hint/fragmentation effects. Exact zero-user retirement, normal unload and actual
+idle are retained in `live-3/cleanup.json`.
+
+The next revision builds the common payload against one provider per run,
+following the existing comparison runners. Native remains available in both
+builds. Compiled mode and actual ELF imports must agree; the unavailable backend
+is refused before object creation. All fault, permission, ownership, fallback
+and lifetime oracles remain. KD retains observed zero-JIT and exact source
+retirement checks; TCLock retains its context-quiescence check. An absent KD
+provider's counters are recorded as unavailable, never as measured zeros.

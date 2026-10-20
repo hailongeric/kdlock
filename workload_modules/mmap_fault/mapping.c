@@ -57,9 +57,9 @@ static atomic64_t release_errors = ATOMIC64_INIT(0);
 
 static void mf_read(struct mf_mapping *m)
 {
-	if (m->backend == MF_KD)
+	if (!MF_TC_BUILD && m->backend == MF_KD)
 		kd_down_read(&m->lock.kd);
-	else if (m->backend == MF_TC) {
+	else if (MF_TC_BUILD && m->backend == MF_TC) {
 		preempt_disable();
 		komb_read_lock(&m->lock.tc);
 	} else
@@ -69,9 +69,9 @@ static void mf_read(struct mf_mapping *m)
 static void mf_read_end(struct mf_mapping *m)
 {
 	atomic64_inc(&m->read_ends);
-	if (m->backend == MF_KD)
+	if (!MF_TC_BUILD && m->backend == MF_KD)
 		kd_up_read(&m->lock.kd);
-	else if (m->backend == MF_TC) {
+	else if (MF_TC_BUILD && m->backend == MF_TC) {
 		komb_read_unlock(&m->lock.tc);
 		preempt_enable();
 	} else
@@ -79,9 +79,9 @@ static void mf_read_end(struct mf_mapping *m)
 }
 static void mf_write(struct mf_mapping *m)
 {
-	if (m->backend == MF_KD)
+	if (!MF_TC_BUILD && m->backend == MF_KD)
 		kd_down_write(&m->lock.kd);
-	else if (m->backend == MF_TC) {
+	else if (MF_TC_BUILD && m->backend == MF_TC) {
 		preempt_disable();
 		komb_write_lock(&m->lock.tc);
 	} else
@@ -91,9 +91,9 @@ static void mf_write(struct mf_mapping *m)
 static void mf_write_end(struct mf_mapping *m)
 {
 	atomic64_inc(&m->write_ends);
-	if (m->backend == MF_KD)
+	if (!MF_TC_BUILD && m->backend == MF_KD)
 		kd_up_write(&m->lock.kd);
-	else if (m->backend == MF_TC) {
+	else if (MF_TC_BUILD && m->backend == MF_TC) {
 		komb_write_unlock(&m->lock.tc);
 		preempt_enable();
 	} else
@@ -101,9 +101,9 @@ static void mf_write_end(struct mf_mapping *m)
 }
 static bool mf_idle(struct mf_mapping *m)
 {
-	if (m->backend == MF_KD)
+	if (!MF_TC_BUILD && m->backend == MF_KD)
 		return kd_rwsem_is_idle(&m->lock.kd);
-	if (m->backend == MF_TC)
+	if (MF_TC_BUILD && m->backend == MF_TC)
 		return !atomic_read(&m->lock.tc.cnts) && !atomic_read(&m->lock.tc.lock.val);
 	return !rwsem_is_locked(&m->lock.native);
 }
@@ -161,6 +161,8 @@ static int mf_create(struct mf_file *f, struct mf_create *c)
 	if (c->abi != MF_ABI || c->backend > MF_TC || !c->pages || c->pages > MF_MAX_PAGES ||
 	    c->features & ~MF_FEATURES || c->reserved[0] || c->reserved[1])
 		return -EINVAL;
+	if (c->backend == (MF_TC_BUILD ? MF_KD : MF_TC))
+		return -EOPNOTSUPP;
 	/* Shared writeback/page_mkwrite is not this driver's callback contract. */
 	if ((c->features & MF_WRITABLE) && !(c->features & MF_PRIVATE))
 		return -EOPNOTSUPP;
@@ -185,7 +187,7 @@ static int mf_create(struct mf_file *f, struct mf_create *c)
 	m->pages = c->pages;
 	m->complement = ~m->epoch;
 	init_waitqueue_head(&m->events);
-	if (selected == MF_KD)
+	if (!MF_TC_BUILD && selected == MF_KD)
 		kd_rwsem_init(&m->lock.kd);
 	else if (selected == MF_NATIVE)
 		init_rwsem(&m->lock.native);
@@ -421,7 +423,7 @@ static int mf_downgrade(struct mf_mapping *m)
 	m->epoch++;
 	m->complement = ~m->epoch;
 	atomic64_inc(&m->write_ends);
-	if (m->backend == MF_KD)
+	if (!MF_TC_BUILD && m->backend == MF_KD)
 		kd_downgrade_write(&m->lock.kd);
 	else
 		downgrade_write(&m->lock.native);
@@ -510,5 +512,10 @@ static void __exit mf_exit(void)
 }
 module_init(mf_init);
 module_exit(mf_exit);
+#if MF_TC_BUILD
+MODULE_INFO(mmap_provider, "tclock");
+#else
+MODULE_INFO(mmap_provider, "kdlock");
+#endif
 MODULE_LICENSE("GPL");
 MODULE_DESCRIPTION("Opt-in local KD backing-state locks and origin-task mmap/fault transactions");

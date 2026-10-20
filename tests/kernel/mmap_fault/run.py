@@ -55,7 +55,8 @@ def validate(rows, backend):
                [r['fallback'] for r in created]==fallback and
                all(r['requested']==backend for r in created), 'backend/fallback identity differs')
     return dict(backend=backend,passed=True,probes=probes,rejected_mode=denied[0],joined=s,created=created,
-                checks=rows[-1]['checks'],execution='ORIGIN_LOCAL',jit_bodies=0)
+                checks=rows[-1]['checks'],fault_execution='ORIGIN_TASK',
+                backing_execution='TCLOCK_SHORT' if backend==2 else 'ORDINARY_LOCAL')
 
 
 def main():
@@ -64,6 +65,8 @@ def main():
     parser.add_argument('--source-manifest',type=Path,required=True)
     parser.add_argument('--host-state',type=Path,required=True)
     parser.add_argument('--backends',default='0,1',choices=('0,1','2'))
+    parser.add_argument('--native-kd-result',type=Path,
+                        help='required successful same-revision result before TCLock')
     kernel_identity.arguments(parser)
     args=parser.parse_args()
     rt.require(os.geteuid()==0 and os.uname().release=='6.1.159-kdclobber2' and
@@ -85,6 +88,17 @@ def main():
                len(host['qemu'])==1 and host['qemu'][0]['pid']==257489,
                'fresh evidence for the same host and recovery snapshot required')
     manifest=json.loads(args.source_manifest.read_text())
+    tc_run=args.backends=='2'
+    prerequisite=None
+    if tc_run:
+        rt.require(args.native_kd_result is not None,'Native/KD result required first')
+        prior=json.loads(args.native_kd_result.read_text())
+        rt.require(prior['passed'] and prior['drained'] and prior['final_idle'] and
+                   prior['backends']=='0,1' and [c['backend'] for c in prior['cases']]==[0,1] and
+                   prior['source_commit']==manifest['commit'] and
+                   prior['source_manifest_sha256']==rt.digest(args.source_manifest),
+                   'same-revision Native/KD correctness prerequisite differs')
+        prerequisite=dict(path=str(args.native_kd_result),sha256=rt.digest(args.native_kd_result))
     hashes={p:h for p,h in manifest['files'].items()
             if p=='bench/archive_run.py' or any(p.startswith(d+'/') for d in DIRECTORIES)}
     rt.require(hashes and len(manifest['commit'])==40,'committed source identities required')
@@ -101,7 +115,8 @@ def main():
                 boot_id=Path('/proc/sys/kernel/random/boot_id').read_text().strip(),
                 snapshot=os.environ['KDLOCK_SNAPSHOT_TAG'],backends=args.backends,
                 production_protocol_changed=False,kernel_modified=False,full_suite=False,
-                accepted=False,cases=[],script_sha256=rt.digest(Path(__file__)))
+                accepted=False,cases=[],native_kd_prerequisite=prerequisite,
+                provider='tclock' if tc_run else 'kdlock',script_sha256=rt.digest(Path(__file__)))
     rt.write_json(out/'result.json',result)
     fd=None;messages=''
     def logs():
@@ -128,36 +143,46 @@ def main():
         rt.write_json(out/'environment.json',dict(packages=packages,topology=topology,
             python=sys.executable,cmdline=Path('/proc/cmdline').read_text(),argv=sys.argv))
         rt.command(['make','-C',source/'tests/unit','run','PYTHON='+sys.executable,'PY_TESTS='],out/'basic.log',timeout=180)
-        spec=importlib.util.spec_from_file_location('mmap_prepare',source/'bench/spin_cacheline/provider/prepare.py')
-        preparation=importlib.util.module_from_spec(spec);spec.loader.exec_module(preparation)
-        prepared=preparation.prepare(out/'build/provider',source)['prepared']
-        rt.write_json(out/'prepared-source-sha256.json',prepared)
-        provider=out/'build/provider/kernel_module/kdlock_km.ko'
-        tc=source/'tclock_backend/tclock_rwlock_backend_km.ko'
+        if tc_run:
+            provider=source/'tclock_backend/tclock_rwlock_backend_km.ko'
+            build=['TCLOCK_RWLOCK=1','TCLOCK_NUMA=1']
+        else:
+            spec=importlib.util.spec_from_file_location('mmap_prepare',source/'bench/spin_cacheline/provider/prepare.py')
+            preparation=importlib.util.module_from_spec(spec);spec.loader.exec_module(preparation)
+            prepared=preparation.prepare(out/'build/provider',source)['prepared']
+            rt.write_json(out/'prepared-source-sha256.json',prepared)
+            provider=out/'build/provider/kernel_module/kdlock_km.ko'
+            build=['W=1','KDLOCK_SELFTEST=0','KDLOCK_NUMA=1','KDLOCK_SPIN_BATCH=1024','UBSAN_SANITIZE=n']
         payload=source/'workload_modules/mmap_fault/kd_mmap_fault.ko'
         guard=source/'bench/tclock_compare/allocator_guard/tc_allocator_guard.ko'
         rt.command(['make','-C',guard.parent,'KDIR='+str(args.kernel_source)],out/'build-guard.log',timeout=180)
-        rt.command(['make','-C',provider.parent,'KDIR='+str(args.kernel_source),'W=1','KDLOCK_SELFTEST=0','KDLOCK_NUMA=1','KDLOCK_SPIN_BATCH=1024','UBSAN_SANITIZE=n'],out/'build-provider.log',timeout=180)
-        rt.command(['make','-C',tc.parent,'KDIR='+str(args.kernel_source),'TCLOCK_RWLOCK=1','TCLOCK_NUMA=1'],out/'build-tclock.log',timeout=180)
+        rt.command(['make','-C',provider.parent,'KDIR='+str(args.kernel_source),*build],out/'build-provider.log',timeout=180)
         rt.command(['make','-C',payload.parent,'KDIR='+str(args.kernel_source),
             'KDLOCK_INCLUDE='+str(source/'include'),'TCLOCK_INCLUDE='+str(source/'tclock_backend/include'),
-            'KBUILD_EXTRA_SYMBOLS='+str(provider.parent/'Module.symvers')+' '+str(tc.parent/'Module.symvers')],out/'build-payload.log',timeout=180)
+            'MF_TC_BUILD='+str(int(tc_run)),
+            'KBUILD_EXTRA_SYMBOLS='+str(provider.parent/'Module.symvers')],out/'build-payload.log',timeout=180)
+        mode=rt.command(['modinfo','-F','mmap_provider',payload],out/'payload-mode.txt').strip()
+        rt.require(mode==result['provider'],'compiled payload mode differs')
+        imports=set(rt.command(['nm','-u',payload],out/'payload-imports.txt').split())
+        rt.require(('komb_read_lock' in imports)==tc_run and
+                   ('kd_down_read' in imports)==(not tc_run) and
+                   not any(n.startswith('kd_') if tc_run else n.startswith('komb_') for n in imports),
+                   'payload imports an unavailable provider')
         client=out/'client'
         rt.command(['gcc','-O2','-g','-Wall','-Wextra','-Werror','-pthread',
             '-I'+str(payload.parent),source/'bench/mmap_fault/client.c','-o',client],out/'build-client.log',timeout=60)
-        binaries={str(p.relative_to(out)):rt.digest(p) for p in (provider,tc,payload,client,guard)}
+        binaries={str(p.relative_to(out)):rt.digest(p) for p in (provider,payload,client,guard)}
         rt.write_json(out/'binary-sha256.json',binaries)
         verify();archive.idle(out.parent,rt.idle)
         fd=os.open('/dev/kmsg',os.O_RDONLY|os.O_NONBLOCK);os.lseek(fd,0,os.SEEK_END)
         result['state']='RUNNING';rt.write_json(out/'result.json',result)
-        rt.command(['insmod',guard],out/'load-guard-kd.log')
-        rt.command(['rmmod','tc_allocator_guard'],out/'unload-guard-kd.log')
-        rt.command(['insmod',provider,'bench_quiet=1','bench_complete_probe=1','jit_timing=0'],out/'load-provider.log')
-        params=rt.parameters();rt.write_json(out/'provider-parameters.json',params)
-        rt.require(params['bench_quiet']==params['bench_complete_probe']=='Y' and params['jit_timing']=='N','provider observation settings differ')
-        rt.command(['insmod',guard],out/'load-guard-tc.log')
-        rt.command(['rmmod','tc_allocator_guard'],out/'unload-guard-tc.log')
-        rt.command(['insmod',tc,'komb_batch_size=1024'],out/'load-tclock.log')
+        rt.command(['insmod',guard],out/'load-guard.log')
+        rt.command(['rmmod','tc_allocator_guard'],out/'unload-guard.log')
+        parameters=['komb_batch_size=1024'] if tc_run else ['bench_quiet=1','bench_complete_probe=1','jit_timing=0']
+        rt.command(['insmod',provider,*parameters],out/'load-provider.log')
+        if not tc_run:
+            params=rt.parameters();rt.write_json(out/'provider-parameters.json',params)
+            rt.require(params['bench_quiet']==params['bench_complete_probe']=='Y' and params['jit_timing']=='N','provider observation settings differ')
         rt.command(['insmod',payload],out/'load-payload.log')
         for backend in map(int,args.backends.split(',')):
             print('START mmap/fault backend',backend,flush=True)
@@ -168,16 +193,23 @@ def main():
             rt.require(re.fullmatch(r'files=0 destroyed=\d+ release_errors=0',case['health']) is not None,'callback/file storage did not drain')
             result['cases'].append(case);rt.write_json(out/'result.json',result)
             print('FINISH mmap/fault backend',backend,'PASS',flush=True)
-        counts=Path('/sys/module/kdlock_km/parameters')
-        result['jit_bodies']=int((counts/'bench_jit_bodies').read_text())
-        result['jit_completions']=int((counts/'bench_jit_completions').read_text())
-        rt.require(result['jit_bodies']==result['jit_completions']==0,'unexpected generated execution')
-        rt.require(Path('/sys/module/tclock_rwlock_backend_km/parameters/quiescent').read_text().strip()=='1','TCLock contexts not idle')
+        result['jit_counts_observed']=not tc_run
+        if tc_run:
+            rt.require(not Path('/sys/module/kdlock_km').exists(),'unexpected KD provider')
+            rt.require(Path('/sys/module/tclock_rwlock_backend_km/parameters/quiescent').read_text().strip()=='1','TCLock contexts not idle')
+            result.update(tclock_quiescent=True,jit_bodies=None,jit_completions=None)
+        else:
+            rt.require(not Path('/sys/module/tclock_rwlock_backend_km').exists(),'unexpected TCLock provider')
+            counts=Path('/sys/module/kdlock_km/parameters')
+            result['jit_bodies']=int((counts/'bench_jit_bodies').read_text())
+            result['jit_completions']=int((counts/'bench_jit_completions').read_text())
+            rt.require(result['jit_bodies']==result['jit_completions']==0,'unexpected generated execution')
         rt.command(['rmmod','kd_mmap_fault'],out/'unload-payload.log')
-        retired=json.loads(rt.command([sys.executable,source/'disassem/device_session.py','retire'],out/'retire.json'))
-        rt.require(retired==dict(state=2,modules=0,writers=0,frames=0),'exact source retirement differs')
-        rt.command(['rmmod','tclock_rwlock_backend_km'],out/'unload-tclock.log')
-        rt.command(['rmmod','kdlock_km'],out/'unload-provider.log')
+        retired=None
+        if not tc_run:
+            retired=json.loads(rt.command([sys.executable,source/'disassem/device_session.py','retire'],out/'retire.json'))
+            rt.require(retired==dict(state=2,modules=0,writers=0,frames=0),'exact source retirement differs')
+        rt.command(['rmmod','tclock_rwlock_backend_km' if tc_run else 'kdlock_km'],out/'unload-provider.log')
         logs();verify();archive.idle(out.parent,rt.idle)
         rt.require(all(rt.digest(out/p)==h for p,h in binaries.items()),'binary changed')
         result.update(state='COMPLETE',passed=True,drained=True,retired=retired,final_idle=True,

@@ -20,7 +20,10 @@ python3 tests/kernel/mmap_fault/run.py --source-manifest /tmp/mmap-source.json \
 ```
 
 First validate Native (`0`) and KD (`1`). Only after those pass, use `--backends 2`
-in another new directory for TCLock's supported short backing-state operations.
+and `--native-kd-result <first-run>/result.json` in another new directory for
+TCLock's supported short backing-state operations. The prerequisite must use the
+same committed inputs. Each payload links one provider; Native is available in
+both builds, and unsupported compiled-out backends are refused before creation.
 All providers and the payload are frozen and built in the VM. The two basic C
 programs run first. The new client requires real CPU faults, all four controlled
 outcomes, rejection after read permission is removed, VMA replacement during
@@ -39,9 +42,12 @@ The host receipt must confirm current pins and the actual recovery snapshot.
 The provider uses the maintained private observation overlay, with source hashes
 retained before and after execution. The existing reserved-per-CPU allocator
 preparation module is loaded and normally unloaded before each provider load;
-it is absent during client execution. Both providers are explicit dependencies
-of the payload even when only one backend is selected.
+it is absent during client execution. The payload's recorded build mode and ELF
+imports must match its single provider. This avoids simultaneous provider
+reservation pressure without changing the lock implementations or kernel.
 
-No timing comparison is performed by this runner. JIT counts must remain zero;
-these are ordinary local KD operations. Signal cancellation, arbitrary remote
+No timing comparison is performed by this runner. Observed KD JIT counts must
+remain zero; these are ordinary local KD operations. A TCLock-only run has no KD
+provider and records its JIT counters as unavailable, with TCLock quiescence
+checked instead. Signal cancellation, arbitrary remote
 faults and full-kernel mmap-lock replacement are outside this validation.
