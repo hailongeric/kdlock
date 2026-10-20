@@ -94,9 +94,22 @@ unique mapped extents, sizes, stable reads and all admission/ownership checks.
 The failed original run and its six measurements remain separate. A corrected
 revision requires basic and affected tests and a fresh strict gate.
 
+## Corrected-reader validation
+
+`checks-2` at `cbb5b63581784824e6d365b6d3219bb6048242b8` passed both
+basic programs and all 27 affected Python checks (13 comparison, 4 host observer,
+2 profile and 8 diagnostic checks). Dependency validation, frozen/current source
+hashes and final idle passed. The added negative check requires the active
+five-level flag before accepting its canonical addresses and still refuses
+unmapped, short and ambiguous reads. No provider or workload binary changes.
+
+The next diagnostic uses a new `run-2` output and the full fixed 48-session
+plan. The first host observer must finish its planned 900 seconds before a
+separately identified second observation begins. No run is interrupted.
+
 ## Disposition
 
-The corrected reader is under validation; no successful counter/timing matrix
+The corrected reader passed validation; no successful counter/timing matrix
 is available yet.
 The seven mutex causes, shared-lock comparative acceptance, remaining nano
 conclusions and real mmap/page-fault integration retain their documented
