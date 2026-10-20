@@ -82,3 +82,10 @@ coverage does not convert a failed case into a pass; overall success still
 requires every planned case to pass. Both plans retain the strict 67-thread
 host admission check and require fresh recovery-snapshot confirmation.
 Preparation, basic/affected checks and live runs are not yet complete.
+
+`admission-1` preparation failed before compilation: the Makefile hunk described
+production context and omitted the original benchmark overlay's `kd_bench.o`.
+The zero-fuzz application correctly rejected that hunk; all other hunks applied.
+No module was built or loaded and no case ran. The partial tree and rejection
+are retained. The corrected hunk includes that existing object; preparation
+must use a new `admission-2` directory rather than rewriting the failed input.
