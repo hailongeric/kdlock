@@ -216,3 +216,12 @@ that the extra helper CALL disappears. Basic and affected resource, API,
 clobber and continuation checks, then the local/OUTER/public and owner-ACK
 probes, precede any new plain performance comparison. No candidate validation
 or performance improvement is claimed yet.
+
+The candidate check runner is [check-entry-candidate.py](check-entry-candidate.py):
+two basic programs and six affected drivers, with provider/daemon builds and
+source verification before and after each step. The serial
+[live supervisor](run-entry-tasks.py) retains the original stop-on-failure and
+idle/source checks. It also binds the owner/ACK fixture's `sources.json` map
+explicitly and verifies each retained source byte and child success/drain
+receipt. The planned order is ordinary local mutex, OUTER continuation, public
+DIRECT continuation, and the real-owner ACK fixture on CPUs 0, 32 and 33.
