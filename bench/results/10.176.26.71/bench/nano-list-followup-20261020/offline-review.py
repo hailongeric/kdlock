@@ -333,7 +333,30 @@ def main():
             if is_shared:
                 a.check(row['write_percent'] == 20 and row['post_work_rounds'] == 4, 'shared_mix_postwork', tag)
             whole, peak, cpu = measurement(a, arithmetic, row, tag)
-            entries, completions = row['jit_bodies'], row['jit_completions']
+            entries = row['jit_bodies']
+            native_delegated = None
+            if row['arm'] == 'tclock' and not is_shared:
+                a.check('jit_completions' not in row and row['jit_status'] == 'NOT_APPLICABLE',
+                        'exclusive_tclock_no_kd_counter', tag)
+                completions = 0
+                a.check(all(row[k]['quiescent'] == 1 for k in
+                            ('tclock_before', 'tclock_after', 'tclock_drained')),
+                        'tclock_native_quiescence', tag)
+                if row['lock_kind'] == 'mutex':
+                    native_delegated = row['tclock_after']['delegated']-row['tclock_before']['delegated']
+                    a.check(0 < native_delegated <= m['completed'] and
+                            native_delegated == row['delegated_bodies'] and row['delegation_status'] == 'PASS',
+                            'tclock_native_delegation', tag)
+                else:
+                    a.check(row['delegated_bodies'] is None and row['delegation_status'] == 'UNMEASURED',
+                            'tclock_spin_delegation_unmeasured', tag)
+            else:
+                completions = row['jit_completions']
+                if row['arm'] == 'tclock':
+                    a.check(is_shared and row['tclock_delegation_status'] == 'UNMEASURED' and
+                            all(row[k]['quiescent'] == 1 for k in
+                                ('tclock_before', 'tclock_after', 'tclock_drained')),
+                            'tclock_shared_quiescence_and_scope', tag)
             operations = m['writes'] if is_shared else m['completed']
             a.check(0 <= completions <= entries <= operations, 'bounded_jit_evidence', tag)
             kind = 'NATIVE'
@@ -380,7 +403,8 @@ def main():
             sessions.append(dict(path=tag, family=row['lock_kind'], nodes=row['list_nodes'],
                 workload=row['workload'], threads=row['threads'], arm=row['arm'], repeat=row['repeat'],
                 execution_class=kind, whole_ops_s=whole, peak_ops_s=peak, cpu_ns_per_op=cpu,
-                operations=m['completed'], jit_entries=entries, jit_completions=completions))
+                operations=m['completed'], jit_entries=entries, jit_completions=completions,
+                tclock_native_delegated=native_delegated))
     a.check(len(sessions) == health['sessions'] == health['functionally_valid'] == health['drained'] == 264 and
             family_counts == dict(spin=72, mutex=72, rwlock=72, rwsem=48), 'all_families_completed')
     a.check(len(cold) == health['compiled_list_audits'] == 44 and len(images) == len(retired) == 96 and
@@ -430,6 +454,7 @@ def main():
                 'Whole-run JIT counters do not establish the selected peak window execution mix.',
                 'Compiled/loaded bytes and retained disassembly are checked; no archived code is executed.',
                 'TCLock spin/rwlock delegation, p95 latency and runtime host interference are unmeasured.',
+                'TCLock exclusive has no KD completion counter; its native mutex delegation is checked and retained separately.',
                 'The seven public-mutex regressions and any failed host endpoints remain unresolved.'])
     args.report.mkdir(parents=True)
     (args.report/'offline-review.json').write_text(json.dumps(output, indent=2, sort_keys=True)+'\n')

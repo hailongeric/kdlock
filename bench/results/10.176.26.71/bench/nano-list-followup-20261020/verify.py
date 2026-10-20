@@ -142,7 +142,26 @@ def main():
             peak = rw_oracle.validate(m, row) if shared else rt.validate_timed_measurement(m, row)
             assert peak == m['peak'], tag
             operations = m['writes'] if shared else m['completed']
-            entries, completions = row['jit_bodies'], row['jit_completions']
+            entries = row['jit_bodies']
+            if row['arm'] == 'tclock' and not shared:
+                # This backend does not load KD or expose a KD completion
+                # counter. Never use this exception for a KD observation.
+                assert 'jit_completions' not in row and row['jit_status'] == 'NOT_APPLICABLE'
+                completions = 0
+                assert all(row[k]['quiescent'] == 1 for k in
+                           ('tclock_before', 'tclock_after', 'tclock_drained'))
+                if row['lock_kind'] == 'mutex':
+                    delegated = row['tclock_after']['delegated']-row['tclock_before']['delegated']
+                    assert 0 < delegated <= m['completed'] and row['delegated_bodies'] == delegated
+                    assert row['delegation_status'] == 'PASS'
+                else:
+                    assert row['delegated_bodies'] is None and row['delegation_status'] == 'UNMEASURED'
+            else:
+                completions = row['jit_completions']
+                if row['arm'] == 'tclock':
+                    assert shared and row['tclock_delegation_status'] == 'UNMEASURED'
+                    assert all(row[k]['quiescent'] == 1 for k in
+                               ('tclock_before', 'tclock_after', 'tclock_drained'))
             assert 0 <= completions <= entries <= operations
             kind = 'NATIVE'
             if row['arm'] == 'kdlock':
@@ -233,6 +252,7 @@ def main():
         per_session_kernel_faults=faults, totals=dict(totals), execution_classes=dict(classes),
         host_endpoints=endpoints, reference_environment_sha256=scheduler.REPLAY_ENVIRONMENT_SHA256,
         verifier_sha256=sha(Path(__file__)), overall_acceptance='OPEN',
+        control_completion_scope='TCLock exclusive has no KD completion counter; its native mutex delegation is checked separately.',
         p95_latency='UNMEASURED', within_run_host_interference='UNMEASURED')
     rt.write_json(base/'health.json', health)
     print(json.dumps({k: v for k, v in health.items()

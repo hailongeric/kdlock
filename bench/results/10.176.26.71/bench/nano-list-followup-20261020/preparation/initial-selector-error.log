@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "<stdin>", line 15, in <module>
+  File "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/bench/mutex32-native-tclock-20261020/offline-review.py", line 69, in jread
+    return json.loads(self.contents[name])
+KeyError: 'spin-list-prefetch-n16/records.json'

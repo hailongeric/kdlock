@@ -24,6 +24,20 @@ records. It reconstructs provider sources and checks compiled/generated ELF
 extents, loaded bytes and every retained prefetch instruction. It imports only
 hash-pinned inert readers and will run on `380G10` after archival. It has not
 yet run against this timing stage.
+Static review reconciled the verifier with the unchanged TCLock record schema:
+exclusive TCLock has no KD completion counter. Its absence is checked explicitly;
+TCLock quiescence and returned native-mutex delegation use their own receipts.
+Missing KD counters still fail verification. These source-host checker changes
+will be synchronized only after the active run is idle.
+The ELF/image reader separately passed a
+[70,425-check inert review](preparation/historical-code-review.json) of the
+retained `list-functional-4` archive: 14 compiled audits and 14 loaded images,
+with zero issues. The first review command selected nonexistent timing
+`records.json` files in that functional archive; its
+[error](preparation/initial-selector-error.log) is retained. Selecting the
+actual frozen plan and per-session receipts allowed the unchanged code-image
+reader to complete. No workload ran, and this historical review does not
+validate the active timing results.
 
 | Family | Variants | Controls | Mix | Sessions |
 | --- | --- | --- | --- | ---: |
