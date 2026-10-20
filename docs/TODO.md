@@ -99,8 +99,10 @@ The entry-inlining experiment passed focused correctness checks but did not
 resolve the seven mutex losses in its separate 120-session comparison. It is
 not accepted as a performance fix. The stage record retains all repetitions,
 class gaps and the failed post-run QEMU thread-set check; latency and runtime
-host interference remain unmeasured. Preserve the experiment before restoring
-the prior entry and validating the maintained state.
+host interference remain unmeasured. The experiment is preserved at
+`archive/mutex-entry-inline-20261020` (`7062887`). The common entry and its test
+extraction marker are restored to their pre-experiment bytes; the separate
+`mutex-entry-restored-20261020` basic, affected and live validation is pending.
 
 Keep the two-word wrapper ABI, separate backend identities, exact KD physical owners,
 exact acquisition references and final ACKs. Shared storage must survive its final

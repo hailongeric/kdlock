@@ -72,7 +72,7 @@ def production():
     for marker in (
         "static unsigned long kd_mutex_contended_acquire(struct kd_mutex *lock, unsigned long ret_rsp,",
         "static void kd_mutex_contended_entry(struct kd_mutex *lock, unsigned long ret_rsp,",
-        "static __always_inline void kd_mutex_lock_entry(struct kd_mutex *lock, unsigned long ret_rsp,",
+        "static void kd_mutex_lock_entry(struct kd_mutex *lock, unsigned long ret_rsp,",
         "void __kd_mutex_lock(struct kd_mutex *lock, unsigned long ret_rsp,",
         "void __kd_mutex_lock_clobber_v1(struct kd_mutex *lock, unsigned long sp,",
         "void __kd_mutex_unlock(struct kd_mutex *lock, unsigned long ret_rsp,",

@@ -56,12 +56,7 @@ static void kd_mutex_contended_entry(struct kd_mutex *lock, unsigned long ret_rs
 	(void)kd_mutex_contended_acquire(lock, ret_rsp, ret_addr, bp, abi);
 }
 
-/* Keep the common decision inside each public ABI entry. A successful CAS
- * already holds physical exclusion, so an extra C helper return would extend
- * the interval before the caller starts its body. Inlining removes that layer
- * without moving sleep checks, changing the bounded probes, or bypassing the
- * contended ownership path. The captured IP/SP/BP still pass through unchanged. */
-static __always_inline void kd_mutex_lock_entry(struct kd_mutex *lock, unsigned long ret_rsp,
+static void kd_mutex_lock_entry(struct kd_mutex *lock, unsigned long ret_rsp,
 		unsigned long ret_addr, unsigned long bp, enum kd_entry_abi abi)
 {
 	/* The legacy kernel hook already saved the caller on its native stack.

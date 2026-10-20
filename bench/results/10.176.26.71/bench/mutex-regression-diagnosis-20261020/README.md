@@ -333,7 +333,16 @@ All archive/input binding, worker, business, retirement and summary-arithmetic
 checks reported no other issue. Archives remain in the corresponding guest
 `-archives` directories and source-host `raw/bench/` directories.
 
-The candidate is rejected as a solution to the seven regressions. Preserve
-this implementation and evidence on an explicit archive ref, restore only
-the common entry declaration/comment and its extraction marker to the prior
-validated source, and validate that restored state before subsequent work.
+The candidate is rejected as a solution to the seven regressions. Its
+implementation and evidence are preserved at
+`archive/mutex-entry-inline-20261020` (`7062887`). Only
+`kernel_module/lock/mutex_calls.inc` and
+`tests/unit/mutex/test_mutex_resources.py` are restored to their `27df765` bytes;
+the unified API, nested locking and ownership/ACK protocol remain in place.
+The restored entry has SHA-256
+`0d201fc6fbb0514e1cefdea2237e35ff2b9dc67432db53592224552fd269ace3`.
+
+The restoration validation stage is `mutex-entry-restored-20261020`. It reuses
+the same two basic programs, six affected drivers and four serial live probes
+(local, OUTER, public DIRECT and owner/ACK) in the original recovery VM. Results
+are pending; earlier candidate passes do not certify this restored source.
