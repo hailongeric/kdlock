@@ -13,6 +13,14 @@ import report
 
 
 class ComparisonTests(unittest.TestCase):
+    def test_guest_clock_bracket_retains_uncertain_realtime_order(self):
+        with patch.object(run.time, 'time_ns', side_effect=[100, 120, 90, 80]), \
+                patch.object(run.time, 'monotonic_ns', side_effect=[50, 60]):
+            self.assertEqual(run.clock_point(), dict(realtime_before_ns=100,
+                monotonic_ns=50, realtime_after_ns=120, realtime_ordered=True))
+            self.assertEqual(run.clock_point(), dict(realtime_before_ns=90,
+                monotonic_ns=60, realtime_after_ns=80, realtime_ordered=False))
+
     def test_retained_program_copy_can_restore_execute_bit_without_changing_bytes(self):
         with tempfile.TemporaryDirectory() as temporary:
             folder = Path(temporary)

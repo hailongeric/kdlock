@@ -88,13 +88,21 @@ Known failures are still open:
 
 ## Delivery scope
 
+The user reopened the seven public-mutex regressions and requested subsequent
+rwlock/rwsem comparisons, real mmap/fault integration and nano/list measurements.
+The active [stage record](../bench/results/10.176.26.71/bench/mutex-regression-diagnosis-20261020/README.md)
+tracks those dependencies and results. Their prior deferred status is not a
+reason to skip the requested investigation; unsupported behavior still requires
+an explicit ownership/context design and validation before execution.
+
 Keep the two-word wrapper ABI, separate backend identities, exact KD physical owners,
 exact acquisition references and final ACKs. Shared storage must survive its final
 reader. Builds/tests/benchmarks run in the recovery guest; default work does not
 change its kernel. Published KD waiters remain pinned polling.
 
-Userspace/futex, real mmap-lock replacement, other architectures and
-oversubscription redesign remain deferred. The [rwsem phase protocol](design/rwsem_implementation.md)
+Userspace/futex, other architectures and oversubscription redesign remain
+deferred. Real mmap-lock replacement is requested work with unresolved
+integration requirements. The [rwsem phase protocol](design/rwsem_implementation.md)
 drains readers before writer publication and excludes ordinary downgrade during
 an outer-writer cohort. It preserves pinned mutex producers and their existing
 oversubscription limits. Outer downgrade, post-publication cancellation, Linux

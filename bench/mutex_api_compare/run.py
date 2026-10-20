@@ -55,6 +55,24 @@ def utc():
     return datetime.now(timezone.utc).isoformat()
 
 
+def clock_point():
+    """Bracket the guest measurement clock without assuming host clock sync."""
+    before = time.time_ns()
+    monotonic = time.monotonic_ns()
+    after = time.time_ns()
+    return dict(realtime_before_ns=before, monotonic_ns=monotonic,
+                realtime_after_ns=after, realtime_ordered=after >= before)
+
+
+def session_clock(out, spec, phase):
+    # These reads/writes surround the entire retained session, outside its
+    # worker interval. The raw client timestamps remain authoritative. Host
+    # alignment still needs separately retained clock calibration and bounds.
+    with (out/'session-clocks.jsonl').open('a') as stream:
+        stream.write(json.dumps(dict(name=spec['name'], phase=phase,
+                                     clock=clock_point()), sort_keys=True)+'\n')
+
+
 def execution_order(groups=GROUPS, threads=THREADS, repeats=3):
     """Rotate four arms at each point; preserve the explicit matched rounds."""
     return [(group, count, repeat, arm)
@@ -551,11 +569,15 @@ def measure(prepared, out, syn, syn_session, bench_session, api, budget, smoke, 
             state['current'] = dict(workload=group, threads=count, repeat=repeat, arm=arm)
             save(out/'status.json', state)
             print(f'[{index+1}/{len(order)}] {spec["name"]}', flush=True)
-            if group in ('c01', 'c08', 'rcuht'):
-                session = synthetic_session(syn, syn_session, bench_session, view, spec)
-            else:
-                session = api.SyscallSession(view, spec)
-                session.execute()
+            session_clock(out, spec, 'before_session')
+            try:
+                if group in ('c01', 'c08', 'rcuht'):
+                    session = synthetic_session(syn, syn_session, bench_session, view, spec)
+                else:
+                    session = api.SyscallSession(view, spec)
+                    session.execute()
+            finally:
+                session_clock(out, spec, 'after_session')
             record = session.record
             if not record['drained'] or record['execution_status'] not in ('OK', 'NO_JIT'):
                 raise RuntimeError('session did not finish safely')
