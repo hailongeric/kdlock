@@ -457,6 +457,17 @@ observer-mode class changes and a failed 95-thread endpoint. Existing
 counters and aligned profiles narrow the observation to queue/owner polling;
 the initiating cause remains unresolved and no production fix was introduced.
 
+The subsequent [physical-ownership diagnostic](../pipecap-owner-20261021/README.md)
+completed 24 serial one-worker sessions with original binaries and 18 exact KD
+retirements. All observed phases qualify as local-only. Static extra work before
+DIRECT's physical release is established; the occupancy-based interval estimates
+remain uncalibrated and inconclusive. The one-worker plain DIRECT/OUTER ratio is
+0.97128, and the immediate endpoint fails at 101 versus 67 threads. Neither this
+different contention point nor the estimator resolves the five-worker loss.
+The stage preserves 24,018 in-phase byte observations and passes 109,948 offline
+consistency checks. No production fix or five-worker extrapolation is claimed;
+all seven points and the other gaps remain explicitly unresolved.
+
 All stages used a sole source writer and serial VM execution. The three
 helpers (`native_api_inventory`, `rw_and_mm_audit`, `unified_api_review`) finished
 read-only reviews and each reported **no files touched**. No run is active.

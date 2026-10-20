@@ -1,0 +1,25 @@
+[1/24] pipecap-t01-r0-native-plain
+[2/24] pipecap-t01-r0-tclock-plain
+[3/24] pipecap-t01-r0-baseline-kd-plain
+[4/24] pipecap-t01-r0-public-kd-plain
+[5/24] pipecap-t01-r0-baseline-kd-reference
+[6/24] pipecap-t01-r0-public-kd-reference
+[7/24] pipecap-t01-r0-baseline-kd-sampled
+[8/24] pipecap-t01-r0-public-kd-sampled
+[9/24] pipecap-t01-r1-baseline-kd-reference
+[10/24] pipecap-t01-r1-public-kd-reference
+[11/24] pipecap-t01-r1-baseline-kd-sampled
+[12/24] pipecap-t01-r1-public-kd-sampled
+[13/24] pipecap-t01-r1-tclock-plain
+[14/24] pipecap-t01-r1-baseline-kd-plain
+[15/24] pipecap-t01-r1-public-kd-plain
+[16/24] pipecap-t01-r1-native-plain
+[17/24] pipecap-t01-r2-baseline-kd-sampled
+[18/24] pipecap-t01-r2-public-kd-sampled
+[19/24] pipecap-t01-r2-baseline-kd-plain
+[20/24] pipecap-t01-r2-public-kd-plain
+[21/24] pipecap-t01-r2-native-plain
+[22/24] pipecap-t01-r2-tclock-plain
+[23/24] pipecap-t01-r2-baseline-kd-reference
+[24/24] pipecap-t01-r2-public-kd-reference
+{"state": "COMPLETE", "planned": 24, "source_commit": "62046e8e89fffedd59815ee1236074818414d4ef", "provider_collection": "d21a1e3", "outer": "752fec1", "source_tools": {"owner_run.py": "f67dd517ba20b67c0a816f107560504da86ddcfe7fe66ac08350e9ff00bfd0b9", "owner_sample.py": "4d31c4dc533f9b26c1f6d8988c5310833cda54b4a3c232ba4c6835f173c8aca7", "route_snapshot.py": "5cd55f7f999994d5274b91d88adc8bff2d4880f56b4b3beab43d1c164bc6263f", "run.py": "2f821f2a394c34c64c6b2d8d86b3aabaf16dca7ae8d477376f468542b230399d"}, "provider_and_workload_binaries_changed": false, "accepted": false, "started_ns": 1792535985878822585, "limits": "One-worker local-path occupancy investigation; reference and owner sampling remain separate. No p95 or causal fix presumed.", "sessions": 24, "final_idle": true, "finished_ns": 1792536115492060567}
