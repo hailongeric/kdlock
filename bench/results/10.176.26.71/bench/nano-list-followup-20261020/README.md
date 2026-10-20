@@ -18,6 +18,12 @@ The prepared [post-run verifier](verify.py) checks all 264 results, frozen
 sources/binaries, 44 compiled-function audits, 96 KD loaded-image receipts and
 exact retirements. It retains both strict environment endpoints; a failed
 post-run check remains a failure. It has not yet run against timing evidence.
+The prepared [independent archive review](offline-review.py) recomputes worker
+effects, timing windows, execution classes and three-round ranges from raw
+records. It reconstructs provider sources and checks compiled/generated ELF
+extents, loaded bytes and every retained prefetch instruction. It imports only
+hash-pinned inert readers and will run on `380G10` after archival. It has not
+yet run against this timing stage.
 
 | Family | Variants | Controls | Mix | Sessions |
 | --- | --- | --- | --- | ---: |
