@@ -1,7 +1,8 @@
 # Shared-lock comparison after mutex correctness restoration
 
-Status: rwsem collection, verification and archival complete; rwlock reference
-running. The rwsem post-run host-thread check failed and acceptance is open. This stage
+Status: both collections, verification and archival are complete. The rwsem
+post-run host-thread check failed; rwlock has five comparator misses and a
+delayed host endpoint. Acceptance remains open. This stage
 follows the validated `a768361` mutex restoration, recorded in `f48b90e`.
 The seven public-mutex performance regressions and the
 environment/execution-class/latency gaps remain
@@ -156,7 +157,7 @@ criteria, with whole-run KD/Native ratios from 1.5072 to 2.3916.
 These observations remain subject to the failed host endpoint and are not
 pooled with the historical 2026-10-18 source or the separate mutex reruns.
 
-## Rwlock reference in progress
+## Completed rwlock reference
 
 `rwlock-preflight-1` passed after rwsem completion, archival and independent
 review. Its host receipt was captured at 2026-10-20 16:31:19.687477 UTC and
@@ -166,6 +167,52 @@ all 497 source hashes and the exact 270-session dry-run plan.
 
 The unchanged serial supervisor started `rwlock-1/rwlock-reference` at
 16:32:10 UTC, using the same source manifest and the planned five worker counts.
-There is one active benchmark and no observer or profiler. This fresh admission
+The run had no observer or profiler. This fresh admission
 does not replace or repair the failed immediate rwsem post-run check.
-Rwlock results are not complete or accepted yet.
+It finished at **16:48:26.414862 UTC** with all **270 sessions functionally valid
+and drained**. [Health](rwlock-1/health.json) records 90 exact KD retirements,
+838 source hashes, 13 binaries and no per-session kernel fault matches.
+The 11,682,855,680 operations comprise 10,601,839,167 reads and 1,081,016,513
+writes. All 3,258,642 KD entry witnesses match completed bodies: 48 KD sessions
+returned bodies, 42 recorded `NO_JIT`, and the two control arms have 90 sessions
+each. TCLock delegation remains unmeasured.
+
+The [independent archive audit](rwlock-1/offline-review.json) completed **208,412
+checks with zero issues**, including all 7,931 files, 180 symlinks, provider
+reconstruction, workers, protected effects, peaks and retirement. The
+[archive manifest](rwlock-1/archives.json) SHA-256 is
+`332ee94138b408378495a81d4e0200084235eff01bf1e02b18ff6d54dde81402`.
+The 26,524,910-byte matrix archive has SHA-256
+`d7e5e766f6eece88200922ed1168ae30ccea962907a75b9e1ed7969caedeeaf2`;
+the 134,162-byte metadata archive has SHA-256
+`52366839e6f2b1206e883fa4c6f31e81d45a31a613d876a5a631fdc19cca8170`.
+Raw evidence is under
+`bench/results/10.176.26.71/raw/bench/shared-lock-followup-20261020/rwlock-1/archives/`.
+
+Both retained host receipts match the original 67-thread configuration and
+other required environment fields. However, the post-run receipt was captured
+at **16:50:23.970516 UTC**, **117.556 seconds after child completion**:
+see [endpoint timing](rwlock-1/endpoint-timing.json). It establishes that later
+point's configuration, not the immediate endpoint or the intervening interval.
+Within-run host interference and p95 latency also remain unmeasured.
+
+KD meets both observed throughput criteria at **27/30 points against Native**
+and **28/30 against TCLock**, with no split-class comparisons. The five misses
+are below; all three repetitions remain in the [complete CSV](rwlock-1/comparisons.csv).
+Whole rates are Mops/s and ratios are KD/control. None has a KD whole maximum
+below 95% of the control minimum. Peak-only misses remain misses.
+
+| Payload / writes / workers | Control | Whole median ratio | Best peak ratio | KD whole range | Control whole range |
+| --- | --- | ---: | ---: | ---: | ---: |
+| c08 / 1% / 1 | Native | 1.0152 | 0.9992 | 70.380–70.452 | 69.348–69.710 |
+| c08 / 20% / 1 | Native | 0.9505 | 0.9439 | 69.892–70.015 | 72.767–73.696 |
+| c08 / 20% / 1 | TCLock | 0.9857 | 0.9914 | 69.892–70.015 | 70.584–71.010 |
+| RCUHT / 1% / 60 | TCLock | 0.9596 | 0.9513 | 13.818–14.413 | 14.610–15.136 |
+| RCUHT / 20% / 60 | Native | 1.2540 | 0.9628 | 6.313–6.373 | 4.830–5.221 |
+
+The largest three-round whole-rate spreads are **10.72% KD** at c08/1%/8
+(21.772–24.106 Mops/s), **83.70% Native** at c01/1%/1 (34.717–63.775),
+and **43.63% TCLock** at c01/1%/1 (47.479–68.196). These are observed
+`(maximum - minimum) / minimum` spreads, not confidence intervals.
+The delayed endpoint, throughput misses, separate rwsem failure and seven
+unresolved public-mutex regressions preclude blanket performance acceptance.

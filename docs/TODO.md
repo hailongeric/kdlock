@@ -117,14 +117,19 @@ completed correctly and drained, with 378 exact KD retirements. Its independent
 failed post-run host-thread comparison (115 versus 67). The observed Native
 comparison has 118/126 throughput passes, six misses and two split-class
 points, with substantial repetition variation. Acceptance remains open.
-The separate 270-session rwlock reference is running after a fresh strict
-preflight matched the original 67-thread host configuration and all source
-hashes. These results cannot resolve the mutex comparison by implication.
+The separate 270-session rwlock reference completed correctly and drained, with
+90 exact KD retirements and 208,412 independent checks without issues.
+Observed parity is 27/30 against Native and 28/30 against TCLock. Both captured
+host endpoints match, but the after receipt is delayed 117.556 seconds; that
+interval and runtime interference remain unobserved. These results cannot
+resolve the mutex comparison by implication.
 The [mmap/fault source capture](../bench/results/10.176.26.71/tests/mmap-fault-followup-20261020/README.md)
-is prepared for an idle interval, without changing the guest kernel. The
+completed in the idle guest: 46 source/configuration files, including 21 newly
+captured callback/helper files, with unchanged kernel identity. Offline review
+is pending; no kernel was changed and no KD mmap/fault test ran. The
 [resident-list timing plan](../bench/results/10.176.26.71/bench/nano-list-followup-20261020/README.md)
-retains the previously selected 264 sessions at eight and 60 workers. Neither
-stage has run yet.
+retains the previously selected 264 sessions at eight and 60 workers; timing
+has not run yet.
 
 Keep the two-word wrapper ABI, separate backend identities, exact KD physical owners,
 exact acquisition references and final ACKs. Shared storage must survive its final

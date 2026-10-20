@@ -18,9 +18,9 @@ references and acknowledgements finished. The
 
 The later [instruction-exit change](design/admission.md#checked-instruction-exits)
 has focused correctness validation, including ordinary rwsem delegation controls.
-It does not have a new timed comparison. The throughput values below belong to
-their recorded source versions; acceptance of those results does not measure the
-additional flag-preservation cost in images that contain instruction markers.
+The fresh shared-lock comparison below measures ordinary payloads on the restored
+source; it does not isolate additional flag-preservation cost in images containing
+instruction markers. Every throughput result retains its recorded source version.
 
 The retained mutex performance baseline is `752fec1`, preserving KD-only physical
 ownership and the 32-byte object with native 8-byte alignment. Independent OSQ
@@ -58,6 +58,25 @@ retirement does not prove absence during measurement. No checks were weakened.
 The original matrix and replay have separate records and archives. Neither
 measures the later continuation/prefetch corrections, and neither establishes
 whole-kernel replacement or performance acceptance for the unified API.
+
+## Current shared-lock follow-up
+
+The separate [current-source comparison](../bench/results/10.176.26.71/bench/shared-lock-followup-20261020/README.md)
+completed 756 rwsem and 270 rwlock sessions on the original recovery VM.
+All passed functional checks and drained, with 378 and 90 exact KD retirements.
+The measured `f48b90e` inputs equal restored, validated `a768361`; historical
+results below remain separate.
+
+Rwsem meets observed whole-median and best-peak parity at 118/126 Native
+comparisons, with six misses and two split execution-class points. Its immediate
+post-run host-thread check failed (115 versus 67). Rwlock meets parity at 27/30
+Native and 28/30 TCLock comparisons, with no class splits. Its host receipts
+match, but the after receipt was captured 117.556 seconds after completion;
+the intervening interval remains unobserved. Largest three-round whole-rate
+spreads are rwsem KD/Native 89.10%/227.88%, and rwlock KD/Native/TCLock
+10.72%/83.70%/43.63%. Full ranges, all misses and artifact hashes are in the
+stage report. p95 latency, runtime interference and the seven separate mutex
+regressions remain unresolved; these results do not establish blanket acceptance.
 
 ## Fresh 32-byte mutex comparison with Native and TCLock
 

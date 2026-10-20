@@ -1,0 +1,8 @@
+{
+  "child_finished_utc": "2026-10-20T16:48:26.414862+00:00",
+  "host_captured_utc": "2026-10-20T16:50:23.970516+00:00",
+  "delay_seconds": 117.55565357208252,
+  "scope": "Matching point-in-time receipt after completion; intervening and within-run host state unobserved.",
+  "immediate_endpoint": false,
+  "acceptance": "OPEN"
+}
