@@ -1,6 +1,6 @@
 # Seven-regression operation-latency diagnostic
 
-Status: preparation pending. No latency measurement or performance acceptance
+Status: private caller preparation in progress. No latency measurement or performance acceptance
 is claimed. The completed correctness, strict rwlock refusal diagnosis and
 earlier mutex results remain in the
 [continuation record](../mutex-regression-diagnosis-20261020/README.md).
@@ -75,3 +75,15 @@ This diagnostic does not resolve the seven causes by itself. Whole-kernel
 replacement, the two remaining execution-class gaps, historic QEMU interference,
 shared-lock parity and real mmap/fault integration retain their documented
 limits. Acceptance remains open until addressed or explicitly reported unresolved.
+
+## Preparation record
+
+`checks-1`, source `f365e95`, passed dependency validation, both basic programs
+and all seven affected latency tests in the original VM, with final idle.
+`inputs-1` then stopped before any caller build or live measurement because the
+preparer incorrectly assumed a non-MODVERSIONS kernel. The real kernel has
+`CONFIG_MODVERSIONS=y`. Preserve that failed tree and `prepare-1.log`.
+The correction compares each rebuilt export-metadata CRC with the corresponding
+word in the original module's `__kcrctab` section; no original backend is
+replaced and no version check is omitted. A new input run will retain its own
+identity and validation results.

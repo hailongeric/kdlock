@@ -13,6 +13,7 @@ import os
 from pathlib import Path
 import re
 import shutil
+import struct
 import sys
 
 sys.dont_write_bytecode = True
@@ -304,14 +305,44 @@ def prepare(out, source_commit):
     print(json.dumps(dict(complete=True, manifest=str(out/'inputs.json'), sha256=sha(out/'inputs.json'))))
 
 
+def export_crcs(binary):
+    """Read the actual CRC words in the original module, not a rebuilt proxy."""
+    from elftools.elf.elffile import ELFFile
+    with binary.open('rb') as stream:
+        elf = ELFFile(stream)
+        require(elf['e_machine'] == 'EM_X86_64', 'unexpected export ELF architecture')
+        symbols = list(elf.get_section_by_name('.symtab').iter_symbols())
+        exports = {s.name.removeprefix('__ksymtab_') for s in symbols
+                   if s.name.startswith('__ksymtab_')}
+        crcs = {}
+        for symbol in symbols:
+            if not symbol.name.startswith('__crc_'):
+                continue
+            index, offset = symbol['st_shndx'], symbol['st_value']
+            require(isinstance(index, int), 'export CRC must be a retained section word')
+            section = elf.get_section(index)
+            require(section.name in ('__kcrctab', '__kcrctab_gpl') and
+                    0 <= offset <= section.data_size-4 and offset % 4 == 0,
+                    'unexpected export CRC location')
+            require(not any(s['sh_type'] in ('SHT_REL', 'SHT_RELA') and s['sh_info'] == index
+                            for s in elf.iter_sections()), 'relocated export CRC needs separate review')
+            name = symbol.name.removeprefix('__crc_')
+            require(name not in crcs, 'duplicate export CRC')
+            crcs[name] = struct.unpack_from('<I', section.data(), offset)[0]
+        require(exports and set(crcs) == exports, 'export names and CRCs differ')
+        return crcs
+
+
 def check_exports(syn, binary, symvers, output):
     vermagic = syn.command(['modinfo', '-F', 'vermagic', binary], output.with_suffix('.vermagic.txt'))
-    require('modversions' not in vermagic, 'this diagnostic requires the recorded non-MODVERSIONS kernel')
-    symbols = syn.command(['nm', '--defined-only', binary], output.with_suffix('.symbols.txt'))
-    expected = set(re.findall(r'\b__ksymtab_(\w+)$', symbols, re.M))
+    require('modversions' in vermagic, 'original MODVERSIONS kernel required')
+    syn.command(['nm', '--defined-only', binary], output.with_suffix('.symbols.txt'))
+    expected = export_crcs(binary)
     rows = [line.split() for line in symvers.read_text().splitlines()]
-    require(expected and {r[1] for r in rows} == expected and all(int(r[0], 16) == 0 for r in rows),
-            'rebuilt export metadata differs from the original loaded backend')
+    actual = {r[1]: int(r[0], 16) for r in rows}
+    require(len(actual) == len(rows) and actual == expected,
+            'rebuilt export names/CRCs differ from the original loaded backend')
+    save(output.with_suffix('.crc.json'), dict(original=expected, rebuilt=actual, equal=True))
 
 
 def main():
@@ -328,7 +359,13 @@ def main():
     require(sys.executable == '/root/kdlock-translation-venv-20261019/bin/python3' and
             shutil.which('python3') == sys.executable and
             re.fullmatch(r'[0-9a-f]{40}', args.source_commit), 'pinned Python and source revision required')
-    prepare(args.output.resolve(), args.source_commit)
+    out = args.output.resolve()
+    try:
+        prepare(out, args.source_commit)
+    except BaseException as error:
+        if (out/'state.json').is_file():
+            save(out/'failure.json', dict(complete=False, error=repr(error)))
+        raise
 
 
 if __name__ == '__main__':

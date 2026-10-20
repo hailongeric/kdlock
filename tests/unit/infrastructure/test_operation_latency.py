@@ -14,6 +14,7 @@ sys.path.insert(0, str(ROOT/'bench/mutex_api_compare'))
 import latency
 import latency_overlay
 import latency_run
+import latency_inputs
 # Avoid collision with the unit driver's __main__ module.
 import importlib.util
 spec = importlib.util.spec_from_file_location('latency_test_scheduler',
@@ -44,6 +45,14 @@ class LatencyTests(unittest.TestCase):
         self.assertEqual((header, size, ioctl), (latency.HEADER.size, latency.SIZE, latency.READ))
         return dict(worker=worker, completed=done, selected=selected, dropped=dropped,
                     enabled=True, samples=[list(map(int, line.split())) for line in lines])
+
+    def test_export_crc_reader_uses_original_section_word(self):
+        # ET_REL uses section-relative symbol values, like the original modules.
+        target = Path(self.temporary.name)/'exports.o'
+        subprocess.run(shlex.split(os.environ.get('CC', 'gcc')) +
+                       ['-c', str(ROOT/'tests/unit/infrastructure/operation_latency_fixture.c'),
+                        '-o', str(target)], check=True, timeout=30)
+        self.assertEqual(latency_inputs.export_crcs(target), {'fixture': 0x12345678})
 
     def test_c_sampler_matches_independent_schedule_and_clock_extents(self):
         for worker, done in ((0, 0), (0, 1), (1, 255), (2, 256), (5, 257), (62, 100000)):

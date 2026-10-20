@@ -6,6 +6,9 @@
 #include "../../../workload_modules/latency/operation_latency.h"
 
 static struct kd_latency_slot slot;
+/* Retained ELF CRC words exercise the module export reader without a module. */
+const unsigned int __crc_fixture __attribute__((section("__kcrctab_gpl"))) = 0x12345678;
+const unsigned int __ksymtab_fixture = 1;
 
 int main(int argc, char **argv)
 {
