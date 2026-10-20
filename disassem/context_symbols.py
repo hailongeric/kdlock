@@ -42,9 +42,22 @@ CONTEXT_SYMBOLS = (
     # Return-valued or task-signal/I/O APIs stay on the original task.
     "kd_mutex_lock_interruptible", "kd_mutex_lock_killable", "kd_mutex_lock_io",
     "kd_mutex_trylock", "kd_atomic_dec_and_mutex_lock",
-    # Sleeping KD rwsems have local acquisition/ownership only. The execution
-    # ledger has no rwsem read/write mode, downgrade or cancellation protocol;
-    # never learn these APIs as ordinary helpers inside a translated body.
+    # A delegated body has no rwsem mode/owner ledger or cancellation,
+    # downgrade or non-owner-release protocol. Refuse native rwsem operations
+    # before ordinary CALL-miss learning can import their implementations.
+    "init_rwsem", "__init_rwsem", "rwsem_*", "__rwsem_*",
+    "down_read", "down_read_*", "__down_read", "__down_read_*",
+    "down_write", "down_write_*", "__down_write", "__down_write_*",
+    "up_read", "up_read_*", "__up_read", "__up_read_*",
+    "up_write", "up_write_*", "__up_write", "__up_write_*",
+    "downgrade_write", "downgrade_write_*", "__downgrade_write",
+    # Per-CPU rwsems are a separate protocol, also outside this ledger.
+    "percpu_init_rwsem", "__percpu_init_rwsem", "percpu_free_rwsem",
+    "percpu_down_*", "percpu_up_*", "__percpu_down_*", "__percpu_up_*",
+    "percpu_rwsem_*", "__percpu_rwsem_*",
+    # KD's explicit outer-writer pair reserves admission and drains readers
+    # before publishing on the embedded mutex. That does not authorize calls
+    # to ordinary rwsem APIs or phase helpers inside an enclosing JIT body.
     "kd_down_*", "kd_up_*", "kd_downgrade_write", "kd_rwsem_*",
     "schedule*",
     "__schedule*",

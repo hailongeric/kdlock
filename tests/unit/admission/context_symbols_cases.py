@@ -666,6 +666,11 @@ with (
             "kd_up_write",
             "kd_downgrade_write",
             "kd_rwsem_init.constprop.0",
+            "__init_rwsem",
+            "down_read",
+            "down_write_nested",
+            "up_read_non_owner",
+            "rwsem_wake.isra.0",
             "rcu_read_unlock",
             "synchronize_rcu_expedited",
             "local_bh_enable",
@@ -685,6 +690,14 @@ with (
             "kd_spin_direct_native_unlock",
             "ktime_get",
             "kd_resume_native_probe",
+            "down_reader",
+            "down_readiness",
+            "up_writer",
+            "my_rwsem_helper",
+            "up_threshold_show",
+            "down_threshold_store",
+            "net_rwsem",
+            "pernet_ops_rwsem",
         ):
             self.assertFalse(context_policy.is_context_symbol(name), name)
         # The faster matcher must retain every old glob's anchors, case and
@@ -710,8 +723,22 @@ with (
         ):
             context_policy.load_context_symbols()
 
-    def test_local_rwsem_apis_are_context_boundaries(self):
+    def test_rwsem_apis_are_context_boundaries(self):
         names = (
+            "init_rwsem", "__init_rwsem", "rwsem_is_locked", "rwsem_is_contended",
+            "rwsem_mark_wake", "rwsem_spin_on_owner", "__rwsem_do_wake",
+            "rwsem_down_read_slowpath", "rwsem_down_write_slowpath",
+            "down_read", "down_read_interruptible", "down_read_killable",
+            "down_read_trylock", "down_read_nested", "down_read_non_owner",
+            "__down_read", "__down_read_trylock", "up_read", "up_read_non_owner",
+            "__up_read", "down_write", "down_write_killable", "down_write_trylock",
+            "down_write_nested", "down_write_killable_nested",
+            "__down_write", "__down_write_killable", "up_write", "__up_write",
+            "downgrade_write", "__downgrade_write",
+            "percpu_init_rwsem", "__percpu_init_rwsem", "percpu_free_rwsem",
+            "__percpu_down_read", "percpu_down_write", "percpu_up_read",
+            "percpu_up_write", "__percpu_rwsem_trylock", "percpu_rwsem_wait",
+            "percpu_rwsem_wake_function",
             "kd_rwsem_init", "kd_rwsem_is_idle",
             "kd_rwsem_delegate_enter", "kd_rwsem_delegate_exit",
             "kd_down_read", "kd_down_read_interruptible", "kd_down_read_killable",
@@ -734,13 +761,26 @@ with (
                             log = self.assert_rejected(raw, lock_kind=kind, symbols=symbols)
                             self.assertIn(symbol, log)
 
-    def test_late_helper_with_local_rwsem_rejects_enclosing_entry(self):
+    def test_late_helper_with_rwsem_rejects_enclosing_entry(self):
         caller = "e8fb0f0000c3"
         for kind in ("spin", "mutex"):
-            with self.subTest(kind=kind):
-                log = self.assert_rejected(caller, lock_kind=kind,
-                    regions=[(bytes.fromhex(caller), 0x1000, [0x1000]),
-                             (bytes.fromhex("e8fb0f0000c3"), 0x2000, [0x2000])],
-                    symbols={0x3000: "kd_down_write_killable"})
-                self.assertIn('entry="0x1000"', log)
-                self.assertIn('rip="0x2000"', log)
+            for name in ("down_read_killable", "up_read_non_owner", "downgrade_write",
+                         "rwsem_down_write_slowpath", "percpu_down_write",
+                         "kd_down_write_killable"):
+                with self.subTest(kind=kind, symbol=name):
+                    log = self.assert_rejected(caller, lock_kind=kind,
+                        regions=[(bytes.fromhex(caller), 0x1000, [0x1000]),
+                                 (bytes.fromhex("e8fb0f0000c3"), 0x2000, [0x2000])],
+                        symbols={0x3000: name})
+                    self.assertIn('entry="0x1000"', log)
+                    self.assertIn('rip="0x2000"', log)
+
+    def test_rwsem_after_outer_unlock_is_outside_emitted_episode(self):
+        assembly, log, status = render(
+            "e8fb4f0000e8f61f0000c3",
+            kernel_symbols={"_raw_spin_unlock": 0x6000},
+            symbols={0x3000: "down_write"},
+            return_status=True,
+        )
+        self.assertEqual(status, 0, log)
+        self.assertNotIn(b"loc_1005:", assembly)

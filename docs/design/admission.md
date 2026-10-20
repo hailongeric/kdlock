@@ -92,6 +92,16 @@ operations across every block it will emit:
   linear per-CPU/current addresses, scheduling/preemption/IRQ/BH/RCU references
   and calls to the wrong lock backend are refused.
 
+Native, per-CPU and KD rwsem operations and slowpaths are also refused inside
+the emitted episode, including helpers discovered through later CALL learning.
+The execution ledger has no rwsem read/write, cancellation, downgrade or
+non-owner-release contract. Symbol families include compiler clones and their
+interior ranges; the conservative `rwsem_*` family also covers named rwsem data
+such as lock-class keys. The separately admitted
+[ABI2 outer-writer wrapper](rwsem_implementation.md#api-and-scope) remains
+supported because reader admission and drain occur before its mutex entry.
+This does not authorize nested rwsem operations inside another delegated body.
+
 Pinning the waiter prevents task replacement. It does not prevent IRQ/NMI activity
 or arbitrary remote accesses, and it does not reproduce the waiter's complete
 per-CPU context on the combiner.
