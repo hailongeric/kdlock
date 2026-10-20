@@ -359,7 +359,8 @@ static int mf_probe(struct file *file, struct mf_mapping *m, struct mf_probe *p)
 		vma = find_vma(scope.mm, p->address);
 		if (!vma || p->address < vma->vm_start || vma->vm_file != file ||
 		    vma->vm_ops != &mf_vm_ops || vma->vm_private_data != m ||
-		    !(vma->vm_flags & VM_SHARED) || vma->vm_flags & (VM_WRITE | VM_EXEC)) {
+		    !(vma->vm_flags & VM_SHARED) || !(vma->vm_flags & VM_READ) ||
+		    vma->vm_flags & (VM_WRITE | VM_EXEC)) {
 			p->stale++;
 			error = -ESTALE;
 			break;

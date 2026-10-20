@@ -30,3 +30,25 @@ program compiled, but neither basic suite completion nor module correctness is
 claimed. No project module was loaded. The failure, source snapshot and logs
 remain untouched; actual VM idle was checked before correcting the runner's
 snapshot dependency list.
+
+`live-2`, source `7077fcf`, passed both basic programs and built the provider,
+TCLock rwlock, payload and client. TCLock module loading failed with
+`Cannot allocate memory`; the kernel recorded a 520-byte, 64-byte-aligned
+reserved-per-CPU allocation failure. No mmap client ran. This is retained as a
+failed attempt, not a correctness pass. The unused KD provider reported zero
+modules, writers and frames, retired to state 2 and unloaded normally; actual
+idle was then confirmed in `live-2/cleanup.json`.
+
+The same log exposed ignored observation parameters: this runner had compiled
+the production provider without the required benchmark overlay. The follow-up
+uses the existing private observation preparation, retains its prepared hashes,
+and verifies actual parameter values. It also uses the existing allocator hint
+refresh module before provider loads, unloaded before any client runs. No
+allocator metadata, kernel code or lock admission is changed.
+
+Static review separately found that the controlled fault-in path rechecked
+shared/write/execute mode but omitted current read permission. The follow-up
+requires `VM_READ` and adds a negative `PROT_NONE` case with zero callback
+attempts and exactly one native mmap acquisition/release. No unsafe probe was
+run against the earlier implementation. Native/KD validation must pass on the
+new revision before the separate TCLock case is eligible.

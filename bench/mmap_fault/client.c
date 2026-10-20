@@ -33,10 +33,10 @@ static int create(unsigned backend, unsigned features, unsigned pages, struct mf
 	return fd;
 }
 static void cold(void *address) { CHECK(madvise(address,page_size,MADV_DONTNEED)==0); }
-static void probe_report(const struct mf_probe *p)
+static void probe_report(const struct mf_probe *p, const char *event)
 {
-	printf("{\"event\":\"probe\",\"action\":%u,\"result\":%lld,\"attempts\":%llu,\"acquisitions\":%llu,\"releases\":%llu,\"callbacks\":%llu,\"retries\":%llu,\"nowait\":%llu,\"completed\":%llu,\"revalidated\":%llu,\"stale\":%llu,\"pause_timeout\":%llu,\"final_held\":%llu}\n",
-	       p->action,(long long)p->result,(unsigned long long)p->attempts,
+	printf("{\"event\":\"%s\",\"action\":%u,\"result\":%lld,\"attempts\":%llu,\"acquisitions\":%llu,\"releases\":%llu,\"callbacks\":%llu,\"retries\":%llu,\"nowait\":%llu,\"completed\":%llu,\"revalidated\":%llu,\"stale\":%llu,\"pause_timeout\":%llu,\"final_held\":%llu}\n",
+	       event,p->action,(long long)p->result,(unsigned long long)p->attempts,
 	       (unsigned long long)p->acquisitions,(unsigned long long)p->releases,
 	       (unsigned long long)p->callbacks,(unsigned long long)p->retries,
 	       (unsigned long long)p->nowait,(unsigned long long)p->completed,
@@ -117,12 +117,16 @@ int main(int argc,char **argv)
 	CHECK(*(volatile uint64_t *)base==MF_WORD);
 	CHECK(mprotect(base,page_size,PROT_READ|PROT_WRITE)==-1 && errno==EACCES);
 	CHECK(mprotect(base,page_size,PROT_NONE)==0);
+	struct mf_probe denied={.address=(uintptr_t)base,.action=MF_NORMAL};
+	CHECK(ioctl(fd,MF_PROBE,&denied)==0);probe_report(&denied,"rejected_mode");
+	CHECK(denied.result==-ESTALE && denied.acquisitions==1 && denied.releases==1 &&
+	      denied.stale==1 && !denied.attempts && !denied.callbacks && !denied.final_held);
 	CHECK(mprotect(base,page_size,PROT_READ)==0);
 	for (unsigned action=MF_NORMAL;action<=MF_COMPLETED;action++) {
 		void *address=(char *)base+(action+1)*page_size;
 		cold(address);
 		struct mf_probe p={.address=(uintptr_t)address,.action=action};
-		CHECK(ioctl(fd,MF_PROBE,&p)==0);probe_report(&p);
+		CHECK(ioctl(fd,MF_PROBE,&p)==0);probe_report(&p,"probe");
 		CHECK(p.final_held==0 && p.acquisitions==p.releases && p.pause_timeout==0 && p.stale==0);
 		CHECK(p.result==(action==MF_NOWAIT ? -EAGAIN : 0));
 		CHECK(p.attempts==(action==MF_RETRY ? 2U : 1U));
@@ -140,7 +144,7 @@ int main(int argc,char **argv)
 	CHECK(mmap(replace,page_size,PROT_READ|PROT_WRITE,MAP_PRIVATE|MAP_ANONYMOUS|MAP_FIXED,-1,0)==replace);
 	*(volatile uint64_t *)replace=0xcafef00d;
 	CHECK(ioctl(fd,MF_RELEASE_DROP)==0 && pthread_join(thread,NULL)==0);
-	probe_report(&retry.p);
+	probe_report(&retry.p,"probe");
 	CHECK(retry.rc==0 && retry.p.result==-ESTALE && retry.p.acquisitions==2 && retry.p.releases==2 &&
 	      retry.p.attempts==1 && retry.p.callbacks==1 && retry.p.retries==1 && retry.p.stale==1 &&
 	      !retry.p.final_held && !retry.p.pause_timeout);
@@ -162,7 +166,7 @@ int main(int argc,char **argv)
 	CHECK(munmap(base,8*page_size)==0);
 	struct mf_stats s;CHECK(ioctl(fd,MF_STATS,&s)==0);
 	CHECK(!s.vmas && !s.active_probe && !s.context_errors && !s.data_errors && !s.fallback);
-	CHECK(s.reads==s.read_ends && s.writes==s.write_ends && s.scopes==5 && s.scope_ends==5);
+	CHECK(s.reads==s.read_ends && s.writes==s.write_ends && s.scopes==6 && s.scope_ends==6);
 	CHECK(s.epoch==(backend==MF_TC ? 1000U : 1001U) && s.downgrades==(backend!=MF_TC));
 	CHECK(s.faults>=408);
 	printf("{\"event\":\"joined\",\"backend\":%u,\"faults\":%llu,\"epoch\":%llu,\"reads\":%llu,\"read_ends\":%llu,\"writes\":%llu,\"write_ends\":%llu,\"scopes\":%llu,\"scope_ends\":%llu,\"downgrades\":%llu,\"vmas\":%llu,\"errors\":%llu}\n",backend,

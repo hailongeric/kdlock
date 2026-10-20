@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """Serial recovery-VM correctness for opt-in backing-state mmap/fault locking."""
 import argparse
+import datetime
+import importlib.metadata
 import importlib.util
 import json
 import os
@@ -17,7 +19,8 @@ import kernel_identity
 
 DIRECTORIES = ('include','kernel_module','daemon','tclock_backend','workload_modules/mmap_fault',
                'bench/mmap_fault','tests/kernel/mmap_fault','tests/unit','disassem',
-               'tests/protocols','kernel_baseline','bench/spin_cacheline')
+               'tests/protocols','kernel_baseline','bench/spin_cacheline',
+               'bench/tclock_compare/allocator_guard')
 
 
 def validate(rows, backend):
@@ -32,12 +35,17 @@ def validate(rows, backend):
         rt.require(tuple(row[k] for k in fields)==values and row['callbacks']==row['attempts']
                    and row['releases']==row['acquisitions'] and
                    row['pause_timeout']==row['final_held']==0, 'fault ownership outcome differs')
+    denied=[r for r in rows if r['event']=='rejected_mode']
+    rt.require(len(denied)==1 and denied[0]==dict(event='rejected_mode',action=0,
+        result=-116,attempts=0,acquisitions=1,releases=1,callbacks=0,retries=0,
+        nowait=0,completed=0,revalidated=0,stale=1,pause_timeout=0,final_held=0),
+        'inaccessible VMA must be refused before handle_mm_fault')
     joined=[r for r in rows if r['event']=='joined']
     rt.require(len(joined)==1,'missing joined state')
     s=joined[0]
     rt.require(s['backend']==backend and s['vmas']==s['errors']==0 and
                s['reads']==s['read_ends'] and s['writes']==s['write_ends'] and
-               s['scopes']==s['scope_ends']==5 and s['faults']>=408 and
+               s['scopes']==s['scope_ends']==6 and s['faults']>=408 and
                s['epoch']==(1000 if backend==2 else 1001) and
                s['downgrades']==(0 if backend==2 else 1), 'joined object state differs')
     created=[r for r in rows if r['event']=='create']
@@ -46,7 +54,7 @@ def validate(rows, backend):
     rt.require([r['selected'] for r in created]==selected and
                [r['fallback'] for r in created]==fallback and
                all(r['requested']==backend for r in created), 'backend/fallback identity differs')
-    return dict(backend=backend,passed=True,probes=probes,joined=s,created=created,
+    return dict(backend=backend,passed=True,probes=probes,rejected_mode=denied[0],joined=s,created=created,
                 checks=rows[-1]['checks'],execution='ORIGIN_LOCAL',jit_bodies=0)
 
 
@@ -54,6 +62,7 @@ def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--output',type=Path,required=True)
     parser.add_argument('--source-manifest',type=Path,required=True)
+    parser.add_argument('--host-state',type=Path,required=True)
     parser.add_argument('--backends',default='0,1',choices=('0,1','2'))
     kernel_identity.arguments(parser)
     args=parser.parse_args()
@@ -69,8 +78,15 @@ def main():
     archive=importlib.util.module_from_spec(spec);spec.loader.exec_module(archive)
     out=args.output.resolve();rt.require(not out.exists() and not out.is_relative_to(ROOT),'new evidence output required')
     archive.idle(out.parent,rt.idle)
+    host=json.loads(args.host_state.read_text())
+    age=(datetime.datetime.now(datetime.timezone.utc)-datetime.datetime.fromisoformat(host['captured_utc'])).total_seconds()
+    rt.require(0<=age<=300 and host['snapshot_listed'] and host['pins_verified'] and
+               host['recovery_snapshot']==os.environ['KDLOCK_SNAPSHOT_TAG'] and
+               len(host['qemu'])==1 and host['qemu'][0]['pid']==257489,
+               'fresh evidence for the same host and recovery snapshot required')
     manifest=json.loads(args.source_manifest.read_text())
-    hashes={p:h for p,h in manifest['files'].items() if any(p.startswith(d+'/') for d in DIRECTORIES)}
+    hashes={p:h for p,h in manifest['files'].items()
+            if p=='bench/archive_run.py' or any(p.startswith(d+'/') for d in DIRECTORIES)}
     rt.require(hashes and len(manifest['commit'])==40,'committed source identities required')
     for name,digest in hashes.items():rt.require(rt.digest(ROOT/name)==digest,'source differs: '+name)
     out.mkdir(parents=True);source=out/'source'
@@ -78,6 +94,7 @@ def main():
         dest=source/name;dest.parent.mkdir(parents=True,exist_ok=True);shutil.copyfile(ROOT/name,dest)
         rt.require(rt.digest(dest)==digest,'snapshot differs: '+name)
     shutil.copyfile(args.source_manifest,out/'committed-source.json')
+    shutil.copyfile(args.host_state,out/'host-before.json')
     rt.write_json(out/'source-sha256.json',hashes)
     result=dict(state='STARTING',passed=False,drained=False,source_commit=manifest['commit'],
                 source_manifest_sha256=rt.digest(args.source_manifest),source_files=len(hashes),
@@ -98,14 +115,29 @@ def main():
     def verify():
         for p,h in hashes.items():
             rt.require(rt.digest(ROOT/p)==rt.digest(source/p)==h,'source changed: '+p)
+        for p,h in prepared.items():
+            rt.require(rt.digest(out/'build/provider'/p)==h,'prepared provider changed: '+p)
+    prepared={}
     try:
         result['kernel_identity']=kernel_identity.capture(args,out,rt.command)
         rt.command([sys.executable,'-m','pip','check'],out/'dependencies.log',timeout=60)
+        packages={p:importlib.metadata.version(p) for p in ('miasm','future','pyparsing','pyelftools')}
+        rt.require(packages==dict(miasm='0.1.5',future='1.0.0',pyparsing='2.4.7',pyelftools='0.27'),'dependency versions differ')
+        topology=rt.capture_topology([0,1,2,3,4,63])
+        rt.require(topology['online_cpus']==list(range(64)) and topology['role_nodes']==[0,0,0,0,0,1],'guest topology differs')
+        rt.write_json(out/'environment.json',dict(packages=packages,topology=topology,
+            python=sys.executable,cmdline=Path('/proc/cmdline').read_text(),argv=sys.argv))
         rt.command(['make','-C',source/'tests/unit','run','PYTHON='+sys.executable,'PY_TESTS='],out/'basic.log',timeout=180)
-        provider=source/'kernel_module/kdlock_km.ko'
+        spec=importlib.util.spec_from_file_location('mmap_prepare',source/'bench/spin_cacheline/provider/prepare.py')
+        preparation=importlib.util.module_from_spec(spec);spec.loader.exec_module(preparation)
+        prepared=preparation.prepare(out/'build/provider',source)['prepared']
+        rt.write_json(out/'prepared-source-sha256.json',prepared)
+        provider=out/'build/provider/kernel_module/kdlock_km.ko'
         tc=source/'tclock_backend/tclock_rwlock_backend_km.ko'
         payload=source/'workload_modules/mmap_fault/kd_mmap_fault.ko'
-        rt.command(['make','-C',provider.parent,'KDIR='+str(args.kernel_source),'W=1','KDLOCK_SELFTEST=0','UBSAN_SANITIZE=n'],out/'build-provider.log',timeout=180)
+        guard=source/'bench/tclock_compare/allocator_guard/tc_allocator_guard.ko'
+        rt.command(['make','-C',guard.parent,'KDIR='+str(args.kernel_source)],out/'build-guard.log',timeout=180)
+        rt.command(['make','-C',provider.parent,'KDIR='+str(args.kernel_source),'W=1','KDLOCK_SELFTEST=0','KDLOCK_NUMA=1','KDLOCK_SPIN_BATCH=1024','UBSAN_SANITIZE=n'],out/'build-provider.log',timeout=180)
         rt.command(['make','-C',tc.parent,'KDIR='+str(args.kernel_source),'TCLOCK_RWLOCK=1','TCLOCK_NUMA=1'],out/'build-tclock.log',timeout=180)
         rt.command(['make','-C',payload.parent,'KDIR='+str(args.kernel_source),
             'KDLOCK_INCLUDE='+str(source/'include'),'TCLOCK_INCLUDE='+str(source/'tclock_backend/include'),
@@ -113,12 +145,18 @@ def main():
         client=out/'client'
         rt.command(['gcc','-O2','-g','-Wall','-Wextra','-Werror','-pthread',
             '-I'+str(payload.parent),source/'bench/mmap_fault/client.c','-o',client],out/'build-client.log',timeout=60)
-        binaries={str(p.relative_to(out)):rt.digest(p) for p in (provider,tc,payload,client)}
+        binaries={str(p.relative_to(out)):rt.digest(p) for p in (provider,tc,payload,client,guard)}
         rt.write_json(out/'binary-sha256.json',binaries)
         verify();archive.idle(out.parent,rt.idle)
         fd=os.open('/dev/kmsg',os.O_RDONLY|os.O_NONBLOCK);os.lseek(fd,0,os.SEEK_END)
         result['state']='RUNNING';rt.write_json(out/'result.json',result)
-        rt.command(['insmod',provider,'bench_quiet=1','bench_complete_probe=1'],out/'load-provider.log')
+        rt.command(['insmod',guard],out/'load-guard-kd.log')
+        rt.command(['rmmod','tc_allocator_guard'],out/'unload-guard-kd.log')
+        rt.command(['insmod',provider,'bench_quiet=1','bench_complete_probe=1','jit_timing=0'],out/'load-provider.log')
+        params=rt.parameters();rt.write_json(out/'provider-parameters.json',params)
+        rt.require(params['bench_quiet']==params['bench_complete_probe']=='Y' and params['jit_timing']=='N','provider observation settings differ')
+        rt.command(['insmod',guard],out/'load-guard-tc.log')
+        rt.command(['rmmod','tc_allocator_guard'],out/'unload-guard-tc.log')
         rt.command(['insmod',tc,'komb_batch_size=1024'],out/'load-tclock.log')
         rt.command(['insmod',payload],out/'load-payload.log')
         for backend in map(int,args.backends.split(',')):

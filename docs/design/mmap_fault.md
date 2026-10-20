@@ -65,6 +65,9 @@ authorize an unlock. The controlled outcomes are:
 | RETRY with NOWAIT | Retained | Return `EAGAIN` after one matching release |
 | COMPLETED | Page inserted, then explicitly released | Return without another unlock |
 
+NOWAIT here specifies the fault retry's ownership rule. It does not claim that
+acquiring the private backing reader lock or entering the ioctl never waits.
+
 COMPLETED returns `NOPAGE | COMPLETED`: the captured kernel's `__do_fault()`
 recognizes NOPAGE as a callback that has already supplied the page-table entry.
 The COMPLETED bit records the separate mmap release. Returning COMPLETED alone
@@ -73,7 +76,9 @@ validated shared read-only mapping with `VM_MIXEDMAP` set at mmap creation.
 
 After a drop, no VMA pointer is reused. The ioctl finds the current VMA, checks
 address containment, file identity, callback identity, private object and access
-mode again. Replacing the VMA at the same address causes `ESTALE`. The focused
+mode again, including the current `VM_READ` permission. Removing that permission
+with `mprotect(PROT_NONE)` is refused before calling `handle_mm_fault()`.
+Replacing the VMA at the same address causes `ESTALE`. The focused
 test pauses one request after its actual release so another thread can replace
 the mapping; a bounded pause timeout reports failure and never establishes drain.
 
