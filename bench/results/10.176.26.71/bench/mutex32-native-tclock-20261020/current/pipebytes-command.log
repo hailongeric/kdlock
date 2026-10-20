@@ -1,0 +1,163 @@
+1/81 pipebytes-query-n16-t01-r0-native
+  3.431 M/s; peak 5.152; JIT entries 0, complete 0
+2/81 pipebytes-query-n16-t01-r0-tclock
+  5.426 M/s; peak 5.451; JIT entries 0, complete 0
+3/81 pipebytes-query-n16-t01-r0-kdlock
+  5.210 M/s; peak 5.240; JIT entries 0, complete 0
+4/81 pipebytes-query-n16-t01-r1-tclock
+  5.426 M/s; peak 5.454; JIT entries 0, complete 0
+5/81 pipebytes-query-n16-t01-r1-kdlock
+  5.212 M/s; peak 5.233; JIT entries 0, complete 0
+6/81 pipebytes-query-n16-t01-r1-native
+  5.138 M/s; peak 5.158; JIT entries 0, complete 0
+7/81 pipebytes-query-n16-t01-r2-kdlock
+  5.199 M/s; peak 5.233; JIT entries 0, complete 0
+8/81 pipebytes-query-n16-t01-r2-native
+  5.135 M/s; peak 5.154; JIT entries 0, complete 0
+9/81 pipebytes-query-n16-t01-r2-tclock
+  5.419 M/s; peak 5.441; JIT entries 0, complete 0
+10/81 pipebytes-query-n16-t02-r0-native
+  7.335 M/s; peak 7.662; JIT entries 0, complete 0
+11/81 pipebytes-query-n16-t02-r0-tclock
+  8.174 M/s; peak 8.218; JIT entries 0, complete 0
+12/81 pipebytes-query-n16-t02-r0-kdlock
+  8.080 M/s; peak 8.103; JIT entries 0, complete 0
+13/81 pipebytes-query-n16-t02-r1-tclock
+  7.260 M/s; peak 7.318; JIT entries 0, complete 0
+14/81 pipebytes-query-n16-t02-r1-kdlock
+  7.959 M/s; peak 7.990; JIT entries 0, complete 0
+15/81 pipebytes-query-n16-t02-r1-native
+  7.717 M/s; peak 7.741; JIT entries 0, complete 0
+16/81 pipebytes-query-n16-t02-r2-kdlock
+  7.620 M/s; peak 7.646; JIT entries 0, complete 0
+17/81 pipebytes-query-n16-t02-r2-native
+  7.603 M/s; peak 7.641; JIT entries 0, complete 0
+18/81 pipebytes-query-n16-t02-r2-tclock
+  7.264 M/s; peak 7.314; JIT entries 0, complete 0
+19/81 pipebytes-query-n16-t04-r0-native
+  3.949 M/s; peak 4.018; JIT entries 0, complete 0
+20/81 pipebytes-query-n16-t04-r0-tclock
+  2.428 M/s; peak 2.444; JIT entries 0, complete 0
+21/81 pipebytes-query-n16-t04-r0-kdlock
+  15.962 M/s; peak 16.042; JIT entries 0, complete 0
+22/81 pipebytes-query-n16-t04-r1-tclock
+  2.607 M/s; peak 2.622; JIT entries 0, complete 0
+23/81 pipebytes-query-n16-t04-r1-kdlock
+  15.160 M/s; peak 15.229; JIT entries 0, complete 0
+24/81 pipebytes-query-n16-t04-r1-native
+  3.971 M/s; peak 4.001; JIT entries 0, complete 0
+25/81 pipebytes-query-n16-t04-r2-kdlock
+  15.256 M/s; peak 15.318; JIT entries 0, complete 0
+26/81 pipebytes-query-n16-t04-r2-native
+  4.059 M/s; peak 4.093; JIT entries 0, complete 0
+27/81 pipebytes-query-n16-t04-r2-tclock
+  2.352 M/s; peak 2.383; JIT entries 0, complete 0
+28/81 pipebytes-query-n16-t08-r0-native
+  4.427 M/s; peak 4.620; JIT entries 0, complete 0
+29/81 pipebytes-query-n16-t08-r0-tclock
+  2.833 M/s; peak 2.856; JIT entries 0, complete 0
+30/81 pipebytes-query-n16-t08-r0-kdlock
+  5.331 M/s; peak 5.359; JIT entries 9837204, complete 9837204
+31/81 pipebytes-query-n16-t08-r1-tclock
+  2.738 M/s; peak 2.755; JIT entries 0, complete 0
+32/81 pipebytes-query-n16-t08-r1-kdlock
+  5.571 M/s; peak 5.594; JIT entries 10323939, complete 10323939
+33/81 pipebytes-query-n16-t08-r1-native
+  4.588 M/s; peak 4.608; JIT entries 0, complete 0
+34/81 pipebytes-query-n16-t08-r2-kdlock
+  5.792 M/s; peak 5.814; JIT entries 10907654, complete 10907654
+35/81 pipebytes-query-n16-t08-r2-native
+  4.886 M/s; peak 4.912; JIT entries 0, complete 0
+36/81 pipebytes-query-n16-t08-r2-tclock
+  2.763 M/s; peak 2.776; JIT entries 0, complete 0
+37/81 pipebytes-query-n16-t16-r0-native
+  5.298 M/s; peak 5.400; JIT entries 0, complete 0
+38/81 pipebytes-query-n16-t16-r0-tclock
+  2.677 M/s; peak 2.698; JIT entries 0, complete 0
+39/81 pipebytes-query-n16-t16-r0-kdlock
+  6.340 M/s; peak 6.372; JIT entries 12589737, complete 12589737
+40/81 pipebytes-query-n16-t16-r1-tclock
+  2.706 M/s; peak 2.716; JIT entries 0, complete 0
+41/81 pipebytes-query-n16-t16-r1-kdlock
+  6.483 M/s; peak 6.525; JIT entries 12872346, complete 12872346
+42/81 pipebytes-query-n16-t16-r1-native
+  4.956 M/s; peak 5.011; JIT entries 0, complete 0
+43/81 pipebytes-query-n16-t16-r2-kdlock
+  5.860 M/s; peak 5.890; JIT entries 11641204, complete 11641204
+44/81 pipebytes-query-n16-t16-r2-native
+  4.905 M/s; peak 4.951; JIT entries 0, complete 0
+45/81 pipebytes-query-n16-t16-r2-tclock
+  2.643 M/s; peak 2.663; JIT entries 0, complete 0
+46/81 pipebytes-query-n16-t32-r0-native
+  4.157 M/s; peak 4.191; JIT entries 0, complete 0
+47/81 pipebytes-query-n16-t32-r0-tclock
+  2.500 M/s; peak 2.519; JIT entries 0, complete 0
+48/81 pipebytes-query-n16-t32-r0-kdlock
+  5.903 M/s; peak 5.936; JIT entries 11724610, complete 11724610
+49/81 pipebytes-query-n16-t32-r1-tclock
+  2.423 M/s; peak 2.436; JIT entries 0, complete 0
+50/81 pipebytes-query-n16-t32-r1-kdlock
+  5.887 M/s; peak 5.906; JIT entries 11689749, complete 11689749
+51/81 pipebytes-query-n16-t32-r1-native
+  4.318 M/s; peak 4.477; JIT entries 0, complete 0
+52/81 pipebytes-query-n16-t32-r2-kdlock
+  5.750 M/s; peak 5.773; JIT entries 11420553, complete 11420553
+53/81 pipebytes-query-n16-t32-r2-native
+  4.410 M/s; peak 4.442; JIT entries 0, complete 0
+54/81 pipebytes-query-n16-t32-r2-tclock
+  2.773 M/s; peak 2.789; JIT entries 0, complete 0
+55/81 pipebytes-query-n16-t36-r0-native
+  3.065 M/s; peak 3.324; JIT entries 0, complete 0
+56/81 pipebytes-query-n16-t36-r0-tclock
+  2.459 M/s; peak 2.474; JIT entries 0, complete 0
+57/81 pipebytes-query-n16-t36-r0-kdlock
+  5.056 M/s; peak 5.077; JIT entries 10053493, complete 10053493
+58/81 pipebytes-query-n16-t36-r1-tclock
+  2.614 M/s; peak 2.627; JIT entries 0, complete 0
+59/81 pipebytes-query-n16-t36-r1-kdlock
+  5.032 M/s; peak 5.053; JIT entries 10003934, complete 10003934
+60/81 pipebytes-query-n16-t36-r1-native
+  3.207 M/s; peak 3.346; JIT entries 0, complete 0
+61/81 pipebytes-query-n16-t36-r2-kdlock
+  4.974 M/s; peak 4.995; JIT entries 9887384, complete 9887384
+62/81 pipebytes-query-n16-t36-r2-native
+  3.181 M/s; peak 3.331; JIT entries 0, complete 0
+63/81 pipebytes-query-n16-t36-r2-tclock
+  2.569 M/s; peak 2.586; JIT entries 0, complete 0
+64/81 pipebytes-query-n16-t48-r0-native
+  2.152 M/s; peak 2.335; JIT entries 0, complete 0
+65/81 pipebytes-query-n16-t48-r0-tclock
+  2.575 M/s; peak 2.593; JIT entries 0, complete 0
+66/81 pipebytes-query-n16-t48-r0-kdlock
+  5.265 M/s; peak 5.297; JIT entries 10286317, complete 10286317
+67/81 pipebytes-query-n16-t48-r1-tclock
+  2.591 M/s; peak 2.618; JIT entries 0, complete 0
+68/81 pipebytes-query-n16-t48-r1-kdlock
+  5.035 M/s; peak 5.065; JIT entries 9849475, complete 9849475
+69/81 pipebytes-query-n16-t48-r1-native
+  2.182 M/s; peak 2.315; JIT entries 0, complete 0
+70/81 pipebytes-query-n16-t48-r2-kdlock
+  5.199 M/s; peak 5.249; JIT entries 10163717, complete 10163717
+71/81 pipebytes-query-n16-t48-r2-native
+  2.223 M/s; peak 2.352; JIT entries 0, complete 0
+72/81 pipebytes-query-n16-t48-r2-tclock
+  2.577 M/s; peak 2.606; JIT entries 0, complete 0
+73/81 pipebytes-query-n16-t60-r0-native
+  1.919 M/s; peak 2.008; JIT entries 0, complete 0
+74/81 pipebytes-query-n16-t60-r0-tclock
+  2.496 M/s; peak 2.511; JIT entries 0, complete 0
+75/81 pipebytes-query-n16-t60-r0-kdlock
+  4.904 M/s; peak 4.925; JIT entries 9574571, complete 9574571
+76/81 pipebytes-query-n16-t60-r1-tclock
+  2.442 M/s; peak 2.453; JIT entries 0, complete 0
+77/81 pipebytes-query-n16-t60-r1-kdlock
+  4.904 M/s; peak 4.925; JIT entries 9565315, complete 9565315
+78/81 pipebytes-query-n16-t60-r1-native
+  1.928 M/s; peak 2.058; JIT entries 0, complete 0
+79/81 pipebytes-query-n16-t60-r2-kdlock
+  4.706 M/s; peak 4.721; JIT entries 9188442, complete 9188442
+80/81 pipebytes-query-n16-t60-r2-native
+  1.838 M/s; peak 1.906; JIT entries 0, complete 0
+81/81 pipebytes-query-n16-t60-r2-tclock
+  2.434 M/s; peak 2.449; JIT entries 0, complete 0
+All sessions completed and drained.

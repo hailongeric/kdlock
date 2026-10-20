@@ -1,0 +1,126 @@
+{
+  "commands": [
+    {
+      "argv": [
+        "/root/kdlock-translation-venv-20261019/bin/python3",
+        "-m",
+        "pip",
+        "check"
+      ],
+      "cwd": "/root/host_fs/kdlock",
+      "exit_code": 0,
+      "finished_unix": 1792465177.471723,
+      "name": "dependencies",
+      "started_unix": 1792465176.903244,
+      "timeout_seconds": 60
+    },
+    {
+      "argv": [
+        "make",
+        "-C",
+        "kernel_module",
+        "KDIR=/root/linux-6.1.159-kdclobber2",
+        "W=1",
+        "UBSAN_SANITIZE=n"
+      ],
+      "cwd": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-native-tclock-20261020/checks/source",
+      "exit_code": 0,
+      "finished_unix": 1792465188.933967,
+      "name": "provider",
+      "started_unix": 1792465177.5557036,
+      "timeout_seconds": 240
+    },
+    {
+      "argv": [
+        "make",
+        "-C",
+        "daemon",
+        "CFLAGS=-O2 -Wall -Wextra -Werror"
+      ],
+      "cwd": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-native-tclock-20261020/checks/source",
+      "exit_code": 0,
+      "finished_unix": 1792465189.338484,
+      "name": "daemon",
+      "started_unix": 1792465189.0208445,
+      "timeout_seconds": 60
+    },
+    {
+      "argv": [
+        "make",
+        "-C",
+        "tests/unit",
+        "run",
+        "PY_TESTS="
+      ],
+      "cwd": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-native-tclock-20261020/checks/source",
+      "exit_code": 0,
+      "finished_unix": 1792465190.2934434,
+      "name": "unit",
+      "started_unix": 1792465189.4229362,
+      "timeout_seconds": 300
+    },
+    {
+      "argv": [
+        "/root/kdlock-translation-venv-20261019/bin/python3",
+        "bench/tclock_compare/test_direct.py"
+      ],
+      "cwd": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-native-tclock-20261020/checks/source",
+      "exit_code": 0,
+      "finished_unix": 1792465190.744241,
+      "name": "test_direct",
+      "started_unix": 1792465190.37684,
+      "timeout_seconds": 180
+    },
+    {
+      "argv": [
+        "/root/kdlock-translation-venv-20261019/bin/python3",
+        "bench/spin_cacheline/test_peak.py"
+      ],
+      "cwd": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-native-tclock-20261020/checks/source",
+      "exit_code": 0,
+      "finished_unix": 1792465191.3433347,
+      "name": "test_peak",
+      "started_unix": 1792465190.8251565,
+      "timeout_seconds": 180
+    },
+    {
+      "argv": [
+        "/root/kdlock-translation-venv-20261019/bin/python3",
+        "bench/real_api/test_plan.py"
+      ],
+      "cwd": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-native-tclock-20261020/checks/source",
+      "exit_code": 0,
+      "finished_unix": 1792465191.6444998,
+      "name": "test_plan",
+      "started_unix": 1792465191.4281166,
+      "timeout_seconds": 180
+    },
+    {
+      "argv": [
+        "/root/kdlock-translation-venv-20261019/bin/python3",
+        "bench/real_api/test_report.py"
+      ],
+      "cwd": "/root/kdlock-evidence/10.176.26.71/bench/mutex32-native-tclock-20261020/checks/source",
+      "exit_code": 0,
+      "finished_unix": 1792465191.8437908,
+      "name": "test_report",
+      "started_unix": 1792465191.7275581,
+      "timeout_seconds": 180
+    }
+  ],
+  "final_idle": true,
+  "full_suite": false,
+  "passed": true,
+  "runner_tests": [
+    "bench/tclock_compare/test_direct.py",
+    "bench/spin_cacheline/test_peak.py",
+    "bench/real_api/test_plan.py",
+    "bench/real_api/test_report.py"
+  ],
+  "script_sha256": "73db235611e1e9800f3b5458ca8b5f408b1397b58355b0af187a253b051a0e73",
+  "snapshot_tag": "before-mutex-kdonly-20261017T140354Z",
+  "source_revision": "bd9d4ce205512fd34dc00044e3ad238f985d4b6d",
+  "source_unchanged": true,
+  "unit_basic": 2,
+  "unit_drivers": []
+}

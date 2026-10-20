@@ -20,12 +20,22 @@ These are API microbenchmarks with real kernel metadata, not end-to-end
 application measurements or a global replacement of Linux locks. Neither loading
 KD nor loading TCLock alone changes ordinary syscall locking.
 
-The current compact-mutex result is the [pipebytes, pipecap and seek screen](../results/10.176.26.71/bench/mutex32-api-screen-20261019/README.md):
-144 valid, drained sessions with fresh Native/TCLock controls. Pipe KD uses
-local physical locking without measured JIT; contended seek returns JIT bodies.
-The report keeps these categories, repeat variation and one final diagnostic-row
-gap explicit. The historical [256-byte KD-only pipebytes comparison](../results/10.176.26.71/bench/comparison/mutex-kdonly-20261017T140354Z/README.md)
-retains its original source and measurements.
+The [current mutex comparison](../results/10.176.26.71/bench/mutex32-native-tclock-20261020/README.md)
+includes 324 valid, drained API sessions for pipebytes n16, pipecap n16,
+`SEEK_SET` and `SEEK_END`, with fresh Native/TCLock/KD controls and three
+repetitions at `1 2 4 8 16 32 36 48 60` workers. The `bd9d4ce` collection keeps
+the shared-node `752fec1` runtime unchanged. Among the 108 KD API sessions,
+78 record matching returned JIT bodies and 30 record local `NO_JIT` execution.
+Every measured seek point from four workers and every measured pipe point from
+eight workers records returned bodies in all three repetitions. At 60 workers,
+KD's whole-run median exceeds both controls in all four API cases. These are
+scoped API results, not full-grid or application-wide guarantees.
+
+The earlier [compact API screen](../results/10.176.26.71/bench/mutex32-api-screen-20261019/README.md)
+retains its 144 sessions, local-only pipe observations and diagnostic-row gap
+under its older source identity. The historical
+[256-byte KD-only pipebytes comparison](../results/10.176.26.71/bench/comparison/mutex-kdonly-20261017T140354Z/README.md)
+also retains its original source and measurements.
 The [workload catalog](../../docs/BENCHMARK_WORKLOADS.md) defines each label.
 Broader historical API coverage retains its original adapter/provider identity;
 it is not validation of every current KD mutex scenario.

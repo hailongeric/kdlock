@@ -18,6 +18,16 @@ reader/writer runner's historical default and `--full-matrix` stop at 36 workers
 Synthetic bodies run repeatedly inside one ioctl per phase; API workers issue
 syscalls individually. Include both categories when requesting the full catalog.
 
+The [current mutex comparison](../bench/results/10.176.26.71/bench/mutex32-native-tclock-20261020/README.md)
+covers c01/post64, c08/post64, exclusive-update RCUHT, seek set/end, pipebytes
+n16 and pipecap n16 with fresh Native/TCLock/KD controls. Its 567 valid, drained
+sessions use three repetitions at `1 2 4 8 16 32 36 48 60` workers, a nine-point
+subset of the standard grid. Collection revision `bd9d4ce` retains the
+`752fec1` shared-node mutex runtime. Synthetic generated-body entries and API
+returned-body probes remain separate; local `NO_JIT` sessions retain that class.
+The c08 two-worker point has one local and two entry-witnessed repetitions,
+so it has no complete three-repeat class result.
+
 The historical [KD-only matrix](../bench/results/10.176.26.71/bench/comparison/mutex-kdonly-20261017T140354Z/README.md)
 covers c01/post64 and `api-pipebytes-query-n16` on its recorded 256-byte mutex.
 It does not measure the current shared-node 32-byte implementation. Broader historical owned-mutex
@@ -78,9 +88,12 @@ ordinary API rename, an extra private lock around only some consumers, or a
 cast from a Linux mutex to KD mutex does not implement that conversion.
 
 Eligibility in this table is a source assessment, not a fresh benchmark result.
-The historical KD-only matrix cited above covers c01/post64 and pipebytes n16;
-current mutex results and their source identities are listed in
-[performance status](PERFORMANCE.md). The accepted rwsem matrix covers c01,
+The current mutex comparison cited above measures all seven mutex cases at its
+nine worker counts; it does not validate every catalog parameter. Its KD
+synthetic evidence contains 68 entry-witnessed and 13 local sessions; its API
+evidence contains 78 returned-body and 30 local sessions. Current results and
+their source identities are listed in [performance status](PERFORMANCE.md).
+The accepted rwsem matrix covers c01,
 c08 and RCUHT. Other API measurements retain their historical source identities.
 The latest [instruction-exit validation](../bench/results/10.176.26.71/tests/native-instruction-exit-20261018/README.md)
 also completed delegated rwsem c08 and RCUHT writers, but it is a functional

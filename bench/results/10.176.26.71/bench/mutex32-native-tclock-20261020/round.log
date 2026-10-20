@@ -1,0 +1,30 @@
+START checks dependencies
+FINISH checks dependencies 0
+START checks provider
+FINISH checks provider 0
+START checks daemon
+FINISH checks daemon 0
+START checks unit
+FINISH checks unit 0
+START checks test_direct
+FINISH checks test_direct 0
+START checks test_peak
+FINISH checks test_peak 0
+START checks test_plan
+FINISH checks test_plan 0
+START checks test_report
+FINISH checks test_report 0
+START current c01
+FINISH current c01 0 drained NO_JIT rejections 0
+START current c08
+FINISH current c08 0 drained NO_JIT rejections 0
+START current rcuht
+FINISH current rcuht 0 drained NO_JIT rejections 0
+START current seek-set
+FINISH current seek-set 0 drained NO_JIT rejections 0
+START current seek-end
+FINISH current seek-end 0 drained NO_JIT rejections 0
+START current pipebytes
+FINISH current pipebytes 0 drained NO_JIT rejections 0
+START current pipecap
+FINISH current pipecap 0 drained NO_JIT rejections 0

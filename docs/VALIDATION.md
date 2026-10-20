@@ -8,6 +8,25 @@ Basic plus affected checks are the default; an old pass is not a current full pa
 The [terminology guide](TERMINOLOGY.md) explains status labels and other technical
 terms used in the receipts below.
 
+## Fresh mutex benchmark and report validation
+
+The [Native/TCLock/KD comparison](../bench/results/10.176.26.71/bench/mutex32-native-tclock-20261020/README.md)
+uses `bd9d4ce` with unchanged `752fec1` production. Fresh VM validation passed
+dependency and provider/daemon builds, the two basic C programs, and 86 cases
+across the direct-runner, peak, API-plan and API-report programs. The provider
+build retains 48 warning lines. No full suite or separate protocol/live-probe
+rerun is claimed for this documentation and benchmark change.
+
+All 567 planned timings completed correctly and drained, with 567 kernel logs
+and zero matched runtime faults. Among 189 KD sessions, 68 witness synthetic
+entry, 78 record matching returned API bodies and 43 record no generated entry.
+The c08/two-worker split remains separate; no entry-positive synthetic sample
+is promoted to returned-body proof. The independent inert archive review passed
+668,688 checks and reconstructed every timing window; a separate compact
+numeric review passed 6,952 checks. Final health confirms an idle VM and the
+recorded host/guest policy. Performance outcomes and remaining regressions are
+separate from these correctness and preservation checks.
+
 ## Mutex shared-node and bounded-locality checks
 
 The [shared-node receipt](../bench/results/10.176.26.71/bench/mutex32-mcs-20261020/README.md)

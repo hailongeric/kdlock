@@ -38,6 +38,50 @@ repetitions and four arms (accepted compatibility baseline, KD-only, Native,
 TCLock). It uses the regular 64-vCPU VM and collector 63, and measures the former
 256-byte object. Those results do not measure the compact layout.
 
+## Fresh 32-byte mutex comparison with Native and TCLock
+
+The [2026-10-20 comparison](../bench/results/10.176.26.71/bench/mutex32-native-tclock-20261020/README.md)
+measures the retained `752fec1` runtime from collection source `bd9d4ce` against
+fresh Linux Native and TCLock controls. All 567 sessions passed their result and
+drain checks: seven workloads, workers 1/2/4/8/16/32/36/48/60, three backends and
+three 2000 ms repetitions. This is a focused nine-point grid in the same
+64-vCPU VM with collector 63. Whole-run median Mops/s at sixty workers is:
+
+| Workload, 60 workers | Linux Native | TCLock | KD | KD / Native | KD / TCLock |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| c01/post64 | 3.974 | 3.145 | 4.952 | 1.246× | 1.575× |
+| c08/post64 | 3.067 | 2.744 | 3.671 | 1.197× | 1.338× |
+| RCUHT | 1.740 | 1.752 | 2.077 | 1.194× | 1.186× |
+| SEEK_SET n16 | 1.369 | 2.448 | 4.185 | 3.057× | 1.709× |
+| SEEK_END n16 | 1.310 | 2.525 | 4.185 | 3.196× | 1.658× |
+| Pipe bytes n16 | 1.919 | 2.442 | 4.904 | 2.555× | 2.008× |
+| Pipe capacity n16 | 1.907 | 2.491 | 4.345 | 2.279× | 1.744× |
+
+At sixty workers KD's median exceeds both controls for every tested workload;
+its minimum also exceeds their maxima in these three repetitions. At eight
+workers KD trails Native for c01/c08/RCUHT at 0.834×/0.582×/0.852×, while the four
+API medians exceed both controls. The complete curves preserve low-count
+regressions, repetition ranges and separately measured peak rates. These are
+descriptive results, not confidence intervals or full-grid parity.
+
+Of 189 KD sessions, 68 witness synthetic generated-body entry, 78 count matching
+returned API bodies and 43 have no generated entry. There are no PARTIAL_JIT
+sessions or rejected timings. The c08/two-worker point splits into two
+entry-positive repetitions and one NO_JIT repetition; those classes are not
+pooled. Pipe-byte/capacity points at one/two/four workers remain local and are
+not JIT results. At sixty workers API returned-body shares are 97.31–97.62%.
+TCLock's measured returned delegation counts remain a separate counter class.
+
+The two basic programs and 86 cases in four benchmark test programs passed.
+All 567 retained kernel logs have no matched runtime faults; the VM is idle.
+The independent archive/source/arithmetic review passed 668,688 checks and
+reconstructed every timing window. Production and admission are unchanged;
+no full suite or separate live protocol probe was rerun for this documentation
+and benchmark change. Host pinning and frequency policy remained unchanged,
+with ondemand frequency and imperfect NUMA page residency explicitly retained
+as measurement conditions. Earlier compact/old256 comparisons below keep their
+own source identities and are not pooled with this round.
+
 ## Mutex shared-node and locality comparison
 
 The [shared-node investigation](../bench/results/10.176.26.71/bench/mutex32-mcs-20261020/README.md)

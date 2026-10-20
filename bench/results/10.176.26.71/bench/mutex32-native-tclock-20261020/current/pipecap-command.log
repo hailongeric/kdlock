@@ -1,0 +1,163 @@
+1/81 pipecap-query-n16-t01-r0-native
+  3.637 M/s; peak 5.755; JIT entries 0, complete 0
+2/81 pipecap-query-n16-t01-r0-tclock
+  5.954 M/s; peak 5.996; JIT entries 0, complete 0
+3/81 pipecap-query-n16-t01-r0-kdlock
+  5.794 M/s; peak 5.811; JIT entries 0, complete 0
+4/81 pipecap-query-n16-t01-r1-tclock
+  5.980 M/s; peak 6.007; JIT entries 0, complete 0
+5/81 pipecap-query-n16-t01-r1-kdlock
+  5.794 M/s; peak 5.825; JIT entries 0, complete 0
+6/81 pipecap-query-n16-t01-r1-native
+  5.755 M/s; peak 5.780; JIT entries 0, complete 0
+7/81 pipecap-query-n16-t01-r2-kdlock
+  5.778 M/s; peak 5.809; JIT entries 0, complete 0
+8/81 pipecap-query-n16-t01-r2-native
+  5.755 M/s; peak 5.779; JIT entries 0, complete 0
+9/81 pipecap-query-n16-t01-r2-tclock
+  5.915 M/s; peak 5.934; JIT entries 0, complete 0
+10/81 pipecap-query-n16-t02-r0-native
+  8.301 M/s; peak 8.619; JIT entries 0, complete 0
+11/81 pipecap-query-n16-t02-r0-tclock
+  8.049 M/s; peak 8.127; JIT entries 0, complete 0
+12/81 pipecap-query-n16-t02-r0-kdlock
+  8.592 M/s; peak 8.618; JIT entries 0, complete 0
+13/81 pipecap-query-n16-t02-r1-tclock
+  8.003 M/s; peak 8.083; JIT entries 0, complete 0
+14/81 pipecap-query-n16-t02-r1-kdlock
+  8.440 M/s; peak 8.470; JIT entries 0, complete 0
+15/81 pipecap-query-n16-t02-r1-native
+  8.086 M/s; peak 8.111; JIT entries 0, complete 0
+16/81 pipecap-query-n16-t02-r2-kdlock
+  8.677 M/s; peak 8.712; JIT entries 0, complete 0
+17/81 pipecap-query-n16-t02-r2-native
+  8.123 M/s; peak 8.160; JIT entries 0, complete 0
+18/81 pipecap-query-n16-t02-r2-tclock
+  8.537 M/s; peak 8.610; JIT entries 0, complete 0
+19/81 pipecap-query-n16-t04-r0-native
+  11.692 M/s; peak 14.906; JIT entries 0, complete 0
+20/81 pipecap-query-n16-t04-r0-tclock
+  2.550 M/s; peak 2.562; JIT entries 0, complete 0
+21/81 pipecap-query-n16-t04-r0-kdlock
+  16.752 M/s; peak 16.814; JIT entries 0, complete 0
+22/81 pipecap-query-n16-t04-r1-tclock
+  2.756 M/s; peak 2.768; JIT entries 0, complete 0
+23/81 pipecap-query-n16-t04-r1-kdlock
+  17.275 M/s; peak 17.354; JIT entries 0, complete 0
+24/81 pipecap-query-n16-t04-r1-native
+  16.537 M/s; peak 16.689; JIT entries 0, complete 0
+25/81 pipecap-query-n16-t04-r2-kdlock
+  17.244 M/s; peak 17.306; JIT entries 0, complete 0
+26/81 pipecap-query-n16-t04-r2-native
+  16.484 M/s; peak 16.587; JIT entries 0, complete 0
+27/81 pipecap-query-n16-t04-r2-tclock
+  2.422 M/s; peak 2.432; JIT entries 0, complete 0
+28/81 pipecap-query-n16-t08-r0-native
+  5.426 M/s; peak 5.588; JIT entries 0, complete 0
+29/81 pipecap-query-n16-t08-r0-tclock
+  3.091 M/s; peak 3.107; JIT entries 0, complete 0
+30/81 pipecap-query-n16-t08-r0-kdlock
+  5.061 M/s; peak 5.079; JIT entries 8765665, complete 8765665
+31/81 pipecap-query-n16-t08-r1-tclock
+  2.833 M/s; peak 2.855; JIT entries 0, complete 0
+32/81 pipecap-query-n16-t08-r1-kdlock
+  5.184 M/s; peak 5.212; JIT entries 8921142, complete 8921142
+33/81 pipecap-query-n16-t08-r1-native
+  4.560 M/s; peak 4.582; JIT entries 0, complete 0
+34/81 pipecap-query-n16-t08-r2-kdlock
+  5.279 M/s; peak 5.298; JIT entries 9173048, complete 9173048
+35/81 pipecap-query-n16-t08-r2-native
+  4.632 M/s; peak 4.680; JIT entries 0, complete 0
+36/81 pipecap-query-n16-t08-r2-tclock
+  2.683 M/s; peak 2.698; JIT entries 0, complete 0
+37/81 pipecap-query-n16-t16-r0-native
+  4.799 M/s; peak 4.962; JIT entries 0, complete 0
+38/81 pipecap-query-n16-t16-r0-tclock
+  2.551 M/s; peak 2.566; JIT entries 0, complete 0
+39/81 pipecap-query-n16-t16-r0-kdlock
+  5.524 M/s; peak 5.539; JIT entries 10977334, complete 10977334
+40/81 pipecap-query-n16-t16-r1-tclock
+  2.678 M/s; peak 2.704; JIT entries 0, complete 0
+41/81 pipecap-query-n16-t16-r1-kdlock
+  5.168 M/s; peak 5.188; JIT entries 10270870, complete 10270870
+42/81 pipecap-query-n16-t16-r1-native
+  4.931 M/s; peak 4.970; JIT entries 0, complete 0
+43/81 pipecap-query-n16-t16-r2-kdlock
+  5.593 M/s; peak 5.611; JIT entries 11110810, complete 11110810
+44/81 pipecap-query-n16-t16-r2-native
+  5.009 M/s; peak 5.044; JIT entries 0, complete 0
+45/81 pipecap-query-n16-t16-r2-tclock
+  2.559 M/s; peak 2.573; JIT entries 0, complete 0
+46/81 pipecap-query-n16-t32-r0-native
+  4.422 M/s; peak 4.608; JIT entries 0, complete 0
+47/81 pipecap-query-n16-t32-r0-tclock
+  2.577 M/s; peak 2.589; JIT entries 0, complete 0
+48/81 pipecap-query-n16-t32-r0-kdlock
+  4.960 M/s; peak 4.976; JIT entries 9861105, complete 9861105
+49/81 pipecap-query-n16-t32-r1-tclock
+  2.547 M/s; peak 2.563; JIT entries 0, complete 0
+50/81 pipecap-query-n16-t32-r1-kdlock
+  4.995 M/s; peak 5.008; JIT entries 9930098, complete 9930098
+51/81 pipecap-query-n16-t32-r1-native
+  4.538 M/s; peak 4.768; JIT entries 0, complete 0
+52/81 pipecap-query-n16-t32-r2-kdlock
+  4.982 M/s; peak 4.998; JIT entries 9902321, complete 9902321
+53/81 pipecap-query-n16-t32-r2-native
+  4.481 M/s; peak 4.672; JIT entries 0, complete 0
+54/81 pipecap-query-n16-t32-r2-tclock
+  2.463 M/s; peak 2.480; JIT entries 0, complete 0
+55/81 pipecap-query-n16-t36-r0-native
+  3.113 M/s; peak 3.276; JIT entries 0, complete 0
+56/81 pipecap-query-n16-t36-r0-tclock
+  2.432 M/s; peak 2.443; JIT entries 0, complete 0
+57/81 pipecap-query-n16-t36-r0-kdlock
+  4.444 M/s; peak 4.461; JIT entries 8836270, complete 8836270
+58/81 pipecap-query-n16-t36-r1-tclock
+  2.588 M/s; peak 2.601; JIT entries 0, complete 0
+59/81 pipecap-query-n16-t36-r1-kdlock
+  4.482 M/s; peak 4.501; JIT entries 8912556, complete 8912556
+60/81 pipecap-query-n16-t36-r1-native
+  3.075 M/s; peak 3.282; JIT entries 0, complete 0
+61/81 pipecap-query-n16-t36-r2-kdlock
+  4.534 M/s; peak 4.553; JIT entries 9015026, complete 9015026
+62/81 pipecap-query-n16-t36-r2-native
+  3.037 M/s; peak 3.101; JIT entries 0, complete 0
+63/81 pipecap-query-n16-t36-r2-tclock
+  2.509 M/s; peak 2.520; JIT entries 0, complete 0
+64/81 pipecap-query-n16-t48-r0-native
+  2.144 M/s; peak 2.301; JIT entries 0, complete 0
+65/81 pipecap-query-n16-t48-r0-tclock
+  2.601 M/s; peak 2.619; JIT entries 0, complete 0
+66/81 pipecap-query-n16-t48-r0-kdlock
+  4.619 M/s; peak 4.661; JIT entries 9040141, complete 9040141
+67/81 pipecap-query-n16-t48-r1-tclock
+  2.584 M/s; peak 2.611; JIT entries 0, complete 0
+68/81 pipecap-query-n16-t48-r1-kdlock
+  4.537 M/s; peak 4.575; JIT entries 8877992, complete 8877992
+69/81 pipecap-query-n16-t48-r1-native
+  2.189 M/s; peak 2.372; JIT entries 0, complete 0
+70/81 pipecap-query-n16-t48-r2-kdlock
+  4.480 M/s; peak 4.520; JIT entries 8770567, complete 8770567
+71/81 pipecap-query-n16-t48-r2-native
+  2.240 M/s; peak 2.361; JIT entries 0, complete 0
+72/81 pipecap-query-n16-t48-r2-tclock
+  2.634 M/s; peak 2.665; JIT entries 0, complete 0
+73/81 pipecap-query-n16-t60-r0-native
+  1.907 M/s; peak 2.021; JIT entries 0, complete 0
+74/81 pipecap-query-n16-t60-r0-tclock
+  2.609 M/s; peak 2.622; JIT entries 0, complete 0
+75/81 pipecap-query-n16-t60-r0-kdlock
+  4.409 M/s; peak 4.426; JIT entries 8612884, complete 8612884
+76/81 pipecap-query-n16-t60-r1-tclock
+  2.465 M/s; peak 2.476; JIT entries 0, complete 0
+77/81 pipecap-query-n16-t60-r1-kdlock
+  4.295 M/s; peak 4.308; JIT entries 8394947, complete 8394947
+78/81 pipecap-query-n16-t60-r1-native
+  1.946 M/s; peak 2.058; JIT entries 0, complete 0
+79/81 pipecap-query-n16-t60-r2-kdlock
+  4.345 M/s; peak 4.361; JIT entries 8490568, complete 8490568
+80/81 pipecap-query-n16-t60-r2-native
+  1.875 M/s; peak 2.023; JIT entries 0, complete 0
+81/81 pipecap-query-n16-t60-r2-tclock
+  2.491 M/s; peak 2.504; JIT entries 0, complete 0
+All sessions completed and drained.

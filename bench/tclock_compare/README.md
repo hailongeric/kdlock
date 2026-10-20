@@ -12,7 +12,13 @@ The retained `752fec1` policy uses a 256-body NUMA locality boundary: eight or m
 deferred requests receive handoff, while a smaller prefix precedes FIFO service
 for the rest of the bounded batch. The total cap remains 1024 by default.
 The shared client validates the embedded object extent; other lock types keep
-their own sizes. The recorded `d2a2304` KD-only arm used a 256-byte,
+their own sizes. The [current three-backend comparison](../results/10.176.26.71/bench/mutex32-native-tclock-20261020/README.md)
+measures this runtime through collection revision `bd9d4ce`, covering all seven
+mutex workloads at nine worker counts with three repetitions. It includes
+243 synthetic sessions for c01/post64, c08/post64 and exclusive-update RCUHT,
+plus 324 API sessions. All 567 completed correctly and drained.
+
+The recorded `d2a2304` KD-only arm used a 256-byte,
 128-byte-aligned object; those measurements do not cover this storage refactor.
 The accepted `555b8b7` baseline uses its frozen older client,
 provider and translator in the [paired round](../results/10.176.26.71/bench/comparison/mutex-kdonly-20261017T140354Z/README.md).
@@ -167,7 +173,14 @@ positive observed counts do not prove starvation freedom.
 
 The [historical KD-only comparison](../results/10.176.26.71/bench/comparison/mutex-kdonly-20261017T140354Z/README.md)
 retains 504 sessions for c01/post64 and pipebytes n16 over the standard grid,
-including the compatibility baseline and Native/TCLock controls. Use
+including the compatibility baseline and Native/TCLock controls. The
+[current comparison](../results/10.176.26.71/bench/mutex32-native-tclock-20261020/README.md)
+instead uses `1 2 4 8 16 32 36 48 60` workers. Its whole-run medians put KD above
+both controls for all three synthetic workloads at 60 workers, but below Native
+for each at eight workers. Synthetic KD records 68 entry-witnessed sessions
+and 13 local `NO_JIT` sessions; returned-body counts remain unmeasured.
+At c08/t2, the one local sample and two entry-witnessed samples remain separate
+incomplete-class groups, not a pooled three-repeat result. Use
 [performance status](../../docs/PERFORMANCE.md) for outcomes and
 [historical evidence](../../docs/history/README.md) for superseded implementations.
 The `adaptive` session suffix refers to admission heat policy, not the rejected

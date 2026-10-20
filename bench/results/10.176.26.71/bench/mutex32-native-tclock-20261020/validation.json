@@ -1,0 +1,111 @@
+{
+  "checks": {
+    "commands_sha256": "9a845445a7b94d605a2945b8b4b23c0be13c9f41e7cb5c2a1db989f458f084c4",
+    "frozen_source_files": 437,
+    "full_suite": false,
+    "live_probes_rerun": false,
+    "logs_sha256": {
+      "daemon": "1367dbf98b18801687a41d474d2a842bb70c23f7378d226fe1294664fed60dda",
+      "dependencies": "9261363b733079a641c2e4cc9bc46ffa1d8336945a87f807b6cf68847dbc9b09",
+      "provider": "48810386bcf3dbc9537afa5a37e3affaa6a99794e854c6b8f9c292253520ecb1",
+      "test_direct": "034410afd27574cf27d74e0ee9603fd59541ff7e6dc889ac7e2300a48f7c2c2c",
+      "test_peak": "d6115f04a5f677030044a1dee7f2656e06b25e5bec30d6d6ca57b602174a6ca7",
+      "test_plan": "a753a61bbd66b614c67a60ed94a734f70863220a816d6a064364b1e97a253671",
+      "test_report": "f1f13abad0113a87f764e7a23cb3bd05ed2b3921bcfde1d822ab688df8c43004",
+      "unit": "edb1cfdd6283849c6c1a4da0488e7807e1782e5e5f87a1128534b5b1b2c757e3"
+    },
+    "passed": true,
+    "provider_warning_lines": 48,
+    "result_sha256": "e15e94f05ea7e15ac46fc3f25fc60634796f569d212bfb16221b6f227d12d3bc",
+    "runner_tests": {
+      "test_direct": {
+        "log_sha256": "034410afd27574cf27d74e0ee9603fd59541ff7e6dc889ac7e2300a48f7c2c2c",
+        "passed": true,
+        "path": "bench/tclock_compare/test_direct.py",
+        "tests": 52
+      },
+      "test_peak": {
+        "log_sha256": "d6115f04a5f677030044a1dee7f2656e06b25e5bec30d6d6ca57b602174a6ca7",
+        "passed": true,
+        "path": "bench/spin_cacheline/test_peak.py",
+        "tests": 10
+      },
+      "test_plan": {
+        "log_sha256": "a753a61bbd66b614c67a60ed94a734f70863220a816d6a064364b1e97a253671",
+        "passed": true,
+        "path": "bench/real_api/test_plan.py",
+        "tests": 11
+      },
+      "test_report": {
+        "log_sha256": "f1f13abad0113a87f764e7a23cb3bd05ed2b3921bcfde1d822ab688df8c43004",
+        "passed": true,
+        "path": "bench/real_api/test_report.py",
+        "tests": 13
+      }
+    },
+    "source_commit": "bd9d4ce205512fd34dc00044e3ad238f985d4b6d",
+    "source_manifest_sha256": "47ced020e97d026bb42a80ee39aa6c3bed19c561e06ec200e7aa292980221ffb",
+    "source_unchanged": true,
+    "unit_affected_drivers": [],
+    "unit_basic": 2,
+    "unit_failed": 0,
+    "unit_passed": 2
+  },
+  "collection_manifests": {
+    "c01": {
+      "command_sha256": "2080b285fdc254f7ee7ecb471d7d85b395c4f38f059393dcbb48148c4decd3f5",
+      "records_sha256": "c04d0fda4e1e05336d57b45e42d4c36d9b4c739e46686c8e9fb12caf5858f22a",
+      "source_manifest_sha256": "7aa703e0971d468b9c3288adc82d4bbae6bc4eb6dea8e02efe902964fb58b6fe"
+    },
+    "c08": {
+      "command_sha256": "2cd6878979b1e1fbb7f09a4fe5098ffb384bfa250cbe7cc21e9ec845c3068ae5",
+      "records_sha256": "a81271a385be2a71c0efa97efa9b58a41533704c8d43e7e0c32783d3c751c193",
+      "source_manifest_sha256": "7aa703e0971d468b9c3288adc82d4bbae6bc4eb6dea8e02efe902964fb58b6fe"
+    },
+    "pipebytes": {
+      "command_sha256": "03d7aba9121b349f32457fa0477a19b548c2da287a78ccd47f8cd15dc9e92ef6",
+      "records_sha256": "fcc1ae1554751cb7123a0053d42a6a79f68a71425e347272a69c962a021403ab",
+      "source_manifest_sha256": "7b2c037d44d183dd069ed64110ffde331d13d5d8c75c72fd8593792f40f57323"
+    },
+    "pipecap": {
+      "command_sha256": "a19b3faf840b26220d3670a0234cb723ca4b9c7401403db1458a39b4cc645da5",
+      "records_sha256": "e9480af22d4263db0ee7bcad7cc34d49b9adbde28b3238fb424e1107168a3f36",
+      "source_manifest_sha256": "7b2c037d44d183dd069ed64110ffde331d13d5d8c75c72fd8593792f40f57323"
+    },
+    "rcuht": {
+      "command_sha256": "8bcb8262cf1485677e969a92b112d8ac9a511543339d503d075f70a97c55d3d7",
+      "records_sha256": "6c0ee0bafe0749f6ffa7a26a3e3a692547633f0f9d8eef30825174b4fb340e6b",
+      "source_manifest_sha256": "7aa703e0971d468b9c3288adc82d4bbae6bc4eb6dea8e02efe902964fb58b6fe"
+    },
+    "seek-end": {
+      "command_sha256": "bf1bcb0deda37fdf1ecd7f531a244cd8bcfd14c473ad28bed18dd171167f9e3b",
+      "records_sha256": "28fbedf0e9b6a936220dfc4b17df45ccce4c3bf41f6e5f9d08dfbfe935cf3187",
+      "source_manifest_sha256": "7b2c037d44d183dd069ed64110ffde331d13d5d8c75c72fd8593792f40f57323"
+    },
+    "seek-set": {
+      "command_sha256": "d6f4f9eeee813be0956080dede20f5af961ee9104cf54d756ce130ff286234f1",
+      "records_sha256": "ac323849151d2d730efe4279f1217bf7ee6f61b0ab57b4cf484b4c1df4baaac2",
+      "source_manifest_sha256": "7b2c037d44d183dd069ed64110ffde331d13d5d8c75c72fd8593792f40f57323"
+    }
+  },
+  "comparison_sha256": "2870410b84b035981e6c57fed72f142155e4f3d012d47268da6c50c0abd9094c",
+  "execution_class_counts": {
+    "NOT_APPLICABLE": 378,
+    "NO_JIT": 43,
+    "RETURNED_JIT": 78,
+    "WITNESSED_JIT": 68
+  },
+  "execution_status_counts": {
+    "OK": 567
+  },
+  "full_suite": false,
+  "helper_file": "finalize.py",
+  "helper_sha256": "f51ceb4d5436203f3733ef59925388f80adeb4933190ed2b46899d752f0f3933",
+  "matrix_sha256": "d89c0d3cf949acf283164d6b14397ed9f738e6408e31495865f1d61817a23aee",
+  "note": "Two fresh basic programs and four benchmark test programs; no protocol-driver/live-probe rerun. Complete safely drained inventory preserves synthetic NO_JIT rejection verdicts; these are excluded from scores.",
+  "passed": true,
+  "retained_no_jit_rejections": 0,
+  "schema": 1,
+  "score_eligible_sessions": 567,
+  "source_revision": "bd9d4ce205512fd34dc00044e3ad238f985d4b6d"
+}

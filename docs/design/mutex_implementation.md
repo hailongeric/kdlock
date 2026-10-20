@@ -491,7 +491,21 @@ unchanged. Build/use instructions belong in the
 [workload README](../../workload_modules/mutex_cacheline/README.md) and
 [runner README](../../bench/tclock_compare/README.md).
 
-The [shared-node comparison](../../bench/results/10.176.26.71/bench/mutex32-mcs-20261020/README.md)
+The [current Native/TCLock/KD comparison](../../bench/results/10.176.26.71/bench/mutex32-native-tclock-20261020/README.md)
+uses collection revision `bd9d4ce` with the `752fec1` runtime unchanged. It
+covers c01/post64, c08/post64, exclusive-update RCUHT, seek set/end, pipebytes n16
+and pipecap n16 at `1 2 4 8 16 32 36 48 60` workers, three repetitions each.
+All 567 sessions completed correctly and drained, with no matched kernel
+faults. Fresh validation passed two basic programs and 86 cases across four
+benchmark test programs; this documentation/comparison round did not rerun
+the protocol drivers or live probes. KD's whole-run median exceeds both controls
+on all seven workloads at 60 workers; its three synthetic medians remain below
+Native at eight workers. This nine-point comparison keeps local, synthetic
+entry-witnessed and API returned-body results separate, including the split
+c08/t2 class. It neither establishes full-grid parity nor measures a new runtime
+change.
+
+The preceding [shared-node comparison](../../bench/results/10.176.26.71/bench/mutex32-mcs-20261020/README.md)
 retains `752fec1`: shared OSQ storage, a 256-body locality boundary and handoff
 for eight or more deferred requests. It passed 17 basic/affected checks,
 11/13-case runner programs and three live probes. Fresh sixty-worker medians

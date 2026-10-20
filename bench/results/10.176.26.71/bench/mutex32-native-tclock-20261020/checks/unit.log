@@ -1,0 +1,58 @@
+make: Entering directory '/root/kdlock-evidence/10.176.26.71/bench/mutex32-native-tclock-20261020/checks/source/tests/unit'
+cc -g -O0 -Wall -Wextra -std=gnu11 -I../../include -o basic/test_control_call basic/test_control_call.c
+cc -g -O0 -Wall -Wextra -std=gnu11 -I../../include -o basic/test_daemon_policy basic/test_daemon_policy.c
+
+[PASS] test_control_call (56 phase/error combinations, post-CALL bounds)
+
+chdir translator workspace: No such file or directory
+daemon: translator failed: workspace=./0x1234 status=32256
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "/usr/lib/python3.10/runpy.py", line 288, in run_path
+    code, fname = _get_code_from_file(run_name, path_name)
+  File "/usr/lib/python3.10/runpy.py", line 252, in _get_code_from_file
+    with io.open_code(decoded_path) as f:
+FileNotFoundError: [Errno 2] No such file or directory: '/tmp/kdlock-compiler-launch.dt9UW6/disassem/disassem.py'
+daemon: translator failed: workspace=./0x1234 status=256
+daemon: translator failed: workspace=./0x1234 status=256
+daemon: translator failed: workspace=./0x1234 status=256
+daemon: translator failed: workspace=./0x1234 status=256
+chdir translator workspace: No such file or directory
+KD_TRANSLATION_METRICS {"schema":1,"pid":0,"tgid":42,"entry":"0x1234","lock_kind":2,"child":2537409,"started_ns":422050173657014,"finished_ns":422050175073587,"wall_ns":1416573,"user_ns":905000,"system_ns":0,"maxrss_kib":1460,"minor_faults":39,"major_faults":0,"voluntary_cs":1,"involuntary_cs":0,"status":32256,"result":-1}
+daemon: translator failed: workspace=./0x1234/42 status=32256
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "/usr/lib/python3.10/runpy.py", line 288, in run_path
+    code, fname = _get_code_from_file(run_name, path_name)
+  File "/usr/lib/python3.10/runpy.py", line 252, in _get_code_from_file
+    with io.open_code(decoded_path) as f:
+FileNotFoundError: [Errno 2] No such file or directory: '/tmp/kdlock-compiler-launch.dt9UW6/disassem/disassem.py'
+KD_TRANSLATION_METRICS {"schema":1,"pid":0,"tgid":42,"entry":"0x1234","lock_kind":2,"child":2537410,"started_ns":422050175185972,"finished_ns":422050201083397,"wall_ns":25897425,"user_ns":21825000,"system_ns":3653000,"maxrss_kib":8924,"minor_faults":984,"major_faults":0,"voluntary_cs":1,"involuntary_cs":0,"status":256,"result":-1}
+daemon: translator failed: workspace=./0x1234/42 status=256
+KD_TRANSLATION_METRICS {"schema":1,"pid":0,"tgid":42,"entry":"0x1234","lock_kind":0,"child":2537411,"started_ns":422050201291330,"finished_ns":422050220872070,"wall_ns":19580740,"user_ns":15326000,"system_ns":3853000,"maxrss_kib":9272,"minor_faults":1049,"major_faults":0,"voluntary_cs":1,"involuntary_cs":0,"status":0,"result":0}
+KD_TRANSLATION_METRICS {"schema":1,"pid":0,"tgid":42,"entry":"0x1234","lock_kind":0,"child":2537412,"started_ns":422050221166489,"finished_ns":422050248507515,"wall_ns":27341026,"user_ns":15320000,"system_ns":11511000,"maxrss_kib":9176,"minor_faults":1047,"major_faults":0,"voluntary_cs":1,"involuntary_cs":0,"status":256,"result":-1}
+daemon: translator failed: workspace=./0x1234/42 status=256
+KD_TRANSLATION_METRICS {"schema":1,"pid":0,"tgid":42,"entry":"0x1234","lock_kind":0,"child":2537413,"started_ns":422050248779741,"finished_ns":422050275662583,"wall_ns":26882842,"user_ns":17646000,"system_ns":8835000,"maxrss_kib":9084,"minor_faults":1047,"major_faults":0,"voluntary_cs":1,"involuntary_cs":0,"status":512,"result":2}
+KD_TRANSLATION_METRICS {"schema":1,"pid":0,"tgid":42,"entry":"0x1234","lock_kind":1,"child":2537414,"started_ns":422050275936369,"finished_ns":422050302731882,"wall_ns":26795513,"user_ns":26301000,"system_ns":0,"maxrss_kib":9036,"minor_faults":1044,"major_faults":0,"voluntary_cs":1,"involuntary_cs":0,"status":0,"result":0}
+KD_TRANSLATION_METRICS {"schema":1,"pid":0,"tgid":42,"entry":"0x1234","lock_kind":1,"child":2537415,"started_ns":422050303002537,"finished_ns":422050329140907,"wall_ns":26138370,"user_ns":21991000,"system_ns":3648000,"maxrss_kib":9164,"minor_faults":1047,"major_faults":0,"voluntary_cs":1,"involuntary_cs":0,"status":256,"result":-1}
+daemon: translator failed: workspace=./0x1234/42 status=256
+KD_TRANSLATION_METRICS {"schema":1,"pid":0,"tgid":42,"entry":"0x1234","lock_kind":1,"child":2537416,"started_ns":422050329506765,"finished_ns":422050356198745,"wall_ns":26691980,"user_ns":22551000,"system_ns":3749000,"maxrss_kib":9156,"minor_faults":1047,"major_faults":0,"voluntary_cs":1,"involuntary_cs":0,"status":512,"result":2}
+KD_TRANSLATION_METRICS {"schema":1,"pid":0,"tgid":42,"entry":"0x1234","lock_kind":2,"child":2537417,"started_ns":422050356514006,"finished_ns":422050382843175,"wall_ns":26329169,"user_ns":21575000,"system_ns":4303000,"maxrss_kib":9252,"minor_faults":1049,"major_faults":0,"voluntary_cs":1,"involuntary_cs":0,"status":0,"result":0}
+KD_TRANSLATION_METRICS {"schema":1,"pid":0,"tgid":42,"entry":"0x1234","lock_kind":2,"child":2537418,"started_ns":422050383162230,"finished_ns":422050412053923,"wall_ns":28891693,"user_ns":20237000,"system_ns":8102000,"maxrss_kib":9160,"minor_faults":1048,"major_faults":0,"voluntary_cs":1,"involuntary_cs":0,"status":256,"result":-1}
+daemon: translator failed: workspace=./0x1234/42 status=256
+KD_TRANSLATION_METRICS {"schema":1,"pid":0,"tgid":42,"entry":"0x1234","lock_kind":2,"child":2537419,"started_ns":422050412406450,"finished_ns":422050441307413,"wall_ns":28900963,"user_ns":24375000,"system_ns":4082000,"maxrss_kib":9164,"minor_faults":1047,"major_faults":0,"voluntary_cs":1,"involuntary_cs":0,"status":512,"result":2}
+daemon: invalid translation monotonic clock
+daemon: invalid translation monotonic clock
+daemon: invalid translation resource record
+daemon: invalid translation resource record
+daemon: invalid translation resource record
+write /dev/kd_dev: Bad file descriptor
+read /dev/kd_dev: Bad file descriptor
+open /dev/kd_dev session: No such file or directory
+daemon: native-only status write failed: -1
+[PASS] daemon opt-in metrics, real children and observation faults
+[PASS] test_daemon_policy
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Unit tests: 2 passed, 0 failed
+make: Leaving directory '/root/kdlock-evidence/10.176.26.71/bench/mutex32-native-tclock-20261020/checks/source/tests/unit'

@@ -1,0 +1,32 @@
+{
+  "comparison_sha256": "2870410b84b035981e6c57fed72f142155e4f3d012d47268da6c50c0abd9094c",
+  "complete_groups_plotted": 188,
+  "individual_sample_groups": [
+    {
+      "backend": "kdlock",
+      "collection": "c08",
+      "eligible_repeats": 2,
+      "jit_class": "WITNESSED_JIT",
+      "status": "INCOMPLETE_CLASS",
+      "threads": 2
+    },
+    {
+      "backend": "kdlock",
+      "collection": "c08",
+      "eligible_repeats": 1,
+      "jit_class": "NO_JIT",
+      "status": "INCOMPLETE_CLASS",
+      "threads": 2
+    }
+  ],
+  "kernel_release": "6.1.159-kdclobber2",
+  "matplotlib_version": "3.10.3",
+  "note": "Complete class triplets only are connected; min/max bars are observed ranges, not confidence intervals.",
+  "outputs": {
+    "mutex-comparison.png": "5967d561658c34f9a5501df4b61f2408c5aea4a27c0c602ad22dfd422eeb2e5d",
+    "mutex-comparison.svg": "3603afa806b221a0f69644730941ea1b8a864e72669c863444bfc8cea39ba537"
+  },
+  "schema": 1,
+  "script_sha256": "b120118e93b88d9ce2412f18b1485c3004caba3d375ca10f4e9a53018589e80d",
+  "unscored_or_ambiguous_groups_omitted": []
+}

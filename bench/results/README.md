@@ -6,6 +6,17 @@ reader/writer semaphore (rwsem) waiting implementation from `c21345b`. See
 [current performance](../../docs/PERFORMANCE.md) for results and retained
 regressions, and [terminology](../../docs/TERMINOLOGY.md) for execution and
 measurement definitions.
+The [fresh 32-byte mutex / Native / TCLock comparison](10.176.26.71/bench/mutex32-native-tclock-20261020/README.md)
+records 567 accepted, drained sessions from `bd9d4ce` with unchanged `752fec1`
+production: c01, c08, RCUHT, seek SET/END, pipe bytes and pipe capacity at nine
+worker counts from one to sixty, three repetitions. At sixty workers KD medians
+exceed both controls in all seven workloads; at eight workers KD still trails
+Native on the three synthetic workloads. Synthetic entry witnesses, returned
+API bodies and local NO_JIT runs remain separate, including c08's split
+two-worker point. Fresh basic/runner checks, all 567 kernel logs and an
+independent 668,688-check archive/arithmetic review passed. The report retains
+full ranges, separate peaks, plots, source bindings and host-placement limits.
+
 The [shared-node mutex comparison](10.176.26.71/bench/mutex32-mcs-20261020/README.md)
 records 72 valid, drained timings across separate preceding-compact,
 rejected-FIFO, old256 and retained `752fec1` sources: c01/post64, SEEK_SET n16

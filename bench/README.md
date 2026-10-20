@@ -75,6 +75,18 @@ Functional mode uses one explicit round and produces no performance claim.
 
 ## Results
 
+The [current mutex comparison](results/10.176.26.71/bench/mutex32-native-tclock-20261020/README.md)
+covers c01, c08, exclusive-update RCUHT, `SEEK_SET`, `SEEK_END`, pipe byte
+count and pipe capacity with fresh Linux Native, TCLock and KD controls.
+It contains 567 valid, drained sessions: three repetitions at
+`1 2 4 8 16 32 36 48 60` workers, with no matched kernel faults. This is a
+nine-point comparison, not the full standard grid. The `bd9d4ce` collection
+keeps the `752fec1` mutex runtime unchanged. KD's whole-run median exceeds both
+controls on all seven workloads at 60 workers; at eight workers its three
+synthetic medians remain below Native. The report retains observed ranges,
+local `NO_JIT` results and separate entry/returned-body evidence; c08 at two
+workers splits into one local and two entry-witnessed samples.
+
 The [historical KD-only report](results/10.176.26.71/bench/comparison/mutex-kdonly-20261017T140354Z/README.md)
 contains 504 sessions for c01/post64 and pipebytes n16 with accepted KD baseline,
 Native and TCLock controls on the older 256-byte object. Use the [results index](results/README.md) for current
