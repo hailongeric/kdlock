@@ -221,3 +221,14 @@ and three of four KD mutex groups. Across all three backends it meets six of
 blanket benefit is established. Rwlock lacks matched repetitions and rwsem
 has no timing in this run. P95 latency and runtime host interference remain
 unmeasured; the 117 missing cases and strict failure remain explicit gaps.
+
+## Separate rwsem continuation
+
+The [rwsem selection](rwsem-task-plan.json) contains only the original tenth
+task, with all arguments unchanged: 48 sessions, two sizes, plain/prefetch,
+eight/60 workers, three repetitions and strict returned-JIT enforcement.
+The same supervisor and 497-file measured source manifest apply. This new
+`rwsem-1` run requires its own fresh strict preflight and immediate host endpoint.
+It repeats none of the 147 attempted sessions and does not resume or relabel
+`timing-1`. The 69 unrun rwlock cases remain unresolved. Preparation and exact
+selection checks are ready; collection has not started.

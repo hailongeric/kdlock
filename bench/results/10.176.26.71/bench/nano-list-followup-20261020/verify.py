@@ -38,8 +38,11 @@ def main():
     p = argparse.ArgumentParser(description=__doc__)
     for name in ('base', 'preflight', 'host-after'):
         p.add_argument('--'+name, type=Path, required=True)
-    p.add_argument('--stopped-rwlock', action='store_true',
+    mode = p.add_mutually_exclusive_group()
+    mode.add_argument('--stopped-rwlock', action='store_true',
                    help='Audit the exact timing-1 failure; never accept it as a completed run.')
+    mode.add_argument('--rwsem-only', action='store_true',
+                      help='Verify the separate, unchanged 48-case rwsem task.')
     args = p.parse_args()
     base = args.base.resolve()
     assert Path.cwd() == ROOT and os.geteuid() == 0
@@ -53,14 +56,18 @@ def main():
     tasks, manifest, plan = (read(base/n) for n in
                              ('tasks.json', 'committed-source.json', 'task-plan.json'))
     stopped = args.stopped_rwlock
+    rwsem_only = args.rwsem_only
+    planned_count = 48 if rwsem_only else 264
     if stopped:
         assert base.name == 'timing-1'
         assert tasks['state'] == 'FAILED' and tasks['passed'] is False and tasks['final_idle'] is False
         assert tasks['failed_task'] == 'rwlock-w20' and len(tasks['tasks']) == 9
     else:
         assert tasks['state'] == 'COMPLETE' and tasks['passed'] and tasks['final_idle']
-        assert len(tasks['tasks']) == 10
-    assert tasks['phase'] == 'timing' and len(plan['phases']['timing']) == 10
+        assert len(tasks['tasks']) == (1 if rwsem_only else 10)
+    assert tasks['phase'] == 'timing' and len(plan['phases']['timing']) == (1 if rwsem_only else 10)
+    if rwsem_only:
+        assert plan['phases']['timing'][0]['name'] == 'rwsem-w20'
     assert tasks['source_commit'] == manifest['commit'] == plan['source_commit']
     assert sha(base/'committed-source.json') == plan['source_manifest_sha256']
     assert sha(base/'run-tasks.py') == tasks['script_sha256'] == plan['supervisor_sha256']
@@ -70,7 +77,8 @@ def main():
         assert sha(ROOT/path) == digest, path
         source_hashes += 1
     pf = read(args.preflight/'result.json')
-    assert pf['passed'] and pf['idle'] and pf['source_unchanged'] and pf['planned_sessions'] == 264
+    assert pf['passed'] and pf['idle'] and pf['source_unchanged'] and pf['planned_sessions'] == planned_count
+    assert pf.get('rwsem_only', False) == rwsem_only
     assert pf['planned_output'] == str(base) and pf['source_commit'] == manifest['commit']
     assert read(args.preflight/'committed-source.json') == manifest
     assert read(args.preflight/'task-plan.json') == plan
@@ -245,10 +253,10 @@ def main():
         remaining = plan['phases']['timing'][-1]
         assert remaining['name'] == 'rwsem-w20' and not (base/'rwsem-w20').exists()
         not_run += ['rwsem-w20/'+s['name'] for s in read(args.preflight/'rwsem-w20.plan.json')]
-    count = 147 if stopped else 264
-    assert len(retired) == len(images) == (49 if stopped else 96)
+    count = 147 if stopped else planned_count
+    assert len(retired) == len(images) == (49 if stopped else 24 if rwsem_only else 96)
     assert sum(r['sessions'] for r in results) == count
-    assert compiled_audits == (36 if stopped else 44) and not faults
+    assert compiled_audits == (36 if stopped else 8 if rwsem_only else 44) and not faults
     assert len(failures) == int(stopped) and len(not_run) == (117 if stopped else 0)
     assert len(set(not_run)) == len(not_run)
     scheduler = load('list_environment', ROOT/'bench/mutex_api_compare/run.py')
@@ -291,8 +299,8 @@ def main():
     archive['idle'](base, rt.idle)
     health = dict(idle=True, boot_id=boot, source_commit=manifest['commit'],
         checked_unix=time.time(), sessions=count, functionally_valid=count-int(stopped), drained=count,
-        planned_sessions=264, business_oracles_valid=count, strict_failures=failures, not_run=not_run,
-        supervisor_state=tasks['state'], stopped_rwlock=stopped,
+        planned_sessions=planned_count, business_oracles_valid=count, strict_failures=failures, not_run=not_run,
+        supervisor_state=tasks['state'], stopped_rwlock=stopped, rwsem_only=rwsem_only,
         tasks=results, source_hashes_checked=source_hashes, binary_hashes_checked=binary_hashes,
         compiled_list_audits=compiled_audits, loaded_images=images, exact_retirements=retired,
         per_session_kernel_faults=faults, totals=dict(totals), execution_classes=dict(classes),

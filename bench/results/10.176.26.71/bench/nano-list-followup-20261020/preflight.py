@@ -29,6 +29,8 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     for name in ('source-manifest', 'plan', 'host-state', 'output', 'planned-output'):
         parser.add_argument('--'+name, type=Path, required=True)
+    parser.add_argument('--rwsem-only', action='store_true',
+                        help='Select only the previously unstarted, unchanged 48-case rwsem task.')
     args = parser.parse_args()
     assert Path.cwd() == ROOT and os.geteuid() == 0
     assert os.uname().release == '6.1.159-kdclobber2'
@@ -44,7 +46,11 @@ def main():
         assert sha(ROOT/path) == expected, path
     historical = ROOT/plan['historical_plan']
     assert sha(historical) == plan['historical_plan_sha256']
-    assert plan['phases']['timing'] == read(historical)['phases']['timing']
+    historical_tasks = read(historical)['phases']['timing']
+    selected = historical_tasks[-1:] if args.rwsem_only else historical_tasks
+    assert not args.rwsem_only or selected[0]['name'] == 'rwsem-w20'
+    assert plan['phases']['timing'] == selected
+    planned_count = 48 if args.rwsem_only else 264
     sys.path.insert(0, str(ROOT/'bench/spin_cacheline'))
     import bench_runtime as rt
     archive = runpy.run_path(str(ROOT/'bench/archive_run.py'))
@@ -59,7 +65,8 @@ def main():
                        (historical, 'historical-plan.json'), (Path(__file__), 'preflight.py')):
         shutil.copyfile(path, out/name)
     result = dict(passed=False, source_commit=manifest['commit'], measured_sessions=0,
-                  script_sha256=sha(Path(__file__)), planned_output=str(target))
+                  script_sha256=sha(Path(__file__)), planned_output=str(target),
+                  rwsem_only=args.rwsem_only)
     try:
         age = (datetime.now(timezone.utc)-datetime.fromisoformat(host['captured_utc'])).total_seconds()
         assert 0 <= age <= 300 and host['pins_verified'] and host['snapshot_listed']
@@ -92,7 +99,8 @@ def main():
             environment, read(ORIGINAL/'topology.json'), topology)
         rt.write_json(out/'environment-comparison.json', comparison)
         tasks = plan['phases']['timing']
-        assert len(tasks) == 10 and sum(t['expected_sessions'] for t in tasks) == 264
+        assert len(tasks) == (1 if args.rwsem_only else 10)
+        assert sum(t['expected_sessions'] for t in tasks) == planned_count
         observed = {}
         for task in tasks:
             text = rt.command([sys.executable, ROOT/task['runner'], *task['arguments'],
@@ -134,7 +142,7 @@ def main():
         archive['idle'](target, rt.idle)
         assert not target.exists()
         result.update(passed=True, idle=True, boot_id=environment['boot_id'],
-                      planned_sessions=264, source_unchanged=True,
+                      planned_sessions=planned_count, source_unchanged=True,
                       source_files=len(manifest['files']), tasks=observed)
     except BaseException as error:
         result['error'] = repr(error)

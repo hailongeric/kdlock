@@ -247,8 +247,11 @@ def main():
     p = argparse.ArgumentParser(description=__doc__)
     for name in ('repo', 'raw', 'report'):
         p.add_argument('--'+name, type=Path, required=True)
-    p.add_argument('--stopped-rwlock', action='store_true',
+    mode = p.add_mutually_exclusive_group()
+    mode.add_argument('--stopped-rwlock', action='store_true',
                    help='Preserve the exact 147-attempt timing-1 failure and its 117 unrun cases.')
+    mode.add_argument('--rwsem-only', action='store_true',
+                      help='Review only the separate, unchanged 48-case rwsem task.')
     args = p.parse_args()
     assert socket.gethostname() == '380G10' and not args.report.exists()
     sys.dont_write_bytecode = True
@@ -260,6 +263,8 @@ def main():
     tasks, plan, manifest, health = (a.jread(n+'.json') for n in
                                    ('tasks', 'task-plan', 'committed-source', 'health'))
     stopped = args.stopped_rwlock
+    rwsem_only = args.rwsem_only
+    planned_count = 48 if rwsem_only else 264
     if stopped:
         a.check(Path(a.archive['guest_base']).name == 'timing-1' and tasks['state'] == 'FAILED' and
                 tasks['passed'] is False and tasks['final_idle'] is False and
@@ -267,8 +272,9 @@ def main():
                 'retained_failed_supervisor')
     else:
         a.check(tasks['state'] == 'COMPLETE' and tasks['passed'] and tasks['final_idle'] and
-                len(tasks['tasks']) == 10, 'completed_supervisor')
-    a.check(tasks['phase'] == 'timing' and len(plan['phases']['timing']) == 10, 'full_original_plan')
+                len(tasks['tasks']) == (1 if rwsem_only else 10), 'completed_supervisor')
+    a.check(tasks['phase'] == 'timing' and len(plan['phases']['timing']) == (1 if rwsem_only else 10),
+            'exact_plan_task_count')
     a.check(tasks['source_commit'] == plan['source_commit'] == manifest['commit'] ==
             health['source_commit'] == shared.SOURCE and len(manifest['files']) == 497,
             'source_identity')
@@ -281,18 +287,25 @@ def main():
     a.check(a.files['preflight/historical-plan.json'] == plan['historical_plan_sha256'] and
             a.files['preflight/historical-plan.json'] ==
             helper.sha(a.git_bytes(shared.SOURCE, plan['historical_plan'])) and
-            plan['phases']['timing'] == a.jread('preflight/historical-plan.json')['phases']['timing'],
+            plan['phases']['timing'] == (a.jread('preflight/historical-plan.json')['phases']['timing'][-1:]
+                                       if rwsem_only else a.jread('preflight/historical-plan.json')['phases']['timing']),
             'unchanged_historical_arguments')
+    if rwsem_only:
+        a.check(plan['phases']['timing'][0]['name'] == 'rwsem-w20', 'unstarted_rwsem_task')
     pf = a.jread('preflight/result.json')
-    a.check(pf['passed'] and pf['idle'] and pf['source_unchanged'] and pf['planned_sessions'] == 264 and
+    a.check(pf['passed'] and pf['idle'] and pf['source_unchanged'] and
+            pf['planned_sessions'] == planned_count and pf.get('rwsem_only', False) == rwsem_only and
             pf['script_sha256'] == a.files['preflight/preflight.py'] and
             pf['planned_output']+'/' == a.guest_base and pf['source_commit'] == shared.SOURCE,
             'exact_preflight')
     a.check(a.jread('preflight/task-plan.json') == plan and
             a.jread('preflight/committed-source.json') == manifest and
             a.jread('preflight/host-state.json') == a.jread('host-before.json'), 'preflight_inputs')
-    a.check(health['verifier_sha256'] == a.files['verify.py'] ==
-            helper.hashfile(args.repo/STAGE/'verify.py'), 'verifier_binding')
+    # Keep timing-1 independently replayable after adding the untouched rwsem
+    # task. This is the exact verifier committed with timing-1 at c535b31.
+    verifier_sha = ('6a77cdf92a0c398b5cb3bf642254e66de64e92102ea34472115ca1d362d17921'
+                    if stopped else helper.hashfile(args.repo/STAGE/'verify.py'))
+    a.check(health['verifier_sha256'] == a.files['verify.py'] == verifier_sha, 'verifier_binding')
     if stopped:
         endpoint = a.jread('endpoint-timing.json')
         captured = a.jread('host-after.json')
@@ -475,14 +488,15 @@ def main():
     if stopped:
         not_run += ['rwsem-w20/'+s['name'] for s in a.jread('preflight/rwsem-w20.plan.json')]
         a.check(not any(p.startswith('rwsem-w20/') for p in a.files), 'rwsem_never_started')
-    count = 147 if stopped else 264
+    count = 147 if stopped else planned_count
     a.check(len(sessions) == health['sessions'] == health['drained'] ==
             health['business_oracles_valid'] == count and
             health['functionally_valid'] == count-int(stopped) and
-            family_counts == (dict(spin=72, mutex=72, rwlock=3) if stopped else
+            family_counts == (dict(spin=72, mutex=72, rwlock=3) if stopped else dict(rwsem=48) if rwsem_only else
                               dict(spin=72, mutex=72, rwlock=72, rwsem=48)),
             'exact_attempted_scope')
-    a.check(health['planned_sessions'] == 264 and health['stopped_rwlock'] == stopped and
+    a.check(health['planned_sessions'] == planned_count and health['stopped_rwlock'] == stopped and
+            health.get('rwsem_only', False) == rwsem_only and
             health['supervisor_state'] == tasks['state'] and health['strict_failures'] == failures and
             len(failures) == int(stopped) and health['not_run'] == not_run and
             len(set(not_run)) == len(not_run) == (117 if stopped else 0),
@@ -497,10 +511,12 @@ def main():
     if stopped:
         expected = {point for point in expected if point[0] in ('spin', 'mutex') or
                     point[:4] == ('rwlock', 'list', 16, 8) and point[-1] == 0}
+    if rwsem_only:
+        expected = {point for point in expected if point[0] == 'rwsem'}
     a.check({tuple(row[k] for k in fields) for row in sessions} == expected and
             len(sessions) == len(expected) == count, 'exact_attempted_matrix')
-    a.check(len(cold) == health['compiled_list_audits'] == (36 if stopped else 44) and
-            len(images) == len(retired) == (49 if stopped else 96) and
+    a.check(len(cold) == health['compiled_list_audits'] == (36 if stopped else 8 if rwsem_only else 44) and
+            len(images) == len(retired) == (49 if stopped else 24 if rwsem_only else 96) and
             loaded == health['loaded_images'] and retired == health['exact_retirements'], 'image_retirement_totals')
     a.check(dict(totals) == health['totals'] and dict(classes) == health['execution_classes'], 'health_arithmetic')
     a.check(source_checks == health['source_hashes_checked'] and len(binaries) == health['binary_hashes_checked'],
@@ -544,7 +560,7 @@ def main():
         regular_file_hash_map_sha256=helper.canonical(a.files), totals=dict(totals),
         execution_classes=dict(classes), family_counts=dict(family_counts),
         host_endpoints=endpoints, sessions=sessions, groups=groups, comparisons=points, prefetch_comparisons=hints,
-        supervisor_state=tasks['state'], strict_failures=failures, not_run=not_run, planned_sessions=264,
+        supervisor_state=tasks['state'], strict_failures=failures, not_run=not_run, planned_sessions=planned_count,
         comparison_counts=dict(Counter(r['family']+':'+r['comparator']+':'+r['status'] for r in points)),
         prefetch_counts=dict(Counter(r['family']+':'+r['status'] for r in hints)),
         script_sha256=helper.hashfile(Path(__file__)), helper_sha256=SHARED_SHA, overall_acceptance='OPEN',
