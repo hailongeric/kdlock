@@ -312,6 +312,10 @@ native_entry_refused:
 	mov QWORD PTR[rsi], 6
 	mov QWORD PTR[rsi + 8], 0
 	ret
+#endif
+
+#if KD_GENERATED_REQUIREMENTS & 16
+	/* Only direct-helper images emit a second, metadata-only jit.S view. */
 #define KD_EMIT_NATIVE_DIRECTORY 1
 #include "jit.S"
 #endif
