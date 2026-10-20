@@ -188,6 +188,12 @@ class EscapeSession(Session):
         self.save()
         start_ns = time.monotonic_ns() + 1000000000
         processes, logs = [], []
+        joined = False
+        failure_stage = "CALLER_START_FAILED"
+
+        def callers():
+            return [dict(pid=p.pid, argv=p.args) for p in processes]
+
         try:
             for index, cpu in enumerate(self.record["cpus"]):
                 log = (self.path / f"{name}-worker-{index}.json").open("w")
@@ -196,22 +202,30 @@ class EscapeSession(Session):
                         "--worker", str(cpu), str(iterations), str(index), str(start_ns)]
                 processes.append(subprocess.Popen(list(map(str, argv)), stdout=log,
                     stderr=subprocess.STDOUT, start_new_session=True))
-        except OSError as error:
-            for log in logs:
-                log.close()
-            rt.write_json(self.path / (name + "-callers.json"), [dict(pid=p.pid, argv=p.args) for p in processes])
-            raise rt.Failure("CALLER_START_FAILED", f"retain caller PIDs {[p.pid for p in processes]}",
-                             unsafe=True) from error
-        rt.write_json(self.path / (name + "-callers.json"), [dict(pid=p.pid, argv=p.args) for p in processes])
-        deadline = time.monotonic() + self.record["phase_timeout"]
-        try:
+                # Receipt I/O can fail while a caller already holds the device.
+                # Preserve identities in the session's failure record as well.
+                result["callers"] = callers()
+            rt.write_json(self.path / (name + "-callers.json"), callers())
+            failure_stage = "CALLER_CONTROL_FAILED"
+            deadline = time.monotonic() + self.record["phase_timeout"]
             for process in processes:
                 process.wait(timeout=max(.01, deadline - time.monotonic()))
-        except subprocess.TimeoutExpired as error:
-            raise rt.Failure("TIMEOUT", f"retain caller PIDs {[p.pid for p in processes]}", unsafe=True) from error
+            joined = True
+        except Exception as error:
+            # Only joining every process proves that no caller can enter its
+            # ioctl later. A zero payload active count before start is not drain.
+            if isinstance(error, rt.Failure):
+                error.unsafe = True
+                raise
+            status = "TIMEOUT" if isinstance(error, subprocess.TimeoutExpired) else failure_stage
+            raise rt.Failure(status, f"retain caller PIDs {[p.pid for p in processes]}: {error}",
+                             unsafe=True) from error
         finally:
             for log in logs:
-                log.close()
+                try:
+                    log.close()
+                except OSError as error:
+                    raise rt.Failure("CALLER_LOG_FAILED", str(error), unsafe=not joined) from error
         self.faults()
         result["returncodes"] = [p.returncode for p in processes]
         self.save()

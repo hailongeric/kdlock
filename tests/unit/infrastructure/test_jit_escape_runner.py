@@ -1,4 +1,4 @@
-"""Guest-only caller-lifetime checks for the production instruction probe."""
+"""Guest-only caller-lifetime checks for production continuation probes."""
 import importlib.util
 import json
 import os
@@ -14,6 +14,15 @@ spec = importlib.util.spec_from_file_location(
     "jit_escape_runner", ROOT / "tests/kernel/jit_escape/run.py")
 runner = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(runner)
+
+spec = importlib.util.spec_from_file_location(
+    "address_guard_runner", ROOT / "tests/kernel/spin/address_guard/run.py")
+address_runner = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(address_runner)
+spec = importlib.util.spec_from_file_location(
+    "string_service_runner", ROOT / "tests/kernel/spin/string_service/run.py")
+string_runner = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(string_runner)
 
 
 class Probe(runner.EscapeSession):
@@ -73,14 +82,22 @@ class Caller:
         return self.returncode
 
 
+class AddressProbe(Probe):
+    phase = address_runner.EscapeSession.phase
+
+
+class StringProbe(Probe):
+    phase = string_runner.StringSession.phase
+
+
 class CallerLifetimeTests(unittest.TestCase):
-    def exercise(self, failure):
+    def exercise(self, failure, runner=runner, probe=Probe):
         with tempfile.TemporaryDirectory() as temporary:
             folder = Path(temporary)
-            session, callers = Probe(folder), []
+            session, callers = probe(folder), []
             original_read = Path.read_text
             original_write = runner.rt.write_json
-            original_barrier = runner.publish_barrier
+            original_barrier = getattr(runner, "publish_barrier", None)
 
             def spawn(argv, **kwargs):
                 index = len(callers)
@@ -88,11 +105,12 @@ class CallerLifetimeTests(unittest.TestCase):
                     raise OSError("spawn failed")
                 caller = Caller(argv, index, failure)
                 callers.append(caller)
-                ready = folder / "probe-barrier" / f"ready-{index}.json"
-                value = dict(pid=caller.pid, cpu=index,
-                             role=session.record["worker_roles"][index],
-                             comm=runner.WORKER_COMM)
-                ready.write_text("{" if failure == "ready-json" else json.dumps(value))
+                if original_barrier:
+                    ready = folder / "probe-barrier" / f"ready-{index}.json"
+                    value = dict(pid=caller.pid, cpu=index,
+                                 role=session.record["worker_roles"][index],
+                                 comm=runner.WORKER_COMM)
+                    ready.write_text("{" if failure == "ready-json" else json.dumps(value))
                 return caller
 
             def read(path, *args, **kwargs):
@@ -114,7 +132,7 @@ class CallerLifetimeTests(unittest.TestCase):
                     patch.object(runner, "image_registry", return_value=[]), \
                     patch.object(Path, "read_text", read), \
                     patch.object(runner.rt, "write_json", side_effect=write), \
-                    patch.object(runner, "publish_barrier", side_effect=barrier):
+                    patch.object(runner, "publish_barrier", side_effect=barrier, create=True):
                 with self.assertRaises(runner.rt.Failure) as raised:
                     session.execute()
             error = raised.exception
@@ -141,6 +159,24 @@ class CallerLifetimeTests(unittest.TestCase):
         self.assertTrue(all(p.returncode == 1 for p in callers))
         self.assertEqual(session.cleanups, 1)
         self.assertTrue(session.record["drained"])
+
+    def test_address_and_string_callers_follow_the_same_join_rule(self):
+        for module, probe in ((address_runner, AddressProbe),
+                              (string_runner.probe, StringProbe)):
+            for failure in ("spawn", "receipt", "wait-timeout", "wait-io", "partial-join"):
+                with self.subTest(probe=probe.__name__, failure=failure):
+                    session, callers, error = self.exercise(failure, module, probe)
+                    self.assertTrue(error.unsafe)
+                    self.assertEqual(session.cleanups, 0)
+                    self.assertFalse(session.record["drained"])
+                    self.assertTrue(any(p.returncode is None for p in callers))
+            with self.subTest(probe=probe.__name__, failure="joined-error"):
+                session, callers, error = self.exercise("joined-error", module, probe)
+                self.assertFalse(error.unsafe)
+                self.assertEqual(error.status, "DATA_ERROR")
+                self.assertTrue(all(p.returncode == 1 for p in callers))
+                self.assertEqual(session.cleanups, 1)
+                self.assertTrue(session.record["drained"])
 
 
 if __name__ == "__main__":
