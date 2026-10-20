@@ -1,7 +1,8 @@
 # Shared-lock comparison after mutex correctness restoration
 
-Status: planned. This stage follows the validated `a768361` mutex restoration,
-recorded in `f48b90e`. The seven public-mutex performance regressions and the
+Status: rwsem collection running; rwlock reference not started. This stage
+follows the validated `a768361` mutex restoration, recorded in `f48b90e`.
+The seven public-mutex performance regressions and the
 environment/execution-class/latency gaps remain
 [explicitly unresolved](../mutex-regression-diagnosis-20261020/README.md).
 This stage cannot establish acceptance of that separate comparison.
@@ -52,6 +53,15 @@ measurement is added to these throughput runs.
 
 Planned guest evidence is
 `/root/kdlock-evidence/10.176.26.71/bench/shared-lock-followup-20261020/`.
-No measurement result is claimed yet. Each family must complete, drain,
+No completed comparison is claimed yet. Each family must complete, drain,
 preserve its frozen inputs and pass archive review before its coverage can be
 reported as complete.
+
+`rwsem-preflight-1` passed with the host receipt captured at
+2026-10-20 15:32:23.798415 UTC: QEMU PID 257489 and the original 67-thread set,
+frequency policy, NUMA memory bindings, CPU pins, boot, pinned dependencies and
+actual recovery snapshot all matched. It checked all 497 source files and the
+exact 756-session dry-run plan. Driver `f8aede3` then started the unchanged serial
+supervisor as `rwsem-1`, with workload evidence under `rwsem-1/rwsem-grid`.
+The rwlock phase requires a separate fresh preflight after this run completes
+and drains. No parallel test, observer or profiler is running.

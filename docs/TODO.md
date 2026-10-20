@@ -111,8 +111,9 @@ This restores validated correctness scope, while all seven performance points
 and the remaining environment/class/latency gaps stay explicitly unresolved.
 The next [shared-lock comparison stage](../bench/results/10.176.26.71/bench/shared-lock-followup-20261020/README.md)
 retains the current recovery VM and pinned environment, with separate fresh
-Native/KD rwsem and Native/TCLock/KD rwlock controls. Its measurements are
-pending and cannot resolve the mutex comparison by implication.
+Native/KD rwsem and Native/TCLock/KD rwlock controls. The exact-environment
+rwsem preflight passed and its 756-session grid is running; the rwlock reference
+has not started. These results cannot resolve the mutex comparison by implication.
 
 Keep the two-word wrapper ABI, separate backend identities, exact KD physical owners,
 exact acquisition references and final ACKs. Shared storage must survive its final
