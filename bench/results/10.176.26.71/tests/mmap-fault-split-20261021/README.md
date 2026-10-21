@@ -61,3 +61,12 @@ basic daemon-policy test. The control-call program compiled; neither basic
 program ran. No timed client was built or executed. The failed log and source
 snapshot remain immutable. The follow-up adds the complete daemon directory to
 the frozen inputs and reruns preparation from a new run identifier.
+
+`timing-prepare-2` at `77cadf5` passed both basic programs and all eight new timed
+client checks (Native mmap-only and Native/KD/TCLock fault readers, at 1/16
+workers). The validated `9291000` provider/payload binaries were reused without
+modification. Every case joined and drained; exact callback counts, all samples,
+source identities, per-session logs and normal retirements are retained. These
+single preparation runs are correctness evidence, not the three-repeat timed
+comparison. Timing acceptance remains pending the strict host check and the
+separate measurement stage.
