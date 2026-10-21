@@ -167,6 +167,11 @@ observer CPU was 2.829% of one core including five captures. Thirty-three basic
 and affected checks plus 2,390 inert archive checks passed. All seven causes,
 acquisition latency, preparation equivalence and timing acceptance remain open.
 
+The next [phase-accounting control](../bench/results/10.176.26.71/bench/mutex-phase-accounting-20261021/README.md)
+adds one bounded observation window across warmup, validation, cleanup and the
+unchanged endpoint. It is a separate no-timing cohort intended to narrow worker
+birth/activity intervals; its accounting never substitutes for the full gate.
+
 The earlier [pipecap owner observation](../bench/results/10.176.26.71/bench/pipecap-owner-20261021/README.md)
 retains 24 drained one-worker sessions with unchanged binaries and no returned
 JIT bodies. The strict endpoint failed at 101 versus 67 threads; the uncalibrated

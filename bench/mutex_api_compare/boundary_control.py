@@ -56,14 +56,17 @@ def main():
     parser.add_argument('--output', required=True, type=Path)
     parser.add_argument('--capture-policy', choices=('fixed', 'sample-trigger'), default='fixed')
     parser.add_argument('--wait-before-warmup', action='store_true')
+    parser.add_argument('--phase-accounting', action='store_true')
     args = parser.parse_args()
     if args.wait_before_warmup and args.capture_policy != 'sample-trigger':
         parser.error('--wait-before-warmup requires --capture-policy sample-trigger')
+    if args.phase_accounting and not args.wait_before_warmup:
+        parser.error('--phase-accounting requires the pre-warmup control')
     out = args.output.resolve()
     out.mkdir(parents=True, exist_ok=False)
     receipt = dict(accepted=False, score_eligible=False, timing_sent=False, complete=False,
         streams=[], requests=[], phases=[], captures=[], boundaries=[], started=stamp(), capture_policy=args.capture_policy,
-        wait_before_warmup=args.wait_before_warmup,
+        wait_before_warmup=args.wait_before_warmup, phase_accounting=args.phase_accounting,
         source_commit=subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip(), sources={})
     assert not subprocess.check_output(['git', 'status', '--porcelain'], cwd=ROOT, text=True), 'commit diagnostic source before running'
     for src in (Path(__file__), TRACE, CAPTURE, ROOT/'bench/mutex_api_compare/qemu_controls.py',
@@ -83,7 +86,8 @@ def main():
     command = shlex.join(['sudo', '-n', 'python3', '-u', '-c', TRACE.read_text(),
         '--pid', '257489', '--cmdline-sha256',
         '08a7ad4ddad7da7d6437c5ebcc2987894c2e69b1cd8abd31db0bd491f30ce917',
-        '--duration', '600', '--interval', '5', '--full-capture'])
+        '--duration', '600', '--interval', '5', '--full-capture']+
+        (['--phase-accounting'] if args.phase_accounting else []))
     observer = Stream(out, 'observer', SSH+['eric@10.176.26.71', command], receipt, save)
     guest = None
     try:
@@ -94,7 +98,10 @@ def main():
             anchor = boundary_trigger.reference(original['host-state.json']['qemu'][0]['tasks'], anchor_sample['remote'])
             receipt['trigger_anchor'] = anchor
             save()
-        mark = lambda label: observer.request('marker', label, 'marker')
+        def mark(label):
+            reply = observer.request('marker', label, 'marker')
+            assert not reply['ack']['remote'].get('accounting_error'), reply['ack']['remote']
+            return reply
 
         def capture(label):
             reply = observer.request('capture', label, 'capture', limit=25)
@@ -105,6 +112,7 @@ def main():
             save()
             assert data['error'] is None, data['error']
             (out/(label+'.json')).write_text(json.dumps(data['host'], indent=2)+'\n')
+            assert not data.get('following_sample_error'), data['following_sample_error']
             return reply, receipt['captures'][-1]['host_gate']
 
         preflight_began = time.monotonic()
@@ -134,7 +142,8 @@ if PREWARMUP: args.append('--prewarmup-boundary-probe')
 sys.exit(subprocess.call(args))
 '''.replace('NAME', repr(out.name)).replace('COMMIT', repr(receipt['source_commit'])).replace('PREWARMUP', repr(args.wait_before_warmup)).replace('BASE', repr(
             '/root/kdlock-evidence/10.176.26.71/bench/'+
-            ('mutex-prewarmup-20261021' if args.wait_before_warmup else
+            ('mutex-phase-accounting-20261021' if args.phase_accounting else
+             'mutex-prewarmup-20261021' if args.wait_before_warmup else
              'mutex-boundary-trigger-20261021' if args.capture_policy == 'sample-trigger' else 'mutex-boundary-20261021')))
         (out/'guest-launch.py').write_text(launch)
         command = shlex.join(['env', 'PYTHONDONTWRITEBYTECODE=1', 'LC_ALL=C',
@@ -211,6 +220,12 @@ sys.exit(subprocess.call(args))
                 answer = dict(boundary_ack=sequence, boundary_token=row['boundary_token'],
                     host_state=remote['host'], observations=observations)
                 validate_reply(answer, row['boundary_token'], sequence)
+                if args.phase_accounting and sequence == 1 and gate['passed']:
+                    arm = observer.request('accounting', 'warmup-through-endpoint-'+row['boundary_token'], 'accounting', limit=10)
+                    assert time.monotonic_ns()-arm['sent']['mono_ns'] <= 10*1000000000, 'accounting arm exceeded absolute request budget'
+                    receipt['accounting_arm'] = arm
+                    save()
+                    assert not arm['ack']['remote']['accounting_error'], arm['ack']['remote']
                 receipt['boundary']['reply_sent'] = stamp()
                 receipt['boundary']['host_gate_passed'] = gate['passed']
                 save()
