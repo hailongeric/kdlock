@@ -40,8 +40,9 @@ def review(path):
     assert supervisor['complete'] and len(ready) == len(complete) == 1
     assert complete[0]['end_reason'] == 'requested_stop' and complete[0]['samples'] == len(samples)
     phases, identities, incomplete, changes = defaultdict(list), defaultdict(list), [], []
-    original = {tuple(t['identity_before']): (t['comm'], t['affinity']) for t in samples[0]['tasks']}
-    assert len(original) == 67 and all(t['complete'] for t in samples[0]['tasks'])
+    gate = samples[supervisor.get('gate_sample_sequence', 0)]
+    original = {tuple(t['identity_before']): (t['comm'], t['affinity']) for t in gate['tasks']}
+    assert len(original) == 67 and all(t['complete'] for t in gate['tasks'])
     previous = None
     for sample in samples:
         phases[sample['phase']].append(sample)
@@ -96,6 +97,7 @@ def review(path):
     gaps = [b['scan_began']['mono_ns']-a['scan_finished']['mono_ns'] for a, b in zip(samples, samples[1:])]
     return dict(run=path.name, complete=True, accepted=False, samples=len(samples),
         initial_tasks=len(samples[0]['tasks']), final_tasks=len(samples[-1]['tasks']),
+        gate_sequence=gate['sequence'], gate_tasks=len(gate['tasks']),
         minimum_tasks=min(len(s['tasks']) for s in samples), maximum_tasks=max(len(s['tasks']) for s in samples),
         source_commit=supervisor['source_commit'], sources=supervisor['sources'],
         evidence_sha256={p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in path.iterdir() if p.is_file()},

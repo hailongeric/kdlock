@@ -97,7 +97,10 @@ def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('--mode', choices=('host', 'guest', 'guest-setup', 'sync', 'basic', 'workload'), required=True)
     p.add_argument('--output', type=Path, required=True)
+    p.add_argument('--wait-idle-seconds', type=int, default=0,
+                   help='Workload only: bounded wait for the unchanged original 67-task gate')
     a = p.parse_args()
+    assert 0 <= a.wait_idle_seconds <= 180 and (not a.wait_idle_seconds or a.mode == 'workload')
     out = a.output.resolve()
     out.mkdir(parents=True, exist_ok=False)
     receipt = dict(mode=a.mode, accepted=False, complete=False, streams=[], requests=[], commands=[],
@@ -123,8 +126,15 @@ def main():
         initial = observer.until('sample')['remote']
         receipt['initial_task_count'] = len(initial['tasks'])
         save()
-        assert receipt['initial_task_count'] == 67, 'control postponed: wait for original idle 67 tasks'
         mark = lambda value: observer.request('marker', value, 'marker')
+        deadline = time.monotonic()+a.wait_idle_seconds
+        if len(initial['tasks']) != 67 and a.wait_idle_seconds:
+            mark('await-original-67-gate')
+            while len(initial['tasks']) != 67 and time.monotonic() < deadline:
+                initial = observer.until('sample', limit=5)['remote']
+        receipt.update(gate_task_count=len(initial['tasks']), gate_sample_sequence=initial['sequence'])
+        save()
+        assert receipt['gate_task_count'] == 67, 'control postponed: wait for original idle 67 tasks'
         mark('host-only-idle')
         time.sleep(8)
         if a.mode in ('sync', 'basic'):
