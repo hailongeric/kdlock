@@ -66,13 +66,35 @@ versus the original 67 threads). Repetition and sampling effects remain
 unseparated, and no gain or KD/TCLock mmap replacement is established. The seven
 mutex causes remain unresolved; the earlier independent-mm results stay fixed.
 
+The later [actual mmap-lock integration](../bench/results/10.176.26.71/tests/mmap-kd-kernel-20261021/README.md)
+passed the selected Native-control and KD-local correctness checks on a separate
+`6.1.159-kdmm1` guest kernel at `b8b31a7`. This covers the actual per-mm lock with
+concurrent local readers, original-task writers, exact release/transfer lifetime,
+untouched mappings, retry/VMA revalidation, remote access and genuine file-write
+fault completion. No experimental-kernel timing has been collected. Arbitrary
+MM-body delegation, all filesystem/device callbacks, full module coverage and
+whole-kernel replacement remain unvalidated; the recovery kernel is preserved.
+
 ## Unified public mutex: acceptance remains open
 
-The [focused pipecap investigation](../bench/results/10.176.26.71/bench/pipecap-causal-20261021/README.md)
-now examines five-worker path counts and waiting with unchanged original
-binaries. Its initial 74-versus-67 host check failed before any new execution;
-the separate diagnostic plan is awaiting basic/affected validation and a fresh
-strict gate. No cause or production optimization is established.
+The latest [seven-point recovery follow-up](../bench/results/10.176.26.71/bench/mutex-recovery-followup-20261021/README.md)
+completed 84 serial sessions with the original frozen providers/callers after
+the same VM returned to its preserved kernel. The new boot is recorded explicitly;
+all other original environment and admission checks remain. Both basic programs,
+19 affected tests, 42 exact KD retirements and 851,872 integrity checks passed.
+The immediate host endpoint failed at 100 versus 67 threads. Six matching-class
+DIRECT/OUTER median ratios range from 0.70532 to 0.97217; pipecap/5 has DIRECT
+returned bodies and OUTER NO_JIT, so its ratio is not scored. Maximum sample CVs
+are 13.92% OUTER, 7.24% DIRECT, 12.01% Native and 18.08% TCLock. All seven causes
+remain unresolved, and no performance fix is accepted.
+
+The earlier [pipecap owner observation](../bench/results/10.176.26.71/bench/pipecap-owner-20261021/README.md)
+retains 24 drained one-worker sessions with unchanged binaries and no returned
+JIT bodies. The strict endpoint failed at 101 versus 67 threads; the uncalibrated
+owner-duration estimator does not establish a causal contribution or authorize
+its conditional five-worker follow-up. Its source/ELF comparison and the earlier
+[five-worker diagnostic](../bench/results/10.176.26.71/bench/pipecap-causal-20261021/README.md)
+remain separate from accepted throughput measurements.
 
 A separate [operation-latency diagnostic](../bench/results/10.176.26.71/bench/mutex-latency-20261021/README.md)
 completed all 252 serial sessions with frozen original providers and plain,

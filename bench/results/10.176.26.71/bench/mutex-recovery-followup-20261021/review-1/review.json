@@ -1,0 +1,28 @@
+{
+  "accepted": false,
+  "checks": 851872,
+  "completed_operations": 1108310016,
+  "environment_issues": [
+    {
+      "actual_threads": 100,
+      "expected_threads": 67,
+      "phase": "after",
+      "reason": "Strict original thread set differs"
+    }
+  ],
+  "exact_retirements": 42,
+  "followup_manifest_sha256": "a57c35c0a11df0812b6a621a688c50229e5cc6c9fdde60868e1799640cf281d1",
+  "integrity_issues": [],
+  "integrity_passed": true,
+  "members": {
+    "archives-1": 3728,
+    "mutex-public-20261020-r2": 68976
+  },
+  "original_input_files": 4088,
+  "original_manifest_sha256": "7b7dad099d06b2c8964d9e1831b9e02e7f0bba0e209420982a5904972330c3c4",
+  "reconstructed_peak_windows": 84,
+  "retained_harness_files": 336,
+  "scope": "Inert archive hashes/inventories/links, exact frozen inputs, source bindings, selected settings, business/worker checks, reconstructed peaks, JIT evidence, retirements and environment comparisons. No archived code executed; descriptive statistics only, no causal acceptance.",
+  "sessions": 84,
+  "source_sha256": "50db185d78e4562acaedb1eca1599c42aaa3638ed709b64127cc437c9dd88c8f"
+}

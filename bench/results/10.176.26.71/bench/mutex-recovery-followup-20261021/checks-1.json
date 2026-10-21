@@ -1,0 +1,76 @@
+{
+  "commands": [
+    {
+      "argv": [
+        "/root/kdlock-translation-venv-20261019/bin/python3",
+        "-m",
+        "pip",
+        "check"
+      ],
+      "cwd": "/root/host_fs/kdlock",
+      "exit_code": 0,
+      "finished_unix": 1792574040.4784834,
+      "name": "dependencies",
+      "pid": 2102,
+      "started_unix": 1792574039.7088993,
+      "timeout_seconds": 60
+    },
+    {
+      "argv": [
+        "make",
+        "-C",
+        "tests/unit",
+        "run",
+        "PYTHON=/root/kdlock-translation-venv-20261019/bin/python3",
+        "PY_TESTS="
+      ],
+      "cwd": "/root/kdlock-evidence/10.176.26.71/bench/mutex-recovery-followup-20261021/checks-1/source",
+      "exit_code": 0,
+      "finished_unix": 1792574041.564642,
+      "name": "unit",
+      "pid": 2103,
+      "started_unix": 1792574040.5902398,
+      "timeout_seconds": 180
+    },
+    {
+      "argv": [
+        "/root/kdlock-translation-venv-20261019/bin/python3",
+        "bench/mutex_api_compare/test_compare.py"
+      ],
+      "cwd": "/root/kdlock-evidence/10.176.26.71/bench/mutex-recovery-followup-20261021/checks-1/source",
+      "exit_code": 0,
+      "finished_unix": 1792574041.9916348,
+      "name": "test_compare",
+      "pid": 2141,
+      "started_unix": 1792574041.6742105,
+      "timeout_seconds": 180
+    },
+    {
+      "argv": [
+        "/root/kdlock-translation-venv-20261019/bin/python3",
+        "bench/mutex_api_compare/test_recovery_replay.py"
+      ],
+      "cwd": "/root/kdlock-evidence/10.176.26.71/bench/mutex-recovery-followup-20261021/checks-1/source",
+      "exit_code": 0,
+      "finished_unix": 1792574042.216068,
+      "name": "test_recovery_replay",
+      "pid": 2150,
+      "started_unix": 1792574042.0997603,
+      "timeout_seconds": 180
+    }
+  ],
+  "committed_manifest_sha256": "53cd7131e532c19dcddc69a068a1258733fc368699aab9984f519e26dc6ececf",
+  "final_idle": true,
+  "full_suite": false,
+  "passed": true,
+  "runner_tests": [
+    "bench/mutex_api_compare/test_compare.py",
+    "bench/mutex_api_compare/test_recovery_replay.py"
+  ],
+  "script_sha256": "5ffe97011c553d1f1a6b696801f587106e73546982ecd4506a9b412645203ef7",
+  "snapshot_tag": "before-mutex-kdonly-20261017T140354Z",
+  "source_revision": "0d65f89aff5030224e7e324add0f8e9f2d3d5dd5",
+  "source_unchanged": true,
+  "unit_basic": 2,
+  "unit_drivers": []
+}

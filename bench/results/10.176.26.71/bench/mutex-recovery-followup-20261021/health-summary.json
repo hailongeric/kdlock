@@ -1,0 +1,21 @@
+{
+  "accepted": false,
+  "api_jit_returns": 10094766,
+  "boot_id": "88449cfc-cea9-4647-a294-bc601e372146",
+  "completed_operations": 1108310016,
+  "drained": 84,
+  "execution_classes": {
+    "NOT_APPLICABLE": 42,
+    "NO_JIT": 9,
+    "RETURNED_JIT": 9,
+    "WITNESSED_JIT": 24
+  },
+  "idle": true,
+  "jit_entries": 46231358,
+  "kernel_release": "6.1.159-kdclobber2",
+  "limits": "Functional preservation only; host endpoint and all seven causal resolutions remain separate.",
+  "matching_runtime_modules": true,
+  "per_session_kernel_faults": [],
+  "sessions": 84,
+  "source_sha256": "209b359430ff8494f11a6ae2011f2d71bb7bab8b2c995064d9d09900dcaea051"
+}

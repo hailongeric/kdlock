@@ -50,6 +50,22 @@ failed preflights, class changes, observer effects, all per-repeat results and
 range/CV statistics. All seven causes remain unresolved; sampled p95 evidence
 does not establish acquisition latency or performance acceptance.
 
+The [actual mmap-lock integration](10.176.26.71/tests/mmap-kd-kernel-20261021/README.md)
+at `b8b31a7` passed focused Native-control and KD-local correctness on the separate
+`6.1.159-kdmm1` guest kernel. API/ownership, untouched mapping, fault retry/VMA
+revalidation, remote access and genuine file-write completion passed with full
+teardown. Readers remain concurrent and local, writers execute on the original
+task, and no MM-body delegation or TCLock support is claimed. The recovery
+kernel remains intact; no experimental-kernel timing has been collected.
+
+After returning the same VM to that preserved recovery kernel, the separate
+[seven-point follow-up](10.176.26.71/bench/mutex-recovery-followup-20261021/README.md)
+completed 84 serial sessions with original frozen binaries, 42 exact KD
+retirements and 851,872 integrity checks. Basic plus 19 affected tests passed.
+Its new boot is explicit; the immediate host endpoint failed at 100 versus 67
+threads. Six matching-class points have lower DIRECT medians; pipecap/5 differs
+in execution class. All seven causes and performance acceptance remain open.
+
 The [fresh 32-byte mutex / Native / TCLock comparison](10.176.26.71/bench/mutex32-native-tclock-20261020/README.md)
 records 567 accepted, drained sessions from `bd9d4ce` with unchanged `752fec1`
 production: c01, c08, RCUHT, seek SET/END, pipe bytes and pipe capacity at nine
