@@ -33,10 +33,6 @@ def save(path, value):
     path.write_text(json.dumps(value, indent=2, sort_keys=True) + '\n')
 
 
-# The explicit recovery transition keeps the original full environment gate.
-from recovery_replay import compare_environment
-
-
 def load_module(path, name):
     spec=importlib.util.spec_from_file_location(name,path)
     module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
@@ -169,6 +165,9 @@ def main():
     shutil.copyfile(scheduler_path, out/'scheduler.py')
     for name in ('route_snapshot.py','recovery_replay.py'):
         shutil.copyfile(ROOT/'bench/mutex_api_compare'/name,out/name)
+    # Import only the retained new copy, outside the mutable checkout. The
+    # original collector's module-origin guard remains fully enabled.
+    compare_environment=load_module(out/'recovery_replay.py','rcuht_recovery').compare_environment
     plan = [row for row in scheduler.execution_order()
             if row[:3] == ('rcuht', 2, 0) and row[3] in ('baseline-kd','public-kd')]
     require(len(plan) == len(set(plan)) == 2, 'fixed two-session diagnostic differs')
