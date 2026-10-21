@@ -54,11 +54,11 @@ def main():
         if not a.phase_single_outer:
             return
         phase_sequence += 1
-        print('KD_PHASE '+json.dumps(dict(event='phase', sequence=phase_sequence,
-            label=label, edge=edge, real_ns=time.time_ns(), mono_ns=time.monotonic_ns())), flush=True)
-        if not select.select([sys.stdin], [], [], 15)[0]:
-            raise phase_error('phase observer acknowledgement timed out; no drain inferred')
         try:
+            print('KD_PHASE '+json.dumps(dict(event='phase', sequence=phase_sequence,
+                label=label, edge=edge, real_ns=time.time_ns(), mono_ns=time.monotonic_ns())), flush=True)
+            if not select.select([sys.stdin], [], [], 15)[0]:
+                raise TimeoutError('phase observer acknowledgement timed out; no drain inferred')
             ack = json.loads(sys.stdin.readline())
         except (ValueError, OSError) as error:
             raise phase_error('phase observer acknowledgement unavailable') from error

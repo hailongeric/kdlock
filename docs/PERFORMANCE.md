@@ -120,6 +120,14 @@ show no win and cannot isolate provider-call cost or establish acceptance. Both
 archives passed 3,521 inert checks; all seven causes and acquisition latency stay
 unresolved. Later worker turnover does not repair the failed endpoint.
 
+The subsequent [worker-creation controls](../bench/results/10.176.26.71/bench/qemu-workers-20261021/README.md)
+are in progress. Host-only observation and the recovery snapshot query stayed
+at 67 tasks; two guest setup/no-op controls each reached 76 before any explicit
+file write or workload. Synchronization and basic build/test phases have
+separate receipts, including retained preflight refusals. This narrows the host
+interference investigation but does not attribute historical worker activity,
+relax the original gate, or resolve any of the seven regressions.
+
 The earlier [pipecap owner observation](../bench/results/10.176.26.71/bench/pipecap-owner-20261021/README.md)
 retains 24 drained one-worker sessions with unchanged binaries and no returned
 JIT bodies. The strict endpoint failed at 101 versus 67 threads; the uncalibrated

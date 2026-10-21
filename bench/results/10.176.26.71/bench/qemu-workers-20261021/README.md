@@ -101,3 +101,37 @@ during its tail; actual synchronization started with the pool already present.
 The first basic-build control, `basic-1`, was refused at 68 before any guest
 command. Its early observer EOF, failure receipt and zero-command record are
 retained. A later attempt must independently reach the unchanged 67-task gate.
+
+`basic-2` passed both rebuilt default unit programs with unchanged captured
+inputs. It began at 67, peaked/ended at 70 across 36 samples. This is basic
+validation and a compiler/test I/O control, not a new full affected suite.
+`sync-2` was subsequently refused before any guest command because the original
+thread-count preflight had not yet recovered. Neither refusal is counted as a
+test pass; no in-flight command was interrupted.
+
+## Read-only delegation-path analysis
+
+Both callers use the same frozen OUTER acquisition and admission rules. General
+unlock adds task-routing lookup before releasing a locally acquired physical
+mutex; it does not update heat or directly enqueue requests. A plausible
+feedback mechanism is that additional work before release increases exhaustion
+of the eight probes, increasing contention samples and hot admission, which
+allows more delegation. The counters are consistent with this hypothesis but
+do not establish its causal timing.
+
+The transformation removes 15 bytes of native cookie-routing code and changes
+generated control flow too: cookie routing and an additional budget check
+disappear, reducing the loaded image from 1,118 to 994 bytes. Normal delegated
+completion reaches `clobber_complete`, rather than executing the C routing
+lookup for each delegated body. The comparison cannot isolate unlock-provider
+cost. Actual acquisition, provider, headers, source admission and ownership
+rules remain identical in the retained control inputs.
+
+Measured returned fractions are separate from lifetime counters including
+warmup. All six prior sessions had zero native-continuation started/completed/
+unlock counters; task reroutes are not ACK traffic. OUTER repeat 2 had no
+delegation slowpath/combiner/JIT activity but did have 1,024 gate-owned native
+acquisitions. General sessions ended with all five locks/CPUs hot; OUTER repeats
+0/2 ended cold and repeat 1 hot. Final heat snapshots cannot reconstruct timed
+transitions. Preserve all six prior unaccepted observations and the four
+separate correctness sessions; no production fix follows from this analysis.
