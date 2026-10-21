@@ -167,10 +167,19 @@ observer CPU was 2.829% of one core including five captures. Thirty-three basic
 and affected checks plus 2,390 inert archive checks passed. All seven causes,
 acquisition latency, preparation equivalence and timing acceptance remain open.
 
-The next [phase-accounting control](../bench/results/10.176.26.71/bench/mutex-phase-accounting-20261021/README.md)
-adds one bounded observation window across warmup, validation, cleanup and the
-unchanged endpoint. It is a separate no-timing cohort intended to narrow worker
-birth/activity intervals; its accounting never substitutes for the full gate.
+The [phase-accounting control](../bench/results/10.176.26.71/bench/mutex-phase-accounting-20261021/README.md)
+completed one bounded observation window across warmup, validation, cleanup and
+the unchanged endpoint. Thirty-eight serial basic/affected checks and 2,446
+inert archive checks passed. The one original warmup completed 6,975,616
+operations/53,833 matched returns and retired exactly. Full gates were
+67/67/67/70: the endpoint remains refused. All three endpoint workers were born
+after the immediate post capture and before execution of the cleanup body;
+this narrows phase association without identifying initiating I/O or excluding
+delayed activity. Observer CPU averaged 4.436% of one core, while recorded scans
+and captures alone consumed at least 25.758% during the armed interval. No timing
+was sent; continuous quiescence, preparation equivalence, all seven causes and
+acquisition latency remain unresolved. The report records the endpoint blocker
+and independent receipt-I/O, actual-MM planning and RCUHT evidence tasks.
 
 The earlier [pipecap owner observation](../bench/results/10.176.26.71/bench/pipecap-owner-20261021/README.md)
 retains 24 drained one-worker sessions with unchanged binaries and no returned

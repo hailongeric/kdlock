@@ -156,6 +156,19 @@ feasibility separately; all seven causes, acquisition latency and performance
 acceptance remain unresolved. Do not replace the failed endpoint with an
 eventually quiet capture.
 
+The [phase-accounting follow-up](../bench/results/10.176.26.71/bench/mutex-phase-accounting-20261021/README.md)
+completed with 38 serial basic/affected checks and 2,446 inert archive checks.
+One original warmup completed 6,975,616 operations/53,833 matched returns with
+exact retirement and final drain. Full gates passed at 67 before and immediately
+after warmup, but the endpoint failed at 70. All three extra workers were born
+after the post capture and before the cleanup body began; initiating I/O remains
+unknown. Active-window observer CPU was at least 25.758% of one core, so this
+separate no-timing evidence does not establish continuous quiet or acceptance.
+Keep the endpoint in place. Next independent work is a bounded receipt-I/O
+diagnostic, offline actual-MM comparison plans and a retained RCUHT execution-
+class audit. All seven causes, acquisition latency and timing acceptance remain
+unresolved; no new user decision is needed to begin that repository work.
+
 The entry-inlining experiment passed focused correctness checks but did not
 resolve the seven mutex losses in its separate 120-session comparison. It is
 not accepted as a performance fix. The stage record retains all repetitions,
@@ -209,10 +222,21 @@ The [shared-mm Native writer stage](../bench/results/10.176.26.71/tests/mmap-wri
 contention without payload faults and validates split, descriptor/VMA and exit
 lifetimes. Its six cases, four timing-client validations, twelve measurements
 and eighteen negative checks completed with drain. The strict endpoint failed
-at 76 versus 67 QEMU threads. Native timing variance, sampling cost and the
-[actual mmap-lock integration gaps](../bench/results/10.176.26.71/tests/mmap-writer-native-20261021/INTEGRATION.md)
-remain open. The complete-source lexical inventory is not yet a transitive
-participant/reachability proof, and no coherent KD kernel adapter is installed.
+at 76 versus 67 QEMU threads. Native timing variance and sampling cost remain
+unresolved. The
+[historical integration audit](../bench/results/10.176.26.71/tests/mmap-writer-native-20261021/INTEGRATION.md)
+is separate from the subsequent
+[actual-object kernel correctness stage](../bench/results/10.176.26.71/tests/mmap-kd-kernel-20261021/README.md),
+which completed selected Native-control/KD-local tasks on `6.1.159-kdmm1`.
+Readers are concurrent/local, writers stay on the original task, and mmap and
+fault cases are distinct. Recovery artifacts and organization are complete.
+The full transitive participant/filesystem/module scope remains unvalidated;
+no arbitrary MM delegation, TCLock MM support or experimental timing is claimed.
+Prepare separate actual-MM timing plans offline with the candidate image/mode,
+runtime-module set and correctness receipts bound explicitly. Execution must
+remain separate from the recovery-kernel mutex investigation and qualify the
+unchanged environment gates; do not rerun completed organization or correctness
+merely because the older Native-only audit was blocked.
 
 The
 [resident-list timing plan](../bench/results/10.176.26.71/bench/nano-list-followup-20261020/README.md)

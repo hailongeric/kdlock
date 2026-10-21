@@ -26,6 +26,16 @@ and lifetime work. Independent inert review passed 31,923 integrity/arithmetic
 checks; final VM health was idle. Readers remain concurrent in the separate
 fault workload.
 
+The subsequent [actual-object kernel integration](../bench/results/10.176.26.71/tests/mmap-kd-kernel-20261021/README.md)
+completed the selected correctness tasks in Native-control and KD-local modes
+on the captured `6.1.159-kdmm1` image, with matching runtime modules and full
+teardown. Readers remain concurrent/local and writers run on the original task;
+untouched mmap/munmap and page-fault cases are separate. Recovery artifacts and
+the later recovery-kernel investigation are preserved. This supersedes the old
+adapter-blocked status for that selected scope, without rewriting its failures.
+No experimental timing, arbitrary MM delegation, TCLock MM support, complete
+filesystem/device coverage, RT, lockdep or whole-kernel replacement is claimed.
+
 ## Opt-in module-owned mapping and faults
 
 The subsequent [split-workload receipt](../bench/results/10.176.26.71/tests/mmap-fault-split-20261021/README.md)
