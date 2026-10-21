@@ -64,7 +64,7 @@ def validate_split(rows, backend, mode, workers, iterations):
     last = tail[-1]
     rt.require(before['event']=='before' and ready['event']=='ready' and
                ready['mode']==mode and ready['workers']==workers and
-               len(set(ready['pids']))==workers and
+               len(ready['pids'])==len(set(ready['pids']))==workers and
                ready['vma_only']==(mode=='lifetime'), 'split start receipt differs')
     rt.require(before['backend']==backend and before['features']==0 and
                all(before[k]==0 for k in ('active_probe','epoch','faults','reads','read_ends',

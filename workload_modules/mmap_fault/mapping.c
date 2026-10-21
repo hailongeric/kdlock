@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0
 /* Opt-in module-owned mappings, not an mm_struct::mmap_lock replacement.
- * The native mmap lock protects VMAs. One immutable per-file backend protects
+ * The kernel mmap lock protects VMAs. One immutable per-file backend protects
  * backing metadata. Allocation, user copies and page-table work stay outside
  * that private lock. Faults and mode transitions execute on the origin task.
  */
@@ -16,8 +16,10 @@
 #include <linux/slab.h>
 #include <linux/uaccess.h>
 #include <linux/wait.h>
+#if !MF_NATIVE_ONLY
 #include "kd_rwsem.h"
 #include "rwlock/komb_rwlock.h"
+#endif
 #include "mmap_fault_uapi.h"
 
 #define MF_MAX_PAGES 64
@@ -31,9 +33,11 @@ struct mf_scope {
 };
 struct mf_mapping {
 	union {
-		struct kd_rwsem kd;
 		struct rw_semaphore native;
+#if !MF_NATIVE_ONLY
+		struct kd_rwsem kd;
 		struct komb_rwlock tc;
+#endif
 	} lock;
 	void *allocation;
 	unsigned int backend, features, pages, fallback;
@@ -57,54 +61,64 @@ static atomic64_t release_errors = ATOMIC64_INIT(0);
 
 static void mf_read(struct mf_mapping *m)
 {
+#if !MF_NATIVE_ONLY
 	if (!MF_TC_BUILD && m->backend == MF_KD)
 		kd_down_read(&m->lock.kd);
 	else if (MF_TC_BUILD && m->backend == MF_TC) {
 		preempt_disable();
 		komb_read_lock(&m->lock.tc);
 	} else
+#endif
 		down_read(&m->lock.native);
 	atomic64_inc(&m->reads);
 }
 static void mf_read_end(struct mf_mapping *m)
 {
 	atomic64_inc(&m->read_ends);
+#if !MF_NATIVE_ONLY
 	if (!MF_TC_BUILD && m->backend == MF_KD)
 		kd_up_read(&m->lock.kd);
 	else if (MF_TC_BUILD && m->backend == MF_TC) {
 		komb_read_unlock(&m->lock.tc);
 		preempt_enable();
 	} else
+#endif
 		up_read(&m->lock.native);
 }
 static void mf_write(struct mf_mapping *m)
 {
+#if !MF_NATIVE_ONLY
 	if (!MF_TC_BUILD && m->backend == MF_KD)
 		kd_down_write(&m->lock.kd);
 	else if (MF_TC_BUILD && m->backend == MF_TC) {
 		preempt_disable();
 		komb_write_lock(&m->lock.tc);
 	} else
+#endif
 		down_write(&m->lock.native);
 	atomic64_inc(&m->writes);
 }
 static void mf_write_end(struct mf_mapping *m)
 {
 	atomic64_inc(&m->write_ends);
+#if !MF_NATIVE_ONLY
 	if (!MF_TC_BUILD && m->backend == MF_KD)
 		kd_up_write(&m->lock.kd);
 	else if (MF_TC_BUILD && m->backend == MF_TC) {
 		komb_write_unlock(&m->lock.tc);
 		preempt_enable();
 	} else
+#endif
 		up_write(&m->lock.native);
 }
 static bool mf_idle(struct mf_mapping *m)
 {
+#if !MF_NATIVE_ONLY
 	if (!MF_TC_BUILD && m->backend == MF_KD)
 		return kd_rwsem_is_idle(&m->lock.kd);
 	if (MF_TC_BUILD && m->backend == MF_TC)
 		return !atomic_read(&m->lock.tc.cnts) && !atomic_read(&m->lock.tc.lock.val);
+#endif
 	return !rwsem_is_locked(&m->lock.native);
 }
 
@@ -162,8 +176,15 @@ static int mf_create(struct mf_file *f, struct mf_create *c)
 	if (c->abi != MF_ABI || c->backend > MF_TC || !c->pages || c->pages > MF_MAX_PAGES ||
 	    c->features & ~MF_FEATURES || c->reserved[0] || c->reserved[1])
 		return -EINVAL;
+#if MF_NATIVE_ONLY
+	/* Refuse before allocation or fallback: a request for another provider
+	 * must never masquerade as the Native backing used by both kernel modes. */
+	if (c->backend != MF_NATIVE)
+		return -EOPNOTSUPP;
+#else
 	if (c->backend == (MF_TC_BUILD ? MF_KD : MF_TC))
 		return -EOPNOTSUPP;
+#endif
 	/* Shared writeback/page_mkwrite is not this driver's callback contract. */
 	if ((c->features & MF_WRITABLE) && !(c->features & MF_PRIVATE))
 		return -EOPNOTSUPP;
@@ -188,9 +209,12 @@ static int mf_create(struct mf_file *f, struct mf_create *c)
 	m->pages = c->pages;
 	m->complement = ~m->epoch;
 	init_waitqueue_head(&m->events);
+#if !MF_NATIVE_ONLY
 	if (!MF_TC_BUILD && selected == MF_KD)
 		kd_rwsem_init(&m->lock.kd);
-	else if (selected == MF_NATIVE)
+	else
+#endif
+	if (selected == MF_NATIVE)
 		init_rwsem(&m->lock.native);
 	/* TCLock's zero initializer is its unlocked state; no live type switch. */
 	for (i = 0; i < m->pages; i++) {
@@ -427,9 +451,11 @@ static int mf_downgrade(struct mf_mapping *m)
 	m->epoch++;
 	m->complement = ~m->epoch;
 	atomic64_inc(&m->write_ends);
+#if !MF_NATIVE_ONLY
 	if (!MF_TC_BUILD && m->backend == MF_KD)
 		kd_downgrade_write(&m->lock.kd);
 	else
+#endif
 		downgrade_write(&m->lock.native);
 	atomic64_inc(&m->reads);
 	atomic64_inc(&m->downgrades);
@@ -516,7 +542,9 @@ static void __exit mf_exit(void)
 }
 module_init(mf_init);
 module_exit(mf_exit);
-#if MF_TC_BUILD
+#if MF_NATIVE_ONLY
+MODULE_INFO(mmap_provider, "native-only");
+#elif MF_TC_BUILD
 MODULE_INFO(mmap_provider, "tclock");
 #else
 MODULE_INFO(mmap_provider, "kdlock");

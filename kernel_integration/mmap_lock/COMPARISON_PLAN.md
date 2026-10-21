@@ -1,7 +1,8 @@
 # Separate actual-mmap and page-fault throughput plans
 
-Status: offline plans prepared; new payload/client validation and timing are
-pending. New p95 and sampled/plain comparisons are deferred, with existing
+Status: the separate Native-only payload profile and frozen-binary runner are
+implemented; VM build/client validation and timing are pending. See the
+[active validation record](../../bench/results/10.176.26.71/tests/actual-mm-plain-20261021/README.md). New p95 and sampled/plain comparisons are deferred, with existing
 latency evidence preserved. Missing p95 is not a throughput prerequisite.
 Execution is separately scheduled in the same VM after recovery-kernel
 diagnostics drain. Retain the usable recovery image/snapshot and strict host

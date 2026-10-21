@@ -110,7 +110,7 @@ def validate(rows,spec):
     m=rows[1];n=spec['threads'];pids=rows[0]['pids']
     rt.require(m['event']=='measurement' and m['complete'] and m['data_ok'] and m['joined']==n and
         m['backend']==BACKENDS[spec['arm']] and m['threads']==n and m['workload']==spec['workload'] and
-        m['observation']==spec['observation'] and len(set(pids))==n and len(m['workers'])==n,
+        m['observation']==spec['observation'] and len(pids)==len(set(pids))==n and len(m['workers'])==n,
         'measurement identity/join differs')
     ws=m['workers'];completed=sum(w['completed'] for w in ws)
     rt.require(m['completed']==completed>0 and m['worker_cpu_ns']==sum(w['cpu_ns'] for w in ws) and
