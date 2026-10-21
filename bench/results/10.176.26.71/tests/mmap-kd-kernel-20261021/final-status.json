@@ -1,0 +1,57 @@
+{
+  "accepted": false,
+  "archive_review": "correctness-archive-review.json",
+  "jit_execution": "NONE_CLAIMED",
+  "kernel_build_id": "687ff5a29315d732f93a618e50ac407c794bbf9b",
+  "kernel_release": "6.1.159-kdmm1",
+  "passed_runs": [
+    "refactor-1",
+    "rwsem-refactor-1",
+    "native-api-3",
+    "native-faults-2",
+    "native-mapping-2",
+    "native-completed-1",
+    "kd-api-1",
+    "kd-faults-1",
+    "kd-mapping-1",
+    "kd-completed-1",
+    "legacy-validator-1"
+  ],
+  "preserved_failed_runs": [
+    "modules-build-1",
+    "native-api-1"
+  ],
+  "readers": "LOCAL_CONCURRENT",
+  "recovery_module_files_checked": 5686,
+  "recovery_preserved": true,
+  "regressions": {
+    "c08-t03": "UNRESOLVED_CAUSE",
+    "c08-t04": "UNRESOLVED_CAUSE",
+    "c08-t05": "UNRESOLVED_CAUSE",
+    "pipebytes-t03": "UNRESOLVED_CAUSE",
+    "pipebytes-t05": "UNRESOLVED_CAUSE",
+    "pipecap-t05": "UNRESOLVED_CAUSE",
+    "rcuht-t02": "UNRESOLVED_CAUSE"
+  },
+  "remaining_limits": [
+    "No experimental-kernel timing",
+    "Arbitrary MM-body delegation unsupported",
+    "All filesystem/device fault callbacks unvalidated",
+    "1440 historical initramfs modules and all-configured-module build coverage unresolved",
+    "IRQ-disabled KD read trylock intentionally refuses before reservation",
+    "Whole-kernel replacement, RT/ww_mutex and lockdep unvalidated",
+    "Oversubscription redesign deferred",
+    "Original performance environment, execution-class and acquisition-latency gaps remain in their separate reports"
+  ],
+  "schema": 1,
+  "stage": "ACTUAL_MMAP_LOCK_FOCUSED_CORRECTNESS_COMPLETE",
+  "tclock_mm_workloads": "UNSUPPORTED_NOT_RUN",
+  "timing": "NOT_RUN",
+  "workflow": {
+    "helper_files_touched": [],
+    "runs_interrupted": false,
+    "sole_writer": "root",
+    "tests_serial": true
+  },
+  "writers": "ORIGINAL_TASK_LOCAL"
+}

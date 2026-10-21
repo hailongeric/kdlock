@@ -1,0 +1,40 @@
+{
+  "accepted": false,
+  "binaries": {
+    "client": "013067b90eeb8be75c2a7bc89e994c188a7bde878e40714d3fb98d4ae4cafe04",
+    "source/payload/kd_mmap_completed.ko": "a59c6c3395ab9beacd5a6461bc96bea3c39e494fb6db16a67f587983f803bb4d"
+  },
+  "boot_id": "cc9b563e-1761-48d0-8d9c-c2958a500578",
+  "delegated": false,
+  "drained": true,
+  "health": "opened=0 closes=1 errors=0",
+  "kernel_identity": {
+    "baseline": "/root/kdlock-kernel-baselines/mmap-kdmm1-20261021",
+    "build_files": 11,
+    "bundle_files": 5,
+    "config": true,
+    "ok": true,
+    "running_build_id": "687ff5a29315d732f93a618e50ac407c794bbf9b",
+    "source": "/root/kdlock-kernel-work/mmap-20261021/candidate-1/linux",
+    "source_files": 44
+  },
+  "mode": "native",
+  "observation": {
+    "completed": 64,
+    "entries": 64,
+    "errors": 0,
+    "lock": 18379471568430376064,
+    "missed": 0,
+    "mm": 18379471568430375936,
+    "retries": 0,
+    "returns": 64,
+    "tid": 2107,
+    "use_kd": 0,
+    "write_reacquired": 1
+  },
+  "passed": true,
+  "source_unchanged": true,
+  "state": "COMPLETE",
+  "timing": false,
+  "workload": "FILE_WRITE_FAULT_COMPLETED"
+}

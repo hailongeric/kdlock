@@ -19,6 +19,10 @@
 #include "mmap_writer_uapi.h"
 #define MAX_WORKERS 60
 static unsigned checks;
+/* Optional exact integration chain, independently decoded from its kernel ELF.
+ * The six-argument recovery-kernel interface retains its original proof. */
+static const char *chain_waiter, *chain_acquire;
+static unsigned long chain_wait[2], chain_adapter;
 #define CHECK(x) do { checks++;if(!(x)) { fprintf(stderr,"FAIL line %d: %s errno=%d\n",__LINE__,#x,errno);exit(1); } } while(0)
 static void pin(unsigned cpu)
 {
@@ -148,6 +152,15 @@ static char task_state(const char *text)
 {
 	const char *end=strrchr(text,')');return end && end[1]==' ' ? end[2] : '?';
 }
+static int chain_frame(const char **text, char symbol[64], unsigned long *offset)
+{
+	const char *top = strstr(*text, "] ");
+	if (!top || sscanf(top + 2, "%63[^+]+0x%lx/", symbol, offset) != 2)
+		return 0;
+	const char *next = strchr(top, '\n');
+	*text = next ? next + 1 : top + strlen(top);
+	return 1;
+}
 static int writer_contention(struct worker *workers,unsigned n,unsigned long mmap_site,unsigned long munmap_site)
 {
 	/* /proc stacks deliberately omit __sched lock helpers. Bind the first
@@ -173,15 +186,30 @@ static int writer_contention(struct worker *workers,unsigned n,unsigned long mma
 				printf("{\"event\":\"stack_observation\",\"tid\":%llu,\"raw_stack\":",(unsigned long long)tid);
 				json_string(buffer);printf("}\n");observations[i]++;
 			}
-			char symbol[64];unsigned long offset=0;char *top=strstr(buffer,"] ");
-			if(!top || sscanf(top+2,"%63[^+]+0x%lx/",symbol,&offset)!=2)continue;
+			char symbol[64], waiter[64];unsigned long offset=0,wait_offset=0;
+			const char *remaining=buffer;
+			if(!chain_frame(&remaining,symbol,&offset))continue;
+			strcpy(waiter,symbol);wait_offset=offset;
+			if(chain_waiter) {
+				if(strcmp(waiter,chain_waiter) || (offset!=chain_wait[0] && offset!=chain_wait[1]))continue;
+				if(strcmp(chain_waiter,chain_acquire)) {
+					if(!chain_frame(&remaining,symbol,&offset) || strcmp(symbol,chain_acquire) || offset!=chain_adapter)continue;
+				}
+				if(!chain_frame(&remaining,symbol,&offset))continue;
+			}
 			int site=(!strcmp(symbol,"vm_mmap_pgoff") && offset==mmap_site) ||
 			         (!strcmp(symbol,"__vm_munmap") && offset==munmap_site);
 			if(!site || task_state(first)!='D' || task_state(last)!='D' ||
-			   strcmp(chan1,symbol) || strcmp(chan2,symbol) || strcmp(sched1,sched2) || !*sched1)continue;
-			printf("{\"event\":\"writer_stack\",\"proof\":\"FILTERED_SCHED_RETURN_SITE\",\"tid\":%llu,\"mm\":%llu,\"mmap_lock\":%llu,\"acquire\":\"down_write_killable\",\"caller\":\"%s\",\"return_offset\":%lu,\"state_before\":\"D\",\"state_after\":\"D\",\"wchan_before\":",
-			 (unsigned long long)tid,(unsigned long long)w->observed.mm,(unsigned long long)w->observed.mmap_lock,symbol,offset);
+			   strcmp(chan1,waiter) || strcmp(chan2,waiter) || strcmp(sched1,sched2) || !*sched1)continue;
+			printf("{\"event\":\"writer_stack\",\"proof\":\"%s\",\"tid\":%llu,\"mm\":%llu,\"mmap_lock\":%llu,\"acquire\":\"%s\",\"caller\":\"%s\",\"return_offset\":%lu,\"state_before\":\"D\",\"state_after\":\"D\",\"wchan_before\":",
+			 chain_waiter?"EXACT_MMAP_WRITER_CHAIN":"FILTERED_SCHED_RETURN_SITE",
+			 (unsigned long long)tid,(unsigned long long)w->observed.mm,(unsigned long long)w->observed.mmap_lock,
+			 chain_acquire?chain_acquire:"down_write_killable",symbol,offset);
 			json_string(chan1);printf(",\"wchan_after\":");json_string(chan2);
+			if(chain_waiter) {
+				printf(",\"waiter\":");json_string(waiter);
+				printf(",\"wait_return_offset\":%lu,\"adapter_return_offset\":%lu",wait_offset,chain_adapter);
+			}
 			printf(",\"schedstat_before\":");json_string(sched1);printf(",\"schedstat_after\":");json_string(sched2);
 			printf(",\"raw_stack\":");json_string(buffer);printf("}\n");return 1;
 		}
@@ -192,7 +220,12 @@ static int writer_contention(struct worker *workers,unsigned n,unsigned long mma
 
 int main(int argc,char **argv)
 {
-	CHECK(argc==6);const char *mode=argv[1];unsigned n=strtoul(argv[2],NULL,10);
+	CHECK(argc==6 || argc==11);const char *mode=argv[1];unsigned n=strtoul(argv[2],NULL,10);
+	if(argc==11) {
+		chain_waiter=argv[6];chain_wait[0]=strtoul(argv[7],NULL,0);chain_wait[1]=strtoul(argv[8],NULL,0);
+		chain_adapter=strtoul(argv[9],NULL,0);chain_acquire=argv[10];
+		CHECK(*chain_waiter && *chain_acquire && chain_wait[0] && chain_wait[1] && chain_adapter);
+	}
 	uint64_t iterations=strtoull(argv[3],NULL,10);
 	CHECK(n && n<=MAX_WORKERS && iterations && iterations<=10000000 && sysconf(_SC_PAGESIZE)==4096);
 	CHECK(!strcmp(mode,"scope") || !strcmp(mode,"cycle") || !strcmp(mode,"lifetime") || !strcmp(mode,"exit"));

@@ -16,7 +16,7 @@ rt=common.rt
 WRITER_SITES=json.loads(Path(__file__).with_name('writer_sites.json').read_text())
 
 
-def validate(rows,mode,n,iterations):
+def validate(rows,mode,n,iterations,writer_proof=None):
     raw=[r for r in rows if r['event']=='stack_observation']
     rt.require(len(raw)<=4*n and all(r['raw_stack'] for r in raw),'invalid diagnostic stack observations')
     rows=[r for r in rows if r['event']!='stack_observation']
@@ -55,14 +55,21 @@ def validate(rows,mode,n,iterations):
             if n>1:
                 stacks=[r for r in rows if r['event']=='writer_stack']
                 rt.require(len(stacks)==1 and stacks[0]['tid'] in {w['tid'] for w in last['workers']} and
-                           stacks[0]['mm']==identity['mm'] and stacks[0]['mmap_lock']==identity['mmap_lock'] and
-                           stacks[0]['proof']=='FILTERED_SCHED_RETURN_SITE' and
+                           stacks[0]['mm']==identity['mm'] and stacks[0]['mmap_lock']==identity['mmap_lock'],
+                           'actual same-mm writer wait identity was not observed')
+                if writer_proof is not None:
+                    # A different kernel must supply its own exact ELF chain
+                    # verifier. Business, identity and teardown checks stay
+                    # shared; the recovery default below remains unchanged.
+                    writer_proof(stacks[0])
+                else:
+                    rt.require(stacks[0]['proof']=='FILTERED_SCHED_RETURN_SITE' and
                            stacks[0]['acquire']=='down_write_killable' and
                            stacks[0]['caller'] in ('vm_mmap_pgoff','__vm_munmap'),
                            'actual same-mm Native writer wait was not observed')
-                stack=stacks[0];site=WRITER_SITES['sites'][stack['caller']]
-                frames=re.findall(r'\] ([A-Za-z0-9_]+)\+0x([0-9a-f]+)/',stack['raw_stack'])
-                rt.require(frames and frames[0][0]==stack['caller'] and
+                    stack=stacks[0];site=WRITER_SITES['sites'][stack['caller']]
+                    frames=re.findall(r'\] ([A-Za-z0-9_]+)\+0x([0-9a-f]+)/',stack['raw_stack'])
+                    rt.require(frames and frames[0][0]==stack['caller'] and
                            int(frames[0][1],16)==stack['return_offset']==site['return_offset'] and
                            stack['state_before']==stack['state_after']=='D' and
                            stack['wchan_before']==stack['wchan_after']==stack['caller'] and
