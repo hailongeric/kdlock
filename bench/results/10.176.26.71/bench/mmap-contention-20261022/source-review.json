@@ -1,0 +1,32 @@
+{
+  "disassembly": {
+    "__vm_munmap": "b81444b8cc4b6ed7da8f28dabcf95053d66b2abba9106aa18bc2589e53c7dc24",
+    "down_write_killable": "158bcdcee2ff5338e50c07a78129d73641d550d1df8e30e74780837afa67221d",
+    "downgrade_write": "c27d7aba4fff673609238f22c2d20fcd20f049efb286d19c90534cd09cb8d859",
+    "kd_mmap_down_write_killable": "0ca206bddac114b307555264f9b0194f2461db224544d15dd7b3411518d0b4ed",
+    "kd_mmap_downgrade_write": "6dd0d7e79831a70171704498863b434a313b4e9b64f00b493ad683d8efdbf8ed",
+    "kd_mmap_up_read": "817c40ca71547cf12b22e02e9c8469b6952f7b6cd6246efa08c7ec9f7812f827",
+    "kd_mmap_up_write": "6f396c0c7e0a618ace2ea143820efeb99b9ef3e8c8aa1564dda0c4db48c422b8",
+    "kd_mmap_write_lock_killable": "ef10cb70994d2a7750cb4810a3dcdddbea8e2ac4ca6ca27c569cf7d679d5e01a",
+    "rwsem_down_write_slowpath": "9d5a80133251ca15f03452d9d0f127b0be10d13a4e2518cc3b41851c8d431a67",
+    "rwsem_spin_on_owner": "08b6cd3a9f815d11a61fa3c0a149afc69f106485a5eee4c05ca43711157ef8f7",
+    "vm_mmap_pgoff": "8cd7f5d56e4acc37267ce6a5da7af89eb35ccd2123f1a2015570831eade0ccfd"
+  },
+  "elf_path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/tests/mmap-kd-kernel-20261021/kernel-elf-1/vmlinux",
+  "elf_sha256": "7c7305c78f5466276a79e3cde4d2809dce67a9677896b30e268d8f4e3d08f236",
+  "helpers": {
+    "host_evidence_review": "read-only; files touched none",
+    "pipecap_class_review": "read-only; files touched none",
+    "receipt_protocol_review": "read-only; files touched none"
+  },
+  "source_commit": "34b43f807502b8957bc787fb5be450b08c9813e9",
+  "upstream_archive_path": "/tmp/kdlock-kernel-baseline.SQbmuD/linux-6.1.159.tar.xz",
+  "upstream_archive_sha256": "1f207ebe93980829ecc0a18b694816f22b715e9893767731651969a168342b9e",
+  "upstream_files": {
+    "include/linux/wait.h": "930e57fc5816649df35476eb95e15a080acfb29e1ddae8fab71892ab4994ee3e",
+    "kernel/locking/rwsem.c": "0ddefd83ed8597ed04ada90acba2ac632948d207af2da80b61d9ababe4555a4c",
+    "kernel/sched/wait.c": "d4e06d83ac469dc272da8c9a54eb190585e45a1737bcf513e443696a031709da",
+    "mm/mmap.c": "9655897fae14ccb7e76ba9e59d3eed4d4a4a7b3db641935920bd0531c75f9761",
+    "mm/util.c": "9714d17756674a5631eba8d9c68d18efec049d256534433d95f49ff53f547f4d"
+  }
+}

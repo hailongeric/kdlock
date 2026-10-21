@@ -25,6 +25,14 @@ retain all three repetitions, rejected rates, CVs, paired ratios, run identities
 and archives. Qualified repetitions and their variance remain unresolved;
 all seven mutex causes remain unresolved and no performance acceptance follows.
 
+The [focused mmap follow-up](../../bench/results/10.176.26.71/bench/mmap-contention-20261022/README.md)
+bound the killable writer and downgrade paths to this exact image. One planned
+Native/KD 16-worker diagnostic pair was refused before execution at 72 QEMU
+threads versus 67; both profiles remain unrun. The source-based phase-wakeup
+hypothesis requires the prepared bounded kernel-stack discriminator, with the
+same frozen work and full admission/endpoint checks. Recovery is restored;
+no kernel protocol change or performance conclusion follows from source review.
+
 ## Shared candidate and validation binding
 
 Compare Native-control (`kd_mmap=off`) with KD-local (`kd_mmap=on`) on the same

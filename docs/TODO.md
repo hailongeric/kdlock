@@ -54,6 +54,15 @@ threads versus 67. Recovery is restored. All-attempt ranges and CVs are
 but qualified repetitions and qualified variance remain unresolved (n=0).
 All seven mutex causes remain unresolved; no performance acceptance is declared.
 
+The [focused mmap contention investigation](../bench/results/10.176.26.71/bench/mmap-contention-20261022/README.md)
+binds the actual killable writer paths to the candidate ELF and identifies
+phase wakeup/reader-drain work as a hypothesis. Two basic programs and fourteen
+affected checks passed. Its one planned diagnostic pair was refused before
+execution at 72 QEMU threads versus 67; both profiles remain unrun. Recovery is
+restored. No implementation defect or causal fix was demonstrated, and no gate
+was relaxed. The next discriminator remains a matched, bounded kernel-stack
+profile of the unchanged 16-worker mmap workload.
+
 KD has explicit spin, ordinary mutex, rwlock and rwsem APIs. Spin/mutex/rwlock
 workloads compare KD, TCLock and Native; sleeping rwsem compares KD with Native
 because this port has no TCLock sleeping rwsem. KD tracks real lock owners and

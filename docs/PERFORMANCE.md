@@ -42,6 +42,14 @@ Whole-rate CV ranges from 0.029% to 4.626%, but qualified n=0 and qualified
 variance remain unresolved. Recovery is restored. New p95 stays deferred,
 and all seven mutex causes remain unresolved; no acceptance is declared.
 
+The subsequent [mmap contention investigation](../bench/results/10.176.26.71/bench/mmap-contention-20261022/README.md)
+traced the exact killable writer and downgrade paths and prepared one matched
+16-worker kernel-stack diagnostic pair. Its basic and affected checks passed,
+but the fresh Native prerequisite refused 72 QEMU threads versus 67 before
+profiling or workload execution. Both profiles remain unrun and recovery is
+restored. Phase wakeup cost is a source-based hypothesis, not an established
+cause; no new timing, variance, protocol fix or acceptance is claimed.
+
 The reader/writer semaphore (rwsem) implementation measured in `c21345b` is
 **accepted as the current version**, including the two-worker regressions below.
 Acceptance identifies the maintained implementation; it does not turn every
