@@ -16,6 +16,9 @@ rt=common.rt
 
 
 def validate(rows,mode,n,iterations):
+    raw=[r for r in rows if r['event']=='stack_observation']
+    rt.require(len(raw)<=4*n and all(r['raw_stack'] for r in raw),'invalid diagnostic stack observations')
+    rows=[r for r in rows if r['event']!='stack_observation']
     identity=rows[0];last=rows[-1]
     rt.require(identity['event']=='identity' and identity['mm'] and identity['mmap_lock'] and identity['object'] and
                identity['tid']==identity['tgid'],'controller exact mm identity differs')

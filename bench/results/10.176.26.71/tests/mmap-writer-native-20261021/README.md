@@ -1,7 +1,14 @@
 # Native shared-mm mmap writer stage
 
-Status: focused correctness implementation prepared; validation and timing
-pending. This stage uses the same sole writer on 380G10 and sole serial executor
+Status: `live-1` at `4a960ab` passed scope and single-worker checks, then failed
+the required sixteen-worker blocked-writer stack observation. Both basic
+programs and builds passed. Exact module health subsequently confirmed
+`files=0 mm_refs=0 destroyed=3 release_errors=0`, no workers remained, and normal
+unload succeeded. This failure is retained; timing remains blocked. A diagnostic
+revision retains nonmatching stacks and joins/teardown before reporting failure;
+the required positive writer proof remains unchanged.
+
+This stage uses the same sole writer on 380G10 and sole serial executor
 in the existing `10.176.26.71:2222` recovery VM. It changes no kernel, Native lock,
 admission rule, access setting or KD/TCLock protocol.
 

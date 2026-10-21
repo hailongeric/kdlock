@@ -135,11 +135,11 @@ static void json_string(const char *text)
 	}
 	putchar('"');
 }
-static void writer_contention(struct worker *workers,unsigned n)
+static int writer_contention(struct worker *workers,unsigned n)
 {
 	/* A nonempty rwsem queue may contain readers. Capture a real blocked
 	 * writer whose immediate native caller takes this mm's mmap_lock. */
-	int found=0;
+	int found=0;unsigned observations[MAX_WORKERS]={0};
 	for(;;) {
 		unsigned done=0;
 		for(unsigned i=0;i<n;i++) {
@@ -150,6 +150,12 @@ static void writer_contention(struct worker *workers,unsigned n)
 			if(fd<0 && errno==ENOENT && atomic_load_explicit(&workers[i].done,memory_order_acquire))continue;
 			CHECK(fd>=0);ssize_t bytes=read(fd,buffer,sizeof(buffer)-1);CHECK(close(fd)==0 && bytes>=0);
 			buffer[bytes]=0;
+			/* Retain bounded nonempty raw observations even when the expected
+			 * stack shape is absent. A failed probe must remain diagnosable. */
+			if(bytes && observations[i]<4) {
+				printf("{\"event\":\"stack_observation\",\"tid\":%llu,\"raw_stack\":",(unsigned long long)workers[i].observed.tid);
+				json_string(buffer);printf("}\n");observations[i]++;
+			}
 			char *lock=strstr(buffer,"down_write_killable+");
 			char *caller=lock ? strchr(lock,'\n') : NULL;
 			if(caller && strstr(buffer,"rwsem_down_write_slowpath+")) {
@@ -170,7 +176,7 @@ static void writer_contention(struct worker *workers,unsigned n)
 		if(done==n || found)break;
 		usleep(1000);
 	}
-	CHECK(found);
+	return found;
 }
 int main(int argc,char **argv)
 {
@@ -205,7 +211,7 @@ int main(int argc,char **argv)
 	for(unsigned i=0;i<n;i++)CHECK(!w[i].error);
 	if(lifetime)CHECK(close(fd)==0); /* Every descriptor is now closed. */
 	barrier(&go);uint64_t completed=0;
-	if(!lifetime && n>1)writer_contention(w,n);
+	int contention_ok=lifetime || n==1 || writer_contention(w,n);
 	for(unsigned i=0;i<n;i++) {
 		CHECK(pthread_join(threads[i],NULL)==0 && !w[i].error && w[i].completed==iterations);
 		for(unsigned j=0;j<i;j++)CHECK(w[j].observed.tid!=w[i].observed.tid);
@@ -218,9 +224,12 @@ int main(int argc,char **argv)
 		if(after.observe && n>1)CHECK(after.contended_mmaps>0);
 		CHECK(close(fd)==0);
 	}
-	printf("{\"event\":\"complete\",\"mode\":\"%s\",\"passed\":true,\"joined\":%u,\"completed\":%llu,\"checks\":%u,\"workers\":[",mode,n,(unsigned long long)completed,checks);
+	printf("{\"event\":\"complete\",\"mode\":\"%s\",\"passed\":%s,\"joined\":%u,\"completed\":%llu,\"checks\":%u,\"workers\":[",mode,contention_ok?"true":"false",n,(unsigned long long)completed,checks);
 	for(unsigned i=0;i<n;i++)printf("%s{\"cpu\":%u,\"tid\":%llu,\"tgid\":%llu,\"mm\":%llu,\"mmap_lock\":%llu,\"object\":%llu,\"completed\":%llu,\"errors\":%d}",i?",":"",i,
 	 (unsigned long long)w[i].observed.tid,(unsigned long long)w[i].observed.tgid,(unsigned long long)w[i].observed.mm,
 	 (unsigned long long)w[i].observed.mmap_lock,(unsigned long long)w[i].observed.object,(unsigned long long)w[i].completed,w[i].error);
-	printf("]}\n");return 0;
+	printf("]}\n");
+	/* Join and retain exact teardown evidence before reporting a missing
+	 * writer observation. Failure still fails the case and the campaign. */
+	CHECK(contention_ok);return 0;
 }
