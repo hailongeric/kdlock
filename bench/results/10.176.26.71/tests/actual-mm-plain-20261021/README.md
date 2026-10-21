@@ -53,3 +53,28 @@ warmup and measurement. Two-worker OUTER and DIRECT sessions are serial; the
 intervening gap is retained separately. Execution classes remain unchanged,
 entry witnesses do not become returned-body counts, and no diagnostic rate is
 eligible for acceptance. Its focused tests and execution are pending.
+
+## Recovery diagnostic and preservation
+
+Five focused RCUHT boundary tests passed, including four distinct captures and
+partial-failure retention. Attempt 1 stopped before workload loading because
+the retained collector refused a helper import from the current checkout.
+The helper is now copied and loaded outside that checkout; the guard remains
+unchanged. Attempt 2 reached the original environment comparison and refused
+**71 QEMU threads versus the required original 67**. No workload started. The
+first capture had 74 threads; it is retained separately, not replaced by the
+second. [Failed admission receipt](rcuht-boundary-2.json). The invocation-label
+correction for attempt 1 is explicit in its [record](rcuht-boundary-1-attempt.json).
+
+The recovery VM drained with all 73 expected modules. Three pre-transition
+archives were sealed, copied back, and checked for exact hashes/sizes and full
+regular-member decompression (453 files). The manifest SHA-256 is
+`9269260b6a89ca356794e71bae5f86f8eafdc900709d91771b436ecf9c582fcb`;
+[archive review](pre-transition-archive-review.json). No RCUHT phase-counter
+measurements or accepted throughput result exist.
+
+The reviewed transition script verifies all preserved recovery artifacts and
+installed candidate hashes, retains the recovery default, and selects only a
+one-shot existing entry. It records new boot identity, exact module restoration
+and full boot logs before readiness. Native-control and KD-local correctness
+will use the identical preparation-1 binaries.
