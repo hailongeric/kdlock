@@ -18,9 +18,14 @@ precede trace export, but their initiating I/O remains unknown. The full endpoin
 still fails at 70 versus 67; active host-observation CPU is at least 26.734% of
 one core. No timing or p95 ran. Archive review passed 2,626 checks, preserving
 the first archive-attempt failure and separate source identities. All seven
-causes remain unresolved; the
-[separate actual-MM plans](../kernel_integration/mmap_lock/COMPARISON_PLAN.md)
-remain offline until their new prerequisites and environment gates qualify.
+causes remain unresolved. The subsequent
+[actual-MM plain stage](../bench/results/10.176.26.71/tests/actual-mm-plain-20261021/README.md)
+passed serial correctness in both candidate modes with identical frozen
+binaries and restored the recovery kernel. Its throughput gate refused 68 QEMU
+threads versus 67; zero timing sessions started. The separate RCUHT phase
+diagnostic passed five focused tests but refused live admission at 71 threads.
+Neither supplies a new accepted rate or repetition variance. New p95 remains
+deferred; all seven regression causes remain unresolved.
 
 The reader/writer semaphore (rwsem) implementation measured in `c21345b` is
 **accepted as the current version**, including the two-worker regressions below.

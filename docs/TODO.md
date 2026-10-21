@@ -34,9 +34,13 @@ unchanged endpoint fails at 70, and request/descriptor attribution remains open.
 No timing or new p95 ran. The completed read-only
 [RCUHT class audit](../bench/results/10.176.26.71/bench/rcuht-class-audit-20261021/README.md)
 finds plain no-JIT sessions with queue entries but zero lifetime combiner calls;
-their cause remains unresolved. Separate
-[actual-mmap/fault plans](../kernel_integration/mmap_lock/COMPARISON_PLAN.md)
-are prepared offline; new payload validation and experimental timing remain pending.
+their cause remains unresolved. The separate
+[actual-MM plain stage](../bench/results/10.176.26.71/tests/actual-mm-plain-20261021/README.md)
+passed both-mode correctness with identical frozen binaries and restored the
+recovery kernel. Throughput admission refused 68 QEMU threads versus 67, so no
+timing session started. The RCUHT phase diagnostic passed five focused tests but
+refused at 71 threads before workload execution. All seven causes, new qualified
+throughput repetitions and their variance remain unresolved; p95 stays deferred.
 
 KD has explicit spin, ordinary mutex, rwlock and rwsem APIs. Spin/mutex/rwlock
 workloads compare KD, TCLock and Native; sleeping rwsem compares KD with Native
@@ -249,11 +253,13 @@ Readers are concurrent/local, writers stay on the original task, and mmap and
 fault cases are distinct. Recovery artifacts and organization are complete.
 The full transitive participant/filesystem/module scope remains unvalidated;
 no arbitrary MM delegation, TCLock MM support or experimental timing is claimed.
-Prepare separate actual-MM timing plans offline with the candidate image/mode,
-runtime-module set and correctness receipts bound explicitly. Execution must
-remain separate from the recovery-kernel mutex investigation and qualify the
-unchanged environment gates; do not rerun completed organization or correctness
-merely because the older Native-only audit was blocked.
+The subsequent [plain-workload validation](../bench/results/10.176.26.71/tests/actual-mm-plain-20261021/README.md)
+bound the candidate image/mode, runtime modules, prior receipts and one frozen
+binary set. Both-mode correctness and default recovery payload builds passed.
+Its planned timing remains unstarted because the original host gate refused
+68 versus 67 threads. A future attempt must retain separate boot identities and
+qualify unchanged environment/endpoint checks. No repeated organization or
+already-completed correctness is needed without changed inputs or new evidence.
 
 The
 [resident-list timing plan](../bench/results/10.176.26.71/bench/nano-list-followup-20261020/README.md)

@@ -1,12 +1,15 @@
 # Separate actual-mmap and page-fault throughput plans
 
-Status: the separate Native-only payload profile and frozen-binary runner are
-implemented; VM build/client validation and timing are pending. See the
-[active validation record](../../bench/results/10.176.26.71/tests/actual-mm-plain-20261021/README.md). New p95 and sampled/plain comparisons are deferred, with existing
-latency evidence preserved. Missing p95 is not a throughput prerequisite.
-Execution is separately scheduled in the same VM after recovery-kernel
-diagnostics drain. Retain the usable recovery image/snapshot and strict host
-admission and immediate endpoint checks; never replace a failed endpoint later.
+Status: the Native-only payload and frozen-binary runner passed serial build
+and client validation in both candidate modes using identical binaries. The
+unchanged throughput gate refused 68 QEMU threads versus the original 67;
+zero timing sessions started. The same VM is back on its preserved recovery
+kernel, and both default payload builds passed. See the
+[validation record](../../bench/results/10.176.26.71/tests/actual-mm-plain-20261021/README.md).
+New p95 and sampled/plain comparisons remain deferred, with existing latency
+evidence preserved. Missing p95 is not a throughput prerequisite. Timing remains
+unresolved and needs the original complete host admission and immediate
+endpoint checks; never replace a failed receipt with a later capture.
 
 ## Shared candidate and validation binding
 

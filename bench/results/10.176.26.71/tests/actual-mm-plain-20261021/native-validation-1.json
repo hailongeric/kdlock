@@ -1,0 +1,1838 @@
+{
+  "accepted": false,
+  "action": "validate",
+  "api": {
+    "abi": 1,
+    "api_checks": 8,
+    "cancellation_checks": 3,
+    "checks": 121,
+    "destroy_checks": 1,
+    "downgrade_checks": 1,
+    "errors": 0,
+    "idle": 1,
+    "irq_checks": 1,
+    "late_reader_slept": 1,
+    "lock": 18379471568434172544,
+    "mm": 18379471568434172416,
+    "nested_checks": 1,
+    "readers_slept": 2,
+    "transfer_checks": 1,
+    "use_kd": 0,
+    "writer_slept": 1
+  },
+  "boot_id": "e512cc18-96de-4f27-9fbd-37d6908d388a",
+  "cases": [
+    {
+      "completion": {
+        "checks": 27,
+        "event": "complete",
+        "mode": "scope",
+        "passed": true
+      },
+      "delegated": false,
+      "health": "files=0 mm_refs=0 destroyed=1 release_errors=0",
+      "identity": {
+        "event": "identity",
+        "mm": 18379471568459171328,
+        "mmap_lock": 18379471568459171456,
+        "object": 1,
+        "tgid": 1881,
+        "tid": 1881
+      },
+      "iterations": 1,
+      "mode": "scope",
+      "name": "writer-fixed-0-scope-1",
+      "observations": [
+        {
+          "clones": 1,
+          "closes": 2,
+          "contended_mmaps": 0,
+          "context_errors": 0,
+          "event": "scope_after",
+          "faults": 0,
+          "foreign_rejects": 2,
+          "maps": 1,
+          "object": 1,
+          "observe": 1,
+          "vmas": 0
+        }
+      ],
+      "passed": true,
+      "protocol": "NATIVE_CONTROL_MMAP_LOCK",
+      "threads": 1
+    },
+    {
+      "completion": {
+        "checks": 22,
+        "completed": 1000,
+        "event": "complete",
+        "joined": 1,
+        "mode": "cycle",
+        "passed": true,
+        "workers": [
+          {
+            "completed": 1000,
+            "cpu": 0,
+            "errors": 0,
+            "mm": 18379471568459171328,
+            "mmap_lock": 18379471568459171456,
+            "object": 2,
+            "tgid": 1883,
+            "tid": 1884
+          }
+        ]
+      },
+      "delegated": false,
+      "health": "files=0 mm_refs=0 destroyed=2 release_errors=0",
+      "identity": {
+        "event": "identity",
+        "mm": 18379471568459171328,
+        "mmap_lock": 18379471568459171456,
+        "object": 2,
+        "tgid": 1883,
+        "tid": 1883
+      },
+      "iterations": 1000,
+      "mode": "cycle",
+      "name": "writer-fixed-1-cycle-1",
+      "observations": [
+        {
+          "clones": 0,
+          "closes": 0,
+          "contended_mmaps": 0,
+          "context_errors": 0,
+          "event": "before",
+          "faults": 0,
+          "foreign_rejects": 0,
+          "maps": 0,
+          "object": 2,
+          "observe": 1,
+          "vmas": 0
+        },
+        {
+          "clones": 0,
+          "closes": 1000,
+          "contended_mmaps": 0,
+          "context_errors": 0,
+          "event": "after",
+          "faults": 0,
+          "foreign_rejects": 0,
+          "maps": 1000,
+          "object": 2,
+          "observe": 1,
+          "vmas": 0
+        }
+      ],
+      "passed": true,
+      "protocol": "NATIVE_CONTROL_MMAP_LOCK",
+      "threads": 1
+    },
+    {
+      "completion": {
+        "checks": 329,
+        "completed": 80000,
+        "event": "complete",
+        "joined": 16,
+        "mode": "cycle",
+        "passed": true,
+        "workers": [
+          {
+            "completed": 5000,
+            "cpu": 0,
+            "errors": 0,
+            "mm": 18379471568459182080,
+            "mmap_lock": 18379471568459182208,
+            "object": 3,
+            "tgid": 1885,
+            "tid": 1886
+          },
+          {
+            "completed": 5000,
+            "cpu": 1,
+            "errors": 0,
+            "mm": 18379471568459182080,
+            "mmap_lock": 18379471568459182208,
+            "object": 3,
+            "tgid": 1885,
+            "tid": 1887
+          },
+          {
+            "completed": 5000,
+            "cpu": 2,
+            "errors": 0,
+            "mm": 18379471568459182080,
+            "mmap_lock": 18379471568459182208,
+            "object": 3,
+            "tgid": 1885,
+            "tid": 1888
+          },
+          {
+            "completed": 5000,
+            "cpu": 3,
+            "errors": 0,
+            "mm": 18379471568459182080,
+            "mmap_lock": 18379471568459182208,
+            "object": 3,
+            "tgid": 1885,
+            "tid": 1889
+          },
+          {
+            "completed": 5000,
+            "cpu": 4,
+            "errors": 0,
+            "mm": 18379471568459182080,
+            "mmap_lock": 18379471568459182208,
+            "object": 3,
+            "tgid": 1885,
+            "tid": 1890
+          },
+          {
+            "completed": 5000,
+            "cpu": 5,
+            "errors": 0,
+            "mm": 18379471568459182080,
+            "mmap_lock": 18379471568459182208,
+            "object": 3,
+            "tgid": 1885,
+            "tid": 1891
+          },
+          {
+            "completed": 5000,
+            "cpu": 6,
+            "errors": 0,
+            "mm": 18379471568459182080,
+            "mmap_lock": 18379471568459182208,
+            "object": 3,
+            "tgid": 1885,
+            "tid": 1892
+          },
+          {
+            "completed": 5000,
+            "cpu": 7,
+            "errors": 0,
+            "mm": 18379471568459182080,
+            "mmap_lock": 18379471568459182208,
+            "object": 3,
+            "tgid": 1885,
+            "tid": 1893
+          },
+          {
+            "completed": 5000,
+            "cpu": 8,
+            "errors": 0,
+            "mm": 18379471568459182080,
+            "mmap_lock": 18379471568459182208,
+            "object": 3,
+            "tgid": 1885,
+            "tid": 1894
+          },
+          {
+            "completed": 5000,
+            "cpu": 9,
+            "errors": 0,
+            "mm": 18379471568459182080,
+            "mmap_lock": 18379471568459182208,
+            "object": 3,
+            "tgid": 1885,
+            "tid": 1895
+          },
+          {
+            "completed": 5000,
+            "cpu": 10,
+            "errors": 0,
+            "mm": 18379471568459182080,
+            "mmap_lock": 18379471568459182208,
+            "object": 3,
+            "tgid": 1885,
+            "tid": 1896
+          },
+          {
+            "completed": 5000,
+            "cpu": 11,
+            "errors": 0,
+            "mm": 18379471568459182080,
+            "mmap_lock": 18379471568459182208,
+            "object": 3,
+            "tgid": 1885,
+            "tid": 1897
+          },
+          {
+            "completed": 5000,
+            "cpu": 12,
+            "errors": 0,
+            "mm": 18379471568459182080,
+            "mmap_lock": 18379471568459182208,
+            "object": 3,
+            "tgid": 1885,
+            "tid": 1898
+          },
+          {
+            "completed": 5000,
+            "cpu": 13,
+            "errors": 0,
+            "mm": 18379471568459182080,
+            "mmap_lock": 18379471568459182208,
+            "object": 3,
+            "tgid": 1885,
+            "tid": 1899
+          },
+          {
+            "completed": 5000,
+            "cpu": 14,
+            "errors": 0,
+            "mm": 18379471568459182080,
+            "mmap_lock": 18379471568459182208,
+            "object": 3,
+            "tgid": 1885,
+            "tid": 1900
+          },
+          {
+            "completed": 5000,
+            "cpu": 15,
+            "errors": 0,
+            "mm": 18379471568459182080,
+            "mmap_lock": 18379471568459182208,
+            "object": 3,
+            "tgid": 1885,
+            "tid": 1901
+          }
+        ]
+      },
+      "delegated": false,
+      "health": "files=0 mm_refs=0 destroyed=3 release_errors=0",
+      "identity": {
+        "event": "identity",
+        "mm": 18379471568459182080,
+        "mmap_lock": 18379471568459182208,
+        "object": 3,
+        "tgid": 1885,
+        "tid": 1885
+      },
+      "iterations": 5000,
+      "mode": "cycle",
+      "name": "writer-fixed-2-cycle-16",
+      "observations": [
+        {
+          "clones": 0,
+          "closes": 0,
+          "contended_mmaps": 0,
+          "context_errors": 0,
+          "event": "before",
+          "faults": 0,
+          "foreign_rejects": 0,
+          "maps": 0,
+          "object": 3,
+          "observe": 1,
+          "vmas": 0
+        },
+        {
+          "clones": 0,
+          "closes": 80000,
+          "contended_mmaps": 79285,
+          "context_errors": 0,
+          "event": "after",
+          "faults": 0,
+          "foreign_rejects": 0,
+          "maps": 80000,
+          "object": 3,
+          "observe": 1,
+          "vmas": 0
+        }
+      ],
+      "passed": true,
+      "protocol": "NATIVE_CONTROL_MMAP_LOCK",
+      "rejected": [
+        "different_lock",
+        "wrong_caller_return",
+        "wrong_wait_return",
+        "wrong_adapter_return",
+        "running_task",
+        "other_wait_channel",
+        "rescheduled_task",
+        "missing_chain",
+        "missing_writer_proof"
+      ],
+      "threads": 16
+    },
+    {
+      "completion": {
+        "checks": 20,
+        "completed": 1,
+        "event": "complete",
+        "joined": 1,
+        "mode": "lifetime",
+        "passed": true,
+        "workers": [
+          {
+            "completed": 1,
+            "cpu": 0,
+            "errors": 0,
+            "mm": 18379471568533516800,
+            "mmap_lock": 18379471568533516928,
+            "object": 4,
+            "tgid": 1902,
+            "tid": 1903
+          }
+        ]
+      },
+      "delegated": false,
+      "health": "files=0 mm_refs=0 destroyed=4 release_errors=0",
+      "identity": {
+        "event": "identity",
+        "mm": 18379471568533516800,
+        "mmap_lock": 18379471568533516928,
+        "object": 4,
+        "tgid": 1902,
+        "tid": 1902
+      },
+      "iterations": 1,
+      "mode": "lifetime",
+      "name": "writer-fixed-3-lifetime-1",
+      "observations": [
+        {
+          "clones": 0,
+          "closes": 0,
+          "contended_mmaps": 0,
+          "context_errors": 0,
+          "event": "before",
+          "faults": 0,
+          "foreign_rejects": 0,
+          "maps": 1,
+          "object": 4,
+          "observe": 1,
+          "vmas": 1
+        }
+      ],
+      "passed": true,
+      "protocol": "NATIVE_CONTROL_MMAP_LOCK",
+      "threads": 1
+    },
+    {
+      "completion": {
+        "checks": 200,
+        "completed": 16,
+        "event": "complete",
+        "joined": 16,
+        "mode": "lifetime",
+        "passed": true,
+        "workers": [
+          {
+            "completed": 1,
+            "cpu": 0,
+            "errors": 0,
+            "mm": 18379471568533513728,
+            "mmap_lock": 18379471568533513856,
+            "object": 5,
+            "tgid": 1904,
+            "tid": 1905
+          },
+          {
+            "completed": 1,
+            "cpu": 1,
+            "errors": 0,
+            "mm": 18379471568533513728,
+            "mmap_lock": 18379471568533513856,
+            "object": 5,
+            "tgid": 1904,
+            "tid": 1906
+          },
+          {
+            "completed": 1,
+            "cpu": 2,
+            "errors": 0,
+            "mm": 18379471568533513728,
+            "mmap_lock": 18379471568533513856,
+            "object": 5,
+            "tgid": 1904,
+            "tid": 1907
+          },
+          {
+            "completed": 1,
+            "cpu": 3,
+            "errors": 0,
+            "mm": 18379471568533513728,
+            "mmap_lock": 18379471568533513856,
+            "object": 5,
+            "tgid": 1904,
+            "tid": 1908
+          },
+          {
+            "completed": 1,
+            "cpu": 4,
+            "errors": 0,
+            "mm": 18379471568533513728,
+            "mmap_lock": 18379471568533513856,
+            "object": 5,
+            "tgid": 1904,
+            "tid": 1909
+          },
+          {
+            "completed": 1,
+            "cpu": 5,
+            "errors": 0,
+            "mm": 18379471568533513728,
+            "mmap_lock": 18379471568533513856,
+            "object": 5,
+            "tgid": 1904,
+            "tid": 1910
+          },
+          {
+            "completed": 1,
+            "cpu": 6,
+            "errors": 0,
+            "mm": 18379471568533513728,
+            "mmap_lock": 18379471568533513856,
+            "object": 5,
+            "tgid": 1904,
+            "tid": 1911
+          },
+          {
+            "completed": 1,
+            "cpu": 7,
+            "errors": 0,
+            "mm": 18379471568533513728,
+            "mmap_lock": 18379471568533513856,
+            "object": 5,
+            "tgid": 1904,
+            "tid": 1912
+          },
+          {
+            "completed": 1,
+            "cpu": 8,
+            "errors": 0,
+            "mm": 18379471568533513728,
+            "mmap_lock": 18379471568533513856,
+            "object": 5,
+            "tgid": 1904,
+            "tid": 1913
+          },
+          {
+            "completed": 1,
+            "cpu": 9,
+            "errors": 0,
+            "mm": 18379471568533513728,
+            "mmap_lock": 18379471568533513856,
+            "object": 5,
+            "tgid": 1904,
+            "tid": 1914
+          },
+          {
+            "completed": 1,
+            "cpu": 10,
+            "errors": 0,
+            "mm": 18379471568533513728,
+            "mmap_lock": 18379471568533513856,
+            "object": 5,
+            "tgid": 1904,
+            "tid": 1915
+          },
+          {
+            "completed": 1,
+            "cpu": 11,
+            "errors": 0,
+            "mm": 18379471568533513728,
+            "mmap_lock": 18379471568533513856,
+            "object": 5,
+            "tgid": 1904,
+            "tid": 1916
+          },
+          {
+            "completed": 1,
+            "cpu": 12,
+            "errors": 0,
+            "mm": 18379471568533513728,
+            "mmap_lock": 18379471568533513856,
+            "object": 5,
+            "tgid": 1904,
+            "tid": 1917
+          },
+          {
+            "completed": 1,
+            "cpu": 13,
+            "errors": 0,
+            "mm": 18379471568533513728,
+            "mmap_lock": 18379471568533513856,
+            "object": 5,
+            "tgid": 1904,
+            "tid": 1918
+          },
+          {
+            "completed": 1,
+            "cpu": 14,
+            "errors": 0,
+            "mm": 18379471568533513728,
+            "mmap_lock": 18379471568533513856,
+            "object": 5,
+            "tgid": 1904,
+            "tid": 1919
+          },
+          {
+            "completed": 1,
+            "cpu": 15,
+            "errors": 0,
+            "mm": 18379471568533513728,
+            "mmap_lock": 18379471568533513856,
+            "object": 5,
+            "tgid": 1904,
+            "tid": 1920
+          }
+        ]
+      },
+      "delegated": false,
+      "health": "files=0 mm_refs=0 destroyed=5 release_errors=0",
+      "identity": {
+        "event": "identity",
+        "mm": 18379471568533513728,
+        "mmap_lock": 18379471568533513856,
+        "object": 5,
+        "tgid": 1904,
+        "tid": 1904
+      },
+      "iterations": 1,
+      "mode": "lifetime",
+      "name": "writer-fixed-4-lifetime-16",
+      "observations": [
+        {
+          "clones": 0,
+          "closes": 0,
+          "contended_mmaps": 0,
+          "context_errors": 0,
+          "event": "before",
+          "faults": 0,
+          "foreign_rejects": 0,
+          "maps": 16,
+          "object": 5,
+          "observe": 1,
+          "vmas": 16
+        }
+      ],
+      "passed": true,
+      "protocol": "NATIVE_CONTROL_MMAP_LOCK",
+      "threads": 16
+    },
+    {
+      "completion": {
+        "checks": 14,
+        "event": "complete",
+        "mode": "exit",
+        "passed": true
+      },
+      "delegated": false,
+      "health": "files=0 mm_refs=0 destroyed=6 release_errors=0",
+      "identity": {
+        "event": "identity",
+        "mm": 18379471568533014528,
+        "mmap_lock": 18379471568533014656,
+        "object": 6,
+        "tgid": 1921,
+        "tid": 1921
+      },
+      "iterations": 1,
+      "mode": "exit",
+      "name": "writer-fixed-5-exit-1",
+      "observations": [
+        {
+          "clones": 0,
+          "closes": 0,
+          "contended_mmaps": 0,
+          "context_errors": 0,
+          "event": "before_exit",
+          "faults": 0,
+          "foreign_rejects": 0,
+          "maps": 1,
+          "object": 6,
+          "observe": 1,
+          "vmas": 1
+        }
+      ],
+      "passed": true,
+      "protocol": "NATIVE_CONTROL_MMAP_LOCK",
+      "threads": 1
+    },
+    {
+      "health": "files=0 destroyed=1 release_errors=0",
+      "passed": true,
+      "rejected_backends": 4,
+      "selected_backend": 0
+    },
+    {
+      "after": {
+        "active_probe": 0,
+        "backend": 0,
+        "context_errors": 0,
+        "data_errors": 0,
+        "epoch": 0,
+        "event": "after",
+        "fallback": 0,
+        "faults": 5000,
+        "features": 0,
+        "read_ends": 5000,
+        "reads": 5000,
+        "scope_ends": 0,
+        "scopes": 0,
+        "vmas": 0,
+        "write_ends": 0,
+        "writes": 0
+      },
+      "backend": 0,
+      "before": {
+        "active_probe": 0,
+        "backend": 0,
+        "context_errors": 0,
+        "data_errors": 0,
+        "epoch": 0,
+        "event": "before",
+        "fallback": 0,
+        "faults": 0,
+        "features": 0,
+        "read_ends": 0,
+        "reads": 0,
+        "scope_ends": 0,
+        "scopes": 0,
+        "vmas": 1,
+        "write_ends": 0,
+        "writes": 0
+      },
+      "completion": {
+        "backend": 0,
+        "completed": 5000,
+        "event": "complete",
+        "iterations": 5000,
+        "joined": 1,
+        "mode": "fault",
+        "passed": true,
+        "workers": [
+          {
+            "completed": 5000,
+            "cpu": 0,
+            "errors": 0,
+            "pid": 1926,
+            "worker": 0
+          }
+        ]
+      },
+      "delegated_reader": false,
+      "execution": "ORIGIN_FAULT_LOCAL_READER",
+      "health": "files=0 destroyed=2 release_errors=0",
+      "independent_native_mm": true,
+      "iterations": 5000,
+      "mode": "fault",
+      "name": "fault-fixed-0-fault-1",
+      "passed": true,
+      "workers": 1
+    },
+    {
+      "after": {
+        "active_probe": 0,
+        "backend": 0,
+        "context_errors": 0,
+        "data_errors": 0,
+        "epoch": 0,
+        "event": "after",
+        "fallback": 0,
+        "faults": 80000,
+        "features": 0,
+        "read_ends": 80000,
+        "reads": 80000,
+        "scope_ends": 0,
+        "scopes": 0,
+        "vmas": 0,
+        "write_ends": 0,
+        "writes": 0
+      },
+      "backend": 0,
+      "before": {
+        "active_probe": 0,
+        "backend": 0,
+        "context_errors": 0,
+        "data_errors": 0,
+        "epoch": 0,
+        "event": "before",
+        "fallback": 0,
+        "faults": 0,
+        "features": 0,
+        "read_ends": 0,
+        "reads": 0,
+        "scope_ends": 0,
+        "scopes": 0,
+        "vmas": 16,
+        "write_ends": 0,
+        "writes": 0
+      },
+      "completion": {
+        "backend": 0,
+        "completed": 80000,
+        "event": "complete",
+        "iterations": 5000,
+        "joined": 16,
+        "mode": "fault",
+        "passed": true,
+        "workers": [
+          {
+            "completed": 5000,
+            "cpu": 0,
+            "errors": 0,
+            "pid": 1928,
+            "worker": 0
+          },
+          {
+            "completed": 5000,
+            "cpu": 1,
+            "errors": 0,
+            "pid": 1929,
+            "worker": 1
+          },
+          {
+            "completed": 5000,
+            "cpu": 2,
+            "errors": 0,
+            "pid": 1930,
+            "worker": 2
+          },
+          {
+            "completed": 5000,
+            "cpu": 3,
+            "errors": 0,
+            "pid": 1931,
+            "worker": 3
+          },
+          {
+            "completed": 5000,
+            "cpu": 4,
+            "errors": 0,
+            "pid": 1932,
+            "worker": 4
+          },
+          {
+            "completed": 5000,
+            "cpu": 5,
+            "errors": 0,
+            "pid": 1933,
+            "worker": 5
+          },
+          {
+            "completed": 5000,
+            "cpu": 6,
+            "errors": 0,
+            "pid": 1934,
+            "worker": 6
+          },
+          {
+            "completed": 5000,
+            "cpu": 7,
+            "errors": 0,
+            "pid": 1935,
+            "worker": 7
+          },
+          {
+            "completed": 5000,
+            "cpu": 8,
+            "errors": 0,
+            "pid": 1936,
+            "worker": 8
+          },
+          {
+            "completed": 5000,
+            "cpu": 9,
+            "errors": 0,
+            "pid": 1937,
+            "worker": 9
+          },
+          {
+            "completed": 5000,
+            "cpu": 10,
+            "errors": 0,
+            "pid": 1938,
+            "worker": 10
+          },
+          {
+            "completed": 5000,
+            "cpu": 11,
+            "errors": 0,
+            "pid": 1939,
+            "worker": 11
+          },
+          {
+            "completed": 5000,
+            "cpu": 12,
+            "errors": 0,
+            "pid": 1940,
+            "worker": 12
+          },
+          {
+            "completed": 5000,
+            "cpu": 13,
+            "errors": 0,
+            "pid": 1941,
+            "worker": 13
+          },
+          {
+            "completed": 5000,
+            "cpu": 14,
+            "errors": 0,
+            "pid": 1942,
+            "worker": 14
+          },
+          {
+            "completed": 5000,
+            "cpu": 15,
+            "errors": 0,
+            "pid": 1943,
+            "worker": 15
+          }
+        ]
+      },
+      "delegated_reader": false,
+      "execution": "ORIGIN_FAULT_LOCAL_READER",
+      "health": "files=0 destroyed=3 release_errors=0",
+      "independent_native_mm": true,
+      "iterations": 5000,
+      "mode": "fault",
+      "name": "fault-fixed-1-fault-16",
+      "passed": true,
+      "workers": 16
+    },
+    {
+      "after": null,
+      "backend": 0,
+      "before": {
+        "active_probe": 0,
+        "backend": 0,
+        "context_errors": 0,
+        "data_errors": 0,
+        "epoch": 0,
+        "event": "before",
+        "fallback": 0,
+        "faults": 0,
+        "features": 0,
+        "read_ends": 0,
+        "reads": 0,
+        "scope_ends": 0,
+        "scopes": 0,
+        "vmas": 16,
+        "write_ends": 0,
+        "writes": 0
+      },
+      "completion": {
+        "backend": 0,
+        "completed": 16000,
+        "event": "complete",
+        "iterations": 1000,
+        "joined": 16,
+        "mode": "lifetime",
+        "passed": true,
+        "workers": [
+          {
+            "completed": 1000,
+            "cpu": 0,
+            "errors": 0,
+            "pid": 1945,
+            "worker": 0
+          },
+          {
+            "completed": 1000,
+            "cpu": 1,
+            "errors": 0,
+            "pid": 1946,
+            "worker": 1
+          },
+          {
+            "completed": 1000,
+            "cpu": 2,
+            "errors": 0,
+            "pid": 1947,
+            "worker": 2
+          },
+          {
+            "completed": 1000,
+            "cpu": 3,
+            "errors": 0,
+            "pid": 1948,
+            "worker": 3
+          },
+          {
+            "completed": 1000,
+            "cpu": 4,
+            "errors": 0,
+            "pid": 1949,
+            "worker": 4
+          },
+          {
+            "completed": 1000,
+            "cpu": 5,
+            "errors": 0,
+            "pid": 1950,
+            "worker": 5
+          },
+          {
+            "completed": 1000,
+            "cpu": 6,
+            "errors": 0,
+            "pid": 1951,
+            "worker": 6
+          },
+          {
+            "completed": 1000,
+            "cpu": 7,
+            "errors": 0,
+            "pid": 1952,
+            "worker": 7
+          },
+          {
+            "completed": 1000,
+            "cpu": 8,
+            "errors": 0,
+            "pid": 1953,
+            "worker": 8
+          },
+          {
+            "completed": 1000,
+            "cpu": 9,
+            "errors": 0,
+            "pid": 1954,
+            "worker": 9
+          },
+          {
+            "completed": 1000,
+            "cpu": 10,
+            "errors": 0,
+            "pid": 1955,
+            "worker": 10
+          },
+          {
+            "completed": 1000,
+            "cpu": 11,
+            "errors": 0,
+            "pid": 1956,
+            "worker": 11
+          },
+          {
+            "completed": 1000,
+            "cpu": 12,
+            "errors": 0,
+            "pid": 1957,
+            "worker": 12
+          },
+          {
+            "completed": 1000,
+            "cpu": 13,
+            "errors": 0,
+            "pid": 1958,
+            "worker": 13
+          },
+          {
+            "completed": 1000,
+            "cpu": 14,
+            "errors": 0,
+            "pid": 1959,
+            "worker": 14
+          },
+          {
+            "completed": 1000,
+            "cpu": 15,
+            "errors": 0,
+            "pid": 1960,
+            "worker": 15
+          }
+        ]
+      },
+      "delegated_reader": false,
+      "execution": "ORIGIN_FAULT_LOCAL_READER",
+      "health": "files=0 destroyed=4 release_errors=0",
+      "independent_native_mm": true,
+      "iterations": 1000,
+      "mode": "lifetime",
+      "name": "fault-fixed-2-lifetime-16",
+      "passed": true,
+      "workers": 16
+    },
+    {
+      "after": {
+        "active_probe": 0,
+        "backend": 0,
+        "context_errors": 0,
+        "data_errors": 0,
+        "epoch": 1000,
+        "event": "after",
+        "fallback": 0,
+        "faults": 15000,
+        "features": 0,
+        "read_ends": 15000,
+        "reads": 15000,
+        "scope_ends": 0,
+        "scopes": 0,
+        "vmas": 0,
+        "write_ends": 1000,
+        "writes": 1000
+      },
+      "backend": 0,
+      "before": {
+        "active_probe": 0,
+        "backend": 0,
+        "context_errors": 0,
+        "data_errors": 0,
+        "epoch": 0,
+        "event": "before",
+        "fallback": 0,
+        "faults": 0,
+        "features": 0,
+        "read_ends": 0,
+        "reads": 0,
+        "scope_ends": 0,
+        "scopes": 0,
+        "vmas": 15,
+        "write_ends": 0,
+        "writes": 0
+      },
+      "completion": {
+        "backend": 0,
+        "completed": 16000,
+        "event": "complete",
+        "iterations": 1000,
+        "joined": 16,
+        "mode": "concurrent",
+        "passed": true,
+        "workers": [
+          {
+            "completed": 1000,
+            "cpu": 0,
+            "errors": 0,
+            "pid": 1962,
+            "worker": 0
+          },
+          {
+            "completed": 1000,
+            "cpu": 1,
+            "errors": 0,
+            "pid": 1963,
+            "worker": 1
+          },
+          {
+            "completed": 1000,
+            "cpu": 2,
+            "errors": 0,
+            "pid": 1964,
+            "worker": 2
+          },
+          {
+            "completed": 1000,
+            "cpu": 3,
+            "errors": 0,
+            "pid": 1965,
+            "worker": 3
+          },
+          {
+            "completed": 1000,
+            "cpu": 4,
+            "errors": 0,
+            "pid": 1966,
+            "worker": 4
+          },
+          {
+            "completed": 1000,
+            "cpu": 5,
+            "errors": 0,
+            "pid": 1967,
+            "worker": 5
+          },
+          {
+            "completed": 1000,
+            "cpu": 6,
+            "errors": 0,
+            "pid": 1968,
+            "worker": 6
+          },
+          {
+            "completed": 1000,
+            "cpu": 7,
+            "errors": 0,
+            "pid": 1969,
+            "worker": 7
+          },
+          {
+            "completed": 1000,
+            "cpu": 8,
+            "errors": 0,
+            "pid": 1970,
+            "worker": 8
+          },
+          {
+            "completed": 1000,
+            "cpu": 9,
+            "errors": 0,
+            "pid": 1971,
+            "worker": 9
+          },
+          {
+            "completed": 1000,
+            "cpu": 10,
+            "errors": 0,
+            "pid": 1972,
+            "worker": 10
+          },
+          {
+            "completed": 1000,
+            "cpu": 11,
+            "errors": 0,
+            "pid": 1973,
+            "worker": 11
+          },
+          {
+            "completed": 1000,
+            "cpu": 12,
+            "errors": 0,
+            "pid": 1974,
+            "worker": 12
+          },
+          {
+            "completed": 1000,
+            "cpu": 13,
+            "errors": 0,
+            "pid": 1975,
+            "worker": 13
+          },
+          {
+            "completed": 1000,
+            "cpu": 14,
+            "errors": 0,
+            "pid": 1976,
+            "worker": 14
+          },
+          {
+            "completed": 1000,
+            "cpu": 15,
+            "errors": 0,
+            "pid": 1977,
+            "worker": 15
+          }
+        ]
+      },
+      "delegated_reader": false,
+      "execution": "ORIGIN_FAULT_LOCAL_READER",
+      "health": "files=0 destroyed=5 release_errors=0",
+      "independent_native_mm": true,
+      "iterations": 1000,
+      "mode": "concurrent",
+      "name": "fault-fixed-3-concurrent-16",
+      "passed": true,
+      "workers": 16
+    },
+    {
+      "backend": 0,
+      "backing_execution": "ORDINARY_LOCAL",
+      "checks": 96,
+      "created": [
+        {
+          "event": "create",
+          "fallback": 0,
+          "features": 8,
+          "requested": 0,
+          "selected": 0
+        },
+        {
+          "event": "create",
+          "fallback": 0,
+          "features": 23,
+          "requested": 0,
+          "selected": 0
+        },
+        {
+          "event": "create",
+          "fallback": 0,
+          "features": 0,
+          "requested": 0,
+          "selected": 0
+        }
+      ],
+      "fault_execution": "ORIGIN_TASK",
+      "health": "files=0 destroyed=3 release_errors=0",
+      "joined": {
+        "backend": 0,
+        "downgrades": 1,
+        "epoch": 1001,
+        "errors": 0,
+        "event": "joined",
+        "faults": 408,
+        "read_ends": 409,
+        "reads": 409,
+        "scope_ends": 6,
+        "scopes": 6,
+        "vmas": 0,
+        "write_ends": 1013,
+        "writes": 1013
+      },
+      "passed": true,
+      "probes": [
+        {
+          "acquisitions": 1,
+          "action": 0,
+          "attempts": 1,
+          "callbacks": 1,
+          "completed": 0,
+          "event": "probe",
+          "final_held": 0,
+          "nowait": 0,
+          "pause_timeout": 0,
+          "releases": 1,
+          "result": 0,
+          "retries": 0,
+          "revalidated": 0,
+          "stale": 0
+        },
+        {
+          "acquisitions": 2,
+          "action": 1,
+          "attempts": 2,
+          "callbacks": 2,
+          "completed": 0,
+          "event": "probe",
+          "final_held": 0,
+          "nowait": 0,
+          "pause_timeout": 0,
+          "releases": 2,
+          "result": 0,
+          "retries": 1,
+          "revalidated": 1,
+          "stale": 0
+        },
+        {
+          "acquisitions": 1,
+          "action": 2,
+          "attempts": 1,
+          "callbacks": 1,
+          "completed": 0,
+          "event": "probe",
+          "final_held": 0,
+          "nowait": 1,
+          "pause_timeout": 0,
+          "releases": 1,
+          "result": -11,
+          "retries": 0,
+          "revalidated": 0,
+          "stale": 0
+        },
+        {
+          "acquisitions": 1,
+          "action": 3,
+          "attempts": 1,
+          "callbacks": 1,
+          "completed": 1,
+          "event": "probe",
+          "final_held": 0,
+          "nowait": 0,
+          "pause_timeout": 0,
+          "releases": 1,
+          "result": 0,
+          "retries": 0,
+          "revalidated": 0,
+          "stale": 0
+        },
+        {
+          "acquisitions": 2,
+          "action": 4,
+          "attempts": 1,
+          "callbacks": 1,
+          "completed": 0,
+          "event": "probe",
+          "final_held": 0,
+          "nowait": 0,
+          "pause_timeout": 0,
+          "releases": 2,
+          "result": -116,
+          "retries": 1,
+          "revalidated": 0,
+          "stale": 1
+        }
+      ],
+      "rejected_mode": {
+        "acquisitions": 1,
+        "action": 0,
+        "attempts": 0,
+        "callbacks": 0,
+        "completed": 0,
+        "event": "rejected_mode",
+        "final_held": 0,
+        "nowait": 0,
+        "pause_timeout": 0,
+        "releases": 1,
+        "result": -116,
+        "retries": 0,
+        "revalidated": 0,
+        "stale": 1
+      }
+    }
+  ],
+  "drained": true,
+  "final_idle": true,
+  "host_endpoint": "PENDING",
+  "inputs_sha256": "69271dff3cbb70e098a0b7157125b32a97ee7499b5903a539d0259bc5dff9b6f",
+  "kernel_identity": {
+    "baseline": "/root/kdlock-kernel-baselines/mmap-kdmm1-20261021",
+    "build_files": 11,
+    "bundle_files": 5,
+    "config": true,
+    "ok": true,
+    "running_build_id": "687ff5a29315d732f93a618e50ac407c794bbf9b",
+    "source": "/root/kdlock-kernel-work/mmap-20261021/candidate-1/linux",
+    "source_files": 44
+  },
+  "kernel_mmap_mode": "native",
+  "modules": [
+    "aesni_intel",
+    "async_memcpy",
+    "async_pq",
+    "async_raid6_recov",
+    "async_tx",
+    "async_xor",
+    "autofs4",
+    "binfmt_misc",
+    "blake2b_generic",
+    "bochs",
+    "btrfs",
+    "crc32_pclmul",
+    "crct10dif_pclmul",
+    "cryptd",
+    "crypto_simd",
+    "dm_multipath",
+    "drm",
+    "drm_kms_helper",
+    "drm_ttm_helper",
+    "drm_vram_helper",
+    "efi_pstore",
+    "failover",
+    "fb_sys_fops",
+    "floppy",
+    "ghash_clmulni_intel",
+    "i2c_piix4",
+    "input_leds",
+    "intel_rapl_common",
+    "intel_rapl_msr",
+    "intel_uncore_frequency_common",
+    "ip_tables",
+    "joydev",
+    "kvm",
+    "kvm_intel",
+    "libcrc32c",
+    "linear",
+    "mac_hid",
+    "multipath",
+    "net_failover",
+    "nfit",
+    "nfnetlink",
+    "nls_iso8859_1",
+    "parport",
+    "parport_pc",
+    "pata_acpi",
+    "ppdev",
+    "psmouse",
+    "qemu_fw_cfg",
+    "raid0",
+    "raid1",
+    "raid10",
+    "raid456",
+    "raid6_pq",
+    "rapl",
+    "sch_fq_codel",
+    "scsi_dh_alua",
+    "scsi_dh_emc",
+    "scsi_dh_rdac",
+    "serio_raw",
+    "sha1_ssse3",
+    "sha256_ssse3",
+    "sha512_ssse3",
+    "skx_edac_common",
+    "syscopyarea",
+    "sysfillrect",
+    "sysimgblt",
+    "tls",
+    "ttm",
+    "virtio_net",
+    "virtio_scsi",
+    "x_tables",
+    "xor",
+    "zstd_compress"
+  ],
+  "p95_status": "DEFERRED",
+  "passed": true,
+  "sampling_cost_status": "DEFERRED",
+  "sessions": [
+    {
+      "arm": "native",
+      "collector_cpu": 63,
+      "collector_shared": false,
+      "cpus": [
+        0
+      ],
+      "drained": true,
+      "duration_ms": 2000,
+      "health": "files=0 mm_refs=0 destroyed=1 release_errors=0",
+      "kernel_mmap_mode": "native",
+      "measurement": {
+        "backing": "NATIVE",
+        "callback_count": 717280,
+        "completed": 717280,
+        "completed_operation_p95_ns": null,
+        "delegated": false,
+        "errors": 0,
+        "execution": "NATIVE_CONTROL_MMAP_LOCK",
+        "fault_callbacks": 0,
+        "kernel_mmap_mode": "native",
+        "latency_definition": "One shared-mm mmap plus munmap cycle, untouched payload range",
+        "latency_samples": 0,
+        "p95_status": "DEFERRED",
+        "peak": {
+          "active_finished_ns": 118568620149,
+          "active_started_ns": 116568901415,
+          "amortized_ns_op": 2776.4021376863534,
+          "candidate_windows": 139,
+          "collector_cpu": 63,
+          "collector_shared": false,
+          "completed": 111616,
+          "elapsed_ns": 309890901,
+          "eligible_samples": 169,
+          "eligible_started_ns": 116868901415,
+          "end_sample_index": 97,
+          "end_snapshot_span_ns": 506,
+          "finished_ns": 117538725998,
+          "max_snapshot_span_ns": 42283,
+          "policy": "observed_full_cohort_earliest_endpoint",
+          "progress_batch": 256,
+          "progress_count_error_bound": 256,
+          "requested_window_ns": 300000000,
+          "sample_period_ns": 10000000,
+          "settle_ns": 300000000,
+          "start_sample_index": 66,
+          "start_snapshot_span_ns": 748,
+          "started_ns": 117228835097,
+          "throughput_ops_s": 360178.37129074015,
+          "worker_completed": [
+            111616
+          ]
+        },
+        "sampling_cost_status": "DEFERRED",
+        "whole_ops_s": 358632.9286552292
+      },
+      "name": "mmap-plain-1",
+      "observation": "plain",
+      "passed": true,
+      "peak_settle_ms": 300,
+      "peak_window_ms": 300,
+      "queue_observer": false,
+      "rejected": [
+        "live_vma",
+        "missing_join",
+        "wrong_cpu",
+        "invalid_progress",
+        "plain_latency",
+        "different_mm",
+        "duplicate_tid",
+        "fault_in_mmap",
+        "missing_map"
+      ],
+      "repeat": 0,
+      "sample_ms": 10,
+      "task": "mmap",
+      "threads": 1,
+      "warmup": null,
+      "workload": "mmap-shared-mm"
+    },
+    {
+      "arm": "native",
+      "collector_cpu": 63,
+      "collector_shared": false,
+      "cpus": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15
+      ],
+      "drained": true,
+      "duration_ms": 2000,
+      "health": "files=0 mm_refs=0 destroyed=1 release_errors=0",
+      "kernel_mmap_mode": "native",
+      "measurement": {
+        "backing": "NATIVE",
+        "callback_count": 219712,
+        "completed": 219712,
+        "completed_operation_p95_ns": null,
+        "delegated": false,
+        "errors": 0,
+        "execution": "NATIVE_CONTROL_MMAP_LOCK",
+        "fault_callbacks": 0,
+        "kernel_mmap_mode": "native",
+        "latency_definition": "One shared-mm mmap plus munmap cycle, untouched payload range",
+        "latency_samples": 0,
+        "p95_status": "DEFERRED",
+        "peak": {
+          "active_finished_ns": 120793546877,
+          "active_started_ns": 118793789801,
+          "amortized_ns_op": 8683.867158564815,
+          "candidate_windows": 139,
+          "collector_cpu": 63,
+          "collector_shared": false,
+          "completed": 34560,
+          "elapsed_ns": 300114449,
+          "eligible_samples": 169,
+          "eligible_started_ns": 119093789801,
+          "end_sample_index": 68,
+          "end_snapshot_span_ns": 1934,
+          "finished_ns": 119473767414,
+          "max_snapshot_span_ns": 24002,
+          "policy": "observed_full_cohort_earliest_endpoint",
+          "progress_batch": 256,
+          "progress_count_error_bound": 4096,
+          "requested_window_ns": 300000000,
+          "sample_period_ns": 10000000,
+          "settle_ns": 300000000,
+          "start_sample_index": 38,
+          "start_snapshot_span_ns": 877,
+          "started_ns": 119173652965,
+          "throughput_ops_s": 115156.06834378041,
+          "worker_completed": [
+            2048,
+            1536,
+            2048,
+            2816,
+            2304,
+            2304,
+            2048,
+            2048,
+            3328,
+            2048,
+            2048,
+            1792,
+            2048,
+            2816,
+            2048,
+            1280
+          ]
+        },
+        "sampling_cost_status": "DEFERRED",
+        "whole_ops_s": 109586.11187161315
+      },
+      "name": "mmap-plain-16",
+      "observation": "plain",
+      "passed": true,
+      "peak_settle_ms": 300,
+      "peak_window_ms": 300,
+      "queue_observer": false,
+      "rejected": [
+        "live_vma",
+        "missing_join",
+        "wrong_cpu",
+        "invalid_progress",
+        "plain_latency",
+        "different_mm",
+        "duplicate_tid",
+        "fault_in_mmap",
+        "missing_map"
+      ],
+      "repeat": 0,
+      "sample_ms": 10,
+      "task": "mmap",
+      "threads": 16,
+      "warmup": null,
+      "workload": "mmap-shared-mm"
+    },
+    {
+      "arm": "native",
+      "collector_cpu": 63,
+      "collector_shared": false,
+      "cpus": [
+        0
+      ],
+      "drained": true,
+      "duration_ms": 2000,
+      "health": "files=0 destroyed=1 release_errors=0",
+      "kernel_mmap_mode": "native",
+      "measurement": {
+        "backing": "NATIVE",
+        "callback_count": 519424,
+        "completed": 519424,
+        "completed_operation_p95_ns": null,
+        "delegated": false,
+        "errors": 0,
+        "execution": "NATIVE_CONTROL_MMAP_LOCK",
+        "kernel_mmap_mode": "native",
+        "latency_definition": "MADV_DONTNEED plus checked CPU read; includes PTE reset",
+        "latency_samples": 0,
+        "p95_status": "DEFERRED",
+        "peak": {
+          "active_finished_ns": 123034614515,
+          "active_started_ns": 121034896303,
+          "amortized_ns_op": 3832.0883356408226,
+          "candidate_windows": 138,
+          "collector_cpu": 63,
+          "collector_shared": false,
+          "completed": 80896,
+          "elapsed_ns": 310000618,
+          "eligible_samples": 169,
+          "eligible_started_ns": 121334896303,
+          "end_sample_index": 96,
+          "end_snapshot_span_ns": 663,
+          "finished_ns": 121994812422,
+          "max_snapshot_span_ns": 54691,
+          "policy": "observed_full_cohort_earliest_endpoint",
+          "progress_batch": 256,
+          "progress_count_error_bound": 256,
+          "requested_window_ns": 300000000,
+          "sample_period_ns": 10000000,
+          "settle_ns": 300000000,
+          "start_sample_index": 65,
+          "start_snapshot_span_ns": 729,
+          "started_ns": 121684811804,
+          "throughput_ops_s": 260954.3184846167,
+          "worker_completed": [
+            80896
+          ]
+        },
+        "sampling_cost_status": "DEFERRED",
+        "whole_ops_s": 259709.3570677278
+      },
+      "name": "fault-plain-1",
+      "observation": "plain",
+      "passed": true,
+      "peak_settle_ms": 300,
+      "peak_window_ms": 300,
+      "rejected": [
+        "live_vma",
+        "missing_join",
+        "wrong_cpu",
+        "invalid_progress",
+        "plain_latency",
+        "missing_fault",
+        "missing_read_end",
+        "writer_in_fault",
+        "extra_pid"
+      ],
+      "repeat": 0,
+      "sample_ms": 10,
+      "task": "fault",
+      "threads": 1,
+      "warmup": null,
+      "workload": "fault"
+    },
+    {
+      "arm": "native",
+      "collector_cpu": 63,
+      "collector_shared": false,
+      "cpus": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15
+      ],
+      "drained": true,
+      "duration_ms": 2000,
+      "health": "files=0 destroyed=1 release_errors=0",
+      "kernel_mmap_mode": "native",
+      "measurement": {
+        "backing": "NATIVE",
+        "callback_count": 5155008,
+        "completed": 5155008,
+        "completed_operation_p95_ns": null,
+        "delegated": false,
+        "errors": 0,
+        "execution": "NATIVE_CONTROL_MMAP_LOCK",
+        "kernel_mmap_mode": "native",
+        "latency_definition": "MADV_DONTNEED plus checked CPU read; includes PTE reset",
+        "latency_samples": 0,
+        "p95_status": "DEFERRED",
+        "peak": {
+          "active_finished_ns": 125272088869,
+          "active_started_ns": 123272409654,
+          "amortized_ns_op": 386.6981825820686,
+          "candidate_windows": 139,
+          "collector_cpu": 63,
+          "collector_shared": false,
+          "completed": 775936,
+          "elapsed_ns": 300053041,
+          "eligible_samples": 169,
+          "eligible_started_ns": 123572409654,
+          "end_sample_index": 157,
+          "end_snapshot_span_ns": 30122,
+          "finished_ns": 124842334045,
+          "max_snapshot_span_ns": 51390,
+          "policy": "observed_full_cohort_earliest_endpoint",
+          "progress_batch": 256,
+          "progress_count_error_bound": 4096,
+          "requested_window_ns": 300000000,
+          "sample_period_ns": 10000000,
+          "settle_ns": 300000000,
+          "start_sample_index": 127,
+          "start_snapshot_span_ns": 2087,
+          "started_ns": 124542281004,
+          "throughput_ops_s": 2585996.120599224,
+          "worker_completed": [
+            48128,
+            48128,
+            48640,
+            48128,
+            48384,
+            48896,
+            48640,
+            49152,
+            46848,
+            48640,
+            48640,
+            48896,
+            48640,
+            48896,
+            48640,
+            48640
+          ]
+        },
+        "sampling_cost_status": "DEFERRED",
+        "whole_ops_s": 2577303.000004984
+      },
+      "name": "fault-plain-16",
+      "observation": "plain",
+      "passed": true,
+      "peak_settle_ms": 300,
+      "peak_window_ms": 300,
+      "rejected": [
+        "live_vma",
+        "missing_join",
+        "wrong_cpu",
+        "invalid_progress",
+        "plain_latency",
+        "missing_fault",
+        "missing_read_end",
+        "writer_in_fault",
+        "extra_pid"
+      ],
+      "repeat": 0,
+      "sample_ms": 10,
+      "task": "fault",
+      "threads": 16,
+      "warmup": null,
+      "workload": "fault"
+    }
+  ],
+  "seven_mutex_causes": "UNRESOLVED",
+  "timing": false
+}

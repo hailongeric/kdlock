@@ -1,0 +1,20 @@
+{
+  "builds": [
+    {
+      "passed": true,
+      "payload_sha256": "d946f57e5fbbee932e69494acd0854c99b9cda00d812adbf6b2a15b4251a48c9",
+      "profile": "kd",
+      "provider": "kdlock"
+    },
+    {
+      "passed": true,
+      "payload_sha256": "789af2bd2246f7a0e1f559b58195ca8b83389f1c1acd106255c021add6b9909a",
+      "profile": "tc",
+      "provider": "tclock"
+    }
+  ],
+  "driver_sha256": "fb3a3a6ebbe537a15a5a385066cbbfbfb494938f884ad1f98b6c6c2bdc3f2f31",
+  "final_idle": true,
+  "modules_loaded": 0,
+  "passed": true
+}
