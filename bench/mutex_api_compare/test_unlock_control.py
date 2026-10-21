@@ -13,7 +13,9 @@ import unlock_control as control
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--candidate', type=Path, required=True)
+    parser.add_argument('--output', type=Path, required=True)
     args = parser.parse_args()
+    control.require(not args.output.exists(), 'new audit receipt required')
     original = control.ORIGINAL/'baseline/pipecap'/control.BINARY
     control.elf_audit(original, False)
     result = control.elf_audit(args.candidate, True)
@@ -49,6 +51,9 @@ def main():
             else:
                 raise AssertionError('damaged ELF was accepted: '+name)
     print('PASS two actual ELF positives and three damaged-ELF rejections; no module loaded')
+    control.save(args.output, dict(passed=True, original_sha256=control.sha(original),
+        candidate_sha256=control.sha(args.candidate), auditor_sha256=control.sha(Path(control.__file__)),
+        test_sha256=control.sha(Path(__file__)), rejected=list(edits), loaded=False))
 
 
 if __name__ == '__main__':

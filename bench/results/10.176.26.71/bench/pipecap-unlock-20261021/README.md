@@ -32,8 +32,10 @@ between reads. No settings, affinities, tracing or unknown processes changed.
 
 The derivative changes exactly one macro in the frozen baseline pipecap source:
 `KD_MUTEX_OUTER_UNLOCK(&kd_lock, cookie)` becomes
-`KD_MUTEX_DIRECT_UNLOCK(&kd_lock)`. OUTER acquisition, cookie writes and ABI2
-continuation remain unchanged. The original bundle and artifacts are immutable.
+`KD_MUTEX_DIRECT_UNLOCK(&kd_lock)`. The OUTER acquisition macro, including its
+source cookie writes, remains unchanged. The compiler removes the unused
+route-result copy; both actual capture sequences preserve ABI2. The original
+bundle and artifacts are immutable.
 The builder retains the original provider, headers, daemon, translator, client,
 body, n16 and placement. Existing retained symbol metadata is checked against
 the exact original provider's CRC words; no rebuilt provider may be loaded.
@@ -63,3 +65,44 @@ All seven mutex causes remain unresolved. Complete-operation p95 remains
 separate from unresolved acquisition latency. Concurrent local readers,
 separate mmap/page-fault tasks and exclusion of unsupported TCLock MM bodies
 remain unchanged.
+
+## Implementation and basic validation
+
+`b513663` adds the isolated workload builder and affected ownership/ABI fixtures;
+`820b251` adds the serial correctness/timing driver and actual-ELF rejection
+checks. Neither changes the production protocol. `checks-1` passed both basic
+programs and all six selected drivers in the VM. Both unlock variants also
+passed the actual macro/generated-code checks against the frozen original
+headers. The fixture result is separate from the pending live owner/ACK and
+syscall checks.
+
+`inputs-1` built successfully with manifest SHA256
+`daf7f77beda2704d9cc56291f9864489f733c844f6188cd6c8198480539badae`.
+Only the planned workload macro and its binary change; original provider,
+headers, translator and client remain fixed. Both actual ELFs pass the audit,
+and three corrupted copies are rejected: wrong hot RIP, wrong mutex size, and
+damaged unlock capture. No corrupted ELF was loaded. The full caller body
+changes from 203 to 188 bytes; business-body assembly inspection is separate
+from these structural checks. Actual loaded cacheline placement remains a live
+gate, because section-relative placement alone is insufficient.
+
+The host observation before the live task probe at `10:31:13.461481 UTC` found
+76 threads, with verified pins and the recovery snapshot still present. This
+does not qualify for timing; correctness can proceed independently. A later
+timing attempt still requires a fresh strict 67-thread comparison. Read-only
+review also caught a missing fixed-hash check for the original three environment
+receipts in the new runner; it is restored before any live syscall session.
+
+Read-only assembly review found byte-identical business computation at
+`0x13c–0x151`, unchanged stack frame and spills, and unchanged acquisition probes
+apart from branch displacements. The 15 removed bytes are the cookie test/branch
+(5), route-result copy (3), and local-unlock call/return jump (7). This diagnostic
+therefore measures the entire unlock-shell transformation, including changed
+control flow and layout; it cannot isolate provider-only cycles.
+
+`task-1` did not execute its tests: module insertion failed with a reserved
+per-CPU allocation error for 7592 bytes. The logs and original module are
+retained; inspection found no KD module resident. The planned single allocator
+refresh uses the existing page-sized helper's normal allocation/free path and
+unloads it before retrying the unchanged provider. This preparation is separate
+from correctness and never counts as a test pass.

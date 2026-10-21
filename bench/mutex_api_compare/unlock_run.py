@@ -36,6 +36,7 @@ def main():
     p.add_argument('--host-state', type=Path, required=True)
     p.add_argument('--unit-checks', type=Path, required=True)
     p.add_argument('--task-check', type=Path, required=True)
+    p.add_argument('--elf-checks', type=Path, required=True)
     p.add_argument('--correctness', type=Path)
     p.add_argument('--source-commit', required=True)
     a = p.parse_args()
@@ -61,6 +62,42 @@ def main():
     require(checks['passed'] and checks['final_idle'] and checks['source_unchanged'] and
             task_check['passed'] and task_check['drained'] and task_check['acks'] == 4,
             'basic/affected tests and actual owner-ACK probe must pass first')
+    require(checks['unit_basic'] == 2 and checks['unit_drivers'] == [
+        'mutex/test_mutex_resources.py', 'mutex/test_mutex_outer_api.py',
+        'mutex/test_mutex_task_cache.py', 'mutex/test_mutex_state.py',
+        'mutex/test_mutex_wait_clobber.py', 'execution/test_remote_outer.py'] and
+        [(r['name'], r['exit_code']) for r in checks['commands']] ==
+        [('dependencies', 0), ('unit', 0), ('frozen-outer-header', 0)] and
+        sha(a.unit_checks.parent/'committed-source.json') == checks['committed_manifest_sha256'],
+        'required affected tests or committed source receipt differ')
+    unit_sources = read(a.unit_checks.parent/'source-sha256.json')
+    committed = read(a.unit_checks.parent/'committed-source.json')
+    require(committed['commit'] == checks['source_revision'], 'unit source revision differs')
+    for relative, digest in unit_sources.items():
+        require(digest == committed['files'][relative] and
+                sha(a.unit_checks.parent/'source'/relative) == digest,
+                'tested frozen source changed: ' + relative)
+        if relative.startswith(('include/', 'kernel_module/', 'disassem/', 'tests/unit/')):
+            require(sha(ROOT/relative) == digest, 'affected source changed since tests: ' + relative)
+    require(task_check['scope'] == 'task_owner_ack_resource_probe' and
+            task_check['orders'] == ['B-A', 'A-B'] and task_check['deferred_frees'] == 2 and
+            task_check['registry_stress_workers'] == 3 and
+            task_check['registry_stress_iterations'] == 4096 and
+            task_check['registry_stress_deferred_frees'] == 3, 'actual owner/registry probe differs')
+    for relative, digest in read(a.task_check.parent/'sources.json').items():
+        require(sha(ROOT/relative) == sha(a.task_check.parent/'source'/relative) == digest,
+                'actual task-probe source changed: ' + relative)
+    task_identity = read(a.task_check.parent/'identity.json')
+    require(sha(a.task_check.parent/'kdlock_km.ko') == task_identity['module_sha256'] and
+            task_identity['cpus'] == [0, 1, 2], 'actual task probe binary or CPUs differ')
+    elf_checks = read(a.elf_checks)
+    require(elf_checks['passed'] and not elf_checks['loaded'] and
+            elf_checks['candidate_sha256'] == candidate['derivative_workload_sha256'] and
+            elf_checks['original_sha256'] == candidate['original_workload_sha256'] and
+            elf_checks['auditor_sha256'] == sha(Path(control.__file__)) and
+            elf_checks['test_sha256'] == sha(ROOT/'bench/mutex_api_compare/test_unlock_control.py') and
+            elf_checks['rejected'] == ['wrong-hot-rip', 'wrong-mutex-size', 'unlock-capture-damaged'],
+            'actual ELF positive/negative audit provenance differs')
     if a.mode == 'timing':
         require(a.correctness is not None, 'correctness receipt required before timing')
         correctness = read(a.correctness)
@@ -85,6 +122,7 @@ def main():
     out.mkdir(parents=True)
     for name, source in (('runner.py', Path(__file__)), ('inputs.json', a.inputs),
                          ('unit-checks.json', a.unit_checks), ('task-check.json', a.task_check),
+                         ('elf-checks.json', a.elf_checks),
                          ('host-before.json', a.host_state), ('transition.json', transition_path),
                          ('scheduler.py', Path(scheduler.__file__)),
                          ('unlock_control.py', Path(control.__file__))):
@@ -100,6 +138,11 @@ def main():
         python=sys.executable, snapshot_tag=os.environ['KDLOCK_SNAPSHOT_TAG'],
         collector_topology=syn.collector_topology(63))
     save(out/'environment.json', environment)
+    # Compare against the captured campaign, not a mutable reference that could
+    # silently redefine the topology or host gate for this diagnostic.
+    for filename, digest in scheduler.REPLAY_ENVIRONMENT_SHA256.items():
+        require(sha(control.ORIGINAL/'matrix'/filename) == digest,
+                'original environment evidence changed: ' + filename)
     old_env = read(control.ORIGINAL/'matrix/environment.json')
     require(all(environment[k] == v for k, v in old_env.items() if k in environment and k != 'boot_id')
             and topology == read(control.ORIGINAL/'matrix/topology.json'),
