@@ -8,9 +8,11 @@ Neither mode changes admission or the frozen original provider/workload.
 import argparse
 from datetime import datetime, timezone
 import importlib.metadata
+import json
 import os
 from pathlib import Path
 import re
+import select
 import shutil
 import sys
 import time
@@ -39,7 +41,26 @@ def main():
     p.add_argument('--elf-checks', type=Path, required=True)
     p.add_argument('--correctness', type=Path)
     p.add_argument('--source-commit', required=True)
+    p.add_argument('--phase-single-outer', action='store_true',
+                   help='Intrusive single-session host-worker diagnostic with stdin phase acknowledgements')
     a = p.parse_args()
+    if a.phase_single_outer and a.mode != 'timing':
+        p.error('--phase-single-outer requires timing and every existing correctness/environment gate')
+    phase_sequence = 0
+
+    def phase(label, edge):
+        nonlocal phase_sequence
+        if not a.phase_single_outer:
+            return
+        phase_sequence += 1
+        print('KD_PHASE '+json.dumps(dict(event='phase', sequence=phase_sequence,
+            label=label, edge=edge, real_ns=time.time_ns(), mono_ns=time.monotonic_ns())), flush=True)
+        if not select.select([sys.stdin], [], [], 15)[0]:
+            raise ValueError('phase observer acknowledgement timed out; no drain inferred')
+        if json.loads(sys.stdin.readline()) != {'phase_ack': phase_sequence}:
+            raise ValueError('phase observer acknowledgement differs')
+
+    phase('preflight', 'begin')
     control = load(ROOT/'bench/mutex_api_compare/unlock_control.py', 'unlock_control')
     require, save, read, sha = control.require, control.save, control.read, control.sha
     require(os.geteuid() == 0 and os.uname().release == '6.1.159-kdclobber2' and
@@ -169,21 +190,56 @@ def main():
             if a.mode == 'correctness' else
             [(5, r, arm) for r in range(3)
              for arm in (('outer', 'general') if r % 2 == 0 else ('general', 'outer'))])
+    if a.phase_single_outer:
+        plan = [(5, 0, 'outer')]
     save(out/'plan.json', plan)
     receipt = dict(passed=False, accepted=False, mode=a.mode, inputs_sha256=a.inputs_sha256,
         source_commit=a.source_commit, planned=len(plan), completed=0, final_idle=False,
+        phase_single_outer=a.phase_single_outer,
         records=[], started_ns=time.time_ns(), unit_checks_sha256=sha(a.unit_checks),
         task_check_sha256=sha(a.task_check), scope='Separately named workload diagnostic; original provider.')
     save(out/'result.json', receipt)
 
     class MatchedSession(api.SyscallSession):
         def prepare(self):
+            phase('prepare', 'begin')
             super().prepare()
             offset = self.record['lock_addr'] % 64
             self.record['actual_lock_cacheline_offset'] = offset
             self.save()
             require(a.mode != 'timing' or offset == expected_offset,
                     'loaded mutex placement differs from correctness/control')
+            phase('prepare', 'end')
+
+        def tell(self, action, timeout=180, label=None):
+            phase('client-'+(label or action), 'begin')
+            result = super().tell(action, timeout, label)
+            phase('client-'+(label or action), 'end')
+            return result
+
+        def run(self, argv, name, **kwargs):
+            phase('command-'+name, 'begin')
+            result = super().run(argv, name, **kwargs)
+            phase('command-'+name, 'end')
+            return result
+
+        def await_publication(self):
+            phase('publication', 'begin')
+            result = super().await_publication()
+            phase('publication', 'end')
+            return result
+
+        def measure(self):
+            phase('measure-accounting', 'begin')
+            result = super().measure()
+            phase('measure-accounting', 'end')
+            return result
+
+        def cleanup(self):
+            phase('cleanup', 'begin')
+            result = super().cleanup()
+            phase('cleanup', 'end')
+            return result
 
     class CorrectnessSession(MatchedSession):
         def measure(self):
@@ -221,6 +277,7 @@ def main():
             api.require(not s['require_jit'] or s['jit_completions'] > 0,
                         'required returned body absent in correctness work', 'NO_JIT')
 
+    phase('preflight', 'end')
     try:
         for n, repeat, arm in plan:
             syn.idle()
@@ -249,12 +306,14 @@ def main():
             print('FINISH', spec['name'], 'returns', session.record['jit_completions'], flush=True)
         require(len({r['actual_lock_cacheline_offset'] for r in receipt['records']}) == 1,
                 'loaded mutex cacheline placement differed between arms')
+        phase('final-verification', 'begin')
         syn.idle()
         for item in frozen.values():
             scheduler.verify(item['files'])
         scheduler.verify(harness)
         control.validate(scheduler, a.inputs, a.inputs_sha256)
         receipt.update(passed=True, final_idle=True)
+        phase('final-verification', 'end')
     except BaseException as error:
         receipt['error'] = repr(error)
         raise

@@ -71,6 +71,8 @@ def review(path):
         diff = {k: last['counters'][k]-v for k, v in first['counters'].items() if k in last['counters']}
         assert all(v >= 0 for v in diff.values()), 'counter regression within exact lifetime'
         workers.append(dict(identity=identity, observations=len(history), first=first, last=last,
+                            birth_boot_interval_ns=[identity[1]*1_000_000_000//ready[0]['clk_tck'],
+                                (identity[1]+1)*1_000_000_000//ready[0]['clk_tck']],
                             observed_counter_delta=diff, final_sample_present=last['sequence'] == samples[-1]['sequence'],
                             tail_missing=True))
         for before, after in zip(history, history[1:]):
@@ -115,7 +117,9 @@ def review(path):
             'Clock offsets are per-request intervals, not a fixed synchronized-clock assumption.',
             'Recorded observer CPU excludes SSH/sudo startup and source supervisor overhead.',
             'Host observation has no unobserved counterfactual; guest background I/O is not disabled.',
-            'Start ticks lack a recorded BOOTTIME relationship in these controls; no UTC birth inference.'])
+            ('BOOTTIME brackets present; birth ticks are quantized, not exact instants.' if
+             'boot_ns' in samples[0]['scan_began'] else
+             'Start ticks lack a recorded BOOTTIME relationship in this control; no UTC birth inference.')])
 
 
 def main():

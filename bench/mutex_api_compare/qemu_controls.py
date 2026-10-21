@@ -28,8 +28,9 @@ def stamp():
 
 
 class Stream:
-    def __init__(self, out, label, argv, receipt, save):
+    def __init__(self, out, label, argv, receipt, save, mixed_output=False):
         self.receipt, self.save = receipt, save
+        self.mixed_output = mixed_output
         self.record = dict(label=label, argv=argv, started=stamp())
         receipt['streams'].append(self.record)
         self.error = (out/(label+'.stderr')).open('xb')
@@ -45,7 +46,12 @@ class Stream:
     def read(self):
         try:
             for line in self.proc.stdout:
-                row = dict(received=stamp(), remote=json.loads(line))
+                received = stamp()
+                if self.mixed_output:
+                    data = json.loads(line.removeprefix('KD_PHASE ')) if line.startswith('KD_PHASE ') else dict(event='stdout', text=line)
+                else:
+                    data = json.loads(line)
+                row = dict(received=received, remote=data)
                 self.output.write(json.dumps(row)+'\n')
                 self.output.flush()
                 self.items.put(row)
@@ -89,7 +95,7 @@ class Stream:
 
 def main():
     p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument('--mode', choices=('host', 'guest', 'guest-setup', 'sync', 'basic'), required=True)
+    p.add_argument('--mode', choices=('host', 'guest', 'guest-setup', 'sync', 'basic', 'workload'), required=True)
     p.add_argument('--output', type=Path, required=True)
     a = p.parse_args()
     out = a.output.resolve()
@@ -97,7 +103,7 @@ def main():
     receipt = dict(mode=a.mode, accepted=False, complete=False, streams=[], requests=[], commands=[],
                    source_commit=subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip(),
                    sources={}, started=stamp())
-    for src in (Path(__file__), TRACE, GUEST, CAPTURE):
+    for src in (Path(__file__), TRACE, GUEST, CAPTURE, ROOT/'bench/mutex_api_compare/unlock_run.py'):
         data = src.read_bytes()
         (out/src.name).write_bytes(data)
         receipt['sources'][str(src)] = hashlib.sha256(data).hexdigest()
@@ -109,7 +115,7 @@ def main():
     observer_command = shlex.join(['sudo', '-n', 'python3', '-u', '-c', TRACE.read_text(),
         '--pid', '257489', '--cmdline-sha256',
         '08a7ad4ddad7da7d6437c5ebcc2987894c2e69b1cd8abd31db0bd491f30ce917',
-        '--duration', '110', '--interval', '0.5'])
+        '--duration', '120' if a.mode == 'sync' else '110', '--interval', '0.5'])
     observer = Stream(out, 'observer', SSH+['eric@10.176.26.71', observer_command], receipt, save)
     try:
         observer.until('ready')
@@ -147,13 +153,13 @@ r.idle()
                 with (out/(label+'.stdout')).open('xb') as stream, (out/(label+'.stderr')).open('xb') as error:
                     proc = subprocess.Popen(argv, stdin=subprocess.DEVNULL, stdout=stream, stderr=error, cwd=ROOT)
                     record['pid'] = proc.pid
-                    code = proc.wait(timeout=60)
+                    code = proc.wait(timeout=45 if a.mode == 'sync' else 60)
                 record.update(exit_code=code, finished=stamp())
                 mark(label+'-after')
                 assert code == 0
                 time.sleep(3)
             time.sleep(5)
-        elif a.mode == 'host':
+        elif a.mode in ('host', 'workload'):
             mark('snapshot-query-before')
             argv = SSH+['eric@10.176.26.71', 'sudo -n python3 -']
             record = dict(label='existing-capture-host', argv=argv, started=stamp())
@@ -168,7 +174,50 @@ r.idle()
             record.update(exit_code=code, finished=stamp())
             mark('snapshot-query-after')
             assert code == 0
-            time.sleep(10)
+            if a.mode == 'host':
+                time.sleep(10)
+            else:
+                host = json.loads((out/'host-snapshot.json').read_text())
+                assert len(host['qemu'][0]['tasks']) == 67 and host['pins_verified'] and host['snapshot_listed']
+                mark('guest-workload-setup-before')
+                launch = '''import json,os,shutil,subprocess,sys
+from pathlib import Path
+root=Path('/root/host_fs/kdlock')
+base=Path('/root/kdlock-evidence/10.176.26.71/bench/qemu-workers-20261021')
+base.mkdir(exist_ok=True)
+name=NAME
+host=base/(name+'-host.json')
+with host.open('x') as stream: json.dump(HOST,stream)
+runner=base/(name+'-runner.py')
+with runner.open('xb') as stream: stream.write((root/'bench/mutex_api_compare/unlock_run.py').read_bytes())
+old=base.parent/'pipecap-unlock-20261021'
+args=[sys.executable,str(runner),'--mode','timing','--phase-single-outer','--inputs',str(old/'inputs-1/inputs.json'),'--inputs-sha256','daf7f77beda2704d9cc56291f9864489f733c844f6188cd6c8198480539badae','--output',str(base/name),'--host-state',str(host),'--unit-checks',str(old/'checks-1/result.json'),'--task-check',str(old/'task-2/result.json'),'--elf-checks',str(old/'elf-checks-2.json'),'--correctness',str(old/'correctness-1/result.json'),'--source-commit',COMMIT]
+sys.exit(subprocess.call(args))
+'''.replace('NAME', repr(out.name)).replace('HOST', repr(host)).replace('COMMIT', repr(receipt['source_commit']))
+                (out/'guest-launch.py').write_text(launch)
+                command = shlex.join(['env', 'PYTHONDONTWRITEBYTECODE=1', 'LC_ALL=C',
+                    'PATH=/root/kdlock-translation-venv-20261019/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin',
+                    'KDLOCK_RECOVERY_CONFIRMED=1', 'KDLOCK_SNAPSHOT_TAG=before-mutex-kdonly-20261017T140354Z',
+                    '/root/kdlock-translation-venv-20261019/bin/python3', '-u', '-c', launch])
+                guest = Stream(out, 'workload', SSH+['-p', '2222', 'root@10.176.26.71', command], receipt, save, mixed_output=True)
+                receipt['phases'] = []
+                while True:
+                    event = guest.items.get(timeout=30)
+                    if event is None:
+                        break
+                    assert 'reader_error' not in event, event
+                    row = event['remote']
+                    if row['event'] != 'phase':
+                        continue
+                    ack = mark(f"phase{row['sequence']}-{row['label']}-{row['edge']}")
+                    sent = stamp()
+                    guest.proc.stdin.write(json.dumps(dict(phase_ack=row['sequence']))+'\n')
+                    guest.proc.stdin.flush()
+                    receipt['phases'].append(dict(guest_event=event, host_ack=ack, guest_ack_sent=sent))
+                    save()
+                guest.finish()
+                mark('guest-workload-exit-after')
+                time.sleep(5)
         else:
             mark('guest-ssh-setup-before')
             command = shlex.join(['/root/kdlock-translation-venv-20261019/bin/python3', '-u', '-c',

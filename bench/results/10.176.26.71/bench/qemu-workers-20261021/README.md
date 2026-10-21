@@ -60,3 +60,27 @@ identical wall clocks. These first controls retain start ticks and CLK_TCK but
 lack BOOTTIME samples, so birth ticks are not converted to UTC. The next observer
 revision records BOOTTIME explicitly. Entire lifetimes between samples remain
 unobservable. No original admission or acceptance check changed.
+
+## Setup-only repetition and next phases
+
+`setup-1` at `4874f2e` completed 69 samples: 67 initially, peak 76, last 71.
+One worker first appears during SSH/setup and eight during the first no-op
+tail. No tmpfs/disk file is created by this control. See
+[setup accounting](setup-review-1.json). The same pattern has now occurred
+twice without a benchmark. It establishes repeatability of setup-associated
+worker creation, not attribution to SSH versus guest background writeback.
+
+An independent read-only review verified every first-control evidence/source
+hash, phase delta and original task identity. For `guest-1`, the eight-worker
+appearance bracket is 13.222–13.738 seconds after observer ready, before tmpfs
+write at 14.995 seconds and disk write at 21.034 seconds. Across matching reads,
+workers added 11.935290 ms runtime, 155,648 read bytes and 5,558,272 write bytes;
+8.600856 ms and 5,193,728 write bytes cross phase boundaries and remain
+unattributed. These are incomplete lifetime costs, not benchmark overhead.
+
+Next controls observe normal idle synchronization, a forced rebuild/run of the
+two basic guest unit programs, and one frozen OUTER five-worker session. The
+single-session option retains every existing provenance, correctness, placement
+and strict original host gate. Phase handshakes occur outside joined worker
+execution; the observer and pauses make this an intrusive diagnostic. The prior
+six-session runner/results remain preserved at their recorded revisions.
