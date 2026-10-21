@@ -28,6 +28,27 @@
 #define KD_FLAGS 7UL
 static_assert(__alignof__(struct task_struct) >= 8);
 
+void kd_mutex_init(struct kd_mutex *lock)
+{
+	atomic_long_set(&lock->owner, 0);
+	osq_lock_init(&lock->osq);
+	raw_spin_lock_init(&lock->wait_lock);
+	lock->wait_head = NULL;
+	atomic_set(&lock->delegation_state, 0);
+	lock->delegation_tail = 0;
+}
+EXPORT_SYMBOL_GPL(kd_mutex_init);
+
+void __kd_mutex_init(struct kd_mutex *lock, const char *name,
+		     struct lock_class_key *key)
+{
+	/* Lockdep is not enabled in the supported configuration. */
+	(void)name;
+	(void)key;
+	kd_mutex_init(lock);
+}
+EXPORT_SYMBOL_GPL(__kd_mutex_init);
+
 /* Scheduler helpers are not exports in the captured external-module kernel.
  * Resolve once during provider initialization, before publishing any caller.
  * These are I/O accounting helpers, not mutex operations or object adapters.

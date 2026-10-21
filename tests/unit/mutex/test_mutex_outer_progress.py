@@ -24,7 +24,8 @@ def main():
         ).rstrip()
         + ";\n"
     )
-    for name in ("include/exe_info.h", "include/kd_call.h", "include/kd_exec.h", "include/kd_mutex.h"):
+    for name in ("include/exe_info.h", "include/kd_call.h", "include/kd_exec.h",
+                 "include/kd_mutex_types.h", "include/kd_mutex.h"):
         types += without_includes(read_source((ROOT / name))) + "\n"
     types += without_includes(read_source(ROOT / "include/kd_jit_batch.h")) + "\n"
     kernel = Path(f"/lib/modules/{os.uname().release}/build")

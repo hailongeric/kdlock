@@ -2,7 +2,7 @@
 #ifndef KD_RWSEM_H
 #define KD_RWSEM_H
 
-#include <linux/wait.h>
+#include "kd_rwsem_types.h"
 #include "kd_mutex.h"
 
 /* Task-context sleeping reader/writer object. Admission is separate from the
@@ -10,25 +10,6 @@
  * and positive values count exact delegation-capable writer reservations.
  * Every participant must use this API; never access the embedded gate directly.
  */
-struct kd_rwsem {
-	struct kd_mutex gate;
-	/* Reader updates, phase reservations and queue locks write independently. */
-	atomic_long_t readers __aligned(64);
-	atomic_long_t admission __aligned(64);
-	wait_queue_head_t phase_wait __aligned(64);
-	wait_queue_head_t reader_drain __aligned(64);
-};
-
-#define KD_RWSEM_INITIALIZER(name) { \
-	.gate = KD_MUTEX_INITIALIZER(name.gate), \
-	.readers = ATOMIC_LONG_INIT(0), \
-	.admission = ATOMIC_LONG_INIT(0), \
-	.phase_wait = __WAIT_QUEUE_HEAD_INITIALIZER(name.phase_wait), \
-	.reader_drain = __WAIT_QUEUE_HEAD_INITIALIZER(name.reader_drain), \
-}
-#define DEFINE_KD_RWSEM(name) \
-	struct kd_rwsem name = KD_RWSEM_INITIALIZER(name)
-
 void kd_rwsem_init(struct kd_rwsem *sem);
 void kd_down_read(struct kd_rwsem *sem);
 int kd_down_read_interruptible(struct kd_rwsem *sem);

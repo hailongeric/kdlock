@@ -113,6 +113,7 @@ def main():
     kernel=Path(f'/lib/modules/{os.uname().release}/build')
     ptrace=(ROOT/'include/kd_regs.h').read_text()
     types=definition(ptrace,'struct kd_regs {').rstrip()+';\n'
+    types+=without_includes((ROOT/'include/kd_mutex_types.h').read_text())
     types+=without_includes((ROOT/'include/kd_mutex.h').read_text())
     with tempfile.TemporaryDirectory(prefix='kd-mutex-wait-') as tmp:
         path=Path(tmp)

@@ -1,0 +1,29 @@
+{
+  "affected_drivers": [
+    "count",
+    "state",
+    "resources",
+    "osq",
+    "wait_clobber",
+    "outer_progress"
+  ],
+  "basic_programs": 2,
+  "boot_id": "b65f0205-c8f9-4385-8b13-039cbce243a6",
+  "drained": true,
+  "full_suite": false,
+  "kernel_identity": {
+    "baseline": "/root/kdlock-kernel-baselines/mutex-clobber2-20260919",
+    "build_files": 9,
+    "bundle_files": 7,
+    "config": true,
+    "ok": true,
+    "running_build_id": "5ca28058e156f34a2c7fe91e8e0fbf92f4e51960",
+    "source": "/mnt/kdlock-builds/linux-6.1.159-kdclobber2",
+    "source_files": 20
+  },
+  "kernel_modified": false,
+  "passed": true,
+  "source_files": 257,
+  "source_unchanged": true,
+  "state": "COMPLETE"
+}

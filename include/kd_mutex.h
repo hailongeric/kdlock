@@ -27,6 +27,7 @@
 #include <linux/spinlock.h>
 #include <linux/list.h>
 #include <linux/osq_lock.h>
+#include "kd_mutex_types.h"
 #include "kd_regs.h"
 
 struct kd_exec_frame;
@@ -94,28 +95,6 @@ struct kd_mutex_node {
 	u8 locked;
 	bool native_resume;
 };
-
-/*
- * The complete KD physical primitive has the native size and alignment.
- * No auxiliary allocation or address registry is needed. The physical waiters
- * form a circular ring whose first real node replaces the native list sentinel.
- * The freed eight bytes hold the gate phase and encoded delegation queue tail.
- * Equal geometry does not permit mixing KD and Linux protocols on an object.
- */
-struct kd_mutex {
-	atomic_long_t owner;
-	raw_spinlock_t wait_lock;
-	struct optimistic_spin_queue osq;
-	struct kd_local_waiter *wait_head;
-	atomic_t delegation_state; /* gate phase; only the reserved owner stores */
-	u32 delegation_tail; /* (CPU + 1) and reserved per-CPU node slot */
-};
-
-#define KD_MUTEX_INITIALIZER(name) { \
- .owner = ATOMIC_LONG_INIT(0), .osq = OSQ_LOCK_UNLOCKED, \
- .wait_lock = __RAW_SPIN_LOCK_UNLOCKED(name.wait_lock), \
- .wait_head = NULL, .delegation_state = ATOMIC_INIT(0), .delegation_tail = 0 }
-#define DEFINE_KD_MUTEX(name) struct kd_mutex name = KD_MUTEX_INITIALIZER(name)
 
 void kd_mutex_init(struct kd_mutex *lock);
 void __kd_mutex_init(struct kd_mutex *lock, const char *name,

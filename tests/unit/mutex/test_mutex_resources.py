@@ -49,9 +49,10 @@ def production():
         )
         + "\n"
     )
+    code += definition(read_source(ROOT / "kernel_module/kd_mutex_local.c"),
+                       "void kd_mutex_init(struct kd_mutex *lock)")
     for marker in (
         "bool kd_mutex_delegation_owned(struct kd_mutex *lock, struct task_struct *task)",
-        "void kd_mutex_init(struct kd_mutex *lock)",
         "static void kd_mutex_wait_for_result(struct kd_mutex_node *node)",
         "static void kd_mutex_claim_origin_node(struct kd_mutex *lock,",
         "static void kd_mutex_claim_origin(struct kd_mutex *lock)",
@@ -89,6 +90,7 @@ def main():
     kernel = Path(f"/lib/modules/{os.uname().release}/build")
     ptrace = (ROOT / "include/kd_regs.h").read_text()
     types = definition(ptrace, "struct kd_regs {").rstrip() + ";\n"
+    types += without_includes(read_source(ROOT / "include/kd_mutex_types.h"))
     types += without_includes(read_source((ROOT / "include/kd_mutex.h")))
     code = production()
     # Compile each broken decision first, then require an explicit assertion

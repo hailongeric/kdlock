@@ -18,11 +18,13 @@ from test_spin_shadow import definition
 def main():
     types = definition(read_source(ROOT / 'include/kd_regs.h'),
                        'struct kd_regs {').rstrip() + ';\n'
+    types += without_includes(read_source(ROOT / 'include/kd_mutex_types.h'))
     types += without_includes(read_source(ROOT / 'include/kd_mutex.h'))
     source = without_includes(read_source(ROOT / 'include/kd_mutex_state.h'))
     mutex = read_source(ROOT / 'kernel_module/kd_mutex.c')
+    source += '\n' + definition(read_source(ROOT / 'kernel_module/kd_mutex_local.c'),
+                                 'void kd_mutex_init(struct kd_mutex *lock)')
     for marker in (
-        'void kd_mutex_init(struct kd_mutex *lock)',
         'bool kd_mutex_delegation_owned(struct kd_mutex *lock, struct task_struct *task)',
         'bool kd_mutex_combiner_active(struct kd_mutex *lock)',
         'static void kd_mutex_claim_origin_node(struct kd_mutex *lock,',

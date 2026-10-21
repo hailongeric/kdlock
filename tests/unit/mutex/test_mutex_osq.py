@@ -17,6 +17,7 @@ from test_spin_shadow import definition
 def main():
     types = definition(read_source(ROOT / 'include/kd_regs.h'),
                        'struct kd_regs {').rstrip() + ';\n'
+    types += without_includes(read_source(ROOT / 'include/kd_mutex_types.h'))
     types += without_includes(read_source(ROOT / 'include/kd_mutex.h'))
     local = read_source(ROOT / 'kernel_module/kd_mutex_local.h')
     types += local[local.index('#define KD_MUTEX_TAIL_IDX_OFFSET'):
