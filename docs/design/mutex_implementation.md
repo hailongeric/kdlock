@@ -101,7 +101,9 @@ executed JIT bodies. Source aliases in
 interfaces and local task-sensitive variants.
 
 The [replacement contract](kd_only_mutex.md) owns alias coverage and rebuild
-requirements. There is no Linux mutex fallback. The outer cookie's nonzero value
+requirements. Its [semantic differences and replacement limits](kd_only_mutex.md#semantic-differences-and-replacement-limits)
+distinguish native-object compatibility, local execution and delegation admission.
+There is no Linux mutex fallback. The outer cookie's nonzero value
 records exact local ownership; zero means provider-routed unlock and can also
 occur after a local fallback. It is not a delegation-success flag.
 

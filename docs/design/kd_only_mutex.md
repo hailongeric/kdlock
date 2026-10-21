@@ -192,6 +192,81 @@ non-RT, non-debug-mutex, non-lockdep configuration. RT mutexes and wound/wait mu
 are separate integration work. No kernel image is rebuilt or installed in this
 experiment.
 
+## Semantic differences and replacement limits
+
+KD preserves physical mutual exclusion for its own objects, but the public
+delegating API is not a universal replacement for Linux `mutex_lock`. The Linux
+comparison here is the captured ordinary non-RT mutex implementation. Choosing
+local KD execution and authorizing translated execution are separate decisions.
+
+| Property | Linux Native `mutex_lock` | Direct public `kd_mutex_lock` |
+| --- | --- | --- |
+| Object protocol | Linux `struct mutex` and Linux users | KD `struct kd_mutex`; every user must use KD |
+| Body execution | The acquiring task executes its original code | An eligible body may execute on a combiner; the origin resumes after logical unlock on completion |
+| Contended waiting | Optimistic spinning followed by sleeping when needed | Local physical acquisition can sleep; published delegation followers poll pinned |
+| Ownership and unlock | The acquiring task is the physical owner | The executor can retain physical ownership while an origin resumes a native suffix; public unlock uses exact routing and owner ACKs |
+| Caller boundary | Ordinary C ABI | ABI2 continuation capture and compiler-declared clobbers through the public macro |
+| Integration | Native kernel configuration and instrumentation | Captured x86-64, non-RT, non-debug-mutex, non-lockdep configuration |
+
+Both APIs require a context in which mutex acquisition may sleep. Neither
+permits recursive acquisition of the same object or makes mutex locking valid
+in interrupt or atomic context. Physical exclusion and acquire/release ordering
+remain required even when a body delegates. The scheduling gate does not grant
+physical ownership, and a logical native continuation must not bypass public
+unlock routing to release an executor-owned mutex.
+
+### Cases that require retaining native locking
+
+- An existing Linux mutex shared with unconverted callers must retain Linux
+  operations. Conversion requires rebuilding and converting the object and all
+  its users; equal geometry does not authorize a cast or partial conversion.
+- Interfaces that require `struct mutex` or inspect its internal representation
+  require explicit porting before they can use a KD object.
+- Code relying on lockdep classes or debug-mutex integration cannot assume the
+  corresponding behavior from KD. Its non-lockdep nested aliases do not create
+  lockdep state.
+- RT and wound/wait requirements must retain the appropriate native primitives
+  until separately integrated and validated. Ordinary KD mutex is not an
+  implementation of those protocols. Whole-kernel replacement remains unvalidated.
+
+### Bodies that must execute locally
+
+A task-context critical section is not automatically eligible to run on another
+task. The [context admission rules](admission.md#72-context-and-memory-admission)
+support selected origin-task and GS operations while refusing recognized
+unsupported scheduling, per-CPU, IRQ/BH/RCU and lock-backend operations. Supported
+translated nesting uses the exact lock ledger; arbitrary nested lock services
+are not authorized by the outer mutex acquisition.
+
+Admission refusal preserves KD exclusion, but fallback is not a proof of
+arbitrary critical-section safety. The
+[dynamic address gap](admission.md#721-dynamic-address-gap) includes runtime
+pointers that can reach sensitive state without a statically recognized address.
+Generic JIT faults are errors, not arbitrary native-continuation points. A
+refusal after progress neither undoes prior work nor validates an owner-sensitive
+suffix. New bodies need validation against these limits.
+
+For an ordinary caller using a fully converted KD object, explicitly local
+execution is available without introducing a delegation boundary:
+
+```c
+kd_mutex_local_lock(&lock);
+/* Original code executes on the acquiring task. */
+kd_mutex_local_unlock(&lock);
+```
+
+The callable `(kd_mutex_lock)(&lock)` also acquires locally and can pair with
+public `kd_mutex_unlock(&lock)`. Signal, trylock and I/O variants remain local.
+These interfaces do not authorize native-only calls inside a translated body,
+add RT/lockdep support, or make a Linux object compatible with KD.
+
+Published delegation waiters remain pinned with preemption disabled while
+polling, even though physical owners and supported service paths may sleep.
+Oversubscription safety remains unvalidated; the current policy does not offer
+general equivalence to Linux sleeping waits under arbitrary scheduling loads.
+NUMA batching also changes service order; bounded bypass within a batch is not
+a scheduler-independent starvation-freedom guarantee.
+
 ## Validation and measurement boundary
 
 The [shared-node receipt](../../bench/results/10.176.26.71/bench/mutex32-mcs-20261020/README.md)

@@ -17,7 +17,7 @@ the separate Linux implementation used as a benchmark comparator.
 | KD family | Exclusion and object storage | Execution and waiting | Implementation guide |
 | --- | --- | --- | --- |
 | Spinlock | One four-byte `kd_spinlock_t` contains ownership, pending and queue-tail state | Exclusive body; callers poll with preemption disabled. An eligible body may delegate. The body must not sleep. | [Spinlock](design/spin_implementation.md) |
-| Mutex | A 32-byte, native-aligned `struct kd_mutex` contains KD physical ownership, a sleeping-waiter ring head, and the embedded legacy delegation phase and encoded tail; reserved nodes hold exact waiter records | Ordinary calls execute locally and may sleep. Explicit delegation callers can publish pinned polling requests; physical owners and supported service paths may sleep. | [Mutex](design/mutex_implementation.md) |
+| Mutex | A 32-byte, native-aligned `struct kd_mutex` contains KD physical ownership, a sleeping-waiter ring head, and the embedded legacy delegation phase and encoded tail; reserved nodes hold exact waiter records | Direct public blocking calls permit delegation; callable lock symbols and task-sensitive variants execute locally. Published delegation waiters poll pinned; physical owners and supported service paths may sleep. | [Mutex](design/mutex_implementation.md) |
 | Rwlock | A 128-byte `kd_rwlock_t` separates the reader/writer count from a KD spin gate | Readers run concurrently and locally. Writers exclude readers and may delegate through the spin engine. Neither body may sleep. | [Reader/writer spinlock](design/rwlock_implementation.md) |
 | Rwsem | A 320-byte `struct kd_rwsem` contains a KD mutex, reader count, writer reservations and two sleeping waitqueues | Readers and ordinary writers run locally. Explicit outer writers drain readers before entering mutex delegation. Published delegation waiters still poll pinned. | [Reader/writer semaphore](design/rwsem_implementation.md) |
 
@@ -92,7 +92,9 @@ interfaces can share their corresponding KD object with matching unlocks.
 Linux and TCLock operations cannot operate on that object. The source aliases
 in [`kd_mutex_compat.h`](../include/kd_mutex_compat.h) require rebuilding every
 containing object and caller; they do not convert existing Linux mutex memory.
-See [mutex replacement](design/kd_only_mutex.md).
+See [mutex replacement](design/kd_only_mutex.md) and its
+[semantic differences and replacement limits](design/kd_only_mutex.md#semantic-differences-and-replacement-limits)
+for native-object compatibility, original-task execution and unsupported integration.
 
 Ordinary spin and rwlock pairs preserve interrupt/bottom-half state and pair
 preemption protection. Spin's explicit interrupt and bottom-half variants stay
