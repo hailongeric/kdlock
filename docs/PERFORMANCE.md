@@ -134,6 +134,17 @@ unattributed. Runtime count was still 73. Collection separately reached 78.
 Archives passed 2,340 inert checks. The VM is drained; the single intrusive
 rate is unaccepted, and all seven causes/acquisition latency remain open.
 
+The separate [setup-boundary probe](../bench/results/10.176.26.71/bench/mutex-boundary-20261021/README.md)
+sent no timed command. One original warmup completed 6,724,992 operations, then
+a 120.612-second hold preserved exact publication/counters and retired cleanly.
+All five scheduled full captures refused at 75/75/70/68/68 tasks, despite eleven
+intervening accounting scans with the original 67 identities. A new worker
+appeared late, and the post-cleanup full capture was 70. Observer CPU cost was
+2.361% of one core, including full captures; unsampled lifetimes and tails remain
+unknown. Archives passed 2,004 inert checks. This narrows the next feasibility
+probe but supplies no comparable rates, variance, accepted gain or resolution
+of the seven regressions. Waiting after warmup changes the preparation contract.
+
 The earlier [pipecap owner observation](../bench/results/10.176.26.71/bench/pipecap-owner-20261021/README.md)
 retains 24 drained one-worker sessions with unchanged binaries and no returned
 JIT bodies. The strict endpoint failed at 101 versus 67 threads; the uncalibrated

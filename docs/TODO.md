@@ -123,6 +123,17 @@ I/O and indirect interference remain unresolved. No historical endpoint or
 regression is accepted by these controls; causal unlock-path attribution and
 acquisition latency remain open.
 
+The [setup-boundary diagnostic](../bench/results/10.176.26.71/bench/mutex-boundary-20261021/README.md)
+completed without timing: basic/affected checks passed, one original warmup
+completed 6,724,992 operations, and the held session preserved exact state and
+retired normally. Its five scheduled full captures at 0/15/30/60/120 seconds
+all refused (75/75/70/68/68 tasks). Eleven intervening accounting scans saw
+67, then a new worker appeared; the post-cleanup full capture was 70. Archives
+passed 2,004 inert checks. Next, a bounded no-timing candidate-triggered full
+capture can test the observed quiet interval; a sample alone never admits the
+gate. Post-warmup waiting changes the preparation contract, so timing parity,
+all seven causal resolutions and acquisition latency remain unresolved.
+
 The entry-inlining experiment passed focused correctness checks but did not
 resolve the seven mutex losses in its separate 120-session comparison. It is
 not accepted as a performance fix. The stage record retains all repetitions,
