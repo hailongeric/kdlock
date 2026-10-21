@@ -31,3 +31,30 @@ host-side participant inventory. The current KD object/API cannot coherently
 replace the actual native member without converting all participants and the
 missing ownership/mode/context interfaces. The source inventory and concrete
 integration work will be recorded here; a Native baseline is not KD integration.
+
+## Stack probe diagnosis
+
+`live-2` at `3e19abb` again failed the expected unfiltered stack shape. It retained
+80,000 completed map/unmap cycles, sixteen exact worker joins, 79,608 nonempty
+queue observations, zero fault/context errors and zero final VMAs. Final module
+health was again `files=0 mm_refs=0 destroyed=3 release_errors=0`; normal unload
+succeeded. The failure log includes one stdout/stderr interleaving, preserved
+verbatim. The next client flushes its receipt before reporting failure.
+
+Captured `kernel/stacktrace.c:97,136` uses
+`stack_trace_consume_entry_nosched()` for `/proc` task stacks; it filters
+`in_sched_functions()`. The exact kernel ELF confirms that both lock helpers
+are in the filtered scheduler-text range. Consequently the previous requirement
+could never observe the requested helper frames. The retained top return PCs
+are `vm_mmap_pgoff+0xab` and `__vm_munmap+0x93`. Independently decoded instructions
+immediately before both return PCs call `down_write_killable`; the captured
+source binds the argument to the actual current mm's mmap lock.
+
+The revised positive proof requires those exact ELF-bound return sites plus
+bracketing `D` task state, matching wait channels and unchanged scheduler
+execution counters. This remains a required actual blocked-writer observation;
+queue counts alone cannot pass it. ELF SHA-256:
+`7125f9b8e76ee72315f83e7129dbf5be38bdbe56ba5b3461f4997290907d9402`.
+The [fixed call-site receipt](../../../../../tests/kernel/mmap_writer/writer_sites.json)
+records disassembly hashes and Build ID. Raw ELF and disassembly remain in
+`raw/tests/mmap-writer-native-20261021/kernel-capture-1/`.

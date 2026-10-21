@@ -34,10 +34,14 @@ mm/modes, split/unmap accounting, descriptor-closed VMA lifetimes and process-ex
 teardown. Timing must follow successful validation. Reader delegation and the
 discarded artificial writer lookup have no role in this workload.
 
-During correctness only, the controller also samples its workers' kernel stacks.
-A nonempty queue alone may include readers; the required positive receipt is an
-actual `rwsem_down_write_slowpath` wait through `down_write_killable`, immediately
-called by `vm_mmap_pgoff` or `__vm_munmap`. The raw stack, exact TID and shared
-mm/mmap-lock identity are retained. No permissions are changed for this check,
-and a missing or unreadable writer observation fails rather than being skipped.
-The sampler is excluded from later timing.
+During correctness only, the controller samples its workers' kernel stacks.
+This kernel's `/proc` unwinder filters `__sched` lock helpers. The required
+positive receipt binds the first remaining return PC to an independently
+decoded `down_write_killable(&mm->mmap_lock)` call in the exact kernel ELF.
+Both bracketing task states must be `D`, both wait channels must match that
+caller, and scheduler execution counters must remain unchanged. A generic
+rwsem queue, arbitrary mmap frame or running task is insufficient. The runner
+checks the whole ELF hash, raw stack, return offset, exact TID and shared mm.
+No permissions are changed; missing evidence fails. This sampler is excluded
+from timing. The two earlier failures and their raw observations are retained
+in the stage report.

@@ -135,55 +135,69 @@ static void json_string(const char *text)
 	}
 	putchar('"');
 }
-static int writer_contention(struct worker *workers,unsigned n)
+static int proc_text(uint64_t tid,const char *name,char *buffer,size_t size)
 {
-	/* A nonempty rwsem queue may contain readers. Capture a real blocked
-	 * writer whose immediate native caller takes this mm's mmap_lock. */
-	int found=0;unsigned observations[MAX_WORKERS]={0};
+	char path[128];snprintf(path,sizeof(path),"/proc/self/task/%llu/%s",(unsigned long long)tid,name);
+	int fd=open(path,O_RDONLY|O_CLOEXEC);
+	if(fd<0 && errno==ENOENT)return 0;
+	CHECK(fd>=0);ssize_t bytes=read(fd,buffer,size-1);int saved=errno;
+	CHECK(close(fd)==0);if(bytes<0 && saved==ESRCH)return 0;
+	CHECK(bytes>=0);buffer[bytes]=0;return 1;
+}
+static char task_state(const char *text)
+{
+	const char *end=strrchr(text,')');return end && end[1]==' ' ? end[2] : '?';
+}
+static int writer_contention(struct worker *workers,unsigned n,unsigned long mmap_site,unsigned long munmap_site)
+{
+	/* /proc stacks deliberately omit __sched lock helpers. Bind the first
+	 * remaining return PC to an independently decoded down_write_killable
+	 * call in this exact kernel ELF. Bracket it with sleeping task state,
+	 * the same wait channel, and unchanged scheduler execution counters.
+	 * A generic rwsem queue, arbitrary mmap frame, or running task fails. */
+	unsigned observations[MAX_WORKERS]={0};
 	for(;;) {
 		unsigned done=0;
 		for(unsigned i=0;i<n;i++) {
-			if(atomic_load_explicit(&workers[i].done,memory_order_acquire)) { done++;continue; }
-			char path[96],buffer[4096];
-			snprintf(path,sizeof(path),"/proc/self/task/%llu/stack",(unsigned long long)workers[i].observed.tid);
-			int fd=open(path,O_RDONLY|O_CLOEXEC);
-			if(fd<0 && errno==ENOENT && atomic_load_explicit(&workers[i].done,memory_order_acquire))continue;
-			CHECK(fd>=0);ssize_t bytes=read(fd,buffer,sizeof(buffer)-1);CHECK(close(fd)==0 && bytes>=0);
-			buffer[bytes]=0;
-			/* Retain bounded nonempty raw observations even when the expected
-			 * stack shape is absent. A failed probe must remain diagnosable. */
-			if(bytes && observations[i]<4) {
-				printf("{\"event\":\"stack_observation\",\"tid\":%llu,\"raw_stack\":",(unsigned long long)workers[i].observed.tid);
+			struct worker *w=&workers[i];
+			if(atomic_load_explicit(&w->done,memory_order_acquire)) { done++;continue; }
+			uint64_t tid=w->observed.tid;
+			char first[4096],last[4096],chan1[128],chan2[128],sched1[256],sched2[256],buffer[4096];
+			if(!proc_text(tid,"stat",first,sizeof(first)) || !proc_text(tid,"wchan",chan1,sizeof(chan1)) ||
+			   !proc_text(tid,"schedstat",sched1,sizeof(sched1)) || !proc_text(tid,"stack",buffer,sizeof(buffer)) ||
+			   !proc_text(tid,"schedstat",sched2,sizeof(sched2)) || !proc_text(tid,"wchan",chan2,sizeof(chan2)) ||
+			   !proc_text(tid,"stat",last,sizeof(last))) {
+				CHECK(atomic_load_explicit(&w->done,memory_order_acquire));continue;
+			}
+			if(*buffer && observations[i]<4) {
+				printf("{\"event\":\"stack_observation\",\"tid\":%llu,\"raw_stack\":",(unsigned long long)tid);
 				json_string(buffer);printf("}\n");observations[i]++;
 			}
-			char *lock=strstr(buffer,"down_write_killable+");
-			char *caller=lock ? strchr(lock,'\n') : NULL;
-			if(caller && strstr(buffer,"rwsem_down_write_slowpath+")) {
-				caller++;
-				char *end=strchr(caller,'\n');if(end)*end=0;
-				const char *name=strstr(caller,"vm_mmap_pgoff+") ? "vm_mmap_pgoff" :
-				                 strstr(caller,"__vm_munmap+") ? "__vm_munmap" : NULL;
-				if(end)*end='\n';
-				if(name && !found) {
-					printf("{\"event\":\"writer_stack\",\"tid\":%llu,\"mm\":%llu,\"mmap_lock\":%llu,\"blocked\":\"rwsem_down_write_slowpath\",\"acquire\":\"down_write_killable\",\"caller\":\"%s\",\"raw_stack\":",
-					 (unsigned long long)workers[i].observed.tid,(unsigned long long)workers[i].observed.mm,
-					 (unsigned long long)workers[i].observed.mmap_lock,name);
-					json_string(buffer);printf("}\n");
-					found=1;
-				}
-			}
+			char symbol[64];unsigned long offset=0;char *top=strstr(buffer,"] ");
+			if(!top || sscanf(top+2,"%63[^+]+0x%lx/",symbol,&offset)!=2)continue;
+			int site=(!strcmp(symbol,"vm_mmap_pgoff") && offset==mmap_site) ||
+			         (!strcmp(symbol,"__vm_munmap") && offset==munmap_site);
+			if(!site || task_state(first)!='D' || task_state(last)!='D' ||
+			   strcmp(chan1,symbol) || strcmp(chan2,symbol) || strcmp(sched1,sched2) || !*sched1)continue;
+			printf("{\"event\":\"writer_stack\",\"proof\":\"FILTERED_SCHED_RETURN_SITE\",\"tid\":%llu,\"mm\":%llu,\"mmap_lock\":%llu,\"acquire\":\"down_write_killable\",\"caller\":\"%s\",\"return_offset\":%lu,\"state_before\":\"D\",\"state_after\":\"D\",\"wchan_before\":",
+			 (unsigned long long)tid,(unsigned long long)w->observed.mm,(unsigned long long)w->observed.mmap_lock,symbol,offset);
+			json_string(chan1);printf(",\"wchan_after\":");json_string(chan2);
+			printf(",\"schedstat_before\":");json_string(sched1);printf(",\"schedstat_after\":");json_string(sched2);
+			printf(",\"raw_stack\":");json_string(buffer);printf("}\n");return 1;
 		}
-		if(done==n || found)break;
+		if(done==n)return 0;
 		usleep(1000);
 	}
-	return found;
 }
+
 int main(int argc,char **argv)
 {
-	CHECK(argc==4);const char *mode=argv[1];unsigned n=strtoul(argv[2],NULL,10);
+	CHECK(argc==6);const char *mode=argv[1];unsigned n=strtoul(argv[2],NULL,10);
 	uint64_t iterations=strtoull(argv[3],NULL,10);
 	CHECK(n && n<=MAX_WORKERS && iterations && iterations<=10000000 && sysconf(_SC_PAGESIZE)==4096);
 	CHECK(!strcmp(mode,"scope") || !strcmp(mode,"cycle") || !strcmp(mode,"lifetime") || !strcmp(mode,"exit"));
+	unsigned long mmap_site=strtoul(argv[4],NULL,0),munmap_site=strtoul(argv[5],NULL,0);
+	CHECK(mmap_site && munmap_site);
 	pin(63);int fd=open("/dev/kd_mmap_writer_native",O_RDWR|O_CLOEXEC);CHECK(fd>=0);
 	struct mw_identity id=identity(fd);print_identity("identity",&id);
 	if(!strcmp(mode,"scope")) {
@@ -211,7 +225,7 @@ int main(int argc,char **argv)
 	for(unsigned i=0;i<n;i++)CHECK(!w[i].error);
 	if(lifetime)CHECK(close(fd)==0); /* Every descriptor is now closed. */
 	barrier(&go);uint64_t completed=0;
-	int contention_ok=lifetime || n==1 || writer_contention(w,n);
+	int contention_ok=lifetime || n==1 || writer_contention(w,n,mmap_site,munmap_site);
 	for(unsigned i=0;i<n;i++) {
 		CHECK(pthread_join(threads[i],NULL)==0 && !w[i].error && w[i].completed==iterations);
 		for(unsigned j=0;j<i;j++)CHECK(w[j].observed.tid!=w[i].observed.tid);
@@ -231,5 +245,5 @@ int main(int argc,char **argv)
 	printf("]}\n");
 	/* Join and retain exact teardown evidence before reporting a missing
 	 * writer observation. Failure still fails the case and the campaign. */
-	CHECK(contention_ok);return 0;
+	fflush(stdout);CHECK(contention_ok);return 0;
 }

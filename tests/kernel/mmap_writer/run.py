@@ -13,6 +13,7 @@ ROOT=Path(__file__).resolve().parents[3]
 spec=importlib.util.spec_from_file_location('mw_common',ROOT/'bench/mmap_fault/timing.py')
 common=importlib.util.module_from_spec(spec);spec.loader.exec_module(common)
 rt=common.rt
+WRITER_SITES=json.loads(Path(__file__).with_name('writer_sites.json').read_text())
 
 
 def validate(rows,mode,n,iterations):
@@ -55,14 +56,20 @@ def validate(rows,mode,n,iterations):
                 stacks=[r for r in rows if r['event']=='writer_stack']
                 rt.require(len(stacks)==1 and stacks[0]['tid'] in {w['tid'] for w in last['workers']} and
                            stacks[0]['mm']==identity['mm'] and stacks[0]['mmap_lock']==identity['mmap_lock'] and
-                           stacks[0]['blocked']=='rwsem_down_write_slowpath' and
+                           stacks[0]['proof']=='FILTERED_SCHED_RETURN_SITE' and
                            stacks[0]['acquire']=='down_write_killable' and
                            stacks[0]['caller'] in ('vm_mmap_pgoff','__vm_munmap'),
                            'actual same-mm Native writer wait was not observed')
-                functions=re.findall(r'\] ([A-Za-z0-9_]+)\+',stacks[0]['raw_stack'])
-                rt.require('rwsem_down_write_slowpath' in functions and
-                           functions[functions.index('down_write_killable')+1]==stacks[0]['caller'],
-                           'raw wait stack does not bind the immediate Native mmap-lock caller')
+                stack=stacks[0];site=WRITER_SITES['sites'][stack['caller']]
+                frames=re.findall(r'\] ([A-Za-z0-9_]+)\+0x([0-9a-f]+)/',stack['raw_stack'])
+                rt.require(frames and frames[0][0]==stack['caller'] and
+                           int(frames[0][1],16)==stack['return_offset']==site['return_offset'] and
+                           stack['state_before']==stack['state_after']=='D' and
+                           stack['wchan_before']==stack['wchan_after']==stack['caller'] and
+                           stack['schedstat_before']==stack['schedstat_after'] and
+                           len(stack['schedstat_before'].split())==3 and
+                           all(v.isdigit() for v in stack['schedstat_before'].split()),
+                           'raw stack/ELF return site or sleeping task bracket differs')
         else:rt.require(mode=='lifetime' and len(rows)==3 and iterations==1,'VMA-only lifetime differs')
     return dict(mode=mode,threads=n,iterations=iterations,passed=True,identity=identity,
                 observations=observations,completion=last,protocol='NATIVE_MMAP_LOCK',delegated=False)
@@ -96,6 +103,9 @@ def main():
     try:
         common.host_check(a.host_state,out,False)
         result['kernel_identity']=common.kernel_identity.capture(a,out,rt.command)
+        rt.require(rt.digest(a.kernel_source/'vmlinux')==WRITER_SITES['vmlinux_sha256'],
+                   'writer call-site proof belongs to another kernel ELF')
+        result['writer_sites']=WRITER_SITES
         manifest=json.loads(a.source_manifest.read_text());source=out/'source'
         dirs=('workload_modules/mmap_writer/','bench/mmap_writer/','tests/kernel/mmap_writer/',
               'bench/mmap_fault/','bench/spin_cacheline/','tests/protocols/','disassem/','kernel_baseline/',
@@ -124,7 +134,8 @@ def main():
         plan=[('scope',1,1),('cycle',1,1000),('cycle',16,5000),('lifetime',1,1),('lifetime',16,1),('exit',1,1)]
         for i,(mode,n,iterations) in enumerate(plan):
             name=f'{i:02d}-{mode}-{n}';print('START',name,flush=True)
-            data=rt.command([client,mode,str(n),str(iterations)],out/(name+'.jsonl'),timeout=120)
+            sites=[str(WRITER_SITES['sites'][name]['return_offset']) for name in ('vm_mmap_pgoff','__vm_munmap')]
+            data=rt.command([client,mode,str(n),str(iterations),*sites],out/(name+'.jsonl'),timeout=120)
             logs();case=validate([json.loads(line) for line in data.splitlines()],mode,n,iterations)
             health=Path('/sys/module/kd_mmap_writer_native/parameters/health').read_text().strip()
             rt.require(health==f'files=0 mm_refs=0 destroyed={i+1} release_errors=0','VFS/mm descriptor teardown differs')
