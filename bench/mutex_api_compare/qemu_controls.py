@@ -115,7 +115,8 @@ def main():
     observer_command = shlex.join(['sudo', '-n', 'python3', '-u', '-c', TRACE.read_text(),
         '--pid', '257489', '--cmdline-sha256',
         '08a7ad4ddad7da7d6437c5ebcc2987894c2e69b1cd8abd31db0bd491f30ce917',
-        '--duration', '120' if a.mode == 'sync' else '110', '--interval', '0.5'])
+        '--duration', '600' if a.mode == 'workload' else ('120' if a.mode == 'sync' else '110'),
+        '--interval', '0.5'])
     observer = Stream(out, 'observer', SSH+['eric@10.176.26.71', observer_command], receipt, save)
     try:
         observer.until('ready')
@@ -131,14 +132,20 @@ def main():
                 commands = [('sync-dry-run', ['python3', str(ROOT/'tools/vm/sync_to_vm.py'), '--dry-run']),
                             ('sync-write', ['python3', str(ROOT/'tools/vm/sync_to_vm.py')])]
             else:
-                code = '''import os,sys,subprocess
+                code = '''import hashlib,json,os,sys,subprocess
 from pathlib import Path
 assert os.uname().release == '6.1.159-kdclobber2'
 assert Path('/proc/sys/kernel/random/boot_id').read_text().strip() == '88449cfc-cea9-4647-a294-bc601e372146'
 sys.path.insert(0,'/root/host_fs/kdlock/bench/spin_cacheline')
 import bench_runtime as r
 r.idle()
+root=Path('/root/host_fs/kdlock')
+sources=[root/'tests/unit/Makefile', *sorted((root/'tests/unit/basic').glob('*.c')), root/'daemon/daemon.c', *sorted((root/'daemon').glob('*.inc')), *sorted((root/'include').glob('*.h'))]
+before={str(p.relative_to(root)):hashlib.sha256(p.read_bytes()).hexdigest() for p in sources}
+print(json.dumps(dict(unit_input_sha256=before)),flush=True)
 subprocess.run(['make','-B','-C','/root/host_fs/kdlock/tests/unit','run'],check=True)
+assert before == {str(p.relative_to(root)):hashlib.sha256(p.read_bytes()).hexdigest() for p in sources}
+print(json.dumps(dict(unit_sources_unchanged=True)),flush=True)
 r.idle()
 '''
                 command = shlex.join(['env', 'PYTHONDONTWRITEBYTECODE=1', 'LC_ALL=C',
@@ -202,7 +209,7 @@ sys.exit(subprocess.call(args))
                 guest = Stream(out, 'workload', SSH+['-p', '2222', 'root@10.176.26.71', command], receipt, save, mixed_output=True)
                 receipt['phases'] = []
                 while True:
-                    event = guest.items.get(timeout=30)
+                    event = guest.items.get(timeout=240)
                     if event is None:
                         break
                     assert 'reader_error' not in event, event

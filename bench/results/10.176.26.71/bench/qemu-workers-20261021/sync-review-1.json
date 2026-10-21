@@ -1,0 +1,1238 @@
+[
+  {
+    "accepted": false,
+    "changes": [
+      {
+        "appeared": [
+          [
+            447754,
+            96924089
+          ]
+        ],
+        "disappeared": [],
+        "phase": "sync-dry-run-before",
+        "previous_scan_began": {
+          "boot_ns": 969240504698703,
+          "mono_ns": 969240504696128,
+          "real_ns": 1792582113829023888
+        },
+        "sequence": 22,
+        "this_scan_finished": {
+          "boot_ns": 969241023689922,
+          "mono_ns": 969241023689644,
+          "real_ns": 1792582114348017819
+        }
+      },
+      {
+        "appeared": [
+          [
+            447824,
+            96924544
+          ],
+          [
+            447825,
+            96924544
+          ],
+          [
+            447826,
+            96924544
+          ],
+          [
+            447827,
+            96924544
+          ],
+          [
+            447828,
+            96924544
+          ],
+          [
+            447829,
+            96924544
+          ],
+          [
+            447830,
+            96924544
+          ],
+          [
+            447831,
+            96924544
+          ]
+        ],
+        "disappeared": [],
+        "phase": "sync-dry-run-after",
+        "previous_scan_began": {
+          "boot_ns": 969245089308188,
+          "mono_ns": 969245089306571,
+          "real_ns": 1792582118413634469
+        },
+        "sequence": 31,
+        "this_scan_finished": {
+          "boot_ns": 969245610303564,
+          "mono_ns": 969245610303389,
+          "real_ns": 1792582118934631560
+        }
+      }
+    ],
+    "clock_brackets": [
+      {
+        "offset_high_ns": 638501,
+        "offset_low_ns": -331400,
+        "round_trip_ns": 970994,
+        "source_midpoint_ns": 1792582103160150958,
+        "stream": "observer",
+        "value": "host-only-idle"
+      },
+      {
+        "offset_high_ns": 576743,
+        "offset_low_ns": -712212,
+        "round_trip_ns": 1288122,
+        "source_midpoint_ns": 1792582111177486580,
+        "stream": "observer",
+        "value": "sync-dry-run-before"
+      },
+      {
+        "offset_high_ns": 360034,
+        "offset_low_ns": -703748,
+        "round_trip_ns": 1064120,
+        "source_midpoint_ns": 1792582116417516859,
+        "stream": "observer",
+        "value": "sync-dry-run-after"
+      },
+      {
+        "offset_high_ns": 244044,
+        "offset_low_ns": -1049527,
+        "round_trip_ns": 1292775,
+        "source_midpoint_ns": 1792582119422385819,
+        "stream": "observer",
+        "value": "sync-write-before"
+      },
+      {
+        "offset_high_ns": -199762,
+        "offset_low_ns": -1705876,
+        "round_trip_ns": 1506784,
+        "source_midpoint_ns": 1792582130330580235,
+        "stream": "observer",
+        "value": "sync-write-after"
+      },
+      {
+        "offset_high_ns": -354451,
+        "offset_low_ns": -1500569,
+        "round_trip_ns": 1146219,
+        "source_midpoint_ns": 1792582138340786830,
+        "stream": "observer",
+        "value": "stop"
+      }
+    ],
+    "complete": true,
+    "evidence_sha256": {
+      "capture-host.py": "b0ad0d1854a0f0d60487fa9afea4d044aacf7b9fa86ec3c700d66a150cd4be1b",
+      "observer.jsonl": "348fc1457514f022966a4bf50198ecdceff5d68e6b675d1aa4667c55d321dcd0",
+      "observer.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "qemu_controls.py": "2af37e7f477d7ed6d00b298a5fdd75a7a5d985c8abb1abf76835aa27276bbda0",
+      "qemu_guest_control.py": "8afeb7111e5c3e11c74cc9503a3340da3219676cd8f18daa6ce17cbc96b30102",
+      "qemu_trace.py": "6b5b9fa95b66887b213c4403bde4790dad1dd189476d42ca7ab0f16f55a9b0a6",
+      "supervisor.json": "324d4511c38a3e7fd48d09e9a8a019b0824e86a082991dfb3e6ae837433a5815",
+      "sync-dry-run.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sync-dry-run.stdout": "6b41d8a35414f26aa8975f9749ec6b2f6dfd58ac83fcdf9ed960e89824c2fac0",
+      "sync-write.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sync-write.stdout": "2102b371147731ec480fb9fc3cc42ad7fa778fe0ae7212b7d6e01124d2811090",
+      "unlock_run.py": "30da89bf8a40fe73b61a0d77262eb50e1c4d21c1453741042aba1073ff91eb69"
+    },
+    "final_tasks": 76,
+    "incomplete_rows": [],
+    "initial_tasks": 67,
+    "limitations": [
+      "Sampling misses lifetimes wholly between scans and accounting after the last read.",
+      "First/last cumulative values are not phase-local activity; only matched intervals are differenced.",
+      "Task count includes partial rows; original identities must remain completely readable.",
+      "Each read is bracketed; a scan is not an atomic QEMU snapshot.",
+      "Clock offsets are per-request intervals, not a fixed synchronized-clock assumption.",
+      "Recorded observer CPU excludes SSH/sudo startup and source supervisor overhead.",
+      "Host observation has no unobserved counterfactual; guest background I/O is not disabled.",
+      "BOOTTIME brackets present; birth ticks are quantized, not exact instants."
+    ],
+    "maximum_tasks": 76,
+    "minimum_tasks": 67,
+    "observer": {
+      "affinity": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35,
+        36,
+        37,
+        38,
+        39,
+        40,
+        41,
+        42,
+        43,
+        44,
+        45,
+        46,
+        47,
+        48,
+        49,
+        50,
+        51,
+        52,
+        53,
+        54,
+        55,
+        56,
+        57,
+        58,
+        59,
+        60,
+        61,
+        62,
+        63
+      ],
+      "clk_tck": 100,
+      "cpu_ns": 670297671,
+      "cpu_percent_one_core": 1.904710478415153,
+      "elapsed_ns": 35191577859,
+      "host_boot_id": {
+        "status": "READ",
+        "text": "2b39cf56-2146-4c87-9fa5-28c66dcee12c\n"
+      },
+      "maximum_scan_wall_ns": 12791665,
+      "maximum_unsampled_gap_ns": 501808506,
+      "median_scan_wall_ns": 9346090,
+      "sched_schedstats": {
+        "status": "READ",
+        "text": "0\n"
+      }
+    },
+    "original_67_unchanged": true,
+    "phases": {
+      "host-only-idle": {
+        "maximum_tasks": 67,
+        "minimum_tasks": 67,
+        "observed_worker_deltas": {},
+        "samples": 15
+      },
+      "sync-dry-run-after": {
+        "maximum_tasks": 76,
+        "minimum_tasks": 68,
+        "observed_worker_deltas": {
+          "cancelled_write_bytes": 0,
+          "rchar": 0,
+          "read_bytes": 0,
+          "runqueue_wait_ns": 2169598,
+          "runtime_ns": 2839745,
+          "syscr": 0,
+          "syscw": 378,
+          "timeslices": 130,
+          "wchar": 1217664,
+          "write_bytes": 1216512
+        },
+        "samples": 5
+      },
+      "sync-dry-run-before": {
+        "maximum_tasks": 68,
+        "minimum_tasks": 67,
+        "observed_worker_deltas": {
+          "cancelled_write_bytes": 0,
+          "rchar": 0,
+          "read_bytes": 0,
+          "runqueue_wait_ns": 0,
+          "runtime_ns": 0,
+          "syscr": 0,
+          "syscw": 0,
+          "timeslices": 0,
+          "wchar": 0,
+          "write_bytes": 0
+        },
+        "samples": 11
+      },
+      "sync-write-after": {
+        "maximum_tasks": 76,
+        "minimum_tasks": 76,
+        "observed_worker_deltas": {
+          "cancelled_write_bytes": 0,
+          "rchar": 0,
+          "read_bytes": 0,
+          "runqueue_wait_ns": 6898499,
+          "runtime_ns": 3011435,
+          "syscr": 0,
+          "syscw": 160,
+          "timeslices": 150,
+          "wchar": 667864,
+          "write_bytes": 667648
+        },
+        "samples": 15
+      },
+      "sync-write-before": {
+        "maximum_tasks": 76,
+        "minimum_tasks": 76,
+        "observed_worker_deltas": {
+          "cancelled_write_bytes": 0,
+          "rchar": 929792,
+          "read_bytes": 274432,
+          "runqueue_wait_ns": 17073776,
+          "runtime_ns": 22535468,
+          "syscr": 15,
+          "syscw": 496,
+          "timeslices": 696,
+          "wchar": 3737080,
+          "write_bytes": 3735552
+        },
+        "samples": 22
+      },
+      "unmarked": {
+        "maximum_tasks": 67,
+        "minimum_tasks": 67,
+        "observed_worker_deltas": {},
+        "samples": 1
+      }
+    },
+    "run": "sync-1",
+    "samples": 69,
+    "source_commit": "038379b7cd919a898081659468ebc59b06eeaa6c",
+    "sources": {
+      "/home/eric/vm/vm-shared/kdlock/bench/mutex_api_compare/qemu_controls.py": "2af37e7f477d7ed6d00b298a5fdd75a7a5d985c8abb1abf76835aa27276bbda0",
+      "/home/eric/vm/vm-shared/kdlock/bench/mutex_api_compare/qemu_guest_control.py": "8afeb7111e5c3e11c74cc9503a3340da3219676cd8f18daa6ce17cbc96b30102",
+      "/home/eric/vm/vm-shared/kdlock/bench/mutex_api_compare/qemu_trace.py": "6b5b9fa95b66887b213c4403bde4790dad1dd189476d42ca7ab0f16f55a9b0a6",
+      "/home/eric/vm/vm-shared/kdlock/bench/mutex_api_compare/unlock_run.py": "30da89bf8a40fe73b61a0d77262eb50e1c4d21c1453741042aba1073ff91eb69",
+      "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/bench/mutex32-native-tclock-20261020/capture-host.py": "b0ad0d1854a0f0d60487fa9afea4d044aacf7b9fa86ec3c700d66a150cd4be1b"
+    },
+    "unattributed_deltas": {
+      "cancelled_write_bytes": 0,
+      "rchar": 0,
+      "read_bytes": 0,
+      "runqueue_wait_ns": 0,
+      "runtime_ns": 0,
+      "syscr": 0,
+      "syscw": 0,
+      "timeslices": 0,
+      "wchar": 0,
+      "write_bytes": 0
+    },
+    "workers": [
+      {
+        "birth_boot_interval_ns": [
+          969240890000000,
+          969240900000000
+        ],
+        "final_sample_present": true,
+        "first": {
+          "affinity": [
+            63
+          ],
+          "counters": {
+            "cancelled_write_bytes": 0,
+            "rchar": 0,
+            "read_bytes": 0,
+            "runqueue_wait_ns": 64010,
+            "runtime_ns": 110362,
+            "syscr": 0,
+            "syscw": 2,
+            "timeslices": 1,
+            "wchar": 4104,
+            "write_bytes": 4096
+          },
+          "phase": "sync-dry-run-before",
+          "read_began": {
+            "boot_ns": 969241023438180,
+            "mono_ns": 969241023438021,
+            "real_ns": 1792582114347766249
+          },
+          "read_finished": {
+            "boot_ns": 969241023644829,
+            "mono_ns": 969241023644651,
+            "real_ns": 1792582114347972782
+          },
+          "sequence": 22,
+          "syscall": {
+            "status": "READ",
+            "text": "202 0x634ac77eec54 0x189 0x0 0x74676cdf65d0 0x0 0xffffffff 0x74676cdf6420 0x746fd1098e51\n"
+          },
+          "wchan": {
+            "status": "READ",
+            "text": "futex_wait_queue"
+          }
+        },
+        "identity": [
+          447754,
+          96924089
+        ],
+        "last": {
+          "affinity": [
+            63
+          ],
+          "counters": {
+            "cancelled_write_bytes": 0,
+            "rchar": 131072,
+            "read_bytes": 65536,
+            "runqueue_wait_ns": 4474277,
+            "runtime_ns": 5864964,
+            "syscr": 2,
+            "syscw": 461,
+            "timeslices": 226,
+            "wchar": 1647992,
+            "write_bytes": 1646592
+          },
+          "phase": "sync-write-after",
+          "read_began": {
+            "boot_ns": 969264544207264,
+            "mono_ns": 969264544207121,
+            "real_ns": 1792582137868535384
+          },
+          "read_finished": {
+            "boot_ns": 969264544385344,
+            "mono_ns": 969264544385152,
+            "real_ns": 1792582137868713373
+          },
+          "sequence": 68,
+          "syscall": {
+            "status": "READ",
+            "text": "202 0x634ac77eec50 0x189 0x0 0x74676cdf65d0 0x0 0xffffffff 0x74676cdf6420 0x746fd1098e51\n"
+          },
+          "wchan": {
+            "status": "READ",
+            "text": "futex_wait_queue"
+          }
+        },
+        "observations": 47,
+        "observed_counter_delta": {
+          "cancelled_write_bytes": 0,
+          "rchar": 131072,
+          "read_bytes": 65536,
+          "runqueue_wait_ns": 4410267,
+          "runtime_ns": 5754602,
+          "syscr": 2,
+          "syscw": 459,
+          "timeslices": 225,
+          "wchar": 1643888,
+          "write_bytes": 1642496
+        },
+        "tail_missing": true
+      },
+      {
+        "birth_boot_interval_ns": [
+          969245440000000,
+          969245450000000
+        ],
+        "final_sample_present": true,
+        "first": {
+          "affinity": [
+            63
+          ],
+          "counters": {
+            "cancelled_write_bytes": 0,
+            "rchar": 0,
+            "read_bytes": 0,
+            "runqueue_wait_ns": 203144,
+            "runtime_ns": 172642,
+            "syscr": 0,
+            "syscw": 18,
+            "timeslices": 4,
+            "wchar": 77896,
+            "write_bytes": 77824
+          },
+          "phase": "sync-dry-run-after",
+          "read_began": {
+            "boot_ns": 969245608777457,
+            "mono_ns": 969245608777347,
+            "real_ns": 1792582118933105628
+          },
+          "read_finished": {
+            "boot_ns": 969245608970503,
+            "mono_ns": 969245608970308,
+            "real_ns": 1792582118933298513
+          },
+          "sequence": 31,
+          "syscall": {
+            "status": "READ",
+            "text": "202 0x634ac77eec54 0x189 0x0 0x74675a6a15d0 0x0 0xffffffff 0x74675a6a1420 0x746fd1098e51\n"
+          },
+          "wchan": {
+            "status": "READ",
+            "text": "futex_wait_queue"
+          }
+        },
+        "identity": [
+          447824,
+          96924544
+        ],
+        "last": {
+          "affinity": [
+            63
+          ],
+          "counters": {
+            "cancelled_write_bytes": 0,
+            "rchar": 65536,
+            "read_bytes": 0,
+            "runqueue_wait_ns": 2952892,
+            "runtime_ns": 2902606,
+            "syscr": 1,
+            "syscw": 82,
+            "timeslices": 98,
+            "wchar": 540920,
+            "write_bytes": 540672
+          },
+          "phase": "sync-write-after",
+          "read_began": {
+            "boot_ns": 969264544386701,
+            "mono_ns": 969264544386592,
+            "real_ns": 1792582137868714873
+          },
+          "read_finished": {
+            "boot_ns": 969264544554058,
+            "mono_ns": 969264544553896,
+            "real_ns": 1792582137868882143
+          },
+          "sequence": 68,
+          "syscall": {
+            "status": "READ",
+            "text": "202 0x634ac77eec50 0x189 0x0 0x74675a6a15d0 0x0 0xffffffff 0x74675a6a1420 0x746fd1098e51\n"
+          },
+          "wchan": {
+            "status": "READ",
+            "text": "futex_wait_queue"
+          }
+        },
+        "observations": 38,
+        "observed_counter_delta": {
+          "cancelled_write_bytes": 0,
+          "rchar": 65536,
+          "read_bytes": 0,
+          "runqueue_wait_ns": 2749748,
+          "runtime_ns": 2729964,
+          "syscr": 1,
+          "syscw": 64,
+          "timeslices": 94,
+          "wchar": 463024,
+          "write_bytes": 462848
+        },
+        "tail_missing": true
+      },
+      {
+        "birth_boot_interval_ns": [
+          969245440000000,
+          969245450000000
+        ],
+        "final_sample_present": true,
+        "first": {
+          "affinity": [
+            63
+          ],
+          "counters": {
+            "cancelled_write_bytes": 0,
+            "rchar": 0,
+            "read_bytes": 0,
+            "runqueue_wait_ns": 144981,
+            "runtime_ns": 178685,
+            "syscr": 0,
+            "syscw": 1,
+            "timeslices": 4,
+            "wchar": 8,
+            "write_bytes": 0
+          },
+          "phase": "sync-dry-run-after",
+          "read_began": {
+            "boot_ns": 969245608971598,
+            "mono_ns": 969245608971477,
+            "real_ns": 1792582118933299737
+          },
+          "read_finished": {
+            "boot_ns": 969245609162136,
+            "mono_ns": 969245609161924,
+            "real_ns": 1792582118933490144
+          },
+          "sequence": 31,
+          "syscall": {
+            "status": "READ",
+            "text": "202 0x634ac77eec54 0x189 0x0 0x7467a94d35d0 0x0 0xffffffff 0x7467a94d3420 0x746fd1098e51\n"
+          },
+          "wchan": {
+            "status": "READ",
+            "text": "futex_wait_queue"
+          }
+        },
+        "identity": [
+          447825,
+          96924544
+        ],
+        "last": {
+          "affinity": [
+            63
+          ],
+          "counters": {
+            "cancelled_write_bytes": 0,
+            "rchar": 0,
+            "read_bytes": 0,
+            "runqueue_wait_ns": 2560908,
+            "runtime_ns": 2584024,
+            "syscr": 0,
+            "syscw": 67,
+            "timeslices": 90,
+            "wchar": 544912,
+            "write_bytes": 544768
+          },
+          "phase": "sync-write-after",
+          "read_began": {
+            "boot_ns": 969264544555431,
+            "mono_ns": 969264544555312,
+            "real_ns": 1792582137868883586
+          },
+          "read_finished": {
+            "boot_ns": 969264544715696,
+            "mono_ns": 969264544715491,
+            "real_ns": 1792582137869043712
+          },
+          "sequence": 68,
+          "syscall": {
+            "status": "READ",
+            "text": "202 0x634ac77eec50 0x189 0x0 0x7467a94d35d0 0x0 0xffffffff 0x7467a94d3420 0x746fd1098e51\n"
+          },
+          "wchan": {
+            "status": "READ",
+            "text": "futex_wait_queue"
+          }
+        },
+        "observations": 38,
+        "observed_counter_delta": {
+          "cancelled_write_bytes": 0,
+          "rchar": 0,
+          "read_bytes": 0,
+          "runqueue_wait_ns": 2415927,
+          "runtime_ns": 2405339,
+          "syscr": 0,
+          "syscw": 66,
+          "timeslices": 86,
+          "wchar": 544904,
+          "write_bytes": 544768
+        },
+        "tail_missing": true
+      },
+      {
+        "birth_boot_interval_ns": [
+          969245440000000,
+          969245450000000
+        ],
+        "final_sample_present": true,
+        "first": {
+          "affinity": [
+            63
+          ],
+          "counters": {
+            "cancelled_write_bytes": 0,
+            "rchar": 0,
+            "read_bytes": 0,
+            "runqueue_wait_ns": 2749,
+            "runtime_ns": 69095,
+            "syscr": 0,
+            "syscw": 0,
+            "timeslices": 1,
+            "wchar": 0,
+            "write_bytes": 0
+          },
+          "phase": "sync-dry-run-after",
+          "read_began": {
+            "boot_ns": 969245609163308,
+            "mono_ns": 969245609163183,
+            "real_ns": 1792582118933491447
+          },
+          "read_finished": {
+            "boot_ns": 969245609351292,
+            "mono_ns": 969245609351088,
+            "real_ns": 1792582118933679300
+          },
+          "sequence": 31,
+          "syscall": {
+            "status": "READ",
+            "text": "202 0x634ac77eec50 0x189 0x0 0x7467ff2f85d0 0x0 0xffffffff 0x7467ff2f8420 0x746fd1098e51\n"
+          },
+          "wchan": {
+            "status": "READ",
+            "text": "futex_wait_queue"
+          }
+        },
+        "identity": [
+          447826,
+          96924544
+        ],
+        "last": {
+          "affinity": [
+            63
+          ],
+          "counters": {
+            "cancelled_write_bytes": 0,
+            "rchar": 131072,
+            "read_bytes": 0,
+            "runqueue_wait_ns": 2736444,
+            "runtime_ns": 2800092,
+            "syscr": 2,
+            "syscw": 72,
+            "timeslices": 90,
+            "wchar": 520400,
+            "write_bytes": 520192
+          },
+          "phase": "sync-write-after",
+          "read_began": {
+            "boot_ns": 969264544716805,
+            "mono_ns": 969264544716690,
+            "real_ns": 1792582137869044964
+          },
+          "read_finished": {
+            "boot_ns": 969264544883650,
+            "mono_ns": 969264544883362,
+            "real_ns": 1792582137869211599
+          },
+          "sequence": 68,
+          "syscall": {
+            "status": "READ",
+            "text": "202 0x634ac77eec54 0x189 0x0 0x7467ff2f85d0 0x0 0xffffffff 0x7467ff2f8420 0x746fd1098e51\n"
+          },
+          "wchan": {
+            "status": "READ",
+            "text": "futex_wait_queue"
+          }
+        },
+        "observations": 38,
+        "observed_counter_delta": {
+          "cancelled_write_bytes": 0,
+          "rchar": 131072,
+          "read_bytes": 0,
+          "runqueue_wait_ns": 2733695,
+          "runtime_ns": 2730997,
+          "syscr": 2,
+          "syscw": 72,
+          "timeslices": 89,
+          "wchar": 520400,
+          "write_bytes": 520192
+        },
+        "tail_missing": true
+      },
+      {
+        "birth_boot_interval_ns": [
+          969245440000000,
+          969245450000000
+        ],
+        "final_sample_present": true,
+        "first": {
+          "affinity": [
+            63
+          ],
+          "counters": {
+            "cancelled_write_bytes": 0,
+            "rchar": 0,
+            "read_bytes": 0,
+            "runqueue_wait_ns": 2343,
+            "runtime_ns": 38021,
+            "syscr": 0,
+            "syscw": 0,
+            "timeslices": 1,
+            "wchar": 0,
+            "write_bytes": 0
+          },
+          "phase": "sync-dry-run-after",
+          "read_began": {
+            "boot_ns": 969245609352680,
+            "mono_ns": 969245609352568,
+            "real_ns": 1792582118933680843
+          },
+          "read_finished": {
+            "boot_ns": 969245609536984,
+            "mono_ns": 969245609536799,
+            "real_ns": 1792582118933865042
+          },
+          "sequence": 31,
+          "syscall": {
+            "status": "READ",
+            "text": "202 0x634ac77eec50 0x189 0x0 0x7467e75f45d0 0x0 0xffffffff 0x7467e75f4420 0x746fd1098e51\n"
+          },
+          "wchan": {
+            "status": "READ",
+            "text": "futex_wait_queue"
+          }
+        },
+        "identity": [
+          447827,
+          96924544
+        ],
+        "last": {
+          "affinity": [
+            63
+          ],
+          "counters": {
+            "cancelled_write_bytes": 0,
+            "rchar": 131072,
+            "read_bytes": 0,
+            "runqueue_wait_ns": 2714529,
+            "runtime_ns": 2480347,
+            "syscr": 2,
+            "syscw": 71,
+            "timeslices": 95,
+            "wchar": 577744,
+            "write_bytes": 577536
+          },
+          "phase": "sync-write-after",
+          "read_began": {
+            "boot_ns": 969264544885113,
+            "mono_ns": 969264544884926,
+            "real_ns": 1792582137869213204
+          },
+          "read_finished": {
+            "boot_ns": 969264545053924,
+            "mono_ns": 969264545053681,
+            "real_ns": 1792582137869381946
+          },
+          "sequence": 68,
+          "syscall": {
+            "status": "READ",
+            "text": "202 0x634ac77eec54 0x189 0x0 0x7467e75f45d0 0x0 0xffffffff 0x7467e75f4420 0x746fd1098e51\n"
+          },
+          "wchan": {
+            "status": "READ",
+            "text": "futex_wait_queue"
+          }
+        },
+        "observations": 38,
+        "observed_counter_delta": {
+          "cancelled_write_bytes": 0,
+          "rchar": 131072,
+          "read_bytes": 0,
+          "runqueue_wait_ns": 2712186,
+          "runtime_ns": 2442326,
+          "syscr": 2,
+          "syscw": 71,
+          "timeslices": 94,
+          "wchar": 577744,
+          "write_bytes": 577536
+        },
+        "tail_missing": true
+      },
+      {
+        "birth_boot_interval_ns": [
+          969245440000000,
+          969245450000000
+        ],
+        "final_sample_present": true,
+        "first": {
+          "affinity": [
+            63
+          ],
+          "counters": {
+            "cancelled_write_bytes": 0,
+            "rchar": 0,
+            "read_bytes": 0,
+            "runqueue_wait_ns": 2051,
+            "runtime_ns": 40751,
+            "syscr": 0,
+            "syscw": 0,
+            "timeslices": 1,
+            "wchar": 0,
+            "write_bytes": 0
+          },
+          "phase": "sync-dry-run-after",
+          "read_began": {
+            "boot_ns": 969245609538274,
+            "mono_ns": 969245609538157,
+            "real_ns": 1792582118933866400
+          },
+          "read_finished": {
+            "boot_ns": 969245609716746,
+            "mono_ns": 969245609716567,
+            "real_ns": 1792582118934044821
+          },
+          "sequence": 31,
+          "syscall": {
+            "status": "READ",
+            "text": "202 0x634ac77eec50 0x189 0x0 0x7467e1bb65d0 0x0 0xffffffff 0x7467e1bb6420 0x746fd1098e51\n"
+          },
+          "wchan": {
+            "status": "READ",
+            "text": "futex_wait_queue"
+          }
+        },
+        "identity": [
+          447828,
+          96924544
+        ],
+        "last": {
+          "affinity": [
+            63
+          ],
+          "counters": {
+            "cancelled_write_bytes": 0,
+            "rchar": 217088,
+            "read_bytes": 20480,
+            "runqueue_wait_ns": 3088499,
+            "runtime_ns": 3270678,
+            "syscr": 4,
+            "syscw": 83,
+            "timeslices": 99,
+            "wchar": 565512,
+            "write_bytes": 565248
+          },
+          "phase": "sync-write-after",
+          "read_began": {
+            "boot_ns": 969264545055314,
+            "mono_ns": 969264545055133,
+            "real_ns": 1792582137869383407
+          },
+          "read_finished": {
+            "boot_ns": 969264545218428,
+            "mono_ns": 969264545218281,
+            "real_ns": 1792582137869546548
+          },
+          "sequence": 68,
+          "syscall": {
+            "status": "READ",
+            "text": "202 0x634ac77eec54 0x189 0x0 0x7467e1bb65d0 0x0 0xffffffff 0x7467e1bb6420 0x746fd1098e51\n"
+          },
+          "wchan": {
+            "status": "READ",
+            "text": "futex_wait_queue"
+          }
+        },
+        "observations": 38,
+        "observed_counter_delta": {
+          "cancelled_write_bytes": 0,
+          "rchar": 217088,
+          "read_bytes": 20480,
+          "runqueue_wait_ns": 3086448,
+          "runtime_ns": 3229927,
+          "syscr": 4,
+          "syscw": 83,
+          "timeslices": 98,
+          "wchar": 565512,
+          "write_bytes": 565248
+        },
+        "tail_missing": true
+      },
+      {
+        "birth_boot_interval_ns": [
+          969245440000000,
+          969245450000000
+        ],
+        "final_sample_present": true,
+        "first": {
+          "affinity": [
+            63
+          ],
+          "counters": {
+            "cancelled_write_bytes": 0,
+            "rchar": 0,
+            "read_bytes": 0,
+            "runqueue_wait_ns": 2068,
+            "runtime_ns": 53795,
+            "syscr": 0,
+            "syscw": 0,
+            "timeslices": 1,
+            "wchar": 0,
+            "write_bytes": 0
+          },
+          "phase": "sync-dry-run-after",
+          "read_began": {
+            "boot_ns": 969245609717966,
+            "mono_ns": 969245609717819,
+            "real_ns": 1792582118934046056
+          },
+          "read_finished": {
+            "boot_ns": 969245609896761,
+            "mono_ns": 969245609896609,
+            "real_ns": 1792582118934224872
+          },
+          "sequence": 31,
+          "syscall": {
+            "status": "READ",
+            "text": "202 0x634ac77eec50 0x189 0x0 0x7467c0fdc5d0 0x0 0xffffffff 0x7467c0fdc420 0x746fd1098e51\n"
+          },
+          "wchan": {
+            "status": "READ",
+            "text": "futex_wait_queue"
+          }
+        },
+        "identity": [
+          447829,
+          96924544
+        ],
+        "last": {
+          "affinity": [
+            63
+          ],
+          "counters": {
+            "cancelled_write_bytes": 0,
+            "rchar": 126976,
+            "read_bytes": 61440,
+            "runqueue_wait_ns": 2499585,
+            "runtime_ns": 3345085,
+            "syscr": 2,
+            "syscw": 73,
+            "timeslices": 100,
+            "wchar": 491664,
+            "write_bytes": 491520
+          },
+          "phase": "sync-write-after",
+          "read_began": {
+            "boot_ns": 969264545219544,
+            "mono_ns": 969264545219423,
+            "real_ns": 1792582137869547701
+          },
+          "read_finished": {
+            "boot_ns": 969264545381239,
+            "mono_ns": 969264545381039,
+            "real_ns": 1792582137869709264
+          },
+          "sequence": 68,
+          "syscall": {
+            "status": "READ",
+            "text": "202 0x634ac77eec50 0x189 0x0 0x7467c0fdc5d0 0x0 0xffffffff 0x7467c0fdc420 0x746fd1098e51\n"
+          },
+          "wchan": {
+            "status": "READ",
+            "text": "futex_wait_queue"
+          }
+        },
+        "observations": 38,
+        "observed_counter_delta": {
+          "cancelled_write_bytes": 0,
+          "rchar": 126976,
+          "read_bytes": 61440,
+          "runqueue_wait_ns": 2497517,
+          "runtime_ns": 3291290,
+          "syscr": 2,
+          "syscw": 73,
+          "timeslices": 99,
+          "wchar": 491664,
+          "write_bytes": 491520
+        },
+        "tail_missing": true
+      },
+      {
+        "birth_boot_interval_ns": [
+          969245440000000,
+          969245450000000
+        ],
+        "final_sample_present": true,
+        "first": {
+          "affinity": [
+            63
+          ],
+          "counters": {
+            "cancelled_write_bytes": 0,
+            "rchar": 0,
+            "read_bytes": 0,
+            "runqueue_wait_ns": 2044,
+            "runtime_ns": 38206,
+            "syscr": 0,
+            "syscw": 0,
+            "timeslices": 1,
+            "wchar": 0,
+            "write_bytes": 0
+          },
+          "phase": "sync-dry-run-after",
+          "read_began": {
+            "boot_ns": 969245609898076,
+            "mono_ns": 969245609897934,
+            "real_ns": 1792582118934226169
+          },
+          "read_finished": {
+            "boot_ns": 969245610080422,
+            "mono_ns": 969245610080181,
+            "real_ns": 1792582118934408373
+          },
+          "sequence": 31,
+          "syscall": {
+            "status": "READ",
+            "text": "202 0x634ac77eec50 0x189 0x0 0x74676d5f75d0 0x0 0xffffffff 0x74676d5f7420 0x746fd1098e51\n"
+          },
+          "wchan": {
+            "status": "READ",
+            "text": "futex_wait_queue"
+          }
+        },
+        "identity": [
+          447830,
+          96924544
+        ],
+        "last": {
+          "affinity": [
+            63
+          ],
+          "counters": {
+            "cancelled_write_bytes": 0,
+            "rchar": 126976,
+            "read_bytes": 126976,
+            "runqueue_wait_ns": 2709418,
+            "runtime_ns": 2877192,
+            "syscr": 2,
+            "syscw": 66,
+            "timeslices": 94,
+            "wchar": 467112,
+            "write_bytes": 466944
+          },
+          "phase": "sync-write-after",
+          "read_began": {
+            "boot_ns": 969264545382272,
+            "mono_ns": 969264545382161,
+            "real_ns": 1792582137869710432
+          },
+          "read_finished": {
+            "boot_ns": 969264545541672,
+            "mono_ns": 969264545541509,
+            "real_ns": 1792582137869869759
+          },
+          "sequence": 68,
+          "syscall": {
+            "status": "READ",
+            "text": "202 0x634ac77eec50 0x189 0x0 0x74676d5f75d0 0x0 0xffffffff 0x74676d5f7420 0x746fd1098e51\n"
+          },
+          "wchan": {
+            "status": "READ",
+            "text": "futex_wait_queue"
+          }
+        },
+        "observations": 38,
+        "observed_counter_delta": {
+          "cancelled_write_bytes": 0,
+          "rchar": 126976,
+          "read_bytes": 126976,
+          "runqueue_wait_ns": 2707374,
+          "runtime_ns": 2838986,
+          "syscr": 2,
+          "syscw": 66,
+          "timeslices": 93,
+          "wchar": 467112,
+          "write_bytes": 466944
+        },
+        "tail_missing": true
+      },
+      {
+        "birth_boot_interval_ns": [
+          969245440000000,
+          969245450000000
+        ],
+        "final_sample_present": true,
+        "first": {
+          "affinity": [
+            63
+          ],
+          "counters": {
+            "cancelled_write_bytes": 0,
+            "rchar": 0,
+            "read_bytes": 0,
+            "runqueue_wait_ns": 2192,
+            "runtime_ns": 20942,
+            "syscr": 0,
+            "syscw": 0,
+            "timeslices": 1,
+            "wchar": 0,
+            "write_bytes": 0
+          },
+          "phase": "sync-dry-run-after",
+          "read_began": {
+            "boot_ns": 969245610081497,
+            "mono_ns": 969245610081390,
+            "real_ns": 1792582118934409648
+          },
+          "read_finished": {
+            "boot_ns": 969245610259312,
+            "mono_ns": 969245610259190,
+            "real_ns": 1792582118934587441
+          },
+          "sequence": 31,
+          "syscall": {
+            "status": "READ",
+            "text": "202 0x634ac77eec50 0x189 0x0 0x74676c5f55d0 0x0 0xffffffff 0x74676c5f5420 0x746fd1098e51\n"
+          },
+          "wchan": {
+            "status": "READ",
+            "text": "futex_wait_queue"
+          }
+        },
+        "identity": [
+          447831,
+          96924544
+        ],
+        "last": {
+          "affinity": [
+            63
+          ],
+          "counters": {
+            "cancelled_write_bytes": 0,
+            "rchar": 0,
+            "read_bytes": 0,
+            "runqueue_wait_ns": 2830903,
+            "runtime_ns": 2984159,
+            "syscr": 0,
+            "syscw": 80,
+            "timeslices": 99,
+            "wchar": 348360,
+            "write_bytes": 348160
+          },
+          "phase": "sync-write-after",
+          "read_began": {
+            "boot_ns": 969264545542785,
+            "mono_ns": 969264545542665,
+            "real_ns": 1792582137869870943
+          },
+          "read_finished": {
+            "boot_ns": 969264545702088,
+            "mono_ns": 969264545701947,
+            "real_ns": 1792582137870030197
+          },
+          "sequence": 68,
+          "syscall": {
+            "status": "READ",
+            "text": "202 0x634ac77eec50 0x189 0x0 0x74676c5f55d0 0x0 0xffffffff 0x74676c5f5420 0x746fd1098e51\n"
+          },
+          "wchan": {
+            "status": "READ",
+            "text": "futex_wait_queue"
+          }
+        },
+        "observations": 38,
+        "observed_counter_delta": {
+          "cancelled_write_bytes": 0,
+          "rchar": 0,
+          "read_bytes": 0,
+          "runqueue_wait_ns": 2828711,
+          "runtime_ns": 2963217,
+          "syscr": 0,
+          "syscw": 80,
+          "timeslices": 98,
+          "wchar": 348360,
+          "write_bytes": 348160
+        },
+        "tail_missing": true
+      }
+    ]
+  }
+]

@@ -47,6 +47,7 @@ def main():
     if a.phase_single_outer and a.mode != 'timing':
         p.error('--phase-single-outer requires timing and every existing correctness/environment gate')
     phase_sequence = 0
+    phase_error = ValueError
 
     def phase(label, edge):
         nonlocal phase_sequence
@@ -56,9 +57,13 @@ def main():
         print('KD_PHASE '+json.dumps(dict(event='phase', sequence=phase_sequence,
             label=label, edge=edge, real_ns=time.time_ns(), mono_ns=time.monotonic_ns())), flush=True)
         if not select.select([sys.stdin], [], [], 15)[0]:
-            raise ValueError('phase observer acknowledgement timed out; no drain inferred')
-        if json.loads(sys.stdin.readline()) != {'phase_ack': phase_sequence}:
-            raise ValueError('phase observer acknowledgement differs')
+            raise phase_error('phase observer acknowledgement timed out; no drain inferred')
+        try:
+            ack = json.loads(sys.stdin.readline())
+        except (ValueError, OSError) as error:
+            raise phase_error('phase observer acknowledgement unavailable') from error
+        if ack != {'phase_ack': phase_sequence}:
+            raise phase_error('phase observer acknowledgement differs')
 
     phase('preflight', 'begin')
     control = load(ROOT/'bench/mutex_api_compare/unlock_control.py', 'unlock_control')
@@ -78,6 +83,9 @@ def main():
     require(not out.exists() and not out.is_relative_to(ROOT) and
             not out.is_relative_to(a.inputs.resolve().parent), 'new independent output required')
     scheduler, frozen, harness, syn, api = control.context(out)
+    # A command may have succeeded before the caller updates its loaded/bound
+    # flag. Losing coordination at that boundary must retain uncertain state.
+    phase_error = lambda message: api.Failure('OBSERVER_FAILED', message, unsafe=True)
     candidate = control.validate(scheduler, a.inputs, a.inputs_sha256)
     checks, task_check = read(a.unit_checks), read(a.task_check)
     require(checks['passed'] and checks['final_idle'] and checks['source_unchanged'] and
@@ -312,8 +320,8 @@ def main():
             scheduler.verify(item['files'])
         scheduler.verify(harness)
         control.validate(scheduler, a.inputs, a.inputs_sha256)
-        receipt.update(passed=True, final_idle=True)
         phase('final-verification', 'end')
+        receipt.update(passed=True, final_idle=True)
     except BaseException as error:
         receipt['error'] = repr(error)
         raise

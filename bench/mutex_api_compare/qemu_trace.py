@@ -43,7 +43,7 @@ def main():
     p.add_argument('--duration', type=float, default=45)
     p.add_argument('--interval', type=float, default=.5)
     a = p.parse_args()
-    assert 1 <= a.duration <= 120 and .25 <= a.interval <= 5
+    assert 1 <= a.duration <= 600 and .25 <= a.interval <= 5
     proc = Path('/proc')/str(a.pid)
     command = (proc/'cmdline').read_bytes()
     assert hashlib.sha256(command).hexdigest() == a.cmdline_sha256

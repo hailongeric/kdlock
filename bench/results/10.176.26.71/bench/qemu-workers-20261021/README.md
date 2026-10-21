@@ -84,3 +84,20 @@ single-session option retains every existing provenance, correctness, placement
 and strict original host gate. Phase handshakes occur outside joined worker
 execution; the observer and pauses make this an intrusive diagnostic. The prior
 six-session runner/results remain preserved at their recorded revisions.
+
+`sync-1` at `038379b` completed both the dry run and synchronization: 20 changed
+files, all 3,949 approved hashes verified, no deletion. A read-only review found
+two failure-path issues in the new, **not yet executed** workload phase hooks:
+loss of an observer reply could precede a loaded/bound flag update, and final
+success was recorded before the last reply. The follow-up uses unsafe failure
+retention for uncertain state and records success only after the final reply.
+Its workload observer bound is 600 seconds and event wait is 240 seconds,
+covering existing bounded publication/identity/client waits. This does not
+extend or change the workload's own timeout or drain rules. Observer phase
+acknowledgements do not represent kernel ownership or unlock ACKs.
+
+`sync-1` itself began at 67, reached 68 during the read-only dry run, then 76
+during its tail; actual synchronization started with the pool already present.
+The first basic-build control, `basic-1`, was refused at 68 before any guest
+command. Its early observer EOF, failure receipt and zero-command record are
+retained. A later attempt must independently reach the unchanged 67-task gate.
