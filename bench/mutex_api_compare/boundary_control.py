@@ -18,6 +18,7 @@ import time
 sys.dont_write_bytecode = True
 from qemu_controls import ROOT, CAPTURE, TRACE, SSH, Stream, stamp
 from boundary_protocol import host_hash, validate_reply
+import boundary_trigger
 import run as scheduler
 
 
@@ -52,15 +53,17 @@ def host_gate(original, host):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--output', required=True, type=Path)
+    parser.add_argument('--capture-policy', choices=('fixed', 'sample-trigger'), default='fixed')
     args = parser.parse_args()
     out = args.output.resolve()
     out.mkdir(parents=True, exist_ok=False)
     receipt = dict(accepted=False, score_eligible=False, timing_sent=False, complete=False,
-        streams=[], requests=[], phases=[], captures=[], started=stamp(),
+        streams=[], requests=[], phases=[], captures=[], started=stamp(), capture_policy=args.capture_policy,
         source_commit=subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip(), sources={})
     assert not subprocess.check_output(['git', 'status', '--porcelain'], cwd=ROOT, text=True), 'commit diagnostic source before running'
     for src in (Path(__file__), TRACE, CAPTURE, ROOT/'bench/mutex_api_compare/qemu_controls.py',
                 ROOT/'bench/mutex_api_compare/boundary_protocol.py', ROOT/'bench/mutex_api_compare/unlock_run.py',
+                ROOT/'bench/mutex_api_compare/boundary_trigger.py',
                 ROOT/'bench/mutex_api_compare/run.py', ROOT/'bench/mutex_api_compare/recovery_replay.py'):
         data = src.read_bytes()
         (out/src.name).write_bytes(data)
@@ -79,10 +82,15 @@ def main():
     guest = None
     try:
         observer.until('ready')
+        anchor_sample = observer.until('sample')
+        anchor = boundary_trigger.reference(original['host-state.json']['qemu'][0]['tasks'], anchor_sample['remote'])
+        receipt['trigger_anchor'] = anchor
+        save()
         mark = lambda label: observer.request('marker', label, 'marker')
 
         def capture(label):
             reply = observer.request('capture', label, 'capture', limit=25)
+            assert time.monotonic_ns()-reply['sent']['mono_ns'] <= 25*1000000000, 'full capture reply exceeded absolute request budget'
             data = reply['ack']['remote']
             receipt['captures'].append(dict(label=label, error=data['error'],
                 host_gate=host_gate(original, data['host']) if data['host'] else None))
@@ -104,7 +112,7 @@ def main():
         launch = '''import json,subprocess,sys
 from pathlib import Path
 root=Path('/root/host_fs/kdlock')
-base=Path('/root/kdlock-evidence/10.176.26.71/bench/mutex-boundary-20261021')
+base=Path(BASE)
 base.mkdir(exist_ok=True)
 name=NAME
 host_data=json.loads(sys.stdin.readline())
@@ -115,7 +123,9 @@ with runner.open('xb') as stream: stream.write((root/'bench/mutex_api_compare/un
 old=base.parent/'pipecap-unlock-20261021'
 args=[sys.executable,str(runner),'--mode','timing','--phase-single-outer','--setup-boundary-probe','--inputs',str(old/'inputs-1/inputs.json'),'--inputs-sha256','daf7f77beda2704d9cc56291f9864489f733c844f6188cd6c8198480539badae','--output',str(base/name),'--host-state',str(host),'--unit-checks',str(old/'checks-1/result.json'),'--task-check',str(old/'task-2/result.json'),'--elf-checks',str(old/'elf-checks-2.json'),'--correctness',str(old/'correctness-1/result.json'),'--source-commit',COMMIT]
 sys.exit(subprocess.call(args))
-'''.replace('NAME', repr(out.name)).replace('COMMIT', repr(receipt['source_commit']))
+'''.replace('NAME', repr(out.name)).replace('COMMIT', repr(receipt['source_commit'])).replace('BASE', repr(
+            '/root/kdlock-evidence/10.176.26.71/bench/'+
+            ('mutex-boundary-trigger-20261021' if args.capture_policy == 'sample-trigger' else 'mutex-boundary-20261021')))
         (out/'guest-launch.py').write_text(launch)
         command = shlex.join(['env', 'PYTHONDONTWRITEBYTECODE=1', 'LC_ALL=C',
             'PATH=/root/kdlock-translation-venv-20261019/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin',
@@ -139,18 +149,24 @@ sys.exit(subprocess.call(args))
                 save()
             elif row['event'] == 'boundary':
                 assert 'boundary' not in receipt and row['boundary'] == 1
-                receipt['boundary'] = dict(request=event, observations=[])
+                receipt['boundary'] = dict(request=event, observations=[], sample_decisions=[])
                 start = time.monotonic()
                 marker = mark('held-boundary-'+row['boundary_token'])['ack']['remote']['mono_ns']
                 observations = receipt['boundary']['observations']
-                for index, offset in enumerate((0, 15, 30, 60, 120)):
-                    # Longest individual pause is 60s; all traffic stays on the
-                    # established connections, with no guest work during hold.
-                    time.sleep(max(0, start+offset-time.monotonic()))
+                def fixed_points():
+                    for offset in (0, 15, 30, 60, 120):
+                        time.sleep(max(0, start+offset-time.monotonic()))
+                        yield dict(kind='fixed', offset_s=offset)
+                points = (boundary_trigger.triggers(observer, anchor, marker, int(start*1000000000),
+                          receipt['boundary']['sample_decisions'], save)
+                          if args.capture_policy == 'sample-trigger' else fixed_points())
+                for index, trigger in enumerate(points):
+                    offset = time.monotonic()-start
                     label = f"boundary-{row['boundary_token']}-{index}"
                     reply, gate = capture(label)
                     remote = reply['ack']['remote']
-                    observations.append(dict(capture=label, offset_s=offset,
+                    freshness = boundary_trigger.capture_age(trigger, remote) if trigger['kind'] == 'sample' else None
+                    observations.append(dict(capture=label, offset_s=offset, trigger=trigger, trigger_freshness=freshness,
                         capture_began_ns=remote['capture_began']['mono_ns'],
                         capture_finished_ns=remote['capture_finished']['mono_ns'],
                         boundary_marker_ns=marker, request_sent_ns=reply['sent']['mono_ns'],
@@ -158,7 +174,7 @@ sys.exit(subprocess.call(args))
                         host_sha256=host_hash(remote['host']), host_gate=gate))
                     save()
                     print(json.dumps(dict(capture=label, task_count=len(remote['host']['qemu'][0]['tasks']), host_gate=gate)), flush=True)
-                    if gate['passed']:
+                    if gate['passed'] and (freshness is None or freshness['qualified']):
                         break
                 answer = dict(boundary_ack=1, boundary_token=row['boundary_token'],
                     host_state=remote['host'], observations=observations)
