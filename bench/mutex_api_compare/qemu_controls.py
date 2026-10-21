@@ -193,20 +193,25 @@ root=Path('/root/host_fs/kdlock')
 base=Path('/root/kdlock-evidence/10.176.26.71/bench/qemu-workers-20261021')
 base.mkdir(exist_ok=True)
 name=NAME
+host_data=json.loads(sys.stdin.readline())
 host=base/(name+'-host.json')
-with host.open('x') as stream: json.dump(HOST,stream)
+with host.open('x') as stream: json.dump(host_data,stream)
 runner=base/(name+'-runner.py')
 with runner.open('xb') as stream: stream.write((root/'bench/mutex_api_compare/unlock_run.py').read_bytes())
 old=base.parent/'pipecap-unlock-20261021'
 args=[sys.executable,str(runner),'--mode','timing','--phase-single-outer','--inputs',str(old/'inputs-1/inputs.json'),'--inputs-sha256','daf7f77beda2704d9cc56291f9864489f733c844f6188cd6c8198480539badae','--output',str(base/name),'--host-state',str(host),'--unit-checks',str(old/'checks-1/result.json'),'--task-check',str(old/'task-2/result.json'),'--elf-checks',str(old/'elf-checks-2.json'),'--correctness',str(old/'correctness-1/result.json'),'--source-commit',COMMIT]
 sys.exit(subprocess.call(args))
-'''.replace('NAME', repr(out.name)).replace('HOST', repr(host)).replace('COMMIT', repr(receipt['source_commit']))
+'''.replace('NAME', repr(out.name)).replace('COMMIT', repr(receipt['source_commit']))
                 (out/'guest-launch.py').write_text(launch)
                 command = shlex.join(['env', 'PYTHONDONTWRITEBYTECODE=1', 'LC_ALL=C',
                     'PATH=/root/kdlock-translation-venv-20261019/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin',
                     'KDLOCK_RECOVERY_CONFIRMED=1', 'KDLOCK_SNAPSHOT_TAG=before-mutex-kdonly-20261017T140354Z',
                     '/root/kdlock-translation-venv-20261019/bin/python3', '-u', '-c', launch])
                 guest = Stream(out, 'workload', SSH+['-p', '2222', 'root@10.176.26.71', command], receipt, save, mixed_output=True)
+                # The snapshot exceeds a single argv's Linux size limit. Send
+                # it once on stdin before the child can request any phase ACK.
+                guest.proc.stdin.write(json.dumps(host)+'\n')
+                guest.proc.stdin.flush()
                 receipt['phases'] = []
                 while True:
                     event = guest.items.get(timeout=240)
