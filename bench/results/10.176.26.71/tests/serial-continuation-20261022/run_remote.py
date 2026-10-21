@@ -17,12 +17,19 @@ def main():
     p=argparse.ArgumentParser(description=__doc__)
     p.add_argument('--remote-command',required=True);p.add_argument('--output',type=Path,required=True)
     p.add_argument('--receipt',required=True,help='exact guest result path to fetch after the immediate capture')
+    p.add_argument('--admission',type=Path,help='fresh local host capture bound to this candidate session')
     a=p.parse_args();a.output.mkdir()
     capture=CAPTURE.read_bytes()
     assert hashlib.sha256(capture).hexdigest()=='b0ad0d1854a0f0d60487fa9afea4d044aacf7b9fa86ec3c700d66a150cd4be1b'
     record=dict(passed=False,started_utc=datetime.datetime.now(datetime.timezone.utc).isoformat(),
                 remote_command=a.remote_command,driver_sha256=hashlib.sha256(Path(__file__).read_bytes()).hexdigest())
     try:
+        if a.admission:
+            host=json.loads(a.admission.read_text())
+            age=(datetime.datetime.now(datetime.timezone.utc)-datetime.datetime.fromisoformat(host['captured_utc'])).total_seconds()
+            assert 0<=age<=300
+            record.update(admission_sha256=hashlib.sha256(a.admission.read_bytes()).hexdigest(),
+                          admission_age_seconds=age,admission_path=str(a.admission))
         with (a.output/'guest-console.log').open('wb') as log:
             child=subprocess.Popen(['ssh','-o','BatchMode=yes','-o','ConnectTimeout=10','-p','2222',
                                     'root@10.176.26.71',a.remote_command],stdout=log,stderr=subprocess.STDOUT)
