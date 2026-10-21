@@ -47,6 +47,17 @@ __attribute__((noinline,noipa)) void kd_mutex_local_unlock(struct kd_mutex *lock
 }
 #include "outer_api.h"
 
+/* Compile both the original pair and the separately named unlock diagnostic.
+ * Acquisition, cookie writes and the ABI2 continuation stay identical. */
+#ifndef KD_TEST_GENERAL_UNLOCK
+#define KD_TEST_GENERAL_UNLOCK 0
+#endif
+#if KD_TEST_GENERAL_UNLOCK
+#define TEST_OUTER_UNLOCK(lock, cookie) KD_MUTEX_DIRECT_UNLOCK(lock)
+#else
+#define TEST_OUTER_UNLOCK(lock, cookie) KD_MUTEX_OUTER_UNLOCK(lock, cookie)
+#endif
+
 static void check_owner_probe(void)
 {
  struct kd_mutex lock = {0};
@@ -151,7 +162,7 @@ __attribute__((noinline,noipa)) unsigned long outer_jit_case(void)
  KD_MUTEX_OUTER_LOCK(&test_lock,cookie,
   ".globl outer_jit_entry\nouter_jit_entry:\n");
  body++;
- KD_MUTEX_OUTER_UNLOCK(&test_lock,cookie);
+ TEST_OUTER_UNLOCK(&test_lock,cookie);
  return body;
 }
 
@@ -167,7 +178,7 @@ __attribute__((noinline,noipa)) static unsigned long stress(unsigned long seed, 
  assert(cookie.owner == (mode==1 ? 0UL : (unsigned long)current));
  if(mode==2) lock.owner |= 1; /* Original unlock retains Linux waiter/owner semantics. */
  asm volatile("" : "+r"(a),"+r"(b),"+r"(c),"+r"(d),"+r"(e) : : "memory");
- KD_MUTEX_OUTER_UNLOCK(&lock,cookie);
+ TEST_OUTER_UNLOCK(&lock,cookie);
  assert(!lock.owner);
  return a+b+c+d+e;
 }
@@ -234,9 +245,9 @@ int main(void)
   assert(stress(100,mode)==515);
   assert(entries==before+1);
   assert(routed_locks==locks+(mode==1 || mode==3));
-  assert(routed_unlocks==unlocks+(mode==1));
+  assert(routed_unlocks==unlocks+(KD_TEST_GENERAL_UNLOCK || mode==1));
  }
- assert(native_unlocks==3);
+ assert(native_unlocks==(KD_TEST_GENERAL_UNLOCK ? 0UL : 3UL));
  contended_native_return=0;
  for(int hot=0;hot<2;hot++) {
   test_lock.owner=hot?0x9000UL:0;

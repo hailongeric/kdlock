@@ -43,7 +43,10 @@ static unsigned long kd_mutex_multi_slot_count, kd_mutex_frame_failure_count;
 static unsigned long kd_mutex_node_overflow_count, kd_mutex_jit_resume_count;
 static unsigned long kd_mutex_origin_acquires, kd_mutex_origin_releases;
 static int kd_mutex_reserved_nodes;
-static bool promoted, task_failure, active_override, borrowed;
+static bool promoted, task_failure, active_override;
+static struct kd_mutex *borrowed_lock;
+static struct task_struct *borrowed_task;
+static unsigned int borrowed_requests;
 static bool cpu_hot = true, trace_admission, sampled_first;
 static unsigned int comm_queries;
 static bool schedule_wanted, recycle_on_enable, direct_packet;
@@ -408,7 +411,14 @@ static bool kd_exec_native_unlock(unsigned long addr, bool mutex)
 {
 	CHECK(addr && mutex);
 	notify_calls++;
-	return borrowed;
+	/* Substitute the request boundary, not its exact lock/task predicate.
+	 * Real owner-side request/ACK ordering is tested by remote_outer. */
+	if (borrowed_lock && addr == (unsigned long)borrowed_lock &&
+	    current == borrowed_task) {
+		borrowed_requests++;
+		return true;
+	}
+	return false;
 }
 static unsigned long kd_read_kernel_gsbase(void)
 {
@@ -519,7 +529,10 @@ static void reset(void)
 	trace_admission = sampled_first = false;
 	comm_queries = 0;
 	kd_comm_init(&kd_spin_target, target_process);
-	task_failure = active_override = borrowed = false;
+	task_failure = active_override = false;
+	borrowed_lock = NULL;
+	borrowed_task = NULL;
+	borrowed_requests = 0;
 	schedule_wanted = recycle_on_enable = direct_packet = false;
 	waiting_gate = release_gate = NULL;
 	reference_gate = NULL;
@@ -922,7 +935,8 @@ static void check_slowpath_packets(void)
 				      count == 0 && !errors);
 				CHECK(fixture_gate_owner(gate) == &peer &&
 				      lock->owner == &peer);
-				borrowed = true;
+				borrowed_lock = lock;
+				borrowed_task = current;
 				public_unlock(lock);
 				CHECK(notify_calls == 2 && releases == 1 &&
 				      !task_puts && refs == 1);
@@ -989,7 +1003,10 @@ static void check_outer_native_result(void)
 		if (scenario == 2) strcpy(current->comm, "non-target");
 		if (scenario == 3) refs = 1; /* An unrelated acquisition remains live. */
 		if (scenario == 4) task_failure = true;
-		if (scenario == 5) { cpu_hot = false; refs = 1; borrowed = true; }
+		if (scenario == 5) {
+			cpu_hot = false; refs = 1;
+			borrowed_lock = &origins[1].mutex; borrowed_task = current;
+		}
 		unsigned int inherited_refs = refs;
 		unsigned long route = kd_mutex_outer_contended_clobber_v1(
 			lock, (unsigned long)&native_stack[16], 0x8000, 0);
@@ -1025,6 +1042,73 @@ static void check_outer_native_result(void)
 	CHECK(!lock->owner && kd_mutex_gate_read(gate) && task_puts == 1);
 	preempt = migration = 1;
 	kd_mutex_release_node(head);
+}
+
+/* The diagnostic changes only OUTER's release route. Its native cookie must
+ * still describe C, even when the same task has live ownership or a borrowed
+ * request for unrelated A. General release must preserve A's exact record. */
+static void check_outer_general_unlock(void)
+{
+	for (unsigned int scenario = 0; scenario < 6; scenario++) {
+		reset();
+		struct kd_mutex *lock = &origins[0].mutex;
+		struct kd_mutex *other = &origins[1].mutex;
+		if (scenario == 0) cpu_hot = false;
+		if (scenario == 1) source_open = false;
+		if (scenario == 2) strcpy(current->comm, "non-target");
+		if (scenario == 3) {
+			__kd_mutex_lock_clobber_v1(other,
+				(unsigned long)&native_stack[16], 0x8000, 0);
+			CHECK(other->owner == current && refs == 1 &&
+			      kd_mutex_gate_read(other) == KD_MUTEX_GATE_HELD);
+		}
+		if (scenario == 4) task_failure = true;
+		if (scenario == 5) {
+			hold_peer(other);
+			cpu_hot = false;
+			refs = 1;
+			borrowed_lock = other;
+			borrowed_task = current;
+		}
+		unsigned int inherited_refs = refs, old_releases = releases;
+		unsigned long origin_before = kd_mutex_origin_releases;
+		unsigned long route = kd_mutex_outer_contended_clobber_v1(
+			lock, (unsigned long)&native_stack[16], 0x8000, 0);
+		CHECK(route == (unsigned long)current && lock->owner == current);
+		CHECK(current == &waiter && !preempt && !migration && !table_irq);
+		public_unlock(lock);
+		CHECK(!lock->owner && releases == old_releases + 1 &&
+		      refs == inherited_refs && !task_puts && !borrowed_requests);
+		CHECK(notify_calls == !!inherited_refs && !cpu_shadows.node_slots &&
+		      !kd_mutex_reserved_nodes && !slow_calls);
+		CHECK(kd_mutex_origin_releases == origin_before &&
+		      current == &waiter && !preempt && !migration && !table_irq);
+		if (scenario == 3) {
+			CHECK(other->owner == current &&
+			      kd_mutex_gate_read(other) == KD_MUTEX_GATE_HELD);
+			public_unlock(other);
+			CHECK(!other->owner && !kd_mutex_gate_read(other) &&
+			      !refs && task_puts == 1 &&
+			      kd_mutex_origin_acquires == kd_mutex_origin_releases);
+		} else if (scenario == 5) {
+			CHECK(other->owner == &peer && refs == 1 &&
+			      fixture_gate_owner(other) == &peer && borrowed_lock == other &&
+			      kd_mutex_gate_read(other) == KD_MUTEX_GATE_COMBINER);
+			public_unlock(other);
+			CHECK(borrowed_requests == 1 && refs == 1 && !task_puts &&
+			      other->owner == &peer && releases == old_releases + 1);
+			/* Only the peer performs physical release. The live ACK probe
+			 * validates the real handoff; this fixture substitutes its end. */
+			release_peer(other);
+			borrowed_lock = NULL;
+			borrowed_task = NULL;
+			kd_mutex_task_put(current);
+			CHECK(!refs && task_puts == 1 && !other->owner &&
+			      !kd_mutex_gate_read(other) &&
+			      kd_mutex_origin_acquires == kd_mutex_origin_releases);
+		}
+		CHECK(!errors && !preempt && !migration && !table_irq);
+	}
 }
 
 
@@ -1085,6 +1169,7 @@ static void check_routing(void)
 	public_unlock(&origins[0].mutex);
 	check_gate_phases_and_owner_unlock();
 	check_outer_native_result();
+	check_outer_general_unlock();
 	check_minimal_entry();
 	check_poll_result();
 	check_tails();

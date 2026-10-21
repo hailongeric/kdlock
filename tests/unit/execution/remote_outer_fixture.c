@@ -708,6 +708,26 @@ static void check_wait_returns(bool mutex, bool rejected)
 	if (mutex)
 		frames[0].complex_ready = true;
 	CHECK(kd_exec_native_begin(&frames[0], mutex) == 0);
+	if (mutex) {
+		struct task_struct *executor = current;
+		struct qspinlock physical = locks[0];
+		unsigned int retained = refs, puts = mutex_puts;
+		struct kd_exec_frame before = frames[0];
+
+		/* A task's unrelated native C unlock cannot request borrowed A.
+		 * Exercise the production matcher before the existing owner ACK. */
+		current = &logical;
+		CHECK(!kd_exec_native_unlock((unsigned long)&locks[1], true));
+		CHECK(!kd_exec_native_unlock(frames[0].outer_lock_addr, false));
+		current = executor;
+		CHECK(current != &logical);
+		CHECK(!kd_exec_native_unlock(frames[0].outer_lock_addr, true));
+		CHECK(!memcmp(&before, &frames[0], sizeof(before)) &&
+		      !memcmp(&physical, &locks[0], sizeof(physical)));
+		CHECK(!list_empty(&kd_native_frames) && !frames[0].native_request &&
+		      refs == retained && mutex_puts == puts && kd_native_started == 1 &&
+		      !kd_native_completed && !kd_native_unlocks && !polls);
+	}
 	if (rejected)
 		frames[0].state = KD_EXEC_FRAME_ERROR;
 	request = (struct kd_native_request){ .lock_addr = frames[0].outer_lock_addr };

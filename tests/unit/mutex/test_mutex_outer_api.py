@@ -4,6 +4,7 @@ This does not model kernel owner/ACK concurrency. It executes real caller
 constraints and translates the compiled hot continuation without relaxing the
 production admission rules. The live benchmark supplies real returned bodies.
 """
+import argparse
 import re
 import subprocess
 import tempfile
@@ -11,10 +12,10 @@ from pathlib import Path
 from test_jit_diagnostics import ROOT, render
 
 
-def main():
-    source = (ROOT/'include/kd_mutex_direct.h').read_text()
+def check_variant(general_unlock, header_root):
+    source = (header_root/'include/kd_mutex_direct.h').read_text()
     header = re.sub(r'^#include .*$', '', source, flags=re.M)
-    gate_state = next(line for line in (ROOT/'include/kd_mutex.h').read_text().splitlines()
+    gate_state = next(line for line in (header_root/'include/kd_mutex.h').read_text().splitlines()
                       if line.startswith('#define KD_MUTEX_GATE_COMBINER '))
     header = gate_state + '\n' + header
     with tempfile.TemporaryDirectory(prefix='kd-mutex-outer-') as directory:
@@ -26,6 +27,7 @@ def main():
         (path/'asm/nospec-branch.h').write_text('#define CALL_NOSPEC "call *%[thunk_target]\\n"\n')
         binary = path/'fixture'
         flags=['-O2', '-std=gnu11', '-Wall', '-Wextra', '-Werror',
+               f'-DKD_TEST_GENERAL_UNLOCK={int(general_unlock)}',
                '-fno-omit-frame-pointer', '-fno-optimize-sibling-calls',
                '-fno-reorder-blocks-and-partition', '-fno-toplevel-reorder',
                '-mno-red-zone', '-mpreferred-stack-boundary=4', '-fno-pie',
@@ -94,6 +96,16 @@ def main():
         assert 'PASS actual compiled/JIT outer entry:' in result.stdout, result.stdout
         print(result.stdout,end='')
         print('PASS actual compiled outer continuation: strict ABI2 admission and generated execution')
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--header-root', type=Path, default=ROOT,
+                        help='explicit frozen caller header source; fixture/translator stay recorded')
+    args = parser.parse_args()
+    for general in (False, True):
+        print('Checking OUTER acquisition with ' + ('general' if general else 'OUTER') + ' unlock', flush=True)
+        check_variant(general, args.header_root.resolve(strict=True))
 
 
 if __name__ == '__main__':
