@@ -2,8 +2,8 @@
 
 Status: `live-3` at `b9fe567` passed both basic programs and all six focused
 Native correctness cases, with exact drain and normal unload. The first two
-stack-probe failures remain retained below. Native-only controlled timing is
-prepared but not yet validated or measured. Overall acceptance remains false.
+stack-probe failures remain retained below. The four serial Native timing-client validations at `b043da5` also passed and
+drained. Controlled timing is waiting for the original host precondition. Overall acceptance remains false.
 
 This stage uses the same sole writer on 380G10 and sole serial executor
 in the existing `10.176.26.71:2222` recovery VM. It changes no kernel, Native lock,
@@ -77,3 +77,13 @@ seconds; collector 63, workers 0..N-1, 300 ms settling/window, 10 ms progress,
 unchanged. Whole-cycle latency includes mmap plus munmap. Thread CPU time uses
 `CLOCK_THREAD_CPUTIME_ID`; no stack sampler runs during timing. Native callback
 accounting remains instrumentation and is part of this baseline's scope.
+
+The [actual mmap-lock integration audit](INTEGRATION.md) records the captured
+participant inventory, current API gaps, downgrade/fault ownership transitions,
+origin context and lifetime work. KD integration remains explicitly blocked;
+no Native/KD protocol is mixed and no private side lock substitutes for mmap.
+
+Before the controlled campaign, host receipts 4 and 5 showed 75 and 96 QEMU
+threads versus the original 67. These observations are retained. No timed
+campaign was started from either state, and no worker was killed or host setting
+changed. Timing-client validation results are not pooled with later repetitions.
