@@ -66,6 +66,12 @@ Its new boot is explicit; the immediate host endpoint failed at 100 versus 67
 threads. Six matching-class points have lower DIRECT medians; pipecap/5 differs
 in execution class. All seven causes and performance acceptance remain open.
 
+The [subsequent evidence review](10.176.26.71/bench/mutex-causal-boundary-20261021/README.md)
+binds six pipecap logs and the host endpoint difference: OUTER never entered the
+delegation queue in those sessions; DIRECT returned bodies. The historical extra
+threads' activity is unavailable, and a later observation still fails the count
+gate. No new timing or performance acceptance is claimed.
+
 The [fresh 32-byte mutex / Native / TCLock comparison](10.176.26.71/bench/mutex32-native-tclock-20261020/README.md)
 records 567 accepted, drained sessions from `bd9d4ce` with unchanged `752fec1`
 production: c01, c08, RCUHT, seek SET/END, pipe bytes and pipe capacity at nine

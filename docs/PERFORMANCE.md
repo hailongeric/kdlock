@@ -88,6 +88,15 @@ returned bodies and OUTER NO_JIT, so its ratio is not scored. Maximum sample CVs
 are 13.92% OUTER, 7.24% DIRECT, 12.01% Native and 18.08% TCLock. All seven causes
 remain unresolved, and no performance fix is accepted.
 
+The subsequent [evidence review](../bench/results/10.176.26.71/bench/mutex-causal-boundary-20261021/README.md)
+establishes that all three recovery OUTER pipecap sessions had zero lifetime
+delegation queue entries, while DIRECT queued and returned bodies. This is a
+path difference, not a matched-path overhead result. The 33 historical extra
+host threads have exited without retained activity accounting; a later snapshot
+contains seven different disk-writing workers and still fails the 67-thread
+count. No new timing ran. The review preserves both limits and specifies a
+small workload-only general-unlock control with correctness prerequisites.
+
 The earlier [pipecap owner observation](../bench/results/10.176.26.71/bench/pipecap-owner-20261021/README.md)
 retains 24 drained one-worker sessions with unchanged binaries and no returned
 JIT bodies. The strict endpoint failed at 101 versus 67 threads; the uncalibrated

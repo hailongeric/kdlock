@@ -95,6 +95,14 @@ tracks those dependencies and results. Their prior deferred status is not a
 reason to skip the requested investigation; unsupported behavior still requires
 an explicit ownership/context design and validation before execution.
 
+The latest [regression evidence review](../bench/results/10.176.26.71/bench/mutex-causal-boundary-20261021/README.md)
+narrows pipecap's class mismatch to OUTER sessions with no delegation queue entry
+versus DIRECT sessions with returned bodies. Historical host-worker activity
+cannot be reconstructed, and a fresh observation still fails the thread-count
+gate. All seven causes remain unresolved. The proposed isolated general-unlock
+control remains unimplemented and requires affected correctness checks before
+any serial timing; no admission or ownership check may be relaxed to run it.
+
 The entry-inlining experiment passed focused correctness checks but did not
 resolve the seven mutex losses in its separate 120-session comparison. It is
 not accepted as a performance fix. The stage record retains all repetitions,

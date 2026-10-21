@@ -1,0 +1,9 @@
+{
+  "captured_utc": "2026-10-21T10:02:40.553253+00:00",
+  "idle": true,
+  "boot_id": "88449cfc-cea9-4647-a294-bc601e372146",
+  "release": "6.1.159-kdclobber2",
+  "modules_match_transition": true,
+  "module_count": 73,
+  "scope": "Read-only idle and runtime identity check; no new build, test, synchronization, or timing."
+}
