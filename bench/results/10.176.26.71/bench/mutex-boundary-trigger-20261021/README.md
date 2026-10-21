@@ -40,3 +40,19 @@ observer/capture overhead, non-atomic reads, missed lifetimes and departed tails
 All seven mutex regressions and acquisition latency remain unresolved;
 complete-operation p95 is separate. Readers remain local/concurrent, mmap and
 page fault remain separate, and unsupported TCLock bodies remain excluded.
+
+## Focused validation
+
+Implementation `2d27b4c` and deadline correction `813184e` synchronized while
+idle; the final transfer verified all 3,968 tracked hashes and updated only the
+three corrected diagnostic files. Review tightened the cutoff after evidence
+writes and at dispatch, and kept original fixed-mode behavior.
+
+Guest `checks-1` passed serially: two rebuilt basic programs, nine trigger-policy
+tests, four held-reply protocol tests and six unchanged recovery-gate tests.
+The trigger tests cover task replacement/reuse, duplicate/partial rows,
+clock/queue staleness, cooldown, stream failure, absolute deadlines, candidate
+budget and a deliberately delayed evidence write. All tested source hashes
+remained unchanged; final idle passed on the same recovery boot. The live
+probe retains every original frozen correctness, ownership/ACK and ELF
+prerequisite in addition to these focused checks.
