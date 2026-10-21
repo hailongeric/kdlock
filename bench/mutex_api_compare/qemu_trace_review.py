@@ -40,9 +40,24 @@ def review(path):
     assert supervisor['complete'] and len(ready) == len(complete) == 1
     assert complete[0]['end_reason'] == 'requested_stop' and complete[0]['samples'] == len(samples)
     phases, identities, incomplete, changes = defaultdict(list), defaultdict(list), [], []
-    gate = samples[supervisor.get('gate_sample_sequence', 0)]
-    original = {tuple(t['identity_before']): (t['comm'], t['affinity']) for t in gate['tasks']}
-    assert len(original) == 67 and all(t['complete'] for t in gate['tasks'])
+    anchor = supervisor.get('trigger_anchor')
+    if anchor is not None:
+        # A trigger run can start with extra workers and retain a refused
+        # preflight. Its recorded anchor selects only the original identities;
+        # it is not a passing full capture or a count-only gate waiver.
+        gate = next(s for s in samples if s['sequence'] == anchor['sample_sequence'])
+        assert hashlib.sha256(json.dumps(gate, sort_keys=True).encode()).hexdigest() == anchor['sample_sha256']
+        old = json.loads((path/'original-host-state.json').read_text())['qemu'][0]['tasks']
+        assert sorted(old, key=lambda t: t['tid']) == anchor['tasks']
+        lifetime_ticks = {tid: ticks for tid, ticks in anchor['identities']}
+        assert len(lifetime_ticks) == len(anchor['identities']) == len(anchor['tasks']) == 67
+        original = {(t['tid'], lifetime_ticks[t['tid']]): (t['comm'], t['affinity']) for t in anchor['tasks']}
+        available = {tuple(t['identity_before']): (t['comm'], t['affinity']) for t in gate['tasks'] if t['complete']}
+        assert all(available.get(key) == value for key, value in original.items())
+    else:
+        gate = samples[supervisor.get('gate_sample_sequence', 0)]
+        original = {tuple(t['identity_before']): (t['comm'], t['affinity']) for t in gate['tasks']}
+        assert len(original) == 67 and all(t['complete'] for t in gate['tasks'])
     previous = None
     for sample in samples:
         phases[sample['phase']].append(sample)
@@ -97,7 +112,9 @@ def review(path):
     gaps = [b['scan_began']['mono_ns']-a['scan_finished']['mono_ns'] for a, b in zip(samples, samples[1:])]
     return dict(run=path.name, complete=True, accepted=False, samples=len(samples),
         initial_tasks=len(samples[0]['tasks']), final_tasks=len(samples[-1]['tasks']),
-        gate_sequence=gate['sequence'], gate_tasks=len(gate['tasks']),
+        gate_sequence=gate['sequence'] if anchor is None else None,
+        gate_tasks=len(gate['tasks']) if anchor is None else None,
+        reference_sample_sequence=gate['sequence'], reference_sample_tasks=len(gate['tasks']),
         minimum_tasks=min(len(s['tasks']) for s in samples), maximum_tasks=max(len(s['tasks']) for s in samples),
         source_commit=supervisor['source_commit'], sources=supervisor['sources'],
         evidence_sha256={p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in path.iterdir() if p.is_file()},

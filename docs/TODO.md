@@ -134,6 +134,17 @@ capture can test the observed quiet interval; a sample alone never admits the
 gate. Post-warmup waiting changes the preparation contract, so timing parity,
 all seven causal resolutions and acquisition latency remain unresolved.
 
+The [sample-triggered follow-up](../bench/results/10.176.26.71/bench/mutex-boundary-trigger-20261021/README.md)
+obtained one valid full prepared-boundary pass: an exact-67 scan triggered the
+capture after 25.431 ms, and the unchanged fresh guest comparison passed while
+held state remained identical. One warmup completed 8,375,936 operations; no
+timing was sent and retirement/drain passed. The endpoint full capture failed
+at 70, distinct from the last accounting sample's 67. Basic/affected checks and
+2,046 archive checks passed. This establishes observed feasibility only; the
+83.971-second post-warmup wait changes preparation history. A separate no-timing
+pre-warmup-wait control can test whether warmup recreates workers. Original
+timing parity, all seven causal regressions and acquisition latency remain open.
+
 The entry-inlining experiment passed focused correctness checks but did not
 resolve the seven mutex losses in its separate 120-session comparison. It is
 not accepted as a performance fix. The stage record retains all repetitions,

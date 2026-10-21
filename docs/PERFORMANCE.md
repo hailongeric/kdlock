@@ -145,6 +145,17 @@ unknown. Archives passed 2,004 inert checks. This narrows the next feasibility
 probe but supplies no comparable rates, variance, accepted gain or resolution
 of the seven regressions. Waiting after warmup changes the preparation contract.
 
+The [sample-triggered boundary follow-up](../bench/results/10.176.26.71/bench/mutex-boundary-trigger-20261021/README.md)
+then obtained one full gate pass at the retained prepared state, with an exact-
+67 sample followed by capture 25.431 ms later and the unchanged fresh guest
+comparison passing. It sent no timing command. The one warmup completed
+8,375,936 operations; the 83.971-second hold preserved exact state and retired
+normally. The endpoint full capture still failed at 70. Observer CPU was 1.800%
+of one core, including four full captures; 2,046 inert archive checks passed.
+This establishes one observed boundary, not continuous quiescence, comparable
+preparation or performance acceptance. All seven causes/acquisition latency
+remain unresolved; no timing variance is available from this feasibility probe.
+
 The earlier [pipecap owner observation](../bench/results/10.176.26.71/bench/pipecap-owner-20261021/README.md)
 retains 24 drained one-worker sessions with unchanged binaries and no returned
 JIT bodies. The strict endpoint failed at 101 versus 67 threads; the uncalibrated
