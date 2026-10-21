@@ -95,9 +95,9 @@ static void native_fallback(unsigned backend)
 	CHECK(munmap((void *)other,page_size)==0);
 	CHECK(munmap((void *)p,page_size)==0 && close(fd)==0);
 }
-static void vma_lifetime(unsigned backend)
+static void vma_lifetime(unsigned backend, unsigned extra)
 {
-	struct mf_create c;int fd=create(backend,0,1,&c);
+	struct mf_create c;int fd=create(backend,extra,1,&c);
 	volatile uint64_t *p=mmap(NULL,page_size,PROT_READ,MAP_SHARED,fd,0);
 	CHECK(p!=MAP_FAILED && *p==MF_WORD);
 	CHECK(close(fd)==0); /* Only the VMA's file reference now protects callback storage. */
@@ -105,10 +105,11 @@ static void vma_lifetime(unsigned backend)
 }
 int main(int argc,char **argv)
 {
-	CHECK(argc==2);unsigned backend=strtoul(argv[1],NULL,10);CHECK(backend<=MF_TC);
+	CHECK(argc==2 || argc==3);unsigned backend=strtoul(argv[1],NULL,10);CHECK(backend<=MF_TC);
+	unsigned extra=argc==3 ? strtoul(argv[2],NULL,10) : 0;
 	page_size=sysconf(_SC_PAGESIZE);CHECK(page_size==4096);pin(63);
 	negative_create(backend);
-	struct mf_create c;unsigned features=backend==MF_TC ? 0 : MF_DOWNGRADE;
+	struct mf_create c;unsigned features=(backend==MF_TC ? 0 : MF_DOWNGRADE)|extra;
 	int fd=create(backend,features,8,&c);
 	CHECK(c.selected_backend==backend && !c.fallback);
 	CHECK(ioctl(fd,MF_CREATE,&c)==-1 && errno==EBUSY);
@@ -169,13 +170,21 @@ int main(int argc,char **argv)
 	CHECK(s.reads==s.read_ends && s.writes==s.write_ends && s.scopes==6 && s.scope_ends==6);
 	CHECK(s.epoch==(backend==MF_TC ? 1000U : 1001U) && s.downgrades==(backend!=MF_TC));
 	CHECK(s.faults>=408);
+	if (extra & MF_LOOKUP_WRITE) {
+		CHECK(s.lookup_sequence==s.fault_lookups && s.lookup_begins==s.lookup_ends && s.lookup_ends==s.fault_lookups);
+		if (extra & MF_DELEGATE)
+			CHECK(s.lookup_fallbacks>=2 && s.lookup_candidates+s.lookup_fallbacks==s.lookup_ends);
+		printf("{\"event\":\"lookups\",\"features\":%u,\"sequence\":%llu,\"begins\":%llu,\"ends\":%llu,\"faults\":%llu,\"candidates\":%llu,\"fallbacks\":%llu}\n",extra,
+		 (unsigned long long)s.lookup_sequence,(unsigned long long)s.lookup_begins,(unsigned long long)s.lookup_ends,
+		 (unsigned long long)s.fault_lookups,(unsigned long long)s.lookup_candidates,(unsigned long long)s.lookup_fallbacks);
+	}
 	printf("{\"event\":\"joined\",\"backend\":%u,\"faults\":%llu,\"epoch\":%llu,\"reads\":%llu,\"read_ends\":%llu,\"writes\":%llu,\"write_ends\":%llu,\"scopes\":%llu,\"scope_ends\":%llu,\"downgrades\":%llu,\"vmas\":%llu,\"errors\":%llu}\n",backend,
 	 (unsigned long long)s.faults,(unsigned long long)s.epoch,(unsigned long long)s.reads,
 	 (unsigned long long)s.read_ends,(unsigned long long)s.writes,(unsigned long long)s.write_ends,
 	 (unsigned long long)s.scopes,(unsigned long long)s.scope_ends,(unsigned long long)s.downgrades,
 	 (unsigned long long)s.vmas,(unsigned long long)(s.context_errors+s.data_errors));
 	CHECK(close(fd)==0);
-	native_fallback(backend);vma_lifetime(backend);
+	native_fallback(backend);vma_lifetime(backend,extra);
 	if (backend==MF_TC) {
 		fd=create(backend,MF_DOWNGRADE|MF_ALLOW_FALLBACK,1,&c);
 		CHECK(c.selected_backend==MF_NATIVE && c.fallback==1);

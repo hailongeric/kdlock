@@ -17,11 +17,12 @@
 #include <linux/uaccess.h>
 #include <linux/wait.h>
 #include "kd_rwsem.h"
+#include "kd_rwsem_direct.h"
 #include "rwlock/komb_rwlock.h"
 #include "mmap_fault_uapi.h"
 
 #define MF_MAX_PAGES 64
-#define MF_FEATURES (MF_PRIVATE | MF_WRITABLE | MF_INHERIT | MF_DOWNGRADE | MF_ALLOW_FALLBACK)
+#define MF_FEATURES (MF_PRIVATE | MF_WRITABLE | MF_INHERIT | MF_DOWNGRADE | MF_ALLOW_FALLBACK | MF_LOOKUP_WRITE | MF_DELEGATE)
 
 struct mf_scope {
 	struct task_struct *task;
@@ -39,6 +40,9 @@ struct mf_mapping {
 	unsigned int backend, features, pages, fallback;
 	struct page *page[MF_MAX_PAGES];
 	u64 epoch, complement;
+	/* The lookup sequence is backing metadata protected by writer ownership.
+	 * Page slots and their base references are immutable until final release. */
+	u64 lookup_sequence;
 	/* scope is published and removed under the private writer lock. Only
 	 * its exact origin task may use the stack record outside that lock. */
 	struct mf_scope *scope;
@@ -46,6 +50,7 @@ struct mf_mapping {
 	wait_queue_head_t events;
 	atomic64_t faults, reads, read_ends, writes, write_ends, downgrades;
 	atomic64_t context_errors, data_errors, scopes, scope_ends;
+	atomic64_t lookup_begins, lookup_ends, lookup_fallbacks, lookup_candidates, fault_lookups;
 };
 struct mf_file {
 	atomic_t configuring;
@@ -108,6 +113,8 @@ static bool mf_idle(struct mf_mapping *m)
 	return !rwsem_is_locked(&m->lock.native);
 }
 
+#include "lookup.inc"
+
 static int mf_open(struct inode *inode, struct file *file)
 {
 	struct mf_file *f = kzalloc(sizeof(*f), GFP_KERNEL);
@@ -136,7 +143,10 @@ static int mf_release(struct inode *inode, struct file *file)
 	if (m) {
 		if (atomic_read(&m->vmas) || atomic_read(&m->probe_busy) || m->scope ||
 		    !mf_idle(m) || atomic64_read(&m->reads) != atomic64_read(&m->read_ends) ||
-		    atomic64_read(&m->writes) != atomic64_read(&m->write_ends)) {
+		    atomic64_read(&m->writes) != atomic64_read(&m->write_ends) ||
+		    atomic64_read(&m->lookup_begins) != atomic64_read(&m->lookup_ends) ||
+		    atomic64_read(&m->lookup_ends) != m->lookup_sequence ||
+		    atomic64_read(&m->context_errors) || atomic64_read(&m->data_errors)) {
 			atomic64_inc(&release_errors);
 			WARN_ON_ONCE(1);
 			/* An invariant failure retains storage and the module for
@@ -162,6 +172,12 @@ static int mf_create(struct mf_file *f, struct mf_create *c)
 	    c->features & ~MF_FEATURES || c->reserved[0] || c->reserved[1])
 		return -EINVAL;
 	if (c->backend == (MF_TC_BUILD ? MF_KD : MF_TC))
+		return -EOPNOTSUPP;
+	if ((c->features & MF_DELEGATE) &&
+	    (!(c->features & MF_LOOKUP_WRITE) || c->backend != MF_KD))
+		return -EOPNOTSUPP;
+	if ((c->features & MF_LOOKUP_WRITE) &&
+	    (c->features & (MF_PRIVATE | MF_WRITABLE | MF_INHERIT)))
 		return -EOPNOTSUPP;
 	/* Shared writeback/page_mkwrite is not this driver's callback contract. */
 	if ((c->features & MF_WRITABLE) && !(c->features & MF_PRIVATE))
@@ -222,6 +238,7 @@ static void mf_mm_release(struct mf_scope *scope)
 
 static vm_fault_t mf_fault(struct vm_fault *vmf)
 {
+	struct task_struct *origin = current;
 	struct mf_mapping *m = vmf->vma->vm_private_data;
 	struct mf_scope *scope = NULL;
 	struct page *page = NULL;
@@ -229,23 +246,31 @@ static vm_fault_t mf_fault(struct vm_fault *vmf)
 	unsigned int action = MF_NORMAL;
 
 	atomic64_inc(&m->faults);
-	if (current->mm != vmf->vma->vm_mm || !current->mm) {
+	if (origin->mm != vmf->vma->vm_mm || !origin->mm) {
 		atomic64_inc(&m->context_errors);
 		return VM_FAULT_SIGBUS;
 	}
 	mf_read(m);
 	if (m->complement != ~m->epoch)
 		atomic64_inc(&m->data_errors);
-	if (m->scope && m->scope->task == current) {
+	if (m->scope && m->scope->task == origin) {
 		scope = m->scope;
 		scope->result->callbacks++;
 		action = scope->result->action;
 	}
-	if (vmf->pgoff < m->pages) {
+	if (!(m->features & MF_LOOKUP_WRITE) && vmf->pgoff < m->pages) {
 		page = m->page[vmf->pgoff];
 		get_page(page);
 	}
 	mf_read_end(m);
+	if (m->features & MF_LOOKUP_WRITE) {
+		/* Read scope/task state only on the origin. The delegated helper
+		 * sees immutable slot identity and resident backing metadata only. */
+		atomic64_inc(&m->fault_lookups);
+		page = mf_lookup_page(m, vmf->pgoff,
+			vmf->flags & (FAULT_FLAG_RETRY_NOWAIT | FAULT_FLAG_TRIED |
+				      FAULT_FLAG_WRITE | FAULT_FLAG_REMOTE), NULL);
+	}
 	if (!page)
 		return VM_FAULT_SIGBUS;
 	/* Only an active ioctl scope may release mmap ownership. Its VFS file
@@ -303,6 +328,36 @@ static int mf_mmap(struct file *file, struct vm_area_struct *vma)
 	struct mf_mapping *m = smp_load_acquire(&f->mapping);
 	if (!m)
 		return -EINVAL;
+	if (command == MF_PREPARE) {
+#if !MF_TC_BUILD
+		if (m->backend == MF_KD && (m->features & MF_DELEGATE))
+			return kd_mutex_prepare(&m->lock.kd.gate, (unsigned long)mf_lookup_entry,
+					       KD_ENTRY_ABI_MUTEX_CLOBBER_V1);
+#endif
+		return -EOPNOTSUPP;
+	}
+	if (command == MF_LOOKUPS || command == MF_LOCAL_LOOKUPS) {
+		struct mf_work work;
+		u64 i;
+		if (!(m->features & MF_LOOKUP_WRITE) || !current->mm)
+			return -EOPNOTSUPP;
+		if (copy_from_user(&work, user, sizeof(work)))
+			return -EFAULT;
+		if (!work.iterations || work.iterations > 10000000 || work.completed || work.errors || work.last_sequence)
+			return -EINVAL;
+		for (i = 0; i < work.iterations; i++) {
+			struct page *page = mf_lookup_page(m, i % m->pages,
+				command == MF_LOCAL_LOOKUPS, &work.last_sequence);
+			if (!page || *(u64 *)page_address(page) != MF_WORD + i % m->pages)
+				work.errors++;
+			if (page)
+				put_page(page);
+			work.completed++;
+			if (!(i & 255))
+				cond_resched();
+		}
+		return copy_to_user(user, &work, sizeof(work)) ? -EFAULT : 0;
+	}
 	if (!!(vma->vm_flags & VM_SHARED) == !!(m->features & MF_PRIVATE) ||
 	    !!(vma->vm_flags & VM_WRITE) != !!(m->features & MF_WRITABLE) ||
 	    !(vma->vm_flags & VM_READ) || vma->vm_flags & VM_EXEC)
@@ -484,7 +539,19 @@ static long mf_ioctl(struct file *file, unsigned int command, unsigned long arg)
 			.context_errors = atomic64_read(&m->context_errors), .data_errors = atomic64_read(&m->data_errors),
 			.fallback = m->fallback, .scopes = atomic64_read(&m->scopes),
 			.scope_ends = atomic64_read(&m->scope_ends),
+			.lookup_sequence = READ_ONCE(m->lookup_sequence),
+			.lookup_begins = atomic64_read(&m->lookup_begins),
+			.lookup_ends = atomic64_read(&m->lookup_ends),
+			.lookup_fallbacks = atomic64_read(&m->lookup_fallbacks),
+			.lookup_candidates = atomic64_read(&m->lookup_candidates),
+			.fault_lookups = atomic64_read(&m->fault_lookups),
 		};
+#if !MF_TC_BUILD
+		if (m->backend == MF_KD) {
+			s.entry = (unsigned long)mf_lookup_entry;
+			s.gate = (unsigned long)&m->lock.kd.gate;
+		}
+#endif
 		return copy_to_user(user, &s, sizeof(s)) ? -EFAULT : 0;
 	}
 	return -ENOTTY;

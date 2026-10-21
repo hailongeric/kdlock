@@ -4,7 +4,7 @@
 #include <linux/ioctl.h>
 #include <linux/types.h>
 
-#define MF_ABI 1
+#define MF_ABI 2
 #define MF_NATIVE 0
 #define MF_KD 1
 #define MF_TC 2
@@ -13,6 +13,8 @@
 #define MF_INHERIT 4U
 #define MF_DOWNGRADE 8U
 #define MF_ALLOW_FALLBACK 16U
+#define MF_LOOKUP_WRITE 32U
+#define MF_DELEGATE 64U
 #define MF_NORMAL 0
 #define MF_RETRY 1
 #define MF_NOWAIT 2
@@ -35,7 +37,10 @@ struct mf_stats {
 	__u64 backend, features, vmas, active_probe, epoch, faults, reads, read_ends;
 	__u64 writes, write_ends, downgrades, context_errors, data_errors, fallback;
 	__u64 scopes, scope_ends;
+	__u64 lookup_sequence, lookup_begins, lookup_ends, lookup_fallbacks;
+	__u64 lookup_candidates, fault_lookups, entry, gate;
 };
+struct mf_work { __u64 iterations, completed, errors, last_sequence; };
 #define MF_CREATE _IOWR('M', 1, struct mf_create)
 #define MF_PROBE _IOWR('M', 2, struct mf_probe)
 #define MF_STATS _IOR('M', 3, struct mf_stats)
@@ -43,4 +48,7 @@ struct mf_stats {
 #define MF_DOWNGRADE_ONCE _IO('M', 5)
 #define MF_WAIT_DROP _IO('M', 6)
 #define MF_RELEASE_DROP _IO('M', 7)
+#define MF_PREPARE _IO('M', 8)
+#define MF_LOOKUPS _IOWR('M', 9, struct mf_work)
+#define MF_LOCAL_LOOKUPS _IOWR('M', 10, struct mf_work)
 #endif
