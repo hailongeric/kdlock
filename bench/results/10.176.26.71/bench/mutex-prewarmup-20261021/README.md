@@ -1,6 +1,6 @@
 # Pre-warmup quiescence control, 2026-10-21
 
-Status: implementation and focused validation in progress; no timing permitted.
+Status: focused validation passed; live diagnostic pending. No timing permitted.
 The source checkout started clean at `e477c86`. The same VM is drained on boot
 `88449cfc-cea9-4647-a294-bc601e372146`, kernel `6.1.159-kdclobber2`, with the
 original 73 modules. Only the main agent edits files or executes VM checks.
@@ -44,3 +44,20 @@ heat or establish original preparation parity. All seven regression causes and
 acquisition latency remain unresolved. Complete-operation p95 is separate.
 Readers stay local/concurrent; mmap and page-fault tasks remain separate;
 unsupported TCLock critical sections remain excluded.
+
+## Focused validation
+
+Implementation `7682076` synchronized while idle and verified all 3,975 tracked
+file hashes. Guest `checks-1` passed serially: two rebuilt basic programs,
+nine trigger tests, four reply-protocol tests, twelve pre-warmup ordering and
+failure-path tests, and six unchanged recovery-gate tests. Tests ran from 104
+frozen committed source files; current and retained hashes matched afterward
+and final idle passed. The new integration tests exercise the actual runner
+methods with a fake client, including safe pre-refusal, malformed replies,
+invalid joined work, wrong placement and immediate post-capture ordering.
+
+Read-only review caught and corrected unsafe handling of malformed warmup
+replies before this test run. Such replies now retain resources as `UNDRAINED`;
+they cannot cause ordinary unbind/unload. Original-reply and in-memory-validation
+timestamps are recorded separately. The `client-warmup` phase marker brackets
+the pre-wait plus warmup; actual command timestamps define the work interval.
