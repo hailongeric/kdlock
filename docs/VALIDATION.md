@@ -8,6 +8,24 @@ Basic plus affected checks are the default; an old pass is not a current full pa
 The [terminology guide](TERMINOLOGY.md) explains status labels and other technical
 terms used in the receipts below.
 
+## Native shared-mm mmap writers
+
+The [shared-mm receipt](../bench/results/10.176.26.71/tests/mmap-writer-native-20261021/README.md)
+passed both basic programs and six focused cases at `b9fe567`: exact shared mm/mmap-lock identity, zero fault callbacks,
+actual blocked Native writer evidence, VMA split/unmap, descriptor-closed VMA
+lifetime and process-exit drain. Two failed stack probes are preserved; the
+corrected probe accounts for kernel stack filtering through exact ELF-bound
+return sites plus sleeping-task observations. No admission was weakened.
+
+At `b043da5`, four timing-client cases and twelve serial measurements passed and
+drained. Eighteen corrupted receipts were rejected. The immediate host endpoint
+failed at 76 versus 67 threads, so performance acceptance remains false. This
+is Native only; the [integration audit](../bench/results/10.176.26.71/tests/mmap-writer-native-20261021/INTEGRATION.md)
+records the remaining actual mmap-lock API, mode, origin-context, participant
+and lifetime work. Independent inert review passed 31,923 integrity/arithmetic
+checks; final VM health was idle. Readers remain concurrent in the separate
+fault workload.
+
 ## Opt-in module-owned mapping and faults
 
 The subsequent [split-workload receipt](../bench/results/10.176.26.71/tests/mmap-fault-split-20261021/README.md)

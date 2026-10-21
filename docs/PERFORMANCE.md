@@ -52,7 +52,19 @@ All sessions drained, but the strict immediate host endpoint failed (73 versus
 controls and complete-operation p95, including 24.45% whole-rate CV for
 one-worker mmap and 9.78% for sixteen-worker Native faults. These measurements
 do not establish accepted gains, isolate sampling cost or resolve the seven
-mutex regressions. Full-mm conversion and same-mm mmap contention remain open.
+mutex regressions. Full-mm conversion remains open.
+
+The subsequent [shared-mm Native writer baseline](../bench/results/10.176.26.71/tests/mmap-writer-native-20261021/README.md)
+completed twelve serial sessions at `b043da5` after focused correctness and
+four client validations. All pthreads share the exact actual mmap lock and the
+mapped ranges are never touched. Plain whole-run median cycle throughput was
+658,172/s with one worker and 108,217/s with sixteen. Three-repeat CV was 17.96%
+and 9.85%, respectively; sampled p95 medians were 1.585 us and 69.515 us.
+
+This Native instrumented baseline has a failed immediate host endpoint (76
+versus the original 67 threads). Repetition and sampling effects remain
+unseparated, and no gain or KD/TCLock mmap replacement is established. The seven
+mutex causes remain unresolved; the earlier independent-mm results stay fixed.
 
 ## Unified public mutex: acceptance remains open
 

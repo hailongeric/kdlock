@@ -1,0 +1,162 @@
+{
+  "accepted": false,
+  "groups": [
+    {
+      "arm": "native",
+      "completed_operation_p95_ns": null,
+      "observation": "plain",
+      "peak_ops_s": {
+        "cv_pct": 0.12451177141991553,
+        "maximum": 662289.798786474,
+        "median": 661432.7924015431,
+        "minimum": 660280.0341916451,
+        "n": 3,
+        "spread_pct": 0.30385015951988864
+      },
+      "threads": 1,
+      "whole_ops_s": {
+        "cv_pct": 17.956340147695705,
+        "maximum": 658964.2552800782,
+        "median": 658172.0213501309,
+        "minimum": 435975.6942270493,
+        "n": 3,
+        "spread_pct": 33.87998180105024
+      },
+      "workload": "mmap-shared-mm"
+    },
+    {
+      "arm": "native",
+      "completed_operation_p95_ns": {
+        "cv_pct": 0.4308439300372092,
+        "maximum": 1599,
+        "median": 1585,
+        "minimum": 1584,
+        "n": 3,
+        "spread_pct": 0.9463722397476341
+      },
+      "observation": "sampled",
+      "peak_ops_s": {
+        "cv_pct": 0.056847223646435616,
+        "maximum": 661479.1380761926,
+        "median": 661330.8202762163,
+        "minimum": 660618.1143061072,
+        "n": 3,
+        "spread_pct": 0.13019562126649384
+      },
+      "threads": 1,
+      "whole_ops_s": {
+        "cv_pct": 0.12504502026130732,
+        "maximum": 658760.8626554336,
+        "median": 657057.9787112633,
+        "minimum": 656977.810264765,
+        "n": 3,
+        "spread_pct": 0.2713691102520016
+      },
+      "workload": "mmap-shared-mm"
+    },
+    {
+      "arm": "native",
+      "completed_operation_p95_ns": null,
+      "observation": "plain",
+      "peak_ops_s": {
+        "cv_pct": 11.700918675480729,
+        "maximum": 144203.47894826028,
+        "median": 113492.88579305369,
+        "minimum": 113491.41154543117,
+        "n": 3,
+        "spread_pct": 27.060786399273
+      },
+      "threads": 16,
+      "whole_ops_s": {
+        "cv_pct": 9.854581217577206,
+        "maximum": 132484.02476184026,
+        "median": 108217.41903502241,
+        "minimum": 108135.27126917448,
+        "n": 3,
+        "spread_pct": 22.499846798957382
+      },
+      "workload": "mmap-shared-mm"
+    },
+    {
+      "arm": "native",
+      "completed_operation_p95_ns": {
+        "cv_pct": 4.945368651068258,
+        "maximum": 72269,
+        "median": 69515,
+        "minimum": 64099,
+        "n": 3,
+        "spread_pct": 11.752859095159318
+      },
+      "observation": "sampled",
+      "peak_ops_s": {
+        "cv_pct": 1.8048943960100148,
+        "maximum": 114345.83079864352,
+        "median": 110079.18431324424,
+        "minimum": 110074.36419255334,
+        "n": 3,
+        "spread_pct": 3.8803581555757005
+      },
+      "threads": 16,
+      "whole_ops_s": {
+        "cv_pct": 0.6512697530740809,
+        "maximum": 107378.3621411382,
+        "median": 106277.8038932292,
+        "minimum": 105707.98628795709,
+        "n": 3,
+        "spread_pct": 1.571707159906355
+      },
+      "workload": "mmap-shared-mm"
+    }
+  ],
+  "limits": "Native instrumented shared-mm baseline only; endpoint pending; seven mutex causes unresolved",
+  "observation_pairs": [
+    {
+      "arm": "native",
+      "repeat": 0,
+      "sampled_plain_peak_ratio": 1.001816053526464,
+      "sampled_plain_whole_ratio": 1.5110036439608518,
+      "threads": 1,
+      "workload": "mmap-shared-mm"
+    },
+    {
+      "arm": "native",
+      "repeat": 1,
+      "sampled_plain_peak_ratio": 0.9998458314639094,
+      "sampled_plain_whole_ratio": 0.9981855638850826,
+      "threads": 1,
+      "workload": "mmap-shared-mm"
+    },
+    {
+      "arm": "native",
+      "repeat": 2,
+      "sampled_plain_peak_ratio": 0.9974759018130281,
+      "sampled_plain_whole_ratio": 0.9971071624089767,
+      "threads": 1,
+      "workload": "mmap-shared-mm"
+    },
+    {
+      "arm": "native",
+      "repeat": 0,
+      "sampled_plain_peak_ratio": 0.7633601152766938,
+      "sampled_plain_whole_ratio": 0.802193351872268,
+      "threads": 16,
+      "workload": "mmap-shared-mm"
+    },
+    {
+      "arm": "native",
+      "repeat": 1,
+      "sampled_plain_peak_ratio": 1.0075154050373265,
+      "sampled_plain_whole_ratio": 0.9922465634334463,
+      "threads": 16,
+      "workload": "mmap-shared-mm"
+    },
+    {
+      "arm": "native",
+      "repeat": 2,
+      "sampled_plain_peak_ratio": 0.9698915776414503,
+      "sampled_plain_whole_ratio": 0.9775532538761076,
+      "threads": 16,
+      "workload": "mmap-shared-mm"
+    }
+  ]
+}

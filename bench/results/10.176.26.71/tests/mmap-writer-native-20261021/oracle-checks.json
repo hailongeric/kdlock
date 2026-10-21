@@ -1,0 +1,85 @@
+{
+  "accepted": false,
+  "idle": true,
+  "input_hashes": {
+    "/root/kdlock-evidence/10.176.26.71/tests/mmap-writer-native-20261021/live-3/02-cycle-16.jsonl": "ff1e921b17532f4a42a330347fb3a831f6cabb69d945ad757d11dc360240f859",
+    "/root/kdlock-evidence/10.176.26.71/tests/mmap-writer-native-20261021/timing-prepare-1/03-mmap-shared-mm-16-sampled-r0/client.jsonl": "1134dbd2ececd121bce267793e2a398c1627d966273a11bc3c49265b2b41b9c1"
+  },
+  "passed": true,
+  "positive_receipts": 2,
+  "rejected": [
+    {
+      "error": "worker did not use the exact shared native mm/lock",
+      "name": "different_mm"
+    },
+    {
+      "error": "whole-operation or thread accounting differs",
+      "name": "duplicate_tid"
+    },
+    {
+      "error": "exact VMA/fault/observation accounting differs",
+      "name": "fault_in_mmap"
+    },
+    {
+      "error": "exact VMA/fault/observation accounting differs",
+      "name": "live_vma"
+    },
+    {
+      "error": "exact VMA/fault/observation accounting differs",
+      "name": "unexpected_clone"
+    },
+    {
+      "error": "exact VMA/fault/observation accounting differs",
+      "name": "missing_map"
+    },
+    {
+      "error": "exact VMA/fault/observation accounting differs",
+      "name": "queue_observer_enabled"
+    },
+    {
+      "error": "incomplete/wrong measurement",
+      "name": "missing_join"
+    },
+    {
+      "error": "latency coverage or capacity differs",
+      "name": "missing_latency"
+    },
+    {
+      "error": "progress counts move backward or exceed final totals",
+      "name": "invalid_progress"
+    },
+    {
+      "error": "worker did not use the exact shared native mm/lock",
+      "name": "wrong_cpu"
+    },
+    {
+      "error": "actual same-mm Native writer wait was not observed",
+      "name": "wrong_lock"
+    },
+    {
+      "error": "raw stack/ELF return site or sleeping task bracket differs",
+      "name": "wrong_return_pc"
+    },
+    {
+      "error": "raw stack/ELF return site or sleeping task bracket differs",
+      "name": "running_task"
+    },
+    {
+      "error": "raw stack/ELF return site or sleeping task bracket differs",
+      "name": "other_wait"
+    },
+    {
+      "error": "raw stack/ELF return site or sleeping task bracket differs",
+      "name": "task_rescheduled"
+    },
+    {
+      "error": "native writer contention or final VMA state differs",
+      "name": "missing_writer_proof"
+    },
+    {
+      "error": "raw stack/ELF return site or sleeping task bracket differs",
+      "name": "unbound_stack_pc"
+    }
+  ],
+  "script_sha256": "d9d88b9ff690ea4531d5db6ef0040a4d3f4a1b24afdbb17269ee8a9e086cbf44"
+}

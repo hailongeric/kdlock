@@ -1,0 +1,182 @@
+{
+  "accepted": false,
+  "archive_manifest_sha256": "715b83ea8fc3d091900247b5482f733f401f27bfe023a88e9ae8eafff3c18a17",
+  "archives": [
+    {
+      "bytes": 2842602,
+      "file": "development.tar.gz",
+      "members": 778,
+      "sha256": "cb0cefb94dd86b84849055b5d91eaee9df646a13c5dc42e0410db413d37b7217",
+      "types": {
+        "dir": 68,
+        "file": 710
+      }
+    },
+    {
+      "bytes": 1432037,
+      "file": "correctness.tar.gz",
+      "members": 397,
+      "sha256": "38b67fbc7239686e97cddfee4009741b1e18a26fea11a6faed62c99c3cb7f7f5",
+      "types": {
+        "dir": 34,
+        "file": 363
+      }
+    },
+    {
+      "bytes": 1574105,
+      "file": "timing.tar.gz",
+      "members": 528,
+      "sha256": "e7c0e1fb2ba355daf3f95bdafe1866de444d71e9d65d99c2a6178cb046015fab",
+      "types": {
+        "dir": 52,
+        "file": 476
+      }
+    },
+    {
+      "bytes": 261658792,
+      "file": "kernel.tar.gz",
+      "members": 4,
+      "sha256": "df0433a0b8d0b7731c5b7f5b9a6beb717c0b2998d648e5e357755c5cfb1546db",
+      "types": {
+        "dir": 1,
+        "file": 3
+      }
+    },
+    {
+      "bytes": 259170638,
+      "file": "kernel-elf.tar.gz",
+      "members": 12,
+      "sha256": "c6ca412be98c348161514038aea2d94b44441e174bb5ee4f050e66760c704311",
+      "types": {
+        "dir": 2,
+        "file": 10
+      }
+    },
+    {
+      "bytes": 103892,
+      "file": "metadata.tar.gz",
+      "members": 29,
+      "sha256": "92df2a2b8501fae69063d6de9cdb39eca565696e036d79480b54a7773f20b469",
+      "types": {
+        "dir": 2,
+        "file": 27
+      }
+    }
+  ],
+  "check_counts": {
+    "VMA_conservation": 8,
+    "all_reconstructed_peak_fields": 16,
+    "archive_bytes": 6,
+    "archive_completed_idle": 1,
+    "archive_hash": 6,
+    "archived_health_hash": 1,
+    "archiver_hash": 1,
+    "basic_two_passed": 4,
+    "binary_identity": 6,
+    "blocked_writer_proof": 1,
+    "case_lifetime_drain": 6,
+    "collector_identity": 16,
+    "collector_separate": 16,
+    "correctness_exact_joins": 4,
+    "cycle_no_faults_or_clones": 2,
+    "decoded_writer_call": 1,
+    "directory_empty_payload": 159,
+    "disassembly_hash": 8,
+    "eligible_interval": 16,
+    "exact_kernel_elf": 1,
+    "exact_mmap_callbacks": 16,
+    "exit_VMA_only_setup": 1,
+    "failed_endpoint_preserved": 1,
+    "failed_probe_drained": 2,
+    "failed_probe_retained": 2,
+    "final_health": 1,
+    "fixed_timing_inputs": 1,
+    "frozen_git_source": 1204,
+    "full_source_capture_binding": 1,
+    "independent_p95": 16,
+    "inventory_exact_set": 1,
+    "inventory_hash": 1,
+    "measurement_deadline": 16,
+    "measurement_setting": 64,
+    "member_assigned_group": 1748,
+    "member_bytes": 1589,
+    "member_in_inventory": 1748,
+    "member_mode": 1748,
+    "member_mtime_tar_projection": 1748,
+    "member_owner": 1748,
+    "member_prefix": 1748,
+    "member_read_bytes": 1589,
+    "member_safe_path": 1748,
+    "member_type": 1748,
+    "member_unique": 1748,
+    "negative_checks": 1,
+    "p95_variance": 2,
+    "paired_peak": 6,
+    "paired_whole": 6,
+    "peak_variance": 4,
+    "plan_receipt": 16,
+    "positive_peak_exists": 16,
+    "progress_batch": 16,
+    "raw_probe_failure": 2,
+    "record_whole_rate": 16,
+    "retained_timing_input": 610,
+    "same_kernel": 4,
+    "sample_count": 16,
+    "sample_count_order": 3216,
+    "sample_coverage": 136,
+    "sample_time_order": 3216,
+    "sample_worker_lifetime": 3216,
+    "scope_split_and_rejection": 1,
+    "shared_mm_identity": 34,
+    "six_focused_cases": 1,
+    "source_commit": 4,
+    "successful_scope_drain": 2,
+    "thread_cpu_and_completion": 16,
+    "three_repetitions": 4,
+    "timed_count_drain": 2,
+    "timed_exact_drain": 16,
+    "timed_exact_joins": 16,
+    "timed_shared_mm": 136,
+    "timing_source_binding": 303,
+    "whole_positive": 16,
+    "whole_variance": 4,
+    "whole_wall": 16,
+    "window_settings": 16,
+    "worker_count": 16,
+    "worker_cpu_order": 16,
+    "worker_interval": 136,
+    "worker_operation_sum": 16,
+    "worker_oracle": 136,
+    "writer_binding": 1
+  },
+  "checks": 31923,
+  "correctness_cases": 6,
+  "evidence_consistent": true,
+  "files": 1589,
+  "helper_sha256": "05b87daa59dd00c658b042f8e6bf30ee60d5c811956a5a132053d9708ae4ebf6",
+  "issues": [],
+  "kd_integration": false,
+  "latency_samples": 71644,
+  "members": 1748,
+  "negative_rejections": 18,
+  "operations": 8791264,
+  "script_sha256": "d77ccd28d76af6ba7163832451f6409e40aa0ab06ae3adefb9de83cb65356cbd",
+  "strict_host_endpoint": {
+    "captured_utc": "2026-10-21T05:18:58.572327+00:00",
+    "configuration_checks": {
+      "args": true,
+      "cpufreq": true,
+      "numa": true,
+      "pid": true,
+      "recovery_snapshot": true
+    },
+    "exact_original_threads": false,
+    "original_threads": 67,
+    "pins_verified": true,
+    "snapshot_listed": true,
+    "threads": 76
+  },
+  "symlinks": 0,
+  "timing_sessions": 12,
+  "timing_validation_sessions": 4
+}

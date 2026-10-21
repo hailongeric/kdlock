@@ -1048,3 +1048,14 @@ mmap locking remains unchanged, so there are no KD/TCLock mmap replacement arms.
 Unsupported TCLock combined bodies are excluded. These workloads do not implement
 the full procfs/mmap proposals; the [48-session receipt](../bench/results/10.176.26.71/tests/mmap-fault-split-20261021/README.md)
 retains variance and a failed strict host endpoint without performance acceptance.
+
+The distinct [Native shared-mm writer workload](../bench/mmap_writer/README.md)
+now uses pthreads on one exact mm and its real mmap lock. Each cycle maps and
+unmaps an untouched page; zero fault callbacks are mandatory. Correctness also
+checks actual blocked-writer call sites, foreign-mm rejection, VMA splitting,
+closed-descriptor lifetimes and exit teardown. Timing excludes the stack probe,
+uses native mmap ownership throughout, and retains complete-cycle latency and
+per-thread CPU time. Its [twelve-session receipt](../bench/results/10.176.26.71/tests/mmap-writer-native-20261021/README.md)
+retains both failed probe attempts, repetition variance and the 76-versus-67
+host endpoint failure. No KD or TCLock full-mmap arm is provided; the separate
+fault task keeps local readers concurrent.

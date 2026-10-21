@@ -23,8 +23,8 @@
   "configuration": {
     "CONFIG_DAX": "y",
     "CONFIG_EXT4_FS": "y",
+    "CONFIG_FS_IOMAP": "y",
     "CONFIG_HUGETLBFS": "y",
-    "CONFIG_IOMAP": "n",
     "CONFIG_LOCKDEP": "n",
     "CONFIG_PREEMPT_RT": "n",
     "CONFIG_TRANSPARENT_HUGEPAGE": "y",
@@ -53,7 +53,7 @@
   "manifest_sha256": "4136eb02bb788b6bb764a086adaae3115eb2881a9b97c45765e3c1235237b11d",
   "participant_files": 247,
   "schema": 1,
-  "script_sha256": "dd21e95148a235036c5dcf4b90290726c8e670072e668bf93376a4b54e77c85b",
+  "script_sha256": "c0308dc82f97e690160c1e324aa5ca8eb4e56c162b094720373e13f296abc694",
   "selected_source_hashes": {
     "fs/proc/base.c": "dbfb49ad5469956609c16bc1c1f000119e09b15c014a1129940c742926c8df33",
     "fs/proc/task_mmu.c": "743d91dbc6e830bc456a26dfd03116a5b2a56e0eee2b3d77bf360fcdc3e369ec",

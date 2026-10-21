@@ -1,0 +1,68 @@
+{
+  "accepted": false,
+  "attempts": [
+    {
+      "name": "live-1",
+      "passed": false,
+      "result_sha256": "4fd8cc3be81c58260f9fff27dfc2eec0c4499071607e8fc7bf985cbb46b18d89",
+      "source_commit": "4a960ab9e30480383a1665f5e94f1af6bee9ebf2",
+      "state": "FAILED"
+    },
+    {
+      "name": "live-2",
+      "passed": false,
+      "result_sha256": "7b26019720c261d3bd9715b71c3cd0248fd5de5d63c0201d9d19263ae952cc0f",
+      "source_commit": "3e19abb934a7daea3aa552b0f177b169d6f3bcec",
+      "state": "FAILED"
+    },
+    {
+      "name": "live-3",
+      "passed": true,
+      "result_sha256": "334d5b7d127316b0ce70b13c86a5fb3021b8aeebf903991bd4dc035647f8761e",
+      "source_commit": "b9fe567ff4e978fd7a88d7ef389fa279879440c4",
+      "state": "COMPLETE"
+    },
+    {
+      "name": "timing-prepare-1",
+      "passed": true,
+      "result_sha256": "521813d7b0a5855be2b1d46a52c0191c50cb5ef1d13af24b2742240004ec7496",
+      "source_commit": "b043da5f8d42dbf4d6161d57e01f3e341192e440",
+      "state": "COMPLETE"
+    },
+    {
+      "name": "timing-run-1",
+      "passed": true,
+      "result_sha256": "afb53846b51ee80278d26360df7d10d86d20f9667ea68be1b284c791e0e248d9",
+      "source_commit": "b043da5f8d42dbf4d6161d57e01f3e341192e440",
+      "state": "COMPLETE"
+    }
+  ],
+  "boot_id": "b65f0205-c8f9-4385-8b13-039cbce243a6",
+  "correctness_cases": 6,
+  "finished_ns": 1792560109809891058,
+  "idle": true,
+  "kd_integration": false,
+  "kernel_modified": false,
+  "kernel_release": "6.1.159-kdclobber2",
+  "oracle_rejections": 18,
+  "per_session_kernel_faults": [],
+  "script_sha256": "2e46b0aa3de6e6ede25b985d54c4c27358b81c9d5f3a39de1ed92bcd0959d002",
+  "strict_host_endpoint": {
+    "captured_utc": "2026-10-21T05:18:58.572327+00:00",
+    "configuration_checks": {
+      "args": true,
+      "cpufreq": true,
+      "numa": true,
+      "pid": true,
+      "recovery_snapshot": true
+    },
+    "exact_original_threads": false,
+    "original_threads": 67,
+    "pins_verified": true,
+    "snapshot_listed": true,
+    "threads": 76
+  },
+  "timing_sessions": 12,
+  "timing_validation_sessions": 4,
+  "verified_hashes": 1517
+}

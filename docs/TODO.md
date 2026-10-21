@@ -139,10 +139,20 @@ Native fallback remain separate from private backing locking. The later
 passed eighteen separate mmap/fault cases and completed 48 timings through local
 readers, with complete-operation p95 and paired observation controls. Its strict
 host endpoint failed (73 versus 67 threads); variance and isolated instrumentation
-cost remain unresolved. Full-mm conversion, signal cancellation, generic callbacks,
-same-mm mmap writer contention and all seven mutex causes remain open. Reader
-delegation is deliberately absent; a real exclusive backing-writer workload needs
-its own supported contract and execution evidence.
+cost remain unresolved. Full-mm conversion, signal cancellation, generic callbacks
+and all seven mutex causes remain open. Reader delegation is deliberately
+absent; a real exclusive backing-writer workload needs its own supported
+contract and execution evidence.
+
+The [shared-mm Native writer stage](../bench/results/10.176.26.71/tests/mmap-writer-native-20261021/README.md) now proves actual mmap writer
+contention without payload faults and validates split, descriptor/VMA and exit
+lifetimes. Its six cases, four timing-client validations, twelve measurements
+and eighteen negative checks completed with drain. The strict endpoint failed
+at 76 versus 67 QEMU threads. Native timing variance, sampling cost and the
+[actual mmap-lock integration gaps](../bench/results/10.176.26.71/tests/mmap-writer-native-20261021/INTEGRATION.md)
+remain open. The complete-source lexical inventory is not yet a transitive
+participant/reachability proof, and no coherent KD kernel adapter is installed.
+
 The
 [resident-list timing plan](../bench/results/10.176.26.71/bench/nano-list-followup-20261020/README.md)
 retains the previously selected 264 sessions at eight and 60 workers.

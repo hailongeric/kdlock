@@ -43,7 +43,7 @@ for name in selected:
     assert name in contents
     dest=selected_dir/name;dest.parent.mkdir(parents=True,exist_ok=True);dest.write_text(contents[name])
 configuration={key:('y' if key+'=y\n' in contents['.config'] else 'n') for key in
- ('CONFIG_LOCKDEP','CONFIG_USERFAULTFD','CONFIG_TRANSPARENT_HUGEPAGE','CONFIG_HUGETLBFS','CONFIG_DAX','CONFIG_EXT4_FS','CONFIG_IOMAP','CONFIG_PREEMPT_RT')}
+ ('CONFIG_LOCKDEP','CONFIG_USERFAULTFD','CONFIG_TRANSPARENT_HUGEPAGE','CONFIG_HUGETLBFS','CONFIG_DAX','CONFIG_EXT4_FS','CONFIG_FS_IOMAP','CONFIG_PREEMPT_RT')}
 result=dict(schema=1,verified_files=len(seen),source_bytes=capture['bytes'],archive_sha256=capture['archive_sha256'],
     manifest_sha256=capture['manifest_sha256'],inventory_rows=len(rows),participant_files=len({r['path'] for r in rows}),
     families=dict(sorted(families.items())),api_occurrences=dict(sorted(apis.items())),configuration=configuration,
