@@ -108,6 +108,10 @@ def triggers(observer, anchor, marker_ns, began_ns, decisions, save,
         decisions.append(decision)
         save()
         if reason is None:
+            if clock() >= latest_candidate:
+                decision.update(candidate=False, reason='candidate window expired while retaining decision')
+                save()
+                continue
             yield dict(kind='sample', **decision)
             count += 1
             # Execution resumes only after the capture ACK and its validation;

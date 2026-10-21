@@ -124,6 +124,17 @@ class BoundaryTrigger(unittest.TestCase):
         self.assertEqual([v['kind'] for v in self.generator(late, [])], ['terminal'])
         self.assertEqual(late.now, 120*S)
 
+    def test_slow_evidence_write_cannot_release_expired_candidate(self):
+        stream = FakeStream([(94*S, sample(1, 94*S))])
+        decisions = []
+        def delayed_save():
+            stream.now = max(stream.now, 96*S)
+        values = list(trigger.triggers(stream, self.anchor, 1000*S, 0, decisions, delayed_save,
+                                      clock=lambda: stream.now, sleep=stream.sleep))
+        self.assertEqual([v['kind'] for v in values], ['terminal'])
+        self.assertFalse(decisions[0]['candidate'])
+        self.assertEqual(stream.now, 120*S)
+
 
 if __name__ == '__main__':
     unittest.main()

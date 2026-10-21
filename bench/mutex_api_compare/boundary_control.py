@@ -82,10 +82,12 @@ def main():
     guest = None
     try:
         observer.until('ready')
-        anchor_sample = observer.until('sample')
-        anchor = boundary_trigger.reference(original['host-state.json']['qemu'][0]['tasks'], anchor_sample['remote'])
-        receipt['trigger_anchor'] = anchor
-        save()
+        anchor = None
+        if args.capture_policy == 'sample-trigger':
+            anchor_sample = observer.until('sample')
+            anchor = boundary_trigger.reference(original['host-state.json']['qemu'][0]['tasks'], anchor_sample['remote'])
+            receipt['trigger_anchor'] = anchor
+            save()
         mark = lambda label: observer.request('marker', label, 'marker')
 
         def capture(label):
@@ -149,7 +151,7 @@ sys.exit(subprocess.call(args))
                 save()
             elif row['event'] == 'boundary':
                 assert 'boundary' not in receipt and row['boundary'] == 1
-                receipt['boundary'] = dict(request=event, observations=[], sample_decisions=[])
+                receipt['boundary'] = dict(request=event, observations=[], sample_decisions=[], dispatch_skips=[])
                 start = time.monotonic()
                 marker = mark('held-boundary-'+row['boundary_token'])['ack']['remote']['mono_ns']
                 observations = receipt['boundary']['observations']
@@ -160,12 +162,21 @@ sys.exit(subprocess.call(args))
                 points = (boundary_trigger.triggers(observer, anchor, marker, int(start*1000000000),
                           receipt['boundary']['sample_decisions'], save)
                           if args.capture_policy == 'sample-trigger' else fixed_points())
-                for index, trigger in enumerate(points):
+                for trigger in points:
+                    cutoff = int(start*1000000000)+boundary_trigger.WINDOW_NS-boundary_trigger.CAPTURE_BUDGET_NS
+                    if trigger['kind'] == 'sample' and time.monotonic_ns() >= cutoff:
+                        receipt['boundary']['dispatch_skips'].append(dict(trigger=trigger, skipped=stamp(), reason='candidate dispatch cutoff expired'))
+                        save()
+                        continue
+                    index = len(observations)
                     offset = time.monotonic()-start
                     label = f"boundary-{row['boundary_token']}-{index}"
                     reply, gate = capture(label)
                     remote = reply['ack']['remote']
                     freshness = boundary_trigger.capture_age(trigger, remote) if trigger['kind'] == 'sample' else None
+                    if freshness is not None:
+                        freshness['dispatch_before_cutoff'] = reply['sent']['mono_ns'] < cutoff
+                        freshness['qualified'] = freshness['qualified'] and freshness['dispatch_before_cutoff']
                     observations.append(dict(capture=label, offset_s=offset, trigger=trigger, trigger_freshness=freshness,
                         capture_began_ns=remote['capture_began']['mono_ns'],
                         capture_finished_ns=remote['capture_finished']['mono_ns'],
