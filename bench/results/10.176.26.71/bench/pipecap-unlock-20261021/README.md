@@ -73,8 +73,8 @@ remain unchanged.
 checks. Neither changes the production protocol. `checks-1` passed both basic
 programs and all six selected drivers in the VM. Both unlock variants also
 passed the actual macro/generated-code checks against the frozen original
-headers. The fixture result is separate from the pending live owner/ACK and
-syscall checks.
+headers. The fixture result is separate from the live owner/ACK and syscall
+checks reported below.
 
 `inputs-1` built successfully with manifest SHA256
 `daf7f77beda2704d9cc56291f9864489f733c844f6188cd6c8198480539badae`.
@@ -97,7 +97,7 @@ Read-only assembly review found byte-identical business computation at
 `0x13c–0x151`, unchanged stack frame and spills, and unchanged acquisition probes
 apart from branch displacements. The 15 removed bytes are the cookie test/branch
 (5), route-result copy (3), and local-unlock call/return jump (7). This diagnostic
-therefore measures the entire unlock-shell transformation, including changed
+would therefore compare the entire unlock-shell transformation, including changed
 control flow and layout; it cannot isolate provider-only cycles.
 
 `task-1` did not execute its tests: module insertion failed with a reserved
@@ -159,3 +159,36 @@ The successful allocator preparation captured its kernel log. After review,
 the maintained preparation script also captures kernel messages on exceptional
 exit; that failure-path improvement was not exercised or used to alter the
 completed `allocator-refresh-1/driver.py` evidence.
+
+## Evidence preservation
+
+Final health verification confirmed the same recovery boot and original 73
+runtime modules, no project module/task or evidence writer, all 4,088 original
+input hashes, all 336 retained collector hashes, the derivative manifest, and
+the exact session retirements. The initial health-verifier process imported a
+maintained helper before the frozen collector and was rejected by the collector
+origin guard. Its script and failure log remain archived. The corrected,
+separately named verifier checks the frozen files without importing a second
+collector; the guard itself is unchanged. This was an evidence-check failure,
+not another workload run.
+
+The completed archive manifest is
+[`archives-1/archives.json`](../../raw/bench/pipecap-unlock-20261021/archives-1/archives.json),
+SHA256 `c665228f06d3c5cd6ba85fb62c4e7609d4f1cc4a4d8ac58d26c439d333317c10`.
+The archiver confirmed unchanged input inventory and final guest idle. Archives
+retain the frozen source fragments, binaries, generated images, complete logs,
+host observations, supervisors, commands and exit statuses, including failures.
+
+| Archive | Contents | SHA256 |
+| --- | --- | --- |
+| [checks.tar.gz](../../raw/bench/pipecap-unlock-20261021/archives-1/checks.tar.gz) | Basic/affected checks and frozen tested source | `ae8d73292dfc12e4f20d5b077af930021009fb87ca07d8f8f190f54f10650b1f` |
+| [inputs.tar.gz](../../raw/bench/pipecap-unlock-20261021/archives-1/inputs.tar.gz) | Original/derivative input bindings, build and actual ELF audits | `ec5a6e5a288d0b27f64bf31b445d7ff422fa416ce0dc59dcd1ce50aa62a6d6b5` |
+| [live.tar.gz](../../raw/bench/pipecap-unlock-20261021/archives-1/live.tar.gz) | Failed task load, allocator preparation, successful retry and four syscall sessions | `ce5ae77a6c5ff8ff1ddfa6ced15a144308232650c9f51491224ca72a0dfa8b4d` |
+| [metadata.tar.gz](../../raw/bench/pipecap-unlock-20261021/archives-1/metadata.tar.gz) | Host receipts, rejected timing gate, final health and command records | `44039297d41e37fc8067f6ccf22f7c828045c3bbca38f7668933e3eedd7e4a8c` |
+
+The source-host [inert review](review.py) passed **17,992 checks** with zero
+issues; its [receipt](review.json) binds all four archives, Git/source and binary
+identities, exact correctness totals and the absence of timing outputs. It
+executes no archived program. Both helpers remained read-only and reported zero
+files touched. No production locking change, kernel rebuild, reboot or
+performance acceptance occurred in this stage.

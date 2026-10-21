@@ -35,7 +35,15 @@ def main():
     spec = importlib.util.spec_from_file_location('health_control', ROOT/'bench/mutex_api_compare/unlock_control.py')
     control = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(control)
-    scheduler, frozen, harness, _, _ = control.context(BASE/'unused-health-output')
+    # This is an evidence check, not a collector process. Importing both the
+    # maintained idle helper and frozen collector would correctly trip the
+    # collector's origin guard, so verify its files without loading runners.
+    scheduler = control.load(ROOT/'bench/mutex_api_compare/run.py', 'health_scheduler')
+    frozen = scheduler.replay_inputs(control.ORIGINAL, BASE/'unused-health-output')
+    harness = scheduler.retained_harness(control.ORIGINAL)
+    for item in frozen.values():
+        scheduler.verify(item['files'])
+    scheduler.verify(harness)
     inputs = BASE/'inputs-1/inputs.json'
     candidate = control.validate(scheduler, inputs,
         'daf7f77beda2704d9cc56291f9864489f733c844f6188cd6c8198480539badae')

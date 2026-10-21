@@ -106,6 +106,8 @@ a reserved per-CPU allocation; normal allocator preparation allowed an identical
 binary retry to pass. The single timing admission attempt found 68 instead of
 67 QEMU tasks and started no timing sessions. The three planned pairs, variance,
 causal attribution and all seven regression resolutions remain open.
+Its four archives passed 17,992 inert integrity/evidence checks; failures remain
+retained and the recovery VM is idle.
 
 The earlier [pipecap owner observation](../bench/results/10.176.26.71/bench/pipecap-owner-20261021/README.md)
 retains 24 drained one-worker sessions with unchanged binaries and no returned
