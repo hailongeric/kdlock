@@ -135,3 +135,30 @@ acquisitions. General sessions ended with all five locks/CPUs hot; OUTER repeats
 0/2 ended cold and repeat 1 hot. Final heat snapshots cannot reconstruct timed
 transitions. Preserve all six prior unaccepted observations and the four
 separate correctness sessions; no production fix follows from this analysis.
+
+## Frozen workload phase diagnostic
+
+After completed `sync-3` and `sync-4` verified the reviewed harness bytes,
+`phase-1` was refused before any guest command at the unchanged thread gate.
+`phase-2` started at 67 and passed the full original environment comparison and
+all retained correctness/provenance prerequisites. It completed one original
+OUTER five-worker session with 167,972 returned generated bodies and normal
+retirement. The original provider/workload binaries were reused; no build or
+production change was introduced. Source supervisor revision: `a345918`;
+the guest runner's exact file bytes are retained with the session.
+
+The continuous trace contains 45 samples, starting at 67 and ending/peaking at
+73. One worker appears during guest setup; additional workers appear around
+warmup/measurement. The four samples labelled `client-measure-begin` all contain
+73 tasks. Matched intervals wholly within that label show zero additional
+worker runtime/read/write counters. This is a limited interior observation:
+boundary activity, first cumulative observations and missing lifetime tails
+cannot be assigned to the timed critical section. It does not establish zero
+interference or restore the failed original task-count condition. See
+[phase accounting](phase-review-2.json). Rates remain unaccepted and are not
+compared against prior uninstrumented arms.
+
+Collection, frozen-input verification and archival are next observed as separate
+phases. These operations occur after the completed workload and cannot explain
+the workers already observed during that workload. They can create additional
+workers of their own; retain their timing independently.
