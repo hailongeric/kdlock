@@ -1,6 +1,7 @@
 # Actual mmap contention investigation, 2026-10-22
 
-Status: source review complete; one bounded diagnostic pair is being prepared.
+Status: source review and focused checks complete; one bounded diagnostic pair
+is ready for admission.
 No implementation change or performance acceptance is claimed. The seven
 original mutex causes remain unresolved.
 
@@ -88,3 +89,20 @@ One sampled pair cannot establish causation or justify a protocol change.
 No QEMU cause will be inferred from another temporal correlation. Identifying
 initiating operations or activity during measurement is a separate unresolved
 requirement. New p95 collection remains deferred.
+
+## Diagnostic preparation
+
+Revision `34b43f8` adds the diagnostic wrapper and four focused tests. Read-only
+review found no execution blocker. The retained perf binary has SHA-256
+`be41fc3678db80aa92593a72034ebd6ec4c574c2dca2523f294dff5a0667aca3`;
+its own help confirms the required options. Sampling settings, including the
+callchain depth limit, are captured and must remain identical between modes.
+
+The idle synchronization copied 23 changed files (including completed prior
+reports) and verified all 4,046 approved hashes; it deleted nothing. In
+`checks-1`, dependencies, two basic programs and four new diagnostic tests
+passed. The copied existing control test could not import its omitted
+`serial.py` helper, so the aggregate attempt remains failed. `checks-2`
+included that unchanged helper and passed all ten control tests. No test was
+removed or weakened. Both attempts remain separately retained. Final checks
+confirmed idle recovery and the exact 73-module set before any candidate boot.
