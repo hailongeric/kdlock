@@ -54,6 +54,37 @@ def bounds(before,after,work,label):
                 'original fixed warmup differs')
 
 
+def selected_plan(order, arm=None):
+    plan = [row for row in order if row[:3] == ('rcuht', 2, 0) and
+            row[3] in ('baseline-kd', 'public-kd')]
+    require(plan == [('rcuht', 2, 0, 'baseline-kd'), ('rcuht', 2, 0, 'public-kd')],
+            'fixed original diagnostic order differs')
+    require(arm in (None, 'baseline-kd', 'public-kd'), 'invalid diagnostic arm')
+    return plan if arm is None else [row for row in plan if row[3] == arm]
+
+
+def endpoint_link(endpoint, controller, host, result_hash, host_hash, result_path):
+    require(endpoint['passed'] and endpoint['immediate'] and controller['passed'] and
+        controller['guest_returncode']==controller['host_returncode']==controller['result_fetch_returncode']==0 and
+        controller['guest_result_path']==result_path and
+        endpoint['result_sha256']==controller['guest_result_sha256']==result_hash and
+        endpoint['host_sha256']==controller['host_sha256']==host_hash and
+        host['pins_verified'] and host['snapshot_listed'], 'endpoint/result/controller binding differs')
+    end=controller['guest_exit_observed_monotonic_ns']
+    start=controller['host_capture_started_monotonic_ns']
+    require(0 <= start-end < 1_000_000_000 and
+        start <= controller['host_capture_finished_monotonic_ns'], 'endpoint was not immediate after guest exit')
+
+
+def predecessor_identity(previous, expected, records):
+    require(previous['passed'] and previous['state']=='COMPLETE' and previous['final_idle'] and
+        previous['sessions']==1 and previous['order']==[['rcuht',2,0,'baseline-kd']] and
+        all(previous[key]==value for key,value in expected.items()), 'OUTER diagnostic identity differs')
+    require(len(records)==1 and records[0]['drained'] and
+        records[0]['execution_status'] in ('OK','NO_JIT') and
+        records[0]['comparison_arm']=='baseline-kd', 'OUTER session did not complete and drain')
+
+
 def observed_session(base, route, Failure):
     class Observed(base):
         observer=None
@@ -126,6 +157,10 @@ def main():
     p.add_argument('--transition', type=Path, required=True)
     p.add_argument('--transition-sha256', required=True)
     p.add_argument('--source-commit', required=True)
+    p.add_argument('--arm', choices=('baseline-kd', 'public-kd'),
+                   help='one session per process, with fresh admission and an external immediate endpoint')
+    p.add_argument('--predecessor', type=Path,
+                   help='completed OUTER directory with its original passing endpoint; required for single DIRECT')
     a = p.parse_args()
     require(os.geteuid() == 0 and os.uname().release == '6.1.159-kdclobber2' and
             os.environ.get('KDLOCK_RECOVERY_CONFIRMED') == '1' and
@@ -168,9 +203,54 @@ def main():
     # Import only the retained new copy, outside the mutable checkout. The
     # original collector's module-origin guard remains fully enabled.
     compare_environment=load_module(out/'recovery_replay.py','rcuht_recovery').compare_environment
-    plan = [row for row in scheduler.execution_order()
-            if row[:3] == ('rcuht', 2, 0) and row[3] in ('baseline-kd','public-kd')]
-    require(len(plan) == len(set(plan)) == 2, 'fixed two-session diagnostic differs')
+    plan = selected_plan(scheduler.execution_order(), a.arm)
+    predecessor = None
+    if a.arm == 'public-kd':
+        require(a.predecessor is not None, 'single DIRECT requires completed OUTER and endpoint')
+        a.predecessor=a.predecessor.resolve(strict=True)
+        require(not out.is_relative_to(a.predecessor) and not a.predecessor.is_relative_to(out),
+                'new output must be separate from predecessor')
+        previous = scheduler.load(a.predecessor/'result.json')
+        records = scheduler.load(a.predecessor/'matrix/records.json')
+        expected=dict(driver_sha256=sha(Path(__file__)),scheduler_sha256=sha(scheduler_path),
+            route_snapshot_sha256=sha(out/'route_snapshot.py'),
+            recovery_driver_sha256=sha(out/'recovery_replay.py'),
+            transition_sha256=a.transition_sha256,original_inputs=str(prepared))
+        predecessor_identity(previous,expected,records)
+        endpoint = scheduler.load(a.predecessor/'endpoint.json')
+        controller = scheduler.load(a.predecessor/'controller.json')
+        host_endpoint = scheduler.load(a.predecessor/'host-endpoint.json')
+        require(endpoint['controller_sha256']==sha(a.predecessor/'controller.json'),
+                'endpoint controller receipt changed')
+        endpoint_link(endpoint, controller, host_endpoint, sha(a.predecessor/'result.json'),
+                      sha(a.predecessor/'host-endpoint.json'), str(a.predecessor/'result.json'))
+        require(previous['passed'] and previous['final_idle'] and previous['sessions'] == 1 and
+                previous['order'] == [['rcuht', 2, 0, 'baseline-kd']] and
+                previous['transition_sha256'] == a.transition_sha256 and
+                previous['original_inputs'] == str(prepared) and
+                endpoint['passed'] and endpoint['immediate'] and
+                endpoint['result_sha256'] == sha(a.predecessor/'result.json') and
+                endpoint['host_sha256'] == sha(a.predecessor/'host-endpoint.json'),
+                'OUTER predecessor or original endpoint differs')
+        # Re-evaluate the preserved endpoint, never trust its pass label alone.
+        compare_environment(scheduler.same_environment, transition,
+            scheduler.load(prepared/'matrix/host-state.json'),
+            scheduler.load(a.predecessor/'host-endpoint.json'),
+            scheduler.load(prepared/'matrix/environment.json'),
+            scheduler.load(a.predecessor/'matrix/environment.json'),
+            scheduler.load(prepared/'matrix/topology.json'),
+            scheduler.load(a.predecessor/'matrix/topology.json'))
+        predecessor = {str(a.predecessor/name): sha(a.predecessor/name)
+                       for name in ('result.json', 'endpoint.json', 'host-endpoint.json', 'controller.json',
+                                    'matrix/environment.json','matrix/topology.json','matrix/records.json','matrix/plan.json')}
+        previous_plan=scheduler.load(a.predecessor/'matrix/plan.json')
+        require(len(previous_plan)==1,'OUTER plan differs')
+        session_path=Path(previous_plan[0]['evidence_path'])/'session.json'
+        require(session_path.resolve().is_relative_to(a.predecessor) and
+                scheduler.load(session_path)==records[0], 'OUTER session receipt differs')
+        predecessor[str(session_path)]=sha(session_path)
+    else:
+        require(a.predecessor is None, 'predecessor is only valid for single DIRECT')
     original_compare = scheduler.same_environment
     scheduler.same_environment = lambda *args: compare_environment(
         original_compare, transition, *args)
@@ -188,7 +268,8 @@ def main():
                    recovery_driver_sha256=sha(out/'recovery_replay.py'),
                    transition_sha256=a.transition_sha256,
                    measured_collection='d21a1e3', outer_revision='752fec1',
-                   planned=2, order=plan, original_inputs=str(prepared),
+                   planned=len(plan), order=plan, original_inputs=str(prepared),
+                   single_arm=a.arm, predecessor=predecessor,
                    instrumentation='JOINED_BOUNDARY_EXISTING_COUNTERS', same_boot=False,
                    p95_status='DEFERRED', seven_mutex_causes='UNRESOLVED',
                    scope='New recovery boot; original immutable benchmark inputs. '
@@ -204,7 +285,7 @@ def main():
         result = scheduler.measure(prepared, out/'matrix', syn, syn_session,
             bench_session, api, 600, False, a.host_state, replay=True)
         records = scheduler.load(out/'matrix/records.json')
-        require(result == 0 and len(records) == 2 and all(
+        require(result == 0 and len(records) == len(plan) and all(
             r['drained'] and r['execution_status'] in ('OK', 'NO_JIT') for r in records),
             'selected sessions failed or did not drain')
         syn.idle()
@@ -216,7 +297,8 @@ def main():
                     'diagnostic helper changed: '+name)
         require(Path('/proc/sys/kernel/random/boot_id').read_text().strip() ==
                 transition['new_boot_id'], 'boot changed during collection')
-        receipt.update(state='COMPLETE', passed=True, sessions=2, final_idle=True)
+        receipt.update(state='COMPLETE', passed=True, sessions=len(plan), final_idle=True,
+                       finished_utc=scheduler.utc(), endpoint='PENDING')
     except BaseException as error:
         receipt.update(state='FAILED', error=repr(error))
         raise
