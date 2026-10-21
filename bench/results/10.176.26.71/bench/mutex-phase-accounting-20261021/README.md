@@ -1,6 +1,6 @@
 # Phase accounting across warmup and cleanup, 2026-10-21
 
-Status: implementation and focused validation in progress. No timing permitted.
+Status: focused validation passed; live control pending. No timing permitted.
 The checkout was clean at `bdd8472` on 380G10, without a source writer or index
 lock. Fresh read-only checks found the same recovery VM drained, with its
 original 73 modules, boot `88449cfc-cea9-4647-a294-bc601e372146` and kernel
@@ -57,3 +57,19 @@ Preserve all refusals and uncertain resources. All seven mutex causes and
 acquisition latency remain unresolved; complete-operation p95 is separate.
 Readers remain concurrent/local, mmap and faults stay separate, and unsupported
 TCLock critical sections remain excluded.
+
+## Focused validation
+
+Implementation `7e1071c` synchronized while idle, verifying all 3,981 tracked
+hashes. Guest `checks-1` passed serially from 105 frozen source files: two rebuilt
+basic programs, five phase-accounting tests, nine trigger tests, four reply
+protocol tests, twelve pre-warmup flow tests and six recovery-gate tests.
+Source hashes remained unchanged and final idle passed. The new checks cover
+expiry/nonrenewal, completion spacing, pending-control priority, capture before
+accounting, preserved capture after sample failure, exact task identity,
+unavailable counters and identity reuse/disappearance during a read.
+
+Independent read-only review confirmed the fixes for preserving a completed
+capture on accounting failure, suppressing guest ACKs on observation error,
+arming only after a passed host gate and neutral observer-state labeling.
+It reported no remaining blocker and touched no files.
