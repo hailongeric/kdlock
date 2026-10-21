@@ -593,6 +593,11 @@ resolve those failures.
 
 ### Main-plan acceptance audit
 
+New p95 collection is deferred. Preserve existing latency evidence, but do not
+use missing p95 as a throughput-validation or throughput-acceptance blocker.
+Matched work, compatible execution classes, exact retirement and unchanged
+environment gates remain required for throughput claims.
+
 Acceptance requires matching generated/published identities, returned JIT bodies
 where required, correct effects, exact owner ACKs and complete retirement. Current
 selected checks cannot be combined with historical passes to claim whole-project

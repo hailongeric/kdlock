@@ -21,6 +21,19 @@ indexed in [VALIDATION](VALIDATION.md).
 
 ## Current checkpoint
 
+New p95 measurements are deferred at the user's request. Existing latency
+evidence remains fixed; missing p95 does not block throughput investigation or
+acceptance. Continue the seven-cause investigation with correctness, matched
+work, execution-class, retirement and unchanged environment requirements.
+Keep latency gaps documented separately from those throughput requirements.
+The active [receipt-I/O control](../bench/results/10.176.26.71/bench/mutex-receipt-io-20261021/README.md)
+adds bounded observation without moving the endpoint. The completed read-only
+[RCUHT class audit](../bench/results/10.176.26.71/bench/rcuht-class-audit-20261021/README.md)
+finds plain no-JIT sessions with queue entries but zero lifetime combiner calls;
+their cause remains unresolved. Separate
+[actual-mmap/fault plans](../kernel_integration/mmap_lock/COMPARISON_PLAN.md)
+are prepared offline; new payload validation and experimental timing remain pending.
+
 KD has explicit spin, ordinary mutex, rwlock and rwsem APIs. Spin/mutex/rwlock
 workloads compare KD, TCLock and Native; sleeping rwsem compares KD with Native
 because this port has no TCLock sleeping rwsem. KD tracks real lock owners and

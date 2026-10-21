@@ -1,5 +1,20 @@
 # Performance status
 
+Current scope: new p95 measurements are deferred at the user's request. Preserve
+existing latency evidence; missing p95 is not a gate for throughput investigation
+or throughput acceptance. Throughput still requires correct matched work,
+compatible execution classes, exact retirement, unchanged environment checks
+and reported repetition variance. Acquisition latency remains unmeasured within
+its stated scope and does not block this throughput-only stage.
+The [retained RCUHT audit](../bench/results/10.176.26.71/bench/rcuht-class-audit-20261021/README.md)
+separates plain execution classes from instrumented modes and identifies queue
+activity without combiner calls in the two plain no-JIT sessions. It supplies
+no causal fix or newly accepted rate. The
+[receipt-I/O diagnostic](../bench/results/10.176.26.71/bench/mutex-receipt-io-20261021/README.md)
+is a bounded no-timing control; the
+[separate actual-MM plans](../kernel_integration/mmap_lock/COMPARISON_PLAN.md)
+remain offline until their new prerequisites and environment gates qualify.
+
 The reader/writer semaphore (rwsem) implementation measured in `c21345b` is
 **accepted as the current version**, including the two-worker regressions below.
 Acceptance identifies the maintained implementation; it does not turn every

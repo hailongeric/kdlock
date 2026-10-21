@@ -49,6 +49,8 @@ def main():
                    help='Preserve one warmup, hold at client measurement delivery, validate the full gate, then retire without timing')
     p.add_argument('--prewarmup-boundary-probe', action='store_true',
                    help='Wait for the full gate before warmup, then capture once immediately afterward; never time')
+    p.add_argument('--receipt-trace', action='store_true',
+                   help='Bounded in-memory observation of existing evidence writes; export after normal drain')
     a = p.parse_args()
     if a.phase_single_outer and a.mode != 'timing':
         p.error('--phase-single-outer requires timing and every existing correctness/environment gate')
@@ -56,8 +58,11 @@ def main():
         p.error('--setup-boundary-probe requires --phase-single-outer and every timing prerequisite')
     if a.prewarmup_boundary_probe and not a.setup_boundary_probe:
         p.error('--prewarmup-boundary-probe requires --setup-boundary-probe')
+    if a.receipt_trace and not a.prewarmup_boundary_probe:
+        p.error('--receipt-trace requires the no-timing pre-warmup control')
     phase_sequence = 0
     phase_error = ValueError
+    trace = trace_module = None
 
     def phase(label, edge):
         nonlocal phase_sequence
@@ -65,11 +70,17 @@ def main():
             return
         phase_sequence += 1
         try:
-            print('KD_PHASE '+json.dumps(dict(event='phase', sequence=phase_sequence,
-                label=label, edge=edge, real_ns=time.time_ns(), mono_ns=time.monotonic_ns())), flush=True)
+            wire = 'KD_PHASE '+json.dumps(dict(event='phase', sequence=phase_sequence,
+                label=label, edge=edge, real_ns=time.time_ns(), mono_ns=time.monotonic_ns()))
+            if trace:
+                trace.mark('phase-send', f'phase{phase_sequence}-{label}-{edge}', len((wire+'\n').encode()))
+            print(wire, flush=True)
             if not select.select([sys.stdin], [], [], 15)[0]:
                 raise TimeoutError('phase observer acknowledgement timed out; no drain inferred')
-            ack = json.loads(sys.stdin.readline())
+            reply = sys.stdin.readline()
+            ack = json.loads(reply)
+            if trace:
+                trace.mark('phase-reply', f'phase{phase_sequence}-{label}-{edge}', len(reply.encode()))
         except (ValueError, OSError) as error:
             raise phase_error('phase observer acknowledgement unavailable') from error
         if ack != {'phase_ack': phase_sequence}:
@@ -92,6 +103,9 @@ def main():
     out = a.output.resolve()
     require(not out.exists() and not out.is_relative_to(ROOT) and
             not out.is_relative_to(a.inputs.resolve().parent), 'new independent output required')
+    if a.receipt_trace:
+        trace_module = load(ROOT/'bench/mutex_api_compare/receipt_trace.py', 'receipt_trace')
+        trace = trace_module.ReceiptTrace(out)
     scheduler, frozen, harness, syn, api = control.context(out)
     # A command may have succeeded before the caller updates its loaded/bound
     # flag. Losing coordination at that boundary must retain uncertain state.
@@ -161,6 +175,8 @@ def main():
             host['recovery_snapshot'] == os.environ['KDLOCK_SNAPSHOT_TAG'],
             'fresh host placement/recovery receipt required')
     out.mkdir(parents=True)
+    if trace:
+        shutil.copyfile(ROOT/'bench/mutex_api_compare/receipt_trace.py', out/'receipt_trace.py')
     for name, source in (('runner.py', Path(__file__)), ('inputs.json', a.inputs),
                          ('unit-checks.json', a.unit_checks), ('task-check.json', a.task_check),
                          ('elf-checks.json', a.elf_checks),
@@ -318,6 +334,8 @@ def main():
             # observation, avoiding a new guest artifact write before warmup.
             if stage != 'before-warmup':
                 self.save()
+            elif trace and gate['passed']:
+                trace.arm(token)
             return boundary
 
         def prepare(self):
@@ -507,6 +525,13 @@ def main():
     finally:
         receipt['finished_ns'] = time.time_ns()
         save(out/'result.json', receipt)
+
+    if trace and trace.armed:
+        # All original saves and normal drain precede this stdout-only export.
+        # The supervisor still waits for this runner/SSH to exit before its
+        # unchanged endpoint capture. Export traffic is measured separately.
+        trace_module.export_safely(trace, final_idle=receipt['final_idle'],
+                                   completed=receipt.get('diagnostic_completed', False))
 
 
 if __name__ == '__main__':

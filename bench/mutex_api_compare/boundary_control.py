@@ -20,6 +20,7 @@ from qemu_controls import ROOT, CAPTURE, TRACE, SSH, Stream, stamp
 from boundary_protocol import host_hash, validate_reply
 import boundary_trigger
 import prewarmup_control
+import receipt_trace
 import run as scheduler
 
 
@@ -57,22 +58,27 @@ def main():
     parser.add_argument('--capture-policy', choices=('fixed', 'sample-trigger'), default='fixed')
     parser.add_argument('--wait-before-warmup', action='store_true')
     parser.add_argument('--phase-accounting', action='store_true')
+    parser.add_argument('--receipt-trace', action='store_true')
     args = parser.parse_args()
     if args.wait_before_warmup and args.capture_policy != 'sample-trigger':
         parser.error('--wait-before-warmup requires --capture-policy sample-trigger')
     if args.phase_accounting and not args.wait_before_warmup:
         parser.error('--phase-accounting requires the pre-warmup control')
+    if args.receipt_trace and not args.phase_accounting:
+        parser.error('--receipt-trace requires --phase-accounting')
     out = args.output.resolve()
     out.mkdir(parents=True, exist_ok=False)
     receipt = dict(accepted=False, score_eligible=False, timing_sent=False, complete=False,
         streams=[], requests=[], phases=[], captures=[], boundaries=[], started=stamp(), capture_policy=args.capture_policy,
         wait_before_warmup=args.wait_before_warmup, phase_accounting=args.phase_accounting,
+        receipt_trace=args.receipt_trace,
         source_commit=subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip(), sources={})
     assert not subprocess.check_output(['git', 'status', '--porcelain'], cwd=ROOT, text=True), 'commit diagnostic source before running'
     for src in (Path(__file__), TRACE, CAPTURE, ROOT/'bench/mutex_api_compare/qemu_controls.py',
                 ROOT/'bench/mutex_api_compare/boundary_protocol.py', ROOT/'bench/mutex_api_compare/unlock_run.py',
                 ROOT/'bench/mutex_api_compare/boundary_trigger.py',
                 ROOT/'bench/mutex_api_compare/prewarmup_control.py',
+                ROOT/'bench/mutex_api_compare/receipt_trace.py',
                 ROOT/'bench/mutex_api_compare/run.py', ROOT/'bench/mutex_api_compare/recovery_replay.py'):
         data = src.read_bytes()
         (out/src.name).write_bytes(data)
@@ -139,10 +145,12 @@ with runner.open('xb') as stream: stream.write((root/'bench/mutex_api_compare/un
 old=base.parent/'pipecap-unlock-20261021'
 args=[sys.executable,str(runner),'--mode','timing','--phase-single-outer','--setup-boundary-probe','--inputs',str(old/'inputs-1/inputs.json'),'--inputs-sha256','daf7f77beda2704d9cc56291f9864489f733c844f6188cd6c8198480539badae','--output',str(base/name),'--host-state',str(host),'--unit-checks',str(old/'checks-1/result.json'),'--task-check',str(old/'task-2/result.json'),'--elf-checks',str(old/'elf-checks-2.json'),'--correctness',str(old/'correctness-1/result.json'),'--source-commit',COMMIT]
 if PREWARMUP: args.append('--prewarmup-boundary-probe')
+if RECEIPTS: args.append('--receipt-trace')
 sys.exit(subprocess.call(args))
-'''.replace('NAME', repr(out.name)).replace('COMMIT', repr(receipt['source_commit'])).replace('PREWARMUP', repr(args.wait_before_warmup)).replace('BASE', repr(
+'''.replace('NAME', repr(out.name)).replace('COMMIT', repr(receipt['source_commit'])).replace('PREWARMUP', repr(args.wait_before_warmup)).replace('RECEIPTS', repr(args.receipt_trace)).replace('BASE', repr(
             '/root/kdlock-evidence/10.176.26.71/bench/'+
-            ('mutex-phase-accounting-20261021' if args.phase_accounting else
+            ('mutex-receipt-io-20261021' if args.receipt_trace else
+             'mutex-phase-accounting-20261021' if args.phase_accounting else
              'mutex-prewarmup-20261021' if args.wait_before_warmup else
              'mutex-boundary-trigger-20261021' if args.capture_policy == 'sample-trigger' else 'mutex-boundary-20261021')))
         (out/'guest-launch.py').write_text(launch)
@@ -153,12 +161,15 @@ sys.exit(subprocess.call(args))
         guest = Stream(out, 'workload', SSH+['-p', '2222', 'root@10.176.26.71', command], receipt, save, mixed_output=True)
         guest.proc.stdin.write(json.dumps(host)+'\n')
         guest.proc.stdin.flush()
+        receipt_records = []
         while True:
             event = guest.items.get(timeout=180)
             if event is None:
                 break
             assert 'reader_error' not in event, event
             row = event['remote']
+            if args.receipt_trace and row['event'] == 'stdout':
+                receipt_trace.collect_line(receipt_records, row['text'])
             if row['event'] == 'phase':
                 ack = mark(f"phase{row['sequence']}-{row['label']}-{row['edge']}")
                 sent = stamp()
@@ -231,8 +242,15 @@ sys.exit(subprocess.call(args))
                 save()
                 guest.proc.stdin.write(json.dumps(answer)+'\n')
                 guest.proc.stdin.flush()
-        guest.finish()
-        capture('endpoint')
+        if args.receipt_trace:
+            token = receipt['boundaries'][0]['request']['remote']['boundary_token']
+            def retain(records):
+                (out/'receipt-trace.json').write_text(json.dumps(records, indent=2)+'\n')
+            receipt['receipt_export'] = receipt_trace.finish_control(
+                guest.finish, capture, retain, receipt_records, token)
+        else:
+            guest.finish()
+            capture('endpoint')
         receipt.update(complete=True, finished=stamp())
     except BaseException as error:
         receipt['error'] = repr(error)
