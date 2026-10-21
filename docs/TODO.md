@@ -134,8 +134,15 @@ made no kernel changes and ran no KD mmap/fault test. The subsequent
 implemented module-owned backing state and passed Native/KD/TCLock functional
 checks at `21451da`, preserving three failed preparation attempts. Native mmap
 ownership, origin-task callbacks, exact retry/completion releases and explicit
-Native fallback remain separate from private backing locking. Full-mm conversion,
-signal cancellation, generic callbacks and timed comparison remain unresolved.
+Native fallback remain separate from private backing locking. The later
+[split-workload stage](../bench/results/10.176.26.71/tests/mmap-fault-split-20261021/README.md)
+passed eighteen separate mmap/fault cases and completed 48 timings through local
+readers, with complete-operation p95 and paired observation controls. Its strict
+host endpoint failed (73 versus 67 threads); variance and isolated instrumentation
+cost remain unresolved. Full-mm conversion, signal cancellation, generic callbacks,
+same-mm mmap writer contention and all seven mutex causes remain open. Reader
+delegation is deliberately absent; a real exclusive backing-writer workload needs
+its own supported contract and execution evidence.
 The
 [resident-list timing plan](../bench/results/10.176.26.71/bench/nano-list-followup-20261020/README.md)
 retains the previously selected 264 sessions at eight and 60 workers.

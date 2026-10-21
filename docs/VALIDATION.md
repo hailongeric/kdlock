@@ -10,6 +10,17 @@ terms used in the receipts below.
 
 ## Opt-in module-owned mapping and faults
 
+The subsequent [split-workload receipt](../bench/results/10.176.26.71/tests/mmap-fault-split-20261021/README.md)
+passed the existing 96/96/100 Native/KD/TCLock checks and eighteen additional
+cases at `9291000`: mmap without faults, concurrent local fault readers,
+metadata-writer concurrency and VMA-only lifetimes. Both basic programs passed
+in each successful validation run. The new timing client at `77cadf5` passed
+eight supported cases and nine negative receipt checks, then completed 48
+serial, drained measurements. Its preparation failure remains archived. The
+independent review passed 78,261 integrity/arithmetic checks, while retaining
+the failed strict host endpoint (73 versus 67 threads). Reader delegation,
+full-mm replacement and performance acceptance are not established.
+
 The [focused mmap/fault receipt](../bench/results/10.176.26.71/tests/mmap-fault-optin-20261021/README.md)
 records Native/KD `live-4` and TCLock `live-5` at `21451da` in the unchanged VM.
 Both basic programs passed in each run; clients passed 96/96/100 checks with

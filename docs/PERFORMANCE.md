@@ -38,6 +38,22 @@ repetitions and four arms (accepted compatibility baseline, KD-only, Native,
 TCLock). It uses the regular 64-vCPU VM and collector 63, and measures the former
 256-byte object. Those results do not measure the compact layout.
 
+## Separate mmap and page-fault measurements
+
+The [split-workload report](../bench/results/10.176.26.71/tests/mmap-fault-split-20261021/README.md)
+records 48 serial sessions at timing source `77cadf5`, reusing the validated
+`9291000` provider/payload binaries in the original VM. Mmap-only is a Native
+map/unmap control with zero fault callbacks. Fault cycles use concurrent local
+readers and include PTE discard plus a checked CPU read; there is no reader
+delegation or KD/TCLock replacement of the native mmap lock.
+
+All sessions drained, but the strict immediate host endpoint failed (73 versus
+67 QEMU threads). The report retains all three repetitions, plain/sampled
+controls and complete-operation p95, including 24.45% whole-rate CV for
+one-worker mmap and 9.78% for sixteen-worker Native faults. These measurements
+do not establish accepted gains, isolate sampling cost or resolve the seven
+mutex regressions. Full-mm conversion and same-mm mmap contention remain open.
+
 ## Unified public mutex: acceptance remains open
 
 The [focused pipecap investigation](../bench/results/10.176.26.71/bench/pipecap-causal-20261021/README.md)

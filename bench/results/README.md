@@ -32,6 +32,15 @@ preserved. The native mmap lock remains intact; timed comparisons and full-mm
 replacement remain unvalidated. This stage does not resolve the seven mutex
 performance regressions.
 
+The follow-up [split mmap/fault stage](10.176.26.71/tests/mmap-fault-split-20261021/README.md)
+keeps readers concurrent and local. Eighteen split correctness cases, eight
+timed-client checks and nine negative receipt checks passed. All 48 serial
+timings completed and drained, retaining throughput, complete-operation p95,
+three-repeat variance and observation controls. The immediate host endpoint
+failed at 73 versus the original 67 threads. The 78,261-check independent review
+confirms evidence consistency without granting performance acceptance; all seven
+mutex causes and full-mm conversion remain open.
+
 The later [seven-point latency diagnostic](10.176.26.71/bench/mutex-latency-20261021/README.md)
 completed 252 serial sessions, 126 exact KD retirements and 4,073,421 sampled
 complete-operation observations. All basic/affected VM checks and 5,218,772

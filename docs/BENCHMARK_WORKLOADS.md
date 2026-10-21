@@ -1038,5 +1038,13 @@ procfs/mmap candidates still need implementation and fresh VM validation.
 The separate [opt-in mapping payload](design/mmap_fault.md) now supplies real
 module-owned VMA callbacks and controlled fault-in transactions, validated with
 Native/KD/TCLock private backing locks. It leaves `mm_struct::mmap_lock` native.
-Its [focused runner](../tests/kernel/mmap_fault/README.md) measures correctness
-only; it does not implement the full procfs/mmap proposals or a timed benchmark.
+Its [focused runner](../tests/kernel/mmap_fault/README.md) checks correctness.
+The separate [split workloads](../bench/mmap_fault/README.md) now measure
+Native mmap/munmap without touching the range and real CPU fault cycles through
+Native/KD/TCLock local backing readers. VMAs are created before fault timing;
+fault-cycle latency includes PTE discard and the checked read. Readers stay
+concurrent, and no artificial writer work is added to force delegation. Native
+mmap locking remains unchanged, so there are no KD/TCLock mmap replacement arms.
+Unsupported TCLock combined bodies are excluded. These workloads do not implement
+the full procfs/mmap proposals; the [48-session receipt](../bench/results/10.176.26.71/tests/mmap-fault-split-20261021/README.md)
+retains variance and a failed strict host endpoint without performance acceptance.
