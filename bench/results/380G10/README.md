@@ -11,7 +11,10 @@ new physical host.
 - [Initial rwlock comparison](bench/rwlock_compare/20261009/README.md)
 - [Spin/mutex evidence index](bench/tclock_compare/HISTORY.md)
 
-Ignored raw evidence and source-host scratch files are retained in `raw/legacy/`.
+Retained raw evidence and source-host scratch files are in `raw/legacy/`.
+The October 21 cleanup removed entries dated before October 1, 2026; see the
+[retention note](../README.md#record-retention) and
+[removal inventory](tests/repository-cleanup-20261021.json).
 Some entries are documentation or maintenance artifacts with no measured machine
 identity; this directory records their storage origin, without relabeling their
 contents. See [the common layout](../README.md) for relocation and compatibility.

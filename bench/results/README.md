@@ -223,10 +223,9 @@ Historical raw files moved from `bench/.tmp/` to
 individual run provenance is not established; retain their existing manifests
 rather than assuming they are benchmark samples. The proven new-host migration
 archive is separated into `bench/results/10.176.26.71/raw/bench/`.
-`bench/.tmp` is a local compatibility symlink to the legacy directory, and its
-old migration-run path redirects to the new-host archive. These links preserve
-old references without duplicating evidence. A fresh checkout contains the
-compact reports, without raw archives or these local links.
+The local `bench/.tmp` compatibility symlink was removed during the October 21
+cleanup. Use the explicit machine-specific paths; frozen historical references
+are not rewritten. A fresh checkout contains compact reports without raw archives.
 
 The migrated guest also retains original-host archives under
 `/root/kdlock-evidence/380G10/legacy/`, with compatibility links at their original
@@ -243,3 +242,22 @@ paths and bytes. For retained compact reports, the relocation mapping is:
 | `bench/tclock_compare/results/<report>` | `bench/results/380G10/bench/tclock_compare/<report>` |
 | `bench/.tmp/<entry>` | `bench/results/380G10/raw/legacy/<entry>` |
 | `bench/.tmp/migration-20261010T070707Z` | `bench/results/10.176.26.71/raw/bench/migration-20261010T070707Z` |
+
+## Record retention
+
+At the user's request, the October 21, 2026 cleanup removed 42 source-checkout
+entries under `380G10/raw/legacy/` dated before October 1, 2026. These contained
+24,604 regular files (1,059,592,303 logical bytes) and 512 symlinks. Selection used
+the run date encoded in each entry name, not filesystem modification times.
+The [removal inventory](380G10/tests/repository-cleanup-20261021.json) records
+paths, counts and content-inventory hashes; it is not a backup of removed data.
+No new archive ref was created. Git history and existing archive refs were not
+rewritten, and no guest or external archive was changed.
+
+No tracked record paths qualified for that date cutoff. September reports
+already referenced through fixed Git links remain accessible through those links.
+Undated raw entries were retained because their run dates were not established;
+an old source revision alone does not establish when a run occurred. Required
+kernel baseline/configuration inputs remain even when captured before October.
+October runs retain their frozen inputs, failures, hashes and topology identities.
+This is a one-time cleanup, not an automatic expiry policy for new evidence.

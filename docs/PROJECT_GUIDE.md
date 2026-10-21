@@ -14,6 +14,38 @@ for spinlock, mutex, rwlock or rwsem. [Design](DESIGN.md) explains shared execut
 [code map](CODE_MAP.md) locates source. The [documentation index](README.md) separates API,
 execution, operations, benchmark and historical material.
 
+## Folder ownership
+
+Keep one directory per responsibility. Similar names do not imply interchangeable
+protocols or workloads:
+
+| Location | Contents |
+| --- | --- |
+| `include/` | Public APIs and the shared execution ABI |
+| `kernel_module/` | KD provider; private `spin/`, `mutex/`, `lock/` and `execution/` fragments remain with their owning translation units |
+| `daemon/`, `disassem/` | Publication/control service and Python translation/admission, respectively |
+| `tclock_backend/` | Independent comparator implementation and upstream provenance |
+| `workload_modules/` | Kernel payloads; synthetic and real API workloads retain separate identities |
+| `bench/` | Maintained runners and shared collection/archival helpers |
+| `bench/archive/` | Historical offline analysis tools, with one index and dependency list |
+| `tests/unit/`, `tests/protocols/` | Unit fixtures and directly affected protocol drivers |
+| `tests/kernel/`, `tests/live/`, `tests/tools/` | Provider probes, lifecycle runner and specialized audit tool |
+| `bench/results/<machine>/` | Compact reports under `bench/` and `tests/`; ignored raw records under `raw/` |
+| `docs/design/`, `docs/operations/`, `docs/history/` | Current contracts, VM procedures and historical decisions |
+| `kernel_baseline/` | Required kernel identity inputs and captured historical experiments |
+| `tools/vm/` | Idle-only source synchronization |
+
+Do not merge comparator implementations, measured machine identities or frozen
+run inputs to reduce the directory count. Private `.inc` files remain source
+inputs and must be included in snapshots. The empty `tests/clients/` directory
+and the local `bench/.tmp` compatibility alias were removed; use the explicit
+payload, runner and result locations above.
+
+The October 21 cleanup removed source-host raw entries whose run names date
+before October 1, 2026, without creating an archive ref. It did not use file
+modification times to classify source or records. Undated records and required
+kernel baseline inputs remain; see the [retention note](../bench/results/README.md#record-retention).
+
 ## Guest workflow
 
 Edit `/home/eric/vm/vm-shared/kdlock` on the source host. Stage intended new files

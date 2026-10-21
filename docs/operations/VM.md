@@ -100,7 +100,7 @@ The translation environment contains the four versions pinned in
 same four versions but an unrelated missing `pycairo` dependency of `pygobject`.
 Use the isolated environment for current checks. Plotting uses the separate
 environment and the fixed dependency list in
-`bench/archive/full_compare_20261011/requirements.txt`, so its newer `pyparsing`
+`bench/archive/requirements.txt`, so its newer `pyparsing`
 does not replace the translator's version. The former documented
 `/root/kdlock-evidence/clobber-20260918/venv` path is absent from this guest.
 

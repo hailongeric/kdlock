@@ -35,12 +35,13 @@ disabled for the source session. Earlier updates are retained. The
 [validation record](bench/results/10.176.26.71/tests/native-instruction-exit-20261018/README.md)
 separates correctness checks from the accepted performance measurements below.
 
-The current mutex is 32 bytes with native 8-byte alignment. Delegation uses a
-preallocated address-indexed table without auxiliary registry locks or RCU,
-and exact references retire its state automatically. The
-[compact comparison](bench/results/10.176.26.71/bench/mutex32-index-20261019/README.md)
-records the 16 MiB provider storage tradeoff, improvements over the preceding
-RCU version, and remaining c01, seek and pipe gaps against the old inline object.
+The current mutex is 32 bytes with native 8-byte alignment. Its delegation phase
+and tail are embedded in the object; preallocated CPU/slot nodes share storage
+between independent OSQ and delegation memberships. There is no auxiliary
+address-indexed table. The
+[shared-node comparison](bench/results/10.176.26.71/bench/mutex32-mcs-20261020/README.md)
+records the 256-body NUMA locality policy and remaining performance gaps against
+the old 256-byte object. Earlier compact-table measurements remain historical.
 
 The historical accepted [504-session comparison](bench/results/10.176.26.71/bench/comparison/mutex-kdonly-20261017T140354Z/README.md)
 covers c01/post64 and `api-pipebytes-query-n16` at 1–8 workers and 12–60 by four,
@@ -88,6 +89,11 @@ scaling results and the still-unaccepted taskname mutation delegation case.
 | [tests](tests/README.md) | Basic, targeted and live checks |
 | [kernel_baseline](kernel_baseline/README.md) | Captured kernel identity and historical experiments |
 | [tools/vm](tools/vm/README.md) | Source synchronization |
+
+The [folder ownership guide](docs/PROJECT_GUIDE.md#folder-ownership) explains
+where new source, runners, probes and records belong. Historical analysis tools
+are kept together in [bench/archive](bench/archive/README.md); measured outputs
+remain under machine-specific result directories.
 
 Edit source on `380G10`; build and test only in the designated recovery VM on
 `10.176.26.71`. KD's admission checks are not a security sandbox. See
