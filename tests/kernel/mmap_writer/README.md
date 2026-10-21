@@ -30,3 +30,9 @@ The sixteen-worker case additionally retains a real blocked-writer kernel stack,
 with an immediate Native mmap-lock caller. It does not infer writer contention
 from a queue containing unknown reader/writer types. Kernel-stack access failures
 or absence of the required positive observation are failures, not passes.
+
+The writer proof uses the exact kernel ELF hash and return sites recorded in
+[writer_sites.json](writer_sites.json), because this kernel filters `__sched`
+frames from proc stacks. A positive site additionally requires bracketing `D`
+states, matching wait channels and unchanged scheduler execution counters.
+See the [retained diagnosis](../../../bench/results/10.176.26.71/tests/mmap-writer-native-20261021/README.md).

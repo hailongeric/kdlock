@@ -1,12 +1,9 @@
 # Native shared-mm mmap writer stage
 
-Status: `live-1` at `4a960ab` passed scope and single-worker checks, then failed
-the required sixteen-worker blocked-writer stack observation. Both basic
-programs and builds passed. Exact module health subsequently confirmed
-`files=0 mm_refs=0 destroyed=3 release_errors=0`, no workers remained, and normal
-unload succeeded. This failure is retained; timing remains blocked. A diagnostic
-revision retains nonmatching stacks and joins/teardown before reporting failure;
-the required positive writer proof remains unchanged.
+Status: `live-3` at `b9fe567` passed both basic programs and all six focused
+Native correctness cases, with exact drain and normal unload. The first two
+stack-probe failures remain retained below. Native-only controlled timing is
+prepared but not yet validated or measured. Overall acceptance remains false.
 
 This stage uses the same sole writer on 380G10 and sole serial executor
 in the existing `10.176.26.71:2222` recovery VM. It changes no kernel, Native lock,
@@ -58,3 +55,25 @@ queue counts alone cannot pass it. ELF SHA-256:
 The [fixed call-site receipt](../../../../../tests/kernel/mmap_writer/writer_sites.json)
 records disassembly hashes and Build ID. Raw ELF and disassembly remain in
 `raw/tests/mmap-writer-native-20261021/kernel-capture-1/`.
+
+## Focused correctness completion
+
+`live-3` completed 1,000 one-worker and 80,000 sixteen-worker map/unmap cycles.
+The latter observed 79,106 nonempty native queues and a sleeping writer TID
+3069158 at `vm_mmap_pgoff+0xab`, with unchanged scheduler counters and exact
+shared mm/mmap-lock identity. Every cycle had zero fault callbacks, zero clones
+and matching create/close counts. Scope checks rejected a forked mm and invalid
+mapping modes, then verified one VMA split and both closes. One- and sixteen-VMA
+lifetime cases closed every descriptor before unmapping. Process exit closed
+its remaining untouched VMA. All six processes left zero file/mm references
+and zero release errors; final `destroyed=6`. No kernel fault matched the log.
+
+The separate timing revision uses the validated payload binary with queue
+observation off. Its timing client first requires four serial validations
+(1/16 workers, plain/sampled) before a twelve-session plan: the same two worker
+counts, both observation modes and three repetitions. Each run lasts two
+seconds; collector 63, workers 0..N-1, 300 ms settling/window, 10 ms progress,
+256-operation checkpoints and one latency sample per 64 operations remain
+unchanged. Whole-cycle latency includes mmap plus munmap. Thread CPU time uses
+`CLOCK_THREAD_CPUTIME_ID`; no stack sampler runs during timing. Native callback
+accounting remains instrumentation and is part of this baseline's scope.

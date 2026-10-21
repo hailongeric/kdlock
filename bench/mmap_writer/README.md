@@ -45,3 +45,15 @@ checks the whole ELF hash, raw stack, return offset, exact TID and shared mm.
 No permissions are changed; missing evidence fails. This sampler is excluded
 from timing. The two earlier failures and their raw observations are retained
 in the stage report.
+
+The [timing runner](timing.py) requires the six-case correctness receipt, reuses
+its validated payload binary, and validates both 1/16-thread plain/sampled
+clients before measurement. The Native baseline uses `observe=0`; callback
+accounting remains enabled. It runs two seconds per session, three repetitions,
+collector CPU 63 and workers 0..N-1, preserving the preceding setup's 300 ms
+settling/window, 10 ms progress and 256-operation checkpoints. Sampled mode
+measures every 64th complete mmap/munmap cycle with per-worker offsets. Both
+modes use identical stop-clock frequency. CPU time is per-thread, and all
+identities, exact callbacks, joins, sample counts and final module drain are
+required. Repeated measurements use strict original host preflight and retain
+an immediate endpoint check; a failed endpoint prevents acceptance.

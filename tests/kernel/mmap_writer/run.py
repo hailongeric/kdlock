@@ -78,7 +78,7 @@ def validate(rows,mode,n,iterations):
 def idle(base):
     common.idle(base)
     for path in Path('/proc').glob('[0-9]*/task/[0-9]*/comm'):
-        try:rt.require(path.read_text().strip()!='mw_worker','existing shared-mm worker')
+        try:rt.require(path.read_text().strip() not in ('mw_worker','mw_time_worker'),'existing shared-mm worker')
         except FileNotFoundError:pass
 
 
