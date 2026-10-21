@@ -240,7 +240,7 @@ def main():
             manifest=load(a.source_manifest);kd=bundle(a.correctness_kd);tc=bundle(a.correctness_tc)
             rt.require(len(kd['result']['split_cases'])==12 and len(tc['result']['split_cases'])==6 and
                        kd['result']['source_commit']==tc['result']['source_commit'],'same-revision eighteen-case prerequisite')
-            dirs=('include/','kernel_module/','tclock_backend/','workload_modules/mmap_fault/','bench/mmap_fault/',
+            dirs=('include/','kernel_module/','daemon/','tclock_backend/','workload_modules/mmap_fault/','bench/mmap_fault/',
                   'bench/spin_cacheline/','disassem/','tests/protocols/','tests/unit/','kernel_baseline/')
             selected={name:h for name,h in manifest['files'].items() if name.startswith(dirs) or name in
                       ('bench/archive_run.py','bench/mutex_api_compare/run.py')}

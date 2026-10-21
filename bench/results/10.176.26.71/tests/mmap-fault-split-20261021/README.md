@@ -54,3 +54,10 @@ Host capture found 69 QEMU threads before Native/KD and 73 before TCLock, with
 original CPU pins, snapshot, boot, kernel and configuration. These are functional
 checks. Timing retains the original strict 67-thread identity preflight and must
 record any endpoint mismatch without claiming acceptance.
+
+`timing-prepare-1` at `8e87640` failed before module loading: the new timing
+snapshot omitted `daemon/daemon.c` and its private includes, required by the
+basic daemon-policy test. The control-call program compiled; neither basic
+program ran. No timed client was built or executed. The failed log and source
+snapshot remain immutable. The follow-up adds the complete daemon directory to
+the frozen inputs and reruns preparation from a new run identifier.
