@@ -51,3 +51,13 @@ remain zero; these are ordinary local KD operations. A TCLock-only run has no KD
 provider and records its JIT counters as unavailable, with TCLock quiescence
 checked instead. Signal cancellation, arbitrary remote
 faults and full-kernel mmap-lock replacement are outside this validation.
+
+Add `--split` to both sequential provider runs to check the two independent
+workload tasks. `bench/mmap_fault/split_client.c` checks mmap-only at 1/16 workers
+with exactly zero callbacks, CPU faults at 1/16 workers with one local reader
+pair per completed fault cycle, fifteen fault readers plus one metadata writer,
+and sixteen VMA-only lifetimes after every descriptor closes. The existing
+retry, revalidation, NOWAIT, COMPLETED, permissions, fallback and downgrade
+checks still run. Each worker has its own native mm and an exact PID/CPU/join
+receipt. Source and provider execution classes remain in each result; these
+functional runs do not report timing or reader delegation.

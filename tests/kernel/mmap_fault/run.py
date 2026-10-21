@@ -59,6 +59,44 @@ def validate(rows, backend):
                 backing_execution='TCLOCK_SHORT' if backend==2 else 'ORDINARY_LOCAL')
 
 
+def validate_split(rows, backend, mode, workers, iterations):
+    before, ready, *tail = rows
+    last = tail[-1]
+    rt.require(before['event']=='before' and ready['event']=='ready' and
+               ready['mode']==mode and ready['workers']==workers and
+               len(set(ready['pids']))==workers and
+               ready['vma_only']==(mode=='lifetime'), 'split start receipt differs')
+    rt.require(before['backend']==backend and before['features']==0 and
+               all(before[k]==0 for k in ('active_probe','epoch','faults','reads','read_ends',
+                   'writes','write_ends','context_errors','data_errors','scopes','scope_ends','fallback')) and
+               before['vmas']==(0 if mode=='mmap' else workers-(mode=='concurrent')),
+               'setup must not trigger a fault or a backing acquisition')
+    rt.require(last['event']=='complete' and last['passed'] and last['backend']==backend and
+               last['mode']==mode and last['iterations']==iterations and last['joined']==workers and
+               last['completed']==iterations*workers and len(last['workers'])==workers,
+               'split completion differs')
+    rt.require(all(row==dict(worker=i,pid=ready['pids'][i],cpu=i,completed=iterations,errors=0)
+                   for i,row in enumerate(last['workers'])), 'split worker receipt differs')
+    after=None
+    if mode=='lifetime':
+        rt.require(len(tail)==1, 'VMA-only final object cannot be queried after destruction')
+    else:
+        rt.require(len(tail)==2 and tail[0]['event']=='after', 'missing joined object')
+        after=tail[0]
+        faults=0 if mode=='mmap' else iterations*(workers-(mode=='concurrent'))
+        writes=iterations if mode=='concurrent' else 0
+        rt.require(after['backend']==backend and after['features']==0 and
+                   all(after[k]==0 for k in ('vmas','active_probe','context_errors','data_errors',
+                                            'scopes','scope_ends','fallback')) and
+                   after['faults']==after['reads']==after['read_ends']==faults and
+                   after['epoch']==after['writes']==after['write_ends']==writes,
+                   'mmap/fault separation or shared-reader accounting differs')
+    return dict(backend=backend,mode=mode,workers=workers,iterations=iterations,
+                passed=True,before=before,after=after,completion=last,
+                execution='NATIVE_MMAP_ONLY' if mode=='mmap' else 'ORIGIN_FAULT_LOCAL_READER',
+                delegated_reader=False,independent_native_mm=True)
+
+
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--output',type=Path,required=True)
@@ -67,6 +105,8 @@ def main():
     parser.add_argument('--backends',default='0,1',choices=('0,1','2'))
     parser.add_argument('--native-kd-result',type=Path,
                         help='required successful same-revision result before TCLock')
+    parser.add_argument('--split',action='store_true',
+                        help='also validate mmap without faults and separate CPU-fault workloads')
     kernel_identity.arguments(parser)
     args=parser.parse_args()
     rt.require(os.geteuid()==0 and os.uname().release=='6.1.159-kdclobber2' and
@@ -115,7 +155,7 @@ def main():
                 boot_id=Path('/proc/sys/kernel/random/boot_id').read_text().strip(),
                 snapshot=os.environ['KDLOCK_SNAPSHOT_TAG'],backends=args.backends,
                 production_protocol_changed=False,kernel_modified=False,full_suite=False,
-                accepted=False,cases=[],native_kd_prerequisite=prerequisite,
+                accepted=False,cases=[],split_cases=[],split=args.split,native_kd_prerequisite=prerequisite,
                 provider='tclock' if tc_run else 'kdlock',script_sha256=rt.digest(Path(__file__)))
     rt.write_json(out/'result.json',result)
     fd=None;messages=''
@@ -172,6 +212,12 @@ def main():
         rt.command(['gcc','-O2','-g','-Wall','-Wextra','-Werror','-pthread',
             '-I'+str(payload.parent),source/'bench/mmap_fault/client.c','-o',client],out/'build-client.log',timeout=60)
         binaries={str(p.relative_to(out)):rt.digest(p) for p in (provider,payload,client,guard)}
+        split_client=out/'split-client'
+        if args.split:
+            rt.command(['gcc','-O2','-g','-Wall','-Wextra','-Werror',
+                '-I'+str(payload.parent),source/'bench/mmap_fault/split_client.c','-o',split_client],
+                out/'build-split-client.log',timeout=60)
+            binaries[str(split_client.relative_to(out))]=rt.digest(split_client)
         rt.write_json(out/'binary-sha256.json',binaries)
         verify();archive.idle(out.parent,rt.idle)
         fd=os.open('/dev/kmsg',os.O_RDONLY|os.O_NONBLOCK);os.lseek(fd,0,os.SEEK_END)
@@ -193,6 +239,22 @@ def main():
             rt.require(re.fullmatch(r'files=0 destroyed=\d+ release_errors=0',case['health']) is not None,'callback/file storage did not drain')
             result['cases'].append(case);rt.write_json(out/'result.json',result)
             print('FINISH mmap/fault backend',backend,'PASS',flush=True)
+            if args.split:
+                for mode,workers,iterations in (('mmap',1,1000),('mmap',16,1000),
+                        ('fault',1,5000),('fault',16,5000),('concurrent',16,1000),('lifetime',16,1000)):
+                    print('START split',backend,mode,workers,flush=True)
+                    name=f'split-{backend}-{mode}-{workers}'
+                    data=rt.command([split_client,str(backend),mode,str(workers),str(iterations)],
+                                    out/(name+'.jsonl'),timeout=120)
+                    logs()
+                    split_case=validate_split([json.loads(line) for line in data.splitlines()],
+                                              backend,mode,workers,iterations)
+                    health=Path('/sys/module/kd_mmap_fault/parameters/health').read_text().strip()
+                    rt.require(re.fullmatch(r'files=0 destroyed=\d+ release_errors=0',health) is not None,
+                               'split callback/file storage did not drain')
+                    split_case['health']=health
+                    result['split_cases'].append(split_case);rt.write_json(out/'result.json',result)
+                    print('FINISH split',backend,mode,workers,'PASS',flush=True)
         result['jit_counts_observed']=not tc_run
         if tc_run:
             rt.require(not Path('/sys/module/kdlock_km').exists(),'unexpected KD provider')

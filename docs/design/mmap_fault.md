@@ -116,3 +116,35 @@ mapping state, not a coordinated kernel mmap-lock adapter; the four blockers in
 the [retained full-mm review](../../bench/results/10.176.26.71/tests/mmap-fault-followup-20261020/README.md)
 remain for that wider task. Whole-kernel replacement, RT, lockdep and the seven
 mutex regressions remain open.
+
+## Separate workload tasks
+
+`mmap` does not itself require touching the mapped range. The split client uses
+`MAP_SHARED | PROT_READ` without `MAP_POPULATE`, `mlock`, memory access or a
+fault-in helper in its mmap-only task. One completed operation is one successful
+`mmap`/`munmap` pair. Both the fault-callback count and private backing-lock
+acquisition counts must stay zero. The driver retains Linux's native mmap lock;
+this control does not establish a KD or TCLock mmap-lock implementation.
+
+The page-fault task creates its VMAs before the start barrier. Each worker owns
+an independent native `mm` and shares the same backing object. It discards its
+own PTE with `MADV_DONTNEED`, reads the page and checks the immutable value. One
+completed fault-cycle operation includes that reset and read; it is not an
+isolated lock-acquisition or hardware-fault duration. The callback and reader
+acquisition counts must equal the completed fault cycles exactly. Ordinary
+reader acquisitions remain concurrent and local. There is no artificial writer
+counter and no reader delegation or positive-JIT requirement for this workload.
+
+The concurrent case adds one real metadata writer to fifteen fault readers;
+its epoch updates and writer pairs have a separate exact oracle. In the VMA-only
+case every descriptor closes before the first fault, then all workers fault and
+unmap before final release. That case relies on the final release's exact idle,
+pairing and error checks; the freed object cannot provide a post-release snapshot.
+
+TCLock comparisons are restricted to its supported resident backing operations.
+Actual native mmap mutation, task/GS-dependent critical sections, sleeping
+critical sections and user-memory access inside a combined body are unsupported
+TCLock replacements and are not timed as TCLock cases. Reader-only KD execution
+is reported as local. Delegation of a genuine exclusive backing update would be
+a different workload with its own execution evidence; it must not be obtained
+by serializing this read-only lookup.

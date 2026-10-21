@@ -136,7 +136,8 @@ static int mf_release(struct inode *inode, struct file *file)
 	if (m) {
 		if (atomic_read(&m->vmas) || atomic_read(&m->probe_busy) || m->scope ||
 		    !mf_idle(m) || atomic64_read(&m->reads) != atomic64_read(&m->read_ends) ||
-		    atomic64_read(&m->writes) != atomic64_read(&m->write_ends)) {
+		    atomic64_read(&m->writes) != atomic64_read(&m->write_ends) ||
+		    atomic64_read(&m->context_errors) || atomic64_read(&m->data_errors)) {
 			atomic64_inc(&release_errors);
 			WARN_ON_ONCE(1);
 			/* An invariant failure retains storage and the module for
@@ -222,6 +223,9 @@ static void mf_mm_release(struct mf_scope *scope)
 
 static vm_fault_t mf_fault(struct vm_fault *vmf)
 {
+	/* Capture implicit task state before entering the backing critical section.
+	 * Reader acquisition and the complete fault callback stay on this task. */
+	struct task_struct *origin = current;
 	struct mf_mapping *m = vmf->vma->vm_private_data;
 	struct mf_scope *scope = NULL;
 	struct page *page = NULL;
@@ -229,14 +233,14 @@ static vm_fault_t mf_fault(struct vm_fault *vmf)
 	unsigned int action = MF_NORMAL;
 
 	atomic64_inc(&m->faults);
-	if (current->mm != vmf->vma->vm_mm || !current->mm) {
+	if (origin->mm != vmf->vma->vm_mm || !origin->mm) {
 		atomic64_inc(&m->context_errors);
 		return VM_FAULT_SIGBUS;
 	}
 	mf_read(m);
 	if (m->complement != ~m->epoch)
 		atomic64_inc(&m->data_errors);
-	if (m->scope && m->scope->task == current) {
+	if (m->scope && m->scope->task == origin) {
 		scope = m->scope;
 		scope->result->callbacks++;
 		action = scope->result->action;
