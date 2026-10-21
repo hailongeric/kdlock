@@ -11,7 +11,14 @@ separates plain execution classes from instrumented modes and identifies queue
 activity without combiner calls in the two plain no-JIT sessions. It supplies
 no causal fix or newly accepted rate. The
 [receipt-I/O diagnostic](../bench/results/10.176.26.71/bench/mutex-receipt-io-20261021/README.md)
-is a bounded no-timing control; the
+completed after 49 serial basic/affected checks. One original warmup produced
+9,331,584 operations/5,881 matched returns and exact retirement. Seventeen
+existing writes totaled 4,874,247 logical bytes; all three new endpoint workers
+precede trace export, but their initiating I/O remains unknown. The full endpoint
+still fails at 70 versus 67; active host-observation CPU is at least 26.734% of
+one core. No timing or p95 ran. Archive review passed 2,626 checks, preserving
+the first archive-attempt failure and separate source identities. All seven
+causes remain unresolved; the
 [separate actual-MM plans](../kernel_integration/mmap_lock/COMPARISON_PLAN.md)
 remain offline until their new prerequisites and environment gates qualify.
 

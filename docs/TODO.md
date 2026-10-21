@@ -26,8 +26,12 @@ evidence remains fixed; missing p95 does not block throughput investigation or
 acceptance. Continue the seven-cause investigation with correctness, matched
 work, execution-class, retirement and unchanged environment requirements.
 Keep latency gaps documented separately from those throughput requirements.
-The active [receipt-I/O control](../bench/results/10.176.26.71/bench/mutex-receipt-io-20261021/README.md)
-adds bounded observation without moving the endpoint. The completed read-only
+The completed [receipt-I/O control](../bench/results/10.176.26.71/bench/mutex-receipt-io-20261021/README.md)
+passed 49 serial basic/affected and 2,626 inert archive checks, with one original
+warmup, exact retirement and final drain. Seventeen writes/4,874,247 logical
+bytes narrow receipt intervals; all three worker births precede export. The
+unchanged endpoint fails at 70, and request/descriptor attribution remains open.
+No timing or new p95 ran. The completed read-only
 [RCUHT class audit](../bench/results/10.176.26.71/bench/rcuht-class-audit-20261021/README.md)
 finds plain no-JIT sessions with queue entries but zero lifetime combiner calls;
 their cause remains unresolved. Separate
