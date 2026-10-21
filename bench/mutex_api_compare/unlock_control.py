@@ -127,7 +127,9 @@ def elf_audit(path, general):
         return dict(imports=imports, control_calls=calls, body_size=size,
                     entry_in_body=entry['st_value']-start, lock_size=lock['st_size'],
                     lock_section=elf.get_section(lock['st_shndx']).name,
-                    lock_offset=lock['st_value'], lock_cacheline_offset=lock['st_value'] % 64)
+                    lock_offset=lock['st_value'],
+                    lock_section_alignment=elf.get_section(lock['st_shndx'])['sh_addralign'],
+                    lock_section_relative_mod64=lock['st_value'] % 64)
 
 
 def validate(scheduler, manifest, digest):
@@ -136,8 +138,17 @@ def validate(scheduler, manifest, digest):
     require(data['kind'] == 'outer-general-unlock-v1' and data['complete'] and
             data['original'] == str(ORIGINAL) and
             data['preparer_sha256'] == sha(Path(__file__)), 'diagnostic identity differs')
+    require(data['original_inputs_sha256'] == scheduler.REPLAY_INPUTS_SHA256 and
+            data['original_harness_sha256'] == scheduler.REPLAY_HARNESS_SHA256 and
+            sha(ORIGINAL/'frozen-inputs.json') == scheduler.REPLAY_INPUTS_SHA256 and
+            sha(ORIGINAL/'harness-inputs.json') == scheduler.REPLAY_HARNESS_SHA256,
+            'original input manifests changed')
     original = ORIGINAL/'baseline/pipecap'
     bundle = base/'bundle'
+    actual = {str(p): sha(p) for p in bundle.rglob('*') if p.is_file()}
+    require(actual == data['bundle']['files'] and all(
+        not p.is_symlink() and p.resolve().is_relative_to(bundle)
+        for p in bundle.rglob('*')), 'bundle membership or containment changed')
     scheduler.verify(data['bundle']['files'])
     before, after = read(original/'source-sha256.json'), read(bundle/'source-sha256.json')
     require(set(before) == set(after) and
@@ -148,13 +159,24 @@ def validate(scheduler, manifest, digest):
     require(data['bundle']['bundle'] == str(bundle) and
             data['bundle']['source_identity'] == scheduler.identity(after),
             'bundle identity redirected')
+    require(data['changed_source'] == SOURCE and data['changed_binary'] == BINARY and
+            data['symvers_sha256'] == sha(base/'Module.symvers') == SYMVERS_SHA and
+            data['provider_sha256'] == sha(original/'build/kdlock_km.ko') ==
+            sha(bundle/'build/kdlock_km.ko') and
+            data['original_workload_sha256'] == sha(original/BINARY) and
+            data['derivative_workload_sha256'] == sha(bundle/BINARY),
+            'declared provider/workload/export identity differs')
+    require(sha(bundle/'plan.json') == sha(original/'plan.json'), 'original template changed')
+    for relative, expected in after.items():
+        require(sha(bundle/'source'/relative) == expected, 'source map differs')
     for filename, expected in scheduler.binary_paths(original, False).items():
         relative = str(Path(filename).relative_to(original))
         if relative != BINARY:
             require(sha(bundle/relative) == expected, 'non-workload binary changed')
     for relative, expected in data['immutable_files'].items():
         require(not Path(relative).is_absolute() and '..' not in Path(relative).parts and
-                not (base/relative).is_symlink() and sha(base/relative) == expected,
+                not (base/relative).is_symlink() and (base/relative).resolve().is_relative_to(base) and
+                sha(base/relative) == expected,
                 'diagnostic input changed: ' + relative)
     return data
 
@@ -180,6 +202,7 @@ def prepare(out, commit):
         require(sha(target) == expected, 'copied binary changed')
     shutil.copyfile(original/'plan.json', bundle/'plan.json')
     shutil.copyfile(Path(__file__), out/'unlock_control.py')
+    shutil.copyfile(Path(scheduler.__file__), out/'scheduler.py')
     require(sha(SYMVERS) == SYMVERS_SHA, 'retained export metadata changed')
     shutil.copyfile(SYMVERS, out/'Module.symvers')
     utilities = load(ROOT/'bench/mutex_api_compare/latency_inputs.py', 'unlock_elf_utilities')
@@ -206,7 +229,8 @@ def prepare(out, commit):
     require(set(after['imports']) == set(before['imports']) - {'kd_mutex_local_unlock'},
             'unexpected import delta')
     require(all(before[k] == after[k] for k in
-                ('lock_size', 'lock_section', 'lock_offset', 'lock_cacheline_offset')),
+                ('lock_size', 'lock_section', 'lock_offset', 'lock_section_alignment',
+                 'lock_section_relative_mod64')),
             'mutex object placement changed')
     old_versions = dict(line.split()[::-1] for line in (out/'original-versions.txt').read_text().splitlines())
     new_versions = dict(line.split()[::-1] for line in (out/'derivative-versions.txt').read_text().splitlines())
