@@ -145,6 +145,17 @@ at 70, distinct from the last accounting sample's 67. Basic/affected checks and
 pre-warmup-wait control can test whether warmup recreates workers. Original
 timing parity, all seven causal regressions and acquisition latency remain open.
 
+The [pre-warmup control](../bench/results/10.176.26.71/bench/mutex-prewarmup-20261021/README.md)
+now passed the full gate before one original warmup and in one immediate post
+capture, without a post-warmup settling wait or timing command. The warmup
+completed 8,272,256 operations/54,599 returns and retired exactly; 33 basic and
+affected checks and 2,390 inert archive checks passed. The endpoint still failed
+at 68. No accounting samples cover warmup or the later validation/cleanup gap,
+so the new endpoint worker cannot be attributed. Preserve this observed boundary
+feasibility separately; all seven causes, acquisition latency and performance
+acceptance remain unresolved. Do not replace the failed endpoint with an
+eventually quiet capture.
+
 The entry-inlining experiment passed focused correctness checks but did not
 resolve the seven mutex losses in its separate 120-session comparison. It is
 not accepted as a performance fix. The stage record retains all repetitions,
