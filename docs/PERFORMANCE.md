@@ -27,6 +27,21 @@ diagnostic passed five focused tests but refused live admission at 71 threads.
 Neither supplies a new accepted rate or repetition variance. New p95 remains
 deferred; all seven regression causes remain unresolved.
 
+The [2026-10-22 serial continuation](../bench/results/10.176.26.71/tests/serial-continuation-20261022/README.md)
+completed the bounded RCUHT OUTER and DIRECT diagnostics after separate original
+admission checks. Both completed and retired exactly. Warmup recorded zero
+entry witnesses; measurements recorded 17/8. Their fixed endpoints failed at
+110/76 QEMU threads, so neither supplies accepted timing or returned-body proof.
+Six archives passed independent integrity review. The actual-MM continuation
+completed all 24 sessions across six boots using the same validated candidate
+and frozen inputs, with serial per-session admission and endpoints. All cases
+validated and drained; all fixed endpoints failed at 68–70 threads versus 67.
+The [detailed report](../bench/results/10.176.26.71/tests/serial-continuation-20261022/ACTUAL_MM.md)
+retains every rejected rate, paired ratio and min/median/max/population CV.
+Whole-rate CV ranges from 0.029% to 4.626%, but qualified n=0 and qualified
+variance remain unresolved. Recovery is restored. New p95 stays deferred,
+and all seven mutex causes remain unresolved; no acceptance is declared.
+
 The reader/writer semaphore (rwsem) implementation measured in `c21345b` is
 **accepted as the current version**, including the two-worker regressions below.
 Acceptance identifies the maintained implementation; it does not turn every

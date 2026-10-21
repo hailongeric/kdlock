@@ -2,7 +2,9 @@
 
 Status: both bounded RCUHT sessions completed and drained. Their original
 immediate endpoints failed, so both remain rejected for performance use.
-The six candidate boot blocks and 24 separate plain sessions are pending.
+All six candidate boot blocks and 24 separate plain sessions completed and
+drained. Every fixed endpoint failed, leaving zero qualified timing sessions.
+Recovery is restored. [Actual-MM rates, variance, run IDs and artifacts](ACTUAL_MM.md).
 All seven mutex causes remain unresolved. New p95 stays deferred.
 
 The source checkout resumed clean at `01594c5` on `380G10`; its eight verified
@@ -91,8 +93,52 @@ timeout, waits for a changed boot UUID after a reboot request, and never resends
 an ambiguous request. Copied archives must match inventory, boot and base-path
 bindings as well as every tar hash. A refreshed recovery health check confirms
 the same boot and exact 73 modules before timing. The serial wrapper and all
-683 frozen input bindings remain unchanged. The next stage is six distinct
+683 frozen input bindings remain unchanged. The campaign ran six distinct
 boot blocks in native/KD, KD/native, native/KD order, each with separate
 `mmap/1`, `mmap/16`, `fault/1`, `fault/16` sessions. Every admission uses the
 original full gate. Failed fixed endpoints remain rejected; later observations
 can only admit a distinct new session.
+
+`campaign-1` uses coordinator revision `27d4d5e` and the unchanged `78a1b04`
+serial wrapper. Block 0 (`native`, repeat 0) completed all four cases correctly
+and drained, but each fixed endpoint failed. Its readiness observations were
+85/69/68/67 QEMU threads; each case then required its own separate successful
+admission. The original 67 thread identities and placement stayed unchanged
+through readiness, while additional workers changed across observations.
+Some recorded I/O despite zero CPU-tick deltas; their initiating activity is
+not established. Block 0 evidence was sealed and copied before block 1 booted.
+No failed endpoint has been replaced by a later observation.
+
+Source-side command/PID receipts, every admission observation and lifetime
+scan are retained under `raw/tests/serial-continuation-20261022/campaign-1`.
+The unchanged six-block summary applies block endpoint status to all four
+rows; the final report also retains each session's actual endpoint status.
+Any aggregate containing rejected endpoints remains descriptive and unaccepted.
+
+All 24 cases passed business validation and normal drain. Their fixed endpoints
+contained 68–70 threads against the required 67. The 85 retained observations
+include 55 ineligible captures; all six readiness and 24 per-session admissions
+eventually passed without weakening the original gate. Reported whole-rate
+population CV ranges from 0.029% to 4.626%; these are rejected observations,
+and qualified repetitions/variance remain unresolved. All seven original mutex
+causes remain explicitly unresolved in the detailed report.
+
+Recovery is restored on boot `e8e0a914-ef13-4063-ab95-e5e89c1eb7da`, with the
+exact 73 modules, preserved recovery artifacts/default and no configured fault
+matches in the final retained log. See [final health](final-health.json),
+[campaign receipt](campaign-result.json), [summary receipt](summary-receipt.json)
+and [independent archive reviews](campaign-archive-reviews.json). The source
+coordinator and admission histories remain alongside every sealed guest block.
+
+The final control seal is
+`8e2dc5ede7f1075d1a70050ccc1a66c7575223e0079dd512bfa21d0fed2b942d`.
+It retains 1,327 source-control snapshot files, the basic/affected validation
+receipts, all summary outputs and final recovery logs. The
+[artifact index](artifact-index.json) binds all 31 retained archives across the
+prior actual-MM stage, RCUHT diagnostics, six candidate blocks, recovery and
+final controls. Independent [summary review](summary-review.json) reproduced
+all 24 rows, eight groups and twelve paired ratios with no mismatch.
+The [final seal review](final-archive-review.json) passed all three archive
+inventories (1,349 regular files, 66 directories, no links), all 1,327 source
+snapshot bindings and all 24 immutable result bindings. No artifact gap remains;
+the failed endpoint qualifications and seven unresolved causes remain explicit.

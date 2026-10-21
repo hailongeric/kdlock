@@ -2,14 +2,28 @@
 
 Status: the Native-only payload and frozen-binary runner passed serial build
 and client validation in both candidate modes using identical binaries. The
-unchanged throughput gate refused 68 QEMU threads versus the original 67;
-zero timing sessions started. The same VM is back on its preserved recovery
-kernel, and both default payload builds passed. See the
+first stage refused admission at 68 QEMU threads versus the original 67 and
+started no timing. The subsequent six-block continuation completed all 24
+cases correctly and drained; every fixed endpoint failed at 68–70 threads.
+Zero timings qualify. The same VM is back on its preserved recovery kernel;
+both default payload builds passed in the prior stage. See the
 [validation record](../../bench/results/10.176.26.71/tests/actual-mm-plain-20261021/README.md).
 New p95 and sampled/plain comparisons remain deferred, with existing latency
 evidence preserved. Missing p95 is not a throughput prerequisite. Timing remains
 unresolved and needs the original complete host admission and immediate
 endpoint checks; never replace a failed receipt with a later capture.
+
+The [2026-10-22 continuation](../../bench/results/10.176.26.71/tests/serial-continuation-20261022/README.md)
+completed this six-block schedule with the same validated candidate and
+frozen inputs. The separate serial wrapper passed two basic programs and ten
+affected tests; the source coordinator passed four VM control tests. Each
+case gets its own full admission and immediate whole-command endpoint before
+validation and normal unload. Later quiet observations may admit the next
+distinct case but cannot replace a failed endpoint. The
+[results](../../bench/results/10.176.26.71/tests/serial-continuation-20261022/ACTUAL_MM.md)
+retain all three repetitions, rejected rates, CVs, paired ratios, run identities
+and archives. Qualified repetitions and their variance remain unresolved;
+all seven mutex causes remain unresolved and no performance acceptance follows.
 
 ## Shared candidate and validation binding
 

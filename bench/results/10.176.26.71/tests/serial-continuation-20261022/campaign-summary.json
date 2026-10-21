@@ -1,0 +1,554 @@
+{
+  "rows": [
+    {
+      "run": "/root/kdlock-evidence/10.176.26.71/tests/serial-continuation-20261022/mm-block-0-native/block-result.json",
+      "block": 0,
+      "boot_id": "f1b7a12f-aba2-4b94-b711-a736676f22aa",
+      "repeat": 0,
+      "mode": "native",
+      "task": "mmap",
+      "threads": 1,
+      "whole_ops_s": 379976.64992167224,
+      "peak_ops_s": 446267.29809916223,
+      "endpoint": "FAIL"
+    },
+    {
+      "run": "/root/kdlock-evidence/10.176.26.71/tests/serial-continuation-20261022/mm-block-0-native/block-result.json",
+      "block": 0,
+      "boot_id": "f1b7a12f-aba2-4b94-b711-a736676f22aa",
+      "repeat": 0,
+      "mode": "native",
+      "task": "mmap",
+      "threads": 16,
+      "whole_ops_s": 113949.92022465149,
+      "peak_ops_s": 119464.00301761272,
+      "endpoint": "FAIL"
+    },
+    {
+      "run": "/root/kdlock-evidence/10.176.26.71/tests/serial-continuation-20261022/mm-block-0-native/block-result.json",
+      "block": 0,
+      "boot_id": "f1b7a12f-aba2-4b94-b711-a736676f22aa",
+      "repeat": 0,
+      "mode": "native",
+      "task": "fault",
+      "threads": 1,
+      "whole_ops_s": 262971.54578795744,
+      "peak_ops_s": 268784.9005602362,
+      "endpoint": "FAIL"
+    },
+    {
+      "run": "/root/kdlock-evidence/10.176.26.71/tests/serial-continuation-20261022/mm-block-0-native/block-result.json",
+      "block": 0,
+      "boot_id": "f1b7a12f-aba2-4b94-b711-a736676f22aa",
+      "repeat": 0,
+      "mode": "native",
+      "task": "fault",
+      "threads": 16,
+      "whole_ops_s": 4334119.044835913,
+      "peak_ops_s": 5482674.570738847,
+      "endpoint": "FAIL"
+    },
+    {
+      "run": "/root/kdlock-evidence/10.176.26.71/tests/serial-continuation-20261022/mm-block-1-kd/block-result.json",
+      "block": 1,
+      "boot_id": "08809fb2-55d3-4dc0-9be0-85af91171609",
+      "repeat": 0,
+      "mode": "kd",
+      "task": "mmap",
+      "threads": 1,
+      "whole_ops_s": 372506.9970447762,
+      "peak_ops_s": 450508.9993778771,
+      "endpoint": "FAIL"
+    },
+    {
+      "run": "/root/kdlock-evidence/10.176.26.71/tests/serial-continuation-20261022/mm-block-1-kd/block-result.json",
+      "block": 1,
+      "boot_id": "08809fb2-55d3-4dc0-9be0-85af91171609",
+      "repeat": 0,
+      "mode": "kd",
+      "task": "mmap",
+      "threads": 16,
+      "whole_ops_s": 33181.77243403537,
+      "peak_ops_s": 41813.28510867784,
+      "endpoint": "FAIL"
+    },
+    {
+      "run": "/root/kdlock-evidence/10.176.26.71/tests/serial-continuation-20261022/mm-block-1-kd/block-result.json",
+      "block": 1,
+      "boot_id": "08809fb2-55d3-4dc0-9be0-85af91171609",
+      "repeat": 0,
+      "mode": "kd",
+      "task": "fault",
+      "threads": 1,
+      "whole_ops_s": 263032.2932853229,
+      "peak_ops_s": 266225.6956933704,
+      "endpoint": "FAIL"
+    },
+    {
+      "run": "/root/kdlock-evidence/10.176.26.71/tests/serial-continuation-20261022/mm-block-1-kd/block-result.json",
+      "block": 1,
+      "boot_id": "08809fb2-55d3-4dc0-9be0-85af91171609",
+      "repeat": 0,
+      "mode": "kd",
+      "task": "fault",
+      "threads": 16,
+      "whole_ops_s": 3869161.971693619,
+      "peak_ops_s": 5064122.936810534,
+      "endpoint": "FAIL"
+    },
+    {
+      "run": "/root/kdlock-evidence/10.176.26.71/tests/serial-continuation-20261022/mm-block-2-kd/block-result.json",
+      "block": 2,
+      "boot_id": "7370eeed-5dba-4550-94aa-8bd361ce3f29",
+      "repeat": 1,
+      "mode": "kd",
+      "task": "mmap",
+      "threads": 1,
+      "whole_ops_s": 375910.525551114,
+      "peak_ops_s": 460764.4105569286,
+      "endpoint": "FAIL"
+    },
+    {
+      "run": "/root/kdlock-evidence/10.176.26.71/tests/serial-continuation-20261022/mm-block-2-kd/block-result.json",
+      "block": 2,
+      "boot_id": "7370eeed-5dba-4550-94aa-8bd361ce3f29",
+      "repeat": 1,
+      "mode": "kd",
+      "task": "mmap",
+      "threads": 16,
+      "whole_ops_s": 33504.96555032927,
+      "peak_ops_s": 40959.867972692235,
+      "endpoint": "FAIL"
+    },
+    {
+      "run": "/root/kdlock-evidence/10.176.26.71/tests/serial-continuation-20261022/mm-block-2-kd/block-result.json",
+      "block": 2,
+      "boot_id": "7370eeed-5dba-4550-94aa-8bd361ce3f29",
+      "repeat": 1,
+      "mode": "kd",
+      "task": "fault",
+      "threads": 1,
+      "whole_ops_s": 262870.60132452025,
+      "peak_ops_s": 264525.77142328094,
+      "endpoint": "FAIL"
+    },
+    {
+      "run": "/root/kdlock-evidence/10.176.26.71/tests/serial-continuation-20261022/mm-block-2-kd/block-result.json",
+      "block": 2,
+      "boot_id": "7370eeed-5dba-4550-94aa-8bd361ce3f29",
+      "repeat": 1,
+      "mode": "kd",
+      "task": "fault",
+      "threads": 16,
+      "whole_ops_s": 4220934.167590909,
+      "peak_ops_s": 5497154.734626481,
+      "endpoint": "FAIL"
+    },
+    {
+      "run": "/root/kdlock-evidence/10.176.26.71/tests/serial-continuation-20261022/mm-block-3-native/block-result.json",
+      "block": 3,
+      "boot_id": "f0794861-fa8c-43b1-8452-eacb4dbf00fb",
+      "repeat": 1,
+      "mode": "native",
+      "task": "mmap",
+      "threads": 1,
+      "whole_ops_s": 356426.94479664194,
+      "peak_ops_s": 357799.1326295453,
+      "endpoint": "FAIL"
+    },
+    {
+      "run": "/root/kdlock-evidence/10.176.26.71/tests/serial-continuation-20261022/mm-block-3-native/block-result.json",
+      "block": 3,
+      "boot_id": "f0794861-fa8c-43b1-8452-eacb4dbf00fb",
+      "repeat": 1,
+      "mode": "native",
+      "task": "mmap",
+      "threads": 16,
+      "whole_ops_s": 111384.9392938511,
+      "peak_ops_s": 117759.17764840942,
+      "endpoint": "FAIL"
+    },
+    {
+      "run": "/root/kdlock-evidence/10.176.26.71/tests/serial-continuation-20261022/mm-block-3-native/block-result.json",
+      "block": 3,
+      "boot_id": "f0794861-fa8c-43b1-8452-eacb4dbf00fb",
+      "repeat": 1,
+      "mode": "native",
+      "task": "fault",
+      "threads": 1,
+      "whole_ops_s": 263380.69543717115,
+      "peak_ops_s": 264532.6790558405,
+      "endpoint": "FAIL"
+    },
+    {
+      "run": "/root/kdlock-evidence/10.176.26.71/tests/serial-continuation-20261022/mm-block-3-native/block-result.json",
+      "block": 3,
+      "boot_id": "f0794861-fa8c-43b1-8452-eacb4dbf00fb",
+      "repeat": 1,
+      "mode": "native",
+      "task": "fault",
+      "threads": 16,
+      "whole_ops_s": 4436260.1399099855,
+      "peak_ops_s": 5177472.245680358,
+      "endpoint": "FAIL"
+    },
+    {
+      "run": "/root/kdlock-evidence/10.176.26.71/tests/serial-continuation-20261022/mm-block-4-native/block-result.json",
+      "block": 4,
+      "boot_id": "ccc554a0-d84b-4cb5-a923-9abd62c51430",
+      "repeat": 2,
+      "mode": "native",
+      "task": "mmap",
+      "threads": 1,
+      "whole_ops_s": 358982.6248097705,
+      "peak_ops_s": 360105.91884670855,
+      "endpoint": "FAIL"
+    },
+    {
+      "run": "/root/kdlock-evidence/10.176.26.71/tests/serial-continuation-20261022/mm-block-4-native/block-result.json",
+      "block": 4,
+      "boot_id": "ccc554a0-d84b-4cb5-a923-9abd62c51430",
+      "repeat": 2,
+      "mode": "native",
+      "task": "mmap",
+      "threads": 16,
+      "whole_ops_s": 113211.23213862652,
+      "peak_ops_s": 119772.54625578952,
+      "endpoint": "FAIL"
+    },
+    {
+      "run": "/root/kdlock-evidence/10.176.26.71/tests/serial-continuation-20261022/mm-block-4-native/block-result.json",
+      "block": 4,
+      "boot_id": "ccc554a0-d84b-4cb5-a923-9abd62c51430",
+      "repeat": 2,
+      "mode": "native",
+      "task": "fault",
+      "threads": 1,
+      "whole_ops_s": 263240.79259871907,
+      "peak_ops_s": 265075.5698269939,
+      "endpoint": "FAIL"
+    },
+    {
+      "run": "/root/kdlock-evidence/10.176.26.71/tests/serial-continuation-20261022/mm-block-4-native/block-result.json",
+      "block": 4,
+      "boot_id": "ccc554a0-d84b-4cb5-a923-9abd62c51430",
+      "repeat": 2,
+      "mode": "native",
+      "task": "fault",
+      "threads": 16,
+      "whole_ops_s": 4421061.165416222,
+      "peak_ops_s": 5505558.310222067,
+      "endpoint": "FAIL"
+    },
+    {
+      "run": "/root/kdlock-evidence/10.176.26.71/tests/serial-continuation-20261022/mm-block-5-kd/block-result.json",
+      "block": 5,
+      "boot_id": "bc33af7c-d6d3-4d03-b2f2-dd063338d0b7",
+      "repeat": 2,
+      "mode": "kd",
+      "task": "mmap",
+      "threads": 1,
+      "whole_ops_s": 357799.58956284774,
+      "peak_ops_s": 360142.64302237635,
+      "endpoint": "FAIL"
+    },
+    {
+      "run": "/root/kdlock-evidence/10.176.26.71/tests/serial-continuation-20261022/mm-block-5-kd/block-result.json",
+      "block": 5,
+      "boot_id": "bc33af7c-d6d3-4d03-b2f2-dd063338d0b7",
+      "repeat": 2,
+      "mode": "kd",
+      "task": "mmap",
+      "threads": 16,
+      "whole_ops_s": 31152.81590550967,
+      "peak_ops_s": 40959.5558618826,
+      "endpoint": "FAIL"
+    },
+    {
+      "run": "/root/kdlock-evidence/10.176.26.71/tests/serial-continuation-20261022/mm-block-5-kd/block-result.json",
+      "block": 5,
+      "boot_id": "bc33af7c-d6d3-4d03-b2f2-dd063338d0b7",
+      "repeat": 2,
+      "mode": "kd",
+      "task": "fault",
+      "threads": 1,
+      "whole_ops_s": 262872.8242290806,
+      "peak_ops_s": 264533.11288907257,
+      "endpoint": "FAIL"
+    },
+    {
+      "run": "/root/kdlock-evidence/10.176.26.71/tests/serial-continuation-20261022/mm-block-5-kd/block-result.json",
+      "block": 5,
+      "boot_id": "bc33af7c-d6d3-4d03-b2f2-dd063338d0b7",
+      "repeat": 2,
+      "mode": "kd",
+      "task": "fault",
+      "threads": 16,
+      "whole_ops_s": 4313043.598394306,
+      "peak_ops_s": 5488401.327720929,
+      "endpoint": "FAIL"
+    }
+  ],
+  "groups": [
+    {
+      "task": "mmap",
+      "threads": 1,
+      "mode": "native",
+      "whole_ops_s": {
+        "n": 3,
+        "minimum": 356426.94479664194,
+        "maximum": 379976.64992167224,
+        "median": 358982.6248097705,
+        "cv_pct": 2.889603403917445,
+        "spread_pct": 6.560123944023641
+      },
+      "peak_ops_s": {
+        "n": 3,
+        "minimum": 357799.1326295453,
+        "maximum": 446267.29809916223,
+        "median": 360105.91884670855,
+        "cv_pct": 10.609601853630139,
+        "spread_pct": 24.567262252436475
+      }
+    },
+    {
+      "task": "mmap",
+      "threads": 1,
+      "mode": "kd",
+      "whole_ops_s": {
+        "n": 3,
+        "minimum": 357799.58956284774,
+        "maximum": 375910.525551114,
+        "median": 372506.9970447762,
+        "cv_pct": 2.1313615280600127,
+        "spread_pct": 4.8619049123765254
+      },
+      "peak_ops_s": {
+        "n": 3,
+        "minimum": 360142.64302237635,
+        "maximum": 460764.4105569286,
+        "median": 450508.9993778771,
+        "cv_pct": 10.667776654850568,
+        "spread_pct": 22.335129303411076
+      }
+    },
+    {
+      "task": "mmap",
+      "threads": 16,
+      "mode": "native",
+      "whole_ops_s": {
+        "n": 3,
+        "minimum": 111384.9392938511,
+        "maximum": 113949.92022465149,
+        "median": 113211.23213862652,
+        "cv_pct": 0.955324234694182,
+        "spread_pct": 2.265659407062706
+      },
+      "peak_ops_s": {
+        "n": 3,
+        "minimum": 117759.17764840942,
+        "maximum": 119772.54625578952,
+        "median": 119464.00301761272,
+        "cv_pct": 0.7440363593329576,
+        "spread_pct": 1.68533495992368
+      }
+    },
+    {
+      "task": "mmap",
+      "threads": 16,
+      "mode": "kd",
+      "whole_ops_s": {
+        "n": 3,
+        "minimum": 31152.81590550967,
+        "maximum": 33504.96555032927,
+        "median": 33181.77243403537,
+        "cv_pct": 3.192058333716593,
+        "spread_pct": 7.088679935635202
+      },
+      "peak_ops_s": {
+        "n": 3,
+        "minimum": 40959.5558618826,
+        "maximum": 41813.28510867784,
+        "median": 40959.867972692235,
+        "cv_pct": 0.9755988166551941,
+        "spread_pct": 2.084306637327086
+      }
+    },
+    {
+      "task": "fault",
+      "threads": 1,
+      "mode": "native",
+      "whole_ops_s": {
+        "n": 3,
+        "minimum": 262971.54578795744,
+        "maximum": 263380.69543717115,
+        "median": 263240.79259871907,
+        "cv_pct": 0.06451197513935795,
+        "spread_pct": 0.15542790506538667
+      },
+      "peak_ops_s": {
+        "n": 3,
+        "minimum": 264532.6790558405,
+        "maximum": 268784.9005602362,
+        "median": 265075.5698269939,
+        "cv_pct": 0.710025681184432,
+        "spread_pct": 1.6041544330814779
+      }
+    },
+    {
+      "task": "fault",
+      "threads": 1,
+      "mode": "kd",
+      "whole_ops_s": {
+        "n": 3,
+        "minimum": 262870.60132452025,
+        "maximum": 263032.2932853229,
+        "median": 262872.8242290806,
+        "cv_pct": 0.02879290602538887,
+        "spread_pct": 0.0615095764565395
+      },
+      "peak_ops_s": {
+        "n": 3,
+        "minimum": 264525.77142328094,
+        "maximum": 266225.6956933704,
+        "median": 264533.11288907257,
+        "cv_pct": 0.30163813917615484,
+        "spread_pct": 0.6426130368043251
+      }
+    },
+    {
+      "task": "fault",
+      "threads": 16,
+      "mode": "native",
+      "whole_ops_s": {
+        "n": 3,
+        "minimum": 4334119.044835913,
+        "maximum": 4436260.1399099855,
+        "median": 4421061.165416222,
+        "cv_pct": 1.0233275692786554,
+        "spread_pct": 2.3103298337754703
+      },
+      "peak_ops_s": {
+        "n": 3,
+        "minimum": 5177472.245680358,
+        "maximum": 5505558.310222067,
+        "median": 5482674.570738847,
+        "cv_pct": 2.7754973434768795,
+        "spread_pct": 5.9840514024434555
+      }
+    },
+    {
+      "task": "fault",
+      "threads": 16,
+      "mode": "kd",
+      "whole_ops_s": {
+        "n": 3,
+        "minimum": 3869161.971693619,
+        "maximum": 4313043.598394306,
+        "median": 4220934.167590909,
+        "cv_pct": 4.626334264879296,
+        "spread_pct": 10.516194024272878
+      },
+      "peak_ops_s": {
+        "n": 3,
+        "minimum": 5064122.936810534,
+        "maximum": 5497154.734626481,
+        "median": 5488401.327720929,
+        "cv_pct": 3.7776745391298814,
+        "spread_pct": 7.889944119588724
+      }
+    }
+  ],
+  "paired_ratios": [
+    {
+      "task": "mmap",
+      "threads": 1,
+      "repeat": 0,
+      "whole_kd_native": 0.9803418107969639,
+      "peak_kd_native": 1.0095048445108616
+    },
+    {
+      "task": "mmap",
+      "threads": 1,
+      "repeat": 1,
+      "whole_kd_native": 1.0546636022862648,
+      "peak_kd_native": 1.287773972984978
+    },
+    {
+      "task": "mmap",
+      "threads": 1,
+      "repeat": 2,
+      "whole_kd_native": 0.9967044776956833,
+      "peak_kd_native": 1.0001019815941528
+    },
+    {
+      "task": "mmap",
+      "threads": 16,
+      "repeat": 0,
+      "whole_kd_native": 0.29119610060821216,
+      "peak_kd_native": 0.3500074001581318
+    },
+    {
+      "task": "mmap",
+      "threads": 16,
+      "repeat": 1,
+      "whole_kd_native": 0.3008033739816284,
+      "peak_kd_native": 0.3478273947783932
+    },
+    {
+      "task": "mmap",
+      "threads": 16,
+      "repeat": 2,
+      "whole_kd_native": 0.2751742500899842,
+      "peak_kd_native": 0.3419778333376019
+    },
+    {
+      "task": "fault",
+      "threads": 1,
+      "repeat": 0,
+      "whole_kd_native": 1.0002310040699782,
+      "peak_kd_native": 0.9904786137110696
+    },
+    {
+      "task": "fault",
+      "threads": 1,
+      "repeat": 1,
+      "whole_kd_native": 0.9980632820799406,
+      "peak_kd_native": 0.9999738874131385
+    },
+    {
+      "task": "fault",
+      "threads": 1,
+      "repeat": 2,
+      "whole_kd_native": 0.9986021605314058,
+      "peak_kd_native": 0.9979535762640239
+    },
+    {
+      "task": "fault",
+      "threads": 16,
+      "repeat": 0,
+      "whole_kd_native": 0.8927216653875051,
+      "peak_kd_native": 0.9236592235180012
+    },
+    {
+      "task": "fault",
+      "threads": 16,
+      "repeat": 1,
+      "whole_kd_native": 0.9514622755365636,
+      "peak_kd_native": 1.0617448966941037
+    },
+    {
+      "task": "fault",
+      "threads": 16,
+      "repeat": 2,
+      "whole_kd_native": 0.9755675022397601,
+      "peak_kd_native": 0.9968836979767732
+    }
+  ],
+  "accepted": false,
+  "endpoints_passed": false,
+  "cv_definition": "100 * population standard deviation / arithmetic mean",
+  "p95_status": "DEFERRED",
+  "sampling_cost_status": "DEFERRED",
+  "limits": "Three repetitions are descriptive. Callback/progress overhead remains unisolated. Fault cycles include PTE reset. Seven mutex causes remain unresolved."
+}

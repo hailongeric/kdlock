@@ -1,0 +1,27 @@
+{
+  "scope": "Independent read-only preservation audit, recorded by the sole writer",
+  "reviewer": "/root/host_evidence_review",
+  "reviewer_files_touched": [],
+  "passed": true,
+  "mismatches": 0,
+  "prior_actual_mm": {
+    "manifest_sha256": "cedb89ef8a426a8fa339c5ddaad5dd2cc78633d6453e48ec3e26eaab004d2aba",
+    "archives": 8,
+    "compressed_bytes": 5279073,
+    "regular_files": 902,
+    "directories": 80,
+    "symlinks": 0
+  },
+  "serial_rcuht": {
+    "manifest_sha256": "b7afa0e2000ddb5b2a8bd533c1455cf97a4a8d9b755511f61a826bc4910d4af1",
+    "archives": 6,
+    "compressed_bytes": 3705587,
+    "regular_files": 187,
+    "directories": 56,
+    "symlinks": 72
+  },
+  "inventory_entries": 1297,
+  "duplicate_members": 0,
+  "all_tar_hashes_and_sizes_match": true,
+  "both_inventory_hashes_match": true
+}

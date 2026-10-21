@@ -42,6 +42,18 @@ timing session started. The RCUHT phase diagnostic passed five focused tests but
 refused at 71 threads before workload execution. All seven causes, new qualified
 throughput repetitions and their variance remain unresolved; p95 stays deferred.
 
+The [2026-10-22 continuation](../bench/results/10.176.26.71/tests/serial-continuation-20261022/README.md)
+completed and archived the separate RCUHT OUTER/DIRECT phase diagnostics after
+fresh full admission. Both drained exactly; fixed endpoints still failed at
+110/76 threads. The phase counts are entry witnesses and provide no causal fix.
+The unchanged actual-MM candidate completed six serial boot blocks and 24
+validated, drained cases using the already validated binaries. Every case
+retains its own admission and fixed endpoint; all endpoints failed at 68–70
+threads versus 67. Recovery is restored. All-attempt ranges and CVs are
+[reported](../bench/results/10.176.26.71/tests/serial-continuation-20261022/ACTUAL_MM.md),
+but qualified repetitions and qualified variance remain unresolved (n=0).
+All seven mutex causes remain unresolved; no performance acceptance is declared.
+
 KD has explicit spin, ordinary mutex, rwlock and rwsem APIs. Spin/mutex/rwlock
 workloads compare KD, TCLock and Native; sleeping rwsem compares KD with Native
 because this port has no TCLock sleeping rwsem. KD tracks real lock owners and
