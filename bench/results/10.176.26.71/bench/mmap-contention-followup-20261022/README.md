@@ -1,6 +1,6 @@
 # Pending-admission mmap diagnostic continuation, 2026-10-22
 
-Status: preparing the already reviewed Native/KD 99-Hz kernel-stack pair.
+Status: focused checks passed; ready for the reviewed Native/KD 99-Hz kernel-stack pair.
 Main agent only writes and executes VM work; helpers remain read-only. Start
 from clean `a03204f`. The same VM was freshly verified idle on recovery
 `6.1.159-kdclobber2`, boot `68924d08-9913-4e43-91f8-3643e3331c09`, with exactly
@@ -52,3 +52,31 @@ One sampled pair supplies intrusive diagnostic evidence, not accepted plain
 throughput, repetition variance or an isolated protocol-cost proof. All 24 prior
 timings remain rejected and all seven original causes remain unresolved unless
 new demonstrated evidence resolves a specific claim.
+
+## Focused checks before transition
+
+Synchronization of `601541e` copied 18 changed files, verified all 4,060 tracked
+hashes and deleted no project files. The frozen `checks-1` contains 198 source
+files, including private daemon `.inc` files and both admission helper/test
+files. In the same recovery boot, both basic C programs and all five directly
+affected pending-admission tests passed; dependency validation passed. The
+daemon-policy test's deliberately failed children are expected negative cases.
+No full suite ran. The unchanged guest profiler's four and serial driver's ten
+focused tests remain the separately recorded preceding-stage evidence.
+
+The new checks result SHA-256 is
+`fbcf9f3b7ba530280781f3616925bca49c830e3ae03cc74b657f812daff82836`.
+Exact baseline modules, idle state, recovery preservation and no fault-pattern
+matches were rechecked before archiving. Local evidence is under
+`bench/results/10.176.26.71/raw/bench/mmap-contention-followup-20261022/`;
+guest evidence is under the corresponding
+`/root/kdlock-evidence/10.176.26.71/bench/mmap-contention-followup-20261022/`.
+The `pretransition/archives/archives.json` SHA-256 is
+`827bba69b1d461e1e086e596039820942a38364d9fa3e32c4c99ae1e76219cd0`;
+its two archives total 519,757 bytes. All 39 earlier archives remain separate.
+
+Read-only protocol review found no blocker to the first attempt. On a guest
+refusal, `ADMISSION` alone does not prove no payload loaded: retain the exact
+trace and verify launch state plus fresh drain. Resume a returned recorder only
+through its existing finish step and original endpoint; never repeat a
+completed profile. All source files stay frozen while the pair controller runs.
