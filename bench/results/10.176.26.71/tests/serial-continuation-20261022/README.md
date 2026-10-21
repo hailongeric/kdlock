@@ -60,9 +60,23 @@ worker-exit snapshot. OUTER admission observations 72 then 67 and DIRECT
 observations 68 then 67 remain separate. The later quiet captures never replace
 either failed endpoint.
 
+Independent read-only archive review passed: six archives contain 187 regular
+files, 56 directories and 72 preserved symlinks. All archive hashes, sizes,
+inventory types and symlink targets match. The manifest SHA-256 is
+`b7afa0e2000ddb5b2a8bd533c1455cf97a4a8d9b755511f61a826bc4910d4af1`.
+All 340 baseline and 344 current RCUHT input bindings match their original
+archives. The shared frozen-input manifest SHA-256 is
+`df8b56e19893cb2e42d92bad41de8876ff4b1b6a915b2fe67336ba761a99ea73`.
+Raw evidence: `raw/tests/serial-continuation-20261022/rcuht-archives-1`.
+
+The local endpoint request began 1,500 ns / 669 ns after observing SSH exit;
+request-to-return took 768.117 ms / 717.593 ms. These are controller chronology,
+not instantaneous remote sampling. Neither arm supplies rerun variance.
+
 ## Actual-MM preparation
 
-A separate measure-only wrapper is under review. It keeps the validated
+A separate measure-only wrapper at `78a1b04` passed two basic programs and ten
+directly affected VM tests. It keeps the validated
 preparation manifest and all frozen payload/client/runner files unchanged,
 reuses completed both-mode correctness, enforces the documented boot/case
 order, and gives each session its own full admission and original endpoint.
@@ -70,3 +84,15 @@ The API correctness suite will not be rerun without changed inputs or new
 failures. Readers stay local, writers stay on their original task, shared-mm
 untouched mapping stays separate from independent-mm fault cycles, and
 unsupported TCLock MM workloads remain excluded.
+
+The source-side coordinator passed read-only review and four focused VM control
+tests. It records every child command and PID, preserves unknown drain after a
+timeout, waits for a changed boot UUID after a reboot request, and never resends
+an ambiguous request. Copied archives must match inventory, boot and base-path
+bindings as well as every tar hash. A refreshed recovery health check confirms
+the same boot and exact 73 modules before timing. The serial wrapper and all
+683 frozen input bindings remain unchanged. The next stage is six distinct
+boot blocks in native/KD, KD/native, native/KD order, each with separate
+`mmap/1`, `mmap/16`, `fault/1`, `fault/16` sessions. Every admission uses the
+original full gate. Failed fixed endpoints remain rejected; later observations
+can only admit a distinct new session.
