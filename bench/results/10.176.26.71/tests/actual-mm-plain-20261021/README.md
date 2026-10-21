@@ -1,6 +1,6 @@
 # Actual-MM plain workload validation, 2026-10-21
 
-Status: implementation prepared; VM build and correctness validation pending.
+Status: preparation passed; both-mode live correctness validation pending.
 No timing acceptance. New p95 collection remains deferred. All seven mutex
 regression causes remain unresolved.
 
@@ -36,3 +36,20 @@ image/default needs replacement. Recovery diagnostics must drain before a
 recorded candidate transition. New binaries must pass in both modes before any
 timing. A later recovery boot receives a new identity and cannot reuse an old
 same-boot receipt.
+
+## Preparation 1
+
+Committed source `7c517e1` passed the serial guest preparation. Dependency check,
+two basic C programs and six focused Python tests passed. The writer, Native-only
+fault and actual-mm API payloads built against the captured candidate kernel;
+six clients built with warnings as errors. The Native-only fault module has no
+external provider dependency; its only KD imports are the builtin actual-mm
+read-lock adapter. No module was loaded and the recovery boot remained idle
+with the exact 73 modules. [Preparation receipt](prepare-1.json).
+
+The new `rcuht_boundary.py` diagnostic keeps the retained original synthetic
+runner/provider/payload and adds four read-only snapshots around original
+warmup and measurement. Two-worker OUTER and DIRECT sessions are serial; the
+intervening gap is retained separately. Execution classes remain unchanged,
+entry witnesses do not become returned-body counts, and no diagnostic rate is
+eligible for acceptance. Its focused tests and execution are pending.
