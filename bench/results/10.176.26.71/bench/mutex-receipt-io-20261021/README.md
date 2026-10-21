@@ -1,6 +1,7 @@
 # Bounded guest receipt-I/O diagnostic, 2026-10-21
 
-Status: implementation and protocol review in progress; no live run yet.
+Status: protocol review and serial basic/affected validation passed; live control
+pending.
 New p95 measurements are deferred and missing p95 is not a throughput gate.
 Existing latency and baseline artifacts remain unchanged. All seven mutex
 causes remain unresolved under the original correctness, matched-work,
@@ -51,3 +52,21 @@ Separate read-only work prepares an RCUHT execution-class audit and distinct
 actual-mmap/fault comparison plans. Experimental-kernel execution stays
 separately scheduled after recovery diagnostics drain, in this same VM with
 the recovery path preserved.
+
+## Focused validation
+
+Implementation `aba2dbf` synchronized while idle, verifying all 3,991 tracked
+hashes and changing 16 files without deletion. `checks-1` passed 49 checks/programs
+serially from 107 frozen sources: two rebuilt basic programs, eleven receipt
+observer tests, five phase-accounting tests, nine trigger tests, four boundary
+protocol tests, twelve pre-warmup tests and six recovery-gate tests. Sources
+remained unchanged and final idle passed.
+
+Read-only review identified and verified repairs for observer clock failures
+changing original write behavior and optional export failures skipping the
+endpoint. Tests inject those failures, preserve original effects/exceptions,
+check logical text/binary byte counts, bounded overflow/expiry, excluded paths,
+normal-drain-before-export and EOF/endpoint-before-trace-validation order.
+An uncertain guest still cannot produce a fabricated endpoint or drain.
+The reviewer found no remaining blocker for this focused live diagnostic,
+touched no files and ran no tests, builds or remote actions.
