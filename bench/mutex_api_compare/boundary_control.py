@@ -91,7 +91,14 @@ def main():
             (out/(label+'.json')).write_text(json.dumps(data['host'], indent=2)+'\n')
             return reply, receipt['captures'][-1]['host_gate']
 
-        initial, gate = capture('preflight')
+        preflight_began = time.monotonic()
+        for index, offset in enumerate((0, 15, 30, 60, 120)):
+            time.sleep(max(0, preflight_began+offset-time.monotonic()))
+            initial, gate = capture('preflight-'+str(index))
+            print(json.dumps(dict(preflight=index, offset_s=offset,
+                task_count=len(initial['ack']['remote']['host']['qemu'][0]['tasks']), host_gate=gate)), flush=True)
+            if gate['passed']:
+                break
         assert gate['passed'], 'initial full host gate refused: '+str(gate['error'])
         host = initial['ack']['remote']['host']
         launch = '''import json,subprocess,sys
