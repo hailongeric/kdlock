@@ -48,7 +48,8 @@ class Stream:
             for line in self.proc.stdout:
                 received = stamp()
                 if self.mixed_output:
-                    data = json.loads(line.removeprefix('KD_PHASE ')) if line.startswith('KD_PHASE ') else dict(event='stdout', text=line)
+                    prefix = next((s for s in ('KD_PHASE ', 'KD_BOUNDARY ') if line.startswith(s)), None)
+                    data = json.loads(line.removeprefix(prefix)) if prefix else dict(event='stdout', text=line)
                 else:
                     data = json.loads(line)
                 row = dict(received=received, remote=data)

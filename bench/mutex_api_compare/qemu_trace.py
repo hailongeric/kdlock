@@ -1,17 +1,21 @@
 #!/usr/bin/env python3
 """Short read-only QEMU lifetime/accounting trace; no performance acceptance.
 
-Run on the existing benchmark host. stdin accepts clock/phase markers only.
+Run on the existing benchmark host. stdin accepts clock/phase markers and an
+optional hash-bound full host capture, with an independent whole-call deadline.
 Samples cannot see lifetimes wholly between scans or departed accounting tails.
 The observer records its own CPU cost and read brackets; it is intrusive evidence.
 """
 import argparse
+import contextlib
 import hashlib
+import io
 import json
 import os
 from pathlib import Path
 import resource
 import select
+import signal
 import sys
 import time
 
@@ -42,8 +46,14 @@ def main():
     p.add_argument('--cmdline-sha256', required=True)
     p.add_argument('--duration', type=float, default=45)
     p.add_argument('--interval', type=float, default=.5)
+    p.add_argument('--full-capture', action='store_true', help='Allow the established read-only full host capture on request')
     a = p.parse_args()
     assert 1 <= a.duration <= 600 and .25 <= a.interval <= 5
+    capture_source = None
+    if a.full_capture:
+        capture_path = Path('/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/bench/mutex32-native-tclock-20261020/capture-host.py')
+        capture_source = capture_path.read_bytes()
+        assert hashlib.sha256(capture_source).hexdigest() == 'b0ad0d1854a0f0d60487fa9afea4d044aacf7b9fa86ec3c700d66a150cd4be1b'
     proc = Path('/proc')/str(a.pid)
     command = (proc/'cmdline').read_bytes()
     assert hashlib.sha256(command).hexdigest() == a.cmdline_sha256
@@ -92,6 +102,30 @@ def main():
                 end_reason = 'stdin_eof'
                 break
             message = json.loads(line)
+            if set(message) == {'capture'}:
+                assert capture_source is not None and isinstance(message['capture'], str) and len(message['capture']) <= 100
+                capture_began, capture_cpu = stamp(), time.process_time_ns()
+                output = io.StringIO()
+                scope = {}
+                def capture_timeout(signum, frame):
+                    raise TimeoutError('full host capture exceeded 15 seconds')
+                old_alarm = signal.signal(signal.SIGALRM, capture_timeout)
+                signal.setitimer(signal.ITIMER_REAL, 15)
+                try:
+                    with contextlib.redirect_stdout(output):
+                        exec(compile(capture_source, str(capture_path), 'exec'), scope)
+                    result = dict(host=json.loads(output.getvalue()), error=None)
+                except Exception as error:
+                    result = dict(host=None, error=repr(error), partial_stdout=output.getvalue())
+                finally:
+                    signal.setitimer(signal.ITIMER_REAL, 0)
+                    signal.signal(signal.SIGALRM, old_alarm)
+                    if 's' in scope:
+                        scope['s'].close()
+                emit('capture', capture=message['capture'], capture_began=capture_began,
+                     capture_finished=stamp(), capture_cpu_ns=time.process_time_ns()-capture_cpu,
+                     capture_source_sha256=hashlib.sha256(capture_source).hexdigest(), **result)
+                continue
             assert set(message) == {'marker'} and isinstance(message['marker'], str) and len(message['marker']) <= 100
             phase = message['marker']
             emit('marker', marker=phase)

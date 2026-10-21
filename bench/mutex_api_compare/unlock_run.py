@@ -7,12 +7,14 @@ Neither mode changes admission or the frozen original provider/workload.
 """
 import argparse
 from datetime import datetime, timezone
+import fcntl
 import importlib.metadata
 import json
 import os
 from pathlib import Path
 import re
 import select
+import secrets
 import shutil
 import sys
 import time
@@ -43,9 +45,13 @@ def main():
     p.add_argument('--source-commit', required=True)
     p.add_argument('--phase-single-outer', action='store_true',
                    help='Intrusive single-session host-worker diagnostic with stdin phase acknowledgements')
+    p.add_argument('--setup-boundary-probe', action='store_true',
+                   help='Preserve one warmup, hold at client measurement delivery, validate the full gate, then retire without timing')
     a = p.parse_args()
     if a.phase_single_outer and a.mode != 'timing':
         p.error('--phase-single-outer requires timing and every existing correctness/environment gate')
+    if a.setup_boundary_probe and not a.phase_single_outer:
+        p.error('--setup-boundary-probe requires --phase-single-outer and every timing prerequisite')
     phase_sequence = 0
     phase_error = ValueError
 
@@ -86,6 +92,7 @@ def main():
     # A command may have succeeded before the caller updates its loaded/bound
     # flag. Losing coordination at that boundary must retain uncertain state.
     phase_error = lambda message: api.Failure('OBSERVER_FAILED', message, unsafe=True)
+    boundary_protocol = load(ROOT/'bench/mutex_api_compare/boundary_protocol.py', 'boundary_protocol') if a.setup_boundary_probe else None
     candidate = control.validate(scheduler, a.inputs, a.inputs_sha256)
     checks, task_check = read(a.unit_checks), read(a.task_check)
     require(checks['passed'] and checks['final_idle'] and checks['source_unchanged'] and
@@ -207,8 +214,91 @@ def main():
         records=[], started_ns=time.time_ns(), unit_checks_sha256=sha(a.unit_checks),
         task_check_sha256=sha(a.task_check), scope='Separately named workload diagnostic; original provider.')
     save(out/'result.json', receipt)
+    if a.setup_boundary_probe:
+        shutil.copyfile(ROOT/'bench/mutex_api_compare/boundary_protocol.py', out/'boundary_protocol.py')
+        receipt.update(setup_boundary_probe=True, measurement_contract='ONE_ORIGINAL_WARMUP_THEN_GATE_WAIT_NO_TIMING')
+        save(out/'result.json', receipt)
+
+    class BoundaryObserved(Exception):
+        pass
 
     class MatchedSession(api.SyscallSession):
+        def boundary_state(self):
+            require(self.client is not None and self.client.poll() is None and self.control_bound and
+                    self.loaded_kd and self.loaded_source and self.daemon is None,
+                    'prepared client/source/provider or stopped translator differs')
+            expected_modules = sorted(transition['modules']+['kdlock_km', 'real_api'])
+            require(sorted(line.split()[0] for line in Path('/proc/modules').read_text().splitlines()) == expected_modules,
+                    'prepared runtime module set differs')
+            # The frozen mutex payload has no quiescent sysfs attribute. Its
+            # existing privileged RA_DRAIN checks the exact physical mutex;
+            # the client's binding and original owner descriptor stay alive.
+            fd = os.open('/dev/real_api_control', os.O_RDONLY | os.O_CLOEXEC)
+            try:
+                require(fcntl.ioctl(fd, 0x4162) == 0, 'prepared physical mutex is not idle')
+            finally:
+                os.close(fd)
+            publication = self.publication()
+            require(publication['source']['frames'] == publication['source']['writers'] == 0,
+                    'prepared frame/writer remains')
+            params = Path('/sys/module/kdlock_km/parameters')
+            return dict(physical_idle=True, publication=publication, client_pid=self.client.pid,
+                calls=int((api.PARAM/'calls').read_text()),
+                counters={n: int((params/n).read_text()) for n in
+                    ('bench_jit_bodies', 'bench_jit_completions', 'address_guard_count')})
+
+        def hold_boundary(self):
+            def observed_state(label):
+                try:
+                    state = self.boundary_state()
+                    self.record.setdefault('boundary_states', {})[label] = state
+                    return state
+                except (api.Failure, ValueError, KeyError, OSError) as error:
+                    self.record.setdefault('boundary_states', {})[label+'-error'] = repr(error)
+                    self.save()
+                    raise api.Failure('UNDRAINED', 'prepared boundary state is uncertain', unsafe=True) from error
+
+            before = observed_state('before')
+            began = time.monotonic_ns()
+            token = secrets.token_hex(8)
+            request = dict(event='boundary', boundary=1, boundary_token=token, real_ns=time.time_ns(), mono_ns=began,
+                environment=environment, topology=topology,
+                contract='ONE_ORIGINAL_WARMUP_THEN_GATE_WAIT_NO_TIMING')
+            try:
+                print('KD_BOUNDARY '+json.dumps(request), flush=True)
+                reply = boundary_protocol.validate_reply(boundary_protocol.receive(sys.stdin.fileno()), token)
+            except (ValueError, KeyError, TypeError, OSError) as error:
+                raise phase_error('boundary observer coordination failed; retain prepared state') from error
+            after = observed_state('after')
+            if before != after:
+                self.save()
+                raise api.Failure('UNDRAINED', 'prepared lifetime, image or exact drained counters changed during wait', unsafe=True)
+            fresh_env = dict(boot_id=Path('/proc/sys/kernel/random/boot_id').read_text().strip(),
+                cmdline=Path('/proc/cmdline').read_text().strip(),
+                preemption=Path('/sys/kernel/debug/sched/preempt').read_text().strip(),
+                packages={n: importlib.metadata.version(n) for n in ('miasm', 'future', 'pyparsing', 'pyelftools')},
+                python=sys.executable, snapshot_tag=os.environ['KDLOCK_SNAPSHOT_TAG'],
+                collector_topology=syn.collector_topology(63))
+            fresh_topology = syn.runtime.capture_topology(list(range(60)))
+            boundary_host = reply['host_state']
+            age = (datetime.now(timezone.utc)-datetime.fromisoformat(boundary_host['captured_utc'])).total_seconds()
+            require(0 <= age <= 300 and boundary_host['pins_verified'] and boundary_host['snapshot_listed'] and
+                    boundary_host['recovery_snapshot'] == os.environ['KDLOCK_SNAPSHOT_TAG'],
+                    'fresh actual boundary snapshot confirmation required')
+            try:
+                comparison = followup.compare_environment(scheduler.same_environment, transition,
+                    read(control.ORIGINAL/'matrix/host-state.json'), boundary_host, old_env, fresh_env,
+                    read(control.ORIGINAL/'matrix/topology.json'), fresh_topology)
+                gate = dict(passed=True, comparison=comparison)
+            except ValueError as error:
+                gate = dict(passed=False, error=str(error))
+            self.record.update(measurement_skipped=True, boundary=dict(before=before, after=after,
+                gate=gate, host=boundary_host, environment=fresh_env, topology=fresh_topology,
+                observations=reply['observations'], began_ns=began, finished_ns=time.monotonic_ns(),
+                contract=request['contract'], scope='Feasibility only; post-warmup delay changes the original timing contract.'))
+            self.save()
+            raise BoundaryObserved()
+
         def prepare(self):
             phase('prepare', 'begin')
             super().prepare()
@@ -220,8 +310,12 @@ def main():
             phase('prepare', 'end')
 
         def tell(self, action, timeout=180, label=None):
+            if a.setup_boundary_probe and action == 'measure':
+                return self.hold_boundary()
             phase('client-'+(label or action), 'begin')
             result = super().tell(action, timeout, label)
+            if a.setup_boundary_probe and action == 'warmup':
+                self.record['boundary_warmup'] = result
             phase('client-'+(label or action), 'end')
             return result
 
@@ -239,7 +333,13 @@ def main():
 
         def measure(self):
             phase('measure-accounting', 'begin')
-            result = super().measure()
+            try:
+                result = super().measure()
+            except BoundaryObserved:
+                require(a.setup_boundary_probe and 'measurement' not in self.record,
+                        'boundary probe unexpectedly executed timing')
+                require(self.tell('check', label='check-after-boundary')['check'], 'post-boundary business check failed')
+                result = None
             phase('measure-accounting', 'end')
             return result
 
@@ -311,7 +411,10 @@ def main():
             receipt['records'].append(session.record)
             receipt['completed'] += 1
             save(out/'result.json', receipt)
-            print('FINISH', spec['name'], 'returns', session.record['jit_completions'], flush=True)
+            if a.setup_boundary_probe:
+                print('FINISH', spec['name'], 'timing skipped; boundary gate', session.record['boundary']['gate']['passed'], flush=True)
+            else:
+                print('FINISH', spec['name'], 'returns', session.record['jit_completions'], flush=True)
         require(len({r['actual_lock_cacheline_offset'] for r in receipt['records']}) == 1,
                 'loaded mutex cacheline placement differed between arms')
         phase('final-verification', 'begin')
@@ -321,7 +424,9 @@ def main():
         scheduler.verify(harness)
         control.validate(scheduler, a.inputs, a.inputs_sha256)
         phase('final-verification', 'end')
-        receipt.update(passed=True, final_idle=True)
+        receipt.update(passed=(all(r['boundary']['gate']['passed'] for r in receipt['records'])
+                               if a.setup_boundary_probe else True),
+                       diagnostic_completed=True, final_idle=True)
     except BaseException as error:
         receipt['error'] = repr(error)
         raise
