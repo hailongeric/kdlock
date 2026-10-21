@@ -121,12 +121,18 @@ archives passed 3,521 inert checks; all seven causes and acquisition latency sta
 unresolved. Later worker turnover does not repair the failed endpoint.
 
 The subsequent [worker-creation controls](../bench/results/10.176.26.71/bench/qemu-workers-20261021/README.md)
-are in progress. Host-only observation and the recovery snapshot query stayed
+completed. Host-only observation and the recovery snapshot query stayed
 at 67 tasks; two guest setup/no-op controls each reached 76 before any explicit
 file write or workload. Synchronization and basic build/test phases have
 separate receipts, including retained preflight refusals. This narrows the host
 interference investigation but does not attribute historical worker activity,
-relax the original gate, or resolve any of the seven regressions.
+relax the original gate, or resolve any of the seven regressions. One frozen
+OUTER diagnostic completed 24,489,984 operations/167,972 returned bodies and
+exact retirement. All six observed extra workers were born before measurement;
+four interior samples had zero worker counter deltas, with boundary activity
+unattributed. Runtime count was still 73. Collection separately reached 78.
+Archives passed 2,340 inert checks. The VM is drained; the single intrusive
+rate is unaccepted, and all seven causes/acquisition latency remain open.
 
 The earlier [pipecap owner observation](../bench/results/10.176.26.71/bench/pipecap-owner-20261021/README.md)
 retains 24 drained one-worker sessions with unchanged binaries and no returned

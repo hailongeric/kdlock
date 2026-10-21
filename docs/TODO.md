@@ -114,10 +114,14 @@ separate from these frozen-provider workload results.
 
 Focused [QEMU phase controls](../bench/results/10.176.26.71/bench/qemu-workers-20261021/README.md)
 now reproduce extra workers during guest setup/no-op activity before a workload.
-Complete the separately bracketed workload/collection diagnosis while keeping
-the original thread gate, frozen inputs and correctness prerequisites. Observer
-overhead, missing lifetime tails and clock uncertainty remain explicit. No
-historical endpoint or regression is accepted by these controls.
+The separately bracketed workload/collection diagnosis is complete with the
+original gate, frozen inputs and correctness prerequisites preserved. All six
+observed workload workers were born before measurement, but the runtime count
+still fails at 73 and boundary activity remains unattributed. Three archives
+passed 2,340 inert checks. Observer overhead, unsampled lifetimes, delayed guest
+I/O and indirect interference remain unresolved. No historical endpoint or
+regression is accepted by these controls; causal unlock-path attribution and
+acquisition latency remain open.
 
 The entry-inlining experiment passed focused correctness checks but did not
 resolve the seven mutex losses in its separate 120-session comparison. It is
