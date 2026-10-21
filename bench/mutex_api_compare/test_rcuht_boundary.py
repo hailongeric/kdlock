@@ -31,14 +31,15 @@ class BoundaryTests(unittest.TestCase):
             with self.assertRaises(ValueError):diagnostic.predecessor_identity(previous,expected,records)
 
     def test_endpoint_requires_immediate_bound_capture(self):
-        endpoint=dict(passed=True,immediate=True,result_sha256='r',host_sha256='h')
+        endpoint=dict(passed=True,checked=True,immediate=True,result_sha256='r',host_sha256='h')
         controller=dict(passed=True,guest_returncode=0,host_returncode=0,result_fetch_returncode=0,
             guest_result_path='/run/result.json',guest_result_sha256='r',host_sha256='h',
             guest_exit_observed_monotonic_ns=10,host_capture_started_monotonic_ns=11,
             host_capture_finished_monotonic_ns=12)
         host=dict(pins_verified=True,snapshot_listed=True)
         diagnostic.endpoint_link(endpoint,controller,host,'r','h','/run/result.json')
-        for target,key,value in ((0,'passed',False),(0,'immediate',False),(0,'result_sha256','wrong'),
+        diagnostic.endpoint_link(dict(endpoint,passed=False),controller,host,'r','h','/run/result.json')
+        for target,key,value in ((0,'checked',False),(0,'immediate',False),(0,'result_sha256','wrong'),
             (1,'host_sha256','wrong'),(1,'guest_result_path','/old/result.json'),
             (1,'host_capture_started_monotonic_ns',9),(1,'host_capture_started_monotonic_ns',2_000_000_000),
             (1,'host_capture_finished_monotonic_ns',9),(2,'pins_verified',False),(2,'snapshot_listed',False)):

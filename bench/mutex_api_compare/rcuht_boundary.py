@@ -64,7 +64,7 @@ def selected_plan(order, arm=None):
 
 
 def endpoint_link(endpoint, controller, host, result_hash, host_hash, result_path):
-    require(endpoint['passed'] and endpoint['immediate'] and controller['passed'] and
+    require(endpoint['checked'] and endpoint['immediate'] and controller['passed'] and
         controller['guest_returncode']==controller['host_returncode']==controller['result_fetch_returncode']==0 and
         controller['guest_result_path']==result_path and
         endpoint['result_sha256']==controller['guest_result_sha256']==result_hash and
@@ -160,7 +160,7 @@ def main():
     p.add_argument('--arm', choices=('baseline-kd', 'public-kd'),
                    help='one session per process, with fresh admission and an external immediate endpoint')
     p.add_argument('--predecessor', type=Path,
-                   help='completed OUTER directory with its original passing endpoint; required for single DIRECT')
+                   help='completed OUTER directory with its original checked endpoint; required for single DIRECT')
     a = p.parse_args()
     require(os.geteuid() == 0 and os.uname().release == '6.1.159-kdclobber2' and
             os.environ.get('KDLOCK_RECOVERY_CONFIRMED') == '1' and
@@ -228,18 +228,26 @@ def main():
                 previous['order'] == [['rcuht', 2, 0, 'baseline-kd']] and
                 previous['transition_sha256'] == a.transition_sha256 and
                 previous['original_inputs'] == str(prepared) and
-                endpoint['passed'] and endpoint['immediate'] and
+                endpoint['checked'] and endpoint['immediate'] and
                 endpoint['result_sha256'] == sha(a.predecessor/'result.json') and
                 endpoint['host_sha256'] == sha(a.predecessor/'host-endpoint.json'),
                 'OUTER predecessor or original endpoint differs')
         # Re-evaluate the preserved endpoint, never trust its pass label alone.
-        compare_environment(scheduler.same_environment, transition,
-            scheduler.load(prepared/'matrix/host-state.json'),
-            scheduler.load(a.predecessor/'host-endpoint.json'),
-            scheduler.load(prepared/'matrix/environment.json'),
-            scheduler.load(a.predecessor/'matrix/environment.json'),
-            scheduler.load(prepared/'matrix/topology.json'),
-            scheduler.load(a.predecessor/'matrix/topology.json'))
+        try:
+            compare_environment(scheduler.same_environment, transition,
+                scheduler.load(prepared/'matrix/host-state.json'), host_endpoint,
+                scheduler.load(prepared/'matrix/environment.json'),
+                scheduler.load(a.predecessor/'matrix/environment.json'),
+                scheduler.load(prepared/'matrix/topology.json'),
+                scheduler.load(a.predecessor/'matrix/topology.json'))
+        except ValueError as error:
+            require(endpoint['passed'] is False and endpoint.get('error')==repr(error),
+                    'original rejected endpoint was relabelled')
+        else:
+            require(endpoint['passed'] is True, 'original passing endpoint was relabelled')
+        # A completed rejected observation remains rejected. The next distinct
+        # diagnostic arm may run only through its own fresh full admission;
+        # it never replaces or retroactively accepts this predecessor.
         predecessor = {str(a.predecessor/name): sha(a.predecessor/name)
                        for name in ('result.json', 'endpoint.json', 'host-endpoint.json', 'controller.json',
                                     'matrix/environment.json','matrix/topology.json','matrix/records.json','matrix/plan.json')}
@@ -270,6 +278,7 @@ def main():
                    measured_collection='d21a1e3', outer_revision='752fec1',
                    planned=len(plan), order=plan, original_inputs=str(prepared),
                    single_arm=a.arm, predecessor=predecessor,
+                   predecessor_endpoint_passed=endpoint['passed'] if predecessor else None,
                    instrumentation='JOINED_BOUNDARY_EXISTING_COUNTERS', same_boot=False,
                    p95_status='DEFERRED', seven_mutex_causes='UNRESOLVED',
                    scope='New recovery boot; original immutable benchmark inputs. '

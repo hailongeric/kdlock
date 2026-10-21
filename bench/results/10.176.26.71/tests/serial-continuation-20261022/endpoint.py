@@ -18,7 +18,7 @@ def main():
     boundary=runpy.run_path(str(ROOT/'bench/mutex_api_compare/rcuht_boundary.py'))
     load=scheduler['load'];sha=scheduler['sha'];result=load(out/'result.json')
     controller=load(out/'controller.json');original=Path(result['original_inputs'])/'matrix'
-    answer=dict(passed=False,immediate=controller.get('immediate',False),
+    answer=dict(passed=False,checked=False,immediate=controller.get('immediate',False),
         result_sha256=sha(out/'result.json'),host_sha256=sha(out/'host-endpoint.json'),
         controller_sha256=sha(out/'controller.json'),driver_sha256=sha(Path(__file__)))
     try:
@@ -26,8 +26,9 @@ def main():
         assert controller['passed'] and controller['immediate'] and controller['host_sha256']==answer['host_sha256']
         for name,digest in scheduler['REPLAY_ENVIRONMENT_SHA256'].items():assert sha(original/name)==digest
         host=load(out/'host-endpoint.json')
-        boundary['endpoint_link'](dict(answer,passed=True),controller,host,
+        boundary['endpoint_link'](dict(answer,checked=True),controller,host,
             answer['result_sha256'],answer['host_sha256'],str(out/'result.json'))
+        answer['checked']=True
         answer['comparison']=recovery['compare_environment'](scheduler['same_environment'],
             load(out/'transition.json'),load(original/'host-state.json'),host,
             load(original/'environment.json'),load(out/'matrix/environment.json'),
