@@ -89,7 +89,7 @@ class Stream:
 
 def main():
     p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument('--mode', choices=('host', 'guest'), required=True)
+    p.add_argument('--mode', choices=('host', 'guest', 'guest-setup', 'sync', 'basic'), required=True)
     p.add_argument('--output', type=Path, required=True)
     a = p.parse_args()
     out = a.output.resolve()
@@ -120,7 +120,40 @@ def main():
         mark = lambda value: observer.request('marker', value, 'marker')
         mark('host-only-idle')
         time.sleep(8)
-        if a.mode == 'host':
+        if a.mode in ('sync', 'basic'):
+            if a.mode == 'sync':
+                commands = [('sync-dry-run', ['python3', str(ROOT/'tools/vm/sync_to_vm.py'), '--dry-run']),
+                            ('sync-write', ['python3', str(ROOT/'tools/vm/sync_to_vm.py')])]
+            else:
+                code = '''import os,sys,subprocess
+from pathlib import Path
+assert os.uname().release == '6.1.159-kdclobber2'
+assert Path('/proc/sys/kernel/random/boot_id').read_text().strip() == '88449cfc-cea9-4647-a294-bc601e372146'
+sys.path.insert(0,'/root/host_fs/kdlock/bench/spin_cacheline')
+import bench_runtime as r
+r.idle()
+subprocess.run(['make','-B','-C','/root/host_fs/kdlock/tests/unit','run'],check=True)
+r.idle()
+'''
+                command = shlex.join(['env', 'PYTHONDONTWRITEBYTECODE=1', 'LC_ALL=C',
+                    'PATH=/root/kdlock-translation-venv-20261019/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin',
+                    '/root/kdlock-translation-venv-20261019/bin/python3', '-c', code])
+                commands = [('basic-build-test', SSH+['-p', '2222', 'root@10.176.26.71', command])]
+            for label, argv in commands:
+                mark(label+'-before')
+                record = dict(label=label, argv=argv, started=stamp())
+                receipt['commands'].append(record)
+                save()
+                with (out/(label+'.stdout')).open('xb') as stream, (out/(label+'.stderr')).open('xb') as error:
+                    proc = subprocess.Popen(argv, stdin=subprocess.DEVNULL, stdout=stream, stderr=error, cwd=ROOT)
+                    record['pid'] = proc.pid
+                    code = proc.wait(timeout=60)
+                record.update(exit_code=code, finished=stamp())
+                mark(label+'-after')
+                assert code == 0
+                time.sleep(3)
+            time.sleep(5)
+        elif a.mode == 'host':
             mark('snapshot-query-before')
             argv = SSH+['eric@10.176.26.71', 'sudo -n python3 -']
             record = dict(label='existing-capture-host', argv=argv, started=stamp())
@@ -143,7 +176,9 @@ def main():
             guest = Stream(out, 'guest', SSH+['-p', '2222', 'root@10.176.26.71', command], receipt, save)
             guest.until('ready')
             mark('guest-ssh-setup-after')
-            for index, action in enumerate(('clock', 'noop', 'tmpfs-write', 'tmpfs-read', 'disk-write', 'disk-read', 'cleanup', 'clock')):
+            actions = (('clock', 'noop', 'clock', 'noop', 'clock', 'noop', 'clock') if a.mode == 'guest-setup' else
+                       ('clock', 'noop', 'tmpfs-write', 'tmpfs-read', 'disk-write', 'disk-read', 'cleanup', 'clock'))
+            for index, action in enumerate(actions):
                 mark(str(index)+'-'+action+'-before')
                 guest.request('action', action, 'end')
                 mark(str(index)+'-'+action+'-after')

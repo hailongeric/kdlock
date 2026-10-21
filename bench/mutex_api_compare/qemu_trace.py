@@ -24,7 +24,8 @@ def read(path):
 
 
 def stamp():
-    return dict(real_ns=time.time_ns(), mono_ns=time.monotonic_ns())
+    return dict(real_ns=time.time_ns(), mono_ns=time.monotonic_ns(),
+                boot_ns=time.clock_gettime_ns(time.CLOCK_BOOTTIME))
 
 
 def identity(stat):
