@@ -103,9 +103,13 @@ gate. All seven causes remain unresolved. The subsequent
 [isolated general-unlock control](../bench/results/10.176.26.71/bench/pipecap-unlock-20261021/README.md)
 is implemented and passed basic/affected, ELF, live owner/ACK and four serial
 syscall correctness checks. Its single timing gate failed at 68 versus 67 host
-tasks, before any session. The three paired repetitions and their variance
-remain unrun; no admission, ownership or environment check may be relaxed to
-complete them. The allocator failure and identical-binary successful retry stay
+tasks, before any session. The later
+[paired follow-up](../bench/results/10.176.26.71/bench/pipecap-unlock-followup-20261021/README.md)
+waited for a qualifying gate and completed all six planned sessions, retaining
+all paired rates and variance. Its immediate endpoint failed at 120 versus 67
+tasks, with changing returned fractions and one mixed-class pair. All seven
+causal resolutions remain open; no admission, ownership or environment check
+may be relaxed. The allocator failure and identical-binary successful retry stay
 separate from these frozen-provider workload results.
 
 The entry-inlining experiment passed focused correctness checks but did not

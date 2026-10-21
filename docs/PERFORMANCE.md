@@ -104,10 +104,21 @@ syscall correctness sessions. Both 16-worker arms returned JIT bodies and all
 four sessions retired exactly. The first task-probe load failed before init on
 a reserved per-CPU allocation; normal allocator preparation allowed an identical
 binary retry to pass. The single timing admission attempt found 68 instead of
-67 QEMU tasks and started no timing sessions. The three planned pairs, variance,
-causal attribution and all seven regression resolutions remain open.
+67 QEMU tasks and started no timing sessions. The three planned pairs were unrun
+at that stage; causal attribution and all seven regression resolutions remained open.
 Its four archives passed 17,992 inert integrity/evidence checks; failures remain
 retained and the recovery VM is idle.
+
+The [subsequent paired follow-up](../bench/results/10.176.26.71/bench/pipecap-unlock-followup-20261021/README.md)
+waited for a naturally qualifying gate, then completed all six planned sessions
+with 117,108,224 operations and exact retirement. The immediate endpoint failed
+at 120 versus 67 threads. General-unlock/OUTER whole-rate ratios were 0.382801,
+0.822220 and 0.279808; sample CV was 7.36% for general unlock and 44.11% for OUTER
+(the latter mixes execution classes). One pair is NO_JIT versus RETURNED_JIT;
+the other pairs also have different returned fractions. These descriptive rates
+show no win and cannot isolate provider-call cost or establish acceptance. Both
+archives passed 3,521 inert checks; all seven causes and acquisition latency stay
+unresolved. Later worker turnover does not repair the failed endpoint.
 
 The earlier [pipecap owner observation](../bench/results/10.176.26.71/bench/pipecap-owner-20261021/README.md)
 retains 24 drained one-worker sessions with unchanged binaries and no returned
