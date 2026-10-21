@@ -5,6 +5,7 @@
 | [module.c](module.c), [runner.inc](runner.inc), [api.h](api.h) | Ioctls, worker lifecycle, fixed/timed loops and snapshots |
 | [payload.h](payload.h) | Cacheline updates |
 | [hash_payload.h](hash_payload.h) | Preallocated hash move/conflict/miss logic |
+| [list_payload.h](list_payload.h) | Resident list traversal, with optional prefetch |
 | [post_work.h](post_work.h) | Shared lock-outside arithmetic |
 | [direct.h](direct.h) | Compile-time Native/TCLock/KD direct APIs |
 | [scenario.h](scenario.h) | Plain operation and selected KD nested/early cases |

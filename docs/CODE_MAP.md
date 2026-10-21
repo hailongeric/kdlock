@@ -70,8 +70,8 @@ uses the same physical mutex and delegation queue, not a separate writer engine.
 | [bench/api_profile.py](../bench/api_profile.py) | Separate unscored taskname/xattr function profiles, retained tracing state and exact restoration; diagnostic timings are excluded from benchmark scores |
 | [tests/unit](../tests/unit) | Guest-only basic and selected production-code fixtures |
 | [tests/kernel](../tests/kernel) | Provider observers and kernel selftests |
-| [tests/kernel/spin/address_guard](../tests/kernel/spin/address_guard), [workload_modules/jit_address_guard](../workload_modules/jit_address_guard) | Checked spin exit probe: completed JIT bodies, exact native continuation, retained effects, permanent delegation refusal and drain |
-| [tests/kernel/spin/string_service](../tests/kernel/spin/string_service), [workload_modules/jit_string_service](../workload_modules/jit_string_service) | Original `strcmp` service probe: short and 300-character comparisons, returned JIT bodies, unchanged published image, exact results and drain |
+| [tests/kernel/spin/address_guard](../tests/kernel/spin/address_guard), [address-guard payload](../tests/kernel/spin/address_guard/payload) | Checked spin exit probe: completed JIT bodies, exact native continuation, retained effects, permanent delegation refusal and drain |
+| [tests/kernel/spin/string_service](../tests/kernel/spin/string_service), [string-service payload](../tests/kernel/spin/string_service/payload) | Original `strcmp` service probe: short and 300-character comparisons, returned JIT bodies, unchanged published image, exact results and drain |
 | [tests/kernel/rwlock](../tests/kernel/rwlock/README.md) | Native/KD correctness sessions: reader overlap, writer exclusion, exact updates, JIT and drain |
 | [tests/kernel/rwsem](../tests/kernel/rwsem/README.md) | Sleeping/cancellation/downgrade and outer admission probe; checks ordering before publication without claiming JIT execution |
 | [tests/protocols](../tests/protocols) | Trace validation, topology and protocol oracles |

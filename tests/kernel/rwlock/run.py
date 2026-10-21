@@ -174,7 +174,7 @@ def main():
     parser.add_argument("--cpus", type=cpu_list, default=list(range(16)))
     parser.add_argument("--iterations", type=int, default=50000)
     parser.add_argument("--output", type=Path, required=True)
-    parser.add_argument("--workload", type=Path, default=ROOT / "workload_modules/rwlock/rwlock_test.ko")
+    parser.add_argument("--workload", type=Path, default=ROOT / "tests/kernel/rwlock/payload/rwlock_test.ko")
     parser.add_argument("--provider", type=Path, default=ROOT / "bench/spin_cacheline/.build/provider/kernel_module/kdlock_km.ko")
     kernel_identity.arguments(parser)
     args = parser.parse_args()
@@ -194,8 +194,8 @@ def main():
     # native dispatch independently; do not infer a policy change from log loss.
     require("nopvspin" in boot.split(), "guest is missing the native-qspinlock boot argument")
     (args.output / "boot.txt").write_text(boot)
-    inputs = [ROOT / "include/kd_rwlock.h", ROOT / "workload_modules/rwlock/module.c",
-              ROOT / "workload_modules/rwlock/api.h", ROOT / "workload_modules/rwlock/Makefile",
+    inputs = [ROOT / "include/kd_rwlock.h", ROOT / "tests/kernel/rwlock/payload/module.c",
+              ROOT / "tests/kernel/rwlock/payload/api.h", ROOT / "tests/kernel/rwlock/payload/Makefile",
               Path(__file__).resolve()]
     (args.output / "inputs.json").write_text(json.dumps({str(p): digest(p) for p in inputs}, indent=2) + "\n")
     # Preserve the translator/header inputs used by this daemon session.

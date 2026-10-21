@@ -25,7 +25,7 @@ from native_only_protocol import entries
 DEVICE = "/dev/kd_jit_address_guard_test"
 WORKER_COMM = "kg_worker"
 RUNNER = "tests/kernel/spin/address_guard"
-PAYLOAD = "workload_modules/jit_address_guard"
+PAYLOAD = "tests/kernel/spin/address_guard/payload"
 MODULE = "jit_address_guard_test"
 CAP_VERSIONS, CAP_BIT, IMAGE_REQUIREMENT = (7, 8, 9, 10, 11, 12), 6, 2
 SUCCESS_MESSAGE = "PASS: cold branch delegated; aliasing load resumed on original task; exact effects/values; permanent native-only state; final drain"

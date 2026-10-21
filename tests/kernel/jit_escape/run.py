@@ -87,7 +87,7 @@ def sources(root):
     hashes = {}
     for directory in ("include", "kernel_module", "daemon", "disassem", "kernel_baseline",
                       "bench/spin_cacheline", "bench/tclock_compare/allocator_guard",
-                      "tests/protocols", "tests/kernel/jit_escape", "workload_modules/jit_escape"):
+                      "tests/protocols", "tests/kernel/jit_escape"):
         for path in (root / directory).rglob("*"):
             relative = path.relative_to(root)
             if (not path.is_file() or any(p.startswith(".") or p in ("__pycache__", "results")
@@ -412,7 +412,7 @@ def main():
         guard_dir = build / "guard"
         shutil.copytree(source / "bench/tclock_compare/allocator_guard", guard_dir)
         rt.command(["make", "-C", guard_dir, f"KDIR={args.kernel_source}"], out / "build-guard.log", timeout=180)
-        workload = source / "workload_modules/jit_escape/jit_escape_test.ko"
+        workload = source / "tests/kernel/jit_escape/payload/jit_escape_test.ko"
         rt.command(["make", "-C", workload.parent, f"KDIR={args.kernel_source}",
                     f"KDLOCK_INCLUDE={source / 'include'}",
                     f"JIT_ESCAPE_FAMILY={args.family}",

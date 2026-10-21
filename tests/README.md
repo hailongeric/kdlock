@@ -1,5 +1,12 @@
 # Verification
 
+Correctness-only kernel modules belong beside their runners under
+[`kernel/`](kernel/README.md), using a `payload/` subdirectory for module source,
+Makefiles and ioctl headers. Unit fixtures remain under `unit/`; benchmark and
+shared payloads remain under `workload_modules/`. Each kernel test guide owns its
+build, execution and drain instructions.
+
+
 JIT means just-in-time compilation: KD generates machine code so one lock holder
 can perform another waiting task's protected work. The [terminology guide](../docs/TERMINOLOGY.md)
 explains the lock, execution-state and measurement terms used below.

@@ -48,13 +48,13 @@ RW_KERNEL=/root/linux-6.1.159-kdclobber2
 make -C bench/spin_cacheline provider KDIR="$RW_KERNEL" UBSAN_SANITIZE=n
 make -C daemon CFLAGS='-O2 -Wall -Wextra -Werror'
 make -C bench/tclock_compare/allocator_guard KDIR="$RW_KERNEL"
-make -C workload_modules/rwlock KDIR="$RW_KERNEL" RW_BACKEND=kdlock \
+make -C tests/kernel/rwlock/payload KDIR="$RW_KERNEL" RW_BACKEND=kdlock \
   KDLOCK_INCLUDE="$RW_ROOT/include" \
   KBUILD_EXTRA_SYMBOLS="$RW_ROOT/bench/spin_cacheline/.build/provider/kernel_module/Module.symvers"
 
 RW_NATIVE_DIR="$(mktemp -d /root/kdlock-rw-native.XXXXXX)"
-cp workload_modules/rwlock/Makefile workload_modules/rwlock/api.h \
-  workload_modules/rwlock/module.c "$RW_NATIVE_DIR/"
+cp tests/kernel/rwlock/payload/Makefile tests/kernel/rwlock/payload/api.h \
+  tests/kernel/rwlock/payload/module.c "$RW_NATIVE_DIR/"
 make -C "$RW_NATIVE_DIR" KDIR="$RW_KERNEL" RW_BACKEND=native
 ```
 

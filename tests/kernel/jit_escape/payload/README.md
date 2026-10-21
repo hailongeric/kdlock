@@ -1,7 +1,7 @@
 # Conditional instruction exit workload
 
 This is a focused correctness workload for KD mutex instruction exits. Use the
-[guest runner](../../tests/kernel/jit_escape/README.md); this directory contains
+[guest runner](../README.md); this directory contains
 only the kernel payload and its userspace command layout.
 
 JIT means just-in-time compiled code that lets a lock holder execute a waiting

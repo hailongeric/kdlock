@@ -124,6 +124,6 @@ the critical section.
 Readers update only their own result counters. Writers update the protected data.
 Hash outcome totals are combined once per returned ioctl. After all callers finish,
 snapshots and the Python checker verify the resulting data. Use the separate
-[rwlock test workload](../rwlock/README.md) for instrumented reader/writer overlap
+[rwlock test workload](../../tests/kernel/rwlock/payload/README.md) for instrumented reader/writer overlap
 checks. These benchmarks support pinned task-context callers with IRQs enabled,
 one global lock and no recursive reads, upgrades or nested/IRQ/BH locking.

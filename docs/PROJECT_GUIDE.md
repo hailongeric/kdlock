@@ -25,7 +25,7 @@ protocols or workloads:
 | `kernel_module/` | KD provider; private `spin/`, `mutex/`, `lock/` and `execution/` fragments remain with their owning translation units |
 | `daemon/`, `disassem/` | Publication/control service and Python translation/admission, respectively |
 | `tclock_backend/` | Independent comparator implementation and upstream provenance |
-| `workload_modules/` | Kernel payloads; synthetic and real API workloads retain separate identities |
+| `workload_modules/` | Benchmark and shared kernel payloads; correctness-only payloads live under `tests/kernel/` |
 | `bench/` | Maintained runners and shared collection/archival helpers |
 | `bench/archive/` | Historical offline analysis tools, with one index and dependency list |
 | `tests/unit/`, `tests/protocols/` | Unit fixtures and directly affected protocol drivers |

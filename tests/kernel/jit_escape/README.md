@@ -3,7 +3,7 @@
 Run only in the verified recovery guest, following
 [VM operations](../../../docs/operations/VM.md). The runner freezes the source,
 including private `.inc` implementation files, and builds the provider, daemon,
-allocator guard and [kernel payload](../../../workload_modules/jit_escape/README.md)
+allocator guard and [kernel payload](payload/README.md)
 inside a new output directory. Source and binary hashes record the exact inputs.
 
 JIT means just-in-time compiled code used to execute a waiting task's work on

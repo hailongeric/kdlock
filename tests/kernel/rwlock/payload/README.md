@@ -2,7 +2,7 @@
 
 `rwlock_test.ko` exposes `/dev/kd_rwlock_test`. Build-time `RW_BACKEND=native`
 selects Linux rwlocks; `RW_BACKEND=kdlock` selects the public
-[KD rwlock API](../../include/kd_rwlock.h). Each build owns its target lock.
+[KD rwlock API](../../../../include/kd_rwlock.h). Each build owns its target lock.
 The KD build prepares ABI3 writer continuations; readers execute locally. Native
 code acquires writer admission before the body on both local and JIT routes.
 Prepared publication alone is not proof of delegation; the test runner checks
@@ -21,6 +21,6 @@ aggregate writes with all eight values. This is a functional workload, not a
 throughput comparison with TCLock.
 
 Build and run only in the verified recovery guest, using
-[the test guide](../../tests/kernel/rwlock/README.md). A loaded workload holds a
+[the test guide](../README.md). A loaded workload holds a
 reference to its provider. Retire prepared JIT sources to release their pins before
 unloading modules.
