@@ -47,11 +47,15 @@ def main():
                    help='Intrusive single-session host-worker diagnostic with stdin phase acknowledgements')
     p.add_argument('--setup-boundary-probe', action='store_true',
                    help='Preserve one warmup, hold at client measurement delivery, validate the full gate, then retire without timing')
+    p.add_argument('--prewarmup-boundary-probe', action='store_true',
+                   help='Wait for the full gate before warmup, then capture once immediately afterward; never time')
     a = p.parse_args()
     if a.phase_single_outer and a.mode != 'timing':
         p.error('--phase-single-outer requires timing and every existing correctness/environment gate')
     if a.setup_boundary_probe and not a.phase_single_outer:
         p.error('--setup-boundary-probe requires --phase-single-outer and every timing prerequisite')
+    if a.prewarmup_boundary_probe and not a.setup_boundary_probe:
+        p.error('--prewarmup-boundary-probe requires --setup-boundary-probe')
     phase_sequence = 0
     phase_error = ValueError
 
@@ -93,6 +97,7 @@ def main():
     # flag. Losing coordination at that boundary must retain uncertain state.
     phase_error = lambda message: api.Failure('OBSERVER_FAILED', message, unsafe=True)
     boundary_protocol = load(ROOT/'bench/mutex_api_compare/boundary_protocol.py', 'boundary_protocol') if a.setup_boundary_probe else None
+    prewarmup = load(ROOT/'bench/mutex_api_compare/prewarmup_control.py', 'prewarmup_control')
     candidate = control.validate(scheduler, a.inputs, a.inputs_sha256)
     checks, task_check = read(a.unit_checks), read(a.task_check)
     require(checks['passed'] and checks['final_idle'] and checks['source_unchanged'] and
@@ -216,7 +221,10 @@ def main():
     save(out/'result.json', receipt)
     if a.setup_boundary_probe:
         shutil.copyfile(ROOT/'bench/mutex_api_compare/boundary_protocol.py', out/'boundary_protocol.py')
-        receipt.update(setup_boundary_probe=True, measurement_contract='ONE_ORIGINAL_WARMUP_THEN_GATE_WAIT_NO_TIMING')
+        shutil.copyfile(ROOT/'bench/mutex_api_compare/prewarmup_control.py', out/'prewarmup_control.py')
+        receipt.update(setup_boundary_probe=True, prewarmup_boundary_probe=a.prewarmup_boundary_probe,
+            measurement_contract=('PRE_GATE_WAIT_ONE_ORIGINAL_WARMUP_IMMEDIATE_POST_GATE_NO_TIMING'
+                                  if a.prewarmup_boundary_probe else 'ONE_ORIGINAL_WARMUP_THEN_GATE_WAIT_NO_TIMING'))
         save(out/'result.json', receipt)
 
     class BoundaryObserved(Exception):
@@ -247,11 +255,16 @@ def main():
                 counters={n: int((params/n).read_text()) for n in
                     ('bench_jit_bodies', 'bench_jit_completions', 'address_guard_count')})
 
-        def hold_boundary(self):
+        def exchange_boundary(self, stage):
+            sequence = len(self.record.get('boundaries', []))+1
+            prewarmup.capture_policy(a.prewarmup_boundary_probe, sequence, stage)
+            times = {}
             def observed_state(label):
+                times[label+'_began_ns'] = time.monotonic_ns()
                 try:
                     state = self.boundary_state()
-                    self.record.setdefault('boundary_states', {})[label] = state
+                    self.record.setdefault('boundary_states', {})[str(sequence)+'-'+label] = state
+                    times[label+'_finished_ns'] = time.monotonic_ns()
                     return state
                 except (api.Failure, ValueError, KeyError, OSError) as error:
                     self.record.setdefault('boundary_states', {})[label+'-error'] = repr(error)
@@ -261,18 +274,20 @@ def main():
             before = observed_state('before')
             began = time.monotonic_ns()
             token = secrets.token_hex(8)
-            request = dict(event='boundary', boundary=1, boundary_token=token, real_ns=time.time_ns(), mono_ns=began,
+            request = dict(event='boundary', boundary=sequence, stage=stage, boundary_token=token, real_ns=time.time_ns(), mono_ns=began,
                 environment=environment, topology=topology,
-                contract='ONE_ORIGINAL_WARMUP_THEN_GATE_WAIT_NO_TIMING')
+                contract=receipt['measurement_contract'])
             try:
                 print('KD_BOUNDARY '+json.dumps(request), flush=True)
-                reply = boundary_protocol.validate_reply(boundary_protocol.receive(sys.stdin.fileno()), token)
+                reply = boundary_protocol.validate_reply(boundary_protocol.receive(sys.stdin.fileno()), token, sequence)
+                times['reply_received_ns'] = time.monotonic_ns()
             except (ValueError, KeyError, TypeError, OSError) as error:
                 raise phase_error('boundary observer coordination failed; retain prepared state') from error
             after = observed_state('after')
             if before != after:
                 self.save()
                 raise api.Failure('UNDRAINED', 'prepared lifetime, image or exact drained counters changed during wait', unsafe=True)
+            times['guest_validation_began_ns'] = time.monotonic_ns()
             fresh_env = dict(boot_id=Path('/proc/sys/kernel/random/boot_id').read_text().strip(),
                 cmdline=Path('/proc/cmdline').read_text().strip(),
                 preemption=Path('/sys/kernel/debug/sched/preempt').read_text().strip(),
@@ -292,16 +307,27 @@ def main():
                 gate = dict(passed=True, comparison=comparison)
             except ValueError as error:
                 gate = dict(passed=False, error=str(error))
-            self.record.update(measurement_skipped=True, boundary=dict(before=before, after=after,
+            times['guest_validation_finished_ns'] = time.monotonic_ns()
+            boundary = dict(before=before, after=after, stage=stage, sequence=sequence, times=times,
                 gate=gate, host=boundary_host, environment=fresh_env, topology=fresh_topology,
                 observations=reply['observations'], began_ns=began, finished_ns=time.monotonic_ns(),
-                contract=request['contract'], scope='Feasibility only; post-warmup delay changes the original timing contract.'))
-            self.save()
-            raise BoundaryObserved()
+                contract=request['contract'], scope='Feasibility only; waits and observer I/O change preparation history.')
+            self.record.update(measurement_skipped=True, boundary=boundary)
+            self.record.setdefault('boundaries', []).append(boundary)
+            # Keep the pre-gate receipt in memory until the immediate post
+            # observation, avoiding a new guest artifact write before warmup.
+            if stage != 'before-warmup':
+                self.save()
+            return boundary
 
         def prepare(self):
             phase('prepare', 'begin')
-            super().prepare()
+            try:
+                super().prepare()
+            except prewarmup.PreWarmupRefused:
+                require(a.prewarmup_boundary_probe and self.record['prewarmup_control']['warmup_skipped'],
+                        'unexpected pre-warmup refusal')
+                self.faults()
             offset = self.record['lock_addr'] % 64
             self.record['actual_lock_cacheline_offset'] = offset
             self.save()
@@ -311,8 +337,47 @@ def main():
 
         def tell(self, action, timeout=180, label=None):
             if a.setup_boundary_probe and action == 'measure':
-                return self.hold_boundary()
+                require(not a.prewarmup_boundary_probe, 'pre-warmup control must never request measurement')
+                self.exchange_boundary('after-warmup')
+                raise BoundaryObserved()
             phase('client-'+(label or action), 'begin')
+            if a.prewarmup_boundary_probe and action == 'warmup':
+                require(self.record['lock_addr'] % 64 == expected_offset,
+                        'loaded mutex placement differs before warmup')
+                try:
+                    original_tell = super().tell
+                    def original_warmup():
+                        try:
+                            work = original_tell(action, timeout, label)
+                            self.record['prewarmup_control']['original_reply_saved_ns'] = time.monotonic_ns()
+                            s = self.record
+                            require(work['ok'] and len(work['workers']) == s['threads'] and
+                                work['collector_cpu'] == work['collector_observed_cpu'] == 63 and
+                                work['collector_error'] == 0 and
+                                work['completed'] == sum(w['completed'] for w in work['workers']) and
+                                [w['cpu'] for w in work['workers']] == s['cpus'] and
+                                all(w['error'] == 0 and w['cpu'] == w['observed_cpu'] and
+                                    w['completed'] >= s['warmup'] and
+                                    w['finished_ns'] >= work['started_ns']+s['warmup_ms']*1000000
+                                    for w in work['workers']), 'original joined warmup reply differs')
+                            self.record['prewarmup_control']['reply_validation_finished_ns'] = time.monotonic_ns()
+                            return work
+                        except (ValueError, KeyError, TypeError, OSError) as error:
+                            # The command may already have started workers.
+                            # Malformed or unavailable replies prove no drain.
+                            raise api.Failure('UNDRAINED', 'original warmup completion is uncertain', unsafe=True) from error
+                    result = prewarmup.run_once(self.exchange_boundary,
+                        original_warmup, self.record, time.monotonic_ns)
+                except prewarmup.PreWarmupRefused:
+                    phase('client-'+(label or action), 'end')
+                    raise
+                try:
+                    before, after = self.record['boundaries']
+                    self.record['warmup_counter_delta'] = prewarmup.validate_transition(before['after'], after['before'], result)
+                except (ValueError, KeyError, TypeError) as error:
+                    raise api.Failure('UNDRAINED', 'warmup identity or accounting is uncertain', unsafe=True) from error
+                phase('client-'+(label or action), 'end')
+                return result
             result = super().tell(action, timeout, label)
             if a.setup_boundary_probe and action == 'warmup':
                 self.record['boundary_warmup'] = result
@@ -333,6 +398,13 @@ def main():
 
         def measure(self):
             phase('measure-accounting', 'begin')
+            if a.prewarmup_boundary_probe:
+                require('measurement' not in self.record, 'pre-warmup control unexpectedly executed timing')
+                require(self.tell('check', label='check-after-boundary')['check'], 'post-boundary business check failed')
+                self.faults()
+                self.save()
+                phase('measure-accounting', 'end')
+                return
             try:
                 result = super().measure()
             except BoundaryObserved:
@@ -424,7 +496,9 @@ def main():
         scheduler.verify(harness)
         control.validate(scheduler, a.inputs, a.inputs_sha256)
         phase('final-verification', 'end')
-        receipt.update(passed=(all(r['boundary']['gate']['passed'] for r in receipt['records'])
+        receipt.update(passed=(all(all(b['gate']['passed'] for b in r['boundaries']) and
+                                   (not a.prewarmup_boundary_probe or len(r['boundaries']) == 2)
+                                   for r in receipt['records'])
                                if a.setup_boundary_probe else True),
                        diagnostic_completed=True, final_idle=True)
     except BaseException as error:

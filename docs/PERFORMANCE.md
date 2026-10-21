@@ -156,6 +156,12 @@ This establishes one observed boundary, not continuous quiescence, comparable
 preparation or performance acceptance. All seven causes/acquisition latency
 remain unresolved; no timing variance is available from this feasibility probe.
 
+A separate [pre-warmup control](../bench/results/10.176.26.71/bench/mutex-prewarmup-20261021/README.md)
+is being prepared. It waits for the unchanged full gate before one original
+warmup, then requests one immediate post-warmup full capture without a second
+settling wait or any timing command. Its observations and observer overhead will
+remain distinct from the previous cohorts; no acceptance is implied.
+
 The earlier [pipecap owner observation](../bench/results/10.176.26.71/bench/pipecap-owner-20261021/README.md)
 retains 24 drained one-worker sessions with unchanged binaries and no returned
 JIT bodies. The strict endpoint failed at 101 versus 67 threads; the uncalibrated

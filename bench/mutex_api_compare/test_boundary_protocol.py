@@ -54,6 +54,12 @@ class BoundaryProtocol(unittest.TestCase):
                 capture_began_ns=20, capture_finished_ns=30, boundary_marker_ns=10,
                 request_sent_ns=1, ack_received_ns=2)])
         self.assertEqual(validate_reply(reply, 'fresh'), reply)
+        second = dict(reply, boundary_ack=2)
+        self.assertEqual(validate_reply(second, 'fresh', 2), second)
+        with self.assertRaises(ValueError):
+            validate_reply(second, 'fresh', 1)
+        with self.assertRaises(ValueError):
+            validate_reply(reply, 'fresh', True)
         for key, value in [('boundary_ack', True), ('boundary_ack', 2),
                            ('boundary_token', 'stale'), ('observations', []), ('host_state', {'example': 2})]:
             changed = dict(reply, **{key: value})

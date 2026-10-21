@@ -29,10 +29,10 @@ def host_hash(host):
     return hashlib.sha256(json.dumps(host, sort_keys=True).encode()).hexdigest()
 
 
-def validate_reply(reply, token):
+def validate_reply(reply, token, sequence=1):
     if not isinstance(reply, dict) or set(reply) != {'boundary_ack', 'boundary_token', 'host_state', 'observations'}:
         raise ValueError('unexpected boundary reply fields')
-    if type(reply['boundary_ack']) is not int or reply['boundary_ack'] != 1 or reply['boundary_token'] != token or not isinstance(reply['host_state'], dict):
+    if type(sequence) is not int or type(reply['boundary_ack']) is not int or reply['boundary_ack'] != sequence or reply['boundary_token'] != token or not isinstance(reply['host_state'], dict):
         raise ValueError('unexpected boundary sequence or host state')
     if not isinstance(reply['observations'], list) or not 1 <= len(reply['observations']) <= 5:
         raise ValueError('missing or excessive boundary observations')

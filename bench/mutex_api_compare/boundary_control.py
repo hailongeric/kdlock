@@ -19,6 +19,7 @@ sys.dont_write_bytecode = True
 from qemu_controls import ROOT, CAPTURE, TRACE, SSH, Stream, stamp
 from boundary_protocol import host_hash, validate_reply
 import boundary_trigger
+import prewarmup_control
 import run as scheduler
 
 
@@ -54,16 +55,21 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--output', required=True, type=Path)
     parser.add_argument('--capture-policy', choices=('fixed', 'sample-trigger'), default='fixed')
+    parser.add_argument('--wait-before-warmup', action='store_true')
     args = parser.parse_args()
+    if args.wait_before_warmup and args.capture_policy != 'sample-trigger':
+        parser.error('--wait-before-warmup requires --capture-policy sample-trigger')
     out = args.output.resolve()
     out.mkdir(parents=True, exist_ok=False)
     receipt = dict(accepted=False, score_eligible=False, timing_sent=False, complete=False,
-        streams=[], requests=[], phases=[], captures=[], started=stamp(), capture_policy=args.capture_policy,
+        streams=[], requests=[], phases=[], captures=[], boundaries=[], started=stamp(), capture_policy=args.capture_policy,
+        wait_before_warmup=args.wait_before_warmup,
         source_commit=subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip(), sources={})
     assert not subprocess.check_output(['git', 'status', '--porcelain'], cwd=ROOT, text=True), 'commit diagnostic source before running'
     for src in (Path(__file__), TRACE, CAPTURE, ROOT/'bench/mutex_api_compare/qemu_controls.py',
                 ROOT/'bench/mutex_api_compare/boundary_protocol.py', ROOT/'bench/mutex_api_compare/unlock_run.py',
                 ROOT/'bench/mutex_api_compare/boundary_trigger.py',
+                ROOT/'bench/mutex_api_compare/prewarmup_control.py',
                 ROOT/'bench/mutex_api_compare/run.py', ROOT/'bench/mutex_api_compare/recovery_replay.py'):
         data = src.read_bytes()
         (out/src.name).write_bytes(data)
@@ -124,10 +130,12 @@ runner=base/(name+'-runner.py')
 with runner.open('xb') as stream: stream.write((root/'bench/mutex_api_compare/unlock_run.py').read_bytes())
 old=base.parent/'pipecap-unlock-20261021'
 args=[sys.executable,str(runner),'--mode','timing','--phase-single-outer','--setup-boundary-probe','--inputs',str(old/'inputs-1/inputs.json'),'--inputs-sha256','daf7f77beda2704d9cc56291f9864489f733c844f6188cd6c8198480539badae','--output',str(base/name),'--host-state',str(host),'--unit-checks',str(old/'checks-1/result.json'),'--task-check',str(old/'task-2/result.json'),'--elf-checks',str(old/'elf-checks-2.json'),'--correctness',str(old/'correctness-1/result.json'),'--source-commit',COMMIT]
+if PREWARMUP: args.append('--prewarmup-boundary-probe')
 sys.exit(subprocess.call(args))
-'''.replace('NAME', repr(out.name)).replace('COMMIT', repr(receipt['source_commit'])).replace('BASE', repr(
+'''.replace('NAME', repr(out.name)).replace('COMMIT', repr(receipt['source_commit'])).replace('PREWARMUP', repr(args.wait_before_warmup)).replace('BASE', repr(
             '/root/kdlock-evidence/10.176.26.71/bench/'+
-            ('mutex-boundary-trigger-20261021' if args.capture_policy == 'sample-trigger' else 'mutex-boundary-20261021')))
+            ('mutex-prewarmup-20261021' if args.wait_before_warmup else
+             'mutex-boundary-trigger-20261021' if args.capture_policy == 'sample-trigger' else 'mutex-boundary-20261021')))
         (out/'guest-launch.py').write_text(launch)
         command = shlex.join(['env', 'PYTHONDONTWRITEBYTECODE=1', 'LC_ALL=C',
             'PATH=/root/kdlock-translation-venv-20261019/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin',
@@ -150,16 +158,29 @@ sys.exit(subprocess.call(args))
                 receipt['phases'].append(dict(guest_event=event, host_ack=ack, guest_ack_sent=sent))
                 save()
             elif row['event'] == 'boundary':
-                assert 'boundary' not in receipt and row['boundary'] == 1
-                receipt['boundary'] = dict(request=event, observations=[], sample_decisions=[], dispatch_skips=[])
+                sequence = len(receipt['boundaries'])+1
+                assert row['boundary'] == sequence
+                policy = prewarmup_control.capture_policy(args.wait_before_warmup, sequence, row['stage'])
+                receipt['boundary'] = dict(request=event, observations=[], sample_decisions=[], dispatch_skips=[], policy=policy)
+                receipt['boundaries'].append(receipt['boundary'])
                 start = time.monotonic()
-                marker = mark('held-boundary-'+row['boundary_token'])['ack']['remote']['mono_ns']
+                if policy == 'immediate':
+                    # Reuse the acknowledged warmup-begin marker as a lower
+                    # bound. No extra marker round trip or quiet wait may delay
+                    # the one post-warmup full-capture request.
+                    previous_phase = receipt['phases'][-1]
+                    assert previous_phase['guest_event']['remote']['label'] == 'client-warmup'
+                    assert previous_phase['guest_event']['remote']['edge'] == 'begin'
+                    marker = previous_phase['host_ack']['ack']['remote']['mono_ns']
+                else:
+                    marker = mark('held-boundary-'+row['boundary_token'])['ack']['remote']['mono_ns']
                 observations = receipt['boundary']['observations']
                 def fixed_points():
                     for offset in (0, 15, 30, 60, 120):
                         time.sleep(max(0, start+offset-time.monotonic()))
                         yield dict(kind='fixed', offset_s=offset)
-                points = (boundary_trigger.triggers(observer, anchor, marker, int(start*1000000000),
+                points = ([dict(kind='immediate', offset_s=0)] if policy == 'immediate' else
+                          boundary_trigger.triggers(observer, anchor, marker, int(start*1000000000),
                           receipt['boundary']['sample_decisions'], save)
                           if args.capture_policy == 'sample-trigger' else fixed_points())
                 for trigger in points:
@@ -187,9 +208,9 @@ sys.exit(subprocess.call(args))
                     print(json.dumps(dict(capture=label, task_count=len(remote['host']['qemu'][0]['tasks']), host_gate=gate)), flush=True)
                     if gate['passed'] and (freshness is None or freshness['qualified']):
                         break
-                answer = dict(boundary_ack=1, boundary_token=row['boundary_token'],
+                answer = dict(boundary_ack=sequence, boundary_token=row['boundary_token'],
                     host_state=remote['host'], observations=observations)
-                validate_reply(answer, row['boundary_token'])
+                validate_reply(answer, row['boundary_token'], sequence)
                 receipt['boundary']['reply_sent'] = stamp()
                 receipt['boundary']['host_gate_passed'] = gate['passed']
                 save()
