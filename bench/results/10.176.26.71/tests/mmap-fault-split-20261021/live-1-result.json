@@ -1,0 +1,1926 @@
+{
+  "accepted": false,
+  "backends": "0,1",
+  "basic_programs": 2,
+  "binaries": {
+    "build/provider/kernel_module/kdlock_km.ko": "ccabf4d50791eb71c884af30ab55524e0aaf5fd938379877370873ecf2c436b0",
+    "client": "103261479bcffe60935c58df743be8dd7ad475478033812a0f94c596a7618193",
+    "source/bench/tclock_compare/allocator_guard/tc_allocator_guard.ko": "1dd86f749797771e4e6b5420321c9ae3a0728ad4d76cefd62a0cde98fe9357b9",
+    "source/workload_modules/mmap_fault/kd_mmap_fault.ko": "640ccf681d1db4750a3949c36749cb2a2352ed91ba532632420224d10e0e82b6",
+    "split-client": "e50a71b561fbceb68e2cb0c0aebbcb4d0be99a2c81f9def47dc282407222b7f4"
+  },
+  "boot_id": "b65f0205-c8f9-4385-8b13-039cbce243a6",
+  "cases": [
+    {
+      "backend": 0,
+      "backing_execution": "ORDINARY_LOCAL",
+      "checks": 96,
+      "created": [
+        {
+          "event": "create",
+          "fallback": 0,
+          "features": 8,
+          "requested": 0,
+          "selected": 0
+        },
+        {
+          "event": "create",
+          "fallback": 0,
+          "features": 23,
+          "requested": 0,
+          "selected": 0
+        },
+        {
+          "event": "create",
+          "fallback": 0,
+          "features": 0,
+          "requested": 0,
+          "selected": 0
+        }
+      ],
+      "fault_execution": "ORIGIN_TASK",
+      "health": "files=0 destroyed=3 release_errors=0",
+      "joined": {
+        "backend": 0,
+        "downgrades": 1,
+        "epoch": 1001,
+        "errors": 0,
+        "event": "joined",
+        "faults": 408,
+        "read_ends": 409,
+        "reads": 409,
+        "scope_ends": 6,
+        "scopes": 6,
+        "vmas": 0,
+        "write_ends": 1013,
+        "writes": 1013
+      },
+      "passed": true,
+      "probes": [
+        {
+          "acquisitions": 1,
+          "action": 0,
+          "attempts": 1,
+          "callbacks": 1,
+          "completed": 0,
+          "event": "probe",
+          "final_held": 0,
+          "nowait": 0,
+          "pause_timeout": 0,
+          "releases": 1,
+          "result": 0,
+          "retries": 0,
+          "revalidated": 0,
+          "stale": 0
+        },
+        {
+          "acquisitions": 2,
+          "action": 1,
+          "attempts": 2,
+          "callbacks": 2,
+          "completed": 0,
+          "event": "probe",
+          "final_held": 0,
+          "nowait": 0,
+          "pause_timeout": 0,
+          "releases": 2,
+          "result": 0,
+          "retries": 1,
+          "revalidated": 1,
+          "stale": 0
+        },
+        {
+          "acquisitions": 1,
+          "action": 2,
+          "attempts": 1,
+          "callbacks": 1,
+          "completed": 0,
+          "event": "probe",
+          "final_held": 0,
+          "nowait": 1,
+          "pause_timeout": 0,
+          "releases": 1,
+          "result": -11,
+          "retries": 0,
+          "revalidated": 0,
+          "stale": 0
+        },
+        {
+          "acquisitions": 1,
+          "action": 3,
+          "attempts": 1,
+          "callbacks": 1,
+          "completed": 1,
+          "event": "probe",
+          "final_held": 0,
+          "nowait": 0,
+          "pause_timeout": 0,
+          "releases": 1,
+          "result": 0,
+          "retries": 0,
+          "revalidated": 0,
+          "stale": 0
+        },
+        {
+          "acquisitions": 2,
+          "action": 4,
+          "attempts": 1,
+          "callbacks": 1,
+          "completed": 0,
+          "event": "probe",
+          "final_held": 0,
+          "nowait": 0,
+          "pause_timeout": 0,
+          "releases": 2,
+          "result": -116,
+          "retries": 1,
+          "revalidated": 0,
+          "stale": 1
+        }
+      ],
+      "rejected_mode": {
+        "acquisitions": 1,
+        "action": 0,
+        "attempts": 0,
+        "callbacks": 0,
+        "completed": 0,
+        "event": "rejected_mode",
+        "final_held": 0,
+        "nowait": 0,
+        "pause_timeout": 0,
+        "releases": 1,
+        "result": -116,
+        "retries": 0,
+        "revalidated": 0,
+        "stale": 1
+      }
+    },
+    {
+      "backend": 1,
+      "backing_execution": "ORDINARY_LOCAL",
+      "checks": 96,
+      "created": [
+        {
+          "event": "create",
+          "fallback": 0,
+          "features": 8,
+          "requested": 1,
+          "selected": 1
+        },
+        {
+          "event": "create",
+          "fallback": 1,
+          "features": 23,
+          "requested": 1,
+          "selected": 0
+        },
+        {
+          "event": "create",
+          "fallback": 0,
+          "features": 0,
+          "requested": 1,
+          "selected": 1
+        }
+      ],
+      "fault_execution": "ORIGIN_TASK",
+      "health": "files=0 destroyed=12 release_errors=0",
+      "joined": {
+        "backend": 1,
+        "downgrades": 1,
+        "epoch": 1001,
+        "errors": 0,
+        "event": "joined",
+        "faults": 408,
+        "read_ends": 409,
+        "reads": 409,
+        "scope_ends": 6,
+        "scopes": 6,
+        "vmas": 0,
+        "write_ends": 1013,
+        "writes": 1013
+      },
+      "passed": true,
+      "probes": [
+        {
+          "acquisitions": 1,
+          "action": 0,
+          "attempts": 1,
+          "callbacks": 1,
+          "completed": 0,
+          "event": "probe",
+          "final_held": 0,
+          "nowait": 0,
+          "pause_timeout": 0,
+          "releases": 1,
+          "result": 0,
+          "retries": 0,
+          "revalidated": 0,
+          "stale": 0
+        },
+        {
+          "acquisitions": 2,
+          "action": 1,
+          "attempts": 2,
+          "callbacks": 2,
+          "completed": 0,
+          "event": "probe",
+          "final_held": 0,
+          "nowait": 0,
+          "pause_timeout": 0,
+          "releases": 2,
+          "result": 0,
+          "retries": 1,
+          "revalidated": 1,
+          "stale": 0
+        },
+        {
+          "acquisitions": 1,
+          "action": 2,
+          "attempts": 1,
+          "callbacks": 1,
+          "completed": 0,
+          "event": "probe",
+          "final_held": 0,
+          "nowait": 1,
+          "pause_timeout": 0,
+          "releases": 1,
+          "result": -11,
+          "retries": 0,
+          "revalidated": 0,
+          "stale": 0
+        },
+        {
+          "acquisitions": 1,
+          "action": 3,
+          "attempts": 1,
+          "callbacks": 1,
+          "completed": 1,
+          "event": "probe",
+          "final_held": 0,
+          "nowait": 0,
+          "pause_timeout": 0,
+          "releases": 1,
+          "result": 0,
+          "retries": 0,
+          "revalidated": 0,
+          "stale": 0
+        },
+        {
+          "acquisitions": 2,
+          "action": 4,
+          "attempts": 1,
+          "callbacks": 1,
+          "completed": 0,
+          "event": "probe",
+          "final_held": 0,
+          "nowait": 0,
+          "pause_timeout": 0,
+          "releases": 2,
+          "result": -116,
+          "retries": 1,
+          "revalidated": 0,
+          "stale": 1
+        }
+      ],
+      "rejected_mode": {
+        "acquisitions": 1,
+        "action": 0,
+        "attempts": 0,
+        "callbacks": 0,
+        "completed": 0,
+        "event": "rejected_mode",
+        "final_held": 0,
+        "nowait": 0,
+        "pause_timeout": 0,
+        "releases": 1,
+        "result": -116,
+        "retries": 0,
+        "revalidated": 0,
+        "stale": 1
+      }
+    }
+  ],
+  "drained": true,
+  "final_idle": true,
+  "full_suite": false,
+  "jit_bodies": 0,
+  "jit_completions": 0,
+  "jit_counts_observed": true,
+  "kernel_identity": {
+    "baseline": "/root/kdlock-kernel-baselines/mutex-clobber2-20260919",
+    "build_files": 9,
+    "bundle_files": 7,
+    "config": true,
+    "ok": true,
+    "running_build_id": "5ca28058e156f34a2c7fe91e8e0fbf92f4e51960",
+    "source": "/mnt/kdlock-builds/linux-6.1.159-kdclobber2",
+    "source_files": 20
+  },
+  "kernel_modified": false,
+  "native_kd_prerequisite": null,
+  "passed": true,
+  "production_protocol_changed": false,
+  "provider": "kdlock",
+  "retired": {
+    "frames": 0,
+    "modules": 0,
+    "state": 2,
+    "writers": 0
+  },
+  "script_sha256": "8489ab6b6aef25d989bb07818b35ab277881f120ffd2986b621081c5674682f5",
+  "snapshot": "before-mutex-kdonly-20261017T140354Z",
+  "source_commit": "9291000d969d1525d3062ddb29f1cdfde9e0f15b",
+  "source_files": 395,
+  "source_manifest_sha256": "e2edb207c788dcad1165710835e39b557b7465a038e494f044091b8915b00cfa",
+  "source_unchanged": true,
+  "split": true,
+  "split_cases": [
+    {
+      "after": {
+        "active_probe": 0,
+        "backend": 0,
+        "context_errors": 0,
+        "data_errors": 0,
+        "epoch": 0,
+        "event": "after",
+        "fallback": 0,
+        "faults": 0,
+        "features": 0,
+        "read_ends": 0,
+        "reads": 0,
+        "scope_ends": 0,
+        "scopes": 0,
+        "vmas": 0,
+        "write_ends": 0,
+        "writes": 0
+      },
+      "backend": 0,
+      "before": {
+        "active_probe": 0,
+        "backend": 0,
+        "context_errors": 0,
+        "data_errors": 0,
+        "epoch": 0,
+        "event": "before",
+        "fallback": 0,
+        "faults": 0,
+        "features": 0,
+        "read_ends": 0,
+        "reads": 0,
+        "scope_ends": 0,
+        "scopes": 0,
+        "vmas": 0,
+        "write_ends": 0,
+        "writes": 0
+      },
+      "completion": {
+        "backend": 0,
+        "completed": 1000,
+        "event": "complete",
+        "iterations": 1000,
+        "joined": 1,
+        "mode": "mmap",
+        "passed": true,
+        "workers": [
+          {
+            "completed": 1000,
+            "cpu": 0,
+            "errors": 0,
+            "pid": 3061749,
+            "worker": 0
+          }
+        ]
+      },
+      "delegated_reader": false,
+      "execution": "NATIVE_MMAP_ONLY",
+      "health": "files=0 destroyed=4 release_errors=0",
+      "independent_native_mm": true,
+      "iterations": 1000,
+      "mode": "mmap",
+      "passed": true,
+      "workers": 1
+    },
+    {
+      "after": {
+        "active_probe": 0,
+        "backend": 0,
+        "context_errors": 0,
+        "data_errors": 0,
+        "epoch": 0,
+        "event": "after",
+        "fallback": 0,
+        "faults": 0,
+        "features": 0,
+        "read_ends": 0,
+        "reads": 0,
+        "scope_ends": 0,
+        "scopes": 0,
+        "vmas": 0,
+        "write_ends": 0,
+        "writes": 0
+      },
+      "backend": 0,
+      "before": {
+        "active_probe": 0,
+        "backend": 0,
+        "context_errors": 0,
+        "data_errors": 0,
+        "epoch": 0,
+        "event": "before",
+        "fallback": 0,
+        "faults": 0,
+        "features": 0,
+        "read_ends": 0,
+        "reads": 0,
+        "scope_ends": 0,
+        "scopes": 0,
+        "vmas": 0,
+        "write_ends": 0,
+        "writes": 0
+      },
+      "completion": {
+        "backend": 0,
+        "completed": 16000,
+        "event": "complete",
+        "iterations": 1000,
+        "joined": 16,
+        "mode": "mmap",
+        "passed": true,
+        "workers": [
+          {
+            "completed": 1000,
+            "cpu": 0,
+            "errors": 0,
+            "pid": 3061751,
+            "worker": 0
+          },
+          {
+            "completed": 1000,
+            "cpu": 1,
+            "errors": 0,
+            "pid": 3061752,
+            "worker": 1
+          },
+          {
+            "completed": 1000,
+            "cpu": 2,
+            "errors": 0,
+            "pid": 3061753,
+            "worker": 2
+          },
+          {
+            "completed": 1000,
+            "cpu": 3,
+            "errors": 0,
+            "pid": 3061754,
+            "worker": 3
+          },
+          {
+            "completed": 1000,
+            "cpu": 4,
+            "errors": 0,
+            "pid": 3061755,
+            "worker": 4
+          },
+          {
+            "completed": 1000,
+            "cpu": 5,
+            "errors": 0,
+            "pid": 3061756,
+            "worker": 5
+          },
+          {
+            "completed": 1000,
+            "cpu": 6,
+            "errors": 0,
+            "pid": 3061757,
+            "worker": 6
+          },
+          {
+            "completed": 1000,
+            "cpu": 7,
+            "errors": 0,
+            "pid": 3061758,
+            "worker": 7
+          },
+          {
+            "completed": 1000,
+            "cpu": 8,
+            "errors": 0,
+            "pid": 3061759,
+            "worker": 8
+          },
+          {
+            "completed": 1000,
+            "cpu": 9,
+            "errors": 0,
+            "pid": 3061760,
+            "worker": 9
+          },
+          {
+            "completed": 1000,
+            "cpu": 10,
+            "errors": 0,
+            "pid": 3061761,
+            "worker": 10
+          },
+          {
+            "completed": 1000,
+            "cpu": 11,
+            "errors": 0,
+            "pid": 3061762,
+            "worker": 11
+          },
+          {
+            "completed": 1000,
+            "cpu": 12,
+            "errors": 0,
+            "pid": 3061763,
+            "worker": 12
+          },
+          {
+            "completed": 1000,
+            "cpu": 13,
+            "errors": 0,
+            "pid": 3061764,
+            "worker": 13
+          },
+          {
+            "completed": 1000,
+            "cpu": 14,
+            "errors": 0,
+            "pid": 3061765,
+            "worker": 14
+          },
+          {
+            "completed": 1000,
+            "cpu": 15,
+            "errors": 0,
+            "pid": 3061766,
+            "worker": 15
+          }
+        ]
+      },
+      "delegated_reader": false,
+      "execution": "NATIVE_MMAP_ONLY",
+      "health": "files=0 destroyed=5 release_errors=0",
+      "independent_native_mm": true,
+      "iterations": 1000,
+      "mode": "mmap",
+      "passed": true,
+      "workers": 16
+    },
+    {
+      "after": {
+        "active_probe": 0,
+        "backend": 0,
+        "context_errors": 0,
+        "data_errors": 0,
+        "epoch": 0,
+        "event": "after",
+        "fallback": 0,
+        "faults": 5000,
+        "features": 0,
+        "read_ends": 5000,
+        "reads": 5000,
+        "scope_ends": 0,
+        "scopes": 0,
+        "vmas": 0,
+        "write_ends": 0,
+        "writes": 0
+      },
+      "backend": 0,
+      "before": {
+        "active_probe": 0,
+        "backend": 0,
+        "context_errors": 0,
+        "data_errors": 0,
+        "epoch": 0,
+        "event": "before",
+        "fallback": 0,
+        "faults": 0,
+        "features": 0,
+        "read_ends": 0,
+        "reads": 0,
+        "scope_ends": 0,
+        "scopes": 0,
+        "vmas": 1,
+        "write_ends": 0,
+        "writes": 0
+      },
+      "completion": {
+        "backend": 0,
+        "completed": 5000,
+        "event": "complete",
+        "iterations": 5000,
+        "joined": 1,
+        "mode": "fault",
+        "passed": true,
+        "workers": [
+          {
+            "completed": 5000,
+            "cpu": 0,
+            "errors": 0,
+            "pid": 3061768,
+            "worker": 0
+          }
+        ]
+      },
+      "delegated_reader": false,
+      "execution": "ORIGIN_FAULT_LOCAL_READER",
+      "health": "files=0 destroyed=6 release_errors=0",
+      "independent_native_mm": true,
+      "iterations": 5000,
+      "mode": "fault",
+      "passed": true,
+      "workers": 1
+    },
+    {
+      "after": {
+        "active_probe": 0,
+        "backend": 0,
+        "context_errors": 0,
+        "data_errors": 0,
+        "epoch": 0,
+        "event": "after",
+        "fallback": 0,
+        "faults": 80000,
+        "features": 0,
+        "read_ends": 80000,
+        "reads": 80000,
+        "scope_ends": 0,
+        "scopes": 0,
+        "vmas": 0,
+        "write_ends": 0,
+        "writes": 0
+      },
+      "backend": 0,
+      "before": {
+        "active_probe": 0,
+        "backend": 0,
+        "context_errors": 0,
+        "data_errors": 0,
+        "epoch": 0,
+        "event": "before",
+        "fallback": 0,
+        "faults": 0,
+        "features": 0,
+        "read_ends": 0,
+        "reads": 0,
+        "scope_ends": 0,
+        "scopes": 0,
+        "vmas": 16,
+        "write_ends": 0,
+        "writes": 0
+      },
+      "completion": {
+        "backend": 0,
+        "completed": 80000,
+        "event": "complete",
+        "iterations": 5000,
+        "joined": 16,
+        "mode": "fault",
+        "passed": true,
+        "workers": [
+          {
+            "completed": 5000,
+            "cpu": 0,
+            "errors": 0,
+            "pid": 3061770,
+            "worker": 0
+          },
+          {
+            "completed": 5000,
+            "cpu": 1,
+            "errors": 0,
+            "pid": 3061771,
+            "worker": 1
+          },
+          {
+            "completed": 5000,
+            "cpu": 2,
+            "errors": 0,
+            "pid": 3061772,
+            "worker": 2
+          },
+          {
+            "completed": 5000,
+            "cpu": 3,
+            "errors": 0,
+            "pid": 3061773,
+            "worker": 3
+          },
+          {
+            "completed": 5000,
+            "cpu": 4,
+            "errors": 0,
+            "pid": 3061774,
+            "worker": 4
+          },
+          {
+            "completed": 5000,
+            "cpu": 5,
+            "errors": 0,
+            "pid": 3061775,
+            "worker": 5
+          },
+          {
+            "completed": 5000,
+            "cpu": 6,
+            "errors": 0,
+            "pid": 3061776,
+            "worker": 6
+          },
+          {
+            "completed": 5000,
+            "cpu": 7,
+            "errors": 0,
+            "pid": 3061777,
+            "worker": 7
+          },
+          {
+            "completed": 5000,
+            "cpu": 8,
+            "errors": 0,
+            "pid": 3061778,
+            "worker": 8
+          },
+          {
+            "completed": 5000,
+            "cpu": 9,
+            "errors": 0,
+            "pid": 3061779,
+            "worker": 9
+          },
+          {
+            "completed": 5000,
+            "cpu": 10,
+            "errors": 0,
+            "pid": 3061780,
+            "worker": 10
+          },
+          {
+            "completed": 5000,
+            "cpu": 11,
+            "errors": 0,
+            "pid": 3061781,
+            "worker": 11
+          },
+          {
+            "completed": 5000,
+            "cpu": 12,
+            "errors": 0,
+            "pid": 3061782,
+            "worker": 12
+          },
+          {
+            "completed": 5000,
+            "cpu": 13,
+            "errors": 0,
+            "pid": 3061783,
+            "worker": 13
+          },
+          {
+            "completed": 5000,
+            "cpu": 14,
+            "errors": 0,
+            "pid": 3061784,
+            "worker": 14
+          },
+          {
+            "completed": 5000,
+            "cpu": 15,
+            "errors": 0,
+            "pid": 3061785,
+            "worker": 15
+          }
+        ]
+      },
+      "delegated_reader": false,
+      "execution": "ORIGIN_FAULT_LOCAL_READER",
+      "health": "files=0 destroyed=7 release_errors=0",
+      "independent_native_mm": true,
+      "iterations": 5000,
+      "mode": "fault",
+      "passed": true,
+      "workers": 16
+    },
+    {
+      "after": {
+        "active_probe": 0,
+        "backend": 0,
+        "context_errors": 0,
+        "data_errors": 0,
+        "epoch": 1000,
+        "event": "after",
+        "fallback": 0,
+        "faults": 15000,
+        "features": 0,
+        "read_ends": 15000,
+        "reads": 15000,
+        "scope_ends": 0,
+        "scopes": 0,
+        "vmas": 0,
+        "write_ends": 1000,
+        "writes": 1000
+      },
+      "backend": 0,
+      "before": {
+        "active_probe": 0,
+        "backend": 0,
+        "context_errors": 0,
+        "data_errors": 0,
+        "epoch": 0,
+        "event": "before",
+        "fallback": 0,
+        "faults": 0,
+        "features": 0,
+        "read_ends": 0,
+        "reads": 0,
+        "scope_ends": 0,
+        "scopes": 0,
+        "vmas": 15,
+        "write_ends": 0,
+        "writes": 0
+      },
+      "completion": {
+        "backend": 0,
+        "completed": 16000,
+        "event": "complete",
+        "iterations": 1000,
+        "joined": 16,
+        "mode": "concurrent",
+        "passed": true,
+        "workers": [
+          {
+            "completed": 1000,
+            "cpu": 0,
+            "errors": 0,
+            "pid": 3061787,
+            "worker": 0
+          },
+          {
+            "completed": 1000,
+            "cpu": 1,
+            "errors": 0,
+            "pid": 3061788,
+            "worker": 1
+          },
+          {
+            "completed": 1000,
+            "cpu": 2,
+            "errors": 0,
+            "pid": 3061789,
+            "worker": 2
+          },
+          {
+            "completed": 1000,
+            "cpu": 3,
+            "errors": 0,
+            "pid": 3061790,
+            "worker": 3
+          },
+          {
+            "completed": 1000,
+            "cpu": 4,
+            "errors": 0,
+            "pid": 3061791,
+            "worker": 4
+          },
+          {
+            "completed": 1000,
+            "cpu": 5,
+            "errors": 0,
+            "pid": 3061792,
+            "worker": 5
+          },
+          {
+            "completed": 1000,
+            "cpu": 6,
+            "errors": 0,
+            "pid": 3061793,
+            "worker": 6
+          },
+          {
+            "completed": 1000,
+            "cpu": 7,
+            "errors": 0,
+            "pid": 3061794,
+            "worker": 7
+          },
+          {
+            "completed": 1000,
+            "cpu": 8,
+            "errors": 0,
+            "pid": 3061795,
+            "worker": 8
+          },
+          {
+            "completed": 1000,
+            "cpu": 9,
+            "errors": 0,
+            "pid": 3061796,
+            "worker": 9
+          },
+          {
+            "completed": 1000,
+            "cpu": 10,
+            "errors": 0,
+            "pid": 3061797,
+            "worker": 10
+          },
+          {
+            "completed": 1000,
+            "cpu": 11,
+            "errors": 0,
+            "pid": 3061798,
+            "worker": 11
+          },
+          {
+            "completed": 1000,
+            "cpu": 12,
+            "errors": 0,
+            "pid": 3061799,
+            "worker": 12
+          },
+          {
+            "completed": 1000,
+            "cpu": 13,
+            "errors": 0,
+            "pid": 3061800,
+            "worker": 13
+          },
+          {
+            "completed": 1000,
+            "cpu": 14,
+            "errors": 0,
+            "pid": 3061801,
+            "worker": 14
+          },
+          {
+            "completed": 1000,
+            "cpu": 15,
+            "errors": 0,
+            "pid": 3061802,
+            "worker": 15
+          }
+        ]
+      },
+      "delegated_reader": false,
+      "execution": "ORIGIN_FAULT_LOCAL_READER",
+      "health": "files=0 destroyed=8 release_errors=0",
+      "independent_native_mm": true,
+      "iterations": 1000,
+      "mode": "concurrent",
+      "passed": true,
+      "workers": 16
+    },
+    {
+      "after": null,
+      "backend": 0,
+      "before": {
+        "active_probe": 0,
+        "backend": 0,
+        "context_errors": 0,
+        "data_errors": 0,
+        "epoch": 0,
+        "event": "before",
+        "fallback": 0,
+        "faults": 0,
+        "features": 0,
+        "read_ends": 0,
+        "reads": 0,
+        "scope_ends": 0,
+        "scopes": 0,
+        "vmas": 16,
+        "write_ends": 0,
+        "writes": 0
+      },
+      "completion": {
+        "backend": 0,
+        "completed": 16000,
+        "event": "complete",
+        "iterations": 1000,
+        "joined": 16,
+        "mode": "lifetime",
+        "passed": true,
+        "workers": [
+          {
+            "completed": 1000,
+            "cpu": 0,
+            "errors": 0,
+            "pid": 3061804,
+            "worker": 0
+          },
+          {
+            "completed": 1000,
+            "cpu": 1,
+            "errors": 0,
+            "pid": 3061805,
+            "worker": 1
+          },
+          {
+            "completed": 1000,
+            "cpu": 2,
+            "errors": 0,
+            "pid": 3061806,
+            "worker": 2
+          },
+          {
+            "completed": 1000,
+            "cpu": 3,
+            "errors": 0,
+            "pid": 3061807,
+            "worker": 3
+          },
+          {
+            "completed": 1000,
+            "cpu": 4,
+            "errors": 0,
+            "pid": 3061808,
+            "worker": 4
+          },
+          {
+            "completed": 1000,
+            "cpu": 5,
+            "errors": 0,
+            "pid": 3061809,
+            "worker": 5
+          },
+          {
+            "completed": 1000,
+            "cpu": 6,
+            "errors": 0,
+            "pid": 3061810,
+            "worker": 6
+          },
+          {
+            "completed": 1000,
+            "cpu": 7,
+            "errors": 0,
+            "pid": 3061811,
+            "worker": 7
+          },
+          {
+            "completed": 1000,
+            "cpu": 8,
+            "errors": 0,
+            "pid": 3061812,
+            "worker": 8
+          },
+          {
+            "completed": 1000,
+            "cpu": 9,
+            "errors": 0,
+            "pid": 3061813,
+            "worker": 9
+          },
+          {
+            "completed": 1000,
+            "cpu": 10,
+            "errors": 0,
+            "pid": 3061814,
+            "worker": 10
+          },
+          {
+            "completed": 1000,
+            "cpu": 11,
+            "errors": 0,
+            "pid": 3061815,
+            "worker": 11
+          },
+          {
+            "completed": 1000,
+            "cpu": 12,
+            "errors": 0,
+            "pid": 3061816,
+            "worker": 12
+          },
+          {
+            "completed": 1000,
+            "cpu": 13,
+            "errors": 0,
+            "pid": 3061817,
+            "worker": 13
+          },
+          {
+            "completed": 1000,
+            "cpu": 14,
+            "errors": 0,
+            "pid": 3061818,
+            "worker": 14
+          },
+          {
+            "completed": 1000,
+            "cpu": 15,
+            "errors": 0,
+            "pid": 3061819,
+            "worker": 15
+          }
+        ]
+      },
+      "delegated_reader": false,
+      "execution": "ORIGIN_FAULT_LOCAL_READER",
+      "health": "files=0 destroyed=9 release_errors=0",
+      "independent_native_mm": true,
+      "iterations": 1000,
+      "mode": "lifetime",
+      "passed": true,
+      "workers": 16
+    },
+    {
+      "after": {
+        "active_probe": 0,
+        "backend": 1,
+        "context_errors": 0,
+        "data_errors": 0,
+        "epoch": 0,
+        "event": "after",
+        "fallback": 0,
+        "faults": 0,
+        "features": 0,
+        "read_ends": 0,
+        "reads": 0,
+        "scope_ends": 0,
+        "scopes": 0,
+        "vmas": 0,
+        "write_ends": 0,
+        "writes": 0
+      },
+      "backend": 1,
+      "before": {
+        "active_probe": 0,
+        "backend": 1,
+        "context_errors": 0,
+        "data_errors": 0,
+        "epoch": 0,
+        "event": "before",
+        "fallback": 0,
+        "faults": 0,
+        "features": 0,
+        "read_ends": 0,
+        "reads": 0,
+        "scope_ends": 0,
+        "scopes": 0,
+        "vmas": 0,
+        "write_ends": 0,
+        "writes": 0
+      },
+      "completion": {
+        "backend": 1,
+        "completed": 1000,
+        "event": "complete",
+        "iterations": 1000,
+        "joined": 1,
+        "mode": "mmap",
+        "passed": true,
+        "workers": [
+          {
+            "completed": 1000,
+            "cpu": 0,
+            "errors": 0,
+            "pid": 3061829,
+            "worker": 0
+          }
+        ]
+      },
+      "delegated_reader": false,
+      "execution": "NATIVE_MMAP_ONLY",
+      "health": "files=0 destroyed=13 release_errors=0",
+      "independent_native_mm": true,
+      "iterations": 1000,
+      "mode": "mmap",
+      "passed": true,
+      "workers": 1
+    },
+    {
+      "after": {
+        "active_probe": 0,
+        "backend": 1,
+        "context_errors": 0,
+        "data_errors": 0,
+        "epoch": 0,
+        "event": "after",
+        "fallback": 0,
+        "faults": 0,
+        "features": 0,
+        "read_ends": 0,
+        "reads": 0,
+        "scope_ends": 0,
+        "scopes": 0,
+        "vmas": 0,
+        "write_ends": 0,
+        "writes": 0
+      },
+      "backend": 1,
+      "before": {
+        "active_probe": 0,
+        "backend": 1,
+        "context_errors": 0,
+        "data_errors": 0,
+        "epoch": 0,
+        "event": "before",
+        "fallback": 0,
+        "faults": 0,
+        "features": 0,
+        "read_ends": 0,
+        "reads": 0,
+        "scope_ends": 0,
+        "scopes": 0,
+        "vmas": 0,
+        "write_ends": 0,
+        "writes": 0
+      },
+      "completion": {
+        "backend": 1,
+        "completed": 16000,
+        "event": "complete",
+        "iterations": 1000,
+        "joined": 16,
+        "mode": "mmap",
+        "passed": true,
+        "workers": [
+          {
+            "completed": 1000,
+            "cpu": 0,
+            "errors": 0,
+            "pid": 3061831,
+            "worker": 0
+          },
+          {
+            "completed": 1000,
+            "cpu": 1,
+            "errors": 0,
+            "pid": 3061832,
+            "worker": 1
+          },
+          {
+            "completed": 1000,
+            "cpu": 2,
+            "errors": 0,
+            "pid": 3061833,
+            "worker": 2
+          },
+          {
+            "completed": 1000,
+            "cpu": 3,
+            "errors": 0,
+            "pid": 3061834,
+            "worker": 3
+          },
+          {
+            "completed": 1000,
+            "cpu": 4,
+            "errors": 0,
+            "pid": 3061835,
+            "worker": 4
+          },
+          {
+            "completed": 1000,
+            "cpu": 5,
+            "errors": 0,
+            "pid": 3061836,
+            "worker": 5
+          },
+          {
+            "completed": 1000,
+            "cpu": 6,
+            "errors": 0,
+            "pid": 3061837,
+            "worker": 6
+          },
+          {
+            "completed": 1000,
+            "cpu": 7,
+            "errors": 0,
+            "pid": 3061838,
+            "worker": 7
+          },
+          {
+            "completed": 1000,
+            "cpu": 8,
+            "errors": 0,
+            "pid": 3061839,
+            "worker": 8
+          },
+          {
+            "completed": 1000,
+            "cpu": 9,
+            "errors": 0,
+            "pid": 3061840,
+            "worker": 9
+          },
+          {
+            "completed": 1000,
+            "cpu": 10,
+            "errors": 0,
+            "pid": 3061841,
+            "worker": 10
+          },
+          {
+            "completed": 1000,
+            "cpu": 11,
+            "errors": 0,
+            "pid": 3061842,
+            "worker": 11
+          },
+          {
+            "completed": 1000,
+            "cpu": 12,
+            "errors": 0,
+            "pid": 3061843,
+            "worker": 12
+          },
+          {
+            "completed": 1000,
+            "cpu": 13,
+            "errors": 0,
+            "pid": 3061844,
+            "worker": 13
+          },
+          {
+            "completed": 1000,
+            "cpu": 14,
+            "errors": 0,
+            "pid": 3061845,
+            "worker": 14
+          },
+          {
+            "completed": 1000,
+            "cpu": 15,
+            "errors": 0,
+            "pid": 3061846,
+            "worker": 15
+          }
+        ]
+      },
+      "delegated_reader": false,
+      "execution": "NATIVE_MMAP_ONLY",
+      "health": "files=0 destroyed=14 release_errors=0",
+      "independent_native_mm": true,
+      "iterations": 1000,
+      "mode": "mmap",
+      "passed": true,
+      "workers": 16
+    },
+    {
+      "after": {
+        "active_probe": 0,
+        "backend": 1,
+        "context_errors": 0,
+        "data_errors": 0,
+        "epoch": 0,
+        "event": "after",
+        "fallback": 0,
+        "faults": 5000,
+        "features": 0,
+        "read_ends": 5000,
+        "reads": 5000,
+        "scope_ends": 0,
+        "scopes": 0,
+        "vmas": 0,
+        "write_ends": 0,
+        "writes": 0
+      },
+      "backend": 1,
+      "before": {
+        "active_probe": 0,
+        "backend": 1,
+        "context_errors": 0,
+        "data_errors": 0,
+        "epoch": 0,
+        "event": "before",
+        "fallback": 0,
+        "faults": 0,
+        "features": 0,
+        "read_ends": 0,
+        "reads": 0,
+        "scope_ends": 0,
+        "scopes": 0,
+        "vmas": 1,
+        "write_ends": 0,
+        "writes": 0
+      },
+      "completion": {
+        "backend": 1,
+        "completed": 5000,
+        "event": "complete",
+        "iterations": 5000,
+        "joined": 1,
+        "mode": "fault",
+        "passed": true,
+        "workers": [
+          {
+            "completed": 5000,
+            "cpu": 0,
+            "errors": 0,
+            "pid": 3061848,
+            "worker": 0
+          }
+        ]
+      },
+      "delegated_reader": false,
+      "execution": "ORIGIN_FAULT_LOCAL_READER",
+      "health": "files=0 destroyed=15 release_errors=0",
+      "independent_native_mm": true,
+      "iterations": 5000,
+      "mode": "fault",
+      "passed": true,
+      "workers": 1
+    },
+    {
+      "after": {
+        "active_probe": 0,
+        "backend": 1,
+        "context_errors": 0,
+        "data_errors": 0,
+        "epoch": 0,
+        "event": "after",
+        "fallback": 0,
+        "faults": 80000,
+        "features": 0,
+        "read_ends": 80000,
+        "reads": 80000,
+        "scope_ends": 0,
+        "scopes": 0,
+        "vmas": 0,
+        "write_ends": 0,
+        "writes": 0
+      },
+      "backend": 1,
+      "before": {
+        "active_probe": 0,
+        "backend": 1,
+        "context_errors": 0,
+        "data_errors": 0,
+        "epoch": 0,
+        "event": "before",
+        "fallback": 0,
+        "faults": 0,
+        "features": 0,
+        "read_ends": 0,
+        "reads": 0,
+        "scope_ends": 0,
+        "scopes": 0,
+        "vmas": 16,
+        "write_ends": 0,
+        "writes": 0
+      },
+      "completion": {
+        "backend": 1,
+        "completed": 80000,
+        "event": "complete",
+        "iterations": 5000,
+        "joined": 16,
+        "mode": "fault",
+        "passed": true,
+        "workers": [
+          {
+            "completed": 5000,
+            "cpu": 0,
+            "errors": 0,
+            "pid": 3061850,
+            "worker": 0
+          },
+          {
+            "completed": 5000,
+            "cpu": 1,
+            "errors": 0,
+            "pid": 3061851,
+            "worker": 1
+          },
+          {
+            "completed": 5000,
+            "cpu": 2,
+            "errors": 0,
+            "pid": 3061852,
+            "worker": 2
+          },
+          {
+            "completed": 5000,
+            "cpu": 3,
+            "errors": 0,
+            "pid": 3061853,
+            "worker": 3
+          },
+          {
+            "completed": 5000,
+            "cpu": 4,
+            "errors": 0,
+            "pid": 3061854,
+            "worker": 4
+          },
+          {
+            "completed": 5000,
+            "cpu": 5,
+            "errors": 0,
+            "pid": 3061855,
+            "worker": 5
+          },
+          {
+            "completed": 5000,
+            "cpu": 6,
+            "errors": 0,
+            "pid": 3061856,
+            "worker": 6
+          },
+          {
+            "completed": 5000,
+            "cpu": 7,
+            "errors": 0,
+            "pid": 3061857,
+            "worker": 7
+          },
+          {
+            "completed": 5000,
+            "cpu": 8,
+            "errors": 0,
+            "pid": 3061858,
+            "worker": 8
+          },
+          {
+            "completed": 5000,
+            "cpu": 9,
+            "errors": 0,
+            "pid": 3061859,
+            "worker": 9
+          },
+          {
+            "completed": 5000,
+            "cpu": 10,
+            "errors": 0,
+            "pid": 3061860,
+            "worker": 10
+          },
+          {
+            "completed": 5000,
+            "cpu": 11,
+            "errors": 0,
+            "pid": 3061861,
+            "worker": 11
+          },
+          {
+            "completed": 5000,
+            "cpu": 12,
+            "errors": 0,
+            "pid": 3061862,
+            "worker": 12
+          },
+          {
+            "completed": 5000,
+            "cpu": 13,
+            "errors": 0,
+            "pid": 3061863,
+            "worker": 13
+          },
+          {
+            "completed": 5000,
+            "cpu": 14,
+            "errors": 0,
+            "pid": 3061864,
+            "worker": 14
+          },
+          {
+            "completed": 5000,
+            "cpu": 15,
+            "errors": 0,
+            "pid": 3061865,
+            "worker": 15
+          }
+        ]
+      },
+      "delegated_reader": false,
+      "execution": "ORIGIN_FAULT_LOCAL_READER",
+      "health": "files=0 destroyed=16 release_errors=0",
+      "independent_native_mm": true,
+      "iterations": 5000,
+      "mode": "fault",
+      "passed": true,
+      "workers": 16
+    },
+    {
+      "after": {
+        "active_probe": 0,
+        "backend": 1,
+        "context_errors": 0,
+        "data_errors": 0,
+        "epoch": 1000,
+        "event": "after",
+        "fallback": 0,
+        "faults": 15000,
+        "features": 0,
+        "read_ends": 15000,
+        "reads": 15000,
+        "scope_ends": 0,
+        "scopes": 0,
+        "vmas": 0,
+        "write_ends": 1000,
+        "writes": 1000
+      },
+      "backend": 1,
+      "before": {
+        "active_probe": 0,
+        "backend": 1,
+        "context_errors": 0,
+        "data_errors": 0,
+        "epoch": 0,
+        "event": "before",
+        "fallback": 0,
+        "faults": 0,
+        "features": 0,
+        "read_ends": 0,
+        "reads": 0,
+        "scope_ends": 0,
+        "scopes": 0,
+        "vmas": 15,
+        "write_ends": 0,
+        "writes": 0
+      },
+      "completion": {
+        "backend": 1,
+        "completed": 16000,
+        "event": "complete",
+        "iterations": 1000,
+        "joined": 16,
+        "mode": "concurrent",
+        "passed": true,
+        "workers": [
+          {
+            "completed": 1000,
+            "cpu": 0,
+            "errors": 0,
+            "pid": 3061867,
+            "worker": 0
+          },
+          {
+            "completed": 1000,
+            "cpu": 1,
+            "errors": 0,
+            "pid": 3061868,
+            "worker": 1
+          },
+          {
+            "completed": 1000,
+            "cpu": 2,
+            "errors": 0,
+            "pid": 3061869,
+            "worker": 2
+          },
+          {
+            "completed": 1000,
+            "cpu": 3,
+            "errors": 0,
+            "pid": 3061870,
+            "worker": 3
+          },
+          {
+            "completed": 1000,
+            "cpu": 4,
+            "errors": 0,
+            "pid": 3061871,
+            "worker": 4
+          },
+          {
+            "completed": 1000,
+            "cpu": 5,
+            "errors": 0,
+            "pid": 3061872,
+            "worker": 5
+          },
+          {
+            "completed": 1000,
+            "cpu": 6,
+            "errors": 0,
+            "pid": 3061873,
+            "worker": 6
+          },
+          {
+            "completed": 1000,
+            "cpu": 7,
+            "errors": 0,
+            "pid": 3061874,
+            "worker": 7
+          },
+          {
+            "completed": 1000,
+            "cpu": 8,
+            "errors": 0,
+            "pid": 3061875,
+            "worker": 8
+          },
+          {
+            "completed": 1000,
+            "cpu": 9,
+            "errors": 0,
+            "pid": 3061876,
+            "worker": 9
+          },
+          {
+            "completed": 1000,
+            "cpu": 10,
+            "errors": 0,
+            "pid": 3061877,
+            "worker": 10
+          },
+          {
+            "completed": 1000,
+            "cpu": 11,
+            "errors": 0,
+            "pid": 3061878,
+            "worker": 11
+          },
+          {
+            "completed": 1000,
+            "cpu": 12,
+            "errors": 0,
+            "pid": 3061879,
+            "worker": 12
+          },
+          {
+            "completed": 1000,
+            "cpu": 13,
+            "errors": 0,
+            "pid": 3061880,
+            "worker": 13
+          },
+          {
+            "completed": 1000,
+            "cpu": 14,
+            "errors": 0,
+            "pid": 3061881,
+            "worker": 14
+          },
+          {
+            "completed": 1000,
+            "cpu": 15,
+            "errors": 0,
+            "pid": 3061882,
+            "worker": 15
+          }
+        ]
+      },
+      "delegated_reader": false,
+      "execution": "ORIGIN_FAULT_LOCAL_READER",
+      "health": "files=0 destroyed=17 release_errors=0",
+      "independent_native_mm": true,
+      "iterations": 1000,
+      "mode": "concurrent",
+      "passed": true,
+      "workers": 16
+    },
+    {
+      "after": null,
+      "backend": 1,
+      "before": {
+        "active_probe": 0,
+        "backend": 1,
+        "context_errors": 0,
+        "data_errors": 0,
+        "epoch": 0,
+        "event": "before",
+        "fallback": 0,
+        "faults": 0,
+        "features": 0,
+        "read_ends": 0,
+        "reads": 0,
+        "scope_ends": 0,
+        "scopes": 0,
+        "vmas": 16,
+        "write_ends": 0,
+        "writes": 0
+      },
+      "completion": {
+        "backend": 1,
+        "completed": 16000,
+        "event": "complete",
+        "iterations": 1000,
+        "joined": 16,
+        "mode": "lifetime",
+        "passed": true,
+        "workers": [
+          {
+            "completed": 1000,
+            "cpu": 0,
+            "errors": 0,
+            "pid": 3061884,
+            "worker": 0
+          },
+          {
+            "completed": 1000,
+            "cpu": 1,
+            "errors": 0,
+            "pid": 3061885,
+            "worker": 1
+          },
+          {
+            "completed": 1000,
+            "cpu": 2,
+            "errors": 0,
+            "pid": 3061886,
+            "worker": 2
+          },
+          {
+            "completed": 1000,
+            "cpu": 3,
+            "errors": 0,
+            "pid": 3061887,
+            "worker": 3
+          },
+          {
+            "completed": 1000,
+            "cpu": 4,
+            "errors": 0,
+            "pid": 3061888,
+            "worker": 4
+          },
+          {
+            "completed": 1000,
+            "cpu": 5,
+            "errors": 0,
+            "pid": 3061889,
+            "worker": 5
+          },
+          {
+            "completed": 1000,
+            "cpu": 6,
+            "errors": 0,
+            "pid": 3061890,
+            "worker": 6
+          },
+          {
+            "completed": 1000,
+            "cpu": 7,
+            "errors": 0,
+            "pid": 3061891,
+            "worker": 7
+          },
+          {
+            "completed": 1000,
+            "cpu": 8,
+            "errors": 0,
+            "pid": 3061892,
+            "worker": 8
+          },
+          {
+            "completed": 1000,
+            "cpu": 9,
+            "errors": 0,
+            "pid": 3061893,
+            "worker": 9
+          },
+          {
+            "completed": 1000,
+            "cpu": 10,
+            "errors": 0,
+            "pid": 3061894,
+            "worker": 10
+          },
+          {
+            "completed": 1000,
+            "cpu": 11,
+            "errors": 0,
+            "pid": 3061895,
+            "worker": 11
+          },
+          {
+            "completed": 1000,
+            "cpu": 12,
+            "errors": 0,
+            "pid": 3061896,
+            "worker": 12
+          },
+          {
+            "completed": 1000,
+            "cpu": 13,
+            "errors": 0,
+            "pid": 3061897,
+            "worker": 13
+          },
+          {
+            "completed": 1000,
+            "cpu": 14,
+            "errors": 0,
+            "pid": 3061898,
+            "worker": 14
+          },
+          {
+            "completed": 1000,
+            "cpu": 15,
+            "errors": 0,
+            "pid": 3061899,
+            "worker": 15
+          }
+        ]
+      },
+      "delegated_reader": false,
+      "execution": "ORIGIN_FAULT_LOCAL_READER",
+      "health": "files=0 destroyed=18 release_errors=0",
+      "independent_native_mm": true,
+      "iterations": 1000,
+      "mode": "lifetime",
+      "passed": true,
+      "workers": 16
+    }
+  ],
+  "state": "COMPLETE"
+}

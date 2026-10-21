@@ -1,6 +1,6 @@
 # Separate mmap and page-fault validation
 
-Status: implementation prepared; VM correctness and timing pending. This stage
+Status: split correctness passed; timing preparation is in progress. This stage
 follows the user's instruction to retain concurrent, local readers and split
 mmap from page-fault workloads. No admission or protocol checks are removed.
 The sole source writer and VM executor is the main agent; helpers are inactive.
@@ -25,3 +25,32 @@ is fixed historical evidence. All seven mutex regressions remain open at the
 New source versions, observations and future timings must remain separate from
 those baselines. Acceptance is false until remaining gaps are resolved or
 explicitly listed as unresolved.
+
+## Correctness at 9291000
+
+`live-1` (Native/KD) and `live-2` (TCLock) passed serially on the original VM.
+Each run passed both basic C programs. The existing clients retained 96/96/100
+checks respectively, and all 18 additional split cases passed. For each backend:
+
+| Separate case | Completed operations | Callback/reader pairs | Writer pairs |
+| --- | ---: | ---: | ---: |
+| mmap-only, one worker | 1,000 | 0 | 0 |
+| mmap-only, sixteen workers | 16,000 | 0 | 0 |
+| faults, one worker | 5,000 | 5,000 | 0 |
+| faults, sixteen workers | 80,000 | 80,000 | 0 |
+| fifteen fault readers and one writer | 16,000 | 15,000 | 1,000 |
+| sixteen VMA-only lifetimes | 16,000 | object freed; exact data/join and release checks | 0 |
+
+All object/file and provider checks drained, with zero context/data/release
+errors. KD retirement returned state 2 and zero modules, writers and frames.
+The TCLock run had no KD provider and confirmed its own quiescent state. The
+[Native/KD receipt](live-1-result.json) and [TCLock receipt](live-2-result.json)
+retain the complete per-worker and fault-ownership evidence. No reader body was
+submitted for delegation. Raw unbound observation counters cannot establish a
+JIT execution class; the ordinary reader interface and exact callback receipts
+are the scope of these results.
+
+Host capture found 69 QEMU threads before Native/KD and 73 before TCLock, with
+original CPU pins, snapshot, boot, kernel and configuration. These are functional
+checks. Timing retains the original strict 67-thread identity preflight and must
+record any endpoint mismatch without claiming acceptance.
