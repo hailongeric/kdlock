@@ -1,7 +1,7 @@
 # OUTER acquisition with general unlock diagnostic, 2026-10-21
 
-Status: **implementation and correctness validation in progress; no performance
-acceptance.** This is the focused control specified by the
+Status: **implementation and focused correctness complete; timing blocked by
+the unchanged host gate; no performance acceptance.** This is the control specified by the
 [previous evidence review](../mutex-causal-boundary-20261021/README.md).
 
 The main agent is the sole writer and VM executor. Fresh inspection found a
@@ -106,3 +106,56 @@ retained; inspection found no KD module resident. The planned single allocator
 refresh uses the existing page-sized helper's normal allocation/free path and
 unloads it before retrying the unchanged provider. This preparation is separate
 from correctness and never counts as a test pass.
+
+## Completed correctness and timing admission
+
+`allocator-refresh-1` completed normal build/load/unload and preserved the failed
+attempt byte-for-byte. `task-2` then passed both ownership orders, four real ACKs,
+two deferred frees, and the three-worker × 4096-iteration registry stress with
+three final deferred frees. Ordinary source retirement/unload completed and
+the task registry was empty. Both attempts used the identical provider SHA256
+`e892c5ee994d705d0b50444d19b4e06ac8faa7efcd10b8f41080908f511c3d46`.
+This current-provider ACK probe remains distinct from the frozen provider used
+by the workload derivative. The strengthened `elf-checks-2` receipt binds both
+actual positive ELFs and all three rejection cases to their source/binary hashes.
+
+`correctness-1`, runner revision `574545b`, completed all four serial sessions.
+The joined correctness work has no timing/throughput measurement command.
+Every worker progressed on its assigned CPU, the collector stayed on CPU 63,
+the protected capacity result and call count matched, and generated images
+remained stable. Every session retired to exactly state 2, zero modules, zero
+frames and zero writers, then drained. The actual loaded mutex offset was
+32 modulo 64 in all four sessions. No per-session kernel fault was detected.
+
+| Session | Operations | Returned JIT bodies | Final drain |
+| --- | ---: | ---: | --- |
+| Original OUTER, 1 worker | 3,230,080 | 0 | Pass |
+| OUTER/general unlock, 1 worker | 5,685,888 | 0 | Pass |
+| Original OUTER, 16 workers | 5,100,544 | 5,068,444 | Pass |
+| OUTER/general unlock, 16 workers | 6,476,544 | 6,427,903 | Pass |
+
+The one-worker cases execute locally; both contended cases satisfy the required
+returned-body check. These operation counts are correctness evidence, not a
+performance comparison. They total 20,493,056 operations and 11,496,347 returned
+bodies. Entry witnesses remain separately recorded from returned bodies.
+
+`timing-1` was rejected **before its plan or any session started**. The fresh
+host receipt at `10:39:29.126620 UTC` contained the original 67 task rows plus
+worker TID `446191` on CPU 63. The immediate post-rejection receipt at
+`10:39:32.746549 UTC` contained the same 68 rows. Recovery snapshot and pins
+were verified. The original strict identity/count check was not relaxed, and
+no repeated gate attempts were made to select a favorable observation.
+
+Thus the planned three derivative/fresh-OUTER pairs remain **unrun**. There are
+zero new timing samples, so paired rates, variance and confidence intervals
+are unavailable. The earlier failed 100-thread endpoint and subsequent
+74-thread observation remain unchanged evidence. All seven points remain
+`UNRESOLVED_CAUSE`: c08 at 3/4/5 workers, pipebytes at 3/5, pipecap at 5, and rcuht
+at 2. Acquisition latency also remains unresolved. A qualifying unchanged host
+gate is still required before the six sessions can establish any new timing
+evidence; changed execution mix must remain separate from matched-path cost.
+
+The successful allocator preparation captured its kernel log. After review,
+the maintained preparation script also captures kernel messages on exceptional
+exit; that failure-path improvement was not exercised or used to alter the
+completed `allocator-refresh-1/driver.py` evidence.

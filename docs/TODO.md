@@ -99,9 +99,14 @@ The latest [regression evidence review](../bench/results/10.176.26.71/bench/mute
 narrows pipecap's class mismatch to OUTER sessions with no delegation queue entry
 versus DIRECT sessions with returned bodies. Historical host-worker activity
 cannot be reconstructed, and a fresh observation still fails the thread-count
-gate. All seven causes remain unresolved. The proposed isolated general-unlock
-control remains unimplemented and requires affected correctness checks before
-any serial timing; no admission or ownership check may be relaxed to run it.
+gate. All seven causes remain unresolved. The subsequent
+[isolated general-unlock control](../bench/results/10.176.26.71/bench/pipecap-unlock-20261021/README.md)
+is implemented and passed basic/affected, ELF, live owner/ACK and four serial
+syscall correctness checks. Its single timing gate failed at 68 versus 67 host
+tasks, before any session. The three paired repetitions and their variance
+remain unrun; no admission, ownership or environment check may be relaxed to
+complete them. The allocator failure and identical-binary successful retry stay
+separate from these frozen-provider workload results.
 
 The entry-inlining experiment passed focused correctness checks but did not
 resolve the seven mutex losses in its separate 120-session comparison. It is

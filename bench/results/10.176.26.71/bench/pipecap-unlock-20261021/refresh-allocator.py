@@ -61,6 +61,17 @@ def main():
     rt.write_json(out/'result.json', result)
     fd = os.open('/dev/kmsg', os.O_RDONLY | os.O_NONBLOCK)
     os.lseek(fd, 0, os.SEEK_END)
+    messages = ''
+
+    def collect():
+        nonlocal messages
+        while True:
+            try:
+                messages += os.read(fd, 1 << 20).decode(errors='replace')+'\n'
+            except BlockingIOError:
+                break
+        (out/'kernel.log').write_text(messages)
+
     try:
         for name, command, limit in [
             ('build', ['make', '-C', build, 'KDIR=/root/linux-6.1.159-kdclobber2'], 180),
@@ -69,13 +80,7 @@ def main():
             rt.command(command, out/(name+'.log'), timeout=limit)
             result['commands'].append(dict(name=name, exit_code=0))
             rt.write_json(out/'result.json', result)
-        messages = ''
-        while True:
-            try:
-                messages += os.read(fd, 1 << 20).decode(errors='replace')+'\n'
-            except BlockingIOError:
-                break
-        (out/'kernel.log').write_text(messages)
+        collect()
         require(not rt.FAULT.search(messages), 'kernel fault during preparation')
         require(all(sha(failure/p) == h for p, h in failed_hashes.items()), 'failed evidence changed')
         require(all(sha(build/p) == h for p, h in sources.items()), 'helper source changed')
@@ -86,8 +91,11 @@ def main():
         result['error'] = repr(error)
         raise
     finally:
-        os.close(fd)
-        rt.write_json(out/'result.json', result)
+        try:
+            collect()
+        finally:
+            os.close(fd)
+            rt.write_json(out/'result.json', result)
     print(json.dumps(result, sort_keys=True))
 
 

@@ -97,6 +97,16 @@ contains seven different disk-writing workers and still fails the 67-thread
 count. No new timing ran. The review preserves both limits and specifies a
 small workload-only general-unlock control with correctness prerequisites.
 
+The [isolated unlock control](../bench/results/10.176.26.71/bench/pipecap-unlock-20261021/README.md)
+now builds against the frozen provider/headers and passes both basic programs,
+six affected drivers, actual ELF checks, the live owner/ACK probe and four serial
+syscall correctness sessions. Both 16-worker arms returned JIT bodies and all
+four sessions retired exactly. The first task-probe load failed before init on
+a reserved per-CPU allocation; normal allocator preparation allowed an identical
+binary retry to pass. The single timing admission attempt found 68 instead of
+67 QEMU tasks and started no timing sessions. The three planned pairs, variance,
+causal attribution and all seven regression resolutions remain open.
+
 The earlier [pipecap owner observation](../bench/results/10.176.26.71/bench/pipecap-owner-20261021/README.md)
 retains 24 drained one-worker sessions with unchanged binaries and no returned
 JIT bodies. The strict endpoint failed at 101 versus 67 threads; the uncalibrated
