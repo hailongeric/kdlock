@@ -35,3 +35,22 @@ failed with two competing `serio_raw.o` compilations: modpost found missing
 installed or booted. The first build log and object/command files are retained;
 the planned retry uses the module directory with one job, preserving the image
 and checking the same 73-module closure. Admission and runtime checks are unchanged.
+
+The directory retry stopped before compilation because the first competing
+compilations had also corrupted `.serio_raw.o.cmd` (missing separator). Both
+attempts are retained. The next retry archives and verifies that exact generated
+output set before regenerating it; sources, image, configuration and the
+73-module requirement remain unchanged.
+
+Regenerating the corrupt outputs compiled `serio_raw.o` correctly. The broad
+directory target then failed on unrelated Hyper-V module dependencies. That
+third attempt remains a failure. The fourth attempt uses the exact external
+directory `serio_raw.ko` target with one job; no modpost warnings are suppressed
+and the required module set is unchanged.
+
+The exact fourth target passed. All 73 required modules and the baseline
+manifest (`ccb394c86a5fb79139d6db97900820b90194bd2de555f97a92c24ca6ba9bf410`)
+verified. The kernel image remained
+`96bb2fb60a1f5b60b971295c5a811bf30f2f346b72bacfc5b199817f2b67a5d3`;
+recovery and prior installed boot artifacts were unchanged. Installation and
+live checks are still pending. Earlier failures are retained as failures.
