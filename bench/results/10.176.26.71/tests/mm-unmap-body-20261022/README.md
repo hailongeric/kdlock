@@ -27,3 +27,11 @@ The stage uses `bench/results/10.176.26.71/raw/tests/mm-unmap-body-20261022/`
 on the source host and `/root/kdlock-evidence/10.176.26.71/tests/mm-unmap-body-20261022/`
 in the guest. No general mmap/munmap or populated-page teardown delegation is
 claimed.
+
+Build source `670796f` passed the two basic programs, five advice and five fault
+receipt checks, and completed the kernel image. The final single-module target
+failed with two competing `serio_raw.o` compilations: modpost found missing
+`MODULE_LICENSE()` and an unresolved builtin reschedule symbol. Nothing was
+installed or booted. The first build log and object/command files are retained;
+the planned retry uses the module directory with one job, preserving the image
+and checking the same 73-module closure. Admission and runtime checks are unchanged.
