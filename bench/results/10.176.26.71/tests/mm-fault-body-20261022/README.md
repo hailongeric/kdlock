@@ -1,6 +1,6 @@
 # Anonymous write-fault body stage
 
-Status: prepared, not yet compiled or live-validated. The selected scope and
+Status: kernel compilation passed; live correctness is pending. The selected scope and
 reader/ownership rationale are in [the fault guide](../../../../../kernel_integration/mmap_lock/FAULT.md).
 All performance work, p95 and the seven mutex regressions remain deferred.
 
@@ -26,3 +26,18 @@ Raw inspection and subsequent results belong in
 `/root/kdlock-evidence/10.176.26.71/tests/mm-fault-body-20261022/`.
 Builds, tests, transitions and final recovery will be recorded here as they
 complete. No correctness or delegation completion is claimed from prepared code.
+
+## Build stage
+
+Kernel source commit `1e2ddb2` built successfully as `6.1.159-kdmm3`, Build ID
+`51312746083c9b4ba76d668a46eabb7c4942866a`. Its captured manifest SHA-256 is
+`7190c36fb1a0ccd43757e5ac11b32814b150971f951290dc74eda52b4112ad45`.
+The basic C checks, prior advice receipt checks, image and all 73 runtime modules
+completed in `build-control-1`; recovery and prior MM boot artifacts remained
+byte-identical. The new tree stays on root ext4, with about 16 GiB still free.
+
+Probe preparation `test-preparation-1` at test commit `82d04f1` failed module
+linking: its read-only cancellation observer indirectly referenced unexported
+`pmd_clear_bad`. No module loaded and no reboot or fault workload began. The
+observer now refuses bad/huge/device PMD entries directly, without attempting
+page-table repair. The failed frozen source and log remain under `test-build-1`.

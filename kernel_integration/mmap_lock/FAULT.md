@@ -1,7 +1,7 @@
 # Minimal anonymous write-fault body
 
-Status: implementation prepared for a separate `kdmm3` kernel. Compilation and
-live correctness are not yet validated. The validated [VMA advice body](BODY.md),
+Status: the separate `kdmm3` kernel and its 73 runtime modules built successfully.
+Live correctness is not yet validated. The validated [VMA advice body](BODY.md),
 its installed `kdmm2` image and the recovery kernel remain preserved. Performance,
 p95 latency and the seven mutex regressions are deferred.
 

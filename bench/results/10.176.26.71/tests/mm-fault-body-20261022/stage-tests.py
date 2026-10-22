@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Freeze and compile focused fault probes, then install the preserved candidate."""
-import hashlib
+import argparse
 import io
 import json
 from pathlib import Path
@@ -12,7 +12,7 @@ import tarfile
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[4]
 BASE = '/root/kdlock-evidence/10.176.26.71/tests/mm-fault-body-20261022'
-RAW = ROOT / 'bench/results/10.176.26.71/raw/tests/mm-fault-body-20261022/test-preparation-1'
+RAW_ROOT = ROOT / 'bench/results/10.176.26.71/raw/tests/mm-fault-body-20261022'
 TREE = '/root/kdlock-kernel-work/mm-fault-body-20261022/candidate-1/linux'
 BUNDLE = '/root/kdlock-kernel-baselines/mmap-kdmm3-20261022'
 C = runpy.run_path(str(HERE.parent/'serial-continuation-20261022/campaign.py'))
@@ -20,6 +20,11 @@ SYNC = runpy.run_path(str(ROOT/'tools/vm/sync_source.py'))
 
 
 def main():
+    parser=argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--attempt',type=int,required=True)
+    a=parser.parse_args()
+    assert a.attempt >= 1
+    RAW=RAW_ROOT/('test-preparation-'+str(a.attempt))
     RAW.mkdir()
     prior = json.loads((HERE/'source-inputs.json').read_text())
     for name, digest in prior['files'].items():
@@ -45,14 +50,16 @@ def main():
     C['command'](ssh,RAW/'sync-after.json',180,(json.dumps(header)+'\n').encode()+archive.getvalue())
     after=json.loads((RAW/'sync-after.json').read_text())
     assert after['idle'] and after['hashes']==files and after['copied']==len(changed)
-    C['guest']('mkdir -- '+BASE+'/control',RAW/'mkdir.log',30)
+    C['guest']('mkdir -p -- '+BASE+'/control',RAW/'mkdir.log',30)
     C['copy_in']([HERE/'transition.py',RAW/'source-inputs.json'],BASE+'/control/',RAW/'copy-control.log')
     # Read-only ELF inspection remains on the source host. Keep the complete
     # captured ELF, rather than inferring new offsets from an older image.
-    C['command'](['scp','-o','BatchMode=yes','-o','ConnectTimeout=10','-P','2222',
-                  'root@10.176.26.71:'+TREE+'/vmlinux',str(RAW/'vmlinux')],RAW/'copy-elf.log',300)
+    elf=RAW_ROOT/'test-preparation-1/vmlinux'
+    if a.attempt==1:
+        C['command'](['scp','-o','BatchMode=yes','-o','ConnectTimeout=10','-P','2222',
+                      'root@10.176.26.71:'+TREE+'/vmlinux',str(elf)],RAW/'copy-elf.log',300)
     C['fetch'](BUNDLE+'/manifest.json',RAW/'kernel-manifest.json')
-    C['command'](['python3',str(HERE/'writer-sites.py'),'--elf',str(RAW/'vmlinux'),
+    C['command'](['python3',str(HERE/'writer-sites.py'),'--elf',str(elf),
                   '--manifest',str(RAW/'kernel-manifest.json'),'--output',str(RAW/'writer-sites')],RAW/'writer-sites.log',120)
     C['copy_in']([RAW/'writer-sites/writer-sites.json'],BASE+'/control/',RAW/'copy-sites.log')
     script = '''import json,os,runpy,shutil,sys
@@ -66,7 +73,7 @@ modules=sorted(s.split()[0] for s in Path('/proc/modules').read_text().splitline
 expected=json.loads(Path('/root/kdlock-evidence/10.176.26.71/tests/mm-body-20261022/final-health.json').read_text())['modules']
 assert modules==expected
 rt.write_json(base/'control/expected-guest.json',dict(modules=modules,boot_id=Path('/proc/sys/kernel/random/boot_id').read_text().strip()))
-out=base/'test-build-1';out.mkdir()
+out=base/('test-build-'+str(ATTEMPT));out.mkdir()
 inputs=json.loads((base/'control/source-inputs.json').read_text())
 for n,digest in inputs['files'].items():assert rt.digest(root/n)==digest,n
 shutil.copytree(root/'tests/kernel/mmap_lock/fault_body',out/'source')
@@ -75,9 +82,9 @@ command(['make','-C',out/'source/payload','KDIR='+str(tree),'W=1','UBSAN_SANITIZ
 command(['cc','-pthread','-O2','-Wall','-Wextra','-Werror','-o',out/'client',out/'source/client.c'],out/'build-client.log',120)
 command([sys.executable,root/'tests/kernel/mmap_lock/fault_body/test_receipts.py'],out/'receipts.log',60)
 rt.write_json(out/'result.json',dict(passed=True,loaded=False,booted=False,source_inputs_sha256=rt.digest(base/'control/source-inputs.json')))
-'''.replace('BASE',repr(BASE)).replace('TREE',repr(TREE))
+'''.replace('BASE',repr(BASE)).replace('TREE',repr(TREE)).replace('ATTEMPT',str(a.attempt))
     C['guest'](C['PY']+" - <<'PYG'\n"+script+'\nPYG',RAW/'test-build.log',600)
-    C['fetch'](BASE+'/test-build-1/result.json',RAW/'test-build-result.json')
+    C['fetch'](BASE+'/test-build-'+str(a.attempt)+'/result.json',RAW/'test-build-result.json')
     host=C['capture'](RAW/'host-install.json')
     assert host['pins_verified'] and host['snapshot_listed']
     C['copy_in']([RAW/'host-install.json'],BASE+'/control/',RAW/'copy-host.log')

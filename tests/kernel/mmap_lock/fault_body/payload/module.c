@@ -136,7 +136,9 @@ static bool present(struct mm_struct *mm, unsigned long address)
 	pud = pud_offset(p4d, address);
 	if (pud_none(*pud) || pud_bad(*pud)) return false;
 	pmd = pmd_offset(pud, address);
-	if (pmd_none(*pmd) || pmd_trans_unstable(pmd)) return false;
+	/* Observation must not clear a bad PMD, and that repair helper is not
+	 * exported to modules. Refuse every non-ordinary page-table shape. */
+	if (pmd_none(*pmd) || pmd_bad(*pmd) || pmd_trans_huge(*pmd) || pmd_devmap(*pmd)) return false;
 	pte = pte_offset_map_lock(mm, pmd, address, &ptl);
 	found = pte_present(*pte);
 	pte_unmap_unlock(pte, ptl);
