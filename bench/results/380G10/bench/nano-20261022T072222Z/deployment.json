@@ -1,0 +1,19 @@
+{
+  "git_head": "050c1aad72b7de45c6dd3d19b8299314f7471faf",
+  "git_status": "",
+  "source_host": "380G10",
+  "frozen_utc": "2026-10-22T07:26:16.245630+00:00",
+  "file_count": 664,
+  "archive_bytes": 6717440,
+  "archive_sha256": "ad33c0255fb221b4b9be428359f2dd9e6bdfe61823d2b5365770ef85d56a8539",
+  "exclusions": [
+    "bench/results/",
+    "results/",
+    "docs/history/"
+  ],
+  "previous_guest_source": "/root/host_fs/kdlock-before-nano-20261022T072222Z",
+  "guest_source": "/root/host_fs/kdlock",
+  "guest_boot_id": "f84aa8f3-c211-4198-aafa-686cf93cb751",
+  "python": "/root/kdlock-evidence/clobber-20260918/venv/bin/python3",
+  "deployment_hashes_verified": true
+}

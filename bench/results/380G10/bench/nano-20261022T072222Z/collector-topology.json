@@ -1,0 +1,262 @@
+{
+  "passed": true,
+  "online_cpus": 40,
+  "checks": [
+    {
+      "workers": 1,
+      "collector": 38,
+      "shared": false,
+      "expected": 1,
+      "actual": 1,
+      "stderr": "/dev/spin_cacheline: No such file or directory\n"
+    },
+    {
+      "workers": 1,
+      "collector": 0,
+      "shared": false,
+      "expected": 2,
+      "actual": 2,
+      "stderr": ""
+    },
+    {
+      "workers": 2,
+      "collector": 38,
+      "shared": false,
+      "expected": 1,
+      "actual": 1,
+      "stderr": "/dev/spin_cacheline: No such file or directory\n"
+    },
+    {
+      "workers": 2,
+      "collector": 1,
+      "shared": false,
+      "expected": 2,
+      "actual": 2,
+      "stderr": ""
+    },
+    {
+      "workers": 3,
+      "collector": 38,
+      "shared": false,
+      "expected": 1,
+      "actual": 1,
+      "stderr": "/dev/spin_cacheline: No such file or directory\n"
+    },
+    {
+      "workers": 3,
+      "collector": 2,
+      "shared": false,
+      "expected": 2,
+      "actual": 2,
+      "stderr": ""
+    },
+    {
+      "workers": 4,
+      "collector": 38,
+      "shared": false,
+      "expected": 1,
+      "actual": 1,
+      "stderr": "/dev/spin_cacheline: No such file or directory\n"
+    },
+    {
+      "workers": 4,
+      "collector": 3,
+      "shared": false,
+      "expected": 2,
+      "actual": 2,
+      "stderr": ""
+    },
+    {
+      "workers": 5,
+      "collector": 38,
+      "shared": false,
+      "expected": 1,
+      "actual": 1,
+      "stderr": "/dev/spin_cacheline: No such file or directory\n"
+    },
+    {
+      "workers": 5,
+      "collector": 4,
+      "shared": false,
+      "expected": 2,
+      "actual": 2,
+      "stderr": ""
+    },
+    {
+      "workers": 6,
+      "collector": 38,
+      "shared": false,
+      "expected": 1,
+      "actual": 1,
+      "stderr": "/dev/spin_cacheline: No such file or directory\n"
+    },
+    {
+      "workers": 6,
+      "collector": 5,
+      "shared": false,
+      "expected": 2,
+      "actual": 2,
+      "stderr": ""
+    },
+    {
+      "workers": 7,
+      "collector": 38,
+      "shared": false,
+      "expected": 1,
+      "actual": 1,
+      "stderr": "/dev/spin_cacheline: No such file or directory\n"
+    },
+    {
+      "workers": 7,
+      "collector": 6,
+      "shared": false,
+      "expected": 2,
+      "actual": 2,
+      "stderr": ""
+    },
+    {
+      "workers": 8,
+      "collector": 38,
+      "shared": false,
+      "expected": 1,
+      "actual": 1,
+      "stderr": "/dev/spin_cacheline: No such file or directory\n"
+    },
+    {
+      "workers": 8,
+      "collector": 7,
+      "shared": false,
+      "expected": 2,
+      "actual": 2,
+      "stderr": ""
+    },
+    {
+      "workers": 12,
+      "collector": 38,
+      "shared": false,
+      "expected": 1,
+      "actual": 1,
+      "stderr": "/dev/spin_cacheline: No such file or directory\n"
+    },
+    {
+      "workers": 12,
+      "collector": 11,
+      "shared": false,
+      "expected": 2,
+      "actual": 2,
+      "stderr": ""
+    },
+    {
+      "workers": 16,
+      "collector": 38,
+      "shared": false,
+      "expected": 1,
+      "actual": 1,
+      "stderr": "/dev/spin_cacheline: No such file or directory\n"
+    },
+    {
+      "workers": 16,
+      "collector": 15,
+      "shared": false,
+      "expected": 2,
+      "actual": 2,
+      "stderr": ""
+    },
+    {
+      "workers": 20,
+      "collector": 38,
+      "shared": false,
+      "expected": 1,
+      "actual": 1,
+      "stderr": "/dev/spin_cacheline: No such file or directory\n"
+    },
+    {
+      "workers": 20,
+      "collector": 19,
+      "shared": false,
+      "expected": 2,
+      "actual": 2,
+      "stderr": ""
+    },
+    {
+      "workers": 24,
+      "collector": 38,
+      "shared": false,
+      "expected": 1,
+      "actual": 1,
+      "stderr": "/dev/spin_cacheline: No such file or directory\n"
+    },
+    {
+      "workers": 24,
+      "collector": 23,
+      "shared": false,
+      "expected": 2,
+      "actual": 2,
+      "stderr": ""
+    },
+    {
+      "workers": 28,
+      "collector": 38,
+      "shared": false,
+      "expected": 1,
+      "actual": 1,
+      "stderr": "/dev/spin_cacheline: No such file or directory\n"
+    },
+    {
+      "workers": 28,
+      "collector": 27,
+      "shared": false,
+      "expected": 2,
+      "actual": 2,
+      "stderr": ""
+    },
+    {
+      "workers": 32,
+      "collector": 38,
+      "shared": false,
+      "expected": 1,
+      "actual": 1,
+      "stderr": "/dev/spin_cacheline: No such file or directory\n"
+    },
+    {
+      "workers": 32,
+      "collector": 31,
+      "shared": false,
+      "expected": 2,
+      "actual": 2,
+      "stderr": ""
+    },
+    {
+      "workers": 36,
+      "collector": 38,
+      "shared": false,
+      "expected": 1,
+      "actual": 1,
+      "stderr": "/dev/spin_cacheline: No such file or directory\n"
+    },
+    {
+      "workers": 36,
+      "collector": 35,
+      "shared": false,
+      "expected": 2,
+      "actual": 2,
+      "stderr": ""
+    },
+    {
+      "workers": 64,
+      "collector": 63,
+      "shared": true,
+      "expected": 2,
+      "actual": 2,
+      "stderr": ""
+    },
+    {
+      "workers": 36,
+      "collector": 38,
+      "shared": true,
+      "expected": 2,
+      "actual": 2,
+      "stderr": ""
+    }
+  ]
+}
