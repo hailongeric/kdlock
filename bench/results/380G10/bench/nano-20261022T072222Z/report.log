@@ -1,8 +1,0 @@
-Traceback (most recent call last):
-  File "/root/kdlock-evidence/380G10/bench/nano-20261022T072222Z/report.py", line 227, in <module>
-    main()
-  File "/root/kdlock-evidence/380G10/bench/nano-20261022T072222Z/report.py", line 202, in main
-    samples, manifests = collect(args.base)
-  File "/root/kdlock-evidence/380G10/bench/nano-20261022T072222Z/report.py", line 50, in collect
-    assert frozen[relative] == digest, relative
-KeyError: 'bench/spin_cacheline/.build/provider/include/asm_head.h'
