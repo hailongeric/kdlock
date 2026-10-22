@@ -162,7 +162,7 @@ static void report(const char *mode, struct fb_status final, unsigned int bindin
 	       "\"mm\":%llu,\"gate\":%llu,\"idle\":%llu,\"unmapped_pages\":%d,"
 	       "\"reader_peak\":%llu,\"delegated_with_readers\":%llu,\"retry_writer_completed\":%d,"
 	       "\"cancel_tid\":[%llu,%llu],\"cancel_present\":[%llu,%llu],\"cancel_result\":[%lld,%lld],\"phases\":[",
-	       mode, checks + final.checks, (unsigned long long)final.errors, completed,
+	       mode, checks + (unsigned long)final.checks, (unsigned long long)final.errors, completed,
 	       (unsigned long long)final.mm, (unsigned long long)final.gate, (unsigned long long)after.idle, PAGES,
 	       (unsigned long long)final.reader_peak, (unsigned long long)final.delegated_with_readers, retry,
 	       (unsigned long long)final.cancel_tid[0], (unsigned long long)final.cancel_tid[1],
@@ -187,7 +187,7 @@ static void retry_case(void)
 	struct uffdio_register reg = {.range = {.start = (uintptr_t)(area + 16 * PAGE), .len = 3 * PAGE},
 		.mode = UFFDIO_REGISTER_MODE_MISSING};
 	struct uffd_msg message;
-	unsigned char *copy;
+	unsigned char *copy = NULL;
 	require(uffd >= 0, "userfaultfd");
 	require(!ioctl(uffd, UFFDIO_API, &api) && (api.features & UFFD_FEATURE_THREAD_ID), "userfaultfd API/tid");
 	require(!ioctl(uffd, UFFDIO_REGISTER, &reg), "register missing pages");

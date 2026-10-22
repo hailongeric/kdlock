@@ -41,3 +41,9 @@ linking: its read-only cancellation observer indirectly referenced unexported
 `pmd_clear_bad`. No module loaded and no reboot or fault workload began. The
 observer now refuses bad/huge/device PMD entries directly, without attempting
 page-table repair. The failed frozen source and log remain under `test-build-1`.
+
+`test-preparation-2` linked the corrected module, then failed the userspace
+client's warnings-as-errors build: a printed counter needed an explicit type
+conversion, and a checked allocation pointer needed initialization for the
+compiler's control-flow analysis. Both are test-only fixes; no admission or
+correctness check changed. That frozen attempt remains under `test-build-2`.
