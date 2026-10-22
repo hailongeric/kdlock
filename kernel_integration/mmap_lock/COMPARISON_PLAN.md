@@ -51,14 +51,18 @@ worker/interval accounting found 94.04% of blocked phase-schedule returns follow
 by failed predicates; physical-gate blocked departures were zero. This supports
 the retry-amplification target under instrumentation, not wake-all attribution.
 Its unchanged endpoint failed at 72 versus 67, so there is no accepted rate or
-repetition variance. Recovery is restored idle. Control-coverage and fairness
-gaps remain documented before a protocol candidate; the six-block plain plan
+repetition variance. Recovery is restored idle. That diagnostic left control
+coverage and fairness gaps before a protocol candidate; the six-block plain plan
 and seven original mutex causes are not resolved by this diagnostic.
 
 The [deterministic controls](../../bench/results/10.176.26.71/tests/mmap-phase-controls-20261022/README.md)
-are a separate correctness stage, currently awaiting VM validation. Their
-[wake-correlation design](../../bench/results/10.176.26.71/tests/mmap-phase-controls-20261022/WAKE_CORRELATION.md)
-defines the next evidence boundary without changing the baseline wake policy.
+passed serial VM validation: two basic programs, six receipt tests, 139 original
+API checks and 51 new checks covering all three missing observer paths. The
+approved continuation retained every refusal and used 90-second settling with
+unchanged admission. Recovery is restored; no timing or wake-policy change ran.
+The [wake-correlation design](../../bench/results/10.176.26.71/tests/mmap-phase-controls-20261022/WAKE_CORRELATION.md)
+defines the next unvalidated evidence boundary. All seven original mutex causes
+and qualified throughput variance remain unresolved.
 
 ## Shared candidate and validation binding
 

@@ -69,13 +69,18 @@ blocked phase-schedule returns, 94.04% precede another failed predicate. This
 supports retry amplification under observation, not wake-all causality or an
 uninstrumented cost claim. The fixed endpoint failed at 72 versus 67; timing
 is rejected, repetition variance is unavailable, and recovery is restored idle.
-No lock policy changed. Observer control gaps and all seven original causes
-remain unresolved; prior baselines and profiles remain separate.
+No lock policy changed. That stage left observer control gaps and all seven
+original causes unresolved; prior baselines and profiles remain separate.
 
 A separate [correctness-only follow-up](../bench/results/10.176.26.71/tests/mmap-phase-controls-20261022/README.md)
-is preparing deterministic coverage for those three observer gaps. It introduces
-no timing or production lock-policy change. Exact wake-callback attribution is
-still proposed, not measured; the prior rejected rates remain unchanged.
+closed those three observer gaps with 51 positive-control checks, after two basic
+programs, six receipt tests and the unchanged 139-check API baseline. Five initial
+admission refusals and one post-boot refusal remain preserved. The user-approved
+90-second continuation passed full admission and all controls serially, then
+restored recovery idle.
+No timing or production wake-policy change occurred. Exact wake-callback
+attribution remains proposed, not measured; all seven causes and prior rejected
+rates remain unresolved.
 
 The reader/writer semaphore (rwsem) implementation measured in `c21345b` is
 **accepted as the current version**, including the two-worker regressions below.

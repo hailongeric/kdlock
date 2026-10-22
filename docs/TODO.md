@@ -87,11 +87,14 @@ public-mutex causes remain unresolved. Recovery is restored and idle; no protoco
 change or acceptance followed this diagnostic.
 
 The [deterministic observer controls](../bench/results/10.176.26.71/tests/mmap-phase-controls-20261022/README.md)
-are now prepared as a separate correctness-only fixture. Live validation is
-pending. Preserve the sealed observer and original workload bindings; require
-positive independent evidence for each missing schedule path. The accompanying
-exact wake-correlation design remains a proposal and must validate stack-entry
-reuse, callback outcomes and complete event lifetimes before any policy change.
+now close the failed-after-block, no-switch and runnable-only coverage gaps:
+51 checks passed with exact identities, independent task switch counters and
+complete joins, after basic/receipt checks and the unchanged 139-check baseline.
+The observer and original workload bindings remain sealed. Recovery is restored
+idle. Next, validate the proposed exact wait-entry/wake-callback correlation,
+including stack reuse, scheduler activation, cancellation and complete callback
+lifetimes, before attributing retries to fanout or changing wake policy. No
+timing ran; qualified variance and all seven original causes remain unresolved.
 
 KD has explicit spin, ordinary mutex, rwlock and rwsem APIs. Spin/mutex/rwlock
 workloads compare KD, TCLock and Native; sleeping rwsem compares KD with Native
