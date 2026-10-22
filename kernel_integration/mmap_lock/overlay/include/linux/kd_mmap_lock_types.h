@@ -22,9 +22,10 @@ struct kd_mmap_fault_state {
 struct kd_mmap_unmap_state {
 	u32 tail;
 	unsigned long start, end;
-	bool enabled, native_only;
+	bool enabled, native_only, allow_populated;
 	atomic64_t calls, removed, delegated, native, post_ban;
 	atomic64_t handbacks, acks, cancelled, refused, failed;
+	atomic64_t populated, populated_remote;
 };
 
 /* Chosen once, before an mm is published. Neither contention nor a partial

@@ -59,6 +59,7 @@ bool kd_mmap_fault_try(struct vm_fault *vmf, struct page *page,
 struct ma_state;
 void kd_mmap_unmap_init(struct kd_mmap_lock *lock);
 int kd_mmap_unmap_enable(struct mm_struct *mm, unsigned long start, unsigned long end);
+int kd_mmap_unmap_populated_enable(struct mm_struct *mm, unsigned long start, unsigned long end);
 unsigned int kd_mmap_unmap_pending(struct mm_struct *mm);
 /* Allocation-only preparation reads a height hint; actual capacity and VMA
  * eligibility are rechecked under exact physical mmap write ownership. */
@@ -67,6 +68,6 @@ bool kd_mmap_unmap_submit(struct mm_struct *mm, unsigned long start,
 	unsigned long end, struct ma_state *live, struct ma_state *reserve, int *result);
 bool kd_mmap_unmap_try(struct mm_struct *mm, unsigned long start,
 	unsigned long end, struct task_struct *origin, struct ma_state *live,
-	struct ma_state *reserve, int *result);
+	struct ma_state *reserve, u64 request_id, int *result);
 
 #endif

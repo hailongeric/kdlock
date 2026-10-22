@@ -33,6 +33,7 @@ void kd_mmap_unmap_init(struct kd_mmap_lock *lock)
 	u->tail = 0;
 	u->start = u->end = 0;
 	u->enabled = u->native_only = false;
+	u->allow_populated = false;
 	atomic64_set(&u->calls, 0);
 	atomic64_set(&u->removed, 0);
 	atomic64_set(&u->delegated, 0);
@@ -43,9 +44,12 @@ void kd_mmap_unmap_init(struct kd_mmap_lock *lock)
 	atomic64_set(&u->cancelled, 0);
 	atomic64_set(&u->refused, 0);
 	atomic64_set(&u->failed, 0);
+	atomic64_set(&u->populated, 0);
+	atomic64_set(&u->populated_remote, 0);
 }
 
-int kd_mmap_unmap_enable(struct mm_struct *mm, unsigned long start, unsigned long end)
+static int enable(struct mm_struct *mm, unsigned long start, unsigned long end,
+		  bool populated)
 {
 	struct kd_mmap_lock *lock = &mm->mmap_lock;
 	unsigned long owner;
@@ -59,10 +63,22 @@ int kd_mmap_unmap_enable(struct mm_struct *mm, unsigned long start, unsigned lon
 		return -EBUSY;
 	lock->unmap.start = start;
 	lock->unmap.end = end;
+	lock->unmap.allow_populated = populated;
 	smp_store_release(&lock->unmap.enabled, true);
 	return 0;
 }
+
+int kd_mmap_unmap_enable(struct mm_struct *mm, unsigned long start, unsigned long end)
+{
+	return enable(mm, start, end, false);
+}
 EXPORT_SYMBOL_GPL(kd_mmap_unmap_enable);
+
+int kd_mmap_unmap_populated_enable(struct mm_struct *mm, unsigned long start, unsigned long end)
+{
+	return enable(mm, start, end, true);
+}
+EXPORT_SYMBOL_GPL(kd_mmap_unmap_populated_enable);
 
 unsigned int kd_mmap_unmap_pending(struct mm_struct *mm)
 {
@@ -132,7 +148,7 @@ static void execute(struct kd_mmap_mutex_node *node)
 		return;
 	}
 	if (!READ_ONCE(u->native_only) && kd_mmap_unmap_try(r->mm, r->start,
-			r->end, r->origin, r->live, r->reserve, &r->result)) {
+			r->end, r->origin, r->live, r->reserve, r->id, &r->result)) {
 		r->handled = true;
 		BUG_ON(!owned(r->mm));
 		if (r->result) {
