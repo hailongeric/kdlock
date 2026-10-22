@@ -1,7 +1,8 @@
 # Populated anonymous munmap: bounded functional stage
 
-Status: the basic populated-unmap milestone passed all four focused live cases
-on `kdmm5`; preservation checks and recovery restoration are in progress.
+Status: the basic populated-unmap milestone and all preservation checks passed
+on `kdmm5`: 20 serial sessions, zero live failures, recovery restored and archive
+audit complete. The single failed probe build remains separately recorded.
 Performance, p95, broad stress and the seven mutex regressions remain deferred.
 Initial inspection found the original
 MM VM idle on recovery boot
@@ -94,3 +95,94 @@ under `/root/kdlock-evidence/10.176.26.71/tests/mm-populated-unmap-20261022/kd-1
 local fetched receipts are in the matching ignored raw-stage directory.
 No live failure occurred in these four sessions. Broader populated ranges,
 general page-table destruction and mmap creation remain unsupported.
+
+## Preserved functionality and recovery
+
+`kd-1` completed all 16 sessions on one boot. Alongside the four new cases,
+the basic API, advice, advice cancellation, actual first-write fault body,
+fault cancellation, userfaultfd retry, old unpopulated munmap, its cancellation
+and zero-page refusal, untouched mmap, page-fault workloads and completed-fault
+return handling all passed. The separate `native-1` completed its four controls.
+No MM run overlapped another, no in-flight run was interrupted and this task
+changed no nano input. The basic C programs and the 20 directly affected receipt controls
+(five each for advice, fault, unpopulated and populated munmap) passed in the VM.
+
+The preservation sessions recorded 1,747 remote advice bodies, 133 remote
+first-write page installations with 16 original-PTE receipts, and 15 remote
+unpopulated removals. These are this kernel's correctness counts, not throughput,
+variance estimates or pooled totals with `kdmm2`/`kdmm3`/`kdmm4`. The page-fault
+retry released its read acquisition and allowed the required writer to proceed;
+the completed-fault test checked all 64 actual returns and writer reacquisition.
+Untouched mmap and page-fault workloads remained distinct.
+
+Recovery boot `e3f803a7-7a85-435a-8f62-82e08b2e9f2a` runs
+`6.1.159-kdclobber2`, Build ID
+`5ca28058e156f34a2c7fe91e8e0fbf92f4e51960`, with the expected 73 modules, no
+remaining MM probe workers and no new kernel-fault matches in the retained log.
+All 5,686 recovery module files and preserved boot inputs were checked. Each of
+the advice, fault and old unpopulated installations retained all 90 recorded
+files. Advice/fault body source hashes are unchanged. All 337 frozen non-document
+source inputs matched after validation; the unrelated cleanup-report edit was
+left untouched. During final documentation, another task staged deletion of 60
+nano report paths. Those unrelated index changes remained outside this task's
+path-specific commit; the second source check still matched all 337 MM inputs.
+
+## Commands and artifacts
+
+The [maintained scope guide](../../../../../kernel_integration/mmap_lock/UNMAP.md)
+explains admission, caller resources and ownership. The
+[probe guide](../../../../../tests/kernel/mmap_lock/populated_unmap/README.md)
+gives the four individual guest commands. For the installed candidate, these
+source-host commands repeat the focused serial controls on fresh run names:
+
+```sh
+python3 bench/results/10.176.26.71/tests/mm-populated-unmap-20261022/validate.py --mode native --run native-2
+python3 bench/results/10.176.26.71/tests/mm-populated-unmap-20261022/validate.py --mode kd --run kd-2
+python3 bench/results/10.176.26.71/tests/mm-populated-unmap-20261022/validate.py --mode recovery --run recovery-2
+```
+
+Each predecessor must pass and drain before the next command. These controllers
+make the recorded one-shot transitions in the approved MM guest; they are not
+commands for another host or an active VM. They preserve the recovery default,
+require the actual snapshot and pins, and never turn a timeout into proof of
+drain. No timing command is included.
+
+The tracked [correctness result](correctness-result.json) binds source/probe
+revisions, all run receipts, failure and final health. The guest evidence root is
+`/root/kdlock-evidence/10.176.26.71/tests/mm-populated-unmap-20261022`; the archives
+are in its sibling `mm-populated-unmap-20261022-archives-1`. Local raw evidence is
+`bench/results/10.176.26.71/raw/tests/mm-populated-unmap-20261022`.
+Its `seal-1/guest-archives-1` contains `native.tar.gz`, `kd.tar.gz`,
+`build.tar.gz`, `preparation.tar.gz` and `metadata.tar.gz`, totaling 316,523,055
+bytes. The failed first module build is in `preparation.tar.gz`.
+
+Archive manifest SHA-256:
+`c2170e201f21d5bf8b348b5b8b8bf4787f0f92a7ab87c21db5ef0c1be854dfff`.
+Final health SHA-256:
+`478e87488bb4e9046de57ea551a522927791e869438cc1e509ac83dec36a53e8`.
+The read-only source-host audit passed 13,452 checks with zero mismatches across
+1,893 files and 697 frozen source bindings. It checked inventories, Git and binary
+hashes, exact physical-page/body/ACK identities, failed-build preservation and
+recovery without extracting or executing archived code. Recheck it with:
+
+```sh
+python3 bench/results/10.176.26.71/tests/mm-populated-unmap-20261022/audit.py
+```
+
+## Remaining limits
+
+This is one ordinary resident anonymous page with retained page tables. Required
+table destruction and partial removals were exercised through the native waiter
+continuation, not delegated. Mapping creation, larger populated ranges, swaps,
+huge pages, device/file/notifier callbacks and arbitrary MM bodies remain outside
+the admitted scope. Busy-page, poisoned-page, DMA-pin, policy and other exclusions
+are reviewed guards, not individually fault-injected test passes.
+
+Forced allocation failure, concurrent tree growth during preparation, slot
+exhaustion, the 256-request handoff boundary, post-admission cancellation,
+advice/unmap queue interleaving, broad reader/fault races, concurrent fast page
+pinning, swap/reclaim pressure, different non-root memory cgroups and
+oversubscribed progress remain untested. Only the required 73 runtime modules
+were built. RT, lockdep and whole-kernel replacement remain unvalidated.
+Performance, p95 and the seven mutex regressions are deferred/unresolved;
+variance was not measured and performance acceptance is false.

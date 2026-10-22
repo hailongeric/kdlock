@@ -1,7 +1,12 @@
 # One populated anonymous page: correctness probe
 
-Prepared for serial execution in the original approved MM VM. No live pass is
-claimed yet. The module only coordinates existing readers/queues and retains
+All four cases passed serially in the original approved MM VM on `kdmm5` with
+probe revision `f7af0fd`; recovery was restored. The main case completed 15
+removals on other tasks, and the unreferenced case completed one. The initial
+module build at `53b2f25` failed because `lru_add_drain` is not exported; the
+corrected probe settles exact scratch references through the existing exported
+page-vector release API, preserving the strict reference checks. The module
+only coordinates existing readers/queues and retains
 explicit test references to original pages; real userspace `munmap` and the
 in-tree kernel body perform all removals. Cancellation uses real `vm_munmap`.
 The separate populated opt-in preserves the old unpopulated admission.

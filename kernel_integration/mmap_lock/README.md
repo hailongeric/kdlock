@@ -1,12 +1,14 @@
 # Actual mmap-lock kernel integration
 
-The subsequent [whole-VMA munmap experiment](UNMAP.md) passed focused serial
-correctness on `kdmm4`: 15 real removals completed on other tasks, with exact
-mapping/ACK receipts, local readers, fault ordering, cancellation and cleanup.
-It preserves the advice and fault implementations below. Its initial probe
-failure and successful follow-up remain separately recorded; recovery is restored.
-This only admits small isolated anonymous ranges with absent page-directory
-entries. Performance and broad MM support remain unvalidated.
+The [whole-VMA munmap experiment](UNMAP.md) now passes 20 serial correctness
+sessions on `kdmm5`. A separate opt-in admits one resident anonymous page when
+neighboring mappings retain its page tables; 16 real populated removals completed
+on other tasks across the new cases, with original physical-page receipts,
+exact ACKs, local concurrent readers, cancellation and cleanup. The preserved
+unpopulated path, advice and first-write fault tests also passed. Recovery is
+restored. The failed initial probe build and successful follow-up remain distinct.
+General table destruction, mapping creation, performance and broad MM support
+remain unvalidated.
 
 The separate [anonymous write-fault experiment](FAULT.md) passed focused serial
 correctness on `kdmm3`: 129 real page-installation bodies completed on other
