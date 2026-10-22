@@ -1,6 +1,7 @@
 # Pending-admission mmap diagnostic continuation, 2026-10-22
 
-Status: focused checks passed; ready for the reviewed Native/KD 99-Hz kernel-stack pair.
+Status: focused checks passed; original admission-only coordinator retired with
+explicit approval; preparing the same-boot settling continuation, `pair-2`.
 Main agent only writes and executes VM work; helpers remain read-only. Start
 from clean `a03204f`. The same VM was freshly verified idle on recovery
 `6.1.159-kdclobber2`, boot `68924d08-9913-4e43-91f8-3643e3331c09`, with exactly
@@ -80,3 +81,49 @@ refusal, `ADMISSION` alone does not prove no payload loaded: retain the exact
 trace and verify launch state plus fresh drain. Resume a returned recorder only
 through its existing finish step and original endpoint; never repeat a
 completed profile. All source files stay frozen while the pair controller runs.
+
+## Approved retirement and settling continuation
+
+The original follow-up `pair-1` retained 434 pending observations over roughly
+7 hours 27 minutes. Neither profile was attempted. The user explicitly approved
+retiring only the waiting coordinator and resuming on the same Native boot with
+60 seconds settling after every guest idle check. No admission criterion changes.
+
+At `2026-10-22T02:57:30.280546Z`, a parent-only pidfd SIGINT retired coordinator
+PID 792734 (start ticks 970588747). The traceback locates interruption in
+`admission_wait.wait` at `sleep(interval)`; its tool session returned 130. The
+process and its command chain exited. All 880 original command receipts report
+EXITED/0, and the final state records zero profile attempts and completions.
+The old `KeyboardInterrupt()` and `drain_requires_review` state remain fixed;
+subsequent drain proof is separate. The signal was observed about 0.216 seconds
+after the latest pending branch, not claimed to have an atomic timing guarantee.
+No workload, recorder, process group or VM worker received a signal.
+
+Fresh guest idle and preservation checks then passed on unchanged Native boot
+`89400671-89e1-4797-b703-70cb4ac71c67`, release `6.1.159-kdmm1`, `kd_mmap=off`,
+with exactly 73 baseline modules and no profiler or mmap/fault workers. The
+candidate, recovery/default boot configuration and all 5,686 recovery module
+files remain preserved. `control-stop-1.json` binds the retirement, final pair
+state, command receipts and fresh checks; SHA-256:
+`e66d9493141afff777563b65ce2e84abd9711128858b302be80c686c7a781dd1`.
+The original final `pair-1/result.json` SHA-256 remains
+`4a6aa252b8ad9f8344230cc8fc5f8d45d3aa7575585136bdab1bd9aa67fb8e39`.
+
+`run_pair_resume.py` creates separate `pair-2` source evidence and `native-2`,
+`kd-2`, `recovery-2` guest blocks. It requires the stopped coordinator's exact
+receipt, absent old process, zero prior attempts, fresh idle and unchanged
+Native boot. The copied original transition/request/host-capture hash chain
+retains that boot's provenance. Every new observation follows a guest idle
+check, a recorded 60-second settling interval, a source ownership check and the
+unchanged complete host capture. Extra-thread refusals remain pending; the
+original complete guest gate still runs before loading. The guest profiler,
+frozen inputs, candidate image, recording settings and immediate endpoint are
+unchanged. Only the source coordinator and this report change; no guest source
+synchronization or new workload build is needed.
+
+The source coordinator is reviewed statically. Existing focused VM checks cover
+the unchanged admission helper and recording/endpoint drivers; they do not claim
+to test the new same-boot orchestration. The new run must retain its actual
+admission, command, endpoint, completion, drain and recovery receipts. This
+continuation is not performance acceptance; all seven original causes remain
+unresolved.
