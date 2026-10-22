@@ -7,6 +7,12 @@ summarizes the accepted version. Build and run only in the verified VM on
 The [terminology guide](../docs/TERMINOLOGY.md) defines lock names, just-in-time
 (JIT) execution, status labels and measurement terms such as post4 and Mops/s.
 
+For a short functional run, use [basic/run.py](basic/run.py) and the
+[quick-start commands](../docs/PROJECT_GUIDE.md#basic-working-version). It runs
+one existing resident-list case per KD family, with public mutex calls,
+concurrent local readers, returned-body checks and complete drain. It produces
+no timing acceptance or throughput score. Comparison timing rules stay unchanged.
+
 | Comparison | Entry point | Payloads |
 | --- | --- | --- |
 | Spin | [tclock_compare/run.py](tclock_compare/run.py) | c01/c08, resident list with matched prefetch variants, and RCUHT |

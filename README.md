@@ -1,5 +1,9 @@
 # kdlock
 
+Start with the [basic working version](docs/PROJECT_GUIDE.md#basic-working-version)
+for focused functional commands across all four lock families and the separate
+real mmap/page-fault examples. Performance tuning remains separate.
+
 kdlock is an experimental x86_64 Linux kernel lock library. A lock holder can
 execute waiting callers' critical sections through a just-in-time (JIT) compiler,
 which translates their protected work into code for delegated execution. The project

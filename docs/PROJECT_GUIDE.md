@@ -14,6 +14,58 @@ for spinlock, mutex, rwlock or rwsem. [Design](DESIGN.md) explains shared execut
 [code map](CODE_MAP.md) locates source. The [documentation index](README.md) separates API,
 execution, operations, benchmark and historical material.
 
+## Basic working version
+
+The current priority is functional delivery. Reuse validated implementations;
+causal profiling, p95, exhaustive matrices and performance tuning are deferred.
+Earlier rejected measurements remain rejected.
+
+| Task | Working interface and scope |
+| --- | --- |
+| Unsupported operations | Reviewed markers stop before the original operation, return execution to its waiter without replaying the prefix, and disable delegation of that entry for the source session. Mutex/rwsem use ABI2; root spin/rwlock use ABI1/3. Unknown operations still fail admission. See [continuation checks](../tests/kernel/jit_escape/README.md). |
+| Unified mutex | Direct `kd_mutex_lock/unlock` and blocking aliases use DIRECT, retaining nesting and exact unlock routing. Signal, try, I/O and callable-symbol paths execute locally on the KD object. See [API mappings](design/kd_only_mutex.md). |
+| Reader/writer locks | Readers are concurrent and local. Rwlock DIRECT writers can delegate. Ordinary sleeping rwsem writers are local; explicit OUTER writers can delegate. See the [lock catalog](LOCKS.md) for cancellation and downgrade limits. |
+| Real mmap and faults | Separate untouched mmap/munmap and page-fault tests use the experimental guest's actual `mm->mmap_lock` adapter. Readers and writers execute locally; this is not MM-body delegation. See [commands](../kernel_integration/mmap_lock/README.md#basic-correctness-commands). |
+| Nano benchmark | The resident-list payload supports spin, public mutex, rwlock and rwsem. The [basic runner](../bench/basic/run.py) runs one 16-node, 16-worker KD case per family, checking data, returned JIT bodies and retirement. Comparison runners remain available; TCLock sleeping rwsem and TCLock MM are unsupported. |
+
+After idle synchronization and the [VM recovery checks](operations/VM.md), use
+the approved 90-second settling interval after the guest idle check. Capture a
+fresh host receipt on the source host:
+
+```sh
+ssh -o BatchMode=yes -o ConnectTimeout=10 eric@10.176.26.71 \
+  'sudo -n python3 -' \
+  < bench/results/10.176.26.71/bench/mutex32-native-tclock-20261020/capture-host.py \
+  > /tmp/kd-basic-host.json
+scp -P 2222 /tmp/kd-basic-host.json root@10.176.26.71:/tmp/kd-basic-host.json
+```
+
+In the same recovery guest, after verifying the actual snapshot:
+
+```sh
+cd /root/host_fs/kdlock
+export PATH=/root/kdlock-translation-venv-20261019/bin:$PATH
+export LC_ALL=C PYTHONDONTWRITEBYTECODE=1
+export KDLOCK_RECOVERY_CONFIRMED=1
+export KDLOCK_SNAPSHOT_TAG=before-mutex-kdonly-20261017T140354Z
+python3 bench/basic/run.py --host-state /tmp/kd-basic-host.json \
+  --output /root/kdlock-evidence/10.176.26.71/tests/basic-NEW
+```
+
+Use a new output name each time. Dependencies, both basic programs and focused
+runner guards precede the four serial cases. `--families mutex` selects one
+family; `--dry-run` prints commands without building or loading modules. Each
+child status and complete session receipt is retained. Failure stops the run;
+a deadline reports unknown drain without killing the child. Establish drain
+before later work or unload.
+
+This mode produces no performance score. Additional QEMU `worker` threads are
+recorded and allowed only on CPU 63. Original QEMU identity, task identities,
+pins, frequency policy, memory bindings, topology, isolation, recovery and
+correctness protections remain. The strict 67-thread timing gate and every
+historical refusal stay unchanged. Local-only or partial execution cannot pass
+the returned-JIT smoke requirement.
+
 ## Folder ownership
 
 Keep one directory per responsibility. Similar names do not imply interchangeable

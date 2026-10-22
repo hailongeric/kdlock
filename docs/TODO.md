@@ -21,11 +21,13 @@ indexed in [VALIDATION](VALIDATION.md).
 
 ## Current checkpoint
 
-New p95 measurements are deferred at the user's request. Existing latency
-evidence remains fixed; missing p95 does not block throughput investigation or
-acceptance. Continue the seven-cause investigation with correctness, matched
-work, execution-class, retirement and unchanged environment requirements.
-Keep latency gaps documented separately from those throughput requirements.
+The user's priority is the [basic working version](PROJECT_GUIDE.md#basic-working-version)
+across all original tasks. Reuse validated functionality and run focused serial
+smoke/correctness checks. Causal profiling, wake-callback observer expansion,
+p95, exhaustive matrices and performance tuning are deferred. All seven causes
+and qualified variance remain unresolved; preserved performance refusals remain
+failures. Functional delivery keeps ownership, isolation, recovery, topology,
+lifetime and teardown checks without requiring timing acceptance.
 The completed [receipt-I/O control](../bench/results/10.176.26.71/bench/mutex-receipt-io-20261021/README.md)
 passed 49 serial basic/affected and 2,626 inert archive checks, with one original
 warmup, exact retirement and final drain. Seventeen writes/4,874,247 logical
@@ -79,8 +81,8 @@ admission after blocking across all 16 workers: 94.04% of blocked phase-schedule
 returns fail their next predicate. Original ownership, cancellation, reader,
 downgrade and reference oracles passed. This does not identify wake source or
 fanout, uninstrumented cost, per-acquisition retry distribution or fairness.
-Deterministic failed-after-block, no-switch and runnable-only control cases
-remain coverage gaps. Any selective-wake candidate still needs competing-writer,
+That stage left failed-after-block, no-switch and runnable-only coverage gaps,
+which the follow-up below closes. Any selective-wake candidate still needs competing-writer,
 reader-cohort, cancellation/rollback-successor and downgrade controls. The fixed
 endpoint failed at 72 versus 67; qualified timing/variance and all seven original
 public-mutex causes remain unresolved. Recovery is restored and idle; no protocol

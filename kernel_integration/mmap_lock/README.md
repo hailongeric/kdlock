@@ -30,6 +30,43 @@ Stage evidence and remaining gaps are recorded in the
 The earlier [Native audit](../../bench/results/10.176.26.71/tests/mmap-writer-native-20261021/INTEGRATION.md)
 describes the starting limitations; its historical blocked status is retained.
 
+## Basic correctness commands
+
+The installed `6.1.159-kdmm1` image has separate Native-control (`kd_mmap=off`)
+and KD-local (`kd_mmap=on`) entries. Recovery stays the default. These commands
+apply only after the approved transition and identity/recovery checks; they do
+not install or reboot a kernel. The current basic handoff reuses the successful
+[both-mode validation](../../bench/results/10.176.26.71/tests/actual-mm-plain-20261021/README.md)
+without another transition solely to repeat unchanged tests.
+
+On the experimental KD boot, with the pinned environment and verified snapshot:
+
+```sh
+cd /root/host_fs/kdlock
+KD_MM_SOURCE=/root/kdlock-kernel-work/mmap-20261021/candidate-1/linux
+KD_MM_BASELINE=/root/kdlock-kernel-baselines/mmap-kdmm1-20261021
+KD_MM_MODE=kd
+KD_MM_OUT=/root/kdlock-evidence/10.176.26.71/tests/mm-basic-NEW
+python3 tests/kernel/mmap_lock/run.py --mode "$KD_MM_MODE" \
+  --kernel-source "$KD_MM_SOURCE" --kernel-baseline "$KD_MM_BASELINE" \
+  --output "$KD_MM_OUT/api"
+python3 tests/kernel/mmap_lock/mapping.py --mode "$KD_MM_MODE" \
+  --api-result "$KD_MM_OUT/api/result.json" \
+  --kernel-source "$KD_MM_SOURCE" --kernel-baseline "$KD_MM_BASELINE" \
+  --output "$KD_MM_OUT/mmap"
+python3 tests/kernel/mmap_lock/faults.py --mode "$KD_MM_MODE" \
+  --kernel-source "$KD_MM_SOURCE" --kernel-baseline "$KD_MM_BASELINE" \
+  --output "$KD_MM_OUT/page-fault"
+```
+
+Run each command only after its predecessor passed and drained. On an already
+verified Native-control boot, use `KD_MM_MODE=native` and a new output root.
+The mapping task does not touch the payload and requires zero fault callbacks.
+The fault task separately exercises fork/COW, remote access, fault retry and
+VMA changes. Readers are concurrent and local; KD MM writers also execute
+locally. Neither these tests nor their receipts claim delegated MM bodies.
+TCLock is excluded from these operations.
+
 ## Experimental interface and lifetime
 
 `CONFIG_KD_MMAP_LOCK` gives the actual mm object an immutable backend choice.

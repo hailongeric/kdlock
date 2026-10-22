@@ -108,7 +108,7 @@ The current translation features also have distinct scopes:
 
 | Feature | Current scope and canonical contract |
 | --- | --- |
-| Reviewed instruction exits | [Mutex ABI2](design/admission.md#checked-instruction-exits): stop before a supported special instruction, resume the original waiter there, and disable future delegation of that entry for the source session |
+| Reviewed instruction exits | [Mutex/rwsem ABI2 and root spin/rwlock ABI1/3](../tests/kernel/jit_escape/README.md): stop before a reviewed special instruction, resume the original waiter there, and disable delegation of that entry for the source session. Root ABI1/3 images require capability bit 11 and immutable requirements 33. |
 | Checked pointer-load exits | [Restricted spin ABI1 bodies](design/admission.md#checked-spin-pointer-loads): validate the supported address relation before the load and resume the original waiter if it fails |
 | Direct original `strcmp` / `strscpy_pad` calls | [Eligible spin ABI1 bodies](design/admission.md#direct-original-helper-calls): stay inside one generated invocation, with no helper-code scans or extra string/destination checks; source lifetime, return words and call quotas remain required |
 
@@ -118,8 +118,11 @@ admission contract. Hardware task identity, interrupt state and the executor's
 stack do not become the origin's identity merely because work is delegated.
 
 The accepted scope does not establish whole-kernel replacement, real-time (RT),
-lock dependency checking (lockdep), wound/wait mutexes, arbitrary
-oversubscription, or replacement of `mm_struct::mmap_lock`. Oversubscription
+lock dependency checking (lockdep), wound/wait mutexes or arbitrary
+oversubscription. The separate [experimental mmap-lock adapter](../kernel_integration/mmap_lock/README.md)
+replaces the guest's `mm_struct::mmap_lock` API in its tested configuration,
+using local concurrent readers and original-task writers. Arbitrary MM-body
+delegation remains unsupported. Oversubscription
 means more runnable tasks than CPUs. Pinned waiters can prevent dependencies
 from running; bounded batches alone provide no starvation guarantee.
 
