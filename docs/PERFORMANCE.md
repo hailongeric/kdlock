@@ -61,6 +61,17 @@ without proving causality or literal unlock cost. This single intrusive pair
 provides no accepted timing or repetition variance. All seven original causes
 remain unresolved; earlier 24 rejected timings remain separate.
 
+The subsequent [writer-phase observation](../bench/results/10.176.26.71/bench/mmap-phase-observation-20261022/README.md)
+passed two basic programs, five receipt tests and serial observer-off/on controls
+(139/198 checks), then completed one frozen 16-worker diagnostic on unchanged
+kdmm1. All 129,152 writer acquisitions reconcile to 64,576 cycles. Of 1,683,343
+blocked phase-schedule returns, 94.04% precede another failed predicate. This
+supports retry amplification under observation, not wake-all causality or an
+uninstrumented cost claim. The fixed endpoint failed at 72 versus 67; timing
+is rejected, repetition variance is unavailable, and recovery is restored idle.
+No lock policy changed. Observer control gaps and all seven original causes
+remain unresolved; prior baselines and profiles remain separate.
+
 The reader/writer semaphore (rwsem) implementation measured in `c21345b` is
 **accepted as the current version**, including the two-worker regressions below.
 Acceptance identifies the maintained implementation; it does not turn every

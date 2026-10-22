@@ -73,6 +73,19 @@ or fix. Preserve killable cancellation, concurrent readers, exact ownership and
 downgrade/wake ordering in any follow-up. All seven public-mutex causes remain
 unresolved; no performance acceptance follows.
 
+The [writer-phase metadata stage](../bench/results/10.176.26.71/bench/mmap-phase-observation-20261022/README.md)
+passed basic, receipt and serial live controls, then observed repeated failed
+admission after blocking across all 16 workers: 94.04% of blocked phase-schedule
+returns fail their next predicate. Original ownership, cancellation, reader,
+downgrade and reference oracles passed. This does not identify wake source or
+fanout, uninstrumented cost, per-acquisition retry distribution or fairness.
+Deterministic failed-after-block, no-switch and runnable-only control cases
+remain coverage gaps. Any selective-wake candidate still needs competing-writer,
+reader-cohort, cancellation/rollback-successor and downgrade controls. The fixed
+endpoint failed at 72 versus 67; qualified timing/variance and all seven original
+public-mutex causes remain unresolved. Recovery is restored and idle; no protocol
+change or acceptance followed this diagnostic.
+
 KD has explicit spin, ordinary mutex, rwlock and rwsem APIs. Spin/mutex/rwlock
 workloads compare KD, TCLock and Native; sleeping rwsem compares KD with Native
 because this port has no TCLock sleeping rwsem. KD tracks real lock owners and
