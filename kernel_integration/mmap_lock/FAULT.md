@@ -1,9 +1,14 @@
 # Minimal anonymous write-fault body
 
-Status: the separate `kdmm3` kernel and its 73 runtime modules built successfully.
-Live correctness is not yet validated. The validated [VMA advice body](BODY.md),
-its installed `kdmm2` image and the recovery kernel remain preserved. Performance,
-p95 latency and the seven mutex regressions are deferred.
+Status: the narrow path passed serial Native/KD correctness in the original MM
+VM on `kdmm3`. The combiner completed 129 real page installations; 16 sampled
+completion records matched the originating thread and the installed physical
+page. Memory contents, local concurrent readers, handback/ACK, sticky refusal,
+cancellation, retry and cleanup passed. The VM returned to recovery.
+The validated [VMA advice body](BODY.md), its installed `kdmm2` image and the
+recovery kernel remain preserved. Performance, p95 latency and the seven mutex
+regressions are deferred. See the [stage report](../../bench/results/10.176.26.71/tests/mm-fault-body-20261022/README.md)
+for exact identities, failures, limitations and artifacts.
 
 ## Selected boundary
 
@@ -30,6 +35,16 @@ faults are refused. Read faults remain entirely local. Multi-generation LRU
 (a page-reclaim policy) uses implicit caller state; that configuration is refused
 and is disabled in the captured kernel. The captured x86-64 `update_mmu_cache`
 helper is empty. No arbitrary fault callback or JIT image is admitted.
+
+The entry is reached only by anonymous first-write faults inside the enabled
+interval. File faults, swap-in and copy-on-write (COW, copying a shared page on
+write) follow other native fault branches and do not count as refused or
+delegated requests here. Unsupported operations that reach this entry, such as
+a locked anonymous mapping or a userfaultfd missing-page operation, set its
+sticky refusal. Userfaultfd lets a userspace handler resolve selected faults.
+The interface remains experimental: a kernel control call must enable the
+interval under actual mmap write ownership; ordinary applications do not opt in
+automatically. Each new mm starts disabled.
 
 ## Readers, ownership and handback
 
@@ -61,7 +76,7 @@ the origin frees it, releases its exact mmap read acquisition and returns
 `RETRY_NOWAIT` is excluded. Cancellation after admission cannot replay effects.
 No bounded cancellation latency or general oversubscription progress is claimed.
 
-## Validation plan
+## Validation and commands
 
 Use only the original `10.176.26.71:2222` MM VM, one writer, and serial checks.
 Keep Native control, advice preservation, actual page-fault body, cancellation,
@@ -70,5 +85,113 @@ requires differing origin/executor task IDs, the installed PTE's physical page
 number, resulting memory contents and exact queue/owner/ACK cleanup. Local
 fallback and control callbacks do not count as delegated bodies.
 
-The [stage record](../../bench/results/10.176.26.71/tests/mm-fault-body-20261022/README.md)
-will retain working commands, source identities, failures and untested cases.
+The [probe guide](../../tests/kernel/mmap_lock/fault_body/README.md) gives runnable
+guest commands. The source-side coordinator repeats both controls, advice
+preservation and the directly affected tests, with one boot and serial checks
+per command. These fresh run names must not already exist:
+
+```sh
+python3 bench/results/10.176.26.71/tests/mm-fault-body-20261022/validate.py --mode native --run native-2
+python3 bench/results/10.176.26.71/tests/mm-fault-body-20261022/validate.py --mode kd --run kd-2
+python3 bench/results/10.176.26.71/tests/mm-fault-body-20261022/validate.py --mode recovery --run recovery-2
+```
+
+Run each command only after its predecessor has passed and drained. The recorded
+stage used `native-1`, `kd-1` and `recovery-1`. The new kernel source lives entirely
+on root ext4; no candidate build-directory remount is needed.
+
+## Fault protocol
+
+| State/storage | Purpose |
+| --- | --- |
+| Actual mmap read acquisition | Remains on each origin until normal fault completion or the origin's retry unlock. No exclusive mmap writer is acquired by the fault service. |
+| `fault.gate` | Separate KD physical mutex with exact owner and its own delegation tail; serializes only the admitted installation bodies. |
+| Shared preallocated node | Independent OSQ and delegation links; both memberships must retire before slot reuse. |
+| Stack `fault_request` | Explicit mm, origin, fault record, prepared page, PTE value, request ID and borrowed physical owner; its mm reference survives remote completion. |
+| PENDING/RUNNING/CANCELLED claim | Decides admission or cancellation once before any installation effect. |
+| WAIT/HEAD/NATIVE/ACK/DONE | Queue and refusal handshake; DONE follows detach and any required exact ACK. |
+| `fault.native_only` | Permanent refusal for this mm's enabled fault entry, independent of the advice flag. Counters only observe progress. |
+
+```mermaid
+flowchart TD
+    A[Origin holds local mmap read lock] --> B[Allocate and charge page on origin]
+    B --> C{Enabled first-write entry?}
+    C -->|No| L[Original local fault tail]
+    C -->|Yes| D{Sticky refusal or no safe slot?}
+    D -->|Yes| L
+    D -->|No| E[Retain mm and stack request; publish pinned FIFO node]
+    E --> F[Head acquires fault service gate]
+    F --> G{Cancelled before claim?}
+    G -->|Yes| H[Retire without installing page]
+    G -->|No| I{Supported and PTE empty under PTE lock?}
+    I -->|Yes| J[Combiner executes real installation body]
+    I -->|No| K[Set sticky refusal; remote origin verifies owner and ACKs]
+    J --> M[Detach and publish remote DONE]
+    K --> M
+    H --> M
+    M --> N[Owner continues bounded batch then releases its gate]
+    M --> O[Origin retires its detached node and mm reference]
+    O --> P{Result?}
+    P -->|Installed| Q[Normal local fault return and read unlock]
+    P -->|Refused| L
+    P -->|Cancelled| R[Origin frees page, unlocks read and returns RETRY]
+```
+
+A local head needs no remote ACK. A killable physical-acquisition failure hands
+HEAD to its successor without claiming an owner. A temporary slot shortage
+returns locally without banning a semantically supported body. Unsupported body
+admission, including a raced nonempty PTE, sets the sticky flag.
+
+```text
+origin after preparing an anonymous page:
+    if entry disabled/outside interval/not a first write: use original tail
+    if sticky or no safe publication slot: use original tail
+    retain mm, pin CPU, publish typed request and poll HEAD/NATIVE/DONE
+    HEAD: acquire fault gate; consume at most 256 requests
+    NATIVE: verify node, mm, task and exact physical owner; publish refusal ACK
+    DONE: retire slot and retained mm reference
+    INSTALLED: return normally; the page now belongs to its PTE
+    LOCAL: run original fault tail, including any userfaultfd lock release/retry
+    CANCELLED: free prepared page, release own read lock, return VM_FAULT_RETRY
+
+physical owner:
+    atomically claim PENDING or consume CANCELLED before effects
+    if eligible and not sticky:
+        lock real PTE; recheck emptiness; execute shared in-tree installation
+    otherwise:
+        set sticky; request and await exact remote refusal ACK if needed
+    detach link, then publish remote DONE
+    unlock only this physical acquisition; hand HEAD to bounded remainder
+```
+
+## Next useful mmap/munmap extension
+
+The smallest candidate is **whole-VMA munmap of one isolated, never-faulted,
+private anonymous mapping**, initially `PROT_NONE` and `MADV_NOHUGEPAGE`. It would
+reuse the advice writer queue and actual mmap write ownership, not the fault
+service gate. Admission would require exact VMA boundaries, no populated or
+special page-table entries, no anonymous reverse-map chain, file/callback,
+userfaultfd, policy, name, huge/locked/growing state, memory-account charge or
+MMU notifier. An MMU notifier is a callback used by another memory-management
+consumer to track mapping changes.
+
+In the captured source, `__vm_munmap()` calls `do_mas_munmap()` and
+`do_mas_align_munmap()`. The latter removes VMAs from the maple tree (the address
+range index), updates map counts, tears down page tables and frees VMA metadata.
+A real extension must execute that actual removal and completion path on the
+combiner; a counter or a successful no-overlap munmap would not count. Keeping
+the optional downgrade disabled for the admitted branch would retain one exact
+writer acquisition through the body and leave its release with the owner.
+
+This is a proposal, not an admitted implementation. It still needs an explicit
+caller-derived address-limit check, review or caller-side preparation of maple
+tree allocations, and a complete audit of `arch_unmap`, page-table teardown,
+notifier exclusion and VMA freeing. Reject before the point of no return; retain
+the original waiter route and sticky refusal for everything else. Prove the
+mapping disappears, neighboring mappings survive, ownership/ACKs match and the
+request fully retires. Faults remain a separate workload.
+
+Creating a mapping is a larger first step: the current `do_mmap()` and
+`__mmap_region()` use `current->mm`, caller address selection, resource/security
+checks and `perf_event_mmap()` notifications. No general mmap or munmap body
+support is claimed from either completed milestone.

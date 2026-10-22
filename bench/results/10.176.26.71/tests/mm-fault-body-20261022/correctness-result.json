@@ -1,0 +1,178 @@
+{
+  "advice_body_unchanged": true,
+  "artifacts": {
+    "archive_manifest": "bench/results/10.176.26.71/raw/tests/mm-fault-body-20261022/seal-1/guest-archives-1/archives.json",
+    "archive_manifest_sha256": "36cfccfe6a9a570852f245eedef0cf325080fff9d5a0a6ed851805123c6193ef",
+    "archives": [
+      {
+        "bytes": 2242492,
+        "file": "native.tar.gz",
+        "sha256": "fb0a6dbdb3fa52a65db45735a8da08ff63827cf2dc1dbf83fb265d11b19734d6"
+      },
+      {
+        "bytes": 4523197,
+        "file": "kd.tar.gz",
+        "sha256": "798360e3875b9304b5f69321d865820f3ab5148c5ca8b6a2fb942a926b22a1aa"
+      },
+      {
+        "bytes": 843204,
+        "file": "build.tar.gz",
+        "sha256": "e3124bc9243edb3823ae6cc36b67f11adfe20280cfe4587bf505280d56225383"
+      },
+      {
+        "bytes": 1371671,
+        "file": "preparation.tar.gz",
+        "sha256": "1d55b048d451a0ad651d05e677de7769b84353fd5ab3c2214d9171a464ec9c76"
+      },
+      {
+        "bytes": 193937631,
+        "file": "metadata.tar.gz",
+        "sha256": "2e2f64856b454c43a5e67328d9573c2a953b976eb38331df039a2d871f18d4e5"
+      }
+    ],
+    "audit": "bench/results/10.176.26.71/raw/tests/mm-fault-body-20261022/audit.json",
+    "audit_sha256": "72be8b803d6b952aaa9f645b31dddf8f62a0b464ded239e341a24dcb63580cbe",
+    "final_health_sha256": "5b7f0f41095afc2e145fee8cefff9bb986de3659ca75d5563bcf73e7986592c1"
+  },
+  "audit": {
+    "actual_remote_page_installations": 129,
+    "advice_remote_bodies": 1736,
+    "archives": 5,
+    "cancelled_faults": 1,
+    "checks": 11087,
+    "compressed_bytes": 202918195,
+    "directories": 194,
+    "fault_acks": 16,
+    "fault_handbacks": 16,
+    "files": 1577,
+    "health_sha256": "5b7f0f41095afc2e145fee8cefff9bb986de3659ca75d5563bcf73e7986592c1",
+    "manifest_sha256": "36cfccfe6a9a570852f245eedef0cf325080fff9d5a0a6ed851805123c6193ef",
+    "mismatches": 0,
+    "passed": true,
+    "payload_bytes": 248836421,
+    "performance_accepted": false,
+    "pte_bound_receipts": 16,
+    "scope": "Read-only inventory, source/Git/binary, PTE/body/ACK, failure and recovery evidence; no archived code execution",
+    "script_sha256": "a8c0fdc5597c04d05d2584f3ba32a2a62aaa06c56902346e24c247af5a048dae",
+    "sessions": 13,
+    "source_bindings": 600,
+    "symlinks": 0
+  },
+  "concurrent_local_readers": 2,
+  "failures": [
+    {
+      "live_work_started": false,
+      "reason": "Probe module referenced unexported pmd_clear_bad",
+      "resolved_by": "e4054ab",
+      "revision": "82d04f1",
+      "run": "test-preparation-1"
+    },
+    {
+      "live_work_started": false,
+      "reason": "Strict client compilation: printf type and allocation-pointer initialization",
+      "resolved_by": "ce2c5ae",
+      "revision": "e4054ab",
+      "run": "test-preparation-2"
+    }
+  ],
+  "fault_body": {
+    "actual_remote_page_installations": 129,
+    "execution": "REAL_DO_ANONYMOUS_PAGE_INSTALL",
+    "jit_bodies": 0,
+    "matched_handbacks": 15,
+    "post_ban_local_calls": 128,
+    "pte_bound_receipts": 16,
+    "reader_delegation": false
+  },
+  "fault_body_checks": 3277095,
+  "fault_cancellation": {
+    "cancelled_before_installation": 1,
+    "jit_bodies": 0,
+    "original_read_lock_released": true,
+    "queue_retired": true,
+    "victim_pte_absent": true
+  },
+  "fault_retry": {
+    "jit_bodies": 0,
+    "matched_acks": 1,
+    "post_ban_local_calls": 1,
+    "real_userfaultfd_handback": 1,
+    "resolved_page_contents": true,
+    "writer_during_unresolved_fault": true
+  },
+  "final_recovery": {
+    "boot_id": "11968a2a-23e4-4474-95b8-a636a9858fbd",
+    "build_id": "5ca28058e156f34a2c7fe91e8e0fbf92f4e51960",
+    "idle": true,
+    "modules": 73,
+    "new_kernel_faults": [],
+    "release": "6.1.159-kdclobber2"
+  },
+  "functional_milestone_passed": true,
+  "kernel": {
+    "build_id": "51312746083c9b4ba76d668a46eabb7c4942866a",
+    "machine": "x86_64",
+    "release": "6.1.159-kdmm3",
+    "version": "#1 SMP PREEMPT_DYNAMIC Thu Oct 22 10:16:19 UTC 2026"
+  },
+  "kernel_manifest_sha256": "7190c36fb1a0ccd43757e5ac11b32814b150971f951290dc74eda52b4112ad45",
+  "kernel_source_commit": "1e2ddb208bb55190b95fcdff3a1d2431f57d4d89",
+  "live_failed_sessions": 0,
+  "next_extension": "Proposed whole-VMA munmap of one isolated never-faulted anonymous mapping under actual mmap write ownership; not implemented",
+  "old_advice_baseline": "bench/results/10.176.26.71/tests/mm-body-20261022/correctness-result.json",
+  "performance_accepted": false,
+  "preparation_passes": [
+    "test-preparation-3",
+    "test-preparation-4"
+  ],
+  "preserved_advice": {
+    "execution": "FIXED_IN_TREE_MADVISE_BODY",
+    "handbacks": 15,
+    "jit_bodies": 0,
+    "post_ban_local_calls": 512,
+    "reader_delegation": false,
+    "receipts": 16,
+    "returned_compiled_bodies": 1736
+  },
+  "prior_advice_installed_files_verified": 90,
+  "probe_source_commit": "5a9a9ba7a9a2252c6407a25e9883f99d95696690",
+  "runs": {
+    "kd-1": {
+      "boot_id": "bdd22a66-c7f6-4394-92d5-155310660837",
+      "passed": true,
+      "result": "bench/results/10.176.26.71/raw/tests/mm-fault-body-20261022/kd-1/result.json",
+      "sha256": "943bf8ef4f0ad09b4d73df0f2c05cfd6356339c095f714e886e6646ca6a589ae"
+    },
+    "native-1": {
+      "boot_id": "9770cece-5391-4796-a35d-08809111a0f3",
+      "passed": true,
+      "result": "bench/results/10.176.26.71/raw/tests/mm-fault-body-20261022/native-1/result.json",
+      "sha256": "6624c166d3d1be77a0a5fa48b01e63c33a7d8d7a3a65ea42039194a8df7a2f33"
+    },
+    "recovery-1": {
+      "boot_id": "11968a2a-23e4-4474-95b8-a636a9858fbd",
+      "passed": true,
+      "result": "bench/results/10.176.26.71/raw/tests/mm-fault-body-20261022/recovery-1/result.json",
+      "sha256": "8f3b961882aeceff41a70383251a85344de854b9b3b47b91e85825deb55d0e69"
+    }
+  },
+  "scope": "Explicitly enabled private anonymous first-write PTE installation; original x86-64 MM VM",
+  "timing_started": false,
+  "unresolved": {
+    "general_mmap_munmap_body_support": false,
+    "general_page_fault_body_support": false,
+    "p95": "DEFERRED",
+    "performance": "DEFERRED",
+    "seven_mutex_regressions": "UNRESOLVED",
+    "untested": [
+      "slot exhaustion",
+      "forced 256-request batch boundary",
+      "PTE installation races",
+      "post-admission cancellation",
+      "swap pressure",
+      "oversubscribed progress"
+    ],
+    "variance": "NOT_MEASURED"
+  },
+  "verified_user_written_pages": 400
+}

@@ -1,5 +1,12 @@
 # Actual mmap-lock kernel integration
 
+The separate [anonymous write-fault experiment](FAULT.md) passed focused serial
+correctness on `kdmm3`: 129 real page-installation bodies completed on other
+tasks, with PTE-bound receipts, concurrent local readers, exact handbacks/ACKs,
+sticky refusal, cancellation and fault retry. The VM returned to recovery.
+This is an explicitly enabled narrow path, not general mmap/page-fault delegation.
+Its source, controls and results remain separate from the stages below.
+
 The [minimal body experiment](BODY.md) adds an opt-in in-tree VMA flag update
 under the actual KD mmap lock. Its `kdmm2` Native/KD correctness checks passed,
 including actual combiner completion, origin handback, sticky refusal and queued

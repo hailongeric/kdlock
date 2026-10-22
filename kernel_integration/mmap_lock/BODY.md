@@ -134,8 +134,10 @@ the old `kdmm1` proof stays intact. Native/KD mmap tests performed 81,000 untouc
 cycles per mode with zero payload faults. Page-fault retry, remote-mm/fork/COW,
 VMA split/lifetime and completed-fault tests ran as separate tasks.
 
-Only the reviewed opt-in advice entry delegates. Mapping creation, arbitrary
-callbacks, user-memory work and page-fault bodies remain local. Readers are never
+On this preserved `kdmm2` stage, only the reviewed opt-in advice entry delegates.
+Mapping creation, arbitrary callbacks, user-memory work and page-fault bodies
+remain local. The separate [kdmm3 fault milestone](FAULT.md) adds a narrowly
+enabled page-installation body and reruns advice preservation. Readers are never
 delegated. This does not establish full Linux mutex replacement, arbitrary MM
 delegation, RT/ww_mutex/lockdep support, oversubscription progress, performance
 parity, variance or p95; the seven prior performance regressions remain unresolved.
