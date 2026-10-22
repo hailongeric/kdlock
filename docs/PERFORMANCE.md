@@ -72,6 +72,11 @@ is rejected, repetition variance is unavailable, and recovery is restored idle.
 No lock policy changed. Observer control gaps and all seven original causes
 remain unresolved; prior baselines and profiles remain separate.
 
+A separate [correctness-only follow-up](../bench/results/10.176.26.71/tests/mmap-phase-controls-20261022/README.md)
+is preparing deterministic coverage for those three observer gaps. It introduces
+no timing or production lock-policy change. Exact wake-callback attribution is
+still proposed, not measured; the prior rejected rates remain unchanged.
+
 The reader/writer semaphore (rwsem) implementation measured in `c21345b` is
 **accepted as the current version**, including the two-worker regressions below.
 Acceptance identifies the maintained implementation; it does not turn every

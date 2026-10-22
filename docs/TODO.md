@@ -86,6 +86,13 @@ endpoint failed at 72 versus 67; qualified timing/variance and all seven origina
 public-mutex causes remain unresolved. Recovery is restored and idle; no protocol
 change or acceptance followed this diagnostic.
 
+The [deterministic observer controls](../bench/results/10.176.26.71/tests/mmap-phase-controls-20261022/README.md)
+are now prepared as a separate correctness-only fixture. Live validation is
+pending. Preserve the sealed observer and original workload bindings; require
+positive independent evidence for each missing schedule path. The accompanying
+exact wake-correlation design remains a proposal and must validate stack-entry
+reuse, callback outcomes and complete event lifetimes before any policy change.
+
 KD has explicit spin, ordinary mutex, rwlock and rwsem APIs. Spin/mutex/rwlock
 workloads compare KD, TCLock and Native; sleeping rwsem compares KD with Native
 because this port has no TCLock sleeping rwsem. KD tracks real lock owners and

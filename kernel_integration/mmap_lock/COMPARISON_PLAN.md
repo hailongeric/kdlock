@@ -55,6 +55,11 @@ repetition variance. Recovery is restored idle. Control-coverage and fairness
 gaps remain documented before a protocol candidate; the six-block plain plan
 and seven original mutex causes are not resolved by this diagnostic.
 
+The [deterministic controls](../../bench/results/10.176.26.71/tests/mmap-phase-controls-20261022/README.md)
+are a separate correctness stage, currently awaiting VM validation. Their
+[wake-correlation design](../../bench/results/10.176.26.71/tests/mmap-phase-controls-20261022/WAKE_CORRELATION.md)
+defines the next evidence boundary without changing the baseline wake policy.
+
 ## Shared candidate and validation binding
 
 Compare Native-control (`kd_mmap=off`) with KD-local (`kd_mmap=on`) on the same
