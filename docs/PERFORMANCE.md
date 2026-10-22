@@ -46,9 +46,20 @@ The subsequent [mmap contention investigation](../bench/results/10.176.26.71/ben
 traced the exact killable writer and downgrade paths and prepared one matched
 16-worker kernel-stack diagnostic pair. Its basic and affected checks passed,
 but the fresh Native prerequisite refused 72 QEMU threads versus 67 before
-profiling or workload execution. Both profiles remain unrun and recovery is
-restored. Phase wakeup cost is a source-based hypothesis, not an established
-cause; no new timing, variance, protocol fix or acceptance is claimed.
+profiling or workload execution. Both profiles remained unrun in that attempt,
+and recovery was restored. That source review established no cause, new timing,
+variance, protocol fix or acceptance.
+
+The [settled mmap diagnostic continuation](../bench/results/10.176.26.71/bench/mmap-contention-followup-20261022/README.md)
+subsequently completed one Native and one KD profile serially on the same
+candidate and frozen workload, after original full admission. Both validated
+and drained; their fixed endpoints failed at 85/74 versus 67. Recovery is
+restored. Exact binary/export reconciliation found no loss/throttle records;
+selected stacks contain 570 Native and 1,148 KD samples. KD has 1,000 samples
+(87.11%) in writer phase-admission context, supporting that investigation target
+without proving causality or literal unlock cost. This single intrusive pair
+provides no accepted timing or repetition variance. All seven original causes
+remain unresolved; earlier 24 rejected timings remain separate.
 
 The reader/writer semaphore (rwsem) implementation measured in `c21345b` is
 **accepted as the current version**, including the two-worker regressions below.

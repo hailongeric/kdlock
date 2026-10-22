@@ -28,10 +28,21 @@ all seven mutex causes remain unresolved and no performance acceptance follows.
 The [focused mmap follow-up](../../bench/results/10.176.26.71/bench/mmap-contention-20261022/README.md)
 bound the killable writer and downgrade paths to this exact image. One planned
 Native/KD 16-worker diagnostic pair was refused before execution at 72 QEMU
-threads versus 67; both profiles remain unrun. The source-based phase-wakeup
-hypothesis requires the prepared bounded kernel-stack discriminator, with the
-same frozen work and full admission/endpoint checks. Recovery is restored;
-no kernel protocol change or performance conclusion follows from source review.
+threads versus 67; both profiles remained unrun in that attempt. It left the
+source-based phase-wakeup hypothesis for the prepared bounded kernel-stack
+discriminator, with the same frozen work and full admission/endpoint checks.
+Recovery was restored; source review established no protocol fix or performance
+conclusion.
+
+The [settled continuation](../../bench/results/10.176.26.71/bench/mmap-contention-followup-20261022/README.md)
+completed that single diagnostic pair on unchanged frozen work and candidate
+image. Native reused its existing boot; each mode passed full admission after
+60-second post-idle settling. Both workloads validated and drained, then recovery
+was restored. The original recorder-exit endpoints failed at 85/74 versus 67.
+Offline integrity checks passed; 87.11% of selected KD samples retain writer
+phase-admission context. This is a diagnostic target, not causal proof or an
+accepted timing result. No repeated profile, altered endpoint, new p95 or
+protocol change was introduced; all seven mutex causes remain unresolved.
 
 ## Shared candidate and validation binding
 

@@ -58,10 +58,20 @@ The [focused mmap contention investigation](../bench/results/10.176.26.71/bench/
 binds the actual killable writer paths to the candidate ELF and identifies
 phase wakeup/reader-drain work as a hypothesis. Two basic programs and fourteen
 affected checks passed. Its one planned diagnostic pair was refused before
-execution at 72 QEMU threads versus 67; both profiles remain unrun. Recovery is
-restored. No implementation defect or causal fix was demonstrated, and no gate
-was relaxed. The next discriminator remains a matched, bounded kernel-stack
-profile of the unchanged 16-worker mmap workload.
+execution at 72 QEMU threads versus 67; both profiles remained unrun in that
+attempt and recovery was restored. No implementation defect or causal fix was
+demonstrated, and no gate was relaxed. That stage left the matched, bounded
+kernel-stack profile of the unchanged 16-worker mmap workload outstanding.
+
+The subsequent [settled diagnostic pair](../bench/results/10.176.26.71/bench/mmap-contention-followup-20261022/README.md)
+completed once per mode with full admission, business validation and drain.
+Recovery is restored. Endpoints failed at 85/74 versus 67, so qualified timing
+and variance remain unresolved. KD's sampled CPU contexts concentrate in writer
+phase admission (1,000/1,148 selected samples), with no selected physical-gate
+sample. This identifies the next investigation target, not a demonstrated cause
+or fix. Preserve killable cancellation, concurrent readers, exact ownership and
+downgrade/wake ordering in any follow-up. All seven public-mutex causes remain
+unresolved; no performance acceptance follows.
 
 KD has explicit spin, ordinary mutex, rwlock and rwsem APIs. Spin/mutex/rwlock
 workloads compare KD, TCLock and Native; sleeping rwsem compares KD with Native

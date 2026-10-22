@@ -1,7 +1,8 @@
 # Pending-admission mmap diagnostic continuation, 2026-10-22
 
-Status: focused checks passed; original admission-only coordinator retired with
-explicit approval; preparing the same-boot settling continuation, `pair-2`.
+Status: `pair-2` completed both profiles serially and restored recovery. Both
+workloads validated and drained; both fixed endpoints failed. Diagnostic stacks
+are available, but no timing is accepted and all seven mutex causes remain unresolved.
 Main agent only writes and executes VM work; helpers remain read-only. Start
 from clean `a03204f`. The same VM was freshly verified idle on recovery
 `6.1.159-kdclobber2`, boot `68924d08-9913-4e43-91f8-3643e3331c09`, with exactly
@@ -127,3 +128,171 @@ to test the new same-boot orchestration. The new run must retain its actual
 admission, command, endpoint, completion, drain and recovery receipts. This
 continuation is not performance acceptance; all seven original causes remain
 unresolved.
+
+## Completed pair-2
+
+Clean source commit `889a840ee3fc85fd8a4b589bb5e3f055413e54df` ran the source
+coordinator; the guest driver, validated frozen binaries and candidate kernel
+were unchanged. Native reused its original boot. Native observations were
+68 then 67 tasks; KD observations were 69 then 67. All four observations follow
+recorded settling: guest command return to capture dispatch was
+60.102760–60.103726 seconds. Both complete guest admission comparisons passed
+before loading. Both admissions passed after the recorded settling intervals;
+this does not establish why the earlier checks saw extra workers.
+
+| Mode / guest block | Boot UUID | Completed mmap/munmap cycles | Business errors | Fixed endpoint | Drain |
+| --- | --- | ---: | ---: | --- | --- |
+| Native / `native-2/profile` | `89400671-89e1-4797-b703-70cb4ac71c67` | 198,464 | 0 | FAIL, 85 vs 67 tasks | Passed |
+| KD / `kd-2/profile` | `7ae32334-7d07-4849-84dd-f11adf89609b` | 50,048 | 0 | FAIL, 74 vs 67 tasks | Passed |
+
+Exactly one profile ran per mode. Each original endpoint starts immediately
+after the controller observes recorder-command exit, including flush: recorded
+capture-dispatch gaps are 744 ns for Native and 711 ns for KD. These are dispatch
+gaps, not claims that the remote capture completed in that time. No later
+capture replaces either failed endpoint. Both modes retain zero fault callbacks,
+exact maps/closes/completed counts, zero live VMAs and final
+`files=0 mm_refs=0 destroyed=1 release_errors=0`. No reader delegation or
+page-fault workload ran in this diagnostic.
+
+Both recordings use the retained perf tool, `cpu-clock:k`, 99 Hz, inherited
+kernel frame-pointer chains, the monotonic clock and collector CPU 63. Work is
+the same untouched mmap/munmap loop on workers 0–15. The recorded whole rates
+are 99,006.432 and 24,969.222 cycles/s; worker CPU is 30.784 and 262.080
+microseconds/cycle. These are **single intrusive, rejected observations**, not
+plain timing replacements or an accepted ratio. Repetition variance is
+unavailable for this pair (one per mode); qualified n=0. The earlier 24 rates,
+ratios and variance remain separate and rejected.
+
+The coordinator exited 0. All 55 source command receipts reached EXITED: 53
+returned zero; the first KD and recovery reachability probes returned SSH 255
+during reboot, followed by successful boot verification. Recovery is restored
+on boot `9545bcf9-e8ae-4515-be1b-0a5309afc18f`, release `6.1.159-kdclobber2`,
+Build ID `5ca28058e156f34a2c7fe91e8e0fbf92f4e51960`, exact 73-module set and
+5,686 preserved recovery module files. Recovery default and candidate image
+bindings remain unchanged. Each transition retains its six known `fd0` I/O
+error lines; no configured kernel-fault pattern matched. This is not an
+error-free-boot claim.
+
+## Offline integrity and stack attribution
+
+The archived perf data was exported on the source host with the exact candidate
+ELF and captured runtime symbols. Before worker filtering, a separate binary
+parser reconciled every sample's PID/TID, CPU, monotonic timestamp, period and
+entire address chain with both the raw and symbolized exports. Caller addresses
+are unchanged return addresses, not return-minus-one; sampled leaf addresses
+are never adjusted. All exported symbol bases match captured kallsyms.
+
+| Global recording check | Native | KD |
+| --- | ---: | ---: |
+| Raw/exported samples | 571 | 1,148 |
+| Selected worker/CPU/active-interval samples | 570 | 1,148 |
+| Excluded non-worker samples | 1 | 0 |
+| LOST / LOST_SAMPLES / THROTTLE / UNTHROTTLE records | 0 / 0 / 0 / 0 | 0 / 0 / 0 / 0 |
+| Raw chain entries, including kernel context marker | 3–19 | 5–16 |
+| Unresolved exported symbol frames | 0 | 0 |
+| Misordered timestamps | 0 | 0 |
+
+No chain hits the recorded maximum 127, and no export truncates a raw chain.
+Intermediate frame omission is demonstrated: 13 Native spin samples omit the
+explicit slowpath frame while retaining `rwsem_spin_on_owner` and the matching
+`down_write_killable` caller. Other writer context means not identified as spin,
+not proof that no spinning occurred. Each raw
+numeric export retains a warning about the absent default vmlinux; the separate
+symbolized export explicitly uses the verified ELF and has empty stderr. The
+binary reconciliation does not depend on the default-symbol lookup. All five
+export commands per mode returned zero. No loss/throttle check is performed
+only on the filtered worker subset.
+
+Classification uses the predeclared order: physical KD gate or Native optimistic
+spin/OSQ first, then writer acquire/release, reader release/downgrade, common
+MM/VMA/file work, and unknown/interrupt work. Generic scheduler/wakeup/spin
+symbols need surviving caller evidence. IRQ/softirq boundaries prevent using
+interrupted lock ancestry. Operation and queue subtype remain separate.
+
+| Selected sample context | Native count (%) | KD count (%) |
+| --- | ---: | ---: |
+| Physical KD gate / Native optimistic spin or OSQ | 266 (46.67%) | 0 (0%) |
+| Writer acquire/release excluding above | 101 (17.72%) | 1,057 (92.07%) |
+| Reader release/downgrade excluding above | 37 (6.49%) | 61 (5.31%) |
+| Common MM/VMA/file/payload work | 150 (26.32%) | 27 (2.35%) |
+| Other/unknown | 14 (2.46%) | 3 (0.26%) |
+| Interrupt work | 2 (0.35%) | 0 (0%) |
+
+Every selected period is 10,101,010, so sample and period shares agree. These
+shares describe sampled on-CPU contexts, not fractions of elapsed waiting time.
+Profiler execution is explicitly flagged within the retained categories: 22
+Native and three KD stacks contain `perf_*` or `__perf_*` frames. Common MM
+includes profiler-related mmap notification work; recording overhead is not
+isolated.
+
+KD has 1,000 phase-admission samples (87.11% of selected): 653 through
+`prepare_to_wait_event`, 294 through `schedule`, and 53 through `finish_wait`.
+Another eight belong to reader-drain admission. Proven phase-wake contexts
+contribute 48 writer-release and 57 downgrade samples; two read-release samples
+belong to reader-drain wake. Three other KD lock-context samples retain unknown
+queue subtype. No selected sample is attributed to the physical KD gate;
+zero samples do not prove absence of execution or cost.
+
+The sampled leaf remains distinct from the caller context: KD's leading leaves
+are `_raw_spin_unlock_irqrestore` (812) and `finish_task_switch.isra.0` (299).
+Sampling after IRQ restoration can concentrate events at the restore boundary,
+so these counts cannot identify the literal cost of the unlock instruction.
+Native's leading leaves include `osq_lock` (143) and `rwsem_spin_on_owner` (92).
+
+This pair supports the narrower observation that KD's sampled CPU execution
+concentrates in writer phase waiting and related scheduler work. It is consistent
+with the source hypothesis and gives a concrete next investigation target.
+It does **not** establish a wake-all causal regression, queue length, wake count,
+successful reservation count, off-CPU delay, ownership history or accepted
+protocol-cost difference. These actual-MM writers execute in their original
+tasks; the result does not measure DIRECT delegation or unlock ACK overhead.
+
+## Evidence and remaining gaps
+
+Local root: `bench/results/10.176.26.71/raw/bench/mmap-contention-followup-20261022/`.
+`pair-2/result.json` SHA-256:
+`58d11fe0f4679256ccefc1f5926fdb7ac8e4f8f0bd46b1ee56da3c53181f4cd3`.
+Its Native/KD result hashes are respectively
+`ee0d59b89e0ba850d38532b39ee6b9da220c3c981edf8006b675b4c5150a8341` and
+`7d4321b8cfe084bfef1704e0c5397555d4f9ee0ad9ec63aa4f691b3fc6a0c53c`.
+
+| Archive manifest relative to local root | SHA-256 |
+| --- | --- |
+| `pair-2/native/archives/archives.json` | `720519a04afe04afc9af523b440c8ad8da78305f69b8b34287dc41d3fe43e472` |
+| `pair-2/kd/archives/archives.json` | `05504d7f7f319acd18cf63a9c92d73fa4398ca0955b8045838f246f6d54d158a` |
+| `pair-2/recovery/archives/archives.json` | `ae59db55a6ad0532e5a1ecb849a236b9e1e91d7fb916d43d28ba6a700b1cfb38` |
+| `retired-control-archives-1/archives.json` | `6d9597011f66d65496fabb8f848ef6aa4a64cb2eb5a06a98ae3f1d749fafbc7f` |
+
+The six pair archives total 3,491,115 compressed bytes, with 168 files,
+13 directories and zero links. Independent decompression, inventory and binding
+review passed 1,648 checks. The stopped-control archive has 3,090 files and
+12,537,456 bytes; its SHA-256 is
+`8328ffa33d0546610496339e5f42514516e54deefbd779604a6f670abce6fba3`.
+The separate stopped-observation/archive review passed 30,016 inert checks.
+All 42 prior archives (39 earlier, two pretransition, one stopped-control)
+remain unchanged at 32,866,084 bytes. Offline exports, reconciler, per-sample
+classification and summary are retained under `offline-1/`.
+
+The final local control/offline archive is
+`completed-local-archives-2/control-and-offline.tar.gz`: 392 files,
+5,535,449 compressed bytes, SHA-256
+`6b1cb1816ec0531d36d2dd8ea647fd18cb99f2e30ca98604f74691b2f44ad1a2`.
+Its `archives.json` SHA-256 is
+`f7f7381bdbde0f3848fd6db6ab5de086a1bd3e102643cd6cf762a48136d3e4d7`.
+It includes source control receipts, console, read-only review summary, exact
+export commands, binary reconciler and all classified samples; the six guest
+archives remain separate. Independent packaging review passed 2,688 checks
+with zero mismatches, including all 142 extracted Native/KD guest files against
+their separate sealed archives. The final `offline-1/analysis.json` SHA-256 is
+`4dce581f04fa4f88ed5389c09875edeb5e37947b6e104b1d5f869835cfb101bb`,
+and its `analysis.py` SHA-256 is
+`f8e536c1f776293cff493deeada6f10cfd4cbabb53eefc857a463be953dc3a7a`.
+
+All seven original public-mutex causes remain **UNRESOLVED**: c08 at 3/4/5
+workers, pipe bytes at 3/5, pipe capacity at 5, and RCUHT at 2. Their original
+baselines and follow-up source identities remain distinct. Qualified throughput
+repetitions/variance and the repeated host-endpoint failure remain open. New p95
+stays deferred. No protocol fix, broader kernel replacement, unsupported TCLock
+MM compatibility or performance acceptance is claimed. Future phase-admission
+work must preserve killable cancellation, reader concurrency, exact ownership,
+downgrade ordering and wake/retirement obligations.
