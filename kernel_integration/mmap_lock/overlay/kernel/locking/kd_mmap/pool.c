@@ -2,6 +2,7 @@
 #include <linux/sched.h>
 #include <linux/kd_mmap_rwsem_types.h>
 #include "kd_mmap_mutex_local.h"
+#include "body_internal.h"
 
 /* This builtin has no JIT/delegation entry. Keep the production packet/node
  * geometry and independent OSQ links; no shadow stack or executable image is
@@ -10,6 +11,22 @@
 DEFINE_PER_CPU_SHARED_ALIGNED(struct kd_mmap_mutex_node,
 			     kd_mmap_mutex_nodes[KD_MMAP_MUTEX_MAX_NODES]);
 static DEFINE_PER_CPU(unsigned long, kd_mmap_slots);
+
+struct kd_mmap_mutex_node *kd_mmap_body_node_get(struct kd_mmap_mutex *lock)
+{
+	struct kd_mmap_mutex_osq_node *osq;
+	int slot;
+
+	lockdep_assert_preemption_disabled();
+	/* A published poller must not strand an acquiring/sleeping predecessor
+	 * on this CPU. Refuse before publication; the caller can acquire locally. */
+	for (slot = 0; slot < KD_MMAP_MUTEX_MAX_NODES; slot++)
+		if ((this_cpu_read(kd_mmap_slots) & BIT(slot)) &&
+		    READ_ONCE(this_cpu_ptr(&kd_mmap_mutex_nodes[slot])->lock) == lock)
+			return NULL;
+	osq = kd_mmap_mutex_osq_node_get(lock);
+	return osq ? container_of(osq, struct kd_mmap_mutex_node, osq) : NULL;
+}
 
 struct kd_mmap_mutex_osq_node *kd_mmap_mutex_osq_node_get(struct kd_mmap_mutex *lock)
 {

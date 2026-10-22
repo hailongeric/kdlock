@@ -14,6 +14,11 @@ struct kd_mmap_lock {
 		struct kd_mmap_rwsem kd;
 	};
 	bool use_kd;
+	/* Opt-in typed in-tree body. No arbitrary callback or generated image is
+	 * admitted. Refusal is sticky for this mm until its final destruction. */
+	bool body_enabled, body_native_only;
+	u64 body_calls, body_supported, body_delegated, body_handbacks;
+	u64 body_native, body_post_ban, body_cancelled, body_acks;
 };
 
 #define KD_MMAP_LOCK_INITIALIZER(name) { \

@@ -28,6 +28,10 @@ late_initcall(kd_mmap_report);
 void kd_mmap_init(struct kd_mmap_lock *lock)
 {
 	lock->use_kd = kd_mmap_enabled;
+	lock->body_enabled = lock->body_native_only = false;
+	lock->body_calls = lock->body_supported = lock->body_delegated = 0;
+	lock->body_handbacks = lock->body_native = lock->body_post_ban = 0;
+	lock->body_cancelled = lock->body_acks = 0;
 	if (lock->use_kd)
 		kd_mmap_rwsem_init(&lock->kd);
 	else
@@ -161,7 +165,7 @@ bool kd_mmap_is_write_owner(struct kd_mmap_lock *lock)
 		return rwsem_is_locked(&lock->native);
 	owner = atomic_long_read(&lock->kd.gate.owner);
 	return atomic_long_read(&lock->kd.admission) == -1 && !(owner & 4UL) &&
-		(owner & ~7UL) == (unsigned long)current;
+		((owner & ~7UL) == (unsigned long)current || kd_mmap_body_write_owned(lock));
 }
 EXPORT_SYMBOL_GPL(kd_mmap_is_write_owner);
 
@@ -173,3 +177,10 @@ bool kd_mmap_is_contended(struct kd_mmap_lock *lock)
 		rwsem_is_contended(&lock->native);
 }
 EXPORT_SYMBOL_GPL(kd_mmap_is_contended);
+
+bool kd_mmap_is_idle(struct kd_mmap_lock *lock)
+{
+	/* Stopped/joined users only; includes exact reserved CPU-slot records. */
+	return lock->use_kd ? kd_mmap_rwsem_is_idle(&lock->kd) : !rwsem_is_locked(&lock->native);
+}
+EXPORT_SYMBOL_GPL(kd_mmap_is_idle);

@@ -1,5 +1,9 @@
 # Actual mmap-lock kernel integration
 
+The [minimal body experiment](BODY.md) adds an opt-in in-tree VMA flag update
+under the actual KD mmap lock. Its preparation and pending validation are
+separate from the installed local-only `kdmm1` results below.
+
 This is an explicitly approved guest-kernel experiment on the existing
 `10.176.26.71:2222` VM. The source baseline is `443baa6` and the recovery kernel
 is `6.1.159-kdclobber2`, Build ID

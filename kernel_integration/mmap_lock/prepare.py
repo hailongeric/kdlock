@@ -58,12 +58,30 @@ def generated_sources(target):
                                   '{\n\treturn 0;\n}\n') + text[end:]
             text = replace_once(text, 'int old = kd_io_prepare();', 'int old = io_schedule_prepare();')
             text = replace_once(text, 'kd_io_finish(old);', 'io_schedule_finish(old);')
+            text += '''
+/* The typed MM queue lends its reserved slot to independent OSQ membership. */
+int kd_mutex_lock_killable_node(struct kd_mutex *lock, struct kd_mutex_node *node)
+{
+    BUG_ON(!node || node->lock != lock || node->task_struct_ptr != current);
+    return kd_local_lock_state(lock, TASK_KILLABLE, node);
+}
+'''
+            text = '#include "body_internal.h"\n' + text
         if name.endswith('kd_rwsem.c'):
             start = text.index('static bool kd_rwsem_reserve_delegate(')
             end = text.index('bool kd_rwsem_is_idle(', start)
             # No executor or positive-phase admission exists in this builtin.
             # All ordinary/local algorithms before this boundary are reused.
             text = text[:start] + text[end:]
+            start = text.index('int kd_down_write_killable(struct kd_rwsem *sem)')
+            end = text.index('EXPORT_SYMBOL_GPL(kd_down_write_killable);', start)
+            borrowed = text[start:end].replace(
+                'int kd_down_write_killable(struct kd_rwsem *sem)',
+                'int kd_rwsem_body_lock(struct kd_rwsem *sem, struct kd_mutex_node *node)')
+            borrowed = borrowed.replace('kd_mutex_lock_killable(&sem->gate)',
+                                        'kd_mutex_lock_killable_node(&sem->gate, node)')
+            text += '\n' + borrowed
+            text = '#include "body_internal.h"\n' + text
         if name in ('include/kd_mutex.h', 'include/kd_rwsem.h'):
             text = re.sub(r'#include "(kd_(?:mutex|rwsem)_types.h)"',
                           r'#include <linux/\1>', text)

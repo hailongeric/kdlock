@@ -201,3 +201,18 @@
 +	mmdrop_async(mm);
 +}
 +EXPORT_SYMBOL_GPL(mmap_read_unlock_complete);
+--- a/mm/madvise.c
++++ b/mm/madvise.c
+@@ -1395,0 +1396,4 @@
++#ifdef CONFIG_KD_MMAP_LOCK
++#include "kd_mmap_advice.inc"
++#endif
++
+@@ -1426,0 +1431,7 @@
++#endif
++
++#ifdef CONFIG_KD_MMAP_LOCK
++	/* Only this reviewed writer entry is opt-in. Fault/read paths are unchanged. */
++	if (mm->mmap_lock.use_kd && READ_ONCE(mm->mmap_lock.body_enabled) &&
++	    mm == current->mm && (behavior == MADV_DONTDUMP || behavior == MADV_DODUMP))
++		return kd_mmap_madvise(mm, start, end, behavior);
