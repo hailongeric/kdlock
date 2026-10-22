@@ -1,8 +1,9 @@
 # Populated anonymous munmap: bounded functional stage
 
-Status: the first kernel candidate built; focused probe preparation is in
-progress and no live pass is claimed. Performance, p95, broad stress and the
-seven mutex regressions remain deferred. Initial inspection found the original
+Status: the basic populated-unmap milestone passed all four focused live cases
+on `kdmm5`; preservation checks and recovery restoration are in progress.
+Performance, p95, broad stress and the seven mutex regressions remain deferred.
+Initial inspection found the original
 MM VM idle on recovery boot
 `880aa11b-ab56-4129-b700-06b037473530`, with the expected 73 modules and
 9,757,523,968 bytes free on root. The real snapshot and original placement were
@@ -52,7 +53,7 @@ programs, five advice, five fault and five unpopulated-unmap receipt controls,
 the `kdmm5` image and all 73 required runtime modules passed. The captured
 manifest SHA-256 is
 `8f9bd2899aa5c69bb2eb113b4d914d780dd5daa17f20b31ada3bced1a0f71cb1`.
-No new image has been installed or booted yet. The single `serio_raw` target
+The single `serio_raw` target
 uses the already validated one-job external-directory form, avoiding the
 previous stage's competing builds.
 
@@ -71,3 +72,25 @@ not a pass. The follow-up probe uses the existing exported page-vector release
 API to retire exact scratch references on the original pinned setup CPU; its
 normal local LRU drain makes the same strict reference-count oracle usable.
 No kernel candidate, admission check or ownership assertion changed.
+
+Probe revision `f7af0fd` passed module/client compilation and all five receipt
+controls in `test-build-2`. Candidate installation preserved the recovery default
+and files. Build ID: `557ee1e502bacf98c48b3f21b2c328aa92e273e9`.
+`native-1` passed all four controls on boot
+`6a6e9224-49ed-4bbc-93d6-b21255ba17fc`. On KD boot
+`da7ca065-c431-4822-af2d-cf26b6532c5d`, these new sessions passed and drained:
+
+| Run/session | Observed result |
+| --- | --- |
+| `kd-1/populated-body` | 16 supported one-page removals, 15 completed on another task; 15 original-PFN/body receipt pairs; 1,640,290 content/ownership checks; 48 originating-CPU translation invalidations; 15 exact partial-unmap refusal ACKs; 16 later sticky-local calls; two concurrent local readers and a real blocked neighbor fault that resumed with zero-filled data; all 48 test references released. |
+| `kd-1/populated-cancellation` | One queued fatal cancellation retained its original mapping/page; healthy head completed; both test references and all queue ownership retired. |
+| `kd-1/populated-no-neighbor` | Required page-table freeing returned to the original waiter with one exact ACK; one later sticky-local call; original CPU translation invalidated; three test references released. |
+| `kd-1/populated-free` | Both test page references released before the body; two actual removals, one remote, with original-PFN completion; both originating CPUs faulted after removal; no freed page dereferenced. |
+
+The four sessions issued 165 explicit local cleanup calls and retained zero test
+page references. These are built-in real `do_mas_align_munmap_prepared` bodies,
+not synthetic callbacks or JIT execution. Their results and kernel receipts are
+under `/root/kdlock-evidence/10.176.26.71/tests/mm-populated-unmap-20261022/kd-1/`;
+local fetched receipts are in the matching ignored raw-stage directory.
+No live failure occurred in these four sessions. Broader populated ranges,
+general page-table destruction and mmap creation remain unsupported.
