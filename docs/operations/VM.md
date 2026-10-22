@@ -47,6 +47,17 @@ idle; never clear or recursively replace `/root/host_fs`. Do not edit the mirror
 guest source or frozen running inputs as another source of truth. See
 [synchronization details](../../tools/vm/README.md).
 
+## Disk housekeeping
+
+Inspect the root and data filesystems separately. Before removing old build
+outputs, confirm the VM is idle and exclude captured source/configuration/build
+files, recovery inputs and frozen run evidence. An old date alone does not make
+an artifact disposable. Use an exact deletion inventory and verify retained
+copies before removing duplicates; do not run a blanket kernel-tree clean.
+The [October 22 cleanup receipt](../../bench/results/10.176.26.71/tests/vm-disk-cleanup-20261022/README.md)
+records the 10.01 GiB reclaimed from four historical build trees and the
+preserved kernel identities. The recovery and MM build trees remain intact.
+
 ## Kernel identity
 
 Run in the guest:
