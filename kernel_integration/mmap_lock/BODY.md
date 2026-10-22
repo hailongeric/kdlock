@@ -1,6 +1,8 @@
 # Minimal actual-MM body experiment
 
-Status: implementation prepared; build and VM validation pending. Preserve the
+Status: basic programs and receipt guards passed; the first kernel build failed
+on header ordering and split-directory include resolution. Corrected build and
+live VM validation are pending. Preserve the
 installed `kdmm1` local-only results and the `kdclobber2` recovery kernel.
 
 The first supported in-tree body is `madvise_vma_behavior()` for DONTDUMP/DODUMP
@@ -33,6 +35,10 @@ The physical owner waits for its ACK, then releases the request for retirement.
 No VMA pointer crosses a lock drop, and the retained mm reference outlives every
 remote completion. Queued cancellation retains its link until the owner consumes
 it before body admission. Cancellation after admission cannot replay effects.
+Published cancellation is not an eager unlink: a cancelled waiter can return
+only after its predecessor/owner consumes the link. Bounded signal-response
+latency and general Linux killable-lock equivalence are not established for this
+opt-in body entry. Ordinary mmap-lock killable APIs retain their local protocol.
 
 The [focused probe](../../tests/kernel/mmap_lock/body/README.md) requires actual
 different-task completion, exact business effects, shared readers, native

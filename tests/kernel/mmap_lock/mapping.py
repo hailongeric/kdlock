@@ -90,8 +90,12 @@ def main():
     p.add_argument('--mode', choices=('native', 'kd'), required=True)
     p.add_argument('--api-result', type=Path, required=True)
     p.add_argument('--output', type=Path, required=True)
+    p.add_argument('--writer-sites', type=Path, default=Path(__file__).with_name('writer_sites.json'),
+                   help='reviewed call-site manifest bound to the exact candidate ELF')
     kernel_identity.arguments(p)
     a = p.parse_args()
+    global SITES
+    SITES = json.loads(a.writer_sites.read_text())
     rt.require(os.geteuid() == 0 and str(ROOT).startswith('/root/') and
                os.uname().release.startswith('6.1.159-kdmm') and
                os.environ.get('KDLOCK_RECOVERY_CONFIRMED') == '1' and
@@ -132,6 +136,8 @@ def main():
         result['kernel_identity'] = kernel_identity.capture(a, out, rt.command)
         rt.require(result['kernel_identity']['running_build_id'] == SITES['kernel_build_id'] and
                    rt.digest(a.kernel_source / 'vmlinux') == SITES['vmlinux_sha256'], 'writer proof ELF differs')
+        shutil.copyfile(a.writer_sites, out / 'writer-sites.json')
+        result['writer_sites_sha256'] = rt.digest(out / 'writer-sites.json')
         source, hashes = out / 'source', {}
         for directory in ('workload_modules/mmap_writer', 'bench/mmap_writer', 'tests/kernel/mmap_writer',
                           'tests/kernel/mmap_lock'):
@@ -148,6 +154,8 @@ def main():
         rt.write_json(out / 'source-sha256.json', hashes)
 
         def verify():
+            rt.require(rt.digest(a.writer_sites) == rt.digest(out / 'writer-sites.json') ==
+                       result['writer_sites_sha256'], 'reviewed writer proof changed')
             for name, h in hashes.items():
                 rt.require(rt.digest(ROOT / name) == rt.digest(source / name) == h, 'frozen source changed: ' + name)
 

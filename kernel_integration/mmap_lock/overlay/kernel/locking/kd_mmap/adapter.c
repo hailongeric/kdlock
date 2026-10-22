@@ -19,7 +19,7 @@ early_param("kd_mmap", kd_mmap_setup);
 
 static int __init kd_mmap_report(void)
 {
-	pr_info("KD mmap_lock: %s; local readers and origin writers; no delegation\n",
+	pr_info("KD mmap_lock: %s; local readers; typed body delegation requires per-mm opt-in\n",
 		kd_mmap_enabled ? "KD_LOCAL" : "NATIVE_CONTROL");
 	return 0;
 }

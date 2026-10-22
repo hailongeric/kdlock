@@ -1,6 +1,7 @@
 /* SPDX-License-Identifier: GPL-2.0 */
 #ifndef KD_MMAP_BODY_INTERNAL_H
 #define KD_MMAP_BODY_INTERNAL_H
+#include <linux/atomic.h>
 #include "kd_mmap_mutex_local.h"
 struct kd_mmap_rwsem;
 

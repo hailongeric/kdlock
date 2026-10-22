@@ -4,9 +4,9 @@
 #include "kd_mmap_mutex_local.h"
 #include "body_internal.h"
 
-/* This builtin has no JIT/delegation entry. Keep the production packet/node
- * geometry and independent OSQ links; no shadow stack or executable image is
- * published. Reservations remain on one CPU until OSQ retirement, so early
+/* The builtin's typed body queue shares the production node geometry and
+ * independent OSQ links. It publishes no shadow stack or executable image.
+ * Reservations remain on one CPU until both memberships retire, so early
  * boot and allocation failure need no dynamic pool initialization. */
 DEFINE_PER_CPU_SHARED_ALIGNED(struct kd_mmap_mutex_node,
 			     kd_mmap_mutex_nodes[KD_MMAP_MUTEX_MAX_NODES]);
