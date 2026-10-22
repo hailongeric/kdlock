@@ -457,7 +457,7 @@ class BenchTests(unittest.TestCase):
                                        '--write-percent', '50', '--threads', '16'])
         plan = run.make_plan(args)
         self.assertEqual(len(plan), 9)
-        self.assertEqual([s['arm'] for s in plan[:6]], ['native', 'tclock', 'kdlock', 'kdlock', 'tclock', 'native'])
+        self.assertEqual([s['arm'] for s in plan[:6]], ['native', 'tclock', 'kdlock', 'tclock', 'kdlock', 'native'])
         self.assertEqual(len({s['name'] for s in plan}), 9)
         args.collector_cpu = 0
         with self.assertRaises(run.Failure):

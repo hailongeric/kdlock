@@ -173,14 +173,15 @@ class Session:
         return result
 
     def measure(self):
-        """Count entries; resident-list profiles also record returned bodies."""
-        list_profile = self.record.get('workload') in ('list', 'list-prefetch')
+        """Read entry and matching completion counters outside the timed phase."""
+        completion_probe = (self.loaded_kd and
+                            Path('/sys/module/kdlock_km/parameters/bench_complete_probe').read_text().strip() == 'Y')
         if self.loaded_kd:
             before = self.publication()
             require(before["source"]["writers"] == 0, "writers before measurement", "UNDRAINED")
             count_path = Path("/sys/module/kdlock_km/parameters/bench_jit_bodies")
             self.record["jit_before"] = int(count_path.read_text())
-            if list_profile:
+            if completion_probe:
                 complete_path = count_path.with_name('bench_jit_completions')
                 self.record['jit_completions_before'] = int(complete_path.read_text())
             self.record["published_before"] = before
@@ -194,19 +195,18 @@ class Session:
             require(before == after, "publication changed during measurement")
             self.record.update(classify_bodies(self.record["jit_before"], self.record["jit_after"],
                                               self.record["measurement"]["completed"]))
-            if list_profile:
+            if completion_probe:
                 self.record['jit_completions_after'] = int(complete_path.read_text())
                 completed = (self.record['jit_completions_after'] -
                              self.record['jit_completions_before'])
                 require(0 <= completed <= self.record['jit_bodies'],
-                        'returned list bodies exceed entry witnesses', 'DATA_ERROR')
+                        'returned bodies exceed entry witnesses', 'DATA_ERROR')
                 self.record['jit_completions'] = completed
                 self.record['jit_complete_share'] = completed / self.record['measurement']['completed']
         else:
             require(not Path("/sys/module/kdlock_km").exists(), "kdlock appeared in native arm")
             self.record.update(jit_bodies=0, jit_share=0, jit_status="NATIVE")
-            if list_profile:
-                self.record.update(jit_completions=0, jit_complete_share=0)
+            self.record.update(jit_completions=0, jit_complete_share=0)
         self.save()
 
     def cleanup(self):

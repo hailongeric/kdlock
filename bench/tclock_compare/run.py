@@ -159,9 +159,8 @@ def make_plan(args):
     variants = [(backend, 'adaptive' if backend == 'kdlock' else 'not_applicable')
                 for backend in args.backends]
     for n, t, repeat in itertools.product(sizes, args.threads, range(args.repeats)):
-        arms = list(variants)
-        if repeat % 2:
-            arms.reverse()
+        offset = repeat % len(variants)
+        arms = variants[offset:] + variants[:offset]
         for backend, mode in arms:
             prefix = (f'{workload}-n{list_nodes}' if list_nodes else
                       'hash1024' if workload == 'rcuht' else f'c{n:02d}')

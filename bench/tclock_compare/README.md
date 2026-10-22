@@ -235,3 +235,11 @@ Join workers → verify data/lock/queue/frame drain → stop translators → ret
 sources → unload workload → unload backend/provider. Clear TCLock's diagnostic
 `target_lock` before freeing its workload storage. Do not force unload on EBUSY,
 reuse old RIP-keyed JIT after replacing only a source module, or alter frozen inputs.
+
+New nano collections enable the existing matching-root completion probe for all
+spin/mutex workloads, including cacheline and RCUHT. Counter deltas bracket only
+the measurement phase after warmup. Older entry-only collections remain distinct.
+Three-backend plans rotate the first arm on each repetition so each implementation
+occupies each execution position once. Two-backend plans alternate; three repeats
+cannot perfectly balance two positions. `bench/nano/run.py` owns the serial standard
+grid campaign and stops on a correctness failure or uncertain cleanup.

@@ -112,7 +112,8 @@ def make_plan(args):
                            list_nodes if workload in ('list', 'list-prefetch') else [0])]
     plan = []
     for (workload, lines), percent, n, repeat in itertools.product(cases, args.write_percent, threads, range(args.repeats)):
-        for arm in (args.backends if repeat % 2 == 0 else list(reversed(args.backends))):
+        offset = repeat % len(args.backends)
+        for arm in args.backends[offset:] + args.backends[:offset]:
             variant = (f'{workload}-n{lines}-{arm}' if workload in ('list', 'list-prefetch')
                        else f'{workload}-c{lines:02d}-{arm}')
             if args.lock_kind != 'rwlock':

@@ -573,7 +573,7 @@ ret
                               hotlock_mode='adaptive', scenario='plain')
         session.loaded_kd = True
         session.save = Mock()
-        events, counts = [], iter((700, 705))  # 700 bodies already returned in warmup.
+        events, counts = [], iter(('Y', 700, 650, 705, 654))
 
         def counter():
             events.append('counter')
@@ -592,8 +592,11 @@ ret
         session.publication, session.phase = publication, phase
         with patch.object(Path, 'read_text', side_effect=counter):
             session.measure()
-        self.assertEqual(events, ['publication', 'counter', 'measure', 'counter', 'publication'])
+        self.assertEqual(events, ['counter', 'publication', 'counter', 'counter',
+                                  'measure', 'counter', 'publication', 'counter'])
         self.assertEqual(session.record['jit_bodies'], 5)
+        self.assertEqual(session.record['jit_completions'], 4)
+        self.assertEqual(session.record['jit_complete_share'], 4/51)
         self.assertEqual(session.record['jit_share'], 5/51)
         self.assertEqual(session.record['measurement']['completed'], 51)
 
@@ -901,16 +904,16 @@ ret
                             'max_throughput_ops_s', 'throughput_spread_pct'):
                     self.assertIsNone(row[key])
 
-    def test_matrix_and_alternating_order(self):
+    def test_matrix_and_balanced_order(self):
         plan = run.make_plan(Namespace(cachelines=[1, 16], threads=[1, 4, 8, 16, 20],
             repeats=3, iterations=100000, backends=['native', 'tclock', 'kdlock']))
         self.assertEqual(len(plan), 90)
         self.assertEqual([(s['arm'], s['hotlock_mode']) for s in plan[:9]],
                          [('native', 'not_applicable'), ('tclock', 'not_applicable'),
-                          ('kdlock', 'adaptive'), ('kdlock', 'adaptive'),
-                          ('tclock', 'not_applicable'), ('native', 'not_applicable'),
-                          ('native', 'not_applicable'), ('tclock', 'not_applicable'),
-                          ('kdlock', 'adaptive')])
+                          ('kdlock', 'adaptive'), ('tclock', 'not_applicable'),
+                          ('kdlock', 'adaptive'), ('native', 'not_applicable'),
+                          ('kdlock', 'adaptive'), ('native', 'not_applicable'),
+                          ('tclock', 'not_applicable')])
         self.assertTrue(all(s['api_mode'] == 'direct' for s in plan))
 
     def test_summary_excludes_bad_and_undrained_samples(self):
@@ -1135,7 +1138,7 @@ ret
         self.assertIn('spin_entry_ratio_limit=4', args)
         self.assertIn('spin_delegate=1', args)
         self.assertIn('spin_prefetch=0', args)
-        self.assertNotIn('bench_complete_probe=1', args)
+        self.assertIn('bench_complete_probe=1', args)
 
     def test_list_provider_enables_returned_body_probe(self):
         for workload in ('list', 'list-prefetch'):

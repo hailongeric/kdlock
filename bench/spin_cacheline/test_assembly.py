@@ -34,7 +34,7 @@ class AssemblyTests(unittest.TestCase):
         for filename, content in {"jit.bin": b"\xc3", "bin.txt": b"0: c3 ret\n",
                                   "jit.S": b"loc_1000:\nMOV             Stack_JIT_WITNESS, 1\nRET\n"}.items():
             (folder / filename).write_bytes(content)
-        publication = dict(entry=dict(entry=0x1000, tgid=42, code=0x9000,
+        publication = dict(entry=dict(entry=0x1000, tgid=42, code=0x9000, requirements=0,
                                       lock_kind=1, status=0, pid=0),
                            source=dict(state=0, frames=0, modules=1, writers=0),
                            images={p.name: assembly.sha256(p.read_bytes())

@@ -155,8 +155,7 @@ class BackendSession(Session):
         self.run(['insmod', GUARD_MODULE], 'load-allocator-guard.log')
         self.run(['rmmod', 'tc_allocator_guard'], 'unload-allocator-guard.log')
         if self.record['arm'] == 'kdlock':
-            complete_probe = (['bench_complete_probe=1']
-                              if self.record.get('workload') in ('list', 'list-prefetch') else [])
+            complete_probe = ['bench_complete_probe=1']
             self.run(['insmod', PROVIDER, 'bench_quiet=1', 'jit_timing=0', 'hotlock_stats=1',
                       'target_process=sc_worker',
                       'spin_entry_ratio_limit=' + str(self.record['spin_entry_ratio_limit']),
