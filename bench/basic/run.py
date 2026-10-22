@@ -79,11 +79,14 @@ def functional_host(original, host, now):
 
 def plan(out, families):
     common = ['--functional', '--backends', 'kdlock', '--repeats', '1',
-              '--threads', '16', '--iterations', '100000', '--collector-cpu', '63',
+              '--iterations', '100000', '--collector-cpu', '63',
               '--kernel-source', '/root/linux-6.1.159-kdclobber2',
               '--kernel-baseline', '/root/kdlock-kernel-baselines/mutex-clobber2-20260919']
     rows = []
     for family in families:
+        # Mixed rwlock can legitimately stay local at 16 workers. Keep its
+        # returned-body requirement and use the established 60-worker case.
+        workers = 60 if family == 'rwlock' else 16
         if family in ('spin', 'mutex'):
             runner = 'bench/tclock_compare/' + ('run.py' if family == 'spin' else 'run_mutex.py')
             arguments = ['--cpus', '0-15', '--workload', 'list', '--list-nodes', '16']
@@ -91,11 +94,12 @@ def plan(out, families):
                 arguments += ['--mutex-api', 'public']
         else:
             runner = 'bench/rwlock_compare/run.py'
-            arguments = ['--cpus', *map(str, range(16)), '--lock-kind', family,
+            arguments = ['--cpus', *map(str, range(workers)), '--lock-kind', family,
                          '--workloads', 'list', '--list-nodes', '16', '--write-percent', '20',
                          '--post-work-rounds', '4', '--delegate', 'on', '--require-jit']
         rows.append(dict(family=family, output=str(out / family),
-                         argv=[sys.executable, str(ROOT / runner), *common, *arguments,
+                         argv=[sys.executable, str(ROOT / runner), *common,
+                               '--threads', str(workers), *arguments,
                                '--output', str(out / family)]))
     return rows
 

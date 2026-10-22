@@ -1,6 +1,6 @@
 # Basic functional delivery
 
-Status: new runner and documentation prepared; focused VM smoke pending. The
+Status: spin/public-mutex smoke passed; rwlock/rwsem completion pending. The
 user requested a basic version across all original tasks before more performance
 analysis. This stage changes no production lock, admission, ownership, ACK,
 cancellation or teardown protocol.
@@ -14,10 +14,24 @@ writer and executor; existing helpers remain finished and touched no files.
 
 `bench/basic/run.py` runs both basic programs, focused runner guards and four
 existing fixed-work list cases serially: KD spin, public mutex, rwlock and
-rwsem, 16 nodes, 16 workers, 100,000 iterations per worker. Shared families keep
+rwsem, 16 nodes, 100,000 iterations per worker. Shared families keep
 20% writes and local concurrent readers. Every case requires positive returned
 JIT bodies and complete drain. Additional CPU-63 I/O workers are recorded in
 this unscored functional mode; the original timing gates are unchanged.
+
+Attempt `run-1`, frozen `6237f5e`, passed dependencies, both basic programs and
+four runner tests. Spin and public mutex each completed 1,600,000 operations;
+matching JIT entry/completion counts were 1,591,572 and 1,533,374. The 16-worker
+mixed rwlock case completed and drained with zero returned JIT bodies. Its
+strict `NO_JIT` failure stopped the runner before rwsem. This is retained as a
+failed delegation check, not relabeled as delegated support. The separate
+post-run guard confirms the same idle recovery boot and exact 73 modules.
+
+The basic preset now uses the already exercised 60-worker mixed rwlock case;
+spin, public mutex and rwsem retain 16 workers. The next run selects only rwlock
+and rwsem, preserving passed cases and the failed original attempt. It retains
+`--require-jit`, list/data/reader checks and full retirement. This geometry change
+is a functional preset, not a comparable timing rerun or causal correction.
 
 Existing evidence keeps its original identities:
 

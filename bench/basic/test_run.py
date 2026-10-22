@@ -50,7 +50,7 @@ class FunctionalSmoke(unittest.TestCase):
             self.assertEqual(len(rows), 1)
             self.assertTrue(rows[0]['functional'])
             self.assertEqual(rows[0]['duration_ms'], 0)
-            self.assertEqual(rows[0]['threads'], 16)
+            self.assertEqual(rows[0]['threads'], 60 if task['family'] == 'rwlock' else 16)
             self.assertEqual(rows[0]['workload'], 'list')
             if task['family'] == 'mutex':
                 self.assertIn('public', task['argv'])

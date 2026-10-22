@@ -26,7 +26,7 @@ Earlier rejected measurements remain rejected.
 | Unified mutex | Direct `kd_mutex_lock/unlock` and blocking aliases use DIRECT, retaining nesting and exact unlock routing. Signal, try, I/O and callable-symbol paths execute locally on the KD object. See [API mappings](design/kd_only_mutex.md). |
 | Reader/writer locks | Readers are concurrent and local. Rwlock DIRECT writers can delegate. Ordinary sleeping rwsem writers are local; explicit OUTER writers can delegate. See the [lock catalog](LOCKS.md) for cancellation and downgrade limits. |
 | Real mmap and faults | Separate untouched mmap/munmap and page-fault tests use the experimental guest's actual `mm->mmap_lock` adapter. Readers and writers execute locally; this is not MM-body delegation. See [commands](../kernel_integration/mmap_lock/README.md#basic-correctness-commands). |
-| Nano benchmark | The resident-list payload supports spin, public mutex, rwlock and rwsem. The [basic runner](../bench/basic/run.py) runs one 16-node, 16-worker KD case per family, checking data, returned JIT bodies and retirement. Comparison runners remain available; TCLock sleeping rwsem and TCLock MM are unsupported. |
+| Nano benchmark | The resident-list payload supports spin, public mutex, rwlock and rwsem. The [basic runner](../bench/basic/run.py) runs one 16-node KD case per family: 16 workers for spin/mutex/rwsem, the established 60-worker preset for mixed rwlock. It checks data, returned JIT bodies and retirement. Comparison runners remain available; TCLock sleeping rwsem and TCLock MM are unsupported. |
 
 After idle synchronization and the [VM recovery checks](operations/VM.md), use
 the approved 90-second settling interval after the guest idle check. Capture a
