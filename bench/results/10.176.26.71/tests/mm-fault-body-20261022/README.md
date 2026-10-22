@@ -47,3 +47,13 @@ client's warnings-as-errors build: a printed counter needed an explicit type
 conversion, and a checked allocation pointer needed initialization for the
 compiler's control-flow analysis. Both are test-only fixes; no admission or
 correctness check changed. That frozen attempt remains under `test-build-2`.
+
+`test-preparation-3` compiled both probes and passed all five new receipt checks;
+installation preserved recovery and the previous MM images. Native control run
+`native-1`, boot `9770cece-5391-4796-a35d-08809111a0f3`, passed basic/API,
+separate untouched-mmap, page-fault and completed-file-fault checks and ended idle
+with 73 modules. Boot logs retain the existing empty `fd0` floppy I/O diagnostics.
+Before KD execution, static review moved pthread creation before the test holds
+two mmap readers: creating user stacks can require mmap write ownership. This
+avoids a test-generated lock conflict while preserving the required queued
+cohorts and reader assertions. No fault-body live pass is claimed yet.

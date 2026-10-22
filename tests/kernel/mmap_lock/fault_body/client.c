@@ -27,6 +27,7 @@ struct writer {
 	pthread_t thread;
 	unsigned int cpu, first, pages, initial;
 	_Atomic pid_t tid;
+	_Atomic int ready, go;
 	unsigned long checked;
 };
 struct phase { struct fb_status status; struct writer workers[FB_WORKERS]; };
@@ -89,6 +90,8 @@ static void *write_pages(void *arg)
 	unsigned int page, byte;
 	pin(w->cpu);
 	w->tid = syscall(SYS_gettid);
+	atomic_store(&w->ready, 1);
+	while (!atomic_load(&w->go)) usleep(1000);
 	for (page = 0; page < w->pages; page++) {
 		volatile unsigned char *p = area + (w->first + page) * PAGE;
 		/* This store is the actual CPU fault. No preceding read may install
@@ -107,6 +110,9 @@ static void start_writer(struct writer *w, unsigned int cpu, unsigned int first,
 {
 	w->cpu = cpu; w->first = first; w->pages = pages; w->initial = initial;
 	require(!pthread_create(&w->thread, NULL, write_pages, w), "create fault origin");
+	for (unsigned int i = 0; !atomic_load(&w->ready); i++) {
+		require(i < 5000, "fault origin ready"); usleep(1000);
+	}
 }
 static void join_writer(struct writer *w)
 {
@@ -122,8 +128,11 @@ static void cohort(unsigned int first, unsigned int pages, int gated)
 {
 	struct phase *p = &phases[phase_count++];
 	unsigned int i;
-	if (gated) hold_start(FB_WORKERS);
+	/* pthread_create may map a stack and acquire mmap write ownership.
+	 * Finish that work before the controller retains its shared readers. */
 	for (i = 0; i < FB_WORKERS; i++) start_writer(&p->workers[i], i, first + i * pages, pages, 0);
+	if (gated) hold_start(FB_WORKERS);
+	for (i = 0; i < FB_WORKERS; i++) atomic_store(&p->workers[i].go, 1);
 	for (i = 0; i < FB_WORKERS; i++) join_writer(&p->workers[i]);
 	if (gated) hold_join();
 	p->status = status();
@@ -193,10 +202,12 @@ static void retry_case(void)
 	require(!ioctl(uffd, UFFDIO_REGISTER, &reg), "register missing pages");
 	require(!posix_memalign((void **)&copy, PAGE, PAGE), "copy page");
 	memset(copy, 0xa5, PAGE);
-	hold_start(2);
 	start_writer(&phases[0].workers[0], 0, 0, 1, 0);
-	wait_state(1, 0);
 	start_writer(&phases[0].workers[1], 1, 16, 1, 0xa5);
+	hold_start(2);
+	atomic_store(&phases[0].workers[0].go, 1);
+	wait_state(1, 0);
+	atomic_store(&phases[0].workers[1].go, 1);
 	struct pollfd poller = {.fd = uffd, .events = POLLIN};
 	require(poll(&poller, 1, 15000) == 1 && (poller.revents & POLLIN), "missing-page event");
 	require(read(uffd, &message, sizeof(message)) == sizeof(message), "read fault event");
@@ -214,6 +225,7 @@ static void retry_case(void)
 	join_writer(&phases[0].workers[0]); join_writer(&phases[0].workers[1]);
 	phases[0].status = status(); phase_count = 1;
 	start_writer(&phases[1].workers[0], 0, 32, 1, 0);
+	atomic_store(&phases[1].workers[0].go, 1);
 	join_writer(&phases[1].workers[0]);
 	phases[1].status = status(); phase_count = 2;
 	require(!ioctl(uffd, UFFDIO_UNREGISTER, &reg.range) && !close(uffd), "userfaultfd cleanup");

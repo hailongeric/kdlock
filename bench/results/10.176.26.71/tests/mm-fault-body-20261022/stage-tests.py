@@ -22,6 +22,7 @@ SYNC = runpy.run_path(str(ROOT/'tools/vm/sync_source.py'))
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--attempt',type=int,required=True)
+    parser.add_argument('--compile-only',action='store_true')
     a=parser.parse_args()
     assert a.attempt >= 1
     RAW=RAW_ROOT/('test-preparation-'+str(a.attempt))
@@ -68,7 +69,7 @@ root=Path('/root/host_fs/kdlock');base=Path(BASE);tree=Path(TREE)
 sys.path.insert(0,str(root/'bench/spin_cacheline'))
 import bench_runtime as rt
 runpy.run_path(str(root/'bench/archive_run.py'))['idle'](Path('/root'),rt.idle)
-assert os.uname().release=='6.1.159-kdclobber2'
+assert os.uname().release in ('6.1.159-kdclobber2','6.1.159-kdmm3')
 modules=sorted(s.split()[0] for s in Path('/proc/modules').read_text().splitlines())
 expected=json.loads(Path('/root/kdlock-evidence/10.176.26.71/tests/mm-body-20261022/final-health.json').read_text())['modules']
 assert modules==expected
@@ -85,6 +86,9 @@ rt.write_json(out/'result.json',dict(passed=True,loaded=False,booted=False,sourc
 '''.replace('BASE',repr(BASE)).replace('TREE',repr(TREE)).replace('ATTEMPT',str(a.attempt))
     C['guest'](C['PY']+" - <<'PYG'\n"+script+'\nPYG',RAW/'test-build.log',600)
     C['fetch'](BASE+'/test-build-'+str(a.attempt)+'/result.json',RAW/'test-build-result.json')
+    if a.compile_only:
+        print(json.dumps(dict(passed=True,probes_compiled=True,installation_attempted=False)),flush=True)
+        return
     host=C['capture'](RAW/'host-install.json')
     assert host['pins_verified'] and host['snapshot_listed']
     C['copy_in']([RAW/'host-install.json'],BASE+'/control/',RAW/'copy-host.log')
