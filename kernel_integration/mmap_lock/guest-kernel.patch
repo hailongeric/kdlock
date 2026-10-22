@@ -216,3 +216,42 @@
 +	if (mm->mmap_lock.use_kd && READ_ONCE(mm->mmap_lock.body_enabled) &&
 +	    mm == current->mm && (behavior == MADV_DONTDUMP || behavior == MADV_DODUMP))
 +		return kd_mmap_madvise(mm, start, end, behavior);
+--- a/mm/memory.c
++++ b/mm/memory.c
+@@ -4132,0 +4133,4 @@
++#ifdef CONFIG_KD_MMAP_LOCK
++#include "kd_mmap_fault.inc"
++#endif
++
+@@ -4210,0 +4215,24 @@
++#ifdef CONFIG_KD_MMAP_LOCK
++	if (vma->vm_mm->mmap_lock.use_kd &&
++	    smp_load_acquire(&vma->vm_mm->mmap_lock.fault.enabled) &&
++	    (vmf->flags & FAULT_FLAG_WRITE) &&
++	    vmf->address >= vma->vm_mm->mmap_lock.fault.start &&
++	    vmf->address < vma->vm_mm->mmap_lock.fault.end) {
++		enum kd_mmap_fault_result result = kd_mmap_fault_submit(vmf, page, pte_val(entry));
++
++		if (result == KD_MMAP_FAULT_INSTALLED)
++			return 0;
++		if (result == KD_MMAP_FAULT_CANCELLED) {
++			/* This exact origin still owns its read acquisition and page.
++			 * No remote task may execute the unlock/retry continuation. */
++			BUG_ON(!(vmf->flags & FAULT_FLAG_ALLOW_RETRY) ||
++			       (vmf->flags & FAULT_FLAG_RETRY_NOWAIT));
++			put_page(page);
++			mmap_read_unlock(vma->vm_mm);
++			return VM_FAULT_RETRY;
++		}
++		/* Refusal and ACK have retired; userfaultfd may now drop the read
++		 * lock and wait without retaining a queue link or borrowed owner. */
++	}
++#endif
++
+@@ -4228,0 +4257,4 @@
++#ifdef CONFIG_KD_MMAP_LOCK
++	do_anonymous_page_install(vmf, page, entry, current);
++	goto unlock;
++#else
+@@ -4231,0 +4264 @@
++#endif

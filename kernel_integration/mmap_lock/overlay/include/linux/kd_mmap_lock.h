@@ -36,4 +36,24 @@ bool kd_mmap_madvise_try(struct mm_struct *mm, unsigned long start,
 int kd_mmap_madvise_native(struct mm_struct *mm, unsigned long start,
 			  unsigned long end, int behavior);
 
+struct vm_fault;
+struct page;
+struct task_struct;
+enum kd_mmap_fault_result {
+	KD_MMAP_FAULT_INSTALLED,
+	KD_MMAP_FAULT_LOCAL,
+	KD_MMAP_FAULT_CANCELLED,
+};
+void kd_mmap_fault_init(struct kd_mmap_lock *lock);
+int kd_mmap_fault_enable(struct mm_struct *mm, unsigned long start, unsigned long end);
+unsigned int kd_mmap_fault_pending(struct mm_struct *mm);
+bool kd_mmap_fault_idle(struct kd_mmap_lock *lock);
+/* Called only by the real anonymous fault after origin allocation/charging.
+ * INSTALLED transfers the page to its PTE; all other results leave the page
+ * with the origin. No mmap read share is transferred or released remotely. */
+enum kd_mmap_fault_result kd_mmap_fault_submit(struct vm_fault *vmf,
+					      struct page *page, unsigned long entry);
+bool kd_mmap_fault_try(struct vm_fault *vmf, struct page *page,
+		       unsigned long entry, struct task_struct *origin);
+
 #endif
