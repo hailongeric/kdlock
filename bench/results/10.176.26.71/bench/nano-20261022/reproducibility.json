@@ -1,0 +1,124 @@
+{
+  "schema": 1,
+  "report_version": "first-partial",
+  "collection_source_commit": "5ffde5ca6fe918e9ed9464a87f389b133bbb256b",
+  "source_host": "380G10",
+  "source_checkout": "/home/eric/vm/vm-shared/kdlock",
+  "branch": "master",
+  "guest": "root@10.176.26.71:2222",
+  "guest_collection": "/mnt/kdlock-builds/nano-20261022",
+  "guest_first_archives": "/mnt/kdlock-builds/nano-20261022-archives-first",
+  "retained_archives": "bench/results/10.176.26.71/raw/bench/nano-20261022/first-attempt",
+  "raw_per_run_json": "bench/results/10.176.26.71/raw/bench/nano-20261022/exports-first/runs.json",
+  "recovery_snapshot": "before-mutex-kdonly-20261017T140354Z",
+  "owner": {
+    "pid": 3628,
+    "started": 1792677877.5832953,
+    "boot_id": "e3f803a7-7a85-435a-8f62-82e08b2e9f2a",
+    "source_sha256": "8977656f724057dea248fb0341eb5417c87f060d8c24028b2156587c630bb392"
+  },
+  "compiler": "gcc (Ubuntu 11.4.0-1ubuntu1~22.04.3) 11.4.0\nCopyright (C) 2021 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n",
+  "linker": "GNU ld (GNU Binutils for Ubuntu) 2.38\nCopyright (C) 2022 Free Software Foundation, Inc.\nThis program is free software; you may redistribute it under the terms of\nthe GNU General Public License version 3 or (at your option) a later version.\nThis program has absolutely no warranty.\n",
+  "translation_python": "/root/kdlock-translation-venv-20261019/bin/python3",
+  "plot_python": "/root/kdlock-plot-venv-20261019/bin/python3",
+  "source_binary_manifests": "spin-cacheline.tar.gz:nano-20261022/spin-cacheline/{source-sha256.json,binary-sha256.json}",
+  "archive_receipt": {
+    "archive_prefix": "nano-20261022",
+    "boot_id": "e3f803a7-7a85-435a-8f62-82e08b2e9f2a",
+    "completed": true,
+    "finished_ns": 1792679520251652314,
+    "groups": [
+      {
+        "bytes": 15647542,
+        "file": "spin-cacheline.tar.gz",
+        "group": "spin-cacheline",
+        "path": "/mnt/kdlock-builds/nano-20261022-archives-first/spin-cacheline.tar.gz",
+        "roots": [
+          "nano-20261022/spin-cacheline"
+        ],
+        "sha256": "74f70bcc7b9f85b6f69f8f79a5a4ab46b339a5329ccbf6d089a59294c4cad917"
+      },
+      {
+        "bytes": 61420,
+        "file": "metadata.tar.gz",
+        "group": "metadata",
+        "path": "/mnt/kdlock-builds/nano-20261022-archives-first/metadata.tar.gz",
+        "roots": [
+          "nano-20261022/STOP",
+          "nano-20261022/checks-2.log",
+          "nano-20261022/checks-3.log",
+          "nano-20261022/checks-4.log",
+          "nano-20261022/checks.log",
+          "nano-20261022/commands.json",
+          "nano-20261022/compiler.txt",
+          "nano-20261022/environment",
+          "nano-20261022/first-audit-2.log",
+          "nano-20261022/first-audit.json",
+          "nano-20261022/first-audit.log",
+          "nano-20261022/first-health.json",
+          "nano-20261022/first-report-2.log",
+          "nano-20261022/first-report.log",
+          "nano-20261022/linker.txt",
+          "nano-20261022/owner-finished.json",
+          "nano-20261022/owner.json",
+          "nano-20261022/report-tests-2.log",
+          "nano-20261022/report-tests.log",
+          "nano-20261022/spin-cacheline.log",
+          "nano-20261022/status.json"
+        ],
+        "sha256": "d3030fce567666099fe44e5c3d419a67648506482daca98443720a64d6d6524c"
+      }
+    ],
+    "guest_base": "/mnt/kdlock-builds/nano-20261022",
+    "guest_idle": true,
+    "health_path": "first-health.json",
+    "health_sha256": "9664b1ffa9f4db2b66ffb70813af71449812aaa7c2f9f01c9c8ce9f2aad21442",
+    "idle_source_sha256": "c6f7dc17a41bc5c34bff35d3aaed7b4a995ba3e5225d2c48d032417ca3f1510e",
+    "input_inventory_sha256": "4ab2a799dfe3202663e3daa1acc7760d0ae8167d7261cd8f676ae0549bafffac",
+    "kernel_release": "6.1.159-kdclobber2",
+    "schema": 1,
+    "scope": "Complete evidence preservation; no deletion, module action, test or timing",
+    "script_sha256": "8d666f148a10d7fe19294cc7d193464c8bb53d4c3aec64b7518b9d335966c952",
+    "started_ns": 1792679516316020740
+  },
+  "archive_copy_verification": {
+    "compressed_hashes_verified": true,
+    "inventory_paths": 12041,
+    "regular_files": 10910
+  },
+  "analysis_scripts": {
+    "bench/nano/test_report.py": "5926e4d2c5c85800cb291ecad1299c87db76acf4e6a42cdafa22b009c5973975",
+    "bench/nano/continue.py": "dc5ca404ac8af3088a3481ad9f107698fd94a290873e47ef5faf437bbe63a5dc",
+    "bench/nano/report.py": "ee1144aed27e4e76d1867657bcbcbc380b49d16b5714fcb0576d3776049ab5c9",
+    "bench/nano/audit.py": "58720954f9d827e00d07e40d35202306e52ecaf91b97a4a6d8c89bdfcb819347",
+    "bench/nano/run.py": "8977656f724057dea248fb0341eb5417c87f060d8c24028b2156587c630bb392"
+  },
+  "reproduction_commands": [
+    "export PATH=/root/kdlock-translation-venv-20261019/bin:$PATH LC_ALL=C",
+    "export KDLOCK_RECOVERY_CONFIRMED=1 KDLOCK_SNAPSHOT_TAG=before-mutex-kdonly-20261017T140354Z",
+    "python3 bench/nano/run.py --output NEW_EXTERNAL_DIRECTORY",
+    "python3 bench/nano/audit.py COLLECTION --output COLLECTION/first-audit.json",
+    "/root/kdlock-plot-venv-20261019/bin/python3 bench/nano/report.py COLLECTION REPORT_DIRECTORY"
+  ],
+  "reproduction_precondition": "Reverify the intended idle guest, live kernel and boot policy, host pins and real recovery snapshot before setting recovery variables. commands.json contains exact expanded collection argv.",
+  "retained_failure": "spin-cacheline/c08-t36-r01-direct-native: DATA_ERROR, finished worker progress differs from exact total; drained; never rescored",
+  "continuation": "Separate owner continues unattempted configurations with unchanged inputs; native c08/36 remaining repetition withheld. Initial failure-boundary archive remains immutable.",
+  "validation": {
+    "basic_c": 2,
+    "direct_runner": 58,
+    "rw_runner": 26,
+    "shared_client": 16,
+    "assembly": 7,
+    "report_accounting": 1,
+    "initial_saved_sessions": 320,
+    "initial_sources": 338,
+    "initial_binaries": 8
+  },
+  "limitations": [
+    "Partial collection; remaining configurations are missing, not passed.",
+    "Three repetitions do not establish statistical significance.",
+    "CPU frequency uses ondemand rather than fixed frequency.",
+    "Matching completion instrumentation adds KD observation cost.",
+    "No p95, MM development, performance tuning, or seven-mutex-regression investigation."
+  ]
+}
