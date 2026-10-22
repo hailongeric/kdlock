@@ -1,8 +1,9 @@
 # Populated anonymous munmap: bounded functional stage
 
-Status: source review and the first candidate are prepared; no build or live
-pass is claimed. Performance, p95, broad stress and the seven mutex regressions
-remain deferred. The original MM VM is idle on recovery boot
+Status: the first kernel candidate built; focused probe preparation is in
+progress and no live pass is claimed. Performance, p95, broad stress and the
+seven mutex regressions remain deferred. Initial inspection found the original
+MM VM idle on recovery boot
 `880aa11b-ab56-4129-b700-06b037473530`, with the expected 73 modules and
 9,757,523,968 bytes free on root. The real snapshot and original placement were
 rechecked. Checkout commit `d575556` is confined to nano results; its work and
@@ -62,3 +63,11 @@ before real munmap, exercises normal final release, and deliberately does not
 dereference freed pages. All originating CPUs repeat their earlier cached
 access after unmap and must fault. A separate hardware fault to an untouched
 neighbor must wait behind the writer and resolve normally after writer release.
+
+Probe build attempt 1 failed at module symbol checking: `lru_add_drain` is not
+exported by this kernel. No module loaded, installation started or boot changed.
+The retained `test-build-1/build-module.log` and source snapshot are a failure,
+not a pass. The follow-up probe uses the existing exported page-vector release
+API to retire exact scratch references on the original pinned setup CPU; its
+normal local LRU drain makes the same strict reference-count oracle usable.
+No kernel candidate, admission check or ownership assertion changed.

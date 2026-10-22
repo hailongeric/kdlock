@@ -11,6 +11,7 @@
 #include <linux/mm.h>
 #include <linux/mmap_lock.h>
 #include <linux/module.h>
+#include <linux/pagevec.h>
 #include <linux/sched/mm.h>
 #include <linux/sched/signal.h>
 #include <linux/sched/task.h>
@@ -232,6 +233,24 @@ static void drop_pins(struct session *s)
 	}
 }
 
+static void settle_page_references(struct session *s)
+{
+	struct pagevec scratch;
+	unsigned int i;
+
+	/* The client populated and acquired these pages on its pinned setup CPU.
+	 * Release exact scratch references through the exported page-vector API:
+	 * it drains this CPU's deferred LRU references before our ownership oracle.
+	 * lru_add_drain itself is internal and cannot be called from a module. */
+	pagevec_init(&scratch);
+	for (i = 0; i < s->region.groups; i++) {
+		if (!s->pages[i]) continue;
+		get_page(s->pages[i]);
+		if (!pagevec_add(&scratch, s->pages[i])) pagevec_release(&scratch);
+	}
+	pagevec_release(&scratch);
+}
+
 static long page_operation(struct session *s, unsigned int cmd, unsigned long arg)
 {
 	unsigned int i;
@@ -241,7 +260,6 @@ static long page_operation(struct session *s, unsigned int cmd, unsigned long ar
 	if (atomic_read(&s->controlling) || !s->region.groups) { error = -EBUSY; goto out; }
 	if (cmd == UB_PIN) {
 		if (pins_owned(s)) { error = -EBUSY; goto out; }
-		lru_add_drain();
 		mmap_read_lock(s->mm);
 		for (i = 0; i < s->region.groups; i++) {
 			long n = get_user_pages(target(s, i), 1, FOLL_WRITE, &s->pages[i], NULL);
@@ -249,7 +267,7 @@ static long page_operation(struct session *s, unsigned int cmd, unsigned long ar
 			s->charges[i] = READ_ONCE(s->pages[i]->memcg_data);
 		}
 		mmap_read_unlock(s->mm);
-		lru_add_drain();
+		settle_page_references(s);
 		if (error) drop_pins(s);
 	} else if (cmd == UB_PAGESTATE) {
 		if (pins_owned(s) != s->region.groups) { error = -EINVAL; goto out; }
