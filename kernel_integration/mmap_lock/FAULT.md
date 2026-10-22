@@ -164,34 +164,17 @@ physical owner:
     unlock only this physical acquisition; hand HEAD to bounded remainder
 ```
 
-## Next useful mmap/munmap extension
+## Smallest mmap/munmap extension
 
-The smallest candidate is **whole-VMA munmap of one isolated, never-faulted,
-private anonymous mapping**, initially `PROT_NONE` and `MADV_NOHUGEPAGE`. It would
-reuse the advice writer queue and actual mmap write ownership, not the fault
-service gate. Admission would require exact VMA boundaries, no populated or
-special page-table entries, no anonymous reverse-map chain, file/callback,
-userfaultfd, policy, name, huge/locked/growing state, memory-account charge or
-MMU notifier. An MMU notifier is a callback used by another memory-management
-consumer to track mapping changes.
+The follow-up [whole-VMA munmap stage](UNMAP.md) implements the small extension
+identified after this fault milestone: real removal of one isolated anonymous
+VMA under actual mmap write ownership. It prepares caller-dependent maple-tree
+allocations on the origin and admits only ranges whose top-level page-directory
+entries are absent. Its `kdmm4` validation recorded 15 remote removals and kept
+this fault implementation unchanged. Its sources and results are separate from
+the `kdmm3` results above.
 
-In the captured source, `__vm_munmap()` calls `do_mas_munmap()` and
-`do_mas_align_munmap()`. The latter removes VMAs from the maple tree (the address
-range index), updates map counts, tears down page tables and frees VMA metadata.
-A real extension must execute that actual removal and completion path on the
-combiner; a counter or a successful no-overlap munmap would not count. Keeping
-the optional downgrade disabled for the admitted branch would retain one exact
-writer acquisition through the body and leave its release with the owner.
-
-This is a proposal, not an admitted implementation. It still needs an explicit
-caller-derived address-limit check, review or caller-side preparation of maple
-tree allocations, and a complete audit of `arch_unmap`, page-table teardown,
-notifier exclusion and VMA freeing. Reject before the point of no return; retain
-the original waiter route and sticky refusal for everything else. Prove the
-mapping disappears, neighboring mappings survive, ownership/ACKs match and the
-request fully retires. Faults remain a separate workload.
-
-Creating a mapping is a larger first step: the current `do_mmap()` and
+Creating a mapping is a larger step: the current `do_mmap()` and
 `__mmap_region()` use `current->mm`, caller address selection, resource/security
-checks and `perf_event_mmap()` notifications. No general mmap or munmap body
-support is claimed from either completed milestone.
+checks and `perf_event_mmap()` notifications. No general mmap, munmap or
+page-fault body support is claimed from these narrow milestones.

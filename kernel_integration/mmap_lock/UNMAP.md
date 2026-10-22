@@ -1,7 +1,8 @@
 # Minimal whole-VMA munmap body
 
-Status: implementation prepared for a separate `kdmm4` kernel; compilation and
-live correctness are pending. The `kdmm2` advice and `kdmm3` anonymous first-write
+Status: the separate `kdmm4` kernel passed the focused serial correctness stage.
+Fifteen actual whole-VMA removals completed on other tasks with exact mapping
+receipts; recovery was restored. The `kdmm2` advice and `kdmm3` anonymous first-write
 milestones remain preserved. This stage is correctness only; performance, p95,
 the seven mutex regressions and broad stress remain deferred.
 
@@ -74,14 +75,50 @@ body admission, then returns `-EINTR` without removing the VMA. Once admitted,
 an error is returned directly and never replayed locally. Bounded cancellation
 latency and oversubscribed progress remain unvalidated.
 
-## Planned validation
+## Validated scope and commands
 
-Use the original `10.176.26.71:2222` MM VM, one writer and serial checks. Verify
-different-task completion of real munmap, absence of the actual mapping,
-unchanged neighbors, local readers/fault interaction, exact handback/ACK pairs,
-sticky refusal, queued cancellation and complete node/resource/module cleanup.
-Keep Native controls, advice preservation, first-write preservation, untouched
-mmap and fault workloads separate. Preserve every failure and restore recovery.
-The [stage record](../../bench/results/10.176.26.71/tests/mm-unmap-body-20261022/README.md)
-will record working commands and actual results. No functional pass is claimed
-from this prepared implementation.
+On the original `10.176.26.71:2222` MM VM, `native-1` passed four controls;
+`kd-1` passed six preservation sessions, and `kd-2` passed the remaining six on
+the same KD boot. The one failed initial munmap probe remains separate. The
+[stage record](../../bench/results/10.176.26.71/tests/mm-unmap-body-20261022/README.md)
+binds revisions, boot identities, result receipts and archives.
+
+The successful main case removed 16 complete three-page VMAs, including 15
+remote bodies with origin/mm/range-bound completion receipts. Two readers held
+the actual read lock concurrently before the writer drained them. A subsequent
+hardware read fault waited at reader admission and received `SEGV_MAPERR` after
+the VMA disappeared. Partial removals of 16 populated VMAs went to their callers,
+with 15 matching handback/ACK pairs and unchanged remaining contents. Sixteen
+later eligible whole-range calls stayed local after sticky refusal.
+
+Separate cases verified a queued fatal cancellation left its VMA intact, and a
+prior real zero-page read forced full-range unmap back to its caller. Re-reading
+on the original reader CPU then faulted, verifying local invalidation of the old
+translation. That case matched one additional handback/ACK and one sticky local
+call. All three cases checked mapping cleanup and exact idle retirement before
+normal module unload. Their 159 explicit cleanup calls count as local calls,
+never delegated removals. Built-in C bodies execute here; no JIT body is claimed.
+
+[Probe commands](../../tests/kernel/mmap_lock/unmap_body/README.md) run the three
+cases serially with the exact source/baseline arguments. They require an already
+approved KD boot and verified recovery snapshot. For this recorded candidate:
+
+- Kernel source: `/root/kdlock-kernel-work/mm-unmap-body-20261022/candidate-1/linux`.
+- Baseline: `/root/kdlock-kernel-baselines/mmap-kdmm4-20261022`.
+- Build ID: `a4f371bb5bca303f6b6d9354bfbf156275479dcb`.
+
+## Remaining limitations
+
+This supports removal of one small, isolated VMA whose PGD entries are absent.
+It does not delegate populated-page teardown, partial unmap, file/device or
+notifier callbacks, or creation of mappings. Only partial populated removal and
+the zero-page/PGD refusal were individually exercised as unsupported branches;
+the other guards remain source-reviewed exclusions, not individually tested
+claims. The ordinary local path retains its native downgrade and release logic.
+
+Forced reserve-allocation failure, tree-height growth during preparation, slot
+exhaustion, the 256-request handoff boundary, post-admission cancellation,
+advice/unmap queue interleaving, broad reader/fault races, swap pressure and
+oversubscribed progress remain untested. The run checked the same 73 runtime
+modules, not every configured module. RT, lockdep, whole-kernel replacement,
+performance, p95 and the seven mutex regressions remain outside this milestone.

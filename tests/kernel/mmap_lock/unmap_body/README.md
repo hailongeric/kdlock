@@ -12,18 +12,35 @@ export LC_ALL=C PYTHONDONTWRITEBYTECODE=1
 export KDLOCK_RECOVERY_CONFIRMED=1
 export KDLOCK_SNAPSHOT_TAG=before-mutex-kdonly-20261017T140354Z
 cd /root/host_fs/kdlock
+KD_UNMAP_SOURCE=/root/kdlock-kernel-work/mm-unmap-body-20261022/candidate-1/linux
+KD_UNMAP_BASELINE=/root/kdlock-kernel-baselines/mmap-kdmm4-20261022
+KD_UNMAP_OUT=/root/kdlock-evidence/10.176.26.71/tests/NEW-unmap
 python3 tests/kernel/mmap_lock/unmap_body/test_receipts.py
 python3 tests/kernel/mmap_lock/unmap_body/run.py \
-  --kernel-source /root/kdlock-kernel-work/mm-unmap-body-20261022/candidate-1/linux \
-  --kernel-baseline /root/kdlock-kernel-baselines/mmap-kdmm4-20261022 \
-  --output /root/kdlock-evidence/10.176.26.71/tests/NEW-unmap-body
+  --kernel-source "$KD_UNMAP_SOURCE" --kernel-baseline "$KD_UNMAP_BASELINE" \
+  --output "$KD_UNMAP_OUT/body"
+python3 tests/kernel/mmap_lock/unmap_body/run.py --cancellation \
+  --kernel-source "$KD_UNMAP_SOURCE" --kernel-baseline "$KD_UNMAP_BASELINE" \
+  --output "$KD_UNMAP_OUT/cancellation"
+python3 tests/kernel/mmap_lock/unmap_body/run.py --read-first \
+  --kernel-source "$KD_UNMAP_SOURCE" --kernel-baseline "$KD_UNMAP_BASELINE" \
+  --output "$KD_UNMAP_OUT/read-first"
 ```
 
-Use distinct output directories for subsequent serial `--cancellation` and
-`--read-first` runs. A snapshot environment variable alone is not confirmation.
+Run each command only after its predecessor passes and drains. All output
+directories must be new; do not reuse the recorded stage outputs. A snapshot
+environment variable alone is not confirmation.
 The commands require actual snapshot verification described in
-[VM operations](../../../../docs/operations/VM.md). Compilation is preliminary;
-this prepared probe has no live pass yet.
+[VM operations](../../../../docs/operations/VM.md). The `b787a90` probe passed all
+three live cases on `kdmm4`; the initial
+`50412ff` observer failure is retained in the
+[stage record](../../../../bench/results/10.176.26.71/tests/mm-unmap-body-20261022/README.md).
+
+Before closing writer admission, the probe opens and exercises its proc stack
+observer, writes every output-buffer page, and prepares the late thread's
+signal-jump/read machinery. This prevents first-use faults in the observer from
+waiting behind the writer it is trying to observe. The later target access
+still must produce the real blocked-fault stack and expected mapping fault.
 
 The main probe places each target VMA (virtual memory area) in a distinct absent
 PGD (top-level page-directory entry), with separately mapped neighbors. It queues

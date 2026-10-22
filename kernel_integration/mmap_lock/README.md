@@ -1,5 +1,13 @@
 # Actual mmap-lock kernel integration
 
+The subsequent [whole-VMA munmap experiment](UNMAP.md) passed focused serial
+correctness on `kdmm4`: 15 real removals completed on other tasks, with exact
+mapping/ACK receipts, local readers, fault ordering, cancellation and cleanup.
+It preserves the advice and fault implementations below. Its initial probe
+failure and successful follow-up remain separately recorded; recovery is restored.
+This only admits small isolated anonymous ranges with absent page-directory
+entries. Performance and broad MM support remain unvalidated.
+
 The separate [anonymous write-fault experiment](FAULT.md) passed focused serial
 correctness on `kdmm3`: 129 real page-installation bodies completed on other
 tasks, with PTE-bound receipts, concurrent local readers, exact handbacks/ACKs,
@@ -83,12 +91,13 @@ TCLock is excluded from these operations.
 ## Experimental interface and lifetime
 
 `CONFIG_KD_MMAP_LOCK` gives the actual mm object an immutable backend choice.
-Both `kd_mmap=off` (Native control) and `kd_mmap=on` (KD local) use the same
+Both `kd_mmap=off` (Native control) and `kd_mmap=on` (KD backend) use the same
 kernel image and mm layout. `init_mm` remains Native. Dynamic mm initialization
 chooses the boot mode before publication; no acquisition can switch protocols.
 The builtin implementation is a namespaced copy of the maintained KD physical
 mutex/rwsem code. Its preallocated node slots retain separate OSQ links and exact
-object identity, without publishing any delegated body or executable image.
+object identity. The base lock API executes locally; the explicitly enabled
+advice, fault and munmap entries add their separately validated built-in bodies.
 
 Read releases transferred to BPF irq_work retain a unique `mmap_read_token` and
 an mm-count reference. Completion consumes the record once, releases its actual
