@@ -1,7 +1,7 @@
 # Actual mmap-lock body correctness stage
 
 Run family: `mm-body-20261022`. Candidate source: `5652f58`.
-Status: first separate `6.1.159-kdmm2` build failed; corrected build pending. No live result or
+Status: corrected `6.1.159-kdmm2` build and capture passed; live checks pending. No live result or
 performance acceptance is claimed. The user confirmed sole writer and test-slot
 ownership before resumption. Only the original 64-vCPU VM at
 `10.176.26.71:2222` is used. Performance tuning and p95 are deferred.
@@ -49,3 +49,23 @@ Attempt 2 adds the explicit atomic include and a complete symlink view of the
 new candidate at its data-disk directory, preserving relative include paths.
 Only the new experimental build is updated after its confirmed exit. The prior
 prepare manifest and changed generated inputs are retained before replacement.
+
+## Build attempt 2 and capture correction
+
+Source `3c01e17`: basic programs (2), receipt guards (4), kernel image and all 73
+runtime modules built successfully. Capture refused the external `arch` symlink
+under the unchanged baseline containment check. Its incomplete bundle is retained
+as `mmap-kdmm2-20261022-capture-failed-1`; it is not an accepted baseline.
+
+`storage.py` replaces only this candidate's three staging symlinks with bind
+mounts at the original build paths. The data remains on the same guest disk.
+The verifier keeps its path-containment and byte-hash checks. These mounts are
+recreated after each guest reboot; no fstab or recovery boot policy is changed.
+Capture is repeated as `capture-control-3`, without rebuilding or changing any
+kernel source, configuration, image or runtime module bytes.
+
+Capture passed with Build ID `198726ed15a65c0fd91fb9afd10ba8e3c5a31c83` and manifest
+SHA-256 `76603b0060bdea616a1b4a94b46f96299a98faebd2fad396a332af729f6af405`.
+Recovery files and modules were verified unchanged. Live checks use newly frozen
+probe sources, including a separate queued-cancellation/no-effect/retirement
+case; the built kernel remains the `3c01e17` implementation.

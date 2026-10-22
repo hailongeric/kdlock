@@ -1,8 +1,9 @@
 # Minimal actual-MM body experiment
 
-Status: basic programs and receipt guards passed; the first kernel build failed
-on header ordering and split-directory include resolution. Corrected build and
-live VM validation are pending. Preserve the
+Status: the corrected kernel image, 73 runtime modules and exact kernel capture
+passed. Live VM validation is pending. The retained build/capture failures and
+corrections are recorded in the [stage report](../../bench/results/10.176.26.71/tests/mm-body-20261022/README.md).
+Preserve the
 installed `kdmm1` local-only results and the `kdclobber2` recovery kernel.
 
 The first supported in-tree body is `madvise_vma_behavior()` for DONTDUMP/DODUMP

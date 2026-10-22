@@ -26,6 +26,13 @@ partial ranges, forcing native splitting on the origin and exact owner/ACK
 handback. The third phase performs 512 local calls after the sticky refusal;
 delegated completions and handbacks must remain unchanged.
 
+Run a second fresh client with `--cancellation` on the runner. A healthy head and
+one follower publish behind a real local reader. SIGUSR1 must not complete the
+killable request; SIGKILL cancels the follower, which retains its link until the
+reader releases and the head consumes it. Require EINTR, no victim VMA mutation,
+one successful head, one cancellation, and exact queue/slot cleanup. This proves
+safe retirement, not bounded cancellation latency behind a blocked predecessor.
+
 All workers must join, the exact pool/queue/owner state must be idle, and all
 VMAs must unmap before ordinary module unload. A timeout leaves the run and
 module in place for diagnosis. Run untouched mmap/munmap and page-fault tests

@@ -61,9 +61,24 @@ def validate(row, messages):
                 execution='FIXED_IN_TREE_MADVISE_BODY', receipts=len(records))
 
 
+def validate_cancellation(row, messages):
+    rt.require(row['errors'] == 0 and row['checks'] == 11 and row['completed'] == 2 and
+               row['pending_peak'] == 2 and row['idle'] == 1 and row['unmapped'] == 16 and
+               row['mm'] and row['lock'], 'cancellation/effect/retirement oracle differs')
+    p = row['phases'][0]
+    expected = dict(calls=2, supported=1, delegated=0, handbacks=0, native=0,
+                    post_ban=0, cancelled=1, acks=0, native_only=0)
+    rt.require(all(p[k] == v for k, v in expected.items()) and
+               p['tids'][0] != p['tids'][1] and all(p['tids'][:2]) and
+               'KD_MM_BODY done' not in messages, 'cancelled body executed or accounting differs')
+    return dict(cancelled_before_admission=1, unchanged_victim_vma=True,
+                queue_retired=True, jit_bodies=0, execution='CANCELLED_QUEUED_BODY')
+
+
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('--output', type=Path, required=True)
+    p.add_argument('--cancellation', action='store_true')
     kernel_identity.arguments(p)
     a = p.parse_args()
     rt.require(os.geteuid() == 0 and str(ROOT).startswith('/root/') and
@@ -120,9 +135,9 @@ def main():
         command(['insmod', module], out / 'load.log')
         result['state'] = 'RUNNING'
         rt.write_json(out / 'result.json', result)
-        row = json.loads(command([client], out / 'client.json', 180))
+        row = json.loads(command([client, *(['--cancel'] if a.cancellation else [])], out / 'client.json', 180))
         logs()
-        result['evidence'] = validate(row, messages)
+        result['evidence'] = (validate_cancellation if a.cancellation else validate)(row, messages)
         result['client'] = row
         for rel, digest in hashes.items():
             rt.require(rt.digest(source / rel) == rt.digest(Path(__file__).parent / rel) == digest,

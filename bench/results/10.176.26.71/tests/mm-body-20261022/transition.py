@@ -62,7 +62,7 @@ def main():
     try:
         result.update(preserved())
         expected=load(BASE/'control/expected-guest.json')['modules']
-        build=load(BASE/'build-control-2/build-result.json')
+        build=load(BASE/'capture-control-3/result.json')
         rt.require(build['passed'] and rt.digest(BUNDLE/'manifest.json')==
                    build['baseline_manifest_sha256'],'built candidate capture differs')
         build_id=load(BUNDLE/'manifest.json')['running']['build_id']
@@ -118,6 +118,7 @@ def main():
             rt.require(modules==expected,'exact runtime module restoration failed')
             args=argparse.Namespace(kernel_source=Path('/root/linux-6.1.159-kdclobber2') if a.mode=='recovery' else SOURCE,
                 kernel_baseline=Path('/root/kdlock-kernel-baselines/mutex-clobber2-20260919') if a.mode=='recovery' else BUNDLE)
+            rt.command([sys.executable,BASE/'control/storage.py'],a.output/'candidate-storage.log',timeout=60)
             identity=kernel_identity.capture(args,a.output,rt.command)
             rt.require(identity['running_build_id']==('5ca28058e156f34a2c7fe91e8e0fbf92f4e51960' if a.mode=='recovery' else build_id),
                        'running Build ID differs')

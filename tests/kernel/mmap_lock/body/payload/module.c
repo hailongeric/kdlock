@@ -12,6 +12,7 @@
 #include <linux/mmap_lock.h>
 #include <linux/module.h>
 #include <linux/sched/mm.h>
+#include <linux/sched/signal.h>
 #include <linux/sched/task.h>
 #include <linux/slab.h>
 #include <linux/uaccess.h>
@@ -25,7 +26,8 @@ struct worker {
 	struct task_struct *task;
 	struct completion done, entered;
 	unsigned int index, phase, iterations;
-	bool reader;
+	bool reader, cancel;
+	int returned;
 	u64 completed, errors;
 };
 struct test {
@@ -50,6 +52,13 @@ static int work(void *argument)
 	unsigned int i;
 
 	kthread_use_mm(t->mm);
+	if (w->cancel) {
+		allow_signal(SIGUSR1);
+		allow_signal(SIGKILL);
+		w->returned = advice(t->mm, t->result.address[w->index], 3 * PAGE_SIZE, MADV_DONTDUMP);
+		w->completed++;
+		goto done;
+	}
 	if (w->reader) {
 		int active;
 
@@ -83,6 +92,7 @@ static int work(void *argument)
 			mmap_read_unlock(t->mm);
 		}
 	}
+done:
 	kthread_unuse_mm(t->mm);
 	complete(&w->done);
 	return 0;
@@ -186,6 +196,67 @@ release:
 	return 0;
 }
 
+/* Keep the healthy head behind a real reader while one published follower is
+ * cancelled. The victim cannot retire its link early; after reader release it
+ * returns EINTR with no VMA mutation and the exact queue/slot state is empty. */
+static int cancellation(struct test *t)
+{
+	struct kd_mmap_lock *lock = &t->mm->mmap_lock;
+	unsigned int i, spawned = 0, pending = 0;
+	unsigned long deadline;
+	int error = 0;
+
+	mmap_read_lock(t->mm);
+	for (i = 0; i < 2; i++) {
+		t->workers[i].cancel = true;
+		error = start(t, &t->workers[i], i, 0, false);
+		if (error)
+			goto release;
+		spawned++;
+		t->result.tids[0][i] = t->workers[i].task->pid;
+		deadline = jiffies + 5 * HZ;
+		do {
+			pending = kd_mmap_body_pending(t->mm);
+			if (pending == i + 1)
+				break;
+			msleep(1);
+		} while (time_before(jiffies, deadline));
+		check(t, pending == i + 1);
+		if (pending != i + 1) { error = -ETIMEDOUT; goto release; }
+	}
+	t->result.pending_peak = pending;
+	check(t, !send_sig(SIGUSR1, t->workers[1].task, 1));
+	msleep(20);
+	check(t, !completion_done(&t->workers[1].done));
+	check(t, !send_sig(SIGKILL, t->workers[1].task, 1));
+	msleep(20);
+	check(t, !completion_done(&t->workers[1].done));
+release:
+	mmap_read_unlock(t->mm);
+	for (i = 0; i < spawned; i++) {
+		if (!join(&t->workers[i]))
+			return -EBUSY;
+		check(t, t->workers[i].returned == (i ? -EINTR : 0));
+		t->result.completed += t->workers[i].completed;
+	}
+	if (error)
+		return error;
+	mmap_read_lock(t->mm);
+	for (i = 0; i < 2; i++) {
+		struct vm_area_struct *vma = find_vma(t->mm, t->result.address[i]);
+
+		check(t, vma && vma->vm_start == t->result.address[i] &&
+		      !!(vma->vm_flags & VM_DONTDUMP) == !i);
+	}
+	t->result.counts[0] = (struct mb_counts) { lock->body_calls, lock->body_supported,
+		lock->body_delegated, lock->body_handbacks, lock->body_native,
+		lock->body_post_ban, lock->body_cancelled, lock->body_acks,
+		lock->body_native_only };
+	mmap_read_unlock(t->mm);
+	check(t, kd_mmap_is_idle(lock));
+	return 0;
+}
+
 static long run(struct file *file, unsigned int cmd, unsigned long arg)
 {
 	struct test *t;
@@ -193,7 +264,7 @@ static long run(struct file *file, unsigned int cmd, unsigned long arg)
 	unsigned int i;
 	int error = 0;
 
-	if (cmd != MB_RUN || !current->mm || !current->mm->mmap_lock.use_kd)
+	if ((cmd != MB_RUN && cmd != MB_CANCEL) || !current->mm || !current->mm->mmap_lock.use_kd)
 		return -EOPNOTSUPP;
 	if (atomic_cmpxchg(&busy, 0, 1))
 		return -EBUSY;
@@ -221,8 +292,11 @@ static long run(struct file *file, unsigned int cmd, unsigned long arg)
 	if (!error)
 		error = kd_mmap_body_enable(t->mm);
 	mmap_write_unlock(t->mm);
-	for (i = 0; !error && i < 3; i++)
-		error = phase(t, i);
+	if (!error && cmd == MB_CANCEL)
+		error = cancellation(t);
+	else
+		for (i = 0; !error && i < 3; i++)
+			error = phase(t, i);
 	if (error == -EBUSY) {
 		/* Unjoined tasks retain this context, mm and module for diagnosis. */
 		__module_get(THIS_MODULE);

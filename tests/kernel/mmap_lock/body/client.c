@@ -6,13 +6,14 @@
 #include <sched.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <sys/ioctl.h>
 #include <sys/mman.h>
 #include <unistd.h>
 #include "payload/api.h"
 
 static void fail(const char *message) { perror(message); exit(1); }
-int main(void)
+int main(int argc, char **argv)
 {
 	struct mb_result r = {0};
 	size_t page = (size_t)sysconf(_SC_PAGESIZE);
@@ -20,6 +21,9 @@ int main(void)
 	char *arena;
 	int fd;
 	cpu_set_t affinity;
+	int cancel = argc == 2 && !strcmp(argv[1], "--cancel");
+
+	if (argc != 1 && !cancel) return 2;
 
 	CPU_ZERO(&affinity); CPU_SET(63, &affinity);
 	if (sched_setaffinity(0, sizeof(affinity), &affinity)) fail("collector affinity");
@@ -34,7 +38,7 @@ int main(void)
 		    munmap(arena + (5 * i + 4) * page, page)) fail("unmap guard");
 	}
 	fd = open("/dev/kd_mm_body_test", O_RDWR);
-	if (fd < 0 || ioctl(fd, MB_RUN, &r)) fail("body ioctl");
+	if (fd < 0 || ioctl(fd, cancel ? MB_CANCEL : MB_RUN, &r)) fail("body ioctl");
 	if (close(fd)) fail("close");
 	for (i = 0; i < MB_WORKERS; i++)
 		if (munmap((void *)(uintptr_t)r.address[i], 3 * page)) fail("final unmap");

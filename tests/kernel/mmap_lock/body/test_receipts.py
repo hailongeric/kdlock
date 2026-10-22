@@ -23,6 +23,16 @@ LOG = 'KD_MM_BODY done mm=abc origin=100 executor=101 start=10000 end=13000 beha
 
 
 class Receipts(unittest.TestCase):
+    def test_cancelled_before_effect(self):
+        row = fixture()
+        row.update(checks=11, completed=2, pending_peak=2)
+        row['phases'][0].update(calls=2, supported=1, delegated=0, cancelled=1)
+        self.assertTrue(runner.validate_cancellation(row, '')['queue_retired'])
+        for key, value in [('cancelled', 0), ('supported', 2), ('delegated', 1), ('acks', 1)]:
+            bad = copy.deepcopy(row); bad['phases'][0][key] = value
+            with self.assertRaises(Exception): runner.validate_cancellation(bad, '')
+        with self.assertRaises(Exception): runner.validate_cancellation(row, LOG)
+
     def test_positive(self):
         self.assertEqual(runner.validate(fixture(), LOG)['returned_compiled_bodies'], 1)
 

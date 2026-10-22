@@ -15,4 +15,5 @@ struct mb_result {
 	struct mb_counts counts[3];
 };
 #define MB_RUN _IOWR('B', 0x51, struct mb_result)
+#define MB_CANCEL _IOWR('B', 0x52, struct mb_result)
 #endif
