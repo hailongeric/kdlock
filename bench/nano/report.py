@@ -47,7 +47,7 @@ def main():
         for mix in ([1,20] if lock in ('rwlock','rwsem') else [100]):
             key=(lock,workload,size,mix,workers,arm);r,path=found.get(key+(rep,),({},''));m=r.get('measurement',{})
             unsupported=lock=='rwsem' and arm=='tclock'
-            valid=(r.get('execution_status')=='OK' and r.get('drained') is True and m.get('complete') is True and m.get('data_ok') is True)
+            valid=(r.get('execution_status')=='OK' and r.get('drained') is True and not r.get('cleanup_error') and m.get('complete') is True and m.get('data_ok') is True)
             # A strict delegation refusal can still be a correct local baseline.
             local=(r.get('execution_status')=='NO_JIT' and r.get('jit_bodies')==0 and r.get('drained') is True and not r.get('cleanup_error') and m.get('complete') is True and m.get('data_ok') is True)
             terminal=r and r.get('execution_status') not in ('PREPARING','MEASURING')
@@ -56,7 +56,7 @@ def main():
             returns=r.get('jit_completions') if arm=='kdlock' else None
             eligible=m.get('writes') if lock in ('rwlock','rwsem') else m.get('completed')
             execution=('local-zero-delegation' if entries==0 else 'returned-delegation' if returns and returns>0 else 'entry-only' if entries else 'unmeasured') if arm=='kdlock' else 'control'
-            row=dict(zip(KEY,key));row.update(repetition=rep,status=status,reason='TCLock has no sleeping rwsem port' if unsupported else r.get('error') or held.get(key+(rep,),'not collected' if status=='missing' else ''),
+            row=dict(zip(KEY,key));row.update(repetition=rep,status=status,reason='TCLock has no sleeping rwsem port' if unsupported else r.get('error') or r.get('cleanup_error') or held.get(key+(rep,),'not collected' if status=='missing' else ''),
                 runner_status=r.get('execution_status',''),execution=execution,completed_operations=m.get('completed'),reads=m.get('reads'),writes=m.get('writes'),
                 wall_ns=m.get('wall_ns'),throughput_ops_s=m['completed']*1e9/m['wall_ns'] if status=='completed' else None,
                 peak_ops_s=(m.get('peak') or {}).get('throughput_ops_s'),kd_entries=entries,kd_completions=returns,
@@ -65,6 +65,8 @@ def main():
                 kd_completion_share=returns/eligible if returns is not None and eligible else None,
                 kd_entries_without_matching_completion=entries-returns if entries is not None and returns is not None else None,
                 kd_no_generated_entry_operations=m['completed']-entries if entries is not None and 'completed' in m else None,
+                kd_eligible_without_entry_operations=eligible-entries if entries is not None and eligible is not None else None,
+                kd_local_reader_operations=m.get('reads') if arm=='kdlock' and lock in ('rwlock','rwsem') else 0 if arm=='kdlock' and 'completed' in m else None,
                 drained=r.get('drained'),data_ok=m.get('data_ok'),complete=m.get('complete'),oversubscribed=False,session=path)
             rows.append(row)
     dump(out/'runs.csv',rows);(out/'runs.json').write_text(json.dumps(rows,indent=2)+'\n')
@@ -91,6 +93,16 @@ def main():
             if other:r['kd_speedup_'+arm]=r['median_ops_s']/other['median_ops_s']
     fields=KEY+['execution','local_repetitions','returned_delegation_repetitions','entry_only_repetitions','repetitions','median_ops_s','min_ops_s','max_ops_s','spread_percent','cv_percent','kd_speedup_native','kd_speedup_tclock']
     dump(out/'aggregate.csv',aggregate,fields)
+    comparisons=[]
+    for lock,arm in itertools.product(('spin','mutex','rwlock','rwsem'),('native','tclock')):
+        ratios=[r['kd_speedup_'+arm] for r in aggregate
+            if r['lock']==lock and r['kd_speedup_'+arm] is not None]
+        if ratios:
+            comparisons.append(dict(lock=lock,baseline=arm,matched_configurations=len(ratios),
+                higher=sum(v>1 for v in ratios),lower=sum(v<1 for v in ratios),equal=sum(v==1 for v in ratios),
+                minimum_ratio=min(ratios),maximum_ratio=max(ratios)))
+    dump(out/'comparison-summary.csv',comparisons,
+        ['lock','baseline','matched_configurations','higher','lower','equal','minimum_ratio','maximum_ratio'])
     coverage=[]
     for lock,(workload,size),arm in itertools.product(('spin','mutex','rwlock','rwsem'),VARIANTS,('native','tclock','kdlock')):
         subset=[r for r in rows if (r['lock'],r['workload'],r['size'],r['implementation'])==(lock,workload,size,arm)]
@@ -145,8 +157,14 @@ def main():
           f"Configurations: {config_totals['completed']} have all three valid repetitions, {config_totals['failed']} contain a failure, {config_totals['missing']} are otherwise incomplete, and {config_totals['unsupported']} are unsupported. See coverage-configurations.csv for every worker count and write mix.", '',
           'This report contains only this collection. Missing points are not passes. The earlier 40-vCPU campaign is a separate historical dataset. No performance acceptance is claimed outside completed configurations.', '',
           'Throughput is completed operations divided by measured wall time. Plots show the median of three repetitions with minimum–maximum whiskers. Open points have fewer than three valid repetitions. Coefficient of variation (CV) is sample standard deviation divided by the mean. Speedup is kdlock median divided by the matching control median; values below one are regressions. Ratios require three valid repetitions for both implementations.', '',
-          'Delegation means another lock holder executes the caller’s critical section. Just-in-time (JIT) entry counts and matching completed bodies are recorded separately. Zero-entry runs remain local baselines. A published NORMAL image is not proof of execution. Counts exclude warmup and cover the full measured interval, not the selected peak window. The no-generated-entry count includes local rwlock/rwsem readers; it is not an exact count of admission failures. Medians combine repetitions of the same frozen configuration even when observed delegation varies. The mixed-delegation label and per-mode repetition counts expose that variation; per-run counts remain available. Source versions, workload settings and topologies are never pooled.', '',
+          'Delegation means another lock holder executes the caller’s critical section. Just-in-time (JIT) entry counts and matching completed bodies are recorded separately. Zero-entry runs remain local baselines. A published NORMAL image is not proof of execution. Counts exclude warmup and cover the full measured interval, not the selected peak window. The export separates local readers from eligible operations without a generated entry (eligible writes for rwlock/rwsem, all operations for spin/mutex). The latter includes local fast paths and fallback; the saved counters do not separate reasons for local execution. The total no-generated-entry count includes both categories. Medians combine repetitions of the same frozen configuration even when observed delegation varies. The mixed-delegation label and per-mode repetition counts expose that variation; per-run counts remain available. Throughput ratios compare whole implementations and do not isolate the causal benefit of delegation. Source versions, workload settings and topologies are never pooled.', '',
           '## Observed comparisons', '']
+    if comparisons:
+        text += ['This table counts complete matched configurations across the requested worker counts and workload variants. It does not average throughput across workloads. Higher/lower means a median ratio above/below one, not a statistically significant difference.', '',
+            '| Lock | Control | Complete pairs | Higher | Lower | Equal | Ratio range |',
+            '| --- | --- | ---: | ---: | ---: | ---: | ---: |']
+        text += [f"| {r['lock']} | {'Linux Native' if r['baseline']=='native' else 'TCLock'} | {r['matched_configurations']} | {r['higher']} | {r['lower']} | {r['equal']} | {r['minimum_ratio']:.2f}–{r['maximum_ratio']:.2f}× |" for r in comparisons]
+        text += ['', 'Largest measured wins and regressions:', '']
     text += ['- '+s for _,s in sorted(wins,reverse=True)[:5]] or ['No complete matched wins available yet.']
     text += ['']+(['- '+s for _,s in sorted(losses)[:5]] or ['No complete matched regressions available yet.'])
     text += ['', 'These are the largest observed ratios among complete matched groups, not statistical significance claims. All valid repetitions remain in the data files.']
@@ -167,6 +185,7 @@ def main():
     text += ['', '## Environment and method','',
        'The existing VM at 10.176.26.71:2222 runs 6.1.159-kdclobber2 with nokaslr, nopvspin and voluntary preemption. It has 64 vCPUs and 24 GiB RAM: CPUs 0–31 on NUMA node 0, 32–63 on node 1. NUMA means memory access cost depends on the CPU and memory node. Workers use CPUs 0 through N−1; collector CPU 63 is separate. No requested point oversubscribes the guest. Host vCPUs are pinned one-to-one; the observed host governor is ondemand, so clock frequency is not fixed.', '',
        'The 1–32-worker points stay on node 0; the 36–60-worker points span both nodes. At 60 workers the split is 32 on node 0 and 28 on node 1. QEMU service threads share host CPU 63 with the collector. This placement is part of the result identity, not a claim that every possible placement has the same scaling.', '',
+       'Worker and collector CPU placement is fixed. Module preparation inherits the runner’s CPU affinity (0–63), and the static payload arrays use kernel module allocation. Per-object physical NUMA placement was not bound or recorded. All implementations use this same preparation policy, but these results do not isolate the effect of memory placement.', '',
        'All arms use 48,000 warmup operations per worker and a 2,000 ms measured interval. A separate secondary peak uses the highest valid 300 ms window after 300 ms settling, sampled every 10 ms. Conclusions and ratios use whole-run medians. Spin/mutex have 64 dependent arithmetic rounds after unlock; rwlock/rwsem have four. Do not compare rates across these different lock-family workloads as though they were equivalent.', '',
        'Cacheline c01/c08 update one/eight padded 64-byte counters. Lists visit 16/128 resident nodes in a fixed permutation; prefetch/no-prefetch are separate variants. RCUHT names the hash-table workload: it has 1,024 buckets, 4,096 preallocated nodes and 8,192 possible keys. Its exclusive operations attempt moves, including misses and conflicts; this nano workload performs no per-operation allocation or read-copy-update (RCU) memory reclamation.', '',
        'Each fresh workload module starts cacheline/list values at zero. A list node occupies 64 bytes, so the selected list footprints are 1 KiB and 8 KiB. List links advance five array slots. Hash nodes begin with keys 0–4,095, inserted into bucket key modulo 1,024; bucket and node strides are 64 bytes. Hash random streams use the same CPU-derived seed in every arm. All workers complete warmup before the measured snapshot; timed hash interleavings can produce different valid table states. The captured owner uses ordinary time-sharing scheduling with nice value 5, inherited by its clients.', '',
