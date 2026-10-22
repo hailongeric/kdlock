@@ -28,6 +28,10 @@ p95, exhaustive matrices and performance tuning are deferred. All seven causes
 and qualified variance remain unresolved; preserved performance refusals remain
 failures. Functional delivery keeps ownership, isolation, recovery, topology,
 lifetime and teardown checks without requiring timing acceptance.
+The [basic handoff](../bench/results/10.176.26.71/tests/basic-version-20261022/README.md)
+now records four returned-body presets and complete drain. Its failed
+16-worker mixed rwlock delegation check remains unresolved; the basic preset
+uses the separately validated 60-worker case without changing admission.
 The completed [receipt-I/O control](../bench/results/10.176.26.71/bench/mutex-receipt-io-20261021/README.md)
 passed 49 serial basic/affected and 2,626 inert archive checks, with one original
 warmup, exact retirement and final drain. Seventeen writes/4,874,247 logical
@@ -93,7 +97,7 @@ now close the failed-after-block, no-switch and runnable-only coverage gaps:
 51 checks passed with exact identities, independent task switch counters and
 complete joins, after basic/receipt checks and the unchanged 139-check baseline.
 The observer and original workload bindings remain sealed. Recovery is restored
-idle. Next, validate the proposed exact wait-entry/wake-callback correlation,
+idle. A later causal stage would validate exact wait-entry/wake-callback correlation,
 including stack reuse, scheduler activation, cancellation and complete callback
 lifetimes, before attributing retries to fanout or changing wake policy. No
 timing ran; qualified variance and all seven original causes remain unresolved.
@@ -533,10 +537,10 @@ with this revision.
 ### Main-plan acceptance audit
 
 The [focused five-worker pipecap investigation](../bench/results/10.176.26.71/bench/pipecap-causal-20261021/README.md)
-is active. It must distinguish original route counts, queue waits and observer
-effects before proposing a production change. The initial host receipt fails;
-planned diagnostics are not passes. Remaining mutex, shared-lock, nano and real
-mmap/fault work retains explicit unresolved dispositions.
+is deferred under the basic-version priority. It must distinguish original route
+counts, queue waits and observer effects before proposing a production change.
+The initial host receipt fails; planned diagnostics are not passes. Remaining
+performance and broad integration gaps retain explicit unresolved dispositions.
 
 The [seven-point latency stage](../bench/results/10.176.26.71/bench/mutex-latency-20261021/README.md)
 completed its separate 252-session follow-up after a retained capacity failure.

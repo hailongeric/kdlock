@@ -66,6 +66,14 @@ correctness protections remain. The strict 67-thread timing gate and every
 historical refusal stay unchanged. Local-only or partial execution cannot pass
 the returned-JIT smoke requirement.
 
+The [basic-version results](../bench/results/10.176.26.71/tests/basic-version-20261022/README.md)
+record returned-body passes for all four presets and the retained 16-worker
+rwlock `NO_JIT` failure. That smaller case was correct and drained but did not
+demonstrate delegation. The 60-worker preset is functional coverage, not a fix
+or performance comparison. Subsequent work is ordered as low-cohort delegation,
+the seven regression causes and MM wake attribution, then broader coverage and
+optional latency/matrix work.
+
 ## Folder ownership
 
 Keep one directory per responsibility. Similar names do not imply interchangeable

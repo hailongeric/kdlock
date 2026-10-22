@@ -1,11 +1,12 @@
 # Performance status
 
-Current scope: new p95 measurements are deferred at the user's request. Preserve
-existing latency evidence; missing p95 is not a gate for throughput investigation
-or throughput acceptance. Throughput still requires correct matched work,
-compatible execution classes, exact retirement, unchanged environment checks
-and reported repetition variance. Acquisition latency remains unmeasured within
-its stated scope and does not block this throughput-only stage.
+Current priority is the [basic functional version](../bench/results/10.176.26.71/tests/basic-version-20261022/README.md).
+All four KD families have returned-body smoke passes; the 16-worker rwlock
+NO_JIT failure remains separate. Functional results supply no throughput score
+or performance acceptance. Causal profiling, observer expansion, p95, exhaustive
+matrices and tuning are deferred. Future throughput work still requires correct
+matched work, compatible execution classes, exact retirement, unchanged timing
+gates and repetition variance. Preserve all existing measurements and refusals.
 The [retained RCUHT audit](../bench/results/10.176.26.71/bench/rcuht-class-audit-20261021/README.md)
 separates plain execution classes from instrumented modes and identifies queue
 activity without combiner calls in the two plain no-JIT sessions. It supplies
