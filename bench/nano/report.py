@@ -27,7 +27,14 @@ def identity(r):
 def main():
     p=argparse.ArgumentParser(description=__doc__);p.add_argument('input',type=Path);p.add_argument('output',type=Path)
     p.add_argument('--no-plots',action='store_true');a=p.parse_args();out=a.output;out.mkdir(parents=True,exist_ok=True)
-    found={}
+    found={};held={}
+    held_names={r['name']:r['reason']
+        for receipt in a.input.glob('continuation*/prefix-finished.json')
+        for r in json.loads(receipt.read_text()).get('skipped',[])}
+    for plan in a.input.glob('*/plan.json'):
+        for spec in json.loads(plan.read_text()):
+            if spec['name'] in held_names:
+                held[identity(spec)+(spec['repeat'],)]=held_names[spec['name']]
     for path in sorted(a.input.glob('*/*/session.json')):
         r=json.loads(path.read_text());key=identity(r)+(r['repeat'],)
         if 'measurement' not in r and path.with_name('measure.json').is_file():
@@ -49,7 +56,7 @@ def main():
             returns=r.get('jit_completions') if arm=='kdlock' else None
             eligible=m.get('writes') if lock in ('rwlock','rwsem') else m.get('completed')
             execution=('local-zero-delegation' if entries==0 else 'returned-delegation' if returns and returns>0 else 'entry-only' if entries else 'unmeasured') if arm=='kdlock' else 'control'
-            row=dict(zip(KEY,key));row.update(repetition=rep,status=status,reason='TCLock has no sleeping rwsem port' if unsupported else r.get('error',''),
+            row=dict(zip(KEY,key));row.update(repetition=rep,status=status,reason='TCLock has no sleeping rwsem port' if unsupported else r.get('error') or held.get(key+(rep,),'not collected' if status=='missing' else ''),
                 runner_status=r.get('execution_status',''),execution=execution,completed_operations=m.get('completed'),reads=m.get('reads'),writes=m.get('writes'),
                 wall_ns=m.get('wall_ns'),throughput_ops_s=m['completed']*1e9/m['wall_ns'] if status=='completed' else None,
                 peak_ops_s=(m.get('peak') or {}).get('throughput_ops_s'),kd_entries=entries,kd_completions=returns,
@@ -63,11 +70,16 @@ def main():
     dump(out/'runs.csv',rows);(out/'runs.json').write_text(json.dumps(rows,indent=2)+'\n')
     groups={}
     for r in rows:
-        if r['status']=='completed': groups.setdefault(tuple(r[k] for k in KEY)+(r['execution'],),[]).append(r)
+        if r['status']=='completed': groups.setdefault(tuple(r[k] for k in KEY),[]).append(r)
     aggregate=[]
     for key,items in groups.items():
         rates=[r['throughput_ops_s'] for r in items];med=statistics.median(rates)
-        row=dict(zip(KEY,key[:-1]));row.update(execution=key[-1],repetitions=len(items),median_ops_s=med,min_ops_s=min(rates),max_ops_s=max(rates),
+        modes=sorted({r['execution'] for r in items})
+        row=dict(zip(KEY,key));row.update(execution=modes[0] if len(modes)==1 else 'mixed-delegation',
+            local_repetitions=sum(r['execution']=='local-zero-delegation' for r in items),
+            returned_delegation_repetitions=sum(r['execution']=='returned-delegation' for r in items),
+            entry_only_repetitions=sum(r['execution']=='entry-only' for r in items),
+            repetitions=len(items),median_ops_s=med,min_ops_s=min(rates),max_ops_s=max(rates),
             spread_percent=(max(rates)-min(rates))/med*100,cv_percent=statistics.stdev(rates)/statistics.mean(rates)*100 if len(rates)>1 else None,
             kd_speedup_native=None,kd_speedup_tclock=None)
         aggregate.append(row)
@@ -77,13 +89,26 @@ def main():
         for arm in ('native','tclock'):
             other=lookup.get(tuple(r[k] for k in KEY[:-1])+(arm,))
             if other:r['kd_speedup_'+arm]=r['median_ops_s']/other['median_ops_s']
-    fields=KEY+['execution','repetitions','median_ops_s','min_ops_s','max_ops_s','spread_percent','cv_percent','kd_speedup_native','kd_speedup_tclock']
+    fields=KEY+['execution','local_repetitions','returned_delegation_repetitions','entry_only_repetitions','repetitions','median_ops_s','min_ops_s','max_ops_s','spread_percent','cv_percent','kd_speedup_native','kd_speedup_tclock']
     dump(out/'aggregate.csv',aggregate,fields)
     coverage=[]
     for lock,(workload,size),arm in itertools.product(('spin','mutex','rwlock','rwsem'),VARIANTS,('native','tclock','kdlock')):
         subset=[r for r in rows if (r['lock'],r['workload'],r['size'],r['implementation'])==(lock,workload,size,arm)]
         coverage.append(dict(lock=lock,workload=workload,size=size,implementation=arm,**{s:sum(r['status']==s for r in subset) for s in ('completed','failed','unsupported','missing')}))
     dump(out/'coverage.csv',coverage)
+    configurations={}
+    for r in rows:
+        configurations.setdefault(tuple(r[k] for k in KEY),[]).append(r)
+    config_coverage=[]
+    for key,items in configurations.items():
+        counts={s:sum(r['status']==s for r in items) for s in ('completed','failed','unsupported','missing')}
+        status=('unsupported' if counts['unsupported']==3 else 'completed' if counts['completed']==3
+            else 'failed' if counts['failed'] else 'missing')
+        config_coverage.append(dict(zip(KEY,key),status=status,**counts,
+            reasons='; '.join(sorted({r['reason'] for r in items if r['reason']}))))
+    dump(out/'coverage-configurations.csv',config_coverage)
+    config_totals={s:sum(r['status']==s for r in config_coverage) for s in ('completed','failed','unsupported','missing')}
+    (out/'coverage-configurations.json').write_text(json.dumps(config_totals,indent=2)+'\n')
     totals={s:sum(r['status']==s for r in rows) for s in ('completed','failed','unsupported','missing')}
     (out/'coverage.json').write_text(json.dumps(totals,indent=2)+'\n')
     figures=[]
@@ -105,7 +130,7 @@ def main():
                         ax.plot(THREADS,[values.get(n,float('nan')) for n in THREADS],color=color,label=label,marker='o',markersize=3)
                         ax.vlines(x,[r['min_ops_s']/1e6 for r in rr],[r['max_ops_s']/1e6 for r in rr],color=color,alpha=.5)
                     partial=[r for r in selected if r['implementation']==arm and r['repetitions']<3]
-                    if partial: ax.scatter([r['workers'] for r in partial],[r['median_ops_s']/1e6 for r in partial],facecolors='none',edgecolors=color,label=label+' incomplete/class split')
+                    if partial: ax.scatter([r['workers'] for r in partial],[r['median_ops_s']/1e6 for r in partial],facecolors='none',edgecolors=color,label=label+' incomplete')
                 ax.set(xlabel='Workers',ylabel='Million operations/second',title=f'{lock}: {workload} {size or ""}, {mix}% writes')
                 ax.grid(alpha=.2);ax.legend(fontsize=8);fig.tight_layout()
                 name=f'{lock}-{workload}-{size}-w{mix}.png';fig.savefig(out/name,dpi=150);plt.close(fig);figures.append(name)
@@ -117,14 +142,19 @@ def main():
             item=(ratio,f"{r['lock']} {r['workload']} size {r['size']}, {r['write_percent']}% writes, {r['workers']} workers: {ratio:.2f}× {label}")
             (wins if ratio>=1 else losses).append(item)
     text=['# Nano benchmark: first results', '',f"Measured runs: {totals['completed']} completed, {totals['failed']} failed, {totals['missing']} missing; {totals['unsupported']} unsupported repetition slots.",'',
+          f"Configurations: {config_totals['completed']} have all three valid repetitions, {config_totals['failed']} contain a failure, {config_totals['missing']} are otherwise incomplete, and {config_totals['unsupported']} are unsupported. See coverage-configurations.csv for every worker count and write mix.", '',
           'This report contains only this collection. Missing points are not passes. The earlier 40-vCPU campaign is a separate historical dataset. No performance acceptance is claimed outside completed configurations.', '',
-          'Throughput is completed operations divided by measured wall time. Plots show the median of three repetitions with minimum–maximum whiskers. Open points have fewer than three repetitions in an execution class. Coefficient of variation (CV) is sample standard deviation divided by the mean. Speedup is kdlock median divided by the matching control median; values below one are regressions.', '',
-          'Delegation means another lock holder executes the caller’s critical section. Just-in-time (JIT) entry counts and matching completed bodies are recorded separately. Zero-entry runs remain local baselines. A published NORMAL image is not proof of execution. Counts exclude warmup and cover the full measured interval, not the selected peak window. The no-generated-entry count includes local rwlock/rwsem readers; it is not an exact count of admission failures. Mixed execution classes remain separate, with no three-repeat ratio fabricated.', '',
+          'Throughput is completed operations divided by measured wall time. Plots show the median of three repetitions with minimum–maximum whiskers. Open points have fewer than three valid repetitions. Coefficient of variation (CV) is sample standard deviation divided by the mean. Speedup is kdlock median divided by the matching control median; values below one are regressions. Ratios require three valid repetitions for both implementations.', '',
+          'Delegation means another lock holder executes the caller’s critical section. Just-in-time (JIT) entry counts and matching completed bodies are recorded separately. Zero-entry runs remain local baselines. A published NORMAL image is not proof of execution. Counts exclude warmup and cover the full measured interval, not the selected peak window. The no-generated-entry count includes local rwlock/rwsem readers; it is not an exact count of admission failures. Medians combine repetitions of the same frozen configuration even when observed delegation varies. The mixed-delegation label and per-mode repetition counts expose that variation; per-run counts remain available. Source versions, workload settings and topologies are never pooled.', '',
           '## Observed comparisons', '']
     text += ['- '+s for _,s in sorted(wins,reverse=True)[:5]] or ['No complete matched wins available yet.']
     text += ['']+(['- '+s for _,s in sorted(losses)[:5]] or ['No complete matched regressions available yet.'])
     text += ['', 'These are the largest observed ratios among complete matched groups, not statistical significance claims. All valid repetitions remain in the data files.']
     failed=[r for r in rows if r['status']=='failed']
+    withheld=[r for r in rows if r['status']=='missing' and r['reason']!='not collected']
+    if withheld:
+        text += ['', '## Withheld repetitions', '']
+        text += [f"- {r['lock']} {r['workload']} size {r['size']}, {r['workers']} workers, {r['implementation']}, repetition {r['repetition']+1}: {r['reason']}. Counted as missing, not as a pass." for r in withheld]
     if failed:
         text += ['', '## Failed cases retained', '']
         text += [f"- {r['lock']} {r['workload']} size {r['size']}, {r['workers']} workers, {r['implementation']}, repetition {r['repetition']+1}: {r['reason']}. Drained: {r['drained']}. No throughput score." for r in failed]
@@ -138,7 +168,7 @@ def main():
        'The existing VM at 10.176.26.71:2222 runs 6.1.159-kdclobber2 with nokaslr, nopvspin and voluntary preemption. It has 64 vCPUs and 24 GiB RAM: CPUs 0–31 on NUMA node 0, 32–63 on node 1. NUMA means memory access cost depends on the CPU and memory node. Workers use CPUs 0 through N−1; collector CPU 63 is separate. No requested point oversubscribes the guest. Host vCPUs are pinned one-to-one; the observed host governor is ondemand, so clock frequency is not fixed.', '',
        'The 1–32-worker points stay on node 0; the 36–60-worker points span both nodes. At 60 workers the split is 32 on node 0 and 28 on node 1. QEMU service threads share host CPU 63 with the collector. This placement is part of the result identity, not a claim that every possible placement has the same scaling.', '',
        'All arms use 48,000 warmup operations per worker and a 2,000 ms measured interval. A separate secondary peak uses the highest valid 300 ms window after 300 ms settling, sampled every 10 ms. Conclusions and ratios use whole-run medians. Spin/mutex have 64 dependent arithmetic rounds after unlock; rwlock/rwsem have four. Do not compare rates across these different lock-family workloads as though they were equivalent.', '',
-       'Cacheline c01/c08 update one/eight padded 64-byte counters. Lists visit 16/128 resident nodes in a fixed permutation; prefetch/no-prefetch are separate variants. RCUHT has 1,024 buckets, 4,096 preallocated nodes and 8,192 possible keys. Its exclusive operations attempt moves, including misses and conflicts; it performs no per-operation allocation or RCU reclamation.', '',
+       'Cacheline c01/c08 update one/eight padded 64-byte counters. Lists visit 16/128 resident nodes in a fixed permutation; prefetch/no-prefetch are separate variants. RCUHT names the hash-table workload: it has 1,024 buckets, 4,096 preallocated nodes and 8,192 possible keys. Its exclusive operations attempt moves, including misses and conflicts; this nano workload performs no per-operation allocation or read-copy-update (RCU) memory reclamation.', '',
        'Each fresh workload module starts cacheline/list values at zero. A list node occupies 64 bytes, so the selected list footprints are 1 KiB and 8 KiB. List links advance five array slots. Hash nodes begin with keys 0–4,095, inserted into bucket key modulo 1,024; bucket and node strides are 64 bytes. Hash random streams use the same CPU-derived seed in every arm. All workers complete warmup before the measured snapshot; timed hash interleavings can produce different valid table states. The captured owner uses ordinary time-sharing scheduling with nice value 5, inherited by its clients.', '',
        'Spinlocks wait by spinning; mutexes can sleep. Reader/writer spinlocks (rwlocks) allow concurrent readers or an exclusive writer. Reader/writer semaphores (rwsems) offer those ownership modes with sleeping waits. Spin/mutex operations here are exclusive writes. For rwlock/rwsem every worker mixes local shared readers and exclusive writers at 1% or 20% writes; there are no dedicated writer threads. Readers compare cacheline/list values or search a hash bucket. KD writers may delegate. TCLock has no sleeping rwsem implementation.', '',
        'Public mutex macros use the current unified binary calling interface, ABI2. The existing private KD observation provider has UndefinedBehaviorSanitizer (UBSAN) instrumentation disabled; actual compiler commands and source/binary hashes are retained per block. Completion probes are enabled for every KD payload. No lock or workload tuning occurred.', '',

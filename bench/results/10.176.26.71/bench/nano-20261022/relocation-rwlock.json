@@ -1,0 +1,15 @@
+{
+  "started": 1792698726.0012057,
+  "original": "/mnt/kdlock-builds/nano-20261022/rwlock",
+  "destination": "/root/kdlock-evidence/10.176.26.71/bench/nano-20261022-relocated/rwlock",
+  "independent_verification": "/mnt/kdlock-builds/nano-tools-20261023/verification.json",
+  "verification_sha256": "1810ab606a91135ec82f40342314cc8dc5c7095b7eccf92e0b66da9528b1ecbf",
+  "archive_sha256": "c5466d09e7313d5091dc54c59cd1cda87d4bac0234320acebb888d304dd63689",
+  "inventory_sha256": "a122bdfd01ecc206a1636939f5f7407cf187693ca5c5c84cbe72d0c2617daa0f",
+  "paths": 84633,
+  "completed": true,
+  "scope": "Completed evidence moved across existing guest filesystems; recorded absolute paths preserved by symlink.",
+  "copy_verified": true,
+  "finished": 1792698742.6608336,
+  "link_target": "/root/kdlock-evidence/10.176.26.71/bench/nano-20261022-relocated/rwlock"
+}
