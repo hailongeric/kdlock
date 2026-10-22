@@ -45,3 +45,20 @@ installations are retained. Focused serial tests must prove another task removed
 the original physical page mapping, cached-translation invalidation, neighboring
 contents, exact ACKs, sticky refusal, cancellation and complete cleanup, and
 rerun the directly affected preserved paths before this stage can pass.
+
+Kernel source `4b8ec51` built successfully on the first attempt: both basic
+programs, five advice, five fault and five unpopulated-unmap receipt controls,
+the `kdmm5` image and all 73 required runtime modules passed. The captured
+manifest SHA-256 is
+`8f9bd2899aa5c69bb2eb113b4d914d780dd5daa17f20b31ada3bced1a0f71cb1`.
+No new image has been installed or booted yet. The single `serio_raw` target
+uses the already validated one-job external-directory form, avoiding the
+previous stage's competing builds.
+
+The probe retains explicit original-page references for PFN (physical page
+number), contents, mapcount and memory-charge ownership checks, then retires
+every reference. An additional unreferenced case releases these test references
+before real munmap, exercises normal final release, and deliberately does not
+dereference freed pages. All originating CPUs repeat their earlier cached
+access after unmap and must fault. A separate hardware fault to an untouched
+neighbor must wait behind the writer and resolve normally after writer release.
