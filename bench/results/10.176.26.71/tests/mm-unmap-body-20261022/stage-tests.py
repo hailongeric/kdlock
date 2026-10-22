@@ -76,6 +76,7 @@ assert modules==expected
 rt.write_json(base/'control/expected-guest.json',dict(modules=modules,boot_id=Path('/proc/sys/kernel/random/boot_id').read_text().strip()))
 out=base/('test-build-'+str(ATTEMPT));out.mkdir()
 inputs=json.loads((base/'control/source-inputs.json').read_text())
+rt.write_json(out/'frozen-inputs.json',inputs)
 for n,digest in inputs['files'].items():assert rt.digest(root/n)==digest,n
 shutil.copytree(root/'tests/kernel/mmap_lock/unmap_body',out/'source')
 command=runpy.run_path(str(base/'build-control-1/build.py'))['command']

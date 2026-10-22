@@ -27,6 +27,8 @@ static pthread_t holder, late_thread;
 static _Atomic int late_ready, late_go, late_entered, late_done;
 static _Atomic pid_t late_tid;
 static int late_code, late_blocked, read_first_code;
+static int late_stack_fd = -1;
+static unsigned char warm_byte;
 static char late_stack[8192];
 static _Thread_local sigjmp_buf trap;
 static _Thread_local volatile sig_atomic_t trap_armed, trap_code;
@@ -104,6 +106,9 @@ static int probe_read(uintptr_t address)
 static void *late_fault(void *unused)
 {
 	(void)unused; pin(59);
+	/* Resolve and fault in this thread's signal-jump/read machinery before
+	 * admission closes. The later stack must describe the target access. */
+	if (probe_read((uintptr_t)&warm_byte)) _exit(91);
 	late_tid = syscall(SYS_gettid);
 	atomic_store(&late_ready, 1);
 	while (!atomic_load(&late_go)) usleep(1000);
@@ -112,22 +117,38 @@ static void *late_fault(void *unused)
 	atomic_store(&late_done, 1);
 	return NULL;
 }
-static void capture_late_fault(void)
+static int read_late_stack(void)
+{
+	require(lseek(late_stack_fd, 0, SEEK_SET) == 0, "rewind actual fault stack");
+	ssize_t length = read(late_stack_fd, late_stack, sizeof(late_stack) - 1);
+	require(length >= 0, "read actual fault stack");
+	late_stack[length] = 0;
+	return strstr(late_stack, "kd_mmap_down_read") && strstr(late_stack, "do_user_addr_fault");
+}
+static void capture_late_fault(int arm)
 {
 	char path[128];
-	snprintf(path, sizeof(path), "/proc/self/task/%d/stack", (int)late_tid);
+	struct ub_status s = status();
+
+	if (!arm) {
+		/* Opening procfs, resolving libc entries and first writing the output
+		 * pages may themselves fault. Complete that work before held readers
+		 * and the queued writer could block the observer's own mmap read. */
+		snprintf(path, sizeof(path), "/proc/self/task/%d/stack", (int)late_tid);
+		late_stack_fd = open(path, O_RDONLY | O_CLOEXEC);
+		require(late_stack_fd >= 0, "prepare actual fault stack");
+		for (unsigned int i = 0; i < sizeof(late_stack); i++)
+			((volatile char *)late_stack)[i] = 0;
+		require(!read_late_stack() && !s.held, "prepare observer before retaining readers");
+		return;
+	}
 	atomic_store(&late_go, 1); wait_atomic(&late_entered);
 	for (unsigned int i = 0; i < 5000; i++) {
-		int fd = open(path, O_RDONLY | O_CLOEXEC);
-		require(fd >= 0, "open actual fault stack");
-		ssize_t length = read(fd, late_stack, sizeof(late_stack) - 1);
-		require(length >= 0, "read actual fault stack");
-		late_stack[length] = 0; close(fd);
-		if (strstr(late_stack, "kd_mmap_down_read") && strstr(late_stack, "do_user_addr_fault")) break;
+		if (read_late_stack()) break;
 		require(i < 4999 && !atomic_load(&late_done), "late hardware fault waits on actual reader admission");
 		usleep(1000);
 	}
-	struct ub_status s = status();
+	s = status();
 	require(s.readers == 2 && s.admission == -1 && !atomic_load(&late_done), "writer reservation blocks only the late reader");
 	late_blocked = 1;
 }
@@ -170,6 +191,7 @@ static void cohort(unsigned int first, unsigned int count, int partial, int gate
 	if (late) {
 		require(!pthread_create(&late_thread, NULL, late_fault, NULL), "create late fault origin");
 		wait_atomic(&late_ready);
+		capture_late_fault(0);
 	}
 	if (gated) hold_start(count);
 	for (unsigned int i = 0; i < count; i++) {
@@ -178,7 +200,7 @@ static void cohort(unsigned int first, unsigned int count, int partial, int gate
 	}
 	if (gated) {
 		wait_state(1, 0);
-		if (late) capture_late_fault();
+		if (late) capture_late_fault(1);
 		require(!ioctl(device, UB_RELEASE), "release existing readers");
 	}
 	for (unsigned int i = 0; i < count; i++) {
@@ -201,6 +223,7 @@ static void cohort(unsigned int first, unsigned int count, int partial, int gate
 	}
 	if (late) {
 		require(!pthread_join(late_thread, NULL) && late_code == SEGV_MAPERR, "late fault observes completed unmap");
+		require(!close(late_stack_fd), "close fault observer"); late_stack_fd = -1;
 	}
 	p->status = status();
 	require(p->status.idle && !p->status.pending && !p->status.errors, "phase exact retirement");

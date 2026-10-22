@@ -1,6 +1,6 @@
 # Whole-VMA munmap body stage
 
-Status: prepared; compilation and live validation are pending. The reviewed
+Status: installed; Native controls passed and serial KD validation is running. The reviewed
 scope and resource/ownership rationale are in [the munmap guide](../../../../../kernel_integration/mmap_lock/UNMAP.md).
 The completed advice and first-write stages through `9ebcfba` remain separate.
 Performance, p95 and the seven mutex regressions remain deferred.
@@ -54,3 +54,28 @@ verified. The kernel image remained
 `96bb2fb60a1f5b60b971295c5a811bf30f2f346b72bacfc5b199817f2b67a5d3`;
 recovery and prior installed boot artifacts were unchanged. Installation and
 live checks are still pending. Earlier failures are retained as failures.
+
+Probe revision `50412ff` compiled with warnings treated as errors and passed
+five receipt checks in `test-preparation-1`. Installation retained the recovery
+default and prior kernels. Native run `native-1` completed all four sessions
+and returned idle on boot `3b41a9e4-df17-4bee-bfb4-bec6b42d7e87`. The KD run
+is in progress; no munmap functional pass is claimed yet.
+
+`kd-1` passed API, advice/body cancellation and all three fault-body cases before
+its first munmap probe failed: the client could no longer open the late-fault
+thread's proc stack file. The kernel emitted 15 remote removal records, but the
+client did not finish mapping/content/cleanup assertions; this is not a pass.
+No later test started. All client and probe workers exited; no device handle
+remained, the probe had zero references, ordinary unload succeeded and the
+expected 73-module idle state was verified in `failed-live-drain-1` on the same
+KD boot `f8af79bc-47b7-4ae0-99c3-e8ad02e718ff`.
+
+The observer previously opened procfs and first touched its output pages after
+writer admission closed. Such first-use faults can block the observer itself
+behind that writer until the reader controller's deadline releases readers.
+The follow-up prepares and exercises the observer, including its output pages,
+and warms the late thread's read/signal-jump path before retaining readers.
+The real late target access and both exact stack predicates remain mandatory;
+no kernel source or admission check changed. Preserve the failed frozen probe
+separately, compile the follow-up, then resume only the six unfinished cases on
+the same boot. Native controls and the six completed KD cases need no rerun.
