@@ -1,0 +1,33 @@
+{
+  "validated_sessions": 7054,
+  "failed_sessions": [
+    {
+      "session": "spin-cacheline/c08-t36-r01-direct-native/session.json",
+      "status": "DATA_ERROR",
+      "drained": true,
+      "error": "finished worker progress differs from exact total",
+      "client_complete": true,
+      "client_data_ok": true,
+      "completed": 8442112,
+      "post_finish_sample_mismatches": [
+        {
+          "sample": 200,
+          "worker": 16,
+          "sample_begin": 2899179807899,
+          "sample_end": 2899179808565,
+          "kernel_finished": 2899179807556,
+          "observed": 234240,
+          "final": 234496,
+          "gap": 256
+        }
+      ]
+    }
+  ],
+  "missing_sessions": [
+    "spin-cacheline/c08-t36-r02-direct-native/session.json"
+  ],
+  "checked_source_files": 4558,
+  "checked_binaries": 138,
+  "consistent_sources": 366,
+  "scope": "Saved client oracles, exact totals, worker placement, publication and retirement receipts, counters, logs, retained input bytes. Does not rerun measured operations."
+}

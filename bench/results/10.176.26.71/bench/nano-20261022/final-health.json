@@ -1,0 +1,10 @@
+{
+  "idle": true,
+  "boot_id": "e3f803a7-7a85-435a-8f62-82e08b2e9f2a",
+  "kernel": "6.1.159-kdclobber2",
+  "captured": 1792706388.324094,
+  "new_faults_in_retained_dmesg": [],
+  "per_session_kernel_faults": [],
+  "collection_start_uptime_estimate": 1803.4692013263702,
+  "scope": "Idle boundary; retained per-session logs and retained dmesg since collection start. No unload, reboot or new measurement."
+}

@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "report_version": "checkpoint-before-rwsem",
+  "report_version": "first-complete",
   "collection_source_commit": "5ffde5ca6fe918e9ed9464a87f389b133bbb256b",
   "source_host": "380G10",
   "source_checkout": "/home/eric/vm/vm-shared/kdlock",
@@ -8,8 +8,12 @@
   "guest": "root@10.176.26.71:2222",
   "guest_collection": "/mnt/kdlock-builds/nano-20261022",
   "guest_first_archives": "/mnt/kdlock-builds/nano-20261022-archives-first",
-  "retained_archives": "bench/results/10.176.26.71/raw/bench/nano-20261022/checkpoint",
-  "raw_per_run_json": "bench/results/10.176.26.71/raw/bench/nano-20261022/exports-checkpoint/runs.json",
+  "retained_archives": {
+    "first-attempt": "bench/results/10.176.26.71/raw/bench/nano-20261022/first-attempt",
+    "checkpoint": "bench/results/10.176.26.71/raw/bench/nano-20261022/checkpoint",
+    "final": "bench/results/10.176.26.71/raw/bench/nano-20261022/final"
+  },
+  "raw_per_run_json": "bench/results/10.176.26.71/raw/bench/nano-20261022/exports-final/runs.json",
   "recovery_snapshot": "before-mutex-kdonly-20261017T140354Z",
   "owner": {
     "pid": 3628,
@@ -21,8 +25,554 @@
   "linker": "GNU ld (GNU Binutils for Ubuntu) 2.38\nCopyright (C) 2022 Free Software Foundation, Inc.\nThis program is free software; you may redistribute it under the terms of\nthe GNU General Public License version 3 or (at your option) a later version.\nThis program has absolutely no warranty.\n",
   "translation_python": "/root/kdlock-translation-venv-20261019/bin/python3",
   "plot_python": "/root/kdlock-plot-venv-20261019/bin/python3",
-  "source_binary_manifests": "Per-block checkpoint archives: nano-20261022/BLOCK/{source-sha256.json,binary-sha256.json}; private .inc inputs and binaries retained.",
+  "source_binary_manifests": "Per-block nano-20261022/BLOCK/{source-sha256.json,binary-sha256.json}; private .inc inputs and binaries retained. Use final archives except rwlock and mutex-cacheline, whose full unchanged data are in checkpoint archives.",
   "archive_receipt": {
+    "archive_prefix": "nano-20261022",
+    "boot_id": "e3f803a7-7a85-435a-8f62-82e08b2e9f2a",
+    "completed": true,
+    "finished_ns": 1792706587179436012,
+    "groups": [
+      {
+        "bytes": 19031963,
+        "file": "spin-cacheline.tar.gz",
+        "group": "spin-cacheline",
+        "path": "/mnt/kdlock-builds/nano-20261022-archives-final/spin-cacheline.tar.gz",
+        "roots": [
+          "nano-20261022/spin-cacheline"
+        ],
+        "sha256": "28c0a06cbeac4ecb59c6449ef6eea4130d6869f8c9b2d3805e7e5419b7379bf7"
+      },
+      {
+        "bytes": 10512610,
+        "file": "spin-rcuht.tar.gz",
+        "group": "spin-rcuht",
+        "path": "/mnt/kdlock-builds/nano-20261022-archives-final/spin-rcuht.tar.gz",
+        "roots": [
+          "nano-20261022/spin-rcuht"
+        ],
+        "sha256": "178aaf34a933afb4525e294a03a88527823ddfe9d143630040ff31862ceaa7d1"
+      },
+      {
+        "bytes": 11139113,
+        "file": "spin-list-n16.tar.gz",
+        "group": "spin-list-n16",
+        "path": "/mnt/kdlock-builds/nano-20261022-archives-final/spin-list-n16.tar.gz",
+        "roots": [
+          "nano-20261022/spin-list-n16"
+        ],
+        "sha256": "7340405c0b2420d6d206315d196b15ef5ea86c25355550b0099d9719c8d13bda"
+      },
+      {
+        "bytes": 10160952,
+        "file": "spin-list-n128.tar.gz",
+        "group": "spin-list-n128",
+        "path": "/mnt/kdlock-builds/nano-20261022-archives-final/spin-list-n128.tar.gz",
+        "roots": [
+          "nano-20261022/spin-list-n128"
+        ],
+        "sha256": "54569e23168827e7267cb5fe613464341ae33ce891da0bef3224ad4949b5cae3"
+      },
+      {
+        "bytes": 11186801,
+        "file": "spin-list-prefetch-n16.tar.gz",
+        "group": "spin-list-prefetch-n16",
+        "path": "/mnt/kdlock-builds/nano-20261022-archives-final/spin-list-prefetch-n16.tar.gz",
+        "roots": [
+          "nano-20261022/spin-list-prefetch-n16"
+        ],
+        "sha256": "0707d6b3f2c3b873669fadb458ac45917f884e03de6920342fed8bd33f78d9d8"
+      },
+      {
+        "bytes": 10211222,
+        "file": "spin-list-prefetch-n128.tar.gz",
+        "group": "spin-list-prefetch-n128",
+        "path": "/mnt/kdlock-builds/nano-20261022-archives-final/spin-list-prefetch-n128.tar.gz",
+        "roots": [
+          "nano-20261022/spin-list-prefetch-n128"
+        ],
+        "sha256": "4bc3f717473140b5af95a48c1e559938c3cfa1d3d7af1adc04eed8deab49fac8"
+      },
+      {
+        "bytes": 273,
+        "file": "mutex-cacheline-location.tar.gz",
+        "group": "mutex-cacheline-location",
+        "path": "/mnt/kdlock-builds/nano-20261022-archives-final/mutex-cacheline-location.tar.gz",
+        "roots": [
+          "nano-20261022/mutex-cacheline"
+        ],
+        "sha256": "3fa1072c9ced23c47391d6c7bbbffc6303f65aac2dbfd896a7b4a2eaffd2fad4"
+      },
+      {
+        "bytes": 11777197,
+        "file": "mutex-rcuht.tar.gz",
+        "group": "mutex-rcuht",
+        "path": "/mnt/kdlock-builds/nano-20261022-archives-final/mutex-rcuht.tar.gz",
+        "roots": [
+          "nano-20261022/mutex-rcuht"
+        ],
+        "sha256": "41ed539e31ec81fe8cf61bd01b0c33a7bfb95faf2f55b23b089bc72488bed723"
+      },
+      {
+        "bytes": 12503571,
+        "file": "mutex-list-n16.tar.gz",
+        "group": "mutex-list-n16",
+        "path": "/mnt/kdlock-builds/nano-20261022-archives-final/mutex-list-n16.tar.gz",
+        "roots": [
+          "nano-20261022/mutex-list-n16"
+        ],
+        "sha256": "0c8d2791714f5c558ef83b0e861e2466ce6f66f1024b80bc56c7394704143648"
+      },
+      {
+        "bytes": 12528486,
+        "file": "mutex-list-n128.tar.gz",
+        "group": "mutex-list-n128",
+        "path": "/mnt/kdlock-builds/nano-20261022-archives-final/mutex-list-n128.tar.gz",
+        "roots": [
+          "nano-20261022/mutex-list-n128"
+        ],
+        "sha256": "491e4501085be6f88ea57dbdbc4be55407ad21546a36ecd4dc849f3a711d92ad"
+      },
+      {
+        "bytes": 12481493,
+        "file": "mutex-list-prefetch-n16.tar.gz",
+        "group": "mutex-list-prefetch-n16",
+        "path": "/mnt/kdlock-builds/nano-20261022-archives-final/mutex-list-prefetch-n16.tar.gz",
+        "roots": [
+          "nano-20261022/mutex-list-prefetch-n16"
+        ],
+        "sha256": "54b804ac9801be29c90268b3c05552f71f177ba29176ee60b04feea53a480ed6"
+      },
+      {
+        "bytes": 12577289,
+        "file": "mutex-list-prefetch-n128.tar.gz",
+        "group": "mutex-list-prefetch-n128",
+        "path": "/mnt/kdlock-builds/nano-20261022-archives-final/mutex-list-prefetch-n128.tar.gz",
+        "roots": [
+          "nano-20261022/mutex-list-prefetch-n128"
+        ],
+        "sha256": "d2f5fc9b71359ee0a49aba6bb76f15877fa8b89afd33e8f4f6115b1126ec124b"
+      },
+      {
+        "bytes": 256,
+        "file": "rwlock-location.tar.gz",
+        "group": "rwlock-location",
+        "path": "/mnt/kdlock-builds/nano-20261022-archives-final/rwlock-location.tar.gz",
+        "roots": [
+          "nano-20261022/rwlock"
+        ],
+        "sha256": "9e1575c61b5fd7e30624cf1ede9ead5a89c71be1bf07cfcab8ca306de8dcb2c1"
+      },
+      {
+        "bytes": 120254590,
+        "file": "rwsem.tar.gz",
+        "group": "rwsem",
+        "path": "/mnt/kdlock-builds/nano-20261022-archives-final/rwsem.tar.gz",
+        "roots": [
+          "nano-20261022/rwsem"
+        ],
+        "sha256": "786c769f06cb501bb3f3c6b2d1236c8bffea9ca6a11a88946836b954608bbee3"
+      },
+      {
+        "bytes": 3436628,
+        "file": "metadata.tar.gz",
+        "group": "metadata",
+        "path": "/mnt/kdlock-builds/nano-20261022-archives-final/metadata.tar.gz",
+        "roots": [
+          "nano-20261022/STOP",
+          "nano-20261022/checkpoint-audit.json",
+          "nano-20261022/checkpoint-audit.log",
+          "nano-20261022/checkpoint-dmesg.log",
+          "nano-20261022/checkpoint-health.json",
+          "nano-20261022/checkpoint-report-tests.log",
+          "nano-20261022/checks-2.log",
+          "nano-20261022/checks-3.log",
+          "nano-20261022/checks-4.log",
+          "nano-20261022/checks.log",
+          "nano-20261022/commands.json",
+          "nano-20261022/compiler.txt",
+          "nano-20261022/continuation",
+          "nano-20261022/continuation-2",
+          "nano-20261022/environment",
+          "nano-20261022/final-artifact-check.json",
+          "nano-20261022/final-audit.json",
+          "nano-20261022/final-audit.log",
+          "nano-20261022/final-dmesg.log",
+          "nano-20261022/final-health.json",
+          "nano-20261022/final-report-tests.log",
+          "nano-20261022/first-audit-2.log",
+          "nano-20261022/first-audit.json",
+          "nano-20261022/first-audit.log",
+          "nano-20261022/first-health.json",
+          "nano-20261022/first-report-2.log",
+          "nano-20261022/first-report.log",
+          "nano-20261022/linker.txt",
+          "nano-20261022/mutex-cacheline.log",
+          "nano-20261022/mutex-list-n128.log",
+          "nano-20261022/mutex-list-n16.log",
+          "nano-20261022/mutex-list-prefetch-n128.log",
+          "nano-20261022/mutex-list-prefetch-n16.log",
+          "nano-20261022/mutex-rcuht.log",
+          "nano-20261022/owner-finished.json",
+          "nano-20261022/owner.json",
+          "nano-20261022/provenance",
+          "nano-20261022/relocation-inventory-mutex-cacheline.json",
+          "nano-20261022/relocation-inventory-rwlock.json",
+          "nano-20261022/relocation-mutex-cacheline.json",
+          "nano-20261022/relocation-rwlock.json",
+          "nano-20261022/report-tests-2.log",
+          "nano-20261022/report-tests.log",
+          "nano-20261022/rwlock.log",
+          "nano-20261022/rwsem.log",
+          "nano-20261022/spin-cacheline.log",
+          "nano-20261022/spin-list-n128.log",
+          "nano-20261022/spin-list-n16.log",
+          "nano-20261022/spin-list-prefetch-n128.log",
+          "nano-20261022/spin-list-prefetch-n16.log",
+          "nano-20261022/spin-rcuht.log",
+          "nano-20261022/status.json"
+        ],
+        "sha256": "6d410d51f5db10ba38527bcde883d7d065140dad27720828d68ae29e51ea6e0b"
+      }
+    ],
+    "guest_base": "/mnt/kdlock-builds/nano-20261022",
+    "guest_idle": true,
+    "health_path": "final-health.json",
+    "health_sha256": "01be5f633c35f182cff02c09aac6fb036343d95c4eafbdea8ee8485f97c48a48",
+    "idle_source_sha256": "c6f7dc17a41bc5c34bff35d3aaed7b4a995ba3e5225d2c48d032417ca3f1510e",
+    "input_inventory_sha256": "746a3a1337657553141b1b0963a50368259752be1e40733a928c3ca3c2815e6b",
+    "kernel_release": "6.1.159-kdclobber2",
+    "schema": 1,
+    "scope": "Complete evidence preservation; no deletion, module action, test or timing",
+    "script_sha256": "8d666f148a10d7fe19294cc7d193464c8bb53d4c3aec64b7518b9d335966c952",
+    "started_ns": 1792706540613687211
+  },
+  "archive_copy_verification": {
+    "completed": true,
+    "host": "380G10",
+    "inventory_paths": 150818,
+    "regular_files": 131792,
+    "verified_archives": [
+      {
+        "file": "spin-cacheline.tar.gz",
+        "sha256": "28c0a06cbeac4ecb59c6449ef6eea4130d6869f8c9b2d3805e7e5419b7379bf7",
+        "regular_files": 12703
+      },
+      {
+        "file": "spin-rcuht.tar.gz",
+        "sha256": "178aaf34a933afb4525e294a03a88527823ddfe9d143630040ff31862ceaa7d1",
+        "regular_files": 6592
+      },
+      {
+        "file": "spin-list-n16.tar.gz",
+        "sha256": "7340405c0b2420d6d206315d196b15ef5ea86c25355550b0099d9719c8d13bda",
+        "regular_files": 6853
+      },
+      {
+        "file": "spin-list-n128.tar.gz",
+        "sha256": "54569e23168827e7267cb5fe613464341ae33ce891da0bef3224ad4949b5cae3",
+        "regular_files": 6853
+      },
+      {
+        "file": "spin-list-prefetch-n16.tar.gz",
+        "sha256": "0707d6b3f2c3b873669fadb458ac45917f884e03de6920342fed8bd33f78d9d8",
+        "regular_files": 6853
+      },
+      {
+        "file": "spin-list-prefetch-n128.tar.gz",
+        "sha256": "4bc3f717473140b5af95a48c1e559938c3cfa1d3d7af1adc04eed8deab49fac8",
+        "regular_files": 6853
+      },
+      {
+        "file": "mutex-cacheline-location.tar.gz",
+        "sha256": "3fa1072c9ced23c47391d6c7bbbffc6303f65aac2dbfd896a7b4a2eaffd2fad4",
+        "regular_files": 0
+      },
+      {
+        "file": "mutex-rcuht.tar.gz",
+        "sha256": "41ed539e31ec81fe8cf61bd01b0c33a7bfb95faf2f55b23b089bc72488bed723",
+        "regular_files": 6573
+      },
+      {
+        "file": "mutex-list-n16.tar.gz",
+        "sha256": "0c8d2791714f5c558ef83b0e861e2466ce6f66f1024b80bc56c7394704143648",
+        "regular_files": 6834
+      },
+      {
+        "file": "mutex-list-n128.tar.gz",
+        "sha256": "491e4501085be6f88ea57dbdbc4be55407ad21546a36ecd4dc849f3a711d92ad",
+        "regular_files": 6834
+      },
+      {
+        "file": "mutex-list-prefetch-n16.tar.gz",
+        "sha256": "54b804ac9801be29c90268b3c05552f71f177ba29176ee60b04feea53a480ed6",
+        "regular_files": 6834
+      },
+      {
+        "file": "mutex-list-prefetch-n128.tar.gz",
+        "sha256": "d2f5fc9b71359ee0a49aba6bb76f15877fa8b89afd33e8f4f6115b1126ec124b",
+        "regular_files": 6834
+      },
+      {
+        "file": "rwlock-location.tar.gz",
+        "sha256": "9e1575c61b5fd7e30624cf1ede9ead5a89c71be1bf07cfcab8ca306de8dcb2c1",
+        "regular_files": 0
+      },
+      {
+        "file": "rwsem.tar.gz",
+        "sha256": "786c769f06cb501bb3f3c6b2d1236c8bffea9ca6a11a88946836b954608bbee3",
+        "regular_files": 51080
+      },
+      {
+        "file": "metadata.tar.gz",
+        "sha256": "6d410d51f5db10ba38527bcde883d7d065140dad27720828d68ae29e51ea6e0b",
+        "regular_files": 96
+      }
+    ],
+    "scope": "Compressed hashes and complete archive path/type/size/mode/owner/link inventory. Read-only; no extraction."
+  },
+  "analysis_scripts": {
+    "bench/nano/audit.py": "58720954f9d827e00d07e40d35202306e52ecaf91b97a4a6d8c89bdfcb819347",
+    "bench/nano/continue.py": "dc5ca404ac8af3088a3481ad9f107698fd94a290873e47ef5faf437bbe63a5dc",
+    "bench/nano/health.py": "08b6fdd8f4051b16adc88daa08b4d826640abbc44804cb49b9054a5a61e6e0c4",
+    "bench/nano/relocate.py": "0c9913ec6b2de6d2a2cc06ea54e168c2eca5b31be76d20b57331dcf78e284a60",
+    "bench/nano/report.py": "f9a9e31f016ce98566e43ae3ad658c5deed883ab5796fd6b98b09a8c8f9568cc",
+    "bench/nano/resume.py": "36fb295967ccef7eb5952f76f27bd2269156d41deb292d9f829d9ff3b092cf55",
+    "bench/nano/run.py": "8977656f724057dea248fb0341eb5417c87f060d8c24028b2156587c630bb392",
+    "bench/nano/test_report.py": "2b4099f4bd1d6b37902fda822b355efe63e7343802a3b6c95ce0de1562b9b8a0",
+    "bench/nano/verify_archives.py": "4db4808282765839018abcf6cecf46a9182b65af2fe238ae4c99656afd802f79"
+  },
+  "reproduction_commands": [
+    "cd /root/host_fs/kdlock",
+    "export PATH=/root/kdlock-translation-venv-20261019/bin:$PATH LC_ALL=C PYTHONDONTWRITEBYTECODE=1",
+    "export KDLOCK_RECOVERY_CONFIRMED=1 KDLOCK_SNAPSHOT_TAG=before-mutex-kdonly-20261017T140354Z",
+    "python3 -c 'import os; os.setpriority(os.PRIO_PROCESS,0,5); assert os.sched_getscheduler(0)==os.SCHED_OTHER; os.execvp(\"python3\",[\"python3\",\"bench/nano/run.py\",\"--output\",\"NEW_EXTERNAL_DIRECTORY\"])'",
+    "python3 FINAL_ANALYSIS_HELPERS/audit.py COLLECTION --output COLLECTION/final-audit.json",
+    "/root/kdlock-plot-venv-20261019/bin/python3 FINAL_ANALYSIS_HELPERS/report.py COLLECTION REPORT_DIRECTORY"
+  ],
+  "reproduction_precondition": "Reverify the intended idle guest, live kernel and boot policy, host pins and real recovery snapshot before setting recovery variables. commands.json contains exact expanded collection argv. Use collection_source_commit for measurement inputs and analysis_source_commit for separate FINAL_ANALYSIS_HELPERS; do not synchronize newer implementation inputs into the frozen source. The current guest source remains frozen.",
+  "retained_failure": "spin-cacheline/c08-t36-r01-direct-native: DATA_ERROR, finished worker progress differs from exact total; drained; never rescored",
+  "continuation": "Three non-overlapping serial owners completed the collection. Initial failure and later storage guard boundaries are preserved; native c08/36 remaining repetition withheld. No corrected measured reruns. All owners exited.",
+  "validation": {
+    "basic_c": 2,
+    "direct_runner": 58,
+    "rw_runner": 26,
+    "shared_client": 16,
+    "assembly": 7,
+    "report_accounting": 1,
+    "initial_saved_sessions": 320,
+    "initial_sources": 338,
+    "initial_binaries": 8,
+    "checkpoint_saved_sessions": 5290,
+    "checkpoint_source_files": 4307,
+    "checkpoint_binaries": 121,
+    "checkpoint_archive_paths": 188038,
+    "checkpoint_archive_regular_files": 166791,
+    "final_saved_sessions": 7054,
+    "final_source_files": 4558,
+    "final_binaries": 138,
+    "final_consistent_sources": 366,
+    "final_archive_paths": 150818,
+    "final_archive_regular_files": 131792,
+    "final_export": {
+      "passed": true,
+      "run_rows": 7938,
+      "aggregate_rows": 2352,
+      "configuration_rows": 2646,
+      "coverage": {
+        "completed": 7054,
+        "failed": 1,
+        "unsupported": 882,
+        "missing": 1
+      },
+      "plots": [
+        "mutex-cacheline-1-w100.png",
+        "mutex-cacheline-8-w100.png",
+        "mutex-list-128-w100.png",
+        "mutex-list-16-w100.png",
+        "mutex-list-prefetch-128-w100.png",
+        "mutex-list-prefetch-16-w100.png",
+        "mutex-rcuht-0-w100.png",
+        "rwlock-cacheline-1-w1.png",
+        "rwlock-cacheline-1-w20.png",
+        "rwlock-cacheline-8-w1.png",
+        "rwlock-cacheline-8-w20.png",
+        "rwlock-list-128-w1.png",
+        "rwlock-list-128-w20.png",
+        "rwlock-list-16-w1.png",
+        "rwlock-list-16-w20.png",
+        "rwlock-list-prefetch-128-w1.png",
+        "rwlock-list-prefetch-128-w20.png",
+        "rwlock-list-prefetch-16-w1.png",
+        "rwlock-list-prefetch-16-w20.png",
+        "rwlock-rcuht-0-w1.png",
+        "rwlock-rcuht-0-w20.png",
+        "rwsem-cacheline-1-w1.png",
+        "rwsem-cacheline-1-w20.png",
+        "rwsem-cacheline-8-w1.png",
+        "rwsem-cacheline-8-w20.png",
+        "rwsem-list-128-w1.png",
+        "rwsem-list-128-w20.png",
+        "rwsem-list-16-w1.png",
+        "rwsem-list-16-w20.png",
+        "rwsem-list-prefetch-128-w1.png",
+        "rwsem-list-prefetch-128-w20.png",
+        "rwsem-list-prefetch-16-w1.png",
+        "rwsem-list-prefetch-16-w20.png",
+        "rwsem-rcuht-0-w1.png",
+        "rwsem-rcuht-0-w20.png",
+        "spin-cacheline-1-w100.png",
+        "spin-cacheline-8-w100.png",
+        "spin-list-128-w100.png",
+        "spin-list-16-w100.png",
+        "spin-list-prefetch-128-w100.png",
+        "spin-list-prefetch-16-w100.png",
+        "spin-rcuht-0-w100.png"
+      ],
+      "matched_comparisons": 1469,
+      "checks": [
+        "CSV/JSON agreement",
+        "unique requested repetition slots",
+        "coverage accounting",
+        "failed/missing scores absent",
+        "local/delegated operation conservation",
+        "three-repeat comparison coverage",
+        "42 plots",
+        "saved audit agreement"
+      ]
+    },
+    "final_report_tests": "bench/results/10.176.26.71/raw/bench/nano-20261022/final-metadata/final-report-tests.log"
+  },
+  "limitations": [
+    "One failed Native spin cacheline c08/36 run is unscored and its remaining repetition is withheld; no corrected measurement reruns.",
+    "Three repetitions do not establish statistical significance.",
+    "CPU frequency uses ondemand rather than fixed frequency.",
+    "Matching completion instrumentation adds KD observation cost.",
+    "No p95, MM development, performance tuning, or seven-mutex-regression investigation.",
+    "Per-object physical NUMA memory placement was not bound or recorded; common module preparation policy does not isolate memory-placement effects.",
+    "Local fast paths and fallback reasons are not separately counted; local readers are separated from eligible operations without generated entries.",
+    "TCLock has no sleeping rwsem port; all 882 requested repetition slots for that combination are unsupported."
+  ],
+  "first_archive_receipt": {
+    "archive_prefix": "nano-20261022",
+    "boot_id": "e3f803a7-7a85-435a-8f62-82e08b2e9f2a",
+    "completed": true,
+    "finished_ns": 1792679520251652314,
+    "groups": [
+      {
+        "bytes": 15647542,
+        "file": "spin-cacheline.tar.gz",
+        "group": "spin-cacheline",
+        "path": "/mnt/kdlock-builds/nano-20261022-archives-first/spin-cacheline.tar.gz",
+        "roots": [
+          "nano-20261022/spin-cacheline"
+        ],
+        "sha256": "74f70bcc7b9f85b6f69f8f79a5a4ab46b339a5329ccbf6d089a59294c4cad917"
+      },
+      {
+        "bytes": 61420,
+        "file": "metadata.tar.gz",
+        "group": "metadata",
+        "path": "/mnt/kdlock-builds/nano-20261022-archives-first/metadata.tar.gz",
+        "roots": [
+          "nano-20261022/STOP",
+          "nano-20261022/checks-2.log",
+          "nano-20261022/checks-3.log",
+          "nano-20261022/checks-4.log",
+          "nano-20261022/checks.log",
+          "nano-20261022/commands.json",
+          "nano-20261022/compiler.txt",
+          "nano-20261022/environment",
+          "nano-20261022/first-audit-2.log",
+          "nano-20261022/first-audit.json",
+          "nano-20261022/first-audit.log",
+          "nano-20261022/first-health.json",
+          "nano-20261022/first-report-2.log",
+          "nano-20261022/first-report.log",
+          "nano-20261022/linker.txt",
+          "nano-20261022/owner-finished.json",
+          "nano-20261022/owner.json",
+          "nano-20261022/report-tests-2.log",
+          "nano-20261022/report-tests.log",
+          "nano-20261022/spin-cacheline.log",
+          "nano-20261022/status.json"
+        ],
+        "sha256": "d3030fce567666099fe44e5c3d419a67648506482daca98443720a64d6d6524c"
+      }
+    ],
+    "guest_base": "/mnt/kdlock-builds/nano-20261022",
+    "guest_idle": true,
+    "health_path": "first-health.json",
+    "health_sha256": "9664b1ffa9f4db2b66ffb70813af71449812aaa7c2f9f01c9c8ce9f2aad21442",
+    "idle_source_sha256": "c6f7dc17a41bc5c34bff35d3aaed7b4a995ba3e5225d2c48d032417ca3f1510e",
+    "input_inventory_sha256": "4ab2a799dfe3202663e3daa1acc7760d0ae8167d7261cd8f676ae0549bafffac",
+    "kernel_release": "6.1.159-kdclobber2",
+    "schema": 1,
+    "scope": "Complete evidence preservation; no deletion, module action, test or timing",
+    "script_sha256": "8d666f148a10d7fe19294cc7d193464c8bb53d4c3aec64b7518b9d335966c952",
+    "started_ns": 1792679516316020740
+  },
+  "guest_checkpoint_archives": "/mnt/kdlock-builds/nano-20261022-archives-checkpoint",
+  "owners": [
+    {
+      "pid": 3628,
+      "started": 1792677877.5832953,
+      "boot_id": "e3f803a7-7a85-435a-8f62-82e08b2e9f2a",
+      "source_sha256": "8977656f724057dea248fb0341eb5417c87f060d8c24028b2156587c630bb392"
+    },
+    {
+      "pid": 27188,
+      "started": 1792679601.8971925,
+      "boot_id": "e3f803a7-7a85-435a-8f62-82e08b2e9f2a",
+      "script_sha256": "dc5ca404ac8af3088a3481ad9f107698fd94a290873e47ef5faf437bbe63a5dc",
+      "commands_sha256": "f640c60667c858c59578572fad6aba2be1d73672d7be69c9f0d3f229a571ae99"
+    },
+    {
+      "pid": 405709,
+      "started": 1792699003.5430045,
+      "boot_id": "e3f803a7-7a85-435a-8f62-82e08b2e9f2a",
+      "script_sha256": "36fb295967ccef7eb5952f76f27bd2269156d41deb292d9f829d9ff3b092cf55",
+      "commands_sha256": "f640c60667c858c59578572fad6aba2be1d73672d7be69c9f0d3f229a571ae99"
+    }
+  ],
+  "relocations": [
+    {
+      "started": 1792698726.0012057,
+      "original": "/mnt/kdlock-builds/nano-20261022/rwlock",
+      "destination": "/root/kdlock-evidence/10.176.26.71/bench/nano-20261022-relocated/rwlock",
+      "independent_verification": "/mnt/kdlock-builds/nano-tools-20261023/verification.json",
+      "verification_sha256": "1810ab606a91135ec82f40342314cc8dc5c7095b7eccf92e0b66da9528b1ecbf",
+      "archive_sha256": "c5466d09e7313d5091dc54c59cd1cda87d4bac0234320acebb888d304dd63689",
+      "inventory_sha256": "a122bdfd01ecc206a1636939f5f7407cf187693ca5c5c84cbe72d0c2617daa0f",
+      "paths": 84633,
+      "completed": true,
+      "scope": "Completed evidence moved across existing guest filesystems; recorded absolute paths preserved by symlink.",
+      "copy_verified": true,
+      "finished": 1792698742.6608336,
+      "link_target": "/root/kdlock-evidence/10.176.26.71/bench/nano-20261022-relocated/rwlock"
+    },
+    {
+      "started": 1792698774.9694326,
+      "original": "/mnt/kdlock-builds/nano-20261022/mutex-cacheline",
+      "destination": "/root/kdlock-evidence/10.176.26.71/bench/nano-20261022-relocated/mutex-cacheline",
+      "independent_verification": "/mnt/kdlock-builds/nano-tools-20261023/verification.json",
+      "verification_sha256": "1810ab606a91135ec82f40342314cc8dc5c7095b7eccf92e0b66da9528b1ecbf",
+      "archive_sha256": "afd16e56eebc45b32f8cbd2526d2e0a3008942da0b734fba6dfb3e2bc6b53668",
+      "inventory_sha256": "4f3c3a1dbabd3ca77cc8ca539a20014adf09b1c5f4962ffce92e55ad1f05de92",
+      "paths": 14003,
+      "completed": true,
+      "scope": "Completed evidence moved across existing guest filesystems; recorded absolute paths preserved by symlink.",
+      "copy_verified": true,
+      "finished": 1792698777.8064818,
+      "link_target": "/root/kdlock-evidence/10.176.26.71/bench/nano-20261022-relocated/mutex-cacheline"
+    }
+  ],
+  "analysis_policy": "Median and variability use all valid repetitions of the same frozen configuration. Observed delegation can vary between repetitions; per-run counts and aggregate mode counts expose this without conditioning performance on the outcome. The first partial report used separate execution classes and remains preserved in Git.",
+  "scheduling": "SCHED_OTHER, nice 5. Foreground SSH defaults to nice 0; guest zsh adds 5 to background jobs. Foreground precheck used nice -n 5; actual background owner omitted an additional adjustment and verified nice 5. Two rejected scheduling prechecks/launches ran no measured cases and are retained separately.",
+  "environment_receipts": "bench/results/10.176.26.71/raw/bench/nano-20261022/environment",
+  "publication_date": "2026-10-23",
+  "publication_timezone": "Asia/Shanghai",
+  "analysis_source_commit": "40b3a3d1c42348552cc28c8f979ee440078d1838",
+  "checkpoint_archive_receipt": {
     "archive_prefix": "nano-20261022",
     "boot_id": "e3f803a7-7a85-435a-8f62-82e08b2e9f2a",
     "completed": true,
@@ -219,7 +769,7 @@
     "script_sha256": "8d666f148a10d7fe19294cc7d193464c8bb53d4c3aec64b7518b9d335966c952",
     "started_ns": 1792698455699479477
   },
-  "archive_copy_verification": {
+  "checkpoint_archive_copy_verification": {
     "completed": true,
     "host": "380G10",
     "inventory_paths": 188038,
@@ -298,166 +848,23 @@
     ],
     "scope": "Compressed hashes and complete archive path/type/size/mode/owner/link inventory. Read-only; no extraction."
   },
-  "analysis_scripts": {
-    "bench/nano/audit.py": "58720954f9d827e00d07e40d35202306e52ecaf91b97a4a6d8c89bdfcb819347",
-    "bench/nano/continue.py": "dc5ca404ac8af3088a3481ad9f107698fd94a290873e47ef5faf437bbe63a5dc",
-    "bench/nano/health.py": "08b6fdd8f4051b16adc88daa08b4d826640abbc44804cb49b9054a5a61e6e0c4",
-    "bench/nano/relocate.py": "0c9913ec6b2de6d2a2cc06ea54e168c2eca5b31be76d20b57331dcf78e284a60",
-    "bench/nano/report.py": "b0083527ecbc4ee4e57c04a915aec02408c5e90ab50b2c1254847d03c9b9efd6",
-    "bench/nano/resume.py": "36fb295967ccef7eb5952f76f27bd2269156d41deb292d9f829d9ff3b092cf55",
-    "bench/nano/run.py": "8977656f724057dea248fb0341eb5417c87f060d8c24028b2156587c630bb392",
-    "bench/nano/test_report.py": "c65834f244d257dfbb992dec642e8c21f436e793847c9270c430e87931308849",
-    "bench/nano/verify_archives.py": "4db4808282765839018abcf6cecf46a9182b65af2fe238ae4c99656afd802f79"
+  "guest_final_archives": "/mnt/kdlock-builds/nano-20261022-archives-final",
+  "final_owner_finished": {
+    "finished": 1792706209.8876586,
+    "blocks": 1
   },
-  "reproduction_commands": [
-    "cd /root/host_fs/kdlock",
-    "export PATH=/root/kdlock-translation-venv-20261019/bin:$PATH LC_ALL=C PYTHONDONTWRITEBYTECODE=1",
-    "export KDLOCK_RECOVERY_CONFIRMED=1 KDLOCK_SNAPSHOT_TAG=before-mutex-kdonly-20261017T140354Z",
-    "python3 -c 'import os; os.setpriority(os.PRIO_PROCESS,0,5); assert os.sched_getscheduler(0)==os.SCHED_OTHER; os.execvp(\"python3\",[\"python3\",\"bench/nano/run.py\",\"--output\",\"NEW_EXTERNAL_DIRECTORY\"])'",
-    "python3 bench/nano/audit.py COLLECTION --output COLLECTION/final-audit.json",
-    "/root/kdlock-plot-venv-20261019/bin/python3 bench/nano/report.py COLLECTION REPORT_DIRECTORY"
-  ],
-  "reproduction_precondition": "Reverify the intended idle guest, live kernel and boot policy, host pins and real recovery snapshot before setting recovery variables. commands.json contains exact expanded collection argv.",
-  "retained_failure": "spin-cacheline/c08-t36-r01-direct-native: DATA_ERROR, finished worker progress differs from exact total; drained; never rescored",
-  "continuation": "Separate owner continues unattempted configurations with unchanged inputs; native c08/36 remaining repetition withheld. Initial failure-boundary archive remains immutable.",
-  "validation": {
-    "basic_c": 2,
-    "direct_runner": 58,
-    "rw_runner": 26,
-    "shared_client": 16,
-    "assembly": 7,
-    "report_accounting": 1,
-    "initial_saved_sessions": 320,
-    "initial_sources": 338,
-    "initial_binaries": 8,
-    "checkpoint_saved_sessions": 5290,
-    "checkpoint_source_files": 4307,
-    "checkpoint_binaries": 121,
-    "checkpoint_archive_paths": 188038,
-    "checkpoint_archive_regular_files": 166791
-  },
-  "limitations": [
-    "Checkpoint excludes the running rwsem block. One failed Native spin cacheline c08/36 run is unscored and its remaining repetition is withheld.",
-    "Three repetitions do not establish statistical significance.",
-    "CPU frequency uses ondemand rather than fixed frequency.",
-    "Matching completion instrumentation adds KD observation cost.",
-    "No p95, MM development, performance tuning, or seven-mutex-regression investigation."
-  ],
-  "first_archive_receipt": {
-    "archive_prefix": "nano-20261022",
-    "boot_id": "e3f803a7-7a85-435a-8f62-82e08b2e9f2a",
-    "completed": true,
-    "finished_ns": 1792679520251652314,
-    "groups": [
-      {
-        "bytes": 15647542,
-        "file": "spin-cacheline.tar.gz",
-        "group": "spin-cacheline",
-        "path": "/mnt/kdlock-builds/nano-20261022-archives-first/spin-cacheline.tar.gz",
-        "roots": [
-          "nano-20261022/spin-cacheline"
-        ],
-        "sha256": "74f70bcc7b9f85b6f69f8f79a5a4ab46b339a5329ccbf6d089a59294c4cad917"
-      },
-      {
-        "bytes": 61420,
-        "file": "metadata.tar.gz",
-        "group": "metadata",
-        "path": "/mnt/kdlock-builds/nano-20261022-archives-first/metadata.tar.gz",
-        "roots": [
-          "nano-20261022/STOP",
-          "nano-20261022/checks-2.log",
-          "nano-20261022/checks-3.log",
-          "nano-20261022/checks-4.log",
-          "nano-20261022/checks.log",
-          "nano-20261022/commands.json",
-          "nano-20261022/compiler.txt",
-          "nano-20261022/environment",
-          "nano-20261022/first-audit-2.log",
-          "nano-20261022/first-audit.json",
-          "nano-20261022/first-audit.log",
-          "nano-20261022/first-health.json",
-          "nano-20261022/first-report-2.log",
-          "nano-20261022/first-report.log",
-          "nano-20261022/linker.txt",
-          "nano-20261022/owner-finished.json",
-          "nano-20261022/owner.json",
-          "nano-20261022/report-tests-2.log",
-          "nano-20261022/report-tests.log",
-          "nano-20261022/spin-cacheline.log",
-          "nano-20261022/status.json"
-        ],
-        "sha256": "d3030fce567666099fe44e5c3d419a67648506482daca98443720a64d6d6524c"
-      }
+  "restore": {
+    "instructions": "README.md, Artifacts and reproduction",
+    "final_groups": "All final *.tar.gz except *-location.tar.gz",
+    "checkpoint_groups": [
+      "rwlock.tar.gz",
+      "mutex-cacheline.tar.gz"
     ],
-    "guest_base": "/mnt/kdlock-builds/nano-20261022",
-    "guest_idle": true,
-    "health_path": "first-health.json",
-    "health_sha256": "9664b1ffa9f4db2b66ffb70813af71449812aaa7c2f9f01c9c8ce9f2aad21442",
-    "idle_source_sha256": "c6f7dc17a41bc5c34bff35d3aaed7b4a995ba3e5225d2c48d032417ca3f1510e",
-    "input_inventory_sha256": "4ab2a799dfe3202663e3daa1acc7760d0ae8167d7261cd8f676ae0549bafffac",
-    "kernel_release": "6.1.159-kdclobber2",
-    "schema": 1,
-    "scope": "Complete evidence preservation; no deletion, module action, test or timing",
-    "script_sha256": "8d666f148a10d7fe19294cc7d193464c8bb53d4c3aec64b7518b9d335966c952",
-    "started_ns": 1792679516316020740
-  },
-  "guest_checkpoint_archives": "/mnt/kdlock-builds/nano-20261022-archives-checkpoint",
-  "owners": [
-    {
-      "pid": 3628,
-      "started": 1792677877.5832953,
-      "boot_id": "e3f803a7-7a85-435a-8f62-82e08b2e9f2a",
-      "source_sha256": "8977656f724057dea248fb0341eb5417c87f060d8c24028b2156587c630bb392"
-    },
-    {
-      "pid": 27188,
-      "started": 1792679601.8971925,
-      "boot_id": "e3f803a7-7a85-435a-8f62-82e08b2e9f2a",
-      "script_sha256": "dc5ca404ac8af3088a3481ad9f107698fd94a290873e47ef5faf437bbe63a5dc",
-      "commands_sha256": "f640c60667c858c59578572fad6aba2be1d73672d7be69c9f0d3f229a571ae99"
-    },
-    {
-      "pid": 405709,
-      "started": 1792699003.5430045,
-      "boot_id": "e3f803a7-7a85-435a-8f62-82e08b2e9f2a",
-      "script_sha256": "36fb295967ccef7eb5952f76f27bd2269156d41deb292d9f829d9ff3b092cf55",
-      "commands_sha256": "f640c60667c858c59578572fad6aba2be1d73672d7be69c9f0d3f229a571ae99"
-    }
-  ],
-  "relocations": [
-    {
-      "started": 1792698726.0012057,
-      "original": "/mnt/kdlock-builds/nano-20261022/rwlock",
-      "destination": "/root/kdlock-evidence/10.176.26.71/bench/nano-20261022-relocated/rwlock",
-      "independent_verification": "/mnt/kdlock-builds/nano-tools-20261023/verification.json",
-      "verification_sha256": "1810ab606a91135ec82f40342314cc8dc5c7095b7eccf92e0b66da9528b1ecbf",
-      "archive_sha256": "c5466d09e7313d5091dc54c59cd1cda87d4bac0234320acebb888d304dd63689",
-      "inventory_sha256": "a122bdfd01ecc206a1636939f5f7407cf187693ca5c5c84cbe72d0c2617daa0f",
-      "paths": 84633,
-      "completed": true,
-      "scope": "Completed evidence moved across existing guest filesystems; recorded absolute paths preserved by symlink.",
-      "copy_verified": true,
-      "finished": 1792698742.6608336,
-      "link_target": "/root/kdlock-evidence/10.176.26.71/bench/nano-20261022-relocated/rwlock"
-    },
-    {
-      "started": 1792698774.9694326,
-      "original": "/mnt/kdlock-builds/nano-20261022/mutex-cacheline",
-      "destination": "/root/kdlock-evidence/10.176.26.71/bench/nano-20261022-relocated/mutex-cacheline",
-      "independent_verification": "/mnt/kdlock-builds/nano-tools-20261023/verification.json",
-      "verification_sha256": "1810ab606a91135ec82f40342314cc8dc5c7095b7eccf92e0b66da9528b1ecbf",
-      "archive_sha256": "afd16e56eebc45b32f8cbd2526d2e0a3008942da0b734fba6dfb3e2bc6b53668",
-      "inventory_sha256": "4f3c3a1dbabd3ca77cc8ca539a20014adf09b1c5f4962ffce92e55ad1f05de92",
-      "paths": 14003,
-      "completed": true,
-      "scope": "Completed evidence moved across existing guest filesystems; recorded absolute paths preserved by symlink.",
-      "copy_verified": true,
-      "finished": 1792698777.8064818,
-      "link_target": "/root/kdlock-evidence/10.176.26.71/bench/nano-20261022-relocated/mutex-cacheline"
-    }
-  ],
-  "analysis_policy": "Median and variability use all valid repetitions of the same frozen configuration. Observed delegation can vary between repetitions; per-run counts and aggregate mode counts expose this without conditioning performance on the outcome. The first partial report used separate execution classes and remains preserved in Git.",
-  "scheduling": "SCHED_OTHER, nice 5. Foreground SSH defaults to nice 0; guest zsh adds 5 to background jobs. Foreground precheck used nice -n 5; actual background owner omitted an additional adjustment and verified nice 5. Two rejected scheduling prechecks/launches ran no measured cases and are retained separately.",
-  "environment_receipts": "bench/results/10.176.26.71/raw/bench/nano-20261022/environment"
+    "prefix": "nano-20261022",
+    "symlink_receipts_only": [
+      "rwlock-location.tar.gz",
+      "mutex-cacheline-location.tar.gz"
+    ],
+    "audit_path_requirement": "Saved binary audit uses original absolute private build paths. Report regeneration accepts a relocated collection root."
+  }
 }
