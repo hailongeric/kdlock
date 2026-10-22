@@ -9,5 +9,7 @@
   "mm/Kconfig": "2f75fcac80387f0dfa5d5be1f3f31128b3ffcfe7f3acf9afd71b51e54fc15a32",
   "mm/mmap_lock.c": "b58c23961d05e8d62745e84adbd2f514ff93bd245dff28cfab14d313bb6f1d1d",
   "mm/madvise.c": "9e46f224b63edf122cae49cfa29d4186a5cc10220b003433f84a29d42a6a356d",
-  "mm/memory.c": "794197258b5f9b42457032d0e140e87f384cddc236a4baa5b7b90350e7eb4113"
+  "mm/memory.c": "794197258b5f9b42457032d0e140e87f384cddc236a4baa5b7b90350e7eb4113",
+  "mm/mmap.c": "9655897fae14ccb7e76ba9e59d3eed4d4a4a7b3db641935920bd0531c75f9761",
+  "lib/maple_tree.c": "4d7e6b2c39f08ef8fa56cf11a699d6569548e73a814c1060fbb13e5a95df7a85"
 }

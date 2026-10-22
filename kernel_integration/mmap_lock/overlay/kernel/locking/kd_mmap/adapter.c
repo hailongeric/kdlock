@@ -33,6 +33,7 @@ void kd_mmap_init(struct kd_mmap_lock *lock)
 	lock->body_handbacks = lock->body_native = lock->body_post_ban = 0;
 	lock->body_cancelled = lock->body_acks = 0;
 	kd_mmap_fault_init(lock);
+	kd_mmap_unmap_init(lock);
 	if (lock->use_kd)
 		kd_mmap_rwsem_init(&lock->kd);
 	else
@@ -45,7 +46,8 @@ void kd_mmap_destroy(struct kd_mmap_lock *lock)
 	/* mm_count and transferred read references have reached their final
 	 * release. A residual reservation or waiter must never be freed. */
 	if (lock->use_kd)
-		BUG_ON(!kd_mmap_rwsem_is_idle(&lock->kd) || !kd_mmap_fault_idle(lock));
+		BUG_ON(!kd_mmap_rwsem_is_idle(&lock->kd) || !kd_mmap_fault_idle(lock) ||
+		       READ_ONCE(lock->unmap.tail));
 }
 
 void kd_mmap_write_lock(struct kd_mmap_lock *lock)
@@ -182,7 +184,8 @@ EXPORT_SYMBOL_GPL(kd_mmap_is_contended);
 bool kd_mmap_is_idle(struct kd_mmap_lock *lock)
 {
 	/* Stopped/joined users only; includes exact reserved CPU-slot records. */
-	return lock->use_kd ? kd_mmap_rwsem_is_idle(&lock->kd) && kd_mmap_fault_idle(lock) :
+	return lock->use_kd ? kd_mmap_rwsem_is_idle(&lock->kd) && kd_mmap_fault_idle(lock) &&
+		!READ_ONCE(lock->unmap.tail) :
 		!rwsem_is_locked(&lock->native);
 }
 EXPORT_SYMBOL_GPL(kd_mmap_is_idle);

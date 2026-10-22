@@ -56,4 +56,17 @@ enum kd_mmap_fault_result kd_mmap_fault_submit(struct vm_fault *vmf,
 bool kd_mmap_fault_try(struct vm_fault *vmf, struct page *page,
 		       unsigned long entry, struct task_struct *origin);
 
+struct ma_state;
+void kd_mmap_unmap_init(struct kd_mmap_lock *lock);
+int kd_mmap_unmap_enable(struct mm_struct *mm, unsigned long start, unsigned long end);
+unsigned int kd_mmap_unmap_pending(struct mm_struct *mm);
+/* Allocation-only preparation reads a height hint; actual capacity and VMA
+ * eligibility are rechecked under exact physical mmap write ownership. */
+int kd_mmap_mas_preallocate(struct ma_state *mas, gfp_t gfp);
+bool kd_mmap_unmap_submit(struct mm_struct *mm, unsigned long start,
+	unsigned long end, struct ma_state *live, struct ma_state *reserve, int *result);
+bool kd_mmap_unmap_try(struct mm_struct *mm, unsigned long start,
+	unsigned long end, struct task_struct *origin, struct ma_state *live,
+	struct ma_state *reserve, int *result);
+
 #endif

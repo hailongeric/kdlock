@@ -16,6 +16,17 @@ struct kd_mmap_fault_state {
 	atomic64_t handbacks, acks, cancelled, refused;
 };
 
+/* Independent typed queue on the same actual mmap writer gate. Keeping its
+ * tail separate prevents the preserved advice queue from interpreting another
+ * request layout. Both queues share KD's physical exclusion and node slots. */
+struct kd_mmap_unmap_state {
+	u32 tail;
+	unsigned long start, end;
+	bool enabled, native_only;
+	atomic64_t calls, removed, delegated, native, post_ban;
+	atomic64_t handbacks, acks, cancelled, refused, failed;
+};
+
 /* Chosen once, before an mm is published. Neither contention nor a partial
  * critical section can change the backend. Both boot modes have this layout.
  * init_mm stays Native; dynamically initialized mms use the boot selection. */
@@ -31,6 +42,7 @@ struct kd_mmap_lock {
 	u64 body_calls, body_supported, body_delegated, body_handbacks;
 	u64 body_native, body_post_ban, body_cancelled, body_acks;
 	struct kd_mmap_fault_state fault;
+	struct kd_mmap_unmap_state unmap;
 };
 
 #define KD_MMAP_LOCK_INITIALIZER(name) { \

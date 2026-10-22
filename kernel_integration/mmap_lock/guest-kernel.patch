@@ -255,3 +255,104 @@
 +#else
 @@ -4231,0 +4264 @@
 +#endif
+--- a/mm/mmap.c
++++ b/mm/mmap.c
+@@ -2440 +2440 @@
+-do_mas_align_munmap(struct ma_state *mas, struct vm_area_struct *vma,
++do_mas_align_munmap_prepared(struct ma_state *mas, struct vm_area_struct *vma,
+@@ -2442 +2442,2 @@
+-		    unsigned long end, struct list_head *uf, bool downgrade)
++		    unsigned long end, struct list_head *uf, bool downgrade,
++		    struct ma_state *detach_reserve)
+@@ -2455,0 +2457,11 @@
++	if (detach_reserve) {
++		/* The fixed body admits one complete VMA and no lock downgrade.
++		 * Transfer only its prepared allocation chain and state flags; the
++		 * origin keeps no ownership of these nodes after this point. */
++		BUG_ON(start != vma->vm_start || end != vma->vm_end || downgrade || uf);
++		BUG_ON(!detach_reserve->alloc || mas_detach.alloc);
++		mas_detach.alloc = detach_reserve->alloc;
++		mas_detach.mas_flags = detach_reserve->mas_flags;
++		detach_reserve->alloc = NULL;
++		detach_reserve->mas_flags = 0;
++	}
+@@ -2520 +2532,6 @@
+-		error = mas_store_gfp(&mas_detach, next, GFP_KERNEL);
++		if (detach_reserve) {
++			mas_store_prealloc(&mas_detach, next);
++			error = 0;
++		} else {
++			error = mas_store_gfp(&mas_detach, next, GFP_KERNEL);
++		}
+@@ -2604,0 +2622,2 @@
++	if (detach_reserve)
++		mas_destroy(&mas_detach);
+@@ -2609,0 +2629,8 @@
++}
++
++static int do_mas_align_munmap(struct ma_state *mas, struct vm_area_struct *vma,
++		struct mm_struct *mm, unsigned long start, unsigned long end,
++		struct list_head *uf, bool downgrade)
++{
++	return do_mas_align_munmap_prepared(mas, vma, mm, start, end, uf,
++					  downgrade, NULL);
+@@ -2925,0 +2953,4 @@
++#ifdef CONFIG_KD_MMAP_LOCK
++#include "kd_mmap_unmap.inc"
++#endif
++
+@@ -2931,0 +2963,9 @@
++
++#ifdef CONFIG_KD_MMAP_LOCK
++	if (mm->mmap_lock.use_kd && smp_load_acquire(&mm->mmap_lock.unmap.enabled) &&
++	    start >= mm->mmap_lock.unmap.start && start < mm->mmap_lock.unmap.end &&
++	    kd_mmap_munmap(mm, start, len, &ret))
++		return ret;
++	/* Refusal ACK and queue retirement are complete. The original caller
++	 * now owns its ordinary native acquisition/downgrade/unlock path. */
++#endif
+--- a/lib/maple_tree.c
++++ b/lib/maple_tree.c
+@@ -54,0 +55,3 @@
++#ifdef CONFIG_KD_MMAP_LOCK
++#include <linux/kd_mmap_lock.h>
++#endif
+@@ -5797 +5800 @@
+- * mas_preallocate() - Preallocate enough nodes for a store operation
++ * mas_preallocate_height() - Prepare one store at a given tree height.
+@@ -5799 +5802 @@
+- * @entry: The entry that will be stored
++ * @height: The height used to size the allocation reserve
+@@ -5804 +5807 @@
+-int mas_preallocate(struct ma_state *mas, void *entry, gfp_t gfp)
++static int mas_preallocate_height(struct ma_state *mas, unsigned int height, gfp_t gfp)
+@@ -5809 +5812 @@
+-	mas_node_count_gfp(mas, 1 + mas_mt_height(mas) * 3, gfp);
++	mas_node_count_gfp(mas, 1 + height * 3, gfp);
+@@ -5821,0 +5825,26 @@
++
++/**
++ * mas_preallocate() - Preallocate enough nodes for a store operation.
++ * @mas: The maple state
++ * @entry: The entry that will be stored
++ * @gfp: The GFP_FLAGS to use for allocations
++ *
++ * Return: 0 on success, -ENOMEM if memory could not be allocated.
++ */
++int mas_preallocate(struct ma_state *mas, void *entry, gfp_t gfp)
++{
++	return mas_preallocate_height(mas, mas_mt_height(mas), gfp);
++}
++
++#ifdef CONFIG_KD_MMAP_LOCK
++int kd_mmap_mas_preallocate(struct ma_state *mas, gfp_t gfp)
++{
++	/* Preparation never walks/dereferences a live tree node. Read only a
++	 * scalar height hint, allocate on the originating task, then require
++	 * sufficient actual capacity again under mmap write ownership. */
++	unsigned int height = (READ_ONCE(mas->tree->ma_flags) & MT_FLAGS_HEIGHT_MASK) >>
++			      MT_FLAGS_HEIGHT_OFFSET;
++
++	return mas_preallocate_height(mas, height, gfp);
++}
++#endif
