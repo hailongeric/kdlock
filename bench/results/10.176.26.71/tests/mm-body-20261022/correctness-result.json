@@ -1,0 +1,172 @@
+{
+  "artifacts": {
+    "archive_manifest": "bench/results/10.176.26.71/raw/tests/mm-body-20261022/seal-1/guest-archives-1/archives.json",
+    "archive_manifest_sha256": "1c39e0564a6cf1c57330424bb8cf9e65732013ccd668204efb2a58079bd45d47",
+    "archives": [
+      {
+        "bytes": 2210187,
+        "file": "native.tar.gz",
+        "sha256": "a9069c925b210339c7549f39bfe96de350814bdbdf599b23aad952617748c297"
+      },
+      {
+        "bytes": 3073792,
+        "file": "kd.tar.gz",
+        "sha256": "7640cd30371acc5d3b2dd22a9d9f82c6259b3475cdc115867c7619bd2f01646f"
+      },
+      {
+        "bytes": 1030984,
+        "file": "build.tar.gz",
+        "sha256": "acc6a692a10a44834674c85f92d4e75216127863a3cb2277602a0de0997035c5"
+      },
+      {
+        "bytes": 79068537,
+        "file": "metadata.tar.gz",
+        "sha256": "dae98340941caa366351e1c709fe190dd9b25932d0cba97359d155c36cdb1f11"
+      }
+    ],
+    "audit": "bench/results/10.176.26.71/raw/tests/mm-body-20261022/audit.json",
+    "audit_sha256": "6538f3cd55ad0d1b29b3e2b8d7f6e855fe9f62dbb4df2ef767cb4e74891e2ce5",
+    "final_health_sha256": "3956f72dde6f683325a6f6ac3e2371b821c88c85732403064081a22fc9635ae0"
+  },
+  "audit": {
+    "acks": 15,
+    "archives": 4,
+    "cancelled_queued": 1,
+    "checks": 9675,
+    "compressed_bytes": 85383500,
+    "directories": 174,
+    "files": 1371,
+    "handbacks": 15,
+    "health_sha256": "3956f72dde6f683325a6f6ac3e2371b821c88c85732403064081a22fc9635ae0",
+    "manifest_sha256": "1c39e0564a6cf1c57330424bb8cf9e65732013ccd668204efb2a58079bd45d47",
+    "mismatches": 0,
+    "passed": true,
+    "payload_bytes": 110463807,
+    "performance_accepted": false,
+    "returned_compiled_bodies": 1690,
+    "scope": "Inventory, source/binary/Git bindings, exact MM/body results, retained failures and recovery; no extraction or archived-code execution",
+    "script_sha256": "ab3ed9a594d6b3378c8293a114466a97fd5ff78331d250723fba06a8271d78fa",
+    "sessions": 10,
+    "source_bindings": 558,
+    "symlinks": 0
+  },
+  "body": {
+    "execution": "FIXED_IN_TREE_MADVISE_BODY",
+    "handbacks": 15,
+    "jit_bodies": 0,
+    "post_ban_local_calls": 512,
+    "reader_delegation": false,
+    "receipts": 16,
+    "returned_compiled_bodies": 1690
+  },
+  "body_calls": 2576,
+  "body_checks": 55,
+  "cancellation": {
+    "cancelled_before_admission": 1,
+    "execution": "CANCELLED_QUEUED_BODY",
+    "jit_bodies": 0,
+    "queue_retired": true,
+    "unchanged_victim_vma": true
+  },
+  "cancellation_checks": 11,
+  "correctness_stage_passed": true,
+  "implementation_commit": "3c01e1740a9ffaecbcb9548e5222a82087532faf",
+  "kernel": {
+    "build_id": "198726ed15a65c0fd91fb9afd10ba8e3c5a31c83",
+    "machine": "x86_64",
+    "release": "6.1.159-kdmm2",
+    "version": "#1 SMP PREEMPT_DYNAMIC Thu Oct 22 08:27:59 UTC 2026"
+  },
+  "limitations": [
+    "Fixed opt-in in-tree DONTDUMP/DODUMP body for complete isolated ordinary anonymous VMAs only",
+    "Readers, general mmap creation and page-fault bodies remain local",
+    "Published cancellation retains its link until consumed; bounded response latency unvalidated",
+    "No arbitrary MM JIT, whole-kernel mutex replacement, RT/ww_mutex/lockdep or oversubscription validation",
+    "73 runtime modules and dependencies, not all configured modules",
+    "Seven prior performance regressions, variance and p95 unresolved/deferred"
+  ],
+  "performance_accepted": false,
+  "probe_commit": "0d2a471",
+  "recovery": {
+    "boot_id": "d4980f92-14c5-4bed-9749-beac916e76d3",
+    "build_id": "5ca28058e156f34a2c7fe91e8e0fbf92f4e51960",
+    "idle": true,
+    "modules": 73,
+    "preserved_files": 5686,
+    "release": "6.1.159-kdclobber2"
+  },
+  "run_family": "mm-body-20261022",
+  "sessions": [
+    {
+      "boot_id": "f2e97abf-0c3a-450f-b9a7-24fc41237537",
+      "mode": "native",
+      "receipt": "/root/kdlock-evidence/10.176.26.71/tests/mm-body-20261022/native-1/api/result.json",
+      "sha256": "6bf4f092771bfff3d1a8ce4bc69ae8cab48df84100ef84a855f18545a0b3075e",
+      "task": "api"
+    },
+    {
+      "boot_id": "f2e97abf-0c3a-450f-b9a7-24fc41237537",
+      "mode": "native",
+      "receipt": "/root/kdlock-evidence/10.176.26.71/tests/mm-body-20261022/native-1/mmap/result.json",
+      "sha256": "fc1f5edeb740624a84eefb5da57887eda5807d2df54157142730919505398a9a",
+      "task": "mmap"
+    },
+    {
+      "boot_id": "f2e97abf-0c3a-450f-b9a7-24fc41237537",
+      "mode": "native",
+      "receipt": "/root/kdlock-evidence/10.176.26.71/tests/mm-body-20261022/native-1/page-fault/result.json",
+      "sha256": "0a7747eba4b4d955452a94e641f6b4ecbf531db4b94534852f061cf0e2e9d2e3",
+      "task": "page-fault"
+    },
+    {
+      "boot_id": "f2e97abf-0c3a-450f-b9a7-24fc41237537",
+      "mode": "native",
+      "receipt": "/root/kdlock-evidence/10.176.26.71/tests/mm-body-20261022/native-1/completed-fault/result.json",
+      "sha256": "a7204bfca964d9cc9ea0250d41a85ce77e398bc86dc3392cdaaa2818b5cdd66e",
+      "task": "completed-fault"
+    },
+    {
+      "boot_id": "74f9b040-42ba-46b2-819f-ec501db49d88",
+      "mode": "kd",
+      "receipt": "/root/kdlock-evidence/10.176.26.71/tests/mm-body-20261022/kd-1/api/result.json",
+      "sha256": "c41cd4eb68408dfe065723b7b17d955bf80e62647139761d09f5c5d2dfec27df",
+      "task": "api"
+    },
+    {
+      "boot_id": "74f9b040-42ba-46b2-819f-ec501db49d88",
+      "mode": "kd",
+      "receipt": "/root/kdlock-evidence/10.176.26.71/tests/mm-body-20261022/kd-1/body/result.json",
+      "sha256": "650bfc3aef6b614bb28bbb9c1b8cc383b23f94600be455daaa7eb093762f4a05",
+      "task": "body"
+    },
+    {
+      "boot_id": "74f9b040-42ba-46b2-819f-ec501db49d88",
+      "mode": "kd",
+      "receipt": "/root/kdlock-evidence/10.176.26.71/tests/mm-body-20261022/kd-1/body-cancellation/result.json",
+      "sha256": "6bc6c0fba10e3bcc6528e068a41736ce06c2e321895b8f5c2ce9a4a790a57e2b",
+      "task": "body-cancellation"
+    },
+    {
+      "boot_id": "74f9b040-42ba-46b2-819f-ec501db49d88",
+      "mode": "kd",
+      "receipt": "/root/kdlock-evidence/10.176.26.71/tests/mm-body-20261022/kd-1/mmap/result.json",
+      "sha256": "357f551d8953f9f5bddfecd39efb1a50ca7587e83ab3966e6afb51858aaaac20",
+      "task": "mmap"
+    },
+    {
+      "boot_id": "74f9b040-42ba-46b2-819f-ec501db49d88",
+      "mode": "kd",
+      "receipt": "/root/kdlock-evidence/10.176.26.71/tests/mm-body-20261022/kd-1/page-fault/result.json",
+      "sha256": "1a408467e7238a7afa683a2f4b4ae9eae891a5e925a88c768668377e977e7fd5",
+      "task": "page-fault"
+    },
+    {
+      "boot_id": "74f9b040-42ba-46b2-819f-ec501db49d88",
+      "mode": "kd",
+      "receipt": "/root/kdlock-evidence/10.176.26.71/tests/mm-body-20261022/kd-1/completed-fault/result.json",
+      "sha256": "dfa031858034376191303d1860441cbb76f71b075b0c9ef06af362e9e0bb28f4",
+      "task": "completed-fault"
+    }
+  ],
+  "timing_started": false
+}

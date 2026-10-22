@@ -37,5 +37,8 @@ All workers must join, the exact pool/queue/owner state must be idle, and all
 VMAs must unmap before ordinary module unload. A timeout leaves the run and
 module in place for diagnosis. Run untouched mmap/munmap and page-fault tests
 separately; their success is not a claim of delegated mmap creation or faults.
-Validation is pending until a retained VM result passes. No timing or p95 work
-belongs to this stage.
+The [retained stage](../../../../bench/results/10.176.26.71/tests/mm-body-20261022/README.md)
+passed on `6.1.159-kdmm2`: 55 body checks, 1,690 different-task completions,
+15 exact handbacks/ACKs, 512 sticky local calls, and 11 separate cancellation
+checks. Both Native and KD ordinary MM workloads also passed. The VM returned
+to recovery. No timing or p95 work belongs to this stage.

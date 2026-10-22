@@ -161,14 +161,14 @@
 @@ -1183,0 +1184,11 @@
 +
 +config KD_MMAP_LOCK
-+	bool "Experimental KD local mmap lock"
++	bool "Experimental KD mmap lock"
 +	depends on X86_64 && SMP && !PREEMPT_RT
 +	depends on !LOCKDEP && !DEBUG_LOCK_ALLOC && !DEBUG_MUTEXES
 +	help
 +	  Use one immutable backend for each actual mm_struct mmap lock. The
 +	  kd_mmap=on boot argument selects KD local concurrent readers and
-+	  original-task writers for new mms. The default is Native control;
-+	  init_mm always stays Native. No MM body is delegated. Keep a separate
++	  original-task writers for new mms. A per-mm opt-in enables fixed
++	  madvise body delegation. Default and init_mm stay Native. Keep a separate
 +	  recovery kernel. RT and lockdep configurations are not supported.
 --- a/mm/mmap_lock.c
 +++ b/mm/mmap_lock.c
