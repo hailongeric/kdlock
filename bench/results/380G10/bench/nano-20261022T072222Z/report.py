@@ -4,9 +4,12 @@ import argparse
 import collections
 import csv
 import hashlib
+import importlib.util
 import json
 from pathlib import Path
 import statistics
+import sys
+import tempfile
 
 
 def read(path):
@@ -38,7 +41,26 @@ def execution(row):
     return 'WITNESSED_JIT' if entries else 'NO_JIT'
 
 
-def collect(base):
+def reconstruct_provider(base, output):
+    root = Path('/root/host_fs/kdlock')
+    frozen = read(base / 'source-sha256.json')
+    script = root / 'bench/spin_cacheline/provider/prepare.py'
+    assert hashlib.sha256(script.read_bytes()).hexdigest() == frozen[str(script.relative_to(root))]
+    sys.dont_write_bytecode = True
+    spec = importlib.util.spec_from_file_location('nano_provider_prepare', script)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    with tempfile.TemporaryDirectory(prefix='nano-provider-review-') as temporary:
+        expected = module.prepare(Path(temporary) / 'provider', root)
+    for name, digest in expected['production'].items():
+        assert frozen[name] == digest, name
+    for name, digest in expected['observation'].items():
+        assert frozen['bench/spin_cacheline/provider/' + name] == digest, name
+    write(output / 'provider-reconstruction.json', expected)
+    return expected
+
+
+def collect(base, provider):
     jobs = read(base / 'matrix-plan.json')
     frozen = read(base / 'source-sha256.json')
     samples, manifests = [], {}
@@ -46,8 +68,18 @@ def collect(base):
         folder = base / 'matrix' / job['name']
         specs = read(folder / 'plan.json')
         assert len(specs) == job['expected_sessions']
+        prefix = 'bench/spin_cacheline/.build/provider/'
         for relative, digest in read(folder / 'source-sha256.json').items():
-            assert frozen[relative] == digest, relative
+            path = folder / 'source' / relative
+            assert hashlib.sha256(path.read_bytes()).hexdigest() == digest, relative
+            if relative.startswith(prefix):
+                prepared = relative[len(prefix):]
+                if prepared == 'manifest.json':
+                    assert read(path) == provider, relative
+                else:
+                    assert provider['prepared'][prepared] == digest, relative
+            else:
+                assert frozen[relative] == digest, relative
         for name in ('source-sha256.json', 'binary-sha256.json', 'environment.json', 'plan.json'):
             path = folder / name
             manifests[str(path.relative_to(base))] = hashlib.sha256(path.read_bytes()).hexdigest()
@@ -64,6 +96,8 @@ def collect(base):
             family = job['family']
             payload = (f'c{row["cachelines"]:02d}' if row['workload'] == 'cacheline' else
                        f'list{row["list_nodes"]}' if row['workload'] == 'list' else 'rcuht')
+            eligible_ops = measurement.get('writes', measurement['completed'])
+            entries, returns = row.get('jit_bodies'), row.get('jit_completions')
             sample = dict(job=job['name'], session=spec['name'], lock=family,
                           payload=payload, workload=row['workload'],
                           write_percent=row.get('write_percent', 100),
@@ -71,6 +105,9 @@ def collect(base):
                           execution_class=klass, execution_status=row['execution_status'],
                           correct_and_drained=correct, score_eligible=eligible,
                           jit_entries=row.get('jit_bodies'), jit_completions=row.get('jit_completions'),
+                          jit_eligible_operations=eligible_ops,
+                          jit_entry_share=entries / eligible_ops if entries is not None and eligible_ops else None,
+                          jit_completion_share=returns / eligible_ops if returns is not None and eligible_ops else None,
                           whole_ops_s=measurement['completed'] * 1e9 / measurement['wall_ns'],
                           peak_ops_s=measurement['peak']['throughput_ops_s'],
                           operations=measurement['completed'],
@@ -138,15 +175,20 @@ def figures(summary, destination):
                 selected = [row for row in summary if row['lock'] == family
                             and row['write_percent'] == percent and row['payload'] == payload]
                 groups = collections.defaultdict(list)
+                worker_grid = sorted({row['workers'] for row in selected})
                 for row in selected:
                     if row['valid_samples']:
                         groups[(row['backend'], row['execution_class'])].append(row)
                 for (backend, klass), rows in sorted(groups.items()):
                     rows.sort(key=lambda row: row['workers'])
                     label = labels[backend] + (': ' + klass if backend == 'kdlock' else '')
-                    x = [row['workers'] for row in rows]
-                    values = [row[f'{metric}_ops_s_median'] / 1e6 if row['complete'] else float('nan') for row in rows]
-                    line, = axis.plot(x, values, color=colors[backend], marker=markers[klass],
+                    by_workers = {row['workers']: row for row in rows}
+                    # Missing or rejected repeats break the curve rather than
+                    # implying measured performance across an unscored cohort.
+                    values = [by_workers[count][f'{metric}_ops_s_median'] / 1e6
+                              if count in by_workers and by_workers[count]['complete']
+                              else float('nan') for count in worker_grid]
+                    line, = axis.plot(worker_grid, values, color=colors[backend], marker=markers[klass],
                                       linestyle='--' if klass == 'NO_JIT' else '-', linewidth=1.5,
                                       markersize=4, label=label)
                     handles[label] = line
@@ -189,7 +231,8 @@ def main():
     parser.add_argument('--plots', action='store_true')
     args = parser.parse_args()
     args.output.mkdir(parents=True, exist_ok=False)
-    samples, manifests = collect(args.base)
+    provider = reconstruct_provider(args.base, args.output)
+    samples, manifests = collect(args.base, provider)
     summary, comparisons = summarize(samples)
     table(args.output / 'samples.csv', samples)
     table(args.output / 'summary.csv', summary)
@@ -200,6 +243,7 @@ def main():
     counts = collections.Counter((row['lock'], row['backend'], row['execution_status'], row['execution_class'])
                                  for row in samples)
     status = dict(expected_sessions=3600, recorded_sessions=len(samples),
+                  report_script_sha256=hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
                   correct_and_drained=sum(row['correct_and_drained'] for row in samples),
                   eligible_sessions=sum(row['score_eligible'] for row in samples),
                   complete_summary_groups=sum(row['complete'] for row in summary),

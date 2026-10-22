@@ -1,0 +1,24 @@
+{
+  "archive_receipt_sha256": "53fd081616867156dcd021f0634c4609edb588c4ec2b63ec4e70e020f7b69736",
+  "base_disks_removed": false,
+  "boot_id": "f84aa8f3-c211-4198-aafa-686cf93cb751",
+  "captured_utc": "2026-10-22T12:23:38.383594+00:00",
+  "graceful_guest_poweroff": true,
+  "qemu_exited": true,
+  "qemu_pid": 901846,
+  "recovery_snapshot_retired_with_overlays": true,
+  "removed_temporary_overlays": [
+    {
+      "allocated_bytes": 5803290624,
+      "bytes": 5803474944,
+      "path": "/run/qemu/kdlock-nano-20261022T072222Z/root.qcow2"
+    },
+    {
+      "allocated_bytes": 5582848,
+      "bytes": 5767168,
+      "path": "/run/qemu/kdlock-nano-20261022T072222Z/data.qcow2"
+    }
+  ],
+  "ssh_port_closed": true,
+  "verified_sessions": 3600
+}

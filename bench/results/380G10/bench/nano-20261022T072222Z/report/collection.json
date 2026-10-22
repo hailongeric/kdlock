@@ -1,0 +1,138 @@
+{
+  "classes": [
+    {
+      "backend": "kdlock",
+      "count": 35,
+      "execution_class": "NO_JIT",
+      "lock": "mutex",
+      "status": "NO_JIT"
+    },
+    {
+      "backend": "kdlock",
+      "count": 28,
+      "execution_class": "NO_JIT",
+      "lock": "mutex",
+      "status": "OK"
+    },
+    {
+      "backend": "kdlock",
+      "count": 45,
+      "execution_class": "RETURNED_JIT",
+      "lock": "mutex",
+      "status": "OK"
+    },
+    {
+      "backend": "kdlock",
+      "count": 117,
+      "execution_class": "WITNESSED_JIT",
+      "lock": "mutex",
+      "status": "OK"
+    },
+    {
+      "backend": "native",
+      "count": 225,
+      "execution_class": "NATIVE",
+      "lock": "mutex",
+      "status": "OK"
+    },
+    {
+      "backend": "tclock",
+      "count": 225,
+      "execution_class": "TCLOCK",
+      "lock": "mutex",
+      "status": "OK"
+    },
+    {
+      "backend": "kdlock",
+      "count": 278,
+      "execution_class": "NO_JIT",
+      "lock": "rwlock",
+      "status": "OK"
+    },
+    {
+      "backend": "kdlock",
+      "count": 172,
+      "execution_class": "RETURNED_JIT",
+      "lock": "rwlock",
+      "status": "OK"
+    },
+    {
+      "backend": "native",
+      "count": 450,
+      "execution_class": "NATIVE",
+      "lock": "rwlock",
+      "status": "OK"
+    },
+    {
+      "backend": "tclock",
+      "count": 450,
+      "execution_class": "TCLOCK",
+      "lock": "rwlock",
+      "status": "OK"
+    },
+    {
+      "backend": "kdlock",
+      "count": 281,
+      "execution_class": "NO_JIT",
+      "lock": "rwsem",
+      "status": "OK"
+    },
+    {
+      "backend": "kdlock",
+      "count": 169,
+      "execution_class": "RETURNED_JIT",
+      "lock": "rwsem",
+      "status": "OK"
+    },
+    {
+      "backend": "native",
+      "count": 450,
+      "execution_class": "NATIVE",
+      "lock": "rwsem",
+      "status": "OK"
+    },
+    {
+      "backend": "kdlock",
+      "count": 105,
+      "execution_class": "NO_JIT",
+      "lock": "spin",
+      "status": "OK"
+    },
+    {
+      "backend": "kdlock",
+      "count": 48,
+      "execution_class": "RETURNED_JIT",
+      "lock": "spin",
+      "status": "OK"
+    },
+    {
+      "backend": "kdlock",
+      "count": 72,
+      "execution_class": "WITNESSED_JIT",
+      "lock": "spin",
+      "status": "OK"
+    },
+    {
+      "backend": "native",
+      "count": 225,
+      "execution_class": "NATIVE",
+      "lock": "spin",
+      "status": "OK"
+    },
+    {
+      "backend": "tclock",
+      "count": 225,
+      "execution_class": "TCLOCK",
+      "lock": "spin",
+      "status": "OK"
+    }
+  ],
+  "complete_summary_groups": 1179,
+  "correct_and_drained": 3600,
+  "eligible_sessions": 3565,
+  "expected_sessions": 3600,
+  "failed_preflight": "64-vCPU shared-collector expectation on 40-vCPU guest",
+  "recorded_sessions": 3600,
+  "report_script_sha256": "021eb9d968fed5813229bcc4d44a86124cbf80991d8ed1dfd0fbf1d5fecdef75",
+  "tclock_rwsem": "UNAVAILABLE"
+}

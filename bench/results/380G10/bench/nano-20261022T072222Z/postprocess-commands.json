@@ -1,0 +1,57 @@
+[
+  {
+    "name": "plot-venv",
+    "argv": [
+      "/usr/bin/python3",
+      "-m",
+      "venv",
+      "/root/kdlock-nano-plot-venv-20261022T072222Z"
+    ],
+    "returncode": 0,
+    "started_ns": 1792670221644585725,
+    "finished_ns": 1792670225527429346
+  },
+  {
+    "name": "plot-install",
+    "argv": [
+      "/root/kdlock-nano-plot-venv-20261022T072222Z/bin/python3",
+      "-m",
+      "pip",
+      "install",
+      "--disable-pip-version-check",
+      "--only-binary=:all:",
+      "-r",
+      "/root/host_fs/kdlock/bench/archive/requirements.txt"
+    ],
+    "returncode": 0,
+    "started_ns": 1792670225527944127,
+    "finished_ns": 1792670590059911026
+  },
+  {
+    "name": "plot-check",
+    "argv": [
+      "/root/kdlock-nano-plot-venv-20261022T072222Z/bin/python3",
+      "-m",
+      "pip",
+      "check"
+    ],
+    "returncode": 0,
+    "started_ns": 1792670590060706038,
+    "finished_ns": 1792670590728895167
+  },
+  {
+    "name": "report",
+    "argv": [
+      "/root/kdlock-nano-plot-venv-20261022T072222Z/bin/python3",
+      "/root/kdlock-evidence/380G10/bench/nano-20261022T072222Z/report.py",
+      "--base",
+      "/root/kdlock-evidence/380G10/bench/nano-20261022T072222Z",
+      "--output",
+      "/root/kdlock-evidence/380G10/bench/nano-20261022T072222Z/report",
+      "--plots"
+    ],
+    "returncode": 1,
+    "started_ns": 1792670590815971203,
+    "finished_ns": 1792670590881084352
+  }
+]

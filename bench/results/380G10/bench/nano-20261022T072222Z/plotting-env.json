@@ -1,0 +1,18 @@
+{
+  "python": "3.10.12 (main, Aug 31 2026, 10:18:17) [GCC 11.4.0]",
+  "packages": {
+    "contourpy": "1.3.2",
+    "cycler": "0.12.1",
+    "fonttools": "4.65.0",
+    "kiwisolver": "1.5.1",
+    "matplotlib": "3.10.3",
+    "numpy": "2.2.6",
+    "packaging": "26.3",
+    "pillow": "12.3.0",
+    "pyparsing": "3.3.3",
+    "python-dateutil": "2.9.0.post0",
+    "six": "1.17.0"
+  },
+  "requirements_sha256": "6524d9f38752c1cac26ab8e13206c2d3f6ae35fe1a961d9707040181447daaf3",
+  "executable": "/root/kdlock-nano-plot-venv-20261022T072222Z/bin/python3"
+}

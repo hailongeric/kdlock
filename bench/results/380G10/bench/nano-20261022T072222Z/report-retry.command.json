@@ -1,0 +1,14 @@
+{
+  "argv": [
+    "/root/kdlock-nano-plot-venv-20261022T072222Z/bin/python3",
+    "/root/kdlock-evidence/380G10/bench/nano-20261022T072222Z/report.py",
+    "--base",
+    "/root/kdlock-evidence/380G10/bench/nano-20261022T072222Z",
+    "--output",
+    "/root/kdlock-evidence/380G10/bench/nano-20261022T072222Z/report",
+    "--plots"
+  ],
+  "returncode": 0,
+  "started_ns": 1792670901014291004,
+  "finished_ns": 1792670947077452663
+}
