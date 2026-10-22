@@ -52,6 +52,11 @@ exact identities:
 - Scheduler waking/activation events for the exact retained target. Preserve
   the synchronous caller context and any cross-CPU activation separately; a
   remote scheduler event must not borrow an unrelated CPU's callback context.
+  `sched_wakeup` also occurs for an already queued runnable target, so distinguish
+  that notification from an actual `activate_task` enqueue. A pending wake
+  token must survive remote activation and cannot be replaced by the next wake
+  attempt until the first activation is accounted for; ambiguous reuse rejects
+  the trace rather than establishing a causal match.
 - Actual blocked versus runnable switch-out, schedule return, and the next
   predicate outcome. Retain the corrected `prev->on_rq == 0` blocked predicate.
   Multiple switches within one schedule invocation form one episode.

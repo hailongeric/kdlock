@@ -1,7 +1,7 @@
 # Deterministic mmap phase-observer controls
 
-Status: implementation in progress; no new build, live control or timing has
-started. This stage preserves the `d9210e13` observer, original API fixture,
+Status: the controls are implemented; VM validation is pending. No new build,
+live control or timing has started. This stage preserves the `d9210e13` observer, original API fixture,
 683 workload bindings, installed `kdmm1` image and all prior archives.
 
 The sole writer refreshed source ownership on 2026-10-22 at 05:11:27 UTC:
@@ -14,6 +14,26 @@ The guest idle/preservation check at 05:11:50 UTC confirmed recovery boot
 recovery module files. The actual host capture at 05:15:32 UTC, more than
 60 seconds later, confirmed QEMU PID 257489, the original 67 threads and pins,
 two NUMA nodes and snapshot `before-mutex-kdonly-20261017T140354Z`.
+
+The first coordinator used frozen `f7d9086` and 60-second post-idle settling.
+Its five initial admission captures refused 68, 68, 68, 68 and 69 QEMU threads
+against the original 67. Nothing reached preparation, boot transition or live
+testing. The separate host-only observation saw its last extra worker still
+present at 05:36:38 UTC and absent at 05:36:43; that later quiet sample did not
+replace any failed capture. The user approved stopping only this waiting
+coordinator and increasing settling to 90 seconds. At 05:39:13 UTC, its exact
+PID 865830/start-ticks 974179357 had no children and all 13 command receipts
+had exited zero; a pidfd SIGINT stopped it with exit 130. Independent follow-up
+confirmed its exit, child drain, the same idle recovery boot, all original 683
+workload bindings and all 427 prior observer bindings. The source descriptor
+checks retain their inaccessible-process limitation.
+
+The approved continuation uses `stage-2`, guest `kd-2` and 90-second settling.
+Its stop/drain prerequisite SHA-256 is
+`8ca5c607a0bcb13fdecf42fe67414a925049ca699bb56d37bec94bd6d4a728ae`.
+The old coordinator source, five refusals, lifetime samples and original result
+remain under `raw/tests/mmap-phase-controls-20261022/stage-1`; no refusal is a
+pass. The complete original host/guest gates and fixture bytes are unchanged.
 
 Three separate correctness controls will use real `mm_struct` objects and the
 unchanged killable writer. A held writer keeps the admission predicate false.
