@@ -13,6 +13,7 @@ struct kd_mmap_unmap_preparation {
 	struct ma_state detach;
 	struct ma_state *split_mas[2];
 	struct vm_area_struct *split_vma[2];
+	struct anon_vma_chain *split_avc[2];
 };
 
 static bool kd_mmap_unmap_capacity(struct ma_state *mas, unsigned int height)
@@ -151,11 +152,22 @@ bool kd_mmap_unmap_try(struct mm_struct *mm, unsigned long start,
 	if (partial) {
 		unsigned int height = mt_height(&mm->mm_mt) + 2;
 
-		/* Resident partial removal needs caller-prepared reverse-map links.
-		 * This first split path admits only an entirely untouched VMA. */
-		if (mm->mmap_lock.unmap.allow_populated || !pristine ||
-		    !kd_mmap_unmap_capacity(live, height))
+		if (!kd_mmap_unmap_capacity(live, height))
 			return false;
+		if (mm->mmap_lock.unmap.allow_populated) {
+			/* First resident slice: one page of exactly three resident base
+			 * pages, with one reverse-map link per VMA. Refuse an unsupported
+			 * ancestry or missing allocation before any split occurs. */
+			if (!mm->mmap_lock.unmap.allow_partial || pristine ||
+			    old_end - old_start != 3 * PAGE_SIZE || end - start != PAGE_SIZE ||
+			    !vma->anon_vma || !list_is_singular(&vma->anon_vma_chain) ||
+			    list_first_entry(&vma->anon_vma_chain, struct anon_vma_chain,
+					     same_vma)->anon_vma != vma->anon_vma ||
+			    !prep->split_avc[0] || !prep->split_avc[1])
+				return false;
+		} else if (!pristine) {
+			return false;
+		}
 		for (i = 0; i < 2; i++)
 			if (!prep->split_vma[i] || prep->split_mas[i]->tree != &mm->mm_mt ||
 			    !kd_mmap_unmap_capacity(prep->split_mas[i], height))
@@ -188,17 +200,21 @@ bool kd_mmap_unmap_try(struct mm_struct *mm, unsigned long start,
 		 * any error is an admitted return, NEVER a native replay/refusal. */
 		if (start > old_start) {
 			*result = split_vma_prepared(mm, vma, start, 0,
-				&prep->split_vma[splits], prep->split_mas[splits]);
-			if (*result) return true;
+				&prep->split_vma[splits], prep->split_mas[splits], &prep->split_avc[splits]);
+			if (*result) goto out_pages;
 			splits++;
 			vma = find_vma(mm, start);
+			*result = kd_mmap_unmap_test_error(mm, start, end, splits, false);
+			if (*result) goto out_pages;
 		}
 		if (end < old_end) {
 			*result = split_vma_prepared(mm, vma, end, 0,
-				&prep->split_vma[splits], prep->split_mas[splits]);
-			if (*result) return true;
+				&prep->split_vma[splits], prep->split_mas[splits], &prep->split_avc[splits]);
+			if (*result) goto out_pages;
 			splits++;
 			vma = find_vma(mm, start);
+			*result = kd_mmap_unmap_test_error(mm, start, end, splits, false);
+			if (*result) goto out_pages;
 		}
 		BUG_ON(!vma || vma->vm_start != start || vma->vm_end != end);
 	}
@@ -230,6 +246,7 @@ bool kd_mmap_unmap_try(struct mm_struct *mm, unsigned long start,
 					splits, before, mm->map_count, pages, mm->total_vm);
 		}
 	}
+out_pages:
 	if (nr) {
 		/* Neighbor VMAs keep this page-table directory under our writer.
 		 * Native teardown has dropped the mapping reference and completed
@@ -240,9 +257,16 @@ bool kd_mmap_unmap_try(struct mm_struct *mm, unsigned long start,
 			pte_t *pte;
 
 			BUG_ON(mm_pgtables_bytes(mm) != table_bytes);
-			pte = pte_offset_map_lock(mm, held_pmd, start, &ptl);
+			pte = pte_offset_map_lock(mm, held_pmd, old_start, &ptl);
 			for (i = 0; i < nr; i++)
-				BUG_ON(!pte_none(ptep_get(pte + i)) || page_mapped(held[i]));
+				if (old_start + i * PAGE_SIZE >= start && old_start + i * PAGE_SIZE < end) {
+					BUG_ON(!pte_none(ptep_get(pte + i)) || page_mapped(held[i]));
+				} else {
+					pte_t entry = ptep_get(pte + i);
+
+					BUG_ON(!pte_present(entry) || pte_pfn(entry) != pfns[i] ||
+					       page_mapcount(held[i]) != 1);
+				}
 			pte_unmap_unlock(pte, ptl);
 		}
 		kd_mmap_unmap_release_pages(held, nr);
@@ -251,7 +275,11 @@ bool kd_mmap_unmap_try(struct mm_struct *mm, unsigned long start,
 
 			atomic64_inc(&u->populated);
 			if (origin != current && atomic64_inc_return(&u->populated_remote) <= 16) {
-				if (nr == 1)
+				if (partial)
+					pr_info("KD_MM_RESIDENT_PARTIAL done mm=%px id=%llu origin=%d executor=%d start=%lx end=%lx pfn=%lx held=%u released=%u pte_none=1 mapcount=0 tables_retained=1\n",
+						mm, request_id, origin->pid, current->pid, start, end,
+						pfns[(start - old_start) >> PAGE_SHIFT], nr, nr);
+				else if (nr == 1)
 					pr_info("KD_MM_POPULATED done mm=%px id=%llu origin=%d executor=%d start=%lx end=%lx pfn=%lx pte_none=1 mapcount=0 tables_retained=1\n",
 						mm, request_id, origin->pid, current->pid, start, end, pfns[0]);
 				else
@@ -261,6 +289,9 @@ bool kd_mmap_unmap_try(struct mm_struct *mm, unsigned long start,
 			}
 		}
 	}
+	if (*result && partial)
+		pr_info("KD_MM_PARTIAL error mm=%px id=%llu origin=%d executor=%d start=%lx end=%lx splits=%u held=%u released=%u result=%d\n",
+			mm, request_id, origin->pid, current->pid, start, end, splits, nr, nr, *result);
 	return true;
 }
 
@@ -278,7 +309,9 @@ static noinline bool kd_mmap_munmap(struct mm_struct *mm, unsigned long start,
 	struct ma_state *reserve = &prep.detach;
 	unsigned long end = 0;
 	unsigned long allocated[2] = { 0, 0 };
+	unsigned long allocated_avc[2] = { 0, 0 };
 	unsigned int i, consumed = 0, freed = 0;
+	unsigned int avc_consumed = 0, avc_freed = 0;
 	bool prepared = false, handled;
 
 	/* All caller-sensitive address-limit checks and GFP_KERNEL allocation run
@@ -300,13 +333,18 @@ static noinline bool kd_mmap_munmap(struct mm_struct *mm, unsigned long start,
 		    !kd_mmap_mas_preallocate(&live, GFP_KERNEL) &&
 		    !mas_preallocate(reserve, NULL, GFP_KERNEL))
 			prepared = true;
-		if (prepared && !mm->mmap_lock.unmap.allow_populated) {
+		if (prepared && (!mm->mmap_lock.unmap.allow_populated || mm->mmap_lock.unmap.allow_partial)) {
 			for (i = 0; i < 2; i++) {
 				prep.split_vma[i] = vm_area_alloc(mm);
 				allocated[i] = (unsigned long)prep.split_vma[i];
 				if (!prep.split_vma[i] || kd_mmap_mas_preallocate(prep.split_mas[i], GFP_KERNEL)) {
 					prepared = false;
 					break;
+				}
+				if (mm->mmap_lock.unmap.allow_partial) {
+					prep.split_avc[i] = kd_anon_vma_chain_alloc();
+					allocated_avc[i] = (unsigned long)prep.split_avc[i];
+					if (!prep.split_avc[i]) { prepared = false; break; }
 				}
 			}
 		}
@@ -327,10 +365,19 @@ static noinline bool kd_mmap_munmap(struct mm_struct *mm, unsigned long start,
 			consumed |= 1U << i;
 		}
 		BUG_ON(prep.split_mas[i]->alloc);
+		if (prep.split_avc[i]) {
+			kd_anon_vma_chain_free(prep.split_avc[i]);
+			avc_freed |= 1U << i;
+		} else if (allocated_avc[i]) {
+			avc_consumed |= 1U << i;
+		}
 	}
 	BUG_ON(live.alloc || reserve->alloc || (freed & consumed));
 	if (allocated[0] && atomic64_read(&mm->mmap_lock.unmap.calls) <= 64)
 		pr_info("KD_MM_SPLIT retire mm=%px origin=%d start=%lx end=%lx vma0=%lx vma1=%lx consumed=%u freed=%u\n",
 			mm, current->pid, start, end, allocated[0], allocated[1], consumed, freed);
+	if (allocated_avc[0] && atomic64_read(&mm->mmap_lock.unmap.calls) <= 64)
+		pr_info("KD_MM_RMAP retire mm=%px origin=%d start=%lx end=%lx avc0=%lx avc1=%lx consumed=%u freed=%u\n",
+			mm, current->pid, start, end, allocated_avc[0], allocated_avc[1], avc_consumed, avc_freed);
 	return handled;
 }

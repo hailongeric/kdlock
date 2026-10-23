@@ -22,7 +22,10 @@ struct kd_mmap_fault_state {
 struct kd_mmap_unmap_state {
 	u32 tail;
 	unsigned long start, end;
-	bool enabled, native_only, allow_populated;
+	bool enabled, native_only, allow_populated, allow_partial;
+	/* Explicit correctness-probe injection, serialized by mmap write ownership.
+	 * These bytes use existing padding; normal operations leave them zero. */
+	u8 test_fail_after, test_fail_seen;
 	atomic64_t calls, removed, delegated, native, post_ban;
 	atomic64_t handbacks, acks, cancelled, refused, failed;
 	atomic64_t populated, populated_remote;

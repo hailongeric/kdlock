@@ -34,6 +34,8 @@ void kd_mmap_unmap_init(struct kd_mmap_lock *lock)
 	u->start = u->end = 0;
 	u->enabled = u->native_only = false;
 	u->allow_populated = false;
+	u->allow_partial = false;
+	u->test_fail_after = u->test_fail_seen = 0;
 	atomic64_set(&u->calls, 0);
 	atomic64_set(&u->removed, 0);
 	atomic64_set(&u->delegated, 0);
@@ -49,7 +51,7 @@ void kd_mmap_unmap_init(struct kd_mmap_lock *lock)
 }
 
 static int enable(struct mm_struct *mm, unsigned long start, unsigned long end,
-		  bool populated)
+		  bool populated, bool partial)
 {
 	struct kd_mmap_lock *lock = &mm->mmap_lock;
 	unsigned long owner;
@@ -64,21 +66,29 @@ static int enable(struct mm_struct *mm, unsigned long start, unsigned long end,
 	lock->unmap.start = start;
 	lock->unmap.end = end;
 	lock->unmap.allow_populated = populated;
+	lock->unmap.allow_partial = partial;
 	smp_store_release(&lock->unmap.enabled, true);
 	return 0;
 }
 
 int kd_mmap_unmap_enable(struct mm_struct *mm, unsigned long start, unsigned long end)
 {
-	return enable(mm, start, end, false);
+	return enable(mm, start, end, false, false);
 }
 EXPORT_SYMBOL_GPL(kd_mmap_unmap_enable);
 
 int kd_mmap_unmap_populated_enable(struct mm_struct *mm, unsigned long start, unsigned long end)
 {
-	return enable(mm, start, end, true);
+	return enable(mm, start, end, true, false);
 }
 EXPORT_SYMBOL_GPL(kd_mmap_unmap_populated_enable);
+
+int kd_mmap_unmap_resident_partial_enable(struct mm_struct *mm, unsigned long start,
+					unsigned long end)
+{
+	return enable(mm, start, end, true, true);
+}
+EXPORT_SYMBOL_GPL(kd_mmap_unmap_resident_partial_enable);
 
 unsigned int kd_mmap_unmap_pending(struct mm_struct *mm)
 {
@@ -153,7 +163,10 @@ static void execute(struct kd_mmap_mutex_node *node)
 		BUG_ON(!owned(r->mm));
 		if (r->result) {
 			/* An admitted body's error is returned, never replayed locally. */
-			atomic64_inc(&u->failed);
+			count = atomic64_inc_return(&u->failed);
+			if (remote && count <= 16)
+				pr_info("KD_MM_UNMAP error mm=%px id=%llu origin=%d executor=%d start=%lx end=%lx result=%d\n",
+					r->mm, r->id, r->origin->pid, current->pid, r->start, r->end, r->result);
 			return;
 		}
 		atomic64_inc(&u->removed);

@@ -263,24 +263,23 @@
 @@ -623 +623 @@
 -	struct vm_area_struct *expand)
 +	struct vm_area_struct *expand, struct ma_state *reserve)
-@@ -723,0 +724,11 @@
+@@ -723,0 +724,10 @@
 +	if (reserve) {
 +		/* Only an admitted anonymous split lends its origin-owned reserve.
 +		 * Transfer the allocation chain, not traversal state or ownership. */
-+		BUG_ON(!insert || expand || file || vma->anon_vma ||
-+		       !list_empty(&vma->anon_vma_chain) || mas.alloc || !reserve->alloc);
++		BUG_ON(!insert || expand || file || mas.alloc || !reserve->alloc);
 +		mas.alloc = reserve->alloc;
 +		mas.mas_flags = reserve->mas_flags;
 +		reserve->alloc = NULL;
 +		reserve->mas_flags = 0;
 +	}
 +
-@@ -803,0 +815,4 @@
+@@ -803,0 +814,4 @@
 +	/* Prepared anonymous splits always insert ABOVE. The retained original
 +	 * range changes in place and only the insertion performs a maple store.
 +	 * A second store would otherwise need another caller-owned reserve. */
 +	BUG_ON(reserve && (vma_changed || adjust_next || remove_next));
-@@ -881,0 +897,7 @@
+@@ -881,0 +896,7 @@
 +}
 +
 +int __vma_adjust(struct vm_area_struct *vma, unsigned long start,
@@ -288,21 +287,23 @@
 +	struct vm_area_struct *expand)
 +{
 +	return vma_adjust_prepared(vma, start, end, pgoff, insert, expand, NULL);
-@@ -2350,2 +2372,3 @@
+@@ -2350,2 +2371,3 @@
 -int __split_vma(struct mm_struct *mm, struct vm_area_struct *vma,
 -		unsigned long addr, int new_below)
 +static int split_vma_prepared(struct mm_struct *mm, struct vm_area_struct *vma,
 +	unsigned long addr, int new_below, struct vm_area_struct **prepared,
-+	struct ma_state *reserve)
-@@ -2363,3 +2386,16 @@
++	struct ma_state *reserve, struct anon_vma_chain **prepared_avc)
+@@ -2363,3 +2385,18 @@
 -	new = vm_area_dup(vma);
 -	if (!new)
 -		return -ENOMEM;
 +	if (prepared) {
 +		/* Same descriptor clone as vm_area_dup, using an object allocated
-+		 * on the real caller. Admission excludes every clone-time resource. */
++		 * on the real caller. A resident split also lends one exact reverse
++		 * mapping link; admission excludes other clone-time resources. */
 +		BUG_ON(new_below || !*prepared || !reserve || vma->vm_file || vma->vm_ops ||
-+		       vma->anon_vma || !list_empty(&vma->anon_vma_chain) ||
++		       (vma->anon_vma && (!prepared_avc || !*prepared_avc ||
++			!list_is_singular(&vma->anon_vma_chain))) ||
 +		       anon_vma_name(vma) || vma_policy(vma) || userfaultfd_armed(vma));
 +		new = *prepared;
 +		*prepared = NULL;
@@ -314,30 +315,62 @@
 +		if (!new)
 +			return -ENOMEM;
 +	}
-@@ -2389,2 +2425,2 @@
+@@ -2378 +2415,6 @@
+-	err = anon_vma_clone(new, vma);
++#ifdef CONFIG_KD_MMAP_LOCK
++	if (prepared && vma->anon_vma)
++		err = kd_anon_vma_clone_prepared(new, vma, prepared_avc);
++	else
++#endif
++		err = anon_vma_clone(new, vma);
+@@ -2389,2 +2431,2 @@
 -		err = vma_adjust(vma, addr, vma->vm_end, vma->vm_pgoff +
 -			((addr - new->vm_start) >> PAGE_SHIFT), new);
 +		err = vma_adjust_prepared(vma, addr, vma->vm_end, vma->vm_pgoff +
 +			((addr - new->vm_start) >> PAGE_SHIFT), new, NULL, reserve);
-@@ -2392 +2428,2 @@
+@@ -2392 +2434,2 @@
 -		err = vma_adjust(vma, vma->vm_start, addr, vma->vm_pgoff, new);
 +		err = vma_adjust_prepared(vma, vma->vm_start, addr, vma->vm_pgoff,
 +			new, NULL, reserve);
-@@ -2413,0 +2451,6 @@
+@@ -2413,0 +2457,6 @@
 +int __split_vma(struct mm_struct *mm, struct vm_area_struct *vma,
 +		unsigned long addr, int new_below)
 +{
-+	return split_vma_prepared(mm, vma, addr, new_below, NULL, NULL);
++	return split_vma_prepared(mm, vma, addr, new_below, NULL, NULL, NULL);
 +}
 +
-@@ -2440 +2483 @@
+@@ -2438,0 +2488,21 @@
++/* An explicitly armed correctness probe can model the next native allocation
++ * failure after a successful split. Both routes use the same point/count and
++ * native error cleanup. Ordinary callers never arm it. No callback executes. */
++static int kd_mmap_unmap_test_error(struct mm_struct *mm, unsigned long start,
++		unsigned long end, unsigned int splits, bool native)
++{
++#ifdef CONFIG_KD_MMAP_LOCK
++	struct kd_mmap_unmap_state *u = &mm->mmap_lock.unmap;
++
++	if (u->test_fail_after == splits && start >= u->start && end <= u->end) {
++		BUG_ON(!splits || !kd_mmap_is_write_owner(&mm->mmap_lock));
++		u->test_fail_after = 0;
++		u->test_fail_seen++;
++		pr_info("KD_MM_SPLIT inject mm=%px executor=%d start=%lx end=%lx splits=%u native=%u result=%d\n",
++			mm, current->pid, start, end, splits, native, -ENOMEM);
++		return -ENOMEM;
++	}
++#endif
++	return 0;
++}
++
+@@ -2440 +2510 @@
 -do_mas_align_munmap(struct ma_state *mas, struct vm_area_struct *vma,
 +do_mas_align_munmap_prepared(struct ma_state *mas, struct vm_area_struct *vma,
-@@ -2442 +2485,2 @@
+@@ -2442 +2512,2 @@
 -		    unsigned long end, struct list_head *uf, bool downgrade)
 +		    unsigned long end, struct list_head *uf, bool downgrade,
 +		    struct ma_state *detach_reserve)
-@@ -2455,0 +2500,11 @@
+@@ -2447,0 +2519 @@
++	unsigned int completed_splits = 0;
+@@ -2455,0 +2528,11 @@
 +	if (detach_reserve) {
 +		/* The fixed body admits one complete VMA and no lock downgrade.
 +		 * Transfer only its prepared allocation chain and state flags; the
@@ -349,7 +382,15 @@
 +		detach_reserve->alloc = NULL;
 +		detach_reserve->mas_flags = 0;
 +	}
-@@ -2520 +2575,6 @@
+@@ -2485,0 +2569,3 @@
++		error = kd_mmap_unmap_test_error(mm, start, end, ++completed_splits, true);
++		if (error)
++			goto end_split_failed;
+@@ -2503,0 +2590,3 @@
++			error = kd_mmap_unmap_test_error(mm, start, end, ++completed_splits, true);
++			if (error)
++				goto end_split_failed;
+@@ -2520 +2609,6 @@
 -		error = mas_store_gfp(&mas_detach, next, GFP_KERNEL);
 +		if (detach_reserve) {
 +			mas_store_prealloc(&mas_detach, next);
@@ -357,10 +398,10 @@
 +		} else {
 +			error = mas_store_gfp(&mas_detach, next, GFP_KERNEL);
 +		}
-@@ -2604,0 +2665,2 @@
+@@ -2604,0 +2699,2 @@
 +	if (detach_reserve)
 +		mas_destroy(&mas_detach);
-@@ -2609,0 +2672,8 @@
+@@ -2609,0 +2706,8 @@
 +}
 +
 +static int do_mas_align_munmap(struct ma_state *mas, struct vm_area_struct *vma,
@@ -369,12 +410,12 @@
 +{
 +	return do_mas_align_munmap_prepared(mas, vma, mm, start, end, uf,
 +					  downgrade, NULL);
-@@ -2925,0 +2996,4 @@
+@@ -2925,0 +3030,4 @@
 +#ifdef CONFIG_KD_MMAP_LOCK
 +#include "kd_mmap_unmap.inc"
 +#endif
 +
-@@ -2931,0 +3006,9 @@
+@@ -2931,0 +3040,9 @@
 +
 +#ifdef CONFIG_KD_MMAP_LOCK
 +	if (mm->mmap_lock.use_kd && smp_load_acquire(&mm->mmap_lock.unmap.enabled) &&
@@ -430,5 +471,65 @@
 +	 * Actual capacity is checked before the first split commits. */
 +	height += 2;
 +	return mas_preallocate_height(mas, height, gfp);
++}
++#endif
+--- a/mm/rmap.c
++++ b/mm/rmap.c
+@@ -76,0 +77,3 @@
++#ifdef CONFIG_KD_MMAP_LOCK
++#include <linux/kd_mmap_lock.h>
++#endif
+@@ -148,0 +152,14 @@
++#ifdef CONFIG_KD_MMAP_LOCK
++/* Allocate on the original caller before queue publication. No source VMA or
++ * anon_vma pointer is captured: the real owner checks the current chain later. */
++struct anon_vma_chain *kd_anon_vma_chain_alloc(void)
++{
++	return anon_vma_chain_alloc(GFP_KERNEL);
++}
++
++void kd_anon_vma_chain_free(struct anon_vma_chain *chain)
++{
++	anon_vma_chain_free(chain);
++}
++#endif
++
+@@ -279 +296,2 @@
+-int anon_vma_clone(struct vm_area_struct *dst, struct vm_area_struct *src)
++static int anon_vma_clone_prepared(struct vm_area_struct *dst,
++		struct vm_area_struct *src, struct anon_vma_chain **prepared)
+@@ -283,0 +302,8 @@
++	if (prepared) {
++		mmap_assert_write_locked(src->vm_mm);
++		BUG_ON(!*prepared || !src->anon_vma || dst->anon_vma != src->anon_vma ||
++		       dst->vm_mm != src->vm_mm || !list_empty(&dst->anon_vma_chain) ||
++		       !list_is_singular(&src->anon_vma_chain) ||
++		       list_first_entry(&src->anon_vma_chain, struct anon_vma_chain,
++				 same_vma)->anon_vma != src->anon_vma);
++	}
+@@ -287 +313,8 @@
+-		avc = anon_vma_chain_alloc(GFP_NOWAIT | __GFP_NOWARN);
++		if (prepared) {
++			/* Native link/interval-tree/active-count ordering below stays
++			 * shared. Consuming this exact object transfers its lifetime. */
++			avc = *prepared;
++			*prepared = NULL;
++		} else {
++			avc = anon_vma_chain_alloc(GFP_NOWAIT | __GFP_NOWARN);
++		}
+@@ -288,0 +322 @@
++			BUG_ON(prepared);
+@@ -326,0 +361,13 @@
++
++int anon_vma_clone(struct vm_area_struct *dst, struct vm_area_struct *src)
++{
++	return anon_vma_clone_prepared(dst, src, NULL);
++}
++
++#ifdef CONFIG_KD_MMAP_LOCK
++int kd_anon_vma_clone_prepared(struct vm_area_struct *dst,
++		struct vm_area_struct *src, struct anon_vma_chain **prepared)
++{
++	return anon_vma_clone_prepared(dst, src, prepared);
 +}
 +#endif

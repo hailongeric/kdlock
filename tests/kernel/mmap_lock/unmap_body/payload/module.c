@@ -4,12 +4,15 @@
 #include <linux/completion.h>
 #include <linux/delay.h>
 #include <linux/fs.h>
+#include <linux/highmem.h>
 #include <linux/kd_mmap_lock.h>
 #include <linux/kthread.h>
 #include <linux/miscdevice.h>
 #include <linux/mm.h>
 #include <linux/mmap_lock.h>
 #include <linux/module.h>
+#include <linux/pagevec.h>
+#include <linux/rmap.h>
 #include <linux/sched/mm.h>
 #include <linux/sched/signal.h>
 #include <linux/sched/task.h>
@@ -23,6 +26,12 @@ struct session {
 	struct ub_status result;
 	atomic_t controlling, held, readers, ready, release;
 	bool partial_cancel;
+	unsigned int groups;
+	struct mutex pins_lock;
+	struct page *pages[UB_EXT_PAGES], *busy_page;
+	unsigned long charges[UB_EXT_PAGES];
+	u64 pins_released;
+	struct ub_pages snapshot;
 };
 struct control;
 struct worker {
@@ -204,6 +213,8 @@ out:
 	return error;
 }
 
+#include "resident.inc"
+
 static long operation(struct file *file, unsigned int cmd, unsigned long arg)
 {
 	struct session *s = file->private_data;
@@ -215,6 +226,26 @@ static long operation(struct file *file, unsigned int cmd, unsigned long arg)
 	if (current->mm != s->mm)
 		return -EXDEV;
 	switch (cmd) {
+	case UB_EXPERIMENT:
+		return experiment(s, arg);
+	case UB_RMAP:
+		return rmap_state(s, arg);
+	case UB_PIN:
+	case UB_PAGESTATE:
+	case UB_DROP:
+	case UB_BUSY_LOCK:
+	case UB_BUSY_UNLOCK:
+	case UB_UNPIN_MAPPED:
+		return page_operation(s, cmd, arg);
+	case UB_EXTRA: {
+		struct ub_extra extra;
+
+		mmap_read_lock(s->mm);
+		extra = (struct ub_extra) { f->test_fail_after, f->test_fail_seen,
+			pins_owned(s), s->pins_released };
+		mmap_read_unlock(s->mm);
+		return copy_to_user((void __user *)arg, &extra, sizeof(extra)) ? -EFAULT : 0;
+	}
 	case UB_ENABLE:
 		if (copy_from_user(&region, (void __user *)arg, sizeof(region))) return -EFAULT;
 		mmap_write_lock(s->mm);
@@ -288,6 +319,7 @@ static int opened(struct inode *inode, struct file *file)
 	s = kzalloc(sizeof(*s), GFP_KERNEL);
 	if (!s) return -ENOMEM;
 	s->mm = current->mm;
+	mutex_init(&s->pins_lock);
 	mmget(s->mm);
 	file->private_data = s;
 	return 0;
@@ -302,6 +334,7 @@ static int released(struct inode *inode, struct file *file)
 		return 0;
 	}
 	WARN_ON(!kd_mmap_is_idle(&s->mm->mmap_lock));
+	drop_pins(s);
 	mmput(s->mm);
 	kfree(s);
 	return 0;

@@ -60,10 +60,17 @@ struct ma_state;
 void kd_mmap_unmap_init(struct kd_mmap_lock *lock);
 int kd_mmap_unmap_enable(struct mm_struct *mm, unsigned long start, unsigned long end);
 int kd_mmap_unmap_populated_enable(struct mm_struct *mm, unsigned long start, unsigned long end);
+int kd_mmap_unmap_resident_partial_enable(struct mm_struct *mm, unsigned long start, unsigned long end);
 unsigned int kd_mmap_unmap_pending(struct mm_struct *mm);
 /* Allocation-only preparation reads a height hint; actual capacity and VMA
  * eligibility are rechecked under exact physical mmap write ownership. */
 int kd_mmap_mas_preallocate(struct ma_state *mas, gfp_t gfp);
+struct anon_vma_chain;
+struct vm_area_struct;
+struct anon_vma_chain *kd_anon_vma_chain_alloc(void);
+void kd_anon_vma_chain_free(struct anon_vma_chain *chain);
+int kd_anon_vma_clone_prepared(struct vm_area_struct *dst,
+	struct vm_area_struct *src, struct anon_vma_chain **prepared);
 bool kd_mmap_unmap_submit(struct mm_struct *mm, unsigned long start,
 	unsigned long end, struct ma_state *live, struct ma_state *reserve, int *result);
 bool kd_mmap_unmap_try(struct mm_struct *mm, unsigned long start,

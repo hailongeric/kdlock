@@ -30,4 +30,20 @@ struct ub_layout {
 };
 #define UB_LAYOUT _IOWR('U', 0x66, struct ub_layout)
 #define UB_CANCEL_PARTIAL _IO('U', 0x67)
+/* New controls do not change any existing ioctl or client structure. */
+struct ub_experiment { struct ub_config region; __u64 mode, groups, fail_after; };
+struct ub_rmap { __u64 address, anon, root, link, links, active, refs, intervals; };
+struct ub_page { __u64 address, pfn, hash, mapcount, refs, charged_same, value, locked; };
+#define UB_EXT_PAGES 9
+struct ub_pages { __u64 count; struct ub_page page[UB_EXT_PAGES]; };
+struct ub_extra { __u64 fail_after, fail_seen, pins_owned, pins_released; };
+#define UB_EXPERIMENT _IOW('U', 0x68, struct ub_experiment)
+#define UB_RMAP _IOWR('U', 0x69, struct ub_rmap)
+#define UB_PIN _IO('U', 0x6a)
+#define UB_PAGESTATE _IOR('U', 0x6b, struct ub_pages)
+#define UB_DROP _IO('U', 0x6c)
+#define UB_BUSY_LOCK _IO('U', 0x6d)
+#define UB_BUSY_UNLOCK _IO('U', 0x6e)
+#define UB_UNPIN_MAPPED _IO('U', 0x6f)
+#define UB_EXTRA _IOR('U', 0x70, struct ub_extra)
 #endif
