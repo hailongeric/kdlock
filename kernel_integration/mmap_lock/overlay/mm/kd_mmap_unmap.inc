@@ -174,13 +174,12 @@ static bool kd_mmap_unmap_hold_edge(struct mm_struct *mm,
 		pte_unmap_unlock(pte, ptl);
 		if (!supported) return false;
 	}
-	/* A genuinely empty leaf in this existing retained table owns no page
-	 * or translation. Native removal must still split/remove its VMA range;
-	 * it neither populates the leaf nor frees the table proved retained above.
-	 * Only pte_none() joins the already checked private/zero classes. Missing
-	 * tables and special non-present entries do not inherit this admission. */
-	if (edge->shared && !(edge->target_private || edge->target_zero ||
-	    (!edge->target_missing && pte_none(edge->target_entry)))) goto rollback;
+	/* A missing target PMD covers the near survivor too. Under this mmap
+	 * writer it cannot acquire a leaf table; the near slot is necessarily
+	 * untouched, with no PTE pointer, reverse map or private-page hold.
+	 * The upper walk and BOTH outer-neighbor/native-retention checks above
+	 * still apply. Never allocate a table merely to remove an absent range.
+	 * Existing tables passed the exact empty/zero/private classifier. */
 	ptl = pmd_lock(mm, edge->survivor);
 	edge->survivor_missing = pmd_none(*edge->survivor);
 	spin_unlock(ptl);
@@ -196,7 +195,8 @@ static bool kd_mmap_unmap_hold_edge(struct mm_struct *mm,
 		if (i == target) continue;
 		addr = lo + i * PAGE_SIZE;
 		slot = (addr & PMD_MASK) == (start & PMD_MASK) ? edge->target : edge->survivor;
-		if (slot == edge->survivor && edge->survivor_missing) continue;
+		if ((slot == edge->target && edge->target_missing) ||
+		    (slot == edge->survivor && edge->survivor_missing)) continue;
 		/* Each surviving slot is classified in its actual current table.
 		 * The mmap writer retains both tables; never hold two PTE locks or
 		 * carry a PTE pointer across the table boundary. */
@@ -516,7 +516,8 @@ out_pages:
 				if (i == target) continue;
 				address = old_start + i * PAGE_SIZE;
 				slot = (address & PMD_MASK) == (start & PMD_MASK) ? edge.target : edge.survivor;
-				if (slot == edge.survivor && edge.survivor_missing) {
+				if ((slot == edge.target && edge.target_missing) ||
+				    (slot == edge.survivor && edge.survivor_missing)) {
 					BUG_ON(held[i] || ((present | zero) & (1U << i)));
 					continue;
 				}
@@ -595,7 +596,7 @@ out_pages:
 						edge.shared ? (start == old_start ? 4U : 1U) : (start == old_start ? 6U : 3U));
 				} else if (boundary_edge) {
 					pr_info("KD_MM_BOUNDARY%s%s done mm=%px id=%llu origin=%d executor=%d start=%lx end=%lx boundary=%lx parent_pfn=%lx survivor_table_pfn=%lx survivor_missing=%u resident_mask=%u zero_mask=%u untouched_mask=%u held=%u released=%u floor=%lx ceiling=%lx target_pmd_none=%u target_owned=0 tables_unchanged=1 target_table_pfn=%lx target_pte_none=%u target_zero=%u zero_pfn=%lx zero_owned=0 shared_geometry=%u target_table_mask=%u other_table_mask=%u zero_tlb_complete=%u\n",
-						edge.shared ? "_SHARED" : "", edge.target_missing ? "" : edge.target_zero ? "_ZERO" : "_EMPTY", mm, request_id, origin->pid, current->pid, start, end, edge.boundary,
+						edge.shared ? "_SHARED" : "", edge.target_missing ? (edge.shared ? "_MISSING" : "") : edge.target_zero ? "_ZERO" : "_EMPTY", mm, request_id, origin->pid, current->pid, start, end, edge.boundary,
 						edge.parent_pfn, edge.survivor_pfn, edge.survivor_missing,
 						present, zero, 7U ^ (present | zero), nr, nr, edge.floor, edge.ceiling,
 						edge.target_missing, edge.target_pfn, !edge.target_missing, edge.target_zero,
@@ -651,7 +652,7 @@ out_pages:
 			edge.shared ? (start == old_start ? 4U : 1U) : (start == old_start ? 6U : 3U));
 	else if (*result && boundary_edge)
 		pr_info("KD_MM_BOUNDARY%s%s error mm=%px id=%llu origin=%d executor=%d start=%lx end=%lx boundary=%lx parent_pfn=%lx survivor_table_pfn=%lx survivor_missing=%u resident_mask=%u zero_mask=%u untouched_mask=%u held=%u released=%u floor=%lx ceiling=%lx target_pmd_none=%u target_owned=0 tables_unchanged=1 result=%d target_table_pfn=%lx target_pte_none=%u target_zero=%u zero_pfn=%lx zero_owned=0 zero_ptes_preserved=1 shared_geometry=%u target_table_mask=%u other_table_mask=%u\n",
-			edge.shared ? "_SHARED" : "", edge.target_missing ? "" : edge.target_zero ? "_ZERO" : "_EMPTY", mm, request_id, origin->pid, current->pid, start, end, edge.boundary,
+			edge.shared ? "_SHARED" : "", edge.target_missing ? (edge.shared ? "_MISSING" : "") : edge.target_zero ? "_ZERO" : "_EMPTY", mm, request_id, origin->pid, current->pid, start, end, edge.boundary,
 			edge.parent_pfn, edge.survivor_pfn, edge.survivor_missing,
 			present, zero, 7U ^ (present | zero), nr, nr, edge.floor, edge.ceiling,
 			edge.target_missing, *result, edge.target_pfn, !edge.target_missing && !edge.target_zero,

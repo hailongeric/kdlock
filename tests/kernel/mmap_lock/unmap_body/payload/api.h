@@ -104,4 +104,10 @@ struct ub_bases { __u64 base[3]; };
 #define UB_CHANGE_SHARED_EMPTY_ZERO_ARM _IO('U', 0x87)
 #define UB_CHANGE_SHARED_EMPTY_PRIVATE_ARM _IO('U', 0x88)
 #define UB_CHANGE_SHARED_EMPTY_BUSY_ARM _IO('U', 0x89)
+/* Shared boundary table absent at publication. Modes 16-18 keep three
+ * queued requests; mode 19 makes the new private target busy for handback. */
+#define UB_CHANGE_SHARED_MISSING_NEAR_ARM _IO('U', 0x8a)
+#define UB_CHANGE_SHARED_MISSING_ZERO_ARM _IO('U', 0x8b)
+#define UB_CHANGE_SHARED_MISSING_PRIVATE_ARM _IO('U', 0x8c)
+#define UB_CHANGE_SHARED_MISSING_BUSY_ARM _IO('U', 0x8d)
 #endif
