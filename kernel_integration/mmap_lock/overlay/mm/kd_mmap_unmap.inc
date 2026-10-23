@@ -37,7 +37,8 @@ static unsigned int kd_mmap_unmap_hold_pages(struct mm_struct *mm,
 	struct vm_area_struct *vma, struct vm_area_struct *prev,
 	struct vm_area_struct *next, unsigned long start, unsigned long end,
 	bool partial, pmd_t **held_pmd, struct page **pages,
-	unsigned int *present, unsigned int *checked)
+	unsigned int *present, unsigned int *zero, pte_t *zero_ptes,
+	unsigned int *checked)
 {
 	unsigned long address = vma->vm_start;
 	unsigned long count = (vma->vm_end - address) >> PAGE_SHIFT;
@@ -55,6 +56,7 @@ static unsigned int kd_mmap_unmap_hold_pages(struct mm_struct *mm,
 	BUILD_BUG_ON(KD_MMAP_RESIDENT_MAX >= MMU_GATHER_BUNDLE);
 	*checked = 0;
 	*present = 0;
+	*zero = 0;
 	if (!mm->mmap_lock.unmap.allow_populated || IS_ENABLED(CONFIG_LRU_GEN) ||
 	    !count || count > KD_MMAP_RESIDENT_MAX || !vma->anon_vma ||
 	    (vma->vm_flags & VM_MERGEABLE) ||
@@ -76,11 +78,23 @@ static unsigned int kd_mmap_unmap_hold_pages(struct mm_struct *mm,
 		unsigned long slot = address + i * PAGE_SIZE;
 		pte_t entry = ptep_get(pte + i);
 
-		/* Only retained slots may be untouched. Keep page pointers indexed
-		 * by their original VMA offset: a sparse set is not a dense prefix.
-		 * A resident target remains mandatory, and special/zero/swap entries
-		 * still refuse before any split. The writer excludes new faults. */
-		if (partial && pte_none(entry) && (slot < start || slot >= end)) continue;
+		/* Retained slots may be absent or map the permanent shared zero
+		 * page. That special mapping owns no ordinary anonymous reference:
+		 * do not get, lock, put or modify its page. Keep all slot identities
+		 * separate. The writer excludes read/write faults during the body;
+		 * already mapped readers may still set the hardware accessed bit. */
+		if (partial && (slot < start || slot >= end)) {
+			if (pte_none(entry)) continue;
+			if (pte_present(entry) && !pte_protnone(entry) &&
+			    pte_special(entry) && !pte_write(entry) &&
+			    !pte_devmap(entry) && is_zero_pfn(pte_pfn(entry))) {
+				*zero |= 1U << i;
+				zero_ptes[i] = pte_mkold(entry);
+				continue;
+			}
+		}
+		/* Every removed slot must still be an ordinary writable private
+		 * resident page. Other special, zero, swap and absent targets refuse. */
 		if (!pte_present(entry) || !pte_write(entry) || pte_special(entry) || pte_devmap(entry)) break;
 		page = vm_normal_page(vma, slot, entry);
 		if (!page) break;
@@ -119,11 +133,12 @@ bool kd_mmap_unmap_try(struct mm_struct *mm, unsigned long start,
 {
 	struct vm_area_struct *vma, *prev, *next;
 	struct page *held[KD_MMAP_RESIDENT_MAX] = { NULL };
+	pte_t zero_ptes[KD_MMAP_RESIDENT_MAX];
 	unsigned long pfns[KD_MMAP_RESIDENT_MAX];
 	pmd_t *held_pmd = NULL;
 	unsigned long address, pages, table_bytes = 0;
 	unsigned long old_start, old_end, old_flags, old_pgoff;
-	unsigned int before, nr = 0, i, checked, splits = 0, present = 0, slots;
+	unsigned int before, nr = 0, i, checked, splits = 0, present = 0, zero = 0, slots;
 	struct kd_mmap_unmap_preparation *prep;
 	bool pristine, partial;
 
@@ -169,7 +184,7 @@ bool kd_mmap_unmap_try(struct mm_struct *mm, unsigned long start,
 			return false;
 		if (mm->mmap_lock.unmap.allow_populated) {
 			/* One resident target in a three-page VMA; retained slots may be
-			 * ordinary resident pages or absent PTEs. Refuse an unsupported
+			 * ordinary resident, shared zero pages or absent PTEs. Refuse an unsupported
 			 * ancestry or missing allocation before any split occurs. */
 			if (!mm->mmap_lock.unmap.allow_partial || pristine ||
 			    old_end - old_start != 3 * PAGE_SIZE || end - start != PAGE_SIZE ||
@@ -192,7 +207,7 @@ bool kd_mmap_unmap_try(struct mm_struct *mm, unsigned long start,
 	}
 	if (!pristine) {
 		nr = kd_mmap_unmap_hold_pages(mm, vma, prev, next, start, end,
-			partial, &held_pmd, held, &present, &checked);
+			partial, &held_pmd, held, &present, &zero, zero_ptes, &checked);
 		if (!nr) {
 			if (checked)
 				pr_info("KD_MM_POPULATED_RANGE rollback mm=%px id=%llu origin=%d executor=%d start=%lx end=%lx held=%u released=%u effects=0\n",
@@ -267,14 +282,22 @@ out_pages:
 		 * Native teardown has dropped the mapping reference and completed
 		 * its TLB flush. Release our temporary reference on this executor;
 		 * page/memcg ownership, never current's cgroup, governs final free. */
-		if (!*result) {
+		if (!*result || zero) {
 			spinlock_t *ptl;
 			pte_t *pte;
 
 			BUG_ON(mm_pgtables_bytes(mm) != table_bytes);
 			pte = pte_offset_map_lock(mm, held_pmd, old_start, &ptl);
 			for (i = 0; i < slots; i++)
-				if (!(present & (1U << i))) {
+				if (zero & (1U << i)) {
+					/* The native split never tears down a survivor PTE.
+					 * Check its identity/protection even on admitted errors;
+					 * tolerate only hardware access-bit updates by readers. */
+					BUG_ON(held[i] || (present & (1U << i)) ||
+					       !pte_same(pte_mkold(ptep_get(pte + i)), zero_ptes[i]));
+				} else if (*result) {
+					continue;
+				} else if (!(present & (1U << i))) {
 					BUG_ON(!pte_none(ptep_get(pte + i)) || held[i]);
 				} else if (old_start + i * PAGE_SIZE >= start && old_start + i * PAGE_SIZE < end) {
 					BUG_ON(!pte_none(ptep_get(pte + i)) || page_mapped(held[i]));
@@ -296,7 +319,11 @@ out_pages:
 					pr_info("KD_MM_RESIDENT_PARTIAL done mm=%px id=%llu origin=%d executor=%d start=%lx end=%lx pfn=%lx held=%u released=%u pte_none=1 mapcount=0 tables_retained=1\n",
 						mm, request_id, origin->pid, current->pid, start, end,
 						pfns[(start - old_start) >> PAGE_SHIFT], nr, nr);
-					if (present != 7)
+					if (zero)
+						pr_info("KD_MM_ZERO_PARTIAL done mm=%px id=%llu origin=%d executor=%d start=%lx end=%lx resident_mask=%u zero_mask=%u untouched_mask=%u held=%u released=%u zero_ptes_preserved=1\n",
+							mm, request_id, origin->pid, current->pid, start, end,
+							present, zero, 7U ^ (present | zero), nr, nr);
+					else if (present != 7)
 						pr_info("KD_MM_MIXED_PARTIAL done mm=%px id=%llu origin=%d executor=%d start=%lx end=%lx resident_mask=%u untouched_mask=%u held=%u released=%u\n",
 							mm, request_id, origin->pid, current->pid, start, end,
 							present, 7U ^ present, nr, nr);
@@ -313,6 +340,10 @@ out_pages:
 	if (*result && partial)
 		pr_info("KD_MM_PARTIAL error mm=%px id=%llu origin=%d executor=%d start=%lx end=%lx splits=%u held=%u released=%u result=%d\n",
 			mm, request_id, origin->pid, current->pid, start, end, splits, nr, nr, *result);
+	if (*result && zero)
+		pr_info("KD_MM_ZERO_PARTIAL error mm=%px id=%llu origin=%d executor=%d start=%lx end=%lx resident_mask=%u zero_mask=%u untouched_mask=%u held=%u released=%u zero_ptes_preserved=1 result=%d\n",
+			mm, request_id, origin->pid, current->pid, start, end,
+			present, zero, 7U ^ (present | zero), nr, nr, *result);
 	return true;
 }
 
