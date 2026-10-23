@@ -1,21 +1,20 @@
 # Actual mmap-lock kernel integration
 
 The [bounded munmap experiment](UNMAP.md) now permits a shared-zero target in a
-three-page anonymous VMA (virtual memory area) when an ordinary private resident
-survivor remains. The `kdmm11` extension passed 48 serial cases, two basic programs
-and 650 negative receipt controls. All 15 eligible layouts matched native behavior.
-Validation recorded 32 zero-target removals on different tasks, plus one private
-removal after a controlled queued target change. Zero-page identity, accounting,
-TLB (cached translation) invalidation, survivor isolation, ownership/ACK
-(acknowledgement), split errors, refusal and cancellation passed. Seven small
-smokes preserve earlier unmap, advice and separate first-write paths. Recovery
-is restored and modules unloaded. The [result record](../../bench/results/10.176.26.71/tests/mm-zero-target-20261023/README.md)
-keeps this kernel change separate from the preserved zero-survivor milestone.
+three-page anonymous VMA (virtual memory area) without any private resident
+survivor. `kdmm12` passed all 12 new zero/untouched survivor layouts against native
+controls: 27 different-task removals with zero private holds, two resident-survivor
+preservation removals and one separately counted changed-private removal.
+All 44 serial cases, two basic tests and 660 negative receipt controls passed.
+Ownership/ACK (acknowledgement), metadata, accounting, TLB (cached translation)
+cleanup, split errors, refusal and cancellation passed. Recovery is restored and
+modules unloaded. The [result record](../../bench/results/10.176.26.71/tests/mm-zero-only-20261023/README.md)
+keeps this stage separate from completed kdmm11 evidence.
 [Runnable commands](../../tests/kernel/mmap_lock/zero_target/README.md) reuse the
-installed image and probes. Zero targets without private survivors, larger
-mappings, complex ancestry, general table destruction and mmap creation remain
-unsupported. The controlled change is not broad write-fault race coverage.
-No general MM support or performance gain is claimed.
+installed image and frozen probes. Absent targets, larger mappings, complex
+ancestry, general page-table destruction and mmap creation remain unsupported.
+The controlled target change is not broad write-fault race coverage. No general
+MM support or performance gain is claimed.
 
 The separate [anonymous write-fault experiment](FAULT.md) passed focused serial
 correctness on `kdmm3`: 129 real page-installation bodies completed on other
