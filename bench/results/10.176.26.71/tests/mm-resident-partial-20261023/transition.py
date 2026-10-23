@@ -32,11 +32,11 @@ def preserved():
     for name,digest in {**boot,**modules}.items():
         if name=='/boot/grub/grub.cfg':continue
         rt.require(rt.digest(Path(name))==digest,'recovery artifact changed: '+name)
-    installed=load(BASE/'install/result.json')
+    installed=load(BASE/'install-2/result.json')
     rt.require(installed['passed'] and installed['recovery_unchanged'] and
-               rt.digest(BASE/'install/installed-sha256.json')==installed['installed_manifest_sha256'],
+               rt.digest(BASE/'install-2/installed-sha256.json')==installed['installed_manifest_sha256'],
                'installed candidate receipt changed')
-    for name,digest in load(BASE/'install/installed-sha256.json').items():
+    for name,digest in load(BASE/'install-2/installed-sha256.json').items():
         rt.require(rt.digest(Path(name))==digest,'installed candidate changed: '+name)
     cfg=Path('/boot/grub/grub.cfg').read_text()
     rt.require('set default="'+installed['recovery_default']+'"' in cfg and
@@ -62,7 +62,7 @@ def main():
     try:
         result.update(preserved())
         expected=load(BASE/'control/expected-guest.json')['modules']
-        build=load(BASE/'build-1/result.json')
+        build=load(BASE/'build-2/result.json')
         rt.require(build['passed'] and rt.digest(BUNDLE/'manifest.json')==
                    build['baseline_manifest_sha256'],'built candidate capture differs')
         build_id=load(BUNDLE/'manifest.json')['running']['build_id']
