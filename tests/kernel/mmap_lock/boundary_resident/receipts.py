@@ -9,8 +9,8 @@ require,IDENT=edge['require'],edge['IDENT']
 compare_native,compare_success=edge['compare_native'],edge['compare_success']
 
 
-def validate(row,log):
-    result=edge['validate'](row,log,private=True)
+def validate(row,log,*,shared=False):
+    result=edge['validate'](row,log,private=True,shared=shared)
     mode,native,target=row['mode'],row['native'],row['slice']
     transitions=list(re.finditer(r'KD_MM_TEST edge_private_busy mm=([0-9a-f]+) index=(\d+) actor=(\d+) pending=(\d+) readers=(\d+) admission=(-?\d+) mode=10 before_locked=0 after_locked=1 table_before=([0-9a-f]+) table_after=([0-9a-f]+) anon_before=([0-9a-f]+) anon_after=([0-9a-f]+) private_pfn=([0-9a-f]+) refs=2 mapcount=1 result=0',log))
     require(len(transitions)==(mode=='change-busy'), 'queued target eligibility change missing/duplicated')

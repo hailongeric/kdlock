@@ -17,7 +17,7 @@ def check(row,log,validate):
     r=copy.deepcopy(row);r['table_bytes_after']+=4096;mutations.append(('table-leak-or-extra-allocation',r,log))
     r=copy.deepcopy(row);r['walks_cleanup'][-1]['upper_none']=0;mutations.append(('cleanup-table-leak',r,log))
     r=copy.deepcopy(row);r['interval_cleanup_calls']-=1;mutations.append(('cleanup-entry-routing',r,log))
-    if re.search(r'KD_MM_BOUNDARY(?:_EMPTY|_ZERO|_PRIVATE)? (?:done|error) ',log):
+    if re.search(r'KD_MM_BOUNDARY(?:_EMPTY|_ZERO|_PRIVATE|_SHARED_PRIVATE)? (?:done|error) ',log):
         mutations.append(('wrong-native-retention-bound',row,re.sub(r' floor=[0-9a-f]+',' floor=0',log)))
         mutations.append(('survivor-table-ownership',row,log.replace('target_owned=1','target_owned=0') if row.get('boundary_private_test',0) else log.replace('target_owned=0','target_owned=1')))
     for name,data,text in mutations:

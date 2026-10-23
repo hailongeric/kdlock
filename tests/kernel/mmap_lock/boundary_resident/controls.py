@@ -9,7 +9,7 @@ shared=runpy.run_path(str(Path(__file__).parents[1]/'boundary_empty/controls.py'
 
 def check(row,log,validate):
     passed=shared(row,log,validate);mutations=[]
-    if 'KD_MM_BOUNDARY_PRIVATE ' in log:
+    if 'KD_MM_BOUNDARY_PRIVATE ' in log or 'KD_MM_BOUNDARY_SHARED_PRIVATE ' in log:
         for name,pattern,replacement in (
             ('wrong-target-table',r'target_table_pfn=[0-9a-f]+','target_table_pfn=0'),
             ('wrong-original-target-page',r'target_pfn=[0-9a-f]+','target_pfn=0'),

@@ -22,7 +22,7 @@ def check(row, log, validate):
         required = ('KD_MM_SPLIT inject' if row['native'] else
                     'KD_MM_UNMAP error' if row['injection'] else
                     'KD_MM_UNMAP ack' if row['busy'] else
-                    'KD_MM_SPLIT retire' if row['cancel'] else 'KD_MM_BOUNDARY_PRIVATE done' if private else 'KD_MM_BOUNDARY_ZERO done' if row.get('boundary_zero_test',0) else 'KD_MM_BOUNDARY_EMPTY done' if row.get('boundary_empty_test',0) else 'KD_MM_BOUNDARY done' if boundary else 'KD_MM_MISSING_TABLE done' if missing else 'KD_MM_ABSENT_TARGET done' if absent else 'KD_MM_ZERO_TARGET done')
+                    'KD_MM_SPLIT retire' if row['cancel'] else 'KD_MM_BOUNDARY_SHARED_PRIVATE done' if row.get('boundary_shared_test',0) else 'KD_MM_BOUNDARY_PRIVATE done' if private else 'KD_MM_BOUNDARY_ZERO done' if row.get('boundary_zero_test',0) else 'KD_MM_BOUNDARY_EMPTY done' if row.get('boundary_empty_test',0) else 'KD_MM_BOUNDARY done' if boundary else 'KD_MM_MISSING_TABLE done' if missing else 'KD_MM_ABSENT_TARGET done' if absent else 'KD_MM_ZERO_TARGET done')
         lines = log.splitlines(True)
         index = next(i for i, line in enumerate(lines) if required in line)
         mutations.append(('missing-body-or-retirement', row, ''.join(lines[:index] + lines[index + 1:])))
@@ -91,7 +91,11 @@ def check(row, log, validate):
     if not row['native'] and not row['busy'] and not row['cancel'] and not row['injection']:
         key='target_owned' if absent or private else 'zero_owned'
         mutations.append(('target-ownership-changed',row,log.replace(key+('=1' if private else '=0'),key+('=0' if private else '=1'))))
-        if row.get('changing_zero'): mutations.append(('faulted-zero-page-owned',row,log.replace('zero_owned=0','zero_owned=1')))
+        if row.get('changing_zero'):
+            if row.get('boundary_shared_test',0):
+                broken=copy.deepcopy(row);broken['change']['after_private']=1
+                mutations.append(('faulted-zero-page-owned',broken,log))
+            else: mutations.append(('faulted-zero-page-owned',row,log.replace('zero_owned=0','zero_owned=1')))
     if absent:
         broken=copy.deepcopy(row);broken['tables_before'][0]['leaf'] ^= 1
         mutations.append(('missing-table-claimed-leaf',broken,log))
