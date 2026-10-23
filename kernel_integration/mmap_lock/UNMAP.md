@@ -1,18 +1,23 @@
 # Bounded anonymous munmap bodies
 
-Status: `kdmm16` adds an empty target PTE (leaf page-table entry) in an existing
-retained table to boundary-crossing prefix/suffix removal. Both survivors lie in
-the adjacent 2-MiB page-middle-directory (PMD) interval and may be private,
-shared-zero or untouched. Actual neighboring VMA bounds must still prove native
-teardown cannot free a table. All 51 serial cases, two basic tests and 1,458
-negative receipt controls passed, with 26 new different-task removals (14 without
+Status: `kdmm17` adds a shared-zero target PTE (leaf page-table entry) to the
+retained-table boundary path. One prefix/suffix page is removed from a three-page
+anonymous VMA (virtual memory area); both survivors lie in the adjacent 2-MiB
+page-middle-directory (PMD) interval. Actual neighboring VMA bounds must still prove native teardown
+cannot free a table. All 74 serial cases, two basic tests and 1,979 negative
+receipt controls passed, with 38 different-task zero-target removals (18 without
 private-page holds) and two native-matched delegated split errors. Recovery is
 restored and modules unloaded. See the
-[result record](../../bench/results/10.176.26.71/tests/mm-boundary-empty-20261023/README.md)
-and [probe commands](../../tests/kernel/mmap_lock/boundary_empty/README.md).
+[result record](../../bench/results/10.176.26.71/tests/mm-boundary-zero-20261023/README.md)
+and [probe commands](../../tests/kernel/mmap_lock/boundary_zero/README.md).
+The [kdmm16 baseline](../../bench/results/10.176.26.71/tests/mm-boundary-empty-20261023/README.md)
+retains its separate 51-case empty-boundary campaign. All six reversed mixed
+empty-target layouts passed separately on kdmm17; seven preservation smokes
+cover missing/empty boundary and same-table zero behavior without repeating
+historical matrices.
 The [kdmm15 baseline](../../bench/results/10.176.26.71/tests/mm-boundary-edge-20261023/README.md)
 retains its separate 49-case missing-target-table boundary evidence; its matrix
-was not repeated. The four preservation smokes cover both missing-table edges,
+was not repeated. The kdmm16 campaign's four preservation smokes cover both missing-table edges,
 the old controlled appearance refusal and same-table empty-entry removal.
 The [kdmm14 baseline](../../bench/results/10.176.26.71/tests/mm-missing-table-20261023/README.md)
 retains its 42 serial cases, 956 negative controls, 11 same-table missing-target
@@ -499,10 +504,11 @@ separates these controls, actual remote removals, errors and preservation smokes
 `kdmm16` replaces only kdmm15's mandatory missing target PMD entry. The same
 isolated-edge geometry, valid common upper directory and both neighboring-VMA
 retention bounds above remain mandatory. An existing normal target leaf table
-is accepted only when its selected entry satisfies `pte_none()`. A zero-page or
-private target, special non-present entry, huge/device mapping or missing higher
-level still refuses. Same-table target support does not authorize a populated
-boundary target.
+is accepted in kdmm16 only when its selected entry satisfies `pte_none()`; that
+revision refuses zero/private targets. The kdmm17 extension below adds only a
+verified shared-zero target. Special non-present entries, huge/device mappings
+and missing higher levels still refuse. Same-table support does not authorize
+an ordinary private boundary target.
 
 After taking the actual mmap write lock, the executor walks the live hierarchy
 afresh. It observes missing versus existing target tables under the PMD lock;
@@ -539,6 +545,50 @@ Readers remain concurrent and local. See the
 [result record](../../bench/results/10.176.26.71/tests/mm-boundary-empty-20261023/README.md)
 for counts, split errors, cancellation, waiting faults, full cleanup and untested
 reversed pairs and races.
+
+## Shared-zero target in a retained boundary table
+
+`kdmm17` shares the existing exact zero-PTE classifier between the same-table
+and boundary paths: present, special, read-only, not protection-none or device,
+and `is_zero_pfn()`. The boundary target remains alone in its PMD interval,
+within the same upper directory as both survivors. The complete two-neighbor
+native floor/ceiling proof above is unchanged. Another zero/private PTE cannot
+substitute for the missing retaining VMA.
+
+Under actual mmap write ownership, the executor rewalks the hierarchy and
+locks the current target PTE. It records the table identity and original zero
+entry, ignoring only the hardware accessed bit for later comparisons. This
+snapshot crosses neither publication nor an unlocked VMA change. An ordinary
+private target refuses before survivor holds or splitting. The target acquires
+no private-page reference, reverse map or lock; only eligible private survivors
+use the existing exact hold/release records. Admission still permits zero holds,
+missing survivor tables and absent anonymous ancestry. Caller-prepared VMA,
+maple and reverse-map reserves retire through the unchanged protocol.
+
+The real native `zap_pte_range()` clears the zero entry and records TLB
+(translation lookaside buffer) invalidation. `vm_normal_page()` returns NULL for
+the special zero mapping, so native teardown does not decrement private resident
+accounting, remove a private reverse map, enqueue a page release or change the
+shared zero page. The native VMA removal and TLB completion still execute.
+Success requires the target PTE to be empty; an admitted post-split error instead
+requires its original zero entry to remain. Both outcomes require identical
+parent/target/survivor tables, unchanged table-byte accounting and exact survivor
+references. `KD_MM_BOUNDARY_ZERO` receipts bind these checks to the request,
+origin and different executor. Errors after splitting never authorize replay.
+
+The focused run validates all nine R/Z/U survivor pairs in both directions.
+Each target is read-faulted and classified before admission. Origin tasks warm
+existing zero translations without touching U survivors, then check removal
+faults on the same CPU. Controlled zero-to-private faults after publication
+cause locked handback and an exact acknowledgment (ACK), followed by sticky local
+calls. Retention loss is tested by moving the target-side neighbor away before
+publication; native table release then matches the handback route. Queue-time
+neighbor replacement is not tested because changing VMA bounds needs writer
+ownership incompatible with the fixture's held reader shares. Readers remain
+concurrent and local. The
+[result record](../../bench/results/10.176.26.71/tests/mm-boundary-zero-20261023/README.md)
+separates 38 zero removals, 12 empty-target gap-closure removals, split errors,
+refusals, cancellation, smoke results and untested races.
 
 ## One through four populated pages
 
@@ -715,8 +765,8 @@ one through four resident pages with retained tables. The new opt-in additionall
 supports the three-page/one-page-slice cases above, including zero or empty-leaf
 targets with only zero/untouched survivors, and a missing leaf table when upper
 levels exist and all three slots are untouched. The new boundary-edge path
-permits a missing target table or an empty PTE in an existing target table,
-with an adjacent survivor interval under the
+permits a missing target table or an empty/shared-zero PTE in an existing target
+table, with an adjacent survivor interval under the
 explicit two-neighbor retention proof above. It refuses missing higher levels
 on this opt-in, special non-present entries, inconsistent or multi-link reverse-map
 ancestry, shared/COW
@@ -749,11 +799,11 @@ and exact zero-effect release before ACK.
 
 Zero/empty/missing-table admission is separate from private-page ownership.
 Explicit receipts prove native VMA removal even with no physical target.
-The next narrow candidate is a shared-zero target in the same isolated-edge
-geometry, retaining the proven native floor/ceiling rule. It would require exact
-special-zero PTE classification, translation invalidation and no ordinary
-private-page ownership/release. Both zero and private boundary targets still
-hand back in kdmm16. General table destruction and missing higher levels remain
-deferred.
+The next narrow candidate is one ordinary private boundary target under the
+same retention proof, reusing the bounded same-table private-page path only after
+reviewing exact page holds, reverse-map unlink, TLB completion and final release.
+Private boundary targets still hand back in kdmm17. General table destruction
+and missing higher levels remain deferred. The six reversed kdmm16 empty-target
+boundary gaps are now closed; uncontrolled transitions and broader races are not.
 Broader mapping creation/removal support, performance, p95, the seven mutex
 regressions and nano reruns remain deferred.
