@@ -46,4 +46,8 @@ struct ub_extra { __u64 fail_after, fail_seen, pins_owned, pins_released; };
 #define UB_BUSY_UNLOCK _IO('U', 0x6e)
 #define UB_UNPIN_MAPPED _IO('U', 0x6f)
 #define UB_EXTRA _IOR('U', 0x70, struct ub_extra)
+/* Sparse test references never fault untouched slots into existence. */
+#define UB_PIN_MASK _IO('U', 0x71)
+struct ub_ptes { __u64 address, none, anon, zero, other, pfn[3]; };
+#define UB_PTES _IOWR('U', 0x72, struct ub_ptes)
 #endif

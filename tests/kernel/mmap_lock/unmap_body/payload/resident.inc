@@ -65,6 +65,46 @@ static unsigned long target(struct session *s, unsigned int i)
 	return s->region.base + (i / 3) * s->region.stride + (i % 3) * PAGE_SIZE;
 }
 
+static int pte_state(struct session *s, unsigned long arg)
+{
+	struct ub_ptes r;
+	unsigned int i;
+	int error = 0;
+
+	if (copy_from_user(&r, (void __user *)arg, sizeof(r))) return -EFAULT;
+	if (offset_in_page(r.address) || r.address > TASK_SIZE - 3 * PAGE_SIZE) return -EINVAL;
+	r.none = r.anon = r.zero = r.other = 0;
+	mmap_read_lock(s->mm);
+	for (i = 0; i < 3; i++) {
+		unsigned long a = r.address + i * PAGE_SIZE;
+		pgd_t *pgd = pgd_offset(s->mm, a);
+		p4d_t *p4d; pud_t *pud; pmd_t *pmd; pte_t *pte, entry;
+		spinlock_t *ptl;
+
+		r.pfn[i] = 0;
+		if (pgd_none(*pgd)) { r.none |= 1U << i; continue; }
+		if (pgd_bad(*pgd)) { error = -EINVAL; break; }
+		p4d = p4d_offset(pgd, a);
+		if (p4d_none(*p4d)) { r.none |= 1U << i; continue; }
+		if (p4d_bad(*p4d)) { error = -EINVAL; break; }
+		pud = pud_offset(p4d, a);
+		if (pud_none(*pud)) { r.none |= 1U << i; continue; }
+		if (pud_trans_huge(*pud) || pud_devmap(*pud) || pud_bad(*pud)) { error = -EINVAL; break; }
+		pmd = pmd_offset(pud, a);
+		if (pmd_none(*pmd)) { r.none |= 1U << i; continue; }
+		if (pmd_trans_huge(*pmd) || pmd_devmap(*pmd) || pmd_bad(*pmd)) { error = -EINVAL; break; }
+		pte = pte_offset_map_lock(s->mm, pmd, a, &ptl); entry = ptep_get(pte);
+		if (pte_none(entry)) r.none |= 1U << i;
+		else if (pte_present(entry) && is_zero_pfn(pte_pfn(entry))) r.zero |= 1U << i;
+		else if (pte_present(entry) && !pte_special(entry) && !pte_devmap(entry) &&
+			 PageAnon(pfn_to_page(pte_pfn(entry)))) { r.anon |= 1U << i; r.pfn[i] = pte_pfn(entry); }
+		else r.other |= 1U << i;
+		pte_unmap_unlock(pte, ptl);
+	}
+	mmap_read_unlock(s->mm);
+	return error ?: (copy_to_user((void __user *)arg, &r, sizeof(r)) ? -EFAULT : 0);
+}
+
 static unsigned int pins_owned(struct session *s)
 {
 	unsigned int i, n = 0;
@@ -90,13 +130,17 @@ static int page_operation(struct session *s, unsigned int cmd, unsigned long arg
 
 	mutex_lock(&s->pins_lock);
 	if (!n || atomic_read(&s->controlling)) { error = -EBUSY; goto out; }
-	if (cmd == UB_PIN) {
+	if (cmd == UB_PIN || cmd == UB_PIN_MASK) {
 		struct pagevec scratch;
 
 		if (pins_owned(s)) { error = -EBUSY; goto out; }
+		if (cmd == UB_PIN_MASK && (!arg || arg >= (1UL << n))) { error = -EINVAL; goto out; }
+		s->pin_mask = cmd == UB_PIN ? (1U << n) - 1 : arg;
 		mmap_read_lock(s->mm);
 		for (i = 0; i < n; i++) {
-			long got = get_user_pages(target(s, i), 1, FOLL_WRITE, &s->pages[i], NULL);
+			long got;
+			if (!(s->pin_mask & (1U << i))) continue;
+			got = get_user_pages(target(s, i), 1, FOLL_WRITE, &s->pages[i], NULL);
 			if (got != 1) { s->pages[i] = NULL; error = got < 0 ? got : -EFAULT; break; }
 			s->charges[i] = READ_ONCE(s->pages[i]->memcg_data);
 		}
@@ -111,14 +155,19 @@ static int page_operation(struct session *s, unsigned int cmd, unsigned long arg
 		pagevec_release(&scratch);
 		if (error) drop_pins(s);
 	} else if (cmd == UB_PAGESTATE) {
-		if (pins_owned(s) != n) { error = -EINVAL; goto out; }
+		if (pins_owned(s) != hweight32(s->pin_mask)) { error = -EINVAL; goto out; }
 		s->snapshot.count = n;
 		for (i = 0; i < n; i++) {
 			struct page *page = s->pages[i];
-			unsigned char *bytes = kmap_local_page(page), value = 1 + i;
+			unsigned char *bytes, value = 1 + i;
 			u64 hash = 1469598103934665603ULL;
 			unsigned int b;
 
+			if (!page) {
+				s->snapshot.page[i] = (struct ub_page) { .address = target(s, i) };
+				continue;
+			}
+			bytes = kmap_local_page(page);
 			for (b = 0; b < PAGE_SIZE; b++) {
 				check(s, bytes[b] == value); hash = (hash ^ bytes[b]) * 1099511628211ULL;
 			}

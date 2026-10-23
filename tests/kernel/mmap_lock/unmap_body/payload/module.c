@@ -27,6 +27,7 @@ struct session {
 	atomic_t controlling, held, readers, ready, release;
 	bool partial_cancel;
 	unsigned int groups;
+	unsigned int pin_mask;
 	struct mutex pins_lock;
 	struct page *pages[UB_EXT_PAGES], *busy_page;
 	unsigned long charges[UB_EXT_PAGES];
@@ -231,12 +232,15 @@ static long operation(struct file *file, unsigned int cmd, unsigned long arg)
 	case UB_RMAP:
 		return rmap_state(s, arg);
 	case UB_PIN:
+	case UB_PIN_MASK:
 	case UB_PAGESTATE:
 	case UB_DROP:
 	case UB_BUSY_LOCK:
 	case UB_BUSY_UNLOCK:
 	case UB_UNPIN_MAPPED:
 		return page_operation(s, cmd, arg);
+	case UB_PTES:
+		return pte_state(s, arg);
 	case UB_EXTRA: {
 		struct ub_extra extra;
 

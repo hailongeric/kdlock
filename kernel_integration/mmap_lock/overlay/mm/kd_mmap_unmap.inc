@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: GPL-2.0 */
-/* Whole isolated anonymous VMA removal and untouched anonymous slicing. Caller preparation and the original
- * native teardown remain shared. The old opt-in still requires absent PGDs.
+/* Whole isolated anonymous VMA removal and bounded anonymous slicing. Caller
+ * preparation and native teardown remain shared. The old opt-in requires absent PGDs.
  * A separate opt-in admits up to four resident anonymous base pages when neighbor
  * VMAs retain the PTE table, excluding current-dependent table-batch allocation. */
 
@@ -27,6 +27,7 @@ static void kd_mmap_unmap_release_pages(struct page **pages, unsigned int nr)
 	while (nr) {
 		struct page *page = pages[--nr];
 
+		if (!page) continue;
 		unlock_page(page);
 		put_page(page);
 	}
@@ -34,7 +35,9 @@ static void kd_mmap_unmap_release_pages(struct page **pages, unsigned int nr)
 
 static unsigned int kd_mmap_unmap_hold_pages(struct mm_struct *mm,
 	struct vm_area_struct *vma, struct vm_area_struct *prev,
-	struct vm_area_struct *next, pmd_t **held_pmd, struct page **pages, unsigned int *checked)
+	struct vm_area_struct *next, unsigned long start, unsigned long end,
+	bool partial, pmd_t **held_pmd, struct page **pages,
+	unsigned int *present, unsigned int *checked)
 {
 	unsigned long address = vma->vm_start;
 	unsigned long count = (vma->vm_end - address) >> PAGE_SHIFT;
@@ -44,13 +47,14 @@ static unsigned int kd_mmap_unmap_hold_pages(struct mm_struct *mm,
 	pmd_t *pmd;
 	pte_t *pte;
 	spinlock_t *ptl;
-	unsigned int held = 0;
+	unsigned int held = 0, i;
 
 	/* Filling the native local gather can allocate its next batch immediately,
 	 * so remain strictly below its capacity. Same-PMD neighbors retain every
 	 * table: neither data-page nor table teardown allocates on the executor. */
 	BUILD_BUG_ON(KD_MMAP_RESIDENT_MAX >= MMU_GATHER_BUNDLE);
 	*checked = 0;
+	*present = 0;
 	if (!mm->mmap_lock.unmap.allow_populated || IS_ENABLED(CONFIG_LRU_GEN) ||
 	    !count || count > KD_MMAP_RESIDENT_MAX || !vma->anon_vma ||
 	    (vma->vm_flags & VM_MERGEABLE) ||
@@ -67,12 +71,18 @@ static unsigned int kd_mmap_unmap_hold_pages(struct mm_struct *mm,
 	pmd = pmd_offset(pud, address);
 	if (pmd_none(*pmd) || pmd_trans_huge(*pmd) || pmd_devmap(*pmd) || pmd_bad(*pmd)) return 0;
 	pte = pte_offset_map_lock(mm, pmd, address, &ptl);
-	while (held < count) {
+	for (i = 0; i < count; i++) {
 		struct page *page;
-		pte_t entry = ptep_get(pte + held);
+		unsigned long slot = address + i * PAGE_SIZE;
+		pte_t entry = ptep_get(pte + i);
 
+		/* Only retained slots may be untouched. Keep page pointers indexed
+		 * by their original VMA offset: a sparse set is not a dense prefix.
+		 * A resident target remains mandatory, and special/zero/swap entries
+		 * still refuse before any split. The writer excludes new faults. */
+		if (partial && pte_none(entry) && (slot < start || slot >= end)) continue;
 		if (!pte_present(entry) || !pte_write(entry) || pte_special(entry) || pte_devmap(entry)) break;
-		page = vm_normal_page(vma, address + held * PAGE_SIZE, entry);
+		page = vm_normal_page(vma, slot, entry);
 		if (!page) break;
 		get_page(page);
 		/* All pages are checked before any removal. Try, never wait, under
@@ -89,12 +99,14 @@ static unsigned int kd_mmap_unmap_hold_pages(struct mm_struct *mm,
 			put_page(page);
 			break;
 		}
-		pages[held++] = page;
+		pages[i] = page;
+		*present |= 1U << i;
+		held++;
 	}
 	pte_unmap_unlock(pte, ptl);
-	if (held != count) {
+	if (i != count) {
 		*checked = held;
-		kd_mmap_unmap_release_pages(pages, held);
+		kd_mmap_unmap_release_pages(pages, i);
 		return 0;
 	}
 	*held_pmd = pmd;
@@ -106,12 +118,12 @@ bool kd_mmap_unmap_try(struct mm_struct *mm, unsigned long start,
 	struct ma_state *reserve, u64 request_id, int *result)
 {
 	struct vm_area_struct *vma, *prev, *next;
-	struct page *held[KD_MMAP_RESIDENT_MAX];
+	struct page *held[KD_MMAP_RESIDENT_MAX] = { NULL };
 	unsigned long pfns[KD_MMAP_RESIDENT_MAX];
 	pmd_t *held_pmd = NULL;
 	unsigned long address, pages, table_bytes = 0;
 	unsigned long old_start, old_end, old_flags, old_pgoff;
-	unsigned int before, nr = 0, i, checked, splits = 0;
+	unsigned int before, nr = 0, i, checked, splits = 0, present = 0, slots;
 	struct kd_mmap_unmap_preparation *prep;
 	bool pristine, partial;
 
@@ -136,6 +148,7 @@ bool kd_mmap_unmap_try(struct mm_struct *mm, unsigned long start,
 	old_end = vma->vm_end;
 	old_flags = vma->vm_flags;
 	old_pgoff = vma->vm_pgoff;
+	slots = (old_end - old_start) >> PAGE_SHIFT;
 	partial = start != old_start || end != old_end;
 	if (partial && (old_end - old_start > 16 * PAGE_SIZE ||
 	    old_start < mm->mmap_lock.unmap.start || old_end > mm->mmap_lock.unmap.end))
@@ -155,8 +168,8 @@ bool kd_mmap_unmap_try(struct mm_struct *mm, unsigned long start,
 		if (!kd_mmap_unmap_capacity(live, height))
 			return false;
 		if (mm->mmap_lock.unmap.allow_populated) {
-			/* First resident slice: one page of exactly three resident base
-			 * pages, with one reverse-map link per VMA. Refuse an unsupported
+			/* One resident target in a three-page VMA; retained slots may be
+			 * ordinary resident pages or absent PTEs. Refuse an unsupported
 			 * ancestry or missing allocation before any split occurs. */
 			if (!mm->mmap_lock.unmap.allow_partial || pristine ||
 			    old_end - old_start != 3 * PAGE_SIZE || end - start != PAGE_SIZE ||
@@ -178,14 +191,16 @@ bool kd_mmap_unmap_try(struct mm_struct *mm, unsigned long start,
 		}
 	}
 	if (!pristine) {
-		nr = kd_mmap_unmap_hold_pages(mm, vma, prev, next, &held_pmd, held, &checked);
+		nr = kd_mmap_unmap_hold_pages(mm, vma, prev, next, start, end,
+			partial, &held_pmd, held, &present, &checked);
 		if (!nr) {
 			if (checked)
 				pr_info("KD_MM_POPULATED_RANGE rollback mm=%px id=%llu origin=%d executor=%d start=%lx end=%lx held=%u released=%u effects=0\n",
 					mm, request_id, origin->pid, current->pid, start, end, checked, checked);
 			return false;
 		}
-		for (i = 0; i < nr; i++) pfns[i] = page_to_pfn(held[i]);
+		for (i = 0; i < slots; i++)
+			if (present & (1U << i)) pfns[i] = page_to_pfn(held[i]);
 		table_bytes = mm_pgtables_bytes(mm);
 	}
 	/* The origin already checked TASK_SIZE/alignment with its own thread mode.
@@ -258,8 +273,10 @@ out_pages:
 
 			BUG_ON(mm_pgtables_bytes(mm) != table_bytes);
 			pte = pte_offset_map_lock(mm, held_pmd, old_start, &ptl);
-			for (i = 0; i < nr; i++)
-				if (old_start + i * PAGE_SIZE >= start && old_start + i * PAGE_SIZE < end) {
+			for (i = 0; i < slots; i++)
+				if (!(present & (1U << i))) {
+					BUG_ON(!pte_none(ptep_get(pte + i)) || held[i]);
+				} else if (old_start + i * PAGE_SIZE >= start && old_start + i * PAGE_SIZE < end) {
 					BUG_ON(!pte_none(ptep_get(pte + i)) || page_mapped(held[i]));
 				} else {
 					pte_t entry = ptep_get(pte + i);
@@ -269,17 +286,21 @@ out_pages:
 				}
 			pte_unmap_unlock(pte, ptl);
 		}
-		kd_mmap_unmap_release_pages(held, nr);
+		kd_mmap_unmap_release_pages(held, slots);
 		if (!*result) {
 			struct kd_mmap_unmap_state *u = &mm->mmap_lock.unmap;
 
 			atomic64_inc(&u->populated);
 			if (origin != current && atomic64_inc_return(&u->populated_remote) <= 16) {
-				if (partial)
+				if (partial) {
 					pr_info("KD_MM_RESIDENT_PARTIAL done mm=%px id=%llu origin=%d executor=%d start=%lx end=%lx pfn=%lx held=%u released=%u pte_none=1 mapcount=0 tables_retained=1\n",
 						mm, request_id, origin->pid, current->pid, start, end,
 						pfns[(start - old_start) >> PAGE_SHIFT], nr, nr);
-				else if (nr == 1)
+					if (present != 7)
+						pr_info("KD_MM_MIXED_PARTIAL done mm=%px id=%llu origin=%d executor=%d start=%lx end=%lx resident_mask=%u untouched_mask=%u held=%u released=%u\n",
+							mm, request_id, origin->pid, current->pid, start, end,
+							present, 7U ^ present, nr, nr);
+				} else if (nr == 1)
 					pr_info("KD_MM_POPULATED done mm=%px id=%llu origin=%d executor=%d start=%lx end=%lx pfn=%lx pte_none=1 mapcount=0 tables_retained=1\n",
 						mm, request_id, origin->pid, current->pid, start, end, pfns[0]);
 				else

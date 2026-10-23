@@ -20,6 +20,10 @@ def main():
     p.add_argument('--baseline', type=Path, required=True)
     p.add_argument('--recovery-record', type=Path, required=True)
     p.add_argument('--output', type=Path, required=True)
+    p.add_argument('--strip-module-debug', action='store_true',
+                   help='use standard Kbuild debug stripping before signing new modules')
+    p.add_argument('--initramfs-tmpdir', type=Path,
+                   help='existing temporary directory for packaging the new initramfs')
     a = p.parse_args()
     rt.require(os.geteuid() == 0 and str(ROOT).startswith('/root/') and
                os.uname().release == '6.1.159-kdclobber2' and
@@ -48,7 +52,11 @@ def main():
     for kind in ('vmlinuz', 'initrd.img', 'System.map', 'config'):
         rt.require(not Path('/boot', kind + '-' + release).exists(), 'boot artifact already exists')
     a.output.mkdir(parents=True)
+    if a.initramfs_tmpdir is not None:
+        rt.require(a.initramfs_tmpdir.is_dir(), 'initramfs temporary directory missing')
     result = dict(state='INSTALLING', passed=False, release=release, rebooted=False,
+                  module_debug_stripped=a.strip_module_debug,
+                  initramfs_tmpdir=str(a.initramfs_tmpdir) if a.initramfs_tmpdir else None,
                   kernel_manifest_sha256=rt.digest(a.baseline / 'manifest.json'),
                   snapshot_tag=os.environ['KDLOCK_SNAPSHOT_TAG'], modules=len(built['modules']))
     rt.write_json(a.output / 'result.json', result)
@@ -57,7 +65,8 @@ def main():
         # The new release directory was required absent; recovery paths are
         # neither installation destinations nor rollback targets.
         (tree / 'modules.order').write_text(''.join(n + '\n' for n in sorted(built['modules'])))
-        rt.command(['make', 'modules_install'], a.output / 'modules-install.log', timeout=300, cwd=tree)
+        rt.command(['make', 'modules_install'] + (['INSTALL_MOD_STRIP=1'] if a.strip_module_debug else []),
+                   a.output / 'modules-install.log', timeout=300, cwd=tree)
         depmod = rt.command(['depmod', '-e', '-F', tree / 'System.map', release],
                             a.output / 'depmod.log', timeout=60)
         rt.require(not depmod.strip(), 'module dependency diagnostics require review')
@@ -69,8 +78,11 @@ def main():
         for name, target in (('arch/x86/boot/bzImage', 'vmlinuz'), ('System.map', 'System.map'),
                              ('.config', 'config')):
             shutil.copyfile(tree / name, Path('/boot', target + '-' + release))
+        package_env = dict(os.environ)
+        if a.initramfs_tmpdir is not None:
+            package_env['TMPDIR'] = str(a.initramfs_tmpdir)
         rt.command(['mkinitramfs', '-o', '/boot/initrd.img-' + release, release],
-                   a.output / 'initramfs.log', timeout=300)
+                   a.output / 'initramfs.log', timeout=300, env=package_env)
         listing = rt.command(['lsinitramfs', '/boot/initrd.img-' + release],
                              a.output / 'initramfs-files.txt', timeout=90)
         rt.require('kernel/drivers/scsi/virtio_scsi.ko' in listing and
