@@ -29,6 +29,7 @@ struct session {
 	struct page *pages[UB_PAGES];
 	unsigned long charges[UB_PAGES];
 	struct ub_pages snapshot;
+	struct page *busy_page;
 };
 struct control;
 struct worker {
@@ -71,7 +72,7 @@ static int work(void *argument)
 		allow_signal(SIGKILL);
 		/* Exercise the real vm_munmap entry, including caller preparation,
 		 * killable ownership and cancellation before actual VMA removal. */
-		w->result = vm_munmap(s->region.base + w->index * s->region.stride, PAGE_SIZE);
+		w->result = vm_munmap(s->region.base + w->index * s->region.stride, s->region.width * PAGE_SIZE);
 	}
 	kthread_unuse_mm(s->mm);
 	complete(&w->done);
@@ -210,8 +211,9 @@ out:
 
 static unsigned long target(struct session *s, unsigned int index)
 {
-	return s->region.base + index * s->region.stride +
-		(s->region.groups == UB_PAGES && index >= 16 && index < 32 ? PAGE_SIZE : 0);
+	unsigned int group, page;
+	ub_pin_location(&s->region, index, &group, &page);
+	return s->region.base + group * s->region.stride + page * PAGE_SIZE;
 }
 
 static unsigned int pins_owned(struct session *s)
@@ -224,6 +226,7 @@ static unsigned int pins_owned(struct session *s)
 static void drop_pins(struct session *s)
 {
 	unsigned int i;
+	if (s->busy_page) { unlock_page(s->busy_page); s->busy_page = NULL; }
 	for (i = 0; i < UB_PAGES; i++) {
 		struct page *page = s->pages[i];
 		if (!page) continue;
@@ -243,7 +246,7 @@ static void settle_page_references(struct session *s)
 	 * it drains this CPU's deferred LRU references before our ownership oracle.
 	 * lru_add_drain itself is internal and cannot be called from a module. */
 	pagevec_init(&scratch);
-	for (i = 0; i < s->region.groups; i++) {
+	for (i = 0; i < ub_pin_total(&s->region); i++) {
 		if (!s->pages[i]) continue;
 		get_page(s->pages[i]);
 		if (!pagevec_add(&scratch, s->pages[i])) pagevec_release(&scratch);
@@ -261,7 +264,7 @@ static long page_operation(struct session *s, unsigned int cmd, unsigned long ar
 	if (cmd == UB_PIN) {
 		if (pins_owned(s)) { error = -EBUSY; goto out; }
 		mmap_read_lock(s->mm);
-		for (i = 0; i < s->region.groups; i++) {
+		for (i = 0; i < ub_pin_total(&s->region); i++) {
 			long n = get_user_pages(target(s, i), 1, FOLL_WRITE, &s->pages[i], NULL);
 			if (n != 1) { s->pages[i] = NULL; error = n < 0 ? n : -EFAULT; break; }
 			s->charges[i] = READ_ONCE(s->pages[i]->memcg_data);
@@ -270,14 +273,17 @@ static long page_operation(struct session *s, unsigned int cmd, unsigned long ar
 		settle_page_references(s);
 		if (error) drop_pins(s);
 	} else if (cmd == UB_PAGESTATE) {
-		if (pins_owned(s) != s->region.groups) { error = -EINVAL; goto out; }
-		s->snapshot.count = s->region.groups;
-		for (i = 0; i < s->region.groups; i++) {
+		if (pins_owned(s) != ub_pin_total(&s->region)) { error = -EINVAL; goto out; }
+		s->snapshot.count = ub_pin_total(&s->region);
+		for (i = 0; i < ub_pin_total(&s->region); i++) {
 			struct page *page = s->pages[i];
 			unsigned char *bytes = kmap_local_page(page);
 			u64 hash = 1469598103934665603ULL;
-			unsigned int byte;
-			unsigned char value = 1 + i * 3 + (s->region.groups == UB_PAGES && i >= 16 && i < 32);
+			unsigned int byte, group, offset;
+			unsigned char value;
+
+			ub_pin_location(&s->region, i, &group, &offset);
+			value = 1 + group * 3 + offset;
 
 			for (byte = 0; byte < PAGE_SIZE; byte++) {
 				check(s, bytes[byte] == value);
@@ -286,22 +292,30 @@ static long page_operation(struct session *s, unsigned int cmd, unsigned long ar
 			kunmap_local(bytes);
 			s->snapshot.page[i] = (struct ub_page) {
 				target(s, i), page_to_pfn(page), hash, page_mapcount(page),
-				page_count(page), READ_ONCE(page->memcg_data) == s->charges[i], value,
+				page_count(page), READ_ONCE(page->memcg_data) == s->charges[i], value, PageLocked(page),
 			};
 			check(s, s->snapshot.page[i].charged_same);
 		}
 		if (copy_to_user((void __user *)arg, &s->snapshot, sizeof(s->snapshot))) error = -EFAULT;
+	} else if (cmd == UB_BUSY_LOCK) {
+		unsigned int last = ub_group_pins(&s->region, 0) + ub_group_pins(&s->region, 1) - 1;
+		if (s->busy_page || s->region.groups != 3 || !s->pages[last] ||
+		    !trylock_page(s->pages[last])) { error = -EBUSY; goto out; }
+		s->busy_page = s->pages[last];
+	} else if (cmd == UB_BUSY_UNLOCK) {
+		if (!s->busy_page) { error = -EINVAL; goto out; }
+		unlock_page(s->busy_page); s->busy_page = NULL;
 	} else if (cmd == UB_UNPIN_MAPPED) {
-		for (i = 0; i < s->region.groups; i++)
+		for (i = 0; i < ub_pin_total(&s->region); i++)
 			if (!s->pages[i] || page_mapcount(s->pages[i]) != 1 || page_count(s->pages[i]) != 2) {
 				error = -EBUSY; goto out;
 			}
 		drop_pins(s);
 	} else {
 		if (!kd_mmap_is_idle(&s->mm->mmap_lock)) { error = -EBUSY; goto out; }
-		for (i = 0; i < s->region.groups; i++)
+		for (i = 0; i < ub_pin_total(&s->region); i++)
 			if ((s->pages[i] && page_mapped(s->pages[i])) ||
-			    (!s->pages[i] && s->result.pins_released != s->region.groups)) { error = -EBUSY; goto out; }
+			    (!s->pages[i] && s->result.pins_released != ub_pin_total(&s->region))) { error = -EBUSY; goto out; }
 		/* The unsupported no-neighbor case uses native deferred table free.
 		 * Drain those kernel callbacks after every requester has joined. */
 		rcu_barrier();
@@ -325,8 +339,10 @@ static long operation(struct file *file, unsigned int cmd, unsigned long arg)
 	switch (cmd) {
 	case UB_ENABLE:
 		if (copy_from_user(&region, (void __user *)arg, sizeof(region))) return -EFAULT;
-		if ((region.groups != 2 && region.groups != 3 && region.groups != UB_PAGES) ||
-		    region.stride < 8 * PAGE_SIZE || region.base < region.start ||
+		if ((region.groups != 2 && region.groups != 3 && region.groups != UB_GROUPS) ||
+		    !region.width || region.width > 4 || region.wide > 1 ||
+		    (region.wide && (region.width != 4 || region.groups != 3)) ||
+		    region.stride < 16 * PAGE_SIZE || region.base < region.start ||
 		    region.base >= region.end ||
 		    region.groups > (region.end - region.base) / region.stride + 1) return -EINVAL;
 		mmap_write_lock(s->mm);
@@ -345,6 +361,8 @@ static long operation(struct file *file, unsigned int cmd, unsigned long arg)
 	case UB_PAGESTATE:
 	case UB_DROP:
 	case UB_UNPIN_MAPPED:
+	case UB_BUSY_LOCK:
+	case UB_BUSY_UNLOCK:
 		return page_operation(s, cmd, arg);
 	case UB_STATUS:
 		result = s->result;

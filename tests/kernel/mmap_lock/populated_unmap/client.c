@@ -22,7 +22,9 @@
 static int device, hold_error;
 static unsigned long checks, completed;
 static uintptr_t addresses[GROUPS];
-static unsigned int groups, phase_count;
+static unsigned int groups, phase_count, width = 1, pin_total;
+static int busy_mode, wide_mode, no_neighbor_mode, busy_expected, rollback_checked;
+static struct ub_config config;
 static pthread_t holder, late_thread;
 static _Atomic int late_ready, late_go, late_entered, late_done;
 static _Atomic pid_t late_tid;
@@ -30,7 +32,7 @@ static int late_code, late_blocked, no_neighbor_code;
 static unsigned int late_value;
 static struct ub_pages page_states;
 static int page_oracle_active = 1;
-static unsigned long long initial_pfns[GROUPS];
+static unsigned long long initial_pfns[UB_PAGES];
 static int late_stack_fd = -1;
 static unsigned char warm_byte;
 static char late_stack[8192];
@@ -45,7 +47,7 @@ struct worker {
 	_Atomic pid_t tid;
 	_Atomic int ready, go;
 	int result, error, fault_code;
-	unsigned int before;
+	unsigned int before, invalidated;
 };
 struct phase { struct ub_status status; struct worker workers[UB_WORKERS]; unsigned int count; };
 static struct phase phases[3];
@@ -118,7 +120,7 @@ static void *late_fault(void *unused)
 	atomic_store(&late_ready, 1);
 	while (!atomic_load(&late_go)) usleep(1000);
 	atomic_store(&late_entered, 1);
-	late_code = probe_read(addresses[7] + 4 * PAGE);
+	late_code = probe_read(addresses[7] + 8 * PAGE);
 	late_value = observed;
 	atomic_store(&late_done, 1);
 	return NULL;
@@ -158,20 +160,32 @@ static void capture_late_fault(int arm)
 	require(s.readers == 2 && s.admission == -1 && !atomic_load(&late_done), "writer reservation blocks only the late reader");
 	late_blocked = 1;
 }
+static unsigned int target_pages(unsigned int group);
+static unsigned char pattern(unsigned int group, unsigned int page);
 static void *unmap(void *arg)
 {
 	struct worker *w = arg;
+	unsigned int count = w->partial ? 1 : target_pages(w->group);
 	pin(w->cpu); w->tid = syscall(SYS_gettid);
-	if (probe_read(addresses[w->group] + (w->partial ? PAGE : 0))) _exit(92);
-	w->before = observed;
+	for (unsigned int page = 0; page < count; page++) {
+		unsigned int offset = w->partial ? 1 : page;
+		if (probe_read(addresses[w->group] + offset * PAGE) || observed != pattern(w->group, offset)) _exit(92);
+		if (!page) w->before = observed;
+	}
 	atomic_store(&w->ready, 1);
 	while (!atomic_load(&w->go)) usleep(1000);
-	w->result = munmap((void *)(addresses[w->group] + (w->partial ? PAGE : 0)),
-			  PAGE);
+	w->result = munmap((void *)(addresses[w->group] + (w->partial ? PAGE : 0)), count * PAGE);
 	w->error = errno;
-	if (!w->result) w->fault_code = probe_read(addresses[w->group] + (w->partial ? PAGE : 0));
+	if (!w->result) {
+		for (unsigned int page = 0; page < count; page++) {
+			w->fault_code = probe_read(addresses[w->group] + (w->partial ? 1 : page) * PAGE);
+			if (w->fault_code != SEGV_MAPERR) _exit(93);
+			w->invalidated++;
+		}
+	}
 	return NULL;
 }
+
 static int mapped(uintptr_t address)
 {
 	unsigned char vec = 0;
@@ -190,24 +204,27 @@ static void check_page(uintptr_t address, unsigned char value)
 }
 static unsigned int target_pages(unsigned int group)
 {
-	return groups == GROUPS && group >= 16 && group < 32 ? 3 : 1;
+	return ub_group_pages(&config, group);
 }
 static void check_pins(unsigned int removed)
 {
 	if (!page_oracle_active) return;
-	require(!ioctl(device, UB_PAGESTATE, &page_states) && page_states.count == groups, "read owned physical-page records");
-	for (unsigned int i = 0; i < groups; i++) {
+	require(!ioctl(device, UB_PAGESTATE, &page_states) && page_states.count == pin_total, "read owned physical-page records");
+	for (unsigned int i = 0; i < pin_total; i++) {
 		struct ub_page *p = &page_states.page[i];
-		unsigned int middle = target_pages(i) == 3;
-		unsigned char value = pattern(i, middle);
+		unsigned int group, page;
+		ub_pin_location(&config, i, &group, &page);
+		unsigned char value = pattern(group, page);
 		unsigned long long hash = 1469598103934665603ULL;
 		for (unsigned int byte = 0; byte < PAGE; byte++) hash = (hash ^ value) * 1099511628211ULL;
 		if (!initial_pfns[i]) initial_pfns[i] = p->pfn;
-		require(p->address == addresses[i] + middle * PAGE && p->pfn == initial_pfns[i] && p->pfn &&
+		require(p->address == addresses[group] + page * PAGE && p->pfn == initial_pfns[i] && p->pfn &&
 			p->hash == hash && p->value == value && p->charged_same == 1, "original physical page and contents preserved");
-		require(p->mapcount == (i >= removed) && p->refs == p->mapcount + 1, "exact mapping and test-reference ownership");
+		require(p->mapcount == (group >= removed) && p->refs == p->mapcount + 1, "exact mapping and test-reference ownership");
+		require(p->locked == (unsigned int)(busy_expected && group == 1 && page == width - 1), "exact page-lock rollback and test ownership");
 	}
 }
+
 static void cohort(unsigned int first, unsigned int count, int partial, int gated, int late, int ordered)
 {
 	struct phase *p = &phases[phase_count++];
@@ -241,18 +258,18 @@ static void cohort(unsigned int first, unsigned int count, int partial, int gate
 		completed++;
 		for (unsigned int page = 0; page < target_pages(w->group); page++)
 			require(mapped(addresses[w->group] + page * PAGE) == (partial && page != 1), "exact requested mapping removal");
-		int neighbors = !(groups == 3 && w->group == 1);
-		require(mapped(addresses[w->group] - 2 * PAGE) == neighbors && mapped(addresses[w->group] + 4 * PAGE) == neighbors,
+		int neighbors = !(no_neighbor_mode && w->group == 1);
+		require(mapped(addresses[w->group] - 2 * PAGE) == neighbors && mapped(addresses[w->group] + 8 * PAGE) == neighbors,
 			"exact neighbor mappings survive");
 		if (neighbors) {
 			check_page(addresses[w->group] - 2 * PAGE, 0xa1);
-			check_page(addresses[w->group] + 4 * PAGE, groups == GROUPS && w->group == 7 ? 0 : 0xb2);
+			check_page(addresses[w->group] + 8 * PAGE, groups == GROUPS && w->group == 7 ? 0 : 0xb2);
 		}
 		if (partial) {
 			check_page(addresses[w->group], pattern(w->group, 0));
 			check_page(addresses[w->group] + 2 * PAGE, pattern(w->group, 2));
 			check_page(addresses[w->group] - 2 * PAGE, 0xa1);
-			check_page(addresses[w->group] + 4 * PAGE, 0xb2);
+			check_page(addresses[w->group] + 8 * PAGE, 0xb2);
 		}
 	}
 	if (gated) {
@@ -292,14 +309,14 @@ static void finish(const char *mode)
 	for (unsigned int i = 0; i < groups; i++) {
 		require(!munmap((void *)addresses[i], target_pages(i) * PAGE), "cleanup target range"); cleanup++;
 		require(!munmap((void *)(addresses[i] - 2 * PAGE), PAGE), "cleanup left neighbor"); cleanup++;
-		require(!munmap((void *)(addresses[i] + 4 * PAGE), PAGE), "cleanup right neighbor"); cleanup++;
+		require(!munmap((void *)(addresses[i] + 8 * PAGE), PAGE), "cleanup right neighbor"); cleanup++;
 		for (unsigned int page = 0; page < target_pages(i); page++) require(!mapped(addresses[i] + page * PAGE), "target remains absent");
-		require(!mapped(addresses[i] - 2 * PAGE) && !mapped(addresses[i] + 4 * PAGE), "neighbors cleaned");
+		require(!mapped(addresses[i] - 2 * PAGE) && !mapped(addresses[i] + 8 * PAGE), "neighbors cleaned");
 	}
 	check_pins(groups);
 	require(!ioctl(device, UB_DROP), "release every owned test page after cleanup");
 	struct ub_status after = status();
-	require(after.pins_owned == 0 && after.pins_released == groups, "no test page reference remains");
+	require(after.pins_owned == 0 && after.pins_released == pin_total, "no test page reference remains");
 	require(after.idle && !after.pending && !after.errors && after.counts.calls == before.counts.calls + cleanup,
 		"cleanup calls and exact idle");
 	require(after.counts.removed == before.counts.removed && after.counts.delegated == before.counts.delegated,
@@ -318,23 +335,25 @@ static void finish(const char *mode)
 	       (unsigned long long)before.cancel_mapped[0], (unsigned long long)before.cancel_mapped[1],
 	       (long long)before.cancel_result[0], (long long)before.cancel_result[1]);
 	print_counts(&after.counts); printf("},\"late_fault_stack\":"); print_string(late_stack);
-	printf(",\"pins_owned\":%llu,\"pins_released\":%llu,\"late_value\":%u,\"pages\":[",
+	printf(",\"width\":%u,\"pin_total\":%u,\"rollback_checked\":%d,\"pins_owned\":%llu,\"pins_released\":%llu,\"late_value\":%u,\"pages\":[", width, pin_total, rollback_checked,
 		(unsigned long long)after.pins_owned, (unsigned long long)after.pins_released, late_value);
-	for (unsigned int i = 0; i < groups; i++) {
+	for (unsigned int i = 0; i < pin_total; i++) {
 		struct ub_page *p = &page_states.page[i];
-		printf("%s{\"address\":%llu,\"pfn\":%llu,\"initial_pfn\":%llu,\"hash\":%llu,\"mapcount\":%llu,\"refs_before_drop\":%llu,\"charged_same\":%llu}",
+		unsigned int group, page;
+		ub_pin_location(&config, i, &group, &page);
+		printf("%s{\"address\":%llu,\"pfn\":%llu,\"initial_pfn\":%llu,\"hash\":%llu,\"mapcount\":%llu,\"refs_before_drop\":%llu,\"charged_same\":%llu,\"group\":%u,\"page\":%u,\"locked\":%llu}",
 			i ? "," : "", (unsigned long long)p->address, (unsigned long long)p->pfn, initial_pfns[i],
 			(unsigned long long)p->hash, (unsigned long long)p->mapcount, (unsigned long long)p->refs,
-			(unsigned long long)p->charged_same);
+			(unsigned long long)p->charged_same, group, page, (unsigned long long)p->locked);
 	}
 	printf("],\"phases\":[");
 	for (unsigned int i = 0; i < phase_count; i++) {
 		printf("%s{", i ? "," : ""); print_counts(&phases[i].status.counts); printf(",\"origins\":[");
 		for (unsigned int j = 0; j < phases[i].count; j++) {
 			struct worker *w = &phases[i].workers[j];
-			printf("%s{\"tid\":%d,\"start\":%llu,\"end\":%llu,\"fault_code\":%d}", j ? "," : "", (int)w->tid,
+			printf("%s{\"tid\":%d,\"start\":%llu,\"end\":%llu,\"fault_code\":%d,\"invalidated\":%u}", j ? "," : "", (int)w->tid,
 			       (unsigned long long)(addresses[w->group] + (w->partial ? PAGE : 0)),
-			       (unsigned long long)(addresses[w->group] + (w->partial ? 2 : 1) * PAGE), w->fault_code);
+			       (unsigned long long)(addresses[w->group] + (w->partial ? 2 : target_pages(w->group)) * PAGE), w->fault_code, w->invalidated);
 		}
 		printf("]}");
 	}
@@ -342,24 +361,34 @@ static void finish(const char *mode)
 }
 int main(int argc, char **argv)
 {
-	int cancel = argc == 2 && !strcmp(argv[1], "--cancel");
-	int free_case = argc == 2 && !strcmp(argv[1], "--free");
-	int no_neighbor = argc == 2 && !strcmp(argv[1], "--no-neighbor");
-	pin(63); require(argc == 1 || cancel || no_neighbor || free_case, "arguments");
+	int cancel = 0, free_case = 0;
+	for (int i = 1; i < argc; i++) {
+		if (!strcmp(argv[i], "--cancel")) cancel = 1;
+		else if (!strcmp(argv[i], "--free")) free_case = 1;
+		else if (!strcmp(argv[i], "--no-neighbor")) no_neighbor_mode = 1;
+		else if (!strcmp(argv[i], "--busy-last")) busy_mode = 1;
+		else if (!strcmp(argv[i], "--too-wide")) wide_mode = 1;
+		else if (!strcmp(argv[i], "--pages") && i + 1 < argc) width = strtoul(argv[++i], NULL, 10);
+		else require(0, "arguments");
+	}
+	pin(63); require(width >= 1 && width <= 4 && cancel + free_case + no_neighbor_mode + busy_mode + wide_mode <= 1 &&
+		(!wide_mode || width == 4), "arguments");
 	struct sigaction action = {.sa_sigaction = segv, .sa_flags = SA_SIGINFO};
 	sigemptyset(&action.sa_mask); require(!sigaction(SIGSEGV, &action, NULL), "install expected fault handler");
 	device = open("/dev/kd_mm_populated_test", O_RDWR | O_CLOEXEC);
 	require(device >= 0 && sysconf(_SC_PAGESIZE) == PAGE, "device and page size");
 	struct ub_status initial = status();
-	groups = cancel || free_case ? 2 : no_neighbor ? 3 : GROUPS;
+	groups = cancel || free_case ? 2 : (no_neighbor_mode || busy_mode || wide_mode) ? 3 : GROUPS;
 	uintptr_t base = initial.pgdir_size * 8 + 8 * PAGE;
 	require(initial.pgdir_size >= (1ULL << 39) && base + groups * initial.pgdir_size < initial.task_size,
 		"unused top-level page-directory address interval");
+	config = (struct ub_config){base - 2 * PAGE, base + (groups - 1) * initial.pgdir_size + 9 * PAGE, base, initial.pgdir_size, groups, width, wide_mode};
+	pin_total = ub_pin_total(&config);
 	for (unsigned int i = 0; i < groups; i++) {
 		addresses[i] = base + i * initial.pgdir_size;
-		uintptr_t ranges[] = {addresses[i], addresses[i] - 2 * PAGE, addresses[i] + 4 * PAGE};
+		uintptr_t ranges[] = {addresses[i], addresses[i] - 2 * PAGE, addresses[i] + 8 * PAGE};
 		for (unsigned int j = 0; j < 3; j++) {
-			if (groups == 3 && i == 1 && j) continue;
+			if (no_neighbor_mode && i == 1 && j) continue;
 			size_t length = (j ? 1 : target_pages(i)) * PAGE;
 			void *p = mmap((void *)ranges[j], length, PROT_READ | PROT_WRITE,
 				MAP_PRIVATE | MAP_ANONYMOUS | MAP_NORESERVE | MAP_FIXED_NOREPLACE, -1, 0);
@@ -372,7 +401,6 @@ int main(int argc, char **argv)
 			}
 		}
 	}
-	struct ub_config config = {base - 2 * PAGE, addresses[groups - 1] + 5 * PAGE, base, initial.pgdir_size, groups};
 	require(!ioctl(device, UB_ENABLE, &config), "enable immutable populated munmap interval");
 	require(!ioctl(device, UB_PIN), "retain original physical-page references");
 	check_pins(0);
@@ -389,19 +417,28 @@ int main(int argc, char **argv)
 		require(!mapped(addresses[0]) && mapped(addresses[1]), "healthy removal and cancelled VMA retained");
 		finish("cancel"); return 0;
 	}
-	if (no_neighbor) {
+	if (no_neighbor_mode || busy_mode || wide_mode) {
 		require(probe_read(addresses[1]) == 0 && observed == pattern(1, 0), "original populated translation without neighboring VMAs");
+		if (busy_mode) {
+			require(!ioctl(device, UB_BUSY_LOCK), "hold last page to force late admission refusal");
+			busy_expected = 1;
+		}
 		cohort(0, 2, 0, 1, 0, 1);
+		if (busy_mode) {
+			rollback_checked = 1;
+			require(!ioctl(device, UB_BUSY_UNLOCK), "release exact test page lock after refusal");
+			busy_expected = 0; check_pins(2);
+		}
 		no_neighbor_code = probe_read(addresses[1]);
 		require(no_neighbor_code == SEGV_MAPERR, "native unmap invalidated cached read translation");
 		cohort(2, 1, 0, 0, 0, 0);
-		finish("no-neighbor"); return 0;
+		finish(busy_mode ? "busy-last" : wide_mode ? "too-wide" : "no-neighbor"); return 0;
 	}
 	cohort(0, UB_WORKERS, 0, 1, 1, 0);
 	for (unsigned int i = 16; i < 32; i++) {
 		for (unsigned int page = 0; page < 3; page++) memset((void *)(addresses[i] + page * PAGE), pattern(i, page), PAGE);
 		memset((void *)(addresses[i] - 2 * PAGE), 0xa1, PAGE);
-		memset((void *)(addresses[i] + 4 * PAGE), 0xb2, PAGE);
+		memset((void *)(addresses[i] + 8 * PAGE), 0xb2, PAGE);
 	}
 	cohort(16, UB_WORKERS, 1, 1, 0, 0);
 	cohort(32, UB_WORKERS, 0, 0, 0, 0);

@@ -48,18 +48,25 @@ def check_common(row):
                after['post_ban'] - before['post_ban'] == row['cleanup_calls'] - (row['mode'] in ('cancel','free')),
                'cleanup escaped sticky local continuation')
 
-    pages=row['pages']
-    rt.require(len(pages)==row['groups'] and len({p['pfn'] for p in pages})==len(pages) and
+    pages=row['pages'];width=row['width']
+    expected_pins=(32*width+16 if row['groups']==48 else row['groups']*width+(row['mode']=='too-wide'))
+    rt.require(1<=width<=4 and row['pin_total']==expected_pins and len(pages)==expected_pins and len({p['pfn'] for p in pages})==len(pages) and
                len({p['address'] for p in pages})==len(pages) and row['pins_owned']==0 and
-               row['pins_released']==row['groups'], 'original page references were not retired')
+               row['pins_released']==expected_pins, 'original page references were not retired')
     for i,page in enumerate(pages):
-        value=1+i*3+(row['groups']==48 and 16<=i<32)
+        group,page_index=page['group'],page['page']
+        rt.require(0<=group<row['groups'], 'unknown original page group')
+        expected_indices=({1} if row['groups']==48 and 16<=group<32 else
+                          set(range(5 if row['mode']=='too-wide' and group==1 else width)))
+        rt.require(page_index in expected_indices and
+                   {p['page'] for p in pages if p['group']==group}==expected_indices, 'incomplete original page group')
+        value=1+group*3+page_index
         expected=1469598103934665603
         for _ in range(4096): expected=((expected^value)*1099511628211)&((1<<64)-1)
         rt.require(page['pfn']==page['initial_pfn'] and page['pfn']>0 and page['hash']==expected and
-                   page['mapcount']==(row['mode']=='free') and page['refs_before_drop']==1+(row['mode']=='free') and page['charged_same']==1,
+                   page['mapcount']==(row['mode']=='free') and page['refs_before_drop']==1+(row['mode']=='free') and page['charged_same']==1 and page['locked']==0,
                    'original physical data, page accounting or final mapping reference differs')
-    rt.require(all(o['fault_code']==1 for phase in row['phases'] for o in phase['origins']),
+    rt.require(all(o['fault_code']==1 and o['invalidated']==(o['end']-o['start'])//4096 for phase in row['phases'] for o in phase['origins']),
                'an origin retained a usable cached translation after munmap')
 
 
@@ -91,6 +98,29 @@ def expect(phase, **values):
     rt.require(all(phase[k] == v for k, v in values.items()), 'phase accounting differs: ' + str(values))
 
 
+def physical_records(row, messages, done):
+    pages={p['address']:p for p in row['pages']}
+    if row['width']==1:
+        physical=re.findall(r'KD_MM_POPULATED done mm=([0-9a-f]+) id=(\d+) origin=(\d+) executor=(\d+) '
+            r'start=([0-9a-f]+) end=([0-9a-f]+) pfn=([0-9a-f]+) pte_none=1 mapcount=0 tables_retained=1',messages)
+        physical=[(*p[:6],'0','1',p[6]) for p in physical]
+    else:
+        physical=re.findall(r'KD_MM_POPULATED_RANGE done mm=([0-9a-f]+) id=(\d+) origin=(\d+) executor=(\d+) '
+            r'start=([0-9a-f]+) end=([0-9a-f]+) index=(\d+) pages=(\d+) pfn=([0-9a-f]+) '
+            r'pte_none=1 mapcount=0 tables_retained=1',messages)
+    rt.require(len(physical)==len(set(physical))==len(done)*row['width'], 'missing/duplicate physical completion')
+    for receipt in done:
+        matches=[p for p in physical if p[:6]==receipt]
+        rt.require(len(matches)==row['width'] and {int(p[6]) for p in matches}==set(range(row['width'])),
+                   'body lacks a complete set of original page receipts')
+        for p in matches:
+            start,end=int(p[4],16),int(p[5],16)
+            original=pages.get(start+int(p[6])*4096,{})
+            rt.require(end-start==row['width']*4096 and int(p[7])==row['width'] and
+                       original.get('initial_pfn')==int(p[8],16), 'body removed a different original page')
+    return len(physical)
+
+
 def validate(row, messages):
     check_common(row)
     a, b, c = row['phases']
@@ -110,19 +140,11 @@ def validate(row, messages):
     expect(b,populated=16,populated_remote=15)
     expect(c,populated=16,populated_remote=15)
     done = identities(row, messages, 'done', a, 15)
-    physical=re.findall(r'KD_MM_POPULATED done mm=([0-9a-f]+) id=(\d+) origin=(\d+) executor=(\d+) '
-        r'start=([0-9a-f]+) end=([0-9a-f]+) pfn=([0-9a-f]+) pte_none=1 mapcount=0 tables_retained=1',messages)
-    rt.require(len(physical)==15 and sorted(p[:6] for p in physical)==sorted(done),
-               'missing completed physical-page removal or generic completion pairing')
-    pages={p['address']:p for p in row['pages']}
-    for *identity,pfn in physical:
-        page=pages.get(int(identity[4],16),{})
-        rt.require(int(identity[5],16)-int(identity[4],16)==4096 and page.get('initial_pfn')==int(pfn,16),
-                   'remote removal did not clear the original populated page mapping')
+    physical_count = physical_records(row, messages, done)
     matched = ack_records(row, messages, b, 15)
     return dict(actual_remote_vma_removals=len(done), mapping_bound_receipts=len(done),
                 matched_handbacks=matched, post_ban_local_calls=16,
-                real_neighbor_fault_waited_then_resolved=True, origin_tlb_invalidations=48, physical_page_receipts=15, concurrent_local_readers=2,
+                real_neighbor_fault_waited_then_resolved=True, origin_tlb_invalidations=32*row['width']+16, physical_page_receipts=physical_count, concurrent_local_readers=2,
                 partial_unmap_preserved_contents=True, cleanup_calls=144,
                 execution='REAL_POPULATED_DO_MAS_ALIGN_MUNMAP', jit_bodies=0)
 
@@ -145,7 +167,7 @@ def validate_cancellation(row, messages):
 def validate_no_neighbor(row, messages):
     check_common(row)
     a, b = row['phases']
-    rt.require(row['mode'] == 'no-neighbor' and row['groups'] == row['completed'] == 3 and
+    rt.require(row['mode'] in ('no-neighbor','busy-last','too-wide') and row['groups'] == row['completed'] == 3 and
                row['pending_peak'] == 2 and row['no_neighbor_code'] == 1 and
                'KD_MM_UNMAP done' not in messages, 'table-free case was delegated or stale translation survived')
     expect(a, calls=2, removed=1, delegated=0, native=1, post_ban=0, handbacks=1,
@@ -155,7 +177,14 @@ def validate_no_neighbor(row, messages):
     expect(a,populated=1,populated_remote=0)
     expect(b,populated=1,populated_remote=0)
     ack_records(row, messages, a, 1)
-    return dict(required_table_free_handback=1, matched_acks=1, cached_translation_invalidated=True,
+    if row['mode']=='busy-last':
+        rollback=re.findall(r'KD_MM_POPULATED_RANGE rollback mm=([0-9a-f]+) id=(\d+) origin=(\d+) executor=(\d+) '
+            r'start=([0-9a-f]+) end=([0-9a-f]+) held=(\d+) released=(\d+) effects=0',messages)
+        ack=identities(row,messages,'ack',a,1)
+        rt.require(row['width']==4 and row['rollback_checked']==1 and len(rollback)==1 and
+                   rollback[0][:6]==ack[0] and rollback[0][6:]==('3','3'),
+                   'late-page refusal did not prove exact prefix rollback')
+    return dict(refusal=row['mode'],required_table_free_handback=int(row['mode']=='no-neighbor'), matched_acks=1, cached_translation_invalidated=True,
                 post_ban_local_calls=1, cleanup_calls=9, jit_bodies=0)
 
 
@@ -167,15 +196,10 @@ def validate_free(row,messages):
     expect(p,calls=2,removed=2,delegated=1,native=0,post_ban=0,handbacks=0,cancelled=0,
            refused=0,native_only=0,populated=2,populated_remote=1)
     done=identities(row,messages,'done',p,1)
-    physical=re.findall(r'KD_MM_POPULATED done mm=([0-9a-f]+) id=(\d+) origin=(\d+) executor=(\d+) '
-        r'start=([0-9a-f]+) end=([0-9a-f]+) pfn=([0-9a-f]+) pte_none=1 mapcount=0 tables_retained=1',messages)
-    rt.require(len(physical)==1 and physical[0][:6]==done[0], 'real unreferenced completion missing')
-    pages={p['address']:p for p in row['pages']}
-    rt.require(pages[int(physical[0][4],16)]['initial_pfn']==int(physical[0][6],16),
-               'unreferenced completion used another original page')
+    physical_count=physical_records(row,messages,done)
     ack_records(row,messages,p,0)
-    return dict(actual_remote_vma_removals=1,test_references_released_before_body=2,
-                origin_tlb_invalidations=2,cleanup_calls=6,jit_bodies=0,
+    return dict(actual_remote_vma_removals=1,test_references_released_before_body=row['pin_total'],physical_page_receipts=physical_count,
+                origin_tlb_invalidations=2*row['width'],cleanup_calls=6,jit_bodies=0,
                 post_free_page_dereference=False)
 
 
@@ -186,6 +210,9 @@ def main():
     mode.add_argument('--cancellation', action='store_true')
     mode.add_argument('--no-neighbor', action='store_true')
     mode.add_argument('--free', action='store_true')
+    mode.add_argument('--busy-last', action='store_true')
+    mode.add_argument('--too-wide', action='store_true')
+    p.add_argument('--pages',type=int,choices=(1,2,3,4),default=1)
     kernel_identity.arguments(p)
     a = p.parse_args()
     rt.require(os.geteuid() == 0 and str(ROOT).startswith('/root/') and
@@ -242,9 +269,9 @@ def main():
         command(['insmod', module], out / 'load.log')
         result['state'] = 'RUNNING'
         rt.write_json(out / 'result.json', result)
-        row = json.loads(command([client, *(['--cancel'] if a.cancellation else ['--no-neighbor'] if a.no_neighbor else ['--free'] if a.free else [])], out / 'client.json', 180))
+        row = json.loads(command([client, *(['--cancel'] if a.cancellation else ['--no-neighbor'] if a.no_neighbor else ['--free'] if a.free else ['--busy-last'] if a.busy_last else ['--too-wide'] if a.too_wide else []), '--pages',str(a.pages)], out / 'client.json', 180))
         logs()
-        result['evidence'] = (validate_cancellation if a.cancellation else validate_no_neighbor if a.no_neighbor else validate_free if a.free else validate)(row, messages)
+        result['evidence'] = (validate_cancellation if a.cancellation else validate_no_neighbor if (a.no_neighbor or a.busy_last or a.too_wide) else validate_free if a.free else validate)(row, messages)
         result['client'] = row
         for rel, digest in hashes.items():
             rt.require(rt.digest(source / rel) == rt.digest(Path(__file__).parent / rel) == digest,
