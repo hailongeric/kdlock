@@ -1,14 +1,19 @@
 # Bounded anonymous munmap bodies
 
-Status: `kdmm15` adds retained-table boundary-crossing prefix/suffix removal.
-The one-page target has no leaf table; both survivors lie in the adjacent 2-MiB
-page-middle-directory (PMD) interval and may be private, shared-zero or untouched. Actual neighboring VMA
-bounds must prove native teardown cannot free a table. All 49 serial cases,
-two basic tests and 1,289 negative receipt controls passed, with 26 different-task
-removals and two native-matched delegated split errors. Recovery is restored and
-modules unloaded. See the
-[result record](../../bench/results/10.176.26.71/tests/mm-boundary-edge-20261023/README.md)
-and [probe commands](../../tests/kernel/mmap_lock/boundary_edge/README.md).
+Status: `kdmm16` adds an empty target PTE (leaf page-table entry) in an existing
+retained table to boundary-crossing prefix/suffix removal. Both survivors lie in
+the adjacent 2-MiB page-middle-directory (PMD) interval and may be private,
+shared-zero or untouched. Actual neighboring VMA bounds must still prove native
+teardown cannot free a table. All 51 serial cases, two basic tests and 1,458
+negative receipt controls passed, with 26 new different-task removals (14 without
+private-page holds) and two native-matched delegated split errors. Recovery is
+restored and modules unloaded. See the
+[result record](../../bench/results/10.176.26.71/tests/mm-boundary-empty-20261023/README.md)
+and [probe commands](../../tests/kernel/mmap_lock/boundary_empty/README.md).
+The [kdmm15 baseline](../../bench/results/10.176.26.71/tests/mm-boundary-edge-20261023/README.md)
+retains its separate 49-case missing-target-table boundary evidence; its matrix
+was not repeated. The four preservation smokes cover both missing-table edges,
+the old controlled appearance refusal and same-table empty-entry removal.
 The [kdmm14 baseline](../../bench/results/10.176.26.71/tests/mm-missing-table-20261023/README.md)
 retains its 42 serial cases, 956 negative controls, 11 same-table missing-target
 removals and three controlled table appearances; that campaign was not repeated.
@@ -436,7 +441,9 @@ prefix geometry is `[B-P, B+2P)` removing `[B-P, B)`; suffix geometry is
 `[B-2P, B+P)` removing `[B, B+P)`. The target lies alone in its 2-MiB interval,
 while both survivors share the adjacent interval. Both intervals must lie within
 one valid PUD. A target sharing its interval with a survivor, interior crossing,
-missing higher levels and an existing target leaf table are explicitly refused.
+missing higher levels and, in the kdmm15 baseline, an existing target leaf table
+are explicitly refused. The kdmm16 extension below admits only empty targets in
+those existing tables.
 The survivor table may be missing or contain ordinary private, shared-zero and
 empty PTEs; two untouched survivors need not allocate a table.
 
@@ -486,6 +493,52 @@ survivor fault waits behind writer admission and resolves locally afterward.
 Neither control claims uncontrolled fault or neighbor-replacement race coverage.
 The [result record](../../bench/results/10.176.26.71/tests/mm-boundary-edge-20261023/README.md)
 separates these controls, actual remote removals, errors and preservation smokes.
+
+## Empty target entry in a retained boundary table
+
+`kdmm16` replaces only kdmm15's mandatory missing target PMD entry. The same
+isolated-edge geometry, valid common upper directory and both neighboring-VMA
+retention bounds above remain mandatory. An existing normal target leaf table
+is accepted only when its selected entry satisfies `pte_none()`. A zero-page or
+private target, special non-present entry, huge/device mapping or missing higher
+level still refuses. Same-table target support does not authorize a populated
+boundary target.
+
+After taking the actual mmap write lock, the executor walks the live hierarchy
+afresh. It observes missing versus existing target tables under the PMD lock;
+for an existing normal table it maps the current leaf under its PTE lock, records
+the physical table identity and checks the target is empty. No earlier unlocked
+table pointer survives queue publication. The mmap writer excludes ordinary
+faults and VMA replacement during this body; the unchanged native floor/ceiling
+proof ensures that the table remains live through teardown. Another populated
+entry in that table is neither the retention proof nor an ownership reference.
+
+Caller-prepared VMA/maple/reverse-map resources and survivor classification are
+unchanged. Absent anonymous metadata consumes no reverse-map links; zero and
+untouched slots need no private-page holds. The native split/detach/unmap body
+removes the virtual mapping without allocating a target page/table, clearing
+unrelated PTEs or suppressing native cleanup. Success and admitted split errors
+verify the same parent, target and survivor table identities, still-empty target
+PTE, unchanged table-byte accounting and exact survivor holds. New
+`KD_MM_BOUNDARY_EMPTY` completion/error receipts record the target table identity
+and `target_pte_none=1`; the original missing-table receipt remains distinct.
+After a successful split, an error remains an admitted native-compatible return
+and cannot authorize destructive replay.
+
+The test allocates the target table by read-faulting a separate retaining
+neighbor in that interval, never by touching the target. Read-only walks verify
+its shared-zero PTE, target-table identity and empty target before admission and
+after removal. Twelve representative prefix/suffix layouts matched native
+behavior. Controlled local-reader faults change an empty target to zero/private
+after publication; locked revalidation hands back with the exact acknowledgment
+(ACK), then later calls remain local. Moving the retaining neighbor away before
+publication also hands back and matches native table release. That prepublication
+control is not a queued neighbor-replacement race: changing VMA bounds needs
+writer ownership, incompatible with the two held reader shares in this fixture.
+Readers remain concurrent and local. See the
+[result record](../../bench/results/10.176.26.71/tests/mm-boundary-empty-20261023/README.md)
+for counts, split errors, cancellation, waiting faults, full cleanup and untested
+reversed pairs and races.
 
 ## One through four populated pages
 
@@ -662,7 +715,8 @@ one through four resident pages with retained tables. The new opt-in additionall
 supports the three-page/one-page-slice cases above, including zero or empty-leaf
 targets with only zero/untouched survivors, and a missing leaf table when upper
 levels exist and all three slots are untouched. The new boundary-edge path
-permits a missing target table and an adjacent survivor interval under the
+permits a missing target table or an empty PTE in an existing target table,
+with an adjacent survivor interval under the
 explicit two-neighbor retention proof above. It refuses missing higher levels
 on this opt-in, special non-present entries, inconsistent or multi-link reverse-map
 ancestry, shared/COW
@@ -695,10 +749,11 @@ and exact zero-effect release before ACK.
 
 Zero/empty/missing-table admission is separate from private-page ownership.
 Explicit receipts prove native VMA removal even with no physical target.
-The next narrow candidate is an existing target leaf table containing an empty
-PTE in the same isolated-edge geometry. It must retain the proven native
-floor/ceiling rule and validate exact target-table lifetime before admission.
-Existing target tables still hand back in kdmm15; private/zero edge targets,
-general table destruction and missing higher levels remain deferred.
+The next narrow candidate is a shared-zero target in the same isolated-edge
+geometry, retaining the proven native floor/ceiling rule. It would require exact
+special-zero PTE classification, translation invalidation and no ordinary
+private-page ownership/release. Both zero and private boundary targets still
+hand back in kdmm16. General table destruction and missing higher levels remain
+deferred.
 Broader mapping creation/removal support, performance, p95, the seven mutex
 regressions and nano reruns remain deferred.
