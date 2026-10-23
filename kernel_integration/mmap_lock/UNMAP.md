@@ -1,12 +1,14 @@
 # Minimal whole-VMA munmap body
 
-Status: `kdmm5` passed 20 serial correctness sessions, extending the validated
-unpopulated path to one resident anonymous page whose neighbors retain its page
-tables. The four new cases included 16 real populated removals on other tasks,
-exact physical-page and ACK receipts, concurrent local readers and cleanup.
-Recovery is restored. The advice, anonymous first-write and old unpopulated
-implementations remain preserved and passed their affected checks. Performance,
-p95, the seven mutex regressions and broad stress remain deferred.
+Status: `kdmm6` extends the validated one-page removal to one through four
+resident anonymous pages whose neighbors retain their page tables. All 11
+focused serial cases passed, including 18 multi-page removals on other tasks
+with 69 original-page receipts, late admission rollback, exact handback/ACK
+(acknowledgement) matching and cleanup. The single-page, advice, anonymous
+first-write and unpopulated paths passed a small preservation smoke set. Recovery
+is restored. See the [result record](../../bench/results/10.176.26.71/tests/mm-range-unmap-20261023/README.md)
+for run identities and essential logs. Performance, p95, the seven mutex
+regressions and broad stress remain deferred.
 
 ## Reviewed boundary
 
@@ -32,42 +34,64 @@ and frees the VMA. The ordinary native route calls the same helper without a
 prepared reserve. Success requires a real VMA removal; empty-range success or
 local continuation is never counted as a delegated body.
 
-## One populated page
+## One through four populated pages
 
-The separate `kd_mmap_unmap_populated_enable()` opt-in keeps all those VMA
-exclusions, but additionally allows one writable resident 4-KiB anonymous page.
-The page must be exclusive to one mapping, ordinary rather than huge/compound,
-unswapped, healthy and without a detected DMA pin. Its VMA must have one reverse
+The separate `kd_mmap_unmap_populated_enable()` opt-in keeps the common VMA
+exclusions, but allows reverse mapping state for one through four writable
+resident 4-KiB anonymous pages. Every page must be exclusive to one mapping, ordinary rather
+than huge/compound, unswapped, healthy and without a detected DMA pin (a device's
+retained reference for direct memory access). Their VMA must have one reverse
 mapping chain and must not be mergeable. Multi-generation LRU, a page-reclaim
 policy that uses implicit task context, is excluded in configuration admission.
 The opt-in is an experimental kernel control under actual mmap write ownership;
 ordinary applications do not enable it automatically.
 
-Both neighboring VMAs must end/start strictly within the target's PMD span,
-the 2-MiB interval described by a page-middle-directory entry. The original
+The whole target must fit in one PMD span, the 2-MiB interval described by a
+page-middle-directory entry. Both neighboring VMAs' end/start bounds must lie
+strictly inside that span. The original
 `free_pgd_range()` then returns before freeing the leaf PTE table. This is a
 deliberate correctness restriction: general table freeing can allocate an RCU
 batch, which defers freeing until concurrent readers finish, using the executor's
-allocation context. A single data page fits the native eight-page local gather
-without allocating another batch. The real unmap helpers still execute.
+allocation context. Four data pages fit strictly below the native eight-page
+local gather (the temporary list of pages awaiting a TLB flush and release).
+The captured `__tlb_remove_page_size()` calls `tlb_next_batch()` immediately when
+that list fills, which can allocate in the executor's context. Staying below
+eight, with retained tables, avoids both allocation paths. A compile-time check
+enforces this capacity relationship. The real unmap helpers still execute.
 
 The origin prepares maple storage, synchronizes its deferred RSS (resident-page
 accounting), and drains its local LRU (recently used page) additions before queue
 publication. Under actual mmap writer ownership, the executor walks the explicit
-mm's page tables, takes a temporary reference, and tries the page lock under the
-PTE lock. It never blocks in that inverse lock order. A busy or unsupported page
-refuses before effects and makes later calls local. The retained reference and
-page lock protect the object against freeing, reclaim and migration through
-the real removal.
+mm's page tables and takes a temporary reference and tries the page lock for
+every target page under the PTE lock. It never blocks in that inverse lock order.
+All pages must pass before any removal. A busy or unsupported later page releases
+every earlier page lock/reference before refusal; the existing protocol returns
+the operation to its waiter and makes later calls local. The retained references
+and locks protect the exact objects against freeing, reclaim and migration
+through the real removal. Fixed four-entry stack arrays need no new allocation
+or queue storage.
 
 Native teardown removes the PTE and reverse map, updates explicit mm and page
-accounting, and completes the TLB flush. The executor then requires an empty PTE,
-zero mapcount and unchanged page-table bytes, and releases its temporary page
-lock/reference before completion. Final page-charge release follows the page's
-recorded memory cgroup. The existing physical owner, queue and exact ACK protocol
+accounting, and completes the TLB flush. The executor then requires every PTE
+empty, every page's mapcount zero and page-table bytes unchanged, and releases
+all its temporary page locks/references before completion. Final page-charge
+release follows each page's recorded memory cgroup. The existing physical owner,
+queue and exact ACK protocol
 below are unchanged; unsupported table destruction returns to the original caller.
 
-The `kdmm5` main case paired 15 original PFNs (physical page numbers) with
+The `kdmm6` four-page case completed 15 whole-VMA removals on other tasks and
+matched all 60 original PFNs (physical page numbers) to body receipts. A deliberately
+locked fourth page proved that the three earlier temporary locks/references
+were released before its exact handback/ACK; a five-page range also refused,
+and later calls stayed local in both cases. Separate two-, three- and four-page
+cases released all test references before the real body, exercising final page
+release without dereferencing freed pages. The [probe guide](../../tests/kernel/mmap_lock/populated_unmap/README.md)
+provides commands that reuse the built probes. Its kernel snapshot is for
+identity verification, not a complete module build tree.
+
+## Preserved single-page baseline
+
+The earlier `kdmm5` main case paired 15 original PFNs with
 different-task completions, verified every retained page byte and exact mapping
 and test references, and invalidated 48 originating CPUs' cached translations.
 Fifteen partial-unmap handbacks matched their ACKs; 16 later calls stayed local.
@@ -85,9 +109,9 @@ All four cases released 55 exact test references, performed 165 local cleanup
 calls and unloaded normally. These counts are separate from the old unpopulated
 path and earlier kernel runs.
 
-The [populated probe guide](../../tests/kernel/mmap_lock/populated_unmap/README.md)
-contains all four runnable commands. Use the recorded `kdmm5` source and baseline
-on the original, already approved KD guest boot:
+The historical probe commands and all four baseline cases remain in the
+`f7af0fd` revision of the probe guide and the stage record. Their `kdmm5` identity
+is separate from the current candidate:
 
 - Source: `/root/kdlock-kernel-work/mm-populated-unmap-20261022/candidate-1/linux`.
 - Baseline: `/root/kdlock-kernel-baselines/mmap-kdmm5-20261022`.
@@ -177,12 +201,15 @@ approved KD boot and verified recovery snapshot. For this recorded candidate:
 
 ## Remaining limitations
 
-The original opt-in supports one small isolated VMA with absent PGDs. The new
-opt-in additionally supports the one resident page with retained tables described
-above. Neither delegates larger populated ranges, general page-table destruction,
-partial unmap, file/device or notifier callbacks, or mapping creation. Partial
-populated removal, old zero-page/PGD refusal and the new missing-neighbor refusal
-were individually exercised; other guards remain source-reviewed exclusions.
+The original opt-in supports one small isolated VMA with absent PGDs. The
+populated opt-in additionally supports one through four resident pages with
+retained tables as described above. Neither delegates larger populated ranges,
+general page-table destruction, partial unmap, file/device or notifier callbacks,
+or mapping creation. Partial
+populated removal, old zero-page/PGD refusal and one-page missing-neighbor refusal
+were individually exercised in earlier stages. This stage exercised partial
+removal again, a busy final page, and the five-page limit. Cross-PMD ranges,
+partially absent PTE ranges and other guards remain source-reviewed exclusions.
 The ordinary local path retains its native downgrade and release logic.
 
 Forced reserve-allocation failure, tree-height growth during preparation, slot
