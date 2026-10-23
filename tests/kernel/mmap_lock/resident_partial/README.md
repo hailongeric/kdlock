@@ -1,5 +1,9 @@
 # Resident partial munmap correctness
 
+The later [mixed-page guide](../mixed_partial/README.md) records `kdmm9` support
+for untouched survivors. This guide retains the `kdmm8` fully resident baseline
+and its original limits.
+
 The `kdmm8` milestone passed 23 serial cases in the existing MM VM, including
 seven different-task resident partial removals and six delegated post-split
 errors matched to native controls. See the [scope and execution flow](../../../../kernel_integration/mmap_lock/UNMAP.md#resident-partial-removal-and-post-split-errors)

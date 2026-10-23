@@ -1,13 +1,15 @@
 # Bounded anonymous munmap bodies
 
-Status: `kdmm8` adds one-page prefix, suffix and interior removal from a
-three-page resident anonymous VMA (virtual memory area). All 23 serial cases
-passed, including seven different-task resident removals and six delegated
-post-split errors compared with native errors and layouts. Ownership,
-handback/ACK (acknowledgement), cancellation, page references and cleanup passed.
-Advice, first-write faults, whole-VMA removal and untouched partial removal
-passed preservation smokes. Recovery is restored. See the [result record](../../bench/results/10.176.26.71/tests/mm-resident-partial-20261023/README.md)
-and [prebuilt commands](../../tests/kernel/mmap_lock/resident_partial/README.md).
+Status: `kdmm9` permits untouched surviving pages around a resident one-page
+target in a three-page anonymous VMA (virtual memory area). All 22 serial cases
+passed, including 11 different-task mixed-page removals and native comparisons
+for errors after either interior split. Ownership, handback/ACK
+(acknowledgement), cancellation, page references and cleanup passed. Resident
+and untouched unmap, advice and first-write fault preservation smokes passed.
+Recovery is restored. See the [result record](../../bench/results/10.176.26.71/tests/mm-mixed-partial-20261023/README.md)
+and [prebuilt commands](../../tests/kernel/mmap_lock/mixed_partial/README.md).
+The [kdmm8 result](../../bench/results/10.176.26.71/tests/mm-resident-partial-20261023/README.md)
+retains the fully resident and original split-error evidence.
 The [untouched partial baseline](../../bench/results/10.176.26.71/tests/mm-partial-unmap-20261023/README.md)
 keeps its separate 45-removal evidence. Performance, p95, the seven mutex
 regressions and broad stress remain deferred.
@@ -90,14 +92,15 @@ describes the checks and their limits.
 
 ## Resident partial removal and post-split errors
 
-`kd_mmap_unmap_resident_partial_enable()` explicitly enables the new path under
-mmap write ownership. It admits one page of exactly three ordinary, writable,
-exclusive resident anonymous 4-KiB pages. The original exclusions, isolation and
+`kd_mmap_unmap_resident_partial_enable()` explicitly enables the path under
+mmap write ownership. It admits one ordinary, writable, exclusive resident
+anonymous 4-KiB target in an exactly three-page VMA. Each retained slot may be
+an ordinary resident page or an absent PTE. The original exclusions, isolation and
 both neighboring VMAs within the same PMD span remain required. A PMD describes
 a 2-MiB page-table interval here. Retaining its leaf table avoids allocation for
 deferred table freeing on the executor. The VMA must have exactly one
 `anon_vma_chain` link, pointing to its active `anon_vma` reverse-map object.
-Missing pages, additional ancestry links and unsupported page types hand back.
+A missing target, additional ancestry links and unsupported page types hand back.
 
 The native `anon_vma_clone()` allocates a new link when splitting. The caller
 now allocates two links, two VMA descriptors and the separate maple reserves
@@ -105,16 +108,20 @@ before publication, using its own allocation context. No live VMA or reverse-map
 pointer is retained during preparation. Under the actual mmap writer, the owner
 rechecks the current VMA, ancestry, reserve capacity and all three original PTEs
 (leaf page-table entries). It takes a temporary reference and tries the lock on
-each original page; a later failure releases the exact held prefix before
-handback. Readers remain concurrent and local until writer admission closes.
+each resident page. References retain their original VMA slot indices; skipping
+an untouched survivor never compacts them into a misleading dense prefix.
+Only an absent retained PTE may be skipped. A later failure releases exactly the
+held slots before handback. Readers remain concurrent and local until writer
+admission closes. The target's resident-page requirement is unchanged.
 
 The prepared clone consumes one supplied link per split and shares the native
 reverse-map root locking, interval-tree insertion and active-VMA accounting.
 Ordinary native callers retain their allocator path. Native split/adjust and
-unmap then remove the requested slice. All three original pages remain held
+unmap then remove the requested slice. All originally resident pages remain held
 through this body; after its TLB (cached address translation) flush, the removed
 PTE must be empty with mapcount zero, surviving PTEs must retain their original
-physical pages, and table bytes must be unchanged. The executor releases all
+physical pages, untouched survivor PTEs must remain absent, and table bytes must
+be unchanged. The executor releases all
 temporary page references/locks before completion. Unused prepared links and
 descriptors retire on the origin after exact queue-node retirement. Consumed
 links belong to the native VMA lifecycle, including later local cleanup.
@@ -139,6 +146,21 @@ A busy third page proves release of two earlier holds before ACK; a subsequent
 call stays local. Queued cancellation leaves its mapping intact. Two local
 readers overlap, and a real fault on an untouched surviving neighbor waits for
 writer release and resolves locally. That fault is not delegated fault evidence.
+
+The `kdmm9` mixed cases add prefix/suffix/interior targets with both survivors
+untouched, and interior targets with only the left or right survivor resident.
+Ten removals execute on other tasks; a final-release case adds one more. The
+probe pins only specified resident slots and independently reads all three
+PTEs without faulting them in. Body receipts bind exact resident/untouched masks
+to the same mm, request, origin and executor as the physical-page completion.
+After writer release, a real fault inside an untouched surviving part of the
+original VMA resolves locally to the zero page. Survivors then pass full-page
+zero/pattern checks and local writes. The zero page is a shared physical page
+mapped by a read fault; it is distinct from an absent PTE and is still refused
+if already present during body admission. Busy-page, zero-page-survivor and
+missing-target cases each release one earlier page hold before their exact
+handback/ACK and then demonstrate sticky-local fallback. Sparse references also
+retire correctly after either injected interior split error and cancellation.
 
 ## One through four populated pages
 
@@ -312,8 +334,8 @@ approved KD boot and verified recovery snapshot. For this recorded candidate:
 The original opt-in supports untouched whole/partial removal within its 16-page
 bound and absent PGDs. The original populated opt-in supports whole removal of
 one through four resident pages with retained tables. The new opt-in additionally
-supports the resident three-page/one-page-slice case above. It refuses mixed
-resident/untouched inputs, multi-link reverse-map ancestry, shared/COW
+supports the mixed or fully resident three-page/one-page-slice case above. It
+refuses nonresident targets, zero-page survivors, multi-link reverse-map ancestry, shared/COW
 (copy-on-write) pages, swapped/huge pages and missing table-retaining neighbors.
 General table destruction, file/device or notifier callbacks, memory-accounted
 VMAs and mapping creation remain unsupported. Other untouched widths within the
@@ -331,10 +353,8 @@ Native-off boot controls and the full historical fault-retry/API suite were not
 repeated. The run checked the same 73 runtime modules, not every configured
 module. RT, lockdep and whole-kernel replacement remain unvalidated.
 
-The next small extension is a resident target page with untouched retained pages
-inside the same three-page VMA. Revalidate each PTE under the writer, hold only
-present ordinary pages, and preserve exact slot-to-page identity while retaining
-the current table and reverse-map restrictions. Zero-page, swapped, shared and
-complex-ancestry cases should continue to hand back. This would remove an
-all-pages-resident restriction without increasing size or claiming general mmap
-support. It is a plan, not implemented or tested support.
+Live mixed coverage uses both untouched survivors for edge targets and zero or
+one resident survivor for interior targets. Edge targets with one resident and
+one untouched survivor are admitted by the same slot walk but were not directly
+tested. No size limit was increased. Broader mapping creation/removal support,
+performance, p95, the seven mutex regressions and nano reruns remain deferred.
