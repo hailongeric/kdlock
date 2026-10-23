@@ -51,7 +51,8 @@ def compare_success(native, delegated):
     return dict(shape=native['shape'], origins=delegated['groups'], layouts_equal=True, residency_equal=True)
 
 
-def validate(row, log, *, absent=False, missing=False, boundary=False, boundary_empty=False, boundary_zero=False, boundary_private=False, boundary_shared=False, boundary_shared_missing=False):
+def validate(row, log, *, absent=False, missing=False, boundary=False, boundary_empty=False, boundary_zero=False, boundary_private=False, boundary_shared=False, boundary_shared_missing=False, neighbor=False):
+    require(row.get('neighbor_gate_test',0)==neighbor, 'explicit native writer-gate evidence required')
     n, resident, native = row['groups'], row['resident'], row['native']
     require(resident == 1 and row['zero_target_test'] == (not (absent or boundary_private)) and
             row.get('absent_target_test', 0) == absent and row.get('missing_table_test',0)==missing and row.get('boundary_edge_test',0)==boundary and row.get('boundary_empty_test',0)==boundary_empty and row.get('boundary_zero_test',0)==boundary_zero and row.get('boundary_private_test',0)==boundary_private and row.get('boundary_shared_test',0)==boundary_shared and row.get('boundary_shared_missing_test',0)==boundary_shared_missing and (not boundary_shared or boundary_private or boundary_zero or boundary_empty or boundary_shared_missing) and (not boundary_shared_missing or boundary_shared and absent and not (boundary_private or boundary_zero or boundary_empty)) and (not (boundary_empty or boundary_zero or boundary_private) or boundary) and sum((boundary_empty,boundary_zero,boundary_private))<=1, 'exact target-family evidence required')
@@ -86,7 +87,7 @@ def validate(row, log, *, absent=False, missing=False, boundary=False, boundary_
         require((mask, zero) == expected_input and not (mask & zero), 'declared residency combination differs')
         if not (row['injection'] and not native and g == 0 or row['missing_target'] and g == 1):
             require(not ((mask | zero) & target) if absent else mask & target and not (zero & target) if boundary_private else zero & target and not (mask & target), 'target initial leaf state differs')
-    require(row['busy'] == (bool(not native and ((row['mode'] in ('busy','free-table','shared','appear','change-zero','change-private','change-busy','change-private-busy','appear-private-busy') and not (boundary_shared and (boundary_zero and row['mode']=='change-private' or boundary_empty and row['mode'] in ('change-zero','change-private')))) or row['mode']=='table' and not boundary_empty)) if boundary else bool(row['busy_page'] or row['no_resident'] or row['missing_target'] or missing_table or upper_refusal)) and
+    require(row['busy'] == (bool(not native and row['neighbor_loss']) if neighbor else (bool(not native and ((row['mode'] in ('busy','free-table','shared','appear','change-zero','change-private','change-busy','change-private-busy','appear-private-busy') and not (boundary_shared and (boundary_zero and row['mode']=='change-private' or boundary_empty and row['mode'] in ('change-zero','change-private')))) or row['mode']=='table' and not boundary_empty)) if boundary else bool(row['busy_page'] or row['no_resident'] or row['missing_target'] or missing_table or upper_refusal))) and
             sum(row[k] for k in ('busy_page','no_resident','missing_target')) + missing_table + upper_refusal <= 1, 'refusal input differs')
     effective = [m | (target if private_change and g == change_group else 0) for g,m in enumerate(masks)]
     effective_zero = [(z | (change_bit if changing_zero and g == change_group else 0)) & ~(target if private_change and g == change_group else 0) for g,z in enumerate(zeros)]
@@ -94,7 +95,7 @@ def validate(row, log, *, absent=False, missing=False, boundary=False, boundary_
     inject, busy, cancel, free = (row[k] for k in ('injection', 'busy', 'cancel', 'free_first'))
     require(n == (1 if native else 2 if inject or cancel or free else 3) and row['slice'] in (0, 1, 2), 'case shape differs')
     require(row['idle'] == 1 and row['errors'] == 0 and row['checks'] > 100 and row['mm'] and row['gate'] and
-            row['reader_peak'] == (0 if native else 2) and row['cleanup_calls'] == n * (4 if missing or boundary else 3) and
+            row['reader_peak'] == (0 if native or neighbor else 2) and row['cleanup_calls'] == n * (4 if missing or boundary else 3) and
             row['fail_seen'] == bool(inject), 'business, injection, readers or cleanup missing')
     expected = dict(calls=0 if native else n, removed=0 if native else 1 if inject or busy or cancel else n,
                     delegated=0 if native or inject or busy or cancel else n - 1,

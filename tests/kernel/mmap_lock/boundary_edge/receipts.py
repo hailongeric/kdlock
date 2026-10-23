@@ -24,16 +24,17 @@ def compare_success(a,b):
     return dict(shape=a['shape'],mode=a['mode'],layouts_equal=True,residency_equal=True)
 
 
-def validate(row, log, *, empty=False, zero=False, private=False, shared=False, shared_missing=False):
+def validate(row, log, *, empty=False, zero=False, private=False, shared=False, shared_missing=False, neighbor=False):
     existing=empty or zero or private
-    ev=common['validate'](row,log,absent=not (zero or private),boundary=True,boundary_empty=empty,boundary_zero=zero,boundary_private=private,boundary_shared=shared,boundary_shared_missing=shared_missing)
+    ev=common['validate'](row,log,absent=not (zero or private),boundary=True,boundary_empty=empty,boundary_zero=zero,boundary_private=private,boundary_shared=shared,boundary_shared_missing=shared_missing,neighbor=neighbor)
     n,native,target,mode=row['groups'],row['native'],row['slice'],row['mode']
     victim=0 if native else 1
     require(target in (0,2) and mode in (('success','error','cancel','appear-near-zero','appear-zero','appear-private','appear-private-busy','free-table','fault') if shared_missing else ('success','error','cancel','free','change-busy','change-near-zero','free-table','shared','fault','busy') if private else ('success','error','cancel','change-zero','change-private','change-private-busy','free-table','shared','fault','busy') if existing else ('success','error','cancel','appear','table','free-table','shared','fault','busy')), 'unsupported edge input')
     require(row['injection']==(mode=='error') and row['cancel']==(mode=='cancel') and row['fault_interaction']==(mode=='fault') and
             row['busy_page']==(mode=='busy') and row['free_first']==(private and mode=='free') and row['interval_cleanup_calls']==n*4, 'case/control/cleanup routing differs')
     require((row['page_size'],row['pmd_size'],row['pud_size'])==(PAGE,PMD,PUD) and row['pgdir_size'] in (1<<39,1<<48), 'unsupported architecture geometry')
-    require(row['table_bytes_after']==row['table_bytes_before']+PAGE*(mode=='appear' and not empty or shared_missing and row['changing'] or mode=='fault' and not native)-PAGE*(mode=='free-table' and not shared), 'unexpected table creation or destruction')
+    growth=PAGE*bool(row['neighbor_body']['old_table'] and not row['neighbor_body']['destination_table']) if neighbor else 0
+    require(row['table_bytes_after']==row['table_bytes_before']+growth+PAGE*(mode=='appear' and not empty or shared_missing and row['changing'] or mode=='fault' and not native)-PAGE*(mode=='free-table' and not shared), 'unexpected table creation or destruction')
     keys=['walks_before','walks_after','walks_accessed','walks_written','walks_cleanup','neighbors','anchors','tables_before','tables_after']
     require(all(len(row[k])==n for k in keys), 'incomplete table/neighbor observations')
     for g,o in enumerate(row['origins']):
@@ -46,14 +47,16 @@ def validate(row, log, *, empty=False, zero=False, private=False, shared=False, 
         if not head:
             shares=shared or mode=='shared' and selected
             require((start//PMD==(lo+PAGE)//PMD)==shares, 'edge sharing a survivor table was misclassified')
-        neighbor=row['neighbors'][g]
-        require(len(neighbor)==2, 'two outer VMA records required')
-        for side,entry in enumerate(neighbor):
+        adjacent=row['neighbors'][g]
+        require(len(adjacent)==2, 'two outer VMA records required')
+        for side,entry in enumerate(adjacent):
             expected=lo+(-2 if side==0 else 4)*PAGE
             if mode=='free-table' and selected and side==bool(target):expected+=PMD if side else -PMD
-            require(entry['address']==entry['start']==expected and entry['end']==expected+PAGE and entry['unchanged']==1 and
+            replaced=neighbor and selected and side==row['neighbor_config']['side']
+            if replaced:expected+=(-1 if side==0 else 1)*(PMD if row['neighbor_loss'] else PAGE)
+            require(entry['address']==entry['start']==expected and entry['end']==expected+PAGE and entry['unchanged']==(not replaced) and
                     not entry['anon'] and not entry['other'] and not entry['pfn'] and
-                    entry['zero']==(side==bool(target) and (existing and not (mode=='free-table' and selected) or mode=='table' and selected)) and entry['none']==(not entry['zero']), 'retaining neighbor moved, populated or disappeared')
+                    entry['zero']==(not neighbor and side==bool(target) and (existing and not (mode=='free-table' and selected) or mode=='table' and selected)) and entry['none']==(not entry['zero']), 'retaining neighbor moved, populated or disappeared')
         require(row['anchors'][g]==first*PMD+2*PMD+8*PAGE and row['anchors'][g]//PUD==lo//PUD, 'upper-level anchor geometry differs')
         before=row['walks_before'][g]
         for phase,key in enumerate(('walks_before','walks_after','walks_accessed','walks_written')):
@@ -65,7 +68,7 @@ def validate(row, log, *, empty=False, zero=False, private=False, shared=False, 
                               for q in range(3))
                 if (not (selected and mode=='free-table' and phase and not shared) if existing else selected and (mode=='table' or phase==0 and mode=='free-table' and not shared_missing or phase>0 and (mode=='appear' or shared_missing and row['changing']))) and interval==(lo+target*PAGE)//PMD:populated=True
                 if phase>0 and mode=='fault' and not native and g==1 and interval==(lo+row['late_slot']*PAGE)//PMD:populated=True
-                if phase>=2 and any(e['address']//PMD==interval for e in neighbor):populated=True
+                if phase>=2 and any(e['address']//PMD==interval for e in adjacent):populated=True
                 if head:populated=True
                 if populated:leaf|=1<<p
                 require(bool(w['table_pfn'][p])==populated and w['parent_pfn'][p]==before['parent_pfn'][0]>0, 'wrong or replaced table identity')

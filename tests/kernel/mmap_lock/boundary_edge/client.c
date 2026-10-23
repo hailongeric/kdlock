@@ -9,6 +9,9 @@
 #ifndef KD_BOUNDARY_PRIVATE
 #define KD_BOUNDARY_PRIVATE 0
 #endif
+#ifndef KD_NEIGHBOR_TEST
+#define KD_NEIGHBOR_TEST 0
+#endif
 #ifndef KD_BOUNDARY_SHARED
 #define KD_BOUNDARY_SHARED 0
 #endif
@@ -28,6 +31,9 @@ static unsigned int target_rechecks_accessed, target_rechecks_written;
 struct neighbor { unsigned long address, start, end, pgoff, flags, none, zero, anon, other, pfn; };
 static struct neighbor neighbor_before[3][2], neighbor_after[3][2], retention_before;
 static unsigned long retention_table_before, retention_table_after;
+#if KD_NEIGHBOR_TEST
+#include "../neighbor_replace/client.inc"
+#endif
 static struct neighbor neighbor_state(unsigned int g, unsigned int side)
 {
 	struct ub_layout l = layout(neighbors[g][side]);
@@ -41,9 +47,13 @@ static void print_neighbors(void)
 	for (unsigned int g = 0; g < groups; g++) {
 		printf("%s[",g ? "," : "");
 		for (unsigned int side = 0; side < 2; side++) {
-			struct neighbor *a = &neighbor_before[g][side], *b = &neighbor_after[g][side];
+			struct neighbor *original_neighbor = &neighbor_before[g][side], *b = &neighbor_after[g][side];
+			struct neighbor *a = original_neighbor;
+#if KD_NEIGHBOR_TEST
+			if (neighbor_selected(g, side)) a = b;
+#endif
 			printf("%s{\"address\":%lu,\"start\":%lu,\"end\":%lu,\"flags\":%lu,\"pgoff\":%lu,\"none\":%lu,\"zero\":%lu,\"anon\":%lu,\"other\":%lu,\"pfn\":%lu,\"unchanged\":%d}",
-				side ? "," : "",a->address,a->start,a->end,a->flags,a->pgoff,a->none,a->zero,a->anon,a->other,a->pfn,!memcmp(a,b,sizeof(*a)));
+				side ? "," : "",a->address,a->start,a->end,a->flags,a->pgoff,a->none,a->zero,a->anon,a->other,a->pfn,!memcmp(original_neighbor,b,sizeof(*a)));
 		}
 		putchar(']');
 	}
@@ -82,10 +92,13 @@ static void edge_walk(unsigned int g, struct ub_table_walk *w, unsigned int phas
 }
 int main(int argc, char **argv)
 {
-	require(argc == 3 || argc == 4, "native|target prefix|suffix-PAIR [error|cancel|appear|table|free-table|shared|fault|busy]");
+	require(KD_NEIGHBOR_TEST ? argc == 4 || argc == 5 : argc == 3 || argc == 4, "native|target prefix|suffix-PAIR [error|cancel|appear|table|free-table|shared|fault|busy]");
 	native = !strcmp(argv[1], "native"); resident = 1;
 	require(native || !strcmp(argv[1], "target"), "native or target route");
-	const char *shape = argv[2], *mode = argc == 4 ? argv[3] : "success";
+	const char *shape = argv[2], *mode = KD_NEIGHBOR_TEST ? (argc == 5 ? argv[4] : "success") : argc == 4 ? argv[3] : "success";
+#if KD_NEIGHBOR_TEST
+	neighbor_parse(argv[3]);
+#endif
 	unsigned int shape_mask = 0, shape_zero = 0; int found = 0;
 	for (unsigned int i = 0; i < sizeof(shapes) / sizeof(shapes[0]); i++)
 		if (!strcmp(shape, shapes[i].name)) { found = 1; slice = shapes[i].target; shape_mask = shapes[i].mask | (KD_BOUNDARY_PRIVATE ? 1U << slice : 0); shape_zero = shapes[i].zero & (KD_BOUNDARY_ZERO ? 7U : ~(1U << slice)); }
@@ -106,6 +119,11 @@ int main(int argc, char **argv)
 	fault_interaction = !strcmp(mode, "fault"); busy_page = !strcmp(mode, "busy");
 	free_table = !strcmp(mode, "free-table"); present_table = !strcmp(mode, "table"); shared_edge = !strcmp(mode, "shared");
 	busy = !native && (free_table || (!KD_BOUNDARY_EXISTING && present_table) || shared_edge || (changing && !near_zero && !zero_convert && !empty_convert && !missing_convert) || busy_page);
+	#if KD_NEIGHBOR_TEST
+	busy = !native && neighbor_config.loss;
+	require(!changing && !free_table && !present_table && !shared_edge && !fault_interaction && !busy_page && !free_first &&
+		(!strcmp(mode,"success") || injection || cancellation) && !(neighbor_config.loss && (injection || cancellation)), "focused native neighbor replacement");
+#endif
 	require(!strcmp(mode, "success") || free_first || injection || cancellation || free_table || present_table || shared_edge || changing || busy_page || fault_interaction, "known edge mode");
 	require(!busy_page || (slice == 0 && shape_mask == (KD_BOUNDARY_PRIVATE ? 7U : 6U)), "busy final survivor has an earlier exact hold");
 	require(!(shared_edge || changing || fault_interaction) || (!(shape_mask & ~(1U << slice)) && !(shape_zero & ~(1U << slice))), "focused geometry/transition/fault fixtures use UU survivors");
@@ -134,9 +152,11 @@ int main(int argc, char **argv)
 		uintptr_t ranges[] = {addresses[g], neighbors[g][0], neighbors[g][1]};
 		for (unsigned int r = 0; r < 3; r++) {
 			size_t len = (r ? 1 : 3) * PAGE;
-			void *p = mmap((void *)ranges[r], len, PROT_READ | PROT_WRITE,
-				MAP_PRIVATE | MAP_ANONYMOUS | MAP_NORESERVE | MAP_FIXED_NOREPLACE, -1, 0);
-			require(p == (void *)ranges[r] && !madvise(p, len, MADV_NOHUGEPAGE), "mapping setup");
+			int device_neighbor = KD_NEIGHBOR_TEST && r;
+			void *p = mmap((void *)ranges[r], len, PROT_READ | (device_neighbor ? 0 : PROT_WRITE),
+				MAP_PRIVATE | MAP_NORESERVE | MAP_FIXED_NOREPLACE | (device_neighbor ? 0 : MAP_ANONYMOUS),
+				device_neighbor ? device : -1, device_neighbor ? (g * 2 + r - 1) * PAGE : 0);
+			require(p == (void *)ranges[r] && (device_neighbor || !madvise(p, len, MADV_NOHUGEPAGE)), "mapping setup");
 		}
 		if (KD_BOUNDARY_ZERO)
 			require(!probe_read(addresses[g] + slice * PAGE) && !observed, "read-fault shared-zero target without a private write");
@@ -149,7 +169,7 @@ int main(int argc, char **argv)
 		require(!probe_read(anchors[g]) && !observed, "upper levels exist without touching missing slots");
 		if (KD_BOUNDARY_EXISTING || ((present_table || free_table) && selected)) {
 			unsigned int side = !!slice;
-			if (!KD_BOUNDARY_SHARED_MISSING) require(!probe_read(neighbors[g][side]) && !observed, "neighbor read constructs target table without touching target");
+			if (!KD_NEIGHBOR_TEST && !KD_BOUNDARY_SHARED_MISSING) require(!probe_read(neighbors[g][side]) && !observed, "neighbor read constructs target table without touching target");
 			if (free_table && selected) {
 				if (KD_BOUNDARY_EXISTING || KD_BOUNDARY_SHARED_MISSING) {
 					retention_before = neighbor_state(g, side);
@@ -211,6 +231,9 @@ int main(int argc, char **argv)
 		(unsigned long)((native ? 0 : 3) + (near_zero ? 1 : slice))), "arm locked revalidation control before execution");
 	extra_before = extra();
 	int fault_test = !native && !injection && !busy && !cancellation && fault_interaction;
+	#if KD_NEIGHBOR_TEST
+	neighbor_run(base);
+	#else
 	if (native) {
 		before = layout(base); workers[0].tid = syscall(SYS_gettid); workers[0].offset = slice; workers[0].width = 1;
         if (changing) require(!ioctl(device, UB_CHANGE_NOW), "native controlled target-table appearance");
@@ -240,6 +263,7 @@ int main(int argc, char **argv)
 		if (fault_test) { wait_atomic(&late_done); require(!late_code && !fault_value, "real survivor fault resolves locally"); }
 		wait_atomic(&holder_done); require(!hold_error, "reader controller drained");
 	}
+	#endif
 	if (near_zero && !KD_BOUNDARY_SHARED_MISSING) {
 		require(!ioctl(device, UB_CHANGE_RESULT_MORE, &change_more), "queued near-survivor read fault observation");
 		change = change_more.state;
@@ -285,11 +309,15 @@ int main(int argc, char **argv)
 	}
 
 	after = layout(base); extra_after = extra();
+	unsigned long neighbor_growth = 0;
+#if KD_NEIGHBOR_TEST
+	neighbor_growth = neighbor_body.old_table && !neighbor_body.destination_table ? PAGE : 0;
+#endif
 	unsigned int removed_pages = injection ? (native ? 0 : 3) : cancellation ? 1 : groups;
 	int map_delta = injection ? injection - !native : slice == 1 ? (int)removed_pages : 0;
 	require(before.total_vm == after.total_vm + removed_pages && before.data_vm == after.data_vm + removed_pages &&
 		before.exec_vm == after.exec_vm && before.stack_vm == after.stack_vm &&
-		(long long)after.map_count - (long long)before.map_count == map_delta && before.pgtables + ((changing && !KD_BOUNDARY_EXISTING) || fault_test ? PAGE : 0) == after.pgtables + (free_table && !KD_BOUNDARY_SHARED ? PAGE : 0),
+		(long long)after.map_count - (long long)before.map_count == map_delta && before.pgtables + neighbor_growth + ((changing && !KD_BOUNDARY_EXISTING) || fault_test ? PAGE : 0) == after.pgtables + (free_table && !KD_BOUNDARY_SHARED ? PAGE : 0),
 		"exact native page/VMA/table accounting including harmless splits");
 	require(extra_after.fail_after == 0 && extra_after.fail_seen == !!injection, "one exact injection consumed");
 	if (!cancellation) for (unsigned int g = 0; g < groups; g++) {
@@ -308,11 +336,19 @@ int main(int argc, char **argv)
 	}
 	for (unsigned int g = 0; g < groups; g++) for (unsigned int side = 0; side < 2; side++) {
 		neighbor_after[g][side] = neighbor_state(g, side);
+#if KD_NEIGHBOR_TEST
+		if (neighbor_selected(g, side)) {
+			struct neighbor a = neighbor_before[g][side], *b = &neighbor_after[g][side];
+			a.address = a.start = neighbor_config.new_address; a.end = a.start + PAGE;
+			require(!memcmp(&a,b,sizeof(a)) && !mapped(neighbor_config.old_address) &&
+				probe_read(neighbor_config.old_address) == SEGV_MAPERR, "native replacement exact; old address inaccessible");
+		} else
+#endif
 		require(!memcmp(&neighbor_before[g][side], &neighbor_after[g][side], sizeof(struct neighbor)), "retaining-neighbor mapping and PTE remain exact");
 	}
 	account(1); /* No survivor read by this controller precedes this snapshot. */
 	verify_mappings();
-	if (KD_BOUNDARY_SHARED_MISSING) for (unsigned int g = 0; g < groups; g++)
+	if (KD_BOUNDARY_SHARED_MISSING || KD_NEIGHBOR_TEST) for (unsigned int g = 0; g < groups; g++)
 		if (removed(g, slice)) {
 			require(probe_read(addresses[g] + slice * PAGE) == SEGV_MAPERR,
 				"near-survivor fault must not restore the removed target");
@@ -364,7 +400,7 @@ int main(int argc, char **argv)
 		walks_written[g] = walk_state(g); edge_walk(g, &walks_written[g], 3);
 		for (unsigned int p = 0; p < 3; p++) require(walks_written[g].tables.table_pfn[p] == walks_accessed[g].tables.table_pfn[p], "writes retain exact tables");
 	}
-	if (KD_BOUNDARY_SHARED_MISSING) for (unsigned int g = 0; g < groups; g++)
+	if (KD_BOUNDARY_SHARED_MISSING || KD_NEIGHBOR_TEST) for (unsigned int g = 0; g < groups; g++)
 		if (removed(g, slice)) {
 			require(probe_read(addresses[g] + slice * PAGE) == SEGV_MAPERR,
 				"isolated survivor writes must not restore the removed target");
@@ -374,14 +410,21 @@ int main(int argc, char **argv)
 	account(2);
 	require(!fclose(smaps), "close resident accounting observer");
 	struct ub_status done = status();
-	require(done.idle && !done.pending && !done.errors && (native || done.reader_peak == 2) &&
+	require(done.idle && !done.pending && !done.errors && (native || done.reader_peak == (KD_NEIGHBOR_TEST ? 0 : 2)) &&
 		done.counts.handbacks == done.counts.acks, "no stranded ownership/ACK");
+	#if KD_NEIGHBOR_TEST
+	neighbor_snapshot(&neighbor_accessed, groups * 2, groups * 2);
+	require(!mapped(neighbor_config.old_address) && probe_read(neighbor_config.old_address) == SEGV_MAPERR, "neighbor reads do not restore old mapping");
+	#endif
 	atomic_store(&leave_threads, 1);
 	if (!native && !cancellation) {
 		for (unsigned int g = 0; g < groups; g++) require(!pthread_join(workers[g].thread, NULL), "join origins");
-		require(!pthread_join(holder, NULL), "join controller");
+		if (!KD_NEIGHBOR_TEST) require(!pthread_join(holder, NULL), "join controller");
 		if (fault_test) require(!pthread_join(late_thread, NULL) && !close(late_stack_fd), "join fault observer");
 	}
+	#if KD_NEIGHBOR_TEST
+	require(!pthread_join(neighbor_thread, NULL), "join native writer");
+	#endif
 	unsigned int cleanup = 0, routed_cleanup = 0;
 	for (unsigned int g = 0; g < groups; g++) {
 		require(!munmap((void *)addresses[g], 3 * PAGE), "cleanup all target pieces"); cleanup++;
@@ -416,6 +459,9 @@ int main(int argc, char **argv)
 		clean.counts.delegated == done.counts.delegated && clean.counts.failed == done.counts.failed &&
 		clean.counts.calls == done.counts.calls + (native ? 0 : routed_cleanup) &&
 		clean.counts.native == done.counts.native + (native ? 0 : routed_cleanup), "cleanup cannot replay a failed body");
+	#if KD_NEIGHBOR_TEST
+	neighbor_snapshot(&neighbor_clean, 0, 0);
+	#endif
 	require(!close(device), "release mm reference");
 	printf("{\"boundary_edge_test\":1,\"boundary_empty_test\":%d,\"boundary_zero_test\":%d,\"boundary_private_test\":%d,\"boundary_shared_test\":%d,\"mode\":\"%s\",", KD_BOUNDARY_EMPTY, KD_BOUNDARY_ZERO, KD_BOUNDARY_PRIVATE, KD_BOUNDARY_SHARED, mode);
 	if (KD_BOUNDARY_SHARED_MISSING) printf("\"boundary_shared_missing_test\":1,\"target_rechecks_accessed\":%u,\"target_rechecks_written\":%u,", target_rechecks_accessed, target_rechecks_written);
@@ -462,6 +508,9 @@ int main(int argc, char **argv)
 		printf(",\"walks_cleanup\":");print_walks(walks_cleanup);
 	}
 
+	#if KD_NEIGHBOR_TEST
+	neighbor_print();
+	#endif
 	print_neighbors();
 	printf(",\"residency\":"); print_account();
 	if (KD_TEST_ABSENT || KD_BOUNDARY_ZERO || KD_BOUNDARY_PRIVATE) {

@@ -36,6 +36,10 @@ struct session {
 	struct ub_pages snapshot;
 	bool change_armed;
 	struct ub_change_more change;
+	struct ub_neighbor neighbor;
+	struct page *neighbor_page;
+	struct control *neighbor_cancel;
+	atomic_t neighbor_vmas, neighbor_faults;
 };
 struct control;
 struct worker {
@@ -249,6 +253,7 @@ out:
 
 #include "resident.inc"
 #include "target_change.inc"
+#include "neighbor_gate.inc"
 
 static long operation(struct file *file, unsigned int cmd, unsigned long arg)
 {
@@ -261,6 +266,11 @@ static long operation(struct file *file, unsigned int cmd, unsigned long arg)
 	if (current->mm != s->mm)
 		return -EXDEV;
 	switch (cmd) {
+	case UB_NEIGHBOR_ARM:
+	case UB_NEIGHBOR_RESULT:
+	case UB_NEIGHBOR_PROBE:
+	case UB_NEIGHBOR_FINISH:
+		return neighbor_operation(s, cmd, arg);
 	case UB_CHANGE_ARM:
 	case UB_CHANGE_NOW:
 	case UB_CHANGE_RESULT:
@@ -418,6 +428,10 @@ static int released(struct inode *inode, struct file *file)
 	}
 	WARN_ON(!kd_mmap_is_idle(&s->mm->mmap_lock));
 	drop_pins(s);
+	if (s->neighbor_page) {
+		WARN_ON(atomic_read(&s->neighbor_vmas) || page_count(s->neighbor_page) != 1 || page_mapped(s->neighbor_page));
+		put_page(s->neighbor_page);
+	}
 	mmput(s->mm);
 	kfree(s);
 	return 0;
@@ -425,7 +439,7 @@ static int released(struct inode *inode, struct file *file)
 
 static const struct file_operations operations = {
 	.owner = THIS_MODULE, .open = opened, .release = released,
-	.unlocked_ioctl = operation, .llseek = no_llseek,
+	.unlocked_ioctl = operation, .llseek = no_llseek, .mmap = neighbor_mmap,
 };
 static struct miscdevice device = {
 	.minor = MISC_DYNAMIC_MINOR, .name = "kd_mm_unmap_test", .fops = &operations, .mode = 0600,

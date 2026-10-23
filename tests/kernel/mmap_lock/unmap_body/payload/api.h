@@ -110,4 +110,23 @@ struct ub_bases { __u64 base[3]; };
 #define UB_CHANGE_SHARED_MISSING_ZERO_ARM _IO('U', 0x8b)
 #define UB_CHANGE_SHARED_MISSING_PRIVATE_ARM _IO('U', 0x8c)
 #define UB_CHANGE_SHARED_MISSING_BUSY_ARM _IO('U', 0x8d)
+/* A native mremap callback holds the real writer while requests publish.
+ * Every original ioctl layout stays binary-compatible. */
+struct ub_neighbor_config {
+	__u64 old_address, new_address, target_start, target_end;
+	__u64 side, loss, count, cancel, offset;
+};
+struct ub_neighbor {
+	struct ub_neighbor_config config;
+	__u64 armed, actor, owner, old_vma, new_vma, old_flags, new_flags, pgoff;
+	__u64 pending, readers, queued, released, retired, close_owner, close_pending;
+	__u64 old_table, destination_table, tables_before, tables_queued, tables_closed;
+	__u64 maps_before, maps_queued, maps_closed, pages_before, pages_closed;
+	__u64 reader_blocked, writer_blocked, probe_actor, vmas, faults, page_refs, page_maps;
+	__s64 admission, result;
+};
+#define UB_NEIGHBOR_ARM _IOW('U', 0x8e, struct ub_neighbor_config)
+#define UB_NEIGHBOR_RESULT _IOR('U', 0x8f, struct ub_neighbor)
+#define UB_NEIGHBOR_PROBE _IO('U', 0x90)
+#define UB_NEIGHBOR_FINISH _IO('U', 0x91)
 #endif
