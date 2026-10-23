@@ -92,5 +92,6 @@ removal, four-page whole removal, advice and separate first-write faults.
 Forced mapping/residency replacement, concurrent zero-page write faults during
 the body, reclaim/fast-pinning races, pressure and post-admission cancellation
 remain untested. Larger mappings, complex ancestry and general table destruction
-remain unsupported. Zero-page targets still hand back. No performance result
-or general mmap/page-fault support is implied.
+remain unsupported. Zero-page targets still hand back on this captured kdmm10
+image; the later [zero-target guide](../zero_target/README.md) documents kdmm11.
+No performance result or general mmap/page-fault support is implied.

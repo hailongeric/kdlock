@@ -1,19 +1,21 @@
 # Actual mmap-lock kernel integration
 
-The [bounded munmap experiment](UNMAP.md) now permits shared-zero, untouched or
-private resident survivors around one private resident target in a three-page
-anonymous VMA (virtual memory area). The `kdmm10` extension passed all 44 serial
-cases: 15 new layouts matched native behavior with 30 different-task removals,
-plus one remote final-release case. Zero PTE (page-table entry) identity,
-accounting, isolated private writes, exact ownership/ACK (acknowledgement), split
-errors, refusal, cancellation and cleanup passed. Six preservation smokes cover
-existing unmap, advice and separate first-write faults. Recovery is restored and
-modules unloaded. The [result record](../../bench/results/10.176.26.71/tests/mm-zero-partial-20261023/README.md)
-keeps this kernel change separate from the preserved kdmm9 mixed matrix.
-[Runnable commands](../../tests/kernel/mmap_lock/zero_partial/README.md) reuse the
-installed image and probes. Zero/nonresident targets, complex ancestry, general
-table destruction and mapping creation remain unsupported. No general MM support
-or performance gain is claimed.
+The [bounded munmap experiment](UNMAP.md) now permits a shared-zero target in a
+three-page anonymous VMA (virtual memory area) when an ordinary private resident
+survivor remains. The `kdmm11` extension passed 48 serial cases, two basic programs
+and 650 negative receipt controls. All 15 eligible layouts matched native behavior.
+Validation recorded 32 zero-target removals on different tasks, plus one private
+removal after a controlled queued target change. Zero-page identity, accounting,
+TLB (cached translation) invalidation, survivor isolation, ownership/ACK
+(acknowledgement), split errors, refusal and cancellation passed. Seven small
+smokes preserve earlier unmap, advice and separate first-write paths. Recovery
+is restored and modules unloaded. The [result record](../../bench/results/10.176.26.71/tests/mm-zero-target-20261023/README.md)
+keeps this kernel change separate from the preserved zero-survivor milestone.
+[Runnable commands](../../tests/kernel/mmap_lock/zero_target/README.md) reuse the
+installed image and probes. Zero targets without private survivors, larger
+mappings, complex ancestry, general table destruction and mmap creation remain
+unsupported. The controlled change is not broad write-fault race coverage.
+No general MM support or performance gain is claimed.
 
 The separate [anonymous write-fault experiment](FAULT.md) passed focused serial
 correctness on `kdmm3`: 129 real page-installation bodies completed on other
