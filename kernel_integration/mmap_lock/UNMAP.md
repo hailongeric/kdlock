@@ -1,14 +1,16 @@
-# Minimal whole-VMA munmap body
+# Bounded anonymous munmap bodies
 
-Status: `kdmm6` extends the validated one-page removal to one through four
-resident anonymous pages whose neighbors retain their page tables. All 11
-focused serial cases passed, including 18 multi-page removals on other tasks
-with 69 original-page receipts, late admission rollback, exact handback/ACK
-(acknowledgement) matching and cleanup. The single-page, advice, anonymous
-first-write and unpopulated paths passed a small preservation smoke set. Recovery
-is restored. See the [result record](../../bench/results/10.176.26.71/tests/mm-range-unmap-20261023/README.md)
-for run identities and essential logs. Performance, p95, the seven mutex
-regressions and broad stress remain deferred.
+Status: `kdmm7` adds prefix, suffix and interior removal from an untouched
+anonymous VMA (virtual memory area), including two native splits for an interior
+hole. All 10 serial cases passed: 45 partial removals completed on other tasks,
+with exact mapping/accounting, handback/ACK (acknowledgement), cancellation and
+resource-retirement checks. Whole-VMA removal of unpopulated and one through
+four resident pages, advice and anonymous first-write faults passed preservation
+smokes. Recovery is restored. See the [result record](../../bench/results/10.176.26.71/tests/mm-partial-unmap-20261023/README.md)
+and [prebuilt commands](../../tests/kernel/mmap_lock/partial_unmap/README.md).
+This is a narrow mapping extension; performance, p95, the seven mutex regressions
+and broad stress remain deferred. The [resident-range baseline](../../bench/results/10.176.26.71/tests/mm-range-unmap-20261023/README.md)
+retains its separate `kdmm6` evidence.
 
 ## Reviewed boundary
 
@@ -33,6 +35,58 @@ from the maple tree (the mapping index), updates counts, runs `unmap_region()`,
 and frees the VMA. The ordinary native route calls the same helper without a
 prepared reserve. Success requires a real VMA removal; empty-range success or
 local continuation is never counted as a delegated body.
+
+## Untouched partial ranges and VMA splitting
+
+The original unpopulated opt-in now also accepts a proper subrange of one VMA.
+The **entire original VMA**, including the retained ranges, must fit within the
+opt-in interval, contain at most 16 pages and have absent PGDs and no reverse-map
+chain. All common exclusions above still apply. A reverse map connects a
+physical page back to its mappings. Splitting a resident anonymous VMA can
+allocate new reverse-map links in the executing task's context; those resources
+are not prepared here. Resident partial removal therefore remains a refusal,
+including on the populated opt-in. Merely raising the resident-page limit would
+not solve this caller-context problem.
+
+The originating task allocates two VMA descriptors and separate maple reserves
+for up to two splits, in addition to the existing removal reserves. A reserve
+is storage allocated before queue publication, when the original caller's
+allocation context still applies. Preparation reads only a scalar tree-height
+hint; it does not walk an unlocked tree or retain a VMA pointer. It reserves for
+two possible height increases, and the owner checks current capacity again under
+the actual mmap write lock before changing any mapping.
+
+The native split/adjust helpers accept these prepared objects; ordinary callers
+use their original allocation path. Each prepared split inserts the higher
+address VMA. This orientation matters: the captured native maple store destroys
+its reserve after each store, whereas inserting below could need a second store
+and allocate on the executor. The prepared path asserts its single-store
+conditions. After one or two splits, the shared native removal body detaches and
+frees exactly the requested interval. Retained bounds, flags, page offsets,
+map count, mapped-page count and page-table bytes are checked before completion.
+No callback or new reverse-map allocation is admitted on the combiner.
+
+All refusal checks precede splitting. After the first split can take effect,
+errors are returned as admitted operation errors, never as permission to replay
+the original munmap locally. This preserves native partial-progress semantics
+without repeating destructive work. A pre-effect refusal uses the existing
+exact handback/ACK and sticky local fallback. Consumed descriptor pointers are
+cleared when ownership transfers to the native helper; the origin frees unused
+descriptors and reserves only after its exact queue node retires. Retirement
+receipts bind the descriptor addresses, mm, originating task and range, including
+refusal and cancellation.
+
+Validation removed one page from three-page VMAs in each of the three shapes.
+Each shape produced 15 different-task completions and retained the expected
+zero-filled contents; subsequent writes to surviving ranges also matched.
+Interior removal increased map count by one per operation; edge removal left
+it unchanged. Two local readers held shares concurrently, and a real later
+fault waited for writer release before reporting the removed address absent.
+A populated partial removal instead matched its handback/ACK, preserved the
+surviving patterned bytes and invalidated the original CPU's cached translation;
+the next call stayed local. Queued fatal cancellation left the victim's entire
+mapping intact. The [probe guide](../../tests/kernel/mmap_lock/partial_unmap/README.md)
+describes the checks and their limits.
 
 ## One through four populated pages
 
@@ -128,7 +182,9 @@ so the origin checks them before publication. The captured x86 `arch_unmap()`
 is empty. No callback, file operation or user access is admitted remotely.
 
 Maple-tree allocation can depend on the current task's allocation context.
-The origin therefore prepares both allocation chains before entering the queue.
+The origin therefore prepares the live-tree and detach allocation chains before
+entering the queue, plus the two split reserves/descriptors for the unpopulated
+opt-in described above.
 An allocation-only helper reads a scalar tree-height hint with `READ_ONCE`; it
 never walks a live tree or retains a VMA pointer. Its common allocation routine
 is also used by the unchanged native preallocation API. The combiner checks the
@@ -201,21 +257,25 @@ approved KD boot and verified recovery snapshot. For this recorded candidate:
 
 ## Remaining limitations
 
-The original opt-in supports one small isolated VMA with absent PGDs. The
-populated opt-in additionally supports one through four resident pages with
-retained tables as described above. Neither delegates larger populated ranges,
-general page-table destruction, partial unmap, file/device or notifier callbacks,
-or mapping creation. Partial
-populated removal, old zero-page/PGD refusal and one-page missing-neighbor refusal
-were individually exercised in earlier stages. This stage exercised partial
-removal again, a busy final page, and the five-page limit. Cross-PMD ranges,
-partially absent PTE ranges and other guards remain source-reviewed exclusions.
-The ordinary local path retains its native downgrade and release logic.
+The original opt-in supports whole or partial removal of one small isolated,
+untouched VMA with absent PGDs. The populated opt-in supports whole removal of
+one through four resident pages with retained tables. Neither delegates resident
+partial removal, larger resident ranges, general page-table destruction,
+file/device or notifier callbacks, or mapping creation. The current partial
+tests use three-page VMAs and one-page slices; other sizes within the 16-page
+bound and multi-page slices are not newly validated. The supported untouched
+target has no cached leaf translation to invalidate. Warm-translation evidence
+comes from the refused resident case's local teardown and the separate resident
+whole-VMA preservation smokes, not from remote partial removal. A retained-range
+fault concurrent with splitting was not separately tested. The ordinary local
+path retains its native downgrade and release logic.
 
-Forced reserve-allocation failure, tree-height growth during preparation, slot
+Forced reserve-allocation or post-split failure, the maximum-VMA-count error,
+tree-height growth during preparation, slot
 exhaustion, the 256-request handoff boundary, post-admission cancellation,
 advice/unmap queue interleaving, broad reader/fault races, concurrent fast-GUP
 (fast page pinning), swap/reclaim pressure, different non-root memory cgroups and
-oversubscribed progress remain untested. The run checked the same 73 runtime
+oversubscribed progress remain untested. Native controls and the full historical
+fault-retry/API suite were not repeated. The run checked the same 73 runtime
 modules, not every configured module. RT, lockdep, whole-kernel replacement,
 performance, p95 and the seven mutex regressions remain outside this milestone.

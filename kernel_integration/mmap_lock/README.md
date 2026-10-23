@@ -1,16 +1,18 @@
 # Actual mmap-lock kernel integration
 
-The [whole-VMA munmap experiment](UNMAP.md) now admits one through four resident
-anonymous pages when neighboring mappings retain their page tables. The `kdmm6`
-focused run passed all 11 serial cases: 18 multi-page removals completed on other
-tasks, with 69 receipts tied to original physical pages, plus the preserved
-single-page case. Late admission rollback, exact handback/ACK matching, local
-concurrent readers, cancellation and cleanup passed. Advice, anonymous
-first-write faults and unpopulated removal passed the small preservation smoke
-set. Recovery is restored. The [result record](../../bench/results/10.176.26.71/tests/mm-range-unmap-20261023/README.md)
-keeps this incremental build and run separate from the `kdmm5` baseline.
-General table destruction, mapping creation, performance and broad MM support
-remain unvalidated.
+The [bounded munmap experiment](UNMAP.md) now supports partial removal of an
+untouched anonymous VMA (virtual memory area), including native splitting around
+an interior hole. The `kdmm7` run passed all 10 serial cases: 45 partial removals
+completed on other tasks, with correct retained mappings and contents, exact
+accounting, handback/ACK matching, local concurrent readers, cancellation and
+cleanup. Whole-VMA unpopulated and one-through-four-page resident removal,
+advice and anonymous first-write faults passed preservation smokes. Recovery is
+restored. The [result record](../../bench/results/10.176.26.71/tests/mm-partial-unmap-20261023/README.md)
+keeps this incremental build and run separate from the `kdmm6` resident-range
+baseline. [Runnable commands](../../tests/kernel/mmap_lock/partial_unmap/README.md)
+reuse the installed kernel and frozen probes. Resident partial removal, general
+table destruction, mapping creation, performance and broad MM support remain
+unvalidated.
 
 The separate [anonymous write-fault experiment](FAULT.md) passed focused serial
 correctness on `kdmm3`: 129 real page-installation bodies completed on other
