@@ -59,7 +59,7 @@ static int change_target(struct session *s)
 	if (!s->change_armed || r->done ||
 	    (more->mode == 10 ? !s->pages[i] || s->busy_page : !!s->pages[i]) || current->mm != s->mm ||
 	    (s->mm->mmap_lock.unmap.enabled ?
-	     r->pending != (more->mode >= 6 ? 2 : 3) || r->readers != 2 || r->admission != -1 :
+	     r->pending != (more->mode >= 6 && more->mode != 11 ? 2 : 3) || r->readers != 2 || r->admission != -1 :
 	     r->pending != 0 || r->readers != 1)) goto out;
 	vma = vma_lookup(s->mm, address);
 	if (!vma) goto out;
@@ -98,7 +98,7 @@ static int change_target(struct session *s)
 		/* No target leaf exists. Keep before_none=0 to avoid claiming a
 		 * real empty PTE; the table-change receipt names this distinction. */
 		if (more->table_before) { error = -EINVAL; goto out; }
-	} else if (more->mode && more->mode != 9) {
+	} else if (more->mode && more->mode != 9 && more->mode != 11 && more->mode != 12) {
 		if (!pte_none(entry)) { error = -EINVAL; goto out; }
 		more->before_none = 1;
 	} else {
@@ -146,6 +146,12 @@ static int change_target(struct session *s)
 		hash = (hash ^ bytes[b]) * 1099511628211ULL;
 	}
 	kunmap_local(bytes);
+	/* Mode 12 retains exactly the new GUP reference and changes only page-lock
+	 * eligibility. Native handback may unmap it; the probe unlocks before put. */
+	if (more->mode == 12) {
+		if (s->busy_page || !trylock_page(page)) { error = -EINVAL; goto out; }
+		s->busy_page = page;
+	}
 	r->after_private = 1;
 	r->page = (struct ub_page) { address, page_to_pfn(page), hash, page_mapcount(page),
 		page_count(page), 1, value, PageLocked(page) };
@@ -165,6 +171,12 @@ out:
 			s->mm, i, r->actor, r->pending, r->readers, r->admission, more->mode,
 			more->after_zero, r->after_private, more->table_before, more->table_after,
 			more->anon_before, more->anon_after, r->zero_pfn, r->page.pfn, error);
+	else if (more->mode == 11 || more->mode == 12)
+		pr_info("KD_MM_TEST shared_zero_change mm=%px index=%u actor=%llu pending=%llu readers=%llu admission=%lld mode=%llu before_zero=%llu after_private=%llu table_before=%llx table_after=%llx anon_before=%llx anon_after=%llx zero_pfn=%llx private_pfn=%llx refs=%llu mapcount=%llu locked=%llu result=%d\n",
+			s->mm, i, r->actor, r->pending, r->readers, r->admission, more->mode,
+			r->before_zero, r->after_private, more->table_before, more->table_after,
+			more->anon_before, more->anon_after, r->zero_pfn, r->page.pfn,
+			r->page.refs, r->page.mapcount, r->page.locked, error);
 	else if (more->mode == 9)
 		pr_info("KD_MM_TEST edge_zero_change mm=%px index=%u actor=%llu pending=%llu readers=%llu admission=%lld mode=9 before_none=0 before_zero=%llu after_zero=0 after_private=%llu table_before=%llx table_after=%llx anon_before=%llx anon_after=%llx zero_pfn=%llx private_pfn=%llx result=%d\n",
 			s->mm, i, r->actor, r->pending, r->readers, r->admission, r->before_zero,
@@ -189,7 +201,8 @@ static int change_operation(struct session *s, unsigned int cmd, unsigned long a
 	struct ub_change *r = &s->change.state;
 	bool busy = cmd == UB_CHANGE_EDGE_PRIVATE_BUSY_ARM;
 	bool edge = cmd == UB_CHANGE_EDGE_TABLE_ARM || cmd == UB_CHANGE_EDGE_EMPTY_ZERO_ARM ||
-		cmd == UB_CHANGE_EDGE_EMPTY_PRIVATE_ARM || cmd == UB_CHANGE_EDGE_ZERO_PRIVATE_ARM || busy;
+		cmd == UB_CHANGE_EDGE_EMPTY_PRIVATE_ARM || cmd == UB_CHANGE_EDGE_ZERO_PRIVATE_ARM || busy ||
+		cmd == UB_CHANGE_SHARED_ZERO_PRIVATE_ARM || cmd == UB_CHANGE_SHARED_ZERO_BUSY_ARM;
 
 	if (atomic_read(&s->controlling)) return -EBUSY;
 	if (cmd == UB_CHANGE_ARM || cmd == UB_CHANGE_EMPTY_ZERO_ARM || cmd == UB_CHANGE_EMPTY_PRIVATE_ARM ||
@@ -203,7 +216,7 @@ static int change_operation(struct session *s, unsigned int cmd, unsigned long a
 			error = -EINVAL;
 		else {
 			r->index = arg; s->change_armed = true;
-			s->change.mode = busy ? 10 : cmd == UB_CHANGE_EDGE_ZERO_PRIVATE_ARM ? 9 :
+			s->change.mode = cmd == UB_CHANGE_SHARED_ZERO_PRIVATE_ARM ? 11 : cmd == UB_CHANGE_SHARED_ZERO_BUSY_ARM ? 12 : busy ? 10 : cmd == UB_CHANGE_EDGE_ZERO_PRIVATE_ARM ? 9 :
 				cmd == UB_CHANGE_EDGE_EMPTY_ZERO_ARM ? 7 : cmd == UB_CHANGE_EDGE_EMPTY_PRIVATE_ARM ? 8 :
 				cmd == UB_CHANGE_EDGE_TABLE_ARM ? 6 : cmd == UB_CHANGE_EMPTY_ZERO_ARM ? 1 : cmd == UB_CHANGE_EMPTY_PRIVATE_ARM ? 2 :
 				cmd == UB_CHANGE_TABLE_EMPTY_ARM ? 3 : cmd == UB_CHANGE_TABLE_ZERO_ARM ? 4 : cmd == UB_CHANGE_TABLE_PRIVATE_ARM ? 5 : 0;

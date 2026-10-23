@@ -8,7 +8,7 @@ shared=runpy.run_path(str(Path(__file__).parents[1]/'boundary_empty/controls.py'
 
 def check(row,log,validate):
     passed=shared(row,log,validate);mutations=[]
-    if 'KD_MM_BOUNDARY_ZERO ' in log:
+    if 'KD_MM_BOUNDARY_ZERO ' in log or 'KD_MM_BOUNDARY_SHARED_ZERO ' in log:
         mutations.append(('wrong-target-table-identity',row,re.sub(r'target_table_pfn=[0-9a-f]+','target_table_pfn=0',log)))
         mutations.append(('missing-shared-zero-identity',row,re.sub(r'zero_pfn=[0-9a-f]+','zero_pfn=0',log)))
         mutations.append(('shared-zero-owned',row,log.replace('zero_owned=0','zero_owned=1')))

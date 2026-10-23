@@ -95,4 +95,8 @@ struct ub_bases { __u64 base[3]; };
 #define UB_CHANGE_EDGE_EMPTY_PRIVATE_ARM _IO('U', 0x82)
 #define UB_CHANGE_EDGE_ZERO_PRIVATE_ARM _IO('U', 0x83)
 #define UB_CHANGE_EDGE_PRIVATE_BUSY_ARM _IO('U', 0x84)
+/* Shared-table zero targets: three queued requests for supported conversion,
+ * two for conversion followed by a busy-page refusal. */
+#define UB_CHANGE_SHARED_ZERO_PRIVATE_ARM _IO('U', 0x85)
+#define UB_CHANGE_SHARED_ZERO_BUSY_ARM _IO('U', 0x86)
 #endif

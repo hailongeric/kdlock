@@ -174,10 +174,12 @@ static bool kd_mmap_unmap_hold_edge(struct mm_struct *mm,
 		pte_unmap_unlock(pte, ptl);
 		if (!supported) return false;
 	}
-	/* Only the proven private-page class is extended to a target table
-	 * shared with one survivor. Other target classes keep their isolated-edge
-	 * contract; no table or zero-PTE shortcut widens their admission. */
-	if (edge->shared && !edge->target_private) goto rollback;
+	/* Sharing the retained target table admits the proven private class or
+	 * the exact special zero PTE above. Zero targets take no page reference,
+	 * lock or rmap ownership: native zap clears only their translation and
+	 * finishes its TLB invalidation. A missing/empty target stays refused in
+	 * this geometry. No owned-page count substitutes for admission. */
+	if (edge->shared && !(edge->target_private || edge->target_zero)) goto rollback;
 	ptl = pmd_lock(mm, edge->survivor);
 	edge->survivor_missing = pmd_none(*edge->survivor);
 	spin_unlock(ptl);
@@ -591,12 +593,14 @@ out_pages:
 						edge.shared ? (start == old_start ? 3U : 6U) : (start == old_start ? 1U : 4U),
 						edge.shared ? (start == old_start ? 4U : 1U) : (start == old_start ? 6U : 3U));
 				} else if (boundary_edge) {
-					pr_info("KD_MM_BOUNDARY%s done mm=%px id=%llu origin=%d executor=%d start=%lx end=%lx boundary=%lx parent_pfn=%lx survivor_table_pfn=%lx survivor_missing=%u resident_mask=%u zero_mask=%u untouched_mask=%u held=%u released=%u floor=%lx ceiling=%lx target_pmd_none=%u target_owned=0 tables_unchanged=1 target_table_pfn=%lx target_pte_none=%u target_zero=%u zero_pfn=%lx zero_owned=0\n",
-						edge.target_missing ? "" : edge.target_zero ? "_ZERO" : "_EMPTY", mm, request_id, origin->pid, current->pid, start, end, edge.boundary,
+					pr_info("KD_MM_BOUNDARY%s%s done mm=%px id=%llu origin=%d executor=%d start=%lx end=%lx boundary=%lx parent_pfn=%lx survivor_table_pfn=%lx survivor_missing=%u resident_mask=%u zero_mask=%u untouched_mask=%u held=%u released=%u floor=%lx ceiling=%lx target_pmd_none=%u target_owned=0 tables_unchanged=1 target_table_pfn=%lx target_pte_none=%u target_zero=%u zero_pfn=%lx zero_owned=0 shared_geometry=%u target_table_mask=%u other_table_mask=%u zero_tlb_complete=%u\n",
+						edge.shared ? "_SHARED" : "", edge.target_missing ? "" : edge.target_zero ? "_ZERO" : "_EMPTY", mm, request_id, origin->pid, current->pid, start, end, edge.boundary,
 						edge.parent_pfn, edge.survivor_pfn, edge.survivor_missing,
 						present, zero, 7U ^ (present | zero), nr, nr, edge.floor, edge.ceiling,
 						edge.target_missing, edge.target_pfn, !edge.target_missing, edge.target_zero,
-						edge.target_zero ? pte_pfn(zero_ptes[(start - old_start) >> PAGE_SHIFT]) : 0UL);
+						edge.target_zero ? pte_pfn(zero_ptes[(start - old_start) >> PAGE_SHIFT]) : 0UL, edge.shared,
+						edge.shared ? (start == old_start ? 3U : 6U) : (start == old_start ? 1U : 4U),
+						edge.shared ? (start == old_start ? 4U : 1U) : (start == old_start ? 6U : 3U), edge.target_zero);
 				} else if (missing_table) {
 					pr_info("KD_MM_MISSING_TABLE done mm=%px id=%llu origin=%d executor=%d start=%lx end=%lx pmd_table_pfn=%lx pmd_none=1 held=0 released=0 target_owned=0 upper_retained=1 tables_unchanged=1\n",
 						mm, request_id, origin->pid, current->pid, start, end, parent_pfn);
@@ -645,12 +649,14 @@ out_pages:
 			edge.shared ? (start == old_start ? 3U : 6U) : (start == old_start ? 1U : 4U),
 			edge.shared ? (start == old_start ? 4U : 1U) : (start == old_start ? 6U : 3U));
 	else if (*result && boundary_edge)
-		pr_info("KD_MM_BOUNDARY%s error mm=%px id=%llu origin=%d executor=%d start=%lx end=%lx boundary=%lx parent_pfn=%lx survivor_table_pfn=%lx survivor_missing=%u resident_mask=%u zero_mask=%u untouched_mask=%u held=%u released=%u floor=%lx ceiling=%lx target_pmd_none=%u target_owned=0 tables_unchanged=1 result=%d target_table_pfn=%lx target_pte_none=%u target_zero=%u zero_pfn=%lx zero_owned=0 zero_ptes_preserved=1\n",
-			edge.target_missing ? "" : edge.target_zero ? "_ZERO" : "_EMPTY", mm, request_id, origin->pid, current->pid, start, end, edge.boundary,
+		pr_info("KD_MM_BOUNDARY%s%s error mm=%px id=%llu origin=%d executor=%d start=%lx end=%lx boundary=%lx parent_pfn=%lx survivor_table_pfn=%lx survivor_missing=%u resident_mask=%u zero_mask=%u untouched_mask=%u held=%u released=%u floor=%lx ceiling=%lx target_pmd_none=%u target_owned=0 tables_unchanged=1 result=%d target_table_pfn=%lx target_pte_none=%u target_zero=%u zero_pfn=%lx zero_owned=0 zero_ptes_preserved=1 shared_geometry=%u target_table_mask=%u other_table_mask=%u\n",
+			edge.shared ? "_SHARED" : "", edge.target_missing ? "" : edge.target_zero ? "_ZERO" : "_EMPTY", mm, request_id, origin->pid, current->pid, start, end, edge.boundary,
 			edge.parent_pfn, edge.survivor_pfn, edge.survivor_missing,
 			present, zero, 7U ^ (present | zero), nr, nr, edge.floor, edge.ceiling,
 			edge.target_missing, *result, edge.target_pfn, !edge.target_missing && !edge.target_zero,
-			edge.target_zero, edge.target_zero ? pte_pfn(zero_ptes[(start - old_start) >> PAGE_SHIFT]) : 0UL);
+			edge.target_zero, edge.target_zero ? pte_pfn(zero_ptes[(start - old_start) >> PAGE_SHIFT]) : 0UL, edge.shared,
+			edge.shared ? (start == old_start ? 3U : 6U) : (start == old_start ? 1U : 4U),
+			edge.shared ? (start == old_start ? 4U : 1U) : (start == old_start ? 6U : 3U));
 	else if (*result && missing_table)
 		pr_info("KD_MM_MISSING_TABLE error mm=%px id=%llu origin=%d executor=%d start=%lx end=%lx pmd_table_pfn=%lx pmd_none=1 held=0 released=0 target_owned=0 upper_retained=1 tables_unchanged=1 result=%d\n",
 			mm, request_id, origin->pid, current->pid, start, end, parent_pfn, *result);

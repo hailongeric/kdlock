@@ -29,7 +29,7 @@ def validate(row, log, *, empty=False, zero=False, private=False, shared=False):
     ev=common['validate'](row,log,absent=not (zero or private),boundary=True,boundary_empty=empty,boundary_zero=zero,boundary_private=private,boundary_shared=shared)
     n,native,target,mode=row['groups'],row['native'],row['slice'],row['mode']
     victim=0 if native else 1
-    require(target in (0,2) and mode in (('success','error','cancel','free','change-busy','change-near-zero','free-table','shared','fault','busy') if private else ('success','error','cancel','change-zero','change-private','free-table','shared','fault','busy') if existing else ('success','error','cancel','appear','table','free-table','shared','fault','busy')), 'unsupported edge input')
+    require(target in (0,2) and mode in (('success','error','cancel','free','change-busy','change-near-zero','free-table','shared','fault','busy') if private else ('success','error','cancel','change-zero','change-private','change-private-busy','free-table','shared','fault','busy') if existing else ('success','error','cancel','appear','table','free-table','shared','fault','busy')), 'unsupported edge input')
     require(row['injection']==(mode=='error') and row['cancel']==(mode=='cancel') and row['fault_interaction']==(mode=='fault') and
             row['busy_page']==(mode=='busy') and row['free_first']==(private and mode=='free') and row['interval_cleanup_calls']==n*4, 'case/control/cleanup routing differs')
     require((row['page_size'],row['pmd_size'],row['pud_size'])==(PAGE,PMD,PUD) and row['pgdir_size'] in (1<<39,1<<48), 'unsupported architecture geometry')
@@ -80,7 +80,7 @@ def validate(row, log, *, empty=False, zero=False, private=False, shared=False):
     suffix=(r' boundary=([0-9a-f]+) parent_pfn=([0-9a-f]+) survivor_table_pfn=([0-9a-f]+) survivor_missing=(\d+)'
             r' resident_mask=(\d+) zero_mask=(\d+) untouched_mask=(\d+) held=(\d+) released=(\d+) floor=([0-9a-f]+) ceiling=([0-9a-f]+)'
             rf' target_pmd_none={0 if existing else 1} target_owned={1 if private else 0} tables_unchanged=1')
-    tag='KD_MM_BOUNDARY_SHARED_PRIVATE' if shared else 'KD_MM_BOUNDARY_PRIVATE' if private else 'KD_MM_BOUNDARY_ZERO' if zero else 'KD_MM_BOUNDARY_EMPTY' if empty else 'KD_MM_BOUNDARY'
+    tag=('KD_MM_BOUNDARY_SHARED_PRIVATE' if private else 'KD_MM_BOUNDARY_SHARED_ZERO') if shared else 'KD_MM_BOUNDARY_PRIVATE' if private else 'KD_MM_BOUNDARY_ZERO' if zero else 'KD_MM_BOUNDARY_EMPTY' if empty else 'KD_MM_BOUNDARY'
     tail=r' target_table_pfn=([0-9a-f]+) target_pte_none=1' if existing else ''
     if zero:tail+=r' target_zero=1 zero_pfn=([0-9a-f]+) zero_owned=0'
     if private:tail+=r' target_pfn=([0-9a-f]+) refs_before=(\d+) refs_after=(\d+) mapcount=0 target_put=1 tlb_complete=1'
@@ -89,14 +89,25 @@ def validate(row, log, *, empty=False, zero=False, private=False, shared=False):
     if shared:
         fields=r' shared_geometry=1 target_table_mask=(\d+) other_table_mask=(\d+)'
         tail+=fields;error_tail+=fields
+        if zero:tail+=r' zero_tlb_complete=1'
     dones=re.findall(tag+' done '+IDENT+suffix+tail,log)
     errors=re.findall(tag+' error '+IDENT+suffix+r' result=-12'+error_tail,log)
+    changed_private=[]
+    if shared and zero and mode=='change-private':
+        # Only the controlled victim may select kdmm19's fully checked class.
+        changed_private=re.findall('KD_MM_BOUNDARY_SHARED_PRIVATE done '+IDENT+
+            suffix.replace('target_owned=0','target_owned=1')+
+            r' target_table_pfn=([0-9a-f]+) target_pte_none=1 target_pfn=([0-9a-f]+) refs_before=(\d+) refs_after=(\d+) mapcount=0 target_put=1 tlb_complete=1'+fields,log)
+        require(len(changed_private)==(not native), 'changed boundary target was not removed exactly once')
+        dones+=changed_private
     queue_done=re.findall('KD_MM_UNMAP done '+IDENT+r' result=0',log)
     queue_errors=re.findall('KD_MM_UNMAP error '+IDENT+r' result=-12',log)
     require(sorted(r[:6] for r in dones)==sorted(queue_done) and sorted(r[:6] for r in errors)==sorted(queue_errors), 'actual boundary body not bound to completion/error')
     origins={str(o['tid']):(g,o) for g,o in enumerate(row['origins'])}
     for r in dones+errors:
         g,o=origins[r[2]];lo,hi=o['old_start'],o['old_end'];start,end=o['start'],o['end']
+        changed=r in changed_private
+        require(not changed or g==victim, 'private body executed for an unchanged zero target')
         w=row['walks_before'][g];survivor=0 if target else 2 if shared else 1
         parent,leaf=int(r[7],16),int(r[8],16);floor,ceiling=int(r[15],16),int(r[16],16)
         require(int(r[6],16)==(hi-1)//PMD*PMD and parent==w['parent_pfn'][0] and
@@ -106,14 +117,17 @@ def validate(row, log, *, empty=False, zero=False, private=False, shared=False):
             before_kind='anon' if private else 'zero' if zero else 'none'
             after_kind=before_kind if r in errors else 'none'
             require(row['ptes_before'][g][before_kind]&(1<<target) and row['ptes_after'][g][after_kind]&(1<<target), 'target clear/preservation differs')
-            if zero:require(int(r[18],16)>0, 'shared-zero target PFN missing')
-            if private:
-                page=row['pages_before'][g*3+target]
-                require(int(r[18],16)==page['pfn']==row['ptes_before'][g]['pfn'][target]>0, 'private target original physical identity differs')
+            if zero and not changed:require(int(r[18],16)>0, 'shared-zero target PFN missing')
+            if private or changed:
+                page=row['change']['page'][0] if changed else row['pages_before'][g*3+target]
+                require(int(r[18],16)==page['pfn']>0 and (changed or page['pfn']==row['ptes_before'][g]['pfn'][target]), 'private target original physical identity differs')
                 require(int(r[19])==(2 if row['free_first'] else 3) and int(r[20])==int(r[19])-(r in dones), 'target temporary hold/native mapping release differs')
         body_zero=row['zero_masks'][g] | (2 if shared and mode=='change-near-zero' and g==victim else 0)
-        if shared:require(tuple(map(int,r[21:23]))==((3,4) if target==0 else (6,1)), 'shared survivor was assigned to the wrong table')
-        require(tuple(map(int,r[10:15]))==(row['masks'][g],body_zero,7^(row['masks'][g]|body_zero),row['masks'][g].bit_count(),row['masks'][g].bit_count()), 'body ownership/slot identities differ')
+        if changed:body_zero &= ~(1<<target)
+        body_mask=row['masks'][g] | ((1<<target) if changed else 0)
+        offset=21 if private or changed else 19
+        if shared:require(tuple(map(int,r[offset:offset+2]))==((3,4) if target==0 else (6,1)), 'shared survivor was assigned to the wrong table')
+        require(tuple(map(int,r[10:15]))==(body_mask,body_zero,7^(body_mask|body_zero),body_mask.bit_count(),body_mask.bit_count()), 'body ownership/slot identities differ')
         require(floor==(start if target else row['neighbors'][g][0]['end']) and
                 ceiling==(row['neighbors'][g][1]['start'] if target else end), 'native post-split retention bounds differ')
         addr=start//PMD*PMD
@@ -122,7 +136,7 @@ def validate(row, log, *, empty=False, zero=False, private=False, shared=False):
         finish=end-PMD if end-1>cap-1 else end
         require(cap and addr>finish-1, 'native teardown would walk/free a table')
     if zero:
-        require(len({r[18] for r in dones+errors})<=1, 'shared-zero physical identities disagree')
+        require(len({r[18] for r in dones+errors if r not in changed_private})<=1, 'shared-zero physical identities disagree')
     trans=list(re.finditer('KD_MM_TEST table_change '+r'mm=([0-9a-f]+) index=(\d+) actor=(\d+) pending=(\d+) readers=(\d+) admission=(-?\d+) mode=6 before_table_none=1 after_zero=1 after_private=0 table_before=0 table_after=([0-9a-f]+) anon_before=0 anon_after=0 zero_pfn=([0-9a-f]+) private_pfn=0 result=0',log))
     require(len(trans)==(mode=='appear'), 'controlled target-table appearance missing/duplicated')
     if mode=='appear':
@@ -138,10 +152,10 @@ def validate(row, log, *, empty=False, zero=False, private=False, shared=False):
             ack=re.search('KD_MM_UNMAP handback '+IDENT,log)
             require(ack and ack.group(3)==str(row['origins'][1]['tid']) and trans[0].end()<ack.start(), 'table appearance did not cause pre-effect handback')
     elif not existing:require(not any(row['change_more'].values()), 'unexpected table appearance')
-    if existing and not (private and mode in ('change-busy','change-near-zero')):validate_empty_controls(row,log,zero=zero,shared=shared)
+    if existing and not (private and mode in ('change-busy','change-near-zero') or shared and zero and mode in ('change-private','change-private-busy')):validate_empty_controls(row,log,zero=zero,shared=shared)
     require(not zero or mode!='change-zero', 'zero target cannot use empty-to-zero control')
     if mode!='fault':require(not any(row[k] for k in ('late_fault_blocked','late_fault_code','late_fault_value','late_fault_stack')), 'unrecorded fault obscures initial states')
-    return dict(ev,remote_boundary_removals=len(dones),remote_boundary_errors=len(errors),remote_boundary_without_private_holds=sum(not row['masks'][origins[r[2]][0]] for r in dones),empty_target_checks=empty,boundary_zero_checks=zero,boundary_private_checks=private,remote_private_boundary_removals=len(dones) if private else 0,remote_private_without_probe_holds=len(dones) if private and row['free_first'] else 0,retention_bounds_verified=True,
+    return dict(ev,remote_boundary_removals=len(dones),remote_boundary_errors=len(errors),remote_boundary_without_private_holds=sum(not row['masks'][origins[r[2]][0]] and r not in changed_private for r in dones),remote_changed_boundary_private_removals=len(changed_private),empty_target_checks=empty,boundary_zero_checks=zero,boundary_private_checks=private,remote_private_boundary_removals=len(dones) if private else 0,remote_private_without_probe_holds=len(dones) if private and row['free_first'] else 0,retention_bounds_verified=True,
                 native_target_table_frees=int(mode=='free-table' and not shared),controlled_table_appearance=mode=='appear',neighbor_preservation=True)
 
 

@@ -54,7 +54,7 @@ def compare_success(native, delegated):
 def validate(row, log, *, absent=False, missing=False, boundary=False, boundary_empty=False, boundary_zero=False, boundary_private=False, boundary_shared=False):
     n, resident, native = row['groups'], row['resident'], row['native']
     require(resident == 1 and row['zero_target_test'] == (not (absent or boundary_private)) and
-            row.get('absent_target_test', 0) == absent and row.get('missing_table_test',0)==missing and row.get('boundary_edge_test',0)==boundary and row.get('boundary_empty_test',0)==boundary_empty and row.get('boundary_zero_test',0)==boundary_zero and row.get('boundary_private_test',0)==boundary_private and row.get('boundary_shared_test',0)==boundary_shared and (not boundary_shared or boundary_private) and (not (boundary_empty or boundary_zero or boundary_private) or boundary) and sum((boundary_empty,boundary_zero,boundary_private))<=1, 'exact target-family evidence required')
+            row.get('absent_target_test', 0) == absent and row.get('missing_table_test',0)==missing and row.get('boundary_edge_test',0)==boundary and row.get('boundary_empty_test',0)==boundary_empty and row.get('boundary_zero_test',0)==boundary_zero and row.get('boundary_private_test',0)==boundary_private and row.get('boundary_shared_test',0)==boundary_shared and (not boundary_shared or boundary_private or boundary_zero) and (not (boundary_empty or boundary_zero or boundary_private) or boundary) and sum((boundary_empty,boundary_zero,boundary_private))<=1, 'exact target-family evidence required')
     masks, zeros = row['masks'], row['zero_masks']; target = 1 << row['slice']
     changing = row['changing']; change_group = 0 if native else 1
     changing_zero = row.get('changing_zero', 0); missing_table = row.get('missing_table', 0)
@@ -77,7 +77,7 @@ def validate(row, log, *, absent=False, missing=False, boundary=False, boundary_
     if boundary_private: wanted_mask |= target; wanted_zero &= ~target
     if absent: wanted_zero &= ~target
     if missing: wanted_mask = wanted_zero = 0
-    require(row['slice'] == wanted_slice and changing == (row['shape'] in ('change','change-empty','change-zero','change-private','change-table-empty','change-table-zero','change-table-private') or boundary and row['mode'] in ('appear','change-zero','change-private','change-busy','change-near-zero')), 'declared target or transition differs')
+    require(row['slice'] == wanted_slice and changing == (row['shape'] in ('change','change-empty','change-zero','change-private','change-table-empty','change-table-zero','change-table-private') or boundary and row['mode'] in ('appear','change-zero','change-private','change-busy','change-near-zero','change-private-busy')), 'declared target or transition differs')
     for g, (mask, zero) in enumerate(zip(masks, zeros)):
         if row['injection'] and not native and g == 0: expected_input = (7, 0)
         elif missing_table and g == 1: expected_input = (0, 0)
@@ -86,7 +86,7 @@ def validate(row, log, *, absent=False, missing=False, boundary=False, boundary_
         require((mask, zero) == expected_input and not (mask & zero), 'declared residency combination differs')
         if not (row['injection'] and not native and g == 0 or row['missing_target'] and g == 1):
             require(not ((mask | zero) & target) if absent else mask & target and not (zero & target) if boundary_private else zero & target and not (mask & target), 'target initial leaf state differs')
-    require(row['busy'] == (bool(not native and (row['mode'] in ('busy','free-table','shared','appear','change-zero','change-private','change-busy') or row['mode']=='table' and not boundary_empty)) if boundary else bool(row['busy_page'] or row['no_resident'] or row['missing_target'] or missing_table or upper_refusal)) and
+    require(row['busy'] == (bool(not native and ((row['mode'] in ('busy','free-table','shared','appear','change-zero','change-private','change-busy','change-private-busy') and not (boundary_shared and boundary_zero and row['mode']=='change-private')) or row['mode']=='table' and not boundary_empty)) if boundary else bool(row['busy_page'] or row['no_resident'] or row['missing_target'] or missing_table or upper_refusal)) and
             sum(row[k] for k in ('busy_page','no_resident','missing_target')) + missing_table + upper_refusal <= 1, 'refusal input differs')
     effective = [m | (target if private_change and g == change_group else 0) for g,m in enumerate(masks)]
     effective_zero = [(z | (change_bit if changing_zero and g == change_group else 0)) & ~(target if private_change and g == change_group else 0) for g,z in enumerate(zeros)]
@@ -138,7 +138,7 @@ def validate(row, log, *, absent=False, missing=False, boundary=False, boundary_
         _, o = identity(r); s = 2 if row['slice'] == 1 else 1
         require(int(r[6], 16) == o['old_start'] and int(r[7], 16) == o['old_end'] and int(r[8]) == s and
                 int(r[10]) - int(r[9]) == s - 1 and int(r[11]) - int(r[12]) == 1, 'native split accounting differs')
-    private_rows = [r for r in rows['done'] if private_change and identity(r)[0] == change_group]
+    private_rows = [r for r in rows['done'] if private_change and identity(r)[0] == change_group and not boundary]
     zero_done = [r for r in rows['done'] if r not in private_rows and
                  (not absent or changing_zero and identity(r)[0] == change_group) and not boundary]
     absent_done = [r for r in rows['done'] if r not in private_rows and r not in zero_done and
