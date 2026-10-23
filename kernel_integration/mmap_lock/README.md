@@ -1,18 +1,20 @@
 # Actual mmap-lock kernel integration
 
-The [bounded munmap experiment](UNMAP.md) now supports partial removal of an
-untouched anonymous VMA (virtual memory area), including native splitting around
-an interior hole. The `kdmm7` run passed all 10 serial cases: 45 partial removals
-completed on other tasks, with correct retained mappings and contents, exact
-accounting, handback/ACK matching, local concurrent readers, cancellation and
-cleanup. Whole-VMA unpopulated and one-through-four-page resident removal,
-advice and anonymous first-write faults passed preservation smokes. Recovery is
-restored. The [result record](../../bench/results/10.176.26.71/tests/mm-partial-unmap-20261023/README.md)
-keeps this incremental build and run separate from the `kdmm6` resident-range
-baseline. [Runnable commands](../../tests/kernel/mmap_lock/partial_unmap/README.md)
-reuse the installed kernel and frozen probes. Resident partial removal, general
-table destruction, mapping creation, performance and broad MM support remain
-unvalidated.
+The [bounded munmap experiment](UNMAP.md) now supports one-page prefix, suffix
+or interior removal from a three-page resident anonymous VMA (virtual memory
+area). The caller prepares reverse-map links, which connect pages to their
+mappings, before queue publication. The `kdmm8` run passed all 23 serial cases:
+seven resident partial removals completed on different tasks; six delegated
+post-split errors matched native errors and retained layouts without replay.
+Concurrent local readers, exact accounting/references, handback/ACK
+(acknowledgement), cancellation and cleanup passed. Advice, first-write faults,
+whole-VMA removal and untouched partial removal passed preservation smokes.
+Recovery is restored. The [result record](../../bench/results/10.176.26.71/tests/mm-resident-partial-20261023/README.md)
+preserves the initial packaging failure separately from its successful retry
+and live run. [Runnable commands](../../tests/kernel/mmap_lock/resident_partial/README.md)
+reuse the installed image and probes. Mixed resident/untouched pages, complex
+reverse-map ancestry, general table destruction and mapping creation remain
+unsupported; this is not general MM support or performance evidence.
 
 The separate [anonymous write-fault experiment](FAULT.md) passed focused serial
 correctness on `kdmm3`: 129 real page-installation bodies completed on other

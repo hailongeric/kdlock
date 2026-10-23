@@ -1,5 +1,9 @@
 # Untouched anonymous partial munmap correctness
 
+The later [resident-partial guide](../resident_partial/README.md) records `kdmm8`
+resident support and post-split failure injection. This guide retains the
+completed `kdmm7` untouched baseline and its original coverage limits.
+
 The `kdmm7` milestone passed five partial-unmap cases and five preservation
 smokes serially in the existing `10.176.26.71:2222` VM. The new cases exercise
 prefix, suffix and interior removal, including VMA (virtual memory area)
