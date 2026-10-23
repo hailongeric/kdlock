@@ -56,7 +56,8 @@ static int change_target(struct session *s)
 	r->readers = atomic_long_read(&s->mm->mmap_lock.kd.readers);
 	r->admission = atomic_long_read(&s->mm->mmap_lock.kd.admission);
 	error = -EINVAL;
-	if (!s->change_armed || r->done || s->pages[i] || current->mm != s->mm ||
+	if (!s->change_armed || r->done ||
+	    (more->mode == 10 ? !s->pages[i] || s->busy_page : !!s->pages[i]) || current->mm != s->mm ||
 	    (s->mm->mmap_lock.unmap.enabled ?
 	     r->pending != (more->mode >= 6 ? 2 : 3) || r->readers != 2 || r->admission != -1 :
 	     r->pending != 0 || r->readers != 1)) goto out;
@@ -65,6 +66,34 @@ static int change_target(struct session *s)
 	more->anon_before = (unsigned long)vma->anon_vma;
 	error = change_entry(s, address, &entry, &more->table_before, missing);
 	if (error) goto out;
+	if (more->mode == 10) {
+		pte_t after;
+
+		/* Change eligibility after publication using an already held local
+		 * read share. Retain the original probe reference; do not fault,
+		 * replace the PTE or fabricate a delegation body. Native handback
+		 * may unmap this locked page; the probe unlocks before dropping it. */
+		page = s->pages[i];
+		if (!pte_present(entry) || !pte_write(entry) || pte_special(entry) ||
+		    pte_devmap(entry) || pte_pfn(entry) != page_to_pfn(page) ||
+		    !PageAnon(page) || !PageAnonExclusive(page) || PageCompound(page) ||
+		    page_mapcount(page) != 1 || page_count(page) != 2 || !trylock_page(page)) {
+			error = -EINVAL; goto out;
+		}
+		s->busy_page = page;
+		error = change_entry(s, address, &after, &more->table_after, false);
+		if (error) goto out;
+		if (!pte_same(pte_mkold(entry), pte_mkold(after))) { error = -EINVAL; goto out; }
+		bytes = kmap_local_page(page);
+		for (b = 0; b < PAGE_SIZE; b++) {
+			check(s, bytes[b] == value); hash = (hash ^ bytes[b]) * 1099511628211ULL;
+		}
+		kunmap_local(bytes);
+		r->after_private = 1;
+		r->page = (struct ub_page) { address, page_to_pfn(page), hash, page_mapcount(page),
+			page_count(page), READ_ONCE(page->memcg_data) == s->charges[i], value, PageLocked(page) };
+		goto completed;
+	}
 	if (missing) {
 		/* No target leaf exists. Keep before_none=0 to avoid claiming a
 		 * real empty PTE; the table-change receipt names this distinction. */
@@ -126,7 +155,12 @@ completed:
 		more->table_before == more->table_after) ? 0 : -EINVAL;
 out:
 	r->result = error; r->done = 1;
-	if (missing)
+	if (more->mode == 10)
+		pr_info("KD_MM_TEST edge_private_busy mm=%px index=%u actor=%llu pending=%llu readers=%llu admission=%lld mode=10 before_locked=0 after_locked=%llu table_before=%llx table_after=%llx anon_before=%llx anon_after=%llx private_pfn=%llx refs=%llu mapcount=%llu result=%d\n",
+			s->mm, i, r->actor, r->pending, r->readers, r->admission, r->page.locked,
+			more->table_before, more->table_after, more->anon_before, more->anon_after,
+			r->page.pfn, r->page.refs, r->page.mapcount, error);
+	else if (missing)
 		pr_info("KD_MM_TEST table_change mm=%px index=%u actor=%llu pending=%llu readers=%llu admission=%lld mode=%llu before_table_none=1 after_zero=%llu after_private=%llu table_before=%llx table_after=%llx anon_before=%llx anon_after=%llx zero_pfn=%llx private_pfn=%llx result=%d\n",
 			s->mm, i, r->actor, r->pending, r->readers, r->admission, more->mode,
 			more->after_zero, r->after_private, more->table_before, more->table_after,
@@ -153,22 +187,23 @@ static int change_operation(struct session *s, unsigned int cmd, unsigned long a
 {
 	int error = 0;
 	struct ub_change *r = &s->change.state;
+	bool busy = cmd == UB_CHANGE_EDGE_PRIVATE_BUSY_ARM;
 	bool edge = cmd == UB_CHANGE_EDGE_TABLE_ARM || cmd == UB_CHANGE_EDGE_EMPTY_ZERO_ARM ||
-		cmd == UB_CHANGE_EDGE_EMPTY_PRIVATE_ARM || cmd == UB_CHANGE_EDGE_ZERO_PRIVATE_ARM;
+		cmd == UB_CHANGE_EDGE_EMPTY_PRIVATE_ARM || cmd == UB_CHANGE_EDGE_ZERO_PRIVATE_ARM || busy;
 
 	if (atomic_read(&s->controlling)) return -EBUSY;
 	if (cmd == UB_CHANGE_ARM || cmd == UB_CHANGE_EMPTY_ZERO_ARM || cmd == UB_CHANGE_EMPTY_PRIVATE_ARM ||
 	    cmd == UB_CHANGE_TABLE_EMPTY_ARM || cmd == UB_CHANGE_TABLE_ZERO_ARM || cmd == UB_CHANGE_TABLE_PRIVATE_ARM ||
 	    edge) {
 		mutex_lock(&s->pins_lock);
-		if (!s->groups || arg >= s->groups * 3 || s->pages[arg] || s->change_armed ||
+		if (!s->groups || arg >= s->groups * 3 || (busy ? !s->pages[arg] || s->busy_page : !!s->pages[arg]) || s->change_armed ||
 		    (s->mm->mmap_lock.unmap.enabled ? s->groups != 3 ||
 		     (edge ? arg != 3 && arg != 5 : arg != 4) : s->groups != 1 ||
 		     (edge ? arg != 0 && arg != 2 : arg != 1)))
 			error = -EINVAL;
 		else {
 			r->index = arg; s->change_armed = true;
-			s->change.mode = cmd == UB_CHANGE_EDGE_ZERO_PRIVATE_ARM ? 9 :
+			s->change.mode = busy ? 10 : cmd == UB_CHANGE_EDGE_ZERO_PRIVATE_ARM ? 9 :
 				cmd == UB_CHANGE_EDGE_EMPTY_ZERO_ARM ? 7 : cmd == UB_CHANGE_EDGE_EMPTY_PRIVATE_ARM ? 8 :
 				cmd == UB_CHANGE_EDGE_TABLE_ARM ? 6 : cmd == UB_CHANGE_EMPTY_ZERO_ARM ? 1 : cmd == UB_CHANGE_EMPTY_PRIVATE_ARM ? 2 :
 				cmd == UB_CHANGE_TABLE_EMPTY_ARM ? 3 : cmd == UB_CHANGE_TABLE_ZERO_ARM ? 4 : cmd == UB_CHANGE_TABLE_PRIVATE_ARM ? 5 : 0;

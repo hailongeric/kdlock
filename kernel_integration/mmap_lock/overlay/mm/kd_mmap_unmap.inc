@@ -45,13 +45,16 @@ static bool kd_mmap_unmap_simple_anon(struct vm_area_struct *vma, bool allow_emp
 				 same_vma)->anon_vma == vma->anon_vma;
 }
 
-/* A boundary edge owns no target page. Both PMD entries and their common
- * parent remain live under the mmap writer through native teardown. */
+/* Both PMD entries and their common parent remain live under the mmap writer.
+ * A private target uses the same exact temporary hold as a same-table target;
+ * missing/empty/zero targets never acquire private-page ownership. */
 struct kd_mmap_unmap_edge {
 	pmd_t *target, *survivor;
 	pud_t *parent;
 	unsigned long parent_pfn, target_pfn, survivor_pfn, boundary, floor, ceiling;
-	bool target_missing, target_zero, survivor_missing;
+	pte_t target_entry;
+	unsigned int target_refs_before, target_refs_after;
+	bool target_missing, target_zero, target_private, survivor_missing;
 };
 
 static bool kd_mmap_unmap_zero_pte(pte_t entry)
@@ -143,18 +146,26 @@ static bool kd_mmap_unmap_hold_edge(struct mm_struct *mm,
 		bool supported;
 
 		/* Rewalk under the actual mmap writer, never a prepublication PTE
-		 * pointer. The unchanged native floor/ceiling proof above retains
-		 * this table through removal. A special shared-zero mapping owns no
-		 * private page: native zap clears its PTE and invalidates the TLB,
-		 * while vm_normal_page() excludes RSS/rmap/page release. Private,
-		 * huge/device and other special entries still hand back here. */
+		 * pointer. The unchanged floor/ceiling proof retains this table.
+		 * The shared classifier takes one nonblocking private-page hold,
+		 * rejects COW/pinned/busy pages, and never owns a special zero page.
+		 * Native zap and the bounded gather perform rmap/RSS/TLB teardown;
+		 * the exact temporary hold survives until that teardown completes. */
 		if (!pmd_present(*edge->target) || pmd_bad(*edge->target) ||
 		    pmd_trans_huge(*edge->target) || pmd_devmap(*edge->target)) return false;
 		pte = pte_offset_map_lock(mm, edge->target, start, &ptl);
 		edge->target_pfn = pmd_pfn(READ_ONCE(*edge->target));
 		entry = ptep_get(pte);
-		edge->target_zero = kd_mmap_unmap_zero_pte(entry);
-		supported = pte_none(entry) || edge->target_zero;
+		supported = kd_mmap_unmap_hold_slot(vma, start, entry, true,
+			&held[target], &is_zero, &zero_ptes[target]);
+		edge->target_zero = is_zero;
+		edge->target_private = !!held[target];
+		edge->target_entry = pte_mkold(entry);
+		if (held[target]) {
+			*present |= 1U << target;
+			(*nr)++;
+			edge->target_refs_before = page_count(held[target]);
+		}
 		if (edge->target_zero) {
 			*zero |= 1U << target;
 			zero_ptes[target] = pte_mkold(entry);
@@ -166,7 +177,8 @@ static bool kd_mmap_unmap_hold_edge(struct mm_struct *mm,
 	edge->survivor_missing = pmd_none(*edge->survivor);
 	spin_unlock(ptl);
 	if (edge->survivor_missing) return true;
-	if (pmd_bad(*edge->survivor) || pmd_trans_huge(*edge->survivor) || pmd_devmap(*edge->survivor)) return false;
+	if (!pmd_present(*edge->survivor) || pmd_bad(*edge->survivor) ||
+	    pmd_trans_huge(*edge->survivor) || pmd_devmap(*edge->survivor)) goto rollback;
 	edge->survivor_pfn = pmd_pfn(READ_ONCE(*edge->survivor));
 	addr = target ? lo : end;
 	pte = pte_offset_map_lock(mm, edge->survivor, addr, &ptl);
@@ -179,6 +191,9 @@ static bool kd_mmap_unmap_hold_edge(struct mm_struct *mm,
 	}
 	pte_unmap_unlock(pte, ptl);
 	if (i == 3) return true;
+rollback:
+	/* A survivor refusal must also release a previously acquired target.
+	 * No split or destructive native work has happened on this route. */
 	*checked = *nr;
 	kd_mmap_unmap_release_pages(held, 3);
 	return false;
@@ -445,8 +460,9 @@ out_pages:
 			spinlock_t *ptl;
 			pte_t *pte;
 
-			BUG_ON(mm_pgtables_bytes(mm) != table_bytes || held[target] ||
-			       present & (1U << target) ||
+			BUG_ON(mm_pgtables_bytes(mm) != table_bytes ||
+			       !!held[target] != edge.target_private ||
+			       !!(present & (1U << target)) != edge.target_private ||
 			       !!(zero & (1U << target)) != edge.target_zero ||
 			       pud_none(*edge.parent) || pud_pfn(*edge.parent) != edge.parent_pfn);
 			ptl = pmd_lock(mm, edge.target);
@@ -457,20 +473,25 @@ out_pages:
 				       pmd_trans_huge(*edge.target) || pmd_devmap(*edge.target) ||
 				       pmd_pfn(*edge.target) != edge.target_pfn);
 				pte = pte_offset_map_lock(mm, edge.target, start, &ptl);
-				/* A post-split error must preserve the original zero entry;
-				 * success must have cleared it through the native zap/TLB
-				 * path. Neither case grants ownership of the shared page. */
-				if (*result && edge.target_zero)
-					BUG_ON(!pte_same(pte_mkold(ptep_get(pte)), zero_ptes[target]));
+				/* A post-split error preserves the original target. Success
+				 * has completed native zap/TLB before any temporary put. */
+				if (*result && (edge.target_zero || edge.target_private))
+					BUG_ON(!pte_same(pte_mkold(ptep_get(pte)), edge.target_entry));
 				else
 					BUG_ON(!pte_none(ptep_get(pte)));
+				if (edge.target_private) {
+					BUG_ON(page_to_pfn(held[target]) != pfns[target] ||
+					       page_mapcount(held[target]) != !!*result);
+					edge.target_refs_after = page_count(held[target]);
+				}
 				pte_unmap_unlock(pte, ptl);
 			}
 			ptl = pmd_lock(mm, edge.survivor);
 			BUG_ON(pmd_none(*edge.survivor) != edge.survivor_missing);
 			spin_unlock(ptl);
 			if (edge.survivor_missing) {
-				BUG_ON(nr || present || (zero & ~(1U << target)));
+				BUG_ON(nr != edge.target_private || (present & ~(1U << target)) ||
+				       (zero & ~(1U << target)));
 			} else {
 				BUG_ON(pmd_pfn(*edge.survivor) != edge.survivor_pfn);
 				pte = pte_offset_map_lock(mm, edge.survivor, target ? old_start : end, &ptl);
@@ -542,7 +563,14 @@ out_pages:
 
 			atomic64_inc(&u->populated);
 			if (origin != current && atomic64_inc_return(&u->populated_remote) <= 16) {
-				if (boundary_edge) {
+				if (boundary_edge && edge.target_private) {
+					pr_info("KD_MM_BOUNDARY_PRIVATE done mm=%px id=%llu origin=%d executor=%d start=%lx end=%lx boundary=%lx parent_pfn=%lx survivor_table_pfn=%lx survivor_missing=%u resident_mask=%u zero_mask=%u untouched_mask=%u held=%u released=%u floor=%lx ceiling=%lx target_pmd_none=0 target_owned=1 tables_unchanged=1 target_table_pfn=%lx target_pte_none=1 target_pfn=%lx refs_before=%u refs_after=%u mapcount=0 target_put=1 tlb_complete=1\n",
+						mm, request_id, origin->pid, current->pid, start, end, edge.boundary,
+						edge.parent_pfn, edge.survivor_pfn, edge.survivor_missing,
+						present, zero, 7U ^ (present | zero), nr, nr, edge.floor, edge.ceiling,
+						edge.target_pfn, pfns[(start - old_start) >> PAGE_SHIFT],
+						edge.target_refs_before, edge.target_refs_after);
+				} else if (boundary_edge) {
 					pr_info("KD_MM_BOUNDARY%s done mm=%px id=%llu origin=%d executor=%d start=%lx end=%lx boundary=%lx parent_pfn=%lx survivor_table_pfn=%lx survivor_missing=%u resident_mask=%u zero_mask=%u untouched_mask=%u held=%u released=%u floor=%lx ceiling=%lx target_pmd_none=%u target_owned=0 tables_unchanged=1 target_table_pfn=%lx target_pte_none=%u target_zero=%u zero_pfn=%lx zero_owned=0\n",
 						edge.target_missing ? "" : edge.target_zero ? "_ZERO" : "_EMPTY", mm, request_id, origin->pid, current->pid, start, end, edge.boundary,
 						edge.parent_pfn, edge.survivor_pfn, edge.survivor_missing,
@@ -587,7 +615,14 @@ out_pages:
 	if (*result && partial)
 		pr_info("KD_MM_PARTIAL error mm=%px id=%llu origin=%d executor=%d start=%lx end=%lx splits=%u held=%u released=%u result=%d\n",
 			mm, request_id, origin->pid, current->pid, start, end, splits, nr, nr, *result);
-	if (*result && boundary_edge)
+	if (*result && boundary_edge && edge.target_private)
+		pr_info("KD_MM_BOUNDARY_PRIVATE error mm=%px id=%llu origin=%d executor=%d start=%lx end=%lx boundary=%lx parent_pfn=%lx survivor_table_pfn=%lx survivor_missing=%u resident_mask=%u zero_mask=%u untouched_mask=%u held=%u released=%u floor=%lx ceiling=%lx target_pmd_none=0 target_owned=1 tables_unchanged=1 result=%d target_table_pfn=%lx target_pte_none=0 target_pfn=%lx refs_before=%u refs_after=%u mapcount=1 target_put=1 target_preserved=1\n",
+			mm, request_id, origin->pid, current->pid, start, end, edge.boundary,
+			edge.parent_pfn, edge.survivor_pfn, edge.survivor_missing,
+			present, zero, 7U ^ (present | zero), nr, nr, edge.floor, edge.ceiling,
+			*result, edge.target_pfn, pfns[(start - old_start) >> PAGE_SHIFT],
+			edge.target_refs_before, edge.target_refs_after);
+	else if (*result && boundary_edge)
 		pr_info("KD_MM_BOUNDARY%s error mm=%px id=%llu origin=%d executor=%d start=%lx end=%lx boundary=%lx parent_pfn=%lx survivor_table_pfn=%lx survivor_missing=%u resident_mask=%u zero_mask=%u untouched_mask=%u held=%u released=%u floor=%lx ceiling=%lx target_pmd_none=%u target_owned=0 tables_unchanged=1 result=%d target_table_pfn=%lx target_pte_none=%u target_zero=%u zero_pfn=%lx zero_owned=0 zero_ptes_preserved=1\n",
 			edge.target_missing ? "" : edge.target_zero ? "_ZERO" : "_EMPTY", mm, request_id, origin->pid, current->pid, start, end, edge.boundary,
 			edge.parent_pfn, edge.survivor_pfn, edge.survivor_missing,

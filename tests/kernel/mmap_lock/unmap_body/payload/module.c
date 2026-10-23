@@ -274,6 +274,7 @@ static long operation(struct file *file, unsigned int cmd, unsigned long arg)
 	case UB_CHANGE_EDGE_EMPTY_ZERO_ARM:
 	case UB_CHANGE_EDGE_EMPTY_PRIVATE_ARM:
 	case UB_CHANGE_EDGE_ZERO_PRIVATE_ARM:
+	case UB_CHANGE_EDGE_PRIVATE_BUSY_ARM:
 		return change_operation(s, cmd, arg);
 	case UB_EXPERIMENT:
 		return experiment(s, arg);
