@@ -15,7 +15,7 @@ RAW=ROOT/'bench/results/10.176.26.71/raw/tests/mm-boundary-empty-20261023'
 BASE='/root/kdlock-evidence/10.176.26.71/tests/mm-boundary-empty-20261023'
 C=runpy.run_path(str(HERE.parent/'serial-continuation-20261022/campaign.py'))
 SYNC=runpy.run_path(str(ROOT/'tools/vm/sync_source.py'))
-CONTROL=BASE+'/control'
+CONTROL=BASE+'/control-2'
 C['boot'].__globals__['PRIOR']=CONTROL
 
 
@@ -26,7 +26,7 @@ def main():
     a=p.parse_args()
     local=RAW/(a.action+'-'+str(a.attempt));local.mkdir(parents=True)
     if a.action=='prepare':
-        assert a.attempt==1
+        assert a.attempt==2
         C['capture'](local/'availability-host.json')
         names={'kernel_integration/mmap_lock/guest-kernel.patch','kernel_integration/mmap_lock/install.py',
                'bench/results/10.176.26.71/tests/mm-resident-partial-20261023/incremental.patch'}
@@ -64,7 +64,7 @@ def main():
         C['guest']('mkdir -- '+guest,local/'mkdir.log',30)
         transition=C['boot'](a.action,guest,local)
         if a.action=='kd':
-            C['guest'](C['remote']([CONTROL+'/focus.py','--build-attempt','1','--run','focused-'+str(a.attempt)]),local/'focused.log',1200)
+            C['guest'](C['remote']([CONTROL+'/focus.py','--build-attempt','2','--run','focused-'+str(a.attempt)]),local/'focused.log',1200)
             C['fetch'](BASE+'/focused-'+str(a.attempt)+'/result.json',local/'result.json')
         else:C['save'](local/'result.json',transition)
     else:

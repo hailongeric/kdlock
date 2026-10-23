@@ -213,7 +213,7 @@ int main(int argc, char **argv)
 		require(!ioctl(device, UB_CHANGE_RESULT_MORE, &change_more), "exact target-table appearance result");
 		change = change_more.state;
 		require(change_more.mode == table_change && change_more.before_none == KD_BOUNDARY_EMPTY && !change.before_zero &&
-			change_more.after_zero == changing_zero && change.after_private == !changing_zero &&
+			change_more.after_zero == (unsigned int)changing_zero && change.after_private == !changing_zero &&
 			change_more.table_after && !change_more.anon_before && change.done && !change.result &&
 			change.index == (native ? 0U : 3U) + slice && change.pending == (native ? 0U : 2U) &&
 			change.readers == (native ? 1U : 2U) && (native || change.admission == -1), "controlled target transition before locked revalidation");
