@@ -1,23 +1,22 @@
 # Actual mmap-lock kernel integration
 
-The [bounded munmap experiment](UNMAP.md#missing-leaf-tables-with-existing-upper-levels)
-now removes a one-page prefix/interior/suffix when the leaf page table is missing
-but its upper levels exist. The three-page anonymous VMA (virtual memory area)
-stays inside one 2-MiB table interval, so both survivors must be untouched.
-`kdmm14` passed all three native-matched layouts, with 11 different-task
-missing-table removals and no target-page ownership or leaf allocation.
-Controlled table appearance selected the existing empty/zero/private target
-paths. All 42 serial cases, two basic tests and 956 negative receipt controls
-passed after correcting one probe cleanup-counter assertion; the failed attempt
-is retained separately. Recovery is restored and test modules are unloaded.
-See the [result record](../../bench/results/10.176.26.71/tests/mm-missing-table-20261023/README.md)
-and [runnable commands](../../tests/kernel/mmap_lock/missing_table/README.md).
-The completed [kdmm13 baseline](../../bench/results/10.176.26.71/tests/mm-absent-target-20261023/README.md)
-remains separate evidence; its nine reversed mixed-layout gaps passed on kdmm14.
-Missing higher-level tables on this opt-in, special
-non-present entries, larger mappings, complex ancestry, general table destruction
-and mmap creation remain unsupported. Controlled transitions do not establish
-uncontrolled fault/reclaim/pinning race coverage or a performance gain.
+The [bounded munmap experiment](UNMAP.md#boundary-crossing-edge-removal-with-retained-tables)
+now removes one prefix/suffix page across a leaf-page-table boundary from a
+three-page anonymous VMA (virtual memory area). The target has no leaf table;
+both survivors occupy the adjacent interval and may be private, shared-zero or
+untouched. Actual outer neighboring VMAs must prove that native teardown retains
+all tables. `kdmm15` passed 49 serial cases, two basic tests and 1,289 negative
+receipt controls, with 26 different-task removals and two native-matched split
+errors. Recovery is restored and test modules are unloaded. See the
+[result record](../../bench/results/10.176.26.71/tests/mm-boundary-edge-20261023/README.md)
+and [runnable commands](../../tests/kernel/mmap_lock/boundary_edge/README.md).
+The [kdmm14 baseline](../../bench/results/10.176.26.71/tests/mm-missing-table-20261023/README.md)
+retains its same-table missing-target and controlled table-appearance evidence;
+the historical matrix was not repeated. Existing target-side tables, target
+sharing across the boundary, interior crossing, missing higher levels, larger
+mappings, complex ancestry, general table destruction and mmap creation remain
+outside this extension. Controlled transitions do not establish uncontrolled
+fault/reclaim/pinning race coverage or a performance gain.
 
 The separate [anonymous write-fault experiment](FAULT.md) passed focused serial
 correctness on `kdmm3`: 129 real page-installation bodies completed on other

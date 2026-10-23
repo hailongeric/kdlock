@@ -1,14 +1,17 @@
 # Bounded anonymous munmap bodies
 
-Status: `kdmm14` removes a one-page slice with a missing leaf table and existing
-upper levels, within the same three-page scope. All three feasible layouts matched
-native behavior; 11 different-task missing-table removals owned no private page
-and allocated no leaf table. Controlled table appearance selected the existing
-empty/zero/private target paths. All 42 serial cases, two basic tests and 956
-negative receipt controls passed after one probe accounting correction. Recovery
-is restored and modules unloaded. See the
-[result record](../../bench/results/10.176.26.71/tests/mm-missing-table-20261023/README.md)
-and [probe commands](../../tests/kernel/mmap_lock/missing_table/README.md).
+Status: `kdmm15` adds retained-table boundary-crossing prefix/suffix removal.
+The one-page target has no leaf table; both survivors lie in the adjacent 2-MiB
+page-middle-directory (PMD) interval and may be private, shared-zero or untouched. Actual neighboring VMA
+bounds must prove native teardown cannot free a table. All 49 serial cases,
+two basic tests and 1,289 negative receipt controls passed, with 26 different-task
+removals and two native-matched delegated split errors. Recovery is restored and
+modules unloaded. See the
+[result record](../../bench/results/10.176.26.71/tests/mm-boundary-edge-20261023/README.md)
+and [probe commands](../../tests/kernel/mmap_lock/boundary_edge/README.md).
+The [kdmm14 baseline](../../bench/results/10.176.26.71/tests/mm-missing-table-20261023/README.md)
+retains its 42 serial cases, 956 negative controls, 11 same-table missing-target
+removals and three controlled table appearances; that campaign was not repeated.
 The [kdmm13 milestone](../../bench/results/10.176.26.71/tests/mm-absent-target-20261023/README.md)
 retains its 51 cases and 38 absent-target removals; the nine previously untested
 reversed mixed layouts passed separately on kdmm14 using the unchanged client.
@@ -112,8 +115,9 @@ mmap write ownership. It admits one ordinary, writable, exclusive resident
 anonymous 4-KiB target, or a shared-zero/absent target described below, in an
 exactly three-page VMA. Each retained slot may be
 an ordinary resident page, a validated shared zero page or an absent PTE. The
-original exclusions, isolation and both neighboring VMAs within the same PMD
-span remain required. A PMD describes
+original exclusions and isolation remain required. For the same-table path,
+both neighboring VMAs must remain within the same PMD span; the separate
+boundary-edge extension below proves retention across two intervals. A PMD describes
 a 2-MiB page-table interval here. Retaining its leaf table avoids allocation for
 deferred table freeing on the executor. Private PTEs require exactly one
 `anon_vma_chain` link pointing to the active `anon_vma` reverse-map object. With
@@ -424,6 +428,65 @@ then pass zero-fill and isolated-write checks. Complete cleanup runs locally and
 verifies that the formerly retained upper tables disappear; that local teardown
 is not counted as delegated table destruction.
 
+## Boundary-crossing edge removal with retained tables
+
+`kdmm15` extends the same explicit resident-partial opt-in to exactly one missing
+leaf-table edge target across a PMD boundary. At boundary B and page size P,
+prefix geometry is `[B-P, B+2P)` removing `[B-P, B)`; suffix geometry is
+`[B-2P, B+P)` removing `[B, B+P)`. The target lies alone in its 2-MiB interval,
+while both survivors share the adjacent interval. Both intervals must lie within
+one valid PUD. A target sharing its interval with a survivor, interior crossing,
+missing higher levels and an existing target leaf table are explicitly refused.
+The survivor table may be missing or contain ordinary private, shared-zero and
+empty PTEs; two untouched survivors need not allocate a table.
+
+Admission requires both actual outer VMA neighbors: preceding end greater than
+the first PMD base, following start less than the end of the second PMD span.
+Under mmap write ownership these neighbors cannot move. After the native split,
+`unmap_region()` uses the following exact native `free_pgd_range()` bounds:
+
+| Shape | Floor | Ceiling |
+| --- | --- | --- |
+| Prefix | original preceding VMA end | B, surviving VMA start |
+| Suffix | B, surviving VMA end | original following VMA start |
+
+Admission mirrors native PMD rounding of start/ceiling and adjustment of end,
+and requires the early return before any table walk. This establishes retention
+for both leaf intervals and every upper level. A populated survivor elsewhere
+alone does not establish it. Native zap, reverse-map unlink, VMA release and TLB
+completion still execute; no required cleanup is silently skipped. The test's
+retaining neighbors are an explicit scope restriction, not proof of general
+cross-boundary support.
+
+Caller preparation and queue publication remain unchanged. The writer revalidates
+all current geometry and metadata, checks the target `pmd_none()` under its PMD
+lock, and classifies survivor PTEs under their leaf lock. The existing strict
+private-page classifier is shared without weakening its checks; exact references
+and trylocks retain original slot indices. Z/U slots own no private page, and
+absent anonymous metadata consumes no prepared reverse-map link. Admission is
+independent of the number of owned pages. No target PTE pointer or table is
+created merely to remove the range.
+
+After native splitting/removal, success and admitted errors verify the same
+parent and survivor-table identities, still-missing target table, survivor PTEs
+and unchanged table bytes. Private holds retire exactly. `KD_MM_BOUNDARY`
+receipts bind these checks, native floor/ceiling, request and task identities to
+completion or error. All refusals precede splitting; after a split any error is
+an admitted return, never permission for local replay. Handback/ACK routing,
+sticky local fallback and cancellation retain their original protocol.
+
+The focused validation covers both directions and representative RR/RZ/RU/ZZ/ZU/UU
+survivor pairs. Read-only walks precede survivor data access. The probe then
+checks later normal faults/writes and full local table cleanup. Existing target
+tables and target-sharing geometry hand back. Moving the target-side neighbor
+away before opt-in makes native teardown free the target table; the KD route
+also hands back and matches that release. A controlled target-table appearance
+after publication causes locked refusal and exact ACK, while a separate ordinary
+survivor fault waits behind writer admission and resolves locally afterward.
+Neither control claims uncontrolled fault or neighbor-replacement race coverage.
+The [result record](../../bench/results/10.176.26.71/tests/mm-boundary-edge-20261023/README.md)
+separates these controls, actual remote removals, errors and preservation smokes.
+
 ## One through four populated pages
 
 The separate `kd_mmap_unmap_populated_enable()` opt-in keeps the common VMA
@@ -598,7 +661,9 @@ bound and absent PGDs. The original populated opt-in supports whole removal of
 one through four resident pages with retained tables. The new opt-in additionally
 supports the three-page/one-page-slice cases above, including zero or empty-leaf
 targets with only zero/untouched survivors, and a missing leaf table when upper
-levels exist and all three slots are untouched. It refuses missing higher levels
+levels exist and all three slots are untouched. The new boundary-edge path
+permits a missing target table and an adjacent survivor interval under the
+explicit two-neighbor retention proof above. It refuses missing higher levels
 on this opt-in, special non-present entries, inconsistent or multi-link reverse-map
 ancestry, shared/COW
 (copy-on-write) pages, swapped/huge pages and missing table-retaining neighbors.
@@ -613,7 +678,7 @@ post-admission cancellation, queue interleaving, broader reader/fault races,
 concurrent fast-GUP (fast page pinning), swap/reclaim pressure, non-root memory
 cgroups and oversubscription remain untested. Injected failures precede
 destructive removal; the admitted native path has no recoverable error return
-after destruction starts. Resident edge-error injection, fork/complex ancestry,
+after destruction starts. Private-target edge-error injection, fork/complex ancestry,
 Native-off boot controls and the full historical fault-retry/API suite were not
 repeated. The run checked the same 73 runtime modules, not every configured
 module. RT, lockdep and whole-kernel replacement remain unvalidated.
@@ -630,10 +695,10 @@ and exact zero-effect release before ACK.
 
 Zero/empty/missing-table admission is separate from private-page ownership.
 Explicit receipts prove native VMA removal even with no physical target.
-The next narrow candidate is a three-page VMA crossing one PMD boundary, starting
-with an edge removal whose absent target table and populated survivor table are
-distinct. It requires a separate retention proof for each affected table and
-validated split geometry. It is not supported by the current same-PMD guard;
+The next narrow candidate is an existing target leaf table containing an empty
+PTE in the same isolated-edge geometry. It must retain the proven native
+floor/ceiling rule and validate exact target-table lifetime before admission.
+Existing target tables still hand back in kdmm15; private/zero edge targets,
 general table destruction and missing higher levels remain deferred.
 Broader mapping creation/removal support, performance, p95, the seven mutex
 regressions and nano reruns remain deferred.
