@@ -24,10 +24,17 @@ empty/zero/private and isolated missing-table paths without historical reruns.
 Unsupported private pages, huge mappings, special entries and missing higher
 levels remain refused. Interior crossing, larger mappings, complex ancestry,
 general table destruction and mmap creation remain outside this extension.
-Retention loss was tested before publication. Queued neighbor replacement needs
-a separate writer gate and remains untested; the current fixture holds reader
-shares. Controlled faults do not establish uncontrolled fault/reclaim/pinning
-race coverage or any performance gain.
+The [queued-neighbor follow-up](../../bench/results/10.176.26.71/tests/mm-neighbor-replace-20261024/README.md)
+now validates replacement through a real native writer gate on the same kdmm22
+image, without a kernel rebuild. Its 38 serial cases, two basic tests and 1,241
+negative controls passed: seven remote removals of VMAs with replaced neighbors,
+seven remote peers, seven retention-loss ACKs, two native-matched split errors
+and two cancellations. Four preservation smokes add eight separate remote
+removals and concurrent local readers. Native `mremap` retires the old neighbor
+after publication; the combiner then uses the new locked bounds. See the
+[probe commands](../../tests/kernel/mmap_lock/neighbor_replace/README.md).
+Same-address/target-VMA replacement and uncontrolled fault/reclaim/pinning races
+remain untested. No performance gain is claimed.
 
 The separate [anonymous write-fault experiment](FAULT.md) passed focused serial
 correctness on `kdmm3`: 129 real page-installation bodies completed on other

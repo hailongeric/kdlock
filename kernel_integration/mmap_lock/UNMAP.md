@@ -12,6 +12,10 @@ queued appearances as empty/zero/private targets. Twenty of these 26 removals
 held no private pages. Recovery is restored and modules unloaded. See the
 [result record](../../bench/results/10.176.26.71/tests/mm-boundary-shared-missing-20261024/README.md)
 and [probe commands](../../tests/kernel/mmap_lock/boundary_shared_missing/README.md).
+A test-only [queued-neighbor follow-up](#queued-neighbor-replacement-with-a-native-writer-gate)
+reuses kdmm22: 38 serial cases, two basic tests and 1,241 negative controls pass.
+It closes deterministic queued neighbor replacement without changing the kernel
+or repeating the completed campaign. Recovery is restored and modules unloaded.
 The [kdmm21 baseline](../../bench/results/10.176.26.71/tests/mm-boundary-shared-empty-20261024/README.md)
 retains its separate 69-case empty-target campaign; it was not repeated. Eight
 small smokes preserve shared empty/zero/private and isolated missing-table paths.
@@ -823,11 +827,55 @@ native-compatible harmless split without destructive local replay.
 The [result record](../../bench/results/10.176.26.71/tests/mm-boundary-shared-missing-20261024/README.md)
 separates the 20 missing, two converted-empty, two converted-zero and two
 converted-private removals, two split errors, four ACKs, two cancellations and
-eight smokes. Retention loss is tested before publication. Queued neighboring-VMA
-replacement remains untested: it needs a separate writer-owned test gate because
-the current two-reader gate cannot safely replace a VMA. A waiting near-survivor
-fault was tested for prefix UU; both directions separately check near demand
-faults after removal. These controls do not cover uncontrolled races.
+eight smokes. That campaign tested retention loss before publication; its
+two-reader fixture cannot safely replace a VMA while requests queue. The separate
+writer-gate follow-up below closes that narrow coverage gap. A waiting
+near-survivor fault was tested for prefix UU; both directions separately check
+near demand faults after removal. These controls do not cover uncontrolled races.
+
+## Queued neighbor replacement with a native writer gate
+
+The [test-only follow-up](../../tests/kernel/mmap_lock/neighbor_replace/README.md)
+uses installed kdmm22 unchanged. Native `mremap` calls a VMA callback under its
+actual mmap writer lock after copying the destination VMA and before retiring
+the old VMA. A scheduling gate pauses there: old remains the nearest neighbor
+while real munmap requests publish. Local reader/writer trylocks are both
+excluded. On release, native code retires old and records new as nearest under
+the same owner, then unlocks normally. The combiner rewalks current neighbors,
+tables and both retention prerequisites after acquiring its own writer. Neither
+the probe nor a waiter borrows the native writer's ownership.
+
+Untouched one-page device neighbors move outward by one page to preserve
+retention, or by 2 MiB to lose it. Both edge directions and both neighbor sides
+have native-body controls for missing targets; existing empty/zero/private
+classes have focused preserving/loss representatives. Loss gives pre-effect
+handback, exact acknowledgment (ACK), then sticky local fallback. Harmless split
+errors retain native-compatible mapping state without replay. Native mremap
+can allocate a destination table when the original neighbor's table exists;
+this caller-side allocation is independently accounted before publication.
+It is not target-body allocation or general delegated table teardown.
+
+Only after initial target/survivor PTE and residency snapshots do neighbor
+reads map a module-owned ordinary zero-filled page. This is not the shared
+kernel zero page. Exact page references, map counts and file-VMA lifetimes
+retire at cleanup. The existing private-page, zero-page isolation, demand-fault,
+TLB, accounting and removed-address checks are retained. The writer gate
+excludes readers normally; four old clients separately smoke concurrent local
+readers with the existing two-reader fixture.
+
+All **38 serial cases, two basic tests and 1,241 negative controls** passed.
+Seven removals of VMAs whose neighbor changed executed in different tasks;
+seven unchanged peers also executed remotely. Eight of those 14 held no private
+pages. Seven retention-loss ACK pairs, two remote post-split errors and two
+cancellations passed, with 14 native success comparisons and two error
+comparisons. Four smokes add eight separate remote removals. See the
+[result/evidence record](../../bench/results/10.176.26.71/tests/mm-neighbor-replace-20261024/README.md).
+
+This tests deterministic old-neighbor retirement after publication, with
+new-VMA creation before publication. Same-address replacement, populated-neighbor
+moves, target-VMA replacement, forced native relocation allocation failure and
+uncontrolled fault/reclaim/pinning races remain untested. No kernel rebuild or
+new mapping/teardown support was needed.
 
 ## One through four populated pages
 
@@ -1034,15 +1082,16 @@ live comparisons too. The absent-target extension adds 18 representative
 native/KD pairs on kdmm13; the nine reversed mixed pairs passed separately on
 kdmm14. No size limit was increased. Controlled pre-execution Z-to-private and
 U-to-zero/private changes
-are validated; forced VMA replacement and uncontrolled
+are validated. Deterministic queued neighboring-VMA replacement is covered by
+the writer-gate follow-up above; target-VMA replacement and uncontrolled
 mapping/residency races are not. Busy-page refusal exercises locked revalidation
 and exact zero-effect release before ACK.
 
 Zero/empty/missing-table admission is separate from private-page ownership.
 Explicit receipts prove native VMA removal even with no physical target.
 The shared missing-table gap is closed by kdmm22, without increasing any size
-limit. A useful next validation step is a separate writer-owned gate for queued
-neighbor replacement. The next functional candidate is one-page interior removal
+limit. The separate native writer gate now validates queued neighbor replacement
+with preservation and retention-loss outcomes. The next functional candidate is one-page interior removal
 in the same three-page boundary scope, requiring a separate two-split retention
 proof and failure checks; it is not enabled here. General table destruction and
 missing higher levels remain deferred. The kdmm16 reversed empty-target gaps
