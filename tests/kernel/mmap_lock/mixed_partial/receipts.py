@@ -8,6 +8,9 @@ def require(ok, text):
 
 
 IDENT = r'mm=([0-9a-f]+) id=(\d+) origin=(\d+) executor=(\d+) start=([0-9a-f]+) end=([0-9a-f]+)'
+SHAPES = {'prefix': (0, 1), 'prefix-near': (0, 3), 'prefix-far': (0, 5),
+          'middle': (1, 2), 'left': (1, 3), 'right': (1, 6),
+          'suffix': (2, 4), 'suffix-near': (2, 6), 'suffix-far': (2, 5)}
 
 
 def semantic_layout(row):
@@ -23,6 +26,23 @@ def compare_native(native, delegated):
     require(native['origins'][0]['result'] == delegated['origins'][1]['result'] == -1 and
             native['origins'][0]['errno'] == delegated['origins'][1]['errno'] == 12,
             'native/delegated error differs')
+    require(all(a[0] == b[1] for a, b in zip(native['residency'], delegated['residency'])),
+            'native/delegated post-error resident accounting differs')
+
+
+def compare_success(native, delegated):
+    require(native['native'] == 1 and delegated['native'] == 0 and
+            all(native[k] == delegated[k] for k in ('shape', 'resident', 'injection', 'slice')) and
+            not any(native[k] or delegated[k] for k in ('injection', 'busy', 'cancel', 'free_first')),
+            'native success comparison inputs differ')
+    expected = semantic_layout(native)
+    for g, origin in enumerate(delegated['origins']):
+        require([{k: p[k] for k in ('mapped', 'lo', 'hi', 'pgoff', 'flags')} for p in origin['layouts']] == expected and
+                origin['result'] == native['origins'][0]['result'] == 0 and
+                delegated['masks'][g] == native['masks'][0], 'native/delegated mapping result differs')
+        require(all(a[0] == b[g] for a, b in zip(native['residency'], delegated['residency'])),
+                'native/delegated resident accounting differs')
+    return dict(shape=native['shape'], origins=delegated['groups'], layouts_equal=True, residency_equal=True)
 
 
 def validate(row, log):
@@ -30,6 +50,12 @@ def validate(row, log):
     require(row['mixed'] == resident == 1, 'mixed resident evidence required')
     masks = row['masks']; target = 1 << row['slice']
     require(len(masks) == n and all(0 < m <= 7 for m in masks), 'original slot masks missing')
+    require(row['shape'] in SHAPES or row['shape'] in ('refusal', 'zero', 'missing', 'cancel', 'free'), 'unknown input shape')
+    wanted_slice, wanted_mask = SHAPES.get(row['shape'], (1, 2))
+    require(row['slice'] == wanted_slice and all(m == (
+        7 if row['injection'] and not native and g == 0 else
+        5 if row['missing_case'] and g == 1 else
+        6 if row['busy_page'] and g == 1 else wanted_mask) for g, m in enumerate(masks)), 'declared residency combination differs')
     for g, mask in enumerate(masks):
         require(mask == 7 if row['injection'] and not native and g == 0 else
                 mask == 5 if row['missing_case'] and g == 1 else
@@ -131,7 +157,7 @@ def validate(row, log):
         failed = inject and (native or i == 1)
         require(o['result'] == (-4 if cancel and i == 1 else -1 if failed else 0) and
                 (not failed or o['errno'] == 12), 'origin error/cancellation result differs')
-        if not native and not cancel:
+        if not cancel:
             require(o['fault'] == ((0 if resident else -2) if failed else 1), 'same-CPU translation result differs')
         gone = lambda p: (not native and i == 0) if inject else (not cancel or i != 1) and p == row['slice']
         s = inject if failed else 0 if inject or cancel and i == 1 else 2 if row['slice'] == 1 else 1
@@ -182,6 +208,20 @@ def validate(row, log):
         require(row['late_fault_blocked'] == 1 and row['late_fault_code'] == row['late_fault_value'] == 0 and
                 'kd_mmap_down_read' in row['late_fault_stack'] and 'do_user_addr_fault' in row['late_fault_stack'],
                 'real retained-neighbor fault ordering missing')
+    require(len(row['residency']) == 3, 'before/body/writable resident accounting missing')
+    for phase, observations in enumerate(row['residency']):
+        require(len(observations) == n, 'resident accounting groups differ')
+        for g, entries in enumerate(observations):
+            require(len(entries) == 3, 'resident accounting slots differ')
+            gone = (7 if not native and g == 0 else 0) if inject else 0 if cancel and g == 1 else target
+            resident_mask = masks[g] if phase == 0 else masks[g] & ~gone if phase == 1 else 7 & ~gone
+            for p, entry in enumerate(entries):
+                expected_layout = dict(mapped=1, lo=0, hi=12288) if not phase else row['origins'][g]['layouts'][p]
+                require(all(entry[k] == expected_layout[k] for k in ('mapped', 'lo', 'hi')), 'resident accounting VMA identity differs')
+                expected_kb = 4 * sum(bool(resident_mask & (1 << q)) and entry['lo'] <= q * 4096 < entry['hi']
+                                      for q in range(3)) if entry['mapped'] else 0
+                require(entry['rss_kb'] == entry['anonymous_kb'] == expected_kb, 'unexpected resident population or accounting leak')
     return dict(mixed_slot_checks=True,remote_resident_removals=expected['delegated'],remote_post_split_errors=expected['failed'],
-                native_error_control=bool(native),matched_acks=expected['acks'],pre_effect_rollback=bool(busy),cancelled=expected['cancelled'],
+                native_error_control=bool(native and inject),native_success_control=bool(native and not inject),
+                per_vma_residency_checks=True,matched_acks=expected['acks'],pre_effect_rollback=bool(busy),cancelled=expected['cancelled'],
                 retained_mapping_and_reference_checks=True,cleanup_calls=n*3,readers_local=True,jit_bodies=0)

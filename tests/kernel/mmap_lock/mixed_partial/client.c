@@ -6,6 +6,13 @@
 static int resident, native, injection, busy, cancellation, free_first;
 static unsigned int slice, masks[3], pin_mask, late_slot;
 static int zero_case, missing_case, busy_page;
+static const struct { const char *name; unsigned int target, mask; } shapes[] = {
+	{"prefix", 0, 1}, {"prefix-near", 0, 3}, {"prefix-far", 0, 5},
+	{"middle", 1, 2}, {"left", 1, 3}, {"right", 1, 6},
+	{"suffix", 2, 4}, {"suffix-near", 2, 6}, {"suffix-far", 2, 5},
+};
+static FILE *smaps;
+static struct residency { uintptr_t lo, hi; unsigned long rss, anon; unsigned int seen; } residency[3][3][3];
 static struct ub_ptes ptes_before[3], ptes_after[3];
 static struct ub_pages pages_before, pages_after;
 static struct ub_ptes ptes(unsigned int g)
@@ -108,6 +115,73 @@ static unsigned int split_count(unsigned int g)
 	if (cancellation && g == 1) return 0;
 	return slice == 1 ? 2 : 1;
 }
+/* smaps walks the explicit mm without accessing the target addresses. Observe
+ * RSS/Anonymous before removal, before survivor reads, and after local writes;
+ * a shared zero-page read contributes no ordinary anonymous resident page. */
+static void account(unsigned int phase)
+{
+	char line[1024]; uintptr_t lo = 0, hi = 0; unsigned long value;
+	rewind(smaps);
+	while (fgets(line, sizeof(line), smaps)) {
+		uintptr_t a, b;
+		if (sscanf(line, "%lx-%lx", &a, &b) == 2) {
+			lo = a; hi = b;
+			for (unsigned int g = 0; g < groups; g++) for (unsigned int p = 0; p < 3; p++)
+				if (addresses[g] + p * PAGE >= lo && addresses[g] + p * PAGE < hi) {
+					struct residency *r = &residency[phase][g][p];
+					require(!r->seen, "one smaps entry per mapped slot");
+					r->lo = lo; r->hi = hi; r->seen = 1;
+				}
+		} else {
+			unsigned int field = sscanf(line, "Rss: %lu kB", &value) == 1 ? 2 :
+				sscanf(line, "Anonymous: %lu kB", &value) == 1 ? 4 : 0;
+			if (!field) continue;
+			for (unsigned int g = 0; g < groups; g++) for (unsigned int p = 0; p < 3; p++) {
+				struct residency *r = &residency[phase][g][p];
+				if (r->seen && r->lo == lo && r->hi == hi) {
+					require(!(r->seen & field), "one resident accounting field");
+					r->seen |= field;
+					if (field == 2) r->rss = value; else r->anon = value;
+				}
+			}
+		}
+	}
+	require(!ferror(smaps), "complete read-only resident accounting");
+	for (unsigned int g = 0; g < groups; g++) for (unsigned int p = 0; p < 3; p++) {
+		struct residency *r = &residency[phase][g][p]; unsigned int count = 0;
+		if (phase && removed(g, p)) {
+			require(!r->seen, "removed slot absent from smaps"); continue;
+		}
+		require(r->seen == 7 && r->lo >= addresses[g] && r->hi <= addresses[g] + 3 * PAGE,
+			"complete per-VMA resident accounting");
+		for (unsigned int q = 0; q < 3; q++)
+			if (addresses[g] + q * PAGE >= r->lo && addresses[g] + q * PAGE < r->hi &&
+			    (!phase || !removed(g, q)) && (phase == 2 || (masks[g] & (1U << q)))) count++;
+		require(r->rss == count * (PAGE / 1024) && r->anon == r->rss,
+			"only expected ordinary resident anonymous pages contribute RSS");
+	}
+}
+static void print_account(void)
+{
+	putchar('[');
+	for (unsigned int phase = 0; phase < 3; phase++) {
+		if (phase) putchar(',');
+		putchar('[');
+		for (unsigned int g = 0; g < groups; g++) {
+			if (g) putchar(',');
+			putchar('[');
+			for (unsigned int p = 0; p < 3; p++) {
+				struct residency *r = &residency[phase][g][p];
+				printf("%s{\"mapped\":%d,\"lo\":%lu,\"hi\":%lu,\"rss_kb\":%lu,\"anonymous_kb\":%lu}",
+					p ? "," : "", !!r->seen, r->seen ? r->lo - addresses[g] : 0,
+					r->seen ? r->hi - addresses[g] : 0, r->rss, r->anon);
+			}
+			putchar(']');
+		}
+		putchar(']');
+	}
+	putchar(']');
+}
 static void verify_mappings(void)
 {
 	for (unsigned int g = 0; g < groups; g++) {
@@ -173,20 +247,24 @@ static void print_pages(struct ub_pages *s)
 }
 int main(int argc, char **argv)
 {
-	require(argc == 3 || argc == 6, "mixed MODE or error native|kd resident middle 1|2");
+	require(argc == 3 || argc == 6, "mixed|native MODE or error native|kd resident middle 1|2");
 	if (argc == 6) {
 		require(!strcmp(argv[1], "error") && (!strcmp(argv[2], "native") || !strcmp(argv[2], "kd")) &&
 			(!strcmp(argv[3], "resident") || !strcmp(argv[3], "untouched")), "error mode");
 		native = !strcmp(argv[2], "native"); resident = !strcmp(argv[3], "resident"); injection = atoi(argv[5]);
 		require(injection == 1 || injection == 2, "reachable split count");
 	} else {
-		require(!strcmp(argv[1], "mixed"), "mixed mode"); resident = 1;
+		require(!strcmp(argv[1], "mixed") || !strcmp(argv[1], "native"), "mixed/native mode"); resident = 1;
+		native = !strcmp(argv[1], "native");
 		busy_page = !strcmp(argv[2], "refusal"); zero_case = !strcmp(argv[2], "zero"); missing_case = !strcmp(argv[2], "missing");
 		busy = busy_page || zero_case || missing_case; cancellation = !strcmp(argv[2], "cancel"); free_first = !strcmp(argv[2], "free");
 	}
 	const char *shape = argc == 6 ? argv[4] : argv[2];
-	slice = !strcmp(shape, "prefix") ? 0 : !strcmp(shape, "suffix") ? 2 : 1;
-	require(!strcmp(shape, "prefix") || !strcmp(shape, "suffix") || !strcmp(shape, "middle") || !strcmp(shape, "left") || !strcmp(shape, "right") || busy || cancellation || free_first, "shape");
+	unsigned int shape_mask = 2; int found = 0; slice = 1;
+	for (unsigned int i = 0; i < sizeof(shapes) / sizeof(shapes[0]); i++)
+		if (!strcmp(shape, shapes[i].name)) { found = 1; slice = shapes[i].target; shape_mask = shapes[i].mask; }
+	require(found || busy || cancellation || free_first, "shape");
+	require(!native || !(busy || cancellation || free_first), "native success controls use supported shapes");
 	require(injection != 2 || slice == 1, "two splits only for an interior range");
 	require(resident && (!injection || slice == 1), "mixed resident interior error scope");
 	pin(63); groups = native ? 1 : injection || cancellation || free_first ? 2 : 3;
@@ -206,9 +284,7 @@ int main(int argc, char **argv)
 				MAP_PRIVATE | MAP_ANONYMOUS | MAP_NORESERVE | MAP_FIXED_NOREPLACE, -1, 0);
 			require(p == (void *)ranges[r] && !madvise(p, len, MADV_NOHUGEPAGE), "mapping setup");
 		}
-		masks[g] = 1U << slice;
-		if (!strcmp(shape, "left")) masks[g] |= 1;
-		if (!strcmp(shape, "right")) masks[g] |= 4;
+		masks[g] = shape_mask;
 		if (injection && !native && !g) masks[g] = 7;
 		if (busy && g == 1) masks[g] = missing_case ? 5 : busy_page ? 6 : 2;
 		pin_mask |= masks[g] << (g * 3);
@@ -228,6 +304,8 @@ int main(int argc, char **argv)
 	for (unsigned int g = 0; g < groups; g++) {
 		ptes_before[g] = ptes(g); check_ptes(g, ptes_before[g], masks[g], zero_case && g == 1 ? 4 : 0);
 	}
+	smaps = fopen("/proc/self/smaps", "r"); require(smaps != NULL, "open per-VMA resident accounting");
+	account(0); /* Allocate/warm the observation buffer before global mm counters. */
 	while (masks[1] & (1U << late_slot)) late_slot++;
 	require(late_slot < 3, "untouched survivor for fault interaction");
 	extra_before = extra();
@@ -235,6 +313,7 @@ int main(int argc, char **argv)
 	if (native) {
 		before = layout(base); workers[0].tid = syscall(SYS_gettid); workers[0].offset = slice; workers[0].width = 1;
 		errno = 0; workers[0].result = munmap((void *)(base + slice * PAGE), PAGE); workers[0].error = errno;
+		workers[0].fault = probe_read(base + slice * PAGE);
 	} else if (cancellation) {
 		before = layout(base); require(!ioctl(device, UB_CANCEL_PARTIAL), "queued fatal cancellation");
 	} else {
@@ -270,7 +349,7 @@ int main(int argc, char **argv)
 	if (!cancellation) for (unsigned int g = 0; g < groups; g++) {
 		int failed = injection && (native || g == 1);
 		require(workers[g].result == (failed ? -1 : 0) && (!failed || workers[g].error == ENOMEM), "original caller receives exact return");
-		if (!native) require(workers[g].fault == (failed ? (resident ? 0 : -2) : SEGV_MAPERR), "same CPU checks retained or invalidated translation");
+		require(workers[g].fault == (failed ? (resident ? 0 : -2) : SEGV_MAPERR), "same CPU checks retained or invalidated translation");
 	}
 	for (unsigned int g = 0; g < groups; g++) {
 		unsigned int gone = 0;
@@ -279,6 +358,7 @@ int main(int argc, char **argv)
 		check_ptes(g, ptes_after[g], masks[g] & ~gone,
 			(zero_case && g == 1 ? 4 : 0) | (fault_test && g == 1 ? 1U << late_slot : 0));
 	}
+	account(1); /* No survivor read by this controller precedes this snapshot. */
 	verify_mappings();
 	if (busy_page) require(!ioctl(device, UB_BUSY_UNLOCK), "release original busy-page lock");
 	if (resident && !free_first) {
@@ -299,6 +379,8 @@ int main(int argc, char **argv)
 			memset((void *)(addresses[g] + p * PAGE), pattern(g, p), PAGE);
 			check_page(addresses[g] + p * PAGE, pattern(g, p));
 		}
+	account(2);
+	require(!fclose(smaps), "close resident accounting observer");
 	struct ub_status done = status();
 	require(done.idle && !done.pending && !done.errors && (native || done.reader_peak == 2) &&
 		done.counts.handbacks == done.counts.acks, "no stranded ownership/ACK");
@@ -324,7 +406,7 @@ int main(int argc, char **argv)
 		clean.counts.calls == done.counts.calls + (native ? 0 : cleanup) &&
 		clean.counts.native == done.counts.native + (native ? 0 : cleanup), "cleanup cannot replay a failed body");
 	require(!close(device), "release mm reference");
-	printf("{\"mixed\":1,\"zero_case\":%d,\"missing_case\":%d,\"busy_page\":%d,\"late_slot\":%u,\"masks\":[",zero_case,missing_case,busy_page,late_slot);
+	printf("{\"mixed\":1,\"shape\":\"%s\",\"zero_case\":%d,\"missing_case\":%d,\"busy_page\":%d,\"late_slot\":%u,\"masks\":[",shape,zero_case,missing_case,busy_page,late_slot);
 	for (unsigned int g=0;g<groups;g++) printf("%s%u",g?",":"",masks[g]);
 	printf("],\"ptes_before\":[");for(unsigned int g=0;g<groups;g++){if(g)putchar(',');print_ptes(&ptes_before[g]);}
 	printf("],\"ptes_after\":[");for(unsigned int g=0;g<groups;g++){if(g)putchar(',');print_ptes(&ptes_after[g]);}
@@ -343,6 +425,7 @@ int main(int argc, char **argv)
 		print_layouts(g); putchar('}');
 	}
 	printf("],\"pages_before\":"); print_pages(&pages_before); printf(",\"pages_after\":"); print_pages(&pages_after);
+	printf(",\"residency\":"); print_account();
 	printf(",\"late_fault_blocked\":%d,\"late_fault_code\":%d,\"late_fault_value\":%d,\"late_fault_stack\":",late_blocked,late_code,fault_value); print_string(late_stack); puts("}");
 	return 0;
 }
