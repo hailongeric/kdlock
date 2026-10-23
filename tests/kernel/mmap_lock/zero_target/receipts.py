@@ -51,10 +51,10 @@ def compare_success(native, delegated):
     return dict(shape=native['shape'], origins=delegated['groups'], layouts_equal=True, residency_equal=True)
 
 
-def validate(row, log, *, absent=False, missing=False, boundary=False, boundary_empty=False):
+def validate(row, log, *, absent=False, missing=False, boundary=False, boundary_empty=False, boundary_zero=False):
     n, resident, native = row['groups'], row['resident'], row['native']
     require(resident == 1 and row['zero_target_test'] == (not absent) and
-            row.get('absent_target_test', 0) == absent and row.get('missing_table_test',0)==missing and row.get('boundary_edge_test',0)==boundary and row.get('boundary_empty_test',0)==boundary_empty and (not boundary_empty or boundary), 'exact target-family evidence required')
+            row.get('absent_target_test', 0) == absent and row.get('missing_table_test',0)==missing and row.get('boundary_edge_test',0)==boundary and row.get('boundary_empty_test',0)==boundary_empty and row.get('boundary_zero_test',0)==boundary_zero and (not (boundary_empty or boundary_zero) or boundary) and not (boundary_empty and boundary_zero), 'exact target-family evidence required')
     masks, zeros = row['masks'], row['zero_masks']; target = 1 << row['slice']
     changing = row['changing']; change_group = 0 if native else 1
     changing_zero = row.get('changing_zero', 0); missing_table = row.get('missing_table', 0)
@@ -136,7 +136,7 @@ def validate(row, log, *, absent=False, missing=False, boundary=False, boundary_
                 int(r[10]) - int(r[9]) == s - 1 and int(r[11]) - int(r[12]) == 1, 'native split accounting differs')
     private_rows = [r for r in rows['done'] if private_change and identity(r)[0] == change_group]
     zero_done = [r for r in rows['done'] if r not in private_rows and
-                 (not absent or changing_zero and identity(r)[0] == change_group)]
+                 (not absent or changing_zero and identity(r)[0] == change_group) and not boundary]
     absent_done = [r for r in rows['done'] if r not in private_rows and r not in zero_done and
                    (not missing or changing_empty and identity(r)[0]==change_group) and not boundary]
     missing_done = [r for r in rows['done'] if r not in private_rows+zero_done+absent_done and not boundary]
@@ -158,7 +158,7 @@ def validate(row, log, *, absent=False, missing=False, boundary=False, boundary_
         require(int(r[6],16)>0 and tuple(map(int,r[7:])) == (effective[i],effective_zero[i],7 ^ (effective[i] | effective_zero[i]),effective[i].bit_count(),effective[i].bit_count()), 'zero-target identity/ownership differs')
     require(len({r[6] for r in cleared}) <= 1, 'zero PFNs disagree on this captured x86 kernel')
     zero_errors = re.findall(r'KD_MM_ZERO_TARGET error ' + IDENT + r' resident_mask=(\d+) zero_mask=(\d+) untouched_mask=(\d+) held=(\d+) released=(\d+) zero_ptes_preserved=1 zero_owned=0 result=-12', log)
-    require(sorted(r[:6] for r in zero_errors) == ([] if absent else sorted(rows['error'])), 'zero target after admitted error unproven')
+    require(sorted(r[:6] for r in zero_errors) == ([] if absent or boundary else sorted(rows['error'])), 'zero target after admitted error unproven')
     for r in zero_errors:
         i, _ = identity(r)
         require(tuple(map(int,r[6:])) == (masks[i],zeros[i],7 ^ (masks[i] | zeros[i]),masks[i].bit_count(),masks[i].bit_count()), 'zero target error holds/state differs')
@@ -171,9 +171,9 @@ def validate(row, log, *, absent=False, missing=False, boundary=False, boundary_
         require(tuple(map(int,r[6:11]))==(masks[i],zeros[i],7^(masks[i]|zeros[i]),masks[i].bit_count(),masks[i].bit_count()) and
                 int(r[11],16)==row['tables_after' if missing else 'tables_before'][i]['pfn'][0]>0, 'absent body state, references or retained table differ')
     transitions = list(re.finditer(r'KD_MM_TEST target_change mm=([0-9a-f]+) index=(\d+) actor=(\d+) pending=(\d+) readers=(\d+) admission=(-?\d+) zero_pfn=([0-9a-f]+) private_pfn=([0-9a-f]+) before_zero=1 after_private=1 result=0',log))
-    require(len(transitions)==(changing and not absent), 'controlled zero target change missing/duplicated')
+    require(len(transitions)==(changing and not absent and not boundary), 'controlled zero target change missing/duplicated')
     c=row['change']
-    if changing and not absent:
+    if changing and not absent and not boundary:
         require(c['done']==c['before_zero']==c['after_private']==1 and c['result']==0 and c['index']==change_group*3+row['slice'] and
                 c['pending']==(0 if native else 3) and c['readers']==(1 if native else 2) and (native or c['admission']==-1), 'target change was not before queued execution')
         require(len(c['page'])==1 and c['actor']>0 and c['zero_pfn']>0, 'change identity missing')
@@ -283,7 +283,7 @@ def validate(row, log, *, absent=False, missing=False, boundary=False, boundary_
                 root = o['original_anon'] or next(x['anon'] for x in o['layouts'] if x['mapped'])
                 require(root and l['anon'] == l['root'] == root and l['link'] and l['refs'] == 1 and l['active'] == l['intervals'] == active,
                         'reverse-map accounting/reference leak')
-                if absent and private_change and i==change_group: require(root==row['change_more']['anon_after'], 'fault-created ancestry lost')
+                if (absent or boundary) and private_change and i==change_group: require(root==row['change_more']['anon_after'], 'fault-created ancestry lost')
             else: require(all(l[k]==0 for k in ('anon','root','link','refs','active','intervals')), 'fabricated reverse map without private history')
     require(row['pins_released'] == pins and
             row['pins_released_before'] == (pins if free else 0), 'exact test reference release differs')

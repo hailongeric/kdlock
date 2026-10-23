@@ -24,11 +24,12 @@ def compare_success(a,b):
     return dict(shape=a['shape'],mode=a['mode'],layouts_equal=True,residency_equal=True)
 
 
-def validate(row, log, *, empty=False):
-    ev=common['validate'](row,log,absent=True,boundary=True,boundary_empty=empty)
+def validate(row, log, *, empty=False, zero=False):
+    existing=empty or zero
+    ev=common['validate'](row,log,absent=not zero,boundary=True,boundary_empty=empty,boundary_zero=zero)
     n,native,target,mode=row['groups'],row['native'],row['slice'],row['mode']
     victim=0 if native else 1
-    require(target in (0,2) and mode in (('success','error','cancel','change-zero','change-private','free-table','shared','fault','busy') if empty else ('success','error','cancel','appear','table','free-table','shared','fault','busy')), 'unsupported edge input')
+    require(target in (0,2) and mode in (('success','error','cancel','change-zero','change-private','free-table','shared','fault','busy') if existing else ('success','error','cancel','appear','table','free-table','shared','fault','busy')), 'unsupported edge input')
     require(row['injection']==(mode=='error') and row['cancel']==(mode=='cancel') and row['fault_interaction']==(mode=='fault') and
             row['busy_page']==(mode=='busy') and not row['free_first'] and row['interval_cleanup_calls']==n*4, 'case/control/cleanup routing differs')
     require((row['page_size'],row['pmd_size'],row['pud_size'])==(PAGE,PMD,PUD) and row['pgdir_size'] in (1<<39,1<<48), 'unsupported architecture geometry')
@@ -52,7 +53,7 @@ def validate(row, log, *, empty=False):
             if mode=='free-table' and selected and side==bool(target):expected+=PMD if side else -PMD
             require(entry['address']==entry['start']==expected and entry['end']==expected+PAGE and entry['unchanged']==1 and
                     not entry['anon'] and not entry['other'] and not entry['pfn'] and
-                    entry['zero']==(side==bool(target) and (empty and not (mode=='free-table' and selected) or mode=='table' and selected)) and entry['none']==(not entry['zero']), 'retaining neighbor moved, populated or disappeared')
+                    entry['zero']==(side==bool(target) and (existing and not (mode=='free-table' and selected) or mode=='table' and selected)) and entry['none']==(not entry['zero']), 'retaining neighbor moved, populated or disappeared')
         require(row['anchors'][g]==first*PMD+2*PMD+8*PAGE and row['anchors'][g]//PUD==lo//PUD, 'upper-level anchor geometry differs')
         before=row['walks_before'][g]
         for phase,key in enumerate(('walks_before','walks_after','walks_accessed','walks_written')):
@@ -60,9 +61,9 @@ def validate(row, log, *, empty=False):
             for p in range(3):
                 interval=(lo+p*PAGE)//PMD
                 populated=any((lo+q*PAGE)//PMD==interval and
-                              (bool((row['masks'][g]|row['zero_masks'][g])&(1<<q)) if phase<2 else bool(o['layouts'][q]['mapped']))
+                              (bool((row['masks'][g]|row['zero_masks'][g])&(1<<q)) and (not phase or bool(o['layouts'][q]['mapped'])) if phase<2 else bool(o['layouts'][q]['mapped']))
                               for q in range(3))
-                if (not (selected and mode=='free-table' and phase) if empty else selected and (mode=='table' or phase==0 and mode=='free-table' or phase>0 and mode=='appear')) and interval==(lo+target*PAGE)//PMD:populated=True
+                if (not (selected and mode=='free-table' and phase) if existing else selected and (mode=='table' or phase==0 and mode=='free-table' or phase>0 and mode=='appear')) and interval==(lo+target*PAGE)//PMD:populated=True
                 if phase>0 and mode=='fault' and not native and g==1 and interval==(lo+row['late_slot']*PAGE)//PMD:populated=True
                 if phase>=2 and any(e['address']//PMD==interval for e in neighbor):populated=True
                 if head:populated=True
@@ -78,11 +79,13 @@ def validate(row, log, *, empty=False):
         require(cleaned==dict(leaf=0,upper_none=7,pmd_none=0,parent_pfn=[0]*3,table_pfn=[0]*3), 'cleanup leaked tables or invalidated only part of hierarchy')
     suffix=(r' boundary=([0-9a-f]+) parent_pfn=([0-9a-f]+) survivor_table_pfn=([0-9a-f]+) survivor_missing=(\d+)'
             r' resident_mask=(\d+) zero_mask=(\d+) untouched_mask=(\d+) held=(\d+) released=(\d+) floor=([0-9a-f]+) ceiling=([0-9a-f]+)'
-            rf' target_pmd_none={0 if empty else 1} target_owned=0 tables_unchanged=1')
-    tag='KD_MM_BOUNDARY_EMPTY' if empty else 'KD_MM_BOUNDARY'
-    tail=r' target_table_pfn=([0-9a-f]+) target_pte_none=1' if empty else ''
+            rf' target_pmd_none={0 if existing else 1} target_owned=0 tables_unchanged=1')
+    tag='KD_MM_BOUNDARY_ZERO' if zero else 'KD_MM_BOUNDARY_EMPTY' if empty else 'KD_MM_BOUNDARY'
+    tail=r' target_table_pfn=([0-9a-f]+) target_pte_none=1' if existing else ''
+    if zero:tail+=r' target_zero=1 zero_pfn=([0-9a-f]+) zero_owned=0'
+    error_tail=tail.replace('target_pte_none=1','target_pte_none=0')+r' zero_ptes_preserved=1' if zero else tail
     dones=re.findall(tag+' done '+IDENT+suffix+tail,log)
-    errors=re.findall(tag+' error '+IDENT+suffix+r' result=-12'+tail,log)
+    errors=re.findall(tag+' error '+IDENT+suffix+r' result=-12'+error_tail,log)
     queue_done=re.findall('KD_MM_UNMAP done '+IDENT+r' result=0',log)
     queue_errors=re.findall('KD_MM_UNMAP error '+IDENT+r' result=-12',log)
     require(sorted(r[:6] for r in dones)==sorted(queue_done) and sorted(r[:6] for r in errors)==sorted(queue_errors), 'actual boundary body not bound to completion/error')
@@ -92,8 +95,13 @@ def validate(row, log, *, empty=False):
         w=row['walks_before'][g];survivor=0 if target else 1
         parent,leaf=int(r[7],16),int(r[8],16);floor,ceiling=int(r[15],16),int(r[16],16)
         require(int(r[6],16)==(hi-1)//PMD*PMD and parent==w['parent_pfn'][0] and
-                leaf==w['table_pfn'][survivor] and int(r[9])==(not leaf) and bool(w['pmd_none']&(1<<target))==(not empty), 'body table state differs from verified input')
-        if empty:require(int(r[17],16)==w['table_pfn'][target]==row['walks_after'][g]['table_pfn'][target]>0 and row['ptes_before'][g]['none']&(1<<target) and row['ptes_after'][g]['none']&(1<<target), 'empty target/table identity lost')
+                leaf==w['table_pfn'][survivor] and int(r[9])==(not leaf) and bool(w['pmd_none']&(1<<target))==(not existing), 'body table state differs from verified input')
+        if existing:
+            require(int(r[17],16)==w['table_pfn'][target]==row['walks_after'][g]['table_pfn'][target]>0, 'target table identity lost')
+            before_kind='zero' if zero else 'none'
+            after_kind='zero' if zero and r in errors else 'none'
+            require(row['ptes_before'][g][before_kind]&(1<<target) and row['ptes_after'][g][after_kind]&(1<<target), 'target clear/preservation differs')
+            if zero:require(int(r[18],16)>0, 'shared-zero target PFN missing')
         require(tuple(map(int,r[10:15]))==(row['masks'][g],row['zero_masks'][g],7^(row['masks'][g]|row['zero_masks'][g]),row['masks'][g].bit_count(),row['masks'][g].bit_count()), 'body ownership/slot identities differ')
         require(floor==(start if target else row['neighbors'][g][0]['end']) and
                 ceiling==(row['neighbors'][g][1]['start'] if target else end), 'native post-split retention bounds differ')
@@ -102,6 +110,8 @@ def validate(row, log, *, empty=False):
         cap=ceiling//PMD*PMD
         finish=end-PMD if end-1>cap-1 else end
         require(cap and addr>finish-1, 'native teardown would walk/free a table')
+    if zero:
+        require(len({r[18] for r in dones+errors})<=1, 'shared-zero physical identities disagree')
     trans=list(re.finditer('KD_MM_TEST table_change '+r'mm=([0-9a-f]+) index=(\d+) actor=(\d+) pending=(\d+) readers=(\d+) admission=(-?\d+) mode=6 before_table_none=1 after_zero=1 after_private=0 table_before=0 table_after=([0-9a-f]+) anon_before=0 anon_after=0 zero_pfn=([0-9a-f]+) private_pfn=0 result=0',log))
     require(len(trans)==(mode=='appear'), 'controlled target-table appearance missing/duplicated')
     if mode=='appear':
@@ -116,14 +126,15 @@ def validate(row, log, *, empty=False):
         if not native:
             ack=re.search('KD_MM_UNMAP handback '+IDENT,log)
             require(ack and ack.group(3)==str(row['origins'][1]['tid']) and trans[0].end()<ack.start(), 'table appearance did not cause pre-effect handback')
-    elif not empty:require(not any(row['change_more'].values()), 'unexpected table appearance')
-    if empty:validate_empty_controls(row,log)
+    elif not existing:require(not any(row['change_more'].values()), 'unexpected table appearance')
+    if existing:validate_empty_controls(row,log,zero=zero)
+    require(not zero or mode!='change-zero', 'zero target cannot use empty-to-zero control')
     if mode!='fault':require(not any(row[k] for k in ('late_fault_blocked','late_fault_code','late_fault_value','late_fault_stack')), 'unrecorded fault obscures initial states')
-    return dict(ev,remote_boundary_removals=len(dones),remote_boundary_errors=len(errors),remote_boundary_without_private_holds=sum(not row['masks'][origins[r[2]][0]] for r in dones),empty_target_checks=empty,retention_bounds_verified=True,
+    return dict(ev,remote_boundary_removals=len(dones),remote_boundary_errors=len(errors),remote_boundary_without_private_holds=sum(not row['masks'][origins[r[2]][0]] for r in dones),empty_target_checks=empty,boundary_zero_checks=zero,retention_bounds_verified=True,
                 native_target_table_frees=int(mode=='free-table'),controlled_table_appearance=mode=='appear',neighbor_preservation=True)
 
 
-def validate_empty_controls(row,log):
+def validate_empty_controls(row,log,*,zero=False):
     """Boundary-only transitions refuse; same-table support is not inherited."""
     mode,native,target=row['mode'],row['native'],row['slice']
     victim=0 if native else 1
@@ -136,25 +147,27 @@ def validate_empty_controls(row,log):
                 and moved['table_before']>0 and row['walks_after'][victim]['pmd_none']&(1<<target),
                 'neighbor transition or required native table release unproven')
     else:require(not any(moved.values()), 'unexpected retention prerequisite change')
-    transitions=list(re.finditer(r'KD_MM_TEST edge_empty_change mm=([0-9a-f]+) index=(\d+) actor=(\d+) pending=(\d+) readers=(\d+) admission=(-?\d+) mode=(\d+) before_none=1 after_zero=(\d+) after_private=(\d+) table_before=([0-9a-f]+) table_after=([0-9a-f]+) anon_before=0 anon_after=([0-9a-f]+) zero_pfn=([0-9a-f]+) private_pfn=([0-9a-f]+) result=0',log))
+    tag='edge_zero_change' if zero else 'edge_empty_change'
+    before=r'before_none=0 before_zero=1' if zero else r'before_none=1'
+    transitions=list(re.finditer(r'KD_MM_TEST '+tag+r' mm=([0-9a-f]+) index=(\d+) actor=(\d+) pending=(\d+) readers=(\d+) admission=(-?\d+) mode=(\d+) '+before+r' after_zero=(\d+) after_private=(\d+) table_before=([0-9a-f]+) table_after=([0-9a-f]+) anon_before=0 anon_after=([0-9a-f]+) zero_pfn=([0-9a-f]+) private_pfn=([0-9a-f]+) result=0',log))
     changing=mode in ('change-zero','change-private')
     require(len(transitions)==changing, 'empty target transition missing/duplicate')
     c,m=row['change'],row['change_more']
     if not changing:
         require(not any(m.values()), 'unexpected controlled target state');return
     private=mode=='change-private';r=transitions[0].groups()
-    require(c['done']==1 and c['result']==c['before_zero']==0 and c['after_private']==private and
+    require(c['done']==1 and c['result']==0 and c['before_zero']==zero and c['after_private']==private and
             c['index']==victim*3+target and c['pending']==(0 if native else 2) and c['readers']==(1 if native else 2) and
             (native or c['admission']==-1) and c['actor']>0, 'transition ordering/ownership differs')
-    require(m['mode']==(8 if private else 7) and m['before_none']==1 and m['after_zero']==(not private) and
+    require(m['mode']==(9 if zero else 8 if private else 7) and m['before_none']==(not zero) and m['after_zero']==(not private) and
             m['table_before']==m['table_after']==w['table_pfn'][target]==row['walks_after'][victim]['table_pfn'][target]>0 and
             not m['anon_before'] and bool(m['anon_after'])==private, 'pre-execution table or ancestry identity differs')
     require(int(r[0],16)==row['mm'] and tuple(map(int,r[1:9]))==(c['index'],c['actor'],c['pending'],c['readers'],c['admission'],m['mode'],not private,private) and
             tuple(int(v,16) for v in r[9:13])==(m['table_before'],m['table_after'],m['anon_after'],c['zero_pfn']), 'transition receipt not bound to observed state')
     if private:
-        require(len(c['page'])==1 and c['zero_pfn']==0, 'private transition test reference missing')
+        require(len(c['page'])==1 and bool(c['zero_pfn'])==zero, 'private transition test reference missing')
         p=c['page'][0]
-        require(p['address']==o['start'] and p['pfn']==int(r[13],16)>0 and p['maps']==1 and p['refs']==2 and p['hash']>0 and p['charged_same'] and not p['locked'], 'new private-page ownership differs')
+        require(p['address']==o['start'] and p['pfn']==int(r[13],16)>0 and p['pfn']!=c['zero_pfn'] and p['maps']==1 and p['refs']==2 and p['hash']>0 and p['charged_same'] and not p['locked'], 'new private-page ownership differs')
     else:require(c['zero_pfn']>0 and not c['page'] and int(r[13],16)==0, 'zero transition acquired private ownership')
     require(c['actor']==o['tid'] if native else all(c['actor']!=origin['tid'] for origin in row['origins']), 'wrong transition executor')
     if not native:

@@ -307,7 +307,7 @@ static void verify_mappings(void)
 				require(r.anon && r.root == r.anon && r.links == 1 && r.refs == 1 &&
 					r.active == 1 + splits - lost && r.intervals == r.active &&
 					(!p || removed(g, p - 1) || r.anon == rmaps[g][p - 1].anon), "new native reverse-map ancestry survives target removal");
-				if (KD_TEST_ABSENT) require(r.anon == change_more.anon_after,
+				if (KD_TEST_ABSENT || KD_TEST_TABLE) require(r.anon == change_more.anon_after,
 					"surviving ancestry matches the controlled native fault");
 			} else require(!r.anon && !r.links && !r.refs && !r.active && !r.intervals,
 				"absent reverse map remains absent before first private write");

@@ -3,9 +3,13 @@
 #ifndef KD_BOUNDARY_EMPTY
 #define KD_BOUNDARY_EMPTY 0
 #endif
+#ifndef KD_BOUNDARY_ZERO
+#define KD_BOUNDARY_ZERO 0
+#endif
+#define KD_BOUNDARY_EXISTING (KD_BOUNDARY_EMPTY || KD_BOUNDARY_ZERO)
 #include <stdint.h>
 static uintptr_t neighbors[3][2];
-#define KD_TEST_ABSENT 1
+#define KD_TEST_ABSENT (!KD_BOUNDARY_ZERO)
 #define KD_TEST_TABLE 1
 #define KD_TEST_MAIN previous_target_probe_main
 #define KD_TEST_NEIGHBOR(g, side) neighbors[g][side]
@@ -45,8 +49,8 @@ static void edge_walk(unsigned int g, struct ub_table_walk *w, unsigned int phas
 		int exists = 0;
 		for (unsigned int q = 0; q < 3; q++)
 			if ((addresses[g] + q * PAGE) >> 21 == interval &&
-			    (phase < 2 ? !!((masks[g] | zeros[g]) & (1U << q)) : !removed(g,q))) exists = 1;
-		if ((KD_BOUNDARY_EMPTY ? !(selected && free_table && phase) :
+			    (phase < 2 ? !!((masks[g] | zeros[g]) & (1U << q)) && (!phase || !removed(g,q)) : !removed(g,q))) exists = 1;
+		if ((KD_BOUNDARY_EXISTING ? !(selected && free_table && phase) :
 		    selected && (present_table || (!phase && free_table) || (phase && changing))) &&
 		    (addresses[g] + slice * PAGE) >> 21 == interval) exists = 1;
 		if (phase && fault_interaction && !native && g == 1 &&
@@ -75,19 +79,19 @@ int main(int argc, char **argv)
 	const char *shape = argv[2], *mode = argc == 4 ? argv[3] : "success";
 	unsigned int shape_mask = 0, shape_zero = 0; int found = 0;
 	for (unsigned int i = 0; i < sizeof(shapes) / sizeof(shapes[0]); i++)
-		if (!strcmp(shape, shapes[i].name)) { found = 1; slice = shapes[i].target; shape_mask = shapes[i].mask; shape_zero = shapes[i].zero & ~(1U << slice); }
+		if (!strcmp(shape, shapes[i].name)) { found = 1; slice = shapes[i].target; shape_mask = shapes[i].mask; shape_zero = shapes[i].zero & (KD_BOUNDARY_ZERO ? 7U : ~(1U << slice)); }
 	require(found && (slice == 0 || slice == 2), "three-page prefix/suffix only");
 	injection = !strcmp(mode, "error"); cancellation = !strcmp(mode, "cancel");
-	changing = KD_BOUNDARY_EMPTY ? !strcmp(mode, "change-zero") || !strcmp(mode, "change-private") : !strcmp(mode, "appear");
-	changing_zero = changing && (!KD_BOUNDARY_EMPTY || !strcmp(mode, "change-zero"));
-	table_change = changing ? (KD_BOUNDARY_EMPTY ? (changing_zero ? 7 : 8) : 6) : 0;
+	changing = KD_BOUNDARY_ZERO ? !strcmp(mode, "change-private") : KD_BOUNDARY_EMPTY ? !strcmp(mode, "change-zero") || !strcmp(mode, "change-private") : !strcmp(mode, "appear");
+	changing_zero = changing && !KD_BOUNDARY_ZERO && (!KD_BOUNDARY_EMPTY || !strcmp(mode, "change-zero"));
+	table_change = changing ? (KD_BOUNDARY_ZERO ? 9 : KD_BOUNDARY_EMPTY ? (changing_zero ? 7 : 8) : 6) : 0;
 	fault_interaction = !strcmp(mode, "fault"); busy_page = !strcmp(mode, "busy");
 	free_table = !strcmp(mode, "free-table"); present_table = !strcmp(mode, "table"); shared_edge = !strcmp(mode, "shared");
-	busy = !native && (free_table || (!KD_BOUNDARY_EMPTY && present_table) || shared_edge || changing || busy_page);
+	busy = !native && (free_table || (!KD_BOUNDARY_EXISTING && present_table) || shared_edge || changing || busy_page);
 	require(!strcmp(mode, "success") || injection || cancellation || free_table || present_table || shared_edge || changing || busy_page || fault_interaction, "known edge mode");
 	require(!busy_page || (slice == 0 && shape_mask == 6), "busy final survivor has an earlier exact hold");
-	require(!(shared_edge || changing || fault_interaction) || (!shape_mask && !shape_zero), "focused geometry/appearance/fault fixtures use UU survivors");
-	require(!KD_BOUNDARY_EMPTY || (!present_table && strcmp(mode, "appear")), "empty boundary fixture has its own state controls");
+	require(!(shared_edge || changing || fault_interaction) || (!shape_mask && !(shape_zero & ~(1U << slice))), "focused geometry/transition/fault fixtures use UU survivors");
+	require(!KD_BOUNDARY_EXISTING || (!present_table && strcmp(mode, "appear")), "existing boundary fixture has its own state controls");
 	require(!native || !cancellation, "cancellation is a queue control");
 	pin(63); groups = native ? 1 : injection || cancellation || free_first ? 2 : 3;
 	struct sigaction action = {.sa_sigaction = segv, .sa_flags = SA_SIGINFO};
@@ -113,28 +117,31 @@ int main(int argc, char **argv)
 				MAP_PRIVATE | MAP_ANONYMOUS | MAP_NORESERVE | MAP_FIXED_NOREPLACE, -1, 0);
 			require(p == (void *)ranges[r] && !madvise(p, len, MADV_NOHUGEPAGE), "mapping setup");
 		}
-		if (KD_BOUNDARY_EMPTY || ((present_table || free_table) && selected)) {
+		if (KD_BOUNDARY_ZERO)
+			require(!probe_read(addresses[g] + slice * PAGE) && !observed, "read-fault shared-zero target without a private write");
+		if (KD_BOUNDARY_EXISTING || ((present_table || free_table) && selected)) {
 			unsigned int side = !!slice;
 			require(!probe_read(neighbors[g][side]) && !observed, "neighbor read constructs target table without touching target");
 			if (free_table && selected) {
-				if (KD_BOUNDARY_EMPTY) {
+				if (KD_BOUNDARY_EXISTING) {
 					retention_before = neighbor_state(g, side);
 					struct ub_table_walk w = walk_state(g);
 					retention_table_before = w.tables.table_pfn[slice];
-					require(retention_before.zero && retention_table_before && (w.tables.ptes.none & (1U << slice)), "retention prerequisite and empty target observed before native neighbor movement");
+					require(retention_before.zero && retention_table_before &&
+						((KD_BOUNDARY_ZERO ? w.tables.ptes.zero : w.tables.ptes.none) & (1U << slice)), "retention prerequisite and target observed before native neighbor movement");
 				}
-				/* The original VMA still retains this now-empty table while
+				/* The original VMA still retains this target table while
 				 * its outer neighbor is moved to the next table interval. */
 				require(!munmap((void *)neighbors[g][side], PAGE), "remove target-side retaining VMA before opt-in");
 				neighbors[g][side] += side ? (2UL << 20) : -(2UL << 20);
 				require(mmap((void *)neighbors[g][side], PAGE, PROT_READ | PROT_WRITE,
 					MAP_PRIVATE | MAP_ANONYMOUS | MAP_NORESERVE | MAP_FIXED_NOREPLACE, -1, 0) == (void *)neighbors[g][side] &&
 					!madvise((void *)neighbors[g][side], PAGE, MADV_NOHUGEPAGE), "far neighbor is not a retention guarantee");
-				if (KD_BOUNDARY_EMPTY) {
+				if (KD_BOUNDARY_EXISTING) {
 					struct ub_table_walk w = walk_state(g);
 					retention_table_after = w.tables.table_pfn[slice];
 					require(retention_table_after == retention_table_before && !layout(retention_before.address).start &&
-						(w.tables.ptes.none & (1U << slice)), "prepublication neighbor change retains the still-used empty target table");
+						((KD_BOUNDARY_ZERO ? w.tables.ptes.zero : w.tables.ptes.none) & (1U << slice)), "prepublication neighbor change retains the still-used target table");
 				}
 			}
 		}
@@ -175,7 +182,7 @@ int main(int argc, char **argv)
 	account(0); /* Allocate/warm the observation buffer before global mm counters. */
 	while (late_slot < 3 && ((masks[1] | zeros[1] | (1U << slice)) & (1U << late_slot))) late_slot++;
 	if (late_slot == 3) late_slot = 4; /* Existing, untouched neighbor VMA. */
-	if (changing) require(!ioctl(device, KD_BOUNDARY_EMPTY ?
+	if (changing) require(!ioctl(device, KD_BOUNDARY_ZERO ? UB_CHANGE_EDGE_ZERO_PRIVATE_ARM : KD_BOUNDARY_EMPTY ?
 		(changing_zero ? UB_CHANGE_EDGE_EMPTY_ZERO_ARM : UB_CHANGE_EDGE_EMPTY_PRIVATE_ARM) : UB_CHANGE_EDGE_TABLE_ARM,
 		(unsigned long)((native ? 0 : 3) + slice)), "arm target-table appearance before execution");
 	extra_before = extra();
@@ -212,17 +219,18 @@ int main(int argc, char **argv)
 	if (changing) {
 		require(!ioctl(device, UB_CHANGE_RESULT_MORE, &change_more), "exact target-table appearance result");
 		change = change_more.state;
-		require(change_more.mode == table_change && change_more.before_none == KD_BOUNDARY_EMPTY && !change.before_zero &&
+		require(change_more.mode == table_change && change_more.before_none == KD_BOUNDARY_EMPTY && change.before_zero == KD_BOUNDARY_ZERO &&
 			change_more.after_zero == (unsigned int)changing_zero && change.after_private == !changing_zero &&
 			change_more.table_after && !change_more.anon_before && change.done && !change.result &&
 			change.index == (native ? 0U : 3U) + slice && change.pending == (native ? 0U : 2U) &&
 			change.readers == (native ? 1U : 2U) && (native || change.admission == -1), "controlled target transition before locked revalidation");
-		if (KD_BOUNDARY_EMPTY) require(change_more.table_before == change_more.table_after &&
+		if (KD_BOUNDARY_EXISTING) require(change_more.table_before == change_more.table_after &&
 			change_more.table_before == walks_before[native ? 0 : 1].tables.table_pfn[slice], "transition keeps the original target table");
 		else require(!change_more.table_before, "missing target table actually appeared");
 		if (changing_zero) require(change.zero_pfn && !change.page.pfn && !change_more.anon_after, "read fault owns no shared-zero page");
 		else {
-			require(!change.zero_pfn && change_more.anon_after && change.page.pfn && change.page.mapcount == 1 &&
+			require(!!change.zero_pfn == KD_BOUNDARY_ZERO && change_more.anon_after && change.page.pfn &&
+				change.page.pfn != change.zero_pfn && change.page.mapcount == 1 &&
 				change.page.refs == 2 && change.page.charged_same && !change.page.locked, "controlled private fault retains an exact reference");
 			pin_mask |= 1U << change.index;
 		}
@@ -233,7 +241,7 @@ int main(int argc, char **argv)
 	int map_delta = injection ? injection - !native : slice == 1 ? (int)removed_pages : 0;
 	require(before.total_vm == after.total_vm + removed_pages && before.data_vm == after.data_vm + removed_pages &&
 		before.exec_vm == after.exec_vm && before.stack_vm == after.stack_vm &&
-		(long long)after.map_count - (long long)before.map_count == map_delta && before.pgtables + ((changing && !KD_BOUNDARY_EMPTY) || fault_test ? PAGE : 0) == after.pgtables + (free_table ? PAGE : 0),
+		(long long)after.map_count - (long long)before.map_count == map_delta && before.pgtables + ((changing && !KD_BOUNDARY_EXISTING) || fault_test ? PAGE : 0) == after.pgtables + (free_table ? PAGE : 0),
 		"exact native page/VMA/table accounting including harmless splits");
 	require(extra_after.fail_after == 0 && extra_after.fail_seen == !!injection, "one exact injection consumed");
 	if (!cancellation) for (unsigned int g = 0; g < groups; g++) {
@@ -348,8 +356,8 @@ int main(int argc, char **argv)
 		clean.counts.calls == done.counts.calls + (native ? 0 : routed_cleanup) &&
 		clean.counts.native == done.counts.native + (native ? 0 : routed_cleanup), "cleanup cannot replay a failed body");
 	require(!close(device), "release mm reference");
-	printf("{\"boundary_edge_test\":1,\"boundary_empty_test\":%d,\"mode\":\"%s\",", KD_BOUNDARY_EMPTY, mode);
-	if (KD_BOUNDARY_EMPTY) printf("\"retention_change\":{\"before_start\":%lu,\"before_end\":%lu,\"before_zero\":%lu,\"table_before\":%lu,\"table_after\":%lu,\"before_publication\":%d},",
+	printf("{\"boundary_edge_test\":1,\"boundary_empty_test\":%d,\"boundary_zero_test\":%d,\"mode\":\"%s\",", KD_BOUNDARY_EMPTY, KD_BOUNDARY_ZERO, mode);
+	if (KD_BOUNDARY_EXISTING) printf("\"retention_change\":{\"before_start\":%lu,\"before_end\":%lu,\"before_zero\":%lu,\"table_before\":%lu,\"table_after\":%lu,\"before_publication\":%d},",
 		retention_before.start,retention_before.end,retention_before.zero,retention_table_before,retention_table_after,!!free_table);
 	printf("\"zero_target_test\":%d,\"absent_target_test\":%d,\"shape\":\"%s\",\"no_resident\":%d,\"missing_target\":%d,\"missing_table\":%d,\"busy_page\":%d,\"changing\":%d,\"changing_zero\":%d,\"late_slot\":%u,\"masks\":[",
 		!KD_TEST_ABSENT,KD_TEST_ABSENT,shape,no_resident,missing_target,missing_table,busy_page,changing,changing_zero,late_slot);
@@ -394,7 +402,7 @@ int main(int argc, char **argv)
 
 	print_neighbors();
 	printf(",\"residency\":"); print_account();
-	if (KD_TEST_ABSENT) {
+	if (KD_TEST_ABSENT || KD_BOUNDARY_ZERO) {
 		printf(",\"tables_before\":[");for(unsigned int g=0;g<groups;g++){if(g)putchar(',');print_tables(&tables_before[g]);}
 		printf("],\"tables_after\":[");for(unsigned int g=0;g<groups;g++){if(g)putchar(',');print_tables(&tables_after[g]);}putchar(']');
 		printf(",\"change_more\":{\"mode\":%llu,\"before_none\":%llu,\"after_zero\":%llu,\"table_before\":%llu,\"table_after\":%llu,\"anon_before\":%llu,\"anon_after\":%llu}",

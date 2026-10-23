@@ -93,4 +93,5 @@ struct ub_bases { __u64 base[3]; };
 #define UB_CHANGE_EDGE_TABLE_ARM _IO('U', 0x80)
 #define UB_CHANGE_EDGE_EMPTY_ZERO_ARM _IO('U', 0x81)
 #define UB_CHANGE_EDGE_EMPTY_PRIVATE_ARM _IO('U', 0x82)
+#define UB_CHANGE_EDGE_ZERO_PRIVATE_ARM _IO('U', 0x83)
 #endif

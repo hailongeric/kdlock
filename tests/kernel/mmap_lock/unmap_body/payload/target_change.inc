@@ -69,7 +69,7 @@ static int change_target(struct session *s)
 		/* No target leaf exists. Keep before_none=0 to avoid claiming a
 		 * real empty PTE; the table-change receipt names this distinction. */
 		if (more->table_before) { error = -EINVAL; goto out; }
-	} else if (more->mode) {
+	} else if (more->mode && more->mode != 9) {
 		if (!pte_none(entry)) { error = -EINVAL; goto out; }
 		more->before_none = 1;
 	} else {
@@ -131,6 +131,11 @@ out:
 			s->mm, i, r->actor, r->pending, r->readers, r->admission, more->mode,
 			more->after_zero, r->after_private, more->table_before, more->table_after,
 			more->anon_before, more->anon_after, r->zero_pfn, r->page.pfn, error);
+	else if (more->mode == 9)
+		pr_info("KD_MM_TEST edge_zero_change mm=%px index=%u actor=%llu pending=%llu readers=%llu admission=%lld mode=9 before_none=0 before_zero=%llu after_zero=0 after_private=%llu table_before=%llx table_after=%llx anon_before=%llx anon_after=%llx zero_pfn=%llx private_pfn=%llx result=%d\n",
+			s->mm, i, r->actor, r->pending, r->readers, r->admission, r->before_zero,
+			r->after_private, more->table_before, more->table_after,
+			more->anon_before, more->anon_after, r->zero_pfn, r->page.pfn, error);
 	else if (more->mode)
 		pr_info("KD_MM_TEST %s mm=%px index=%u actor=%llu pending=%llu readers=%llu admission=%lld mode=%llu before_none=%llu after_zero=%llu after_private=%llu table_before=%llx table_after=%llx anon_before=%llx anon_after=%llx zero_pfn=%llx private_pfn=%llx result=%d\n",
 			more->mode >= 7 ? "edge_empty_change" : "absent_change", s->mm, i, r->actor, r->pending, r->readers, r->admission, more->mode,
@@ -148,7 +153,8 @@ static int change_operation(struct session *s, unsigned int cmd, unsigned long a
 {
 	int error = 0;
 	struct ub_change *r = &s->change.state;
-	bool edge = cmd == UB_CHANGE_EDGE_TABLE_ARM || cmd == UB_CHANGE_EDGE_EMPTY_ZERO_ARM || cmd == UB_CHANGE_EDGE_EMPTY_PRIVATE_ARM;
+	bool edge = cmd == UB_CHANGE_EDGE_TABLE_ARM || cmd == UB_CHANGE_EDGE_EMPTY_ZERO_ARM ||
+		cmd == UB_CHANGE_EDGE_EMPTY_PRIVATE_ARM || cmd == UB_CHANGE_EDGE_ZERO_PRIVATE_ARM;
 
 	if (atomic_read(&s->controlling)) return -EBUSY;
 	if (cmd == UB_CHANGE_ARM || cmd == UB_CHANGE_EMPTY_ZERO_ARM || cmd == UB_CHANGE_EMPTY_PRIVATE_ARM ||
@@ -162,7 +168,8 @@ static int change_operation(struct session *s, unsigned int cmd, unsigned long a
 			error = -EINVAL;
 		else {
 			r->index = arg; s->change_armed = true;
-			s->change.mode = cmd == UB_CHANGE_EDGE_EMPTY_ZERO_ARM ? 7 : cmd == UB_CHANGE_EDGE_EMPTY_PRIVATE_ARM ? 8 :
+			s->change.mode = cmd == UB_CHANGE_EDGE_ZERO_PRIVATE_ARM ? 9 :
+				cmd == UB_CHANGE_EDGE_EMPTY_ZERO_ARM ? 7 : cmd == UB_CHANGE_EDGE_EMPTY_PRIVATE_ARM ? 8 :
 				cmd == UB_CHANGE_EDGE_TABLE_ARM ? 6 : cmd == UB_CHANGE_EMPTY_ZERO_ARM ? 1 : cmd == UB_CHANGE_EMPTY_PRIVATE_ARM ? 2 :
 				cmd == UB_CHANGE_TABLE_EMPTY_ARM ? 3 : cmd == UB_CHANGE_TABLE_ZERO_ARM ? 4 : cmd == UB_CHANGE_TABLE_PRIVATE_ARM ? 5 : 0;
 		}
