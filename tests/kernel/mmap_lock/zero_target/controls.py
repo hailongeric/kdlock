@@ -62,6 +62,16 @@ def check(row, log, validate):
         mutations.append(('stale-private-target',broken,log))
         broken = copy.deepcopy(row); broken['change']['pending'] += 1
         mutations.append(('change-not-before-execution',broken,log))
+    if any(not mask for mask in row['masks']):
+        broken = copy.deepcopy(row)
+        victim = next(o for mask,o in zip(row['masks'],broken['origins']) if not mask)
+        victim['original_anon'] = 0 if victim['original_anon'] else 1
+        mutations.append(('wrong-initial-ancestry',broken,log))
+        if not row['native'] and not any(row[k] for k in ('busy','cancel','injection')):
+            mutations.append(('invented-private-holds',row,log.replace('held=0 released=0','held=1 released=1')))
+        if not row['native']:
+            changed = re.sub(r'(KD_MM_RMAP retire[^\n]* consumed=)0( freed=)3',r'\g<1>1\g<2>2',log,count=1)
+            mutations.append(('unused-link-falsely-consumed',row,changed))
     if not row['native'] and not row['busy'] and not row['cancel'] and not row['injection']:
         mutations.append(('zero-page-owned',row,log.replace('zero_owned=0','zero_owned=1')))
     passed = []

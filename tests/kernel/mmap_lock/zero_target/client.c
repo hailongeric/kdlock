@@ -6,6 +6,7 @@
 static int resident, native, injection, busy, cancellation, free_first;
 static unsigned int slice, masks[3], zeros[3], pin_mask, late_slot;
 static int no_resident, missing_target, busy_page, changing;
+static int empty_control, inherited;
 static struct ub_change change;
 /* Survivor letters are ordered by ascending address, excluding the target.
  * R is a private resident page, Z a verified shared-zero PTE, U no PTE. */
@@ -16,6 +17,12 @@ static const struct { const char *name; unsigned int target, mask, zero; } shape
 	{"middle-zr", 1, 4, 3}, {"middle-rr", 1, 5, 2},
 	{"suffix-ru", 2, 1, 4}, {"suffix-ur", 2, 2, 4}, {"suffix-rz", 2, 1, 6},
 	{"suffix-zr", 2, 2, 5}, {"suffix-rr", 2, 3, 4},
+	{"prefix-zz", 0, 0, 7}, {"prefix-zu", 0, 0, 3},
+	{"prefix-uz", 0, 0, 5}, {"prefix-uu", 0, 0, 1},
+	{"middle-zz", 1, 0, 7}, {"middle-zu", 1, 0, 3},
+	{"middle-uz", 1, 0, 6}, {"middle-uu", 1, 0, 2},
+	{"suffix-zz", 2, 0, 7}, {"suffix-zu", 2, 0, 5},
+	{"suffix-uz", 2, 0, 6}, {"suffix-uu", 2, 0, 4},
 };
 static FILE *smaps;
 static struct residency { uintptr_t lo, hi; unsigned long rss, anon; unsigned int seen; } residency[3][3][3];
@@ -229,7 +236,14 @@ static void verify_mappings(void)
 				require(r.anon == roots[g].anon && r.root == roots[g].root && r.links == 1 &&
 					r.refs == roots[g].refs && r.active == 1 + splits - lost && r.intervals == r.active,
 					"reverse-map root, links, active VMAs and reference lifetime");
-			} else require(!r.anon, "untouched reverse map remains absent before first read");
+			} else if (changing && g == (native ? 0U : 1U)) {
+				/* The controlled write fault created ancestry after preparation.
+				 * Its removed private target leaves the same root on both splits. */
+				require(r.anon && r.root == r.anon && r.links == 1 && r.refs == 1 &&
+					r.active == 1 + splits - lost && r.intervals == r.active &&
+					(!p || r.anon == rmaps[g][0].anon), "new native reverse-map ancestry survives target removal");
+			} else require(!r.anon && !r.links && !r.refs && !r.active && !r.intervals,
+				"absent reverse map remains absent before first private write");
 		}
 		/* Read only after every split/absence observation for this VMA. */
 		for (unsigned int p = 0; p < 3; p++)
@@ -273,15 +287,20 @@ int main(int argc, char **argv)
 	} else {
 		require(!strcmp(argv[1], "target") || !strcmp(argv[1], "native"), "target/native mode"); resident = 1;
 		native = !strcmp(argv[1], "native");
-		busy_page = !strcmp(argv[2], "refusal"); no_resident = !strcmp(argv[2], "no-resident");
-		missing_target = !strcmp(argv[2], "missing"); changing = !strcmp(argv[2], "change");
-		busy = busy_page || no_resident || missing_target; cancellation = !strcmp(argv[2], "cancel"); free_first = !strcmp(argv[2], "free");
+		empty_control = !strcmp(argv[2], "change-empty") || !strcmp(argv[2], "missing-empty") || !strcmp(argv[2], "cancel-empty");
+		inherited = !strcmp(argv[2], "inherited");
+		busy_page = !strcmp(argv[2], "refusal");
+		missing_target = !strcmp(argv[2], "missing") || !strcmp(argv[2], "missing-empty");
+		changing = !strcmp(argv[2], "change") || !strcmp(argv[2], "change-empty");
+		busy = busy_page || missing_target;
+		cancellation = !strcmp(argv[2], "cancel") || !strcmp(argv[2], "cancel-empty"); free_first = !strcmp(argv[2], "free");
 	}
 	const char *shape = argc == 6 ? argv[4] : argv[2];
 	unsigned int shape_mask = busy_page ? 5 : changing ? 4 : 1, shape_zero = busy_page ? 2 : changing ? 3 : 6; int found = 0; slice = 1;
+	if (empty_control || inherited) { shape_mask = 0; shape_zero = 7; }
 	for (unsigned int i = 0; i < sizeof(shapes) / sizeof(shapes[0]); i++)
 		if (!strcmp(shape, shapes[i].name)) { found = 1; slice = shapes[i].target; shape_mask = shapes[i].mask; shape_zero = shapes[i].zero; }
-	require(found || busy || cancellation || free_first || changing, "shape");
+	require(found || busy || cancellation || free_first || changing || inherited, "shape");
 	require(!native || !(busy || cancellation || free_first), "native success controls use supported shapes");
 	require(injection != 2 || slice == 1, "two splits only for an interior range");
 	require(resident && (!injection || slice == 1), "zero-survivor resident interior error scope");
@@ -304,14 +323,20 @@ int main(int argc, char **argv)
 		}
 		masks[g] = shape_mask; zeros[g] = shape_zero;
 		if (injection && !native && !g) { masks[g] = 7; zeros[g] = 0; }
-		if (no_resident && g == 1) { masks[g] = 0; zeros[g] = 7; }
-		if (missing_target && g == 1) { masks[g] = 1; zeros[g] = 4; }
+		if (missing_target && g == 1) { masks[g] = empty_control ? 0 : 1; zeros[g] = empty_control ? 5 : 4; }
+		if (inherited) {
+			/* Only the TARGET gets a temporary private history. No survivor is
+			 * populated to bypass eligibility. DONTNEED keeps its simple VMA
+			 * ancestry but drops the private page; the later read proves Z. */
+			memset((void *)(addresses[g] + slice * PAGE), 0x37, PAGE);
+			require(!madvise((void *)(addresses[g] + slice * PAGE), PAGE, MADV_DONTNEED), "drop historical private target before zero read fault");
+		}
 		pin_mask |= masks[g] << (g * 3);
 		for (unsigned int p = 0; p < 3; p++) if (masks[g] & (1U << p)) memset((void *)(addresses[g] + p * PAGE), pattern(g, p), PAGE);
 		for (unsigned int p = 0; p < 3; p++) if (zeros[g] & (1U << p))
 			require(!probe_read(addresses[g] + p * PAGE) && !observed, "read-fault intended zero slot without writing");
 		original[g] = layout(addresses[g]); roots[g] = rmap(addresses[g]);
-		if (masks[g]) require(roots[g].anon && roots[g].anon == roots[g].root && roots[g].links == 1 && roots[g].active == 1 && roots[g].intervals == 1, "one original reverse-map chain");
+		if (masks[g] || inherited) require(roots[g].anon && roots[g].anon == roots[g].root && roots[g].links == 1 && roots[g].active == 1 && roots[g].intervals == 1, "one original reverse-map chain");
 		else require(!roots[g].anon && !roots[g].links, "no private page means no fabricated reverse map");
 	}
 	require(!probe_read(addresses[0] - 2 * PAGE) && !observed, "read-fault independent zero mapping");
@@ -319,7 +344,7 @@ int main(int argc, char **argv)
 	struct ub_experiment e = {{base - 2 * PAGE, addresses[groups - 1] + 5 * PAGE, base, stride}, native ? 0 : resident ? 2 : 1, groups, injection};
 	require(!ioctl(device, UB_EXPERIMENT, &e), "explicit experiment opt-in");
 	if (resident) {
-		require(!ioctl(device, UB_PIN_MASK, (unsigned long)pin_mask) && !ioctl(device, UB_PAGESTATE, &pages_before), "exact original page references");
+		require((!pin_mask || !ioctl(device, UB_PIN_MASK, (unsigned long)pin_mask)) && !ioctl(device, UB_PAGESTATE, &pages_before), "exact original page references, including zero owned pages");
 		for (unsigned int i = 0; i < pages_before.count; i++) if (pin_mask & (1U << i)) require(pages_before.page[i].mapcount == 1 && pages_before.page[i].refs == 2 && !pages_before.page[i].locked, "initial page ownership");
 		if (free_first) require(!ioctl(device, UB_UNPIN_MAPPED), "drop test references before real final release");
 		if (busy_page) require(!ioctl(device, UB_BUSY_LOCK), "make final page busy before admission");
@@ -487,6 +512,7 @@ int main(int argc, char **argv)
 		print_layouts(g); putchar('}');
 	}
 	printf("],\"pages_before\":"); print_pages(&pages_before); printf(",\"pages_after\":"); print_pages(&pages_after);
+	printf(",\"empty_control\":%d,\"inherited\":%d",empty_control,inherited);
 	printf(",\"residency\":"); print_account();
 	printf(",\"change\":{\"index\":%llu,\"actor\":%llu,\"pending\":%llu,\"readers\":%llu,\"admission\":%lld,\"zero_pfn\":%llu,\"before_zero\":%llu,\"after_private\":%llu,\"done\":%llu,\"result\":%lld,\"page\":",
 		(unsigned long long)change.index,(unsigned long long)change.actor,(unsigned long long)change.pending,(unsigned long long)change.readers,

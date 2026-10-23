@@ -33,12 +33,24 @@ static void kd_mmap_unmap_release_pages(struct page **pages, unsigned int nr)
 	}
 }
 
-static unsigned int kd_mmap_unmap_hold_pages(struct mm_struct *mm,
+/* Zero/read-only anonymous mappings can have no reverse-map ancestry at all.
+ * Empty means BOTH the pointer and chain are absent. An inherited simple chain
+ * still needs its caller-prepared clone links even when no private PTE remains. */
+static bool kd_mmap_unmap_simple_anon(struct vm_area_struct *vma, bool allow_empty)
+{
+	if (!vma->anon_vma)
+		return allow_empty && list_empty(&vma->anon_vma_chain);
+	return list_is_singular(&vma->anon_vma_chain) &&
+		list_first_entry(&vma->anon_vma_chain, struct anon_vma_chain,
+				 same_vma)->anon_vma == vma->anon_vma;
+}
+
+static bool kd_mmap_unmap_hold_pages(struct mm_struct *mm,
 	struct vm_area_struct *vma, struct vm_area_struct *prev,
 	struct vm_area_struct *next, unsigned long start, unsigned long end,
 	bool partial, pmd_t **held_pmd, struct page **pages,
 	unsigned int *present, unsigned int *zero, pte_t *zero_ptes,
-	unsigned int *checked)
+	unsigned int *checked, unsigned int *nr)
 {
 	unsigned long address = vma->vm_start;
 	unsigned long count = (vma->vm_end - address) >> PAGE_SHIFT;
@@ -55,12 +67,14 @@ static unsigned int kd_mmap_unmap_hold_pages(struct mm_struct *mm,
 	 * table: neither data-page nor table teardown allocates on the executor. */
 	BUILD_BUG_ON(KD_MMAP_RESIDENT_MAX >= MMU_GATHER_BUNDLE);
 	*checked = 0;
+	*nr = 0;
 	*present = 0;
 	*zero = 0;
 	if (!mm->mmap_lock.unmap.allow_populated || IS_ENABLED(CONFIG_LRU_GEN) ||
-	    !count || count > KD_MMAP_RESIDENT_MAX || !vma->anon_vma ||
+	    !count || count > KD_MMAP_RESIDENT_MAX ||
+	    !kd_mmap_unmap_simple_anon(vma, partial) ||
 	    (vma->vm_flags & VM_MERGEABLE) ||
-	    !list_is_singular(&vma->anon_vma_chain) || !prev || !next ||
+	    !prev || !next ||
 	    ((vma->vm_end - 1) & PMD_MASK) != (address & PMD_MASK) ||
 	    prev->vm_end <= (address & PMD_MASK) ||
 	    next->vm_start >= (address & PMD_MASK) + PMD_SIZE ||
@@ -95,7 +109,8 @@ static unsigned int kd_mmap_unmap_hold_pages(struct mm_struct *mm,
 		}
 		/* All remaining present slots must be writable private resident pages.
 		 * Unsupported special, swap and absent targets refuse before splitting. */
-		if (!pte_present(entry) || !pte_write(entry) || pte_special(entry) || pte_devmap(entry)) break;
+		if (!vma->anon_vma || !pte_present(entry) || !pte_write(entry) ||
+		    pte_special(entry) || pte_devmap(entry)) break;
 		page = vm_normal_page(vma, slot, entry);
 		if (!page) break;
 		get_page(page);
@@ -124,9 +139,10 @@ static unsigned int kd_mmap_unmap_hold_pages(struct mm_struct *mm,
 		return 0;
 	}
 	*held_pmd = pmd;
-	/* Keep at least one ordinary resident page and the existing single-link
-	 * ancestry contract. With a zero target, that page must be a survivor. */
-	return held;
+	*nr = held;
+	/* Admission and ownership are separate: a validated zero target may own
+	 * no pages. The retained table still needs post-body checks and a TLB flush. */
+	return true;
 }
 
 bool kd_mmap_unmap_try(struct mm_struct *mm, unsigned long start,
@@ -186,14 +202,12 @@ bool kd_mmap_unmap_try(struct mm_struct *mm, unsigned long start,
 			return false;
 		if (mm->mmap_lock.unmap.allow_populated) {
 			/* One private resident or shared-zero target in a three-page VMA.
-			 * Retained slots may be private, zero or absent. The page walk still
-			 * requires a private resident slot. Refuse unsupported ancestry or
+			 * Retained slots may be private, zero or absent. Empty ancestry is
+			 * valid only with no private PTEs. Refuse unsupported ancestry or
 			 * missing allocation before any split occurs. */
 			if (!mm->mmap_lock.unmap.allow_partial || pristine ||
 			    old_end - old_start != 3 * PAGE_SIZE || end - start != PAGE_SIZE ||
-			    !vma->anon_vma || !list_is_singular(&vma->anon_vma_chain) ||
-			    list_first_entry(&vma->anon_vma_chain, struct anon_vma_chain,
-					     same_vma)->anon_vma != vma->anon_vma ||
+			    !kd_mmap_unmap_simple_anon(vma, true) ||
 			    !prep->split_avc[0] || !prep->split_avc[1])
 				return false;
 		} else if (!pristine) {
@@ -209,9 +223,8 @@ bool kd_mmap_unmap_try(struct mm_struct *mm, unsigned long start,
 		}
 	}
 	if (!pristine) {
-		nr = kd_mmap_unmap_hold_pages(mm, vma, prev, next, start, end,
-			partial, &held_pmd, held, &present, &zero, zero_ptes, &checked);
-		if (!nr) {
+		if (!kd_mmap_unmap_hold_pages(mm, vma, prev, next, start, end,
+			partial, &held_pmd, held, &present, &zero, zero_ptes, &checked, &nr)) {
 			if (checked)
 				pr_info("KD_MM_POPULATED_RANGE rollback mm=%px id=%llu origin=%d executor=%d start=%lx end=%lx held=%u released=%u effects=0\n",
 					mm, request_id, origin->pid, current->pid, start, end, checked, checked);
@@ -281,7 +294,7 @@ bool kd_mmap_unmap_try(struct mm_struct *mm, unsigned long start,
 		}
 	}
 out_pages:
-	if (nr) {
+	if (held_pmd) {
 		/* Neighbor VMAs keep this page-table directory under our writer.
 		 * Native teardown has completed its TLB flush; a removed private page
 		 * also lost its mapping reference. Zero pages own no such reference.

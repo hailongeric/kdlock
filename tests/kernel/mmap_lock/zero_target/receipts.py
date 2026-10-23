@@ -12,7 +12,7 @@ SHAPES = {
     f'{shape}-{pair}': (target, sum(1 << p for p, kind in zip(survivors, pair) if kind == 'r'),
                        (1 << target) | sum(1 << p for p, kind in zip(survivors, pair) if kind == 'z'))
     for shape, target, survivors in [('prefix', 0, [1, 2]), ('middle', 1, [0, 2]), ('suffix', 2, [0, 1])]
-    for pair in ('ru', 'ur', 'rz', 'zr', 'rr')}
+    for pair in ('ru', 'ur', 'rz', 'zr', 'rr', 'zz', 'zu', 'uz', 'uu')}
 
 
 def semantic_layout(row):
@@ -53,13 +53,17 @@ def validate(row, log):
     masks, zeros = row['masks'], row['zero_masks']; target = 1 << row['slice']
     changing = row['changing']; change_group = 0 if native else 1
     require(len(masks) == len(zeros) == n and all(0 <= m <= 7 for m in masks), 'original slot masks missing')
-    require(row['shape'] in SHAPES or row['shape'] in ('refusal', 'no-resident', 'missing', 'cancel', 'free', 'change'), 'unknown input shape')
+    require(row['shape'] in SHAPES or row['shape'] in ('refusal', 'missing', 'cancel', 'free', 'change', 'change-empty', 'missing-empty', 'cancel-empty', 'inherited'), 'unknown input shape')
+    empty = row.get('empty_control', 0); inherited = row.get('inherited', 0)
+    require(empty == (row['shape'] in ('change-empty','missing-empty','cancel-empty')) and
+            inherited == (row['shape']=='inherited') and not row['no_resident'], 'metadata fixture differs')
     wanted_slice, wanted_mask, wanted_zero = SHAPES.get(row['shape'], (1, 5, 2) if row['busy_page'] else (1, 4, 3) if changing else (1, 1, 6))
-    require(row['slice'] == wanted_slice and changing == (row['shape'] == 'change'), 'declared target or transition differs')
+    if empty or inherited: wanted_slice, wanted_mask, wanted_zero = 1, 0, 7
+    require(row['slice'] == wanted_slice and changing == (row['shape'] in ('change','change-empty')), 'declared target or transition differs')
     for g, (mask, zero) in enumerate(zip(masks, zeros)):
-        expected_input = ((7, 0) if row['injection'] and not native and g == 0 else
-                          (0, 7) if row['no_resident'] and g == 1 else
-                          (1, 4) if row['missing_target'] and g == 1 else (wanted_mask, wanted_zero))
+        if row['injection'] and not native and g == 0: expected_input = (7, 0)
+        elif row['missing_target'] and g == 1: expected_input = (0, 5) if empty else (1, 4)
+        else: expected_input = (wanted_mask, wanted_zero)
         require((mask, zero) == expected_input and not (mask & zero), 'declared residency combination differs')
         if not (row['injection'] and not native and g == 0 or row['missing_target'] and g == 1):
             require(zero & target and not (mask & target), 'target was privately populated before initial observation')
@@ -106,7 +110,7 @@ def validate(row, log):
         for r in rows[kind]: identity(r)
     require(sorted(rows['handback']) == sorted(rows['ack']), 'wrong refusal ACK owner')
     rollback = re.findall(r'KD_MM_POPULATED_RANGE rollback ' + IDENT + r' held=1 released=1 effects=0', log)
-    require(sorted(rollback) == ([] if row['no_resident'] else sorted(rows['handback'])), 'late-page refusal did not release its exact prefix before ACK')
+    require(sorted(rollback) == ([] if empty else sorted(rows['handback'])), 'late-page refusal did not release its exact prefix before ACK')
     splits = re.findall(r'KD_MM_PARTIAL done ' + IDENT + r' old_start=([0-9a-f]+) old_end=([0-9a-f]+) splits=(\d+) maps_before=(\d+) maps_after=(\d+) pages_before=(\d+) pages_after=(\d+) tables_unchanged=1', log)
     require(sorted(r[:6] for r in splits) == sorted(rows['done']), 'split/body completion not paired')
     for r in splits:
@@ -179,6 +183,10 @@ def validate(row, log):
             require(cleanup or origin in origins, 'unknown allocation owner')
             i, o = (None, dict(start=row['origins'][0]['old_start'], end=row['origins'][0]['old_end'])) if cleanup else origins[origin]
             mask = 0 if cleanup or (cancel and i == 1) or (busy and i == 1) or (inject and i == 0) else (1 << inject) - 1 if inject else 3 if row['slice'] == 1 else 1
+            # With absent ancestry native cloning consumes no reverse-map
+            # link. Both caller reserves must instead retire unused. A fault
+            # after publication may create the simple ancestry before split.
+            if name == 'reverse-map' and not cleanup and not (o['original_anon'] or changing and i == change_group): mask = 0
             require(int(mm, 16) == row['mm'] and int(start, 16) == o['start'] and int(end, 16) == o['end'] and
                     int(obj0, 16) > 0 and int(obj1, 16) > 0 and obj0 != obj1 and
                     int(used) == mask and int(freed) == (3 ^ mask), name + ' transfer/retirement mismatch')
@@ -190,6 +198,8 @@ def validate(row, log):
                     require(o['layouts'][2]['link'] == int(obj1 if row['slice'] == 1 else obj0, 16), 'surviving link ownership lost')
 
     for i, o in enumerate(row['origins']):
+        require(bool(o['original_anon']) == bool(masks[i] or inherited) and
+                bool(o['original_link']) == bool(o['original_anon']), 'initial ancestry was fabricated or lost')
         failed = inject and (native or i == 1)
         require(o['result'] == (-4 if cancel and i == 1 else -1 if failed else 0) and
                 (not failed or o['errno'] == 12), 'origin error/cancellation result differs')
@@ -205,11 +215,12 @@ def validate(row, log):
             if s == 2: bounds.insert(2, 2)
             lo, hi = next((a, b) for a, b in zip(bounds, bounds[1:]) if a <= p < b)
             require(l['lo'] == lo * 4096 and l['hi'] == hi * 4096 and l['pgoff'] == lo, 'wrong harmless split layout')
-            if o['original_anon']:
+            if o['original_anon'] or changing and i == change_group:
                 active = 1 + s - sum(gone(q) for q in range(3))
-                require(l['anon'] == l['root'] == o['original_anon'] and l['link'] and l['refs'] == 1 and l['active'] == l['intervals'] == active,
+                root = o['original_anon'] or next(x['anon'] for x in o['layouts'] if x['mapped'])
+                require(root and l['anon'] == l['root'] == root and l['link'] and l['refs'] == 1 and l['active'] == l['intervals'] == active,
                         'reverse-map accounting/reference leak')
-            else: require(all(l[k]==0 for k in ('anon','root','link','refs','active','intervals')), 'fabricated reverse map on no-resident refusal')
+            else: require(all(l[k]==0 for k in ('anon','root','link','refs','active','intervals')), 'fabricated reverse map without private history')
     require(row['pins_released'] == pins and
             row['pins_released_before'] == (pins if free else 0), 'exact test reference release differs')
     require(len(row['pages_before']) == (n * 3 if resident else 0) and
@@ -284,7 +295,7 @@ def validate(row, log):
         r = row['ptes_written'][g]
         require((r['anon'], r['zero'], r['none'], r['other']) == (7 & ~gone, 0, gone, 0), 'final private survivor state differs')
     require(next(steps, None) is None, 'unexpected write evidence')
-    return dict(zero_target_checks=True,isolated_private_writes=count,remote_zero_removals=len(zero_done),remote_changed_private_removals=len(private_rows),controlled_target_change=bool(changing),remote_resident_removals=len(private_rows),remote_post_split_errors=expected['failed'],
+    return dict(zero_target_checks=True,isolated_private_writes=count,remote_zero_removals=len(zero_done),remote_without_private_holds=sum(not masks[identity(r)[0]] for r in zero_done),remote_changed_private_removals=len(private_rows),controlled_target_change=bool(changing),remote_resident_removals=len(private_rows),remote_post_split_errors=expected['failed'],
                 native_error_control=bool(native and inject),native_success_control=bool(native and not inject),
                 per_vma_residency_checks=True,matched_acks=expected['acks'],pre_effect_rollback=bool(busy),cancelled=expected['cancelled'],
                 retained_mapping_and_reference_checks=True,cleanup_calls=n*3,readers_local=True,jit_bodies=0)
