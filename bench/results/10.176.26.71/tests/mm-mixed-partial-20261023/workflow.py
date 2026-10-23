@@ -15,12 +15,12 @@ RAW=ROOT/'bench/results/10.176.26.71/raw/tests/mm-mixed-partial-20261023'
 BASE='/root/kdlock-evidence/10.176.26.71/tests/mm-mixed-partial-20261023'
 C=runpy.run_path(str(HERE.parent/'serial-continuation-20261022/campaign.py'))
 SYNC=runpy.run_path(str(ROOT/'tools/vm/sync_source.py'))
-C['boot'].__globals__['PRIOR']=BASE+'/control'
+C['boot'].__globals__['PRIOR']=BASE+'/control-2'
 
 
 def main():
     p=argparse.ArgumentParser(description=__doc__)
-    p.add_argument('action',choices=('prepare','build','kd','recovery','collect'))
+    p.add_argument('action',choices=('prepare','build','finish','kd','recovery','collect'))
     p.add_argument('--attempt',type=int,default=1)
     a=p.parse_args()
     local=RAW/(a.action+'-'+str(a.attempt));local.mkdir(parents=True)
@@ -53,12 +53,17 @@ def main():
     elif a.action=='build':
         C['guest']('unshare --mount --propagation private '+C['remote']([BASE+'/control/build.py','--attempt',str(a.attempt)]),local/'build.log',2400)
         C['fetch'](BASE+'/build-'+str(a.attempt)+'/result.json',local/'result.json')
+    elif a.action=='finish':
+        C['guest']('mkdir -- '+BASE+'/control-2',local/'mkdir.log',30)
+        C['copy_in']([HERE/'complete.py',HERE/'hydrate.py',HERE/'transition.py'],BASE+'/control-2/',local/'copy.log')
+        C['guest'](C['remote']([BASE+'/control-2/complete.py']),local/'finish.log',600)
+        C['fetch'](BASE+'/build-2/result.json',local/'result.json')
     elif a.action in ('kd','recovery'):
         guest=BASE+'/'+a.action+'-'+str(a.attempt)
         C['guest']('mkdir -- '+guest,local/'mkdir.log',30)
         transition=C['boot'](a.action,guest,local)
         if a.action=='kd':
-            C['guest'](C['remote']([BASE+'/control/focus.py','--build-attempt','1','--run','focused-'+str(a.attempt)]),local/'focused.log',1200)
+            C['guest'](C['remote']([BASE+'/control/focus.py','--build-attempt','2','--run','focused-'+str(a.attempt)]),local/'focused.log',1200)
             C['fetch'](BASE+'/focused-'+str(a.attempt)+'/result.json',local/'result.json')
         else:C['save'](local/'result.json',transition)
     else:

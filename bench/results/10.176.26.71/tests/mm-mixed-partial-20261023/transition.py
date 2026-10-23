@@ -62,7 +62,7 @@ def main():
     try:
         result.update(preserved())
         expected=load(BASE/'control/expected-guest.json')['modules']
-        build=load(BASE/'build-1/result.json')
+        build=load(BASE/'build-2/result.json')
         rt.require(build['passed'] and rt.digest(BUNDLE/'manifest.json')==
                    build['baseline_manifest_sha256'],'built candidate capture differs')
         build_id=load(BUNDLE/'manifest.json')['running']['build_id']
@@ -99,7 +99,7 @@ def main():
         else:
             if a.mode != 'recovery':
                 import runpy
-                runpy.run_path(str(BASE/'control/hydrate.py'))['hydrate']()
+                runpy.run_path(str(BASE/'control-2/hydrate.py'))['hydrate']()
             rt.require(a.request is not None,'recorded request required')
             prior=load(a.request)
             rt.require(prior['passed'] and prior['reboot_requested'] and prior['mode']==a.mode and

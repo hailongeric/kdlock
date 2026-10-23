@@ -21,13 +21,24 @@ def hydrate():
         assert (TREE/'vmlinux').is_file() and not (TREE/'vmlinux').is_symlink()
         assert digest(TREE/'vmlinux')==receipt['vmlinux_sha256']
         return
-    source=Path('/mnt/kdlock-builds/mm-mixed-partial-20261023/identity');compressed=Path(receipt['compressed_path'])
-    assert digest(compressed)==receipt['compressed_sha256']
+    source=Path('/mnt/kdlock-builds/mm-mixed-partial-20261023/identity')
+    combined=hashlib.sha256()
+    for part in receipt['parts']:
+        path=Path(part['path'])
+        assert path.stat().st_size==part['bytes'] and digest(path)==part['sha256']
+        with path.open('rb') as f:
+            for block in iter(lambda:f.read(1<<20),b''):combined.update(block)
+    assert combined.hexdigest()==receipt['compressed_sha256']
     TREE.mkdir()
     for p in source.rglob('*'):
-        if p.is_file() and p!=compressed:
+        if p.is_file():
             dst=TREE/p.relative_to(source);dst.parent.mkdir(parents=True,exist_ok=True);shutil.copyfile(p,dst)
-    with lzma.open(compressed,'rb') as f, (TREE/'vmlinux').open('wb') as out:shutil.copyfileobj(f,out,1<<20)
+    decoder=lzma.LZMADecompressor()
+    with (TREE/'vmlinux').open('wb') as out:
+        for part in receipt['parts']:
+            with Path(part['path']).open('rb') as f:
+                for block in iter(lambda:f.read(1<<20),b''):out.write(decoder.decompress(block))
+    assert decoder.eof and not decoder.unused_data
     assert digest(TREE/'vmlinux')==receipt['vmlinux_sha256']
 
 if __name__=='__main__':hydrate()
