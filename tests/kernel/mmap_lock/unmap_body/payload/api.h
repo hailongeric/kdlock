@@ -50,4 +50,14 @@ struct ub_extra { __u64 fail_after, fail_seen, pins_owned, pins_released; };
 #define UB_PIN_MASK _IO('U', 0x71)
 struct ub_ptes { __u64 address, none, anon, zero, other, pfn[3]; };
 #define UB_PTES _IOWR('U', 0x72, struct ub_ptes)
+/* Controlled native write fault while an existing reader holds its share.
+ * Original ioctl layouts remain unchanged for the frozen preservation clients. */
+struct ub_change {
+	struct ub_page page;
+	__u64 index, actor, pending, readers, zero_pfn, before_zero, after_private, done;
+	__s64 admission, result;
+};
+#define UB_CHANGE_ARM _IO('U', 0x73)
+#define UB_CHANGE_NOW _IO('U', 0x74)
+#define UB_CHANGE_RESULT _IOR('U', 0x75, struct ub_change)
 #endif

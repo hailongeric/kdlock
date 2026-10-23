@@ -33,6 +33,8 @@ struct session {
 	unsigned long charges[UB_EXT_PAGES];
 	u64 pins_released;
 	struct ub_pages snapshot;
+	bool change_armed;
+	struct ub_change change;
 };
 struct control;
 struct worker {
@@ -46,6 +48,9 @@ struct worker {
 struct control {
 	struct session *session;
 	struct completion release_readers;
+	struct completion change_go, change_done;
+	bool change_run;
+	int change_error;
 	struct worker readers[2], writers[2];
 };
 
@@ -55,6 +60,8 @@ static void check(struct session *s, bool good)
 	if (!good)
 		s->result.errors++;
 }
+
+static int change_target(struct session *s);
 
 static int work(void *argument)
 {
@@ -67,6 +74,11 @@ static int work(void *argument)
 		mmap_read_lock(s->mm);
 		atomic_inc(&s->readers);
 		complete(&w->entered);
+		if (s->change_armed && !w->index) {
+			wait_for_completion(&c->change_go);
+			if (c->change_run) c->change_error = change_target(s);
+			complete(&c->change_done);
+		}
 		wait_for_completion(&c->release_readers);
 		atomic_dec(&s->readers);
 		mmap_read_unlock(s->mm);
@@ -141,6 +153,8 @@ static int hold(struct session *s, unsigned int count, bool cancel)
 	if (!c) { atomic_set(&s->controlling, 0); return -ENOMEM; }
 	c->session = s;
 	init_completion(&c->release_readers);
+	init_completion(&c->change_go);
+	init_completion(&c->change_done);
 	atomic_set(&s->ready, 0);
 	atomic_set(&s->release, 0);
 	for (i = 0; i < 2; i++) {
@@ -176,6 +190,22 @@ static int hold(struct session *s, unsigned int count, bool cancel)
 		msleep(1);
 	check(s, atomic_long_read(&s->mm->mmap_lock.kd.admission) == -1);
 	check(s, atomic_long_read(&s->mm->mmap_lock.kd.readers) == 2);
+	if (s->change_armed) {
+		/* Both local read shares already exist. A normal write fault using
+		 * one of them can finish while queued writers await their release.
+		 * No reader bypass, PTE poke or body callback is introduced. */
+		if (cancel || count != 3 || kd_mmap_unmap_pending(s->mm) != count ||
+		    atomic_long_read(&s->mm->mmap_lock.kd.admission) != -1 ||
+		    atomic_long_read(&s->mm->mmap_lock.kd.readers) != 2) {
+			error = -EINVAL; goto out;
+		}
+		c->change_run = true;
+		complete(&c->change_go);
+		if (!wait_for_completion_timeout(&c->change_done, 10 * HZ)) {
+			error = -ETIMEDOUT; goto out;
+		}
+		if (c->change_error) { error = c->change_error; goto out; }
+	}
 	if (!cancel) {
 		atomic_set(&s->ready, 1);
 		until = jiffies + 20 * HZ;
@@ -185,6 +215,7 @@ static int hold(struct session *s, unsigned int count, bool cancel)
 out:
 	atomic_set(&s->ready, 0);
 	atomic_set(&s->held, 0);
+	complete_all(&c->change_go);
 	complete_all(&c->release_readers);
 	for (i = 0; i < 2; i++) {
 		if (!join(&c->readers[i])) drained = false;
@@ -215,6 +246,7 @@ out:
 }
 
 #include "resident.inc"
+#include "target_change.inc"
 
 static long operation(struct file *file, unsigned int cmd, unsigned long arg)
 {
@@ -227,6 +259,10 @@ static long operation(struct file *file, unsigned int cmd, unsigned long arg)
 	if (current->mm != s->mm)
 		return -EXDEV;
 	switch (cmd) {
+	case UB_CHANGE_ARM:
+	case UB_CHANGE_NOW:
+	case UB_CHANGE_RESULT:
+		return change_operation(s, cmd, arg);
 	case UB_EXPERIMENT:
 		return experiment(s, arg);
 	case UB_RMAP:
