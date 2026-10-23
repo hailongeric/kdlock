@@ -35,6 +35,7 @@ static int change_target(struct session *s)
 	struct ub_change_more *more = &s->change;
 	struct ub_change *r = &more->state;
 	unsigned int i = r->index, b;
+	bool missing = more->mode >= 3 && more->mode <= 6;
 	unsigned long address = target(s, i);
 	struct page *page = NULL;
 	struct vm_area_struct *vma;
@@ -57,14 +58,14 @@ static int change_target(struct session *s)
 	error = -EINVAL;
 	if (!s->change_armed || r->done || s->pages[i] || current->mm != s->mm ||
 	    (s->mm->mmap_lock.unmap.enabled ?
-	     r->pending != (more->mode == 6 ? 2 : 3) || r->readers != 2 || r->admission != -1 :
+	     r->pending != (more->mode >= 6 ? 2 : 3) || r->readers != 2 || r->admission != -1 :
 	     r->pending != 0 || r->readers != 1)) goto out;
 	vma = vma_lookup(s->mm, address);
 	if (!vma) goto out;
 	more->anon_before = (unsigned long)vma->anon_vma;
-	error = change_entry(s, address, &entry, &more->table_before, more->mode >= 3);
+	error = change_entry(s, address, &entry, &more->table_before, missing);
 	if (error) goto out;
-	if (more->mode >= 3) {
+	if (missing) {
 		/* No target leaf exists. Keep before_none=0 to avoid claiming a
 		 * real empty PTE; the table-change receipt names this distinction. */
 		if (more->table_before) { error = -EINVAL; goto out; }
@@ -78,7 +79,7 @@ static int change_target(struct session *s)
 		}
 		r->before_zero = 1; r->zero_pfn = pte_pfn(entry);
 	}
-	if (more->mode == 1 || more->mode == 3 || more->mode == 4 || more->mode == 6) {
+	if (more->mode == 1 || more->mode == 3 || more->mode == 4 || more->mode == 6 || more->mode == 7) {
 		/* No pages[] and no FOLL_GET: a real native read fault, with no
 		 * reference or ownership acquired on the permanent shared zero page. */
 		got = get_user_pages(more->mode == 3 ? address - 3 * PAGE_SIZE : address, 1, 0, NULL, NULL);
@@ -121,18 +122,18 @@ static int change_target(struct session *s)
 		page_count(page), 1, value, PageLocked(page) };
 completed:
 	more->anon_after = (unsigned long)vma->anon_vma;
-	error = more->table_after && (more->mode >= 3 ? !more->table_before :
+	error = more->table_after && (missing ? !more->table_before :
 		more->table_before == more->table_after) ? 0 : -EINVAL;
 out:
 	r->result = error; r->done = 1;
-	if (more->mode >= 3)
+	if (missing)
 		pr_info("KD_MM_TEST table_change mm=%px index=%u actor=%llu pending=%llu readers=%llu admission=%lld mode=%llu before_table_none=1 after_zero=%llu after_private=%llu table_before=%llx table_after=%llx anon_before=%llx anon_after=%llx zero_pfn=%llx private_pfn=%llx result=%d\n",
 			s->mm, i, r->actor, r->pending, r->readers, r->admission, more->mode,
 			more->after_zero, r->after_private, more->table_before, more->table_after,
 			more->anon_before, more->anon_after, r->zero_pfn, r->page.pfn, error);
 	else if (more->mode)
-		pr_info("KD_MM_TEST absent_change mm=%px index=%u actor=%llu pending=%llu readers=%llu admission=%lld mode=%llu before_none=%llu after_zero=%llu after_private=%llu table_before=%llx table_after=%llx anon_before=%llx anon_after=%llx zero_pfn=%llx private_pfn=%llx result=%d\n",
-			s->mm, i, r->actor, r->pending, r->readers, r->admission, more->mode,
+		pr_info("KD_MM_TEST %s mm=%px index=%u actor=%llu pending=%llu readers=%llu admission=%lld mode=%llu before_none=%llu after_zero=%llu after_private=%llu table_before=%llx table_after=%llx anon_before=%llx anon_after=%llx zero_pfn=%llx private_pfn=%llx result=%d\n",
+			more->mode >= 7 ? "edge_empty_change" : "absent_change", s->mm, i, r->actor, r->pending, r->readers, r->admission, more->mode,
 			more->before_none, more->after_zero, r->after_private, more->table_before,
 			more->table_after, more->anon_before, more->anon_after, r->zero_pfn, r->page.pfn, error);
 	else
@@ -147,20 +148,22 @@ static int change_operation(struct session *s, unsigned int cmd, unsigned long a
 {
 	int error = 0;
 	struct ub_change *r = &s->change.state;
+	bool edge = cmd == UB_CHANGE_EDGE_TABLE_ARM || cmd == UB_CHANGE_EDGE_EMPTY_ZERO_ARM || cmd == UB_CHANGE_EDGE_EMPTY_PRIVATE_ARM;
 
 	if (atomic_read(&s->controlling)) return -EBUSY;
 	if (cmd == UB_CHANGE_ARM || cmd == UB_CHANGE_EMPTY_ZERO_ARM || cmd == UB_CHANGE_EMPTY_PRIVATE_ARM ||
 	    cmd == UB_CHANGE_TABLE_EMPTY_ARM || cmd == UB_CHANGE_TABLE_ZERO_ARM || cmd == UB_CHANGE_TABLE_PRIVATE_ARM ||
-	    cmd == UB_CHANGE_EDGE_TABLE_ARM) {
+	    edge) {
 		mutex_lock(&s->pins_lock);
 		if (!s->groups || arg >= s->groups * 3 || s->pages[arg] || s->change_armed ||
 		    (s->mm->mmap_lock.unmap.enabled ? s->groups != 3 ||
-		     (cmd == UB_CHANGE_EDGE_TABLE_ARM ? arg != 3 && arg != 5 : arg != 4) : s->groups != 1 ||
-		     (cmd == UB_CHANGE_EDGE_TABLE_ARM ? arg != 0 && arg != 2 : arg != 1)))
+		     (edge ? arg != 3 && arg != 5 : arg != 4) : s->groups != 1 ||
+		     (edge ? arg != 0 && arg != 2 : arg != 1)))
 			error = -EINVAL;
 		else {
 			r->index = arg; s->change_armed = true;
-			s->change.mode = cmd == UB_CHANGE_EDGE_TABLE_ARM ? 6 : cmd == UB_CHANGE_EMPTY_ZERO_ARM ? 1 : cmd == UB_CHANGE_EMPTY_PRIVATE_ARM ? 2 :
+			s->change.mode = cmd == UB_CHANGE_EDGE_EMPTY_ZERO_ARM ? 7 : cmd == UB_CHANGE_EDGE_EMPTY_PRIVATE_ARM ? 8 :
+				cmd == UB_CHANGE_EDGE_TABLE_ARM ? 6 : cmd == UB_CHANGE_EMPTY_ZERO_ARM ? 1 : cmd == UB_CHANGE_EMPTY_PRIVATE_ARM ? 2 :
 				cmd == UB_CHANGE_TABLE_EMPTY_ARM ? 3 : cmd == UB_CHANGE_TABLE_ZERO_ARM ? 4 : cmd == UB_CHANGE_TABLE_PRIVATE_ARM ? 5 : 0;
 		}
 		mutex_unlock(&s->pins_lock);

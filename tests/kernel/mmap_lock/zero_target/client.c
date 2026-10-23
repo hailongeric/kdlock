@@ -306,7 +306,7 @@ static void verify_mappings(void)
 				 * Its removed private target leaves the same root on both splits. */
 				require(r.anon && r.root == r.anon && r.links == 1 && r.refs == 1 &&
 					r.active == 1 + splits - lost && r.intervals == r.active &&
-					(!p || r.anon == rmaps[g][0].anon), "new native reverse-map ancestry survives target removal");
+					(!p || removed(g, p - 1) || r.anon == rmaps[g][p - 1].anon), "new native reverse-map ancestry survives target removal");
 				if (KD_TEST_ABSENT) require(r.anon == change_more.anon_after,
 					"surviving ancestry matches the controlled native fault");
 			} else require(!r.anon && !r.links && !r.refs && !r.active && !r.intervals,
