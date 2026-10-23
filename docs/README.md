@@ -16,7 +16,7 @@ adds validated original-waiter continuation without changing that lock protocol.
 | [VM operations](operations/VM.md) | Environment, identity, builds, recovery and drain |
 | [Development rules](../AGENTS.md) | Repository-wide contribution constraints |
 | [Design](DESIGN.md), [code map](CODE_MAP.md) | Architecture, terms and file responsibilities |
-| [Lock protocols](design/lock_protocols.md) | KD/TCLock/Native comparisons for spin, mutex and rwlock, plus KD/Native sleeping rwsem; no TCLock rwsem port |
+| [Lock protocols](design/lock_protocols.md) | KD/TCLock/Native comparisons for spin, mutex and rwlock, plus Native/KD/original-TCLock rwsem with documented API limits |
 | [Spin](design/spin_implementation.md), [mutex](design/mutex_implementation.md), [rwlock](design/rwlock_implementation.md), [rwsem](design/rwsem_implementation.md) | Canonical implementation guides: API, source paths, state, ordering, storage and limits |
 | [KD-only mutex](design/kd_only_mutex.md) | Object replacement, ordinary aliases and delegation |
 | [Locking](design/locking.md), [frames](design/frames.md), [lifetimes](design/lifetimes.md) | Ownership and retirement |

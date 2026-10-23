@@ -2,7 +2,7 @@
 #ifndef TCLOCK_BACKEND_COMPAT_H
 #define TCLOCK_BACKEND_COMPAT_H
 
-/* Waiters only poll on per-CPU borrowed stacks; there is no scheduling path. */
+/* Match the pinned upstream RCUHT scheduling branch. */
 #include <linux/kernel.h>
 #include <linux/percpu.h>
 #include <linux/sched.h>

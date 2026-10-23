@@ -122,21 +122,16 @@
  				       struct komb_rwlock_node *curr_node)
  {
  	void *incoming_rsp_ptr, *outgoing_rsp_ptr;
-@@ -225,11 +226,9 @@
- 	 * function call, which we will resume execution at using the switch
- 	 * in unlock.
- 	 */
--	local_irq_disable();
+@@ -229,7 +230,7 @@
  	komb_context_switch(incoming_rsp_ptr, outgoing_rsp_ptr);
--	local_irq_enable();
--
+ 	local_irq_enable();
+ 
 -	BUG_ON((this_cpu_ptr(&local_shadow_stack)->ptr) -
-+
 +	BUG_ON((unsigned long)(this_cpu_ptr(&local_shadow_stack)->ptr) -
  		       (*this_cpu_ptr(&local_shadow_stack_ptr)) >
  	       SIZE_OF_SHADOW_STACK);
  
-@@ -244,7 +243,7 @@
+@@ -244,7 +245,7 @@
  #pragma GCC push_options
  #pragma GCC optimize("O3")
  __attribute__((noipa)) noinline notrace static void
@@ -145,7 +140,7 @@
  {
  #ifdef NUMA_AWARE
  	struct komb_rwlock_node **local_head, **local_tail;
-@@ -257,7 +256,7 @@
+@@ -257,7 +258,7 @@
  	if (next_node == NULL) {
  		set_locked(lock);
  		/*
@@ -154,7 +149,7 @@
  		 * become the combiner.
  		 */
  		curr_node->locked = false;
-@@ -283,7 +282,7 @@
+@@ -283,7 +284,7 @@
  	local_head = this_cpu_ptr(&local_queue_head);
  	local_tail = this_cpu_ptr(&local_queue_tail);
  
@@ -163,7 +158,7 @@
  		(*local_tail)->next = next_node;
  		next_node = *local_head;
  		*local_head = NULL;
-@@ -294,8 +293,8 @@
+@@ -294,8 +295,8 @@
  	BUG_ON(next_node == NULL);
  
  	set_locked(lock);
@@ -174,7 +169,7 @@
  	 * the combiner.
  	 */
  	next_node->locked = false;
-@@ -305,11 +304,11 @@
+@@ -305,11 +306,11 @@
  #pragma GCC push_options
  #pragma GCC optimize("O3")
  __attribute__((noipa)) noinline notrace static int
@@ -188,7 +183,7 @@
  	int old_tail, val, j;
  
  	/*
-@@ -339,11 +338,11 @@
+@@ -339,11 +340,11 @@
  		if (curr_node->completed) {
  			for (j = 7; j >= 0; j--)
  				if (this_cpu_ptr(&local_shadow_stack)
@@ -202,7 +197,7 @@
  						      ->lock_addr[j];
  
  				BUG_ON(parent_lock == lock);
-@@ -406,7 +405,7 @@
+@@ -406,7 +407,7 @@
  	prev_cs_cpu = *this_cpu_ptr(&current_critical_section_cpu);
  
  	/*
@@ -211,7 +206,7 @@
  	 * Release the node and run_combiner.
  	 */
  	curr_node->count--;
-@@ -425,16 +424,16 @@
+@@ -425,16 +426,16 @@
  
  	j = 7;
  	for (j = 7; j >= 0; j--)
@@ -232,7 +227,7 @@
  
  #ifdef NUMA_AWARE
  	*this_cpu_ptr(&local_queue_head) = prev_local_queue_head;
-@@ -452,7 +451,7 @@
+@@ -452,7 +453,7 @@
  	return 0;
  
  release:
@@ -241,7 +236,7 @@
  	 * release the node
  	 */
  	curr_node->count--;
-@@ -461,7 +460,7 @@
+@@ -461,7 +462,7 @@
  #pragma GCC pop_options
  
  __attribute__((noipa)) noinline notrace static int
@@ -250,7 +245,7 @@
  {
  	struct komb_rwlock_node *curr_node;
  	int tail, idx;
-@@ -475,6 +474,9 @@
+@@ -475,6 +476,9 @@
  	/*
  	 * Initialize curr_node
  	 */
@@ -260,7 +255,7 @@
  	curr_node->locked = true;
  	curr_node->completed = false;
  	curr_node->next = NULL;
-@@ -489,27 +491,33 @@
+@@ -489,27 +493,33 @@
   * Public API
   */
  
@@ -303,7 +298,7 @@
  	}
  }
  
-@@ -519,7 +527,7 @@
+@@ -519,7 +529,7 @@
  	atomic_set(&lock->lock.val, 0);
  }
  
@@ -312,7 +307,7 @@
  get_shadow_stack_ptr(void)
  {
  	return this_cpu_ptr(&local_shadow_stack_ptr);
-@@ -531,7 +539,7 @@
+@@ -531,7 +541,7 @@
  	return this_cpu_ptr(&komb_rwlock_nodes[0]);
  }
  
@@ -321,7 +316,7 @@
   * When the following function is called, the compiler in caller frame does
   * this sequence:
   *
-@@ -558,10 +566,10 @@
+@@ -558,10 +568,10 @@
  #pragma GCC push_options
  #pragma GCC optimize("O3")
  __attribute__((noipa)) noinline notrace void
@@ -334,32 +329,21 @@
  	 * We must save the callee-saved registers now, since we will resume
  	 * execution at the return address currently at top of stack. If we
  	 * defer saving to when context switch happens later, the C function
-@@ -575,7 +583,6 @@
- 	 * our return address, but Linux only assumes 8-byte stack alignment,
- 	 * so it isn't a problem for us.
- 	 */
--	local_irq_disable();
- 	asm volatile("pushq %%rbp\n"
- 		     "pushq %%rbx\n"
- 		     "pushq %%r12\n"
-@@ -596,11 +603,9 @@
+@@ -596,11 +606,13 @@
  		     :
  		     : "i"(get_shadow_stack_ptr)
  		     : "memory");
--	local_irq_enable();
++
+ 	local_irq_enable();
  
  	ret_val = __kombrw_spin_lock_slowpath(lock);
  
--	local_irq_disable();
+ 	local_irq_disable();
++
  	if (ret_val) {
  		asm volatile("callq %P0\n"
  			     "movq (%%rax), %%rsp\n"
-@@ -637,12 +642,11 @@
- 			     :
- 			     : "memory");
- 	}
--	local_irq_enable();
- }
+@@ -642,7 +654,7 @@
  #pragma GCC pop_options
  
  __attribute__((noipa)) noinline notrace void
@@ -368,7 +352,7 @@
  {
  	u32 val, cnt;
  
-@@ -727,7 +731,7 @@
+@@ -727,7 +739,7 @@
  	kombrw_spin_lock_slowpath(lock);
  }
  
@@ -377,7 +361,7 @@
   * No IPA is even more relevant here, because even if assembly is removed,
   * compiler shouldn't assume which caller-saved registers are in use inside
   * the function. When we jump from the spin loop to the return address after
-@@ -735,7 +739,7 @@
+@@ -735,7 +747,7 @@
   * inconsistent, because we only restored the callee-saved registers.
   */
  __attribute__((noipa)) noinline notrace void
@@ -386,7 +370,7 @@
  {
  	int from_cpuid = *this_cpu_ptr(&current_critical_section_cpu);
  	void *incoming_rsp_ptr, *outgoing_rsp_ptr;
-@@ -759,9 +763,9 @@
+@@ -759,9 +771,9 @@
  	for (j = 0; j < 8; j++) {
  		temp_lock_addr =
  			this_cpu_ptr(&local_shadow_stack)->lock_addr[j];
@@ -398,17 +382,7 @@
  			my_idx = j;
  	}
  
-@@ -785,9 +789,7 @@
- 	outgoing_rsp_ptr =
- 		&((per_cpu_ptr(&komb_rwlock_nodes[0], from_cpuid)->rsp));
- 
--	local_irq_disable();
- 	komb_context_switch(incoming_rsp_ptr, outgoing_rsp_ptr);
--	local_irq_enable();
- 	return;
- }
- 
-@@ -832,21 +834,21 @@
+@@ -832,21 +844,21 @@
  	// kombrw_spin_unlock(&lock->lock);
  }
  
@@ -433,7 +407,7 @@
  {
  	u32 val;
  
-@@ -859,7 +861,7 @@
+@@ -859,7 +871,7 @@
  	kombrw_spin_unlock(&lock->lock);
  }
  
@@ -442,7 +416,7 @@
  {
  	u32 cnts;
  
-@@ -870,7 +872,38 @@
+@@ -870,7 +882,38 @@
  	komb_read_lock_slowpath(lock);
  }
  

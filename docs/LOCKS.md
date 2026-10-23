@@ -146,7 +146,7 @@ Use one guide for each responsibility:
 | Question | Guide |
 | --- | --- |
 | How does each KD lock acquire, wait, delegate and release? | The four implementation guides in the first table |
-| How does it differ from the benchmark comparators? | [KD, TCLock and Linux Native protocols](design/lock_protocols.md); there is no TCLock sleeping-rwsem port |
+| How does it differ from the benchmark comparators? | [KD, TCLock and Linux Native protocols](design/lock_protocols.md); original TCLock rwsem has narrower API support than Linux rwsem |
 | Who owns a lock during nested execution or native recovery? | [Ownership](design/locking.md) |
 | How are execution state and code retained? | [Frames](design/frames.md), [lifetimes](design/lifetimes.md) |
 | What can translated code execute? | [Admission](design/admission.md), [register ABI](JIT_REGISTER_ABI.md) |

@@ -93,8 +93,8 @@ class BenchTests(unittest.TestCase):
             self.assertTrue(all(r['cachelines'] == r['list_nodes'] and
                                 r['workload'] in r['name'] for r in plan))
         args = run.parser().parse_args(['--lock-kind', 'rwsem', '--workloads', 'list'])
-        with self.assertRaises(run.Failure):
-            run.make_plan(args)
+        self.assertEqual({r['arm'] for r in run.make_plan(args)},
+                         {'native', 'tclock', 'kdlock'})
 
     def test_list_oracle_checks_writer_totals_read_consistency_and_identity(self):
         for workload, code in (('list', 4), ('list-prefetch', 5)):
@@ -231,8 +231,10 @@ class BenchTests(unittest.TestCase):
             run.make_plan(args)
         args.require_jit = False
         args.backends.append('tclock')
-        with self.assertRaises(run.Failure):
-            run.make_plan(args)
+        tc_plan = [s for s in run.make_plan(args) if s['arm'] == 'tclock']
+        self.assertEqual(len(tc_plan), 18)
+        self.assertTrue(all(s['rwsem_writer_shell'] == 'upstream-stack' and
+                            s['numa_policy'] == 'on' for s in tc_plan))
 
     def test_rwsem_delegation_plan_and_standard_grid(self):
         threads = [*range(1, 9), *range(12, 61, 4)]

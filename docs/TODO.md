@@ -103,8 +103,8 @@ lifetimes, before attributing retries to fanout or changing wake policy. No
 timing ran; qualified variance and all seven original causes remain unresolved.
 
 KD has explicit spin, ordinary mutex, rwlock and rwsem APIs. Spin/mutex/rwlock
-workloads compare KD, TCLock and Native; sleeping rwsem compares KD with Native
-because this port has no TCLock sleeping rwsem. KD tracks real lock owners and
+workloads compare KD, TCLock and Native; sleeping rwsem also has an original TCLock port with fixed-affinity registered
+workers and ordinary API scope. KD tracks real lock owners and
 unlock acknowledgements, keeps source modules loaded while needed, and shares
 register packets between waiter and combiner. It does not intercept global lock
 calls. Historical comparisons retained configuration-specific throughput gaps;

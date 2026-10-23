@@ -874,7 +874,7 @@ drained: Native/TCLock/KD, the same three payloads and two mixes, and
 1/8/32/36/60 workers with three repetitions. KD meets both observed criteria at
 29/30 points against Native and 28/30 against TCLock. Its misses are c08/20%/one
 worker against both and RCUHT/1%/60 workers against TCLock. TCLock's stack-based
-delegation share is unmeasured. This port has no sleeping TCLock rwsem; these
+delegation share is unmeasured. The source used for that report had no sleeping TCLock rwsem; these
 spinning measurements are not rwsem parity or evidence of sleeping/cancellation/
 downgrade support. The KD rwlock algorithm was not changed.
 

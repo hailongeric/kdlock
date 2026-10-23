@@ -1,5 +1,8 @@
 # Guest-only module. Preserve the experiment kernel's frame pointer/mitigations.
-ifeq ($(TCLOCK_RWLOCK),1)
+ifeq ($(TCLOCK_RWSEM),1)
+obj-m := tclock_rwsem_backend_km.o
+tclock_rwsem_backend_km-objs := rwsem_provider.o komb_rwsem.o aqs.o combiner.o
+else ifeq ($(TCLOCK_RWLOCK),1)
 obj-m := tclock_rwlock_backend_km.o
 tclock_rwlock_backend_km-objs := rwlock_provider.o komb_rwlock.o combiner.o
 else ifeq ($(TCLOCK_MUTEX),1)

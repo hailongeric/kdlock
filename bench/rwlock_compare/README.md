@@ -17,7 +17,8 @@ snapshots. These modes keep distinct lock, caller and execution identities.
 
 ## Additional explicit modes
 
-`--lock-kind rwsem --backends native kdlock` compares Linux rwsem with the
+`--lock-kind rwsem --backends native tclock kdlock` compares Linux rwsem, the
+[original TCLock rwsem](../../tclock_backend/README.md#original-rwsem-comparator), and the
 [KD sleeping semaphore](../../docs/design/rwsem_implementation.md) on c01/c08 or
 RCUHT. The waiting implementation in **`c21345b` is accepted as current**, including
 the low-count regressions recorded in its comparison. Readers execute locally.
@@ -33,7 +34,10 @@ mutex protocol is unchanged.
 
 `--delegate off` compiles the ordinary local KD writer API and labels its variant
 `-local`; it requires zero JIT counts. `--require-jit` applies only to eligible
-multithreaded default-KD writers. There is no TCLock sleeping rwsem backend. This
+multithreaded default-KD writers. TCLock uses its original writer-stack protocol
+and AQS reader gate, with per-worker registration and post-client retirement
+outside the measured loop. Its `upstream-stack` shell supports ordinary pairs,
+not Linux-compatible killable/downgrade semantics. This
 mode does not replace the real kernel mmap lock. Use the
 [scheduler probe](../../tests/kernel/rwsem/README.md) for sleeping holders,
 same-CPU progress, cancellation, epoch exclusion and downgrade coverage.
@@ -327,7 +331,8 @@ logs. Each run also has a `session.json`.
 
 Functional runs have no performance summary entries. For performance parity, both
 of these must hold against **each** of Native and TCLock for spin/rwlock, or
-against Native for rwsem:
+against Native for a two-arm rwsem comparison. When rwsem includes TCLock,
+both controls are required:
 
 1. KD's best warmed peak is at least as high.
 2. KD's median whole-run rate is at least as high.

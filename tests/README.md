@@ -83,6 +83,7 @@ check, missing dependency, crash or compile failure must not be reported as a pa
 | Context, aliases and guards |`admission/test_context_policy.py`, `test_context_memory.py`, `test_context_guards.py`, `test_call_alias.py`, `test_audited_c_memory.py` |
 | Heat/ratio |`infrastructure/test_hotlock_sampling.py` |
 | IRQ/BH variants |`spin/test_spin_irq.py`, `test_spin_cold.py`; [kernel consumer](kernel/spin/irq_api/README.md) |
+| Original TCLock four-family port | [Pinned-source checks and serial live probes](kernel/tclock_original/README.md); ordinary rwsem API and IRQ-enabled rwlock caller scope |
 | TCLock assembly/parking |`spin/test_tclock_context.py`, `mutex/test_tclock_mutex_context.py` |
 | Reader/writer exclusion, ABI3 admission and retry | `rwlock/test_rwlock.py`, `admission/test_clobber_entry.py`, `codegen/test_spin_paired_jit.py`, `execution/test_jit_entry_scope.py`, `spin/test_spin_wait.py`; [live rwlock controls/JIT](kernel/rwlock/README.md) |
 | TCLock rwlock assembly and benchmark oracles | `rwlock/test_tclock_rwlock_context.py`; `bench/rwlock_compare/test_bench.py`; [rwlock benchmark](../bench/rwlock_compare/README.md) |
@@ -177,8 +178,8 @@ reader overlap, writer exclusion, updates and exact count/gate drain. The
 [rwlock benchmark](../bench/rwlock_compare/README.md) adds the real TCLock port and
 1%/20% RCUHT mixes. Its `--require-jit` checks returned writer bodies; performance
 parity is a separate `--require-parity` result. Readers do not count as JIT bodies.
-The same runner's `--lock-kind rwsem` mode compares Linux Native with KD outer
-ABI2 writers; `--delegate off` selects the local KD control. Mixed c08 runs check
+The same runner's `--lock-kind rwsem` mode compares Linux Native, original
+TCLock rwsem and KD outer ABI2 writers; `--delegate off` selects the local KD control. Mixed c08 runs check
 reader consistency while entry and matching-unlock completion counters record
 actual delegated execution. Whole-kernel mmap replacement is outside this scope.
 

@@ -10,9 +10,6 @@ $(error spin requires a taskname or argbounds snapshot workload)
 endif
 else ifeq ($(RB_LOCK_KIND),rwsem)
 ccflags-y += -DRB_RWSEM -DRB_RWSEM_DELEGATE=$(RB_RWSEM_DELEGATE)
-ifeq ($(RB_BACKEND),tclock)
-$(error TCLock backend has no sleeping rwsem port)
-endif
 else ifneq ($(RB_LOCK_KIND),rwlock)
 $(error RB_LOCK_KIND must be rwlock, spin or rwsem)
 endif

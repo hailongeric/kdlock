@@ -1,4 +1,5 @@
 """Snapshot/rwlock preparation, complete-body evidence and strict source/queue drain."""
+import errno
 import fcntl
 import json
 import os
@@ -42,7 +43,18 @@ class RWSession(Session):
         return row
 
     def tc_idle(self):
-        row = {p.name: int(p.read_text()) for p in self.tc_params.iterdir()}
+        if self.record['lock_kind'] == 'rwsem':
+            # Client process has returned; retain refs until PID retirement too.
+            for attempt in range(100):
+                try:
+                    (self.tc_params / 'drain').write_text('1')
+                    break
+                except OSError as error:
+                    if error.errno != errno.EBUSY or attempt == 99:
+                        raise
+                    time.sleep(0.01)
+        row = {p.name: int(p.read_text()) for p in self.tc_params.iterdir()
+               if p.name != 'drain'}
         require(row['quiescent'] == 1, 'TCLock contexts/queue remain active', 'UNDRAINED')
         return row
 
@@ -210,6 +222,8 @@ class RWSession(Session):
         if peak:
             m['peak'] = peak
         self.counts(label)
+        if self.loaded_tc and self.record['lock_kind'] == 'rwsem':
+            self.tc_idle()
         return m
 
     def measure(self):

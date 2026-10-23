@@ -290,8 +290,9 @@ increments and nonzero unused snapshot fields fail validation. The object and
 payload stay resident until workers, source leases, frames and ACKs drain.
 
 Spin and mutex support Native, TCLock and KD; rwlock supports all three with
-local readers. Rwsem supports Native and KD, retaining its ordinary/local and
-explicit outer-writer modes. There is no TCLock sleeping-rwsem port.
+local readers. Rwsem supports Native, original TCLock and KD. KD retains its ordinary/local
+and explicit outer-writer modes; TCLock uses its original semaphore protocol
+with registered fixed-affinity task contexts.
 The public mutex example uses `--mutex-api public`. New list profiles record
 both JIT entry and matching root-completion counts; entry-only execution does
 not satisfy strict functional delegation acceptance. Workload, node count,
@@ -720,7 +721,7 @@ automatically added to an ordinary rwlock or full-catalog sweep.
 
 | Mode | Payloads / backends | Execution contract |
 | --- | --- | --- |
-| `--lock-kind rwsem` | c01/c08 or RCUHT; `--backends native kdlock` | Sleeping local readers and explicit writers that may delegate. KD blocks new readers and waits for existing readers before entering the unchanged mutex delegation queue. `--delegate off` selects a distinct ordinary-local KD control with zero JIT. No TCLock sleeping-rwsem port. |
+| `--lock-kind rwsem` | c01/c08 or RCUHT; `--backends native tclock kdlock` | Local readers and explicit writers that may delegate. KD blocks new readers and waits for existing readers before entering the unchanged mutex delegation queue. `--delegate off` selects a distinct ordinary-local KD control with zero JIT. TCLock uses the original rwsem and AQS reader gate; only ordinary read/write pairs are supported. |
 | `--lock-kind spin --workloads argbounds` | Four-word argument-boundary snapshot; Native/TCLock/KD | Every snapshot takes an exclusive spinlock; KD may delegate reads. Controlled optional mutations use the same selected lock. |
 | `--lock-kind spin --workloads taskname` | Exact `strscpy_pad()` copy from a 16-byte name field to a 64-byte padded buffer; Native/TCLock/KD | Read-only correctness, returned-body checks and the `05876a4` standard-grid comparison are complete. The preceding version's 20% mutation control passed correctness with zero KD generated bodies and does not supersede earlier strict delegation failures. Explicit `--delegate off` gives a separate KD local control. |
 

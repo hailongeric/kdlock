@@ -35,7 +35,7 @@ __komb_spin_lock_longjmp(struct qspinlock *lock, int tail,
 
 		int count __maybe_unused = 0;
 
-		komb_cond_load_relaxed(&curr_node->locked, !(VAL));
+		smp_cond_load_relaxed_sched(&curr_node->locked, !(VAL));
 
 
 
@@ -113,7 +113,7 @@ __komb_spin_lock_longjmp(struct qspinlock *lock, int tail,
 	/*
 	 * contended path; wait for next if not observed yet, release.
 	 */
-	komb_cond_load_relaxed(&curr_node->next, (VAL));
+	smp_cond_load_relaxed_sched(&curr_node->next, (VAL));
 	next_node = curr_node->next;
 #ifdef DEBUG_KOMB
 	BUG_ON(next_node == NULL);

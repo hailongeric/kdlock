@@ -136,12 +136,13 @@ policy. Static snapshots check complete structure and exact operation totals.
 TCLock retains NUMA/WWJUMP and configured 1,024; zero-based jumps can execute 1,025
 bodies. The shared port header currently enables NUMA even when Makefile's variable
 is 0; actual ELF metadata rejects misleading off labels. Spin IRQ checks are disabled
-for this IRQ-enabled task-context comparator, and batches do not truncate on
-`need_resched()`. TCLock/workloads have UBSAN off; the kernel's policy is unchanged.
+for this IRQ-enabled task-context comparator. Spin now retains upstream
+`need_resched()` batch termination and the scheduling-enabled RCUHT waiter loop;
+old comparison results retain their previous source identity. TCLock/workloads have UBSAN off; the kernel's policy is unchanged.
 Mutex workers preregister one fixed-affinity context per CPU before measurement;
 contexts/task refs survive complete cohort drain. KD published waiters remain pinned
 polling. See [TCLock scope](../../tclock_backend/README.md) and
-[all nine lock protocols](../../docs/design/lock_protocols.md).
+[lock protocols](../../docs/design/lock_protocols.md).
 
 ## Results and validity
 

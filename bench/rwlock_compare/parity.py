@@ -11,7 +11,7 @@ def assess(plan, summary):
         points.setdefault(key, {})[spec['arm']] = spec['variant']
     result = []
     for (lock_kind, workload, lines, percent, threads), variants in sorted(points.items()):
-        comparators = ('native',) if lock_kind == 'rwsem' else ('native', 'tclock')
+        comparators = ('native',) if lock_kind == 'rwsem' and 'tclock' not in variants else ('native', 'tclock')
         required = {'kdlock', *comparators}
         row = dict(lock_kind=lock_kind, workload=workload, cachelines=lines,
                    write_percent=percent, threads=threads,

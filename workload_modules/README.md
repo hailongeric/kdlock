@@ -22,7 +22,7 @@ compile time. All participants on a target lock must use that same backend's API
 | --- | --- | --- |
 | [spin_cacheline](spin_cacheline/README.md) | `spin_cacheline.ko` / `/dev/spin_cacheline` | Native/TCLock/KD spin, cacheline/RCUHT payloads and KD nested/early scenarios |
 | [mutex_cacheline](mutex_cacheline/README.md) | `mutex_cacheline.ko` / `/dev/mutex_cacheline` | Separate ordinary mutex functions for the same three arms and shared cacheline/RCUHT payload logic |
-| [rwlock_bench](rwlock_bench/README.md) | `rwlock_bench.ko` / `/dev/kd_rwlock_bench` | Native/TCLock/KD rwlock and proc spin snapshots; Native/KD rwsem with explicit KD outer writers or a local control; separate shell identities |
+| [rwlock_bench](rwlock_bench/README.md) | `rwlock_bench.ko` / `/dev/kd_rwlock_bench` | Native/TCLock/KD rwlock and proc spin snapshots; Native/TCLock/KD rwsem with original TCLock writers and explicit KD outer writers or a local control; separate shell identities |
 | [real_api](../bench/real_api/README.md) | `real_api.ko` / scoped ftrace substitution | Real syscall critical sections: xattr/OFD, descriptor flags, pipe mutexes, file-position mutexes and bounded UTS reader/writer metadata; Native/TCLock/KD selection |
 
 The top-level Makefile builds the spin and mutex Linux Native workloads by default; explicit

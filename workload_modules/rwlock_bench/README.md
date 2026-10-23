@@ -4,7 +4,7 @@
 [comparison runner](../../bench/rwlock_compare/README.md). Build variants select
 Linux native, TCLock or KD through `RB_BACKEND` and the locking shell through
 `RB_LOCK_KIND=rwlock|spin|rwsem`. All use the same timed worker loop, operation
-mix and payload. TCLock has no sleeping rwsem backend.
+mix and payload. TCLock rwsem uses its original semaphore plus AQS reader gate. Workers register before their operation loop and drain after the client cohort exits.
 The runner defaults to RCUHT at 1% and 20% writes on its historical fifteen-count
 grid ending at 36 workers. Current standard comparisons must explicitly select
 workers 1–8 and 12–60 by four, with CPU 63 reserved for the collector; the default

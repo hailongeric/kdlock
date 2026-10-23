@@ -225,6 +225,27 @@ ret
         check_jit_evidence(record := dict(record, jit_bodies=1))
         self.assertEqual(record['jit_acceptance'], 'PASS')
 
+    def test_rwlock_context_accepts_only_original_irq_prefix(self):
+        saves = [f'push %{r}' for r in ('rbp', 'rbx', 'r12', 'r13', 'r14', 'r15')]
+        restores = [f'pop %{r}' for r in ('r15', 'r14', 'r13', 'r12', 'rbx', 'rbp')]
+        def function(name, instructions):
+            return f'0000 <{name}>:\n' + ''.join(
+                f' {i:x}: {instruction}\n' for i, instruction in enumerate(instructions))
+        switch = function('komb_context_switch', saves +
+                          ['mov %rsp,(%rsi)', 'mov (%rdi),%rsp'] + restores + ['ret'])
+        helpers = function('get_komb_rwlock_node', ['mov %gs:0,%rax', 'ret']) + \
+                  function('get_shadow_stack_ptr', ['mov %gs:0,%rax', 'ret'])
+        for prefix in (['cli'], ['call *0x0(%rip)\n 2: R_X86_64_PC32 pv_ops+0xf4']):
+            body = prefix + saves + ['call 0'] + restores + ['ret'] + restores + ['ret']
+            text = switch + function('kombrw_spin_lock_slowpath', body) + helpers
+            self.assertTrue(audit_context(text, 'rwlock')['six_register_switch'])
+            if prefix[0].startswith('call'):
+                for invalid in (text.replace('pv_ops+0xf4', 'pv_ops+0xfc'),
+                                text.replace('pv_ops+0xf4', 'unrelated'),
+                                text.replace('push %rbp', 'push %rbp\n 0: mov %rsp,%rbp', 1)):
+                    with self.assertRaises(ValueError):
+                        audit_context(invalid, 'rwlock')
+
     def test_source_snapshot_covers_tclock_fragments(self):
         # A frozen run must include the bodies behind the C entry files;
         # omitting them would allow protocol changes during measurement.

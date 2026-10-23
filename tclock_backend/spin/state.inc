@@ -15,8 +15,27 @@
 
 #define UINT64_MAX 0xffffffffffffffffL
 
-/* Wait on the per-CPU shadow stack without an explicit scheduling point. */
-#define komb_cond_load_relaxed(ptr, cond_expr)                                 \
+#define KERNEL_SYNCSTRESS 1
+#ifdef KERNEL_SYNCSTRESS
+#define smp_cond_load_relaxed_sched(ptr, cond_expr)                            \
+	({                                                                     \
+		typeof(ptr) __PTR = (ptr);                                     \
+		__unqual_scalar_typeof(*ptr) VAL;                              \
+		for (;;) {                                                     \
+			VAL = READ_ONCE(*__PTR);                               \
+			if (cond_expr)                                         \
+				break;                                         \
+			cpu_relax();                                           \
+			if (need_resched()) {                                  \
+				preempt_enable();                              \
+				schedule();                                    \
+				preempt_disable();                             \
+			}                                                      \
+		}                                                              \
+		(typeof(*ptr))VAL;                                             \
+	})
+#else
+#define smp_cond_load_relaxed_sched(ptr, cond_expr)                            \
 	({                                                                     \
 		typeof(ptr) __PTR = (ptr);                                     \
 		__unqual_scalar_typeof(*ptr) VAL;                              \
@@ -28,6 +47,24 @@
 		}                                                              \
 		(typeof(*ptr))VAL;                                             \
 	})
+
+//if (need_resched()) {
+//	schedule_preempt_disabled();
+//}
+#endif
+
+#ifndef smp_cond_load_acquire_sched
+#define smp_cond_load_acquire_sched(ptr, cond_expr)                            \
+	({                                                                     \
+		__unqual_scalar_typeof(*ptr) _val;                             \
+		_val = smp_cond_load_relaxed_sched(ptr, cond_expr);            \
+		smp_acquire__after_ctrl_dep();                                 \
+		(typeof(*ptr))_val;                                            \
+	})
+#endif
+
+#define atomic_cond_read_acquire_sched(v, c)                                   \
+	smp_cond_load_acquire_sched(&(v)->counter, (c))
 
 struct shadow_stack {
 	/*

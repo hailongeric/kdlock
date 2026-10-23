@@ -17,7 +17,7 @@ implementation or measurement.
 | KD / delegation | This project's lock implementation. A lock holder can execute another waiting task's protected work on that task's behalf. |
 | Native / Linux Native | The corresponding unmodified Linux lock implementation used in a comparison. This label does not mean that every surrounding benchmark adapter is original kernel code. |
 | Native execution / native continuation | The original waiter runs its original source instructions. This can still use KD locks; it does not mean switching a KD object to Linux Native locking. |
-| TCLock | The separately maintained comparison implementation, which can delegate work by switching to a waiting caller's stack. This repository has TCLock spin, mutex and rwlock ports, but no sleeping rwsem port. |
+| TCLock | The separately maintained comparison implementation, which can delegate work by switching to a waiting caller's stack. This repository ports the original TCLock spin, mutex, rwlock and rwsem implementations; module support is restricted to the documented ordinary APIs and fixed-affinity callers. |
 | Backend / arm | One implementation in a comparison, such as Native, TCLock or KD. |
 | Origin / waiter / producer | The task that requested an operation. When its request is delegated, it waits for the result. |
 | Executor / combiner | The task that executes another task's delegated operation. Combining means serving several queued requests while holding the lock. |

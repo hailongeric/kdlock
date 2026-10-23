@@ -20,10 +20,12 @@ extern char rb_entry[];
 #include "rwlock/komb_rwlock.h"
 static struct komb_rwlock rb_lock __aligned(64) = __KOMB_RWLOCK_UNLOCKED;
 #define RB_BACKEND 1
+/* Original rwlock inline returns can leave IRQs off. These callers enter
+ * with IRQs enabled and restore that context after the complete pair. */
 #define RB_READ_LOCK() do { preempt_disable(); komb_read_lock(&rb_lock); } while (0)
-#define RB_READ_UNLOCK() do { komb_read_unlock(&rb_lock); preempt_enable(); } while (0)
+#define RB_READ_UNLOCK() do { komb_read_unlock(&rb_lock); local_irq_enable(); preempt_enable(); } while (0)
 #define RB_WRITE_LOCK() do { preempt_disable(); komb_write_lock(&rb_lock); } while (0)
-#define RB_WRITE_UNLOCK() do { komb_write_unlock(&rb_lock); preempt_enable(); } while (0)
+#define RB_WRITE_UNLOCK() do { komb_write_unlock(&rb_lock); local_irq_enable(); preempt_enable(); } while (0)
 #else
 static rwlock_t rb_lock __aligned(64) = __RW_LOCK_UNLOCKED(rb_lock);
 #define RB_BACKEND 0

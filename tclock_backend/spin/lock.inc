@@ -150,7 +150,7 @@ queue:
 			WRITE_ONCE(prev_node->next, curr_node);
 
 			print_debug("IRQ going to waiting for lock\n");
-			komb_cond_load_relaxed(&curr_node->locked, !(VAL));
+			smp_cond_load_relaxed_sched(&curr_node->locked, !(VAL));
 		}
 
 		curr_node->rsp = prev_rsp;
@@ -190,7 +190,7 @@ queue:
 
 		print_debug("IRQ got the lock\n");
 
-		komb_cond_load_relaxed(&curr_node->next, (VAL));
+		smp_cond_load_relaxed_sched(&curr_node->next, (VAL));
 		next_node = curr_node->next;
 
 #ifdef DEBUG_KOMB

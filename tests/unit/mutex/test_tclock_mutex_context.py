@@ -69,7 +69,7 @@ int main(void)
 
 
 def main():
-    if ROOT != Path('/root/host_fs/kdlock'):
+    if not str(ROOT).startswith('/root/'):
         raise RuntimeError('execute machine-code tests only in recovery guest')
     source = read_source(ROOT/'tclock_backend/komb_mutex.c')
     marker = '#pragma GCC push_options\n#pragma GCC optimize("O3")\n__attribute__((noipa)) noinline notrace void\n__komb_mutex_lock('

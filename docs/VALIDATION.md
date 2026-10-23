@@ -510,7 +510,7 @@ kernel remains `6.1.159-kdclobber2`, Build ID
 The [performance report](../bench/results/10.176.26.71/bench/rwsem-optimization-20261018/README.md)
 keeps candidate screens, baseline repeats, instrumented profiles and execution
 statuses separate. Performance failures or split JIT groups do not mean a test
-was unexecuted. TCLock has no sleeping rwsem backend. Earlier experimental
+was unexecuted. That source had no TCLock sleeping rwsem backend. Earlier experimental
 probes and rejected candidates remain distinct from selected-source results;
 the selected implementation contains no asynchronous reader-grant mechanism.
 These are basic plus affected checks, not a full unit-suite claim. They do not

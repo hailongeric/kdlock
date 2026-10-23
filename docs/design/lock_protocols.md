@@ -2,7 +2,7 @@
 
 This guide compares how the maintained backends acquire, delegate and release
 spinlocks, mutexes, rwlocks and sleeping rwsems. Linux Native and KD cover all four
-families; the TCLock port covers spin, mutex and rwlock only. It describes the
+families, as does the original TCLock port within its documented ordinary-API scope. It describes the
 captured x86_64 implementation, not interchangeable object layouts. Start with
 the [lock catalog](../LOCKS.md) for current KD APIs and the
 [glossary](../TERMINOLOGY.md) for terms such as combiner, frame, native suffix and ACK.
@@ -16,7 +16,7 @@ storage, source files and execution details. KD's nested ownership, recovery and
 | Backend | Exclusion object | Who executes a contended request? | Wait policy | Native peers on the same object |
 | --- | --- | --- | --- | --- |
 | Linux Native spin | Linux `raw_spinlock_t` / qspinlock word | The acquiring caller | Native pending/MCS in the current VM | Ordinary compatible Linux APIs |
-| TCLock spin | A qspinlock-shaped word owned exclusively by TCLock | Caller or combiner on the waiter's real stack | Pinned polling | Not supported |
+| TCLock spin | A qspinlock-shaped word owned exclusively by TCLock | Caller or combiner on the waiter's real stack | Upstream RCUHT polling with scheduling | Not supported |
 | KD spin | Explicit four-byte `kd_spinlock_t` | Caller or combiner running translated code | Pinned polling | KD native variants only; no Linux/TCLock mixing |
 | Linux Native mutex | Original `struct mutex` | Its actual Linux owner | Optimistic spinning and sleeping | Ordinary compatible Linux APIs |
 | TCLock mutex | Separate `struct komb_mutex` | Caller or combiner on the waiter's real stack | Polling, scheduling and parking | Not supported |
@@ -25,6 +25,7 @@ storage, source files and execution details. KD's nested ownership, recovery and
 | TCLock rwlock | Separate `struct komb_rwlock` count and gate | Readers run locally; queued writer bodies may run on a borrowed waiter stack | Pinned polling and upstream gate delegation | TCLock rwlock pairs only |
 | KD rwlock | 128-byte `kd_rwlock_t`, count and KD gate on separate cache lines | Readers run locally; writers run natively or through ABI3 JIT | Pinned readers/writers; KD gate queues contended admission | KD native and direct pairs only; no Linux/TCLock mixing |
 | Linux Native rwsem | Linux `struct rw_semaphore` | Readers and writers execute their own bodies | Concurrent readers or one writer; blocked callers may sleep | Ordinary compatible Linux rwsem APIs |
+| TCLock rwsem | Original count, AQS reader gate and writer queue | Local readers; writers may run on a borrowed waiter stack | Original reader spinning and writer scheduling/parking | Registered ordinary TCLock rwsem pairs only |
 | KD rwsem | 320-byte `struct kd_rwsem`, reader count and phase reservations around a KD mutex | Readers and ordinary writers run locally; outer writers may use mutex ABI2 delegation | Admission/drain waits may sleep; published mutex waiters poll pinned | KD ordinary and outer-writer pairs only; no Linux/TCLock mixing |
 
 A queue-head notification tells a waiter it may try to acquire the lock. It does
@@ -60,8 +61,8 @@ CPU, or create a KD packet/frame/source lease.
 
 Fast CAS and pending acquisition execute on the caller. A queued caller saves
 six callee-saved GPRs and its real RSP, moves to its CPU's shadow stack, and
-publishes a TCLock node. The workload holds its preemption pin across this
-operation. A holder with eligible followers becomes a combiner.
+publishes a TCLock node. The workload brackets the operation with preemption protection; the original
+RCUHT waiter loop temporarily enables preemption around `schedule()`. A holder with eligible followers becomes a combiner.
 
 The combiner switches physical RSP to a waiter's saved native continuation.
 That stack resumes after lock acquisition, so the existing body runs under
@@ -74,8 +75,9 @@ NUMA selection can defer remote followers and splice them back before the
 next queue-head handoff. The configured batch value is 1024; upstream WWJUMP
 starts its counter at zero and can execute 1025 bodies. It has no KD-style
 independent scan budget or fairness guarantee. The current spin comparator
-is limited to IRQ-enabled task-context single-lock workloads; IRQ checks and
-explicit scheduling points are disabled.
+is limited to IRQ-enabled task-context single-lock workloads. IRQ checks remain
+disabled as in the selected upstream source, but scheduling points and the
+`need_resched()` batch exit are retained.
 
 Tail layout compatibility with Linux is insufficient: TCLock decodes tail
 IDs into its own node pool, while Linux decodes into kernel qnodes. Native
@@ -248,7 +250,9 @@ gate before their application read body.
 Gate delegation switches six saved GPRs and the real waiter stack. It can serve
 short reader admission or a queued writer body; application reads remain local.
 This rwlock combiner returns between delegated requests and has no WWJUMP chain.
-Callers pin the complete operation, with one non-nested worker per CPU. Count,
+Callers pin the complete operation, with one non-nested worker per CPU, and
+restore IRQ-enabled entry context after the pair. The original internal IRQ
+toggles and inline returns are preserved. Count,
 gate, queue, node and stack state must drain before unload. See
 [port scope and provenance](../../tclock_backend/README.md#rwlock-comparator).
 
@@ -285,8 +289,22 @@ translation or delegation. The benchmark mappings are in
 
 This arm is a sleeping semaphore, not the spinning Native rwlock above. Results
 must retain the lock kind even when both protect identical c01/c08/RCUHT payloads.
-There is no sleeping TCLock rwsem port in this repository; TCLock rwlock results
-are a separately labelled reference and cannot serve as its replacement.
+TCLock rwlock results remain a separately labelled reference and cannot replace
+results from the original TCLock rwsem backend.
+
+## TCLock rwsem
+
+The original upstream semaphore uses its count word, original AQS reader gate,
+and separate writer queue. Readers execute locally. Queued writers may execute
+on a combiner through their saved native stacks, retaining upstream parking,
+wakeup, NUMA selection and batch handoff. Reader admission can spin.
+
+The external-module adapter substitutes registered fixed-affinity task contexts
+for upstream custom task fields; it does not replace the semaphore with a mutex
+wrapper. Only ordinary read/write pairs are supported. Upstream killable wrappers
+do not implement cancellation, and downgrade is unimplemented. Task references
+and borrowed-stack storage survive cohort join and task retirement. See the
+[port and exact differences](../../tclock_backend/README.md#original-rwsem-comparator).
 
 ## KD rwsem
 

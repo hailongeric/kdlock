@@ -195,8 +195,9 @@ There is no KD packet, translation registry, generated body or daemon in this ar
 NUMA selection defers remote waiters and prefetches six caller-stack addresses at
 64-byte intervals. Completion and previous-waiter wakeup retain upstream order.
 The configured batch value is 1024; its zero-based WWJUMP counter can execute
-1025 bodies. The current comparator does not truncate batches on `need_resched()`.
-Callers pair preemption protection; queue waiting polls and IRQ checks are disabled
+1025 bodies. The current comparator restores upstream batch termination on `need_resched()`.
+The RCUHT wait loop may enable preemption, schedule, then disable preemption.
+Callers pair preemption protection; IRQ checks are disabled
 for the selected ordinary IRQ-enabled task-context workload.
 
 The port preserves the actual C inline-assembly stack switch. Private components

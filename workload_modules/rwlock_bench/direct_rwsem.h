@@ -1,5 +1,5 @@
 /* SPDX-License-Identifier: GPL-2.0 */
-/* Readers retain sleeping rwsem semantics. The explicit delegated writer
+/* KD readers retain sleeping rwsem semantics. The explicit delegated writer
  * shell reserves a reader-free epoch before entering the unchanged KD mutex
  * protocol; the ordinary shell remains a distinct local control. */
 #ifdef RB_KDLOCK
@@ -19,6 +19,15 @@ extern char rb_entry[];
 #define RB_WRITE_LOCK() kd_down_write(&rb_lock)
 #define RB_WRITE_UNLOCK() kd_up_write(&rb_lock)
 #endif
+#elif defined(RB_TCLOCK)
+#include "rwsem/komb_rwsem.h"
+extern int tc_rwsem_worker_register(void);
+static DECLARE_KOMB_RWSEM(rb_lock);
+#define RB_BACKEND 1
+#define RB_READ_LOCK() komb_rwsem_down_read(&rb_lock)
+#define RB_READ_UNLOCK() komb_rwsem_up_read(&rb_lock)
+#define RB_WRITE_LOCK() komb_rwsem_down_write(&rb_lock)
+#define RB_WRITE_UNLOCK() komb_rwsem_up_write(&rb_lock)
 #else
 #include <linux/rwsem.h>
 static DECLARE_RWSEM(rb_lock);
@@ -49,6 +58,9 @@ static void rb_lock_snapshot(struct rw_bench_snapshot *s)
 #endif
 	s->cnts = atomic_long_read(&rb_lock.readers);
 	s->gate = !kd_rwsem_is_idle(&rb_lock);
+#elif defined(RB_TCLOCK)
+	s->cnts = atomic_long_read(&rb_lock.cnts);
+	s->gate = atomic_read(&rb_lock.reader_wait_lock.val) || rb_lock.writer_tail != NULL;
 #else
 	s->gate = rwsem_is_locked(&rb_lock);
 #endif

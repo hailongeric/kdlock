@@ -18,7 +18,7 @@ no timing acceptance or throughput score. Comparison timing rules stay unchanged
 | Spin | [tclock_compare/run.py](tclock_compare/run.py) | c01/c08, resident list with matched prefetch variants, and RCUHT |
 | Mutex | [tclock_compare/run_mutex.py](tclock_compare/run_mutex.py) | Same payloads, selected KD-only mutex |
 | Rwlock | [rwlock_compare/run.py](rwlock_compare/run.py) | c01/c08, resident list and RCUHT, default 1%/20% writes |
-| Sleeping reader/writer semaphore (rwsem) | [rwlock_compare/run.py](rwlock_compare/run.py), `--lock-kind rwsem --backends native kdlock` | Same synthetic payloads; local readers and writers that may delegate, with `--delegate off` local control; no TCLock implementation |
+| Sleeping reader/writer semaphore (rwsem) | [rwlock_compare/run.py](rwlock_compare/run.py), `--lock-kind rwsem --backends native tclock kdlock` | Same synthetic payloads; local readers and writers that may delegate, with `--delegate off` KD local control; original TCLock rwsem with fixed-affinity registered workers |
 | Proc snapshots | [rwlock_compare/run.py](rwlock_compare/run.py), `--lock-kind spin` | `argbounds` and exact `taskname`; separate from full procfs/ps |
 | Syscall/API | [real_api/run.py](real_api/run.py) | OFD, setfd, pipebytes, pipecap, seek, bounded UTS and xattr controls |
 

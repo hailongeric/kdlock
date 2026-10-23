@@ -49,6 +49,12 @@ static long rb_run(void __user *user)
 		error = -EBUSY;
 		goto out;
 	}
+#if defined(RB_TCLOCK) && defined(RB_RWSEM)
+	/* Register once per fixed-affinity client, before entering any lock body. */
+	error = tc_rwsem_worker_register();
+	if (error)
+		goto out;
+#endif
 	before_preempt = preempt_count();
 	before_irqs = irqs_disabled();
 	run.cpu = raw_smp_processor_id();

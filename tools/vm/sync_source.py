@@ -30,7 +30,8 @@ ROOT = pathlib.Path('/root/host_fs/kdlock')
 MODULES = {'kdlock_km', 'spin_cacheline', 'mutex_cacheline', 'klock_module',
            'kd_depth_source', 'kd_dispatch_floor', 'rwlock_bench', 'rwlock_test',
            'tclock_backend_km', 'tclock_mutex_backend_km',
-           'tclock_rwlock_backend_km', 'tc_allocator_guard'}
+           'tclock_rwlock_backend_km', 'tclock_rwsem_backend_km', 'tc_original_test',
+           'tc_original_reap', 'tc_allocator_guard'}
 TASKS = {'sc_worker', 'rb_worker', 'klock_test', 'kd_test', 'daemon'}
 
 def validate_manifest(mapping):

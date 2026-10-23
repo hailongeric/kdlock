@@ -59,6 +59,8 @@ static atomic_t files = ATOMIC_INIT(0);
 static atomic64_t destroyed = ATOMIC64_INIT(0);
 static atomic64_t release_errors = ATOMIC64_INIT(0);
 
+/* TCLock callers enter with IRQs enabled. Keep upstream IRQ instructions in
+ * the lock; restore the caller context only after the complete pair. */
 static void mf_read(struct mf_mapping *m)
 {
 #if !MF_NATIVE_ONLY
@@ -80,6 +82,7 @@ static void mf_read_end(struct mf_mapping *m)
 		kd_up_read(&m->lock.kd);
 	else if (MF_TC_BUILD && m->backend == MF_TC) {
 		komb_read_unlock(&m->lock.tc);
+		local_irq_enable();
 		preempt_enable();
 	} else
 #endif
@@ -106,6 +109,7 @@ static void mf_write_end(struct mf_mapping *m)
 		kd_up_write(&m->lock.kd);
 	else if (MF_TC_BUILD && m->backend == MF_TC) {
 		komb_write_unlock(&m->lock.tc);
+		local_irq_enable();
 		preempt_enable();
 	} else
 #endif

@@ -113,11 +113,9 @@ komb_spin_unlock(struct qspinlock *lock)
 
 	uint64_t counter = ptr->counter_val;
 
-	/* Batch progress depends on queue eligibility and budget, not scheduler
-	 * requests. Keep the protocol's successor and batch-limit checks. */
 	if (next_node == NULL || next_node->next == NULL ||
 	    check_irq_node(next_node) || check_irq_node(next_node->next) ||
-	    counter >= komb_batch_size) {
+	    counter >= komb_batch_size || need_resched()) {
 		incoming_rsp_ptr = &(ptr->local_shadow_stack_ptr);
 		ptr->curr_cs_cpu = -1;
 		ptr->prev_cs_cpu = curr_node->cpuid;

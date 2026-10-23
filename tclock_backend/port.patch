@@ -1,5 +1,5 @@
---- a/locks/komb.c
-+++ b/komb.c
+--- upstream/locks/komb.c
++++ komb.c
 @@ -7,16 +7,8 @@
   * Currently nested locking becomes TTAS lock.
   * irqs_disabled() will hurt performance when running in VM.
@@ -29,7 +29,7 @@
  #ifdef DSM_DEBUG
  #define print_debug(fmt, ...)                                                  \
  	({                                                                     \
-@@ -38,30 +31,10 @@
+@@ -38,10 +31,9 @@
  #define SIZE_OF_SHADOW_STACK 8192L
  #define IRQ_NUMA_NODE 255
  
@@ -37,53 +37,13 @@
 -
  #define UINT64_MAX 0xffffffffffffffffL
  
--#ifdef KERNEL_SYNCSTRESS
--#define smp_cond_load_relaxed_sched(ptr, cond_expr)                            \
--	({                                                                     \
--		typeof(ptr) __PTR = (ptr);                                     \
--		__unqual_scalar_typeof(*ptr) VAL;                              \
--		for (;;) {                                                     \
--			VAL = READ_ONCE(*__PTR);                               \
--			if (cond_expr)                                         \
--				break;                                         \
--			cpu_relax();                                           \
--			if (need_resched()) {                                  \
--				preempt_enable();                              \
--				schedule();                                    \
--				preempt_disable();                             \
--			}                                                      \
--		}                                                              \
--		(typeof(*ptr))VAL;                                             \
--	})
--#else
--#define smp_cond_load_relaxed_sched(ptr, cond_expr)                            \
-+/* Wait on the per-CPU shadow stack without an explicit scheduling point. */
-+#define komb_cond_load_relaxed(ptr, cond_expr)                                 \
++#define KERNEL_SYNCSTRESS 1
+ #ifdef KERNEL_SYNCSTRESS
+ #define smp_cond_load_relaxed_sched(ptr, cond_expr)                            \
  	({                                                                     \
- 		typeof(ptr) __PTR = (ptr);                                     \
- 		__unqual_scalar_typeof(*ptr) VAL;                              \
-@@ -74,33 +47,15 @@
- 		(typeof(*ptr))VAL;                                             \
- 	})
+@@ -93,14 +85,14 @@
+ 	smp_cond_load_acquire_sched(&(v)->counter, (c))
  
--//if (need_resched()) {
--//	schedule_preempt_disabled();
--//}
--#endif
--
--#ifndef smp_cond_load_acquire_sched
--#define smp_cond_load_acquire_sched(ptr, cond_expr)                            \
--	({                                                                     \
--		__unqual_scalar_typeof(*ptr) _val;                             \
--		_val = smp_cond_load_relaxed_sched(ptr, cond_expr);            \
--		smp_acquire__after_ctrl_dep();                                 \
--		(typeof(*ptr))_val;                                            \
--	})
--#endif
--
--#define atomic_cond_read_acquire_sched(v, c)                                   \
--	smp_cond_load_acquire_sched(&(v)->counter, (c))
--
  struct shadow_stack {
 -	/* 
 +	/*
@@ -98,7 +58,7 @@
  	 * stack.
  	 */
  	uint64_t lock_addr[8];
-@@ -110,7 +65,7 @@
+@@ -110,7 +102,7 @@
  	 */
  	void *ptr;
  	/*
@@ -107,7 +67,7 @@
   * currently executing.
   */
  	uint32_t curr_cs_cpu;
-@@ -120,7 +75,7 @@
+@@ -120,7 +112,7 @@
  	uint64_t local_shadow_stack_ptr;
  #ifdef NUMA_AWARE
  	/*
@@ -116,7 +76,7 @@
   * different socket.
   */
  
-@@ -130,7 +85,7 @@
+@@ -130,7 +122,7 @@
  
  	int irqs_disabled;
  
@@ -125,7 +85,7 @@
  
  #ifdef LOCK_MEASURE_TIME
  static DEFINE_PER_CPU_ALIGNED(uint64_t, combiner_loop);
-@@ -152,12 +107,14 @@
+@@ -152,12 +144,13 @@
  static DEFINE_PER_CPU_SHARED_ALIGNED(struct komb_node, komb_nodes[MAX_NODES]);
  
  /*
@@ -136,13 +96,13 @@
   * to handle nesting
   */
  static DEFINE_PER_CPU_SHARED_ALIGNED(struct shadow_stack, local_shadow_stack);
- 
+-
 +/* SPDX-License-Identifier: GPL-2.0 */
 +/* Tail encoding and NUMA successor selection; preserve the original queue publication and native boundaries. */
  #define _Q_LOCKED_PENDING_MASK (_Q_LOCKED_MASK | _Q_PENDING_MASK)
  #define _Q_LOCKED_COMBINER_VAL 3
  #define _Q_UNLOCKED_OOO_VAL 7 //Unlocked a lock out-of-order
-@@ -272,7 +229,7 @@
+@@ -272,7 +265,7 @@
  }
  
  /**
@@ -151,7 +111,7 @@
   * @lock : Pointer to queued spinlock structure
   * Return: The previous lock value
   *
-@@ -320,7 +277,7 @@
+@@ -320,7 +313,7 @@
  		if (next_node->socket_id == numa_node_id()) {
  #ifdef PREFETCHING
  			void *rsp_ptr =
@@ -160,16 +120,17 @@
  					 ->rsp);
  			prefetchw(rsp_ptr);
  			int i;
-@@ -344,6 +301,8 @@
+@@ -343,7 +336,8 @@
+ 	return my_node->next;
  #endif
  }
- 
+-
 +/* SPDX-License-Identifier: GPL-2.0 */
 +/* Native body stack switches and batch handoff; preserve WWJUMP state and deferred remote links. */
  #pragma GCC push_options
  #pragma GCC optimize("O3")
  
-@@ -386,9 +345,7 @@
+@@ -386,9 +380,7 @@
  	BUG_ON(*(uint64_t *)incoming_rsp_ptr == NULL);
  	BUG_ON(*(uint64_t *)outgoing_rsp_ptr == NULL);
  #endif
@@ -179,7 +140,7 @@
  
  #ifdef DEBUG_KOMB
  	if ((ptr->ptr - (ptr->local_shadow_stack_ptr)) > SIZE_OF_SHADOW_STACK) {
-@@ -429,8 +386,6 @@
+@@ -429,8 +421,6 @@
  			execute_cs(lock, ptr->next_node_ptr);
  		}
  	}
@@ -188,7 +149,7 @@
  }
  #pragma GCC pop_options
  
-@@ -443,13 +398,13 @@
+@@ -443,13 +433,13 @@
  	BUG_ON(curr_node == NULL);
  #endif
  	struct komb_node *next_node = curr_node->next;
@@ -204,7 +165,7 @@
  		 * become the combiner.
  		 */
  		curr_node->locked = false;
-@@ -522,14 +477,16 @@
+@@ -522,14 +512,15 @@
  #ifdef WWJUMP
  	ptr->curr_cs_cpu = -1;
  #endif
@@ -217,30 +178,27 @@
  	next_node->locked = false;
  }
  #pragma GCC pop_options
- 
+-
 +/* SPDX-License-Identifier: GPL-2.0 */
 +/* Queued acquisition and nested combiner restoration; keep saved owner/stack state until handoff. */
  #pragma GCC push_options
  #pragma GCC optimize("O3")
  __attribute__((noipa)) noinline notrace static int
-@@ -563,34 +520,28 @@
+@@ -563,34 +554,28 @@
  
  		prev_node->next = curr_node;
  
 -		int count = 0;
--
--		smp_cond_load_relaxed_sched(&curr_node->locked, !(VAL));
--
++		int count __maybe_unused = 0;
+ 
+ 		smp_cond_load_relaxed_sched(&curr_node->locked, !(VAL));
+ 
 -		/*while (READ_ONCE(curr_node->locked)) {
 -			cpu_relax();
 -			count++;
 -			if (count == INT_MAX)
 -				BUG_ON(true);
 -		}*/
-+		int count __maybe_unused = 0;
-+
-+		komb_cond_load_relaxed(&curr_node->locked, !(VAL));
-+
 +
  
  		struct shadow_stack *ptr = this_cpu_ptr(&local_shadow_stack);
@@ -265,7 +223,7 @@
  #ifdef DEBUG_KOMB
  				BUG_ON(parent_lock == lock);
  #endif
-@@ -601,12 +552,12 @@
+@@ -601,12 +586,12 @@
  				}
  			}
  
@@ -284,13 +242,7 @@
  			LOCK_START_TIMING_PER_CPU(unlock_stack_switch);
  			return 0;
  		}
-@@ -649,15 +600,12 @@
- 	/*
- 	 * contended path; wait for next if not observed yet, release.
- 	 */
--	smp_cond_load_relaxed_sched(&curr_node->next, (VAL));
-+	komb_cond_load_relaxed(&curr_node->next, (VAL));
- 	next_node = curr_node->next;
+@@ -654,10 +639,7 @@
  #ifdef DEBUG_KOMB
  	BUG_ON(next_node == NULL);
  #endif
@@ -302,7 +254,7 @@
  
  	struct shadow_stack *ptr = this_cpu_ptr(&local_shadow_stack);
  
-@@ -670,7 +618,7 @@
+@@ -670,7 +652,7 @@
  	BUG_ON(ptr->prev_cs_cpu != -1);
  #endif
  	/*
@@ -311,7 +263,7 @@
  	 * Release the node and run_combiner.
  	 */
  	curr_node->count--;
-@@ -680,7 +628,7 @@
+@@ -680,7 +662,7 @@
  #endif
  	lock->locked = _Q_LOCKED_COMBINER_VAL;
  	prev_rsp = curr_node->rsp;
@@ -320,7 +272,7 @@
  
  	prev_counter_val = ptr->counter_val;
  	ptr->counter_val = 0;
-@@ -698,13 +646,13 @@
+@@ -698,13 +680,13 @@
  
  	j = 7;
  	for (j = 7; j >= 0; j--)
@@ -336,7 +288,7 @@
  
  	run_combiner(lock, next_node);
  
-@@ -712,7 +660,7 @@
+@@ -712,7 +694,7 @@
  	BUG_ON(this_cpu_ptr(&local_shadow_stack)->lock_addr[j] != lock);
  #endif
  
@@ -345,7 +297,7 @@
  
  	ptr->next_node_ptr = prev_next_node_ptr;
  	ptr->counter_val = prev_counter_val;
-@@ -738,7 +686,7 @@
+@@ -738,7 +720,7 @@
  
  	return 0;
  release:
@@ -354,10 +306,11 @@
  	 * release the node
  	 */
  	curr_node->count--;
-@@ -774,26 +722,29 @@
+@@ -773,27 +755,29 @@
+ 
  	return __komb_spin_lock_longjmp(lock, tail, curr_node);
  }
- 
+-
 +/* SPDX-License-Identifier: GPL-2.0 */
 +/* Per-CPU shadow-stack setup, rollback and release; callers must drain before freeing storage. */
  /*
@@ -389,7 +342,7 @@
  		ptr->curr_cs_cpu = -1;
  		ptr->prev_cs_cpu = -1;
  		ptr->counter_val = 0;
-@@ -809,14 +760,18 @@
+@@ -809,14 +793,18 @@
  		*per_cpu_ptr(&combiner_loop, i) = UINT64_MAX;
  #endif
  	}
@@ -410,10 +363,11 @@
  	}
  }
  
-@@ -825,7 +780,9 @@
+@@ -824,8 +812,9 @@
+ {
  	atomic_set(&lock->val, 0);
  }
- 
+-
 -__attribute__((noipa)) noinline notrace static uint64_t
 +/* SPDX-License-Identifier: GPL-2.0 */
 +/* Original six-register acquisition trampoline; keep its CALL/RSP continuation and GCC attributes together. */
@@ -421,7 +375,7 @@
  get_shadow_stack_ptr(void)
  {
  	struct shadow_stack *ptr = this_cpu_ptr(&local_shadow_stack);
-@@ -839,7 +796,7 @@
+@@ -839,7 +828,7 @@
  	return this_cpu_ptr(&komb_nodes[0]);
  }
  
@@ -430,7 +384,7 @@
   * When the following function is called, the compiler in caller frame does
   * this sequence:
   *
-@@ -863,13 +820,17 @@
+@@ -863,13 +852,17 @@
   * registers.
   */
  
@@ -449,7 +403,7 @@
  	 * We must save the callee-saved registers now, since we will resume
  	 * execution at the return address currently at top of stack. If we
  	 * defer saving to when context switch happens later, the C function
-@@ -888,7 +849,6 @@
+@@ -888,7 +881,6 @@
  	BUG_ON(irqs_disabled());
  #endif
  #endif
@@ -457,7 +411,7 @@
  	asm volatile("pushq %%rbp\n"
  		     "pushq %%rbx\n"
  		     "pushq %%r12\n"
-@@ -908,11 +868,8 @@
+@@ -908,11 +900,8 @@
  		     :
  		     : "i"(get_shadow_stack_ptr)
  		     : "memory");
@@ -469,14 +423,14 @@
  	if (ret_val) {
  		asm volatile("callq %P0\n"
  			     "movq (%%rax), %%rsp\n"
-@@ -949,15 +906,17 @@
+@@ -949,15 +938,16 @@
  			     :
  			     : "memory");
  	}
 -	//local_irq_enable();
  }
  #pragma GCC pop_options
- 
+-
 +/* SPDX-License-Identifier: GPL-2.0 */
 +/* Fast/pending acquisition and queue entry; all callers on a target use this same spin protocol. */
  __attribute__((noipa)) noinline notrace void
@@ -489,7 +443,7 @@
  
  	/*
  	 * Fastpath
-@@ -989,19 +948,19 @@
+@@ -989,19 +979,19 @@
  		goto queue;
  
  	/*
@@ -519,7 +473,7 @@
  	if (unlikely(val & ~_Q_LOCKED_MASK)) {
  		/* Undo PENDING if we set it. */
  		if (!(val & _Q_PENDING_MASK))
-@@ -1011,24 +970,24 @@
+@@ -1011,24 +1001,24 @@
  	}
  
  	/*
@@ -558,28 +512,11 @@
  	clear_pending_set_locked(lock);
  	return;
  
-@@ -1102,7 +1061,7 @@
- 			WRITE_ONCE(prev_node->next, curr_node);
- 
- 			print_debug("IRQ going to waiting for lock\n");
--			smp_cond_load_relaxed_sched(&curr_node->locked, !(VAL));
-+			komb_cond_load_relaxed(&curr_node->locked, !(VAL));
- 		}
- 
- 		curr_node->rsp = prev_rsp;
-@@ -1142,7 +1101,7 @@
- 
- 		print_debug("IRQ got the lock\n");
- 
--		smp_cond_load_relaxed_sched(&curr_node->next, (VAL));
-+		komb_cond_load_relaxed(&curr_node->next, (VAL));
- 		next_node = curr_node->next;
- 
- #ifdef DEBUG_KOMB
-@@ -1209,17 +1168,19 @@
+@@ -1208,18 +1198,19 @@
+ #endif
  }
  EXPORT_SYMBOL_GPL(komb_spin_lock);
- 
+-
 +/* SPDX-License-Identifier: GPL-2.0 */
 +/* Owner lookup, WWJUMP continuation and release; context-idle observation does not grant ownership. */
  struct task_struct *komb_get_current(spinlock_t *lock)
@@ -598,7 +535,7 @@
  #ifdef DEBUG_KOMB
  			BUG_ON(ptr->curr_cs_cpu < 0);
  #endif
-@@ -1237,7 +1198,7 @@
+@@ -1237,7 +1228,7 @@
  	smp_mb();
  }
  
@@ -607,7 +544,7 @@
   * No IPA is even more relevant here, because even if assembly is removed,
   * compiler shouldn't assume which caller-saved registers are in use inside
   * the function. When we jump from the spin loop to the return address after
-@@ -1267,11 +1228,11 @@
+@@ -1267,11 +1258,11 @@
  
  	for (j = 0; j < 8; j++) {
  		temp_lock_addr = ptr->lock_addr[j];
@@ -622,7 +559,7 @@
  			break;
  	}
  
-@@ -1316,14 +1277,17 @@
+@@ -1316,6 +1307,7 @@
  
  	struct komb_node *curr_node = per_cpu_ptr(&komb_nodes[0], from_cpuid);
  
@@ -630,18 +567,7 @@
  #ifdef WWJUMP
  	struct komb_node *next_node = ptr->next_node_ptr;
  
- 	uint64_t counter = ptr->counter_val;
- 
-+	/* Batch progress depends on queue eligibility and budget, not scheduler
-+	 * requests. Keep the protocol's successor and batch-limit checks. */
- 	if (next_node == NULL || next_node->next == NULL ||
- 	    check_irq_node(next_node) || check_irq_node(next_node->next) ||
--	    counter >= komb_batch_size || need_resched()) {
-+	    counter >= komb_batch_size) {
- 		incoming_rsp_ptr = &(ptr->local_shadow_stack_ptr);
- 		ptr->curr_cs_cpu = -1;
- 		ptr->prev_cs_cpu = curr_node->cpuid;
-@@ -1354,10 +1318,8 @@
+@@ -1354,10 +1346,8 @@
  #ifdef ENABLE_IRQS_CHECK
  	curr_node->irqs_disabled = irqs_disabled();
  #endif
@@ -652,7 +578,7 @@
  	if (ptr->irqs_disabled) {
  		ptr->irqs_disabled = false;
  		local_irq_disable();
-@@ -1406,3 +1368,22 @@
+@@ -1406,3 +1396,22 @@
  {
  	return !atomic_read(&lock.val);
  }
@@ -675,8 +601,8 @@
 +    }
 +    return 1;
 +}
---- a/lib/combiner.c
-+++ b/combiner.c
+--- upstream/lib/combiner.c
++++ combiner.c
 @@ -1,20 +1,10 @@
  // SPDX-License-Identifier: GPL-2.0
  // Copyright (c) 2022 Vishal Gupta, Kumar Kartikeya Dwivedi
@@ -791,8 +717,19 @@
 -}
 -#endif
 -#endif
---- a/include/spinlock/komb.h
-+++ b/include/spinlock/komb.h
+--- upstream/include/lib/combiner.h
++++ include/lib/combiner.h
+@@ -12,7 +12,7 @@
+ 
+ #define NUMA_AWARE 1
+ #define PREFETCHING 1
+-#define WWJUMP 1 
++#define WWJUMP 1
+ 
+ #define NUM_PREFETCH_LINES 6
+ 
+--- upstream/include/spinlock/komb.h
++++ include/spinlock/komb.h
 @@ -6,7 +6,12 @@
  #include "lib/combiner.h"
  #define qspinlock orig_qspinlock
@@ -835,19 +772,8 @@
  struct task_struct *komb_get_current(spinlock_t *lock);
  void komb_set_current_state(spinlock_t *lock, unsigned int state);
  #endif
---- a/include/lib/combiner.h
-+++ b/include/lib/combiner.h
-@@ -12,7 +12,7 @@
- 
- #define NUMA_AWARE 1
- #define PREFETCHING 1
--#define WWJUMP 1 
-+#define WWJUMP 1
- 
- #define NUM_PREFETCH_LINES 6
- 
---- a/locks/komb_mutex.c
-+++ b/komb_mutex.c
+--- upstream/locks/komb_mutex.c
++++ komb_mutex.c
 @@ -13,19 +13,11 @@
  #include <linux/sched/stat.h>
  #include <linux/sched/task.h>
@@ -880,17 +806,16 @@
  
  #define smp_cond_load_relaxed_sleep(curr_node, ptr, cond_expr)                 \
  	({                                                                     \
-@@ -114,6 +104,9 @@
+@@ -114,6 +104,8 @@
  #define KOMB_WAITER_PARKED 1
  #define KOMB_WAITER_PROCESSING 2
  #define KOMB_WAITER_PROCESSED 4
-+
 +/* SPDX-License-Identifier: GPL-2.0 */
 +/* Parking CAS, wakeup and registered context access; keep task references through wake completion. */
  static inline void schedule_out_curr_task(void)
  {
  	preempt_enable();
-@@ -130,6 +123,7 @@
+@@ -130,6 +122,7 @@
  		__set_current_state(TASK_RUNNING);
  		return;
  	}
@@ -898,7 +823,7 @@
  	schedule_out_curr_task();
  	__set_current_state(TASK_RUNNING);
  }
-@@ -168,25 +162,27 @@
+@@ -168,25 +161,26 @@
  /*
   * lock -> rdi
   */
@@ -918,7 +843,6 @@
 -
 +	return ((struct komb_mutex_node *)(tc_mutex_current()->komb_mutex_node));
 +}
-+
 +/* SPDX-License-Identifier: GPL-2.0 */
 +/* NUMA deferred queue selection and caller-stack hints; successor storage must remain live. */
  #ifdef NUMA_AWARE
@@ -933,7 +857,7 @@
  
  	if (*head == NULL) {
  		*head = node;
-@@ -212,7 +208,7 @@
+@@ -212,7 +206,7 @@
  			goto next_node_null;
  
  		if (next_node->socket_id == numa_node_id()) {
@@ -942,16 +866,17 @@
  			prefetchw(rsp_ptr);
  			prefetchw(rsp_ptr + 64);
  			prefetchw(rsp_ptr + 128);
-@@ -237,6 +233,8 @@
+@@ -236,7 +230,8 @@
+ 	return my_node->next;
  #endif
  }
- 
+-
 +/* SPDX-License-Identifier: GPL-2.0 */
 +/* Real waiter-stack execution and deferred handoff; retain completion and parking/wakeup ordering. */
  #pragma GCC push_options
  #pragma GCC optimize("O3")
  __attribute__((noipa)) noinline notrace static void
-@@ -245,7 +243,7 @@
+@@ -245,7 +240,7 @@
  	void *incoming_rsp_ptr, *outgoing_rsp_ptr;
  	struct komb_mutex_node *my_node, *next_node;
  
@@ -960,7 +885,7 @@
  #ifdef DEBUG_KOMB
  	BUG_ON(curr_node->cpuid == smp_processor_id());
  #endif
-@@ -260,13 +258,10 @@
+@@ -260,13 +255,10 @@
  	 * function call, which we will resume execution at using the switch
  	 * in unlock.
  	 */
@@ -977,7 +902,7 @@
  	       SIZE_OF_SHADOW_STACK);
  #endif
  
-@@ -274,37 +269,33 @@
+@@ -274,37 +266,33 @@
  		print_debug("Combiner got control back OOO unlock\n");
  
  #ifdef KOMB_STATS
@@ -1024,7 +949,7 @@
  
  		if (next_node && next_node->next) {
  			execute_cs(lock, next_node);
-@@ -327,16 +318,15 @@
+@@ -327,16 +315,15 @@
  #endif
  
  	struct komb_mutex_node *next_node = curr_node->next;
@@ -1044,7 +969,7 @@
  		print_debug("mutex combiner only one in the queue. Passing lock to %d\n", curr_node->cpuid);
  		wake_up_waiter(curr_node);
  		WRITE_ONCE(curr_node->locked, 0);
-@@ -345,61 +335,50 @@
+@@ -345,61 +332,50 @@
  
  	WRITE_ONCE(lock->combiner_task, current);
  
@@ -1123,7 +1048,7 @@
  
  	if (*local_head) {
  		(*local_tail)->next = next_node;
-@@ -416,7 +395,7 @@
+@@ -416,7 +392,7 @@
  #endif
  
  	/*
@@ -1132,16 +1057,17 @@
  	 * become the combiner.
  	 */
  	print_debug("mutex Passing lock to next node %d\n", next_node->cpuid);
-@@ -425,6 +404,8 @@
+@@ -424,7 +400,8 @@
+ 	WRITE_ONCE(next_node->locked, 0);
  }
  #pragma GCC pop_options
- 
+-
 +/* SPDX-License-Identifier: GPL-2.0 */
 +/* Queued mutex acquisition and nested stack restoration; preserve exact saved context until handoff. */
  #pragma GCC push_options
  #pragma GCC optimize("O3")
  __attribute__((noipa)) noinline notrace static int
-@@ -455,11 +436,11 @@
+@@ -455,11 +432,11 @@
  		if (READ_ONCE(curr_node->completed) == KOMB_WAITER_PROCESSED) {
  			print_debug("Mutex CS processed\n");
  			for (j = 7; j >= 0; j--)
@@ -1155,7 +1081,7 @@
  #ifdef DEBUG_KOMB
  				BUG_ON(parent_lock == lock);
  #endif
-@@ -470,12 +451,12 @@
+@@ -470,12 +447,12 @@
  				}
  			}
  
@@ -1174,7 +1100,7 @@
  			return 0;
  		}
  	}
-@@ -507,11 +488,11 @@
+@@ -507,11 +484,11 @@
  	//Head of the queue. Run Combiner.
  
  	struct task_struct *prev_curr_waiter_task =
@@ -1191,7 +1117,7 @@
  #endif
  
  	prev_locked_val = lock->locked;
-@@ -523,67 +504,64 @@
+@@ -523,67 +500,64 @@
  
  	struct task_struct *prev_task_struct_ptr = curr_node->task_struct_ptr;
  	uint64_t prev_rsp = curr_node->rsp;
@@ -1289,10 +1215,11 @@
  	}
  	lock->locked = prev_locked_val;
  
-@@ -608,13 +586,14 @@
+@@ -607,14 +581,14 @@
+ 
  	return __komb_mutex_lock_slowpath(lock, curr_node);
  }
- 
+-
 +/* SPDX-License-Identifier: GPL-2.0 */
 +/* Original six-register mutex trampoline and public acquisition; preserve CALL/RSP and preemption pairing. */
  #pragma GCC push_options
@@ -1305,7 +1232,7 @@
  	asm volatile("pushq %%rbp\n"
  		     "pushq %%rbx\n"
  		     "pushq %%r12\n"
-@@ -636,11 +615,8 @@
+@@ -636,11 +610,8 @@
  		     :
  		     : "i"(get_shadow_stack_ptr)
  		     : "memory");
@@ -1317,7 +1244,7 @@
  	if (ret_val) {
  		asm volatile("popq %%rdi\n"
  			     "callq %P0\n"
-@@ -679,7 +655,6 @@
+@@ -679,7 +650,6 @@
  			     :
  			     : "memory");
  	}
@@ -1325,7 +1252,7 @@
  }
  #pragma GCC pop_options
  
-@@ -690,8 +665,7 @@
+@@ -690,8 +660,7 @@
  
  	ret = cmpxchg(&lock->locked, 0, 1);
  	if (likely(ret == 0)) {
@@ -1335,7 +1262,7 @@
  		return;
  	}
  
-@@ -701,10 +675,9 @@
+@@ -701,10 +670,9 @@
  
  	__komb_mutex_lock(lock);
  
@@ -1348,7 +1275,7 @@
  
  		if ((struct komb_mutex *)curr_node->lock == lock) {
  #ifdef DEBUG_KOMB
-@@ -713,19 +686,17 @@
+@@ -713,19 +681,17 @@
  			struct komb_mutex_node *next_node =
  				get_next_node(curr_node);
  			if (next_node == NULL)
@@ -1372,7 +1299,7 @@
  
  #ifdef DEBUG_KOMB
  			BUG_ON(prev_node->lock != lock);
-@@ -733,78 +704,31 @@
+@@ -733,78 +699,30 @@
  			print_debug("Waking up prev waiter: %d\n", prev_node->cpuid);
  			wake_up_waiter(prev_node);
  			clear_locked_set_completed(prev_node);
@@ -1383,7 +1310,7 @@
  
  	preempt_enable();
  }
- 
+-
 -__attribute__((noipa)) noinline notrace void
 -komb_mutex_lock_rwsem_writer(struct komb_mutex *lock)
 -{
@@ -1456,7 +1383,7 @@
  		if (temp_lock_addr)
  			max_idx = j;
  		if (temp_lock_addr == lock)
-@@ -836,7 +760,7 @@
+@@ -836,7 +754,7 @@
  	if (lock->locked != _Q_LOCKED_COMBINER_VAL)
  		BUG_ON(true);
  
@@ -1465,7 +1392,7 @@
  
  	if (max_idx < 0) {
  		BUG_ON(true);
-@@ -851,16 +775,14 @@
+@@ -851,16 +769,14 @@
  		return;
  	}
  
@@ -1487,7 +1414,7 @@
  
  #ifdef DEBUG_KOMB
  	BUG_ON(lock->combiner_task != current);
-@@ -868,15 +790,15 @@
+@@ -868,15 +784,15 @@
  
  	if (next_node == NULL || next_node->next == NULL ||
  	    counter >= komb_batch_size) {
@@ -1509,7 +1436,7 @@
  		print_debug("Jumping to the next waiter: %d\n",
  			    next_node->cpuid);
  	}
-@@ -887,9 +809,11 @@
+@@ -887,9 +803,11 @@
  	outgoing_rsp_ptr = &(curr_node->rsp);
  
  	preempt_disable();
@@ -1523,8 +1450,8 @@
 +EXPORT_SYMBOL_GPL(komb_mutex_init);
 +EXPORT_SYMBOL_GPL(komb_mutex_lock);
 +EXPORT_SYMBOL_GPL(komb_mutex_unlock);
---- a/include/mutex/komb_mutex.h
-+++ b/include/mutex/komb_mutex.h
+--- upstream/include/mutex/komb_mutex.h
++++ include/mutex/komb_mutex.h
 @@ -1,3 +1,5 @@
 +/* SPDX-License-Identifier: GPL-2.0 */
 +/* Upstream ordinary mutex types; benchmark supports only registered workers. */

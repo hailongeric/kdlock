@@ -27,7 +27,7 @@ def main():
     fixture = C.replace('komb_node', 'komb_rwlock_node').replace('komb_spin_lock_slowpath', 'kombrw_spin_lock_slowpath')
     fixture = fixture.replace('kombrw_spin_lock_slowpath(void *)', 'kombrw_spin_lock_slowpath(struct qspinlock *)')
     fixture = fixture.replace('TCLock C inline asm', 'TCLock rwlock C inline asm')
-    declarations = ('#include <stddef.h>\nstruct komb_rwlock_node *get_komb_rwlock_node(void);\n'
+    declarations = ('#include <stddef.h>\n/* User-mode fixture cannot execute CLI/STI; IRQ behavior is checked live. */\n#define local_irq_disable() ((void)0)\n#define local_irq_enable() ((void)0)\nstruct komb_rwlock_node *get_komb_rwlock_node(void);\n'
                     'uint64_t *get_shadow_stack_ptr(void);\nint __kombrw_spin_lock_slowpath(void *);\n')
     with tempfile.TemporaryDirectory(prefix='tc-rw-context-') as temporary:
         p = Path(temporary)

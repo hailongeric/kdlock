@@ -74,8 +74,6 @@ def make_plan(args):
             'snapshot workloads require --lock-kind spin; other workloads use rwlock/rwsem')
     require(not (set(args.workloads) & snapshots) or set(args.workloads).issubset(snapshots),
             'run snapshots separately from rwlock/rwsem payloads')
-    require(args.lock_kind != 'rwsem' or 'tclock' not in args.backends,
-            'the TCLock backend has no sleeping rwsem port; use native/kdlock')
     threads = FULL_THREADS if args.full_matrix else args.threads
     list_nodes = getattr(args, 'list_nodes', [16])
     require(list_nodes and len(list_nodes) == len(set(list_nodes)) and
@@ -88,7 +86,8 @@ def make_plan(args):
     require(1 <= args.post_work_rounds <= 256 and 0 < args.iterations <= 100000000,
             'invalid post-work or iterations')
     require(args.repeats == (1 if args.functional else 3), 'use one functional round or three performance rounds')
-    parity_backends = {'native', 'kdlock'} if args.lock_kind == 'rwsem' else {'native', 'tclock', 'kdlock'}
+    parity_backends = ({'native', 'kdlock'} if args.lock_kind == 'rwsem' and 'tclock' not in args.backends
+                       else {'native', 'tclock', 'kdlock'})
     require(not args.require_parity or (not args.functional and set(args.backends) == parity_backends),
             '--require-parity needs ' + ', '.join(sorted(parity_backends)) + ' and a timed comparison')
     require(args.spin_entry_ratio_limit in (0, *(1 << n for n in range(1, 32))), 'invalid entry ratio limit')
@@ -138,16 +137,17 @@ def make_plan(args):
                 lock_kind=args.lock_kind, entry_abi=entry_abi,
                 caller_abi='clobber' if arm == 'kdlock' and (args.lock_kind != 'rwsem' or rwsem_direct) else 'c',
                 delegate=args.delegate == 'on' if arm == 'kdlock' else False,
-                rwsem_writer_shell=('delegated-epoch-abi2' if rwsem_direct else 'ordinary-local')
+                rwsem_writer_shell=('upstream-stack' if arm == 'tclock' else
+                    'delegated-epoch-abi2' if rwsem_direct else 'ordinary-local')
                     if args.lock_kind == 'rwsem' else None,
                 require_jit=args.require_jit and arm == 'kdlock' and
                     (percent < 100 if args.lock_kind == 'spin' else percent > 0) and n > 1,
                 spin_entry_ratio_limit=args.spin_entry_ratio_limit if arm == 'kdlock' else None,
-                numa_policy='on' if arm != 'native' and (args.lock_kind != 'rwsem' or rwsem_direct)
+                numa_policy='on' if arm != 'native' and (args.lock_kind != 'rwsem' or rwsem_direct or arm == 'tclock')
                     else 'not_applicable',
                 provider_ubsan='off',
                 delegation_batch_limit=1024 if arm != 'native' and
-                    (args.lock_kind != 'rwsem' or rwsem_direct) else None))
+                    (args.lock_kind != 'rwsem' or rwsem_direct or arm == 'tclock') else None))
     return plan
 
 
@@ -216,7 +216,7 @@ def report(out):
 def idle():
     common_idle()
     for module in ('rwlock_bench', 'rwlock_test', 'tclock_backend_km', 'tclock_mutex_backend_km',
-                   'tclock_rwlock_backend_km', 'tc_allocator_guard'):
+                   'tclock_rwlock_backend_km', 'tclock_rwsem_backend_km', 'tc_allocator_guard'):
         require(not Path('/sys/module', module).exists(), 'existing module: ' + module)
     for path in Path('/proc').glob('[0-9]*/task/[0-9]*/comm'):
         try:
@@ -268,9 +268,11 @@ def build(args, out, plan):
         shutil.copytree(source / 'tclock_backend', tc)
         tc_kind = args.lock_kind
         command(['make', '-C', tc, f'KDIR={args.kernel_source}',
-                 f'TCLOCK_RWLOCK={int(tc_kind == "rwlock")}', 'TCLOCK_NUMA=1'],
+                 f'TCLOCK_RWLOCK={int(tc_kind == "rwlock")}',
+                 f'TCLOCK_RWSEM={int(tc_kind == "rwsem")}', 'TCLOCK_NUMA=1'],
                 out / 'build-tclock.log', timeout=180)
-        binaries['tclock'] = tc / ('tclock_rwlock_backend_km.ko' if tc_kind == 'rwlock' else 'tclock_backend_km.ko')
+        binaries['tclock'] = tc / ({'rwlock': 'tclock_rwlock_backend_km.ko', 'rwsem': 'tclock_rwsem_backend_km.ko',
+                                   'spin': 'tclock_backend_km.ko'}[tc_kind])
         require(command(['modinfo', '-F', tc_kind + '_numa', binaries['tclock']], out / 'tc-numa.txt').strip() == '1',
                 'TCLock compiled policy differs')
         disasm = command(['objdump', '-dr', '--no-show-raw-insn', binaries['tclock']], out / 'tclock-context.txt')
@@ -304,6 +306,9 @@ def build(args, out, plan):
                         'kdlock': ('kd_spin_prepare', 'kd_spin_lock_pinned_clobber_v1', 'kd_spin_unlock_clobber_v1')}[backend]
         elif spec['lock_kind'] == 'rwsem':
             expected = {'native': ('down_read', 'up_read', 'down_write', 'up_write'),
+                        'tclock': ('komb_rwsem_down_read', 'komb_rwsem_up_read',
+                                   'komb_rwsem_down_write', 'komb_rwsem_up_write',
+                                   'tc_rwsem_worker_register'),
                         'kdlock': ('kd_down_read', 'kd_up_read', 'kd_down_write', 'kd_up_write')}[backend]
             if backend == 'kdlock' and spec['delegate']:
                 expected = ('kd_down_read', 'kd_up_read', 'kd_mutex_prepare',

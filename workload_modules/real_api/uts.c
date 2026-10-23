@@ -47,10 +47,12 @@ extern char rb_entry[];
 #elif defined(RB_TCLOCK)
 #include "rwlock/komb_rwlock.h"
 static struct komb_rwlock rw_lock __aligned(64) = __KOMB_RWLOCK_UNLOCKED;
+/* Original rwlock inline returns can leave IRQs off. These callers enter
+ * with IRQs enabled and restore that context after the complete pair. */
 #define RA_READ() do { preempt_disable(); komb_read_lock(&rw_lock); } while (0)
-#define RA_READ_END() do { komb_read_unlock(&rw_lock); preempt_enable(); } while (0)
+#define RA_READ_END() do { komb_read_unlock(&rw_lock); local_irq_enable(); preempt_enable(); } while (0)
 #define RA_WRITE() do { preempt_disable(); komb_write_lock(&rw_lock); } while (0)
-#define RA_WRITE_END() do { komb_write_unlock(&rw_lock); preempt_enable(); } while (0)
+#define RA_WRITE_END() do { komb_write_unlock(&rw_lock); local_irq_enable(); preempt_enable(); } while (0)
 #else
 static struct rw_semaphore rw_lock __aligned(64) = __RWSEM_INITIALIZER(rw_lock);
 #define RA_READ() down_read(&rw_lock)

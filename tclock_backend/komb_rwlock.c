@@ -226,7 +226,9 @@ __always_inline static void execute_cs(struct qspinlock *lock,
 	 * function call, which we will resume execution at using the switch
 	 * in unlock.
 	 */
+	local_irq_disable();
 	komb_context_switch(incoming_rsp_ptr, outgoing_rsp_ptr);
+	local_irq_enable();
 
 	BUG_ON((unsigned long)(this_cpu_ptr(&local_shadow_stack)->ptr) -
 		       (*this_cpu_ptr(&local_shadow_stack_ptr)) >
@@ -583,6 +585,7 @@ kombrw_spin_lock_slowpath(struct qspinlock *lock)
 	 * our return address, but Linux only assumes 8-byte stack alignment,
 	 * so it isn't a problem for us.
 	 */
+	local_irq_disable();
 	asm volatile("pushq %%rbp\n"
 		     "pushq %%rbx\n"
 		     "pushq %%r12\n"
@@ -604,7 +607,11 @@ kombrw_spin_lock_slowpath(struct qspinlock *lock)
 		     : "i"(get_shadow_stack_ptr)
 		     : "memory");
 
+	local_irq_enable();
+
 	ret_val = __kombrw_spin_lock_slowpath(lock);
+
+	local_irq_disable();
 
 	if (ret_val) {
 		asm volatile("callq %P0\n"
@@ -642,6 +649,7 @@ kombrw_spin_lock_slowpath(struct qspinlock *lock)
 			     :
 			     : "memory");
 	}
+	local_irq_enable();
 }
 #pragma GCC pop_options
 
@@ -789,7 +797,9 @@ kombrw_spin_unlock(struct qspinlock *lock)
 	outgoing_rsp_ptr =
 		&((per_cpu_ptr(&komb_rwlock_nodes[0], from_cpuid)->rsp));
 
+	local_irq_disable();
 	komb_context_switch(incoming_rsp_ptr, outgoing_rsp_ptr);
+	local_irq_enable();
 	return;
 }
 

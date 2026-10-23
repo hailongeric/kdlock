@@ -37,8 +37,18 @@ def audit(disassembly, lock_kind='spin'):
         raise ValueError('unexpected context-switch return')
 
     slow_name = {'mutex': '__komb_mutex_lock', 'rwlock': 'kombrw_spin_lock_slowpath',
-                 'spin': 'komb_spin_lock_slowpath'}[lock_kind]
-    _, slow = function(slow_name)
+                 'spin': 'komb_spin_lock_slowpath', 'rwsem': '__komb_write_stack_switch'}[lock_kind]
+    slow_text, slow = function(slow_name)
+    # Original rwlock masks interrupts before saving the continuation.
+    if lock_kind == 'rwlock' and slow:
+        irq_prefix = slow[0] == 'cli'
+        # Captured x86_64 kernel: pv_ops.irq.irq_disable relocation. Accept
+        # this exact call only before the first save, never an arbitrary call.
+        irq_prefix |= (slow[0].startswith('call *') and
+                       re.search(r'R_X86_64_PC32\s+pv_ops\+0xf4\b',
+                                 slow_text.split('push', 1)[0]) is not None)
+        if irq_prefix:
+            slow = slow[1:]
     if slow[:6] != SAVES or not slow[6].startswith('call '):
         raise ValueError('slowpath has an extra prologue before saving the continuation')
     returns = [i for i, instruction in enumerate(slow) if instruction == 'ret']
@@ -48,7 +58,7 @@ def audit(disassembly, lock_kind='spin'):
     # Upstream's hidden asm calls do not declare RDI clobbers. The emitted
     # helpers must preserve the incoming lock argument and the saved stack.
     node_name = {'mutex': 'get_komb_mutex_node', 'rwlock': 'get_komb_rwlock_node',
-                 'spin': 'get_komb_node'}[lock_kind]
+                 'spin': 'get_komb_node', 'rwsem': 'get_komb_mutex_node'}[lock_kind]
     for name in (node_name,
                  'get_shadow_stack_ptr'):
         _, helper = function(name)
