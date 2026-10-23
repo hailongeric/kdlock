@@ -33,7 +33,9 @@ def main():
     assert 'kd_mmap=on' in Path('/proc/cmdline').read_text().split()
     assert os.environ['KDLOCK_RECOVERY_CONFIRMED']=='1'
     idle()
-    build=json.loads((BASE/f'build-{a.build_attempt}/result.json').read_text());assert build['passed']
+    assert a.build_attempt==1
+    build_path=BASE/'finish-build-1/result.json'
+    build=json.loads(build_path.read_text());assert build['passed']
     for files in build['binaries'].values():
         for name,digest in files.items():assert rt.digest(BASE/name)==digest
     probe_receipt=json.loads(a.probe_revision.read_text()) if a.probe_revision else build
@@ -43,8 +45,8 @@ def main():
     probes=Path(probe_receipt['probe_directory'])
     out=BASE/a.run;out.mkdir()
     result=dict(passed=False,drained=False,timing=False,boot_id=Path('/proc/sys/kernel/random/boot_id').read_text().strip(),
-                kernel_identity=kernel_identity.check(TREE,BUNDLE),build_receipt=str(BASE/f'build-{a.build_attempt}/result.json'),cases=[])
-    result['probe_revision']=str(a.probe_revision) if a.probe_revision else str(BASE/f'build-{a.build_attempt}/result.json')
+                kernel_identity=kernel_identity.check(TREE,BUNDLE),build_receipt=str(build_path),cases=[])
+    result['probe_revision']=str(a.probe_revision) if a.probe_revision else str(build_path)
     rt.write_json(out/'result.json',result)
     validators={};controls={}
     for key,family in (('edge','boundary_edge'),('empty','boundary_empty'),('zero','boundary_zero'),('samezero','zero_target')):

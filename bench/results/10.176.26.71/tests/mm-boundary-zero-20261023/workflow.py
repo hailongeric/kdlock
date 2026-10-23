@@ -15,13 +15,13 @@ RAW=ROOT/'bench/results/10.176.26.71/raw/tests/mm-boundary-zero-20261023'
 BASE='/root/kdlock-evidence/10.176.26.71/tests/mm-boundary-zero-20261023'
 C=runpy.run_path(str(HERE.parent/'serial-continuation-20261022/campaign.py'))
 SYNC=runpy.run_path(str(ROOT/'tools/vm/sync_source.py'))
-CONTROL=BASE+'/control'
+CONTROL=BASE+'/control-2'
 C['boot'].__globals__['PRIOR']=CONTROL
 
 
 def main():
     p=argparse.ArgumentParser(description=__doc__)
-    p.add_argument('action',choices=('prepare','build','kd','run','recovery','collect'))
+    p.add_argument('action',choices=('prepare','build','finish','kd','run','recovery','collect'))
     p.add_argument('--attempt',type=int,default=1)
     a=p.parse_args()
     local=RAW/(a.action+'-'+str(a.attempt));local.mkdir(parents=True)
@@ -55,6 +55,9 @@ def main():
     elif a.action=='build':
         C['guest']('unshare --mount --propagation private '+C['remote']([CONTROL+'/build.py','--attempt',str(a.attempt)]),local/'build.log',2400)
         C['fetch'](BASE+'/build-'+str(a.attempt)+'/result.json',local/'result.json')
+    elif a.action=='finish':
+        C['guest']('unshare --mount --propagation private '+C['remote']([CONTROL+'/finish_build.py']),local/'finish.log',1200)
+        C['fetch'](BASE+'/finish-build-1/result.json',local/'result.json')
     elif a.action=='run':
         host=C['capture'](local/'host.json');assert host['pins_verified'] and host['snapshot_listed']
         C['guest'](C['remote']([CONTROL+'/focus.py','--run','focused-'+str(a.attempt)]),local/'focused.log',1200)

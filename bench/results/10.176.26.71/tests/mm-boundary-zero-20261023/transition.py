@@ -63,7 +63,7 @@ def main():
     try:
         result.update(preserved())
         expected=load(BASE/'control/expected-guest.json')['modules']
-        build=load(BASE/'build-1/result.json')
+        build=load(BASE/'finish-build-1/result.json')
         rt.require(build['passed'] and rt.digest(BUNDLE/'manifest.json')==
                    build['baseline_manifest_sha256'],'built candidate capture differs')
         build_id=load(BUNDLE/'manifest.json')['running']['build_id']

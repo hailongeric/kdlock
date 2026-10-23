@@ -107,7 +107,8 @@ def main():
         old_symbols={s.split()[1] for s in (LOWER/'vmlinux.symvers').read_text().splitlines()}
         new_symbols={s.split()[1] for s in (TREE/'vmlinux.symvers').read_text().splitlines()}
         assert new_symbols-old_symbols=={'kd_mmap_unmap_resident_partial_enable'} and not old_symbols-new_symbols
-        save(OUT/'modules-build-1.json',dict(passed=True,modules={n:rt.digest(TREE/n) for n in targets}))
+        # install.py's historical input filename is independent of this run's attempt.
+        save(OUT/'modules-build-2.json',dict(passed=True,modules={n:rt.digest(TREE/n) for n in targets}))
         for family,module in [('unmap_body','kd_mm_unmap_test')]:
             dest=probes/family
             command(['make','-C',dest/'payload','KDIR='+str(TREE),'W=1','UBSAN_SANITIZE=n'],log/(family+'-module.log'),180)
