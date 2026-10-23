@@ -20,7 +20,7 @@ C['boot'].__globals__['PRIOR']=BASE+'/control'
 
 def main():
     p=argparse.ArgumentParser(description=__doc__)
-    p.add_argument('action',choices=('prepare','build','kd','recovery','collect'))
+    p.add_argument('action',choices=('prepare','build','probe','kd','run','recovery','collect'))
     p.add_argument('--attempt',type=int,default=1)
     a=p.parse_args()
     local=RAW/(a.action+'-'+str(a.attempt));local.mkdir(parents=True)
@@ -54,12 +54,41 @@ def main():
     elif a.action=='build':
         C['guest']('unshare --mount --propagation private '+C['remote']([BASE+'/control/build.py','--attempt',str(a.attempt)]),local/'build.log',2400)
         C['fetch'](BASE+'/build-'+str(a.attempt)+'/result.json',local/'result.json')
+    elif a.action=='probe':
+        assert a.attempt==2
+        host=C['capture'](local/'host.json');assert host['pins_verified'] and host['snapshot_listed']
+        script="""import os,runpy,sys
+from pathlib import Path
+sys.path.insert(0,'/root/host_fs/kdlock/bench/spin_cacheline')
+import bench_runtime as rt
+runpy.run_path('/root/host_fs/kdlock/bench/archive_run.py')['idle'](Path('/root'),rt.idle)
+assert os.uname().release=='6.1.159-kdmm14'
+base=Path(BASE)
+for name in ('control-2','probes-2'):(base/name).mkdir()
+for name in ('zero_target','missing_table'):(base/'probes-2'/name).mkdir()
+""".replace('BASE',repr(BASE))
+        C['guest'](C['PY']+" - <<'PYG'\n"+script+'\nPYG',local/'idle-prepare.log',60)
+        files={}
+        for family in ('zero_target','missing_table'):
+            sources=[ROOT/'tests/kernel/mmap_lock'/family/name for name in ('client.c','receipts.py','controls.py')]
+            files.update({'probes-2/'+family+'/'+path.name:C['sha'](path) for path in sources})
+            C['copy_in'](sources,BASE+'/probes-2/'+family+'/',local/('copy-'+family+'.log'))
+        sources=[HERE/'focus.py',HERE/'probe_revision.py']
+        files.update({'control-2/'+path.name:C['sha'](path) for path in sources})
+        C['save'](local/'inputs.json',dict(commit=subprocess.check_output(['git','rev-parse','HEAD'],cwd=ROOT,text=True).strip(),files=files))
+        C['copy_in']([*sources,local/'inputs.json'],BASE+'/control-2/',local/'copy-control.log')
+        C['guest'](C['remote']([BASE+'/control-2/probe_revision.py']),local/'probe.log',180)
+        C['fetch'](BASE+'/probe-revision-2/result.json',local/'result.json')
+    elif a.action=='run':
+        host=C['capture'](local/'host.json');assert host['pins_verified'] and host['snapshot_listed']
+        C['guest'](C['remote']([BASE+'/control-2/focus.py','--run','focused-'+str(a.attempt),'--probe-revision',BASE+'/probe-revision-2/result.json']),local/'focused.log',1200)
+        C['fetch'](BASE+'/focused-'+str(a.attempt)+'/result.json',local/'result.json')
     elif a.action in ('kd','recovery'):
         guest=BASE+'/'+a.action+'-'+str(a.attempt)
         C['guest']('mkdir -- '+guest,local/'mkdir.log',30)
         transition=C['boot'](a.action,guest,local)
         if a.action=='kd':
-            C['guest'](C['remote']([BASE+'/control/focus.py','--build-attempt','1','--run','focused-'+str(a.attempt)]),local/'focused.log',1200)
+            C['guest'](C['remote']([BASE+'/control-2/focus.py','--build-attempt','1','--run','focused-'+str(a.attempt),'--probe-revision',BASE+'/probe-revision-2/result.json']),local/'focused.log',1200)
             C['fetch'](BASE+'/focused-'+str(a.attempt)+'/result.json',local/'result.json')
         else:C['save'](local/'result.json',transition)
     else:

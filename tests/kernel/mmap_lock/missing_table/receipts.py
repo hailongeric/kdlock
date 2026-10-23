@@ -18,6 +18,7 @@ def validate(row, log):
     require(row['page_size']==4096 and row['pmd_size']==2<<20 and row['pud_size']==1<<30 and
             row['pgdir_size'] in (1<<39,1<<48), 'captured x86 base-page geometry differs')
     n, native, inject = row['groups'], row['native'], row['injection']
+    require(row['interval_cleanup_calls']==n*4-1, 'exact cleanup entry interval differs')
     mode = MODES.get(row['shape'], 0)
     upper = row['upper_refusal']; fault = row['fault_interaction'] and not native
     group = 0 if native else 1

@@ -26,6 +26,7 @@ def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--build-attempt',type=int,default=1)
     parser.add_argument('--run',default='focused-1')
+    parser.add_argument('--probe-revision',type=Path)
     a=parser.parse_args()
     assert a.run.replace('-','').isalnum()
     assert os.geteuid()==0 and os.uname().release=='6.1.159-kdmm14'
@@ -35,10 +36,15 @@ def main():
     build=json.loads((BASE/f'build-{a.build_attempt}/result.json').read_text());assert build['passed']
     for files in build['binaries'].values():
         for name,digest in files.items():assert rt.digest(BASE/name)==digest
-    probes=Path(build['probe_directory'])
+    probe_receipt=json.loads(a.probe_revision.read_text()) if a.probe_revision else build
+    assert probe_receipt['passed']
+    for files in probe_receipt['binaries'].values():
+        for name,digest in files.items():assert rt.digest(BASE/name)==digest
+    probes=Path(probe_receipt['probe_directory'])
     out=BASE/a.run;out.mkdir()
     result=dict(passed=False,drained=False,timing=False,boot_id=Path('/proc/sys/kernel/random/boot_id').read_text().strip(),
                 kernel_identity=kernel_identity.check(TREE,BUNDLE),build_receipt=str(BASE/f'build-{a.build_attempt}/result.json'),cases=[])
+    result['probe_revision']=str(a.probe_revision) if a.probe_revision else str(BASE/f'build-{a.build_attempt}/result.json')
     rt.write_json(out/'result.json',result)
     validators={kind:runpy.run_path(str(probes/(kind+'_partial')/'receipts.py')) for kind in ('resident',)}
     controls={kind:runpy.run_path(str(probes/(kind+'_partial')/'controls.py'))['check'] for kind in ('resident',)}

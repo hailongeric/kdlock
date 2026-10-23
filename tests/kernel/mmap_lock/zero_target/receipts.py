@@ -99,9 +99,10 @@ def validate(row, log, *, absent=False, missing=False):
                     cancelled=int(bool(cancel)), refused=int(bool(busy)), failed=int(bool(inject and not native)), native_only=int(bool(busy)))
     require(row['counts'] == expected, 'operation/ACK/error balance differs; possible replay')
     clean = dict(expected); cleanup_total = n * (4 if missing else 3)
+    routed_cleanup = cleanup_total - missing
     if not native:
-        clean.update(calls=expected['calls'] + cleanup_total, native=expected['native'] + cleanup_total,
-                     post_ban=expected['post_ban'] + cleanup_total - (not busy), refused=1, native_only=1)
+        clean.update(calls=expected['calls'] + routed_cleanup, native=expected['native'] + routed_cleanup,
+                     post_ban=expected['post_ban'] + routed_cleanup - (not busy), refused=1, native_only=1)
     require(row['after_cleanup'] == clean, 'cleanup replay or retirement imbalance')
     removed_pages = (0 if native else 3) if inject else 1 if cancel else n
     delta = inject - (not native) if inject else removed_pages if row['slice'] == 1 else 0

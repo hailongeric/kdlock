@@ -621,17 +621,19 @@ int main(int argc, char **argv)
 		require(!pthread_join(holder, NULL), "join controller");
 		if (fault_test) require(!pthread_join(late_thread, NULL) && !close(late_stack_fd), "join fault observer");
 	}
-	unsigned int cleanup = 0;
+	unsigned int cleanup = 0, routed_cleanup = 0;
 	for (unsigned int g = 0; g < groups; g++) {
 		require(!munmap((void *)addresses[g], 3 * PAGE), "cleanup all target pieces"); cleanup++;
 		require(!munmap((void *)(addresses[g] - 2 * PAGE), PAGE), "cleanup left neighbor"); cleanup++;
 		require(!munmap((void *)(addresses[g] + 4 * PAGE), PAGE), "cleanup right neighbor"); cleanup++;
 		for (unsigned int p = 0; p < 3; p++) require(!mapped(addresses[g] + p * PAGE), "cleanup target absence");
 		require(!mapped(addresses[g] - 2 * PAGE) && !mapped(addresses[g] + 4 * PAGE), "cleanup neighbor absence");
+		routed_cleanup += 3;
 	}
 	if (KD_TEST_TABLE) {
 		for (unsigned int g = 0; g < groups; g++) {
 			require(!munmap((void *)anchors[g], PAGE) && !mapped(anchors[g]), "cleanup independent upper anchor"); cleanup++;
+			if (anchors[g] >= e.region.start && anchors[g] < e.region.end) routed_cleanup++;
 		}
 		for (unsigned int g = 0; g < groups; g++) {
 			walks_cleanup[g] = walk_state(g);
@@ -641,11 +643,19 @@ int main(int argc, char **argv)
 	}
 	if (resident) require(!ioctl(device, UB_DROP), "retire every exact test reference");
 	struct ub_status clean = status(); struct ub_extra clean_extra = extra();
+	/* The final separate anchor is outside the enabled interval. Its munmap
+	 * is still checked, but __vm_munmap never submits it to the KD queue. */
+	require(routed_cleanup == cleanup - (KD_TEST_TABLE ? 1U : 0U), "exact cleanup entry routing by enabled interval");
+	if (clean.counts.calls != done.counts.calls + (native ? 0 : routed_cleanup) ||
+	    clean.counts.native != done.counts.native + (native ? 0 : routed_cleanup))
+		fprintf(stderr, "cleanup total=%u routed=%u calls=%llu before=%llu native=%llu before_native=%llu\n", cleanup,routed_cleanup,
+			(unsigned long long)clean.counts.calls,(unsigned long long)done.counts.calls,
+			(unsigned long long)clean.counts.native,(unsigned long long)done.counts.native);
 	require(clean.idle && !clean.pending && !clean.errors && !clean_extra.pins_owned &&
 		clean_extra.pins_released == (unsigned int)__builtin_popcount(pin_mask) && clean.counts.removed == done.counts.removed &&
 		clean.counts.delegated == done.counts.delegated && clean.counts.failed == done.counts.failed &&
-		clean.counts.calls == done.counts.calls + (native ? 0 : cleanup) &&
-		clean.counts.native == done.counts.native + (native ? 0 : cleanup), "cleanup cannot replay a failed body");
+		clean.counts.calls == done.counts.calls + (native ? 0 : routed_cleanup) &&
+		clean.counts.native == done.counts.native + (native ? 0 : routed_cleanup), "cleanup cannot replay a failed body");
 	require(!close(device), "release mm reference");
 	printf("{\"zero_target_test\":%d,\"absent_target_test\":%d,\"shape\":\"%s\",\"no_resident\":%d,\"missing_target\":%d,\"missing_table\":%d,\"busy_page\":%d,\"changing\":%d,\"changing_zero\":%d,\"late_slot\":%u,\"masks\":[",
 		!KD_TEST_ABSENT,KD_TEST_ABSENT,shape,no_resident,missing_target,missing_table,busy_page,changing,changing_zero,late_slot);
@@ -676,6 +686,7 @@ int main(int argc, char **argv)
 	printf("],\"pages_before\":"); print_pages(&pages_before); printf(",\"pages_after\":"); print_pages(&pages_after);
 	printf(",\"empty_control\":%d,\"inherited\":%d",empty_control,inherited);
 	if (KD_TEST_TABLE) {
+		printf(",\"interval_cleanup_calls\":%u",routed_cleanup);
 		printf(",\"pgdir_size\":%llu,\"page_size\":%lu,\"pmd_size\":%lu,\"pud_size\":%lu",(unsigned long long)initial.pgdir_size,(unsigned long)PAGE,2UL << 20,1UL << 30);
 		printf(",\"missing_table_test\":1,\"changing_empty\":%d,\"upper_refusal\":%d,\"fault_interaction\":%d,\"table_bytes_before\":%llu,\"table_bytes_after\":%llu,\"anchors\":[",
 			changing_empty,upper_refusal,fault_interaction,(unsigned long long)before.pgtables,(unsigned long long)after.pgtables);

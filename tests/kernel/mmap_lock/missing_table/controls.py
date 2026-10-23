@@ -20,6 +20,8 @@ def check(row, log, validate):
     mutations.append(('upper-table-replaced', r, log))
     r = copy.deepcopy(row); r['table_bytes_after'] += 4096
     mutations.append(('unexpected-table-allocation', r, log))
+    r = copy.deepcopy(row); r['interval_cleanup_calls'] += 1
+    mutations.append(('cleanup-entry-routing', r, log))
     r = copy.deepcopy(row); r['walks_cleanup'][0]['upper_none'] = 0
     mutations.append(('table-cleanup-leak', r, log))
     for name, data, text in mutations:
