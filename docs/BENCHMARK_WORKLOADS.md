@@ -256,17 +256,27 @@ unselected counters must remain unchanged.
 
 ## Resident linked-list traversal
 
-`list` and `list-prefetch` use the same
-[shared payload](../workload_modules/spin_cacheline/list_payload.h) with 16 or
-128 preallocated, 64-byte-aligned nodes. An immutable circular next-pointer
+The maintained nano workload matrix selects plain `list` with **16 or 64
+nodes** (1 KiB or 4 KiB of node storage). List size 128 and the
+`list-prefetch` variants at sizes 16 and 128 are excluded from future nano
+campaigns. Cacheline and RCUHT selections are unchanged.
+
+The 64-node case is a planned addition, not implemented or measured yet. The
+current runners and [shared payload](../workload_modules/spin_cacheline/list_payload.h)
+accept only 16 and 128 nodes; their validation must be extended before running
+64 nodes. The frozen nano campaign and its reports retain their original
+128-node and prefetch measurements as historical evidence.
+
+The payload uses preallocated, 64-byte-aligned nodes. An immutable circular next-pointer
 permutation advances five array slots per link. Each write holds one exclusive
 lock and visits exactly N nodes, incrementing every node once. Rwlock/rwsem
 readers hold shared ownership and verify that all N values equal the first
 value. There is no allocation, link mutation, reclamation, user-memory access
 or deliberate scheduling point inside this payload.
 
-`list-prefetch` adds a read-prefetch of the already loaded next pointer on each
-iteration; `list` omits it. All compared backends compile the same variant.
+The selected `list` workload omits software read-prefetch. The retained historical
+`list-prefetch` variant adds a read-prefetch of the already loaded next pointer
+on each iteration. All compared backends compile the same variant.
 These hints target retained module storage and add no lifetime guarantee.
 They are separate from KD's provider queue-prefetch option `--spin-prefetch`.
 The traversal is bounded by N rather than by reaching a null pointer.
@@ -306,10 +316,12 @@ Native/TCLock ELF checks precede module relocations and alternatives and do not
 claim to inspect their loaded text. Decoder failures retain diagnostics and fail
 preparation through the runner's normal drain and failure-reporting path.
 
-In spin/mutex runners select `--workload list` or `--workload list-prefetch`,
-`--list-nodes 16` or `128`, and omit `--cachelines`. The reader/writer runner
-accepts both names through `--workloads` and both sizes through `--list-nodes`;
-its snapshot `lines` field records N for these workload IDs. No ioctl structure
+For the currently runnable selected case, spin/mutex runners use
+`--workload list --list-nodes 16` and omit `--cachelines`; the reader/writer
+runner uses `--workloads list --list-nodes 16`. Once 64-node support is
+implemented and validated, use `--list-nodes 64` for its separate case. Do not
+substitute 128 nodes for the planned 64-node case. The snapshot `lines` field
+records N for these workload IDs. No ioctl structure
 grows. Use the [standard worker grid](../bench/README.md#standard-worker-grid)
 and matched backend/setup/post-work settings for performance comparisons.
 Operation p95 latency is not sampled by these runners; inverse throughput

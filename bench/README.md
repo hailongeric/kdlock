@@ -56,10 +56,13 @@ recovery variables, then omit `--dry-run` and use an outer timeout. For other
 synthetic sizes select `--cachelines 1 8`; for RCUHT use `--workload rcuht`
 and omit `--cachelines`. These choices define different workloads.
 For [resident-list variants](../docs/BENCHMARK_WORKLOADS.md#resident-linked-list-traversal),
-select `--workload list` or `list-prefetch` and `--list-nodes 16` or `128`,
-also omitting `--cachelines`. Add `--mutex-api public` for literal public mutex
-calls. The rwlock/rwsem runner uses plural `--workloads` and can plan both list
-variants and sizes together.
+the revised nano matrix selects plain `list` at 16 and 64 nodes, excluding
+128 nodes and both prefetch variants. Currently use `--workload list
+--list-nodes 16`, omitting `--cachelines`; 64-node support still requires
+implementation and validation. Add `--mutex-api public` for literal public
+mutex calls. The rwlock/rwsem runner uses plural `--workloads`.
+The frozen `bench/nano/run.py` campaign recipe and existing reports retain the
+original matrix; they are not yet a runner for this revised selection.
 
 The public mutex acceptance driver, [mutex_api_compare/run.py](mutex_api_compare/run.py),
 has separate `prepare`, `smoke` and `measure` actions with one `--output` directory.
