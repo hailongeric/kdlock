@@ -1,7 +1,7 @@
 /* SPDX-License-Identifier: GPL-2.0 */
 /* Test-only state transition through native GUP (get_user_pages). No production
  * delegation hook or synthetic unmap callback: the body is still real munmap. */
-static int change_entry(struct session *s, unsigned long address, pte_t *entry, u64 *table)
+static int change_entry(struct session *s, unsigned long address, pte_t *entry, u64 *table, bool allow_missing)
 {
 	pgd_t *pgd = pgd_offset(s->mm, address);
 	p4d_t *p4d; pud_t *pud; pmd_t *pmd; pte_t *pte;
@@ -14,6 +14,14 @@ static int change_entry(struct session *s, unsigned long address, pte_t *entry, 
 	pud = pud_offset(p4d, address);
 	if (pud_none(*pud) || pud_bad(*pud) || pud_trans_huge(*pud) || pud_devmap(*pud)) return -EINVAL;
 	pmd = pmd_offset(pud, address);
+	if (allow_missing) {
+		ptl = pmd_lock(s->mm, pmd);
+		if (pmd_none(*pmd)) {
+			*table = 0; *entry = __pte(0);
+			spin_unlock(ptl); return 0;
+		}
+		spin_unlock(ptl);
+	}
 	if (pmd_none(*pmd) || pmd_bad(*pmd) || pmd_trans_huge(*pmd) || pmd_devmap(*pmd)) return -EINVAL;
 	pte = pte_offset_map_lock(s->mm, pmd, address, &ptl);
 	*entry = ptep_get(pte);
@@ -54,9 +62,13 @@ static int change_target(struct session *s)
 	vma = vma_lookup(s->mm, address);
 	if (!vma) goto out;
 	more->anon_before = (unsigned long)vma->anon_vma;
-	error = change_entry(s, address, &entry, &more->table_before);
+	error = change_entry(s, address, &entry, &more->table_before, more->mode >= 3);
 	if (error) goto out;
-	if (more->mode) {
+	if (more->mode >= 3) {
+		/* No target leaf exists. Keep before_none=0 to avoid claiming a
+		 * real empty PTE; the table-change receipt names this distinction. */
+		if (more->table_before) { error = -EINVAL; goto out; }
+	} else if (more->mode) {
 		if (!pte_none(entry)) { error = -EINVAL; goto out; }
 		more->before_none = 1;
 	} else {
@@ -66,13 +78,18 @@ static int change_target(struct session *s)
 		}
 		r->before_zero = 1; r->zero_pfn = pte_pfn(entry);
 	}
-	if (more->mode == 1) {
+	if (more->mode == 1 || more->mode == 3 || more->mode == 4) {
 		/* No pages[] and no FOLL_GET: a real native read fault, with no
 		 * reference or ownership acquired on the permanent shared zero page. */
-		got = get_user_pages(address, 1, 0, NULL, NULL);
+		got = get_user_pages(more->mode == 3 ? address - 3 * PAGE_SIZE : address, 1, 0, NULL, NULL);
 		if (got != 1) { error = got < 0 ? got : -EFAULT; goto out; }
-		error = change_entry(s, address, &entry, &more->table_after);
+		error = change_entry(s, address, &entry, &more->table_after, false);
 		if (error) goto out;
+		if (more->mode == 3) {
+			/* Fault the existing left-neighbor VMA, not any target-VMA slot. */
+			if (!pte_none(entry)) { error = -EINVAL; goto out; }
+			goto completed;
+		}
 		if (!pte_present(entry) || !pte_special(entry) || pte_write(entry) ||
 		    pte_protnone(entry) || pte_devmap(entry) || !is_zero_pfn(pte_pfn(entry))) {
 			error = -EINVAL; goto out;
@@ -87,7 +104,7 @@ static int change_target(struct session *s)
 	s->pages[i] = page; s->pin_mask |= 1U << i;
 	s->charges[i] = READ_ONCE(page->memcg_data);
 	get_page(page); pagevec_init(&drain); pagevec_add(&drain, page); pagevec_release(&drain);
-	error = change_entry(s, address, &entry, &more->table_after);
+	error = change_entry(s, address, &entry, &more->table_after, false);
 	if (error) goto out;
 	if (!pte_present(entry) || !pte_write(entry) || pte_special(entry) ||
 	    pte_devmap(entry) || pte_pfn(entry) != page_to_pfn(page) ||
@@ -104,10 +121,16 @@ static int change_target(struct session *s)
 		page_count(page), 1, value, PageLocked(page) };
 completed:
 	more->anon_after = (unsigned long)vma->anon_vma;
-	error = more->table_before && more->table_before == more->table_after ? 0 : -EINVAL;
+	error = more->table_after && (more->mode >= 3 ? !more->table_before :
+		more->table_before == more->table_after) ? 0 : -EINVAL;
 out:
 	r->result = error; r->done = 1;
-	if (more->mode)
+	if (more->mode >= 3)
+		pr_info("KD_MM_TEST table_change mm=%px index=%u actor=%llu pending=%llu readers=%llu admission=%lld mode=%llu before_table_none=1 after_zero=%llu after_private=%llu table_before=%llx table_after=%llx anon_before=%llx anon_after=%llx zero_pfn=%llx private_pfn=%llx result=%d\n",
+			s->mm, i, r->actor, r->pending, r->readers, r->admission, more->mode,
+			more->after_zero, r->after_private, more->table_before, more->table_after,
+			more->anon_before, more->anon_after, r->zero_pfn, r->page.pfn, error);
+	else if (more->mode)
 		pr_info("KD_MM_TEST absent_change mm=%px index=%u actor=%llu pending=%llu readers=%llu admission=%lld mode=%llu before_none=%llu after_zero=%llu after_private=%llu table_before=%llx table_after=%llx anon_before=%llx anon_after=%llx zero_pfn=%llx private_pfn=%llx result=%d\n",
 			s->mm, i, r->actor, r->pending, r->readers, r->admission, more->mode,
 			more->before_none, more->after_zero, r->after_private, more->table_before,
@@ -126,14 +149,16 @@ static int change_operation(struct session *s, unsigned int cmd, unsigned long a
 	struct ub_change *r = &s->change.state;
 
 	if (atomic_read(&s->controlling)) return -EBUSY;
-	if (cmd == UB_CHANGE_ARM || cmd == UB_CHANGE_EMPTY_ZERO_ARM || cmd == UB_CHANGE_EMPTY_PRIVATE_ARM) {
+	if (cmd == UB_CHANGE_ARM || cmd == UB_CHANGE_EMPTY_ZERO_ARM || cmd == UB_CHANGE_EMPTY_PRIVATE_ARM ||
+	    cmd == UB_CHANGE_TABLE_EMPTY_ARM || cmd == UB_CHANGE_TABLE_ZERO_ARM || cmd == UB_CHANGE_TABLE_PRIVATE_ARM) {
 		mutex_lock(&s->pins_lock);
 		if (!s->groups || arg >= s->groups * 3 || s->pages[arg] || s->change_armed ||
 		    (s->mm->mmap_lock.unmap.enabled ? s->groups != 3 || arg != 4 : s->groups != 1 || arg != 1))
 			error = -EINVAL;
 		else {
 			r->index = arg; s->change_armed = true;
-			s->change.mode = cmd == UB_CHANGE_EMPTY_ZERO_ARM ? 1 : cmd == UB_CHANGE_EMPTY_PRIVATE_ARM ? 2 : 0;
+			s->change.mode = cmd == UB_CHANGE_EMPTY_ZERO_ARM ? 1 : cmd == UB_CHANGE_EMPTY_PRIVATE_ARM ? 2 :
+				cmd == UB_CHANGE_TABLE_EMPTY_ARM ? 3 : cmd == UB_CHANGE_TABLE_ZERO_ARM ? 4 : cmd == UB_CHANGE_TABLE_PRIVATE_ARM ? 5 : 0;
 		}
 		mutex_unlock(&s->pins_lock);
 	} else if (cmd == UB_CHANGE_NOW) {

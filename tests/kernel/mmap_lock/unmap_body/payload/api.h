@@ -75,4 +75,14 @@ struct ub_change_more {
 #define UB_CHANGE_EMPTY_ZERO_ARM _IO('U', 0x77)
 #define UB_CHANGE_EMPTY_PRIVATE_ARM _IO('U', 0x78)
 #define UB_CHANGE_RESULT_MORE _IOR('U', 0x79, struct ub_change_more)
+/* Missing leaf tables are PMD-none with all required upper levels present.
+ * Keep UB_PTE_TABLES unchanged for the frozen kdmm13 clients. */
+struct ub_table_walk {
+	struct ub_pte_tables tables;
+	__u64 pmd_none, upper_none, parent_pfn[3];
+};
+#define UB_TABLE_WALK _IOWR('U', 0x7a, struct ub_table_walk)
+#define UB_CHANGE_TABLE_EMPTY_ARM _IO('U', 0x7b)
+#define UB_CHANGE_TABLE_ZERO_ARM _IO('U', 0x7c)
+#define UB_CHANGE_TABLE_PRIVATE_ARM _IO('U', 0x7d)
 #endif

@@ -48,7 +48,8 @@ static bool kd_mmap_unmap_simple_anon(struct vm_area_struct *vma, bool allow_emp
 static bool kd_mmap_unmap_hold_pages(struct mm_struct *mm,
 	struct vm_area_struct *vma, struct vm_area_struct *prev,
 	struct vm_area_struct *next,
-	bool partial, pmd_t **held_pmd, struct page **pages,
+	bool partial, pmd_t **held_pmd, pud_t **held_pud,
+	bool *missing_table, unsigned long *parent_pfn, struct page **pages,
 	unsigned int *present, unsigned int *zero, pte_t *zero_ptes,
 	unsigned int *checked, unsigned int *nr)
 {
@@ -70,6 +71,7 @@ static bool kd_mmap_unmap_hold_pages(struct mm_struct *mm,
 	*nr = 0;
 	*present = 0;
 	*zero = 0;
+	*missing_table = false;
 	if (!mm->mmap_lock.unmap.allow_populated || IS_ENABLED(CONFIG_LRU_GEN) ||
 	    !count || count > KD_MMAP_RESIDENT_MAX ||
 	    !kd_mmap_unmap_simple_anon(vma, partial) ||
@@ -85,6 +87,22 @@ static bool kd_mmap_unmap_hold_pages(struct mm_struct *mm,
 	pud = pud_offset(p4d, address);
 	if (pud_none(*pud) || pud_trans_huge(*pud) || pud_devmap(*pud) || pud_bad(*pud)) return 0;
 	pmd = pmd_offset(pud, address);
+	/* pmd_none() means this entire 2-MiB interval has no leaf table; all
+	 * three same-PMD slots are necessarily untouched. Never allocate one.
+	 * Serialize the observation with native pmd_install(), even though our
+	 * mmap writer already excludes ordinary faults. Missing PGD/P4D/PUD and
+	 * huge/special non-present entries never reach this admitted state. */
+	if (partial) {
+		ptl = pmd_lock(mm, pmd);
+		if (pmd_none(*pmd)) {
+			*held_pmd = pmd;
+			*held_pud = pud;
+			*parent_pfn = pud_pfn(READ_ONCE(*pud));
+			*missing_table = true;
+		}
+		spin_unlock(ptl);
+		if (*missing_table) return true;
+	}
 	if (pmd_none(*pmd) || pmd_trans_huge(*pmd) || pmd_devmap(*pmd) || pmd_bad(*pmd)) return 0;
 	pte = pte_offset_map_lock(mm, pmd, address, &ptl);
 	for (i = 0; i < count; i++) {
@@ -158,6 +176,9 @@ bool kd_mmap_unmap_try(struct mm_struct *mm, unsigned long start,
 	pte_t zero_ptes[KD_MMAP_RESIDENT_MAX];
 	unsigned long pfns[KD_MMAP_RESIDENT_MAX];
 	pmd_t *held_pmd = NULL;
+	pud_t *held_pud = NULL;
+	unsigned long parent_pfn = 0;
+	bool missing_table = false;
 	unsigned long address, pages, table_bytes = 0;
 	unsigned long old_start, old_end, old_flags, old_pgoff;
 	unsigned int before, nr = 0, i, checked, splits = 0, present = 0, zero = 0, slots;
@@ -228,7 +249,8 @@ bool kd_mmap_unmap_try(struct mm_struct *mm, unsigned long start,
 	}
 	if (!pristine) {
 		if (!kd_mmap_unmap_hold_pages(mm, vma, prev, next,
-			partial, &held_pmd, held, &present, &zero, zero_ptes, &checked, &nr)) {
+			partial, &held_pmd, &held_pud, &missing_table, &parent_pfn,
+			held, &present, &zero, zero_ptes, &checked, &nr)) {
 			if (checked)
 				pr_info("KD_MM_POPULATED_RANGE rollback mm=%px id=%llu origin=%d executor=%d start=%lx end=%lx held=%u released=%u effects=0\n",
 					mm, request_id, origin->pid, current->pid, start, end, checked, checked);
@@ -237,7 +259,7 @@ bool kd_mmap_unmap_try(struct mm_struct *mm, unsigned long start,
 		for (i = 0; i < slots; i++)
 			if (present & (1U << i)) pfns[i] = page_to_pfn(held[i]);
 		zero_target = partial && (zero & (1U << ((start - old_start) >> PAGE_SHIFT)));
-		absent_target = partial && !((present | zero) &
+		absent_target = partial && !missing_table && !((present | zero) &
 				(1U << ((start - old_start) >> PAGE_SHIFT)));
 		table_bytes = mm_pgtables_bytes(mm);
 	}
@@ -306,7 +328,20 @@ out_pages:
 		 * also lost its mapping reference. Zero pages own no such reference.
 		 * Release our temporary private-page references on this executor;
 		 * page/memcg ownership, never current's cgroup, governs final free. */
-		if (!*result || zero || absent_target) {
+		if (missing_table) {
+			spinlock_t *ptl;
+
+			/* Same-PMD floor/ceiling makes native free_pgd_range() return
+			 * before walking. Check the retained PMD-table identity and its
+			 * still-empty entry, including admitted split errors. There is
+			 * no PTE pointer, data-page ownership or table-free obligation. */
+			BUG_ON(nr || present || zero || !held_pud ||
+			       pud_none(*held_pud) || pud_pfn(*held_pud) != parent_pfn ||
+			       mm_pgtables_bytes(mm) != table_bytes);
+			ptl = pmd_lock(mm, held_pmd);
+			BUG_ON(!pmd_none(*held_pmd));
+			spin_unlock(ptl);
+		} else if (!*result || zero || absent_target) {
 			spinlock_t *ptl;
 			pte_t *pte;
 
@@ -348,7 +383,10 @@ out_pages:
 
 			atomic64_inc(&u->populated);
 			if (origin != current && atomic64_inc_return(&u->populated_remote) <= 16) {
-				if (absent_target) {
+				if (missing_table) {
+					pr_info("KD_MM_MISSING_TABLE done mm=%px id=%llu origin=%d executor=%d start=%lx end=%lx pmd_table_pfn=%lx pmd_none=1 held=0 released=0 target_owned=0 upper_retained=1 tables_unchanged=1\n",
+						mm, request_id, origin->pid, current->pid, start, end, parent_pfn);
+				} else if (absent_target) {
 					pr_info("KD_MM_ABSENT_TARGET done mm=%px id=%llu origin=%d executor=%d start=%lx end=%lx resident_mask=%u zero_mask=%u untouched_mask=%u held=%u released=%u initial_pte_none=1 target_pte_none=1 target_owned=0 table_pfn=%lx tables_retained=1 zero_survivors_preserved=1\n",
 						mm, request_id, origin->pid, current->pid, start, end,
 						present, zero, 7U ^ (present | zero), nr, nr,
@@ -383,7 +421,10 @@ out_pages:
 	if (*result && partial)
 		pr_info("KD_MM_PARTIAL error mm=%px id=%llu origin=%d executor=%d start=%lx end=%lx splits=%u held=%u released=%u result=%d\n",
 			mm, request_id, origin->pid, current->pid, start, end, splits, nr, nr, *result);
-	if (*result && absent_target)
+	if (*result && missing_table)
+		pr_info("KD_MM_MISSING_TABLE error mm=%px id=%llu origin=%d executor=%d start=%lx end=%lx pmd_table_pfn=%lx pmd_none=1 held=0 released=0 target_owned=0 upper_retained=1 tables_unchanged=1 result=%d\n",
+			mm, request_id, origin->pid, current->pid, start, end, parent_pfn, *result);
+	else if (*result && absent_target)
 		pr_info("KD_MM_ABSENT_TARGET error mm=%px id=%llu origin=%d executor=%d start=%lx end=%lx resident_mask=%u zero_mask=%u untouched_mask=%u held=%u released=%u target_pte_none=1 target_owned=0 table_pfn=%lx zero_ptes_preserved=1 result=%d\n",
 			mm, request_id, origin->pid, current->pid, start, end,
 			present, zero, 7U ^ (present | zero), nr, nr,

@@ -265,6 +265,9 @@ static long operation(struct file *file, unsigned int cmd, unsigned long arg)
 	case UB_CHANGE_EMPTY_ZERO_ARM:
 	case UB_CHANGE_EMPTY_PRIVATE_ARM:
 	case UB_CHANGE_RESULT_MORE:
+	case UB_CHANGE_TABLE_EMPTY_ARM:
+	case UB_CHANGE_TABLE_ZERO_ARM:
+	case UB_CHANGE_TABLE_PRIVATE_ARM:
 		return change_operation(s, cmd, arg);
 	case UB_EXPERIMENT:
 		return experiment(s, arg);
@@ -280,7 +283,8 @@ static long operation(struct file *file, unsigned int cmd, unsigned long arg)
 		return page_operation(s, cmd, arg);
 	case UB_PTES:
 	case UB_PTE_TABLES:
-		return pte_state(s, arg, cmd == UB_PTE_TABLES);
+	case UB_TABLE_WALK:
+		return pte_state(s, arg, cmd);
 	case UB_EXTRA: {
 		struct ub_extra extra;
 

@@ -5,12 +5,17 @@
 #ifndef KD_TEST_ABSENT
 #define KD_TEST_ABSENT 0
 #endif
+#ifndef KD_TEST_TABLE
+#define KD_TEST_TABLE 0
+#endif
 
 static int resident, native, injection, busy, cancellation, free_first;
 static unsigned int slice, masks[3], zeros[3], pin_mask, late_slot;
 static int no_resident, missing_target, busy_page, changing;
 static int empty_control, inherited;
-static int missing_table, changing_zero;
+static int missing_table, changing_zero, changing_empty, upper_refusal, fault_interaction;
+static unsigned int table_change;
+static uintptr_t anchors[3];
 static struct ub_change change;
 static struct ub_change_more change_more;
 /* Survivor letters are ordered by ascending address, excluding the target.
@@ -33,13 +38,14 @@ static FILE *smaps;
 static struct residency { uintptr_t lo, hi; unsigned long rss, anon; unsigned int seen; } residency[3][3][3];
 static struct ub_ptes ptes_before[3], ptes_after[3], ptes_written[3];
 static struct ub_pte_tables tables_before[3], tables_after[3];
+static struct ub_table_walk walks_before[3], walks_after[3], walks_accessed[3], walks_written[3], walks_cleanup[3];
 static struct ub_ptes independent_before, independent_after;
 static struct { unsigned int group, slot; struct ub_ptes state, independent; } writes[9];
 static unsigned int write_count;
 static struct ub_ptes independent(void)
 {
 	/* Separate, pre-existing neighbor VMA; this query never accesses its data. */
-	struct ub_ptes r = {.address = addresses[0] - 2 * PAGE};
+	struct ub_ptes r = {.address = KD_TEST_TABLE ? anchors[0] : addresses[0] - 2 * PAGE};
 	require(!ioctl(device, UB_PTES, &r) && (r.zero & 1) && !(r.anon & 1) && !(r.none & 1) && !(r.other & 1),
 		"independent mapping still uses the kernel shared zero page");
 	check_page(r.address, 0); return r;
@@ -59,6 +65,38 @@ static void check_tables(unsigned int g, struct ub_pte_tables *r)
 	for (unsigned int i = 0; i < 3; i++)
 		require(missing ? !r->table_pfn[i] : r->table_pfn[i] && r->table_pfn[i] == r->table_pfn[0],
 			"all three leaf entries share the retained table");
+}
+static struct ub_table_walk walk_state(unsigned int g)
+{
+	struct ub_table_walk w = {.tables.ptes.address = addresses[g]};
+	require(!ioctl(device, UB_TABLE_WALK, &w), "exact upper/PMD/leaf walk without allocation");
+	return w;
+}
+static void check_walk(unsigned int g, struct ub_table_walk *w, int leaf, int upper)
+{
+	require(w->tables.leaf == (leaf ? 7U : 0U) && w->pmd_none == (!leaf && !upper ? 7U : 0U) &&
+		w->upper_none == (upper ? 7U : 0U) && w->tables.higher_none == (leaf ? 0U : 7U),
+		"missing leaf, missing upper and populated table are distinct");
+	for (unsigned int p = 0; p < 3; p++) {
+		require(leaf ? w->tables.table_pfn[p] && w->tables.table_pfn[p] == w->tables.table_pfn[0] : !w->tables.table_pfn[p],
+			"one shared leaf table or no leaf table");
+		require(upper ? !w->parent_pfn[p] : w->parent_pfn[p] && w->parent_pfn[p] == w->parent_pfn[0],
+			"required PMD table identity");
+		if (w != &walks_before[g] && walks_before[g].parent_pfn[p])
+			require(w->parent_pfn[p] == walks_before[g].parent_pfn[p], "upper table never replaced by unmap or later fault");
+	}
+}
+static void print_walks(struct ub_table_walk *w)
+{
+	putchar('[');
+	for (unsigned int g = 0; g < groups; g++) {
+		printf("%s{\"pmd_none\":%llu,\"upper_none\":%llu,\"parent_pfn\":[%llu,%llu,%llu],\"leaf\":%llu,\"table_pfn\":[%llu,%llu,%llu]}",
+			g ? "," : "", (unsigned long long)w[g].pmd_none, (unsigned long long)w[g].upper_none,
+			(unsigned long long)w[g].parent_pfn[0], (unsigned long long)w[g].parent_pfn[1], (unsigned long long)w[g].parent_pfn[2],
+			(unsigned long long)w[g].tables.leaf, (unsigned long long)w[g].tables.table_pfn[0],
+			(unsigned long long)w[g].tables.table_pfn[1], (unsigned long long)w[g].tables.table_pfn[2]);
+	}
+	putchar(']');
 }
 static void print_tables(struct ub_pte_tables *r)
 {
@@ -263,7 +301,7 @@ static void verify_mappings(void)
 				require(r.anon == roots[g].anon && r.root == roots[g].root && r.links == 1 &&
 					r.refs == roots[g].refs && r.active == 1 + splits - lost && r.intervals == r.active,
 					"reverse-map root, links, active VMAs and reference lifetime");
-			} else if (changing && !changing_zero && g == (native ? 0U : 1U)) {
+			} else if (changing && !changing_zero && !changing_empty && g == (native ? 0U : 1U)) {
 				/* The controlled write fault created ancestry after preparation.
 				 * Its removed private target leaves the same root on both splits. */
 				require(r.anon && r.root == r.anon && r.links == 1 && r.refs == 1 &&
@@ -319,13 +357,18 @@ int main(int argc, char **argv)
 		empty_control = !strcmp(argv[2], "change-empty") || !strcmp(argv[2], "missing-empty") || !strcmp(argv[2], "cancel-empty");
 		inherited = !strcmp(argv[2], "inherited");
 		missing_table = KD_TEST_ABSENT && !strcmp(argv[2], "missing-table");
-		changing_zero = KD_TEST_ABSENT && !strcmp(argv[2], "change-zero");
+		table_change = KD_TEST_TABLE ? !strcmp(argv[2], "change-table-empty") ? 3 :
+			!strcmp(argv[2], "change-table-zero") ? 4 : !strcmp(argv[2], "change-table-private") ? 5 : 0 : 0;
+		changing_empty = table_change == 3;
+		changing_zero = (KD_TEST_ABSENT && !strcmp(argv[2], "change-zero")) || table_change == 4;
+		upper_refusal = KD_TEST_TABLE && !strcmp(argv[2], "upper-refusal");
+		fault_interaction = KD_TEST_TABLE && !strcmp(argv[2], "fault");
 		busy_page = !strcmp(argv[2], "refusal");
 		missing_target = !strcmp(argv[2], "missing") || !strcmp(argv[2], "missing-empty");
 		changing = !strcmp(argv[2], "change") || !strcmp(argv[2], "change-empty") ||
-			changing_zero || (KD_TEST_ABSENT && !strcmp(argv[2], "change-private"));
-		if (KD_TEST_ABSENT && (missing_table || changing)) empty_control = 1;
-		busy = busy_page || missing_target || missing_table;
+			changing_zero || table_change || (KD_TEST_ABSENT && !strcmp(argv[2], "change-private"));
+		if (KD_TEST_ABSENT && (missing_table || changing || upper_refusal)) empty_control = 1;
+		busy = busy_page || missing_target || missing_table || upper_refusal;
 		cancellation = !strcmp(argv[2], "cancel") || !strcmp(argv[2], "cancel-empty"); free_first = !strcmp(argv[2], "free");
 	}
 	const char *shape = argc == 6 ? argv[4] : argv[2];
@@ -333,8 +376,16 @@ int main(int argc, char **argv)
 	if (empty_control || inherited) { shape_mask = 0; shape_zero = 7; }
 	for (unsigned int i = 0; i < sizeof(shapes) / sizeof(shapes[0]); i++)
 		if (!strcmp(shape, shapes[i].name)) { found = 1; slice = shapes[i].target; shape_mask = shapes[i].mask; shape_zero = shapes[i].zero; }
-	require(found || busy || cancellation || free_first || changing || inherited, "shape");
+	require(found || busy || cancellation || free_first || changing || inherited || fault_interaction, "shape");
 	require(!KD_TEST_ABSENT || (!inherited && !missing_target), "absent target has no fabricated history or obsolete missing-PTE refusal");
+	if (KD_TEST_TABLE) {
+		require(!shape_mask || (!found && (changing || cancellation || upper_refusal || fault_interaction)),
+			"a missing leaf table cannot contain any resident survivor");
+		require(!found || shape_zero == (1U << slice), "only UU survivors are geometrically possible");
+		shape_mask = shape_zero = 0;
+		require(!busy_page && !missing_target && !missing_table && !inherited && !free_first,
+			"missing-table path uses explicit narrow controls");
+	}
 	require(!native || !(busy || cancellation || free_first), "native success controls use supported shapes");
 	require(injection != 2 || slice == 1, "two splits only for an interior range");
 	require(resident && (!injection || slice == 1), "zero-survivor resident interior error scope");
@@ -343,7 +394,7 @@ int main(int argc, char **argv)
 	sigemptyset(&action.sa_mask); require(!sigaction(SIGSEGV, &action, NULL), "signal handler");
 	device = open("/dev/kd_mm_unmap_test", O_RDWR | O_CLOEXEC); require(device >= 0, "probe open");
 	struct ub_status initial = status();
-	uintptr_t stride = resident ? 2 * 1024 * 1024 : initial.pgdir_size;
+	uintptr_t stride = KD_TEST_TABLE ? (upper_refusal ? 1UL << 30 : 4UL << 20) : resident ? 2 * 1024 * 1024 : initial.pgdir_size;
 	uintptr_t base = initial.pgdir_size * 8 + 8 * PAGE;
 	require(base + groups * stride < initial.task_size, "caller address range");
 	for (unsigned int g = 0; g < groups; g++) {
@@ -354,6 +405,17 @@ int main(int argc, char **argv)
 			void *p = mmap((void *)ranges[r], len, PROT_READ | PROT_WRITE,
 				MAP_PRIVATE | MAP_ANONYMOUS | MAP_NORESERVE | MAP_FIXED_NOREPLACE, -1, 0);
 			require(p == (void *)ranges[r] && !madvise(p, len, MADV_NOHUGEPAGE), "mapping setup");
+		}
+		if (KD_TEST_TABLE) {
+			anchors[g] = addresses[g] + (2UL << 20);
+			require((addresses[g] & ~((2UL << 20) - 1)) == ((addresses[g] + 3 * PAGE - 1) & ~((2UL << 20) - 1)) &&
+				(addresses[g] >> 21) != (anchors[g] >> 21) && (addresses[g] >> 30) == (anchors[g] >> 30),
+				"three-page VMA in one PMD, anchor in a different PMD of the same PUD");
+			require(mmap((void *)anchors[g], PAGE, PROT_READ | PROT_WRITE,
+				MAP_PRIVATE | MAP_ANONYMOUS | MAP_NORESERVE | MAP_FIXED_NOREPLACE, -1, 0) == (void *)anchors[g] &&
+				!madvise((void *)anchors[g], PAGE, MADV_NOHUGEPAGE), "separate upper-level anchor VMA");
+			if (!(upper_refusal && g == 1)) require(!probe_read(anchors[g]) && !observed,
+				"construct upper levels without allocating the target leaf table");
 		}
 		masks[g] = shape_mask; zeros[g] = shape_zero;
 		if (injection && !native && !g) { masks[g] = 7; zeros[g] = 0; }
@@ -371,14 +433,14 @@ int main(int argc, char **argv)
 		for (unsigned int p = 0; p < 3; p++) if (masks[g] & (1U << p)) memset((void *)(addresses[g] + p * PAGE), pattern(g, p), PAGE);
 		for (unsigned int p = 0; p < 3; p++) if (zeros[g] & (1U << p))
 			require(!probe_read(addresses[g] + p * PAGE) && !observed, "read-fault intended zero slot without writing");
-		if (KD_TEST_ABSENT && !(missing_table && g == 1))
+		if (KD_TEST_ABSENT && !KD_TEST_TABLE && !(missing_table && g == 1))
 			require(!probe_read(addresses[g] - 2 * PAGE) && !observed,
 				"independent neighbor establishes an existing table without accessing any target slot");
 		original[g] = layout(addresses[g]); roots[g] = rmap(addresses[g]);
 		if (masks[g] || inherited) require(roots[g].anon && roots[g].anon == roots[g].root && roots[g].links == 1 && roots[g].active == 1 && roots[g].intervals == 1, "one original reverse-map chain");
 		else require(!roots[g].anon && !roots[g].links, "no private page means no fabricated reverse map");
 	}
-	require(!probe_read(addresses[0] - 2 * PAGE) && !observed, "read-fault independent zero mapping");
+	require(!probe_read(KD_TEST_TABLE ? anchors[0] : addresses[0] - 2 * PAGE) && !observed, "read-fault independent zero mapping");
 	independent_before = independent();
 	struct ub_experiment e = {{base - 2 * PAGE, addresses[groups - 1] + 5 * PAGE, base, stride}, native ? 0 : resident ? 2 : 1, groups, injection};
 	require(!ioctl(device, UB_EXPERIMENT, &e), "explicit experiment opt-in");
@@ -389,7 +451,11 @@ int main(int argc, char **argv)
 		if (busy_page) require(!ioctl(device, UB_BUSY_LOCK), "make final page busy before admission");
 	}
 	for (unsigned int g = 0; g < groups; g++) {
-		if (KD_TEST_ABSENT) {
+		if (KD_TEST_TABLE) {
+			walks_before[g] = walk_state(g);
+			check_walk(g, &walks_before[g], injection && !native && !g, upper_refusal && g == 1);
+			tables_before[g] = walks_before[g].tables; ptes_before[g] = tables_before[g].ptes;
+		} else if (KD_TEST_ABSENT) {
 			tables_before[g] = table_state(g); check_tables(g, &tables_before[g]);
 			ptes_before[g] = tables_before[g].ptes;
 			require((injection && !native && !g) || (ptes_before[g].none & (1U << slice)),
@@ -401,11 +467,12 @@ int main(int argc, char **argv)
 	account(0); /* Allocate/warm the observation buffer before global mm counters. */
 	while (late_slot < 3 && ((masks[1] | zeros[1] | (1U << slice)) & (1U << late_slot))) late_slot++;
 	if (late_slot == 3) late_slot = 4; /* Existing, untouched neighbor VMA. */
-	if (changing) require(!ioctl(device, KD_TEST_ABSENT ?
+	if (changing) require(!ioctl(device, KD_TEST_TABLE ? (table_change == 3 ? UB_CHANGE_TABLE_EMPTY_ARM :
+		table_change == 4 ? UB_CHANGE_TABLE_ZERO_ARM : UB_CHANGE_TABLE_PRIVATE_ARM) : KD_TEST_ABSENT ?
 		(changing_zero ? UB_CHANGE_EMPTY_ZERO_ARM : UB_CHANGE_EMPTY_PRIVATE_ARM) : UB_CHANGE_ARM,
 		native ? 1UL : 4UL), "arm exact target transition before queued execution");
 	extra_before = extra();
-	int fault_test = !native && !injection && !busy && !cancellation;
+	int fault_test = !native && !injection && !busy && !cancellation && (!KD_TEST_TABLE || fault_interaction);
 	if (native) {
 		before = layout(base); workers[0].tid = syscall(SYS_gettid); workers[0].offset = slice; workers[0].width = 1;
 		if (changing) require(!ioctl(device, UB_CHANGE_NOW), "native controlled zero-to-private fault");
@@ -439,7 +506,11 @@ int main(int argc, char **argv)
 		if (KD_TEST_ABSENT) {
 			require(!ioctl(device, UB_CHANGE_RESULT_MORE, &change_more), "extended native transition result");
 			change = change_more.state;
-			require(change_more.mode == (changing_zero ? 1U : 2U) && change_more.before_none && !change.before_zero &&
+			if (KD_TEST_TABLE) require(change_more.mode == table_change && !change_more.before_none && !change.before_zero &&
+				change_more.after_zero == (unsigned)changing_zero && change.after_private == (unsigned)(table_change == 5) &&
+				!change_more.table_before && change_more.table_after && !change_more.anon_before &&
+				(table_change == 5 ? !!change_more.anon_after : !change_more.anon_after), "native fault constructs the missing table before execution");
+			else require(change_more.mode == (changing_zero ? 1U : 2U) && change_more.before_none && !change.before_zero &&
 				change_more.after_zero == (unsigned)changing_zero && change.after_private == (unsigned)!changing_zero &&
 				change_more.table_before == tables_before[native ? 0 : 1].table_pfn[0] &&
 				change_more.table_after == change_more.table_before && !change_more.anon_before &&
@@ -450,17 +521,17 @@ int main(int argc, char **argv)
 		require(change.done && !change.result, "native target transition completed before body admission");
 		require(change.index == (native ? 1U : 4U) && change.pending == (native ? 0U : 3U) &&
 			change.readers == (native ? 1U : 2U) && (native || change.admission == -1) &&
-			(changing_zero ? !change.page.pfn && !change.page.refs && change.zero_pfn :
+			(changing_empty ? !change.page.pfn && !change.zero_pfn : changing_zero ? !change.page.pfn && !change.page.refs && change.zero_pfn :
 			change.page.mapcount == 1 && change.page.refs == 2 && change.page.charged_same && !change.page.locked),
 			"changed target exact reference and queued/local-reader ordering");
-		if (!changing_zero) pin_mask |= 1U << change.index;
+		if (!changing_zero && !changing_empty) pin_mask |= 1U << change.index;
 	}
 	after = layout(base); extra_after = extra();
 	unsigned int removed_pages = injection ? (native ? 0 : 3) : cancellation ? 1 : groups;
 	int map_delta = injection ? injection - !native : slice == 1 ? (int)removed_pages : 0;
 	require(before.total_vm == after.total_vm + removed_pages && before.data_vm == after.data_vm + removed_pages &&
 		before.exec_vm == after.exec_vm && before.stack_vm == after.stack_vm &&
-		(long long)after.map_count - (long long)before.map_count == map_delta && before.pgtables == after.pgtables,
+		(long long)after.map_count - (long long)before.map_count == map_delta && before.pgtables + (KD_TEST_TABLE && (changing || fault_test) ? PAGE : 0) == after.pgtables,
 		"exact native page/VMA/table accounting including harmless splits");
 	require(extra_after.fail_after == 0 && extra_after.fail_seen == !!injection, "one exact injection consumed");
 	if (!cancellation) for (unsigned int g = 0; g < groups; g++) {
@@ -471,7 +542,14 @@ int main(int argc, char **argv)
 	for (unsigned int g = 0; g < groups; g++) {
 		unsigned int gone = 0;
 		for (unsigned int p = 0; p < 3; p++) if (removed(g, p)) gone |= 1U << p;
-		if (KD_TEST_ABSENT) {
+		if (KD_TEST_TABLE) {
+			walks_after[g] = walk_state(g);
+			check_walk(g, &walks_after[g], (injection && !native && !g) ||
+				(changing && g == (native ? 0U : 1U)) || (fault_test && g == 1), upper_refusal && g == 1);
+			tables_after[g] = walks_after[g].tables; ptes_after[g] = tables_after[g].ptes;
+			if (changing && g == (native ? 0U : 1U)) require(tables_after[g].table_pfn[0] == change_more.table_after,
+				"execution preserves the exact fault-created table");
+		} else if (KD_TEST_ABSENT) {
 			tables_after[g] = table_state(g); check_tables(g, &tables_after[g]);
 			for (unsigned int p = 0; p < 3; p++) require(tables_after[g].table_pfn[p] == tables_before[g].table_pfn[p],
 				"the exact leaf table remains without freeing or replacement");
@@ -482,6 +560,11 @@ int main(int argc, char **argv)
 	}
 	account(1); /* No survivor read by this controller precedes this snapshot. */
 	verify_mappings();
+	if (KD_TEST_TABLE) for (unsigned int g = 0; g < groups; g++) {
+		walks_accessed[g] = walk_state(g); check_walk(g, &walks_accessed[g], 1, 0);
+		if (tables_after[g].table_pfn[0]) require(walks_accessed[g].tables.table_pfn[0] == tables_after[g].table_pfn[0],
+			"later survivor reads retain any table already installed");
+	}
 	if (busy_page) require(!ioctl(device, UB_BUSY_UNLOCK), "release original busy-page lock");
 	if (resident && !free_first) {
 		require(!ioctl(device, UB_PAGESTATE, &pages_after), "post-body exact page references");
@@ -521,6 +604,11 @@ int main(int argc, char **argv)
 		require(ptes_written[g].anon == (7U & ~gone) && ptes_written[g].none == gone &&
 			!ptes_written[g].zero && !ptes_written[g].other, "survivors end as private writable pages");
 	}
+	if (KD_TEST_TABLE) for (unsigned int g = 0; g < groups; g++) {
+		walks_written[g] = walk_state(g); check_walk(g, &walks_written[g], 1, 0);
+		require(walks_written[g].tables.table_pfn[0] == walks_accessed[g].tables.table_pfn[0],
+			"isolated writes keep the same leaf table");
+	}
 	independent_after = independent();
 	account(2);
 	require(!fclose(smaps), "close resident accounting observer");
@@ -540,6 +628,16 @@ int main(int argc, char **argv)
 		require(!munmap((void *)(addresses[g] + 4 * PAGE), PAGE), "cleanup right neighbor"); cleanup++;
 		for (unsigned int p = 0; p < 3; p++) require(!mapped(addresses[g] + p * PAGE), "cleanup target absence");
 		require(!mapped(addresses[g] - 2 * PAGE) && !mapped(addresses[g] + 4 * PAGE), "cleanup neighbor absence");
+	}
+	if (KD_TEST_TABLE) {
+		for (unsigned int g = 0; g < groups; g++) {
+			require(!munmap((void *)anchors[g], PAGE) && !mapped(anchors[g]), "cleanup independent upper anchor"); cleanup++;
+		}
+		for (unsigned int g = 0; g < groups; g++) {
+			walks_cleanup[g] = walk_state(g);
+			require(walks_cleanup[g].upper_none == 7 && !walks_cleanup[g].tables.leaf && !walks_cleanup[g].pmd_none &&
+				!walks_cleanup[g].parent_pfn[0] && !walks_cleanup[g].tables.table_pfn[0], "local cleanup retires empty table hierarchy");
+		}
 	}
 	if (resident) require(!ioctl(device, UB_DROP), "retire every exact test reference");
 	struct ub_status clean = status(); struct ub_extra clean_extra = extra();
@@ -577,6 +675,18 @@ int main(int argc, char **argv)
 	}
 	printf("],\"pages_before\":"); print_pages(&pages_before); printf(",\"pages_after\":"); print_pages(&pages_after);
 	printf(",\"empty_control\":%d,\"inherited\":%d",empty_control,inherited);
+	if (KD_TEST_TABLE) {
+		printf(",\"pgdir_size\":%llu,\"page_size\":%lu,\"pmd_size\":%lu,\"pud_size\":%lu",(unsigned long long)initial.pgdir_size,(unsigned long)PAGE,2UL << 20,1UL << 30);
+		printf(",\"missing_table_test\":1,\"changing_empty\":%d,\"upper_refusal\":%d,\"fault_interaction\":%d,\"table_bytes_before\":%llu,\"table_bytes_after\":%llu,\"anchors\":[",
+			changing_empty,upper_refusal,fault_interaction,(unsigned long long)before.pgtables,(unsigned long long)after.pgtables);
+		for (unsigned int g = 0; g < groups; g++) printf("%s%lu",g ? "," : "",(unsigned long)anchors[g]);
+		printf("],\"walks_before\":");print_walks(walks_before);
+		printf(",\"walks_after\":");print_walks(walks_after);
+		printf(",\"walks_accessed\":");print_walks(walks_accessed);
+		printf(",\"walks_written\":");print_walks(walks_written);
+		printf(",\"walks_cleanup\":");print_walks(walks_cleanup);
+	}
+
 	printf(",\"residency\":"); print_account();
 	if (KD_TEST_ABSENT) {
 		printf(",\"tables_before\":[");for(unsigned int g=0;g<groups;g++){if(g)putchar(',');print_tables(&tables_before[g]);}
@@ -590,7 +700,7 @@ int main(int argc, char **argv)
 		(unsigned long long)change.index,(unsigned long long)change.actor,(unsigned long long)change.pending,(unsigned long long)change.readers,
 		(long long)change.admission,(unsigned long long)change.zero_pfn,(unsigned long long)change.before_zero,(unsigned long long)change.after_private,
 		(unsigned long long)change.done,(long long)change.result);
-	struct ub_pages changed = {.count = changing && !changing_zero ? 1U : 0U}; changed.page[0] = change.page; print_pages(&changed); putchar('}');
+	struct ub_pages changed = {.count = changing && !changing_zero && !changing_empty ? 1U : 0U}; changed.page[0] = change.page; print_pages(&changed); putchar('}');
 	printf(",\"late_fault_blocked\":%d,\"late_fault_code\":%d,\"late_fault_value\":%d,\"late_fault_stack\":",late_blocked,late_code,fault_value); print_string(late_stack); puts("}");
 	return 0;
 }

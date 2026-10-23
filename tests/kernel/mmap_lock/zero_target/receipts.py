@@ -23,6 +23,7 @@ def semantic_layout(row):
 def compare_native(native, delegated):
     require(native['native'] == 1 and delegated['native'] == 0 and
             native.get('absent_target_test',0)==delegated.get('absent_target_test',0) and
+            native.get('missing_table_test',0)==delegated.get('missing_table_test',0) and
             all(native[k] == delegated[k] for k in ('resident', 'injection', 'slice')),
             'native comparison inputs differ')
     require(semantic_layout(native) == semantic_layout(delegated), 'native/delegated post-error VMA layout differs')
@@ -36,6 +37,7 @@ def compare_native(native, delegated):
 def compare_success(native, delegated):
     require(native['native'] == 1 and delegated['native'] == 0 and
             native.get('absent_target_test',0)==delegated.get('absent_target_test',0) and
+            native.get('missing_table_test',0)==delegated.get('missing_table_test',0) and
             all(native[k] == delegated[k] for k in ('shape', 'resident', 'injection', 'slice')) and
             not any(native[k] or delegated[k] for k in ('injection', 'busy', 'cancel', 'free_first')),
             'native success comparison inputs differ')
@@ -49,27 +51,30 @@ def compare_success(native, delegated):
     return dict(shape=native['shape'], origins=delegated['groups'], layouts_equal=True, residency_equal=True)
 
 
-def validate(row, log, *, absent=False):
+def validate(row, log, *, absent=False, missing=False):
     n, resident, native = row['groups'], row['resident'], row['native']
     require(resident == 1 and row['zero_target_test'] == (not absent) and
-            row.get('absent_target_test', 0) == absent, 'exact target-family evidence required')
+            row.get('absent_target_test', 0) == absent and row.get('missing_table_test',0)==missing, 'exact target-family evidence required')
     masks, zeros = row['masks'], row['zero_masks']; target = 1 << row['slice']
     changing = row['changing']; change_group = 0 if native else 1
     changing_zero = row.get('changing_zero', 0); missing_table = row.get('missing_table', 0)
-    private_change = changing and not changing_zero
-    require(changing_zero == (absent and row['shape']=='change-zero') and
+    changing_empty = row.get('changing_empty',0); upper_refusal = row.get('upper_refusal',0)
+    private_change = changing and not changing_zero and not changing_empty
+    require(changing_zero == (absent and row['shape']=='change-zero' or missing and row['shape']=='change-table-zero') and
             missing_table == (absent and row['shape']=='missing-table'), 'transition/table refusal mode differs')
     require(len(masks) == len(zeros) == n and all(0 <= m <= 7 for m in masks), 'original slot masks missing')
     require(row['shape'] in SHAPES or row['shape'] in ('refusal', 'missing', 'cancel', 'free', 'change', 'change-empty', 'missing-empty', 'cancel-empty', 'inherited') or
-            absent and row['shape'] in ('change-zero','change-private','missing-table'), 'unknown input shape')
+            absent and row['shape'] in ('change-zero','change-private','missing-table') or
+            missing and row['shape'] in ('change-table-empty','change-table-zero','change-table-private','upper-refusal','fault'), 'unknown input shape')
     empty = row.get('empty_control', 0); inherited = row.get('inherited', 0)
-    require(empty == (row['shape'] in ('change-empty','missing-empty','cancel-empty') or absent and (missing_table or changing)) and
+    require(empty == (row['shape'] in ('change-empty','missing-empty','cancel-empty') or absent and (missing_table or changing or upper_refusal)) and
             inherited == (row['shape']=='inherited') and not row['no_resident'], 'metadata fixture differs')
     require(not absent or not (inherited or row['missing_target']), 'absent-target history/refusal fixture not permitted')
     wanted_slice, wanted_mask, wanted_zero = SHAPES.get(row['shape'], (1, 5, 2) if row['busy_page'] else (1, 4, 3) if changing else (1, 1, 6))
     if empty or inherited: wanted_slice, wanted_mask, wanted_zero = 1, 0, 7
     if absent: wanted_zero &= ~target
-    require(row['slice'] == wanted_slice and changing == (row['shape'] in ('change','change-empty','change-zero','change-private')), 'declared target or transition differs')
+    if missing: wanted_mask = wanted_zero = 0
+    require(row['slice'] == wanted_slice and changing == (row['shape'] in ('change','change-empty','change-zero','change-private','change-table-empty','change-table-zero','change-table-private')), 'declared target or transition differs')
     for g, (mask, zero) in enumerate(zip(masks, zeros)):
         if row['injection'] and not native and g == 0: expected_input = (7, 0)
         elif missing_table and g == 1: expected_input = (0, 0)
@@ -78,25 +83,25 @@ def validate(row, log, *, absent=False):
         require((mask, zero) == expected_input and not (mask & zero), 'declared residency combination differs')
         if not (row['injection'] and not native and g == 0 or row['missing_target'] and g == 1):
             require(not ((mask | zero) & target) if absent else zero & target and not (mask & target), 'target initial leaf state differs')
-    require(row['busy'] == bool(row['busy_page'] or row['no_resident'] or row['missing_target'] or missing_table) and
-            sum(row[k] for k in ('busy_page','no_resident','missing_target')) + missing_table <= 1, 'refusal input differs')
+    require(row['busy'] == bool(row['busy_page'] or row['no_resident'] or row['missing_target'] or missing_table or upper_refusal) and
+            sum(row[k] for k in ('busy_page','no_resident','missing_target')) + missing_table + upper_refusal <= 1, 'refusal input differs')
     effective = [m | (target if private_change and g == change_group else 0) for g,m in enumerate(masks)]
     effective_zero = [(z | (target if changing_zero and g == change_group else 0)) & ~(target if private_change and g == change_group else 0) for g,z in enumerate(zeros)]
     pins = sum(m.bit_count() for m in masks) + private_change
     inject, busy, cancel, free = (row[k] for k in ('injection', 'busy', 'cancel', 'free_first'))
     require(n == (1 if native else 2 if inject or cancel or free else 3) and row['slice'] in (0, 1, 2), 'case shape differs')
     require(row['idle'] == 1 and row['errors'] == 0 and row['checks'] > 100 and row['mm'] and row['gate'] and
-            row['reader_peak'] == (0 if native else 2) and row['cleanup_calls'] == n * 3 and
+            row['reader_peak'] == (0 if native else 2) and row['cleanup_calls'] == n * (4 if missing else 3) and
             row['fail_seen'] == bool(inject), 'business, injection, readers or cleanup missing')
     expected = dict(calls=0 if native else n, removed=0 if native else 1 if inject or busy or cancel else n,
                     delegated=0 if native or inject or busy or cancel else n - 1,
                     native=2 if busy else 0, post_ban=int(bool(busy)), handbacks=int(bool(busy)), acks=int(bool(busy)),
                     cancelled=int(bool(cancel)), refused=int(bool(busy)), failed=int(bool(inject and not native)), native_only=int(bool(busy)))
     require(row['counts'] == expected, 'operation/ACK/error balance differs; possible replay')
-    clean = dict(expected)
+    clean = dict(expected); cleanup_total = n * (4 if missing else 3)
     if not native:
-        clean.update(calls=expected['calls'] + n * 3, native=expected['native'] + n * 3,
-                     post_ban=expected['post_ban'] + n * 3 - (not busy), refused=1, native_only=1)
+        clean.update(calls=expected['calls'] + cleanup_total, native=expected['native'] + cleanup_total,
+                     post_ban=expected['post_ban'] + cleanup_total - (not busy), refused=1, native_only=1)
     require(row['after_cleanup'] == clean, 'cleanup replay or retirement imbalance')
     removed_pages = (0 if native else 3) if inject else 1 if cancel else n
     delta = inject - (not native) if inject else removed_pages if row['slice'] == 1 else 0
@@ -131,7 +136,9 @@ def validate(row, log, *, absent=False):
     private_rows = [r for r in rows['done'] if private_change and identity(r)[0] == change_group]
     zero_done = [r for r in rows['done'] if r not in private_rows and
                  (not absent or changing_zero and identity(r)[0] == change_group)]
-    absent_done = [r for r in rows['done'] if r not in private_rows and r not in zero_done]
+    absent_done = [r for r in rows['done'] if r not in private_rows and r not in zero_done and
+                   (not missing or changing_empty and identity(r)[0]==change_group)]
+    missing_done = [r for r in rows['done'] if r not in private_rows+zero_done+absent_done]
     physical = re.findall(r'KD_MM_RESIDENT_PARTIAL done ' + IDENT + r' pfn=([0-9a-f]+) held=(\d+) released=(\d+) pte_none=1 mapcount=0 tables_retained=1', log)
     require(sorted(r[:6] for r in physical) == sorted(private_rows), 'changed target not executed through the private-page path')
     for r in physical:
@@ -139,7 +146,7 @@ def validate(row, log, *, absent=False):
         require(int(r[6], 16) == row['change']['page'][0]['pfn'] and
                 int(r[7]) == int(r[8]) == effective[i].bit_count(), 'changed target PFN/holds differ')
     kept = re.findall(r'KD_MM_ZERO_PARTIAL done ' + IDENT + r' resident_mask=(\d+) zero_mask=(\d+) untouched_mask=(\d+) held=(\d+) released=(\d+) zero_ptes_preserved=1', log)
-    require(sorted(r[:6] for r in kept) == sorted(private_rows), 'changed target zero survivor lost')
+    require(sorted(r[:6] for r in kept) == ([] if missing else sorted(private_rows)), 'changed target zero survivor lost')
     for r in kept:
         i,_=identity(r)
         require(tuple(map(int,r[6:])) == (effective[i], effective_zero[i], 7 ^ (effective[i] | effective_zero[i]), effective[i].bit_count(), effective[i].bit_count()), 'post-change slot state differs')
@@ -157,11 +164,11 @@ def validate(row, log, *, absent=False):
     cleared_absent = re.findall(r'KD_MM_ABSENT_TARGET done '+IDENT+r' resident_mask=(\d+) zero_mask=(\d+) untouched_mask=(\d+) held=(\d+) released=(\d+) initial_pte_none=1 target_pte_none=1 target_owned=0 table_pfn=([0-9a-f]+) tables_retained=1 zero_survivors_preserved=1',log)
     error_absent = re.findall(r'KD_MM_ABSENT_TARGET error '+IDENT+r' resident_mask=(\d+) zero_mask=(\d+) untouched_mask=(\d+) held=(\d+) released=(\d+) target_pte_none=1 target_owned=0 table_pfn=([0-9a-f]+) zero_ptes_preserved=1 result=-12',log)
     require(sorted(r[:6] for r in cleared_absent)==sorted(absent_done) and
-            sorted(r[:6] for r in error_absent)==(sorted(rows['error']) if absent else []), 'absent body completion/error not paired')
+            sorted(r[:6] for r in error_absent)==(sorted(rows['error']) if absent and not missing else []), 'absent body completion/error not paired')
     for r in cleared_absent+error_absent:
         i,_=identity(r)
         require(tuple(map(int,r[6:11]))==(masks[i],zeros[i],7^(masks[i]|zeros[i]),masks[i].bit_count(),masks[i].bit_count()) and
-                int(r[11],16)==row['tables_before'][i]['pfn'][0]>0, 'absent body state, references or retained table differ')
+                int(r[11],16)==row['tables_after' if missing else 'tables_before'][i]['pfn'][0]>0, 'absent body state, references or retained table differ')
     transitions = list(re.finditer(r'KD_MM_TEST target_change mm=([0-9a-f]+) index=(\d+) actor=(\d+) pending=(\d+) readers=(\d+) admission=(-?\d+) zero_pfn=([0-9a-f]+) private_pfn=([0-9a-f]+) before_zero=1 after_private=1 result=0',log))
     require(len(transitions)==(changing and not absent), 'controlled zero target change missing/duplicated')
     c=row['change']
@@ -183,8 +190,8 @@ def validate(row, log, *, absent=False):
         require(not any(c[k] for k in ('done','before_zero','after_private','result','actor','pending','readers','zero_pfn')) and not c['page'], 'unexpected target transition')
 
     empty_transitions = list(re.finditer(r'KD_MM_TEST absent_change mm=([0-9a-f]+) index=(\d+) actor=(\d+) pending=(\d+) readers=(\d+) admission=(-?\d+) mode=(\d+) before_none=1 after_zero=(\d+) after_private=(\d+) table_before=([0-9a-f]+) table_after=([0-9a-f]+) anon_before=([0-9a-f]+) anon_after=([0-9a-f]+) zero_pfn=([0-9a-f]+) private_pfn=([0-9a-f]+) result=0',log))
-    require(len(empty_transitions)==(absent and changing), 'absent transition missing/duplicated')
-    if absent:
+    require(len(empty_transitions)==(absent and changing and not missing), 'absent transition missing/duplicated')
+    if absent and not missing:
         require(len(row['tables_before'])==len(row['tables_after'])==n, 'leaf-table observations missing')
         for g,(a,b) in enumerate(zip(row['tables_before'],row['tables_after'])):
             missing=missing_table and g==1
@@ -297,7 +304,7 @@ def validate(row, log, *, absent=False):
         lost = (not native and i // 3 == 0) if inject else (not cancel or i // 3 != 1) and i % 3 == row['slice']
         require(a['maps'] == 1 and a['refs'] == 2 and a['pfn'] == b['pfn'] and a['hash'] == b['hash'] and
                 b['maps'] == (not lost) and b['refs'] == 2 - lost and not b['locked'] and b['charged_same'], 'page identity/lock/reference/charge changed')
-    fault_test = not native and not inject and not busy and not cancel
+    fault_test = not native and not inject and not busy and not cancel and (not missing or row['fault_interaction'])
     require(len(row['ptes_before']) == len(row['ptes_after']) == n, 'PTE snapshots missing')
     for g, (a, b) in enumerate(zip(row['ptes_before'],row['ptes_after'])):
         gone = (7 if not native and g == 0 else 0) if inject else 0 if cancel and g == 1 else target
@@ -351,7 +358,7 @@ def validate(row, log, *, absent=False):
         r = row['ptes_written'][g]
         require((r['anon'], r['zero'], r['none'], r['other']) == (7 & ~gone, 0, gone, 0), 'final private survivor state differs')
     require(next(steps, None) is None, 'unexpected write evidence')
-    return dict(zero_target_checks=not absent,absent_target_checks=absent,isolated_private_writes=count,remote_absent_removals=len(absent_done),remote_zero_removals=len(zero_done),remote_without_private_holds=sum(not masks[identity(r)[0]] for r in (absent_done if absent else zero_done)),remote_changed_private_removals=len(private_rows),controlled_target_change=bool(changing),remote_resident_removals=len(private_rows),remote_post_split_errors=expected['failed'],
+    return dict(zero_target_checks=not absent,absent_target_checks=absent and not missing,missing_table_checks=missing,isolated_private_writes=count,remote_absent_removals=len(absent_done),remote_missing_table_removals=len(missing_done),remote_zero_removals=len(zero_done),remote_without_private_holds=sum(not masks[identity(r)[0]] for r in (missing_done if missing else absent_done if absent else zero_done)),remote_changed_private_removals=len(private_rows),controlled_target_change=bool(changing),remote_resident_removals=len(private_rows),remote_post_split_errors=expected['failed'],
                 native_error_control=bool(native and inject),native_success_control=bool(native and not inject),
                 per_vma_residency_checks=True,matched_acks=expected['acks'],pre_effect_rollback=bool(busy),cancelled=expected['cancelled'],
-                retained_mapping_and_reference_checks=True,cleanup_calls=n*3,readers_local=True,jit_bodies=0)
+                retained_mapping_and_reference_checks=True,cleanup_calls=cleanup_total,readers_local=True,jit_bodies=0)

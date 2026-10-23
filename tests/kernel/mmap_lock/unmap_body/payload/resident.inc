@@ -65,10 +65,11 @@ static unsigned long target(struct session *s, unsigned int i)
 	return s->region.base + (i / 3) * s->region.stride + (i % 3) * PAGE_SIZE;
 }
 
-static int pte_state(struct session *s, unsigned long arg, bool tables)
+static int pte_state(struct session *s, unsigned long arg, unsigned int cmd)
 {
 	struct ub_ptes r;
-	struct ub_pte_tables detail = { .leaf = 0, .higher_none = 0 };
+	struct ub_table_walk walk = { .pmd_none = 0, .upper_none = 0 };
+	struct ub_pte_tables *detail = &walk.tables;
 	unsigned int i;
 	int error = 0;
 
@@ -83,20 +84,27 @@ static int pte_state(struct session *s, unsigned long arg, bool tables)
 		spinlock_t *ptl;
 
 		r.pfn[i] = 0;
-		detail.table_pfn[i] = 0;
-		if (pgd_none(*pgd)) { r.none |= 1U << i; detail.higher_none |= 1U << i; continue; }
+		detail->table_pfn[i] = 0;
+		walk.parent_pfn[i] = 0;
+		if (pgd_none(*pgd)) { r.none |= 1U << i; detail->higher_none |= 1U << i; walk.upper_none |= 1U << i; continue; }
 		if (pgd_bad(*pgd)) { error = -EINVAL; break; }
 		p4d = p4d_offset(pgd, a);
-		if (p4d_none(*p4d)) { r.none |= 1U << i; detail.higher_none |= 1U << i; continue; }
+		if (p4d_none(*p4d)) { r.none |= 1U << i; detail->higher_none |= 1U << i; walk.upper_none |= 1U << i; continue; }
 		if (p4d_bad(*p4d)) { error = -EINVAL; break; }
 		pud = pud_offset(p4d, a);
-		if (pud_none(*pud)) { r.none |= 1U << i; detail.higher_none |= 1U << i; continue; }
+		if (pud_none(*pud)) { r.none |= 1U << i; detail->higher_none |= 1U << i; walk.upper_none |= 1U << i; continue; }
 		if (pud_trans_huge(*pud) || pud_devmap(*pud) || pud_bad(*pud)) { error = -EINVAL; break; }
 		pmd = pmd_offset(pud, a);
-		if (pmd_none(*pmd)) { r.none |= 1U << i; detail.higher_none |= 1U << i; continue; }
+		walk.parent_pfn[i] = pud_pfn(READ_ONCE(*pud));
+		ptl = pmd_lock(s->mm, pmd);
+		if (pmd_none(*pmd)) {
+			r.none |= 1U << i; detail->higher_none |= 1U << i; walk.pmd_none |= 1U << i;
+			spin_unlock(ptl); continue;
+		}
+		spin_unlock(ptl);
 		if (pmd_trans_huge(*pmd) || pmd_devmap(*pmd) || pmd_bad(*pmd)) { error = -EINVAL; break; }
 		pte = pte_offset_map_lock(s->mm, pmd, a, &ptl); entry = ptep_get(pte);
-		detail.leaf |= 1U << i; detail.table_pfn[i] = pmd_pfn(READ_ONCE(*pmd));
+		detail->leaf |= 1U << i; detail->table_pfn[i] = pmd_pfn(READ_ONCE(*pmd));
 		if (pte_none(entry)) r.none |= 1U << i;
 		else if (pte_present(entry) && is_zero_pfn(pte_pfn(entry))) r.zero |= 1U << i;
 		else if (pte_present(entry) && !pte_special(entry) && !pte_devmap(entry) &&
@@ -105,9 +113,10 @@ static int pte_state(struct session *s, unsigned long arg, bool tables)
 		pte_unmap_unlock(pte, ptl);
 	}
 	mmap_read_unlock(s->mm);
-	if (tables) {
-		detail.ptes = r;
-		return error ?: (copy_to_user((void __user *)arg, &detail, sizeof(detail)) ? -EFAULT : 0);
+	if (cmd == UB_PTE_TABLES || cmd == UB_TABLE_WALK) {
+		detail->ptes = r;
+		return error ?: (copy_to_user((void __user *)arg, &walk,
+			cmd == UB_TABLE_WALK ? sizeof(walk) : sizeof(*detail)) ? -EFAULT : 0);
 	}
 	return error ?: (copy_to_user((void __user *)arg, &r, sizeof(r)) ? -EFAULT : 0);
 }
