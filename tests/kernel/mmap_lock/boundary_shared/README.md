@@ -7,8 +7,11 @@ outer-neighbor retention guards remain mandatory. See the maintained
 [mechanism](../../../../kernel_integration/mmap_lock/UNMAP.md#private-target-sharing-a-boundary-table)
 and [result record](../../../../bench/results/10.176.26.71/tests/mm-boundary-shared-20261023/README.md).
 The old isolated-edge, same-table, advice and first-write implementations remain
-separate. This fixture supports only the existing narrow private target class;
-zero/empty/missing-table targets in the new geometry still hand back.
+separate. This fixture supports only the existing narrow private target class.
+Its zero/empty/missing refusal controls describe kdmm19. On kdmm20, use the
+separate [shared-zero fixture](../boundary_shared_zero/README.md) for the newly
+supported zero target; empty/missing targets still hand back. Do not run the
+historical zero-refusal assertion as a kdmm20 acceptance check.
 
 ## Reuse the installed candidate
 

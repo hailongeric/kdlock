@@ -1,24 +1,29 @@
 # Actual mmap-lock kernel integration
 
-The [bounded munmap experiment](UNMAP.md#private-target-sharing-a-boundary-table)
-now removes one ordinary private prefix/suffix page from a three-page anonymous
+The [bounded munmap experiment](UNMAP.md#shared-zero-target-sharing-a-boundary-table)
+now also removes one shared-zero prefix/suffix page from a three-page anonymous
 VMA (virtual memory area) with one survivor sharing the target leaf table and
 one across a 2-MiB boundary. Both outer-neighbor retention guards remain mandatory.
-`kdmm19` passed 69 serial cases, two basic tests and 1,954 negative receipt
-controls, with 44 new different-task removals and 18 native-matched layouts.
-Two removals had no probe reference during execution. Split errors, exact
-handback/acknowledgment (ACK), cancellation, local reader faults and cleanup passed.
+`kdmm20` passed 65 serial cases, two basic tests and 1,935 negative receipt
+controls, with 40 different-task zero removals and 18 native-matched layouts.
+Twenty removals held no private pages. Two queued zero-to-private targets passed
+the complete private-page checks and were also removed by a different task.
+Split errors, exact handback/acknowledgment (ACK), cancellation, local reader
+faults and cleanup passed.
 Recovery is restored and test modules are unloaded. See the
-[result record](../../bench/results/10.176.26.71/tests/mm-boundary-shared-20261023/README.md)
-and [runnable commands](../../tests/kernel/mmap_lock/boundary_shared/README.md).
-The [kdmm18 baseline](../../bench/results/10.176.26.71/tests/mm-boundary-resident-20261023/README.md)
+[result record](../../bench/results/10.176.26.71/tests/mm-boundary-shared-zero-20261023/README.md)
+and [runnable commands](../../tests/kernel/mmap_lock/boundary_shared_zero/README.md).
+The [kdmm19 baseline](../../bench/results/10.176.26.71/tests/mm-boundary-shared-20261023/README.md)
 and earlier campaigns remain separate. Eight small smokes preserve existing
-boundary paths and refuse other target classes in the new shared-table geometry.
-Shared/COW (copy-on-write), huge, special, busy or otherwise unsupported pages
-still hand back before destructive work. Interior crossing, missing higher
+boundary paths and keep empty/missing targets refused in the shared geometry.
+Multiply mapped private pages, COW (copy-on-write) pages, huge mappings,
+unsupported special entries and busy pages still hand back before destructive
+work. Interior crossing, missing higher
 levels, larger mappings, complex ancestry, general table destruction and mmap
 creation remain outside this extension. Controlled transitions do not establish
-uncontrolled fault/reclaim/pinning race coverage or a performance gain.
+uncontrolled fault/reclaim/pinning race coverage or a performance gain. Queued
+neighbor replacement remains untested because it needs writer ownership while
+the current fixture holds reader shares.
 
 The separate [anonymous write-fault experiment](FAULT.md) passed focused serial
 correctness on `kdmm3`: 129 real page-installation bodies completed on other
