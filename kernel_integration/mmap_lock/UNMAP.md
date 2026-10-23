@@ -1,14 +1,15 @@
 # Bounded anonymous munmap bodies
 
-Status: `kdmm9` permits untouched surviving pages around a resident one-page
-target in a three-page anonymous VMA (virtual memory area). The complete matrix
-passed all 27 serial cases on the unchanged kernel, including 18 different-task
-mixed-page removals. All nine mixed layouts matched native layout and resident
-accounting. Ownership, handback/ACK
-(acknowledgement), cancellation, page references and cleanup passed. Resident
-and untouched unmap, advice and first-write fault preservation smokes passed.
-Recovery is restored. See the [result record](../../bench/results/10.176.26.71/tests/mm-mixed-matrix-20261023/README.md)
-and [prebuilt commands](../../tests/kernel/mmap_lock/mixed_partial/README.md).
+Status: `kdmm10` permits shared-zero-page survivors around the same ordinary
+resident one-page target in a three-page anonymous VMA (virtual memory area).
+All 15 new layouts matched native behavior: 30 different-task removals plus one
+final-release case, 44 serial cases, two basic programs and 576 negative receipt
+controls. Split errors, handback/ACK (acknowledgement), cancellation, accounting
+and cleanup passed. Recovery is restored; modules are unloaded. See the
+[result record](../../bench/results/10.176.26.71/tests/mm-zero-partial-20261023/README.md)
+and [reusable commands](../../tests/kernel/mmap_lock/zero_partial/README.md).
+The [completed kdmm9 mixed matrix](../../bench/results/10.176.26.71/tests/mm-mixed-matrix-20261023/README.md)
+retains all nine resident/untouched combinations and its separate 18-removal proof.
 The [initial mixed milestone](../../bench/results/10.176.26.71/tests/mm-mixed-partial-20261023/README.md)
 retains its 22 cases, both interior split-error points, missing-target and
 zero-page-survivor refusals, and final-page-release evidence.
@@ -99,8 +100,9 @@ describes the checks and their limits.
 `kd_mmap_unmap_resident_partial_enable()` explicitly enables the path under
 mmap write ownership. It admits one ordinary, writable, exclusive resident
 anonymous 4-KiB target in an exactly three-page VMA. Each retained slot may be
-an ordinary resident page or an absent PTE. The original exclusions, isolation and
-both neighboring VMAs within the same PMD span remain required. A PMD describes
+an ordinary resident page, a validated shared zero page or an absent PTE. The
+original exclusions, isolation and both neighboring VMAs within the same PMD
+span remain required. A PMD describes
 a 2-MiB page-table interval here. Retaining its leaf table avoids allocation for
 deferred table freeing on the executor. The VMA must have exactly one
 `anon_vma_chain` link, pointing to its active `anon_vma` reverse-map object.
@@ -114,9 +116,10 @@ rechecks the current VMA, ancestry, reserve capacity and all three original PTEs
 (leaf page-table entries). It takes a temporary reference and tries the lock on
 each resident page. References retain their original VMA slot indices; skipping
 an untouched survivor never compacts them into a misleading dense prefix.
-Only an absent retained PTE may be skipped. A later failure releases exactly the
-held slots before handback. Readers remain concurrent and local until writer
-admission closes. The target's resident-page requirement is unchanged.
+Absent retained PTEs and the narrowly recognized shared-zero entries below
+acquire no ordinary page reference. A later failure releases exactly the
+held private slots before handback. Readers remain concurrent and local until
+writer admission closes. The target's resident-page requirement is unchanged.
 
 The prepared clone consumes one supplied link per split and shares the native
 reverse-map root locking, interval-tree insertion and active-VMA accounting.
@@ -161,8 +164,8 @@ After writer release, a real fault inside an untouched surviving part of the
 original VMA resolves locally to the zero page. Survivors then pass full-page
 zero/pattern checks and local writes. The zero page is a shared physical page
 mapped by a read fault; it is distinct from an absent PTE and is still refused
-if already present during body admission. Busy-page, zero-page-survivor and
-missing-target cases each release one earlier page hold before their exact
+if already present during body admission on `kdmm9`. Busy-page,
+zero-page-survivor and missing-target cases each release one earlier page hold before their exact
 handback/ACK and then demonstrate sticky-local fallback. Sparse references also
 retire correctly after either injected interior split error and cancellation.
 
@@ -182,6 +185,43 @@ the shared zero page only after writer release; other absent slots remain empty
 until explicitly read. Local writes then allocate normal writable anonymous
 pages. The controller never pins or reads an absent slot before these checks;
 the deliberate competing reader's single zero-page fault is recorded separately.
+
+## Shared-zero-page survivors
+
+`kdmm10` extends only retained slots of the resident-partial opt-in. An absent
+PTE, a present special shared-zero PTE and an owned private resident page are
+three separate states. Under mmap writer ownership and the PTE lock, a zero
+survivor must be present, special, read-only, non-device, not protection-none,
+and satisfy `is_zero_pfn()`. Other special entries and all zero-page targets
+still refuse before splitting. Whole-VMA eligibility is unchanged.
+
+The native read-fault path installs a special zero-page PTE. `vm_normal_page()`
+excludes that permanent page, and native zap skips ordinary anonymous-page
+accounting/release for such entries. The extension never gets, locks, puts or
+writes the zero page. Its retained PTE is recorded separately; after success
+or an admitted split error, its complete identity/protection must be unchanged,
+ignoring only the hardware accessed bit that concurrent readers may set.
+No new caller-context allocation or queue storage is introduced. Existing caller
+reserves, locked revalidation, exact private-page holds, native split/unmap,
+completion/ACK routing and sticky refusal remain intact.
+
+The new probe reuses the existing read-only PTE classifier. It intentionally
+read-faults Z slots, leaves U slots absent and pins only private R slots. All five
+survivor combinations containing Z (`ZU`, `UZ`, `ZR`, `RZ`, `ZZ`) run at all three
+target positions with native comparisons; none is deduplicated. Per-VMA resident
+accounting excludes Z and U. Pre-access snapshots precede controller reads;
+subsequent zero reads and isolated private writes check both another survivor
+and an independent shared-zero mapping. An explicit competing read fault waits
+at local reader admission; no reader or that read-fault body is delegated.
+
+Thirty matrix removals and one final release completed on other tasks. Two
+interior post-split errors match native `ENOMEM` and harmless layouts with zero
+PTEs intact. A busy retained private page and a zero-page target each release one
+earlier hold before matched handback/ACK, then demonstrate sticky local fallback.
+Queued cancellation preserves the victim mapping. Six small smokes preserve the
+existing mixed/resident/untouched removal, whole removal, advice and first-write
+paths. The [probe guide](../../tests/kernel/mmap_lock/zero_partial/README.md)
+provides commands, observations and explicit race-coverage limits.
 
 ## One through four populated pages
 
@@ -356,7 +396,7 @@ The original opt-in supports untouched whole/partial removal within its 16-page
 bound and absent PGDs. The original populated opt-in supports whole removal of
 one through four resident pages with retained tables. The new opt-in additionally
 supports the mixed or fully resident three-page/one-page-slice case above. It
-refuses nonresident targets, zero-page survivors, multi-link reverse-map ancestry, shared/COW
+refuses nonresident or zero-page targets, multi-link reverse-map ancestry, shared/COW
 (copy-on-write) pages, swapped/huge pages and missing table-retaining neighbors.
 General table destruction, file/device or notifier callbacks, memory-accounted
 VMAs and mapping creation remain unsupported. Other untouched widths within the
@@ -378,9 +418,10 @@ All nine mixed survivor patterns now have live native/delegated comparisons;
 no size limit was increased. A forced change to mapping identity or survivor
 residency between preparation and execution was not tested. Busy-page refusal
 does exercise page-state revalidation and exact zero-effect release before ACK.
-The next narrow candidate is an already-read shared-zero-page survivor while
-keeping the target ordinary and resident. It needs explicit zero-page identity
-and lifetime handling, unchanged-PTE checks through splitting, and local
-write-fault validation; simply accepting all special PTEs would be incorrect.
-That extension is not implemented. Broader mapping creation/removal support,
+Shared-zero survivors now have their own 15-layout validation above. The next
+narrow candidate is a shared-zero target with at least one private resident
+survivor, still within three pages and with retained tables. That needs separate
+target absence and zero-page accounting receipts without ordinary zero-page
+release; it remains unsupported. Concurrent zero-page write faults during the
+body were not forced in this stage. Broader mapping creation/removal support,
 performance, p95, the seven mutex regressions and nano reruns remain deferred.

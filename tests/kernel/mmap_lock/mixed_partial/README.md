@@ -26,8 +26,9 @@ tests pass and drain. A failed command or timeout does not establish drain:
 inspect workers and retain loaded state; never force unload or reboot an active
 test. The transition checks the actual recovery snapshot, original placement,
 kernel identity and recovery default. All admission checks remain intact.
-Current root/data free space is only about 3.5/10 MB; arrange headroom before
-another transition. Existing evidence must remain preserved.
+That baseline ended with only about 3.5/10 MB root/data headroom. The later
+[zero-survivor stage](../zero_partial/README.md) records approved cleanup and
+new headroom; check current space before transitions and preserve old evidence.
 
 Do not repeat preparation, kernel builds or module builds for unchanged inputs.
 The matrix's guest root is `/mnt/kdlock-builds/mm-mixed-matrix-20261023`.
@@ -86,8 +87,9 @@ preserve fully resident partial, untouched partial, four-page whole removal,
 advice and separate first-write fault behavior. The initial milestone retains
 split-point-1, zero-page/missing-target refusal and final-release coverage.
 
-Unsupported cases still hand back: zero-page survivors, nonresident targets,
-complex reverse-map ancestry, shared/swapped/huge pages and general page-table
+On this captured kdmm9 image, unsupported cases still hand back: zero-page
+survivors, nonresident targets, complex reverse-map ancestry,
+shared/swapped/huge pages and general page-table
 destruction. Forced prepublication layout/residency changes, broad fast-pinning
 and reclaim races, pressure and wider mappings remain untested. Successful local
 fallback, queue admission and synthetic callbacks are never counted as remote

@@ -1,22 +1,19 @@
 # Actual mmap-lock kernel integration
 
-The [bounded munmap experiment](UNMAP.md) now permits untouched survivors around
-a resident one-page target in a three-page anonymous VMA (virtual memory area).
-The completed `kdmm9` follow-up passed all 27 serial cases, including all nine
-mixed residency combinations and 18 different-task removals. Every shape matched
-the ordinary native body's VMA layout and resident-memory accounting. The kernel
-and modules were reused; only the userspace observer changed. Exact page-slot
-ownership, untouched PTEs (leaf page-table entries),
-retained contents, post-split errors, handback/ACK (acknowledgement), sticky
-fallback and cancellation passed. A real fault into an untouched survivor waited
-for writer release and resolved locally. Existing resident/untouched unmap,
-advice and first-write fault paths passed preservation smokes. Recovery is
-restored. The [result record](../../bench/results/10.176.26.71/tests/mm-mixed-matrix-20261023/README.md)
-keeps this complete matrix separate from the preserved 22-case implementation
-milestone and earlier resident baseline. [Runnable commands](../../tests/kernel/mmap_lock/mixed_partial/README.md)
-reuse the installed image and probes. Zero-page survivors, nonresident targets,
-complex reverse-map ancestry, general table destruction and mapping creation
-remain unsupported. This is not general MM support or performance evidence.
+The [bounded munmap experiment](UNMAP.md) now permits shared-zero, untouched or
+private resident survivors around one private resident target in a three-page
+anonymous VMA (virtual memory area). The `kdmm10` extension passed all 44 serial
+cases: 15 new layouts matched native behavior with 30 different-task removals,
+plus one remote final-release case. Zero PTE (page-table entry) identity,
+accounting, isolated private writes, exact ownership/ACK (acknowledgement), split
+errors, refusal, cancellation and cleanup passed. Six preservation smokes cover
+existing unmap, advice and separate first-write faults. Recovery is restored and
+modules unloaded. The [result record](../../bench/results/10.176.26.71/tests/mm-zero-partial-20261023/README.md)
+keeps this kernel change separate from the preserved kdmm9 mixed matrix.
+[Runnable commands](../../tests/kernel/mmap_lock/zero_partial/README.md) reuse the
+installed image and probes. Zero/nonresident targets, complex ancestry, general
+table destruction and mapping creation remain unsupported. No general MM support
+or performance gain is claimed.
 
 The separate [anonymous write-fault experiment](FAULT.md) passed focused serial
 correctness on `kdmm3`: 129 real page-installation bodies completed on other
