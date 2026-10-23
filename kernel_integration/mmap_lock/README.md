@@ -1,20 +1,20 @@
 # Actual mmap-lock kernel integration
 
-The [bounded munmap experiment](UNMAP.md) now permits a shared-zero target in a
-three-page anonymous VMA (virtual memory area) without any private resident
-survivor. `kdmm12` passed all 12 new zero/untouched survivor layouts against native
-controls: 27 different-task removals with zero private holds, two resident-survivor
-preservation removals and one separately counted changed-private removal.
-All 44 serial cases, two basic tests and 660 negative receipt controls passed.
-Ownership/ACK (acknowledgement), metadata, accounting, TLB (cached translation)
-cleanup, split errors, refusal and cancellation passed. Recovery is restored and
-modules unloaded. The [result record](../../bench/results/10.176.26.71/tests/mm-zero-only-20261023/README.md)
-keeps this stage separate from completed kdmm11 evidence.
-[Runnable commands](../../tests/kernel/mmap_lock/zero_target/README.md) reuse the
-installed image and frozen probes. Absent targets, larger mappings, complex
-ancestry, general page-table destruction and mmap creation remain unsupported.
-The controlled target change is not broad write-fault race coverage. No general
-MM support or performance gain is claimed.
+The [bounded munmap experiment](UNMAP.md) now removes an absent target leaf
+entry inside an existing page table, within the same three-page anonymous VMA
+(virtual memory area) and one-page prefix/interior/suffix scope. `kdmm13` passed
+18 representative native-matched layouts: 38 different-task absent-target removals,
+including 20 with no private-page holds. Controlled absent-to-zero and
+absent-to-private changes each completed through the corresponding supported path.
+All 51 serial cases, two basic tests and 966 negative receipt controls passed.
+Recovery is restored and test modules are unloaded. See the
+[result record](../../bench/results/10.176.26.71/tests/mm-absent-target-20261023/README.md)
+and [runnable commands](../../tests/kernel/mmap_lock/absent_target/README.md).
+The completed [kdmm12 zero-only milestone](../../bench/results/10.176.26.71/tests/mm-zero-only-20261023/README.md)
+remains separate evidence. Missing higher-level tables on this opt-in, special
+non-present entries, larger mappings, complex ancestry, general table destruction
+and mmap creation remain unsupported. Controlled transitions do not establish
+uncontrolled fault/reclaim/pinning race coverage or a performance gain.
 
 The separate [anonymous write-fault experiment](FAULT.md) passed focused serial
 correctness on `kdmm3`: 129 real page-installation bodies completed on other

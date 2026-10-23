@@ -11,6 +11,12 @@ The [kdmm11 record](../../../../bench/results/10.176.26.71/tests/mm-zero-target-
 retains its separate completed matrix and frozen probes.
 See [mechanism and limits](../../../../kernel_integration/mmap_lock/UNMAP.md#zero-and-untouched-survivors-without-private-pages).
 
+The commands below intentionally retain the frozen kdmm12 campaign. The later
+[kdmm13 absent-target probe](../absent_target/README.md) reuses this client binary
+for two preservation smokes and shares its source/receipt helpers. The old
+`missing-empty` refusal is specific to kdmm12; a retained-table absent target is
+supported on kdmm13 and has a separate completion contract.
+
 ## Reuse the installed image and frozen probes
 
 On source host `380G10`, after confirming the VM/test slot is idle and checking
@@ -103,8 +109,9 @@ owned page, and absent ancestry cannot claim consumed reverse-map links.
 identity, forged metadata, missing completion, destructive replay and lost ACKs.
 Local heads, fallback and synthetic callbacks are excluded from remote counts.
 
-Seven additional smokes preserve earlier resident-target, untouched/whole-unmap,
-advice and separate first-write paths. Larger ranges, complex ancestry, absent
-targets and general table destruction remain unsupported. Forced VMA replacement,
+Seven additional kdmm12 smokes preserve earlier resident-target, untouched/whole-unmap,
+advice and separate first-write paths. Larger ranges, complex ancestry and general
+table destruction remain unsupported. Absent targets have the separate kdmm13
+scope linked above. Forced VMA replacement,
 uncontrolled write faults, reclaim/pinning races, pressure and post-admission
 cancellation remain untested. No general mapping or performance support is claimed.
