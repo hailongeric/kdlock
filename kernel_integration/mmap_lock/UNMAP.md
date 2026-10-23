@@ -1,13 +1,17 @@
 # Bounded anonymous munmap bodies
 
-Status: `kdmm13` removes an absent leaf target in an existing retained table,
-within the three-page/one-page-slice scope. Eighteen representative layouts matched
-native behavior; 38 different-task absent removals include 20 owning no private
-pages. Controlled absent-to-zero/private transitions also completed remotely.
-All 51 serial cases, two basic tests and 966 negative receipt controls passed;
-recovery is restored and modules unloaded. See the
-[result record](../../bench/results/10.176.26.71/tests/mm-absent-target-20261023/README.md)
-and [probe commands](../../tests/kernel/mmap_lock/absent_target/README.md).
+Status: `kdmm14` removes a one-page slice with a missing leaf table and existing
+upper levels, within the same three-page scope. All three feasible layouts matched
+native behavior; 11 different-task missing-table removals owned no private page
+and allocated no leaf table. Controlled table appearance selected the existing
+empty/zero/private target paths. All 42 serial cases, two basic tests and 956
+negative receipt controls passed after one probe accounting correction. Recovery
+is restored and modules unloaded. See the
+[result record](../../bench/results/10.176.26.71/tests/mm-missing-table-20261023/README.md)
+and [probe commands](../../tests/kernel/mmap_lock/missing_table/README.md).
+The [kdmm13 milestone](../../bench/results/10.176.26.71/tests/mm-absent-target-20261023/README.md)
+retains its 51 cases and 38 absent-target removals; the nine previously untested
+reversed mixed layouts passed separately on kdmm14 using the unchanged client.
 The [kdmm12 milestone](../../bench/results/10.176.26.71/tests/mm-zero-only-20261023/README.md)
 retains its separate completed zero/untouched-only survivor evidence.
 The [kdmm11 zero-target milestone](../../bench/results/10.176.26.71/tests/mm-zero-target-20261023/README.md)
@@ -105,7 +109,7 @@ describes the checks and their limits.
 
 `kd_mmap_unmap_resident_partial_enable()` explicitly enables the path under
 mmap write ownership. It admits one ordinary, writable, exclusive resident
-anonymous 4-KiB target, or a shared-zero/empty-leaf target described below, in an
+anonymous 4-KiB target, or a shared-zero/absent target described below, in an
 exactly three-page VMA. Each retained slot may be
 an ordinary resident page, a validated shared zero page or an absent PTE. The
 original exclusions, isolation and both neighboring VMAs within the same PMD
@@ -114,14 +118,14 @@ a 2-MiB page-table interval here. Retaining its leaf table avoids allocation for
 deferred table freeing on the executor. Private PTEs require exactly one
 `anon_vma_chain` link pointing to the active `anon_vma` reverse-map object. With
 only zero/empty PTEs, consistently absent metadata is also supported as described
-below. Additional ancestry links, missing upper tables and unsupported PTE/page
+below. Additional ancestry links, missing higher levels and unsupported PTE/page
 types hand back.
 
 The native `anon_vma_clone()` allocates a new link when splitting. The caller
 now allocates two links, two VMA descriptors and the separate maple reserves
 before publication, using its own allocation context. No live VMA or reverse-map
-pointer is retained during preparation. Under the actual mmap writer, the owner
-rechecks the current VMA, ancestry, reserve capacity and all three original PTEs
+pointer is retained during preparation. For an existing leaf table, under the
+actual mmap writer the owner rechecks the current VMA, ancestry, reserve capacity and all three original PTEs
 (leaf page-table entries). It takes a temporary reference and tries the lock on
 each resident page. References retain their original VMA slot indices; skipping
 an untouched survivor never compacts them into a misleading dense prefix.
@@ -354,11 +358,12 @@ has no positive cached translation to warm; its fault after removal proves VMA
 absence, not a positive-target TLB invalidation. Zero/private preservation smokes
 retain their warm-translation checks.
 
-The 18 native/KD pairs use survivor pairs RR, RZ, RU, ZZ, ZU and UU at each target
-position. The nine reversed mixed pairs are not rerun: slot classification is
-unchanged, the earlier zero-target matrices cover both orders, and RR exercises
-private holds on both sides. This is representative new coverage, not a claim
-that all 27 absent-target layouts ran. Two controlled tests use native GUP
+The kdmm13 campaign's 18 native/KD pairs use survivor pairs RR, RZ, RU, ZZ, ZU and
+UU at each target position. R is private resident, Z shared zero and U untouched.
+Its nine reversed mixed pairs were not rerun then. The separate kdmm14 coverage
+group closes ZR, UR and UZ at all three positions with the unchanged absent-target
+binary; the two kernel revisions' evidence remains distinct. Two controlled tests
+use native GUP
 (`get_user_pages`) on an already admitted local reader after three requests publish.
 Read intent with no output page array takes no reference on the shared zero page;
 write intent retains only the new private page. Their unchanged table identities
@@ -368,6 +373,56 @@ split-error points match native harmless splits; busy-survivor and missing-table
 refusals match their ACKs and sticky continuation. Cancellation and cleanup pass.
 See the [result](../../bench/results/10.176.26.71/tests/mm-absent-target-20261023/README.md)
 for exact counts, identities and remaining gaps.
+
+## Missing leaf tables with existing upper levels
+
+`kdmm14` admits a separate state: valid PGD/P4D/PUD entries (the upper directory
+levels) and `pmd_none()` at the target. A PMD, or page-middle-directory entry,
+covers 2 MiB here; its missing entry means there is no 512-entry leaf PTE table
+for that interval. This differs from `pte_none()` in an existing leaf table.
+The captured x86-64 kernel supports five levels; the live probe reports 4-KiB
+pages, 2-MiB PMD intervals, 1-GiB PUD intervals and a 256-TiB PGD interval.
+Missing higher levels, huge/device mappings, bad entries and special non-present
+states remain refused. `pmd_none()` uses native x86 semantics, including its
+ignored erratum bits; it is not an arbitrary raw-entry equality test.
+
+The same three-page VMA and both retaining-neighbor constraints remain. All three
+slots share one leaf table, so a missing table requires all three to be untouched.
+A zero/private survivor in that same interval would necessarily create the table.
+The test therefore reads an independent anchor VMA in the adjacent PMD within the
+same PUD, constructing the required upper levels without touching any target-VMA
+slot. Read-only table walks verify both absence and exact upper identity. No VMA
+is widened and no boundary-crossing case is claimed.
+
+The caller prepares the existing VMA, mapping-index and reverse-map reserves.
+Under actual mmap writer ownership, the combiner revalidates the current VMA,
+ancestry, neighbors and upper levels, then tests `pmd_none()` under the PMD lock
+used by native table installation. Admission records the PMD entry and its parent
+table's physical identity separately from page ownership; it never computes a PTE
+pointer or allocates the missing table. Consistently absent anonymous metadata
+consumes no reverse-map links. The real native split/detach/unmap body changes
+VMA boundaries and accounting even though there is no target PTE to clear.
+
+Native zap skips the missing table. The retained neighbors make
+`free_pgd_range()` return before freeing tables; no general table-free batching
+is delegated. Success and admitted split errors require the same parent table,
+still-missing PMD entry, unchanged table bytes and zero held pages.
+`KD_MM_MISSING_TABLE` receipts bind this state to the exact request, origin,
+different executor and native completion. Errors after a split remain admitted
+returns, preserving harmless native splits without replay. Pre-effect refusal,
+ACK routing, cancellation, resource retirement and sticky local fallback retain
+the existing protocol. Readers stay concurrent and local.
+
+Three deterministic controls create the missing table after requests publish,
+using an already admitted local reader: a neighbor read leaves the target empty,
+a target read creates a shared-zero PTE, and a target write creates a private
+page and simple metadata. Locked revalidation selects the corresponding existing
+supported body. A separate ordinary read fault waits at writer admission and
+creates a survivor's table only after removal. These are distinct from uncontrolled
+fault races. All survivors fault in normally after the initial observations,
+then pass zero-fill and isolated-write checks. Complete cleanup runs locally and
+verifies that the formerly retained upper tables disappear; that local teardown
+is not counted as delegated table destruction.
 
 ## One through four populated pages
 
@@ -542,8 +597,9 @@ The original opt-in supports untouched whole/partial removal within its 16-page
 bound and absent PGDs. The original populated opt-in supports whole removal of
 one through four resident pages with retained tables. The new opt-in additionally
 supports the three-page/one-page-slice cases above, including zero or empty-leaf
-targets with only zero/untouched survivors. It refuses missing upper tables on
-this opt-in, special non-present entries, inconsistent or multi-link reverse-map
+targets with only zero/untouched survivors, and a missing leaf table when upper
+levels exist and all three slots are untouched. It refuses missing higher levels
+on this opt-in, special non-present entries, inconsistent or multi-link reverse-map
 ancestry, shared/COW
 (copy-on-write) pages, swapped/huge pages and missing table-retaining neighbors.
 General table destruction, file/device or notifier callbacks, memory-accounted
@@ -565,18 +621,19 @@ module. RT, lockdep and whole-kernel replacement remain unvalidated.
 All nine mixed survivor patterns and all 15 zero-survivor patterns retain their
 separate native/delegated evidence. The 15 eligible zero-target patterns now have
 live comparisons too. The absent-target extension adds 18 representative
-native/KD pairs; reversed mixed pairs were not repeated. No size limit was
-increased. Controlled pre-execution Z-to-private and U-to-zero/private changes
+native/KD pairs on kdmm13; the nine reversed mixed pairs passed separately on
+kdmm14. No size limit was increased. Controlled pre-execution Z-to-private and
+U-to-zero/private changes
 are validated; forced VMA replacement and uncontrolled
 mapping/residency races are not. Busy-page refusal exercises locked revalidation
 and exact zero-effect release before ACK.
 
-Zero/empty-target admission is separate from private-page ownership. Explicit
-absent-target receipts prove native VMA removal even with no physical target.
-The next narrow candidate is an empty target with a missing leaf table but
-existing upper levels, still in the three-page scope. It needs a separate
-no-table state and proof that native traversal neither allocates nor frees
-tables. The current missing-table control retains safe handback; do not allocate
-a table merely to pass admission.
+Zero/empty/missing-table admission is separate from private-page ownership.
+Explicit receipts prove native VMA removal even with no physical target.
+The next narrow candidate is a three-page VMA crossing one PMD boundary, starting
+with an edge removal whose absent target table and populated survivor table are
+distinct. It requires a separate retention proof for each affected table and
+validated split geometry. It is not supported by the current same-PMD guard;
+general table destruction and missing higher levels remain deferred.
 Broader mapping creation/removal support, performance, p95, the seven mutex
 regressions and nano reruns remain deferred.

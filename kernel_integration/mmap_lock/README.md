@@ -1,17 +1,20 @@
 # Actual mmap-lock kernel integration
 
-The [bounded munmap experiment](UNMAP.md) now removes an absent target leaf
-entry inside an existing page table, within the same three-page anonymous VMA
-(virtual memory area) and one-page prefix/interior/suffix scope. `kdmm13` passed
-18 representative native-matched layouts: 38 different-task absent-target removals,
-including 20 with no private-page holds. Controlled absent-to-zero and
-absent-to-private changes each completed through the corresponding supported path.
-All 51 serial cases, two basic tests and 966 negative receipt controls passed.
-Recovery is restored and test modules are unloaded. See the
-[result record](../../bench/results/10.176.26.71/tests/mm-absent-target-20261023/README.md)
-and [runnable commands](../../tests/kernel/mmap_lock/absent_target/README.md).
-The completed [kdmm12 zero-only milestone](../../bench/results/10.176.26.71/tests/mm-zero-only-20261023/README.md)
-remains separate evidence. Missing higher-level tables on this opt-in, special
+The [bounded munmap experiment](UNMAP.md#missing-leaf-tables-with-existing-upper-levels)
+now removes a one-page prefix/interior/suffix when the leaf page table is missing
+but its upper levels exist. The three-page anonymous VMA (virtual memory area)
+stays inside one 2-MiB table interval, so both survivors must be untouched.
+`kdmm14` passed all three native-matched layouts, with 11 different-task
+missing-table removals and no target-page ownership or leaf allocation.
+Controlled table appearance selected the existing empty/zero/private target
+paths. All 42 serial cases, two basic tests and 956 negative receipt controls
+passed after correcting one probe cleanup-counter assertion; the failed attempt
+is retained separately. Recovery is restored and test modules are unloaded.
+See the [result record](../../bench/results/10.176.26.71/tests/mm-missing-table-20261023/README.md)
+and [runnable commands](../../tests/kernel/mmap_lock/missing_table/README.md).
+The completed [kdmm13 baseline](../../bench/results/10.176.26.71/tests/mm-absent-target-20261023/README.md)
+remains separate evidence; its nine reversed mixed-layout gaps passed on kdmm14.
+Missing higher-level tables on this opt-in, special
 non-present entries, larger mappings, complex ancestry, general table destruction
 and mmap creation remain unsupported. Controlled transitions do not establish
 uncontrolled fault/reclaim/pinning race coverage or a performance gain.

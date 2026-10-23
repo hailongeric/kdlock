@@ -9,6 +9,11 @@ This is separate from the older untouched path requiring absent top-level PGDs
 (page-directory entries). See the [mechanism](../../../../kernel_integration/mmap_lock/UNMAP.md#absent-targets-with-retained-leaf-tables)
 and [completed result](../../../../bench/results/10.176.26.71/tests/mm-absent-target-20261023/README.md).
 
+The separate [kdmm14 missing-table stage](../missing_table/README.md) adds an
+explicit missing-leaf state with existing upper levels. It also closes the nine
+reversed mixed-layout gaps below with this unchanged absent-target binary;
+those results retain their separate kernel identity and run labels.
+
 ## Reuse the installed image
 
 On source host `380G10`, with the VM/test slot idle and current capacity sufficient
@@ -53,9 +58,10 @@ leaf. `native SHAPE` uses the ordinary munmap body on the same KD lock backend;
 `target SHAPE` enables the prepared delegation path. SHAPE combines `prefix`,
 `middle` or `suffix` with `-rr`, `-rz`, `-ru`, `-zz`, `-zu`, `-uu` in the focused
 run. Letters describe survivors in ascending address order; the target is U.
-The reversed mixed pairs remain expressible but were not rerun: survivor-slot
-classification is unchanged and both orders have earlier zero-target evidence.
-The result is 18 representative pairs, not all 27 absent-target layouts.
+The reversed mixed pairs were not rerun in the kdmm13 campaign. Its result
+remains 18 representative pairs. ZR, UR and UZ at each position subsequently
+passed as nine separate native/KD pairs on kdmm14; do not pool these as one
+27-layout run on either kernel revision.
 
 A read of the independent left neighbor establishes the actual leaf table, even
 for UUU. No target slot is touched to create it. `UB_PTE_TABLES` observes each leaf
