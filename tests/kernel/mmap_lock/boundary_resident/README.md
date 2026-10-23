@@ -8,6 +8,10 @@ prove that native teardown retains the page tables. See the maintained
 [mechanism](../../../../kernel_integration/mmap_lock/UNMAP.md#private-target-in-a-retained-boundary-table)
 and [single result record](../../../../bench/results/10.176.26.71/tests/mm-boundary-resident-20261023/README.md).
 
+For kdmm19's new shared-table geometry, use the separate
+[boundary_shared guide](../boundary_shared/README.md). The `shared` refusal mode
+below describes kdmm18 and is not a valid refusal expectation on kdmm19.
+
 The initial target is a writable, exclusive base anonymous page with one mapping,
 simple reverse-map ancestry, no compound/swap-cache/reserved/poisoned state and no
 native indication of a DMA pin. The executor uses a nonblocking page lock and

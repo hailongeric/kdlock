@@ -1,25 +1,23 @@
 # Actual mmap-lock kernel integration
 
-The [bounded munmap experiment](UNMAP.md#private-target-in-a-retained-boundary-table)
-now removes one ordinary private prefix/suffix page across a 2-MiB boundary from
-a three-page anonymous VMA (virtual memory area). The target occupies its
-interval alone; both survivors occupy the adjacent one. Actual outer neighboring
-VMAs must still prove native table retention. `kdmm18` passed 48 serial cases,
-two basic tests and 1,238 negative receipt controls, with 24 different-task private
-target removals, including two after dropping all probe references. Ten
-representative layouts matched native behavior; two delegated split errors,
-seven handback/acknowledgment (ACK) pairs and two cancellations passed. Recovery
-is restored and test modules are unloaded. See the
-[result record](../../bench/results/10.176.26.71/tests/mm-boundary-resident-20261023/README.md)
-and [runnable commands](../../tests/kernel/mmap_lock/boundary_resident/README.md).
-The [kdmm17 baseline](../../bench/results/10.176.26.71/tests/mm-boundary-zero-20261023/README.md)
-retains its completed zero-target matrix and reversed empty-target coverage;
-neither campaign was repeated. Five focused smokes preserve missing/empty/zero
-boundary and same-table resident paths. Shared/COW (copy-on-write), huge, special,
-busy or otherwise unsupported pages still hand back before destructive work.
-Target/survivor interval sharing, interior crossing, missing higher levels,
-larger mappings, complex ancestry, general table destruction and mmap creation
-remain outside this extension. Controlled eligibility changes do not establish
+The [bounded munmap experiment](UNMAP.md#private-target-sharing-a-boundary-table)
+now removes one ordinary private prefix/suffix page from a three-page anonymous
+VMA (virtual memory area) with one survivor sharing the target leaf table and
+one across a 2-MiB boundary. Both outer-neighbor retention guards remain mandatory.
+`kdmm19` passed 69 serial cases, two basic tests and 1,954 negative receipt
+controls, with 44 new different-task removals and 18 native-matched layouts.
+Two removals had no probe reference during execution. Split errors, exact
+handback/acknowledgment (ACK), cancellation, local reader faults and cleanup passed.
+Recovery is restored and test modules are unloaded. See the
+[result record](../../bench/results/10.176.26.71/tests/mm-boundary-shared-20261023/README.md)
+and [runnable commands](../../tests/kernel/mmap_lock/boundary_shared/README.md).
+The [kdmm18 baseline](../../bench/results/10.176.26.71/tests/mm-boundary-resident-20261023/README.md)
+and earlier campaigns remain separate. Eight small smokes preserve existing
+boundary paths and refuse other target classes in the new shared-table geometry.
+Shared/COW (copy-on-write), huge, special, busy or otherwise unsupported pages
+still hand back before destructive work. Interior crossing, missing higher
+levels, larger mappings, complex ancestry, general table destruction and mmap
+creation remain outside this extension. Controlled transitions do not establish
 uncontrolled fault/reclaim/pinning race coverage or a performance gain.
 
 The separate [anonymous write-fault experiment](FAULT.md) passed focused serial
