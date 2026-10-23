@@ -22,4 +22,12 @@ struct ub_status {
 #define UB_HOLD _IO('U', 0x63)
 #define UB_CANCEL _IO('U', 0x64)
 #define UB_RELEASE _IO('U', 0x65)
+/* Read one exact VMA and explicit-mm accounting under local read ownership.
+ * Existing control structures/ioctl encodings remain binary-compatible. */
+struct ub_layout {
+	__u64 address, start, end, pgoff, flags;
+	__u64 map_count, total_vm, data_vm, stack_vm, exec_vm, pgtables;
+};
+#define UB_LAYOUT _IOWR('U', 0x66, struct ub_layout)
+#define UB_CANCEL_PARTIAL _IO('U', 0x67)
 #endif

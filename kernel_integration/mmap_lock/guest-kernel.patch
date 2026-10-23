@@ -257,14 +257,87 @@
 +#endif
 --- a/mm/mmap.c
 +++ b/mm/mmap.c
-@@ -2440 +2440 @@
+@@ -621 +621 @@
+-int __vma_adjust(struct vm_area_struct *vma, unsigned long start,
++static int vma_adjust_prepared(struct vm_area_struct *vma, unsigned long start,
+@@ -623 +623 @@
+-	struct vm_area_struct *expand)
++	struct vm_area_struct *expand, struct ma_state *reserve)
+@@ -723,0 +724,11 @@
++	if (reserve) {
++		/* Only an admitted anonymous split lends its origin-owned reserve.
++		 * Transfer the allocation chain, not traversal state or ownership. */
++		BUG_ON(!insert || expand || file || vma->anon_vma ||
++		       !list_empty(&vma->anon_vma_chain) || mas.alloc || !reserve->alloc);
++		mas.alloc = reserve->alloc;
++		mas.mas_flags = reserve->mas_flags;
++		reserve->alloc = NULL;
++		reserve->mas_flags = 0;
++	}
++
+@@ -803,0 +815,4 @@
++	/* Prepared anonymous splits always insert ABOVE. The retained original
++	 * range changes in place and only the insertion performs a maple store.
++	 * A second store would otherwise need another caller-owned reserve. */
++	BUG_ON(reserve && (vma_changed || adjust_next || remove_next));
+@@ -881,0 +897,7 @@
++}
++
++int __vma_adjust(struct vm_area_struct *vma, unsigned long start,
++	unsigned long end, pgoff_t pgoff, struct vm_area_struct *insert,
++	struct vm_area_struct *expand)
++{
++	return vma_adjust_prepared(vma, start, end, pgoff, insert, expand, NULL);
+@@ -2350,2 +2372,3 @@
+-int __split_vma(struct mm_struct *mm, struct vm_area_struct *vma,
+-		unsigned long addr, int new_below)
++static int split_vma_prepared(struct mm_struct *mm, struct vm_area_struct *vma,
++	unsigned long addr, int new_below, struct vm_area_struct **prepared,
++	struct ma_state *reserve)
+@@ -2363,3 +2386,16 @@
+-	new = vm_area_dup(vma);
+-	if (!new)
+-		return -ENOMEM;
++	if (prepared) {
++		/* Same descriptor clone as vm_area_dup, using an object allocated
++		 * on the real caller. Admission excludes every clone-time resource. */
++		BUG_ON(new_below || !*prepared || !reserve || vma->vm_file || vma->vm_ops ||
++		       vma->anon_vma || !list_empty(&vma->anon_vma_chain) ||
++		       anon_vma_name(vma) || vma_policy(vma) || userfaultfd_armed(vma));
++		new = *prepared;
++		*prepared = NULL;
++		ASSERT_EXCLUSIVE_WRITER(vma->vm_flags);
++		*new = data_race(*vma);
++		INIT_LIST_HEAD(&new->anon_vma_chain);
++	} else {
++		new = vm_area_dup(vma);
++		if (!new)
++			return -ENOMEM;
++	}
+@@ -2389,2 +2425,2 @@
+-		err = vma_adjust(vma, addr, vma->vm_end, vma->vm_pgoff +
+-			((addr - new->vm_start) >> PAGE_SHIFT), new);
++		err = vma_adjust_prepared(vma, addr, vma->vm_end, vma->vm_pgoff +
++			((addr - new->vm_start) >> PAGE_SHIFT), new, NULL, reserve);
+@@ -2392 +2428,2 @@
+-		err = vma_adjust(vma, vma->vm_start, addr, vma->vm_pgoff, new);
++		err = vma_adjust_prepared(vma, vma->vm_start, addr, vma->vm_pgoff,
++			new, NULL, reserve);
+@@ -2413,0 +2451,6 @@
++int __split_vma(struct mm_struct *mm, struct vm_area_struct *vma,
++		unsigned long addr, int new_below)
++{
++	return split_vma_prepared(mm, vma, addr, new_below, NULL, NULL);
++}
++
+@@ -2440 +2483 @@
 -do_mas_align_munmap(struct ma_state *mas, struct vm_area_struct *vma,
 +do_mas_align_munmap_prepared(struct ma_state *mas, struct vm_area_struct *vma,
-@@ -2442 +2442,2 @@
+@@ -2442 +2485,2 @@
 -		    unsigned long end, struct list_head *uf, bool downgrade)
 +		    unsigned long end, struct list_head *uf, bool downgrade,
 +		    struct ma_state *detach_reserve)
-@@ -2455,0 +2457,11 @@
+@@ -2455,0 +2500,11 @@
 +	if (detach_reserve) {
 +		/* The fixed body admits one complete VMA and no lock downgrade.
 +		 * Transfer only its prepared allocation chain and state flags; the
@@ -276,7 +349,7 @@
 +		detach_reserve->alloc = NULL;
 +		detach_reserve->mas_flags = 0;
 +	}
-@@ -2520 +2532,6 @@
+@@ -2520 +2575,6 @@
 -		error = mas_store_gfp(&mas_detach, next, GFP_KERNEL);
 +		if (detach_reserve) {
 +			mas_store_prealloc(&mas_detach, next);
@@ -284,10 +357,10 @@
 +		} else {
 +			error = mas_store_gfp(&mas_detach, next, GFP_KERNEL);
 +		}
-@@ -2604,0 +2622,2 @@
+@@ -2604,0 +2665,2 @@
 +	if (detach_reserve)
 +		mas_destroy(&mas_detach);
-@@ -2609,0 +2629,8 @@
+@@ -2609,0 +2672,8 @@
 +}
 +
 +static int do_mas_align_munmap(struct ma_state *mas, struct vm_area_struct *vma,
@@ -296,12 +369,12 @@
 +{
 +	return do_mas_align_munmap_prepared(mas, vma, mm, start, end, uf,
 +					  downgrade, NULL);
-@@ -2925,0 +2953,4 @@
+@@ -2925,0 +2996,4 @@
 +#ifdef CONFIG_KD_MMAP_LOCK
 +#include "kd_mmap_unmap.inc"
 +#endif
 +
-@@ -2931,0 +2963,9 @@
+@@ -2931,0 +3006,9 @@
 +
 +#ifdef CONFIG_KD_MMAP_LOCK
 +	if (mm->mmap_lock.use_kd && smp_load_acquire(&mm->mmap_lock.unmap.enabled) &&
@@ -329,7 +402,7 @@
 @@ -5809 +5812 @@
 -	mas_node_count_gfp(mas, 1 + mas_mt_height(mas) * 3, gfp);
 +	mas_node_count_gfp(mas, 1 + height * 3, gfp);
-@@ -5821,0 +5825,26 @@
+@@ -5821,0 +5825,29 @@
 +
 +/**
 + * mas_preallocate() - Preallocate enough nodes for a store operation.
@@ -353,6 +426,9 @@
 +	unsigned int height = (READ_ONCE(mas->tree->ma_flags) & MT_FLAGS_HEIGHT_MASK) >>
 +			      MT_FLAGS_HEIGHT_OFFSET;
 +
++	/* Two anonymous splits may each grow the mapping tree before removal.
++	 * Actual capacity is checked before the first split commits. */
++	height += 2;
 +	return mas_preallocate_height(mas, height, gfp);
 +}
 +#endif

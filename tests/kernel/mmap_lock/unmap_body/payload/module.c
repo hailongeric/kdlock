@@ -22,6 +22,7 @@ struct session {
 	struct ub_config region;
 	struct ub_status result;
 	atomic_t controlling, held, readers, ready, release;
+	bool partial_cancel;
 };
 struct control;
 struct worker {
@@ -64,7 +65,8 @@ static int work(void *argument)
 		allow_signal(SIGKILL);
 		/* Exercise the real vm_munmap entry, including caller preparation,
 		 * killable ownership and cancellation before actual VMA removal. */
-		w->result = vm_munmap(s->region.base + w->index * s->region.stride, 3 * PAGE_SIZE);
+		w->result = vm_munmap(s->region.base + w->index * s->region.stride +
+			(s->partial_cancel ? PAGE_SIZE : 0), (s->partial_cancel ? 1 : 3) * PAGE_SIZE);
 	}
 	kthread_unuse_mm(s->mm);
 	complete(&w->done);
@@ -187,7 +189,8 @@ out:
 		mmap_read_lock(s->mm);
 		for (i = 0; i < 2; i++) {
 			s->result.cancel_result[i] = c->writers[i].result;
-			s->result.cancel_mapped[i] = !!vma_lookup(s->mm, s->region.base + i * s->region.stride);
+			s->result.cancel_mapped[i] = !!vma_lookup(s->mm, s->region.base + i * s->region.stride +
+				(s->partial_cancel ? PAGE_SIZE : 0));
 			check(s, c->writers[i].result == (i ? -EINTR : 0));
 			check(s, s->result.cancel_mapped[i] == !!i);
 		}
@@ -223,6 +226,31 @@ static long operation(struct file *file, unsigned int cmd, unsigned long arg)
 		return hold(s, arg, false);
 	case UB_CANCEL:
 		return hold(s, 2, true);
+	case UB_CANCEL_PARTIAL:
+		s->partial_cancel = true;
+		error = hold(s, 2, true);
+		s->partial_cancel = false;
+		return error;
+	case UB_LAYOUT: {
+		struct ub_layout layout;
+		struct vm_area_struct *vma;
+
+		if (copy_from_user(&layout, (void __user *)arg, sizeof(layout))) return -EFAULT;
+		mmap_read_lock(s->mm);
+		vma = vma_lookup(s->mm, layout.address);
+		layout.start = vma ? vma->vm_start : 0;
+		layout.end = vma ? vma->vm_end : 0;
+		layout.pgoff = vma ? vma->vm_pgoff : 0;
+		layout.flags = vma ? vma->vm_flags : 0;
+		layout.map_count = s->mm->map_count;
+		layout.total_vm = s->mm->total_vm;
+		layout.data_vm = s->mm->data_vm;
+		layout.stack_vm = s->mm->stack_vm;
+		layout.exec_vm = s->mm->exec_vm;
+		layout.pgtables = mm_pgtables_bytes(s->mm);
+		mmap_read_unlock(s->mm);
+		return copy_to_user((void __user *)arg, &layout, sizeof(layout)) ? -EFAULT : 0;
+	}
 	case UB_RELEASE:
 		atomic_set(&s->release, 1);
 		return 0;
