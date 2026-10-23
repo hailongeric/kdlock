@@ -45,6 +45,118 @@ static bool kd_mmap_unmap_simple_anon(struct vm_area_struct *vma, bool allow_emp
 				 same_vma)->anon_vma == vma->anon_vma;
 }
 
+/* A boundary edge owns no target page. Both PMD entries and their common
+ * parent remain live under the mmap writer through native teardown. */
+struct kd_mmap_unmap_edge {
+	pmd_t *target, *survivor;
+	pud_t *parent;
+	unsigned long parent_pfn, survivor_pfn, boundary, floor, ceiling;
+	bool survivor_missing;
+};
+
+static bool kd_mmap_unmap_hold_slot(struct vm_area_struct *vma,
+	unsigned long address, pte_t entry, bool partial, struct page **held,
+	bool *zero, pte_t *zero_entry)
+{
+	struct page *page;
+
+	*zero = false;
+	if (partial && pte_none(entry)) return true;
+	if (partial && pte_present(entry) && !pte_protnone(entry) &&
+	    pte_special(entry) && !pte_write(entry) && !pte_devmap(entry) &&
+	    is_zero_pfn(pte_pfn(entry))) {
+		*zero = true;
+		*zero_entry = pte_mkold(entry);
+		return true;
+	}
+	if (!vma->anon_vma || !pte_present(entry) || !pte_write(entry) ||
+	    pte_special(entry) || pte_devmap(entry)) return false;
+	page = vm_normal_page(vma, address, entry);
+	if (!page) return false;
+	get_page(page);
+	if (!trylock_page(page)) { put_page(page); return false; }
+	if (PageCompound(page) || !PageAnon(page) || !PageAnonExclusive(page) ||
+	    PageSwapCache(page) || PageHWPoison(page) || PageReserved(page) ||
+	    page_mapcount(page) != 1 || page_maybe_dma_pinned(page)) {
+		unlock_page(page); put_page(page); return false;
+	}
+	*held = page;
+	return true;
+}
+
+static bool kd_mmap_unmap_hold_edge(struct mm_struct *mm,
+	struct vm_area_struct *vma, struct vm_area_struct *prev,
+	struct vm_area_struct *next, unsigned long start, unsigned long end,
+	struct kd_mmap_unmap_edge *edge, struct page **held, unsigned int *present,
+	unsigned int *zero, pte_t *zero_ptes, unsigned int *checked, unsigned int *nr)
+{
+	unsigned long lo = vma->vm_start, hi = vma->vm_end;
+	unsigned long first = lo & PMD_MASK, last = (hi - 1) & PMD_MASK;
+	unsigned long addr, free_end = end, ceiling;
+	unsigned int target = (start - lo) >> PAGE_SHIFT, i;
+	pgd_t *pgd; p4d_t *p4d; pud_t *pud; pmd_t *left;
+	spinlock_t *ptl;
+	pte_t *pte;
+	bool is_zero;
+
+	*nr = *checked = *present = *zero = 0;
+	if (!mm->mmap_lock.unmap.allow_partial || IS_ENABLED(CONFIG_LRU_GEN) ||
+	    hi - lo != 3 * PAGE_SIZE || end - start != PAGE_SIZE ||
+	    last != first + PMD_SIZE || (lo & PUD_MASK) != ((hi - 1) & PUD_MASK) ||
+	    !((start == lo && end == last) || (end == hi && start == last)) ||
+	    !kd_mmap_unmap_simple_anon(vma, true) || (vma->vm_flags & VM_MERGEABLE) ||
+	    !prev || !next || prev->vm_end <= first || next->vm_start >= last + PMD_SIZE)
+		return false;
+	/* After the single native split these are exactly unmap_region's floor
+	 * and ceiling. Mirror the bounded free_pgd_range preflight: no table
+	 * traversal is allowed. Populated survivors across the boundary alone
+	 * cannot supply the missing target-side outer neighbor. */
+	edge->floor = target ? start : prev->vm_end;
+	edge->ceiling = target ? next->vm_start : end;
+	addr = start & PMD_MASK;
+	if (addr < edge->floor) addr += PMD_SIZE;
+	ceiling = edge->ceiling & PMD_MASK;
+	if (!ceiling) return false;
+	if (free_end - 1 > ceiling - 1) free_end -= PMD_SIZE;
+	if (addr <= free_end - 1) return false;
+	pgd = pgd_offset(mm, lo);
+	if (pgd_none(*pgd) || pgd_bad(*pgd)) return false;
+	p4d = p4d_offset(pgd, lo);
+	if (p4d_none(*p4d) || p4d_bad(*p4d)) return false;
+	pud = pud_offset(p4d, lo);
+	if (pud_none(*pud) || pud_bad(*pud) || pud_trans_huge(*pud) || pud_devmap(*pud)) return false;
+	left = pmd_offset(pud, lo);
+	edge->target = left + !!target;
+	edge->survivor = left + !target;
+	edge->parent = pud;
+	edge->parent_pfn = pud_pfn(READ_ONCE(*pud));
+	edge->boundary = last;
+	ptl = pmd_lock(mm, edge->target);
+	is_zero = pmd_none(*edge->target);
+	spin_unlock(ptl);
+	if (!is_zero) return false; /* Existing target tables stay explicit handbacks. */
+	ptl = pmd_lock(mm, edge->survivor);
+	edge->survivor_missing = pmd_none(*edge->survivor);
+	spin_unlock(ptl);
+	if (edge->survivor_missing) return true;
+	if (pmd_bad(*edge->survivor) || pmd_trans_huge(*edge->survivor) || pmd_devmap(*edge->survivor)) return false;
+	edge->survivor_pfn = pmd_pfn(READ_ONCE(*edge->survivor));
+	addr = target ? lo : end;
+	pte = pte_offset_map_lock(mm, edge->survivor, addr, &ptl);
+	for (i = 0; i < 3; i++) {
+		if (i == target) continue;
+		if (!kd_mmap_unmap_hold_slot(vma, lo + i * PAGE_SIZE,
+			ptep_get(pte + i - !target), true, &held[i], &is_zero, &zero_ptes[i])) break;
+		if (is_zero) *zero |= 1U << i;
+		if (held[i]) { *present |= 1U << i; (*nr)++; }
+	}
+	pte_unmap_unlock(pte, ptl);
+	if (i == 3) return true;
+	*checked = *nr;
+	kd_mmap_unmap_release_pages(held, 3);
+	return false;
+}
+
 static bool kd_mmap_unmap_hold_pages(struct mm_struct *mm,
 	struct vm_area_struct *vma, struct vm_area_struct *prev,
 	struct vm_area_struct *next,
@@ -106,52 +218,14 @@ static bool kd_mmap_unmap_hold_pages(struct mm_struct *mm,
 	if (pmd_none(*pmd) || pmd_trans_huge(*pmd) || pmd_devmap(*pmd) || pmd_bad(*pmd)) return 0;
 	pte = pte_offset_map_lock(mm, pmd, address, &ptl);
 	for (i = 0; i < count; i++) {
-		struct page *page;
-		unsigned long slot = address + i * PAGE_SIZE;
-		pte_t entry = ptep_get(pte + i);
+		bool is_zero;
 
-		/* A partial target or survivor may be an empty leaf PTE in this
-		 * already validated table. This is not a missing upper-level table,
-		 * swap or another non-present entry. Native unmap must still remove
-		 * the VMA slice even when no data-page mapping needs clearing.
-		 * A slot may also map the permanent zero page, with no owned reference:
-		 * do not get, lock, put or modify its page. Keep all slot identities
-		 * separate. The writer excludes read/write faults during the body;
-		 * already mapped readers may still set the hardware accessed bit. */
-		if (partial) {
-			if (pte_none(entry)) continue;
-			if (pte_present(entry) && !pte_protnone(entry) &&
-			    pte_special(entry) && !pte_write(entry) &&
-			    !pte_devmap(entry) && is_zero_pfn(pte_pfn(entry))) {
-				*zero |= 1U << i;
-				zero_ptes[i] = pte_mkold(entry);
-				continue;
-			}
-		}
-		/* All remaining present slots must be writable private resident pages.
-		 * Unsupported special and nonempty non-present entries refuse before splitting. */
-		if (!vma->anon_vma || !pte_present(entry) || !pte_write(entry) ||
-		    pte_special(entry) || pte_devmap(entry)) break;
-		page = vm_normal_page(vma, slot, entry);
-		if (!page) break;
-		get_page(page);
-		/* All pages are checked before any removal. Try, never wait, under
-		 * the PTE lock. A late refusal releases this reference and every
-		 * earlier page lock/reference before handing the request back. */
-		if (!trylock_page(page)) {
-			put_page(page);
-			break;
-		}
-		if (PageCompound(page) || !PageAnon(page) || !PageAnonExclusive(page) ||
-		    PageSwapCache(page) || PageHWPoison(page) || PageReserved(page) ||
-		    page_mapcount(page) != 1 || page_maybe_dma_pinned(page)) {
-			unlock_page(page);
-			put_page(page);
-			break;
-		}
-		pages[i] = page;
-		*present |= 1U << i;
-		held++;
+		/* Preserve slot indices, zero-page non-ownership and exact rollback.
+		 * The shared classifier never waits while holding the PTE lock. */
+		if (!kd_mmap_unmap_hold_slot(vma, address + i * PAGE_SIZE,
+			ptep_get(pte + i), partial, &pages[i], &is_zero, &zero_ptes[i])) break;
+		if (is_zero) *zero |= 1U << i;
+		if (pages[i]) { *present |= 1U << i; held++; }
 	}
 	pte_unmap_unlock(pte, ptl);
 	if (i != count) {
@@ -178,7 +252,8 @@ bool kd_mmap_unmap_try(struct mm_struct *mm, unsigned long start,
 	pmd_t *held_pmd = NULL;
 	pud_t *held_pud = NULL;
 	unsigned long parent_pfn = 0;
-	bool missing_table = false;
+	bool missing_table = false, boundary_edge = false;
+	struct kd_mmap_unmap_edge edge = { 0 };
 	unsigned long address, pages, table_bytes = 0;
 	unsigned long old_start, old_end, old_flags, old_pgoff;
 	unsigned int before, nr = 0, i, checked, splits = 0, present = 0, zero = 0, slots;
@@ -248,9 +323,19 @@ bool kd_mmap_unmap_try(struct mm_struct *mm, unsigned long start,
 		}
 	}
 	if (!pristine) {
-		if (!kd_mmap_unmap_hold_pages(mm, vma, prev, next,
-			partial, &held_pmd, &held_pud, &missing_table, &parent_pfn,
-			held, &present, &zero, zero_ptes, &checked, &nr)) {
+		bool admitted;
+
+		boundary_edge = partial && (old_start & PMD_MASK) != ((old_end - 1) & PMD_MASK);
+		if (boundary_edge) {
+			admitted = kd_mmap_unmap_hold_edge(mm, vma, prev, next, start, end,
+				&edge, held, &present, &zero, zero_ptes, &checked, &nr);
+			if (admitted) held_pmd = edge.target;
+		} else {
+			admitted = kd_mmap_unmap_hold_pages(mm, vma, prev, next,
+				partial, &held_pmd, &held_pud, &missing_table, &parent_pfn,
+				held, &present, &zero, zero_ptes, &checked, &nr);
+		}
+		if (!admitted) {
 			if (checked)
 				pr_info("KD_MM_POPULATED_RANGE rollback mm=%px id=%llu origin=%d executor=%d start=%lx end=%lx held=%u released=%u effects=0\n",
 					mm, request_id, origin->pid, current->pid, start, end, checked, checked);
@@ -259,7 +344,7 @@ bool kd_mmap_unmap_try(struct mm_struct *mm, unsigned long start,
 		for (i = 0; i < slots; i++)
 			if (present & (1U << i)) pfns[i] = page_to_pfn(held[i]);
 		zero_target = partial && (zero & (1U << ((start - old_start) >> PAGE_SHIFT)));
-		absent_target = partial && !missing_table && !((present | zero) &
+		absent_target = partial && !boundary_edge && !missing_table && !((present | zero) &
 				(1U << ((start - old_start) >> PAGE_SHIFT)));
 		table_bytes = mm_pgtables_bytes(mm);
 	}
@@ -328,7 +413,39 @@ out_pages:
 		 * also lost its mapping reference. Zero pages own no such reference.
 		 * Release our temporary private-page references on this executor;
 		 * page/memcg ownership, never current's cgroup, governs final free. */
-		if (missing_table) {
+		if (boundary_edge) {
+			unsigned int target = (start - old_start) >> PAGE_SHIFT;
+			spinlock_t *ptl;
+			pte_t *pte;
+
+			BUG_ON(mm_pgtables_bytes(mm) != table_bytes || held[target] ||
+			       (present | zero) & (1U << target) ||
+			       pud_none(*edge.parent) || pud_pfn(*edge.parent) != edge.parent_pfn);
+			ptl = pmd_lock(mm, edge.target);
+			BUG_ON(!pmd_none(*edge.target));
+			spin_unlock(ptl);
+			ptl = pmd_lock(mm, edge.survivor);
+			BUG_ON(pmd_none(*edge.survivor) != edge.survivor_missing);
+			spin_unlock(ptl);
+			if (edge.survivor_missing) {
+				BUG_ON(nr || present || zero);
+			} else {
+				BUG_ON(pmd_pfn(*edge.survivor) != edge.survivor_pfn);
+				pte = pte_offset_map_lock(mm, edge.survivor, target ? old_start : end, &ptl);
+				for (i = 0; i < 3; i++) {
+					pte_t entry;
+
+					if (i == target) continue;
+					entry = ptep_get(pte + i - !target);
+					if (zero & (1U << i))
+						BUG_ON(held[i] || !pte_same(pte_mkold(entry), zero_ptes[i]));
+					else if (present & (1U << i))
+						BUG_ON(!pte_present(entry) || pte_pfn(entry) != pfns[i] || page_mapcount(held[i]) != 1);
+					else BUG_ON(held[i] || !pte_none(entry));
+				}
+				pte_unmap_unlock(pte, ptl);
+			}
+		} else if (missing_table) {
 			spinlock_t *ptl;
 
 			/* Same-PMD floor/ceiling makes native free_pgd_range() return
@@ -383,7 +500,12 @@ out_pages:
 
 			atomic64_inc(&u->populated);
 			if (origin != current && atomic64_inc_return(&u->populated_remote) <= 16) {
-				if (missing_table) {
+				if (boundary_edge) {
+					pr_info("KD_MM_BOUNDARY done mm=%px id=%llu origin=%d executor=%d start=%lx end=%lx boundary=%lx parent_pfn=%lx survivor_table_pfn=%lx survivor_missing=%u resident_mask=%u zero_mask=%u untouched_mask=%u held=%u released=%u floor=%lx ceiling=%lx target_pmd_none=1 target_owned=0 tables_unchanged=1\n",
+						mm, request_id, origin->pid, current->pid, start, end, edge.boundary,
+						edge.parent_pfn, edge.survivor_pfn, edge.survivor_missing,
+						present, zero, 7U ^ (present | zero), nr, nr, edge.floor, edge.ceiling);
+				} else if (missing_table) {
 					pr_info("KD_MM_MISSING_TABLE done mm=%px id=%llu origin=%d executor=%d start=%lx end=%lx pmd_table_pfn=%lx pmd_none=1 held=0 released=0 target_owned=0 upper_retained=1 tables_unchanged=1\n",
 						mm, request_id, origin->pid, current->pid, start, end, parent_pfn);
 				} else if (absent_target) {
@@ -421,7 +543,12 @@ out_pages:
 	if (*result && partial)
 		pr_info("KD_MM_PARTIAL error mm=%px id=%llu origin=%d executor=%d start=%lx end=%lx splits=%u held=%u released=%u result=%d\n",
 			mm, request_id, origin->pid, current->pid, start, end, splits, nr, nr, *result);
-	if (*result && missing_table)
+	if (*result && boundary_edge)
+		pr_info("KD_MM_BOUNDARY error mm=%px id=%llu origin=%d executor=%d start=%lx end=%lx boundary=%lx parent_pfn=%lx survivor_table_pfn=%lx survivor_missing=%u resident_mask=%u zero_mask=%u untouched_mask=%u held=%u released=%u floor=%lx ceiling=%lx target_pmd_none=1 target_owned=0 tables_unchanged=1 result=%d\n",
+			mm, request_id, origin->pid, current->pid, start, end, edge.boundary,
+			edge.parent_pfn, edge.survivor_pfn, edge.survivor_missing,
+			present, zero, 7U ^ (present | zero), nr, nr, edge.floor, edge.ceiling, *result);
+	else if (*result && missing_table)
 		pr_info("KD_MM_MISSING_TABLE error mm=%px id=%llu origin=%d executor=%d start=%lx end=%lx pmd_table_pfn=%lx pmd_none=1 held=0 released=0 target_owned=0 upper_retained=1 tables_unchanged=1 result=%d\n",
 			mm, request_id, origin->pid, current->pid, start, end, parent_pfn, *result);
 	else if (*result && absent_target)

@@ -315,8 +315,13 @@ static void verify_mappings(void)
 		/* Read only after every split/absence observation for this VMA. */
 		for (unsigned int p = 0; p < 3; p++)
 			if (!removed(g, p)) check_page(addresses[g] + p * PAGE, (masks[g] & (1U << p)) ? pattern(g, p) : 0);
+#ifdef KD_TEST_NEIGHBOR
+		check_page(KD_TEST_NEIGHBOR(g, 0), 0);
+		check_page(KD_TEST_NEIGHBOR(g, 1), 0);
+#else
 		check_page(addresses[g] - 2 * PAGE, 0);
 		check_page(addresses[g] + 4 * PAGE, 0);
+#endif
 	}
 }
 static void print_layouts(unsigned int g)
@@ -343,7 +348,10 @@ static void print_pages(struct ub_pages *s)
 	}
 	putchar(']');
 }
-int main(int argc, char **argv)
+#ifndef KD_TEST_MAIN
+#define KD_TEST_MAIN main
+#endif
+int KD_TEST_MAIN(int argc, char **argv)
 {
 	require(argc == 3 || argc == 6, "target|native SHAPE or error native|kd resident middle-rz 1|2");
 	if (argc == 6) {

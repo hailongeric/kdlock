@@ -57,7 +57,7 @@ static int change_target(struct session *s)
 	error = -EINVAL;
 	if (!s->change_armed || r->done || s->pages[i] || current->mm != s->mm ||
 	    (s->mm->mmap_lock.unmap.enabled ?
-	     r->pending != 3 || r->readers != 2 || r->admission != -1 :
+	     r->pending != (more->mode == 6 ? 2 : 3) || r->readers != 2 || r->admission != -1 :
 	     r->pending != 0 || r->readers != 1)) goto out;
 	vma = vma_lookup(s->mm, address);
 	if (!vma) goto out;
@@ -78,7 +78,7 @@ static int change_target(struct session *s)
 		}
 		r->before_zero = 1; r->zero_pfn = pte_pfn(entry);
 	}
-	if (more->mode == 1 || more->mode == 3 || more->mode == 4) {
+	if (more->mode == 1 || more->mode == 3 || more->mode == 4 || more->mode == 6) {
 		/* No pages[] and no FOLL_GET: a real native read fault, with no
 		 * reference or ownership acquired on the permanent shared zero page. */
 		got = get_user_pages(more->mode == 3 ? address - 3 * PAGE_SIZE : address, 1, 0, NULL, NULL);
@@ -150,14 +150,17 @@ static int change_operation(struct session *s, unsigned int cmd, unsigned long a
 
 	if (atomic_read(&s->controlling)) return -EBUSY;
 	if (cmd == UB_CHANGE_ARM || cmd == UB_CHANGE_EMPTY_ZERO_ARM || cmd == UB_CHANGE_EMPTY_PRIVATE_ARM ||
-	    cmd == UB_CHANGE_TABLE_EMPTY_ARM || cmd == UB_CHANGE_TABLE_ZERO_ARM || cmd == UB_CHANGE_TABLE_PRIVATE_ARM) {
+	    cmd == UB_CHANGE_TABLE_EMPTY_ARM || cmd == UB_CHANGE_TABLE_ZERO_ARM || cmd == UB_CHANGE_TABLE_PRIVATE_ARM ||
+	    cmd == UB_CHANGE_EDGE_TABLE_ARM) {
 		mutex_lock(&s->pins_lock);
 		if (!s->groups || arg >= s->groups * 3 || s->pages[arg] || s->change_armed ||
-		    (s->mm->mmap_lock.unmap.enabled ? s->groups != 3 || arg != 4 : s->groups != 1 || arg != 1))
+		    (s->mm->mmap_lock.unmap.enabled ? s->groups != 3 ||
+		     (cmd == UB_CHANGE_EDGE_TABLE_ARM ? arg != 3 && arg != 5 : arg != 4) : s->groups != 1 ||
+		     (cmd == UB_CHANGE_EDGE_TABLE_ARM ? arg != 0 && arg != 2 : arg != 1)))
 			error = -EINVAL;
 		else {
 			r->index = arg; s->change_armed = true;
-			s->change.mode = cmd == UB_CHANGE_EMPTY_ZERO_ARM ? 1 : cmd == UB_CHANGE_EMPTY_PRIVATE_ARM ? 2 :
+			s->change.mode = cmd == UB_CHANGE_EDGE_TABLE_ARM ? 6 : cmd == UB_CHANGE_EMPTY_ZERO_ARM ? 1 : cmd == UB_CHANGE_EMPTY_PRIVATE_ARM ? 2 :
 				cmd == UB_CHANGE_TABLE_EMPTY_ARM ? 3 : cmd == UB_CHANGE_TABLE_ZERO_ARM ? 4 : cmd == UB_CHANGE_TABLE_PRIVATE_ARM ? 5 : 0;
 		}
 		mutex_unlock(&s->pins_lock);

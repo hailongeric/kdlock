@@ -85,4 +85,10 @@ struct ub_table_walk {
 #define UB_CHANGE_TABLE_EMPTY_ARM _IO('U', 0x7b)
 #define UB_CHANGE_TABLE_ZERO_ARM _IO('U', 0x7c)
 #define UB_CHANGE_TABLE_PRIVATE_ARM _IO('U', 0x7d)
+/* Boundary fixtures keep a same-table whole-VMA queue head for error tests.
+ * Explicit bases affect test observations only, never production admission. */
+struct ub_bases { __u64 base[3]; };
+#define UB_EDGE_BASES _IOW('U', 0x7e, struct ub_bases)
+#define UB_CANCEL_EDGE _IO('U', 0x7f)
+#define UB_CHANGE_EDGE_TABLE_ARM _IO('U', 0x80)
 #endif

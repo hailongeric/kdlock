@@ -8,6 +8,7 @@ def check(row, log, validate):
     mutations = []
     absent = row.get('absent_target_test', 0)
     missing = row.get('missing_table_test',0)
+    boundary = row.get('boundary_edge_test',0)
     broken = copy.deepcopy(row); broken['counts']['native'] += 1
     mutations.append(('destructive-replay', broken, log))
     broken = copy.deepcopy(row); broken['pages_removed'] += 1
@@ -20,7 +21,7 @@ def check(row, log, validate):
         required = ('KD_MM_SPLIT inject' if row['native'] else
                     'KD_MM_UNMAP error' if row['injection'] else
                     'KD_MM_UNMAP ack' if row['busy'] else
-                    'KD_MM_SPLIT retire' if row['cancel'] else 'KD_MM_MISSING_TABLE done' if missing else 'KD_MM_ABSENT_TARGET done' if absent else 'KD_MM_ZERO_TARGET done')
+                    'KD_MM_SPLIT retire' if row['cancel'] else 'KD_MM_BOUNDARY done' if boundary else 'KD_MM_MISSING_TABLE done' if missing else 'KD_MM_ABSENT_TARGET done' if absent else 'KD_MM_ZERO_TARGET done')
         lines = log.splitlines(True)
         index = next(i for i, line in enumerate(lines) if required in line)
         mutations.append(('missing-body-or-retirement', row, ''.join(lines[:index] + lines[index + 1:])))
@@ -64,7 +65,8 @@ def check(row, log, validate):
     mutations.append(('zero-input-unproven', broken, log))
     if row['changing']:
         broken = copy.deepcopy(row)
-        if row.get('changing_empty'): broken['change_more']['table_after'] += 1
+        if boundary: broken['change_more']['table_after'] += 1
+        elif row.get('changing_empty'): broken['change_more']['table_after'] += 1
         elif row.get('changing_zero'): broken['change']['zero_pfn'] += 1
         else: broken['change']['page'][0]['pfn'] += 1
         mutations.append(('stale-private-target',broken,log))

@@ -62,7 +62,8 @@ static int rmap_state(struct session *s, unsigned long arg)
 
 static unsigned long target(struct session *s, unsigned int i)
 {
-	return s->region.base + (i / 3) * s->region.stride + (i % 3) * PAGE_SIZE;
+	return (s->edge_bases.base[0] ? s->edge_bases.base[i / 3] :
+		s->region.base + (i / 3) * s->region.stride) + (i % 3) * PAGE_SIZE;
 }
 
 static int pte_state(struct session *s, unsigned long arg, unsigned int cmd)

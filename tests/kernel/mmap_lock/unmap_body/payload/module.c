@@ -25,7 +25,8 @@ struct session {
 	struct ub_config region;
 	struct ub_status result;
 	atomic_t controlling, held, readers, ready, release;
-	bool partial_cancel;
+	unsigned int partial_cancel; /* zero: whole; otherwise one plus page offset */
+	struct ub_bases edge_bases;
 	unsigned int groups;
 	unsigned int pin_mask;
 	struct mutex pins_lock;
@@ -62,6 +63,7 @@ static void check(struct session *s, bool good)
 }
 
 static int change_target(struct session *s);
+static unsigned long target(struct session *s, unsigned int i);
 
 static int work(void *argument)
 {
@@ -87,8 +89,8 @@ static int work(void *argument)
 		allow_signal(SIGKILL);
 		/* Exercise the real vm_munmap entry, including caller preparation,
 		 * killable ownership and cancellation before actual VMA removal. */
-		w->result = vm_munmap(s->region.base + w->index * s->region.stride +
-			(s->partial_cancel ? PAGE_SIZE : 0), (s->partial_cancel ? 1 : 3) * PAGE_SIZE);
+		w->result = vm_munmap(target(s, w->index * 3 +
+			(s->partial_cancel ? s->partial_cancel - 1 : 0)), (s->partial_cancel ? 1 : 3) * PAGE_SIZE);
 	}
 	kthread_unuse_mm(s->mm);
 	complete(&w->done);
@@ -194,7 +196,7 @@ static int hold(struct session *s, unsigned int count, bool cancel)
 		/* Both local read shares already exist. A normal write fault using
 		 * one of them can finish while queued writers await their release.
 		 * No reader bypass, PTE poke or body callback is introduced. */
-		if (cancel || count != 3 || kd_mmap_unmap_pending(s->mm) != count ||
+		if (cancel || count != (s->change.mode == 6 ? 2 : 3) || kd_mmap_unmap_pending(s->mm) != count ||
 		    atomic_long_read(&s->mm->mmap_lock.kd.admission) != -1 ||
 		    atomic_long_read(&s->mm->mmap_lock.kd.readers) != 2) {
 			error = -EINVAL; goto out;
@@ -230,8 +232,8 @@ out:
 		mmap_read_lock(s->mm);
 		for (i = 0; i < 2; i++) {
 			s->result.cancel_result[i] = c->writers[i].result;
-			s->result.cancel_mapped[i] = !!vma_lookup(s->mm, s->region.base + i * s->region.stride +
-				(s->partial_cancel ? PAGE_SIZE : 0));
+			s->result.cancel_mapped[i] = !!vma_lookup(s->mm, target(s, i * 3 +
+				(s->partial_cancel ? s->partial_cancel - 1 : 0)));
 			check(s, c->writers[i].result == (i ? -EINTR : 0));
 			check(s, s->result.cancel_mapped[i] == !!i);
 		}
@@ -268,6 +270,7 @@ static long operation(struct file *file, unsigned int cmd, unsigned long arg)
 	case UB_CHANGE_TABLE_EMPTY_ARM:
 	case UB_CHANGE_TABLE_ZERO_ARM:
 	case UB_CHANGE_TABLE_PRIVATE_ARM:
+	case UB_CHANGE_EDGE_TABLE_ARM:
 		return change_operation(s, cmd, arg);
 	case UB_EXPERIMENT:
 		return experiment(s, arg);
@@ -306,10 +309,29 @@ static long operation(struct file *file, unsigned int cmd, unsigned long arg)
 	case UB_CANCEL:
 		return hold(s, 2, true);
 	case UB_CANCEL_PARTIAL:
-		s->partial_cancel = true;
+		s->partial_cancel = 2;
 		error = hold(s, 2, true);
-		s->partial_cancel = false;
+		s->partial_cancel = 0;
 		return error;
+	case UB_CANCEL_EDGE:
+		if (arg != 0 && arg != 2) return -EINVAL;
+		s->partial_cancel = arg + 1;
+		error = hold(s, 2, true);
+		s->partial_cancel = 0;
+		return error;
+	case UB_EDGE_BASES: {
+		struct ub_bases bases;
+		unsigned int i;
+
+		if (atomic_read(&s->controlling) || !s->groups || pins_owned(s) ||
+		    kd_mmap_unmap_pending(s->mm) || s->edge_bases.base[0]) return -EBUSY;
+		if (copy_from_user(&bases, (void __user *)arg, sizeof(bases))) return -EFAULT;
+		for (i = 0; i < s->groups; i++)
+			if (offset_in_page(bases.base[i]) || bases.base[i] < s->region.start ||
+			    bases.base[i] > s->region.end - 3 * PAGE_SIZE) return -EINVAL;
+		s->edge_bases = bases;
+		return 0;
+	}
 	case UB_LAYOUT: {
 		struct ub_layout layout;
 		struct vm_area_struct *vma;
