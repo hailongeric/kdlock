@@ -2,15 +2,18 @@
 
 The [bounded munmap experiment](UNMAP.md) now permits untouched survivors around
 a resident one-page target in a three-page anonymous VMA (virtual memory area).
-The `kdmm9` run passed all 22 serial cases, including 11 different-task mixed-page
-removals. Exact page-slot ownership, untouched PTEs (leaf page-table entries),
+The completed `kdmm9` follow-up passed all 27 serial cases, including all nine
+mixed residency combinations and 18 different-task removals. Every shape matched
+the ordinary native body's VMA layout and resident-memory accounting. The kernel
+and modules were reused; only the userspace observer changed. Exact page-slot
+ownership, untouched PTEs (leaf page-table entries),
 retained contents, post-split errors, handback/ACK (acknowledgement), sticky
 fallback and cancellation passed. A real fault into an untouched survivor waited
 for writer release and resolved locally. Existing resident/untouched unmap,
 advice and first-write fault paths passed preservation smokes. Recovery is
-restored. The [result record](../../bench/results/10.176.26.71/tests/mm-mixed-partial-20261023/README.md)
-keeps the storage-check failure and completion without rebuilding distinct from
-the successful live run. [Runnable commands](../../tests/kernel/mmap_lock/mixed_partial/README.md)
+restored. The [result record](../../bench/results/10.176.26.71/tests/mm-mixed-matrix-20261023/README.md)
+keeps this complete matrix separate from the preserved 22-case implementation
+milestone and earlier resident baseline. [Runnable commands](../../tests/kernel/mmap_lock/mixed_partial/README.md)
 reuse the installed image and probes. Zero-page survivors, nonresident targets,
 complex reverse-map ancestry, general table destruction and mapping creation
 remain unsupported. This is not general MM support or performance evidence.

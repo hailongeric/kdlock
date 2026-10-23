@@ -1,13 +1,17 @@
 # Bounded anonymous munmap bodies
 
 Status: `kdmm9` permits untouched surviving pages around a resident one-page
-target in a three-page anonymous VMA (virtual memory area). All 22 serial cases
-passed, including 11 different-task mixed-page removals and native comparisons
-for errors after either interior split. Ownership, handback/ACK
+target in a three-page anonymous VMA (virtual memory area). The complete matrix
+passed all 27 serial cases on the unchanged kernel, including 18 different-task
+mixed-page removals. All nine mixed layouts matched native layout and resident
+accounting. Ownership, handback/ACK
 (acknowledgement), cancellation, page references and cleanup passed. Resident
 and untouched unmap, advice and first-write fault preservation smokes passed.
-Recovery is restored. See the [result record](../../bench/results/10.176.26.71/tests/mm-mixed-partial-20261023/README.md)
+Recovery is restored. See the [result record](../../bench/results/10.176.26.71/tests/mm-mixed-matrix-20261023/README.md)
 and [prebuilt commands](../../tests/kernel/mmap_lock/mixed_partial/README.md).
+The [initial mixed milestone](../../bench/results/10.176.26.71/tests/mm-mixed-partial-20261023/README.md)
+retains its 22 cases, both interior split-error points, missing-target and
+zero-page-survivor refusals, and final-page-release evidence.
 The [kdmm8 result](../../bench/results/10.176.26.71/tests/mm-resident-partial-20261023/README.md)
 retains the fully resident and original split-error evidence.
 The [untouched partial baseline](../../bench/results/10.176.26.71/tests/mm-partial-unmap-20261023/README.md)
@@ -161,6 +165,23 @@ if already present during body admission. Busy-page, zero-page-survivor and
 missing-target cases each release one earlier page hold before their exact
 handback/ACK and then demonstrate sticky-local fallback. Sparse references also
 retire correctly after either injected interior split error and cancellation.
+
+The complete mixed matrix additionally exercises each edge target with either
+the near or far survivor resident. There are nine distinct mixed combinations:
+three target positions times three survivor patterns (both absent, only one or
+only the other resident); none is deduplicated. Fully resident combinations
+remain separately validated by `kdmm8`, with an interior preservation smoke.
+For every mixed shape the ordinary native body and three KD calls agree on
+normalized VMA bounds, offsets and flags. Two KD calls per shape finish on a
+different task. Read-only PTE observations precede survivor reads. Independent
+`/proc/self/smaps` walks report RSS (resident set size) and anonymous resident
+bytes before removal, after completion and after explicit survivor writes.
+These exact per-VMA observations match native behavior without relying on batched
+process RSS counters. The intentional competing read fault resolves locally to
+the shared zero page only after writer release; other absent slots remain empty
+until explicitly read. Local writes then allocate normal writable anonymous
+pages. The controller never pins or reads an absent slot before these checks;
+the deliberate competing reader's single zero-page fault is recorded separately.
 
 ## One through four populated pages
 
@@ -353,8 +374,13 @@ Native-off boot controls and the full historical fault-retry/API suite were not
 repeated. The run checked the same 73 runtime modules, not every configured
 module. RT, lockdep and whole-kernel replacement remain unvalidated.
 
-Live mixed coverage uses both untouched survivors for edge targets and zero or
-one resident survivor for interior targets. Edge targets with one resident and
-one untouched survivor are admitted by the same slot walk but were not directly
-tested. No size limit was increased. Broader mapping creation/removal support,
+All nine mixed survivor patterns now have live native/delegated comparisons;
+no size limit was increased. A forced change to mapping identity or survivor
+residency between preparation and execution was not tested. Busy-page refusal
+does exercise page-state revalidation and exact zero-effect release before ACK.
+The next narrow candidate is an already-read shared-zero-page survivor while
+keeping the target ordinary and resident. It needs explicit zero-page identity
+and lifetime handling, unchanged-PTE checks through splitting, and local
+write-fault validation; simply accepting all special PTEs would be incorrect.
+That extension is not implemented. Broader mapping creation/removal support,
 performance, p95, the seven mutex regressions and nano reruns remain deferred.
