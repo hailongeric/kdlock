@@ -1,21 +1,22 @@
 # Actual mmap-lock kernel integration
 
-The [bounded munmap experiment](UNMAP.md#shared-zero-target-sharing-a-boundary-table)
-now also removes one shared-zero prefix/suffix page from a three-page anonymous
+The [bounded munmap experiment](UNMAP.md#empty-target-sharing-a-boundary-table)
+now also removes one empty prefix/suffix entry from a three-page anonymous
 VMA (virtual memory area) with one survivor sharing the target leaf table and
 one across a 2-MiB boundary. Both outer-neighbor retention guards remain mandatory.
-`kdmm20` passed 65 serial cases, two basic tests and 1,935 negative receipt
-controls, with 40 different-task zero removals and 18 native-matched layouts.
-Twenty removals held no private pages. Two queued zero-to-private targets passed
-the complete private-page checks and were also removed by a different task.
+`kdmm21` passed 69 serial cases, two basic tests and 2,254 negative receipt
+controls, with 42 different-task empty removals and 18 native-matched layouts.
+Twenty-two empty removals held no private pages. Two queued targets converted to
+zero and two to private passed the complete existing classifiers and were also
+removed by a different task. A missing target table remains refused here.
 Split errors, exact handback/acknowledgment (ACK), cancellation, local reader
 faults and cleanup passed.
 Recovery is restored and test modules are unloaded. See the
-[result record](../../bench/results/10.176.26.71/tests/mm-boundary-shared-zero-20261023/README.md)
-and [runnable commands](../../tests/kernel/mmap_lock/boundary_shared_zero/README.md).
-The [kdmm19 baseline](../../bench/results/10.176.26.71/tests/mm-boundary-shared-20261023/README.md)
+[result record](../../bench/results/10.176.26.71/tests/mm-boundary-shared-empty-20261024/README.md)
+and [runnable commands](../../tests/kernel/mmap_lock/boundary_shared_empty/README.md).
+The [kdmm20 baseline](../../bench/results/10.176.26.71/tests/mm-boundary-shared-zero-20261023/README.md)
 and earlier campaigns remain separate. Eight small smokes preserve existing
-boundary paths and keep empty/missing targets refused in the shared geometry.
+boundary paths and keep missing-table targets refused in the shared geometry.
 Multiply mapped private pages, COW (copy-on-write) pages, huge mappings,
 unsupported special entries and busy pages still hand back before destructive
 work. Interior crossing, missing higher

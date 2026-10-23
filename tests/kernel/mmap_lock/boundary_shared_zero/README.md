@@ -68,5 +68,7 @@ completion, handback/acknowledgment (ACK), sticky fallback and cancellation are
 required, including exact post-split error outcomes without destructive replay.
 Queued neighboring-VMA replacement conflicts with the fixture's held reader
 shares and remains untested. Controlled target changes do not establish
-uncontrolled fault/reclaim/pinning race coverage. Empty/missing targets in this
-shared geometry, larger VMAs and general table destruction remain unsupported.
+uncontrolled fault/reclaim/pinning race coverage. kdmm20 refuses empty/missing
+targets in this geometry; kdmm21 adds the separate
+[empty-target fixture](../boundary_shared_empty/README.md). Missing target tables,
+larger VMAs and general table destruction remain unsupported here.

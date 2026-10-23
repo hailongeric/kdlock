@@ -7,6 +7,9 @@ interval; both survivors occupy the adjacent interval. Actual outer neighboring
 VMAs must prove native table retention. See the
 [mechanism](../../../../kernel_integration/mmap_lock/UNMAP.md#empty-target-entry-in-a-retained-boundary-table)
 and the single [result record](../../../../bench/results/10.176.26.71/tests/mm-boundary-empty-20261023/README.md).
+The historical `shared` refusal belongs to kdmm16. kdmm21 validates that geometry
+through the separate [shared empty-target fixture](../boundary_shared_empty/README.md);
+do not reuse the old refusal assertion on that newer image.
 
 ## Reuse the installed candidate
 

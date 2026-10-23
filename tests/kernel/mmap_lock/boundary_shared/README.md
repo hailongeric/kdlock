@@ -10,8 +10,10 @@ The old isolated-edge, same-table, advice and first-write implementations remain
 separate. This fixture supports only the existing narrow private target class.
 Its zero/empty/missing refusal controls describe kdmm19. On kdmm20, use the
 separate [shared-zero fixture](../boundary_shared_zero/README.md) for the newly
-supported zero target; empty/missing targets still hand back. Do not run the
-historical zero-refusal assertion as a kdmm20 acceptance check.
+supported zero target. kdmm21 additionally supports the
+[empty-target fixture](../boundary_shared_empty/README.md); missing target tables
+still hand back. Do not run historical zero/empty refusal assertions as acceptance
+checks for images that explicitly added those target classes.
 
 ## Reuse the installed candidate
 
