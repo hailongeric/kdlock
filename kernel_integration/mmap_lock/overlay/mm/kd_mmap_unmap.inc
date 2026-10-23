@@ -47,7 +47,7 @@ static bool kd_mmap_unmap_simple_anon(struct vm_area_struct *vma, bool allow_emp
 
 static bool kd_mmap_unmap_hold_pages(struct mm_struct *mm,
 	struct vm_area_struct *vma, struct vm_area_struct *prev,
-	struct vm_area_struct *next, unsigned long start, unsigned long end,
+	struct vm_area_struct *next,
 	bool partial, pmd_t **held_pmd, struct page **pages,
 	unsigned int *present, unsigned int *zero, pte_t *zero_ptes,
 	unsigned int *checked, unsigned int *nr)
@@ -92,13 +92,16 @@ static bool kd_mmap_unmap_hold_pages(struct mm_struct *mm,
 		unsigned long slot = address + i * PAGE_SIZE;
 		pte_t entry = ptep_get(pte + i);
 
-		/* Only retained slots may be absent. A partial target or survivor
-		 * may map the permanent zero page, with no owned anonymous reference:
+		/* A partial target or survivor may be an empty leaf PTE in this
+		 * already validated table. This is not a missing upper-level table,
+		 * swap or another non-present entry. Native unmap must still remove
+		 * the VMA slice even when no data-page mapping needs clearing.
+		 * A slot may also map the permanent zero page, with no owned reference:
 		 * do not get, lock, put or modify its page. Keep all slot identities
 		 * separate. The writer excludes read/write faults during the body;
 		 * already mapped readers may still set the hardware accessed bit. */
 		if (partial) {
-			if (pte_none(entry) && (slot < start || slot >= end)) continue;
+			if (pte_none(entry)) continue;
 			if (pte_present(entry) && !pte_protnone(entry) &&
 			    pte_special(entry) && !pte_write(entry) &&
 			    !pte_devmap(entry) && is_zero_pfn(pte_pfn(entry))) {
@@ -108,7 +111,7 @@ static bool kd_mmap_unmap_hold_pages(struct mm_struct *mm,
 			}
 		}
 		/* All remaining present slots must be writable private resident pages.
-		 * Unsupported special, swap and absent targets refuse before splitting. */
+		 * Unsupported special and nonempty non-present entries refuse before splitting. */
 		if (!vma->anon_vma || !pte_present(entry) || !pte_write(entry) ||
 		    pte_special(entry) || pte_devmap(entry)) break;
 		page = vm_normal_page(vma, slot, entry);
@@ -140,8 +143,9 @@ static bool kd_mmap_unmap_hold_pages(struct mm_struct *mm,
 	}
 	*held_pmd = pmd;
 	*nr = held;
-	/* Admission and ownership are separate: a validated zero target may own
-	 * no pages. The retained table still needs post-body checks and a TLB flush. */
+	/* Admission and ownership are separate: zero/empty targets may own no
+	 * pages. Native removal still runs; the retained table needs post-body
+	 * checks even when no populated target translation needs invalidation. */
 	return true;
 }
 
@@ -158,7 +162,7 @@ bool kd_mmap_unmap_try(struct mm_struct *mm, unsigned long start,
 	unsigned long old_start, old_end, old_flags, old_pgoff;
 	unsigned int before, nr = 0, i, checked, splits = 0, present = 0, zero = 0, slots;
 	struct kd_mmap_unmap_preparation *prep;
-	bool pristine, partial, zero_target = false;
+	bool pristine, partial, zero_target = false, absent_target = false;
 
 	mmap_assert_write_locked(mm);
 	if (origin->mm != mm || !live || !reserve || end <= start ||
@@ -201,7 +205,7 @@ bool kd_mmap_unmap_try(struct mm_struct *mm, unsigned long start,
 		if (!kd_mmap_unmap_capacity(live, height))
 			return false;
 		if (mm->mmap_lock.unmap.allow_populated) {
-			/* One private resident or shared-zero target in a three-page VMA.
+			/* One private, shared-zero or empty-leaf target in a three-page VMA.
 			 * Retained slots may be private, zero or absent. Empty ancestry is
 			 * valid only with no private PTEs. Refuse unsupported ancestry or
 			 * missing allocation before any split occurs. */
@@ -223,7 +227,7 @@ bool kd_mmap_unmap_try(struct mm_struct *mm, unsigned long start,
 		}
 	}
 	if (!pristine) {
-		if (!kd_mmap_unmap_hold_pages(mm, vma, prev, next, start, end,
+		if (!kd_mmap_unmap_hold_pages(mm, vma, prev, next,
 			partial, &held_pmd, held, &present, &zero, zero_ptes, &checked, &nr)) {
 			if (checked)
 				pr_info("KD_MM_POPULATED_RANGE rollback mm=%px id=%llu origin=%d executor=%d start=%lx end=%lx held=%u released=%u effects=0\n",
@@ -233,6 +237,8 @@ bool kd_mmap_unmap_try(struct mm_struct *mm, unsigned long start,
 		for (i = 0; i < slots; i++)
 			if (present & (1U << i)) pfns[i] = page_to_pfn(held[i]);
 		zero_target = partial && (zero & (1U << ((start - old_start) >> PAGE_SHIFT)));
+		absent_target = partial && !((present | zero) &
+				(1U << ((start - old_start) >> PAGE_SHIFT)));
 		table_bytes = mm_pgtables_bytes(mm);
 	}
 	/* The origin already checked TASK_SIZE/alignment with its own thread mode.
@@ -300,7 +306,7 @@ out_pages:
 		 * also lost its mapping reference. Zero pages own no such reference.
 		 * Release our temporary private-page references on this executor;
 		 * page/memcg ownership, never current's cgroup, governs final free. */
-		if (!*result || zero) {
+		if (!*result || zero || absent_target) {
 			spinlock_t *ptl;
 			pte_t *pte;
 
@@ -319,10 +325,13 @@ out_pages:
 						BUG_ON(!pte_none(ptep_get(pte + i)));
 					else
 						BUG_ON(!pte_same(pte_mkold(ptep_get(pte + i)), zero_ptes[i]));
+				} else if (!(present & (1U << i))) {
+					/* Empty leaves stay empty on success and admitted error;
+					 * the successful VMA removal above, not a PTE clear,
+					 * makes later access to the target invalid. */
+					BUG_ON(!pte_none(ptep_get(pte + i)) || held[i]);
 				} else if (*result) {
 					continue;
-				} else if (!(present & (1U << i))) {
-					BUG_ON(!pte_none(ptep_get(pte + i)) || held[i]);
 				} else if (old_start + i * PAGE_SIZE >= start && old_start + i * PAGE_SIZE < end) {
 					BUG_ON(!pte_none(ptep_get(pte + i)) || page_mapped(held[i]));
 				} else {
@@ -339,7 +348,12 @@ out_pages:
 
 			atomic64_inc(&u->populated);
 			if (origin != current && atomic64_inc_return(&u->populated_remote) <= 16) {
-				if (zero_target) {
+				if (absent_target) {
+					pr_info("KD_MM_ABSENT_TARGET done mm=%px id=%llu origin=%d executor=%d start=%lx end=%lx resident_mask=%u zero_mask=%u untouched_mask=%u held=%u released=%u initial_pte_none=1 target_pte_none=1 target_owned=0 table_pfn=%lx tables_retained=1 zero_survivors_preserved=1\n",
+						mm, request_id, origin->pid, current->pid, start, end,
+						present, zero, 7U ^ (present | zero), nr, nr,
+						pmd_pfn(READ_ONCE(*held_pmd)));
+				} else if (zero_target) {
 					pr_info("KD_MM_ZERO_TARGET done mm=%px id=%llu origin=%d executor=%d start=%lx end=%lx zero_pfn=%lx resident_mask=%u zero_mask=%u untouched_mask=%u held=%u released=%u target_pte_none=1 zero_owned=0 tables_retained=1 zero_survivors_preserved=1\n",
 						mm, request_id, origin->pid, current->pid, start, end,
 						pte_pfn(zero_ptes[(start - old_start) >> PAGE_SHIFT]),
@@ -369,7 +383,12 @@ out_pages:
 	if (*result && partial)
 		pr_info("KD_MM_PARTIAL error mm=%px id=%llu origin=%d executor=%d start=%lx end=%lx splits=%u held=%u released=%u result=%d\n",
 			mm, request_id, origin->pid, current->pid, start, end, splits, nr, nr, *result);
-	if (*result && zero_target)
+	if (*result && absent_target)
+		pr_info("KD_MM_ABSENT_TARGET error mm=%px id=%llu origin=%d executor=%d start=%lx end=%lx resident_mask=%u zero_mask=%u untouched_mask=%u held=%u released=%u target_pte_none=1 target_owned=0 table_pfn=%lx zero_ptes_preserved=1 result=%d\n",
+			mm, request_id, origin->pid, current->pid, start, end,
+			present, zero, 7U ^ (present | zero), nr, nr,
+			pmd_pfn(READ_ONCE(*held_pmd)), *result);
+	else if (*result && zero_target)
 		pr_info("KD_MM_ZERO_TARGET error mm=%px id=%llu origin=%d executor=%d start=%lx end=%lx resident_mask=%u zero_mask=%u untouched_mask=%u held=%u released=%u zero_ptes_preserved=1 zero_owned=0 result=%d\n",
 			mm, request_id, origin->pid, current->pid, start, end,
 			present, zero, 7U ^ (present | zero), nr, nr, *result);

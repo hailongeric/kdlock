@@ -6,6 +6,7 @@ import re
 
 def check(row, log, validate):
     mutations = []
+    absent = row.get('absent_target_test', 0)
     broken = copy.deepcopy(row); broken['counts']['native'] += 1
     mutations.append(('destructive-replay', broken, log))
     broken = copy.deepcopy(row); broken['pages_removed'] += 1
@@ -18,7 +19,7 @@ def check(row, log, validate):
         required = ('KD_MM_SPLIT inject' if row['native'] else
                     'KD_MM_UNMAP error' if row['injection'] else
                     'KD_MM_UNMAP ack' if row['busy'] else
-                    'KD_MM_SPLIT retire' if row['cancel'] else 'KD_MM_ZERO_TARGET done')
+                    'KD_MM_SPLIT retire' if row['cancel'] else 'KD_MM_ABSENT_TARGET done' if absent else 'KD_MM_ZERO_TARGET done')
         lines = log.splitlines(True)
         index = next(i for i, line in enumerate(lines) if required in line)
         mutations.append(('missing-body-or-retirement', row, ''.join(lines[:index] + lines[index + 1:])))
@@ -49,16 +50,21 @@ def check(row, log, validate):
     victim['anonymous_kb'] = 0
     mutations.append(('missing-local-write-population', broken, log))
     if not row['native'] and not row['injection'] and not row['busy'] and not row['cancel']:
-        mutations.append(('wrong-body-slot-mask',row,re.sub(r'zero_mask=\d+', 'zero_mask=0',log)))
+        key='untouched_mask' if absent else 'zero_mask'
+        mutations.append(('wrong-body-slot-mask',row,re.sub(key+r'=\d+',key+'=0',log)))
     broken = copy.deepcopy(row); broken['independent_after']['zero'] &= ~1
     mutations.append(('independent-zero-corrupted', broken, log))
     if row['writes']:
         broken = copy.deepcopy(row); broken['writes'][0]['state']['zero'] ^= 1
         mutations.append(('write-changed-another-slot', broken, log))
-    broken = copy.deepcopy(row); broken['zero_masks'][-1] = 0
+    broken = copy.deepcopy(row)
+    if absent: broken['zero_masks'][-1] ^= 1 << row['slice']
+    else: broken['zero_masks'][-1] = 0
     mutations.append(('zero-input-unproven', broken, log))
     if row['changing']:
-        broken = copy.deepcopy(row); broken['change']['page'][0]['pfn'] += 1
+        broken = copy.deepcopy(row)
+        if row.get('changing_zero'): broken['change']['zero_pfn'] += 1
+        else: broken['change']['page'][0]['pfn'] += 1
         mutations.append(('stale-private-target',broken,log))
         broken = copy.deepcopy(row); broken['change']['pending'] += 1
         mutations.append(('change-not-before-execution',broken,log))
@@ -73,7 +79,20 @@ def check(row, log, validate):
             changed = re.sub(r'(KD_MM_RMAP retire[^\n]* consumed=)0( freed=)3',r'\g<1>1\g<2>2',log,count=1)
             mutations.append(('unused-link-falsely-consumed',row,changed))
     if not row['native'] and not row['busy'] and not row['cancel'] and not row['injection']:
-        mutations.append(('zero-page-owned',row,log.replace('zero_owned=0','zero_owned=1')))
+        key='target_owned' if absent else 'zero_owned'
+        mutations.append(('unowned-target-owned',row,log.replace(key+'=0',key+'=1')))
+        if row.get('changing_zero'): mutations.append(('faulted-zero-page-owned',row,log.replace('zero_owned=0','zero_owned=1')))
+    if absent:
+        broken=copy.deepcopy(row);broken['tables_before'][0]['leaf'] ^= 1
+        mutations.append(('missing-table-claimed-leaf',broken,log))
+        broken=copy.deepcopy(row);broken['tables_after'][0]['pfn'][0] += 1
+        mutations.append(('retained-table-replaced',broken,log))
+        broken=copy.deepcopy(row);g=1 if row['injection'] and not row['native'] else 0
+        broken['ptes_before'][g]['none'] &= ~(1 << row['slice']);broken['ptes_before'][g]['zero'] |= 1 << row['slice']
+        mutations.append(('target-populated-before-admission',broken,log))
+        if row['changing']:
+            broken=copy.deepcopy(row);broken['change_more']['table_after'] += 1
+            mutations.append(('fault-changed-table',broken,log))
     passed = []
     for name, data, messages in mutations:
         try: validate(data, messages)

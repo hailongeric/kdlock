@@ -1,7 +1,7 @@
 /* SPDX-License-Identifier: GPL-2.0 */
 /* Test-only state transition through native GUP (get_user_pages). No production
  * delegation hook or synthetic unmap callback: the body is still real munmap. */
-static int change_entry(struct session *s, unsigned long address, pte_t *entry)
+static int change_entry(struct session *s, unsigned long address, pte_t *entry, u64 *table)
 {
 	pgd_t *pgd = pgd_offset(s->mm, address);
 	p4d_t *p4d; pud_t *pud; pmd_t *pmd; pte_t *pte;
@@ -17,16 +17,19 @@ static int change_entry(struct session *s, unsigned long address, pte_t *entry)
 	if (pmd_none(*pmd) || pmd_bad(*pmd) || pmd_trans_huge(*pmd) || pmd_devmap(*pmd)) return -EINVAL;
 	pte = pte_offset_map_lock(s->mm, pmd, address, &ptl);
 	*entry = ptep_get(pte);
+	*table = pmd_pfn(READ_ONCE(*pmd));
 	pte_unmap_unlock(pte, ptl);
 	return 0;
 }
 
 static int change_target(struct session *s)
 {
-	struct ub_change *r = &s->change;
+	struct ub_change_more *more = &s->change;
+	struct ub_change *r = &more->state;
 	unsigned int i = r->index, b;
 	unsigned long address = target(s, i);
 	struct page *page = NULL;
+	struct vm_area_struct *vma;
 	struct pagevec drain;
 	unsigned char *bytes, value = 1 + i;
 	u64 hash = 1469598103934665603ULL;
@@ -48,13 +51,35 @@ static int change_target(struct session *s)
 	    (s->mm->mmap_lock.unmap.enabled ?
 	     r->pending != 3 || r->readers != 2 || r->admission != -1 :
 	     r->pending != 0 || r->readers != 1)) goto out;
-	error = change_entry(s, address, &entry);
+	vma = vma_lookup(s->mm, address);
+	if (!vma) goto out;
+	more->anon_before = (unsigned long)vma->anon_vma;
+	error = change_entry(s, address, &entry, &more->table_before);
 	if (error) goto out;
-	if (!pte_present(entry) || !pte_special(entry) || pte_write(entry) ||
-	    pte_protnone(entry) || pte_devmap(entry) || !is_zero_pfn(pte_pfn(entry))) {
-		error = -EINVAL; goto out;
+	if (more->mode) {
+		if (!pte_none(entry)) { error = -EINVAL; goto out; }
+		more->before_none = 1;
+	} else {
+		if (!pte_present(entry) || !pte_special(entry) || pte_write(entry) ||
+		    pte_protnone(entry) || pte_devmap(entry) || !is_zero_pfn(pte_pfn(entry))) {
+			error = -EINVAL; goto out;
+		}
+		r->before_zero = 1; r->zero_pfn = pte_pfn(entry);
 	}
-	r->before_zero = 1; r->zero_pfn = pte_pfn(entry);
+	if (more->mode == 1) {
+		/* No pages[] and no FOLL_GET: a real native read fault, with no
+		 * reference or ownership acquired on the permanent shared zero page. */
+		got = get_user_pages(address, 1, 0, NULL, NULL);
+		if (got != 1) { error = got < 0 ? got : -EFAULT; goto out; }
+		error = change_entry(s, address, &entry, &more->table_after);
+		if (error) goto out;
+		if (!pte_present(entry) || !pte_special(entry) || pte_write(entry) ||
+		    pte_protnone(entry) || pte_devmap(entry) || !is_zero_pfn(pte_pfn(entry))) {
+			error = -EINVAL; goto out;
+		}
+		more->after_zero = 1; r->zero_pfn = pte_pfn(entry);
+		goto completed;
+	}
 	got = get_user_pages(address, 1, FOLL_WRITE, &page, NULL);
 	if (got != 1) { error = got < 0 ? got : -EFAULT; goto out; }
 	/* Own only the NEW private page. Even on a later observation failure,
@@ -62,7 +87,7 @@ static int change_target(struct session *s)
 	s->pages[i] = page; s->pin_mask |= 1U << i;
 	s->charges[i] = READ_ONCE(page->memcg_data);
 	get_page(page); pagevec_init(&drain); pagevec_add(&drain, page); pagevec_release(&drain);
-	error = change_entry(s, address, &entry);
+	error = change_entry(s, address, &entry, &more->table_after);
 	if (error) goto out;
 	if (!pte_present(entry) || !pte_write(entry) || pte_special(entry) ||
 	    pte_devmap(entry) || pte_pfn(entry) != page_to_pfn(page) ||
@@ -77,12 +102,20 @@ static int change_target(struct session *s)
 	r->after_private = 1;
 	r->page = (struct ub_page) { address, page_to_pfn(page), hash, page_mapcount(page),
 		page_count(page), 1, value, PageLocked(page) };
-	error = 0;
+completed:
+	more->anon_after = (unsigned long)vma->anon_vma;
+	error = more->table_before && more->table_before == more->table_after ? 0 : -EINVAL;
 out:
 	r->result = error; r->done = 1;
-	pr_info("KD_MM_TEST target_change mm=%px index=%u actor=%llu pending=%llu readers=%llu admission=%lld zero_pfn=%llx private_pfn=%llx before_zero=%llu after_private=%llu result=%d\n",
-		s->mm, i, r->actor, r->pending, r->readers, r->admission, r->zero_pfn,
-		r->page.pfn, r->before_zero, r->after_private, error);
+	if (more->mode)
+		pr_info("KD_MM_TEST absent_change mm=%px index=%u actor=%llu pending=%llu readers=%llu admission=%lld mode=%llu before_none=%llu after_zero=%llu after_private=%llu table_before=%llx table_after=%llx anon_before=%llx anon_after=%llx zero_pfn=%llx private_pfn=%llx result=%d\n",
+			s->mm, i, r->actor, r->pending, r->readers, r->admission, more->mode,
+			more->before_none, more->after_zero, r->after_private, more->table_before,
+			more->table_after, more->anon_before, more->anon_after, r->zero_pfn, r->page.pfn, error);
+	else
+		pr_info("KD_MM_TEST target_change mm=%px index=%u actor=%llu pending=%llu readers=%llu admission=%lld zero_pfn=%llx private_pfn=%llx before_zero=%llu after_private=%llu result=%d\n",
+			s->mm, i, r->actor, r->pending, r->readers, r->admission, r->zero_pfn,
+			r->page.pfn, r->before_zero, r->after_private, error);
 	mutex_unlock(&s->pins_lock);
 	return error;
 }
@@ -90,21 +123,26 @@ out:
 static int change_operation(struct session *s, unsigned int cmd, unsigned long arg)
 {
 	int error = 0;
+	struct ub_change *r = &s->change.state;
 
 	if (atomic_read(&s->controlling)) return -EBUSY;
-	if (cmd == UB_CHANGE_ARM) {
+	if (cmd == UB_CHANGE_ARM || cmd == UB_CHANGE_EMPTY_ZERO_ARM || cmd == UB_CHANGE_EMPTY_PRIVATE_ARM) {
 		mutex_lock(&s->pins_lock);
 		if (!s->groups || arg >= s->groups * 3 || s->pages[arg] || s->change_armed ||
 		    (s->mm->mmap_lock.unmap.enabled ? s->groups != 3 || arg != 4 : s->groups != 1 || arg != 1))
 			error = -EINVAL;
-		else { s->change.index = arg; s->change_armed = true; }
+		else {
+			r->index = arg; s->change_armed = true;
+			s->change.mode = cmd == UB_CHANGE_EMPTY_ZERO_ARM ? 1 : cmd == UB_CHANGE_EMPTY_PRIVATE_ARM ? 2 : 0;
+		}
 		mutex_unlock(&s->pins_lock);
 	} else if (cmd == UB_CHANGE_NOW) {
 		if (s->mm->mmap_lock.unmap.enabled) return -EINVAL;
 		mmap_read_lock(s->mm); error = change_target(s); mmap_read_unlock(s->mm);
 	} else {
-		if (!s->change.done) return -EAGAIN;
-		if (copy_to_user((void __user *)arg, &s->change, sizeof(s->change))) error = -EFAULT;
+		if (!r->done) return -EAGAIN;
+		if (copy_to_user((void __user *)arg, &s->change,
+				 cmd == UB_CHANGE_RESULT_MORE ? sizeof(s->change) : sizeof(*r))) error = -EFAULT;
 	}
 	return error;
 }

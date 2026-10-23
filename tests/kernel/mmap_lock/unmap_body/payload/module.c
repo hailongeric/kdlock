@@ -34,7 +34,7 @@ struct session {
 	u64 pins_released;
 	struct ub_pages snapshot;
 	bool change_armed;
-	struct ub_change change;
+	struct ub_change_more change;
 };
 struct control;
 struct worker {
@@ -262,6 +262,9 @@ static long operation(struct file *file, unsigned int cmd, unsigned long arg)
 	case UB_CHANGE_ARM:
 	case UB_CHANGE_NOW:
 	case UB_CHANGE_RESULT:
+	case UB_CHANGE_EMPTY_ZERO_ARM:
+	case UB_CHANGE_EMPTY_PRIVATE_ARM:
+	case UB_CHANGE_RESULT_MORE:
 		return change_operation(s, cmd, arg);
 	case UB_EXPERIMENT:
 		return experiment(s, arg);
@@ -276,7 +279,8 @@ static long operation(struct file *file, unsigned int cmd, unsigned long arg)
 	case UB_UNPIN_MAPPED:
 		return page_operation(s, cmd, arg);
 	case UB_PTES:
-		return pte_state(s, arg);
+	case UB_PTE_TABLES:
+		return pte_state(s, arg, cmd == UB_PTE_TABLES);
 	case UB_EXTRA: {
 		struct ub_extra extra;
 

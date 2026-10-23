@@ -60,4 +60,19 @@ struct ub_change {
 #define UB_CHANGE_ARM _IO('U', 0x73)
 #define UB_CHANGE_NOW _IO('U', 0x74)
 #define UB_CHANGE_RESULT _IOR('U', 0x75, struct ub_change)
+/* Distinguish an empty leaf in an existing table from an absent upper level.
+ * These new encodings leave every frozen client ABI unchanged. */
+struct ub_pte_tables {
+	struct ub_ptes ptes;
+	__u64 leaf, higher_none, table_pfn[3];
+};
+#define UB_PTE_TABLES _IOWR('U', 0x76, struct ub_pte_tables)
+struct ub_change_more {
+	struct ub_change state;
+	__u64 mode, before_none, after_zero, table_before, table_after;
+	__u64 anon_before, anon_after;
+};
+#define UB_CHANGE_EMPTY_ZERO_ARM _IO('U', 0x77)
+#define UB_CHANGE_EMPTY_PRIVATE_ARM _IO('U', 0x78)
+#define UB_CHANGE_RESULT_MORE _IOR('U', 0x79, struct ub_change_more)
 #endif

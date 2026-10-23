@@ -2,12 +2,17 @@
 #define main old_whole_probe_main
 #include "../unmap_body/client.c"
 #undef main
+#ifndef KD_TEST_ABSENT
+#define KD_TEST_ABSENT 0
+#endif
 
 static int resident, native, injection, busy, cancellation, free_first;
 static unsigned int slice, masks[3], zeros[3], pin_mask, late_slot;
 static int no_resident, missing_target, busy_page, changing;
 static int empty_control, inherited;
+static int missing_table, changing_zero;
 static struct ub_change change;
+static struct ub_change_more change_more;
 /* Survivor letters are ordered by ascending address, excluding the target.
  * R is a private resident page, Z a verified shared-zero PTE, U no PTE. */
 static const struct { const char *name; unsigned int target, mask, zero; } shapes[] = {
@@ -27,6 +32,7 @@ static const struct { const char *name; unsigned int target, mask, zero; } shape
 static FILE *smaps;
 static struct residency { uintptr_t lo, hi; unsigned long rss, anon; unsigned int seen; } residency[3][3][3];
 static struct ub_ptes ptes_before[3], ptes_after[3], ptes_written[3];
+static struct ub_pte_tables tables_before[3], tables_after[3];
 static struct ub_ptes independent_before, independent_after;
 static struct { unsigned int group, slot; struct ub_ptes state, independent; } writes[9];
 static unsigned int write_count;
@@ -39,6 +45,27 @@ static struct ub_ptes independent(void)
 	check_page(r.address, 0); return r;
 }
 static struct ub_pages pages_before, pages_after;
+static struct ub_pte_tables table_state(unsigned int g)
+{
+	struct ub_pte_tables r = {.ptes.address = addresses[g]};
+	require(!ioctl(device, UB_PTE_TABLES, &r), "read-only existing table and leaf-state query");
+	return r;
+}
+static void check_tables(unsigned int g, struct ub_pte_tables *r)
+{
+	int missing = missing_table && g == 1;
+	require(r->leaf == (missing ? 0U : 7U) && r->higher_none == (missing ? 7U : 0U),
+		"empty leaf and absent upper-level table are distinct");
+	for (unsigned int i = 0; i < 3; i++)
+		require(missing ? !r->table_pfn[i] : r->table_pfn[i] && r->table_pfn[i] == r->table_pfn[0],
+			"all three leaf entries share the retained table");
+}
+static void print_tables(struct ub_pte_tables *r)
+{
+	printf("{\"leaf\":%llu,\"higher_none\":%llu,\"pfn\":[%llu,%llu,%llu]}",
+		(unsigned long long)r->leaf,(unsigned long long)r->higher_none,
+		(unsigned long long)r->table_pfn[0],(unsigned long long)r->table_pfn[1],(unsigned long long)r->table_pfn[2]);
+}
 static struct ub_ptes ptes(unsigned int g)
 {
 	struct ub_ptes r = {.address = addresses[g]};
@@ -108,7 +135,7 @@ static void *ex_origin(void *arg)
 	w->error = errno;
 	/* An untouched failed target is read by the controller only after its
 	 * page-table accounting/layout snapshot, so that read cannot obscure it. */
-	w->fault = w->result && !resident ? -2 : probe_read(addresses[w->group] + w->offset * PAGE);
+	w->fault = w->result && (!resident || KD_TEST_ABSENT) ? -2 : probe_read(addresses[w->group] + w->offset * PAGE);
 	atomic_store(&w->done, 1);
 	while (!atomic_load(&leave_threads)) usleep(1000);
 	return NULL;
@@ -236,12 +263,14 @@ static void verify_mappings(void)
 				require(r.anon == roots[g].anon && r.root == roots[g].root && r.links == 1 &&
 					r.refs == roots[g].refs && r.active == 1 + splits - lost && r.intervals == r.active,
 					"reverse-map root, links, active VMAs and reference lifetime");
-			} else if (changing && g == (native ? 0U : 1U)) {
+			} else if (changing && !changing_zero && g == (native ? 0U : 1U)) {
 				/* The controlled write fault created ancestry after preparation.
 				 * Its removed private target leaves the same root on both splits. */
 				require(r.anon && r.root == r.anon && r.links == 1 && r.refs == 1 &&
 					r.active == 1 + splits - lost && r.intervals == r.active &&
 					(!p || r.anon == rmaps[g][0].anon), "new native reverse-map ancestry survives target removal");
+				if (KD_TEST_ABSENT) require(r.anon == change_more.anon_after,
+					"surviving ancestry matches the controlled native fault");
 			} else require(!r.anon && !r.links && !r.refs && !r.active && !r.intervals,
 				"absent reverse map remains absent before first private write");
 		}
@@ -289,10 +318,14 @@ int main(int argc, char **argv)
 		native = !strcmp(argv[1], "native");
 		empty_control = !strcmp(argv[2], "change-empty") || !strcmp(argv[2], "missing-empty") || !strcmp(argv[2], "cancel-empty");
 		inherited = !strcmp(argv[2], "inherited");
+		missing_table = KD_TEST_ABSENT && !strcmp(argv[2], "missing-table");
+		changing_zero = KD_TEST_ABSENT && !strcmp(argv[2], "change-zero");
 		busy_page = !strcmp(argv[2], "refusal");
 		missing_target = !strcmp(argv[2], "missing") || !strcmp(argv[2], "missing-empty");
-		changing = !strcmp(argv[2], "change") || !strcmp(argv[2], "change-empty");
-		busy = busy_page || missing_target;
+		changing = !strcmp(argv[2], "change") || !strcmp(argv[2], "change-empty") ||
+			changing_zero || (KD_TEST_ABSENT && !strcmp(argv[2], "change-private"));
+		if (KD_TEST_ABSENT && (missing_table || changing)) empty_control = 1;
+		busy = busy_page || missing_target || missing_table;
 		cancellation = !strcmp(argv[2], "cancel") || !strcmp(argv[2], "cancel-empty"); free_first = !strcmp(argv[2], "free");
 	}
 	const char *shape = argc == 6 ? argv[4] : argv[2];
@@ -301,6 +334,7 @@ int main(int argc, char **argv)
 	for (unsigned int i = 0; i < sizeof(shapes) / sizeof(shapes[0]); i++)
 		if (!strcmp(shape, shapes[i].name)) { found = 1; slice = shapes[i].target; shape_mask = shapes[i].mask; shape_zero = shapes[i].zero; }
 	require(found || busy || cancellation || free_first || changing || inherited, "shape");
+	require(!KD_TEST_ABSENT || (!inherited && !missing_target), "absent target has no fabricated history or obsolete missing-PTE refusal");
 	require(!native || !(busy || cancellation || free_first), "native success controls use supported shapes");
 	require(injection != 2 || slice == 1, "two splits only for an interior range");
 	require(resident && (!injection || slice == 1), "zero-survivor resident interior error scope");
@@ -324,6 +358,8 @@ int main(int argc, char **argv)
 		masks[g] = shape_mask; zeros[g] = shape_zero;
 		if (injection && !native && !g) { masks[g] = 7; zeros[g] = 0; }
 		if (missing_target && g == 1) { masks[g] = empty_control ? 0 : 1; zeros[g] = empty_control ? 5 : 4; }
+		if (KD_TEST_ABSENT) zeros[g] &= ~(1U << slice);
+		if (missing_table && g == 1) { masks[g] = 0; zeros[g] = 0; }
 		if (inherited) {
 			/* Only the TARGET gets a temporary private history. No survivor is
 			 * populated to bypass eligibility. DONTNEED keeps its simple VMA
@@ -335,6 +371,9 @@ int main(int argc, char **argv)
 		for (unsigned int p = 0; p < 3; p++) if (masks[g] & (1U << p)) memset((void *)(addresses[g] + p * PAGE), pattern(g, p), PAGE);
 		for (unsigned int p = 0; p < 3; p++) if (zeros[g] & (1U << p))
 			require(!probe_read(addresses[g] + p * PAGE) && !observed, "read-fault intended zero slot without writing");
+		if (KD_TEST_ABSENT && !(missing_table && g == 1))
+			require(!probe_read(addresses[g] - 2 * PAGE) && !observed,
+				"independent neighbor establishes an existing table without accessing any target slot");
 		original[g] = layout(addresses[g]); roots[g] = rmap(addresses[g]);
 		if (masks[g] || inherited) require(roots[g].anon && roots[g].anon == roots[g].root && roots[g].links == 1 && roots[g].active == 1 && roots[g].intervals == 1, "one original reverse-map chain");
 		else require(!roots[g].anon && !roots[g].links, "no private page means no fabricated reverse map");
@@ -350,20 +389,28 @@ int main(int argc, char **argv)
 		if (busy_page) require(!ioctl(device, UB_BUSY_LOCK), "make final page busy before admission");
 	}
 	for (unsigned int g = 0; g < groups; g++) {
-		ptes_before[g] = ptes(g); check_ptes(g, ptes_before[g], masks[g], zeros[g]);
+		if (KD_TEST_ABSENT) {
+			tables_before[g] = table_state(g); check_tables(g, &tables_before[g]);
+			ptes_before[g] = tables_before[g].ptes;
+			require((injection && !native && !g) || (ptes_before[g].none & (1U << slice)),
+				"target is absent before admission without a data access");
+		} else ptes_before[g] = ptes(g);
+		check_ptes(g, ptes_before[g], masks[g], zeros[g]);
 	}
 	smaps = fopen("/proc/self/smaps", "r"); require(smaps != NULL, "open per-VMA resident accounting");
 	account(0); /* Allocate/warm the observation buffer before global mm counters. */
 	while (late_slot < 3 && ((masks[1] | zeros[1] | (1U << slice)) & (1U << late_slot))) late_slot++;
 	if (late_slot == 3) late_slot = 4; /* Existing, untouched neighbor VMA. */
-	if (changing) require(!ioctl(device, UB_CHANGE_ARM, native ? 1UL : 4UL), "arm exact zero target state change");
+	if (changing) require(!ioctl(device, KD_TEST_ABSENT ?
+		(changing_zero ? UB_CHANGE_EMPTY_ZERO_ARM : UB_CHANGE_EMPTY_PRIVATE_ARM) : UB_CHANGE_ARM,
+		native ? 1UL : 4UL), "arm exact target transition before queued execution");
 	extra_before = extra();
 	int fault_test = !native && !injection && !busy && !cancellation;
 	if (native) {
 		before = layout(base); workers[0].tid = syscall(SYS_gettid); workers[0].offset = slice; workers[0].width = 1;
 		if (changing) require(!ioctl(device, UB_CHANGE_NOW), "native controlled zero-to-private fault");
 		errno = 0; workers[0].result = munmap((void *)(base + slice * PAGE), PAGE); workers[0].error = errno;
-		workers[0].fault = probe_read(base + slice * PAGE);
+		workers[0].fault = KD_TEST_ABSENT && workers[0].result ? -2 : probe_read(base + slice * PAGE);
 	} else if (cancellation) {
 		before = layout(base); require(!ioctl(device, UB_CANCEL_PARTIAL), "queued fatal cancellation");
 	} else {
@@ -389,13 +436,24 @@ int main(int argc, char **argv)
 		wait_atomic(&holder_done); require(!hold_error, "reader controller drained");
 	}
 	if (changing) {
-		require(!ioctl(device, UB_CHANGE_RESULT, &change) && change.done && !change.result && change.before_zero && change.after_private,
-			"native target transition completed before body admission");
+		if (KD_TEST_ABSENT) {
+			require(!ioctl(device, UB_CHANGE_RESULT_MORE, &change_more), "extended native transition result");
+			change = change_more.state;
+			require(change_more.mode == (changing_zero ? 1U : 2U) && change_more.before_none && !change.before_zero &&
+				change_more.after_zero == (unsigned)changing_zero && change.after_private == (unsigned)!changing_zero &&
+				change_more.table_before == tables_before[native ? 0 : 1].table_pfn[0] &&
+				change_more.table_after == change_more.table_before && !change_more.anon_before &&
+				(changing_zero ? !change_more.anon_after : !!change_more.anon_after),
+				"absent target changes through a native fault in the same retained table");
+		} else require(!ioctl(device, UB_CHANGE_RESULT, &change) && change.before_zero && change.after_private,
+			"native zero-to-private transition");
+		require(change.done && !change.result, "native target transition completed before body admission");
 		require(change.index == (native ? 1U : 4U) && change.pending == (native ? 0U : 3U) &&
 			change.readers == (native ? 1U : 2U) && (native || change.admission == -1) &&
-			change.page.mapcount == 1 && change.page.refs == 2 && change.page.charged_same && !change.page.locked,
+			(changing_zero ? !change.page.pfn && !change.page.refs && change.zero_pfn :
+			change.page.mapcount == 1 && change.page.refs == 2 && change.page.charged_same && !change.page.locked),
 			"changed target exact reference and queued/local-reader ordering");
-		pin_mask |= 1U << change.index;
+		if (!changing_zero) pin_mask |= 1U << change.index;
 	}
 	after = layout(base); extra_after = extra();
 	unsigned int removed_pages = injection ? (native ? 0 : 3) : cancellation ? 1 : groups;
@@ -408,12 +466,17 @@ int main(int argc, char **argv)
 	if (!cancellation) for (unsigned int g = 0; g < groups; g++) {
 		int failed = injection && (native || g == 1);
 		require(workers[g].result == (failed ? -1 : 0) && (!failed || workers[g].error == ENOMEM), "original caller receives exact return");
-		require(workers[g].fault == (failed ? (resident ? 0 : -2) : SEGV_MAPERR), "same CPU checks retained or invalidated translation");
+		require(workers[g].fault == (failed ? (resident && !KD_TEST_ABSENT ? 0 : -2) : SEGV_MAPERR), "same CPU checks removal, delaying reads of failed absent targets");
 	}
 	for (unsigned int g = 0; g < groups; g++) {
 		unsigned int gone = 0;
 		for (unsigned int p = 0; p < 3; p++) if (removed(g, p)) gone |= 1U << p;
-		ptes_after[g] = ptes(g);
+		if (KD_TEST_ABSENT) {
+			tables_after[g] = table_state(g); check_tables(g, &tables_after[g]);
+			for (unsigned int p = 0; p < 3; p++) require(tables_after[g].table_pfn[p] == tables_before[g].table_pfn[p],
+				"the exact leaf table remains without freeing or replacement");
+			ptes_after[g] = tables_after[g].ptes;
+		} else ptes_after[g] = ptes(g);
 		check_ptes(g, ptes_after[g], masks[g] & ~gone,
 			(zeros[g] & ~gone) | (fault_test && g == 1 && late_slot < 3 ? 1U << late_slot : 0));
 	}
@@ -486,7 +549,8 @@ int main(int argc, char **argv)
 		clean.counts.calls == done.counts.calls + (native ? 0 : cleanup) &&
 		clean.counts.native == done.counts.native + (native ? 0 : cleanup), "cleanup cannot replay a failed body");
 	require(!close(device), "release mm reference");
-	printf("{\"zero_target_test\":1,\"shape\":\"%s\",\"no_resident\":%d,\"missing_target\":%d,\"busy_page\":%d,\"changing\":%d,\"late_slot\":%u,\"masks\":[",shape,no_resident,missing_target,busy_page,changing,late_slot);
+	printf("{\"zero_target_test\":%d,\"absent_target_test\":%d,\"shape\":\"%s\",\"no_resident\":%d,\"missing_target\":%d,\"missing_table\":%d,\"busy_page\":%d,\"changing\":%d,\"changing_zero\":%d,\"late_slot\":%u,\"masks\":[",
+		!KD_TEST_ABSENT,KD_TEST_ABSENT,shape,no_resident,missing_target,missing_table,busy_page,changing,changing_zero,late_slot);
 	for (unsigned int g=0;g<groups;g++) printf("%s%u",g?",":"",masks[g]);
 	printf("],\"zero_masks\":[");for(unsigned int g=0;g<groups;g++)printf("%s%u",g?",":"",zeros[g]);
 	printf("],\"ptes_written\":[");for(unsigned int g=0;g<groups;g++){if(g)putchar(',');print_ptes(&ptes_written[g]);}
@@ -514,11 +578,19 @@ int main(int argc, char **argv)
 	printf("],\"pages_before\":"); print_pages(&pages_before); printf(",\"pages_after\":"); print_pages(&pages_after);
 	printf(",\"empty_control\":%d,\"inherited\":%d",empty_control,inherited);
 	printf(",\"residency\":"); print_account();
+	if (KD_TEST_ABSENT) {
+		printf(",\"tables_before\":[");for(unsigned int g=0;g<groups;g++){if(g)putchar(',');print_tables(&tables_before[g]);}
+		printf("],\"tables_after\":[");for(unsigned int g=0;g<groups;g++){if(g)putchar(',');print_tables(&tables_after[g]);}putchar(']');
+		printf(",\"change_more\":{\"mode\":%llu,\"before_none\":%llu,\"after_zero\":%llu,\"table_before\":%llu,\"table_after\":%llu,\"anon_before\":%llu,\"anon_after\":%llu}",
+			(unsigned long long)change_more.mode,(unsigned long long)change_more.before_none,(unsigned long long)change_more.after_zero,
+			(unsigned long long)change_more.table_before,(unsigned long long)change_more.table_after,
+			(unsigned long long)change_more.anon_before,(unsigned long long)change_more.anon_after);
+	}
 	printf(",\"change\":{\"index\":%llu,\"actor\":%llu,\"pending\":%llu,\"readers\":%llu,\"admission\":%lld,\"zero_pfn\":%llu,\"before_zero\":%llu,\"after_private\":%llu,\"done\":%llu,\"result\":%lld,\"page\":",
 		(unsigned long long)change.index,(unsigned long long)change.actor,(unsigned long long)change.pending,(unsigned long long)change.readers,
 		(long long)change.admission,(unsigned long long)change.zero_pfn,(unsigned long long)change.before_zero,(unsigned long long)change.after_private,
 		(unsigned long long)change.done,(long long)change.result);
-	struct ub_pages changed = {.count = changing ? 1U : 0U}; changed.page[0] = change.page; print_pages(&changed); putchar('}');
+	struct ub_pages changed = {.count = changing && !changing_zero ? 1U : 0U}; changed.page[0] = change.page; print_pages(&changed); putchar('}');
 	printf(",\"late_fault_blocked\":%d,\"late_fault_code\":%d,\"late_fault_value\":%d,\"late_fault_stack\":",late_blocked,late_code,fault_value); print_string(late_stack); puts("}");
 	return 0;
 }
