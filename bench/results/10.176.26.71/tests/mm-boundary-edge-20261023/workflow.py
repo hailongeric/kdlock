@@ -15,7 +15,8 @@ RAW=ROOT/'bench/results/10.176.26.71/raw/tests/mm-boundary-edge-20261023'
 BASE='/root/kdlock-evidence/10.176.26.71/tests/mm-boundary-edge-20261023'
 C=runpy.run_path(str(HERE.parent/'serial-continuation-20261022/campaign.py'))
 SYNC=runpy.run_path(str(ROOT/'tools/vm/sync_source.py'))
-C['boot'].__globals__['PRIOR']=BASE+'/control'
+CONTROL=BASE+'/control-2'
+C['boot'].__globals__['PRIOR']=CONTROL
 
 
 def main():
@@ -25,7 +26,7 @@ def main():
     a=p.parse_args()
     local=RAW/(a.action+'-'+str(a.attempt));local.mkdir(parents=True)
     if a.action=='prepare':
-        assert a.attempt==1
+        assert a.attempt==2
         C['capture'](local/'availability-host.json')
         names={'kernel_integration/mmap_lock/guest-kernel.patch','kernel_integration/mmap_lock/install.py',
                'bench/results/10.176.26.71/tests/mm-resident-partial-20261023/incremental.patch'}
@@ -47,23 +48,23 @@ def main():
         header=dict(operation='copy',manifest=files,changed=changed,previous={n:before['hashes'][n] for n in changed})
         C['command'](ssh,local/'sync-after.json',180,(json.dumps(header)+'\n').encode()+archive.getvalue())
         after=json.loads((local/'sync-after.json').read_text());assert after['idle'] and after['hashes']==files
-        C['guest']('mkdir -p -- '+BASE+'/control',local/'mkdir.log',30)
-        C['copy_in']([local/'inputs.json',HERE/'build.py',HERE/'focus.py',HERE/'transition.py',HERE/'hydrate.py'],BASE+'/control/',local/'copy.log')
+        C['guest']('mkdir -p -- '+CONTROL,local/'mkdir.log',30)
+        C['copy_in']([local/'inputs.json',HERE/'build.py',HERE/'focus.py',HERE/'transition.py',HERE/'hydrate.py'],CONTROL+'/',local/'copy.log')
         host=C['capture'](local/'host.json');assert host['pins_verified'] and host['snapshot_listed']
-        C['copy_in']([local/'host.json'],BASE+'/control/',local/'copy-host.log')
+        C['copy_in']([local/'host.json'],CONTROL+'/',local/'copy-host.log')
     elif a.action=='build':
-        C['guest']('unshare --mount --propagation private '+C['remote']([BASE+'/control/build.py','--attempt',str(a.attempt)]),local/'build.log',2400)
+        C['guest']('unshare --mount --propagation private '+C['remote']([CONTROL+'/build.py','--attempt',str(a.attempt)]),local/'build.log',2400)
         C['fetch'](BASE+'/build-'+str(a.attempt)+'/result.json',local/'result.json')
     elif a.action=='run':
         host=C['capture'](local/'host.json');assert host['pins_verified'] and host['snapshot_listed']
-        C['guest'](C['remote']([BASE+'/control/focus.py','--run','focused-'+str(a.attempt)]),local/'focused.log',1200)
+        C['guest'](C['remote']([CONTROL+'/focus.py','--run','focused-'+str(a.attempt)]),local/'focused.log',1200)
         C['fetch'](BASE+'/focused-'+str(a.attempt)+'/result.json',local/'result.json')
     elif a.action in ('kd','recovery'):
         guest=BASE+'/'+a.action+'-'+str(a.attempt)
         C['guest']('mkdir -- '+guest,local/'mkdir.log',30)
         transition=C['boot'](a.action,guest,local)
         if a.action=='kd':
-            C['guest'](C['remote']([BASE+'/control/focus.py','--build-attempt','1','--run','focused-'+str(a.attempt)]),local/'focused.log',1200)
+            C['guest'](C['remote']([CONTROL+'/focus.py','--build-attempt','2','--run','focused-'+str(a.attempt)]),local/'focused.log',1200)
             C['fetch'](BASE+'/focused-'+str(a.attempt)+'/result.json',local/'result.json')
         else:C['save'](local/'result.json',transition)
     else:

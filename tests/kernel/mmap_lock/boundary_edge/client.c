@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0
+#define _GNU_SOURCE
 #include <stdint.h>
 static uintptr_t neighbors[3][2];
 #define KD_TEST_ABSENT 1

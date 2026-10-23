@@ -31,12 +31,12 @@ def save(path,row):rt.write_json(path,row)
 
 def main():
     p=argparse.ArgumentParser();p.add_argument('--attempt',type=int,default=1);a=p.parse_args()
-    assert a.attempt==1 and os.geteuid()==0 and os.uname().release=='6.1.159-kdclobber2'
+    assert a.attempt in (1,2) and os.geteuid()==0 and os.uname().release=='6.1.159-kdclobber2'
     assert os.readlink('/proc/self/ns/mnt')!=os.readlink('/proc/1/ns/mnt')
-    idle();inputs=json.loads((BASE/'control/inputs.json').read_text())
+    idle();inputs=json.loads((Path(__file__).parent/'inputs.json').read_text())
     for name,digest in inputs['files'].items():assert rt.digest(ROOT/name)==digest,name
     expected=json.loads((PRIOR/'control/expected-guest.json').read_text())['modules']
-    assert sorted(s.split()[0] for s in Path('/proc/modules').read_text().splitlines())==expected
+    assert sorted(s.split()[0] for s in Path('/proc/modules').read_text().splitlines())==sorted(expected+(['overlay'] if a.attempt==2 else []))
     assert verify(Path('/root/kdlock-kernel-baselines/mmap-kdmm5-20261022'),LOWER,build=True)['ok']
     parent=json.loads((PARENT/'manifest.json').read_text())
     # Reuse the finished headroom study; this is only a capacity check.
@@ -47,21 +47,31 @@ def main():
     assert shutil.disk_usage('/dev/shm').free > 7_739_283_276
     assert not Path('/boot/vmlinuz-6.1.159-kdmm15').exists()
     assert not Path('/lib/modules/6.1.159-kdmm15').exists()
-    log=BASE/'build-1';log.mkdir();OUT.mkdir();TREE.mkdir();RAM.mkdir();(RAM/'upper').mkdir();(RAM/'work').mkdir()
+    resume=a.attempt==2
+    if resume:
+        prior=json.loads((BASE/'build-1/result.json').read_text())
+        assert not prior['passed'] and not prior['installed'] and 'boundary-client.log' in prior['error']
+        assert not (BASE/'build-1/patch.log').exists() and not any(OUT.iterdir()) and not any(TREE.iterdir())
+    log=BASE/f'build-{a.attempt}';log.mkdir();OUT.mkdir(exist_ok=resume);TREE.mkdir(exist_ok=resume)
+    RAM.mkdir(exist_ok=resume);(RAM/'upper').mkdir(exist_ok=resume);(RAM/'work').mkdir(exist_ok=resume)
     state=dict(space_before=dict(root=shutil.disk_usage('/').free,ram=shutil.disk_usage('/dev/shm').free),passed=False,installed=False,booted=False,source_commit=inputs['commit'],parent_manifest_sha256=rt.digest(PARENT/'manifest.json'))
     save(log/'result.json',state)
-    recovery=BASE/'recovery';recovery.mkdir()
+    recovery=BASE/'recovery';recovery.mkdir(exist_ok=resume)
     names=[p for p in Path('/boot').glob('*-6.1.159-*') if p.is_file()]
     names += [Path('/boot/grub/grub.cfg'),Path('/etc/default/grub')]
     names += [p for d in ('/etc/default/grub.d','/etc/grub.d') for p in Path(d).glob('*') if p.is_file()]
-    save(recovery/'boot-sha256.json',{str(p):rt.digest(p) for p in names})
-    shutil.copyfile(PRIOR/'recovery/modules-sha256.json',recovery/'modules-sha256.json')
-    shutil.copyfile('/boot/grub/grub.cfg',recovery/'grub-before.cfg')
-    save(BASE/'control/expected-guest.json',dict(modules=expected))
+    boot_hashes={str(p):rt.digest(p) for p in names}
+    if resume:
+        assert json.loads((recovery/'boot-sha256.json').read_text())==boot_hashes
+    else:
+        save(recovery/'boot-sha256.json',boot_hashes)
+        shutil.copyfile(PRIOR/'recovery/modules-sha256.json',recovery/'modules-sha256.json')
+        shutil.copyfile('/boot/grub/grub.cfg',recovery/'grub-before.cfg')
+        save(BASE/'control/expected-guest.json',dict(modules=expected))
     command(['modprobe','overlay'],log/'overlay-load.log',30)
     command(['mount','-t','overlay','overlay','-o',f'lowerdir={LOWER},upperdir={RAM}/upper,workdir={RAM}/work',TREE],log/'mount.log',30)
     try:
-        probes=BASE/'probes-1';probes.mkdir();binaries={}
+        probes=BASE/f'probes-{a.attempt}';probes.mkdir();binaries={}
         for family,module in [('unmap_body','kd_mm_unmap_test'),('populated_unmap','kd_mm_populated_test')]:
             dest=probes/family;(dest/'payload').mkdir(parents=True)
             for source in (PRIOR/'probes-1'/family).rglob('*'):

@@ -24,7 +24,7 @@ def idle():
 
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--build-attempt',type=int,default=1)
+    parser.add_argument('--build-attempt',type=int,default=2)
     parser.add_argument('--run',default='focused-1')
     parser.add_argument('--probe-revision',type=Path)
     a=parser.parse_args()
