@@ -196,7 +196,7 @@ static int hold(struct session *s, unsigned int count, bool cancel)
 		/* Both local read shares already exist. A normal write fault using
 		 * one of them can finish while queued writers await their release.
 		 * No reader bypass, PTE poke or body callback is introduced. */
-		if (cancel || count != (s->change.mode >= 6 && s->change.mode != 11 ? 2 : 3) || kd_mmap_unmap_pending(s->mm) != count ||
+		if (cancel || count != (s->change.mode >= 6 && s->change.mode != 11 && s->change.mode != 13 && s->change.mode != 14 ? 2 : 3) || kd_mmap_unmap_pending(s->mm) != count ||
 		    atomic_long_read(&s->mm->mmap_lock.kd.admission) != -1 ||
 		    atomic_long_read(&s->mm->mmap_lock.kd.readers) != 2) {
 			error = -EINVAL; goto out;
@@ -277,6 +277,9 @@ static long operation(struct file *file, unsigned int cmd, unsigned long arg)
 	case UB_CHANGE_EDGE_PRIVATE_BUSY_ARM:
 	case UB_CHANGE_SHARED_ZERO_PRIVATE_ARM:
 	case UB_CHANGE_SHARED_ZERO_BUSY_ARM:
+	case UB_CHANGE_SHARED_EMPTY_ZERO_ARM:
+	case UB_CHANGE_SHARED_EMPTY_PRIVATE_ARM:
+	case UB_CHANGE_SHARED_EMPTY_BUSY_ARM:
 		return change_operation(s, cmd, arg);
 	case UB_EXPERIMENT:
 		return experiment(s, arg);

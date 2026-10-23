@@ -99,4 +99,9 @@ struct ub_bases { __u64 base[3]; };
  * two for conversion followed by a busy-page refusal. */
 #define UB_CHANGE_SHARED_ZERO_PRIVATE_ARM _IO('U', 0x85)
 #define UB_CHANGE_SHARED_ZERO_BUSY_ARM _IO('U', 0x86)
+/* Shared-table empty targets: positive read/write faults use three queued
+ * requests; the write-fault/busy-page refusal uses two and a sticky third. */
+#define UB_CHANGE_SHARED_EMPTY_ZERO_ARM _IO('U', 0x87)
+#define UB_CHANGE_SHARED_EMPTY_PRIVATE_ARM _IO('U', 0x88)
+#define UB_CHANGE_SHARED_EMPTY_BUSY_ARM _IO('U', 0x89)
 #endif

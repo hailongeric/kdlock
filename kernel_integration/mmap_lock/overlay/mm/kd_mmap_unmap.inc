@@ -174,12 +174,13 @@ static bool kd_mmap_unmap_hold_edge(struct mm_struct *mm,
 		pte_unmap_unlock(pte, ptl);
 		if (!supported) return false;
 	}
-	/* Sharing the retained target table admits the proven private class or
-	 * the exact special zero PTE above. Zero targets take no page reference,
-	 * lock or rmap ownership: native zap clears only their translation and
-	 * finishes its TLB invalidation. A missing/empty target stays refused in
-	 * this geometry. No owned-page count substitutes for admission. */
-	if (edge->shared && !(edge->target_private || edge->target_zero)) goto rollback;
+	/* A genuinely empty leaf in this existing retained table owns no page
+	 * or translation. Native removal must still split/remove its VMA range;
+	 * it neither populates the leaf nor frees the table proved retained above.
+	 * Only pte_none() joins the already checked private/zero classes. Missing
+	 * tables and special non-present entries do not inherit this admission. */
+	if (edge->shared && !(edge->target_private || edge->target_zero ||
+	    (!edge->target_missing && pte_none(edge->target_entry)))) goto rollback;
 	ptl = pmd_lock(mm, edge->survivor);
 	edge->survivor_missing = pmd_none(*edge->survivor);
 	spin_unlock(ptl);

@@ -8,7 +8,7 @@ shared=runpy.run_path(str(Path(__file__).parents[1]/'boundary_edge/controls.py')
 
 def check(row,log,validate):
     passed=shared(row,log,validate);mutations=[]
-    if 'KD_MM_BOUNDARY_EMPTY ' in log:
+    if 'KD_MM_BOUNDARY_EMPTY ' in log or 'KD_MM_BOUNDARY_SHARED_EMPTY ' in log:
         mutations.append(('wrong-target-table-identity',row,re.sub(r'target_table_pfn=[0-9a-f]+','target_table_pfn=0',log)))
         mutations.append(('populated-target-accepted',row,log.replace('target_pte_none=1','target_pte_none=0')))
     if row['mode']=='free-table':
