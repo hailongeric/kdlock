@@ -1,30 +1,33 @@
 # Actual mmap-lock kernel integration
 
-The [bounded munmap experiment](UNMAP.md#empty-target-sharing-a-boundary-table)
-now also removes one empty prefix/suffix entry from a three-page anonymous
-VMA (virtual memory area) with one survivor sharing the target leaf table and
-one across a 2-MiB boundary. Both outer-neighbor retention guards remain mandatory.
-`kdmm21` passed 69 serial cases, two basic tests and 2,254 negative receipt
-controls, with 42 different-task empty removals and 18 native-matched layouts.
-Twenty-two empty removals held no private pages. Two queued targets converted to
-zero and two to private passed the complete existing classifiers and were also
-removed by a different task. A missing target table remains refused here.
-Split errors, exact handback/acknowledgment (ACK), cancellation, local reader
-faults and cleanup passed.
+The [bounded munmap experiment](UNMAP.md#missing-target-table-shared-with-an-untouched-survivor)
+now removes a prefix/suffix page from a three-page anonymous VMA (virtual memory
+area) when its leaf page table is genuinely missing. The near survivor shares
+that missing-table range and stays untouched; the far survivor lies across a
+2-MiB boundary and may be private resident, shared zero or untouched. Both
+outer-neighbor guards and the exact native table-retention proof remain mandatory.
+No table is allocated merely to remove the target.
+
+`kdmm22` passed 48 serial cases, two basic tests and 1,709 negative receipt
+controls. Six feasible layouts matched native behavior. There were 20
+different-task missing-table removals, plus two each after queued appearance of
+an empty, shared-zero or private target. Twenty of these 26 removals held no
+private pages. Split errors, handback/acknowledgment (ACK), cancellation, local
+reader faults, target inaccessibility after survivor faults and cleanup passed.
 Recovery is restored and test modules are unloaded. See the
-[result record](../../bench/results/10.176.26.71/tests/mm-boundary-shared-empty-20261024/README.md)
-and [runnable commands](../../tests/kernel/mmap_lock/boundary_shared_empty/README.md).
-The [kdmm20 baseline](../../bench/results/10.176.26.71/tests/mm-boundary-shared-zero-20261023/README.md)
-and earlier campaigns remain separate. Eight small smokes preserve existing
-boundary paths and keep missing-table targets refused in the shared geometry.
-Multiply mapped private pages, COW (copy-on-write) pages, huge mappings,
-unsupported special entries and busy pages still hand back before destructive
-work. Interior crossing, missing higher
-levels, larger mappings, complex ancestry, general table destruction and mmap
-creation remain outside this extension. Controlled transitions do not establish
-uncontrolled fault/reclaim/pinning race coverage or a performance gain. Queued
-neighbor replacement remains untested because it needs writer ownership while
-the current fixture holds reader shares.
+[result record](../../bench/results/10.176.26.71/tests/mm-boundary-shared-missing-20261024/README.md)
+and [runnable commands](../../tests/kernel/mmap_lock/boundary_shared_missing/README.md).
+The [kdmm21 baseline](../../bench/results/10.176.26.71/tests/mm-boundary-shared-empty-20261024/README.md)
+and earlier campaigns remain separate. Eight smokes preserve existing shared
+empty/zero/private and isolated missing-table paths without historical reruns.
+
+Unsupported private pages, huge mappings, special entries and missing higher
+levels remain refused. Interior crossing, larger mappings, complex ancestry,
+general table destruction and mmap creation remain outside this extension.
+Retention loss was tested before publication. Queued neighbor replacement needs
+a separate writer gate and remains untested; the current fixture holds reader
+shares. Controlled faults do not establish uncontrolled fault/reclaim/pinning
+race coverage or any performance gain.
 
 The separate [anonymous write-fault experiment](FAULT.md) passed focused serial
 correctness on `kdmm3`: 129 real page-installation bodies completed on other
