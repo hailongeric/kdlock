@@ -452,11 +452,54 @@ PTE probe exposes zero classification via `is_zero_pfn()` and fills its PFN arra
 only for private pages; actual zero frame identity is recorded by kernel bodies
 and native/queued transitions. No zero page receives ordinary ownership.
 
-Queued zero/untouched-to-private near creation, interior neighbor replacement,
-opposite guard loss, uncontrolled writes/faults/reclaim/pinning and hibernation
-remain untested. The next small coverage step is near-page creation revalidation;
-a private interior target with an untouched near survivor is the next useful
-implementation candidate and remains refused.
+Queued zero/untouched-to-private near creation was not part of that original
+campaign; the validation-only follow-up below closes it. Interior neighbor
+replacement, opposite guard loss, uncontrolled writes/faults/reclaim/pinning and
+hibernation remain untested. A private interior target with an untouched near
+survivor remains the next useful implementation candidate and is still refused.
+
+## Queued private near-survivor creation
+
+The [follow-up record](../../bench/results/10.176.26.71/tests/mm-interior-near-create-20261024/README.md)
+reuses the exact installed kdmm29 kernel, runtime modules and initramfs. Production
+already rewalks/classifies the current near page and prepares both reverse-map
+links independently of initial ancestry. No eligibility guard or allocation path
+needed a change. Only the correctness probe, clients and receipt validators changed.
+
+For either existing empty or shared-zero middle target, the near survivor begins
+U (no PTE) or Z (verified shared-zero PTE), with far R/Z/U. Both orientations and
+all 24 layouts have native controls. Three published requests and two already-held
+local readers precede a native `get_user_pages(FOLL_WRITE)` fault on the near slot.
+This wrapper retains the existing mmap read share; it cannot drop/reacquire it
+on retry. The probe owns exactly one new private reference and verifies zero-fill
+before setting a known pattern. There is no synthetic unmap callback or reader bypass.
+
+After readers release, the combiner takes actual mmap write ownership and rewalks
+current PTE/table identity, simple ancestry, both outer guards and native two-split
+retention bounds. The eligible new near page gains its exact reference/lock;
+new ancestry is supported by the original caller's already-prepared links.
+Sixteen layouts create ancestry, while eight retain ancestry from a far R page.
+The reference count is 2 before/after the body and 3 during its hold. Native zero
+clearing and TLB completion still exclude the zero page from ordinary ownership.
+The table is retained and no private interior target is admitted.
+
+All 70 serial cases, two basic tests and 2,632 negative receipt controls passed.
+There were 24 changed-survivor remote removals, 24 unchanged peer removals and
+eight preservation bodies. Four admitted split errors match native harmless
+splits without local replay. Four busy controls verify early refusal or exact
+release of an earlier near/far hold before handback/ACK; the next call stays local.
+Two cancellations create the private survivor before fatal cancellation and keep
+the victim mapped while retiring every caller resource and test reference.
+
+Pre-access observations bind PTEs, VMA boundaries, ancestry, private accounting,
+references and table identities without populating untouched survivors. Later
+normal faults and isolated writes preserve other survivors, neighboring mappings
+and the independent zero mapping; removed addresses remain inaccessible. Cleanup
+and normal module unload passed; recovery is restored. See the [probe guide](../../tests/kernel/mmap_lock/interior_near_create/README.md)
+for exact controls and commands. Busy/error/cancellation modes cover the listed
+subset, not every layout. Uncontrolled fault/reclaim/pinning races, interior
+neighbor replacement, allocation exhaustion and a new waiting-fault fixture
+remain untested. This follow-up makes no broader mapping or performance claim.
 
 ## Reviewed boundary
 
@@ -1491,9 +1534,9 @@ limit. The separate native writer gate now validates queued neighbor replacement
 with preservation and retention-loss outcomes. Interior removal now has its own
 two-split proof and failure checks in the bounded classes above. The next useful
 candidate is a private interior target beside an untouched near survivor, retaining
-exact target ownership through native teardown; this remains refused. Queued
-near-page creation is a smaller remaining revalidation-coverage step. General table destruction and
-missing higher levels remain deferred. The kdmm16 reversed empty-target gaps
+exact target ownership through native teardown; this remains refused. Controlled
+queued near-page creation now has separate native-matched validation above.
+General table destruction and missing higher levels remain deferred. The kdmm16 reversed empty-target gaps
 remain closed; the eight omitted kdmm18 isolated private layouts are not covered
 retroactively by this geometry. Controlled queued target/near faults passed,
 including busy-page handback; uncontrolled races remain untested.

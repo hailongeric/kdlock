@@ -1,5 +1,18 @@
 # Actual mmap-lock kernel integration
 
+The latest correctness follow-up validates [queued private near-survivor
+creation](UNMAP.md#queued-private-near-survivor-creation) on unchanged `kdmm29`.
+An initially untouched or shared-zero near survivor becomes private after
+publication; the actual mmap writer revalidates its current page and ancestry.
+All 24 layouts matched native behavior: **70 serial cases, two basic tests and
+2,632 negative receipt controls** passed. There were 24 changed-survivor remote
+removals, 24 unchanged peer removals, four remote split errors, four exact
+handback/ACK pairs, two cancellations after creation and eight smoke removals.
+Only two clients and one test module were built. Recovery is restored and modules
+unloaded. See [results](../../bench/results/10.176.26.71/tests/mm-interior-near-create-20261024/README.md)
+and [commands](../../tests/kernel/mmap_lock/interior_near_create/README.md).
+Controlled queued transitions do not establish uncontrolled race coverage.
+
 The latest [bounded munmap extension](UNMAP.md#shared-zero-interior-target-with-a-private-near-survivor)
 is `kdmm29`: a shared-zero middle target may retain an ordinary private near
 survivor in the same three-page boundary geometry. Both outer-neighbor guards,
