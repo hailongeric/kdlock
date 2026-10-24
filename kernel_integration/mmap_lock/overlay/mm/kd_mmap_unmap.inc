@@ -221,14 +221,16 @@ static bool kd_mmap_unmap_hold_edge(struct mm_struct *mm,
 		 * The mmap writer retains both tables; never hold two PTE locks or
 		 * carry a PTE pointer across the table boundary. */
 		pte = pte_offset_map_lock(mm, slot, addr, &ptl);
-		/* A zero interior target may retain an exact shared-zero near PTE.
-		 * The common classifier records it without private-page ownership;
-		 * post-body/error checks preserve it under this retained mmap writer.
-		 * Other target classes still require an empty near slot. A private or
-		 * special near entry refuses before either split and rolls back any
-		 * preceding far-page hold exactly; native work must never replay. */
+		/* An empty or zero interior target may retain an exact shared-zero
+		 * near PTE in this existing table. Target classification was captured
+		 * under its PTE lock and remains stable under the mmap writer; never
+		 * allocate a target page or table. The common classifier owns no zero
+		 * page, and post-body/error checks preserve the surviving PTE.
+		 * Private/special near entries refuse before either split, rolling
+		 * back any earlier far hold exactly; native work must never replay. */
 		if (edge->interior && slot == edge->target && !pte_none(ptep_get(pte)) &&
-		    !(edge->target_zero && kd_mmap_unmap_zero_pte(ptep_get(pte)))) {
+		    !(!edge->target_missing && (edge->target_zero || pte_none(edge->target_entry)) &&
+		      kd_mmap_unmap_zero_pte(ptep_get(pte)))) {
 			pte_unmap_unlock(pte, ptl);
 			goto rollback;
 		}

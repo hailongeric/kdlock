@@ -25,7 +25,7 @@ def validate(row,log,*,empty=False,zero=False,near_zero=False):
     near,far=(2,0) if right else (0,2)
     allowed=('middle-ru','middle-zu','middle-uu') if right else ('middle-ur','middle-uz','middle-uu')
     if near_zero:
-        require(zero, 'zero near survivor requires a zero target')
+        require(zero or empty, 'zero near survivor requires an existing empty/zero target')
         allowed=('middle-rz','middle-zz','middle-uz') if right else ('middle-zr','middle-zz','middle-zu')
     require(row['shape'] in allowed, 'bounded interior survivor class differs')
     victim=0 if native else 1
@@ -38,8 +38,8 @@ def validate(row,log,*,empty=False,zero=False,near_zero=False):
                 'interior cut or boundary orientation differs')
         near_bit=1<<near
         require(not (row['masks'][g]&near_bit) and bool(row['zero_masks'][g]&near_bit)==near_zero and
-                row['ptes_before'][g]['none']&same==(0 if near_zero else same^2 if zero else same) and
-                row['ptes_before'][g]['zero']&same==(same if near_zero else 2 if zero else 0) and not w['upper_none'],
+                row['ptes_before'][g]['none']&same==((0 if zero else 2) if near_zero else same^2 if zero else same) and
+                row['ptes_before'][g]['zero']&same==((same if zero else near_bit) if near_zero else 2 if zero else 0) and not w['upper_none'],
                 'exact target/near survivor classes require existing upper levels')
         if empty or zero or mode=='table' and g==victim:
             require(w['leaf']&same==same and w['table_pfn'][1]>0, 'existing target table was not observed')
@@ -55,7 +55,9 @@ def validate(row,log,*,empty=False,zero=False,near_zero=False):
     else:require(not any(move.values()), 'unexpected retaining-neighbor modification')
     pre=list(re.finditer('KD_MM_INTERIOR preflight '+IDENT+r' old_start=([0-9a-f]+) old_end=([0-9a-f]+) outer_floor=([0-9a-f]+) outer_ceiling=([0-9a-f]+) floor=([0-9a-f]+) ceiling=([0-9a-f]+) required_splits=2 no_table_walk=1',log))
     bounds=list(re.finditer('KD_MM_INTERIOR split_bounds '+IDENT+r' left_start=([0-9a-f]+) left_end=([0-9a-f]+) right_start=([0-9a-f]+) right_end=([0-9a-f]+) splits=2 tables_unchanged=1',log))
-    done=list(re.finditer('KD_MM_BOUNDARY_INTERIOR_'+('ZERO' if zero else 'EMPTY' if empty else 'MISSING')+' (?:done|error) '+IDENT,log))
+    changed_zero=near_zero and empty and mode=='change-zero'
+    body_class=r'(?:EMPTY|ZERO)' if changed_zero else 'ZERO' if zero else 'EMPTY' if empty else 'MISSING'
+    done=list(re.finditer('KD_MM_BOUNDARY_INTERIOR_'+body_class+' (?:done|error) '+IDENT,log))
     require(sorted(p.groups()[:6] for p in pre)==sorted(p.groups() for p in done), 'pre-split retention proof not bound to every remote body/error')
     expected_bounds=[] if row['injection']==1 else [p.groups() for p in done]
     require(sorted(p.groups()[:6] for p in bounds)==sorted(expected_bounds), 'second split bounds missing, duplicated or claimed after first-split failure')
@@ -75,7 +77,7 @@ def validate(row,log,*,empty=False,zero=False,near_zero=False):
             b=next(x for x in bounds if x.groups()[:6]==r[:6])
             require(tuple(int(x,16) for x in b.groups()[6:])==(lo,start,end,hi) and p.end()<b.start()<d.start(),
                     'actual post-split adjacent VMAs do not establish native floor/ceiling')
-    require(not re.search(r'KD_MM_BOUNDARY_INTERIOR_'+(r'(?:MISSING|EMPTY|PRIVATE)' if zero else r'(?:MISSING|ZERO|PRIVATE)' if empty else r'(?:EMPTY|ZERO|PRIVATE)'),log), 'unsupported interior target class executed')
-    return dict(result,remote_interior_missing_removals=0 if empty or zero else result['remote_boundary_removals'],remote_interior_empty_removals=result['remote_boundary_removals'] if empty else 0,remote_interior_zero_removals=result['remote_boundary_removals'] if zero else 0,two_split_retention_verified=True,
+    require(not re.search(r'KD_MM_BOUNDARY_INTERIOR_'+(r'(?:MISSING|EMPTY|PRIVATE)' if zero else (r'(?:MISSING|PRIVATE)' if changed_zero else r'(?:MISSING|ZERO|PRIVATE)') if empty else r'(?:EMPTY|ZERO|PRIVATE)'),log), 'unsupported interior target class executed')
+    return dict(result,remote_interior_missing_removals=0 if empty or zero else result['remote_boundary_removals'],remote_interior_empty_removals=result['remote_boundary_removals']-result['remote_changed_boundary_zero_removals'] if empty else 0,remote_interior_zero_removals=result['remote_boundary_removals'] if zero else result['remote_changed_boundary_zero_removals'],two_split_retention_verified=True,
                 interior_right=right,near_survivor_untouched_before_access=not near_zero,near_survivor_shared_zero_before_access=near_zero,retained_outer_guards=True,
-                existing_table_refused=not (empty or zero) and mode in ('table','appear'),populated_transition_refused=(empty or zero) and mode in ('change-zero','change-private','change-near-private'),error_after_split=row['injection'])
+                existing_table_refused=not (empty or zero) and mode in ('table','appear'),populated_transition_refused=(empty or zero) and not changed_zero and mode in ('change-zero','change-private','change-near-private'),error_after_split=row['injection'])

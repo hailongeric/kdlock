@@ -32,7 +32,7 @@ def validate(row, log, *, empty=False, zero=False, private=False, shared=False, 
     ev=common['validate'](row,log,absent=not (zero or private),boundary=True,boundary_empty=empty,boundary_zero=zero,boundary_private=private,boundary_shared=shared,boundary_shared_missing=shared_missing,neighbor=neighbor,interior=interior,interior_near_zero=interior_near_zero)
     n,native,target,mode=row['groups'],row['native'],row['slice'],row['mode']
     victim=0 if native else 1
-    require((target==1 if interior else target in (0,2)) and mode in ((('success','error1','error2','cancel','change-private','change-near-private','free-table','fault') if zero else ('success','error1','error2','cancel','change-zero','change-private','free-table','fault') if empty else ('success','error1','error2','cancel','appear','table','free-table','fault')) if interior else ('success','error','cancel','appear-near-zero','appear-zero','appear-private','appear-private-busy','free-table','fault') if shared_missing else ('success','error','cancel','free','change-busy','change-near-zero','free-table','shared','fault','busy') if private else ('success','error','cancel','change-zero','change-private','change-private-busy','free-table','shared','fault','busy') if existing else ('success','error','cancel','appear','table','free-table','shared','fault','busy')), 'unsupported edge input')
+    require((target==1 if interior else target in (0,2)) and mode in ((('success','error1','error2','cancel','change-private','change-near-private','free-table','fault') if zero else ('success','error1','error2','cancel','change-zero','change-private','change-near-private','free-table','fault') if empty else ('success','error1','error2','cancel','appear','table','free-table','fault')) if interior else ('success','error','cancel','appear-near-zero','appear-zero','appear-private','appear-private-busy','free-table','fault') if shared_missing else ('success','error','cancel','free','change-busy','change-near-zero','free-table','shared','fault','busy') if private else ('success','error','cancel','change-zero','change-private','change-private-busy','free-table','shared','fault','busy') if existing else ('success','error','cancel','appear','table','free-table','shared','fault','busy')), 'unsupported edge input')
     require(row['injection']==((1 if mode=='error1' else 2 if mode=='error2' else 0) if interior else mode=='error') and row['cancel']==(mode=='cancel') and row['fault_interaction']==(mode=='fault') and
             row['busy_page']==(mode=='busy') and row['free_first']==(private and mode=='free') and row['interval_cleanup_calls']==n*4, 'case/control/cleanup routing differs')
     require((row['page_size'],row['pmd_size'],row['pud_size'])==(PAGE,PMD,PUD) and row['pgdir_size'] in (1<<39,1<<48), 'unsupported architecture geometry')
@@ -111,10 +111,11 @@ def validate(row, log, *, empty=False, zero=False, private=False, shared=False, 
         require(len(changed_private)==(not native), 'changed boundary target was not removed exactly once')
         dones+=changed_private
     changed_zero=[]
-    if shared and not interior and (empty and mode=='change-zero' or shared_missing and mode=='appear-zero'):
-        # An empty leaf may become zero only through the fully revalidated
-        # kdmm20 path. Its receipt must bind the changed victim exactly once.
-        changed_zero=re.findall('KD_MM_BOUNDARY_SHARED_ZERO done '+IDENT+suffix.replace('target_pmd_none=1','target_pmd_none=0')+
+    if shared and (not interior or interior_near_zero) and (empty and mode=='change-zero' or shared_missing and mode=='appear-zero'):
+        # A changed leaf selects the fully revalidated zero class for this
+        # exact geometry. Bind the changed victim and native TLB completion;
+        # an edge-only receipt cannot stand in for an interior body.
+        changed_zero=re.findall(('KD_MM_BOUNDARY_INTERIOR_ZERO' if interior else 'KD_MM_BOUNDARY_SHARED_ZERO')+' done '+IDENT+suffix.replace('target_pmd_none=1','target_pmd_none=0')+
             r' target_table_pfn=([0-9a-f]+) target_pte_none=1 target_zero=1 zero_pfn=([0-9a-f]+) zero_owned=0'+fields+r' zero_tlb_complete=1',log)
         require(len(changed_zero)==(not native), 'changed zero target was not removed exactly once')
         dones+=changed_zero
@@ -180,7 +181,7 @@ def validate(row, log, *, empty=False, zero=False, private=False, shared=False, 
             ack=re.search('KD_MM_UNMAP handback '+IDENT,log)
             require(ack and ack.group(3)==str(row['origins'][1]['tid']) and trans[0].end()<ack.start(), 'table appearance did not cause pre-effect handback')
     elif not existing and not shared_missing:require(not any(row['change_more'].values()), 'unexpected table appearance')
-    if existing and not (private and mode in ('change-busy','change-near-zero') or shared and not interior and zero and mode in ('change-private','change-private-busy') or shared and not interior and empty and mode in ('change-zero','change-private','change-private-busy')):validate_empty_controls(row,log,zero=zero,shared=shared,interior=interior)
+    if existing and not (interior_near_zero and empty and mode=='change-zero' or private and mode in ('change-busy','change-near-zero') or shared and not interior and zero and mode in ('change-private','change-private-busy') or shared and not interior and empty and mode in ('change-zero','change-private','change-private-busy')):validate_empty_controls(row,log,zero=zero,shared=shared,interior=interior)
     require(not zero or mode!='change-zero', 'zero target cannot use empty-to-zero control')
     if mode!='fault':require(not any(row[k] for k in ('late_fault_blocked','late_fault_code','late_fault_value','late_fault_stack')), 'unrecorded fault obscures initial states')
     return dict(ev,remote_boundary_removals=len(dones),remote_boundary_errors=len(errors),remote_boundary_without_private_holds=sum(not row['masks'][origins[r[2]][0]] and r not in changed_private for r in dones),remote_changed_boundary_private_removals=len(changed_private),remote_changed_boundary_zero_removals=len(changed_zero),remote_changed_boundary_empty_removals=len(changed_empty),empty_target_checks=empty,boundary_zero_checks=zero,boundary_private_checks=private,remote_private_boundary_removals=len(dones) if private else 0,remote_private_without_probe_holds=len(dones) if private and row['free_first'] else 0,retention_bounds_verified=True,

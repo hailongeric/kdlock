@@ -123,14 +123,14 @@ int main(int argc, char **argv)
 	missing_busy = KD_BOUNDARY_SHARED_MISSING && !strcmp(mode, "appear-private-busy");
 	zero_convert = KD_BOUNDARY_SHARED && !KD_BOUNDARY_INTERIOR && KD_BOUNDARY_ZERO && !strcmp(mode, "change-private");
 	zero_busy = KD_BOUNDARY_SHARED && KD_BOUNDARY_ZERO && !strcmp(mode, "change-private-busy");
-	empty_convert = KD_BOUNDARY_SHARED && !KD_BOUNDARY_INTERIOR && KD_BOUNDARY_EMPTY && (!strcmp(mode, "change-zero") || !strcmp(mode, "change-private"));
+	empty_convert = KD_BOUNDARY_SHARED && (!KD_BOUNDARY_INTERIOR || (KD_BOUNDARY_NEAR_ZERO && !strcmp(mode, "change-zero"))) && KD_BOUNDARY_EMPTY && (!strcmp(mode, "change-zero") || !strcmp(mode, "change-private"));
 	empty_busy = KD_BOUNDARY_SHARED && KD_BOUNDARY_EMPTY && !strcmp(mode, "change-private-busy");
 	changing = near_private || missing_convert || missing_busy || empty_busy || zero_busy || near_zero || (KD_BOUNDARY_PRIVATE ? !strcmp(mode, "change-busy") : KD_BOUNDARY_ZERO ? !strcmp(mode, "change-private") : KD_BOUNDARY_EMPTY ? !strcmp(mode, "change-zero") || !strcmp(mode, "change-private") : !strcmp(mode, "appear"));
 	changing_zero = near_zero || (KD_BOUNDARY_SHARED_MISSING ? !strcmp(mode, "appear-zero") : changing && !KD_BOUNDARY_PRIVATE && !KD_BOUNDARY_ZERO && (!KD_BOUNDARY_EMPTY || !strcmp(mode, "change-zero")));
 	table_change = missing_convert ? (near_zero ? 16 : changing_zero ? 17 : 18) : missing_busy ? 19 : empty_convert ? (changing_zero ? 13 : 14) : empty_busy ? 15 : zero_convert ? 11 : zero_busy ? 12 : near_zero ? 1 : changing ? (KD_BOUNDARY_PRIVATE ? 10 : KD_BOUNDARY_ZERO ? 9 : KD_BOUNDARY_EMPTY ? (changing_zero ? 7 : 8) : 6) : 0;
 	if (KD_BOUNDARY_INTERIOR) {
 		require(!missing_convert && !missing_busy && !near_zero, "interior appearance uses explicit safe handback control");
-		if (changing) { changing_zero = KD_BOUNDARY_ZERO ? 0 : KD_BOUNDARY_EMPTY ? !strcmp(mode, "change-zero") : 1; table_change = KD_BOUNDARY_ZERO ? 9 : KD_BOUNDARY_EMPTY ? (changing_zero ? 7 : 8) : 6; }
+		if (changing) { changing_zero = KD_BOUNDARY_ZERO ? 0 : KD_BOUNDARY_EMPTY ? !strcmp(mode, "change-zero") : 1; table_change = near_private || KD_BOUNDARY_ZERO ? 9 : KD_BOUNDARY_EMPTY ? (changing_zero ? (empty_convert ? 13 : 7) : 8) : 6; }
 	}
 	fault_interaction = !strcmp(mode, "fault"); busy_page = !strcmp(mode, "busy");
 	free_table = !strcmp(mode, "free-table"); present_table = !strcmp(mode, "table"); shared_edge = !strcmp(mode, "shared");
@@ -144,10 +144,10 @@ int main(int argc, char **argv)
 	require(!busy_page || (slice == 0 && shape_mask == (KD_BOUNDARY_PRIVATE ? 7U : 6U)), "busy final survivor has an earlier exact hold");
 	if (KD_BOUNDARY_NEAR_ZERO) {
 		unsigned int near = interior_right ? 2 : 0;
-		require(KD_BOUNDARY_INTERIOR && KD_BOUNDARY_ZERO && (shape_zero & (1U << near)) &&
+		require(KD_BOUNDARY_INTERIOR && (KD_BOUNDARY_ZERO || KD_BOUNDARY_EMPTY) && (shape_zero & (1U << near)) &&
 			!(shape_mask & (1U << near)) && !fault_interaction && !shared_edge,
-			"zero target and verified zero near survivor; no private near admission");
-		if (changing && !near_private) require(!shape_mask && shape_zero == ((1U << near) | 2U),
+			"empty/zero target and verified zero near survivor; no private near admission");
+		if (changing && !near_private) require(!shape_mask && shape_zero == ((1U << near) | (KD_BOUNDARY_ZERO ? 2U : 0)),
 			"target conversion uses an untouched far survivor");
 	} else
 	require(!(shared_edge || changing || fault_interaction) || (!(shape_mask & ~(1U << slice)) && !(shape_zero & ~(1U << slice))), "focused geometry/transition/fault fixtures use UU survivors");
@@ -251,7 +251,7 @@ int main(int argc, char **argv)
 	while (late_slot < 3 && ((masks[1] | zeros[1] | (1U << slice)) & (1U << late_slot))) late_slot++;
 	if (late_slot == 3) late_slot = 4; /* Existing, untouched neighbor VMA. */
 	if (KD_BOUNDARY_SHARED && fault_interaction) late_slot = KD_BOUNDARY_INTERIOR ? (interior_right ? 2 : 0) : KD_BOUNDARY_SHARED_MISSING ? 1 : slice ? 0 : 2;
-	if (changing) require(!ioctl(device, KD_BOUNDARY_INTERIOR ? (near_private ? UB_CHANGE_INTERIOR_NEAR_PRIVATE_ARM : KD_BOUNDARY_ZERO ? UB_CHANGE_INTERIOR_ZERO_PRIVATE_ARM : KD_BOUNDARY_EMPTY ? (changing_zero ? UB_CHANGE_INTERIOR_EMPTY_ZERO_ARM : UB_CHANGE_INTERIOR_EMPTY_PRIVATE_ARM) : UB_CHANGE_INTERIOR_TABLE_ARM) : missing_convert ? (near_zero ? UB_CHANGE_SHARED_MISSING_NEAR_ARM : changing_zero ? UB_CHANGE_SHARED_MISSING_ZERO_ARM : UB_CHANGE_SHARED_MISSING_PRIVATE_ARM) : missing_busy ? UB_CHANGE_SHARED_MISSING_BUSY_ARM : empty_convert ? (changing_zero ? UB_CHANGE_SHARED_EMPTY_ZERO_ARM : UB_CHANGE_SHARED_EMPTY_PRIVATE_ARM) : empty_busy ? UB_CHANGE_SHARED_EMPTY_BUSY_ARM : zero_convert ? UB_CHANGE_SHARED_ZERO_PRIVATE_ARM : zero_busy ? UB_CHANGE_SHARED_ZERO_BUSY_ARM : near_zero ? UB_CHANGE_EMPTY_ZERO_ARM : KD_BOUNDARY_PRIVATE ? UB_CHANGE_EDGE_PRIVATE_BUSY_ARM : KD_BOUNDARY_ZERO ? UB_CHANGE_EDGE_ZERO_PRIVATE_ARM : KD_BOUNDARY_EMPTY ?
+	if (changing) require(!ioctl(device, KD_BOUNDARY_INTERIOR ? (near_private ? UB_CHANGE_INTERIOR_NEAR_PRIVATE_ARM : KD_BOUNDARY_ZERO ? UB_CHANGE_INTERIOR_ZERO_PRIVATE_ARM : KD_BOUNDARY_EMPTY ? (changing_zero ? (empty_convert ? UB_CHANGE_INTERIOR_EMPTY_ZERO_ADMIT_ARM : UB_CHANGE_INTERIOR_EMPTY_ZERO_ARM) : UB_CHANGE_INTERIOR_EMPTY_PRIVATE_ARM) : UB_CHANGE_INTERIOR_TABLE_ARM) : missing_convert ? (near_zero ? UB_CHANGE_SHARED_MISSING_NEAR_ARM : changing_zero ? UB_CHANGE_SHARED_MISSING_ZERO_ARM : UB_CHANGE_SHARED_MISSING_PRIVATE_ARM) : missing_busy ? UB_CHANGE_SHARED_MISSING_BUSY_ARM : empty_convert ? (changing_zero ? UB_CHANGE_SHARED_EMPTY_ZERO_ARM : UB_CHANGE_SHARED_EMPTY_PRIVATE_ARM) : empty_busy ? UB_CHANGE_SHARED_EMPTY_BUSY_ARM : zero_convert ? UB_CHANGE_SHARED_ZERO_PRIVATE_ARM : zero_busy ? UB_CHANGE_SHARED_ZERO_BUSY_ARM : near_zero ? UB_CHANGE_EMPTY_ZERO_ARM : KD_BOUNDARY_PRIVATE ? UB_CHANGE_EDGE_PRIVATE_BUSY_ARM : KD_BOUNDARY_ZERO ? UB_CHANGE_EDGE_ZERO_PRIVATE_ARM : KD_BOUNDARY_EMPTY ?
 		(changing_zero ? UB_CHANGE_EDGE_EMPTY_ZERO_ARM : UB_CHANGE_EDGE_EMPTY_PRIVATE_ARM) : UB_CHANGE_EDGE_TABLE_ARM,
 		(unsigned long)((native ? 0 : 3) + (near_private ? (interior_right ? 2 : 0) : near_zero ? 1 : slice))), "arm locked revalidation control before execution");
 	extra_before = extra();
@@ -316,7 +316,7 @@ int main(int argc, char **argv)
 	} else if (changing) {
 		require(!ioctl(device, UB_CHANGE_RESULT_MORE, &change_more), "exact target-table appearance result");
 		change = change_more.state;
-		require(change_more.mode == table_change && change_more.before_none == KD_BOUNDARY_EMPTY && change.before_zero == KD_BOUNDARY_ZERO &&
+		require(change_more.mode == table_change && change_more.before_none == (KD_BOUNDARY_EMPTY && !near_private) && change.before_zero == (KD_BOUNDARY_ZERO || near_private) &&
 			change_more.after_zero == (unsigned int)changing_zero && change.after_private == !changing_zero &&
 			change_more.table_after && change_more.anon_before == roots[native ? 0 : 1].anon && change.done && !change.result &&
 			change.index == (native ? 0U : 3U) + (near_private ? (interior_right ? 2 : 0) : near_zero ? 1 : slice) && change.pending == (native ? 0U : zero_convert || empty_convert || missing_convert ? 3U : 2U) &&
@@ -326,7 +326,7 @@ int main(int argc, char **argv)
 		else require(!change_more.table_before, "missing target table actually appeared");
 		if (changing_zero) require(change.zero_pfn && !change.page.pfn && !change_more.anon_after, "read fault owns no shared-zero page");
 		else {
-			require(!!change.zero_pfn == KD_BOUNDARY_ZERO && change_more.anon_after && change.page.pfn &&
+			require(!!change.zero_pfn == (KD_BOUNDARY_ZERO || near_private) && change_more.anon_after && change.page.pfn &&
 				change.page.pfn != change.zero_pfn && change.page.mapcount == 1 &&
 				change.page.refs == 2 && change.page.charged_same && change.page.locked == (unsigned)(zero_busy || empty_busy || missing_busy), "controlled private fault retains an exact reference");
 			if (change_more.anon_before) require(change_more.anon_after == change_more.anon_before, "controlled fault preserves existing reverse-map root");

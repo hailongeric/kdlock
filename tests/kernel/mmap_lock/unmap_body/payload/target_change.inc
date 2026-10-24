@@ -212,7 +212,8 @@ static int change_operation(struct session *s, unsigned int cmd, unsigned long a
 	int error = 0;
 	struct ub_change *r = &s->change.state;
 	bool interior_near = cmd == UB_CHANGE_INTERIOR_NEAR_PRIVATE_ARM;
-	bool interior = interior_near || cmd == UB_CHANGE_INTERIOR_TABLE_ARM || cmd == UB_CHANGE_INTERIOR_EMPTY_ZERO_ARM ||
+	bool interior_zero_admit = cmd == UB_CHANGE_INTERIOR_EMPTY_ZERO_ADMIT_ARM;
+	bool interior = interior_zero_admit || interior_near || cmd == UB_CHANGE_INTERIOR_TABLE_ARM || cmd == UB_CHANGE_INTERIOR_EMPTY_ZERO_ARM ||
 		cmd == UB_CHANGE_INTERIOR_EMPTY_PRIVATE_ARM || cmd == UB_CHANGE_INTERIOR_ZERO_PRIVATE_ARM;
 	bool busy = cmd == UB_CHANGE_EDGE_PRIVATE_BUSY_ARM;
 	bool near = cmd == UB_CHANGE_SHARED_MISSING_NEAR_ARM;
@@ -236,7 +237,7 @@ static int change_operation(struct session *s, unsigned int cmd, unsigned long a
 			error = -EINVAL;
 		else {
 			r->index = arg; s->change_armed = true;
-			s->change.mode = near ? 16 : cmd == UB_CHANGE_SHARED_MISSING_ZERO_ARM ? 17 : cmd == UB_CHANGE_SHARED_MISSING_PRIVATE_ARM ? 18 : cmd == UB_CHANGE_SHARED_MISSING_BUSY_ARM ? 19 : cmd == UB_CHANGE_SHARED_EMPTY_ZERO_ARM ? 13 : cmd == UB_CHANGE_SHARED_EMPTY_PRIVATE_ARM ? 14 : cmd == UB_CHANGE_SHARED_EMPTY_BUSY_ARM ? 15 : cmd == UB_CHANGE_SHARED_ZERO_PRIVATE_ARM ? 11 : cmd == UB_CHANGE_SHARED_ZERO_BUSY_ARM ? 12 : busy ? 10 : (interior_near || cmd == UB_CHANGE_EDGE_ZERO_PRIVATE_ARM || cmd == UB_CHANGE_INTERIOR_ZERO_PRIVATE_ARM) ? 9 :
+			s->change.mode = near ? 16 : cmd == UB_CHANGE_SHARED_MISSING_ZERO_ARM ? 17 : cmd == UB_CHANGE_SHARED_MISSING_PRIVATE_ARM ? 18 : cmd == UB_CHANGE_SHARED_MISSING_BUSY_ARM ? 19 : (interior_zero_admit || cmd == UB_CHANGE_SHARED_EMPTY_ZERO_ARM) ? 13 : cmd == UB_CHANGE_SHARED_EMPTY_PRIVATE_ARM ? 14 : cmd == UB_CHANGE_SHARED_EMPTY_BUSY_ARM ? 15 : cmd == UB_CHANGE_SHARED_ZERO_PRIVATE_ARM ? 11 : cmd == UB_CHANGE_SHARED_ZERO_BUSY_ARM ? 12 : busy ? 10 : (interior_near || cmd == UB_CHANGE_EDGE_ZERO_PRIVATE_ARM || cmd == UB_CHANGE_INTERIOR_ZERO_PRIVATE_ARM) ? 9 :
 				(cmd == UB_CHANGE_EDGE_EMPTY_ZERO_ARM || cmd == UB_CHANGE_INTERIOR_EMPTY_ZERO_ARM) ? 7 :
 				(cmd == UB_CHANGE_EDGE_EMPTY_PRIVATE_ARM || cmd == UB_CHANGE_INTERIOR_EMPTY_PRIVATE_ARM) ? 8 :
 				(interior || cmd == UB_CHANGE_EDGE_TABLE_ARM) ? 6 : cmd == UB_CHANGE_EMPTY_ZERO_ARM ? 1 : cmd == UB_CHANGE_EMPTY_PRIVATE_ARM ? 2 :

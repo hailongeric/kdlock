@@ -137,3 +137,6 @@ struct ub_neighbor {
 
 /* Interior survivor conversion uses native GUP under the existing read share. */
 #define UB_CHANGE_INTERIOR_NEAR_PRIVATE_ARM _IO('U', 0x96)
+
+/* A queued empty interior target can select the validated zero-target body. */
+#define UB_CHANGE_INTERIOR_EMPTY_ZERO_ADMIT_ARM _IO('U', 0x97)
