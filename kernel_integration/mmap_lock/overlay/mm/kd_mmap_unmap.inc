@@ -60,6 +60,7 @@ struct kd_mmap_unmap_edge {
 	unsigned int near_refs_before, near_refs_after;
 	unsigned int target_refs_before, target_refs_after;
 	bool target_missing, target_zero, target_private, survivor_missing, shared, interior;
+	bool target_rolled_back;
 };
 
 static bool kd_mmap_unmap_zero_pte(pte_t entry)
@@ -170,13 +171,13 @@ static bool kd_mmap_unmap_hold_edge(struct mm_struct *mm,
 		pte = pte_offset_map_lock(mm, edge->target, start, &ptl);
 		edge->target_pfn = pmd_pfn(READ_ONCE(*edge->target));
 		entry = ptep_get(pte);
-		/* The interior class admits empty or exact shared-zero PTEs under
-		 * the current PTE lock and retained mmap writer. The zero classifier
-		 * owns no page: native zap clears its PTE and invalidates translation,
-		 * then skips RSS/rmap/page release as vm_normal_page() returns NULL.
-		 * Private targets and all other special entries still hand back
-		 * before holds or either split; edge support does not authorize them. */
-		if (edge->interior && !pte_none(entry) && !kd_mmap_unmap_zero_pte(entry)) {
+		/* Interior private targets use the same exact ordinary-page classifier
+		 * as edge targets, with the separate two-split retention proof above.
+		 * Keep the hold through native zap/TLB and distinguish its final put
+		 * from the mapping-reference release. A populated near slot refuses
+		 * below before either split; edge support alone cannot admit it. */
+		if (edge->interior && !pte_none(entry) && !kd_mmap_unmap_zero_pte(entry) &&
+		    (!pte_present(entry) || pte_protnone(entry))) {
 			pte_unmap_unlock(pte, ptl);
 			return false;
 		}
@@ -184,7 +185,7 @@ static bool kd_mmap_unmap_hold_edge(struct mm_struct *mm,
 			&held[target], &is_zero, &zero_ptes[target]);
 		edge->target_zero = is_zero;
 		edge->target_private = !!held[target];
-		edge->target_entry = pte_mkold(entry);
+		edge->target_entry = held[target] ? pte_mkclean(pte_mkold(entry)) : pte_mkold(entry);
 		if (held[target]) {
 			*present |= 1U << target;
 			(*nr)++;
@@ -254,6 +255,19 @@ rollback:
 	/* A survivor refusal must also release a previously acquired target.
 	 * No split or destructive native work has happened on this route. */
 	*checked = *nr;
+	if (edge->interior && edge->target_private) {
+		/* A later slot/retention refusal owns the exact target acquired
+		 * above. Check it while still held, then retire once without any
+		 * native split/zap. Only hardware accessed/dirty changes are ignored. */
+		pte = pte_offset_map_lock(mm, edge->target, start, &ptl);
+		BUG_ON(!held[target] || !PageLocked(held[target]) ||
+		       page_to_pfn(held[target]) != pte_pfn(edge->target_entry) ||
+		       page_mapcount(held[target]) != 1 ||
+		       !pte_same(pte_mkclean(pte_mkold(ptep_get(pte))), edge->target_entry));
+		edge->target_refs_after = page_count(held[target]);
+		pte_unmap_unlock(pte, ptl);
+		edge->target_rolled_back = true;
+	}
 	kd_mmap_unmap_release_pages(held, 3);
 	return false;
 }
@@ -440,6 +454,10 @@ bool kd_mmap_unmap_try(struct mm_struct *mm, unsigned long start,
 			if (checked)
 				pr_info("KD_MM_POPULATED_RANGE rollback mm=%px id=%llu origin=%d executor=%d start=%lx end=%lx held=%u released=%u effects=0\n",
 					mm, request_id, origin->pid, current->pid, start, end, checked, checked);
+			if (boundary_edge && edge.target_rolled_back && origin != current)
+				pr_info("KD_MM_INTERIOR_TARGET rollback mm=%px id=%llu origin=%d executor=%d start=%lx end=%lx pfn=%lx refs_before=%u refs_held=%u mapcount=1 pte_same=1 held=1 released=1 target_put=1 effects=0\n",
+					mm, request_id, origin->pid, current->pid, start, end,
+					pte_pfn(edge.target_entry), edge.target_refs_before, edge.target_refs_after);
 			if (boundary_edge && edge.near_pfn && origin != current)
 				pr_info("KD_MM_INTERIOR_NEAR_PRIVATE rollback mm=%px id=%llu origin=%d executor=%d start=%lx end=%lx pfn=%lx held=1 released=1 effects=0\n",
 					mm, request_id, origin->pid, current->pid, start, end, edge.near_pfn);
@@ -557,11 +575,13 @@ out_pages:
 				/* A post-split error preserves the original target. Success
 				 * has completed native zap/TLB before any temporary put. */
 				if (*result && (edge.target_zero || edge.target_private))
-					BUG_ON(!pte_same(pte_mkold(ptep_get(pte)), edge.target_entry));
+					BUG_ON(!pte_same(edge.target_private ?
+						pte_mkclean(pte_mkold(ptep_get(pte))) : pte_mkold(ptep_get(pte)), edge.target_entry));
 				else
 					BUG_ON(!pte_none(ptep_get(pte)));
 				if (edge.target_private) {
-					BUG_ON(page_to_pfn(held[target]) != pfns[target] ||
+					BUG_ON(!PageLocked(held[target]) ||
+					       page_to_pfn(held[target]) != pfns[target] ||
 					       page_mapcount(held[target]) != !!*result);
 					edge.target_refs_after = page_count(held[target]);
 				}

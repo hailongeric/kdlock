@@ -109,7 +109,7 @@ static int change_target(struct session *s)
 		}
 		r->before_zero = 1; r->zero_pfn = pte_pfn(entry);
 	}
-	if (more->mode == 1 || more->mode == 3 || more->mode == 4 || more->mode == 6 || more->mode == 7 || more->mode == 13 || more->mode == 16 || more->mode == 17) {
+	if (more->mode == 1 || more->mode == 3 || more->mode == 4 || more->mode == 6 || more->mode == 7 || more->mode == 13 || more->mode == 16 || more->mode == 17 || more->mode == 21) {
 		/* No pages[] and no FOLL_GET: a real native read fault, with no
 		 * reference or ownership acquired on the permanent shared zero page. */
 		got = get_user_pages(more->mode == 3 ? address - 3 * PAGE_SIZE : address, 1, 0, NULL, NULL);
@@ -200,12 +200,16 @@ out:
 			s->near_create.far_index, s->near_create.far_table, s->near_create.far_page.pfn,
 			s->near_create.far_page.refs, s->near_create.far_page.mapcount,
 			s->near_create.far_page.locked, error);
-	else if (more->mode >= 16)
+	else if (more->mode >= 16 && more->mode <= 19)
 		pr_info("KD_MM_TEST shared_table_change mm=%px index=%u actor=%llu pending=%llu readers=%llu admission=%lld mode=%llu before_table_none=1 after_zero=%llu after_private=%llu table_before=%llx table_after=%llx anon_before=%llx anon_after=%llx zero_pfn=%llx private_pfn=%llx refs=%llu mapcount=%llu locked=%llu result=%d\n",
 			s->mm, i, r->actor, r->pending, r->readers, r->admission, more->mode,
 			more->after_zero, r->after_private, more->table_before, more->table_after,
 			more->anon_before, more->anon_after, r->zero_pfn, r->page.pfn,
 			r->page.refs, r->page.mapcount, r->page.locked, error);
+	else if (more->mode == 21)
+		pr_info("KD_MM_TEST interior_near_zero mm=%px index=%u actor=%llu pending=%llu readers=%llu admission=%lld mode=21 before_none=1 after_zero=1 after_private=0 table_before=%llx table_after=%llx anon_before=%llx anon_after=%llx zero_pfn=%llx private_pfn=0 result=%d\n",
+			s->mm, i, r->actor, r->pending, r->readers, r->admission,
+			more->table_before, more->table_after, more->anon_before, more->anon_after, r->zero_pfn, error);
 	else if (missing)
 		pr_info("KD_MM_TEST table_change mm=%px index=%u actor=%llu pending=%llu readers=%llu admission=%lld mode=%llu before_table_none=1 after_zero=%llu after_private=%llu table_before=%llx table_after=%llx anon_before=%llx anon_after=%llx zero_pfn=%llx private_pfn=%llx result=%d\n",
 			s->mm, i, r->actor, r->pending, r->readers, r->admission, more->mode,
@@ -245,11 +249,13 @@ static int change_operation(struct session *s, unsigned int cmd, unsigned long a
 {
 	int error = 0;
 	struct ub_change *r = &s->change.state;
-	bool interior_near = cmd == UB_CHANGE_INTERIOR_NEAR_PRIVATE_ARM;
+	bool interior_near_read = cmd == UB_CHANGE_INTERIOR_PRIVATE_NEAR_ZERO_ARM;
+	bool interior_target_busy = cmd == UB_CHANGE_INTERIOR_PRIVATE_BUSY_ARM;
+	bool interior_near = interior_near_read || cmd == UB_CHANGE_INTERIOR_NEAR_PRIVATE_ARM;
 	bool interior_zero_admit = cmd == UB_CHANGE_INTERIOR_EMPTY_ZERO_ADMIT_ARM;
-	bool interior = interior_zero_admit || interior_near || cmd == UB_CHANGE_INTERIOR_TABLE_ARM || cmd == UB_CHANGE_INTERIOR_EMPTY_ZERO_ARM ||
+	bool interior = interior_target_busy || interior_zero_admit || interior_near || cmd == UB_CHANGE_INTERIOR_TABLE_ARM || cmd == UB_CHANGE_INTERIOR_EMPTY_ZERO_ARM ||
 		cmd == UB_CHANGE_INTERIOR_EMPTY_PRIVATE_ARM || cmd == UB_CHANGE_INTERIOR_ZERO_PRIVATE_ARM;
-	bool busy = cmd == UB_CHANGE_EDGE_PRIVATE_BUSY_ARM;
+	bool busy = interior_target_busy || cmd == UB_CHANGE_EDGE_PRIVATE_BUSY_ARM;
 	bool near = cmd == UB_CHANGE_SHARED_MISSING_NEAR_ARM;
 	bool edge = interior || cmd == UB_CHANGE_EDGE_TABLE_ARM || cmd == UB_CHANGE_EDGE_EMPTY_ZERO_ARM ||
 		cmd == UB_CHANGE_EDGE_EMPTY_PRIVATE_ARM || cmd == UB_CHANGE_EDGE_ZERO_PRIVATE_ARM || busy ||
@@ -292,7 +298,7 @@ static int change_operation(struct session *s, unsigned int cmd, unsigned long a
 			error = -EINVAL;
 		else {
 			r->index = arg; s->change_armed = true;
-			s->change.mode = near ? 16 : cmd == UB_CHANGE_SHARED_MISSING_ZERO_ARM ? 17 : cmd == UB_CHANGE_SHARED_MISSING_PRIVATE_ARM ? 18 : cmd == UB_CHANGE_SHARED_MISSING_BUSY_ARM ? 19 : (interior_zero_admit || cmd == UB_CHANGE_SHARED_EMPTY_ZERO_ARM) ? 13 : cmd == UB_CHANGE_SHARED_EMPTY_PRIVATE_ARM ? 14 : cmd == UB_CHANGE_SHARED_EMPTY_BUSY_ARM ? 15 : cmd == UB_CHANGE_SHARED_ZERO_PRIVATE_ARM ? 11 : cmd == UB_CHANGE_SHARED_ZERO_BUSY_ARM ? 12 : busy ? 10 : (interior_near || cmd == UB_CHANGE_EDGE_ZERO_PRIVATE_ARM || cmd == UB_CHANGE_INTERIOR_ZERO_PRIVATE_ARM) ? 9 :
+			s->change.mode = interior_near_read ? 21 : near ? 16 : cmd == UB_CHANGE_SHARED_MISSING_ZERO_ARM ? 17 : cmd == UB_CHANGE_SHARED_MISSING_PRIVATE_ARM ? 18 : cmd == UB_CHANGE_SHARED_MISSING_BUSY_ARM ? 19 : (interior_zero_admit || cmd == UB_CHANGE_SHARED_EMPTY_ZERO_ARM) ? 13 : cmd == UB_CHANGE_SHARED_EMPTY_PRIVATE_ARM ? 14 : cmd == UB_CHANGE_SHARED_EMPTY_BUSY_ARM ? 15 : cmd == UB_CHANGE_SHARED_ZERO_PRIVATE_ARM ? 11 : cmd == UB_CHANGE_SHARED_ZERO_BUSY_ARM ? 12 : busy ? 10 : (interior_near || cmd == UB_CHANGE_EDGE_ZERO_PRIVATE_ARM || cmd == UB_CHANGE_INTERIOR_ZERO_PRIVATE_ARM) ? 9 :
 				(cmd == UB_CHANGE_EDGE_EMPTY_ZERO_ARM || cmd == UB_CHANGE_INTERIOR_EMPTY_ZERO_ARM) ? 7 :
 				(cmd == UB_CHANGE_EDGE_EMPTY_PRIVATE_ARM || cmd == UB_CHANGE_INTERIOR_EMPTY_PRIVATE_ARM) ? 8 :
 				(interior || cmd == UB_CHANGE_EDGE_TABLE_ARM) ? 6 : cmd == UB_CHANGE_EMPTY_ZERO_ARM ? 1 : cmd == UB_CHANGE_EMPTY_PRIVATE_ARM ? 2 :

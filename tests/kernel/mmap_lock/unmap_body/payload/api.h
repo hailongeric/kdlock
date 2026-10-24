@@ -152,3 +152,7 @@ struct ub_near_create {
 
 /* A queued empty interior target can select the validated zero-target body. */
 #define UB_CHANGE_INTERIOR_EMPTY_ZERO_ADMIT_ARM _IO('U', 0x97)
+
+/* Private interior target / untouched-near queued eligibility controls. */
+#define UB_CHANGE_INTERIOR_PRIVATE_BUSY_ARM _IO('U', 0x9a)
+#define UB_CHANGE_INTERIOR_PRIVATE_NEAR_ZERO_ARM _IO('U', 0x9b)
