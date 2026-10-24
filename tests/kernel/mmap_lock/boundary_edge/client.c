@@ -129,7 +129,7 @@ int main(int argc, char **argv)
 	missing_busy = KD_BOUNDARY_SHARED_MISSING && !strcmp(mode, "appear-private-busy");
 	zero_convert = KD_BOUNDARY_SHARED && !KD_BOUNDARY_INTERIOR && KD_BOUNDARY_ZERO && !strcmp(mode, "change-private");
 	zero_busy = KD_BOUNDARY_SHARED && KD_BOUNDARY_ZERO && !strcmp(mode, "change-private-busy");
-	empty_convert = KD_BOUNDARY_SHARED && (!KD_BOUNDARY_INTERIOR || (KD_BOUNDARY_NEAR_ZERO && !strcmp(mode, "change-zero"))) && KD_BOUNDARY_EMPTY && (!strcmp(mode, "change-zero") || !strcmp(mode, "change-private"));
+	empty_convert = KD_BOUNDARY_SHARED && (!KD_BOUNDARY_INTERIOR || ((KD_BOUNDARY_NEAR_ZERO || KD_BOUNDARY_NEAR_PRIVATE) && !strcmp(mode, "change-zero"))) && KD_BOUNDARY_EMPTY && (!strcmp(mode, "change-zero") || !strcmp(mode, "change-private"));
 	empty_busy = KD_BOUNDARY_SHARED && KD_BOUNDARY_EMPTY && !strcmp(mode, "change-private-busy");
 	changing = near_busy || far_busy || near_private || missing_convert || missing_busy || empty_busy || zero_busy || near_zero || (KD_BOUNDARY_PRIVATE ? !strcmp(mode, "change-busy") : KD_BOUNDARY_ZERO ? !strcmp(mode, "change-private") : KD_BOUNDARY_EMPTY ? !strcmp(mode, "change-zero") || !strcmp(mode, "change-private") : !strcmp(mode, "appear"));
 	changing_zero = near_zero || (KD_BOUNDARY_SHARED_MISSING ? !strcmp(mode, "appear-zero") : changing && !KD_BOUNDARY_PRIVATE && !KD_BOUNDARY_ZERO && (!KD_BOUNDARY_EMPTY || !strcmp(mode, "change-zero")));
@@ -151,11 +151,11 @@ int main(int argc, char **argv)
 	require(!busy_page || (slice == 0 && shape_mask == (KD_BOUNDARY_PRIVATE ? 7U : 6U)), "busy final survivor has an earlier exact hold");
 	if (KD_BOUNDARY_NEAR_PRIVATE) {
 		unsigned int near = interior_right ? 2 : 0;
-		require(KD_BOUNDARY_INTERIOR && KD_BOUNDARY_EMPTY && (shape_mask & (1U << near)) &&
+		require(KD_BOUNDARY_INTERIOR && (KD_BOUNDARY_EMPTY || KD_BOUNDARY_ZERO) && (shape_mask & (1U << near)) &&
 			!(shape_zero & (1U << near)) && !fault_interaction && !shared_edge && !busy_page,
-			"empty target and ordinary resident near survivor; exact existing far subset");
-		if (near_busy || far_busy) require(shape_mask == 5 && !shape_zero, "both resident survivors for exact early/late hold refusal");
-		else if (changing) require(shape_mask == (1U << near) && !shape_zero, "target transition keeps a resident near and untouched far");
+			"empty/zero target and ordinary resident near survivor; exact existing far subset");
+		if (near_busy || far_busy) require(shape_mask == 5 && shape_zero == (KD_BOUNDARY_ZERO ? 2U : 0U), "both resident survivors for exact early/late hold refusal");
+		else if (changing) require(shape_mask == (1U << near) && shape_zero == (KD_BOUNDARY_ZERO ? 2U : 0U), "target transition keeps a resident near and untouched far");
 	} else if (KD_BOUNDARY_NEAR_ZERO) {
 		unsigned int near = interior_right ? 2 : 0;
 		require(KD_BOUNDARY_INTERIOR && (KD_BOUNDARY_ZERO || KD_BOUNDARY_EMPTY) && (shape_zero & (1U << near)) &&

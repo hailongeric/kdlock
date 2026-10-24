@@ -28,7 +28,7 @@ def validate(row,log,*,empty=False,zero=False,near_zero=False,near_private=False
         require(zero or empty, 'zero near survivor requires an existing empty/zero target')
         allowed=('middle-rz','middle-zz','middle-uz') if right else ('middle-zr','middle-zz','middle-zu')
     if near_private:
-        require(empty and not near_zero, 'ordinary private near requires an empty target')
+        require((empty or zero) and not near_zero, 'ordinary private near requires an empty/zero target')
         allowed=('middle-rr','middle-zr','middle-ur') if right else ('middle-rr','middle-rz','middle-ru')
     require(row['shape'] in allowed, 'bounded interior survivor class differs')
     victim=0 if native else 1
@@ -41,7 +41,7 @@ def validate(row,log,*,empty=False,zero=False,near_zero=False,near_private=False
                 'interior cut or boundary orientation differs')
         near_bit=1<<near
         require(bool(row['masks'][g]&near_bit)==near_private and bool(row['zero_masks'][g]&near_bit)==near_zero and
-                row['ptes_before'][g]['none']&same==(2 if near_private else (0 if zero else 2) if near_zero else same^2 if zero else same) and
+                row['ptes_before'][g]['none']&same==((0 if zero else 2) if near_private else (0 if zero else 2) if near_zero else same^2 if zero else same) and
                 row['ptes_before'][g]['zero']&same==((same if zero else near_bit) if near_zero else 2 if zero else 0) and not w['upper_none'],
                 'exact target/near survivor classes require existing upper levels')
         if empty or zero or mode=='table' and g==victim:
@@ -58,7 +58,7 @@ def validate(row,log,*,empty=False,zero=False,near_zero=False,near_private=False
     else:require(not any(move.values()), 'unexpected retaining-neighbor modification')
     pre=list(re.finditer('KD_MM_INTERIOR preflight '+IDENT+r' old_start=([0-9a-f]+) old_end=([0-9a-f]+) outer_floor=([0-9a-f]+) outer_ceiling=([0-9a-f]+) floor=([0-9a-f]+) ceiling=([0-9a-f]+) required_splits=2 no_table_walk=1',log))
     bounds=list(re.finditer('KD_MM_INTERIOR split_bounds '+IDENT+r' left_start=([0-9a-f]+) left_end=([0-9a-f]+) right_start=([0-9a-f]+) right_end=([0-9a-f]+) splits=2 tables_unchanged=1',log))
-    changed_zero=near_zero and empty and mode=='change-zero'
+    changed_zero=(near_zero or near_private) and empty and mode=='change-zero'
     body_class=r'(?:EMPTY|ZERO)' if changed_zero else 'ZERO' if zero else 'EMPTY' if empty else 'MISSING'
     done=list(re.finditer('KD_MM_BOUNDARY_INTERIOR_'+body_class+' (?:done|error) '+IDENT,log))
     require(sorted(p.groups()[:6] for p in pre)==sorted(p.groups() for p in done), 'pre-split retention proof not bound to every remote body/error')
