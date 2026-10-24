@@ -24,7 +24,7 @@ def idle():
 
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--build-attempt',type=int,default=2)
+    parser.add_argument('--build-attempt',type=int,default=3)
     parser.add_argument('--run',default='focused-1')
     parser.add_argument('--probe-revision',type=Path)
     a=parser.parse_args()
@@ -33,8 +33,8 @@ def main():
     assert 'kd_mmap=on' in Path('/proc/cmdline').read_text().split()
     assert os.environ['KDLOCK_RECOVERY_CONFIRMED']=='1'
     idle()
-    assert a.build_attempt==2
-    build_path=BASE/'build-2/result.json'
+    assert a.build_attempt==3
+    build_path=BASE/'build-3/result.json'
     build=json.loads(build_path.read_text());assert build['passed']
     for files in build['binaries'].values():
         for name,digest in files.items():assert rt.digest(BASE/name)==digest
