@@ -117,7 +117,7 @@ int main(int argc, char **argv)
 		(KD_BOUNDARY_SHARED_MISSING && !strcmp(mode, "appear-near-zero")));
 	missing_convert = KD_BOUNDARY_SHARED_MISSING && (near_zero || !strcmp(mode, "appear-zero") || !strcmp(mode, "appear-private"));
 	missing_busy = KD_BOUNDARY_SHARED_MISSING && !strcmp(mode, "appear-private-busy");
-	zero_convert = KD_BOUNDARY_SHARED && KD_BOUNDARY_ZERO && !strcmp(mode, "change-private");
+	zero_convert = KD_BOUNDARY_SHARED && !KD_BOUNDARY_INTERIOR && KD_BOUNDARY_ZERO && !strcmp(mode, "change-private");
 	zero_busy = KD_BOUNDARY_SHARED && KD_BOUNDARY_ZERO && !strcmp(mode, "change-private-busy");
 	empty_convert = KD_BOUNDARY_SHARED && !KD_BOUNDARY_INTERIOR && KD_BOUNDARY_EMPTY && (!strcmp(mode, "change-zero") || !strcmp(mode, "change-private"));
 	empty_busy = KD_BOUNDARY_SHARED && KD_BOUNDARY_EMPTY && !strcmp(mode, "change-private-busy");
@@ -126,7 +126,7 @@ int main(int argc, char **argv)
 	table_change = missing_convert ? (near_zero ? 16 : changing_zero ? 17 : 18) : missing_busy ? 19 : empty_convert ? (changing_zero ? 13 : 14) : empty_busy ? 15 : zero_convert ? 11 : zero_busy ? 12 : near_zero ? 1 : changing ? (KD_BOUNDARY_PRIVATE ? 10 : KD_BOUNDARY_ZERO ? 9 : KD_BOUNDARY_EMPTY ? (changing_zero ? 7 : 8) : 6) : 0;
 	if (KD_BOUNDARY_INTERIOR) {
 		require(!missing_convert && !missing_busy && !near_zero, "interior appearance uses explicit safe handback control");
-		if (changing) { changing_zero = KD_BOUNDARY_EMPTY ? !strcmp(mode, "change-zero") : 1; table_change = KD_BOUNDARY_EMPTY ? (changing_zero ? 7 : 8) : 6; }
+		if (changing) { changing_zero = KD_BOUNDARY_ZERO ? 0 : KD_BOUNDARY_EMPTY ? !strcmp(mode, "change-zero") : 1; table_change = KD_BOUNDARY_ZERO ? 9 : KD_BOUNDARY_EMPTY ? (changing_zero ? 7 : 8) : 6; }
 	}
 	fault_interaction = !strcmp(mode, "fault"); busy_page = !strcmp(mode, "busy");
 	free_table = !strcmp(mode, "free-table"); present_table = !strcmp(mode, "table"); shared_edge = !strcmp(mode, "shared");
@@ -239,7 +239,7 @@ int main(int argc, char **argv)
 	while (late_slot < 3 && ((masks[1] | zeros[1] | (1U << slice)) & (1U << late_slot))) late_slot++;
 	if (late_slot == 3) late_slot = 4; /* Existing, untouched neighbor VMA. */
 	if (KD_BOUNDARY_SHARED && fault_interaction) late_slot = KD_BOUNDARY_INTERIOR ? (interior_right ? 2 : 0) : KD_BOUNDARY_SHARED_MISSING ? 1 : slice ? 0 : 2;
-	if (changing) require(!ioctl(device, KD_BOUNDARY_INTERIOR ? (KD_BOUNDARY_EMPTY ? (changing_zero ? UB_CHANGE_INTERIOR_EMPTY_ZERO_ARM : UB_CHANGE_INTERIOR_EMPTY_PRIVATE_ARM) : UB_CHANGE_INTERIOR_TABLE_ARM) : missing_convert ? (near_zero ? UB_CHANGE_SHARED_MISSING_NEAR_ARM : changing_zero ? UB_CHANGE_SHARED_MISSING_ZERO_ARM : UB_CHANGE_SHARED_MISSING_PRIVATE_ARM) : missing_busy ? UB_CHANGE_SHARED_MISSING_BUSY_ARM : empty_convert ? (changing_zero ? UB_CHANGE_SHARED_EMPTY_ZERO_ARM : UB_CHANGE_SHARED_EMPTY_PRIVATE_ARM) : empty_busy ? UB_CHANGE_SHARED_EMPTY_BUSY_ARM : zero_convert ? UB_CHANGE_SHARED_ZERO_PRIVATE_ARM : zero_busy ? UB_CHANGE_SHARED_ZERO_BUSY_ARM : near_zero ? UB_CHANGE_EMPTY_ZERO_ARM : KD_BOUNDARY_PRIVATE ? UB_CHANGE_EDGE_PRIVATE_BUSY_ARM : KD_BOUNDARY_ZERO ? UB_CHANGE_EDGE_ZERO_PRIVATE_ARM : KD_BOUNDARY_EMPTY ?
+	if (changing) require(!ioctl(device, KD_BOUNDARY_INTERIOR ? (KD_BOUNDARY_ZERO ? UB_CHANGE_INTERIOR_ZERO_PRIVATE_ARM : KD_BOUNDARY_EMPTY ? (changing_zero ? UB_CHANGE_INTERIOR_EMPTY_ZERO_ARM : UB_CHANGE_INTERIOR_EMPTY_PRIVATE_ARM) : UB_CHANGE_INTERIOR_TABLE_ARM) : missing_convert ? (near_zero ? UB_CHANGE_SHARED_MISSING_NEAR_ARM : changing_zero ? UB_CHANGE_SHARED_MISSING_ZERO_ARM : UB_CHANGE_SHARED_MISSING_PRIVATE_ARM) : missing_busy ? UB_CHANGE_SHARED_MISSING_BUSY_ARM : empty_convert ? (changing_zero ? UB_CHANGE_SHARED_EMPTY_ZERO_ARM : UB_CHANGE_SHARED_EMPTY_PRIVATE_ARM) : empty_busy ? UB_CHANGE_SHARED_EMPTY_BUSY_ARM : zero_convert ? UB_CHANGE_SHARED_ZERO_PRIVATE_ARM : zero_busy ? UB_CHANGE_SHARED_ZERO_BUSY_ARM : near_zero ? UB_CHANGE_EMPTY_ZERO_ARM : KD_BOUNDARY_PRIVATE ? UB_CHANGE_EDGE_PRIVATE_BUSY_ARM : KD_BOUNDARY_ZERO ? UB_CHANGE_EDGE_ZERO_PRIVATE_ARM : KD_BOUNDARY_EMPTY ?
 		(changing_zero ? UB_CHANGE_EDGE_EMPTY_ZERO_ARM : UB_CHANGE_EDGE_EMPTY_PRIVATE_ARM) : UB_CHANGE_EDGE_TABLE_ARM,
 		(unsigned long)((native ? 0 : 3) + (near_zero ? 1 : slice))), "arm locked revalidation control before execution");
 	extra_before = extra();
@@ -330,7 +330,7 @@ int main(int argc, char **argv)
 	int map_delta = injection ? injection - !native : slice == 1 ? (int)removed_pages : 0;
 	require(before.total_vm == after.total_vm + removed_pages && before.data_vm == after.data_vm + removed_pages &&
 		before.exec_vm == after.exec_vm && before.stack_vm == after.stack_vm &&
-		(long long)after.map_count - (long long)before.map_count == map_delta && before.pgtables + neighbor_growth + ((changing && !KD_BOUNDARY_EXISTING) || (fault_test && !(KD_BOUNDARY_INTERIOR && KD_BOUNDARY_EMPTY)) ? PAGE : 0) == after.pgtables + (free_table && !KD_BOUNDARY_SHARED ? PAGE : 0),
+		(long long)after.map_count - (long long)before.map_count == map_delta && before.pgtables + neighbor_growth + ((changing && !KD_BOUNDARY_EXISTING) || (fault_test && !(KD_BOUNDARY_INTERIOR && KD_BOUNDARY_EXISTING)) ? PAGE : 0) == after.pgtables + (free_table && !KD_BOUNDARY_SHARED ? PAGE : 0),
 		"exact native page/VMA/table accounting including harmless splits");
 	require(extra_after.fail_after == 0 && extra_after.fail_seen == !!injection, "one exact injection consumed");
 	if (!cancellation) for (unsigned int g = 0; g < groups; g++) {

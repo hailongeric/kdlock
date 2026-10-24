@@ -167,11 +167,13 @@ static bool kd_mmap_unmap_hold_edge(struct mm_struct *mm,
 		pte = pte_offset_map_lock(mm, edge->target, start, &ptl);
 		edge->target_pfn = pmd_pfn(READ_ONCE(*edge->target));
 		entry = ptep_get(pte);
-		/* Interior existing-table support is only an empty target PTE.
-		 * The current mmap writer retains the rewalked table and its PTE
-		 * lock serializes this classification. Do not inherit edge support
-		 * for zero/private or special non-present targets in this geometry. */
-		if (edge->interior && !pte_none(entry)) {
+		/* The interior class admits empty or exact shared-zero PTEs under
+		 * the current PTE lock and retained mmap writer. The zero classifier
+		 * owns no page: native zap clears its PTE and invalidates translation,
+		 * then skips RSS/rmap/page release as vm_normal_page() returns NULL.
+		 * Private targets and all other special entries still hand back
+		 * before holds or either split; edge support does not authorize them. */
+		if (edge->interior && !pte_none(entry) && !kd_mmap_unmap_zero_pte(entry)) {
 			pte_unmap_unlock(pte, ptl);
 			return false;
 		}
