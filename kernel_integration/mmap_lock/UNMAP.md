@@ -1,6 +1,17 @@
 # Bounded anonymous munmap bodies
 
-Status: `kdmm28` permits an [empty interior target beside a private near survivor](#empty-interior-target-with-a-private-near-survivor).
+Status: `kdmm29` permits a [shared-zero interior target beside a private near survivor](#shared-zero-interior-target-with-a-private-near-survivor).
+The existing three-page geometry, far-survivor subset, both outer guards and
+native two-split retention proof are unchanged. All 48 serial cases, two basic
+tests and 1,057 negative receipt controls passed: 12 initial-zero remote removals,
+two more after queued empty-to-zero changes, four native-matched split errors,
+eight handback/ACK (acknowledgment) pairs and two cancellations. Two unchanged
+empty peer removals and 12 preservation removals remain separate. Recovery is
+restored and modules unloaded. See the
+[results](../../bench/results/10.176.26.71/tests/mm-boundary-interior-zero-near-private-20261024/README.md)
+and [commands](../../tests/kernel/mmap_lock/boundary_interior_zero_near_private/README.md).
+
+Baseline: `kdmm28` permits an [empty interior target beside a private near survivor](#empty-interior-target-with-a-private-near-survivor).
 The three-page scope, far-survivor subset, both outer guards and native two-split
 retention proof remain unchanged. All 48 serial cases, two basic tests and 1,161
 negative receipt controls passed: 12 new different-task removals, four
@@ -357,8 +368,8 @@ anonymous base page. Far R/Z/U classes and both orientations remain unchanged:
 left RR/RZ/RU and right RR/ZR/UR, with letters in survivor address order. The
 original outer guards and the native post-split floor=`start`, ceiling=`end`
 proof still exclude general table teardown. A populated survivor alone does not
-establish retention. A private interior target, or zero target with a private
-near survivor, still refuses before splitting.
+establish retention. On kdmm28, a private interior target, or zero target with
+a private near survivor, refuses before splitting.
 
 The former guard was an implementation restriction; the existing caller already
 prepares two VMA descriptors, maple-tree reserves and reverse-map links for simple
@@ -396,6 +407,56 @@ Queued near-page creation, a waiting-fault fixture, interior neighbor replacemen
 opposite guard loss and uncontrolled fault/write/reclaim/pinning races were not
 exercised. The next narrow candidate is a shared-zero target beside this private
 near survivor, with native zero clearing and unchanged exact survivor holds.
+
+## Shared-zero interior target with a private near survivor
+
+`kdmm29` lets the already classified shared-zero target use the same eligible
+private-near survivor path as an empty target. Left RR/RZ/RU and right RR/ZR/UR
+keep their existing geometry and far subset. The near page must still be a
+writable, exclusive ordinary anonymous base page with one mapping, no pin/special
+indicators and an available nonblocking page lock. Missing higher levels,
+huge/special entries and private interior targets remain explicit refusals.
+
+The target's current PTE and both table identities are rewalked under the actual
+mmap writer and PTE locks. Both outer neighbors and post-split native retention
+bounds remain mandatory. Existing caller-prepared VMA descriptors, maple-tree
+reserves and reverse-map links suffice for the same two splits and simple
+ancestry. There is no new combiner allocation or stale table-pointer admission.
+
+Native zap clears the zero target and records translation invalidation, then
+skips private RSS, reverse-map removal and page release because the shared zero
+page is not an ordinary owned anonymous page. TLB completion precedes return.
+The private near hold remains through teardown and is checked/released exactly,
+including native split-error returns. Its PTE comparison excludes only hardware
+accessed/dirty bits; identities and permissions remain bound to the held page.
+An error after a harmless split never falls through to local destructive replay.
+
+Six layouts produced 12 different-task removals. Both split-error points preserved
+the original zero target and near page, matching native `-ENOMEM` and VMA layout.
+Queued zero-to-private target changes still hand back before either split. Busy
+near/far controls cover both traversal orders: a late refusal releases one earlier
+hold before ACK, while an early refusal owns no earlier page. Readers remain
+local and concurrent; published cancellation and sticky fallback are unchanged.
+
+The affected empty-target/private-near probe now allows its queued read fault:
+three published requests and two readers precede locked revalidation, which
+selects this fully supported zero body. Both orientations passed, with two zero
+and two unchanged empty peer completions. Historical refusal fixtures remain tied
+to their recorded image/clients; this is not a retroactive pass for those cases.
+
+Initial PTE, content, reference, table and VMA/accounting snapshots precede far-U
+access. Subsequent demand faults, zero reads and isolated writes preserve other
+survivors, neighbors and the independent zero mapping. The target faults before
+and after those accesses; full cleanup retires mappings/tables/references. The
+PTE probe exposes zero classification via `is_zero_pfn()` and fills its PFN array
+only for private pages; actual zero frame identity is recorded by kernel bodies
+and native/queued transitions. No zero page receives ordinary ownership.
+
+Queued zero/untouched-to-private near creation, interior neighbor replacement,
+opposite guard loss, uncontrolled writes/faults/reclaim/pinning and hibernation
+remain untested. The next small coverage step is near-page creation revalidation;
+a private interior target with an untouched near survivor is the next useful
+implementation candidate and remains refused.
 
 ## Reviewed boundary
 
@@ -1390,10 +1451,9 @@ PTE classes also permit one survivor sharing the existing target table. A missin
 target table now permits an untouched near survivor and a private/zero/untouched
 far survivor in that shared geometry. One-page interior removal additionally
 supports missing/empty/zero targets with an untouched near survivor, or an
-empty/zero target with a shared-zero near survivor, or an empty target with an
-eligible ordinary private near survivor. It retains both outer guards and a
-separate two-split proof; private interior targets and zero targets beside
-private near survivors refuse.
+empty/zero target with a shared-zero or eligible ordinary private near survivor.
+It retains both outer guards and a separate two-split proof; private interior
+targets refuse.
 It refuses missing higher
 levels on this opt-in, special non-present entries, inconsistent or multi-link reverse-map
 ancestry, shared/COW
@@ -1430,9 +1490,9 @@ The shared missing-table gap is closed by kdmm22, without increasing any size
 limit. The separate native writer gate now validates queued neighbor replacement
 with preservation and retention-loss outcomes. Interior removal now has its own
 two-split proof and failure checks in the bounded classes above. The next useful
-candidate is a shared-zero interior target beside an ordinary private near
-survivor, retaining native zero clearing and exact survivor holds; this
-combination remains refused. General table destruction and
+candidate is a private interior target beside an untouched near survivor, retaining
+exact target ownership through native teardown; this remains refused. Queued
+near-page creation is a smaller remaining revalidation-coverage step. General table destruction and
 missing higher levels remain deferred. The kdmm16 reversed empty-target gaps
 remain closed; the eight omitted kdmm18 isolated private layouts are not covered
 retroactively by this geometry. Controlled queued target/near faults passed,
