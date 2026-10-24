@@ -1,6 +1,18 @@
 # Bounded anonymous munmap bodies
 
-Status: `kdmm24` adds [empty interior targets in existing tables](#empty-interior-target-in-an-existing-table)
+Status: `kdmm25` adds [shared-zero interior targets](#shared-zero-interior-target-with-native-clearing)
+with an untouched near survivor and private/shared-zero/untouched far survivor.
+Native clearing/TLB (translation lookaside buffer) handling never owns or
+releases the zero page. Both outer guards and the two-split retention proof stay
+unchanged; private interior targets refuse. All 40 serial cases, two basic tests
+and 867 negative receipt controls passed, with 16 new different-task removals
+(12 without private holds), four native-matched split errors, four handback/ACK
+(acknowledgment) pairs and two cancellations. Six smokes add 12 remote removals.
+Recovery is restored and modules unloaded. See the
+[result record](../../bench/results/10.176.26.71/tests/mm-boundary-interior-zero-20261024/README.md)
+and [commands](../../tests/kernel/mmap_lock/boundary_interior_zero/README.md).
+
+Baseline: `kdmm24` adds [empty interior targets in existing tables](#empty-interior-target-in-an-existing-table)
 with an untouched near survivor and private/shared-zero/untouched far survivor.
 The two-split proof and both outer guards are unchanged. All 44 serial cases,
 two basic tests and 1,090 negative receipt controls passed, with 16 new
@@ -144,9 +156,9 @@ eligible ordinary private page, shared zero or untouched. This is a deliberate
 small subset, not admission of every survivor state that an existing table
 could represent.
 
-After the locked rewalk, an interior target must satisfy `pte_none()` under its
-PTE lock. Present zero/private entries and special non-present entries refuse;
-edge or same-table support does not authorize these interior classes. The near
+On kdmm24, after the locked rewalk, an interior target must satisfy `pte_none()`
+under its PTE lock. Present zero/private entries and special non-present entries
+refuse; edge or same-table support does not authorize these interior classes. The near
 survivor must likewise be empty. A late survivor refusal releases any preceding
 far-page hold before handback. The mmap writer retains the current table through
 native splits/removal, and post-body checks require its original PFN, empty
@@ -168,7 +180,57 @@ Queued near-survivor changes and interior neighboring-VMA replacement were not
 exercised; uncontrolled fault/reclaim/pinning races, huge/special-entry injection
 and allocation exhaustion remain untested. Populated target/near-survivor
 classes, larger VMAs, complex ancestry and general table destruction are not
-supported by this extension.
+supported by this extension. The kdmm25 subsection below adds only shared-zero
+targets to the same untouched-near subset.
+
+## Shared-zero interior target with native clearing
+
+`kdmm25` keeps the two interior geometries, untouched near survivor, eligible
+private resident/shared-zero/untouched far survivor, both original outer-neighbor
+guards and native retention proof above. It extends the current locked target classifier from `pte_none()`
+to also accept a present, read-only, special PTE whose PFN (physical frame
+number) is the shared zero page. `protnone`, device mappings, other special entries and ordinary private
+interior targets still refuse before holds or either split. No page-table
+pointer is retained from caller preparation.
+
+The existing zero classifier records the normalized original PTE and zero mask
+without acquiring private-page ownership. Caller-prepared split VMAs, maple
+reserves and reverse-map links suffice; absent reverse-map metadata is safe and
+zero private holds do not prevent admission. Any eligible far private page has
+an exact temporary reference/lock through native teardown. The near PTE must
+remain empty, and refusal retires any earlier far hold before handback.
+
+Under the mmap writer, the native body performs both splits and checks actual
+survivor bounds and accounting before removal. The floor/ceiling proof prevents
+table freeing from walking either interval. Native `zap_pte_range()` clears the
+zero PTE and registers TLB invalidation. `vm_normal_page()` returns NULL for the
+zero page, so native code skips private resident-page accounting, reverse-map
+removal and page release. The success receipt follows native TLB completion and
+requires the original table PFN, an empty target PTE, intact surviving entries
+and unchanged table-byte accounting. VMA/mapped-page counts change normally.
+
+Read faults establish real shared-zero targets; locked walks verify their PTEs
+before admission. Both orientations and all six selected far-survivor layouts
+matched native behavior. Origins warm their target translations on pinned CPUs
+before publication and fault on access after completion. Later survivor reads,
+isolated writes and local demand faults preserve the hole, neighboring mappings
+and independent shared-zero mappings. Two readers remain concurrent and local.
+
+Queued zero-to-private target changes use a real native write fault after two
+requests are pending while two reader shares remain held. Locked revalidation
+hands back before splitting; exact ACK and sticky local fallback complete the
+operation without replay. Retention loss is a separate prepublication control.
+Failures after the first or second split return admitted native-compatible
+errors, preserving the original zero PTE and harmless split layout. Cancellation
+and exact resource retirement passed. Missing/empty interior and shared-zero
+edge paths passed the small preservation set.
+
+Private interior targets and populated near survivors remain unsupported.
+Queued near-survivor changes, interior neighbor replacement, opposite outer
+guard loss, live huge/special-entry injection and allocation exhaustion were not
+exercised. Empty/missing-to-zero interior transitions were not newly tested.
+Controlled transitions do not cover uncontrolled fault/reclaim/pinning races.
+Larger VMAs, complex ancestry and general page-table destruction remain deferred.
 
 ## Reviewed boundary
 

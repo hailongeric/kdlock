@@ -1,12 +1,33 @@
 # Actual mmap-lock kernel integration
 
-The latest [bounded munmap extension](UNMAP.md#empty-interior-target-in-an-existing-table)
+The latest [bounded munmap extension](UNMAP.md#shared-zero-interior-target-with-native-clearing)
+is `kdmm25`: remove a shared-zero middle target from a three-page anonymous
+VMA (virtual memory area) crossing a 2-MiB boundary. The near survivor stays
+untouched; the far survivor may be ordinary private resident, shared zero or
+untouched. Locked PTE (page-table entry) revalidation, both outer-neighbor guards
+and the separate two-split native retention proof remain mandatory. Native PTE
+clearing and TLB (translation lookaside buffer) invalidation never own or release
+the zero page. Private interior targets and populated near survivors refuse.
+
+All 40 serial cases, two basic tests and 867 negative receipt controls passed:
+six native-matched layouts, 16 new different-task removals (12 without private
+holds), four native-matched split errors, four handback/ACK (acknowledgment)
+pairs and two cancellations. Six smokes add 12 separate remote removals.
+Recovery is restored and modules unloaded. See the
+[results](../../bench/results/10.176.26.71/tests/mm-boundary-interior-zero-20261024/README.md)
+and [commands](../../tests/kernel/mmap_lock/boundary_interior_zero/README.md).
+Controlled queued zero-to-private changes hand back safely; uncontrolled
+fault/reclaim/pinning races and hibernation remain untested. Three recorded
+objtool linker warnings remain unresolved. No performance claim is made.
+
+The preceding [empty-target extension](UNMAP.md#empty-interior-target-in-an-existing-table)
 is `kdmm24`: remove a middle page with an empty PTE (page-table entry) in an
 existing leaf table, within a three-page anonymous VMA (virtual memory area)
 crossing a 2-MiB boundary. The near survivor stays untouched; the far survivor
 may be private resident, shared zero or untouched. Locked revalidation, both
 outer-neighbor guards and the separate two-split retention proof remain required.
-Populated target/near-survivor entries refuse before splitting.
+On that image, populated target/near-survivor entries refuse before splitting;
+kdmm25 adds only the shared-zero target subset above.
 
 All 44 serial cases, two basic tests and 1,090 negative receipt controls passed:
 six native-matched layouts, 16 new different-task removals (12 with no private
@@ -23,7 +44,8 @@ missing. Two native splits establish the actual adjacent retention bounds;
 both original outer-neighbor guards remain mandatory. The near survivor stays
 untouched, the far survivor may be private resident/shared zero/untouched, and
 no leaf table is allocated merely to unmap. Existing-table interior targets
-were refused on that image; kdmm24 adds only the empty-target subset above.
+were refused on that image; kdmm24 adds empty targets and kdmm25 adds shared-zero
+targets within the same untouched-near subset.
 
 All 44 serial cases, two basic tests and 1,092 negative receipt controls passed.
 Six layouts matched native behavior, with 16 new different-task removals
