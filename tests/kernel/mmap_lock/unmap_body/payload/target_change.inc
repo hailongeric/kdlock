@@ -211,7 +211,8 @@ static int change_operation(struct session *s, unsigned int cmd, unsigned long a
 {
 	int error = 0;
 	struct ub_change *r = &s->change.state;
-	bool interior = cmd == UB_CHANGE_INTERIOR_TABLE_ARM;
+	bool interior = cmd == UB_CHANGE_INTERIOR_TABLE_ARM || cmd == UB_CHANGE_INTERIOR_EMPTY_ZERO_ARM ||
+		cmd == UB_CHANGE_INTERIOR_EMPTY_PRIVATE_ARM;
 	bool busy = cmd == UB_CHANGE_EDGE_PRIVATE_BUSY_ARM;
 	bool near = cmd == UB_CHANGE_SHARED_MISSING_NEAR_ARM;
 	bool edge = interior || cmd == UB_CHANGE_EDGE_TABLE_ARM || cmd == UB_CHANGE_EDGE_EMPTY_ZERO_ARM ||
@@ -235,7 +236,8 @@ static int change_operation(struct session *s, unsigned int cmd, unsigned long a
 		else {
 			r->index = arg; s->change_armed = true;
 			s->change.mode = near ? 16 : cmd == UB_CHANGE_SHARED_MISSING_ZERO_ARM ? 17 : cmd == UB_CHANGE_SHARED_MISSING_PRIVATE_ARM ? 18 : cmd == UB_CHANGE_SHARED_MISSING_BUSY_ARM ? 19 : cmd == UB_CHANGE_SHARED_EMPTY_ZERO_ARM ? 13 : cmd == UB_CHANGE_SHARED_EMPTY_PRIVATE_ARM ? 14 : cmd == UB_CHANGE_SHARED_EMPTY_BUSY_ARM ? 15 : cmd == UB_CHANGE_SHARED_ZERO_PRIVATE_ARM ? 11 : cmd == UB_CHANGE_SHARED_ZERO_BUSY_ARM ? 12 : busy ? 10 : cmd == UB_CHANGE_EDGE_ZERO_PRIVATE_ARM ? 9 :
-				cmd == UB_CHANGE_EDGE_EMPTY_ZERO_ARM ? 7 : cmd == UB_CHANGE_EDGE_EMPTY_PRIVATE_ARM ? 8 :
+				(cmd == UB_CHANGE_EDGE_EMPTY_ZERO_ARM || cmd == UB_CHANGE_INTERIOR_EMPTY_ZERO_ARM) ? 7 :
+				(cmd == UB_CHANGE_EDGE_EMPTY_PRIVATE_ARM || cmd == UB_CHANGE_INTERIOR_EMPTY_PRIVATE_ARM) ? 8 :
 				(interior || cmd == UB_CHANGE_EDGE_TABLE_ARM) ? 6 : cmd == UB_CHANGE_EMPTY_ZERO_ARM ? 1 : cmd == UB_CHANGE_EMPTY_PRIVATE_ARM ? 2 :
 				cmd == UB_CHANGE_TABLE_EMPTY_ARM ? 3 : cmd == UB_CHANGE_TABLE_ZERO_ARM ? 4 : cmd == UB_CHANGE_TABLE_PRIVATE_ARM ? 5 : 0;
 		}

@@ -131,3 +131,5 @@ struct ub_neighbor {
 #define UB_NEIGHBOR_FINISH _IO('U', 0x91)
 #define UB_CHANGE_INTERIOR_TABLE_ARM _IO('U', 0x92)
 #endif
+#define UB_CHANGE_INTERIOR_EMPTY_ZERO_ARM _IO('U', 0x93)
+#define UB_CHANGE_INTERIOR_EMPTY_PRIVATE_ARM _IO('U', 0x94)

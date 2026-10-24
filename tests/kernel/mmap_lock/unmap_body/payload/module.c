@@ -271,6 +271,8 @@ static long operation(struct file *file, unsigned int cmd, unsigned long arg)
 	case UB_NEIGHBOR_PROBE:
 	case UB_NEIGHBOR_FINISH:
 		return neighbor_operation(s, cmd, arg);
+	case UB_CHANGE_INTERIOR_EMPTY_ZERO_ARM:
+	case UB_CHANGE_INTERIOR_EMPTY_PRIVATE_ARM:
 	case UB_CHANGE_INTERIOR_TABLE_ARM:
 	case UB_CHANGE_ARM:
 	case UB_CHANGE_NOW:

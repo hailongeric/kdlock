@@ -152,11 +152,6 @@ static bool kd_mmap_unmap_hold_edge(struct mm_struct *mm,
 	ptl = pmd_lock(mm, edge->target);
 	edge->target_missing = pmd_none(*edge->target);
 	spin_unlock(ptl);
-	/* The first interior extension only admits a genuinely absent target
-	 * table. Its near survivor must therefore remain untouched. If a fault
-	 * installed a table while queued, hand back before holds or either split;
-	 * existing edge/same-table target support does not imply this geometry. */
-	if (edge->interior && !edge->target_missing) return false;
 	if (!edge->target_missing) {
 		pte_t entry;
 		bool supported;
@@ -172,6 +167,14 @@ static bool kd_mmap_unmap_hold_edge(struct mm_struct *mm,
 		pte = pte_offset_map_lock(mm, edge->target, start, &ptl);
 		edge->target_pfn = pmd_pfn(READ_ONCE(*edge->target));
 		entry = ptep_get(pte);
+		/* Interior existing-table support is only an empty target PTE.
+		 * The current mmap writer retains the rewalked table and its PTE
+		 * lock serializes this classification. Do not inherit edge support
+		 * for zero/private or special non-present targets in this geometry. */
+		if (edge->interior && !pte_none(entry)) {
+			pte_unmap_unlock(pte, ptl);
+			return false;
+		}
 		supported = kd_mmap_unmap_hold_slot(vma, start, entry, true,
 			&held[target], &is_zero, &zero_ptes[target]);
 		edge->target_zero = is_zero;
@@ -216,6 +219,13 @@ static bool kd_mmap_unmap_hold_edge(struct mm_struct *mm,
 		 * The mmap writer retains both tables; never hold two PTE locks or
 		 * carry a PTE pointer across the table boundary. */
 		pte = pte_offset_map_lock(mm, slot, addr, &ptl);
+		/* Keep the initial interior survivor subset identical to the missing
+		 * table path: the near slot is empty. A queued near fault must refuse
+		 * before either split and release any earlier far-page hold exactly. */
+		if (edge->interior && slot == edge->target && !pte_none(ptep_get(pte))) {
+			pte_unmap_unlock(pte, ptl);
+			goto rollback;
+		}
 		supported = kd_mmap_unmap_hold_slot(vma, addr, ptep_get(pte),
 			true, &held[i], &is_zero, &zero_ptes[i]);
 		pte_unmap_unlock(pte, ptl);
