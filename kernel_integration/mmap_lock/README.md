@@ -1,6 +1,24 @@
 # Actual mmap-lock kernel integration
 
-The latest [bounded munmap extension](UNMAP.md#shared-zero-near-survivor-for-a-zero-interior-target)
+The latest [bounded munmap extension](UNMAP.md#empty-interior-target-with-a-shared-zero-near-survivor)
+is `kdmm27`: an empty middle target may retain a verified shared-zero near
+survivor in the same three-page boundary geometry. The far survivor stays
+ordinary private resident, shared zero or untouched. Locked PTE (page-table
+entry) revalidation, both outer-neighbor guards and the two-split native
+retention proof remain mandatory. No target page/table is allocated to unmap.
+
+All 44 serial cases, two basic tests and 1,139 negative receipt controls passed.
+Six native-matched layouts plus queued empty-to-zero changes produced 16 new
+different-task completions: 14 empty and two zero targets, 12 without private
+holds. Four split errors matched native behavior; six handback/ACK
+(acknowledgment) pairs and two cancellations passed. Six preservation cases
+added 12 separate remote removals. Recovery is restored and modules unloaded.
+See the [results](../../bench/results/10.176.26.71/tests/mm-boundary-interior-near-empty-20261024/README.md)
+and [commands](../../tests/kernel/mmap_lock/boundary_interior_near_empty/README.md).
+Private interior targets/near survivors still refuse. Broad races, general table
+destruction and performance remain deferred; three objtool warnings are unresolved.
+
+The preceding [bounded munmap extension](UNMAP.md#shared-zero-near-survivor-for-a-zero-interior-target)
 is `kdmm26`: remove a shared-zero middle target while preserving a shared-zero
 near survivor in the same three-page boundary geometry. The far survivor may be
 ordinary private resident, shared zero or untouched. Both outer-neighbor guards,
