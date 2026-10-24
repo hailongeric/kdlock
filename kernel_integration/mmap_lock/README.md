@@ -1,7 +1,24 @@
 # Actual mmap-lock kernel integration
 
+The latest [bounded munmap extension](UNMAP.md#interior-removal-with-a-missing-target-table)
+is `kdmm23`: remove the middle page of a three-page anonymous VMA (virtual
+memory area) across a 2-MiB boundary when its target leaf page table is genuinely
+missing. Two native splits establish the actual adjacent retention bounds;
+both original outer-neighbor guards remain mandatory. The near survivor stays
+untouched, the far survivor may be private resident/shared zero/untouched, and
+no leaf table is allocated merely to unmap. Existing-table interior targets
+remain refused before splitting.
+
+All 44 serial cases, two basic tests and 1,092 negative receipt controls passed.
+Six layouts matched native behavior, with 16 new different-task removals
+(12 without private-page holds), four native-matched split errors, six exact
+handback/ACK (acknowledgment) pairs and two cancellations. Six preservation smokes add 12 separate
+remote removals. Recovery is restored and modules are unloaded. See the
+[result record](../../bench/results/10.176.26.71/tests/mm-boundary-interior-missing-20261024/README.md)
+and [runnable probe guide](../../tests/kernel/mmap_lock/boundary_interior_missing/README.md).
+
 The [bounded munmap experiment](UNMAP.md#missing-target-table-shared-with-an-untouched-survivor)
-now removes a prefix/suffix page from a three-page anonymous VMA (virtual memory
+previously added prefix/suffix removal from a three-page anonymous VMA (virtual memory
 area) when its leaf page table is genuinely missing. The near survivor shares
 that missing-table range and stays untouched; the far survivor lies across a
 2-MiB boundary and may be private resident, shared zero or untouched. Both
@@ -22,8 +39,8 @@ and earlier campaigns remain separate. Eight smokes preserve existing shared
 empty/zero/private and isolated missing-table paths without historical reruns.
 
 Unsupported private pages, huge mappings, special entries and missing higher
-levels remain refused. Interior crossing, larger mappings, complex ancestry,
-general table destruction and mmap creation remain outside this extension.
+levels remain refused. Other interior target classes, larger mappings, complex
+ancestry, general table destruction and mmap creation remain outside this scope.
 The [queued-neighbor follow-up](../../bench/results/10.176.26.71/tests/mm-neighbor-replace-20261024/README.md)
 now validates replacement through a real native writer gate on the same kdmm22
 image, without a kernel rebuild. Its 38 serial cases, two basic tests and 1,241

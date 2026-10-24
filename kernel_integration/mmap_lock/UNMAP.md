@@ -1,6 +1,16 @@
 # Bounded anonymous munmap bodies
 
-Status: `kdmm22` supports a genuinely missing target leaf PTE (page-table
+Status: `kdmm23` adds [interior missing-table removal](#interior-removal-with-a-missing-target-table)
+in the three-page boundary geometry, with a separate two-split retention proof.
+All 44 serial cases, two basic tests and 1,092 negative receipt controls passed:
+six native-matched layouts, 16 new different-task removals (12 with no private
+holds), four native-matched split errors, six handback/ACK (acknowledgment) pairs and two
+cancellations. Six preservation smokes add 12 remote removals. Recovery is
+restored and modules unloaded. See the
+[result record](../../bench/results/10.176.26.71/tests/mm-boundary-interior-missing-20261024/README.md)
+and [probe commands](../../tests/kernel/mmap_lock/boundary_interior_missing/README.md).
+
+Baseline: `kdmm22` supports a genuinely missing target leaf PTE (page-table
 entry) table in the three-page shared-boundary geometry. One prefix/suffix page
 is removed, the near survivor remains untouched in that missing table range,
 and the far survivor lies across the 2-MiB PMD (page-middle-directory) boundary.
@@ -65,6 +75,54 @@ retains the fully resident and original split-error evidence.
 The [untouched partial baseline](../../bench/results/10.176.26.71/tests/mm-partial-unmap-20261023/README.md)
 keeps its separate 45-removal evidence. Performance, p95, the seven mutex
 regressions and broad stress remain deferred.
+
+## Interior removal with a missing target table
+
+`kdmm23` admits only the middle 4-KiB page of a three-page anonymous VMA (virtual
+memory area) across
+two adjacent 2-MiB intervals within the same PUD (upper page-directory) interval.
+For boundary B and page size P, the VMA is `[B-2P,B+P)` or `[B-P,B+2P)`.
+The target and near survivor share an absent leaf table; the far survivor is
+ordinary private resident, shared zero or untouched. Required upper levels must
+exist. A locked `pmd_none()` observation establishes actual table absence; an
+untouched address alone does not. The executor does not allocate a leaf table.
+
+The boundary helper now selects target/survivor tables and slot masks by actual
+addresses, rather than assuming the target is the first/last slot. Both outer
+guards remain unchanged: previous VMA end exceeds the first interval base and
+next VMA start is below the second interval end. Current VMA ancestry, reserves,
+upper levels and survivor page eligibility are revalidated under the actual mmap
+writer. An existing target table, including empty/zero/private entries, refuses
+before holds or splitting. No earlier table pointer crosses publication.
+
+The existing caller preparation already supplies both VMA descriptors, maple
+reserves and reverse-map links needed for two splits. Absent reverse-map metadata
+consumes no link, and zero private holds do not prevent admission. After the
+splits, actual surviving bounds must be `[old_start,start)` and `[end,old_end)`.
+They establish native `free_pgd_range()` floor=`start`, ceiling=`end`:
+
+| Target | Native rounded start | Native rounded ceiling | Why no table walk occurs |
+| --- | --- | --- | --- |
+| `[B-P,B)` | B after floor adjustment | B | Start exceeds `end-1` |
+| `[B,B+P)` | B | B | Native ceiling adjustment subtracts 2 MiB from the walk end |
+
+The production check verifies actual post-split bounds, two added VMAs, unchanged
+mapped-page count and table bytes before removing the middle VMA. Successful
+removal leaves map count increased by one and mapped-page count reduced by one.
+Private survivor holds last through native teardown; zero pages are never owned
+or modified. No target translation exists to invalidate, and no table is freed
+on the executor. Later local survivor faults may create a table without restoring
+the removed virtual range.
+
+Existing after-split error controls leave native-compatible harmless splits and
+return the error through the admitted request. They never trigger local replay.
+Pre-effect refusal keeps exact waiter handback/ACK and sticky fallback. Both
+orientations passed native layout/accounting comparisons, zero/private/untouched
+survivor checks, two split-error points, empty-table refusal, queued zero-table
+appearance, prepublication outer-guard loss, cancellation and waiting local
+faults. The body still excludes callbacks, unsupported ancestry and allocation
+on the combiner. Existing-table interior support, queued interior neighbor
+replacement and uncontrolled races remain outside the validated scope.
 
 ## Reviewed boundary
 
