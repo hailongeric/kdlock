@@ -35,6 +35,9 @@ RT/ww_mutex and lockdep integration remain separately unvalidated.
 7. Do not modify, build, install or reboot the guest kernel by default. Captured
    kernel experiments under `kernel_baseline/experiments/` are historical inputs.
    Spin still requires spin-clobber-v1; KD mutex owns its clobber entry.
+   MM integration is limited to the lock backend and minimal API/lifetime wrappers.
+   Keep native MM bodies and semantics unchanged and execute them on their original
+   task. Operation-specific MM body delegation and prepared teardown are retired.
 8. Synchronize only while idle and never edit frozen running inputs. Confirm a
    real recovery snapshot before live module/JIT work. Bound remote commands.
    A timeout does not prove drain. Never force unload or clear `/root/host_fs`.

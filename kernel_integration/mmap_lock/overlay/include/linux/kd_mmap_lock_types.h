@@ -5,32 +5,6 @@
 #include <linux/rwsem.h>
 #include <linux/kd_mmap_rwsem_types.h>
 
-/* Fault callers retain their own mmap read share. This independent KD service
- * gate serializes only opted-in write-fault installation requests; acquiring
- * the mmap writer gate here would wait for those callers and deadlock. */
-struct kd_mmap_fault_state {
-	struct kd_mmap_mutex gate;
-	unsigned long start, end;
-	bool enabled, native_only;
-	atomic64_t calls, supported, delegated, native, post_ban;
-	atomic64_t handbacks, acks, cancelled, refused;
-};
-
-/* Independent typed queue on the same actual mmap writer gate. Keeping its
- * tail separate prevents the preserved advice queue from interpreting another
- * request layout. Both queues share KD's physical exclusion and node slots. */
-struct kd_mmap_unmap_state {
-	u32 tail;
-	unsigned long start, end;
-	bool enabled, native_only, allow_populated, allow_partial;
-	/* Explicit correctness-probe injection, serialized by mmap write ownership.
-	 * These bytes use existing padding; normal operations leave them zero. */
-	u8 test_fail_after, test_fail_seen;
-	atomic64_t calls, removed, delegated, native, post_ban;
-	atomic64_t handbacks, acks, cancelled, refused, failed;
-	atomic64_t populated, populated_remote;
-};
-
 /* Chosen once, before an mm is published. Neither contention nor a partial
  * critical section can change the backend. Both boot modes have this layout.
  * init_mm stays Native; dynamically initialized mms use the boot selection. */
@@ -40,13 +14,6 @@ struct kd_mmap_lock {
 		struct kd_mmap_rwsem kd;
 	};
 	bool use_kd;
-	/* Opt-in typed in-tree body. No arbitrary callback or generated image is
-	 * admitted. Refusal is sticky for this mm until its final destruction. */
-	bool body_enabled, body_native_only;
-	u64 body_calls, body_supported, body_delegated, body_handbacks;
-	u64 body_native, body_post_ban, body_cancelled, body_acks;
-	struct kd_mmap_fault_state fault;
-	struct kd_mmap_unmap_state unmap;
 };
 
 #define KD_MMAP_LOCK_INITIALIZER(name) { \

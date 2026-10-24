@@ -1,3 +1,5 @@
+> **Retired experiment — outside the current scope.** This is preserved historical evidence, not a current feature or runnable campaign. The maintained work is [lock implementation and minimal API adaptation](../../../../../kernel_integration/mmap_lock/README.md). Body-specific code and runners were removed; use the recorded historical source commit to inspect the experiment. Numeric results, failures and artifact identities below are unchanged.
+
 # Queued near-survivor creation on unchanged kdmm29
 
 **Complete, validation only:** 70 serial cases, two basic tests and 2,632 negative

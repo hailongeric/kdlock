@@ -19,7 +19,7 @@ early_param("kd_mmap", kd_mmap_setup);
 
 static int __init kd_mmap_report(void)
 {
-	pr_info("KD mmap_lock: %s; local readers; typed body delegation requires per-mm opt-in\n",
+	pr_info("KD mmap_lock: %s; local readers and origin writers; no delegation\n",
 		kd_mmap_enabled ? "KD_LOCAL" : "NATIVE_CONTROL");
 	return 0;
 }
@@ -28,12 +28,6 @@ late_initcall(kd_mmap_report);
 void kd_mmap_init(struct kd_mmap_lock *lock)
 {
 	lock->use_kd = kd_mmap_enabled;
-	lock->body_enabled = lock->body_native_only = false;
-	lock->body_calls = lock->body_supported = lock->body_delegated = 0;
-	lock->body_handbacks = lock->body_native = lock->body_post_ban = 0;
-	lock->body_cancelled = lock->body_acks = 0;
-	kd_mmap_fault_init(lock);
-	kd_mmap_unmap_init(lock);
 	if (lock->use_kd)
 		kd_mmap_rwsem_init(&lock->kd);
 	else
@@ -46,8 +40,7 @@ void kd_mmap_destroy(struct kd_mmap_lock *lock)
 	/* mm_count and transferred read references have reached their final
 	 * release. A residual reservation or waiter must never be freed. */
 	if (lock->use_kd)
-		BUG_ON(!kd_mmap_rwsem_is_idle(&lock->kd) || !kd_mmap_fault_idle(lock) ||
-		       READ_ONCE(lock->unmap.tail));
+		BUG_ON(!kd_mmap_rwsem_is_idle(&lock->kd));
 }
 
 void kd_mmap_write_lock(struct kd_mmap_lock *lock)
@@ -168,7 +161,7 @@ bool kd_mmap_is_write_owner(struct kd_mmap_lock *lock)
 		return rwsem_is_locked(&lock->native);
 	owner = atomic_long_read(&lock->kd.gate.owner);
 	return atomic_long_read(&lock->kd.admission) == -1 && !(owner & 4UL) &&
-		((owner & ~7UL) == (unsigned long)current || kd_mmap_body_write_owned(lock));
+		(owner & ~7UL) == (unsigned long)current;
 }
 EXPORT_SYMBOL_GPL(kd_mmap_is_write_owner);
 
@@ -180,12 +173,3 @@ bool kd_mmap_is_contended(struct kd_mmap_lock *lock)
 		rwsem_is_contended(&lock->native);
 }
 EXPORT_SYMBOL_GPL(kd_mmap_is_contended);
-
-bool kd_mmap_is_idle(struct kd_mmap_lock *lock)
-{
-	/* Stopped/joined users only; includes exact reserved CPU-slot records. */
-	return lock->use_kd ? kd_mmap_rwsem_is_idle(&lock->kd) && kd_mmap_fault_idle(lock) &&
-		!READ_ONCE(lock->unmap.tail) :
-		!rwsem_is_locked(&lock->native);
-}
-EXPORT_SYMBOL_GPL(kd_mmap_is_idle);

@@ -1,3 +1,5 @@
+> **Retired experiment — outside the current scope.** This is preserved historical evidence, not a current feature or runnable campaign. The maintained work is [lock implementation and minimal API adaptation](../../../../../kernel_integration/mmap_lock/README.md). Body-specific code and runners were removed; use the recorded historical source commit to inspect the experiment. Numeric results, failures and artifact identities below are unchanged.
+
 # kdmm20: shared-zero target sharing a retained boundary table
 
 Completed October 24 on the original `10.176.26.71:2222` VM: **65 serial cases,
