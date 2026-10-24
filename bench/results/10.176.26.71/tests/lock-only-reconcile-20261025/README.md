@@ -69,6 +69,10 @@ replacement remain outside the validated scope. These are limitations, not
 implicit passes. Broader races, performance, p95 and the seven mutex investigations
 remain deferred. Existing historical build/probe failures remain preserved.
 
+The subsequent [disabled-configuration object/link check](../mmap-disabled-build-20261025/README.md)
+closes the affected-wrapper compile/link gap without changing production code.
+A full disabled kernel build and runtime validation remain unperformed.
+
 ## Records and reproduction
 
 New evidence is limited to read-only reconciliation receipts:

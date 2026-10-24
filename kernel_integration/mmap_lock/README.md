@@ -71,6 +71,14 @@ the five local lock objects, checks unchanged native MM source hashes, and runs
 the two basic programs plus the existing unified mutex API driver. It does not
 load the new objects or validate actual-mm runtime behavior on the recovery kernel.
 
+The separate [disabled-configuration check](../../bench/results/10.176.26.71/tests/mmap-disabled-build-20261025/README.md)
+compiles the four affected native interface objects and compares real-header
+fixtures with `CONFIG_KD_MMAP_LOCK` unset. Native wrapper code, layout and
+initialization match; partial links resolve the added lifetime helpers without
+KD service dependencies. Its runner is `tests/kernel/mmap_lock/disabled/run.py`.
+This establishes affected-object compatibility, not a full disabled kernel build
+or runtime validation.
+
 The original actual-mm lock API probe, mapping/fault checks, completed page-fault
 probe and lock phase controls remain in `tests/kernel/mmap_lock/`. Their live
 integration runs require a separately verified lock-only kernel and explicit
