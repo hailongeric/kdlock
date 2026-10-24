@@ -9,6 +9,9 @@
 #ifndef KD_BOUNDARY_PRIVATE
 #define KD_BOUNDARY_PRIVATE 0
 #endif
+#ifndef KD_BOUNDARY_INTERIOR
+#define KD_BOUNDARY_INTERIOR 0
+#endif
 #ifndef KD_NEIGHBOR_TEST
 #define KD_NEIGHBOR_TEST 0
 #endif
@@ -27,6 +30,7 @@ static uintptr_t neighbors[3][2];
 #undef KD_TEST_MAIN
 static int free_table, present_table, shared_edge, near_zero, zero_convert, zero_busy;
 static int empty_convert, empty_busy, missing_convert, missing_busy;
+static unsigned int interior_right;
 static unsigned int target_rechecks_accessed, target_rechecks_written;
 struct neighbor { unsigned long address, start, end, pgoff, flags, none, zero, anon, other, pfn; };
 static struct neighbor neighbor_before[3][2], neighbor_after[3][2], retention_before;
@@ -92,18 +96,22 @@ static void edge_walk(unsigned int g, struct ub_table_walk *w, unsigned int phas
 }
 int main(int argc, char **argv)
 {
-	require(KD_NEIGHBOR_TEST ? argc == 4 || argc == 5 : argc == 3 || argc == 4, "native|target prefix|suffix-PAIR [error|cancel|appear|table|free-table|shared|fault|busy]");
+	require((KD_NEIGHBOR_TEST || KD_BOUNDARY_INTERIOR) ? argc == 4 || argc == 5 : argc == 3 || argc == 4, "native|target prefix|suffix-PAIR [error|cancel|appear|table|free-table|shared|fault|busy]");
 	native = !strcmp(argv[1], "native"); resident = 1;
 	require(native || !strcmp(argv[1], "target"), "native or target route");
-	const char *shape = argv[2], *mode = KD_NEIGHBOR_TEST ? (argc == 5 ? argv[4] : "success") : argc == 4 ? argv[3] : "success";
+	const char *shape = argv[2], *mode = (KD_NEIGHBOR_TEST || KD_BOUNDARY_INTERIOR) ? (argc == 5 ? argv[4] : "success") : argc == 4 ? argv[3] : "success";
 #if KD_NEIGHBOR_TEST
 	neighbor_parse(argv[3]);
 #endif
+	if (KD_BOUNDARY_INTERIOR) {
+		require(!strcmp(argv[3], "left") || !strcmp(argv[3], "right"), "interior target below/above boundary");
+		interior_right = !strcmp(argv[3], "right");
+	}
 	unsigned int shape_mask = 0, shape_zero = 0; int found = 0;
 	for (unsigned int i = 0; i < sizeof(shapes) / sizeof(shapes[0]); i++)
 		if (!strcmp(shape, shapes[i].name)) { found = 1; slice = shapes[i].target; shape_mask = shapes[i].mask | (KD_BOUNDARY_PRIVATE ? 1U << slice : 0); shape_zero = shapes[i].zero & (KD_BOUNDARY_ZERO ? 7U : ~(1U << slice)); }
-	require(found && (slice == 0 || slice == 2), "three-page prefix/suffix only");
-	injection = !strcmp(mode, "error"); cancellation = !strcmp(mode, "cancel");
+	require(found && (KD_BOUNDARY_INTERIOR ? slice == 1 : slice == 0 || slice == 2), "declared three-page slice geometry");
+	injection = KD_BOUNDARY_INTERIOR ? (!strcmp(mode,"error1") ? 1 : !strcmp(mode,"error2") ? 2 : 0) : !strcmp(mode, "error"); cancellation = !strcmp(mode, "cancel");
 	free_first = KD_BOUNDARY_PRIVATE && !strcmp(mode, "free");
 	near_zero = KD_BOUNDARY_SHARED && ((KD_BOUNDARY_PRIVATE && !strcmp(mode, "change-near-zero")) ||
 		(KD_BOUNDARY_SHARED_MISSING && !strcmp(mode, "appear-near-zero")));
@@ -116,6 +124,10 @@ int main(int argc, char **argv)
 	changing = missing_convert || missing_busy || empty_busy || zero_busy || near_zero || (KD_BOUNDARY_PRIVATE ? !strcmp(mode, "change-busy") : KD_BOUNDARY_ZERO ? !strcmp(mode, "change-private") : KD_BOUNDARY_EMPTY ? !strcmp(mode, "change-zero") || !strcmp(mode, "change-private") : !strcmp(mode, "appear"));
 	changing_zero = near_zero || (KD_BOUNDARY_SHARED_MISSING ? !strcmp(mode, "appear-zero") : changing && !KD_BOUNDARY_PRIVATE && !KD_BOUNDARY_ZERO && (!KD_BOUNDARY_EMPTY || !strcmp(mode, "change-zero")));
 	table_change = missing_convert ? (near_zero ? 16 : changing_zero ? 17 : 18) : missing_busy ? 19 : empty_convert ? (changing_zero ? 13 : 14) : empty_busy ? 15 : zero_convert ? 11 : zero_busy ? 12 : near_zero ? 1 : changing ? (KD_BOUNDARY_PRIVATE ? 10 : KD_BOUNDARY_ZERO ? 9 : KD_BOUNDARY_EMPTY ? (changing_zero ? 7 : 8) : 6) : 0;
+	if (KD_BOUNDARY_INTERIOR) {
+		require(!missing_convert && !missing_busy && !near_zero, "interior appearance uses explicit safe handback control");
+		if (changing) { changing_zero = 1; table_change = 6; }
+	}
 	fault_interaction = !strcmp(mode, "fault"); busy_page = !strcmp(mode, "busy");
 	free_table = !strcmp(mode, "free-table"); present_table = !strcmp(mode, "table"); shared_edge = !strcmp(mode, "shared");
 	busy = !native && (free_table || (!KD_BOUNDARY_EXISTING && present_table) || shared_edge || (changing && !near_zero && !zero_convert && !empty_convert && !missing_convert) || busy_page);
@@ -130,15 +142,15 @@ int main(int argc, char **argv)
 	require(!KD_BOUNDARY_EXISTING || (!present_table && strcmp(mode, "appear")), "existing boundary fixture has its own state controls");
 	require(!KD_BOUNDARY_SHARED || !shared_edge, "shared geometry is the primary fixture, not the old refusal mode");
 	require(!native || !cancellation, "cancellation is a queue control");
-	require(!KD_BOUNDARY_SHARED_MISSING || (!((shape_mask | shape_zero) & 2U) &&
-		!present_table && strcmp(mode, "appear")), "missing target table requires untouched near survivor and explicit appearance control");
+	require(!KD_BOUNDARY_SHARED_MISSING || (!((shape_mask | shape_zero) & (KD_BOUNDARY_INTERIOR ? 1U << (interior_right ? 2 : 0) : 2U)) &&
+		(KD_BOUNDARY_INTERIOR || (!present_table && strcmp(mode, "appear")))), "missing target table requires untouched near survivor and explicit appearance control");
 	pin(63); groups = native ? 1 : injection || cancellation || free_first ? 2 : 3;
 	struct sigaction action = {.sa_sigaction = segv, .sa_flags = SA_SIGINFO};
 	sigemptyset(&action.sa_mask); require(!sigaction(SIGSEGV, &action, NULL), "signal handler");
 	device = open("/dev/kd_mm_unmap_test", O_RDWR | O_CLOEXEC); require(device >= 0, "probe open");
 	struct ub_status initial = status();
 	uintptr_t stride = 8UL << 20, boundary = initial.pgdir_size * 8 + (64UL << 20);
-	uintptr_t base = boundary - (slice == 0 ? (KD_BOUNDARY_SHARED ? 2 : 1) : (KD_BOUNDARY_SHARED ? 1 : 2)) * PAGE;
+	uintptr_t base = boundary - (KD_BOUNDARY_INTERIOR ? (interior_right ? 1 : 2) : slice == 0 ? (KD_BOUNDARY_SHARED ? 2 : 1) : (KD_BOUNDARY_SHARED ? 1 : 2)) * PAGE;
 	require(base + groups * stride + (8UL << 20) < initial.task_size, "caller address range");
 	struct ub_bases bases = {0};
 	for (unsigned int g = 0; g < groups; g++) {
@@ -168,8 +180,8 @@ int main(int argc, char **argv)
 			!madvise((void *)anchors[g], PAGE, MADV_NOHUGEPAGE), "independent upper-level anchor");
 		require(!probe_read(anchors[g]) && !observed, "upper levels exist without touching missing slots");
 		if (KD_BOUNDARY_EXISTING || ((present_table || free_table) && selected)) {
-			unsigned int side = !!slice;
-			if (!KD_NEIGHBOR_TEST && !KD_BOUNDARY_SHARED_MISSING) require(!probe_read(neighbors[g][side]) && !observed, "neighbor read constructs target table without touching target");
+			unsigned int side = KD_BOUNDARY_INTERIOR ? interior_right : !!slice;
+			if (!KD_NEIGHBOR_TEST && (!KD_BOUNDARY_SHARED_MISSING || (KD_BOUNDARY_INTERIOR && present_table))) require(!probe_read(neighbors[g][side]) && !observed, "neighbor read constructs target table without touching target");
 			if (free_table && selected) {
 				if (KD_BOUNDARY_EXISTING || KD_BOUNDARY_SHARED_MISSING) {
 					retention_before = neighbor_state(g, side);
@@ -225,8 +237,8 @@ int main(int argc, char **argv)
 	account(0); /* Allocate/warm the observation buffer before global mm counters. */
 	while (late_slot < 3 && ((masks[1] | zeros[1] | (1U << slice)) & (1U << late_slot))) late_slot++;
 	if (late_slot == 3) late_slot = 4; /* Existing, untouched neighbor VMA. */
-	if (KD_BOUNDARY_SHARED && fault_interaction) late_slot = KD_BOUNDARY_SHARED_MISSING ? 1 : slice ? 0 : 2;
-	if (changing) require(!ioctl(device, missing_convert ? (near_zero ? UB_CHANGE_SHARED_MISSING_NEAR_ARM : changing_zero ? UB_CHANGE_SHARED_MISSING_ZERO_ARM : UB_CHANGE_SHARED_MISSING_PRIVATE_ARM) : missing_busy ? UB_CHANGE_SHARED_MISSING_BUSY_ARM : empty_convert ? (changing_zero ? UB_CHANGE_SHARED_EMPTY_ZERO_ARM : UB_CHANGE_SHARED_EMPTY_PRIVATE_ARM) : empty_busy ? UB_CHANGE_SHARED_EMPTY_BUSY_ARM : zero_convert ? UB_CHANGE_SHARED_ZERO_PRIVATE_ARM : zero_busy ? UB_CHANGE_SHARED_ZERO_BUSY_ARM : near_zero ? UB_CHANGE_EMPTY_ZERO_ARM : KD_BOUNDARY_PRIVATE ? UB_CHANGE_EDGE_PRIVATE_BUSY_ARM : KD_BOUNDARY_ZERO ? UB_CHANGE_EDGE_ZERO_PRIVATE_ARM : KD_BOUNDARY_EMPTY ?
+	if (KD_BOUNDARY_SHARED && fault_interaction) late_slot = KD_BOUNDARY_INTERIOR ? (interior_right ? 2 : 0) : KD_BOUNDARY_SHARED_MISSING ? 1 : slice ? 0 : 2;
+	if (changing) require(!ioctl(device, KD_BOUNDARY_INTERIOR ? UB_CHANGE_INTERIOR_TABLE_ARM : missing_convert ? (near_zero ? UB_CHANGE_SHARED_MISSING_NEAR_ARM : changing_zero ? UB_CHANGE_SHARED_MISSING_ZERO_ARM : UB_CHANGE_SHARED_MISSING_PRIVATE_ARM) : missing_busy ? UB_CHANGE_SHARED_MISSING_BUSY_ARM : empty_convert ? (changing_zero ? UB_CHANGE_SHARED_EMPTY_ZERO_ARM : UB_CHANGE_SHARED_EMPTY_PRIVATE_ARM) : empty_busy ? UB_CHANGE_SHARED_EMPTY_BUSY_ARM : zero_convert ? UB_CHANGE_SHARED_ZERO_PRIVATE_ARM : zero_busy ? UB_CHANGE_SHARED_ZERO_BUSY_ARM : near_zero ? UB_CHANGE_EMPTY_ZERO_ARM : KD_BOUNDARY_PRIVATE ? UB_CHANGE_EDGE_PRIVATE_BUSY_ARM : KD_BOUNDARY_ZERO ? UB_CHANGE_EDGE_ZERO_PRIVATE_ARM : KD_BOUNDARY_EMPTY ?
 		(changing_zero ? UB_CHANGE_EDGE_EMPTY_ZERO_ARM : UB_CHANGE_EDGE_EMPTY_PRIVATE_ARM) : UB_CHANGE_EDGE_TABLE_ARM,
 		(unsigned long)((native ? 0 : 3) + (near_zero ? 1 : slice))), "arm locked revalidation control before execution");
 	extra_before = extra();
@@ -240,7 +252,7 @@ int main(int argc, char **argv)
 		errno = 0; workers[0].result = munmap((void *)(addresses[0] + slice * PAGE), PAGE); workers[0].error = errno;
 		workers[0].fault = KD_TEST_ABSENT && workers[0].result ? -2 : probe_read(addresses[0] + slice * PAGE);
 	} else if (cancellation) {
-		before = layout(base); require(!ioctl(device, UB_CANCEL_EDGE, (unsigned long)slice), "queued fatal cancellation");
+		before = layout(base); require(!ioctl(device, KD_BOUNDARY_INTERIOR ? UB_CANCEL_PARTIAL : UB_CANCEL_EDGE, (unsigned long)slice), "queued fatal cancellation");
 	} else {
 		for (unsigned int g = 0; g < groups; g++) {
 			workers[g].group = g; workers[g].offset = injection && !g ? 0 : slice; workers[g].width = injection && !g ? 3 : 1;
@@ -464,6 +476,7 @@ int main(int argc, char **argv)
 	#endif
 	require(!close(device), "release mm reference");
 	printf("{\"boundary_edge_test\":1,\"boundary_empty_test\":%d,\"boundary_zero_test\":%d,\"boundary_private_test\":%d,\"boundary_shared_test\":%d,\"mode\":\"%s\",", KD_BOUNDARY_EMPTY, KD_BOUNDARY_ZERO, KD_BOUNDARY_PRIVATE, KD_BOUNDARY_SHARED, mode);
+	if (KD_BOUNDARY_INTERIOR) printf("\"boundary_interior_test\":1,\"interior_right\":%u,", interior_right);
 	if (KD_BOUNDARY_SHARED_MISSING) printf("\"boundary_shared_missing_test\":1,\"target_rechecks_accessed\":%u,\"target_rechecks_written\":%u,", target_rechecks_accessed, target_rechecks_written);
 	if (KD_BOUNDARY_EXISTING || KD_BOUNDARY_SHARED_MISSING) printf("\"retention_change\":{\"before_start\":%lu,\"before_end\":%lu,\"before_zero\":%lu,\"table_before\":%lu,\"table_after\":%lu,\"before_publication\":%d},",
 		retention_before.start,retention_before.end,retention_before.zero,retention_table_before,retention_table_after,!!free_table);

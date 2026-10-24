@@ -51,8 +51,9 @@ def compare_success(native, delegated):
     return dict(shape=native['shape'], origins=delegated['groups'], layouts_equal=True, residency_equal=True)
 
 
-def validate(row, log, *, absent=False, missing=False, boundary=False, boundary_empty=False, boundary_zero=False, boundary_private=False, boundary_shared=False, boundary_shared_missing=False, neighbor=False):
-    require(row.get('neighbor_gate_test',0)==neighbor, 'explicit native writer-gate evidence required')
+def validate(row, log, *, absent=False, missing=False, boundary=False, boundary_empty=False, boundary_zero=False, boundary_private=False, boundary_shared=False, boundary_shared_missing=False, neighbor=False, interior=False):
+    require(row.get('neighbor_gate_test',0)==neighbor and row.get('boundary_interior_test',0)==interior, 'explicit writer/interior evidence required')
+    require(not interior or boundary and boundary_shared_missing and not neighbor, 'interior requires the bounded missing-table class')
     n, resident, native = row['groups'], row['resident'], row['native']
     require(resident == 1 and row['zero_target_test'] == (not (absent or boundary_private)) and
             row.get('absent_target_test', 0) == absent and row.get('missing_table_test',0)==missing and row.get('boundary_edge_test',0)==boundary and row.get('boundary_empty_test',0)==boundary_empty and row.get('boundary_zero_test',0)==boundary_zero and row.get('boundary_private_test',0)==boundary_private and row.get('boundary_shared_test',0)==boundary_shared and row.get('boundary_shared_missing_test',0)==boundary_shared_missing and (not boundary_shared or boundary_private or boundary_zero or boundary_empty or boundary_shared_missing) and (not boundary_shared_missing or boundary_shared and absent and not (boundary_private or boundary_zero or boundary_empty)) and (not (boundary_empty or boundary_zero or boundary_private) or boundary) and sum((boundary_empty,boundary_zero,boundary_private))<=1, 'exact target-family evidence required')

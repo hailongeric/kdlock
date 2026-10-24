@@ -129,4 +129,5 @@ struct ub_neighbor {
 #define UB_NEIGHBOR_RESULT _IOR('U', 0x8f, struct ub_neighbor)
 #define UB_NEIGHBOR_PROBE _IO('U', 0x90)
 #define UB_NEIGHBOR_FINISH _IO('U', 0x91)
+#define UB_CHANGE_INTERIOR_TABLE_ARM _IO('U', 0x92)
 #endif

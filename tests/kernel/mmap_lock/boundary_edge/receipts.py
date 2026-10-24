@@ -24,13 +24,13 @@ def compare_success(a,b):
     return dict(shape=a['shape'],mode=a['mode'],layouts_equal=True,residency_equal=True)
 
 
-def validate(row, log, *, empty=False, zero=False, private=False, shared=False, shared_missing=False, neighbor=False):
+def validate(row, log, *, empty=False, zero=False, private=False, shared=False, shared_missing=False, neighbor=False, interior=False):
     existing=empty or zero or private
-    ev=common['validate'](row,log,absent=not (zero or private),boundary=True,boundary_empty=empty,boundary_zero=zero,boundary_private=private,boundary_shared=shared,boundary_shared_missing=shared_missing,neighbor=neighbor)
+    ev=common['validate'](row,log,absent=not (zero or private),boundary=True,boundary_empty=empty,boundary_zero=zero,boundary_private=private,boundary_shared=shared,boundary_shared_missing=shared_missing,neighbor=neighbor,interior=interior)
     n,native,target,mode=row['groups'],row['native'],row['slice'],row['mode']
     victim=0 if native else 1
-    require(target in (0,2) and mode in (('success','error','cancel','appear-near-zero','appear-zero','appear-private','appear-private-busy','free-table','fault') if shared_missing else ('success','error','cancel','free','change-busy','change-near-zero','free-table','shared','fault','busy') if private else ('success','error','cancel','change-zero','change-private','change-private-busy','free-table','shared','fault','busy') if existing else ('success','error','cancel','appear','table','free-table','shared','fault','busy')), 'unsupported edge input')
-    require(row['injection']==(mode=='error') and row['cancel']==(mode=='cancel') and row['fault_interaction']==(mode=='fault') and
+    require((target==1 if interior else target in (0,2)) and mode in (('success','error1','error2','cancel','appear','table','free-table','fault') if interior else ('success','error','cancel','appear-near-zero','appear-zero','appear-private','appear-private-busy','free-table','fault') if shared_missing else ('success','error','cancel','free','change-busy','change-near-zero','free-table','shared','fault','busy') if private else ('success','error','cancel','change-zero','change-private','change-private-busy','free-table','shared','fault','busy') if existing else ('success','error','cancel','appear','table','free-table','shared','fault','busy')), 'unsupported edge input')
+    require(row['injection']==((1 if mode=='error1' else 2 if mode=='error2' else 0) if interior else mode=='error') and row['cancel']==(mode=='cancel') and row['fault_interaction']==(mode=='fault') and
             row['busy_page']==(mode=='busy') and row['free_first']==(private and mode=='free') and row['interval_cleanup_calls']==n*4, 'case/control/cleanup routing differs')
     require((row['page_size'],row['pmd_size'],row['pud_size'])==(PAGE,PMD,PUD) and row['pgdir_size'] in (1<<39,1<<48), 'unsupported architecture geometry')
     growth=PAGE*bool(row['neighbor_body']['old_table'] and not row['neighbor_body']['destination_table']) if neighbor else 0
@@ -46,17 +46,17 @@ def validate(row, log, *, empty=False, zero=False, private=False, shared=False, 
         require(lo//PUD==(hi-1)//PUD and last-first==(not head), 'unexpected page-table crossing')
         if not head:
             shares=shared or mode=='shared' and selected
-            require((start//PMD==(lo+PAGE)//PMD)==shares, 'edge sharing a survivor table was misclassified')
+            require((start//PMD==(lo+(2 if row['interior_right'] else 0)*PAGE)//PMD if interior else start//PMD==(lo+PAGE)//PMD)==shares, 'edge sharing a survivor table was misclassified')
         adjacent=row['neighbors'][g]
         require(len(adjacent)==2, 'two outer VMA records required')
         for side,entry in enumerate(adjacent):
             expected=lo+(-2 if side==0 else 4)*PAGE
-            if mode=='free-table' and selected and side==bool(target):expected+=PMD if side else -PMD
+            if mode=='free-table' and selected and side==(row['interior_right'] if interior else bool(target)):expected+=PMD if side else -PMD
             replaced=neighbor and selected and side==row['neighbor_config']['side']
             if replaced:expected+=(-1 if side==0 else 1)*(PMD if row['neighbor_loss'] else PAGE)
             require(entry['address']==entry['start']==expected and entry['end']==expected+PAGE and entry['unchanged']==(not replaced) and
                     not entry['anon'] and not entry['other'] and not entry['pfn'] and
-                    entry['zero']==(not neighbor and side==bool(target) and (existing and not (mode=='free-table' and selected) or mode=='table' and selected)) and entry['none']==(not entry['zero']), 'retaining neighbor moved, populated or disappeared')
+                    entry['zero']==(not neighbor and side==(row['interior_right'] if interior else bool(target)) and (existing and not (mode=='free-table' and selected) or mode=='table' and selected)) and entry['none']==(not entry['zero']), 'retaining neighbor moved, populated or disappeared')
         require(row['anchors'][g]==first*PMD+2*PMD+8*PAGE and row['anchors'][g]//PUD==lo//PUD, 'upper-level anchor geometry differs')
         before=row['walks_before'][g]
         for phase,key in enumerate(('walks_before','walks_after','walks_accessed','walks_written')):
@@ -83,7 +83,7 @@ def validate(row, log, *, empty=False, zero=False, private=False, shared=False, 
     suffix=(r' boundary=([0-9a-f]+) parent_pfn=([0-9a-f]+) survivor_table_pfn=([0-9a-f]+) survivor_missing=(\d+)'
             r' resident_mask=(\d+) zero_mask=(\d+) untouched_mask=(\d+) held=(\d+) released=(\d+) floor=([0-9a-f]+) ceiling=([0-9a-f]+)'
             rf' target_pmd_none={0 if existing else 1} target_owned={1 if private else 0} tables_unchanged=1')
-    tag=('KD_MM_BOUNDARY_SHARED_PRIVATE' if private else 'KD_MM_BOUNDARY_SHARED_EMPTY' if empty else 'KD_MM_BOUNDARY_SHARED_MISSING' if shared_missing else 'KD_MM_BOUNDARY_SHARED_ZERO') if shared else 'KD_MM_BOUNDARY_PRIVATE' if private else 'KD_MM_BOUNDARY_ZERO' if zero else 'KD_MM_BOUNDARY_EMPTY' if empty else 'KD_MM_BOUNDARY'
+    tag='KD_MM_BOUNDARY_INTERIOR_MISSING' if interior else ('KD_MM_BOUNDARY_SHARED_PRIVATE' if private else 'KD_MM_BOUNDARY_SHARED_EMPTY' if empty else 'KD_MM_BOUNDARY_SHARED_MISSING' if shared_missing else 'KD_MM_BOUNDARY_SHARED_ZERO') if shared else 'KD_MM_BOUNDARY_PRIVATE' if private else 'KD_MM_BOUNDARY_ZERO' if zero else 'KD_MM_BOUNDARY_EMPTY' if empty else 'KD_MM_BOUNDARY'
     tail=r' target_table_pfn=([0-9a-f]+) target_pte_none=1' if existing else ''
     if zero:tail+=r' target_zero=1 zero_pfn=([0-9a-f]+) zero_owned=0'
     if shared and empty:tail+=r' target_zero=0 zero_pfn=0 zero_owned=0'
@@ -130,7 +130,7 @@ def validate(row, log, *, empty=False, zero=False, private=False, shared=False, 
         g,o=origins[r[2]];lo,hi=o['old_start'],o['old_end'];start,end=o['start'],o['end']
         changed=r in changed_private
         require(not (changed or r in changed_zero or r in changed_empty) or g==victim, 'changed body executed for an unchanged target')
-        w=row['walks_before'][g];survivor=0 if target else 2 if shared else 1
+        w=row['walks_before'][g];survivor=(0 if row['interior_right'] else 2) if interior else 0 if target else 2 if shared else 1
         parent,leaf=int(r[7],16),int(r[8],16);floor,ceiling=int(r[15],16),int(r[16],16)
         require(int(r[6],16)==(hi-1)//PMD*PMD and parent==w['parent_pfn'][0] and
                 leaf==w['table_pfn'][survivor] and int(r[9])==(not leaf) and bool(w['pmd_none']&(1<<target))==(not existing), 'body table state differs from verified input')
@@ -151,10 +151,10 @@ def validate(row, log, *, empty=False, zero=False, private=False, shared=False, 
         if changed:body_zero &= ~(1<<target)
         body_mask=row['masks'][g] | ((1<<target) if changed else 0)
         offset=21 if private or changed else 19 if zero or r in changed_zero else 18
-        if shared:require(tuple(map(int,r[offset:offset+2]))==((3,4) if target==0 else (6,1)), 'shared survivor was assigned to the wrong table')
+        if shared:require(tuple(map(int,r[offset:offset+2]))==((3,4) if (not row['interior_right'] if interior else target==0) else (6,1)), 'shared survivor was assigned to the wrong table')
         require(tuple(map(int,r[10:15]))==(body_mask,body_zero,7^(body_mask|body_zero),body_mask.bit_count(),body_mask.bit_count()), 'body ownership/slot identities differ')
         require(floor==(start if target else row['neighbors'][g][0]['end']) and
-                ceiling==(row['neighbors'][g][1]['start'] if target else end), 'native post-split retention bounds differ')
+                ceiling==(end if interior else row['neighbors'][g][1]['start'] if target else end), 'native post-split retention bounds differ')
         addr=start//PMD*PMD
         if addr<floor:addr+=PMD
         cap=ceiling//PMD*PMD
