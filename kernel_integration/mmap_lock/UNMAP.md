@@ -1,6 +1,16 @@
 # Bounded anonymous munmap bodies
 
-Status: `kdmm23` adds [interior missing-table removal](#interior-removal-with-a-missing-target-table)
+Status: `kdmm24` adds [empty interior targets in existing tables](#empty-interior-target-in-an-existing-table)
+with an untouched near survivor and private/shared-zero/untouched far survivor.
+The two-split proof and both outer guards are unchanged. All 44 serial cases,
+two basic tests and 1,090 negative receipt controls passed, with 16 new
+different-task removals (12 without private holds), four native-matched split
+errors, six handback/ACK (acknowledgment) pairs and two cancellations. Six smokes
+add 12 remote removals. Recovery is restored and modules unloaded. See the
+[result record](../../bench/results/10.176.26.71/tests/mm-boundary-interior-empty-20261024/README.md)
+and [commands](../../tests/kernel/mmap_lock/boundary_interior_empty/README.md).
+
+Baseline: `kdmm23` adds [interior missing-table removal](#interior-removal-with-a-missing-target-table)
 in the three-page boundary geometry, with a separate two-split retention proof.
 All 44 serial cases, two basic tests and 1,092 negative receipt controls passed:
 six native-matched layouts, 16 new different-task removals (12 with no private
@@ -123,6 +133,42 @@ appearance, prepublication outer-guard loss, cancellation and waiting local
 faults. The body still excludes callbacks, unsupported ancestry and allocation
 on the combiner. Existing-table interior support, queued interior neighbor
 replacement and uncontrolled races remain outside the validated scope.
+
+## Empty interior target in an existing table
+
+`kdmm24` extends the same two interior geometries to an empty target PTE in a
+present leaf table. Required upper levels, both outer-neighbor guards, native
+floor=`start`/ceiling=`end` calculation and actual two-split survivor checks are
+unchanged. The near survivor must remain untouched; the far survivor may be an
+eligible ordinary private page, shared zero or untouched. This is a deliberate
+small subset, not admission of every survivor state that an existing table
+could represent.
+
+After the locked rewalk, an interior target must satisfy `pte_none()` under its
+PTE lock. Present zero/private entries and special non-present entries refuse;
+edge or same-table support does not authorize these interior classes. The near
+survivor must likewise be empty. A late survivor refusal releases any preceding
+far-page hold before handback. The mmap writer retains the current table through
+native splits/removal, and post-body checks require its original PFN, empty
+target, unchanged surviving PTEs and table-byte accounting. No target page is
+allocated and no table is freed. Existing caller reserves and exact retirement
+remain sufficient, including absent reverse-map metadata and zero private holds.
+
+Both orientations passed R/Z/U far-survivor native comparisons, first/second
+split errors, queued target zero/private transitions, retention loss and
+cancellation. The controlled target changes stay in the same leaf table and
+hand back before either split; later calls remain local. A near-survivor fault
+waits for the writer and then fills an empty PTE locally without creating a new
+table. Removed-address checks after later reads/writes prove the hole stays
+inaccessible. Existing missing-table interior and empty/zero/private edge paths
+pass the small preservation set. The target has no populated translation, so
+this does not add populated-target TLB coverage.
+
+Queued near-survivor changes and interior neighboring-VMA replacement were not
+exercised; uncontrolled fault/reclaim/pinning races, huge/special-entry injection
+and allocation exhaustion remain untested. Populated target/near-survivor
+classes, larger VMAs, complex ancestry and general table destruction are not
+supported by this extension.
 
 ## Reviewed boundary
 

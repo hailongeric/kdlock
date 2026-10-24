@@ -1,13 +1,29 @@
 # Actual mmap-lock kernel integration
 
-The latest [bounded munmap extension](UNMAP.md#interior-removal-with-a-missing-target-table)
+The latest [bounded munmap extension](UNMAP.md#empty-interior-target-in-an-existing-table)
+is `kdmm24`: remove a middle page with an empty PTE (page-table entry) in an
+existing leaf table, within a three-page anonymous VMA (virtual memory area)
+crossing a 2-MiB boundary. The near survivor stays untouched; the far survivor
+may be private resident, shared zero or untouched. Locked revalidation, both
+outer-neighbor guards and the separate two-split retention proof remain required.
+Populated target/near-survivor entries refuse before splitting.
+
+All 44 serial cases, two basic tests and 1,090 negative receipt controls passed:
+six native-matched layouts, 16 new different-task removals (12 with no private
+holds), four native-matched split errors, six handback/ACK (acknowledgment) pairs
+and two cancellations. Six smokes add 12 separate remote removals. Recovery is
+restored and modules unloaded. See the
+[results](../../bench/results/10.176.26.71/tests/mm-boundary-interior-empty-20261024/README.md)
+and [commands](../../tests/kernel/mmap_lock/boundary_interior_empty/README.md).
+
+The preceding [missing-table extension](UNMAP.md#interior-removal-with-a-missing-target-table)
 is `kdmm23`: remove the middle page of a three-page anonymous VMA (virtual
 memory area) across a 2-MiB boundary when its target leaf page table is genuinely
 missing. Two native splits establish the actual adjacent retention bounds;
 both original outer-neighbor guards remain mandatory. The near survivor stays
 untouched, the far survivor may be private resident/shared zero/untouched, and
 no leaf table is allocated merely to unmap. Existing-table interior targets
-remain refused before splitting.
+were refused on that image; kdmm24 adds only the empty-target subset above.
 
 All 44 serial cases, two basic tests and 1,092 negative receipt controls passed.
 Six layouts matched native behavior, with 16 new different-task removals
