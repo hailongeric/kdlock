@@ -18,13 +18,16 @@ def compare_success(a,b):
     return dict(edge['compare_success'](a,b),interior_right=a['interior_right'])
 
 
-def validate(row,log,*,empty=False,zero=False):
-    result=edge['validate'](row,log,empty=empty,zero=zero,shared=True,shared_missing=not (empty or zero),interior=True)
+def validate(row,log,*,empty=False,zero=False,near_zero=False):
+    result=edge['validate'](row,log,empty=empty,zero=zero,shared=True,shared_missing=not (empty or zero),interior=True,interior_near_zero=near_zero)
     right,mode,native=row['interior_right'],row['mode'],row['native']
     require(right in (0,1), 'one declared boundary orientation required')
     near,far=(2,0) if right else (0,2)
     allowed=('middle-ru','middle-zu','middle-uu') if right else ('middle-ur','middle-uz','middle-uu')
-    require(row['shape'] in allowed, 'bounded interior class requires an untouched near survivor')
+    if near_zero:
+        require(zero, 'zero near survivor requires a zero target')
+        allowed=('middle-rz','middle-zz','middle-uz') if right else ('middle-zr','middle-zz','middle-zu')
+    require(row['shape'] in allowed, 'bounded interior survivor class differs')
     victim=0 if native else 1
     same=6 if right else 3
     for g,(o,w) in enumerate(zip(row['origins'],row['walks_before'])):
@@ -33,8 +36,11 @@ def validate(row,log,*,empty=False,zero=False):
         boundary=(hi-1)//PMD*PMD
         require(lo==boundary-(1 if right else 2)*PAGE and start==lo+PAGE and end==lo+2*PAGE,
                 'interior cut or boundary orientation differs')
-        require(not ((row['masks'][g]|row['zero_masks'][g])&(1<<near)) and row['ptes_before'][g]['none']&same==(same^2 if zero else same) and bool(row['ptes_before'][g]['zero']&2)==zero and not w['upper_none'],
-                'exact target class and untouched near survivor require existing upper levels')
+        near_bit=1<<near
+        require(not (row['masks'][g]&near_bit) and bool(row['zero_masks'][g]&near_bit)==near_zero and
+                row['ptes_before'][g]['none']&same==(0 if near_zero else same^2 if zero else same) and
+                row['ptes_before'][g]['zero']&same==(same if near_zero else 2 if zero else 0) and not w['upper_none'],
+                'exact target/near survivor classes require existing upper levels')
         if empty or zero or mode=='table' and g==victim:
             require(w['leaf']&same==same and w['table_pfn'][1]>0, 'existing target table was not observed')
         else:require(w['pmd_none']&same==same and not w['table_pfn'][1] and not w['table_pfn'][near], 'target table absence not actually observed')
@@ -71,5 +77,5 @@ def validate(row,log,*,empty=False,zero=False):
                     'actual post-split adjacent VMAs do not establish native floor/ceiling')
     require(not re.search(r'KD_MM_BOUNDARY_INTERIOR_'+(r'(?:MISSING|EMPTY|PRIVATE)' if zero else r'(?:MISSING|ZERO|PRIVATE)' if empty else r'(?:EMPTY|ZERO|PRIVATE)'),log), 'unsupported interior target class executed')
     return dict(result,remote_interior_missing_removals=0 if empty or zero else result['remote_boundary_removals'],remote_interior_empty_removals=result['remote_boundary_removals'] if empty else 0,remote_interior_zero_removals=result['remote_boundary_removals'] if zero else 0,two_split_retention_verified=True,
-                interior_right=right,near_survivor_untouched_before_access=True,retained_outer_guards=True,
-                existing_table_refused=not (empty or zero) and mode in ('table','appear'),populated_transition_refused=(empty or zero) and mode in ('change-zero','change-private'),error_after_split=row['injection'])
+                interior_right=right,near_survivor_untouched_before_access=not near_zero,near_survivor_shared_zero_before_access=near_zero,retained_outer_guards=True,
+                existing_table_refused=not (empty or zero) and mode in ('table','appear'),populated_transition_refused=(empty or zero) and mode in ('change-zero','change-private','change-near-private'),error_after_split=row['injection'])

@@ -134,3 +134,6 @@ struct ub_neighbor {
 #define UB_CHANGE_INTERIOR_EMPTY_ZERO_ARM _IO('U', 0x93)
 #define UB_CHANGE_INTERIOR_EMPTY_PRIVATE_ARM _IO('U', 0x94)
 #define UB_CHANGE_INTERIOR_ZERO_PRIVATE_ARM _IO('U', 0x95)
+
+/* Interior survivor conversion uses native GUP under the existing read share. */
+#define UB_CHANGE_INTERIOR_NEAR_PRIVATE_ARM _IO('U', 0x96)

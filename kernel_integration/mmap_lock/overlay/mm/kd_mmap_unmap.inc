@@ -221,10 +221,14 @@ static bool kd_mmap_unmap_hold_edge(struct mm_struct *mm,
 		 * The mmap writer retains both tables; never hold two PTE locks or
 		 * carry a PTE pointer across the table boundary. */
 		pte = pte_offset_map_lock(mm, slot, addr, &ptl);
-		/* Keep the initial interior survivor subset identical to the missing
-		 * table path: the near slot is empty. A queued near fault must refuse
-		 * before either split and release any earlier far-page hold exactly. */
-		if (edge->interior && slot == edge->target && !pte_none(ptep_get(pte))) {
+		/* A zero interior target may retain an exact shared-zero near PTE.
+		 * The common classifier records it without private-page ownership;
+		 * post-body/error checks preserve it under this retained mmap writer.
+		 * Other target classes still require an empty near slot. A private or
+		 * special near entry refuses before either split and rolls back any
+		 * preceding far-page hold exactly; native work must never replay. */
+		if (edge->interior && slot == edge->target && !pte_none(ptep_get(pte)) &&
+		    !(edge->target_zero && kd_mmap_unmap_zero_pte(ptep_get(pte)))) {
 			pte_unmap_unlock(pte, ptl);
 			goto rollback;
 		}

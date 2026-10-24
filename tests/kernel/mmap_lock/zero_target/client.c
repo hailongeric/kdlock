@@ -51,6 +51,19 @@ static struct ub_ptes independent(void)
 	check_page(r.address, 0); return r;
 }
 static struct ub_pages pages_before, pages_after;
+/* Keep immutable setup masks separate from a real controlled private fault.
+ * Its exact new reference can now belong to a surviving slot, not just a
+ * removed target. Pre-access accounting must include that survivor only. */
+static unsigned int current_mask(unsigned int g)
+{
+	return masks[g] | (changing && change.done && change.after_private &&
+		change.index / 3 == g ? 1U << (change.index % 3) : 0);
+}
+static unsigned long expected_pfn(unsigned int g, unsigned int p)
+{
+	return changing && change.done && change.after_private && change.index == g * 3 + p ?
+		change.page.pfn : pages_before.page[g * 3 + p].pfn;
+}
 static struct ub_pte_tables table_state(unsigned int g)
 {
 	struct ub_pte_tables r = {.ptes.address = addresses[g]};
@@ -113,7 +126,7 @@ static void check_ptes(unsigned int g, struct ub_ptes r, unsigned int anon, unsi
 {
 	require(r.anon == anon && r.zero == zero && !r.other && r.none == (7U ^ (anon | zero)), "exact anonymous/untouched/zero PTE masks");
 	for (unsigned int p = 0; p < 3; p++)
-		require(!(anon & (1U << p)) || r.pfn[p] == pages_before.page[g * 3 + p].pfn, "original per-slot physical page");
+		require(!(anon & (1U << p)) || r.pfn[p] == expected_pfn(g, p), "exact original or controlled per-slot physical page");
 }
 static void print_ptes(struct ub_ptes *r)
 {
@@ -245,7 +258,7 @@ static void account(unsigned int phase)
 			"complete per-VMA resident accounting");
 		for (unsigned int q = 0; q < 3; q++)
 			if (addresses[g] + q * PAGE >= r->lo && addresses[g] + q * PAGE < r->hi &&
-			    (!phase || !removed(g, q)) && (phase == 2 || (masks[g] & (1U << q)))) count++;
+			    (!phase || !removed(g, q)) && (phase == 2 || ((phase ? current_mask(g) : masks[g]) & (1U << q)))) count++;
 		require(r->rss == count * (PAGE / 1024) && r->anon == r->rss,
 			"only expected ordinary resident anonymous pages contribute RSS");
 	}
@@ -314,7 +327,7 @@ static void verify_mappings(void)
 		}
 		/* Read only after every split/absence observation for this VMA. */
 		for (unsigned int p = 0; p < 3; p++)
-			if (!removed(g, p)) check_page(addresses[g] + p * PAGE, (masks[g] & (1U << p)) ? pattern(g, p) : 0);
+			if (!removed(g, p)) check_page(addresses[g] + p * PAGE, (current_mask(g) & (1U << p)) ? pattern(g, p) : 0);
 #ifdef KD_TEST_NEIGHBOR
 		check_page(KD_TEST_NEIGHBOR(g, 0), 0);
 		check_page(KD_TEST_NEIGHBOR(g, 1), 0);

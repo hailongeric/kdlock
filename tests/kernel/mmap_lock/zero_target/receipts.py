@@ -51,9 +51,11 @@ def compare_success(native, delegated):
     return dict(shape=native['shape'], origins=delegated['groups'], layouts_equal=True, residency_equal=True)
 
 
-def validate(row, log, *, absent=False, missing=False, boundary=False, boundary_empty=False, boundary_zero=False, boundary_private=False, boundary_shared=False, boundary_shared_missing=False, neighbor=False, interior=False):
+def validate(row, log, *, absent=False, missing=False, boundary=False, boundary_empty=False, boundary_zero=False, boundary_private=False, boundary_shared=False, boundary_shared_missing=False, neighbor=False, interior=False, interior_near_zero=False):
     require(row.get('neighbor_gate_test',0)==neighbor and row.get('boundary_interior_test',0)==interior, 'explicit writer/interior evidence required')
     require(not interior or boundary and boundary_shared and (boundary_shared_missing or boundary_empty or boundary_zero) and not neighbor, 'interior requires a bounded missing-table, empty-target or shared-zero class')
+    require(row.get('boundary_interior_near_zero_test',0)==interior_near_zero and
+            (not interior_near_zero or interior and boundary_zero), 'explicit zero-near interior family required')
     n, resident, native = row['groups'], row['resident'], row['native']
     require(resident == 1 and row['zero_target_test'] == (not (absent or boundary_private)) and
             row.get('absent_target_test', 0) == absent and row.get('missing_table_test',0)==missing and row.get('boundary_edge_test',0)==boundary and row.get('boundary_empty_test',0)==boundary_empty and row.get('boundary_zero_test',0)==boundary_zero and row.get('boundary_private_test',0)==boundary_private and row.get('boundary_shared_test',0)==boundary_shared and row.get('boundary_shared_missing_test',0)==boundary_shared_missing and (not boundary_shared or boundary_private or boundary_zero or boundary_empty or boundary_shared_missing) and (not boundary_shared_missing or boundary_shared and absent and not (boundary_private or boundary_zero or boundary_empty)) and (not (boundary_empty or boundary_zero or boundary_private) or boundary) and sum((boundary_empty,boundary_zero,boundary_private))<=1, 'exact target-family evidence required')
@@ -62,7 +64,9 @@ def validate(row, log, *, absent=False, missing=False, boundary=False, boundary_
     changing_zero = row.get('changing_zero', 0); missing_table = row.get('missing_table', 0)
     changing_empty = row.get('changing_empty',0); upper_refusal = row.get('upper_refusal',0)
     near_zero = boundary_shared and (row['mode']=='change-near-zero' or boundary_shared_missing and row['mode']=='appear-near-zero')
-    change_bit = 2 if near_zero else target
+    near_private = interior_near_zero and row['mode']=='change-near-private'
+    require(row.get('mode')!='change-near-private' or near_private, 'near conversion requires the zero-near family')
+    change_bit = (4 if row['interior_right'] else 1) if near_private else 2 if near_zero else target
     private_change = changing and not changing_zero and not changing_empty and not boundary_private
     require(changing_zero == (absent and row['shape']=='change-zero' or missing and row['shape']=='change-table-zero' or boundary and row['mode'] in ('appear','change-zero','appear-zero') or near_zero) and
             missing_table == (absent and row['shape']=='missing-table'), 'transition/table refusal mode differs')
@@ -79,7 +83,7 @@ def validate(row, log, *, absent=False, missing=False, boundary=False, boundary_
     if boundary_private: wanted_mask |= target; wanted_zero &= ~target
     if absent: wanted_zero &= ~target
     if missing: wanted_mask = wanted_zero = 0
-    require(row['slice'] == wanted_slice and changing == (row['shape'] in ('change','change-empty','change-zero','change-private','change-table-empty','change-table-zero','change-table-private') or boundary and row['mode'] in ('appear','change-zero','change-private','change-busy','change-near-zero','change-private-busy','appear-near-zero','appear-zero','appear-private','appear-private-busy')), 'declared target or transition differs')
+    require(row['slice'] == wanted_slice and changing == (row['shape'] in ('change','change-empty','change-zero','change-private','change-table-empty','change-table-zero','change-table-private') or boundary and row['mode'] in ('appear','change-zero','change-private','change-busy','change-near-zero','change-private-busy','appear-near-zero','appear-zero','appear-private','appear-private-busy','change-near-private')), 'declared target or transition differs')
     for g, (mask, zero) in enumerate(zip(masks, zeros)):
         if row['injection'] and not native and g == 0: expected_input = (7, 0)
         elif missing_table and g == 1: expected_input = (0, 0)
@@ -88,10 +92,10 @@ def validate(row, log, *, absent=False, missing=False, boundary=False, boundary_
         require((mask, zero) == expected_input and not (mask & zero), 'declared residency combination differs')
         if not (row['injection'] and not native and g == 0 or row['missing_target'] and g == 1):
             require(not ((mask | zero) & target) if absent else mask & target and not (zero & target) if boundary_private else zero & target and not (mask & target), 'target initial leaf state differs')
-    require(row['busy'] == (bool(not native and row['neighbor_loss']) if neighbor else (bool(not native and ((row['mode'] in ('busy','free-table','shared','appear','change-zero','change-private','change-busy','change-private-busy','appear-private-busy') and not (boundary_shared and not interior and (boundary_zero and row['mode']=='change-private' or boundary_empty and row['mode'] in ('change-zero','change-private')))) or row['mode']=='table' and not boundary_empty)) if boundary else bool(row['busy_page'] or row['no_resident'] or row['missing_target'] or missing_table or upper_refusal))) and
+    require(row['busy'] == (bool(not native and row['neighbor_loss']) if neighbor else (bool(not native and ((row['mode'] in ('busy','free-table','shared','appear','change-zero','change-private','change-near-private','change-busy','change-private-busy','appear-private-busy') and not (boundary_shared and not interior and (boundary_zero and row['mode']=='change-private' or boundary_empty and row['mode'] in ('change-zero','change-private')))) or row['mode']=='table' and not boundary_empty)) if boundary else bool(row['busy_page'] or row['no_resident'] or row['missing_target'] or missing_table or upper_refusal))) and
             sum(row[k] for k in ('busy_page','no_resident','missing_target')) + missing_table + upper_refusal <= 1, 'refusal input differs')
-    effective = [m | (target if private_change and g == change_group else 0) for g,m in enumerate(masks)]
-    effective_zero = [(z | (change_bit if changing_zero and g == change_group else 0)) & ~(target if private_change and g == change_group else 0) for g,z in enumerate(zeros)]
+    effective = [m | (change_bit if private_change and g == change_group else 0) for g,m in enumerate(masks)]
+    effective_zero = [(z | (change_bit if changing_zero and g == change_group else 0)) & ~(change_bit if private_change and g == change_group else 0) for g,z in enumerate(zeros)]
     pins = sum(m.bit_count() for m in masks) + private_change
     inject, busy, cancel, free = (row[k] for k in ('injection', 'busy', 'cancel', 'free_first'))
     require(n == (1 if native else 2 if inject or cancel or free else 3) and row['slice'] in (0, 1, 2), 'case shape differs')
@@ -131,9 +135,10 @@ def validate(row, log, *, absent=False, missing=False, boundary=False, boundary_
                 'missing/duplicate ' + kind)
         for r in rows[kind]: identity(r)
     require(sorted(rows['handback']) == sorted(rows['ack']), 'wrong refusal ACK owner')
+    near_rollback = near_private and row['interior_right'] and bool(masks[change_group]&1)
     rollback_holds = 2 if boundary_private and row['busy_page'] else 1
     rollback = re.findall(r'KD_MM_POPULATED_RANGE rollback ' + IDENT + rf' held={rollback_holds} released={rollback_holds} effects=0', log)
-    require(sorted(rollback) == ([] if empty or boundary and not row['busy_page'] else sorted(rows['handback'])), 'late-page refusal did not release its exact prefix before ACK')
+    require(sorted(rollback) == ([] if empty or boundary and not (row['busy_page'] or near_rollback) else sorted(rows['handback'])), 'late-page refusal did not release its exact prefix before ACK')
     splits = re.findall(r'KD_MM_PARTIAL done ' + IDENT + r' old_start=([0-9a-f]+) old_end=([0-9a-f]+) splits=(\d+) maps_before=(\d+) maps_after=(\d+) pages_before=(\d+) pages_after=(\d+) tables_unchanged=1', log)
     require(sorted(r[:6] for r in splits) == sorted(rows['done']), 'split/body completion not paired')
     for r in splits:
@@ -318,14 +323,16 @@ def validate(row, log, *, absent=False, missing=False, boundary=False, boundary_
     for g, (a, b) in enumerate(zip(row['ptes_before'],row['ptes_after'])):
         gone = (7 if not native and g == 0 else 0) if inject else 0 if cancel and g == 1 else target
         zero = zeros[g]
-        after_zero = zero | (2 if near_zero and g==change_group else 0)
+        after_zero = effective_zero[g]
         late = (1 << row['late_slot']) if fault_test and g == 1 and row['late_slot'] < 3 else 0
         require(not late or not ((masks[g] | zeros[g] | gone) & late), 'fault did not target an untouched survivor')
-        for r, anon, z in ((a,masks[g],zero),(b,masks[g] & ~gone,(after_zero & ~gone) | late)):
+        for r, anon, z in ((a,masks[g],zero),(b,effective[g] & ~gone,(after_zero & ~gone) | late)):
             require(r['anon'] == anon and r['zero'] == z and r['none'] == (7 ^ (anon | z)) and r['other'] == 0,
                     'unexpected PTE creation, retention or removal')
-            require(len(r['pfn']) == 3 and all(r['pfn'][p] == (row['pages_before'][g*3+p]['pfn'] if anon & (1<<p) else 0)
-                    for p in range(3)), 'PTE physical slot identity differs')
+            require(len(r['pfn']) == 3 and all(r['pfn'][p] == (
+                (row['change']['page'][0]['pfn'] if r is b and private_change and
+                 g*3+p==row['change']['index'] else row['pages_before'][g*3+p]['pfn'])
+                if anon & (1<<p) else 0) for p in range(3)), 'PTE physical slot identity differs')
     if fault_test:
         require(row['late_fault_blocked'] == 1 and row['late_fault_code'] == row['late_fault_value'] == 0 and
                 'kd_mmap_down_read' in row['late_fault_stack'] and 'do_user_addr_fault' in row['late_fault_stack'],
@@ -336,7 +343,7 @@ def validate(row, log, *, absent=False, missing=False, boundary=False, boundary_
         for g, entries in enumerate(observations):
             require(len(entries) == 3, 'resident accounting slots differ')
             gone = (7 if not native and g == 0 else 0) if inject else 0 if cancel and g == 1 else target
-            resident_mask = masks[g] if phase == 0 else masks[g] & ~gone if phase == 1 else 7 & ~gone
+            resident_mask = masks[g] if phase == 0 else effective[g] & ~gone if phase == 1 else 7 & ~gone
             for p, entry in enumerate(entries):
                 expected_layout = dict(mapped=1, lo=0, hi=12288) if not phase else row['origins'][g]['layouts'][p]
                 require(all(entry[k] == expected_layout[k] for k in ('mapped', 'lo', 'hi')), 'resident accounting VMA identity differs')
@@ -353,17 +360,18 @@ def validate(row, log, *, absent=False, missing=False, boundary=False, boundary_
         gone = (7 if not native and g == 0 else 0) if inject else 0 if cancel and g == 1 else target
         written = 0
         for p in range(3):
-            if (gone | masks[g]) & (1 << p): continue
+            if (gone | effective[g]) & (1 << p): continue
             step = next(steps, None); require(step is not None, 'missing isolated write')
             require((step['group'], step['slot']) == (g, p), 'write order or identity differs')
-            written |= 1 << p; anon = (masks[g] | written) & ~gone; r = step['state']
+            written |= 1 << p; anon = (effective[g] | written) & ~gone; r = step['state']
             require((r['anon'], r['zero'], r['none'], r['other']) == (anon, 7 & ~(anon | gone), gone, 0),
                     'write changed another survivor or failed private conversion')
             pfns = [r['pfn'][q] for q in range(3) if anon & (1 << q)]
             require(all(pfns) and len(set(pfns)) == len(pfns), 'private survivors alias')
             for q in range(3):
-                if masks[g] & ~gone & (1 << q):
-                    require(r['pfn'][q] == row['pages_before'][g * 3 + q]['pfn'], 'resident survivor moved during zero write')
+                if effective[g] & ~gone & (1 << q):
+                    expected_pfn = row['change']['page'][0]['pfn'] if private_change and g*3+q==row['change']['index'] else row['pages_before'][g*3+q]['pfn']
+                    require(r['pfn'][q] == expected_pfn, 'resident survivor moved during zero write')
             independent(step['independent']); count += 1
         r = row['ptes_written'][g]
         require((r['anon'], r['zero'], r['none'], r['other']) == (7 & ~gone, 0, gone, 0), 'final private survivor state differs')

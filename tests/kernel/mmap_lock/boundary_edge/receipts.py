@@ -20,16 +20,19 @@ def compare_success(a,b):
     for g,o in enumerate(b['origins']):
         require([{k:p[k] for k in ('mapped','lo','hi','pgoff','flags')} for p in o['layouts']]==expected and
                 o['result']==a['origins'][0]['result']==0, 'native boundary result differs')
-        require(all(x[0]==y[g] for x,y in zip(a['residency'],b['residency'])), 'native boundary resident accounting differs')
-    return dict(shape=a['shape'],mode=a['mode'],layouts_equal=True,residency_equal=True)
+        # A changed surviving slot stays resident only in the queued victim.
+        # The unchanged peers retain their separately validated input masks.
+        if a['mode']!='change-near-private' or g==1:
+            require(all(x[0]==y[g] for x,y in zip(a['residency'],b['residency'])), 'native boundary resident accounting differs')
+    return dict(shape=a['shape'],mode=a['mode'],layouts_equal=True,residency_equal=True,changed_survivor_comparison=a['mode']=='change-near-private')
 
 
-def validate(row, log, *, empty=False, zero=False, private=False, shared=False, shared_missing=False, neighbor=False, interior=False):
+def validate(row, log, *, empty=False, zero=False, private=False, shared=False, shared_missing=False, neighbor=False, interior=False, interior_near_zero=False):
     existing=empty or zero or private
-    ev=common['validate'](row,log,absent=not (zero or private),boundary=True,boundary_empty=empty,boundary_zero=zero,boundary_private=private,boundary_shared=shared,boundary_shared_missing=shared_missing,neighbor=neighbor,interior=interior)
+    ev=common['validate'](row,log,absent=not (zero or private),boundary=True,boundary_empty=empty,boundary_zero=zero,boundary_private=private,boundary_shared=shared,boundary_shared_missing=shared_missing,neighbor=neighbor,interior=interior,interior_near_zero=interior_near_zero)
     n,native,target,mode=row['groups'],row['native'],row['slice'],row['mode']
     victim=0 if native else 1
-    require((target==1 if interior else target in (0,2)) and mode in ((('success','error1','error2','cancel','change-private','free-table','fault') if zero else ('success','error1','error2','cancel','change-zero','change-private','free-table','fault') if empty else ('success','error1','error2','cancel','appear','table','free-table','fault')) if interior else ('success','error','cancel','appear-near-zero','appear-zero','appear-private','appear-private-busy','free-table','fault') if shared_missing else ('success','error','cancel','free','change-busy','change-near-zero','free-table','shared','fault','busy') if private else ('success','error','cancel','change-zero','change-private','change-private-busy','free-table','shared','fault','busy') if existing else ('success','error','cancel','appear','table','free-table','shared','fault','busy')), 'unsupported edge input')
+    require((target==1 if interior else target in (0,2)) and mode in ((('success','error1','error2','cancel','change-private','change-near-private','free-table','fault') if zero else ('success','error1','error2','cancel','change-zero','change-private','free-table','fault') if empty else ('success','error1','error2','cancel','appear','table','free-table','fault')) if interior else ('success','error','cancel','appear-near-zero','appear-zero','appear-private','appear-private-busy','free-table','fault') if shared_missing else ('success','error','cancel','free','change-busy','change-near-zero','free-table','shared','fault','busy') if private else ('success','error','cancel','change-zero','change-private','change-private-busy','free-table','shared','fault','busy') if existing else ('success','error','cancel','appear','table','free-table','shared','fault','busy')), 'unsupported edge input')
     require(row['injection']==((1 if mode=='error1' else 2 if mode=='error2' else 0) if interior else mode=='error') and row['cancel']==(mode=='cancel') and row['fault_interaction']==(mode=='fault') and
             row['busy_page']==(mode=='busy') and row['free_first']==(private and mode=='free') and row['interval_cleanup_calls']==n*4, 'case/control/cleanup routing differs')
     require((row['page_size'],row['pmd_size'],row['pud_size'])==(PAGE,PMD,PUD) and row['pgdir_size'] in (1<<39,1<<48), 'unsupported architecture geometry')
@@ -197,6 +200,9 @@ def validate_empty_controls(row,log,*,zero=False,shared=False,interior=False):
                 and moved['table_before']>0 and (row['walks_after'][victim]['table_pfn'][target]==moved['table_before'] if shared else row['walks_after'][victim]['pmd_none']&(1<<target)),
                 'neighbor transition or required native table release unproven')
     else:require(not any(moved.values()), 'unexpected retention prerequisite change')
+    if mode=='change-near-private':
+        validate_near_private(row,log)
+        return
     tag='edge_zero_change' if zero else 'edge_empty_change'
     before=r'before_none=0 before_zero=1' if zero else r'before_none=1'
     transitions=list(re.finditer(r'KD_MM_TEST '+tag+r' mm=([0-9a-f]+) index=(\d+) actor=(\d+) pending=(\d+) readers=(\d+) admission=(-?\d+) mode=(\d+) '+before+r' after_zero=(\d+) after_private=(\d+) table_before=([0-9a-f]+) table_after=([0-9a-f]+) anon_before=0 anon_after=([0-9a-f]+) zero_pfn=([0-9a-f]+) private_pfn=([0-9a-f]+) result=0',log))
@@ -223,3 +229,43 @@ def validate_empty_controls(row,log,*,zero=False,shared=False,interior=False):
     if not native:
         ack=re.search('KD_MM_UNMAP handback '+IDENT,log)
         require(ack and ack.group(3)==str(o['tid']) and transitions[0].end()<ack.start(), 'populated boundary target did not hand back before effects')
+
+
+def validate_near_private(row,log):
+    """A queued native zero-to-private fault changes only the near survivor."""
+    require(row.get('boundary_interior_near_zero_test')==1, 'near conversion family missing')
+    victim=0 if row['native'] else 1
+    slot=2 if row['interior_right'] else 0
+    o=row['origins'][victim];c,m=row['change'],row['change_more']
+    transitions=list(re.finditer(r'KD_MM_TEST edge_zero_change ([^\n]+)',log))
+    require(len(transitions)==1, 'exact near conversion receipt missing/duplicate')
+    fields=dict(re.findall(r'(\w+)=(\S+)',transitions[0].group(1)))
+    require(set(fields)==set(('mm','index','actor','pending','readers','admission','mode','before_none',
+        'before_zero','after_zero','after_private','table_before','table_after','anon_before','anon_after',
+        'zero_pfn','private_pfn','result')), 'unexpected transition fields')
+    require(c['done']==1 and c['result']==0 and c['before_zero']==c['after_private']==1 and
+        c['index']==victim*3+slot and c['pending']==(0 if row['native'] else 2) and
+        c['readers']==(1 if row['native'] else 2) and (row['native'] or c['admission']==-1),
+        'near conversion ordering/slot differs')
+    require(m['mode']==9 and m['before_none']==m['after_zero']==0 and
+        m['table_before']==m['table_after']==row['walks_before'][victim]['table_pfn'][slot]==row['walks_after'][victim]['table_pfn'][slot]>0 and
+        m['anon_before']==o['original_anon'] and m['anon_after']>0 and
+        (not m['anon_before'] or m['anon_after']==m['anon_before']), 'near conversion table/ancestry differs')
+    require(len(c['page'])==1 and c['zero_pfn']>0, 'near conversion private reference missing')
+    p=c['page'][0]
+    require(p['address']==o['old_start']+slot*PAGE and p['pfn']>0 and p['pfn']!=c['zero_pfn'] and
+        p['maps']==1 and p['refs']==2 and p['hash']>0 and p['charged_same'] and not p['locked'],
+        'new survivor reference differs')
+    expected=dict(mm=row['mm'],index=c['index'],actor=c['actor'],pending=c['pending'],readers=c['readers'],
+        admission=c['admission'],mode=9,before_none=0,before_zero=1,after_zero=0,after_private=1,
+        table_before=m['table_before'],table_after=m['table_after'],anon_before=m['anon_before'],
+        anon_after=m['anon_after'],zero_pfn=c['zero_pfn'],private_pfn=p['pfn'],result=0)
+    hexa={'mm','table_before','table_after','anon_before','anon_after','zero_pfn','private_pfn'}
+    require({k:int(v,16 if k in hexa else 10) for k,v in fields.items()}==expected,
+        'near conversion receipt not bound to exact observed state')
+    require(c['actor']>0 and (c['actor']==o['tid'] if row['native'] else all(c['actor']!=x['tid'] for x in row['origins'])),
+        'near conversion actor differs')
+    if not row['native']:
+        ack=re.search('KD_MM_UNMAP handback '+IDENT,log)
+        require(ack and ack.group(3)==str(o['tid']) and transitions[0].end()<ack.start(),
+            'private near survivor did not hand back before splitting')
