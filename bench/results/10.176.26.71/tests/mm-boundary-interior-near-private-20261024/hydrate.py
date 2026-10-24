@@ -6,8 +6,8 @@ import json
 from pathlib import Path
 import shutil
 
-OUT=Path('/root/kdlock-kernel-work/mm-boundary-interior-near-private-20261024')
-TREE=Path('/dev/shm/kdmm28-identity')
+OUT=Path('/root/kdlock-kernel-work/mm-boundary-interior-near-private-20261024/revision-2')
+TREE=Path('/dev/shm/kdmm28-r2-identity')
 
 def digest(p):
     h=hashlib.sha256()

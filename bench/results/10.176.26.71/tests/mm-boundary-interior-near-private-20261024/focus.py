@@ -10,8 +10,8 @@ import sys
 sys.dont_write_bytecode = True
 ROOT = Path('/root/host_fs/kdlock')
 BASE = Path('/root/kdlock-evidence/10.176.26.71/tests/mm-boundary-interior-near-private-20261024')
-TREE = Path('/dev/shm/kdmm28-identity')
-BUNDLE = Path('/root/kdlock-kernel-baselines/mmap-kdmm28-20261024')
+TREE = Path('/dev/shm/kdmm28-r2-identity')
+BUNDLE = Path('/root/kdlock-kernel-baselines/mmap-kdmm28-r2-20261024')
 sys.path.insert(0,str(ROOT/'bench/spin_cacheline'))
 import bench_runtime as rt
 import kernel_identity
@@ -24,7 +24,7 @@ def idle():
 
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--build-attempt',type=int,default=1)
+    parser.add_argument('--build-attempt',type=int,default=2)
     parser.add_argument('--run',default='focused-1')
     parser.add_argument('--probe-revision',type=Path)
     a=parser.parse_args()
@@ -33,8 +33,8 @@ def main():
     assert 'kd_mmap=on' in Path('/proc/cmdline').read_text().split()
     assert os.environ['KDLOCK_RECOVERY_CONFIRMED']=='1'
     idle()
-    assert a.build_attempt==1
-    build_path=BASE/'build-1/result.json'
+    assert a.build_attempt==2
+    build_path=BASE/'build-2/result.json'
     build=json.loads(build_path.read_text());assert build['passed']
     for files in build['binaries'].values():
         for name,digest in files.items():assert rt.digest(BASE/name)==digest

@@ -15,8 +15,8 @@ sys.path.insert(0,str(ROOT/'bench/spin_cacheline'))
 import bench_runtime as rt
 import kernel_identity
 BASE=Path('/root/kdlock-evidence/10.176.26.71/tests/mm-boundary-interior-near-private-20261024')
-SOURCE=Path('/dev/shm/kdmm28-identity')
-BUNDLE=Path('/root/kdlock-kernel-baselines/mmap-kdmm28-20261024')
+SOURCE=Path('/dev/shm/kdmm28-r2-identity')
+BUNDLE=Path('/root/kdlock-kernel-baselines/mmap-kdmm28-r2-20261024')
 RELEASE='6.1.159-kdmm28'
 
 
@@ -33,11 +33,11 @@ def preserved():
     for name,digest in {**boot,**modules}.items():
         if name=='/boot/grub/grub.cfg':continue
         rt.require(rt.digest(Path(name))==digest,'recovery artifact changed: '+name)
-    installed=load(BASE/'install/result.json')
+    installed=load(BASE/'install-r2/result.json')
     rt.require(installed['passed'] and installed['recovery_unchanged'] and
-               rt.digest(BASE/'install/installed-sha256.json')==installed['installed_manifest_sha256'],
+               rt.digest(BASE/'install-r2/installed-sha256.json')==installed['installed_manifest_sha256'],
                'installed candidate receipt changed')
-    for name,digest in load(BASE/'install/installed-sha256.json').items():
+    for name,digest in load(BASE/'install-r2/installed-sha256.json').items():
         rt.require(rt.digest(Path(name))==digest,'installed candidate changed: '+name)
     cfg=Path('/boot/grub/grub.cfg').read_text()
     rt.require('set default="'+installed['recovery_default']+'"' in cfg and
@@ -63,7 +63,7 @@ def main():
     try:
         result.update(preserved())
         expected=load(BASE/'control/expected-guest.json')['modules']
-        build=load(BASE/'build-1/result.json')
+        build=load(BASE/'build-2/result.json')
         rt.require(build['passed'] and rt.digest(BUNDLE/'manifest.json')==
                    build['baseline_manifest_sha256'],'built candidate capture differs')
         build_id=load(BUNDLE/'manifest.json')['running']['build_id']
@@ -103,7 +103,7 @@ def main():
         else:
             if a.mode != 'recovery':
                 import runpy
-                runpy.run_path(str(BASE/'control/hydrate.py'))['hydrate']()
+                runpy.run_path(str(BASE/'control-r2/hydrate.py'))['hydrate']()
             rt.require(a.request is not None,'recorded request required')
             prior=load(a.request)
             rt.require(prior['passed'] and prior['reboot_requested'] and prior['mode']==a.mode and

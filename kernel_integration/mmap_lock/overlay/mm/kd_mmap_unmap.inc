@@ -227,7 +227,8 @@ static bool kd_mmap_unmap_hold_edge(struct mm_struct *mm,
 		/* Only an empty interior target may retain an ordinary private near
 		 * page. The shared classifier below still requires a writable exclusive
 		 * base page, one mapping, no pin/special state and a nonblocking lock.
-		 * Save its exact PTE and hold through both splits/native teardown;
+		 * Save its PTE except hardware accessed/dirty bits, which user stores
+		 * may update without mmap_lock. Hold through both splits/teardown;
 		 * this survivor must never be zapped. A zero target keeps its narrower
 		 * empty/zero-near class. No target page/table is allocated. */
 		if (edge->interior && slot == edge->target && !pte_none(ptep_get(pte)) &&
@@ -239,7 +240,7 @@ static bool kd_mmap_unmap_hold_edge(struct mm_struct *mm,
 		supported = kd_mmap_unmap_hold_slot(vma, addr, ptep_get(pte),
 			true, &held[i], &is_zero, &zero_ptes[i]);
 		if (supported && held[i] && edge->interior && slot == edge->target) {
-			edge->near_entry = pte_mkold(ptep_get(pte));
+			edge->near_entry = pte_mkclean(pte_mkold(ptep_get(pte)));
 			edge->near_pfn = page_to_pfn(held[i]);
 			edge->near_refs_before = page_count(held[i]);
 		}
@@ -592,7 +593,7 @@ out_pages:
 				else BUG_ON(held[i] || !pte_none(entry));
 				if (edge.interior && slot == edge.target && edge.near_pfn) {
 					BUG_ON(!held[i] || !PageLocked(held[i]) || pfns[i] != edge.near_pfn ||
-					       !pte_same(pte_mkold(entry), edge.near_entry));
+					       !pte_same(pte_mkclean(pte_mkold(entry)), edge.near_entry));
 					edge.near_refs_after = page_count(held[i]);
 				}
 				pte_unmap_unlock(pte, ptl);

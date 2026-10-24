@@ -15,14 +15,14 @@ RAW=ROOT/'bench/results/10.176.26.71/raw/tests/mm-boundary-interior-near-private
 BASE='/root/kdlock-evidence/10.176.26.71/tests/mm-boundary-interior-near-private-20261024'
 C=runpy.run_path(str(HERE.parent/'serial-continuation-20261022/campaign.py'))
 SYNC=runpy.run_path(str(ROOT/'tools/vm/sync_source.py'))
-CONTROL=BASE+'/control'
+CONTROL=BASE+'/control-r2'
 C['boot'].__globals__['PRIOR']=CONTROL
 
 
 def boot(mode,block,output):
     # The candidate identity is durable on the source host, not guest root.
     # Restore only its RAM transport after a changed boot and before verification.
-    receipt=C['load'](RAW/'identity/receipt.json')
+    receipt=C['load'](RAW/'identity-r2/receipt.json')
     image=Path(receipt['host_path'])
     assert receipt['passed'] and image.stat().st_size==receipt['compressed_bytes'] and C['sha'](image)==receipt['compressed_sha256']
     original_guest=C['boot'].__globals__['guest']
@@ -86,7 +86,7 @@ def main():
         C['guest']('mkdir -- '+guest,local/'mkdir.log',30)
         transition=boot(a.action,guest,local)
         if a.action=='kd':
-            C['guest'](C['remote']([CONTROL+'/focus.py','--build-attempt','1','--run','focused-'+str(a.attempt)]),local/'focused.log',1200)
+            C['guest'](C['remote']([CONTROL+'/focus.py','--build-attempt','2','--run','focused-'+str(a.attempt)]),local/'focused.log',1200)
             C['fetch'](BASE+'/focused-'+str(a.attempt)+'/result.json',local/'result.json')
         else:C['save'](local/'result.json',transition)
     else:
