@@ -1,13 +1,33 @@
 # Actual mmap-lock kernel integration
 
-The latest [bounded munmap extension](UNMAP.md#shared-zero-interior-target-with-native-clearing)
+The latest [bounded munmap extension](UNMAP.md#shared-zero-near-survivor-for-a-zero-interior-target)
+is `kdmm26`: remove a shared-zero middle target while preserving a shared-zero
+near survivor in the same three-page boundary geometry. The far survivor may be
+ordinary private resident, shared zero or untouched. Both outer-neighbor guards,
+locked PTE (page-table entry) revalidation and the separate two-split native
+retention proof remain mandatory. Neither zero page is owned or released.
+Private targets and private near survivors still hand back before splitting.
+
+All 40 serial cases, two basic tests and 905 negative receipt controls passed:
+six native-matched layouts, 12 new different-task removals (eight without private
+holds), four native-matched split errors, six handback/ACK (acknowledgment) pairs
+and two cancellations. Six preservation smokes add 12 separate remote removals.
+Queued near conversion verifies exact rollback of an earlier far-page hold.
+Recovery is restored and modules unloaded. See the
+[results](../../bench/results/10.176.26.71/tests/mm-boundary-interior-near-zero-20261024/README.md)
+and [commands](../../tests/kernel/mmap_lock/boundary_interior_near_zero/README.md).
+Uncontrolled fault/reclaim/pinning races and hibernation remain untested; three
+recorded objtool warnings remain unresolved. No performance claim is made.
+
+The preceding [shared-zero target extension](UNMAP.md#shared-zero-interior-target-with-native-clearing)
 is `kdmm25`: remove a shared-zero middle target from a three-page anonymous
 VMA (virtual memory area) crossing a 2-MiB boundary. The near survivor stays
 untouched; the far survivor may be ordinary private resident, shared zero or
 untouched. Locked PTE (page-table entry) revalidation, both outer-neighbor guards
 and the separate two-split native retention proof remain mandatory. Native PTE
 clearing and TLB (translation lookaside buffer) invalidation never own or release
-the zero page. Private interior targets and populated near survivors refuse.
+the zero page. On that image, private interior targets and populated near
+survivors refuse; kdmm26 adds only the shared-zero near subset above.
 
 All 40 serial cases, two basic tests and 867 negative receipt controls passed:
 six native-matched layouts, 16 new different-task removals (12 without private

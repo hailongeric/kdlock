@@ -1,6 +1,18 @@
 # Bounded anonymous munmap bodies
 
-Status: `kdmm25` adds [shared-zero interior targets](#shared-zero-interior-target-with-native-clearing)
+Status: `kdmm26` adds a [shared-zero near survivor](#shared-zero-near-survivor-for-a-zero-interior-target)
+beside a shared-zero interior target. The far survivor keeps the existing
+private/shared-zero/untouched subset. Both outer guards and the two-split proof
+remain mandatory; private targets/near survivors refuse before splitting.
+All 40 serial cases, two basic tests and 905 negative receipt controls passed:
+12 new different-task removals (eight without private holds), four native-matched
+split errors, six handback/ACK (acknowledgment) pairs and two cancellations.
+Six preservation smokes add 12 separate remote removals. Recovery is restored
+and modules unloaded. See the
+[result record](../../bench/results/10.176.26.71/tests/mm-boundary-interior-near-zero-20261024/README.md)
+and [commands](../../tests/kernel/mmap_lock/boundary_interior_near_zero/README.md).
+
+Baseline: `kdmm25` adds [shared-zero interior targets](#shared-zero-interior-target-with-native-clearing)
 with an untouched near survivor and private/shared-zero/untouched far survivor.
 Native clearing/TLB (translation lookaside buffer) handling never owns or
 releases the zero page. Both outer guards and the two-split retention proof stay
@@ -225,12 +237,57 @@ errors, preserving the original zero PTE and harmless split layout. Cancellation
 and exact resource retirement passed. Missing/empty interior and shared-zero
 edge paths passed the small preservation set.
 
-Private interior targets and populated near survivors remain unsupported.
+On kdmm25, private interior targets and populated near survivors remain unsupported.
 Queued near-survivor changes, interior neighbor replacement, opposite outer
 guard loss, live huge/special-entry injection and allocation exhaustion were not
 exercised. Empty/missing-to-zero interior transitions were not newly tested.
 Controlled transitions do not cover uncontrolled fault/reclaim/pinning races.
 Larger VMAs, complex ancestry and general page-table destruction remain deferred.
+
+## Shared-zero near survivor for a zero interior target
+
+`kdmm26` extends only the near-survivor classifier in the two interior geometries
+above. The target must be shared-zero to admit a shared-zero near PTE. Missing
+and empty target classes retain their untouched-near requirement; private
+interior targets and private near survivors refuse. The far survivor may be an
+eligible ordinary private page, shared zero or untouched. The six new layouts
+are left ZR/ZZ/ZU and right RZ/ZZ/UZ, in increasing survivor-address order.
+
+The mmap writer rewalks current VMA/table state and both original outer guards.
+Under the current PTE lock, the near survivor must be either empty or the exact
+present, read-only, special shared-zero class. The latter is admitted only with
+`edge->target_zero`. The existing classifier stores its original normalized PTE
+and zero mask without a private-page reference or lock. No earlier table pointer
+crosses publication. Caller-prepared split descriptors, maple reserves and
+reverse-map links remain sufficient, including absent reverse-map metadata.
+
+The separate two-split proof still checks actual survivor bounds and native
+floor/ceiling rounding before removal. Native zap clears only the target and
+completes translation invalidation. The post-body path compares the near PTE
+with its saved value, ignoring only the hardware accessed bit, and verifies
+table identity/accounting on success and admitted split error. Neither zero
+page is owned, released or modified. A far private hold retires exactly once.
+
+The probes distinguish immutable initial masks from a controlled private
+survivor created by a queued native write fault. They verify the new page's
+exact reference, PTE, contents and resident accounting through local completion
+and cleanup. Left conversion exercises initially absent reverse-map metadata;
+right conversion uses a private far survivor, requiring rollback of its earlier
+temporary hold before handback. Target conversion also refuses before either
+split. Both controls record two pending requests, two reader shares and closed
+writer admission. Exact ACK and sticky local fallback prevent destructive replay.
+
+All six selected layouts matched native behavior with actual different-task
+execution. Native-matched split errors, retention loss, cancellation, target
+faults after warmed translations, survivor isolated writes/demand faults and
+complete table/reference cleanup passed. Readers stayed concurrent and local.
+One kdmm25 preservation smoke retained the waiting-local-fault check; the new
+zero-near fixture does not claim an initial fault on an already mapped survivor.
+
+Interior neighboring-VMA replacement, opposite guard loss, zero-to-empty
+transitions, live huge/special-entry injection, allocation exhaustion and
+uncontrolled fault/reclaim/pinning races were not exercised. Larger VMAs,
+complex ancestry and general page-table destruction remain outside scope.
 
 ## Reviewed boundary
 
