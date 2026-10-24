@@ -76,7 +76,12 @@ probe and lock phase controls remain in `tests/kernel/mmap_lock/`. Their live
 integration runs require a separately verified lock-only kernel and explicit
 kernel authorization; a matching release prefix alone is insufficient. The
 [original local integration evidence](../../bench/results/10.176.26.71/tests/mmap-kd-kernel-20261021/README.md)
-is retained without repeating its campaign. RT, lockdep, whole-kernel substitution
+is retained without repeating its campaign. The
+[runtime reconciliation](../../bench/results/10.176.26.71/tests/lock-only-reconcile-20261025/README.md)
+verified the restored inputs and prepared outputs against the preserved kdmm1
+image, configuration, compiler record, modules and initramfs. Its eight focused
+Native/KD runtime results are reusable; no new build, test or boot was needed.
+RT, lockdep, whole-kernel substitution
 and broader Linux semantic equivalence remain unvalidated. Performance work is deferred.
 
 ## Retired experiments and provenance
