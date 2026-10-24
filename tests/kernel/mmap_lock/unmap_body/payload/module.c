@@ -36,6 +36,7 @@ struct session {
 	struct ub_pages snapshot;
 	bool change_armed;
 	struct ub_change_more change;
+	struct ub_near_create near_create;
 	struct ub_neighbor neighbor;
 	struct page *neighbor_page;
 	struct control *neighbor_cancel;
@@ -64,6 +65,27 @@ static void check(struct session *s, bool good)
 	s->result.checks++;
 	if (!good)
 		s->result.errors++;
+}
+
+static unsigned int change_pending(struct session *s)
+{
+	unsigned int mode = s->change.mode;
+
+	if (mode == 20) return s->near_create.outcome == UB_CREATE_OK ? 3 : 2;
+	return mode >= 6 && mode != 11 && mode != 13 && mode != 14 &&
+		!(mode >= 16 && mode <= 18) ? 2 : 3;
+}
+
+static void cancel_signals(struct control *c)
+{
+	struct session *s = c->session;
+
+	check(s, !send_sig(SIGUSR1, c->writers[1].task, 1));
+	msleep(20);
+	check(s, !completion_done(&c->writers[1].done));
+	check(s, !send_sig(SIGKILL, c->writers[1].task, 1));
+	msleep(20);
+	check(s, !completion_done(&c->writers[1].done));
 }
 
 static int change_target(struct session *s);
@@ -180,12 +202,10 @@ static int hold(struct session *s, unsigned int count, bool cancel)
 			s->result.cancel_tid[i] = c->writers[i].task->pid;
 			if (!wait_pending(s, i + 1)) { error = -ETIMEDOUT; goto out; }
 		}
-		check(s, !send_sig(SIGUSR1, c->writers[1].task, 1));
-		msleep(20);
-		check(s, !completion_done(&c->writers[1].done));
-		check(s, !send_sig(SIGKILL, c->writers[1].task, 1));
-		msleep(20);
-		check(s, !completion_done(&c->writers[1].done));
+		/* The new cancellation control creates its survivor before signals;
+		 * historical cancellation keeps its original ordering. */
+		if (!(s->change_armed && s->change.mode == 20 &&
+		      s->near_create.outcome == UB_CREATE_CANCEL)) cancel_signals(c);
 	} else if (!wait_pending(s, count)) {
 		error = -ETIMEDOUT; goto out;
 	}
@@ -200,7 +220,7 @@ static int hold(struct session *s, unsigned int count, bool cancel)
 		/* Both local read shares already exist. A normal write fault using
 		 * one of them can finish while queued writers await their release.
 		 * No reader bypass, PTE poke or body callback is introduced. */
-		if (cancel || count != (s->change.mode >= 6 && s->change.mode != 11 && s->change.mode != 13 && s->change.mode != 14 && !(s->change.mode >= 16 && s->change.mode <= 18) ? 2 : 3) || kd_mmap_unmap_pending(s->mm) != count ||
+		if ((cancel && !(s->change.mode == 20 && s->near_create.outcome == UB_CREATE_CANCEL)) || count != change_pending(s) || kd_mmap_unmap_pending(s->mm) != count ||
 		    atomic_long_read(&s->mm->mmap_lock.kd.admission) != -1 ||
 		    atomic_long_read(&s->mm->mmap_lock.kd.readers) != 2) {
 			error = -EINVAL; goto out;
@@ -211,6 +231,7 @@ static int hold(struct session *s, unsigned int count, bool cancel)
 			error = -ETIMEDOUT; goto out;
 		}
 		if (c->change_error) { error = c->change_error; goto out; }
+		if (cancel) cancel_signals(c);
 	}
 	if (!cancel) {
 		atomic_set(&s->ready, 1);
@@ -277,6 +298,8 @@ static long operation(struct file *file, unsigned int cmd, unsigned long arg)
 	case UB_CHANGE_INTERIOR_NEAR_PRIVATE_ARM:
 	case UB_CHANGE_INTERIOR_ZERO_PRIVATE_ARM:
 	case UB_CHANGE_INTERIOR_TABLE_ARM:
+	case UB_NEAR_CREATE_ARM:
+	case UB_NEAR_CREATE_RESULT:
 	case UB_CHANGE_ARM:
 	case UB_CHANGE_NOW:
 	case UB_CHANGE_RESULT:

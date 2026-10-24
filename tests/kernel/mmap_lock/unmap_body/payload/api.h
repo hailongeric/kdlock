@@ -129,6 +129,18 @@ struct ub_neighbor {
 #define UB_NEIGHBOR_RESULT _IOR('U', 0x8f, struct ub_neighbor)
 #define UB_NEIGHBOR_PROBE _IO('U', 0x90)
 #define UB_NEIGHBOR_FINISH _IO('U', 0x91)
+/* Test-only native near-survivor creation under a held local reader. The
+ * extra observations bind a later busy far page without another reference. */
+enum ub_create_outcome {
+	UB_CREATE_OK, UB_CREATE_NEAR_BUSY, UB_CREATE_FAR_BUSY,
+	UB_CREATE_CANCEL, UB_CREATE_SPLIT_ERROR,
+};
+struct ub_near_create {
+	__u64 index, from_zero, outcome, far_index, far_table;
+	struct ub_page far_page;
+};
+#define UB_NEAR_CREATE_ARM _IOW('U', 0x98, struct ub_near_create)
+#define UB_NEAR_CREATE_RESULT _IOR('U', 0x99, struct ub_near_create)
 #define UB_CHANGE_INTERIOR_TABLE_ARM _IO('U', 0x92)
 #endif
 #define UB_CHANGE_INTERIOR_EMPTY_ZERO_ARM _IO('U', 0x93)

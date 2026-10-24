@@ -35,7 +35,7 @@ static int change_target(struct session *s)
 	struct ub_change_more *more = &s->change;
 	struct ub_change *r = &more->state;
 	unsigned int i = r->index, b;
-	bool missing = (more->mode >= 3 && more->mode <= 6) || more->mode >= 16;
+	bool missing = (more->mode >= 3 && more->mode <= 6) || (more->mode >= 16 && more->mode <= 19);
 	unsigned long address = target(s, i);
 	struct page *page = NULL;
 	struct vm_area_struct *vma;
@@ -59,7 +59,7 @@ static int change_target(struct session *s)
 	if (!s->change_armed || r->done ||
 	    (more->mode == 10 ? !s->pages[i] || s->busy_page : !!s->pages[i]) || current->mm != s->mm ||
 	    (s->mm->mmap_lock.unmap.enabled ?
-	     r->pending != (more->mode >= 6 && more->mode != 11 && more->mode != 13 && more->mode != 14 && !(more->mode >= 16 && more->mode <= 18) ? 2 : 3) || r->readers != 2 || r->admission != -1 :
+	     r->pending != change_pending(s) || r->readers != 2 || r->admission != -1 :
 	     r->pending != 0 || r->readers != 1)) goto out;
 	vma = vma_lookup(s->mm, address);
 	if (!vma) goto out;
@@ -98,7 +98,8 @@ static int change_target(struct session *s)
 		/* No target leaf exists. Keep before_none=0 to avoid claiming a
 		 * real empty PTE; the table-change receipt names this distinction. */
 		if (more->table_before) { error = -EINVAL; goto out; }
-	} else if (more->mode && more->mode != 9 && more->mode != 11 && more->mode != 12) {
+	} else if (more->mode == 20 ? !s->near_create.from_zero :
+		   more->mode && more->mode != 9 && more->mode != 11 && more->mode != 12) {
 		if (!pte_none(entry)) { error = -EINVAL; goto out; }
 		more->before_none = 1;
 	} else {
@@ -148,9 +149,32 @@ static int change_target(struct session *s)
 	kunmap_local(bytes);
 	/* Modes 12/15/19 retain exactly the new GUP reference and change only page-lock
 	 * eligibility. Native handback may unmap it; the probe unlocks before put. */
-	if (more->mode == 12 || more->mode == 15 || more->mode == 19) {
+	if (more->mode == 12 || more->mode == 15 || more->mode == 19 ||
+	    (more->mode == 20 && s->near_create.outcome == UB_CREATE_NEAR_BUSY)) {
 		if (s->busy_page || !trylock_page(page)) { error = -EINVAL; goto out; }
 		s->busy_page = page;
+	}
+	if (more->mode == 20 && s->near_create.outcome == UB_CREATE_FAR_BUSY) {
+		struct ub_near_create *create = &s->near_create;
+		unsigned int far = i / 3 * 3 + 2 - i % 3;
+		struct page *other = s->pages[far];
+		pte_t far_entry;
+
+		/* Retain the pre-existing test reference exactly once. A later
+		 * classifier refusal must retire the new near hold before ACK. */
+		error = change_entry(s, target(s, far), &far_entry, &create->far_table, false);
+		if (error) goto out;
+		if (!other || s->busy_page || !pte_present(far_entry) || !pte_write(far_entry) ||
+		    pte_special(far_entry) || pte_devmap(far_entry) ||
+		    pte_pfn(far_entry) != page_to_pfn(other) || !PageAnon(other) ||
+		    !PageAnonExclusive(other) || PageCompound(other) ||
+		    page_mapcount(other) != 1 || page_count(other) != 2 || !trylock_page(other)) {
+			error = -EINVAL; goto out;
+		}
+		s->busy_page = other; create->far_index = far;
+		create->far_page = (struct ub_page) {target(s, far), page_to_pfn(other), 0,
+			page_mapcount(other), page_count(other),
+			READ_ONCE(other->memcg_data) == s->charges[far], 1 + far, PageLocked(other)};
 	}
 	r->after_private = 1;
 	r->page = (struct ub_page) { address, page_to_pfn(page), hash, page_mapcount(page),
@@ -166,6 +190,16 @@ out:
 			s->mm, i, r->actor, r->pending, r->readers, r->admission, r->page.locked,
 			more->table_before, more->table_after, more->anon_before, more->anon_after,
 			r->page.pfn, r->page.refs, r->page.mapcount, error);
+	else if (more->mode == 20)
+		pr_info("KD_MM_TEST near_create mm=%px index=%u actor=%llu pending=%llu readers=%llu admission=%lld mode=20 from_zero=%llu outcome=%llu before_none=%llu before_zero=%llu after_private=%llu table_before=%llx table_after=%llx anon_before=%llx anon_after=%llx zero_pfn=%llx private_pfn=%llx refs=%llu mapcount=%llu locked=%llu far_index=%llu far_table=%llx far_pfn=%llx far_refs=%llu far_maps=%llu far_locked=%llu result=%d\n",
+			s->mm, i, r->actor, r->pending, r->readers, r->admission,
+			s->near_create.from_zero, s->near_create.outcome, more->before_none,
+			r->before_zero, r->after_private, more->table_before, more->table_after,
+			more->anon_before, more->anon_after, r->zero_pfn, r->page.pfn,
+			r->page.refs, r->page.mapcount, r->page.locked,
+			s->near_create.far_index, s->near_create.far_table, s->near_create.far_page.pfn,
+			s->near_create.far_page.refs, s->near_create.far_page.mapcount,
+			s->near_create.far_page.locked, error);
 	else if (more->mode >= 16)
 		pr_info("KD_MM_TEST shared_table_change mm=%px index=%u actor=%llu pending=%llu readers=%llu admission=%lld mode=%llu before_table_none=1 after_zero=%llu after_private=%llu table_before=%llx table_after=%llx anon_before=%llx anon_after=%llx zero_pfn=%llx private_pfn=%llx refs=%llu mapcount=%llu locked=%llu result=%d\n",
 			s->mm, i, r->actor, r->pending, r->readers, r->admission, more->mode,
@@ -226,7 +260,28 @@ static int change_operation(struct session *s, unsigned int cmd, unsigned long a
 		cmd == UB_CHANGE_SHARED_MISSING_BUSY_ARM;
 
 	if (atomic_read(&s->controlling)) return -EBUSY;
-	if (cmd == UB_CHANGE_ARM || cmd == UB_CHANGE_EMPTY_ZERO_ARM || cmd == UB_CHANGE_EMPTY_PRIVATE_ARM ||
+	if (cmd == UB_NEAR_CREATE_ARM) {
+		struct ub_near_create input;
+		unsigned int g = s->mm->mmap_lock.unmap.enabled ? 1 : 0;
+
+		if (copy_from_user(&input, (void __user *)arg, sizeof(input))) return -EFAULT;
+		mutex_lock(&s->pins_lock);
+		if (input.index >= UB_EXT_PAGES || input.index / 3 != g || input.index % 3 == 1 ||
+		    input.from_zero > 1 || input.outcome > UB_CREATE_SPLIT_ERROR || s->change_armed ||
+		    s->pages[input.index] || s->busy_page ||
+		    s->groups != (!g ? 1 : input.outcome >= UB_CREATE_CANCEL ? 2 : 3) ||
+		    (input.outcome == UB_CREATE_FAR_BUSY && !s->pages[g * 3 + 2 - input.index % 3]))
+			error = -EINVAL;
+		else {
+			s->near_create = (struct ub_near_create) { .index = input.index,
+				.from_zero = input.from_zero, .outcome = input.outcome };
+			r->index = input.index; s->change.mode = 20; s->change_armed = true;
+		}
+		mutex_unlock(&s->pins_lock);
+	} else if (cmd == UB_NEAR_CREATE_RESULT) {
+		if (s->change.mode != 20 || !r->done) return -EAGAIN;
+		if (copy_to_user((void __user *)arg, &s->near_create, sizeof(s->near_create))) error = -EFAULT;
+	} else if (cmd == UB_CHANGE_ARM || cmd == UB_CHANGE_EMPTY_ZERO_ARM || cmd == UB_CHANGE_EMPTY_PRIVATE_ARM ||
 	    cmd == UB_CHANGE_TABLE_EMPTY_ARM || cmd == UB_CHANGE_TABLE_ZERO_ARM || cmd == UB_CHANGE_TABLE_PRIVATE_ARM ||
 	    edge) {
 		mutex_lock(&s->pins_lock);

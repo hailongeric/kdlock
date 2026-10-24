@@ -51,13 +51,15 @@ def compare_success(native, delegated):
     return dict(shape=native['shape'], origins=delegated['groups'], layouts_equal=True, residency_equal=True)
 
 
-def validate(row, log, *, absent=False, missing=False, boundary=False, boundary_empty=False, boundary_zero=False, boundary_private=False, boundary_shared=False, boundary_shared_missing=False, neighbor=False, interior=False, interior_near_zero=False, interior_near_private=False):
+def validate(row, log, *, absent=False, missing=False, boundary=False, boundary_empty=False, boundary_zero=False, boundary_private=False, boundary_shared=False, boundary_shared_missing=False, neighbor=False, interior=False, interior_near_zero=False, interior_near_private=False, interior_near_create=False):
     require(row.get('neighbor_gate_test',0)==neighbor and row.get('boundary_interior_test',0)==interior, 'explicit writer/interior evidence required')
     require(not interior or boundary and boundary_shared and (boundary_shared_missing or boundary_empty or boundary_zero) and not neighbor, 'interior requires a bounded missing-table, empty-target or shared-zero class')
     require(row.get('boundary_interior_near_zero_test',0)==interior_near_zero and
             (not interior_near_zero or interior and (boundary_zero or boundary_empty)), 'explicit zero-near interior family required')
     require(row.get('boundary_interior_near_private_test',0)==interior_near_private and
             (not interior_near_private or interior and (boundary_empty or boundary_zero) and not interior_near_zero), 'explicit empty/zero-target/private-near family required')
+    require(row.get('boundary_interior_near_create_test',0)==interior_near_create and
+            (not interior_near_create or interior and (boundary_empty or boundary_zero) and not (interior_near_zero or interior_near_private)), 'explicit queued near creation family required')
     n, resident, native = row['groups'], row['resident'], row['native']
     require(resident == 1 and row['zero_target_test'] == (not (absent or boundary_private)) and
             row.get('absent_target_test', 0) == absent and row.get('missing_table_test',0)==missing and row.get('boundary_edge_test',0)==boundary and row.get('boundary_empty_test',0)==boundary_empty and row.get('boundary_zero_test',0)==boundary_zero and row.get('boundary_private_test',0)==boundary_private and row.get('boundary_shared_test',0)==boundary_shared and row.get('boundary_shared_missing_test',0)==boundary_shared_missing and (not boundary_shared or boundary_private or boundary_zero or boundary_empty or boundary_shared_missing) and (not boundary_shared_missing or boundary_shared and absent and not (boundary_private or boundary_zero or boundary_empty)) and (not (boundary_empty or boundary_zero or boundary_private) or boundary) and sum((boundary_empty,boundary_zero,boundary_private))<=1, 'exact target-family evidence required')
@@ -66,7 +68,7 @@ def validate(row, log, *, absent=False, missing=False, boundary=False, boundary_
     changing_zero = row.get('changing_zero', 0); missing_table = row.get('missing_table', 0)
     changing_empty = row.get('changing_empty',0); upper_refusal = row.get('upper_refusal',0)
     near_zero = boundary_shared and (row['mode']=='change-near-zero' or boundary_shared_missing and row['mode']=='appear-near-zero')
-    near_private = interior_near_zero and row['mode']=='change-near-private'
+    near_private = interior_near_create or interior_near_zero and row['mode']=='change-near-private'
     require(row.get('mode')!='change-near-private' or near_private, 'near conversion requires the zero-near family')
     change_bit = (4 if row['interior_right'] else 1) if near_private else 2 if near_zero else target
     private_busy_change = interior_near_private and row['mode'] in ('change-near-busy','change-far-busy')
@@ -86,7 +88,7 @@ def validate(row, log, *, absent=False, missing=False, boundary=False, boundary_
     if boundary_private: wanted_mask |= target; wanted_zero &= ~target
     if absent: wanted_zero &= ~target
     if missing: wanted_mask = wanted_zero = 0
-    require(row['slice'] == wanted_slice and changing == (row['shape'] in ('change','change-empty','change-zero','change-private','change-table-empty','change-table-zero','change-table-private') or boundary and row['mode'] in ('appear','change-zero','change-private','change-busy','change-near-zero','change-private-busy','appear-near-zero','appear-zero','appear-private','appear-private-busy','change-near-private','change-near-busy','change-far-busy')), 'declared target or transition differs')
+    require(row['slice'] == wanted_slice and changing == (row['shape'] in ('change','change-empty','change-zero','change-private','change-table-empty','change-table-zero','change-table-private') or boundary and row['mode'] in ('appear','change-zero','change-private','change-busy','change-near-zero','change-private-busy','appear-near-zero','appear-zero','appear-private','appear-private-busy','change-near-private','change-near-busy','change-far-busy') or interior_near_create and row['mode'] in ('create','create-busy','create-far-busy','create-cancel','create-error1','create-error2')), 'declared target or transition differs')
     for g, (mask, zero) in enumerate(zip(masks, zeros)):
         if row['injection'] and not native and g == 0: expected_input = (7, 0)
         elif missing_table and g == 1: expected_input = (0, 0)
@@ -95,7 +97,7 @@ def validate(row, log, *, absent=False, missing=False, boundary=False, boundary_
         require((mask, zero) == expected_input and not (mask & zero), 'declared residency combination differs')
         if not (row['injection'] and not native and g == 0 or row['missing_target'] and g == 1):
             require(not ((mask | zero) & target) if absent else mask & target and not (zero & target) if boundary_private else zero & target and not (mask & target), 'target initial leaf state differs')
-    require(row['busy'] == (bool(not native and row['neighbor_loss']) if neighbor else (bool(not native and ((row['mode'] in ('busy','free-table','shared','appear','change-zero','change-private','change-near-private','change-near-busy','change-far-busy','change-busy','change-private-busy','appear-private-busy') and not (boundary_shared and (not interior or (interior_near_zero or interior_near_private) and boundary_empty and row['mode']=='change-zero') and (boundary_zero and row['mode']=='change-private' or boundary_empty and row['mode'] in ('change-zero','change-private')))) or row['mode']=='table' and not boundary_empty)) if boundary else bool(row['busy_page'] or row['no_resident'] or row['missing_target'] or missing_table or upper_refusal))) and
+    require(row['busy'] == (bool(not native and row['mode'] in ('create-busy','create-far-busy')) if interior_near_create else bool(not native and row['neighbor_loss']) if neighbor else (bool(not native and ((row['mode'] in ('busy','free-table','shared','appear','change-zero','change-private','change-near-private','change-near-busy','change-far-busy','change-busy','change-private-busy','appear-private-busy') and not (boundary_shared and (not interior or (interior_near_zero or interior_near_private) and boundary_empty and row['mode']=='change-zero') and (boundary_zero and row['mode']=='change-private' or boundary_empty and row['mode'] in ('change-zero','change-private')))) or row['mode']=='table' and not boundary_empty)) if boundary else bool(row['busy_page'] or row['no_resident'] or row['missing_target'] or missing_table or upper_refusal))) and
             sum(row[k] for k in ('busy_page','no_resident','missing_target')) + missing_table + upper_refusal <= 1, 'refusal input differs')
     effective = [m | (change_bit if private_change and g == change_group else 0) for g,m in enumerate(masks)]
     effective_zero = [(z | (change_bit if changing_zero and g == change_group else 0)) & ~(change_bit if private_change and g == change_group else 0) for g,z in enumerate(zeros)]
@@ -138,8 +140,8 @@ def validate(row, log, *, absent=False, missing=False, boundary=False, boundary_
                 'missing/duplicate ' + kind)
         for r in rows[kind]: identity(r)
     require(sorted(rows['handback']) == sorted(rows['ack']), 'wrong refusal ACK owner')
-    near_rollback = near_private and row['interior_right'] and bool(masks[change_group]&1)
-    survivor_rollback = private_busy_change and ((row['interior_right'] and row['mode']=='change-near-busy') or (not row['interior_right'] and row['mode']=='change-far-busy'))
+    near_rollback = near_private and not interior_near_create and row['interior_right'] and bool(masks[change_group]&1)
+    survivor_rollback = (interior_near_create and ((row['interior_right'] and row['mode']=='create-busy' and bool(masks[change_group]&1)) or (not row['interior_right'] and row['mode']=='create-far-busy'))) or private_busy_change and ((row['interior_right'] and row['mode']=='change-near-busy') or (not row['interior_right'] and row['mode']=='change-far-busy'))
     rollback_holds = 2 if boundary_private and row['busy_page'] else 1
     rollback = re.findall(r'KD_MM_POPULATED_RANGE rollback ' + IDENT + rf' held={rollback_holds} released={rollback_holds} effects=0', log)
     require(sorted(rollback) == ([] if empty or boundary and not (row['busy_page'] or near_rollback or survivor_rollback) else sorted(rows['handback'])), 'late-page refusal did not release its exact prefix before ACK')
@@ -251,7 +253,7 @@ def validate(row, log, *, absent=False, missing=False, boundary=False, boundary_
     aborted = re.findall(r'KD_MM_PARTIAL error ' + IDENT + r' splits=(\d+) held=(\d+) released=(\d+) result=-12', log)
     require(sorted(r[:6] for r in aborted) == sorted(rows['error']), 'admitted failure not paired with queue error')
     for r in aborted:
-        require(identity(r)[0] == 1 and int(r[6]) == inject and int(r[7]) == int(r[8]) == masks[1].bit_count(),
+        require(identity(r)[0] == 1 and int(r[6]) == inject and int(r[7]) == int(r[8]) == effective[1].bit_count(),
                 'failed body leaked a held page or executed the wrong split')
 
     for name, tag, objects, count in [('VMA', 'KD_MM_SPLIT', 'vma', 0 if native else 2 if busy else n + 1),
