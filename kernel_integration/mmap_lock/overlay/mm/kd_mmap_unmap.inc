@@ -55,6 +55,9 @@ struct kd_mmap_unmap_edge {
 	unsigned long outer_floor, outer_ceiling;
 	unsigned int target_mask, other_mask;
 	pte_t target_entry;
+	pte_t near_entry;
+	unsigned long near_pfn;
+	unsigned int near_refs_before, near_refs_after;
 	unsigned int target_refs_before, target_refs_after;
 	bool target_missing, target_zero, target_private, survivor_missing, shared, interior;
 };
@@ -221,21 +224,25 @@ static bool kd_mmap_unmap_hold_edge(struct mm_struct *mm,
 		 * The mmap writer retains both tables; never hold two PTE locks or
 		 * carry a PTE pointer across the table boundary. */
 		pte = pte_offset_map_lock(mm, slot, addr, &ptl);
-		/* An empty or zero interior target may retain an exact shared-zero
-		 * near PTE in this existing table. Target classification was captured
-		 * under its PTE lock and remains stable under the mmap writer; never
-		 * allocate a target page or table. The common classifier owns no zero
-		 * page, and post-body/error checks preserve the surviving PTE.
-		 * Private/special near entries refuse before either split, rolling
-		 * back any earlier far hold exactly; native work must never replay. */
+		/* Only an empty interior target may retain an ordinary private near
+		 * page. The shared classifier below still requires a writable exclusive
+		 * base page, one mapping, no pin/special state and a nonblocking lock.
+		 * Save its exact PTE and hold through both splits/native teardown;
+		 * this survivor must never be zapped. A zero target keeps its narrower
+		 * empty/zero-near class. No target page/table is allocated. */
 		if (edge->interior && slot == edge->target && !pte_none(ptep_get(pte)) &&
-		    !(!edge->target_missing && (edge->target_zero || pte_none(edge->target_entry)) &&
-		      kd_mmap_unmap_zero_pte(ptep_get(pte)))) {
+		    !(!edge->target_missing && (pte_none(edge->target_entry) ||
+		      (edge->target_zero && kd_mmap_unmap_zero_pte(ptep_get(pte)))))) {
 			pte_unmap_unlock(pte, ptl);
 			goto rollback;
 		}
 		supported = kd_mmap_unmap_hold_slot(vma, addr, ptep_get(pte),
 			true, &held[i], &is_zero, &zero_ptes[i]);
+		if (supported && held[i] && edge->interior && slot == edge->target) {
+			edge->near_entry = pte_mkold(ptep_get(pte));
+			edge->near_pfn = page_to_pfn(held[i]);
+			edge->near_refs_before = page_count(held[i]);
+		}
 		pte_unmap_unlock(pte, ptl);
 		if (!supported) goto rollback;
 		if (is_zero) *zero |= 1U << i;
@@ -432,6 +439,9 @@ bool kd_mmap_unmap_try(struct mm_struct *mm, unsigned long start,
 			if (checked)
 				pr_info("KD_MM_POPULATED_RANGE rollback mm=%px id=%llu origin=%d executor=%d start=%lx end=%lx held=%u released=%u effects=0\n",
 					mm, request_id, origin->pid, current->pid, start, end, checked, checked);
+			if (boundary_edge && edge.near_pfn && origin != current)
+				pr_info("KD_MM_INTERIOR_NEAR_PRIVATE rollback mm=%px id=%llu origin=%d executor=%d start=%lx end=%lx pfn=%lx held=1 released=1 effects=0\n",
+					mm, request_id, origin->pid, current->pid, start, end, edge.near_pfn);
 			return false;
 		}
 		for (i = 0; i < slots; i++)
@@ -580,6 +590,11 @@ out_pages:
 				else if (present & (1U << i))
 					BUG_ON(!pte_present(entry) || pte_pfn(entry) != pfns[i] || page_mapcount(held[i]) != 1);
 				else BUG_ON(held[i] || !pte_none(entry));
+				if (edge.interior && slot == edge.target && edge.near_pfn) {
+					BUG_ON(!held[i] || !PageLocked(held[i]) || pfns[i] != edge.near_pfn ||
+					       !pte_same(pte_mkold(entry), edge.near_entry));
+					edge.near_refs_after = page_count(held[i]);
+				}
 				pte_unmap_unlock(pte, ptl);
 			}
 		} else if (missing_table) {
@@ -632,6 +647,10 @@ out_pages:
 			pte_unmap_unlock(pte, ptl);
 		}
 		kd_mmap_unmap_release_pages(held, slots);
+		if (boundary_edge && edge.near_pfn && origin != current)
+			pr_info("KD_MM_INTERIOR_NEAR_PRIVATE kept mm=%px id=%llu origin=%d executor=%d start=%lx end=%lx pfn=%lx refs_before=%u refs_after=%u mapcount=1 pte_same=1 held=1 released=1 result=%d\n",
+				mm, request_id, origin->pid, current->pid, start, end, edge.near_pfn,
+				edge.near_refs_before, edge.near_refs_after, *result);
 		if (!*result) {
 			struct kd_mmap_unmap_state *u = &mm->mmap_lock.unmap;
 

@@ -18,8 +18,8 @@ def compare_success(a,b):
     return dict(edge['compare_success'](a,b),interior_right=a['interior_right'])
 
 
-def validate(row,log,*,empty=False,zero=False,near_zero=False):
-    result=edge['validate'](row,log,empty=empty,zero=zero,shared=True,shared_missing=not (empty or zero),interior=True,interior_near_zero=near_zero)
+def validate(row,log,*,empty=False,zero=False,near_zero=False,near_private=False):
+    result=edge['validate'](row,log,empty=empty,zero=zero,shared=True,shared_missing=not (empty or zero),interior=True,interior_near_zero=near_zero,interior_near_private=near_private)
     right,mode,native=row['interior_right'],row['mode'],row['native']
     require(right in (0,1), 'one declared boundary orientation required')
     near,far=(2,0) if right else (0,2)
@@ -27,6 +27,9 @@ def validate(row,log,*,empty=False,zero=False,near_zero=False):
     if near_zero:
         require(zero or empty, 'zero near survivor requires an existing empty/zero target')
         allowed=('middle-rz','middle-zz','middle-uz') if right else ('middle-zr','middle-zz','middle-zu')
+    if near_private:
+        require(empty and not near_zero, 'ordinary private near requires an empty target')
+        allowed=('middle-rr','middle-zr','middle-ur') if right else ('middle-rr','middle-rz','middle-ru')
     require(row['shape'] in allowed, 'bounded interior survivor class differs')
     victim=0 if native else 1
     same=6 if right else 3
@@ -37,8 +40,8 @@ def validate(row,log,*,empty=False,zero=False,near_zero=False):
         require(lo==boundary-(1 if right else 2)*PAGE and start==lo+PAGE and end==lo+2*PAGE,
                 'interior cut or boundary orientation differs')
         near_bit=1<<near
-        require(not (row['masks'][g]&near_bit) and bool(row['zero_masks'][g]&near_bit)==near_zero and
-                row['ptes_before'][g]['none']&same==((0 if zero else 2) if near_zero else same^2 if zero else same) and
+        require(bool(row['masks'][g]&near_bit)==near_private and bool(row['zero_masks'][g]&near_bit)==near_zero and
+                row['ptes_before'][g]['none']&same==(2 if near_private else (0 if zero else 2) if near_zero else same^2 if zero else same) and
                 row['ptes_before'][g]['zero']&same==((same if zero else near_bit) if near_zero else 2 if zero else 0) and not w['upper_none'],
                 'exact target/near survivor classes require existing upper levels')
         if empty or zero or mode=='table' and g==victim:
@@ -79,5 +82,5 @@ def validate(row,log,*,empty=False,zero=False,near_zero=False):
                     'actual post-split adjacent VMAs do not establish native floor/ceiling')
     require(not re.search(r'KD_MM_BOUNDARY_INTERIOR_'+(r'(?:MISSING|EMPTY|PRIVATE)' if zero else (r'(?:MISSING|PRIVATE)' if changed_zero else r'(?:MISSING|ZERO|PRIVATE)') if empty else r'(?:EMPTY|ZERO|PRIVATE)'),log), 'unsupported interior target class executed')
     return dict(result,remote_interior_missing_removals=0 if empty or zero else result['remote_boundary_removals'],remote_interior_empty_removals=result['remote_boundary_removals']-result['remote_changed_boundary_zero_removals'] if empty else 0,remote_interior_zero_removals=result['remote_boundary_removals'] if zero else result['remote_changed_boundary_zero_removals'],two_split_retention_verified=True,
-                interior_right=right,near_survivor_untouched_before_access=not near_zero,near_survivor_shared_zero_before_access=near_zero,retained_outer_guards=True,
+                interior_right=right,near_survivor_untouched_before_access=not (near_zero or near_private),near_survivor_private_before_access=near_private,near_survivor_shared_zero_before_access=near_zero,retained_outer_guards=True,
                 existing_table_refused=not (empty or zero) and mode in ('table','appear'),populated_transition_refused=(empty or zero) and not changed_zero and mode in ('change-zero','change-private','change-near-private'),error_after_split=row['injection'])
