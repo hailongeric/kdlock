@@ -46,9 +46,17 @@ now brackets prepared workers and holds result publication until the host
 measurement endpoint. Its [offline checkpoint](../bench/results/10.176.26.71/tests/mmap-window-20261026/README.md)
 passed 85 focused Python tests, 21 C transport assertions, two basic programs
 and client compilation. These do not qualify timing. The default historical
-policy and all rejected evidence remain unchanged. The next bounded step is a
-16-worker Native/KD harness-validation pair, using reviewed role evidence and
-the existing image/payload, before considering the unchanged 126-session matrix.
+policy and all rejected evidence remain unchanged. The authorized
+[16-worker harness-validation attempt](../bench/results/10.176.26.71/bench/mmap-window-screen-20261026/README.md)
+rebuilt only the timed client and booted Native, then stopped at admission:
+82 QEMU tasks versus the 67 allowed by its empty role manifest. No readiness,
+payload, fixed proof, timed session or KD boot followed. The attempt omitted
+post-idle settling, meeting neither the historical 60-second procedure nor the
+later user-required 90 seconds; no later quiet capture can rescue it. Recovery
+returned to the original 73 modules and zero taint.
+The next step is to resolve admission preparation and role evidence before
+seeking another bounded pair. No rate, variability or optimization claim is
+available, and the 126-session matrix remains unrun.
 
 The historical records below retain their original source, topology, caller
 shell and instrumentation identities. Historical complete-operation p95 remains

@@ -4,9 +4,14 @@ Current work is throughput only. The prospective `plain-scaling-v1` plan selects
 **126 plain sessions** across 21 worker counts, Native/KD and three repetitions.
 It has [41 focused mocked test passes](../results/10.176.26.71/tests/mmap-scaling-plan-20261026/README.md);
 no expanded live campaign has run or is authorized by this guide.
-The prospective [prepared-window interface](#prepared-window-interface) has
-offline tooling checks only. It supplies no current throughput and cannot
-reclassify any rejected historical run.
+The [prepared-window interface](#prepared-window-interface) passed offline
+tooling checks. Its [small live attempt](../results/10.176.26.71/bench/mmap-window-screen-20261026/README.md)
+stopped after the Native boot: admission captured 82 QEMU tasks, which the
+empty reviewed role manifest could not admit. Readiness, payloads and timing
+never started; recovery was restored. The attempt also omitted post-idle
+settling: the earlier procedure required 60 seconds and the later user
+instruction requires 90 seconds. It supplies no current throughput and
+cannot reclassify any rejected historical run.
 The earlier 12-session `plain-v1` attempt [stopped before boot](../results/10.176.26.71/bench/mmap-plain-v1-20261025/README.md)
 at **68 QEMU tasks versus 67**. One full capture ran; all 12 measurements and
 six unscored checks remain unrun. The historical 24-case plain/sampled plan
@@ -116,8 +121,11 @@ python3 bench/mmap_lock/prepare.py \
   --source-manifest COMMITTED-SOURCE.json --output WINDOW-BUILD
 ```
 
-For each candidate boot, capture a fresh host admission using the existing
-`controller.py --output LOCAL-ADMISSION` command. Copy that exact JSON to the
+For each candidate boot, verify guest idle and record the user-required
+90-second settling interval after that check, then capture fresh host admission using
+`controller.py --output LOCAL-ADMISSION`. This scheduled preparation interval
+does not permit repeated captures until one passes. Never add this delay to
+the immediate measurement or transport endpoints. Copy the admitted JSON to the
 guest before preparation. With the pinned Python/environment and actual boot
 ID, run the following in the guest, substituting `native/0` then `kd/1` for
 `MODE/BLOCK`. `PRIOR` is the retained `mmap-kdmm31-prep-20261025/prior` directory;
