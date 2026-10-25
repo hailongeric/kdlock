@@ -24,8 +24,25 @@ SITES = ROOT / 'tests/kernel/mmap_lock/writer_sites_kdmm31.json'
 MODULE = 'kd_mmap_writer_native'
 LEGACY_PLAN = 'paired-v1'
 THROUGHPUT_PLAN = 'plain-v1'
+SCALING_PLAN = 'plain-scaling-v1'
+SCALING_WORKERS = tuple(range(1, 9)) + tuple(range(12, 61, 4))
+PLAIN_PLANS = (THROUGHPUT_PLAN, SCALING_PLAN)
 CASES = [(n, observation) for n in (1, 16) for observation in ('plain', 'sampled')]
-PLANS = {LEGACY_PLAN: CASES, THROUGHPUT_PLAN: [(1, 'plain'), (16, 'plain')]}
+PLANS = {LEGACY_PLAN: CASES, THROUGHPUT_PLAN: [(1, 'plain'), (16, 'plain')],
+         SCALING_PLAN: [(n, 'plain') for n in SCALING_WORKERS]}
+FIXED_THREADS, FIXED_ITERATIONS = 16, 5000
+PROOF_MUTATIONS = ['different_lock', 'wrong_caller_return', 'wrong_wait_return',
+                   'wrong_adapter_return', 'running_task', 'other_wait_channel', 'rescheduled_task',
+                   'missing_chain', 'missing_writer_proof']
+# Planning assumptions, not measured costs, runtime limits or live permission.
+# Storage budgets one retained campaign copy; copies/headroom are applied below.
+# Payload/readiness budgets exclude the separately counted dmesg captures.
+PLANNING_ASSUMPTIONS = dict(boot_ms=120000, boot_readiness_ms=10000,
+    recovery_check_ms=10000, fixed_check_ms=30000, timed_case_overhead_ms=5000,
+    host_capture_ms=2000, report_case_ms=1000, payload_cycle_bytes=2*1024**2,
+    host_capture_bytes=1024**2, dmesg_dump_bytes=256*1024,
+    boot_readiness_bytes=2*1024**2, recovery_bytes=2*1024**2, shared_bytes=16*1024**2,
+    retained_copies=2, headroom_percent=25)
 # Five candidate boots, plus the final recovery boot. Adjacent same-mode
 # repetitions share a boot; the report must not call them independent boots.
 BLOCKS = [('native', []), ('kd', [0]), ('native', [0, 1]), ('kd', [1, 2]), ('native', [2])]
@@ -42,7 +59,7 @@ def cases_for(plan):
 
 
 def row_plan(row):
-    # Missing means the original 24-case schema, never an inferred 12-case plan.
+    # Missing always means the original 24-case schema, never an inferred grid.
     plan = row.get('plan', LEGACY_PLAN)
     cases_for(plan)
     return plan
@@ -64,6 +81,61 @@ def bounds(plan):
     return dict(measured_sessions=measured, unscored_checks=validation,
                 payload_cycles=measured + validation, boots=len(BLOCKS) + 1,
                 host_captures=1 + len(BLOCKS) + 2 * measured + 1)
+
+
+def describe_plan(plan, assumptions=None):
+    """Pure planning arithmetic; no guest check, capture, output file or workload.
+
+    Each backend validates one fixed proof and every timed case before K0.
+    There is no warmup loop. The timed client has a 100 ms scheduled start delay;
+    its two-second target comes from the same specifications used by run().
+    Neither the start delay nor the target bounds scheduling or drain time.
+    """
+    rt.require(plan in PLAIN_PLANS, 'estimates require an explicit plain plan')
+    a = dict(PLANNING_ASSUMPTIONS if assumptions is None else assumptions)
+    rt.require(set(a) == set(PLANNING_ASSUMPTIONS) and
+               all(type(v) is int and v >= 0 for v in a.values()) and a['retained_copies'] > 0,
+               'complete nonnegative integer planning assumptions required')
+    cases, order, limits = cases_for(plan), order_for(plan), bounds(plan)
+    fixed_checks = 2
+    timed_controls = 2 * len(cases)
+    timed_sessions = len(order) + timed_controls
+    # ready: one; fixed: two; timed validation: three; measurement: four.
+    dmesg_dumps = len(BLOCKS) + 2*fixed_checks + 3*timed_controls + 4*len(order)
+    measured_ms = sum(specification(case, repeat, mode, plan)['duration_ms']
+                      for repeat, mode, case in order)
+    validation_ms = sum(specification(case, 0, mode, plan)['duration_ms']
+                        for mode in ('native', 'kd') for case in range(len(cases)))
+    time_parts = dict(measured_intervals_ms=measured_ms, validation_intervals_ms=validation_ms,
+        client_start_delays_ms=100*timed_sessions, fixed_checks_ms=fixed_checks*a['fixed_check_ms'],
+        timed_overhead_ms=timed_sessions*a['timed_case_overhead_ms'],
+        host_captures_ms=limits['host_captures']*a['host_capture_ms'],
+        boots_ms=limits['boots']*a['boot_ms'], readiness_ms=len(BLOCKS)*a['boot_readiness_ms'],
+        recovery_check_ms=a['recovery_check_ms'], report_ms=len(order)*a['report_case_ms'])
+    storage_parts = dict(payload_cycles=limits['payload_cycles']*a['payload_cycle_bytes'],
+        host_captures=limits['host_captures']*a['host_capture_bytes'],
+        boot_readiness=len(BLOCKS)*a['boot_readiness_bytes'], recovery=a['recovery_bytes'],
+        dmesg=dmesg_dumps*a['dmesg_dump_bytes'], shared=a['shared_bytes'])
+    one_copy = sum(storage_parts.values())
+    reserve = (one_copy*a['retained_copies']*(100+a['headroom_percent']) + 99)//100
+    return dict(plan=plan, worker_counts=[n for n, _ in cases], observations=['plain'],
+        order_fields=['repeat', 'mode', 'case'], order=order, limits=limits,
+        checks=dict(fixed=fixed_checks, timed_validation=timed_controls, warmups=0,
+                    fixed_worker_cycles=fixed_checks*FIXED_THREADS*FIXED_ITERATIONS,
+                    negative_receipt_mutations=fixed_checks*len(PROOF_MUTATIONS),
+                    dmesg_dumps=dmesg_dumps,
+                    runtime_saved_timed_replays=len(order)*timed_controls,
+                    runtime_saved_fixed_replays=len(order)*fixed_checks,
+                    report_saved_timed_replays=len(order)*timed_controls,
+                    report_saved_fixed_replays=len(order)*fixed_checks),
+        placement=dict(worker_cpus='0..N-1', collector_cpu=63, collector_shared=False,
+                       guest_node_cpus={'0': list(range(32)), '1': list(range(32, 64))}),
+        assumptions=a, time=dict(components_ms=time_parts, estimated_ms=sum(time_parts.values())),
+        storage=dict(components_bytes=storage_parts, one_copy_bytes=one_copy,
+                     reserve_bytes=reserve, rounded_gib_bytes=((reserve+1024**3-1)//1024**3)*1024**3),
+        limitations='Planning estimates, not measured duration, hard completion bounds or approval. '
+                    'Storage copies mean raw plus archive on each retention filesystem; no compression credit. '
+                    'Recheck actual space, logs and scope before execution. No build/install space included.')
 
 
 def bind(path):
@@ -250,7 +322,7 @@ def readiness(path):
 def measurement(rows, spec, mode, plan=LEGACY_PLAN):
     cases_for(plan)
     result = writer.validate(rows, spec)
-    if plan == THROUGHPUT_PLAN:
+    if plan in PLAIN_PLANS:
         rt.require(spec['observation'] == 'plain' and result['latency_samples'] == 0,
                    'plain campaign cannot include workload latency sampling')
         result.update(execution='KD_LOCAL_MMAP_LOCK' if mode == 'kd' else 'NATIVE_CONTROL_MMAP_LOCK',
@@ -273,10 +345,10 @@ def fixed(inputs, out, mode):
     rt.command(['insmod', inputs['binaries']['payload'], 'observe=1'], out / 'load-fixed.log')
     fault_check(out, 'after-fixed-load-dmesg')
     health(0)
-    data = rt.command([inputs['binaries']['fixed'], 'cycle', '16', '5000', *proof],
+    data = rt.command([inputs['binaries']['fixed'], 'cycle', str(FIXED_THREADS), str(FIXED_ITERATIONS), *proof],
                       out / 'fixed.jsonl', timeout=120)
     rows = [json.loads(line) for line in data.splitlines()]
-    result = mapping.validate(rows, 'cycle', 16, 5000, mode)
+    result = mapping.validate(rows, 'cycle', FIXED_THREADS, FIXED_ITERATIONS, mode)
     result['rejected_mutations'] = mapping.reject_mutations(rows, mode)
     result['health'] = health(1)
     fault_check(out, 'fixed-dmesg')
@@ -341,12 +413,10 @@ def validation_shape(v, mode, prepared_ref, plan=LEGACY_PLAN):
                [c['spec'] for c in v['cases']] == [specification(i, 0, mode, plan) for i in range(count)],
                'validation case set/specification differs')
     f = v['fixed']
-    rt.require(f['passed'] and f['mode'] == 'cycle' and f['threads'] == 16 and f['iterations'] == 5000 and
+    rt.require(f['passed'] and f['mode'] == 'cycle' and f['threads'] == FIXED_THREADS and f['iterations'] == FIXED_ITERATIONS and
                f['protocol'] == ('KD_LOCAL_MMAP_LOCK' if mode == 'kd' else 'NATIVE_CONTROL_MMAP_LOCK') and
                f['health'] == 'files=0 mm_refs=0 destroyed=1 release_errors=0' and
-               f['rejected_mutations'] == ['different_lock', 'wrong_caller_return', 'wrong_wait_return',
-                   'wrong_adapter_return', 'running_task', 'other_wait_channel', 'rescheduled_task',
-                   'missing_chain', 'missing_writer_proof'], 'required fixed-work writer proof differs')
+               f['rejected_mutations'] == PROOF_MUTATIONS, 'required fixed-work writer proof differs')
 
 
 def validation_receipt(path, mode, prepared_ref, plan=LEGACY_PLAN):
@@ -359,7 +429,7 @@ def validation_receipt(path, mode, prepared_ref, plan=LEGACY_PLAN):
                'validation readiness differs')
     mapping.SITES = common.load(SITES)
     raw = [json.loads(line) for line in file_bound(v['fixed_raw']).read_text().splitlines()]
-    proof = mapping.validate(raw, 'cycle', 16, 5000, mode)
+    proof = mapping.validate(raw, 'cycle', FIXED_THREADS, FIXED_ITERATIONS, mode)
     rt.require(all(v['fixed'][key] == value for key, value in proof.items()), 'saved writer proof differs')
     for case in v['cases']:
         raw = [json.loads(line) for line in file_bound(case['raw']).read_text().splitlines()]
@@ -473,8 +543,8 @@ def finish(a):
 
 def main():
     p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument('action', choices=('ready', 'validate', 'run', 'finish'))
-    p.add_argument('--output', type=Path, required=True)
+    p.add_argument('action', choices=('describe', 'ready', 'validate', 'run', 'finish'))
+    p.add_argument('--output', type=Path)
     p.add_argument('--prepared', type=Path)
     p.add_argument('--native-api', type=Path)
     p.add_argument('--kd-api', type=Path)
@@ -484,15 +554,22 @@ def main():
     p.add_argument('--ready', type=Path)
     p.add_argument('--host-state', type=Path)
     p.add_argument('--repeat', type=int, choices=range(3))
-    p.add_argument('--case', type=int, choices=range(4))
+    p.add_argument('--case', type=int, choices=range(max(map(len, PLANS.values()))))
     p.add_argument('--native-validation', type=Path)
     p.add_argument('--kd-validation', type=Path)
     p.add_argument('--controller', type=Path)
     p.add_argument('--previous', type=Path)
-    p.add_argument('--plan', choices=tuple(PLANS), help='select only at ready; otherwise inherit bound readiness')
+    p.add_argument('--plan', choices=tuple(PLANS), help='select at describe/ready; later actions inherit bound readiness')
     a = p.parse_args()
+    if a.action == 'describe':
+        if a.plan not in PLAIN_PLANS or a.output is not None:
+            p.error('describe requires an explicit plain --plan and writes only to stdout')
+        print(json.dumps(describe_plan(a.plan), indent=2, sort_keys=True))
+        return
     if a.plan is not None and a.action != 'ready':
         p.error('--plan is selected at ready and inherited by later actions')
+    if a.output is None:
+        p.error('--output is required for live actions')
     a.output = a.output.resolve()
     rt.require(not a.output.is_relative_to(ROOT) and (a.action == 'finish' or not a.output.exists()),
                'unique evidence directory outside source required')

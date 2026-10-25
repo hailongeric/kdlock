@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Summarize one bound 24-case historical or 12-case plain campaign."""
+"""Summarize one bound historical or prospective campaign without mixing plans."""
 import argparse
 import json
 import math
@@ -38,7 +38,7 @@ def summarize(rows, receipt_bindings):
         rate = r['measurement']['whole_ops_s']
         if not isinstance(rate, (int, float)) or not math.isfinite(rate) or rate <= 0:
             raise ValueError('finite positive completed-cycle throughput required')
-        if plan == paired.THROUGHPUT_PLAN and (r['measurement']['latency_samples'] != 0 or
+        if plan in paired.PLAIN_PLANS and (r['measurement']['latency_samples'] != 0 or
                                                r['measurement']['latency_percentiles_ns'] != {}):
             raise ValueError('plain campaign contains workload latency sampling')
         block = paired.expected_block(r['repeat'], r['mode'])
@@ -71,13 +71,19 @@ def summarize(rows, receipt_bindings):
                   keyed[(r, 'native', case)]['measurement']['whole_ops_s'] for r in range(3)]
         points.append(dict(threads=n, observation=observation, arms=arms,
                            paired_kd_over_native_throughput=spread(ratios)))
-    if plan == paired.THROUGHPUT_PLAN:
+    if plan in paired.PLAIN_PLANS:
+        limitations = ('Three paired observations; adjacent repetitions can share a boot. '
+                       'No independent-boot, NUMA scaling, reader scaling, delegation or TCLock claim. '
+                       'No workload latency sampling; progress and correctness accounting retained.')
+        if plan == paired.SCALING_PLAN:
+            limitations = ('Three paired observations; adjacent repetitions share boots. '
+                           'Workers use CPUs 0..N-1, collector 63; counts above 32 span both guest NUMA nodes. '
+                           'The count sweep does not isolate NUMA effects or establish independent-boot, '
+                           'reader-scaling, delegation or TCLock results. No workload latency sampling; '
+                           'progress and correctness accounting retained.')
         return dict(plan=plan, qualified_cases=len(order), paired_repetitions=3, prepared=identity,
             points=points, throughput_definition='Completed whole mmap/munmap cycles / actual elapsed time',
-            limits=paired.bounds(plan),
-            limitations='Three paired observations; adjacent repetitions can share a boot. '
-                        'No independent-boot, NUMA scaling, reader scaling, delegation or TCLock claim. '
-                        'No workload latency sampling; progress and correctness accounting retained.')
+            limits=paired.bounds(plan), limitations=limitations)
     instrumentation = {str(n): {mode: spread([
         keyed[(repeat, mode, paired.CASES.index((n, 'sampled')))]['measurement']['whole_ops_s'] /
         keyed[(repeat, mode, paired.CASES.index((n, 'plain')))]['measurement']['whole_ops_s']

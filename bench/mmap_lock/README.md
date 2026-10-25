@@ -1,12 +1,14 @@
 # Built-in mmap lock performance
 
-Current work is throughput only. The explicit
-`plain-v1` plan selects **12 plain sessions**. It is prepared and mock-tested;
-its authorized October 25 attempt [stopped before boot](../results/10.176.26.71/bench/mmap-plain-v1-20261025/README.md)
+Current work is throughput only. The prospective `plain-scaling-v1` plan selects
+**126 plain sessions** across 21 worker counts, Native/KD and three repetitions.
+It has [41 focused mocked test passes](../results/10.176.26.71/tests/mmap-scaling-plan-20261026/README.md);
+no expanded live campaign has run or is authorized by this guide.
+The earlier 12-session `plain-v1` attempt [stopped before boot](../results/10.176.26.71/bench/mmap-plain-v1-20261025/README.md)
 at **68 QEMU tasks versus 67**. One full capture ran; all 12 measurements and
 six unscored checks remain unrun. The historical 24-case plain/sampled plan
 is `paired-v1`; omitted plan fields retain that historical meaning. Never obtain
-a 12-case campaign by skipping sampled rows or relabelling old receipts.
+a different campaign by skipping or relabelling old receipts.
 
 The prepared comparison uses the unchanged shared-mm
 [writer workload](../mmap_writer/README.md), with Native and KD selected by
@@ -18,8 +20,9 @@ payload checks; all 24 measured sessions remain unrun. The stop remains in force
 No current qualified rate or optimization gain has been established.
 The [audit and preparation receipt](../results/10.176.26.71/bench/mmap-perf-prep-20261025/README.md)
 records the remaining limits and retained failures.
-The separate [QEMU diagnostic](DIAGNOSTIC.md) has passed 43 focused mocked tests;
-its exact live cycle remains unapproved and cannot qualify a benchmark.
+The separate [QEMU diagnostic](DIAGNOSTIC.md) cannot qualify a benchmark.
+Its first authorized attempt stopped during initial observation; the guide
+tracks the separate timing correction and execution boundary.
 
 Private reconstruction and build-3 preparation have passed, including all 16
 payload import CRCs and base/split BTF parsing with existing pahole 1.25. The
@@ -35,6 +38,82 @@ The maintained `paired.py` binds [kdmm31.json](kdmm31.json) and supplies a mode
 label only after checking the actual image, boot arguments and module set.
 
 ## Plain throughput plan
+
+Select **`--plan plain-scaling-v1`** on every `paired.py ready` call for the
+expanded comparison. Cases 0–20 are exactly, in order:
+
+```text
+1,2,3,4,5,6,7,8,12,16,20,24,28,32,36,40,44,48,52,56,60
+```
+
+Each count has Native and KD arms with three paired repetitions, giving
+21 × 2 × 3 = **126 measured sessions per workload**. This runner currently
+implements only the existing shared-mm writer workload. Applying that arithmetic
+to another workload does not supply its driver, equivalence or live approval.
+All cases are plain, with zero latency samples; existing 10 ms progress and exact
+correctness/lifetime checks remain. The same image/configuration, payload and
+clients are used for both backends, with `kd_mmap=off/on` selecting the backend.
+
+Workers use CPUs 0..N−1, with collector CPU 63 separate; there is no 64-worker
+case. Counts through 32 occupy guest node 0; higher counts span nodes 0 and 1
+(32/28 workers at 60). Collector-first-touch buffers are not per-worker-local
+allocations. This sweep changes contention and NUMA placement together and
+does not isolate a NUMA effect. No memory policy changes are implied. The
+unchanged client still allocates 30 MiB of unused latency arrays at 60 workers,
+about 248 KiB of progress storage and pthread stacks; plain output still contains
+zero latency observations.
+
+| Boot block | Work in `plain-scaling-v1` |
+| --- | --- |
+| 0, Native | One 16-worker fixed proof, then 21 unscored plain controls |
+| 1, KD | Same validation, then repeat 0: cases 0–20 |
+| 2, Native | Repeats 0 and 1: cases 0–20 each |
+| 3, KD | Repeats 1 and 2: cases 0–20 each |
+| 4, Native | Repeat 2: cases 0–20 |
+| Recovery | Return to preserved recovery after proven drain |
+
+There are **44 unscored checks, 170 payload cycles, 259 full host captures and
+six boots including recovery**. These are maxima without retries. No dedicated
+warmup is added. Fixed observed writer-chain proofs remain at 16 workers;
+unobserved timed controls cover every count but do not establish observed chains
+at every count. Adjacent repetitions share boots. Report every rate, paired
+KD/Native ratio, median, range and sample coefficient of variation; retain losses
+and rejected cases. Exact plan, source, readiness, predecessor and boot bindings
+are checked at run and replay. No mixed/partial plan can be scored.
+
+Run the pure estimate command in the VM; it does not launch a workload or capture:
+
+```sh
+PYTHONDONTWRITEBYTECODE=1 /root/kdlock-translation-venv-20261019/bin/python3 \
+  bench/mmap_lock/paired.py describe --plan plain-scaling-v1
+```
+
+The derived timed targets total **336 seconds**, plus **16.8 seconds** scheduled
+start delays. Neither is a completion bound. Default planning assumptions add
+120 seconds per boot, 2 seconds per host capture, 5 seconds per timed-case setup,
+drain and saved validation replay, 30 seconds per fixed check, 10 seconds per
+readiness/recovery check and 1 second per final report case. The resulting
+estimate is **2,676.8 seconds (44 min 36.8 s)**, not a measured duration.
+
+The estimate counts **639 dmesg dumps**: five readiness, four fixed-proof,
+126 timed-control and 504 measurement logs. Each measurement replays 42 saved
+timed controls and two fixed proofs before launch: 5,292/252 saved replays over
+the campaign, repeated again by final reporting. These are reads/validation,
+not additional payload cycles. With 2 MiB per payload cycle, 1 MiB per capture,
+256 KiB per dmesg dump, 2 MiB per readiness/recovery and 16 MiB shared overhead,
+one retained copy is **786.75 MiB**. Raw plus archive with 25% headroom is
+**1,966.875 MiB**, rounded to **2 GiB on each retention filesystem** with no
+compression credit. Recheck actual log sizes, filesystem space and scope before
+requesting execution; build/install storage is excluded. Do not reuse the older
+512 MiB campaign allowance for this plan.
+
+The command sequence below remains `ready`, `validate`, `run`, `finish`, `report`;
+use `--plan plain-scaling-v1` at each ready, cases 0–20 and the block order above.
+Later commands inherit the bound plan. Synchronize reviewed inputs only while
+idle before any separately approved live campaign. The exact original **67-QEMU-task**
+admission is unchanged and is unrelated to the workload's worker count.
+
+## Retained smaller plain plan
 
 Select `--plan plain-v1` on **each** `paired.py ready` invocation. Its bound
 readiness selects the plan for validation, run, finish and report; those actions
