@@ -8,9 +8,13 @@ passed Native validation, then stopped at the KD fixed-writer proof. All 126
 measurements remain unrun; recovery was restored. This guide authorizes no retry.
 The [explicit eligibility policy](THROUGHPUT_POLICY.md) now separates functional
 completion from the sleeping-writer observation and verifies reuse of the
-completed Native controls. It passed offline checks and saved-evidence replay;
-no new live run has occurred. Missing selection retains strict behavior and all
-historical outcomes. The policy guide gives the reduced continuation bounds.
+completed Native controls. After offline checks and saved-evidence replay, its
+[authorized continuation](../results/10.176.26.71/bench/mmap-functional-scaling-20261026/README.md)
+completed the KD functional check and 15 controls through 36 workers, then
+stopped at the 40-worker full-cohort peak-window check. All 126 measurements
+remain unrun; recovery returned to 73 modules, zero taint and no pending boot.
+Missing policy selection retains strict behavior and all historical outcomes.
+The policy guide records the continuation bounds; it authorizes no retry.
 The [prepared-window interface](#prepared-window-interface) passed offline
 tooling checks. Its [small live attempt](../results/10.176.26.71/bench/mmap-window-screen-20261026/README.md)
 stopped after the Native boot: admission captured 82 QEMU tasks, which the

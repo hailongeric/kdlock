@@ -85,8 +85,16 @@ functional and teardown checks and verified reuse of completed Native controls.
 That policy is implemented: 99 focused offline tests passed, the fixed userspace
 client compiled, and replay verified the original Native proof and all 21
 controls for compatible reuse. These are tooling checks, not new actual-mmap
-execution. Strict mode and positive-proof verification remain intact; no live
-rerun or new measurement occurred. Optimization remains deferred.
+execution. Strict mode and positive-proof verification remain intact. The
+[authorized continuation](../bench/results/10.176.26.71/bench/mmap-functional-scaling-20261026/README.md)
+then completed 80,000 KD functional cycles with an inconclusive writer
+observation and passed 15 controls through 36 workers. The 40-worker control
+failed the unchanged full-cohort peak-window requirement: 139 candidate windows,
+none with positive published progress for all 40 workers. All workers joined
+and references drained; the failure remains a rejected control, with zero
+measured cases. Recovery restored 73 modules, zero taint and no pending boot.
+Review the retained 256-cycle checkpoints and 300 ms window contract before
+proposing another paired cycle. No repeated baseline or optimization is claimed.
 
 The historical records below retain their original source, topology, caller
 shell and instrumentation identities. Historical complete-operation p95 remains

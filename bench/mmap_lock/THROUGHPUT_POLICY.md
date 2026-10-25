@@ -1,6 +1,6 @@
 # Throughput eligibility and writer observation
 
-**Implemented and checked offline; no live restart is authorized by this guide.**
+**Implemented; the authorized continuation stopped during KD validation.**
 The explicit `mmap-functional-v1` policy separates functional completion from
 the sleeping-writer observation. Missing selection retains `mmap-writer-proof-v1`
 strict behavior. [Focused validation](../results/10.176.26.71/tests/mmap-functional-eligibility-20261026/README.md)
@@ -9,6 +9,14 @@ replay of the saved Native controls. These are not new actual-mmap runtime tests
 The sweep closed at `b8d9137` remains failed under its original policy, with
 **0/126 measured cases**. Its failed KD observation, completed Native controls
 and the separate accepted small pair retain their original outcomes.
+
+The [subsequent live continuation](../results/10.176.26.71/bench/mmap-functional-scaling-20261026/README.md)
+completed 80,000 KD cycles with `writer_observation=inconclusive`, then passed
+15 unscored controls through 36 workers. The 40-worker control failed the
+unchanged positive full-cohort peak-window requirement. All 126 measurements
+remain unrun. Drain was verified separately and recovery restored 73 modules,
+zero taint and no pending boot. This guide authorizes no restart or acceptance
+change; review the retained progress samples before proposing another cycle.
 
 ## Decision and source evidence
 
@@ -149,7 +157,11 @@ The 126 measurements, per-case workload, three paired repetitions, placement,
 Do not rerun the Native controls or the small screen. The old failed KD proof
 remains failed even if a future fixed check returns `inconclusive`.
 
-| Remaining maximum, conditional on approved reuse | Bound |
+The following bounds describe that stopped continuation's original authorization,
+not remaining permission to relaunch it. It consumed 17 payload cycles, two
+boots and three full captures; the result receipt reconciles partial validation.
+
+| Original continuation maximum, conditional on approved reuse | Bound |
 | --- | ---: |
 | New fixed check / unscored timed controls | 1 KD / 21 KD |
 | Measured cases / payload cycles | 126 / 148 |

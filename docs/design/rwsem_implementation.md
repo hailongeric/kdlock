@@ -351,9 +351,14 @@ recovery. That validation failure is not a lock-defect claim. The subsequent
 [explicit eligibility policy](../../bench/mmap_lock/THROUGHPUT_POLICY.md)
 separates a missing scheduling observation from completed functional work while
 preserving strict mode, every positive-proof predicate and exact drain checks.
-Its 99 offline tests and saved Native-control replay passed; no new actual mmap
-execution or optimization followed. The new policy is selected explicitly and
-cannot reclassify historical failures.
+Its 99 offline tests and saved Native-control replay passed. The
+[authorized continuation](../../bench/results/10.176.26.71/bench/mmap-functional-scaling-20261026/README.md)
+then completed 80,000 actual KD mmap/munmap cycles with an inconclusive writer
+observation and passed 15 unscored controls through 36 workers. The 40-worker
+control failed the unchanged positive full-cohort peak-window requirement;
+all workers and references drained, but no measured case ran. This supplies no
+repeated performance baseline or optimization claim. The new policy is selected
+explicitly and cannot reclassify historical failures.
 
 The separate [small validation pair](../../bench/results/10.176.26.71/bench/mmap-worker-screen-20261026/README.md)
 qualified under `mmap-window-v2` and `qemu-workers-v1`: Native 108,245.61 versus
@@ -386,8 +391,8 @@ then stopped on a new QEMU task during the guest no-op phase; its checksum phase
 did not run. Final health at **01:26:28 on October 26 (Asia/Shanghai)** recorded
 recovery `6.1.159-kdclobber2`, boot `d32e2e18-c340-4a98-8105-335bccec0b5d`,
 the original 73 modules, taint **12288** and no pending boot. This is time-stamped
-saved evidence, superseded for current recovery status by the later sweep and
-[offline eligibility receipt](../../bench/results/10.176.26.71/tests/mmap-functional-eligibility-20261026/README.md):
+saved evidence, superseded for current recovery status by the later sweep,
+offline preparation and [stopped continuation](../../bench/results/10.176.26.71/bench/mmap-functional-scaling-20261026/README.md):
 recovery `6.1.159-kdclobber2`, original 73 modules, taint 0, no pending boot and
 no active project work. Recheck recovery and competing jobs before later live
 work; preserve the

@@ -100,8 +100,15 @@ replay passed. The separately reviewed continuation would reuse those controls:
 one new KD fixed check, 21 KD controls and 126 measurements, bounded by 148
 payload cycles, five boots and 384 full captures. Estimated time is 4 h 28 min
 19.7 s, with 3 GiB reserved per retention filesystem under the documented
-assumptions. Fresh readiness and separate live-cycle approval remain required;
-no continuation has run.
+assumptions. The separately authorized
+[continuation](../bench/results/10.176.26.71/bench/mmap-functional-scaling-20261026/README.md)
+ran at `30af034`: KD completed its functional check with an inconclusive writer
+observation and passed 15 controls, then failed the 40-worker positive
+full-cohort peak-window check. It consumed 17 payload cycles, two boots and
+three full captures, with zero measured cases, and restored recovery. The next
+step is to review the saved checkpoint/window interaction; the failed result
+cannot be made acceptable by changing criteria retroactively. Fresh review and
+approval are required for another live cycle.
 
 ## Expansion after the first qualified baseline
 
