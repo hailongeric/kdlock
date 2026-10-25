@@ -109,9 +109,21 @@ static int worker_main(void *data)
 		atomic_dec(&writing);
 		mmap_write_unlock(mm);
 	} else {
+		unsigned long flags;
+		int count = preempt_count();
+
 		check(!atomic_read(&writing));
 		atomic_dec(&reading);
-		mmap_read_unlock(mm);
+		/* Exercise the actual adapter's atomic final-reader release while
+		 * a writer drains. Native retains its ordinary release context. */
+		if (expected_kd) {
+			local_irq_save(flags);
+			mmap_read_unlock(mm);
+			check(irqs_disabled() && preempt_count() == count);
+			local_irq_restore(flags);
+		} else {
+			mmap_read_unlock(mm);
+		}
 	}
 done:
 	w->switches = current->nvcsw - before;
@@ -326,18 +338,53 @@ static int transfer_cases(struct kd_mmap_probe_result *r)
 		.handler = destroy_return, .maxactive = 64 };
 	struct mm_struct *mm;
 	unsigned long flags;
-	int ret;
+	int ret, context;
 	bool acquired;
 
 	init_irq_work(&t.work, transfer_complete);
-	/* The IRQ-disabled KD path must refuse before changing any admission. */
-	local_irq_save(flags);
-	acquired = mmap_read_trylock(probe_mm);
-	local_irq_restore(flags);
-	check(acquired == !expected_kd);
-	if (acquired)
-		mmap_read_unlock(probe_mm);
-	check(idle(probe_mm));
+	/* Match the originating IRQ/preemption state on success and failure.
+	 * Native release remains outside atomic context or uses its exact token. */
+	for (context = 0; context < 3; context++) {
+		int count;
+		bool irq;
+
+		flags = 0;
+		if (context == 1)
+			local_irq_save(flags);
+		else if (context == 2)
+			preempt_disable();
+		count = preempt_count();
+		irq = irqs_disabled();
+		acquired = mmap_read_trylock(probe_mm);
+		check(acquired && irqs_disabled() == irq && preempt_count() == count);
+		if (acquired && expected_kd) {
+			mmap_read_unlock(probe_mm);
+			check(irqs_disabled() == irq && preempt_count() == count);
+		}
+		if (context == 1)
+			local_irq_restore(flags);
+		else if (context == 2)
+			preempt_enable();
+		if (acquired && !expected_kd)
+			mmap_read_unlock(probe_mm);
+		check(idle(probe_mm));
+		mmap_write_lock(probe_mm);
+		if (context == 1)
+			local_irq_save(flags);
+		else if (context == 2)
+			preempt_disable();
+		count = preempt_count();
+		irq = irqs_disabled();
+		check(!mmap_read_trylock(probe_mm));
+		check(irqs_disabled() == irq && preempt_count() == count);
+		if (context == 1)
+			local_irq_restore(flags);
+		else if (context == 2)
+			preempt_enable();
+		check(kd_mmap_is_write_owner(&probe_mm->mmap_lock));
+		mmap_write_unlock(probe_mm);
+		check(idle(probe_mm) && !irqs_disabled() && !preempt_count());
+	}
 	r->irq_checks++;
 
 	mmap_read_lock(probe_mm);

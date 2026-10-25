@@ -338,11 +338,11 @@ static int transfer_cases(struct kd_mmap_probe_result *r)
 	bool acquired;
 
 	init_irq_work(&t.work, transfer_complete);
-	/* The IRQ-disabled KD path must refuse before changing any admission. */
+	/* Both backends admit an uncontended IRQ-disabled read trylock. */
 	local_irq_save(flags);
 	acquired = mmap_read_trylock(probe_mm);
 	local_irq_restore(flags);
-	check(acquired == !expected_kd);
+	check(acquired);
 	if (acquired)
 		mmap_read_unlock(probe_mm);
 	check(idle(probe_mm));

@@ -2,6 +2,7 @@
 """Serial actual-mm API probe on the separately captured integration kernel."""
 import argparse
 import fcntl
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -32,6 +33,8 @@ def main():
     p.add_argument('--output', type=Path)
     p.add_argument('--client', action='store_true')
     p.add_argument('--mode', choices=('native', 'kd'), required=True)
+    p.add_argument('--reuse-probe', type=Path,
+                   help='verified prebuilt receipt; reuse prior basic/build checks')
     kernel_identity.arguments(p)
     a = p.parse_args()
     expected_kd = int(a.mode == 'kd')
@@ -102,12 +105,39 @@ def main():
                 rt.require(rt.digest(ROOT / name) == rt.digest(source / name) == h,
                            'frozen source changed: ' + name)
 
-        rt.command([sys.executable, '-m', 'pip', 'check'], out / 'dependencies.log', timeout=60)
-        rt.command(['make', '-C', source / 'tests/unit', 'run', 'PYTHON=' + sys.executable,
-                    'PY_TESTS='], out / 'basic.log', timeout=180)
         payload = source / 'tests/kernel/mmap_lock/payload/kd_mmap_probe.ko'
-        rt.command(['make', '-C', payload.parent, 'KDIR=' + str(a.kernel_source),
-                    'W=1', 'UBSAN_SANITIZE=n'], out / 'build.log', timeout=180)
+        if a.reuse_probe:
+            from elftools.elf.elffile import ELFFile
+            prior = json.loads(a.reuse_probe.read_text())
+            expected_sources = {name: h for name, h in hashes.items()
+                                if name.startswith('tests/kernel/mmap_lock/payload/')}
+            rt.require(prior['passed'] and prior['source'] == expected_sources,
+                       'prebuilt probe source bindings differ')
+            old_payload = Path(prior['module'])
+            rt.require(rt.digest(old_payload) == prior['sha256'] and
+                       rt.digest(a.kernel_source / 'vmlinux') == prior['vmlinux_sha256'],
+                       'prebuilt probe or kernel ELF differs')
+            with (a.kernel_source / 'vmlinux').open('rb') as f:
+                btf = ELFFile(f).get_section_by_name('.BTF').data()
+            rt.require(hashlib.sha256(btf).hexdigest() == prior['base_btf_sha256'] ==
+                       rt.digest(Path('/sys/kernel/btf/vmlinux')), 'prebuilt base BTF differs')
+            with old_payload.open('rb') as f:
+                rt.require(ELFFile(f).get_section_by_name('.BTF') is not None,
+                           'prebuilt split BTF missing')
+            vermagic = rt.command(['modinfo', '-F', 'vermagic', old_payload], out / 'vermagic.log')
+            rt.require(vermagic.split()[0] == os.uname().release, 'prebuilt release differs')
+            shutil.copyfile(old_payload, payload)
+            rt.require(rt.digest(payload) == prior['sha256'], 'prebuilt copy differs')
+            shutil.copyfile(a.reuse_probe, out / 'prebuilt.json')
+            result.update(reused_probe=str(a.reuse_probe), basic_programs=0,
+                          base_btf_sha256=prior['base_btf_sha256'])
+        else:
+            rt.command([sys.executable, '-m', 'pip', 'check'], out / 'dependencies.log', timeout=60)
+            rt.command(['make', '-C', source / 'tests/unit', 'run', 'PYTHON=' + sys.executable,
+                        'PY_TESTS='], out / 'basic.log', timeout=180)
+            rt.command(['make', '-C', payload.parent, 'KDIR=' + str(a.kernel_source),
+                        'W=1', 'UBSAN_SANITIZE=n'], out / 'build.log', timeout=180)
+            result['basic_programs'] = 2
         result['probe_sha256'] = rt.digest(payload)
         verify()
         idle()
@@ -125,7 +155,7 @@ def main():
         rt.command(['rmmod', 'kd_mmap_probe'], out / 'unload.log')
         logs()
         idle()
-        result.update(state='COMPLETE', passed=True, drained=True, basic_programs=2, source_unchanged=True)
+        result.update(state='COMPLETE', passed=True, drained=True, source_unchanged=True)
     except BaseException as error:
         result.update(state='FAILED', error=repr(error))
         raise

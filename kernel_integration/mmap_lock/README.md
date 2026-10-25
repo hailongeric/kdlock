@@ -6,9 +6,10 @@ and execute on the originating task. Readers stay concurrent and local. The
 operation-specific body-delegation experiments are retired, including their
 prepared VMA splits, page classification/ownership and table-retention machinery.
 
-The active integration restores the local-reader/local-writer adapter from
-`b8b31a7b2f895b18226538b8a409331623b4ddc7`. The shared KD mutex/rwsem implementation
-is preserved. This is an experimental adapter, not a validated whole-kernel
+The active integration uses the local-reader/local-writer adapter restored from
+`b8b31a7b2f895b18226538b8a409331623b4ddc7`, with the shared rwsem's IRQ-safe read
+trylock/rollback/release correction described below. This is an experimental
+adapter, not a validated whole-kernel
 replacement or a claim that every Linux mutex semantic has been established.
 
 ## Retained components
@@ -33,6 +34,51 @@ adaptation remains necessary; a reader count alone cannot authorize a transferre
 unlock. It does not change a mapping algorithm or delegate a critical-section body.
 `init_mm` stays Native, and a dynamic mm chooses Native or KD once before publication.
 All users of each lock follow that choice. KD readers and writers execute locally.
+
+## Public read/write API and atomic read trylock
+
+Use `include/kd_rwsem.h` and `struct kd_rwsem` for the shared sleeping read/write
+family: `kd_rwsem_init`, `kd_down_read` / `kd_up_read`, `kd_down_write` /
+`kd_up_write`, `kd_down_read_trylock`, `kd_down_write_trylock`, the existing
+`_interruptible` / `_killable` acquisitions and `kd_downgrade_write`.
+`include/kd_rwsem_types.h` provides `DEFINE_KD_RWSEM` and `KD_RWSEM_INITIALIZER`.
+This preserves concurrent readers; the exclusive `kd_mutex_api.h` family cannot
+replace a read/write semaphore's semantics.
+
+Linux MM callers retain the existing `mmap_*` interfaces in
+`include/linux/mmap_lock.h`. The patch routes these through the declarations in
+`overlay/include/linux/kd_mmap_lock.h`, using `struct kd_mmap_lock` and its immutable
+backend selection. `prepare.py` namespaces the shared primitives, for example
+`kd_down_read_trylock` becomes `kd_mmap_down_read_trylock` on
+`struct kd_mmap_rwsem`. No new or implicit delegation interface is needed.
+
+`kd_mutex_local_lock` / `kd_mutex_local_unlock` inside `kd_rwsem.c` implement
+physical writer ownership behind that public family. Calling those functions
+directly on the embedded gate would bypass reader admission/drain and is invalid.
+Likewise, a caller selecting local mutex entry directly bypasses the source-level
+ABI2 facade. Public mutex unlock retains its provider routing; rwsem ordinary and
+outer acquisitions retain their distinct matching release protocols.
+`KD_RWSEM_OUTER_WRITE_LOCK` / `KD_RWSEM_OUTER_WRITE_UNLOCK` in
+`include/kd_rwsem_direct.h` explicitly opt eligible writers into delegation. They
+do not transfer native MM bodies' task context. The mmap adapter uses ordinary
+acquisitions so every native MM body remains on its originating task.
+
+KD read trylock now accepts IRQ-disabled callers. Its fixed sequence is an
+admission check, ordered reader increment, admission recheck and, on collision,
+ordered rollback. Atomic rollback and matching read unlock never enter waitqueue
+or scheduler locks, allocate, schedule, change IRQ/preemption state or leave a
+deferred pointer. Writers use one-jiffy timed reader-drain rechecks, including
+interruptible, killable and unpublished outer reservations. A timeout never
+grants ownership: the acquire-ordered zero-reader predicate must succeed.
+Task-context release still wakes the reader-drain queue immediately. The existing
+BPF token/mm-reference transfer remains intact; Native release under an rq lock
+still requires its asynchronous release wrapper.
+
+This adds timer wakeups during a prolonged reader drain and can delay observation
+of an atomic final release until the next recheck. With the validated `HZ=250`,
+one jiffy is 4 ms; scheduling can add delay. No new performance result is claimed.
+See the [focused correction receipt](../../bench/results/10.176.26.71/tests/mmap-irq-trylock-20261025/README.md)
+for checks and limits.
 
 ## Why native bodies stay on their caller
 
@@ -88,7 +134,15 @@ is retained without repeating its campaign. The
 [runtime reconciliation](../../bench/results/10.176.26.71/tests/lock-only-reconcile-20261025/README.md)
 verified the restored inputs and prepared outputs against the preserved kdmm1
 image, configuration, compiler record, modules and initramfs. Its eight focused
-Native/KD runtime results are reusable; no new build, test or boot was needed.
+Native/KD runtime results remain evidence for that restored baseline. The IRQ
+correction changes shared lock/adapter inputs; kdmm1 still contains the old guard
+and is not runtime evidence for the corrected path. The subsequent
+[kdmm31 correction validation](../../bench/results/10.176.26.71/tests/mmap-irq-trylock-20261025/README.md)
+passed 137 Native and 161 KD assertions on actual mm objects, using the same
+verified kernel image and prebuilt probe. Both modes drained and unloaded normally;
+recovery was restored. The runner's `--reuse-probe` option requires exact payload
+source, ELF, kernel and live BTF bindings and records that basic/build checks were
+reused. It does not rerun those checks or count them as newly executed.
 RT, lockdep, whole-kernel substitution
 and broader Linux semantic equivalence remain unvalidated. Performance work is deferred.
 

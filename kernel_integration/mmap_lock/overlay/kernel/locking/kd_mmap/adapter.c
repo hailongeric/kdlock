@@ -113,12 +113,8 @@ EXPORT_SYMBOL_GPL(kd_mmap_read_lock_killable);
 
 int kd_mmap_read_trylock(struct kd_mmap_lock *lock)
 {
-	/* KD's speculative reader rollback can wake a draining writer. BPF's
-	 * IRQ-disabled lookup already has an explicit trylock-failure fallback;
-	 * choose that before any reservation, rather than waking under rq_lock.
-	 * This does not acquire the Native backend of a KD mm. */
-	if (lock->use_kd && irqs_disabled())
-		return 0;
+	/* The shared primitive also supports atomic speculation/rollback. The
+	 * matching read unlock leaves IRQ and preemption state unchanged. */
 	return lock->use_kd ? kd_mmap_down_read_trylock(&lock->kd) :
 		down_read_trylock(&lock->native);
 }

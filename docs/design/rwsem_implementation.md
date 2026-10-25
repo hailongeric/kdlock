@@ -1,11 +1,13 @@
 # Sleeping KD reader/writer semaphore
 
-The waiting implementation in `c21345b` is the **accepted current KD rwsem**.
-Acceptance includes the measured tradeoff: large gains at 60 workers and
+The waiting implementation selected in `c21345b` is the KD rwsem baseline.
+Its acceptance includes the measured tradeoff: large gains at 60 workers and
 substantial regressions at two workers with 20% writes. The
 [performance status](../PERFORMANCE.md#accepted-rwsem-implementation-c21345b)
 retains those results. This acceptance does not replace the selected KD mutex
 protocol or establish support for every Linux reader/writer semaphore use.
+The subsequent IRQ-safe reader-release correction adds timed writer-drain
+rechecks. Those historical measurements do not establish its performance.
 
 [`kd_rwsem.h`](../../include/kd_rwsem.h) provides concurrent sleeping readers and
 ordinary exclusive writers. The explicit outer-writer interface in
@@ -79,6 +81,13 @@ cancellation, without leaving reader, writer-admission or gate ownership behind.
 Killable acquisition ignores nonfatal signals. An immediately available
 acquisition may succeed despite a pending signal.
 
+Read trylock and its matching read unlock also support IRQ-disabled or
+preemption-disabled contexts without changing the caller's state. In those
+atomic contexts they do not sleep, allocate or spin on a lock. Ordinary sleeping
+acquisitions and writer operations retain their task-context requirements. The
+mmap adapter's public facade and caller-task policy are described in the
+[integration guide](../../kernel_integration/mmap_lock/README.md#public-readwrite-api-and-atomic-read-trylock).
+
 `kd_downgrade_write()` converts an ordinary writer to a reader without admitting
 an intervening writer; finish with `kd_up_read()`. `kd_rwsem_is_idle()` is an
 inspection helper after all callers stop and join. Its admission, reader and
@@ -144,9 +153,10 @@ readers have finished before that publication, and the positive phase prevents
 new admitted readers. The reader's ordered increment/recheck and the writer's
 reservation/barrier/count check prevent both from missing each other.
 
-The final reader's ordered decrement precedes the reader-drain wakeup.
+The final reader's ordered decrement precedes a task-context reader-drain wakeup.
 Waitqueue enrolment and condition rechecks ensure a waiter either observes the
-completed drain or receives a wakeup. Releasing the last outer reservation
+completed drain or receives a wakeup. Atomic release omits the synchronous wake;
+the writer's timed recheck observes completion. Releasing the last outer reservation
 reopens admission and wakes phase waiters. Reservation release is outside the
 translated region, after the existing mutex unlock endpoint; synthetic
 completion resumes there on the origin rather than releasing the reservation
@@ -162,12 +172,30 @@ reduces the containing object to 320 bytes while retaining those separate region
 `phase_wait` contains readers and writers
 waiting for an eligible admission phase. `reader_drain` contains writers that
 already hold an ordinary or outer reservation and are waiting for readers to
-finish. The final reader wakes only `reader_drain`; an ordinary phase release
+finish. A final reader in schedulable context wakes only `reader_drain`; an ordinary phase release
 or final outer reservation release wakes only `phase_wait`. Reader drainage
 cannot open a closed admission phase. A reader-drain waiter retains its
 reservation, so admission cannot reopen while that wait remains live. Fully
 ordered count/phase updates precede the lockless `waitqueue_active()` checks
 and pair with waitqueue enrolment and predicate rechecks.
+
+Read trylock's speculative rollback uses the same ordered decrement as read
+unlock. IRQ-disabled or preemption-disabled callers cannot enter a waitqueue or
+scheduler lock there: they might already hold `rq_lock`. They only decrement.
+All reader-drain sleeps therefore recheck the acquire-ordered reader count on a
+one-jiffy timeout. The timeout does not acquire ownership or expire a reader;
+writers continue sleeping until the count is zero or an applicable signal
+cancels the wait. Timer/stack wait storage belongs to the schedulable writer and
+is retired before returning. No callback retains the semaphore after read release.
+This applies before delegation publication, including positive reservations.
+Phase waits keep their ordinary wakeups and do not poll on a timer.
+
+On the captured `HZ=250` configuration a jiffy is 4 ms. This introduces periodic
+writer wakeups while readers remain and possible additional wake latency after
+an atomic final decrement. Scheduling adds its own delay; there is no new latency
+guarantee or performance claim. IRQ-enabled, non-atomic final release still wakes
+immediately. Admission barriers, exact reservations, cancellation, physical
+ownership, static initialization and the 320-byte layout are unchanged.
 
 Uninterruptible acquisitions poll, meaning they repeatedly check whether they
 can proceed before entering a sleeping wait. Each polling stage tries at most
@@ -184,8 +212,8 @@ reduces throughput in some two-worker cases; acceptance retains that limitation.
 The polling bound counts predicate invocations, not elapsed time: the existing
 outer-reservation predicate can retry its compare/exchange internally. The
 fallback retains `wait_event()` enrolment, condition rechecks and scheduling.
-Interruptible and killable acquisitions keep their existing sleeping waits and
-cancellation rules. Wakeups prompt readers to retry their own admission-aware
+Interruptible and killable acquisitions keep their cancellation rules; their
+reader-drain waits also use the timed recheck. Wakeups prompt readers to retry their own admission-aware
 acquisition. Published mutex waiters, physical ownership, queue batching and
 wrapper ABI are unchanged.
 
@@ -253,9 +281,10 @@ validated hot instruction marker, exact native suffix effects, competing
 accepted-reader exclusion and final reservation/gate drain. It does not add
 delegated reader or nested rwsem control support.
 
-The API does not integrate this object into `mm_struct::mmap_lock`. That requires
-coordinated replacement of every reader/writer, Linux helper and lockdep
-contracts, fault/VMA lifetimes, retry and lock-mode transitions, and kernel
+The separate [mmap adapter](../../kernel_integration/mmap_lock/README.md) integrates
+this family into `mm_struct::mmap_lock` for its documented non-lockdep configuration.
+Broader substitution still requires coordinated reader/writer, Linux helper and
+lockdep contracts, fault/VMA lifetimes, retry and lock-mode transitions, and kernel
 configuration validation. Safe admission does not establish that
 `access_remote_vm()` or another task-dependent body can be delegated; existing
 instruction and context admission still apply.
@@ -300,10 +329,10 @@ mmap/fault execution. The subsequent
 rechecked the live identity and all 25 files, adding 21 callback/helper files.
 Its 1,470 archive checks passed and 24 hashed source intervals document implicit
 release, NOWAIT, file/context pins, nested resources, retry and downgrade.
-Full-mm integration remains unresolved: the native mm object and full helper
-surface are not converted, delegated rwsem mode/ownership transitions are
-absent, origin context and transitive filesystem/DAX/journal lifetimes are
-unproved. The subsequent opt-in [module-owned mapping integration](mmap_fault.md)
+Those audited inputs still used native mm lock objects and did not establish
+delegated rwsem mode/ownership transitions, origin context or transitive
+filesystem/DAX/journal lifetimes. The subsequent opt-in
+[module-owned mapping integration](mmap_fault.md)
 passed Native/KD/TCLock functional checks for its private backing state and
 originating-task fault transactions. Its native `mm->mmap_lock` remains intact;
 that bounded integration does not resolve the full-mm blockers. The existing

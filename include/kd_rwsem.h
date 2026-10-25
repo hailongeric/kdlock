@@ -14,6 +14,9 @@ void kd_rwsem_init(struct kd_rwsem *sem);
 void kd_down_read(struct kd_rwsem *sem);
 int kd_down_read_interruptible(struct kd_rwsem *sem);
 int kd_down_read_killable(struct kd_rwsem *sem);
+/* Nonblocking, allocation-free read try/unlock preserve IRQ/preemption state,
+ * including IRQ-disabled/atomic callers. Sleeping acquisition remains task-only.
+ * Atomic final release is observed by the writer's timed drain recheck. */
 int kd_down_read_trylock(struct kd_rwsem *sem);
 void kd_up_read(struct kd_rwsem *sem);
 void kd_down_write(struct kd_rwsem *sem);

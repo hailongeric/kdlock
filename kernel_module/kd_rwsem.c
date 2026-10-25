@@ -13,7 +13,7 @@
  * colocated holders still get the ordinary wait_event scheduling fallback.
  * A successful condition may acquire a reservation, so never evaluate it again
  * after success. The wait macro retains its enqueue/recheck ordering. */
-#define kd_rwsem_wait(queue, condition) do { \
+#define kd_rwsem_poll(condition) ({ \
 	unsigned int kd_rwsem_budget = 16384; \
 	bool kd_rwsem_ready = false; \
 	do { \
@@ -25,7 +25,11 @@
 			break; \
 		cpu_relax(); \
 	} while (--kd_rwsem_budget); \
-	if (!kd_rwsem_ready) \
+	kd_rwsem_ready; \
+})
+
+#define kd_rwsem_wait(queue, condition) do { \
+	if (!kd_rwsem_poll(condition)) \
 		wait_event(queue, condition); \
 } while (0)
 
@@ -50,10 +54,40 @@ static void kd_rwsem_wake(wait_queue_head_t *queue)
 
 void kd_up_read(struct kd_rwsem *sem)
 {
-	if (atomic_long_dec_and_test(&sem->readers))
+	/* Trylock rollback and a matching read unlock may run under rq_lock.
+	 * Never acquire a waitqueue/scheduler lock from that atomic context.
+	 * Reader-drain waiters recheck on a timer, so omitting this wake cannot
+	 * strand them. No deferred reference outlives this ordered decrement. */
+	if (atomic_long_dec_and_test(&sem->readers) &&
+	    !irqs_disabled() && !in_atomic())
 		kd_rwsem_wake(&sem->reader_drain);
 }
 EXPORT_SYMBOL_GPL(kd_up_read);
+
+static int kd_rwsem_drain_readers(struct kd_rwsem *sem, unsigned int state)
+{
+	long ret;
+
+	if (state == TASK_UNINTERRUPTIBLE &&
+	    kd_rwsem_poll(!atomic_long_read_acquire(&sem->readers)))
+		return 0;
+	/* An IRQ-disabled reader cannot safely wake a sleeping writer. Only
+	 * schedulable, unpublished writers wait here; one-jiffy sleeps provide
+	 * progress even when the last decrement omitted its wake. The timeout
+	 * is a recheck, never permission to enter while a reader remains. */
+	do {
+		if (state == TASK_INTERRUPTIBLE)
+			ret = wait_event_interruptible_timeout(sem->reader_drain,
+				!atomic_long_read_acquire(&sem->readers), 1);
+		else if (state == TASK_KILLABLE)
+			ret = wait_event_killable_timeout(sem->reader_drain,
+				!atomic_long_read_acquire(&sem->readers), 1);
+		else
+			ret = wait_event_timeout(sem->reader_drain,
+				!atomic_long_read_acquire(&sem->readers), 1);
+	} while (!ret);
+	return ret < 0 ? -EINTR : 0;
+}
 
 int kd_down_read_trylock(struct kd_rwsem *sem)
 {
@@ -111,7 +145,7 @@ void kd_down_write(struct kd_rwsem *sem)
 	might_sleep();
 	kd_rwsem_wait(sem->phase_wait, kd_rwsem_reserve_local(sem));
 	kd_mutex_local_lock(&sem->gate);
-	kd_rwsem_wait(sem->reader_drain, !atomic_long_read_acquire(&sem->readers));
+	kd_rwsem_drain_readers(sem, TASK_UNINTERRUPTIBLE);
 }
 EXPORT_SYMBOL_GPL(kd_down_write);
 
@@ -125,8 +159,7 @@ int kd_down_write_interruptible(struct kd_rwsem *sem)
 		return -EINTR;
 	ret = kd_mutex_lock_interruptible(&sem->gate);
 	if (!ret) {
-		ret = wait_event_interruptible(sem->reader_drain,
-					       !atomic_long_read_acquire(&sem->readers));
+		ret = kd_rwsem_drain_readers(sem, TASK_INTERRUPTIBLE);
 		if (!ret)
 			return 0;
 		kd_mutex_local_unlock(&sem->gate);
@@ -147,8 +180,7 @@ int kd_down_write_killable(struct kd_rwsem *sem)
 		return -EINTR;
 	ret = kd_mutex_lock_killable(&sem->gate);
 	if (!ret) {
-		ret = wait_event_killable(sem->reader_drain,
-					 !atomic_long_read_acquire(&sem->readers));
+		ret = kd_rwsem_drain_readers(sem, TASK_KILLABLE);
 		if (!ret)
 			return 0;
 		kd_mutex_local_unlock(&sem->gate);
@@ -213,7 +245,7 @@ void kd_rwsem_delegate_enter(struct kd_rwsem *sem)
 	/* No producer has published yet. A sleeping reader can resume even when
 	 * it shares this CPU. Positive admission prevents new accepted readers or
 	 * ordinary downgrades throughout every reservation in the cohort. */
-	kd_rwsem_wait(sem->reader_drain, !atomic_long_read_acquire(&sem->readers));
+	kd_rwsem_drain_readers(sem, TASK_UNINTERRUPTIBLE);
 }
 EXPORT_SYMBOL_GPL(kd_rwsem_delegate_enter);
 
