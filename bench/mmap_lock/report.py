@@ -10,6 +10,7 @@ import sys
 sys.dont_write_bytecode = True
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import paired
+eligibility = paired.eligibility
 
 
 def spread(values):
@@ -23,6 +24,10 @@ def summarize(rows, receipt_bindings):
         raise ValueError('complete campaign receipts required')
     plan = paired.row_plan(rows[0])
     policy = paired.window.policy(rows[0])
+    eligible = eligibility.policy(rows[0])
+    outcomes = eligibility.observations(rows[0])
+    if eligible == eligibility.FUNCTIONAL and (plan != paired.SCALING_PLAN or policy != paired.window.POLICY):
+        raise ValueError('functional eligibility requires scaling/window policy')
     cases, order = paired.cases_for(plan), paired.order_for(plan)
     if len(rows) != len(order) or set(receipt_bindings) != set(order):
         raise ValueError(f'exactly {len(order)} qualified cases and bindings required for {plan}')
@@ -31,6 +36,8 @@ def summarize(rows, receipt_bindings):
     identity = rows[0]['prepared']
     admission = paired.window.admission_policy(rows[0])
     for r in rows:
+        if eligibility.policy(r) != eligible or eligibility.observations(r) != outcomes:
+            raise ValueError('mixed eligibility policies or observation outcomes')
         key = (r['repeat'], r['mode'], r['case'])
         if (not r['passed'] or not r['drained'] or not r['accepted'] or not r['endpoint_checked'] or
                 r.get('screen') or paired.window.policy(r) != policy or
@@ -91,6 +98,8 @@ def summarize(rows, receipt_bindings):
                            'progress and correctness accounting retained.')
         return dict(plan=plan, measurement_policy=policy, qualified_cases=len(order), paired_repetitions=3, prepared=identity,
             **paired.window.admission_fields(rows[0]),
+            **eligibility.fields(eligible),
+            **(dict(writer_observations=outcomes) if outcomes else {}),
             points=points, throughput_definition='Completed whole mmap/munmap cycles / actual elapsed time',
             limits=paired.bounds(plan), limitations=limitations)
     instrumentation = {str(n): {mode: spread([
@@ -111,6 +120,9 @@ def replay(path):
     client = paired.common.load(path.parent / 'client-result.json')
     plan = paired.row_plan(r)
     policy = paired.window.policy(r)
+    eligible = eligibility.policy(r)
+    if eligibility.policy(client) != eligible:
+        raise ValueError('client/final eligibility differs')
     if paired.row_plan(client) != plan or paired.window.policy(client) != policy:
         raise ValueError('final/client campaign plan differs')
     if paired.window.admission_policy(r) != paired.window.admission_policy(client):
@@ -119,13 +131,16 @@ def replay(path):
            if key not in ('passed', 'accepted', 'drained')):
         raise ValueError('final receipt changed client identity/specification')
     ready = paired.load_bound(r['ready'])
+    if eligibility.policy(ready) != eligible:
+        raise ValueError('readiness eligibility differs')
     if (not ready['passed'] or paired.row_plan(ready) != plan or paired.window.policy(ready) != policy or
             paired.window.admission_policy(ready) != paired.window.admission_policy(r) or
             any(ready[k] != r[k] for k in ('mode', 'boot_id', 'block', 'prepared'))):
         raise ValueError('readiness mode/boot/block/preparation differs')
     paired.load_bound(r['prepared'])
     if r.get('screen'):
-        if policy != paired.window.POLICY or plan != paired.SCALING_PLAN or r['case'] != 9 or r['repeat'] != 0:
+        if (eligible != eligibility.STRICT or policy != paired.window.POLICY or
+                plan != paired.SCALING_PLAN or r['case'] != 9 or r['repeat'] != 0):
             raise ValueError('unexpected controlled screen scope')
         paired.mapping.SITES = paired.common.load(paired.SITES)
         raw = [json.loads(line) for line in paired.file_bound(r['fixed_raw']).read_text().splitlines()]
@@ -137,6 +152,15 @@ def replay(path):
     else:
         for mode, binding in zip(('native', 'kd'), r['validated'], strict=True):
             v = paired.validation_receipt(paired.file_bound(binding), mode, r['prepared'], plan)
+            if eligibility.policy(v) != eligible:
+                raise ValueError('validation eligibility differs')
+            if eligible == eligibility.FUNCTIONAL and eligibility.observations(r)[mode] != eligibility.observation(v):
+                raise ValueError('reported observation differs from validation')
+            if eligible == eligibility.FUNCTIONAL:
+                if paired.window.admission_policy(v) != paired.window.admission_policy(ready):
+                    raise ValueError('validation admission policy differs')
+                import reuse
+                reuse.match_ready(v, ready)
             if paired.window.policy(v) != policy:
                 raise ValueError('validation measurement policy differs')
     evidence = r['qualification']
@@ -159,6 +183,7 @@ def screen_summary(rows):
     rows = sorted(rows, key=lambda r: r['mode'])
     for r in rows:
         if (not all(r.get(k) for k in ('screen', 'passed', 'accepted', 'drained', 'endpoint_checked')) or
+                eligibility.policy(r) != eligibility.STRICT or
                 paired.window.policy(r) != paired.window.POLICY or paired.row_plan(r) != paired.SCALING_PLAN or
                 r['spec'] != paired.specification(9, 0, r['mode'], paired.SCALING_PLAN) or
                 r['block'] != (0 if r['mode'] == 'native' else 1) or

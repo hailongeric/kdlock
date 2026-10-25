@@ -218,10 +218,30 @@ static int writer_contention(struct worker *workers,unsigned n,unsigned long mma
 	}
 }
 
+/* Called only after successful joins, callback checks and final close. The
+ * prospective policy changes the observational verdict, never those checks. */
+static int emit_completion(const char *mode, int contention_ok, int functional,
+		struct worker *w, unsigned n, uint64_t completed)
+{
+	int passed=contention_ok || functional;
+	printf("{\"event\":\"complete\",\"mode\":\"%s\",\"passed\":%s,\"joined\":%u,\"completed\":%llu,\"checks\":%u,",
+	 mode,passed?"true":"false",n,(unsigned long long)completed,checks);
+	if(functional)printf("\"eligibility_policy\":\"mmap-functional-v1\",\"functional_complete\":true,\"writer_observation\":\"%s\",",
+	 contention_ok?"observed":"inconclusive");
+	printf("\"workers\":[");
+	for(unsigned i=0;i<n;i++)printf("%s{\"cpu\":%u,\"tid\":%llu,\"tgid\":%llu,\"mm\":%llu,\"mmap_lock\":%llu,\"object\":%llu,\"completed\":%llu,\"errors\":%d}",i?",":"",i,
+	 (unsigned long long)w[i].observed.tid,(unsigned long long)w[i].observed.tgid,(unsigned long long)w[i].observed.mm,
+	 (unsigned long long)w[i].observed.mmap_lock,(unsigned long long)w[i].observed.object,(unsigned long long)w[i].completed,w[i].error);
+	printf("]}\n");fflush(stdout);return passed;
+}
+
 int main(int argc,char **argv)
 {
-	CHECK(argc==6 || argc==11);const char *mode=argv[1];unsigned n=strtoul(argv[2],NULL,10);
-	if(argc==11) {
+	CHECK(argc==6 || argc==11 || argc==13);
+	int functional=argc==13;
+	if(functional)CHECK(!strcmp(argv[11],"--eligibility-policy") && !strcmp(argv[12],"mmap-functional-v1"));
+	const char *mode=argv[1];unsigned n=strtoul(argv[2],NULL,10);
+	if(argc>=11) {
 		chain_waiter=argv[6];chain_wait[0]=strtoul(argv[7],NULL,0);chain_wait[1]=strtoul(argv[8],NULL,0);
 		chain_adapter=strtoul(argv[9],NULL,0);chain_acquire=argv[10];
 		CHECK(*chain_waiter && *chain_acquire && chain_wait[0] && chain_wait[1] && chain_adapter);
@@ -229,6 +249,7 @@ int main(int argc,char **argv)
 	uint64_t iterations=strtoull(argv[3],NULL,10);
 	CHECK(n && n<=MAX_WORKERS && iterations && iterations<=10000000 && sysconf(_SC_PAGESIZE)==4096);
 	CHECK(!strcmp(mode,"scope") || !strcmp(mode,"cycle") || !strcmp(mode,"lifetime") || !strcmp(mode,"exit"));
+	if(functional)CHECK(!strcmp(mode,"cycle") && n>1);
 	unsigned long mmap_site=strtoul(argv[4],NULL,0),munmap_site=strtoul(argv[5],NULL,0);
 	CHECK(mmap_site && munmap_site);
 	pin(63);int fd=open("/dev/kd_mmap_writer_native",O_RDWR|O_CLOEXEC);CHECK(fd>=0);
@@ -271,12 +292,8 @@ int main(int argc,char **argv)
 		if(after.observe && n>1)CHECK(after.contended_mmaps>0);
 		CHECK(close(fd)==0);
 	}
-	printf("{\"event\":\"complete\",\"mode\":\"%s\",\"passed\":%s,\"joined\":%u,\"completed\":%llu,\"checks\":%u,\"workers\":[",mode,contention_ok?"true":"false",n,(unsigned long long)completed,checks);
-	for(unsigned i=0;i<n;i++)printf("%s{\"cpu\":%u,\"tid\":%llu,\"tgid\":%llu,\"mm\":%llu,\"mmap_lock\":%llu,\"object\":%llu,\"completed\":%llu,\"errors\":%d}",i?",":"",i,
-	 (unsigned long long)w[i].observed.tid,(unsigned long long)w[i].observed.tgid,(unsigned long long)w[i].observed.mm,
-	 (unsigned long long)w[i].observed.mmap_lock,(unsigned long long)w[i].observed.object,(unsigned long long)w[i].completed,w[i].error);
-	printf("]}\n");
 	/* Join and retain exact teardown evidence before reporting a missing
-	 * writer observation. Failure still fails the case and the campaign. */
-	fflush(stdout);CHECK(contention_ok);return 0;
+	 * writer observation. Strict mode still fails the case and campaign. */
+	int completion_ok=emit_completion(mode,contention_ok,functional,w,n,completed);
+	if(functional)CHECK(completion_ok);else CHECK(contention_ok);return 0;
 }

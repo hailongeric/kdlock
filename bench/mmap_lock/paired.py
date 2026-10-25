@@ -19,6 +19,7 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / 'bench/mmap_lock'))
 import plain
 import window
+import eligibility
 rt, common, writer, mapping = plain.rt, plain.common, plain.writer, plain.mapping
 PROFILE = common.load(Path(__file__).with_name('kdmm31.json'))
 SITES = ROOT / 'tests/kernel/mmap_lock/writer_sites_kdmm31.json'
@@ -298,6 +299,11 @@ def ready(a):
     result = dict(passed=False, accepted=False, mode=a.mode, boot_id=a.boot_id, block=a.block,
                   **plan_fields(plan))
     policy = getattr(a, 'measurement_policy', None) or window.LEGACY
+    eligible = getattr(a, 'eligibility_policy', None) or eligibility.STRICT
+    result.update(eligibility.fields(eligible))
+    if eligible == eligibility.FUNCTIONAL:
+        rt.require(plan == SCALING_PLAN and policy == window.POLICY,
+                   'functional eligibility requires explicit scaling/window policy')
     if policy == window.POLICY:
         rt.require(plan in PLAIN_PLANS, 'prepared window is plain only')
         result.update(window.binding())
@@ -310,6 +316,9 @@ def ready(a):
     try:
         rt.require(BLOCKS[a.block][0] == a.mode, 'ordered candidate boot mode differs')
         inputs = prepared(a.prepared)
+        if eligible == eligibility.FUNCTIONAL:
+            rt.require(inputs.get('fixed_eligibility_policy') == eligible,
+                       'functional fixed-client build required')
         result['prior_api'] = []
         for mode, path in [('native', a.native_api), ('kd', a.kd_api)]:
             expected = PROFILE['prior_api'][mode]
@@ -342,6 +351,7 @@ def readiness(path):
     row = common.load(path)
     row_plan(row)
     policy = window.policy(row)
+    eligibility.policy(row)
     ready_roles(row)
     if policy == window.POLICY:
         rt.require(all(row.get(k) == v for k, v in window.binding().items()), 'readiness control source differs')
@@ -350,6 +360,10 @@ def readiness(path):
     check_kernel(row['mode'], row['boot_id'])
     inputs = prepared(Path(row['prepared']['path']))
     load_bound(row['prepared'])
+    if eligibility.policy(row) == eligibility.FUNCTIONAL:
+        rt.require(row_plan(row) == SCALING_PLAN and policy == window.POLICY and
+                   inputs.get('fixed_eligibility_policy') == eligibility.FUNCTIONAL,
+                   'functional readiness scope/build differs')
     for binding in row['prior_api']:
         load_bound(binding)
     return row, inputs
@@ -372,20 +386,23 @@ def measurement(rows, spec, mode, plan=LEGACY_PLAN):
     return result
 
 
-def fixed(inputs, out, mode):
+def fixed(inputs, out, mode, eligibility_policy=eligibility.STRICT):
     mapping.SITES = common.load(SITES)
     sites = mapping.SITES
     chain = sites['chains'][mode]
     proof = [str(sites['sites'][name]['return_offset']) for name in ('vm_mmap_pgoff', '__vm_munmap')]
     proof += [chain['waiter'], *map(str, chain['wait_returns']), str(chain['adapter_return']), sites['adapter']]
+    options = ['--eligibility-policy', eligibility_policy] if eligibility_policy == eligibility.FUNCTIONAL else []
+    eligibility.fields(eligibility_policy)
     rt.command(['insmod', inputs['binaries']['payload'], 'observe=1'], out / 'load-fixed.log')
     fault_check(out, 'after-fixed-load-dmesg')
     health(0)
-    data = rt.command([inputs['binaries']['fixed'], 'cycle', str(FIXED_THREADS), str(FIXED_ITERATIONS), *proof],
+    data = rt.command([inputs['binaries']['fixed'], 'cycle', str(FIXED_THREADS), str(FIXED_ITERATIONS), *proof, *options],
                       out / 'fixed.jsonl', timeout=120)
     rows = [json.loads(line) for line in data.splitlines()]
-    result = mapping.validate(rows, 'cycle', FIXED_THREADS, FIXED_ITERATIONS, mode)
-    result['rejected_mutations'] = mapping.reject_mutations(rows, mode)
+    result = mapping.validate(rows, 'cycle', FIXED_THREADS, FIXED_ITERATIONS, mode, eligibility_policy)
+    result['rejected_mutations'] = (mapping.reject_mutations(rows, mode, eligibility_policy)
+        if eligibility.observation(result) == 'observed' else [])
     result['health'] = health(1)
     fault_check(out, 'fixed-dmesg')
     rt.command(['rmmod', MODULE], out / 'unload-fixed.log')
@@ -436,8 +453,12 @@ def validate(a):
     if window.policy(ready) == window.POLICY:
         result.update(window.binding())
     result.update(window.admission_fields(ready))
+    result.update(eligibility.fields(eligibility.policy(ready)))
     try:
-        result['fixed'] = fixed(inputs, out, ready['mode'])
+        options = [] if eligibility.policy(ready) == eligibility.STRICT else [eligibility.policy(ready)]
+        result['fixed'] = fixed(inputs, out, ready['mode'], *options)
+        if options:
+            result['writer_observation'] = eligibility.observation(result['fixed'])
         result['fixed_raw'] = bind(out / 'fixed.jsonl')
         for index, (n, observation) in enumerate(cases_for(plan)):
             case = out / f'{n}-{observation}'
@@ -466,17 +487,27 @@ def validation_shape(v, mode, prepared_ref, plan=LEGACY_PLAN):
                [c['spec'] for c in v['cases']] == [specification(i, 0, mode, plan) for i in range(count)],
                'validation case set/specification differs')
     f = v['fixed']
+    eligible = eligibility.policy(v)
+    rt.require(eligibility.policy(f) == eligible, 'fixed/validation eligibility differs')
+    observed = eligibility.observation(f)
+    if eligible == eligibility.FUNCTIONAL:
+        rt.require(eligibility.observation(v) == observed, 'validation observation differs')
     rt.require(f['passed'] and f['mode'] == 'cycle' and f['threads'] == FIXED_THREADS and f['iterations'] == FIXED_ITERATIONS and
                f['protocol'] == ('KD_LOCAL_MMAP_LOCK' if mode == 'kd' else 'NATIVE_CONTROL_MMAP_LOCK') and
                f['health'] == 'files=0 mm_refs=0 destroyed=1 release_errors=0' and
-               f['rejected_mutations'] == PROOF_MUTATIONS, 'required fixed-work writer proof differs')
+               f['rejected_mutations'] == (PROOF_MUTATIONS if observed == 'observed' else []),
+               'required fixed-work validation differs')
 
 
 def validation_receipt(path, mode, prepared_ref, plan=LEGACY_PLAN):
     """Replay saved positive evidence without executing a workload or test."""
     v = common.load(path)
+    if 'compatibility' in v:
+        import reuse
+        return reuse.replay(path, mode, prepared_ref, plan)
     validation_shape(v, mode, prepared_ref, plan)
     ready = load_bound(v['ready'])
+    rt.require(eligibility.policy(v) == eligibility.policy(ready), 'validation/readiness eligibility differs')
     rt.require(window.admission_policy(v) == window.admission_policy(ready), 'validation admission policy differs')
     rt.require(ready['passed'] and ready['mode'] == mode and ready['prepared'] == prepared_ref and
                window.policy(ready) == window.policy(v) and
@@ -484,7 +515,7 @@ def validation_receipt(path, mode, prepared_ref, plan=LEGACY_PLAN):
                'validation readiness differs')
     mapping.SITES = common.load(SITES)
     raw = [json.loads(line) for line in file_bound(v['fixed_raw']).read_text().splitlines()]
-    proof = mapping.validate(raw, 'cycle', FIXED_THREADS, FIXED_ITERATIONS, mode)
+    proof = mapping.validate(raw, 'cycle', FIXED_THREADS, FIXED_ITERATIONS, mode, eligibility.policy(v))
     rt.require(all(v['fixed'][key] == value for key, value in proof.items()), 'saved writer proof differs')
     for case in v['cases']:
         raw = [json.loads(line) for line in file_bound(case['raw']).read_text().splitlines()]
@@ -509,6 +540,10 @@ def run(a):
     if policy == window.POLICY:
         result.update(window.binding())
     result.update(window.admission_fields(ready))
+    eligible = eligibility.policy(ready)
+    result.update(eligibility.fields(eligible))
+    if eligible == eligibility.FUNCTIONAL:
+        result['writer_observations'] = {}
     try:
         index = order.index((a.repeat, ready['mode'], a.case))
         rt.require((index == 0) == (a.previous is None), 'ordered predecessor required')
@@ -519,6 +554,7 @@ def run(a):
                 row_plan(prior) == plan and
                 window.policy(prior) == policy and
                 window.admission_policy(prior) == window.admission_policy(ready) and
+                eligibility.policy(prior) == eligible and
                 prior['prepared'] == ready['prepared'] and
                 ((prior['block'] == ready['block']) == (prior['boot_id'] == ready['boot_id'])),
                 'preceding qualified case or boot transition differs')
@@ -526,6 +562,13 @@ def run(a):
         result['validated'] = []
         for mode, path in [('native', a.native_validation), ('kd', a.kd_validation)]:
             validation = validation_receipt(path, mode, ready['prepared'], plan)
+            rt.require(eligibility.policy(validation) == eligible, 'validation eligibility differs')
+            if eligible == eligibility.FUNCTIONAL:
+                result['writer_observations'][mode] = eligibility.observation(validation)
+                rt.require(window.admission_policy(validation) == window.admission_policy(ready),
+                           'validation admission policy differs')
+                import reuse
+                reuse.match_ready(validation, ready)
             if policy == window.POLICY:
                 rt.require(window.policy(validation) == policy, 'validation measurement policy differs')
             result['validated'].append(bind(path))
@@ -554,6 +597,7 @@ def run(a):
 def screen(a):
     """One fixed proof and one controlled 16-worker case; never a grid receipt."""
     ready, inputs = readiness(a.ready)
+    rt.require(eligibility.policy(ready) == eligibility.STRICT, 'screen retains strict writer proof')
     rt.require(window.policy(ready) == window.POLICY and row_plan(ready) == SCALING_PLAN,
                'screen needs explicit window/scaling readiness')
     out = a.output
@@ -602,6 +646,8 @@ def qualify(out, client, directory):
                'reviewed endpoint tooling differs')
     before = load_bound(client['admission'])
     ready = load_bound(client['ready'])
+    rt.require(eligibility.policy(client) == eligibility.policy(ready), 'client/readiness eligibility differs')
+    eligibility.observations(client)
     roles = ready_roles(ready)
     rt.require(window.admission_policy(controller) == window.admission_policy(client) ==
                window.admission_policy(ready), 'mixed admission policies')
@@ -670,6 +716,7 @@ def main():
     p.add_argument('--plan', choices=tuple(PLANS), help='select at describe/ready; later actions inherit bound readiness')
     p.add_argument('--measurement-policy', choices=(window.LEGACY, window.POLICY))
     p.add_argument('--window-roles', type=Path, help='versioned role manifest selected at ready')
+    p.add_argument('--eligibility-policy', choices=(eligibility.STRICT, eligibility.FUNCTIONAL))
     a = p.parse_args()
     if a.action == 'describe':
         if a.plan not in PLAIN_PLANS or a.output is not None:
@@ -682,6 +729,8 @@ def main():
         p.error('--measurement-policy is selected at ready and inherited')
     if a.window_roles is not None and a.action != 'ready':
         p.error('--window-roles is selected at ready and inherited')
+    if a.eligibility_policy is not None and a.action != 'ready':
+        p.error('--eligibility-policy is selected at ready and inherited')
     if a.output is None:
         p.error('--output is required for live actions')
     a.output = a.output.resolve()

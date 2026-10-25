@@ -46,13 +46,13 @@ def chain_proof(row, mode):
                'writer sleep bracket or scheduler identity changed')
 
 
-def validate(rows, mode, count, iterations, backend):
-    row = checks.validate(rows, mode, count, iterations, lambda r: chain_proof(r, backend))
+def validate(rows, mode, count, iterations, backend, eligibility_policy=checks.eligibility.STRICT):
+    row = checks.validate(rows, mode, count, iterations, lambda r: chain_proof(r, backend), eligibility_policy)
     row['protocol'] = 'KD_LOCAL_MMAP_LOCK' if backend == 'kd' else 'NATIVE_CONTROL_MMAP_LOCK'
     return row
 
 
-def reject_mutations(rows, backend):
+def reject_mutations(rows, backend, eligibility_policy=checks.eligibility.STRICT):
     # Keep the positive exact-object/ELF proof, then ensure a corrupt identity,
     # missing frame or rescheduled observation still fails the same verifier.
     rejected = []
@@ -70,14 +70,14 @@ def reject_mutations(rows, backend):
         bad = copy.deepcopy(rows)
         mutate(next(r for r in bad if r['event'] == 'writer_stack'))
         try:
-            validate(bad, 'cycle', 16, 5000, backend)
+            validate(bad, 'cycle', 16, 5000, backend, eligibility_policy)
         except rt.Failure:
             rejected.append(name)
         else:
             raise RuntimeError('corrupt writer proof accepted: ' + name)
     bad = [r for r in rows if r['event'] != 'writer_stack']
     try:
-        validate(bad, 'cycle', 16, 5000, backend)
+        validate(bad, 'cycle', 16, 5000, backend, eligibility_policy)
     except rt.Failure:
         rejected.append('missing_writer_proof')
     else:

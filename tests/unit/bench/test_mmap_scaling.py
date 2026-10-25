@@ -164,7 +164,7 @@ class ScalingPlan(unittest.TestCase):
                 with patch.object(paired, 'readiness', return_value=(ready, {})), \
                      patch.object(paired, 'bind', return_value={}), \
                      patch.object(paired.common, 'load', side_effect=[prior, {'captured_utc': '2026-10-26T00:01:00'}]), \
-                     patch.object(paired, 'validation_receipt') as validate, \
+                     patch.object(paired, 'validation_receipt', return_value={}) as validate, \
                      patch.object(paired, 'host_check'), patch.object(paired, 'environment', return_value=({}, {})), \
                      patch.object(paired, 'host_environment', return_value={}), patch.object(paired, 'fault_check'), \
                      patch.object(paired.shutil, 'copyfile'), patch.object(paired, 'timed') as timed:

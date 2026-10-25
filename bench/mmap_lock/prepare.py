@@ -52,34 +52,46 @@ def split_btf(base, payload, out):
 
 
 def rebuild_client(a, out):
-    """Reuse the proven candidate module/fixed client; build only timed userspace."""
+    """Reuse candidate binaries; replace only the explicitly selected client."""
     prior = json.loads(a.reuse_payload.read_text())
     profile = json.loads(Path(__file__).with_name('kdmm31.json').read_text())
     rt.require(prior['passed'] and prior['built_only'] and not prior['modules_loaded'] and
                prior['profile'] == profile, 'matching successful build-only receipt required')
-    changed_source = str(ROOT / 'bench/mmap_writer/timed_client.c')
+    fixed_only = getattr(a, 'fixed_client_only', False)
+    filename = 'client.c' if fixed_only else 'timed_client.c'
+    changed_source = str(ROOT / 'bench/mmap_writer' / filename)
     files = {name: digest for name, digest in prior['files'].items() if name != changed_source}
+    if fixed_only:
+        rt.require(getattr(a, 'prior_source', None) is not None, 'frozen original sources required')
+        origin = Path('/root/host_fs/kdlock')
+        files = {str(a.prior_source.resolve() / Path(name).relative_to(origin))
+                 if Path(name).is_relative_to(origin) else name: digest
+                 for name, digest in prior['files'].items()}
     rt.require(all(sha(Path(name)) == digest for name, digest in files.items()), 'reused build input changed')
     manifest = json.loads(a.source_manifest.read_text())
-    for name in ('bench/mmap_writer/timed_client.c', 'bench/mmap_writer/control.h',
+    for name in ('bench/mmap_writer/' + filename, 'bench/mmap_writer/control.h',
                  'workload_modules/mmap_writer/mmap_writer_uapi.h'):
         digest = manifest['files'][name]
         rt.require(sha(ROOT / name) == digest, 'new client source differs: ' + name)
         dest = out / 'source' / name
         dest.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(ROOT / name, dest)
-        files[str(ROOT / name)] = files[str(dest)] = digest
-    target = out / 'timed'
+        files[str(dest)] = digest
+        if not fixed_only:
+            files[str(ROOT / name)] = digest
+    target = out / ('fixed' if fixed_only else 'timed')
     rt.command(['gcc', '-O2', '-g', '-Wall', '-Wextra', '-Werror', '-pthread',
                 '-I' + str(out / 'source/workload_modules/mmap_writer'),
-                out / 'source/bench/mmap_writer/timed_client.c', '-o', target],
-               out / 'build-timed.log', timeout=60)
+                out / 'source/bench/mmap_writer' / filename, '-o', target],
+               out / ('build-' + target.name + '.log'), timeout=60)
     files[str(target)] = sha(target)
     files[str(a.reuse_payload.resolve())] = sha(a.reuse_payload)
     shutil.copyfile(a.source_manifest, out / 'source-manifest.json')
     return dict(passed=True, built_only=True, modules_loaded=False, booted=False,
                 client_only=True, reused_payload=True, profile=profile, files=files,
-                binaries=dict(prior['binaries'], timed=str(target)),
+                binaries=dict(prior['binaries'], **{target.name: str(target)}),
+                **(dict(fixed_eligibility_policy='mmap-functional-v1') if fixed_only else {}),
+                **(dict(prior_source=str(a.prior_source.resolve())) if fixed_only else {}),
                 reused_from=dict(path=str(a.reuse_payload.resolve()), sha256=sha(a.reuse_payload)),
                 source_manifest_sha256=sha(a.source_manifest), driver_sha256=sha(Path(__file__)))
 
@@ -88,12 +100,19 @@ def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('--kernel-source', type=Path)
     p.add_argument('--reuse-payload', type=Path)
+    p.add_argument('--fixed-client-only', action='store_true', help='reuse payload/timed binary; rebuild fixed userspace only')
+    p.add_argument('--prior-source', type=Path, help='frozen original sources for fixed-client-only reconstruction')
     p.add_argument('--source-manifest', required=True, type=Path)
     p.add_argument('--output', required=True, type=Path)
     a = p.parse_args()
+    if a.fixed_client_only and not a.reuse_payload:
+        p.error('--fixed-client-only requires --reuse-payload')
+    if a.fixed_client_only != bool(a.prior_source):
+        p.error('--fixed-client-only and --prior-source must be selected together')
     if bool(a.kernel_source) == bool(a.reuse_payload):
         p.error('select exactly one of --kernel-source or --reuse-payload')
-    rt.require(os.geteuid() == 0 and str(ROOT) == '/root/host_fs/kdlock' and
+    rt.require(os.geteuid() == 0 and (str(ROOT) == '/root/host_fs/kdlock' or
+               (a.fixed_client_only and ROOT.is_relative_to('/root/kdlock-evidence'))) and
                os.uname().release == '6.1.159-kdclobber2', 'idle recovery VM required')
     runpy.run_path(str(ROOT / 'bench/archive_run.py'))['idle'](Path('/root'), rt.idle)
     out = a.output.resolve()

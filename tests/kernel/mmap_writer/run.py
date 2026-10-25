@@ -10,17 +10,25 @@ import shutil
 import sys
 sys.dont_write_bytecode=True
 ROOT=Path(__file__).resolve().parents[3]
+sys.path.insert(0,str(ROOT/'bench/mmap_lock'))
+import eligibility
 spec=importlib.util.spec_from_file_location('mw_common',ROOT/'bench/mmap_fault/timing.py')
 common=importlib.util.module_from_spec(spec);spec.loader.exec_module(common)
 rt=common.rt
 WRITER_SITES=json.loads(Path(__file__).with_name('writer_sites.json').read_text())
 
 
-def validate(rows,mode,n,iterations,writer_proof=None):
+def validate(rows,mode,n,iterations,writer_proof=None,eligibility_policy=eligibility.STRICT):
     raw=[r for r in rows if r['event']=='stack_observation']
     rt.require(len(raw)<=4*n and all(r['raw_stack'] for r in raw),'invalid diagnostic stack observations')
     rows=[r for r in rows if r['event']!='stack_observation']
     identity=rows[0];last=rows[-1]
+    rt.require(eligibility.policy(last)==eligibility_policy,'fixed completion eligibility differs')
+    observed=True
+    if eligibility_policy==eligibility.FUNCTIONAL:
+        rt.require(mode=='cycle' and n>1 and last.get('functional_complete') is True and last.get('passed') is True,
+                   'functional cycle completion required')
+        observed=eligibility.observation(last)=='observed'
     rt.require(identity['event']=='identity' and identity['mm'] and identity['mmap_lock'] and identity['object'] and
                identity['tid']==identity['tgid'],'controller exact mm identity differs')
     rt.require(last['event']=='complete' and last['mode']==mode and last['passed'],'client completion missing')
@@ -49,10 +57,10 @@ def validate(rows,mode,n,iterations,writer_proof=None):
                    not before['closes'] and not before['clones'] and not before['foreign_rejects'],'start state differs')
         if mode=='cycle':
             after=observations[1]
-            rt.require(len(rows)==(5 if n>1 else 4) and after['maps']==after['closes']==n*iterations and
+            rt.require(len(rows)==(5 if n>1 and observed else 4) and after['maps']==after['closes']==n*iterations and
                        after['clones']==after['vmas']==after['foreign_rejects']==0 and
                        (n==1 or after['contended_mmaps']>0),'native writer contention or final VMA state differs')
-            if n>1:
+            if n>1 and observed:
                 stacks=[r for r in rows if r['event']=='writer_stack']
                 rt.require(len(stacks)==1 and stacks[0]['tid'] in {w['tid'] for w in last['workers']} and
                            stacks[0]['mm']==identity['mm'] and stacks[0]['mmap_lock']==identity['mmap_lock'],
@@ -78,8 +86,14 @@ def validate(rows,mode,n,iterations,writer_proof=None):
                            all(v.isdigit() for v in stack['schedstat_before'].split()),
                            'raw stack/ELF return site or sleeping task bracket differs')
         else:rt.require(mode=='lifetime' and len(rows)==3 and iterations==1,'VMA-only lifetime differs')
-    return dict(mode=mode,threads=n,iterations=iterations,passed=True,identity=identity,
-                observations=observations,completion=last,protocol='NATIVE_MMAP_LOCK',delegated=False)
+    result=dict(mode=mode,threads=n,iterations=iterations,passed=True,identity=identity,
+                observations=observations,completion=last,protocol='NATIVE_MMAP_LOCK',delegated=False,
+                **eligibility.fields(eligibility_policy))
+    if eligibility_policy==eligibility.FUNCTIONAL:
+        rt.require(sum(r['event']=='writer_stack' for r in rows)==int(observed),
+                   'observation status differs from witness')
+        result['writer_observation']=eligibility.observation(last)
+    return result
 
 
 def idle(base):
