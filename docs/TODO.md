@@ -35,6 +35,12 @@ records build-3 compatibility checks, 16 capture and 14 paired/report mocked
 tests, and two earlier basic programs. These are build/offline results; prior
 actual mmap correctness was reused. The six-boot cycle and root host capture
 remain unapproved, and qualified current performance cases remain zero.
+Local `master` now includes the five-commit fast-forward through `92f773f`.
+The [readiness and cleanup dependency record](../bench/results/10.176.26.71/bench/mmap-perf-prep-20261025/README.md#local-integration-and-read-only-readiness)
+confirms the prepared binaries and persistent identities still match; guest root
+space supports the reasoned 512 MiB campaign evidence allowance. No deletion,
+new build or live test followed. Cleanup candidates still require verified
+preservation and exact approval; the live cycle has its separate pending gates.
 Broader matrices, causal profiling, observer expansion and tuning remain
 separate work. All seven earlier mutex causes and qualified variance remain
 unresolved; preserved performance refusals remain failures. The historical

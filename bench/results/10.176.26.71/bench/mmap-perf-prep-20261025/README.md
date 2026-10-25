@@ -185,6 +185,107 @@ returned the same error. The handoff was not delivered; this receipt retains
 the completion record. The approval covers sending the summary only. The
 six-boot/24-session benchmark cycle and root host capture remain unapproved.
 
-This documentation update adds no VM health observation or runtime result.
+The `92f773f` documentation update added no VM health observation or runtime result.
 The next performance step is the bounded Native/KD comparison after its required
 approval, followed by one optimization selected from qualified measurements.
+
+## Local integration and read-only readiness
+
+After the user's bounded local-integration authorization, local `master` was
+fast-forwarded from `769ba5b0c595a2739f61e372bab9230027050c88` to
+`92f773f50511e9f3685918730ecaf2551e067a71`. The five linear commits are `e6fc371`,
+`82c20b4`, `e15a5aa`, `eb10f21` and `92f773f`: 39 changed files, with no MM or
+scheduler body changes, retired experiment additions or untested optimization.
+The lock implementation still matches `e6fc371`; executable tooling still
+matches `e15a5aa`. Recorded validation above was reused, not rerun. The feature
+branch and archive refs remain reachable; no history was rewritten or pushed.
+The sole unrelated dirty path remains
+`bench/results/10.176.26.71/tests/vm-disk-cleanup-20261022/README.md`, still empty
+with SHA-256 `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`.
+
+The guest inspection began on **2026-10-25 at 17:00:37 (Asia/Shanghai)**. It used
+bounded read-only SSH commands, without executing a benchmark or readiness
+runner. Recovery release, boot ID, exact 73-module set, taint 12288, 64 online
+CPUs, voluntary preemption and empty `next_entry` matched the preceding receipt.
+The generated default still selects recovery through
+`/etc/default/grub.d/99-kdlock-nopvspin.cfg`; the two kdmm31 menu entries are
+present in `/etc/grub.d/42_kd_mmap_kdmm31` and generated GRUB configuration.
+All four installed candidate boot-file hashes matched. No matching guest
+build/workload process or open descriptor under the inspected project, build,
+boot and module paths was found; the descriptor scan reported no access errors.
+This is a guest observation, not a host-wide open-reference proof.
+
+All 13 prepared source/binary bindings and 22 recorded runner hashes matched.
+The persistent runtime-identity tree has all 44 source and 11 build inputs;
+its ELF, Module.symvers, configuration and embedded BTF matched their recorded
+hashes, as did the candidate bundle manifest, both prior actual mmap receipts,
+the full reconstruction inventory and post-install delta. The three original
+environment receipts also matched. Pinned packages remain miasm 0.1.5,
+future 1.0.0, pyparsing 2.4.7 and pyelftools 0.27. No full archive audit or new
+correctness campaign was performed. Current qualified performance cases remain
+**zero**.
+
+### Cleanup preservation dependencies
+
+These are preservation requirements, not a deletion authorization:
+
+| Class | Exact location and reason |
+|---|---|
+| Required boot/recovery | `/boot/{vmlinuz,initrd.img,config,System.map}-6.1.159-kdclobber2`, the equivalent four `6.1.159-kdmm31` files, both `/lib/modules/<release>` trees, `/boot/grub`, `/etc/default/grub*` and the two configuration files named above. |
+| Required recovery source | `/mnt/kdlock-builds/linux-6.1.159-kdclobber2`: both `/root/linux-6.1.159-kdclobber2` and the recovery module build/source links resolve here. Preserve the target, not just the links. |
+| Required identity bundles | `/root/kdlock-kernel-baselines/mutex-clobber2-20260919`, `/root/kdlock-kernel-baselines/mmap-kdmm31-irq-20261025`, and `/root/kdlock-kernel-work/mmap-irq-20261025/candidate-1/runtime-identity`. The current runner consumes the persistent candidate identity tree. |
+| Required prepared run | `/root/kdlock-evidence/10.176.26.71/bench/mmap-kdmm31-prep-20261025`, especially `build-3/result.json`, `build-3/fixed`, `build-3/timed`, `build-3/source/workload_modules/mmap_writer/kd_mmap_writer_native.ko`, every source path bound by the receipt, and `prior/actual-{native,kd}-1.json`. Preserve its adjacent `.tar.gz` and source-side raw copy. |
+| Required qualification environment | `/root/kdlock-evidence/10.176.26.71/bench/mutex-public-20261020-r2/matrix/{host-state,environment,topology}.json`. These historical files remain active hash-bound dependencies. |
+| Required source and tools | `/root/host_fs/kdlock`, source checkout and Git/archive refs on 380G10, benchmark-host source mirror, and `/root/kdlock-translation-venv-20261019`. Preserve the bound C/header/private `.inc`/Python/JSON inputs and unrelated user work. |
+| Required reconstruction/provenance | `/root/kdlock-kernel-work/mmap-20261021/candidate-1/linux`, candidate `new-volatile.json`, `resume-20261025/post-install-tree-changes.tar.gz`, retained `kdmm31-delta.tar.gz`, and existing recovery/candidate raw archives and manifests. The source-side delta is under `bench/results/10.176.26.71/raw/tests/mmap-irq-trylock-20261025/`. Preserve the historical archive containing the previously removed guest `vmlinux.o` as well. |
+| Reproducible scratch; not needed by the prepared live run | `/dev/shm/kdmm31-perf-prep-20261025-build` and duplicate inputs under `/dev/shm/kdmm31-perf-prep-20261025-inputs`. Reconstruction receipts/displaced files are retained in preparation evidence, and the delta/source manifest have retained copies. The unused copied `bpftool-6.8` is not a campaign dependency. Removing tmpfs files would reclaim memory, not persistent disk space; nothing was removed. |
+
+The installed candidate build/source links still name absent
+`/dev/shm/kd-mmap-irq-20261025/linux`. This known limitation does not block the
+prepared run: it uses the persistent build-3 binaries and runtime-identity tree.
+Do not repoint those links or rebuild merely to start the existing campaign.
+
+The cleanup worker's conditional source-host candidate,
+`bench/results/10.176.26.71/raw/bench/mutex-kdonly-20261017T140354Z/replay`, is
+outside current runner inputs and bound source directories. Matching text in
+current runners refers to the recovery snapshot tag, not that replay directory.
+Its reported 3,314,864,128 allocated bytes would free source-host space only.
+The cleanup worker reports that all 150,984 manifest-listed regular files match
+names, types, sizes and modes, with single links and no extra paths; 3,916
+archived symlinks are absent. Archive and manifest hashes match, but payload
+bytes were not rehashed, restoration was not exercised and global open-reference
+absence is unproven. It is not yet deletion-ready, and no guest deletion
+candidate was established by this dependency inspection.
+
+### Campaign headroom and remaining gates
+
+| Guest filesystem | Available bytes | Available inodes |
+|---|---:|---:|
+| Root, including `/boot` and `/tmp` | 2,996,535,296 | 10,352,410 |
+| `/mnt/kdlock-builds` | 10,031,104 | 1,499,205 |
+| `/dev/shm` | 5,740,777,472 | 2,976,510 |
+
+Use root for new campaign receipts; the data disk's reserved free blocks are
+not a working-space budget. No new kernel, payload build or reconstruction is
+needed. The 32 timed checks (eight validation plus 24 measured) include eight
+sampled runs at each worker count. With 65,536 latency entries per worker and
+at most 21 decimal/comma bytes per entry, their latency arrays total at most
+187,170,816 bytes (178.5 MiB). Progress/worker records are much smaller. At the
+observed 47,289-byte kernel-log size, 129 planned log copies add about 5.8 MiB;
+five readiness bundle copies add 1,465,370 bytes. The retained host receipt is
+129,813 bytes, about 6.8 MiB if repeated 55 times before transfer duplicates.
+
+Allowing 256 MiB for raw campaign evidence and another 256 MiB for an archive
+is a planning estimate derived from those quantities, not a hard output bound.
+Fresh host-capture sizes, log growth and metadata/transfer copies must still be
+checked before execution. Root would retain 2,459,664,384 bytes after that
+512 MiB allowance; current guest capacity therefore does not require deleting
+an archive to start this prepared campaign. No new tmpfs build space is needed.
+Benchmark-host backing-disk capacity and open references were not inspected.
+
+The remaining gates are exact approval for the six-boot/34-payload-check/
+55-host-capture cycle, fresh recovery snapshot and host admission evidence,
+and both-mode payload validation on the candidate. The denied host metadata
+capture was not retried. Neither later quiet task observations nor successful
+build/hash checks establish accepted performance. Cleanup, kernel boots and
+the live cycle remain unperformed and separately subject to their approvals.
