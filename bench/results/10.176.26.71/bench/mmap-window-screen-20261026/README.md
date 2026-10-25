@@ -123,3 +123,93 @@ optimization gain was measured. The next useful step is to correct admission
 preparation and establish reviewed role evidence before another explicitly
 authorized small pair. Do not expand the workload or run the 126-session matrix
 to work around this refusal.
+
+## Offline admission review and proposed next scope
+
+This section is a proposal, not a new role approval or live-run authorization.
+It uses the retained captures and current source; no further VM command or
+test followed the final recovery capture.
+
+| Exact gate | Current behavior |
+| --- | --- |
+| `paired.py:host_check`, legacy branch | Requires the complete original 67-task projection. Preserve this historical policy. |
+| `window_controller.py:inventory`; `window.py:core_inventory` | Require the original 64 vCPUs and three service tasks, but allow additional tasks for separate classification. |
+| `window.py:resolve_roles` | Matches every extra task against exactly one reviewed `comm`/CPU63 selector. An empty manifest rejects every extra task. |
+| `window.py:check_samples` | Requires observed `(tid,start_ticks)` keys to equal the core plus the roles resolved at the first guard scan. Addition, retirement or replacement then rejects the window. |
+| `window_host.py:sample`; `host_capture_control.py:capture` | Require complete, consistent reads within each scan. Preserve these failures rather than hiding a disappearing task. |
+
+The actual early stop was the launch command's local
+`assert d['passed'] and len(d['qemu'][0]['tasks']) == 67`, before copying
+admission. The prepared-window harness did not run. Its empty role manifest
+would independently reject these extra tasks at `resolve_roles`; the full
+capture itself had passed. The 67 checks in the window core functions are not
+total-task limits.
+
+The existing `expected_service` class can represent a variable-size QEMU worker
+pool **between preparations**: one selector can match several TIDs, and each
+arm resolves its own identities. It already permits recorded CPU/scheduling/I/O
+activity. It cannot represent membership changes **inside** the guard/window.
+No saved prepared measurement window demonstrates a need to change that
+lifetime rule: this attempt stopped before preparation, and the earlier
+diagnostic observed guest-control phases rather than a held workload window.
+
+The minimum proposed next change therefore uses the existing class. Review a
+prospective selector for `worker`, affinity `[63]`, class `expected_service`,
+bound to the retained QEMU process/configuration evidence. The comparison would
+explicitly include that VM's service-worker activity. Evidence must establish
+membership in the exact QEMU process and the same configuration/placement in
+both arms; it need not identify the guest request behind every I/O operation.
+The capture records two unchanged qcow2 drives and the QEMU process identity;
+it does not identify a specific worker callback. A name, sleep state or nonzero
+counter alone is neither role proof nor proof of contamination.
+
+Exact proposed patch/test scope:
+
+1. `window_controller.py`: use the existing role resolver on the admission
+   inventory before launching guest preparation. This checks eligibility early;
+   the observer still resolves and freezes actual identities after preparation.
+   Replace the manual total-count assertion with core plus reviewed-role checks.
+2. One reviewed role-evidence record and manifest, identical for Native/KD;
+   runner documentation records the required **90 seconds after the idle check**.
+   Record actual monotonic elapsed time once; a failed capture is not retried.
+3. Extend `test_mmap_window.py` with focused checks for several eligible workers
+   with different setup TIDs/counts in each arm, and refusal before guest launch
+   for missing/ambiguous roles or wrong affinity. Retain the existing activity,
+   frozen-lifetime, core-identity, partial-read, gap and legacy-policy tests.
+   Run this directly affected module plus the two basic programs in the VM.
+   No client, payload, kernel, report schema or new observer framework is needed.
+
+If reviewed requirements instead permit worker births/deaths inside the timed
+window, that is a separate change to `window.py`, `window_host.py` and
+`window_replay.py`: resolve eligible extras per complete scan; preserve exact
+core identities; keep counters monotonic per lifetime; record births, departures
+and the incomplete counter coverage of departed workers. The current
+fixed-cardinality `final_deltas` slice would also need replacement. Do not simply
+remove the inventory equality assertion or infer complete activity totals from
+polling. That extension is not implemented or required by this proposed first
+step.
+
+Retain single-owner and guest-idle checks, matched image/configuration, CPU/NUMA
+placement, prepared workload and instrumentation. Known competing work rejects
+admission regardless of its name. The QEMU-only window does not detect arbitrary
+non-QEMU host workloads; it cannot substitute for an independent host isolation
+and competing-job check. No claim that those jobs are absent follows from a
+`worker` role match. Wrong topology/pins, missing core tasks, changed QEMU
+identity, unknown roles or incomplete reads still reject the run.
+
+Under the proposed rule the 82-task capture could establish selector eligibility
+only after explicit review; its missing settling/readiness/window still prevents
+acceptance. Diagnostic TID 553662's positive counters rule out an inactive role,
+but do not by themselves rule out an expected service role. That diagnostic
+remains incomplete and rejected. The final 68-task recovery capture cannot
+retroactively qualify either attempt.
+
+After review, the proposed next live attempt is the same bounded 16-worker
+screen: reuse the existing payload, fixed client and new timed binary; one
+Native arm, one KD arm, then recovery; maximum three boots, eight full captures,
+four payload cycles, two fixed proofs, two timed sessions and two observers
+(194 scans maximum). No retry, kernel build/install or new workload. Report
+both rates, role activity and their ratio as one unscored pair, with variability
+explicitly unavailable at n=1. A performance conclusion requires a separately
+bounded repeated paired run with all per-trial rates, ratios, range and sample
+CV; no such run or extension of this screen is authorized here.
