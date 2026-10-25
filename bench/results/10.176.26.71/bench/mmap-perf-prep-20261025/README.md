@@ -158,3 +158,33 @@ the final health reported by the preparation owner, not approval for a live
 cycle. The six-boot/24-session proposal and read-only root host capture remain
 unapproved. New qualified measurements remain zero; runtime readiness and timing
 acceptance require their own retained evidence.
+
+## Completion and handoff
+
+Preparation ended at `eb10f2165fc9ee4b9d3e68e5642130545f5d07d1`, with 26
+changed files across three separate local commits:
+
+| Commit | Scope | Files |
+|---|---|---|
+| `82c20b4f2cf32d580d2a9c130f682d63e123bf4c` | Capture failure evidence, monitor bounds and focused mocked checks | 3 |
+| `e15a5aa3dd2b8cfcac5846d5e6f4a90743cd94dc` | Reconstruction, benchmark preparation, paired qualification and reporting | 8 |
+| `eb10f2165fc9ee4b9d3e68e5642130545f5d07d1` | API/support guidance, audit evidence and bounded performance instructions | 15 |
+
+The [commit inventory](../../raw/bench/mmap-kdmm31-prep-20261025/commits.json)
+records every changed path. The core lock/MM implementation and master remained
+unchanged, and the unrelated disk-cleanup README was left uncommitted. The
+[final source-sync receipt](../../raw/bench/mmap-kdmm31-prep-20261025/final-source-sync.json)
+confirmed all 15 documentation hashes in the VM at `eb10f21`; that receipt
+predates this handoff update. No build, test or synchronization owned by this
+session remained running when preparation ended.
+
+On October 25, the user explicitly approved sending the completion summary to
+Codex task `01a15996-4e4d-7002-985e-aa239685e038`. Delivery failed with
+`thread/read failed: thread not loaded` (code `-32600`), and a follow-up read
+returned the same error. The handoff was not delivered; this receipt retains
+the completion record. The approval covers sending the summary only. The
+six-boot/24-session benchmark cycle and root host capture remain unapproved.
+
+This documentation update adds no VM health observation or runtime result.
+The next performance step is the bounded Native/KD comparison after its required
+approval, followed by one optimization selected from qualified measurements.
