@@ -22,6 +22,7 @@ adds validated original-waiter continuation without changing that lock protocol.
 | [Locking](design/locking.md), [frames](design/frames.md), [lifetimes](design/lifetimes.md) | Ownership and retirement |
 | [JIT execution](JIT_EXECUTION.md), [register ABI](JIT_REGISTER_ABI.md), [admission](design/admission.md) | Translation and execution contracts |
 | [Workload catalog](BENCHMARK_WORKLOADS.md), [benchmarks](../bench/README.md) | Protected work and reproducible runner commands |
+| [Throughput roadmap](THROUGHPUT_PLAN.md) | Proposed small Native/KD stages, actual mmap/fault boundaries and approval dependencies |
 | [Performance](PERFORMANCE.md), [results](../bench/results/README.md) | Measured outcomes and retained evidence |
 | [Tests](../tests/README.md), [validation](VALIDATION.md) | Check selection and receipts |
 | [Limitations](TODO.md) | Known failures and deferred work |

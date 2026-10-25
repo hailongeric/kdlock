@@ -1,34 +1,41 @@
 # Performance status
 
-Current priority is a small, controlled Native/KD comparison selected from the
-[workload documentation](BENCHMARK_WORKLOADS.md), beginning with the
-[shared-mm mmap benchmark plan](../bench/mmap_lock/README.md). The corrected
+Current priority is a [throughput-only Native/KD comparison](THROUGHPUT_PLAN.md)
+across documented lock workloads, actual shared-mm mmap and actual page faults.
+Substantial improvement is a hypothesis to test; report regressions honestly.
+New tail-latency collection and sampled workload variants are deferred. The
+corrected
 `e6fc371` rwsem has focused correctness evidence, but no qualified performance
 baseline. Actual mmap integration, ordinary lock microbenchmarks and explicit
 delegation remain separate comparisons. The [basic functional version](../bench/results/10.176.26.71/tests/basic-version-20261022/README.md)
 retains all four returned-body smoke passes and the separate 16-worker rwlock
 NO_JIT failure. Performance requires matched work, exact retirement, unchanged
-timing gates and repeated throughput/latency observations. Preserve all existing
+timing gates and repeated paired throughput observations. Preserve all existing
 measurements and refusals; the full matrix is not the default next step.
 
-The current proposal is 1 and 16 shared-mm writers, plain and sampled modes,
-and three Native/KD pairs: 24 measured sessions across four measured candidate
-boots, plus one initial validation boot and the final recovery boot. Its latency
-is the complete mmap/munmap cycle. It does not isolate lock acquisition or
-measure reader scaling, NUMA scaling or delegation. The
+The smaller proposed first mmap stage is 1 and 16 shared-mm writers and three
+plain Native/KD pairs: 12 measured sessions. Its explicit `plain-v1` runner/report
+mode passed [25 focused mocked checks](../bench/results/10.176.26.71/tests/mmap-plain-plan-20261025/README.md)
+and still needs exact live approval. Historical 24-case plain/sampled plans
+remain separate; skipping their sampled entries is invalid. This writer workload
+does not measure reader scaling, NUMA scaling or delegation. The
 [preparation receipt](../bench/results/10.176.26.71/bench/mmap-perf-prep-20261025/README.md)
 records successful private reconstruction and build-3 compatibility checks using
 existing pahole 1.25. Preparation loaded no module and booted no kernel. The
 authorized October 25 attempt [stopped at initial admission](../bench/results/10.176.26.71/bench/mmap-kdmm31-paired-20261025/README.md):
 73 QEMU tasks versus 67, with no boot or payload load and all 24 measured cases
-unrun. New qualified timing count is zero. The current tooling passed 16 capture
+unrun. New qualified timing count is zero. That preparation passed 16 capture
 and 14 paired/report mocked tests, including the report-integrity fixes; mock
-results do not qualify timing.
+results do not qualify timing. The separately prepared
+[QEMU diagnostic](../bench/mmap_lock/DIAGNOSTIC.md) passed 43 new mocked tests;
+it has not run live and does not lift the campaign stop.
 
 The historical records below retain their original source, topology, caller
-shell and instrumentation identities. Their deferred p95 statements describe
-those campaigns; the current proposal requests sampled whole-cycle p50/p95/p99
-only if the new campaign is authorized and qualifies.
+shell and instrumentation identities. Historical complete-operation p95 remains
+available within its recorded limits; this phase adds no latency collection.
+Actual page-fault correctness cases exist, but a generic throughput driver is
+not yet established. The private backing-lock fault benchmark leaves native
+mmap locking unchanged and cannot substitute for that comparison.
 
 The [retained RCUHT audit](../bench/results/10.176.26.71/bench/rcuht-class-audit-20261021/README.md)
 separates plain execution classes from instrumented modes and identifies queue

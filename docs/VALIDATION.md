@@ -21,13 +21,22 @@ allocation failure remains unexplained. See the [current preparation receipt](..
 The later build-3 preparation passed all 16 payload import CRCs and base/split
 BTF parsing with the existing pahole 1.25. It built the payload and two clients
 without loading a module or compiling, installing or booting a kernel. Failed
-build-1/build-2 attempts remain evidence. Two basic programs and the current
-30 mocked tooling tests (16 capture, 14 paired/report) passed in recovery,
+build-1/build-2 attempts remain evidence. Two basic programs and that stage's
+30 preparation tooling tests (16 capture, 14 paired/report) passed in recovery,
 including the four later review fixes. None of these checks is
 a new actual mmap workload, provider/JIT test or performance result. The authorized
 October 25 cycle [stopped at its first host admission](../bench/results/10.176.26.71/bench/mmap-kdmm31-paired-20261025/README.md)
 with 73 QEMU tasks versus 67. One capture completed; no boot, payload check or
 measured session ran. Qualified current performance cases remain zero.
+
+The later [phase-separated QEMU diagnostic preparation](../bench/results/10.176.26.71/tests/mmap-diagnostic-offline-20261025/README.md)
+passed 43 new mocked tests in recovery, with exact frozen-source bindings and
+before/after health checks. No live diagnostic or old validation was repeated.
+These passes do not establish actual mmap performance or lift the admission stop.
+The explicit [plain-only runner/report preparation](../bench/results/10.176.26.71/tests/mmap-plain-plan-20261025/README.md)
+subsequently passed 11 new fixtures plus the 14 directly affected historical
+paired/report tests. Its 12-case schema is distinct from the stopped 24-case plan;
+no workload, host capture or boot ran, and new qualified throughput remains zero.
 
 The [shared-mm receipt](../bench/results/10.176.26.71/tests/mmap-writer-native-20261021/README.md)
 passed both basic programs and six focused cases at `b9fe567`: exact shared mm/mmap-lock identity, zero fault callbacks,

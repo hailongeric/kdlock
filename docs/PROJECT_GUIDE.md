@@ -3,9 +3,9 @@
 The primary checkout on `380G10` is the source of truth. `master` contains the
 accepted KD-only mutex from `d2a2304`, with its legacy delegation protocol and
 compatibility backports. `accepted/kd-only-mutex-20261018` preserves the measured
-implementation. At the October 25 documentation review, `master` is `769ba5b`;
-the IRQ-safe rwsem/mmap correction at `e6fc371` is evidence from
-`codex/mmap-irq-trylock-20261025`, not a merge into `master`.
+implementation. The authorized October 25 local fast-forward integrated the
+IRQ-safe rwsem/mmap correction at `e6fc371` and its preparation through `92f773f`
+into `master`; later documentation and diagnostic preparation commits are local.
 `current/kd-mutex` retains the earlier `af330db` instruction-exit checkpoint and
 does not include the later spin helper work. The earlier consolidation is retained
 in [branch dispositions](history/main-consolidation-20261018.md).
@@ -18,13 +18,18 @@ execution, operations, benchmark and historical material.
 
 ## Basic working version
 
-Reuse the validated functional implementation. The next performance task is the
-[bounded Native/KD shared-mm comparison](../bench/mmap_lock/README.md). Its
-payload/client preparation is build-ready. The authorized October 25 attempt
+Reuse the validated functional implementation. The current
+[throughput-only roadmap](THROUGHPUT_PLAN.md) separates documented lock workloads,
+actual mmap and actual page faults. The shared-mm payload/client preparation is
+build-ready. The earlier plain/sampled October 25 attempt
 [stopped before boot](../bench/results/10.176.26.71/bench/mmap-kdmm31-paired-20261025/README.md)
 when host admission found 73 QEMU tasks versus 67; all 24 measured sessions remain
-unrun. There is no qualified new timing or optimization gain. Broader matrices
-and tuning remain separate; earlier rejected measurements remain rejected.
+unrun. Its 24-case plan cannot be reduced by skipping sampled cases. The explicit
+12-case `plain-v1` runner/report mode passed 25 focused mocked tests and still
+requires exact live approval; a generic actual page-fault throughput driver still
+needs preparation. There is no
+qualified new timing or optimization gain. Earlier rejected measurements remain
+rejected; new tail-latency work is deferred.
 
 | Task | Working interface and scope |
 | --- | --- |

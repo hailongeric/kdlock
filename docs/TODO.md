@@ -21,14 +21,19 @@ indexed in [VALIDATION](VALIDATION.md).
 
 ## Current checkpoint
 
-The current objective is a workload-driven Native/KD performance comparison,
-starting with the [bounded shared-mm writer plan](../bench/mmap_lock/README.md)
-selected from the [workload catalog](BENCHMARK_WORKLOADS.md). Reuse the validated
+The current objective is a [throughput-only Native/KD comparison](THROUGHPUT_PLAN.md)
+across the [workload catalog](BENCHMARK_WORKLOADS.md), actual mmap and actual
+page faults. Substantial gains are a hypothesis; losses remain reportable.
+Reuse the validated
 [basic working version](PROJECT_GUIDE.md#basic-working-version) and retain focused
-correctness, ownership, lifetime, recovery and environment checks. The proposal
-uses 1 and 16 workers, plain and sampled observations and three paired
-repetitions: 24 measured cases. Throughput and sampled p50/p95/p99 describe the
-complete mmap/munmap cycle, not isolated lock acquisition or reader scaling.
+correctness, ownership, lifetime, recovery and environment checks. The smaller
+mmap proposal uses 1 and 16 workers and three plain Native/KD pairs: 12 measured
+cases. The explicit `plain-v1` runner/report mode passed
+[25 focused mocked checks](../bench/results/10.176.26.71/tests/mmap-plain-plan-20261025/README.md);
+live execution is unapproved. Skipping entries in the stopped 24-case
+plain/sampled plan is invalid. New latency sampling is deferred.
+Generic actual page-fault throughput needs a driver; the private backing-lock
+fault workload is a distinct comparison.
 
 The [preparation receipt](../bench/results/10.176.26.71/bench/mmap-perf-prep-20261025/README.md)
 records build-3 compatibility checks, 16 capture and 14 paired/report mocked
@@ -38,7 +43,8 @@ actual mmap correctness was reused. The authorized October 25 attempt
 with 73 QEMU tasks versus 67. It consumed one host capture, no boots or payload
 checks, and left all 24 measured sessions unrun. Qualified current performance
 cases remain zero. Offline worker analysis is complete; the proposed bounded
-live diagnostic still requires its exact approval. The existing stop and
+live diagnostic has [43 focused mocked test passes](../bench/results/10.176.26.71/tests/mmap-diagnostic-offline-20261025/README.md)
+and still requires its exact approval. The existing stop and
 acceptance criteria remain in force. The six workers predated that full capture
 helper by about 63/55 seconds; its snapshot query did not create them. Their
 roles and initiating I/O remain unknown.

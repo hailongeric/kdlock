@@ -169,13 +169,15 @@ shared-provider workload coverage remains open.
 
 RT, lockdep, whole-kernel substitution
 and broader Linux semantic equivalence remain unvalidated. The next performance
-work uses the [separate paired benchmark plan](../../bench/mmap_lock/README.md);
+work follows the [throughput-only roadmap](../../docs/THROUGHPUT_PLAN.md);
 the old `kdmm1` timing profile cannot establish performance of this correction.
-The current proposal measures 24 shared-mm writer cases over five candidate
-boots followed by recovery. The authorized October 25 attempt
+The earlier plain/sampled proposal selected 24 shared-mm writer cases over five
+candidate boots followed by recovery. Its authorized October 25 attempt
 [stopped before boot](../../bench/results/10.176.26.71/bench/mmap-kdmm31-paired-20261025/README.md)
 at 73 QEMU tasks versus 67. All 24 measured cases remain unrun; no new timing or
-performance gain is claimed.
+performance gain is claimed. The explicit 12-case `plain-v1` runner/report mode
+passed 25 focused mocked checks; it still requires exact live approval. The
+stopped plan is not resumed by omitting sampled cases.
 
 ## Reusing the corrected build
 

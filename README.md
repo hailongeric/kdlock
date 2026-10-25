@@ -2,8 +2,9 @@
 
 Start with the [basic working version](docs/PROJECT_GUIDE.md#basic-working-version)
 for focused functional commands across all four lock families and the separate
-real mmap/page-fault examples. Current work prioritizes a small, qualified
-Native/KD performance baseline; see the [mmap benchmark plan](bench/mmap_lock/README.md).
+real mmap/page-fault examples. Current work prioritizes qualified Native/KD
+throughput across lock workloads, actual mmap and actual page faults; see the
+[throughput roadmap](docs/THROUGHPUT_PLAN.md). New tail-latency work is deferred.
 
 kdlock is an experimental x86_64 Linux kernel lock library. A lock holder can
 execute waiting callers' critical sections through a just-in-time (JIT) compiler,

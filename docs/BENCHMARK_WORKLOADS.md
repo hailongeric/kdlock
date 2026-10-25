@@ -42,9 +42,11 @@ establish current performance. Sleeping rwsem with
 outer writer delegation and extracted proc snapshots have explicit
 runner modes described below. Full [process inspection and mmap candidates](#process-inspection-and-mmap-candidates)
 remain proposals where stated, outside the runnable standard catalog. The current
-lock-only mmap adapter has a separate [bounded Native/KD plan](../bench/mmap_lock/README.md)
-using actual shared-mm writers and complete mmap/munmap cycle latency. Its
-preparation has passed. The authorized October 25 attempt
+lock-only mmap adapter has prepared actual shared-mm writers. The current
+[throughput roadmap](THROUGHPUT_PLAN.md) proposes a separate 12-case plain plan
+and later actual page-fault throughput; new latency sampling is deferred.
+The earlier [24-case plain/sampled preparation](../bench/mmap_lock/README.md)
+has passed. Its authorized October 25 attempt
 [stopped at initial host admission](../bench/results/10.176.26.71/bench/mmap-kdmm31-paired-20261025/README.md)
 before any boot or workload: 73 QEMU tasks versus the required 67. No current
 qualified measurement resulted.
@@ -1094,5 +1096,9 @@ retains both failed probe attempts, repetition variance and the 76-versus-67
 host endpoint failure. That original runner provides no KD or TCLock full-mmap
 arm; the separate fault task keeps local readers concurrent. The current kdmm31
 wrapper supplies a separately checked Native/KD mode for the same shared-mm
-workload; no TCLock mmap arm exists. Its bounded plan keeps complete-cycle
-latency distinct from the separate mmap/munmap latencies proposed above.
+workload; no TCLock mmap arm exists. Its stopped plain/sampled plan kept
+complete-cycle latency distinct from separate mmap/munmap latencies. Current
+work is [throughput only](THROUGHPUT_PLAN.md); those historical samples remain
+preserved. The private backing-lock fault timing above does not measure a
+replacement of the real mmap lock, and the actual fault correctness drivers
+are not yet a generic actual page-fault throughput harness.
