@@ -6,10 +6,11 @@ substantial regressions at two workers with 20% writes. The
 [performance status](../PERFORMANCE.md#accepted-rwsem-implementation-c21345b)
 retains those results. This acceptance does not replace the selected KD mutex
 protocol or establish support for every Linux reader/writer semaphore use.
-The subsequent IRQ-safe reader-release correction at `e6fc371`, on
-`codex/mmap-irq-trylock-20261025`, adds timed writer-drain rechecks. This is branch
-evidence, not a merge into maintained `master`. Those historical measurements do
-not establish its performance.
+The subsequent IRQ-safe reader-release correction at `e6fc371` adds timed
+writer-drain rechecks and is included in maintained `master`. A source comparison
+at `02e6294` confirms that the rwsem implementation, public rwsem headers and mmap
+overlay are unchanged since that correction. The historical `c21345b`
+measurements predate the correction and do not establish its performance.
 
 [`kd_rwsem.h`](../../include/kd_rwsem.h) provides concurrent sleeping readers and
 ordinary exclusive writers. The explicit outer-writer interface in
@@ -203,6 +204,9 @@ an atomic final decrement. Scheduling adds its own delay; there is no new latenc
 guarantee or performance claim. IRQ-enabled, non-atomic final release still wakes
 immediately. Admission barriers, exact reservations, cancellation, physical
 ownership, static initialization and the 320-byte layout are unchanged.
+Keep this validated baseline until measurements justify a safer alternative.
+An embedded `irq_work` wakeup would require proof of late-enqueue, cancellation
+and object-lifetime safety; it is not a validated replacement for the timed wait.
 
 Uninterruptible acquisitions poll, meaning they repeatedly check whether they
 can proceed before entering a sleeping wait. Each polling stage tries at most
@@ -312,11 +316,55 @@ cases, not full Linux semantics, fairness, bounded starvation, transitive callba
 coverage, whole-kernel substitution, RT or lockdep equivalence. Provider loading
 alone also does not establish shared-provider workload or returned-JIT coverage.
 
-The [shared-mm comparison tools](../../bench/mmap_lock/README.md) are build-ready
-preparation for a proposed 24-session, six-boot Native/KD cycle; live execution
-and root host capture await approval. There is no qualified new timing for this
-correction. The proposed throughput and sampled latency cover complete writer
-mmap/munmap cycles, not isolated lock acquisition or concurrent-reader scaling.
+The [scoped audit](../../bench/results/10.176.26.71/bench/mmap-perf-prep-20261025/README.md#lock-audit)
+records acquisition, rollback, cancellation, downgrade, exact writer ownership
+and mmap token/destruction ordering. It found no new demonstrated lock correctness
+defect within that scope. It distinguishes the validated one-jiffy tradeoff from
+unproved fairness and wakeup-amplification hypotheses; it does not establish
+full Native equivalence. The already-authorized one-attempt diagnostic loaded
+the unchanged provider, retired it and unloaded normally, without a workload or
+JIT-body test. The earlier pre-initialization failure to allocate its 7,592-byte
+per-CPU section remains unexplained: capacity, fragmentation and allocator hints
+were not isolated. Do not repeat that diagnostic as a prerequisite for the
+built-in mmap comparison.
+
+The older 24-session plain/sampled campaign
+[stopped at initial admission](../../bench/results/10.176.26.71/bench/mmap-kdmm31-paired-20261025/README.md)
+with 73 QEMU tasks versus the required 67, before any boot or payload load. All
+24 measured sessions remain unrun. Later quiet observations cannot validate
+that failed admission or any rejected timing.
+
+The current [shared-mm comparison plan](../../bench/mmap_lock/README.md#plain-throughput-plan)
+is the separate `plain-v1` schema: 12 plain sessions, Native/KD at 1 and 16 writers
+with three paired repetitions. It has
+[25 focused mocked test passes](../../bench/results/10.176.26.71/tests/mmap-plain-plan-20261025/README.md),
+not new actual-mmap runtime or performance validation. Its bounded cycle allows
+six unscored checks plus twelve measurements, at most 18 payload cycles,
+31 full host captures and six boots including recovery, subject to exact cycle
+approval and fresh admission. Adjacent repetitions share boots. Its
+[authorized attempt](../../bench/results/10.176.26.71/bench/mmap-plain-v1-20261025/README.md)
+consumed one full capture and stopped at 68 QEMU tasks versus 67, before any boot
+or payload check. All twelve measurements and six unscored checks remain unrun;
+current qualified timing remains zero. This failure is separate from the older
+73-task stop. The guest's `paired.py` and `report.py` still need their reviewed
+idle synchronization before a future plain-plan execution.
+It measures completed writer mmap/munmap cycles, not isolated lock acquisition,
+concurrent-reader scaling or page-fault throughput. New latency sampling is
+deferred. TCLock has no equivalent killable/downgrade mmap interface and is not
+an arm of this comparison.
+
+The next performance step is separate approval for the prepared
+[60-second phase diagnostic](../../bench/mmap_lock/DIAGNOSTIC.md) to investigate
+the extra task, followed by review of fresh benchmark admission. That diagnostic
+has not run; a quiet retry cannot replace the failed admission.
+
+The latest attempt's final health check at 23:43:26 on October 25 (Asia/Shanghai)
+recorded recovery
+`6.1.159-kdclobber2`, boot `d32e2e18-c340-4a98-8105-335bccec0b5d`, the original
+73 modules, taint **12288** and no pending boot. This is saved evidence, not a
+fresh VM check by this documentation review. Recheck recovery and competing jobs
+with the active implementation/testing owner before any live work; preserve the
+[reconstruction and recovery inputs](../../kernel_integration/mmap_lock/README.md#reusing-the-corrected-build).
 
 Operation-specific MM body delegation and prepared teardown campaigns are
 retired. The historical audits below explain native dependencies and preserve
