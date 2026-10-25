@@ -22,7 +22,10 @@ rt, common, writer, mapping = plain.rt, plain.common, plain.writer, plain.mappin
 PROFILE = common.load(Path(__file__).with_name('kdmm31.json'))
 SITES = ROOT / 'tests/kernel/mmap_lock/writer_sites_kdmm31.json'
 MODULE = 'kd_mmap_writer_native'
+LEGACY_PLAN = 'paired-v1'
+THROUGHPUT_PLAN = 'plain-v1'
 CASES = [(n, observation) for n in (1, 16) for observation in ('plain', 'sampled')]
+PLANS = {LEGACY_PLAN: CASES, THROUGHPUT_PLAN: [(1, 'plain'), (16, 'plain')]}
 # Five candidate boots, plus the final recovery boot. Adjacent same-mode
 # repetitions share a boot; the report must not call them independent boots.
 BLOCKS = [('native', []), ('kd', [0]), ('native', [0, 1]), ('kd', [1, 2]), ('native', [2])]
@@ -31,6 +34,36 @@ ORDER = [(repeat, mode, case) for mode, repeats in BLOCKS
 BIND_DIRS = ('bench/mmap_lock', 'bench/mmap_writer', 'bench/mmap_fault',
              'bench/spin_cacheline', 'tests/kernel/mmap_lock', 'tests/kernel/mmap_writer',
              'tests/kernel/mmap_fault', 'tests/protocols', 'disassem', 'kernel_baseline')
+
+
+def cases_for(plan):
+    rt.require(isinstance(plan, str) and plan in PLANS, 'unknown mmap campaign plan')
+    return PLANS[plan]
+
+
+def row_plan(row):
+    # Missing means the original 24-case schema, never an inferred 12-case plan.
+    plan = row.get('plan', LEGACY_PLAN)
+    cases_for(plan)
+    return plan
+
+
+def plan_fields(plan):
+    cases_for(plan)
+    return {} if plan == LEGACY_PLAN else dict(plan=plan)
+
+
+def order_for(plan):
+    return [(repeat, mode, case) for mode, repeats in BLOCKS
+            for repeat in repeats for case in range(len(cases_for(plan)))]
+
+
+def bounds(plan):
+    measured = len(order_for(plan))
+    validation = 2 * (1 + len(cases_for(plan)))
+    return dict(measured_sessions=measured, unscored_checks=validation,
+                payload_cycles=measured + validation, boots=len(BLOCKS) + 1,
+                host_captures=1 + len(BLOCKS) + 2 * measured + 1)
 
 
 def bind(path):
@@ -47,8 +80,10 @@ def load_bound(row):
     return common.load(file_bound(row))
 
 
-def specification(case, repeat, mode):
-    n, observation = CASES[case]
+def specification(case, repeat, mode, plan=LEGACY_PLAN):
+    cases = cases_for(plan)
+    rt.require(isinstance(case, int) and 0 <= case < len(cases), 'case outside campaign plan')
+    n, observation = cases[case]
     value = writer.spec(n, observation, repeat)
     value['arm'] = mode
     return value
@@ -161,10 +196,13 @@ def prepared(path):
 
 
 def ready(a):
+    plan = a.plan or LEGACY_PLAN
+    cases_for(plan)
     check_kernel(a.mode, a.boot_id)
     out = a.output
     out.mkdir(parents=True)
-    result = dict(passed=False, accepted=False, mode=a.mode, boot_id=a.boot_id, block=a.block)
+    result = dict(passed=False, accepted=False, mode=a.mode, boot_id=a.boot_id, block=a.block,
+                  **plan_fields(plan))
     try:
         rt.require(BLOCKS[a.block][0] == a.mode, 'ordered candidate boot mode differs')
         inputs = prepared(a.prepared)
@@ -198,6 +236,7 @@ def ready(a):
 
 def readiness(path):
     row = common.load(path)
+    row_plan(row)
     rt.require(row['passed'], 'same-boot readiness required')
     common.verify_maps(row['files'])
     check_kernel(row['mode'], row['boot_id'])
@@ -208,8 +247,15 @@ def readiness(path):
     return row, inputs
 
 
-def measurement(rows, spec, mode):
+def measurement(rows, spec, mode, plan=LEGACY_PLAN):
+    cases_for(plan)
     result = writer.validate(rows, spec)
+    if plan == THROUGHPUT_PLAN:
+        rt.require(spec['observation'] == 'plain' and result['latency_samples'] == 0,
+                   'plain campaign cannot include workload latency sampling')
+        result.update(execution='KD_LOCAL_MMAP_LOCK' if mode == 'kd' else 'NATIVE_CONTROL_MMAP_LOCK',
+                      latency_percentiles_ns={}, latency_sample_policy='disabled')
+        return result
     values = sorted(v for w in rows[1]['workers'] for v in w['latency_ns'])
     result.update(execution='KD_LOCAL_MMAP_LOCK' if mode == 'kd' else 'NATIVE_CONTROL_MMAP_LOCK',
                   latency_percentiles_ns={str(p): values[math.ceil(p/100*len(values))-1]
@@ -246,12 +292,12 @@ def timed(inputs, out, spec):
                out / 'client.jsonl', timeout=120)
 
 
-def business_finish(out, spec, mode):
+def business_finish(out, spec, mode, plan=LEGACY_PLAN):
     # Evidence qualification is separate. Only normal client completion, exact
     # lifetime accounting and a fault-free guest authorize ordinary unload.
     fault_check(out, 'before-unload-dmesg')
     rows = [json.loads(line) for line in (out / 'client.jsonl').read_text().splitlines()]
-    result = measurement(rows, spec, mode)
+    result = measurement(rows, spec, mode, plan)
     value = health(1)
     rt.command(['rmmod', MODULE], out / 'unload.log')
     fault_check(out, 'after-unload-dmesg')
@@ -261,19 +307,20 @@ def business_finish(out, spec, mode):
 
 def validate(a):
     ready, inputs = readiness(a.ready)
+    plan = row_plan(ready)
     out = a.output
     out.mkdir(parents=True)
     result = dict(passed=False, drained=False, accepted=False, mode=ready['mode'],
-                  prepared=ready['prepared'], ready=bind(a.ready), cases=[])
+                  prepared=ready['prepared'], ready=bind(a.ready), cases=[], **plan_fields(plan))
     try:
         result['fixed'] = fixed(inputs, out, ready['mode'])
         result['fixed_raw'] = bind(out / 'fixed.jsonl')
-        for index, (n, observation) in enumerate(CASES):
+        for index, (n, observation) in enumerate(cases_for(plan)):
             case = out / f'{n}-{observation}'
             case.mkdir()
-            spec = specification(index, 0, ready['mode'])
+            spec = specification(index, 0, ready['mode'], plan)
             timed(inputs, case, spec)
-            row, value = business_finish(case, spec, ready['mode'])
+            row, value = business_finish(case, spec, ready['mode'], plan)
             result['cases'].append(dict(spec=spec, measurement=row, health=value,
                                        raw=bind(case / 'client.jsonl')))
         common.verify_maps(inputs['files'])
@@ -286,10 +333,12 @@ def validate(a):
         rt.write_json(out / 'result.json', result)
 
 
-def validation_shape(v, mode, prepared_ref):
+def validation_shape(v, mode, prepared_ref, plan=LEGACY_PLAN):
+    count = len(cases_for(plan))
+    rt.require(row_plan(v) == plan, 'validation campaign plan differs')
     rt.require(v['passed'] and v['drained'] and not v['accepted'] and v['mode'] == mode and
-               v['prepared'] == prepared_ref and len(v['cases']) == 4 and
-               [c['spec'] for c in v['cases']] == [specification(i, 0, mode) for i in range(4)],
+               v['prepared'] == prepared_ref and len(v['cases']) == count and
+               [c['spec'] for c in v['cases']] == [specification(i, 0, mode, plan) for i in range(count)],
                'validation case set/specification differs')
     f = v['fixed']
     rt.require(f['passed'] and f['mode'] == 'cycle' and f['threads'] == 16 and f['iterations'] == 5000 and
@@ -300,20 +349,21 @@ def validation_shape(v, mode, prepared_ref):
                    'missing_chain', 'missing_writer_proof'], 'required fixed-work writer proof differs')
 
 
-def validation_receipt(path, mode, prepared_ref):
+def validation_receipt(path, mode, prepared_ref, plan=LEGACY_PLAN):
     """Replay saved positive evidence without executing a workload or test."""
     v = common.load(path)
-    validation_shape(v, mode, prepared_ref)
+    validation_shape(v, mode, prepared_ref, plan)
     ready = load_bound(v['ready'])
     rt.require(ready['passed'] and ready['mode'] == mode and ready['prepared'] == prepared_ref and
-               ready['block'] == (0 if mode == 'native' else 1), 'validation readiness differs')
+               ready['block'] == (0 if mode == 'native' else 1) and row_plan(ready) == plan,
+               'validation readiness differs')
     mapping.SITES = common.load(SITES)
     raw = [json.loads(line) for line in file_bound(v['fixed_raw']).read_text().splitlines()]
     proof = mapping.validate(raw, 'cycle', 16, 5000, mode)
     rt.require(all(v['fixed'][key] == value for key, value in proof.items()), 'saved writer proof differs')
     for case in v['cases']:
         raw = [json.loads(line) for line in file_bound(case['raw']).read_text().splitlines()]
-        rt.require(measurement(raw, case['spec'], mode) == case['measurement'] and
+        rt.require(measurement(raw, case['spec'], mode, plan) == case['measurement'] and
                    case['health'] == 'files=0 mm_refs=0 destroyed=1 release_errors=0',
                    'saved timed-client validation differs')
     return v
@@ -321,27 +371,30 @@ def validation_receipt(path, mode, prepared_ref):
 
 def run(a):
     ready, inputs = readiness(a.ready)
-    rt.require(a.repeat in BLOCKS[ready['block']][1] and 0 <= a.case < len(CASES), 'case/block differs')
+    plan = row_plan(ready)
+    order = order_for(plan)
+    rt.require(a.repeat in BLOCKS[ready['block']][1] and 0 <= a.case < len(cases_for(plan)), 'case/block differs')
     out = a.output
     out.mkdir(parents=True)
-    spec = specification(a.case, a.repeat, ready['mode'])
+    spec = specification(a.case, a.repeat, ready['mode'], plan)
     result = dict(passed=False, accepted=False, drained=False, client_exited=False,
         ready=bind(a.ready), mode=ready['mode'], boot_id=ready['boot_id'], spec=spec,
-        repeat=a.repeat, case=a.case, block=ready['block'], prepared=ready['prepared'])
+        repeat=a.repeat, case=a.case, block=ready['block'], prepared=ready['prepared'], **plan_fields(plan))
     try:
-        index = ORDER.index((a.repeat, ready['mode'], a.case))
+        index = order.index((a.repeat, ready['mode'], a.case))
         rt.require((index == 0) == (a.previous is None), 'ordered predecessor required')
         if a.previous is not None:
             prior = common.load(a.previous)
             rt.require(prior['passed'] and prior['drained'] and prior['accepted'] and
-                (prior['repeat'], prior['mode'], prior['case']) == ORDER[index-1] and
+                (prior['repeat'], prior['mode'], prior['case']) == order[index-1] and
+                row_plan(prior) == plan and
                 prior['prepared'] == ready['prepared'] and
                 ((prior['block'] == ready['block']) == (prior['boot_id'] == ready['boot_id'])),
                 'preceding qualified case or boot transition differs')
             result['previous'] = bind(a.previous)
         result['validated'] = []
         for mode, path in [('native', a.native_validation), ('kd', a.kd_validation)]:
-            validation_receipt(path, mode, ready['prepared'])
+            validation_receipt(path, mode, ready['prepared'], plan)
             result['validated'].append(bind(path))
         host = common.load(a.host_state)
         host_check(host, fresh=True)
@@ -383,6 +436,7 @@ def qualify(out, client, directory):
     ids = lambda h: sorted((t['tid'], t['start_ticks']) for t in h['capture']['tasks'])
     rt.require(ids(before) == ids(host), 'QEMU task lifetime changed across measurement')
     ready = load_bound(client['ready'])
+    rt.require(row_plan(client) == row_plan(ready), 'measurement/readiness campaign plan differs')
     host_environment(host, ready['environment'], ready['topology'])
     return dict(captured_utc=host['captured_utc'], controller=bind(directory / 'controller.json'),
                 endpoint=bind(host_path), admission=client['admission'])
@@ -401,7 +455,7 @@ def finish(a):
         load_bound(client['prepared'])
         # A missing/malformed endpoint still permits these independent, exact
         # business/drain checks. No new workload starts during finalization.
-        result['measurement'], result['health'] = business_finish(out, client['spec'], client['mode'])
+        result['measurement'], result['health'] = business_finish(out, client['spec'], client['mode'], row_plan(ready))
         result.update(passed=True, drained=True)
         try:
             evidence = qualify(out, client, a.controller)
@@ -435,7 +489,10 @@ def main():
     p.add_argument('--kd-validation', type=Path)
     p.add_argument('--controller', type=Path)
     p.add_argument('--previous', type=Path)
+    p.add_argument('--plan', choices=tuple(PLANS), help='select only at ready; otherwise inherit bound readiness')
     a = p.parse_args()
+    if a.plan is not None and a.action != 'ready':
+        p.error('--plan is selected at ready and inherited by later actions')
     a.output = a.output.resolve()
     rt.require(not a.output.is_relative_to(ROOT) and (a.action == 'finish' or not a.output.exists()),
                'unique evidence directory outside source required')

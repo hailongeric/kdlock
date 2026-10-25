@@ -1,6 +1,12 @@
 # Built-in mmap lock performance
 
-The current bounded comparison uses the unchanged shared-mm
+Current work is throughput only. The explicit
+`plain-v1` plan selects **12 plain sessions**. It is prepared and mock-tested;
+live execution remains unapproved. The historical 24-case plain/sampled plan
+is `paired-v1`; omitted plan fields retain that historical meaning. Never obtain
+a 12-case campaign by skipping sampled rows or relabelling old receipts.
+
+The prepared comparison uses the unchanged shared-mm
 [writer workload](../mmap_writer/README.md), with Native and KD selected by
 `kd_mmap=off/on` in the **same** `6.1.159-kdmm31` image. This is a proposed live
 cycle requiring explicit approval; preparation alone does not authorize it.
@@ -26,7 +32,62 @@ historical kdmm1 inputs. Preserve them; do not relabel their output as kdmm31.
 The maintained `paired.py` binds [kdmm31.json](kdmm31.json) and supplies a mode
 label only after checking the actual image, boot arguments and module set.
 
-## Work and measurements
+## Plain throughput plan
+
+Select `--plan plain-v1` on **each** `paired.py ready` invocation. Its bound
+readiness selects the plan for validation, run, finish and report; those actions
+reject a new `--plan` override. New receipts carry `plan: plain-v1`. Reports
+reject mixed/unknown plans, missing or duplicate cases, mismatched validation
+and readiness, changed instrumentation, predecessor gaps and rejected endpoints.
+Historical 24-case reports retain their existing output and validation shape.
+
+| Setting | `plain-v1` |
+| --- | --- |
+| Image/backend | Same installed `6.1.159-kdmm31`, `kd_mmap=off/on`; Native/KD local |
+| Cases per trial | Case 0: 1 worker, plain; case 1: 16 workers, plain |
+| Placement | CPUs 0..N-1 on node 0; collector 63; existing host/guest topology |
+| Work | Untouched shared-mm mmap/munmap cycles, original-task native MM bodies |
+| Timing | Existing two-second client, 10 ms progress accounting, 32-operation stop checks; no latency samples |
+| Repetitions | K0/N0, N1/K1, K2/N2; two cases per arm, 12 measured sessions |
+| Validation | Per backend: one fixed 16-worker writer-proof check plus two plain timed-client checks |
+| Maximum cycle | 6 boots, 18 payload load/run/unload checks, 31 full host captures |
+
+Boot order is unchanged: initial Native validation (block 0), KD validation/K0
+(1), N0/N1 (2), K1/K2 (3), N2 (4), then recovery. Four blocks contain measurements;
+adjacent repetitions share boots and are not independent boot replications.
+Six unscored checks plus twelve measurements give 18 payload cycles. Captures
+are one initial, five boot-readiness, two per measurement and one recovery check:
+1 + 5 + 24 + 1 = 31. Stop on the first failure; these are maxima, not retry budgets.
+Only the existing writer payload is loaded. No provider diagnostic is repeated.
+
+After exact cycle/recovery approval and successful fresh admission, the ready
+interface is, with actual paths/mode/block/boot ID:
+
+```sh
+python3 bench/mmap_lock/paired.py ready --plan plain-v1 \
+  --prepared BUILD/result.json --native-api PRIOR/actual-native-1.json \
+  --kd-api PRIOR/actual-kd-1.json --mode native --block 0 \
+  --boot-id ACTUAL-BOOT-ID --host-state ADMISSION.json --output BOOT/ready
+python3 bench/mmap_lock/paired.py validate \
+  --ready BOOT/ready/result.json --output BOOT/validation
+```
+
+Use the same controller/run/finish transport shown below, with case indices
+**0 and 1 only**, the bound plain readiness, both plain validation receipts and
+the exact preceding qualified case. Report exactly the twelve saved final
+receipts using `report.py`; it derives the plan from bound receipts, not a flag.
+The report retains every session rate, paired KD/Native throughput ratio,
+median, min/max and sample CV. Throughput is completed whole cycles divided by
+actual elapsed time. It publishes no latency or sampled/plain comparison.
+Progress, callbacks, business correctness, exact mm/VMA drain and immediate
+endpoint checks remain mandatory. Three pairs are exploratory.
+
+The [25 focused mocked checks](../results/10.176.26.71/tests/mmap-plain-plan-20261025/README.md)
+passed: 11 new plain-plan fixtures and 14 directly affected historical tests.
+Prepared binaries are reused; this is not new actual mmap validation, a boot
+approval or a measured performance result. The prior admission stop still applies.
+
+## Work and measurements in the stopped plan
 
 Pthreads share the exact originating mm, mmap lock and payload object. They map
 and unmap one untouched page. Creating/removing VMAs uses writer ownership;
@@ -64,7 +125,7 @@ identical caller shells and workload semantics. Its restricted rwsem port has
 no equivalent killable/downgrade mmap interface. The separate private-mm backing
 lock/fault workload is not a substitute for actual mmap-lock measurements.
 
-## Bounded boot and validation proposal
+## Retained boot and validation proposal
 
 No new kernel image, initramfs, module installation or kernel build is required.
 The installed Native/KD entries use Build ID
@@ -158,9 +219,12 @@ libbpf failed parsing this base BTF; that failure remains retained. A privately
 copied bpftool was preserved unused; no package/system installation or BPF load
 occurred.
 
-## Live execution interface
+## Retained transport and historical execution interface
 
-These commands describe the reviewed interfaces; run them only after the exact
+The following examples retain the historical 24-case defaults. For `plain-v1`,
+select the plan at every ready step as above, use only cases 0/1 and report 12
+receipts. The controller and finish transport are shared; old receipts are not
+changed. These commands describe interfaces; run them only after the exact
 cycle and root host capture are approved and no stop condition is active.
 The October 25 admission failure does not authorize another attempt after
 waiting for quiet. Set `KDLOCK_RECOVERY_CONFIRMED=1` and
