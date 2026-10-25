@@ -43,7 +43,10 @@ runner modes described below. Full [process inspection and mmap candidates](#pro
 remain proposals where stated, outside the runnable standard catalog. The current
 lock-only mmap adapter has a separate [bounded Native/KD plan](../bench/mmap_lock/README.md)
 using actual shared-mm writers and complete mmap/munmap cycle latency. Its
-preparation has passed; live execution and root capture remain unapproved.
+preparation has passed. The authorized October 25 attempt
+[stopped at initial host admission](../bench/results/10.176.26.71/bench/mmap-kdmm31-paired-20261025/README.md)
+before any boot or workload: 73 QEMU tasks versus the required 67. No current
+qualified measurement resulted.
 
 ## KD API use and delegation
 

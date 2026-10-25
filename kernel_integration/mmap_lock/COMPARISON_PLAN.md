@@ -8,7 +8,9 @@ The current procedure uses the corrected lock-only `e6fc371` baseline and the
 already installed kdmm31 image. Its shared-mm writer selection is 1/16 workers,
 Native/KD modes, plain/sampled observation and three paired repetitions: 24
 measured cases. Five candidate boots plus return to recovery form the proposed
-six-boot cycle. That cycle and root host capture remain unapproved. Private
+six-boot cycle. The authorized October 25 attempt
+[stopped at first admission](../../bench/results/10.176.26.71/bench/mmap-kdmm31-paired-20261025/README.md)
+with 73 QEMU tasks versus 67, before any boot or payload load. Private
 reconstruction and a compatible payload/client build are preparation evidence;
 they have started no current timing and establish no performance gain.
 

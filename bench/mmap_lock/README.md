@@ -4,6 +4,9 @@ The current bounded comparison uses the unchanged shared-mm
 [writer workload](../mmap_writer/README.md), with Native and KD selected by
 `kd_mmap=off/on` in the **same** `6.1.159-kdmm31` image. This is a proposed live
 cycle requiring explicit approval; preparation alone does not authorize it.
+The authorized October 25 attempt [stopped at first admission](../results/10.176.26.71/bench/mmap-kdmm31-paired-20261025/README.md)
+with 73 QEMU tasks versus 67. It consumed one host capture and no boots or
+payload checks; all 24 measured sessions remain unrun. The stop remains in force.
 No current qualified rate or optimization gain has been established.
 The [audit and preparation receipt](../results/10.176.26.71/bench/mmap-perf-prep-20261025/README.md)
 records the remaining limits and retained failures.
@@ -153,10 +156,12 @@ libbpf failed parsing this base BTF; that failure remains retained. A privately
 copied bpftool was preserved unused; no package/system installation or BPF load
 occurred.
 
-## Live execution interface (approval pending)
+## Live execution interface
 
 These commands describe the reviewed interfaces; run them only after the exact
-cycle and root host capture are approved. Set `KDLOCK_RECOVERY_CONFIRMED=1` and
+cycle and root host capture are approved and no stop condition is active.
+The October 25 admission failure does not authorize another attempt after
+waiting for quiet. Set `KDLOCK_RECOVERY_CONFIRMED=1` and
 `KDLOCK_SNAPSHOT_TAG=before-mutex-kdonly-20261017T140354Z` only after an actual
 successful snapshot listing. Flags alone are not recovery proof.
 

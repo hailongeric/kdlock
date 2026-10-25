@@ -24,8 +24,10 @@ without loading a module or compiling, installing or booting a kernel. Failed
 build-1/build-2 attempts remain evidence. Two basic programs and the current
 30 mocked tooling tests (16 capture, 14 paired/report) passed in recovery,
 including the four later review fixes. None of these checks is
-a new actual mmap workload, provider/JIT test or performance result. The proposed
-six-boot, 24-session cycle and root host capture remain unapproved.
+a new actual mmap workload, provider/JIT test or performance result. The authorized
+October 25 cycle [stopped at its first host admission](../bench/results/10.176.26.71/bench/mmap-kdmm31-paired-20261025/README.md)
+with 73 QEMU tasks versus 67. One capture completed; no boot, payload check or
+measured session ran. Qualified current performance cases remain zero.
 
 The [shared-mm receipt](../bench/results/10.176.26.71/tests/mmap-writer-native-20261021/README.md)
 passed both basic programs and six focused cases at `b9fe567`: exact shared mm/mmap-lock identity, zero fault callbacks,

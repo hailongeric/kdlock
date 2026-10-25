@@ -20,9 +20,10 @@ execution, operations, benchmark and historical material.
 
 Reuse the validated functional implementation. The next performance task is the
 [bounded Native/KD shared-mm comparison](../bench/mmap_lock/README.md). Its
-payload/client preparation is build-ready only: the proposed 24 measured sessions
-across six boots, including return to recovery, and root host capture await
-approval. There is no qualified new timing or optimization gain. Broader matrices
+payload/client preparation is build-ready. The authorized October 25 attempt
+[stopped before boot](../bench/results/10.176.26.71/bench/mmap-kdmm31-paired-20261025/README.md)
+when host admission found 73 QEMU tasks versus 67; all 24 measured sessions remain
+unrun. There is no qualified new timing or optimization gain. Broader matrices
 and tuning remain separate; earlier rejected measurements remain rejected.
 
 | Task | Working interface and scope |

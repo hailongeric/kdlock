@@ -33,14 +33,19 @@ complete mmap/munmap cycle, not isolated lock acquisition or reader scaling.
 The [preparation receipt](../bench/results/10.176.26.71/bench/mmap-perf-prep-20261025/README.md)
 records build-3 compatibility checks, 16 capture and 14 paired/report mocked
 tests, and two earlier basic programs. These are build/offline results; prior
-actual mmap correctness was reused. The six-boot cycle and root host capture
-remain unapproved, and qualified current performance cases remain zero.
+actual mmap correctness was reused. The authorized October 25 attempt
+[stopped at initial admission](../bench/results/10.176.26.71/bench/mmap-kdmm31-paired-20261025/README.md)
+with 73 QEMU tasks versus 67. It consumed one host capture, no boots or payload
+checks, and left all 24 measured sessions unrun. Qualified current performance
+cases remain zero; the next step is a bounded worker analysis and diagnostic
+proposal, preserving the existing stop and acceptance criteria.
 Local `master` now includes the five-commit fast-forward through `92f773f`.
 The [readiness and cleanup dependency record](../bench/results/10.176.26.71/bench/mmap-perf-prep-20261025/README.md#local-integration-and-read-only-readiness)
 confirms the prepared binaries and persistent identities still match; guest root
 space supports the reasoned 512 MiB campaign evidence allowance. No deletion,
 new build or live test followed. Cleanup candidates still require verified
-preservation and exact approval; the live cycle has its separate pending gates.
+preservation and exact approval. The failed admission cannot be replaced by a
+later quiet observation.
 Broader matrices, causal profiling, observer expansion and tuning remain
 separate work. All seven earlier mutex causes and qualified variance remain
 unresolved; preserved performance refusals remain failures. The historical

@@ -1,5 +1,10 @@
 # kdmm31 audit and performance preparation, October 25
 
+Subsequent status: the user authorized the bounded cycle at 19:15
+(Asia/Shanghai), and its first host admission [stopped before boot](../mmap-kdmm31-paired-20261025/README.md)
+with 73 QEMU tasks versus 67. All 24 measured sessions remain unrun. Approval
+statements below describe the earlier preparation/readiness checkpoints.
+
 Audited implementation: `e6fc371b032cc0444dba34ee9025e7d939811125`, branch
 `codex/mmap-irq-trylock-20261025`. Master remained
 `769ba5b0c595a2739f61e372bab9230027050c88`. The unrelated emptied disk-cleanup

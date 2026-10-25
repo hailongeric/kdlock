@@ -172,8 +172,10 @@ and broader Linux semantic equivalence remain unvalidated. The next performance
 work uses the [separate paired benchmark plan](../../bench/mmap_lock/README.md);
 the old `kdmm1` timing profile cannot establish performance of this correction.
 The current proposal measures 24 shared-mm writer cases over five candidate
-boots followed by recovery. That six-boot cycle and root host capture are still
-unapproved; no new timing or performance gain is claimed.
+boots followed by recovery. The authorized October 25 attempt
+[stopped before boot](../../bench/results/10.176.26.71/bench/mmap-kdmm31-paired-20261025/README.md)
+at 73 QEMU tasks versus 67. All 24 measured cases remain unrun; no new timing or
+performance gain is claimed.
 
 ## Reusing the corrected build
 

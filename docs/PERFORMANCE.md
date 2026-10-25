@@ -19,9 +19,11 @@ measure reader scaling, NUMA scaling or delegation. The
 [preparation receipt](../bench/results/10.176.26.71/bench/mmap-perf-prep-20261025/README.md)
 records successful private reconstruction and build-3 compatibility checks using
 existing pahole 1.25. Preparation loaded no module and booted no kernel. The
-six-boot cycle and root host capture remain unapproved; new qualified timing
-count is zero. The current tooling passed 16 capture and 14 paired/report mocked
-tests, including the report-integrity fixes; mock results do not qualify timing.
+authorized October 25 attempt [stopped at initial admission](../bench/results/10.176.26.71/bench/mmap-kdmm31-paired-20261025/README.md):
+73 QEMU tasks versus 67, with no boot or payload load and all 24 measured cases
+unrun. New qualified timing count is zero. The current tooling passed 16 capture
+and 14 paired/report mocked tests, including the report-integrity fixes; mock
+results do not qualify timing.
 
 The historical records below retain their original source, topology, caller
 shell and instrumentation identities. Their deferred p95 statements describe
