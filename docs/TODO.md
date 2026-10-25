@@ -42,10 +42,12 @@ proposal, preserving the existing stop and acceptance criteria.
 Local `master` now includes the five-commit fast-forward through `92f773f`.
 The [readiness and cleanup dependency record](../bench/results/10.176.26.71/bench/mmap-perf-prep-20261025/README.md#local-integration-and-read-only-readiness)
 confirms the prepared binaries and persistent identities still match; guest root
-space supports the reasoned 512 MiB campaign evidence allowance. No deletion,
-new build or live test followed. Cleanup candidates still require verified
-preservation and exact approval. The failed admission cannot be replaced by a
-later quiet observation.
+space supported the reasoned 512 MiB campaign evidence allowance. A subsequent
+[exact-file cleanup](../bench/results/10.176.26.71/tests/approved-archive-cleanup-20261025/README.md)
+removed three approved duplicate guest archives and retained their verified
+source-host copies, freeing 1,237,295,104 bytes. No build or live test followed.
+Additional cleanup requires its own verified preservation and exact approval.
+The failed admission cannot be replaced by a later quiet observation.
 Broader matrices, causal profiling, observer expansion and tuning remain
 separate work. All seven earlier mutex causes and qualified variance remain
 unresolved; preserved performance refusals remain failures. The historical

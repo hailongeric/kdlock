@@ -67,7 +67,8 @@ the data disk 10,031,104 bytes and `/dev/shm` 5,740,777,472 bytes. Current capac
 supported the earlier 512 MiB campaign evidence allowance; disk space did not
 cause the admission stop. The [host discovery](../../raw/bench/mmap-kdmm31-paired-20261025/host-discovery.json)
 and [guest preflight](../../raw/bench/mmap-kdmm31-paired-20261025/guest-before.json)
-retain the observations. Cleanup proposals remain separate and untouched.
+retain the observations. A later [separately approved archive cleanup](../../tests/approved-archive-cleanup-20261025/README.md)
+preserved this evidence and did not resume the campaign.
 
 Final health at **19:29:56 (Asia/Shanghai)** confirmed the same recovery boot
 `d32e2e18-c340-4a98-8105-335bccec0b5d` on `6.1.159-kdclobber2`, the exact original

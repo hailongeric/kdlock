@@ -57,6 +57,11 @@ copies before removing duplicates; do not run a blanket kernel-tree clean.
 The [October 22 cleanup receipt](../../bench/results/10.176.26.71/tests/vm-disk-cleanup-20261022/README.md)
 records the 10.01 GiB reclaimed from four historical build trees and the
 preserved kernel identities. The recovery and MM build trees remain intact.
+The later [October 25 exact-file cleanup](../../bench/results/10.176.26.71/tests/approved-archive-cleanup-20261025/README.md)
+removed only three separately approved duplicate guest archives, retaining
+hash-matched source-host copies. It freed 552,722,432 bytes on root and
+684,572,672 bytes on the data disk. This did not authorize further cleanup or
+resume the benchmark stopped by host admission.
 
 ## Kernel identity
 
