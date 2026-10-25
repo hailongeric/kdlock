@@ -3,7 +3,9 @@
 Current work is throughput only. The prospective `plain-scaling-v1` plan selects
 **126 plain sessions** across 21 worker counts, Native/KD and three repetitions.
 It has [41 focused mocked test passes](../results/10.176.26.71/tests/mmap-scaling-plan-20261026/README.md);
-no expanded live campaign has run or is authorized by this guide.
+its [authorized live attempt](../results/10.176.26.71/bench/mmap-worker-scaling-20261026/README.md)
+passed Native validation, then stopped at the KD fixed-writer proof. All 126
+measurements remain unrun; recovery was restored. This guide authorizes no retry.
 The [prepared-window interface](#prepared-window-interface) passed offline
 tooling checks. Its [small live attempt](../results/10.176.26.71/bench/mmap-window-screen-20261026/README.md)
 stopped after the Native boot: admission captured 82 QEMU tasks, which the

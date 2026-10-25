@@ -49,6 +49,13 @@ the same recovery boot, original 73 modules, taint 12288 and no pending boot.
 The prospective [21-count plan](../bench/results/10.176.26.71/tests/mmap-scaling-plan-20261026/README.md)
 passed 41 focused mocked tests (14 historical, 11 smaller-plain and 16 scaling),
 with independent source/receipt review. Its 126 sessions remain unrun.
+The later [authorized sweep](../bench/results/10.176.26.71/bench/mmap-worker-scaling-20261026/README.md)
+passed the Native fixed proof and all 21 Native controls, but the KD fixed
+client failed `contention_ok`: no accepted stable writer-chain observation.
+All KD workers joined with 80,000 completed cycles and no worker errors;
+separate lifetime checks permitted normal cleanup. This is a failed test,
+not a new lock-defect or performance conclusion. No measured sweep case ran,
+and the original recovery state was restored.
 The [diagnostic timing correction](../bench/results/10.176.26.71/tests/mmap-diagnostic-cadence-20261026/README.md)
 passed 48 mocked tests after one retained fixture failure. It follows the user's
 approximate-500-ms requirement and preserves substantial observation-loss,

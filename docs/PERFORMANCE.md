@@ -24,7 +24,10 @@ Historical 24-case plain/sampled plans remain separate; skipping their sampled
 entries is invalid. The new `plain-scaling-v1` plan prepares 21 counts and 126
 plain sessions, with
 [41 mocked passes and independent review](../bench/results/10.176.26.71/tests/mmap-scaling-plan-20261026/README.md).
-It has not run live. Counts above 32 cross NUMA nodes; this writer workload
+Its [live attempt](../bench/results/10.176.26.71/bench/mmap-worker-scaling-20261026/README.md)
+passed the Native fixed proof and all 21 Native controls, then stopped when KD
+failed to produce the required stable writer-chain observation. All 126
+measurements remain unrun. Counts above 32 cross NUMA nodes; this writer workload
 does not isolate NUMA effects or measure reader scaling/delegation. The
 [preparation receipt](../bench/results/10.176.26.71/bench/mmap-perf-prep-20261025/README.md)
 records successful private reconstruction and build-3 compatibility checks using
@@ -72,8 +75,13 @@ passed an 80,000-cycle fixed proof and recorded the required 90-second
 post-setup interval. This single unscored pair has no variability estimate or
 causal bottleneck conclusion. Recovery finished with the original 73 modules,
 zero taint and no pending boot. Historical rejected runs are unchanged. The
-next step is the authorized throughput sweep with fresh window-policy resource
-accounting; optimization remains deferred until repeated evidence exists.
+subsequent sweep used the revised window-policy resource budget but stopped at
+the KD fixed proof described above. Its 80,000 completed cycles and clean
+lifetime drain do not replace the missing observation. Recovery again restored
+73 modules, zero taint and no pending boot. The next step is a read-only review
+of throughput eligibility versus the separate scheduling observation, retaining
+strict functional and teardown checks. No policy change or rerun is implied;
+optimization remains deferred.
 
 The historical records below retain their original source, topology, caller
 shell and instrumentation identities. Historical complete-operation p95 remains

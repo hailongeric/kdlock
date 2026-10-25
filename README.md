@@ -31,8 +31,10 @@ payload/client preparation has passed. The authorized October 25 `plain-v1`
 attempt [stopped before boot](bench/results/10.176.26.71/bench/mmap-plain-v1-20261025/README.md)
 at 68 QEMU tasks versus the required 67; all 12 measured sessions remain unrun.
 The separate prospective `plain-scaling-v1` matrix has 21 worker counts and
-126 Native/KD sessions per workload; its 41 focused mocked tests passed. It has
-not run live. A separate qualified
+126 Native/KD sessions per workload; its 41 focused mocked tests passed. Its
+[live sweep](bench/results/10.176.26.71/bench/mmap-worker-scaling-20261026/README.md)
+passed all Native controls, then stopped on the KD fixed-writer observation;
+all 126 measurements remain unrun and recovery is restored. A separate qualified
 [16-worker validation pair](bench/results/10.176.26.71/bench/mmap-worker-screen-20261026/README.md)
 measured 108,246 Native versus 35,406 KD mmap/munmap cycles/s (KD 0.3271×).
 One pair provides no variability estimate or optimization conclusion. See the

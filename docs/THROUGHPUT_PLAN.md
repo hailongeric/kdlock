@@ -82,6 +82,15 @@ No later quiet observation can replace a failed admission or rejected endpoint.
 Return to the preserved recovery entry only after proven drain; uncertainty
 requires review. No automatic campaign follows a diagnostic.
 
+The [October 26 sweep](../bench/results/10.176.26.71/bench/mmap-worker-scaling-20261026/README.md)
+used this revised budget and stopped at the KD fixed-writer observation after
+Native validation passed. It consumed three boots, four full captures and
+23 payload cycles, with zero measured cases. Recovery is restored. Review
+whether the sleeping-writer observation belongs in throughput eligibility or
+in a separate integration claim before proposing another bounded cycle.
+Keep the failed observation and completed controls; do not repeat the small
+screen to substitute for this missing proof.
+
 ## Expansion after the first qualified baseline
 
 The prospective mmap matrix is separate from later workload expansion. Optional

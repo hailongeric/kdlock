@@ -344,7 +344,11 @@ Current window admission needs 385 full captures; the historical transport
 estimate was 259. See the [runner budget](../../bench/mmap_lock/README.md#plain-throughput-plan)
 for the worker-policy waits and revised storage/runtime. Counts above 32 span
 both guest NUMA nodes; this does not isolate a
-NUMA effect. Adjacent repetitions share boots. No expanded case has run.
+NUMA effect. Adjacent repetitions share boots. No expanded measurement has run:
+the [live sweep](../../bench/results/10.176.26.71/bench/mmap-worker-scaling-20261026/README.md)
+passed Native validation and stopped at the KD fixed-writer proof, then restored
+recovery. The current runner requires that observation; its role in prospective
+throughput eligibility is under read-only review. It is not a lock-defect claim.
 
 The earlier 12-session `plain-v1`
 [authorized attempt](../../bench/results/10.176.26.71/bench/mmap-plain-v1-20261025/README.md)
