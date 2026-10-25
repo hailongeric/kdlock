@@ -33,9 +33,10 @@ MM-body delegation and prepared teardown are retired.
 
 The adapter has [focused actual-mm validation](VALIDATION.md#native-shared-mm-mmap-writers).
 That evidence does not establish full Native semantics, fairness, whole-kernel,
-RT or lockdep equivalence. Its [bounded performance plan](../bench/mmap_lock/README.md)
-has completed preparation only; live execution remains unapproved and no current
-qualified timing is claimed.
+RT or lockdep equivalence. The authorized paired and plain benchmark attempts
+stopped at host admission before boot or payload execution. The expanded scaling
+plan remains unrun; no current qualified timing is claimed. The
+[throughput roadmap](THROUGHPUT_PLAN.md) tracks those separate plans and stops.
 
 ## Terms used in these guides
 
@@ -85,9 +86,11 @@ The [code map](CODE_MAP.md) shows where each component is implemented.
 Each lock type has its own ownership rules:
 
 - KD spin uses one KD lock word for native acquisition and delegated execution.
-- KD mutex embeds physical exclusion and claims a legacy scheduling gate in a
-  preallocated direct-index slot when needed. Every delegation executor must own
-  the KD physical primitive as well as that gate; slot collisions fall back locally.
+- KD mutex embeds physical exclusion, the delegation gate state and encoded tail
+  in its 32-byte object. Every delegation executor must own the KD physical
+  primitive as well as that gate. Preallocated CPU/slot nodes share storage
+  between independent optimistic-spin and delegation memberships, retaining
+  separate links and cancellation and retirement obligations.
   See the [KD-only object and API contract](design/kd_only_mutex.md).
 - KD rwlock uses a reader/writer count and a KD spin gate. Readers run locally;
   every writer must exclude readers, whether it runs natively or through JIT.

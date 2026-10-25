@@ -2,9 +2,9 @@
 
 This is the entry point for the four lock families maintained on `master`.
 The earlier protocol inventory used `05876a4`, with documentation and benchmark
-checkpoint `40a0f36`. The current rwsem/MM review uses `e6fc371` on
-`codex/mmap-irq-trylock-20261025`; that branch evidence does not imply a merge
-into `master`. The selected KD-only mutex
+checkpoint `40a0f36`. The IRQ-safe rwsem/mmap correction at `e6fc371` is
+integrated into `master`; its focused validation remains scoped to the
+recorded inputs and checks. The selected KD-only mutex
 protocol comes from `d2a2304`, and the accepted rwsem waiting policy from
 `c21345b`. Later translation changes and the compact mutex storage refactor do
 not replace those lock protocols. Current object sizes below include that refactor.

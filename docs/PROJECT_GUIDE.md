@@ -5,7 +5,8 @@ accepted KD-only mutex from `d2a2304`, with its legacy delegation protocol and
 compatibility backports. `accepted/kd-only-mutex-20261018` preserves the measured
 implementation. The authorized October 25 local fast-forward integrated the
 IRQ-safe rwsem/mmap correction at `e6fc371` and its preparation through `92f773f`
-into `master`; later documentation and diagnostic preparation commits are local.
+into `master`. Subsequent work added the expanded throughput plan and recorded
+the stopped QEMU diagnostics; see the [throughput roadmap](THROUGHPUT_PLAN.md).
 `current/kd-mutex` retains the earlier `af330db` instruction-exit checkpoint and
 does not include the later spin helper work. The earlier consolidation is retained
 in [branch dispositions](history/main-consolidation-20261018.md).
@@ -25,11 +26,15 @@ build-ready. The earlier plain/sampled October 25 attempt
 [stopped before boot](../bench/results/10.176.26.71/bench/mmap-kdmm31-paired-20261025/README.md)
 when host admission found 73 QEMU tasks versus 67; all 24 measured sessions remain
 unrun. Its 24-case plan cannot be reduced by skipping sampled cases. The explicit
-12-case `plain-v1` runner/report mode passed 25 focused mocked tests and still
-requires exact live approval; a generic actual page-fault throughput driver still
-needs preparation. There is no
-qualified new timing or optimization gain. Earlier rejected measurements remain
-rejected; new tail-latency work is deferred.
+12-case `plain-v1` runner/report mode passed 25 focused mocked tests, but its
+[authorized attempt](../bench/results/10.176.26.71/bench/mmap-plain-v1-20261025/README.md)
+also stopped before boot at 68 QEMU tasks versus 67; all twelve measurements
+and six unscored checks remain unrun. The separate `plain-scaling-v1` plan
+prepares 21 worker counts and 126 measured sessions. Its 41 focused mocked
+tests passed; the live matrix remains unrun. A generic actual page-fault
+throughput driver still needs preparation. There is no qualified current mmap
+timing or new optimization gain. Earlier rejected measurements remain rejected;
+new tail-latency work is deferred.
 
 | Task | Working interface and scope |
 | --- | --- |
