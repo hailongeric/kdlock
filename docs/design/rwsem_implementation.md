@@ -339,15 +339,18 @@ is the separate `plain-scaling-v1` schema: 21 worker counts, Native/KD and three
 paired repetitions, or 126 plain sessions. Its
 [41 focused mocked test passes](../../bench/results/10.176.26.71/tests/mmap-scaling-plan-20261026/README.md)
 and independent review establish tooling behavior only. The 44 unscored checks,
-170 payload cycles, 259 captures and six boots are planning maxima, not live
-approval. Counts above 32 span both guest NUMA nodes; this does not isolate a
+170 payload cycles and six boots are planning maxima, not live approval.
+Current window admission needs 385 full captures; the historical transport
+estimate was 259. See the [runner budget](../../bench/mmap_lock/README.md#plain-throughput-plan)
+for the worker-policy waits and revised storage/runtime. Counts above 32 span
+both guest NUMA nodes; this does not isolate a
 NUMA effect. Adjacent repetitions share boots. No expanded case has run.
 
 The earlier 12-session `plain-v1`
 [authorized attempt](../../bench/results/10.176.26.71/bench/mmap-plain-v1-20261025/README.md)
 consumed one capture and stopped at 68 QEMU tasks versus 67, before any boot or
 payload check. All twelve measurements and six unscored checks remain unrun;
-qualified current timing remains zero. This failure is separate from the older
+that attempt qualified no timing. This failure is separate from the older
 73-task stop. Review and idle synchronization of runner inputs remain necessary
 before a future separately approved campaign. The workload measures completed
 writer mmap/munmap cycles, not isolated lock acquisition, concurrent-reader

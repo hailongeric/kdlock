@@ -56,20 +56,27 @@ isolated NUMA experiment or a reader/delegation/TCLock comparison.
 Order is initial Native validation; KD repeat 0; Native repeats 0/1; KD repeats
 1/2; Native repeat 2; recovery. Adjacent repetitions share boots. Each backend
 runs one observed 16-worker fixed proof and all 21 unobserved timed controls.
-The exact maxima are **44 unscored checks, 170 payload cycles, 259 full host
-captures and six boots**, with no retries or dedicated warmups. Fixed writer-chain
+The current window-policy maxima are **44 unscored checks, 170 payload cycles,
+385 full host captures, 126 observers (at most 12,222 scans) and six boots**,
+with no retries or dedicated warmups. Fixed writer-chain
 proofs are not extended to every worker count by those timed controls.
 
 The [runner guide](../bench/mmap_lock/README.md#plain-throughput-plan) gives
 commands, placement, replay/log accounting and the pure `describe` interface.
-Default explicit assumptions estimate **44 min 36.8 s** and **2 GiB per retention
-filesystem** for raw plus archive/headroom, counting 639 dmesg dumps. This is
-planning arithmetic, not measured cost, a completion guarantee or permission.
-Recheck actual space and log sizes; the older 512 MiB allowance does not cover
-this expanded plan. Source synchronization is still pending and must happen
-only while idle, after review, before separately approved live execution.
+The older `describe` output estimates legacy transport: 259 captures,
+44 min 36.8 s and 2 GiB per retention filesystem. For `mmap-window-v2` with
+`qemu-workers-v1`, the additional endpoints, guards and 168 required 90-second
+post-setup waits revise the estimate to **5 h 5 min 0.8 s** and **3 GiB per
+retention filesystem**. The runner guide gives the arithmetic and assumptions;
+neither estimate is measured cost, a completion guarantee or permission.
+Recheck actual space, log sizes and frozen source identity before execution.
+Any required synchronization must happen only while idle, after review.
 
-The exact original 67-QEMU-task gate is unchanged. Stop on the first failed
+The original 67-QEMU-task policy remains unchanged for historical transport.
+The explicit worker policy permits verified auxiliary lifetimes and activity;
+the completed [small pair](../bench/results/10.176.26.71/bench/mmap-worker-screen-20261026/README.md)
+qualified under that policy and is not repeated as part of the sweep.
+Stop on the first failed
 identity, correctness, admission, endpoint or drain check; retain every failure.
 No later quiet observation can replace a failed admission or rejected endpoint.
 Return to the preserved recovery entry only after proven drain; uncertainty

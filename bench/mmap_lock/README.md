@@ -248,8 +248,9 @@ zero latency observations.
 | 4, Native | Repeat 2: cases 0–20 |
 | Recovery | Return to preserved recovery after proven drain |
 
-There are **44 unscored checks, 170 payload cycles, 259 full host captures and
-six boots including recovery**. These are maxima without retries. No dedicated
+There are **44 unscored checks, 170 payload cycles and six boots including
+recovery**. Legacy transport uses 259 full host captures; the current window
+policy uses **385**, as accounted below. These are maxima without retries. No dedicated
 warmup is added. Fixed observed writer-chain proofs remain at 16 workers;
 unobserved timed controls cover every count but do not establish observed chains
 at every count. Adjacent repetitions share boots. Report every rate, paired
@@ -257,7 +258,9 @@ KD/Native ratio, median, range and sample coefficient of variation; retain losse
 and rejected cases. Exact plan, source, readiness, predecessor and boot bindings
 are checked at run and replay. No mixed/partial plan can be scored.
 
-Run the pure estimate command in the VM; it does not launch a workload or capture:
+The pure estimate command below still describes legacy transport, without
+window endpoints, guard time or worker-policy settling. It does not launch a
+workload or capture, and is not the current-policy execution budget:
 
 ```sh
 PYTHONDONTWRITEBYTECODE=1 /root/kdlock-translation-venv-20261019/bin/python3 \
@@ -283,8 +286,30 @@ compression credit. Recheck actual log sizes, filesystem space and scope before
 requesting execution; build/install storage is excluded. Do not reuse the older
 512 MiB campaign allowance for this plan.
 
-These older planning estimates exclude the worker policy's 90-second interval
-per timed-client preparation; they are not duration estimates for that policy.
+For `mmap-window-v2` with `qemu-workers-v1`, the 126 measured cases each require
+an admission, window endpoint and transport endpoint: **385 full captures** =
+1 initial + 5 boot-readiness + 3 × 126 + 1 final recovery. The **126 window
+observers** make at most **12,222 scans** (97 each), separate from full captures.
+There are **two fixed proofs and 42 unscored timed controls**; the latter run
+without window observers and do not become qualified measurements. No separate
+screen pair is repeated.
+
+The existing implementation waits once for 90 seconds after each timed payload
+setup, including all 42 unscored controls: **168 waits = 15,120 seconds
+(4 h 12 min)**. Add 126 extra captures at the historical 2-second planning cost
+and 126 minimum 2-second guards to the older 2,676.8-second estimate: **18,300.8
+seconds (5 h 5 min 0.8 s)**. This is a planning estimate, not a completion bound.
+
+For storage, add 126 capture allowances and 2 MiB per window stream to the
+older inventory: **1,164.75 MiB per copy**. Raw plus archive and 25% headroom
+is **2,911.875 MiB**, rounded to **3 GiB on each retention filesystem**. The
+small pair's host streams were about 1.20 MB and window endpoints about 0.94 MB;
+these observations do not enforce future size limits. The stream's 16 MiB
+acceptance ceiling exceeds its planning allowance, and legacy full captures
+have no enforced byte cap. Recheck actual consumption/headroom before each
+case; preserve partial evidence and stop before exhausting the reserve. Do not
+delete old evidence or treat a timeout as permission to unload or reboot.
+
 The command sequence below remains `ready`, `validate`, `run`, `finish`, `report`;
 use `--plan plain-scaling-v1` at each ready, cases 0–20 and the block order above.
 Later commands inherit the bound plan. Synchronize reviewed inputs only while
