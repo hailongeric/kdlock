@@ -58,9 +58,16 @@ def execute(api, out, command, receipt_path, admission, roles_path):
                   roles_sha256=api.sha(roles_path), phase='setup')
     roles = json.loads(roles_path.read_text())
     # Explicit evidence files are reviewed inputs, not a role inferred from S/comm.
-    window.require(set(roles) == {'roles', 'evidence'}, 'role manifest shape differs')
+    admission_version = window.role_manifest(roles)
+    record.update(window.admission_fields(roles))
     for path, digest in roles['evidence'].items():
         window.require(api.sha(Path(path)) == digest, 'role/configuration evidence changed')
+        if admission_version == window.WORKER_ADMISSION:
+            target = out / 'role-evidence' / digest
+            target.parent.mkdir(exist_ok=True)
+            data = Path(path).read_bytes()
+            window.require(hashlib.sha256(data).hexdigest() == digest, 'role evidence changed during copy')
+            target.write_bytes(data)
     window.require(all(r['evidence'] in roles['evidence'].values() for r in roles['roles']),
                    'role lacks bound independent evidence')
     (out / 'window-roles.json').write_bytes(roles_path.read_bytes())
@@ -77,6 +84,12 @@ def execute(api, out, command, receipt_path, admission, roles_path):
         core = inventory(host)
         record['core'] = core
         profile = json.loads((HERE / 'kdmm31.json').read_text())['host']
+        if admission_version == window.WORKER_ADMISSION:
+            expected = {k: profile[k] for k in ('pid', 'start_ticks', 'command_sha256')}
+            window.require(host['capture']['identity_before'] == host['capture']['identity_after'] ==
+                           host['final_identity'] == expected, 'admission QEMU membership identity differs')
+            window.resolve_roles(host['qemu'][0]['tasks'], core, roles['roles'],
+                                 admission=admission_version, qemu_identity=expected)
         remote = guest_command(command, nonce)
         guest = subprocess.Popen([*api.SSH, '-p', '2222', 'root@10.176.26.71', remote],
                                  stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
@@ -125,7 +138,8 @@ def execute(api, out, command, receipt_path, admission, roles_path):
                                 record.update(host_window_pid=observer.pid, host_window_completion_unconfirmed=True,
                                               phase='guard')
                                 register(observer, 'host')
-                                request = dict(nonce=nonce, profile=profile, core=core, roles=roles['roles'])
+                                request = dict(nonce=nonce, profile=profile, core=core, roles=roles['roles'],
+                                               **window.admission_fields(roles))
                                 window.write_all(observer.stdin.fileno(), (json.dumps(request) + '\n').encode(), time.monotonic()+10)
                                 deadline = time.monotonic() + 30
                             elif kind == 'started':

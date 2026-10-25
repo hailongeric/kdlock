@@ -15,6 +15,17 @@ def qualify_window(out, client, directory, before, transport_endpoint, ready):
     roles = p.common.load(roles_path)
     control = p.load_bound(client['window_control'])
     window.control_replay(control)
+    admission = window.role_manifest(roles)
+    window.require(all(window.admission_policy(r) == admission for r in (receipt, controller, client, ready, control)),
+                   'mixed admission policies')
+    if admission == window.WORKER_ADMISSION:
+        window.require(ready['window_roles']['sha256'] == controller['roles_sha256'], 'readiness role policy differs')
+        for digest in roles['evidence'].values():
+            window.require(p.rt.digest(directory / 'role-evidence' / digest) == digest, 'retained role evidence differs')
+        window.check_settling(control['post_setup_settling'])
+        window.require(type(control['started_monotonic_ns']) is int and
+                       control['post_setup_settling']['finished_ns'] <= control['started_monotonic_ns'],
+                       'client started before post-setup settling completed')
     window.require(all(r.get(k) == v for r in (receipt, controller, client, ready)
                        for k, v in window.binding().items()), 'window policy/source binding differs')
     for name, key in (('window_controller.py', 'window_controller_sha256'),
@@ -49,16 +60,23 @@ def qualify_window(out, client, directory, before, transport_endpoint, ready):
     index = raw[guard]['index']
     window.require(type(index) is int and index == receipt['guard_end'] == guard - 1 and
                    len(samples) > index + 1, 'missing guard or post-completion endpoint')
-    old = p.host_check(before, fresh=False, measurement_policy=window.POLICY)
+    old = p.host_check(before, fresh=False, measurement_policy=window.POLICY, role_manifest=roles)
     core = window.core_inventory(old, before)
     window.require(core == receipt['core'] == controller['core'], 'core admission binding differs')
-    resolved = window.resolve_roles(samples[0]['tasks'], core, roles['roles'])
+    expected_identity = {k: p.PROFILE['host'][k] for k in ('pid', 'start_ticks', 'command_sha256')}
+    check_args = dict(admission=admission, qemu_identity=expected_identity)
+    resolved = roles['roles'] if admission == window.WORKER_ADMISSION else window.resolve_roles(samples[0]['tasks'], core, roles['roles'])
     window.require(resolved == receipt['roles'] and
                    all(r['evidence'] in roles['evidence'].values() for r in resolved), 'role evidence differs')
-    window.check_samples(samples[:index+1], core, resolved)
-    deltas = window.check_samples(samples, core, resolved)
-    window.require(receipt['final_deltas'] == deltas[-len(core)-len(resolved):] and
-                   receipt['passed'] and receipt['observer_affinity'] == [62] and
+    window.check_samples(samples[:index+1], core, resolved, **check_args)
+    deltas = window.check_samples(samples, core, resolved, **check_args)
+    if admission == window.WORKER_ADMISSION:
+        window.require(receipt['worker_activity'] == deltas, 'worker lifetime/activity record differs')
+        observed = [r for r in deltas['lifetimes'] if r['role'] != 'core']
+    else:
+        window.require(receipt['final_deltas'] == deltas[-len(core)-len(resolved):], 'counter deltas differ')
+        observed = resolved
+    window.require(receipt['passed'] and receipt['observer_affinity'] == [62] and
                    type(receipt['observer_cpu_ns']) is int and receipt['observer_cpu_ns'] >= 0,
                    'observer activity/settings differ')
     # At S0 all counter reads precede GO; the last sample follows FINISHED.
@@ -66,8 +84,8 @@ def qualify_window(out, client, directory, before, transport_endpoint, ready):
     window.require(samples[-1]['end_ns'] - samples[index]['end_ns'] <= window.WINDOW_TIMEOUT_NS,
                    'window completion bound exceeded')
     end = receipt['environment_endpoint']
-    p.host_check(end, fresh=False, measurement_policy=window.POLICY)
-    p.host_environment(end, ready['environment'], ready['topology'], window.POLICY)
+    p.host_check(end, fresh=False, measurement_policy=window.POLICY, role_manifest=roles)
+    p.host_environment(end, ready['environment'], ready['topology'], window.POLICY, roles)
     key = lambda tasks: sorted((t['tid'], t['start_ticks'], t['comm'], t['affinity']) for t in tasks)
     window.require(key(core) == key(window.core_inventory(old, end)) ==
                    key(window.core_inventory(old, transport_endpoint)), 'core lifetime changed at endpoint')
@@ -75,6 +93,7 @@ def qualify_window(out, client, directory, before, transport_endpoint, ready):
                    control['stderr_sha256'] == p.rt.digest(out / 'client.stderr') and
                    (out / 'client.stderr').stat().st_size == 0, 'client output binding differs')
     return dict(**window.binding(), endpoint=p.bind(endpoint_path), roles=p.bind(roles_path),
+                **window.admission_fields(roles),
                 control=client['window_control'], host_stream=p.bind(directory / 'host.stream'),
                 observer_cpu_ns=receipt['observer_cpu_ns'], observer_elapsed_ns=receipt['observer_elapsed_ns'],
-                observed_auxiliaries=resolved)
+                observed_auxiliaries=observed)

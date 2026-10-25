@@ -64,6 +64,16 @@ class ScalingPlan(unittest.TestCase):
         guard.start()
         self.addCleanup(guard.stop)
 
+    def test_full_summary_preserves_explicit_admission_policy(self):
+        data = rows()
+        for row in data:
+            row.update(measurement_policy=paired.window.POLICY,
+                       admission_policy=paired.window.WORKER_ADMISSION,
+                       qualification=dict(window=dict(roles=dict(sha256='a'*64))))
+        result = report.summarize(data, bindings())
+        self.assertEqual(result['admission_policy'], paired.window.WORKER_ADMISSION)
+        self.assertEqual(result['qualified_cases'], 126)
+
     def test_exact_grid_order_bounds_and_placement(self):
         self.assertEqual(paired.cases_for(PLAN), [(n, 'plain') for n in COUNTS])
         self.assertEqual(paired.order_for(PLAN), ORDER)

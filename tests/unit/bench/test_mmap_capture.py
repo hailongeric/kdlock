@@ -125,12 +125,21 @@ class ProcFixtures(unittest.TestCase):
         for path in (self.proc / 'stat', self.proc / 'task/42/stat'):
             path.write_text(self.stat(42, 11))
         (self.proc / 'task/42/schedstat').write_text('100 20 3')
+        (self.proc / 'task/42/status').write_text('Pid:\t42\nTgid:\t42\n')
 
     def test_same_arguments_different_start_rejected(self):
         control.identity(self.proc, 11, self.sha)
         (self.proc / 'stat').write_text(self.stat(42, 12))
         with self.assertRaises(ValueError):
             control.identity(self.proc, 11, self.sha)
+
+    def test_foreign_tgid_is_a_partial_failed_capture(self):
+        (self.proc / 'task/42/status').write_text('Pid:\t42\nTgid:\t43\n')
+        with patch.object(control.os, 'sched_getaffinity', return_value={63}):
+            row = control.capture(self.proc, 11, self.sha)
+        self.assertFalse(row['complete'])
+        self.assertFalse(row['tasks'][0]['complete'])
+        self.assertIn('membership', row['errors'][0]['error'])
 
     def test_disappearing_task_retains_partial_row(self):
         (self.proc / 'task/43').mkdir()

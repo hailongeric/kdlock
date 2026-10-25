@@ -1,0 +1,17 @@
+{
+  "admission_policy": "qemu-workers-v1",
+  "roles": [
+    {
+      "comm": "worker",
+      "affinity": [
+        63
+      ],
+      "class": "qemu_worker",
+      "reason": "Include observed auxiliary activity of the bound QEMU process under matched VM configuration.",
+      "evidence": "2f7fea2daa1c27992d6885814e913fe53b40b370349ec26ca436ee86fa727618"
+    }
+  ],
+  "evidence": {
+    "bench/mmap_lock/QEMU_WORKERS.md": "2f7fea2daa1c27992d6885814e913fe53b40b370349ec26ca436ee86fa727618"
+  }
+}

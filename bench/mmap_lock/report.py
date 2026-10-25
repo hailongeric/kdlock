@@ -29,10 +29,12 @@ def summarize(rows, receipt_bindings):
     keyed = {}
     boots, ready_bindings = {}, {}
     identity = rows[0]['prepared']
+    admission = paired.window.admission_policy(rows[0])
     for r in rows:
         key = (r['repeat'], r['mode'], r['case'])
         if (not r['passed'] or not r['drained'] or not r['accepted'] or not r['endpoint_checked'] or
                 r.get('screen') or paired.window.policy(r) != policy or
+                paired.window.admission_policy(r) != paired.window.admission_policy(rows[0]) or
                 r['prepared'] != identity or paired.row_plan(r) != plan or key not in order or key in keyed):
             raise ValueError('rejected, duplicate, mixed-input or unexpected timing case')
         if r['spec'] != paired.specification(r['case'], r['repeat'], r['mode'], plan):
@@ -50,6 +52,10 @@ def summarize(rows, receipt_bindings):
                 ready_bindings.setdefault(block, r['ready']) != r['ready']:
             raise ValueError('shared block changed boot or readiness')
         keyed[key] = r
+        if admission == paired.window.WORKER_ADMISSION and (
+                r['qualification']['window']['roles']['sha256'] !=
+                rows[0]['qualification']['window']['roles']['sha256']):
+            raise ValueError('mixed role manifests')
     if set(keyed) != set(order):
         raise ValueError('incomplete paired plan')
     if len(boots) != 4 or len(set(boots.values())) != 4:
@@ -84,6 +90,7 @@ def summarize(rows, receipt_bindings):
                            'reader-scaling, delegation or TCLock results. No workload latency sampling; '
                            'progress and correctness accounting retained.')
         return dict(plan=plan, measurement_policy=policy, qualified_cases=len(order), paired_repetitions=3, prepared=identity,
+            **paired.window.admission_fields(rows[0]),
             points=points, throughput_definition='Completed whole mmap/munmap cycles / actual elapsed time',
             limits=paired.bounds(plan), limitations=limitations)
     instrumentation = {str(n): {mode: spread([
@@ -106,11 +113,14 @@ def replay(path):
     policy = paired.window.policy(r)
     if paired.row_plan(client) != plan or paired.window.policy(client) != policy:
         raise ValueError('final/client campaign plan differs')
+    if paired.window.admission_policy(r) != paired.window.admission_policy(client):
+        raise ValueError('final/client admission policy differs')
     if any(r.get(key) != value for key, value in client.items()
            if key not in ('passed', 'accepted', 'drained')):
         raise ValueError('final receipt changed client identity/specification')
     ready = paired.load_bound(r['ready'])
     if (not ready['passed'] or paired.row_plan(ready) != plan or paired.window.policy(ready) != policy or
+            paired.window.admission_policy(ready) != paired.window.admission_policy(r) or
             any(ready[k] != r[k] for k in ('mode', 'boot_id', 'block', 'prepared'))):
         raise ValueError('readiness mode/boot/block/preparation differs')
     paired.load_bound(r['prepared'])
@@ -155,6 +165,7 @@ def screen_summary(rows):
                 r['measurement']['latency_samples'] != 0):
             raise ValueError('screen scope, correctness or policy differs')
     if (rows[0]['prepared'] != rows[1]['prepared'] or rows[0]['boot_id'] == rows[1]['boot_id'] or
+            paired.window.admission_policy(rows[0]) != paired.window.admission_policy(rows[1]) or
             rows[0]['qualification']['window']['roles']['sha256'] !=
             rows[1]['qualification']['window']['roles']['sha256']):
         raise ValueError('screen builds, boots or role policy differ')
@@ -162,7 +173,9 @@ def screen_summary(rows):
     if not all(isinstance(v, (int, float)) and math.isfinite(v) and v > 0 for v in rates.values()):
         raise ValueError('finite positive screen rates required')
     return dict(measurement_policy=paired.window.POLICY, screen=True, qualified_cases=2,
+        **paired.window.admission_fields(rows[0]),
         rates=rates, kd_over_native=rates['kd']/rates['native'],
+        observed_auxiliaries={r['mode']: r['qualification']['window'].get('observed_auxiliaries', []) for r in rows},
         limitations='One unscored harness-validation pair; no variability estimate, optimization gain '
                     'or completed throughput matrix. The 21-count, three-pair plan remains unchanged.')
 

@@ -1,5 +1,6 @@
 """Offline control/receipt fixtures. No SSH, host observer or kernel workload."""
 import copy
+import hashlib
 import json
 import selectors
 import shlex
@@ -17,7 +18,9 @@ sys.path.insert(0, str(ROOT / 'bench/mmap_lock'))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import window
 import window_controller
+import window_replay
 import report
+import paired
 import test_mmap_scaling as scaling
 
 NONCE = '0123456789abcdef0123456789abcdef'
@@ -244,6 +247,202 @@ class Observations(unittest.TestCase):
             rows[-1].update(change)
             with self.assertRaises(ValueError):
                 window.check_samples(rows, core(), [])
+
+
+class WorkerPool(unittest.TestCase):
+    identity = dict(pid=1, start_ticks=1, command_sha256='b'*64)
+    definition = dict(comm='worker', affinity=[63], **{'class': 'qemu_worker'},
+                      evidence='a'*64, reason='Matched QEMU worker activity is part of the VM comparison.')
+
+    def pool(self):
+        rows = samples()
+        for row in rows:
+            row.update(identity_before=dict(self.identity), identity_after=dict(self.identity))
+            for task in row['tasks']:
+                task['tgid'] = 1
+        return rows
+
+    def add(self, row, tid=300, start=100, runtime=123):
+        row['tasks'].append(dict(tid=tid, start_ticks=start, comm='worker', affinity=[63], tgid=1,
+            state='R', complete=True, runtime_ns=runtime, runqueue_wait_ns=30, timeslices=3,
+            io={k: 512 for k in window.IO_KEYS}))
+        row['initial_tids'] = row['final_tids'] = sorted(t['tid'] for t in row['tasks'])
+
+    def check(self, rows):
+        return window.check_samples(rows, core(), [self.definition], admission=window.WORKER_ADMISSION,
+                                    qemu_identity=self.identity)
+
+    def test_active_birth_retirement_and_tid_reuse_have_separate_coverage(self):
+        rows = self.pool()
+        for i in range(1, 4):
+            self.add(rows[i], runtime=123+i)
+        for i in range(4, 7):
+            self.add(rows[i], start=200, runtime=10+i)
+        result = self.check(rows)
+        workers = [r for r in result['lifetimes'] if r['role'] != 'core']
+        self.assertEqual(result['auxiliary_counts'], [0, 1, 1, 1, 1, 1, 1])
+        self.assertEqual([r['start_ticks'] for r in workers], [100, 200])
+        self.assertEqual([r['observed_deltas']['runtime_ns'] for r in workers], [2, 2])
+        self.assertFalse(workers[0]['present_at_start'])
+        self.assertFalse(workers[0]['present_at_end'])
+        self.assertTrue(workers[1]['present_at_end'])
+        self.assertEqual(result['changes'][3]['departed'], [dict(tid=300, start_ticks=100)])
+        self.assertIn('not measured', result['coverage'])
+
+    def test_missing_or_foreign_membership_unknown_role_and_wrong_affinity_reject(self):
+        for mutation in ('missing_tgid', 'foreign', 'name', 'affinity'):
+            with self.subTest(mutation=mutation):
+                rows = self.pool();self.add(rows[2])
+                task = rows[2]['tasks'][-1]
+                if mutation == 'missing_tgid':del task['tgid']
+                elif mutation == 'foreign':task['tgid'] = 2
+                elif mutation == 'name':task['comm'] = 'foreign-worker'
+                else:task['affinity'] = [0]
+                with self.assertRaises(ValueError):self.check(rows)
+
+    def test_fixed_core_and_partial_scans_still_fail(self):
+        for mutation in ('missing_core', 'changed_core_lifetime', 'partial', 'identity', 'gap'):
+            with self.subTest(mutation=mutation):
+                rows = self.pool()
+                if mutation == 'missing_core':rows[3]['tasks'].pop(0)
+                elif mutation == 'changed_core_lifetime':rows[3]['tasks'][0]['start_ticks'] += 1
+                elif mutation == 'partial':rows[3]['complete'] = False
+                elif mutation == 'identity':rows[3]['identity_after'] = dict(self.identity, start_ticks=2)
+                else:rows[3]['begin_ns'] += 2_000_000_000
+                with self.assertRaises(ValueError):self.check(rows)
+
+    def test_regression_and_reappearing_departed_lifetime_reject(self):
+        for mutation in ('regression', 'reappear'):
+            rows = self.pool()
+            self.add(rows[1], runtime=100)
+            self.add(rows[2 if mutation == 'regression' else 4], runtime=99)
+            with self.assertRaises(ValueError):self.check(rows)
+
+    def test_old_policy_does_not_admit_dynamic_worker_class(self):
+        rows = self.pool();self.add(rows[1])
+        with self.assertRaises(ValueError):window.check_samples(rows, core(), [])
+        with self.assertRaises(ValueError):window.role_manifest(dict(roles=[self.definition], evidence={'p':'a'*64}))
+
+    def test_manifest_is_explicit_and_ambiguous_selectors_reject(self):
+        manifest = dict(admission_policy=window.WORKER_ADMISSION, roles=[self.definition], evidence={'p':'a'*64})
+        self.assertEqual(window.role_manifest(manifest), window.WORKER_ADMISSION)
+        rows = self.pool();self.add(rows[0])
+        with self.assertRaises(ValueError):
+            window.resolve_roles(rows[0]['tasks'], core(), [self.definition]*2,
+                                 admission=window.WORKER_ADMISSION, qemu_identity=self.identity)
+
+    def test_one_post_setup_wait_records_ninety_seconds_without_quiet_retries(self):
+        now = [5_000_000_000]
+        delays = []
+        def sleep(seconds):
+            delays.append(seconds);now[0] += int(seconds*1e9)
+        result = window.post_setup_wait(clock=lambda:now[0], sleep=sleep)
+        window.check_settling(result)
+        self.assertEqual(sum(delays), 90)
+        with self.assertRaises(ValueError):window.check_settling(dict(result, finished_ns=result['finished_ns']-1))
+
+    def test_host_admission_uses_same_membership_rule_and_preserves_legacy(self):
+        rows = self.pool();self.add(rows[0])
+        profile = dict(self.identity, snapshot='snapshot', boot_id='host-boot', task_count=67)
+        original = dict(qemu=[dict(tasks=copy.deepcopy(rows[1]['tasks']))])
+        host = dict(passed=True, capture=rows[0], pins_verified=True, snapshot_listed=True,
+            recovery_snapshot='snapshot', boot_id='host-boot', final_identity=self.identity,
+            qemu=[dict(tasks=rows[0]['tasks'])])
+        manifest = dict(admission_policy=window.WORKER_ADMISSION, roles=[self.definition], evidence={'p':'a'*64})
+        with patch.dict(paired.PROFILE, host=profile), \
+             patch.object(paired.common.scheduler, 'REPLAY_ENVIRONMENT_SHA256', {}), \
+             patch.object(paired.common, 'load', return_value=original):
+            paired.host_check(host, fresh=False, measurement_policy=window.POLICY, role_manifest=manifest)
+            with self.assertRaises(paired.rt.Failure):paired.host_check(host, fresh=False)
+            host['qemu'][0]['tasks'][-1]['tgid'] = 2
+            with self.assertRaises(ValueError):
+                paired.host_check(host, fresh=False, measurement_policy=window.POLICY, role_manifest=manifest)
+
+
+class WorkerReplay(unittest.TestCase):
+    def replay_fixture(self, root, mutation=None):
+        """Run the real window qualifier; only external environment checks are stubbed."""
+        out, directory = root / 'case', root / 'controller'
+        out.mkdir();directory.mkdir()
+        def write(path, value):
+            path.write_text(json.dumps(value, sort_keys=True) + '\n')
+        fixture = WorkerPool()
+        observations = fixture.pool()
+        for i in range(1, 4):fixture.add(observations[i], runtime=100+i)
+        original = dict(qemu=[dict(tasks=core())])
+        before = dict(qemu=[dict(tasks=observations[0]['tasks'])])
+        endpoint = dict(qemu=[dict(tasks=observations[-1]['tasks'])])
+        fixed = window.core_inventory(original, before)
+        evidence = b'Fixture: bound QEMU membership and shared CPU63 worker policy.\n'
+        digest = hashlib.sha256(evidence).hexdigest()
+        definition = dict(fixture.definition, evidence=digest)
+        roles = dict(admission_policy=window.WORKER_ADMISSION, roles=[definition], evidence={'scope.md':digest})
+        write(directory / 'window-roles.json', roles)
+        (directory / 'role-evidence').mkdir()
+        if mutation != 'missing_evidence':(directory / 'role-evidence' / digest).write_bytes(evidence)
+        binding = dict(**window.binding(), admission_policy=window.WORKER_ADMISSION)
+        activity = window.check_samples(observations, fixed, roles['roles'],
+            admission=window.WORKER_ADMISSION, qemu_identity=fixture.identity)
+        if mutation == 'worker_accounting':activity['lifetimes'][-1]['observed_deltas']['runtime_ns'] += 1
+        receipt = dict(**binding, nonce=NONCE, core=fixed, roles=roles['roles'], samples=observations,
+            guard_end=4, worker_activity=activity, passed=True, observer_affinity=[62],
+            observer_cpu_ns=10, observer_elapsed_ns=3_100_000_000, environment_endpoint=endpoint)
+        endpoint_path = directory / 'window-endpoint.json';write(endpoint_path, receipt)
+        endpoint_sha = paired.rt.digest(endpoint_path)
+        raw = []
+        for i, sample in enumerate(observations):
+            raw.append(dict(**binding, nonce=NONCE, event='sample', sample=sample))
+            if i == 4:raw.append(dict(**binding, nonce=NONCE, event='guard', index=4))
+        raw.append(dict(**binding, nonce=NONCE, event='endpoint', receipt=receipt))
+        (directory / 'host.stream').write_text(''.join(json.dumps(row)+'\n' for row in raw))
+        protocol = window.Protocol(NONCE)
+        for event in protocol.ORDER:
+            fields = {}
+            if event in ('finished', 'export'):fields['completion_token'] = '0'*16
+            if event in ('endpoint', 'export'):fields['endpoint_sha256'] = endpoint_sha
+            protocol.add(event, **fields)
+        (out / 'client.jsonl').write_text('fixture output\n');(out / 'client.stderr').write_bytes(b'')
+        control = dict(**binding, nonce=NONCE, events=protocol.events, returncode=0,
+            completion_confirmed=True, publication_after_endpoint=True,
+            completion_token='0'*16, endpoint_sha256=endpoint_sha,
+            started_monotonic_ns=window.SETTLE_NS+2,
+            post_setup_settling=dict(started_ns=1, finished_ns=window.SETTLE_NS+1, required_ns=window.SETTLE_NS),
+            stdout_sha256=paired.rt.digest(out/'client.jsonl'), stderr_sha256=paired.rt.digest(out/'client.stderr'))
+        if mutation == 'missing_settling':del control['post_setup_settling']
+        if mutation == 'short_settling':control['post_setup_settling']['finished_ns'] -= 1
+        if mutation == 'settling_after_launch':control['started_monotonic_ns'] = window.SETTLE_NS
+        write(out/'window-control.json', control)
+        client = dict(**binding, window_control=paired.bind(out/'window-control.json'))
+        ready = dict(**binding, window_roles=paired.bind(directory/'window-roles.json'), environment={}, topology={})
+        if mutation == 'manifest':ready['window_roles']['sha256'] = 'f'*64
+        controller = dict(**binding, nonce=NONCE, core=fixed, events=protocol.events,
+            window_controller_sha256=paired.rt.digest(ROOT/'bench/mmap_lock/window_controller.py'),
+            window_observer_sha256=paired.rt.digest(ROOT/'bench/mmap_lock/window_host.py'),
+            window_endpoint_sha256=endpoint_sha, roles_sha256=paired.rt.digest(directory/'window-roles.json'),
+            completion_token='0'*16, host_window_returncode=0, host_window_completion_unconfirmed=False,
+            go_sent_monotonic_ns=10, finished_observed_monotonic_ns=20, endpoint_requested_monotonic_ns=21,
+            endpoint_observed_monotonic_ns=22, export_sent_monotonic_ns=23, guest_exit_observed_monotonic_ns=24,
+            stream_sha256={'host':paired.rt.digest(directory/'host.stream')})
+        if mutation == 'policy':controller['admission_policy'] = window.FIXED_ADMISSION
+        write(directory/'controller.json', controller)
+        with patch.dict(paired.PROFILE, host=fixture.identity), \
+             patch.object(paired, 'host_check', return_value=original), \
+             patch.object(paired, 'host_environment', return_value={}):
+            return window_replay.qualify_window(out, client, directory, before, endpoint, ready)
+
+    def test_real_worker_window_qualification(self):
+        with tempfile.TemporaryDirectory() as directory:
+            result = self.replay_fixture(Path(directory))
+        self.assertEqual(result['admission_policy'], window.WORKER_ADMISSION)
+        self.assertEqual(len(result['observed_auxiliaries']), 1)
+        self.assertFalse(result['observed_auxiliaries'][0]['present_at_end'])
+
+    def test_real_replay_rejects_policy_evidence_settling_and_accounting_mutations(self):
+        for mutation in ('policy', 'manifest', 'missing_evidence', 'missing_settling', 'short_settling',
+                         'settling_after_launch', 'worker_accounting'):
+            with self.subTest(mutation=mutation), tempfile.TemporaryDirectory() as directory:
+                with self.assertRaises((ValueError, KeyError, FileNotFoundError)):
+                    self.replay_fixture(Path(directory), mutation)
 
 
 class Bridge(unittest.TestCase):

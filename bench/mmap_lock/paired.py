@@ -202,7 +202,7 @@ def projection(host):
                    for t in host['qemu'][0]['tasks']), key=lambda t: t['tid'])
 
 
-def host_check(host, *, fresh, measurement_policy=window.LEGACY):
+def host_check(host, *, fresh, measurement_policy=window.LEGACY, role_manifest=None):
     expected = PROFILE['host']
     rt.require(host['passed'] and host['capture']['complete'] and host['pins_verified'] and
                host['snapshot_listed'] and host['recovery_snapshot'] == expected['snapshot'] and
@@ -217,12 +217,28 @@ def host_check(host, *, fresh, measurement_policy=window.LEGACY):
         rt.require(rt.digest(common.ORIGINAL / name) == h, 'original environment changed')
     old = common.load(common.ORIGINAL / 'host-state.json')
     if measurement_policy == window.POLICY:
-        window.core_inventory(old, host)
+        core = window.core_inventory(old, host)
+        if role_manifest is not None:
+            admission = window.role_manifest(role_manifest)
+            expected_identity = {k: expected[k] for k in ('pid', 'start_ticks', 'command_sha256')}
+            if admission == window.WORKER_ADMISSION:
+                rt.require(host['capture']['identity_before'] == host['capture']['identity_after'] ==
+                           expected_identity, 'host capture membership identity differs')
+            window.resolve_roles(host['qemu'][0]['tasks'], core, role_manifest['roles'],
+                                 admission=admission, qemu_identity=expected_identity)
     else:
         rt.require(measurement_policy == window.LEGACY and
                    len(projection(host)) == expected['task_count'] == 67 and
                    projection(host) == projection(old), 'strict original QEMU thread set differs')
     return old
+
+
+def ready_roles(row):
+    if window.admission_policy(row) == window.FIXED_ADMISSION:
+        return None
+    roles = load_bound(row['window_roles'])
+    rt.require(window.role_manifest(roles) == window.admission_policy(row), 'bound admission policy differs')
+    return roles
 
 
 def environment():
@@ -244,8 +260,8 @@ def environment():
     return env, topo
 
 
-def host_environment(host, env, topo, measurement_policy=window.LEGACY):
-    old = host_check(host, fresh=False, measurement_policy=measurement_policy)
+def host_environment(host, env, topo, measurement_policy=window.LEGACY, role_manifest=None):
+    old = host_check(host, fresh=False, measurement_policy=measurement_policy, role_manifest=role_manifest)
     original = common.load(common.ORIGINAL / 'environment.json')
     original.update(boot_id=env['boot_id'], cmdline=env['cmdline'])
     compare = window.same_environment if measurement_policy == window.POLICY else common.scheduler.same_environment
@@ -285,6 +301,12 @@ def ready(a):
     if policy == window.POLICY:
         rt.require(plan in PLAIN_PLANS, 'prepared window is plain only')
         result.update(window.binding())
+    roles = None
+    if getattr(a, 'window_roles', None) is not None:
+        rt.require(policy == window.POLICY, 'role manifest requires prepared-window measurement')
+        roles = common.load(a.window_roles)
+        window.role_manifest(roles)
+        result.update(window.admission_fields(roles), window_roles=bind(a.window_roles))
     try:
         rt.require(BLOCKS[a.block][0] == a.mode, 'ordered candidate boot mode differs')
         inputs = prepared(a.prepared)
@@ -306,9 +328,9 @@ def ready(a):
             kernel_baseline=Path(PROFILE['bundle'])), out, rt.command)
         rt.require(identity['running_build_id'] == PROFILE['build_id'], 'live kernel Build ID differs')
         host = common.load(a.host_state)
-        host_check(host, fresh=True, measurement_policy=policy)
+        host_check(host, fresh=True, measurement_policy=policy, role_manifest=roles)
         env, topo = environment()
-        comparison = host_environment(host, env, topo, policy)
+        comparison = host_environment(host, env, topo, policy, roles)
         fault_check(out, 'ready-dmesg')
         result.update(passed=True, prepared=bind(a.prepared), files=control_files(),
             environment=env, topology=topo, host_comparison=comparison, kernel_identity=identity)
@@ -320,6 +342,7 @@ def readiness(path):
     row = common.load(path)
     row_plan(row)
     policy = window.policy(row)
+    ready_roles(row)
     if policy == window.POLICY:
         rt.require(all(row.get(k) == v for k, v in window.binding().items()), 'readiness control source differs')
     rt.require(row['passed'], 'same-boot readiness required')
@@ -369,15 +392,18 @@ def fixed(inputs, out, mode):
     return result
 
 
-def timed(inputs, out, spec, nonce=None):
+def timed(inputs, out, spec, nonce=None, admission=window.FIXED_ADMISSION):
     rt.command(['insmod', inputs['binaries']['payload'], 'observe=0'], out / 'load.log')
     fault_check(out, 'after-load-dmesg')
     health(0)
     argv = [inputs['binaries']['timed'], str(spec['threads']), spec['observation']]
+    settling = window.post_setup_wait() if admission == window.WORKER_ADMISSION else None
     if nonce is None:
         rt.command(argv, out / 'client.jsonl', timeout=120)
     else:
         record, stdout, stderr = window.bridge(argv, nonce, sys.stdin.buffer, sys.stdout.buffer)
+        if settling is not None:
+            record.update(admission_policy=admission, post_setup_settling=settling)
         # A failed exchange is preserved as failed evidence. It does not make an
         # early publication, uncertain client exit or module teardown acceptable.
         (out / 'client.jsonl').write_bytes(stdout)
@@ -409,6 +435,7 @@ def validate(a):
                   prepared=ready['prepared'], ready=bind(a.ready), cases=[], **plan_fields(plan))
     if window.policy(ready) == window.POLICY:
         result.update(window.binding())
+    result.update(window.admission_fields(ready))
     try:
         result['fixed'] = fixed(inputs, out, ready['mode'])
         result['fixed_raw'] = bind(out / 'fixed.jsonl')
@@ -416,7 +443,7 @@ def validate(a):
             case = out / f'{n}-{observation}'
             case.mkdir()
             spec = specification(index, 0, ready['mode'], plan)
-            timed(inputs, case, spec)
+            timed(inputs, case, spec, admission=window.admission_policy(ready))
             row, value = business_finish(case, spec, ready['mode'], plan)
             result['cases'].append(dict(spec=spec, measurement=row, health=value,
                                        raw=bind(case / 'client.jsonl')))
@@ -450,6 +477,7 @@ def validation_receipt(path, mode, prepared_ref, plan=LEGACY_PLAN):
     v = common.load(path)
     validation_shape(v, mode, prepared_ref, plan)
     ready = load_bound(v['ready'])
+    rt.require(window.admission_policy(v) == window.admission_policy(ready), 'validation admission policy differs')
     rt.require(ready['passed'] and ready['mode'] == mode and ready['prepared'] == prepared_ref and
                window.policy(ready) == window.policy(v) and
                ready['block'] == (0 if mode == 'native' else 1) and row_plan(ready) == plan,
@@ -480,6 +508,7 @@ def run(a):
     policy = window.policy(ready)
     if policy == window.POLICY:
         result.update(window.binding())
+    result.update(window.admission_fields(ready))
     try:
         index = order.index((a.repeat, ready['mode'], a.case))
         rt.require((index == 0) == (a.previous is None), 'ordered predecessor required')
@@ -489,6 +518,7 @@ def run(a):
                 (prior['repeat'], prior['mode'], prior['case']) == order[index-1] and
                 row_plan(prior) == plan and
                 window.policy(prior) == policy and
+                window.admission_policy(prior) == window.admission_policy(ready) and
                 prior['prepared'] == ready['prepared'] and
                 ((prior['block'] == ready['block']) == (prior['boot_id'] == ready['boot_id'])),
                 'preceding qualified case or boot transition differs')
@@ -500,16 +530,17 @@ def run(a):
                 rt.require(window.policy(validation) == policy, 'validation measurement policy differs')
             result['validated'].append(bind(path))
         host = common.load(a.host_state)
-        host_check(host, fresh=True, **({'measurement_policy': policy} if policy == window.POLICY else {}))
+        host_check(host, fresh=True, **({'measurement_policy': policy, 'role_manifest': ready_roles(ready)} if policy == window.POLICY else {}))
         if a.previous is not None:
             rt.require(host['captured_utc'] > prior['endpoint_captured_utc'],
                        'fresh admission must follow the preceding endpoint')
         env, topo = environment()
-        result['host_comparison'] = host_environment(host, env, topo, *([policy] if policy == window.POLICY else []))
+        result['host_comparison'] = host_environment(host, env, topo, *([policy, ready_roles(ready)] if policy == window.POLICY else []))
         result['admission'] = bind(a.host_state)
         shutil.copyfile(a.host_state, out / 'host-before.json')
         fault_check(out, 'before-load-dmesg')
-        timed(inputs, out, spec, *([os.environ['KDLOCK_WINDOW_NONCE']] if policy == window.POLICY else []))
+        timed(inputs, out, spec, *([os.environ['KDLOCK_WINDOW_NONCE']] if policy == window.POLICY else []),
+              **({'admission': window.admission_policy(ready)} if window.admission_policy(ready) != window.FIXED_ADMISSION else {}))
         result['client_exited'] = True
         if policy == window.POLICY:
             result['window_control'] = bind(out / 'window-control.json')
@@ -529,19 +560,20 @@ def screen(a):
     out.mkdir(parents=True)
     spec = specification(9, 0, ready['mode'], SCALING_PLAN)
     result = dict(**window.binding(), plan=SCALING_PLAN, screen=True,
+        **window.admission_fields(ready),
         passed=False, accepted=False, drained=False, client_exited=False,
         ready=bind(a.ready), prepared=ready['prepared'], mode=ready['mode'], boot_id=ready['boot_id'],
         block=ready['block'], repeat=0, case=9, spec=spec)
     try:
         rt.require(ready['block'] == (0 if ready['mode'] == 'native' else 1), 'screen boot block differs')
         host = common.load(a.host_state)
-        host_check(host, fresh=True, measurement_policy=window.POLICY)
+        host_check(host, fresh=True, measurement_policy=window.POLICY, role_manifest=ready_roles(ready))
         env, topo = environment()
-        result['host_comparison'] = host_environment(host, env, topo, window.POLICY)
+        result['host_comparison'] = host_environment(host, env, topo, window.POLICY, ready_roles(ready))
         result['admission'] = bind(a.host_state)
         result['fixed'] = fixed(inputs, out, ready['mode'])
         result['fixed_raw'] = bind(out / 'fixed.jsonl')
-        timed(inputs, out, spec, os.environ['KDLOCK_WINDOW_NONCE'])
+        timed(inputs, out, spec, os.environ['KDLOCK_WINDOW_NONCE'], admission=window.admission_policy(ready))
         result.update(client_exited=True, window_control=bind(out / 'window-control.json'))
     except BaseException as error:
         result['error'] = repr(error)
@@ -569,14 +601,17 @@ def qualify(out, client, directory):
                controller['observer_sha256'] == rt.digest(ROOT / 'bench/mmap_lock/host_capture_control.py'),
                'reviewed endpoint tooling differs')
     before = load_bound(client['admission'])
-    host_check(host, fresh=False, measurement_policy=policy)
+    ready = load_bound(client['ready'])
+    roles = ready_roles(ready)
+    rt.require(window.admission_policy(controller) == window.admission_policy(client) ==
+               window.admission_policy(ready), 'mixed admission policies')
+    host_check(host, fresh=False, measurement_policy=policy, role_manifest=roles)
     ids = lambda h: sorted((t['tid'], t['start_ticks']) for t in h['capture']['tasks'])
     if policy == window.LEGACY:
         rt.require(ids(before) == ids(host), 'QEMU task lifetime changed across measurement')
-    ready = load_bound(client['ready'])
     rt.require(row_plan(client) == row_plan(ready) and window.policy(ready) == policy,
                'measurement/readiness campaign or policy differs')
-    host_environment(host, ready['environment'], ready['topology'], policy)
+    host_environment(host, ready['environment'], ready['topology'], policy, roles)
     result = dict(captured_utc=host['captured_utc'], controller=bind(directory / 'controller.json'),
                   endpoint=bind(host_path), admission=client['admission'])
     if policy == window.POLICY:
@@ -634,6 +669,7 @@ def main():
     p.add_argument('--previous', type=Path)
     p.add_argument('--plan', choices=tuple(PLANS), help='select at describe/ready; later actions inherit bound readiness')
     p.add_argument('--measurement-policy', choices=(window.LEGACY, window.POLICY))
+    p.add_argument('--window-roles', type=Path, help='versioned role manifest selected at ready')
     a = p.parse_args()
     if a.action == 'describe':
         if a.plan not in PLAIN_PLANS or a.output is not None:
@@ -644,6 +680,8 @@ def main():
         p.error('--plan is selected at ready and inherited by later actions')
     if a.measurement_policy is not None and a.action != 'ready':
         p.error('--measurement-policy is selected at ready and inherited')
+    if a.window_roles is not None and a.action != 'ready':
+        p.error('--window-roles is selected at ready and inherited')
     if a.output is None:
         p.error('--output is required for live actions')
     a.output = a.output.resolve()

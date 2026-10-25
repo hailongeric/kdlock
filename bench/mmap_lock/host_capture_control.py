@@ -49,6 +49,10 @@ def capture(proc, start_ticks, command_sha):
             try:
                 first = stat_fields((task / 'stat').read_text())
                 row.update(first)
+                status = dict(line.split(':', 1) for line in (task / 'status').read_text().splitlines() if ':' in line)
+                row['tgid'] = int(status.get('Tgid', '-1'))
+                if first['tid'] != tid or int(status.get('Pid', '-1')) != tid or row['tgid'] != int(proc.name):
+                    raise ValueError('task membership differs from bound QEMU process')
                 row['runtime_ns'], row['runqueue_wait_ns'], row['timeslices'] = map(
                     int, (task / 'schedstat').read_text().split())
                 row['affinity'] = sorted(os.sched_getaffinity(tid))

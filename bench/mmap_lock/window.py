@@ -13,6 +13,9 @@ import time
 
 POLICY = 'mmap-window-v2'
 LEGACY = 'mmap-transport-v1'
+FIXED_ADMISSION = 'fixed-aux-v1'
+WORKER_ADMISSION = 'qemu-workers-v1'
+SETTLE_NS = 90_000_000_000
 ABI = 'MW1'
 MAX_OUTPUT = 1024 * 1024
 MAX_ERROR = 64 * 1024
@@ -37,6 +40,51 @@ def policy(row):
     value = row.get('measurement_policy', LEGACY)
     require(value in (LEGACY, POLICY), 'unknown measurement policy')
     return value
+
+
+def admission_policy(row):
+    value = row.get('admission_policy', FIXED_ADMISSION)
+    require(value in (FIXED_ADMISSION, WORKER_ADMISSION), 'unknown admission policy')
+    return value
+
+
+def admission_fields(row):
+    value = admission_policy(row)
+    return {} if value == FIXED_ADMISSION else dict(admission_policy=value)
+
+
+def role_manifest(row):
+    admission = admission_policy(row)
+    require(set(row) == {'roles', 'evidence'} | ({'admission_policy'} if 'admission_policy' in row else set()),
+            'role manifest shape differs')
+    require(isinstance(row['roles'], list) and isinstance(row['evidence'], dict), 'invalid role manifest')
+    for role in row['roles']:
+        require(set(role) == {'comm', 'affinity', 'class', 'reason', 'evidence'} and
+                role['affinity'] == [63] and isinstance(role['reason'], str) and role['reason'].strip() and
+                isinstance(role['evidence'], str) and re.fullmatch('[0-9a-f]{64}', role['evidence']) and
+                role['evidence'] in row['evidence'].values(), 'invalid/unbound role definition')
+        if admission == WORKER_ADMISSION:
+            require(role['class'] == 'qemu_worker' and role['comm'] == 'worker', 'worker policy role differs')
+        else:
+            require(role['class'] in ('inactive_auxiliary', 'expected_service'), 'fixed policy role differs')
+    return admission
+
+
+def post_setup_wait(*, clock=time.monotonic_ns, sleep=time.sleep):
+    """One fixed interval, before client creation; never a wait-until-quiet loop."""
+    started = clock()
+    while True:
+        now = clock()
+        if now - started >= SETTLE_NS:
+            return dict(started_ns=started, finished_ns=now, required_ns=SETTLE_NS)
+        sleep(min(1, (SETTLE_NS - (now - started)) / 1e9))
+
+
+def check_settling(row):
+    require(set(row) == {'started_ns', 'finished_ns', 'required_ns'} and
+            all(type(v) is int and v >= 0 for v in row.values()) and
+            row['required_ns'] == SETTLE_NS and row['finished_ns'] - row['started_ns'] >= SETTLE_NS,
+            'missing required 90-second post-setup interval')
 
 
 def binding():
@@ -151,6 +199,7 @@ def bridge(argv, nonce, command_input, event_output, *, popen=subprocess.Popen):
     """
     p = Protocol(nonce)
     record = dict(**binding(), nonce=nonce, events=p.events, returncode=None,
+                  started_monotonic_ns=time.monotonic_ns(),
                   completion_confirmed=False, publication_after_endpoint=False)
     buffers = {name: bytearray() for name in ('stdout', 'stderr', 'control', 'input')}
     parent, child_socket = socket.socketpair()
@@ -334,8 +383,23 @@ def counters(task):
     return values
 
 
-def resolve_roles(tasks, core, definitions):
-    """Resolve reviewed role selectors once, after setup and before the guard."""
+def member_tasks(tasks, qemu_identity):
+    require(isinstance(qemu_identity, dict) and set(qemu_identity) == {'pid', 'start_ticks', 'command_sha256'} and
+            type(qemu_identity['pid']) is int and qemu_identity['pid'] > 0 and
+            type(qemu_identity['start_ticks']) is int and qemu_identity['start_ticks'] > 0 and
+            re.fullmatch('[0-9a-f]{64}', qemu_identity['command_sha256']), 'missing bound QEMU identity')
+    require(all(t['complete'] and type(t.get('tgid')) is int and t['tgid'] == qemu_identity['pid'] and
+                type(t['tid']) is int and t['tid'] > 0 and type(t['start_ticks']) is int and t['start_ticks'] > 0
+                for t in tasks), 'task is not a verified member of the bound QEMU process')
+
+
+def resolve_roles(tasks, core, definitions, *, admission=FIXED_ADMISSION, qemu_identity=None):
+    """Resolve eligible auxiliaries; the version chooses fixed or dynamic lifetime."""
+    require(admission in (FIXED_ADMISSION, WORKER_ADMISSION), 'unknown admission policy')
+    if admission == WORKER_ADMISSION:
+        member_tasks(tasks, qemu_identity)
+        require(all(r['class'] == 'qemu_worker' and r['comm'] == 'worker' and r['affinity'] == [63]
+                    for r in definitions), 'worker policy role differs')
     keys = {task_key(t) for t in core}
     result = []
     for task in tasks:
@@ -344,17 +408,21 @@ def resolve_roles(tasks, core, definitions):
         matches = [r for r in definitions if r['comm'] == task['comm'] and
                    r['affinity'] == task['affinity'] == [63]]
         require(len(matches) == 1, 'unclassified or ambiguously classified auxiliary')
-        result.append(dict(matches[0], tid=task['tid'], start_ticks=task['start_ticks']))
+        result.append(dict(matches[0], tid=task['tid'], start_ticks=task['start_ticks'],
+                           **({'tgid': task['tgid']} if admission == WORKER_ADMISSION else {})))
     return result
 
 
-def check_samples(samples, core, roles, *, complete=True):
+def check_samples(samples, core, roles, *, complete=True, admission=FIXED_ADMISSION, qemu_identity=None):
     """Validate one frozen inventory; no quiet-interval restart or count budget.
 
     core: original vCPU/service identities and affinities. roles: explicit extra
     identity -> classification/evidence. Expected service activity is recorded,
     not subjected to the inactive-auxiliary zero-delta rule.
     """
+    require(admission in (FIXED_ADMISSION, WORKER_ADMISSION), 'unknown admission policy')
+    if admission == WORKER_ADMISSION:
+        return check_worker_samples(samples, core, roles, complete=complete, qemu_identity=qemu_identity)
     require(samples, 'missing window observations')
     expected = {task_key(t): t for t in core}
     require(len(expected) == 67 and len(core) == 67, 'exact original core inventory required')
@@ -406,3 +474,67 @@ def check_samples(samples, core, roles, *, complete=True):
         require(len(samples) >= GUARD_SCANS and samples[-1]['end_ns'] - first['begin_ns'] >= GUARD_NS,
                 'incomplete guard coverage')
     return deltas
+
+
+def check_worker_samples(samples, core, definitions, *, complete, qemu_identity):
+    """Exact core; explicit QEMU worker membership with per-lifetime coverage.
+
+    Complete scans may differ in auxiliary membership. A missing/partial read
+    within a scan remains a failure. First/last observed counters are not total
+    lifetime activity, and no inference is made about unobserved short lifetimes.
+    """
+    require(samples, 'missing window observations')
+    fixed = {task_key(t): t for t in core}
+    require(len(fixed) == len(core) == 67, 'exact original core inventory required')
+    seen, departed, previous_keys, counts, changes = {}, set(), set(), [], []
+    previous = None
+    for index, sample in enumerate(samples):
+        require(sample['complete'] and not sample['errors'] and sample['equal_observed_tid_lists'] and
+                sample['identity_before'] == sample['identity_after'] == qemu_identity,
+                'incomplete observation or QEMU identity drift')
+        require(type(sample['begin_ns']) is int and type(sample['end_ns']) is int and
+                0 <= sample['begin_ns'] <= sample['end_ns'] and
+                sample['end_ns'] - sample['begin_ns'] <= MAX_GAP_NS, 'invalid or slow observation')
+        if previous is not None:
+            require(previous['end_ns'] <= sample['begin_ns'] and
+                    sample['begin_ns'] - previous['begin_ns'] <= MAX_GAP_NS, 'observation gap or order differs')
+        tasks = {task_key(t): t for t in sample['tasks']}
+        require(len(tasks) == len(sample['tasks']) == len({t['tid'] for t in sample['tasks']}) and fixed.keys() <= tasks.keys() and
+                sample['initial_tids'] == sample['final_tids'] == sorted(t['tid'] for t in tasks.values()),
+                'core missing or inconsistent task inventory')
+        eligible = {task_key(r): r for r in resolve_roles(sample['tasks'], core, definitions,
+                    admission=WORKER_ADMISSION, qemu_identity=qemu_identity)}
+        counts.append(len(eligible))
+        lost = previous_keys - tasks.keys()
+        departed.update(lost)
+        if index:
+            changes.append(dict(sample=index,
+                added=[dict(tid=k[0], start_ticks=k[1]) for k in sorted(tasks.keys()-previous_keys)],
+                departed=[dict(tid=k[0], start_ticks=k[1]) for k in sorted(lost)]))
+        for key, task in tasks.items():
+            require(key not in departed, 'departed lifetime reappeared')
+            role = fixed[key] if key in fixed else eligible[key]
+            require(task['comm'] == role['comm'] and task['affinity'] == role['affinity'],
+                    'task placement/comm drift')
+            current = counters(task)
+            if key not in seen:
+                seen[key] = dict(tid=key[0], start_ticks=key[1], comm=task['comm'], affinity=task['affinity'],
+                    tgid=task['tgid'], first_sample=index, first_begin_ns=sample['begin_ns'],
+                    first_counters=current, role='core' if key in fixed else eligible[key])
+            else:
+                prior = seen[key]
+                require(task['comm'] == prior['comm'] and task['affinity'] == prior['affinity'] and
+                        all(current[k] >= prior['last_counters'][k] for k in current), 'lifetime/counter regression')
+            seen[key].update(last_sample=index, last_end_ns=sample['end_ns'], last_counters=current)
+        previous_keys, previous = set(tasks), sample
+    if complete:
+        require(len(samples) >= GUARD_SCANS and samples[-1]['end_ns']-samples[0]['begin_ns'] >= GUARD_NS,
+                'incomplete guard coverage')
+    rows = []
+    for key, lifetime in sorted(seen.items()):
+        rows.append(dict(lifetime, present_at_start=lifetime['first_sample'] == 0,
+            present_at_end=key in previous_keys,
+            observed_deltas={k: lifetime['last_counters'][k]-v for k, v in lifetime['first_counters'].items()}))
+    return dict(admission_policy=WORKER_ADMISSION, lifetimes=rows, auxiliary_counts=counts, changes=changes,
+        coverage='Counters cover first through last observation of each lifetime only; '
+                 'birth/departure intervals and entirely unobserved lifetimes are not measured.')

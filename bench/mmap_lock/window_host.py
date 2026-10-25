@@ -43,6 +43,9 @@ def observe(request, source, output):
     nonce = request['nonce']
     window.Protocol(nonce)
     profile, core, definitions = request['profile'], request['core'], request['roles']
+    admission = window.admission_policy(request)
+    qemu_identity = {k: profile[k] for k in ('pid', 'start_ticks', 'command_sha256')}
+    check_args = dict(admission=admission, qemu_identity=qemu_identity)
     roles = None
     os.sched_setaffinity(0, {62})
     started, cpu = time.monotonic_ns(), time.process_time_ns()
@@ -67,13 +70,13 @@ def observe(request, source, output):
             # Emit even invalid/partial observations before refusing admission.
             emit('sample', sample=row)
             if roles is None:
-                roles = window.resolve_roles(row['tasks'], core, definitions)
-            window.check_samples(samples, core, roles, complete=False)
+                roles = definitions if admission == window.WORKER_ADMISSION else window.resolve_roles(row['tasks'], core, definitions)
+            window.check_samples(samples, core, roles, complete=False, **check_args)
             now = time.monotonic_ns()
             if guard_end is None:
                 window.require(now - started <= window.GUARD_TIMEOUT_NS, 'guard deadline exceeded')
                 if len(samples) >= window.GUARD_SCANS and row['end_ns'] - samples[0]['begin_ns'] >= window.GUARD_NS:
-                    window.check_samples(samples, core, roles)
+                    window.check_samples(samples, core, roles, **check_args)
                     guard_end = len(samples) - 1
                     emit('guard', index=guard_end)
             else:
@@ -96,14 +99,18 @@ def observe(request, source, output):
                 row = sample(profile)
                 samples.append(row)
                 emit('sample', sample=row)
-                deltas = window.check_samples(samples, core, roles)
+                deltas = window.check_samples(samples, core, roles, **check_args)
                 receipt = dict(**window.binding(), nonce=nonce, passed=True,
+                    **window.admission_fields(request),
                     samples=samples, core=core, roles=roles, guard_end=guard_end,
                     observer_affinity=sorted(os.sched_getaffinity(0)),
                     observer_cpu_ns=time.process_time_ns() - cpu,
                     observer_elapsed_ns=time.monotonic_ns() - started,
-                    stream_bytes_before_endpoint=total_bytes,
-                    final_deltas=deltas[-len(core)-len(roles):])
+                    stream_bytes_before_endpoint=total_bytes)
+                if admission == window.WORKER_ADMISSION:
+                    receipt['worker_activity'] = deltas
+                else:
+                    receipt['final_deltas'] = deltas[-len(core)-len(roles):]
                 # Full metadata/monitor reads happen after the measurement sample;
                 # receipt export remains held until this endpoint also completes.
                 receipt['environment_endpoint'] = host_state.collect(profile['pid'],
