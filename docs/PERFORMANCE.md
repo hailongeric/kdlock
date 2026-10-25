@@ -57,6 +57,15 @@ returned to the original 73 modules and zero taint.
 The next step is to resolve admission preparation and role evidence before
 seeking another bounded pair. No rate, variability or optimization claim is
 available, and the 126-session matrix remains unrun.
+The explicit [QEMU auxiliary-worker policy](../bench/mmap_lock/QEMU_WORKERS.md)
+now separates fixed vCPU/service identities from observed worker lifetimes.
+It permits verified worker activity and membership changes between complete
+scans, retains identity/placement and incomplete-read failures, and records
+the required 90-second interval after payload setup. The
+[94 focused Python tests and two basic programs](../bench/results/10.176.26.71/tests/mmap-worker-admission-20261026/README.md)
+passed in the recovery VM, followed by 55 targeted tests for review fixes.
+These are tooling checks; the corrected bounded
+Native/KD validation remains pending. Historical rejected runs are unchanged.
 
 The historical records below retain their original source, topology, caller
 shell and instrumentation identities. Historical complete-operation p95 remains

@@ -12,6 +12,11 @@ never started; recovery was restored. The attempt also omitted post-idle
 settling: the earlier procedure required 60 seconds and the later user
 instruction requires 90 seconds. It supplies no current throughput and
 cannot reclassify any rejected historical run.
+The separately versioned [QEMU worker policy](QEMU_WORKERS.md),
+`qemu-workers-v1`, now admits verified QEMU auxiliary lifetimes and records
+their activity. Its [focused VM fixtures](../results/10.176.26.71/tests/mmap-worker-admission-20261026/README.md)
+pass; the corrected two-arm validation is still pending. Extra workers alone
+are not a rejection under this explicit policy.
 The earlier 12-session `plain-v1` attempt [stopped before boot](../results/10.176.26.71/bench/mmap-plain-v1-20261025/README.md)
 at **68 QEMU tasks versus 67**. One full capture ran; all 12 measurements and
 six unscored checks remain unrun. The historical 24-case plain/sampled plan
@@ -84,6 +89,18 @@ ordering encloses the workload; host and guest monotonic clocks are not directly
 subtracted. Control traffic is included in this conservative enclosure.
 
 The original 64 vCPU identities/pins and three service tasks remain exact.
+Admission policy is separate from the unchanged `mmap-window-v2` control
+protocol. A manifest without `admission_policy` selects `fixed-aux-v1` and
+retains the original rules below. The explicit `qemu-workers-v1` policy uses
+[qemu_worker_roles.json](qemu_worker_roles.json), bound to
+[its reviewed scope](QEMU_WORKERS.md). It verifies `Pid`/`Tgid` membership in
+the bound QEMU process, permits CPU63 `worker` creation/retirement between
+complete scans and records counters separately for each `(tid,start_ticks)`.
+Neither sleep state nor nonzero activity alone decides acceptance. Partial
+scans still fail; observed deltas do not cover whole departed lifetimes or
+tasks missed between scans. Both arms must bind the same policy and manifest.
+
+Under `fixed-aux-v1`:
 Additional tasks must match an explicitly reviewed role manifest, then their
 `(tid,start_ticks)` identities and affinity are frozen at the first guard scan.
 An `inactive_auxiliary` must remain sleeping with no increase in any recorded
@@ -93,15 +110,15 @@ an additional `expected_service` role needs evidence explaining why its activity
 belongs in this workload/control path. Unknown or ambiguous roles, partial reads,
 counter regression, identity churn and affinity drift reject the window.
 
-The role manifest has exactly `roles` and `evidence` keys. Each role has `comm`,
+The role manifest has `roles` and `evidence` keys and may explicitly select
+`admission_policy`. Each role has `comm`,
 `affinity: [63]`, `class`, a nonempty `reason`, and `evidence` equal to a SHA-256
 in the manifest's `{ "evidence-file-path": "sha256" }` map. It does not list
 prospective TIDs; the observer resolves those once after setup. Both arms bind
 the same manifest. A `worker` name or CPU63 pin alone does not justify a role.
-The diagnostic's TID 553662 remains unidentified and that run remains rejected;
-no approved manifest for it is supplied by this documentation. The concrete
-remaining admission input is a reviewed role classification/configuration record,
-not proof of the origin of every I/O operation.
+The diagnostic's TID 553662 and that incomplete run remain rejected. The new
+manifest is prospective; it cannot replace missing historical window evidence
+and does not attribute the origin of individual I/O operations.
 
 Only the host observer is placed on spare CPU62; QEMU and guest pins remain
 unchanged. Receipts retain observer CPU/elapsed time, bytes, gaps and task-counter
@@ -121,11 +138,13 @@ python3 bench/mmap_lock/prepare.py \
   --source-manifest COMMITTED-SOURCE.json --output WINDOW-BUILD
 ```
 
-For each candidate boot, verify guest idle and record the user-required
-90-second settling interval after that check, then capture fresh host admission using
-`controller.py --output LOCAL-ADMISSION`. This scheduled preparation interval
-does not permit repeated captures until one passes. Never add this delay to
-the immediate measurement or transport endpoints. Copy the admitted JSON to the
+For each candidate boot, verify guest idle, then capture fresh host admission using
+`controller.py --output LOCAL-ADMISSION`. The worker policy enforces the single
+user-required 90-second interval after timed-payload setup, before launching
+the unchanged client; it records guest monotonic start/end timestamps. The
+client's existing 30-second control timeout is unaffected. This scheduled
+interval is never repeated until a capture passes, and never delays measurement
+or transport endpoints. Copy the admitted JSON and exact role manifest to the
 guest before preparation. With the pinned Python/environment and actual boot
 ID, run the following in the guest, substituting `native/0` then `kd/1` for
 `MODE/BLOCK`. `PRIOR` is the retained `mmap-kdmm31-prep-20261025/prior` directory;
@@ -134,6 +153,7 @@ all output paths must be new and absolute:
 ```sh
 python3 bench/mmap_lock/paired.py ready --plan plain-scaling-v1 \
   --measurement-policy mmap-window-v2 --prepared WINDOW-BUILD/result.json \
+  --window-roles GUEST-ROLES.json \
   --native-api PRIOR/actual-native-1.json --kd-api PRIOR/actual-kd-1.json \
   --mode MODE --block BLOCK --boot-id ACTUAL-BOOT-ID \
   --host-state GUEST-ADMISSION.json --output GUEST-READY
@@ -173,6 +193,7 @@ new workload, kernel build or installation is included.
 | Full host captures | 8: initial recovery, then admission/window endpoint/transport endpoint per arm, final recovery |
 | Window observations | At most 97 per arm including final sample, 194 total; separate from full captures |
 | Timed targets / scheduled delays / minimum guards | 4 s / 0.2 s / 4 s; none proves completion |
+| Worker-policy post-setup settling | One recorded 90 s interval per arm; 180 s total |
 | Control bounds | 240 s preparation; 30 s each controller guard, measurement, endpoint and publication phase; 30 s each later capture, observer wait and fetch |
 | Other command bounds | Fixed proof 120 s; ordinary guest commands 30 s; client-only compile 60 s |
 | Accepted output limits per case | Client 1 MiB; each error channel 64 KiB; host stream 16 MiB; endpoint frame 4 MiB |
@@ -258,6 +279,8 @@ compression credit. Recheck actual log sizes, filesystem space and scope before
 requesting execution; build/install storage is excluded. Do not reuse the older
 512 MiB campaign allowance for this plan.
 
+These older planning estimates exclude the worker policy's 90-second interval
+per timed-client preparation; they are not duration estimates for that policy.
 The command sequence below remains `ready`, `validate`, `run`, `finish`, `report`;
 use `--plan plain-scaling-v1` at each ready, cases 0–20 and the block order above.
 Later commands inherit the bound plan. Synchronize reviewed inputs only while
