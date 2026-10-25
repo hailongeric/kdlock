@@ -4,6 +4,9 @@ Current work is throughput only. The prospective `plain-scaling-v1` plan selects
 **126 plain sessions** across 21 worker counts, Native/KD and three repetitions.
 It has [41 focused mocked test passes](../results/10.176.26.71/tests/mmap-scaling-plan-20261026/README.md);
 no expanded live campaign has run or is authorized by this guide.
+The prospective [prepared-window interface](#prepared-window-interface) has
+offline tooling checks only. It supplies no current throughput and cannot
+reclassify any rejected historical run.
 The earlier 12-session `plain-v1` attempt [stopped before boot](../results/10.176.26.71/bench/mmap-plain-v1-20261025/README.md)
 at **68 QEMU tasks versus 67**. One full capture ran; all 12 measurements and
 six unscored checks remain unrun. The historical 24-case plain/sampled plan
@@ -36,6 +39,146 @@ readiness or performance acceptance.
 historical kdmm1 inputs. Preserve them; do not relabel their output as kdmm31.
 The maintained `paired.py` binds [kdmm31.json](kdmm31.json) and supplies a mode
 label only after checking the actual image, boot arguments and module set.
+
+## Prepared-window interface
+
+Select `--measurement-policy mmap-window-v2` explicitly at `paired.py ready`
+and at the source controller. Missing policy means the original
+`mmap-transport-v1`, including its exact 67-task gate. The campaign identifier
+remains `plain-scaling-v1`; its 21 counts and 126 sessions do not change.
+Runner and report replay reject mixed policies, sources, builds and readiness.
+The [offline validation receipt](../results/10.176.26.71/tests/mmap-window-20261026/README.md)
+records the tests and their limits. No live window has been qualified.
+
+The workload remains real userspace `mmap()`/`munmap()` syscall throughput:
+`timed_client.c::worker()` maps one **4 KiB**, `PROT_READ`, `MAP_SHARED` range
+through the device file, never touches it, and counts one completed pair.
+Pthreads share one mm and mmap lock. `MW_ID`/`MW_STATS` ioctls obtain identity
+and counters outside the loop; they do not execute the measured mappings.
+The payload's mmap/VMA callbacks retain exact accounting and add overhead.
+This is distinct from will-it-scale's larger anonymous private mappings and
+from a map/touch/unmap or `MAP_POPULATE` workload. Native MM/fault bodies and
+the originating task remain unchanged.
+
+All guest SSH setup, input verification, payload loading, descriptor/worker
+allocation and readiness complete before `PREPARED`. The guest bridge holds
+client output in bounded memory. An explicit `GO` releases the existing
+100 ms scheduled delay and two-second workload. After joins and final close,
+`FINISHED` supplies a fresh completion token. The controller captures the host
+measurement endpoint before sending `EXPORT` with that token and the endpoint
+hash. Receipt files and bulk output follow. The later SSH-exit/full-capture
+endpoint remains separate. A failed exchange cannot authorize unload;
+`finish` still requires normal completion, exact business counts and drain.
+
+One prospective guard requires at least two seconds and five complete scans,
+nominally 500 ms apart, within ten seconds. Scan/start gaps above one second
+fail the attempt. Observation continues through the completion endpoint;
+there is no restart of a failed quiet interval. These are versioned engineering
+bounds, not timing constants established by the old diagnostic. Causal message
+ordering encloses the workload; host and guest monotonic clocks are not directly
+subtracted. Control traffic is included in this conservative enclosure.
+
+The original 64 vCPU identities/pins and three service tasks remain exact.
+Additional tasks must match an explicitly reviewed role manifest, then their
+`(tid,start_ticks)` identities and affinity are frozen at the first guard scan.
+An `inactive_auxiliary` must remain sleeping with no increase in any recorded
+CPU, scheduling, queue-wait or I/O counter. Sleeping alone never suffices.
+Expected vCPU/service activity is recorded rather than required to be zero;
+an additional `expected_service` role needs evidence explaining why its activity
+belongs in this workload/control path. Unknown or ambiguous roles, partial reads,
+counter regression, identity churn and affinity drift reject the window.
+
+The role manifest has exactly `roles` and `evidence` keys. Each role has `comm`,
+`affinity: [63]`, `class`, a nonempty `reason`, and `evidence` equal to a SHA-256
+in the manifest's `{ "evidence-file-path": "sha256" }` map. It does not list
+prospective TIDs; the observer resolves those once after setup. Both arms bind
+the same manifest. A `worker` name or CPU63 pin alone does not justify a role.
+The diagnostic's TID 553662 remains unidentified and that run remains rejected;
+no approved manifest for it is supplied by this documentation. The concrete
+remaining admission input is a reviewed role classification/configuration record,
+not proof of the origin of every I/O operation.
+
+Only the host observer is placed on spare CPU62; QEMU and guest pins remain
+unchanged. Receipts retain observer CPU/elapsed time, bytes, gaps and task-counter
+deltas. Polling can miss an entire short-lived task between scans and cannot
+exclude delayed device effects. This policy does not assert zero interference.
+
+### Small matched validation screen
+
+After review of this exact scope and recovery plan, use the installed kdmm31
+Native and KD entries in that order, then return to recovery. Reuse build-3's
+payload and fixed client. In the idle recovery VM, rebuild only timed userspace
+from the synchronized, committed source manifest:
+
+```sh
+python3 bench/mmap_lock/prepare.py \
+  --reuse-payload /root/kdlock-evidence/10.176.26.71/bench/mmap-kdmm31-prep-20261025/build-3/result.json \
+  --source-manifest COMMITTED-SOURCE.json --output WINDOW-BUILD
+```
+
+For each candidate boot, capture a fresh host admission using the existing
+`controller.py --output LOCAL-ADMISSION` command. Copy that exact JSON to the
+guest before preparation. With the pinned Python/environment and actual boot
+ID, run the following in the guest, substituting `native/0` then `kd/1` for
+`MODE/BLOCK`. `PRIOR` is the retained `mmap-kdmm31-prep-20261025/prior` directory;
+all output paths must be new and absolute:
+
+```sh
+python3 bench/mmap_lock/paired.py ready --plan plain-scaling-v1 \
+  --measurement-policy mmap-window-v2 --prepared WINDOW-BUILD/result.json \
+  --native-api PRIOR/actual-native-1.json --kd-api PRIOR/actual-kd-1.json \
+  --mode MODE --block BLOCK --boot-id ACTUAL-BOOT-ID \
+  --host-state GUEST-ADMISSION.json --output GUEST-READY
+```
+
+On 380G10, use the same reviewed role manifest for both arms. The existing guest
+connection carries all start/completion/export messages:
+
+```sh
+python3 bench/mmap_lock/controller.py --measurement-policy mmap-window-v2 \
+  --window-roles REVIEWED-ROLES.json --output LOCAL-CASE \
+  --admission LOCAL-ADMISSION/host-endpoint.json \
+  --receipt GUEST-CASE/client-result.json \
+  --remote-command 'cd /root/host_fs/kdlock && env LC_ALL=C PYTHONDONTWRITEBYTECODE=1 KDLOCK_RECOVERY_CONFIRMED=1 KDLOCK_SNAPSHOT_TAG=before-mutex-kdonly-20261017T140354Z /root/kdlock-translation-venv-20261019/bin/python3 bench/mmap_lock/paired.py screen --ready GUEST-READY/result.json --host-state GUEST-ADMISSION.json --output GUEST-CASE'
+```
+
+Copy the controller directory unchanged to a new guest evidence path only after
+transport completes. In the guest, finalize that case before another workload:
+
+```sh
+python3 bench/mmap_lock/paired.py finish --output GUEST-CASE --controller GUEST-CONTROLLER
+python3 bench/mmap_lock/report.py --screen NATIVE-CASE/result.json KD-CASE/result.json
+```
+
+`screen` executes one 16-worker/5,000-iteration fixed writer proof, unloads,
+then runs one controlled 16-worker plain case. Report replay requires both
+qualified/drained arms with the same build and role policy. It reports the two
+rates and their ratio as **one unscored harness-validation pair**, with no
+variability estimate or optimization claim. Screen receipts cannot enter the
+126-case report. Stop on the first failure; no quiet retry, provider diagnostic,
+new workload, kernel build or installation is included.
+
+| Bounded screen scope | Count/limit |
+| --- | --- |
+| Timed sessions / fixed proofs / payload cycles | 2 / 2 / 4; no warmup or retry |
+| Boots | 3: Native, KD, recovery; exact installed hashes and recovery entry required |
+| Full host captures | 8: initial recovery, then admission/window endpoint/transport endpoint per arm, final recovery |
+| Window observations | At most 97 per arm including final sample, 194 total; separate from full captures |
+| Timed targets / scheduled delays / minimum guards | 4 s / 0.2 s / 4 s; none proves completion |
+| Control bounds | 240 s preparation; 30 s each controller guard, measurement, endpoint and publication phase; 30 s each later capture, observer wait and fetch |
+| Other command bounds | Fixed proof 120 s; ordinary guest commands 30 s; client-only compile 60 s |
+| Accepted output limits per case | Client 1 MiB; each error channel 64 KiB; host stream 16 MiB; endpoint frame 4 MiB |
+| Storage planning | Reserve 256 MiB per retention filesystem for raw plus archive, before execution |
+
+The storage allowance assumes eight 1 MiB full captures, twelve 256 KiB dmesg
+logs, two 1 MiB fixed receipts, bounded streams/results and 16 MiB shared
+inputs, then two retained copies plus headroom. Legacy full-capture and dmesg
+sizes are planning assumptions, not enforced byte caps. Recheck free space and
+actual retained sizes. Deadline expiry records uncertain completion, never
+permission to signal workers, force unload or reboot. After proven drain and
+idle, recover through the preserved recovery entry and recheck the original
+73 modules, taint, boot policy and empty pending-boot entry. No live execution
+is authorized by these commands alone.
 
 ## Plain throughput plan
 
@@ -110,8 +253,9 @@ requesting execution; build/install storage is excluded. Do not reuse the older
 The command sequence below remains `ready`, `validate`, `run`, `finish`, `report`;
 use `--plan plain-scaling-v1` at each ready, cases 0–20 and the block order above.
 Later commands inherit the bound plan. Synchronize reviewed inputs only while
-idle before any separately approved live campaign. The exact original **67-QEMU-task**
-admission is unchanged and is unrelated to the workload's worker count.
+idle before any separately approved live campaign. Default legacy admission
+retains the exact original **67-QEMU-task** rule, unrelated to workload worker
+count. The explicit prepared-window policy is described separately above.
 
 ## Retained smaller plain plan
 
@@ -290,7 +434,7 @@ make -C tests/unit run PYTHON=python3 \
 ```
 
 The source manifest is `{ "commit": "...", "files": { "relative/path": "sha256", ... } }`
-for the five unchanged payload/clients' source files. Preparation retains it and
+for the six payload/client source files, including `control.h`. Preparation retains it and
 all copied bytes. Freeze the collector source after its focused tests; readiness
 binds its Python/C/header/`.inc`/JSON inputs before any measurements.
 The existing `/usr/bin/pahole` 1.25 parses both the base ELF and split module

@@ -40,6 +40,16 @@ the single authorized attempt stopped on a new task during the guest no-op phase
 retains the I/O counters and observation window; it establishes no creation
 cause and does not lift the campaign stop.
 
+The explicit prospective
+[`mmap-window-v2` interface](../bench/mmap_lock/README.md#prepared-window-interface)
+now brackets prepared workers and holds result publication until the host
+measurement endpoint. Its [offline checkpoint](../bench/results/10.176.26.71/tests/mmap-window-20261026/README.md)
+passed 85 focused Python tests, 21 C transport assertions, two basic programs
+and client compilation. These do not qualify timing. The default historical
+policy and all rejected evidence remain unchanged. The next bounded step is a
+16-worker Native/KD harness-validation pair, using reviewed role evidence and
+the existing image/payload, before considering the unchanged 126-session matrix.
+
 The historical records below retain their original source, topology, caller
 shell and instrumentation identities. Historical complete-operation p95 remains
 available within its recorded limits; this phase adds no latency collection.
