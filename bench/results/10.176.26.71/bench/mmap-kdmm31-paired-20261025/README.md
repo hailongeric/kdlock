@@ -36,7 +36,9 @@ admission. The six extra threads were `worker` TIDs 552145, 552149, 552150,
 552157, 552159 and 552163, all observed on affinity `[63]`; no original TID was
 missing. These tasks were observed before the helper queried snapshots, so the
 snapshot query cannot explain their presence in that initial observation.
-Their creation cause is not established by this capture.
+Completed offline analysis places their starts about 63/55 seconds before that
+helper. Their roles and creation cause remain unknown; phase association or
+the name `worker` alone cannot identify them.
 
 Fresh process discovery matched QEMU PID 257489, start ticks 42969155, command
 SHA-256 `08a7ad4ddad7da7d6437c5ebcc2987894c2e69b1cd8abd31db0bd491f30ce917` and host
@@ -87,7 +89,8 @@ preflight/gate/final-health results and the final ledger. The
 identifies the maintained controller and predicate. Existing output paths must
 not be reused. Historical invalid measurements remain rejected.
 
-The next step is a bounded analysis of the extra QEMU workers and a controlled
-diagnostic proposal. This attempt does not authorize quiet retries or a weaker
+Offline analysis of the extra QEMU workers is complete. A controlled,
+phase-separated 60-second live diagnostic remains proposed and requires exact
+approval. This attempt does not authorize quiet retries or a weaker
 task-set gate. No lock bottleneck or optimization is selected from this failed
 admission. Qualified current performance cases remain **zero**.

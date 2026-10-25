@@ -161,7 +161,8 @@ diagnostic target, and unload the workload before the provider.
 The original killable wrappers call ordinary acquisition and return success;
 they do not implement signal cancellation. Original downgrade calls `BUG_ON`.
 These functions are retained in source but are not exported as supported module
-APIs. Nested, migrating, oversubscribed and arbitrary sleeping critical sections
+APIs, and this port supplies no equivalent actual-mmap integration API. Nested,
+migrating, oversubscribed and arbitrary sleeping critical sections
 are not validated by this fixed-worker port. Do not claim Linux rwsem API parity.
 
 Use `bench/rwlock_compare/run.py --lock-kind rwsem --backends native tclock kdlock`

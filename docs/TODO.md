@@ -37,8 +37,11 @@ actual mmap correctness was reused. The authorized October 25 attempt
 [stopped at initial admission](../bench/results/10.176.26.71/bench/mmap-kdmm31-paired-20261025/README.md)
 with 73 QEMU tasks versus 67. It consumed one host capture, no boots or payload
 checks, and left all 24 measured sessions unrun. Qualified current performance
-cases remain zero; the next step is a bounded worker analysis and diagnostic
-proposal, preserving the existing stop and acceptance criteria.
+cases remain zero. Offline worker analysis is complete; the proposed bounded
+live diagnostic still requires its exact approval. The existing stop and
+acceptance criteria remain in force. The six workers predated that full capture
+helper by about 63/55 seconds; its snapshot query did not create them. Their
+roles and initiating I/O remain unknown.
 Local `master` now includes the five-commit fast-forward through `92f773f`.
 The [readiness and cleanup dependency record](../bench/results/10.176.26.71/bench/mmap-perf-prep-20261025/README.md#local-integration-and-read-only-readiness)
 confirms the prepared binaries and persistent identities still match; guest root
@@ -269,10 +272,11 @@ after warmup, but the endpoint failed at 70. All three extra workers were born
 after the post capture and before the cleanup body began; initiating I/O remains
 unknown. Active-window observer CPU was at least 25.758% of one core, so this
 separate no-timing evidence does not establish continuous quiet or acceptance.
-Keep the endpoint in place. Next independent work is a bounded receipt-I/O
-diagnostic, offline actual-MM comparison plans and a retained RCUHT execution-
-class audit. All seven causes, acquisition latency and timing acceptance remain
-unresolved; no new user decision is needed to begin that repository work.
+Keep the endpoint in place. The subsequent
+[receipt-I/O diagnostic](../bench/results/10.176.26.71/bench/mutex-receipt-io-20261021/README.md)
+and [retained RCUHT class audit](../bench/results/10.176.26.71/bench/rcuht-class-audit-20261021/README.md)
+are complete, as recorded in the current checkpoint above. All seven causes,
+acquisition latency and timing acceptance remain unresolved.
 
 The entry-inlining experiment passed focused correctness checks but did not
 resolve the seven mutex losses in its separate 120-session comparison. It is
@@ -318,9 +322,11 @@ Native fallback remain separate from private backing locking. The later
 passed eighteen separate mmap/fault cases and completed 48 timings through local
 readers, with complete-operation p95 and paired observation controls. Its strict
 host endpoint failed (73 versus 67 threads); variance and isolated instrumentation
-cost remain unresolved. Full-mm conversion, signal cancellation, generic callbacks
-and all seven mutex causes remain open. Reader delegation is deliberately
-absent; a real exclusive backing-writer workload needs its own supported
+cost remain unresolved. Those private-backing results did not establish actual
+mmap-lock conversion or its signal APIs; subsequent lock-only integration and
+focused cancellation checks are recorded below. Broad callback coverage, full
+Native equivalence and all seven mutex causes remain open. Reader delegation is
+deliberately absent; a real exclusive backing-writer workload needs its own supported
 contract and execution evidence.
 
 The [shared-mm Native writer stage](../bench/results/10.176.26.71/tests/mmap-writer-native-20261021/README.md) now proves actual mmap writer
@@ -375,8 +381,10 @@ and show extra workers performing disk writes. Matched RAM/ext4 diagnostics
 also observe background root-disk writes, so historical timing interference
 remains unresolved. An isolated provider observation patch and fixed matched
 comparison distinguish rwlock ratio/time, lock-heat and queue-prefix refusals.
-The original 69 unstarted cases use a separate strict coverage plan. No
-admission threshold, failed record or acceptance gate is changed.
+The original 69 unstarted cases subsequently completed under the separate strict
+coverage plan: 59 successes and ten NO_JIT failures, as detailed below. Remaining
+gaps concern delegation and qualification, not missing execution. No admission
+threshold, failed record or acceptance gate is changed.
 The first fixed 12-case diagnosis completed: six eight-worker strict NO_JIT
 failures, six sixty-worker successes, 12 exact retirements and 59,561 passing
 evidence-integrity checks. Its endpoint still fails at 72 versus 67 threads.
@@ -403,8 +411,9 @@ reader. Builds/tests/benchmarks run in the recovery guest; default work does not
 change its kernel. Published KD waiters remain pinned polling.
 
 Userspace/futex, other architectures and oversubscription redesign remain
-deferred. Real mmap-lock replacement is requested work with unresolved
-integration requirements. The [rwsem phase protocol](design/rwsem_implementation.md)
+deferred. Lock-only actual mmap integration and its selected Native/KD runtime
+checks are complete; broader participant coverage and full Native equivalence
+remain unvalidated. The [rwsem phase protocol](design/rwsem_implementation.md)
 drains readers before writer publication and excludes ordinary downgrade during
 an outer-writer cohort. It preserves pinned mutex producers and their existing
 oversubscription limits. Outer downgrade, post-publication cancellation, Linux
@@ -561,9 +570,10 @@ with this revision.
 ### Main-plan acceptance audit
 
 The [focused five-worker pipecap investigation](../bench/results/10.176.26.71/bench/pipecap-causal-20261021/README.md)
-is deferred under the basic-version priority. It must distinguish original route
-counts, queue waits and observer effects before proposing a production change.
-The initial host receipt fails; planned diagnostics are not passes. Remaining
+completed its separate 48-session diagnostic after a retained admission failure.
+Queue/owner polling observations did not establish a cause or production fix;
+its 95-thread endpoint failed. All seven points remain unresolved: c08 at
+3/4/5 workers, pipebytes at 3/5, pipecap at 5 and RCUHT at 2. Remaining
 performance and broad integration gaps retain explicit unresolved dispositions.
 
 The [seven-point latency stage](../bench/results/10.176.26.71/bench/mutex-latency-20261021/README.md)

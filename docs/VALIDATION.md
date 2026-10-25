@@ -75,8 +75,10 @@ exact ownership, VMA revalidation, explicit Native fallback and lifetime drain.
 KD observed zero generated bodies and exact source retirement; TCLock contexts
 were quiescent before unload. Three preparation failures remain archived.
 The [design](design/mmap_fault.md) preserves the native mmap lock and confines
-private locks to owned backing state. These results do not validate full-mm
-replacement, generic fault delegation or performance parity.
+private locks to owned backing state. These historical results do not validate
+actual mmap-lock replacement; the later lock-only integration and selected
+runtime checks are recorded above. Full Native equivalence, generic fault
+delegation and performance parity remain unvalidated.
 
 ## Unified mutex API checks
 

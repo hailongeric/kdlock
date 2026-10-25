@@ -39,23 +39,28 @@ Static inspection identifies DIRECT's clobber entry and provider ownership
 lookup as hypotheses to profile. It does not establish their share of any loss.
 The seven points remain c08 at 3/4/5 workers, pipebytes at 3/5, pipecap at 5 and
 RCUHT at 2. The original pipecap loss was 40.23%; the replay loss was 25.18%,
-without a demonstrated fix. The two class gaps and unmeasured p95 latency remain
-open. Instrumented diagnosis will remain separate from plain throughput.
+without a demonstrated fix. At this historical stage p95 was unmeasured; the
+later complete-operation p95 evidence is linked above. The two class gaps,
+acquisition-only latency and timing qualification remain open. Instrumented
+diagnosis remains separate from plain throughput.
 
 Subsequent stages retain these dependencies:
 
 1. Evaluate focused mutex changes only after causal evidence, with affected
    correctness checks and matched OUTER/Native/TCLock controls. Define latency
    sampling and overhead before interpreting percentiles.
-2. Reconcile and measure supported rwlock/rwsem comparisons. TCLock has no
-   established sleeping-rwsem control; this cannot be silently substituted.
-3. Audit all users of the real `mm->mmap_lock` object and missing filemap/folio,
-   userfault and filesystem callbacks before integration. Initialization,
+2. Reconcile and measure supported rwlock/rwsem comparisons. At this stage TCLock
+   had no established rwsem control. The later [original rwsem port](../../../../../tclock_backend/README.md#original-rwsem-comparator)
+   supports ordinary registered-worker pairs, without equivalent cancellation,
+   downgrade or actual-mmap APIs; use it only for that comparable scope.
+3. The historical pre-integration audit covered users of `mm->mmap_lock` and
+   missing filemap/folio, userfault and filesystem callbacks. Initialization,
    helper APIs, task/mm state, cancellation, downgrade and implicit
    unlock/reacquire transitions must follow one ownership protocol.
-4. Establish native/local mmap and fault behavior, then validate any supported
-   delegation without replaying partial effects. Synthetic probes do not
-   establish safe real fault delegation.
+4. The later lock-only mmap integration validates selected Native/KD behavior
+   with unchanged MM bodies on their originating tasks. Broad callback coverage
+   and full Native equivalence remain open; operation-specific MM body
+   delegation and page-layout campaigns are retired.
 5. Compare equivalent 16/128-node plain/prefetch list work across supported lock
    families and worker configurations. Functional success alone is not evidence
    of a throughput advantage; losses and variation remain reportable.
@@ -402,8 +407,10 @@ directories and source-host `raw/tests/mutex-entry-restored-20261020/`.
 
 The maintained entry is restored and its affected correctness scope is
 validated. No performance measurement was rerun in this restoration stage.
-All seven mutex regressions, execution-class gaps, p95 latency and the strict
-post-measurement host thread-set mismatch remain explicitly unresolved.
+All seven mutex regressions, execution-class gaps and the strict post-measurement
+host thread-set mismatch remain explicitly unresolved. P95 was unmeasured in
+this restoration stage; later complete-operation latency evidence is separate
+from the still-open acquisition-only latency and timing qualification.
 Subsequent rwlock/rwsem, real mmap/fault and list work must retain those limits
 and cannot imply acceptance of the mutex comparison.
 
@@ -420,8 +427,10 @@ The [current mmap/fault review](../../tests/mmap-fault-followup-20261020/README.
 captures 46 kernel files, verifies unchanged kernel identity and documents
 four concrete blockers: full-object/API migration, ownership/mode transitions,
 origin-context/resource lifetime, and unvalidated transitive callbacks.
-Its 1,470-check source review passes; real KD mmap/fault integration remains
-explicitly unresolved, with no guest kernel changes.
+Its 1,470-check source review passed without guest kernel changes at that stage.
+The later [lock-only mmap integration](../../tests/mmap-irq-trylock-20261025/README.md)
+completed selected actual-object runtime checks. Broader integration and full
+Native equivalence remain unvalidated; retired MM-body work is not reopened.
 
 The [resident-list stage](../nano-list-followup-20261020/README.md) preserves
 `timing-1` (146 strict successes, one strict rwlock `NO_JIT` failure) and the

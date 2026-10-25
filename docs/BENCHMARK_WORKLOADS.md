@@ -12,9 +12,10 @@ waiting. Just-in-time (JIT) compilation supplies code for delegated execution.
 
 The standard grid is 1–8 workers by one and 12–60 by four, three repetitions per
 configuration, comparing KD, TCLock and Linux Native where supported. Rwlock and
-rwsem use 1% and 20% writes. The accepted rwsem matrix compares KD with Linux
-Native; the separate TCLock rwsem port supports only its documented ordinary
-registered-worker pairs, without equivalent cancellation, downgrade or mmap APIs.
+rwsem use 1% and 20% writes. The historically accepted `c21345b` rwsem matrix
+compares KD with Linux Native; the separate original TCLock rwsem port supports
+only its documented ordinary registered-worker pairs, without equivalent
+cancellation, downgrade or mmap APIs.
 Pass the worker grid explicitly using the linked runner commands: the
 reader/writer runner's historical default and `--full-matrix` stop at 36 workers.
 Synthetic bodies run repeatedly inside one ioctl per phase; API workers issue
