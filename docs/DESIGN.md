@@ -10,13 +10,32 @@ reader/writer semaphores on x86_64. The [lock catalog](LOCKS.md) maps each famil
 to its API and implementation guide. Callers
 use explicit KD APIs, built against the recorded caller-clobber kernel interfaces.
 Loading the provider does not intercept other Linux locks.
-The separate [sleeping rwsem](design/rwsem_implementation.md) provides ordinary
-local readers/writers and explicit outer writers using the existing mutex ABI2.
-Writer reservations drain readers before the unchanged mutex queue can publish
-and pin a caller. This does not replace the kernel's mmap rwsem.
-The opt-in [mapping and fault integration](design/mmap_fault.md) applies a
-private backing-state lock to module-owned mappings while retaining native mmap
-ownership and originating-task callbacks.
+The public [sleeping rwsem](design/rwsem_implementation.md) provides concurrent
+local readers and ordinary local writers through `include/kd_rwsem.h` and
+`struct kd_rwsem`. Explicit outer writers use the separate delegation interface
+and existing mutex ABI2. Their reservations drain readers before the unchanged
+mutex queue can publish and pin a caller.
+
+The opt-in [mapping and fault example](design/mmap_fault.md) protects module-owned
+backing pages and metadata with a private lock. It retains Linux's native
+`mm_struct::mmap_lock` and executes fault callbacks on the originating task.
+Its backing lock and the mmap lock protect different objects.
+
+The separate [actual mmap adapter](../kernel_integration/mmap_lock/README.md)
+routes Linux's `mmap_*` wrappers to Native or namespaced local KD rwsem primitives.
+Each mm selects one backend before publication, and every user follows that
+choice. Readers stay concurrent; native mmap, munmap, advice and fault bodies
+retain their algorithms and execute on the original task. The integration is
+limited to lock implementation and minimal API/lifetime wrappers, including the
+exact read-share token and mm reference needed for asynchronous read release.
+It does not use the explicit outer-writer delegation interface. Operation-specific
+MM-body delegation and prepared teardown are retired.
+
+The adapter has [focused actual-mm validation](VALIDATION.md#native-shared-mm-mmap-writers).
+That evidence does not establish full Native semantics, fairness, whole-kernel,
+RT or lockdep equivalence. Its [bounded performance plan](../bench/mmap_lock/README.md)
+has completed preparation only; live execution remains unapproved and no current
+qualified timing is claimed.
 
 ## Terms used in these guides
 

@@ -12,7 +12,9 @@ waiting. Just-in-time (JIT) compilation supplies code for delegated execution.
 
 The standard grid is 1–8 workers by one and 12–60 by four, three repetitions per
 configuration, comparing KD, TCLock and Linux Native where supported. Rwlock and
-rwsem use 1% and 20% writes; rwsem compares KD with Linux Native.
+rwsem use 1% and 20% writes. The accepted rwsem matrix compares KD with Linux
+Native; the separate TCLock rwsem port supports only its documented ordinary
+registered-worker pairs, without equivalent cancellation, downgrade or mmap APIs.
 Pass the worker grid explicitly using the linked runner commands: the
 reader/writer runner's historical default and `--full-matrix` stop at 36 workers.
 Synthetic bodies run repeatedly inside one ioctl per phase; API workers issue
@@ -32,11 +34,16 @@ The historical [KD-only matrix](../bench/results/10.176.26.71/bench/comparison/m
 covers c01/post64 and `api-pipebytes-query-n16` on its recorded 256-byte mutex.
 It does not measure the current shared-node 32-byte implementation. Broader historical owned-mutex
 coverage remains in [history](history/README.md), with its original implementation
-identity. The rwsem waiting implementation in **`c21345b` is accepted as current**,
-including its documented two-worker throughput regressions. Sleeping rwsem with
+identity. The rwsem waiting policy selected at **`c21345b`** remains the baseline,
+including its documented two-worker throughput regressions. Those measurements
+predate the compact gate and IRQ-safe reader-release correction and do not
+establish current performance. Sleeping rwsem with
 outer writer delegation and extracted proc snapshots have explicit
 runner modes described below. Full [process inspection and mmap candidates](#process-inspection-and-mmap-candidates)
-remain proposals, outside the runnable standard catalog.
+remain proposals where stated, outside the runnable standard catalog. The current
+lock-only mmap adapter has a separate [bounded Native/KD plan](../bench/mmap_lock/README.md)
+using actual shared-mm writers and complete mmap/munmap cycle latency. Its
+preparation has passed; live execution and root capture remain unapproved.
 
 ## KD API use and delegation
 
@@ -887,6 +894,14 @@ procfs enumeration is not evidence of that global lock being the bottleneck.
 
 ### mmap critical-section boundaries
 
+The source references below describe the retained native kernel. The current
+[experimental mmap adapter](../kernel_integration/mmap_lock/README.md) changes
+only lock implementation and minimal API/lifetime wrappers. The
+[bounded shared-mm comparison](../bench/mmap_lock/README.md) is the active
+performance plan. Operation-specific MM-body delegation and prepared teardown
+campaigns are retired; the proposals below are historical context where they
+depend on those mechanisms.
+
 `include/linux/mm_types.h:597` declares `mmap_lock` as `struct rw_semaphore`.
 It protects VMA layout and related MM operations. Page tables and reverse
 mappings have additional locks; mmap ownership does not protect every task field.
@@ -914,8 +929,10 @@ Replacing every Linux **mutex** with KD mutex does not replace `alloc_lock`,
 direct blocking calls use the unified ABI2 interface and permit JIT. Callable
 lock symbols and signal/try/I/O acquisitions remain local, with public unlock
 retaining exact ownership routing.
-The closest APIs for a future real-object conversion are listed below. These
-are integration choices, **not implemented procfs/mmap adapters**. A killable
+The closest APIs for real-object conversion are listed below. General procfs
+conversion remains unimplemented. The separate experimental mmap adapter now
+supplies local reader/writer wrappers with focused validation; it does not
+delegate native MM bodies. A killable
 wait can return without acquiring the lock when a fatal signal is pending;
 downgrade changes exclusive write ownership into shared read ownership.
 
@@ -923,7 +940,7 @@ downgrade changes exclusive write ownership into shared read ownership.
 | --- | --- | --- |
 | Plain `mm->arg_lock` and `task->alloc_lock` sections | `KD_SPIN_DIRECT_LOCK` / `KD_SPIN_DIRECT_UNLOCK` on a converted object | The extracted four-word body can delegate. Version 10 extracted name-copy correctness and returned-body checks passed. Live pointer/reference snapshots need their own lifetime and compiled-body review. All real-object consumers still need conversion. |
 | `sighand->siglock` with interrupt-state saving | `kd_spin_lock_irqsave` / `kd_spin_unlock_irqrestore` | Local KD execution only; interrupt state belongs to the caller. The surrounding pointer revalidation and all signal-side consumers must be preserved. |
-| Mmap readers and `exec_update_lock` readers | `kd_down_read_killable` / `kd_up_read`, with the appropriate trylock/retry handling | Local shared access only. These APIs cover part of a future port; full mmap wrapper support is incomplete. |
+| Mmap readers and `exec_update_lock` readers | `kd_down_read_killable` / `kd_up_read`, with the appropriate trylock/retry handling | Local shared access only. The mmap adapter has focused wrapper tests; `exec_update_lock` conversion and full Native equivalence are unvalidated. |
 | Mmap writers | `kd_down_write_killable` / `kd_up_write`, with `kd_downgrade_write` where required | These are local operations. The delegating outer pair waits uninterruptibly and cannot downgrade; it cannot replace the current mmap acquisition/release paths. |
 | Sequence-lock statistics, raw accounting locks and interrupt-disabled task-list writers | No complete interchangeable KD API | Preserve sequence retries, read-copy-update (RCU) traversal, raw-lock rules and interrupt state. An ordinary exclusive delegated body is not equivalent. |
 
@@ -1070,5 +1087,8 @@ closed-descriptor lifetimes and exit teardown. Timing excludes the stack probe,
 uses native mmap ownership throughout, and retains complete-cycle latency and
 per-thread CPU time. Its [twelve-session receipt](../bench/results/10.176.26.71/tests/mmap-writer-native-20261021/README.md)
 retains both failed probe attempts, repetition variance and the 76-versus-67
-host endpoint failure. No KD or TCLock full-mmap arm is provided; the separate
-fault task keeps local readers concurrent.
+host endpoint failure. That original runner provides no KD or TCLock full-mmap
+arm; the separate fault task keeps local readers concurrent. The current kdmm31
+wrapper supplies a separately checked Native/KD mode for the same shared-mm
+workload; no TCLock mmap arm exists. Its bounded plan keeps complete-cycle
+latency distinct from the separate mmap/munmap latencies proposed above.

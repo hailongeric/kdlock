@@ -2,7 +2,8 @@
 
 Start with the [basic working version](docs/PROJECT_GUIDE.md#basic-working-version)
 for focused functional commands across all four lock families and the separate
-real mmap/page-fault examples. Performance tuning remains separate.
+real mmap/page-fault examples. Current work prioritizes a small, qualified
+Native/KD performance baseline; see the [mmap benchmark plan](bench/mmap_lock/README.md).
 
 kdlock is an experimental x86_64 Linux kernel lock library. A lock holder can
 execute waiting callers' critical sections through a just-in-time (JIT) compiler,
@@ -15,13 +16,32 @@ allows concurrent readers or one exclusive writer, and lets blocked callers
 sleep. Its ordinary readers/writers execute locally; explicit outer writers can
 delegate their work through the unchanged KD mutex protocol.
 
-The rwsem waiting implementation in **`c21345b` is accepted as current**. Writers
+The public rwsem interface is [`include/kd_rwsem.h`](include/kd_rwsem.h) and
+`struct kd_rwsem`. The experimental [mmap adapter](kernel_integration/mmap_lock/README.md)
+uses that local reader/writer protocol behind Linux's mmap wrappers. Native MM
+bodies stay on their original task, and readers remain concurrent. Explicit
+rwsem delegation is a separate interface; operation-specific MM-body delegation
+and prepared teardown are retired.
+
+The `e6fc371` correction passed 137 Native and 161 KD assertions on actual mmap
+objects, plus a separate 352-assertion standalone probe and two basic programs.
+These focused checks do not establish full Linux semantic equivalence. Benchmark
+payload/client preparation has passed; the proposed six-boot, 24-session cycle
+remains unapproved and supplies no current qualified timing. See the
+[validation scopes](docs/VALIDATION.md#native-shared-mm-mmap-writers).
+
+The rwsem waiting policy selected in **`c21345b`** remains the baseline. Writers
 first block new readers and wait for existing readers to finish. Separate queues
-serve different waiting conditions, and callers repeatedly check those conditions
-for a bounded number of attempts before sleeping. The
+serve different waiting conditions. Ordinary uninterruptible acquisition polls
+for a bounded number of attempts before sleeping; killable mmap writers use
+their separate wait path. The
 [756-session comparison](bench/results/10.176.26.71/bench/rwsem-optimization-20261018/README.md)
 records large 60-worker gains and retained two-worker regressions. Acceptance
-includes this measured tradeoff. This port has no sleeping TCLock rwsem.
+includes this measured tradeoff. Those measurements predate the current object
+layout and IRQ-safe reader-release correction; they do not establish current
+performance. The [TCLock rwsem port](tclock_backend/README.md#original-rwsem-comparator)
+supports restricted ordinary pairs, without compatible cancellation, downgrade
+or actual mmap integration.
 
 `master` is the maintained version. Its KD mutex uses **KD-owned physical
 exclusion and the accepted legacy delegation protocol**, selected at `d2a2304`.

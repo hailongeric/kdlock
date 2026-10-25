@@ -6,8 +6,10 @@ substantial regressions at two workers with 20% writes. The
 [performance status](../PERFORMANCE.md#accepted-rwsem-implementation-c21345b)
 retains those results. This acceptance does not replace the selected KD mutex
 protocol or establish support for every Linux reader/writer semaphore use.
-The subsequent IRQ-safe reader-release correction adds timed writer-drain
-rechecks. Those historical measurements do not establish its performance.
+The subsequent IRQ-safe reader-release correction at `e6fc371`, on
+`codex/mmap-irq-trylock-20261025`, adds timed writer-drain rechecks. This is branch
+evidence, not a merge into maintained `master`. Those historical measurements do
+not establish its performance.
 
 [`kd_rwsem.h`](../../include/kd_rwsem.h) provides concurrent sleeping readers and
 ordinary exclusive writers. The explicit outer-writer interface in
@@ -37,7 +39,8 @@ rwlock and the two exclusive lock families.
 
 | Source | Responsibility |
 | --- | --- |
-| [kd_rwsem.h](../../include/kd_rwsem.h) | Object layout, static initializer and ordinary public operations |
+| [kd_rwsem.h](../../include/kd_rwsem.h) | Public concurrent-reader/ordinary-writer operations on `struct kd_rwsem` |
+| [kd_rwsem_types.h](../../include/kd_rwsem_types.h) | Object layout, `DEFINE_KD_RWSEM` and `KD_RWSEM_INITIALIZER` |
 | [kd_rwsem.c](../../kernel_module/kd_rwsem.c) | Reader acquisition, exact writer reservations, bounded polling, sleeping waits, cancellation, downgrade and idle inspection |
 | [kd_rwsem_direct.h](../../include/kd_rwsem_direct.h) | Outer-writer pair: reserve/drain before the mutex call, release the reservation on the origin after mutex unlock completes |
 | [KD mutex implementation](mutex_implementation.md) | Physical writer ownership, legacy delegation queue, generated execution and unlock acknowledgements |
@@ -75,6 +78,10 @@ also records this containing layout from the built provider.
 `DEFINE_KD_RWSEM()` and `kd_rwsem_init()` initialize static and dynamic objects.
 `kd_down_read()` / `kd_up_read()` permit concurrent, sleeping readers.
 `kd_down_write()` / `kd_up_write()` provide exclusive, sleeping ordinary writers.
+The `kd_mutex_local_*` calls inside the implementation are the internal physical
+writer gate, not an alternative public rwsem API: calling them directly would
+bypass reader admission and drain. Explicit writer delegation uses the separate
+`kd_rwsem_direct.h` interface described below.
 Read and write trylocks return 1 on success and 0 on failure. Interruptible and
 killable ordinary acquisitions return zero on success and `-EINTR` on
 cancellation, without leaving reader, writer-admission or gate ownership behind.
@@ -212,8 +219,11 @@ reduces throughput in some two-worker cases; acceptance retains that limitation.
 The polling bound counts predicate invocations, not elapsed time: the existing
 outer-reservation predicate can retry its compare/exchange internally. The
 fallback retains `wait_event()` enrolment, condition rechecks and scheduling.
-Interruptible and killable acquisitions keep their cancellation rules; their
-reader-drain waits also use the timed recheck. Wakeups prompt readers to retry their own admission-aware
+Interruptible and killable acquisitions bypass the 16,384-probe polling stage;
+their reader-drain waits use the timed recheck and retain their cancellation
+rules. In particular, mmap/munmap's `kd_down_write_killable()` path does not run
+that polling loop. Changing its budget would not directly tune those syscalls'
+killable admission or reader-drain waits. Wakeups prompt readers to retry their own admission-aware
 acquisition. Published mutex waiters, physical ownership, queue batching and
 wrapper ABI are unchanged.
 
@@ -282,12 +292,39 @@ accepted-reader exclusion and final reservation/gate drain. It does not add
 delegated reader or nested rwsem control support.
 
 The separate [mmap adapter](../../kernel_integration/mmap_lock/README.md) integrates
-this family into `mm_struct::mmap_lock` for its documented non-lockdep configuration.
-Broader substitution still requires coordinated reader/writer, Linux helper and
-lockdep contracts, fault/VMA lifetimes, retry and lock-mode transitions, and kernel
-configuration validation. Safe admission does not establish that
-`access_remote_vm()` or another task-dependent body can be delegated; existing
-instruction and context admission still apply.
+the ordinary local API into `mm_struct::mmap_lock` for its documented non-RT,
+non-lockdep x86_64 SMP configuration. Linux callers keep the `mmap_*` wrappers;
+the adapter selects Native or namespaced KD primitives once per mm before
+publication. Readers remain concurrent and local. Native mmap, munmap, advice
+and fault algorithms stay unchanged and execute on their original task. The
+adapter does not use the explicit outer-writer pair.
+
+Minimal API/lifetime wrappers preserve the acquired-share token and mm reference
+for asynchronous non-owner read release. The generic rwsem API does not gain a
+non-owner release contract. An observed reader count or idle predicate cannot
+replace that exact transfer or stopped/joined users at destruction.
+
+The [corrected-image receipt](../../bench/results/10.176.26.71/tests/mmap-irq-trylock-20261025/README.md)
+records 137 Native and 161 KD assertions on actual mm objects in `kdmm31`, with
+normal drain and unload. Its 352 standalone assertions and two basic programs
+are separate validation classes. They establish the tested API/order/lifetime
+cases, not full Linux semantics, fairness, bounded starvation, transitive callback
+coverage, whole-kernel substitution, RT or lockdep equivalence. Provider loading
+alone also does not establish shared-provider workload or returned-JIT coverage.
+
+The [shared-mm comparison tools](../../bench/mmap_lock/README.md) are build-ready
+preparation for a proposed 24-session, six-boot Native/KD cycle; live execution
+and root host capture await approval. There is no qualified new timing for this
+correction. The proposed throughput and sampled latency cover complete writer
+mmap/munmap cycles, not isolated lock acquisition or concurrent-reader scaling.
+
+Operation-specific MM body delegation and prepared teardown campaigns are
+retired. The historical audits below explain native dependencies and preserve
+their captured evidence; they do not authorize resuming those mechanisms.
+`access_remote_vm()` and other task-dependent bodies remain on the originating
+task. Broader substitution still requires coordinated reader/writer, Linux helper
+and lockdep contracts, fault/VMA lifetimes, retry and lock-mode transitions, and
+kernel configuration validation.
 
 The retained [native mmap audit](../../bench/results/10.176.26.71/tests/proc-mmap-audit-20261015/README.md)
 identifies the following dependencies. Paths and line numbers refer to its
@@ -331,7 +368,7 @@ Its 1,470 archive checks passed and 24 hashed source intervals document implicit
 release, NOWAIT, file/context pins, nested resources, retry and downgrade.
 Those audited inputs still used native mm lock objects and did not establish
 delegated rwsem mode/ownership transitions, origin context or transitive
-filesystem/DAX/journal lifetimes. The subsequent opt-in
+filesystem/DAX/journal lifetimes. The separate earlier opt-in
 [module-owned mapping integration](mmap_fault.md)
 passed Native/KD/TCLock functional checks for its private backing state and
 originating-task fault transactions. Its native `mm->mmap_lock` remains intact;

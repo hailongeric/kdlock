@@ -3,7 +3,9 @@
 The primary checkout on `380G10` is the source of truth. `master` contains the
 accepted KD-only mutex from `d2a2304`, with its legacy delegation protocol and
 compatibility backports. `accepted/kd-only-mutex-20261018` preserves the measured
-implementation. Use `master` for current code: at this documentation review,
+implementation. At the October 25 documentation review, `master` is `769ba5b`;
+the IRQ-safe rwsem/mmap correction at `e6fc371` is evidence from
+`codex/mmap-irq-trylock-20261025`, not a merge into `master`.
 `current/kd-mutex` retains the earlier `af330db` instruction-exit checkpoint and
 does not include the later spin helper work. The earlier consolidation is retained
 in [branch dispositions](history/main-consolidation-20261018.md).
@@ -16,21 +18,38 @@ execution, operations, benchmark and historical material.
 
 ## Basic working version
 
-The current priority is functional delivery. Reuse validated implementations;
-causal profiling, p95, exhaustive matrices and performance tuning are deferred.
-Earlier rejected measurements remain rejected.
+Reuse the validated functional implementation. The next performance task is the
+[bounded Native/KD shared-mm comparison](../bench/mmap_lock/README.md). Its
+payload/client preparation is build-ready only: the proposed 24 measured sessions
+across six boots, including return to recovery, and root host capture await
+approval. There is no qualified new timing or optimization gain. Broader matrices
+and tuning remain separate; earlier rejected measurements remain rejected.
 
 | Task | Working interface and scope |
 | --- | --- |
 | Unsupported operations | Reviewed markers stop before the original operation, return execution to its waiter without replaying the prefix, and disable delegation of that entry for the source session. Mutex/rwsem use ABI2; root spin/rwlock use ABI1/3. Unknown operations still fail admission. See [continuation checks](../tests/kernel/jit_escape/README.md). |
 | Unified mutex | Direct `kd_mutex_lock/unlock` and blocking aliases use DIRECT, retaining nesting and exact unlock routing. Signal, try, I/O and callable-symbol paths execute locally on the KD object. See [API mappings](design/kd_only_mutex.md). |
-| Reader/writer locks | Readers are concurrent and local. Rwlock DIRECT writers can delegate. Ordinary sleeping rwsem writers are local; explicit OUTER writers can delegate. See the [lock catalog](LOCKS.md) for cancellation and downgrade limits. |
+| Reader/writer locks | Readers are concurrent and local. Rwlock DIRECT writers can delegate. Use `include/kd_rwsem.h` and `struct kd_rwsem` for ordinary sleeping rwsem operations; explicit OUTER writers use `include/kd_rwsem_direct.h`. See the [lock catalog](LOCKS.md) for cancellation and downgrade limits. |
 | Real mmap and faults | The maintained integration changes the lock backend and minimal API/lifetime wrappers only. Readers stay concurrent and local; mmap, munmap, advice and page-fault bodies retain native algorithms and run on the originating task. Operation-specific body delegation is retired. See [scope and validation](../kernel_integration/mmap_lock/README.md). |
 | Nano benchmark | The resident-list payload supports spin, public mutex, rwlock and rwsem. The [basic runner](../bench/basic/run.py) runs one 16-node KD case per family: 16 workers for spin/mutex/rwsem, the established 60-worker preset for mixed rwlock. It checks data, returned JIT bodies and retirement. Comparison runners remain available; original TCLock rwsem is available for registered fixed-affinity workers; general TCLock MM remains unsupported. |
 
-After idle synchronization and the [VM recovery checks](operations/VM.md), use
-the approved 90-second settling interval after the guest idle check. Capture a
-fresh host receipt on the source host:
+The rwsem's internal local mutex gate supplies physical writer exclusion after
+reader admission closes; callers must not bypass that public read/write protocol.
+The mmap adapter uses ordinary local operations behind Linux's `mmap_*` wrappers.
+The [corrected-image receipt](../bench/results/10.176.26.71/tests/mmap-irq-trylock-20261025/README.md)
+records 137 Native and 161 KD assertions on actual mm objects. The 352 standalone
+assertions and two basic programs are separate validation classes. These checks
+do not establish full Native semantics, fairness, whole-kernel, RT or lockdep
+equivalence. Atomic final-reader release avoids synchronous wakeups; writers
+recheck drain after one jiffy (4 ms at HZ=250, plus possible scheduling delay).
+Mmap's killable writer path bypasses the ordinary 16,384-probe polling stage;
+see [rwsem waiting](design/rwsem_implementation.md#waiting-and-wakeups).
+
+The following basic smoke workflow retains its previously approved 90-second
+settling interval after idle synchronization and the
+[VM recovery checks](operations/VM.md). It is separate from the pending mmap
+comparison and cannot requalify a rejected timing endpoint. Capture a fresh host
+receipt on the source host:
 
 ```sh
 ssh -o BatchMode=yes -o ConnectTimeout=10 eric@10.176.26.71 \
@@ -70,9 +89,10 @@ The [basic-version results](../bench/results/10.176.26.71/tests/basic-version-20
 record returned-body passes for all four presets and the retained 16-worker
 rwlock `NO_JIT` failure. That smaller case was correct and drained but did not
 demonstrate delegation. The 60-worker preset is functional coverage, not a fix
-or performance comparison. Subsequent work is ordered as low-cohort delegation,
-the seven regression causes and MM wake attribution, then broader coverage and
-optional latency/matrix work.
+or performance comparison. Its earlier follow-up order covered low-cohort
+delegation, the seven regression causes and MM wake attribution. The current
+bounded mmap proposal measures whole-cycle throughput and sampled latency;
+it does not establish those causes or replace the retained functional evidence.
 
 ## Folder ownership
 

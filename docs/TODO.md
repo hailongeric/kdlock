@@ -21,13 +21,24 @@ indexed in [VALIDATION](VALIDATION.md).
 
 ## Current checkpoint
 
-The user's priority is the [basic working version](PROJECT_GUIDE.md#basic-working-version)
-across all original tasks. Reuse validated functionality and run focused serial
-smoke/correctness checks. Causal profiling, wake-callback observer expansion,
-p95, exhaustive matrices and performance tuning are deferred. All seven causes
-and qualified variance remain unresolved; preserved performance refusals remain
-failures. Functional delivery keeps ownership, isolation, recovery, topology,
-lifetime and teardown checks without requiring timing acceptance.
+The current objective is a workload-driven Native/KD performance comparison,
+starting with the [bounded shared-mm writer plan](../bench/mmap_lock/README.md)
+selected from the [workload catalog](BENCHMARK_WORKLOADS.md). Reuse the validated
+[basic working version](PROJECT_GUIDE.md#basic-working-version) and retain focused
+correctness, ownership, lifetime, recovery and environment checks. The proposal
+uses 1 and 16 workers, plain and sampled observations and three paired
+repetitions: 24 measured cases. Throughput and sampled p50/p95/p99 describe the
+complete mmap/munmap cycle, not isolated lock acquisition or reader scaling.
+
+The [preparation receipt](../bench/results/10.176.26.71/bench/mmap-perf-prep-20261025/README.md)
+records build-3 compatibility checks, 16 capture and 14 paired/report mocked
+tests, and two earlier basic programs. These are build/offline results; prior
+actual mmap correctness was reused. The six-boot cycle and root host capture
+remain unapproved, and qualified current performance cases remain zero.
+Broader matrices, causal profiling, observer expansion and tuning remain
+separate work. All seven earlier mutex causes and qualified variance remain
+unresolved; preserved performance refusals remain failures. The historical
+checkpoints below retain their original scopes, including deferred p95 work.
 The [basic handoff](../bench/results/10.176.26.71/tests/basic-version-20261022/README.md)
 now records four returned-body presets and complete drain. Its failed
 16-worker mixed rwlock delegation check remains unresolved; the basic preset

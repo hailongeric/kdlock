@@ -1,12 +1,33 @@
 # Performance status
 
-Current priority is the [basic functional version](../bench/results/10.176.26.71/tests/basic-version-20261022/README.md).
-All four KD families have returned-body smoke passes; the 16-worker rwlock
-NO_JIT failure remains separate. Functional results supply no throughput score
-or performance acceptance. Causal profiling, observer expansion, p95, exhaustive
-matrices and tuning are deferred. Future throughput work still requires correct
-matched work, compatible execution classes, exact retirement, unchanged timing
-gates and repetition variance. Preserve all existing measurements and refusals.
+Current priority is a small, controlled Native/KD comparison selected from the
+[workload documentation](BENCHMARK_WORKLOADS.md), beginning with the
+[shared-mm mmap benchmark plan](../bench/mmap_lock/README.md). The corrected
+`e6fc371` rwsem has focused correctness evidence, but no qualified performance
+baseline. Actual mmap integration, ordinary lock microbenchmarks and explicit
+delegation remain separate comparisons. The [basic functional version](../bench/results/10.176.26.71/tests/basic-version-20261022/README.md)
+retains all four returned-body smoke passes and the separate 16-worker rwlock
+NO_JIT failure. Performance requires matched work, exact retirement, unchanged
+timing gates and repeated throughput/latency observations. Preserve all existing
+measurements and refusals; the full matrix is not the default next step.
+
+The current proposal is 1 and 16 shared-mm writers, plain and sampled modes,
+and three Native/KD pairs: 24 measured sessions across four measured candidate
+boots, plus one initial validation boot and the final recovery boot. Its latency
+is the complete mmap/munmap cycle. It does not isolate lock acquisition or
+measure reader scaling, NUMA scaling or delegation. The
+[preparation receipt](../bench/results/10.176.26.71/bench/mmap-perf-prep-20261025/README.md)
+records successful private reconstruction and build-3 compatibility checks using
+existing pahole 1.25. Preparation loaded no module and booted no kernel. The
+six-boot cycle and root host capture remain unapproved; new qualified timing
+count is zero. The current tooling passed 16 capture and 14 paired/report mocked
+tests, including the report-integrity fixes; mock results do not qualify timing.
+
+The historical records below retain their original source, topology, caller
+shell and instrumentation identities. Their deferred p95 statements describe
+those campaigns; the current proposal requests sampled whole-cycle p50/p95/p99
+only if the new campaign is authorized and qualifies.
+
 The [retained RCUHT audit](../bench/results/10.176.26.71/bench/rcuht-class-audit-20261021/README.md)
 separates plain execution classes from instrumented modes and identifies queue
 activity without combiner calls in the two plain no-JIT sessions. It supplies

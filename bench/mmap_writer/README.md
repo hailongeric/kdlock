@@ -1,9 +1,19 @@
 # Native shared-mm mmap writer workload
 
+This guide describes the original Native runner and its retained evidence.
+The current [built-in mmap comparison](../mmap_lock/README.md) reuses this payload
+and timed client with a separately checked kdmm31 Native/KD mode. Preparation has
+built compatible artifacts; the proposed six-boot, 24-session live cycle and
+root host capture still require explicit approval. No new timing has run.
+This original runner's `NATIVE_MMAP_LOCK` labels cannot establish KD execution;
+use the linked guide's separate preparation, validation and measurement commands.
+
 This workload measures actual Native `mm_struct::mmap_lock` writers. Pthreads
 share one address space and issue ordinary `mmap`/`munmap` calls without touching
 the mapped ranges. It is separate from page-fault workloads and from the earlier
-independent-process mmap control. No KD or TCLock lock is installed or timed.
+independent-process mmap control. This original Native runner installs or times
+no KD or TCLock lock. The kdmm31 comparison instead selects the built-in backend
+for the actual mm while preserving native MM bodies on the originating task.
 
 The standalone [payload](../../workload_modules/mmap_writer/mapping.c) binds an
 open file to the exact originating mm. Every identity ioctl and mmap callback
@@ -57,3 +67,11 @@ modes use identical stop-clock frequency. CPU time is per-thread, and all
 identities, exact callbacks, joins, sample counts and final module drain are
 required. Repeated measurements use strict original host preflight and retain
 an immediate endpoint check; a failed endpoint prevents acceptance.
+
+The sampled interval covers the complete successful mmap/munmap cycle. It does
+not separate mmap from munmap or isolate lock acquisition. The workload primarily
+exercises writer ownership, including possible munmap downgrade; it does not
+measure sustained concurrent-reader scaling. Zero payload fault callbacks do
+not mean zero incidental process or kernel faults. Native/KD comparison results
+must retain these limits, each observation mode and every repetition separately.
+No performance gain follows from the retained rejected timings.

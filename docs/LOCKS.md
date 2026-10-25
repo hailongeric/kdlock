@@ -1,8 +1,10 @@
 # Current KD lock catalog
 
 This is the entry point for the four lock families maintained on `master`.
-The protocol inventory was checked against implementation revision `05876a4`; its
-documentation and benchmark checkpoint is `40a0f36`. The selected KD-only mutex
+The earlier protocol inventory used `05876a4`, with documentation and benchmark
+checkpoint `40a0f36`. The current rwsem/MM review uses `e6fc371` on
+`codex/mmap-irq-trylock-20261025`; that branch evidence does not imply a merge
+into `master`. The selected KD-only mutex
 protocol comes from `d2a2304`, and the accepted rwsem waiting policy from
 `c21345b`. Later translation changes and the compact mutex storage refactor do
 not replace those lock protocols. Current object sizes below include that refactor.
@@ -44,6 +46,14 @@ The rwsem reservation blocks new readers, but does not grant physical mutex
 ownership. Those layers have separate responsibilities and must all remain live
 until their matching releases. Neither reader/writer lock adds a third JIT
 engine. JIT means just-in-time translation of the original protected code.
+
+Use [`include/kd_rwsem.h`](../include/kd_rwsem.h) and `struct kd_rwsem` for the unified concurrent-reader
+API. Linux mmap callers retain their `mmap_*` wrappers. The internal
+`kd_mutex_local_*` gate implements physical writer exclusion; bypassing rwsem
+admission with that gate does not protect readers. Explicit delegation remains
+a separate interface in [`include/kd_rwsem_direct.h`](../include/kd_rwsem_direct.h),
+with its own publication and retirement obligations. The mmap adapter selects
+the local protocol and keeps native MM bodies on their original task.
 
 The provider builds both engines and shared execution helpers through
 [`kd_spin_runtime.c`](../kernel_module/kd_spin_runtime.c). Ordinary mutex physical
@@ -98,11 +108,31 @@ for native-object compatibility, original-task execution and unsupported integra
 
 Ordinary spin and rwlock pairs preserve interrupt/bottom-half state and pair
 preemption protection. Spin's explicit interrupt and bottom-half variants stay
-on the calling CPU. Rwlock has no such variants. Mutex and rwsem are task-context
-APIs. A sleeping lock does not make every task-dependent or sleeping helper
-eligible for translation. Rwsem outer writers cannot cancel after publication,
+on the calling CPU. Rwlock has no such variants. Mutex operations and sleeping
+rwsem acquisitions require task context. KD rwsem read trylock and matching read
+unlock also preserve IRQ/preemption-disabled contexts; atomic final release is
+observed through timed writer-drain rechecks. A sleeping lock does not make every
+task-dependent or sleeping helper eligible for translation. Rwsem outer writers cannot cancel after publication,
 downgrade, or appear as nested controls inside a translated body. Its ordinary
 writer API retains cancellation and downgrade.
+
+| Current rwsem behavior | Evidence / limit |
+| --- | --- |
+| Concurrent local readers, exclusive local writers, trylock, signal cancellation and downgrade | The standalone probe passed 352 assertions; the corrected actual mmap adapter separately passed 137 Native and 161 KD assertions. The two basic programs are another validation class. See the [receipt](../bench/results/10.176.26.71/tests/mmap-irq-trylock-20261025/README.md); these are not full Linux equivalence claims. |
+| Read trylock/rollback and matching release with IRQs/preemption disabled | Focused standalone and actual mmap checks; no synchronous wake from atomic final release. Writer drain rechecks after one jiffy. |
+| Explicit outer writers | Separate mutex delegation protocol; no cancellation or downgrade after publication. |
+| Teardown | Callers must stop/join all users and retire published work. An idle predicate alone does not establish object lifetime. |
+| Fairness, starvation bounds, performance neutrality | Unestablished. Current corrected code has no qualified Native/KD performance baseline. |
+| Whole-kernel, RT/ww_mutex, lockdep integration | Separately unvalidated; nested/non-owner compatibility wrappers are not full lockdep support. |
+| TCLock rwsem | Restricted ordinary registered-worker pairs only; no equivalent cancellation, downgrade or actual mmap arm. |
+
+The atomic reader-release correction retains fully ordered count updates and
+avoids a synchronous scheduler/waitqueue wake when IRQs or preemption are
+disabled. Writers recheck reader drain after one jiffy (4 ms at the captured
+HZ=250, with additional scheduling delay possible). This is an unmeasured latency
+tradeoff. Ordinary uninterruptible acquisitions have bounded polling of at most
+16,384 checks per stage; mmap's killable writer path bypasses that polling loop.
+Neither mechanism establishes fairness or a maximum acquisition latency.
 
 The current translation features also have distinct scopes:
 

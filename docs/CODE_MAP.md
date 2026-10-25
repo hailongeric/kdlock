@@ -6,6 +6,10 @@ for how each lock works. The tables list maintained source, not generated build
 files or benchmark archives. The [lock catalog](LOCKS.md) organizes the four
 public lock families and their canonical implementation guides.
 
+The rwsem/mmap entries below include the `e6fc371` correction on
+`codex/mmap-irq-trylock-20261025`. This branch's code and evidence are distinct
+from maintained `master`; the [project guide](PROJECT_GUIDE.md) records that boundary.
+
 ## Provider and execution
 
 | Entry | Responsibility |
@@ -20,7 +24,9 @@ public lock families and their canonical implementation guides.
 | [kd_mutex_state.h](../include/kd_mutex_state.h) | Embedded gate claim and owner phase stores; versioned waiter records in reserved nodes |
 | [mutex/count.inc](../kernel_module/mutex/count.inc) | Cold exact waiter snapshots and controlled drain checks; no shared waiter-count updates |
 | [kd_mutex_api.h](../include/kd_mutex_api.h), [kd_mutex_compat.h](../include/kd_mutex_compat.h) | Unified ABI2 blocking calls, callable local acquisition and source aliases for an exclusively KD mutex build |
-| [kd_rwsem.h](../include/kd_rwsem.h), [kd_rwsem_direct.h](../include/kd_rwsem_direct.h), [kd_rwsem.c](../kernel_module/kd_rwsem.c) | Sleeping readers, ordinary writers and outer ABI2 writers; phase reservations drain readers before the unchanged mutex queue |
+| [kd_rwsem.h](../include/kd_rwsem.h), [kd_rwsem_types.h](../include/kd_rwsem_types.h) | Public read/write API and `struct kd_rwsem` layout/initializers; concurrent local readers and ordinary local writers |
+| [kd_rwsem.c](../kernel_module/kd_rwsem.c) | Reader admission, exact writer reservations, cancellation/downgrade and reader drain; atomic read release omits synchronous wake, with timed rechecks by sleeping writers |
+| [kd_rwsem_direct.h](../include/kd_rwsem_direct.h) | Explicit outer ABI2 writer pair; reserve/drain before publication and release the reservation on the origin after the mutex unlock/ACK |
 | [kd_mutex_tasks.c](../kernel_module/kd_mutex_tasks.c) | Exact task/acquisition references and RCU removal |
 | [kd_lock.c](../kernel_module/kd_lock.c) → [lock](../kernel_module/lock) | Nested control CALLs and direct KD mutex routing; no Linux mutex bridge |
 | [kd_exec.c](../kernel_module/kd_exec.c), [exe.c](../kernel_module/exe.c) → [execution](../kernel_module/execution) | Frame binding, lock ledger, remote/native ACKs, registry and JIT dispatch |
@@ -37,9 +43,25 @@ objects. Follow the ordinary spin path from
 `lock/mutex_calls.inc` → `mutex/queue.inc` → combiner/waiter/clobber. Rwlock's
 public count/gate protocol is in its header; the spin components acquire writer
 admission before ABI3 execution and preserve it across native continuation.
-Rwsem admission starts in `kd_rwsem.c` before `KD_MUTEX_OUTER_LOCK` and ends on
-the origin after the matching mutex unlock/acknowledgement. Its `gate` member
-uses the same physical mutex and delegation queue, not a separate writer engine.
+Ordinary rwsem writers reserve admission and drain readers through `kd_rwsem.c`;
+its internal `kd_mutex_local_*` calls supply physical writer exclusion. Accessing
+the embedded gate directly bypasses reader admission and is invalid. Explicit
+outer writers reserve/drain before `KD_MUTEX_OUTER_LOCK`; their reservation ends
+on the origin after the matching mutex unlock/acknowledgement. The `gate` member
+reuses the selected physical mutex and delegation queue.
+
+## Mmap lock integration
+
+| Entry | Responsibility |
+| --- | --- |
+| [adapter.c](../kernel_integration/mmap_lock/overlay/kernel/locking/kd_mmap/adapter.c), [kd_mmap_lock.h](../kernel_integration/mmap_lock/overlay/include/linux/kd_mmap_lock.h) | Linux mmap read/write, trylock, killable, nested-write and downgrade wrappers; immutable Native/KD choice per mm; concurrent readers and writer bodies stay on the original task |
+| [prepare.py](../kernel_integration/mmap_lock/prepare.py), [pool.c](../kernel_integration/mmap_lock/overlay/kernel/locking/kd_mmap/pool.c) | Namespaced reuse of the shared local lock primitives and preallocated CPU/slot records; the built-in adapter omits delegation |
+| [guest-kernel.patch](../kernel_integration/mmap_lock/guest-kernel.patch) | Lock field/routing, initialization/destruction and minimal API/lifetime wrappers, including the exact token/mm-reference transfer for asynchronous read release |
+
+Native MM algorithms remain unchanged. Operation-specific body delegation and
+prepared teardown are retired historical evidence. The
+[integration guide](../kernel_integration/mmap_lock/README.md) records supported
+interfaces, focused validation and unvalidated Native/RT/lockdep equivalence.
 
 ## Translation and reference backends
 
@@ -64,7 +86,8 @@ uses the same physical mutex and delegation queue, not a separate writer engine.
 | --- | --- |
 | [workload_modules](../workload_modules/README.md) | Spin/mutex/rwlock/rwsem payloads and API adapters; shared timing and business logic |
 | [bench/tclock_compare](../bench/tclock_compare/README.md) | Three-arm spin/mutex runners, sessions and result reports |
-| [bench/rwlock_compare](../bench/rwlock_compare/README.md) | RCUHT/cacheline rwlock and Native/KD rwsem comparisons, proc spin snapshots, exact oracles and complete-body JIT evidence |
+| [bench/rwlock_compare](../bench/rwlock_compare/README.md) | RCUHT/cacheline rwlock and Native/TCLock/KD rwsem comparisons; TCLock rwsem uses restricted ordinary registered-worker pairs. Also proc spin snapshots, exact oracles and complete-body JIT evidence |
+| [bench/mmap_lock](../bench/mmap_lock/README.md) | Prepared kdmm31 Native/KD shared-mm writer comparison: preparation, paired sessions, host capture and reporting; 24-session/six-boot live approval pending, no qualified new timing |
 | [bench/spin_cacheline](../bench/spin_cacheline/README.md) | Shared client, peak selection, provider preparation and offline readers |
 | [bench/spin_cacheline/native_image.py](../bench/spin_cacheline/native_image.py) | Captures loaded generated bytes outside timing and reconstructs relocated CALLs from uploaded placeholders and helper addresses; no helper-instruction inspection |
 | [bench/api_profile.py](../bench/api_profile.py) | Separate unscored taskname/xattr function profiles, retained tracing state and exact restoration; diagnostic timings are excluded from benchmark scores |
@@ -74,6 +97,7 @@ uses the same physical mutex and delegation queue, not a separate writer engine.
 | [tests/kernel/spin/string_service](../tests/kernel/spin/string_service), [string-service payload](../tests/kernel/spin/string_service/payload) | Original `strcmp` service probe: short and 300-character comparisons, returned JIT bodies, unchanged published image, exact results and drain |
 | [tests/kernel/rwlock](../tests/kernel/rwlock/README.md) | Native/KD correctness sessions: reader overlap, writer exclusion, exact updates, JIT and drain |
 | [tests/kernel/rwsem](../tests/kernel/rwsem/README.md) | Sleeping/cancellation/downgrade and outer admission probe; checks ordering before publication without claiming JIT execution |
+| [tests/kernel/mmap_lock](../tests/kernel/mmap_lock), [atomic-read payload](../tests/kernel/mmap_lock/irq/payload) | Actual-mm adapter checks and separate standalone IRQ/preemption read-trylock, rollback and writer-drain checks; distinct from provider/JIT and timing coverage |
 | [tests/protocols](../tests/protocols) | Trace validation, topology and protocol oracles |
 | [kernel_baseline](../kernel_baseline/README.md), [kernel_experiments](../kernel_baseline/experiments/README.md) | Captured kernel identity and independently authorized experiment bundles |
 

@@ -1,0 +1,160 @@
+# kdmm31 audit and performance preparation, October 25
+
+Audited implementation: `e6fc371b032cc0444dba34ee9025e7d939811125`, branch
+`codex/mmap-irq-trylock-20261025`. Master remained
+`769ba5b0c595a2739f61e372bab9230027050c88`. The unrelated emptied disk-cleanup
+README is user WIP and was preserved. Protocol, workload and tooling audits were
+read-only; implementation and validation used one owner. The subsequent
+documentation reconciliation was restricted to explicitly handed-off paths.
+
+No new demonstrated lock correctness defect was found in this scoped audit.
+No qualified current performance baseline or optimization gain is claimed.
+The maintained [benchmark guide](../../../../mmap_lock/README.md) contains the
+bounded proposal and commands; kernel boots and root host metadata access remain
+subject to exact approval.
+
+## Lock audit
+
+| Classification | Evidence and implication | Minimal next action |
+|---|---|---|
+| Validated tradeoff: atomic reader release | `kd_rwsem.c::kd_up_read` performs the fully ordered final decrement but avoids scheduler/waitqueue locking under IRQ/preemption-disabled contexts. `kd_rwsem_drain_readers` rechecks after one jiffy: at HZ=250 about 4 ms plus scheduling delay. | Retain this baseline. Measure actual affected waits before redesigning wakeup. Embedded irq_work needs late-publication/cancellation/object-lifetime proof. |
+| Progress hypothesis | Admission uses competitive compare/exchange and `wake_up_all`; no native rwsem handoff/fairness equivalence is established. A positive delegation phase can be prolonged by further reservations. | Measure the exact killable admission path and starvation indicators; do not infer starvation from contention alone. |
+| Historical performance clue, unqualified | The October 22 profile placed 87.11% of 1,000 KD samples in phase admission and sampled no physical-gate contention. Intrusive phase observation counted 129,152 acquisitions, 1,683,343 blocked returns and 1,583,015 failed following predicates (94.04%). | Retry amplification is a hypothesis, not elapsed wait time or proof that wake-all is causal. All associated endpoint failures remain rejected. |
+| Wrong potential tuning target | `kd_down_write_killable`, used by mmap/munmap, bypasses the 16,384-probe uninterruptible polling macro. Ordinary writers reserve exclusive admission before taking the physical gate. The corrected ELF confirms these call sites. | Establish qualified whole-workload measurements before changing polling or OSQ. |
+| Provider diagnostic gap narrowed | The already-authorized one-attempt load of the unchanged provider succeeded, retired and unloaded. This was no workload/JIT execution. The old 7,592-byte per-CPU allocation failure remains unexplained. | Do not repeat the attempt or unload unrelated modules. Keep capacity, fragmentation and allocator hints as unresolved alternatives. |
+
+The acquisition/release trace covered:
+
+- Reader admission: fully ordered increment plus acquire recheck, with ordered
+  rollback through `kd_up_read`; read trylock preserves atomic caller state.
+- Ordinary writers: exclusive admission reservation precedes the local physical
+  gate; release drops that gate before fully ordered admission reopening.
+  Interruptible/killable failures unwind gate and reservation in that order.
+- Downgrade: the reader count is installed before writer gate/phase release.
+  It neither drops original-task context nor delegates the native MM body.
+- Explicit outer writer reservation: exact ownership transfers back only after
+  the outer mutex ACK; published requests cannot cancel or downgrade.
+- Local mutex owner/waiter/handoff/pickup state and independent OSQ/delegation
+  links: slot retirement and public unlock's exact provider route remain intact.
+- mmap lifetime: `mmgrab` precedes token publication, exchange consumes a token
+  once, and unlock precedes `mmdrop_async`. Destruction requires stopped/joined
+  users; an idle observation does not independently establish object lifetime.
+
+References: `kernel_module/kd_rwsem.c`, `include/kd_rwsem{,_direct}.h`,
+`include/kd_mutex.h`, `kernel_module/lock/mutex_calls.inc`, and
+`kernel_integration/mmap_lock/overlay/kernel/locking/kd_mmap/adapter.c`.
+The integration patch remains limited to lock selection and minimal API/lifetime
+wrappers; native MM/scheduler bodies and originating tasks are preserved.
+Full JIT/provider, whole-kernel, RT/ww_mutex and lockdep equivalence are not
+established by this review. Retired operation-specific unmap/page-layout work
+remains historical.
+
+## Tooling findings
+
+The independent review inspected the untracked controller SHA-256
+`90452be147b60b18c2c55f4d7b23e597cd6b8ded61a67daeaa864a9cac1b413f`.
+Its original bytes are reachable at archive ref
+`archive/host-capture-control-before-audit-20261025`, commit `27b17859dd91207c0d289e7487c0c736be358973`.
+Frozen historical helpers and controllers were not edited.
+
+| Severity | Finding | Maintained remedy / check |
+|---|---|---|
+| P1, source-reachable | Historical monitor `read_prompt` can loop forever on EOF. No saved attempt demonstrated that loop. | `host_state.read_prompt` rejects EOF, bounds bytes and total time, and closes its own socket; mocked EOF/deadline tests. |
+| P1 | Endpoint/final identity exceptions discard available controller evidence. | `host_capture_control.observe` finalizes partial receipts, records child ownership immediately and retains every consumed output byte. |
+| P2 | Timeout/interruption omit partial bytes and leave child status ambiguous. | Explicit phase, PID/start where available, timeout/interruption timestamps and unknown-completion fields; no signals or retry. Transport loss/SIGKILL still cannot guarantee receipt delivery. |
+| P2 | Final command equality alone cannot reject PID reuse. | PID/start/command checks bracket captures; partial task rows/errors survive; runtime deltas require matching identities. |
+| P2 | Historical fetch timeout can leave `passed=true` with unconfirmed drain. | New controller sets success only after required stages and resets it on every exception; mocked fetch timeout. |
+| P2 | Missing/malformed endpoint evidence aborts old finalization before cleanup. | New finalization independently requires normal client completion, exact business/lifetime checks and fault-free state before ordinary unload; endpoint failures still reject performance. |
+
+A further paired-runner/report review found four issues. The following remedies
+are implemented in `e15a5aa3dd2b8cfcac5846d5e6f4a90743cd94dc` and passed all
+14 focused paired/report mocked tests. This supersedes the earlier nine-test
+paired result; it does not establish live workload or timing acceptance.
+
+| Severity | Finding | Implemented remedy with focused mocked coverage |
+|---|---|---|
+| P1 | Reporting trusted final acceptance flags without replaying endpoint/controller/admission evidence. | Persist bindings and replay saved qualification, validation and raw measurement evidence; missing or changed captures reject the report. |
+| P2 | Repeat labels and boot grouping could disagree with the full workload specification and predecessor chain. | Require the canonical specification, four measured boot blocks, consistent readiness and the exact chronological predecessor binding. |
+| P2 | Fixed/timed clients could start after module load without an intervening kernel-fault check. | Check the kernel log immediately after each load, before starting the client. |
+| P2 | Validation admission checked flags and row count without proving the complete fixed/timed case set. | Bind and replay the fixed-work writer proof and all four exact timed-client validation cases. |
+
+The saved October 25 control failed with `PermissionError` reading
+`/proc/257489/numa_maps`, before monitor connection or snapshot query. Its two
+67-task observations are diagnostic only. The prior controls already showed
+setup/no-op phases can create workers without the benchmark; repeating those
+controls would not isolate SSH from background writeback. The historical helper
+captures tasks **before** the snapshot query. All 24 October 22 actual-MM
+endpoints had 68–70 tasks; qualified count remains **zero**. Later quiet samples
+cannot replace rejected endpoints. See the
+[QEMU controls](../qemu-workers-20261021/README.md) and
+[actual-MM receipt](../../tests/serial-continuation-20261022/ACTUAL_MM.md).
+
+## Retained validation and artifacts
+
+Existing corrected-image actual mmap API validation passed **137 Native** and
+**161 KD** assertions. Standalone validation passed **352 assertions and two
+basic programs**. These are different validation classes. The one-attempt full
+provider load used ELF SHA-256
+`eab86044148276b133f1e24b5c6b33508a13a4b56833f5a02e977ee9ff7f8f49`:
+3,398,744 bytes, per-CPU section 7,592 bytes/alignment 128, all 85 imports matched.
+Reserved per-CPU free space was 8,100 → 508 → 8,100; retirement had zero remaining
+modules/frames/writers. It does not prove why the previous allocation failed.
+Raw diagnostic: `raw/tests/provider-load-once-20261025/`.
+
+The new private reconstruction verified all **102,993** entries against both
+base and corrected inventories, including types, modes, every regular file's
+bytes and symlink targets. Two removed dependency files were moved into retained
+`displaced/` storage, not deleted. The exact post-install `modules.order` was
+restored. Captured identity verification passed 5 bundle, 44 source and 11 build
+files plus configuration. Nothing compiled or installed a kernel. Inputs:
+
+- Delta: `cde7ad43033ea25812ec608482200e754b56ccb271a88b48665c89918630cf16`.
+- Full inventory: `9687419fcbc6165a929c6652e65321abab3a93a87e72386c329df64c72fb7aca`.
+- Post-install delta: `0d5bbb6d8ed27ef5b521efb02ab0e70de7aa60d2abe40f95f3458d3e686a5b4a`.
+- Candidate vmlinux: `fea94797765cf9f1ac4acdf91fc89dfe54b22696a8ffc18fdf09573ff65a1190`.
+- Candidate Build ID: `ef5179e8def44f0255adcd62585f62f118fee30f`.
+
+The first benchmark preparation compiled the module and checked CRCs, then
+failed because bpftool was unavailable. The second failed parsing the retained
+base BTF with the guest's installed libbpf (`EINVAL`). Both are failed attempts,
+not passes. The preserved installation receipt identifies the existing pahole 1.25 parser
+that successfully checked this exact base and 74 split inputs. Subsequent
+preparation reuses that operation. A copied private bpftool remains unused; no
+package/system installation or BPF load is involved.
+
+**Build-3 passed** using the existing `/usr/bin/pahole` 1.25. The unchanged
+benchmark payload and both clients compiled, all **16 imported CRCs** matched,
+and base/split BTF parsing passed against the corrected candidate. Build-1 and
+build-2 remain failed attempts. This preparation loaded no module and did not
+compile, install or boot a kernel. Source and binary hashes are retained in
+`build-3/result.json`, also copied to the source-side
+[build receipt](../../raw/bench/mmap-kdmm31-prep-20261025/build-3-result.json).
+
+The two basic programs and current **30 mocked tooling tests** (16 capture,
+14 paired/report) passed in the recovery VM. The retained logs are `unit-1.log`,
+`test_mmap_capture-final.log` and `test_mmap_paired-review-fixes.log`; the last
+records `Ran 14 tests, OK`.
+Capture fixes are committed at `82c20b4f2cf32d580d2a9c130f682d63e123bf4c`;
+preparation, paired runner and report fixes at
+`e15a5aa3dd2b8cfcac5846d5e6f4a90743cd94dc`. These checks do not execute an actual
+mmap workload or establish provider/JIT execution, new runtime coverage or timing.
+Prior actual mmap correctness receipts were reused rather than rerun.
+
+The preparation owner retained `preparation-summary.json` under
+`/root/kdlock-evidence/10.176.26.71/bench/mmap-kdmm31-prep-20261025/` and sealed
+the preparation archive with SHA-256
+`d09d1ee5c06e454e248115335956850de6159e4e9581b257f8393699acd949a7`.
+The source-side [preparation summary](../../raw/bench/mmap-kdmm31-prep-20261025/preparation-summary.json)
+and [archive check](../../raw/bench/mmap-kdmm31-prep-20261025/archive-check.json)
+bind these results to the retained `preparation.tar.gz`, including the logs and
+both failed build attempts.
+
+At the last live check the VM was still `6.1.159-kdclobber2`, boot
+`d32e2e18-c340-4a98-8105-335bccec0b5d`, with the exact original 73 modules, no project
+module/workload and empty `next_entry`. Taint was **12288**, reflecting the prior
+unsigned out-of-tree diagnostic; do not repeat the earlier zero-taint claim.
+Recovery inputs and installed candidate artifact hashes still matched. This is
+the final health reported by the preparation owner, not approval for a live
+cycle. The six-boot/24-session proposal and read-only root host capture remain
+unapproved. New qualified measurements remain zero; runtime readiness and timing
+acceptance require their own retained evidence.

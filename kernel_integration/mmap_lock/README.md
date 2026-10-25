@@ -10,7 +10,7 @@ The active integration uses the local-reader/local-writer adapter restored from
 `b8b31a7b2f895b18226538b8a409331623b4ddc7`, with the shared rwsem's IRQ-safe read
 trylock/rollback/release correction described below. This is an experimental
 adapter, not a validated whole-kernel
-replacement or a claim that every Linux mutex semantic has been established.
+replacement or a claim that every Linux rwsem semantic has been established.
 
 ## Retained components
 
@@ -60,8 +60,11 @@ ABI2 facade. Public mutex unlock retains its provider routing; rwsem ordinary an
 outer acquisitions retain their distinct matching release protocols.
 `KD_RWSEM_OUTER_WRITE_LOCK` / `KD_RWSEM_OUTER_WRITE_UNLOCK` in
 `include/kd_rwsem_direct.h` explicitly opt eligible writers into delegation. They
-do not transfer native MM bodies' task context. The mmap adapter uses ordinary
-acquisitions so every native MM body remains on its originating task.
+retain the originating task's phase reservation until the matching mutex
+unlock/ACK completes. They cannot downgrade, cancel after publication or nest
+inside another translated body. They do not transfer native MM bodies' task
+context. The mmap adapter uses ordinary acquisitions so every native MM body
+remains on its originating task.
 
 KD read trylock now accepts IRQ-disabled callers. Its fixed sequence is an
 admission check, ordered reader increment, admission recheck and, on collision,
@@ -77,8 +80,19 @@ still requires its asynchronous release wrapper.
 This adds timer wakeups during a prolonged reader drain and can delay observation
 of an atomic final release until the next recheck. With the validated `HZ=250`,
 one jiffy is 4 ms; scheduling can add delay. No new performance result is claimed.
+The mmap/munmap killable writer path bypasses the 16,384-probe polling macro used
+by ordinary uninterruptible acquisitions. Changing that polling budget would
+not directly tune these syscalls' killable admission or reader-drain waits.
 See the [focused correction receipt](../../bench/results/10.176.26.71/tests/mmap-irq-trylock-20261025/README.md)
 for checks and limits.
+
+| Interface or semantic | Current scope |
+| --- | --- |
+| Concurrent readers, exclusive local writers, signal cancellation and downgrade | Implemented; the focused standalone and actual-mm probes exercise selected ordering, exclusion, cancellation and lifetime cases. |
+| Read trylock and matching read release with IRQs or preemption disabled | Supported by the corrected shared API and tested in the documented contexts; sleeping acquisitions remain task-context operations. |
+| BPF asynchronous read-share transfer | The wrapper requires the exact acquired-share token and retained mm reference; an observed reader count does not authorize release. |
+| Explicit writer delegation | Separate opt-in interface with the restrictions above; native MM body delegation is outside the maintained scope. |
+| Native fairness/handoff behavior, all callbacks, RT and lockdep semantics | Equivalence is unvalidated. Nested wrapper names and passing focused probes do not establish it. |
 
 ## Why native bodies stay on their caller
 
@@ -142,9 +156,52 @@ passed 137 Native and 161 KD assertions on actual mm objects, using the same
 verified kernel image and prebuilt probe. Both modes drained and unloaded normally;
 recovery was restored. The runner's `--reuse-probe` option requires exact payload
 source, ELF, kernel and live BTF bindings and records that basic/build checks were
-reused. It does not rerun those checks or count them as newly executed.
+reused. The separate standalone adapter probe passed 352 assertions, and the two
+basic programs passed before those actual-mm runs. Reuse does not count these
+checks as newly executed.
+
+The subsequent [one-attempt provider diagnostic](../../bench/results/10.176.26.71/bench/mmap-perf-prep-20261025/README.md#retained-validation-and-artifacts)
+successfully initialized the unchanged provider, checked its capabilities,
+retired it with zero remaining modules/frames/writers and unloaded normally.
+Exactly one load was attempted; no workload or JIT body executed. The earlier
+7,592-byte reserved per-CPU allocation failure remains unexplained, and full
+shared-provider workload coverage remains open.
+
 RT, lockdep, whole-kernel substitution
-and broader Linux semantic equivalence remain unvalidated. Performance work is deferred.
+and broader Linux semantic equivalence remain unvalidated. The next performance
+work uses the [separate paired benchmark plan](../../bench/mmap_lock/README.md);
+the old `kdmm1` timing profile cannot establish performance of this correction.
+The current proposal measures 24 shared-mm writer cases over five candidate
+boots followed by recovery. That six-boot cycle and root host capture are still
+unapproved; no new timing or performance gain is claimed.
+
+## Reusing the corrected build
+
+The installed `kdmm31` build/source links name a temporary tree removed by the
+completed reboot. The retained `candidate-1/runtime-identity` directory supports
+identity verification, but is not a complete external-module build tree. Do not
+point Kbuild at it or silently build against recovery/kdmm1 headers.
+
+Reconstruct a new private tree from the unchanged kdmm1 base and authenticated
+`kdmm31-delta.tar.gz`, using `new-volatile.json` to verify the base, the 779 changed
+entries and the full result. The two recorded removed `.fixdep.o.d` files must
+be absent from the reconstructed tree; preserve displaced copies outside it.
+Then apply the preserved post-install `modules.order` delta. Verify source,
+configuration, ELF, generated build inputs and module CRC/BTF bindings before
+building a new payload. Reconstruction does not require a kernel rebuild,
+installation, boot-link change or deletion of retained evidence. Exact artifact
+hashes remain in the [correction receipt](../../bench/results/10.176.26.71/tests/mmap-irq-trylock-20261025/README.md#preservation-and-final-state).
+
+The [current preparation receipt](../../bench/results/10.176.26.71/bench/mmap-perf-prep-20261025/README.md)
+records a completed private reconstruction and successful `build-3` of the
+unchanged writer payload and clients. All 16 imported symbol CRCs matched;
+the exact base and split BTF parsed with the existing pahole 1.25. This work
+loaded no module and did not compile, install or boot a kernel. Earlier parser
+failures remain failed attempts. Current tooling passed 30 mocked cases
+(16 capture and 14 paired/report), including the latest four review fixes;
+the two earlier basic programs also passed. Build and mock results do not replace both-mode live payload
+validation or qualify timings. Use the linked benchmark guide for current
+commands rather than replaying historical kernel-build instructions.
 
 ## Retired experiments and provenance
 

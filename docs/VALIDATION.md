@@ -10,6 +10,23 @@ terms used in the receipts below.
 
 ## Native shared-mm mmap writers
 
+The [IRQ/read-trylock correction](../bench/results/10.176.26.71/tests/mmap-irq-trylock-20261025/README.md)
+at `e6fc371` passed 137 Native and 161 KD assertions on actual mm objects in the
+same `kdmm31` image. Its separate standalone probe passed 352 assertions and the
+two basic programs passed; these scopes must not be combined into actual-mm
+coverage. The unchanged full provider later loaded once, retired and unloaded
+in the authorized diagnostic, without a workload or JIT-body test. Its earlier
+allocation failure remains unexplained. See the [current preparation receipt](../bench/results/10.176.26.71/bench/mmap-perf-prep-20261025/README.md).
+
+The later build-3 preparation passed all 16 payload import CRCs and base/split
+BTF parsing with the existing pahole 1.25. It built the payload and two clients
+without loading a module or compiling, installing or booting a kernel. Failed
+build-1/build-2 attempts remain evidence. Two basic programs and the current
+30 mocked tooling tests (16 capture, 14 paired/report) passed in recovery,
+including the four later review fixes. None of these checks is
+a new actual mmap workload, provider/JIT test or performance result. The proposed
+six-boot, 24-session cycle and root host capture remain unapproved.
+
 The [shared-mm receipt](../bench/results/10.176.26.71/tests/mmap-writer-native-20261021/README.md)
 passed both basic programs and six focused cases at `b9fe567`: exact shared mm/mmap-lock identity, zero fault callbacks,
 actual blocked Native writer evidence, VMA split/unmap, descriptor-closed VMA
