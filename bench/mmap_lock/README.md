@@ -10,6 +10,8 @@ payload checks; all 24 measured sessions remain unrun. The stop remains in force
 No current qualified rate or optimization gain has been established.
 The [audit and preparation receipt](../results/10.176.26.71/bench/mmap-perf-prep-20261025/README.md)
 records the remaining limits and retained failures.
+The separate [QEMU diagnostic](DIAGNOSTIC.md) has passed 43 focused mocked tests;
+its exact live cycle remains unapproved and cannot qualify a benchmark.
 
 Private reconstruction and build-3 preparation have passed, including all 16
 payload import CRCs and base/split BTF parsing with existing pahole 1.25. The
