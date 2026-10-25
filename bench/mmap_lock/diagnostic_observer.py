@@ -20,7 +20,11 @@ from host_capture_control import stat_fields
 
 NS = 1_000_000_000
 PERIOD = NS // 2
-MAX_GAP = NS // 2
+# A nominal half-second cadence is not a scheduling deadline. Five seconds is
+# the shortest phase window: a scan/gap that long can obscure a whole phase.
+# This is coarse phase observation, not proof that shorter task lifetimes did
+# not occur. Retain actual gaps/costs; ordinary dispatch jitter is not failure.
+MAX_GAP = 5 * NS
 MAX_LINE = 2 * 1024 * 1024
 MAX_OUTPUT = 32 * 1024 * 1024
 MONITOR_LIMIT = 1024 * 1024
@@ -322,6 +326,7 @@ class Observer:
         self.sample_count = 0
         self.next_sample = self.start
         self.completed = []
+        self.observed_phases = set()
         self.max_gap_ns = 0
         self.max_unobserved_gap_ns = 0
         self.next_id = 0
@@ -389,11 +394,13 @@ class Observer:
         elif added:
             self.stop('first new QEMU task')
         elif elapsed > MAX_GAP or (gap is not None and not 0 <= gap <= MAX_GAP):
-            self.stop('task sampling exceeded 500 ms bound')
+            self.stop('task observation loss exceeded 5 s phase window')
         elif self.baseline is None:
             self.baseline = keys
             self.emit('inventory_bound', identities=sorted(keys),
                       original_admission_task_count=self.expected['task_count'], accepted=False)
+        if not self.stop_reason:
+            self.observed_phases.add(self.phase)
 
     def acknowledge(self, message):
         if message.get('kind') == 'controller_stop':
@@ -439,6 +446,7 @@ class Observer:
         try:
             self.emit('start', accepted=False, workload_started=False, phases=PHASES,
                       sample_period_ns=PERIOD, maximum_sample_start_gap_ns=MAX_GAP,
+                      sampling_policy='Approximate cadence; 5 s scan/gap observation-loss limit',
                       expected=self.expected, observer_affinity=self.fs.affinity(0),
                       observer_processor=self.fs.processor())
             bound = identity(self.fs, self.expected)
@@ -513,6 +521,14 @@ class Observer:
         finally:
             if self.monitor:
                 self.stop('observer ended with monitor completion unknown')
+            # A long final sleep can leave the loop without another scan.
+            # Successful stimuli alone cannot establish phase observation.
+            final_gap = None if self.last_sample_start is None else self.clock.now() - self.last_sample_start
+            missing_phases = [name for _, name in PHASES if name not in self.observed_phases]
+            if not self.stop_reason and (final_gap is None or not 0 <= final_gap <= MAX_GAP):
+                self.stop('task observation loss at observer end')
+            if not self.stop_reason and missing_phases:
+                self.stop('missing task observations for phases: ' + ', '.join(missing_phases))
             complete = (not self.stop_reason and self.completed ==
                         ['metadata', 'monitor', 'guest_true', 'guest_hash'])
             self.final = dict(observation_complete=complete, accepted=False, cause_established=False,
@@ -520,6 +536,7 @@ class Observer:
                       pending=self.pending, remote_completion_unconfirmed=self.pending is not None,
                       sample_count=self.sample_count, maximum_gap_ns=self.max_gap_ns,
                       maximum_unobserved_gap_ns=self.max_unobserved_gap_ns, output_error=self.output_error,
+                      final_sample_start_gap_ns=final_gap, missing_observation_phases=missing_phases,
                       observer_cpu_ns=self.clock.cpu() - self.cpu_start,
                       elapsed_ns=self.clock.now() - self.start,
                       limitations='Discrete scans can miss short-lived tasks. Names, phase association '

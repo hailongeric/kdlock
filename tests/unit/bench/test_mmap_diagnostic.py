@@ -312,16 +312,16 @@ class Phases(NoLive):
         self.assertFalse(self.rows('phase'))
         self.assertFalse(self.rows('launch_request'))
 
-    def test_gap_over_half_second_stops_no_catch_up_launches(self):
+    def test_observation_loss_stops_no_catch_up_launches(self):
         def skip():
             if 6 * ob.NS <= self.clock.now() < 7 * ob.NS:
                 self.clock.ns += 40 * ob.NS
         self.clock.on_sleep = skip
         self.assertFalse(self.runner.run())
-        self.assertIn('500 ms', self.rows('stop')[0]['reason'])
+        self.assertIn('observation loss', self.rows('stop')[0]['reason'])
         self.assertFalse(self.rows('launch_request'))
 
-    def test_nonzero_scan_time_counts_in_start_to_start_bound(self):
+    def test_nonzero_scan_time_and_ordinary_jitter_are_retained_not_rejected(self):
         def cost(path):
             if path.endswith('/schedstat'):
                 self.clock.ns += 1_000_000
@@ -337,7 +337,89 @@ class Phases(NoLive):
         self.runner.scan()
         self.assertEqual(self.rows('sample')[-1]['unobserved_gap_ns'], 450_000_000)
         self.assertEqual(self.rows('sample')[-1]['gap_ns'], 517_000_000)
-        self.assertIn('500 ms', self.runner.stop_reason)
+        self.assertIsNone(self.runner.stop_reason)
+
+    def test_full_phases_with_scan_cost_and_oversleep_keep_nominal_cadence(self):
+        # Deterministic 6.7 ms scans plus variable sleep/dispatch jitter. A
+        # perfect virtual clock previously hid the zero-margin 500 ms policy.
+        def cost(path):
+            if path.endswith('/schedstat'):
+                self.clock.ns += 100_000
+        delays = iter([0, 1_000_000, 3_000_000, 7_000_000] * 2000)
+        self.fs.before_read = cost
+        self.clock.on_sleep = lambda: setattr(self.clock, 'ns', self.clock.ns + next(delays))
+        self.assertTrue(self.runner.run())
+        samples = self.rows('sample')
+        self.assertTrue(all(row['duration_ns'] == 6_700_000 for row in samples))
+        self.assertGreater(max(row['gap_ns'] or 0 for row in samples), 500_000_000)
+        self.assertLess(max(row['gap_ns'] or 0 for row in samples), 550_000_000)
+        self.assertGreater(len(samples), 110)
+        self.assertLess(len(samples), 125)
+        self.assertEqual(self.rows('start')[0]['sample_period_ns'], 500_000_000)
+        self.assertEqual(self.rows('start')[0]['maximum_sample_start_gap_ns'], 5 * ob.NS)
+        self.assertEqual(self.rows('final')[0]['completed_phases'],
+                         ['metadata', 'monitor', 'guest_true', 'guest_hash'])
+        self.assertEqual(len(self.monitors), 1)
+        self.assertEqual(len(self.rows('launch_request')), 2)
+        self.assertFalse(self.rows('final')[0]['accepted'])
+
+    def test_phase_window_loss_boundary_is_separate_from_nominal_period(self):
+        self.runner.executable = self.fs.exe.copy()
+        self.runner.scan()
+        self.clock.ns = 5 * ob.NS
+        self.runner.scan()
+        self.assertIsNone(self.runner.stop_reason)
+        self.clock.ns += 5 * ob.NS + 1
+        self.runner.scan()
+        self.assertIn('observation loss', self.runner.stop_reason)
+        self.assertEqual(self.rows('sample')[-1]['gap_ns'], 5 * ob.NS + 1)
+        self.assertFalse(self.rows('launch_request'))
+
+    def test_slow_scan_stops_even_without_prior_gap(self):
+        def cost(path):
+            if path.endswith('/schedstat'):
+                self.clock.ns += 80_000_000
+        self.fs.before_read = cost
+        self.runner.executable = self.fs.exe.copy()
+        self.runner.scan()
+        self.assertEqual(self.rows('sample')[0]['duration_ns'], 5_360_000_000)
+        self.assertIsNone(self.rows('sample')[0]['gap_ns'])
+        self.assertIn('observation loss', self.runner.stop_reason)
+
+    def test_end_stall_without_a_following_scan_cannot_complete(self):
+        def skip():
+            if self.runner.phase == 'tail':
+                self.clock.ns += 6 * ob.NS
+        self.clock.on_sleep = skip
+        self.assertFalse(self.runner.run())
+        final = self.rows('final')[0]
+        self.assertEqual(final['completed_phases'], ['metadata', 'monitor', 'guest_true', 'guest_hash'])
+        self.assertGreater(final['final_sample_start_gap_ns'], 5 * ob.NS)
+        self.assertIn('observation loss at observer end', final['stop_reason'])
+        self.assertFalse(final['observation_complete'])
+
+    def test_successful_stimuli_cannot_replace_missing_phase_observations(self):
+        # Less than the loss bound, but enough to leave the short final phase
+        # unobserved before the normal 50 ms finish margin. Stimuli all succeed.
+        # Complete the mock monitor in one step, keeping its required extra
+        # scan on the nominal grid so the last pre-tail scan starts at 55 s.
+        def immediate_monitor(clock):
+            monitor = FakeMonitor(clock)
+            monitor.steps = 4
+            self.monitors.append(monitor)
+            return monitor
+        self.runner.monitor_factory = immediate_monitor
+        def skip():
+            if self.runner.phase == 'tail':
+                self.clock.ns += 4_950_000_000
+        self.clock.on_sleep = skip
+        self.assertFalse(self.runner.run())
+        final = self.rows('final')[0]
+        self.assertEqual(final['completed_phases'], ['metadata', 'monitor', 'guest_true', 'guest_hash'])
+        self.assertLessEqual(final['final_sample_start_gap_ns'], 5 * ob.NS)
+        self.assertEqual(final['missing_observation_phases'], ['tail'])
+        self.assertIn('missing task observations', final['stop_reason'])
+        self.assertFalse(final['observation_complete'])
 
     def test_metadata_read_failure_preserves_earlier_bundle_rows(self):
         self.fs.files['/sys/devices/system/cpu/cpufreq/policy0/scaling_governor'] = PermissionError('denied')
