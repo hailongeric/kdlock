@@ -35,7 +35,10 @@ The adapter has [focused actual-mm validation](VALIDATION.md#native-shared-mm-mm
 That evidence does not establish full Native semantics, fairness, whole-kernel,
 RT or lockdep equivalence. The authorized paired and plain benchmark attempts
 stopped at host admission before boot or payload execution. The expanded scaling
-plan remains unrun; no current qualified timing is claimed. The
+plan remains unrun. A separate
+[16-worker validation pair](../bench/results/10.176.26.71/bench/mmap-worker-screen-20261026/README.md)
+qualified under the explicit worker/window policies, with KD at 0.3271× Native;
+it provides no repeated baseline or causal performance conclusion. The
 [throughput roadmap](THROUGHPUT_PLAN.md) tracks those separate plans and stops.
 
 ## Terms used in these guides

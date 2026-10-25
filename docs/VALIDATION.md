@@ -27,7 +27,7 @@ including the four later review fixes. None of these checks is
 a new actual mmap workload, provider/JIT test or performance result. The authorized
 October 25 cycle [stopped at its first host admission](../bench/results/10.176.26.71/bench/mmap-kdmm31-paired-20261025/README.md)
 with 73 QEMU tasks versus 67. One capture completed; no boot, payload check or
-measured session ran. Qualified current performance cases remain zero.
+measured session ran. That attempt qualified no performance cases.
 
 The later [phase-separated QEMU diagnostic preparation](../bench/results/10.176.26.71/tests/mmap-diagnostic-offline-20261025/README.md)
 passed 43 new mocked tests in recovery, with exact frozen-source bindings and
@@ -37,7 +37,7 @@ These passes do not establish actual mmap performance or lift the admission stop
 The explicit [plain-only runner/report preparation](../bench/results/10.176.26.71/tests/mmap-plain-plan-20261025/README.md)
 subsequently passed 11 new fixtures plus the 14 directly affected historical
 paired/report tests. Its 12-case schema is distinct from the stopped 24-case plan;
-no workload, host capture or boot ran, and new qualified throughput remains zero.
+no workload, host capture or boot ran, and it supplied no qualified throughput.
 
 The subsequent [authorized `plain-v1` attempt](../bench/results/10.176.26.71/bench/mmap-plain-v1-20261025/README.md)
 completed one fresh host capture, then failed the unchanged admission predicate
@@ -59,6 +59,15 @@ The [one corrected live diagnostic](../bench/results/10.176.26.71/bench/mmap-dia
 recorded 80 scans and stopped on a new task during the guest no-op phase. The
 no-op completed after the stop; the checksum phase was unrun. Final recovery
 health matched, and no benchmark or retry followed.
+
+The later [worker-policy validation pair](../bench/results/10.176.26.71/bench/mmap-worker-screen-20261026/README.md)
+qualified two actual shared-mm timed windows: Native 108,245.61 and KD
+35,406.14 cycles/s. Each arm also passed a 16 × 5,000 fixed writer proof,
+endpoint qualification and normal drain. Those checks are distinct from the
+earlier full focused mmap API assertions and standalone rwsem probe. The single
+pair does not supply repetition variance, latency or an optimization result;
+the 126-session scaling baseline remains unrun. End-of-cycle recovery recorded
+73 original modules, zero taint and an empty pending boot entry.
 
 The [shared-mm receipt](../bench/results/10.176.26.71/tests/mmap-writer-native-20261021/README.md)
 passed both basic programs and six focused cases at `b9fe567`: exact shared mm/mmap-lock identity, zero fault callbacks,

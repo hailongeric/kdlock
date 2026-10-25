@@ -15,8 +15,10 @@ cannot reclassify any rejected historical run.
 The separately versioned [QEMU worker policy](QEMU_WORKERS.md),
 `qemu-workers-v1`, now admits verified QEMU auxiliary lifetimes and records
 their activity. Its [focused VM fixtures](../results/10.176.26.71/tests/mmap-worker-admission-20261026/README.md)
-pass; the corrected two-arm validation is still pending. Extra workers alone
-are not a rejection under this explicit policy.
+pass. The corrected [16-worker validation pair](../results/10.176.26.71/bench/mmap-worker-screen-20261026/README.md)
+qualified and drained: Native 108,246 versus KD 35,406 cycles/s (0.3271×).
+This single unscored pair supplies no variability or optimization conclusion.
+Extra workers alone are not a rejection under this explicit policy.
 The earlier 12-session `plain-v1` attempt [stopped before boot](../results/10.176.26.71/bench/mmap-plain-v1-20261025/README.md)
 at **68 QEMU tasks versus 67**. One full capture ran; all 12 measurements and
 six unscored checks remain unrun. The historical 24-case plain/sampled plan
@@ -29,8 +31,9 @@ The prepared comparison uses the unchanged shared-mm
 exact approval and fresh admission; preparation alone does not authorize it.
 The earlier authorized October 25 attempt [stopped at first admission](../results/10.176.26.71/bench/mmap-kdmm31-paired-20261025/README.md)
 with 73 QEMU tasks versus 67. It consumed one host capture and no boots or
-payload checks; all 24 measured sessions remain unrun. The stop remains in force.
-No current qualified rate or optimization gain has been established.
+payload checks; all 24 measured sessions remain unrun. That historical run
+remains rejected. The qualified pair above does not establish an optimization
+gain or a repeated baseline.
 The [audit and preparation receipt](../results/10.176.26.71/bench/mmap-perf-prep-20261025/README.md)
 records the remaining limits and retained failures.
 The separate [QEMU diagnostic](DIAGNOSTIC.md) cannot qualify a benchmark.
@@ -58,7 +61,8 @@ and at the source controller. Missing policy means the original
 remains `plain-scaling-v1`; its 21 counts and 126 sessions do not change.
 Runner and report replay reject mixed policies, sources, builds and readiness.
 The [offline validation receipt](../results/10.176.26.71/tests/mmap-window-20261026/README.md)
-records the tests and their limits. No live window has been qualified.
+records the tests and their limits. The separate live screen qualified two
+windows; its receipts cannot enter the 126-session report.
 
 The workload remains real userspace `mmap()`/`munmap()` syscall throughput:
 `timed_client.c::worker()` maps one **4 KiB**, `PROT_READ`, `MAP_SHARED` range

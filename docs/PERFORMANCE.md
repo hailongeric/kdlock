@@ -5,8 +5,9 @@ across documented lock workloads, actual shared-mm mmap and actual page faults.
 Substantial improvement is a hypothesis to test; report regressions honestly.
 New tail-latency collection and sampled workload variants are deferred. The
 corrected
-`e6fc371` rwsem has focused correctness evidence, but no qualified performance
-baseline. Actual mmap integration, ordinary lock microbenchmarks and explicit
+`e6fc371` rwsem has focused correctness evidence and one qualified mmap
+validation pair, but no repeated current performance baseline. Actual mmap
+integration, ordinary lock microbenchmarks and explicit
 delegation remain separate comparisons. The [basic functional version](../bench/results/10.176.26.71/tests/basic-version-20261022/README.md)
 retains all four returned-body smoke passes and the separate 16-worker rwlock
 NO_JIT failure. Performance requires matched work, exact retirement, unchanged
@@ -30,7 +31,7 @@ records successful private reconstruction and build-3 compatibility checks using
 existing pahole 1.25. Preparation loaded no module and booted no kernel. The
 earlier authorized October 25 attempt [stopped at initial admission](../bench/results/10.176.26.71/bench/mmap-kdmm31-paired-20261025/README.md):
 73 QEMU tasks versus 67, with no boot or payload load and all 24 measured cases
-unrun. New qualified timing count is zero. That preparation passed 16 capture
+unrun. That attempt qualified no timing. Its preparation passed 16 capture
 and 14 paired/report mocked tests, including the report-integrity fixes; mock
 results do not qualify timing. The separately prepared
 [QEMU diagnostic](../bench/mmap_lock/DIAGNOSTIC.md) first stopped during initial
@@ -54,9 +55,8 @@ payload, fixed proof, timed session or KD boot followed. The attempt omitted
 post-idle settling, meeting neither the historical 60-second procedure nor the
 later user-required 90 seconds; no later quiet capture can rescue it. Recovery
 returned to the original 73 modules and zero taint.
-The next step is to resolve admission preparation and role evidence before
-seeking another bounded pair. No rate, variability or optimization claim is
-available, and the 126-session matrix remains unrun.
+That attempt supplies no rate, variability or optimization claim. The separate
+126-session matrix remains unrun.
 The explicit [QEMU auxiliary-worker policy](../bench/mmap_lock/QEMU_WORKERS.md)
 now separates fixed vCPU/service identities from observed worker lifetimes.
 It permits verified worker activity and membership changes between complete
@@ -64,8 +64,16 @@ scans, retains identity/placement and incomplete-read failures, and records
 the required 90-second interval after payload setup. The
 [94 focused Python tests and two basic programs](../bench/results/10.176.26.71/tests/mmap-worker-admission-20261026/README.md)
 passed in the recovery VM, followed by 55 targeted tests for review fixes.
-These are tooling checks; the corrected bounded
-Native/KD validation remains pending. Historical rejected runs are unchanged.
+These are tooling checks. The corrected
+[16-worker validation pair](../bench/results/10.176.26.71/bench/mmap-worker-screen-20261026/README.md)
+then qualified and drained: Native **108,245.61** versus KD **35,406.14**
+completed mmap/munmap cycles/s, KD **0.3271× Native (67.3% lower)**. Both arms
+passed an 80,000-cycle fixed proof and recorded the required 90-second
+post-setup interval. This single unscored pair has no variability estimate or
+causal bottleneck conclusion. Recovery finished with the original 73 modules,
+zero taint and no pending boot. Historical rejected runs are unchanged. The
+next step is the authorized throughput sweep with fresh window-policy resource
+accounting; optimization remains deferred until repeated evidence exists.
 
 The historical records below retain their original source, topology, caller
 shell and instrumentation identities. Historical complete-operation p95 remains
