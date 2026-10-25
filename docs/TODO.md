@@ -26,9 +26,11 @@ across the [workload catalog](BENCHMARK_WORKLOADS.md), actual mmap and actual
 page faults. Substantial gains are a hypothesis; losses remain reportable.
 Reuse the validated
 [basic working version](PROJECT_GUIDE.md#basic-working-version) and retain focused
-correctness, ownership, lifetime, recovery and environment checks. The smaller
-mmap proposal uses 1 and 16 workers and three plain Native/KD pairs: 12 measured
-cases. The explicit `plain-v1` runner/report mode passed
+correctness, ownership, lifetime, recovery and environment checks. The new
+`plain-scaling-v1` plan prepares 21 worker counts and 126 plain
+Native/KD sessions, with [41 mocked passes and independent review](../bench/results/10.176.26.71/tests/mmap-scaling-plan-20261026/README.md).
+Its cases remain unrun. The earlier smaller plan used 1 and 16 workers and
+three pairs: 12 measured cases. The explicit `plain-v1` runner/report mode passed
 [25 focused mocked checks](../bench/results/10.176.26.71/tests/mmap-plain-plan-20261025/README.md);
 its [authorized attempt](../bench/results/10.176.26.71/bench/mmap-plain-v1-20261025/README.md)
 stopped at 68 QEMU tasks versus 67 before boot or payload execution. It consumed
@@ -45,19 +47,24 @@ actual mmap correctness was reused. The earlier authorized October 25 attempt
 [stopped at initial admission](../bench/results/10.176.26.71/bench/mmap-kdmm31-paired-20261025/README.md)
 with 73 QEMU tasks versus 67. It consumed one host capture, no boots or payload
 checks, and left all 24 measured sessions unrun. Qualified current performance
-cases remain zero. Offline worker analysis is complete; the proposed bounded
-live diagnostic has [43 focused mocked test passes](../bench/results/10.176.26.71/tests/mmap-diagnostic-offline-20261025/README.md)
-and still requires its exact approval. The existing stop and
+cases remain zero. The first bounded diagnostic stopped during initial
+observation; its
+[guide](../bench/mmap_lock/DIAGNOSTIC.md) records the subsequent approximate-cadence
+correction and execution status. The existing stop and
 acceptance criteria remain in force. The six workers predated that full capture
 helper by about 63/55 seconds; its snapshot query did not create them. Their
 roles and initiating I/O remain unknown.
-Local `master` now includes the five-commit fast-forward through `92f773f`.
+Local `master` includes the earlier integration through `92f773f`, the expanded
+plan at `80f3f1e` and diagnostic timing correction at `39ad0be`.
 The [readiness and cleanup dependency record](../bench/results/10.176.26.71/bench/mmap-perf-prep-20261025/README.md#local-integration-and-read-only-readiness)
 confirms the prepared binaries and persistent identities still match; guest root
-space supported the reasoned 512 MiB campaign evidence allowance. A subsequent
+space supported the older 512 MiB campaign evidence allowance. The expanded
+plan instead estimates 2 GiB per retention filesystem; fresh space/log review
+is required before any separately approved execution. A subsequent
 [exact-file cleanup](../bench/results/10.176.26.71/tests/approved-archive-cleanup-20261025/README.md)
 removed three approved duplicate guest archives and retained their verified
-source-host copies, freeing 1,237,295,104 bytes. No build or live test followed.
+source-host copies, freeing 1,237,295,104 bytes. That cleanup involved no build
+or live test.
 Additional cleanup requires its own verified preservation and exact approval.
 The failed admission cannot be replaced by a later quiet observation.
 Broader matrices, causal profiling, observer expansion and tuning remain

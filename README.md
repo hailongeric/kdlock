@@ -30,7 +30,9 @@ These focused checks do not establish full Linux semantic equivalence. Benchmark
 payload/client preparation has passed. The authorized October 25 `plain-v1`
 attempt [stopped before boot](bench/results/10.176.26.71/bench/mmap-plain-v1-20261025/README.md)
 at 68 QEMU tasks versus the required 67; all 12 measured sessions remain unrun.
-Current qualified timing remains zero. See the
+The separate prospective `plain-scaling-v1` matrix has 21 worker counts and
+126 Native/KD sessions per workload; its 41 focused mocked tests passed. It has
+not run live. Current qualified timing remains zero. See the
 [validation scopes](docs/VALIDATION.md#native-shared-mm-mmap-writers).
 
 The rwsem waiting policy selected in **`c21345b`** remains the baseline. Writers

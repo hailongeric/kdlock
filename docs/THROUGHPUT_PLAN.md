@@ -13,8 +13,9 @@ stopped at 68 QEMU tasks versus 67: one full capture, no boot or payload load,
 all twelve measurements and six unscored checks unrun. The earlier
 [73-versus-67 admission stop](../bench/results/10.176.26.71/bench/mmap-kdmm31-paired-20261025/README.md)
 remains separate preserved evidence. The [60-second diagnostic](../bench/mmap_lock/DIAGNOSTIC.md)
-has 43 mocked test passes and still needs exact live approval. No quiet retry,
-weaker gate or repeated provider diagnostic is scheduled.
+first stopped during initial observation; its guide tracks the separately
+reviewed timing correction and execution status. No quiet observation, weaker
+gate or repeated provider diagnostic can qualify the campaign.
 
 ## Workload and interface boundaries
 
@@ -24,7 +25,7 @@ weaker gate or repeated provider diagnostic is scheduled.
 | Pipe byte count/capacity, seek and other documented APIs | [Workload catalog](BENCHMARK_WORKLOADS.md#real-world-api-critical-sections), [public mutex collector](../bench/mutex_api_compare/run.py) | Same objects, query parameters and syscall shell; copy-to-user and post-work remain in their native positions. Freeze a bounded point list; the historical replay is not a new Native/KD plan. |
 | Rwlock c01/c08/RCUHT and resident lists | [Reader/writer runner](../bench/rwlock_compare/README.md), `--lock-kind rwlock` | Local concurrent readers, bounded non-sleeping writers; keep 1% and 20% writes separate. Preserve strict delegation failures and exact drain. |
 | Rwsem c01/c08/RCUHT and resident lists | Same runner, `--lock-kind rwsem`; [unified API](../include/kd_rwsem.h) | Ordinary local readers/writers and explicit OUTER writer delegation are separate controls. Internal local mutex calls cannot replace reader admission. Compare the selected interface consistently. |
-| Actual shared-mm mmap/munmap | [Prepared mmap workload](../bench/mmap_lock/README.md), unchanged `kdmm31`, Native/KD boot modes | Same pthread cohort, exact mm/lock, CPUs and untouched mappings. No delegated MM body. The explicit `plain-v1` runner/report is mock-tested; its first authorized live admission failed. |
+| Actual shared-mm mmap/munmap | [Prepared mmap workload](../bench/mmap_lock/README.md), unchanged `kdmm31`, Native/KD boot modes | Same pthread cohort, exact mm/lock, CPUs and untouched mappings. No delegated MM body. The new `plain-scaling-v1` runner/report is mock-tested; all 126 sessions are unrun. The older `plain-v1` admission failed. |
 | Actual kernel page faults | [Fault correctness cases](../tests/kernel/mmap_lock/fault_cases.c), [completed-fault client](../tests/kernel/mmap_lock/page_fault_completed/client.c) | Actual native fault bodies remain on the faulting task behind the selected mmap backend. Correctness drivers exist; a generic throughput driver has not been established. Prepare that driver separately before any timed fault campaign. |
 | Module-owned backing-page faults | [Private mapping runner](../bench/mmap_fault/README.md), `timing.py` / `timed_client.c` | Real CPU faults through a private backing lock, with separate native mms and native mmap locks unchanged. Preserve this evidence separately; it cannot stand in for actual mmap-backend fault throughput. |
 
@@ -34,52 +35,56 @@ equivalent cancellation, downgrade or actual-mmap APIs. There is no TCLock arm
 for the proposed actual mmap/fault comparisons. Do not substitute its rwlock
 for a sleeping rwsem. Explicit delegation is not evidence of generic MM support.
 
-## First small mmap comparison
+## Prospective 21-count mmap comparison
 
-The proposed replacement is **12 plain sessions**: 1 and 16 shared-mm writers,
-Native and KD, three paired repetitions, two seconds per session. Reuse build-3
-payload/client binaries, the same image/configuration and prior scoped API
-evidence. No latency sampling is requested. Whole-run completed mmap/munmap
-cycles per second is the primary measure; retain exact totals, joins, callback
-oracles, identity, retirement and existing progress checks.
+The implemented `plain-scaling-v1` plan uses exactly
+`1,2,3,4,5,6,7,8,12,16,20,24,28,32,36,40,44,48,52,56,60` writers, Native/KD and
+three paired repetitions: **126 measured sessions per workload**, with no
+64-worker point. Only the existing shared-mm writer workload is implemented.
+Its [41 focused mocked tests](../bench/results/10.176.26.71/tests/mmap-scaling-plan-20261026/README.md)
+passed; independent source/receipt review found no material matrix defect. No
+expanded live campaign has run. The original `paired-v1` (24 sessions, also the
+missing-plan default) and stopped `plain-v1` (12 sessions) remain separate.
 
-The explicit `plain-v1` selection is implemented at `7e6641e` in `paired.py` and
-`report.py`. Its [25 focused mocked checks](../bench/results/10.176.26.71/tests/mmap-plain-plan-20261025/README.md)
-passed in recovery: 11 new plan fixtures and 14 directly affected historical
-tests. Case order, plain specifications, validation receipts, report cardinality
-and chronological predecessors are bound to the plan. The original 24-case
-plain/sampled schema remains `paired-v1`, also used when old receipts omit a
-plan field. Skipping or relabelling its rows is invalid.
+Reuse the same `kdmm31` image/configuration, build-3 payload/clients and scoped
+API evidence. Plain runs retain exact totals, joins, callback oracles, mm/lock
+identity, retirement and progress accounting, with zero latency samples.
+Workers use CPUs 0..N−1; collector 63 is separate. Counts above 32 span both guest
+NUMA nodes. Collector-first-touch buffers remain unchanged; this is not an
+isolated NUMA experiment or a reader/delegation/TCLock comparison.
 
-Preserve the existing alternating order: initial Native validation; KD repeat 0;
-Native repeats 0/1; KD repeats 1/2; Native repeat 2; recovery. This is at most
-five candidate boots plus one recovery boot, not six independent paired boots.
-Adjacent repeats share a boot; report that dependence. A proposed reduced
-validation set is one fixed-work check plus both plain worker counts in each
-mode: six unscored checks plus twelve measured sessions, or **18 payload
-load/check/unload cycles**. Keeping the same capture boundaries gives at most
-**31 full captures**: one initial, five boot-readiness, 24 measurement boundaries
-and one recovery check. These bounds are derived and covered by the focused
-fixtures. They remain maxima for exact cycle review, not live permission.
+Order is initial Native validation; KD repeat 0; Native repeats 0/1; KD repeats
+1/2; Native repeat 2; recovery. Adjacent repetitions share boots. Each backend
+runs one observed 16-worker fixed proof and all 21 unobserved timed controls.
+The exact maxima are **44 unscored checks, 170 payload cycles, 259 full host
+captures and six boots**, with no retries or dedicated warmups. Fixed writer-chain
+proofs are not extended to every worker count by those timed controls.
 
-Before any live cycle, synchronize only the reviewed runner inputs while idle
-and bind current source, prepared binaries, image/configuration, module set,
-CPU/NUMA placement and instrumentation. Present exact commands,
-counts, storage allowance and recovery entry. Stop at the first failed gate;
-no measurement or endpoint is replaced after waiting. Return to the preserved
-recovery entry only after proven drain; uncertainty requires review.
+The [runner guide](../bench/mmap_lock/README.md#plain-throughput-plan) gives
+commands, placement, replay/log accounting and the pure `describe` interface.
+Default explicit assumptions estimate **44 min 36.8 s** and **2 GiB per retention
+filesystem** for raw plus archive/headroom, counting 639 dmesg dumps. This is
+planning arithmetic, not measured cost, a completion guarantee or permission.
+Recheck actual space and log sizes; the older 512 MiB allowance does not cover
+this expanded plan. Source synchronization is still pending and must happen
+only while idle, after review, before separately approved live execution.
+
+The exact original 67-QEMU-task gate is unchanged. Stop on the first failed
+identity, correctness, admission, endpoint or drain check; retain every failure.
+No later quiet observation can replace a failed admission or rejected endpoint.
+Return to the preserved recovery entry only after proven drain; uncertainty
+requires review. No automatic campaign follows a diagnostic.
 
 ## Expansion after the first qualified baseline
 
-The first baseline contains only the twelve actual mmap cases. Optional later
+The prospective mmap matrix is separate from later workload expansion. Optional
 screens must not become prerequisites: public-mutex c08, rwlock c08/20% writes
 and rwsem c08/20% writes at 16 workers would each take six Native/KD sessions
 (three pairs), 18 total. The write mix is per worker; mutex c08's retained
 `LEGACY_ENTRY_OBSERVATION` is not returned-body proof. Use the
 [documented catalog](BENCHMARK_WORKLOADS.md), keeping each interface's source and
-execution class separate. Extend worker counts from local
-overhead to contention, then to the 32/36-worker NUMA boundary and 60 workers
-only when justified. Set CPU lists explicitly; the normal collector is CPU 63.
+execution class separate. For each additional workload, specify the same 21-count grid separately and
+retain the 32/36-worker NUMA boundary and interface-specific limitations. Set CPU lists explicitly; the normal collector is CPU 63.
 
 Retain all seven unresolved mutex regression points: c08 at **3/4/5** workers,
 pipebytes at **3/5**, pipecap at **5**, and RCUHT at **2**. A fresh Native/public-KD

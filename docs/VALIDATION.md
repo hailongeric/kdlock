@@ -31,7 +31,8 @@ measured session ran. Qualified current performance cases remain zero.
 
 The later [phase-separated QEMU diagnostic preparation](../bench/results/10.176.26.71/tests/mmap-diagnostic-offline-20261025/README.md)
 passed 43 new mocked tests in recovery, with exact frozen-source bindings and
-before/after health checks. No live diagnostic or old validation was repeated.
+before/after health checks. Those mocked checks ran no live diagnostic or old
+validation.
 These passes do not establish actual mmap performance or lift the admission stop.
 The explicit [plain-only runner/report preparation](../bench/results/10.176.26.71/tests/mmap-plain-plan-20261025/README.md)
 subsequently passed 11 new fixtures plus the 14 directly affected historical
@@ -44,6 +45,20 @@ at 68 tasks versus 67. All twelve measurements and six unscored checks remain
 unrun. Artifact checks reused the prior runtime evidence; two readiness collector
 errors and their completed continuation remain recorded. Final health confirmed
 the same recovery boot, original 73 modules, taint 12288 and no pending boot.
+
+The prospective [21-count plan](../bench/results/10.176.26.71/tests/mmap-scaling-plan-20261026/README.md)
+passed 41 focused mocked tests (14 historical, 11 smaller-plain and 16 scaling),
+with independent source/receipt review. Its 126 sessions remain unrun.
+The [diagnostic timing correction](../bench/results/10.176.26.71/tests/mmap-diagnostic-cadence-20261026/README.md)
+passed 48 mocked tests after one retained fixture failure. It follows the user's
+approximate-500-ms requirement and preserves substantial observation-loss,
+identity, access and uncertain-completion stops. See the
+[diagnostic guide](../bench/mmap_lock/DIAGNOSTIC.md) for the separate live status;
+none of these mocked results is actual mmap validation or accepted performance.
+The [one corrected live diagnostic](../bench/results/10.176.26.71/bench/mmap-diagnostic-corrected-20261026/README.md)
+recorded 80 scans and stopped on a new task during the guest no-op phase. The
+no-op completed after the stop; the checksum phase was unrun. Final recovery
+health matched, and no benchmark or retry followed.
 
 The [shared-mm receipt](../bench/results/10.176.26.71/tests/mmap-writer-native-20261021/README.md)
 passed both basic programs and six focused cases at `b9fe567`: exact shared mm/mmap-lock identity, zero fault callbacks,

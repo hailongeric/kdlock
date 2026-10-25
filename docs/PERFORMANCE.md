@@ -13,15 +13,18 @@ NO_JIT failure. Performance requires matched work, exact retirement, unchanged
 timing gates and repeated paired throughput observations. Preserve all existing
 measurements and refusals; the full matrix is not the default next step.
 
-The smaller proposed first mmap stage is 1 and 16 shared-mm writers and three
+The earlier smaller mmap stage selected 1 and 16 shared-mm writers and three
 plain Native/KD pairs: 12 measured sessions. Its explicit `plain-v1` runner/report
 mode passed [25 focused mocked checks](../bench/results/10.176.26.71/tests/mmap-plain-plan-20261025/README.md)
 but its [authorized live attempt](../bench/results/10.176.26.71/bench/mmap-plain-v1-20261025/README.md)
 stopped at 68 QEMU tasks versus 67 before any boot or payload load. All 12
 measurements and six unscored checks remain unrun; one full capture was consumed.
-Historical 24-case plain/sampled plans
-remain separate; skipping their sampled entries is invalid. This writer workload
-does not measure reader scaling, NUMA scaling or delegation. The
+Historical 24-case plain/sampled plans remain separate; skipping their sampled
+entries is invalid. The new `plain-scaling-v1` plan prepares 21 counts and 126
+plain sessions, with
+[41 mocked passes and independent review](../bench/results/10.176.26.71/tests/mmap-scaling-plan-20261026/README.md).
+It has not run live. Counts above 32 cross NUMA nodes; this writer workload
+does not isolate NUMA effects or measure reader scaling/delegation. The
 [preparation receipt](../bench/results/10.176.26.71/bench/mmap-perf-prep-20261025/README.md)
 records successful private reconstruction and build-3 compatibility checks using
 existing pahole 1.25. Preparation loaded no module and booted no kernel. The
@@ -30,8 +33,12 @@ earlier authorized October 25 attempt [stopped at initial admission](../bench/re
 unrun. New qualified timing count is zero. That preparation passed 16 capture
 and 14 paired/report mocked tests, including the report-integrity fixes; mock
 results do not qualify timing. The separately prepared
-[QEMU diagnostic](../bench/mmap_lock/DIAGNOSTIC.md) passed 43 new mocked tests;
-it has not run live and does not lift the campaign stop.
+[QEMU diagnostic](../bench/mmap_lock/DIAGNOSTIC.md) first stopped during initial
+observation at a 504.396027 ms gap. After the approximate-cadence correction,
+the single authorized attempt stopped on a new task during the guest no-op phase. The
+[corrected result](../bench/results/10.176.26.71/bench/mmap-diagnostic-corrected-20261026/README.md)
+retains the I/O counters and observation window; it establishes no creation
+cause and does not lift the campaign stop.
 
 The historical records below retain their original source, topology, caller
 shell and instrumentation identities. Historical complete-operation p95 remains

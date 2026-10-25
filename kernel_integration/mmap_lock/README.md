@@ -180,6 +180,10 @@ passed 25 focused mocked checks; its [authorized live attempt](../../bench/resul
 then stopped at 68 QEMU tasks versus 67 before any boot or payload check. All
 twelve measurements remain unrun. The stopped older plan is not resumed by
 omitting sampled cases.
+The separate prospective `plain-scaling-v1` plan now prepares 21 counts and
+126 plain Native/KD sessions, with [41 focused mocked passes](../../bench/results/10.176.26.71/tests/mmap-scaling-plan-20261026/README.md).
+All expanded cases remain unrun. Mock validation and the separate QEMU
+diagnostic do not replace actual mmap runtime validation or original admission.
 
 ## Reusing the corrected build
 

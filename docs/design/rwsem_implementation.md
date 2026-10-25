@@ -8,7 +8,7 @@ retains those results. This acceptance does not replace the selected KD mutex
 protocol or establish support for every Linux reader/writer semaphore use.
 The subsequent IRQ-safe reader-release correction at `e6fc371` adds timed
 writer-drain rechecks and is included in maintained `master`. A source comparison
-at `02e6294` confirms that the rwsem implementation, public rwsem headers and mmap
+at `80f3f1e` confirms that the rwsem implementation, public rwsem headers and mmap
 overlay are unchanged since that correction. The historical `c21345b`
 measurements predate the correction and do not establish its performance.
 
@@ -334,36 +334,41 @@ with 73 QEMU tasks versus the required 67, before any boot or payload load. All
 24 measured sessions remain unrun. Later quiet observations cannot validate
 that failed admission or any rejected timing.
 
-The current [shared-mm comparison plan](../../bench/mmap_lock/README.md#plain-throughput-plan)
-is the separate `plain-v1` schema: 12 plain sessions, Native/KD at 1 and 16 writers
-with three paired repetitions. It has
-[25 focused mocked test passes](../../bench/results/10.176.26.71/tests/mmap-plain-plan-20261025/README.md),
-not new actual-mmap runtime or performance validation. Its bounded cycle allows
-six unscored checks plus twelve measurements, at most 18 payload cycles,
-31 full host captures and six boots including recovery, subject to exact cycle
-approval and fresh admission. Adjacent repetitions share boots. Its
+The prospective [shared-mm comparison plan](../../bench/mmap_lock/README.md#plain-throughput-plan)
+is the separate `plain-scaling-v1` schema: 21 worker counts, Native/KD and three
+paired repetitions, or 126 plain sessions. Its
+[41 focused mocked test passes](../../bench/results/10.176.26.71/tests/mmap-scaling-plan-20261026/README.md)
+and independent review establish tooling behavior only. The 44 unscored checks,
+170 payload cycles, 259 captures and six boots are planning maxima, not live
+approval. Counts above 32 span both guest NUMA nodes; this does not isolate a
+NUMA effect. Adjacent repetitions share boots. No expanded case has run.
+
+The earlier 12-session `plain-v1`
 [authorized attempt](../../bench/results/10.176.26.71/bench/mmap-plain-v1-20261025/README.md)
-consumed one full capture and stopped at 68 QEMU tasks versus 67, before any boot
-or payload check. All twelve measurements and six unscored checks remain unrun;
-current qualified timing remains zero. This failure is separate from the older
-73-task stop. The guest's `paired.py` and `report.py` still need their reviewed
-idle synchronization before a future plain-plan execution.
-It measures completed writer mmap/munmap cycles, not isolated lock acquisition,
-concurrent-reader scaling or page-fault throughput. New latency sampling is
-deferred. TCLock has no equivalent killable/downgrade mmap interface and is not
-an arm of this comparison.
+consumed one capture and stopped at 68 QEMU tasks versus 67, before any boot or
+payload check. All twelve measurements and six unscored checks remain unrun;
+qualified current timing remains zero. This failure is separate from the older
+73-task stop. Review and idle synchronization of runner inputs remain necessary
+before a future separately approved campaign. The workload measures completed
+writer mmap/munmap cycles, not isolated lock acquisition, concurrent-reader
+scaling or page-fault throughput. New latency sampling is deferred. TCLock has
+no equivalent killable/downgrade mmap interface and is not a comparison arm.
 
-The next performance step is separate approval for the prepared
-[60-second phase diagnostic](../../bench/mmap_lock/DIAGNOSTIC.md) to investigate
-the extra task, followed by review of fresh benchmark admission. That diagnostic
-has not run; a quiet retry cannot replace the failed admission.
+The [first 60-second diagnostic attempt](../../bench/results/10.176.26.71/bench/mmap-diagnostic-20261026/README.md)
+stopped during initial observation at a 504.396027 ms gap, before any stimulus.
+The user subsequently clarified the approximate cadence requirement; the
+[diagnostic guide](../../bench/mmap_lock/DIAGNOSTIC.md) tracks its separate
+correction and latest execution status. Neither a diagnostic nor a later quiet
+observation replaces original benchmark admission or validates rejected timing.
+The exact 67-task gate remains unchanged.
 
-The latest attempt's final health check at 23:43:26 on October 25 (Asia/Shanghai)
-recorded recovery
-`6.1.159-kdclobber2`, boot `d32e2e18-c340-4a98-8105-335bccec0b5d`, the original
-73 modules, taint **12288** and no pending boot. This is saved evidence, not a
-fresh VM check by this documentation review. Recheck recovery and competing jobs
-with the active implementation/testing owner before any live work; preserve the
+The [corrected diagnostic](../../bench/results/10.176.26.71/bench/mmap-diagnostic-corrected-20261026/README.md)
+then stopped on a new QEMU task during the guest no-op phase; its checksum phase
+did not run. Final health at **01:26:28 on October 26 (Asia/Shanghai)** recorded
+recovery `6.1.159-kdclobber2`, boot `d32e2e18-c340-4a98-8105-335bccec0b5d`,
+the original 73 modules, taint **12288** and no pending boot. This is time-stamped
+saved evidence. Recheck recovery and competing jobs with the active owner before
+later live work; preserve the
 [reconstruction and recovery inputs](../../kernel_integration/mmap_lock/README.md#reusing-the-corrected-build).
 
 Operation-specific MM body delegation and prepared teardown campaigns are

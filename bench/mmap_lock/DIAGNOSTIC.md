@@ -1,7 +1,17 @@
-# Proposed QEMU task diagnostic
+# QEMU task diagnostic
 
-Status: offline preparation and 43 focused mocked tests complete; **live execution
-is unapproved**. The October 25 73-versus-67 admission stop remains in force.
+Status: the original 43 focused mocked tests passed; the first authorized live
+attempt [stopped during initial observation](../results/10.176.26.71/bench/mmap-diagnostic-20261026/README.md)
+on October 26 at a 504.396027 ms start gap. No stimulus phase ran; the observation
+is incomplete and unaccepted. The user then clarified that 500 ms is an
+approximate target. The minimal correction has
+[48 focused mocked test passes](../results/10.176.26.71/tests/mmap-diagnostic-cadence-20261026/README.md);
+the [one corrected attempt](../results/10.176.26.71/bench/mmap-diagnostic-corrected-20261026/README.md)
+then stopped on a new task during the guest no-op phase. The no-op completed
+after the stop; the checksum phase did not run. Both attempts remain incomplete
+and unaccepted. **No further attempt or benchmark is authorized by these results.**
+The October 25
+73-versus-67 and later 68-versus-67 admission stops remain in force.
 This tool cannot admit, repair or qualify a performance run. The prior capture's
 six workers predated that helper by about 63/55 seconds; their roles and creation
 source remain unknown. Preserve that failed capture and the unchanged gate.
@@ -12,7 +22,7 @@ It streams the reviewed [observer](diagnostic_observer.py) and the existing
 copy. `kdmm31.json` supplies the retained VM identity. No code runs on import.
 Without `--execute`, the controller only reports local source/payload hashes.
 
-## Exact proposed phases
+## Retained phase design
 
 Offsets use the observer's host monotonic clock. All phases share a 60-second
 observer bound; there are no retries or loops waiting for 67 tasks.
@@ -27,12 +37,17 @@ observer bound; there are no retries or loops waiting for 67 tasks.
 | 45–55 s | One source-to-guest SSH `/usr/bin/sha256sum -- /boot/vmlinuz-6.1.159-kdmm31` |
 | 55–60 s | Tail observation and finish |
 
-The nominal task cadence is **500 ms**. A scan longer than 500 ms or a gap
-between successive scan starts greater than 500 ms stops later stimuli; scan
-duration is not subtracted from that gap. Scheduling delay alone can therefore
-stop this strict diagnostic, including during idle. Actual start/end and
-unobserved gaps are retained. No faster sampling or catch-up loop is substituted.
-The explicitly requested post-monitor scan is additional.
+The nominal task cadence is **approximately 500 ms**. Ordinary wakeup jitter is
+recorded, not rejected. A scan or start-to-start gap exceeding **five seconds**
+stops later stimuli: this is the shortest phase window, so a loss that long can
+obscure a whole phase. It is an observation-loss rule, not an exact scheduling
+requirement. Every phase must have task-observation evidence before the run can
+be complete; successful stimuli alone are insufficient. The final gap is checked
+even if a late sleep exits the loop without another scan. Actual start/end,
+scan durations, gaps, CPU cost and output bytes remain evidence. Sampling is
+coarse and can miss short-lived tasks; it cannot establish precise causation.
+No faster sampling or catch-up loop is substituted. The requested post-monitor
+scan is additional. The original strict-500-ms receipt remains rejected.
 
 Each task observation records membership before/after, stat before/after,
 schedstat, affinity, and non-vCPU `io`/`wchan`. It retains monotonic/BOOTTIME
@@ -84,7 +99,7 @@ task lifetimes. This has no workload throughput or latency measurement.
 
 ## Offline validation and approval boundary
 
-The [43 mocked tests](../../tests/unit/bench/test_mmap_diagnostic.py) use in-memory
+The [focused mocked tests](../../tests/unit/bench/test_mmap_diagnostic.py) use in-memory
 proc/sys fixtures, virtual time and injected transports/processes. Guards refuse
 production Proc/Clock adapters, sockets, process launches and pipe operations
 unless a case explicitly mocks that adapter. The execution-receipt fixture uses
@@ -92,8 +107,14 @@ in-memory files. This tests those paths, not universal interception or live safe
 See the [validation receipt](../results/10.176.26.71/tests/mmap-diagnostic-offline-20261025/README.md)
 for exact hashes and VM results. No old validation or cleanup was repeated.
 
-Before any live invocation, approve this exact bounded cycle and reviewed source
-snapshot. The prepared command, **not yet authorized to run**, is:
+The original invocation, clarified timing requirement, 48-test correction and
+independent review are recorded in the linked receipts. The single authorized
+corrected execution is complete as a stopped attempt. It used the same phases,
+identity/access/completion safeguards and no new instruments, settings, signals,
+module operations or reboot. Its authorization is consumed; no retry follows.
+
+Additional invocations need approval for the exact cycle and reviewed source
+snapshot. The interface alone is **not authorization to retry**:
 
 ```sh
 python3 bench/mmap_lock/diagnostic_controller.py --execute --output NEW-local-diagnostic
