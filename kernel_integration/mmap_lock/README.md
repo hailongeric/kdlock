@@ -176,8 +176,10 @@ candidate boots followed by recovery. Its authorized October 25 attempt
 [stopped before boot](../../bench/results/10.176.26.71/bench/mmap-kdmm31-paired-20261025/README.md)
 at 73 QEMU tasks versus 67. All 24 measured cases remain unrun; no new timing or
 performance gain is claimed. The explicit 12-case `plain-v1` runner/report mode
-passed 25 focused mocked checks; it still requires exact live approval. The
-stopped plan is not resumed by omitting sampled cases.
+passed 25 focused mocked checks; its [authorized live attempt](../../bench/results/10.176.26.71/bench/mmap-plain-v1-20261025/README.md)
+then stopped at 68 QEMU tasks versus 67 before any boot or payload check. All
+twelve measurements remain unrun. The stopped older plan is not resumed by
+omitting sampled cases.
 
 ## Reusing the corrected build
 

@@ -16,13 +16,16 @@ measurements and refusals; the full matrix is not the default next step.
 The smaller proposed first mmap stage is 1 and 16 shared-mm writers and three
 plain Native/KD pairs: 12 measured sessions. Its explicit `plain-v1` runner/report
 mode passed [25 focused mocked checks](../bench/results/10.176.26.71/tests/mmap-plain-plan-20261025/README.md)
-and still needs exact live approval. Historical 24-case plain/sampled plans
+but its [authorized live attempt](../bench/results/10.176.26.71/bench/mmap-plain-v1-20261025/README.md)
+stopped at 68 QEMU tasks versus 67 before any boot or payload load. All 12
+measurements and six unscored checks remain unrun; one full capture was consumed.
+Historical 24-case plain/sampled plans
 remain separate; skipping their sampled entries is invalid. This writer workload
 does not measure reader scaling, NUMA scaling or delegation. The
 [preparation receipt](../bench/results/10.176.26.71/bench/mmap-perf-prep-20261025/README.md)
 records successful private reconstruction and build-3 compatibility checks using
 existing pahole 1.25. Preparation loaded no module and booted no kernel. The
-authorized October 25 attempt [stopped at initial admission](../bench/results/10.176.26.71/bench/mmap-kdmm31-paired-20261025/README.md):
+earlier authorized October 25 attempt [stopped at initial admission](../bench/results/10.176.26.71/bench/mmap-kdmm31-paired-20261025/README.md):
 73 QEMU tasks versus 67, with no boot or payload load and all 24 measured cases
 unrun. New qualified timing count is zero. That preparation passed 16 capture
 and 14 paired/report mocked tests, including the report-integrity fixes; mock

@@ -2,15 +2,17 @@
 
 Current work is throughput only. The explicit
 `plain-v1` plan selects **12 plain sessions**. It is prepared and mock-tested;
-live execution remains unapproved. The historical 24-case plain/sampled plan
+its authorized October 25 attempt [stopped before boot](../results/10.176.26.71/bench/mmap-plain-v1-20261025/README.md)
+at **68 QEMU tasks versus 67**. One full capture ran; all 12 measurements and
+six unscored checks remain unrun. The historical 24-case plain/sampled plan
 is `paired-v1`; omitted plan fields retain that historical meaning. Never obtain
 a 12-case campaign by skipping sampled rows or relabelling old receipts.
 
 The prepared comparison uses the unchanged shared-mm
 [writer workload](../mmap_writer/README.md), with Native and KD selected by
-`kd_mmap=off/on` in the **same** `6.1.159-kdmm31` image. This is a proposed live
-cycle requiring explicit approval; preparation alone does not authorize it.
-The authorized October 25 attempt [stopped at first admission](../results/10.176.26.71/bench/mmap-kdmm31-paired-20261025/README.md)
+`kd_mmap=off/on` in the **same** `6.1.159-kdmm31` image. Each live cycle requires
+exact approval and fresh admission; preparation alone does not authorize it.
+The earlier authorized October 25 attempt [stopped at first admission](../results/10.176.26.71/bench/mmap-kdmm31-paired-20261025/README.md)
 with 73 QEMU tasks versus 67. It consumed one host capture and no boots or
 payload checks; all 24 measured sessions remain unrun. The stop remains in force.
 No current qualified rate or optimization gain has been established.

@@ -30,7 +30,10 @@ correctness, ownership, lifetime, recovery and environment checks. The smaller
 mmap proposal uses 1 and 16 workers and three plain Native/KD pairs: 12 measured
 cases. The explicit `plain-v1` runner/report mode passed
 [25 focused mocked checks](../bench/results/10.176.26.71/tests/mmap-plain-plan-20261025/README.md);
-live execution is unapproved. Skipping entries in the stopped 24-case
+its [authorized attempt](../bench/results/10.176.26.71/bench/mmap-plain-v1-20261025/README.md)
+stopped at 68 QEMU tasks versus 67 before boot or payload execution. It consumed
+one full capture; all twelve measurements and six unscored checks remain unrun.
+Skipping entries in the stopped 24-case
 plain/sampled plan is invalid. New latency sampling is deferred.
 Generic actual page-fault throughput needs a driver; the private backing-lock
 fault workload is a distinct comparison.
@@ -38,7 +41,7 @@ fault workload is a distinct comparison.
 The [preparation receipt](../bench/results/10.176.26.71/bench/mmap-perf-prep-20261025/README.md)
 records build-3 compatibility checks, 16 capture and 14 paired/report mocked
 tests, and two earlier basic programs. These are build/offline results; prior
-actual mmap correctness was reused. The authorized October 25 attempt
+actual mmap correctness was reused. The earlier authorized October 25 attempt
 [stopped at initial admission](../bench/results/10.176.26.71/bench/mmap-kdmm31-paired-20261025/README.md)
 with 73 QEMU tasks versus 67. It consumed one host capture, no boots or payload
 checks, and left all 24 measured sessions unrun. Qualified current performance

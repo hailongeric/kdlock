@@ -7,9 +7,12 @@ variance with the gains. **This phase measures throughput only**; new tail-laten
 collection and sampled workload variants are deferred. Preserve historical
 latency evidence. Environment diagnosis is a separate activity.
 
-No campaign below is authorized to run by this roadmap. The October 25
+No campaign below is authorized to run by this roadmap. The separately authorized
+[`plain-v1` attempt](../bench/results/10.176.26.71/bench/mmap-plain-v1-20261025/README.md)
+stopped at 68 QEMU tasks versus 67: one full capture, no boot or payload load,
+all twelve measurements and six unscored checks unrun. The earlier
 [73-versus-67 admission stop](../bench/results/10.176.26.71/bench/mmap-kdmm31-paired-20261025/README.md)
-remains in force. The [60-second diagnostic](../bench/mmap_lock/DIAGNOSTIC.md)
+remains separate preserved evidence. The [60-second diagnostic](../bench/mmap_lock/DIAGNOSTIC.md)
 has 43 mocked test passes and still needs exact live approval. No quiet retry,
 weaker gate or repeated provider diagnostic is scheduled.
 
@@ -21,7 +24,7 @@ weaker gate or repeated provider diagnostic is scheduled.
 | Pipe byte count/capacity, seek and other documented APIs | [Workload catalog](BENCHMARK_WORKLOADS.md#real-world-api-critical-sections), [public mutex collector](../bench/mutex_api_compare/run.py) | Same objects, query parameters and syscall shell; copy-to-user and post-work remain in their native positions. Freeze a bounded point list; the historical replay is not a new Native/KD plan. |
 | Rwlock c01/c08/RCUHT and resident lists | [Reader/writer runner](../bench/rwlock_compare/README.md), `--lock-kind rwlock` | Local concurrent readers, bounded non-sleeping writers; keep 1% and 20% writes separate. Preserve strict delegation failures and exact drain. |
 | Rwsem c01/c08/RCUHT and resident lists | Same runner, `--lock-kind rwsem`; [unified API](../include/kd_rwsem.h) | Ordinary local readers/writers and explicit OUTER writer delegation are separate controls. Internal local mutex calls cannot replace reader admission. Compare the selected interface consistently. |
-| Actual shared-mm mmap/munmap | [Prepared mmap workload](../bench/mmap_lock/README.md), unchanged `kdmm31`, Native/KD boot modes | Same pthread cohort, exact mm/lock, CPUs and untouched mappings. No delegated MM body. The explicit `plain-v1` runner/report is mock-tested; live approval remains required. |
+| Actual shared-mm mmap/munmap | [Prepared mmap workload](../bench/mmap_lock/README.md), unchanged `kdmm31`, Native/KD boot modes | Same pthread cohort, exact mm/lock, CPUs and untouched mappings. No delegated MM body. The explicit `plain-v1` runner/report is mock-tested; its first authorized live admission failed. |
 | Actual kernel page faults | [Fault correctness cases](../tests/kernel/mmap_lock/fault_cases.c), [completed-fault client](../tests/kernel/mmap_lock/page_fault_completed/client.c) | Actual native fault bodies remain on the faulting task behind the selected mmap backend. Correctness drivers exist; a generic throughput driver has not been established. Prepare that driver separately before any timed fault campaign. |
 | Module-owned backing-page faults | [Private mapping runner](../bench/mmap_fault/README.md), `timing.py` / `timed_client.c` | Real CPU faults through a private backing lock, with separate native mms and native mmap locks unchanged. Preserve this evidence separately; it cannot stand in for actual mmap-backend fault throughput. |
 

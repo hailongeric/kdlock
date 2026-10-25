@@ -27,9 +27,9 @@ and prepared teardown are retired.
 The `e6fc371` correction passed 137 Native and 161 KD assertions on actual mmap
 objects, plus a separate 352-assertion standalone probe and two basic programs.
 These focused checks do not establish full Linux semantic equivalence. Benchmark
-payload/client preparation has passed. The authorized October 25 comparison
-[stopped before boot](bench/results/10.176.26.71/bench/mmap-kdmm31-paired-20261025/README.md)
-at 73 QEMU tasks versus the required 67; all 24 measured sessions remain unrun.
+payload/client preparation has passed. The authorized October 25 `plain-v1`
+attempt [stopped before boot](bench/results/10.176.26.71/bench/mmap-plain-v1-20261025/README.md)
+at 68 QEMU tasks versus the required 67; all 12 measured sessions remain unrun.
 Current qualified timing remains zero. See the
 [validation scopes](docs/VALIDATION.md#native-shared-mm-mmap-writers).
 

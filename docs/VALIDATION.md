@@ -38,6 +38,13 @@ subsequently passed 11 new fixtures plus the 14 directly affected historical
 paired/report tests. Its 12-case schema is distinct from the stopped 24-case plan;
 no workload, host capture or boot ran, and new qualified throughput remains zero.
 
+The subsequent [authorized `plain-v1` attempt](../bench/results/10.176.26.71/bench/mmap-plain-v1-20261025/README.md)
+completed one fresh host capture, then failed the unchanged admission predicate
+at 68 tasks versus 67. All twelve measurements and six unscored checks remain
+unrun. Artifact checks reused the prior runtime evidence; two readiness collector
+errors and their completed continuation remain recorded. Final health confirmed
+the same recovery boot, original 73 modules, taint 12288 and no pending boot.
+
 The [shared-mm receipt](../bench/results/10.176.26.71/tests/mmap-writer-native-20261021/README.md)
 passed both basic programs and six focused cases at `b9fe567`: exact shared mm/mmap-lock identity, zero fault callbacks,
 actual blocked Native writer evidence, VMA split/unmap, descriptor-closed VMA
