@@ -22,6 +22,7 @@ def summarize(rows, receipt_bindings):
     if not rows:
         raise ValueError('complete campaign receipts required')
     plan = paired.row_plan(rows[0])
+    policy = paired.window.policy(rows[0])
     cases, order = paired.cases_for(plan), paired.order_for(plan)
     if len(rows) != len(order) or set(receipt_bindings) != set(order):
         raise ValueError(f'exactly {len(order)} qualified cases and bindings required for {plan}')
@@ -31,6 +32,7 @@ def summarize(rows, receipt_bindings):
     for r in rows:
         key = (r['repeat'], r['mode'], r['case'])
         if (not r['passed'] or not r['drained'] or not r['accepted'] or not r['endpoint_checked'] or
+                r.get('screen') or paired.window.policy(r) != policy or
                 r['prepared'] != identity or paired.row_plan(r) != plan or key not in order or key in keyed):
             raise ValueError('rejected, duplicate, mixed-input or unexpected timing case')
         if r['spec'] != paired.specification(r['case'], r['repeat'], r['mode'], plan):
@@ -81,7 +83,7 @@ def summarize(rows, receipt_bindings):
                            'The count sweep does not isolate NUMA effects or establish independent-boot, '
                            'reader-scaling, delegation or TCLock results. No workload latency sampling; '
                            'progress and correctness accounting retained.')
-        return dict(plan=plan, qualified_cases=len(order), paired_repetitions=3, prepared=identity,
+        return dict(plan=plan, measurement_policy=policy, qualified_cases=len(order), paired_repetitions=3, prepared=identity,
             points=points, throughput_definition='Completed whole mmap/munmap cycles / actual elapsed time',
             limits=paired.bounds(plan), limitations=limitations)
     instrumentation = {str(n): {mode: spread([
@@ -101,18 +103,32 @@ def replay(path):
     r = paired.common.load(path)
     client = paired.common.load(path.parent / 'client-result.json')
     plan = paired.row_plan(r)
-    if paired.row_plan(client) != plan:
+    policy = paired.window.policy(r)
+    if paired.row_plan(client) != plan or paired.window.policy(client) != policy:
         raise ValueError('final/client campaign plan differs')
     if any(r.get(key) != value for key, value in client.items()
            if key not in ('passed', 'accepted', 'drained')):
         raise ValueError('final receipt changed client identity/specification')
     ready = paired.load_bound(r['ready'])
-    if (not ready['passed'] or paired.row_plan(ready) != plan or
+    if (not ready['passed'] or paired.row_plan(ready) != plan or paired.window.policy(ready) != policy or
             any(ready[k] != r[k] for k in ('mode', 'boot_id', 'block', 'prepared'))):
         raise ValueError('readiness mode/boot/block/preparation differs')
     paired.load_bound(r['prepared'])
-    for mode, binding in zip(('native', 'kd'), r['validated'], strict=True):
-        paired.validation_receipt(paired.file_bound(binding), mode, r['prepared'], plan)
+    if r.get('screen'):
+        if policy != paired.window.POLICY or plan != paired.SCALING_PLAN or r['case'] != 9 or r['repeat'] != 0:
+            raise ValueError('unexpected controlled screen scope')
+        paired.mapping.SITES = paired.common.load(paired.SITES)
+        raw = [json.loads(line) for line in paired.file_bound(r['fixed_raw']).read_text().splitlines()]
+        proof = paired.mapping.validate(raw, 'cycle', paired.FIXED_THREADS, paired.FIXED_ITERATIONS, r['mode'])
+        if (any(r['fixed'][k] != v for k, v in proof.items()) or
+                r['fixed']['rejected_mutations'] != paired.PROOF_MUTATIONS or
+                r['fixed']['health'] != 'files=0 mm_refs=0 destroyed=1 release_errors=0'):
+            raise ValueError('screen fixed proof differs')
+    else:
+        for mode, binding in zip(('native', 'kd'), r['validated'], strict=True):
+            v = paired.validation_receipt(paired.file_bound(binding), mode, r['prepared'], plan)
+            if paired.window.policy(v) != policy:
+                raise ValueError('validation measurement policy differs')
     evidence = r['qualification']
     for key in ('controller', 'endpoint', 'admission'):
         paired.file_bound(evidence[key])
@@ -126,9 +142,35 @@ def replay(path):
     return r
 
 
+def screen_summary(rows):
+    """One pair validates the prospective harness; it is not the 126-case result."""
+    if len(rows) != 2 or {r['mode'] for r in rows} != {'native', 'kd'}:
+        raise ValueError('one Native/KD screen pair required')
+    rows = sorted(rows, key=lambda r: r['mode'])
+    for r in rows:
+        if (not all(r.get(k) for k in ('screen', 'passed', 'accepted', 'drained', 'endpoint_checked')) or
+                paired.window.policy(r) != paired.window.POLICY or paired.row_plan(r) != paired.SCALING_PLAN or
+                r['spec'] != paired.specification(9, 0, r['mode'], paired.SCALING_PLAN) or
+                r['block'] != (0 if r['mode'] == 'native' else 1) or
+                r['measurement']['latency_samples'] != 0):
+            raise ValueError('screen scope, correctness or policy differs')
+    if (rows[0]['prepared'] != rows[1]['prepared'] or rows[0]['boot_id'] == rows[1]['boot_id'] or
+            rows[0]['qualification']['window']['roles']['sha256'] !=
+            rows[1]['qualification']['window']['roles']['sha256']):
+        raise ValueError('screen builds, boots or role policy differ')
+    rates = {r['mode']: r['measurement']['whole_ops_s'] for r in rows}
+    if not all(isinstance(v, (int, float)) and math.isfinite(v) and v > 0 for v in rates.values()):
+        raise ValueError('finite positive screen rates required')
+    return dict(measurement_policy=paired.window.POLICY, screen=True, qualified_cases=2,
+        rates=rates, kd_over_native=rates['kd']/rates['native'],
+        limitations='One unscored harness-validation pair; no variability estimate, optimization gain '
+                    'or completed throughput matrix. The 21-count, three-pair plan remains unchanged.')
+
+
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('receipts', type=Path, nargs='+')
+    p.add_argument('--screen', action='store_true')
     a = p.parse_args()
     rows = []
     bindings = {}
@@ -140,7 +182,7 @@ def main():
             raise ValueError('duplicate case receipt')
         bindings[key] = paired.bind(path)
         rows.append(r)
-    print(json.dumps(summarize(rows, bindings), indent=2, sort_keys=True))
+    print(json.dumps(screen_summary(rows) if a.screen else summarize(rows, bindings), indent=2, sort_keys=True))
 
 
 if __name__ == '__main__':

@@ -13,10 +13,12 @@
 #include <sys/ioctl.h>
 #include <sys/mman.h>
 #include <sys/prctl.h>
+#include <sys/random.h>
 #include <sys/syscall.h>
 #include <time.h>
 #include <unistd.h>
 #include "mmap_writer_uapi.h"
+#include "control.h"
 #define MAX_WORKERS 60
 #define LATENCY_CAP 65536
 #define SAMPLE_CAP 512
@@ -30,6 +32,7 @@ struct worker {
 struct sample { uint64_t started_ns,finished_ns,completed[MAX_WORKERS]; };
 static pthread_barrier_t ready,go;
 static uint64_t started_ns,deadline_ns;
+static int aborted;
 static void require(int ok,const char *what)
 {
 	if(!ok) { fflush(stdout);fprintf(stderr,"FAIL %s errno=%d\n",what,errno);exit(1); }
@@ -82,7 +85,10 @@ static void print_stats(const struct mw_stats *s)
 static void *worker(void *arg)
 {
 	struct worker *w=arg;pin(w->cpu);require(!prctl(PR_SET_NAME,"mw_time_worker",0,0,0),"comm");
-	w->identity=identity(w->fd);barrier(&ready);barrier(&go);until(started_ns);
+	w->identity=identity(w->fd);barrier(&ready);barrier(&go);
+	/* The go barrier publishes the pre-start cancellation decision. */
+	if(aborted) { require(!close(w->fd),"aborted worker close");return NULL; }
+	until(started_ns);
 	uint64_t cpu_start=clock_ns(CLOCK_THREAD_CPUTIME_ID);w->active_started_ns=now();
 	uint64_t check=w->active_started_ns;
 	while(check<deadline_ns) {
@@ -104,7 +110,11 @@ static void *worker(void *arg)
 }
 int main(int argc,char **argv)
 {
-	require(argc==3,"WORKERS plain|sampled");unsigned n=strtoul(argv[1],NULL,10);int sampled=!strcmp(argv[2],"sampled");
+	require(argc==3 || (argc==5 && !strcmp(argv[3],"--control-fd")),"WORKERS plain|sampled [--control-fd FD]");
+	int control=-1;
+	if(argc==5) { char *end;long value=strtol(argv[4],&end,10);require(*argv[4] && !*end && value>=3 && value<=INT32_MAX,"control descriptor");control=(int)value; }
+	unsigned n=strtoul(argv[1],NULL,10);int sampled=!strcmp(argv[2],"sampled");
+	require(control<0 || !sampled,"controlled mode is plain only");
 	require(n && n<=MAX_WORKERS && (sampled || !strcmp(argv[2],"plain")) && sysconf(_SC_PAGESIZE)==4096,"arguments");pin(63);
 	int fd=open("/dev/kd_mmap_writer_native",O_RDWR|O_CLOEXEC);require(fd>=0,"open");
 	struct mw_identity id=identity(fd);struct worker *w=NULL;
@@ -123,6 +133,19 @@ int main(int argc,char **argv)
 		for(unsigned j=0;j<i;j++)require(w[j].identity.tid!=v->tid,"unique TID");
 	}
 	printf("{\"event\":\"ready\",\"identity\":");print_identity(&id);printf("}\n");fflush(stdout);
+	/* stdout is a bounded private pipe in controlled mode, never a guest file.
+	 * Every descriptor and worker is ready before PREPARED. A failed start
+	 * exchange is cooperative cancellation, not permission to run work. */
+	if(control>=0 && (mw_control_send(control,"MW1 PREPARED\n",30000) ||
+	                   mw_control_wait(control,"MW1 GO\n",30000) ||
+	                   mw_control_send(control,"MW1 STARTED\n",30000))) {
+		aborted=1;barrier(&go);
+		for(unsigned i=0;i<n;i++)require(!pthread_join(threads[i],NULL),"aborted join");
+		require(!pthread_barrier_destroy(&ready) && !pthread_barrier_destroy(&go),"aborted barriers");
+		struct mw_stats cancelled=stats(fd);require(!cancelled.maps && cancelled.object==id.object,"aborted accounting");
+		require(!close(fd),"aborted final close");
+		(void)mw_control_send(control,"MW1 ABORTED\n",1000);close(control);free(samples);free(w);return 2;
+	}
 	started_ns=now()+100000000ULL;deadline_ns=started_ns+2000000000ULL;barrier(&go);
 	unsigned count=0;uint64_t next=started_ns;
 	while(next<=deadline_ns) {
@@ -138,6 +161,19 @@ int main(int argc,char **argv)
 	require(!pthread_barrier_destroy(&ready) && !pthread_barrier_destroy(&go),"barrier destroy");
 	struct mw_stats after=stats(fd);require(after.maps==completed && after.object==id.object,"exact VMA callback count");
 	require(!close(fd),"final close");
+	/* Joins and final close precede FINISHED. Publication needs a distinct
+	 * endpoint acknowledgement; transport loss never invents that endpoint. */
+	if(control>=0) {
+		/* A fresh completion token prevents a pipelined pre-completion EXPORT
+		 * from releasing publication, even if it remained queued during work. */
+		uint64_t token;char message[64],ack[64];
+		require(getrandom(&token,sizeof(token),0)==(ssize_t)sizeof(token),"completion token");
+		snprintf(message,sizeof(message),"MW1 FINISHED %016llx\n",(unsigned long long)token);
+		snprintf(ack,sizeof(ack),"MW1 EXPORT %016llx\n",(unsigned long long)token);
+		if(mw_control_send(control,message,30000) || mw_control_wait(control,ack,30000)) {
+			close(control);free(samples);free(w);return 3;
+		}
+	}
 	printf("{\"event\":\"measurement\",\"complete\":true,\"data_ok\":true,\"workload\":\"mmap-shared-mm\",\"observation\":\"%s\",\"threads\":%u,\"joined\":%u,\"completed\":%llu,\"started_ns\":%llu,\"deadline_ns\":%llu,\"finished_ns\":%llu,\"wall_ns\":%llu,\"worker_cpu_ns\":%llu,\"duration_ns\":2000000000,\"peak_window_ns\":300000000,\"peak_settle_ns\":300000000,\"sample_period_ns\":10000000,\"progress_batch\":256,\"collector_cpu\":63,\"collector_observed_cpu\":%d,\"collector_error\":0,\"before\":",
 	 argv[2],n,n,(unsigned long long)completed,(unsigned long long)started_ns,(unsigned long long)deadline_ns,
 	 (unsigned long long)finished,(unsigned long long)(finished-started_ns),(unsigned long long)cpu_ns,sched_getcpu());
@@ -157,5 +193,5 @@ int main(int argc,char **argv)
 		for(unsigned j=0;j<n;j++)printf("%s%llu",j?",":"",(unsigned long long)s->completed[j]);
 		printf("]}");
 	}
-	printf("]}\n");free(samples);free(w);return 0;
+	printf("]}\n");free(samples);free(w);if(control>=0)close(control);return 0;
 }

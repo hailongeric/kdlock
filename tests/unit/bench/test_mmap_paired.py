@@ -141,7 +141,7 @@ class Replay(unittest.TestCase):
                 ready = {k: r[k] for k in ('mode', 'boot_id', 'block', 'prepared')}
                 ready['passed'] = True
                 with patch.object(paired, 'load_bound', return_value=ready), \
-                     patch.object(paired, 'validation_receipt'), \
+                     patch.object(paired, 'validation_receipt', return_value={}), \
                      patch.object(paired, 'qualify', return_value=evidence) as qualification, \
                      patch.object(paired, 'measurement', return_value=r['measurement']):
                     report.replay(out / 'result.json')

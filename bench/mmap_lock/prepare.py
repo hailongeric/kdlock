@@ -51,12 +51,48 @@ def split_btf(base, payload, out):
     return dict(passed=True, tool=str(tool), sha256=sha(tool), method='pahole -F btf, base then split')
 
 
+def rebuild_client(a, out):
+    """Reuse the proven candidate module/fixed client; build only timed userspace."""
+    prior = json.loads(a.reuse_payload.read_text())
+    profile = json.loads(Path(__file__).with_name('kdmm31.json').read_text())
+    rt.require(prior['passed'] and prior['built_only'] and not prior['modules_loaded'] and
+               prior['profile'] == profile, 'matching successful build-only receipt required')
+    changed_source = str(ROOT / 'bench/mmap_writer/timed_client.c')
+    files = {name: digest for name, digest in prior['files'].items() if name != changed_source}
+    rt.require(all(sha(Path(name)) == digest for name, digest in files.items()), 'reused build input changed')
+    manifest = json.loads(a.source_manifest.read_text())
+    for name in ('bench/mmap_writer/timed_client.c', 'bench/mmap_writer/control.h',
+                 'workload_modules/mmap_writer/mmap_writer_uapi.h'):
+        digest = manifest['files'][name]
+        rt.require(sha(ROOT / name) == digest, 'new client source differs: ' + name)
+        dest = out / 'source' / name
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(ROOT / name, dest)
+        files[str(ROOT / name)] = files[str(dest)] = digest
+    target = out / 'timed'
+    rt.command(['gcc', '-O2', '-g', '-Wall', '-Wextra', '-Werror', '-pthread',
+                '-I' + str(out / 'source/workload_modules/mmap_writer'),
+                out / 'source/bench/mmap_writer/timed_client.c', '-o', target],
+               out / 'build-timed.log', timeout=60)
+    files[str(target)] = sha(target)
+    files[str(a.reuse_payload.resolve())] = sha(a.reuse_payload)
+    shutil.copyfile(a.source_manifest, out / 'source-manifest.json')
+    return dict(passed=True, built_only=True, modules_loaded=False, booted=False,
+                client_only=True, reused_payload=True, profile=profile, files=files,
+                binaries=dict(prior['binaries'], timed=str(target)),
+                reused_from=dict(path=str(a.reuse_payload.resolve()), sha256=sha(a.reuse_payload)),
+                source_manifest_sha256=sha(a.source_manifest), driver_sha256=sha(Path(__file__)))
+
+
 def main():
     p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument('--kernel-source', required=True, type=Path)
+    p.add_argument('--kernel-source', type=Path)
+    p.add_argument('--reuse-payload', type=Path)
     p.add_argument('--source-manifest', required=True, type=Path)
     p.add_argument('--output', required=True, type=Path)
     a = p.parse_args()
+    if bool(a.kernel_source) == bool(a.reuse_payload):
+        p.error('select exactly one of --kernel-source or --reuse-payload')
     rt.require(os.geteuid() == 0 and str(ROOT) == '/root/host_fs/kdlock' and
                os.uname().release == '6.1.159-kdclobber2', 'idle recovery VM required')
     runpy.run_path(str(ROOT / 'bench/archive_run.py'))['idle'](Path('/root'), rt.idle)
@@ -68,6 +104,10 @@ def main():
     result = dict(passed=False, built_only=True, modules_loaded=False, booted=False,
                   driver_sha256=sha(Path(__file__)))
     try:
+        if a.reuse_payload:
+            result = rebuild_client(a, out)
+            runpy.run_path(str(ROOT / 'bench/archive_run.py'))['idle'](Path('/root'), rt.idle)
+            return
         profile = json.loads(Path(__file__).with_name('kdmm31.json').read_text())
         tree = a.kernel_source.resolve()
         bundle = Path(profile['bundle'])
@@ -80,7 +120,7 @@ def main():
         selected = {name: h for name, h in manifest['files'].items() if name.startswith(
             ('workload_modules/mmap_writer/', 'bench/mmap_writer/')) and
             (Path(name).suffix in ('.c', '.h', '.inc') or Path(name).name == 'Makefile')}
-        rt.require(len(selected) == 5, 'expected unchanged payload and two client source sets')
+        rt.require(len(selected) == 6, 'expected payload, two clients and control header')
         files = {}
         for name, h in selected.items():
             rt.require(sha(ROOT / name) == h, 'source changed: ' + name)

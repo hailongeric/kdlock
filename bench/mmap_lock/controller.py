@@ -118,14 +118,27 @@ def main():
     p.add_argument('--remote-command')
     p.add_argument('--receipt')
     p.add_argument('--admission', type=Path)
+    p.add_argument('--measurement-policy', choices=('mmap-transport-v1', 'mmap-window-v2'),
+                   default='mmap-transport-v1')
+    p.add_argument('--window-roles', type=Path)
     a = p.parse_args()
     if bool(a.remote_command) != bool(a.receipt) or bool(a.remote_command) != bool(a.admission):
         p.error('measurement requires command, receipt and admission together')
+    if a.measurement_policy == 'mmap-window-v2' and (not a.remote_command or not a.window_roles):
+        p.error('prepared window requires command, receipt, admission and reviewed role manifest')
+    if a.measurement_policy == 'mmap-transport-v1' and a.window_roles:
+        p.error('legacy transport does not accept a window role manifest')
     a.output.mkdir(parents=True)
     def interrupted(signum, frame):
         raise InterruptedError('controller received signal ' + str(signum))
     signal.signal(signal.SIGTERM, interrupted)
-    result = execute(a.output, a.remote_command, a.receipt, a.admission)
+    if a.measurement_policy == 'mmap-window-v2':
+        import sys
+        import window_controller
+        result = window_controller.execute(sys.modules[__name__], a.output, a.remote_command,
+            a.receipt, a.admission, a.window_roles)
+    else:
+        result = execute(a.output, a.remote_command, a.receipt, a.admission)
     print(json.dumps(result), flush=True)
     return int(not result['passed'])
 
