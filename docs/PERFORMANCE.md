@@ -78,10 +78,15 @@ zero taint and no pending boot. Historical rejected runs are unchanged. The
 subsequent sweep used the revised window-policy resource budget but stopped at
 the KD fixed proof described above. Its 80,000 completed cycles and clean
 lifetime drain do not replace the missing observation. Recovery again restored
-73 modules, zero taint and no pending boot. The next step is a read-only review
-of throughput eligibility versus the separate scheduling observation, retaining
-strict functional and teardown checks. No policy change or rerun is implied;
-optimization remains deferred.
+73 modules, zero taint and no pending boot. The completed read-only review
+supports an [explicit separation](../bench/mmap_lock/THROUGHPUT_POLICY.md) of
+throughput eligibility from the scheduling observation, retaining strict
+functional and teardown checks and verified reuse of completed Native controls.
+That policy is implemented: 99 focused offline tests passed, the fixed userspace
+client compiled, and replay verified the original Native proof and all 21
+controls for compatible reuse. These are tooling checks, not new actual-mmap
+execution. Strict mode and positive-proof verification remain intact; no live
+rerun or new measurement occurred. Optimization remains deferred.
 
 The historical records below retain their original source, topology, caller
 shell and instrumentation identities. Historical complete-operation p95 remains

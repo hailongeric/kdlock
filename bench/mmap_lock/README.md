@@ -6,6 +6,11 @@ It has [41 focused mocked test passes](../results/10.176.26.71/tests/mmap-scalin
 its [authorized live attempt](../results/10.176.26.71/bench/mmap-worker-scaling-20261026/README.md)
 passed Native validation, then stopped at the KD fixed-writer proof. All 126
 measurements remain unrun; recovery was restored. This guide authorizes no retry.
+The [explicit eligibility policy](THROUGHPUT_POLICY.md) now separates functional
+completion from the sleeping-writer observation and verifies reuse of the
+completed Native controls. It passed offline checks and saved-evidence replay;
+no new live run has occurred. Missing selection retains strict behavior and all
+historical outcomes. The policy guide gives the reduced continuation bounds.
 The [prepared-window interface](#prepared-window-interface) passed offline
 tooling checks. Its [small live attempt](../results/10.176.26.71/bench/mmap-window-screen-20261026/README.md)
 stopped after the Native boot: admission captured 82 QEMU tasks, which the

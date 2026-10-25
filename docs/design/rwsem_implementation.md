@@ -8,7 +8,7 @@ retains those results. This acceptance does not replace the selected KD mutex
 protocol or establish support for every Linux reader/writer semaphore use.
 The subsequent IRQ-safe reader-release correction at `e6fc371` adds timed
 writer-drain rechecks and is included in maintained `master`. A source comparison
-at `80f3f1e` confirms that the rwsem implementation, public rwsem headers and mmap
+at `b8d9137` confirms that the rwsem implementation, public rwsem headers and mmap
 overlay are unchanged since that correction. The historical `c21345b`
 measurements predate the correction and do not establish its performance.
 
@@ -347,8 +347,20 @@ both guest NUMA nodes; this does not isolate a
 NUMA effect. Adjacent repetitions share boots. No expanded measurement has run:
 the [live sweep](../../bench/results/10.176.26.71/bench/mmap-worker-scaling-20261026/README.md)
 passed Native validation and stopped at the KD fixed-writer proof, then restored
-recovery. The current runner requires that observation; its role in prospective
-throughput eligibility is under read-only review. It is not a lock-defect claim.
+recovery. That validation failure is not a lock-defect claim. The subsequent
+[explicit eligibility policy](../../bench/mmap_lock/THROUGHPUT_POLICY.md)
+separates a missing scheduling observation from completed functional work while
+preserving strict mode, every positive-proof predicate and exact drain checks.
+Its 99 offline tests and saved Native-control replay passed; no new actual mmap
+execution or optimization followed. The new policy is selected explicitly and
+cannot reclassify historical failures.
+
+The separate [small validation pair](../../bench/results/10.176.26.71/bench/mmap-worker-screen-20261026/README.md)
+qualified under `mmap-window-v2` and `qemu-workers-v1`: Native 108,245.61 versus
+KD 35,406.14 completed cycles/s, KD/Native 0.3271. One unscored pair supplies no
+variability estimate or causal bottleneck diagnosis. The historical exact
+67-task admission failures remain rejected; the explicit worker policy does
+not retroactively qualify them.
 
 The earlier 12-session `plain-v1`
 [authorized attempt](../../bench/results/10.176.26.71/bench/mmap-plain-v1-20261025/README.md)
@@ -367,15 +379,18 @@ The user subsequently clarified the approximate cadence requirement; the
 [diagnostic guide](../../bench/mmap_lock/DIAGNOSTIC.md) tracks its separate
 correction and latest execution status. Neither a diagnostic nor a later quiet
 observation replaces original benchmark admission or validates rejected timing.
-The exact 67-task gate remains unchanged.
+The historical/default exact 67-task gate remains unchanged.
 
 The [corrected diagnostic](../../bench/results/10.176.26.71/bench/mmap-diagnostic-corrected-20261026/README.md)
 then stopped on a new QEMU task during the guest no-op phase; its checksum phase
 did not run. Final health at **01:26:28 on October 26 (Asia/Shanghai)** recorded
 recovery `6.1.159-kdclobber2`, boot `d32e2e18-c340-4a98-8105-335bccec0b5d`,
 the original 73 modules, taint **12288** and no pending boot. This is time-stamped
-saved evidence. Recheck recovery and competing jobs with the active owner before
-later live work; preserve the
+saved evidence, superseded for current recovery status by the later sweep and
+[offline eligibility receipt](../../bench/results/10.176.26.71/tests/mmap-functional-eligibility-20261026/README.md):
+recovery `6.1.159-kdclobber2`, original 73 modules, taint 0, no pending boot and
+no active project work. Recheck recovery and competing jobs before later live
+work; preserve the
 [reconstruction and recovery inputs](../../kernel_integration/mmap_lock/README.md#reusing-the-corrected-build).
 
 Operation-specific MM body delegation and prepared teardown campaigns are

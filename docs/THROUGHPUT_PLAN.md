@@ -43,7 +43,8 @@ three paired repetitions: **126 measured sessions per workload**, with no
 64-worker point. Only the existing shared-mm writer workload is implemented.
 Its [41 focused mocked tests](../bench/results/10.176.26.71/tests/mmap-scaling-plan-20261026/README.md)
 passed; independent source/receipt review found no material matrix defect. No
-expanded live campaign has run. The original `paired-v1` (24 sessions, also the
+expanded measurement has run; the live attempt stopped during KD validation.
+The original `paired-v1` (24 sessions, also the
 missing-plan default) and stopped `plain-v1` (12 sessions) remain separate.
 
 Reuse the same `kdmm31` image/configuration, build-3 payload/clients and scoped
@@ -90,6 +91,17 @@ whether the sleeping-writer observation belongs in throughput eligibility or
 in a separate integration claim before proposing another bounded cycle.
 Keep the failed observation and completed controls; do not repeat the small
 screen to substitute for this missing proof.
+
+The [explicit eligibility policy](../bench/mmap_lock/THROUGHPUT_POLICY.md)
+implements the reviewed separation of functional completion from an inconclusive
+sleeping-writer observation, while retaining strict mode and verification of
+every positive proof. Its 99 focused offline tests and saved Native-control
+replay passed. The separately reviewed continuation would reuse those controls:
+one new KD fixed check, 21 KD controls and 126 measurements, bounded by 148
+payload cycles, five boots and 384 full captures. Estimated time is 4 h 28 min
+19.7 s, with 3 GiB reserved per retention filesystem under the documented
+assumptions. Fresh readiness and separate live-cycle approval remain required;
+no continuation has run.
 
 ## Expansion after the first qualified baseline
 
