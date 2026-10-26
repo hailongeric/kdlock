@@ -9,6 +9,11 @@ Use [the daemon](../daemon/README.md) for publication and
 JIT means just-in-time compilation; ABI means application binary interface.
 The [terminology guide](../docs/TERMINOLOGY.md) explains execution-state terms.
 
+Under the [project roadmap](../docs/ROADMAP.md), stage 1 uses this translator to
+establish eligible delegation gains. The current stage 2 mmap adapter executes
+MM bodies locally. Broader stage 3 integration must preserve admission and source
+lifetime rules; a new benchmark target does not make arbitrary MM code eligible.
+
 | Read first | Responsibility |
 | --- | --- |
 | [disassem.py](disassem.py) |CLI, input coordination, assembly/link and diagnostics |

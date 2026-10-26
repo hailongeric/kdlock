@@ -1,5 +1,10 @@
 # Opt-in mmap/fault correctness
 
+These checks validate private backing state and callbacks, as a supporting
+experiment for [stage 2](../../../docs/ROADMAP.md#stage-2-prove-scoped-mm-improvement-or-parity).
+They leave the actual kernel mmap lock Native. The actual mmap adapter and
+generic fault-throughput target have separate correctness/performance scopes.
+
 This serial VM runner validates the supported
 [mapping and fault transaction contract](../../../docs/design/mmap_fault.md).
 Payload code lives in `workload_modules/mmap_fault`; its userspace client lives

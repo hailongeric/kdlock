@@ -1,5 +1,11 @@
 # Verification
 
+The [project roadmap](../docs/ROADMAP.md) defines three evidence scopes: stage 1
+lock/data/delegation checks, stage 2 actual-MM API and lifetime checks, and stage 3
+integration-wide coverage. Each receipt applies only to its tested scope.
+Correctness, performance qualification and gain/parity are separate verdicts;
+full-suite execution remains explicitly selected work.
+
 Correctness-only kernel modules belong beside their runners under
 [`kernel/`](kernel/README.md), using a `payload/` subdirectory for module source,
 Makefiles and ioctl headers. Unit fixtures remain under `unit/`; benchmark and

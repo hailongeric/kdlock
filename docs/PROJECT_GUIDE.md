@@ -1,12 +1,19 @@
 # Project guide
 
+The ultimate objective is in-kernel replacement of relevant Linux locks and
+end-to-end comparison of unchanged programs such as `mmap1`. The
+[project roadmap](ROADMAP.md) defines the three stages: lock micro/nano evidence,
+scoped mmap/page-fault improvement or parity, and broader kernel replacement with
+application evaluation. This guide describes the working checkout and interfaces;
+current implementation limits are not a redefinition of that long-term goal.
+
 The primary checkout on `380G10` is the source of truth. `master` contains the
 accepted KD-only mutex from `d2a2304`, with its legacy delegation protocol and
 compatibility backports. `accepted/kd-only-mutex-20261018` preserves the measured
 implementation. The authorized October 25 local fast-forward integrated the
 IRQ-safe rwsem/mmap correction at `e6fc371` and its preparation through `92f773f`
 into `master`. Subsequent work added the expanded throughput plan and recorded
-the stopped QEMU diagnostics; see the [throughput roadmap](THROUGHPUT_PLAN.md).
+the stopped QEMU diagnostics; see the [throughput campaign plan](THROUGHPUT_PLAN.md).
 `current/kd-mutex` retains the earlier `af330db` instruction-exit checkpoint and
 does not include the later spin helper work. The earlier consolidation is retained
 in [branch dispositions](history/main-consolidation-20261018.md).
@@ -20,7 +27,7 @@ execution, operations, benchmark and historical material.
 ## Basic working version
 
 Reuse the validated functional implementation. The current
-[throughput-only roadmap](THROUGHPUT_PLAN.md) separates documented lock workloads,
+[throughput campaign plan](THROUGHPUT_PLAN.md) separates documented lock workloads,
 actual mmap and actual page faults. The shared-mm payload/client preparation is
 build-ready. The earlier plain/sampled October 25 attempt
 [stopped before boot](../bench/results/10.176.26.71/bench/mmap-kdmm31-paired-20261025/README.md)
@@ -31,9 +38,13 @@ unrun. Its 24-case plan cannot be reduced by skipping sampled cases. The explici
 also stopped before boot at 68 QEMU tasks versus 67; all twelve measurements
 and six unscored checks remain unrun. The separate `plain-scaling-v1` plan
 prepares 21 worker counts and 126 measured sessions. Its 41 focused mocked
-tests passed; the live matrix remains unrun. A generic actual page-fault
-throughput driver still needs preparation. There is no qualified current mmap
-timing or new optimization gain. Earlier rejected measurements remain rejected;
+tests passed; that three-repeat matrix remains unrun. The separate
+[16-worker validation pair](../bench/results/10.176.26.71/bench/mmap-worker-screen-20261026/README.md)
+qualified under its recorded policy, and the later
+[one-round MM screen](../bench/results/10.176.26.71/bench/catalog-mmap-single-20261026/README.md)
+completed exploratory measurements. Neither establishes a repeated current
+mmap baseline or an optimization gain. A generic actual page-fault throughput
+driver still needs preparation. Earlier rejected measurements remain rejected;
 new tail-latency work is deferred.
 
 | Task | Working interface and scope |

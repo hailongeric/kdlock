@@ -9,6 +9,10 @@ and clobber entry; it does not require or call the kernel mutex-clobber interfac
 All private lock and execution services initialize before `/dev/kd_dev` is
 published; teardown removes the device before releasing those services.
 Loading the module does not redirect ordinary Linux lock calls.
+It supplies stage 1 consumers and the lock mechanisms from which scoped and
+broader integration are developed. The [project roadmap](../docs/ROADMAP.md)
+defines stage 2 MM and stage 3 kernel replacement; provider initialization alone
+does not satisfy either integration's coverage or performance requirements.
 [Lock protocols](../docs/design/lock_protocols.md) and
 [the code map](../docs/CODE_MAP.md) define behavior and source responsibilities.
 ABI2 is the machine-level calling agreement used by delegated mutex operations.

@@ -1,5 +1,10 @@
 # Explicit kernel workloads
 
+These payloads supply stage 1 lock/API experiments and supporting stage 2 MM
+checks in the [project roadmap](../docs/ROADMAP.md). Actual kernel replacement
+must be established by the integration and its real callers; a module-owned
+object or extracted API body alone cannot close the stage 3 coverage requirement.
+
 KD mutex workloads own [KD-only objects](../docs/design/kd_only_mutex.md).
 Their Linux Native and TCLock controls keep separate object types. The real-API
 adapter uses a private KD mutex around the controlled subsystem body; the running

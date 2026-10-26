@@ -1,5 +1,12 @@
 # Development rules
 
+The project goal is relevant in-kernel lock replacement and evaluation of
+unchanged applications such as will-it-scale `mmap1`. Follow the three stages in
+[the project roadmap](docs/ROADMAP.md): micro/nano performance evidence, scoped
+mmap/page-fault improvement or parity, then broader kernel integration. Current
+support and performance limits remain explicit; a future milestone does not
+override the implementation or VM rules below.
+
 The maintained branch is `master`. Preserve the KD-only foundation selected at
 `d2a2304`: KD physical exclusion, ABI2, pinned published delegation waiters,
 immutable mutex images and fail-closed instruction admission. The current mutex

@@ -1,5 +1,9 @@
 # Documentation index
 
+Start with the [three-stage project roadmap](ROADMAP.md) for the ultimate kernel
+replacement goal, scoped MM milestone and current evidence gaps. This index
+assigns one responsibility to each maintained guide.
+
 These guides describe `master`, whose mutex retains the accepted
 KD-only lock protocol from `d2a2304` and whose reader/writer semaphore (rwsem) waiting
 implementation is accepted at `c21345b`. The rwsem acceptance includes its
@@ -10,6 +14,7 @@ adds validated original-waiter continuation without changing that lock protocol.
 
 | Guide | Responsibility |
 | --- | --- |
+| [Project roadmap](ROADMAP.md) | Ultimate kernel replacement goal, three development stages, milestones and completion criteria |
 | [Project guide](PROJECT_GUIDE.md) | Reading order, source ownership and quick setup |
 | [Current lock catalog](LOCKS.md) | All four KD lock families, public interfaces, shared engines and compatibility limits |
 | [Terminology](TERMINOLOGY.md) | Plain-language definitions of lock, execution and benchmark terms |
@@ -22,7 +27,7 @@ adds validated original-waiter continuation without changing that lock protocol.
 | [Locking](design/locking.md), [frames](design/frames.md), [lifetimes](design/lifetimes.md) | Ownership and retirement |
 | [JIT execution](JIT_EXECUTION.md), [register ABI](JIT_REGISTER_ABI.md), [admission](design/admission.md) | Translation and execution contracts |
 | [Workload catalog](BENCHMARK_WORKLOADS.md), [benchmarks](../bench/README.md) | Protected work and reproducible runner commands |
-| [Throughput roadmap](THROUGHPUT_PLAN.md) | Proposed small Native/KD stages, actual mmap/fault boundaries and approval dependencies |
+| [Throughput campaign plan](THROUGHPUT_PLAN.md) | Bounded Native/KD measurement plans, actual mmap/fault boundaries and retained campaign status |
 | [Performance](PERFORMANCE.md), [results](../bench/results/README.md) | Measured outcomes and retained evidence |
 | [Tests](../tests/README.md), [validation](VALIDATION.md) | Check selection and receipts |
 | [Limitations](TODO.md) | Known failures and deferred work |

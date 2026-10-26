@@ -1,5 +1,9 @@
 # Real kernel API contention
 
+These scoped API workloads extend stage 1 beyond synthetic bodies. The
+[project roadmap](../../docs/ROADMAP.md) separately defines stage 2 actual-MM
+integration and stage 3 broader kernel replacement with unchanged applications.
+
 This runner measures actual syscalls on private kernel objects: extended
 attributes, file-lock queries, descriptor flags, pipe metadata, file positions
 and UTS namespace names.
@@ -116,7 +120,7 @@ scoped adapters do not establish whole-kernel replacement.
 | `uname()` with `sethostname()` / `setdomainname()` | `uts_sem` protects the real UTS structure: readers copy it, writers replace one name | Implemented bounded read/write experiment in a private UTS namespace; Native rwsem versus KD/TCLock reader/writer spinlocks, with the specialization below. |
 | FxMark directory enumeration / rename | Shared dentry/rename state and, for cross-directory rename, `s_vfs_rename_mutex` | Candidate for wider integration; additional lock sites and filesystem behavior must be preserved. |
 | will-it-scale `lock1` | Repeated `F_SETLKW` / unlock, with a **separate file per worker** | Useful reference; it does not itself create a shared inode lock. The original paper's kernel/version bottleneck must be re-established on this kernel. |
-| will-it-scale `mmap1` | `mm_struct.mmap_lock`, a sleeping rwsem, covers VMA allocation/removal and potentially blocking/nested work | The local TCLocks copy maps and unmaps 128 MiB. [KD rwsem](../../docs/design/rwsem_implementation.md) supports explicit outer writer delegation, but that pair cannot preserve mmap's killable waits and downgrade paths. Full mmap APIs and execution context remain unintegrated; no KD mmap comparison is implemented. |
+| will-it-scale `mmap1` | `mm_struct.mmap_lock`, a sleeping rwsem, covers VMA allocation/removal and potentially blocking/nested work | The reference maps/unmaps untouched 128 MiB anonymous private memory. The [actual mmap adapter](../../kernel_integration/mmap_lock/README.md) implements scoped local Native/KD routing, including killable/downgrade paths; it has separate 4 KiB device-mapping results. Exact mmap1 threads/processes comparison remains planned, outside this ftrace runner. Explicit outer-writer delegation is not its MM execution mode. |
 | eventfd / epoll wakeup paths | Short queue/counter critical sections, often with IRQ exclusion | Poor initial fit for the present ordinary-task-context delegation ports. |
 
 Sources: [TCLocks evaluation, Table 1 and Figure 3](https://www.usenix.org/system/files/osdi23-gupta.pdf),

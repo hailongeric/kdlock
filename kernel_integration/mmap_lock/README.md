@@ -1,5 +1,12 @@
 # mmap lock backend and API integration
 
+This integration is stage 2 of the [project roadmap](../../docs/ROADMAP.md):
+demonstrate improvement or parity for scoped real mmap/page-fault work before
+broader kernel lock replacement. The next application-matching target is
+will-it-scale `mmap1_threads`, with `mmap1_processes` as a separate control. The
+existing 4 KiB device mapping and private-backing fault tests retain their own
+identities; they are not measurements of mmap1. Stage 2's performance gate is open.
+
 The maintained scope is **lock implementation plus minimal API and lifetime
 wrappers**. Native mmap, munmap, advice and page-fault algorithms remain unchanged
 and execute on the originating task. Readers stay concurrent and local. The
@@ -169,20 +176,24 @@ shared-provider workload coverage remains open.
 
 RT, lockdep, whole-kernel substitution
 and broader Linux semantic equivalence remain unvalidated. The next performance
-work follows the [throughput-only roadmap](../../docs/THROUGHPUT_PLAN.md);
+work follows the [throughput campaign plan](../../docs/THROUGHPUT_PLAN.md);
 the old `kdmm1` timing profile cannot establish performance of this correction.
 The earlier plain/sampled proposal selected 24 shared-mm writer cases over five
 candidate boots followed by recovery. Its authorized October 25 attempt
 [stopped before boot](../../bench/results/10.176.26.71/bench/mmap-kdmm31-paired-20261025/README.md)
-at 73 QEMU tasks versus 67. All 24 measured cases remain unrun; no new timing or
-performance gain is claimed. The explicit 12-case `plain-v1` runner/report mode
+at 73 QEMU tasks versus 67. All 24 measured cases in that proposal remain unrun;
+that attempt supplies no timing or performance gain. The explicit 12-case `plain-v1` runner/report mode
 passed 25 focused mocked checks; its [authorized live attempt](../../bench/results/10.176.26.71/bench/mmap-plain-v1-20261025/README.md)
 then stopped at 68 QEMU tasks versus 67 before any boot or payload check. All
 twelve measurements remain unrun. The stopped older plan is not resumed by
 omitting sampled cases.
 The separate prospective `plain-scaling-v1` plan now prepares 21 counts and
 126 plain Native/KD sessions, with [41 focused mocked passes](../../bench/results/10.176.26.71/tests/mmap-scaling-plan-20261026/README.md).
-All expanded cases remain unrun. Mock validation and the separate QEMU
+All cases in that three-repeat matrix remain unrun. The separate
+[qualified validation pair](../../bench/results/10.176.26.71/bench/mmap-worker-screen-20261026/README.md)
+and [completed exploratory screen](../../bench/results/10.176.26.71/bench/catalog-mmap-single-20261026/README.md)
+retain their own evidence; neither establishes a current repeated gain/parity
+baseline or exact mmap1 performance. Mock validation and the separate QEMU
 diagnostic do not replace actual mmap runtime validation or original admission.
 
 ## Reusing the corrected build

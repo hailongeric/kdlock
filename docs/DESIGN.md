@@ -1,5 +1,11 @@
 # KD design
 
+The [project roadmap](ROADMAP.md) places this implementation in a three-stage
+program: establish micro/nano gains, validate scoped MM performance, then replace
+the declared relevant kernel locks and evaluate unchanged applications. The
+contracts below describe current capabilities and constraints, not completed
+whole-kernel replacement.
+
 KD lets one thread run a waiting thread's critical section while holding the
 required lock. The waiting thread then continues after that critical section,
 without running it again. A background daemon translates the original machine
@@ -35,12 +41,15 @@ The adapter has [focused actual-mm validation](VALIDATION.md#native-shared-mm-mm
 That evidence does not establish full Native semantics, fairness, whole-kernel,
 RT or lockdep equivalence. The authorized paired and plain benchmark attempts
 stopped at host admission before boot or payload execution. The expanded scaling
-measurements remain unrun: its live attempt stopped at the KD fixed-writer
-proof after Native validation passed. A separate
+three-repeat measurements remain unrun: that live attempt stopped at the KD
+fixed-writer proof after Native validation passed. A separate
 [16-worker validation pair](../bench/results/10.176.26.71/bench/mmap-worker-screen-20261026/README.md)
 qualified under the explicit worker/window policies, with KD at 0.3271× Native;
-it provides no repeated baseline or causal performance conclusion. The
-[throughput roadmap](THROUGHPUT_PLAN.md) tracks those separate plans and stops.
+it provides no repeated baseline or causal performance conclusion. The subsequent
+[one-round MM screen](../bench/results/10.176.26.71/bench/catalog-mmap-single-20261026/README.md)
+completed 126 exploratory points under a separate plan and retains the actual
+shared-mm regression. The
+[throughput campaign plan](THROUGHPUT_PLAN.md) tracks those separate plans and stops.
 
 ## Terms used in these guides
 

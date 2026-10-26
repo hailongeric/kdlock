@@ -4,6 +4,11 @@ These definitions explain terms used in the maintained guides. Names in code or
 recorded results stay unchanged so that a reader can find the corresponding
 implementation or measurement.
 
+The [project roadmap](ROADMAP.md) defines the development stages and their
+completion criteria. A stage is a research/integration milestone; a campaign is
+one fixed set of measurements. Completing a campaign does not establish that a
+stage's correctness and performance requirements have been met.
+
 ## Locks and execution
 
 | Term | Meaning in this project |
@@ -92,6 +97,10 @@ implementation or measurement.
 | Cacheline / alignment | The unit transferred between CPU caches; the workloads use 64-byte lines. Alignment places an object at an address divisible by the specified size. Separating frequently written fields can reduce traffic between CPUs. |
 | IRQ / BH / RT / lockdep / ww_mutex | Linux facilities: hardware interrupt context, bottom-half interrupt handling, real-time kernel locking, lock dependency checking, and wound/wait mutexes used for some multi-lock operations. Whole-kernel support for these facilities is outside the accepted rwsem measurements. |
 | MM / VMA / mmap lock | MM refers to memory management. A virtual memory area (VMA) describes an address range. A process's `mmap_lock` protects parts of its memory-map state. Benchmarking a private KD rwsem does not replace this kernel lock. |
+| Independent mm / shared mm | Separate processes normally have distinct address spaces and mmap locks. Pthreads in one process share an address space and its lock. Shared file descriptors or `MAP_SHARED` alone do not establish shared mm identity. |
+| mmap1 | will-it-scale's repeated 128 MiB anonymous private read/write mmap followed by munmap, without accessing the range. Its thread and process executables use different mm topologies. Existing 4 KiB device mappings are different workloads. |
+| Private backing lock | A driver's lock protecting its own backing pages/metadata. It can be shared by workers with independent mms. Selecting KD here does not replace the kernel mmap lock; the current fault mapping uses `MAP_SHARED`, not `MAP_PRIVATE`. |
+| Native kernel control | Native mode in the integration tree, distinct from a separately built stock Linux kernel. Both need recorded source/configuration identities; neither means caller-local KD execution. |
 | GPR / R13 / RSP / registers | Registers are small storage locations in the processor. A general-purpose register (GPR) holds scalar machine state; R13 is one such x86-64 register. RSP holds the stack pointer. A caller interface must capture or establish a register's value before generated code uses it. |
 
 ## Measurements and evidence
@@ -106,7 +115,7 @@ implementation or measurement.
 | Mops/s / throughput | Millions of completed operations per second, summed across workers. It is not the latency of an individual request. |
 | Whole-run median | Compute each repetition's rate over its entire measured interval, then take the middle rate among the three repetitions. |
 | Warmup / settling / best peak | Warmup executes operations before timing. Settling excludes early measured windows from peak selection. The best peak is the highest eligible window rate under the runner's progress and operation-mix checks. |
-| Ratio / parity / regression | A ratio divides one throughput by another: 2× means twice as fast; 0.286× means 28.6% of the reference rate, or 71.4% slower. In the current rwsem/rwlock comparison, parity requires both the observed median whole-run rate and best peak to be at least the reference values. A regression is a lower measured rate; these comparisons alone are not statistical significance tests. |
+| Ratio / parity / regression | A ratio divides one throughput by another: 2× means twice as fast; 0.286× means 28.6% of the reference rate, or 71.4% slower. The existing rwsem/rwlock report's parity predicate requires both median whole-run rate and best peak to reach the reference. The roadmap's proposed stage 2 tolerance is a separate prospective contract and does not alter that predicate or historical verdicts. A lower rate is a measured regression; significance and parity require the declared variability analysis. |
 | Split execution-status group | Repetitions at one point contain both sessions with returned JIT bodies and `NO_JIT` sessions. They are reported separately instead of being merged into one three-repetition group. All planned runs may still have completed. |
 | Baseline / candidate screen / profile | A baseline is the recorded comparison version. A candidate screen is a smaller exploratory comparison. A profile counts or times internal functions to investigate cost; instrumented profiles are excluded from scored throughput. |
 | Hits/op | Recorded function calls divided by completed benchmark operations. These profiles can include background work and nested functions, so counts or times cannot be added as exclusive CPU costs. |

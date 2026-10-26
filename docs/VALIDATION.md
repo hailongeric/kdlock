@@ -8,6 +8,15 @@ Basic plus affected checks are the default; an old pass is not a current full pa
 The [terminology guide](TERMINOLOGY.md) explains status labels and other technical
 terms used in the receipts below.
 
+The [project roadmap](ROADMAP.md) separates stage 1 lock-mechanism evidence,
+stage 2 actual-MM semantics/performance, and stage 3 kernel replacement coverage.
+The [October 26 catalog](../bench/results/10.176.26.71/bench/catalog-single-20261026/README.md)
+and [MM extension](../bench/results/10.176.26.71/bench/catalog-mmap-single-20261026/README.md)
+completed exploratory measurements, and the [nano comparisons](../bench/nano/README.md)
+retain favorable and adverse cases. They do not qualify the historical unrun
+three-repeat matrices, prove exact mmap1 performance, or close stage 2's
+improvement/parity gate. The receipts below retain their original outcomes.
+
 ## Native shared-mm mmap writers
 
 The [IRQ/read-trylock correction](../bench/results/10.176.26.71/tests/mmap-irq-trylock-20261025/README.md)

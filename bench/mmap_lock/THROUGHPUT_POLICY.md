@@ -1,5 +1,12 @@
 # Throughput eligibility and writer observation
 
+This guide owns eligibility for its named historical and prospective campaigns;
+the [project roadmap](../../docs/ROADMAP.md) owns stage-completion criteria. The
+separate [October 26 screen](../results/10.176.26.71/bench/catalog-mmap-single-20261026/README.md)
+completed exploratory aggregate measurements with its own optional-peak policy.
+It changes neither the failed verdicts below nor the requirement to establish
+actual-MM improvement/parity before claiming stage 2 complete.
+
 **Implemented; the authorized continuation stopped during KD validation.**
 The explicit `mmap-functional-v1` policy separates functional completion from
 the sleeping-writer observation. Missing selection retains `mmap-writer-proof-v1`

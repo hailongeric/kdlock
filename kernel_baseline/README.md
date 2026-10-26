@@ -6,6 +6,11 @@ The captured configuration and patch are evidence, not a recommendation to use
 this historical kernel on production machines. Rebuilding/installing the guest
 kernel still requires separate approval under [development rules](../AGENTS.md).
 
+The [project roadmap](../docs/ROADMAP.md) plans scoped MM work and eventual broader
+kernel replacement. Candidate kernels for those stages need separate recorded
+source/configuration identities and recovery plans; this captured historical
+bundle is not an editable implementation of the roadmap.
+
 This is the original `6.1.159` baseline, not the current ordinary-spin ABI.
 The current spin provider requires spin caller-clobber v1 on
 [`kdclobber2`](experiments/mutex_clobber/README.md) and does not build on this

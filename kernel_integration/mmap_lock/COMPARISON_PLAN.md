@@ -3,8 +3,12 @@
 Historical kdmm1 plan and evidence. The current corrected-image procedure is
 the [kdmm31 shared-mm plan](../../bench/mmap_lock/README.md). Status and deferrals
 below describe the retained October 21–22 campaign, not current priorities.
+The [project roadmap](../../docs/ROADMAP.md) now defines the three development
+stages and the planned exact mmap1 target. The completed October 26 exploratory
+MM screen is separately indexed by the maintained guide; it does not fill or
+reclassify this historical plan.
 
-The current procedure uses the corrected lock-only `e6fc371` baseline and the
+The later October 25 procedure used the corrected lock-only `e6fc371` baseline and the
 already installed kdmm31 image. Its shared-mm writer selection is 1/16 workers,
 Native/KD modes, plain/sampled observation and three paired repetitions: 24
 measured cases. Five candidate boots plus return to recovery form the proposed
@@ -12,7 +16,7 @@ six-boot cycle. The authorized October 25 attempt
 [stopped at first admission](../../bench/results/10.176.26.71/bench/mmap-kdmm31-paired-20261025/README.md)
 with 73 QEMU tasks versus 67, before any boot or payload load. Private
 reconstruction and a compatible payload/client build are preparation evidence;
-they have started no current timing and establish no performance gain.
+that attempt started no timing and established no performance gain.
 
 Current commands, source bindings, validation prerequisites and the fixed boot
 sequence live in the [maintained benchmark guide](../../bench/mmap_lock/README.md).

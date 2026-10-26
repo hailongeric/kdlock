@@ -1,5 +1,10 @@
 # Current KD lock catalog
 
+The [project roadmap](ROADMAP.md) targets eventual replacement of the relevant
+kernel locks. This catalog describes today's APIs: micro/nano consumers and the
+scoped mmap adapter. A supported standalone API is a prerequisite for broader
+integration, not evidence that all kernel callers already use it.
+
 This is the entry point for the four lock families maintained on `master`.
 The earlier protocol inventory used `05876a4`, with documentation and benchmark
 checkpoint `40a0f36`. The IRQ-safe rwsem/mmap correction at `e6fc371` is

@@ -21,7 +21,14 @@ indexed in [VALIDATION](VALIDATION.md).
 
 ## Current checkpoint
 
-The current objective is a [throughput-only Native/KD comparison](THROUGHPUT_PLAN.md)
+The [three-stage project roadmap](ROADMAP.md) defines the goal: micro/nano gains,
+scoped MM improvement or parity, then relevant kernel lock replacement and
+application evaluation. Stage 1 has favorable exploratory cases and retained
+regressions; stage 2 has not achieved its performance gate; stage 3 remains planned.
+The next scoped gaps are an exact actual-backend `mmap1_threads` comparison, an
+independent-process control, and a generic actual-fault throughput driver.
+
+Current measurement work is a [throughput-only Native/KD comparison](THROUGHPUT_PLAN.md)
 across the [workload catalog](BENCHMARK_WORKLOADS.md), actual mmap and actual
 page faults. Substantial gains are a hypothesis; losses remain reportable.
 Reuse the validated
@@ -46,8 +53,10 @@ tests, and two earlier basic programs. These are build/offline results; prior
 actual mmap correctness was reused. The earlier authorized October 25 attempt
 [stopped at initial admission](../bench/results/10.176.26.71/bench/mmap-kdmm31-paired-20261025/README.md)
 with 73 QEMU tasks versus 67. It consumed one host capture, no boots or payload
-checks, and left all 24 measured sessions unrun. Qualified current performance
-cases remain zero. The first bounded diagnostic stopped during initial
+checks, and left all 24 measured sessions unrun. Qualified performance cases for
+that attempt remain zero. Later validation and exploratory campaigns are recorded
+separately in [performance status](PERFORMANCE.md). The first bounded diagnostic
+stopped during initial
 observation; its
 [guide](../bench/mmap_lock/DIAGNOSTIC.md) records the subsequent approximate-cadence
 correction and execution status. The existing stop and

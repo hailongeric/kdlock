@@ -1,9 +1,14 @@
-# Native/KD throughput roadmap
+# Native/KD throughput campaign plan
 
-Current objective: test whether KD improves throughput substantially across
-documented lock workloads and actual mmap/page-fault use. A large gain is a
-hypothesis, not a required result. Report losses, local execution, class gaps and
-variance with the gains. **This phase measures throughput only**; new tail-latency
+The [project roadmap](ROADMAP.md) owns the three-stage goal and completion gates:
+micro/nano gains, scoped MM improvement or parity, then relevant kernel lock
+replacement and application evaluation. This document owns concrete throughput
+campaigns and their retained status. Their outcomes test the project's hypotheses;
+a completed campaign is not automatically a completed development stage.
+
+Current measurement objective: quantify KD against Native across documented lock
+workloads and actual mmap/page-fault use. Report losses, local execution, class
+gaps and variance with gains. **This phase measures throughput only**; new tail-latency
 collection and sampled workload variants are deferred. Preserve historical
 latency evidence. Environment diagnosis is a separate activity.
 
@@ -27,6 +32,15 @@ gate or repeated provider diagnostic can qualify the campaign.
 
 ## Workload and interface boundaries
 
+The next application-matching target is upstream `mmap1_threads`: 128 MiB
+anonymous private read/write mappings, immediately unmapped without access, with
+all pthreads sharing one actual mmap lock. `mmap1_processes` is a separate
+independent-mm control. Both need a separately prepared actual-backend comparison;
+neither is implemented by relabelling the existing 4 KiB device mapping or the
+private-backing fault loop. The [stage 2 contract](ROADMAP.md#stage-2-prove-scoped-mm-improvement-or-parity)
+defines the work, semantic checks and gain/parity criterion. Historical plans
+below retain their workload identities and do not become mmap1 plans.
+
 | Scenario | Existing implementation/evidence | Comparison contract and next gap |
 | --- | --- | --- |
 | Mutex c01/c08, exclusive-update RCUHT | [Mutex runner](../bench/tclock_compare/README.md), `run_mutex.py`; public and OUTER are separate compiled shells | Same preallocated work and post-work, Native versus current public KD. Preserve entry-only/returned-body/NO_JIT classes. OUTER is a separate regression control. |
@@ -40,7 +54,9 @@ gate or repeated provider diagnostic can qualify the campaign.
 TCLock is optional only for supported equivalent interfaces and matched work.
 Its original rwsem port exports ordinary registered-worker pairs, without
 equivalent cancellation, downgrade or actual-mmap APIs. There is no TCLock arm
-for the proposed actual mmap/fault comparisons. Do not substitute its rwlock
+in the current local harness for actual mmap/fault comparisons. TCLock's paper
+instead used a modified kernel; a future comparable full integration belongs to
+stage 3 and requires its own evidence. Do not substitute the local port's rwlock
 for a sleeping rwsem. Explicit delegation is not evidence of generic MM support.
 
 ## Prospective 21-count mmap comparison
@@ -51,7 +67,8 @@ three paired repetitions: **126 measured sessions per workload**, with no
 64-worker point. Only the existing shared-mm writer workload is implemented.
 Its [41 focused mocked tests](../bench/results/10.176.26.71/tests/mmap-scaling-plan-20261026/README.md)
 passed; independent source/receipt review found no material matrix defect. No
-expanded measurement has run; the live attempt stopped during KD validation.
+measurement in that three-repeat matrix has run; its live attempt stopped during
+KD validation. The completed October 26 single-round screen is a separate plan.
 The original `paired-v1` (24 sessions, also the
 missing-plan default) and stopped `plain-v1` (12 sessions) remain separate.
 

@@ -1,5 +1,10 @@
 # QEMU task diagnostic
 
+This is an environment investigation, not a development-stage performance result.
+The [project roadmap](../../docs/ROADMAP.md) and [runner guide](README.md) track
+later work. Their separately selected policies and completed exploratory screen
+do not reclassify the diagnostic failures or authorize a new diagnostic attempt.
+
 Status: the original 43 focused mocked tests passed; the first authorized live
 attempt [stopped during initial observation](../results/10.176.26.71/bench/mmap-diagnostic-20261026/README.md)
 on October 26 at a 504.396027 ms start gap. No stimulus phase ran; the observation

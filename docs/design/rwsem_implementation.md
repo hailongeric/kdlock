@@ -1,5 +1,10 @@
 # Sleeping KD reader/writer semaphore
 
+This lock supports stage 1 reader/writer microbenchmarks and stage 2 local mmap
+locking in the [project roadmap](../ROADMAP.md). Broader kernel replacement is
+the stage 3 objective. The two current uses have distinct execution paths:
+eligible benchmark outer writers may delegate, while native MM bodies stay local.
+
 The waiting implementation selected in `c21345b` is the KD rwsem baseline.
 Its acceptance includes the measured tradeoff: large gains at 60 workers and
 substantial regressions at two workers with 20% writes. The

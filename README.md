@@ -1,10 +1,19 @@
 # kdlock
 
+The project's goal is to replace relevant Linux kernel locks with KD and measure
+unchanged applications such as will-it-scale's `mmap1`. Work proceeds in three
+stages: demonstrate gains on lock micro/nano benchmarks; establish improvement
+or parity in scoped mmap/page-fault integration; then complete the declared
+kernel lock replacements and evaluate application performance. The
+[project roadmap](docs/ROADMAP.md) defines goals, milestones and completion
+criteria. Current measurements support favorable nano cases but have not met the
+scoped MM performance objective; broad kernel replacement remains planned.
+
 Start with the [basic working version](docs/PROJECT_GUIDE.md#basic-working-version)
 for focused functional commands across all four lock families and the separate
 real mmap/page-fault examples. Current work prioritizes qualified Native/KD
 throughput across lock workloads, actual mmap and actual page faults; see the
-[throughput roadmap](docs/THROUGHPUT_PLAN.md). New tail-latency work is deferred.
+[throughput campaign plan](docs/THROUGHPUT_PLAN.md). New tail-latency work is deferred.
 
 The October 26 exploratory screen attempted all 51 runnable lock/API
 configurations and completed the three separate implemented mmap/fault workloads,
@@ -105,6 +114,7 @@ scaling results and the still-unaccepted taskname mutation delegation case.
 
 ## Documentation
 
+- [Project goal and three-stage roadmap](docs/ROADMAP.md)
 - [Documentation index](docs/README.md) and [project guide](docs/PROJECT_GUIDE.md)
 - [Terminology](docs/TERMINOLOGY.md): lock, execution and measurement terms used in these guides
 - [Current lock catalog](docs/LOCKS.md): spinlock, mutex, rwlock and rwsem APIs and implementation guides

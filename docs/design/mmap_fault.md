@@ -1,5 +1,10 @@
 # Opt-in mapping and fault transactions
 
+This is a supporting callback/backing-lock experiment for stage 2 in the
+[project roadmap](../ROADMAP.md). Actual mmap-lock substitution has a separate
+[adapter](../../kernel_integration/mmap_lock/README.md). Backing-reader gains do
+not establish that adapter's performance or the planned mmap1 result.
+
 This integration owns a small, preallocated device mapping. It does **not**
 replace `mm_struct::mmap_lock`. A virtual memory area (**VMA**) describes a
 mapped address range; the kernel's native mmap rwsem still protects every VMA

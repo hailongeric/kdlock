@@ -1,5 +1,10 @@
 # Benchmarks
 
+The [project roadmap](../docs/ROADMAP.md) places lock micro/nano comparisons in
+stage 1, actual mmap/page-fault comparisons in stage 2, and unchanged applications
+on integrated kernels in stage 3. Use this guide for implemented runner selection;
+the roadmap's exact mmap1 target remains a new runner/validation task.
+
 Use the maintained runner for the lock family. [The workload catalog](../docs/BENCHMARK_WORKLOADS.md)
 defines protected operations and API parameters; [performance status](../docs/PERFORMANCE.md)
 summarizes the accepted version. Build and run only in the verified VM on
@@ -22,6 +27,8 @@ no timing acceptance or throughput score. Comparison timing rules stay unchanged
 | Sleeping reader/writer semaphore (rwsem) | [rwlock_compare/run.py](rwlock_compare/run.py), `--lock-kind rwsem --backends native tclock kdlock` | Same synthetic payloads; local readers and writers that may delegate, with `--delegate off` KD local control; original TCLock rwsem with fixed-affinity registered workers |
 | Proc snapshots | [rwlock_compare/run.py](rwlock_compare/run.py), `--lock-kind spin` | `argbounds` and exact `taskname`; separate from full procfs/ps |
 | Syscall/API | [real_api/run.py](real_api/run.py) | OFD, setfd, pipebytes, pipecap, seek, bounded UTS and xattr controls |
+| Private mapping/fault controls | [mmap_fault](mmap_fault/README.md) | Native independent-mm mmap/munmap; Native/KD/TCLock private-backing fault cycles, with actual mmap locks Native |
+| Actual mmap-lock comparison | [mmap_lock](mmap_lock/README.md), reusing [mmap_writer](mmap_writer/README.md) | Native/KD shared-mm untouched 4 KiB device mappings; separate from the planned 128 MiB anonymous mmap1 workload |
 
 Runner contracts: [spin/mutex](tclock_compare/README.md), [rwlock](rwlock_compare/README.md),
 [API](real_api/README.md). Shared client, peak analysis and snapshot code lives in
@@ -38,8 +45,10 @@ by FIFO service within the total 1024-body cap. See the
 ## Standard worker grid
 
 Use 21 counts: `1 2 3 4 5 6 7 8 12 16 20 24 28 32 36 40 44 48 52 56 60`.
-Workers use the CPU prefix 0 through N−1; collector 63 is separate. Use three
-repetitions per configuration. A plan preview for the mutex c01 case is:
+Workers use the CPU prefix 0 through N−1; collector 63 is separate. The standard
+confirmatory plan uses three repetitions per configuration. Explicit single-round
+screens and the nano runner's one-round default retain their own manifests and
+cannot establish repeat variability. A plan preview for mutex c01 is:
 
 ```sh
 python3 bench/tclock_compare/run_mutex.py --dry-run \

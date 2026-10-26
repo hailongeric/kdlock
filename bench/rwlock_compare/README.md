@@ -1,5 +1,10 @@
 # Reader/writer and proc snapshot comparisons
 
+These are stage 1 comparisons in the [project roadmap](../../docs/ROADMAP.md).
+They use explicit benchmark objects, including the mutex nano profiles below.
+Stage 2 actual-MM experiments use a separate kernel adapter; passing these
+rwsem workloads does not establish mmap1 or page-fault performance.
+
 Reader/writer spinlocks (rwlocks) permit concurrent readers or one exclusive
 writer and wait by spinning. Reader/writer semaphores (rwsems) can sleep while
 waiting. KD delegation lets a lock holder execute a waiting caller's work using

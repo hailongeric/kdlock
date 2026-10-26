@@ -1,5 +1,10 @@
 # Best-case nano profiles and controls
 
+This is stage 1 of the [project roadmap](../../docs/ROADMAP.md): establish the
+mechanism's favorable regime and retain its costs elsewhere. Gains here motivate
+the scoped MM experiments; they do not predict gains from local mmap locking or
+prove final kernel replacement performance.
+
 [`best_case.py`](best_case.py) runs small resident workloads for mutexes and
 sleeping reader/writer semaphores (rwsems). It is designed to expose favorable
 conditions for KD: resident data, helper-free critical sections, repeated access

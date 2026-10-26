@@ -1,5 +1,10 @@
 # Kernel correctness tests
 
+Use the [project roadmap](../../docs/ROADMAP.md) to identify whether a check
+supports a standalone lock, the actual-MM adapter or future broader integration.
+Passing a module-object probe does not establish kernel-wide API coverage, and
+passing an MM correctness case does not establish mmap1 throughput or parity.
+
 Organize tests by lock family or execution feature. A test directory owns its
 runner and guide; a correctness-only loadable module belongs in its `payload/`
 subdirectory. Keep the module Makefile, C source and ioctl header together so

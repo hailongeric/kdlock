@@ -1,9 +1,9 @@
-# Reader/writer and proc snapshot benchmark workload
+# Mutex, reader/writer and proc snapshot benchmark workload
 
 `rwlock_bench.ko` exposes `/dev/kd_rwlock_bench` for the
 [comparison runner](../../bench/rwlock_compare/README.md). Build variants select
 Linux native, TCLock or KD through `RB_BACKEND` and the locking shell through
-`RB_LOCK_KIND=rwlock|spin|rwsem`. All use the same timed worker loop, operation
+`RB_LOCK_KIND=rwlock|spin|rwsem|mutex`. All use the same timed worker loop, operation
 mix and payload. TCLock rwsem uses its original semaphore plus AQS reader gate. Workers register before their operation loop and drain after the client cohort exits.
 The runner defaults to RCUHT at 1% and 20% writes on its historical fifteen-count
 grid ending at 36 workers. Current standard comparisons must explicitly select
@@ -24,7 +24,17 @@ the earlier cacheline benchmark's multiply/add pattern;
 Its default is four rounds, independent of the shared spin/mutex post-work
 setting. RCUHT here is a globally locked hash workload, with no per-body
 allocation or RCU services; the name does not imply lock-free reader execution.
-Future cacheline benchmark selections use `RB_LINES=1` or `RB_LINES=8`.
+Ordinary reader/writer cacheline selections use `RB_LINES=1` or `RB_LINES=8`.
+
+The stage 1 [nano profiles](../../bench/nano/README.md) also use this payload.
+`RB_WORKLOAD=nano RB_LINES=2` selects two logical 64-bit words in one 64-byte
+record, not two cachelines. Its writers update both words and its readers check
+agreement. The mutex arm accepts this all-writer body or `RB_WORKLOAD=cacheline
+RB_LINES=16`, which updates sixteen separate cachelines. Mutex cacheline sizes
+other than 16 are rejected. `RB_MUTEX_DELEGATE=1` selects public ABI2 calls;
+zero selects the callable local control. All arms retain exact data and drain
+checks. The [project roadmap](../../docs/ROADMAP.md) keeps these module-object
+comparisons separate from actual-MM and final kernel replacement.
 
 `RB_LOCK_KIND=spin RB_WORKLOAD=argbounds|taskname RB_LINES=0` selects extracted
 Linux 6.1.159 proc snapshots. Argument bounds copy four related address fields;

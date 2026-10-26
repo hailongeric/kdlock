@@ -37,7 +37,13 @@ At 60 workers, shared-mm Native measured 70,350.82 cycles/s versus KD 6,752.42.
 These exploratory aggregate controls do not qualify the historical paired matrix.
 The VM returned to the recovery kernel with 73 modules, zero taint and no pending boot.
 
-Current priority is a [throughput-only Native/KD comparison](THROUGHPUT_PLAN.md)
+The [project roadmap](ROADMAP.md) places these results in three stages: micro/nano
+gains, scoped MM improvement or parity, then relevant kernel lock replacement
+and application evaluation. Favorable nano points do not close the MM gate;
+the current shared-mm results retain a substantial loss. An exact actual-backend
+will-it-scale `mmap1` comparison remains to be prepared.
+
+Current measurement priority is a [throughput-only Native/KD comparison](THROUGHPUT_PLAN.md)
 across documented lock workloads, actual shared-mm mmap and actual page faults.
 Substantial improvement is a hypothesis to test; report regressions honestly.
 New tail-latency collection and sampled workload variants are deferred. The

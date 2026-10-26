@@ -2,11 +2,17 @@
 
 This guide describes the original Native runner and its retained evidence.
 The current [built-in mmap comparison](../mmap_lock/README.md) reuses this payload
-and timed client with a separately checked kdmm31 Native/KD mode. Preparation has
-built compatible artifacts; the proposed six-boot, 24-session live cycle and
-root host capture still require explicit approval. No new timing has run.
+and timed client with a separately checked kdmm31 Native/KD mode. A qualified
+validation pair and the [October 26 exploratory MM screen](../results/10.176.26.71/bench/catalog-mmap-single-20261026/README.md)
+have completed under their own policies. The original 24-session proposal and
+later three-repeat scaling matrix retain their separate stopped/unrun status.
 This original runner's `NATIVE_MMAP_LOCK` labels cannot establish KD execution;
 use the linked guide's separate preparation, validation and measurement commands.
+
+This is a stage 2 diagnostic in the [project roadmap](../../docs/ROADMAP.md).
+It maps untouched 4 KiB read-only device ranges. The planned mmap1_threads target
+uses 128 MiB anonymous private read/write mappings with the same shared-mm
+topology; it requires a distinct runner/validation record.
 
 This workload measures actual Native `mm_struct::mmap_lock` writers. Pthreads
 share one address space and issue ordinary `mmap`/`munmap` calls without touching

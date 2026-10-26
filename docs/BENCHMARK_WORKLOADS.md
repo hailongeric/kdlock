@@ -5,6 +5,12 @@ interface (syscall/API) workloads selected for
 benchmarks on `master`. Use [benchmark commands](../bench/README.md) for execution and
 [performance status](PERFORMANCE.md) for measured outcomes. Selection is not
 a claim that the current KD version has passed every configuration.
+The [project roadmap](ROADMAP.md) separates micro/nano evidence, scoped actual-MM
+experiments and final kernel replacement. Its planned `mmap1_threads` comparison
+uses 128 MiB untouched anonymous private mappings and a real mmap-lock backend;
+`mmap1_processes` is a separate control. These are new comparison targets, not
+aliases for the existing 4 KiB device mapping or private-backing fault workloads,
+and do not change the completed catalog's workload count.
 The [terminology guide](TERMINOLOGY.md) explains lock names, execution status
 labels and measurement terms. In particular, a reader/writer spinlock (rwlock)
 waits by spinning, while a reader/writer semaphore (rwsem) can sleep while
@@ -53,14 +59,16 @@ establish current performance. Sleeping rwsem with
 outer writer delegation and extracted proc snapshots have explicit
 runner modes described below. Full [process inspection and mmap candidates](#process-inspection-and-mmap-candidates)
 remain proposals where stated, outside the runnable standard catalog. The current
-lock-only mmap adapter has prepared actual shared-mm writers. The current
-[throughput roadmap](THROUGHPUT_PLAN.md) proposes a separate 12-case plain plan
-and later actual page-fault throughput; new latency sampling is deferred.
+lock-only mmap adapter has actual shared-mm device-writer evidence. The
+[throughput campaign plan](THROUGHPUT_PLAN.md) retains the original 24/12-case
+plans and the distinct three-repeat scaling matrix alongside the completed
+single-round screen. Exact mmap1 comparison and actual page-fault throughput
+remain future work; new latency sampling is deferred.
 The earlier [24-case plain/sampled preparation](../bench/mmap_lock/README.md)
 has passed. Its authorized October 25 attempt
 [stopped at initial host admission](../bench/results/10.176.26.71/bench/mmap-kdmm31-paired-20261025/README.md)
-before any boot or workload: 73 QEMU tasks versus the required 67. No current
-qualified measurement resulted.
+before any boot or workload: 73 QEMU tasks versus the required 67. No qualified
+measurement resulted from that attempt.
 
 ## KD API use and delegation
 

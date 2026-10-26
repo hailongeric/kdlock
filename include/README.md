@@ -10,6 +10,11 @@ The [terminology guide](../docs/TERMINOLOGY.md) explains the remaining protocol
 terms. Local KD execution uses KD physical locking on the original caller;
 it does not mean using the Linux Native backend.
 
+The [project roadmap](../docs/ROADMAP.md) distinguishes these current explicit
+APIs from eventual kernel-wide call-site integration. Stage 3 must cover all
+users of each replaced object, including callable symbols and local variants;
+changing a typedef or a subset of lock macros is insufficient.
+
 | Interface | Files | Boundary |
 | --- | --- | --- |
 | Explicit spin object/API | [kd_spin_type.h](kd_spin_type.h), [kd_spin_direct.h](kd_spin_direct.h), [kd_spin_fast.h](kd_spin_fast.h) | One KD word; ordinary preemption pair; no Linux/TCLock mixing |

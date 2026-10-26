@@ -1,6 +1,20 @@
 # Built-in mmap lock performance
 
-Current work is throughput only. The prospective `plain-scaling-v1` plan selects
+This runner supplies the actual mmap-lock comparison for stage 2 of the
+[project roadmap](../../docs/ROADMAP.md). Its implemented workload is shared-mm
+4 KiB device mmap/munmap, with MM bodies local in both Native and KD modes.
+The planned upstream mmap1 comparison and actual fault-throughput driver require
+their own contracts; they cannot reuse these workload labels.
+
+The [October 26 screen](../results/10.176.26.71/bench/catalog-mmap-single-20261026/README.md)
+completed 42 Native/KD shared-mm measurements, one per backend/count, with exact
+aggregate accounting and drain. It is exploratory, retains the KD regression,
+and does not fill the historical three-repeat matrix below. A separately
+qualified 16-worker validation pair is also retained. Stage 2's improvement/parity
+objective remains open; the [campaign plan](../../docs/THROUGHPUT_PLAN.md) separates
+completed evidence from proposed work.
+
+Current measurement work is throughput only. The historical `plain-scaling-v1` plan selects
 **126 plain sessions** across 21 worker counts, Native/KD and three repetitions.
 It has [41 focused mocked test passes](../results/10.176.26.71/tests/mmap-scaling-plan-20261026/README.md);
 its [authorized live attempt](../results/10.176.26.71/bench/mmap-worker-scaling-20261026/README.md)

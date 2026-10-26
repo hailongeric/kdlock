@@ -1,5 +1,11 @@
 # Original TCLock spin, mutex, rwlock and rwsem ports
 
+These are the stage 1 reference backends in the [project roadmap](../docs/ROADMAP.md).
+TCLock's paper evaluated mmap1 using modified kernel lock implementations. This
+external-module port has no equivalent actual-MM integration; that is a local
+port limit, not a claim that the paper lacked a mmap comparison. A future stage 3
+reference needs a compatible full-kernel integration and matched baseline.
+
 These modules provide TCLock spinlocks, mutexes, rwlocks and rwsems for the x86_64
 benchmarks. Callers use `komb_spin_lock/unlock`, `komb_mutex_lock/unlock`, or the
 `komb_read/write` pairs, or `komb_rwsem_down/up_read/write`. Every caller sharing a lock must use that lock's TCLock

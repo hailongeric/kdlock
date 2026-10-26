@@ -1,5 +1,12 @@
 # Separate mmap-only and page-fault workloads
 
+These are supporting stage 2 controls in the [project roadmap](../../docs/ROADMAP.md).
+The selectable KD/TCLock lock protects private backing state, while actual mmap
+locks remain Native. The mmap-only loop never acquires that backing lock and has
+only a Native arm. These results cannot close the actual-MM gain/parity gate or
+replace the planned mmap1 comparison. "Private" describes driver ownership of
+the backing state; the measured mappings use `MAP_SHARED`.
+
 The October 26 single-round extension uses a separate explicit plan:
 `timing.py measure --single-round-grid --workload mmap` or `--workload fault`.
 It selects the standard 21 worker counts, one plain repetition and only the

@@ -4,6 +4,11 @@ All builds, unit tests, live modules, daemons and benchmarks run in the recovery
 VM on `10.176.26.71`. The source host performs edits, Git, static inspection and
 read-only offline evidence checks. See [development rules](../../AGENTS.md).
 
+These operations rules apply to all three [project stages](../ROADMAP.md).
+Stage 3's kernel replacement goal is a future integration task, not permission
+to modify, install or boot a kernel during documentation or microbenchmark work.
+Honor the concrete session authorization; do not ask again for authorized steps.
+
 ## Environment
 
 | Purpose | Location |

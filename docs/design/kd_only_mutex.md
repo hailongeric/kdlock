@@ -1,5 +1,10 @@
 # KD-only mutex replacement contract
 
+This is the per-object replacement contract used by stage 1 benchmarks and the
+foundation for stage 3 in the [project roadmap](../ROADMAP.md). It does not mean
+all Linux mutex objects or call sites have already been replaced. The scoped MM
+stage uses local rwsem operations and retains its separate semantic obligations.
+
 The main branch is `master`, retaining the KD physical-ownership foundation
 selected at `d2a2304` with the accepted `555b8b7` compatibility baseline. The tags
 `accepted/kd-only-mutex-20261018` and `accepted/kd-mutex-compat-20261017` retain

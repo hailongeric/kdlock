@@ -8,6 +8,11 @@ Do not start a second daemon alongside a runner-managed session.
 JIT means just-in-time compilation; ABI means application binary interface.
 The [terminology guide](../docs/TERMINOLOGY.md) defines execution and lifetime terms.
 
+The [project roadmap](../docs/ROADMAP.md) requires stage 3 integration to account
+for translation readiness, publication and retirement across kernel lifecycles.
+Today's daemon serves explicitly registered consumers; starting it does not
+replace kernel locks or enable delegation in the local mmap adapter.
+
 ## Build and command-line interface
 
 Build and run in the recovery guest after loading the matching provider:

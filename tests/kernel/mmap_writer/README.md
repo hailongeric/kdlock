@@ -1,5 +1,11 @@
 # Native shared-mm mmap writer correctness
 
+This original Native probe supports the scoped MM work in the
+[project roadmap](../../../docs/ROADMAP.md). The separately prepared
+[actual-backend comparison](../../../bench/mmap_lock/README.md) reuses the writer
+payload with its own Native/KD bindings. These 4 KiB device-mapping checks are
+not validation of the planned 128 MiB anonymous mmap1 workload.
+
 Run `run.py` only in the existing recovery VM with a current confirmed snapshot,
 committed source manifest and fresh host receipt. It builds the standalone
 Native observation module and client, runs both basic C checks, and then runs
