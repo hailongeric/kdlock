@@ -112,9 +112,16 @@ struct kd_exec_frame {
 	bool complex_ready;
 	bool regs_borrowed;
 	bool completion_seen;
-	u8 spin_kind : 1;
-	u8 spin_regs_decoded : 1;
-	u8 rwlock_admitted : 1;
+	/* Mutex roots initialize this byte without inheriting retired spin tags.
+	 * Spin producers still preserve their tags across generic preparation. */
+	union {
+		struct {
+			u8 spin_kind : 1;
+			u8 spin_regs_decoded : 1;
+			u8 rwlock_admitted : 1;
+		};
+		u8 queue_tags;
+	};
 	struct kd_regs regs;
 	struct kd_regs *regs_ref;
 	unsigned long gsbase;

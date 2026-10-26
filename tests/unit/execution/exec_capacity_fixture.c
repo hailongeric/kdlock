@@ -1029,13 +1029,36 @@ static bool mutex_routing_initialized(const struct kd_exec_frame *frame)
   frame->native_link.next==&frame->native_link && frame->native_link.prev==&frame->native_link;
 }
 
+/* The mutex initializer may reset the tag byte only after reserving unused
+ * root storage. Generic spin preparation must retain producer-populated tags. */
+static void frame_queue_tags(void)
+{
+ struct kd_exec_frame frame;
+
+ CHECK(sizeof(frame.queue_tags)==1 &&
+       offsetof(struct kd_exec_frame,queue_tags)==39 &&
+       offsetof(struct kd_exec_frame,regs)==40);
+ frame.queue_tags=0;
+ frame.spin_kind=KD_SPIN_CONT_VIRTUAL; CHECK(frame.queue_tags==1);
+ frame.spin_regs_decoded=true; CHECK(frame.queue_tags==3);
+ frame.rwlock_admitted=true; CHECK(frame.queue_tags==7);
+ frame.spin_kind=KD_SPIN_CONT_ROOT; CHECK(frame.queue_tags==6);
+ frame.spin_regs_decoded=false; CHECK(frame.queue_tags==4);
+ frame.rwlock_admitted=false; CHECK(frame.queue_tags==0);
+ for (unsigned int tags=0;tags<256;tags++) {
+  frame.queue_tags=tags;
+  kd_exec_frame_prepare(&frame,0x1000,0x2000,0x3000,&waiters[0]);
+  CHECK((frame.queue_tags & 7U)==(tags & 3U));
+ }
+}
+
 /* Exercise real batch push/retirement around an enclosing source lease. The
  * fake mutex checks owner identity; actual blocking/ACK has separate fixtures. */
 static void mutex_batch_frames(void)
 {
  struct kd_mutex lock = { .locked = true };
  struct kd_exec_outer_unlock hook = {0};
- struct kd_regs packet = registers(97), expected;
+ struct kd_regs packet = registers(97), expected, dormant_regs;
  struct kd_exec_frame *frame, saved, refused;
  struct kd_exec_context before;
 
@@ -1055,13 +1078,22 @@ static void mutex_batch_frames(void)
  CHECK(!memcmp(&before,kd_exec_current_context(),sizeof(before)) && source_frames==1);
  kd_exec_current_context()->owner=NULL;
  for (int round=0;round<2;round++) {
-  poison_mutex_routing(&kd_exec_current_context()->frames[0]);
+  frame=&kd_exec_current_context()->frames[0];
+  frame->queue_tags=0xff;
+  frame->regs=registers(101+round);
+  dormant_regs=frame->regs;
+  expected=packet;
+  poison_mutex_routing(frame);
   frame=kd_exec_frame_push_mutex_batch(&packet,0x1000,0x3000,&waiters[0],&lock,&hook);
   CHECK(frame && source_frames==1 && frame->batch_lease && frame->regs_borrowed);
   if (!frame) return;
   CHECK(frame->mutex_backend && frame->entry_abi==KD_ENTRY_ABI_MUTEX_CLOBBER_V1 &&
         frame->packet_state==KD_PACKET_MINIMAL && kd_exec_frame_validate(frame));
   CHECK(frame->jit_lock_node[0]==&lock && frame->jit_lock_addr[0]==(unsigned long)&lock);
+  CHECK(!frame->queue_tags && !frame->spin_kind && !frame->spin_regs_decoded &&
+        !frame->rwlock_admitted);
+  CHECK(!memcmp(&frame->regs,&dormant_regs,sizeof(dormant_regs)) &&
+        !memcmp(&packet,&expected,sizeof(packet)));
   CHECK(!frame->complex_ready && mutex_routing_poisoned(frame));
   CHECK(frame->outer_unlock_hook==&hook && kd_exec_frame_regs(frame)==&packet);
   if (round) {
@@ -1148,6 +1180,7 @@ int main(void)
 
 	CHECK(sizeof(struct kd_regs) == 168 &&
 	      offsetof(struct kd_exec_frame, regs) == 40);
+	frame_queue_tags();
 	mutex_batch_frames();
 	if (failures)
 		return 1;

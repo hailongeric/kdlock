@@ -268,7 +268,8 @@ struct kd_exec_frame *kd_exec_frame_push_mutex_batch(
 	frame->batch_lease = true;
 	frame->complex_ready = false;
 	frame->executed = false;
-	frame->rwlock_admitted = false;
+	/* No spin producer or rwlock admission belongs to this fresh mutex root. */
+	frame->queue_tags = 0;
 	frame->completion_seen = false;
 	frame->outer_unlock_seen = false;
 	frame->role = KD_ROLE_WAITER;
