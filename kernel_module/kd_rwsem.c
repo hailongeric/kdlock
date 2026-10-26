@@ -43,13 +43,23 @@ void kd_rwsem_init(struct kd_rwsem *sem)
 }
 EXPORT_SYMBOL_GPL(kd_rwsem_init);
 
-static void kd_rwsem_wake(wait_queue_head_t *queue)
+static void kd_rwsem_wake_drain(struct kd_rwsem *sem)
 {
-	/* Call only after a fully ordered count/phase RMW. Each predicate keeps
-	 * its own queue: reader drainage cannot enable a closed admission phase.
-	 * The RMW pairs with enqueue/recheck, including this lockless test. */
-	if (waitqueue_active(queue))
-		wake_up_all(queue);
+	/* The fully ordered reader-count RMW pairs with enqueue/recheck,
+	 * including this lockless test. Multiple delegation reservations may
+	 * wait for the same drain, so all of them must be notified. */
+	if (waitqueue_active(&sem->reader_drain))
+		wake_up_all(&sem->reader_drain);
+}
+
+static void kd_rwsem_wake_phase(struct kd_rwsem *sem)
+{
+	/* Call after the fully ordered RMW that reopens admission; it pairs with
+	 * enqueue/recheck, including this lockless test. Readers and delegation
+	 * reservations remain nonexclusive, ahead of exclusive ordinary writers.
+	 * Notify that prefix and one writer, which must still reserve admission. */
+	if (waitqueue_active(&sem->phase_wait))
+		wake_up(&sem->phase_wait);
 }
 
 void kd_up_read(struct kd_rwsem *sem)
@@ -60,7 +70,7 @@ void kd_up_read(struct kd_rwsem *sem)
 	 * strand them. No deferred reference outlives this ordered decrement. */
 	if (atomic_long_dec_and_test(&sem->readers) &&
 	    !irqs_disabled() && !in_atomic())
-		kd_rwsem_wake(&sem->reader_drain);
+		kd_rwsem_wake_drain(sem);
 }
 EXPORT_SYMBOL_GPL(kd_up_read);
 
@@ -137,13 +147,15 @@ static void kd_rwsem_release_local(struct kd_rwsem *sem)
 	/* Every ordinary writer retains this exclusive phase until after its
 	 * physical unlock. No delegated producer can have passed reader drain. */
 	BUG_ON(atomic_long_xchg(&sem->admission, 0) != KD_RWSEM_LOCAL_WRITER);
-	kd_rwsem_wake(&sem->phase_wait);
+	kd_rwsem_wake_phase(sem);
 }
 
 void kd_down_write(struct kd_rwsem *sem)
 {
 	might_sleep();
-	kd_rwsem_wait(sem->phase_wait, kd_rwsem_reserve_local(sem));
+	if (!kd_rwsem_poll(kd_rwsem_reserve_local(sem)))
+		wait_event_exclusive_cmd(sem->phase_wait,
+			kd_rwsem_reserve_local(sem), , );
 	kd_mutex_local_lock(&sem->gate);
 	kd_rwsem_drain_readers(sem, TASK_UNINTERRUPTIBLE);
 }
@@ -154,7 +166,8 @@ int kd_down_write_interruptible(struct kd_rwsem *sem)
 	int ret;
 
 	might_sleep();
-	ret = wait_event_interruptible(sem->phase_wait, kd_rwsem_reserve_local(sem));
+	ret = wait_event_interruptible_exclusive(sem->phase_wait,
+		kd_rwsem_reserve_local(sem));
 	if (ret)
 		return -EINTR;
 	ret = kd_mutex_lock_interruptible(&sem->gate);
@@ -164,7 +177,9 @@ int kd_down_write_interruptible(struct kd_rwsem *sem)
 			return 0;
 		kd_mutex_local_unlock(&sem->gate);
 	}
-	/* Wait macros remove their waiter before rollback reopens admission. */
+	/* Exclusive waits test the reservation before reporting a signal, so a
+	 * selected writer cannot discard an open phase's wakeup on cancellation.
+	 * They remove their waiter before rollback reopens admission. */
 	kd_rwsem_release_local(sem);
 	return -EINTR;
 }
@@ -175,7 +190,8 @@ int kd_down_write_killable(struct kd_rwsem *sem)
 	int ret;
 
 	might_sleep();
-	ret = wait_event_killable(sem->phase_wait, kd_rwsem_reserve_local(sem));
+	ret = wait_event_killable_exclusive(sem->phase_wait,
+		kd_rwsem_reserve_local(sem));
 	if (ret)
 		return -EINTR;
 	ret = kd_mutex_lock_killable(&sem->gate);
@@ -255,7 +271,7 @@ void kd_rwsem_delegate_exit(struct kd_rwsem *sem)
 
 	BUG_ON(remaining < 0);
 	if (!remaining)
-		kd_rwsem_wake(&sem->phase_wait);
+		kd_rwsem_wake_phase(sem);
 }
 EXPORT_SYMBOL_GPL(kd_rwsem_delegate_exit);
 
