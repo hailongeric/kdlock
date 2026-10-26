@@ -17,8 +17,8 @@ from test_mutex_terminal import production_sources
 
 MOCKS = r'''
 #define KDLOCK_MUTEX_DIAGNOSTICS 1
-#ifndef KDLOCK_SPIN_BATCH
-#define KDLOCK_SPIN_BATCH 1024
+#ifndef KDLOCK_MUTEX_BATCH
+#define KDLOCK_MUTEX_BATCH 1024
 #endif
 #define DEFINE_PER_CPU(type, name) type name
 #define this_cpu_add(name, value) ((name) += (value))
@@ -127,7 +127,8 @@ EXTRA = r'''
 def main():
     types, helpers, loop = production_sources()
     original = (ROOT/'tests/unit/mutex/mutex_terminal_fixture.c').read_text()
-    fixture = original.replace('#include "helpers.h"', MOCKS+'\n#include "helpers.h"')
+    fixture = original.replace('kd_mutex_batch_size=1024', 'kd_mutex_batch_size=KDLOCK_MUTEX_BATCH')
+    fixture = fixture.replace('#include "helpers.h"', MOCKS+'\n#include "helpers.h"')
     fixture = fixture.replace('static void finish(void)\n{',
                               'static void finish(void)\n{'+CHECKS)
     fixture = fixture.replace('    printf("PASS terminal queue:', EXTRA+'\n    printf("PASS terminal queue:')
@@ -175,14 +176,14 @@ def main():
         # The unchanged queue limit is enforced at build time for diagnostic
         # configurations; do not silently clamp or discard out-of-range data.
         for cap in (4096, 32767):
-            subprocess.run(command+[f'-DKDLOCK_SPIN_BATCH={cap}', '-fsyntax-only',
+            subprocess.run(command+[f'-DKDLOCK_MUTEX_BATCH={cap}', '-fsyntax-only',
                                      str(path/'fixture.c')], check=True, timeout=30)
         for cap in (0, 32768):
-            rejected = subprocess.run(command+[f'-DKDLOCK_SPIN_BATCH={cap}', '-fsyntax-only',
+            rejected = subprocess.run(command+[f'-DKDLOCK_MUTEX_BATCH={cap}', '-fsyntax-only',
                                                 str(path/'fixture.c')],
                                       text=True, capture_output=True, timeout=30)
             assert rejected.returncode != 0 and (
-                'mutex diagnostic completed histogram does not cover KDLOCK_SPIN_BATCH'
+                'mutex diagnostic completed histogram does not cover KDLOCK_MUTEX_BATCH'
                 in rejected.stderr), (cap, rejected.returncode, rejected.stderr)
 
         # Undefined poisoned arguments must disappear before compilation. The

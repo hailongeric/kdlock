@@ -28,12 +28,23 @@ def parser():
     p.add_argument('--post-work-rounds', type=int,
                    help='override all profiles; defaults: mutex-locality=64, other profiles=4')
     p.add_argument('--delegate', choices=('on', 'off'), default='on')
+    p.add_argument('--mutex-batch-limit', type=int, default=1024,
+                   help='KD mutex-only experimental total service cap; default 1024')
+    p.add_argument('--mutex-numa-boundary', type=int, default=256,
+                   help='KD mutex-only experimental NUMA cohort boundary; default 256')
     p.add_argument('--functional', action='store_true')
     p.add_argument('--plan-only', action='store_true')
     return p
 
 
 def commands(args):
+    cap, boundary = args.mutex_batch_limit, args.mutex_numa_boundary
+    if not (type(cap) is int and type(boundary) is int and 1 <= cap <= 32767 and 1 <= boundary <= 32767):
+        raise ValueError('mutex policy requires total cap and NUMA boundary in 1..32767')
+    if (cap, boundary) != (1024, 256) and not (
+            all(PROFILES[name][0] == 'mutex' for name in args.profiles) and
+            'kdlock' in args.backends and args.delegate == 'on'):
+        raise ValueError('nondefault mutex policy requires only public KD mutex profiles')
     for values in (args.profiles, args.threads, args.backends):
         if not values or len(values) != len(set(values)):
             raise ValueError('empty or duplicate selection')
@@ -55,6 +66,7 @@ def commands(args):
             '--collector-cpu', '63', '--backends', *args.backends,
             '--repeats', str(args.repeats), '--duration-ms', '2000',
             '--post-work-rounds', str(post_work), '--delegate', args.delegate,
+            '--mutex-batch-limit', str(cap), '--mutex-numa-boundary', str(boundary),
             *(['--functional'] if args.functional else []),
             '--kernel-source', '/root/linux-6.1.159-kdclobber2',
             '--kernel-baseline', '/root/kdlock-kernel-baselines/mutex-clobber2-20260919',
@@ -84,7 +96,10 @@ def main():
         (out/'source-sha256.json').write_text(json.dumps(frozen, indent=2)+'\n')
         (out/'commands.json').write_text(json.dumps(plan, indent=2)+'\n')
         receipt = dict(pid=os.getpid(), boot_id=Path('/proc/sys/kernel/random/boot_id').read_text().strip(),
-                       source_sha256=hashlib.sha256(Path(__file__).read_bytes()).hexdigest(), blocks=[])
+                       source_sha256=hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
+                       provider_mutex_policy=dict(total_cap=args.mutex_batch_limit,
+                           numa_boundary=args.mutex_numa_boundary, deferred_handoff=8, scan_budget=64),
+                       blocks=[])
         for name, command in plan:
             if sources() != frozen:
                 raise RuntimeError('campaign sources changed between profiles')

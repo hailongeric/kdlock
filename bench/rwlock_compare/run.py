@@ -54,6 +54,10 @@ def parser():
     p.add_argument('--iterations', type=int, default=50000, help='per worker for fixed/functional runs')
     p.add_argument('--post-work-rounds', type=int, default=4)
     p.add_argument('--spin-entry-ratio-limit', type=int, default=2)
+    p.add_argument('--mutex-batch-limit', type=int, default=1024,
+                   help='KD mutex-only experimental total service cap; default 1024')
+    p.add_argument('--mutex-numa-boundary', type=int, default=256,
+                   help='KD mutex-only experimental NUMA cohort boundary; default 256')
     p.add_argument('--delegate', choices=('on', 'off'), default='on',
                    help='KD local control when off; rwsem compiles the ordinary API shell')
     p.add_argument('--require-jit', action='store_true',
@@ -66,7 +70,18 @@ def parser():
     return p
 
 
+def mutex_policy(args):
+    cap, boundary = args.mutex_batch_limit, args.mutex_numa_boundary
+    require(type(cap) is int and type(boundary) is int and 1 <= cap <= 32767 and 1 <= boundary <= 32767,
+            'mutex policy requires total cap and NUMA boundary in 1..32767')
+    require((cap, boundary) == (1024, 256) or
+            (args.lock_kind == 'mutex' and 'kdlock' in args.backends and args.delegate == 'on'),
+            'nondefault mutex policy requires a public KD mutex experiment')
+    return dict(total_cap=cap, numa_boundary=boundary, deferred_handoff=8, scan_budget=64)
+
+
 def make_plan(args):
+    policy = mutex_policy(args)
     require(0 <= args.helper_waves <= 16, 'helper waves must be 0..16')
     require(2 <= args.helper_workers <= 16, 'helper workers must be 2..16')
     snapshots = {'taskname', 'argbounds'}
@@ -166,7 +181,8 @@ def make_plan(args):
                 numa_policy='on' if arm != 'native' and (args.lock_kind != 'rwsem' or rwsem_direct or arm == 'tclock')
                     else 'not_applicable',
                 provider_ubsan='off',
-                delegation_batch_limit=1024 if arm != 'native' and
+                provider_mutex_policy=dict(policy) if arm == 'kdlock' else None,
+                delegation_batch_limit=policy['total_cap'] if mutex_direct else 1024 if arm != 'native' and
                     (args.lock_kind not in ('rwsem', 'mutex') or rwsem_direct or mutex_direct or arm == 'tclock') else None))
     return plan
 
@@ -263,6 +279,7 @@ def sources():
 
 
 def build(args, out, plan, *, mutex_diag=False):
+    policy = mutex_policy(args)
     source = out / 'source'
     builds = out / 'build'
     builds.mkdir()
@@ -276,13 +293,17 @@ def build(args, out, plan, *, mutex_diag=False):
         prepare_provider(provider, source)
         command(['make', '-C', provider / 'kernel_module', f'KDIR={args.kernel_source}', 'W=1',
                  'KDLOCK_SELFTEST=0', 'KDLOCK_NUMA=1', 'KDLOCK_SPIN_BATCH=1024',
+                 f'KDLOCK_MUTEX_BATCH={policy["total_cap"]}',
+                 f'KDLOCK_MUTEX_NUMA_BOUNDARY={policy["numa_boundary"]}',
                  f'KDLOCK_MUTEX_DIAGNOSTICS={int(mutex_diag)}', 'UBSAN_SANITIZE=n'],
                 out / 'build-kdlock.log', timeout=180)
         binaries['kdlock'] = provider / 'kernel_module/kdlock_km.ko'
         command(['make', '-C', source / 'daemon', 'CFLAGS=-O2 -Wall -Wextra -Werror'],
                 out / 'build-daemon.log', timeout=120)
         binaries['daemon'] = source / 'daemon/daemon'
-        for field, expected in (('spin_numa', '1'), ('spin_batch', '1024'), ('mutex_batch', '1024'),
+        for field, expected in (('spin_numa', '1'), ('spin_batch', '1024'),
+                                ('mutex_batch', str(policy['total_cap'])),
+                                ('mutex_numa_boundary', str(policy['numa_boundary'])),
                                 ('mutex_batch_diag', str(int(mutex_diag)))):
             require(command(['modinfo', '-F', field, binaries['kdlock']], out / (field + '.txt')).strip() == expected,
                     'KD compiled policy differs')

@@ -163,6 +163,22 @@ class NanoProfileTests(unittest.TestCase):
             child.terminate.assert_not_called()
             self.assertEqual(json.loads((out / 'perf-command.json').read_text())['state'], 'UNKNOWN_DRAIN')
 
+    def test_policy_cli_is_forwarded_and_invalid_policy_precedes_live_work(self):
+        base = ['--mode', 'batch', '--output', '/tmp/new-profile', '--source-commit', 'a' * 40]
+        for cap, boundary in ((1024, 256), (4096, 256), (1024, 768)):
+            args = profile.parser().parse_args(base + ['--mutex-batch-limit', str(cap),
+                                                      '--mutex-numa-boundary', str(boundary)])
+            argv = profile.runner_arguments(args, 'mutex')
+            self.assertEqual(argv[argv.index('--mutex-batch-limit') + 1], str(cap))
+            self.assertEqual(argv[argv.index('--mutex-numa-boundary') + 1], str(boundary))
+        for extra in (['--mutex-batch-limit', '0'], ['--mutex-batch-limit', '32768'],
+                      ['--mutex-numa-boundary', '0'], ['--mutex-numa-boundary', '32768'],
+                      ['--mutex-batch-limit', '4096', '--backends', 'native']):
+            with self.subTest(extra=extra), patch.object(profile.sys, 'argv', ['profile.py', *base, *extra]), \
+                    patch.object(profile.os, 'geteuid') as identity, self.assertRaises(ValueError):
+                profile.main()
+            identity.assert_not_called()
+
     def test_default_profile_matrix_preserves_body_and_post_work(self):
         args = profile.parser().parse_args(['--mode', 'stat', '--output', '/tmp/new-profile',
                                            '--source-commit', 'a' * 40])
@@ -196,6 +212,21 @@ class NanoProfileTests(unittest.TestCase):
 
 
 class NanoBatchSnapshotTests(unittest.TestCase):
+    def test_nondefault_batch_metadata_requires_the_exact_recorded_policy(self):
+        for cap, boundary in ((4096, 256), (1024, 768)):
+            policy = dict(total_cap=cap, numa_boundary=boundary, deferred_handoff=8, scan_budget=64)
+            before, after = batch_snapshot(), batch_snapshot(2)
+            before.update(policy)
+            after.update(policy)
+            self.assertEqual(profile.batch_delta(before, after, 10, policy), before)
+            with self.assertRaises(ValueError):
+                profile.validate_batch(before)
+            with self.assertRaises(ValueError):
+                profile.batch_delta(before, batch_snapshot(2), 10, policy)
+            invalid = dict(policy, scan_budget=65)
+            with self.assertRaises(ValueError):
+                profile.validate_batch(dict(before, **invalid), invalid)
+
     def test_valid_snapshot_and_delta_preserve_metadata_and_inputs(self):
         zero, before, after = batch_snapshot(0), batch_snapshot(), batch_snapshot(2)
         original = deepcopy((zero, before, after))

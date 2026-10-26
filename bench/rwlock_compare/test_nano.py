@@ -36,6 +36,62 @@ class NanoTests(unittest.TestCase):
             plan = run.make_plan(run.parser().parse_args(argv[2:]))
             self.assertTrue(all(r['post_work_rounds'] == 4 for r in plan))
 
+    def test_launcher_forwards_policy_only_for_public_mutex_profiles(self):
+        path = Path(__file__).resolve().parents[1] / 'nano/best_case.py'
+        spec = importlib.util.spec_from_file_location('nano_policy_launcher_test', path)
+        launcher = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(launcher)
+        base = ['--output', '/tmp/nano-policy-plan', '--profiles', 'mutex', 'mutex-locality',
+                '--threads', '16', '--plan-only']
+        for cap, boundary in ((1024, 256), (4096, 256), (1024, 768)):
+            args = launcher.parser().parse_args(base + ['--mutex-batch-limit', str(cap),
+                                                       '--mutex-numa-boundary', str(boundary)])
+            for _, argv in launcher.commands(args):
+                plan = run.make_plan(run.parser().parse_args(argv[2:]))
+                kd = next(row for row in plan if row['arm'] == 'kdlock')
+                self.assertEqual(kd['provider_mutex_policy'], dict(total_cap=cap,
+                    numa_boundary=boundary, deferred_handoff=8, scan_budget=64))
+        invalid = [['--mutex-batch-limit', '0'], ['--mutex-batch-limit', '32768'],
+                   ['--mutex-numa-boundary', '0'], ['--mutex-numa-boundary', '32768'],
+                   ['--mutex-batch-limit', '4096', '--delegate', 'off'],
+                   ['--mutex-batch-limit', '4096', '--backends', 'native'],
+                   ['--mutex-batch-limit', '4096', '--profiles', 'mutex', 'rwsem-read']]
+        for extra in invalid:
+            with self.subTest(extra=extra), patch.object(launcher.sys, 'argv', ['best_case.py', *base, *extra]), \
+                    patch.object(launcher.subprocess, 'Popen') as launch, self.assertRaises(ValueError):
+                launcher.main()
+            launch.assert_not_called()
+        defaults = launcher.parser().parse_args(['--output', '/tmp/nano-policy-plan',
+                                                '--mutex-batch-limit', '4096'])
+        with self.assertRaises(ValueError):
+            list(launcher.commands(defaults))
+
+    def test_mutex_policy_is_independent_and_invalid_cli_stops_before_build(self):
+        base = ['--lock-kind', 'mutex', '--workloads', 'nano', '--write-percent', '100',
+                '--threads', '16', '--collector-cpu', '63', '--repeats', '1']
+        for cap, boundary in ((1024, 256), (4096, 256), (1024, 768), (4096, 768)):
+            plan = run.make_plan(run.parser().parse_args(base +
+                ['--mutex-batch-limit', str(cap), '--mutex-numa-boundary', str(boundary)]))
+            kd = next(row for row in plan if row['arm'] == 'kdlock')
+            self.assertEqual(kd['delegation_batch_limit'], cap)
+            self.assertEqual(kd['provider_mutex_policy'], dict(total_cap=cap,
+                numa_boundary=boundary, deferred_handoff=8, scan_budget=64))
+            tc = next(row for row in plan if row['arm'] == 'tclock')
+            self.assertEqual(tc['delegation_batch_limit'], 1024)
+            self.assertIsNone(tc['provider_mutex_policy'])
+            self.assertIsNone(next(row for row in plan if row['arm'] == 'native')['provider_mutex_policy'])
+        invalid = [['--mutex-batch-limit', '0'], ['--mutex-batch-limit', '32768'],
+                   ['--mutex-numa-boundary', '0'], ['--mutex-numa-boundary', '32768'],
+                   ['--mutex-batch-limit', '4096', '--delegate', 'off'],
+                   ['--mutex-batch-limit', '4096', '--backends', 'native'],
+                   ['--mutex-batch-limit', '4096', '--lock-kind', 'rwsem']]
+        for extra in invalid:
+            with self.subTest(extra=extra), patch.object(run, 'idle') as idle, \
+                    patch.object(run, 'build') as build, self.assertRaises(run.Failure):
+                run.main(base + extra)
+            idle.assert_not_called()
+            build.assert_not_called()
+
     def test_locality_profile_checks_every_counter_and_returned_body(self):
         args = run.parser().parse_args(['--lock-kind', 'mutex', '--workloads', 'cacheline',
             '--cachelines', '16', '--write-percent', '100', '--threads', '1', '60',

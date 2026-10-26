@@ -23,9 +23,9 @@ MODULE_INFO(mutex_batch_diag, __stringify(KDLOCK_MUTEX_DIAGNOSTICS));
  * Bin zero stores zero; the last bins cover 16384..32767 and 64..127. */
 #define KD_MUTEX_DIAG_COMPLETED_BINS 16
 #define KD_MUTEX_DIAG_DEFERRED_BINS 8
-#if KDLOCK_SPIN_BATCH <= 0 || \
-    KDLOCK_SPIN_BATCH >= (1U << (KD_MUTEX_DIAG_COMPLETED_BINS - 1))
-#error "mutex diagnostic completed histogram does not cover KDLOCK_SPIN_BATCH"
+#if KDLOCK_MUTEX_BATCH <= 0 || \
+    KDLOCK_MUTEX_BATCH >= (1U << (KD_MUTEX_DIAG_COMPLETED_BINS - 1))
+#error "mutex diagnostic completed histogram does not cover KDLOCK_MUTEX_BATCH"
 #endif
 #define KD_MUTEX_DIAG_REASONS(X) \
 	X(UNCLASSIFIED, unclassified) \
@@ -192,9 +192,10 @@ static int kd_mutex_batch_stats_get(char *buffer, const struct kernel_param *kp)
 #define KD_MUTEX_DIAG_PRINT(fmt, ...) \
 	(length += scnprintf(buffer + length, PAGE_SIZE - length, fmt, ##__VA_ARGS__))
 	KD_MUTEX_DIAG_PRINT("{\"schema\":2,\"compiled\":1,\"total_cap\":%u,"
-		"\"numa_boundary\":256,\"deferred_handoff\":8,\"scan_budget\":64,"
+		"\"numa_boundary\":%u,\"deferred_handoff\":8,\"scan_budget\":64,"
 		"\"completed_hist_bins\":%u,\"deferred_peak_hist_bins\":%u,",
-		kd_mutex_batch_size, KD_MUTEX_DIAG_COMPLETED_BINS,
+		kd_mutex_batch_size, (unsigned int)KDLOCK_MUTEX_NUMA_BOUNDARY,
+		KD_MUTEX_DIAG_COMPLETED_BINS,
 		KD_MUTEX_DIAG_DEFERRED_BINS);
 #ifdef NUMA_AWARE
 	KD_MUTEX_DIAG_PRINT("\"numa_aware\":1,");

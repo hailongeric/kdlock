@@ -29,7 +29,7 @@ struct kd_mutex_batch {
 
 /* Only detach a fully linked node. Its successor remains the published tail
  * chain, so no enqueuer can subsequently write the detached node's next link.
- * A finite scan and a 256-body local cohort bound keep remote requests from
+ * A finite scan and a configured local cohort bound keep remote requests from
  * being bypassed indefinitely. Deferred requests receive service or physical
  * handoff first at that boundary. Longer local cohorts amortize owner transfer
  * while keeping a substantial remote cohort on its own socket. */
@@ -478,10 +478,10 @@ kd_mutex_run_combiner(struct kd_mutex *lock, struct kd_mutex_node *curr_node)
 		 * A substantial remote cohort receives the next physical owner;
 		 * that owner can serve the cohort on its own socket. */
 		if (batch.deferred_head &&
-		    (counter >= 256 || !smp_load_acquire(&curr_node->next))) {
+		    (counter >= KDLOCK_MUTEX_NUMA_BOUNDARY || !smp_load_acquire(&curr_node->next))) {
 			if (batch.deferred_count >= 8) {
 				KD_MUTEX_DIAG_STOP(&batch,
-					counter >= 256 ? KD_MUTEX_DIAG_NUMA_BOUNDARY :
+					counter >= KDLOCK_MUTEX_NUMA_BOUNDARY ? KD_MUTEX_DIAG_NUMA_BOUNDARY :
 					KD_MUTEX_DIAG_NUMA_TAIL);
 				break;
 			}

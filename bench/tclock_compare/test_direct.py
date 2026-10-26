@@ -371,6 +371,22 @@ ret
             kd = [r for r in rows if r['arm'] == 'kdlock']
             self.assertEqual([r['throughput_over_linux'] for r in kd], [0.5, 0.75])
 
+    def test_legacy_mutex_batch_option_reaches_the_independent_build_knob(self):
+        for kind in ('spin', 'mutex'):
+            for cap in (1, 128, 1024):
+                args = Namespace(numa='on', kd_batch_size=cap, cachelines=[1],
+                                 threads=[8], repeats=1, iterations=100,
+                                 backends=['kdlock'], lock_kind=kind)
+                build = run.provider_build(args)
+                self.assertIn(f'KDLOCK_SPIN_BATCH={cap}', build)
+                self.assertIn(f'KDLOCK_MUTEX_BATCH={cap if kind == "mutex" else 1024}', build)
+                self.assertIn('KDLOCK_MUTEX_NUMA_BOUNDARY=256', build)
+                row, = run.make_plan(args)
+                self.assertEqual(row['delegation_batch_limit'], cap)
+                self.assertEqual(row['provider_mutex_policy'], dict(
+                    total_cap=cap if kind == 'mutex' else 1024,
+                    numa_boundary=256, deferred_handoff=8, scan_budget=64))
+
     def test_provider_ubsan_option_and_private_build(self):
         # Both entrypoints default to off; explicit policies and direct helper
         # callers must agree with the policy saved in every new session.

@@ -66,10 +66,11 @@
 
 #define _Q_LOCKED_COMBINER_VAL KD_MUTEX_GATE_COMBINER
 
-/* Share the runner's configured upper bound with spin; NUMA fairness may
- * hand off earlier. The default remains 1024 in the provider Makefile. */
-static const unsigned int kd_mutex_batch_size = KDLOCK_SPIN_BATCH;
-MODULE_INFO(mutex_batch, __stringify(KDLOCK_SPIN_BATCH));
+/* Independent mutex limits bound one physical-owner service interval.
+ * NUMA fairness may hand off earlier; defaults remain 1024 and 256. */
+static const unsigned int kd_mutex_batch_size = KDLOCK_MUTEX_BATCH;
+MODULE_INFO(mutex_batch, __stringify(KDLOCK_MUTEX_BATCH));
+MODULE_INFO(mutex_numa_boundary, __stringify(KDLOCK_MUTEX_NUMA_BOUNDARY));
 
 /* Observations and pinned lifecycle balances use separate per-CPU storage. */
 KD_MUTEX_STAT(kd_mutex_slowpath_count);

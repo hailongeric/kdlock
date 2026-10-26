@@ -15,6 +15,22 @@
  * Linux mutex objects and waiters never participate in this protocol.
  */
 
+/* Build-time experiment bounds. Independent of spin batching; these values
+ * change fairness/amortization policy, never physical exclusion or retirement.
+ * The diagnostic histogram covers the full permitted total-cap range. */
+#ifndef KDLOCK_MUTEX_BATCH
+#define KDLOCK_MUTEX_BATCH 1024
+#endif
+#ifndef KDLOCK_MUTEX_NUMA_BOUNDARY
+#define KDLOCK_MUTEX_NUMA_BOUNDARY 256
+#endif
+#if KDLOCK_MUTEX_BATCH < 1 || KDLOCK_MUTEX_BATCH > 32767
+#error "KDLOCK_MUTEX_BATCH must be 1..32767"
+#endif
+#if KDLOCK_MUTEX_NUMA_BOUNDARY < 1 || KDLOCK_MUTEX_NUMA_BOUNDARY > 32767
+#error "KDLOCK_MUTEX_NUMA_BOUNDARY must be 1..32767"
+#endif
+
 #define KD_MUTEX_SHADOW_STACK_SIZE 8192L
 #define KD_MUTEX_MAX_NODES 4 /* concurrent waiter slots per CPU */
 #define KD_MUTEX_GATE_COMBINER 3 /* existing gate state while servicing a batch */

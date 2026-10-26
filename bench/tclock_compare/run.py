@@ -87,7 +87,9 @@ def provider_build(args):
     # the kernel's sanitizer policy and all explicit protocol checks.
     build = ['make', '-C', HERE, 'provider',
              f'KDLOCK_NUMA={int(args.numa == "on")}',
-             f'KDLOCK_SPIN_BATCH={args.kd_batch_size}']
+             f'KDLOCK_SPIN_BATCH={args.kd_batch_size}',
+             f'KDLOCK_MUTEX_BATCH={args.kd_batch_size if getattr(args, "lock_kind", "spin") == "mutex" else 1024}',
+             'KDLOCK_MUTEX_NUMA_BOUNDARY=256']
     if getattr(args, 'kd_provider_ubsan', DEFAULT_KD_PROVIDER_UBSAN) == 'off':
         build.append('UBSAN_SANITIZE=n')
     return build
@@ -179,6 +181,8 @@ def make_plan(args):
                 kd_provider_ubsan=provider_ubsan if backend == 'kdlock' else 'not_applicable',
                 numa_policy=numa if backend != 'native' else 'not_applicable',
                 delegation_batch_limit=batch if backend == 'kdlock' else (1024 if backend == 'tclock' else None),
+                provider_mutex_policy=dict(total_cap=batch if lock_kind == 'mutex' else 1024,
+                    numa_boundary=256, deferred_handoff=8, scan_budget=64) if backend == 'kdlock' else None,
                 pmu=getattr(args, 'pmu', False),
                 perf_record=getattr(args, 'perf_record', False),
                 diagnostic=bool(getattr(args, 'pmu', False) or getattr(args, 'perf_record', False)),
@@ -367,7 +371,7 @@ def main(lock_kind='spin'):
     p.add_argument('--numa', choices=('on', 'off'), default='on',
                    help='build NUMA queue selection for KD and TCLock')
     p.add_argument('--kd-batch-size', type=int, default=1024,
-                   help='maximum KD delegated bodies and NUMA scan budget per batch (1..1024)')
+                   help='maximum KD delegated bodies (1..1024); also spin scan budget, mutex scan remains 64')
     p.add_argument('--kd-provider-ubsan', choices=('kernel', 'off'),
                    default=DEFAULT_KD_PROVIDER_UBSAN,
                    help='private benchmark provider only: disable UBSAN instrumentation '
@@ -499,6 +503,9 @@ def main(lock_kind='spin'):
                                           out/'kdlock-mutex-batch.txt').strip()
                     require(mutex_batch == str(args.kd_batch_size),
                             'KD mutex batch build identity differs')
+                    mutex_boundary = command(['modinfo', '-F', 'mutex_numa_boundary', binary],
+                                             out/'kdlock-mutex-numa-boundary.txt').strip()
+                    require(mutex_boundary == '256', 'KD mutex NUMA boundary build identity differs')
                 audit_provider_ubsan(out, args.kd_provider_ubsan)
         if 'tclock' in args.backends:
             # Check the actual ELF: changing a Kbuild variable must not leave a

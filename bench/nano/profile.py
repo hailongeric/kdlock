@@ -79,15 +79,39 @@ def observation_delta(before, after):
     return result
 
 
-def validate_batch(snapshot):
+def batch_metadata(policy=None):
+    result = dict(BATCH_METADATA)
+    if policy is not None:
+        require(isinstance(policy, dict) and set(policy) ==
+                {'total_cap', 'numa_boundary', 'deferred_handoff', 'scan_budget'},
+                'unexpected mutex policy schema')
+        require(all(type(value) is int for value in policy.values()) and
+                1 <= policy['total_cap'] <= 32767 and 1 <= policy['numa_boundary'] <= 32767 and
+                policy['deferred_handoff'] == 8 and policy['scan_budget'] == 64,
+                'invalid mutex policy')
+        result.update(policy)
+    return result
+
+
+def selected_mutex_policy(args):
+    policy = dict(total_cap=args.mutex_batch_limit, numa_boundary=args.mutex_numa_boundary,
+                  deferred_handoff=8, scan_budget=64)
+    batch_metadata(policy)
+    require((args.mutex_batch_limit, args.mutex_numa_boundary) == (1024, 256) or
+            'kdlock' in selected_backends(args), 'nondefault mutex policy requires KD')
+    return policy
+
+
+def validate_batch(snapshot, policy=None):
     """Quiescent diagnostic identities only; these never replace exact drain."""
+    metadata = batch_metadata(policy)
     require(isinstance(snapshot, dict) and set(snapshot) ==
             set(BATCH_METADATA) | set(BATCH_COUNTERS) | set(BATCH_HISTOGRAMS) | {'stop_reason', 'legacy'},
             'unexpected batch diagnostic schema')
     def counter(value):
         return type(value) is int and 0 <= value <= 2**64 - 1
     require(all(type(snapshot[key]) is int and snapshot[key] == value
-                for key, value in BATCH_METADATA.items()), 'batch diagnostic metadata differs')
+                for key, value in metadata.items()), 'batch diagnostic metadata differs')
     require(all(counter(snapshot[key]) for key in BATCH_COUNTERS), 'invalid batch counter')
     for key in BATCH_HISTOGRAMS:
         require(isinstance(snapshot[key], list) and len(snapshot[key]) == snapshot[key + '_bins'] and
@@ -121,16 +145,16 @@ def validate_batch(snapshot):
     return snapshot
 
 
-def batch_delta(before, after, expected_completions=None):
-    validate_batch(before)
-    validate_batch(after)
-    result = dict(BATCH_METADATA)
+def batch_delta(before, after, expected_completions=None, policy=None):
+    validate_batch(before, policy)
+    validate_batch(after, policy)
+    result = batch_metadata(policy)
     result.update({key: after[key] - before[key] for key in BATCH_COUNTERS})
     for key in BATCH_HISTOGRAMS:
         result[key] = [b - a for a, b in zip(before[key], after[key])]
     for key in ('stop_reason', 'legacy'):
         result[key] = {field: after[key][field] - before[key][field] for field in before[key]}
-    validate_batch(result)
+    validate_batch(result, policy)
     if expected_completions is not None:
         require(type(expected_completions) is int and expected_completions >= 0 and
                 result['jit_completed'] == expected_completions,
@@ -326,7 +350,8 @@ def profiled_session(runner, args, perf, perf_sha):
             if args.mode == 'batch':
                 require(self.loaded_kd, 'batch diagnostics require KD provider')
                 batch_path = Path('/sys/module/kdlock_km/parameters/mutex_batch_stats')
-                batch_before = validate_batch(json.loads(batch_path.read_text()))
+                policy = self.record['provider_mutex_policy']
+                batch_before = validate_batch(json.loads(batch_path.read_text()), policy)
                 save(self.path / 'batch-before.json', batch_before)
                 self.record['batch_diagnostics'] = dict(status='BEFORE_ONLY', before=batch_before)
             self.save()
@@ -339,8 +364,8 @@ def profiled_session(runner, args, perf, perf_sha):
                     scope='Quiescent reads outside perf; after warmup through measured client completion; observational counters do not establish drain')
                 self.save()
             if args.mode == 'batch':
-                batch_after = validate_batch(json.loads(batch_path.read_text()))
-                delta = batch_delta(batch_before, batch_after, self.record['jit_completions'])
+                batch_after = validate_batch(json.loads(batch_path.read_text()), policy)
+                delta = batch_delta(batch_before, batch_after, self.record['jit_completions'], policy)
                 save(self.path / 'batch-after.json', batch_after)
                 save(self.path / 'batch-delta.json', delta)
                 self.record['batch_diagnostics'].update(status='OBSERVED', after=batch_after, delta=delta,
@@ -405,6 +430,8 @@ def parser():
     p.add_argument('--threads', nargs='+', type=int, choices=(16, 32, 36, 60), default=[16, 36, 60])
     p.add_argument('--backends', nargs='+', choices=('native', 'kdlock'))
     p.add_argument('--frequency', type=int, choices=(199, 499, 997), default=499)
+    p.add_argument('--mutex-batch-limit', type=int, default=1024)
+    p.add_argument('--mutex-numa-boundary', type=int, default=256)
     p.add_argument('--record-event', default='cycles:k')
     p.add_argument('--events', nargs='+', default=list(EVENTS))
     p.add_argument('--allow-multiplex', action='store_true')
@@ -417,12 +444,15 @@ def selected_backends(args):
 
 
 def runner_arguments(args, profile):
+    selected_mutex_policy(args)
     workload, lines, post = PROFILES[profile]
     return ['--output', str(args.output.resolve() / profile), '--lock-kind', 'mutex',
         '--workloads', workload, '--cachelines', str(lines), '--write-percent', '100',
         '--threads', *map(str, args.threads), '--cpus', *map(str, range(max(args.threads))),
         '--collector-cpu', '63', '--backends', *selected_backends(args), '--repeats', '1',
         '--duration-ms', '2000', '--post-work-rounds', str(post),
+        '--mutex-batch-limit', str(args.mutex_batch_limit),
+        '--mutex-numa-boundary', str(args.mutex_numa_boundary),
         '--kernel-source', '/root/linux-6.1.159-kdclobber2',
         '--kernel-baseline', '/root/kdlock-kernel-baselines/mutex-clobber2-20260919']
 
@@ -430,6 +460,7 @@ def runner_arguments(args, profile):
 def main():
     args = parser().parse_args()
     args.backends = selected_backends(args)
+    policy = selected_mutex_policy(args)
     require(args.mode != 'batch' or args.backends == ['kdlock'], 'batch diagnostics support the KD provider only')
     for values in (args.profiles, args.threads, args.backends, args.events):
         require(values and len(values) == len(set(values)), 'empty or duplicate profile selection')
@@ -501,7 +532,7 @@ def main():
         runner.RWSession = profiled_session(runner, args, perf, tool_sha)
         runner.report = lambda directory: diagnostic_report(runner, directory)
         receipt = dict(diagnostic=True, score_eligible=False, source_commit=args.source_commit,
-            driver_sha256=self_sha, mode=args.mode, stages=[], complete=False)
+            driver_sha256=self_sha, mode=args.mode, provider_mutex_policy=policy, stages=[], complete=False)
         save(out / 'result.json', receipt)
         for profile in args.profiles:
             require(runner.sources() == frozen and (perf is None or digest(perf) == tool_sha),

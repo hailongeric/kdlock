@@ -15,6 +15,11 @@ endif
 KDLOCK_NUMA ?= 1
 KDLOCK_SPIN_BATCH ?= 1024
 ccflags-y += -DKDLOCK_SPIN_BATCH=$(KDLOCK_SPIN_BATCH)
+# Mutex-only policy experiments retain the maintained defaults when omitted.
+KDLOCK_MUTEX_BATCH ?= 1024
+KDLOCK_MUTEX_NUMA_BOUNDARY ?= 256
+ccflags-y += -DKDLOCK_MUTEX_BATCH=$(KDLOCK_MUTEX_BATCH)
+ccflags-y += -DKDLOCK_MUTEX_NUMA_BOUNDARY=$(KDLOCK_MUTEX_NUMA_BOUNDARY)
 # Optional observations are compiled out of ordinary timing builds.
 KDLOCK_MUTEX_DIAGNOSTICS ?= 0
 ccflags-y += -DKDLOCK_MUTEX_DIAGNOSTICS=$(KDLOCK_MUTEX_DIAGNOSTICS)
