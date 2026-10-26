@@ -85,11 +85,13 @@ def make_plan(args):
     require(all(0 <= p <= 100 for p in args.write_percent), 'write percentages must be 0..100')
     require(1 <= args.post_work_rounds <= 256 and 0 < args.iterations <= 100000000,
             'invalid post-work or iterations')
-    require(args.repeats == (1 if args.functional else 3), 'use one functional round or three performance rounds')
+    require(args.repeats == 1 if args.functional else args.repeats in (1, 3),
+            'use one functional round or one/three performance rounds')
     parity_backends = ({'native', 'kdlock'} if args.lock_kind == 'rwsem' and 'tclock' not in args.backends
                        else {'native', 'tclock', 'kdlock'})
-    require(not args.require_parity or (not args.functional and set(args.backends) == parity_backends),
-            '--require-parity needs ' + ', '.join(sorted(parity_backends)) + ' and a timed comparison')
+    require(not args.require_parity or (not args.functional and args.repeats == 3 and
+                                       set(args.backends) == parity_backends),
+            '--require-parity needs ' + ', '.join(sorted(parity_backends)) + ' and three timed rounds')
     require(args.spin_entry_ratio_limit in (0, *(1 << n for n in range(1, 32))), 'invalid entry ratio limit')
     require(not args.require_jit or (args.delegate == 'on' and 'kdlock' in args.backends and
             max(threads) > 1 and (min(args.write_percent) < 100 if args.lock_kind == 'spin'

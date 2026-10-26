@@ -129,6 +129,12 @@ timeout 900s python3 bench/rwlock_compare/run.py \
   --output /root/kdlock-evidence/10.176.26.71/tests/argbounds-functional-NEW
 ```
 
+An explicitly requested single-round screen may use `--repeats 1` in timed
+mode. Its rates are individual observations without a repeat-variability
+estimate. The summary and parity report retain their three-round completeness
+criterion; `--require-parity` requires three rounds. Functional mode remains
+separate and produces no performance score.
+
 For fresh performance use the standard grid through 60 workers and three
 repetitions from [benchmark commands](../README.md#standard-worker-grid).
 The explicit rwsem comparison below plans **756 sessions**: three workloads,

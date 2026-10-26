@@ -40,6 +40,18 @@ def fixture(workload='cacheline', percent=50):
 
 
 class BenchTests(unittest.TestCase):
+    def test_single_timed_round_does_not_claim_three_round_parity(self):
+        args = run.parser().parse_args(['--repeats', '1', '--threads', '8',
+                                       '--write-percent', '20'])
+        plan = run.make_plan(args)
+        self.assertEqual(len(plan), 3)
+        self.assertTrue(all(not row['functional'] and row['duration_ms'] == 2000
+                            and row['repeat'] == 0 for row in plan))
+        self.assertEqual(run.assess(plan, [])['status'], 'INCOMPLETE')
+        args.require_parity = True
+        with self.assertRaises(run.Failure):
+            run.make_plan(args)
+
     def test_list_report_requires_returned_evidence_and_preserves_local_controls(self):
         for family, arms in (('rwlock', ['native', 'tclock', 'kdlock']),
                              ('rwsem', ['native', 'kdlock'])):
