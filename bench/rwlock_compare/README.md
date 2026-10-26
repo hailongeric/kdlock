@@ -15,6 +15,14 @@ instrumented checks of reader overlap and writer exclusion.
 The same runner also supports sleeping rwsems and extracted proc spin
 snapshots. These modes keep distinct lock, caller and execution identities.
 
+The [minimal nano profiles](../nano/README.md) add a two-word resident record
+under a public ABI2 mutex or a rwsem. `--workloads nano --lock-kind mutex
+--write-percent 100` selects the all-writer mutex case; rwsem profiles use 1%
+or 20% writes. All backends share the same packed 64-byte record and exact
+two-word write-count oracle. `--delegate off` supplies a separately labeled
+callable-local mutex or ordinary-writer rwsem control. These new bulk-ioctl
+profiles are separate from the real-syscall catalog and historical nano matrix.
+
 ## Additional explicit modes
 
 `--lock-kind rwsem --backends native tclock kdlock` compares Linux rwsem, the

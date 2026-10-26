@@ -3,6 +3,8 @@
 #define KD_RW_BENCH_DIRECT_H
 #ifdef RB_SPIN
 #include "direct_spin.h"
+#elif defined(RB_MUTEX)
+#include "direct_mutex.h"
 #elif defined(RB_RWSEM)
 #include "direct_rwsem.h"
 #else

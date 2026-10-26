@@ -54,6 +54,10 @@ static long rb_run(void __user *user)
 	error = tc_rwsem_worker_register();
 	if (error)
 		goto out;
+#elif defined(RB_TCLOCK) && defined(RB_MUTEX)
+	error = tc_mutex_worker_register();
+	if (error)
+		goto out;
 #endif
 	before_preempt = preempt_count();
 	before_irqs = irqs_disabled();
@@ -149,6 +153,8 @@ static long rb_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 		.workload = 3,
 #elif defined(RB_LIST)
 		.workload = SC_LIST_PREFETCH ? RB_WORKLOAD_LIST_PREFETCH : RB_WORKLOAD_LIST,
+#elif defined(RB_NANO)
+		.workload = RB_WORKLOAD_NANO,
 #endif
 	};
 	unsigned int i;
@@ -158,7 +164,7 @@ static long rb_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 		return rb_run(user);
 	if (cmd == RB_PROGRESS)
 		return rb_read_progress(user);
-	if (cmd != RB_CONFIG && cmd != RB_SNAPSHOT && cmd != RB_PREPARE)
+	if (cmd != RB_CONFIG && cmd != RB_SNAPSHOT && cmd != RB_PREPARE && cmd != RB_DRAIN)
 		return -ENOTTY;
 	if (atomic_cmpxchg_acquire(&rb_control, 0, -1))
 		return -EBUSY;
@@ -169,6 +175,9 @@ static long rb_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 			break;
 		}
 		if (!config.workers || config.workers > RB_MAX_WORKERS || config.write_percent > 100 ||
+#ifdef RB_MUTEX
+		    config.write_percent != 100 ||
+#endif
 		    !config.started_ns || config.started_ns > ktime_get_ns() ||
 		    (config.deadline_ns && (config.deadline_ns <= ktime_get_ns() ||
 		     config.deadline_ns <= config.started_ns ||
@@ -189,12 +198,22 @@ static long rb_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 	case RB_PREPARE:
 		error = rb_prepare();
 		break;
+	case RB_DRAIN:
+#if defined(RB_MUTEX) && defined(RB_TCLOCK)
+		/* No worker can enter while the gate is reserved. The provider still
+		 * requires exact task exit and queue/stack quiescence before releasing
+		 * registrations; an EBUSY response never authorizes teardown. */
+		error = tc_mutex_workers_drain();
+#endif
+		break;
 	case RB_SNAPSHOT:
 		rb_lock_snapshot(&snap);
 #ifdef RB_HASH
 		error = sc_hash_snapshot(&snap);
 #elif defined(RB_LIST)
 		error = sc_list_snapshot(snap.values);
+#elif defined(RB_NANO)
+		error = rb_nano_snapshot(snap.values);
 #else
 		for (i = 0; i < RB_SLOTS; i++)
 			snap.values[i] = READ_ONCE(rb_values[i].value);
@@ -220,6 +239,10 @@ static int __init rb_init(void)
 	BUILD_BUG_ON(sizeof(struct rw_bench_snapshot) != 184);
 	BUILD_BUG_ON(sizeof(struct rw_bench_progress) != 552);
 	BUILD_BUG_ON(sizeof(struct rb_progress_slot) != 128);
+#ifdef RB_NANO
+	BUILD_BUG_ON(sizeof(struct rb_nano_record) != 64);
+	BUILD_BUG_ON(offsetof(struct rb_nano_record, copy) != sizeof(u64));
+#endif
 #ifdef RB_HASH
 	sc_hash_init();
 #elif defined(RB_LIST)
@@ -235,4 +258,4 @@ static void __exit rb_exit(void)
 module_init(rb_init);
 module_exit(rb_exit);
 MODULE_LICENSE("GPL");
-MODULE_DESCRIPTION("Native/TCLock/KD read-write lock performance workloads");
+MODULE_DESCRIPTION("Native/TCLock/KD lock workloads and minimal record nano");

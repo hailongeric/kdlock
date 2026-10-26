@@ -6,6 +6,8 @@
 #include "post_work.h"
 #ifdef RB_SNAPSHOT_PAYLOAD
 #include "snapshot_payload.h"
+#elif defined(RB_NANO)
+#include "nano_payload.h"
 #elif defined(RB_LIST)
 #include "list_payload.h"
 

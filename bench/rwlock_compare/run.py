@@ -33,9 +33,9 @@ def parser():
     p.add_argument('--backends', nargs='+', choices=('native', 'tclock', 'kdlock'),
                    default=['native', 'tclock', 'kdlock'])
     p.add_argument('--workloads', nargs='+', choices=('cacheline', 'rcuht', 'taskname', 'argbounds',
-                                                   'list', 'list-prefetch'), default=['rcuht'])
+                                                   'list', 'list-prefetch', 'nano'), default=['rcuht'])
     p.add_argument('--list-nodes', nargs='+', type=int, choices=(16, 128), default=[16])
-    p.add_argument('--lock-kind', choices=('rwlock', 'spin', 'rwsem'), default='rwlock')
+    p.add_argument('--lock-kind', choices=('rwlock', 'spin', 'rwsem', 'mutex'), default='rwlock')
     p.add_argument('--helper-waves', type=int, default=8,
                    help='maximum drain-separated task-name helper-learning rounds; 0 diagnoses the initial image')
     p.add_argument('--helper-workers', type=int, default=8,
@@ -74,6 +74,11 @@ def make_plan(args):
             'snapshot workloads require --lock-kind spin; other workloads use rwlock/rwsem')
     require(not (set(args.workloads) & snapshots) or set(args.workloads).issubset(snapshots),
             'run snapshots separately from rwlock/rwsem payloads')
+    require(args.lock_kind != 'mutex' or (args.workloads == ['nano'] and
+            args.write_percent == [100]),
+            'mutex nano requires only the all-writer profile')
+    require('nano' not in args.workloads or args.lock_kind in ('mutex', 'rwsem'),
+            'nano profiles use mutex or rwsem')
     threads = FULL_THREADS if args.full_matrix else args.threads
     list_nodes = getattr(args, 'list_nodes', [16])
     require(list_nodes and len(list_nodes) == len(set(list_nodes)) and
@@ -110,19 +115,22 @@ def make_plan(args):
             (not duration or args.peak_settle_ms + args.peak_window_ms < duration), 'invalid peak intervals')
     cases = [(workload, lines) for workload in args.workloads
              for lines in (args.cachelines if workload == 'cacheline' else
-                           list_nodes if workload in ('list', 'list-prefetch') else [0])]
+                           list_nodes if workload in ('list', 'list-prefetch') else
+                           [2] if workload == 'nano' else [0])]
     plan = []
     for (workload, lines), percent, n, repeat in itertools.product(cases, args.write_percent, threads, range(args.repeats)):
         offset = repeat % len(args.backends)
         for arm in args.backends[offset:] + args.backends[:offset]:
-            variant = (f'{workload}-n{lines}-{arm}' if workload in ('list', 'list-prefetch')
+            variant = (f'nano-pair-{arm}' if workload == 'nano' else
+                       f'{workload}-n{lines}-{arm}' if workload in ('list', 'list-prefetch')
                        else f'{workload}-c{lines:02d}-{arm}')
             if args.lock_kind != 'rwlock':
                 variant = args.lock_kind + '-' + variant
             rwsem_direct = args.lock_kind == 'rwsem' and arm == 'kdlock' and args.delegate == 'on'
-            if args.lock_kind == 'rwsem' and arm == 'kdlock' and not rwsem_direct:
+            mutex_direct = args.lock_kind == 'mutex' and arm == 'kdlock' and args.delegate == 'on'
+            if args.lock_kind in ('rwsem', 'mutex') and arm == 'kdlock' and args.delegate == 'off':
                 variant += '-local'
-            entry_abi = (2 if rwsem_direct else None) if args.lock_kind == 'rwsem' else \
+            entry_abi = (2 if rwsem_direct or mutex_direct else None) if args.lock_kind in ('rwsem', 'mutex') else \
                 {'rwlock': 3, 'spin': 1}[args.lock_kind]
             plan.append(dict(name=f'{variant}-w{percent:03d}-t{n:02d}-r{repeat:02d}', variant=variant,
                 arm=arm, workload=workload, cachelines=lines, write_percent=percent, threads=n, repeat=repeat,
@@ -137,7 +145,12 @@ def make_plan(args):
                     and percent < 100 and args.delegate == 'on' and args.helper_waves else [],
                 helper_iterations_per_worker=240000,
                 lock_kind=args.lock_kind, entry_abi=entry_abi,
-                caller_abi='clobber' if arm == 'kdlock' and (args.lock_kind != 'rwsem' or rwsem_direct) else 'c',
+                **(dict(nano_words=2, nano_record_bytes=64, call_shell='bulk_ioctl',
+                         mutex_api=('public' if args.delegate == 'on' else 'callable-local')
+                             if args.lock_kind == 'mutex' and arm == 'kdlock' else None)
+                   if workload == 'nano' else {}),
+                caller_abi='clobber' if arm == 'kdlock' and
+                    (args.lock_kind not in ('rwsem', 'mutex') or rwsem_direct or mutex_direct) else 'c',
                 delegate=args.delegate == 'on' if arm == 'kdlock' else False,
                 rwsem_writer_shell=('upstream-stack' if arm == 'tclock' else
                     'delegated-epoch-abi2' if rwsem_direct else 'ordinary-local')
@@ -149,7 +162,7 @@ def make_plan(args):
                     else 'not_applicable',
                 provider_ubsan='off',
                 delegation_batch_limit=1024 if arm != 'native' and
-                    (args.lock_kind != 'rwsem' or rwsem_direct or arm == 'tclock') else None))
+                    (args.lock_kind not in ('rwsem', 'mutex') or rwsem_direct or mutex_direct or arm == 'tclock') else None))
     return plan
 
 
@@ -160,7 +173,7 @@ def valid(row):
 
 
 def list_execution_class(row):
-    if row.get('workload') not in ('list', 'list-prefetch'):
+    if row.get('workload') not in ('list', 'list-prefetch', 'nano'):
         return None
     if row['arm'] != 'kdlock':
         return 'NATIVE'
@@ -231,7 +244,7 @@ def sources():
     result = {}
     for directory in ('include', 'kernel_module', 'daemon', 'disassem', 'tclock_backend',
                       'workload_modules/rwlock_bench', 'workload_modules/spin_cacheline',
-                      'bench/rwlock_compare', 'bench/spin_cacheline', 'bench/tclock_compare',
+                      'bench/rwlock_compare', 'bench/spin_cacheline', 'bench/tclock_compare', 'bench/nano',
                       'tests/protocols', 'kernel_baseline'):
         for path in (ROOT / directory).rglob('*'):
             relative = path.relative_to(ROOT)
@@ -271,10 +284,12 @@ def build(args, out, plan):
         tc_kind = args.lock_kind
         command(['make', '-C', tc, f'KDIR={args.kernel_source}',
                  f'TCLOCK_RWLOCK={int(tc_kind == "rwlock")}',
-                 f'TCLOCK_RWSEM={int(tc_kind == "rwsem")}', 'TCLOCK_NUMA=1'],
+                 f'TCLOCK_RWSEM={int(tc_kind == "rwsem")}',
+                 f'TCLOCK_MUTEX={int(tc_kind == "mutex")}', 'TCLOCK_NUMA=1'],
                 out / 'build-tclock.log', timeout=180)
         binaries['tclock'] = tc / ({'rwlock': 'tclock_rwlock_backend_km.ko', 'rwsem': 'tclock_rwsem_backend_km.ko',
-                                   'spin': 'tclock_backend_km.ko'}[tc_kind])
+                                   'spin': 'tclock_backend_km.ko',
+                                   'mutex': 'tclock_mutex_backend_km.ko'}[tc_kind])
         require(command(['modinfo', '-F', tc_kind + '_numa', binaries['tclock']], out / 'tc-numa.txt').strip() == '1',
                 'TCLock compiled policy differs')
         disasm = command(['objdump', '-dr', '--no-show-raw-insn', binaries['tclock']], out / 'tclock-context.txt')
@@ -290,6 +305,7 @@ def build(args, out, plan):
                  f'RB_WORKLOAD={spec["workload"]}', f'RB_LINES={spec["cachelines"]}',
                  f'RB_LOCK_KIND={spec["lock_kind"]}',
                  f'RB_RWSEM_DELEGATE={int(spec["lock_kind"] == "rwsem" and spec["delegate"])}',
+                 f'RB_MUTEX_DELEGATE={int(spec["lock_kind"] == "mutex" and spec["delegate"])}',
                  f'RB_POST_WORK_ROUNDS={spec["post_work_rounds"]}',
                  f'KDLOCK_INCLUDE={source / "include"}', f'TCLOCK_INCLUDE={source / "tclock_backend/include"}',
                  f'RB_SHARED={source / "workload_modules/spin_cacheline"}', *extra],
@@ -317,6 +333,18 @@ def build(args, out, plan):
                             'kd_rwsem_delegate_enter', 'kd_rwsem_delegate_exit',
                             'kd_mutex_outer_contended_clobber_v1',
                             'kd_mutex_direct_unlock_clobber_v1', 'kd_mutex_local_unlock')
+        elif spec['lock_kind'] == 'mutex':
+            expected = {'native': ('mutex_lock', 'mutex_unlock'),
+                        'tclock': ('komb_mutex_lock', 'komb_mutex_unlock', 'tc_mutex_worker_register',
+                                   'tc_mutex_workers_drain'),
+                        'kdlock': ('kd_mutex_prepare', 'kd_mutex_direct_lock_clobber_v1',
+                                   'kd_mutex_direct_unlock_clobber_v1', 'kd_mutex_is_idle')}[backend]
+            if backend == 'kdlock' and not spec['delegate']:
+                expected = ('kd_mutex_api_lock', 'kd_mutex_api_unlock', 'kd_mutex_is_idle')
+            if backend == 'kdlock' and spec['delegate']:
+                from mutex_api_audit import audit_public_entries
+                write_json(out / ('public-entry-' + variant + '.json'),
+                           audit_public_entries(binary, {'rb_entry': 'rb_write'}))
         missing = sorted(set(expected) - set(imports.split()))
         require(not missing, f'{variant}: missing direct API imports: {missing}')
         require(backend != 'native' or not any(name in imports for name in ('kd_', 'komb_')), 'native imports a delegate')

@@ -10,6 +10,7 @@
 #define RB_SLOTS 16
 #define RB_WORKLOAD_LIST 4
 #define RB_WORKLOAD_LIST_PREFETCH 5
+#define RB_WORKLOAD_NANO 6
 
 struct rw_bench_config {
 	__u64 started_ns, deadline_ns; /* deadline 0 selects fixed iterations */
@@ -37,4 +38,5 @@ struct rw_bench_progress {
 #define RB_SNAPSHOT _IOR('B', 3, struct rw_bench_snapshot)
 #define RB_PROGRESS _IOR('B', 4, struct rw_bench_progress)
 #define RB_PREPARE _IO('B', 5)
+#define RB_DRAIN _IO('B', 6)
 #endif

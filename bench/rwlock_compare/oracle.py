@@ -32,7 +32,7 @@ def check_snapshot(row, spec):
     require((row['version'], row['backend'], row['workload'], row['lines'], row['post_work_rounds']) ==
             (1, {'native': 0, 'tclock': 1, 'kdlock': 2}[spec['arm']],
              {'cacheline': 0, 'rcuht': 1, 'taskname': 2, 'argbounds': 3,
-              'list': 4, 'list-prefetch': 5}[spec['workload']],
+              'list': 4, 'list-prefetch': 5, 'nano': 6}[spec['workload']],
              spec['cachelines'], spec['post_work_rounds']),
             'workload identity differs')
     require(all(row[name] == 0 for name in ('active', 'cnts', 'gate')), 'rwlock did not drain')
@@ -41,6 +41,11 @@ def check_snapshot(row, spec):
     if spec['workload'] in ('list', 'list-prefetch'):
         require(spec.get('list_nodes') == row['lines'] and row['lines'] in (16, 128) and
                 row['values'][1:] == [0] * 15, 'invalid list identity/unused counters')
+    if spec['workload'] == 'nano':
+        require(spec.get('nano_words') == row['lines'] == 2 and
+                spec.get('nano_record_bytes') == 64 and spec.get('call_shell') == 'bulk_ioctl' and
+                row['values'][0] == row['values'][1] and row['values'][2:] == [0] * 14,
+                'invalid nano record, footprint or unused counters')
 
 
 def validate(measurement, spec):
@@ -74,7 +79,7 @@ def validate(measurement, spec):
     require(all(before[key] == after[key] for key in before if key != 'values'),
             'workload changed during measurement')
     delta = [a - b for a, b in zip(after['values'], before['values'])]
-    if spec['workload'] == 'cacheline':
+    if spec['workload'] in ('cacheline', 'nano'):
         require(delta == [m['writes']] * spec['cachelines'] + [0] * (16 - spec['cachelines']),
                 'lost/duplicated write or inactive-line update')
         require(all(w['read_hits'] == 0 for w in workers), 'cacheline reader returned hash hits')

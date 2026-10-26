@@ -21,7 +21,7 @@ def assess(plan, summary):
                    for arm, variant in variants.items()}
         # Mixed JIT/NO_JIT groups remain separate. A partial group is never
         # promoted to a three-round result or pooled to manufacture parity.
-        list_profile = workload in ('list', 'list-prefetch')
+        list_profile = workload in ('list', 'list-prefetch', 'nano')
         if (set(cohorts) != required or
                 any(len(groups) != 1 or not groups[0]['complete'] or
                     groups[0]['valid_rounds'] != 3 or

@@ -16,7 +16,7 @@ sys.path.insert(0, str(ROOT / 'bench/spin_cacheline'))
 from bench_runtime import Failure, children, parameters, registry, require, status
 from bench_session import Session
 from summarize import write_json
-from protocol import DEVICE, PREPARE, snapshot
+from protocol import DEVICE, PREPARE, DRAIN, snapshot
 from oracle import check_snapshot, jit_evidence, validate
 
 KD_PARAMS = Path('/sys/module/kdlock_km/parameters')
@@ -32,7 +32,7 @@ class RWSession(Session):
         self.tc_params = Path('/sys/module') / self.tc_module / 'parameters'
 
     def has_entry(self):
-        if self.record['lock_kind'] == 'rwsem':
+        if self.record['lock_kind'] in ('rwsem', 'mutex'):
             return self.record['delegate'] and bool(self.record['write_percent'])
         return self.record['write_percent'] < 100 if self.record['lock_kind'] == 'spin' else bool(self.record['write_percent'])
 
@@ -43,11 +43,16 @@ class RWSession(Session):
         return row
 
     def tc_idle(self):
-        if self.record['lock_kind'] == 'rwsem':
+        kind = self.record['lock_kind']
+        if kind == 'rwsem' or (kind == 'mutex' and self.loaded_source):
             # Client process has returned; retain refs until PID retirement too.
             for attempt in range(100):
                 try:
-                    (self.tc_params / 'drain').write_text('1')
+                    if kind == 'rwsem':
+                        (self.tc_params / 'drain').write_text('1')
+                    else:
+                        with open(DEVICE, 'rb', buffering=0) as device:
+                            fcntl.ioctl(device, DRAIN)
                     break
                 except OSError as error:
                     if error.errno != errno.EBUSY or attempt == 99:
@@ -222,7 +227,7 @@ class RWSession(Session):
         if peak:
             m['peak'] = peak
         self.counts(label)
-        if self.loaded_tc and self.record['lock_kind'] == 'rwsem':
+        if self.loaded_tc and self.record['lock_kind'] in ('rwsem', 'mutex'):
             self.tc_idle()
         return m
 

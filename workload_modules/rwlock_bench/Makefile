@@ -10,8 +10,13 @@ $(error spin requires a taskname or argbounds snapshot workload)
 endif
 else ifeq ($(RB_LOCK_KIND),rwsem)
 ccflags-y += -DRB_RWSEM -DRB_RWSEM_DELEGATE=$(RB_RWSEM_DELEGATE)
+else ifeq ($(RB_LOCK_KIND),mutex)
+ccflags-y += -DRB_MUTEX -DRB_MUTEX_DELEGATE=$(RB_MUTEX_DELEGATE)
+ifneq ($(RB_WORKLOAD),nano)
+$(error mutex requires RB_WORKLOAD=nano)
+endif
 else ifneq ($(RB_LOCK_KIND),rwlock)
-$(error RB_LOCK_KIND must be rwlock, spin or rwsem)
+$(error RB_LOCK_KIND must be rwlock, spin, rwsem or mutex)
 endif
 ifneq ($(filter taskname argbounds,$(RB_WORKLOAD)),)
 ifneq ($(RB_LOCK_KIND),spin)
@@ -24,6 +29,9 @@ endif
 endif
 ifeq ($(RB_WORKLOAD),rcuht)
 ccflags-y += -DRB_HASH
+endif
+ifeq ($(RB_WORKLOAD),nano)
+ccflags-y += -DRB_NANO
 endif
 ifneq ($(filter list list-prefetch,$(RB_WORKLOAD)),)
 ccflags-y += -DRB_LIST -DSC_LIST_NODES=$(RB_LINES)
@@ -42,12 +50,13 @@ RB_BACKEND ?= native
 RB_WORKLOAD ?= cacheline
 RB_LOCK_KIND ?= rwlock
 RB_RWSEM_DELEGATE ?= 0
+RB_MUTEX_DELEGATE ?= 1
 RB_LINES ?= 1
 RB_POST_WORK_ROUNDS ?= 4
 RB_SHARED ?= $(abspath ../spin_cacheline)
 .PHONY: all clean
 all:
-	$(MAKE) -C $(KDIR) M=$(CURDIR) W=1 RB_BACKEND=$(RB_BACKEND) RB_LOCK_KIND=$(RB_LOCK_KIND) RB_RWSEM_DELEGATE=$(RB_RWSEM_DELEGATE) RB_LINES=$(RB_LINES) RB_POST_WORK_ROUNDS=$(RB_POST_WORK_ROUNDS) RB_SHARED=$(RB_SHARED) modules
+	$(MAKE) -C $(KDIR) M=$(CURDIR) W=1 RB_BACKEND=$(RB_BACKEND) RB_LOCK_KIND=$(RB_LOCK_KIND) RB_RWSEM_DELEGATE=$(RB_RWSEM_DELEGATE) RB_MUTEX_DELEGATE=$(RB_MUTEX_DELEGATE) RB_LINES=$(RB_LINES) RB_POST_WORK_ROUNDS=$(RB_POST_WORK_ROUNDS) RB_SHARED=$(RB_SHARED) modules
 clean:
 	$(MAKE) -C $(KDIR) M=$(CURDIR) clean
 endif

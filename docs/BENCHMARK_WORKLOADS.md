@@ -64,6 +64,17 @@ qualified measurement resulted.
 
 ## KD API use and delegation
 
+The later [minimal shared-record nano workload](../bench/nano/README.md) is a
+separate addition to the catalog. It reduces the favorable bounded mutex update
+and read-mostly rwsem cases to two adjacent 64-bit words in one 64-byte record.
+Writers increment both words; readers compare them. Its public-mutex 100%-write,
+rwsem 1%-write and rwsem 20%-write profiles retain matched Native/TCLock/KD work,
+exact totals and returned-body evidence. Default nano runs use six worker counts
+and one round. They do not fill or alter the earlier 51-configuration screen.
+See the [per-workload analysis](../bench/results/10.176.26.71/bench/catalog-single-20261026/PERFORMANCE_ANALYSIS.md)
+for the selection and the distinction between delegated mutex wins and local
+rwsem reader-path wins.
+
 The 2026-10-18 source review, against `af330db`, confirms that the implemented
 workloads below **already call KD APIs**. Delegation means another executor
 runs the protected body on behalf of the waiting caller. Current direct
