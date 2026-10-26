@@ -31,6 +31,16 @@ and 12 GiB; node 1 uses CPUs 32–63 and 12 GiB. Each vCPU is pinned to the same
 host CPU, with memory on the corresponding host NUMA node. QEMU service threads
 share host CPU 63. Verify actual placement and host frequency policy before timing.
 
+On October 27, 2026, the user explicitly requested a fixed **2.0 GHz** host
+frequency. All 64 host CPU policies now use the `performance` governor with
+`scaling_min_freq = scaling_max_freq = 2000000` kHz and `intel_pstate/no_turbo = 1`.
+The passive `intel_cpufreq` driver is unchanged. This is a runtime setting;
+recheck it after a reboot or any host configuration change. The
+[fixed-frequency nano campaign](../../bench/results/10.176.26.71/bench/nano-mutex-fixedfreq-20261027/README.md)
+retains the original settings, readbacks and APERF/MPERF observations. Preserve
+this requested setting after the campaign. A configured limit alone is not
+proof of effective frequency, and earlier ondemand results remain separate.
+
 Use collector CPU 63 and workers 0 through N−1 for the standard 1–60-worker grid.
 Only the spin/mutex synthetic runner supports explicit `--share-collector` for
 the optional 64-worker point; this labels CPU 63 contention in the evidence.

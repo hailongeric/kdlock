@@ -67,6 +67,18 @@ at `e5b7f84c` publishes both full-grid tables and charts: 126 measurements and
 loss to Native, low-count NO_JIT results and the one-counter two-worker near tie
 with TCLock. The campaign remains exploratory, with one observation per point.
 
+The [October 27 rerun at fixed 2.0 GHz](../results/10.176.26.71/bench/nano-mutex-fixedfreq-20261027/README.md)
+completed the same 126 timings and warmups with identical source bytes and
+workload plans. All passed exact replay and drain. All 64 host CPU policies use
+the performance governor, equal 2.0 GHz minimum/maximum limits and disabled
+turbo; separate APERF/MPERF telemetry records effective frequency. The earlier
+large single-worker gap disappeared: Native/TCLock/KD measured
+1.925/1.929/1.923 Mops/s for one counter and 1.927/1.926/1.919 for sixteen.
+At 60 workers, KD measured 4.895 and 3.831 Mops/s respectively, or 3.065 and
+2.643 times Native. The host remains pinned at the user's request. Keep these
+single-round exploratory results separate from the earlier ondemand rates;
+strict host task-membership qualification remains failed.
+
 ## Bodies and profiles
 
 Both default mutex profiles reuse the existing

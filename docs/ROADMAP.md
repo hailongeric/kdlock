@@ -1,6 +1,6 @@
 # Project goal and three-stage development plan
 
-Updated October 26, 2026. This is the canonical project-level goal, sequence and
+Updated October 27, 2026. This is the canonical project-level goal, sequence and
 completion contract. The [project guide](PROJECT_GUIDE.md) owns working commands
 and repository orientation; the [throughput campaign plan](THROUGHPUT_PLAN.md)
 owns bounded measurement plans; [performance status](PERFORMANCE.md) owns measured
@@ -62,6 +62,16 @@ both profiles executed locally without JIT at one and two workers. These
 single-round exploratory observations do not provide repeat variability or
 close the repeatability gate. Keep their source, policy and workload identity
 separate from the selection studies.
+
+The [fixed-2.0-GHz rerun](../bench/results/10.176.26.71/bench/nano-mutex-fixedfreq-20261027/README.md)
+completed the same 126 timings and warmups with identical source and workload
+plans. The large one-worker gap disappeared when all host CPUs were pinned:
+all three backends measured about 1.92 Mops/s for both bodies. At 60 workers,
+KD measured 4.895 Mops/s for one counter and 3.831 for sixteen, respectively
+3.065 and 2.643 times Native. Frequency telemetry, exact replay and drain are
+recorded separately from the still-failed strict host membership gate. The
+host remains at the requested 2.0 GHz; this single round does not close the
+repeatability gate or replace the earlier campaign's recorded evidence.
 
 Stage 2 is in progress and its performance objective is **not achieved**. The
 [October 26 MM screen](../bench/results/10.176.26.71/bench/catalog-mmap-single-20261026/README.md)

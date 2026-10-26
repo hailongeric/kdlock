@@ -10,7 +10,7 @@ KD rates, rather than generally increasing KD throughput. The separate
 [768-boundary comparison](../bench/results/10.176.26.71/bench/mutex-profile-20261026/policy-numa768-vs-policy-control/README.md)
 recorded cross-NUMA improvements and losses at 16 workers. Promotion is a
 user-directed choice from exploratory evidence, not a universal gain claim.
-The [new two-profile Native/TCLock/KD campaign](../bench/results/10.176.26.71/bench/nano-mutex-promoted-20261026/README.md)
+The [initial promoted-default Native/TCLock/KD campaign](../bench/results/10.176.26.71/bench/nano-mutex-promoted-20261026/README.md)
 at `e5b7f84c` completed all 126 timings and 126 warmups across `1..8,12..60`
 workers, stepping by four above eight. Every phase passed exact frozen-oracle
 replay, and every session drained. At 60 workers, the one-counter profile measured KD 5.567 Mops/s
@@ -21,6 +21,23 @@ the sixteen-counter body. The one-counter two-worker result was essentially tied
 are not evidence of delegation gains. Each point has one observation with no
 variance estimate; strict host timing qualification remains failed. The new
 source, ELF, policy and workload identities remain separate from earlier studies.
+
+The [October 27 fixed-frequency rerun](../bench/results/10.176.26.71/bench/nano-mutex-fixedfreq-20261027/README.md)
+uses the same 278 source files and complete workload plan, with all 64 host CPUs
+pinned to 2.0 GHz, the performance governor and turbo disabled. All 126 timings
+and warmups passed exact replay and drain. At one worker, Native/TCLock/KD
+measured 1.925/1.929/1.923 Mops/s for one counter and 1.927/1.926/1.919 for
+sixteen counters. The earlier large single-worker advantage disappeared, and
+the within-run TCLock speed transition is absent. These observations support
+frequency/run-order bias in the earlier comparison; they do not establish an
+uncontended KD lock advantage. At 60 workers, one counter measured
+1.597/2.632/4.895 Mops/s (KD 3.065 times Native, 1.860 times TCLock); sixteen
+counters measured 1.450/1.793/3.831 (KD 2.643 times Native, 2.136 times TCLock).
+The report retains all lower-rate and near-tied points. APERF/MPERF telemetry
+checks effective frequency separately from policy readbacks. The user requested
+that the host remain at 2.0 GHz. This single-round campaign remains exploratory;
+strict QEMU task-membership qualification is still failed. Do not pool its
+rates with the earlier ondemand campaign.
 
 The requested [fresh mutex nano comparison](../bench/results/10.176.26.71/bench/nano-mutex-20261026/README.md)
 at `444f6857` completed 36 single-round measurements against Linux Native and
