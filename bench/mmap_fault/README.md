@@ -1,5 +1,21 @@
 # Separate mmap-only and page-fault workloads
 
+The October 26 single-round extension uses a separate explicit plan:
+`timing.py measure --single-round-grid --workload mmap` or `--workload fault`.
+It selects the standard 21 worker counts, one plain repetition and only the
+supported arms below. `--exploratory-host` retains failed strict timing
+qualification; source-host captures still verify the original tasks, placement,
+frequency/NUMA policy and recovery snapshot. No historical result is relabelled.
+Exact whole-operation accounting remains required. Only the final absence of a
+positive full-cohort peak is optional in this new plan; malformed progress,
+identity, callback, reader-release and teardown evidence still fail.
+
+Pass `--boot-id` to the correctness and timing runners to bind a new attempt
+to the verified recovery boot. Its historical default is unchanged. Fresh
+`--split` correctness and timing-client preparation remain prerequisites;
+`prepare --plain-only` checks the plain client without collecting latency
+samples. The old 48-session plain/sampled plan remains the default.
+
 `split_client.c` provides fixed-work correctness cases through the maintained
 [mapping payload](../../docs/design/mmap_fault.md). Readers remain concurrent,
 local readers. `timed_client.c` supplies two independent operation definitions:

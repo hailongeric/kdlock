@@ -107,11 +107,13 @@ def main():
                         help='required successful same-revision result before TCLock')
     parser.add_argument('--split',action='store_true',
                         help='also validate mmap without faults and separate CPU-fault workloads')
+    parser.add_argument('--boot-id', default='b65f0205-c8f9-4385-8b13-039cbce243a6',
+                        help='explicitly bind this check to the verified recovery boot')
     kernel_identity.arguments(parser)
     args=parser.parse_args()
     rt.require(os.geteuid()==0 and os.uname().release=='6.1.159-kdclobber2' and
                str(ROOT)=='/root/host_fs/kdlock' and
-               Path('/proc/sys/kernel/random/boot_id').read_text().strip()=='b65f0205-c8f9-4385-8b13-039cbce243a6' and
+               Path('/proc/sys/kernel/random/boot_id').read_text().strip()==args.boot_id and
                os.environ.get('KDLOCK_RECOVERY_CONFIRMED')=='1' and
                os.environ.get('KDLOCK_SNAPSHOT_TAG')=='before-mutex-kdonly-20261017T140354Z',
                'same confirmed recovery VM required')

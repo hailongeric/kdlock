@@ -41,15 +41,15 @@ def idle(base):
         except FileNotFoundError: pass
 
 
-def guest():
+def guest(boot_id=BOOT):
     rt.require(os.geteuid()==0 and str(ROOT)=='/root/host_fs/kdlock' and
-        os.uname().release==RELEASE and Path('/proc/sys/kernel/random/boot_id').read_text().strip()==BOOT and
+        os.uname().release==RELEASE and Path('/proc/sys/kernel/random/boot_id').read_text().strip()==boot_id and
         os.environ.get('KDLOCK_RECOVERY_CONFIRMED')=='1' and os.environ.get('KDLOCK_SNAPSHOT_TAG')==SNAPSHOT and
         sys.executable=='/root/kdlock-translation-venv-20261019/bin/python3' and shutil.which('python3')==sys.executable,
         'same confirmed recovery VM and pinned Python required')
 
 
-def host_check(path,out,strict):
+def host_check(path,out,strict,boot_id=BOOT):
     host=load(path);shutil.copyfile(path,out/'host-before.json')
     age=(datetime.datetime.now(datetime.timezone.utc)-datetime.datetime.fromisoformat(host['captured_utc'])).total_seconds()
     rt.require(0<=age<=300 and host['pins_verified'] and host['snapshot_listed'] and
@@ -59,7 +59,7 @@ def host_check(path,out,strict):
     try:
         os.sched_setaffinity(0,{63});collector=rt.capture_topology([63])
     finally:os.sched_setaffinity(0,previous)
-    environment=dict(boot_id=BOOT,cmdline=Path('/proc/cmdline').read_text().strip(),
+    environment=dict(boot_id=boot_id,cmdline=Path('/proc/cmdline').read_text().strip(),
         preemption=Path('/sys/kernel/debug/sched/preempt').read_text().strip(),
         packages={p:importlib.metadata.version(p) for p in ('miasm','future','pyparsing','pyelftools')},
         python=sys.executable,snapshot_tag=SNAPSHOT,collector_topology=collector)
@@ -105,6 +105,20 @@ def bundle(base):
         guard=str(base/'source/bench/tclock_compare/allocator_guard/tc_allocator_guard.ko'))
 
 
+def peak_result(measurement, spec):
+    policy = spec.get('peak_policy', 'required')
+    rt.require(policy in ('required', 'optional-positive-window'), 'unknown peak policy')
+    try:
+        return analyze_peak(measurement, spec), None
+    except ValueError as error:
+        if (policy != 'optional-positive-window' or type(error) is not ValueError or
+                str(error) != 'no positive full-cohort peak window'):
+            raise
+        # Exact operation, callback, worker and progress validation precedes
+        # this final availability result. Other malformed samples still fail.
+        return None, str(error)
+
+
 def validate(rows,spec):
     rt.require(len(rows)==2 and rows[0]['event']=='ready','missing start receipt')
     m=rows[1];n=spec['threads'];pids=rows[0]['pids']
@@ -132,7 +146,7 @@ def validate(rows,spec):
                all(before[k]==after[k]==0 for k in quiet) and before['faults']==before['reads']==before['read_ends']==0 and
                after['faults']==after['reads']==after['read_ends']==(0 if spec['workload']=='mmap' else completed),
                'mmap/fault separation, backing mode or exact callback count differs')
-    peak=analyze_peak(m,spec)
+    peak, peak_reason=peak_result(m,spec)
     latency.sort()
     p95=latency[math.ceil(.95*len(latency))-1] if latency else None
     rt.require(bool(latency)==(spec['observation']=='sampled'),'latency mode differs')
@@ -140,7 +154,9 @@ def validate(rows,spec):
         latency_samples=len(latency),completed_operation_p95_ns=p95,
         latency_definition='mmap plus munmap, without access' if spec['workload']=='mmap' else 'MADV_DONTNEED plus checked CPU read; includes PTE reset',
         execution='NATIVE_MMAP_ONLY' if spec['workload']=='mmap' else 'LOCAL_READER',
-        delegated=False,errors=0,callback_count=after['faults'])
+        delegated=False,errors=0,callback_count=after['faults'],
+        peak_status='available' if peak is not None else 'unavailable',
+        peak_unavailable_reason=peak_reason)
 
 
 def session(out,spec,inputs,verify):
@@ -197,6 +213,27 @@ def specification(workload,n,arm,observation,repeat):
         peak_window_ms=300,peak_settle_ms=300,sample_ms=10)
 
 
+def measurement_plan(single_round=False, workload=None):
+    if single_round:
+        rt.require(workload in ('mmap', 'fault'), 'select one single-round workload')
+        arms = ('native',) if workload == 'mmap' else tuple(BACKENDS)
+        return [dict(specification(workload, n, arm, 'plain', 0),
+                     peak_policy='optional-positive-window')
+                for n in list(range(1, 9)) + list(range(12, 61, 4)) for arm in arms]
+    rt.require(workload is None, 'workload selection requires the single-round plan')
+    plan = []
+    for selected in ('mmap', 'fault'):
+        arms = ['native'] if selected == 'mmap' else list(BACKENDS)
+        for n in (1, 16):
+            for repeat in range(3):
+                order = arms[repeat % len(arms):] + arms[:repeat % len(arms)]
+                for observation in (('plain', 'sampled') if repeat % 2 == 0 else ('sampled', 'plain')):
+                    for arm in order:
+                        plan.append(specification(selected, n, arm, observation, repeat))
+    rt.require(len(plan) == 48, 'fixed matched plan differs')
+    return plan
+
+
 def distribution(values):
     mean=statistics.mean(values)
     return dict(n=len(values),minimum=min(values),maximum=max(values),median=statistics.median(values),
@@ -227,13 +264,22 @@ def main():
     p.add_argument('action',choices=('prepare','measure'));p.add_argument('--output',type=Path,required=True)
     p.add_argument('--host-state',type=Path,required=True);p.add_argument('--source-manifest',type=Path)
     p.add_argument('--correctness-kd',type=Path);p.add_argument('--correctness-tc',type=Path)
+    p.add_argument('--boot-id', default=BOOT, help='verified recovery boot for this new run')
+    p.add_argument('--plain-only', action='store_true', help='prepare the plain client without latency sampling')
+    p.add_argument('--single-round-grid', action='store_true', help='new plain 21-count plan, one repetition')
+    p.add_argument('--workload', choices=('mmap','fault'))
+    p.add_argument('--exploratory-host', action='store_true', help='retain failed strict host qualification explicitly')
     p.add_argument('--inputs',type=Path);kernel_identity.arguments(p);a=p.parse_args()
-    guest();out=a.output.resolve();rt.require(not out.exists() and not out.is_relative_to(ROOT),'new evidence path required')
+    rt.require(not a.plain_only or a.action == 'prepare', 'plain-only applies to preparation')
+    rt.require(not a.single_round_grid or a.action == 'measure', 'single-round grid applies to measurement')
+    rt.require(not a.exploratory_host or a.single_round_grid, 'exploratory host requires the explicit new plan')
+    guest(a.boot_id);out=a.output.resolve();rt.require(not out.exists() and not out.is_relative_to(ROOT),'new evidence path required')
     idle(out.parent);out.mkdir(parents=True)
-    result=dict(state='PREPARATION',passed=False,drained=False,accepted=False,boot_id=BOOT,action=a.action,sessions=[])
+    result=dict(state='PREPARATION',passed=False,drained=False,accepted=False,boot_id=a.boot_id,action=a.action,sessions=[],
+                single_round_grid=a.single_round_grid,exploratory_host=a.exploratory_host)
     rt.write_json(out/'result.json',result)
     try:
-        host_check(a.host_state,out,a.action=='measure')
+        host_check(a.host_state,out,a.action=='measure' and not a.exploratory_host,a.boot_id)
         result['kernel_identity']=kernel_identity.capture(a,out,rt.command)
         if a.action=='prepare':
             rt.require(a.source_manifest and a.correctness_kd and a.correctness_tc,'correctness and committed source required')
@@ -260,7 +306,7 @@ def main():
             inputs=dict(kdlock=kd,tclock=tc,client=str(client),files=files,source_commit=manifest['commit'],
                         correctness_source_commit=kd['result']['source_commit'])
             rt.write_json(out/'inputs.json',inputs)
-            plan=[specification(w,n,arm,'sampled',0) for w in ('mmap','fault') for n in (1,16)
+            plan=[specification(w,n,arm,'plain' if a.plain_only else 'sampled',0) for w in ('mmap','fault') for n in (1,16)
                   for arm in (('native',) if w=='mmap' else tuple(BACKENDS))]
         else:
             rt.require(a.inputs is not None,'validated inputs required')
@@ -268,16 +314,7 @@ def main():
             rt.require(prior['passed'] and prior['drained'] and len(prior['sessions'])==8 and
                        all(r['passed'] and r['drained'] for r in prior['sessions']),'timed client correctness prerequisite incomplete')
             shutil.copyfile(a.inputs,out/'inputs.json')
-            plan=[]
-            for workload in ('mmap','fault'):
-                arms=['native'] if workload=='mmap' else list(BACKENDS)
-                for n in (1,16):
-                    for repeat in range(3):
-                        order=arms[repeat%len(arms):]+arms[:repeat%len(arms)]
-                        modes=('plain','sampled') if repeat%2==0 else ('sampled','plain')
-                        for observation in modes:
-                            for arm in order:plan.append(specification(workload,n,arm,observation,repeat))
-            rt.require(len(plan)==48,'fixed matched plan differs')
+            plan=measurement_plan(a.single_round_grid,a.workload)
         verify=lambda:verify_maps(inputs['files'])
         verify();rt.write_json(out/'plan.json',plan);result.update(state='RUNNING',source_commit=inputs['source_commit'],planned=len(plan))
         for i,spec in enumerate(plan):
@@ -286,7 +323,10 @@ def main():
             row=session(out/name,spec,inputs,verify);row['name']=name;result['sessions'].append(row)
             rt.write_json(out/'result.json',result);print('FINISH',name,'PASS',flush=True)
         verify();idle(out.parent)
-        if a.action=='measure':rt.write_json(out/'summary.json',summarize(result['sessions']))
+        if a.action=='measure':
+            summary = (dict(single_round=True,accepted=False,variability=None,
+                            sessions=result['sessions']) if a.single_round_grid else summarize(result['sessions']))
+            rt.write_json(out/'summary.json',summary)
         result.update(state='COMPLETE',passed=True,drained=True,final_idle=True,host_endpoint='PENDING',basic_programs=2 if a.action=='prepare' else None)
     except BaseException as error:
         result.update(state='FAILED',error=repr(error));raise

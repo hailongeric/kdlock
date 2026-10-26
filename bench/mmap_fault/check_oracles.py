@@ -13,8 +13,8 @@ timing=importlib.util.module_from_spec(spec);spec.loader.exec_module(timing)
 
 
 def main():
-    timing.guest()
     base=Path(sys.argv[1]);state=timing.load(base/'result.json')
+    timing.guest(state['boot_id'])
     timing.rt.require(state['passed'] and state['drained'],'completed preparation required')
     row=next(r for r in state['sessions'] if r['workload']=='fault' and r['threads']==16 and r['arm']=='kdlock')
     source=base/row['name']/'client.jsonl'
@@ -27,10 +27,13 @@ def main():
         'duplicate_pid':lambda x:x[0]['pids'].__setitem__(1,x[0]['pids'][0]),
         'missing_join':lambda x:x[1].__setitem__('joined',15),
         'wrong_cpu':lambda x:x[1]['workers'][0].__setitem__('observed_cpu',63),
-        'missing_latency':lambda x:x[1]['workers'][0]['latency_ns'].pop(),
         'early_finish':lambda x:x[1]['workers'][0].__setitem__('kernel_finished_ns',x[1]['started_ns']),
         'false_mmap':lambda x:x[1].__setitem__('workload','mmap'),
     }
+    if row['observation'] == 'sampled':
+        cases['missing_latency'] = lambda x:x[1]['workers'][0]['latency_ns'].pop()
+    else:
+        cases['unexpected_latency'] = lambda x:x[1]['workers'][0]['latency_ns'].append(1)
     rejected=[]
     for name,mutate in cases.items():
         candidate=copy.deepcopy(rows);mutate(candidate)
