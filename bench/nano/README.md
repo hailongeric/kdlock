@@ -84,6 +84,23 @@ At 60 workers, KD measured 4.895 and 3.831 Mops/s respectively, or 3.065 and
 single-round exploratory results separate from the earlier ondemand rates;
 strict host task-membership qualification remains failed.
 
+## Expanded fixed-frequency measurements
+
+The [full October 27 catalog](../results/10.176.26.71/bench/catalog-fixedfreq-20261027/README.md)
+at `a9aeb280` completed all ten nano profiles: **630 measurements and 630
+warmups**, with exact replay and drain. Each coordinate has one round at the
+fixed 2.0 GHz host target. The [performance guide](../../docs/PERFORMANCE.md)
+contains the ten-profile comparison and returned-write shares; each workload's
+report contains its full worker grid and chart.
+
+At 60 workers, only the two mutex profiles exceed both Native and TCLock.
+Every rwsem/rwlock nano profile remains below TCLock; the sixteen-counter,
+1%-write rwlock also loses to Native at every cross-NUMA count. The two
+1%-write rwsem profiles record NO_JIT throughout, so their gains over Native
+are local-path results. These outcomes bound the favorable regime; selection
+alone does not establish a best case for every lock family. Keep this campaign
+separate from the earlier two-profile and historical two-word/post4 studies.
+
 ## Bodies and profiles
 
 All active profiles reuse the existing

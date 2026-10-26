@@ -1,0 +1,868 @@
+{
+  "source_commit": "a9aeb280a68242818aa469d8277e0c5a22fffee1",
+  "source_files": 796,
+  "orchestration_files": 31,
+  "strict_qualified": false,
+  "source_manifest": {
+    "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-fixedfreq-20261027/mm/source-manifest.json",
+    "sha256": "e6ce58f5196a74fd8d6c8b9bbd09018039e0dfdc22c2c5cba8ec8de8cd750ca6",
+    "bytes": 89231
+  },
+  "orchestration_manifest": {
+    "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-fixedfreq-20261027/mm/orchestration-manifest.json",
+    "sha256": "e269c3e9d9ff74f5aa63a3c2a4a9e73e7712126a4a4c7f15b48f3e0abc703b59",
+    "bytes": 2861
+  },
+  "passed": true,
+  "suite": "shared-mm",
+  "measured": 42,
+  "kernel": {
+    "release": "6.1.159-kdmm31",
+    "build_id": "ef5179e8def44f0255adcd62585f62f118fee30f",
+    "kind": "historical installed actual-MM kernel; unchanged prepared payload",
+    "audited_commit": "e6fc371b032cc0444dba34ee9025e7d939811125",
+    "installed_image_reused": true
+  },
+  "workload_kind": "actual-shared-mm-mmap-munmap",
+  "backend_scope": "installed same kernel kd_mmap=off/on; native MM bodies stay on original task",
+  "mapping": "untouched 4KiB read-only MAP_SHARED device mappings",
+  "units": "complete mmap/munmap pairs per second; whole wall time",
+  "returned_jit_evidence": false,
+  "prepared": {
+    "prepared": "/root/kdlock-evidence/10.176.26.71/tests/mmap-functional-eligibility-20261026/offline-2/fixed-build/result.json",
+    "prepared_sha256": "ca742eb7fce9fec233f91508a0c1d0c239865aa873a066143cd05fe7e5880642",
+    "binary_sha256": {
+      "payload": "78210ced79da6b70132e41cc2c7a9ac289f83f0380479d1d24556c5a5403686f",
+      "timed": "5962210671ac238ae4df8dcca442b3cb7407efb2b5b2edb42ae637ac4902083f",
+      "fixed": "50b206a13d6cd277a2e69b1628e4202feab5df142a1a26c7614c2e4d390daef5"
+    },
+    "roles": "/root/kdlock-evidence/10.176.26.71/bench/mmap-worker-scaling-20261026/roles.json",
+    "native_api": "/root/kdlock-evidence/10.176.26.71/bench/mmap-kdmm31-prep-20261025/prior/actual-native-1.json",
+    "kd_api": "/root/kdlock-evidence/10.176.26.71/bench/mmap-kdmm31-prep-20261025/prior/actual-kd-1.json"
+  },
+  "binaries": {
+    "payload": "78210ced79da6b70132e41cc2c7a9ac289f83f0380479d1d24556c5a5403686f",
+    "timed": "5962210671ac238ae4df8dcca442b3cb7407efb2b5b2edb42ae637ac4902083f",
+    "fixed": "50b206a13d6cd277a2e69b1628e4202feab5df142a1a26c7614c2e4d390daef5"
+  },
+  "archive": {
+    "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-fixedfreq-20261027/mm/shared/kd-archive.stdout",
+    "sha256": "b4ce624e512eb3126adf610e6f27f47a4a756820144aa029e1a7adda5af544e1",
+    "bytes": 2608055
+  },
+  "receipts": [
+    {
+      "threads": 1,
+      "arm": "native",
+      "raw_sha256": "ae7a41390f426f3129aafe481d25d726257b0eb45bfe59410574043089191e62",
+      "ops_s": 358803.3954161207,
+      "completed": 717632,
+      "peak_status": "available"
+    },
+    {
+      "threads": 2,
+      "arm": "native",
+      "raw_sha256": "fc48deea9b2fe3712c6af6931c980ed19607a41edf07cb7c5e90eb88b96290ee",
+      "ops_s": 291214.2745151459,
+      "completed": 582464,
+      "peak_status": "available"
+    },
+    {
+      "threads": 3,
+      "arm": "native",
+      "raw_sha256": "2db022b496e7181dcea58418a78f044e2ff737b5e31a484ae66cb150c90119b1",
+      "ops_s": 248414.2145489574,
+      "completed": 496896,
+      "peak_status": "available"
+    },
+    {
+      "threads": 4,
+      "arm": "native",
+      "raw_sha256": "9c3a44221834e3791ffd00f8e195cc51e16e92030f12cba0dd3c3f3eec73f73f",
+      "ops_s": 250514.89266419923,
+      "completed": 501120,
+      "peak_status": "available"
+    },
+    {
+      "threads": 5,
+      "arm": "native",
+      "raw_sha256": "7e861196fdcfa1942f203a1399202ee4e62878c63b9e728b21dcb7fbb7caab96",
+      "ops_s": 240617.77137328847,
+      "completed": 481408,
+      "peak_status": "available"
+    },
+    {
+      "threads": 6,
+      "arm": "native",
+      "raw_sha256": "d6a38ff0e3f24eb6c28da3d64053e3c4aebdc5b7b5f4bc6c26db044d624a3a6c",
+      "ops_s": 233957.91059037953,
+      "completed": 468032,
+      "peak_status": "available"
+    },
+    {
+      "threads": 7,
+      "arm": "native",
+      "raw_sha256": "6c6d67d84ddbb0354437f170c2eec89b4212a223a7a68b5de931cebb25215dcf",
+      "ops_s": 230744.57687917948,
+      "completed": 461664,
+      "peak_status": "available"
+    },
+    {
+      "threads": 8,
+      "arm": "native",
+      "raw_sha256": "d0df3fea3c691493933c9dccd499234575950173b611d8a9c9beecdf63d41c22",
+      "ops_s": 225346.93503684984,
+      "completed": 450816,
+      "peak_status": "available"
+    },
+    {
+      "threads": 12,
+      "arm": "native",
+      "raw_sha256": "92ba4ceffe5e336d7c8011f480526421cc0f68211d3af8639cdb995e315c4cab",
+      "ops_s": 227675.8431662378,
+      "completed": 455616,
+      "peak_status": "available"
+    },
+    {
+      "threads": 16,
+      "arm": "native",
+      "raw_sha256": "190b2ee5c3479ed4368ab08d3d7210af7ada254ca9a8727eca8adb1d5ea866a9",
+      "ops_s": 224642.77770275105,
+      "completed": 449696,
+      "peak_status": "available"
+    },
+    {
+      "threads": 20,
+      "arm": "native",
+      "raw_sha256": "513793b67d4272c15e8576225863c056257ca01fdfee746a891e3853dc49a3f6",
+      "ops_s": 219631.7970064025,
+      "completed": 439712,
+      "peak_status": "available"
+    },
+    {
+      "threads": 24,
+      "arm": "native",
+      "raw_sha256": "1955fae95e6e9309bcee0eba919bc170b8f8421c5eb1ce631c4ed944e7a9e114",
+      "ops_s": 203919.4333936743,
+      "completed": 408544,
+      "peak_status": "available"
+    },
+    {
+      "threads": 28,
+      "arm": "native",
+      "raw_sha256": "2f808fcd9e5557d3826fdd10023ea0e818257011fc14e76445f4712553833417",
+      "ops_s": 209484.74678376687,
+      "completed": 419520,
+      "peak_status": "available"
+    },
+    {
+      "threads": 32,
+      "arm": "native",
+      "raw_sha256": "00b9bd0d51c58c5e9a06c34dde17b3aa09f81022c33f84939ec90960059b9d4d",
+      "ops_s": 209686.1737204608,
+      "completed": 420192,
+      "peak_status": "available"
+    },
+    {
+      "threads": 36,
+      "arm": "native",
+      "raw_sha256": "2c3c614528981d0811f90a0547692b37d361cf003c6069489ec9975f9f7a1d75",
+      "ops_s": 177032.402666535,
+      "completed": 354784,
+      "peak_status": "available"
+    },
+    {
+      "threads": 40,
+      "arm": "native",
+      "raw_sha256": "59bae487ac1b7f19f1aa2a1b665bba7764107568d7bdafdff2c39253b6291682",
+      "ops_s": 164459.10681910077,
+      "completed": 329664,
+      "peak_status": "available"
+    },
+    {
+      "threads": 44,
+      "arm": "native",
+      "raw_sha256": "b2a0ad038017f947f4317c7e462b879e6a10ad3ab97e75a39cb16bf9db7cba25",
+      "ops_s": 157391.82710869273,
+      "completed": 315584,
+      "peak_status": "available"
+    },
+    {
+      "threads": 48,
+      "arm": "native",
+      "raw_sha256": "b6a94c7ac4a48de59ca758d46526c3dc2c88fba530b3aba0aeec36d522c5bad0",
+      "ops_s": 140716.98966583973,
+      "completed": 282176,
+      "peak_status": "available"
+    },
+    {
+      "threads": 52,
+      "arm": "native",
+      "raw_sha256": "a076e86ad2d5516ed8b6514c81a9d8ebd662e8fe396db8f9a17d5d16528c4b82",
+      "ops_s": 138168.88574843897,
+      "completed": 277376,
+      "peak_status": "available"
+    },
+    {
+      "threads": 56,
+      "arm": "native",
+      "raw_sha256": "81b99467019aca0cce6b1c78db53a080a602717292f269f9f9c1e98a199eb650",
+      "ops_s": 135529.548974664,
+      "completed": 271904,
+      "peak_status": "available"
+    },
+    {
+      "threads": 60,
+      "arm": "native",
+      "raw_sha256": "23eb13d9faf956e625409eaed9498dd5d5558031c175ba98ee8f05e9b14f18d6",
+      "ops_s": 132873.53980082835,
+      "completed": 267040,
+      "peak_status": "available"
+    },
+    {
+      "threads": 1,
+      "arm": "kd",
+      "raw_sha256": "ad46c1f363f95e9232fae1effccca339ee7d6b16d3fb0330d2f937562781f2c4",
+      "ops_s": 357066.4988549854,
+      "completed": 714144,
+      "peak_status": "available"
+    },
+    {
+      "threads": 2,
+      "arm": "kd",
+      "raw_sha256": "52747ef5667bc04684a7e40a5f839a8c50724f0787076014d95035a8452d951f",
+      "ops_s": 228141.7374820563,
+      "completed": 456320,
+      "peak_status": "available"
+    },
+    {
+      "threads": 3,
+      "arm": "kd",
+      "raw_sha256": "e11da8a419a1d67635f9c39f5bfae23b2c6fa9c463723acacb1016970cf7fa1d",
+      "ops_s": 147107.4370315962,
+      "completed": 294272,
+      "peak_status": "available"
+    },
+    {
+      "threads": 4,
+      "arm": "kd",
+      "raw_sha256": "f925ec604821e3db5402ee0be991150f0015fe985f7d8b16a181b32a1a76fb77",
+      "ops_s": 112508.93356106515,
+      "completed": 225056,
+      "peak_status": "available"
+    },
+    {
+      "threads": 5,
+      "arm": "kd",
+      "raw_sha256": "ce51d7c5fdac415bd3f3a0309e7ab9922f2b5f1888a6c7282d8a2829d90a782d",
+      "ops_s": 89953.14381217738,
+      "completed": 180000,
+      "peak_status": "available"
+    },
+    {
+      "threads": 6,
+      "arm": "kd",
+      "raw_sha256": "1a4757c28f4d71bc598e75d2d1e0607582e4a19df7def03c28e64b9b0556b436",
+      "ops_s": 87704.9250688882,
+      "completed": 175552,
+      "peak_status": "available"
+    },
+    {
+      "threads": 7,
+      "arm": "kd",
+      "raw_sha256": "10a54d9ed55c11e90a10c76a9b10ebdd23a283e5771218c0e908aa459d4e0fab",
+      "ops_s": 78763.89258640692,
+      "completed": 157664,
+      "peak_status": "available"
+    },
+    {
+      "threads": 8,
+      "arm": "kd",
+      "raw_sha256": "e49bfdc45ebc0c320f20a7ab5dac2171c6bbbf008d5fedf0adf611c298a83c6a",
+      "ops_s": 63507.38470983616,
+      "completed": 127136,
+      "peak_status": "available"
+    },
+    {
+      "threads": 12,
+      "arm": "kd",
+      "raw_sha256": "7ff3e1a91473e2cccc7a20b4adffc7861ca61eeb3bcb1057c5a90a2f8dfd1586",
+      "ops_s": 41596.97887199024,
+      "completed": 83296,
+      "peak_status": "available"
+    },
+    {
+      "threads": 16,
+      "arm": "kd",
+      "raw_sha256": "ec992f344e296e3610a54525af371e459af918a376732be2e23e4464c2673dbb",
+      "ops_s": 29355.69740905918,
+      "completed": 58912,
+      "peak_status": "available"
+    },
+    {
+      "threads": 20,
+      "arm": "kd",
+      "raw_sha256": "e6fabf6db39d3c423f7cb2efa470f86b6487ea98b8aa95ce5207647b83d47ea1",
+      "ops_s": 23420.522851997768,
+      "completed": 47072,
+      "peak_status": "available"
+    },
+    {
+      "threads": 24,
+      "arm": "kd",
+      "raw_sha256": "29b5c865ea1dd3e39fad77ad2d6866b5cf7d2b17cefb21c80820fbfdbba9ccfb",
+      "ops_s": 19723.540831855065,
+      "completed": 39712,
+      "peak_status": "available"
+    },
+    {
+      "threads": 28,
+      "arm": "kd",
+      "raw_sha256": "cedd41d63279033bd823dc32c782c460743caa6486b841080594052c4d1992c0",
+      "ops_s": 17234.603823205478,
+      "completed": 34720,
+      "peak_status": "available"
+    },
+    {
+      "threads": 32,
+      "arm": "kd",
+      "raw_sha256": "4f9ed807f5fcf5e6babf8eef523a64ee3be4790de0e93ebb4210372685ce2f9a",
+      "ops_s": 15371.23523434629,
+      "completed": 31104,
+      "peak_status": "unavailable"
+    },
+    {
+      "threads": 36,
+      "arm": "kd",
+      "raw_sha256": "bf3ee6a7b851d5844892811cce6ee6c591b7bba752a109329dacb24c70f4066b",
+      "ops_s": 11859.337589867593,
+      "completed": 24096,
+      "peak_status": "unavailable"
+    },
+    {
+      "threads": 40,
+      "arm": "kd",
+      "raw_sha256": "adf1d4297271454a999da37b1f9e435abf155c4e7890c8cbd6038ed7ade56e42",
+      "ops_s": 10289.836721016003,
+      "completed": 20992,
+      "peak_status": "unavailable"
+    },
+    {
+      "threads": 44,
+      "arm": "kd",
+      "raw_sha256": "74d0ac6325231ac86cf25e31e9dfa4341e31f48804b3f95e012d1a411b8e3f31",
+      "ops_s": 9066.950965343443,
+      "completed": 18560,
+      "peak_status": "unavailable"
+    },
+    {
+      "threads": 48,
+      "arm": "kd",
+      "raw_sha256": "93409b4eefa38c14b5d81ff1ac9e115a59444bb16ede8f9880faa77fd125908a",
+      "ops_s": 8150.648233352745,
+      "completed": 16800,
+      "peak_status": "unavailable"
+    },
+    {
+      "threads": 52,
+      "arm": "kd",
+      "raw_sha256": "6a53634bce419ea1317bb68269ef1bffc74b30e4f999c2ec5ad4b23e4a6eb9ea",
+      "ops_s": 7511.554747660464,
+      "completed": 15584,
+      "peak_status": "unavailable"
+    },
+    {
+      "threads": 56,
+      "arm": "kd",
+      "raw_sha256": "aebc1c46b1735b82609c2f35a5ed2b224a5b49f8a27b3d6e9217e310600e9a38",
+      "ops_s": 6935.448407578816,
+      "completed": 14592,
+      "peak_status": "unavailable"
+    },
+    {
+      "threads": 60,
+      "arm": "kd",
+      "raw_sha256": "057da83422e0da79bb80872911191f6c7fefc50032b8bd90550da22721ae4b39",
+      "ops_s": 6441.881985580561,
+      "completed": 13536,
+      "peak_status": "unavailable"
+    }
+  ],
+  "frequency": {
+    "target_khz": 2000000,
+    "strict_qualified": false,
+    "endpoint_count": 87,
+    "endpoints": [
+      {
+        "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-fixedfreq-20261027/mm/shared/initial-recovery-qualification.json",
+        "sha256": "05c1c4817976c034b60b9d049491f5400cb3c0e48d5ca0303a2b17903e7c8d82",
+        "bytes": 962
+      },
+      {
+        "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-fixedfreq-20261027/mm/shared/kd-admission-qualification.json",
+        "sha256": "3ec4a2753783aad88e3623332ddf6cb0f8257ed1f16c085640dbcf8fe060634c",
+        "bytes": 954
+      },
+      {
+        "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-fixedfreq-20261027/mm/shared/kd-n1-after-qualification.json",
+        "sha256": "5f56e27175821b3fccb3b90b6b5a7ae84c5ba16b4f82f6196be2ad27835b4551",
+        "bytes": 952
+      },
+      {
+        "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-fixedfreq-20261027/mm/shared/kd-n1-before-qualification.json",
+        "sha256": "379acfc98147aa89c68601d068df3d229e038810c6fb0efd621c5143bb3e0126",
+        "bytes": 954
+      },
+      {
+        "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-fixedfreq-20261027/mm/shared/kd-n12-after-qualification.json",
+        "sha256": "7a0cf7104f800df6332060dbe73becf0f4055546b7f852e7bad454c2b7db31fd",
+        "bytes": 954
+      },
+      {
+        "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-fixedfreq-20261027/mm/shared/kd-n12-before-qualification.json",
+        "sha256": "145ab03a7f67e99591518f1f38b9860f03810e64a79c272bc558f581fc71e3ec",
+        "bytes": 956
+      },
+      {
+        "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-fixedfreq-20261027/mm/shared/kd-n16-after-qualification.json",
+        "sha256": "3cfb06c9d2e842d624069e1e60a4b94aea0e907c9cc4dd335e199569d352d0ce",
+        "bytes": 954
+      },
+      {
+        "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-fixedfreq-20261027/mm/shared/kd-n16-before-qualification.json",
+        "sha256": "9312e791234cea51040408b35a53a9761e9fb89a1323470795447d17c5722749",
+        "bytes": 956
+      },
+      {
+        "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-fixedfreq-20261027/mm/shared/kd-n2-after-qualification.json",
+        "sha256": "f339ade0bc168e60107f310d831d974647af73b06ef3b64b73077057d86e281a",
+        "bytes": 952
+      },
+      {
+        "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-fixedfreq-20261027/mm/shared/kd-n2-before-qualification.json",
+        "sha256": "0a3650edf8522619a77cb7457b14ca13ffcc9ab7449369fa79a3620fe2720e11",
+        "bytes": 954
+      },
+      {
+        "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-fixedfreq-20261027/mm/shared/kd-n20-after-qualification.json",
+        "sha256": "05cb6896e9434bc29af3dfda62ff026e8c3f5b5d1001113b244430f4d35db977",
+        "bytes": 954
+      },
+      {
+        "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-fixedfreq-20261027/mm/shared/kd-n20-before-qualification.json",
+        "sha256": "39ed2eacd43008892abcf3b0d073d7bba7d8a01fee90e50f34ff993372d8c6f6",
+        "bytes": 956
+      },
+      {
+        "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-fixedfreq-20261027/mm/shared/kd-n24-after-qualification.json",
+        "sha256": "08500a45d5b778632b8d4c924ff53d468c9f916bb74d88ab666c459719fc0c9d",
+        "bytes": 954
+      },
+      {
+        "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-fixedfreq-20261027/mm/shared/kd-n24-before-qualification.json",
+        "sha256": "97c3dcfac38a8970ec9b001ff54b38540076d1fb8025ac5bf4248cf2dae7cacc",
+        "bytes": 956
+      },
+      {
+        "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-fixedfreq-20261027/mm/shared/kd-n28-after-qualification.json",
+        "sha256": "6c6ac501e1a255debd61942d4f4330f931668bff7e11341a40169439129ba900",
+        "bytes": 954
+      },
+      {
+        "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-fixedfreq-20261027/mm/shared/kd-n28-before-qualification.json",
+        "sha256": "f347d89f1f53b76c278e8d180cecf0f76a49667424c7b9700bed4eae0cff720d",
+        "bytes": 956
+      },
+      {
+        "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-fixedfreq-20261027/mm/shared/kd-n3-after-qualification.json",
+        "sha256": "82f60708abb5b25441327ede3df29a096231fec54fa262370f08a9c511ceecf0",
+        "bytes": 952
+      },
+      {
+        "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-fixedfreq-20261027/mm/shared/kd-n3-before-qualification.json",
+        "sha256": "1316fe393305a5f36a7a913dbb013ff30d2b516a7cf236d671d89abadefcf4bb",
+        "bytes": 954
+      },
+      {
+        "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-fixedfreq-20261027/mm/shared/kd-n32-after-qualification.json",
+        "sha256": "b6af1b222d27d47c911f31e6f150e8363d6df6c15d23283d68667d940f66ccc8",
+        "bytes": 954
+      },
+      {
+        "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-fixedfreq-20261027/mm/shared/kd-n32-before-qualification.json",
+        "sha256": "03c2fdc953fc4c628ace7b659414f92687b4f9f3a649d105897880e2a3ea75c8",
+        "bytes": 956
+      },
+      {
+        "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-fixedfreq-20261027/mm/shared/kd-n36-after-qualification.json",
+        "sha256": "b6f203a7966d54ff5e0013c5f2e1cf425c4a9a0bd7b9c9f89c6a92b5d99ddfae",
+        "bytes": 954
+      },
+      {
+        "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-fixedfreq-20261027/mm/shared/kd-n36-before-qualification.json",
+        "sha256": "c1094a02264caf531d45a61976c5ccab889b8d454a99b9d34401f178a61b3f35",
+        "bytes": 956
+      },
+      {
+        "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-fixedfreq-20261027/mm/shared/kd-n4-after-qualification.json",
+        "sha256": "651b2d7956997f106755b36a5918b84c9ac5918030e5338326ad7d707baa3ac8",
+        "bytes": 952
+      },
+      {
+        "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-fixedfreq-20261027/mm/shared/kd-n4-before-qualification.json",
+        "sha256": "9062cab2215a1d7c791c47bbaa43185cb54d7a77f2326c563ccfe1c4c748f7f2",
+        "bytes": 954
+      },
+      {
+        "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-fixedfreq-20261027/mm/shared/kd-n40-after-qualification.json",
+        "sha256": "2d20a3c49f38b68653340e508e9afdccbd77bf9ff41334c75a09c6e8326010e1",
+        "bytes": 954
+      },
+      {
+        "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-fixedfreq-20261027/mm/shared/kd-n40-before-qualification.json",
+        "sha256": "59bc08fec3cc6af1a85657eec10098a10fa56f62e83dfbf40919971c57d1d18b",
+        "bytes": 956
+      },
+      {
+        "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-fixedfreq-20261027/mm/shared/kd-n44-after-qualification.json",
+        "sha256": "b6b54cf26d1bb0afd0d49d8a92f9431630626a8e246cee224b53da8da1eb402e",
+        "bytes": 954
+      },
+      {
+        "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-fixedfreq-20261027/mm/shared/kd-n44-before-qualification.json",
+        "sha256": "19e8bb3b48aaea011790b8a582608550e8cc3133ebd4b8f27f193cc67a96a9ba",
+        "bytes": 956
+      },
+      {
+        "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-fixedfreq-20261027/mm/shared/kd-n48-after-qualification.json",
+        "sha256": "1a6d6af89adfa0cc4e7c122855818b286bddf60703b16d2eaf4e562d87f7d669",
+        "bytes": 954
+      },
+      {
+        "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-fixedfreq-20261027/mm/shared/kd-n48-before-qualification.json",
+        "sha256": "87123f66621f6f89dd5bec512bf231213681aad900f511175659ef53e488657a",
+        "bytes": 956
+      },
+      {
+        "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-fixedfreq-20261027/mm/shared/kd-n5-after-qualification.json",
+        "sha256": "3155188e70ec8dc328db88395f71258158482fd3d9fb5dcb487b3784a5135a24",
+        "bytes": 952
+      },
+      {
+        "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-fixedfreq-20261027/mm/shared/kd-n5-before-qualification.json",
+        "sha256": "125211177c494d98956ff44d1b48e9442184d91e81d29475d0ac17b6180204fc",
+        "bytes": 954
+      },
+      {
+        "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-fixedfreq-20261027/mm/shared/kd-n52-after-qualification.json",
+        "sha256": "e8ed42ea4400db017697de2fabbb9abf293259e63a52e727dcefd3e6be240b9e",
+        "bytes": 954
+      },
+      {
+        "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-fixedfreq-20261027/mm/shared/kd-n52-before-qualification.json",
+        "sha256": "17b8ef6b57443fc99c49173d755cbbb5d58ee1480cb83b32fc468f0156e6e191",
+        "bytes": 956
+      },
+      {
+        "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-fixedfreq-20261027/mm/shared/kd-n56-after-qualification.json",
+        "sha256": "b7ded6ac5346ae000d33952fb337960bced58ea09c6d0875a376de6e09201552",
+        "bytes": 954
+      },
+      {
+        "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-fixedfreq-20261027/mm/shared/kd-n56-before-qualification.json",
+        "sha256": "5101aa42fad7fb58a58df576830d9370a9b69f8e1627bd78edf9054e17ef754c",
+        "bytes": 956
+      },
+      {
+        "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-fixedfreq-20261027/mm/shared/kd-n6-after-qualification.json",
+        "sha256": "96a40693385f254dd6754762f0d643897ca9b3c9483542460598459f2e5d3e74",
+        "bytes": 952
+      },
+      {
+        "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-fixedfreq-20261027/mm/shared/kd-n6-before-qualification.json",
+        "sha256": "930f4535c2e0c56f4651e0dd747480442b12781f2fee07efd6496f45f85d2c8a",
+        "bytes": 954
+      },
+      {
+        "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-fixedfreq-20261027/mm/shared/kd-n60-after-qualification.json",
+        "sha256": "09de8c528bb12d9456885253a697b26f2676a07140ebdd779ed0f9537656a401",
+        "bytes": 954
+      },
+      {
+        "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-fixedfreq-20261027/mm/shared/kd-n60-before-qualification.json",
+        "sha256": "d4019fcd37456c270038de60e8b2496a53e96c886c1e8aae167c2ba8430fa617",
+        "bytes": 956
+      },
+      {
+        "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-fixedfreq-20261027/mm/shared/kd-n7-after-qualification.json",
+        "sha256": "8b7bf8c4eba8ff7119f8bfdef282e56283a7c9044816d5b8bf0ae70391f9607c",
+        "bytes": 952
+      },
+      {
+        "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-fixedfreq-20261027/mm/shared/kd-n7-before-qualification.json",
+        "sha256": "bd81de3ca9f8a5d59a570fd561dfadc8dc10c2ac203a1d99145c021365b0f503",
+        "bytes": 954
+      },
+      {
+        "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-fixedfreq-20261027/mm/shared/kd-n8-after-qualification.json",
+        "sha256": "8b5c45b2e47977120b5676a341d73171221294c5fca87420427b3e29b62a95ca",
+        "bytes": 952
+      },
+      {
+        "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-fixedfreq-20261027/mm/shared/kd-n8-before-qualification.json",
+        "sha256": "5c8a5e41ab10b29b9733f809bbc1eb75d56e753206774a47695e687489554195",
+        "bytes": 954
+      },
+      {
+        "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-fixedfreq-20261027/mm/shared/native-admission-qualification.json",
+        "sha256": "2ee71e009afa9f691620ad8e3d3a04f8d391a1a15ce5d9e5f9aca658a997c5ad",
+        "bytes": 962
+      },
+      {
+        "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-fixedfreq-20261027/mm/shared/native-n1-after-qualification.json",
+        "sha256": "67756e84a399cde9b65fd1d37b507967c475c619094720f9a1874b2c3723f569",
+        "bytes": 960
+      },
+      {
+        "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-fixedfreq-20261027/mm/shared/native-n1-before-qualification.json",
+        "sha256": "98dd36f85a651d5818617a06fd7dd9ede73c5806ca6853bf6fb710d13ff5ccc5",
+        "bytes": 962
+      },
+      {
+        "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-fixedfreq-20261027/mm/shared/native-n12-after-qualification.json",
+        "sha256": "3bdc5c411729096124af78f4645531ef37913f423cbbbe6bed238394ec7ecefd",
+        "bytes": 962
+      },
+      {
+        "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-fixedfreq-20261027/mm/shared/native-n12-before-qualification.json",
+        "sha256": "44125b9562afc3efdbc57590aacba4b713d6b0d50c6b588bf596837c05b3acd2",
+        "bytes": 964
+      },
+      {
+        "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-fixedfreq-20261027/mm/shared/native-n16-after-qualification.json",
+        "sha256": "5da86455eb35b5ce57485794a65d10f4587e08346442320f6e49076132d91dee",
+        "bytes": 962
+      },
+      {
+        "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-fixedfreq-20261027/mm/shared/native-n16-before-qualification.json",
+        "sha256": "14826c4f3310080e01e164007282dd566571242924ac084c956da7c4282a01a3",
+        "bytes": 964
+      },
+      {
+        "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-fixedfreq-20261027/mm/shared/native-n2-after-qualification.json",
+        "sha256": "f58edb2ae15eaa0000b8d6d153df2b38dd16dc226720f63d4156f3a7d40bfabc",
+        "bytes": 960
+      },
+      {
+        "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-fixedfreq-20261027/mm/shared/native-n2-before-qualification.json",
+        "sha256": "9bd0dd5b4de3bb4cb68ebd9d9f9c8ac653adcb7c72b22cfbfd8bfee3b11c9294",
+        "bytes": 962
+      },
+      {
+        "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-fixedfreq-20261027/mm/shared/native-n20-after-qualification.json",
+        "sha256": "a5af4d6faa0b09cd13b87e2430e0d5501ef78393566f28966b42f04378dab835",
+        "bytes": 962
+      },
+      {
+        "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-fixedfreq-20261027/mm/shared/native-n20-before-qualification.json",
+        "sha256": "4e4d89145b7353c46835fb290bd843e61df0b77c558eaf89e449448e868279f7",
+        "bytes": 964
+      },
+      {
+        "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-fixedfreq-20261027/mm/shared/native-n24-after-qualification.json",
+        "sha256": "b2486934b932b0b0a139a3c9e967016425b8dffb4fe36ad90617f1cfd935d7b7",
+        "bytes": 962
+      },
+      {
+        "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-fixedfreq-20261027/mm/shared/native-n24-before-qualification.json",
+        "sha256": "59f7e9ea60dfabf0d7e78b7b374f5e2e2311f375b91a4a83ea2d5ef000062cf3",
+        "bytes": 964
+      },
+      {
+        "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-fixedfreq-20261027/mm/shared/native-n28-after-qualification.json",
+        "sha256": "ab388b6b456b2515d573b5cfa29b0eef17b03657d03d17678d4a6c4f1117bb92",
+        "bytes": 962
+      },
+      {
+        "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-fixedfreq-20261027/mm/shared/native-n28-before-qualification.json",
+        "sha256": "e7e8251093608fdafb0199a5332d76c04d80223c0a47be241ad0c60e18b2f83a",
+        "bytes": 964
+      },
+      {
+        "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-fixedfreq-20261027/mm/shared/native-n3-after-qualification.json",
+        "sha256": "17a0e3fa721c1e44da206bb281db08c7998878b789ced89d4e8e7f96b755ea39",
+        "bytes": 960
+      },
+      {
+        "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-fixedfreq-20261027/mm/shared/native-n3-before-qualification.json",
+        "sha256": "ea62e475e6d1495071503d83175a97f0770a29443f2ad4fe4dd095f2f754b0c6",
+        "bytes": 962
+      },
+      {
+        "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-fixedfreq-20261027/mm/shared/native-n32-after-qualification.json",
+        "sha256": "8a6d05fbd6e63713d336e362b0a6717f04c4cfd19ce941dafe27bcc599a75c25",
+        "bytes": 962
+      },
+      {
+        "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-fixedfreq-20261027/mm/shared/native-n32-before-qualification.json",
+        "sha256": "b3bfb678d7ea54a65a4e88c52fdc8ba8db11f00fc9b951ade21e9eac04c78b92",
+        "bytes": 964
+      },
+      {
+        "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-fixedfreq-20261027/mm/shared/native-n36-after-qualification.json",
+        "sha256": "e8cf7c0609f9edefb139bab33cde71ba9aa1127ea0abdb94228ed451c8a1129c",
+        "bytes": 962
+      },
+      {
+        "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-fixedfreq-20261027/mm/shared/native-n36-before-qualification.json",
+        "sha256": "5919c714ddb1263115317f6ef4c8cbdab7cc011f20e8450b357fe2b563b945e2",
+        "bytes": 964
+      },
+      {
+        "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-fixedfreq-20261027/mm/shared/native-n4-after-qualification.json",
+        "sha256": "c55d65072635bef2eedf51e72fae08184b028022c1444c18ca2b2604feacc7b7",
+        "bytes": 960
+      },
+      {
+        "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-fixedfreq-20261027/mm/shared/native-n4-before-qualification.json",
+        "sha256": "5f3b9abada570c4997dded6870d85aebcd67e9d27f09091d5239297b6f1a3077",
+        "bytes": 962
+      },
+      {
+        "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-fixedfreq-20261027/mm/shared/native-n40-after-qualification.json",
+        "sha256": "2c5028f84d4fef366db7c01ff31ab1dc147eb56df6595c0d8e3d49b467949d8b",
+        "bytes": 962
+      },
+      {
+        "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-fixedfreq-20261027/mm/shared/native-n40-before-qualification.json",
+        "sha256": "1e584850452a7da194ec70c3ac282736b0f35848e56f37ae73289c53cafcfda9",
+        "bytes": 964
+      },
+      {
+        "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-fixedfreq-20261027/mm/shared/native-n44-after-qualification.json",
+        "sha256": "636479be432d5d548daf9e012d22e48a0973fd15afca064c1632a61c5dd0e935",
+        "bytes": 962
+      },
+      {
+        "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-fixedfreq-20261027/mm/shared/native-n44-before-qualification.json",
+        "sha256": "1607af98b4ea929b912bf8d35cbacf4ed30b335ad87fbb013e26af1c6a3064d5",
+        "bytes": 964
+      },
+      {
+        "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-fixedfreq-20261027/mm/shared/native-n48-after-qualification.json",
+        "sha256": "bd2b682451efbf9be43d70d879c7864be79f6ce8e11f4a34fb51cecc884067e7",
+        "bytes": 962
+      },
+      {
+        "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-fixedfreq-20261027/mm/shared/native-n48-before-qualification.json",
+        "sha256": "0b306cd7e5140f719289a5b638d8351c9069f442986ca158b83302071d668a26",
+        "bytes": 964
+      },
+      {
+        "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-fixedfreq-20261027/mm/shared/native-n5-after-qualification.json",
+        "sha256": "74375dc13c7e2ddbad1305489fbcc27158098959a864f951a7401c16789be650",
+        "bytes": 960
+      },
+      {
+        "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-fixedfreq-20261027/mm/shared/native-n5-before-qualification.json",
+        "sha256": "78d070c32fb923e1851c06c4075df9ca46686dbd9cbe40b51993255726012f2d",
+        "bytes": 962
+      },
+      {
+        "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-fixedfreq-20261027/mm/shared/native-n52-after-qualification.json",
+        "sha256": "9173aad1032be2df8d0e07d1eae259d09199b323fc49662c75c1a220d6d1c13e",
+        "bytes": 962
+      },
+      {
+        "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-fixedfreq-20261027/mm/shared/native-n52-before-qualification.json",
+        "sha256": "928a22dbefd52a4c9e9cce1e85c7aba6611ae6b84ac9e51ec57b25f578021392",
+        "bytes": 964
+      },
+      {
+        "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-fixedfreq-20261027/mm/shared/native-n56-after-qualification.json",
+        "sha256": "073235b1245ec795966847bca595c57adc0dbd8310517cf575ace04275d1ef44",
+        "bytes": 962
+      },
+      {
+        "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-fixedfreq-20261027/mm/shared/native-n56-before-qualification.json",
+        "sha256": "7662a5f566dd372ccb58a6527b5ff4b91f9e3504e5a53b938504524a9896b152",
+        "bytes": 964
+      },
+      {
+        "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-fixedfreq-20261027/mm/shared/native-n6-after-qualification.json",
+        "sha256": "d8e50c3c11160e8fdcd76b8e3afd8589f3e11f0881ece0c71f9988d13f3a998a",
+        "bytes": 960
+      },
+      {
+        "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-fixedfreq-20261027/mm/shared/native-n6-before-qualification.json",
+        "sha256": "010a515d7a7712f3d83cdb0dd27856367d62f8b69cc94574dd697316ee37a497",
+        "bytes": 962
+      },
+      {
+        "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-fixedfreq-20261027/mm/shared/native-n60-after-qualification.json",
+        "sha256": "8a977737d0944ac9e67599e53b4a0195ccc3a7f601b6002b7ddf74bcbda00026",
+        "bytes": 962
+      },
+      {
+        "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-fixedfreq-20261027/mm/shared/native-n60-before-qualification.json",
+        "sha256": "bcdf1541f38737eaee58028d40264c4126ed7956f61f958cc6d326133b90dabb",
+        "bytes": 964
+      },
+      {
+        "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-fixedfreq-20261027/mm/shared/native-n7-after-qualification.json",
+        "sha256": "dbf9b3ac6b5e84a66c5a6727ce2e72d05e4562705a3c79e35c225be4af5fc8ae",
+        "bytes": 960
+      },
+      {
+        "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-fixedfreq-20261027/mm/shared/native-n7-before-qualification.json",
+        "sha256": "f272cd46f6dcdbea2838cefa3fa405ec44117391e88d3b64225015c3672435f7",
+        "bytes": 962
+      },
+      {
+        "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-fixedfreq-20261027/mm/shared/native-n8-after-qualification.json",
+        "sha256": "d86c4c320560276b7f1c8bad1af6ef61aaa573d779f501a565d90bb572cb1524",
+        "bytes": 960
+      },
+      {
+        "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-fixedfreq-20261027/mm/shared/native-n8-before-qualification.json",
+        "sha256": "cd58c825957a25f42a7ed9f706ba4c2f9330c4aa20629524b32d47686d68461c",
+        "bytes": 962
+      }
+    ],
+    "monitors": [
+      {
+        "stream": {
+          "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-fixedfreq-20261027/mm/shared/mm-shared-native-frequency-monitor.jsonl",
+          "sha256": "3366f76366c83093ecf5635729853e92b4f1551ee2c11322de67b5ad56c401f2",
+          "bytes": 21580564
+        },
+        "command": {
+          "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-fixedfreq-20261027/mm/shared/mm-shared-native-frequency-monitor-command.json",
+          "sha256": "8c1ba950fce7f1f7fe2f14f6d664d834edf6b6c0b71669ad0785528b60856ceb",
+          "bytes": 653
+        },
+        "samples": 1999,
+        "busy_mhz_at_least_5pct_busy_min": 1983.9792344871078,
+        "busy_mhz_at_least_5pct_busy_max": 2000.103574175685,
+        "interpretation": "One-second host busy-clock observations; no per-operation frequency claim"
+      },
+      {
+        "stream": {
+          "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-fixedfreq-20261027/mm/shared/mm-shared-kd-frequency-monitor.jsonl",
+          "sha256": "f4d54a4d0129c1a29b006c06d667ac5be272874ee14ace8390786077655d86e7",
+          "bytes": 21631499
+        },
+        "command": {
+          "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-fixedfreq-20261027/mm/shared/mm-shared-kd-frequency-monitor-command.json",
+          "sha256": "3644c1e86053fe2b68c5f2b933af23f46cf740190a65d6998e247b3470e1f907",
+          "bytes": 649
+        },
+        "samples": 2004,
+        "busy_mhz_at_least_5pct_busy_min": 1986.0488086424314,
+        "busy_mhz_at_least_5pct_busy_max": 2000.1362898660914,
+        "interpretation": "One-second host busy-clock observations; no per-operation frequency claim"
+      }
+    ]
+  },
+  "optional_peak_unavailable": 8
+}

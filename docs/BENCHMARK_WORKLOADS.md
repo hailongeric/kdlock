@@ -36,9 +36,16 @@ and the MM suites add 126; preparation failures remain failed points, not passes
 The maintained [current command plan](../bench/catalog_single/current_plan.py)
 defines the 61 lock/API configurations; its historical `plan.py` counterpart
 continues to define the earlier 51-case screen.
-The requested fixed-2.0-GHz rerun is a new single-round campaign. Its frozen
-plans and frequency receipts must establish the settings actually measured;
-selection here does not establish a completed result.
+The [October 27 full catalog at fixed 2.0 GHz](../bench/results/10.176.26.71/bench/catalog-fixedfreq-20261027/README.md)
+at source `a9aeb280` completed all 61 lock/API configurations: 3,704 valid measurements and 139 retained failed points.
+The separate MM suites have 126/126 archive-audited measurements. Independent-mm mappings, private-backing faults and actual shared-mm mappings retain their separate kernel/backend identities.
+Every measured coordinate has one round. Failed preparation has no rate;
+strict host timing qualification remains failed under the authorized exploratory
+policy. Frequency telemetry and exact data/drain validation are separate
+from timing qualification. [Per-workload tables and ratios](../bench/results/10.176.26.71/bench/catalog-fixedfreq-20261027/COMPARISON.md)
+retain all workload, call-shell, source and kernel distinctions. No rates are pooled.
+
+Xattr preparation failed at 139/168 KD coordinates, versus 47/168 in the historical catalog. These attempts retained exact drain and have no throughput. The fixed eight-worker helper cohort and returned-body prerequisite are unchanged; the reason for the increased failure incidence is not established. [Preparation evidence and limits](../bench/results/10.176.26.71/bench/catalog-fixedfreq-20261027/XATTR_PREPARATION.md).
 
 The explicitly requested [single-round October 26 screen](../bench/results/10.176.26.71/bench/catalog-single-20261026/README.md)
 attempted the 51 then-selected lock/API configurations on that grid.

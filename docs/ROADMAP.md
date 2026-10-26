@@ -73,7 +73,27 @@ recorded separately from the still-failed strict host membership gate. The
 host remains at the requested 2.0 GHz; this single round does not close the
 repeatability gate or replace the earlier campaign's recorded evidence.
 
-Stage 2 is in progress and its performance objective is **not achieved**. The
+The [expanded fixed-frequency catalog](../bench/results/10.176.26.71/bench/catalog-fixedfreq-20261027/README.md) at `a9aeb280`
+adds all ten active nano profiles: 630 valid, drained measurements. At
+60 workers, only the two mutex profiles exceed both Native and TCLock.
+Both 1%-write rwsem profiles beat Native without JIT, and every rwsem
+and rwlock nano profile remains below TCLock at that count. The
+sixteen-counter, 1%-write rwlock loses to Native throughout the
+cross-NUMA counts. These results bound the favorable regime; they do not
+close the repeatability gate or justify promoting every selected profile
+as a demonstrated KD best case.
+
+Xattr preparation failed at 139/168 KD coordinates, versus 47/168 in the historical catalog. These attempts retained exact drain and have no throughput. The fixed eight-worker helper cohort and returned-body prerequisite are unchanged; the reason for the increased failure incidence is not established. [Preparation evidence and limits](../bench/results/10.176.26.71/bench/catalog-fixedfreq-20261027/XATTR_PREPARATION.md).
+
+Stage 2 is in progress and its performance objective is **not achieved**.
+The [October 27 fixed-frequency MM comparison](../bench/results/10.176.26.71/bench/catalog-fixedfreq-20261027/MM_INTERPRETATION.md)
+completed all 126 implemented measurements. At 60 workers, the retained
+`kdmm31` shared-mm kernel measured Native/KD at 132,873.54/6,441.88 complete
+mmap/munmap pairs/s; KD reached only 0.04848× Native. Its local-writer admission
+and wake policy remains distinct from the current external-module nano path.
+The private-backing fault result is a separate local-reader comparison.
+
+The
 [October 26 MM screen](../bench/results/10.176.26.71/bench/catalog-mmap-single-20261026/README.md)
 completed all 126 implemented points. At 60 workers, the existing 4 KiB shared-mm
 writer workload measured 70,350.82 Native versus 6,752.42 KD cycles/s. In the

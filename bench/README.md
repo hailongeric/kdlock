@@ -64,10 +64,12 @@ python3 bench/catalog_single/current_plan.py \
 
 That plan covers 3,843 lock/API points on the standard 21-count grid. The three
 MM suites add 126 points through their separately prepared runners, for 3,969
-planned observations. The requested fixed-2.0-GHz campaign uses one round per
-point and publishes each workload table after collection. It remains a planned
-campaign until its reports establish completion; failed preparation is retained
-as failure rather than a measured pass. The original
+planned observations. The [October 27 fixed-2.0-GHz campaign](results/10.176.26.71/bench/catalog-fixedfreq-20261027/README.md)
+completed all 61 lock/API configurations: 3,704 valid measurements and 139 retained failed points. Its [comparison table](results/10.176.26.71/bench/catalog-fixedfreq-20261027/COMPARISON.md)
+keeps each workload and 60-worker ratio separate. The separate MM suites have 126/126 archive-audited measurements. Independent-mm mappings, private-backing faults and actual shared-mm mappings retain their separate kernel/backend identities.
+Each point has one round; failed preparation has no rate. Strict timing
+qualification remains failed despite fixed-frequency checks and exact drain.
+The original
 [`catalog_single/plan.py`](catalog_single/plan.py) and October 26 reports preserve
 the historical 51-case selection. A request to run this catalog does not imply
 running the full unit-test suite. Follow the VM guide for frequency receipts,

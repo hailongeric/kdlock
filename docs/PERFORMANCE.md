@@ -1,5 +1,60 @@
 # Performance status
 
+The [October 27 full catalog at fixed 2.0 GHz](../bench/results/10.176.26.71/bench/catalog-fixedfreq-20261027/README.md)
+at source `a9aeb280` completed all 61 lock/API configurations: 3,704 valid measurements and 139 retained failed points.
+The separate MM suites have 126/126 archive-audited measurements. Independent-mm mappings, private-backing faults and actual shared-mm mappings retain their separate kernel/backend identities.
+Every measured coordinate has one round. Failed preparation has no rate;
+strict host timing qualification remains failed under the authorized exploratory
+policy. Frequency telemetry and exact data/drain validation are separate
+from timing qualification. [Per-workload tables and ratios](../bench/results/10.176.26.71/bench/catalog-fixedfreq-20261027/COMPARISON.md)
+retain all workload, call-shell, source and kernel distinctions. No rates are pooled.
+
+Xattr preparation failed at 139/168 KD coordinates, versus 47/168 in the historical catalog. These attempts retained exact drain and have no throughput. The fixed eight-worker helper cohort and returned-body prerequisite are unchanged; the reason for the increased failure incidence is not established. [Preparation evidence and limits](../bench/results/10.176.26.71/bench/catalog-fixedfreq-20261027/XATTR_PREPARATION.md).
+
+The ten active nano profiles completed **630 measurements and 630 warmups**.
+Their whole-run rates at **60 workers** are Mops/s:
+
+| Nano profile | Native | TCLock | KD | KD / Native | KD / TCLock | Returned writes |
+|:---|---:|---:|---:|---:|---:|---:|
+| `mutex-throughput` | 1.610 | 2.634 | 4.863 | 3.020× | 1.846× | 99.160% |
+| `mutex-locality` | 1.448 | 1.806 | 3.871 | 2.674× | 2.143× | 99.265% |
+| `rwsem-throughput-read` | 3.165 | 7.941 | 5.788 | 1.829× | 0.729× | 0% (NO_JIT) |
+| `rwsem-throughput-mixed` | 1.255 | 4.767 | 1.812 | 1.444× | 0.380× | 5.951% |
+| `rwsem-locality-read` | 2.588 | 9.896 | 6.583 | 2.543× | 0.665× | 0% (NO_JIT) |
+| `rwsem-locality-mixed` | 1.175 | 3.811 | 1.775 | 1.510× | 0.466× | 24.238% |
+| `rwlock-throughput-read` | 6.932 | 7.859 | 7.639 | 1.102× | 0.972× | 17.268% |
+| `rwlock-throughput-mixed` | 3.055 | 4.325 | 3.560 | 1.165× | 0.823× | 2.807% |
+| `rwlock-locality-read` | 9.075 | 10.166 | 8.374 | 0.923× | 0.824× | 10.731% |
+| `rwlock-locality-mixed` | 2.415 | 3.920 | 2.425 | 1.004× | 0.619× | 2.579% |
+
+Only the two mutex profiles exceed both comparators at 60 workers. Both
+retain lower-count Native losses and NO_JIT observations. All four rwsem
+profiles exceed Native at 60 but remain below TCLock; the two 1%-write profiles
+record NO_JIT throughout the grid, so their gains do not establish delegation.
+All four rwlock profiles also trail TCLock at 60. The sixteen-counter,
+1%-write rwlock is 7.73% below Native at 60 and loses to Native at every
+cross-NUMA count from 36 through 60. Its 20%-write counterpart is only 0.396%
+above Native at 60, a descriptive near equality rather than an established win.
+
+Returned share uses completed writes as its denominator, not all operations.
+More returned bodies do not guarantee more throughput: rwsem c16/mixed returns
+24.24% of writes versus c01/mixed's 5.95%, but has a slightly lower KD rate.
+These comparisons show the combined effect of lock implementation, work spacing
+and workload; they do not isolate causal overheads or establish a universal best
+case. One round supplies no repeat-variability estimate.
+
+The [three MM suites](../bench/results/10.176.26.71/bench/catalog-fixedfreq-20261027/MM_INTERPRETATION.md)
+completed 126 valid measurements. At 60 workers, private-backing fault cycles
+measured Native/TCLock/KD at 4.807/5.608/5.636 Mcycles/s; these use local backing
+readers while actual mmap locks remain Native. Actual shared-mm mmap/munmap on
+the historical installed `6.1.159-kdmm31` kernel measured Native/KD at
+132,873.54/6,441.88 complete pairs/s: KD achieved 0.04848× Native throughput.
+This does not establish shared-mm improvement. Competitive phase reservation
+and broadcast wake/retry work are source-grounded hypotheses, without profiling
+attribution. This local-writer path does not use current nano JIT batching or
+its 768-body boundary. Kernel identities, missing optional peaks and recovery
+checks remain explicit in the linked reports.
+
 The user has promoted the favorable nano defaults to `mutex-throughput`
 (one padded counter/post256) and `mutex-locality` (16 padded counters/post256),
 with mutex total cap 1024 and NUMA boundary 768. The active rwsem and rwlock
