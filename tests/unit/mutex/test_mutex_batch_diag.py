@@ -143,6 +143,8 @@ def main():
         (path/'fixture.c').write_text(fixture)
         command = shlex.split(os.environ.get('CC', 'cc'))+[
             '-std=gnu11', '-O2', '-Wall', '-Wextra', '-Werror',
+            # This fixture retains the historical terminal-loop scenarios.
+            '-DKDLOCK_MUTEX_NUMA_BOUNDARY=256',
             '-I'+str(path), '-I'+str(ROOT/'tests/unit/mutex')]
         binary = path/'enabled'
         subprocess.run(command+[str(path/'fixture.c'), '-o', str(binary)],
@@ -154,6 +156,7 @@ def main():
                   for line in result.stdout.splitlines() if line.startswith(('DIAG ', 'MAX '))}
         sample = values['DIAG']
         assert sample['schema'] == 2 and sample['compiled'] == 1
+        assert sample['total_cap'] == 1024 and sample['numa_boundary'] == 256
         assert sample['completed_hist_bins'] == len(sample['completed_hist']) == 16
         assert sample['deferred_peak_hist_bins'] == len(sample['deferred_peak_hist']) == 8
         assert sample['batches'] == 22 == sum(sample['completed_hist'])

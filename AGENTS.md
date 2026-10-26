@@ -11,10 +11,13 @@ The maintained branch is `master`. Preserve the KD-only foundation selected at
 `d2a2304`: KD physical exclusion, ABI2, pinned published delegation waiters,
 immutable mutex images and fail-closed instruction admission. The current mutex
 keeps its 32-byte native-aligned layout, shares preallocated CPU/slot storage
-between independent OSQ and delegation memberships, and uses a 256-body NUMA
+between independent OSQ and delegation memberships, and uses a 768-body NUMA
 locality boundary. At that boundary, eight or more deferred requests receive
 handoff; a smaller prefix is serviced before a bounded FIFO remainder. Keep the
-separate links, cancellation and retirement obligations. Do not restore the rejected
+total cap at 1024 by default and preserve the separate links, cancellation and
+retirement obligations. The 768 default was promoted at the user's request from
+exploratory cross-NUMA evidence; it is not a universal performance guarantee.
+Do not restore the rejected
 owned/adaptive protocol, Linux mutex backing, or parked delegation producers.
 Direct `kd_mutex_lock/unlock` calls and ordinary blocking aliases use the unified
 ABI2 interface; callable lock symbols and signal/try/I/O APIs execute locally.

@@ -55,9 +55,9 @@ def parser():
     p.add_argument('--post-work-rounds', type=int, default=4)
     p.add_argument('--spin-entry-ratio-limit', type=int, default=2)
     p.add_argument('--mutex-batch-limit', type=int, default=1024,
-                   help='KD mutex-only experimental total service cap; default 1024')
-    p.add_argument('--mutex-numa-boundary', type=int, default=256,
-                   help='KD mutex-only experimental NUMA cohort boundary; default 256')
+                   help='KD mutex total service cap; default 1024')
+    p.add_argument('--mutex-numa-boundary', type=int, default=768,
+                   help='KD mutex NUMA cohort boundary; default 768')
     p.add_argument('--delegate', choices=('on', 'off'), default='on',
                    help='KD local control when off; rwsem compiles the ordinary API shell')
     p.add_argument('--require-jit', action='store_true',
@@ -74,7 +74,7 @@ def mutex_policy(args):
     cap, boundary = args.mutex_batch_limit, args.mutex_numa_boundary
     require(type(cap) is int and type(boundary) is int and 1 <= cap <= 32767 and 1 <= boundary <= 32767,
             'mutex policy requires total cap and NUMA boundary in 1..32767')
-    require((cap, boundary) == (1024, 256) or
+    require((cap, boundary) == (1024, 768) or
             (args.lock_kind == 'mutex' and 'kdlock' in args.backends and args.delegate == 'on'),
             'nondefault mutex policy requires a public KD mutex experiment')
     return dict(total_cap=cap, numa_boundary=boundary, deferred_handoff=8, scan_budget=64)

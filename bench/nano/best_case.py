@@ -13,25 +13,27 @@ import time
 
 ROOT = Path(__file__).resolve().parents[2]
 PROFILES = {'mutex': ('mutex', 100), 'rwsem-read': ('rwsem', 1),
-            'rwsem-mixed': ('rwsem', 20), 'mutex-locality': ('mutex', 100)}
+            'rwsem-mixed': ('rwsem', 20), 'mutex-locality': ('mutex', 100),
+            'mutex-throughput': ('mutex', 100)}
+THREADS = [*range(1, 9), *range(12, 61, 4)]
 
 
 def parser():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('--output', type=Path, required=True)
     p.add_argument('--profiles', nargs='+', choices=PROFILES,
-                   default=['mutex-locality', 'rwsem-read', 'rwsem-mixed'])
-    p.add_argument('--threads', nargs='+', type=int, default=[1, 8, 16, 32, 36, 60])
+                   default=['mutex-throughput', 'mutex-locality', 'rwsem-read', 'rwsem-mixed'])
+    p.add_argument('--threads', nargs='+', type=int, default=THREADS)
     p.add_argument('--backends', nargs='+', choices=('native', 'tclock', 'kdlock'),
                    default=['native', 'tclock', 'kdlock'])
     p.add_argument('--repeats', type=int, choices=(1, 3), default=1)
     p.add_argument('--post-work-rounds', type=int,
-                   help='override all profiles; defaults: mutex-locality=64, other profiles=4')
+                   help='override all profiles; defaults: mutex-throughput/locality=256, other profiles=4')
     p.add_argument('--delegate', choices=('on', 'off'), default='on')
     p.add_argument('--mutex-batch-limit', type=int, default=1024,
-                   help='KD mutex-only experimental total service cap; default 1024')
-    p.add_argument('--mutex-numa-boundary', type=int, default=256,
-                   help='KD mutex-only experimental NUMA cohort boundary; default 256')
+                   help='KD mutex total service cap; default 1024')
+    p.add_argument('--mutex-numa-boundary', type=int, default=768,
+                   help='KD mutex NUMA cohort boundary; default 768')
     p.add_argument('--functional', action='store_true')
     p.add_argument('--plan-only', action='store_true')
     return p
@@ -41,7 +43,7 @@ def commands(args):
     cap, boundary = args.mutex_batch_limit, args.mutex_numa_boundary
     if not (type(cap) is int and type(boundary) is int and 1 <= cap <= 32767 and 1 <= boundary <= 32767):
         raise ValueError('mutex policy requires total cap and NUMA boundary in 1..32767')
-    if (cap, boundary) != (1024, 256) and not (
+    if (cap, boundary) != (1024, 768) and not (
             all(PROFILES[name][0] == 'mutex' for name in args.profiles) and
             'kdlock' in args.backends and args.delegate == 'on'):
         raise ValueError('nondefault mutex policy requires only public KD mutex profiles')
@@ -56,11 +58,12 @@ def commands(args):
     for profile in args.profiles:
         family, percent = PROFILES[profile]
         name = profile + ('-local' if args.delegate == 'off' else '')
-        locality = profile == 'mutex-locality'
-        post_work = args.post_work_rounds if args.post_work_rounds is not None else (64 if locality else 4)
+        counters = profile in ('mutex-throughput', 'mutex-locality')
+        lines = 1 if profile == 'mutex-throughput' else 16 if counters else 2
+        post_work = args.post_work_rounds if args.post_work_rounds is not None else (256 if counters else 4)
         yield name, [sys.executable, str(ROOT/'bench/rwlock_compare/run.py'),
-            '--workloads', 'cacheline' if locality else 'nano',
-            '--cachelines', '16' if locality else '2',
+            '--workloads', 'cacheline' if counters else 'nano',
+            '--cachelines', str(lines),
             '--lock-kind', family, '--write-percent', str(percent),
             '--threads', *map(str, args.threads), '--cpus', *map(str, range(max(args.threads))),
             '--collector-cpu', '63', '--backends', *args.backends,

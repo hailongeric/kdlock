@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Guest-only, unscored diagnostics for the two existing mutex nano bodies.
+"""Guest-only, unscored diagnostics for mutex nano profiles and their control.
 
 Only the measured client is wrapped. Preparation, translation and warmup retain
 their ordinary boundaries. The inherited client includes startup/collection;
@@ -30,11 +30,12 @@ PERF = Path('/root/kdlock-evidence/10.176.26.71/bench/mutex-admission-20261013/t
 EVENTS = ('cycles:k', 'instructions:k', 'cache-references:k', 'cache-misses:k',
           'branches:k', 'branch-misses:k', 'task-clock', 'context-switches',
           'cpu-migrations', 'page-faults')
-PROFILES = {'mutex': ('nano', 2, 4), 'mutex-locality': ('cacheline', 16, 64)}
+PROFILES = {'mutex': ('nano', 2, 4), 'mutex-throughput': ('cacheline', 1, 256),
+            'mutex-locality': ('cacheline', 16, 256)}
 OBSERVATION_PARAMS = ('bench_jit_bodies', 'bench_jit_completions', 'address_guard_count')
 UNEXPORTED_MUTEX_COUNTERS = ('kd_mutex_combiner_count', 'kd_mutex_jit_success_count',
                             'kd_mutex_handoff_count')
-BATCH_METADATA = dict(schema=2, compiled=1, total_cap=1024, numa_boundary=256,
+BATCH_METADATA = dict(schema=2, compiled=1, total_cap=1024, numa_boundary=768,
                       deferred_handoff=8, scan_budget=64, numa_aware=1,
                       completed_hist_bins=16, deferred_peak_hist_bins=8)
 BATCH_COUNTERS = ('batches', 'attempts', 'jit_completed', 'native_completed',
@@ -97,7 +98,7 @@ def selected_mutex_policy(args):
     policy = dict(total_cap=args.mutex_batch_limit, numa_boundary=args.mutex_numa_boundary,
                   deferred_handoff=8, scan_budget=64)
     batch_metadata(policy)
-    require((args.mutex_batch_limit, args.mutex_numa_boundary) == (1024, 256) or
+    require((args.mutex_batch_limit, args.mutex_numa_boundary) == (1024, 768) or
             'kdlock' in selected_backends(args), 'nondefault mutex policy requires KD')
     return policy
 
@@ -426,12 +427,13 @@ def parser():
     p.add_argument('--source-root', type=Path, default=ROOT)
     p.add_argument('--source-commit', required=True)
     p.add_argument('--perf', type=Path, default=PERF)
-    p.add_argument('--profiles', nargs='+', choices=PROFILES, default=list(PROFILES))
+    p.add_argument('--profiles', nargs='+', choices=PROFILES,
+                   default=['mutex-throughput', 'mutex-locality'])
     p.add_argument('--threads', nargs='+', type=int, choices=(16, 32, 36, 60), default=[16, 36, 60])
     p.add_argument('--backends', nargs='+', choices=('native', 'kdlock'))
     p.add_argument('--frequency', type=int, choices=(199, 499, 997), default=499)
     p.add_argument('--mutex-batch-limit', type=int, default=1024)
-    p.add_argument('--mutex-numa-boundary', type=int, default=256)
+    p.add_argument('--mutex-numa-boundary', type=int, default=768)
     p.add_argument('--record-event', default='cycles:k')
     p.add_argument('--events', nargs='+', default=list(EVENTS))
     p.add_argument('--allow-multiplex', action='store_true')

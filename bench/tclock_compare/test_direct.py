@@ -380,12 +380,12 @@ ret
                 build = run.provider_build(args)
                 self.assertIn(f'KDLOCK_SPIN_BATCH={cap}', build)
                 self.assertIn(f'KDLOCK_MUTEX_BATCH={cap if kind == "mutex" else 1024}', build)
-                self.assertIn('KDLOCK_MUTEX_NUMA_BOUNDARY=256', build)
+                self.assertIn('KDLOCK_MUTEX_NUMA_BOUNDARY=768', build)
                 row, = run.make_plan(args)
                 self.assertEqual(row['delegation_batch_limit'], cap)
                 self.assertEqual(row['provider_mutex_policy'], dict(
                     total_cap=cap if kind == 'mutex' else 1024,
-                    numa_boundary=256, deferred_handoff=8, scan_budget=64))
+                    numa_boundary=768, deferred_handoff=8, scan_budget=64))
 
     def test_provider_ubsan_option_and_private_build(self):
         # Both entrypoints default to off; explicit policies and direct helper

@@ -89,7 +89,11 @@ separates correctness checks from the accepted performance measurements below.
 The current mutex is 32 bytes with native 8-byte alignment. Its delegation phase
 and tail are embedded in the object; preallocated CPU/slot nodes share storage
 between independent OSQ and delegation memberships. There is no auxiliary
-address-indexed table. The
+address-indexed table. The user-selected defaults are a 1024-body total cap and
+768-body NUMA locality boundary; the
+[optimization study](bench/results/10.176.26.71/bench/mutex-profile-20261026/OPTIMIZATION.md)
+retains the exploratory cross-NUMA gains and same-node regressions motivating
+that choice. The earlier
 [shared-node comparison](bench/results/10.176.26.71/bench/mutex32-mcs-20261020/README.md)
 records the 256-body NUMA locality policy and remaining performance gaps against
 the old 256-byte object. Earlier compact-table measurements remain historical.

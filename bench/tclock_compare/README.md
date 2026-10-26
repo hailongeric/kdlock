@@ -8,12 +8,14 @@ encoded CPU/slot identity. Ordinary optimistic spinners temporarily reserve a
 slot; an initial delegation head explicitly lends its existing reservation.
 OSQ unlink/handoff finishes before temporary release or scheduling. There is no
 auxiliary hash, shared lock reference count, registry lock or new RCU mechanism.
-The retained `752fec1` policy uses a 256-body NUMA locality boundary: eight or more
+The current policy uses a 768-body NUMA locality boundary: eight or more
 deferred requests receive handoff, while a smaller prefix precedes FIFO service
 for the rest of the bounded batch. The total cap remains 1024 by default.
 The shared client validates the embedded object extent; other lock types keep
-their own sizes. The [current three-backend comparison](../results/10.176.26.71/bench/mutex32-native-tclock-20261020/README.md)
-measures this runtime through collection revision `bd9d4ce`, covering all seven
+their own sizes. The user promoted boundary 768 after exploratory cross-NUMA
+gains with mixed same-node results; see the [nano guide](../nano/README.md).
+The earlier [three-backend comparison](../results/10.176.26.71/bench/mutex32-native-tclock-20261020/README.md)
+measures `752fec1` with boundary 256 through collection revision `bd9d4ce`, covering all seven
 mutex workloads at nine worker counts with three repetitions. It includes
 243 synthetic sessions for c01/post64, c08/post64 and exclusive-update RCUHT,
 plus 324 API sessions. All 567 completed correctly and drained.

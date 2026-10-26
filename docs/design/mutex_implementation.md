@@ -4,7 +4,7 @@
 waiters. New delegation callers use ABI2; ABI0 remains an internal legacy
 compatibility interface. The current OSQ and delegation queues share reserved
 node storage while keeping independent memberships. Bounded NUMA selection
-hands larger deferred cohorts to the next owner at a 256-body local boundary;
+hands larger deferred cohorts to the next owner at a 768-body local boundary;
 a smaller rejoined prefix is followed by FIFO service under the current owner.
 The [compatibility backport](../history/legacy_mutex_compatibility.md) adds fail-closed
 processor-state admission, immutable mutex images and generation-bound frames.
@@ -343,7 +343,7 @@ flowchart TD
 ```
 
 The batch keeps a real tail while it temporarily defers remote-NUMA requests.
-At 256 serviced bodies, or when reaching a terminal node with deferred work,
+At the default 768 serviced bodies, or when reaching a terminal node with deferred work,
 eight or more deferred requests cause handoff. A smaller deferred prefix
 rejoins ahead of the remainder, which is then served in FIFO order within the
 total batch cap. Normal handoff elects the next queue head; the current owner
@@ -533,7 +533,7 @@ full CAS is skipped; the producer's full tail exchange precedes publication.
 
 [combiner.inc](../../kernel_module/mutex/combiner.inc) selects local requests
 when built with NUMA enabled. It can defer at most 64 fully linked remote nodes;
-an unlinked global tail is never detached. At the default boundary of 256
+an unlinked global tail is never detached. At the default boundary of 768
 completed bodies, or when the
 retained successor has no link, deferred requests take priority. Eight or more
 deferred requests receive physical handoff with the prefix rejoined first.
@@ -549,12 +549,24 @@ do not prove scheduler-independent starvation freedom.
 The default total cap is exactly 1024 bodies. Independent build definitions
 `KDLOCK_MUTEX_BATCH` and `KDLOCK_MUTEX_NUMA_BOUNDARY` select the total cap and
 locality boundary; neither changes spin batching. The legacy `--kd-batch-size`
-mutex runner explicitly forwards its cap and retains boundary 256. The
+mutex runner explicitly forwards its cap and uses boundary 768. The
 [nano profiling guide](../../bench/nano/README.md#profiling-the-mutex-profiles)
 documents separate bounded experiments for both values. Runners verify the
 provider's `mutex_batch` and `mutex_numa_boundary` ELF metadata and retain the
 policy with each result. A longer cohort can delay remote service; it does not
 establish a throughput or latency improvement by itself.
+
+The user promoted the 768 boundary after the
+[October 26 optimization study](../../bench/results/10.176.26.71/bench/mutex-profile-20261026/OPTIMIZATION.md).
+Under the same frozen source, four 36/60-worker ordinary observations improved
+8.41–15.95% over boundary 256, while both 16-worker bodies regressed. Separate
+batch diagnostics showed fewer remote returned bodies at 36 and longer mostly
+local batches at 60. These exploratory observations motivate the selected
+default; they do not guarantee a gain for another workload or worker count.
+The total cap, deferred-handoff threshold, scan budget and exact ownership,
+admission, cancellation and retirement rules remain unchanged. Historical
+256-boundary measurements retain their original source and policy identities.
+
 The combiner takes one enclosing source lease and uses
 `kd_exec_frame_push_mutex_batch()` plus `kd_exe_mutex_batch_prepare()` for
 eligible simple ABI2 roots. Each request still checks source OPEN and current

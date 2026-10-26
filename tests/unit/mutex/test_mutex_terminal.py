@@ -70,6 +70,9 @@ def main():
             binary=path/name
             subprocess.run(shlex.split(os.environ.get('CC','cc'))+[
                 '-std=gnu11','-O2','-Wall','-Wextra','-Werror','-I'+str(path),
+                # Preserve the original interleaving/mutation scenarios at
+                # their explicit historical boundary; policy tests cover 768.
+                '-DKDLOCK_MUTEX_NUMA_BOUNDARY=256',
                 str(ROOT/'tests/unit/mutex/mutex_terminal_fixture.c'),'-o',str(binary)],
                 check=True,timeout=30)
             result=subprocess.run([str(binary)],text=True,capture_output=True,timeout=10)

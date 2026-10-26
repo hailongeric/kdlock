@@ -89,7 +89,7 @@ def provider_build(args):
              f'KDLOCK_NUMA={int(args.numa == "on")}',
              f'KDLOCK_SPIN_BATCH={args.kd_batch_size}',
              f'KDLOCK_MUTEX_BATCH={args.kd_batch_size if getattr(args, "lock_kind", "spin") == "mutex" else 1024}',
-             'KDLOCK_MUTEX_NUMA_BOUNDARY=256']
+             'KDLOCK_MUTEX_NUMA_BOUNDARY=768']
     if getattr(args, 'kd_provider_ubsan', DEFAULT_KD_PROVIDER_UBSAN) == 'off':
         build.append('UBSAN_SANITIZE=n')
     return build
@@ -182,7 +182,7 @@ def make_plan(args):
                 numa_policy=numa if backend != 'native' else 'not_applicable',
                 delegation_batch_limit=batch if backend == 'kdlock' else (1024 if backend == 'tclock' else None),
                 provider_mutex_policy=dict(total_cap=batch if lock_kind == 'mutex' else 1024,
-                    numa_boundary=256, deferred_handoff=8, scan_budget=64) if backend == 'kdlock' else None,
+                    numa_boundary=768, deferred_handoff=8, scan_budget=64) if backend == 'kdlock' else None,
                 pmu=getattr(args, 'pmu', False),
                 perf_record=getattr(args, 'perf_record', False),
                 diagnostic=bool(getattr(args, 'pmu', False) or getattr(args, 'perf_record', False)),
@@ -505,7 +505,7 @@ def main(lock_kind='spin'):
                             'KD mutex batch build identity differs')
                     mutex_boundary = command(['modinfo', '-F', 'mutex_numa_boundary', binary],
                                              out/'kdlock-mutex-numa-boundary.txt').strip()
-                    require(mutex_boundary == '256', 'KD mutex NUMA boundary build identity differs')
+                    require(mutex_boundary == '768', 'KD mutex NUMA boundary build identity differs')
                 audit_provider_ubsan(out, args.kd_provider_ubsan)
         if 'tclock' in args.backends:
             # Check the actual ELF: changing a Kbuild variable must not leave a

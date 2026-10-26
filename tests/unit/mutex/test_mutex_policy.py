@@ -11,7 +11,11 @@ from pathlib import Path
 from source_text import ROOT, read_source, without_includes
 from test_mutex_terminal import production_sources
 
-MAIN = r'''int main(void)
+MAIN = r'''#ifdef KD_MUTEX_EXPECT_DEFAULT
+_Static_assert(KDLOCK_MUTEX_BATCH==1024 && KDLOCK_MUTEX_NUMA_BOUNDARY==768,
+               "maintained mutex policy defaults differ");
+#endif
+int main(void)
 {
     const unsigned int cap=KDLOCK_MUTEX_BATCH, boundary=KDLOCK_MUTEX_NUMA_BOUNDARY;
     scenario=1;reset(cap+2);
@@ -61,7 +65,14 @@ def main():
         command = shlex.split(os.environ.get('CC', 'cc')) + [
             '-std=gnu11', '-O2', '-Wall', '-Wextra', '-Werror',
             '-I'+str(path), '-I'+str(ROOT/'tests/unit/mutex')]
-        for cap, boundary in ((1, 256), (128, 256), (1024, 256), (4096, 256), (1024, 768), (4096, 768)):
+        # No policy override: verify the actual header defaults as well as
+        # the same queue/ownership checks used for explicit configurations.
+        binary = path/'policy-default'
+        subprocess.run(command+['-DKD_MUTEX_EXPECT_DEFAULT', str(path/'fixture.c'),
+                                 '-o', str(binary)], check=True, timeout=30)
+        subprocess.run([str(binary)], check=True, timeout=10)
+        for cap, boundary in ((1, 256), (128, 256), (1024, 256), (4096, 256),
+                              (1, 768), (128, 768), (1024, 768), (4096, 768)):
             binary = path/f'policy-{cap}-{boundary}'
             flags = [f'-DKDLOCK_MUTEX_BATCH={cap}', f'-DKDLOCK_MUTEX_NUMA_BOUNDARY={boundary}']
             subprocess.run(command+flags+[str(path/'fixture.c'), '-o', str(binary)], check=True, timeout=30)

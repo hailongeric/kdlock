@@ -16,7 +16,7 @@ profile = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(profile)
 
 
-BATCH_METADATA = dict(schema=2, compiled=1, total_cap=1024, numa_boundary=256,
+BATCH_METADATA = dict(schema=2, compiled=1, total_cap=1024, numa_boundary=768,
                       deferred_handoff=8, scan_budget=64, numa_aware=1,
                       completed_hist_bins=16, deferred_peak_hist_bins=8)
 BATCH_COUNTERS = ('batches', 'attempts', 'jit_completed', 'native_completed',
@@ -165,7 +165,7 @@ class NanoProfileTests(unittest.TestCase):
 
     def test_policy_cli_is_forwarded_and_invalid_policy_precedes_live_work(self):
         base = ['--mode', 'batch', '--output', '/tmp/new-profile', '--source-commit', 'a' * 40]
-        for cap, boundary in ((1024, 256), (4096, 256), (1024, 768)):
+        for cap, boundary in ((1024, 768), (4096, 768), (1024, 256)):
             args = profile.parser().parse_args(base + ['--mutex-batch-limit', str(cap),
                                                       '--mutex-numa-boundary', str(boundary)])
             argv = profile.runner_arguments(args, 'mutex')
@@ -183,9 +183,15 @@ class NanoProfileTests(unittest.TestCase):
         args = profile.parser().parse_args(['--mode', 'stat', '--output', '/tmp/new-profile',
                                            '--source-commit', 'a' * 40])
         self.assertEqual(args.threads, [16, 36, 60])
+        self.assertEqual((args.mutex_batch_limit, args.mutex_numa_boundary), (1024, 768))
+        self.assertEqual(args.profiles, ['mutex-throughput', 'mutex-locality'])
         self.assertEqual(profile.selected_backends(args), ['native', 'kdlock'])
-        for name, post in [('mutex', '4'), ('mutex-locality', '64')]:
+        for name, workload, lines, post in [('mutex', 'nano', '2', '4'),
+                ('mutex-throughput', 'cacheline', '1', '256'),
+                ('mutex-locality', 'cacheline', '16', '256')]:
             argv = profile.runner_arguments(args, name)
+            self.assertEqual(argv[argv.index('--workloads') + 1], workload)
+            self.assertEqual(argv[argv.index('--cachelines') + 1], lines)
             self.assertEqual(argv[argv.index('--post-work-rounds') + 1], post)
             self.assertEqual(argv[argv.index('--repeats') + 1], '1')
             self.assertEqual(argv[argv.index('--write-percent') + 1], '100')
@@ -213,7 +219,7 @@ class NanoProfileTests(unittest.TestCase):
 
 class NanoBatchSnapshotTests(unittest.TestCase):
     def test_nondefault_batch_metadata_requires_the_exact_recorded_policy(self):
-        for cap, boundary in ((4096, 256), (1024, 768)):
+        for cap, boundary in ((4096, 768), (1024, 256)):
             policy = dict(total_cap=cap, numa_boundary=boundary, deferred_handoff=8, scan_budget=64)
             before, after = batch_snapshot(), batch_snapshot(2)
             before.update(policy)

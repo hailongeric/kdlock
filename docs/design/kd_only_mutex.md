@@ -9,7 +9,7 @@ The main branch is `master`, retaining the KD physical-ownership foundation
 selected at `d2a2304` with the accepted `555b8b7` compatibility baseline. The tags
 `accepted/kd-only-mutex-20261018` and `accepted/kd-mutex-compat-20261017` retain
 those measured versions. Current code shares preallocated OSQ/delegation node
-storage and retains handoff for larger deferred NUMA cohorts at a 256-body local
+storage and retains handoff for larger deferred NUMA cohorts at a 768-body local
 boundary. `master` is authoritative;
 `current/kd-mutex` retains the earlier `af330db` instruction-exit checkpoint at
 this review. The owned/adaptive experiment is archived; see
@@ -85,13 +85,17 @@ by OSQ cancellation. Their physical executor may sleep while acquiring the
 mutex, retaining its original reserved node and exact waiter record.
 
 NUMA selection can defer at most 64 fully linked remote requests. At the
-256-body locality boundary, or earlier terminal-link exhaustion, a deferred
+default 768-body locality boundary, or earlier terminal-link exhaustion, a deferred
 cohort of eight or more requests receives handoff with its prefix rejoined
 first. A smaller prefix is rejoined and serviced by the current owner, followed
 by FIFO selection for the rest of that batch. The configured total batch cap
 remains 1024 by default. Refusal, native continuation, early outer release and
 source/frame/ACK retirement retain their separate boundaries. This scheduling
 change does not expand instruction admission or park published producers.
+The user-selected default follows exploratory cross-NUMA results with mixed
+same-node results; the [implementation guide](mutex_implementation.md#queue-batch-execution-and-recovery)
+records that decision and its limits. Earlier measurements at boundary 256
+remain separate historical evidence.
 
 ## Object and API contract
 

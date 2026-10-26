@@ -73,16 +73,23 @@ measurement resulted from that attempt.
 ## KD API use and delegation
 
 The later [minimal nano workloads](../bench/nano/README.md) are separate additions
-to the catalog. The mutex locality profile reduces the resident list to sixteen
-directly addressed, 64-byte-aligned counters, updating all sixteen under public
-ABI2 mutex calls. The minimum-body mutex control and the 1%/20%-write rwsem
+to the catalog. `mutex-throughput` updates one 64-byte-aligned counter;
+`mutex-locality` reduces the resident list to sixteen directly addressed,
+64-byte-aligned counters, updating all sixteen under public ABI2 mutex calls.
+The optional `mutex` minimum-body control and the 1%/20%-write rwsem
 profiles use two adjacent 64-bit words in one 64-byte record; writers increment
 both and readers compare them. All retain matched Native/TCLock/KD work, exact
-totals and returned-body evidence. Default nano runs select mutex locality and
-both rwsem profiles at six worker counts and one round. They do not fill or alter
-the earlier 51-configuration screen.
-The measured favorable mutex setting uses 64 post-unlock rounds; rwsem and the
-minimal mutex control use four. The [fresh tables and analysis](../bench/results/10.176.26.71/bench/nano-pair-20261026/README.md)
+totals and returned-body evidence. Default nano runs select both favorable mutex
+profiles and both rwsem profiles at 21 worker counts (`1..8,12..60`, stepping by
+four above eight), with one round. The two favorable mutex profiles use 256
+post-unlock rounds; rwsem and the optional two-word mutex control use four.
+They do not fill or alter the earlier 51-configuration screen.
+The user-directed promotion follows an exploratory
+[factor screen](../bench/results/10.176.26.71/bench/mutex-profile-20261026/factor-grid/README.md)
+under the earlier 256 NUMA boundary and a separate boundary experiment with
+cross-NUMA gains and mixed within-node outcomes. The new 126-point mutex-only
+comparison uses the promoted 768 boundary; its results remain separate from
+those selection studies. The [earlier tables and analysis](../bench/results/10.176.26.71/bench/nano-pair-20261026/README.md)
 retain both successful and unsuccessful simplifications and explicit local controls.
 See the [per-workload analysis](../bench/results/10.176.26.71/bench/catalog-single-20261026/PERFORMANCE_ANALYSIS.md)
 for the selection and the distinction between delegated mutex wins and local
@@ -285,19 +292,22 @@ configuration, matching Native's embedded footprint. Its delegation phase
 and encoded tail are embedded; versioned waiter records and an independent
 24-byte OSQ subrecord use existing node space. Four 320-byte slots per CPU serve
 both memberships without changing their separate cancellation/retirement rules.
-NUMA selection has a 64-node scan budget and a 256-body locality boundary;
-larger deferred cohorts receive handoff and smaller prefixes continue FIFO,
+NUMA selection has a 64-node scan budget and a 768-body locality boundary;
+eight or more deferred requests receive handoff and smaller prefixes continue FIFO,
 within the configured total cap of 1024. There is no auxiliary lookup, shared
 lock reference count or shared waiter-count update. Lock storage is separate
 from workload counters and controls. The
 recorded `d2a2304` KD-only comparisons used a 256-byte, 128-byte-aligned object;
 they do not measure the compact layout or establish a performance gain for it.
-The c01 name counts payload cachelines only. Spin/mutex loops currently include 64 dependent arithmetic rounds
+The c01 name counts payload cachelines only. The historical spin/mutex loops include 64 dependent arithmetic rounds
 after each unlock, defined in [post_work.h](../workload_modules/spin_cacheline/post_work.h).
 The accepted c01 1–8-worker profile, later 22-count comparison and expanded
 21-count mutex comparison use this post64 setting. An eight-round variant is
 a different workload and needs its own baseline; it must not be pooled with
 those results.
+The current favorable nano profiles use their separate reader/writer benchmark
+payload with 256 rounds, as described above; the optional two-word mutex control
+uses four. Identical `c01` labels do not make these workload settings equivalent.
 
 At completion, each selected counter must match the total completed increments;
 unselected counters must remain unchanged.

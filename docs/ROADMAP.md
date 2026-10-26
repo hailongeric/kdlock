@@ -46,6 +46,18 @@ profile lost to Native at every contended count. These are separate, single-roun
 observations, not repeated acceptance evidence or a universal best case. The
 [nano guide](../bench/nano/README.md) defines the exact bodies and controls.
 
+The user-directed promotion now selects `mutex-throughput` (one padded counter)
+and `mutex-locality` (16 padded counters), both with 256 post-unlock rounds, and
+sets the mutex NUMA boundary to 768 with the total cap still 1024. The
+[factor screen](../bench/results/10.176.26.71/bench/mutex-profile-20261026/factor-grid/README.md)
+selected the bodies under the earlier 256 boundary. The separate
+[768-boundary screen](../bench/results/10.176.26.71/bench/mutex-profile-20261026/policy-numa768-vs-policy-control/README.md)
+showed cross-NUMA gains alongside losses at 16 workers. These exploratory results
+motivate the choice, not a guaranteed gain. The new 21-count comparison of both
+mutex profiles against Native and TCLock is pending; it has 126 planned timings,
+one round per point. Keep its source, policy and workload identity separate from
+the selection studies.
+
 Stage 2 is in progress and its performance objective is **not achieved**. The
 [October 26 MM screen](../bench/results/10.176.26.71/bench/catalog-mmap-single-20261026/README.md)
 completed all 126 implemented points. At 60 workers, the existing 4 KiB shared-mm
@@ -74,12 +86,13 @@ Determine when the cost of admission, publication, JIT execution, ownership
 transfer and retirement is amortized by batching and shared-data locality.
 Distinguish this from improvements in local lock acquisition or reader admission.
 
-1. Use the maintained mutex locality nano profile as the favorable hypothesis:
-   16 independently aligned counters, identical updates under one mutex, and the
-   recorded post64 work. Keep its body and parameters fixed during comparison.
-2. Retain the one-record minimum-body mutex and the post4 locality variant as
-   controls. They expose cases where delegation overhead or contention patterns
-   outweigh the benefit; do not remove them from reports when they lose.
+1. Use the two maintained favorable mutex profiles: `mutex-throughput` updates
+   one padded counter and `mutex-locality` updates 16 independently aligned
+   counters. Both use 256 post-unlock rounds. Keep each body and its parameters
+   fixed during comparison.
+2. Retain the optional `mutex` two-word/post4 control and the recorded post4 and
+   post64 locality studies. They expose cases where delegation overhead or
+   contention patterns outweigh the benefit; do not remove losses from reports.
 3. Compare public ABI2 mutex acquisition with the callable local KD control,
    Linux Native and the supported original TCLock mutex port. Record each call
    shell and its compiler/instrumentation settings separately.
@@ -95,8 +108,9 @@ Distinguish this from improvements in local lock acquisition or reader admission
 Use the [per-workload analysis](../bench/results/10.176.26.71/bench/catalog-single-20261026/PERFORMANCE_ANALYSIS.md)
 to select a small point list before further tuning. Include an uncontended point,
 within-node contention, both sides of the 32/36-worker NUMA boundary and a high
-count. The existing nano grid `1,8,16,32,36,60` is suitable for screening; use the
-catalog's full grid only in an explicitly selected campaign.
+count. The current nano default is the 21-count grid `1..8,12..60` in steps of
+four above eight. The user has selected that full grid for the new two-profile
+mutex comparison. Smaller explicit count sets remain useful for diagnostics.
 
 For every result, retain exact updates/read checks, physical ownership, source
 leases, unlock ACKs and final retirement. Count completed delegated writers when
@@ -260,7 +274,7 @@ replacement coverage and the actual delegated share; these are different metrics
 
 Preserve the current KD-only foundation: ABI2 mutex calls, the 32-byte
 native-aligned object, independent OSQ/delegation memberships in preallocated
-storage, pinned published waiters, the 256-body NUMA boundary, immutable mutex images
+storage, pinned published waiters, the 768-body NUMA boundary, immutable mutex images
 and fail-closed admission. Broader integration does not authorize reverting to
 Linux mutex backing, parked delegation producers or the rejected owned/adaptive
 protocol. MM bodies stay local under the maintained contract. Any later proposal

@@ -15,14 +15,14 @@
  * Linux mutex objects and waiters never participate in this protocol.
  */
 
-/* Build-time experiment bounds. Independent of spin batching; these values
+/* Build-time policy bounds. Independent of spin batching; these values
  * change fairness/amortization policy, never physical exclusion or retirement.
  * The diagnostic histogram covers the full permitted total-cap range. */
 #ifndef KDLOCK_MUTEX_BATCH
 #define KDLOCK_MUTEX_BATCH 1024
 #endif
 #ifndef KDLOCK_MUTEX_NUMA_BOUNDARY
-#define KDLOCK_MUTEX_NUMA_BOUNDARY 256
+#define KDLOCK_MUTEX_NUMA_BOUNDARY 768
 #endif
 #if KDLOCK_MUTEX_BATCH < 1 || KDLOCK_MUTEX_BATCH > 32767
 #error "KDLOCK_MUTEX_BATCH must be 1..32767"

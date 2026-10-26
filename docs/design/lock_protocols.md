@@ -209,7 +209,7 @@ while retaining its CPU reservation and frame ownership.
 
 The combiner uses bounded NUMA selection, a default 1024-body limit and a source
 lease covering the batch. At most 64 fully linked remote nodes can be deferred;
-they take priority by the 256-body local cohort boundary. Eight or more deferred
+they take priority by the default 768-body local cohort boundary. Eight or more deferred
 requests receive handoff with the prefix rejoined first. A smaller prefix is
 serviced by the current owner, followed by FIFO selection for the remaining batch.
 Deferred nodes rejoin before any exit publishes a wake. A terminal ABI2/MINIMAL

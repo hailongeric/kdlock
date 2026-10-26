@@ -177,8 +177,8 @@ A terminal COMPLETE returns only IP/SP/BP and can retire its queue node once no
 executor needs it. Queue tail retirement CASes the exact tail; when a successor is
 not yet linked, wait for publication rather than dropping it. A completed waiter
 never reexecutes its body or unlock. Current mutex batching has a default
-1024-body cap and bounded NUMA selection. Only fully linked remote nodes can be
-deferred; every exit rejoins them before handoff. The
+1024-body cap, a 768-body locality boundary and bounded NUMA selection. Only
+fully linked remote nodes can be deferred; every exit rejoins them before handoff. The
 [implementation guide](mutex_implementation.md#queue-batch-execution-and-recovery)
 defines the scan/cohort limits and small-remote-cohort service rule.
 

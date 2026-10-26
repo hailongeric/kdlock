@@ -1,5 +1,19 @@
 # Performance status
 
+The user has promoted the favorable nano defaults to `mutex-throughput`
+(one padded counter/post256) and `mutex-locality` (16 padded counters/post256),
+with mutex total cap 1024 and NUMA boundary 768. The optional two-word
+`mutex`/post4 control remains available. The
+[factor screen](../bench/results/10.176.26.71/bench/mutex-profile-20261026/factor-grid/README.md)
+used the earlier 256 boundary: larger post-work reduced Native rates more than
+KD rates, rather than generally increasing KD throughput. The separate
+[768-boundary comparison](../bench/results/10.176.26.71/bench/mutex-profile-20261026/policy-numa768-vs-policy-control/README.md)
+recorded cross-NUMA improvements and losses at 16 workers. Promotion is a
+user-directed choice from exploratory evidence, not a universal gain claim.
+The new two-profile Native/TCLock/KD campaign plans 126 timings across
+`1..8,12..60` workers, stepping by four above eight, with one round per point.
+Its results are pending and must retain their new source, ELF and policy identity.
+
 The requested [fresh mutex nano comparison](../bench/results/10.176.26.71/bench/nano-mutex-20261026/README.md)
 at `444f6857` completed 36 single-round measurements against Linux Native and
 TCLock. At 60 workers, the locality/post64 profile measured Native/TCLock/KD
@@ -16,8 +30,9 @@ completed 102 single-round timings and 24 functional cases. The simplified
 with 98.20% returned writers; it still lost to Native at 8, 16 and 36 workers.
 The one-record mutex and post4 locality controls also retain their Native losses.
 Read-mostly rwsem beats Native without JIT execution and remains below TCLock.
-These exploratory results motivate the [new nano defaults](../bench/nano/README.md),
-not a universal best case or qualified repeated baseline. Final drain retained
+These exploratory results motivated the earlier post64 selection; the
+[nano guide](../bench/nano/README.md) records the current defaults. They do not
+establish a universal best case or qualified repeated baseline. Final drain retained
 the recovery boot and original 73 modules; external benchmark modules changed
 taint from 0 to 12288, with no kernel fault recorded.
 
