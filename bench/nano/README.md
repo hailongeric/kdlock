@@ -35,6 +35,11 @@ contended count. Adding outside-lock work reduced Native throughput more than
 KD's; it did not make KD execute faster. These are exploratory, single-round
 observations, not a universal optimum or an isolated causal cost breakdown.
 
+A subsequent [fresh mutex-only comparison](../results/10.176.26.71/bench/nano-mutex-20261026/README.md)
+runs both implemented mutex profiles from the committed defaults. It retains
+all 36 new observations, per-profile tables and charts separately from the
+selection study above; the two campaigns are not pooled into repeated means.
+
 ## Bodies and profiles
 
 The default mutex profile, `mutex-locality`, reuses the existing

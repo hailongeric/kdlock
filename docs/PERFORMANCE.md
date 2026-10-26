@@ -1,5 +1,14 @@
 # Performance status
 
+The requested [fresh mutex nano comparison](../bench/results/10.176.26.71/bench/nano-mutex-20261026/README.md)
+at `444f6857` completed 36 single-round measurements against Linux Native and
+TCLock. At 60 workers, the locality/post64 profile measured Native/TCLock/KD
+2.651/2.188/4.045 Mops/s: KD is 1.526× Native and 1.849× TCLock. It also beats
+both at 32 workers, while retaining Native losses at 8, 16 and 36. The minimal
+post4 profile measured 5.704/3.164/5.011 Mops/s at 60 and remains below Native
+at every contended count. All points passed exact data and drain checks. These
+fresh exploratory observations remain separate from the earlier nano study.
+
 The [per-workload catalog analysis](../bench/results/10.176.26.71/bench/catalog-single-20261026/PERFORMANCE_ANALYSIS.md)
 now covers all 54 lock/API/MM workloads. Its [focused nano follow-up](../bench/results/10.176.26.71/bench/nano-pair-20261026/README.md)
 completed 102 single-round timings and 24 functional cases. The simplified
