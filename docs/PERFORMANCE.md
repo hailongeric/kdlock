@@ -10,9 +10,17 @@ KD rates, rather than generally increasing KD throughput. The separate
 [768-boundary comparison](../bench/results/10.176.26.71/bench/mutex-profile-20261026/policy-numa768-vs-policy-control/README.md)
 recorded cross-NUMA improvements and losses at 16 workers. Promotion is a
 user-directed choice from exploratory evidence, not a universal gain claim.
-The new two-profile Native/TCLock/KD campaign plans 126 timings across
-`1..8,12..60` workers, stepping by four above eight, with one round per point.
-Its results are pending and must retain their new source, ELF and policy identity.
+The [new two-profile Native/TCLock/KD campaign](../bench/results/10.176.26.71/bench/nano-mutex-promoted-20261026/README.md)
+at `e5b7f84c` completed all 126 timings and 126 warmups across `1..8,12..60`
+workers, stepping by four above eight. Every phase passed exact frozen-oracle
+replay, and every session drained. At 60 workers, the one-counter profile measured KD 5.567 Mops/s
+(3.811× Native, 1.790× TCLock); sixteen counters measured 4.400 Mops/s
+(3.426× Native, 2.080× TCLock). KD was 3.76% below Native at four workers on
+the sixteen-counter body. The one-counter two-worker result was essentially tied with TCLock
+(+0.089%). Both profiles recorded NO_JIT at one and two workers, so those gains
+are not evidence of delegation gains. Each point has one observation with no
+variance estimate; strict host timing qualification remains failed. The new
+source, ELF, policy and workload identities remain separate from earlier studies.
 
 The requested [fresh mutex nano comparison](../bench/results/10.176.26.71/bench/nano-mutex-20261026/README.md)
 at `444f6857` completed 36 single-round measurements against Linux Native and

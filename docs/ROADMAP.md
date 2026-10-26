@@ -53,10 +53,15 @@ sets the mutex NUMA boundary to 768 with the total cap still 1024. The
 selected the bodies under the earlier 256 boundary. The separate
 [768-boundary screen](../bench/results/10.176.26.71/bench/mutex-profile-20261026/policy-numa768-vs-policy-control/README.md)
 showed cross-NUMA gains alongside losses at 16 workers. These exploratory results
-motivate the choice, not a guaranteed gain. The new 21-count comparison of both
-mutex profiles against Native and TCLock is pending; it has 126 planned timings,
-one round per point. Keep its source, policy and workload identity separate from
-the selection studies.
+motivate the choice, not a guaranteed gain. The [new 21-count comparison](../bench/results/10.176.26.71/bench/nano-mutex-promoted-20261026/README.md)
+at `e5b7f84c` completed all 126 timings and their warmups with exact replay and
+drain. At 60 workers, one counter reached 5.567 Mops/s (3.811× Native, 1.790×
+TCLock), and sixteen counters reached 4.400 Mops/s (3.426× Native, 2.080×
+TCLock). KD remained below Native at four workers on the sixteen-counter body;
+both profiles executed locally without JIT at one and two workers. These
+single-round exploratory observations do not provide repeat variability or
+close the repeatability gate. Keep their source, policy and workload identity
+separate from the selection studies.
 
 Stage 2 is in progress and its performance objective is **not achieved**. The
 [October 26 MM screen](../bench/results/10.176.26.71/bench/catalog-mmap-single-20261026/README.md)

@@ -61,6 +61,12 @@ TCLock comparisons; the earlier factor results do not establish those outcomes.
 Promotion records the user's choice from exploratory evidence, not a universal
 optimum or guaranteed improvement. The rwsem bodies and post-work are unchanged.
 
+The [completed promoted-default campaign](../results/10.176.26.71/bench/nano-mutex-promoted-20261026/README.md)
+at `e5b7f84c` publishes both full-grid tables and charts: 126 measurements and
+126 warmups passed exact replay and drain. It retains the four-worker locality
+loss to Native, low-count NO_JIT results and the one-counter two-worker near tie
+with TCLock. The campaign remains exploratory, with one observation per point.
+
 ## Bodies and profiles
 
 Both default mutex profiles reuse the existing

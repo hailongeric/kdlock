@@ -1,0 +1,334 @@
+{
+  "archive_receipt": {
+    "regular_files": 7,
+    "sha256": "f97ea8baa12cf09674ff2cb0fce8e77ccfc7e1a95e1bf97fcb96e7d2afa9f30b",
+    "stage": "checks"
+  },
+  "completed_checks": [
+    {
+      "argv": [
+        "make",
+        "-C",
+        "tests/unit",
+        "run",
+        "PY_TESTS=mutex/test_mutex_terminal.py mutex/test_mutex_outer_progress.py mutex/test_mutex_batch_diag.py mutex/test_mutex_policy.py bench/test_nano_profile.py"
+      ],
+      "cwd": "/root/host_fs/kdlock",
+      "returncode": 0
+    },
+    {
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "test_nano"
+      ],
+      "cwd": "/root/host_fs/kdlock/bench/rwlock_compare",
+      "returncode": 0
+    },
+    {
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "test_direct.DirectTests.test_legacy_mutex_batch_option_reaches_the_independent_build_knob",
+        "test_direct.DirectTests.test_provider_ubsan_option_and_private_build"
+      ],
+      "cwd": "/root/host_fs/kdlock/bench/tclock_compare",
+      "returncode": 0
+    }
+  ],
+  "exploratory_endpoint_checks_passed": true,
+  "final_vm": {
+    "boot_id": "afe3a8d8-0c07-475b-89b4-163b822484b0",
+    "data_free": 694603776,
+    "idle": true,
+    "initial_boot_kernel_module_count_taint_unchanged": true,
+    "module_count": 73,
+    "modules_sha256": "ad254236100fbfc57057ddb21bc81d3f828c8ee7c7b2a310cffeece57e493dad",
+    "release": "6.1.159-kdclobber2",
+    "root_free": 7434264576,
+    "taint": "12288"
+  },
+  "host_comparator_sha256": "d2f1b4ca00c4048d415fae2d1c89f53b5a74cb04a0351dd088e7234f16289147",
+  "host_endpoints": [
+    {
+      "auxiliary_tasks": [
+        {
+          "affinity": [
+            63
+          ],
+          "comm": "worker",
+          "tid": 580728
+        },
+        {
+          "affinity": [
+            63
+          ],
+          "comm": "worker",
+          "tid": 580730
+        },
+        {
+          "affinity": [
+            63
+          ],
+          "comm": "worker",
+          "tid": 580731
+        }
+      ],
+      "capture": "throughput-before-host.json",
+      "exploratory_issues": [],
+      "qemu_task_count": 70,
+      "strict_issues": [
+        "QEMU tasks changed: 67 -> 70"
+      ]
+    },
+    {
+      "auxiliary_tasks": [
+        {
+          "affinity": [
+            63
+          ],
+          "comm": "worker",
+          "tid": 580728
+        },
+        {
+          "affinity": [
+            63
+          ],
+          "comm": "worker",
+          "tid": 580730
+        },
+        {
+          "affinity": [
+            63
+          ],
+          "comm": "worker",
+          "tid": 580731
+        },
+        {
+          "affinity": [
+            63
+          ],
+          "comm": "worker",
+          "tid": 580790
+        },
+        {
+          "affinity": [
+            63
+          ],
+          "comm": "worker",
+          "tid": 580791
+        },
+        {
+          "affinity": [
+            63
+          ],
+          "comm": "worker",
+          "tid": 580792
+        },
+        {
+          "affinity": [
+            63
+          ],
+          "comm": "worker",
+          "tid": 580793
+        },
+        {
+          "affinity": [
+            63
+          ],
+          "comm": "worker",
+          "tid": 580794
+        }
+      ],
+      "capture": "throughput-after-host.json",
+      "exploratory_issues": [],
+      "qemu_task_count": 75,
+      "strict_issues": [
+        "QEMU tasks changed: 67 -> 75"
+      ]
+    },
+    {
+      "auxiliary_tasks": [
+        {
+          "affinity": [
+            63
+          ],
+          "comm": "worker",
+          "tid": 580728
+        },
+        {
+          "affinity": [
+            63
+          ],
+          "comm": "worker",
+          "tid": 580730
+        },
+        {
+          "affinity": [
+            63
+          ],
+          "comm": "worker",
+          "tid": 580731
+        },
+        {
+          "affinity": [
+            63
+          ],
+          "comm": "worker",
+          "tid": 580790
+        },
+        {
+          "affinity": [
+            63
+          ],
+          "comm": "worker",
+          "tid": 580791
+        },
+        {
+          "affinity": [
+            63
+          ],
+          "comm": "worker",
+          "tid": 580792
+        },
+        {
+          "affinity": [
+            63
+          ],
+          "comm": "worker",
+          "tid": 580793
+        },
+        {
+          "affinity": [
+            63
+          ],
+          "comm": "worker",
+          "tid": 580794
+        }
+      ],
+      "capture": "locality-before-host.json",
+      "exploratory_issues": [],
+      "qemu_task_count": 75,
+      "strict_issues": [
+        "QEMU tasks changed: 67 -> 75"
+      ]
+    },
+    {
+      "auxiliary_tasks": [
+        {
+          "affinity": [
+            63
+          ],
+          "comm": "worker",
+          "tid": 580728
+        },
+        {
+          "affinity": [
+            63
+          ],
+          "comm": "worker",
+          "tid": 580730
+        },
+        {
+          "affinity": [
+            63
+          ],
+          "comm": "worker",
+          "tid": 580731
+        },
+        {
+          "affinity": [
+            63
+          ],
+          "comm": "worker",
+          "tid": 580790
+        },
+        {
+          "affinity": [
+            63
+          ],
+          "comm": "worker",
+          "tid": 580791
+        },
+        {
+          "affinity": [
+            63
+          ],
+          "comm": "worker",
+          "tid": 580792
+        },
+        {
+          "affinity": [
+            63
+          ],
+          "comm": "worker",
+          "tid": 580793
+        },
+        {
+          "affinity": [
+            63
+          ],
+          "comm": "worker",
+          "tid": 580794
+        },
+        {
+          "affinity": [
+            63
+          ],
+          "comm": "worker",
+          "tid": 580914
+        },
+        {
+          "affinity": [
+            63
+          ],
+          "comm": "worker",
+          "tid": 580915
+        }
+      ],
+      "capture": "locality-after-host.json",
+      "exploratory_issues": [],
+      "qemu_task_count": 77,
+      "strict_issues": [
+        "QEMU tasks changed: 67 -> 77"
+      ]
+    }
+  ],
+  "initial_setup_failure": {
+    "cause": "Campaign parent directory did not exist",
+    "correction": "mkdir(parents=True)",
+    "phase": "mkdir before any test command",
+    "retained": true,
+    "returncode": 1,
+    "test_or_measurement_failure": false
+  },
+  "inputs_sha256": {
+    "checks-archive-receipt.json": "17f9409ca83a68ce5c2177589baaf0790d605aac7a65634ed5961b7120ea52f5",
+    "checks-command.json": "48ca13832a5afe47f4d7b5156af698e480b6ecda64e48402aaa29833a7c3c710",
+    "checks-ready-command.json": "cdd665df607169cc4291b5411769b9fe4d9df940988f73ce7498b494a54357fc",
+    "checks.stderr": "fd8ccfd346ecb4922c3f1c9319037c50aa8df96ef2829e650e4bd565b3fa4139",
+    "checks/check-0.stderr": "408a1b5b5daa97ea4d3c51263fce322e08dec96f79523fc58cc26b2fede3c88d",
+    "checks/check-0.stdout": "faa348f5f43a506a5e668db71f099c25adddf0685f7da91e9724961b13a5bac4",
+    "checks/check-1.stderr": "aea79cf089cd9925acaedfcc188d0cff56d83c1d7dcdc511e2e5eb435c76f26b",
+    "checks/check-1.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "checks/check-2.stderr": "fefd166249373c22bb2d282e0ce97b29629bb483ebf37ff0769f08b9370f8b7d",
+    "checks/check-2.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "checks/result.json": "533ed7f908952397249b94824a3d06137aad593b6ca6d67610dbe0d465dcc7c5",
+    "final-idle-command.json": "7c355b254bdadf0f3b0c4716ee5db07f12d2a9ffe4f4f8739eeab5ed93c40a14",
+    "final-idle.stdout": "94f38011917fb08cceee13d46651405ea3fb6ac4957b2f30316dd088fcf047e3",
+    "initial-idle.stdout": "be2233f12143ad2e2120fd516db479bf39e8f649351c861bdd4d7dbd0acc1e16",
+    "locality-after-host.json": "89430159e1cdf7c512605d40e61cd59d66adc9212074e6976961a07d50d17109",
+    "locality-before-host.json": "4eed67e05e019ab60be0952075030679141eeb997f1966cac8b47629f050945c",
+    "qualification-anchor-host.json": "bd8ab118f5e620b4f01da59f4b095d7a9b732387197ac997444520e54a0be422",
+    "throughput-after-host.json": "e7967d2cce127bc66c1ec53ae25cd6bf1e083eae690c2883840c5fb2ca7f17f7",
+    "throughput-before-host.json": "00a583ab47980138fa25b08ac35bfd1f7cbc6b8e500083bef9a6644612f40d78"
+  },
+  "qualification_anchor_task_count": 67,
+  "schema": 1,
+  "scope": "VM basic checks and selected affected drivers only. The initial orchestration error remains a failed attempt; it supplies no test, module or timing result.",
+  "source_commit": "e5b7f84c41f33f3b15c4f3be0c87fcb943c54212",
+  "status": "FOCUSED_CHECKS_PASSED_AFTER_SETUP_RETRY",
+  "strict_host_qualified": false
+}
