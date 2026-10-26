@@ -81,9 +81,37 @@ class NanoTests(unittest.TestCase):
                 if family == 'mutex':
                     self.assertEqual(kd['mutex_api'], 'public' if delegate == 'on' else 'callable-local')
 
+    def test_mutex_factor_grid_keeps_body_identity_and_exact_counter_oracle(self):
+        for post in (4, 64, 256):
+            args = run.parser().parse_args(['--lock-kind', 'mutex', '--workloads', 'cacheline',
+                '--cachelines', '1', '4', '16', '--write-percent', '100', '--threads', '16',
+                '--collector-cpu', '63', '--repeats', '1', '--post-work-rounds', str(post)])
+            plan = run.make_plan(args)
+            self.assertEqual(len(plan), 9)
+            for row in plan:
+                lines = row['cachelines']
+                self.assertEqual(row['nano_working_set_bytes'], 64 * lines)
+                self.assertEqual(row['nano_layout'], f'{lines}_aligned_counters')
+                self.assertEqual(row['post_work_rounds'], post)
+                spec, measurement = fixture('cacheline', 100)
+                spec.update(cachelines=lines, lock_kind='mutex')
+                for key in ('before', 'after'):
+                    measurement[key].update(lines=lines, values=[0] * 16)
+                measurement['after']['values'] = [200] * lines + [0] * (16 - lines)
+                validate(measurement, spec)
+                bad = copy.deepcopy(measurement)
+                bad['after']['values'][lines - 1] -= 1
+                with self.assertRaises(ValueError):
+                    validate(bad, spec)
+                if lines < 16:
+                    bad = copy.deepcopy(measurement)
+                    bad['after']['values'][lines] = 1
+                    with self.assertRaises(ValueError):
+                        validate(bad, spec)
+
     def test_unsupported_mutex_mixes_and_nano_spin_are_refused(self):
         for argv in (['--lock-kind', 'mutex', '--workloads', 'nano', '--write-percent', '1'],
-                     ['--lock-kind', 'mutex', '--workloads', 'cacheline', '--write-percent', '100'],
+                     ['--lock-kind', 'mutex', '--workloads', 'cacheline', '--write-percent', '20'],
                      ['--lock-kind', 'rwlock', '--workloads', 'nano']):
             with self.assertRaises(run.Failure):
                 run.make_plan(run.parser().parse_args(argv))

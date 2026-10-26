@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-"""Guest-only, unscored perf diagnostics for the two existing mutex nano bodies.
+"""Guest-only, unscored diagnostics for the two existing mutex nano bodies.
 
 Only the measured client is wrapped. Preparation, translation and warmup retain
 their ordinary boundaries. The inherited client includes startup/collection;
 flat summaries separately select rb_worker samples within the settled full cohort.
 No call-chain unwinding is attempted across generated or borrowed stacks.
+Batch mode instead enables optional provider observations without launching perf.
 """
 import argparse
 from collections import defaultdict
@@ -33,6 +34,16 @@ PROFILES = {'mutex': ('nano', 2, 4), 'mutex-locality': ('cacheline', 16, 64)}
 OBSERVATION_PARAMS = ('bench_jit_bodies', 'bench_jit_completions', 'address_guard_count')
 UNEXPORTED_MUTEX_COUNTERS = ('kd_mutex_combiner_count', 'kd_mutex_jit_success_count',
                             'kd_mutex_handoff_count')
+BATCH_METADATA = dict(schema=1, compiled=1, total_cap=1024, numa_boundary=256,
+                      deferred_handoff=8, scan_budget=64, numa_aware=1)
+BATCH_COUNTERS = ('batches', 'attempts', 'jit_completed', 'native_completed',
+    'execution_refusals', 'jit_local', 'jit_remote', 'deferred_total', 'scan_steps',
+    'scan_exhausted_batches', 'small_fifo_batches')
+BATCH_REASONS = ('unclassified', 'initial_unexecutable', 'source_refusal',
+    'numa_boundary', 'numa_tail', 'execution_refusal', 'early_outer_release',
+    'native_done', 'total_cap', 'empty_tail', 'unsupported_tail')
+BATCH_HISTOGRAMS = ('completed_hist', 'deferred_peak_hist')
+BATCH_LEGACY = ('combiner', 'jit_success', 'handoff')
 
 
 def require(condition, message):
@@ -64,6 +75,65 @@ def observation_delta(before, after):
     require(before['values'].keys() == after['values'].keys(), 'observation parameters changed')
     result = {key: value - before['values'][key] for key, value in after['values'].items()}
     require(all(value >= 0 for value in result.values()), 'observation counter reset or moved backward')
+    return result
+
+
+def validate_batch(snapshot):
+    """Quiescent diagnostic identities only; these never replace exact drain."""
+    require(isinstance(snapshot, dict) and set(snapshot) ==
+            set(BATCH_METADATA) | set(BATCH_COUNTERS) | set(BATCH_HISTOGRAMS) | {'stop_reason', 'legacy'},
+            'unexpected batch diagnostic schema')
+    def counter(value):
+        return type(value) is int and 0 <= value <= 2**64 - 1
+    require(all(type(snapshot[key]) is int and snapshot[key] == value
+                for key, value in BATCH_METADATA.items()), 'batch diagnostic metadata differs')
+    require(all(counter(snapshot[key]) for key in BATCH_COUNTERS), 'invalid batch counter')
+    for key in BATCH_HISTOGRAMS:
+        require(isinstance(snapshot[key], list) and len(snapshot[key]) == 33 and
+                all(counter(value) for value in snapshot[key]), 'invalid batch histogram: ' + key)
+    for key, fields in (('stop_reason', BATCH_REASONS), ('legacy', BATCH_LEGACY)):
+        require(isinstance(snapshot[key], dict) and set(snapshot[key]) == set(fields) and
+                all(counter(value) for value in snapshot[key].values()), 'invalid batch mapping: ' + key)
+    batches = snapshot['batches']
+    require(batches == sum(snapshot['completed_hist']) == sum(snapshot['deferred_peak_hist']) ==
+            sum(snapshot['stop_reason'].values()) == snapshot['legacy']['combiner'],
+            'batch counts/histograms/stop reasons/legacy combiner differ')
+    require(snapshot['stop_reason']['unclassified'] == 0, 'unclassified batch exit')
+    require(snapshot['attempts'] == snapshot['jit_completed'] + snapshot['native_completed'] +
+            snapshot['execution_refusals'], 'batch attempt accounting differs')
+    require(snapshot['jit_completed'] == snapshot['jit_local'] + snapshot['jit_remote'] ==
+            snapshot['legacy']['jit_success'], 'batch completion/locality accounting differs')
+    require(snapshot['deferred_total'] == snapshot['scan_steps'], 'batch deferral/scan accounting differs')
+    require(snapshot['scan_exhausted_batches'] <= batches and snapshot['small_fifo_batches'] <= batches,
+            'batch subset counter exceeds batches')
+    require(snapshot['legacy']['handoff'] == sum(snapshot['stop_reason'][key] for key in
+            ('initial_unexecutable', 'source_refusal', 'execution_refusal')),
+            'legacy refusal handoff accounting differs')
+    histogram = snapshot['completed_hist']
+    lower = sum(count * (1 << (index - 1)) for index, count in enumerate(histogram) if index)
+    upper = sum(count * ((1 << index) - 1) for index, count in enumerate(histogram) if index)
+    require(lower <= snapshot['jit_completed'] + snapshot['native_completed'] <= upper,
+            'completed-body count outside histogram bounds')
+    deferred_lower = sum(count * (1 << (index - 1))
+        for index, count in enumerate(snapshot['deferred_peak_hist']) if index)
+    require(deferred_lower <= snapshot['deferred_total'], 'deferred peaks exceed total deferrals')
+    return snapshot
+
+
+def batch_delta(before, after, expected_completions=None):
+    validate_batch(before)
+    validate_batch(after)
+    result = dict(BATCH_METADATA)
+    result.update({key: after[key] - before[key] for key in BATCH_COUNTERS})
+    for key in BATCH_HISTOGRAMS:
+        result[key] = [b - a for a, b in zip(before[key], after[key])]
+    for key in ('stop_reason', 'legacy'):
+        result[key] = {field: after[key][field] - before[key][field] for field in before[key]}
+    validate_batch(result)
+    if expected_completions is not None:
+        require(type(expected_completions) is int and expected_completions >= 0 and
+                result['jit_completed'] == expected_completions,
+                'batch JIT completions differ from exact returned-body counter delta')
     return result
 
 
@@ -238,7 +308,7 @@ def diagnostic_report(runner, out):
         records.append(row)
     save(out / 'records.json', records)
     save(out / 'summary.json', [])
-    parity = dict(status='DIAGNOSTIC', criterion='Perf instrumentation; no performance score or parity acceptance', points=[])
+    parity = dict(status='DIAGNOSTIC', criterion='Diagnostic instrumentation; no performance score or parity acceptance', points=[])
     save(out / 'parity.json', parity)
     return parity
 
@@ -252,6 +322,12 @@ def profiled_session(runner, args, perf, perf_sha):
                 self.record['profile_observations'] = dict(status='BEFORE_ONLY', before=before)
             else:
                 self.record['profile_observations'] = dict(status='NOT_APPLICABLE')
+            if args.mode == 'batch':
+                require(self.loaded_kd, 'batch diagnostics require KD provider')
+                batch_path = Path('/sys/module/kdlock_km/parameters/mutex_batch_stats')
+                batch_before = validate_batch(json.loads(batch_path.read_text()))
+                save(self.path / 'batch-before.json', batch_before)
+                self.record['batch_diagnostics'] = dict(status='BEFORE_ONLY', before=batch_before)
             self.save()
             super().measure()
             if self.loaded_kd:
@@ -261,9 +337,21 @@ def profiled_session(runner, args, perf, perf_sha):
                 self.record['profile_observations'].update(status='OBSERVED', after=after, delta=delta,
                     scope='Quiescent reads outside perf; after warmup through measured client completion; observational counters do not establish drain')
                 self.save()
+            if args.mode == 'batch':
+                batch_after = validate_batch(json.loads(batch_path.read_text()))
+                delta = batch_delta(batch_before, batch_after, self.record['jit_completions'])
+                save(self.path / 'batch-after.json', batch_after)
+                save(self.path / 'batch-delta.json', delta)
+                self.record['batch_diagnostics'].update(status='OBSERVED', after=batch_after, delta=delta,
+                    scope='Quiescent pre/post reads after warmup and joined measurement; optional compiled batch observations, no perf process',
+                    histogram_bins='0: zero; i>0: [2^(i-1), 2^i-1]',
+                    locality='Requester node versus executor node immediately before JIT entry, not whole-body residency',
+                    legacy_handoff='Existing refusal-path counter, not total physical-owner handoffs')
+                self.record.update(profile_status='OBSERVED', diagnostic=True, score_eligible=False)
+                self.save()
 
         def run(self, command, log, **kwargs):
-            if log != 'measure.json':
+            if log != 'measure.json' or args.mode == 'batch':
                 return super().run(command, log, **kwargs)
             expected = self.path.parent / 'source/bench/rwlock_compare/client.py'
             require(len(command) >= 2 and Path(command[1]) == expected,
@@ -307,14 +395,14 @@ def profiled_session(runner, args, perf, perf_sha):
 
 def parser():
     p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument('--mode', choices=('stat', 'record'), required=True)
+    p.add_argument('--mode', choices=('stat', 'record', 'batch'), required=True)
     p.add_argument('--output', type=Path, required=True)
     p.add_argument('--source-root', type=Path, default=ROOT)
     p.add_argument('--source-commit', required=True)
     p.add_argument('--perf', type=Path, default=PERF)
     p.add_argument('--profiles', nargs='+', choices=PROFILES, default=list(PROFILES))
-    p.add_argument('--threads', nargs='+', type=int, choices=(16, 36, 60), default=[16, 36, 60])
-    p.add_argument('--backends', nargs='+', choices=('native', 'kdlock'), default=['native', 'kdlock'])
+    p.add_argument('--threads', nargs='+', type=int, choices=(16, 32, 36, 60), default=[16, 36, 60])
+    p.add_argument('--backends', nargs='+', choices=('native', 'kdlock'))
     p.add_argument('--frequency', type=int, choices=(199, 499, 997), default=499)
     p.add_argument('--record-event', default='cycles:k')
     p.add_argument('--events', nargs='+', default=list(EVENTS))
@@ -323,12 +411,16 @@ def parser():
     return p
 
 
+def selected_backends(args):
+    return args.backends or (['kdlock'] if args.mode == 'batch' else ['native', 'kdlock'])
+
+
 def runner_arguments(args, profile):
     workload, lines, post = PROFILES[profile]
     return ['--output', str(args.output.resolve() / profile), '--lock-kind', 'mutex',
         '--workloads', workload, '--cachelines', str(lines), '--write-percent', '100',
         '--threads', *map(str, args.threads), '--cpus', *map(str, range(max(args.threads))),
-        '--collector-cpu', '63', '--backends', *args.backends, '--repeats', '1',
+        '--collector-cpu', '63', '--backends', *selected_backends(args), '--repeats', '1',
         '--duration-ms', '2000', '--post-work-rounds', str(post),
         '--kernel-source', '/root/linux-6.1.159-kdclobber2',
         '--kernel-baseline', '/root/kdlock-kernel-baselines/mutex-clobber2-20260919']
@@ -336,6 +428,8 @@ def runner_arguments(args, profile):
 
 def main():
     args = parser().parse_args()
+    args.backends = selected_backends(args)
+    require(args.mode != 'batch' or args.backends == ['kdlock'], 'batch diagnostics support the KD provider only')
     for values in (args.profiles, args.threads, args.backends, args.events):
         require(values and len(values) == len(set(values)), 'empty or duplicate profile selection')
     require(re.fullmatch(r'[0-9a-f]{40}', args.source_commit), 'record a full source commit')
@@ -360,21 +454,25 @@ def main():
         fcntl.flock(owner, fcntl.LOCK_EX | fcntl.LOCK_NB)
         runner.idle()
         out.mkdir(parents=True)
-        perf = out / 'tools/perf'
-        perf.parent.mkdir()
-        tool_sha = digest(args.perf)
-        shutil.copyfile(args.perf, perf)
-        perf.chmod(0o755)
-        require(digest(perf) == digest(args.perf) == tool_sha, 'perf changed during retention')
-        save(out / 'perf-tool.json', dict(original=str(args.perf), retained=str(perf), sha256=tool_sha,
-            version=runner.command([perf, '--version'], out / 'perf-version.txt').strip(),
-            sysctls={name: (Path('/proc/sys/kernel') / name).read_text().strip() for name in
-                     ('perf_event_paranoid', 'perf_event_max_sample_rate', 'perf_event_mlock_kb', 'perf_event_max_stack')}))
-        events = args.events if args.mode == 'stat' else [args.record_event]
-        runner.command(['taskset', '-c', '63', perf, 'stat', '--no-big-num', '-x', ';',
-                        '-e', ','.join(events), '-o', out / 'perf-capability.csv', '--', '/bin/true'],
-                       out / 'perf-capability.log', timeout=30)
-        save(out / 'perf-capability.json', parse_stat((out / 'perf-capability.csv').read_text(), events, args.allow_multiplex))
+        perf, tool_sha, events = None, None, []
+        if args.mode != 'batch':
+            perf = out / 'tools/perf'
+            perf.parent.mkdir()
+            tool_sha = digest(args.perf)
+            shutil.copyfile(args.perf, perf)
+            perf.chmod(0o755)
+            require(digest(perf) == digest(args.perf) == tool_sha, 'perf changed during retention')
+            save(out / 'perf-tool.json', dict(original=str(args.perf), retained=str(perf), sha256=tool_sha,
+                version=runner.command([perf, '--version'], out / 'perf-version.txt').strip(),
+                sysctls={name: (Path('/proc/sys/kernel') / name).read_text().strip() for name in
+                         ('perf_event_paranoid', 'perf_event_max_sample_rate', 'perf_event_mlock_kb', 'perf_event_max_stack')}))
+            events = args.events if args.mode == 'stat' else [args.record_event]
+            runner.command(['taskset', '-c', '63', perf, 'stat', '--no-big-num', '-x', ';',
+                            '-e', ','.join(events), '-o', out / 'perf-capability.csv', '--', '/bin/true'],
+                           out / 'perf-capability.log', timeout=30)
+            save(out / 'perf-capability.json', parse_stat((out / 'perf-capability.csv').read_text(), events, args.allow_multiplex))
+        else:
+            save(out / 'perf-tool.json', dict(status='NOT_USED', reason='Compiled batch observations only; no perf process or PMU counters'))
         frozen = runner.sources()
         save(out / 'source-sha256.json', frozen)
         self_sha = digest(Path(__file__))
@@ -384,14 +482,18 @@ def main():
             rows = original_plan(parsed)
             for row in rows:
                 row.update(diagnostic=True, score_eligible=False, source_commit=args.source_commit,
-                    diagnostic_kind='nano-perf-' + args.mode, perf_mode=args.mode,
+                    diagnostic_kind='nano-' + args.mode, diagnostic_mode=args.mode,
+                    mutex_batch_diagnostics=args.mode == 'batch',
+                    perf_mode=args.mode if args.mode != 'batch' else None,
                     perf_events=events, perf_frequency=args.frequency if args.mode == 'record' else None,
                     perf_binary_sha256=tool_sha, profile_driver_sha256=self_sha,
-                    profile_scope='Measured client including startup/collection; warmup excluded')
+                    profile_scope=('Compiled batch observations around joined measurement; warmup excluded'
+                        if args.mode == 'batch' else 'Measured client including startup/collection; warmup excluded'))
             return rows
         def build(parsed, directory, rows):
-            binaries, hashes = original_build(parsed, directory, rows)
-            hashes[str(perf)] = tool_sha
+            binaries, hashes = original_build(parsed, directory, rows, mutex_diag=args.mode == 'batch')
+            if perf is not None:
+                hashes[str(perf)] = tool_sha
             save(directory / 'binary-sha256.json', hashes)
             return binaries, hashes
         runner.make_plan, runner.build = plan, build
@@ -401,7 +503,7 @@ def main():
             driver_sha256=self_sha, mode=args.mode, stages=[], complete=False)
         save(out / 'result.json', receipt)
         for profile in args.profiles:
-            require(runner.sources() == frozen and digest(perf) == tool_sha,
+            require(runner.sources() == frozen and (perf is None or digest(perf) == tool_sha),
                     'frozen inputs changed between profiles')
             require(not (out / 'STOP').exists(), 'STOP requested at drained profile boundary')
             require(shutil.disk_usage(out).free >= 512 * 1024**2, 'storage reserve exhausted')

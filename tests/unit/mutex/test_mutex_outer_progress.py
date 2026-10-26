@@ -60,6 +60,8 @@ def main():
     start = mutex.index("#ifdef DSM_DEBUG")
     end = mutex.index("#endif", start) + len("#endif")
     code = "#define DSM_DEBUG 1\n" + mutex[start:end] + "\n" + code
+    code += '#define MODULE_INFO(...)\n'
+    code += without_includes(read_source(ROOT/'kernel_module/mutex/batch_diag.inc'))+'\n'
     if "struct kd_mutex_batch {" in mutex:
         code += definition(mutex, "struct kd_mutex_batch {").rstrip() + ";\n"
     for name in ('kd_mutex_batch_select', 'kd_mutex_batch_rejoin'):

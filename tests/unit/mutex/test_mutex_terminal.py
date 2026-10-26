@@ -13,13 +13,17 @@ from source_text import ROOT, read_source, without_includes
 from test_spin_shadow import definition
 
 
-def main():
+def production_sources():
     types = definition(read_source(ROOT/'include/kd_regs.h'), 'struct kd_regs {').rstrip()+';\n'
     types += definition(read_source(ROOT/'include/kd_spin_entry.h'), 'struct kd_spin_ref {').rstrip()+';\n'
-    for name in ('exe_info', 'kd_call', 'kd_exec', 'kd_mutex'):
+    # Includes are stripped below, so retain the real physical-object header
+    # explicitly before the queue/API declarations that depend on it.
+    for name in ('exe_info', 'kd_call', 'kd_exec', 'kd_mutex_types', 'kd_mutex'):
         types += without_includes(read_source(ROOT/f'include/{name}.h'))+'\n'
     source = read_source(ROOT/'kernel_module/kd_mutex.c')
-    helpers = definition(source, 'struct kd_mutex_batch {').rstrip()+';\n'
+    helpers = '#define MODULE_INFO(...)\n'
+    helpers += without_includes(read_source(ROOT/'kernel_module/mutex/batch_diag.inc'))+'\n'
+    helpers += definition(source, 'struct kd_mutex_batch {').rstrip()+';\n'
     for name in ('kd_mutex_batch_select', 'kd_mutex_batch_rejoin'):
         marker = next(line for line in source.splitlines() if line.startswith(name+'('))
         helpers += 'static struct kd_mutex_node *\n' + definition(source, marker)+'\n'
@@ -30,6 +34,11 @@ def main():
         helpers += definition(source, marker)+'\n'
     helpers += definition(source, 'static int kd_mutex_release_outer(struct kd_exec_frame *frame,')+'\n'
     loop = 'static void\n'+definition(source, 'kd_mutex_run_combiner(struct kd_mutex *lock, struct kd_mutex_node *curr_node)')
+    return types, helpers, loop
+
+
+def main():
+    types, helpers, loop = production_sources()
     with tempfile.TemporaryDirectory(prefix='kd-mutex-terminal-') as tmp:
         path=Path(tmp)
         (path/'types.h').write_text(types)

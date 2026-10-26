@@ -74,10 +74,9 @@ def make_plan(args):
             'snapshot workloads require --lock-kind spin; other workloads use rwlock/rwsem')
     require(not (set(args.workloads) & snapshots) or set(args.workloads).issubset(snapshots),
             'run snapshots separately from rwlock/rwsem payloads')
-    require(args.lock_kind != 'mutex' or ((args.workloads == ['nano'] or
-            (args.workloads == ['cacheline'] and args.cachelines == [16])) and
+    require(args.lock_kind != 'mutex' or (args.workloads in (['nano'], ['cacheline']) and
             args.write_percent == [100]),
-            'mutex nano requires an all-writer pair or 16-cacheline locality profile')
+            'mutex nano requires an all-writer pair or padded-counter profile')
     require('nano' not in args.workloads or args.lock_kind in ('mutex', 'rwsem'),
             'nano profiles use mutex or rwsem')
     threads = FULL_THREADS if args.full_matrix else args.threads
@@ -150,8 +149,8 @@ def make_plan(args):
                          mutex_api=('public' if args.delegate == 'on' else 'callable-local')
                              if args.lock_kind == 'mutex' and arm == 'kdlock' else None)
                    if workload == 'nano' else {}),
-                **(dict(call_shell='bulk_ioctl', nano_working_set_bytes=1024,
-                         nano_layout='16_aligned_counters',
+                **(dict(call_shell='bulk_ioctl', nano_working_set_bytes=64 * lines,
+                         nano_layout=f'{lines}_aligned_counters',
                          mutex_api=('public' if args.delegate == 'on' else 'callable-local')
                              if arm == 'kdlock' else None)
                    if workload == 'cacheline' and args.lock_kind == 'mutex' else {}),
@@ -263,7 +262,7 @@ def sources():
     return result
 
 
-def build(args, out, plan):
+def build(args, out, plan, *, mutex_diag=False):
     source = out / 'source'
     builds = out / 'build'
     builds.mkdir()
@@ -276,13 +275,15 @@ def build(args, out, plan):
         provider = builds / 'provider'
         prepare_provider(provider, source)
         command(['make', '-C', provider / 'kernel_module', f'KDIR={args.kernel_source}', 'W=1',
-                 'KDLOCK_SELFTEST=0', 'KDLOCK_NUMA=1', 'KDLOCK_SPIN_BATCH=1024', 'UBSAN_SANITIZE=n'],
+                 'KDLOCK_SELFTEST=0', 'KDLOCK_NUMA=1', 'KDLOCK_SPIN_BATCH=1024',
+                 f'KDLOCK_MUTEX_DIAGNOSTICS={int(mutex_diag)}', 'UBSAN_SANITIZE=n'],
                 out / 'build-kdlock.log', timeout=180)
         binaries['kdlock'] = provider / 'kernel_module/kdlock_km.ko'
         command(['make', '-C', source / 'daemon', 'CFLAGS=-O2 -Wall -Wextra -Werror'],
                 out / 'build-daemon.log', timeout=120)
         binaries['daemon'] = source / 'daemon/daemon'
-        for field, expected in (('spin_numa', '1'), ('spin_batch', '1024'), ('mutex_batch', '1024')):
+        for field, expected in (('spin_numa', '1'), ('spin_batch', '1024'), ('mutex_batch', '1024'),
+                                ('mutex_batch_diag', str(int(mutex_diag)))):
             require(command(['modinfo', '-F', field, binaries['kdlock']], out / (field + '.txt')).strip() == expected,
                     'KD compiled policy differs')
     if 'tclock' in args.backends:

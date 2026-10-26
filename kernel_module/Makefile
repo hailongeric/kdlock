@@ -15,6 +15,9 @@ endif
 KDLOCK_NUMA ?= 1
 KDLOCK_SPIN_BATCH ?= 1024
 ccflags-y += -DKDLOCK_SPIN_BATCH=$(KDLOCK_SPIN_BATCH)
+# Optional observations are compiled out of ordinary timing builds.
+KDLOCK_MUTEX_DIAGNOSTICS ?= 0
+ccflags-y += -DKDLOCK_MUTEX_DIAGNOSTICS=$(KDLOCK_MUTEX_DIAGNOSTICS)
 ifeq ($(KDLOCK_NUMA),1)
 ccflags-y += -DNUMA_AWARE
 endif

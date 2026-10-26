@@ -7,6 +7,8 @@
  * are shared with the adjacent components. This is not a standalone object.
  */
 
+#include "batch_diag.inc"
+
 struct kd_mutex_batch {
 	struct kd_mutex *lock; /* enclosing invocation keeps the object live */
 	struct kd_exec_outer_unlock outer;
@@ -22,6 +24,7 @@ struct kd_mutex_batch {
 	unsigned int deferred_count;
 	unsigned int scan_left;
 	int numa_node;
+	KD_MUTEX_DIAG_MEMBER
 };
 
 /* Only detach a fully linked node. Its successor remains the published tail
@@ -48,8 +51,10 @@ kd_mutex_batch_select(struct kd_mutex_batch *batch, struct kd_mutex_node *node)
 			batch->deferred_head = node;
 		batch->deferred_tail = node;
 		batch->deferred_count++;
+		KD_MUTEX_DIAG_DEFERRED(batch);
 		node = next;
 	}
+	KD_MUTEX_DIAG_SCAN_END(batch, node);
 	return node;
 }
 
@@ -453,12 +458,16 @@ kd_mutex_run_combiner(struct kd_mutex *lock, struct kd_mutex_node *curr_node)
 
 	this_cpu_inc(kd_mutex_combiner_count);
 
-	if (!kd_mutex_batch_can_execute(curr_node) || !kd_source_frame_get()) {
+	if (KD_MUTEX_DIAG_CONDITION(&batch, !kd_mutex_batch_can_execute(curr_node),
+				    KD_MUTEX_DIAG_INITIAL_UNEXECUTABLE) ||
+	    KD_MUTEX_DIAG_CONDITION(&batch, !kd_source_frame_get(),
+				    KD_MUTEX_DIAG_SOURCE_REFUSAL)) {
 		/* Keep unsupported last packets and source refusal on native handoff. */
 		this_cpu_inc(kd_mutex_handoff_count);
 		kd_mutex_set_locked(lock);
 		if (curr_node)
 			smp_store_release(&curr_node->locked, 0);
+		KD_MUTEX_DIAG_FINISH(&batch);
 		return;
 	}
 
@@ -470,13 +479,18 @@ kd_mutex_run_combiner(struct kd_mutex *lock, struct kd_mutex_node *curr_node)
 		 * that owner can serve the cohort on its own socket. */
 		if (batch.deferred_head &&
 		    (counter >= 256 || !smp_load_acquire(&curr_node->next))) {
-			if (batch.deferred_count >= 8)
+			if (batch.deferred_count >= 8) {
+				KD_MUTEX_DIAG_STOP(&batch,
+					counter >= 256 ? KD_MUTEX_DIAG_NUMA_BOUNDARY :
+					KD_MUTEX_DIAG_NUMA_TAIL);
 				break;
+			}
 			/* Small prefixes cannot amortize owner transfer. Rejoin before
 			 * execution, then service the rest in FIFO order. The total cap,
 			 * refusal, native and early-outer boundaries remain unchanged. */
 			curr_node = kd_mutex_batch_rejoin(&batch, curr_node);
 			batch.numa_node = -1;
+			KD_MUTEX_DIAG_SMALL_FIFO(&batch);
 		}
 		counter++;
 		next_node = smp_load_acquire(&curr_node->next);
@@ -492,8 +506,10 @@ kd_mutex_run_combiner(struct kd_mutex *lock, struct kd_mutex_node *curr_node)
 		batch.current_retired = false;
 		batch.outer.released = false;
 		kd_mutex_prefetch_successor(next_node);
+		KD_MUTEX_DIAG_REQUEST(&batch, curr_node);
 
 		int exe_flag = kd_mutex_execute_cs(lock, curr_node, &batch);
+		KD_MUTEX_DIAG_RESULT(&batch, exe_flag);
 
 		if (exe_flag != 0 && exe_flag != KD_EXE_NATIVE_DONE) {
 			/*
@@ -505,6 +521,7 @@ kd_mutex_run_combiner(struct kd_mutex *lock, struct kd_mutex_node *curr_node)
 			 */
 			this_cpu_inc(kd_mutex_handoff_count);
 			next_node = curr_node;
+			KD_MUTEX_DIAG_STOP(&batch, KD_MUTEX_DIAG_EXECUTION_REFUSAL);
 			break;
 		}
 
@@ -519,6 +536,8 @@ kd_mutex_run_combiner(struct kd_mutex *lock, struct kd_mutex_node *curr_node)
 			 * now finished; reacquire A for our own original request.
 			 * Do not inspect or wake the old successor a second time. */
 			kd_mutex_wait_and_lock(lock);
+			KD_MUTEX_DIAG_STOP(&batch, KD_MUTEX_DIAG_EARLY_OUTER_RELEASE);
+			KD_MUTEX_DIAG_FINISH(&batch);
 			kd_source_frame_put();
 			return;
 		}
@@ -526,9 +545,12 @@ kd_mutex_run_combiner(struct kd_mutex *lock, struct kd_mutex_node *curr_node)
 		/* A terminal tail may have gained a successor while its body ran.
 		 * After publication, never read the completed/reused current node. */
 		next_node = batch.next;
-		if (exe_flag == KD_EXE_NATIVE_DONE ||
-		    counter >= kd_mutex_batch_size ||
-		    !kd_mutex_batch_can_execute(next_node))
+		if (KD_MUTEX_DIAG_CONDITION(&batch, exe_flag == KD_EXE_NATIVE_DONE,
+					    KD_MUTEX_DIAG_NATIVE_DONE) ||
+		    KD_MUTEX_DIAG_CONDITION(&batch, counter >= kd_mutex_batch_size,
+					    KD_MUTEX_DIAG_TOTAL_CAP) ||
+		    KD_MUTEX_DIAG_CONDITION(&batch, !kd_mutex_batch_can_execute(next_node),
+				next_node ? KD_MUTEX_DIAG_UNSUPPORTED_TAIL : KD_MUTEX_DIAG_EMPTY_TAIL))
 			break;
 
 		curr_node = next_node;
@@ -541,6 +563,7 @@ kd_mutex_run_combiner(struct kd_mutex *lock, struct kd_mutex_node *curr_node)
 	kd_mutex_set_locked(lock);
 	if (next_node)
 		smp_store_release(&next_node->locked, 0);
+	KD_MUTEX_DIAG_FINISH(&batch);
 	/* Includes synchronous native continuation and final physical owner ACK. */
 	kd_source_frame_put();
 }

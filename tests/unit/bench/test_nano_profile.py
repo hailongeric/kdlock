@@ -1,4 +1,5 @@
 """Focused VM-only checks for diagnostic scope, accounting and timeout ownership."""
+from copy import deepcopy
 import importlib.util
 import json
 from pathlib import Path
@@ -13,6 +14,36 @@ ROOT = Path(__file__).resolve().parents[3]
 SPEC = importlib.util.spec_from_file_location('nano_profile', ROOT / 'bench/nano/profile.py')
 profile = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(profile)
+
+
+BATCH_METADATA = dict(schema=1, compiled=1, total_cap=1024, numa_boundary=256,
+                      deferred_handoff=8, scan_budget=64, numa_aware=1)
+BATCH_COUNTERS = ('batches', 'attempts', 'jit_completed', 'native_completed',
+                  'execution_refusals', 'jit_local', 'jit_remote', 'deferred_total',
+                  'scan_steps', 'scan_exhausted_batches', 'small_fifo_batches')
+
+
+def batch_snapshot(scale=1):
+    """Five possible batches, including zero, native and returned-JIT bodies."""
+    completed = [0] * 33
+    completed[0], completed[1], completed[2], completed[4] = 2, 1, 1, 1
+    deferred = [0] * 33
+    deferred[0], deferred[1], deferred[4] = 3, 1, 1
+    result = dict(BATCH_METADATA, batches=5, attempts=12, jit_completed=10,
+                  native_completed=1, execution_refusals=1, jit_local=7, jit_remote=3,
+                  deferred_total=9, scan_steps=9, scan_exhausted_batches=0,
+                  small_fifo_batches=1, completed_hist=completed, deferred_peak_hist=deferred,
+                  stop_reason=dict(unclassified=0, initial_unexecutable=1, source_refusal=0,
+                      numa_boundary=0, numa_tail=1, execution_refusal=1, early_outer_release=0,
+                      native_done=1, total_cap=0, empty_tail=1, unsupported_tail=0),
+                  legacy=dict(combiner=5, jit_success=10, handoff=2))
+    for key in BATCH_COUNTERS:
+        result[key] *= scale
+    for key in ('completed_hist', 'deferred_peak_hist'):
+        result[key] = [value * scale for value in result[key]]
+    for key in ('stop_reason', 'legacy'):
+        result[key] = {name: value * scale for name, value in result[key].items()}
+    return result
 
 
 class NanoProfileTests(unittest.TestCase):
@@ -75,6 +106,7 @@ class NanoProfileTests(unittest.TestCase):
             folder = Path(temporary)
             for name in profile.OBSERVATION_PARAMS:
                 (folder / name).write_text('10')
+            self.assertFalse((folder / 'mutex_batch_stats').exists())
             before = profile.observations(folder)
             self.assertIn('kd_mutex_combiner_count', before['unavailable_static_counters'])
             self.assertNotIn('kd_mutex_combiner_count', before['values'])
@@ -134,12 +166,168 @@ class NanoProfileTests(unittest.TestCase):
         args = profile.parser().parse_args(['--mode', 'stat', '--output', '/tmp/new-profile',
                                            '--source-commit', 'a' * 40])
         self.assertEqual(args.threads, [16, 36, 60])
-        self.assertEqual(args.backends, ['native', 'kdlock'])
+        self.assertEqual(profile.selected_backends(args), ['native', 'kdlock'])
         for name, post in [('mutex', '4'), ('mutex-locality', '64')]:
             argv = profile.runner_arguments(args, name)
             self.assertEqual(argv[argv.index('--post-work-rounds') + 1], post)
             self.assertEqual(argv[argv.index('--repeats') + 1], '1')
             self.assertEqual(argv[argv.index('--write-percent') + 1], '100')
+
+    def test_batch_defaults_select_only_kd_and_allow_the_same_node_boundary(self):
+        args = profile.parser().parse_args(['--mode', 'batch', '--output', '/tmp/new-profile',
+                                           '--source-commit', 'a' * 40,
+                                           '--threads', '16', '32', '36', '60'])
+        self.assertEqual(profile.selected_backends(args), ['kdlock'])
+        self.assertEqual(args.threads, [16, 32, 36, 60])
+        argv = profile.runner_arguments(args, 'mutex')
+        selected = argv[argv.index('--backends') + 1:argv.index('--repeats')]
+        self.assertEqual(selected, ['kdlock'])
+
+    def test_batch_measurement_passes_through_without_perf(self):
+        class Base:
+            def run(self, command, log, **kwargs):
+                return (command, log)
+        runner = types.SimpleNamespace(RWSession=Base)
+        cls = profile.profiled_session(runner, types.SimpleNamespace(mode='batch'), None, None)
+        with patch.object(profile, 'launch_profiled_client') as launch:
+            self.assertEqual(cls().run(['client'], 'measure.json'), (['client'], 'measure.json'))
+            launch.assert_not_called()
+
+
+class NanoBatchSnapshotTests(unittest.TestCase):
+    def test_valid_snapshot_and_delta_preserve_metadata_and_inputs(self):
+        zero, before, after = batch_snapshot(0), batch_snapshot(), batch_snapshot(2)
+        original = deepcopy((zero, before, after))
+        for snapshot in (zero, before, after):
+            profile.validate_batch(snapshot)
+        self.assertEqual(profile.batch_delta(before, after, expected_completions=10), before)
+        self.assertEqual(profile.batch_delta(zero, before), before)
+        self.assertEqual(profile.batch_delta(before, before, expected_completions=0), zero)
+        self.assertEqual((zero, before, after), original)
+
+    def test_schema_metadata_and_shapes_are_required(self):
+        replacements = [
+            (('schema',), 2), (('schema',), True), (('compiled',), 0),
+            (('total_cap',), 0), (('numa_boundary',), 128),
+            (('deferred_handoff',), 0), (('scan_budget',), 0), (('numa_aware',), 0),
+            (('completed_hist',), [0] * 32), (('deferred_peak_hist',), [0] * 34),
+            (('completed_hist',), {}), (('stop_reason',), []), (('legacy',), []),
+        ]
+        for keys, replacement in replacements:
+            with self.subTest(path=keys, replacement=replacement):
+                invalid = batch_snapshot()
+                target = invalid
+                for key in keys[:-1]:
+                    target = target[key]
+                target[keys[-1]] = replacement
+                with self.assertRaises(ValueError):
+                    profile.validate_batch(invalid)
+        for key in (*BATCH_METADATA, *BATCH_COUNTERS, 'completed_hist',
+                    'deferred_peak_hist', 'stop_reason', 'legacy'):
+            with self.subTest(missing=key):
+                invalid = batch_snapshot()
+                del invalid[key]
+                with self.assertRaises(ValueError):
+                    profile.validate_batch(invalid)
+        for group, key in (('stop_reason', 'empty_tail'), ('legacy', 'handoff')):
+            with self.subTest(missing=(group, key)):
+                invalid = batch_snapshot()
+                del invalid[group][key]
+                with self.assertRaises(ValueError):
+                    profile.validate_batch(invalid)
+            with self.subTest(extra=group):
+                invalid = batch_snapshot()
+                invalid[group]['unexpected'] = 0
+                with self.assertRaises(ValueError):
+                    profile.validate_batch(invalid)
+
+    def test_counters_require_nonnegative_u64_integers(self):
+        for keys in (('batches',), ('jit_local',), ('completed_hist', 1),
+                     ('deferred_peak_hist', 1), ('stop_reason', 'empty_tail'),
+                     ('legacy', 'combiner')):
+            for value in (-1, 1.0, True, '1', None, 1 << 64):
+                with self.subTest(path=keys, value=value):
+                    invalid = batch_snapshot()
+                    target = invalid
+                    for key in keys[:-1]:
+                        target = target[key]
+                    target[keys[-1]] = value
+                    with self.assertRaises(ValueError):
+                        profile.validate_batch(invalid)
+
+    def test_count_identities_and_batch_histogram_totals_are_checked(self):
+        for keys in (('attempts',), ('jit_local',), ('native_completed',),
+                     ('deferred_total',), ('legacy', 'combiner'), ('legacy', 'jit_success'),
+                     ('legacy', 'handoff'), ('completed_hist', 0),
+                     ('deferred_peak_hist', 0), ('stop_reason', 'empty_tail')):
+            with self.subTest(path=keys):
+                invalid = batch_snapshot()
+                target = invalid
+                for key in keys[:-1]:
+                    target = target[key]
+                target[keys[-1]] += 1
+                with self.assertRaises(ValueError):
+                    profile.validate_batch(invalid)
+        for key in ('small_fifo_batches', 'scan_exhausted_batches'):
+            with self.subTest(path=key):
+                invalid = batch_snapshot()
+                invalid[key] = invalid['batches'] + 1
+                with self.assertRaises(ValueError):
+                    profile.validate_batch(invalid)
+        invalid = batch_snapshot()
+        invalid['stop_reason']['empty_tail'] = 0
+        invalid['stop_reason']['unclassified'] = 1
+        with self.assertRaises(ValueError):
+            profile.validate_batch(invalid)
+
+    def test_histogram_bounds_must_allow_reported_completions_and_deferrals(self):
+        for histogram, source, destination in (('completed_hist', 4, 5),
+                                                ('completed_hist', 4, 2),
+                                                ('deferred_peak_hist', 4, 5)):
+            with self.subTest(histogram=histogram, destination=destination):
+                invalid = batch_snapshot()
+                invalid[histogram][source] -= 1
+                invalid[histogram][destination] += 1
+                with self.assertRaises(ValueError):
+                    profile.validate_batch(invalid)
+
+    def test_deltas_reject_resets_including_individual_bins(self):
+        with self.assertRaises(ValueError):
+            profile.batch_delta(batch_snapshot(2), batch_snapshot())
+        for histogram in ('completed_hist', 'deferred_peak_hist'):
+            with self.subTest(histogram=histogram):
+                before, after = batch_snapshot(), batch_snapshot(2)
+                # The cumulative snapshot stays valid and total work grows,
+                # but one histogram bucket has moved backward.
+                after[histogram][0] += after[histogram][1]
+                after[histogram][1] = 0
+                profile.validate_batch(after)
+                with self.assertRaises(ValueError):
+                    profile.batch_delta(before, after)
+        before, after = batch_snapshot(), batch_snapshot(2)
+        after['stop_reason']['initial_unexecutable'] = 0
+        after['stop_reason']['empty_tail'] += 2
+        after['legacy']['handoff'] -= 2
+        profile.validate_batch(after)
+        with self.assertRaises(ValueError):
+            profile.batch_delta(before, after)
+
+    def test_deltas_reject_metadata_changes_and_completion_mismatch(self):
+        before, after = batch_snapshot(), batch_snapshot(2)
+        for key in BATCH_METADATA:
+            with self.subTest(metadata=key):
+                changed = deepcopy(after)
+                changed[key] += 1
+                with self.assertRaises(ValueError):
+                    profile.batch_delta(before, changed)
+        for expected in (9, 11, -1, True, 10.0):
+            with self.subTest(expected_completions=expected):
+                with self.assertRaises(ValueError):
+                    profile.batch_delta(before, after, expected_completions=expected)
+        invalid = deepcopy(before)
+        invalid['attempts'] += 1
+        with self.assertRaises(ValueError):
+            profile.batch_delta(invalid, after)
 
 
 if __name__ == '__main__':
