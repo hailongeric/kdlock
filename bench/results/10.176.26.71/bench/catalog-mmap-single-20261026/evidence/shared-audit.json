@@ -1,0 +1,717 @@
+{
+  "passed": true,
+  "measured": 42,
+  "strict_qualified": false,
+  "single_round": true,
+  "source_hashes": 783,
+  "optional_peak_unavailable": 6,
+  "receipts": [
+    {
+      "backend": "native",
+      "threads": 1,
+      "sha256": "1ffd6c6897aa0a79f09e1dc4408eb8a086d68c47952290e246a1d47e3892ecf4",
+      "peak_status": "available"
+    },
+    {
+      "backend": "native",
+      "threads": 2,
+      "sha256": "85c93c1a389622f8eb2fbfe752f064ab105cdfee2a00e5ab43004cbf7a049da9",
+      "peak_status": "available"
+    },
+    {
+      "backend": "native",
+      "threads": 3,
+      "sha256": "7d3fe23914214f2bfabc9af1b9e7eb91d2e609f330e3bd0f84d621fb0a5671de",
+      "peak_status": "available"
+    },
+    {
+      "backend": "native",
+      "threads": 4,
+      "sha256": "15a6e21be6791a000fd557221df90c79b222211b433d301dfe408661cb09745b",
+      "peak_status": "available"
+    },
+    {
+      "backend": "native",
+      "threads": 5,
+      "sha256": "4c5a38eeafd5e12a0ab073ddffc27c131686d8d8555b700e192d1c722ca176a2",
+      "peak_status": "available"
+    },
+    {
+      "backend": "native",
+      "threads": 6,
+      "sha256": "30a9a99413b48de51062bd1fed4001e2823cce61dd3c16d5cc8b16e047b1f68f",
+      "peak_status": "available"
+    },
+    {
+      "backend": "native",
+      "threads": 7,
+      "sha256": "480fef294bba0b45b9cde2a34828c16c6cf750cb41993235d9c285199deaf800",
+      "peak_status": "available"
+    },
+    {
+      "backend": "native",
+      "threads": 8,
+      "sha256": "748b40a322d6768a5f6df34933a6d8fcac63a46a9a688dc1a2651443cc40a7d9",
+      "peak_status": "available"
+    },
+    {
+      "backend": "native",
+      "threads": 12,
+      "sha256": "b1aed4d308c4900752c8050c1fab7ac4e817fd9cef2c626e3032da33cdd52936",
+      "peak_status": "available"
+    },
+    {
+      "backend": "native",
+      "threads": 16,
+      "sha256": "1162ec61bfe15f112c5111d8205c0b09f676f724f30652b358a3dfc9e6efec34",
+      "peak_status": "available"
+    },
+    {
+      "backend": "native",
+      "threads": 20,
+      "sha256": "c7f104496082206cb4cc3c0b1c3303081a90cedb6615aab3a6d9037be1398d88",
+      "peak_status": "available"
+    },
+    {
+      "backend": "native",
+      "threads": 24,
+      "sha256": "29e9fcb74cb137a8588dbf8ba63f1e7b3c67ed6b2ccd661a992c0b3f06223d83",
+      "peak_status": "available"
+    },
+    {
+      "backend": "native",
+      "threads": 28,
+      "sha256": "c6ffb12ac3e2d4e6693f40dbdaeba71b4ec76bf92f4788ee59312e5a28dbb377",
+      "peak_status": "available"
+    },
+    {
+      "backend": "native",
+      "threads": 32,
+      "sha256": "176a219bc3216a15aacc24f6fa366c8f784b7a7619a9a66209be0246808b9301",
+      "peak_status": "available"
+    },
+    {
+      "backend": "native",
+      "threads": 36,
+      "sha256": "1b7f7f20bf3943b6cccd43770672a43ce4c60c495d75c68f0e4875d16e402a69",
+      "peak_status": "available"
+    },
+    {
+      "backend": "native",
+      "threads": 40,
+      "sha256": "c214742ce710e7dbb1d4be26e25661aaf744a5c30d648d3d3117d88cc320a68f",
+      "peak_status": "available"
+    },
+    {
+      "backend": "native",
+      "threads": 44,
+      "sha256": "6574b52027884ae086b7fdd3cba6f8b780e96d50f62bbbf324ebf47623ecf6d0",
+      "peak_status": "available"
+    },
+    {
+      "backend": "native",
+      "threads": 48,
+      "sha256": "517ed9b80add1d06b8d41f4aaec69bc1655f5e98691198f00f44ccc8c3cd3a71",
+      "peak_status": "available"
+    },
+    {
+      "backend": "native",
+      "threads": 52,
+      "sha256": "8d6d6706baf924c9c79423b29f99b9df5637d7c96d028c0af7520f0bc63f6cb8",
+      "peak_status": "available"
+    },
+    {
+      "backend": "native",
+      "threads": 56,
+      "sha256": "496f695b581586178294c7f494165d9c5f70a445945213ae5558557cb8fcd99c",
+      "peak_status": "available"
+    },
+    {
+      "backend": "native",
+      "threads": 60,
+      "sha256": "6f423eddc04d3087ce4cd4b7d0e265c325bf47c8a0e1c5fecd7734c489de7860",
+      "peak_status": "available"
+    },
+    {
+      "backend": "kd",
+      "threads": 1,
+      "sha256": "9fe4d32aaa83d5920eadcaa12e26dccb28d87cb4fbe9d9550a8690b92839d354",
+      "peak_status": "available"
+    },
+    {
+      "backend": "kd",
+      "threads": 2,
+      "sha256": "c639bbbb9aca3e7711412a3f60c834fd2ef6e2b05306ef7ad3b5f2a74682e0a3",
+      "peak_status": "available"
+    },
+    {
+      "backend": "kd",
+      "threads": 3,
+      "sha256": "bf80cd6457ebd1459b4024d41db4583d11cd8780f36303b1ea036fc36d759cae",
+      "peak_status": "available"
+    },
+    {
+      "backend": "kd",
+      "threads": 4,
+      "sha256": "285ffc9183d232078b98589116ab38aaebb2262d0e61649175d4c6a02cd9b066",
+      "peak_status": "available"
+    },
+    {
+      "backend": "kd",
+      "threads": 5,
+      "sha256": "b52dea989ed54b79ff60230081d701a0bb855072501ac5c53585f7f465b5f120",
+      "peak_status": "available"
+    },
+    {
+      "backend": "kd",
+      "threads": 6,
+      "sha256": "1105fd65e876a992fad3b54e4278b097dae5d16a55915e7865d550e7b1235903",
+      "peak_status": "available"
+    },
+    {
+      "backend": "kd",
+      "threads": 7,
+      "sha256": "ce4cf7c01dc0edcd490712547f60dd9ff0ee07f07ee4eaf985f1c8f70eb80d8d",
+      "peak_status": "available"
+    },
+    {
+      "backend": "kd",
+      "threads": 8,
+      "sha256": "6853e6086feefafcbdf2f249462d6d4712eab40ccefca6d32560cb35621d3ce5",
+      "peak_status": "available"
+    },
+    {
+      "backend": "kd",
+      "threads": 12,
+      "sha256": "df7a0fcc4de6e55cd41550352f5ba1c658fa7fa3cd97b95b7d2f669f980537f1",
+      "peak_status": "available"
+    },
+    {
+      "backend": "kd",
+      "threads": 16,
+      "sha256": "c1ad79313af3e4c2f20c9dcafaea46417937db38750a644f4049042bee64834c",
+      "peak_status": "available"
+    },
+    {
+      "backend": "kd",
+      "threads": 20,
+      "sha256": "9a3cead9d2d1a7f6bf4a9fbfe3f68d25e26b0afae27872adae2fc1f2d9224615",
+      "peak_status": "available"
+    },
+    {
+      "backend": "kd",
+      "threads": 24,
+      "sha256": "7b9a2f4213b4db28c0165bddf64e9d820771a926207431de21b946f721cf855f",
+      "peak_status": "available"
+    },
+    {
+      "backend": "kd",
+      "threads": 28,
+      "sha256": "e37c0e1af44802d3dd370341e1be30b17e5d51bf3518b71457886209f2f25251",
+      "peak_status": "available"
+    },
+    {
+      "backend": "kd",
+      "threads": 32,
+      "sha256": "ec07bc5c579042325a20130eba0648e6d186ff8b943b34e0bb80e39485e5a7d9",
+      "peak_status": "available"
+    },
+    {
+      "backend": "kd",
+      "threads": 36,
+      "sha256": "692e4231d5eb2f38b8c0166b08687f1c54a7b8c2d0203e0cc7e2388cd6be5dde",
+      "peak_status": "available"
+    },
+    {
+      "backend": "kd",
+      "threads": 40,
+      "sha256": "195eb8fe98e574382650973d726e717b420d7b4a259e5b3f56f3c5a0806292de",
+      "peak_status": "unavailable"
+    },
+    {
+      "backend": "kd",
+      "threads": 44,
+      "sha256": "61badab1829acb5cca319cb82640a08936f3fd24841b36ac68df198ea5601e34",
+      "peak_status": "unavailable"
+    },
+    {
+      "backend": "kd",
+      "threads": 48,
+      "sha256": "51c2b2be2e305e7febce94599d93eed4eeada4caad15765f101e99d5da54b9af",
+      "peak_status": "unavailable"
+    },
+    {
+      "backend": "kd",
+      "threads": 52,
+      "sha256": "4527a35a4e249d512a56052c9717ca09b59bc6196cc82a06282f22aeb942e4bd",
+      "peak_status": "unavailable"
+    },
+    {
+      "backend": "kd",
+      "threads": 56,
+      "sha256": "963d36e92aee874e9741576a63d8d23f9e5a1ab7adb53ebc7bc021c7ea5c33cc",
+      "peak_status": "unavailable"
+    },
+    {
+      "backend": "kd",
+      "threads": 60,
+      "sha256": "4103364b9842efe613cbb2779e35a899c74c34b96553b35c67122a68adddda92",
+      "peak_status": "unavailable"
+    }
+  ],
+  "host_captures": [
+    {
+      "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-sharedmm-single-20261026/final-recovery/host-endpoint.json",
+      "sha256": "73a574211d261a3bd5a3bc59ed772fb7adff0c8711938a3fc812274e64e5c2d6",
+      "tasks": 76
+    },
+    {
+      "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-sharedmm-single-20261026/initial-recovery/host-endpoint.json",
+      "sha256": "6cef74c20b62c04acb9146e0cce1f5d385b65cd054b0d4dd3d6c57f20c0a6ccf",
+      "tasks": 74
+    },
+    {
+      "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-sharedmm-single-20261026/kd-admission/host-endpoint.json",
+      "sha256": "0c0d8407ff14a1888aefecd0b629336f2f79916ab1af8b043db9218df198c244",
+      "tasks": 72
+    },
+    {
+      "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-sharedmm-single-20261026/kd-n1-after/host-endpoint.json",
+      "sha256": "28eb1dbeef06ef3e9e0e0b82a8b99ca3b9fdb982a044d804a3f59f62acb49b22",
+      "tasks": 68
+    },
+    {
+      "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-sharedmm-single-20261026/kd-n1-before/host-endpoint.json",
+      "sha256": "c351dab216ac0b6068567ba9e7ff24892fbcddf65e7cece925541c0141a1e7f2",
+      "tasks": 72
+    },
+    {
+      "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-sharedmm-single-20261026/kd-n12-after/host-endpoint.json",
+      "sha256": "b60b005a7f455cea589ffdcb8a2b5bc515081f52dda956e32bc3bcec497c08ef",
+      "tasks": 67
+    },
+    {
+      "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-sharedmm-single-20261026/kd-n12-before/host-endpoint.json",
+      "sha256": "ba53676b537013e0495bbf7c7498af880135592bc280e7d36acc9bb90e65351e",
+      "tasks": 68
+    },
+    {
+      "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-sharedmm-single-20261026/kd-n16-after/host-endpoint.json",
+      "sha256": "2a8a65fd7057756efb59df2abafba5fe9b9dfceecdd43d0b456460960039c81a",
+      "tasks": 67
+    },
+    {
+      "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-sharedmm-single-20261026/kd-n16-before/host-endpoint.json",
+      "sha256": "eb858ceedba28851465349911783e606f0742831ac3601e92a8ef410b5f5d9c1",
+      "tasks": 68
+    },
+    {
+      "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-sharedmm-single-20261026/kd-n2-after/host-endpoint.json",
+      "sha256": "e49da783e1484d204c36e6cf8d351b21c044ae7a4c9ba6bb64e0f5af13563c12",
+      "tasks": 67
+    },
+    {
+      "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-sharedmm-single-20261026/kd-n2-before/host-endpoint.json",
+      "sha256": "6ad49956fe9d6ee14b95ded6e334f483d8f1830422db39eed0012ad5f70b2d0f",
+      "tasks": 68
+    },
+    {
+      "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-sharedmm-single-20261026/kd-n20-after/host-endpoint.json",
+      "sha256": "79540dc35b6a7e1591564b0011464ff638381bc3830784773548d8cb3d736209",
+      "tasks": 68
+    },
+    {
+      "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-sharedmm-single-20261026/kd-n20-before/host-endpoint.json",
+      "sha256": "28e64ec8a26cc46ae7f4d266fcb071ac12c4079832cd12993423db2a4cc45e5c",
+      "tasks": 68
+    },
+    {
+      "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-sharedmm-single-20261026/kd-n24-after/host-endpoint.json",
+      "sha256": "d741de0058c53522e8216353a087e1ece80a8806f14e144305cd6b27ef14634c",
+      "tasks": 67
+    },
+    {
+      "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-sharedmm-single-20261026/kd-n24-before/host-endpoint.json",
+      "sha256": "a45cfbc55b92212834ac6d9c40833f07b2b789703688083ef70a2de73940caf8",
+      "tasks": 68
+    },
+    {
+      "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-sharedmm-single-20261026/kd-n28-after/host-endpoint.json",
+      "sha256": "0f984b49042e3ca61b31b3ca569310ad06f2183d2011478fe9141ce28acf8a4b",
+      "tasks": 67
+    },
+    {
+      "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-sharedmm-single-20261026/kd-n28-before/host-endpoint.json",
+      "sha256": "9dc7cfd90fd62ea65cc0e769e2659773b8d0e7363d9565fc8d62855344cd01af",
+      "tasks": 68
+    },
+    {
+      "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-sharedmm-single-20261026/kd-n3-after/host-endpoint.json",
+      "sha256": "d0420a5f0b27934a370954d802bc9819a37e89b2d44e368ace3588bad2956de6",
+      "tasks": 68
+    },
+    {
+      "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-sharedmm-single-20261026/kd-n3-before/host-endpoint.json",
+      "sha256": "571ae93e4de90c3e46d752d3d59b422ed717f309e5784e07e5563c3d73966482",
+      "tasks": 68
+    },
+    {
+      "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-sharedmm-single-20261026/kd-n32-after/host-endpoint.json",
+      "sha256": "c2161da2932d6513b72b456751793539e8a6c0cb9dfbd79f819d6d0c4b1837b6",
+      "tasks": 67
+    },
+    {
+      "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-sharedmm-single-20261026/kd-n32-before/host-endpoint.json",
+      "sha256": "0117e9d41871c610e21fcbe7b543dc962ff1f4a6749e27d3665edc1e531199e9",
+      "tasks": 68
+    },
+    {
+      "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-sharedmm-single-20261026/kd-n36-after/host-endpoint.json",
+      "sha256": "46f004414e88bbef8b0155fd395addf41fd5a9986745dafcdba112049aee9cf6",
+      "tasks": 68
+    },
+    {
+      "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-sharedmm-single-20261026/kd-n36-before/host-endpoint.json",
+      "sha256": "412715eda90aa7bab9c98b757c5ccf0859eb390b708d966b9316032398c9bcc8",
+      "tasks": 68
+    },
+    {
+      "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-sharedmm-single-20261026/kd-n4-after/host-endpoint.json",
+      "sha256": "e2b363b19e2681a998ef26826df8d31472da1ebf3dfb17977f5f8f750028ac80",
+      "tasks": 67
+    },
+    {
+      "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-sharedmm-single-20261026/kd-n4-before/host-endpoint.json",
+      "sha256": "7e8871018b50babe0eedfd8cb0413b92d5d07818e50ef7170f08cc0970911693",
+      "tasks": 68
+    },
+    {
+      "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-sharedmm-single-20261026/kd-n40-after/host-endpoint.json",
+      "sha256": "b96938c3ec906f528f428d95fc6353d3a844dbbcc56a1774a8073bac4b444f0d",
+      "tasks": 67
+    },
+    {
+      "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-sharedmm-single-20261026/kd-n40-before/host-endpoint.json",
+      "sha256": "03f896049c90691a847778086534440a71eec9192cea7127e062571d295af1c4",
+      "tasks": 68
+    },
+    {
+      "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-sharedmm-single-20261026/kd-n44-after/host-endpoint.json",
+      "sha256": "83593f96bae745b0eb427eb16361e42ce9897c5827feb0eb85d95ad5c002df14",
+      "tasks": 67
+    },
+    {
+      "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-sharedmm-single-20261026/kd-n44-before/host-endpoint.json",
+      "sha256": "084e2e609d43f2126ca0dae88c29dc6517b8c387cf0883ac2a97d5d06d608d83",
+      "tasks": 68
+    },
+    {
+      "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-sharedmm-single-20261026/kd-n48-after/host-endpoint.json",
+      "sha256": "044ad958b3be9c316265360bca3fd94cf5f321ef99ada4e7388a276f0611e13f",
+      "tasks": 67
+    },
+    {
+      "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-sharedmm-single-20261026/kd-n48-before/host-endpoint.json",
+      "sha256": "166119cb3ad03b1bb339580d9dce89b0fcef67a0a41cd03ca72bf01de925f428",
+      "tasks": 68
+    },
+    {
+      "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-sharedmm-single-20261026/kd-n5-after/host-endpoint.json",
+      "sha256": "c18c7fc53df0ad1e805eceb2aebe84c9ce4d84439c83a5a5dcd99904122f5f9c",
+      "tasks": 67
+    },
+    {
+      "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-sharedmm-single-20261026/kd-n5-before/host-endpoint.json",
+      "sha256": "9e932e5901f08ded8079257691ea27b1b8e42dcbd6f3e8b80e5431c96b65b740",
+      "tasks": 68
+    },
+    {
+      "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-sharedmm-single-20261026/kd-n52-after/host-endpoint.json",
+      "sha256": "977c4f3781a8eac03e4651532030fdd698153f6f98725045a81c3e83d1dc8ab3",
+      "tasks": 68
+    },
+    {
+      "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-sharedmm-single-20261026/kd-n52-before/host-endpoint.json",
+      "sha256": "beaefaf7b5974a3850a0b5cb34765855c2ad5f99513b2a83cb9717afbbf351b0",
+      "tasks": 68
+    },
+    {
+      "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-sharedmm-single-20261026/kd-n56-after/host-endpoint.json",
+      "sha256": "afe163e6ef8ad6e4dbe39ce55a1592e74c9caddb3aeecc1b6cf6ef57f2f36391",
+      "tasks": 67
+    },
+    {
+      "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-sharedmm-single-20261026/kd-n56-before/host-endpoint.json",
+      "sha256": "13a6d9d1320344d820973cb1114ebce8970748051c48a94ca15d4e6628a02b5b",
+      "tasks": 68
+    },
+    {
+      "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-sharedmm-single-20261026/kd-n6-after/host-endpoint.json",
+      "sha256": "10dc7037a30e70a3a0bd239aaad14dd51fd0c409831cf1e68de60c7bbabd7208",
+      "tasks": 67
+    },
+    {
+      "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-sharedmm-single-20261026/kd-n6-before/host-endpoint.json",
+      "sha256": "3a99d5c15065a555305b547c268a468d8320cba448577554aa32625e1f02124d",
+      "tasks": 68
+    },
+    {
+      "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-sharedmm-single-20261026/kd-n60-after/host-endpoint.json",
+      "sha256": "adec771114f3ec2435e950c288520b28c67775065a3419cf04f1e461009ef3ae",
+      "tasks": 67
+    },
+    {
+      "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-sharedmm-single-20261026/kd-n60-before/host-endpoint.json",
+      "sha256": "c53c22083a1b49fc23a931cf85b669fc2d5f7efdffc8dbd414c4d3146bd47a97",
+      "tasks": 68
+    },
+    {
+      "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-sharedmm-single-20261026/kd-n7-after/host-endpoint.json",
+      "sha256": "f8b43588286966a078713d79b280c45c1f487fe5e5dd3efac393d23be3a9d17c",
+      "tasks": 68
+    },
+    {
+      "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-sharedmm-single-20261026/kd-n7-before/host-endpoint.json",
+      "sha256": "8298f0d750afcd5f11b10b946625f14ab14867655ca97893087ab8f794417e00",
+      "tasks": 68
+    },
+    {
+      "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-sharedmm-single-20261026/kd-n8-after/host-endpoint.json",
+      "sha256": "8d85204ed648eaf533e7d93cc44f3ef7996546de173bf7e8bdc06497180450d0",
+      "tasks": 67
+    },
+    {
+      "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-sharedmm-single-20261026/kd-n8-before/host-endpoint.json",
+      "sha256": "5d4ef5c8ce7983244a838e66274bb1c932affbf19b8c684b9b000e9a9dcc7c81",
+      "tasks": 68
+    },
+    {
+      "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-sharedmm-single-20261026/native-admission/host-endpoint.json",
+      "sha256": "368b3d9bb6084b2f0d6b1dc948c78f5714dc08e3f45e748f6de1dc85e0d2021f",
+      "tasks": 80
+    },
+    {
+      "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-sharedmm-single-20261026/native-n1-after/host-endpoint.json",
+      "sha256": "1688b7b833a796069f1ebde44b59852d104d7a9f37fb11cc2b596c8ea88755ed",
+      "tasks": 67
+    },
+    {
+      "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-sharedmm-single-20261026/native-n1-before/host-endpoint.json",
+      "sha256": "806db0168ec726962bf53fb48fa7c4513593e96487935d64c09b27a6180d1c4d",
+      "tasks": 80
+    },
+    {
+      "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-sharedmm-single-20261026/native-n12-after/host-endpoint.json",
+      "sha256": "04b28e1f0b819fda4218f725b38442bef4e9eb843f43107bed1e6d06aa13caee",
+      "tasks": 67
+    },
+    {
+      "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-sharedmm-single-20261026/native-n12-before/host-endpoint.json",
+      "sha256": "6902ef568b99a15076b679661505ff1fd8c5cffd240e1f7ff1014784746640e1",
+      "tasks": 68
+    },
+    {
+      "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-sharedmm-single-20261026/native-n16-after/host-endpoint.json",
+      "sha256": "47d5e271d93cbc6a56d5d30a69be28ba143334eb05f329a349211ae32779446b",
+      "tasks": 67
+    },
+    {
+      "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-sharedmm-single-20261026/native-n16-before/host-endpoint.json",
+      "sha256": "e8d1ff80f7c82c1d49ca3f555217e0a28366ad49343654aca268c5cddc151ece",
+      "tasks": 68
+    },
+    {
+      "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-sharedmm-single-20261026/native-n2-after/host-endpoint.json",
+      "sha256": "ec4191f2b3509e5e95a95217841bf8ddf35a0771ec83612a68e9d6da49762718",
+      "tasks": 67
+    },
+    {
+      "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-sharedmm-single-20261026/native-n2-before/host-endpoint.json",
+      "sha256": "2314e4a1b3654325130d6c8cb3ca48b6b4266a8eb87fb10039308106ac4291d8",
+      "tasks": 68
+    },
+    {
+      "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-sharedmm-single-20261026/native-n20-after/host-endpoint.json",
+      "sha256": "3bd0d93294464d57517be5f432aa3dcd439d1de148804bf13f41a78a5e012e8b",
+      "tasks": 68
+    },
+    {
+      "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-sharedmm-single-20261026/native-n20-before/host-endpoint.json",
+      "sha256": "8d42a307b463658cf4ce5ddadcb7af82880c847c4f0ab7d9d36d9eb32a992c0c",
+      "tasks": 68
+    },
+    {
+      "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-sharedmm-single-20261026/native-n24-after/host-endpoint.json",
+      "sha256": "5f0a7318495e7966d630b2101feb8ad53025d8f8668a583d54fa6af275eaf0f7",
+      "tasks": 67
+    },
+    {
+      "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-sharedmm-single-20261026/native-n24-before/host-endpoint.json",
+      "sha256": "8bab4af9ad496ff9d648209f72d5def94b2a7e848f459078385e90e56e382235",
+      "tasks": 68
+    },
+    {
+      "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-sharedmm-single-20261026/native-n28-after/host-endpoint.json",
+      "sha256": "97d45539a4bf3fcafce1c54d49bc5b001f4f015b036f15de7a12c9d932463f09",
+      "tasks": 67
+    },
+    {
+      "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-sharedmm-single-20261026/native-n28-before/host-endpoint.json",
+      "sha256": "b86fa08e719ea97fa64f831bba6ac91b75ec2d55ea8c7b9051ca2467a6391aaa",
+      "tasks": 68
+    },
+    {
+      "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-sharedmm-single-20261026/native-n3-after/host-endpoint.json",
+      "sha256": "aa4b2e1713f6be8fbd62eabfaace5d6866bcdeab3cb54fed67c384f959e7b36d",
+      "tasks": 69
+    },
+    {
+      "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-sharedmm-single-20261026/native-n3-before/host-endpoint.json",
+      "sha256": "938998ff6112925f58b8c4879507252c2bb0079f65940810fee22821a197fc4a",
+      "tasks": 68
+    },
+    {
+      "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-sharedmm-single-20261026/native-n32-after/host-endpoint.json",
+      "sha256": "46ff2dddb2ccf26e748c2b552a4b19be01d73aea08f8c5a493a5364b1915e39e",
+      "tasks": 67
+    },
+    {
+      "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-sharedmm-single-20261026/native-n32-before/host-endpoint.json",
+      "sha256": "1963ccdcbfc2adccc5fda09d7a22a1cbc31484052a68f420d40e3d0c2a55a9d4",
+      "tasks": 68
+    },
+    {
+      "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-sharedmm-single-20261026/native-n36-after/host-endpoint.json",
+      "sha256": "d665a87b43d200fe032947d20b128fc26784f3936b1cf62828c558a5655dd8fe",
+      "tasks": 68
+    },
+    {
+      "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-sharedmm-single-20261026/native-n36-before/host-endpoint.json",
+      "sha256": "1d04b07580fc9b4e70bfdc4480b2e2adb213c03546d066da98e070b6abf066a3",
+      "tasks": 68
+    },
+    {
+      "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-sharedmm-single-20261026/native-n4-after/host-endpoint.json",
+      "sha256": "7fe76068f89e2fb5ade066944a7f04ba19c3d49137afc6414368d40a03cc52d2",
+      "tasks": 67
+    },
+    {
+      "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-sharedmm-single-20261026/native-n4-before/host-endpoint.json",
+      "sha256": "2581c62a8a3ade07a85cd44f1e8ccb90e1d6606761f79970cbf26505da23f82e",
+      "tasks": 69
+    },
+    {
+      "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-sharedmm-single-20261026/native-n40-after/host-endpoint.json",
+      "sha256": "579d881b6f86750020e9bf030867741d0adda6be67e8ec29d3234aaf5f32ec58",
+      "tasks": 69
+    },
+    {
+      "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-sharedmm-single-20261026/native-n40-before/host-endpoint.json",
+      "sha256": "7ef2b4a36176ab814f7f79ed7153b65fa247266481c51c13da51b68c5295f337",
+      "tasks": 68
+    },
+    {
+      "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-sharedmm-single-20261026/native-n44-after/host-endpoint.json",
+      "sha256": "2ce1597fa487a108f602fca7e32fbf0ea1d9c1703ac51321c15530f5401abe14",
+      "tasks": 67
+    },
+    {
+      "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-sharedmm-single-20261026/native-n44-before/host-endpoint.json",
+      "sha256": "5f60faa75310391b94ce1a722922ad3f1933624e3bdecc4e03b556c8476b8b4a",
+      "tasks": 70
+    },
+    {
+      "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-sharedmm-single-20261026/native-n48-after/host-endpoint.json",
+      "sha256": "fb7bc09b2894435d07de6488402cd2e44958e023a9eed79d7d31e0d5ce0fbdbd",
+      "tasks": 67
+    },
+    {
+      "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-sharedmm-single-20261026/native-n48-before/host-endpoint.json",
+      "sha256": "bbe5d8f042e5736d183e0db51f5aa1df62ad6456377dbe17b4590990db54357c",
+      "tasks": 68
+    },
+    {
+      "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-sharedmm-single-20261026/native-n5-after/host-endpoint.json",
+      "sha256": "d71407f8d1ee3e372163525f36f883dfbfed2c9ec9cd38e0be80a1bd4ac9c601",
+      "tasks": 67
+    },
+    {
+      "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-sharedmm-single-20261026/native-n5-before/host-endpoint.json",
+      "sha256": "ea045dfff73714263f357a4fdfda920ae3f57c3c801d5580cec4f35a6c4f2401",
+      "tasks": 68
+    },
+    {
+      "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-sharedmm-single-20261026/native-n52-after/host-endpoint.json",
+      "sha256": "cfb550a0f9fded7cb5697a6d89257cbb9fb563cd2883096f679c77a2fff1711b",
+      "tasks": 68
+    },
+    {
+      "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-sharedmm-single-20261026/native-n52-before/host-endpoint.json",
+      "sha256": "867473976d4510d24a3bff95220c1390b12b29518b39d91fea8f280852d48d7f",
+      "tasks": 68
+    },
+    {
+      "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-sharedmm-single-20261026/native-n56-after/host-endpoint.json",
+      "sha256": "127486740549b71935fc1456a235febcb90936aa748cad53aa84736066ae344a",
+      "tasks": 67
+    },
+    {
+      "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-sharedmm-single-20261026/native-n56-before/host-endpoint.json",
+      "sha256": "48eda1c08f197fb34cdda6e17dd0280f80bbd332e28df374fd7cec9195e104d0",
+      "tasks": 69
+    },
+    {
+      "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-sharedmm-single-20261026/native-n6-after/host-endpoint.json",
+      "sha256": "c48aee2c81d0cc0e2f4b3ccb5b3204f63ae76a4753d07d76179c8049194b4e63",
+      "tasks": 67
+    },
+    {
+      "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-sharedmm-single-20261026/native-n6-before/host-endpoint.json",
+      "sha256": "03165ae30ce1c02fccb264bc4149d33f762fce389fe7df6d401d796e72d17378",
+      "tasks": 68
+    },
+    {
+      "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-sharedmm-single-20261026/native-n60-after/host-endpoint.json",
+      "sha256": "231cd6efa397d47e3c67bb4640a2a2d78aa960bf9631f5cb8e6d2dd65e749b1a",
+      "tasks": 67
+    },
+    {
+      "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-sharedmm-single-20261026/native-n60-before/host-endpoint.json",
+      "sha256": "d149b5e154adb23966af926f2a38c56fff64dad2d485ecd1e9a129f8f33ed683",
+      "tasks": 68
+    },
+    {
+      "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-sharedmm-single-20261026/native-n7-after/host-endpoint.json",
+      "sha256": "54ab20a59b971b4127d18da14041945ec8aac05ab7d783547438fd816b8966d1",
+      "tasks": 68
+    },
+    {
+      "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-sharedmm-single-20261026/native-n7-before/host-endpoint.json",
+      "sha256": "359ae53b99fae584ea7979683dae659e41a2b9490edf6d3d1a82dfcc64f75e31",
+      "tasks": 68
+    },
+    {
+      "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-sharedmm-single-20261026/native-n8-after/host-endpoint.json",
+      "sha256": "0ec2d0a2db924b91c18ecdbd04fbfd74acbf103a706ce7920a8d4402063012da",
+      "tasks": 67
+    },
+    {
+      "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-sharedmm-single-20261026/native-n8-before/host-endpoint.json",
+      "sha256": "0434f14bf02b077306e2c55702904978c714e315c17ab53989e280a52794a145",
+      "tasks": 68
+    }
+  ],
+  "recovery_boot": "afe3a8d8-0c07-475b-89b4-163b822484b0",
+  "archives": [
+    {
+      "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-sharedmm-single-20261026/native-archive.stdout",
+      "bytes": 1314213,
+      "sha256": "a55375dbe004086f105b59c965265b4e4905a3ab6e22a07ef0dd51ef5ae90d00"
+    },
+    {
+      "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-sharedmm-single-20261026/kd-archive.stdout",
+      "bytes": 2538455,
+      "sha256": "1f6b13913ec812ab10d5222736929de84cfb19f73856ce56f8346e63cabcf391"
+    }
+  ]
+}

@@ -1,0 +1,65 @@
+make: Entering directory '/root/host_fs/kdlock/tests/unit'
+
+[PASS] test_control_call (56 phase/error combinations, post-CALL bounds)
+
+chdir translator workspace: No such file or directory
+daemon: translator failed: workspace=./0x1234 status=32256
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "/usr/lib/python3.10/runpy.py", line 288, in run_path
+    code, fname = _get_code_from_file(run_name, path_name)
+  File "/usr/lib/python3.10/runpy.py", line 252, in _get_code_from_file
+    with io.open_code(decoded_path) as f:
+FileNotFoundError: [Errno 2] No such file or directory: '/tmp/kdlock-compiler-launch.QQj4O8/disassem/disassem.py'
+daemon: translator failed: workspace=./0x1234 status=256
+daemon: translator failed: workspace=./0x1234 status=256
+daemon: translator failed: workspace=./0x1234 status=256
+daemon: translator failed: workspace=./0x1234 status=256
+chdir translator workspace: No such file or directory
+KD_TRANSLATION_METRICS {"schema":1,"pid":0,"tgid":42,"entry":"0x1234","lock_kind":2,"child":359824,"started_ns":18225994903206,"finished_ns":18225995939225,"wall_ns":1036019,"user_ns":781000,"system_ns":0,"maxrss_kib":1424,"minor_faults":38,"major_faults":0,"voluntary_cs":1,"involuntary_cs":0,"status":32256,"result":-1}
+daemon: translator failed: workspace=./0x1234/42 status=32256
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "/usr/lib/python3.10/runpy.py", line 288, in run_path
+    code, fname = _get_code_from_file(run_name, path_name)
+  File "/usr/lib/python3.10/runpy.py", line 252, in _get_code_from_file
+    with io.open_code(decoded_path) as f:
+FileNotFoundError: [Errno 2] No such file or directory: '/tmp/kdlock-compiler-launch.QQj4O8/disassem/disassem.py'
+KD_TRANSLATION_METRICS {"schema":1,"pid":0,"tgid":42,"entry":"0x1234","lock_kind":2,"child":359825,"started_ns":18225996104971,"finished_ns":18226023694069,"wall_ns":27589098,"user_ns":22681000,"system_ns":4557000,"maxrss_kib":9000,"minor_faults":983,"major_faults":0,"voluntary_cs":1,"involuntary_cs":0,"status":256,"result":-1}
+daemon: translator failed: workspace=./0x1234/42 status=256
+KD_TRANSLATION_METRICS {"schema":1,"pid":0,"tgid":42,"entry":"0x1234","lock_kind":0,"child":359826,"started_ns":18226023902905,"finished_ns":18226050809949,"wall_ns":26907044,"user_ns":22004000,"system_ns":4398000,"maxrss_kib":9008,"minor_faults":1044,"major_faults":0,"voluntary_cs":1,"involuntary_cs":0,"status":0,"result":0}
+KD_TRANSLATION_METRICS {"schema":1,"pid":0,"tgid":42,"entry":"0x1234","lock_kind":0,"child":359827,"started_ns":18226051113781,"finished_ns":18226079603717,"wall_ns":28489936,"user_ns":24034000,"system_ns":4023000,"maxrss_kib":9140,"minor_faults":1046,"major_faults":0,"voluntary_cs":1,"involuntary_cs":0,"status":256,"result":-1}
+daemon: translator failed: workspace=./0x1234/42 status=256
+KD_TRANSLATION_METRICS {"schema":1,"pid":0,"tgid":42,"entry":"0x1234","lock_kind":0,"child":359828,"started_ns":18226079911423,"finished_ns":18226107548044,"wall_ns":27636621,"user_ns":22619000,"system_ns":4545000,"maxrss_kib":9076,"minor_faults":1045,"major_faults":0,"voluntary_cs":1,"involuntary_cs":0,"status":512,"result":2}
+KD_TRANSLATION_METRICS {"schema":1,"pid":0,"tgid":42,"entry":"0x1234","lock_kind":1,"child":359829,"started_ns":18226107825776,"finished_ns":18226133720514,"wall_ns":25894738,"user_ns":21136000,"system_ns":4233000,"maxrss_kib":9244,"minor_faults":1048,"major_faults":0,"voluntary_cs":1,"involuntary_cs":0,"status":0,"result":0}
+KD_TRANSLATION_METRICS {"schema":1,"pid":0,"tgid":42,"entry":"0x1234","lock_kind":1,"child":359830,"started_ns":18226133977602,"finished_ns":18226162854537,"wall_ns":28876935,"user_ns":28449000,"system_ns":0,"maxrss_kib":9156,"minor_faults":1045,"major_faults":0,"voluntary_cs":1,"involuntary_cs":0,"status":256,"result":-1}
+daemon: translator failed: workspace=./0x1234/42 status=256
+KD_TRANSLATION_METRICS {"schema":1,"pid":0,"tgid":42,"entry":"0x1234","lock_kind":1,"child":359831,"started_ns":18226163197840,"finished_ns":18226189406578,"wall_ns":26208738,"user_ns":22125000,"system_ns":3672000,"maxrss_kib":9144,"minor_faults":1047,"major_faults":0,"voluntary_cs":1,"involuntary_cs":0,"status":512,"result":2}
+KD_TRANSLATION_METRICS {"schema":1,"pid":0,"tgid":42,"entry":"0x1234","lock_kind":2,"child":359832,"started_ns":18226189662705,"finished_ns":18226215118532,"wall_ns":25455827,"user_ns":16693000,"system_ns":8365000,"maxrss_kib":9140,"minor_faults":1046,"major_faults":0,"voluntary_cs":1,"involuntary_cs":0,"status":0,"result":0}
+KD_TRANSLATION_METRICS {"schema":1,"pid":0,"tgid":42,"entry":"0x1234","lock_kind":2,"child":359833,"started_ns":18226223455288,"finished_ns":18226250841788,"wall_ns":27386500,"user_ns":23133000,"system_ns":3836000,"maxrss_kib":9132,"minor_faults":1047,"major_faults":0,"voluntary_cs":1,"involuntary_cs":1,"status":256,"result":-1}
+daemon: translator failed: workspace=./0x1234/42 status=256
+KD_TRANSLATION_METRICS {"schema":1,"pid":0,"tgid":42,"entry":"0x1234","lock_kind":2,"child":359834,"started_ns":18226251140468,"finished_ns":18226276636303,"wall_ns":25495835,"user_ns":17947000,"system_ns":7165000,"maxrss_kib":9268,"minor_faults":1050,"major_faults":0,"voluntary_cs":1,"involuntary_cs":0,"status":512,"result":2}
+daemon: invalid translation monotonic clock
+daemon: invalid translation monotonic clock
+daemon: invalid translation resource record
+daemon: invalid translation resource record
+daemon: invalid translation resource record
+[PASS] daemon opt-in metrics, real children and observation faults
+[PASS] test_daemon_policy
+write /dev/kd_dev: Bad file descriptor
+read /dev/kd_dev: Bad file descriptor
+open /dev/kd_dev session: No such file or directory
+daemon: native-only status write failed: -1
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Unit tests: 2 passed, 0 failed
+make: Leaving directory '/root/host_fs/kdlock/tests/unit'
+test_historical_plan_stays_three_rounds_and_two_modes (test_single.SingleRound) ... ok
+test_invalid_plan_selection_is_rejected (test_single.SingleRound) ... ok
+test_new_grid_has_only_supported_arms_and_one_plain_point (test_single.SingleRound) ... ok
+test_only_exact_positive_peak_absence_is_optional (test_single.SingleRound) ... ok
+
+----------------------------------------------------------------------
+Ran 4 tests in 0.003s
+
+OK

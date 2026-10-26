@@ -27,8 +27,9 @@ only after that exact pre-measurement helper failure when cleanup succeeds and
 the guest is idle. Other failures stop the campaign. Failed preparations remain
 gaps; they are neither local throughput measurements nor delegation passes.
 Ten focused continuation-boundary checks passed in the VM.
-The lock/API portion is complete; the explicitly requested separate mmap/fault
-extension is pending. After the initial spin c01 stop, the user
+The lock/API portion and the explicitly requested separate
+[mmap/fault extension](../catalog-mmap-single-20261026/README.md) are complete.
+After the initial spin c01 stop, the user
 explicitly authorized continuation as exploratory measurements. The
 [result index](progress.md) records each completed workload.
 Strict timing qualification remains failed throughout this continuation.
@@ -38,7 +39,7 @@ Strict timing qualification remains failed throughout this continuation.
 | Spin c01/post64 | 63/63 | 63/63 | Failed host endpoint: 67 to 74 QEMU tasks | [Table](spin-c01/README.md), [CSV](spin-c01/table.csv), [PNG](spin-c01/throughput.png), [SVG](spin-c01/throughput.svg) |
 | All 51 lock/API configurations, including c01 | 3,166/3,213 timed; 47 preparation failures | All 3,213 attempts drained | Strict qualification remains failed | [Tables/charts](progress.md); corrected API commands in plan-v2.json |
 | Selected 64-node lists | Unrun | Not implemented by current payload/runners | Requires implementation and validation | Not substituted with 128 nodes |
-| Private-backing mmap/fault timing and actual shared-mm mmap | Pending extension | User explicitly included these separate suites | Separate runner and kernel scopes | Historical measurements will not fill new points |
+| Private-backing mmap/fault timing and actual shared-mm mmap | 126/126 timed | All passed and drained | Exploratory; separate runner and kernel scopes | [Three tables/charts](../catalog-mmap-single-20261026/README.md) |
 | Generic actual-page-fault throughput and full proc/application proposals | Unrun | No generic maintained throughput driver | Requires implementation | Not represented by synthetic or extracted snapshots |
 
 Spin c01 used source base `90fd62f` and the current provider, with one round at

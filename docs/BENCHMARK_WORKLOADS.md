@@ -25,9 +25,12 @@ The explicitly requested [single-round October 26 screen](../bench/results/10.17
 attempted all 51 currently runnable lock/API configurations on that grid.
 It retains 3,166 valid timed observations and 47 drained KD xattr preparation
 failures. Its exploratory host policy and one repetition do not establish
-strict timing qualification or repeat variability. Separate mmap/fault suites
-are being prepared under their own identities; planned 64-node lists remain
-unimplemented.
+strict timing qualification or repeat variability. The separate
+[mmap/fault extension](../bench/results/10.176.26.71/bench/catalog-mmap-single-20261026/README.md)
+completed 126 single-round points across independent-mm mmap/munmap,
+private-backing CPU faults and actual shared-mm Native/KD mmap/munmap, keeping
+their distinct kernel and workload identities. Planned 64-node lists and generic
+actual-mmap-backend page-fault throughput remain unimplemented.
 
 The [current mutex comparison](../bench/results/10.176.26.71/bench/mutex32-native-tclock-20261020/README.md)
 covers c01/post64, c08/post64, exclusive-update RCUHT, seek set/end, pipebytes

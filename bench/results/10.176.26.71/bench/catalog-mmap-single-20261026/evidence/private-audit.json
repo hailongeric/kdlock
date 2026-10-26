@@ -1,0 +1,615 @@
+{
+  "passed": true,
+  "measurements": 84,
+  "single_round": true,
+  "strict_qualified": false,
+  "frozen_input_hashes": 1811,
+  "optional_peak_unavailable": 0,
+  "archives": [
+    {
+      "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-mmap-single-20261026/mmap-archive.stdout",
+      "sha256": "edb05c2c15f9d2a14e9e0f3524fcc87ee8b61d8192c73052656b984c00cb2c38",
+      "bytes": 541057
+    },
+    {
+      "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-mmap-single-20261026/fault-archive.stdout",
+      "sha256": "24d56ba5e438ac30372bd9d0d159efcfffe61ad59f6134a0574568103bd85d61",
+      "bytes": 1381374
+    },
+    {
+      "path": "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-mmap-single-20261026/private-full-archive.stdout",
+      "sha256": "3fd19dd363de1762b0536c4e32693181a02298bf292e790087ff18a708806984",
+      "bytes": 10846444
+    }
+  ],
+  "receipts": [
+    {
+      "workload": "mmap",
+      "threads": 1,
+      "arm": "native",
+      "client_sha256": "fc60742ae5723cb1ab648b2e2072a1b050590bac1f7bfe87b13b1074d4cf0062",
+      "peak_status": "available"
+    },
+    {
+      "workload": "mmap",
+      "threads": 2,
+      "arm": "native",
+      "client_sha256": "2adede2948ee8ba2d0725a9834a3d912c01cbc875df01eb8b4ecb9cd2a2fcf2c",
+      "peak_status": "available"
+    },
+    {
+      "workload": "mmap",
+      "threads": 3,
+      "arm": "native",
+      "client_sha256": "afabec9b0cb85211c9652588564c518700fef3e9dadd062408812b01f015d9d9",
+      "peak_status": "available"
+    },
+    {
+      "workload": "mmap",
+      "threads": 4,
+      "arm": "native",
+      "client_sha256": "38774b46f7ad68e5238bcb0fe579edb8e2438d669d99f0a8297631f6b3d43798",
+      "peak_status": "available"
+    },
+    {
+      "workload": "mmap",
+      "threads": 5,
+      "arm": "native",
+      "client_sha256": "7336de05801f11806e03bd49d2b8ff6636f8a0aa005eab720a5cd3a6b1e9cc31",
+      "peak_status": "available"
+    },
+    {
+      "workload": "mmap",
+      "threads": 6,
+      "arm": "native",
+      "client_sha256": "422bbf0367baa7902d157c004fb3927c933446bd8b1c797dfd5c356df8bce90e",
+      "peak_status": "available"
+    },
+    {
+      "workload": "mmap",
+      "threads": 7,
+      "arm": "native",
+      "client_sha256": "35a5ea179f5860df40d5df1dcf26cc18a2a175439a1ef98d0a82014a6555e34a",
+      "peak_status": "available"
+    },
+    {
+      "workload": "mmap",
+      "threads": 8,
+      "arm": "native",
+      "client_sha256": "ad1fb080c6641c9e6cc104838fa568533b2273883031ca0e4f314edc0bbe2ca8",
+      "peak_status": "available"
+    },
+    {
+      "workload": "mmap",
+      "threads": 12,
+      "arm": "native",
+      "client_sha256": "a00200619044156e195cb5a01a4518d2a6f14e49c40510fe3436bdd16e8d1d74",
+      "peak_status": "available"
+    },
+    {
+      "workload": "mmap",
+      "threads": 16,
+      "arm": "native",
+      "client_sha256": "3eeb86e0116f491e7d9c7804287a0d2327e49d072159153dba7a443ead7316bb",
+      "peak_status": "available"
+    },
+    {
+      "workload": "mmap",
+      "threads": 20,
+      "arm": "native",
+      "client_sha256": "9403f3e43750fefe8861da8277bd73d38ce4cf3ec3a62da227a337a68de3bb5c",
+      "peak_status": "available"
+    },
+    {
+      "workload": "mmap",
+      "threads": 24,
+      "arm": "native",
+      "client_sha256": "479982ae9d052574066e3607f3350159398685a0231d8c4cb5156eca654994ce",
+      "peak_status": "available"
+    },
+    {
+      "workload": "mmap",
+      "threads": 28,
+      "arm": "native",
+      "client_sha256": "a16ed8d7f4ee5741fb79aab2f38638319843a80de3d8c61e2a1558a3c5eed807",
+      "peak_status": "available"
+    },
+    {
+      "workload": "mmap",
+      "threads": 32,
+      "arm": "native",
+      "client_sha256": "0070f715983d54a720e0693b5d2701af04a364f89c06f3fc32ccb9ef0f613382",
+      "peak_status": "available"
+    },
+    {
+      "workload": "mmap",
+      "threads": 36,
+      "arm": "native",
+      "client_sha256": "3caeb12c33bf67a8f0a4cad07dfecaa95ba9c87c182f9d41b799e4a388b444a9",
+      "peak_status": "available"
+    },
+    {
+      "workload": "mmap",
+      "threads": 40,
+      "arm": "native",
+      "client_sha256": "247c30a415f778cf62d6701596b2879229dcbea547a6ae4c62d8b7770ef0bb6d",
+      "peak_status": "available"
+    },
+    {
+      "workload": "mmap",
+      "threads": 44,
+      "arm": "native",
+      "client_sha256": "81d579ff5c3ad5c5f847f236540e728de7fbec28598cf5b95871e86fe242d366",
+      "peak_status": "available"
+    },
+    {
+      "workload": "mmap",
+      "threads": 48,
+      "arm": "native",
+      "client_sha256": "ff0b6c09bae8f829d52871b951aceace8ab30f6a7f5ff295523b0cf82a449106",
+      "peak_status": "available"
+    },
+    {
+      "workload": "mmap",
+      "threads": 52,
+      "arm": "native",
+      "client_sha256": "bb8fd14937b8e8f043e1017a076553e5c7a1ece1196bfaaa12050bd336459be8",
+      "peak_status": "available"
+    },
+    {
+      "workload": "mmap",
+      "threads": 56,
+      "arm": "native",
+      "client_sha256": "f33c7e80f49b7aa51c073467e3519901b1c60df9195fc3265e776ed95bf73322",
+      "peak_status": "available"
+    },
+    {
+      "workload": "mmap",
+      "threads": 60,
+      "arm": "native",
+      "client_sha256": "381b5bf4f36fbe6f1128ca6bab98a6e470d8cdec5b3adab91ed4a1c6203ba3ce",
+      "peak_status": "available"
+    },
+    {
+      "workload": "fault",
+      "threads": 1,
+      "arm": "native",
+      "client_sha256": "54039ba453b70d8fa04398e9482134ce51d687d0ffcb6fdcdf3cc7020ebda275",
+      "peak_status": "available"
+    },
+    {
+      "workload": "fault",
+      "threads": 1,
+      "arm": "kdlock",
+      "client_sha256": "eabae0d044d25e2b82931ffc3f68d80f0fd5c6c8ac2e6b5bd4b9b5bdad0be233",
+      "peak_status": "available"
+    },
+    {
+      "workload": "fault",
+      "threads": 1,
+      "arm": "tclock",
+      "client_sha256": "3e83f42cece8f4a1fd58389a4793240d9f3b3f546a3225c00ef350df163b8862",
+      "peak_status": "available"
+    },
+    {
+      "workload": "fault",
+      "threads": 2,
+      "arm": "native",
+      "client_sha256": "93893c4dfda7f3632cd0a2937c4d4d5673547f49e98ff79c725bc69f2a6ac8c6",
+      "peak_status": "available"
+    },
+    {
+      "workload": "fault",
+      "threads": 2,
+      "arm": "kdlock",
+      "client_sha256": "dca9d90c910b4bc10a2589abe9c6433fc06674cb1e9b93c093f2224dacb7a087",
+      "peak_status": "available"
+    },
+    {
+      "workload": "fault",
+      "threads": 2,
+      "arm": "tclock",
+      "client_sha256": "eefb61ca41d9f9a1c088c1b894b68386940f5ad418b2cfd2abc75db3ab2f23e3",
+      "peak_status": "available"
+    },
+    {
+      "workload": "fault",
+      "threads": 3,
+      "arm": "native",
+      "client_sha256": "944d2ba114001821b32c2ea185af20bdc19d2495324a523e7a88ba111175dc2a",
+      "peak_status": "available"
+    },
+    {
+      "workload": "fault",
+      "threads": 3,
+      "arm": "kdlock",
+      "client_sha256": "78e184505f8b36d0b9f7f0087f646a0cb731c5a4a078c60905e87ccac20731fc",
+      "peak_status": "available"
+    },
+    {
+      "workload": "fault",
+      "threads": 3,
+      "arm": "tclock",
+      "client_sha256": "d7f6bb50c49a91089589b8b0cc277df314ad9e2917dd7d4de67ebdc5f71de0f7",
+      "peak_status": "available"
+    },
+    {
+      "workload": "fault",
+      "threads": 4,
+      "arm": "native",
+      "client_sha256": "39355a479f47320148fc8831b14c5f7c2443c96371e602e32569065a66a352eb",
+      "peak_status": "available"
+    },
+    {
+      "workload": "fault",
+      "threads": 4,
+      "arm": "kdlock",
+      "client_sha256": "a04c6caac084614f69afe2e85e39b605de5f19ff22f446a7dbf4d9e546a1c862",
+      "peak_status": "available"
+    },
+    {
+      "workload": "fault",
+      "threads": 4,
+      "arm": "tclock",
+      "client_sha256": "548aec3e455af626250d8d43f28f36bc15eb238e1fcc0b9f2952f6b3e21a4835",
+      "peak_status": "available"
+    },
+    {
+      "workload": "fault",
+      "threads": 5,
+      "arm": "native",
+      "client_sha256": "828c405e81fccf52fa4fdfcd63f420a45557d9670b4d4968d68dfae4420c2c58",
+      "peak_status": "available"
+    },
+    {
+      "workload": "fault",
+      "threads": 5,
+      "arm": "kdlock",
+      "client_sha256": "4a37377df6f2daa8ec6a2b4fcce3711f20e658253ef74d3e3dc0d9fdd08be377",
+      "peak_status": "available"
+    },
+    {
+      "workload": "fault",
+      "threads": 5,
+      "arm": "tclock",
+      "client_sha256": "ffff4eb1ace4207d2501cf5c1ba4ccab7c303c8439079e9fb7e3e85aec5e0e00",
+      "peak_status": "available"
+    },
+    {
+      "workload": "fault",
+      "threads": 6,
+      "arm": "native",
+      "client_sha256": "75fe8fcd372609cb7212911fd03e8223b829164aced084ddfbc232ff7e802fd8",
+      "peak_status": "available"
+    },
+    {
+      "workload": "fault",
+      "threads": 6,
+      "arm": "kdlock",
+      "client_sha256": "fc798cab56733c05297d3337bc2c5c415673bd8e7855781b623accd9dbc4e38c",
+      "peak_status": "available"
+    },
+    {
+      "workload": "fault",
+      "threads": 6,
+      "arm": "tclock",
+      "client_sha256": "00444f30f43ff0baba51f25afdf1015f9fc0761efb890ceae312e4f59a1479e1",
+      "peak_status": "available"
+    },
+    {
+      "workload": "fault",
+      "threads": 7,
+      "arm": "native",
+      "client_sha256": "d5dc805ee49a20d7f064e2276fa7922c46db07c3bbd3e4bd00cd2de19d617bd5",
+      "peak_status": "available"
+    },
+    {
+      "workload": "fault",
+      "threads": 7,
+      "arm": "kdlock",
+      "client_sha256": "8108dcd3a4944597e309ccfe3db8a8e43e5b31eea5fdc608881ab37faff393ff",
+      "peak_status": "available"
+    },
+    {
+      "workload": "fault",
+      "threads": 7,
+      "arm": "tclock",
+      "client_sha256": "d9a6b1741bce711ed59a39e0aa39415cdd42df96cfb2ce8d8647efd9bb06f625",
+      "peak_status": "available"
+    },
+    {
+      "workload": "fault",
+      "threads": 8,
+      "arm": "native",
+      "client_sha256": "0a2ce5cf6e40d22a9fde1c4468a6b0aab68d0af566803fcdda3977eb99fea8da",
+      "peak_status": "available"
+    },
+    {
+      "workload": "fault",
+      "threads": 8,
+      "arm": "kdlock",
+      "client_sha256": "b4137bfccd8ea87dbdb07531517c2cebd0f3371de5994177502dc9ac8b072411",
+      "peak_status": "available"
+    },
+    {
+      "workload": "fault",
+      "threads": 8,
+      "arm": "tclock",
+      "client_sha256": "c40727793f7bf421e094a8241cded3fb6bc8a77cfad9fb9770282c2168bce0b1",
+      "peak_status": "available"
+    },
+    {
+      "workload": "fault",
+      "threads": 12,
+      "arm": "native",
+      "client_sha256": "cfd23781f23b69218265a3d76a40bae5282e85802c4b14ad0abec391a72c3b6c",
+      "peak_status": "available"
+    },
+    {
+      "workload": "fault",
+      "threads": 12,
+      "arm": "kdlock",
+      "client_sha256": "bd3a24a3cd384d5ae5dbe5a05144b85bd87c01564df35b024a1957b5e6cab018",
+      "peak_status": "available"
+    },
+    {
+      "workload": "fault",
+      "threads": 12,
+      "arm": "tclock",
+      "client_sha256": "f1e8ea397cdb290b4c93a588adbf29591060128dc096f88dae2c98fe79a57ba0",
+      "peak_status": "available"
+    },
+    {
+      "workload": "fault",
+      "threads": 16,
+      "arm": "native",
+      "client_sha256": "ba5bfc38868d03ce5ce0fbd436d44abdd788191221cbbc50459a784690582bb3",
+      "peak_status": "available"
+    },
+    {
+      "workload": "fault",
+      "threads": 16,
+      "arm": "kdlock",
+      "client_sha256": "477d0b32d746263763ca40c33437143d140ccea0dae52f5b0f664dd16f3e66f3",
+      "peak_status": "available"
+    },
+    {
+      "workload": "fault",
+      "threads": 16,
+      "arm": "tclock",
+      "client_sha256": "ec75f6c92349e3a023da68576c6cbaac528dc761932bd828ab4f9ba558add3ca",
+      "peak_status": "available"
+    },
+    {
+      "workload": "fault",
+      "threads": 20,
+      "arm": "native",
+      "client_sha256": "7cbe45f998330108d5dfebff77e3614e4a99423ea7c9fe0a609beaa0cefb7701",
+      "peak_status": "available"
+    },
+    {
+      "workload": "fault",
+      "threads": 20,
+      "arm": "kdlock",
+      "client_sha256": "6f7e6634b6c87ad257ddfc1967a4aae3ebda6477f5fe95adba0a6691e27df4cf",
+      "peak_status": "available"
+    },
+    {
+      "workload": "fault",
+      "threads": 20,
+      "arm": "tclock",
+      "client_sha256": "e86b59049ad94b731f24ea84c692b158ef5f745f860d37f27bc0ecd145bbe86b",
+      "peak_status": "available"
+    },
+    {
+      "workload": "fault",
+      "threads": 24,
+      "arm": "native",
+      "client_sha256": "dff03df09ac2a17fd4e77ef28ec269db3788e8cc0ad98156cfecab325232e4c2",
+      "peak_status": "available"
+    },
+    {
+      "workload": "fault",
+      "threads": 24,
+      "arm": "kdlock",
+      "client_sha256": "281710958668f5ff5b0c17da482e0f46f13ada05775af1a2acca4bc9558c9524",
+      "peak_status": "available"
+    },
+    {
+      "workload": "fault",
+      "threads": 24,
+      "arm": "tclock",
+      "client_sha256": "451b37030ceac12ccc7b5adc7aa7f0a5d6c9da109d860cc83413dc9d139d1652",
+      "peak_status": "available"
+    },
+    {
+      "workload": "fault",
+      "threads": 28,
+      "arm": "native",
+      "client_sha256": "fc4040dd70847cca49d0d3c2b7ebed7d50878831da1748c0636f0e8d0b4b8748",
+      "peak_status": "available"
+    },
+    {
+      "workload": "fault",
+      "threads": 28,
+      "arm": "kdlock",
+      "client_sha256": "c853d546c3d6606939c0bec34f44d300ade1396fee2fc85b582bb4b54b00b855",
+      "peak_status": "available"
+    },
+    {
+      "workload": "fault",
+      "threads": 28,
+      "arm": "tclock",
+      "client_sha256": "cf65ce81d8b53bc670f4c3a72be70b980ca61609727c9a76a79413b3621ea474",
+      "peak_status": "available"
+    },
+    {
+      "workload": "fault",
+      "threads": 32,
+      "arm": "native",
+      "client_sha256": "1d7c86bfd3dfa2918cdc893a5e42ec9f1e5f31b451f5ff32a95000a2b0eae229",
+      "peak_status": "available"
+    },
+    {
+      "workload": "fault",
+      "threads": 32,
+      "arm": "kdlock",
+      "client_sha256": "1b1765f7f674e40085e6de9353c09626b9ed1e9d7746a138cf8d3c12e1d243c7",
+      "peak_status": "available"
+    },
+    {
+      "workload": "fault",
+      "threads": 32,
+      "arm": "tclock",
+      "client_sha256": "b4f1b47d63da16de4450852fa9e75da4e961ad4e2b9b3d76e5e0ff8f7b99d841",
+      "peak_status": "available"
+    },
+    {
+      "workload": "fault",
+      "threads": 36,
+      "arm": "native",
+      "client_sha256": "00c4cf9c76d6060620ff02cb9012a6b82878c445606e773e0812bace655735ff",
+      "peak_status": "available"
+    },
+    {
+      "workload": "fault",
+      "threads": 36,
+      "arm": "kdlock",
+      "client_sha256": "5657dc0eae4d688ba5ee815c0f719c8df1c8459870ab341c366f75d37cb30b83",
+      "peak_status": "available"
+    },
+    {
+      "workload": "fault",
+      "threads": 36,
+      "arm": "tclock",
+      "client_sha256": "ca69674dd877df419461de304db1ff58768921be7118adab0c571ccb24626f53",
+      "peak_status": "available"
+    },
+    {
+      "workload": "fault",
+      "threads": 40,
+      "arm": "native",
+      "client_sha256": "4562248452dc7eaad497c9f7f8fe816ce88fac8f8e22aaebb10da108978fd1c9",
+      "peak_status": "available"
+    },
+    {
+      "workload": "fault",
+      "threads": 40,
+      "arm": "kdlock",
+      "client_sha256": "ecbc29ca9d8f869a3e40755e97d5e2e488586f58371f320e26abd27fdb5bbb1f",
+      "peak_status": "available"
+    },
+    {
+      "workload": "fault",
+      "threads": 40,
+      "arm": "tclock",
+      "client_sha256": "2fa11d2ad41ad5739b398044e0c5b38e8e7c434592381a0e4cd5ca68cf25b396",
+      "peak_status": "available"
+    },
+    {
+      "workload": "fault",
+      "threads": 44,
+      "arm": "native",
+      "client_sha256": "24f9f612ec85f9ce2aabea7bf2378a542528f1d41cc8ca6f9382977d0f715fe5",
+      "peak_status": "available"
+    },
+    {
+      "workload": "fault",
+      "threads": 44,
+      "arm": "kdlock",
+      "client_sha256": "3af05899eaa53c9304d6893227b262ce8d553f4541eede857632971aa788e085",
+      "peak_status": "available"
+    },
+    {
+      "workload": "fault",
+      "threads": 44,
+      "arm": "tclock",
+      "client_sha256": "ef01ade31555c37bd73b1c7883b33c15d1b4840b320b8e975bd01de06dcb33fa",
+      "peak_status": "available"
+    },
+    {
+      "workload": "fault",
+      "threads": 48,
+      "arm": "native",
+      "client_sha256": "47e2d3c62476b023568022de21b51fdc4aeccf00d96cd2a574ea72ad0292e059",
+      "peak_status": "available"
+    },
+    {
+      "workload": "fault",
+      "threads": 48,
+      "arm": "kdlock",
+      "client_sha256": "adb4ed3fb57672641e2cde7ad5a42ffea4f50c981fcf8cfac97d75a9b249835c",
+      "peak_status": "available"
+    },
+    {
+      "workload": "fault",
+      "threads": 48,
+      "arm": "tclock",
+      "client_sha256": "433bcf1fe6bc4306168b1ddb1b53f947349fc862b0ebf1323ea15659efecfb53",
+      "peak_status": "available"
+    },
+    {
+      "workload": "fault",
+      "threads": 52,
+      "arm": "native",
+      "client_sha256": "3051dd6808f06aad734656c2f93eb4972cccd38d2431ccf1e52db9eab5aa95aa",
+      "peak_status": "available"
+    },
+    {
+      "workload": "fault",
+      "threads": 52,
+      "arm": "kdlock",
+      "client_sha256": "695b1d6d803e3685b842c356da2c65323e524eac6b4118b7ba4ec026175c23cc",
+      "peak_status": "available"
+    },
+    {
+      "workload": "fault",
+      "threads": 52,
+      "arm": "tclock",
+      "client_sha256": "235c09fc371d520bac2e078a121371ac4854b64962edad5baaddef3b76030f0f",
+      "peak_status": "available"
+    },
+    {
+      "workload": "fault",
+      "threads": 56,
+      "arm": "native",
+      "client_sha256": "36b59b254e39ce7ca6c77964d1c789ff11f5feb1297517db1ef4e3e4cbf88c61",
+      "peak_status": "available"
+    },
+    {
+      "workload": "fault",
+      "threads": 56,
+      "arm": "kdlock",
+      "client_sha256": "7d66a08ddd1d61ca63217c094c8666892ef917bda886234b60985e830e4e4ed3",
+      "peak_status": "available"
+    },
+    {
+      "workload": "fault",
+      "threads": 56,
+      "arm": "tclock",
+      "client_sha256": "6616b99c80cd57877a3456ab7f2253fe9600dd599a61213b07a215b237949145",
+      "peak_status": "available"
+    },
+    {
+      "workload": "fault",
+      "threads": 60,
+      "arm": "native",
+      "client_sha256": "a611e7154cc684cf29032a530f3e6add1137b68e254dafadac97e188b08c5388",
+      "peak_status": "available"
+    },
+    {
+      "workload": "fault",
+      "threads": 60,
+      "arm": "kdlock",
+      "client_sha256": "32fc4ea92a136288e0d3f22b40d8762f4037559d62e5441cda1d6b76896dbbf2",
+      "peak_status": "available"
+    },
+    {
+      "workload": "fault",
+      "threads": 60,
+      "arm": "tclock",
+      "client_sha256": "e0e4b69ec8148f2f8e021cc2d35bd8be1944991b948584ecc864570ceb95c49f",
+      "peak_status": "available"
+    }
+  ]
+}

@@ -7,7 +7,14 @@ failures. Each point was measured at most once. Per-workload tables and charts
 retain failures and execution classes. The user authorized exploratory
 continuation after QEMU task membership changed; strict timing qualification
 remains failed. These results do not replace repeated accepted baselines.
-The separate mmap/fault extension is pending.
+The separate [mmap/fault extension](../bench/results/10.176.26.71/bench/catalog-mmap-single-20261026/README.md)
+completed another 126 single-round measurements: 21 independent-mm mmap/munmap,
+63 private-backing CPU-fault and 42 actual shared-mm Native/KD points. All passed
+exact aggregate accounting and drained. Six KD shared-mm points at 40–60 workers
+had no positive full-cohort peak window; that optional statistic stays unavailable.
+At 60 workers, shared-mm Native measured 70,350.82 cycles/s versus KD 6,752.42.
+These exploratory aggregate controls do not qualify the historical paired matrix.
+The VM returned to the recovery kernel with 73 modules, zero taint and no pending boot.
 
 Current priority is a [throughput-only Native/KD comparison](THROUGHPUT_PLAN.md)
 across documented lock workloads, actual shared-mm mmap and actual page faults.

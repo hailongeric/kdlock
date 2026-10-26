@@ -7,6 +7,14 @@ variance with the gains. **This phase measures throughput only**; new tail-laten
 collection and sampled workload variants are deferred. Preserve historical
 latency evidence. Environment diagnosis is a separate activity.
 
+The explicitly requested October 26 one-round exploratory screen has completed:
+[51 runnable lock/API configurations](../bench/results/10.176.26.71/bench/catalog-single-20261026/README.md)
+and [three implemented mmap/fault workloads](../bench/results/10.176.26.71/bench/catalog-mmap-single-20261026/README.md).
+It retains 3,292 timed observations and 47 drained xattr preparation failures,
+with strict timing qualification failed and no repeat variability estimate.
+The private-backing fault experiment remains separate from the generic
+actual-mmap-backend page-fault throughput driver proposed below.
+
 No campaign below is authorized to run by this roadmap. The separately authorized
 [`plain-v1` attempt](../bench/results/10.176.26.71/bench/mmap-plain-v1-20261025/README.md)
 stopped at 68 QEMU tasks versus 67: one full capture, no boot or payload load,

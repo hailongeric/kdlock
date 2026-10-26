@@ -6,6 +6,14 @@ real mmap/page-fault examples. Current work prioritizes qualified Native/KD
 throughput across lock workloads, actual mmap and actual page faults; see the
 [throughput roadmap](docs/THROUGHPUT_PLAN.md). New tail-latency work is deferred.
 
+The October 26 exploratory screen attempted all 51 runnable lock/API
+configurations and completed the three separate implemented mmap/fault workloads,
+with one timed round per point. The [lock/API tables](bench/results/10.176.26.71/bench/catalog-single-20261026/progress.md)
+retain 3,166 measurements and 47 drained KD xattr preparation failures; the
+[MM tables](bench/results/10.176.26.71/bench/catalog-mmap-single-20261026/README.md)
+retain another 126 measurements. Strict host timing qualification remains failed;
+these observations do not replace repeated accepted baselines.
+
 kdlock is an experimental x86_64 Linux kernel lock library. A lock holder can
 execute waiting callers' critical sections through a just-in-time (JIT) compiler,
 which translates their protected work into code for delegated execution. The project
