@@ -533,7 +533,8 @@ full CAS is skipped; the producer's full tail exchange precedes publication.
 
 [combiner.inc](../../kernel_module/mutex/combiner.inc) selects local requests
 when built with NUMA enabled. It can defer at most 64 fully linked remote nodes;
-an unlinked global tail is never detached. At 256 completed bodies, or when the
+an unlinked global tail is never detached. At the default boundary of 256
+completed bodies, or when the
 retained successor has no link, deferred requests take priority. Eight or more
 deferred requests receive physical handoff with the prefix rejoined first.
 A smaller prefix is rejoined and serviced by the current owner, with FIFO
@@ -545,8 +546,15 @@ All refusal, ordinary handoff and early-release exits rejoin deferred requests
 before publishing a wake. These bounds constrain bypass within a batch; they
 do not prove scheduler-independent starvation freedom.
 
-The default total cap is exactly 1024 bodies. `--kd-batch-size` configures that
-compile-time cap, verified through the provider's `mutex_batch` ELF metadata.
+The default total cap is exactly 1024 bodies. Independent build definitions
+`KDLOCK_MUTEX_BATCH` and `KDLOCK_MUTEX_NUMA_BOUNDARY` select the total cap and
+locality boundary; neither changes spin batching. The legacy `--kd-batch-size`
+mutex runner explicitly forwards its cap and retains boundary 256. The
+[nano profiling guide](../../bench/nano/README.md#profiling-the-mutex-profiles)
+documents separate bounded experiments for both values. Runners verify the
+provider's `mutex_batch` and `mutex_numa_boundary` ELF metadata and retain the
+policy with each result. A longer cohort can delay remote service; it does not
+establish a throughput or latency improvement by itself.
 The combiner takes one enclosing source lease and uses
 `kd_exec_frame_push_mutex_batch()` plus `kd_exe_mutex_batch_prepare()` for
 eligible simple ABI2 roots. Each request still checks source OPEN and current

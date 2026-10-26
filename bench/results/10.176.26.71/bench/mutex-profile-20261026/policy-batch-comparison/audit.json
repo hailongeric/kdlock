@@ -1,0 +1,332 @@
+{
+  "diagnostic": true,
+  "formulas": {
+    "exit_fraction": "exit_reason_count / batches",
+    "mean_completed_bodies_per_batch": "(jit_completed + native_completed) / batches",
+    "remote_returned_jit_fraction": "jit_remote / jit_completed"
+  },
+  "identical_frozen_source_manifests": true,
+  "input_sha256": {
+    "bench/results/10.176.26.71/bench/mutex-profile-20261026/policy-batch-cap4096/mutex-locality/audit.json": "bf8d35ddc11edc566e587ba945c8acc6146df3e41e4f46d726f2260f7c0a06fa",
+    "bench/results/10.176.26.71/bench/mutex-profile-20261026/policy-batch-cap4096/mutex-minimal/audit.json": "8e285ffafd3ff8b109b1c32eb1189345650515b546043e6943125f29ca92b3f4",
+    "bench/results/10.176.26.71/bench/mutex-profile-20261026/policy-batch-control/mutex-locality/audit.json": "409899c6f1f366ceaf943d54222d2222352e974b7c0039507361544c888f1d1a",
+    "bench/results/10.176.26.71/bench/mutex-profile-20261026/policy-batch-control/mutex-minimal/audit.json": "f9eab1eaf8b7ae13de3cd2bbaf9221a06741ec15f2f3d19c7b44fb100fcac30f",
+    "bench/results/10.176.26.71/bench/mutex-profile-20261026/policy-batch-numa768/mutex-locality/audit.json": "d21a7ce3b20a30bb5dcffae5a0431089be0d8582e721e896bf08814b6c18bd1f",
+    "bench/results/10.176.26.71/bench/mutex-profile-20261026/policy-batch-numa768/mutex-minimal/audit.json": "1cbe1a7710c295538986325a44a67d37268216fe3a2a4a852469060567e9a9af",
+    "bench/results/10.176.26.71/bench/mutex-profile-20261026/policy-cap4096/mutex-locality/audit.json": "da0e028c1554fcf0ad021871c4099fa8ff3b9156d87f229c7989af8bdb0290d9",
+    "bench/results/10.176.26.71/bench/mutex-profile-20261026/policy-cap4096/mutex-minimal/audit.json": "f1834fcc71bda1cce44883f08f15b49b641f413073a1241d0954d6fcdc331e7a",
+    "bench/results/10.176.26.71/bench/mutex-profile-20261026/policy-control/mutex-locality/audit.json": "0a7c1b7c2b44157460db8779c1e32992094e60782229d917c2245d23977db889",
+    "bench/results/10.176.26.71/bench/mutex-profile-20261026/policy-control/mutex-minimal/audit.json": "931ea6d3ab018c35d598749333471e2ca0b798e10df9456d331f32e5267adde4",
+    "bench/results/10.176.26.71/bench/mutex-profile-20261026/policy-numa768/mutex-locality/audit.json": "c7e7019e3fd9a4f468fb808fcf98cbabbded32216f2e40bb9273245f236b1ce3",
+    "bench/results/10.176.26.71/bench/mutex-profile-20261026/policy-numa768/mutex-minimal/audit.json": "6e7f15c90a1e2520dd99e82ea42f6025d632c4ac4a5172ed9f6caf9ecd50c75a",
+    "bench/results/10.176.26.71/raw/bench/mutex-profile-20261026/receipts/policy-batch-cap4096/mutex-locality/binary-sha256.json": "6ec2808e5db2fd09cfa8cb94cd8e7859e9a3cbebffd404119c35e275ee259ef9",
+    "bench/results/10.176.26.71/raw/bench/mutex-profile-20261026/receipts/policy-batch-cap4096/mutex-locality/plan.json": "222fffba14e2903cc2ee54c929e49a3bc4a27a117b9b5a6ca1642cb04466effc",
+    "bench/results/10.176.26.71/raw/bench/mutex-profile-20261026/receipts/policy-batch-cap4096/mutex-locality/source-sha256.json": "6751c92fecc8017625075cdc2dd0cc623be2bb18915299f0a7b625b37899eaa4",
+    "bench/results/10.176.26.71/raw/bench/mutex-profile-20261026/receipts/policy-batch-cap4096/mutex/binary-sha256.json": "d61990d75ffc2ef65ae0a1e73256afe6ed4b00cca7c0cb310a0a2e4490069e7e",
+    "bench/results/10.176.26.71/raw/bench/mutex-profile-20261026/receipts/policy-batch-cap4096/mutex/plan.json": "bc9e4a452c37693f20f28fbf7810963ec7032e5308275accae5de89aa0cd96ae",
+    "bench/results/10.176.26.71/raw/bench/mutex-profile-20261026/receipts/policy-batch-cap4096/mutex/source-sha256.json": "6751c92fecc8017625075cdc2dd0cc623be2bb18915299f0a7b625b37899eaa4",
+    "bench/results/10.176.26.71/raw/bench/mutex-profile-20261026/receipts/policy-batch-control/mutex-locality/binary-sha256.json": "4d8bede253c15c8c38d6dab2e0490ec9b3c81a7590bedf0d42df27b09a531810",
+    "bench/results/10.176.26.71/raw/bench/mutex-profile-20261026/receipts/policy-batch-control/mutex-locality/plan.json": "ae99341f80eb7b07ab4ec623a082b1d093317fee7bb1b72c36ad7d0294bdb9c2",
+    "bench/results/10.176.26.71/raw/bench/mutex-profile-20261026/receipts/policy-batch-control/mutex-locality/source-sha256.json": "6751c92fecc8017625075cdc2dd0cc623be2bb18915299f0a7b625b37899eaa4",
+    "bench/results/10.176.26.71/raw/bench/mutex-profile-20261026/receipts/policy-batch-control/mutex/binary-sha256.json": "e17b87328a3ff31ed8ba8266900e8a698f49bc35061377f05e51e6bd970e84b4",
+    "bench/results/10.176.26.71/raw/bench/mutex-profile-20261026/receipts/policy-batch-control/mutex/plan.json": "662e4f45d421fe6b27fbad99f2a7d349e5f8f6287ca684a181543e4237ed478f",
+    "bench/results/10.176.26.71/raw/bench/mutex-profile-20261026/receipts/policy-batch-control/mutex/source-sha256.json": "6751c92fecc8017625075cdc2dd0cc623be2bb18915299f0a7b625b37899eaa4",
+    "bench/results/10.176.26.71/raw/bench/mutex-profile-20261026/receipts/policy-batch-numa768/mutex-locality/binary-sha256.json": "47b886a2f97aad8d9304e6a13177d0f4bd73e0254c490bc3b616fc70d687f094",
+    "bench/results/10.176.26.71/raw/bench/mutex-profile-20261026/receipts/policy-batch-numa768/mutex-locality/plan.json": "7393fc5acdf5ab0969c199c551038dcffb8b3339fe351b449f048518b9a4b674",
+    "bench/results/10.176.26.71/raw/bench/mutex-profile-20261026/receipts/policy-batch-numa768/mutex-locality/source-sha256.json": "6751c92fecc8017625075cdc2dd0cc623be2bb18915299f0a7b625b37899eaa4",
+    "bench/results/10.176.26.71/raw/bench/mutex-profile-20261026/receipts/policy-batch-numa768/mutex/binary-sha256.json": "4f031de41109c9efcd99cbb07b88a63cc67ed2435b25854b42f76a25d361b3a8",
+    "bench/results/10.176.26.71/raw/bench/mutex-profile-20261026/receipts/policy-batch-numa768/mutex/plan.json": "56fd64b31d55133cd961214e194048a8da0b3a6a8b870fa19486b6c9c5b039df",
+    "bench/results/10.176.26.71/raw/bench/mutex-profile-20261026/receipts/policy-batch-numa768/mutex/source-sha256.json": "6751c92fecc8017625075cdc2dd0cc623be2bb18915299f0a7b625b37899eaa4",
+    "bench/results/10.176.26.71/raw/bench/mutex-profile-20261026/receipts/policy-cap4096/mutex-locality/binary-sha256.json": "ce36e1b7fdcdca32e8e36f171251dc53fe8e9fe015b35dec9b782ec773605ecb",
+    "bench/results/10.176.26.71/raw/bench/mutex-profile-20261026/receipts/policy-cap4096/mutex-locality/plan.json": "6f2f681239f8fb3164db390aa314db43a76862dcd441c2639e61fceb8c50a162",
+    "bench/results/10.176.26.71/raw/bench/mutex-profile-20261026/receipts/policy-cap4096/mutex-locality/source-sha256.json": "6751c92fecc8017625075cdc2dd0cc623be2bb18915299f0a7b625b37899eaa4",
+    "bench/results/10.176.26.71/raw/bench/mutex-profile-20261026/receipts/policy-cap4096/mutex-minimal/binary-sha256.json": "aa38293012e7d961dec25d8abc865f057a05c05b0806f2818b1030c4a5c8e333",
+    "bench/results/10.176.26.71/raw/bench/mutex-profile-20261026/receipts/policy-cap4096/mutex-minimal/plan.json": "88bef70f310ce48778099cf35ee05650d54775e513474f9f267f18c0d1367b8d",
+    "bench/results/10.176.26.71/raw/bench/mutex-profile-20261026/receipts/policy-cap4096/mutex-minimal/source-sha256.json": "6751c92fecc8017625075cdc2dd0cc623be2bb18915299f0a7b625b37899eaa4",
+    "bench/results/10.176.26.71/raw/bench/mutex-profile-20261026/receipts/policy-control/mutex-locality/binary-sha256.json": "1bce290c302ff8167d12b1781c2a9196fdb3b4d4e5361fee9324ccf43701336f",
+    "bench/results/10.176.26.71/raw/bench/mutex-profile-20261026/receipts/policy-control/mutex-locality/plan.json": "75b524813af5b6b1efbc0a38280bf05867833150eee26111394df7d2dc06fd23",
+    "bench/results/10.176.26.71/raw/bench/mutex-profile-20261026/receipts/policy-control/mutex-locality/source-sha256.json": "6751c92fecc8017625075cdc2dd0cc623be2bb18915299f0a7b625b37899eaa4",
+    "bench/results/10.176.26.71/raw/bench/mutex-profile-20261026/receipts/policy-control/mutex-minimal/binary-sha256.json": "e36623570a83fd2d5805152630251976eb3e45eb7f4463c5c7e5ae5453730e4d",
+    "bench/results/10.176.26.71/raw/bench/mutex-profile-20261026/receipts/policy-control/mutex-minimal/plan.json": "0c37f025378f08bb8f0eef0c082a6336bd38fa8d391598e0f7dd84afea0714f2",
+    "bench/results/10.176.26.71/raw/bench/mutex-profile-20261026/receipts/policy-control/mutex-minimal/source-sha256.json": "6751c92fecc8017625075cdc2dd0cc623be2bb18915299f0a7b625b37899eaa4",
+    "bench/results/10.176.26.71/raw/bench/mutex-profile-20261026/receipts/policy-numa768/mutex-locality/binary-sha256.json": "2488d07203f3f03fa45f2f770cfa2ae7e186f28f6c024de8f79849dde9e33e24",
+    "bench/results/10.176.26.71/raw/bench/mutex-profile-20261026/receipts/policy-numa768/mutex-locality/plan.json": "eab4290107c098a88d9f5204bf099e308a0800d62a13c34e243c6fa3f1c7a287",
+    "bench/results/10.176.26.71/raw/bench/mutex-profile-20261026/receipts/policy-numa768/mutex-locality/source-sha256.json": "6751c92fecc8017625075cdc2dd0cc623be2bb18915299f0a7b625b37899eaa4",
+    "bench/results/10.176.26.71/raw/bench/mutex-profile-20261026/receipts/policy-numa768/mutex-minimal/binary-sha256.json": "73abbe2461e22a9e35ef59f01b7d6631f06bf8fd07189b9f2a27af65aa97e337",
+    "bench/results/10.176.26.71/raw/bench/mutex-profile-20261026/receipts/policy-numa768/mutex-minimal/plan.json": "8dac54ff60236de844dde9782157291e172e005348c9ab6cbc8019b15fb3a3d5",
+    "bench/results/10.176.26.71/raw/bench/mutex-profile-20261026/receipts/policy-numa768/mutex-minimal/source-sha256.json": "6751c92fecc8017625075cdc2dd0cc623be2bb18915299f0a7b625b37899eaa4"
+  },
+  "points": 18,
+  "provider_identities": [
+    {
+      "archive_sha256": "9385259c370b44a0e3eaf78295474340c3b0394f9e869e4a2c7e68004717f6ec",
+      "compiled_modinfo": {
+        "mutex_batch": "1024",
+        "mutex_batch_diag": "0",
+        "mutex_numa_boundary": "256"
+      },
+      "diagnostic": false,
+      "method": "Read-only readelf .modinfo on exact SHA-verified archived provider; row policy checked for every planned session",
+      "profile": "mutex",
+      "provider": "bench/results/10.176.26.71/raw/bench/mutex-profile-20261026/policy-control/mutex/build/provider/kernel_module/kdlock_km.ko",
+      "provider_mutex_policy": {
+        "deferred_handoff": 8,
+        "numa_boundary": 256,
+        "scan_budget": 64,
+        "total_cap": 1024
+      },
+      "provider_sha256": "a04ec8aa4e8a0231bc1a0a7e5b4fcdef6aa212458c128557435d32c81a1504e9",
+      "source_commit": "f61ddc1a05e2542476d48116e491846610f1a79e",
+      "stage": "policy-control",
+      "status": "PASS"
+    },
+    {
+      "archive_sha256": "9385259c370b44a0e3eaf78295474340c3b0394f9e869e4a2c7e68004717f6ec",
+      "compiled_modinfo": {
+        "mutex_batch": "1024",
+        "mutex_batch_diag": "0",
+        "mutex_numa_boundary": "256"
+      },
+      "diagnostic": false,
+      "method": "Read-only readelf .modinfo on exact SHA-verified archived provider; row policy checked for every planned session",
+      "profile": "mutex-locality",
+      "provider": "bench/results/10.176.26.71/raw/bench/mutex-profile-20261026/policy-control/mutex-locality/build/provider/kernel_module/kdlock_km.ko",
+      "provider_mutex_policy": {
+        "deferred_handoff": 8,
+        "numa_boundary": 256,
+        "scan_budget": 64,
+        "total_cap": 1024
+      },
+      "provider_sha256": "32c44a0d6b43c18e759ef369abcb2370645e8096c9dd5775a85ded78d022e332",
+      "source_commit": "f61ddc1a05e2542476d48116e491846610f1a79e",
+      "stage": "policy-control",
+      "status": "PASS"
+    },
+    {
+      "archive_sha256": "147e98ae586864bca399baf5ce2632fda250d27c5b744a18c4a414bfe9789e8a",
+      "compiled_modinfo": {
+        "mutex_batch": "4096",
+        "mutex_batch_diag": "0",
+        "mutex_numa_boundary": "256"
+      },
+      "diagnostic": false,
+      "method": "Read-only readelf .modinfo on exact SHA-verified archived provider; row policy checked for every planned session",
+      "profile": "mutex",
+      "provider": "bench/results/10.176.26.71/raw/bench/mutex-profile-20261026/policy-cap4096/mutex/build/provider/kernel_module/kdlock_km.ko",
+      "provider_mutex_policy": {
+        "deferred_handoff": 8,
+        "numa_boundary": 256,
+        "scan_budget": 64,
+        "total_cap": 4096
+      },
+      "provider_sha256": "3b2b86dae9c9bead5e2ddce13f423ecbbea5c12620729207446150faa8e7d4f1",
+      "source_commit": "f61ddc1a05e2542476d48116e491846610f1a79e",
+      "stage": "policy-cap4096",
+      "status": "PASS"
+    },
+    {
+      "archive_sha256": "147e98ae586864bca399baf5ce2632fda250d27c5b744a18c4a414bfe9789e8a",
+      "compiled_modinfo": {
+        "mutex_batch": "4096",
+        "mutex_batch_diag": "0",
+        "mutex_numa_boundary": "256"
+      },
+      "diagnostic": false,
+      "method": "Read-only readelf .modinfo on exact SHA-verified archived provider; row policy checked for every planned session",
+      "profile": "mutex-locality",
+      "provider": "bench/results/10.176.26.71/raw/bench/mutex-profile-20261026/policy-cap4096/mutex-locality/build/provider/kernel_module/kdlock_km.ko",
+      "provider_mutex_policy": {
+        "deferred_handoff": 8,
+        "numa_boundary": 256,
+        "scan_budget": 64,
+        "total_cap": 4096
+      },
+      "provider_sha256": "54aee87c577b23f497df6767184cb2392da61936bc0655764fab38e5b8d17b27",
+      "source_commit": "f61ddc1a05e2542476d48116e491846610f1a79e",
+      "stage": "policy-cap4096",
+      "status": "PASS"
+    },
+    {
+      "archive_sha256": "3b1657694931282e2b786bd175b148ed4f2cc0a980f5aaa279d0ebf895f60487",
+      "compiled_modinfo": {
+        "mutex_batch": "1024",
+        "mutex_batch_diag": "0",
+        "mutex_numa_boundary": "768"
+      },
+      "diagnostic": false,
+      "method": "Read-only readelf .modinfo on exact SHA-verified archived provider; row policy checked for every planned session",
+      "profile": "mutex",
+      "provider": "bench/results/10.176.26.71/raw/bench/mutex-profile-20261026/policy-numa768/mutex/build/provider/kernel_module/kdlock_km.ko",
+      "provider_mutex_policy": {
+        "deferred_handoff": 8,
+        "numa_boundary": 768,
+        "scan_budget": 64,
+        "total_cap": 1024
+      },
+      "provider_sha256": "b73267acaa92518d7c193ab7b5f6b0872ffde6e1d1121526289cc3f2f9bb2071",
+      "source_commit": "f61ddc1a05e2542476d48116e491846610f1a79e",
+      "stage": "policy-numa768",
+      "status": "PASS"
+    },
+    {
+      "archive_sha256": "3b1657694931282e2b786bd175b148ed4f2cc0a980f5aaa279d0ebf895f60487",
+      "compiled_modinfo": {
+        "mutex_batch": "1024",
+        "mutex_batch_diag": "0",
+        "mutex_numa_boundary": "768"
+      },
+      "diagnostic": false,
+      "method": "Read-only readelf .modinfo on exact SHA-verified archived provider; row policy checked for every planned session",
+      "profile": "mutex-locality",
+      "provider": "bench/results/10.176.26.71/raw/bench/mutex-profile-20261026/policy-numa768/mutex-locality/build/provider/kernel_module/kdlock_km.ko",
+      "provider_mutex_policy": {
+        "deferred_handoff": 8,
+        "numa_boundary": 768,
+        "scan_budget": 64,
+        "total_cap": 1024
+      },
+      "provider_sha256": "5a6acebc9a48dfc185eaa1e3e33f1a40b9f9ae2d88667665f7f25a13d07495f8",
+      "source_commit": "f61ddc1a05e2542476d48116e491846610f1a79e",
+      "stage": "policy-numa768",
+      "status": "PASS"
+    },
+    {
+      "archive_sha256": "09f1bb07539124ee02fbca80929db30496510046fadb7a596842dac04fec52b6",
+      "compiled_modinfo": {
+        "mutex_batch": "1024",
+        "mutex_batch_diag": "1",
+        "mutex_numa_boundary": "256"
+      },
+      "diagnostic": true,
+      "method": "Read-only readelf .modinfo on exact SHA-verified archived provider; row policy checked for every planned session",
+      "profile": "mutex",
+      "provider": "bench/results/10.176.26.71/raw/bench/mutex-profile-20261026/policy-batch-control/mutex/build/provider/kernel_module/kdlock_km.ko",
+      "provider_mutex_policy": {
+        "deferred_handoff": 8,
+        "numa_boundary": 256,
+        "scan_budget": 64,
+        "total_cap": 1024
+      },
+      "provider_sha256": "3303534ef112c205a4307556328797b12020dbc3bff195c62fb5addc0dc182d1",
+      "source_commit": "f61ddc1a05e2542476d48116e491846610f1a79e",
+      "stage": "policy-batch-control",
+      "status": "PASS"
+    },
+    {
+      "archive_sha256": "09f1bb07539124ee02fbca80929db30496510046fadb7a596842dac04fec52b6",
+      "compiled_modinfo": {
+        "mutex_batch": "1024",
+        "mutex_batch_diag": "1",
+        "mutex_numa_boundary": "256"
+      },
+      "diagnostic": true,
+      "method": "Read-only readelf .modinfo on exact SHA-verified archived provider; row policy checked for every planned session",
+      "profile": "mutex-locality",
+      "provider": "bench/results/10.176.26.71/raw/bench/mutex-profile-20261026/policy-batch-control/mutex-locality/build/provider/kernel_module/kdlock_km.ko",
+      "provider_mutex_policy": {
+        "deferred_handoff": 8,
+        "numa_boundary": 256,
+        "scan_budget": 64,
+        "total_cap": 1024
+      },
+      "provider_sha256": "ff4a6f2ed62adc229f5294d46b2b4724f573c92286cade87d1293e1a972e6665",
+      "source_commit": "f61ddc1a05e2542476d48116e491846610f1a79e",
+      "stage": "policy-batch-control",
+      "status": "PASS"
+    },
+    {
+      "archive_sha256": "8bc0209bc3f19d6c99903e6b2fe57ef81be2ee8b6c1d1cdfbd42003c4f01ca7b",
+      "compiled_modinfo": {
+        "mutex_batch": "4096",
+        "mutex_batch_diag": "1",
+        "mutex_numa_boundary": "256"
+      },
+      "diagnostic": true,
+      "method": "Read-only readelf .modinfo on exact SHA-verified archived provider; row policy checked for every planned session",
+      "profile": "mutex",
+      "provider": "bench/results/10.176.26.71/raw/bench/mutex-profile-20261026/policy-batch-cap4096/mutex/build/provider/kernel_module/kdlock_km.ko",
+      "provider_mutex_policy": {
+        "deferred_handoff": 8,
+        "numa_boundary": 256,
+        "scan_budget": 64,
+        "total_cap": 4096
+      },
+      "provider_sha256": "c8fbd37849d4b085ea821414ffb3ecaff07a43e436368b1ac67b959fac97028d",
+      "source_commit": "f61ddc1a05e2542476d48116e491846610f1a79e",
+      "stage": "policy-batch-cap4096",
+      "status": "PASS"
+    },
+    {
+      "archive_sha256": "8bc0209bc3f19d6c99903e6b2fe57ef81be2ee8b6c1d1cdfbd42003c4f01ca7b",
+      "compiled_modinfo": {
+        "mutex_batch": "4096",
+        "mutex_batch_diag": "1",
+        "mutex_numa_boundary": "256"
+      },
+      "diagnostic": true,
+      "method": "Read-only readelf .modinfo on exact SHA-verified archived provider; row policy checked for every planned session",
+      "profile": "mutex-locality",
+      "provider": "bench/results/10.176.26.71/raw/bench/mutex-profile-20261026/policy-batch-cap4096/mutex-locality/build/provider/kernel_module/kdlock_km.ko",
+      "provider_mutex_policy": {
+        "deferred_handoff": 8,
+        "numa_boundary": 256,
+        "scan_budget": 64,
+        "total_cap": 4096
+      },
+      "provider_sha256": "2dd8ed90d69ac22ad43e20fe9a6df5931b51a208a549590d01d918df7e4a034d",
+      "source_commit": "f61ddc1a05e2542476d48116e491846610f1a79e",
+      "stage": "policy-batch-cap4096",
+      "status": "PASS"
+    },
+    {
+      "archive_sha256": "01e3ba1ee503b04bb22085e6d96678c42befbd3643340b0dce791c6166e4b66f",
+      "compiled_modinfo": {
+        "mutex_batch": "1024",
+        "mutex_batch_diag": "1",
+        "mutex_numa_boundary": "768"
+      },
+      "diagnostic": true,
+      "method": "Read-only readelf .modinfo on exact SHA-verified archived provider; row policy checked for every planned session",
+      "profile": "mutex",
+      "provider": "bench/results/10.176.26.71/raw/bench/mutex-profile-20261026/policy-batch-numa768/mutex/build/provider/kernel_module/kdlock_km.ko",
+      "provider_mutex_policy": {
+        "deferred_handoff": 8,
+        "numa_boundary": 768,
+        "scan_budget": 64,
+        "total_cap": 1024
+      },
+      "provider_sha256": "2341968090787f50a2fbcfd1401f579b4b786261cb72a73d795c8a06f0005283",
+      "source_commit": "f61ddc1a05e2542476d48116e491846610f1a79e",
+      "stage": "policy-batch-numa768",
+      "status": "PASS"
+    },
+    {
+      "archive_sha256": "01e3ba1ee503b04bb22085e6d96678c42befbd3643340b0dce791c6166e4b66f",
+      "compiled_modinfo": {
+        "mutex_batch": "1024",
+        "mutex_batch_diag": "1",
+        "mutex_numa_boundary": "768"
+      },
+      "diagnostic": true,
+      "method": "Read-only readelf .modinfo on exact SHA-verified archived provider; row policy checked for every planned session",
+      "profile": "mutex-locality",
+      "provider": "bench/results/10.176.26.71/raw/bench/mutex-profile-20261026/policy-batch-numa768/mutex-locality/build/provider/kernel_module/kdlock_km.ko",
+      "provider_mutex_policy": {
+        "deferred_handoff": 8,
+        "numa_boundary": 768,
+        "scan_budget": 64,
+        "total_cap": 1024
+      },
+      "provider_sha256": "5b1aa60ed4db3ac3c120221000e9caab7f5392399ed30b99157134bf97923abd",
+      "source_commit": "f61ddc1a05e2542476d48116e491846610f1a79e",
+      "stage": "policy-batch-numa768",
+      "status": "PASS"
+    }
+  ],
+  "scope": "Distinct ordinary and diagnostic binary identities retained; no pooling across instrumentation or policies",
+  "score_eligible": false,
+  "script_sha256": "056eb9350456b8d054309481a89808c3de06f2df636354009fdac99ba596cf77",
+  "source_commit": "f61ddc1a05e2542476d48116e491846610f1a79e",
+  "status": "PASS",
+  "verified_source_files": 278
+}

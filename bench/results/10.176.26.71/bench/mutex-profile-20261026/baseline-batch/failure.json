@@ -1,0 +1,24 @@
+{
+  "boot_id": "afe3a8d8-0c07-475b-89b4-163b822484b0",
+  "diagnostic": true,
+  "failed_session": "mutex-nano-pair-kdlock-w100-t16-r00",
+  "failure": "Reserved per-CPU allocation of 8360 bytes failed before provider module initialization",
+  "helper_sha256": "2e8ed8533cb60d942bdb54a4cc7ced12d8261e15af143970f6444af0c95e3d84",
+  "input_sha256": {
+    "bench/results/10.176.26.71/raw/bench/mutex-profile-20261026/baseline-batch-command.json": "814501227c2416ba6d9bd57b6a93b8365fdda25036db88f989d628a862ba5e12",
+    "bench/results/10.176.26.71/raw/bench/mutex-profile-20261026/batch-load-failure-state.stdout": "f7088c72de0fc532e93c206867459d92f6783711633693d21244f50cafc61df5"
+  },
+  "measurements": 0,
+  "note": "A bounded diagnostic histogram fix and any retry have separate source/stage identities",
+  "post_failure_idle": true,
+  "provider_loaded": false,
+  "recovery": "No forced unload or reboot is implied by this report; retained post-failure state is idle",
+  "schema": 1,
+  "scope": "Allocator guard completed; provider insmod failed; no workload, warmup, translation or measurement ran",
+  "score_eligible": false,
+  "session_drained": true,
+  "source_commit": "8b31c980192bd69daf5abedf989a8dacb445ee5f",
+  "stage": "baseline-batch",
+  "status": "PREPARATION_FAILED",
+  "warmups": 0
+}

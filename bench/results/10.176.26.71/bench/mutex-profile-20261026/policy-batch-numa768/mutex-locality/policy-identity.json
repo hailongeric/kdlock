@@ -1,0 +1,22 @@
+{
+  "archive_sha256": "01e3ba1ee503b04bb22085e6d96678c42befbd3643340b0dce791c6166e4b66f",
+  "compiled_modinfo": {
+    "mutex_batch": "1024",
+    "mutex_batch_diag": "1",
+    "mutex_numa_boundary": "768"
+  },
+  "diagnostic": true,
+  "method": "Read-only readelf .modinfo on exact SHA-verified archived provider; row policy checked for every planned session",
+  "profile": "mutex-locality",
+  "provider": "bench/results/10.176.26.71/raw/bench/mutex-profile-20261026/policy-batch-numa768/mutex-locality/build/provider/kernel_module/kdlock_km.ko",
+  "provider_mutex_policy": {
+    "deferred_handoff": 8,
+    "numa_boundary": 768,
+    "scan_budget": 64,
+    "total_cap": 1024
+  },
+  "provider_sha256": "5b1aa60ed4db3ac3c120221000e9caab7f5392399ed30b99157134bf97923abd",
+  "source_commit": "f61ddc1a05e2542476d48116e491846610f1a79e",
+  "stage": "policy-batch-numa768",
+  "status": "PASS"
+}

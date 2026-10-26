@@ -1,0 +1,7 @@
+workers,backend,whole_mops_s,peak_mops_s,status,drained,jit_status,jit_entries,jit_completions,host_qualified,session
+16,native,9.075588840713241,10.89443440025181,OK,True,NATIVE,0,0,False,mutex-nano-pair-native-w100-t16-r00
+16,kdlock,6.461254419199124,6.596124959915445,OK,True,RETURNED_JIT,12266617,12266617,False,mutex-nano-pair-kdlock-w100-t16-r00
+36,native,6.942226437483072,7.552842004070327,OK,True,NATIVE,0,0,False,mutex-nano-pair-native-w100-t36-r00
+36,kdlock,4.883461859830289,4.927101912157632,OK,True,RETURNED_JIT,9695686,9695686,False,mutex-nano-pair-kdlock-w100-t36-r00
+60,native,5.288061994685637,5.940928903652572,OK,True,NATIVE,0,0,False,mutex-nano-pair-native-w100-t60-r00
+60,kdlock,5.000613076130813,5.062991573713978,OK,True,RETURNED_JIT,9787476,9787476,False,mutex-nano-pair-kdlock-w100-t60-r00

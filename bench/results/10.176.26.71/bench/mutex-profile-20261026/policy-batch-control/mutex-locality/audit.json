@@ -1,0 +1,31 @@
+{
+  "additional_batch_cap_consistency": "PASS: attempts <= batches*cap; occupied histogram lower bounds <= cap; completed <= sum(bin_count * min(bin_upper, cap)); before/after/delta checked",
+  "analysis_launcher": "bench/results/10.176.26.71/raw/bench/mutex-profile-20261026/analysis/analyze_profiles.py",
+  "analysis_script": "bench/results/10.176.26.71/raw/bench/mutex-profile-20261026/analysis/scripts/3a88a1530d3621e4bac48c034fff947c4def31937eddcde8dd9895eb4421a4d4.py",
+  "analysis_script_sha256": "3a88a1530d3621e4bac48c034fff947c4def31937eddcde8dd9895eb4421a4d4",
+  "archive": "bench/results/10.176.26.71/raw/bench/mutex-profile-20261026/policy-batch-control-archive.stdout",
+  "archive_bytes": 9178329,
+  "archive_sha256": "09f1bb07539124ee02fbca80929db30496510046fadb7a596842dac04fec52b6",
+  "diagnostic": true,
+  "measurements": 3,
+  "mode": "batch",
+  "profile": "mutex-locality",
+  "receipts_root": "bench/results/10.176.26.71/raw/bench/mutex-profile-20261026/receipts/policy-batch-control/mutex-locality",
+  "replayed": "Frozen archive oracle, peak and profiling parser; exact counts, publication and source/frame drain",
+  "schema": 1,
+  "scope": "Quiescent deltas of optional compiled batch observations; no perf process or PMU counters",
+  "score_eligible": false,
+  "source_commit": "f61ddc1a05e2542476d48116e491846610f1a79e",
+  "stage": "policy-batch-control",
+  "status": "PASS",
+  "strict_host_timing_qualification": "FAILED; correctness replay does not qualify timing",
+  "verified_hash_counts": {
+    "frozen_binary": 4,
+    "frozen_source": 278,
+    "mutex-cacheline-c16-kdlock-w100-t16-r00-image-0": 3,
+    "mutex-cacheline-c16-kdlock-w100-t36-r00-image-0": 3,
+    "mutex-cacheline-c16-kdlock-w100-t60-r00-image-0": 3,
+    "prepared_provider": 96
+  },
+  "warmups": 3
+}

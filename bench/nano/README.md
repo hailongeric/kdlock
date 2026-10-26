@@ -171,6 +171,95 @@ overrides every selected profile's default, changes the workload and requires
 matched arms and a distinct result identity. In particular, `--profiles
 mutex-locality --post-work-rounds 4` reproduces the tighter-arrival control.
 
+## Profiling the mutex profiles
+
+[`profile.py`](profile.py) collects separate, unscored diagnostics for `mutex`
+and `mutex-locality`, preserving their four- and 64-round post-work settings.
+It uses one round per point. Run it only in the verified recovery VM under the
+environment above, after idle synchronization and the relevant checks. Set
+`NANO_PROFILE_SOURCE_COMMIT` to the full reviewed source-host commit recorded in
+the synchronization receipt; source and binary hashes are also retained.
+
+```sh
+# Requested PMU/software counters for Native and KD.
+python3 bench/nano/profile.py --mode stat --threads 16 36 60 \
+  --source-commit "$NANO_PROFILE_SOURCE_COMMIT" \
+  --output /root/kdlock-evidence/10.176.26.71/bench/nano-stat-NEW
+
+# Flat instruction-pointer samples for Native and KD.
+python3 bench/nano/profile.py --mode record --threads 16 36 60 --frequency 499 \
+  --source-commit "$NANO_PROFILE_SOURCE_COMMIT" \
+  --output /root/kdlock-evidence/10.176.26.71/bench/nano-record-NEW
+
+# KD batch accounting; compiled diagnostics enabled, with no perf process.
+python3 bench/nano/profile.py --mode batch --threads 16 36 60 \
+  --source-commit "$NANO_PROFILE_SOURCE_COMMIT" \
+  --output /root/kdlock-evidence/10.176.26.71/bench/nano-batch-NEW
+```
+
+Preparation, translation and warmup finish before the measured client starts.
+The `stat` and `record` modes wrap only that client and its inherited threads;
+their raw scope includes client startup and collection. The sample report
+separately selects `rb_worker` samples during the settled interval when all
+workers are active, using sampled periods for attribution. It retains unknown
+and generated-image addresses and uses no borrowed-stack unwinding. Requested
+counter availability is checked before the workload; unsupported or uncounted
+events are failures, not zero measurements.
+
+The `batch` mode builds KD with `KDLOCK_MUTEX_DIAGNOSTICS=1`; ordinary builds and
+the two perf modes keep it compiled out. Quiescent snapshots after warmup and
+after joined measurement produce deltas for batch lengths, exit reasons,
+deferred requests and local/remote JIT service. Histogram bin zero represents
+zero; bin `i > 0` represents `[2^(i-1), 2^i-1]`. The validator checks exact
+accounting identities and requires the batch `jit_completed` delta to equal
+the returned-body completion-counter delta. Dispatch-node locality does not
+prove that a sleepable body stayed on that node. These observations never
+replace exact ownership, ACK, source/frame retirement or final drain checks.
+
+Both perf collection and compiled counters perturb execution. Keep their rates
+separate from uninstrumented throughput and do not infer speedups from
+instrumented rates. All three modes retain `score_eligible=false`; a published
+image alone still does not establish a returned JIT body.
+
+Both launchers accept explicit mutex policy experiments. Change one limit per
+campaign and retain a matched default control; for example:
+
+```sh
+# Uninstrumented comparison: total cap 4096, NUMA boundary still 256.
+python3 bench/nano/best_case.py --profiles mutex mutex-locality \
+  --threads 16 36 60 --mutex-batch-limit 4096 \
+  --output /root/kdlock-evidence/10.176.26.71/bench/nano-cap4096-NEW
+
+# Separate diagnostic campaign: boundary 768, total cap still 1024.
+python3 bench/nano/profile.py --mode batch --threads 16 36 60 \
+  --mutex-numa-boundary 768 --source-commit "$NANO_PROFILE_SOURCE_COMMIT" \
+  --output /root/kdlock-evidence/10.176.26.71/bench/nano-boundary768-batch-NEW
+```
+
+Either option works with either launcher, including `stat` and `record` modes.
+Defaults remain total cap 1024 and NUMA boundary 256. Each accepts `1..32767`
+independently; a smaller total cap can stop service before the NUMA boundary.
+Nondefault policies require mutex-only profiles, KD among the selected backends
+and public delegation enabled. Plans and receipts record both values, and the
+runner verifies the provider's `mutex_batch` and `mutex_numa_boundary` modinfo.
+Keep source, policy and diagnostic settings as separate result identities.
+The deferred-handoff threshold remains eight and the scan budget remains 64.
+A larger same-node cohort can delay remote service; bounded body counts are not
+a wall-time fairness bound. These options make no performance-gain claim.
+
+For changes to this driver or batch diagnostics, run the basic checks plus
+the directly affected drivers in the VM:
+
+```sh
+make -C tests/unit run \
+  PY_TESTS="test_nano_profile.py test_mutex_policy.py test_mutex_batch_diag.py test_mutex_terminal.py test_mutex_outer_progress.py"
+```
+
+Add checks for any other execution code changed by a candidate. Full suites
+require an explicit request. Missing dependencies, skips, compile/load failures
+and omitted measurements remain unvalidated; retaining their evidence does not
+turn them into passes.
+
 ## Interpretation and exact checks
 
 The local control compiles callable KD mutex acquisition/unlock instead of the

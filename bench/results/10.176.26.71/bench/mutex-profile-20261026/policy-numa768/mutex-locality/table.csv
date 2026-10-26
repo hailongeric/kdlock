@@ -1,0 +1,9 @@
+workers,backend,whole_mops_s,peak_mops_s,status,drained,jit_status,jit_entries,jit_completions,host_qualified,session
+16,native,1.983499827598371,3.1581658544280153,OK,True,NATIVE,0,0,False,mutex-cacheline-c16-native-w100-t16-r00
+16,kdlock,3.269327985195241,4.694907259322088,OK,True,RETURNED_JIT,6504271,6504271,False,mutex-cacheline-c16-kdlock-w100-t16-r00
+32,native,4.402478322528149,5.348665252840756,OK,True,NATIVE,0,0,False,mutex-cacheline-c16-native-w100-t32-r00
+32,kdlock,4.894744667490829,4.9242901259152845,OK,True,RETURNED_JIT,9722301,9722301,False,mutex-cacheline-c16-kdlock-w100-t32-r00
+36,native,4.012293657899421,4.373447467417373,OK,True,NATIVE,0,0,False,mutex-cacheline-c16-native-w100-t36-r00
+36,kdlock,4.368574973173895,4.416031868162635,OK,True,RETURNED_JIT,8706658,8706658,False,mutex-cacheline-c16-kdlock-w100-t36-r00
+60,native,2.716739095695298,3.0369842911274416,OK,True,NATIVE,0,0,False,mutex-cacheline-c16-native-w100-t60-r00
+60,kdlock,4.485725862583697,4.53719077362704,OK,True,RETURNED_JIT,8965535,8965535,False,mutex-cacheline-c16-kdlock-w100-t60-r00
