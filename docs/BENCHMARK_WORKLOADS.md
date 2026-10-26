@@ -10,7 +10,7 @@ experiments and final kernel replacement. Its planned `mmap1_threads` comparison
 uses 128 MiB untouched anonymous private mappings and a real mmap-lock backend;
 `mmap1_processes` is a separate control. These are new comparison targets, not
 aliases for the existing 4 KiB device mapping or private-backing fault workloads,
-and do not change the completed catalog's workload count.
+and do not change the completed historical catalog's workload count.
 The [terminology guide](TERMINOLOGY.md) explains lock names, execution status
 labels and measurement terms. In particular, a reader/writer spinlock (rwlock)
 waits by spinning, while a reader/writer semaphore (rwsem) can sleep while
@@ -25,10 +25,23 @@ cancellation, downgrade or mmap APIs.
 Pass the worker grid explicitly using the linked runner commands: the
 reader/writer runner's historical default and `--full-matrix` stop at 36 workers.
 Synthetic bodies run repeatedly inside one ioctl per phase; API workers issue
-syscalls individually. Include both categories when requesting the full catalog.
+syscalls individually. The active lock/API catalog has **61 configurations**:
+the 51 micro/API configurations selected for the October 26 screen plus the
+10 padded-counter nano profiles below. The original c01/c08 micro cases remain
+selected: their call shells and post-work differ from nano c01/c16/post256.
+The three separately implemented MM suites are also included when requesting
+all implemented workloads. This means benchmark coverage, not the full unit-test
+suite. At 21 worker counts and one round, the lock/API plan has 3,843 points
+and the MM suites add 126; preparation failures remain failed points, not passes.
+The maintained [current command plan](../bench/catalog_single/current_plan.py)
+defines the 61 lock/API configurations; its historical `plan.py` counterpart
+continues to define the earlier 51-case screen.
+The requested fixed-2.0-GHz rerun is a new single-round campaign. Its frozen
+plans and frequency receipts must establish the settings actually measured;
+selection here does not establish a completed result.
 
 The explicitly requested [single-round October 26 screen](../bench/results/10.176.26.71/bench/catalog-single-20261026/README.md)
-attempted all 51 currently runnable lock/API configurations on that grid.
+attempted the 51 then-selected lock/API configurations on that grid.
 It retains 3,166 valid timed observations and 47 drained KD xattr preparation
 failures. Its exploratory host policy and one repetition do not establish
 strict timing qualification or repeat variability. The separate
@@ -72,24 +85,36 @@ measurement resulted from that attempt.
 
 ## KD API use and delegation
 
-The later [minimal nano workloads](../bench/nano/README.md) are separate additions
-to the catalog. `mutex-throughput` updates one 64-byte-aligned counter;
-`mutex-locality` reduces the resident list to sixteen directly addressed,
-64-byte-aligned counters, updating all sixteen under public ABI2 mutex calls.
-The optional `mutex` minimum-body control and the 1%/20%-write rwsem
-profiles use two adjacent 64-bit words in one 64-byte record; writers increment
-both and readers compare them. All retain matched Native/TCLock/KD work, exact
-totals and returned-body evidence. Default nano runs select both favorable mutex
-profiles and both rwsem profiles at 21 worker counts (`1..8,12..60`, stepping by
-four above eight), with one round. The two favorable mutex profiles use 256
-post-unlock rounds; rwsem and the optional two-word mutex control use four.
-They do not fill or alter the earlier 51-configuration screen.
+The [active nano workloads](../bench/nano/README.md) are separate additions
+to the micro/API catalog. All ten reuse one or sixteen directly addressed,
+64-byte-aligned counters and perform 256 register-only post-unlock rounds.
+Every writer increments all selected counters; shared readers compare their
+values, including a repeated load for the one-counter case.
+
+| Active nano profiles | Lock and writes | Payload |
+| --- | --- | --- |
+| `mutex-throughput`, `mutex-locality` | Mutex, 100% writes | c01, c16 respectively |
+| `rwsem-throughput-read`, `rwsem-throughput-mixed` | Rwsem, 1% / 20% writes | c01 |
+| `rwsem-locality-read`, `rwsem-locality-mixed` | Rwsem, 1% / 20% writes | c16 |
+| `rwlock-throughput-read`, `rwlock-throughput-mixed` | Rwlock, 1% / 20% writes | c01 |
+| `rwlock-locality-read`, `rwlock-locality-mixed` | Rwlock, 1% / 20% writes | c16 |
+
+Default nano runs select all ten profiles, Native/TCLock/KD and the 21 worker
+counts (`1..8,12..60`, stepping by four above eight), with one round: 630 points.
+Mutex uses public ABI2 calls; rwsem uses local readers and explicit outer writers;
+rwlock uses local readers and direct writer pairs. Matching payload work, exact
+write totals and separate JIT entry/return evidence remain required. The earlier
+two-word `mutex`, `rwsem-read` and `rwsem-mixed` profiles are removed from the
+active launcher; their frozen sources and results remain historical evidence.
+The new selection does not fill or alter the earlier 51-configuration screen.
 The user-directed promotion follows an exploratory
 [factor screen](../bench/results/10.176.26.71/bench/mutex-profile-20261026/factor-grid/README.md)
 under the earlier 256 NUMA boundary and a separate boundary experiment with
-cross-NUMA gains and mixed within-node outcomes. The new 126-point mutex-only
-comparison uses the promoted 768 boundary; its results remain separate from
-those selection studies. The [earlier tables and analysis](../bench/results/10.176.26.71/bench/nano-pair-20261026/README.md)
+cross-NUMA gains and mixed within-node outcomes. The completed
+[126-point fixed-frequency mutex comparison](../bench/results/10.176.26.71/bench/nano-mutex-fixedfreq-20261027/README.md)
+uses the promoted 768 boundary; its results remain separate from those selection
+studies. It does not validate the new rwsem/rwlock nano selection. The
+[earlier tables and analysis](../bench/results/10.176.26.71/bench/nano-pair-20261026/README.md)
 retain both successful and unsuccessful simplifications and explicit local controls.
 See the [per-workload analysis](../bench/results/10.176.26.71/bench/catalog-single-20261026/PERFORMANCE_ANALYSIS.md)
 for the selection and the distinction between delegated mutex wins and local
@@ -267,8 +292,9 @@ same selected counters under one lock. The bodies contain explicit updates:
 | `c01` | Increment counter 0 | 64 bytes |
 | `c08` | Increment counters 0–7 | 512 bytes |
 
-Future synthetic cacheline benchmarks use only c01 and c08 for spin, mutex,
-rwlock and rwsem. Select `--cachelines 1 8` in the
+The micro catalog retains c01 and c08 for spin, mutex, rwlock and rwsem.
+The separate nano profiles use c01 and c16 with post256, as defined above.
+Select `--cachelines 1 8` in the
 [spin/mutex runner](../bench/tclock_compare/README.md). KD mutex retains exact KD
 physical ownership and pinned published delegation waiters; its OSQ and
 delegation queues share preallocated storage with separate links and lifetimes.
@@ -305,19 +331,20 @@ The accepted c01 1–8-worker profile, later 22-count comparison and expanded
 21-count mutex comparison use this post64 setting. An eight-round variant is
 a different workload and needs its own baseline; it must not be pooled with
 those results.
-The current favorable nano profiles use their separate reader/writer benchmark
-payload with 256 rounds, as described above; the optional two-word mutex control
-uses four. Identical `c01` labels do not make these workload settings equivalent.
+The current nano profiles use their separate reader/writer benchmark
+payload with 256 rounds, as described above. The historical two-word controls
+used four. Identical `c01` labels do not make these workload settings equivalent.
 
 At completion, each selected counter must match the total completed increments;
 unselected counters must remain unchanged.
 
 ## Resident linked-list traversal
 
-The maintained nano workload matrix selects plain `list` with **16 or 64
-nodes** (1 KiB or 4 KiB of node storage). List size 128 and the
-`list-prefetch` variants at sizes 16 and 128 are excluded from future nano
-campaigns. Cacheline and RCUHT selections are unchanged.
+The current micro catalog selects plain `list` with **16 nodes** (1 KiB of node
+storage). A 64-node (4 KiB) case remains planned. List size 128 and the
+`list-prefetch` variants at sizes 16 and 128 are excluded from the current
+catalog. These resident traversals are separate from the ten active
+padded-counter nano profiles.
 
 The 64-node case is a planned addition, not implemented or measured yet. The
 current runners and [shared payload](../workload_modules/spin_cacheline/list_payload.h)
@@ -425,10 +452,12 @@ deterministic initial phase and evenly spaced writes. It does not assign 20% of
 workers to a dedicated writer role. The runner supports 0–100% writes and
 defaults to the 1% and 20% mixes.
 
-The rwlock loop uses four dependent arithmetic rounds after each read or write
+The micro reader/writer loop uses four dependent arithmetic rounds after each read or write
 unlock, defined in its own [post_work.h](../workload_modules/rwlock_bench/post_work.h).
 This differs from the spin/mutex post64 loop; compare backends within the same
-lock family, payload and read/write mix.
+lock family, payload and read/write mix. The active nano rwlock/rwsem profiles
+select c01/c16 and explicitly override this setting to post256; their results
+must remain separate from the c01/c08 micro cases.
 
 For example, `rwlock-cacheline-c08-w20` means eight shared counter cachelines,
 with readers checking all eight and writers incrementing all eight, at a 20%

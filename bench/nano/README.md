@@ -5,8 +5,9 @@ mechanism's favorable regime and retain its costs elsewhere. Gains here motivate
 the scoped MM experiments; they do not predict gains from local mmap locking or
 prove final kernel replacement performance.
 
-[`best_case.py`](best_case.py) runs small resident workloads for mutexes and
-sleeping reader/writer semaphores (rwsems). It is designed to expose favorable
+[`best_case.py`](best_case.py) runs ten small resident profiles for mutexes,
+sleeping reader/writer semaphores (rwsems) and reader/writer spinlocks (rwlocks).
+It is designed to expose favorable
 conditions for KD: resident data, helper-free critical sections, repeated access
 and fixed-affinity callers. “Best case” describes the intended scope; matched
 measurements determine whether KD actually wins. It is not a claim about
@@ -26,8 +27,9 @@ The earlier [two-word mutex measurement](../results/10.176.26.71/bench/nano-pair
 is retained as a counterexample: in one exploratory round at 60 workers, KD
 achieved 5.003 Mops/s versus Native's 5.586 Mops/s, despite 97.3% of writes
 returning from JIT bodies. A minimal body and
-successful delegation alone do not guarantee a win. It remains the explicit
-`mutex` control with four post-unlock rounds. The previous
+successful delegation alone do not guarantee a win. Its frozen source and
+four-round post-work setting remain historical evidence; the two-word profile
+is no longer selected or accepted by the active launcher. The previous
 [post64 locality selection](../results/10.176.26.71/bench/nano-pair-20261026/README.md)
 and [fresh 36-point comparison](../results/10.176.26.71/bench/nano-mutex-20261026/README.md)
 retain their original bodies, defaults and mixed Native results.
@@ -59,7 +61,10 @@ four 36/60-worker observations improved 8.41–15.95%, while both 16-worker bodi
 regressed. New full-grid measurements at 768 have their own source, policy and
 TCLock comparisons; the earlier factor results do not establish those outcomes.
 Promotion records the user's choice from exploratory evidence, not a universal
-optimum or guaranteed improvement. The rwsem bodies and post-work are unchanged.
+optimum or guaranteed improvement. The new rwsem/rwlock profiles apply the same
+one-/sixteen-counter, post256 selection at 1% and 20% writes. That is an explicit
+new workload choice, not a measured rwsem/rwlock optimum or a continuation of the
+earlier two-word/post4 results.
 
 The [completed promoted-default campaign](../results/10.176.26.71/bench/nano-mutex-promoted-20261026/README.md)
 at `e5b7f84c` publishes both full-grid tables and charts: 126 measurements and
@@ -81,64 +86,52 @@ strict host task-membership qualification remains failed.
 
 ## Bodies and profiles
 
-Both default mutex profiles reuse the existing
+All active profiles reuse the existing
 [unrolled counter payload](../../workload_modules/rwlock_bench/payload.h): one or
 sixteen 64-bit counters, each padded and aligned to its own 64-byte cacheline.
-Their total payload footprints are 64 and 1,024 bytes. Every operation increments
-every selected counter under one mutex. There is no list traversal, hashing,
-allocation or helper call.
+Their total payload footprints are 64 and 1,024 bytes. Every writer increments
+every selected counter under one exclusive acquisition. Rwsem/rwlock readers
+compare every selected counter with the first while holding shared ownership;
+the one-counter reader reloads its sole counter. Reader results stay caller-local.
+There is no list traversal, hashing, allocation or helper call.
 The loop below is pseudocode; the actual body expands to explicit updates.
 
 ```c
-mutex_lock(lock);
+write_lock(lock);
 for (i = 0; i < selected_counters; ++i)
     WRITE_ONCE(counter[i].value, READ_ONCE(counter[i].value) + 1);
-mutex_unlock(lock);
+write_unlock(lock);
 ```
 
 These profiles use the existing cacheline workload ID 0 with `lines=1` or
 `lines=16`; they do not add a payload or lock protocol. Native, KD and TCLock
 perform the same selected updates, and every counter must advance by the exact
-completed write count. The one-counter body is distinct from the two-word
-minimal control, even though both occupy one cacheline.
+completed write count. The one-counter body is distinct from the historical
+two-word body, even though both occupy one cacheline. Lock storage is separate
+from the payload. Within each profile, Native, KD and TCLock compile the same
+business body, operation mix and register-only post-work.
 
-The two rwsem profiles and optional minimal `mutex` control use a
-[two-word payload](../../workload_modules/rwlock_bench/nano_payload.h): one
-64-byte-aligned record occupying exactly one 64-byte cacheline. Its two adjacent
-64-bit fields start at zero. The recorded `lines=2` counts logical words for this
-workload, not two cachelines. Workload ID 6 distinguishes it from existing padded
-cacheline, list and hash payloads.
+All ten profiles below are selected by default and use post256.
 
-```c
-/* Writer: protected load plus two stores. */
-write_lock(lock);
-next = READ_ONCE(record.sequence) + 1;
-WRITE_ONCE(record.sequence, next);
-WRITE_ONCE(record.copy, next);
-write_unlock(lock);
+| Profile | Lock | Counters / footprint | Writes |
+| --- | --- | --- | ---: |
+| `mutex-throughput` | Mutex | 1 / 64 bytes | 100% |
+| `mutex-locality` | Mutex | 16 / 1,024 bytes | 100% |
+| `rwsem-throughput-read` | Rwsem | 1 / 64 bytes | 1% |
+| `rwsem-throughput-mixed` | Rwsem | 1 / 64 bytes | 20% |
+| `rwsem-locality-read` | Rwsem | 16 / 1,024 bytes | 1% |
+| `rwsem-locality-mixed` | Rwsem | 16 / 1,024 bytes | 20% |
+| `rwlock-throughput-read` | Rwlock | 1 / 64 bytes | 1% |
+| `rwlock-throughput-mixed` | Rwlock | 1 / 64 bytes | 20% |
+| `rwlock-locality-read` | Rwlock | 16 / 1,024 bytes | 1% |
+| `rwlock-locality-mixed` | Rwlock | 16 / 1,024 bytes | 20% |
 
-/* Reader: a caller-local consistency result. */
-read_lock(lock);
-sequence = READ_ONCE(record.sequence);
-copy = READ_ONCE(record.copy);
-read_unlock(lock);
-read_error = sequence != copy;
-```
-
-Within each profile, Native, KD and TCLock compile the same business body,
-operation mix and register-only post-work. The two-word record has no linked-list
-traversal, hashing, allocation, helper call, user-memory access or shared
-per-operation statistics.
-The writer counter gives an exact final oracle; the duplicate field lets readers
-detect inconsistent snapshots. Lock storage is separate from the payload.
-
-| Profile | Default | Lock, footprint and operation mix | KD execution scope |
-| --- | --- | --- | --- |
-| `mutex-throughput` | Yes | 100% exclusive updates of one counter in one cacheline; post256 | Public `kd_mutex_lock/unlock` through ABI2; returned-body evidence establishes delegation. |
-| `mutex-locality` | Yes | 100% exclusive updates of 16 counters across 16 cachelines; post256 | Public `kd_mutex_lock/unlock` through ABI2; returned-body evidence establishes delegation. |
-| `rwsem-read` | Yes | 99% reads, 1% writes of the 64-byte record | Readers execute locally. Explicit outer writers reserve a reader-free phase and may delegate. |
-| `rwsem-mixed` | Yes | 80% reads, 20% writes of the 64-byte record | A separate writer-interference control using the same reader and outer-writer interfaces. |
-| `mutex` | No | 100% exclusive updates of the 64-byte record | The same public ABI2 shell, retained as the minimal-body counterexample. |
+KD mutex uses public `kd_mutex_lock/unlock` through ABI2. Rwsem readers execute
+locally; explicit outer writers reserve a reader-free phase and may delegate.
+Rwlock readers also execute locally; direct writer pairs admit eligible
+exclusive bodies. Returned-body evidence, not publication alone, establishes
+successful delegation in each family. The 20%-write profiles retain distinct
+writer-interference cases rather than dedicated writer threads.
 
 All workers mix their own operations using the existing deterministic phase-17
 schedule; these are not dedicated reader and writer thread pools. The mutex
@@ -147,11 +140,10 @@ defined and measured call shell.
 
 The runner defaults to 21 counts: `1 2 3 4 5 6 7 8 12 16 20 24 28 32 36 40 44 48 52 56 60`,
 a two-second timed interval and one round per point. After each unlock,
-`mutex-throughput` and `mutex-locality` perform 256 dependent multiply/add rounds;
-the minimal mutex and both rwsem profiles perform four.
+every active profile performs 256 dependent multiply/add rounds.
 Workers use CPUs `0..N-1`; the collector uses CPU 63. Counts above 32 cross the
 32-CPU NUMA boundary. The default
-four-profile, three-backend matrix has 252 measured points. Selecting only the
+ten-profile, three-backend matrix has 630 planned measured points. Selecting only the
 two favorable mutex profiles gives 126 points. One round supplies no repeat-variability estimate;
 `--repeats 3` selects a separately recorded repeated comparison.
 
@@ -162,7 +154,11 @@ including file/VFS handling, redirection and result validation outside the lock.
 Their throughput ratios cannot be transferred to this nano workload. The
 selected mutex profiles use post256, separately from the historical post64
 synthetic setting. Keep body, source, policy, post-work and call-shell identities
-separate in reports, including the post4 controls.
+separate in reports, including historical post4 controls. The original c01/c08
+micro configurations remain in the full catalog with their existing post64
+(spin/mutex) or post4 (rwlock/rwsem) settings. They are not replaced by these
+ten profiles. The requested full catalog adds the separate API and MM suites;
+`best_case.py` alone runs only the nano matrix.
 
 ## Commands and execution environment
 
@@ -193,7 +189,11 @@ export KDLOCK_SNAPSHOT_TAG=before-mutex-kdonly-20261017T140354Z
 python3 bench/nano/best_case.py --functional --threads 1 8 \
   --output /root/kdlock-evidence/10.176.26.71/tests/nano-functional-NEW
 
-# Requested full-grid, two-mutex-profile, three-backend, one-round comparison.
+# All ten active profiles, full grid, three backends, one round (630 points).
+python3 bench/nano/best_case.py \
+  --output /root/kdlock-evidence/10.176.26.71/bench/nano-catalog-NEW
+
+# A separate two-mutex-profile comparison (126 points).
 python3 bench/nano/best_case.py --profiles mutex-throughput mutex-locality \
   --output /root/kdlock-evidence/10.176.26.71/bench/nano-best-case-NEW
 
@@ -203,10 +203,9 @@ python3 bench/nano/best_case.py --backends kdlock --delegate off \
   --output /root/kdlock-evidence/10.176.26.71/bench/nano-local-control-NEW
 ```
 
-Without `--profiles`, the launcher also selects unchanged `rwsem-read` and
-`rwsem-mixed`; keep the latter as a separately identified writer-interference
-control. Use `--profiles mutex` for the two-word/post4 control, or explicitly select
-all five profiles to include it in a new campaign. Changing `--post-work-rounds`
+Without `--profiles`, the launcher selects all ten rows in the active table.
+The old `mutex`, `rwsem-read` and `rwsem-mixed` choices are removed; consult their
+frozen historical runners when interpreting existing evidence. Changing `--post-work-rounds`
 overrides every selected profile's default, changes the workload and requires
 matched arms and a distinct result identity. In particular, `--profiles
 mutex-locality --post-work-rounds 4` selects the tighter-arrival body. Use
@@ -216,8 +215,7 @@ policy explicitly when comparing with its historical 256-boundary measurements.
 ## Profiling the mutex profiles
 
 [`profile.py`](profile.py) collects separate, unscored diagnostics for
-`mutex-throughput` and `mutex-locality` by default, preserving their post256
-settings. Explicit `--profiles mutex` retains the two-word/post4 control.
+`mutex-throughput` and `mutex-locality`, preserving their post256 settings.
 It uses one round per point. Run it only in the verified recovery VM under the
 environment above, after idle synchronization and the relevant checks. Set
 `NANO_PROFILE_SOURCE_COMMIT` to the full reviewed source-host commit recorded in
@@ -310,15 +308,15 @@ The local control compiles callable KD mutex acquisition/unlock instead of the
 public ABI2 call shell. Rwsem local control selects ordinary writer admission
 instead of a shared delegated-writer reservation. These changes preserve exact
 provider routing and the same payload, but also change call-shell or admission
-costs. They are not a pure isolated switch for JIT execution. Compare their
-results as mechanism evidence with those limits stated.
+costs. They are not a pure isolated switch for JIT execution. Rwlock local
+control retains the public ABI3 writer shell and published images while setting
+provider `spin_delegate=0`; no returned JIT bodies may occur. Compare controls
+within each family and retain these mechanism differences.
 
 The existing [reader/writer runner](../rwlock_compare/README.md) validates every
 worker's CPU, complete operations, deterministic read/write counts, post-work
-checksum and zero reader errors. For the two-word record, before/after snapshots
-require both word deltas to equal the exact sum of completed writes and all
-fourteen unused fields to remain zero. The locality profile requires all 16
-counter deltas to equal that same exact write count. The throughput profile
+checksum and zero reader errors. Every locality profile requires all 16
+counter deltas to equal the exact sum of completed writes. Every throughput profile
 requires its single counter to advance by the write count and all fifteen unused
 fields to remain zero. Native and local controls
 must have no JIT execution. KD entries
@@ -343,6 +341,15 @@ results as qualified repeated baselines or use a quiet later endpoint to erase
 an earlier failed gate.
 
 ## Historical broad matrix
+
+The retired focused `mutex`, `rwsem-read` and `rwsem-mixed` profiles used the
+[two-word payload](../../workload_modules/rwlock_bench/nano_payload.h), workload
+ID 6: two adjacent 64-bit fields in one 64-byte record, with four post-unlock
+rounds. Writers stored the same incremented value in both fields; readers
+compared them. Their `lines=2` counted logical words, and their oracle required
+both deltas to match completed writes with fourteen unused fields zero.
+The low-level payload remains available for frozen historical inputs, but the
+active nano and profiling launchers no longer offer these profile names.
 
 [`run.py`](run.py) and its existing resume/report helpers preserve the older
 broad nano campaign: four lock families, padded cachelines, RCUHT, resident lists

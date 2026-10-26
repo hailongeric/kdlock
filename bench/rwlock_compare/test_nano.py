@@ -8,7 +8,7 @@ from unittest.mock import mock_open, patch
 
 import run
 import session
-from oracle import validate
+from oracle import post_work_checksum, validate
 from test_bench import fixture
 
 
@@ -25,19 +25,28 @@ class NanoTests(unittest.TestCase):
         self.assertEqual((args.mutex_batch_limit, args.mutex_numa_boundary), (1024, 768))
         commands = list(launcher.commands(args))
         self.assertEqual([name for name, _ in commands],
-                         ['mutex-throughput', 'mutex-locality', 'rwsem-read', 'rwsem-mixed'])
+                         ['mutex-throughput', 'mutex-locality',
+                          'rwsem-throughput-read', 'rwsem-throughput-mixed',
+                          'rwsem-locality-read', 'rwsem-locality-mixed',
+                          'rwlock-throughput-read', 'rwlock-throughput-mixed',
+                          'rwlock-locality-read', 'rwlock-locality-mixed'])
+        self.assertEqual(defaults.profiles, [name for name, _ in commands])
+        self.assertEqual(len(defaults.profiles) * len(defaults.threads) * len(defaults.backends), 630)
         for name, argv in commands:
             plan = run.make_plan(run.parser().parse_args(argv[2:]))
             self.assertEqual(len(plan), 6)
-            family, percent = launcher.PROFILES[name]
-            counter_profile = name in ('mutex-throughput', 'mutex-locality')
+            family, percent, lines = launcher.PROFILES[name]
+            self.assertEqual(lines, 1 if 'throughput' in name else 16)
+            self.assertEqual(percent, 100 if family == 'mutex' else 1 if name.endswith('-read') else 20)
             self.assertTrue(all(r['lock_kind'] == family and r['write_percent'] == percent and
-                                r['repeat'] == 0 and r['workload'] ==
-                                ('cacheline' if counter_profile else 'nano') for r in plan))
-            self.assertEqual({r['cachelines'] for r in plan},
-                             {1 if name == 'mutex-throughput' else 16 if counter_profile else 2})
-            self.assertEqual({r['post_work_rounds'] for r in plan},
-                             {256 if counter_profile else 4})
+                                r['repeat'] == 0 and r['workload'] == 'cacheline' for r in plan))
+            self.assertEqual({r['cachelines'] for r in plan}, {lines})
+            self.assertEqual({r['post_work_rounds'] for r in plan}, {256})
+            self.assertTrue(all(r['call_shell'] == 'bulk_ioctl' and
+                                r['nano_working_set_bytes'] == lines * 64 and
+                                r['nano_layout'] == f'{lines}_aligned_counters' for r in plan))
+            self.assertTrue(all(r['mutex_api'] is None for r in plan
+                                if family != 'mutex' or r['arm'] != 'kdlock'))
             self.assertTrue(all(r['provider_mutex_policy'] == dict(total_cap=1024,
                 numa_boundary=768, deferred_handoff=8, scan_budget=64)
                 for r in plan if r['arm'] == 'kdlock'))
@@ -46,12 +55,63 @@ class NanoTests(unittest.TestCase):
             plan = run.make_plan(run.parser().parse_args(argv[2:]))
             self.assertTrue(all(r['post_work_rounds'] == 4 for r in plan))
 
+    def test_launcher_rejects_retired_names_and_preserves_local_control_semantics(self):
+        path = Path(__file__).resolve().parents[1] / 'nano/best_case.py'
+        spec = importlib.util.spec_from_file_location('nano_control_launcher_test', path)
+        launcher = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(launcher)
+        for retired in ('mutex', 'rwsem-read', 'rwsem-mixed'):
+            with self.subTest(profile=retired), patch.object(launcher.sys, 'stderr'), self.assertRaises(SystemExit):
+                launcher.parser().parse_args(['--output', '/tmp/retired-nano', '--profiles', retired])
+        args = launcher.parser().parse_args(['--output', '/tmp/nano-local-plan',
+                                            '--delegate', 'off', '--threads', '2', '--plan-only'])
+        for name, argv in launcher.commands(args):
+            self.assertTrue(name.endswith('-local'))
+            plan = run.make_plan(run.parser().parse_args(argv[2:]))
+            kd = next(row for row in plan if row['arm'] == 'kdlock')
+            self.assertFalse(kd['delegate'])
+            candidate = object.__new__(session.RWSession)
+            candidate.record = kd
+            rwlock = kd['lock_kind'] == 'rwlock'
+            self.assertEqual(candidate.has_entry(), rwlock)
+            self.assertEqual(kd['entry_abi'], 3 if rwlock else None)
+            self.assertEqual(kd['caller_abi'], 'clobber' if rwlock else 'c')
+            if kd['lock_kind'] == 'mutex':
+                self.assertEqual(kd['mutex_api'], 'callable-local')
+            elif kd['lock_kind'] == 'rwsem':
+                self.assertEqual(kd['rwsem_writer_shell'], 'ordinary-local')
+
+    def test_derived_reader_profiles_keep_exact_counters_and_post_work(self):
+        for family in ('rwsem', 'rwlock'):
+            for percent in (1, 20):
+                for lines in (1, 16):
+                    with self.subTest(family=family, percent=percent, lines=lines):
+                        spec, measurement = fixture('cacheline', percent)
+                        spec.update(lock_kind=family, cachelines=lines, post_work_rounds=256,
+                                    nano_working_set_bytes=64 * lines, nano_layout=f'{lines}_aligned_counters')
+                        for key in ('before', 'after'):
+                            measurement[key].update(lines=lines, post_work_rounds=256, values=[0] * 16)
+                        measurement['after']['values'] = [2 * percent] * lines + [0] * (16 - lines)
+                        for worker in measurement['workers']:
+                            worker['checksum'] = post_work_checksum(worker['completed'], 256)
+                        validate(measurement, spec)
+                        mutations = [lambda m: m['after']['values'].__setitem__(lines - 1, 2 * percent - 1),
+                                     lambda m: m['workers'][0].__setitem__('read_errors', 1),
+                                     lambda m: m['workers'][0].__setitem__('checksum', post_work_checksum(100, 4))]
+                        if lines < 16:
+                            mutations.append(lambda m: m['after']['values'].__setitem__(lines, 1))
+                        for mutate in mutations:
+                            bad = copy.deepcopy(measurement)
+                            mutate(bad)
+                            with self.assertRaises(ValueError):
+                                validate(bad, spec)
+
     def test_launcher_forwards_policy_only_for_public_mutex_profiles(self):
         path = Path(__file__).resolve().parents[1] / 'nano/best_case.py'
         spec = importlib.util.spec_from_file_location('nano_policy_launcher_test', path)
         launcher = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(launcher)
-        base = ['--output', '/tmp/nano-policy-plan', '--profiles', 'mutex', 'mutex-throughput', 'mutex-locality',
+        base = ['--output', '/tmp/nano-policy-plan', '--profiles', 'mutex-throughput', 'mutex-locality',
                 '--threads', '16', '--plan-only']
         for cap, boundary in ((1024, 768), (4096, 768), (1024, 256)):
             args = launcher.parser().parse_args(base + ['--mutex-batch-limit', str(cap),
@@ -61,13 +121,11 @@ class NanoTests(unittest.TestCase):
                 kd = next(row for row in plan if row['arm'] == 'kdlock')
                 self.assertEqual(kd['provider_mutex_policy'], dict(total_cap=cap,
                     numa_boundary=boundary, deferred_handoff=8, scan_budget=64))
-                if kd['workload'] == 'nano':
-                    self.assertEqual((kd['cachelines'], kd['post_work_rounds']), (2, 4))
         invalid = [['--mutex-batch-limit', '0'], ['--mutex-batch-limit', '32768'],
                    ['--mutex-numa-boundary', '0'], ['--mutex-numa-boundary', '32768'],
                    ['--mutex-batch-limit', '4096', '--delegate', 'off'],
                    ['--mutex-batch-limit', '4096', '--backends', 'native'],
-                   ['--mutex-batch-limit', '4096', '--profiles', 'mutex', 'rwsem-read']]
+                   ['--mutex-batch-limit', '4096', '--profiles', 'mutex-throughput', 'rwsem-throughput-read']]
         for extra in invalid:
             with self.subTest(extra=extra), patch.object(launcher.sys, 'argv', ['best_case.py', *base, *extra]), \
                     patch.object(launcher.subprocess, 'Popen') as launch, self.assertRaises(ValueError):

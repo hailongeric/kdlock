@@ -2,8 +2,10 @@
 
 The user has promoted the favorable nano defaults to `mutex-throughput`
 (one padded counter/post256) and `mutex-locality` (16 padded counters/post256),
-with mutex total cap 1024 and NUMA boundary 768. The optional two-word
-`mutex`/post4 control remains available. The
+with mutex total cap 1024 and NUMA boundary 768. The active rwsem and rwlock
+nano profiles now use the same one-/sixteen-counter, post256 bodies at 1% and
+20% writes. The old focused two-word profiles are retired from active choices;
+their results remain historical evidence. The
 [factor screen](../bench/results/10.176.26.71/bench/mutex-profile-20261026/factor-grid/README.md)
 used the earlier 256 boundary: larger post-work reduced Native rates more than
 KD rates, rather than generally increasing KD throughput. The separate

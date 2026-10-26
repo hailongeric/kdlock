@@ -167,8 +167,8 @@ def make_plan(args):
                 **(dict(call_shell='bulk_ioctl', nano_working_set_bytes=64 * lines,
                          nano_layout=f'{lines}_aligned_counters',
                          mutex_api=('public' if args.delegate == 'on' else 'callable-local')
-                             if arm == 'kdlock' else None)
-                   if workload == 'cacheline' and args.lock_kind == 'mutex' else {}),
+                             if args.lock_kind == 'mutex' and arm == 'kdlock' else None)
+                   if workload == 'cacheline' else {}),
                 caller_abi='clobber' if arm == 'kdlock' and
                     (args.lock_kind not in ('rwsem', 'mutex') or rwsem_direct or mutex_direct) else 'c',
                 delegate=args.delegate == 'on' if arm == 'kdlock' else False,

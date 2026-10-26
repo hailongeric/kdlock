@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Small shared-record nano profiles; live work runs only in the recovery VM."""
+"""Padded-counter nano profiles; live work runs only in the recovery VM."""
 import argparse
 import fcntl
 import hashlib
@@ -12,9 +12,18 @@ import sys
 import time
 
 ROOT = Path(__file__).resolve().parents[2]
-PROFILES = {'mutex': ('mutex', 100), 'rwsem-read': ('rwsem', 1),
-            'rwsem-mixed': ('rwsem', 20), 'mutex-locality': ('mutex', 100),
-            'mutex-throughput': ('mutex', 100)}
+PROFILES = {
+    'mutex-throughput': ('mutex', 100, 1),
+    'mutex-locality': ('mutex', 100, 16),
+    'rwsem-throughput-read': ('rwsem', 1, 1),
+    'rwsem-throughput-mixed': ('rwsem', 20, 1),
+    'rwsem-locality-read': ('rwsem', 1, 16),
+    'rwsem-locality-mixed': ('rwsem', 20, 16),
+    'rwlock-throughput-read': ('rwlock', 1, 1),
+    'rwlock-throughput-mixed': ('rwlock', 20, 1),
+    'rwlock-locality-read': ('rwlock', 1, 16),
+    'rwlock-locality-mixed': ('rwlock', 20, 16),
+}
 THREADS = [*range(1, 9), *range(12, 61, 4)]
 
 
@@ -22,14 +31,15 @@ def parser():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('--output', type=Path, required=True)
     p.add_argument('--profiles', nargs='+', choices=PROFILES,
-                   default=['mutex-throughput', 'mutex-locality', 'rwsem-read', 'rwsem-mixed'])
+                   default=list(PROFILES))
     p.add_argument('--threads', nargs='+', type=int, default=THREADS)
     p.add_argument('--backends', nargs='+', choices=('native', 'tclock', 'kdlock'),
                    default=['native', 'tclock', 'kdlock'])
     p.add_argument('--repeats', type=int, choices=(1, 3), default=1)
-    p.add_argument('--post-work-rounds', type=int,
-                   help='override all profiles; defaults: mutex-throughput/locality=256, other profiles=4')
-    p.add_argument('--delegate', choices=('on', 'off'), default='on')
+    p.add_argument('--post-work-rounds', type=int, default=256,
+                   help='register-only post-work rounds for every profile; default 256')
+    p.add_argument('--delegate', choices=('on', 'off'), default='on',
+                   help='off uses local mutex/rwsem writer shells; rwlock keeps ABI3 but disables provider delegation')
     p.add_argument('--mutex-batch-limit', type=int, default=1024,
                    help='KD mutex total service cap; default 1024')
     p.add_argument('--mutex-numa-boundary', type=int, default=768,
@@ -50,25 +60,21 @@ def commands(args):
     for values in (args.profiles, args.threads, args.backends):
         if not values or len(values) != len(set(values)):
             raise ValueError('empty or duplicate selection')
-    if not all(1 <= n <= 60 for n in args.threads) or (
-            args.post_work_rounds is not None and not 1 <= args.post_work_rounds <= 256):
+    if not all(1 <= n <= 60 for n in args.threads) or not 1 <= args.post_work_rounds <= 256:
         raise ValueError('workers must be 1..60; post-work rounds must be 1..256')
     if args.functional and args.repeats != 1:
         raise ValueError('functional checks require one round')
     for profile in args.profiles:
-        family, percent = PROFILES[profile]
+        family, percent, lines = PROFILES[profile]
         name = profile + ('-local' if args.delegate == 'off' else '')
-        counters = profile in ('mutex-throughput', 'mutex-locality')
-        lines = 1 if profile == 'mutex-throughput' else 16 if counters else 2
-        post_work = args.post_work_rounds if args.post_work_rounds is not None else (256 if counters else 4)
         yield name, [sys.executable, str(ROOT/'bench/rwlock_compare/run.py'),
-            '--workloads', 'cacheline' if counters else 'nano',
+            '--workloads', 'cacheline',
             '--cachelines', str(lines),
             '--lock-kind', family, '--write-percent', str(percent),
             '--threads', *map(str, args.threads), '--cpus', *map(str, range(max(args.threads))),
             '--collector-cpu', '63', '--backends', *args.backends,
             '--repeats', str(args.repeats), '--duration-ms', '2000',
-            '--post-work-rounds', str(post_work), '--delegate', args.delegate,
+            '--post-work-rounds', str(args.post_work_rounds), '--delegate', args.delegate,
             '--mutex-batch-limit', str(cap), '--mutex-numa-boundary', str(boundary),
             *(['--functional'] if args.functional else []),
             '--kernel-source', '/root/linux-6.1.159-kdclobber2',

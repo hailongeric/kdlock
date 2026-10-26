@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Guest-only, unscored diagnostics for mutex nano profiles and their control.
+"""Guest-only, unscored diagnostics for the active mutex nano profiles.
 
 Only the measured client is wrapped. Preparation, translation and warmup retain
 their ordinary boundaries. The inherited client includes startup/collection;
@@ -30,7 +30,7 @@ PERF = Path('/root/kdlock-evidence/10.176.26.71/bench/mutex-admission-20261013/t
 EVENTS = ('cycles:k', 'instructions:k', 'cache-references:k', 'cache-misses:k',
           'branches:k', 'branch-misses:k', 'task-clock', 'context-switches',
           'cpu-migrations', 'page-faults')
-PROFILES = {'mutex': ('nano', 2, 4), 'mutex-throughput': ('cacheline', 1, 256),
+PROFILES = {'mutex-throughput': ('cacheline', 1, 256),
             'mutex-locality': ('cacheline', 16, 256)}
 OBSERVATION_PARAMS = ('bench_jit_bodies', 'bench_jit_completions', 'address_guard_count')
 UNEXPORTED_MUTEX_COUNTERS = ('kd_mutex_combiner_count', 'kd_mutex_jit_success_count',

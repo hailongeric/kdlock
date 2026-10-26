@@ -168,7 +168,7 @@ class NanoProfileTests(unittest.TestCase):
         for cap, boundary in ((1024, 768), (4096, 768), (1024, 256)):
             args = profile.parser().parse_args(base + ['--mutex-batch-limit', str(cap),
                                                       '--mutex-numa-boundary', str(boundary)])
-            argv = profile.runner_arguments(args, 'mutex')
+            argv = profile.runner_arguments(args, 'mutex-throughput')
             self.assertEqual(argv[argv.index('--mutex-batch-limit') + 1], str(cap))
             self.assertEqual(argv[argv.index('--mutex-numa-boundary') + 1], str(boundary))
         for extra in (['--mutex-batch-limit', '0'], ['--mutex-batch-limit', '32768'],
@@ -186,8 +186,11 @@ class NanoProfileTests(unittest.TestCase):
         self.assertEqual((args.mutex_batch_limit, args.mutex_numa_boundary), (1024, 768))
         self.assertEqual(args.profiles, ['mutex-throughput', 'mutex-locality'])
         self.assertEqual(profile.selected_backends(args), ['native', 'kdlock'])
-        for name, workload, lines, post in [('mutex', 'nano', '2', '4'),
-                ('mutex-throughput', 'cacheline', '1', '256'),
+        self.assertEqual(set(profile.PROFILES), {'mutex-throughput', 'mutex-locality'})
+        with patch.object(profile.sys, 'stderr'), self.assertRaises(SystemExit):
+            profile.parser().parse_args(['--mode', 'stat', '--output', '/tmp/retired-profile',
+                                        '--source-commit', 'a' * 40, '--profiles', 'mutex'])
+        for name, workload, lines, post in [('mutex-throughput', 'cacheline', '1', '256'),
                 ('mutex-locality', 'cacheline', '16', '256')]:
             argv = profile.runner_arguments(args, name)
             self.assertEqual(argv[argv.index('--workloads') + 1], workload)
@@ -202,7 +205,7 @@ class NanoProfileTests(unittest.TestCase):
                                            '--threads', '16', '32', '36', '60'])
         self.assertEqual(profile.selected_backends(args), ['kdlock'])
         self.assertEqual(args.threads, [16, 32, 36, 60])
-        argv = profile.runner_arguments(args, 'mutex')
+        argv = profile.runner_arguments(args, 'mutex-throughput')
         selected = argv[argv.index('--backends') + 1:argv.index('--repeats')]
         self.assertEqual(selected, ['kdlock'])
 

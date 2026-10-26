@@ -105,15 +105,17 @@ Distinguish this from improvements in local lock acquisition or reader admission
    one padded counter and `mutex-locality` updates 16 independently aligned
    counters. Both use 256 post-unlock rounds. Keep each body and its parameters
    fixed during comparison.
-2. Retain the optional `mutex` two-word/post4 control and the recorded post4 and
-   post64 locality studies. They expose cases where delegation overhead or
-   contention patterns outweigh the benefit; do not remove losses from reports.
+2. Retain the historical two-word/post4 and post64 locality results. The old
+   focused profile names are retired from active nano choices. Their losses
+   remain evidence of cases where delegation overhead or contention patterns
+   outweigh the benefit.
 3. Compare public ABI2 mutex acquisition with the callable local KD control,
    Linux Native and the supported original TCLock mutex port. Record each call
    shell and its compiler/instrumentation settings separately.
-4. Keep rwsem 1%-write and 20%-write profiles separate. Readers remain concurrent
-   and local. Explicit writer delegation is a separate execution class from
-   ordinary local rwsem acquisition. A NO_JIT reader-heavy win is not a JIT win.
+4. Use matching one-/sixteen-counter, post256 bodies for rwsem and rwlock, with
+   separate 1%-write and 20%-write profiles. Readers remain concurrent and local.
+   Explicit writer delegation is a separate execution class from ordinary local
+   acquisition. A NO_JIT reader-heavy win is not a JIT win.
 5. Check transfer to existing cacheline, resident-list and RCUHT workloads, then
    the small real API cases such as seek and pipe queries. A synthetic bulk-ioctl
    loop and a syscall-per-operation workload are different experiments.
@@ -124,8 +126,9 @@ Use the [per-workload analysis](../bench/results/10.176.26.71/bench/catalog-sing
 to select a small point list before further tuning. Include an uncontended point,
 within-node contention, both sides of the 32/36-worker NUMA boundary and a high
 count. The current nano default is the 21-count grid `1..8,12..60` in steps of
-four above eight. The user has selected that full grid for the new two-profile
-mutex comparison. Smaller explicit count sets remain useful for diagnostics.
+four above eight. The user has selected that full grid for all ten active nano
+profiles and the full implemented catalog. Smaller explicit count sets remain
+useful for diagnostics.
 
 For every result, retain exact updates/read checks, physical ownership, source
 leases, unlock ACKs and final retirement. Count completed delegated writers when
