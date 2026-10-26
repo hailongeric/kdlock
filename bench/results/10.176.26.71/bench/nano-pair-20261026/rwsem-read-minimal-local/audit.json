@@ -1,0 +1,120 @@
+{
+  "archive": "bench/results/10.176.26.71/raw/bench/nano-pair-20261026/timed-local-archive.stdout",
+  "archive_bytes": 13289225,
+  "archive_profile": "rwsem-read-local",
+  "archive_sha256": "94d27439d69e4cc126511bf28057f7db3d763f21e5b3307371d803fee5f7b03d",
+  "exploratory": true,
+  "extracted_json_sha256": {
+    "baseline.json": "650d2906508a943d0cb7da2d2f8781f78f09ca9e7533665da0db126276646f06",
+    "binary-sha256.json": "5231aec74bef7f1ba9b0609a83c26ca4a4af551d024c9ca7eb7e171a6081dcc8",
+    "build/provider/manifest.json": "44111d72c204056893a2055f7fed8480b039b8591d1e6a9df8e2998ea5877705",
+    "environment.json": "8de5cc3d9a7c38312e8b184aab14d584ec0ebfd84a0802875f156ab7fb631e22",
+    "parity.json": "155af2a89c33fd4ffdb0b1c415d511fd3e59cb46aa646309283582c05e8b2f5c",
+    "plan.json": "d05a7b9dc67b46e5dcc7ba51405fb9b09305f57cecbaf1e668db9f9eb44c829c",
+    "records.json": "282d7886432804a2e68c0c7b1fdac78f47d5d7bcb1bb966742490b0bd4ec45c3",
+    "rwsem-nano-pair-kdlock-local-w001-t01-r00/drain.counts.json": "0439f7e5edd352aede823d02c3c46dc4212e2a52ea57a0b99c879d664cd929f8",
+    "rwsem-nano-pair-kdlock-local-w001-t01-r00/initial.counts.json": "95d24947cf93f4ae278e7e309ca36eb2ba3cd28f503d146966716652ae361a68",
+    "rwsem-nano-pair-kdlock-local-w001-t01-r00/measure.counts.json": "0439f7e5edd352aede823d02c3c46dc4212e2a52ea57a0b99c879d664cd929f8",
+    "rwsem-nano-pair-kdlock-local-w001-t01-r00/measure.json": "4cb54153044d36156e717b982a49e0e8da5a692d183fdd26b858bae3850d9426",
+    "rwsem-nano-pair-kdlock-local-w001-t01-r00/measure.spec.json": "d8271db6bbd796cf010d55bdefa7fd6edd05ae3e2741280a4424f1d53947d791",
+    "rwsem-nano-pair-kdlock-local-w001-t01-r00/session.json": "db8f071e63f5b554a10d42b377fd07572c27820c5db046221905879eaddb61aa",
+    "rwsem-nano-pair-kdlock-local-w001-t01-r00/warmup.counts.json": "bab3a8ce86c3a92904f8cf08c8224f8b0ca19e5761e9c8eac61e82c660d1acf8",
+    "rwsem-nano-pair-kdlock-local-w001-t01-r00/warmup.json": "c2cd060cb4f833f7683eb176e099b2877ff90693d9a6abca6b7f47ecd4a2a324",
+    "rwsem-nano-pair-kdlock-local-w001-t01-r00/warmup.spec.json": "f41cc2fa0e0fc03410f023e11f8fcbbf0b27091ab52204dafd99d5f87b66ae10",
+    "rwsem-nano-pair-kdlock-local-w001-t16-r00/drain.counts.json": "cd5bfbfd7a9abb03a6a712c56eff0435ee7bf1610ba3b1a771aa0b128cc8dddb",
+    "rwsem-nano-pair-kdlock-local-w001-t16-r00/initial.counts.json": "95d24947cf93f4ae278e7e309ca36eb2ba3cd28f503d146966716652ae361a68",
+    "rwsem-nano-pair-kdlock-local-w001-t16-r00/measure.counts.json": "cd5bfbfd7a9abb03a6a712c56eff0435ee7bf1610ba3b1a771aa0b128cc8dddb",
+    "rwsem-nano-pair-kdlock-local-w001-t16-r00/measure.json": "47cd59b33209cdc253869b111198f118448395acf3796780dfaa0fae20f29ffb",
+    "rwsem-nano-pair-kdlock-local-w001-t16-r00/measure.spec.json": "eb27974e124090ca4377a920554d14a31e9de0dc79a48402e20a06a6963d9668",
+    "rwsem-nano-pair-kdlock-local-w001-t16-r00/session.json": "a2eb41ed2e06bebc686651e2ea1e7f6e332958da5a9aa2d1124dfb89bea4b6d9",
+    "rwsem-nano-pair-kdlock-local-w001-t16-r00/warmup.counts.json": "58a2d61284af2dd55b05428900befcd2bce02b8a6cbe1ed05cb3d3ad45622804",
+    "rwsem-nano-pair-kdlock-local-w001-t16-r00/warmup.json": "fb234081ab5c03da20d4f4ac84de9e11eb2eda5a7c9bdb385802a39841b8f2f6",
+    "rwsem-nano-pair-kdlock-local-w001-t16-r00/warmup.spec.json": "ff27878b77249a212cdc89a9600bbfab34d770443b76d040184437cde704ba89",
+    "rwsem-nano-pair-kdlock-local-w001-t60-r00/drain.counts.json": "ac977326f4b38ae390155c2b77a3fe01f59ff8ec7045dcaa0bf8e0a4a487c994",
+    "rwsem-nano-pair-kdlock-local-w001-t60-r00/initial.counts.json": "95d24947cf93f4ae278e7e309ca36eb2ba3cd28f503d146966716652ae361a68",
+    "rwsem-nano-pair-kdlock-local-w001-t60-r00/measure.counts.json": "ac977326f4b38ae390155c2b77a3fe01f59ff8ec7045dcaa0bf8e0a4a487c994",
+    "rwsem-nano-pair-kdlock-local-w001-t60-r00/measure.json": "af9c0bbc8745ca6d804a97a987e8c2c8c3c6aa4703f986c981ebf60670fc1331",
+    "rwsem-nano-pair-kdlock-local-w001-t60-r00/measure.spec.json": "c98f1ebc47a5697d3af2af37e7ed7228d8a689fb52f57d99a01b507c5a9b8cfd",
+    "rwsem-nano-pair-kdlock-local-w001-t60-r00/session.json": "9512fe2b818d714f23755f0b7b3ddb55d3b0a0ae55dc4a9ef16baa4f7989907c",
+    "rwsem-nano-pair-kdlock-local-w001-t60-r00/warmup.counts.json": "e34870f0561c817b16ec48a75196f3099d20be165311c1f4a8830eaf8f0d441b",
+    "rwsem-nano-pair-kdlock-local-w001-t60-r00/warmup.json": "48c08865589756ff1a4237d42cec8e970049911d4e3ee217133100c4cff46339",
+    "rwsem-nano-pair-kdlock-local-w001-t60-r00/warmup.spec.json": "3c18c7f15f1069221ed60669fb4c9b73dc2927d514d44e181a304d7f6aa1f894",
+    "source-sha256.json": "8a8287c890ceb800ee9bbab39d8071bafe63beccac99bfe9663e46d98982048e",
+    "summary.json": "9ba78dc67cc089f010ed857601567b10a8ffcd9e3567098918e3518e8236a3a9"
+  },
+  "helper_sha256": "c01eff25d06e4f5b23c2ba74d4c635e050a09bc44502d8b009ed20eeffdc10fc",
+  "host_qualified": false,
+  "phases_validated": 6,
+  "plan_count": 3,
+  "published_name": "rwsem-read-minimal-local",
+  "receipts_root": "bench/results/10.176.26.71/raw/bench/nano-pair-20261026/receipts/rwsem-read-minimal-local",
+  "schema": 1,
+  "sessions": [
+    {
+      "arm": "kdlock",
+      "data_ok": true,
+      "drained": true,
+      "execution_class": "NO_JIT",
+      "execution_status": "OK",
+      "jit_complete_share": 0.0,
+      "jit_completions": 0,
+      "jit_entries": 0,
+      "name": "rwsem-nano-pair-kdlock-local-w001-t01-r00",
+      "phases_validated": [
+        "warmup",
+        "measure"
+      ],
+      "threads": 1,
+      "whole_mops_s": 22.30469003807678
+    },
+    {
+      "arm": "kdlock",
+      "data_ok": true,
+      "drained": true,
+      "execution_class": "NO_JIT",
+      "execution_status": "OK",
+      "jit_complete_share": 0.0,
+      "jit_completions": 0,
+      "jit_entries": 0,
+      "name": "rwsem-nano-pair-kdlock-local-w001-t16-r00",
+      "phases_validated": [
+        "warmup",
+        "measure"
+      ],
+      "threads": 16,
+      "whole_mops_s": 9.38428694023166
+    },
+    {
+      "arm": "kdlock",
+      "data_ok": true,
+      "drained": true,
+      "execution_class": "NO_JIT",
+      "execution_status": "OK",
+      "jit_complete_share": 0.0,
+      "jit_completions": 0,
+      "jit_entries": 0,
+      "name": "rwsem-nano-pair-kdlock-local-w001-t60-r00",
+      "phases_validated": [
+        "warmup",
+        "measure"
+      ],
+      "threads": 60,
+      "whole_mops_s": 5.494776422191704
+    }
+  ],
+  "sessions_validated": 3,
+  "stage": "timed-local",
+  "status": "PASS",
+  "strict_timing_qualification": "FAILED; offline correctness replay cannot qualify host timing",
+  "validator_sha256": {
+    "bench/rwlock_compare/oracle.py": "4756384129ee33ddf5feabf600ff5d4088072ef9e311ce519a77a73382301122",
+    "bench/spin_cacheline/peak.py": "fa90dc91b33c7a52b99168565baad0b210d56e2005cd615047d939414c596ad2"
+  },
+  "validator_source": "Exact archived oracle.py and peak.py in an isolated temporary directory",
+  "verified_hash_counts": {
+    "frozen_binary": 4,
+    "frozen_source": 276,
+    "prepared_provider": 95
+  },
+  "warmup_jit_scope": "Warmup data is exact-validated; independent warmup entry/return deltas were not recorded."
+}

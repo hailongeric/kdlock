@@ -353,3 +353,11 @@ body simplification, local-path savings and actual delegation more directly than
 selecting the single largest ratio from this exploratory screen.
 
 Combiner source: [NUMA locality and bounded handoff](../../../../../kernel_module/mutex/combiner.inc).
+
+The subsequent [nano implementation and matched measurements](../nano-pair-20261026/README.md)
+tested these hypotheses. A one-record mutex and a 16-cacheline/post4 mutex both
+lost to Native under contention. The 16-cacheline/post64 version beat both
+comparators at 32 and 60 workers, while retaining Native losses at 8, 16 and 36.
+The 1%-write rwsem preserved its Native advantage with no JIT executions and
+remained below TCLock. These results constrain the best-case workload's scope;
+they do not change the catalog measurements above.

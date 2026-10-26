@@ -26,6 +26,15 @@ therefore tests a separate hypothesis: repeated ownership of a larger resident
 working set can amortize synchronization and data movement. Its results must
 remain separate from the one-cacheline control.
 
+The [fresh matched results](../results/10.176.26.71/bench/nano-pair-20261026/README.md)
+select the locality profile with **64 post-unlock rounds** as the default mutex
+case. At 60 workers it reached 1.435× Native and 1.839× TCLock, with 98.20%
+returned writers. At 32 workers it also beat both controls; at 8, 16 and 36 it
+still lost to Native. The post4 locality control lost to Native at every
+contended count. Adding outside-lock work reduced Native throughput more than
+KD's; it did not make KD execute faster. These are exploratory, single-round
+observations, not a universal optimum or an isolated causal cost breakdown.
+
 ## Bodies and profiles
 
 The default mutex profile, `mutex-locality`, reuses the existing
@@ -88,8 +97,9 @@ schedule; these are not dedicated reader and writer thread pools. The mutex
 profiles accept only 100% writes. Mutex readers would require a separately
 defined and measured call shell.
 
-The runner defaults to counts `1 8 16 32 36 60`, a two-second timed interval,
-one round per point and four dependent multiply/add rounds after each unlock.
+The runner defaults to counts `1 8 16 32 36 60`, a two-second timed interval and
+one round per point. After each unlock, `mutex-locality` performs 64 dependent
+multiply/add rounds; the minimal mutex and both rwsem profiles perform four.
 Workers use CPUs `0..N-1`; the collector uses CPU 63. The 36- and 60-worker
 cohorts cross the 32-CPU NUMA boundary. The default three-profile, three-backend
 screen has 54 measured points. One round supplies no repeat-variability estimate;
@@ -99,9 +109,10 @@ Each worker enters one ioctl for the whole operation loop. This isolates the
 small protected body using the established resident-workload harness. The
 motivating real API benchmarks instead execute one syscall per operation,
 including file/VFS handling, redirection and result validation outside the lock.
-Their throughput ratios cannot be transferred to this nano workload. Its four
-post-work rounds also differ from the historical exclusive synthetic post64
-shell. Keep both call-shell identities separate in reports.
+Their throughput ratios cannot be transferred to this nano workload. The
+locality mutex now matches the historical synthetic post64 setting, but its
+body, source and harness remain separately identified. Keep the post4 controls
+and all call-shell identities separate in reports.
 
 ## Commands and execution environment
 
@@ -146,7 +157,9 @@ python3 bench/nano/best_case.py --backends kdlock --delegate off \
 `rwsem-mixed` as a separately identified writer-interference control. Use
 `--profiles mutex` to reproduce the one-cacheline control, or explicitly select
 all four profiles to include it in a new campaign. Changing `--post-work-rounds`
-changes the workload and requires matched arms and a distinct result identity.
+overrides every selected profile's default, changes the workload and requires
+matched arms and a distinct result identity. In particular, `--profiles
+mutex-locality --post-work-rounds 4` reproduces the tighter-arrival control.
 
 ## Interpretation and exact checks
 

@@ -1,0 +1,431 @@
+{
+  "checks": {
+    "affected_python_unique": 34,
+    "basic_c": 2,
+    "final_nano_subset": 7,
+    "full_suite": false,
+    "functional_sessions": 24,
+    "timed_points": 102
+  },
+  "environment": {
+    "boot_id": "afe3a8d8-0c07-475b-89b4-163b822484b0",
+    "data_free_bytes": 694603776,
+    "final_dmesg_fault_lines": [],
+    "final_dmesg_fault_patterns": "BUG:|WARNING:|Oops:|UBSAN:|general protection fault|Kernel panic|INFO: task .* blocked|rcu.*stall",
+    "final_taint": 12288,
+    "host_endpoints": [
+      {
+        "path": "final-host.json",
+        "status": "EXPLORATORY_ENDPOINT_PASS",
+        "strict_issues": [
+          "QEMU tasks changed: 67 -> 69"
+        ],
+        "tasks": 69
+      },
+      {
+        "issue": "Preserved task-disappearance preflight; no workload started",
+        "path": "functional-1-before-host.json",
+        "status": "FAILED_CAPTURE"
+      },
+      {
+        "path": "functional-2-after-host.json",
+        "status": "EXPLORATORY_ENDPOINT_PASS",
+        "strict_issues": [
+          "QEMU tasks changed: 67 -> 74"
+        ],
+        "tasks": 74
+      },
+      {
+        "path": "functional-2-before-host.json",
+        "status": "EXPLORATORY_ENDPOINT_PASS",
+        "strict_issues": [],
+        "tasks": 67
+      },
+      {
+        "path": "functional-locality-after-host.json",
+        "status": "EXPLORATORY_ENDPOINT_PASS",
+        "strict_issues": [
+          "QEMU tasks changed: 67 -> 71"
+        ],
+        "tasks": 71
+      },
+      {
+        "path": "functional-locality-before-host.json",
+        "status": "EXPLORATORY_ENDPOINT_PASS",
+        "strict_issues": [
+          "QEMU tasks changed: 67 -> 69"
+        ],
+        "tasks": 69
+      },
+      {
+        "path": "initial-host.json",
+        "status": "EXPLORATORY_ENDPOINT_PASS",
+        "strict_issues": [
+          "QEMU tasks changed: 67 -> 68"
+        ],
+        "tasks": 68
+      },
+      {
+        "path": "timed-local-after-host.json",
+        "status": "EXPLORATORY_ENDPOINT_PASS",
+        "strict_issues": [
+          "QEMU tasks changed: 67 -> 82"
+        ],
+        "tasks": 82
+      },
+      {
+        "path": "timed-local-before-host.json",
+        "status": "EXPLORATORY_ENDPOINT_PASS",
+        "strict_issues": [
+          "QEMU tasks changed: 67 -> 82"
+        ],
+        "tasks": 82
+      },
+      {
+        "path": "timed-locality-after-host.json",
+        "status": "EXPLORATORY_ENDPOINT_PASS",
+        "strict_issues": [
+          "QEMU tasks changed: 67 -> 76"
+        ],
+        "tasks": 76
+      },
+      {
+        "path": "timed-locality-before-host.json",
+        "status": "EXPLORATORY_ENDPOINT_PASS",
+        "strict_issues": [
+          "QEMU tasks changed: 67 -> 69"
+        ],
+        "tasks": 69
+      },
+      {
+        "path": "timed-locality-post64-after-host.json",
+        "status": "EXPLORATORY_ENDPOINT_PASS",
+        "strict_issues": [
+          "QEMU tasks changed: 67 -> 74"
+        ],
+        "tasks": 74
+      },
+      {
+        "path": "timed-locality-post64-before-host.json",
+        "status": "EXPLORATORY_ENDPOINT_PASS",
+        "strict_issues": [],
+        "tasks": 67
+      },
+      {
+        "path": "timed-locality-post64-local-after-host.json",
+        "status": "EXPLORATORY_ENDPOINT_PASS",
+        "strict_issues": [
+          "QEMU tasks changed: 67 -> 71"
+        ],
+        "tasks": 71
+      },
+      {
+        "path": "timed-locality-post64-local-before-host.json",
+        "status": "EXPLORATORY_ENDPOINT_PASS",
+        "strict_issues": [
+          "QEMU tasks changed: 67 -> 68"
+        ],
+        "tasks": 68
+      },
+      {
+        "path": "timed-mutex-after-host.json",
+        "status": "EXPLORATORY_ENDPOINT_PASS",
+        "strict_issues": [
+          "QEMU tasks changed: 67 -> 89"
+        ],
+        "tasks": 89
+      },
+      {
+        "path": "timed-mutex-before-host.json",
+        "status": "EXPLORATORY_ENDPOINT_PASS",
+        "strict_issues": [],
+        "tasks": 67
+      },
+      {
+        "path": "timed-rwsem-mixed-after-host.json",
+        "status": "EXPLORATORY_ENDPOINT_PASS",
+        "strict_issues": [
+          "QEMU tasks changed: 67 -> 82"
+        ],
+        "tasks": 82
+      },
+      {
+        "path": "timed-rwsem-mixed-before-host.json",
+        "status": "EXPLORATORY_ENDPOINT_PASS",
+        "strict_issues": [
+          "QEMU tasks changed: 67 -> 82"
+        ],
+        "tasks": 82
+      },
+      {
+        "path": "timed-rwsem-read-after-host.json",
+        "status": "EXPLORATORY_ENDPOINT_PASS",
+        "strict_issues": [
+          "QEMU tasks changed: 67 -> 82"
+        ],
+        "tasks": 82
+      },
+      {
+        "path": "timed-rwsem-read-before-host.json",
+        "status": "EXPLORATORY_ENDPOINT_PASS",
+        "strict_issues": [
+          "QEMU tasks changed: 67 -> 89"
+        ],
+        "tasks": 89
+      }
+    ],
+    "initial_taint": 0,
+    "module_count": 73,
+    "repeated_timing": false,
+    "root_free_bytes": 1814769664,
+    "scope": "Guest drain/identity and authorized exploratory host endpoint checks only",
+    "status": "PASS",
+    "strict_timing_qualified": false
+  },
+  "final_default_change": "Launcher only: mutex-locality selects the already measured explicit post64 setting; other profiles select post4. Final seven nano plan/oracle checks passed in the VM.",
+  "measured_sources": {
+    "locality": "6ff80fadf368f9e261be24c2aa7800013a3d9f6d",
+    "minimal": "8c8f95461cc1bcc7a873f96bed51fc1ad93d7d23"
+  },
+  "offline": {
+    "details": [
+      {
+        "archive_sha256": "a584eeb9bd0b1d1ab7a4697f203c875f61283787aa0e2025bcf718b9946dea4e",
+        "binaries": 7,
+        "execution_classes": {
+          "NATIVE": 12,
+          "NO_JIT": 1,
+          "RETURNED_JIT": 5
+        },
+        "phases_validated": 36,
+        "prepared_files": 95,
+        "profile": "mutex-locality",
+        "publication_sha256": {
+          "README.md": "accc19efc11e2c188d73e3413cc4d448ad67431a85647fabfdb461d3cb4a5e1d",
+          "audit.json": "b457d2fb66ef7c89eefed4ea4efc2db7849c586b77782029afa865a57061fcda",
+          "table.csv": "838f0956079cf1d30ee6fefe9864ab4d2503a81e016a07e6119150849a3ffaee",
+          "throughput.png": "f769bdb6539c99489e071a6eecaff645237a2b2e525e0af8224bc68499f5ec30",
+          "throughput.svg": "7593a7f7f3f1b4a63cbcf22729ccdff72f588f3d72c89ec897037c4624f83586"
+        },
+        "sessions": 18,
+        "source_files": 276
+      },
+      {
+        "archive_sha256": "15eebf79c543b264eb0eb8c7492833005181181a2315bb6299387a6a21ecc070",
+        "binaries": 7,
+        "execution_classes": {
+          "NATIVE": 12,
+          "NO_JIT": 1,
+          "RETURNED_JIT": 5
+        },
+        "phases_validated": 36,
+        "prepared_files": 95,
+        "profile": "mutex-locality-post64",
+        "publication_sha256": {
+          "README.md": "def541d1cfa217ee8db6857681e1d22878b3498dc522de0ef4720f77ae7b2ec0",
+          "audit.json": "1dfcfd5baa133a9156e4e55448ad41d07399f8f3dd2d50fdb5cc0df1c24f737b",
+          "table.csv": "01f03251f27dc1849a646c1d6d223beec268396e4e028cd81f0b28756d813e32",
+          "throughput.png": "817d5c817686cc4fcd186c6acb4014ea3b29d007a91dc2ae5c87e2f4f3a2dfc9",
+          "throughput.svg": "0da02786e6f5395f9f45ed6b3093837132e44ee2a9df46a830a7a072f10af33e"
+        },
+        "sessions": 18,
+        "source_files": 276
+      },
+      {
+        "archive_sha256": "adec7ce2261bfee905fa22c3354e65c862a28bb689bb54b8cc6f31b14a46a4e6",
+        "binaries": 4,
+        "execution_classes": {
+          "NO_JIT": 3
+        },
+        "phases_validated": 6,
+        "prepared_files": 95,
+        "profile": "mutex-locality-post64-local",
+        "publication_sha256": {
+          "README.md": "7f6a5929bb5d53c0c19fe51b5eecd05856cfa94e249e8a04e88251bbc5bab2ce",
+          "audit.json": "fe4090969b0140aeaf54960f906eb2202f6307149db733697e66338bbc0bd464",
+          "table.csv": "19ce3051745fb12ef8def31bee92f3b14b2df48b660905d7b6ea61e86cb1dd99",
+          "throughput.png": "3b4f9def407ddb34a40716d0eab57e9adc35d28c1fce0e01b1d3ca2e18459d7d",
+          "throughput.svg": "b17b7b05c81b2e4331b9392960f0aebc404876d8596a6fb27acc7e1fdc96187e"
+        },
+        "sessions": 3,
+        "source_files": 276
+      },
+      {
+        "archive_sha256": "6827a39079b56703a63db33bfdbd506f4034c8fa3ba8d5d4996651fdf0f1236a",
+        "binaries": 7,
+        "execution_classes": {
+          "NATIVE": 12,
+          "NO_JIT": 1,
+          "RETURNED_JIT": 5
+        },
+        "phases_validated": 36,
+        "prepared_files": 95,
+        "profile": "mutex-minimal",
+        "publication_sha256": {
+          "README.md": "fbe393b6a0ffe857ca3719956846cbe7264f3ffd3044ca6b92f6fd534dd52668",
+          "audit.json": "384026b740e29a2bce28d61a8092a343bec86b0fba2d7f23213c68833a5eef32",
+          "table.csv": "f84a9bc5d530e5716d1ace4b6fcc61ac6e92f5658bdee9e9e1669c67193741bc",
+          "throughput.png": "bea439869f5cd2b4f141f0336ffbeeb8fb023c42282db0ae68f58463ffcf2000",
+          "throughput.svg": "f0f20067ea71247a12bb447a95c8e76b0623ce469a88074d6a8639912b2a58bd"
+        },
+        "sessions": 18,
+        "source_files": 276
+      },
+      {
+        "archive_sha256": "94d27439d69e4cc126511bf28057f7db3d763f21e5b3307371d803fee5f7b03d",
+        "binaries": 4,
+        "execution_classes": {
+          "NO_JIT": 3
+        },
+        "phases_validated": 6,
+        "prepared_files": 95,
+        "profile": "mutex-minimal-local",
+        "publication_sha256": {
+          "README.md": "5d866c5595e7aa2af4938b420370672a54bd4b46b9218ec144223912fc979f7d",
+          "audit.json": "c515b05916d505f1ad0553dcca0cce702f1d378bcee08104b329ddd7e9a562be",
+          "table.csv": "d36ed292cc1fbce6e8b64e470d4d72bfa5526d99e325890aaabdeb4e1e528f36",
+          "throughput.png": "e64a0f3aa16cce43e3f2b195390506fc8a3f0851baabf129c73b99a6762b2ddf",
+          "throughput.svg": "866ea8317679dcbec8e07276a00947a737b272a5aa2c8961bd908dc0d3a5036c"
+        },
+        "sessions": 3,
+        "source_files": 276
+      },
+      {
+        "archive_sha256": "74de5f0bf76e6be4e5eec4632462eef1ccd3b7a493861d872d7c9af2ab7309d2",
+        "binaries": 7,
+        "execution_classes": {
+          "NATIVE": 12,
+          "NO_JIT": 1,
+          "RETURNED_JIT": 5
+        },
+        "phases_validated": 36,
+        "prepared_files": 95,
+        "profile": "rwsem-mixed-minimal",
+        "publication_sha256": {
+          "README.md": "dddbbbe444b09a88f1979fc84c4bf0b74ef09aa18f9f8fbf72fb6f8cf34ccf2c",
+          "audit.json": "b4ea92fc6289bf28a5f71f5033a66da8bf69bb4ffbbae4b7763e2367e6af20b7",
+          "table.csv": "56e20c117d3b56db6133ded4ca895f6ba0db4b2246266fd6f2a0bd730d9647cf",
+          "throughput.png": "7f02daa69e68bb27b814139985b58e54842b5383ebb136b77af156a7520489be",
+          "throughput.svg": "d58bed20af568ae0a270109374164040f3784a93b37e815d1f213d85e164a396"
+        },
+        "sessions": 18,
+        "source_files": 276
+      },
+      {
+        "archive_sha256": "94d27439d69e4cc126511bf28057f7db3d763f21e5b3307371d803fee5f7b03d",
+        "binaries": 4,
+        "execution_classes": {
+          "NO_JIT": 3
+        },
+        "phases_validated": 6,
+        "prepared_files": 95,
+        "profile": "rwsem-mixed-minimal-local",
+        "publication_sha256": {
+          "README.md": "c013bf96201d20003bf946cd388cc00d52018daf6acd057f69e29b47a6236e06",
+          "audit.json": "1631f4d00cfc328d50c6ac243e2dfde152cce3ab3a75fc8e5b899b014adfd722",
+          "table.csv": "7400579cbec3071c99c9ea82863d600f0449ed8b3f80e24f83d4d0f1725737d5",
+          "throughput.png": "aa8e0e494b5d0ed848ed29a2e3fe86beb8de90a12411d89a3dc2280f3228beaa",
+          "throughput.svg": "280bf96cd205d62006a5e0a8ce371713edb6ab7a54606ae426735f171af48fb2"
+        },
+        "sessions": 3,
+        "source_files": 276
+      },
+      {
+        "archive_sha256": "1185db65b272aee52a1053bf7a0972d2202549cbff48c2a98163ccf31644188b",
+        "binaries": 7,
+        "execution_classes": {
+          "NATIVE": 12,
+          "NO_JIT": 6
+        },
+        "phases_validated": 36,
+        "prepared_files": 95,
+        "profile": "rwsem-read-minimal",
+        "publication_sha256": {
+          "README.md": "3913f54ef37375db67268c4163335b93d02ca71e79189b31f4910c9a2ecafc4c",
+          "audit.json": "94bd902ddf7e6ece3593760f4f966396ad0890292eea68d455d9163f0c6ac2fb",
+          "table.csv": "5f6817bf651d76931be85a5b3680698b90a0dadc9ea441a9ed8ac214add74e0f",
+          "throughput.png": "c002a8a1fd5d11c06bf7ec1590ccd6e5210051147134539640a9f59423ed6833",
+          "throughput.svg": "8e2aa52f2346d1dc72b9aca83ed29f83430218853a0d534e2d538aba3dc61060"
+        },
+        "sessions": 18,
+        "source_files": 276
+      },
+      {
+        "archive_sha256": "94d27439d69e4cc126511bf28057f7db3d763f21e5b3307371d803fee5f7b03d",
+        "binaries": 4,
+        "execution_classes": {
+          "NO_JIT": 3
+        },
+        "phases_validated": 6,
+        "prepared_files": 95,
+        "profile": "rwsem-read-minimal-local",
+        "publication_sha256": {
+          "README.md": "7e64c3bf28b5f8fc9cf96c154b9ea4742ad556f5e0fbf8f6737c056bdaedeb6a",
+          "audit.json": "06f4064c4a28a0f8e16b8e342f6b3d042de69cd2c6db055be3c088bd5d820073",
+          "table.csv": "ff7ecac7eb992347c1e04e7a20f08c67b1ac64be3b9f74b7fe4fa9aec0fff486",
+          "throughput.png": "4a29deb27ec050e53733af697f53a6ef21fc86673efdf70a16f329719992b71c",
+          "throughput.svg": "8c7b20617a3ebde4c23c98cfba24bc2acdecee4e6354559cc99f2ab5543a444c"
+        },
+        "sessions": 3,
+        "source_files": 276
+      }
+    ],
+    "exploratory": true,
+    "functional": [
+      {
+        "archive_sha256": "a98b49719d57958474f7d879794159eee8182e9a59f76f9e42154e6259a596cc",
+        "audit": "functional-2-mutex-audit.json",
+        "audit_sha256": "bcf6c92ed1c345b9601cb5cd4ac4e464a3d22e2b244178981bd61918b3301449",
+        "phases_validated": 12,
+        "sessions": 6
+      },
+      {
+        "archive_sha256": "a98b49719d57958474f7d879794159eee8182e9a59f76f9e42154e6259a596cc",
+        "audit": "functional-2-rwsem-read-audit.json",
+        "audit_sha256": "9b2ade483561b0fd4d037eac308508a6966b778255816df1494cc89c61a6d8f0",
+        "phases_validated": 12,
+        "sessions": 6
+      },
+      {
+        "archive_sha256": "a98b49719d57958474f7d879794159eee8182e9a59f76f9e42154e6259a596cc",
+        "audit": "functional-2-rwsem-mixed-audit.json",
+        "audit_sha256": "dfa583949a88d8f04658cd4fd6c112ae1b231283ccffda0db069171a8085985a",
+        "phases_validated": 12,
+        "sessions": 6
+      },
+      {
+        "archive_sha256": "246217b7e3fc8862706ef3e3cac558d3ebcf1ea9542448051342e0a541357d4d",
+        "audit": "functional-locality-mutex-locality-audit.json",
+        "audit_sha256": "0aeb47d66dcac7941fa9b65065a154918a615e438e84d98a3f4e01eacb1d6327",
+        "phases_validated": 12,
+        "sessions": 6
+      }
+    ],
+    "functional_phases_validated": 48,
+    "functional_sessions": 24,
+    "host_qualified": false,
+    "phases_validated": 204,
+    "profiles": 9,
+    "scope": "Independent published-file identity and table arithmetic review; oracle replay is retained separately in each profile audit.json",
+    "sessions": 102,
+    "status": "PASS"
+  },
+  "repeated_timing": false,
+  "retained_raw": {
+    "bench/results/10.176.26.71/raw/bench/nano-pair-20261026/candidate.json": "b8129c4b0cb41237ae33e1c5d70d541a3a4d6de4e35484bc8eefe79c68d3353a",
+    "bench/results/10.176.26.71/raw/bench/nano-pair-20261026/checks-1.log": "5442d8191b440319dfcfe047edd5a4b9fed476294e7b108d4df9041166705372",
+    "bench/results/10.176.26.71/raw/bench/nano-pair-20261026/checks-2.log": "837ae68b25b394f27a9b4a547f38e2547b7e0e483b9e10856f213c7be4501640",
+    "bench/results/10.176.26.71/raw/bench/nano-pair-20261026/checks-final-defaults.log": "fd6162a54365aaafcb84cf6e17215469c12bee889d8f7c94d91d33f43f0268b8",
+    "bench/results/10.176.26.71/raw/bench/nano-pair-20261026/checks-locality-metadata.log": "ec6f544cf7f41639dc4e29e93f33436eeb1f46dcbd1f9b1992260e05fc5dc2f0",
+    "bench/results/10.176.26.71/raw/bench/nano-pair-20261026/checks-locality.log": "d6582c118d81b936ad78dd618ef70b9803dd1e2df50f3657d718c5956eea6102",
+    "bench/results/10.176.26.71/raw/bench/nano-pair-20261026/collect-final.py": "5382fca6097375da9532a70ff82f3d2b816aa61282f357c79ce3ba320d8599e6",
+    "bench/results/10.176.26.71/raw/bench/nano-pair-20261026/final-environment-audit.json": "bfaf3eb27289b82b5f05977f258f6d795b5e56af1c24ff5362203832963efbfa",
+    "bench/results/10.176.26.71/raw/bench/nano-pair-20261026/final-health.stdout": "80ecd9d10d0f84b13fa278bdc0d967c0a228ce0973f5d8ec9feb0dc595c6106a",
+    "bench/results/10.176.26.71/raw/bench/nano-pair-20261026/final-offline-review.json": "f83f4b3564ea2bc0ecdf19c72205137f4dc9056b36f1bbf734b581f3960bf37b",
+    "bench/results/10.176.26.71/raw/bench/nano-pair-20261026/publish-stage.py": "5dd862101eb85920a4d1e9127c8b46bcda6b3909bbb7da00b7962f37fe9f4ef9",
+    "bench/results/10.176.26.71/raw/bench/nano-pair-20261026/run-stage.py": "9015d8ad13bf03b384915cc244723de7726f5eaab995a101cf27a141eea0dc5a"
+  },
+  "schema": 1,
+  "status": "PASS",
+  "strict_timing_qualified": false
+}

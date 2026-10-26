@@ -25,7 +25,8 @@ def parser():
     p.add_argument('--backends', nargs='+', choices=('native', 'tclock', 'kdlock'),
                    default=['native', 'tclock', 'kdlock'])
     p.add_argument('--repeats', type=int, choices=(1, 3), default=1)
-    p.add_argument('--post-work-rounds', type=int, default=4)
+    p.add_argument('--post-work-rounds', type=int,
+                   help='override all profiles; defaults: mutex-locality=64, other profiles=4')
     p.add_argument('--delegate', choices=('on', 'off'), default='on')
     p.add_argument('--functional', action='store_true')
     p.add_argument('--plan-only', action='store_true')
@@ -36,7 +37,8 @@ def commands(args):
     for values in (args.profiles, args.threads, args.backends):
         if not values or len(values) != len(set(values)):
             raise ValueError('empty or duplicate selection')
-    if not all(1 <= n <= 60 for n in args.threads) or not 1 <= args.post_work_rounds <= 256:
+    if not all(1 <= n <= 60 for n in args.threads) or (
+            args.post_work_rounds is not None and not 1 <= args.post_work_rounds <= 256):
         raise ValueError('workers must be 1..60; post-work rounds must be 1..256')
     if args.functional and args.repeats != 1:
         raise ValueError('functional checks require one round')
@@ -44,6 +46,7 @@ def commands(args):
         family, percent = PROFILES[profile]
         name = profile + ('-local' if args.delegate == 'off' else '')
         locality = profile == 'mutex-locality'
+        post_work = args.post_work_rounds if args.post_work_rounds is not None else (64 if locality else 4)
         yield name, [sys.executable, str(ROOT/'bench/rwlock_compare/run.py'),
             '--workloads', 'cacheline' if locality else 'nano',
             '--cachelines', '16' if locality else '2',
@@ -51,7 +54,7 @@ def commands(args):
             '--threads', *map(str, args.threads), '--cpus', *map(str, range(max(args.threads))),
             '--collector-cpu', '63', '--backends', *args.backends,
             '--repeats', str(args.repeats), '--duration-ms', '2000',
-            '--post-work-rounds', str(args.post_work_rounds), '--delegate', args.delegate,
+            '--post-work-rounds', str(post_work), '--delegate', args.delegate,
             *(['--functional'] if args.functional else []),
             '--kernel-source', '/root/linux-6.1.159-kdclobber2',
             '--kernel-baseline', '/root/kdlock-kernel-baselines/mutex-clobber2-20260919',

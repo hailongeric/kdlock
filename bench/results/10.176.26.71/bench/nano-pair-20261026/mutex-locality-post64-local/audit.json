@@ -1,0 +1,120 @@
+{
+  "archive": "bench/results/10.176.26.71/raw/bench/nano-pair-20261026/timed-locality-post64-local-archive.stdout",
+  "archive_bytes": 4421497,
+  "archive_profile": "mutex-locality-local",
+  "archive_sha256": "adec7ce2261bfee905fa22c3354e65c862a28bb689bb54b8cc6f31b14a46a4e6",
+  "exploratory": true,
+  "extracted_json_sha256": {
+    "baseline.json": "650d2906508a943d0cb7da2d2f8781f78f09ca9e7533665da0db126276646f06",
+    "binary-sha256.json": "542a8d2fa2232c8d0aa5fce3031934751b80157b378589e68a0c464590e048b8",
+    "build/provider/manifest.json": "44111d72c204056893a2055f7fed8480b039b8591d1e6a9df8e2998ea5877705",
+    "environment.json": "cf9dbef7f87a13085e6f8fc5260bafc442bb2adb9d2a18af8a7d779d40f1ba23",
+    "mutex-cacheline-c16-kdlock-local-w100-t01-r00/drain.counts.json": "b919c8ef8a7a15553665edec38eaae0039dfa07dcb9b76ad78ad10d1b316f813",
+    "mutex-cacheline-c16-kdlock-local-w100-t01-r00/initial.counts.json": "1392ba43623c9d38953224e26c204402ae2840840291d91504beb73333dfd0b3",
+    "mutex-cacheline-c16-kdlock-local-w100-t01-r00/measure.counts.json": "b919c8ef8a7a15553665edec38eaae0039dfa07dcb9b76ad78ad10d1b316f813",
+    "mutex-cacheline-c16-kdlock-local-w100-t01-r00/measure.json": "bfd2de2f3b257210d3679fceb11e42b0a608a4c70510b46b928c393da893ff1c",
+    "mutex-cacheline-c16-kdlock-local-w100-t01-r00/measure.spec.json": "94b90a757ec4a4f6b4659335eeb2c61384ecd699a489649c9e45d96bed3582ac",
+    "mutex-cacheline-c16-kdlock-local-w100-t01-r00/session.json": "d901f534b4b6e16370fe98b9008084730e9405aa6c5f21b82fbfedb29f80fe0d",
+    "mutex-cacheline-c16-kdlock-local-w100-t01-r00/warmup.counts.json": "06fe91aa524a30e24e9618cbe9ebaaac38bfbf3264d33b3f3d7e559098c8c560",
+    "mutex-cacheline-c16-kdlock-local-w100-t01-r00/warmup.json": "bc38f404b3de527b95ac9bb3b014400282a7d265ded40c61c9e6dbdff11c6039",
+    "mutex-cacheline-c16-kdlock-local-w100-t01-r00/warmup.spec.json": "490eb5cedf04fda1976eca06d3c31eeda432b82a6e4cdffee1e751a993d25f41",
+    "mutex-cacheline-c16-kdlock-local-w100-t16-r00/drain.counts.json": "119542393b66eef67c461e2218e0cd99dc3b63d880ace11ba8029a7d4224e4fe",
+    "mutex-cacheline-c16-kdlock-local-w100-t16-r00/initial.counts.json": "1392ba43623c9d38953224e26c204402ae2840840291d91504beb73333dfd0b3",
+    "mutex-cacheline-c16-kdlock-local-w100-t16-r00/measure.counts.json": "119542393b66eef67c461e2218e0cd99dc3b63d880ace11ba8029a7d4224e4fe",
+    "mutex-cacheline-c16-kdlock-local-w100-t16-r00/measure.json": "62d5c104c1e2e619af9863dd589e2201f6d131187a8dae587f7ee1313ac4f503",
+    "mutex-cacheline-c16-kdlock-local-w100-t16-r00/measure.spec.json": "f340df60158c830a183ccc582a3e2d82ab74b07cb44eb1fe3824345711c55184",
+    "mutex-cacheline-c16-kdlock-local-w100-t16-r00/session.json": "b13dfe4a1c7b979ed209c8ec49e0a5ed5be353a5e03aec68c7847ceb59c75ce3",
+    "mutex-cacheline-c16-kdlock-local-w100-t16-r00/warmup.counts.json": "9c967caf6ead804f52372791bb1e23678471cf2d86547d083f07c62e151f176f",
+    "mutex-cacheline-c16-kdlock-local-w100-t16-r00/warmup.json": "c5fe41305caf9bd12a8c45ee3e9ad83cb56c61bd7a221df782804afb7d9a09a4",
+    "mutex-cacheline-c16-kdlock-local-w100-t16-r00/warmup.spec.json": "33a48ac6daa02cfe2b98361d4ac4b0a966ef145d8c9e4bcee63e799681a6f29a",
+    "mutex-cacheline-c16-kdlock-local-w100-t60-r00/drain.counts.json": "8297b2cd8b8a800af9f31934c16c73b3a4efb3fd7dbefaf23c6dc4649f3c4dfd",
+    "mutex-cacheline-c16-kdlock-local-w100-t60-r00/initial.counts.json": "1392ba43623c9d38953224e26c204402ae2840840291d91504beb73333dfd0b3",
+    "mutex-cacheline-c16-kdlock-local-w100-t60-r00/measure.counts.json": "8297b2cd8b8a800af9f31934c16c73b3a4efb3fd7dbefaf23c6dc4649f3c4dfd",
+    "mutex-cacheline-c16-kdlock-local-w100-t60-r00/measure.json": "8f505379ed6502522660f95fb00ab63ba6ec0e0523d7bc3dc4a5bb79eec4a089",
+    "mutex-cacheline-c16-kdlock-local-w100-t60-r00/measure.spec.json": "cc712f210afbe7051bdc2806e4279d4d91b04ca6878706fc7f39eb542afc9315",
+    "mutex-cacheline-c16-kdlock-local-w100-t60-r00/session.json": "72f7d9322f384c62aeb6f61a3696af84940feb441c90329ea78ce33c45e06c2d",
+    "mutex-cacheline-c16-kdlock-local-w100-t60-r00/warmup.counts.json": "51b91d7b3a0c74d3cfbc91827ac7c60aed46c7dc6c6a01049851cb1722176e90",
+    "mutex-cacheline-c16-kdlock-local-w100-t60-r00/warmup.json": "12c49aec57e29eb3ba1f3d44e4ee86dce3e29835353b44e4034eb94f2f24725a",
+    "mutex-cacheline-c16-kdlock-local-w100-t60-r00/warmup.spec.json": "b28ac5a48882e9bd27115aadb71bf6ecbb29048608e60ed378d118d97e4d29ed",
+    "parity.json": "55bbeba80ef5abdf44b977a226c8c3ba20579e586572a3c37e3a9241a9ddf47d",
+    "plan.json": "691b461592a3202c7799a6c4b84515b24be27f52edae02a1b2e1d2676df95319",
+    "records.json": "6ce185630e42b6fdec87cc098c154c795681316190c2b804156e1056d4c96325",
+    "source-sha256.json": "60110fe2fa17e9d488183775c120527bdef5aa2a3af5e8be7926fc8f2469d577",
+    "summary.json": "9e8718d1f18cb7f0a2da719a6aea7b84a3684fb4950719e6c8fccc734962646f"
+  },
+  "helper_sha256": "5dd862101eb85920a4d1e9127c8b46bcda6b3909bbb7da00b7962f37fe9f4ef9",
+  "host_qualified": false,
+  "phases_validated": 6,
+  "plan_count": 3,
+  "published_name": "mutex-locality-post64-local",
+  "receipts_root": "bench/results/10.176.26.71/raw/bench/nano-pair-20261026/receipts/mutex-locality-post64-local",
+  "schema": 1,
+  "sessions": [
+    {
+      "arm": "kdlock",
+      "data_ok": true,
+      "drained": true,
+      "execution_class": "NO_JIT",
+      "execution_status": "OK",
+      "jit_complete_share": 0.0,
+      "jit_completions": 0,
+      "jit_entries": 0,
+      "name": "mutex-cacheline-c16-kdlock-local-w100-t01-r00",
+      "phases_validated": [
+        "warmup",
+        "measure"
+      ],
+      "threads": 1,
+      "whole_mops_s": 7.686078167856185
+    },
+    {
+      "arm": "kdlock",
+      "data_ok": true,
+      "drained": true,
+      "execution_class": "NO_JIT",
+      "execution_status": "OK",
+      "jit_complete_share": 0.0,
+      "jit_completions": 0,
+      "jit_entries": 0,
+      "name": "mutex-cacheline-c16-kdlock-local-w100-t16-r00",
+      "phases_validated": [
+        "warmup",
+        "measure"
+      ],
+      "threads": 16,
+      "whole_mops_s": 2.651584523780597
+    },
+    {
+      "arm": "kdlock",
+      "data_ok": true,
+      "drained": true,
+      "execution_class": "NO_JIT",
+      "execution_status": "OK",
+      "jit_complete_share": 0.0,
+      "jit_completions": 0,
+      "jit_entries": 0,
+      "name": "mutex-cacheline-c16-kdlock-local-w100-t60-r00",
+      "phases_validated": [
+        "warmup",
+        "measure"
+      ],
+      "threads": 60,
+      "whole_mops_s": 0.5186392374425217
+    }
+  ],
+  "sessions_validated": 3,
+  "stage": "timed-locality-post64-local",
+  "status": "PASS",
+  "strict_timing_qualification": "FAILED; offline correctness replay cannot qualify host timing",
+  "validator_sha256": {
+    "bench/rwlock_compare/oracle.py": "4756384129ee33ddf5feabf600ff5d4088072ef9e311ce519a77a73382301122",
+    "bench/spin_cacheline/peak.py": "fa90dc91b33c7a52b99168565baad0b210d56e2005cd615047d939414c596ad2"
+  },
+  "validator_source": "Exact archived oracle.py and peak.py in an isolated temporary directory",
+  "verified_hash_counts": {
+    "frozen_binary": 4,
+    "frozen_source": 276,
+    "prepared_provider": 95
+  },
+  "warmup_jit_scope": "Warmup data is exact-validated; independent warmup entry/return deltas were not recorded."
+}

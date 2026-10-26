@@ -1,5 +1,17 @@
 # Performance status
 
+The [per-workload catalog analysis](../bench/results/10.176.26.71/bench/catalog-single-20261026/PERFORMANCE_ANALYSIS.md)
+now covers all 54 lock/API/MM workloads. Its [focused nano follow-up](../bench/results/10.176.26.71/bench/nano-pair-20261026/README.md)
+completed 102 single-round timings and 24 functional cases. The simplified
+16-cacheline mutex with post64 reached 1.435× Native / 1.839× TCLock at 60 workers
+with 98.20% returned writers; it still lost to Native at 8, 16 and 36 workers.
+The one-record mutex and post4 locality controls also retain their Native losses.
+Read-mostly rwsem beats Native without JIT execution and remains below TCLock.
+These exploratory results motivate the [new nano defaults](../bench/nano/README.md),
+not a universal best case or qualified repeated baseline. Final drain retained
+the recovery boot and original 73 modules; external benchmark modules changed
+taint from 0 to 12288, with no kernel fault recorded.
+
 The [October 26 single-round catalog](../bench/results/10.176.26.71/bench/catalog-single-20261026/README.md)
 attempted all 51 runnable lock/API configurations on the standard 21-count grid:
 3,166 valid timed measurements and 47 drained KD xattr helper-preparation

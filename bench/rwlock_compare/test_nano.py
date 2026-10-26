@@ -29,6 +29,12 @@ class NanoTests(unittest.TestCase):
             self.assertTrue(all(r['lock_kind'] == family and r['write_percent'] == percent and
                                 r['repeat'] == 0 and r['workload'] ==
                                 ('cacheline' if name == 'mutex-locality' else 'nano') for r in plan))
+            self.assertEqual({r['post_work_rounds'] for r in plan},
+                             {64 if name == 'mutex-locality' else 4})
+        args.post_work_rounds = 4
+        for _, argv in launcher.commands(args):
+            plan = run.make_plan(run.parser().parse_args(argv[2:]))
+            self.assertTrue(all(r['post_work_rounds'] == 4 for r in plan))
 
     def test_locality_profile_checks_every_counter_and_returned_body(self):
         args = run.parser().parse_args(['--lock-kind', 'mutex', '--workloads', 'cacheline',
