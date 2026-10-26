@@ -1,5 +1,11 @@
 # Built-in mmap lock performance
 
+The separate [exclusive-writer candidate plan](../../docs/design/rwsem_implementation.md#exclusive-writer-candidate-validation-plan)
+tracks source-only commit `5bc517f`, its recovery-only first checks and a bounded
+baseline/candidate comparison. It has no build, runtime or performance result.
+That candidate requires new image/profile and subset-runner bindings; the
+`kdmm31` tooling and historical evidence below cannot validate its changed lock.
+
 Current work is throughput only. The prospective `plain-scaling-v1` plan selects
 **126 plain sessions** across 21 worker counts, Native/KD and three repetitions.
 It has [41 focused mocked test passes](../results/10.176.26.71/tests/mmap-scaling-plan-20261026/README.md);

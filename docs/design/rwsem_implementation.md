@@ -12,6 +12,12 @@ at `b8d9137` confirms that the rwsem implementation, public rwsem headers and mm
 overlay are unchanged since that correction. The historical `c21345b`
 measurements predate the correction and do not establish its performance.
 
+The isolated `codex/rwsem-wake-one-20261026` candidate at `5bc517f` changes
+ordinary writer phase waits to exclusive waiters and phase reopening to
+`wake_up()`. It is source-reviewed only: no candidate compilation, runtime
+validation or performance gain is recorded. The validated baseline remains
+separate. See the [bounded validation plan](#exclusive-writer-candidate-validation-plan).
+
 [`kd_rwsem.h`](../../include/kd_rwsem.h) provides concurrent sleeping readers and
 ordinary exclusive writers. The explicit outer-writer interface in
 [`kd_rwsem_direct.h`](../../include/kd_rwsem_direct.h) also permits writer
@@ -187,6 +193,16 @@ reservation, so admission cannot reopen while that wait remains live. Fully
 ordered count/phase updates precede the lockless `waitqueue_active()` checks
 and pair with waitqueue enrolment and predicate rechecks.
 
+In the exclusive-writer candidate, all three ordinary blocking writer variants
+enqueue exclusive phase waiters. Readers and outer reservations remain
+nonexclusive: Linux puts them before exclusive tail waiters. Phase reopening
+notifies that nonexclusive prefix and at most one successfully awakened
+exclusive waiter per wake invocation. Every awakened caller still has to
+acquire its own admission; this is not an ownership handoff. Fresh callers and
+polling writers can still compete, and separate phase releases can wake further
+writers. Reader-drain release still broadcasts because several outer reservations
+can be waiting for the same readers. No deferred wake or new object field is added.
+
 Read trylock's speculative rollback uses the same ordered decrement as read
 unlock. IRQ-disabled or preemption-disabled callers cannot enter a waitqueue or
 scheduler lock there: they might already hold `rq_lock`. They only decrement.
@@ -222,7 +238,9 @@ reduces throughput in some two-worker cases; acceptance retains that limitation.
 
 The polling bound counts predicate invocations, not elapsed time: the existing
 outer-reservation predicate can retry its compare/exchange internally. The
-fallback retains `wait_event()` enrolment, condition rechecks and scheduling.
+fallback retains wait-event enrolment, condition rechecks and scheduling;
+the candidate's ordinary writer uses `wait_event_exclusive_cmd()` with empty
+commands around the usual `schedule()`.
 Interruptible and killable acquisitions bypass the 16,384-probe polling stage;
 their reader-drain waits use the timed recheck and retain their cancellation
 rules. In particular, mmap/munmap's `kd_down_write_killable()` path does not run
@@ -238,6 +256,15 @@ KD physical gate locally, and drains readers while it may sleep. An unavailable
 admission phase is itself a sleeping wait. Interruptible/killable acquisition
 cancels at an applicable wait without retaining the phase or physical gate.
 Failure during reader drainage releases both before reporting `-EINTR`.
+
+The candidate relies on Linux's exclusive wait macros, which check the
+reservation condition before reporting a pending signal. A selected writer
+either consumes an open phase or observes another reservation whose release
+will notify the queue again. Signal cancellation removes the stack waiter under
+the waitqueue lock. Post-reservation cancellation still releases the physical
+gate before reopening admission. This source argument needs the focused
+successor-progress regression below; the old single-waiter cancellation results
+do not establish that race for this candidate.
 
 Ordinary unlock releases the KD physical gate before reopening admission.
 Downgrade publishes its reader count while it still owns both `-1` admission
@@ -259,6 +286,119 @@ Linux rwsem's reader batching or fairness policy, and sustained outer-writer
 arrivals can delay those waiters. It supplies no bounded-wait guarantee or
 implied throughput advantage. The selected mutex's general oversubscription
 limitations remain separate from the rwsem reader-drain solution.
+
+## Exclusive-writer candidate validation plan
+
+This is a proposal, not live authorization or a result. Implementation commit
+`5bc517f31919630e2b0bb6ce48854737ef51aba8` is based on
+`3e0e5971de9d87797520b28a5b7da25d34ae8817`; the baseline lock bytes are still
+those of `e6fc371`. The source-only commit changes `kernel_module/kd_rwsem.c`.
+Static review against the captured Linux 6.1 wait macros and scheduler waitqueue
+code found no blocking defect; `git diff --check` passed. The generated mmap
+source retains these ordinary-writer changes. Neither source review nor the
+earlier 352 standalone / 137 Native / 161 KD assertions validates this candidate.
+
+The hypothesis is reduced contention from waking all ordinary writers for one
+available phase. The qualified saved 16-worker pair was 108,245.61 Native versus
+35,406.14 KD cycles/s. Saved scaling controls also show increasing worker CPU
+cost as contention rises, but contain no wake-count profile that attributes the
+gap quantitatively. Selecting one sleeping writer can trade CPU work for
+scheduling delay if that task is descheduled. Measure both gains and regressions;
+retain the one-jiffy reader-drain fallback and its known latency cost.
+
+**First approval: recovery-only checks.** Coordinate with the active testing
+owner, verify idle state and the real recovery snapshot, then synchronize only
+this isolated branch's frozen inputs. If the guest is not already the verified
+`6.1.159-kdclobber2` recovery environment, stop and request a separate bounded
+cycle. Do not reboot to satisfy this stage. Following
+[VM operations](../operations/VM.md), use fresh external output paths and the
+pinned environment. Run each command once, in order, stopping on failure:
+
+```sh
+# Guest only, after approval and verified idle synchronization.
+cd /root/host_fs/kdlock
+export PATH=/root/kdlock-translation-venv-20261019/bin:$PATH
+export LC_ALL=C
+make -C tests/unit run PYTHON=python3 PY_TESTS=
+python3 tests/kernel/mmap_lock/irq/run.py \
+  --kernel-source /root/linux-6.1.159-kdclobber2 \
+  --kernel-baseline /root/kdlock-kernel-baselines/mutex-clobber2-20260919 \
+  --output /root/kdlock-evidence/10.176.26.71/tests/rwsem-wake-one-20261026/standalone-1
+```
+
+Bounds: two basic programs, one standalone probe load/run/normal-unload cycle,
+five fresh `W=1` production objects and its small probe module; no kernel image
+build, installation, reboot, full provider, timing or full suite. Supervise basic
+checks for at most 180 seconds and the standalone runner for 600 seconds. A
+deadline stops new work and requires inspection; it does not prove drain or
+authorize killing blocked workers or forced unload. Do not use `--reuse-objects`
+with the changed lock source. The old probe recorded 352 assertions; require its
+current complete result contract and zero errors, atomic wakes and live owners,
+rather than treating a count alone as success. This stage is standalone adapter
+validation, not actual `mmap_lock` runtime validation. `scope.py` would duplicate
+the object build here and is unnecessary while wrappers/generation are unchanged.
+
+**Focused coverage before candidate acceptance.** Prepare one bounded regression
+fixture before requesting its execution: multiple queued ordinary writers with
+the first writer signalled before and during reopening, a successor that must
+finish, and queued readers/outer reservations with an ordinary writer. Cover
+interruptible and killable cancellation, nonfatal killable signals, downgrade
+and final outer-reservation release. Require observed enqueue/wake ordering,
+correct exclusion, joins and zero phase/drain/gate ownership; a race not observed
+is a coverage gap. Limit to 16 iterations per cancellation ordering and signal
+mode, with five-second progress deadlines and no retries after failure. Keep
+hooks in correctness-only code. Existing standalone and actual-mm probes have
+only one waiter per cancellation; they cannot replace this regression. The
+separate provider-backed `tests/kernel/rwsem/run.py` covers ten cancellations and
+outer ordering but also lacks the selected-writer/successor race. Any future use
+needs separate live scope; do not repeat the unchanged-provider diagnostic or
+block built-in mmap measurements indefinitely on its allocator coverage gap.
+
+**Later kernel/performance approval.** Obtain separate approval before guest
+reconstruction/build using the
+[authenticated reconstruction inputs](../../kernel_integration/mmap_lock/README.md#reusing-the-corrected-build).
+Prepare an isolated candidate tree. Preserve `kdmm31`, its
+baseline artifacts and recovery `kdclobber2`; do not overwrite them. A new image
+needs its own release, Build ID, image/configuration/BTF/module hashes and exact
+boot entries. Verify native MM bodies and configuration against the baseline;
+record necessary release metadata differences. Rebuild only changed/bound
+artifacts. The current performance tools bind `kdmm31`, so a reviewed candidate
+profile and bounded subset controller/report support must exist before install/run
+approval; pointing the old profile at a new image is invalid. Historical
+`phase_controls.py`/`phase_observation.py` bindings are not candidate validation.
+The current paired runner restricts prepared-window measurement to plain plans;
+the sampled phase below also needs a reviewed extension that binds the same
+window and worker policies. It is not runnable through the existing sampled CLI.
+
+The proposed comparison is 1, 16 and 60 workers, CPUs `0..N-1`, collector 63,
+unchanged shared-mm one-page mmap/munmap workload and two-second target. Use three
+Native/KD pairs per count on each of the clean baseline and candidate images:
+36 plain sessions. Add three paired 16-worker sessions per image using the
+existing sampled mode: 12 separate sessions, for **48 timed sessions maximum**.
+Do not pool sampled/plain results. Each image compares Native/KD with only its
+backend boot argument differing. Reuse the exact user client where hashes allow;
+bind each payload to that image's CRC/BTF. Use the existing five-block alternation
+per image, at most ten experimental boots plus one final recovery boot. Adjacent
+repetitions sharing a boot are not independent boot replications. Re-run the
+actual-mm API probe once per candidate backend; old actual-mm results remain
+baseline evidence only.
+
+Before requesting that cycle, freeze the image/entry names, commands, focused
+test outputs, at most four fixed workload proofs and sixteen timed controls,
+host-capture/storage/runtime budgets, and the exact return-to-recovery command.
+The 48 measurements and 16 controls alone require 96 minutes of 90-second
+settling, before builds, boots, fixed checks, timing, capture or recovery work.
+Keep `mmap-window-v2`, the explicitly reviewed `qemu-workers-v1` manifest,
+90-second settling and current functional/aggregate eligibility rules identical
+across arms. Retain unavailable peak observations and rejected windows; do not
+weaken gates or use later quiet observations to validate rejected runs. Stop at
+the first failed gate without retry. Preserve raw operation counts, wall/worker
+CPU time, per-worker progress, whole-cycle sample counts and p50/p95/p99, paired
+ratios and variability, exact workload counters and normal drain. Compare
+baseline/candidate within each observation class and report regressions. No
+isolated lock-latency claim, TCLock arm, MM-body campaign or provider diagnostic
+is included. Recovery must verify the recorded original module set, Build ID,
+taint, idle state and empty pending boot; never infer current health from old logs.
 
 ## Why the archived delegation cannot be copied unchanged
 
