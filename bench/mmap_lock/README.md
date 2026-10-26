@@ -15,6 +15,13 @@ stopped at the 40-worker full-cohort peak-window check. All 126 measurements
 remain unrun; recovery returned to 73 modules, zero taint and no pending boot.
 Missing policy selection retains strict behavior and all historical outcomes.
 The policy guide records the continuation bounds; it authorizes no retry.
+The separately requested [five remaining KD aggregate controls](../results/10.176.26.71/bench/mmap-aggregate-tail-20261026/README.md)
+then completed at 44/48/52/56/60 workers using `dd08945`. All passed aggregate
+checks and drain with peaks unavailable. These single runs do not fill the
+126-session paired matrix or reclassify earlier failures. Recovery was verified
+at 11:33:52 Asia/Shanghai on October 26: 73 modules, zero taint, idle and no
+pending boot. The result record retains raw counts, durations, hashes and scope.
+
 The [prepared-window interface](#prepared-window-interface) passed offline
 tooling checks. Its [small live attempt](../results/10.176.26.71/bench/mmap-window-screen-20261026/README.md)
 stopped after the Native boot: admission captured 82 QEMU tasks, which the

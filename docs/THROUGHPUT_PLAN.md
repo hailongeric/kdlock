@@ -105,10 +105,14 @@ assumptions. The separately authorized
 ran at `30af034`: KD completed its functional check with an inconclusive writer
 observation and passed 15 controls, then failed the 40-worker positive
 full-cohort peak-window check. It consumed 17 payload cycles, two boots and
-three full captures, with zero measured cases, and restored recovery. The next
-step is to review the saved checkpoint/window interaction; the failed result
-cannot be made acceptable by changing criteria retroactively. Fresh review and
-approval are required for another live cycle.
+three full captures, with zero measured cases, and restored recovery. That
+failed result retains its verdict. A separately requested
+[five-case aggregate run](../bench/results/10.176.26.71/bench/mmap-aggregate-tail-20261026/README.md)
+subsequently completed the missing 44/48/52/56/60-worker KD counts, with peaks
+unavailable and aggregate/drain checks passed. It used five payload cases, two
+boots and three captures, then verified recovery before its deadline. These
+single controls do not complete the 126-session paired matrix. No further live
+cycle is authorized by this roadmap.
 
 ## Expansion after the first qualified baseline
 

@@ -93,8 +93,14 @@ failed the unchanged full-cohort peak-window requirement: 139 candidate windows,
 none with positive published progress for all 40 workers. All workers joined
 and references drained; the failure remains a rejected control, with zero
 measured cases. Recovery restored 73 modules, zero taint and no pending boot.
-Review the retained 256-cycle checkpoints and 300 ms window contract before
-proposing another paired cycle. No repeated baseline or optimization is claimed.
+The subsequent [five-count aggregate request](../bench/results/10.176.26.71/bench/mmap-aggregate-tail-20261026/README.md)
+completed 44/48/52/56/60-worker KD runs at 9,711.882 / 8,573.067 / 7,715.067 /
+7,161.749 / 6,710.938 pairs/s. Every aggregate passed and drained; each peak was
+unavailable. These are separate single controls under `dd08945`, with no new
+Native pairing, repeated baseline or optimization claim. Five payload cases,
+two boots and three captures were consumed. Recovery passed at 11:33:52
+Asia/Shanghai on October 26 with 73 original modules, taint 0, idle and no
+pending boot. The linked record retains exact counts, durations and hashes.
 
 The historical records below retain their original source, topology, caller
 shell and instrumentation identities. Historical complete-operation p95 remains
