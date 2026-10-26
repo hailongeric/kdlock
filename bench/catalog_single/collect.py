@@ -3,6 +3,7 @@
 import argparse
 import io
 import json
+import shlex
 from pathlib import Path
 import subprocess
 import tarfile
@@ -19,8 +20,30 @@ SSH = ['ssh', '-o', 'BatchMode=yes', '-o', 'ConnectTimeout=10',
 
 def capture(name):
     script = ROOT / 'bench/results/10.176.26.71/bench/mutex32-native-tclock-20261020/capture-host.py'
+    payload = script.read_text()
+    marker = 'print(json.dumps(out,indent=2))'
+    assert payload.count(marker) == 1
+    activity = '''
+out['task_activity'] = []
+for qemu in out['qemu']:
+    for task in qemu['tasks']:
+        base = Path('/proc', str(qemu['pid']), 'task', str(task['tid']))
+        first = (base/'stat').read_text()
+        fields = first[first.rfind(')')+2:].split()
+        state = dict(task, start_ticks=int(fields[19]), state=fields[0],
+                     schedstat=(base/'schedstat').read_text().strip())
+        if not task['comm'].startswith('CPU '):
+            status = dict(line.split(':',1) for line in (base/'status').read_text().splitlines() if ':' in line)
+            assert int(status['Tgid']) == qemu['pid'] and int(status['Pid']) == task['tid']
+            state['io'] = (base/'io').read_text()
+            state['wchan'] = (base/'wchan').read_text().strip()
+        last = (base/'stat').read_text()
+        assert int(last[last.rfind(')')+2:].split()[19]) == state['start_ticks']
+        out['task_activity'].append(state)
+'''
+    payload = payload.replace(marker, activity + '\n' + marker)
     result = subprocess.run([*SSH, 'eric@10.176.26.71', 'timeout 45 sudo -n python3 -'],
-                            input=script.read_bytes(), capture_output=True, timeout=60)
+                            input=payload.encode(), capture_output=True, timeout=60)
     (RAW / (name + '-host.json')).write_bytes(result.stdout)
     (RAW / (name + '-host.stderr')).write_bytes(result.stderr)
     result.check_returncode()
@@ -51,7 +74,21 @@ def compare(before, after):
     return issues
 
 
-def collect(name):
+def exploratory_check(before, after):
+    issues = [issue for issue in compare(before, after) if not issue.startswith('QEMU tasks changed:')]
+    if len(after['qemu']) != 1:
+        return issues
+    original = {t['tid']: t for t in before['qemu'][0]['tasks']}
+    current = {t['tid']: t for t in after['qemu'][0]['tasks']}
+    if any(current.get(tid) != task for tid, task in original.items()):
+        issues.append('original QEMU task identity or placement changed')
+    if any(t['comm'] != 'worker' or t['affinity'] != [63]
+           for tid, t in current.items() if tid not in original):
+        issues.append('unknown auxiliary task or placement')
+    return issues
+
+
+def collect(name, exploratory=False):
     if not name or any(c not in 'abcdefghijklmnopqrstuvwxyz0123456789-' for c in name):
         raise ValueError('invalid workload name')
     after = capture(name)
@@ -60,8 +97,13 @@ def collect(name):
     source = RAW / name
     source.mkdir(exist_ok=False)
     files = ['plan.json', 'records.json', 'summary.json', 'environment.json',
-             'source-sha256.json', 'binary-sha256.json']
-    command = f'timeout 30 tar -C {GUEST}/{name} -cf - ' + ' '.join(files)
+             'source-sha256.json', 'binary-sha256.json', 'binaries.json', 'failure.json',
+             'continuation-tool.json', 'continuation-result.json', 'records-before-continuation.json']
+    script = ('import pathlib,sys,tarfile; '
+              f'p=pathlib.Path({GUEST + "/" + name!r}); '
+              't=tarfile.open(fileobj=sys.stdout.buffer,mode="w|"); '
+              f'[t.add(p/n,arcname=n) for n in {files!r} if (p/n).is_file()]; t.close()')
+    command = 'timeout 30 python3 -c ' + shlex.quote(script)
     result = subprocess.run([*SSH, '-p', '2222', 'root@10.176.26.71', command],
                             capture_output=True, timeout=45)
     (source / 'receipts.tar').write_bytes(result.stdout)
@@ -72,19 +114,21 @@ def collect(name):
             if member.name not in files or not member.isfile():
                 raise ValueError('unexpected receipt member')
             (source / member.name).write_bytes(archive.extractfile(member).read())
-    qualification = dict(host_endpoints_passed=not issues, issues=issues,
+    qualification = dict(host_endpoints_passed=not issues, strict_qualified=not issues and not exploratory,
+                         exploratory=exploratory, issues=issues,
                          baseline_tasks=len(before['qemu'][0]['tasks']),
                          endpoint_tasks=len(after['qemu'][0]['tasks']),
                          scope='Whole-workload host endpoints, not continuous observation')
     (source / 'qualification.json').write_text(json.dumps(qualification, indent=2) + '\n')
-    rows = render(source, REPORT / name, name, not issues)
+    rows = render(source, REPORT / name, name, not issues and not exploratory, exploratory=exploratory)
     print(json.dumps(dict(workload=name, measured=sum(r['whole_mops_s'] is not None for r in rows),
                          planned=len(rows), **qualification), indent=2), flush=True)
-    return not issues
+    return not exploratory_check(before, after) if exploratory else not issues
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('workload')
+    parser.add_argument('--exploratory', action='store_true')
     args = parser.parse_args()
-    raise SystemExit(0 if collect(args.workload) else 2)
+    raise SystemExit(0 if collect(args.workload, args.exploratory) else 2)

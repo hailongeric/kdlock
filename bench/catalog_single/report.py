@@ -6,7 +6,7 @@ import json
 from pathlib import Path
 
 
-def render(source, output, title, host_qualified):
+def render(source, output, title, host_qualified, exploratory=False):
     import matplotlib
     matplotlib.use('Agg')
     import matplotlib.pyplot as plt
@@ -19,8 +19,9 @@ def render(source, output, title, host_qualified):
     for spec in plan:
         row = by_name.get(spec['name'], {})
         m = row.get('measurement') or {}
-        valid = (row.get('execution_status') == 'OK' and row.get('drained') is True
-                 and m.get('complete') is True and m.get('data_ok') is True)
+        data_ok = (m.get('ok') is True if 'kind' in spec else
+                   m.get('complete') is True and m.get('data_ok') is True)
+        valid = row.get('execution_status') == 'OK' and row.get('drained') is True and data_ok
         rate = m['completed'] * 1e3 / m['wall_ns'] if valid else None
         peak = (m.get('peak') or {}).get('throughput_ops_s') if valid else None
         evidence = row.get('execution_class', row.get('jit_status',
@@ -28,6 +29,8 @@ def render(source, output, title, host_qualified):
         if spec['arm'] == 'kdlock' and row.get('jit_completions') is not None:
             evidence = ('RETURNED_JIT' if row['jit_completions'] else
                         'PARTIAL_JIT' if row.get('jit_bodies') else 'NO_JIT')
+        if row.get('execution_status', 'NOT_RUN') != 'OK':
+            evidence = row.get('execution_status', 'NOT_RUN')
         rows.append(dict(workers=spec['threads'], backend=spec['arm'],
                          whole_mops_s=rate, peak_mops_s=peak / 1e6 if peak else None,
                          status=row.get('execution_status', 'NOT_RUN'),
@@ -43,6 +46,8 @@ def render(source, output, title, host_qualified):
         writer.writerows(rows)
     label = ('Host endpoints passed' if host_qualified else
              'UNQUALIFIED: host endpoint checks did not pass')
+    if exploratory:
+        label = 'EXPLORATORY: strict timing qualification remains failed'
     text = [f'# {title}', '', 'One timed repetition per point; no repeat variability estimate.',
             f'{label}. Rates include post-lock work. Failed/unrun cases have no plotted rate.', '',
             '| Workers | Native Mops/s | TCLock Mops/s | KD Mops/s | KD execution |',
@@ -62,9 +67,10 @@ def render(source, output, title, host_qualified):
     for backend, name, color in [('native', 'Native', '#64748b'),
                                   ('tclock', 'TCLock', '#db8b20'),
                                   ('kdlock', 'KD', '#147d92')]:
-        selected = [r for r in rows if r['backend'] == backend and r['whole_mops_s'] is not None]
+        selected = [r for r in rows if r['backend'] == backend]
         if selected:
-            ax.plot([r['workers'] for r in selected], [r['whole_mops_s'] for r in selected],
+            ax.plot([r['workers'] for r in selected],
+                    [r['whole_mops_s'] if r['whole_mops_s'] is not None else float('nan') for r in selected],
                     marker='o', markersize=4, label=name, color=color)
     ax.set(xlabel='Workers', ylabel='Whole-run throughput (Mops/s)', ylim=(0, None),
            title=title + '\nOne repetition per point')

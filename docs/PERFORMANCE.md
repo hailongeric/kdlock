@@ -1,5 +1,14 @@
 # Performance status
 
+The [October 26 single-round catalog](../bench/results/10.176.26.71/bench/catalog-single-20261026/README.md)
+attempted all 51 runnable lock/API configurations on the standard 21-count grid:
+3,166 valid timed measurements and 47 drained KD xattr helper-preparation
+failures. Each point was measured at most once. Per-workload tables and charts
+retain failures and execution classes. The user authorized exploratory
+continuation after QEMU task membership changed; strict timing qualification
+remains failed. These results do not replace repeated accepted baselines.
+The separate mmap/fault extension is pending.
+
 Current priority is a [throughput-only Native/KD comparison](THROUGHPUT_PLAN.md)
 across documented lock workloads, actual shared-mm mmap and actual page faults.
 Substantial improvement is a hypothesis to test; report regressions honestly.

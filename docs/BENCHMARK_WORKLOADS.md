@@ -21,6 +21,14 @@ reader/writer runner's historical default and `--full-matrix` stop at 36 workers
 Synthetic bodies run repeatedly inside one ioctl per phase; API workers issue
 syscalls individually. Include both categories when requesting the full catalog.
 
+The explicitly requested [single-round October 26 screen](../bench/results/10.176.26.71/bench/catalog-single-20261026/README.md)
+attempted all 51 currently runnable lock/API configurations on that grid.
+It retains 3,166 valid timed observations and 47 drained KD xattr preparation
+failures. Its exploratory host policy and one repetition do not establish
+strict timing qualification or repeat variability. Separate mmap/fault suites
+are being prepared under their own identities; planned 64-node lists remain
+unimplemented.
+
 The [current mutex comparison](../bench/results/10.176.26.71/bench/mutex32-native-tclock-20261020/README.md)
 covers c01/post64, c08/post64, exclusive-update RCUHT, seek set/end, pipebytes
 n16 and pipecap n16 with fresh Native/TCLock/KD controls. Its 567 valid, drained

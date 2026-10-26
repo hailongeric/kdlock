@@ -50,7 +50,8 @@ def commands():
                 name = f'{kind}-{query}-n{count}'
                 yield name, ['bench/real_api/run.py', *arms, *common,
                              '--kinds', kind, '--queries', query, '--entries', str(count),
-                             '--mutex-api', 'public', '--output', GUEST + '/' + name]
+                             *(['--mutex-api', 'public'] if kind in ('pipebytes', 'pipecap', 'seek') else []),
+                             '--output', GUEST + '/' + name]
 
 
 if __name__ == '__main__':
