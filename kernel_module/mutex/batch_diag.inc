@@ -16,7 +16,17 @@ MODULE_INFO(mutex_batch_diag, __stringify(KDLOCK_MUTEX_DIAGNOSTICS));
 #if KDLOCK_MUTEX_DIAGNOSTICS
 #include <linux/bitops.h>
 
-#define KD_MUTEX_DIAG_BINS 33
+/* Finished bodies cannot exceed the configured attempt cap. Deferred nodes
+ * consume the combiner's non-refilling 64-entry scan budget. Keep only bins
+ * covering those bounded values: unnecessary full-u32 histograms exceeded
+ * the captured guest's reserved module per-CPU space before provider init.
+ * Bin zero stores zero; the last bins cover 16384..32767 and 64..127. */
+#define KD_MUTEX_DIAG_COMPLETED_BINS 16
+#define KD_MUTEX_DIAG_DEFERRED_BINS 8
+#if KDLOCK_SPIN_BATCH <= 0 || \
+    KDLOCK_SPIN_BATCH >= (1U << (KD_MUTEX_DIAG_COMPLETED_BINS - 1))
+#error "mutex diagnostic completed histogram does not cover KDLOCK_SPIN_BATCH"
+#endif
 #define KD_MUTEX_DIAG_REASONS(X) \
 	X(UNCLASSIFIED, unclassified) \
 	X(INITIAL_UNEXECUTABLE, initial_unexecutable) \
@@ -74,8 +84,8 @@ struct kd_mutex_batch_totals {
 #define KD_MUTEX_DIAG_FIELD(name) u64 name;
 	KD_MUTEX_DIAG_TOTALS(KD_MUTEX_DIAG_FIELD)
 #undef KD_MUTEX_DIAG_FIELD
-	u64 completed_hist[KD_MUTEX_DIAG_BINS];
-	u64 deferred_peak_hist[KD_MUTEX_DIAG_BINS];
+	u64 completed_hist[KD_MUTEX_DIAG_COMPLETED_BINS];
+	u64 deferred_peak_hist[KD_MUTEX_DIAG_DEFERRED_BINS];
 	u64 stop_reason[KD_MUTEX_DIAG_REASON_COUNT];
 };
 static DEFINE_PER_CPU(struct kd_mutex_batch_totals, kd_mutex_batch_totals);
@@ -169,21 +179,23 @@ static int kd_mutex_batch_stats_get(char *buffer, const struct kernel_param *kp)
 		total.name += READ_ONCE(per_cpu(kd_mutex_batch_totals, cpu).name);
 		KD_MUTEX_DIAG_TOTALS(KD_MUTEX_DIAG_READ)
 #undef KD_MUTEX_DIAG_READ
-		for (i = 0; i < KD_MUTEX_DIAG_BINS; i++) {
+		for (i = 0; i < KD_MUTEX_DIAG_COMPLETED_BINS; i++)
 			total.completed_hist[i] += READ_ONCE(
 				per_cpu(kd_mutex_batch_totals, cpu).completed_hist[i]);
+		for (i = 0; i < KD_MUTEX_DIAG_DEFERRED_BINS; i++)
 			total.deferred_peak_hist[i] += READ_ONCE(
 				per_cpu(kd_mutex_batch_totals, cpu).deferred_peak_hist[i]);
-		}
 		for (i = 0; i < KD_MUTEX_DIAG_REASON_COUNT; i++)
 			total.stop_reason[i] += READ_ONCE(
 				per_cpu(kd_mutex_batch_totals, cpu).stop_reason[i]);
 	}
 #define KD_MUTEX_DIAG_PRINT(fmt, ...) \
 	(length += scnprintf(buffer + length, PAGE_SIZE - length, fmt, ##__VA_ARGS__))
-	KD_MUTEX_DIAG_PRINT("{\"schema\":1,\"compiled\":1,\"total_cap\":%u,"
-		"\"numa_boundary\":256,\"deferred_handoff\":8,\"scan_budget\":64,",
-		kd_mutex_batch_size);
+	KD_MUTEX_DIAG_PRINT("{\"schema\":2,\"compiled\":1,\"total_cap\":%u,"
+		"\"numa_boundary\":256,\"deferred_handoff\":8,\"scan_budget\":64,"
+		"\"completed_hist_bins\":%u,\"deferred_peak_hist_bins\":%u,",
+		kd_mutex_batch_size, KD_MUTEX_DIAG_COMPLETED_BINS,
+		KD_MUTEX_DIAG_DEFERRED_BINS);
 #ifdef NUMA_AWARE
 	KD_MUTEX_DIAG_PRINT("\"numa_aware\":1,");
 #else
@@ -194,11 +206,11 @@ static int kd_mutex_batch_stats_get(char *buffer, const struct kernel_param *kp)
 	KD_MUTEX_DIAG_TOTALS(KD_MUTEX_DIAG_PRINT_TOTAL)
 #undef KD_MUTEX_DIAG_PRINT_TOTAL
 	KD_MUTEX_DIAG_PRINT("\"completed_hist\":[");
-	for (i = 0; i < KD_MUTEX_DIAG_BINS; i++)
+	for (i = 0; i < KD_MUTEX_DIAG_COMPLETED_BINS; i++)
 		KD_MUTEX_DIAG_PRINT("%s%llu", i ? "," : "",
 			(unsigned long long)total.completed_hist[i]);
 	KD_MUTEX_DIAG_PRINT("],\"deferred_peak_hist\":[");
-	for (i = 0; i < KD_MUTEX_DIAG_BINS; i++)
+	for (i = 0; i < KD_MUTEX_DIAG_DEFERRED_BINS; i++)
 		KD_MUTEX_DIAG_PRINT("%s%llu", i ? "," : "",
 			(unsigned long long)total.deferred_peak_hist[i]);
 	KD_MUTEX_DIAG_PRINT("],\"stop_reason\":{");

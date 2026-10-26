@@ -16,8 +16,11 @@ ifneq ($(filter nano cacheline,$(RB_WORKLOAD)),$(RB_WORKLOAD))
 $(error mutex requires the nano pair or cacheline locality workload)
 endif
 ifeq ($(RB_WORKLOAD),cacheline)
-ifneq ($(RB_LINES),16)
-$(error mutex cacheline locality requires RB_LINES=16)
+ifneq ($(words $(RB_LINES)),1)
+$(error mutex cacheline workload requires one RB_LINES value)
+endif
+ifeq ($(filter $(RB_LINES),1 2 4 8 16),)
+$(error mutex cacheline workload requires RB_LINES=1,2,4,8,16)
 endif
 endif
 else ifneq ($(RB_LOCK_KIND),rwlock)

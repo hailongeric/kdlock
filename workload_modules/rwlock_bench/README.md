@@ -29,9 +29,10 @@ Ordinary reader/writer cacheline selections use `RB_LINES=1` or `RB_LINES=8`.
 The stage 1 [nano profiles](../../bench/nano/README.md) also use this payload.
 `RB_WORKLOAD=nano RB_LINES=2` selects two logical 64-bit words in one 64-byte
 record, not two cachelines. Its writers update both words and its readers check
-agreement. The mutex arm accepts this all-writer body or `RB_WORKLOAD=cacheline
-RB_LINES=16`, which updates sixteen separate cachelines. Mutex cacheline sizes
-other than 16 are rejected. `RB_MUTEX_DELEGATE=1` selects public ABI2 calls;
+agreement. The mutex arm accepts this all-writer body or `RB_WORKLOAD=cacheline`
+with `RB_LINES=1,2,4,8,16`, updating that many separately padded counters. The
+default locality nano uses 16; the other sizes support controlled critical-section
+size comparisons with the same operation loop. `RB_MUTEX_DELEGATE=1` selects public ABI2 calls;
 zero selects the callable local control. All arms retain exact data and drain
 checks. The [project roadmap](../../docs/ROADMAP.md) keeps these module-object
 comparisons separate from actual-MM and final kernel replacement.

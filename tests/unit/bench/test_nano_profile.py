@@ -16,8 +16,9 @@ profile = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(profile)
 
 
-BATCH_METADATA = dict(schema=1, compiled=1, total_cap=1024, numa_boundary=256,
-                      deferred_handoff=8, scan_budget=64, numa_aware=1)
+BATCH_METADATA = dict(schema=2, compiled=1, total_cap=1024, numa_boundary=256,
+                      deferred_handoff=8, scan_budget=64, numa_aware=1,
+                      completed_hist_bins=16, deferred_peak_hist_bins=8)
 BATCH_COUNTERS = ('batches', 'attempts', 'jit_completed', 'native_completed',
                   'execution_refusals', 'jit_local', 'jit_remote', 'deferred_total',
                   'scan_steps', 'scan_exhausted_batches', 'small_fifo_batches')
@@ -25,9 +26,9 @@ BATCH_COUNTERS = ('batches', 'attempts', 'jit_completed', 'native_completed',
 
 def batch_snapshot(scale=1):
     """Five possible batches, including zero, native and returned-JIT bodies."""
-    completed = [0] * 33
+    completed = [0] * 16
     completed[0], completed[1], completed[2], completed[4] = 2, 1, 1, 1
-    deferred = [0] * 33
+    deferred = [0] * 8
     deferred[0], deferred[1], deferred[4] = 3, 1, 1
     result = dict(BATCH_METADATA, batches=5, attempts=12, jit_completed=10,
                   native_completed=1, execution_refusals=1, jit_local=7, jit_remote=3,
@@ -207,10 +208,12 @@ class NanoBatchSnapshotTests(unittest.TestCase):
 
     def test_schema_metadata_and_shapes_are_required(self):
         replacements = [
-            (('schema',), 2), (('schema',), True), (('compiled',), 0),
+            (('schema',), 1), (('schema',), True), (('compiled',), 0),
             (('total_cap',), 0), (('numa_boundary',), 128),
             (('deferred_handoff',), 0), (('scan_budget',), 0), (('numa_aware',), 0),
-            (('completed_hist',), [0] * 32), (('deferred_peak_hist',), [0] * 34),
+            (('completed_hist_bins',), 33), (('deferred_peak_hist_bins',), 33),
+            (('completed_hist',), [0] * 15), (('completed_hist',), [0] * 17),
+            (('deferred_peak_hist',), [0] * 7), (('deferred_peak_hist',), [0] * 9),
             (('completed_hist',), {}), (('stop_reason',), []), (('legacy',), []),
         ]
         for keys, replacement in replacements:

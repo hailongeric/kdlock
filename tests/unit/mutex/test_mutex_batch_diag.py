@@ -17,6 +17,9 @@ from test_mutex_terminal import production_sources
 
 MOCKS = r'''
 #define KDLOCK_MUTEX_DIAGNOSTICS 1
+#ifndef KDLOCK_SPIN_BATCH
+#define KDLOCK_SPIN_BATCH 1024
+#endif
 #define DEFINE_PER_CPU(type, name) type name
 #define this_cpu_add(name, value) ((name) += (value))
 #define per_cpu(name, cpu) (name)
@@ -80,10 +83,10 @@ CHECKS = r'''
 #define CHECK_TOTAL(name) CHECK(kd_mutex_batch_totals.name == expected.name);
     KD_MUTEX_DIAG_TOTALS(CHECK_TOTAL)
 #undef CHECK_TOTAL
-    for (unsigned int i = 0; i < KD_MUTEX_DIAG_BINS; i++) {
+    for (unsigned int i = 0; i < KD_MUTEX_DIAG_COMPLETED_BINS; i++)
         CHECK(kd_mutex_batch_totals.completed_hist[i] == expected.completed_hist[i]);
+    for (unsigned int i = 0; i < KD_MUTEX_DIAG_DEFERRED_BINS; i++)
         CHECK(kd_mutex_batch_totals.deferred_peak_hist[i] == expected.deferred_peak_hist[i]);
-    }
     for (unsigned int i = 0; i < KD_MUTEX_DIAG_REASON_COUNT; i++)
         CHECK(kd_mutex_batch_totals.stop_reason[i] == expected.stop_reason[i]);
     CHECK(kd_mutex_batch_totals.batches == kd_mutex_combiner_count);
@@ -101,6 +104,17 @@ EXTRA = r'''
     int length=kd_mutex_batch_stats_get(json_buffer,NULL);
     CHECK(length>0 && length<(int)sizeof(json_buffer));
     printf("DIAG %s",json_buffer);
+    /* Exercise both declared last bins independently of this fixture's
+     * smaller queue. No observation may grow beyond the per-CPU budget. */
+    _Static_assert(sizeof(struct kd_mutex_batch_totals)<=384,
+                   "batch observations exceed the reserved per-CPU budget");
+    memset(&kd_mutex_batch_totals,0,sizeof(kd_mutex_batch_totals));
+    struct kd_mutex_batch_diag boundary={.attempts=32767,.jit_completed=32767,
+        .jit_local=32767,.deferred_total=127,.peak_deferred=127,
+        .reason=KD_MUTEX_DIAG_TOTAL_CAP};
+    kd_mutex_diag_finish(&boundary);
+    CHECK(kd_mutex_batch_totals.completed_hist[KD_MUTEX_DIAG_COMPLETED_BINS-1]==1);
+    CHECK(kd_mutex_batch_totals.deferred_peak_hist[KD_MUTEX_DIAG_DEFERRED_BINS-1]==1);
     /* Every field at u64 maximum must still fit in one complete sysfs page. */
     memset(&kd_mutex_batch_totals,0xff,sizeof(kd_mutex_batch_totals));
     kd_mutex_combiner_count=kd_mutex_jit_success_count=kd_mutex_handoff_count=~0UL;
@@ -138,7 +152,9 @@ def main():
         values = {line.split(' ', 1)[0]: json.loads(line.split(' ', 1)[1])
                   for line in result.stdout.splitlines() if line.startswith(('DIAG ', 'MAX '))}
         sample = values['DIAG']
-        assert sample['schema'] == sample['compiled'] == 1
+        assert sample['schema'] == 2 and sample['compiled'] == 1
+        assert sample['completed_hist_bins'] == len(sample['completed_hist']) == 16
+        assert sample['deferred_peak_hist_bins'] == len(sample['deferred_peak_hist']) == 8
         assert sample['batches'] == 22 == sum(sample['completed_hist'])
         assert sample['batches'] == sum(sample['deferred_peak_hist'])
         assert sample['batches'] == sum(sample['stop_reason'].values())
@@ -151,10 +167,23 @@ def main():
         assert sample['legacy']['jit_success'] == sample['jit_completed']
         maximum = (1 << 64) - 1
         assert values['MAX']['batches'] == maximum
-        assert values['MAX']['completed_hist'] == [maximum] * 33
-        assert values['MAX']['deferred_peak_hist'] == [maximum] * 33
+        assert values['MAX']['completed_hist'] == [maximum] * 16
+        assert values['MAX']['deferred_peak_hist'] == [maximum] * 8
         assert all(value == maximum for value in values['MAX']['stop_reason'].values())
         assert all(value == maximum for value in values['MAX']['legacy'].values())
+
+        # The unchanged queue limit is enforced at build time for diagnostic
+        # configurations; do not silently clamp or discard out-of-range data.
+        for cap in (4096, 32767):
+            subprocess.run(command+[f'-DKDLOCK_SPIN_BATCH={cap}', '-fsyntax-only',
+                                     str(path/'fixture.c')], check=True, timeout=30)
+        for cap in (0, 32768):
+            rejected = subprocess.run(command+[f'-DKDLOCK_SPIN_BATCH={cap}', '-fsyntax-only',
+                                                str(path/'fixture.c')],
+                                      text=True, capture_output=True, timeout=30)
+            assert rejected.returncode != 0 and (
+                'mutex diagnostic completed histogram does not cover KDLOCK_SPIN_BATCH'
+                in rejected.stderr), (cap, rejected.returncode, rejected.stderr)
 
         # Undefined poisoned arguments must disappear before compilation. The
         # condition's own side effect still occurs once with short circuiting.

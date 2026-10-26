@@ -34,8 +34,9 @@ PROFILES = {'mutex': ('nano', 2, 4), 'mutex-locality': ('cacheline', 16, 64)}
 OBSERVATION_PARAMS = ('bench_jit_bodies', 'bench_jit_completions', 'address_guard_count')
 UNEXPORTED_MUTEX_COUNTERS = ('kd_mutex_combiner_count', 'kd_mutex_jit_success_count',
                             'kd_mutex_handoff_count')
-BATCH_METADATA = dict(schema=1, compiled=1, total_cap=1024, numa_boundary=256,
-                      deferred_handoff=8, scan_budget=64, numa_aware=1)
+BATCH_METADATA = dict(schema=2, compiled=1, total_cap=1024, numa_boundary=256,
+                      deferred_handoff=8, scan_budget=64, numa_aware=1,
+                      completed_hist_bins=16, deferred_peak_hist_bins=8)
 BATCH_COUNTERS = ('batches', 'attempts', 'jit_completed', 'native_completed',
     'execution_refusals', 'jit_local', 'jit_remote', 'deferred_total', 'scan_steps',
     'scan_exhausted_batches', 'small_fifo_batches')
@@ -89,7 +90,7 @@ def validate_batch(snapshot):
                 for key, value in BATCH_METADATA.items()), 'batch diagnostic metadata differs')
     require(all(counter(snapshot[key]) for key in BATCH_COUNTERS), 'invalid batch counter')
     for key in BATCH_HISTOGRAMS:
-        require(isinstance(snapshot[key], list) and len(snapshot[key]) == 33 and
+        require(isinstance(snapshot[key], list) and len(snapshot[key]) == snapshot[key + '_bins'] and
                 all(counter(value) for value in snapshot[key]), 'invalid batch histogram: ' + key)
     for key, fields in (('stop_reason', BATCH_REASONS), ('legacy', BATCH_LEGACY)):
         require(isinstance(snapshot[key], dict) and set(snapshot[key]) == set(fields) and
