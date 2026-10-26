@@ -94,7 +94,7 @@ kd_mutex_batch_find_ready(struct kd_mutex_batch *batch, unsigned long ip)
  * IP/SP/BP and virtual GPR slots share one line which the JIT will write; avoid
  * fetching it read-only and then upgrading ownership in the current body.
  * Do this before the current body; never chase a successor after handoff. */
-static void kd_mutex_prefetch_successor(struct kd_mutex_node *next)
+static void kd_mutex_prefetch_node(struct kd_mutex_node *next)
 {
 	unsigned long sp;
 
@@ -108,6 +108,18 @@ static void kd_mutex_prefetch_successor(struct kd_mutex_node *next)
 		prefetchw((void *)sp);
 		prefetchw((void *)(sp - sizeof(unsigned long)));
 	}
+}
+
+/* Both hints run before the current body can publish completion, native
+ * continuation or early outer release. The first successor remains queued;
+ * its acquire-loaded next link observes the initialized second-node packet.
+ * A missing link is skipped without waiting. Do not follow a third link or
+ * access either node after execution, when wake/reuse may already have begun. */
+static void kd_mutex_prefetch_successor(struct kd_mutex_node *next)
+{
+	kd_mutex_prefetch_node(next);
+	if (next)
+		kd_mutex_prefetch_node(smp_load_acquire(&next->next));
 }
 
 /* An unlinked last node is eligible only under the explicit minimal ABI.
