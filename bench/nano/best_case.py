@@ -13,13 +13,14 @@ import time
 
 ROOT = Path(__file__).resolve().parents[2]
 PROFILES = {'mutex': ('mutex', 100), 'rwsem-read': ('rwsem', 1),
-            'rwsem-mixed': ('rwsem', 20)}
+            'rwsem-mixed': ('rwsem', 20), 'mutex-locality': ('mutex', 100)}
 
 
 def parser():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('--output', type=Path, required=True)
-    p.add_argument('--profiles', nargs='+', choices=PROFILES, default=list(PROFILES))
+    p.add_argument('--profiles', nargs='+', choices=PROFILES,
+                   default=['mutex-locality', 'rwsem-read', 'rwsem-mixed'])
     p.add_argument('--threads', nargs='+', type=int, default=[1, 8, 16, 32, 36, 60])
     p.add_argument('--backends', nargs='+', choices=('native', 'tclock', 'kdlock'),
                    default=['native', 'tclock', 'kdlock'])
@@ -42,8 +43,11 @@ def commands(args):
     for profile in args.profiles:
         family, percent = PROFILES[profile]
         name = profile + ('-local' if args.delegate == 'off' else '')
+        locality = profile == 'mutex-locality'
         yield name, [sys.executable, str(ROOT/'bench/rwlock_compare/run.py'),
-            '--workloads', 'nano', '--lock-kind', family, '--write-percent', str(percent),
+            '--workloads', 'cacheline' if locality else 'nano',
+            '--cachelines', '16' if locality else '2',
+            '--lock-kind', family, '--write-percent', str(percent),
             '--threads', *map(str, args.threads), '--cpus', *map(str, range(max(args.threads))),
             '--collector-cpu', '63', '--backends', *args.backends,
             '--repeats', str(args.repeats), '--duration-ms', '2000',

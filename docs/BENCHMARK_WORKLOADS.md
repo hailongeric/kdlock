@@ -64,13 +64,15 @@ qualified measurement resulted.
 
 ## KD API use and delegation
 
-The later [minimal shared-record nano workload](../bench/nano/README.md) is a
-separate addition to the catalog. It reduces the favorable bounded mutex update
-and read-mostly rwsem cases to two adjacent 64-bit words in one 64-byte record.
-Writers increment both words; readers compare them. Its public-mutex 100%-write,
-rwsem 1%-write and rwsem 20%-write profiles retain matched Native/TCLock/KD work,
-exact totals and returned-body evidence. Default nano runs use six worker counts
-and one round. They do not fill or alter the earlier 51-configuration screen.
+The later [minimal nano workloads](../bench/nano/README.md) are separate additions
+to the catalog. The mutex locality profile reduces the resident list to sixteen
+directly addressed, 64-byte-aligned counters, updating all sixteen under public
+ABI2 mutex calls. The minimum-body mutex control and the 1%/20%-write rwsem
+profiles use two adjacent 64-bit words in one 64-byte record; writers increment
+both and readers compare them. All retain matched Native/TCLock/KD work, exact
+totals and returned-body evidence. Default nano runs select mutex locality and
+both rwsem profiles at six worker counts and one round. They do not fill or alter
+the earlier 51-configuration screen.
 See the [per-workload analysis](../bench/results/10.176.26.71/bench/catalog-single-20261026/PERFORMANCE_ANALYSIS.md)
 for the selection and the distinction between delegated mutex wins and local
 rwsem reader-path wins.

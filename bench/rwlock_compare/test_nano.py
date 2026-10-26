@@ -21,13 +21,39 @@ class NanoTests(unittest.TestCase):
         args = launcher.parser().parse_args(['--output', '/tmp/nano-plan-only',
             '--threads', '1', '60', '--plan-only'])
         commands = list(launcher.commands(args))
-        self.assertEqual([name for name, _ in commands], ['mutex', 'rwsem-read', 'rwsem-mixed'])
+        self.assertEqual([name for name, _ in commands], ['mutex-locality', 'rwsem-read', 'rwsem-mixed'])
         for name, argv in commands:
             plan = run.make_plan(run.parser().parse_args(argv[2:]))
             self.assertEqual(len(plan), 6)
             family, percent = launcher.PROFILES[name]
             self.assertTrue(all(r['lock_kind'] == family and r['write_percent'] == percent and
-                                r['repeat'] == 0 and r['workload'] == 'nano' for r in plan))
+                                r['repeat'] == 0 and r['workload'] ==
+                                ('cacheline' if name == 'mutex-locality' else 'nano') for r in plan))
+
+    def test_locality_profile_checks_every_counter_and_returned_body(self):
+        args = run.parser().parse_args(['--lock-kind', 'mutex', '--workloads', 'cacheline',
+            '--cachelines', '16', '--write-percent', '100', '--threads', '1', '60',
+            '--collector-cpu', '63', '--repeats', '1'])
+        plan = run.make_plan(args)
+        self.assertTrue(all(r['cachelines'] == 16 and r['post_work_rounds'] == 4 for r in plan))
+        self.assertTrue(all(r['call_shell'] == 'bulk_ioctl' and
+                            r['nano_working_set_bytes'] == 1024 and
+                            r['nano_layout'] == '16_aligned_counters' for r in plan))
+        self.assertTrue(all(r['mutex_api'] == 'public' and r['entry_abi'] == 2
+                            for r in plan if r['arm'] == 'kdlock'))
+        spec, measurement = fixture('cacheline', 100)
+        spec.update(cachelines=16, lock_kind='mutex')
+        for key in ('before', 'after'):
+            measurement[key].update(lines=16, values=[0]*16)
+        measurement['after']['values'] = [200]*16
+        validate(measurement, spec)
+        for index in range(16):
+            bad = copy.deepcopy(measurement)
+            bad['after']['values'][index] -= 1
+            with self.assertRaises(ValueError):
+                validate(bad, spec)
+        row = dict(spec, arm='kdlock', jit_bodies=10, jit_completions=0, measurement=measurement)
+        self.assertEqual(run.list_execution_class(row), 'PARTIAL_JIT')
 
     def test_profiles_bind_packed_record_and_public_or_local_shell(self):
         for family, percent in [('mutex', 100), ('rwsem', 1), ('rwsem', 20)]:

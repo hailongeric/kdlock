@@ -22,6 +22,11 @@ or 20% writes. All backends share the same packed 64-byte record and exact
 two-word write-count oracle. `--delegate off` supplies a separately labeled
 callable-local mutex or ordinary-writer rwsem control. These new bulk-ioctl
 profiles are separate from the real-syscall catalog and historical nano matrix.
+The `mutex-locality` nano profile reuses the straight-line counter payload with
+`--workloads cacheline --cachelines 16 --lock-kind mutex --write-percent 100`.
+It removes the list's links while retaining sixteen dirty cachelines and checks
+every counter against the exact completed-write total. Other mutex cacheline
+sizes and mixed mutex operations are intentionally outside this profile.
 
 ## Additional explicit modes
 

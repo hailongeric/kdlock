@@ -74,9 +74,10 @@ def make_plan(args):
             'snapshot workloads require --lock-kind spin; other workloads use rwlock/rwsem')
     require(not (set(args.workloads) & snapshots) or set(args.workloads).issubset(snapshots),
             'run snapshots separately from rwlock/rwsem payloads')
-    require(args.lock_kind != 'mutex' or (args.workloads == ['nano'] and
+    require(args.lock_kind != 'mutex' or ((args.workloads == ['nano'] or
+            (args.workloads == ['cacheline'] and args.cachelines == [16])) and
             args.write_percent == [100]),
-            'mutex nano requires only the all-writer profile')
+            'mutex nano requires an all-writer pair or 16-cacheline locality profile')
     require('nano' not in args.workloads or args.lock_kind in ('mutex', 'rwsem'),
             'nano profiles use mutex or rwsem')
     threads = FULL_THREADS if args.full_matrix else args.threads
@@ -149,6 +150,11 @@ def make_plan(args):
                          mutex_api=('public' if args.delegate == 'on' else 'callable-local')
                              if args.lock_kind == 'mutex' and arm == 'kdlock' else None)
                    if workload == 'nano' else {}),
+                **(dict(call_shell='bulk_ioctl', nano_working_set_bytes=1024,
+                         nano_layout='16_aligned_counters',
+                         mutex_api=('public' if args.delegate == 'on' else 'callable-local')
+                             if arm == 'kdlock' else None)
+                   if workload == 'cacheline' and args.lock_kind == 'mutex' else {}),
                 caller_abi='clobber' if arm == 'kdlock' and
                     (args.lock_kind not in ('rwsem', 'mutex') or rwsem_direct or mutex_direct) else 'c',
                 delegate=args.delegate == 'on' if arm == 'kdlock' else False,
@@ -173,7 +179,8 @@ def valid(row):
 
 
 def list_execution_class(row):
-    if row.get('workload') not in ('list', 'list-prefetch', 'nano'):
+    if row.get('workload') not in ('list', 'list-prefetch', 'nano') and not (
+            row.get('workload') == 'cacheline' and row.get('lock_kind') == 'mutex'):
         return None
     if row['arm'] != 'kdlock':
         return 'NATIVE'

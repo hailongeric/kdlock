@@ -12,8 +12,13 @@ else ifeq ($(RB_LOCK_KIND),rwsem)
 ccflags-y += -DRB_RWSEM -DRB_RWSEM_DELEGATE=$(RB_RWSEM_DELEGATE)
 else ifeq ($(RB_LOCK_KIND),mutex)
 ccflags-y += -DRB_MUTEX -DRB_MUTEX_DELEGATE=$(RB_MUTEX_DELEGATE)
-ifneq ($(RB_WORKLOAD),nano)
-$(error mutex requires RB_WORKLOAD=nano)
+ifneq ($(filter nano cacheline,$(RB_WORKLOAD)),$(RB_WORKLOAD))
+$(error mutex requires the nano pair or cacheline locality workload)
+endif
+ifeq ($(RB_WORKLOAD),cacheline)
+ifneq ($(RB_LINES),16)
+$(error mutex cacheline locality requires RB_LINES=16)
+endif
 endif
 else ifneq ($(RB_LOCK_KIND),rwlock)
 $(error RB_LOCK_KIND must be rwlock, spin, rwsem or mutex)
