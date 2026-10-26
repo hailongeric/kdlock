@@ -11,6 +11,11 @@ Both tables contain only this fresh campaign's **36 timed observations**, one
 round per backend/count/profile. No earlier result is pooled into a mean, median,
 or a supposed second repetition.
 
+The [Native-gap analysis](NATIVE_GAP_ANALYSIS.md) traces the per-request KD path
+and derives worker CPU cost, work distribution and NUMA observations from these
+same receipts. Its [24-row Native/KD table](worker-comparison.csv) adds no timing
+samples.
+
 ## Workloads and measurement scope
 
 Source: `444f68577ed56a10aa8b69da82d97de8f2081497`. Native, KD and TCLock each
@@ -85,8 +90,8 @@ at that count. Once contended, KD exceeds TCLock by 1.506–1.830× but remains
 slower than Native, even though nearly all writes return through generated bodies.
 
 One load and two stores provide little shared dirty data whose ownership
-transfers might be amortized. Queueing, caller capture/restore and exact
-acknowledgment/retirement remain part of KD's operation. That is a plausible
+transfers might be amortized. Queueing, continuation capture/resumption and exact
+frame/completion retirement remain part of KD's operation. That is a plausible
 explanation for the minimal body's unfavorable Native comparison, not a causal
 cost breakdown. The comparison reinforces that a smaller protected body and a
 high returned-JIT share are insufficient to establish a favorable KD workload.
