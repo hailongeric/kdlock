@@ -9,6 +9,7 @@ from copy import deepcopy
 from itertools import product
 
 import context_memory
+import context_edges
 from context_registers import (
     ContextFlowLimit, RegisterConstants, context_reference, known_bits, static_address,
 )
@@ -63,11 +64,12 @@ class FlowConstants(RegisterConstants):
         self.control_calls = set()
         self.clobber_calls = set()
         self.readonly_calls = set()
-        # Only negotiated strcmp/strscpy_pad use the explicit selected-caller
-        # C-object/control-scratch contract. Scalar/assembly CALLs do not.
+        # Legacy provider/fixture compatibility only: the current coordinator
+        # does not select string-service C-object/control-scratch contracts.
+        # Ordinary decoded CALLs retain their complete instruction effects.
         self.audited_c_calls = set()
-        # Exact typed writing services supply a bounded RDI destination span.
-        # Unlike readonly services, their effects invalidate each written byte.
+        # Legacy typed-writing fixtures still model a bounded RDI destination
+        # and invalidate every written byte; no current callee gets this summary.
         self.writer_calls = {}
         self.mutex_calls = set()
         self.mutex_stack_bytes = mutex_stack_bytes
@@ -91,6 +93,14 @@ class FlowConstants(RegisterConstants):
         self.memory.restore(state[2])
         self.memory.entry_spills_blocked = state[3]
         self.memory.checked_spill_windows = state[4]
+
+    def successor_state(self, block, database, target):
+        # Scoped CALL analysis has one actual source packet and preserves the
+        # decoded CALL/RET effects. Refine only its ordinary numeric branch
+        # alternatives; independent callee roots retain their existing policy.
+        if self.scoped_calls:
+            return context_edges.refine(self, block, database, target)
+        return self.snapshot()
 
     def merge_state(self, left, right):
         values = self.merge(left[0], right[0])

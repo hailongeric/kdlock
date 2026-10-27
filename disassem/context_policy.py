@@ -357,10 +357,11 @@ def constant_blocks(
             possible = tracker.return_targets.get(id(block.lines[-1]))
             if possible is not None:
                 return_edges = return_edges & possible
-        outgoing = [
-            (target, tracker.snapshot())
-            for target in sorted(successors[start] | return_edges)
-        ]
+        outgoing = []
+        for target in sorted(successors[start] | return_edges):
+            state = tracker.successor_state(block, databases.get(block), target)
+            if state is not None:
+                outgoing.append((target, state))
         for line, callee, _ in calls[start]:
             state = tracker.call_entries.get(id(line))
             if state is None:
