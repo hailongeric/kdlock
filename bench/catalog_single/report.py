@@ -6,11 +6,8 @@ import json
 from pathlib import Path
 
 
-def render(source, output, title, host_qualified, exploratory=False):
-    import matplotlib
-    matplotlib.use('Agg')
-    import matplotlib.pyplot as plt
-
+def receipt_rows(source, host_qualified):
+    """Select publishable receipt values independently of plotting packages."""
     plan = json.loads((source / 'plan.json').read_text())
     records_path = source / 'records.json'
     records = json.loads(records_path.read_text()) if records_path.exists() else []
@@ -21,9 +18,6 @@ def render(source, output, title, host_qualified, exploratory=False):
         m = row.get('measurement') or {}
         data_ok = (m.get('ok') is True if 'kind' in spec else
                    m.get('complete') is True and m.get('data_ok') is True)
-        valid = row.get('execution_status') == 'OK' and row.get('drained') is True and data_ok
-        rate = m['completed'] * 1e3 / m['wall_ns'] if valid else None
-        peak = (m.get('peak') or {}).get('throughput_ops_s') if valid else None
         evidence = row.get('execution_class', row.get('jit_status',
                                                     row.get('jit_acceptance', 'UNMEASURED')))
         if spec['arm'] == 'kdlock' and row.get('jit_completions') is not None:
@@ -31,6 +25,14 @@ def render(source, output, title, host_qualified, exploratory=False):
                         'PARTIAL_JIT' if row.get('jit_bodies') else 'NO_JIT')
         if row.get('execution_status', 'NOT_RUN') != 'OK':
             evidence = row.get('execution_status', 'NOT_RUN')
+        # Preserve the runner's eligibility decision. An entered JIT body
+        # without a recorded return cannot qualify a throughput comparison.
+        eligible = (row.get('score_eligible') is not False and
+                    (spec['arm'] != 'kdlock' or evidence not in ('PARTIAL_JIT', 'UNMEASURED')))
+        valid = (row.get('execution_status') == 'OK' and row.get('drained') is True
+                 and data_ok and eligible)
+        rate = m['completed'] * 1e3 / m['wall_ns'] if valid else None
+        peak = (m.get('peak') or {}).get('throughput_ops_s') if valid else None
         rows.append(dict(workers=spec['threads'], backend=spec['arm'],
                          whole_mops_s=rate, peak_mops_s=peak / 1e6 if peak else None,
                          status=row.get('execution_status', 'NOT_RUN'),
@@ -39,6 +41,15 @@ def render(source, output, title, host_qualified, exploratory=False):
                          jit_entries=row.get('jit_bodies'),
                          jit_completions=row.get('jit_completions'),
                          host_qualified=host_qualified, session=spec['name']))
+    return rows
+
+
+def render(source, output, title, host_qualified, exploratory=False):
+    import matplotlib
+    matplotlib.use('Agg')
+    import matplotlib.pyplot as plt
+
+    rows = receipt_rows(source, host_qualified)
     output.mkdir(parents=True, exist_ok=True)
     with (output / 'table.csv').open('w') as stream:
         writer = csv.DictWriter(stream, fieldnames=list(rows[0]), lineterminator='\n')
@@ -49,7 +60,7 @@ def render(source, output, title, host_qualified, exploratory=False):
     if exploratory:
         label = 'EXPLORATORY: strict timing qualification remains failed'
     text = [f'# {title}', '', 'One timed repetition per point; no repeat variability estimate.',
-            f'{label}. Rates include post-lock work. Failed/unrun cases have no plotted rate.', '',
+            f'{label}. Rates include post-lock work. Failed, unrun or score-ineligible cases have no plotted rate.', '',
             '| Workers | Native Mops/s | TCLock Mops/s | KD Mops/s | KD execution |',
             '| ---: | ---: | ---: | ---: | --- |']
     lookup = {(r['workers'], r['backend']): r for r in rows}
