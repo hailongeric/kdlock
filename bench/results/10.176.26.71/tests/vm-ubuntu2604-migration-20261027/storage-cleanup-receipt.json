@@ -1,0 +1,208 @@
+{
+  "completed_utc": "2026-10-27T02:50:04.093937+00:00",
+  "passed": true,
+  "plan_sha256": "c1fbc11afb0ea825a70b997cd88be36bcda70798e6b1078b50e70d7e26560fbd",
+  "reference_scan": {
+    "errors": [],
+    "jobs": [],
+    "processes": 625,
+    "project_modules": [],
+    "references": []
+  },
+  "removed_directories": 153,
+  "removed_files": 50037,
+  "space_after": {
+    "/": {
+      "available": 58726858752,
+      "free": 58743635968,
+      "free_inodes": 11321480
+    },
+    "/mnt/kdlock-builds": {
+      "available": 102079242240,
+      "free": 108108865536,
+      "free_inodes": 8102809
+    }
+  },
+  "space_before": {
+    "/": {
+      "available": 53306802176,
+      "free": 53323579392,
+      "free_inodes": 11321294
+    },
+    "/mnt/kdlock-builds": {
+      "available": 102077005824,
+      "free": 108106629120,
+      "free_inodes": 8052806
+    }
+  },
+  "started_utc": "2026-10-27T02:49:38.668803+00:00",
+  "status": "COMPLETE",
+  "scope": "Reviewed obsolete generated module archives, pip cache contents and exact scratch directories only.",
+  "archives": [
+    {
+      "path": "/root/kdlock-maintenance/kernel-module-archives-20261022/linux-6.1.159-kdstatic1.tar.gz",
+      "bytes": 1793815930,
+      "sha256": "baa760d1749d1a0f0628828617e84c8addc3ade0d424765c5d31259bd2bac075"
+    },
+    {
+      "path": "/root/kdlock-maintenance/kernel-module-archives-20261022/linux-6.1.159-kdstatic2.tar.gz",
+      "bytes": 1793840357,
+      "sha256": "a88ef6cee019d6ec11a10fb47ed21bea18ae81e2463290ad1225c5cd161d009b"
+    },
+    {
+      "path": "/root/kdlock-maintenance/kernel-module-archives-20261022/linux-6.1.159-kdclobber1.tar.gz",
+      "bytes": 1794577677,
+      "sha256": "20b61e3b6548a499bdd6a97991d4ee766407fbd1ac70504fde44e1c116ee017b"
+    }
+  ],
+  "archive_disposition": "Deliberately retired generated binaries for obsolete ancestor kernels; not a verified duplicate-copy claim. Hashes and manifests remain.",
+  "trees": [
+    {
+      "path": "/root/.cache/pip",
+      "remove_root": false,
+      "selected_regular_files": 34,
+      "selected_child_directories": 150,
+      "regular_file_bytes": 56029397
+    },
+    {
+      "path": "/mnt/kdlock-builds/src_empty",
+      "remove_root": true,
+      "selected_regular_files": 0,
+      "selected_child_directories": 0,
+      "regular_file_bytes": 0
+    },
+    {
+      "path": "/mnt/kdlock-builds/dst_empty",
+      "remove_root": true,
+      "selected_regular_files": 0,
+      "selected_child_directories": 0,
+      "regular_file_bytes": 0
+    },
+    {
+      "path": "/mnt/kdlock-builds/dst_50000_files",
+      "remove_root": true,
+      "selected_regular_files": 50000,
+      "selected_child_directories": 0,
+      "regular_file_bytes": 0
+    }
+  ],
+  "preserved_archive_metadata": [
+    {
+      "path": "module-archive-metadata/linux-6.1.159-kdclobber1.files.json",
+      "bytes": 1307242,
+      "sha256": "a7e684d620dc538aa98982f770f8cc9f38c8d66b8f415cf9def49915c47bf45b"
+    },
+    {
+      "path": "module-archive-metadata/linux-6.1.159-kdclobber1.removed.jsonl",
+      "bytes": 1375315,
+      "sha256": "b241a797bd30e1272429f22442f3e88da66fb4b54074da1770d79a3b2ff69dfd"
+    },
+    {
+      "path": "module-archive-metadata/linux-6.1.159-kdstatic1.files.json",
+      "bytes": 1311481,
+      "sha256": "a9a39a8adaa1e91fe89596122cdfdf94dfcbbed209a50245f117f8b1cc99e2f5"
+    },
+    {
+      "path": "module-archive-metadata/linux-6.1.159-kdstatic1.removed.jsonl",
+      "bytes": 1373881,
+      "sha256": "471c49db133829eb701d99ff76443ef718c67c7d12c38c5b66a2005c33131f58"
+    },
+    {
+      "path": "module-archive-metadata/linux-6.1.159-kdstatic2.files.json",
+      "bytes": 1311481,
+      "sha256": "4b922e4acef1d6cb4936e6cb5039080dc6e859eebd2e7dc02be1d0a7948b569f"
+    },
+    {
+      "path": "module-archive-metadata/linux-6.1.159-kdstatic2.removed.jsonl",
+      "bytes": 1373881,
+      "sha256": "c0688db97091051e80f2ed5569cd2ab2995c4e0ba6fdfe1e387b413f88bc2b22"
+    },
+    {
+      "path": "module-archive-metadata/result.json",
+      "bytes": 1244,
+      "sha256": "3fe082f8324b4f90eac220fe12893e330c107bfffd0eca7a31177fe1263ab17b"
+    }
+  ],
+  "journal_event_counts": {
+    "begin": 1,
+    "unlink_intent": 50037,
+    "unlinked": 50037,
+    "rmdir_intent": 153,
+    "removed_directory": 153,
+    "final": 1
+  },
+  "guest_log_observation": {
+    "taint": 16384,
+    "boot_id": "fd1db5e3-e2af-410f-a9f3-567ae2d07841",
+    "soft_lockup_lines": 29,
+    "interpretation": "Observed in the maintenance interval; no isolated causal attribution or untainted-runtime/performance qualification."
+  },
+  "space_caveat": "Available bytes are observed before and after the exact guest cleanup. Snapshot reclamation and virtual capacity growth are separate operations; concurrent filesystem activity can affect the differences.",
+  "bindings": {
+    "prepared-storage-plan.json": {
+      "path": "../../raw/tests/vm-ubuntu2604-migration-20261027/prepared-storage-plan.json",
+      "bytes": 25081452,
+      "sha256": "c1fbc11afb0ea825a70b997cd88be36bcda70798e6b1078b50e70d7e26560fbd"
+    },
+    "storage-cleanup-result.json": {
+      "path": "../../raw/tests/vm-ubuntu2604-migration-20261027/storage-cleanup-result.json",
+      "bytes": 912,
+      "sha256": "c427bb7b556032818175670fad3893384b303bd0046d97c0a1c619de1ff73a93"
+    },
+    "storage-cleanup-journal.jsonl": {
+      "path": "../../raw/tests/vm-ubuntu2604-migration-20261027/storage-cleanup-journal.jsonl",
+      "bytes": 18910337,
+      "sha256": "ef98dbc94ebb64c479a7766f258b0eabd7c051c4d6889f4db7241f1379429fcd"
+    },
+    "obsolete-module-archive-plan.json": {
+      "path": "../../raw/tests/vm-ubuntu2604-migration-20261027/obsolete-module-archive-plan.json",
+      "bytes": 3097,
+      "sha256": "49fd4d5b11b9d13f73156073b0ec9742a9887f3312fb35f17c7aab5f976021e3"
+    },
+    "guarded-storage-cleanup.py": {
+      "path": "../../raw/tests/vm-ubuntu2604-migration-20261027/guarded-storage-cleanup.py",
+      "bytes": 19062,
+      "sha256": "000d18bc8d07adf449e29766eaf201bd86fc3208f68777e25ccf3fea1cde9622"
+    },
+    "post-snapshot-guest-log.json": {
+      "path": "../../raw/tests/vm-ubuntu2604-migration-20261027/post-snapshot-guest-log.json",
+      "bytes": 155750,
+      "sha256": "f7ddf1002e1b5951e7b8ee56a19f17056c34ad6fac5f30bedc411ce403b60263"
+    },
+    "module-archive-metadata/linux-6.1.159-kdclobber1.files.json": {
+      "path": "../../raw/tests/vm-ubuntu2604-migration-20261027/module-archive-metadata/linux-6.1.159-kdclobber1.files.json",
+      "bytes": 1307242,
+      "sha256": "a7e684d620dc538aa98982f770f8cc9f38c8d66b8f415cf9def49915c47bf45b"
+    },
+    "module-archive-metadata/linux-6.1.159-kdclobber1.removed.jsonl": {
+      "path": "../../raw/tests/vm-ubuntu2604-migration-20261027/module-archive-metadata/linux-6.1.159-kdclobber1.removed.jsonl",
+      "bytes": 1375315,
+      "sha256": "b241a797bd30e1272429f22442f3e88da66fb4b54074da1770d79a3b2ff69dfd"
+    },
+    "module-archive-metadata/linux-6.1.159-kdstatic1.files.json": {
+      "path": "../../raw/tests/vm-ubuntu2604-migration-20261027/module-archive-metadata/linux-6.1.159-kdstatic1.files.json",
+      "bytes": 1311481,
+      "sha256": "a9a39a8adaa1e91fe89596122cdfdf94dfcbbed209a50245f117f8b1cc99e2f5"
+    },
+    "module-archive-metadata/linux-6.1.159-kdstatic1.removed.jsonl": {
+      "path": "../../raw/tests/vm-ubuntu2604-migration-20261027/module-archive-metadata/linux-6.1.159-kdstatic1.removed.jsonl",
+      "bytes": 1373881,
+      "sha256": "471c49db133829eb701d99ff76443ef718c67c7d12c38c5b66a2005c33131f58"
+    },
+    "module-archive-metadata/linux-6.1.159-kdstatic2.files.json": {
+      "path": "../../raw/tests/vm-ubuntu2604-migration-20261027/module-archive-metadata/linux-6.1.159-kdstatic2.files.json",
+      "bytes": 1311481,
+      "sha256": "4b922e4acef1d6cb4936e6cb5039080dc6e859eebd2e7dc02be1d0a7948b569f"
+    },
+    "module-archive-metadata/linux-6.1.159-kdstatic2.removed.jsonl": {
+      "path": "../../raw/tests/vm-ubuntu2604-migration-20261027/module-archive-metadata/linux-6.1.159-kdstatic2.removed.jsonl",
+      "bytes": 1373881,
+      "sha256": "c0688db97091051e80f2ed5569cd2ab2995c4e0ba6fdfe1e387b413f88bc2b22"
+    },
+    "module-archive-metadata/result.json": {
+      "path": "../../raw/tests/vm-ubuntu2604-migration-20261027/module-archive-metadata/result.json",
+      "bytes": 1244,
+      "sha256": "3fe082f8324b4f90eac220fe12893e330c107bfffd0eca7a31177fe1263ab17b"
+    }
+  }
+}

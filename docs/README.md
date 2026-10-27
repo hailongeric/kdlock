@@ -8,6 +8,10 @@ The next platform is the user-selected Ubuntu 26.04 / Linux 7.0. Its adaptation
 is pending; the guides' existing runtime evidence belongs to retired Linux 6.1.
 The [kernel retirement record](history/kernel-retirement-20261027.md) owns the
 retained recovery version, cleanup inventory and migration boundary.
+The subsequent [VM storage and migration record](history/vm-ubuntu2604-migration-20261027.md)
+records the approved snapshot purge, completed expansion to 132 GiB, and
+release-upgrade preparation. It does not yet record a completed Ubuntu 26.04
+upgrade or Linux 7.0 boot.
 
 These guides describe `master`, whose mutex retains the accepted
 KD-only lock protocol from `d2a2304` and whose reader/writer semaphore (rwsem) waiting

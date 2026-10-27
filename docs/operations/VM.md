@@ -30,7 +30,7 @@ Honor the concrete session authorization; do not ask again for authorized steps.
 | Captured kernel bundle | `/root/kdlock-kernel-baselines/mutex-clobber2-20260919` |
 | Translation Python environment | `/root/kdlock-translation-venv-20261019` |
 | Separate plotting environment | `/root/kdlock-plot-venv-20261019` |
-| Guest data disk | `/mnt/kdlock-builds`; use for frozen build copies when root space is low |
+| Guest data disk | `/mnt/kdlock-builds`; 132 GiB virtual capacity after the October 27 expansion |
 | Live evidence | `/root/kdlock-evidence/10.176.26.71/{bench,tests}/<new-run>` |
 
 The recovery VM has exactly 64 vCPUs and 24 GiB RAM. Node 0 uses CPUs 0–31
@@ -92,9 +92,12 @@ the obsolete project kernel installations, ancestor/MM build copies and stale
 boot-menu files after preserving their source changes and records. Only the
 `kdclobber2` project kernel remains installed; its source/build tree and captured
 bundle are retained. Benchmark evidence and the distro-managed kernel packages
-remain outside the deletion scope. Existing VM snapshots remain available;
-their irreversible removal needs explicit approval after automatic review
-rejected including them in kernel-archive cleanup.
+remain outside the deletion scope. The user subsequently approved the exact
+43 old and temporary snapshot removals. The
+[migration and storage record](../history/vm-ubuntu2604-migration-20261027.md)
+records their completed deletion, leaving only `legacy-kdclobber2-20261027`, and
+the data disk's expansion from 32 to 132 GiB. The earlier approval rejection
+remains part of the recorded history.
 
 ## Kernel identity
 
@@ -164,11 +167,13 @@ Before live module/JIT work, confirm an actual recoverable snapshot through
 `/tmp/qemu-monitor.sock` on the benchmark host. `savevm` must succeed and
 `info snapshots` must list the tag. Only then set `KDLOCK_RECOVERY_CONFIRMED=1`
 and the recorded `KDLOCK_SNAPSHOT_TAG`. Environment variables alone are not proof.
-The final legacy recovery point is `legacy-kdclobber2-20261027`. The earlier
-42 snapshots and the temporary pre-cleanup snapshot remain retained pending
-explicit deletion approval; the [retirement record](../history/kernel-retirement-20261027.md)
-lists the proposed removals. Recheck the actual snapshot list, topology and
-current boot identity before relying on any recovery point.
+The only retained snapshot is `legacy-kdclobber2-20261027`. The user explicitly
+approved deleting the 42 earlier snapshots and the temporary pre-cleanup
+snapshot; the [migration record](../history/vm-ubuntu2604-migration-20261027.md)
+records all 43 completed removals. The retained snapshot captures Ubuntu 22.04
+and the former 32 GiB data disk. Restoring it also restores that disk size and
+rolls back subsequent active contents, including later migration work. Recheck
+the actual snapshot list, topology and current boot identity before recovery.
 
 Use bounded SSH and monitor commands. Root-owned sockets may need sudo. Disconnect
 without sending `quit`; close only monitor clients created for the operation.

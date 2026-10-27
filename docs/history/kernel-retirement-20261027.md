@@ -81,13 +81,17 @@ of deliberately omitted bytes. Opaque historical archives remain private raw
 evidence. Missing members in the already incomplete historical MM tree remain
 documented; this is not a bit-for-bit recovery promise for every retired image.
 
-The new `legacy-kdclobber2-20261027` recovery snapshot is verified, and all 43 existing
-snapshots remain: **44 snapshots total**. Automatic approval review rejected
+At this retirement checkpoint, the new `legacy-kdclobber2-20261027` recovery
+snapshot was verified and all 43 existing snapshots remained: **44 snapshots
+total**. Automatic approval review rejected
 the proposed irreversible purge before execution because the kernel-archive
 cleanup request did not explicitly authorize deleting VM recovery snapshots.
-No snapshot was deleted. The linked report supplies the exact 43-name proposal
-for explicit approval; snapshot purging remains pending. Thus one installed
-project kernel remains while historical disk states are still retained.
+No snapshot was deleted in this operation. The linked report supplied the exact
+43-name proposal for explicit approval, so snapshot purging was pending at this
+checkpoint. The user subsequently approved those removals; the
+[later storage and migration record](vm-ubuntu2604-migration-20261027.md)
+records their completion and the sole retained `legacy-kdclobber2-20261027`
+snapshot. This follow-up does not change the earlier rejection or observations.
 
 Intermediate preservation archives were pruned only after the final source-host
 copy was verified; metadata and results remain. Distro-managed Linux 5.15 packages

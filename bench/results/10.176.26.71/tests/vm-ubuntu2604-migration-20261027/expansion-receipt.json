@@ -1,0 +1,104 @@
+{
+  "status": "COMPLETE",
+  "device": "/dev/sdb",
+  "added_bytes": 107374182400,
+  "before": {
+    "size": 34359738368,
+    "uuid": "7cfd7ee5-fdee-4a4b-8db3-a22fc5806da0",
+    "mount": {
+      "filesystems": [
+        {
+          "source": "/dev/sdb",
+          "target": "/mnt/kdlock-builds",
+          "fstype": "ext4"
+        }
+      ]
+    },
+    "available": 694603776,
+    "filesystem_bytes": 33501757440,
+    "boot_id": "fd1db5e3-e2af-410f-a9f3-567ae2d07841",
+    "release": "6.1.159-kdclobber2",
+    "hashes": {
+      ".config": "e1dd628c6f2315c77debd559cf6df1f299814b0b4ba47d5964cfb5bde4dd4ccd",
+      "vmlinux": "7125f9b8e76ee72315f83e7129dbf5be38bdbe56ba5b3461f4997290907d9402",
+      "arch/x86/boot/bzImage": "3221e8ee72eb947d06ed7b2a2ab3bae348d6edd798cdd55ae439c040227ad19d"
+    }
+  },
+  "after": {
+    "size": 141733920768,
+    "uuid": "7cfd7ee5-fdee-4a4b-8db3-a22fc5806da0",
+    "mount": {
+      "filesystems": [
+        {
+          "source": "/dev/sdb",
+          "target": "/mnt/kdlock-builds",
+          "fstype": "ext4"
+        }
+      ]
+    },
+    "available": 102077005824,
+    "filesystem_bytes": 139179020288,
+    "boot_id": "fd1db5e3-e2af-410f-a9f3-567ae2d07841",
+    "release": "6.1.159-kdclobber2",
+    "hashes": {
+      ".config": "e1dd628c6f2315c77debd559cf6df1f299814b0b4ba47d5964cfb5bde4dd4ccd",
+      "vmlinux": "7125f9b8e76ee72315f83e7129dbf5be38bdbe56ba5b3461f4997290907d9402",
+      "arch/x86/boot/bzImage": "3221e8ee72eb947d06ed7b2a2ab3bae348d6edd798cdd55ae439c040227ad19d"
+    }
+  },
+  "retained_snapshot": "legacy-kdclobber2-20261027",
+  "recovery_note": "Restoring the retained legacy snapshot restores the old 32 GiB disk and old filesystem state.",
+  "first_attempt": {
+    "first_helper_exit": 1,
+    "original_helper_sha256": "f8b0dd0c891f774d84433216d5d48763ec2e774d2ffad37939e42ea31711deb4",
+    "command": "block_resize drive_data1 141733920768",
+    "result": "Error: Failed to grow the L1 table: File too large",
+    "actual_device_bytes_after_rejection": 34359738368,
+    "retained_snapshot": "legacy-kdclobber2-20261027",
+    "filesystem_resize_executed": false,
+    "correction": "Use explicit 132G; HMP unsuffixed size defaults to MiB, not bytes."
+  },
+  "scope": "Online data-device and filesystem expansion; no OS upgrade or KD compatibility claim.",
+  "bindings": {
+    "expansion-completed.json": {
+      "path": "../../raw/tests/vm-ubuntu2604-migration-20261027/expansion-completed.json",
+      "bytes": 1689,
+      "sha256": "f25e4f224a9d032ffc797ac8d096ab73d44b63ff2febd67fb34e211cc7343605"
+    },
+    "expansion-first-rejection.json": {
+      "path": "../../raw/tests/vm-ubuntu2604-migration-20261027/expansion-first-rejection.json",
+      "bytes": 477,
+      "sha256": "212ae5637f4028976fe14e944a8d1781989f7f6031e4750f76de25daed27df52"
+    },
+    "expand-monitor.stdout": {
+      "path": "../../raw/tests/vm-ubuntu2604-migration-20261027/expand-monitor.stdout",
+      "bytes": 2873,
+      "sha256": "b121630fd932728199c87105df105e01c7709dd7b8771552ce9460f48f22402d"
+    },
+    "expand-monitor-v2.stdout": {
+      "path": "../../raw/tests/vm-ubuntu2604-migration-20261027/expand-monitor-v2.stdout",
+      "bytes": 1749,
+      "sha256": "124311a1935198b0a3b04d66af0b6716c6835680a5616543c3188de477019717"
+    },
+    "expand-filesystem-v2.stdout": {
+      "path": "../../raw/tests/vm-ubuntu2604-migration-20261027/expand-filesystem-v2.stdout",
+      "bytes": 187,
+      "sha256": "cf2c6d4fc1d1d1442667533882deac902d084976c8b8d79abc9b515820fdd725"
+    },
+    "expand-guest-before-v2.stdout": {
+      "path": "../../raw/tests/vm-ubuntu2604-migration-20261027/expand-guest-before-v2.stdout",
+      "bytes": 576,
+      "sha256": "f97f54b2c5aa55bc61c3f1fe4b0d8fae4dd2fda77bcd3374824e755e12ac027b"
+    },
+    "expand-guest-after-v2.stdout": {
+      "path": "../../raw/tests/vm-ubuntu2604-migration-20261027/expand-guest-after-v2.stdout",
+      "bytes": 581,
+      "sha256": "435921b49b543d8ff4e321bac9c7daeacdd6f3b18c0f070ef6fd866cb9d8d9f4"
+    },
+    "per-image-snapshots.json": {
+      "path": "../../raw/tests/vm-ubuntu2604-migration-20261027/per-image-snapshots.json",
+      "bytes": 2650,
+      "sha256": "5ca0c50a0848813b0b353c9a1b5d0957ca3b8d6e12917940a9ab862070baa187"
+    }
+  }
+}
