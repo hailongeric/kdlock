@@ -8,8 +8,6 @@
 #define RB_MAX_WORKERS 64
 #define RB_BATCH 256
 #define RB_SLOTS 16
-#define RB_WORKLOAD_LIST 4
-#define RB_WORKLOAD_LIST_PREFETCH 5
 #define RB_WORKLOAD_NANO 6
 
 struct rw_bench_config {

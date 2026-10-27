@@ -90,18 +90,19 @@ def plan(out, families, kernel_source=None, kernel_baseline=None):
               '--kernel-baseline', str(kernel_baseline or defaults.kernel_baseline)]
     rows = []
     for family in families:
-        # Mixed rwlock can legitimately stay local at 16 workers. Keep its
-        # returned-body requirement and use the established 60-worker case.
-        workers = 60 if family == 'rwlock' else 16
+        # Use one NUMA-local cohort for the returned-body smoke. Larger mixed
+        # cohorts may legitimately stay local and belong in the timed catalog.
+        workers = 16
         if family in ('spin', 'mutex'):
             runner = 'bench/tclock_compare/' + ('run.py' if family == 'spin' else 'run_mutex.py')
-            arguments = ['--cpus', '0-15', '--workload', 'list', '--list-nodes', '16']
+            arguments = ['--cpus', '0-15', '--workload', 'cacheline', '--cachelines', '1']
             if family == 'mutex':
                 arguments += ['--mutex-api', 'public']
         else:
             runner = 'bench/rwlock_compare/run.py'
             arguments = ['--cpus', *map(str, range(workers)), '--lock-kind', family,
-                         '--workloads', 'list', '--list-nodes', '16', '--write-percent', '20',
+                         '--workloads', 'cacheline', '--cachelines', '16' if family == 'rwsem' else '1',
+                         '--write-percent', '100' if family == 'rwsem' else '20',
                          '--post-work-rounds', '4', '--delegate', 'on', '--require-jit']
         rows.append(dict(family=family, output=str(out / family),
                          argv=[sys.executable, str(ROOT / runner), *common,

@@ -41,12 +41,6 @@ def hash_layout(layout):
             ('rcuht', 1024, 4096, 8192, 0), 'hash payload configuration differs')
 
 
-def list_layout(layout, record):
-    require((layout['workload'], layout['buckets'], layout['entries'],
-             layout['key_range'], layout['resched']) ==
-            (record['workload'], 0, record['list_nodes'], 0, 0) and
-            record['list_nodes'] in (16, 128), 'list payload configuration differs')
-
 
 def check_kd_parameters(params, record, lock_addr):
     # Parameter identity rejects an old provider that can disable mutex JIT.
@@ -59,9 +53,8 @@ def check_kd_parameters(params, record, lock_addr):
             'spin_cold_fastpath' not in params and 'spin_hot_min_queue' not in params and
             params['spin_delegate'] == ('N' if record.get('spin_delegate') == 'off' else 'Y'),
             'kdlock observation parameters differ')
-    if record.get('workload') in ('list', 'list-prefetch'):
-        require(params.get('bench_complete_probe') == 'Y',
-                'list returned-body probe is not enabled')
+    require(params.get('bench_complete_probe') == 'Y',
+            'returned-body probe is not enabled')
 
 
 def check_jit_evidence(record):
@@ -73,10 +66,17 @@ def check_jit_evidence(record):
         require(record.get('jit_bodies', 0) == 0, 'disabled control executed JIT')
         record['jit_acceptance'] = 'DISABLED_CONTROL'
         return
+    if record['arm'] != 'kdlock':
+        record['jit_acceptance'] = 'NOT_APPLICABLE'
+        return
     # Adaptive admission samples actual MCS entries. Small cohorts can become
     # hot; do not infer native-only execution from their thread count.
-    list_profile = record.get('workload') in ('list', 'list-prefetch')
-    if (record['arm'] == 'kdlock' and record['threads'] in (2, 3) and not list_profile and
+    complete = record.get('jit_completions')
+    require(type(complete) is int and 0 <= complete <= record['jit_bodies'],
+            'completion evidence is absent/invalid', 'DATA_ERROR')
+    require(not record['jit_bodies'] or complete > 0,
+            'entered JIT without a returned body', 'PARTIAL_JIT')
+    if (record['arm'] == 'kdlock' and record['threads'] in (2, 3) and
             record.get('scenario', 'plain') == 'plain' and
             not record.get('functional', False)):
         # Fast/pending acquisitions and native MCS queue heads can complete
@@ -89,20 +89,9 @@ def check_jit_evidence(record):
                 (record.get('functional', False) or record['threads'] >= 20 or
                  (record.get('lock_kind') == 'mutex' and record['threads'] >= 4) or
                  record.get('scenario', 'plain') in ('nested', 'early')))
-    if list_profile:
-        complete = record.get('jit_completions')
-        require(type(complete) is int and 0 <= complete <= record['jit_bodies'],
-                'list completion evidence is absent/invalid', 'DATA_ERROR')
-        record['jit_acceptance'] = ('PASS' if complete else
-                                   'PARTIAL_JIT' if record['jit_bodies'] else 'NO_JIT')
-        require(record['jit_acceptance'] != 'PARTIAL_JIT',
-                'list entered JIT without a returned body', 'PARTIAL_JIT')
-        require(not required or complete > 0,
-                'contended kdlock list had no returned JIT body', 'NO_JIT')
-        return
-    record['jit_acceptance'] = ('PASS' if record.get('jit_bodies', 0) > 0 else 'NO_JIT')
-    require(not required or record['jit_bodies'] > 0,
-            'contended kdlock arm had no actual JIT', 'NO_JIT')
+    record['jit_acceptance'] = 'PASS' if complete else 'NO_JIT'
+    require(not required or complete > 0,
+            'contended kdlock arm had no actual JIT returned body', 'NO_JIT')
 
 
 class BackendSession(Session):
@@ -113,9 +102,6 @@ class BackendSession(Session):
             args = [*args, '--lock-kind', 'mutex']
         if args[0] == HERE/'client' and self.record.get('workload') == 'rcuht':
             args = [*args, '--workload', 'rcuht']
-        if args[0] == HERE/'client' and self.record.get('workload', '').startswith('list'):
-            args = [*args, '--workload', self.record['workload'],
-                    '--list-nodes', str(self.record['list_nodes'])]
         if args[0] == HERE/'client' and log == 'measure.json' and self.record.get('pmu'):
             # Count the measured client and its pinned workers, excluding module
             # load, translation and warmup. PMU output stays separate from data.
@@ -175,8 +161,6 @@ class BackendSession(Session):
         self.record['layout'] = layout
         if self.record.get('workload') == 'rcuht':
             hash_layout(layout)
-        if self.record.get('workload', '').startswith('list'):
-            list_layout(layout, self.record)
         require(self.counts('initial')['values'] == [0]*16, 'source was not reset')
         if self.loaded_tc:
             (self.tc_params/'target_lock').write_text(
@@ -237,10 +221,6 @@ class BackendSession(Session):
                 time.sleep(0.1)
             self.stop_daemon()
             require(status()['writers'] == 0, 'translator writer still open', 'UNDRAINED')
-            if self.record.get('workload') in ('list', 'list-prefetch'):
-                from list_audit import capture
-                self.record['list_image_audit'] = capture(
-                    self.path, self.publication(), self.record['workload'] == 'list-prefetch')
         # Warm every measured CPU with the same worker cohort geometry. The
         # client joins and validates all workers before measurement snapshots
         # its counters; an added idle delay would age the warmed lock state.

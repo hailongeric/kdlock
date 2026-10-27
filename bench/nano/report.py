@@ -11,7 +11,7 @@ from pathlib import Path
 import statistics
 
 THREADS=[1,2,3,4,5,6,7,8,12,16,20,24,28,32,36,40,44,48,52,56,60]
-VARIANTS=[('cacheline',1),('cacheline',8),('rcuht',0),('list',16),('list',128),('list-prefetch',16),('list-prefetch',128)]
+VARIANTS=[('cacheline',1),('cacheline',8),('rcuht',0)]
 KEY=['lock','workload','size','write_percent','workers','implementation']
 
 def dump(path,rows,fields=None):
@@ -21,7 +21,7 @@ def dump(path,rows,fields=None):
 
 def identity(r):
     lock=r['lock_kind']; workload=r.get('workload','cacheline')
-    size=r.get('list_nodes',0) if workload.startswith('list') else r.get('cachelines',0)
+    size=r.get('cachelines',0)
     return (lock,workload,size,r.get('write_percent',100),r['threads'],r['arm'])
 
 def main():
@@ -187,9 +187,9 @@ def main():
        'The 1–32-worker points stay on node 0; the 36–60-worker points span both nodes. At 60 workers the split is 32 on node 0 and 28 on node 1. QEMU service threads share host CPU 63 with the collector. This placement is part of the result identity, not a claim that every possible placement has the same scaling.', '',
        'Worker and collector CPU placement is fixed. Module preparation inherits the runner’s CPU affinity (0–63), and the static payload arrays use kernel module allocation. Per-object physical NUMA placement was not bound or recorded. All implementations use this same preparation policy, but these results do not isolate the effect of memory placement.', '',
        'All arms use 48,000 warmup operations per worker and a 2,000 ms measured interval. A separate secondary peak uses the highest valid 300 ms window after 300 ms settling, sampled every 10 ms. Conclusions and ratios use whole-run medians. Spin/mutex have 64 dependent arithmetic rounds after unlock; rwlock/rwsem have four. Do not compare rates across these different lock-family workloads as though they were equivalent.', '',
-       'Cacheline c01/c08 update one/eight padded 64-byte counters. Lists visit 16/128 resident nodes in a fixed permutation; prefetch/no-prefetch are separate variants. RCUHT names the hash-table workload: it has 1,024 buckets, 4,096 preallocated nodes and 8,192 possible keys. Its exclusive operations attempt moves, including misses and conflicts; this nano workload performs no per-operation allocation or read-copy-update (RCU) memory reclamation.', '',
-       'Each fresh workload module starts cacheline/list values at zero. A list node occupies 64 bytes, so the selected list footprints are 1 KiB and 8 KiB. List links advance five array slots. Hash nodes begin with keys 0–4,095, inserted into bucket key modulo 1,024; bucket and node strides are 64 bytes. Hash random streams use the same CPU-derived seed in every arm. All workers complete warmup before the measured snapshot; timed hash interleavings can produce different valid table states. The captured owner uses ordinary time-sharing scheduling with nice value 5, inherited by its clients.', '',
-       'Spinlocks wait by spinning; mutexes can sleep. Reader/writer spinlocks (rwlocks) allow concurrent readers or an exclusive writer. Reader/writer semaphores (rwsems) offer those ownership modes with sleeping waits. Spin/mutex operations here are exclusive writes. For rwlock/rwsem every worker mixes local shared readers and exclusive writers at 1% or 20% writes; there are no dedicated writer threads. Readers compare cacheline/list values or search a hash bucket. KD writers may delegate. TCLock has no sleeping rwsem implementation.', '',
+       'Cacheline c01/c08 update one/eight padded 64-byte counters. RCUHT names the hash-table workload: it has 1,024 buckets, 4,096 preallocated nodes and 8,192 possible keys. Its exclusive operations attempt moves, including misses and conflicts; this nano workload performs no per-operation allocation or read-copy-update (RCU) memory reclamation.', '',
+       'Each fresh workload module starts cacheline values at zero. Hash nodes begin with keys 0–4,095, inserted into bucket key modulo 1,024; bucket and node strides are 64 bytes. Hash random streams use the same CPU-derived seed in every arm. All workers complete warmup before the measured snapshot; timed hash interleavings can produce different valid table states. The captured owner uses ordinary time-sharing scheduling with nice value 5, inherited by its clients.', '',
+       'Spinlocks wait by spinning; mutexes can sleep. Reader/writer spinlocks (rwlocks) allow concurrent readers or an exclusive writer. Reader/writer semaphores (rwsems) offer those ownership modes with sleeping waits. Spin/mutex operations here are exclusive writes. For rwlock/rwsem every worker mixes local shared readers and exclusive writers at 1% or 20% writes; there are no dedicated writer threads. Readers compare cacheline values or search a hash bucket. KD writers may delegate. TCLock has no sleeping rwsem implementation.', '',
        'Public mutex macros use the current unified binary calling interface, ABI2. The existing private KD observation provider has UndefinedBehaviorSanitizer (UBSAN) instrumentation disabled; actual compiler commands and source/binary hashes are retained per block. Completion probes are enabled for every KD payload. No lock or workload tuning occurred.', '',
        'Each three-backend block rotates order across the three repetitions. With two backends, three repetitions necessarily leave one order occurring twice. Each session validates data, every worker’s completed work, source/frame retirement and module cleanup. Failures stop the affected collection and remain in raw evidence. Zero-delegation strict-JIT refusals are explicitly retained as local throughput only when data, completed work and cleanup all pass.', '',
        '## Artifacts and reproduction','',

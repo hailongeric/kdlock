@@ -19,9 +19,8 @@ motivates two distinct mechanisms. The strongest measured mutex examples include
 returned-JIT shares under contention. The strongest rwsem gains over Native came
 from 1%-write workloads that recorded **NO_JIT**. Those results motivate a local
 reader/admission profile, not an explanation based on delegated readers.
-TCLock remained faster in those strongest read-mostly rwsem examples. The resident
-list mutex result also motivates testing a larger shared footprint while removing
-its traversal and application logic.
+TCLock remained faster in those strongest read-mostly rwsem examples. The larger
+counter profile separately tests a shared footprint of sixteen cachelines.
 
 The earlier [two-word mutex measurement](../results/10.176.26.71/bench/nano-pair-20261026/mutex-minimal/)
 is retained as a counterexample: in one exploratory round at 60 workers, KD
@@ -376,9 +375,8 @@ both deltas to match completed writes with fourteen unused fields zero.
 The low-level payload remains available for frozen historical inputs, but the
 active nano and profiling launchers no longer offer these profile names.
 
-[`run.py`](run.py) and its existing resume/report helpers preserve the older
-broad nano campaign: four lock families, padded cachelines, RCUHT, resident lists
-and historical prefetch/size variants, generally with three rounds. Its frozen
-plans and measurements remain source-specific evidence. Use `best_case.py` for
+[`run.py`](run.py) and its existing resume/report helpers belong to the older
+broad nano campaign. Retained padded-cacheline and RCUHT measurements keep
+their original source and repetition identities. Use `best_case.py` for
 the current focused profiles. Reusing the old counter body with a new mutex
 shell and post-work setting does not rewrite or fill gaps in historical results.

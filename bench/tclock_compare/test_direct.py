@@ -12,7 +12,7 @@ import unittest
 import subprocess
 
 import run
-from session import (BackendSession, hash_layout, list_layout, tc_quiescent, check_jit_evidence,
+from session import (BackendSession, hash_layout, tc_quiescent, check_jit_evidence,
                      check_kd_parameters)
 from bench_session import Session
 from context_audit import audit as audit_context
@@ -20,63 +20,10 @@ from mutex_api_audit import audit_public_entries
 
 
 class DirectTests(unittest.TestCase):
-    def test_list_plans_and_reports_do_not_pool_size_or_prefetch(self):
-        plans = []
-        for workload in ('list', 'list-prefetch'):
-            for nodes in (16, 128):
-                plan = run.make_plan(Namespace(workload=workload, list_nodes=nodes,
-                    cachelines=None, threads=[1], repeats=1, iterations=100,
-                    backends=['native', 'tclock', 'kdlock'], lock_kind='mutex',
-                    mutex_api='public'))
-                self.assertEqual({r['list_nodes'] for r in plan}, {nodes})
-                self.assertEqual({r['cachelines'] for r in plan}, {0})
-                self.assertTrue(all(workload in r['name'] and f'n{nodes}' in r['name']
-                                    for r in plan))
-                plans += plan
-        self.assertEqual(len({r['name'] for r in plans}), 12)
-        with tempfile.TemporaryDirectory() as temporary:
-            out = Path(temporary)
-            run.write_json(out/'plan.json', plans)
-            for spec in plans:
-                folder = out/spec['name']
-                folder.mkdir()
-                rate = spec['list_nodes'] * (2 if spec['workload'] == 'list-prefetch' else 1)
-                if spec['arm'] != 'native':
-                    rate *= 3
-                run.write_json(folder/'session.json', dict(spec,
-                    execution_status='OK', drained=True, jit_bodies=0, jit_completions=0,
-                    measurement=dict(completed=100, wall_ns=100000/rate,
-                                     data_ok=True, complete=True)))
-            run.report(out)
-            rows = json.loads((out/'summary.json').read_text())
-            self.assertEqual(len(rows), 12)
-            for row in rows:
-                self.assertAlmostEqual(row['throughput_over_linux'],
-                                       1 if row['arm'] == 'native' else 3)
 
-    def test_list_layout_and_exact_payload_oracle(self):
-        for workload in ('list', 'list-prefetch'):
-            for nodes in (16, 128):
-                spec = dict(workload=workload, list_nodes=nodes, cachelines=0)
-                layout = dict(workload=workload, buckets=0, entries=nodes, key_range=0, resched=0)
-                list_layout(layout, spec)
-                measurement = dict(workload=workload, list_nodes=nodes, list_integrity_ok=True,
-                    completed=10, before=[100]+[0]*15, after=[110]+[0]*15)
-                run.runtime.validate_payload(measurement, spec)
-                for mutation in (
-                        lambda m: m.__setitem__('list_nodes', 128 if nodes == 16 else 16),
-                        lambda m: m.__setitem__('list_integrity_ok', False),
-                        lambda m: m['after'].__setitem__(0, 109),
-                        lambda m: m['after'].__setitem__(15, 1)):
-                    broken = copy.deepcopy(measurement)
-                    mutation(broken)
-                    with self.assertRaises(run.Failure):
-                        run.runtime.validate_payload(broken, spec)
-                with self.assertRaises(run.Failure):
-                    list_layout(dict(layout, workload='rcuht'), spec)
 
-    def test_list_jit_requires_returned_bodies_and_separates_local_repeats(self):
-        base = dict(workload='list', arm='kdlock', threads=8, jit_bodies=10,
+    def test_jit_requires_returned_bodies_and_separates_local_repeats(self):
+        base = dict(workload='cacheline', arm='kdlock', threads=8, jit_bodies=10,
                     jit_completions=10, lock_kind='mutex', functional=True)
         check_jit_evidence(base)
         self.assertEqual(base['jit_acceptance'], 'PASS')
@@ -84,10 +31,12 @@ class DirectTests(unittest.TestCase):
                        dict(jit_bodies=0, jit_completions=0)):
             with self.assertRaises(run.Failure):
                 check_jit_evidence(dict(base, **values))
-        self.assertEqual(run.list_execution_class(base), 'RETURNED_JIT')
-        self.assertEqual(run.list_execution_class(dict(base, jit_bodies=0, jit_completions=0)),
+        self.assertEqual(run.execution_class(base), 'RETURNED_JIT')
+        self.assertEqual(run.execution_class(dict(base, jit_bodies=0, jit_completions=0)),
                          'NO_JIT')
-        self.assertEqual(run.list_execution_class(dict(base, jit_completions=0)), 'PARTIAL_JIT')
+        self.assertEqual(run.execution_class(dict(base, jit_completions=0)), 'PARTIAL_JIT')
+        self.assertEqual(run.execution_class({k:v for k,v in base.items()
+                                              if k != 'jit_completions'}), 'UNMEASURED')
 
     def test_public_mutex_plan_is_distinct_on_every_standard_cohort(self):
         threads = [*range(1, 9), *range(12, 61, 4)]
@@ -158,7 +107,7 @@ ret
                     (out/spec['name']).mkdir()
                     run.write_json(out/spec['name']/'session.json', dict(spec,
                         execution_status='OK', drained=True, jit_bodies=100,
-                        measurement=dict(complete=True, data_ok=True, completed=100, wall_ns=100000)))
+                        measurement=dict(complete=True, data_ok=True, completed=100, wall_ns=100000), jit_completions=100))
                 run.report(out)
                 records = json.loads((out/'records.json').read_text())
                 self.assertTrue(all(not r['score_eligible'] for r in records))
@@ -192,14 +141,16 @@ ret
         record = dict(spin_entry_ratio_limit=2, spin_prefetch=2,
                       spin_delegate='on')
         params = dict(bench_quiet='Y', jit_timing='N', bench_lock_addr='4096',
+                      bench_complete_probe='Y',
                       spin_entry_ratio_limit='2', spin_prefetch='2', spin_delegate='Y')
         check_kd_parameters(params, record, 4096)
-        for workload in ('list', 'list-prefetch'):
-            list_record = dict(record, workload=workload)
-            check_kd_parameters(dict(params, bench_complete_probe='Y'), list_record, 4096)
-            for incomplete in (params, dict(params, bench_complete_probe='N')):
+        for workload in ('cacheline', 'rcuht'):
+            record_for_workload = dict(record, workload=workload)
+            check_kd_parameters(dict(params, bench_complete_probe='Y'), record_for_workload, 4096)
+            for incomplete in (dict(params, bench_complete_probe='N'),
+                               {k:v for k,v in params.items() if k != 'bench_complete_probe'}):
                 with self.assertRaises(run.Failure):
-                    check_kd_parameters(incomplete, list_record, 4096)
+                    check_kd_parameters(incomplete, record_for_workload, 4096)
         for value in ('0', '1'):
             with self.subTest(value=value), self.assertRaises(run.Failure):
                 check_kd_parameters(dict(params, mutex_jit=value), record, 4096)
@@ -218,11 +169,11 @@ ret
 
     def test_mutex_cannot_bypass_returned_body_acceptance(self):
         record = dict(arm='kdlock', lock_kind='mutex', threads=16,
-                      jit_bodies=0, scenario='plain', spin_delegate='off')
+                      jit_bodies=0, scenario='plain', spin_delegate='off', jit_completions=0)
         with self.assertRaisesRegex(run.Failure, 'no actual JIT'):
             check_jit_evidence(record)
         self.assertEqual(record['jit_acceptance'], 'NO_JIT')
-        check_jit_evidence(record := dict(record, jit_bodies=1))
+        check_jit_evidence(record := dict(record, jit_bodies=1, jit_completions=1))
         self.assertEqual(record['jit_acceptance'], 'PASS')
 
     def test_rwlock_context_accepts_only_original_irq_prefix(self):
@@ -333,7 +284,7 @@ ret
     def test_collect_no_jit_preserves_failure_and_requires_verified_drain(self):
         record = dict(execution_status='NO_JIT', jit_acceptance='NO_JIT',
                       jit_bodies=0, drained=True,
-                      measurement=dict(complete=True, data_ok=True))
+                      measurement=dict(complete=True, data_ok=True), jit_completions=0)
         before = copy.deepcopy(record)
         session = Mock(record=record)
         session.execute.side_effect = run.Failure('NO_JIT', 'missing body')
@@ -344,7 +295,7 @@ ret
         # No unsafe, incomplete or contradictory session may be hidden by
         # the optional evidence-collection mode. The original verdict stays.
         variants = [dict(record, drained=False), dict(record, cleanup_error='busy'),
-                    dict(record, execution_status='OK'), dict(record, jit_bodies=1),
+                    dict(record, execution_status='OK'), dict(record, jit_bodies=1, jit_completions=1),
                     dict(record, jit_acceptance='PASS'),
                     dict(record, measurement=dict(complete=False, data_ok=True)),
                     dict(record, measurement=dict(complete=True, data_ok=False))]
@@ -372,7 +323,7 @@ ret
                     execution_status='OK' if i == 0 else 'NO_JIT',
                     jit_bodies=1 if i == 0 else 0,
                     measurement=dict(completed=100, wall_ns=100000 if i == 0 else 100,
-                                     data_ok=True, complete=True)))
+                                     data_ok=True, complete=True), jit_completions=1 if i == 0 else 0))
             run.report(out)
             summary = json.loads((out/'summary.json').read_text())[0]
             self.assertEqual(summary['valid'], 1)
@@ -403,7 +354,7 @@ ret
         # Successful data with zero JIT does not establish a contended positive.
         with self.assertRaisesRegex(run.Failure, 'no actual JIT'):
             check_jit_evidence(dict(arm='kdlock', lock_kind='mutex', threads=16,
-                                    jit_bodies=0, scenario='plain'))
+                                    jit_bodies=0, scenario='plain', jit_completions=0))
 
     def test_explicit_placement_and_collector(self):
         args = Namespace(cachelines=[1], threads=[8, 16], repeats=1,
@@ -433,7 +384,7 @@ ret
             for i, spec in enumerate(plans):
                 folder = out/spec['name']; folder.mkdir()
                 run.write_json(folder/'session.json', dict(spec,
-                    execution_status='OK', drained=True,
+                    jit_bodies=0, jit_completions=0, execution_status='OK', drained=True,
                     measurement=dict(completed=100, wall_ns=(i+1)*100000,
                                      data_ok=True, complete=True)))
             run.report(out)
@@ -522,7 +473,7 @@ ret
                 plan.append(candidate)
                 folder = out/candidate['name']; folder.mkdir()
                 run.write_json(folder/'session.json', dict(candidate,
-                    execution_status='OK', drained=True,
+                    jit_bodies=0, jit_completions=0, execution_status='OK', drained=True,
                     measurement=dict(completed=index * 1000, wall_ns=1000000,
                                      data_ok=True, complete=True)))
             run.write_json(out/'plan.json', plan)
@@ -592,7 +543,7 @@ ret
                 rate = (2 - spec['repeat']) * 1e6
                 whole = (1 + spec['repeat']) * 0.5e6
                 run.write_json(folder/'session.json', dict(spec,
-                    execution_status='OK', drained=True,
+                    jit_bodies=0, jit_completions=0, execution_status='OK', drained=True,
                     measurement=dict(completed=whole * 2, wall_ns=2e9,
                         data_ok=True, complete=True,
                         peak=dict(throughput_ops_s=rate, amortized_ns_op=1e9/rate))))
@@ -720,7 +671,7 @@ ret
             (out/'plain').mkdir()
             (out/'plain/session.json').write_text(json.dumps(dict(
                 execution_status='PASS', drained=True, jit_bodies=9,
-                jit_acceptance='PASS', measurement=dict(completed=10, wall_ns=100))))
+                jit_acceptance='PASS', measurement=dict(completed=10, wall_ns=100), jit_completions=9)))
             run.report(out)
             rows = json.loads((out/'functional.json').read_text())
             self.assertEqual(rows[0]['completed'], 10)
@@ -736,22 +687,22 @@ ret
 
     def test_disabled_control_rejects_any_jit(self):
         record = dict(arm='kdlock', threads=4, jit_bodies=0,
-                      hotlock_mode='adaptive', spin_delegate='off')
+                      hotlock_mode='adaptive', spin_delegate='off', jit_completions=0)
         check_jit_evidence(record)
         self.assertEqual(record['jit_acceptance'], 'DISABLED_CONTROL')
         with self.assertRaisesRegex(run.Failure, 'disabled control executed JIT'):
-            check_jit_evidence(dict(record, jit_bodies=1))
+            check_jit_evidence(dict(record, jit_bodies=1, jit_completions=1))
 
     def test_policy_no_jit_is_not_protocol_acceptance(self):
-        record = dict(arm='kdlock', threads=4, jit_bodies=0, hotlock_mode='adaptive')
+        record = dict(arm='kdlock', threads=4, jit_bodies=0, hotlock_mode='adaptive', jit_completions=0)
         check_jit_evidence(record)
         self.assertEqual(record['jit_acceptance'], 'NO_JIT')
-        check_jit_evidence(record := dict(record, jit_bodies=1))
+        check_jit_evidence(record := dict(record, jit_bodies=1, jit_completions=1))
         self.assertEqual(record['jit_acceptance'], 'PASS')
 
     def test_single_thread_native_completion_is_not_jit_acceptance(self):
         record = dict(arm='kdlock', threads=1, jit_bodies=0,
-            hotlock_mode='adaptive', caller_shell='cold_clobber', scenario='plain')
+            hotlock_mode='adaptive', caller_shell='cold_clobber', scenario='plain', jit_completions=0)
         check_jit_evidence(record)
         self.assertEqual(record['jit_acceptance'], 'NO_JIT')
 
@@ -779,10 +730,10 @@ ret
         for threads in (2, 3):
             with self.subTest(threads=threads):
                 record = dict(arm='kdlock', threads=threads, jit_bodies=0,
-                    hotlock_mode='adaptive', caller_shell='cold_clobber', scenario='plain')
+                    hotlock_mode='adaptive', caller_shell='cold_clobber', scenario='plain', jit_completions=0)
                 check_jit_evidence(record)
                 self.assertEqual(record['jit_acceptance'], 'NO_JIT_LOW_CONTENTION')
-                check_jit_evidence(record := dict(record, jit_bodies=1))
+                check_jit_evidence(record := dict(record, jit_bodies=1, jit_completions=1))
                 self.assertEqual(record['jit_acceptance'], 'PASS')
 
     def test_nested_protocol_cases_still_require_jit(self):
@@ -791,10 +742,10 @@ ret
                 with self.subTest(threads=threads, scenario=scenario):
                     record = dict(arm='kdlock', threads=threads, jit_bodies=0,
                         hotlock_mode='adaptive', caller_shell='cold_clobber',
-                        spin_entry_ratio_limit=0, scenario=scenario)
+                        spin_entry_ratio_limit=0, scenario=scenario, jit_completions=0)
                     with self.assertRaisesRegex(run.Failure, 'no actual JIT'):
                         check_jit_evidence(record)
-                    check_jit_evidence(record := dict(record, jit_bodies=1))
+                    check_jit_evidence(record := dict(record, jit_bodies=1, jit_completions=1))
                     self.assertEqual(record['jit_acceptance'], 'PASS')
 
     def test_admission_mode_option_is_removed(self):
@@ -811,10 +762,10 @@ ret
     def test_high_contention_requires_jit(self):
         for threads in (20, 24, 28, 32, 36):
             record = dict(arm='kdlock', threads=threads, jit_bodies=0,
-                hotlock_mode='adaptive', caller_shell='cold_clobber', scenario='plain')
+                hotlock_mode='adaptive', caller_shell='cold_clobber', scenario='plain', jit_completions=0)
             with self.assertRaisesRegex(run.Failure, 'no actual JIT'):
                 check_jit_evidence(record)
-            check_jit_evidence(record := dict(record, jit_bodies=1))
+            check_jit_evidence(record := dict(record, jit_bodies=1, jit_completions=1))
             self.assertEqual(record['jit_acceptance'], 'PASS')
 
     def test_contended_functional_plain_requires_jit(self):
@@ -822,11 +773,11 @@ ret
         # cannot satisfy an explicitly requested functional JIT positive.
         for threads in (2, 3, 4, 8, 16, 20):
             record = dict(arm='kdlock', threads=threads, jit_bodies=0,
-                          functional=True, scenario='plain')
+                          functional=True, scenario='plain', jit_completions=0)
             with self.subTest(threads=threads):
                 with self.assertRaisesRegex(run.Failure, 'no actual JIT'):
                     check_jit_evidence(record)
-                check_jit_evidence(record := dict(record, jit_bodies=1))
+                check_jit_evidence(record := dict(record, jit_bodies=1, jit_completions=1))
                 self.assertEqual(record['jit_acceptance'], 'PASS')
 
     def test_hash_layout_rejects_scheduling_enabled_module(self):
@@ -1068,7 +1019,7 @@ ret
                 # Vary rates between rounds; reject the fastest corrupt/undrained rows.
                 bad = spec['repeat'] == 2 and spec['arm'] != 'native'
                 rate = {'native': 1, 'tclock': 2, 'kdlock': 4}[spec['arm']] * (spec['repeat'] + 1)
-                record = dict(spec, execution_status='OK', drained=not (bad and spec['arm'] == 'kdlock'),
+                record = dict(spec, jit_bodies=0, jit_completions=0, execution_status='OK', drained=not (bad and spec['arm'] == 'kdlock'),
                     measurement=dict(completed=400, wall_ns=1 if bad else 400000/rate,
                                      data_ok=not (bad and spec['arm'] == 'tclock'), complete=True))
                 run.write_json(folder/'session.json', record)
@@ -1108,7 +1059,7 @@ ret
                 rate = {'not_applicable': 1, 'observe': 2, 'adaptive': 4}[mode]
                 bad = mode == 'adaptive' and spec['repeat'] == 1
                 run.write_json(folder/'session.json', dict(spec,
-                    execution_status='OK', drained=not bad,
+                    jit_bodies=0, jit_completions=0, execution_status='OK', drained=not bad,
                     measurement=dict(completed=400, wall_ns=1 if bad else 400000/rate,
                                      data_ok=True, complete=True)))
             run.report(out)
@@ -1136,7 +1087,7 @@ ret
             for spec in plan:
                 folder = out/spec['name']; folder.mkdir()
                 run.write_json(folder/'session.json', dict(spec,
-                    execution_status='OK', drained=True,
+                    jit_bodies=0, jit_completions=0, execution_status='OK', drained=True,
                     measurement=dict(completed=100, wall_ns=100000,
                                      data_ok=True, complete=True)))
                 if spec['arm'] == 'kdlock':
@@ -1171,7 +1122,7 @@ ret
             for index, spec in enumerate(plans):
                 folder = out/spec['name']; folder.mkdir()
                 run.write_json(folder/'session.json', dict(spec,
-                    execution_status='OK', drained=True,
+                    jit_bodies=0, jit_completions=0, execution_status='OK', drained=True,
                     measurement=dict(completed=100, wall_ns=100000*(index+1),
                                      data_ok=True, complete=True)))
             run.report(out)
@@ -1201,7 +1152,7 @@ ret
                     execution_status='OK', drained=True,
                     jit_bodies=int(spec['cpu_heat_policy'] == 'mcs_reset1024_shift10_lock512_head6'),
                     measurement=dict(completed=200, wall_ns=100000,
-                                     data_ok=True, complete=True)))
+                                     data_ok=True, complete=True), jit_completions=int(spec['cpu_heat_policy'] == 'mcs_reset1024_shift10_lock512_head6')))
             run.report(out)
             rows = json.loads((out/'summary.json').read_text())
             self.assertEqual(len(rows), 11)
@@ -1241,7 +1192,7 @@ ret
                 run.write_json(folder/'session.json', dict(spec,
                     execution_status='OK', drained=True, jit_bodies=1,
                     measurement=dict(completed=400, wall_ns=400000/rate,
-                                     data_ok=True, complete=True)))
+                                     data_ok=True, complete=True), jit_completions=1))
             run.report(out)
             rows = json.loads((out/'summary.json').read_text())
             self.assertEqual(len(rows), len(rates))
@@ -1281,8 +1232,8 @@ ret
         self.assertIn('spin_prefetch=0', args)
         self.assertIn('bench_complete_probe=1', args)
 
-    def test_list_provider_enables_returned_body_probe(self):
-        for workload in ('list', 'list-prefetch'):
+    def test_provider_enables_returned_body_probe(self):
+        for workload in ('cacheline', 'rcuht'):
             session = BackendSession.__new__(BackendSession)
             session.record = dict(arm='kdlock', workload=workload,
                                   spin_entry_ratio_limit=2, spin_delegate='on', spin_prefetch=2)

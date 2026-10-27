@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Current single-round lock/API catalog; MM suites have separate kernel plans.
 
-The original dated plan remains fixed evidence. This plan selects the active
-Linux 7 kernel identity and padded-counter nano profiles, with a new evidence root.
+This plan selects the active Linux 7 kernel identity, current micro/API cases
+and padded-counter nano profiles, with a new evidence root.
 It prints commands and never starts a workload.
 """
 import argparse
@@ -32,8 +32,8 @@ def commands(guest_root):
         command = ['bench/rwlock_compare/run.py', *argv[2:]]
         command[command.index('--output') + 1] = str(destination/name)
         yield name, command
-    historical = load('catalog_original_micro_api', Path(__file__).with_name('plan.py'))
-    for name, argv in historical.commands():
+    micro_api = load('catalog_micro_api', Path(__file__).with_name('plan.py'))
+    for name, argv in micro_api.commands():
         command = list(argv)
         command[command.index('--output') + 1] = str(destination/name)
         command[command.index('--kernel-source') + 1] = str(args.kernel_source)
@@ -46,8 +46,8 @@ def main():
     parser.add_argument('--guest-root', required=True)
     args = parser.parse_args()
     plan = [dict(workload=name, argv=argv) for name, argv in commands(args.guest_root)]
-    if len(plan) != 61 or len({r['workload'] for r in plan}) != len(plan):
-        raise ValueError('Current catalog must contain 10 nano and 51 micro/API configurations')
+    if len(plan) != 52 or len({r['workload'] for r in plan}) != len(plan):
+        raise ValueError('Current catalog must contain 10 nano and 42 micro/API configurations')
     print(json.dumps(plan, indent=2))
 
 

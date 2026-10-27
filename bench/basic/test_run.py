@@ -117,12 +117,14 @@ class FunctionalSmoke(unittest.TestCase):
             self.assertEqual(len(rows), 1)
             self.assertTrue(rows[0]['functional'])
             self.assertEqual(rows[0]['duration_ms'], 0)
-            self.assertEqual(rows[0]['threads'], 60 if task['family'] == 'rwlock' else 16)
-            self.assertEqual(rows[0]['workload'], 'list')
+            self.assertEqual(rows[0]['threads'], 16)
+            self.assertEqual(rows[0]['workload'], 'cacheline')
+            self.assertEqual(rows[0]['cachelines'], 16 if task['family'] == 'rwsem' else 1)
             if task['family'] == 'mutex':
                 self.assertIn('public', task['argv'])
             if task['family'] in ('rwlock', 'rwsem'):
                 self.assertTrue(rows[0]['require_jit'])
+                self.assertEqual(rows[0]['write_percent'], 100 if task['family'] == 'rwsem' else 20)
 
     def test_selected_kernel_paths_reach_every_child(self):
         for task in run.plan(Path('/tmp/kd-basic-plan-only'), run.FAMILIES,

@@ -52,10 +52,10 @@ class BenchTests(unittest.TestCase):
         with self.assertRaises(run.Failure):
             run.make_plan(args)
 
-    def test_list_report_requires_returned_evidence_and_preserves_local_controls(self):
+    def test_report_requires_returned_evidence_and_preserves_local_controls(self):
         for family, arms in (('rwlock', ['native', 'tclock', 'kdlock']),
                              ('rwsem', ['native', 'kdlock'])):
-            args = run.parser().parse_args(['--lock-kind', family, '--workloads', 'list',
+            args = run.parser().parse_args(['--lock-kind', family, '--workloads', 'cacheline',
                 '--backends', *arms, '--threads', '8', '--write-percent', '20'])
             plan = run.make_plan(args)
             for bodies, completions, expected in ((10, 10, 'PASS'), (10, 0, 'INCOMPLETE'),
@@ -91,42 +91,7 @@ class BenchTests(unittest.TestCase):
                                             jit_status='PARTIAL_JIT', score_eligible=True))
                         self.assertEqual(run.assess(plan, summary)['status'], 'INCOMPLETE')
 
-    def test_list_variants_keep_size_hint_and_lock_family_identity(self):
-        for family, arms in (('rwlock', ['native', 'tclock', 'kdlock']),
-                             ('rwsem', ['native', 'kdlock'])):
-            args = run.parser().parse_args(['--lock-kind', family, '--functional',
-                '--repeats', '1', '--workloads', 'list', 'list-prefetch',
-                '--list-nodes', '16', '128', '--backends', *arms,
-                '--threads', '8', '--write-percent', '20'])
-            plan = run.make_plan(args)
-            self.assertEqual(len(plan), 4 * len(arms))
-            self.assertEqual(len({r['variant'] for r in plan}), len(plan))
-            self.assertEqual({r['list_nodes'] for r in plan}, {16, 128})
-            self.assertTrue(all(r['cachelines'] == r['list_nodes'] and
-                                r['workload'] in r['name'] for r in plan))
-        args = run.parser().parse_args(['--lock-kind', 'rwsem', '--workloads', 'list'])
-        self.assertEqual({r['arm'] for r in run.make_plan(args)},
-                         {'native', 'tclock', 'kdlock'})
 
-    def test_list_oracle_checks_writer_totals_read_consistency_and_identity(self):
-        for workload, code in (('list', 4), ('list-prefetch', 5)):
-            for nodes in (16, 128):
-                for percent in (0, 20, 100):
-                    spec, measurement = fixture('cacheline', percent)
-                    spec.update(workload=workload, list_nodes=nodes, cachelines=nodes)
-                    for label in ('before', 'after'):
-                        measurement[label].update(workload=code, lines=nodes, values=[0]*16)
-                    measurement['after']['values'][0] = 2 * percent
-                    validate(measurement, spec)
-                    for mutate in (
-                            lambda m: m['after']['values'].__setitem__(0, 2*percent+1),
-                            lambda m: m['after']['values'].__setitem__(1, 1),
-                            lambda m: m['after'].__setitem__('lines', 128 if nodes == 16 else 16),
-                            lambda m: m['workers'][0].__setitem__('read_errors', 1)):
-                        bad = copy.deepcopy(measurement)
-                        mutate(bad)
-                        with self.assertRaises(ValueError):
-                            validate(bad, spec)
 
     def test_cold_normal_image_does_not_finish_helper_learning(self):
         # Reproduce a NORMAL CALL-miss image that has never executed. Only a
@@ -321,7 +286,7 @@ class BenchTests(unittest.TestCase):
     def test_parity_requires_both_metrics_and_both_comparators(self):
         plan = run.make_plan(run.parser().parse_args(['--threads', '16', '--write-percent', '20']))
         summary = [dict(variant=f'rcuht-c00-{arm}', write_percent=20, threads=16,
-                        complete=True, valid_rounds=3, jit_status='PASS' if arm == 'kdlock' else 'NATIVE',
+                        complete=True, valid_rounds=3, score_eligible=True, jit_status='PASS' if arm == 'kdlock' else 'NATIVE',
                         best_peak_ops_s=rate, whole_median_ops_s=rate)
                    for arm, rate in (('native', 10), ('tclock', 11), ('kdlock', 12))]
         self.assertEqual(run.assess(plan, summary)['status'], 'PASS')
@@ -345,7 +310,7 @@ class BenchTests(unittest.TestCase):
             '--threads', '8', '--write-percent', '20', '--require-parity'])
         plan = run.make_plan(args)
         summary = [dict(variant=f'rwsem-rcuht-c00-{arm}', write_percent=20, threads=8,
-                        complete=True, valid_rounds=3, jit_status='NATIVE',
+                        complete=True, valid_rounds=3, score_eligible=True, jit_status='NATIVE',
                         best_peak_ops_s=rate, whole_median_ops_s=rate)
                    for arm, rate in (('native', 10), ('kdlock', 12))]
         result = run.assess(plan, summary)
@@ -378,7 +343,7 @@ class BenchTests(unittest.TestCase):
             args.require_parity = False
             plan = run.make_plan(args)
             summary = [dict(variant=spec['variant'], write_percent=20, threads=8,
-                            complete=True, valid_rounds=3, jit_status='NATIVE',
+                            complete=True, valid_rounds=3, score_eligible=True, jit_status='NATIVE',
                             best_peak_ops_s=10, whole_median_ops_s=10)
                        for spec in plan[:2]]
             result = run.assess(plan, summary)
@@ -531,7 +496,7 @@ class BenchTests(unittest.TestCase):
                 folder = out / f'case{i}'
                 folder.mkdir()
                 (folder / 'session.json').write_text(json.dumps(dict(plan[i], execution_status=status,
-                    drained=drain, measurement=m, jit_status='PASS')))
+                    drained=drain, measurement=m, jit_status='PASS', jit_bodies=1, jit_completions=1)))
             run.report(out)
             summary = json.loads((out / 'summary.json').read_text())
             self.assertEqual(summary[0]['valid_rounds'], 1)

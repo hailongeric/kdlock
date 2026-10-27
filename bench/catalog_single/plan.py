@@ -1,18 +1,18 @@
-"""One-round catalog commands; execution belongs exclusively to the recovery VM."""
+"""Active single-round micro/API commands for the Linux 7 development VM."""
 THREADS = list(range(1, 9)) + list(range(12, 61, 4))
-GUEST = '/root/kdlock-evidence/10.176.26.71/bench/catalog-single-20261026'
+GUEST = '/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-20261027'
 
 
 def commands():
     common = ['--threads', *map(str, THREADS), '--collector-cpu', '63',
               '--repeats', '1', '--duration-ms', '2000',
-              '--kernel-source', '/root/linux-6.1.159-kdclobber2',
-              '--kernel-baseline', '/root/kdlock-kernel-baselines/mutex-clobber2-20260919']
+              '--kernel-source', '/mnt/kdlock-builds/linux-7.0.0-38-kdlock1/build',
+              '--kernel-baseline', '/root/kdlock-kernel-baselines/linux70-kdlock1-20261027']
     arms = ['--backends', 'native', 'tclock', 'kdlock']
     payloads = [('c01', 'cacheline', ['--cachelines', '1']),
                 ('c08', 'cacheline', ['--cachelines', '8']),
-                ('rcuht', 'rcuht', []), ('list16', 'list', ['--list-nodes', '16'])]
-    for family in ('spin', 'mutex'):
+                ('rcuht', 'rcuht', [])]
+    for family in ('spin',):
         for label, workload, extra in payloads:
             name = family + '-' + label
             runner = 'run_mutex.py' if family == 'mutex' else 'run.py'
@@ -35,7 +35,6 @@ def commands():
             yield name, ['bench/rwlock_compare/run.py', *arms, *common,
                          '--cpus', *map(str, range(60)), '--lock-kind', 'spin',
                          '--workloads', workload, '--write-percent', str(percent),
-                         *(['--helper-waves', '0'] if workload == 'taskname' and percent else []),
                          '--output', GUEST + '/' + name]
     apis = [('ofd', ('front', 'tail', 'miss'), (16, 128)),
             ('setfd', ('toggle',), (16, 512)),

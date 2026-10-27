@@ -20,10 +20,9 @@ def commands(base):
               '--sample-ms', '10', '--kernel-source', '/root/linux-6.1.159-kdclobber2',
               '--kernel-baseline', '/root/kdlock-kernel-baselines/mutex-clobber2-20260919']
     variants = [('cacheline', ['--cachelines', '1', '8']), ('rcuht', [])]
-    variants += [(w, ['--list-nodes', str(n)]) for w in ('list', 'list-prefetch') for n in (16,128)]
     for lock in ('spin', 'mutex'):
         for workload, extra in variants:
-            name = lock + '-' + workload + ('-n'+extra[-1] if workload.startswith('list') else '')
+            name = lock + '-' + workload
             yield name, [sys.executable, str(ROOT/'bench/tclock_compare'/('run_mutex.py' if lock=='mutex' else 'run.py')),
                          '--backends', 'native', 'tclock', 'kdlock', '--cpus', '0-59',
                          '--workload', workload, *extra, *(['--mutex-api','public'] if lock=='mutex' else []),
@@ -31,8 +30,8 @@ def commands(base):
     for lock in ('rwlock', 'rwsem'):
         yield lock, [sys.executable, str(ROOT/'bench/rwlock_compare/run.py'), '--lock-kind', lock,
                      '--backends', 'native', *(['tclock'] if lock=='rwlock' else []), 'kdlock',
-                     '--workloads', 'cacheline', 'rcuht', 'list', 'list-prefetch', '--cachelines', '1', '8',
-                     '--list-nodes', '16', '128', '--write-percent', '1', '20',
+                     '--workloads', 'cacheline', 'rcuht', '--cachelines', '1', '8',
+                     '--write-percent', '1', '20',
                      '--cpus', *map(str, range(60)), *common, '--output', str(base/lock)]
 
 def main():

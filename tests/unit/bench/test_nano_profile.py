@@ -128,7 +128,7 @@ class NanoProfileTests(unittest.TestCase):
             (out / 'case/session.json').write_text(json.dumps(dict(name='case', functional=False,
                 score_eligible=True, measurement=dict(completed=10, reads=0, writes=10, wall_ns=100,
                     peak=dict(throughput_ops_s=10)), execution_status='OK', drained=True)))
-            runner = types.SimpleNamespace(valid=lambda r: True, list_execution_class=lambda r: 'RETURNED_JIT')
+            runner = types.SimpleNamespace(valid=lambda r: True, execution_class=lambda r: 'RETURNED_JIT')
             self.assertEqual(profile.diagnostic_report(runner, out)['status'], 'DIAGNOSTIC')
             row = json.loads((out / 'records.json').read_text())[0]
             self.assertFalse(row['score_eligible'])

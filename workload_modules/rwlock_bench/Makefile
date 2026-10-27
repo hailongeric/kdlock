@@ -1,3 +1,10 @@
+RB_WORKLOAD ?= cacheline
+ifneq ($(words $(RB_WORKLOAD)),1)
+$(error RB_WORKLOAD requires one payload name)
+endif
+ifneq ($(filter $(RB_WORKLOAD),cacheline rcuht taskname argbounds nano),$(RB_WORKLOAD))
+$(error unsupported RB_WORKLOAD)
+endif
 ifneq ($(KERNELRELEASE),)
 obj-m := rwlock_bench.o
 rwlock_bench-objs := module.o
@@ -40,10 +47,6 @@ ccflags-y += -DRB_HASH
 endif
 ifeq ($(RB_WORKLOAD),nano)
 ccflags-y += -DRB_NANO
-endif
-ifneq ($(filter list list-prefetch,$(RB_WORKLOAD)),)
-ccflags-y += -DRB_LIST -DSC_LIST_NODES=$(RB_LINES)
-ccflags-y += -DSC_LIST_PREFETCH=$(if $(filter list-prefetch,$(RB_WORKLOAD)),1,0)
 endif
 ifeq ($(RB_BACKEND),kdlock)
 ccflags-y += -DRB_KDLOCK -I$(KDLOCK_INCLUDE)

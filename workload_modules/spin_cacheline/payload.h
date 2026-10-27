@@ -24,14 +24,6 @@ static spinlock_t sc_lock __attribute__((aligned(SC_LINE_BYTES)));
 
 #ifdef SC_HASH_PAYLOAD
 #include "hash_payload.h"
-#elif defined(SC_LIST_PAYLOAD)
-#include "list_payload.h"
-static __attribute__((noipa)) void sc_body_0(void)
-{
-	SC_LOCK(0);
-	sc_list_write_locked();
-	SC_UNLOCK();
-}
 #else
 #define SC_TOUCH(i) WRITE_ONCE(sc_data[i].value, READ_ONCE(sc_data[i].value) + 1)
 #define SC_TOUCH_1 SC_TOUCH(0);
@@ -65,7 +57,7 @@ static inline int sc_prepare(unsigned int lines)
 #ifdef SC_DIRECT_KDLOCK
 	unsigned long entry;
 	switch (lines) {
-#if defined(SC_HASH_PAYLOAD) || defined(SC_LIST_PAYLOAD)
+#if defined(SC_HASH_PAYLOAD)
 	case 0: entry = (unsigned long)sc_entry_0; break;
 #else
 	case 1: entry = (unsigned long)sc_entry_1; break;
@@ -82,7 +74,7 @@ static inline int sc_prepare(unsigned int lines)
 	return kd_spin_prepare(&sc_lock, entry, KD_ENTRY_ABI_SPIN_CLOBBER_V1);
 #endif
 #else
-#if defined(SC_HASH_PAYLOAD) || defined(SC_LIST_PAYLOAD)
+#if defined(SC_HASH_PAYLOAD)
 	return lines == 0 ? 0 : -EINVAL;
 #else
 	return lines == 1 || lines == 2 || lines == 4 || lines == 8 || lines == 16 ?

@@ -208,10 +208,6 @@ class RWSession(Session):
                     self.learn_helpers()
                 self.stop_daemon()
                 require(status()['writers'] == 0, 'translator writer still open', 'UNDRAINED')
-                if self.record['workload'] in ('list', 'list-prefetch'):
-                    from list_audit import capture
-                    self.record['list_image_audit'] = capture(
-                        self.path, self.publication(), self.record['workload'] == 'list-prefetch')
         self.phase('warmup', dict(self.record, iterations=48000, duration_ms=0))
         self.save()
 

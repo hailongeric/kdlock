@@ -8,8 +8,9 @@ object or extracted API body alone cannot close the stage 3 coverage requirement
 The active API port targets Ubuntu `linux=7.0.0-38.38`; Linux 6.1 results remain
 historical. The new kernel has its own
 [source/configuration identity](../kernel_integration/linux70/README.md).
-The VM compilation matrix covered 109 provider, payload and support-module
-configurations across its recorded initial and focused retry inputs. Compilation
+The retained VM compilation matrix covers 97 provider, payload and support-module
+configurations across its recorded initial and focused retry inputs. Archived
+source provenance is incomplete after user-directed cleanup. Compilation
 and live correctness are separate gates; this matrix does not validate workload
 execution, drain or performance. A separate eight-session Native/TCLock
 cacheline check passed data and normal drain for spin, mutex, rwlock and rwsem;
@@ -68,19 +69,22 @@ and the [spin](../docs/design/spin_implementation.md),
 [mutex](../docs/design/mutex_implementation.md) and [rwlock](../docs/design/rwlock_implementation.md)
 implementation guides. Measurement commands and results belong in the runner README.
 
-## Synthetic nano-benchmark payloads
+## Synthetic benchmark payloads
 
 Module names identify the lock shells; `*_cacheline` modules also support hash
-and list bodies. The full [workload catalog](../docs/BENCHMARK_WORKLOADS.md)
+bodies. The full [workload catalog](../docs/BENCHMARK_WORKLOADS.md)
 defines configurations; [benchmark runners](../bench/README.md) own commands and
 measurement policy.
 
 | Payload | Implementation | Module shells |
 | --- | --- | --- |
 | Cacheline updates (1 or 8 lines) | [spin payload](spin_cacheline/payload.h), [reader/writer payload](rwlock_bench/payload.h) | `spin_cacheline`, `mutex_cacheline`, `rwlock_bench` |
+| Nano counter updates (1 or 16 lines, post256) | [Reader/writer payload](rwlock_bench/payload.h) | `rwlock_bench` with mutex, rwlock or rwsem shell |
 | RCUHT hash operations | [hash_payload.h](spin_cacheline/hash_payload.h) | All three shells; reader/writer variants add read lookups |
-| Resident list (`list`, 16 or 128 nodes) | [list_payload.h](spin_cacheline/list_payload.h) | All three shells |
-| Resident list with prefetch (`list-prefetch`) | Same list implementation, selected at build time | All three shells |
+
+The active catalog selects micro cacheline/RCUHT bodies for spin, rwlock and
+rwsem. Mutex micro c01/c08/RCUHT bodies remain available to historical probes;
+current mutex comparisons select the two nano profiles and retained API workloads.
 
 `rwlock_bench` selects rwlock, spin or rwsem shells where supported. Shared
 [latency instrumentation](latency/operation_latency.h) is not a separate workload.

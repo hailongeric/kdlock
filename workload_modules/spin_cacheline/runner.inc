@@ -103,10 +103,6 @@ static long sc_run_timed(void __user *user)
 		return -EINVAL;
 	/* Match fixed-iteration workers: random keys remain outside the lock. */
 	random_state = (raw_smp_processor_id() + 1ULL) * 0x9e3779b97f4a7c15ULL;
-#elif defined(SC_LIST_PAYLOAD)
-	if (run.cachelines != 0)
-		return -EINVAL;
-	body = sc_body_0;
 #else
 	switch (run.cachelines) {
 	case 1: body = sc_body_1; break;
@@ -230,11 +226,6 @@ static long sc_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 		/* ABI v2 retains this field to identify old scheduling-enabled runs. */
 		layout.resched = 0;
 		layout.data_addr = (unsigned long)sc_hash_nodes;
-#elif defined(SC_LIST_PAYLOAD)
-		layout.workload = SC_LIST_PREFETCH ?
-			SC_WORKLOAD_LIST_PREFETCH : SC_WORKLOAD_LIST;
-		layout.entries = SC_LIST_NODES;
-		layout.data_addr = (unsigned long)sc_list_nodes;
 #else
 		for (i = 0; i < SC_SLOTS; i++)
 			layout.slot_addr[i] = (unsigned long)&sc_data[i];
@@ -245,8 +236,6 @@ static long sc_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 			return -EBUSY;
 #ifdef SC_HASH_PAYLOAD
 		i = sc_hash_snapshot(&counts);
-#elif defined(SC_LIST_PAYLOAD)
-		i = sc_list_snapshot(counts.values);
 #else
 		for (i = 0; i < SC_SLOTS; i++)
 			counts.values[i] = READ_ONCE(sc_data[i].value);
@@ -267,10 +256,6 @@ static long sc_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 			return -EINVAL;
 		/* The client pins workers; seeds identify their CPU, not backend/time. */
 		random_state = (raw_smp_processor_id() + 1ULL) * 0x9e3779b97f4a7c15ULL;
-#elif defined(SC_LIST_PAYLOAD)
-		if (run.cachelines != 0)
-			return -EINVAL;
-		body = sc_body_0;
 #else
 		switch (run.cachelines) {
 		case 1: body = sc_body_1; break;
@@ -345,8 +330,6 @@ static int __init sc_init(void)
 	sc_lock_init();
 #ifdef SC_HASH_PAYLOAD
 	sc_hash_init();
-#elif defined(SC_LIST_PAYLOAD)
-	sc_list_init();
 #endif
 	atomic_set(&sc_control, 0);
 	return misc_register(&sc_device);
@@ -360,4 +343,4 @@ static void __exit sc_exit(void)
 module_init(sc_init);
 module_exit(sc_exit);
 MODULE_LICENSE("GPL");
-MODULE_DESCRIPTION("Direct lock cacheline, resident list or RCUHT write microbenchmark");
+MODULE_DESCRIPTION("Direct lock cacheline or RCUHT write microbenchmark");

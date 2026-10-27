@@ -163,9 +163,6 @@ class Session:
                     # Hash the inspection disassembly at the same boundaries;
                     # exporting it later never adds I/O to the measured batch.
                     images={p.name: digest(p) for p in (image, assembly, disassembly)})
-        if self.record.get("workload") in ("list", "list-prefetch"):
-            require((folder / "jit.o").is_file(), "missing generated list ELF")
-            result["images"]["jit.o"] = digest(folder / "jit.o")
         if entry['requirements'] & 16:
             from native_image import capture
             result['loaded_image'] = capture(self.path, entry, image)

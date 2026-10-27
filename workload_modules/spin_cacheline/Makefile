@@ -1,5 +1,11 @@
 # Independent guest workload: no kdlock symbol dependency for the native arm.
-SC_LIST_NODES ?= 16
+SC_WORKLOAD ?= cacheline
+ifneq ($(words $(SC_WORKLOAD)),1)
+$(error SC_WORKLOAD requires one payload name)
+endif
+ifneq ($(filter $(SC_WORKLOAD),cacheline rcuht),$(SC_WORKLOAD))
+$(error SC_WORKLOAD must be cacheline or rcuht)
+endif
 ifneq ($(KERNELRELEASE),)
 obj-m := spin_cacheline.o
 spin_cacheline-objs := module.o
@@ -10,10 +16,6 @@ UBSAN_SANITIZE := n
 endif
 ifeq ($(SC_WORKLOAD),rcuht)
 ccflags-y += -DSC_HASH_PAYLOAD
-endif
-ifneq ($(filter list list-prefetch,$(SC_WORKLOAD)),)
-ccflags-y += -DSC_LIST_PAYLOAD -DSC_LIST_NODES=$(SC_LIST_NODES)
-ccflags-y += -DSC_LIST_PREFETCH=$(if $(filter list-prefetch,$(SC_WORKLOAD)),1,0)
 endif
 ifeq ($(SC_BACKEND),kdlock)
 ccflags-y += -DSC_DIRECT_KDLOCK -I$(KDLOCK_INCLUDE)

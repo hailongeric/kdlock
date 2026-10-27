@@ -47,7 +47,7 @@ class CachelineTests(unittest.TestCase):
         cls.temp.cleanup()
 
     def client(self, n=2, fault=None, cpus=None, iterations=1000, api_counts=False,
-               binary=None, workload=None, nodes=16):
+               binary=None):
         env = dict(os.environ)
         env.pop("SC_FIXTURE_FAULT", None)
         env.pop("SC_FIXTURE_COUNTS", None)
@@ -57,41 +57,9 @@ class CachelineTests(unittest.TestCase):
             env["SC_FIXTURE_COUNTS"] = "1"
         args = [str(binary or self.binary), "--cachelines", str(n), "--iterations", str(iterations),
                 "--cpus", ",".join(map(str, self.cpus if cpus is None else cpus))]
-        if workload:
-            args += ['--workload', workload, '--list-nodes', str(nodes)]
         return subprocess.run(args,
                               capture_output=True, text=True, env=env, timeout=10)
 
-    def test_list_client_checks_real_payload_identity_links_and_counts(self):
-        includes = self.out/'list-includes'
-        (includes/'linux').mkdir(parents=True)
-        (includes/'linux/prefetch.h').write_text(
-            '#define prefetch(address) __builtin_prefetch((address), 0, 3)\n')
-        for nodes in (16, 128):
-            for hint in (0, 1):
-                workload = 'list-prefetch' if hint else 'list'
-                binary = self.out/f'list-client-{nodes}-{hint}'
-                subprocess.run(['cc', '-O2', '-Wall', '-Wextra', '-Werror',
-                    '-std=gnu11', '-pthread', '-I', str(includes),
-                    '-DSC_LIST_PAYLOAD', f'-DSC_LIST_NODES={nodes}',
-                    f'-DSC_LIST_PREFETCH={hint}', str(HERE/'client_fixture.c'),
-                    '-o', str(binary)], check=True, capture_output=True, timeout=30)
-                with self.subTest(nodes=nodes, prefetch=hint):
-                    result = self.client(0, binary=binary, workload=workload, nodes=nodes)
-                    self.assertEqual(result.returncode, 0, result.stderr)
-                    measurement = json.loads(result.stdout)
-                    run.validate_measurement(measurement, dict(workload=workload,
-                        list_nodes=nodes, cachelines=0, threads=2, cpus=self.cpus), 1000)
-                    for fault in ('links', 'active', 'inactive', 'layout'):
-                        failed = self.client(0, binary=binary, workload=workload,
-                                             nodes=nodes, fault=fault)
-                        self.assertNotEqual(failed.returncode, 0, fault)
-                    for wrong_workload, wrong_nodes in (
-                            ('list' if hint else 'list-prefetch', nodes),
-                            (workload, 128 if nodes == 16 else 16)):
-                        failed = self.client(0, binary=binary, workload=wrong_workload,
-                                             nodes=wrong_nodes)
-                        self.assertNotEqual(failed.returncode, 0)
 
     def test_one_ioctl_batch_and_constant_clock_calls(self):
         # Count actual calls from the client in the substitute device. This is

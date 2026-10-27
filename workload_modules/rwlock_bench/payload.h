@@ -8,25 +8,6 @@
 #include "snapshot_payload.h"
 #elif defined(RB_NANO)
 #include "nano_payload.h"
-#elif defined(RB_LIST)
-#include "list_payload.h"
-
-static __attribute__((noipa)) void rb_write(void)
-{
-	RB_WRITE_LOCK();
-	sc_list_write_locked();
-	RB_WRITE_UNLOCK();
-}
-
-static __attribute__((noipa)) bool rb_read(void)
-{
-	bool bad;
-
-	RB_READ_LOCK();
-	bad = sc_list_read_locked();
-	RB_READ_UNLOCK();
-	return bad;
-}
 #elif defined(RB_HASH)
 /* Reuse the existing TCLock RCUHT move body and full structural oracle. Only
  * its locking shell changes; keys, linked-list stores and outcome accounting

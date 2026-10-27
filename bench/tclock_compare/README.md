@@ -26,6 +26,9 @@ The accepted `555b8b7` baseline uses its frozen older client,
 provider and translator in the [paired round](../results/10.176.26.71/bench/comparison/mutex-kdonly-20261017T140354Z/README.md).
 
 [run.py](run.py) measures spin; [run_mutex.py](run_mutex.py) measures ordinary mutex.
+The active catalog selects this runner for spin c01/c08/RCUHT. Mutex micro
+c01/c08/RCUHT are historical controls; current mutex nano profiles use the
+[nano launcher](../nano/README.md), and syscall workloads use the API runner.
 Each backend has its own compiled workload functions and lock object. They use
 the same protected operations, timing method and reports. Choosing spin versus
 mutex happens at build time, without a runtime `is_mutex` branch in each operation.
@@ -72,7 +75,7 @@ Full spin cacheline matrix after that verification:
 KDLOCK_RECOVERY_CONFIRMED=1 KDLOCK_SNAPSHOT_TAG=YOUR_CONFIRMED_SNAPSHOT \
   LC_ALL=C timeout --kill-after=10s 3600s python3 bench/tclock_compare/run.py \
   --backends native tclock kdlock --workload cacheline --cachelines 1 \
-  --threads 1 2 3 4 5 6 7 8 12 16 20 24 28 32 36 40 44 48 52 56 60 --repeats 3 \
+  --threads 1 2 3 4 5 6 7 8 12 16 20 24 28 32 36 40 44 48 52 56 60 --repeats 1 \
   --duration-ms 2000 --peak-window-ms 300 --collector-cpu 63 \
   --kernel-source /mnt/kdlock-builds/linux-7.0.0-38-kdlock1/build \
   --kernel-baseline /root/kdlock-kernel-baselines/linux70-kdlock1-20261027 \
@@ -97,7 +100,7 @@ has no `mutex_jit` parameter.
 | Option/default | Meaning |
 | --- | --- |
 | `--threads 1 4 8 16 20` | Short default; explicitly select the standard 21-point set above |
-| `--repeats 3` | Three rounds/configuration, rotating backend order |
+| `--repeats 3` | Low-level default; the current catalog explicitly selects `--repeats 1`. Rotates backend order between repetitions |
 | `--duration-ms 0` | Fixed iterations by default; use 2,000 for the timed comparison |
 | `--peak-window-ms 300`, `--peak-settle-ms 300` | Highest valid cohort window after settling |
 | `--collector-cpu 63` | Separate collector on the current 64-vCPU VM |

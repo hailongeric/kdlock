@@ -185,7 +185,7 @@ class NanoTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 validate(bad, spec)
         row = dict(spec, arm='kdlock', jit_bodies=10, jit_completions=0, measurement=measurement)
-        self.assertEqual(run.list_execution_class(row), 'PARTIAL_JIT')
+        self.assertEqual(run.execution_class(row), 'PARTIAL_JIT')
 
     def test_profiles_bind_packed_record_and_public_or_local_shell(self):
         for family, percent in [('mutex', 100), ('rwsem', 1), ('rwsem', 20)]:
@@ -283,9 +283,9 @@ class NanoTests(unittest.TestCase):
     def test_nano_return_evidence_is_not_inferred_from_entries(self):
         base = dict(workload='nano', arm='kdlock', jit_bodies=10, jit_completions=10,
                     measurement=dict(writes=10))
-        self.assertEqual(run.list_execution_class(base), 'RETURNED_JIT')
-        self.assertEqual(run.list_execution_class(dict(base, jit_completions=0)), 'PARTIAL_JIT')
-        self.assertEqual(run.list_execution_class(dict(base, jit_bodies=0, jit_completions=0)), 'NO_JIT')
+        self.assertEqual(run.execution_class(base), 'RETURNED_JIT')
+        self.assertEqual(run.execution_class(dict(base, jit_completions=0)), 'PARTIAL_JIT')
+        self.assertEqual(run.execution_class(dict(base, jit_bodies=0, jit_completions=0)), 'NO_JIT')
 
 
 if __name__ == '__main__':

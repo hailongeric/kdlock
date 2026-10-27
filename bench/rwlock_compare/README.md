@@ -20,18 +20,16 @@ instrumented checks of reader overlap and writer exclusion.
 The same runner also supports sleeping rwsems and extracted proc spin
 snapshots. These modes keep distinct lock, caller and execution identities.
 
-The [minimal nano profiles](../nano/README.md) add a two-word resident record
-under a public ABI2 mutex or a rwsem. `--workloads nano --lock-kind mutex
---write-percent 100` selects the all-writer mutex case; rwsem profiles use 1%
-or 20% writes. All backends share the same packed 64-byte record and exact
-two-word write-count oracle. `--delegate off` supplies a separately labeled
-callable-local mutex or ordinary-writer rwsem control. These new bulk-ioctl
+The ten [active nano profiles](../nano/README.md) use one or sixteen padded
+counters with 256 post-unlock rounds. They select public ABI2 mutex writes or
+rwlock/rwsem mixes with 1% or 20% writes. All backends share the same body and
+exact completed-write oracle. `--delegate off` supplies a separately labeled
+callable-local mutex or ordinary-writer reader/writer control. These bulk-ioctl
 profiles are separate from the real-syscall catalog and historical nano matrix.
-The `mutex-locality` nano profile reuses the straight-line counter payload with
-`--workloads cacheline --cachelines 16 --lock-kind mutex --write-percent 100`.
-It removes the list's links while retaining sixteen dirty cachelines and checks
-every counter against the exact completed-write total. Other mutex cacheline
-sizes and mixed mutex operations are intentionally outside this profile.
+For example, `mutex-locality` uses `--workloads cacheline --cachelines 16
+--lock-kind mutex --write-percent 100 --post-work-rounds 256`; every counter must match
+the exact completed-write total. The older two-word workload remains available
+only for its historical controls and is not selected by the active nano launcher.
 
 ## Additional explicit modes
 

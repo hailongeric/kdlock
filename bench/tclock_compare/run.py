@@ -64,7 +64,7 @@ def timing_settings(args):
                 'collector CPU must be outside every worker cohort')
         require(getattr(args, 'scenario', 'plain') == 'plain' and
                 getattr(args, 'workload', 'cacheline') in
-                    ('cacheline', 'rcuht', 'list', 'list-prefetch') and
+                    ('cacheline', 'rcuht') and
                 not getattr(args, 'functional', False),
                 'timed peaks require a plain performance workload')
     return settings
@@ -145,9 +145,7 @@ def make_plan(args):
     cpus = worker_cpus(args)
     timing = timing_settings(args)
     workload = getattr(args, 'workload', 'cacheline')
-    list_nodes = getattr(args, 'list_nodes', 16) if workload.startswith('list') else 0
-    require(not workload.startswith('list') or list_nodes in (16, 128),
-            'list nodes must be 16 or 128')
+    require(workload in ('cacheline', 'rcuht'), 'unsupported workload')
     lock_kind = getattr(args, 'lock_kind', 'spin')
     mutex_api = getattr(args, 'mutex_api', 'outer')
     require(mutex_api in ('outer', 'public') and
@@ -164,14 +162,13 @@ def make_plan(args):
         offset = repeat % len(variants)
         arms = variants[offset:] + variants[:offset]
         for backend, mode in arms:
-            prefix = (f'{workload}-n{list_nodes}' if list_nodes else
-                      'hash1024' if workload == 'rcuht' else f'c{n:02d}')
+            prefix = 'hash1024' if workload == 'rcuht' else f'c{n:02d}'
             suffix = f'-{mode}' if backend == 'kdlock' else ''
             if backend == 'kdlock' and lock_kind == 'mutex' and mutex_api == 'public':
                 suffix += '-public'
             result.append(dict(name=f'{prefix}-t{t:02d}-r{repeat:02d}-direct-{backend}{suffix}',
                 cachelines=n, threads=t, repeat=repeat, arm=backend, caller_abi='clobber' if backend == 'kdlock' else 'c',
-                api_mode='direct', workload=workload, list_nodes=list_nodes,
+                api_mode='direct', workload=workload,
                 lock_kind=lock_kind, hotlock_mode=mode,
                 caller_shell=(('mutex_public_direct' if mutex_api == 'public' else 'mutex_outer_cookie') if lock_kind == 'mutex' else 'cold_clobber') if backend == 'kdlock' else 'c',
                 cookie_storage=(('provider_acquisition_ledger' if mutex_api == 'public' else 'outer_acquisition_local') if lock_kind == 'mutex' else 'percpu_direct_gate') if backend == 'kdlock' else 'not_applicable',
@@ -197,16 +194,16 @@ def make_plan(args):
     return result
 
 
-def list_execution_class(record):
-    if record.get('workload') not in ('list', 'list-prefetch'):
-        return 'LEGACY_ENTRY_OBSERVATION'
-    if record['arm'] != 'kdlock':
+def execution_class(record):
+    if record.get('arm') in ('native', 'tclock'):
         return 'NATIVE'
+    if record.get('arm') != 'kdlock':
+        return 'UNMEASURED'
     if 'jit_completions' not in record or 'jit_bodies' not in record:
         return 'UNMEASURED'
     require(type(record['jit_completions']) is int and type(record['jit_bodies']) is int and
             0 <= record['jit_completions'] <= record['jit_bodies'],
-            'invalid list entry/completion evidence')
+            'invalid entry/completion evidence')
     return ('RETURNED_JIT' if record['jit_completions'] else
             'PARTIAL_JIT' if record['jit_bodies'] else 'NO_JIT')
 
@@ -224,7 +221,7 @@ def report(out):
                 arm=spec.get('arm', 'unrecorded'),
                 lock_kind=spec.get('lock_kind', 'unrecorded'),
                 performance_accepted=False,
-                workload=spec.get('workload', 'cacheline'), list_nodes=spec.get('list_nodes', 0),
+                workload=spec.get('workload', 'cacheline'),
                 hotlock_mode=spec.get('hotlock_mode', 'unrecorded'),
                 cpu_heat_policy=spec.get('cpu_heat_policy', 'unrecorded'),
                 spin_contention_pct=spec.get('spin_contention_pct', 'unrecorded'),
@@ -237,7 +234,7 @@ def report(out):
                 completed=row.get('measurement', {}).get('completed', 0),
                 jit_bodies=row.get('jit_bodies', 0),
                 jit_completions=row.get('jit_completions'),
-                execution_class=list_execution_class(row or spec),
+                execution_class=execution_class(row or spec),
                 jit_acceptance=('NOT_APPLICABLE' if spec.get('arm') in ('native', 'tclock')
                                 else row.get('jit_acceptance', 'NOT_RUN'))))
         write_json(out/'functional.json', rows)
@@ -251,7 +248,7 @@ def report(out):
         good = valid(r)
         r['score_eligible'] = good and not any(r.get(k, False) for k in
                                               ('diagnostic', 'pmu', 'perf_record'))
-        evidence = list_execution_class(r)
+        evidence = execution_class(r)
         r['score_eligible'] &= evidence not in ('PARTIAL_JIT', 'UNMEASURED')
         timed = bool(r.get('duration_ms', 0))
         r['whole_throughput_ops_s'] = m['completed']*1e9/m['wall_ns'] if good else None
@@ -270,7 +267,7 @@ def report(out):
         # identities, including zero's bypass. Never pool tuning candidates.
         mode = r.get('hotlock_mode', 'unrecorded')
         groups.setdefault((r.get('lock_kind', 'spin'), r.get('workload', 'cacheline'),
-                           r.get('list_nodes', 0), evidence,
+                           evidence,
                            r['cachelines'], r['threads'], r['arm'], mode,
                            r.get('caller_shell', 'unrecorded'),
                            r.get('cookie_storage', 'unrecorded'),
@@ -286,10 +283,10 @@ def report(out):
                            tuple(r.get('cpus', range(r['threads'])))), []).append(r)
     write_json(out/'records.json', records)
     summary = []
-    for (lock_kind, workload, list_nodes, evidence, n, t, arm, mode, shell, cookie, heat_policy, contention_pct, ratio_limit, timing, delegate, numa, batch, prefetch, provider_ubsan, cpus), rows in groups.items():
+    for (lock_kind, workload, evidence, n, t, arm, mode, shell, cookie, heat_policy, contention_pct, ratio_limit, timing, delegate, numa, batch, prefetch, provider_ubsan, cpus), rows in groups.items():
         good = [r for r in rows if r['score_eligible']]
         row = dict(cachelines=n, threads=t, api_mode='direct', arm=arm, lock_kind=lock_kind,
-                   workload=workload, list_nodes=list_nodes, execution_class=evidence,
+                   workload=workload, execution_class=evidence,
                    sessions=len(rows), valid=len(good),
                    hotlock_mode=mode, caller_shell=shell,
                    cookie_storage=cookie,
@@ -302,8 +299,7 @@ def report(out):
                    cpus=list(cpus), cpu_nodes=rows[0].get('cpu_nodes'),
                    **dict(zip(TIMING_FIELDS, timing)),
                    actual_jit_sessions=sum(r.get('jit_bodies', 0) > 0 for r in good))
-        row['returned_jit_sessions'] = (sum(r.get('jit_completions', 0) > 0 for r in good)
-                                        if workload in ('list', 'list-prefetch') else None)
+        row['returned_jit_sessions'] = sum(r.get('jit_completions', 0) > 0 for r in good)
         # Select one valid session per backend. Keep its matching ns/op and
         # identity so the maximum throughput is auditable in records.json.
         best = max(good, key=lambda r: r['throughput_ops_s']) if good else None
@@ -324,12 +320,12 @@ def report(out):
             100 * (max(rates) - min(rates)) / row['median_throughput_ops_s']
             if len(rates) > 1 else None)
         summary.append(row)
-    natives = {(r['lock_kind'], r['workload'], r['list_nodes'], r['cachelines'], r['threads'],
+    natives = {(r['lock_kind'], r['workload'], r['cachelines'], r['threads'],
                 tuple(r[k] for k in TIMING_FIELDS), tuple(r['cpus'])):
                r['best_throughput_ops_s']
                for r in summary if r['arm'] == 'native'}
     for row in summary:
-        native = natives.get((row['lock_kind'], row['workload'], row['list_nodes'],
+        native = natives.get((row['lock_kind'], row['workload'],
                               row['cachelines'], row['threads'],
                               tuple(row[k] for k in TIMING_FIELDS), tuple(row['cpus'])))
         row['throughput_over_linux'] = row['best_throughput_ops_s']/native if native and row['valid'] else None
@@ -364,8 +360,7 @@ def execute_session(session, keep_going_no_jit=False):
 def main(lock_kind='spin'):
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('--output', type=Path, required=True)
-    p.add_argument('--workload', choices=('cacheline', 'rcuht', 'list', 'list-prefetch'), default='cacheline')
-    p.add_argument('--list-nodes', type=int, choices=(16, 128), default=16)
+    p.add_argument('--workload', choices=('cacheline', 'rcuht'), default='cacheline')
     p.add_argument('--cachelines', type=int, nargs='+', choices=(1,2,4,8,16))
     p.add_argument('--threads', type=int, nargs='+', choices=range(1, 65), default=[1,4,8,16,20])
     p.add_argument('--cpus', type=runtime.cpu_list,
@@ -538,7 +533,6 @@ def main(lock_kind='spin'):
                 extra = [f'KBUILD_EXTRA_SYMBOLS={module.parent / "Module.symvers"}']
             command(['make','-C',folder,f'KDIR={args.kernel_source}',
                      f'SC_BACKEND={backend}', f'SC_WORKLOAD={args.workload}',
-                     f'SC_LIST_NODES={args.list_nodes}',
                      f'SC_MUTEX_API={args.mutex_api}',
                      f'SC_SCENARIO={dict(plain=0, nested=1, early=2)[args.scenario]}',
                      f'KDLOCK_INCLUDE={ROOT / "include"}',
@@ -547,10 +541,6 @@ def main(lock_kind='spin'):
                     out/f'build-{build_name}.log',timeout=120)
             variants[backend] = binary = folder/f'{lock_kind}_cacheline.ko'
             command(['objdump','-dr',binary],out/f'caller-{build_name}.txt')
-            if args.workload in ('list', 'list-prefetch'):
-                from list_audit import functions as audit_list_functions
-                audit_list_functions(binary, ['mc_body_0' if lock_kind == 'mutex' else 'sc_body_0'],
-                                     args.workload == 'list-prefetch', out/f'list-audit-{backend}')
             imported = command(['nm', '-u', binary], out/f'imports-{build_name}.txt')
             require('__ubsan_' not in imported, 'direct workload still imports UBSAN handlers')
             require('kd_raw_spin_' not in imported and 'kd_spin_dispatch_' not in imported,

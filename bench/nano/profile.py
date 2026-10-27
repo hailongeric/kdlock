@@ -330,7 +330,7 @@ def diagnostic_report(runner, out):
                        read_ops_s=m['reads'] * 1e9 / m['wall_ns'],
                        write_ops_s=m['writes'] * 1e9 / m['wall_ns'],
                        peak_ops_s=m['peak']['throughput_ops_s'],
-                       execution_class=runner.list_execution_class(row))
+                       execution_class=runner.execution_class(row))
         records.append(row)
     save(out / 'records.json', records)
     save(out / 'summary.json', [])
