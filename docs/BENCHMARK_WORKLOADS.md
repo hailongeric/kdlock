@@ -1,5 +1,10 @@
 # Benchmark workloads and critical sections
 
+These definitions remain reference workloads after
+[Linux 6.1 retirement](history/kernel-retirement-20261027.md). Future adaptation
+targets Ubuntu 26.04 / Linux 7.0 and requires fresh compatibility checks and
+matched measurements; the retained results do not establish support there.
+
 This catalog defines the synthetic and system-call/application programming
 interface (syscall/API) workloads selected for
 benchmarks on `master`. Use [benchmark commands](../bench/README.md) for execution and

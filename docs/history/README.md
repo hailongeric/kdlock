@@ -6,6 +6,7 @@ Historical throughput does not describe `master` unless the report says so.
 
 | Record | Status |
 | --- | --- |
+| [Linux 6.1 retirement, 2026-10-27](kernel-retirement-20261027.md) | One legacy recovery version, preserved results, exact cleanup receipts and the planned Ubuntu 26.04 / Linux 7.0 transition |
 | [Main consolidation, 2026-10-18](main-consolidation-20261018.md) | Accepted baseline, branch dispositions, moves and removals |
 | [Feature reintegration, 2026-10-18](feature-reintegration-20261018.md) | Restore independent branch features and port ordinary sleeping rwsem without changing the selected mutex protocol |
 | [Legacy compatibility backport](legacy_mutex_compatibility.md) | Instruction/image changes retained in the current KD-only mutex |

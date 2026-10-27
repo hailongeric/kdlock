@@ -1,5 +1,12 @@
 # VM operations
 
+Linux 6.1 development is retired. The environment and commands below describe
+the one retained legacy recovery version, `6.1.159-kdclobber2`. Future adaptation
+targets Ubuntu 26.04 / Linux 7.0; it has not been installed or validated by this
+cleanup. See the [retirement record](../history/kernel-retirement-20261027.md)
+for retained inputs, removed copies and evidence. Establish a new environment
+record before applying these recipes to the next kernel.
+
 All builds, unit tests, live modules, daemons and benchmarks run in the recovery
 VM on `10.176.26.71`. The source host performs edits, Git, static inspection and
 read-only offline evidence checks. See [development rules](../../AGENTS.md).
@@ -71,12 +78,23 @@ an artifact disposable. Use an exact deletion inventory and verify retained
 copies before removing duplicates; do not run a blanket kernel-tree clean.
 The [October 22 cleanup receipt](../../bench/results/10.176.26.71/tests/vm-disk-cleanup-20261022/README.md)
 records the 10.01 GiB reclaimed from four historical build trees and the
-preserved kernel identities. The recovery and MM build trees remain intact.
+preserved kernel identities. That receipt describes the state before the
+October 27 retirement; its MM and ancestor build-tree retention is superseded
+by the retirement inventory.
 The later [October 25 exact-file cleanup](../../bench/results/10.176.26.71/tests/approved-archive-cleanup-20261025/README.md)
 removed only three separately approved duplicate guest archives, retaining
 hash-matched source-host copies. It freed 552,722,432 bytes on root and
 684,572,672 bytes on the data disk. This did not authorize further cleanup or
 resume the benchmark stopped by host admission.
+
+The [October 27 retirement](../history/kernel-retirement-20261027.md) removes
+the obsolete project kernel installations, ancestor/MM build copies and stale
+boot-menu files after preserving their source changes and records. Only the
+`kdclobber2` project kernel remains installed; its source/build tree and captured
+bundle are retained. Benchmark evidence and the distro-managed kernel packages
+remain outside the deletion scope. Existing VM snapshots remain available;
+their irreversible removal needs explicit approval after automatic review
+rejected including them in kernel-archive cleanup.
 
 ## Kernel identity
 
@@ -146,8 +164,11 @@ Before live module/JIT work, confirm an actual recoverable snapshot through
 `/tmp/qemu-monitor.sock` on the benchmark host. `savevm` must succeed and
 `info snapshots` must list the tag. Only then set `KDLOCK_RECOVERY_CONFIRMED=1`
 and the recorded `KDLOCK_SNAPSHOT_TAG`. Environment variables alone are not proof.
-The accepted round used `before-mutex-kdonly-20261017T140354Z`; recheck availability
-and current boot identity before relying on it.
+The final legacy recovery point is `legacy-kdclobber2-20261027`. The earlier
+42 snapshots and the temporary pre-cleanup snapshot remain retained pending
+explicit deletion approval; the [retirement record](../history/kernel-retirement-20261027.md)
+lists the proposed removals. Recheck the actual snapshot list, topology and
+current boot identity before relying on any recovery point.
 
 Use bounded SSH and monitor commands. Root-owned sockets may need sudo. Disconnect
 without sending `quit`; close only monitor clients created for the operation.

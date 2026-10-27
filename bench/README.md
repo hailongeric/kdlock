@@ -5,6 +5,12 @@ stage 1, actual mmap/page-fault comparisons in stage 2, and unchanged applicatio
 on integrated kernels in stage 3. Use this guide for implemented runner selection;
 the roadmap's exact mmap1 target remains a new runner/validation task.
 
+Linux 6.1 development is retired. These runners and results retain the legacy
+workload contracts; Ubuntu 26.04 / Linux 7.0 is the user-selected future
+adaptation target and has not been validated. Follow the
+[retirement record](../docs/history/kernel-retirement-20261027.md) for retained
+kernel inputs and treat existing live-run commands as legacy references.
+
 Use the maintained runner for the lock family. [The workload catalog](../docs/BENCHMARK_WORKLOADS.md)
 defines protected operations and API parameters; [performance status](../docs/PERFORMANCE.md)
 summarizes the accepted version. Build and run only in the verified VM on

@@ -6,6 +6,13 @@ This runner supplies the actual mmap-lock comparison for stage 2 of the
 The planned upstream mmap1 comparison and actual fault-throughput driver require
 their own contracts; they cannot reuse these workload labels.
 
+This runner's Linux 6.1 MM kernels are retired. Its commands and results are
+historical references for future Ubuntu 26.04 / Linux 7.0 adaptation, which is
+not yet validated. The [retirement record](../../docs/history/kernel-retirement-20261027.md)
+defines retained evidence and the single `kdclobber2` recovery version. Old
+`kdmm31` build inputs may require reconstruction; the plans below do not
+authorize or schedule additional legacy-kernel measurements.
+
 The [October 26 screen](../results/10.176.26.71/bench/catalog-mmap-single-20261026/README.md)
 completed 42 Native/KD shared-mm measurements, one per backend/count, with exact
 aggregate accounting and drain. It is exploratory, retains the KD regression,
@@ -14,7 +21,7 @@ qualified 16-worker validation pair is also retained. Stage 2's improvement/pari
 objective remains open; the [campaign plan](../../docs/THROUGHPUT_PLAN.md) separates
 completed evidence from proposed work.
 
-Current measurement work is throughput only. The historical `plain-scaling-v1` plan selects
+The retained measurement plan is throughput only. The historical `plain-scaling-v1` plan selects
 **126 plain sessions** across 21 worker counts, Native/KD and three repetitions.
 It has [41 focused mocked test passes](../results/10.176.26.71/tests/mmap-scaling-plan-20261026/README.md);
 its [authorized live attempt](../results/10.176.26.71/bench/mmap-worker-scaling-20261026/README.md)

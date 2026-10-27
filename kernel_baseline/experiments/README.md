@@ -5,13 +5,20 @@ They are provenance/reproduction inputs, not instructions to change the current
 kernel during ordinary provider work. [kernel_baseline](../README.md)
 and [the project guide](../../docs/PROJECT_GUIDE.md#kernel-identity) define identity checks.
 
+Linux 6.1 development is retired; Ubuntu 26.04 / Linux 7.0 is the unvalidated
+future adaptation target. The [retirement policy](../../docs/history/kernel-retirement-20261027.md)
+keeps one complete `kdclobber2` recovery version and the result evidence. The
+small patch/capture sources here remain historical provenance and ABI fixtures.
+
 | Directory | Release/role |
 | --- | --- |
 | [spin_static](spin_static/README.md) | Historical kdstatic1/2 static-call ancestor |
 | [spin_clobber](spin_clobber/README.md) |kdclobber1 spin caller-clobber v1 |
-| [mutex_clobber](mutex_clobber/README.md) |kdclobber2 ordinary mutex caller-clobber v1; required kernel baseline |
+| [mutex_clobber](mutex_clobber/README.md) |kdclobber2 ordinary mutex caller-clobber v1; retained legacy recovery baseline |
 
-Keep each patch, capture script and immutable captured parent bundle. The current
+Keep each patch, capture script and embedded immutable parent/ancestor record in
+the retained bundle. Separate ancestor build trees and duplicate bundles follow
+the retirement inventory. The current
 spin provider requires spin-clobber-v1 and does not support old static-only
 installation branches. KD mutex now owns its object and clobber entry; the kernel
 mutex-clobber patch remains part of the captured baseline chain. Historical experiment source is retained because the later

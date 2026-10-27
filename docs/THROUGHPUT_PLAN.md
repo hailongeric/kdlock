@@ -6,8 +6,14 @@ replacement and application evaluation. This document owns concrete throughput
 campaigns and their retained status. Their outcomes test the project's hypotheses;
 a completed campaign is not automatically a completed development stage.
 
-Current measurement objective: quantify KD against Native across documented lock
-workloads and actual mmap/page-fault use. Report losses, local execution, class
+Linux 6.1 kernel development is retired. The plans below preserve their original
+workloads, attempts and unrun coordinates; they are not a queue of further
+legacy-kernel runs. Future adaptation targets the user-selected Ubuntu 26.04 /
+Linux 7.0 and needs new compatibility and runtime validation. See the
+[retirement record](history/kernel-retirement-20261027.md) for retained inputs.
+
+The measurement objective remains to quantify KD against Native across documented
+lock workloads and actual mmap/page-fault use. Report losses, local execution, class
 gaps and variance with gains. **This phase measures throughput only**; new tail-latency
 collection and sampled workload variants are deferred. Preserve historical
 latency evidence. Environment diagnosis is a separate activity.
@@ -72,8 +78,9 @@ KD validation. The completed October 26 single-round screen is a separate plan.
 The original `paired-v1` (24 sessions, also the
 missing-plan default) and stopped `plain-v1` (12 sessions) remain separate.
 
-Reuse the same `kdmm31` image/configuration, build-3 payload/clients and scoped
-API evidence. Plain runs retain exact totals, joins, callback oracles, mm/lock
+The historical plan specified the same `kdmm31` image/configuration, build-3
+payload/clients and scoped API evidence. Plain runs retain exact totals, joins,
+callback oracles, mm/lock
 identity, retirement and progress accounting, with zero latency samples.
 Workers use CPUs 0..N−1; collector 63 is separate. Counts above 32 span both guest
 NUMA nodes. Collector-first-touch buffers remain unchanged; this is not an

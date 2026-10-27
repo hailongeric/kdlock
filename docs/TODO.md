@@ -21,6 +21,12 @@ indexed in [VALIDATION](VALIDATION.md).
 
 ## Current checkpoint
 
+The next adaptation target is the user-selected Ubuntu 26.04 / Linux 7.0.
+Linux 6.1 development is retired, with one legacy recovery version and the
+results retained under the [retirement policy](history/kernel-retirement-20261027.md).
+New-kernel compatibility is unvalidated. The legacy campaign plans below keep
+their recorded outcomes and unrun cases; they do not schedule further 6.1 work.
+
 The [three-stage project roadmap](ROADMAP.md) defines the goal: micro/nano gains,
 scoped MM improvement or parity, then relevant kernel lock replacement and
 application evaluation. Stage 1 has favorable exploratory cases and retained
@@ -28,7 +34,7 @@ regressions; stage 2 has not achieved its performance gate; stage 3 remains plan
 The next scoped gaps are an exact actual-backend `mmap1_threads` comparison, an
 independent-process control, and a generic actual-fault throughput driver.
 
-Current measurement work is a [throughput-only Native/KD comparison](THROUGHPUT_PLAN.md)
+The retained measurement plan is a [throughput-only Native/KD comparison](THROUGHPUT_PLAN.md)
 across the [workload catalog](BENCHMARK_WORKLOADS.md), actual mmap and actual
 page faults. Substantial gains are a hypothesis; losses remain reportable.
 Reuse the validated

@@ -9,11 +9,13 @@ kernel lock replacements and evaluate application performance. The
 criteria. Current measurements support favorable nano cases but have not met the
 scoped MM performance objective; broad kernel replacement remains planned.
 
-Start with the [basic working version](docs/PROJECT_GUIDE.md#basic-working-version)
-for focused functional commands across all four lock families and the separate
-real mmap/page-fault examples. Current work prioritizes qualified Native/KD
-throughput across lock workloads, actual mmap and actual page faults; see the
-[throughput campaign plan](docs/THROUGHPUT_PLAN.md). New tail-latency work is deferred.
+Linux 6.1 kernel development is retired. The next adaptation target is the
+user-selected **Ubuntu 26.04 / Linux 7.0**; compatibility is not yet established.
+The [retirement record](docs/history/kernel-retirement-20261027.md) defines the
+single retained legacy recovery version and result-preservation policy. The
+[basic working version](docs/PROJECT_GUIDE.md#basic-working-version) and
+[throughput campaign plan](docs/THROUGHPUT_PLAN.md) retain the legacy interfaces,
+commands and evidence; they do not establish support for the new target.
 
 The October 26 exploratory screen attempted all 51 runnable lock/API
 configurations and completed the three separate implemented mmap/fault workloads,

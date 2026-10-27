@@ -6,6 +6,15 @@ and repository orientation; the [throughput campaign plan](THROUGHPUT_PLAN.md)
 owns bounded measurement plans; [performance status](PERFORMANCE.md) owns measured
 outcomes. Historical campaign definitions and failures keep their original scope.
 
+Linux 6.1 kernel development is retired. Future adaptation targets the
+user-selected Ubuntu 26.04 / Linux 7.0; no compatibility or performance result
+is established for that target. Preserve the results and one legacy
+`6.1.159-kdclobber2` recovery version under the
+[retirement policy](history/kernel-retirement-20261027.md). Porting requires new
+source/configuration identities, ABI and API review, and focused validation
+before the three stages below can claim results on the new kernel. Historical
+passes and nano gains do not transfer automatically.
+
 ## Ultimate goal
 
 Integrate KD into the Linux kernel as a replacement for the relevant native lock

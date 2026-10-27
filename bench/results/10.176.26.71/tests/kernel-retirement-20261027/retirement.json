@@ -1,0 +1,476 @@
+{
+  "archive_member_kinds": {
+    "directory": 11982,
+    "file": 230153,
+    "symlink": 140
+  },
+  "archive_members_verified": 242275,
+  "completed_scope": "Authorized kernel/file cleanup and final recovery verification",
+  "coverage_counts": {
+    "archived": 230287,
+    "deliberately-omitted": 42667,
+    "upstream-identical": 657414
+  },
+  "covered_leaf_records": 930368,
+  "generated_utc": "2026-10-27T00:34:30.102457+00:00",
+  "guest_free_space": [
+    {
+      "filesystem": "/",
+      "free_after_cleanup": 53332357120,
+      "free_before_grub_cleanup": 53332254720,
+      "free_before_inventory": 4365357056,
+      "observed_free_increase": 48967000064
+    },
+    {
+      "filesystem": "/mnt/kdlock-builds",
+      "free_after_cleanup": 694603776,
+      "free_before_grub_cleanup": 694603776,
+      "free_before_inventory": 694603776,
+      "observed_free_increase": 0
+    }
+  ],
+  "host_frequency": {
+    "all_fixed": true,
+    "governors": [
+      "performance"
+    ],
+    "no_turbo": "1",
+    "policy_count": 64,
+    "target_khz": 2000000
+  },
+  "idle": true,
+  "initial_apply_incident": {
+    "cause": "Two System.map link counts fell from two to one when aliases inside the already removed MM work root were deleted.",
+    "changed_paths": [
+      "/boot/System.map-6.1.159-kdmm7",
+      "/boot/System.map-6.1.159-kdmm8"
+    ],
+    "finalize_returncode": 0,
+    "journaled_roots": 106,
+    "link_count_check_waived": false,
+    "remaining_roots": 113,
+    "resume_deletion_complete": true,
+    "resume_failure_cause": "Boot postcondition found obsolete manually configured GRUB menu entries after all original deletion roots were removed.",
+    "resume_returncode": 1,
+    "returncode": 1,
+    "supplementary_boot_menu_files_removed": 32
+  },
+  "input_bindings": [
+    {
+      "bytes": 35183,
+      "path": "bench/results/10.176.26.71/raw/tests/kernel-retirement-20261027/guest-reviewed/plan.json",
+      "sha256": "31783ebaee0778a5543c003a24f3272377044b27a0901febcee4b2648be1c38e"
+    },
+    {
+      "bytes": 14384691,
+      "path": "bench/results/10.176.26.71/raw/tests/kernel-retirement-20261027/guest-reviewed/delete-files.jsonl.gz",
+      "sha256": "b5b054b7af00bfcf79258f8639e1b0a273529a1f7a22e54b92f50ae124bab1be"
+    },
+    {
+      "bytes": 70023255,
+      "path": "bench/results/10.176.26.71/raw/tests/kernel-retirement-20261027/guest-reviewed/preservation-v2.json",
+      "sha256": "4d36016cacc29f1949997ebcb22786f4b534ec246e86320e4d5c06ac99d8ee1f"
+    },
+    {
+      "bytes": 47096849,
+      "path": "bench/results/10.176.26.71/raw/tests/kernel-retirement-20261027/guest-reviewed/coverage-v2.jsonl.gz",
+      "sha256": "4cd4ffa0271ddf2c9dd3bab0a2b4c28251ed42d70015f3a36876d5787f33bd22"
+    },
+    {
+      "bytes": 2840276,
+      "path": "bench/results/10.176.26.71/raw/tests/kernel-retirement-20261027/guest-reviewed/source-differences-v2.json.gz",
+      "sha256": "2560e0058c45b942d497203d0858a6598a88ac75245d5baacd0bce0513def57a"
+    },
+    {
+      "bytes": 867113,
+      "path": "bench/results/10.176.26.71/raw/tests/kernel-retirement-20261027/guest-reviewed/retained-v2-before.json",
+      "sha256": "9bdea0b1dac6d066ded9742c835c5576fe89ea18096979ea26709238b6748af8"
+    },
+    {
+      "bytes": 867113,
+      "path": "bench/results/10.176.26.71/raw/tests/kernel-retirement-20261027/guest-after/retained-v2-after.json",
+      "sha256": "9bdea0b1dac6d066ded9742c835c5576fe89ea18096979ea26709238b6748af8"
+    },
+    {
+      "bytes": 15456,
+      "path": "bench/results/10.176.26.71/raw/tests/kernel-retirement-20261027/independent-preservation-audit-v3.json",
+      "sha256": "60a914c37ee0ad7d44a46b0e06d5e621421df53fb2114a7d7ea7b22f52aa185d"
+    },
+    {
+      "bytes": 3322,
+      "path": "bench/results/10.176.26.71/raw/tests/kernel-retirement-20261027/refinement-v3.json",
+      "sha256": "9a2e5012ed4363065d0a2c78338a6795e756d7f8ddec86b0c3b2c544e1cfd175"
+    },
+    {
+      "bytes": 32015,
+      "path": "bench/results/10.176.26.71/raw/tests/kernel-retirement-20261027/audit-preservation-v3.py",
+      "sha256": "ef0dacaa165b70bee54e8c36d412d6abae635dcc2fe7acddbac49abc15cd830d"
+    },
+    {
+      "bytes": 22946,
+      "path": "bench/results/10.176.26.71/raw/tests/kernel-retirement-20261027/retire-guest-v3.py",
+      "sha256": "9cfac1f9464257f5b2ca2b08fe34da175a1c8f8984a546de79a89b204f3f47b4"
+    },
+    {
+      "bytes": 777,
+      "path": "bench/results/10.176.26.71/raw/tests/kernel-retirement-20261027/apply-command.json",
+      "sha256": "6348769c61829292eb3f4436d765d9b4ebed30f09232b329159a87b10c57603a"
+    },
+    {
+      "bytes": 4762,
+      "path": "bench/results/10.176.26.71/raw/tests/kernel-retirement-20261027/apply.stdout",
+      "sha256": "e7e431d5beae58becd35900d5c31b09f8e6fc391be2c2375d259fdaeadde50a7"
+    },
+    {
+      "bytes": 127,
+      "path": "bench/results/10.176.26.71/raw/tests/kernel-retirement-20261027/apply.stderr",
+      "sha256": "10cd888d3c8e67d45bc9de561efd70b7640a4891e59eb5cf2ac3705d4d07a624"
+    },
+    {
+      "bytes": 918,
+      "path": "bench/results/10.176.26.71/raw/tests/kernel-retirement-20261027/partial-hardlink-state.json",
+      "sha256": "ebd6bb5418d982e5e79c02532298458bb87a13a7b4db2e21c59ed044a558c870"
+    },
+    {
+      "bytes": 107009,
+      "path": "bench/results/10.176.26.71/raw/tests/kernel-retirement-20261027/hardlink-accounting.json",
+      "sha256": "eba967d8c9661331f6d4e9f81bdf6652275a29a8a34dea659a3fe49e046c682a"
+    },
+    {
+      "bytes": 950,
+      "path": "bench/results/10.176.26.71/raw/tests/kernel-retirement-20261027/resume-command.json",
+      "sha256": "a5c0d95a030d3e133d707146b081ba81eea4d2f6bac93894f470984e8b1313bf"
+    },
+    {
+      "bytes": 29831,
+      "path": "bench/results/10.176.26.71/raw/tests/kernel-retirement-20261027/resume-guest-v3.py",
+      "sha256": "e562c7bbedb5ee539a3dbd21f69c26d8571f60315c3bc5cb72bcb7d1e9c8f74f"
+    },
+    {
+      "bytes": 11440,
+      "path": "bench/results/10.176.26.71/raw/tests/kernel-retirement-20261027/guest-partial/deleted-v2.jsonl",
+      "sha256": "ea2f2ae200223d1d464479ab37bc8a997b2f833911604cd31d90d9e6de26d2e4"
+    },
+    {
+      "bytes": 28227,
+      "path": "bench/results/10.176.26.71/raw/tests/kernel-retirement-20261027/guest-after/deleted-v2.jsonl",
+      "sha256": "e278683939e8d82dcb8da61a8d823dc5c0addd2d7d182ad10e86c3d687ce85a0"
+    },
+    {
+      "bytes": 37472,
+      "path": "bench/results/10.176.26.71/raw/tests/kernel-retirement-20261027/guest-after/remaining-boot-files-verified.json",
+      "sha256": "007ff09300540d5553315cfb20f81eec303a0e1aab20615cb1355b9a4c08a455"
+    },
+    {
+      "bytes": 4244,
+      "path": "bench/results/10.176.26.71/raw/tests/kernel-retirement-20261027/resume.stdout",
+      "sha256": "3fb1d0f93d4cfa11903ed3bf8f70aa1fa4e85cc705ed4df904d179bf99c2bc21"
+    },
+    {
+      "bytes": 90,
+      "path": "bench/results/10.176.26.71/raw/tests/kernel-retirement-20261027/resume.stderr",
+      "sha256": "3bb87102455246c4f05e6bc8727a50e7498cbce9e3fbec80c2460a510e9051e6"
+    },
+    {
+      "bytes": 41195,
+      "path": "bench/results/10.176.26.71/raw/tests/kernel-retirement-20261027/grub-menu-backup.json",
+      "sha256": "6ac35060a3cab6b99555dafcd05b22b5dd4675a903db5d7a5c88c2a550f89b48"
+    },
+    {
+      "bytes": 1134,
+      "path": "bench/results/10.176.26.71/raw/tests/kernel-retirement-20261027/finalize-command.json",
+      "sha256": "51685a97e4e0352c194a4826cca1d59b0643167175019f3208cc9f449eb8964b"
+    },
+    {
+      "bytes": 28896,
+      "path": "bench/results/10.176.26.71/raw/tests/kernel-retirement-20261027/finalize-guest-v3.py",
+      "sha256": "1eadc3e8bc9096d1d305c0f421221a88dfbafe9d5c04eca3c03ebcdcc87fa1c3"
+    },
+    {
+      "bytes": 5711,
+      "path": "bench/results/10.176.26.71/raw/tests/kernel-retirement-20261027/guest-after/grub-menus-deleted.jsonl",
+      "sha256": "af826cfecbd738b60e953e1ebe40e80c6b3124d4a5685b55362c9797755558be"
+    },
+    {
+      "bytes": 319,
+      "path": "bench/results/10.176.26.71/raw/tests/kernel-retirement-20261027/guest-after/boot-menu-cleanup.json",
+      "sha256": "d1daf5d4f606ad14cae1e228a52b46397587d92acf68bc60253911a0ffbc2fce"
+    },
+    {
+      "bytes": 2825,
+      "path": "bench/results/10.176.26.71/raw/tests/kernel-retirement-20261027/guest-after/completed-v2.json",
+      "sha256": "c52d9906954880b99e667947fe59a1aece3abdff2f15294d68f96e6dcdcbc5a3"
+    },
+    {
+      "bytes": 1942,
+      "path": "bench/results/10.176.26.71/raw/tests/kernel-retirement-20261027/snapshot-plan.json",
+      "sha256": "e659f30db73987bac119e19bccd5cc6d85f34c5655b4d6e1fea8e281421121b6"
+    },
+    {
+      "bytes": 4128,
+      "path": "bench/results/10.176.26.71/raw/tests/kernel-retirement-20261027/snapshot-state.json",
+      "sha256": "1b6abe1ac9d5fc572d5c12664553b0af41fd1c40156e80d1c3dcd5cf13dab746"
+    },
+    {
+      "bytes": 703,
+      "path": "bench/results/10.176.26.71/raw/tests/kernel-retirement-20261027/snapshot-approval-rejection.json",
+      "sha256": "6f7256bf6981143c73d855255847393c83263fbf925da5d18c34071c2a90751a"
+    },
+    {
+      "bytes": 16048,
+      "path": "bench/results/10.176.26.71/raw/tests/kernel-retirement-20261027/final-state.json",
+      "sha256": "c1a0f4313259e37eda8e5721ee22b78ff129390702b3f7b496e8962761729d82"
+    },
+    {
+      "bytes": 1105,
+      "path": "bench/results/10.176.26.71/raw/tests/kernel-retirement-20261027/pruned-temporary-copies.json",
+      "sha256": "80e6c55f985f543a93b1935c3918662bbeac1d2dd8695523bff22b81b9d61928"
+    },
+    {
+      "bytes": 41235,
+      "path": "bench/results/380G10/tests/kernel-retirement-20261027/clean-worktrees-results.json",
+      "sha256": "f19033d7c0f08e89779036867d069de218c4e501dae820ab2551d4e524fe78f1"
+    },
+    {
+      "bytes": 37113,
+      "path": "bench/results/10.176.26.71/raw/tests/kernel-retirement-20261027/publish-retirement-report.py",
+      "sha256": "6250d59ace4faa6e303bdbe4c8ee52ac5d9b34a93f2e91e51f72eb560928a0d3"
+    }
+  ],
+  "inventory_records": 980109,
+  "limits": [
+    "Filesystem free-space differences are observations, not exact attribution under concurrent activity.",
+    "QEMU image allocation observations are distinct from guest filesystem free bytes and image logical size.",
+    "This cleanup ran no new builds, unit tests, timing, kernel installation or boot.",
+    "Ubuntu 26.04 / Linux 7.0 is a future adaptation target, with no compatibility or performance claim."
+  ],
+  "omission_reasons": {
+    "explicit historical incomplete upstream download": {
+      "bytes": 37768449,
+      "files": 1
+    },
+    "explicit historical kernel vmlinux ELF capture": {
+      "bytes": 775193216,
+      "files": 1
+    },
+    "explicit retired installed boot image/initramfs": {
+      "bytes": 2199646787,
+      "files": 71
+    },
+    "generated kernel object/module ELF": {
+      "bytes": 8871783452,
+      "files": 15824
+    },
+    "generated kernel static object archive": {
+      "bytes": 41112890,
+      "files": 1750
+    },
+    "generated kernel vmlinux ELF": {
+      "bytes": 10154645360,
+      "files": 20
+    },
+    "generated x86 bzImage": {
+      "bytes": 99557376,
+      "files": 8
+    },
+    "official upstream archive; exact public upstream SHA256 recorded": {
+      "bytes": 135366048,
+      "files": 1
+    },
+    "retired installed kernel module ELF": {
+      "bytes": 8143113227,
+      "files": 24955
+    },
+    "signing/key material by explicit filename; bytes not archived": {
+      "bytes": 60612,
+      "files": 36
+    }
+  },
+  "planned_unique_allocated_bytes": 49225084928,
+  "preservation_archive": {
+    "bytes": 2930628726,
+    "path": "bench/results/10.176.26.71/raw/tests/kernel-retirement-20261027/retired-source-and-metadata-v3.tar.gz",
+    "sha256": "9ea2769b87e2ea20f5cf7a4d670b056e2fbb747a40ac50f2a5847f4ac6179fcc"
+  },
+  "preservation_limitations": [
+    "Original v2 omitted binary/key bytes are unavailable on the source host. Their SHA256, format and secret-marker observations are guest assertions bound to preservation metadata; this audit independently reviews path/class/size and exact frozen-inventory coverage, not those missing bytes.",
+    "The four exact temporary vmlinux images newly omitted by refinement were present and independently hashed in the bound v2 audit. No other selected member or omission changed.",
+    "The copied official upstream archive and every selected archive file are independently rehashed locally. Source missing/type/content/mode records are recomputed for all nine frozen inventories.",
+    "Inventory device/inode/mtime/link/allocation facts and live retained-kernel status are guest observations; this is a static offline consistency audit, not a second live guest observation.",
+    "Opaque compressed/archive members remain raw private evidence. They are not recursively extracted, scanned for embedded keys or suitable for public publication.",
+    "Symlinks are verified as metadata only and never materialized. Directory uid/gid/mtime and unselected original directory sizes are outside the content/mode reconstruction contract."
+  ],
+  "proposed_snapshot_removals_pending_approval": [
+    "migration-ready-20261010T070707Z",
+    "topology64-ready-20261010",
+    "topology64-source-ready-20261010",
+    "perf64-20261010T081816Z",
+    "full64-20261010T094831Z",
+    "normal64-after-fullmatrix-20261010T140110Z",
+    "full66-20261011T025525Z",
+    "normal64-after-rerun-20261011T025525Z",
+    "mutex-opt-normal64-20261011T045425Z",
+    "mutex-opt-full66-20261011T045425Z",
+    "normal64-after-mutex-opt-20261011T045425Z",
+    "real-api-20261011-v1",
+    "real-sync-20261011-v1",
+    "mutex-blocking-20261012-v1",
+    "full-wait-66cpu-20261012-v1",
+    "mutex-blocking-only-20261012",
+    "mutex-admission-20261013",
+    "mutex-c01-cost-20261013",
+    "mutex-optimistic-c01-20261013",
+    "mutex-protocol-c01-20261013",
+    "mutex-protocol-c01-post8-20261013",
+    "mutex-owned-v1-20261013",
+    "mutex-owned-hybrid-20261014",
+    "mutex-native-first-20261014",
+    "mutex-owned-c01-full66-20261014",
+    "normal64-after-mutex-owned-full-20261014",
+    "owned-origin-before-20261015",
+    "owned-origin-66-20261015",
+    "owned-origin-regular64-final-20261015",
+    "rwsem-snapshots-20261015",
+    "rwsem-snapshots-ready-20261015",
+    "rwsem-snapshots-current-20261015",
+    "mutex-numa-c01-rerun-20261015",
+    "rwlock-c01-grid-20261015",
+    "before-mutex-legacy-removal-20261015",
+    "workloads-20261015T172603Z",
+    "before-mutex-coverage-20261016T034903Z",
+    "before-mutex-adaptive-20261016T075356Z",
+    "before-mutex-legacy-recovery-20261016T113518Z",
+    "before-mutex-legacy-grid-20261016T125529Z",
+    "before-mutex-legacy-compat-20261017T122742Z",
+    "before-mutex-kdonly-20261017T140354Z",
+    "before-kernel-retirement-20261027"
+  ],
+  "protected_boot_config_files_unchanged": 15,
+  "qemu_image_allocated_bytes_after_final_snapshot": 577889820672,
+  "qemu_image_allocated_bytes_before_final_snapshot": 552722673664,
+  "qemu_image_observed_allocated_byte_increase": 25167147008,
+  "rebooted": false,
+  "remaining_snapshots": [
+    "migration-ready-20261010T070707Z",
+    "topology64-ready-20261010",
+    "topology64-source-ready-20261010",
+    "perf64-20261010T081816Z",
+    "full64-20261010T094831Z",
+    "normal64-after-fullmatrix-20261010T140110Z",
+    "full66-20261011T025525Z",
+    "normal64-after-rerun-20261011T025525Z",
+    "mutex-opt-normal64-20261011T045425Z",
+    "mutex-opt-full66-20261011T045425Z",
+    "normal64-after-mutex-opt-20261011T045425Z",
+    "real-api-20261011-v1",
+    "real-sync-20261011-v1",
+    "mutex-blocking-20261012-v1",
+    "full-wait-66cpu-20261012-v1",
+    "mutex-blocking-only-20261012",
+    "mutex-admission-20261013",
+    "mutex-c01-cost-20261013",
+    "mutex-optimistic-c01-20261013",
+    "mutex-protocol-c01-20261013",
+    "mutex-protocol-c01-post8-20261013",
+    "mutex-owned-v1-20261013",
+    "mutex-owned-hybrid-20261014",
+    "mutex-native-first-20261014",
+    "mutex-owned-c01-full66-20261014",
+    "normal64-after-mutex-owned-full-20261014",
+    "owned-origin-before-20261015",
+    "owned-origin-66-20261015",
+    "owned-origin-regular64-final-20261015",
+    "rwsem-snapshots-20261015",
+    "rwsem-snapshots-ready-20261015",
+    "rwsem-snapshots-current-20261015",
+    "mutex-numa-c01-rerun-20261015",
+    "rwlock-c01-grid-20261015",
+    "before-mutex-legacy-removal-20261015",
+    "workloads-20261015T172603Z",
+    "before-mutex-coverage-20261016T034903Z",
+    "before-mutex-adaptive-20261016T075356Z",
+    "before-mutex-legacy-recovery-20261016T113518Z",
+    "before-mutex-legacy-grid-20261016T125529Z",
+    "before-mutex-legacy-compat-20261017T122742Z",
+    "before-mutex-kdonly-20261017T140354Z",
+    "before-kernel-retirement-20261027",
+    "legacy-kdclobber2-20261027"
+  ],
+  "removal_roots": 219,
+  "removed_clean_worktrees": 24,
+  "removed_snapshots": 0,
+  "retained_boot_id": "fd1db5e3-e2af-410f-a9f3-567ae2d07841",
+  "retained_build_id": "5ca28058e156f34a2c7fe91e8e0fbf92f4e51960",
+  "retained_module_count": 73,
+  "retained_release": "6.1.159-kdclobber2",
+  "retained_snapshot": "legacy-kdclobber2-20261027",
+  "retained_worktrees": 23,
+  "root_categories": {
+    "Historical ancestor source/build tree": 4,
+    "Retired MM experiment work root": 1,
+    "Retired installed project module version": 35,
+    "Retired project boot file": 143,
+    "Superseded captured bundle": 36
+  },
+  "schema": 1,
+  "snapshot_purge_status": "PENDING_APPROVAL",
+  "source_trees": {
+    "/root/kdlock-kernel-work/mm-body-20261022/candidate-1/linux": {
+      "additional_directories": 14,
+      "changed_official_members": 22,
+      "missing_official_members": 53528,
+      "mode_changes": 3
+    },
+    "/root/kdlock-kernel-work/mm-fault-body-20261022/candidate-1/linux": {
+      "additional_directories": 20,
+      "changed_official_members": 26,
+      "missing_official_members": 0,
+      "mode_changes": 0
+    },
+    "/root/kdlock-kernel-work/mm-populated-unmap-20261022/candidate-1/linux": {
+      "additional_directories": 20,
+      "changed_official_members": 27,
+      "missing_official_members": 0,
+      "mode_changes": 0
+    },
+    "/root/kdlock-kernel-work/mm-unmap-body-20261022/candidate-1/linux": {
+      "additional_directories": 20,
+      "changed_official_members": 27,
+      "missing_official_members": 0,
+      "mode_changes": 0
+    },
+    "/root/kdlock-kernel-work/mmap-20261021/candidate-1/linux": {
+      "additional_directories": 20,
+      "changed_official_members": 24,
+      "missing_official_members": 0,
+      "mode_changes": 0
+    },
+    "/root/linux-6.1.159": {
+      "additional_directories": 31,
+      "changed_official_members": 13,
+      "missing_official_members": 0,
+      "mode_changes": 82882
+    },
+    "/root/linux-6.1.159-kdclobber1": {
+      "additional_directories": 19,
+      "changed_official_members": 14,
+      "missing_official_members": 0,
+      "mode_changes": 0
+    },
+    "/root/linux-6.1.159-kdstatic1": {
+      "additional_directories": 19,
+      "changed_official_members": 13,
+      "missing_official_members": 0,
+      "mode_changes": 0
+    },
+    "/root/linux-6.1.159-kdstatic2": {
+      "additional_directories": 19,
+      "changed_official_members": 13,
+      "missing_official_members": 0,
+      "mode_changes": 0
+    }
+  },
+  "status": "COMPLETE",
+  "supplementary_boot_menu_files_removed": 32,
+  "taint": 0
+}

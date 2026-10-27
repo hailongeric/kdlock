@@ -1,13 +1,20 @@
 # Ordinary mutex caller-clobber v1
 
-The current default kernel is `6.1.159-kdclobber2`, derived from the preserved
-`kdclobber1` spin experiment. Ordinary `mutex_lock/unlock` now use ABI identity 2;
+The retained legacy recovery kernel is `6.1.159-kdclobber2`, derived from the
+captured `kdclobber1` spin experiment. Ordinary `mutex_lock/unlock` use ABI identity 2;
 ordinary spin retains identity 1 and legacy callers retain 0 in this historical
 kernel interface. Current KD mutex uses its own object and clobber entry and
 does not require `KD_MUTEX_CLOBBER_V1`; see the [current contract](../../../docs/design/kd_only_mutex.md).
 The later rwlock writer identity 3 is a provider/JIT addition on this same kernel,
 described in [the rwlock guide](../../../docs/design/rwlock_implementation.md); it
 does not change the captured patch or Build ID below.
+
+Linux 6.1 development is retired. Ubuntu 26.04 / Linux 7.0 is the user-selected
+future adaptation target and remains unvalidated. The
+[retirement record](../../../docs/history/kernel-retirement-20261027.md) defines
+the single complete legacy version and its preserved provenance. The build and
+boot sequence below is historical reconstruction documentation, not a current
+installation workflow.
 
 [guest-kernel.patch](guest-kernel.patch) changes only the mutex caller macros,
 a new hook header and versioned bridges in `kernel/locking/mutex.c`. RDI carries
@@ -30,12 +37,13 @@ preallocated but ordinary entry/completion never initializes or copies it.
 Intermediate exits materialize FULL and detach into frame-owned storage before
 C services, because owner ACK can outlive the waiter's node reservation.
 
-Build/install only in the idle recovery guest. Keep the old tree, configuration,
-modules, boot entries and captured baselines. The current independent build is
+The historical build/install sequence ran only in the idle recovery guest and
+preserved its then-existing trees and boot entries. The retained independent
+build is
 `/mnt/kdlock-builds/linux-6.1.159-kdclobber2`, linked from
-`/root/linux-6.1.159-kdclobber2`; the existing auxiliary ext4 disk is mounted by
-UUID and its previous files are preserved. Check free space before copying;
-do not format disks or overwrite an existing tree.
+`/root/linux-6.1.159-kdclobber2`; the auxiliary ext4 disk is mounted by UUID.
+This recipe assumes the historical parent tree is available and creates a
+separate tree. It does not format disks or overwrite an existing tree.
 
 ```sh
 cp -a /root/linux-6.1.159-kdclobber1 /mnt/kdlock-builds/linux-6.1.159-kdclobber2
@@ -65,9 +73,9 @@ separate names. Frame pointers, mitigation options and dynamic preemption config
 remain unchanged. The captured Build ID is
 `5ca28058e156f34a2c7fe91e8e0fbf92f4e51960`.
 
-Confirm the monitor's recovery snapshot, select the exact new GRUB submenu entry
-with `grub-reboot`, then reboot. This is a one-shot boot; existing default and
-recovery entries remain. After boot run
-`python3 bench/spin_cacheline/kernel_identity.py` and rebuild target modules.
+The historical boot procedure was to confirm the monitor's recovery snapshot,
+select the exact new GRUB submenu entry with `grub-reboot`, then reboot once,
+preserving the existing default and recovery entries. After boot, it ran
+`python3 bench/spin_cacheline/kernel_identity.py` and rebuilt target modules.
 Actual run evidence and remaining limits belong in
 [Historical tests/README.md](https://github.com/hailongeric/kdlock/blob/1b9191256f64785f8e844ada914356a69d4f70f0/tests/README.md#mutex-clobber), not this build recipe.

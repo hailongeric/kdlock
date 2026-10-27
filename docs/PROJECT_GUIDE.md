@@ -7,6 +7,14 @@ scoped mmap/page-fault improvement or parity, and broader kernel replacement wit
 application evaluation. This guide describes the working checkout and interfaces;
 current implementation limits are not a redefinition of that long-term goal.
 
+Linux 6.1 kernel development is retired. The user-selected next adaptation
+target is Ubuntu 26.04 / Linux 7.0, with compatibility still unvalidated. This
+guide's existing build, identity and live-run commands describe the retained
+legacy `6.1.159-kdclobber2` recovery environment. The
+[retirement record](history/kernel-retirement-20261027.md) defines the single
+retained version and cleanup scope; new-target setup must establish its own
+source/configuration and runtime evidence.
+
 The primary checkout on `380G10` is the source of truth. `master` contains the
 accepted KD-only mutex from `d2a2304`, with its legacy delegation protocol and
 compatibility backports. `accepted/kd-only-mutex-20261018` preserves the measured
@@ -26,7 +34,7 @@ execution, operations, benchmark and historical material.
 
 ## Basic working version
 
-Reuse the validated functional implementation. The current
+This section records the validated legacy functional implementation. The
 [throughput campaign plan](THROUGHPUT_PLAN.md) separates documented lock workloads,
 actual mmap and actual page faults. The shared-mm payload/client preparation is
 build-ready. The earlier plain/sampled October 25 attempt
@@ -88,7 +96,7 @@ cd /root/host_fs/kdlock
 export PATH=/root/kdlock-translation-venv-20261019/bin:$PATH
 export LC_ALL=C PYTHONDONTWRITEBYTECODE=1
 export KDLOCK_RECOVERY_CONFIRMED=1
-export KDLOCK_SNAPSHOT_TAG=before-mutex-kdonly-20261017T140354Z
+export KDLOCK_SNAPSHOT_TAG=legacy-kdclobber2-20261027
 python3 bench/basic/run.py --host-state /tmp/kd-basic-host.json \
   --output /root/kdlock-evidence/10.176.26.71/tests/basic-NEW
 ```
@@ -134,7 +142,7 @@ protocols or workloads:
 | `tests/kernel/`, `tests/live/`, `tests/tools/` | Provider probes, lifecycle runner and specialized audit tool |
 | `bench/results/<machine>/` | Compact reports under `bench/` and `tests/`; ignored raw records under `raw/` |
 | `docs/design/`, `docs/operations/`, `docs/history/` | Current contracts, VM procedures and historical decisions |
-| `kernel_baseline/` | Required kernel identity inputs and captured historical experiments |
+| `kernel_baseline/` | Legacy identity verifier, captured provenance and ABI test fixtures for the retained recovery version |
 | `tools/vm/` | Idle-only source synchronization |
 
 Do not merge comparator implementations, measured machine identities or frozen
@@ -162,7 +170,8 @@ verification commands are maintained in [VM operations](operations/VM.md).
 
 ## Kernel identity
 
-Use the [identity verifier](operations/VM.md#kernel-identity). Expected release:
+For the retained legacy recovery version, use the
+[identity verifier](operations/VM.md#kernel-identity). Expected release:
 `6.1.159-kdclobber2`; Build ID `5ca28058e156f34a2c7fe91e8e0fbf92f4e51960`.
 Source, config and live identity must agree; `uname -r` alone is insufficient.
 

@@ -4,6 +4,11 @@ Start with the [three-stage project roadmap](ROADMAP.md) for the ultimate kernel
 replacement goal, scoped MM milestone and current evidence gaps. This index
 assigns one responsibility to each maintained guide.
 
+The next platform is the user-selected Ubuntu 26.04 / Linux 7.0. Its adaptation
+is pending; the guides' existing runtime evidence belongs to retired Linux 6.1.
+The [kernel retirement record](history/kernel-retirement-20261027.md) owns the
+retained recovery version, cleanup inventory and migration boundary.
+
 These guides describe `master`, whose mutex retains the accepted
 KD-only lock protocol from `d2a2304` and whose reader/writer semaphore (rwsem) waiting
 implementation is accepted at `c21345b`. The rwsem acceptance includes its

@@ -1,5 +1,11 @@
 # Verification
 
+Linux 6.1 development is retired. Existing receipts and kernel-specific commands
+describe the retained legacy recovery environment. Ubuntu 26.04 / Linux 7.0 is
+the user-selected future adaptation target; its validation remains pending.
+The [retirement record](../docs/history/kernel-retirement-20261027.md) defines
+retained kernel inputs and preserves the historical evidence below.
+
 The [project roadmap](../docs/ROADMAP.md) defines three evidence scopes: stage 1
 lock/data/delegation checks, stage 2 actual-MM API and lifetime checks, and stage 3
 integration-wide coverage. Each receipt applies only to its tested scope.

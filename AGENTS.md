@@ -7,6 +7,15 @@ mmap/page-fault improvement or parity, then broader kernel integration. Current
 support and performance limits remain explicit; a future milestone does not
 override the implementation or VM rules below.
 
+Linux 6.1 kernel development is retired. Preserve benchmark results and the
+single `6.1.159-kdclobber2` legacy recovery version under the
+[retirement record](docs/history/kernel-retirement-20261027.md). The next
+adaptation target is Ubuntu 26.04 / Linux 7.0; compatibility is unvalidated.
+Legacy build/boot recipes are historical references, not the next development
+platform. Keep the small captured patches/manifests used by verification and ABI
+tests. New-platform work must establish its own source, configuration, recovery
+and validation identities before claiming support.
+
 The maintained branch is `master`. Preserve the KD-only foundation selected at
 `d2a2304`: KD physical exclusion, ABI2, pinned published delegation waiters,
 immutable mutex images and fail-closed instruction admission. The current mutex

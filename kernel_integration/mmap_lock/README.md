@@ -7,13 +7,21 @@ will-it-scale `mmap1_threads`, with `mmap1_processes` as a separate control. The
 existing 4 KiB device mapping and private-backing fault tests retain their own
 identities; they are not measurements of mmap1. Stage 2's performance gate is open.
 
+Linux 6.1 development and its MM kernel variants are retired. This source and
+its results remain adaptation references for the user-selected Ubuntu 26.04 /
+Linux 7.0 target; compatibility has not been established. The
+[retirement record](../../docs/history/kernel-retirement-20261027.md) keeps one
+complete `kdclobber2` recovery version. Commands requiring `kdmm1` or `kdmm31`
+build copies describe historical workflows and may require reconstruction from
+retained evidence; they are not current next-run instructions.
+
 The maintained scope is **lock implementation plus minimal API and lifetime
 wrappers**. Native mmap, munmap, advice and page-fault algorithms remain unchanged
 and execute on the originating task. Readers stay concurrent and local. The
 operation-specific body-delegation experiments are retired, including their
 prepared VMA splits, page classification/ownership and table-retention machinery.
 
-The active integration uses the local-reader/local-writer adapter restored from
+The retained integration uses the local-reader/local-writer adapter restored from
 `b8b31a7b2f895b18226538b8a409331623b4ddc7`, with the shared rwsem's IRQ-safe read
 trylock/rollback/release correction described below. This is an experimental
 adapter, not a validated whole-kernel
@@ -198,13 +206,15 @@ diagnostic do not replace actual mmap runtime validation or original admission.
 
 ## Reusing the corrected build
 
-The installed `kdmm31` build/source links name a temporary tree removed by the
-completed reboot. The retained `candidate-1/runtime-identity` directory supports
+This section preserves the historical reconstruction procedure. At the correction
+checkpoint, the installed `kdmm31` build/source links named a temporary tree
+removed by the completed reboot. The retained `candidate-1/runtime-identity` directory supports
 identity verification, but is not a complete external-module build tree. Do not
 point Kbuild at it or silently build against recovery/kdmm1 headers.
 
-Reconstruct a new private tree from the unchanged kdmm1 base and authenticated
-`kdmm31-delta.tar.gz`, using `new-volatile.json` to verify the base, the 779 changed
+The historical reconstruction used a new private tree from the unchanged kdmm1
+base and authenticated `kdmm31-delta.tar.gz`, using `new-volatile.json` to verify
+the base, the 779 changed
 entries and the full result. The two recorded removed `.fixdep.o.d` files must
 be absent from the reconstructed tree; preserve displaced copies outside it.
 Then apply the preserved post-install `modules.order` delta. Verify source,

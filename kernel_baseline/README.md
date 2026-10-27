@@ -1,10 +1,16 @@
 # Captured Guest Kernel
 
-This directory records the existing x86-64 recovery guest prerequisite. It does
+This directory records the retired x86-64 Linux 6.1 guest prerequisite. It does
 not modify the guest, install a kernel, add hooks, or fix hook-reader lifetime.
 The captured configuration and patch are evidence, not a recommendation to use
 this historical kernel on production machines. Rebuilding/installing the guest
 kernel still requires separate approval under [development rules](../AGENTS.md).
+
+Future adaptation targets the user-selected Ubuntu 26.04 / Linux 7.0, which is
+not yet validated. The [retirement policy](../docs/history/kernel-retirement-20261027.md)
+retains results and one complete `6.1.159-kdclobber2` recovery version. The small
+manifests, configurations, patches and verifier here remain provenance and test
+inputs; they are not additional retained runnable kernel versions.
 
 The [project roadmap](../docs/ROADMAP.md) plans scoped MM work and eventual broader
 kernel replacement. Candidate kernels for those stages need separate recorded
@@ -17,10 +23,12 @@ The current spin provider requires spin caller-clobber v1 on
 original kernel; retain this bundle for verification, recovery and reproducing
 its historical source versions.
 The separate [spin-static](experiments/spin_static/README.md) and
-[caller-clobber](experiments/spin_clobber/README.md) experiments retain
-independent source/build trees and external captured bundles. Select the bundle
-matching the running kernel as described in [the manual](../docs/PROJECT_GUIDE.md#kernel-identity);
-do not overwrite this original capture or delete it as an obsolete artifact.
+[caller-clobber](experiments/spin_clobber/README.md) experiments record historical
+ancestors. Their small captured inputs remain part of the provenance chain;
+obsolete independent build trees are covered by the retirement inventory.
+Select the retained bundle matching the running kernel as described in
+[the manual](../docs/PROJECT_GUIDE.md#kernel-identity). Preserve the original
+tracked capture and the retained bundle's embedded parent/ancestor records.
 
 ## Contents
 
@@ -77,7 +85,10 @@ files are not authenticated by the archive-member scan.
 
 ## Read-Only Verification
 
-Run in the recovery guest, from `/root/host_fs/kdlock`:
+The commands in this section describe verification of the original `6.1.159`
+capture and require its historical source inputs. They are not the retained
+`kdclobber2` identity command; use [VM operations](../docs/operations/VM.md#kernel-identity)
+for that version. Historical original-baseline command, from `/root/host_fs/kdlock`:
 
 ```bash
 python3 kernel_baseline/verify.py --source /root/linux-6.1.159 --build --running
