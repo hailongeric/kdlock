@@ -227,7 +227,7 @@ static long rb_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 }
 
 static const struct file_operations rb_fops = {
-	.owner = THIS_MODULE, .unlocked_ioctl = rb_ioctl, .llseek = no_llseek,
+	.owner = THIS_MODULE, .unlocked_ioctl = rb_ioctl,
 };
 static struct miscdevice rb_device = {
 	.minor = MISC_DYNAMIC_MINOR, .name = "kd_rwlock_bench", .fops = &rb_fops, .mode = 0600,

@@ -169,3 +169,29 @@ bool kd_mmap_is_contended(struct kd_mmap_lock *lock)
 		rwsem_is_contended(&lock->native);
 }
 EXPORT_SYMBOL_GPL(kd_mmap_is_contended);
+
+/* Linux 7's per-VMA wrappers assert through a const mm. Keep the native
+ * assertion semantics and check the KD writer's exact physical ownership. */
+void kd_mmap_assert_held(const struct kd_mmap_lock *lock)
+{
+	if (lock->use_kd)
+		WARN_ON(!atomic_long_read(&lock->kd.readers) &&
+			!atomic_long_read(&lock->kd.admission));
+	else
+		rwsem_assert_held(&lock->native);
+}
+EXPORT_SYMBOL_GPL(kd_mmap_assert_held);
+
+void kd_mmap_assert_held_write(const struct kd_mmap_lock *lock)
+{
+	unsigned long owner;
+
+	if (!lock->use_kd) {
+		rwsem_assert_held_write(&lock->native);
+		return;
+	}
+	owner = atomic_long_read(&lock->kd.gate.owner);
+	WARN_ON(atomic_long_read(&lock->kd.admission) != -1 || (owner & 4UL) ||
+		(owner & ~7UL) != (unsigned long)current);
+}
+EXPORT_SYMBOL_GPL(kd_mmap_assert_held_write);

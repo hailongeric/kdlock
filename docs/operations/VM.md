@@ -1,9 +1,14 @@
 # VM operations
 
-The development VM runs Ubuntu 26.04.1 LTS with kernel `7.0.0-38-generic`.
-Ubuntu 26.04 / Linux 7.0 is the active adaptation platform; KD porting and
-validation remain pending. The [migration record](../history/vm-ubuntu2604-migration-20261027.md)
-binds OS, package, boot and storage identities. Linux 6.1 adaptation is retired.
+The development VM runs Ubuntu 26.04.1 LTS. The reviewed Linux 7 development
+kernel, `7.0.0-38-kdlock1`, has been built, installed and booted. Its first boot
+had unsigned-module taint 8192 before project loads. Signing repair, the
+subsequent clean boot and the four-family KD basic functional run passed.
+Live MM integration and performance remain unvalidated. The
+[port record](../../bench/results/10.176.26.71/tests/linux70-port-20261027/README.md)
+owns the new source, build and validation evidence. The
+[migration record](../history/vm-ubuntu2604-migration-20261027.md)
+binds the preceding OS, package, boot and storage identities. Linux 6.1 adaptation is retired.
 Its single recovery version and historical inputs remain under the
 [retirement record](../history/kernel-retirement-20261027.md).
 
@@ -26,12 +31,17 @@ Honor the concrete session authorization; do not ask again for authorized steps.
 | Guest source | `/root/host_fs/kdlock` |
 | VM scripts | Host `/home/eric/vm/qemu-scripts` |
 | Guest connection | `root@10.176.26.71:2222`, or host `./vm_ssh.sh` / `ssh kdlock-vm` |
-| Active OS/kernel | Ubuntu 26.04.1 LTS; `7.0.0-38-generic` |
-| Kernel image/header package version | `7.0.0-38.38` |
-| Installed kernel headers | `/usr/src/linux-headers-7.0.0-38-generic` |
+| OS/development release | Ubuntu 26.04.1 LTS; `7.0.0-38-kdlock1` |
+| Boot and basic validation | Clean second boot; spin/mutex/rwlock/rwsem basic cases passed with returned JIT bodies and final idle |
+| Authenticated Ubuntu source package | `linux=7.0.0-38.38`, containing upstream 7.0.14 |
+| Pristine guest source | `/mnt/kdlock-builds/ubuntu-7.0.0-38-source/linux-7.0.0` |
+| Development source | `/mnt/kdlock-builds/linux-7.0.0-38-kdlock1/source` |
+| Development output / external-module KDIR | `/mnt/kdlock-builds/linux-7.0.0-38-kdlock1/build` |
+| Verified schema-2 identity | `/root/kdlock-kernel-baselines/linux70-kdlock1-20261027` |
+| Stock recovery headers | `/usr/src/linux-headers-7.0.0-38-generic` |
 | Legacy recovery source/build | `/root/linux-6.1.159-kdclobber2` |
 | Legacy captured bundle | `/root/kdlock-kernel-baselines/mutex-clobber2-20260919` |
-| Translation/plotting environments | Earlier Python environments are historical; new dependencies remain unvalidated |
+| Translation Python | `/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3` |
 | Guest data disk | `/mnt/kdlock-builds`; 132 GiB virtual capacity after the October 27 expansion |
 | Live evidence | `/root/kdlock-evidence/10.176.26.71/{bench,tests}/<new-run>` |
 
@@ -102,37 +112,68 @@ remains part of the recorded history.
 
 ## Kernel identity
 
-The verified active release is `7.0.0-38-generic`, with GNU Build ID
-`338e542e384c46228f7a378babc0f9bb2b6a5997`. The installed image and matching
-header packages have version `7.0.0-38.38`; `/lib/modules/7.0.0-38-generic/build`
-resolves to `/usr/src/linux-headers-7.0.0-38-generic`, whose recorded kernel
-release matches. The [migration receipt](../../bench/results/10.176.26.71/tests/vm-ubuntu2604-migration-20261027/README.md)
-binds the boot, package and configuration hashes.
+The installed development release is `7.0.0-38-kdlock1`, GNU Build ID
+`b61c7bef25d2068f2a05ca3c31a5714c20c4aa62`. Its final revision-2 build preserved
+the complete configuration and source during compilation. The source package
+contains 7.0.14, so the generated Linux version code remains `458766` despite
+the Ubuntu ABI release name. The full kernel build/install commands must pass
+`KERNELRELEASE=7.0.0-38-kdlock1`; never change `SUBLEVEL` to manufacture the
+release string. Ordinary external-module wrapper Makefiles instead receive the
+canonical build directory as KDIR. Do not export `KERNELRELEASE` into those
+wrappers: many use its presence to select their inner Kbuild branch.
 
-Read-only checks in the guest:
+The custom image, config and System.map match their build hashes. All 6,901
+installed module copies were inventoried; debug stripping reduced their total
+size to 668,795,275 bytes after signing repair while the original build modules and vmlinux remained
+unchanged. `/lib/modules/7.0.0-38-kdlock1/{build,source}` points to the separate
+canonical directories above. Installation preserved GRUB, the stock Linux 7
+boot files and the legacy recovery kernel. Its initial signing failure and
+subsequent mode-only repair are documented in the
+[kernel installation guidance](../../kernel_integration/linux70/README.md#configuration-and-validation-boundary).
+All 6,827 policy-selected signatures were checked against the built certificate;
+74 Ubuntu staging exclusions remain unsigned. Installation alone did not
+validate KD or clear the first boot's unsigned-module taint.
+
+The canonical schema-2 bundle was captured after the clean custom boot and
+passed running verification with `runtime_policy_verified: true`. Its manifest
+SHA256 is `1d65f61df1be4ab03e358b456d67165d5c9bdc3edd50cf8f15ad651281feca17`.
+The manifest and all 23 named bundle files were independently copied and
+hash-verified on the source host. Recheck the existing identity from the idle,
+synchronized guest checkout:
 
 ```sh
-cat /etc/os-release
-uname -r
-dpkg-query -W linux-image-7.0.0-38-generic linux-headers-7.0.0-38-generic
-readlink -f /lib/modules/7.0.0-38-generic/build
-cat /lib/modules/7.0.0-38-generic/build/include/config/kernel.release
+python3 kernel_integration/linux70/verify.py --running
 ```
 
-Installed headers establish a matching package interface, not a full kernel
-source/build tree or a KD port. KD source/configuration selection, clobber and
-hook contracts, JIT admission and live compatibility remain unvalidated. The
-[legacy identity procedure](https://github.com/hailongeric/kdlock/blob/cd6f1061ea1b3686dd6d43a7a180ab1942ea4e57/docs/operations/VM.md#kernel-identity)
-applies only to the retained Linux 6.1 recovery environment; it is not the
-identity gate for this boot.
+The [schema-2 capture procedure](../../kernel_integration/linux70/IDENTITY.md)
+requires a new bundle directory; do not recapture over the current identity.
+It binds source/configuration, release/version headers,
+exports, ELF/build ID, installed boot files and exact runtime policy. The mmap
+preparation receipt remains required even with `CONFIG_KDLOCK_MMAP` disabled;
+the current capture uses `/mnt/kdlock-builds/linux70-mmap-prepared-r2/prepare.json`.
+Only successful running verification returns `runtime_policy_verified: true`.
+Shared runners use `--kernel-source` for the **build directory** and
+`--kernel-baseline` for the captured bundle; their schema dispatch preserves the
+unchanged legacy verifier for historical identities.
+
+The stock recovery release `7.0.0-38-generic`, package `7.0.0-38.38`, retains
+Build ID `338e542e384c46228f7a378babc0f9bb2b6a5997`. Its migration receipt and the
+Linux 6.1 [legacy identity procedure](https://github.com/hailongeric/kdlock/blob/cd6f1061ea1b3686dd6d43a7a180ab1942ea4e57/docs/operations/VM.md#kernel-identity)
+remain separate evidence. None substitutes for the new running identity,
+recovery snapshot, returned-JIT or performance gates.
 
 ## Boot policy
 
-The verified Linux 7.0 boot retained `nokaslr nopvspin console=tty1 console=ttyS0`.
+The Linux 7.0 boots retain `nokaslr nopvspin console=tty1 console=ttyS0`.
 The preemption selector reported `full (lazy)`, whereas the legacy measurements
 used voluntary preemption. This upgrade does not establish equivalent kernel
-configuration, instrumentation or timing qualification. Taint was zero, no
-project modules were loaded, and no failed services were reported.
+configuration, instrumentation or timing qualification. The first custom boot
+selected the ITS return thunk and reported no failed services, but had taint
+8192 from unsigned modules before project loads. After signing repair, boot
+`59172bf2-ccd2-49bd-bc1b-fea1d12056a7` verified the same custom Build ID, ITS
+thunk and lazy preemption with taint 0, no recorded kernel errors and no failed
+services. Preserve the failed first boot separately; a clean boot still does
+not establish KD correctness or timing qualification.
 
 Read the actual command line, selector and topology before new live work:
 
@@ -142,27 +183,82 @@ cat /sys/kernel/debug/sched/preempt
 cat /sys/devices/system/cpu/online
 ```
 
-GRUB now selects its first normal kernel entry instead of an explicit Linux 6.1
-entry. The captured [legacy GRUB override](../../kernel_baseline/nopvspin-grub.cfg)
+Installing custom artifacts did not update GRUB. After the clean boot, the
+separately authorized boot procedure selected the normal custom-kernel entry
+as the default, retaining stock Linux 7 and legacy Linux 6 recovery entries.
+The current GRUB override SHA256 is
+`dcfb2c3feacfe8eddfc4e8a57b315a42113d91d03861da0a2e9bba347a865c2a`;
+the port's compact boot receipt binds its generated menu too. The captured
+[legacy GRUB override](../../kernel_baseline/nopvspin-grub.cfg)
 is provenance and must not be installed as the current boot configuration.
 Kernel rebuilds, boot changes and restarts remain outside ordinary development
 work unless the session authorizes them.
 
 ## Dependencies and checks
 
-The active system reports Python 3.14.4 and GCC 15.2.0. Earlier translation and
-plotting virtual environments are historical artifacts; their old dependency
-passes do not establish compatibility with this interpreter. Establish isolated
-environments for the [translator requirements](../../disassem/requirements.txt)
-and [plotting requirements](../../bench/archive/requirements.txt), and verify
-them before future KD builds or measurements.
+The system reports Python 3.14.4 and GCC 15.2.0. Use the translation virtual
+environment listed above, with [pinned requirements](../../disassem/requirements.txt)
+and the exact [Miasm Python 3.14 compatibility patch](../../disassem/compat/README.md).
+The translator checks those dependency bytes before semantic analysis. Import
+success alone is insufficient: the initial semantic checks failed and their
+subsequent corrected checks have separate receipts. Earlier translation and
+plotting environments remain historical; follow the
+[plotting requirements](../../bench/archive/requirements.txt) when preparing new
+analysis rather than borrowing an old dependency-pass label.
+
+The kernel build retains Rust, BTF, frame-pointer unwinding and the stock
+Canonical certificate paths. Its tools include GCC 15.2.0, Rust 1.93.1,
+bindgen 0.72.1, Clang 21.1.8 and pahole 1.31. The initial missing `dwarf.h`
+failure was resolved with `libdw-dev`; no required feature was disabled.
 
 The [legacy build and dependency recipe](https://github.com/hailongeric/kdlock/blob/cd6f1061ea1b3686dd6d43a7a180ab1942ea4e57/docs/operations/VM.md#dependencies-and-checks)
 retains the old KDIR and Python environment for historical reconstruction only.
-No KD module build, unit-test pass or live validation on Linux 7.0 is claimed by
-the OS upgrade. Confirm idle state and use basic plus directly affected checks
-when adapting KD. Full suites still require explicit selection; missing
+The port record distinguishes source/fixture checks, compilation, installation,
+boot and live validation. The optional mmap overlay has separate enabled and
+disabled compilation checks; the installed kernel keeps it disabled. Confirm
+idle state and use basic plus directly affected checks. Full suites still require explicit selection; missing
 dependencies, skipped checks and compilation failures are not passes.
+
+The Linux 7 basic runner is functional-only. It requires the pinned interpreter
+on PATH, a schema-2 running identity, a real recovery tag and explicit
+`--host-reference`, `--host-reference-sha256` and fresh `--host-state` files.
+Run [capture_host.py](../../bench/basic/capture_host.py) as root on the QEMU host
+with the actual `--snapshot` tag to obtain those host captures. It verifies the
+monitor snapshot listing, 64 matched vCPU pins, auxiliary threads on CPU 63,
+NUMA memory bindings and all 64 fixed 2 GHz policies. The runner compares QEMU
+process/task identities and placement with the selected reference; only the
+documented extra CPU-63 worker case is admitted. An old host capture is not
+automatically waived. Every successful family needs correct data, returned JIT
+bodies and complete retirement; these checks produce no performance score.
+
+The completed `basic-03` run passed all four KD families under one recorded
+source version, with `passed=true`, `final_idle=true` and `RETURNED_JIT` in each
+family receipt. Its exact session bindings and complete source/output copy were
+verified on the source host. See the [current functional results](../PROJECT_GUIDE.md#current-development-workflow)
+for operation and completion counts. Earlier `basic-01` and `basic-02` failures
+remain separate with their frozen inputs; their partial successes are not pooled
+into this pass. No throughput was accepted, and the disabled mmap backend was
+not exercised as live MM integration. The successful run used its explicitly
+selected host-reference SHA256
+`aa317da1505f885151838e30c62d9707ea6a668857682cdd920f4f7857358403`.
+
+The separate OUTER-mutex and spin native-escape checks passed original-task,
+effects, flags, terminal-ban and drain assertions across four phases each.
+The hot phases returned through native escape rather than completing a JIT
+body; their receipts keep those outcomes distinct. See the
+[port evidence](../../bench/results/10.176.26.71/tests/linux70-port-20261027/README.md).
+Final post-validation health recorded no project modules, kernel errors or
+failed services. Taint remained 12288 from unsigned out-of-tree project modules;
+the clean pre-live boot's taint 0 remains a separate checkpoint. No throughput
+or broader MM support is inferred from these checks.
+
+The clean Linux 7 checkpoint's host reference is preserved at
+`bench/results/10.176.26.71/raw/tests/linux70-port-20261027/boot/host-functional-reference.json`,
+SHA256 `3474d973eda9b7871624cd41a1fb1c37442bff07e2ce4481b0818570df60281a`.
+It records 69 QEMU tasks, verified vCPU identities/pins, fixed 2 GHz policies
+and auxiliary placement on CPU 63. That functional reference is distinct from
+strict timing qualification. Supply its exact copied bytes and a fresh current
+capture; do not silently reuse it after QEMU process/task identities change.
 
 ## Snapshots and recovery
 
@@ -170,16 +266,23 @@ Before live module/JIT work, confirm an actual recoverable snapshot through
 `/tmp/qemu-monitor.sock` on the benchmark host. `savevm` must succeed and
 `info snapshots` must list the tag. Only then set `KDLOCK_RECOVERY_CONFIRMED=1`
 and the recorded `KDLOCK_SNAPSHOT_TAG`. Environment variables alone are not proof.
-The only retained snapshot is `legacy-kdclobber2-20261027`. The user explicitly
+The current clean-platform snapshot is `linux70-kdlock1-clean-20261027`.
+Its `savevm` returned successfully, and the monitor listed it on all disks at
+`2026-10-27 14:12:19`, with 23.6 GiB of VM state. It captures the signed custom
+kernel after the clean second boot, schema-2 identity capture and custom normal
+GRUB default selection. The legacy snapshot remains separately retained.
+This recovery boundary does not itself validate KD execution or performance.
+
+The migration checkpoint retained `legacy-kdclobber2-20261027`. The user explicitly
 approved deleting the 42 earlier snapshots and the temporary pre-cleanup
 snapshot; the [migration record](../history/vm-ubuntu2604-migration-20261027.md)
 records all 43 completed removals. The retained snapshot captures Ubuntu 22.04
 and the former 32 GiB data disk. Restoring it also restores that disk size and
 rolls back subsequent active contents, including the Ubuntu 26.04 migration.
-Recovery of the new platform has not been validated; this legacy snapshot is
-not a capture of its current state. Establish the recovery boundary before
-future live module/JIT work, and recheck the actual snapshot list, topology and
-boot identity before recovery.
+The legacy snapshot does not capture the new platform. Use the verified current
+boundary for Linux 7 work, and recheck the actual snapshot list, topology and
+boot identity before any recovery. Do not infer that the legacy and current
+snapshots have interchangeable OS, disk-size or source identities.
 
 Use bounded SSH and monitor commands. Root-owned sockets may need sudo. Disconnect
 without sending `quit`; close only monitor clients created for the operation.

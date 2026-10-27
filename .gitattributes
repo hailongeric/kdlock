@@ -1,5 +1,9 @@
 # Captured upstream/guest differences retain historical whitespace verbatim.
 kernel_baseline/linux-6.1.159-guest.patch -whitespace
+# Linux 7 patches preserve exact upstream unified-diff context bytes.
+kernel_integration/linux70/kernel.patch -whitespace
+kernel_integration/linux70/mmap-lock.patch -whitespace
+disassem/compat/miasm-0.1.5-python314.patch -whitespace
 # Unified-diff context also needs its leading spaces and blank-line markers.
 bench/spin_cacheline/provider/observation.patch -whitespace
 tests/kernel/rwlock_admission/observation.patch -whitespace
@@ -11,6 +15,10 @@ tclock_backend/upstream/** -whitespace
 # The tested port retains upstream comment indentation; keep all other checks.
 tclock_backend/komb.c whitespace=-space-before-tab
 tclock_backend/port.patch -whitespace
+tclock_backend/rwlock-port.patch -whitespace
+tclock_backend/rwsem-port.patch -whitespace
+tclock_backend/rwlock-port.patch -whitespace
+tclock_backend/rwsem-port.patch -whitespace
 bench/tclock_compare/workload-observation.patch -whitespace
 # Historical QEMU terminal capture retains CRLF/control bytes exactly.
 bench/results/10.176.26.71/bench/mutex_owned/20261015-origin/snapshots-final.txt -whitespace

@@ -1,0 +1,670 @@
+{
+  "schema": 1,
+  "kind": "linux70-port-evidence-index",
+  "scope": "Derived index of retained VM build, focused-check and functional receipts; no new execution or throughput measurement.",
+  "raw_root_relative_to_repository": "bench/results/10.176.26.71/raw/tests/linux70-port-20261027",
+  "development_kernel": {
+    "build_id": "b61c7bef25d2068f2a05ca3c31a5714c20c4aa62",
+    "bzimage_sha256": "8530a19fcca7b3ef65c39aa35ad2e8a46904ded34d124afb2e4f4285f9631d71",
+    "configuration_sha256": "91b6b86611ee18b4c3ef093c9d95cbd135a092602b4546abf762efcf3c0a2aed",
+    "development_mmap_enabled": false,
+    "initrd_sha256": "a13aaa736d57c6d9a52e8acea99ee6de42379882f000cbbff857a05de68e0769",
+    "installed_module_manifest_sha256": "594eeb5b41d93facc3a4e399576c33194cf82c80ec4a3e1efdc5f75c8b11327b",
+    "linux_version_code": 458766,
+    "module_count": 6901,
+    "pre_live_boot_id": "59172bf2-ccd2-49bd-bc1b-fea1d12056a7",
+    "pre_live_boot_taint": 0,
+    "release": "7.0.0-38-kdlock1",
+    "runtime_policy_verified": true,
+    "signed_modules": 6827,
+    "signing_source_mode_change": {
+      "after": "0744",
+      "before": "0644",
+      "content_sha256": "712d7ad2c2e92ef519d06c51bfa16aa1d499dfb73880cc3d8c40bbba97a7f549",
+      "path": "debian/scripts/sign-module"
+    },
+    "snapshot": "linux70-kdlock1-clean-20261027",
+    "source_package": "linux=7.0.0-38.38",
+    "ubuntu_policy_unsigned_staging_modules": 74,
+    "upstream_version": "7.0.14",
+    "vmlinux_sha256": "f91b7d06025d1ae4bf6f88da44013462811f025d2f180e664a2c1a5f4563a252"
+  },
+  "build_install_index": {
+    "path": "build-install-evidence-index.json",
+    "sha256": "71839a8b0eb21f2fd5a2b1cdfe29d14cf4ff17c526d13f17364245c02cb2a230",
+    "status": "CAPTURED"
+  },
+  "build_install_receipts": [
+    {
+      "label": "Authenticated source acquisition",
+      "path": "source-acquisition.json",
+      "sha256": "5c5e8a574cf8affb7aedd66e9f609ca006041c1cde0d3fc4e086a4f9849f545a",
+      "status": "PASS"
+    },
+    {
+      "label": "Initial prepare missing dwarf.h",
+      "path": "kernel-preparation/prepare.json",
+      "sha256": "b685d1c38edf14168e2bf5ba1e68eca95cd2b16c52dab322faf5242c771b1627",
+      "status": "RETAINED_FAILURE"
+    },
+    {
+      "label": "Prepare with libdw-dev installed",
+      "path": "kernel-preparation/prepare-extra-resume.json",
+      "sha256": "ffbeca6be0f0f56d023bd4c9e8d0aff1af410b46a482fd55187c11318e658d45",
+      "status": "PASS"
+    },
+    {
+      "label": "Revision-2 mmap overlay preparation",
+      "path": "mmap-revision2/preparation/prepare.json",
+      "sha256": "4e7396afbda20fe96a1eed1ac3cab8939ab778da1da8eccbfea3a16631592850",
+      "status": "PASS"
+    },
+    {
+      "label": "Revision-2 overlay installation",
+      "path": "mmap-revision2/preparation/overlay-installed.json",
+      "sha256": "a4abe489bbdb1c06027d1a1f69c9ec753e79d3f4071ad36f69daf572586ccebf",
+      "status": "PASS"
+    },
+    {
+      "label": "Revision-2 disabled mmap objects",
+      "path": "mmap-revision2/disabled/result.json",
+      "sha256": "62b645999f67eaf5eb5e45a1829ef0f8dbe4b05c6dd9c66b9ef9ace592afd835",
+      "status": "COMPILE_PASS"
+    },
+    {
+      "label": "Revision-2 enabled mmap objects",
+      "path": "mmap-revision2/enabled/result.json",
+      "sha256": "156ceb5ca7918a5e50d24421df4e8b707b5e8a6f78711e7273286071a9888f20",
+      "status": "COMPILE_PASS_SEPARATE_OUTPUT"
+    },
+    {
+      "label": "First full kernel build",
+      "path": "full-kernel-build/result.json",
+      "sha256": "06f8ddeac50c69bace5548c9c3b157811c064aa78b533954ac509c90b32b1ad6",
+      "status": "COMPILE_PASS_SUPERSEDED_UNINSTALLED"
+    },
+    {
+      "label": "First build static-review disposition",
+      "path": "full-kernel-build/disposition.json",
+      "sha256": "cb02bb432ab904980cc296af45ac872ac1170a816e55d6d956a799e7eba38304",
+      "status": "RETAINED_REJECTION"
+    },
+    {
+      "label": "Revision-2 full kernel build",
+      "path": "full-kernel-build-rev2/result.json",
+      "sha256": "dc7e970d6ac965c580f245170aa4e9bc2ff12bb575f3a50a1183bce250f94a2a",
+      "status": "PASS"
+    },
+    {
+      "label": "Revision-2 artifact/exports/DWARF review",
+      "path": "full-kernel-build-rev2/artifact-inspection.json",
+      "sha256": "5e78a8e2d8ad64e26ee0b42af01c5c9e2e21805861c2dd5f64dfd5982778e6d6",
+      "status": "PASS"
+    },
+    {
+      "label": "Initial installation artifact checks",
+      "path": "kernel-installation/result.json",
+      "sha256": "5d3aee4e60cc5d9523d8a9788ad11a0650d8a4351c7a239af923b86ae05361a3",
+      "status": "SIGNATURE_GATE_NOT_CHECKED"
+    },
+    {
+      "label": "Initial unsigned-install correction",
+      "path": "kernel-installation/signing-failure.json",
+      "sha256": "ef5254fab5badeed85cb59f59ee6b343c928309275ccd1eb208f48e8c2200d25",
+      "status": "RETAINED_FAILURE"
+    },
+    {
+      "label": "First custom boot with taint8192",
+      "path": "boot/identity/guestboot-receipts/boot/health-656351f7-f601-4d99-9baa-7b998950e3f5.json",
+      "sha256": "0c84efdb004eaecb09656235ecc3a2169fc27e73ee5c361fbfc7cc9a44f91165",
+      "status": "RETAINED_FAILURE"
+    },
+    {
+      "label": "Signing repair and exact module signatures",
+      "path": "kernel-signing-repair/result.json",
+      "sha256": "f36ba3938f61843ead0b054eeb2fdf8474eb07a1b0242641fb093493a7a2d656",
+      "status": "PASS"
+    },
+    {
+      "label": "Clean pre-live custom boot",
+      "path": "boot/identity/guestboot-receipts/boot/health-59172bf2-ccd2-49bd-bc1b-fea1d12056a7.json",
+      "sha256": "a1e0c97c740089cb911d0a2cb0807ad3905eff26eb7f66122b295e6dcb849a43",
+      "status": "PASS"
+    },
+    {
+      "label": "Custom normal GRUB default",
+      "path": "boot/identity/guestboot-receipts/boot/grub-custom-default.json",
+      "sha256": "c1f8e266b7a53358cab2b8a3f3b42c53888dd0840d466b5e2ddd2004b4f3ee6a",
+      "status": "CAPTURED"
+    },
+    {
+      "label": "Schema-2 running identity result",
+      "path": "boot/identity-capture.json",
+      "sha256": "e77d41577382584376230ecc904947edda5b7544a20f43bb93789011d23541d0",
+      "status": "PASS"
+    },
+    {
+      "label": "Schema-2 identity manifest",
+      "path": "boot/identity/manifest.json",
+      "sha256": "1d65f61df1be4ab03e358b456d67165d5c9bdc3edd50cf8f15ad651281feca17",
+      "status": "CAPTURED"
+    },
+    {
+      "label": "Identity copy verification",
+      "path": "boot/identity/copy-receipt.json",
+      "sha256": "8280bd1f51f68548851ff06f9b6511de7de9efbb5b8cb007a8a55f9ac21147e0",
+      "status": "PASS"
+    },
+    {
+      "label": "Boot/GRUB evidence copy verification",
+      "path": "boot/identity/boot-copy-receipt.json",
+      "sha256": "e848f8ff5b9343bb13f6871bba314019713968e9627a85bfd98c2a7c0f01d4aa",
+      "status": "PASS"
+    },
+    {
+      "label": "Current clean snapshot save command",
+      "path": "boot/savevm-linux70.log",
+      "sha256": "e04ce5b717cc193e11e0f43121d704fb089266296c09d849029c5c1af4d9d2bc",
+      "status": "CAPTURED"
+    },
+    {
+      "label": "Actual monitor snapshot listing",
+      "path": "boot/snapshots-after-save.txt",
+      "sha256": "e59a51242db9090f7b4bd6e3e78913e867218462c1227d67b73ac0705d61b105",
+      "status": "CAPTURED"
+    },
+    {
+      "label": "Functional host reference",
+      "path": "boot/host-functional-reference.json",
+      "sha256": "3474d973eda9b7871624cd41a1fb1c37442bff07e2ce4481b0818570df60281a",
+      "status": "CAPTURED"
+    }
+  ],
+  "focused_checks": [
+    {
+      "path": "focused-validation-summary.json",
+      "sha256": "29fc56cda2e35f55d54d0ce18dd20bb374b1cbe30010ceef9673008f1a8707eb",
+      "status": "MIXED_ATTEMPTS_RETAINED",
+      "label": "Checks 02 through 20, including failures and affected retries"
+    }
+  ],
+  "compilation_and_audits": [
+    {
+      "path": "compile-01/receipt-original.json",
+      "sha256": "b390a152100b43cb24fdf034392db4e71d78ecd5bca9b31d882d7049fc514f0b",
+      "status": "FAILED",
+      "label": "Initial module matrix, original receipt"
+    },
+    {
+      "path": "compile-01/receipt-canonical.json",
+      "sha256": "26f32faafe723b3fc175ef08a312b3ad227be81069b4ce1bb2803d8297bfd07a",
+      "status": "FAILED",
+      "label": "Initial matrix, canonicalized receipt with failures and blocked comparators retained"
+    },
+    {
+      "path": "compile-02/receipt.json",
+      "sha256": "34165ce5ff1768704c1fb395a70eedcbb6cb70da9778dac1d5650bad4c9d9fcf",
+      "status": "COMPILE_CHECKS_PASSED",
+      "label": "Affected module compilation retries"
+    },
+    {
+      "path": "compile-03/receipt.json",
+      "sha256": "862c982db52c3bb959acc6afee4fb0355c6ba74a53d4c8fa1aeb034590734405",
+      "status": "FAILED",
+      "label": "Four TCLock builds passed; earlier strict rwlock context checker rejection retained"
+    },
+    {
+      "path": "context-06/receipt.json",
+      "sha256": "c0fa8cc2ea5d393a358886c5432f7436ce99c9d6a2c39a9d2723a28d3171f58b",
+      "status": "PASSED",
+      "label": "Final exact context audits and negative mutations"
+    },
+    {
+      "path": "functional-05/receipt.json",
+      "sha256": "ac4951814572a9183bc8efb5a29b7b2e2aedd1e1869a2a34913f994845759a95",
+      "status": "PASSED",
+      "label": "Focused functional-control runner checks"
+    },
+    {
+      "path": "mitigation-review/latest-metadata-summary.json",
+      "sha256": "30427be74c49202e0039c2a1d778abae41b6c357c957365fb3c3c34831e9b9ec",
+      "status": "CAPTURED_WITH_LIMITATIONS",
+      "label": "Final module mitigation metadata inspection"
+    }
+  ],
+  "refusal_diagnoses": [
+    {
+      "path": "rwlock-source-refusal/diagnosis.json",
+      "sha256": "7f0611c2c683109bd3bf4229bcbe4ff46a2c179dfd8f7ba222f89cba58801689",
+      "status": "CAPTURED",
+      "label": "Leased executable-window refusal and bounded retry"
+    },
+    {
+      "path": "rwsem-address-refusal/diagnosis.json",
+      "sha256": "742085a8923f00224558a04c3de8da4de39bdfbdf6a23aacfbe267b166172f86",
+      "status": "CAPTURED",
+      "label": "Private outer-cookie spill and strict alias refusal"
+    },
+    {
+      "path": "rwsem-address-refusal/resolution.json",
+      "sha256": "d6b2697f07dd2e6c15f9ad32eb6b4aecafa19897e929f86a83a13d7e74c2f8b6",
+      "status": "CAPTURED",
+      "label": "Private lexical cookie correction; protocol/admission unchanged"
+    },
+    {
+      "path": "rwsem-address-refusal/independent-cookie-review.json",
+      "sha256": "122e8a1d3fd6c7b74a26b2924f169b78b724c68ceed01dc21aca1f62801dede2",
+      "status": "CAPTURED",
+      "label": "Independent review of cookie lifetime and access scope"
+    }
+  ],
+  "retained_live_failures": [
+    {
+      "name": "basic-01",
+      "result": {
+        "path": "basic-01/result.json",
+        "sha256": "e4984857dbd3f6b385c331000bae949cd5cbd674bcdef831df53cd32b2a59707",
+        "status": "RETAINED_FAILURE"
+      },
+      "controller_state": "FAILED",
+      "passed": false,
+      "controller_final_idle": false,
+      "preservation": {
+        "path": "basic-01-preservation/receipt.json",
+        "sha256": "0cf85241dc7173aad482fce99a78d9f10bb2eabd322ad603972ddb32cfffc22e",
+        "status": "HASH_VERIFIED"
+      },
+      "note": "Failed controller result unchanged. Completed sessions retired; independent post-run health established idle before later work."
+    },
+    {
+      "name": "basic-02",
+      "result": {
+        "path": "basic-02/result.json",
+        "sha256": "798c32a2612fc8f221e9e399020dac7151dfc75cd6e6207e4787d49fb2f833af",
+        "status": "RETAINED_FAILURE"
+      },
+      "controller_state": "FAILED",
+      "passed": false,
+      "controller_final_idle": false,
+      "preservation": {
+        "path": "basic-02-preservation/receipt.json",
+        "sha256": "540b69140ab0ad28096ea0dfeaf1d1a65174bba7932df9518fda89c56eebe218",
+        "status": "HASH_VERIFIED"
+      },
+      "note": "Failed controller result unchanged. Completed sessions retired; independent post-run health established idle before later work."
+    }
+  ],
+  "final_functional_results": {
+    "kd_basic_03": {
+      "result": {
+        "path": "basic-03/result.json",
+        "sha256": "419373cc22a4c21bb720f99471ebfa8845dcb94991716b340f5004addea967ce",
+        "status": "PASS"
+      },
+      "mode": "FUNCTIONAL_ONLY",
+      "passed": true,
+      "final_idle": true,
+      "performance_accepted": false,
+      "sessions": [
+        {
+          "drained": true,
+          "execution": "RETURNED_JIT",
+          "family": "rwsem",
+          "jit_completions": 43067,
+          "jit_entries": 43067,
+          "operations": 1600000,
+          "passed": true,
+          "performance_accepted": false,
+          "receipt": {
+            "path": "basic-03/rwsem/rwsem-list-n16-kdlock-w020-t16-r00/session.json",
+            "sha256": "31b2d04b8a7224b02703ba0744dc0a6baaa9e9f6706f1ba8b0afcafee9c90b73",
+            "status": "PASS"
+          }
+        },
+        {
+          "drained": true,
+          "execution": "RETURNED_JIT",
+          "family": "rwlock",
+          "jit_completions": 30463,
+          "jit_entries": 30463,
+          "operations": 6000000,
+          "passed": true,
+          "performance_accepted": false,
+          "receipt": {
+            "path": "basic-03/rwlock/list-n16-kdlock-w020-t60-r00/session.json",
+            "sha256": "35d71c30a32de43670b09595faa8eb339ad1d4be774ec553af43ad9ad467ec5f",
+            "status": "PASS"
+          }
+        },
+        {
+          "drained": true,
+          "execution": "RETURNED_JIT",
+          "family": "spin",
+          "jit_completions": 1596396,
+          "jit_entries": 1596396,
+          "operations": 1600000,
+          "passed": true,
+          "performance_accepted": false,
+          "receipt": {
+            "path": "basic-03/spin/list-n16-t16-r00-direct-kdlock-adaptive/session.json",
+            "sha256": "7821fcf7c0814bc6d3ba36bc519b2772d1f863f185988bf3fb9f9af45fdb1ab2",
+            "status": "PASS"
+          }
+        },
+        {
+          "drained": true,
+          "execution": "RETURNED_JIT",
+          "family": "mutex",
+          "jit_completions": 1333599,
+          "jit_entries": 1333599,
+          "operations": 1600000,
+          "passed": true,
+          "performance_accepted": false,
+          "receipt": {
+            "path": "basic-03/mutex/list-n16-t16-r00-direct-kdlock-adaptive-public/session.json",
+            "sha256": "d7c488869a2d021c224ce7ef06be803924749ec2f0f5ba321f02743199e29e3e",
+            "status": "PASS"
+          }
+        }
+      ],
+      "preservation": {
+        "path": "basic-03-preservation/receipt.json",
+        "sha256": "06ca209a38d5da8f887d5b6cf33fc583f193a7a2398137f049e96f140595c496",
+        "status": "HASH_VERIFIED"
+      }
+    },
+    "native_tclock_controls": {
+      "result": {
+        "path": "tclock-functional-01/evidence/result.json",
+        "sha256": "22f7bba325de2212f8785cb98d9eae8059caf690c30422cd64e54ffc11c023f4",
+        "status": "PASS"
+      },
+      "mode": "FUNCTIONAL_ONLY",
+      "passed": true,
+      "final_idle": true,
+      "performance_accepted": false,
+      "sessions": [
+        {
+          "family": "spin",
+          "arm": "native",
+          "passed": true,
+          "drained": true,
+          "operations": 80000,
+          "performance_accepted": false,
+          "delegated_bodies": 0,
+          "delegation_status": "NATIVE",
+          "receipt": {
+            "path": "tclock-functional-01/evidence/spin/c01-t08-r00-direct-native/session.json",
+            "sha256": "fd0e83491ea29eb594bf9537ca787d87fdaaca44f20a3f6342f1a891cec1f822",
+            "status": "PASS"
+          }
+        },
+        {
+          "family": "spin",
+          "arm": "tclock",
+          "passed": true,
+          "drained": true,
+          "operations": 80000,
+          "performance_accepted": false,
+          "delegated_bodies": null,
+          "delegation_status": "UNMEASURED",
+          "receipt": {
+            "path": "tclock-functional-01/evidence/spin/c01-t08-r00-direct-tclock/session.json",
+            "sha256": "4ffb9ea767e6b49fb153ef7cc452cc377b201dda31e77ac044b046a33849587c",
+            "status": "PASS"
+          }
+        },
+        {
+          "family": "mutex",
+          "arm": "native",
+          "passed": true,
+          "drained": true,
+          "operations": 80000,
+          "performance_accepted": false,
+          "delegated_bodies": 0,
+          "delegation_status": "NATIVE",
+          "receipt": {
+            "path": "tclock-functional-01/evidence/mutex/c01-t08-r00-direct-native/session.json",
+            "sha256": "f1b753968365394de885fdc7d7d28354175a116cc40091ed57cc306dfcec6658",
+            "status": "PASS"
+          }
+        },
+        {
+          "family": "mutex",
+          "arm": "tclock",
+          "passed": true,
+          "drained": true,
+          "operations": 80000,
+          "performance_accepted": false,
+          "delegated_bodies": 78641,
+          "delegation_status": "PASS",
+          "receipt": {
+            "path": "tclock-functional-01/evidence/mutex/c01-t08-r00-direct-tclock/session.json",
+            "sha256": "8d45e52c4dda5076cecbd44f712a0fd0af6e671cdf78ec0bd161769e803986e7",
+            "status": "PASS"
+          }
+        },
+        {
+          "family": "rwlock",
+          "arm": "native",
+          "passed": true,
+          "drained": true,
+          "operations": 80000,
+          "performance_accepted": false,
+          "delegated_bodies": null,
+          "delegation_status": "NOT_APPLICABLE",
+          "receipt": {
+            "path": "tclock-functional-01/evidence/rwlock/cacheline-c01-native-w020-t08-r00/session.json",
+            "sha256": "285f7ae647250a840afa955fb57ea8d20dea98a0b352b7d4928144d0db0d16f6",
+            "status": "PASS"
+          }
+        },
+        {
+          "family": "rwlock",
+          "arm": "tclock",
+          "passed": true,
+          "drained": true,
+          "operations": 80000,
+          "performance_accepted": false,
+          "delegated_bodies": null,
+          "delegation_status": "UNMEASURED",
+          "receipt": {
+            "path": "tclock-functional-01/evidence/rwlock/cacheline-c01-tclock-w020-t08-r00/session.json",
+            "sha256": "2c1a8874593e690c4299e93294c22f9e27b8b82ad82af868713ffc8d6ab6e5e0",
+            "status": "PASS"
+          }
+        },
+        {
+          "family": "rwsem",
+          "arm": "native",
+          "passed": true,
+          "drained": true,
+          "operations": 80000,
+          "performance_accepted": false,
+          "delegated_bodies": null,
+          "delegation_status": "NOT_APPLICABLE",
+          "receipt": {
+            "path": "tclock-functional-01/evidence/rwsem/rwsem-cacheline-c01-native-w020-t08-r00/session.json",
+            "sha256": "60da8b703f7789295aa70aea2f77e4fc80a162ee872a9ae6abb1477c0ea248bc",
+            "status": "PASS"
+          }
+        },
+        {
+          "family": "rwsem",
+          "arm": "tclock",
+          "passed": true,
+          "drained": true,
+          "operations": 80000,
+          "performance_accepted": false,
+          "delegated_bodies": null,
+          "delegation_status": "UNMEASURED",
+          "receipt": {
+            "path": "tclock-functional-01/evidence/rwsem/rwsem-cacheline-c01-tclock-w020-t08-r00/session.json",
+            "sha256": "16482f797f4e4a01bd950a7222fe9e208ef3d0731378d1c48aae1f3535bc3945",
+            "status": "PASS"
+          }
+        }
+      ],
+      "compact_archive": {
+        "path": "tclock-functional-01/receipts.tar.gz",
+        "sha256": "73c06dab8c0cd73346769c0d483c66914f611bf29610b58c72ccbb0b628bbc97",
+        "status": "HASH_VERIFIED"
+      }
+    },
+    "native_continuation": [
+      {
+        "family": "mutex",
+        "caller_shell": "mutex_outer_cookie",
+        "passed": true,
+        "drained": true,
+        "result": {
+          "path": "escape-mutex-outer-01/result.json",
+          "sha256": "7e9fc389139f95a866b070a9d69758b5206c1fb4c3f0b8cdf2641135dbe3bf02",
+          "status": "PASS"
+        },
+        "phases": [
+          {
+            "name": "cold-warmup",
+            "complete": true,
+            "completed_operations": 160000,
+            "jit_counters": {
+              "bench_jit_bodies": 55687,
+              "bench_jit_completions": 55687,
+              "native_escape_count": 0
+            },
+            "failures": 0
+          },
+          {
+            "name": "cold-delegated",
+            "complete": true,
+            "completed_operations": 160000,
+            "jit_counters": {
+              "bench_jit_bodies": 158037,
+              "bench_jit_completions": 158037,
+              "native_escape_count": 0
+            },
+            "failures": 0
+          },
+          {
+            "name": "hot-escape",
+            "complete": true,
+            "completed_operations": 160000,
+            "jit_counters": {
+              "bench_jit_bodies": 1,
+              "bench_jit_completions": 0,
+              "native_escape_count": 1
+            },
+            "failures": 0
+          },
+          {
+            "name": "post-ban",
+            "complete": true,
+            "completed_operations": 160000,
+            "jit_counters": {
+              "bench_jit_bodies": 0,
+              "bench_jit_completions": 0,
+              "native_escape_count": 0
+            },
+            "failures": 0
+          }
+        ],
+        "preservation": {
+          "path": "escape-mutex-outer-01-preservation/receipt.json",
+          "sha256": "8a0d2dbd24affef24c1d689519b3c37de314382c1372682b622e36c91aebeabc",
+          "status": "HASH_VERIFIED"
+        }
+      },
+      {
+        "family": "spin",
+        "caller_shell": "spin_direct",
+        "passed": true,
+        "drained": true,
+        "result": {
+          "path": "escape-spin-01/result.json",
+          "sha256": "15a9303487f1dacd8d09e387741290b804389bdfd82dc9b879554a8d77a94fb1",
+          "status": "PASS"
+        },
+        "phases": [
+          {
+            "name": "cold-warmup",
+            "complete": true,
+            "completed_operations": 160000,
+            "jit_counters": {
+              "bench_jit_bodies": 97587,
+              "bench_jit_completions": 97587,
+              "native_escape_count": 0
+            },
+            "failures": 0
+          },
+          {
+            "name": "cold-delegated",
+            "complete": true,
+            "completed_operations": 160000,
+            "jit_counters": {
+              "bench_jit_bodies": 158711,
+              "bench_jit_completions": 158711,
+              "native_escape_count": 0
+            },
+            "failures": 0
+          },
+          {
+            "name": "hot-escape",
+            "complete": true,
+            "completed_operations": 160000,
+            "jit_counters": {
+              "bench_jit_bodies": 1,
+              "bench_jit_completions": 0,
+              "native_escape_count": 1
+            },
+            "failures": 0
+          },
+          {
+            "name": "post-ban",
+            "complete": true,
+            "completed_operations": 160000,
+            "jit_counters": {
+              "bench_jit_bodies": 0,
+              "bench_jit_completions": 0,
+              "native_escape_count": 0
+            },
+            "failures": 0
+          }
+        ],
+        "preservation": {
+          "path": "escape-spin-01-preservation/receipt.json",
+          "sha256": "10b42ce0773bfa79f2d305ece485a309e9cc6fa8135ecc5e1339147a826505c9",
+          "status": "HASH_VERIFIED"
+        }
+      }
+    ]
+  },
+  "limitations": [
+    "Source snapshots and retries remain separate; this is not a single final-source full-suite result.",
+    "The 109 initial module/probe selections have compile passes across affected retries; old phase-offset payloads explicitly refuse Linux 7 runtime.",
+    "CONFIG_KDLOCK_MMAP is disabled in the running kernel. Enabled object compilation does not establish actual-MM/page-fault runtime correctness.",
+    "Named thunk and direct-call metadata are covered by their audits; raw RET and handwritten/generated transfers still lack complete mitigation qualification.",
+    "Active call-depth tracking is refused because its return thunk changes restored arithmetic flags. Native-escape checks apply to the recorded ITS boot.",
+    "The near-text direct-helper pool is unavailable under this configuration.",
+    "Whole-kernel replacement, RT, ww_mutex and lockdep integration remain unvalidated.",
+    "Functional passes establish correctness for their named workloads and configurations; no throughput, comparative speedup or Linux 6.1 result is promoted to this platform."
+  ],
+  "final_health": {
+    "boot_id": "59172bf2-ccd2-49bd-bc1b-fea1d12056a7",
+    "release": "7.0.0-38-kdlock1",
+    "taint": 12288,
+    "project_modules": [],
+    "kernel_errors": [],
+    "failed_services": "",
+    "scope": "post-validation health; unsigned out-of-tree taint retained",
+    "receipt": {
+      "path": "final-health.json",
+      "sha256": "bcf9527d2ce9c2aca90ca53f61e29f2b180e772a7f4203da6a6a068dd8ca4116",
+      "status": "CAPTURED"
+    },
+    "kernel_log": {
+      "path": "final-dmesg.log",
+      "sha256": "e0ec337af1aec977b015439626822f918eac3641d4af49ddab50af5141287894",
+      "status": "CAPTURED"
+    }
+  }
+}

@@ -1,6 +1,6 @@
 """Verify native qspinlock dispatch even after boot dmesg has rotated out.
 
-Only the two function pointers in pv_ops.lock are read from live kernel memory.
+Only the two lock dispatch pointers are read from live kernel memory.
 Call after the exact source/config/build/live kernel identity check.
 """
 from pathlib import Path
@@ -28,7 +28,7 @@ def read_virtual(stream, address, size):
             data = stream.read(size)
             if len(data) == size:
                 return data
-    raise ValueError('pv_ops is outside readable kcore segments')
+    raise ValueError('PV lock dispatch is outside readable kcore segments')
 
 
 def dispatch_offsets(layout):
@@ -53,9 +53,17 @@ def capture(source, out, command):
         fields = line.split()
         if len(fields) == 3:
             symbols[fields[2]] = int(fields[0], 16)
-    template = command(['pahole', '-C', 'paravirt_patch_template', source / 'vmlinux'], out / 'pv-template.txt')
     locks = command(['pahole', '-C', 'pv_lock_ops', source / 'vmlinux'], out / 'pv-lock-ops.txt')
-    base = symbols['pv_ops'] + member_offset(template, 'struct pv_lock_ops lock;')
+    if 'pv_ops_lock' in symbols:
+        # Linux 7 keeps the same typed pair in a standalone object. Read the
+        # live dispatch slots, rather than treating the boot argument as proof.
+        base = symbols['pv_ops_lock']
+        container = 'pv_ops_lock'
+    else:
+        template = command(['pahole', '-C', 'paravirt_patch_template', source / 'vmlinux'],
+                           out / 'pv-template.txt')
+        base = symbols['pv_ops'] + member_offset(template, 'struct pv_lock_ops lock;')
+        container = 'pv_ops.lock'
     # Pahole spacing can vary with its version; parse member names independently.
     dispatch_offsets(locks)
     with open('/proc/kcore', 'rb', buffering=0) as core:
@@ -65,5 +73,6 @@ def capture(source, out, command):
     if not all(expected) or actual != expected:
         raise ValueError('live spinlock dispatch is not native')
     return dict(method='live_pv_ops_two_function_pointers',
+                container=container,
                 boot_id=Path('/proc/sys/kernel/random/boot_id').read_text().strip(),
                 pv_lock_address=hex(base), functions={name: hex(value) for name, value in zip(names, actual)})

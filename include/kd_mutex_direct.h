@@ -33,7 +33,7 @@ void kd_mutex_direct_unlock_clobber_v1(struct kd_mutex *, unsigned long,
 		asm volatile("movq %%rsp, %%rsi\n\t"                        \
 					 "leaq 1f(%%rip), %%rdx\n\t"                    \
 					 "movq %%rbp, %%rcx\n\t"                        \
-					 "call " #symbol "\n\t1:\n\t" continuation      \
+					 "call " #symbol "\n\t1:\n\t" continuation "\n\t" \
 					 : "+D"(kd_lock_arg), "=S"(kd_sp), "=d"(kd_ip), \
 					   "=c"(kd_bp), ASM_CALL_CONSTRAINT             \
 					 :                                              \
@@ -51,7 +51,13 @@ void kd_mutex_direct_unlock_clobber_v1(struct kd_mutex *, unsigned long,
  * This cookie belongs to one lexical acquisition, survives sleeping/migration,
  * and is opaque, same-task and non-transferable: do not copy, modify or reuse
  * it until the matching unlock. A native cookie records this acquisition's
- * exact owner pointer; zero means route through the provider, not unowned. */
+ * exact owner pointer; zero means route through the provider, not unowned.
+ * Only this caller's logical execution accesses the cookie; the polling origin
+ * does not access it while the delegated body owns the transferred frame.
+ * Ordinary C accesses leave this
+ * private value in compiler-owned registers or spills. It is not a published
+ * lock word and requires no READ_ONCE/WRITE_ONCE access. The clobber boundary
+ * still defines its exact result before either continuation consumes it. */
 struct kd_mutex_outer_cookie
 {
 	unsigned long owner;
@@ -95,7 +101,7 @@ kd_mutex_outer_trylock(struct kd_mutex *lock, unsigned long owner)
 		if (kd_mutex_outer_trylock(kd_outer_lock, kd_native_owner))           \
 		{                                                                     \
 			kd_hotlock_mutex_entry();                                         \
-			WRITE_ONCE((cookie).owner, kd_native_owner);                      \
+			(cookie).owner = kd_native_owner;                                 \
 		}                                                                     \
 		else                                                                  \
 		{                                                                     \
@@ -106,7 +112,7 @@ kd_mutex_outer_trylock(struct kd_mutex *lock, unsigned long owner)
 						 "leaq 1f(%%rip), %%rdx\n\t"                          \
 						 "movq %%rbp, %%rcx\n\t"                              \
 						 "call kd_mutex_outer_contended_clobber_v1\n\t"       \
-						 "jmp 2f\n\t1:\n\t" continuation                      \
+						 "jmp 2f\n\t1:\n\t" continuation "\n\t"              \
 						 "xorl %%eax, %%eax\n\t2:\n\t"                        \
 						 : "=a"(kd_route), "+D"(kd_outer_lock),               \
 						   "=S"(kd_sp), "=d"(kd_ip), "=c"(kd_bp),             \
@@ -114,7 +120,7 @@ kd_mutex_outer_trylock(struct kd_mutex *lock, unsigned long owner)
 						 :                                                    \
 						 : "rbx", "r8", "r9", "r10", "r11",                   \
 						   "r12", "r13", "r14", "r15", "cc", "memory");       \
-			WRITE_ONCE((cookie).owner, kd_route);                             \
+			(cookie).owner = kd_route;                                        \
 		}                                                                     \
 	} while (0)
 
@@ -126,7 +132,7 @@ kd_mutex_outer_trylock(struct kd_mutex *lock, unsigned long owner)
 	do                                                                 \
 	{                                                                  \
 		struct kd_mutex *kd_outer_lock = (lock);                          \
-		unsigned long kd_native_owner = READ_ONCE((cookie).owner);     \
+		unsigned long kd_native_owner = (cookie).owner;                 \
 		if (kd_native_owner)                                           \
 		{                                                              \
 			kd_mutex_local_unlock(kd_outer_lock);                             \

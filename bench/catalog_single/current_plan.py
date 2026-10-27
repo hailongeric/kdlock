@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Current single-round lock/API catalog; MM suites have separate kernel plans.
 
-The original dated plan remains fixed evidence. This plan adds only the active
-padded-counter nano profiles and gives every invocation a new evidence root.
+The original dated plan remains fixed evidence. This plan selects the active
+Linux 7 kernel identity and padded-counter nano profiles, with a new evidence root.
 It prints commands and never starts a workload.
 """
 import argparse
@@ -36,6 +36,8 @@ def commands(guest_root):
     for name, argv in historical.commands():
         command = list(argv)
         command[command.index('--output') + 1] = str(destination/name)
+        command[command.index('--kernel-source') + 1] = str(args.kernel_source)
+        command[command.index('--kernel-baseline') + 1] = str(args.kernel_baseline)
         yield name, command
 
 

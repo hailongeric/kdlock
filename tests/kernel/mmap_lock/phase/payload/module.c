@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0
-/* Real mm objects and standard mmap APIs; no private replacement lock or JIT. */
+/* Real mm objects and Linux 7 mmap APIs; the shared test-only try-write helper
+ * covers the private adapter API. Legacy phase sites remain unbound. */
 #include <linux/completion.h>
 #include <linux/cpu.h>
 #include <linux/delay.h>
@@ -17,9 +18,10 @@
 #include <linux/sched/task.h>
 #include <linux/uaccess.h>
 #include "api.h"
+#include "../../payload/backend_trylock.h"
 #include "../../../../../workload_modules/mmap_phase_observer/api.h"
 
-#ifndef CONFIG_KD_MMAP_LOCK
+#ifndef CONFIG_KDLOCK_MMAP
 #error "This probe requires the actual mmap-lock integration kernel"
 #endif
 
@@ -464,17 +466,17 @@ static long run(void __user *user)
 			goto result;
 		}
 	}
-	check(!mmap_write_trylock(probe_mm));
+	check(!probe_backend_write_trylock(probe_mm));
 	mmap_read_unlock(probe_mm);
 	mmap_read_unlock(probe_mm);
-	ok = mmap_write_trylock(probe_mm);
+	ok = probe_backend_write_trylock(probe_mm);
 	check(ok);
 	if (!ok)
 		goto result;
 	check(kd_mmap_is_write_owner(&probe_mm->mmap_lock));
-	check(!mmap_read_trylock(probe_mm) && !mmap_write_trylock(probe_mm));
+	check(!mmap_read_trylock(probe_mm) && !probe_backend_write_trylock(probe_mm));
 	mmap_write_downgrade(probe_mm);
-	check(!mmap_write_trylock(probe_mm));
+	check(!probe_backend_write_trylock(probe_mm));
 	mmap_read_unlock(probe_mm);
 	check(idle(probe_mm));
 	r.api_checks = 8;
@@ -558,7 +560,7 @@ static long probe_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 	return cmd == KD_MMAP_PROBE_RUN ? run((void __user *)arg) : -ENOTTY;
 }
 static const struct file_operations ops = {
-	.owner = THIS_MODULE, .unlocked_ioctl = probe_ioctl, .llseek = no_llseek,
+	.owner = THIS_MODULE, .unlocked_ioctl = probe_ioctl,
 };
 static struct miscdevice device = {
 	.minor = MISC_DYNAMIC_MINOR, .name = "kd_mmap_probe", .fops = &ops, .mode = 0600,

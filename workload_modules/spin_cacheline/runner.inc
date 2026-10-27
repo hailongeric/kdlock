@@ -321,7 +321,6 @@ static long sc_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 static const struct file_operations sc_fops = {
 	.owner = THIS_MODULE,
 	.unlocked_ioctl = sc_ioctl,
-	.llseek = no_llseek,
 };
 static struct miscdevice sc_device = {
 	.minor = MISC_DYNAMIC_MINOR, .name = SC_DEVICE_NAME,

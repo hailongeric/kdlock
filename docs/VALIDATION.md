@@ -17,7 +17,25 @@ retain favorable and adverse cases. They do not qualify the historical unrun
 three-repeat matrices, prove exact mmap1 performance, or close stage 2's
 improvement/parity gate. The receipts below retain their original outcomes.
 
+## Linux 7 functional port
+
+The [October 27 port](../bench/results/10.176.26.71/tests/linux70-port-20261027/README.md)
+uses authenticated Ubuntu `linux=7.0.0-38.38` and custom `7.0.0-38-kdlock1`.
+The final basic run completed 10.8 million correct operations across all four KD
+families, with returned JIT bodies and complete drain in each. Eight Native/TCLock
+controls completed 80,000 operations each. Separate mutex OUTER and spin checks
+passed original-task instruction continuation, exact effects/arithmetic flags,
+terminal delegation refusal and drain. These are focused functional checks;
+full-suite, actual-MM runtime and new performance qualification remain separate.
+Earlier preparation refusals and corrected installation failures are retained.
+
 ## Native shared-mm mmap writers
+
+The [Linux 7 port record](../bench/results/10.176.26.71/tests/linux70-port-20261027/README.md)
+owns the new platform's build, focused checks and live-validation gates. The
+enabled mmap adapter has separate affected-object compilation evidence; it stays
+disabled in the first development kernel. The actual-MM assertions and timings
+below remain Linux 6.1 evidence and do not establish Linux 7 runtime behavior.
 
 The [IRQ/read-trylock correction](../bench/results/10.176.26.71/tests/mmap-irq-trylock-20261025/README.md)
 at `e6fc371` passed 137 Native and 161 KD assertions on actual mm objects in the

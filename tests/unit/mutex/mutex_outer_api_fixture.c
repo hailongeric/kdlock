@@ -5,6 +5,9 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <string.h>
+/* Linux 7 annotations can end at .popsection without a trailing newline.
+ * Keep a data marker so the driver also detects leaked executable bytes. */
+#define TEST_ANNOTATION ".pushsection .discard.kd_boundary,\"a\",@progbits; .byte 0; .popsection"
 struct kd_mutex { unsigned long owner; unsigned int delegation_state; };
 #define current ((void *)0x8000UL)
 #define READ_ONCE(x) (*(volatile __typeof__(x) *)&(x))
@@ -36,7 +39,9 @@ static inline bool outer_test_cas(unsigned long *p, unsigned long *old, unsigned
 #define atomic_long_try_cmpxchg_release outer_test_cas
 #define might_sleep() do { } while (0)
 unsigned long entries, routed_locks, routed_unlocks, native_unlocks;
-unsigned long *test_cookie_address;
+/* Dereferenced by the destructive callee only while the owner frame is live;
+ * after return this remains numeric relocation metadata, not a retained object. */
+uintptr_t test_cookie_address;
 unsigned long contended_native_return;
 static inline void kd_hotlock_mutex_entry(void) { entries++; }
 __attribute__((noinline,noipa)) void kd_mutex_local_unlock(struct kd_mutex *lock)
@@ -108,6 +113,8 @@ static void check_owner_probe(void)
           owner_cas_count==before+1);
   }
  }
+ assert(!release_on_pause);
+ release_on_pause=NULL;
 }
 struct kd_regs { unsigned long w[21]; };
 #define __KERNEL__
@@ -158,9 +165,9 @@ __attribute__((noinline,noipa)) unsigned long outer_jit_case(void)
 {
  struct kd_mutex_outer_cookie cookie;
  volatile unsigned long body=0x115;
- test_cookie_address=&cookie.owner;
+ test_cookie_address=(uintptr_t)&cookie.owner;
  KD_MUTEX_OUTER_LOCK(&test_lock,cookie,
-  ".globl outer_jit_entry\nouter_jit_entry:\n");
+  ".globl outer_jit_entry\nouter_jit_entry:\n" TEST_ANNOTATION);
  body++;
  TEST_OUTER_UNLOCK(&test_lock,cookie);
  return body;
@@ -172,7 +179,7 @@ __attribute__((noinline,noipa)) static unsigned long stress(unsigned long seed, 
  struct kd_mutex_outer_cookie cookie;
  unsigned long a=seed+1,b=seed+2,c=seed+3,d=seed+4,e=seed+5;
  asm volatile("" : "+r"(a),"+r"(b),"+r"(c),"+r"(d),"+r"(e) : : "memory");
- test_cookie_address=&cookie.owner;
+ test_cookie_address=(uintptr_t)&cookie.owner;
  contended_native_return=mode==3 ? (unsigned long)current : 0;
  KD_MUTEX_OUTER_LOCK(&lock,cookie,"");
  assert(cookie.owner == (mode==1 ? 0UL : (unsigned long)current));

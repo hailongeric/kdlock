@@ -64,8 +64,6 @@
  * -------------------------------------------------------------------------- */
 #define KD_MUTEX_WAITER_PROCESSED 1
 
-#define _Q_LOCKED_COMBINER_VAL KD_MUTEX_GATE_COMBINER
-
 /* Independent mutex limits bound one physical-owner service interval.
  * NUMA fairness may hand off earlier; defaults are 1024 and 768. */
 static const unsigned int kd_mutex_batch_size = KDLOCK_MUTEX_BATCH;

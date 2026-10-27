@@ -78,12 +78,25 @@ static _Thread_local unsigned int preempt_depth;
 	} while (0)
 
 enum { MODULE_STATE_LIVE, MODULE_STATE_COMING, MODULE_STATE_GOING };
+enum mod_mem_type {
+	MOD_TEXT,
+	MOD_DATA,
+	MOD_RODATA,
+	MOD_RO_AFTER_INIT,
+	MOD_INIT_TEXT,
+	MOD_INIT_DATA,
+	MOD_INIT_RODATA,
+	MOD_MEM_NUM_TYPES,
+};
+#define mod_mem_type_is_init(type) \
+	((type) == MOD_INIT_TEXT || (type) == MOD_INIT_DATA || \
+	 (type) == MOD_INIT_RODATA)
 struct module {
 	int state;
 	struct {
 		void *base;
-		unsigned int size, text_size;
-	} core_layout, init_layout;
+		unsigned int size;
+	} mem[MOD_MEM_NUM_TYPES];
 	atomic_int refs;
 	bool fail_get;
 };
@@ -136,15 +149,17 @@ static void module_put(struct module *module)
 
 static struct module *module_address(unsigned long address)
 {
-	unsigned long index;
-
 	CHECK(preempt_depth > 0);
-	if (address < SOURCE)
-		return NULL;
-	index = (address - SOURCE) / 0x10000;
-	if (index > KD_SOURCE_MAX_MODULES || (address & 0xffff) >= 0x5000)
-		return NULL;
-	return &modules[index];
+	for (unsigned int i = 0; i <= KD_SOURCE_MAX_MODULES; i++)
+		for (enum mod_mem_type type = MOD_TEXT;
+		     type < MOD_MEM_NUM_TYPES; type++) {
+			unsigned long base = (unsigned long)modules[i].mem[type].base;
+			unsigned long size = modules[i].mem[type].size;
+
+			if (address >= base && address - base < size)
+				return &modules[i];
+		}
+	return NULL;
 }
 
 static unsigned long kallsyms_lookup_name(const char *name)
@@ -256,6 +271,15 @@ static void check_caps(struct file *file)
 }
 static void reset(void)
 {
+	/* Deliberately noncontiguous and not in enum order. Init sections remain
+	 * visible to lookup so the production residency filter must reject them. */
+	static const unsigned long offsets[MOD_MEM_NUM_TYPES] = {
+		[MOD_TEXT] = 0, [MOD_DATA] = 0x8000,
+		[MOD_RODATA] = 0x3000, [MOD_RO_AFTER_INIT] = 0x2000,
+		[MOD_INIT_TEXT] = 0x4000, [MOD_INIT_DATA] = 0xa000,
+		[MOD_INIT_RODATA] = 0xc000,
+	};
+
 	CHECK(!provider.refs);
 	provider.state = MODULE_STATE_LIVE;
 	provider.fail_get = false;
@@ -263,12 +287,12 @@ static void reset(void)
 		CHECK(!modules[i].refs);
 		modules[i].state = MODULE_STATE_LIVE;
 		modules[i].fail_get = false;
-		modules[i].core_layout.base = (void *)(SOURCE + i * 0x10000);
-		modules[i].core_layout.size = 0x4000;
-		modules[i].core_layout.text_size = 0x2000;
-		modules[i].init_layout.base =
-			(void *)(SOURCE + i * 0x10000 + 0x4000);
-		modules[i].init_layout.size = 0x1000;
+		for (enum mod_mem_type type = MOD_TEXT;
+		     type < MOD_MEM_NUM_TYPES; type++) {
+			modules[i].mem[type].base =
+				(void *)(SOURCE + i * 0x10000 + offsets[type]);
+			modules[i].mem[type].size = type == MOD_TEXT ? 0x2000 : 0x1000;
+		}
 	}
 	CHECK(!kd_source_init());
 	for (unsigned int i = 0; i < KD_MAX_EXE; i++)
@@ -322,6 +346,41 @@ static void residency(void)
 	CHECK(!kd_exe_publish_status(&table[0], KD_EXE_NORMAL));
 	CHECK(kd_source_pin_root(SOURCE) == -ESHUTDOWN);
 	CHECK(!kd_source_writer_get() && !kd_source_frame_get());
+}
+
+static void module_regions(void)
+{
+	reset();
+	CHECK(kd_source_writer_get());
+	CHECK(kd_source_frame_get());
+	for (enum mod_mem_type type = MOD_TEXT; type < MOD_MEM_NUM_TYPES; type++) {
+		unsigned long base = (unsigned long)modules[0].mem[type].base;
+		int text_result = type == MOD_TEXT ? 0 : -EPERM;
+
+		CHECK(kd_source_pin_root(base) == text_result);
+		CHECK(kd_source_pin_target(base) == text_result);
+		CHECK(kd_source_pin_range(base, 4) ==
+		      (mod_mem_type_is_init(type) ? -EPERM : 0));
+	}
+	/* A single lease covers all resident regions, but each read window must
+	 * prove residency again at every region boundary. Adjacent core regions
+	 * are valid; init regions and gaps must not inherit the preceding lease. */
+	CHECK(modules[0].refs == 1 && status().modules == 1);
+	CHECK(!kd_source_pin_range(SOURCE + 0x1fff, 2));
+	CHECK(!kd_source_pin_range(SOURCE + 0x2fff, 2));
+	CHECK(kd_source_pin_range(SOURCE + 0x3fff, 2) == -EPERM);
+	CHECK(kd_source_pin_range(SOURCE + 0x8fff, 2) == -ESTALE);
+	CHECK(kd_source_pin_root(SOURCE + 0x6000) == -ESTALE);
+	CHECK(modules[0].refs == 1 && status().modules == 1);
+
+	/* Reject corrupt/wrapping module extents before taking a source reference. */
+	modules[1].mem[MOD_TEXT].base = (void *)(ULONG_MAX - 1);
+	modules[1].mem[MOD_TEXT].size = 4;
+	CHECK(kd_source_pin_root(ULONG_MAX - 1) == -EOVERFLOW);
+	CHECK(!modules[1].refs && status().modules == 1);
+	kd_source_frame_put();
+	kd_source_writer_put();
+	CHECK(!retire() && !status().modules);
 }
 
 static void draining(void)
@@ -532,6 +591,7 @@ int main(void)
 	_Static_assert(sizeof(struct kd_exe_info) == 64, "entry ABI");
 	_Static_assert(sizeof(struct kd_recv_pkt) == 64, "upload ABI");
 	residency();
+	module_regions();
 	direct_pool_available = true;
 	check_caps(&(struct file){ 0 });
 	direct_pool_available = false;

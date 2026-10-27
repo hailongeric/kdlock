@@ -54,6 +54,10 @@ _root_native_escape = False
 class SourceRefused(RuntimeError):
     """A source dependency cannot remain resident for this JIT session."""
 
+    def __init__(self, message, *, errno=None):
+        super().__init__(message)
+        self.errno = errno
+
 
 def info(fd):
     packet = bytearray(INFO_STRUCT.size)
@@ -229,7 +233,7 @@ def pin_range(address, size):
             raise
         raise SourceRefused(
             f"source range cannot be pinned: address={address:#x} bytes={size} "
-            f"errno={error.errno} ({error.strerror})"
+            f"errno={error.errno} ({error.strerror})", errno=error.errno
         ) from error
 
 

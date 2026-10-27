@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-only
-/* Scoped syscall experiment for the captured Linux 6.1.159 kernel.
+/* Scoped OFD/setfd syscall experiment for Ubuntu Linux 7.0.0-38.38.
  * The client owns a private memfd, populates it before binding, and keeps its
  * metadata and OFD owner alive and immutable until every worker has joined and
  * this module is removed. The setfd case changes only preallocated descriptor
@@ -9,12 +9,12 @@
  * continue through the original kernel function. No kernel text is rewritten
  * outside the normal ftrace IPMODIFY mechanism.
  *
- * The xattr body is from fs/xattr.c (Andreas Gruenbacher, SGI, Red Hat).
  * The OFD body follows fs/locks.c: posix_test_lock, posix_locks_conflict,
  * locks_overlap and locks_copy_conflock, specialized to local OFD locks whose
  * absent lock-manager callbacks are checked at bind time.
  */
 #include <linux/file.h>
+#include <linux/filelock.h>
 #include <linux/fdtable.h>
 #include <linux/fs.h>
 #include <linux/ftrace.h>
@@ -25,8 +25,6 @@
 #include <linux/percpu.h>
 #include <linux/pid.h>
 #include <linux/sched/task.h>
-#include <linux/shmem_fs.h>
-#include <linux/xattr.h>
 
 #ifdef RB_KDLOCK
 #include "kd_spin_direct.h"
@@ -54,9 +52,6 @@ module_param(target_pid, int, 0400);
 static struct files_struct *target_files;
 static void (*release_files)(struct files_struct *);
 #endif
-#ifdef RB_XATTR
-static struct simple_xattrs *target_xattrs;
-#endif
 static unsigned long lock_addr;
 module_param(lock_addr, ulong, 0400);
 static DEFINE_PER_CPU(u64, redirected);
@@ -72,68 +67,45 @@ static int calls_get(char *buf, const struct kernel_param *kp)
 static const struct kernel_param_ops calls_ops = { .get = calls_get };
 module_param_cb(calls, &calls_ops, NULL, 0400);
 
-#ifdef RB_XATTR
-static __attribute__((noipa)) int rb_body(struct simple_xattrs *xattrs,
-		const char *name, void *buffer, size_t size)
-{
-	struct simple_xattr *xattr;
-	int ret = -ENODATA;
-
-	RB_LOCK(&xattrs->lock);
-	list_for_each_entry(xattr, &xattrs->head, list) {
-		/* Audited original C API: the syscall owns its copied, terminated
-		 * search name; this physical lock keeps each allocated list name
-		 * valid and unchanged. Delegation uses those same lifetime/read
-		 * guarantees and the original pointers, without rescanning names.
-		 * These callers access allocated names, list nodes and value buffers;
-		 * none observes temporary CALL return words or helper stack scratch. */
-		if (strcmp(name, xattr->name))
-			continue;
-		ret = xattr->size;
-		if (buffer) {
-			if (size < xattr->size)
-				ret = -ERANGE;
-			else
-				memcpy(buffer, xattr->value, xattr->size);
-		}
-		break;
-	}
-	RB_UNLOCK(&xattrs->lock);
-	return ret;
-}
-#define RB_SYMBOL "simple_xattr_get"
-#elif defined(RB_OFD)
+#ifdef RB_OFD
 static __attribute__((noipa)) void rb_body(struct file *filp, struct file_lock *fl)
 {
 	struct file_lock_context *ctx = locks_inode_context(file_inode(filp));
 	struct file_lock *cfl;
 
 	if (!ctx || list_empty_careful(&ctx->flc_posix)) {
-		fl->fl_type = F_UNLCK;
+		fl->c.flc_type = F_UNLCK;
 		return;
 	}
 	RB_LOCK(&ctx->flc_lock);
-	list_for_each_entry(cfl, &ctx->flc_posix, fl_list) {
-		if (fl->fl_owner == cfl->fl_owner)
-			continue;
+	list_for_each_entry(cfl, &ctx->flc_posix, c.flc_list) {
+		/* Linux 7 posix_test_locks_conflict treats an F_UNLCK query as
+		 * a lookup of this owner's overlapping locks, not a conflict test. */
+		if (fl->c.flc_type == F_UNLCK) {
+			if (fl->c.flc_owner != cfl->c.flc_owner)
+				continue;
+		} else {
+			if (fl->c.flc_owner == cfl->c.flc_owner)
+				continue;
+			if (cfl->c.flc_type != F_WRLCK && fl->c.flc_type != F_WRLCK)
+				continue;
+		}
 		if (fl->fl_end < cfl->fl_start || cfl->fl_end < fl->fl_start)
-			continue;
-		if (cfl->fl_type != F_WRLCK && fl->fl_type != F_WRLCK)
 			continue;
 		/* Bind rejects any lmops: no callback ownership/expiry is omitted
 		 * from the admitted local-OFD workload. Field copies match Linux. */
-		fl->fl_owner = cfl->fl_owner;
-		fl->fl_pid = cfl->fl_pid;
-		fl->fl_file = NULL;
-		fl->fl_flags = cfl->fl_flags;
-		fl->fl_type = cfl->fl_type;
+		fl->c.flc_owner = cfl->c.flc_owner;
+		fl->c.flc_pid = cfl->c.flc_pid;
+		fl->c.flc_file = NULL;
+		fl->c.flc_flags = cfl->c.flc_flags;
+		fl->c.flc_type = cfl->c.flc_type;
 		fl->fl_start = cfl->fl_start;
 		fl->fl_end = cfl->fl_end;
 		fl->fl_lmops = cfl->fl_lmops;
 		fl->fl_ops = NULL;
 		goto out;
 	}
-	fl->fl_type = F_UNLCK;
+	fl->c.flc_type = F_UNLCK;
 out:
 	RB_UNLOCK(&ctx->flc_lock);
 }
@@ -179,9 +151,7 @@ static void notrace redirect(unsigned long ip, unsigned long parent_ip,
 	bool match;
 	if (!regs)
 		return;
-#ifdef RB_XATTR
-	match = (void *)regs->di == target_xattrs;
-#elif defined(RB_OFD)
+#ifdef RB_OFD
 	match = file_inode((struct file *)regs->di) == target_inode;
 #else
 	match = current->files == target_files;
@@ -225,18 +195,15 @@ static int __init rb_init(void)
 		ret = -EINVAL;
 		goto fail;
 	}
-#ifdef RB_XATTR
-	target_xattrs = &SHMEM_I(target_inode)->xattrs;
-	lock_addr = (unsigned long)&target_xattrs->lock;
-#elif defined(RB_OFD)
+#ifdef RB_OFD
 	ctx = locks_inode_context(target_inode);
 	if (!ctx) {
 		ret = -EINVAL;
 		goto fail;
 	}
 	__raw_spin_lock(&ctx->flc_lock.rlock);
-	list_for_each_entry(fl, &ctx->flc_posix, fl_list) {
-		if (!(fl->fl_flags & FL_OFDLCK) || fl->fl_lmops || fl->fl_ops) {
+	list_for_each_entry(fl, &ctx->flc_posix, c.flc_list) {
+		if (!(fl->c.flc_flags & FL_OFDLCK) || fl->fl_lmops || fl->fl_ops) {
 			count = 0;
 			break;
 		}
@@ -321,4 +288,4 @@ static void __exit rb_exit(void)
 module_init(rb_init);
 module_exit(rb_exit);
 MODULE_LICENSE("GPL");
-MODULE_DESCRIPTION("Scoped xattr / OFD / file-table syscall critical-section comparison");
+MODULE_DESCRIPTION("Scoped OFD / file-table syscall critical-section comparison");

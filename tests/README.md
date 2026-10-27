@@ -4,6 +4,11 @@ Ubuntu 26.04 / Linux 7.0 is the active adaptation platform. Its verified OS
 boot and installed headers are recorded in the
 [migration record](../docs/history/vm-ubuntu2604-migration-20261027.md); no KD
 build, ABI/API, JIT or live-test pass follows from that environment check.
+The [Linux 7 port receipt](../bench/results/10.176.26.71/tests/linux70-port-20261027/README.md)
+records the new focused checks and their exact source identities. Use the
+[Python 3.14 dependency procedure](../disassem/compat/README.md) before semantic
+translator checks, and the [new kernel identity](../kernel_integration/linux70/IDENTITY.md)
+before live tests. Dated Linux 6.1 experiment runners remain historical.
 Linux 6.1 development is retired. Earlier receipts and kernel-specific commands
 retain their historical scope under the
 [retirement record](../docs/history/kernel-retirement-20261027.md).

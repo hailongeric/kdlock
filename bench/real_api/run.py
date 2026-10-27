@@ -35,18 +35,28 @@ MUTEX_KINDS = {'pipebytes', 'pipecap', 'seek'}
 
 
 def lock_kind(kind):
-    return 'rwlock' if kind == 'utsname' else 'mutex' if kind in MUTEX_KINDS else 'spin'
+    return 'rwlock' if kind in ('utsname', 'xattr') else 'mutex' if kind in MUTEX_KINDS else 'spin'
 
 
 def tc_name(family):
     return 'tclock_backend_km' if family == 'spin' else f'tclock_{family}_backend_km'
 
 
+def source_parameters(spec, ready):
+    arguments = ['target_path=' + ready['path']]
+    if spec['kind'] in {'setfd', 'utsname', 'xattr'} | MUTEX_KINDS:
+        arguments += ['target_pid=' + str(ready['pid'])]
+    if spec['kind'] == 'utsname':
+        arguments += ['domain=' + str(int(spec['query'] == 'domain'))]
+    return arguments
+
+
 def sources():
     result = {}
     for folder in ('include', 'kernel_module', 'daemon', 'disassem', 'tclock_backend',
                    'bench/real_api', 'bench/spin_cacheline', 'bench/tclock_compare',
-                   'workload_modules/real_api', 'kernel_baseline', 'tests/protocols'):
+                   'workload_modules/real_api', 'kernel_baseline',
+                   'kernel_integration/linux70', 'tests/protocols'):
         for p in (ROOT / folder).rglob('*'):
             relative = p.relative_to(ROOT)
             if (p.is_file() and not any(s.startswith('.') or s == '__pycache__' for s in relative.parts)
@@ -60,7 +70,7 @@ def sources():
 def build(out, args):
     build_dir = out / 'build'
     build_dir.mkdir()
-    env = dict(os.environ, KDIR=args.kernel_source)
+    env = dict(os.environ, KDIR=str(args.kernel_source))
     if args.build_from:
         previous = args.build_from.resolve()
         require(json.loads((previous/'source-sha256.json').read_text()) == sources(),
@@ -95,7 +105,7 @@ def build(out, args):
         for backend, kind in itertools.product(('native', 'tclock', 'kdlock'), args.kinds):
             dest = build_dir / (backend + '-' + kind)
             dest.mkdir()
-            for name in ('module.c', 'mutex.c', 'uts.c', 'control.h', 'Makefile'):
+            for name in ('module.c', 'mutex.c', 'uts.c', 'xattr.c', 'control.h', 'Makefile'):
                 shutil.copyfile(ROOT/'workload_modules/real_api'/name, dest/name)
             tc_folder = build_dir/('tclock-'+lock_kind(kind))
             symvers = (PROVIDER.parent/'Module.symvers' if backend == 'kdlock' else tc_folder/'Module.symvers')
@@ -167,13 +177,16 @@ def build(out, args):
             placement[kind] = dict(offset=int(value), cache_line_bytes=64, storage_bytes=128)
         write_json(out/'mutex-lock-placement-build.json', placement)
     # Capture the exact real implementations, not just a moving upstream URL.
+    kernel_source = kernel_identity.source_directory(Path(args.kernel_source),
+                                                      Path(args.kernel_baseline))
     for relative in ('fs/xattr.c', 'fs/locks.c', 'fs/file.c', 'fs/fcntl.c', 'fs/pipe.c',
                      'fs/read_write.c', 'mm/shmem.c', 'include/linux/pipe_fs_i.h', 'include/linux/fs.h',
                      'kernel/sys.c', 'kernel/utsname_sysctl.c', 'include/linux/utsname.h',
-                     'include/linux/fdtable.h', 'include/linux/shmem_fs.h', 'include/linux/xattr.h'):
+                     'include/linux/fdtable.h', 'include/linux/shmem_fs.h', 'include/linux/xattr.h',
+                     'include/linux/filelock.h'):
         p = out/'kernel-inputs'/relative
         p.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copyfile(Path(args.kernel_source)/relative, p)
+        shutil.copyfile(kernel_source/relative, p)
     write_json(out/'kernel-inputs-sha256.json',
                {str(p.relative_to(out/'kernel-inputs')): digest(p)
                 for p in (out/'kernel-inputs').rglob('*') if p.is_file()})
@@ -189,6 +202,11 @@ class SyscallSession(Session):
         self.tc_module = tc_name(spec['lock_kind'])
         self.tc_params = Path('/sys/module', self.tc_module, 'parameters')
         self.control_bound = False
+
+    def has_delegation_entry(self):
+        # Linux 7 xattr lookup holds shared read ownership throughout its
+        # native rb-tree search. KD readers run locally and publish no image.
+        return self.record.get('kind') != 'xattr'
 
     def start_daemon(self):
         workspace = self.path/'workspace'
@@ -328,11 +346,7 @@ class SyscallSession(Session):
             self.run(['insmod', self.out/'build'/(self.tc_module+'.ko'), 'komb_batch_size=1024'], 'load-tc.log')
             self.loaded_tc = True
         if s['arm'] != 'stock':
-            load = ['insmod', self.workload_module, 'target_path='+ready['path']]
-            if s['kind'] in {'setfd', 'utsname'} | MUTEX_KINDS:
-                load += ['target_pid='+str(ready['pid'])]
-            if s['kind'] == 'utsname':
-                load += ['domain='+str(int(s['query'] == 'domain'))]
+            load = ['insmod', self.workload_module, *source_parameters(s, ready)]
             self.run(load, 'load-source.log')
             self.loaded_source = True
             if s['kind'] in MUTEX_KINDS:
@@ -344,7 +358,8 @@ class SyscallSession(Session):
                         'loaded mutex placement differs')
                 s['mutex_lock_placement'] = dict(offset=s['lock_addr'] % 64,
                                                 cache_line_bytes=64, storage_bytes=128)
-            s['gate_addr'] = int((PARAM/'gate_addr').read_text()) if s['kind'] == 'utsname' else s['lock_addr']
+            s['gate_addr'] = (int((PARAM/'gate_addr').read_text())
+                              if s['kind'] in ('utsname', 'xattr') else s['lock_addr'])
             if self.loaded_tc:
                 (self.tc_params/'target_lock').write_text(str(s['lock_addr']))
             if self.loaded_kd:
@@ -356,7 +371,7 @@ class SyscallSession(Session):
                         int(s['probe_parameters']['bench_lock_addr'], 0) == s['gate_addr'],
                         'KD completion probe configuration differs')
             (PARAM/'prepare').write_text('1')
-        if self.loaded_kd:
+        if self.loaded_kd and self.has_delegation_entry():
             sym = [line.split() for line in Path('/proc/kallsyms').read_text().splitlines()]
             begin = [int(v[0], 16) for v in sym if len(v) == 4 and v[2:] == ['rb_body', '[real_api]']]
             nm = self.run(['nm', '-S', self.workload_module], 'symbols.txt')
@@ -384,7 +399,7 @@ class SyscallSession(Session):
 
     def measure(self):
         s = self.record
-        if self.loaded_kd:
+        if self.loaded_kd and self.has_delegation_entry():
             s['published_before'] = self.publication()
             require(s['published_before']['source']['writers'] == 0,
                     'translator writer remains before measurement', 'UNDRAINED')
@@ -416,13 +431,18 @@ class SyscallSession(Session):
                     'invalid rwlock operation accounting', 'DATA_ERROR')
         s.update(jit_evidence(int(jit.read_text()) - jbefore if self.loaded_kd else 0,
             int(complete.read_text()) - complete_before if self.loaded_kd else 0,
-            m['writes'] if s['kind'] == 'utsname' else m['completed'], enabled=self.loaded_kd))
+            0 if s['kind'] == 'xattr' else m['writes'] if s['kind'] == 'utsname' else m['completed'],
+            enabled=self.loaded_kd))
+        s['local_reader_operations'] = (m['completed'] if s['kind'] == 'xattr' else
+                                         m['reads'] if s['kind'] == 'utsname' else 0)
         s['registry_after'] = registry() if self.loaded_kd else []
+        if self.loaded_kd and not self.has_delegation_entry():
+            require(not s['registry_after'], 'local-reader workload published a JIT entry', 'DATA_ERROR')
         s['address_guards_after'] = (int(address_guard.read_text())
                                      if s['address_guards_before'] is not None else None)
         s['address_guard_exits'] = (s['address_guards_after'] - s['address_guards_before']
                                     if s['address_guards_before'] is not None else None)
-        if self.loaded_kd:
+        if self.loaded_kd and self.has_delegation_entry():
             s['published_after'] = self.publication()
             require(s['published_after']['source']['writers'] == 0,
                     'translator writer remains after measurement', 'UNDRAINED')
@@ -441,6 +461,8 @@ class SyscallSession(Session):
         self.faults()
         # Only command replies after pthread_join permit this path. Timeouts
         # deliberately retain the client (and OFD owner), module and evidence.
+        if self.loaded_source and self.record.get('kind') in ('xattr', 'utsname'):
+            require((PARAM/'quiescent').is_file(), 'reader/writer drain interface missing', 'UNDRAINED')
         if self.loaded_source and (PARAM/'quiescent').exists():
             self.record['source_quiescent'] = (PARAM/'quiescent').read_text().strip() == '1'
             require(self.record['source_quiescent'], 'source reader/writer state still active', 'UNDRAINED')
@@ -515,8 +537,9 @@ def make_plan(args):
     require(2 <= args.helper_workers <= 16, 'helper workers must be 2..16')
     helper_cpus = cpus[:min(args.helper_workers, len(cpus))]
     if 'xattr' in args.kinds and args.helper_waves:
-        require(len(helper_cpus) >= 2 and args.collector_cpu not in helper_cpus,
-                'xattr helper preparation needs at least two CPUs and a separate collector')
+        raise Failure('INVALID_PLAN', 'Linux 7 xattr readers execute locally; helper learning is unsupported')
+    require(not args.require_jit or 'xattr' not in args.kinds,
+            'Linux 7 xattr shared readers have no delegatable body')
     require(not args.require_jit or ('kdlock' in args.backends and max(args.threads) > 1),
             '--require-jit needs a multithreaded KD case')
     for field in ('kinds', 'queries', 'entries', 'backends'):
@@ -537,14 +560,17 @@ def make_plan(args):
                 helper_cpus=helper_cpus if kind == 'xattr' and args.helper_waves else [],
                 jit_evidence_version=2,
                 jit_completion_probe=arm == 'kdlock',
+                workload_revision='xattr-rbtree-read-v1' if kind == 'xattr' else 'linux70-v1',
                 require_jit=args.require_jit and arm == 'kdlock' and n > 1,
                 syscalls_per_op=2 if kind == 'setfd' else 1,
                 file_descriptions='per-worker' if kind in ('setfd', 'pipebytes', 'pipecap') else 'shared-query',
                 lock_kind=lock_kind(kind),
-                entry_abi=({'spin': 1, 'mutex': 2, 'rwlock': 3}[lock_kind(kind)] if arm == 'kdlock' else 0),
-                caller_abi='clobber' if arm == 'kdlock' else 'c',
+                entry_abi=({'spin': 1, 'mutex': 2, 'rwlock': 3}[lock_kind(kind)]
+                           if arm == 'kdlock' and kind != 'xattr' else 0),
+                caller_abi='clobber' if arm == 'kdlock' and kind != 'xattr' else 'c',
                 caller_shell=(('mutex_public_direct' if mutex_api == 'public' else 'mutex_outer_cookie')
                               if arm == 'kdlock' and kind in MUTEX_KINDS else
+                              'local_reader' if kind == 'xattr' else
                               'explicit_clobber' if arm == 'kdlock' else 'c'),
                 cookie_storage=(('provider_acquisition_ledger' if mutex_api == 'public' else 'outer_acquisition_local')
                                 if arm == 'kdlock' and kind in MUTEX_KINDS else 'not_applicable'),
@@ -578,7 +604,8 @@ def main():
     p.add_argument('--duration-ms', type=int, default=2000)
     p.add_argument('--warmup', type=int, default=48000)
     p.add_argument('--warmup-ms', type=int, default=1000)
-    p.add_argument('--helper-waves', type=int, default=4)
+    p.add_argument('--helper-waves', type=int, default=0,
+                   help='legacy helper-learning selection; Linux 7 xattr requires zero')
     p.add_argument('--helper-workers', type=int, default=8,
                    help='separate bounded xattr preparation cohort, including single-worker cases')
     p.add_argument('--require-jit', action='store_true',
@@ -586,8 +613,7 @@ def main():
     p.add_argument('--mutex-lock-offset', type=int, choices=[0, 32, 40, 56],
                    help='diagnostic KD mutex placement within dedicated two-cache-line storage; '
                         'default retains the ordinary object and natural linker placement')
-    p.add_argument('--kernel-source', default='/root/linux-6.1.159-kdclobber2')
-    p.add_argument('--kernel-baseline', default='/root/kdlock-kernel-baselines/mutex-clobber2-20260919')
+    kernel_identity.arguments(p)
     args = p.parse_args()
     out = args.output.resolve()
     require(out != ROOT and ROOT not in out.parents and not out.exists(), 'output must be new and outside checkout')
@@ -610,9 +636,10 @@ def main():
         require(max(args.entries) <= 100 and args.value_size == 64, 'UTS requires write percentages 1..100 and 64-byte names')
     require('nopvspin' in Path('/proc/cmdline').read_text().split(), 'nopvspin missing')
     out.mkdir(parents=True)
-    command([sys.executable, ROOT/'bench/spin_cacheline/kernel_identity.py',
-             '--kernel-source', args.kernel_source, '--kernel-baseline', args.kernel_baseline],
-            out/'kernel-identity.json', timeout=120)
+    identity = kernel_identity.capture(args, out, command)
+    require(identity.get('schema') == 2 and identity.get('runtime_policy_verified') is True,
+            'exact Linux 7 kernel and runtime policy verification required')
+    write_json(out/'kernel-identity.json', identity)
     command(['lscpu', '-J'], out/'lscpu.json')
     command(['lscpu', '-e=CPU,NODE,SOCKET,CORE,ONLINE'], out/'topology.txt')
     command(['dmesg'], out/'dmesg-before.txt')

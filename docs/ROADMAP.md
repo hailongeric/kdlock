@@ -8,8 +8,9 @@ outcomes. Historical campaign definitions and failures keep their original scope
 
 Ubuntu 26.04 / Linux 7.0 is now the active adaptation platform, with OS boot
 and package identity recorded in the
-[migration record](history/vm-ubuntu2604-migration-20261027.md). KD porting and
-validation remain open; a successful OS boot or installed headers do not meet
+[migration record](history/vm-ubuntu2604-migration-20261027.md). The separate
+[KD port record](../bench/results/10.176.26.71/tests/linux70-port-20261027/README.md)
+tracks source/build/live gates; an OS boot or installed headers do not meet
 any of the three stages below. Linux 6.1 adaptation is retired. Preserve its
 results and single recovery version under the
 [retirement policy](history/kernel-retirement-20261027.md). Historical passes
@@ -190,7 +191,7 @@ rather than inferred from a mutex result.
 
 ### Integration boundary
 
-Use the [actual mmap adapter](../kernel_integration/mmap_lock/README.md) to change
+Use the [Linux 7 mmap adapter](../kernel_integration/linux70/MMAP.md) to change
 the lock backend and necessary API/lifetime wrappers. Preserve native mmap,
 munmap, advice and page-fault algorithms and their execution on the originating
 task. Each mm chooses one protocol before publication; every acquisition,

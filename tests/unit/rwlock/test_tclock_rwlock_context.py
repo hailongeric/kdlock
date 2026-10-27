@@ -4,16 +4,15 @@ import subprocess
 import tempfile
 from pathlib import Path
 
-from test_tclock_context import C, CHECK
+from test_tclock_context import C, CHECK, TRAMPOLINE_OPTIONS, require_guest
 
 ROOT = Path(__file__).resolve().parents[3]
 
 
 def main():
-    if not str(ROOT).startswith('/root/'):
-        raise RuntimeError('execute machine-code tests only in the recovery guest')
+    require_guest()
     source = (ROOT / 'tclock_backend/komb_rwlock.c').read_text()
-    marker = '#pragma GCC push_options\n#pragma GCC optimize("O3")\n__attribute__((noipa)) noinline notrace void\nkombrw_spin_lock_slowpath('
+    marker = TRAMPOLINE_OPTIONS + '__attribute__((noipa)) noinline notrace void\nkombrw_spin_lock_slowpath('
     begin = source.index(marker)
     end = source.index('#pragma GCC pop_options', begin) + len('#pragma GCC pop_options')
     switch = (ROOT / 'tclock_backend/combiner.c').read_text()

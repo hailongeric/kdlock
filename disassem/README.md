@@ -8,6 +8,8 @@ Use [the daemon](../daemon/README.md) for publication and
 [the project guide](../docs/PROJECT_GUIDE.md) for guest dependencies.
 JIT means just-in-time compilation; ABI means application binary interface.
 The [terminology guide](../docs/TERMINOLOGY.md) explains execution-state terms.
+Python 3.14 uses the [exact Miasm compatibility patch and preflight](compat/README.md);
+translator startup checks its installed bytes before semantic analysis.
 
 Under the [project roadmap](../docs/ROADMAP.md), stage 1 uses this translator to
 establish eligible delegation gains. The current stage 2 mmap adapter executes

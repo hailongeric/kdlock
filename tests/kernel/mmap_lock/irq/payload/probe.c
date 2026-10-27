@@ -349,7 +349,7 @@ static long probe_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 }
 
 static const struct file_operations ops = {
-	.owner = THIS_MODULE, .unlocked_ioctl = probe_ioctl, .llseek = no_llseek,
+	.owner = THIS_MODULE, .unlocked_ioctl = probe_ioctl,
 };
 static struct miscdevice device = {
 	.minor = MISC_DYNAMIC_MINOR, .name = "kd_mmap_irq_probe", .fops = &ops, .mode = 0600,

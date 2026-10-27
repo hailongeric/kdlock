@@ -230,6 +230,25 @@
  #ifdef DEBUG_KOMB
  				BUG_ON(parent_lock == lock);
  #endif
+@@ -759,12 +742,12 @@
+ 					return 1;
+ 				}
+ 			}
+-			prefetchw(curr_node->rsp);
+-			prefetchw(curr_node->rsp + 64);
+-			prefetchw(curr_node->rsp + 128);
+-			prefetchw(curr_node->rsp + 192);
+-			prefetchw(curr_node->rsp + 256);
+-			prefetchw(curr_node->rsp + 320);
++			prefetchw((void *)(unsigned long)(curr_node->rsp));
++			prefetchw((void *)(unsigned long)(curr_node->rsp + 64));
++			prefetchw((void *)(unsigned long)(curr_node->rsp + 128));
++			prefetchw((void *)(unsigned long)(curr_node->rsp + 192));
++			prefetchw((void *)(unsigned long)(curr_node->rsp + 256));
++			prefetchw((void *)(unsigned long)(curr_node->rsp + 320));
+ 			return 0;
+ 		}
+ 	}
 @@ -821,11 +804,11 @@
  	//Head of the queue. Run Combiner.
  
@@ -245,12 +264,14 @@
  #endif
  
  	prev_locked_val = lock->wlocked;
-@@ -838,52 +821,52 @@
+@@ -837,53 +820,53 @@
+ 
  	struct task_struct *prev_task_struct_ptr = curr_node->task_struct_ptr;
  	uint64_t prev_rsp = curr_node->rsp;
- 	curr_node->rsp = NULL;
+-	curr_node->rsp = NULL;
 -	uint64_t prev_counter_val = current->counter_val;
 -	current->counter_val = 0;
++	curr_node->rsp = 0;
 +	uint64_t prev_counter_val = tc_rwsem_current()->counter_val;
 +	tc_rwsem_current()->counter_val = 0;
  
@@ -341,7 +362,19 @@
  	}
  
  	print_debug("Writer done with combining\n");
-@@ -1005,7 +986,7 @@
+@@ -927,8 +908,10 @@
+ 	return __komb_write_lock_slowpath(lock);
+ }
+ 
++/* The six explicit saves own RBP/RSP. Suppress only this trampoline's
++ * compiler-generated frame; every ordinary C function keeps kernel flags. */
+ #pragma GCC push_options
+-#pragma GCC optimize("O3")
++#pragma GCC optimize("O3", "omit-frame-pointer")
+ __attribute__((noipa)) noinline notrace void
+ __komb_write_stack_switch(struct komb_rwsem *lock)
+ {
+@@ -1005,7 +988,7 @@
  /*
   * lock for writing
   */
@@ -350,7 +383,7 @@
  {
  	u64 val, cnt;
  	val = atomic_long_cmpxchg_acquire(&lock->cnts, 0, _KOMB_RWSEM_W_LOCKED);
-@@ -1045,16 +1026,15 @@
+@@ -1045,16 +1028,15 @@
  #ifdef DEBUG_KOMB
  	if (lock->wlocked == _KOMB_RWSEM_W_COMBINER)
  	{
@@ -374,7 +407,7 @@
  
  		print_debug("komb-curr-waiter_tsk\n");
  
-@@ -1066,19 +1046,17 @@
+@@ -1066,19 +1048,17 @@
  				get_next_node(curr_node);
  			print_debug("get_next_node called\n");
  			if (next_node == NULL)
@@ -398,7 +431,7 @@
  
  #ifdef DEBUG_KOMB
  			BUG_ON(prev_node->lock != lock);
-@@ -1087,7 +1065,7 @@
+@@ -1087,7 +1067,7 @@
  				    prev_node->cpuid);
  			wake_up_waiter(prev_node);
  			clear_locked_set_completed(prev_node);
@@ -407,7 +440,7 @@
  		}
  	}
  	preempt_enable();
-@@ -1096,7 +1074,7 @@
+@@ -1096,7 +1076,7 @@
  /*
   * release a read lock
   */
@@ -416,7 +449,7 @@
  {
  #ifdef BRAVO
  	uint64_t **slot = NULL;
-@@ -1132,12 +1110,12 @@
+@@ -1132,12 +1112,12 @@
  	my_idx = -1;
  
  	for (j = 0; j < 8; j++) {
@@ -432,7 +465,7 @@
  			break;
  	}
  
-@@ -1166,9 +1144,9 @@
+@@ -1166,9 +1146,9 @@
  	if (lock->wlocked != _KOMB_RWSEM_W_COMBINER)
  		BUG_ON(true);
  
@@ -445,7 +478,7 @@
  
  	if (max_idx < 0) {
  		BUG_ON(true);
-@@ -1183,28 +1161,26 @@
+@@ -1183,28 +1163,26 @@
  		return;
  	}
  
@@ -485,7 +518,7 @@
  		print_debug("Jumping to the next waiter: %d\n",
  			    next_node->cpuid);
  	}
-@@ -1328,3 +1304,10 @@
+@@ -1328,3 +1306,10 @@
  }
  
  #

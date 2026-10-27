@@ -13,7 +13,7 @@ def arguments(**changes):
     args = dict(kinds=['pipebytes'], queries=['query'], entries=[16],
         threads=[1, 60], cpus=','.join(map(str, range(63))), collector_cpu=63,
         repeats=3, backends=['stock', 'native', 'tclock', 'kdlock'], value_size=64,
-        duration_ms=2000, warmup=48000, warmup_ms=1000, helper_waves=4,
+        duration_ms=2000, warmup=48000, warmup_ms=1000, helper_waves=0,
         helper_workers=8, require_jit=False, mutex_lock_offset=None)
     return Namespace(**(args | changes))
 
@@ -73,24 +73,129 @@ class PlanTests(unittest.TestCase):
             self.assertEqual(len(plan), len(queries)*len(entries)*len(threads)*3)
             self.assertTrue(all(r['entry_abi'] == 2 for r in plan))
 
-    def test_xattr_single_worker_keeps_separate_recorded_learning_cohort(self):
+    def test_xattr_tree_readers_remain_local_in_every_backend(self):
         plan = run.make_plan(arguments(kinds=['xattr'], queries=['tail'],
             entries=[16, 128], threads=[1, 60], backends=['native', 'tclock', 'kdlock'],
-            require_jit=True))
+            require_jit=False))
         self.assertEqual(len(plan), 36)
         for row in plan:
-            self.assertEqual(row['helper_cpus'], list(range(8)))
+            self.assertEqual(row['helper_cpus'], [])
             self.assertEqual(row['cpus'], list(range(row['threads'])))
             self.assertEqual(row['jit_evidence_version'], 2)
             self.assertEqual(row['jit_completion_probe'], row['arm'] == 'kdlock')
-            self.assertEqual(row['require_jit'], row['arm'] == 'kdlock' and row['threads'] > 1)
+            self.assertFalse(row['require_jit'])
+            self.assertEqual((row['entry_abi'], row['caller_abi'], row['caller_shell']),
+                             (0, 'c', 'local_reader'))
+            self.assertEqual(row['lock_kind'], 'rwlock')
+            self.assertEqual(row['workload_revision'], 'xattr-rbtree-read-v1')
+            session = run.SyscallSession.__new__(run.SyscallSession)
+            session.record = row
+            self.assertFalse(session.has_delegation_entry())
 
-    def test_helper_cohort_cannot_share_collector_or_have_only_one_cpu(self):
-        for changes in (dict(cpus='0', threads=[1]),
-                        dict(threads=[1], collector_cpu=7), dict(helper_workers=1),
-                        dict(helper_workers=17)):
+    def test_xattr_rejects_delegation_or_helper_learning_requests(self):
+        for changes in (dict(helper_waves=1), dict(require_jit=True),
+                        dict(helper_workers=1), dict(helper_workers=17)):
             with self.subTest(changes=changes), self.assertRaises(run.Failure):
                 run.make_plan(arguments(kinds=['xattr'], queries=['tail'], **changes))
+
+    def test_xattr_source_binding_includes_the_exact_client_pid(self):
+        ready = dict(path='/proc/1234/fd/7', pid=1234)
+        spec = dict(kind='xattr', query='tail')
+        self.assertEqual(run.source_parameters(spec, ready),
+                         ['target_path=/proc/1234/fd/7', 'target_pid=1234'])
+        self.assertEqual(run.source_parameters(dict(kind='ofd', query='tail'), ready),
+                         ['target_path=/proc/1234/fd/7'])
+
+    def test_local_reader_evidence_rejects_any_jit_execution(self):
+        self.assertEqual(jit_evidence(0, 0, 0, enabled=True)['jit_status'], 'NO_JIT')
+        for entered, completed in ((1, 0), (1, 1)):
+            with self.assertRaises(ValueError):
+                jit_evidence(entered, completed, 0, enabled=True)
+
+    def test_actual_local_reader_measurement_rejects_jit_or_publication(self):
+        for entered, completed, published in ((0, 0, False), (1, 0, False),
+                                               (1, 1, False), (0, 0, True)):
+            with self.subTest(entered=entered, completed=completed, published=published), \
+                 tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                params, counts = root/'source', root/'provider'
+                params.mkdir()
+                counts.mkdir()
+                (params/'calls').write_text('0')
+                for name in ('bench_jit_bodies', 'bench_jit_completions'):
+                    (counts/name).write_text('0')
+                session = run.SyscallSession.__new__(run.SyscallSession)
+                session.record = dict(kind='xattr', require_jit=False)
+                session.loaded_kd = session.loaded_source = True
+                session.loaded_tc = False
+                session.tc_params = root/'tclock'
+                session.save = Mock()
+                session.faults = Mock()
+                session.publication = Mock(side_effect=AssertionError('local reader requested a publication'))
+
+                def phase(action, **kwargs):
+                    if action == 'check':
+                        return dict(check=True)
+                    self.assertEqual(action, 'measure')
+                    (params/'calls').write_text('10')
+                    (counts/'bench_jit_bodies').write_text(str(entered))
+                    (counts/'bench_jit_completions').write_text(str(completed))
+                    return dict(ok=True, completed=10, wall_ns=1000,
+                                workers=[dict(completed=10, error=0, cpu=0, observed_cpu=0)])
+
+                def redirected_path(name):
+                    path = Path(name)
+                    prefix = Path('/sys/module/kdlock_km/parameters')
+                    return counts/path.relative_to(prefix) if path.is_relative_to(prefix) else path
+
+                session.tell = Mock(side_effect=phase)
+                with patch.object(run, 'PARAM', params), patch.object(run, 'Path', side_effect=redirected_path), \
+                     patch.object(run, 'analyze_peak', return_value=dict(throughput_ops_s=10000000)), \
+                     patch.object(run, 'registry', return_value=[dict(status=0)] if published else []):
+                    if entered:
+                        with self.assertRaisesRegex(ValueError, 'JIT entry/completion accounting'):
+                            session.measure()
+                    elif published:
+                        with self.assertRaisesRegex(run.Failure, 'local-reader workload published'):
+                            session.measure()
+                    else:
+                        session.measure()
+                        self.assertEqual(session.record['jit_status'], 'NO_JIT')
+                        self.assertEqual(session.record['jit_eligible_operations'], 0)
+                        self.assertEqual(session.record['local_reader_operations'], 10)
+                session.publication.assert_not_called()
+
+    def test_active_local_readers_prevent_cleanup_and_unload(self):
+        with tempfile.TemporaryDirectory() as directory:
+            params = Path(directory)
+            (params/'quiescent').write_text('0')
+            session = run.SyscallSession.__new__(run.SyscallSession)
+            session.record = dict(kind='xattr')
+            session.loaded_source = session.loaded_kd = True
+            session.loaded_tc = False
+            session.faults = Mock()
+            session.run = Mock()
+            session.stop_daemon = Mock()
+            with patch.object(run, 'PARAM', params), \
+                 self.assertRaisesRegex(run.Failure, 'source reader/writer state still active'):
+                session.cleanup()
+            session.run.assert_not_called()
+            session.stop_daemon.assert_not_called()
+
+    def test_missing_shared_reader_drain_interface_prevents_unload(self):
+        for kind in ('xattr', 'utsname'):
+            with self.subTest(kind=kind), tempfile.TemporaryDirectory() as directory:
+                session = run.SyscallSession.__new__(run.SyscallSession)
+                session.record = dict(kind=kind)
+                session.loaded_source = session.loaded_kd = True
+                session.loaded_tc = False
+                session.faults = Mock()
+                session.run = Mock()
+                session.stop_daemon = Mock()
+                with patch.object(run, 'PARAM', Path(directory)), self.assertRaises(run.Failure):
+                    session.cleanup()
+                session.run.assert_not_called()
+                session.stop_daemon.assert_not_called()
 
     def test_live_translator_writer_blocks_measurement(self):
         session = run.SyscallSession.__new__(run.SyscallSession)

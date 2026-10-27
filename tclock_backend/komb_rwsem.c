@@ -742,12 +742,12 @@ __komb_write_lock_slowpath(register struct komb_rwsem *lock)
 					return 1;
 				}
 			}
-			prefetchw(curr_node->rsp);
-			prefetchw(curr_node->rsp + 64);
-			prefetchw(curr_node->rsp + 128);
-			prefetchw(curr_node->rsp + 192);
-			prefetchw(curr_node->rsp + 256);
-			prefetchw(curr_node->rsp + 320);
+			prefetchw((void *)(unsigned long)(curr_node->rsp));
+			prefetchw((void *)(unsigned long)(curr_node->rsp + 64));
+			prefetchw((void *)(unsigned long)(curr_node->rsp + 128));
+			prefetchw((void *)(unsigned long)(curr_node->rsp + 192));
+			prefetchw((void *)(unsigned long)(curr_node->rsp + 256));
+			prefetchw((void *)(unsigned long)(curr_node->rsp + 320));
 			return 0;
 		}
 	}
@@ -820,7 +820,7 @@ unlock:
 
 	struct task_struct *prev_task_struct_ptr = curr_node->task_struct_ptr;
 	uint64_t prev_rsp = curr_node->rsp;
-	curr_node->rsp = NULL;
+	curr_node->rsp = 0;
 	uint64_t prev_counter_val = tc_rwsem_current()->counter_val;
 	tc_rwsem_current()->counter_val = 0;
 
@@ -908,8 +908,10 @@ komb_write_lock_slowpath(struct komb_rwsem *lock)
 	return __komb_write_lock_slowpath(lock);
 }
 
+/* The six explicit saves own RBP/RSP. Suppress only this trampoline's
+ * compiler-generated frame; every ordinary C function keeps kernel flags. */
 #pragma GCC push_options
-#pragma GCC optimize("O3")
+#pragma GCC optimize("O3", "omit-frame-pointer")
 __attribute__((noipa)) noinline notrace void
 __komb_write_stack_switch(struct komb_rwsem *lock)
 {

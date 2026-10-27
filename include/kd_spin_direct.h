@@ -54,14 +54,15 @@ void kd_spin_lock_pinned_clobber_v1(kd_spinlock_t *, unsigned long,
 /* Same compiler-owned spill contract as clobber-v1, with a direct module CALL.
  * The optional named continuation lets preparation register the exact RIP
  * without executing the lock or adding a registration branch to every op.
- * Use each named label once, in a noipa function, to prevent cloning. */
+ * Use each named label once, in a noipa function, to prevent cloning. End the
+ * continuation text explicitly: kernel annotation macros may omit a newline. */
 #define KD_SPIN_DIRECT_CALL(symbol, lock, continuation) do {                 \
 	kd_spinlock_t *kd_arg = (kd_spinlock_t *)(lock);                 \
 	unsigned long kd_sp, kd_ip, kd_bp;                                   \
 	asm volatile("movq %%rsp, %%rsi\n\t"                                 \
 		     "leaq 1f(%%rip), %%rdx\n\t"                           \
 		     "movq %%rbp, %%rcx\n\t"                               \
-		     "call " #symbol "\n\t1:\n\t" continuation             \
+		     "call " #symbol "\n\t1:\n\t" continuation "\n\t"     \
 		     : "+D" (kd_arg), "=S" (kd_sp), "=d" (kd_ip),          \
 		       "=c" (kd_bp), ASM_CALL_CONSTRAINT                     \
 		     :                                                        \
@@ -98,7 +99,7 @@ void kd_spin_lock_pinned_clobber_v1(kd_spinlock_t *, unsigned long,
  * Pair with KD_SPIN_DIRECT_UNLOCK and prepare the supplied continuation as
  * usual. The five zero idioms cost only hot acquisitions selecting this API. */
 #define KD_SPIN_DIRECT_HELPER_LOCK(lock, cookie, continuation) \
-	KD_SPIN_DIRECT_LOCK(lock, cookie, continuation \
+	KD_SPIN_DIRECT_LOCK(lock, cookie, continuation "\n\t" \
 		"xorl %%ebx, %%ebx\n\t" \
 		"xorl %%r12d, %%r12d\n\t" \
 		"xorl %%r13d, %%r13d\n\t" \

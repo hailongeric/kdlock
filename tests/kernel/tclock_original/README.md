@@ -11,7 +11,13 @@ The [port guide](../../../tclock_backend/README.md) specifies upstream provenanc
 minimal adaptations and unsupported APIs. The [results record](../../../bench/results/10.176.26.71/tests/tclock-original-20261023/README.md)
 contains actual coverage, failed attempts and retained logs.
 
-## Run in the recovery VM
+## Historical Linux 6.1 workflow
+
+The following recipe and `run_probe.py` remain bound to the retired Linux 6.1
+identity. They are historical instructions and must not run on the Linux 7 guest.
+Current compilation and emitted-code checks are recorded in the
+[Linux 7 port report](../../../bench/results/10.176.26.71/tests/linux70-port-20261027/README.md);
+those checks alone do not establish these live probe results on Linux 7.
 
 First follow [VM operations](../../../docs/operations/VM.md): verify the intended
 idle VM, kernel identity and real recovery snapshot. Keep one VM owner. Set the

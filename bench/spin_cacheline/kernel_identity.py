@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Check a selected kernel bundle with the existing exact baseline verifier.
+"""Check the selected legacy or Linux 7 kernel identity bundle.
 
 An experimental kernel has its own captured bundle; the original baseline is
 never rewritten or silently skipped. All named source/config/build files and
@@ -9,24 +9,49 @@ import argparse
 import importlib.util
 import json
 import shutil
+import sys
 from pathlib import Path
 
+sys.dont_write_bytecode = True
 ROOT = Path(__file__).resolve().parents[2]
 
 
 def arguments(parser):
     parser.add_argument('--kernel-source', type=Path,
-                        default=Path('/root/linux-6.1.159-kdclobber2'))
+                        default=Path('/mnt/kdlock-builds/linux-7.0.0-38-kdlock1/build'),
+                        help='kernel build directory (KDIR); schema 2 binds its separate source tree')
     parser.add_argument('--kernel-baseline', type=Path,
-                        default=Path('/root/kdlock-kernel-baselines/mutex-clobber2-20260919'))
+                        default=Path('/root/kdlock-kernel-baselines/linux70-kdlock1-20261027'))
+
+
+def verifier_for(bundle):
+    manifest = json.loads((bundle / 'manifest.json').read_text())
+    schema = manifest.get('schema') if isinstance(manifest, dict) else None
+    if type(schema) is not int or schema not in (1, 2):
+        raise ValueError('unsupported kernel identity schema')
+    path = ('kernel_baseline/verify.py' if schema == 1 else
+            'kernel_integration/linux70/verify.py')
+    spec = importlib.util.spec_from_file_location('captured_kernel_verify',
+                                                ROOT / path)
+    verifier = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(verifier)
+    return schema, manifest, verifier
 
 
 def check(source, bundle):
-    spec = importlib.util.spec_from_file_location('captured_kernel_verify',
-                                                ROOT / 'kernel_baseline/verify.py')
-    verifier = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(verifier)
-    return verifier.verify(bundle.resolve(), source.resolve(), build=True, running=True)
+    schema, _, verifier = verifier_for(bundle)
+    # Preserve the literal schema-2 KDIR for the canonical-root check. Resolving
+    # it first would silently accept a different caller-selected symlink path.
+    selected = source.resolve() if schema == 1 else source
+    return verifier.verify(bundle.resolve(), selected, build=True, running=True)
+
+
+def source_directory(build, bundle):
+    """Locate original implementation files; callers still use KDIR to build."""
+    schema, manifest, verifier = verifier_for(bundle)
+    if schema == 1:
+        return build.resolve()
+    return verifier.source_directory(build, manifest)
 
 
 def capture(args, out, command):

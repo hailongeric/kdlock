@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-only
-/* Bounded UTS namespace read/write comparison, captured Linux 6.1.159.
+/* Bounded UTS namespace read/write comparison for Ubuntu Linux 7.0.0-38.38.
  * Only a private namespace with fixed native-x86-64 personality is bound.
  * Readers copy the real utsname; writers replace one 64-byte name. User copies,
  * permission checks, entropy mixing and proc notification remain in the syscall.
@@ -157,7 +157,9 @@ static struct ftrace_ops write_ops = {
 };
 static void drop_namespace(void)
 {
-	if (refcount_dec_and_test(&target_uts->ns.count))
+	/* Match Linux 7 put_uts_ns(), including initial-namespace and active-ref
+	 * checks. The final destructor is resolved because it is not exported. */
+	if (ns_ref_put(target_uts))
 		free_uts(target_uts);
 }
 static int __init rb_init(void)

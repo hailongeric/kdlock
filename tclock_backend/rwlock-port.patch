@@ -113,6 +113,15 @@
  {
  	return atomic_fetch_or_acquire(_Q_PENDING_VAL, &lock->val);
  }
+@@ -190,7 +191,7 @@
+ 			goto next_node_null;
+ 
+ 		if (next_node->socket_id == numa_node_id()) {
+-			prefetchw(per_cpu_ptr(&komb_rwlock_nodes[0],
++			prefetchw((void *)(unsigned long)per_cpu_ptr(&komb_rwlock_nodes[0],
+ 					      next_node->cpuid)
+ 					  ->rsp);
+ 			return next_node;
 @@ -208,7 +209,7 @@
  #endif
  }
@@ -197,6 +206,25 @@
  						      ->lock_addr[j];
  
  				BUG_ON(parent_lock == lock);
+@@ -351,12 +352,12 @@
+ 				if (parent_lock->locked == _Q_UNLOCKED_OOO_VAL)
+ 					return 1;
+ 			}
+-			prefetchw(curr_node->rsp);
+-			prefetchw(curr_node->rsp + 64);
+-			prefetchw(curr_node->rsp + 128);
+-			prefetchw(curr_node->rsp + 192);
+-			prefetchw(curr_node->rsp + 256);
+-			prefetchw(curr_node->rsp + 320);
++			prefetchw((void *)(unsigned long)(curr_node->rsp));
++			prefetchw((void *)(unsigned long)(curr_node->rsp + 64));
++			prefetchw((void *)(unsigned long)(curr_node->rsp + 128));
++			prefetchw((void *)(unsigned long)(curr_node->rsp + 192));
++			prefetchw((void *)(unsigned long)(curr_node->rsp + 256));
++			prefetchw((void *)(unsigned long)(curr_node->rsp + 320));
+ 			return 0;
+ 		}
+ 	}
 @@ -406,7 +407,7 @@
  	prev_cs_cpu = *this_cpu_ptr(&current_critical_section_cpu);
  
@@ -316,9 +344,15 @@
   * When the following function is called, the compiler in caller frame does
   * this sequence:
   *
-@@ -558,10 +568,10 @@
+@@ -555,13 +565,15 @@
+  * registers.
+  */
+ 
++/* The six explicit saves own RBP/RSP. Suppress only this trampoline's
++ * compiler-generated frame; every ordinary C function keeps kernel flags. */
  #pragma GCC push_options
- #pragma GCC optimize("O3")
+-#pragma GCC optimize("O3")
++#pragma GCC optimize("O3", "omit-frame-pointer")
  __attribute__((noipa)) noinline notrace void
 -kombrw_spin_lock_slowpath(struct orig_qspinlock *lock)
 +kombrw_spin_lock_slowpath(struct qspinlock *lock)
@@ -329,7 +363,7 @@
  	 * We must save the callee-saved registers now, since we will resume
  	 * execution at the return address currently at top of stack. If we
  	 * defer saving to when context switch happens later, the C function
-@@ -596,11 +606,13 @@
+@@ -596,11 +608,13 @@
  		     :
  		     : "i"(get_shadow_stack_ptr)
  		     : "memory");
@@ -343,7 +377,7 @@
  	if (ret_val) {
  		asm volatile("callq %P0\n"
  			     "movq (%%rax), %%rsp\n"
-@@ -642,7 +654,7 @@
+@@ -642,7 +656,7 @@
  #pragma GCC pop_options
  
  __attribute__((noipa)) noinline notrace void
@@ -352,7 +386,7 @@
  {
  	u32 val, cnt;
  
-@@ -727,7 +739,7 @@
+@@ -727,7 +741,7 @@
  	kombrw_spin_lock_slowpath(lock);
  }
  
@@ -361,7 +395,7 @@
   * No IPA is even more relevant here, because even if assembly is removed,
   * compiler shouldn't assume which caller-saved registers are in use inside
   * the function. When we jump from the spin loop to the return address after
-@@ -735,7 +747,7 @@
+@@ -735,7 +749,7 @@
   * inconsistent, because we only restored the callee-saved registers.
   */
  __attribute__((noipa)) noinline notrace void
@@ -370,7 +404,7 @@
  {
  	int from_cpuid = *this_cpu_ptr(&current_critical_section_cpu);
  	void *incoming_rsp_ptr, *outgoing_rsp_ptr;
-@@ -759,9 +771,9 @@
+@@ -759,9 +773,9 @@
  	for (j = 0; j < 8; j++) {
  		temp_lock_addr =
  			this_cpu_ptr(&local_shadow_stack)->lock_addr[j];
@@ -382,7 +416,7 @@
  			my_idx = j;
  	}
  
-@@ -832,21 +844,21 @@
+@@ -832,21 +846,21 @@
  	// kombrw_spin_unlock(&lock->lock);
  }
  
@@ -407,7 +441,7 @@
  {
  	u32 val;
  
-@@ -859,7 +871,7 @@
+@@ -859,7 +873,7 @@
  	kombrw_spin_unlock(&lock->lock);
  }
  
@@ -416,7 +450,7 @@
  {
  	u32 cnts;
  
-@@ -870,7 +882,38 @@
+@@ -870,7 +884,38 @@
  	komb_read_lock_slowpath(lock);
  }
  

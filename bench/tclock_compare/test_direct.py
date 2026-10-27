@@ -235,16 +235,87 @@ ret
                           ['mov %rsp,(%rsi)', 'mov (%rdi),%rsp'] + restores + ['ret'])
         helpers = function('get_komb_rwlock_node', ['mov %gs:0,%rax', 'ret']) + \
                   function('get_shadow_stack_ptr', ['mov %gs:0,%rax', 'ret'])
-        for prefix in (['cli'], ['call *0x0(%rip)\n 2: R_X86_64_PC32 pv_ops+0xf4']):
+        for prefix in (['cli'], ['call *0x0(%rip)\n 2: R_X86_64_PC32 pv_ops+0xec']):
             body = prefix + saves + ['call 0'] + restores + ['ret'] + restores + ['ret']
             text = switch + function('kombrw_spin_lock_slowpath', body) + helpers
             self.assertTrue(audit_context(text, 'rwlock')['six_register_switch'])
             if prefix[0].startswith('call'):
-                for invalid in (text.replace('pv_ops+0xf4', 'pv_ops+0xfc'),
-                                text.replace('pv_ops+0xf4', 'unrelated'),
+                for invalid in (text.replace('pv_ops+0xec', 'pv_ops+0xfc'),
+                                text.replace('pv_ops+0xec', 'pv_ops+0xf4'),
+                                text.replace('pv_ops+0xec', 'unrelated'),
                                 text.replace('push %rbp', 'push %rbp\n 0: mov %rsp,%rbp', 1)):
                     with self.assertRaises(ValueError):
                         audit_context(invalid, 'rwlock')
+
+    def test_rwlock_linux70_pv_argument_dataflow_is_exact(self):
+        saves = [f'push %{r}' for r in ('rbp', 'rbx', 'r12', 'r13', 'r14', 'r15')]
+        restores = [f'pop %{r}' for r in ('r15', 'r14', 'r13', 'r12', 'rbx', 'rbp')]
+
+        def function(name, instructions):
+            return f'0000 <{name}>:\n' + ''.join(
+                f' {i:x}: {instruction}\n' for i, instruction in enumerate(instructions))
+
+        def irq(offset):
+            return 'call *0x0(%rip)\n 0: R_X86_64_PC32 pv_ops+' + offset
+
+        switch = function('komb_context_switch', saves +
+                          ['mov %rsp,(%rsi)', 'mov (%rdi),%rsp'] + restores + ['ret'])
+        helpers = function('get_komb_rwlock_node', ['mov %gs:0,%rax', 'ret']) + \
+                  function('get_shadow_stack_ptr', ['mov %gs:0,%rax', 'ret'])
+        body = ['mov %rdi,%r8', irq('0xec')] + saves + [
+            'call 180 <get_komb_rwlock_node>', 'mov %rsp,0x28(%rax)',
+            'call 150 <get_shadow_stack_ptr>', 'mov (%rax),%rsp',
+            irq('0xf4'), 'mov %r8,%rdi', 'call 7b0 <__kombrw_spin_lock_slowpath>',
+            'mov %eax,%r8d', irq('0xec'), 'test %r8d,%r8d', 'je a6b'] + \
+            restores + ['ret'] + restores + ['ret']
+
+        def text(instructions):
+            return switch + function('kombrw_spin_lock_slowpath', instructions) + helpers
+
+        self.assertTrue(audit_context(text(body), 'rwlock')['rwlock_pv_preserves_argument'])
+        mutations = {
+            'wrong saved register': (0, 'mov %rdi,%r9'),
+            'missing disable': (1, 'nop'),
+            'wrong IRQ call operand': (1, 'call *%r8\n 0: R_X86_64_PC32 pv_ops+0xec'),
+            'old disable offset': (1, irq('0xf4')),
+            'wrong node offset': (9, 'mov %rsp,0x30(%rax)'),
+            'missing enable': (12, 'nop'),
+            'wrong enable offset': (12, irq('0xec')),
+            'missing argument restore': (13, 'nop'),
+            'wrong argument restore': (13, 'mov %r9,%rdi'),
+            'wrong slowpath': (14, 'call 7b0 <unrelated>'),
+            'return value lost': (15, 'mov %eax,%ecx'),
+            'missing second disable': (16, 'nop'),
+            'wrong second disable offset': (16, irq('0xf4')),
+            'wrong return test': (17, 'test %eax,%eax'),
+        }
+        for name, (index, replacement) in mutations.items():
+            broken = list(body)
+            broken[index] = replacement
+            with self.subTest(name=name), self.assertRaises(ValueError):
+                audit_context(text(broken), 'rwlock')
+        for name, broken in (
+                ('extra R8 clobber', body[:12] + ['xor %r8d,%r8d'] + body[12:]),
+                ('extra compiler frame', ['push %rbp', 'mov %rsp,%rbp'] + body),
+                ('extra saved RBP', body[:2] + ['push %rbp'] + body[2:]),
+                ('missing restore', body[:-2] + body[-1:])):
+            with self.subTest(name=name), self.assertRaises(ValueError):
+                audit_context(text(broken), 'rwlock')
+        with self.assertRaises(ValueError):
+            audit_context(text(body).replace('mov %gs:0,%rax', 'xor %r8d,%r8d', 1), 'rwlock')
+        thunk_helpers = function('get_komb_rwlock_node', [
+            'mov %gs:0,%rax', 'jmp 193 <get_komb_rwlock_node+0x13>\n'
+            ' 0: R_X86_64_PLT32 __x86_return_thunk-0x4']) + \
+            function('get_shadow_stack_ptr', ['mov %gs:0,%rax', 'ret'])
+        bound = switch + function('kombrw_spin_lock_slowpath', body) + thunk_helpers
+        self.assertTrue(audit_context(bound, 'rwlock')['hidden_helpers_preserve_lock'])
+        for broken in (
+                bound.replace('R_X86_64_PLT32 __x86_return_thunk-0x4',
+                              'R_X86_64_PLT32 unrelated-0x4'),
+                bound.replace('R_X86_64_PLT32 __x86_return_thunk-0x4', ''),
+                bound.replace('jmp 193 <get_komb_rwlock_node+0x13>', 'jmp *%r8')):
+            with self.assertRaises(ValueError):
+                audit_context(broken, 'rwlock')
 
     def test_source_snapshot_covers_tclock_fragments(self):
         # A frozen run must include the bodies behind the C entry files;
@@ -841,6 +912,39 @@ ret
         with patch.object(sys, 'argv', argv):
             with self.assertRaisesRegex(run.Failure, 'functional mode requires'):
                 run.main()
+
+    def test_native_tclock_functional_controls_have_no_scores(self):
+        for family in ('spin', 'mutex'):
+            output = io.StringIO()
+            argv = ['run.py', '--output', '/tmp/unused', '--dry-run', '--functional',
+                    '--backends', 'native', 'tclock', '--repeats', '1',
+                    '--threads', '8', '--cachelines', '1', '--iterations', '10000']
+            with patch.object(sys, 'argv', argv), contextlib.redirect_stdout(output):
+                self.assertEqual(run.main(family), 0)
+            plan = json.loads(output.getvalue())
+            self.assertEqual(len(plan), 2)
+            self.assertEqual({s['arm'] for s in plan}, {'native', 'tclock'})
+            self.assertTrue(all(s['functional'] and not s['performance_accepted']
+                                and s['lock_kind'] == family and s['duration_ms'] == 0
+                                and s['iterations'] == 10000 for s in plan))
+            with tempfile.TemporaryDirectory() as directory:
+                out = Path(directory)
+                (out/'plan.json').write_text(json.dumps(plan))
+                for spec in plan:
+                    (out/spec['name']).mkdir()
+                    record = dict(spec, execution_status='OK', drained=True,
+                                  measurement=dict(completed=80000, wall_ns=100000))
+                    (out/spec['name']/'session.json').write_text(json.dumps(record))
+                run.report(out)
+                rows = json.loads((out/'functional.json').read_text())
+                self.assertEqual({r['arm'] for r in rows}, {'native', 'tclock'})
+                self.assertTrue(all(r['completed'] == 80000 and r['drained'] and
+                                    r['jit_acceptance'] == 'NOT_APPLICABLE' and
+                                    not r['performance_accepted'] for r in rows))
+                self.assertFalse((out/'summary.json').exists())
+                self.assertFalse((out/'summary.csv').exists())
+                self.assertFalse(any('throughput' in key or 'ns_op' in key
+                                     for row in rows for key in row))
 
     def test_cli_small_and_numa_thread_matrix(self):
         # The 64-worker point explicitly shares collector 63; smaller cohorts do not.

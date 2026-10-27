@@ -8,15 +8,19 @@ support and performance limits remain explicit; a future milestone does not
 override the implementation or VM rules below.
 
 Linux 6.1 kernel development is retired; no further adaptation targets it.
-The active adaptation platform is Ubuntu 26.04 / Linux 7.0. The development VM
-boots Ubuntu 26.04.1 LTS with kernel `7.0.0-38-generic`; the
-[migration record](docs/history/vm-ubuntu2604-migration-20261027.md) binds its
-package, boot and storage identities. OS boot and installed headers do not
-establish KD compatibility; KD porting and validation remain pending. Preserve
-benchmark results, the single legacy `6.1.159-kdclobber2` recovery version and
-its small provenance/test fixtures under the
-[retirement record](docs/history/kernel-retirement-20261027.md). Legacy build
-and boot recipes are historical references only.
+The development VM uses Ubuntu 26.04.1 LTS and the custom
+`7.0.0-38-kdlock1` kernel from authenticated Ubuntu `linux=7.0.0-38.38`
+source. The [port record](bench/results/10.176.26.71/tests/linux70-port-20261027/README.md)
+separates source/build identity, boot, focused checks and live validation.
+Use the source/output-separated build and schema-2 bundle in
+[VM operations](docs/operations/VM.md). Preserve benchmark results and the
+single legacy `6.1.159-kdclobber2` recovery version under the
+[retirement record](docs/history/kernel-retirement-20261027.md). Legacy commands
+and measurements are historical references only. The Linux 7 mmap backend is
+disabled in the ordinary development kernel; enabled compilation does not
+validate actual MM execution. Active call-depth tracking is refused because
+its return thunk violates the native-escape flags contract. Complete mitigation
+coverage of handwritten/generated returns remains a separate limitation.
 
 The maintained branch is `master`. Preserve the KD-only foundation selected at
 `d2a2304`: KD physical exclusion, ABI2, pinned published delegation waiters,

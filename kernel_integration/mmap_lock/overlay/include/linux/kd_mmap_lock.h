@@ -20,5 +20,7 @@ void kd_mmap_read_unlock_non_owner(struct kd_mmap_lock *lock);
 bool kd_mmap_is_locked(struct kd_mmap_lock *lock);
 bool kd_mmap_is_write_owner(struct kd_mmap_lock *lock);
 bool kd_mmap_is_contended(struct kd_mmap_lock *lock);
+void kd_mmap_assert_held(const struct kd_mmap_lock *lock);
+void kd_mmap_assert_held_write(const struct kd_mmap_lock *lock);
 
 #endif

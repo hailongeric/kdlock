@@ -17,8 +17,8 @@
 #include <linux/uaccess.h>
 #include "api.h"
 
-#ifndef CONFIG_KD_MMAP_LOCK
-#error "Captured kdmm1 integration kernel required"
+#ifndef CONFIG_KDLOCK_MMAP
+#error "Linux 7 CONFIG_KDLOCK_MMAP integration kernel required"
 #endif
 
 static DEFINE_MUTEX(control);
@@ -267,7 +267,7 @@ static long control_ioctl(struct file *f, unsigned int cmd, unsigned long arg)
 	return cmd == CONTROL_RUN ? run((void __user *)arg) : -ENOTTY;
 }
 static const struct file_operations ops = {
-	.owner = THIS_MODULE, .unlocked_ioctl = control_ioctl, .llseek = no_llseek,
+	.owner = THIS_MODULE, .unlocked_ioctl = control_ioctl,
 };
 static struct miscdevice device = {
 	.minor = MISC_DYNAMIC_MINOR, .name = "kd_phase_controls", .fops = &ops, .mode = 0600,
@@ -281,6 +281,11 @@ static int __init controls_init(void)
 	unsigned long addresses[] = { 0xffffffff81ee6da9UL, 0xffffffff811508fdUL };
 	unsigned char bytes[][3] = { {0x55}, {0x4c, 0x89, 0xe6} };
 	unsigned int sizes[] = { 1, 3 };
+	/* Keep the captured legacy sites as evidence, never as Linux 7 probes. */
+	if (IS_ENABLED(CONFIG_KDLOCK_MMAP)) {
+		pr_err("kd_phase_controls: Linux 7 instruction-site profile is unvalidated\n");
+		return -EOPNOTSUPP;
+	}
 	if (kallsyms_lookup_name("schedule") != addresses[0] - 9 ||
 	    kallsyms_lookup_name("kd_mmap_down_write_killable") != addresses[1] - 0x7d)
 		return -ESTALE;

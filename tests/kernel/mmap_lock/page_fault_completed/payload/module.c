@@ -12,7 +12,7 @@
 #include <linux/uaccess.h>
 #include "api.h"
 
-#ifndef CONFIG_KD_MMAP_LOCK
+#ifndef CONFIG_KDLOCK_MMAP
 #error "Actual mmap-lock integration kernel required"
 #endif
 
@@ -146,7 +146,7 @@ static int watch_release(struct inode *inode, struct file *file)
 
 static const struct file_operations operations = {
 	.owner = THIS_MODULE, .open = watch_open, .release = watch_release,
-	.unlocked_ioctl = watch_ioctl, .llseek = no_llseek,
+	.unlocked_ioctl = watch_ioctl,
 };
 static struct miscdevice device = {
 	.minor = MISC_DYNAMIC_MINOR, .name = "kd_mmap_completed", .fops = &operations, .mode = 0600,

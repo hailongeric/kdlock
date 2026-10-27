@@ -39,13 +39,14 @@ there is no per-operation runtime `is_mutex` branch. Measurement runs through
 [run_mutex.py](../../bench/tclock_compare/run_mutex.py), sharing reporting with
 the spin runner. Registration and final context drain are outside measurement.
 
-The existing kernel build is `/root/linux-6.1.159-kdclobber2` in the guest. Its
-release, configuration, source/interface hashes and live Build ID are checked
-by the [kernel identity verifier](../../bench/spin_cacheline/kernel_identity.py)
-against the [captured baseline](../../kernel_baseline/README.md). Native source
-paths above refer to that build. The KD physical core is a separately namespaced
-port of its ordinary mutex/OSQ algorithms; it owns KD objects and makes no Linux
-mutex API calls.
+The current kernel build is
+`/mnt/kdlock-builds/linux-7.0.0-38-kdlock1/build` in the guest. Its source is the
+adjacent `source/` directory. The [kernel identity verifier](../../bench/spin_cacheline/kernel_identity.py)
+checks the [Linux 7 schema-2 bundle](../../kernel_integration/linux70/IDENTITY.md),
+including the live Build ID and runtime policy. Historical Native source
+references and measurements retain their captured Linux 6.1 identity. KD keeps
+its accepted, separately namespaced physical mutex/OSQ algorithm; the Linux 7
+compatibility port does not replace it with Linux mutex API calls.
 
 ## Public KD API
 

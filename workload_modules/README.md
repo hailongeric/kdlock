@@ -5,6 +5,18 @@ checks in the [project roadmap](../docs/ROADMAP.md). Actual kernel replacement
 must be established by the integration and its real callers; a module-owned
 object or extracted API body alone cannot close the stage 3 coverage requirement.
 
+The active API port targets Ubuntu `linux=7.0.0-38.38`; Linux 6.1 results remain
+historical. The new kernel has its own
+[source/configuration identity](../kernel_integration/linux70/README.md).
+The VM compilation matrix covered 109 provider, payload and support-module
+configurations across its recorded initial and focused retry inputs. Compilation
+and live correctness are separate gates; this matrix does not validate workload
+execution, drain or performance. A separate eight-session Native/TCLock
+cacheline check passed data and normal drain for spin, mutex, rwlock and rwsem;
+other API/payload configurations retain their own live gates. No previous timing
+result establishes Linux 7 support. See the [port record](../bench/results/10.176.26.71/tests/linux70-port-20261027/README.md)
+for the exact cases, failures, retries and remaining gates.
+
 KD mutex workloads own [KD-only objects](../docs/design/kd_only_mutex.md).
 Their Linux Native and TCLock controls keep separate object types. The real-API
 adapter uses a private KD mutex around the controlled subsystem body; the running
@@ -28,7 +40,7 @@ compile time. All participants on a target lock must use that same backend's API
 | [spin_cacheline](spin_cacheline/README.md) | `spin_cacheline.ko` / `/dev/spin_cacheline` | Native/TCLock/KD spin, cacheline/RCUHT payloads and KD nested/early scenarios |
 | [mutex_cacheline](mutex_cacheline/README.md) | `mutex_cacheline.ko` / `/dev/mutex_cacheline` | Separate ordinary mutex functions for the same three arms and shared cacheline/RCUHT payload logic |
 | [rwlock_bench](rwlock_bench/README.md) | `rwlock_bench.ko` / `/dev/kd_rwlock_bench` | Native/TCLock/KD rwlock and proc spin snapshots; Native/TCLock/KD rwsem with original TCLock writers and explicit KD outer writers or a local control; separate shell identities |
-| [real_api](../bench/real_api/README.md) | `real_api.ko` / scoped ftrace substitution | Real syscall critical sections: xattr/OFD, descriptor flags, pipe mutexes, file-position mutexes and bounded UTS reader/writer metadata; Native/TCLock/KD selection |
+| [real_api](../bench/real_api/README.md) | `real_api.ko` / scoped ftrace substitution | Real syscall critical sections: xattr rb-tree reads, OFD locks, descriptor flags, pipe mutexes, file-position mutexes and bounded UTS reader/writer metadata; Native/TCLock/KD selection |
 
 The top-level Makefile builds the spin and mutex Linux Native workloads by default; explicit
 `spin_cacheline` and `mutex_cacheline` targets build one. Run it only in the
@@ -41,6 +53,15 @@ address-guard and string-service probes, is managed under `tests/kernel/`.
 
 The old transparent-hook workload is removed; its historical evidence remains
 in Git and the validation/report indexes.
+
+Linux 7 xattr queries use [xattr.c](real_api/xattr.c), preserving the native
+`simple_xattr_get` rb-tree lookup and shared-read behavior. Every matched arm uses
+a private, correctly typed rwlock around an immutable tree pinned by a held file
+reference. This `xattr-rbtree-read-v1` workload executes readers locally and records
+`NO_JIT`; it has no delegation entry or helper-learning phase. Its front/tail
+labels select keys, not list positions. It must not be pooled with the retired
+list/spin xattr measurements. The controller joins all workers, checks readers
+and gates drained, removes the hook and only then releases the pinned file.
 
 Lock behavior is documented in [nine protocols](../docs/design/lock_protocols.md)
 and the [spin](../docs/design/spin_implementation.md),

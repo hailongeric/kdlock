@@ -384,7 +384,7 @@
   * When the following function is called, the compiler in caller frame does
   * this sequence:
   *
-@@ -863,13 +852,17 @@
+@@ -863,13 +852,19 @@
   * registers.
   */
  
@@ -392,8 +392,11 @@
 + * Its hidden CALLs/RSP changes require inspecting the built function before
 + * loading: the continuation must have only the six explicit register saves.
 + */
++/* The six explicit saves own RBP/RSP. Suppress only this trampoline's
++ * compiler-generated frame; every ordinary C function keeps kernel flags. */
  #pragma GCC push_options
- #pragma GCC optimize("O3")
+-#pragma GCC optimize("O3")
++#pragma GCC optimize("O3", "omit-frame-pointer")
  __attribute__((noipa)) noinline notrace void
  komb_spin_lock_slowpath(struct qspinlock *lock)
  {
@@ -403,7 +406,7 @@
  	 * We must save the callee-saved registers now, since we will resume
  	 * execution at the return address currently at top of stack. If we
  	 * defer saving to when context switch happens later, the C function
-@@ -888,7 +881,6 @@
+@@ -888,7 +883,6 @@
  	BUG_ON(irqs_disabled());
  #endif
  #endif
@@ -411,7 +414,7 @@
  	asm volatile("pushq %%rbp\n"
  		     "pushq %%rbx\n"
  		     "pushq %%r12\n"
-@@ -908,11 +900,8 @@
+@@ -908,11 +902,8 @@
  		     :
  		     : "i"(get_shadow_stack_ptr)
  		     : "memory");
@@ -423,7 +426,7 @@
  	if (ret_val) {
  		asm volatile("callq %P0\n"
  			     "movq (%%rax), %%rsp\n"
-@@ -949,15 +938,16 @@
+@@ -949,15 +940,16 @@
  			     :
  			     : "memory");
  	}
@@ -443,7 +446,7 @@
  
  	/*
  	 * Fastpath
-@@ -989,19 +979,19 @@
+@@ -989,19 +981,19 @@
  		goto queue;
  
  	/*
@@ -473,7 +476,7 @@
  	if (unlikely(val & ~_Q_LOCKED_MASK)) {
  		/* Undo PENDING if we set it. */
  		if (!(val & _Q_PENDING_MASK))
-@@ -1011,24 +1001,24 @@
+@@ -1011,24 +1003,24 @@
  	}
  
  	/*
@@ -512,7 +515,7 @@
  	clear_pending_set_locked(lock);
  	return;
  
-@@ -1208,18 +1198,19 @@
+@@ -1208,18 +1200,19 @@
  #endif
  }
  EXPORT_SYMBOL_GPL(komb_spin_lock);
@@ -535,7 +538,7 @@
  #ifdef DEBUG_KOMB
  			BUG_ON(ptr->curr_cs_cpu < 0);
  #endif
-@@ -1237,7 +1228,7 @@
+@@ -1237,7 +1230,7 @@
  	smp_mb();
  }
  
@@ -544,7 +547,7 @@
   * No IPA is even more relevant here, because even if assembly is removed,
   * compiler shouldn't assume which caller-saved registers are in use inside
   * the function. When we jump from the spin loop to the return address after
-@@ -1267,11 +1258,11 @@
+@@ -1267,11 +1260,11 @@
  
  	for (j = 0; j < 8; j++) {
  		temp_lock_addr = ptr->lock_addr[j];
@@ -559,7 +562,7 @@
  			break;
  	}
  
-@@ -1316,6 +1307,7 @@
+@@ -1316,6 +1309,7 @@
  
  	struct komb_node *curr_node = per_cpu_ptr(&komb_nodes[0], from_cpuid);
  
@@ -567,7 +570,7 @@
  #ifdef WWJUMP
  	struct komb_node *next_node = ptr->next_node_ptr;
  
-@@ -1354,10 +1346,8 @@
+@@ -1354,10 +1348,8 @@
  #ifdef ENABLE_IRQS_CHECK
  	curr_node->irqs_disabled = irqs_disabled();
  #endif
@@ -578,7 +581,7 @@
  	if (ptr->irqs_disabled) {
  		ptr->irqs_disabled = false;
  		local_irq_disable();
-@@ -1406,3 +1396,22 @@
+@@ -1406,3 +1398,22 @@
  {
  	return !atomic_read(&lock.val);
  }
@@ -1215,15 +1218,18 @@
  	}
  	lock->locked = prev_locked_val;
  
-@@ -607,14 +581,14 @@
+@@ -607,14 +581,16 @@
  
  	return __komb_mutex_lock_slowpath(lock, curr_node);
  }
 -
 +/* SPDX-License-Identifier: GPL-2.0 */
 +/* Original six-register mutex trampoline and public acquisition; preserve CALL/RSP and preemption pairing. */
++/* The six explicit saves own RBP/RSP. Suppress only this trampoline's
++ * compiler-generated frame; every ordinary C function keeps kernel flags. */
  #pragma GCC push_options
- #pragma GCC optimize("O3")
+-#pragma GCC optimize("O3")
++#pragma GCC optimize("O3", "omit-frame-pointer")
  __attribute__((noipa)) noinline notrace void
  __komb_mutex_lock(struct komb_mutex *lock)
  {
@@ -1232,7 +1238,7 @@
  	asm volatile("pushq %%rbp\n"
  		     "pushq %%rbx\n"
  		     "pushq %%r12\n"
-@@ -636,11 +610,8 @@
+@@ -636,11 +612,8 @@
  		     :
  		     : "i"(get_shadow_stack_ptr)
  		     : "memory");
@@ -1244,7 +1250,7 @@
  	if (ret_val) {
  		asm volatile("popq %%rdi\n"
  			     "callq %P0\n"
-@@ -679,7 +650,6 @@
+@@ -679,7 +652,6 @@
  			     :
  			     : "memory");
  	}
@@ -1252,7 +1258,7 @@
  }
  #pragma GCC pop_options
  
-@@ -690,8 +660,7 @@
+@@ -690,8 +662,7 @@
  
  	ret = cmpxchg(&lock->locked, 0, 1);
  	if (likely(ret == 0)) {
@@ -1262,7 +1268,7 @@
  		return;
  	}
  
-@@ -701,10 +670,9 @@
+@@ -701,10 +672,9 @@
  
  	__komb_mutex_lock(lock);
  
@@ -1275,7 +1281,7 @@
  
  		if ((struct komb_mutex *)curr_node->lock == lock) {
  #ifdef DEBUG_KOMB
-@@ -713,19 +681,17 @@
+@@ -713,19 +683,17 @@
  			struct komb_mutex_node *next_node =
  				get_next_node(curr_node);
  			if (next_node == NULL)
@@ -1299,7 +1305,7 @@
  
  #ifdef DEBUG_KOMB
  			BUG_ON(prev_node->lock != lock);
-@@ -733,78 +699,30 @@
+@@ -733,78 +701,30 @@
  			print_debug("Waking up prev waiter: %d\n", prev_node->cpuid);
  			wake_up_waiter(prev_node);
  			clear_locked_set_completed(prev_node);
@@ -1383,7 +1389,7 @@
  		if (temp_lock_addr)
  			max_idx = j;
  		if (temp_lock_addr == lock)
-@@ -836,7 +754,7 @@
+@@ -836,7 +756,7 @@
  	if (lock->locked != _Q_LOCKED_COMBINER_VAL)
  		BUG_ON(true);
  
@@ -1392,7 +1398,7 @@
  
  	if (max_idx < 0) {
  		BUG_ON(true);
-@@ -851,16 +769,14 @@
+@@ -851,16 +771,14 @@
  		return;
  	}
  
@@ -1414,7 +1420,7 @@
  
  #ifdef DEBUG_KOMB
  	BUG_ON(lock->combiner_task != current);
-@@ -868,15 +784,15 @@
+@@ -868,15 +786,15 @@
  
  	if (next_node == NULL || next_node->next == NULL ||
  	    counter >= komb_batch_size) {
@@ -1436,7 +1442,7 @@
  		print_debug("Jumping to the next waiter: %d\n",
  			    next_node->cpuid);
  	}
-@@ -887,9 +803,11 @@
+@@ -887,9 +805,11 @@
  	outgoing_rsp_ptr = &(curr_node->rsp);
  
  	preempt_disable();

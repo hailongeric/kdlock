@@ -39,8 +39,8 @@ Pinned source: [TCLocks](https://github.com/rs3lab/TCLocks), commit
 | [komb_rwsem.c](komb_rwsem.c), [aqs.c](aqs.c), [rwsem_provider.c](rwsem_provider.c) | Original rwsem writer delegation and AQS reader gate; registered task storage and drain |
 
 The private source fragments are included in their original declaration order and
-compiled together. This preserves the assembly strings, GCC options and inlining
-boundaries. [port.patch](port.patch) compares six upstream files with the maintained
+compiled together. This preserves the assembly strings and reviewed inlining
+boundaries; the Linux 7 frame option below is scoped to the four trampolines. [port.patch](port.patch) compares six upstream files with the maintained
 C files after their fragments have been expanded, plus the corresponding headers.
 Git also records the fragment organization and compatibility/provider changes.
 Use the patch to review how the port differs from upstream; it is not an installer
@@ -58,14 +58,25 @@ omission, not an upstream limitation.
 
 ## Build and drain
 
-Guest only; the runner normally creates isolated builds:
+Guest only; the runner normally creates isolated builds. The current port targets
+Ubuntu `linux=7.0.0-38.38` and the separate
+[Linux 7 build tree](../kernel_integration/linux70/README.md). These commands use
+its completed output directory. All four providers compile; the current emitted
+audit and live drain gates must also pass before a benchmark can run. The retired
+6.1 recipes remain historical evidence only.
 
 ```sh
-make -C tclock_backend KDIR=/root/linux-6.1.159-kdclobber2 TCLOCK_NUMA=1
-make -C tclock_backend KDIR=/root/linux-6.1.159-kdclobber2 TCLOCK_MUTEX=1 TCLOCK_NUMA=1
-make -C tclock_backend KDIR=/root/linux-6.1.159-kdclobber2 TCLOCK_RWLOCK=1 TCLOCK_NUMA=1
-make -C tclock_backend KDIR=/root/linux-6.1.159-kdclobber2 TCLOCK_RWSEM=1 TCLOCK_NUMA=1
+export KDIR=/mnt/kdlock-builds/linux-7.0.0-38-kdlock1/build
+export CC=x86_64-linux-gnu-gcc
+make -C tclock_backend TCLOCK_NUMA=1
+make -C tclock_backend TCLOCK_MUTEX=1 TCLOCK_NUMA=1
+make -C tclock_backend TCLOCK_RWLOCK=1 TCLOCK_NUMA=1
+make -C tclock_backend TCLOCK_RWSEM=1 TCLOCK_NUMA=1
 ```
+
+Do not export `KERNELRELEASE` for these external-module wrapper commands.
+They read the release from KDIR; setting it in the environment selects their
+inner Kbuild branch instead of the outer build target.
 
 The outputs are `tclock_backend_km.ko`, `tclock_mutex_backend_km.ko`,
 `tclock_rwlock_backend_km.ko` and `tclock_rwsem_backend_km.ko`. Load the backend before its workload. To shut down,
@@ -73,6 +84,30 @@ join every worker, check `quiescent=1`, and clear the diagnostic target pointer.
 Then unload the workload before the backend. Keep context storage and task
 references until all workers, queues and borrowed stacks have finished. Never
 force unload.
+
+Linux 7/GCC 15 initially added a compiler RBP frame before the six explicit
+register saves in all four acquisition trampolines. Their inline returns bypass
+that extra frame, so those binaries failed the emitted-context audit and were
+not loaded. Only these four manually managed trampolines now select
+`optimize("O3", "omit-frame-pointer")`; their explicit RBP save/restore remains.
+All ordinary C functions, kernel frame-pointer settings, return mitigations and
+`ZERO_CALL_USED_REGS` stay in effect. All four extracted-code fixtures passed the six-register/RSP checks through
+128 switches and 64 acquisition/64 continuation returns. All four rebuilt
+providers then passed the emitted audit. Rwlock preserves its lock argument in
+R8 because Linux 7 PV IRQ callees may clobber RDI under `ZERO_CALL_USED_REGS`.
+The audit binds the complete argument/return dataflow, both IRQ relocation
+offsets and RAX-only hidden helpers with bound return thunks; 22 negative mutations
+reject altered
+registers, IRQ calls, frames and exits. The fixture stubs IRQ macros, so the
+emitted audit is a separate requirement. A subsequent live functional check
+passed Native and TCLock controls for all four families: one cacheline, eight
+workers and 10,000 operations per worker, with 20% writes for rwlock/rwsem.
+Every session checked exact data and normal drain/unload. TCLock mutex recorded
+78,641 delegated bodies in its 80,000-operation case; delegation counts for
+the other TC families remain unmeasured. This unscored check does not establish
+performance or correctness for the complete workload catalog. The
+[port record](../bench/results/10.176.26.71/tests/linux70-port-20261027/README.md)
+retains the exact build, source and recovery identities.
 
 ## Selected comparator scope
 
@@ -97,8 +132,10 @@ promise arbitrary IRQ/BH, mixed trylock or nested/oversubscribed support.
 Spin restores the upstream `need_resched()` batch exit and the RCUHT
 wait loop that enables preemption, schedules, then disables preemption again.
 Mutex retains its original batch and parking policy. UBSAN is off for these modules;
-the captured kernel and mitigation/frame-pointer configuration are unchanged.
-Known stack-switch objtool warnings remain; audit the built trampoline before loading.
+kernel preemption, mitigation and frame-pointer settings belong to each captured
+kernel identity. Linux 7's settings are not assumed equivalent to the legacy
+campaigns. Known stack-switch objtool warnings remain; audit the built trampoline
+and exact paravirtual IRQ relocation before loading.
 
 ## Rwlock comparator
 

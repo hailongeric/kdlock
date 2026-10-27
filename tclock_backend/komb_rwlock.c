@@ -191,7 +191,7 @@ get_next_node(struct komb_rwlock_node *my_node)
 			goto next_node_null;
 
 		if (next_node->socket_id == numa_node_id()) {
-			prefetchw(per_cpu_ptr(&komb_rwlock_nodes[0],
+			prefetchw((void *)(unsigned long)per_cpu_ptr(&komb_rwlock_nodes[0],
 					      next_node->cpuid)
 					  ->rsp);
 			return next_node;
@@ -352,12 +352,12 @@ __kombrw_spin_lock_longjmp(struct qspinlock *lock, int tail,
 				if (parent_lock->locked == _Q_UNLOCKED_OOO_VAL)
 					return 1;
 			}
-			prefetchw(curr_node->rsp);
-			prefetchw(curr_node->rsp + 64);
-			prefetchw(curr_node->rsp + 128);
-			prefetchw(curr_node->rsp + 192);
-			prefetchw(curr_node->rsp + 256);
-			prefetchw(curr_node->rsp + 320);
+			prefetchw((void *)(unsigned long)(curr_node->rsp));
+			prefetchw((void *)(unsigned long)(curr_node->rsp + 64));
+			prefetchw((void *)(unsigned long)(curr_node->rsp + 128));
+			prefetchw((void *)(unsigned long)(curr_node->rsp + 192));
+			prefetchw((void *)(unsigned long)(curr_node->rsp + 256));
+			prefetchw((void *)(unsigned long)(curr_node->rsp + 320));
 			return 0;
 		}
 	}
@@ -565,8 +565,10 @@ get_komb_rwlock_node(void)
  * registers.
  */
 
+/* The six explicit saves own RBP/RSP. Suppress only this trampoline's
+ * compiler-generated frame; every ordinary C function keeps kernel flags. */
 #pragma GCC push_options
-#pragma GCC optimize("O3")
+#pragma GCC optimize("O3", "omit-frame-pointer")
 __attribute__((noipa)) noinline notrace void
 kombrw_spin_lock_slowpath(struct qspinlock *lock)
 {

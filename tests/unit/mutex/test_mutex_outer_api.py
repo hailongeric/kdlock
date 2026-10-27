@@ -35,6 +35,10 @@ def check_variant(general_unlock, header_root):
         subprocess.run(['cc', *flags, '-c',
                         str(ROOT/'tests/unit/mutex/mutex_outer_api_fixture.c'),
                         '-o', str(path/'fixture.o')], check=True, timeout=30)
+        subprocess.run(['objcopy', '--dump-section',
+                        f'.discard.kd_boundary={path}/annotation.bin',
+                        str(path/'fixture.o')], check=True, timeout=10)
+        assert (path/'annotation.bin').read_bytes() == b'\0', 'code leaked into annotation section'
         # Resolving the weak wrapper on the second link can shrink the PLT.
         # Anchor text as well as lock data so source identities remain exact;
         # retain the per-symbol identity assertions below.

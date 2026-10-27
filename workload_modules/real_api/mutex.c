@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-only
-/* Scoped, task-context syscall comparison on the captured 6.1.159 kernel.
+/* Scoped, task-context syscall comparison for Ubuntu Linux 7.0.0-38.38.
  * Native uses the actual kernel mutex. KD and TCLock use private objects;
  * all consumers of the private pipe/file must obey the selected protocol.
  * The client retains every descriptor until the workers join and hooks unload.
@@ -147,17 +147,16 @@ static __attribute__((noipa)) long rb_body(struct file *file, loff_t offset,
 	RA_COOKIE;
 	RA_LOCK();
 	/* The bound tmpfs file uses generic_file_llseek; only SEEK_SET/END.
-	 * Both size reads and the real f_pos/f_version updates stay protected. */
+	 * Size reads and the real f_pos update stay protected. Linux 7's
+	 * generic_file_llseek uses vfs_setpos without a version cookie. */
 	maxsize = file_inode(file)->i_sb->s_maxbytes;
 	if (whence == SEEK_END)
 		offset += i_size_read(file_inode(file));
 	if (offset < 0 || offset > maxsize)
 		result = -EINVAL;
 	else {
-		if (offset != file->f_pos) {
+		if (offset != file->f_pos)
 			file->f_pos = offset;
-			file->f_version = 0;
-		}
 		result = offset;
 	}
 	RA_UNLOCK();
@@ -167,9 +166,9 @@ static long rb_redirected(unsigned int fd, off_t offset, unsigned int whence)
 {
 	struct fd f = fdget(fd);
 	long result;
-	if (!f.file)
+	if (fd_empty(f))
 		return -EBADF;
-	result = rb_body(f.file, offset, whence);
+	result = rb_body(fd_file(f), offset, whence);
 	fdput(f);
 	return result;
 }

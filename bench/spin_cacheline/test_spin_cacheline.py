@@ -136,9 +136,9 @@ class CachelineTests(unittest.TestCase):
         parser = argparse.ArgumentParser()
         kernel_identity.arguments(parser)
         defaults = parser.parse_args([])
-        self.assertEqual(defaults.kernel_source, Path('/root/linux-6.1.159-kdclobber2'))
+        self.assertEqual(defaults.kernel_source, Path('/mnt/kdlock-builds/linux-7.0.0-38-kdlock1/build'))
         self.assertEqual(defaults.kernel_baseline,
-                         Path('/root/kdlock-kernel-baselines/mutex-clobber2-20260919'))
+                         Path('/root/kdlock-kernel-baselines/linux70-kdlock1-20261027'))
         with tempfile.TemporaryDirectory(prefix='spin-kernel-identity-') as directory:
             bundle = Path(directory) / 'bundle'
             shutil.copytree(ROOT / 'kernel_baseline', bundle)

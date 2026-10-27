@@ -9,6 +9,8 @@
 #include <unistd.h>
 #include <asm/prctl.h>
 #include <sys/syscall.h>
+/* Match Linux 7's missing trailing newline without depending on its headers. */
+#define TEST_ANNOTATION ".pushsection .discard.kd_boundary,\"a\",@progbits; .byte 0; .popsection"
 typedef uint32_t u32;
 typedef union { u32 val; unsigned char locked; } kd_spinlock_t;
 #define KD_SPIN_DIRECT_NATIVE_HELD 5U
@@ -110,9 +112,9 @@ __attribute__((noinline,noipa)) static unsigned long stress(unsigned long seed,
   * clobbers. Fixed register variables cannot legally survive those clobbers. */
  asm volatile("" : "+r"(a),"+r"(b),"+r"(c),"+r"(d),"+r"(e) : "m"(stack) : "memory");
  if(helpers)
-  KD_SPIN_DIRECT_HELPER_LOCK(&lock,kd_spin_direct_cookie,"");
+  KD_SPIN_DIRECT_HELPER_LOCK(&lock,kd_spin_direct_cookie,TEST_ANNOTATION);
  else
-  KD_SPIN_DIRECT_LOCK(&lock,kd_spin_direct_cookie,"");
+  KD_SPIN_DIRECT_LOCK(&lock,kd_spin_direct_cookie,TEST_ANNOTATION);
  assert(pins==1 && lock.locked==(cold?KD_SPIN_DIRECT_NATIVE_HELD:1));
  assert(heat[cpu_id]==hot && heat[cpu_id^1]==other_cookie);
  heat[cpu_id]^=1;
@@ -134,7 +136,7 @@ __attribute__((noinline,noipa)) static void helper_seed(void)
  register unsigned long r12 asm("r12"), r13 asm("r13");
  register unsigned long r14 asm("r14"), r15 asm("r15");
  heat[cpu_id]=hot;
- KD_SPIN_DIRECT_HELPER_LOCK(&lock,kd_spin_direct_cookie,"");
+ KD_SPIN_DIRECT_HELPER_LOCK(&lock,kd_spin_direct_cookie,TEST_ANNOTATION);
  /* Read the actual inline-asm outputs before C can reuse these registers.
   * The destructive hot callee sets all five to nonzero values; only the
   * production continuation can make this assertion pass. */

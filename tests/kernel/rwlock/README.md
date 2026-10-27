@@ -40,10 +40,10 @@ snapshot. The workload uses no provider SELFTEST hooks. Build an ordinary provid
 with the existing private observation overlay to count returned JIT bodies:
 
 ```sh
-export PATH=/root/kdlock-translation-venv-20261019/bin:$PATH
+export PATH=/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin:$PATH
 export LC_ALL=C
 RW_ROOT="$PWD"
-RW_KERNEL=/root/linux-6.1.159-kdclobber2
+RW_KERNEL=/mnt/kdlock-builds/linux-7.0.0-38-kdlock1/build
 
 make -C bench/spin_cacheline provider KDIR="$RW_KERNEL" UBSAN_SANITIZE=n
 make -C daemon CFLAGS='-O2 -Wall -Wextra -Werror'

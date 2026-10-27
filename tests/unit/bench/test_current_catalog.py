@@ -20,9 +20,15 @@ class CatalogTests(unittest.TestCase):
             self.assertEqual(name, old_name)
             old_argv = list(old_argv)
             old_argv[old_argv.index('--output')+1] = destination+'/'+name
+            old_argv[old_argv.index('--kernel-source')+1] = '/mnt/kdlock-builds/linux-7.0.0-38-kdlock1/build'
+            old_argv[old_argv.index('--kernel-baseline')+1] = '/root/kdlock-kernel-baselines/linux70-kdlock1-20261027'
             self.assertEqual(argv, old_argv)
         expected = [*range(1, 9), *range(12, 61, 4)]
         for name, argv in rows:
+            self.assertEqual(argv[argv.index('--kernel-source')+1],
+                             '/mnt/kdlock-builds/linux-7.0.0-38-kdlock1/build')
+            self.assertEqual(argv[argv.index('--kernel-baseline')+1],
+                             '/root/kdlock-kernel-baselines/linux70-kdlock1-20261027')
             self.assertEqual(argv[argv.index('--output')+1], destination+'/'+name)
             self.assertEqual(argv[argv.index('--repeats')+1], '1')
             self.assertEqual(argv[argv.index('--duration-ms')+1], '2000')

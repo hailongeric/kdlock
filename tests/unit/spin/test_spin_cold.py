@@ -49,6 +49,12 @@ def main():
                             '-I', directory, str(ROOT / 'tests/unit/spin' / (fixture + '.c')),
                             '-o', str(binary)], check=True, timeout=30)
             subprocess.run([binary], check=True, timeout=10)
+            if fixture == 'spin_paired_abi_fixture':
+                subprocess.run(['objcopy', '--dump-section',
+                                f'.discard.kd_boundary={path}/annotation.bin', str(binary)],
+                               check=True, timeout=10)
+                annotation = (path/'annotation.bin').read_bytes()
+                assert annotation == b'\0' * 3, 'code leaked into continuation annotation section'
             if fixture == 'spin_cold_route_fixture':
                 # Exercise both compile-time and dynamic-preemption C targets;
                 # the real module build checks static-call tail-site metadata.

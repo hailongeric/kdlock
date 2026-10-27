@@ -1,7 +1,9 @@
 /* SPDX-License-Identifier: GPL-2.0 */
 /* Original six-register mutex trampoline and public acquisition; preserve CALL/RSP and preemption pairing. */
+/* The six explicit saves own RBP/RSP. Suppress only this trampoline's
+ * compiler-generated frame; every ordinary C function keeps kernel flags. */
 #pragma GCC push_options
-#pragma GCC optimize("O3")
+#pragma GCC optimize("O3", "omit-frame-pointer")
 __attribute__((noipa)) noinline notrace void
 __komb_mutex_lock(struct komb_mutex *lock)
 {

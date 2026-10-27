@@ -5,12 +5,13 @@ stage 1, actual mmap/page-fault comparisons in stage 2, and unchanged applicatio
 on integrated kernels in stage 3. Use this guide for implemented runner selection;
 the roadmap's exact mmap1 target remains a new runner/validation task.
 
-Linux 6.1 development is retired. These runners and results retain the legacy
-workload contracts. Ubuntu 26.04 / Linux 7.0 is the active adaptation platform;
-KD and runner compatibility remain unvalidated. See the
-[migration record](../docs/history/vm-ubuntu2604-migration-20261027.md) for OS
-readiness and the [retirement record](../docs/history/kernel-retirement-20261027.md)
-for historical inputs. Existing Linux 6.1 command examples are archival references.
+Linux 6.1 development is retired. Active lock/API and nano runners target Ubuntu
+26.04 and the custom `7.0.0-38-kdlock1` kernel built from `linux=7.0.0-38.38`.
+The [port record](results/10.176.26.71/tests/linux70-port-20261027/README.md)
+separates compilation, live correctness and remaining limitations. Existing
+Linux 6.1 results and dated campaign recipes remain historical; no performance
+result is transferred to the new kernel. Actual-MM campaigns require separate
+enabled-kernel and instrumentation validation.
 
 Use the maintained runner for the lock family. [The workload catalog](../docs/BENCHMARK_WORKLOADS.md)
 defines protected operations and API parameters; [performance status](../docs/PERFORMANCE.md)
@@ -19,12 +20,13 @@ summarizes the accepted version. Build and run only in the verified VM on
 The [terminology guide](../docs/TERMINOLOGY.md) defines lock names, just-in-time
 (JIT) execution, status labels and measurement terms such as post4 and Mops/s.
 
-The historical [basic runner](basic/run.py) and
+The [basic runner](basic/run.py) and
 [functional workflow](../docs/PROJECT_GUIDE.md#basic-working-version) select
 one existing resident-list case per KD family, with public mutex calls,
 concurrent local readers, returned-body checks and complete drain. It produces
-no timing acceptance or throughput score. Linux 7.0 runner/KD validation remains
-pending. Comparison timing rules stay unchanged.
+no timing acceptance or throughput score. It requires the schema-2 Linux 7
+kernel bundle, a new-platform recovery snapshot and fresh hash-bound host
+evidence. Comparison timing rules stay unchanged.
 
 | Comparison | Entry point | Payloads |
 | --- | --- | --- |
@@ -92,9 +94,9 @@ screens and the nano runner's one-round default retain their own manifests and
 cannot establish repeat variability. The
 [archived mutex c01 preview and execution recipe](https://github.com/hailongeric/kdlock/blob/cd6f1061ea1b3686dd6d43a7a180ab1942ea4e57/bench/README.md#standard-worker-grid)
 retain the exact Linux 6.1 source and baseline arguments. Those inputs are
-historical; substituting a new kernel path does not validate a Linux 7.0 runner
-or provider. New execution needs matched source/configuration identities, KD
-admission and a verified recovery boundary. Workload selection remains explicit:
+historical. Current runners default to the source/output-separated Linux 7
+build and schema-2 identity bundle. Execution requires matched source/configuration
+identities, KD admission and a verified recovery boundary. Workload selection remains explicit:
 `--cachelines 1 8` selects synthetic sizes, while `--workload rcuht` selects a
 different workload and omits `--cachelines`.
 For [resident-list variants](../docs/BENCHMARK_WORKLOADS.md#resident-linked-list-traversal),

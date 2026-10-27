@@ -41,14 +41,6 @@ def production():
     # Include the actual decoder, not a second copy of its field arithmetic.
     # The fixture substitutes only per_cpu_ptr and verifies its node identity.
     code += definition(mutex, "static inline struct kd_mutex_node *kd_mutex_decode_tail(u32 tail)")
-    code += (
-        next(
-            line
-            for line in mutex.splitlines()
-            if line.startswith("#define _Q_LOCKED_COMBINER_VAL ")
-        )
-        + "\n"
-    )
     code += definition(read_source(ROOT / "kernel_module/kd_mutex_local.c"),
                        "void kd_mutex_init(struct kd_mutex *lock)")
     for marker in (

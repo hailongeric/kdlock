@@ -79,7 +79,7 @@ kd_jump_to_saved_regs_with_flags(struct kd_regs *regs)
 		     "movq %c[reg_si](%%rdi), %%rsi\n"
 		     "movq %c[reg_di](%%rdi), %%rdi\n"
 		     "popfq\n"
-#ifdef CONFIG_RETHUNK
+#if defined(CONFIG_MITIGATION_RETHUNK) || defined(CONFIG_RETHUNK)
 		     "jmp __x86_return_thunk\n"
 #else
 		     "retq\n"

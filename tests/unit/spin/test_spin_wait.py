@@ -57,13 +57,13 @@ def main():
                      source.index("#pragma GCC push_options", source.index("#define KD_RESTORE_REG_OPERANDS"))]
             + '\n#pragma GCC diagnostic pop\n'
             + macros + "static __attribute__((noipa, noreturn)) noinline notrace void\n" + code)
-        for thunk in (False, True):
-            binary = path / ("spin-restore-thunk" if thunk else "spin-restore")
+        for thunk in (None, "CONFIG_RETHUNK", "CONFIG_MITIGATION_RETHUNK"):
+            binary = path / ("spin-restore-" + (thunk or "direct"))
             subprocess.run(
                 shlex.split(os.environ.get("CC", "cc")) + [
                     "-std=gnu11", "-O2", "-Wall", "-Wextra", "-Werror",
                     "-mno-red-zone", "-mgeneral-regs-only", "-fno-stack-protector",
-                    *(["-DCONFIG_RETHUNK=1"] if thunk else []), "-I", str(path),
+                    *(["-D" + thunk + "=1"] if thunk else []), "-I", str(path),
                     str(ROOT / "tests/unit/spin/spin_restore_fixture.c"),
                     "-o", str(binary),
                 ], check=True, timeout=30,

@@ -9,6 +9,12 @@ import subprocess
 import sys
 from pathlib import Path
 
+from miasm_python314 import verify_runtime
+
+# Dependency failure is an environment error, never an admission refusal.
+# Check exact patched bytes before importing/using the semantic lifter.
+DEPENDENCY_IDENTITY = verify_runtime()
+
 import context_guards
 import address_guards as checked_addresses
 import constant_paths
@@ -606,6 +612,9 @@ def dis_assem(pid, entry, lock_kind="unknown", *, body_witness=False, abi=0):
 
 
 if __name__ == "__main__":
+    import json
+    print('[KD_DEPENDENCY] ' + json.dumps(DEPENDENCY_IDENTITY, sort_keys=True),
+          file=sys.stderr, flush=True)
     import device_session
 
     pid = int(sys.argv[1])

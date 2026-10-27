@@ -171,7 +171,7 @@ static int kd_mutex_release_outer(struct kd_exec_frame *frame,
 		    KD_EXEC_LOCK_QUEUE_OWNER ||
 	    frame->outer_lock_addr != (unsigned long)lock ||
 	    batch->lock != lock ||
-	    kd_mutex_gate_read(lock) != _Q_LOCKED_COMBINER_VAL)
+	    kd_mutex_gate_read(lock) != KD_MUTEX_GATE_COMBINER)
 		return -EINVAL;
 	/* A terminal request may have no successor. Remove its published tail
 	 * before opening A; future old_tail=0 arrivals poll A's gate themselves. */

@@ -19,12 +19,12 @@ def main():
     with tempfile.TemporaryDirectory(prefix="kd-escape-restore-") as directory:
         temporary = Path(directory)
         (temporary / "production.h").write_text(code)
-        for thunk in (False, True):
-            binary = temporary / ("thunk" if thunk else "direct")
+        for thunk in (None, "CONFIG_RETHUNK", "CONFIG_MITIGATION_RETHUNK"):
+            binary = temporary / (thunk or "direct")
             subprocess.run(shlex.split(os.environ.get("CC", "cc")) + [
                 "-std=gnu11", "-O2", "-Wall", "-Wextra", "-Werror",
                 "-Wno-unused-parameter", "-fno-stack-protector", "-no-pie",
-                *(["-DCONFIG_RETHUNK=1"] if thunk else []),
+                *(["-D" + thunk + "=1"] if thunk else []),
                 "-I", str(ROOT / "include"), "-I", str(temporary),
                 str(ROOT / "tests/unit/execution/native_escape_restore_fixture.c"),
                 "-o", str(binary)], check=True, timeout=30)

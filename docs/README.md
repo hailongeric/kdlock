@@ -7,8 +7,10 @@ assigns one responsibility to each maintained guide.
 Ubuntu 26.04 / Linux 7.0 is the active adaptation platform. The
 [VM migration record](history/vm-ubuntu2604-migration-20261027.md) records
 Ubuntu 26.04.1 LTS, kernel `7.0.0-38-generic`, matching headers, the approved
-snapshot purge and expansion to 132 GiB. OS readiness does not establish KD
-compatibility; the KD port and its validation remain pending. The
+snapshot purge and expansion to 132 GiB. The separate
+[Linux 7 port receipt](../bench/results/10.176.26.71/tests/linux70-port-20261027/README.md)
+records the custom `7.0.0-38-kdlock1` build, all four KD returned-JIT passes,
+Native/TCLock functional controls and remaining validation limits. The
 [kernel retirement record](history/kernel-retirement-20261027.md) preserves
 the legacy recovery version and earlier results.
 
@@ -27,6 +29,7 @@ adds validated original-waiter continuation without changing that lock protocol.
 | [Current lock catalog](LOCKS.md) | All four KD lock families, public interfaces, shared engines and compatibility limits |
 | [Terminology](TERMINOLOGY.md) | Plain-language definitions of lock, execution and benchmark terms |
 | [VM operations](operations/VM.md) | Environment, identity, builds, recovery and drain |
+| [Linux 7 integration](../kernel_integration/linux70/README.md) | Exact Ubuntu source, core kernel patch, separate mmap overlay and schema-2 kernel identity |
 | [Development rules](../AGENTS.md) | Repository-wide contribution constraints |
 | [Design](DESIGN.md), [code map](CODE_MAP.md) | Architecture, terms and file responsibilities |
 | [Lock protocols](design/lock_protocols.md) | KD/TCLock/Native comparisons for spin, mutex and rwlock, plus Native/KD/original-TCLock rwsem with documented API limits |

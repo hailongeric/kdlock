@@ -1,4 +1,5 @@
-# Tested CPython 3.10 runtime for the x86_64 translator and evidence readers.
+# Pinned translator dependencies. Python 3.14 additionally requires the exact
+# semantic-builder patch/preflight documented in compat/README.md.
 # Pin transitive runtime dependencies too; this is not a compiler/kernel lock
 # or a claim that installed package bytes are identical across distributions.
 miasm==0.1.5

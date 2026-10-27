@@ -221,6 +221,9 @@ def report(out):
             path = out/spec['name']/'session.json'
             row = json.loads(path.read_text()) if path.exists() else {}
             rows.append(dict(name=spec['name'], scenario=spec['scenario'],
+                arm=spec.get('arm', 'unrecorded'),
+                lock_kind=spec.get('lock_kind', 'unrecorded'),
+                performance_accepted=False,
                 workload=spec.get('workload', 'cacheline'), list_nodes=spec.get('list_nodes', 0),
                 hotlock_mode=spec.get('hotlock_mode', 'unrecorded'),
                 cpu_heat_policy=spec.get('cpu_heat_policy', 'unrecorded'),
@@ -235,7 +238,8 @@ def report(out):
                 jit_bodies=row.get('jit_bodies', 0),
                 jit_completions=row.get('jit_completions'),
                 execution_class=list_execution_class(row or spec),
-                jit_acceptance=row.get('jit_acceptance', 'NOT_RUN')))
+                jit_acceptance=('NOT_APPLICABLE' if spec.get('arm') in ('native', 'tclock')
+                                else row.get('jit_acceptance', 'NOT_RUN'))))
         write_json(out/'functional.json', rows)
         return
 
@@ -405,7 +409,7 @@ def main(lock_kind='spin'):
     p.add_argument('--build-only', action='store_true',
                    help='freeze and audit binaries without loading modules or running sessions')
     p.add_argument('--functional', action='store_true',
-                   help='KD functional acceptance only; requires --backends kdlock --repeats 1; no throughput report')
+                   help='backend data/context/drain checks; requires --repeats 1; no performance scores')
     kernel_identity.arguments(p)
     p.add_argument("--scenario", choices=("plain", "nested", "early"), default="plain")
     p.add_argument("--spin-delegate", choices=("on", "off"), default="on",
@@ -427,27 +431,28 @@ def main(lock_kind='spin'):
     require(args.workload == 'cacheline' or args.cachelines is None,
             'non-cacheline payloads do not use --cachelines')
     if args.functional:
-        require(args.backends == ['kdlock'] and args.repeats == 1,
-                'functional mode requires --backends kdlock --repeats 1')
+        require(args.repeats == 1, 'functional mode requires --repeats 1')
         require(not args.keep_going_no_jit,
                 'keep-going-no-jit is for performance evidence collection only')
     plan = make_plan(args)
     if args.functional:
         for spec in plan:
             spec['functional'] = True
+            spec['performance_accepted'] = False
     if args.dry_run:
         print(json.dumps(plan, indent=2)); return 0
     require(ROOT == Path('/root/host_fs/kdlock') and os.geteuid() == 0 and
-            os.environ.get('KDLOCK_RECOVERY_CONFIRMED') == '1', 'confirmed recovery guest required')
-    require(os.uname().release == '6.1.159-kdclobber2', 'verified kdclobber2 kernel required')
+            os.environ.get('KDLOCK_RECOVERY_CONFIRMED') == '1' and os.environ.get('KDLOCK_SNAPSHOT_TAG'),
+            'confirmed recovery guest and recorded snapshot tag required')
+    require(os.uname().release == '7.0.0-38-kdlock1', 'verified Linux 7 KD kernel required')
     out = args.output.resolve()
     require(not out.exists() and not out.is_relative_to(ROOT), 'new external output required')
     idle(); out.mkdir(parents=True); write_json(out/'plan.json', plan)
     try:
         identity = kernel_identity.capture(args, out, command)
         require(command(['findmnt','-T',ROOT,'-n','-o','FSTYPE'],out/'mount.txt').strip() == 'ext4','ext4 required')
-        require('nokaslr' in Path('/proc/cmdline').read_text().split() and
-                '(voluntary)' in Path('/sys/kernel/debug/sched/preempt').read_text(), 'runtime differs')
+        require(identity.get('schema') == 2 and identity.get('runtime_policy_verified') is True,
+                'exact Linux 7 kernel and runtime policy verification required')
         packages = {p:importlib.metadata.version(p) for p in ('miasm','future','pyparsing','pyelftools')}
         require(packages == dict(miasm='0.1.5',future='1.0.0',pyparsing='2.4.7',pyelftools='0.27'), 'dependencies differ')
         topology = runtime.capture_topology(worker_cpus(args))

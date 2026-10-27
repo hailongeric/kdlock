@@ -7,13 +7,17 @@ scoped mmap/page-fault improvement or parity, and broader kernel replacement wit
 application evaluation. This guide describes the working checkout and interfaces;
 current implementation limits are not a redefinition of that long-term goal.
 
-The development VM runs Ubuntu 26.04.1 LTS with kernel `7.0.0-38-generic`.
-Ubuntu 26.04 / Linux 7.0 is the active adaptation platform; KD porting and
-validation remain pending. Linux 6.1 development is retired. The
-[migration record](history/vm-ubuntu2604-migration-20261027.md) owns current OS,
-package and boot identities; the [retirement record](history/kernel-retirement-20261027.md)
-preserves the legacy recovery inputs. The functional evidence below applies
-to the historical kernel and is not a new-kernel quick-start.
+The development VM uses Ubuntu 26.04.1 LTS and the new development release
+`7.0.0-38-kdlock1`. The reviewed kernel build and installation are complete.
+Its first boot exposed unsigned distro-module copies and taint 8192 before any
+project module load. Signing repair and the second boot passed with taint 0.
+The four-family KD basic functional run now passes with returned JIT bodies
+and complete drain. Live MM integration and performance remain unvalidated. The
+[Linux 7 port record](../bench/results/10.176.26.71/tests/linux70-port-20261027/README.md)
+owns current source, build and validation evidence. The preceding
+[migration record](history/vm-ubuntu2604-migration-20261027.md) owns the OS upgrade;
+the [retirement record](history/kernel-retirement-20261027.md) preserves Linux
+6.1 recovery inputs. No further adaptation targets that legacy kernel.
 
 The primary checkout on `380G10` is the source of truth. `master` contains the
 accepted KD-only mutex from `d2a2304`, with its legacy delegation protocol and
@@ -32,7 +36,85 @@ for spinlock, mutex, rwlock or rwsem. [Design](DESIGN.md) explains shared execut
 [code map](CODE_MAP.md) locates source. The [documentation index](README.md) separates API,
 execution, operations, benchmark and historical material.
 
-## Basic working version
+## Current development workflow
+
+The authenticated source package is `linux=7.0.0-38.38`. Its upstream content is
+7.0.14 while its custom Ubuntu ABI release is `7.0.0-38-kdlock1`; keep both
+identities. The development source and output are separate:
+
+| Purpose | Guest path |
+| --- | --- |
+| Source | `/mnt/kdlock-builds/linux-7.0.0-38-kdlock1/source` |
+| Build output and external-module KDIR | `/mnt/kdlock-builds/linux-7.0.0-38-kdlock1/build` |
+| Schema-2 identity bundle | `/root/kdlock-kernel-baselines/linux70-kdlock1-20261027` |
+| Verified clean-platform recovery snapshot | `linux70-kdlock1-clean-20261027` |
+| Pinned translator | `/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin/python3` |
+
+The [kernel prerequisite patch](../kernel_integration/linux70/README.md) provides
+the real spin-clobber ABI and five required GPL exports, while ordinary Linux
+spin macros remain unchanged. KD mutex retains its own clobber entry, physical
+exclusion and ABI2. The separate [mmap adapter](../kernel_integration/linux70/MMAP.md)
+has enabled/disabled object checks; `CONFIG_KDLOCK_MMAP` remains disabled in the
+installed kernel. Native MM bodies and original-task execution remain intact.
+Compilation of the optional adapter does not establish live shared-mm support.
+
+Boot/signing validation and canonical schema-2 capture passed. Before any live
+basic check, reverify the captured
+[schema-2 identity](../kernel_integration/linux70/IDENTITY.md), and verify a real
+current-platform recovery snapshot. The monitor listing confirms the named
+clean-platform snapshot; keep the legacy snapshot separate. Running identity verification must return
+`runtime_policy_verified: true`. The basic runner uses the canonical build as
+`--kernel-source` and the captured identity as `--kernel-baseline`; it also
+requires explicit host-reference bytes and SHA256, a fresh host capture, and
+the matching snapshot tag. [VM operations](operations/VM.md) owns the exact
+host, recovery, synchronization and dependency procedure.
+
+The translator uses pinned dependencies and an exact Python 3.14
+[Miasm compatibility patch](../disassem/compat/README.md), with a dependency-byte
+preflight before semantic analysis. External-module wrappers receive KDIR;
+do not globally export `KERNELRELEASE`, which can bypass their outer Makefile
+targets. Full-kernel build/install invocations require the explicit custom
+release. Keep source snapshots immutable while any build or check is active.
+
+The basic runner produces functional evidence only: correct data, returned JIT
+bodies and complete retirement for each selected family. It does not turn a
+build, local completion, NORMAL image or host-placement pass into a performance
+result. New Linux 7 measurements must retain their own source, topology,
+configuration and mitigation identities.
+
+The complete `basic-03` run passed on this kernel with `passed=true` and
+`final_idle=true`. All cases used the 16-node resident list, one round and
+100,000 iterations per worker. The mixed reader/writer cases used 20% writes
+and four post-work rounds.
+
+| KD family | Workers | Completed operations | Returned JIT bodies |
+| --- | ---: | ---: | ---: |
+| Spinlock | 16 | 1,600,000 | 1,596,396 |
+| Public mutex | 16 | 1,600,000 | 1,333,599 |
+| Rwlock | 60 | 6,000,000 | 30,463 |
+| Rwsem | 16 | 1,600,000 | 43,067 |
+
+Each family passed correctness and drain checks; the controller accepted no
+performance score. The complete 2,161-file archive, eight workspace symlinks
+and every session hash were independently verified. `basic-01` and `basic-02`
+remain failed attempts with separate source versions and partial successes;
+they are not combined to produce the four-family result. This functional scope
+does not establish general semantic equivalence, live mmap/page-fault support,
+whole-kernel replacement or a performance gain. The
+[port record](../bench/results/10.176.26.71/tests/linux70-port-20261027/README.md)
+preserves the implementation changes, earlier failures and validation boundaries.
+
+The separate explicit-OUTER mutex and spin native-escape probes also passed
+four phases of 160,000 operations each. Their cold delegated phases returned
+158,037 and 158,711 JIT bodies respectively. Each hot phase recorded one JIT
+entry, zero JIT completions and one native escape; the subsequent banned phase
+recorded no JIT activity. The probes checked original-task resumption, effects,
+flags, terminal banning and final drain. This is the bounded
+[native-escape proof](../bench/results/10.176.26.71/tests/linux70-port-20261027/README.md)
+for those two call paths, not a returned-body claim for the hot phase or a
+performance measurement.
+
+## Retained functional evidence
 
 This section records the validated legacy functional implementation. The
 [throughput campaign plan](THROUGHPUT_PLAN.md) separates documented lock workloads,
@@ -78,8 +160,8 @@ see [rwsem waiting](design/rwsem_implementation.md#waiting-and-wakeups).
 The [archived basic smoke workflow](https://github.com/hailongeric/kdlock/blob/cd6f1061ea1b3686dd6d43a7a180ab1942ea4e57/docs/PROJECT_GUIDE.md#basic-working-version)
 retains the exact Linux 6.1 command sequence, Python environment and recovery
 assumptions. It is historical functional evidence, not a runnable Linux 7.0
-quick-start. The new platform needs KD and runner adaptation, dependency checks
-and a verified recovery boundary before live work.
+quick-start. The new platform uses the separately captured workflow, live
+functional evidence and recovery boundary above.
 
 That workflow produced no performance score. It retained the strict 67-thread
 timing gate, exact drain and returned-JIT requirements; neither the OS migration
@@ -113,6 +195,7 @@ protocols or workloads:
 | `bench/results/<machine>/` | Compact reports under `bench/` and `tests/`; ignored raw records under `raw/` |
 | `docs/design/`, `docs/operations/`, `docs/history/` | Current contracts, VM procedures and historical decisions |
 | `kernel_baseline/` | Legacy identity verifier, captured provenance and ABI test fixtures for the retained recovery version |
+| `kernel_integration/linux70/` | Current kernel prerequisites, optional mmap preparation and schema-2 identity capture/verification |
 | `tools/vm/` | Idle-only source synchronization |
 
 Do not merge comparator implementations, measured machine identities or frozen
@@ -140,12 +223,13 @@ verification commands are maintained in [VM operations](operations/VM.md).
 
 ## Kernel identity
 
-The active development kernel is `7.0.0-38-generic`, package `7.0.0-38.38`, with
-Build ID `338e542e384c46228f7a378babc0f9bb2b6a5997`. Matching headers are installed
-at `/usr/src/linux-headers-7.0.0-38-generic`. Use
-[VM identity checks](operations/VM.md#kernel-identity) and the migration receipt;
-headers and OS boot do not establish KD compatibility or a complete kernel source
-configuration. The old `kdclobber2` identity belongs to the
+The custom development image is `7.0.0-38-kdlock1`, Build ID
+`b61c7bef25d2068f2a05ca3c31a5714c20c4aa62`, built from Ubuntu source package
+`7.0.0-38.38` with Linux version code `458766`. Use the
+[VM identity checks](operations/VM.md#kernel-identity) and schema-2 bundle to
+bind built, installed and running states. The stock `7.0.0-38-generic` image and
+its headers remain recovery inputs; their identity cannot qualify the custom
+provider. The old `kdclobber2` identity belongs to the
 [legacy retirement record](history/kernel-retirement-20261027.md).
 
 ## Native qspinlocks in the VM
@@ -155,6 +239,7 @@ selector reports `full (lazy)`, not the legacy voluntary setting. Record current
 configuration and runtime policy through [VM operations](operations/VM.md#boot-policy)
 before new measurements; historical results do not establish equivalence.
 
-KD adaptation and directly affected checks remain future work. Save new evidence
-with its physical host, OS, kernel and source identities, and establish recovery
-before live module/JIT work. No further adaptation targets Linux 6.1.
+Kernel/source adaptation, basic functional passes and broader support are
+separate scopes. Save new evidence with its physical host, OS, kernel and source
+identities, and verify recovery before live module/JIT work. No Linux 6.1 result
+is relabelled as a Linux 7 pass.

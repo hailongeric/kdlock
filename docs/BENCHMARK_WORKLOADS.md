@@ -5,7 +5,11 @@ These definitions remain reference workloads after
 Linux 7.0 is the active adaptation platform. KD and runner compatibility still
 require validation before matched measurements; the retained results keep
 their original kernel identities. See the
-[migration record](history/vm-ubuntu2604-migration-20261027.md) for OS readiness.
+[migration record](history/vm-ubuntu2604-migration-20261027.md) for OS readiness and
+the [Linux 7 port record](../bench/results/10.176.26.71/tests/linux70-port-20261027/README.md)
+for source and validation status. Active API adapters target the authenticated
+Ubuntu source package `linux=7.0.0-38.38`, with development release
+`7.0.0-38-kdlock1`. Build and live validation remain separate gates.
 
 This catalog defines the synthetic and system-call/application programming
 interface (syscall/API) workloads selected for
@@ -52,7 +56,14 @@ policy. Frequency telemetry and exact data/drain validation are separate
 from timing qualification. [Per-workload tables and ratios](../bench/results/10.176.26.71/bench/catalog-fixedfreq-20261027/COMPARISON.md)
 retain all workload, call-shell, source and kernel distinctions. No rates are pooled.
 
-Xattr preparation failed at 139/168 KD coordinates, versus 47/168 in the historical catalog. These attempts retained exact drain and have no throughput. The fixed eight-worker helper cohort and returned-body prerequisite are unchanged; the reason for the increased failure incidence is not established. [Preparation evidence and limits](../bench/results/10.176.26.71/bench/catalog-fixedfreq-20261027/XATTR_PREPARATION.md).
+In that Linux 6.1 catalog, xattr preparation failed at 139/168 KD coordinates,
+versus 47/168 in the earlier catalog. These attempts retained exact drain and
+have no throughput. That campaign retained its fixed eight-worker helper cohort
+and returned-body prerequisite; the reason for the increased failure incidence
+is not established. [Preparation evidence and limits](../bench/results/10.176.26.71/bench/catalog-fixedfreq-20261027/XATTR_PREPARATION.md).
+The new Linux 7 xattr workload uses an rb-tree and local shared readers, so it
+has no helper-learning phase or eligible JIT body. Its new revision and future
+measurements must remain separate from those list/spin results.
 
 The explicitly requested [single-round October 26 screen](../bench/results/10.176.26.71/bench/catalog-single-20261026/README.md)
 attempted the 51 then-selected lock/API configurations on that grid.
@@ -134,8 +145,9 @@ See the [per-workload analysis](../bench/results/10.176.26.71/bench/catalog-sing
 for the selection and the distinction between delegated mutex wins and local
 rwsem reader-path wins.
 
-The 2026-10-18 source review, against `af330db`, confirms that the implemented
-workloads below **already call KD APIs**. Delegation means another executor
+The 2026-10-18 source review, against `af330db`, confirmed that the then-implemented
+workloads already called KD APIs. The table below describes the maintained
+calls, including the new Linux 7 local-reader xattr port. Delegation means another executor
 runs the protected body on behalf of the waiting caller. Current direct
 `kd_mutex_lock/unlock` calls and blocking compatibility aliases use the unified
 DIRECT ABI2 boundary. Callable mutex functions and signal/try/I/O acquisitions,
@@ -162,11 +174,11 @@ completion counter. Keep these evidence classes separate in performance reports.
 | `ofd` | Spin direct pair above | Eligible list search and conflict-result copy, limited to the bound file's fixed OFD locks without callbacks. |
 | `setfd` | Spin direct pair above | Eligible bitmap update. The caller's `current->files` lookup happens before acquisition; descriptor creation/removal and table resizing are excluded while bound. |
 | `pipebytes`, `pipecap` | Mutex outer pair above | Eligible ring-length sum or capacity read. `pipebytes` copies to the user pointer after unlock; `pipecap` returns the value after unlock. Pipe mutation and resizing are excluded while bound. |
-| `seek` | Mutex outer pair above | Eligible offset checks and `f_pos`/`f_version` stores. File-reference acquisition/release stays outside the protected body. |
+| `seek` | Mutex outer pair above | Eligible offset checks and `f_pos` updates. Linux 7 removed `f_version`; current adapters do not emulate that retired store. File-reference acquisition/release stays outside the protected body. |
 | `utsname` | Rwlock writer pair and local read pair above | Only the fixed-size name update may delegate. User copies, permission checks, entropy mixing and notification execute on the original caller outside the lock. The current KD adapter uses a spinning rwlock, not KD rwsem. |
 | `argbounds` | Spin direct pair above | Eligible four-word copy under exclusive spin ownership. Optional mutations execute locally through the same KD physical lock. This is an extracted record, not a live process's memory map. |
 | `taskname` | `KD_SPIN_DIRECT_LOCK` / `KD_SPIN_DIRECT_UNLOCK` | Generated code calls the original `strscpy_pad(..., 64)` and models all 64 destination writes. Read-only correctness, returned-body checks and the `05876a4` standard-grid comparison are complete. The preceding version's separate 20% mutation control passed correctness with zero KD generated bodies; mutation-case delegation remains unestablished. |
-| `xattr` | Spin direct pair above | Original list traversal, `strcmp` calls and the real `memcpy` value copy remain present. Generated code calls `strcmp` directly using the reviewed caller contract below. All eight query/list-size correctness controls passed with matching entries and completions; the `05876a4` tail-query standard-grid comparison is complete. |
+| Linux 7 `xattr` (`xattr-rbtree-read-v1`) | `kd_read_lock` / `kd_read_unlock` | Shared readers execute locally across the original rb-tree search, `strcmp` comparisons and value copy. Zero operations are JIT-eligible; any generated-body entry or published image is rejected. Historical Linux 6.1 list/spin delegation results remain below. |
 
 The corresponding source is in the [spin shell](../workload_modules/spin_cacheline/direct.h),
 [mutex shell](../workload_modules/mutex_cacheline/module.c),
@@ -510,7 +522,7 @@ reuses the field name `entries` for several different workload parameters:
 | `pipecap` | Requested pipe capacity in 4 KiB pages | `n16`: request 64 KiB capacity | Capacity returned; the protected query remains a field read |
 | `seek` | File length in 4 KiB pages | `n16`: 64 KiB file | File length and the reference point for `SEEK_END`; no file-data traversal |
 | `utsname` | Percentage of operations that update a name | `n20`: 20% setters, 80% `uname()` | Read/write mix and frequency of exclusive acquisitions |
-| `xattr` | Number of attributes attached to one file | `n16` / `n128`: 16 / 128 attributes | Name-search list length; `vN` separately controls value bytes |
+| `xattr` | Number of attributes attached to one file | `n16` / `n128`: 16 / 128 attributes | Linux 7 rb-tree size and search work; `vN` separately controls value bytes. Query-key names do not fix tree depth. |
 
 The page-based cases use the client's fixed 4,096-byte setup units on the target
 x86-64 kernel. Pipe capacity may be rounded by the kernel; the client records
@@ -541,15 +553,19 @@ names. Their critical sections range from a single field read to a linked-list
 search or a structure copy. The protected object is shared by the workers in
 each case.
 
-OFD queries, descriptor flags and xattrs use exclusive spinlocks. Pipe queries
-and file positioning use exclusive mutexes. Consequently, even the read-only
-OFD and pipe queries serialize on their target locks. UTS uses shared read
+OFD queries and descriptor flags use exclusive spinlocks. Linux 7 xattr queries
+use shared reader/writer spinlock acquisitions. Pipe queries and file positioning
+use exclusive mutexes. Consequently, even the read-only OFD and pipe queries
+serialize on their target locks. UTS uses shared read
 acquisitions for `uname()` and exclusive write acquisitions for name updates.
 The descriptions below identify the actual reads, writes and traversal performed
 between acquisition and release.
 
-The kernel paths below describe selected helpers in the captured Linux 6.1.159
-source. Matched Native/TCLock/KD runs substitute the indicated function only for
+Active adapter bodies target Ubuntu `linux=7.0.0-38.38`; the full arrow chains
+in the table are retained Linux 6.1 call-path references. The unchanged hook
+names alone do not establish an identical call chain or body on Linux 7.
+The runner preserves exact selected implementations and headers from the
+separately bound source tree. Matched Native/TCLock/KD runs substitute the indicated function only for
 the bound benchmark object and reproduce its relevant body in an adapter.
 Stock runs retain the original body. Pipe and seek mutex cases support Stock,
 Native, TCLock and KD controls. Native retains the kernel-owned mutex;
@@ -594,6 +610,11 @@ exclusive spinlock `file_lock_context.flc_lock` while it:
    the proposed lock, skipping the same owner and nonconflicting ranges.
 3. Copies the first conflict's owner, range, type and related fields into the
    caller's request, or sets its type to `F_UNLCK` if no conflict exists.
+
+The Linux 7 adapter uses the embedded `file_lock.c`/`file_lock_core` fields
+(`flc_list`, `flc_owner`, `flc_pid`, `flc_flags`, `flc_type`) and retains the
+source's type/owner/range decisions, including the `F_UNLCK` request branch.
+It rejects unsupported lock callbacks and keeps the existing fixed-OFD scope.
 
 The shared list is only read; writes go to the query's result structure.
 `F_OFD_GETLK` does not acquire or install the proposed lock. The spinlock protects
@@ -698,18 +719,20 @@ TCLock and KD take their private adapter mutexes. Each protects the same steps:
 1. Read the filesystem's maximum file size (`s_maxbytes`). For `SEEK_END`, also
    read the inode size with `i_size_read()` and add the requested displacement.
 2. Reject a resulting offset below zero or above the maximum.
-3. Compare the result with `file->f_pos`; if different, store the new position
-   and set `file->f_version` to zero.
+3. Compare the result with `file->f_pos`; if different, store the new position.
+   Linux 7 has no `file->f_version` field; the old zeroing store belongs only
+   to the preserved Linux 6.1 implementation and measurements.
 
 The body performs a few metadata reads, checks and conditional shared stores.
 N changes the file length and end-relative base. Neither variant traverses,
 reads or writes file contents.
 
-In the original kernel path, `ksys_lseek()` uses `fdget_pos()`/`fdput_pos()` around
-the llseek call, taking the position mutex for the shared description.
+In the Linux 7 kernel path, `ksys_lseek()` uses `CLASS(fd_pos, f)` around
+the llseek call, taking and releasing the position mutex for the shared description.
 `shmem_file_llseek()` supplies `MAX_LFS_FILESIZE` and reads the inode size for
 both supported modes; this tmpfs superblock sets `s_maxbytes` to that same limit.
-The adapter uses `fdget()`/`fdput()` and performs the checks and stores above
+The adapter uses `fdget()`/`fdput()`, the current `fd_empty()`/`fd_file()` accessors,
+and performs the checks and stores above
 under the selected lock, reading inode size only for `SEEK_END`.
 
 ### UTS names: `utsname`
@@ -746,11 +769,41 @@ the fixed-size exclusive copy interrupts shared readers.
 
 ### Extended attributes: `xattr`
 
-This API retrieves a named metadata value attached to a file. For these tmpfs
-objects, attribute records are stored in a linked list.
+This API retrieves a named metadata value attached to a file. The active Linux 7
+tmpfs implementation stores these records in an rb-tree.
 
 Setup attaches N `trusted.kdlock.*` attributes to an anonymous tmpfs file using
 `fsetxattr(..., XATTR_CREATE)`. Each value contains `value_size` bytes.
+
+#### Linux 7 rb-tree/shared-reader workload
+
+Revision `xattr-rbtree-read-v1` preserves `simple_xattr_get()`'s `rb_find()`
+lookup, `strcmp(node->name, key)` ordering, size result, `-ENODATA`/`-ERANGE`
+behavior and real `memcpy()` value copy. Each matched Native, KD or TCLock arm
+uses its own correctly typed private rwlock and holds shared read ownership
+through search and copy. The original embedded Linux lock is not reinterpreted.
+The bound private tmpfs file and its attributes remain fixed until all workers
+join and the hook is removed; independent consumers and metadata writes are
+outside this experiment.
+
+`front` selects key N−1 and `tail` selects key 0, retaining the client labels.
+These names no longer promise a head/tail location, exact comparison count or
+tree depth. `miss` selects an absent key; `size` queries key 0 without a value
+buffer. N changes tree size; `vN` changes value-copy work. No old N-comparison
+or 128-call boundary interpretation applies to this workload.
+
+All KD reads execute locally with `entry_abi=0`, `caller_shell=local_reader`,
+zero JIT-eligible operations and expected `NO_JIT`. The runner still checks
+entry/completion counters and refuses any JIT activity or publication. It
+defaults `--helper-waves` to zero and rejects positive helper waves or
+`--require-jit` for xattr. Shared-reader quiescence is required before unload.
+The port's build/live status is recorded separately; old delegated-body results
+are not passes for this new workload.
+
+#### Historical Linux 6.1 list/spin workload
+
+The remaining xattr description and numeric evidence in this subsection refer
+to the retired list/spin implementation and its original source identities.
 
 **Critical section.** `simple_xattr_get()` takes the exclusive spinlock
 `simple_xattrs.lock` while it:

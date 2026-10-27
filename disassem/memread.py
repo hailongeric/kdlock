@@ -1,7 +1,10 @@
 # Read bounded ELF PT_LOAD windows from kcore through the active device lease.
 # Pin source residency before reading; extend cold CFG windows without silently
 # treating missing bytes as a completed critical section. No execution occurs.
+import errno
+
 import device_session
+import diagnostics
 from elftools.elf.elffile import ELFFile
 
 PAGE_SIZE = 0x1000
@@ -37,24 +40,44 @@ def read_kernel_addr_data(addr, size):
 
 def extend_regions(regions, targets):
     """Merge overlapping windows before decoding, including backward CFG edges."""
-    windows = [(start, start + len(data), set(roots)) for data, start, roots in regions]
+    # Existing bytes remain mandatory. A new root needs the full maximum x86
+    # instruction length; the rest of its two-page window is only lookahead.
+    windows = [(start, start + len(data), set(roots), start + len(data))
+               for data, start, roots in regions]
     for target in targets:
         start = target & ~(PAGE_SIZE - 1)
         if not 0xFFFFFFFF80000000 < start < 0xFFFFFFFFFFFFFFFF - WINDOW_SIZE:
             raise RuntimeError(f"JMP/CALL target {target:#x} is outside kernel space")
-        windows.append((start, start + WINDOW_SIZE, {target}))
+        windows.append((start, start + WINDOW_SIZE, {target}, target + 15))
     merged = []
-    for start, end, roots in sorted(windows, key=lambda window: window[0]):
+    for start, end, roots, required_end in sorted(windows, key=lambda window: window[0]):
         if merged and start <= merged[-1][1]:
             merged[-1][1] = max(end, merged[-1][1])
             merged[-1][2].update(roots)
+            merged[-1][3] = max(required_end, merged[-1][3])
         else:
-            merged.append([start, end, set(roots)])
-    if sum(end - start for start, end, _ in merged) > MAX_TEXT_BYTES:
+            merged.append([start, end, set(roots), required_end])
+    if sum(end - start for start, end, _, _ in merged) > MAX_TEXT_BYTES:
         raise TextReadLimit(f"reachable text exceeds {MAX_TEXT_BYTES} bytes")
     result = []
-    for start, end, roots in merged:
-        chunk = read_kernel_addr_data(start, end - start)
+    for start, end, roots, required_end in merged:
+        try:
+            chunk = read_kernel_addr_data(start, end - start)
+        except device_session.SourceRefused as error:
+            required_end = (required_end + PAGE_SIZE - 1) & ~(PAGE_SIZE - 1)
+            if error.errno not in {errno.EPERM, errno.ESTALE} or required_end >= end:
+                raise
+            # Linux 7 can place a small module's text in a single allocation
+            # page. Never read its adjacent hole or loosen the provider lease.
+            # Retry only the mandatory prefix through the same pin-before-read
+            # boundary; reachable edges beyond it still need CFG expansion.
+            diagnostics.warn(
+                "TEXT_WINDOW_TRIM", "retry_leased_prefix", str(error),
+                address=hex(start), requested_bytes=end - start,
+                required_bytes=required_end - start, errno=error.errno,
+            )
+            end = required_end
+            chunk = read_kernel_addr_data(start, end - start)
         if chunk is None or len(chunk) != end - start:
             raise RuntimeError(f"incomplete kernel text read at {start:#x}")
         result.append([chunk, start, sorted(roots)])

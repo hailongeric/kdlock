@@ -267,7 +267,7 @@ def sources():
     for directory in ('include', 'kernel_module', 'daemon', 'disassem', 'tclock_backend',
                       'workload_modules/rwlock_bench', 'workload_modules/spin_cacheline',
                       'bench/rwlock_compare', 'bench/spin_cacheline', 'bench/tclock_compare', 'bench/nano',
-                      'tests/protocols', 'kernel_baseline'):
+                      'tests/protocols', 'kernel_baseline', 'kernel_integration/linux70'):
         for path in (ROOT / directory).rglob('*'):
             relative = path.relative_to(ROOT)
             if (path.is_file() and not any(part.startswith('.') or part in ('__pycache__', 'results')
@@ -406,8 +406,8 @@ def main(argv=None):
     try:
         identity = kernel_identity.capture(args, out, command)
         require(command(['findmnt', '-T', ROOT, '-n', '-o', 'FSTYPE'], out / 'mount.txt').strip() == 'ext4', 'ext4 required')
-        require('nokaslr' in Path('/proc/cmdline').read_text().split() and
-                '(voluntary)' in Path('/sys/kernel/debug/sched/preempt').read_text(), 'runtime policy differs')
+        require(identity.get('schema') == 2 and identity.get('runtime_policy_verified') is True,
+                'exact Linux 7 kernel and runtime policy verification required')
         policy = boot_policy.capture(args.kernel_source, out, command)
         packages = {p: importlib.metadata.version(p) for p in ('miasm', 'future', 'pyparsing', 'pyelftools')}
         require(packages == dict(miasm='0.1.5', future='1.0.0', pyparsing='2.4.7', pyelftools='0.27'), 'dependencies differ')

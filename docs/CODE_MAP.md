@@ -61,12 +61,13 @@ reuses the selected physical mutex and delegation queue.
 | Entry | Responsibility |
 | --- | --- |
 | [adapter.c](../kernel_integration/mmap_lock/overlay/kernel/locking/kd_mmap/adapter.c), [kd_mmap_lock.h](../kernel_integration/mmap_lock/overlay/include/linux/kd_mmap_lock.h) | Linux mmap read/write, trylock, killable, nested-write and downgrade wrappers; immutable Native/KD choice per mm; concurrent readers and writer bodies stay on the original task |
-| [prepare.py](../kernel_integration/mmap_lock/prepare.py), [pool.c](../kernel_integration/mmap_lock/overlay/kernel/locking/kd_mmap/pool.c) | Namespaced reuse of the shared local lock primitives and preallocated CPU/slot records; the built-in adapter omits delegation |
-| [guest-kernel.patch](../kernel_integration/mmap_lock/guest-kernel.patch) | Lock field/routing, initialization/destruction and minimal API/lifetime wrappers, including the exact token/mm-reference transfer for asynchronous read release |
+| [prepare_mmap.py](../kernel_integration/linux70/prepare_mmap.py), [pool.c](../kernel_integration/mmap_lock/overlay/kernel/locking/kd_mmap/pool.c) | Linux 7 hash-bound preparation, reusing the shared namespaced source generator and preallocated CPU/slot records; the built-in adapter omits delegation |
+| [mmap-lock.patch](../kernel_integration/linux70/mmap-lock.patch) | Linux 7 lock field/routing, writer seqcount and per-VMA ordering, initialization/destruction and exact token/mm-reference transfer for asynchronous read release |
+| [kernel.patch](../kernel_integration/linux70/kernel.patch), [verify.py](../kernel_integration/linux70/verify.py) | Direct-provider kernel exports and exact source/build/installed/running identity |
 
 Native MM algorithms remain unchanged. Operation-specific body delegation and
 prepared teardown are retired historical evidence. The
-[integration guide](../kernel_integration/mmap_lock/README.md) records supported
+[Linux 7 integration guide](../kernel_integration/linux70/MMAP.md) records supported
 interfaces, focused validation and unvalidated Native/RT/lockdep equivalence.
 
 ## Translation and reference backends

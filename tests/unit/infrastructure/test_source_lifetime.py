@@ -55,6 +55,18 @@ def main():
             "(address >= kd_init_start && address < kd_init_end)",
             "false",
         ),
+        "module-init-residency": (
+            "mod_mem_type_is_init(type) ||",
+            "false ||",
+        ),
+        "module-data-executable": (
+            "(text && type != MOD_TEXT)",
+            "false",
+        ),
+        "module-region-gap": (
+            "*end = base + size;",
+            "*end = base + size + 0x10000;",
+        ),
         "busy-writer-ignored": (
             "if (kd_source_frame_count() || kd_sources.writers)",
             "if (kd_source_frame_count())",

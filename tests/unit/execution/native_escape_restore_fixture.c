@@ -14,7 +14,7 @@ unsigned long caller_stack, caller_flags;
 static unsigned char target_stack[4096] __attribute__((aligned(16)));
 extern void run_restore(void), escaped_landing(void);
 
-#ifdef CONFIG_RETHUNK
+#if defined(CONFIG_MITIGATION_RETHUNK) || defined(CONFIG_RETHUNK)
 /* A flags-neutral stand-in exercises the provider's configured jump path.
  * The live kernel probe separately executes the real selected return thunk. */
 asm(".text\n.globl __x86_return_thunk\n__x86_return_thunk:\nretq\nint3\n");
@@ -74,7 +74,7 @@ int main(void)
 		       (caller_flags & ~KD_REG_ARITHMETIC_FLAGS));
 	}
 	printf("native marker restore: 64 arithmetic-flag combinations, all GPRs, exact SP and waiter control flags passed; return=%s\n",
-#ifdef CONFIG_RETHUNK
+#if defined(CONFIG_MITIGATION_RETHUNK) || defined(CONFIG_RETHUNK)
 	       "configured-thunk-stand-in"
 #else
 	       "direct"

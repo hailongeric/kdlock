@@ -20,7 +20,7 @@ import time
 
 
 ROOT = Path(__file__).resolve().parents[1]
-RELEASE = "6.1.159-kdclobber2"
+RELEASE = "7.0.0-38-kdlock1"
 
 
 def require(condition, message):

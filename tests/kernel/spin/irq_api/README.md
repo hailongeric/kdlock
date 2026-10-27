@@ -19,8 +19,8 @@ current 64-vCPU destination. They rotate irqsave/irq/BH/plain-native on one KD l
 and join before init returns. Plain-native uses byte 5 without adaptive registration.
 
 ```sh
-make -C kernel_module KDIR=/root/linux-6.1.159-kdclobber2 UBSAN_SANITIZE=n
-make -C tests/kernel/spin/irq_api KDIR=/root/linux-6.1.159-kdclobber2
+make -C kernel_module KDIR=/mnt/kdlock-builds/linux-7.0.0-38-kdlock1/build UBSAN_SANITIZE=n
+make -C tests/kernel/spin/irq_api KDIR=/mnt/kdlock-builds/linux-7.0.0-38-kdlock1/build
 timeout 60s insmod kernel_module/kdlock_km.ko
 timeout 60s insmod tests/kernel/spin/irq_api/kd_spin_irq_api_test.ko
 # Verify this run's PASS, exact count, context restoration and absence of errors.

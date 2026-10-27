@@ -40,7 +40,7 @@ static struct kd_jit_image ordinary_image;
 
 static unsigned int unpins;
 static bool expected_unpin;
-#ifdef CONFIG_RETHUNK
+#if defined(CONFIG_MITIGATION_RETHUNK) || defined(CONFIG_RETHUNK)
 /* The live probe separately exercises the kernel's actual configured thunk. */
 asm(".text\n.globl __x86_return_thunk\n__x86_return_thunk:\nretq\nint3\n");
 #endif

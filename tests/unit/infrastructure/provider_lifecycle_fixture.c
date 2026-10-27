@@ -3,6 +3,8 @@
  */
 #include <stdio.h>
 #include <stdlib.h>
+#include <errno.h>
+#include <stdbool.h>
 
 #define CHECK(c) do { if (!(c)) { \
  fprintf(stderr, "FAIL line %d: %s (active=%x)\n", __LINE__, #c, active); \
@@ -15,9 +17,21 @@ enum { SOURCE=1, HOT=2, EXE=4, CONTEXT=8, ENTRIES=16,
        SPIN=32, MUTEX=64, DEVICE=128, SERVICES=127 };
 static unsigned int active;
 static int fail_at, attempts;
+static bool call_depth;
+static unsigned int comm_initializations, policy_errors;
+#define X86_FEATURE_CALL_DEPTH 371
+static bool boot_cpu_has(unsigned int capability)
+{
+ CHECK(capability == X86_FEATURE_CALL_DEPTH);
+ return call_depth;
+}
+#define pr_err(...) do { policy_errors++; } while (0)
 static int kd_spin_target;
 static const char *target_process="test";
-static void kd_comm_init(int *key, const char *name) { (void)key; (void)name; }
+static void kd_comm_init(int *key, const char *name)
+{
+ (void)key; (void)name; comm_initializations++;
+}
 static int acquire(unsigned int bit)
 {
  CHECK(!(active & bit));
@@ -69,6 +83,10 @@ static int kd_mutex_task_selftest(void) { return selftest(); }
 int main(void)
 {
  int stages;
+ call_depth=true;
+ CHECK(kdlock_km_init() == -EOPNOTSUPP);
+ CHECK(!active && !attempts && !comm_initializations && policy_errors == 1);
+ call_depth=false;
  CHECK(kdlock_km_init() == 0);
  CHECK(active == (SERVICES | DEVICE));
  stages=attempts;
@@ -80,6 +98,6 @@ int main(void)
   CHECK(kdlock_km_init() == -42);
   CHECK(attempts == failure && active == 0);
  }
- printf("PASS control publication after KD runtime initialization; %d failure paths unwind; unpublish before teardown\n", stages);
+ printf("PASS call-depth policy rejected before initialization; control publication after KD runtime initialization; %d failure paths unwind; unpublish before teardown\n", stages);
  return 0;
 }

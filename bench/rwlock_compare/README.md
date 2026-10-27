@@ -254,13 +254,19 @@ Inspect a plan without compiling or loading anything:
 python3 bench/rwlock_compare/run.py --dry-run --collector-cpu 63
 ```
 
-After verifying the actual monitor snapshot and guest identity:
+Current runs use the `7.0.0-38-kdlock1` build directory and schema-2 bundle
+selected by the shared defaults. The [port record](../results/10.176.26.71/tests/linux70-port-20261027/README.md)
+separates compilation, emitted-assembly checks and live correctness; historical
+comparison results do not establish Linux 7 support. After verifying the actual
+monitor snapshot and guest identity:
 
 ```sh
-export PATH=/root/kdlock-translation-venv-20261019/bin:$PATH
+export PATH=/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin:$PATH
 export LC_ALL=C
 export KDLOCK_RECOVERY_CONFIRMED=1
 export KDLOCK_SNAPSHOT_TAG=YOUR_CONFIRMED_SNAPSHOT
+python3 disassem/miasm_python314.py
+python3 bench/spin_cacheline/kernel_identity.py
 
 # Small correctness/drain check; one round, no performance scores.
 timeout 900s python3 bench/rwlock_compare/run.py \

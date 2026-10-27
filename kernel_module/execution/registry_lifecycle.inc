@@ -184,7 +184,8 @@ int kd_exe_init(void)
 	 * image generations at 64. A missing pool disables only this capability.
 	 * Call-depth instrumentation requires a different generated prologue. */
 	kd_near_block_free = 0;
-#if defined(CONFIG_X86_64) && !defined(CONFIG_CALL_DEPTH_TRACKING)
+#if defined(CONFIG_X86_64) && !defined(CONFIG_MITIGATION_CALL_DEPTH_TRACKING) && \
+	!defined(CONFIG_CALL_DEPTH_TRACKING)
 	{
 		void *(*allocate_near)(unsigned long) =
 			(void *)kallsyms_lookup_name("module_alloc");

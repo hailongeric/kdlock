@@ -12,6 +12,9 @@ import sys
 import time
 
 ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT / 'bench/spin_cacheline'))
+import kernel_identity
+
 PROFILES = {
     'mutex-throughput': ('mutex', 100, 1),
     'mutex-locality': ('mutex', 100, 16),
@@ -29,6 +32,7 @@ THREADS = [*range(1, 9), *range(12, 61, 4)]
 
 def parser():
     p = argparse.ArgumentParser(description=__doc__)
+    kernel_identity.arguments(p)
     p.add_argument('--output', type=Path, required=True)
     p.add_argument('--profiles', nargs='+', choices=PROFILES,
                    default=list(PROFILES))
@@ -77,8 +81,8 @@ def commands(args):
             '--post-work-rounds', str(args.post_work_rounds), '--delegate', args.delegate,
             '--mutex-batch-limit', str(cap), '--mutex-numa-boundary', str(boundary),
             *(['--functional'] if args.functional else []),
-            '--kernel-source', '/root/linux-6.1.159-kdclobber2',
-            '--kernel-baseline', '/root/kdlock-kernel-baselines/mutex-clobber2-20260919',
+            '--kernel-source', str(args.kernel_source),
+            '--kernel-baseline', str(args.kernel_baseline),
             '--output', str(args.output.resolve()/name)]
 
 
@@ -89,10 +93,13 @@ def main():
         print(json.dumps(plan, indent=2))
         return 0
     if (ROOT != Path('/root/host_fs/kdlock') or os.geteuid() != 0 or
-            os.uname().release != '6.1.159-kdclobber2' or
+            os.uname().release != '7.0.0-38-kdlock1' or
             os.environ.get('KDLOCK_RECOVERY_CONFIRMED') != '1' or
-            os.environ.get('KDLOCK_SNAPSHOT_TAG') != 'before-mutex-kdonly-20261017T140354Z'):
+            not os.environ.get('KDLOCK_SNAPSHOT_TAG')):
         raise RuntimeError('confirmed recovery VM required; verify the actual snapshot first')
+    identity = kernel_identity.check(args.kernel_source, args.kernel_baseline)
+    if identity.get('schema') != 2 or identity.get('runtime_policy_verified') is not True:
+        raise RuntimeError('verified Linux 7 build and runtime policy required')
     out = args.output.resolve()
     if out.is_relative_to(ROOT):
         raise ValueError('retain new evidence outside the checkout')

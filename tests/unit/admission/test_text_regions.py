@@ -435,9 +435,10 @@ class DeviceSessionTests(unittest.TestCase):
                     patch(
                         "builtins.open", side_effect=AssertionError("unresident read")
                     ),
-                    self.assertRaises(device_session.SourceRefused),
+                    self.assertRaises(device_session.SourceRefused) as refused,
                 ):
                     memread.read_kernel_addr_data(BASE, 4)
+                self.assertEqual(refused.exception.errno, error)
             for error in (errno.ENOTTY, errno.ESHUTDOWN, errno.EBADF):
                 self.pin_error = error
                 with self.subTest(error=error), self.assertRaises(OSError):
@@ -693,11 +694,102 @@ class TextRegionTests(unittest.TestCase):
         self.assertEqual(self.reads, [])
 
     def test_short_reads_are_errors_not_executable_placeholders(self):
-        with (
-            patch.object(memread, "read_kernel_addr_data", return_value=b"\xc3"),
-            self.assertRaisesRegex(RuntimeError, "incomplete kernel text read"),
-        ):
-            memread.extend_regions([], {self.entry})
+        for responses in ([b'\xc3'], [device_session.SourceRefused(
+                'outside resident module text', errno=errno.ESTALE), b'\xc3']):
+            with (self.subTest(trimmed=len(responses) == 2),
+                  patch.object(memread, 'read_kernel_addr_data', side_effect=responses),
+                  self.assertRaisesRegex(RuntimeError, 'incomplete kernel text read')):
+                memread.extend_regions([], {self.entry})
+
+    def bounded_reader(self, end, error=errno.ESTALE):
+        """Model a provider rejecting a window before any unavailable read."""
+        def read(address, size):
+            if address + size > end:
+                self.reads.append((address, size))
+                raise device_session.SourceRefused('outside resident module text', errno=error)
+            return self.read_memory(address, size)
+        return read
+
+    def test_single_page_module_keeps_its_complete_body(self):
+        entry = BASE + 0xE3
+        self.put(entry, bytes.fromhex('b82a000000c3'))
+        for error in (errno.ESTALE, errno.EPERM):
+            with self.subTest(error=error):
+                self.reads.clear()
+                warnings = io.StringIO()
+                reader = self.bounded_reader(BASE + 0x1000, error)
+                translator.diagnostics.begin(0, entry)
+                translator.diagnostics.set_instruction(entry, '<CFG text coverage>')
+                with (patch.object(memread, 'read_kernel_addr_data', side_effect=reader),
+                      contextlib.redirect_stderr(warnings)):
+                    regions = memread.extend_regions([], {entry})
+                self.assertEqual(regions[0][1:], [BASE, [entry]])
+                self.assertEqual(len(regions[0][0]), 0x1000)
+                self.assertEqual(self.reads, [(BASE, 0x2000), (BASE, 0x1000)])
+                self.assertIn('reason=TEXT_WINDOW_TRIM', warnings.getvalue())
+                self.assertIn('outside resident module text', warnings.getvalue())
+                assembly, log, status = render('', entry=entry, regions=regions,
+                    memory_reader=reader, return_status=True)
+                self.assertEqual(status, 0, log)
+                self.assertIn(b'0x2a', assembly.lower())
+
+    def test_trim_preserves_old_bytes_and_every_new_root(self):
+        old, target = BASE + 0xE3, BASE + 0x1125
+        initial = [[bytes(self.text[:0x1000]), BASE, [old]]]
+        with patch.object(memread, 'read_kernel_addr_data',
+                          side_effect=self.bounded_reader(BASE + 0x2000)):
+            regions = memread.extend_regions(initial, {target})
+        self.assertEqual(regions[0][1:], [BASE, [old, target]])
+        self.assertEqual(regions[0][0], bytes(self.text[:0x2000]))
+        self.assertEqual(self.reads, [(BASE, 0x3000), (BASE, 0x2000)])
+
+    def test_old_bytes_cannot_be_trimmed_when_their_lease_is_refused(self):
+        initial = [[bytes(self.text[:0x2000]), BASE, [BASE + 0xE3]]]
+        with (patch.object(memread, 'read_kernel_addr_data',
+                           side_effect=self.bounded_reader(BASE + 0x1000)),
+              self.assertRaises(device_session.SourceRefused)):
+            memread.extend_regions(initial, {BASE + 0x100})
+        self.assertEqual(self.reads, [(BASE, 0x2000)])
+
+    def test_required_split_instruction_is_never_trimmed(self):
+        entry = BASE + 0xFFF
+        self.put(entry, bytes.fromhex('b82a000000c3'))
+        reader = self.bounded_reader(BASE + 0x1000)
+        with (patch.object(memread, 'read_kernel_addr_data', side_effect=reader),
+              self.assertRaises(device_session.SourceRefused)):
+            memread.extend_regions([], {entry})
+        self.assertEqual(self.reads, [(BASE, 0x2000)])
+        # A truncated block discovered inside an earlier read still fails the
+        # existing decoder/CFG coverage gate; no partial image may be emitted.
+        assembly, log, status = render('', entry=entry,
+            regions=[[bytes(self.text[:0x1000]), BASE, [entry]]],
+            memory_reader=reader, return_status=True)
+        self.assertEqual(status, 2, log)
+        self.assertEqual(assembly, b'')
+        self.assertIn('outside resident module text', log)
+
+    def test_reached_hole_or_fallthrough_is_refused_without_partial_image(self):
+        reader = self.bounded_reader(BASE + 0x1000)
+        for fallthrough in (False, True):
+            with self.subTest(fallthrough=fallthrough):
+                entry = BASE + 0xFF0 if fallthrough else BASE + 0xE3
+                self.put(entry, b'\x90' * 16 if fallthrough else
+                         branch(entry, BASE + 0x1100))
+                with patch.object(memread, 'read_kernel_addr_data', side_effect=reader):
+                    regions = memread.extend_regions([], {entry})
+                assembly, log, status = render('', entry=entry, regions=regions,
+                    memory_reader=reader, return_status=True)
+                self.assertEqual(status, 2, log)
+                self.assertEqual(assembly, b'')
+                self.assertIn('outside resident module text', log)
+
+    def test_capacity_invalid_and_untyped_refusals_never_retry(self):
+        for error in (errno.ENOSPC, errno.EINVAL, errno.ESHUTDOWN, None):
+            with self.subTest(error=error), patch.object(memread, 'read_kernel_addr_data',
+                    side_effect=device_session.SourceRefused('refused', errno=error)) as reader:
+                with self.assertRaises(device_session.SourceRefused):
+                    memread.extend_regions([], {BASE + 0xE3})
+                reader.assert_called_once_with(BASE, 0x2000)
 
     def test_non_kernel_branch_target_is_not_read(self):
         with (

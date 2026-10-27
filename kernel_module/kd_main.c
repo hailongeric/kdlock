@@ -9,6 +9,7 @@
 #include <linux/sched.h>
 #include <linux/spinlock.h>
 #include <linux/string.h>
+#include <asm/cpufeature.h>
 #if __has_include(<linux/kd_spin_hooks.h>)
 #include <linux/kd_spin_hooks.h>
 #endif
@@ -48,6 +49,14 @@ MODULE_PARM_DESC(target_process, "task comm eligible for direct mutex delegation
 static int __init kdlock_km_init(void)
 {
 	int ret;
+
+	/* Instruction-marker resumes restore arithmetic flags before the selected
+	 * return thunk. Call-depth tracking changes those flags after POPFQ; refuse
+	 * that runtime policy before admitting callers or acquiring any service. */
+	if (boot_cpu_has(X86_FEATURE_CALL_DEPTH)) {
+		pr_err("kdlock: active call-depth tracking cannot preserve native-escape arithmetic flags\n");
+		return -EOPNOTSUPP;
+	}
 
 	kd_comm_init(&kd_spin_target, target_process);
 	ret = kd_source_init();

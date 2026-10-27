@@ -42,8 +42,10 @@ get_komb_node(void)
  * Its hidden CALLs/RSP changes require inspecting the built function before
  * loading: the continuation must have only the six explicit register saves.
  */
+/* The six explicit saves own RBP/RSP. Suppress only this trampoline's
+ * compiler-generated frame; every ordinary C function keeps kernel flags. */
 #pragma GCC push_options
-#pragma GCC optimize("O3")
+#pragma GCC optimize("O3", "omit-frame-pointer")
 __attribute__((noipa)) noinline notrace void
 komb_spin_lock_slowpath(struct qspinlock *lock)
 {

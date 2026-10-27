@@ -4,7 +4,7 @@ This module implements KD spinlocks, mutexes, rwlocks and sleeping rwsems.
 Rwsem readers and ordinary writers run locally; explicit outer writers can
 delegate through mutex ABI2 after phase reservation and reader drain. It also exposes
 `/dev/kd_dev` for translation requests and code uploads. Builds require the recorded
-`kdclobber2` spin-clobber-v1 interface. The KD-only mutex supplies its own object
+[Linux 7 spin-clobber-v1 interface](../kernel_integration/linux70/README.md). The KD-only mutex supplies its own object
 and clobber entry; it does not require or call the kernel mutex-clobber interface.
 All private lock and execution services initialize before `/dev/kd_dev` is
 published; teardown removes the device before releasing those services.
@@ -25,7 +25,7 @@ used in this guide.
 Build only in the verified recovery guest:
 
 ```sh
-make -C kernel_module KDIR=/root/linux-6.1.159-kdclobber2 W=1 UBSAN_SANITIZE=n
+make -C kernel_module KDIR=/mnt/kdlock-builds/linux-7.0.0-38-kdlock1/build W=1 UBSAN_SANITIZE=n
 ```
 
 The benchmark builds a separate copy of the provider with measurement counters
@@ -39,7 +39,7 @@ For selected internal regression checks, use a separate SELFTEST build after the
 previous session has drained:
 
 ```sh
-make -C kernel_module KDIR=/root/linux-6.1.159-kdclobber2 \
+make -C kernel_module KDIR=/mnt/kdlock-builds/linux-7.0.0-38-kdlock1/build \
   W=1 UBSAN_SANITIZE=n KDLOCK_SELFTEST=1
 ```
 

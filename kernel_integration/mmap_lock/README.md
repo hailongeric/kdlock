@@ -11,7 +11,14 @@ Linux 6.1 development and its MM kernel variants are retired. This source and
 its results remain references for adaptation to the active Ubuntu 26.04 /
 Linux 7.0 platform. OS readiness is recorded in the
 [migration record](../../docs/history/vm-ubuntu2604-migration-20261027.md); KD and
-MM compatibility remain unvalidated. The [retirement record](../../docs/history/kernel-retirement-20261027.md)
+MM compatibility remain unvalidated. The separate
+[Linux 7 adapter port](../linux70/MMAP.md) supplies its own patch, authenticated
+input manifest, preparation helper and affected-object checker; its
+`CONFIG_KDLOCK_MMAP` option defaults to disabled. This directory's
+`guest-kernel.patch`, `base-sha256.json` and `prepare.py` command-line entry point
+remain Linux 6.1 historical inputs. Only the shared source-generation function
+and local adapter overlay are reused by the new preparation helper.
+The [retirement record](../../docs/history/kernel-retirement-20261027.md)
 preserves one complete legacy recovery version. Commands requiring `kdmm1`,
 `kdmm31` or `kdclobber2` describe archived workflows and do not authorize more
 Linux 6.1 adaptation.
@@ -38,7 +45,7 @@ replacement or a claim that every Linux rwsem semantic has been established.
 | `overlay/include/linux/kd_mmap_lock*.h` and `prepare.py` | Local adapter types, declarations and namespaced reuse of the maintained lock primitives |
 | `guest-kernel.patch` | Lock field, wrapper routing, initialization/destruction, build configuration and asynchronous read-unlock lifetime transfer only |
 
-The patch touches nine files: `include/linux/{mm_types,mmap_lock}.h`,
+The historical patch touches nine files: `include/linux/{mm_types,mmap_lock}.h`,
 `include/linux/sched/mm.h`, `kernel/bpf/{mmap_unlock_work.h,task_iter.c}`,
 `kernel/fork.c`, `kernel/locking/Makefile`, `mm/Kconfig` and `mm/mmap_lock.c`.
 It does not patch `mm/mmap.c`, `mm/memory.c`, `mm/madvise.c`, `mm/rmap.c` or

@@ -182,8 +182,10 @@ ten profiles. The requested full catalog adds the separate API and MM suites;
 Source edits and static plan inspection belong on `380G10`. All builds,
 functional checks, module activity and timing run only in the recovery VM at
 `root@10.176.26.71:2222`. Follow [VM operations](../../docs/operations/VM.md),
-including idle synchronization, the pinned Python environment, the unchanged
-`6.1.159-kdclobber2` identity and actual confirmation of the recovery snapshot.
+including idle synchronization, the pinned Python environment, the
+`7.0.0-38-kdlock1` schema-2 identity and actual confirmation of a recovery snapshot
+of the new platform. The [port record](../results/10.176.26.71/tests/linux70-port-20261027/README.md)
+records current validation limits; existing nano numbers retain their Linux 6.1 scope.
 Environment variables alone do not prove snapshot availability.
 
 Static preview, without creating outputs or executing workloads:
@@ -197,10 +199,10 @@ Use a new external evidence directory for every invocation. After verifying the
 snapshot through the host monitor, set the recorded environment:
 
 ```sh
-export PATH=/root/kdlock-translation-venv-20261019/bin:$PATH
+export PATH=/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin:$PATH
 export LC_ALL=C
 export KDLOCK_RECOVERY_CONFIRMED=1
-export KDLOCK_SNAPSHOT_TAG=before-mutex-kdonly-20261017T140354Z
+: "${KDLOCK_SNAPSHOT_TAG:?Set the exact new-platform tag verified in the monitor}"
 
 # Fixed-iteration functional checks; no performance scores.
 python3 bench/nano/best_case.py --functional --threads 1 8 \
@@ -229,14 +231,17 @@ mutex-locality --post-work-rounds 4` selects the tighter-arrival body. Use
 `--post-work-rounds 64` for the former locality spacing, and record the provider
 policy explicitly when comparing with its historical 256-boundary measurements.
 
-## Profiling the mutex profiles
+## Historical mutex profiling runner
 
-[`profile.py`](profile.py) collects separate, unscored diagnostics for
-`mutex-throughput` and `mutex-locality`, preserving their post256 settings.
-It uses one round per point. Run it only in the verified recovery VM under the
-environment above, after idle synchronization and the relevant checks. Set
-`NANO_PROFILE_SOURCE_COMMIT` to the full reviewed source-host commit recorded in
-the synchronization receipt; source and binary hashes are also retained.
+[`profile.py`](profile.py) retains the Linux 6.1 diagnostic implementation for
+`mutex-throughput` and `mutex-locality`, preserving their post256 settings and
+one round per point. It still binds the retired kernel, identity bundle,
+snapshot and perf-tool location. It has **not been ported to Linux 7** and cannot
+run under the current environment above. Further Linux 6.1 runs are retired.
+The retained invocations below explain existing evidence only; a future Linux 7
+diagnostic port needs its own tooling, identity and affected validation.
+Historical records bind `NANO_PROFILE_SOURCE_COMMIT` to the full reviewed
+source-host commit and retain source and binary hashes.
 
 ```sh
 # Requested PMU/software counters for Native and KD.
@@ -279,8 +284,10 @@ separate from uninstrumented throughput and do not infer speedups from
 instrumented rates. All three modes retain `score_eligible=false`; a published
 image alone still does not establish a returned JIT body.
 
-Both launchers accept explicit mutex policy experiments. Change one limit per
-campaign and retain a matched default control; for example:
+The active `best_case.py` launcher accepts explicit mutex policy experiments.
+The historical profiler exposes the same parameter controls, but remains
+unported. Change one limit per campaign and retain a matched default control;
+the first example is current, while the second documents the retained profiler:
 
 ```sh
 # Uninstrumented comparison: total cap 4096, NUMA boundary still 768.
@@ -288,13 +295,14 @@ python3 bench/nano/best_case.py --profiles mutex-throughput mutex-locality \
   --threads 16 36 60 --mutex-batch-limit 4096 \
   --output /root/kdlock-evidence/10.176.26.71/bench/nano-cap4096-NEW
 
-# Separate diagnostic control: former boundary 256, total cap still 1024.
+# Historical Linux 6.1 diagnostic control; unavailable on Linux 7.
 python3 bench/nano/profile.py --mode batch --threads 16 36 60 \
   --mutex-numa-boundary 256 --source-commit "$NANO_PROFILE_SOURCE_COMMIT" \
   --output /root/kdlock-evidence/10.176.26.71/bench/nano-boundary256-batch-NEW
 ```
 
-Either option works with either launcher, including `stat` and `record` modes.
+The current launcher accepts either option. The retained profiler also records
+them for its historical `stat`, `record` and `batch` modes.
 Defaults are total cap 1024 and NUMA boundary 768. Each accepts `1..32767`
 independently; a smaller total cap can stop service before the NUMA boundary.
 Nondefault policies require mutex-only profiles, KD among the selected backends

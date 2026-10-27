@@ -29,7 +29,7 @@ For a standalone Native build in the recovery guest:
 
 ```sh
 make -C workload_modules/mutex_cacheline \
-  KDIR=/root/linux-6.1.159-kdclobber2 SC_BACKEND=native
+  KDIR=/mnt/kdlock-builds/linux-7.0.0-38-kdlock1/build SC_BACKEND=native
 ```
 
 The [mutex runner](../../bench/tclock_compare/run_mutex.py) builds the other

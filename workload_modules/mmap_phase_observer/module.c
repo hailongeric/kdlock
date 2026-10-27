@@ -18,8 +18,8 @@
 #include <linux/uaccess.h>
 #include "api.h"
 
-#ifndef CONFIG_KD_MMAP_LOCK
-#error "Captured kdmm1 integration kernel required"
+#ifndef CONFIG_KDLOCK_MMAP
+#error "Linux 7 CONFIG_KDLOCK_MMAP integration kernel required"
 #endif
 
 #define SLOTS 64
@@ -393,7 +393,7 @@ out:
 	return ret;
 }
 static const struct file_operations ops = {
-	.owner = THIS_MODULE, .unlocked_ioctl = phase_ioctl, .llseek = no_llseek,
+	.owner = THIS_MODULE, .unlocked_ioctl = phase_ioctl,
 };
 static struct miscdevice device = {
 	.minor = MISC_DYNAMIC_MINOR, .name = "kd_mmap_phase", .fops = &ops, .mode = 0600,
@@ -401,9 +401,16 @@ static struct miscdevice device = {
 
 static int __init observer_init(void)
 {
-	unsigned long address = kallsyms_lookup_name("kd_mmap_down_write_killable");
+	unsigned long address;
 	unsigned int i;
 	int ret;
+	/* The retained table binds the retired kdmm1 image. Compilation does
+	 * not qualify those instruction sites on Linux 7; never register them. */
+	if (IS_ENABLED(CONFIG_KDLOCK_MMAP)) {
+		pr_err("kd_mmap_phase: Linux 7 instruction-site profile is unvalidated\n");
+		return -EOPNOTSUPP;
+	}
+	address = kallsyms_lookup_name("kd_mmap_down_write_killable");
 	if (address != 0xffffffff81150880UL) return -ESTALE;
 	for (i = 0; i < ARRAY_SIZE(sites); i++)
 		if (memcmp((void *)(address + sites[i].offset), sites[i].bytes, sites[i].size))

@@ -8,6 +8,9 @@ endif
 ifeq ($(RB_KIND),UTSNAME)
 real_api-objs := uts.o
 endif
+ifeq ($(RB_KIND),XATTR)
+real_api-objs := xattr.o
+endif
 UBSAN_SANITIZE := n
 ccflags-y += -DRB_$(RB_KIND) -I$(KDLOCK_INCLUDE)
 ccflags-y += -I$(TCLOCK_INCLUDE)

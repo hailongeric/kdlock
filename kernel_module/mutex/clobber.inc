@@ -32,7 +32,7 @@ kd_mutex_resume_completed(struct kd_mutex_node *node)
 	asm volatile("movq %%rax, %%rsp\n\t"
 		     "movq %%rcx, %%rbp\n\t"
 		     "pushq %%rdx\n\t"
-#ifdef CONFIG_RETHUNK
+#if defined(CONFIG_MITIGATION_RETHUNK) || defined(CONFIG_RETHUNK)
 		     "jmp __x86_return_thunk\n\t"
 #else
 		     "ret\n\t"

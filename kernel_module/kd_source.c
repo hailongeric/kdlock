@@ -104,6 +104,7 @@ static int kd_source_piece(unsigned long address, bool text, unsigned long *end)
 {
 	struct module *module;
 	unsigned long base, size;
+	enum mod_mem_type type;
 	unsigned int i;
 
 	if (address >= kd_core_start && address < kd_core_end) {
@@ -116,10 +117,18 @@ static int kd_source_piece(unsigned long address, bool text, unsigned long *end)
 	module = kd_module_address(address);
 	if (!module || READ_ONCE(module->state) != MODULE_STATE_LIVE)
 		return -ESTALE;
-	base = (unsigned long)module->core_layout.base;
-	size = module->core_layout.size;
-	if (address < base || address - base >= size ||
-	    (text && address - base >= module->core_layout.text_size))
+	/* Module regions are separate allocations. Never bridge a hole or an init
+	 * region by treating them as one interval; executable targets need MOD_TEXT.
+	 * The live module reference below retains every accepted core region. */
+	for (type = MOD_TEXT; type < MOD_MEM_NUM_TYPES; type++) {
+		if (mod_mem_type_is_init(type) || (text && type != MOD_TEXT))
+			continue;
+		base = (unsigned long)module->mem[type].base;
+		size = module->mem[type].size;
+		if (address >= base && address - base < size)
+			break;
+	}
+	if (type == MOD_MEM_NUM_TYPES)
 		return -EPERM;
 	*end = base + size;
 	if (*end <= address)

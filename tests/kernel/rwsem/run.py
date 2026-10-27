@@ -37,7 +37,7 @@ def idle():
 def sources(root):
     hashes = {}
     for directory in ('include', 'kernel_module', 'tests/kernel/rwsem', 'bench/spin_cacheline',
-                      'kernel_baseline', 'disassem', 'tests/protocols'):
+                      'kernel_baseline', 'kernel_integration/linux70', 'disassem', 'tests/protocols'):
         for path in (root / directory).rglob('*'):
             relative = path.relative_to(root)
             if (not path.is_file() or any(s.startswith('.') or s == '__pycache__' for s in relative.parts)

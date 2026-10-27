@@ -341,14 +341,14 @@ static int mf_mmap(struct file *file, struct vm_area_struct *vma)
 		return -EOPNOTSUPP;
 	if (vma->vm_pgoff > m->pages || vma_pages(vma) > m->pages - vma->vm_pgoff)
 		return -EINVAL;
-	vma->vm_flags |= VM_DONTEXPAND | VM_DONTDUMP;
+	vm_flags_set(vma, VM_DONTEXPAND | VM_DONTDUMP);
 	if (!(m->features & MF_INHERIT))
-		vma->vm_flags |= VM_DONTCOPY;
+		vm_flags_set(vma, VM_DONTCOPY);
 	if (!(m->features & MF_WRITABLE))
-		vma->vm_flags &= ~VM_MAYWRITE;
-	vma->vm_flags &= ~VM_MAYEXEC;
+		vm_flags_clear(vma, VM_MAYWRITE);
+	vm_flags_clear(vma, VM_MAYEXEC);
 	if (vma->vm_flags & VM_SHARED)
-		vma->vm_flags |= VM_MIXEDMAP;
+		vm_flags_set(vma, VM_MIXEDMAP);
 	vma->vm_ops = &mf_vm_ops;
 	vma->vm_private_data = m;
 	mf_vma_open(vma);
@@ -526,7 +526,7 @@ static long mf_ioctl(struct file *file, unsigned int command, unsigned long arg)
 
 static const struct file_operations mf_fops = {
 	.owner = THIS_MODULE, .open = mf_open, .release = mf_release,
-	.mmap = mf_mmap, .unlocked_ioctl = mf_ioctl, .llseek = no_llseek,
+	.mmap = mf_mmap, .unlocked_ioctl = mf_ioctl,
 };
 static struct miscdevice mf_device = {
 	.minor = MISC_DYNAMIC_MINOR, .name = "kd_mmap_fault", .fops = &mf_fops, .mode = 0600,

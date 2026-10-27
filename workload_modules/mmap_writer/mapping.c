@@ -125,8 +125,8 @@ static int mw_mmap(struct file *file, struct vm_area_struct *vma)
 	mmap_assert_write_locked(m->mm);
 	if (observe && mmap_lock_is_contended(m->mm))
 		atomic64_inc(&m->contended);
-	vma->vm_flags |= VM_DONTEXPAND | VM_DONTDUMP | VM_DONTCOPY;
-	vma->vm_flags &= ~(VM_MAYWRITE | VM_MAYEXEC);
+	vm_flags_set(vma, VM_DONTEXPAND | VM_DONTDUMP | VM_DONTCOPY);
+	vm_flags_clear(vma, VM_MAYWRITE | VM_MAYEXEC);
 	vma->vm_ops = &mw_vm_ops;
 	vma->vm_private_data = m;
 	atomic64_inc(&m->maps);
@@ -164,7 +164,7 @@ static long mw_ioctl(struct file *file, unsigned int command, unsigned long arg)
 
 static const struct file_operations mw_fops = {
 	.owner = THIS_MODULE, .open = mw_open, .release = mw_release,
-	.mmap = mw_mmap, .unlocked_ioctl = mw_ioctl, .llseek = no_llseek,
+	.mmap = mw_mmap, .unlocked_ioctl = mw_ioctl,
 };
 static struct miscdevice mw_device = {
 	.minor = MISC_DYNAMIC_MINOR, .name = "kd_mmap_writer_native", .fops = &mw_fops, .mode = 0600,

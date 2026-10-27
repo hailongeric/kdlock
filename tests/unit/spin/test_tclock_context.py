@@ -3,6 +3,7 @@
 No kernel module is loaded. Check six callee-saved registers, RSP and both
 unexecuted acquisition and delegated unlock returns before the live experiment.
 """
+import os
 import re
 import subprocess
 import tempfile
@@ -11,6 +12,17 @@ from pathlib import Path
 from source_text import read_source
 
 ROOT = Path(__file__).resolve().parents[3]
+TRAMPOLINE_OPTIONS = ('#pragma GCC push_options\n'
+                      '#pragma GCC optimize("O3", "omit-frame-pointer")\n')
+
+
+def require_guest():
+    # Private frozen checks live on the guest data disk; the source-host
+    # checkout is not an execution destination even when readable there.
+    if (os.geteuid() != 0 or os.uname().release != '7.0.0-38-kdlock1' or
+            not any(ROOT.is_relative_to(path) for path in
+                    (Path('/root'), Path('/mnt/kdlock-builds')))):
+        raise RuntimeError('execute machine-code tests only in the Linux 7 development guest')
 
 CHECK = r'''
 .text
@@ -137,14 +149,13 @@ int main(void)
 
 
 def main():
-    if not str(ROOT).startswith('/root/'):
-        raise RuntimeError('execute machine-code tests only in recovery guest')
+    require_guest()
     with tempfile.TemporaryDirectory(prefix='tc-context-') as temporary:
         p = Path(temporary)
         # Compile the actual production function bodies, not a second assembly
         # implementation. Kernel-only surrounding code is replaced by stubs.
         source = read_source(ROOT/'tclock_backend/komb.c')
-        marker = '#pragma GCC push_options\n#pragma GCC optimize("O3")\n__attribute__((noipa)) noinline notrace void\nkomb_spin_lock_slowpath('
+        marker = TRAMPOLINE_OPTIONS + '__attribute__((noipa)) noinline notrace void\nkomb_spin_lock_slowpath('
         start = source.index(marker)
         end = source.index('#pragma GCC pop_options', start) + len('#pragma GCC pop_options')
         switch = (ROOT/'tclock_backend/combiner.c').read_text()

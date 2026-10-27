@@ -12,6 +12,33 @@ operation. A scoped ftrace module substitutes selected functions for the bound
 object. Spin, mutex or reader/writer backends are selected at build time. The
 `stock` arm runs the original kernel functions without a substitution module.
 
+The active port targets authenticated Ubuntu `linux=7.0.0-38.38`, with separate
+source/build identities for `7.0.0-38-kdlock1`. The
+[Linux 7 port record](../results/10.176.26.71/tests/linux70-port-20261027/README.md)
+tracks build and live validation separately; the historical measurements below
+are not validation of this kernel. Original implementations and relevant headers
+are copied from the bound source tree, while external modules build against its
+separate KDIR. The [identity procedure](../../kernel_integration/linux70/IDENTITY.md)
+binds both roots, installed images, configuration and runtime policy.
+
+Linux 7 changes the xattr workload to `xattr-rbtree-read-v1`: the original
+`rb_find()` search, `strcmp(node->name, key)`, size/error handling and real value
+copy execute under shared read ownership. Matched Native, KD and TCLock each
+use a private, correctly typed rwlock. KD readers stay local, with zero eligible
+JIT operations and expected `NO_JIT`; any JIT entry, completion or publication
+is rejected. No helper-learning daemon is started for this case. The client
+labels `front` and `tail` select keys N−1 and 0; they do not specify tree depth
+or comparison count. The source hook binds both the client TGID and the exact
+xattr object. All workers must join and reader state must drain before unload.
+
+The OFD body uses Linux 7's embedded `file_lock.c` fields and preserves its
+owner/type/range decisions, including `F_UNLCK` query semantics. Seek uses
+`fd_empty()`/`fd_file()` and updates the real `f_pos`; Linux 7 removed
+`f_version`, so no retired store is reproduced. These are source adaptations,
+not new performance results.
+
+## Historical Linux 6.1 measurements
+
 The historical [2026-10-11 results report](../results/10.176.26.71/bench/real_api/20261011/RESULTS.md)
 contains 288 accepted, drained OFD/setfd sessions: four backends, three rounds,
 two metadata layouts and six worker counts per API. It introduces each test
@@ -32,7 +59,7 @@ saved-continuation ELF audit before loading; `--build-from` rejects a different
 API selection. Reports keep these identities separate. The earlier OUTER
 measurements below do not establish public-facade performance.
 
-The [current mutex comparison](../results/10.176.26.71/bench/mutex32-native-tclock-20261020/README.md)
+The [historical mutex comparison](../results/10.176.26.71/bench/mutex32-native-tclock-20261020/README.md)
 includes 324 valid, drained API sessions for pipebytes n16, pipecap n16,
 `SEEK_SET` and `SEEK_END`, with fresh Native/TCLock/KD controls and three
 repetitions at `1 2 4 8 16 32 36 48 60` workers. The `bd9d4ce` collection keeps
@@ -55,7 +82,7 @@ All seven implemented adapters already call KD APIs. The catalog's
 [API and delegation table](../../docs/BENCHMARK_WORKLOADS.md#kd-api-use-and-delegation)
 distinguishes eligible bodies, local readers and unresolved translation refusals.
 
-Xattr keeps the original list traversal, `strcmp()` calls and real `memcpy()`
+The retired Linux 6.1 xattr workload keeps the original list traversal, `strcmp()` calls and real `memcpy()`
 value copy. The original `strcmp` uses the API contract introduced in version 10, which
 models its read-only effect. It does not inspect helper code or scan the strings;
 the syscall and selected source lock provide the same valid, stable storage
@@ -111,26 +138,28 @@ scoped adapters do not establish whole-kernel replacement.
 
 | Workload | Actual critical section and cached state | Suitability |
 | --- | --- | --- |
-| tmpfs `fgetxattr()` | `simple_xattr_get()` holds `simple_xattrs.lock` across linked-list name comparisons and the value copy | Implemented; many callers query one metadata-rich file. Attribute count and hit position control real search work. |
+| tmpfs `fgetxattr()` | Linux 7 `simple_xattr_get()` holds shared read ownership across rb-tree name comparisons and the value copy | Ported as `xattr-rbtree-read-v1`; many callers query one fixed metadata-rich file. Attribute count and selected key affect search work; key labels do not guarantee tree depth. KD readers stay local. |
 | `fcntl(F_OFD_GETLK)` | `posix_test_lock()` holds `file_lock_context.flc_lock` while checking owners, ranges and conflict type, then copying the conflict | Implemented for local, non-expiring OFD locks; models repeated byte-range conflict queries on one file. |
 | `fcntl(F_SETFD)` | `set_close_on_exec()` holds `files_struct.file_lock` across the close-on-exec bitmap update | Implemented; each thread toggles its own preallocated descriptor flag in the shared table. Descriptor spacing changes the dirty bitmap footprint. |
 | `ioctl(FIONREAD)` on a shared pipe | `pipe_ioctl()` holds `pipe_inode_info.mutex` while summing real buffer lengths around the ring | Implemented mutex case; occupied buffer count controls protected traversal, with one independent file description per worker. |
 | `fcntl(F_GETPIPE_SZ)` | `pipe_fcntl()` holds the same pipe mutex while reading `max_usage` | Implemented short mutex control on the same real subsystem. |
-| Shared-file `lseek(SEEK_SET/SEEK_END)` | `ksys_lseek()` holds `file.f_pos_lock` across size checks and `f_pos`/`f_version` updates | Implemented mutex case for an anonymous tmpfs file and one shared open description. |
+| Shared-file `lseek(SEEK_SET/SEEK_END)` | `ksys_lseek()` holds `file.f_pos_lock` across size checks and `f_pos` updates; Linux 7 has no `f_version` | Implemented mutex case for an anonymous tmpfs file and one shared open description. |
 | `uname()` with `sethostname()` / `setdomainname()` | `uts_sem` protects the real UTS structure: readers copy it, writers replace one name | Implemented bounded read/write experiment in a private UTS namespace; Native rwsem versus KD/TCLock reader/writer spinlocks, with the specialization below. |
 | FxMark directory enumeration / rename | Shared dentry/rename state and, for cross-directory rename, `s_vfs_rename_mutex` | Candidate for wider integration; additional lock sites and filesystem behavior must be preserved. |
 | will-it-scale `lock1` | Repeated `F_SETLKW` / unlock, with a **separate file per worker** | Useful reference; it does not itself create a shared inode lock. The original paper's kernel/version bottleneck must be re-established on this kernel. |
-| will-it-scale `mmap1` | `mm_struct.mmap_lock`, a sleeping rwsem, covers VMA allocation/removal and potentially blocking/nested work | The reference maps/unmaps untouched 128 MiB anonymous private memory. The [actual mmap adapter](../../kernel_integration/mmap_lock/README.md) implements scoped local Native/KD routing, including killable/downgrade paths; it has separate 4 KiB device-mapping results. Exact mmap1 threads/processes comparison remains planned, outside this ftrace runner. Explicit outer-writer delegation is not its MM execution mode. |
+| will-it-scale `mmap1` | `mm_struct.mmap_lock`, a sleeping rwsem, covers VMA allocation/removal and potentially blocking/nested work | The reference maps/unmaps untouched 128 MiB anonymous private memory. The [Linux 7 mmap adapter](../../kernel_integration/linux70/MMAP.md) preserves local original-task MM execution with separate build/live gates. Retained Linux 6.1 device-mapping results do not validate the new port. This comparison is outside the ftrace runner. |
 | eventfd / epoll wakeup paths | Short queue/counter critical sections, often with IRQ exclusion | Poor initial fit for the present ordinary-task-context delegation ports. |
 
-Sources: [TCLocks evaluation, Table 1 and Figure 3](https://www.usenix.org/system/files/osdi23-gupta.pdf),
+Historical background: [TCLocks evaluation, Table 1 and Figure 3](https://www.usenix.org/system/files/osdi23-gupta.pdf),
 [will-it-scale lock1](https://github.com/antonblanchard/will-it-scale/blob/master/tests/lock1.c),
 [Linux xattr implementation](https://github.com/torvalds/linux/blob/v6.1/fs/xattr.c),
 [Linux file-lock implementation](https://github.com/torvalds/linux/blob/v6.1/fs/locks.c),
 [file-table operations](https://github.com/torvalds/linux/blob/v6.1/fs/file.c), and
 [ftrace function substitution](https://docs.kernel.org/6.1/trace/ftrace-uses.html).
-The runner also saves the exact guest implementations and relevant headers with
-hashes; the compiled experiment targets the captured 6.1.159 guest.
+The active source authority is the authenticated Ubuntu package and its
+[captured provenance](../../kernel_integration/linux70/README.md#source-and-build-identity).
+The runner saves the exact guest implementations and relevant headers with
+hashes; the linked v6.1 code describes the historical experiments.
 
 ## Contract and comparison limits
 
@@ -153,7 +182,7 @@ worker owns a distinct descriptor, alternates its `FD_CLOEXEC` bit, and checks
 the result with `F_GETFD`. Thus one setfd operation includes **two syscalls**,
 of which one takes the substituted lock. Other cases use one syscall per operation.
 Each setfd descriptor has its own open file description, so the syscall's
-`fdget_raw()`/`fdput()` does not contend on one shared `file.f_count` outside
+file-reference handling does not contend on one shared `file.f_count` outside
 the target lock. The earlier shared-description screen remains separate evidence.
 
 The xattr search/copy body follows the guest implementation, changing its lock
@@ -162,11 +191,14 @@ field copies. Callback handling is specialized away only after the binding
 check establishes that the private locks have no callbacks. Native/TCLock/KD
 receive the same body and data layout, without UBSAN in the workload. The
 `stock` control exposes combined substitution/compiler differences; it is not
-pooled with the matched native arm. The captured kernel has UBSAN enabled, while
-all timed replacement/provider modules have UBSAN disabled. Therefore only the
-matched native comparison isolates the lock change within this compiled body.
+pooled with the matched native arm. The historical Linux 6.1 kernel had UBSAN
+enabled while its timed replacement/provider modules disabled it. The new
+configuration and module build records establish Linux 7 instrumentation;
+the old capture does not supply that evidence. Matched Native controls must
+retain the same source body and build instrumentation as their compared arms.
 
-For xattr, `--entries N` installs N attributes, and `--value-size 64` gives each
+In the historical Linux 6.1 xattr workload, `--entries N` installs N attributes,
+and `--value-size 64` gives each
 attribute a 64-byte value. `front` finds the most recently inserted record in
 one name comparison; `tail` finds the oldest record after N comparisons and
 copies its value. `miss` makes N comparisons and returns `ENODATA` without a
@@ -176,11 +208,13 @@ contains both name search and the actual 64-byte `memcpy`; it is not a
 size-query benchmark. At n128, exactly 128 `strcmp` calls fit their separate
 per-body allowance. Other helper/control continuations retain the ordinary
 allowance of 16.
+Those list-position and helper-allowance statements do not apply to the Linux 7
+rb-tree/shared-reader revision described above.
 
 Only one fixed worker runs on each selected CPU. The spin adapters operate on
 the real lists or descriptor bitmap and original spinlock storage under the
 controlled-consumer restrictions above. KD/TCLock mutex adapters and all matched
-UTS adapters use private objects; Native mutex keeps the original lock, as
+UTS and Linux 7 xattr adapters use private objects; Native mutex keeps the original lock, as
 described below. Syscalls run individually, without an
 ioctl loop or artificial arithmetic inside the critical section. Warmup and
 setup are outside timing. User-buffer validation is inside timing and identical
@@ -195,31 +229,25 @@ the userspace timestamp after the last syscall returns, not a kernel probe.
 All workers must make progress in the selected window. Both full-run throughput
 and the highest valid peak are retained, together with CPU time and worker shares.
 
-KD must publish an admitted translation before measurement. Xattr helper-learning
-waves pause the daemon, join every caller, then resume translation; a refusal
-ends that session. Each published image is saved before the next learning wave.
-Preparation succeeds only after a wave returns a complete delegated body while
-the entry remains admitted. Publication alone, or entering generated code before
-falling back, is insufficient.
-
-`--helper-workers 8` selects a separate, bounded preparation cohort from the
-configured CPU list. It uses the same bound file and metadata as timing, including
-when the measured cohort has only one worker. Every preparation caller finishes
-before the next translation; the measured CPU list is unchanged. The runner
-records each preparation cohort and its entry and completion counts. The daemon
-then stops before the common warmup on the measured CPUs. `--helper-waves 0`
-disables learning for an explicitly labelled initial-image diagnostic.
+Eligible KD bodies must publish an admitted translation before measurement.
+Linux 7 xattr readers have no delegation entry: they skip publication and helper
+learning, retain completion probes, and require an empty image registry and zero
+JIT activity. `--helper-waves` defaults to zero; positive values and
+`--require-jit` are rejected for xattr before live setup. The retained helper
+learning implementation and its unit controls describe the historical list/spin
+experiment; they are not the new xattr preparation path.
 
 New records enable the completion probe and separate entry counts from complete
 returned bodies. `PASS` means at least one complete body returned; `PARTIAL_JIT`
 means code was entered but no complete body returned; `NO_JIT` means there were
 no entries. Reports never pool these groups. Historical entry-only records keep
 completion counts unrecorded. `--require-jit` requires a returned body during
-every multithreaded KD measurement; single-worker timing need not delegate.
+every eligible multithreaded KD measurement; single-worker timing need not delegate.
 Immediately before and after measurement, the runner checks a drained publication
 with zero translator writers and verifies that the prepared entry and generated
 image hashes are unchanged. These boundary checks are outside syscall timing;
-they establish image identity, separately from returned-body evidence.
+they establish image identity, separately from returned-body evidence. These
+publication checks apply only to workloads with a delegation entry.
 TCLock spin delegation remains unmeasured, as in the existing comparator.
 The module counts redirected calls, and the runner requires one call per
 measured operation. A failed/undrained session has no accepted score.
@@ -263,7 +291,7 @@ ABI3 writer entry; readers execute locally through `kd_read_lock()` and
 **writes**, not total mixed operations.
 TCLock mutex delegation counts are recorded; spin/rwlock shares remain unmeasured.
 
-## Run in the recovery guest
+## Run after Linux 7 validation
 
 Follow [operations](../../docs/operations/VM.md), synchronize reviewed source, verify
 the current kernel, NUMA placement and physical vCPU pins, and confirm a fresh
@@ -271,10 +299,12 @@ monitor snapshot of the actual CPU topology. Do not rebuild the kernel. The
 standard guest has 64 vCPUs; collector 63 is excluded from worker cohorts.
 
 ```sh
-export PATH=/root/kdlock-translation-venv-20261019/bin:$PATH
+export PATH=/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin:$PATH
 export LC_ALL=C
 export KDLOCK_RECOVERY_CONFIRMED=1
 export KDLOCK_SNAPSHOT_TAG=YOUR_CONFIRMED_SNAPSHOT
+python3 disassem/miasm_python314.py
+python3 bench/spin_cacheline/kernel_identity.py
 timeout --kill-after=10s 3600s python3 bench/real_api/run.py \
   --kinds ofd --queries tail --entries 16 128 \
   --threads 1 8 16 32 48 60 --repeats 3 \
@@ -295,7 +325,8 @@ python3 bench/real_api/test_plan.py
 python3 -m unittest discover -s bench/spin_cacheline -p test_peak.py
 ```
 
-`--queries front tail miss` changes lookup position; xattr also supports `size`.
+`--queries front tail miss` selects query keys/ranges; xattr also supports `size`.
+OFD labels describe range positions; Linux 7 xattr labels do not fix rb-tree depth.
 Use `--kinds setfd --queries toggle` for the bitmap case; `--entries` then means
 the FD-number stride between workers, starting at FD 64. Use a separate run
 because query modes are API-specific.
@@ -314,16 +345,16 @@ python3 bench/real_api/run.py --kinds seek --queries set end --entries 16 \
 python3 bench/real_api/run.py --kinds utsname --queries host domain \
   --entries 20 100 --value-size 64 --threads 1 8 16 32 48 60 --repeats 3 \
   --backends stock native tclock kdlock --output /root/kdlock-evidence/10.176.26.71/bench/uts-new
-# Xattr tail lookup, two list sizes, full standard grid: 378 timed sessions.
+# Linux 7 xattr key-0 lookup, two tree sizes, full grid: 378 local-reader sessions.
 python3 bench/real_api/run.py --kinds xattr --queries tail \
   --entries 16 128 --value-size 64 \
   --threads 1 2 3 4 5 6 7 8 12 16 20 24 28 32 36 40 44 48 52 56 60 \
-  --collector-cpu 63 --duration-ms 2000 --repeats 3 --helper-workers 8 \
+  --collector-cpu 63 --duration-ms 2000 --repeats 3 --helper-waves 0 \
   --backends native tclock kdlock --output /root/kdlock-evidence/10.176.26.71/bench/xattr-new
 ```
 
 Before that matrix, the following focused KD screen checks all four lookup
-paths at both list lengths, including the 128-comparison boundary. The API
+paths at both tree sizes, including size/error/value-copy behavior. The API
 runner has no fixed-iteration functional mode: this is a one-round correctness
 screen with a timed phase, not a performance comparison. Its per-operation and
 pre/post checks also cover every value byte, size results, `ERANGE` and
@@ -333,8 +364,8 @@ keep its output separate from the three-round matrix:
 ```sh
 timeout --kill-after=10s 1800s python3 bench/real_api/run.py \
   --kinds xattr --queries front tail miss size --entries 16 128 --value-size 64 \
-  --backends kdlock --threads 8 --collector-cpu 63 --helper-workers 8 \
-  --duration-ms 1000 --repeats 1 --require-jit \
+  --backends kdlock --threads 8 --collector-cpu 63 --helper-waves 0 \
+  --duration-ms 1000 --repeats 1 \
   --output /root/kdlock-evidence/10.176.26.71/tests/xattr-paths-NEW
 ```
 

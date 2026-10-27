@@ -7,7 +7,7 @@ work; and final drain means all requests, references and release confirmations
 have finished.
 
 The [KD-only mutex contract](design/kd_only_mutex.md) is the current replacement
-assumption. Whole-kernel rebuilding, lockdep/RT/ww_mutex integration and broad
+assumption. Whole-kernel lock replacement, lockdep/RT/ww_mutex integration and broad
 oversubscription remain unvalidated. Removing the Linux mutex bridge does not
 resolve historical pinned-producer scheduling failures.
 
@@ -23,8 +23,12 @@ indexed in [VALIDATION](VALIDATION.md).
 
 Ubuntu 26.04 / Linux 7.0 is the active adaptation platform. The
 [migration record](history/vm-ubuntu2604-migration-20261027.md) establishes OS
-boot and matching package/header identities, while KD build, ABI/API, JIT and
-MM compatibility remain unvalidated. Linux 6.1 adaptation is retired, with
+boot and matching package/header identities. The separate
+[port record](../bench/results/10.176.26.71/tests/linux70-port-20261027/README.md)
+records the custom kernel boot, all four KD returned-JIT passes and Native/TCLock
+functional controls. No new performance baseline is claimed. The Linux 7 mmap adapter remains disabled
+pending actual-MM runtime validation; optional near-text direct-helper allocation
+remains unavailable with call-depth tracking. Linux 6.1 adaptation is retired, with
 results and one recovery version retained under the
 [retirement policy](history/kernel-retirement-20261027.md). Earlier campaign
 plans keep their outcomes and unrun coordinates without scheduling more 6.1 work.

@@ -50,6 +50,17 @@ Check the benchmark host frequency policy and vCPU/NUMA affinity; keep the exist
 mitigations and preemption configuration. Confirm a real monitor snapshot before
 setting recovery variables. Output must be a new directory outside the checkout.
 
+Current runs require the `7.0.0-38-kdlock1` schema-2 identity and the pinned
+Python 3.14 environment. Follow the [port record](../results/10.176.26.71/tests/linux70-port-20261027/README.md)
+for build, emitted-assembly and live-validation status; historical comparison
+results do not establish those gates on Linux 7. Before running the commands:
+
+```sh
+export PATH=/mnt/kdlock-builds/venvs/kdlock-translation-7.0-20261027/bin:$PATH
+python3 disassem/miasm_python314.py
+python3 bench/spin_cacheline/kernel_identity.py
+```
+
 The example uses collector 63 for the documented 64-vCPU destination. Its
 [migration checks](../README.md#vm-migration-validation) are recorded separately
 from the historical 40-vCPU runs, which used collector 38. Verify the actual
@@ -63,8 +74,8 @@ KDLOCK_RECOVERY_CONFIRMED=1 KDLOCK_SNAPSHOT_TAG=YOUR_CONFIRMED_SNAPSHOT \
   --backends native tclock kdlock --workload cacheline --cachelines 1 \
   --threads 1 2 3 4 5 6 7 8 12 16 20 24 28 32 36 40 44 48 52 56 60 --repeats 3 \
   --duration-ms 2000 --peak-window-ms 300 --collector-cpu 63 \
-  --kernel-source /root/linux-6.1.159-kdclobber2 \
-  --kernel-baseline /root/kdlock-kernel-baselines/mutex-clobber2-20260919 \
+  --kernel-source /mnt/kdlock-builds/linux-7.0.0-38-kdlock1/build \
+  --kernel-baseline /root/kdlock-kernel-baselines/linux70-kdlock1-20261027 \
   --output /root/kdlock-evidence/10.176.26.71/bench/spin-matrix-new
 ```
 
@@ -208,13 +219,16 @@ KDLOCK_RECOVERY_CONFIRMED=1 KDLOCK_SNAPSHOT_TAG=YOUR_CONFIRMED_SNAPSHOT \
   --functional --backends kdlock --cachelines 1 --threads 20 --repeats 1 \
   --collector-cpu 63 \
   --iterations 100000 --scenario nested --spin-entry-ratio-limit 0 \
-  --kernel-source /root/linux-6.1.159-kdclobber2 \
-  --kernel-baseline /root/kdlock-kernel-baselines/mutex-clobber2-20260919 \
+  --kernel-source /mnt/kdlock-builds/linux-7.0.0-38-kdlock1/build \
+  --kernel-baseline /root/kdlock-kernel-baselines/linux70-kdlock1-20261027 \
   --output /root/kdlock-evidence/10.176.26.71/bench/nested-new
 ```
 
-Nested/early are KD spin cacheline only. Functional runs require actual JIT for
-multithread positives and write `functional.json`, not performance summaries.
+Nested/early are KD spin cacheline only. Plain `--functional` runs also accept
+Native and TCLock controls with `--repeats 1`; JIT acceptance is not applicable
+to those controls. Contended KD positives still require returned JIT bodies.
+All functional arms check data and drain, write `functional.json`, and record
+`performance_accepted=false` without throughput scores.
 `--spin-delegate off` is an explicit zero-JIT native control marked DISABLED_CONTROL.
 It applies only to spin; the mutex entry rejects it.
 Ratio0 does not guarantee admission or waive returned-body/context/drain checks.

@@ -85,7 +85,7 @@ def worker(arguments):
 
 def sources(root):
     hashes = {}
-    for directory in ("include", "kernel_module", "daemon", "disassem", "kernel_baseline",
+    for directory in ("include", "kernel_module", "daemon", "disassem", "kernel_baseline", "kernel_integration/linux70",
                       "bench/spin_cacheline", "bench/tclock_compare/allocator_guard",
                       "tests/protocols", "tests/kernel/jit_escape"):
         for path in (root / directory).rglob("*"):
