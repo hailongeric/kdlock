@@ -15,6 +15,8 @@ ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(ROOT / 'bench/spin_cacheline'))
 import bench_runtime as rt
 import kernel_identity
+sys.path.insert(0, str(ROOT / 'bench/mmap_writer'))
+import shared_platform
 
 FIELDS = ('abi', 'use_kd', 'mm', 'lock', 'checks', 'errors', 'api_checks', 'nested_checks',
           'cancellation_checks', 'readers_slept', 'writer_slept', 'late_reader_slept',
@@ -35,7 +37,7 @@ def main():
     p.add_argument('--mode', choices=('native', 'kd'), required=True)
     p.add_argument('--reuse-probe', type=Path,
                    help='verified prebuilt receipt; reuse prior basic/build checks')
-    kernel_identity.arguments(p)
+    shared_platform.arguments(p, required=False)
     a = p.parse_args()
     expected_kd = int(a.mode == 'kd')
     if a.client:
@@ -51,10 +53,8 @@ def main():
         rt.require(all(row[k] == v for k, v in expected.items()) and row['mm'] and
                    row['lock'] and row['checks'] >= 100, 'probe result differs', 'CHECK_FAILED')
         return
-    rt.require(a.output and os.geteuid() == 0 and str(ROOT).startswith('/root/') and
-               os.uname().release.startswith('6.1.159-kdmm') and
-               os.environ.get('KDLOCK_RECOVERY_CONFIRMED') == '1' and
-               os.environ.get('KDLOCK_SNAPSHOT_TAG'), 'confirmed experimental guest required')
+    rt.require(a.output is not None, 'new evidence output required')
+    shared_platform.guest(a)
     idle()
     boot_args = Path('/proc/cmdline').read_text().split()
     rt.require(boot_args.count('kd_mmap=' + ('on' if expected_kd else 'off')) == 1 and
@@ -84,7 +84,8 @@ def main():
         rt.require(not rt.FAULT.search(messages), 'kernel fault; retain module', 'KERNEL_FAULT')
 
     try:
-        result['kernel_identity'] = kernel_identity.capture(a, out, rt.command)
+        result.update(shared_platform.admit(a,out))
+        support=shared_platform.freeze_support(out)
         source, hashes = out / 'source', {}
         for directory in ('tests/kernel/mmap_lock', 'tests/unit', 'include', 'daemon'):
             for path in (ROOT / directory).rglob('*'):
@@ -101,6 +102,8 @@ def main():
         shutil.copyfile(__file__, out / 'runner.py')
 
         def verify():
+            shared_platform.verify_boot(a)
+            shared_platform.common.verify_maps(support)
             for name, h in hashes.items():
                 rt.require(rt.digest(ROOT / name) == rt.digest(source / name) == h,
                            'frozen source changed: ' + name)
@@ -160,12 +163,7 @@ def main():
         result.update(state='FAILED', error=repr(error))
         raise
     finally:
-        try:
-            logs()
-        finally:
-            rt.write_json(out / 'result.json', result)
-            if fd is not None:
-                os.close(fd)
+        shared_platform.common.finish_logs(out,result,logs,fd)
     print(json.dumps(result))
 
 

@@ -1,10 +1,13 @@
 #!/usr/bin/env python3
 """Read-only identity checks reject drift, omitted evidence and root confusion."""
+import argparse
 import hashlib
 import importlib.util
 import json
 from pathlib import Path
+import shutil
 import tempfile
+from types import SimpleNamespace
 import unittest
 from unittest import mock
 
@@ -12,6 +15,14 @@ ROOT = Path(__file__).resolve().parents[3]
 SPEC = importlib.util.spec_from_file_location("linux70_identity", ROOT / "kernel_integration/linux70/verify.py")
 identity = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(identity)
+HELPER_SPEC = importlib.util.spec_from_file_location(
+    "linux70_shared_identity", ROOT / "bench/spin_cacheline/kernel_identity.py")
+helper = importlib.util.module_from_spec(HELPER_SPEC)
+HELPER_SPEC.loader.exec_module(helper)
+CAPTURE_SPEC = importlib.util.spec_from_file_location(
+    "linux70_capture", ROOT / "kernel_integration/linux70/capture.py")
+capture_module = importlib.util.module_from_spec(CAPTURE_SPEC)
+CAPTURE_SPEC.loader.exec_module(capture_module)
 
 
 def sha(data):
@@ -82,6 +93,57 @@ class Linux70IdentityTests(unittest.TestCase):
 
     def save(self):
         (self.bundle / "manifest.json").write_text(json.dumps(self.manifest))
+
+    def prepare_mm_variant(self, variant):
+        for name, value in (("MM_SOURCE_ROOT", self.source), ("MM_BUILD_ROOT", self.build)):
+            patcher = mock.patch.object(identity, name, value)
+            patcher.start()
+            self.addCleanup(patcher.stop)
+        config = (self.build / ".config").read_text() + "CONFIG_KDLOCK_MMAP=y\n"
+        self.write(self.build / ".config", config.encode())
+        self.write(self.bundle / "guest.config", config.encode())
+        self.manifest["configuration"] = identity.config_values(self.build / ".config")
+        self.manifest["build_files"][".config"] = sha(config.encode())
+        self.expected_running["release"] = identity.MM_RELEASE
+        self.manifest["variant"] = variant
+        selected = identity.variant_settings(variant)
+        self.manifest["runtime_policy"] = identity.runtime_policy(
+            "BOOT_IMAGE=/fixture nokaslr nopvspin kd_mmap=" + selected["mmap_mode"],
+            "full (lazy)", variant=variant)
+        outputs = {"include/linux/kd_mmap_lock.h": sha(b"overlay")}
+        native = {"mm/mmap.c": sha(b"unchanged native body")}
+        self.write(self.source / "include/linux/kd_mmap_lock.h", b"overlay")
+        self.write(self.source / "mm/mmap.c", b"unchanged native body")
+        self.manifest["source_files"].update(outputs | native)
+        inputs = {"kernel_integration/linux70/prepare_mmap.py": sha(b"generator")}
+        self.write(self.bundle / "mmap-inputs/kernel_integration/linux70/prepare_mmap.py", b"generator")
+        self.write(self.bundle / "mmap-lock.patch", b"fixture MM patch")
+        self.write(self.bundle / "mmap-base-sha256.json", json.dumps(dict(
+            source_package=identity.PACKAGE, files=outputs, native_bodies=native)).encode())
+        receipt = dict(passed=True, source_unchanged=True, config_modified=False,
+            source_package=identity.PACKAGE, inputs=inputs, outputs=outputs,
+            native_body_sha256=native, patch_sha256=sha(b"fixture MM patch"),
+            base_manifest_sha256=identity.digest_file(self.bundle / "mmap-base-sha256.json"))
+        self.write(self.bundle / "mmap-prepare.json", json.dumps(receipt).encode())
+        self.manifest["mmap"] = dict(enabled=True)
+        self.manifest["bundle_files"] = {
+            str(p.relative_to(self.bundle)): identity.digest_file(p)
+            for p in self.bundle.rglob("*") if p.is_file() and p.name != "manifest.json"}
+        self.manifest["installed_files"] = {}
+        self.manifest["installed_links"] = {}
+        for name in identity.installed_paths(variant):
+            prefix = Path(name).name.removesuffix("-" + identity.MM_RELEASE)
+            source = {"vmlinuz": "arch/x86/boot/bzImage", "config": ".config", "System.map": "System.map"}.get(prefix)
+            data = (self.build / source).read_bytes() if source else b"initrd"
+            self.write(identity.SYSTEM_ROOT / name, data)
+            self.manifest["installed_files"][name] = sha(data)
+        for name, target in (("build", self.build), ("source", self.source)):
+            relative = f"lib/modules/{identity.MM_RELEASE}/{name}"
+            path = identity.SYSTEM_ROOT / relative
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.symlink_to(target)
+            self.manifest["installed_links"][relative] = str(target)
+        self.save()
 
     def test_distinct_source_build_and_installed_inputs_verified(self):
         result = identity.verify(self.bundle, self.build)
@@ -181,6 +243,225 @@ class Linux70IdentityTests(unittest.TestCase):
                                  ("nokaslr nopvspin preempt=voluntary", "none voluntary full (lazy)")):
             with self.subTest(cmdline=cmdline, preempt=preempt), self.assertRaises(identity.BaselineError):
                 identity.check_runtime(expected, cmdline, preempt)
+
+    def test_native_mm_variant_keeps_every_source_build_and_install_check(self):
+        self.prepare_mm_variant("kdmm1-native")
+        result = identity.verify(self.bundle, self.build, variant="kdmm1-native")
+        self.assertEqual((result["variant"], result["mmap_mode"]), ("kdmm1-native", "off"))
+        for path in (self.source / "mm/mmap.c", self.build / "Module.symvers",
+                     self.bundle / "mmap-inputs/kernel_integration/linux70/prepare_mmap.py",
+                     identity.SYSTEM_ROOT / f"boot/initrd.img-{identity.MM_RELEASE}"):
+            old = path.read_bytes()
+            path.write_bytes(old + b"changed")
+            with self.subTest(path=path), self.assertRaises(identity.BaselineError):
+                identity.verify(self.bundle, self.build, variant="kdmm1-native")
+            path.write_bytes(old)
+
+    def test_kd_mm_variant_requires_explicit_selection_even_for_a_copied_bundle(self):
+        self.prepare_mm_variant("kdmm1-kd")
+        copied = self.root / "retained-identity"
+        shutil.copytree(self.bundle, copied)
+        self.assertTrue(identity.verify(copied, self.build, variant="kdmm1-kd")["ok"])
+        for variant in ("kdlock1", "kdmm1-native", "arbitrary-release"):
+            with self.subTest(variant=variant), self.assertRaises(identity.BaselineError):
+                identity.verify(copied, self.build, variant=variant)
+        del self.manifest["variant"]
+        self.save()
+        with self.assertRaisesRegex(identity.BaselineError, "variant mismatch"):
+            identity.verify(self.bundle, self.build, variant="kdmm1-kd")
+
+    def test_mm_mode_is_required_unique_exact_and_lazy(self):
+        for variant, mode in (("kdmm1-native", "off"), ("kdmm1-kd", "on")):
+            valid = "nokaslr nopvspin kd_mmap=" + mode
+            expected = identity.runtime_policy(valid, "full (lazy)", variant=variant)
+            self.assertEqual(identity.check_runtime(expected, valid, "full (lazy)", variant=variant), expected)
+            for command in ("nokaslr nopvspin", valid + " kd_mmap=" + mode,
+                            valid + " kd_mmap", "nokaslr nopvspin kd_mmap=unknown",
+                            "nokaslr nopvspin kd_mmap=" + ("on" if mode == "off" else "off")):
+                with self.subTest(variant=variant, command=command), self.assertRaises(identity.BaselineError):
+                    identity.runtime_policy(command, "full (lazy)", variant=variant)
+            with self.assertRaises(identity.BaselineError):
+                identity.runtime_policy(valid, "(voluntary) full lazy", variant=variant)
+            with self.assertRaises(identity.BaselineError):
+                identity.runtime_policy(valid, "full (lazy)")
+
+    def test_mm_cannot_rehash_a_disabled_configuration_into_acceptance(self):
+        self.prepare_mm_variant("kdmm1-native")
+        config = (self.build / ".config").read_text().replace("CONFIG_KDLOCK_MMAP=y", "# CONFIG_KDLOCK_MMAP is not set")
+        self.write(self.build / ".config", config.encode())
+        self.write(self.bundle / "guest.config", config.encode())
+        self.manifest["configuration"] = identity.config_values(self.build / ".config")
+        self.manifest["build_files"][".config"] = sha(config.encode())
+        self.manifest["bundle_files"]["guest.config"] = sha(config.encode())
+        self.save()
+        with self.assertRaisesRegex(identity.BaselineError, "selected identity variant"):
+            identity.verify(self.bundle, self.build, variant="kdmm1-native")
+
+    def test_mm_preparation_and_canonical_source_roots_remain_required(self):
+        self.prepare_mm_variant("kdmm1-kd")
+        self.manifest["mmap"] = None
+        self.save()
+        with self.assertRaisesRegex(identity.BaselineError, "requires preparation"):
+            identity.verify(self.bundle, self.build, variant="kdmm1-kd")
+        self.manifest["mmap"] = dict(enabled=True)
+        self.manifest["source_root"] = str(self.root / "unreviewed-source")
+        self.save()
+        with self.assertRaisesRegex(identity.BaselineError, "source root mismatch"):
+            identity.verify(self.bundle, self.build, variant="kdmm1-kd")
+
+    def test_mm_manifest_runtime_policy_cannot_be_forged_offline(self):
+        self.prepare_mm_variant("kdmm1-kd")
+        self.manifest["runtime_policy"]["cmdline"] = "nokaslr nopvspin kd_mmap=off"
+        self.save()
+        with self.assertRaisesRegex(identity.BaselineError, "kd_mmap="):
+            identity.verify(self.bundle, self.build, variant="kdmm1-kd")
+
+
+class Linux70ReleaseTests(unittest.TestCase):
+    def test_selected_release_and_original_version_code_are_independent(self):
+        with tempfile.TemporaryDirectory(prefix="kd-linux70-release-") as temporary:
+            build = Path(temporary)
+            def put(name, value):
+                path = build / name
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text(value)
+            put("include/config/kernel.release", identity.MM_RELEASE + "\n")
+            put("include/generated/utsrelease.h", '#define UTS_RELEASE "' + identity.MM_RELEASE + '"\n')
+            put("include/generated/utsversion.h", '#define UTS_VERSION "#fixture"\n')
+            put("include/generated/uapi/linux/version.h", "#define LINUX_VERSION_CODE 458766\n")
+            with mock.patch.object(identity.subprocess, "run", return_value=SimpleNamespace(stdout="Build ID: abcd\n")):
+                for variant in ("kdmm1-native", "kdmm1-kd"):
+                    self.assertEqual(identity.build_identity(build, variant=variant)["release"], identity.MM_RELEASE)
+                with self.assertRaisesRegex(identity.BaselineError, "kernel.release"):
+                    identity.build_identity(build)
+                put("include/generated/uapi/linux/version.h", "#define LINUX_VERSION_CODE 458752\n")
+                with self.assertRaisesRegex(identity.BaselineError, "version code"):
+                    identity.build_identity(build, variant="kdmm1-native")
+
+
+class SharedVariantTests(unittest.TestCase):
+    def test_default_does_not_infer_a_variant_from_the_manifest(self):
+        verifier = SimpleNamespace(verify=mock.Mock(return_value={"ok": True}),
+                                   source_directory=mock.Mock(return_value=Path("/source")))
+        source, bundle = Path("/selected-build"), Path("/selected-bundle")
+        with mock.patch.object(helper, "verifier_for", return_value=(2, {"variant": "kdmm1-kd"}, verifier)):
+            helper.check(source, bundle)
+            verifier.verify.assert_called_once_with(bundle, source, build=True, running=True, variant="kdlock1")
+            helper.source_directory(source, bundle)
+            verifier.source_directory.assert_called_once_with(source, {"variant": "kdmm1-kd"}, variant="kdlock1")
+
+    def test_explicit_variant_is_forwarded_without_resolving_the_build_alias(self):
+        with tempfile.TemporaryDirectory(prefix="kd-linux70-dispatch-") as temporary:
+            root = Path(temporary)
+            build, alias, bundle = root / "build", root / "alias", root / "bundle"
+            build.mkdir()
+            bundle.mkdir()
+            alias.symlink_to(build)
+            manifest = {"variant": "kdmm1-native"}
+            verifier = SimpleNamespace(verify=mock.Mock(), source_directory=mock.Mock())
+            with mock.patch.object(helper, "verifier_for", return_value=(2, manifest, verifier)):
+                helper.check(alias, bundle, variant="kdmm1-native")
+                verifier.verify.assert_called_once_with(bundle, alias, build=True, running=True, variant="kdmm1-native")
+                helper.source_directory(alias, bundle, variant="kdmm1-native")
+                verifier.source_directory.assert_called_once_with(alias, manifest, variant="kdmm1-native")
+
+    def test_legacy_dispatch_is_unchanged_and_rejects_mm_variants(self):
+        verifier = SimpleNamespace(verify=mock.Mock(return_value={"ok": True}))
+        source, bundle = Path("/selected-build"), Path("/selected-bundle")
+        with mock.patch.object(helper, "verifier_for", return_value=(1, {}, verifier)):
+            helper.check(source, bundle)
+            verifier.verify.assert_called_once_with(bundle, source, build=True, running=True)
+            for variant in ("kdmm1-native", "kdmm1-kd"):
+                with self.subTest(variant=variant), self.assertRaisesRegex(ValueError, "legacy"):
+                    helper.check(source, bundle, variant=variant)
+                with self.assertRaisesRegex(ValueError, "legacy"):
+                    helper.source_directory(source, bundle, variant=variant)
+
+    def test_cli_default_remains_the_disabled_kernel(self):
+        parser = argparse.ArgumentParser()
+        helper.arguments(parser)
+        args = parser.parse_args([])
+        self.assertEqual(args.kernel_variant, "kdlock1")
+        self.assertEqual(args.kernel_source, identity.BUILD_ROOT)
+        self.assertEqual(args.kernel_baseline, identity.BUNDLE_ROOT)
+        self.assertEqual(parser.parse_args(["--kernel-variant", "kdmm1-kd"]).kernel_variant, "kdmm1-kd")
+
+    def test_capture_forwards_and_rechecks_the_same_explicit_variant(self):
+        for variant in identity.VARIANTS:
+            with self.subTest(variant=variant), tempfile.TemporaryDirectory(prefix="kd-linux70-copy-") as temporary:
+                root = Path(temporary)
+                bundle, out = root / "bundle", root / "result"
+                bundle.mkdir()
+                out.mkdir()
+                (bundle / "input").write_bytes(b"bound input")
+                manifest = {"schema": 2, "variant": variant, "bundle_files": {"input": sha(b"bound input")}}
+                (bundle / "manifest.json").write_text(json.dumps(manifest))
+                selected = identity.variant_settings(variant)
+                args = SimpleNamespace(kernel_source=selected["build"], kernel_baseline=bundle,
+                                       kernel_variant=variant)
+                expected = {"ok": True, "variant": variant}
+                command = mock.Mock(return_value=json.dumps(expected))
+                with mock.patch.object(helper, "check", return_value=expected) as check:
+                    result = helper.capture(args, out, command)
+                argv, destination = command.call_args.args
+                self.assertEqual(argv[argv.index("--kernel-variant") + 1], variant)
+                self.assertEqual(destination, out / "baseline.json")
+                check.assert_called_once_with(args.kernel_source, out / "kernel-baseline", variant=variant)
+                self.assertEqual((out / "kernel-baseline/input").read_bytes(), b"bound input")
+                self.assertEqual(json.loads((out / "kernel-baseline/manifest.json").read_text()), manifest)
+                self.assertEqual(result["variant"], variant)
+
+    def test_capture_rejects_a_changed_identity_after_copy(self):
+        with tempfile.TemporaryDirectory(prefix="kd-linux70-copy-drift-") as temporary:
+            root = Path(temporary)
+            bundle, out = root / "bundle", root / "result"
+            bundle.mkdir()
+            out.mkdir()
+            (bundle / "manifest.json").write_text(json.dumps({"bundle_files": {}}))
+            args = SimpleNamespace(kernel_source=identity.MM_BUILD_ROOT, kernel_baseline=bundle,
+                                   kernel_variant="kdmm1-kd")
+            with mock.patch.object(helper, "check", return_value={"ok": True, "variant": "kdmm1-native"}):
+                with self.assertRaisesRegex(RuntimeError, "differs from preflight"):
+                    helper.capture(args, out, mock.Mock(return_value=json.dumps({"ok": True, "variant": "kdmm1-kd"})))
+
+
+class CapturePreflightTests(unittest.TestCase):
+    def test_mm_capture_requires_its_canonical_output_and_preparation(self):
+        with tempfile.TemporaryDirectory(prefix="kd-linux70-capture-") as temporary:
+            root = Path(temporary)
+            selected = dict(release=identity.MM_RELEASE, source=root / "source", build=root / "build",
+                            bundle=root / "bundle", mmap_config="y", mmap_mode="off")
+            args = SimpleNamespace(variant="kdmm1-native", source=None, build=None,
+                                   output=root / "other-output", mmap_prepare=root / "prepare.json")
+            with mock.patch.object(capture_module.identity, "variant_settings", return_value=selected), \
+                    mock.patch.object(capture_module.os, "geteuid", return_value=0), \
+                    mock.patch.object(capture_module.os, "uname", return_value=SimpleNamespace(release=identity.MM_RELEASE)):
+                with self.assertRaisesRegex(capture_module.identity.BaselineError, "canonical mode bundle"):
+                    capture_module.capture(args)
+                args.output, args.mmap_prepare = None, None
+                with self.assertRaisesRegex(capture_module.identity.BaselineError, "preparation provenance"):
+                    capture_module.capture(args)
+                self.assertEqual(list(root.iterdir()), [])
+
+    def test_mm_capture_rejects_disabled_config_before_creating_output(self):
+        with tempfile.TemporaryDirectory(prefix="kd-linux70-capture-config-") as temporary:
+            root = Path(temporary)
+            selected = dict(release=identity.MM_RELEASE, source=root / "source", build=root / "build",
+                            bundle=root / "bundle", mmap_config="y", mmap_mode="on")
+            args = SimpleNamespace(variant="kdmm1-kd", source=None, build=None, output=None,
+                                   mmap_prepare=root / "prepare.json", acquisition=root / "acquisition.json",
+                                   source_archives=root / "archives")
+            with mock.patch.object(capture_module.identity, "variant_settings", return_value=selected), \
+                    mock.patch.object(capture_module.os, "geteuid", return_value=0), \
+                    mock.patch.object(capture_module.os, "uname", return_value=SimpleNamespace(release=identity.MM_RELEASE)), \
+                    mock.patch.object(capture_module.identity, "check_digest"), \
+                    mock.patch.object(capture_module.identity, "check_files"), \
+                    mock.patch.object(capture_module.identity, "config_values", return_value={"CONFIG_KDLOCK_MMAP": "n"}), \
+                    mock.patch.object(capture_module.identity, "build_identity") as build_identity:
+                with self.assertRaisesRegex(capture_module.identity.BaselineError, "selected identity variant"):
+                    capture_module.capture(args)
+                build_identity.assert_not_called()
+                self.assertEqual(list(root.iterdir()), [])
 
 
 if __name__ == "__main__":

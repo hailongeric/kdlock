@@ -6,8 +6,10 @@ This original Native probe supports the scoped MM work in the
 payload with its own Native/KD bindings. These 4 KiB device-mapping checks are
 not validation of the planned 128 MiB anonymous mmap1 workload.
 
-Run `run.py` only in the existing recovery VM with a current confirmed snapshot,
-committed source manifest and fresh host receipt. It builds the standalone
+The current runner is ported to `7.0.0-38-kdlock1`; execution remains pending.
+Run `run.py` only in the verified Linux 7 VM with a current confirmed snapshot,
+source manifest, explicit boot UUID, SHA-bound host reference and fresh host
+receipt. It builds the standalone
 Native observation module and client, runs both basic C checks, and then runs
 six focused cases serially:
 
@@ -28,17 +30,21 @@ files, zero mm references and zero release errors after every completed process.
 Failures preserve the module and logs; timeouts do not kill callers or prove drain.
 No KD/TCLock provider or guest kernel modification is used.
 
-`capture_kernel.py` copies the unchanged C/header/assembly and build/configuration
-inputs as an inert archive for source inspection on 380G10. It does not perform
-the kernel participant analysis in the VM or execute captured code on the host.
+`capture_kernel.py` is the historical Linux 6.1 source capture, not a current
+entry point. Linux 7 uses its authenticated Ubuntu source archive and separate
+source/build identity.
 
 The sixteen-worker case additionally retains a real blocked-writer kernel stack,
 with an immediate Native mmap-lock caller. It does not infer writer contention
 from a queue containing unknown reader/writer types. Kernel-stack access failures
 or absence of the required positive observation are failures, not passes.
 
-The writer proof uses the exact kernel ELF hash and return sites recorded in
-[writer_sites.json](writer_sites.json), because this kernel filters `__sched`
-frames from proc stacks. A positive site additionally requires bracketing `D`
-states, matching wait channels and unchanged scheduler execution counters.
+First run [sites.py](../../../bench/mmap_writer/sites.py) in the idle VM to
+derive the exact direct-call bytes and following return PCs from the verified
+Linux 7 ELF. Review its retained function disassembly, then pass its receipt
+using required `--writer-sites` and `--writer-sites-sha256` arguments. The runner
+re-derives those sites before loading the module. A positive site additionally
+requires bracketing `D` states, matching wait channels and unchanged scheduler
+execution counters. Unexpected compiler call-chain shapes fail closed.
+The old [writer_sites.json](writer_sites.json) retains its historical 6.1 identity.
 See the [retained diagnosis](../../../bench/results/10.176.26.71/tests/mmap-writer-native-20261021/README.md).

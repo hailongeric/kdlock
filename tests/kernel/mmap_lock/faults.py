@@ -12,6 +12,8 @@ ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(ROOT / 'bench/spin_cacheline'))
 import bench_runtime as rt
 import kernel_identity
+sys.path.insert(0, str(ROOT / 'bench/mmap_writer'))
+import shared_platform
 sys.path.insert(0, str(ROOT / 'tests/protocols'))
 from cpu_placement import capture_topology
 
@@ -20,10 +22,9 @@ def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('--mode', choices=('native', 'kd'), required=True)
     p.add_argument('--output', type=Path, required=True)
-    kernel_identity.arguments(p)
+    shared_platform.arguments(p)
     a = p.parse_args()
-    rt.require(os.geteuid() == 0 and str(ROOT).startswith('/root/') and
-               os.uname().release.startswith('6.1.159-kdmm'), 'experimental guest required')
+    shared_platform.guest(a)
     rt.idle()
     for m in Path('/sys/module').iterdir():
         rt.require(not m.name.startswith(('kd_', 'tc_', 'tclock_', 'jit_')), 'project module remains')
@@ -58,7 +59,8 @@ def main():
         rt.require(not rt.FAULT.search(messages), 'kernel fault', 'KERNEL_FAULT')
 
     try:
-        result['kernel_identity'] = kernel_identity.capture(a, out, rt.command)
+        result.update(shared_platform.admit(a,out))
+        support=shared_platform.freeze_support(out)
         hashes = {}
         for source in (Path(__file__), Path(__file__).with_name('fault_cases.c')):
             hashes[source.name] = rt.digest(source)
@@ -68,6 +70,8 @@ def main():
         rt.command(['gcc', '-O2', '-g', '-Wall', '-Wextra', '-Werror', '-pthread',
                     out / 'fault_cases.c', '-o', client], out / 'build.log', timeout=60)
         result['binary_sha256'] = rt.digest(client)
+        shared_platform.verify_boot(a)
+        shared_platform.common.verify_maps(support)
         fd = os.open('/dev/kmsg', os.O_RDONLY | os.O_NONBLOCK)
         os.lseek(fd, 0, os.SEEK_END)
         result['state'] = 'RUNNING'
@@ -91,6 +95,8 @@ def main():
             rt.require(rt.digest(Path(__file__).parent / name) == rt.digest(out / name) == h,
                        'frozen input changed: ' + name)
         rt.require(rt.digest(client) == result['binary_sha256'], 'binary changed')
+        shared_platform.verify_boot(a)
+        shared_platform.common.verify_maps(support)
         rt.idle()
         result.update(state='COMPLETE', passed=True, drained=True, cases=rows,
                       children_joined=16, fault_threads_joined=16, source_unchanged=True)
@@ -98,12 +104,7 @@ def main():
         result.update(state='FAILED', error=repr(error))
         raise
     finally:
-        try:
-            logs()
-        finally:
-            rt.write_json(out / 'result.json', result)
-            if fd is not None:
-                os.close(fd)
+        shared_platform.common.finish_logs(out,result,logs,fd)
     print(json.dumps({k: result[k] for k in ('state', 'passed', 'drained', 'mode')}))
 
 

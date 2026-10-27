@@ -73,9 +73,7 @@ def session(out,spec,inputs):
         result.update(state='COMPLETE',passed=True,drained=True)
     except BaseException as error:result.update(state='FAILED',error=repr(error));raise
     finally:
-        rt.write_json(out/'result.json',result)
-        try:logs()
-        finally:os.close(fd)
+        common.finish_logs(out,result,logs,fd)
     return result
 
 
@@ -89,16 +87,22 @@ def main():
     p=argparse.ArgumentParser(description=__doc__);p.add_argument('action',choices=('prepare','measure'))
     p.add_argument('--output',type=Path,required=True);p.add_argument('--host-state',type=Path,required=True)
     p.add_argument('--source-manifest',type=Path);p.add_argument('--correctness',type=Path);p.add_argument('--inputs',type=Path)
-    common.kernel_identity.arguments(p);a=p.parse_args();common.guest();out=a.output.resolve()
+    common.mm_platform.arguments(p);common.kernel_identity.arguments(p)
+    a=p.parse_args();common.guest(a.boot_id);out=a.output.resolve()
     rt.require(not out.exists() and not out.is_relative_to(ROOT),'new evidence directory required');check.idle(out.parent);out.mkdir(parents=True)
-    result=dict(state='PREPARATION',passed=False,drained=False,accepted=False,boot_id=common.BOOT,action=a.action,sessions=[],
+    result=dict(state='PREPARATION',passed=False,drained=False,accepted=False,boot_id=a.boot_id,action=a.action,sessions=[],
                 kd_integration=False,kernel_modified=False,protocol='NATIVE_MMAP_LOCK')
     try:
-        common.host_check(a.host_state,out,a.action=='measure')
+        common.host_check(a.host_state,out,a.action=='measure',a.boot_id,
+                          reference=a.host_reference,reference_sha256=a.host_reference_sha256)
         result['kernel_identity']=common.kernel_identity.capture(a,out,rt.command)
+        result['kernel_binding']=common.mm_platform.kernel_binding(result['kernel_identity'],a.kernel_source,
+                                      a.kernel_baseline,private_backing_locks=False)
         if a.action=='prepare':
             rt.require(a.correctness and a.source_manifest,'correctness and committed inputs required')
             prior=common.load(a.correctness/'result.json')
+            rt.require(prior.get('kernel_binding')==result['kernel_binding'],
+                       'writer correctness kernel identity differs')
             rt.require(prior['passed'] and prior['drained'] and prior['final_idle'] and prior['basic_programs']==2 and
                        len(prior['cases'])==6 and all(v['passed'] for v in prior['cases']), 'focused correctness incomplete')
             files={str(a.correctness/'result.json'):rt.digest(a.correctness/'result.json')}
@@ -109,8 +113,10 @@ def main():
                 if name.startswith('workload_modules/mmap_writer/'):rt.require(rt.digest(ROOT/name)==h,'validated payload source changed')
             manifest=common.load(a.source_manifest);source=out/'source'
             dirs=('bench/mmap_writer/','tests/kernel/mmap_writer/','workload_modules/mmap_writer/', 'bench/mmap_fault/',
-                  'bench/spin_cacheline/','tests/unit/','tests/protocols/','include/','daemon/','disassem/','kernel_baseline/')
-            selected={k:h for k,h in manifest['files'].items() if k.startswith(dirs) or k in ('bench/archive_run.py','bench/mutex_api_compare/run.py')}
+                  'bench/spin_cacheline/','tests/unit/','tests/protocols/','include/','daemon/','disassem/','kernel_baseline/',
+                  'kernel_integration/linux70/','bench/basic/')
+            selected={k:h for k,h in manifest['files'].items() if k.startswith(dirs) or k in
+                      ('bench/archive_run.py','bench/mmap_lock/eligibility.py')}
             for name,h in selected.items():
                 rt.require(rt.digest(ROOT/name)==h,'committed input changed: '+name)
                 dest=source/name;dest.parent.mkdir(parents=True,exist_ok=True);shutil.copyfile(ROOT/name,dest)
@@ -123,11 +129,14 @@ def main():
                         source/'bench/mmap_writer/timed_client.c','-o',client],out/'build-client.log',timeout=60)
             files[str(client)]=rt.digest(client)
             inputs=dict(files=files,client=str(client),payload=str(a.correctness/'source/workload_modules/mmap_writer/kd_mmap_writer_native.ko'),
-                        source_commit=manifest['commit'],correctness_source_commit=prior['source_commit'])
+                        source_commit=manifest['commit'],correctness_source_commit=prior['source_commit'],
+                        kernel_binding=result['kernel_binding'])
             rt.write_json(out/'inputs.json',inputs);plan=[spec(n,mode,0) for n in (1,16) for mode in ('plain','sampled')]
         else:
             rt.require(a.inputs is not None,'validated timing inputs required');inputs=common.load(a.inputs)
             prior=common.load(a.inputs.parent/'result.json')
+            rt.require(inputs.get('kernel_binding')==prior.get('kernel_binding')==result['kernel_binding'],
+                       'timing prerequisite kernel identity differs')
             rt.require(prior['passed'] and prior['drained'] and prior['final_idle'] and len(prior['sessions'])==4 and
                        all(v['passed'] and v['drained'] for v in prior['sessions']),'timed client correctness incomplete')
             shutil.copyfile(a.inputs,out/'inputs.json')
@@ -136,6 +145,7 @@ def main():
         common.verify_maps(inputs['files']);rt.write_json(out/'plan.json',plan)
         result.update(state='RUNNING',source_commit=inputs['source_commit'],planned=len(plan))
         for i,item in enumerate(plan):
+            rt.require(Path('/proc/sys/kernel/random/boot_id').read_text().strip()==a.boot_id,'guest boot changed')
             name=f'{i:02d}-mmap-shared-mm-{item["threads"]}-{item["observation"]}-r{item["repeat"]}'
             print('START',name,flush=True);row=session(out/name,item,inputs);row['name']=name
             result['sessions'].append(row);rt.write_json(out/'result.json',result);print('FINISH',name,'PASS',flush=True)

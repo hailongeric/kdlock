@@ -161,6 +161,52 @@ static int chain_frame(const char **text, char symbol[64], unsigned long *offset
 	*text = next ? next + 1 : top + strlen(top);
 	return 1;
 }
+static void writer_observation(uint64_t tid,const char *first,const char *last,
+		const char *chan1,const char *chan2,const char *sched1,const char *sched2,
+		const char *buffer,unsigned long mmap_site,unsigned long munmap_site)
+{
+	/* Diagnostic replay of already captured bytes only. The original classifier
+	 * below remains authoritative; these fields neither admit nor retry work.
+	 * Keep the existing four nonempty observations per worker output bound. */
+	char symbol[64]={0},waiter[64]={0};unsigned long offset=0,wait_offset=0;
+	const char *remaining=buffer,*chain_error=NULL,*reasons[10];unsigned count=0;
+	int site=0;
+	if(!chain_frame(&remaining,symbol,&offset)) { chain_error="first_frame";goto emit; }
+	strcpy(waiter,symbol);wait_offset=offset;
+	if(chain_waiter) {
+		if(strcmp(waiter,chain_waiter) || (offset!=chain_wait[0] && offset!=chain_wait[1])) {
+			chain_error="waiter_symbol_or_return";goto emit;
+		}
+		if(strcmp(chain_waiter,chain_acquire)) {
+			if(!chain_frame(&remaining,symbol,&offset) || strcmp(symbol,chain_acquire) || offset!=chain_adapter) {
+				chain_error="adapter_symbol_or_return";goto emit;
+			}
+		}
+		if(!chain_frame(&remaining,symbol,&offset)) { chain_error="caller_frame";goto emit; }
+	}
+	site=(!strcmp(symbol,"vm_mmap_pgoff") && offset==mmap_site) ||
+	     (!strcmp(symbol,"__vm_munmap") && offset==munmap_site);
+emit:
+	if(chain_error)reasons[count++]=chain_error;
+	if(!site)reasons[count++]="caller_site";
+	if(task_state(first)!='D')reasons[count++]="state_before";
+	if(task_state(last)!='D')reasons[count++]="state_after";
+	if(strcmp(chan1,waiter))reasons[count++]="wchan_before";
+	if(strcmp(chan2,waiter))reasons[count++]="wchan_after";
+	if(strcmp(sched1,sched2))reasons[count++]="schedstat_changed";
+	if(!*sched1)reasons[count++]="schedstat_empty";
+	printf("{\"event\":\"stack_observation\",\"tid\":%llu,\"diagnostic_only\":true,\"classifier_accepts\":%s,\"rejections\":[",
+	 (unsigned long long)tid,count?"false":"true");
+	for(unsigned i=0;i<count;i++) { if(i)putchar(',');json_string(reasons[i]); }
+	printf("],\"state_before\":\"%c\",\"state_after\":\"%c\",\"stat_before\":",task_state(first),task_state(last));
+	json_string(first);printf(",\"stat_after\":");json_string(last);
+	printf(",\"wchan_before\":");json_string(chan1);printf(",\"wchan_after\":");json_string(chan2);
+	printf(",\"schedstat_before\":");json_string(sched1);printf(",\"schedstat_after\":");json_string(sched2);
+	printf(",\"waiter\":");json_string(waiter);
+	printf(",\"wait_return_offset\":%lu,\"last_parsed_symbol\":",wait_offset);json_string(symbol);
+	printf(",\"last_parsed_offset\":%lu,\"expected_mmap_return\":%lu,\"expected_munmap_return\":%lu,\"raw_stack\":",
+	 offset,mmap_site,munmap_site);json_string(buffer);printf("}\n");
+}
 static int writer_contention(struct worker *workers,unsigned n,unsigned long mmap_site,unsigned long munmap_site)
 {
 	/* /proc stacks deliberately omit __sched lock helpers. Bind the first
@@ -183,8 +229,8 @@ static int writer_contention(struct worker *workers,unsigned n,unsigned long mma
 				CHECK(atomic_load_explicit(&w->done,memory_order_acquire));continue;
 			}
 			if(*buffer && observations[i]<4) {
-				printf("{\"event\":\"stack_observation\",\"tid\":%llu,\"raw_stack\":",(unsigned long long)tid);
-				json_string(buffer);printf("}\n");observations[i]++;
+				writer_observation(tid,first,last,chan1,chan2,sched1,sched2,buffer,mmap_site,munmap_site);
+				observations[i]++;
 			}
 			char symbol[64], waiter[64];unsigned long offset=0,wait_offset=0;
 			const char *remaining=buffer;

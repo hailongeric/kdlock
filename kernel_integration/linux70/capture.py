@@ -22,28 +22,35 @@ SPEC.loader.exec_module(identity)
 
 
 def capture(args):
-    identity.require(os.geteuid() == 0 and os.uname().release == identity.RELEASE,
+    variant = getattr(args, "variant", "kdlock1")
+    selected = identity.variant_settings(variant)
+    identity.require(os.geteuid() == 0 and os.uname().release == selected["release"],
                      "capture requires the installed custom Linux 7 guest to be booted")
-    source, build = args.source, args.build
-    identity.require(source == identity.SOURCE_ROOT and build == identity.BUILD_ROOT,
+    source, build = args.source or selected["source"], args.build or selected["build"]
+    output = args.output or selected["bundle"]
+    identity.require(source == selected["source"] and build == selected["build"],
                      "only the canonical development source/build pair is supported")
-    identity.require(not args.output.exists(), "capture output already exists")
+    if variant != "kdlock1":
+        identity.require(output == selected["bundle"], "MM capture requires its canonical mode bundle")
+        identity.require(args.mmap_prepare is not None, "MM capture requires preparation provenance")
+    identity.require(not output.exists(), "capture output already exists")
     identity.check_digest(args.acquisition, identity.ACQUISITION_SHA256)
     identity.check_files(args.source_archives, identity.SOURCE_ARCHIVES)
     config = identity.config_values(build / ".config")
-    running = identity.build_identity(build)
+    identity.check_variant_config(config, variant)
+    running = identity.build_identity(build, variant=variant)
     identity.legacy.check_running(running, os.uname(), Path("/sys/kernel/notes").read_bytes())
     policy = identity.runtime_policy(Path("/proc/cmdline").read_text().strip(),
-                                     Path("/sys/kernel/debug/sched/preempt").read_text())
+                                     Path("/sys/kernel/debug/sched/preempt").read_text(), variant=variant)
     identity.require(policy["preempt"] == args.preempt, "active preemption differs from requested capture policy")
     # A new directory prevents overwriting the identity used by previous runs.
-    args.output.mkdir(parents=True)
+    output.mkdir(parents=True)
     files = {}
 
     def preserve(path, name):
         identity.relative_path(name)
         expected = identity.digest_file(path)
-        target = args.output / name
+        target = output / name
         target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(path, target)
         identity.check_digest(target, expected)
@@ -72,11 +79,12 @@ def capture(args):
             identity.check_digest(source / name, expected)
             sources[name] = expected
         mmap = dict(enabled=config.get("CONFIG_KDLOCK_MMAP", "n") == "y")
-    installed_links = {f"lib/modules/{identity.RELEASE}/build": str(build)}
-    source_link = Path(f"/lib/modules/{identity.RELEASE}/source")
+    release = selected["release"]
+    installed_links = {f"lib/modules/{release}/build": str(build)}
+    source_link = Path(f"/lib/modules/{release}/source")
     if source_link.exists() or source_link.is_symlink():
         installed_links[str(source_link.relative_to("/"))] = str(source)
-    manifest = dict(schema=2, source_package=identity.PACKAGE,
+    manifest = dict(schema=2, variant=variant, source_package=identity.PACKAGE,
                     source_archives=identity.SOURCE_ARCHIVES,
                     source_scope="named core/MM inputs; not a complete source-tree audit",
                     source_root=str(source), build_root=str(build),
@@ -86,17 +94,18 @@ def capture(args):
                                  for name in sorted(identity.BUILD_FILES)},
                     configuration=config, running=running, runtime_policy=policy,
                     installed_files={name: identity.digest_file(Path("/") / name)
-                                     for name in sorted(identity.installed_paths())},
+                                     for name in sorted(identity.installed_paths(variant))},
                     installed_links=installed_links)
-    (args.output / "manifest.json").write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n")
-    return identity.verify(args.output, build, running=True)
+    (output / "manifest.json").write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n")
+    return identity.verify(output, build, running=True, variant=variant)
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--source", type=Path, default=identity.SOURCE_ROOT)
-    parser.add_argument("--build", type=Path, default=identity.BUILD_ROOT)
-    parser.add_argument("--output", type=Path, default=identity.BUNDLE_ROOT)
+    parser.add_argument("--variant", choices=identity.VARIANTS, default="kdlock1")
+    parser.add_argument("--source", type=Path)
+    parser.add_argument("--build", type=Path)
+    parser.add_argument("--output", type=Path)
     parser.add_argument("--acquisition", type=Path, default=Path(
         "/mnt/kdlock-builds/ubuntu-7.0.0-38-source/source-acquisition.json"))
     parser.add_argument("--source-archives", type=Path, default=Path(

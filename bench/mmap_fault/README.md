@@ -7,7 +7,7 @@ only a Native arm. These results cannot close the actual-MM gain/parity gate or
 replace the planned mmap1 comparison. "Private" describes driver ownership of
 the backing state; the measured mappings use `MAP_SHARED`.
 
-The October 26 single-round extension uses a separate explicit plan:
+The single-round extension uses a separate explicit plan:
 `timing.py measure --single-round-grid --workload mmap` or `--workload fault`.
 It selects the standard 21 worker counts, one plain repetition and only the
 supported arms below. `--exploratory-host` retains failed strict timing
@@ -17,8 +17,11 @@ Exact whole-operation accounting remains required. Only the final absence of a
 positive full-cohort peak is optional in this new plan; malformed progress,
 identity, callback, reader-release and teardown evidence still fail.
 
-Pass `--boot-id` to the correctness and timing runners to bind a new attempt
-to the verified recovery boot. Its historical default is unchanged. Fresh
+The current runners target `7.0.0-38-kdlock1` with the kernel MM adapter disabled.
+Their Linux 7 port has not yet been executed. Follow the
+[Linux 7 command and prerequisite plan](LINUX70_PLAN.md); old 6.1 receipts do not
+authorize a new run. Required arguments bind the exact boot UUID, SHA256 of the
+host reference, fresh host capture, and verified schema-2 kernel bundle. Fresh
 `--split` correctness and timing-client preparation remain prerequisites;
 `prepare --plain-only` checks the plain client without collecting latency
 samples. The old 48-session plain/sampled plan remains the default.
@@ -69,8 +72,14 @@ modes for mmap Native plus the three fault-reader arms. It preserves every run,
 source/binary identity, completed operation, raw latency and progress sample,
 retirement, failure and variance. Both phases require the original recovery VM.
 
-Timing also requires the exact original 67-thread QEMU identity, frequencies,
-NUMA placement, boot policy and dependencies. Capture the host immediately after
-measurement and retain the strict endpoint comparison. No setting is changed
-to make a check pass. No performance acceptance or resolution of the seven
-mutex regressions follows from this separate reader workload.
+Timing requires the permanent tasks from the selected Linux 7 host reference,
+64 matching vCPU affinities, auxiliary CPU 63, two bound NUMA memory backends,
+and all 64 configured CPU-frequency policies fixed at 2.0 GHz with turbo off.
+Exploratory mode permits only literal `worker` creation/retirement on CPU 63,
+records both full identities, and retains failed strict qualification even when
+the endpoint task sets happen to match. Other task, affinity and start-time
+changes fail. The pinned Python environment must include the
+verified Python 3.14 Miasm patch. Correctness, timed-client preparation and
+measurement must bind the same kernel image, configuration and runtime policy.
+Capture the host immediately after measurement and retain frequency-monitor and
+endpoint evidence. These runner preflights alone do not accept performance.

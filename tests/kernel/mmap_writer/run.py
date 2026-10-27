@@ -15,6 +15,9 @@ import eligibility
 spec=importlib.util.spec_from_file_location('mw_common',ROOT/'bench/mmap_fault/timing.py')
 common=importlib.util.module_from_spec(spec);spec.loader.exec_module(common)
 rt=common.rt
+sites_check=common.module('linux70_writer_sites',ROOT/'bench/mmap_writer/sites.py')
+# Historical fixed receipts keep their original default verifier. New live
+# runs below require a reviewed, re-derived Linux 7 ELF receipt explicitly.
 WRITER_SITES=json.loads(Path(__file__).with_name('writer_sites.json').read_text())
 
 
@@ -106,11 +109,14 @@ def idle(base):
 def main():
     p=argparse.ArgumentParser(description=__doc__)
     p.add_argument('--output',type=Path,required=True);p.add_argument('--source-manifest',type=Path,required=True)
-    p.add_argument('--host-state',type=Path,required=True);common.kernel_identity.arguments(p);a=p.parse_args()
-    common.guest();out=a.output.resolve();rt.require(not out.exists() and not out.is_relative_to(ROOT),'new evidence directory required')
+    p.add_argument('--host-state',type=Path,required=True)
+    p.add_argument('--writer-sites',type=Path,required=True)
+    p.add_argument('--writer-sites-sha256',required=True)
+    common.mm_platform.arguments(p);common.kernel_identity.arguments(p);a=p.parse_args()
+    common.guest(a.boot_id);out=a.output.resolve();rt.require(not out.exists() and not out.is_relative_to(ROOT),'new evidence directory required')
     idle(out.parent);out.mkdir(parents=True)
     result=dict(state='PREPARATION',passed=False,drained=False,accepted=False,cases=[],kernel_modified=False,
-                protocol='NATIVE_MMAP_LOCK',kd_integration=False,full_suite=False,boot_id=common.BOOT)
+                protocol='NATIVE_MMAP_LOCK',kd_integration=False,full_suite=False,boot_id=a.boot_id)
     rt.write_json(out/'result.json',result)
     fd=None;messages=''
     def logs():
@@ -122,22 +128,31 @@ def main():
         (out/'kernel.log').write_text(messages)
         rt.require(not rt.FAULT.search(messages),'kernel fault; retain module','KERNEL_FAULT')
     try:
-        common.host_check(a.host_state,out,False)
+        common.host_check(a.host_state,out,False,a.boot_id,
+                          reference=a.host_reference,reference_sha256=a.host_reference_sha256)
         result['kernel_identity']=common.kernel_identity.capture(a,out,rt.command)
-        rt.require(rt.digest(a.kernel_source/'vmlinux')==WRITER_SITES['vmlinux_sha256'],
-                   'writer call-site proof belongs to another kernel ELF')
-        result['writer_sites']=WRITER_SITES
+        result['kernel_binding']=common.mm_platform.kernel_binding(result['kernel_identity'],a.kernel_source,
+                                      a.kernel_baseline,private_backing_locks=False)
+        evidence=out/'writer-disassembly';evidence.mkdir()
+        writer_sites=sites_check.checked_receipt(a.writer_sites,a.writer_sites_sha256,
+                         result['kernel_binding'],a.kernel_source/'vmlinux',evidence,rt.command)
+        shutil.copyfile(a.writer_sites,out/'writer-sites.json')
+        result.update(writer_sites=writer_sites,writer_sites_sha256=a.writer_sites_sha256)
         manifest=json.loads(a.source_manifest.read_text());source=out/'source'
         dirs=('workload_modules/mmap_writer/','bench/mmap_writer/','tests/kernel/mmap_writer/',
               'bench/mmap_fault/','bench/spin_cacheline/','tests/protocols/','disassem/','kernel_baseline/',
-              'tests/unit/','include/','daemon/')
-        hashes={k:h for k,h in manifest['files'].items() if k.startswith(dirs) or k in ('bench/archive_run.py','bench/mutex_api_compare/run.py')}
+              'tests/unit/','include/','daemon/','kernel_integration/linux70/','bench/basic/')
+        hashes={k:h for k,h in manifest['files'].items() if k.startswith(dirs) or k in
+                ('bench/archive_run.py','bench/mmap_lock/eligibility.py')}
         for name,h in hashes.items():
             rt.require(rt.digest(ROOT/name)==h,'committed source changed: '+name)
             dest=source/name;dest.parent.mkdir(parents=True,exist_ok=True);shutil.copyfile(ROOT/name,dest)
         shutil.copyfile(a.source_manifest,out/'committed-source.json');rt.write_json(out/'source-sha256.json',hashes)
         result.update(source_commit=manifest['commit'],source_manifest_sha256=rt.digest(a.source_manifest),source_files=len(hashes),script_sha256=rt.digest(Path(__file__)))
         def verify():
+            rt.require(Path('/proc/sys/kernel/random/boot_id').read_text().strip()==a.boot_id and
+                       rt.digest(a.writer_sites)==rt.digest(out/'writer-sites.json')==a.writer_sites_sha256,
+                       'boot or reviewed writer sites changed')
             for name,h in hashes.items():rt.require(rt.digest(ROOT/name)==rt.digest(source/name)==h,'source changed: '+name)
         rt.command([sys.executable,'-m','pip','check'],out/'dependencies.log',timeout=60)
         rt.command(['make','-C',source/'tests/unit','run','PYTHON='+sys.executable,'PY_TESTS='],out/'basic.log',timeout=180)
@@ -155,9 +170,10 @@ def main():
         plan=[('scope',1,1),('cycle',1,1000),('cycle',16,5000),('lifetime',1,1),('lifetime',16,1),('exit',1,1)]
         for i,(mode,n,iterations) in enumerate(plan):
             name=f'{i:02d}-{mode}-{n}';print('START',name,flush=True)
-            sites=[str(WRITER_SITES['sites'][name]['return_offset']) for name in ('vm_mmap_pgoff','__vm_munmap')]
+            sites=[str(writer_sites['sites'][name]['return_offset']) for name in ('vm_mmap_pgoff','__vm_munmap')]
             data=rt.command([client,mode,str(n),str(iterations),*sites],out/(name+'.jsonl'),timeout=120)
-            logs();case=validate([json.loads(line) for line in data.splitlines()],mode,n,iterations)
+            logs();case=validate([json.loads(line) for line in data.splitlines()],mode,n,iterations,
+                                lambda row:sites_check.validate_witness(row,writer_sites))
             health=Path('/sys/module/kd_mmap_writer_native/parameters/health').read_text().strip()
             rt.require(health==f'files=0 mm_refs=0 destroyed={i+1} release_errors=0','VFS/mm descriptor teardown differs')
             case.update(name=name,health=health);result['cases'].append(case);rt.write_json(out/'result.json',result)
@@ -168,10 +184,7 @@ def main():
         result.update(state='COMPLETE',passed=True,drained=True,final_idle=True,source_unchanged=True,basic_programs=2,binaries=binaries)
     except BaseException as error:result.update(state='FAILED',error=repr(error));raise
     finally:
-        rt.write_json(out/'result.json',result)
-        if fd is not None:
-            try:logs()
-            finally:os.close(fd)
+        common.finish_logs(out,result,logs,fd)
     print(json.dumps({k:result[k] for k in ('state','passed','drained','source_commit','basic_programs')}))
 
 

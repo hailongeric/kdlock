@@ -1,13 +1,18 @@
 # Native shared-mm mmap writer workload
 
-This guide describes the original Native runner and its retained evidence.
-The current [built-in mmap comparison](../mmap_lock/README.md) reuses this payload
-and timed client with a separately checked kdmm31 Native/KD mode. A qualified
+The current Native runner targets Linux 7 and requires a fresh ELF-bound writer
+witness; its port has not yet been executed. The new [Linux 7 shared-MM runner](linux70.py)
+adds an explicit one-round Native/KD plan for a separately enabled kernel. Its
+build, boot and correctness prerequisites are in the
+[Linux 7 MM plan](../mmap_fault/LINUX70_PLAN.md).
+
+The historical [built-in mmap comparison](../mmap_lock/README.md) reused this payload
+and timed client with a separately checked 6.1 kdmm31 Native/KD mode. A qualified
 validation pair and the [October 26 exploratory MM screen](../results/10.176.26.71/bench/catalog-mmap-single-20261026/README.md)
 have completed under their own policies. The original 24-session proposal and
 later three-repeat scaling matrix retain their separate stopped/unrun status.
-This original runner's `NATIVE_MMAP_LOCK` labels cannot establish KD execution;
-use the linked guide's separate preparation, validation and measurement commands.
+The original runner's `NATIVE_MMAP_LOCK` labels cannot establish KD execution.
+Historical boot identities and instruction offsets do not authorize Linux 7.
 
 This is a stage 2 diagnostic in the [project roadmap](../../docs/ROADMAP.md).
 It maps untouched 4 KiB read-only device ranges. The planned mmap1_threads target
@@ -51,7 +56,7 @@ teardown. Timing must follow successful validation. Reader delegation and the
 discarded artificial writer lookup have no role in this workload.
 
 During correctness only, the controller samples its workers' kernel stacks.
-This kernel's `/proc` unwinder filters `__sched` lock helpers. The required
+The Native writer proof expects `/proc` to filter `__sched` lock helpers. The required
 positive receipt binds the first remaining return PC to an independently
 decoded `down_write_killable(&mm->mmap_lock)` call in the exact kernel ELF.
 Both bracketing task states must be `D`, both wait channels must match that

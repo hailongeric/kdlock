@@ -2,7 +2,6 @@
 """Serial split-workload timing with exact callback oracles and retained controls."""
 import argparse
 import datetime
-import importlib.metadata
 import importlib.util
 import json
 import math
@@ -15,14 +14,13 @@ import sys
 
 sys.dont_write_bytecode=True
 ROOT=Path(__file__).resolve().parents[2]
+sys.path.insert(0,str(ROOT/'bench/mmap_fault'))
 sys.path.insert(0,str(ROOT/'bench/spin_cacheline'))
 import bench_runtime as rt
 import kernel_identity
 from peak import analyze_peak
-ORIGINAL=Path('/root/kdlock-evidence/10.176.26.71/bench/mutex-public-20261020-r2/matrix')
-RELEASE='6.1.159-kdclobber2'
-BOOT='b65f0205-c8f9-4385-8b13-039cbce243a6'
-SNAPSHOT='before-mutex-kdonly-20261017T140354Z'
+import mm_platform
+RELEASE=mm_platform.RELEASE
 BACKENDS={'native':0,'kdlock':1,'tclock':2}
 
 
@@ -31,7 +29,7 @@ def module(name,path):
     spec=importlib.util.spec_from_file_location(name,path)
     result=importlib.util.module_from_spec(spec);spec.loader.exec_module(result);return result
 archive=module('mf_archive',ROOT/'bench/archive_run.py')
-scheduler=module('mf_environment',ROOT/'bench/mutex_api_compare/run.py')
+
 
 
 def idle(base):
@@ -41,68 +39,87 @@ def idle(base):
         except FileNotFoundError: pass
 
 
-def guest(boot_id=BOOT):
-    rt.require(os.geteuid()==0 and str(ROOT)=='/root/host_fs/kdlock' and
-        os.uname().release==RELEASE and Path('/proc/sys/kernel/random/boot_id').read_text().strip()==boot_id and
-        os.environ.get('KDLOCK_RECOVERY_CONFIRMED')=='1' and os.environ.get('KDLOCK_SNAPSHOT_TAG')==SNAPSHOT and
-        sys.executable=='/root/kdlock-translation-venv-20261019/bin/python3' and shutil.which('python3')==sys.executable,
-        'same confirmed recovery VM and pinned Python required')
+def guest(boot_id=None):
+    return mm_platform.guest(boot_id)
 
 
-def host_check(path,out,strict,boot_id=BOOT):
+def host_check(path,out,strict,boot_id=None,*,reference=None,reference_sha256=None):
+    rt.require(reference is not None, 'new-platform host reference required')
+    reference_bytes, original = mm_platform.host_reference(reference, reference_sha256)
     host=load(path);shutil.copyfile(path,out/'host-before.json')
-    age=(datetime.datetime.now(datetime.timezone.utc)-datetime.datetime.fromisoformat(host['captured_utc'])).total_seconds()
-    rt.require(0<=age<=300 and host['pins_verified'] and host['snapshot_listed'] and
-               host['recovery_snapshot']==SNAPSHOT and len(host['qemu'])==1 and host['qemu'][0]['pid']==257489,
-               'fresh original host and snapshot receipt required')
+    (out/'host-reference.json').write_bytes(reference_bytes)
+    comparison=mm_platform.compare_host(original,host,datetime.datetime.now(datetime.timezone.utc),
+                                       os.environ['KDLOCK_SNAPSHOT_TAG'],strict)
+    rt.write_json(out/'host-qualification.json',comparison)
     previous=os.sched_getaffinity(0)
     try:
         os.sched_setaffinity(0,{63});collector=rt.capture_topology([63])
     finally:os.sched_setaffinity(0,previous)
     environment=dict(boot_id=boot_id,cmdline=Path('/proc/cmdline').read_text().strip(),
         preemption=Path('/sys/kernel/debug/sched/preempt').read_text().strip(),
-        packages={p:importlib.metadata.version(p) for p in ('miasm','future','pyparsing','pyelftools')},
-        python=sys.executable,snapshot_tag=SNAPSHOT,collector_topology=collector)
+        snapshot_tag=os.environ['KDLOCK_SNAPSHOT_TAG'],collector_topology=collector,
+        **mm_platform.dependency_identity())
     topology=rt.capture_topology(list(range(60)))
+    rt.require(topology['online_cpus']==list(range(64)) and topology['role_nodes']==[0]*32+[1]*28,
+               '64-vCPU/two-node worker topology differs')
     rt.write_json(out/'environment.json',environment);rt.write_json(out/'topology.json',topology)
-    rt.require(environment['packages']==dict(miasm='0.1.5',future='1.0.0',pyparsing='2.4.7',pyelftools='0.27') and
-        {'nokaslr','nopvspin'}<=set(environment['cmdline'].split()) and '(voluntary)' in environment['preemption'] and
-        topology['online_cpus']==list(range(64)), 'guest boot/dependency/topology policy differs')
-    if strict:
-        for name,digest in scheduler.REPLAY_ENVIRONMENT_SHA256.items():
-            rt.require(rt.digest(ORIGINAL/name)==digest,'original environment changed: '+name)
-        old=load(ORIGINAL/'host-state.json')
-        tasks=lambda h:sorted(h['qemu'][0]['tasks'],key=lambda t:t['tid'])
-        rt.require(len(tasks(host))==67 and tasks(host)==tasks(old),'strict original QEMU thread set differs')
-        comparison=scheduler.same_environment(old,host,load(ORIGINAL/'environment.json'),environment,
-                                             load(ORIGINAL/'topology.json'),topology)
-        rt.write_json(out/'environment-comparison.json',comparison)
-    return host
+    return comparison
 
 
 def verify_maps(maps):
     for path,digest in maps.items():rt.require(rt.digest(Path(path))==digest,'frozen input changed: '+path)
 
 
-def bundle(base):
+def finish_logs(out,result,logs,fd):
+    """A late kernel-log failure must never leave a reusable PASS receipt."""
+    failure=None
+    if fd is not None:
+        try:logs()
+        except BaseException as error:
+            failure=error
+            result.update(state='FAILED',passed=False,accepted=False,final_log_error=repr(error))
+        try:os.close(fd)
+        except BaseException as error:
+            if failure is None:failure=error
+            result.update(state='FAILED',passed=False,accepted=False,final_close_error=repr(error))
+    # Proven normal drain is independent of a later observation failure. Keep
+    # its existing value; never manufacture drain or unload during finalization.
+    rt.write_json(out/'result.json',result)
+    if failure is not None:raise failure
+
+
+def bundle(base, identity):
     r=load(base/'result.json')
     rt.require(r['passed'] and r['drained'] and r['final_idle'] and r['split'] and r['basic_programs']==2,
                'split correctness prerequisite incomplete')
+    rt.require(r.get('kernel_binding')==identity, 'correctness kernel identity differs')
+    rt.require(r.get('backends') in ('0,1','2'), 'exact split correctness backend set required')
+    tc=r['backends']=='2'
+    provider='source/tclock_backend/tclock_rwlock_backend_km.ko' if tc else 'build/provider/kernel_module/kdlock_km.ko'
+    payload='source/workload_modules/mmap_fault/kd_mmap_fault.ko'
+    guard='source/bench/tclock_compare/allocator_guard/tc_allocator_guard.ko'
     files={str(base/'result.json'):rt.digest(base/'result.json')}
     for name,root in [('source-sha256.json',base/'source'),('prepared-source-sha256.json',base/'build/provider'),
                       ('binary-sha256.json',base)]:
-        if (base/name).exists():
-            files[str(base/name)]=rt.digest(base/name)
-            files.update({str(root/p):h for p,h in load(base/name).items()})
+        if name=='prepared-source-sha256.json' and tc:
+            continue
+        rt.require((base/name).is_file(), 'required correctness manifest missing: '+name)
+        hashes=load(base/name)
+        rt.require(isinstance(hashes,dict) and bool(hashes) and all(
+            isinstance(p,str) and not Path(p).is_absolute() and '..' not in Path(p).parts and
+            isinstance(h,str) and re.fullmatch('[0-9a-f]{64}',h) for p,h in hashes.items()),
+            'invalid correctness manifest: '+name)
+        if name=='binary-sha256.json':
+            rt.require(set(hashes)=={provider,payload,guard,'client','split-client'},
+                       'exact validated split binaries required')
+        files[str(base/name)]=rt.digest(base/name)
+        files.update({str(root/p):h for p,h in hashes.items()})
     verify_maps(files)
     # Reuse the validated binaries; only timing clients/runners are new.
     for path,digest in load(base/'source-sha256.json').items():
         if path.startswith(('include/','kernel_module/','tclock_backend/','workload_modules/mmap_fault/')):
             rt.require(rt.digest(ROOT/path)==digest,'validated provider or payload source changed: '+path)
-    tc=r['backends']=='2'
-    return dict(files=files,result=r,provider=str(base/('source/tclock_backend/tclock_rwlock_backend_km.ko' if tc else 'build/provider/kernel_module/kdlock_km.ko')),
-        payload=str(base/'source/workload_modules/mmap_fault/kd_mmap_fault.ko'),
-        guard=str(base/'source/bench/tclock_compare/allocator_guard/tc_allocator_guard.ko'))
+    return dict(files=files,result=r,provider=str(base/provider),payload=str(base/payload),guard=str(base/guard))
 
 
 def peak_result(measurement, spec):
@@ -201,9 +218,7 @@ def session(out,spec,inputs,verify):
     except BaseException as error:
         result.update(state='FAILED',error=repr(error));raise
     finally:
-        rt.write_json(out/'result.json',result)
-        try:logs()
-        finally:os.close(fd)
+        finish_logs(out,result,logs,fd)
     return result
 
 
@@ -264,7 +279,7 @@ def main():
     p.add_argument('action',choices=('prepare','measure'));p.add_argument('--output',type=Path,required=True)
     p.add_argument('--host-state',type=Path,required=True);p.add_argument('--source-manifest',type=Path)
     p.add_argument('--correctness-kd',type=Path);p.add_argument('--correctness-tc',type=Path)
-    p.add_argument('--boot-id', default=BOOT, help='verified recovery boot for this new run')
+    mm_platform.arguments(p)
     p.add_argument('--plain-only', action='store_true', help='prepare the plain client without latency sampling')
     p.add_argument('--single-round-grid', action='store_true', help='new plain 21-count plan, one repetition')
     p.add_argument('--workload', choices=('mmap','fault'))
@@ -279,17 +294,20 @@ def main():
                 single_round_grid=a.single_round_grid,exploratory_host=a.exploratory_host)
     rt.write_json(out/'result.json',result)
     try:
-        host_check(a.host_state,out,a.action=='measure' and not a.exploratory_host,a.boot_id)
+        host_check(a.host_state,out,a.action=='measure' and not a.exploratory_host,a.boot_id,
+                   reference=a.host_reference,reference_sha256=a.host_reference_sha256)
         result['kernel_identity']=kernel_identity.capture(a,out,rt.command)
+        result['kernel_binding']=mm_platform.kernel_binding(result['kernel_identity'],a.kernel_source,a.kernel_baseline)
         if a.action=='prepare':
             rt.require(a.source_manifest and a.correctness_kd and a.correctness_tc,'correctness and committed source required')
-            manifest=load(a.source_manifest);kd=bundle(a.correctness_kd);tc=bundle(a.correctness_tc)
+            manifest=load(a.source_manifest);kd=bundle(a.correctness_kd,result['kernel_binding']);tc=bundle(a.correctness_tc,result['kernel_binding'])
             rt.require(len(kd['result']['split_cases'])==12 and len(tc['result']['split_cases'])==6 and
                        kd['result']['source_commit']==tc['result']['source_commit'],'same-revision eighteen-case prerequisite')
             dirs=('include/','kernel_module/','daemon/','tclock_backend/','workload_modules/mmap_fault/','bench/mmap_fault/',
-                  'bench/spin_cacheline/','disassem/','tests/protocols/','tests/unit/','kernel_baseline/')
+                  'bench/spin_cacheline/','disassem/','tests/protocols/','tests/unit/','kernel_baseline/',
+                  'kernel_integration/linux70/','bench/basic/')
             selected={name:h for name,h in manifest['files'].items() if name.startswith(dirs) or name in
-                      ('bench/archive_run.py','bench/mutex_api_compare/run.py')}
+                      ('bench/archive_run.py',)}
             source=out/'source';files={}
             for name,h in selected.items():
                 rt.require(rt.digest(ROOT/name)==h,'committed source changed: '+name)
@@ -304,18 +322,22 @@ def main():
             files[str(client)]=rt.digest(client)
             for b in (kd,tc):files.update(b['files'])
             inputs=dict(kdlock=kd,tclock=tc,client=str(client),files=files,source_commit=manifest['commit'],
-                        correctness_source_commit=kd['result']['source_commit'])
+                        correctness_source_commit=kd['result']['source_commit'],kernel_binding=result['kernel_binding'])
             rt.write_json(out/'inputs.json',inputs)
             plan=[specification(w,n,arm,'plain' if a.plain_only else 'sampled',0) for w in ('mmap','fault') for n in (1,16)
                   for arm in (('native',) if w=='mmap' else tuple(BACKENDS))]
         else:
             rt.require(a.inputs is not None,'validated inputs required')
             inputs=load(a.inputs);prior=load(a.inputs.parent/'result.json')
+            rt.require(inputs.get('kernel_binding')==prior.get('kernel_binding')==result['kernel_binding'],
+                       'timing prerequisite kernel identity differs')
             rt.require(prior['passed'] and prior['drained'] and len(prior['sessions'])==8 and
                        all(r['passed'] and r['drained'] for r in prior['sessions']),'timed client correctness prerequisite incomplete')
             shutil.copyfile(a.inputs,out/'inputs.json')
             plan=measurement_plan(a.single_round_grid,a.workload)
-        verify=lambda:verify_maps(inputs['files'])
+        def verify():
+            rt.require(Path('/proc/sys/kernel/random/boot_id').read_text().strip()==a.boot_id, 'guest boot changed')
+            verify_maps(inputs['files'])
         verify();rt.write_json(out/'plan.json',plan);result.update(state='RUNNING',source_commit=inputs['source_commit'],planned=len(plan))
         for i,spec in enumerate(plan):
             name=f'{i:02d}-{spec["workload"]}-{spec["threads"]}-{spec["arm"]}-{spec["observation"]}-r{spec["repeat"]}'

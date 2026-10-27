@@ -12,18 +12,17 @@ ROOT = Path(__file__).resolve().parents[4]
 sys.path.insert(0, str(ROOT / 'bench/spin_cacheline'))
 import bench_runtime as rt
 import kernel_identity
+sys.path.insert(0, str(ROOT / 'bench/mmap_writer'))
+import shared_platform
 
 
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('--mode', choices=('native', 'kd'), required=True)
     p.add_argument('--output', type=Path, required=True)
-    kernel_identity.arguments(p)
+    shared_platform.arguments(p)
     a = p.parse_args()
-    rt.require(os.geteuid() == 0 and str(ROOT).startswith('/root/') and
-               os.uname().release.startswith('6.1.159-kdmm') and
-               os.environ.get('KDLOCK_RECOVERY_CONFIRMED') == '1' and
-               os.environ.get('KDLOCK_SNAPSHOT_TAG'), 'confirmed experimental guest required')
+    shared_platform.guest(a)
     rt.idle()
     for m in Path('/sys/module').iterdir():
         rt.require(not m.name.startswith(('kd_', 'tclock_', 'tc_', 'jit_')), 'project module remains')
@@ -51,7 +50,8 @@ def main():
         rt.require(not rt.FAULT.search(messages), 'kernel fault; retain module', 'KERNEL_FAULT')
 
     try:
-        result['kernel_identity'] = kernel_identity.capture(a, out, rt.command)
+        result.update(shared_platform.admit(a,out))
+        support=shared_platform.freeze_support(out)
         source, hashes = out / 'source', {}
         here = Path(__file__).parent
         for path in here.rglob('*'):
@@ -70,6 +70,8 @@ def main():
                    out / 'build-client.log', timeout=60)
         binaries = {str(p.relative_to(out)): rt.digest(p) for p in (payload, client)}
         rt.write_json(out / 'binary-sha256.json', binaries)
+        shared_platform.verify_boot(a)
+        shared_platform.common.verify_maps(support)
         fd = os.open('/dev/kmsg', os.O_RDONLY | os.O_NONBLOCK)
         os.lseek(fd, 0, os.SEEK_END)
         rt.command(['insmod', payload], out / 'load.log')
@@ -95,18 +97,15 @@ def main():
             rt.require(rt.digest(here / name) == rt.digest(source / name) == h, 'frozen input changed')
         rt.require(all(rt.digest(out / name) == h for name, h in binaries.items()) and
                    not (out / 'mapped-file').exists(), 'binary or file teardown differs')
+        shared_platform.verify_boot(a)
+        shared_platform.common.verify_maps(support)
         result.update(state='COMPLETE', passed=True, drained=True, observation=observed, health=health,
                       binaries=binaries, source_unchanged=True)
     except BaseException as error:
         result.update(state='FAILED', error=repr(error))
         raise
     finally:
-        try:
-            logs()
-        finally:
-            rt.write_json(out / 'result.json', result)
-            if fd is not None:
-                os.close(fd)
+        shared_platform.common.finish_logs(out,result,logs,fd)
     print(json.dumps(result))
 
 

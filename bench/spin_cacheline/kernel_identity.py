@@ -14,9 +14,12 @@ from pathlib import Path
 
 sys.dont_write_bytecode = True
 ROOT = Path(__file__).resolve().parents[2]
+VARIANTS = ('kdlock1', 'kdmm1-native', 'kdmm1-kd')
 
 
 def arguments(parser):
+    parser.add_argument('--kernel-variant', choices=VARIANTS, default='kdlock1',
+                        help='explicit reviewed Linux 7 release/MM mode; never inferred from a bundle')
     parser.add_argument('--kernel-source', type=Path,
                         default=Path('/mnt/kdlock-builds/linux-7.0.0-38-kdlock1/build'),
                         help='kernel build directory (KDIR); schema 2 binds its separate source tree')
@@ -38,25 +41,33 @@ def verifier_for(bundle):
     return schema, manifest, verifier
 
 
-def check(source, bundle):
+def check(source, bundle, variant='kdlock1'):
     schema, _, verifier = verifier_for(bundle)
     # Preserve the literal schema-2 KDIR for the canonical-root check. Resolving
     # it first would silently accept a different caller-selected symlink path.
     selected = source.resolve() if schema == 1 else source
-    return verifier.verify(bundle.resolve(), selected, build=True, running=True)
+    if schema == 1:
+        if variant != 'kdlock1':
+            raise ValueError('Linux 7 MM variant cannot use a legacy identity')
+        return verifier.verify(bundle.resolve(), selected, build=True, running=True)
+    return verifier.verify(bundle.resolve(), selected, build=True, running=True, variant=variant)
 
 
-def source_directory(build, bundle):
+def source_directory(build, bundle, variant='kdlock1'):
     """Locate original implementation files; callers still use KDIR to build."""
     schema, manifest, verifier = verifier_for(bundle)
     if schema == 1:
+        if variant != 'kdlock1':
+            raise ValueError('Linux 7 MM variant cannot use a legacy identity')
         return build.resolve()
-    return verifier.source_directory(build, manifest)
+    return verifier.source_directory(build, manifest, variant=variant)
 
 
 def capture(args, out, command):
+    variant = getattr(args, 'kernel_variant', 'kdlock1')
     result = command(['python3', Path(__file__).resolve(), '--kernel-source', args.kernel_source,
-                      '--kernel-baseline', args.kernel_baseline], out / 'baseline.json')
+                      '--kernel-baseline', args.kernel_baseline,
+                      '--kernel-variant', variant], out / 'baseline.json')
     # Copy only named, verified bundle inputs, with paths already validated by
     # the verifier. Preserve the manifest itself alongside those exact bytes.
     bundle = args.kernel_baseline.resolve()
@@ -69,7 +80,7 @@ def capture(args, out, command):
         shutil.copyfile(bundle / name, dest)
     # Verify the captured copy too: a concurrent bundle edit must not leave a
     # result associated with different inputs than the ones actually retained.
-    copied = check(args.kernel_source, target)
+    copied = check(args.kernel_source, target, variant=variant)
     if copied != json.loads(result):
         raise RuntimeError('captured kernel identity differs from preflight')
     return dict(source=str(args.kernel_source.resolve()), baseline=str(bundle), **copied)
@@ -79,4 +90,4 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     arguments(parser)
     args = parser.parse_args()
-    print(json.dumps(check(args.kernel_source, args.kernel_baseline), sort_keys=True))
+    print(json.dumps(check(args.kernel_source, args.kernel_baseline, variant=args.kernel_variant), sort_keys=True))

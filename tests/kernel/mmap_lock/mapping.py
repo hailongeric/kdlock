@@ -15,6 +15,9 @@ ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(ROOT / 'bench/spin_cacheline'))
 import bench_runtime as rt
 import kernel_identity
+sys.path.insert(0, str(ROOT / 'bench/mmap_writer'))
+import shared_platform
+import sites as linux70_sites
 sys.path.insert(0, str(ROOT / 'tests/protocols'))
 from cpu_placement import capture_topology
 
@@ -90,16 +93,13 @@ def main():
     p.add_argument('--mode', choices=('native', 'kd'), required=True)
     p.add_argument('--api-result', type=Path, required=True)
     p.add_argument('--output', type=Path, required=True)
-    p.add_argument('--writer-sites', type=Path, default=Path(__file__).with_name('writer_sites.json'),
+    p.add_argument('--writer-sites', type=Path, required=True,
                    help='reviewed call-site manifest bound to the exact candidate ELF')
-    kernel_identity.arguments(p)
+    p.add_argument('--writer-sites-sha256',required=True)
+    shared_platform.arguments(p)
     a = p.parse_args()
     global SITES
-    SITES = json.loads(a.writer_sites.read_text())
-    rt.require(os.geteuid() == 0 and str(ROOT).startswith('/root/') and
-               os.uname().release.startswith('6.1.159-kdmm') and
-               os.environ.get('KDLOCK_RECOVERY_CONFIRMED') == '1' and
-               os.environ.get('KDLOCK_SNAPSHOT_TAG'), 'confirmed experimental guest required')
+    shared_platform.guest(a)
     boot = Path('/proc/sys/kernel/random/boot_id').read_text().strip()
     api = json.loads(a.api_result.read_text())
     rt.require(api['passed'] and api['drained'] and api['boot_id'] == boot and api['mode'] == a.mode and
@@ -133,9 +133,12 @@ def main():
         rt.require(not rt.FAULT.search(messages), 'kernel fault; retain module', 'KERNEL_FAULT')
 
     try:
-        result['kernel_identity'] = kernel_identity.capture(a, out, rt.command)
-        rt.require(result['kernel_identity']['running_build_id'] == SITES['kernel_build_id'] and
-                   rt.digest(a.kernel_source / 'vmlinux') == SITES['vmlinux_sha256'], 'writer proof ELF differs')
+        result.update(shared_platform.admit(a,out))
+        rt.require(api.get('kernel_binding')==result['kernel_binding'], 'actual-MM API kernel identity differs')
+        support=shared_platform.freeze_support(out)
+        evidence=out/'writer-disassembly';evidence.mkdir()
+        SITES=linux70_sites.checked_receipt(a.writer_sites,a.writer_sites_sha256,result['kernel_binding'],
+                                          a.kernel_source/'vmlinux',evidence,rt.command)
         shutil.copyfile(a.writer_sites, out / 'writer-sites.json')
         result['writer_sites_sha256'] = rt.digest(out / 'writer-sites.json')
         source, hashes = out / 'source', {}
@@ -154,6 +157,8 @@ def main():
         rt.write_json(out / 'source-sha256.json', hashes)
 
         def verify():
+            shared_platform.verify_boot(a)
+            shared_platform.common.verify_maps(support)
             rt.require(rt.digest(a.writer_sites) == rt.digest(out / 'writer-sites.json') ==
                        result['writer_sites_sha256'], 'reviewed writer proof changed')
             for name, h in hashes.items():
@@ -207,12 +212,7 @@ def main():
         result.update(state='FAILED', error=repr(error))
         raise
     finally:
-        try:
-            logs()
-        finally:
-            rt.write_json(out / 'result.json', result)
-            if fd is not None:
-                os.close(fd)
+        shared_platform.common.finish_logs(out,result,logs,fd)
     print(json.dumps({k: result[k] for k in ('state', 'passed', 'drained', 'mode')}))
 
 

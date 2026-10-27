@@ -16,11 +16,14 @@ ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0,str(ROOT/'bench/spin_cacheline'))
 import bench_runtime as rt
 import kernel_identity
+sys.path.insert(0,str(ROOT/'bench/mmap_fault'))
+import mm_platform
+import timing as mm_timing
 
 DIRECTORIES = ('include','kernel_module','daemon','tclock_backend','workload_modules/mmap_fault',
                'bench/mmap_fault','tests/kernel/mmap_fault','tests/unit','disassem',
                'tests/protocols','kernel_baseline','bench/spin_cacheline',
-               'bench/tclock_compare/allocator_guard')
+               'bench/tclock_compare/allocator_guard','kernel_integration/linux70','bench/basic')
 
 
 def validate(rows, backend):
@@ -107,28 +110,18 @@ def main():
                         help='required successful same-revision result before TCLock')
     parser.add_argument('--split',action='store_true',
                         help='also validate mmap without faults and separate CPU-fault workloads')
-    parser.add_argument('--boot-id', default='b65f0205-c8f9-4385-8b13-039cbce243a6',
-                        help='explicitly bind this check to the verified recovery boot')
+    mm_platform.arguments(parser)
     kernel_identity.arguments(parser)
     args=parser.parse_args()
-    rt.require(os.geteuid()==0 and os.uname().release=='6.1.159-kdclobber2' and
-               str(ROOT)=='/root/host_fs/kdlock' and
-               Path('/proc/sys/kernel/random/boot_id').read_text().strip()==args.boot_id and
-               os.environ.get('KDLOCK_RECOVERY_CONFIRMED')=='1' and
-               os.environ.get('KDLOCK_SNAPSHOT_TAG')=='before-mutex-kdonly-20261017T140354Z',
-               'same confirmed recovery VM required')
-    rt.require(sys.executable=='/root/kdlock-translation-venv-20261019/bin/python3' and
-               shutil.which('python3')==sys.executable,'pinned Python required')
+    mm_platform.guest(args.boot_id)
     spec=importlib.util.spec_from_file_location('mmap_archive',ROOT/'bench/archive_run.py')
     archive=importlib.util.module_from_spec(spec);spec.loader.exec_module(archive)
     out=args.output.resolve();rt.require(not out.exists() and not out.is_relative_to(ROOT),'new evidence output required')
     archive.idle(out.parent,rt.idle)
+    reference_bytes,reference=mm_platform.host_reference(args.host_reference,args.host_reference_sha256)
     host=json.loads(args.host_state.read_text())
-    age=(datetime.datetime.now(datetime.timezone.utc)-datetime.datetime.fromisoformat(host['captured_utc'])).total_seconds()
-    rt.require(0<=age<=300 and host['snapshot_listed'] and host['pins_verified'] and
-               host['recovery_snapshot']==os.environ['KDLOCK_SNAPSHOT_TAG'] and
-               len(host['qemu'])==1 and host['qemu'][0]['pid']==257489,
-               'fresh evidence for the same host and recovery snapshot required')
+    host_gate=mm_platform.compare_host(reference,host,datetime.datetime.now(datetime.timezone.utc),
+                                       os.environ['KDLOCK_SNAPSHOT_TAG'],False)
     manifest=json.loads(args.source_manifest.read_text())
     tc_run=args.backends=='2'
     prerequisite=None
@@ -152,6 +145,8 @@ def main():
     shutil.copyfile(args.source_manifest,out/'committed-source.json')
     shutil.copyfile(args.host_state,out/'host-before.json')
     rt.write_json(out/'source-sha256.json',hashes)
+    (out/'host-reference.json').write_bytes(reference_bytes)
+    rt.write_json(out/'host-qualification.json',host_gate)
     result=dict(state='STARTING',passed=False,drained=False,source_commit=manifest['commit'],
                 source_manifest_sha256=rt.digest(args.source_manifest),source_files=len(hashes),
                 boot_id=Path('/proc/sys/kernel/random/boot_id').read_text().strip(),
@@ -170,6 +165,7 @@ def main():
         (out/'kernel.log').write_text(messages)
         rt.require(not rt.FAULT.search(messages),'kernel fault; retain all modules','KERNEL_FAULT')
     def verify():
+        rt.require(Path('/proc/sys/kernel/random/boot_id').read_text().strip()==args.boot_id, 'guest boot changed')
         for p,h in hashes.items():
             rt.require(rt.digest(ROOT/p)==rt.digest(source/p)==h,'source changed: '+p)
         for p,h in prepared.items():
@@ -177,13 +173,16 @@ def main():
     prepared={}
     try:
         result['kernel_identity']=kernel_identity.capture(args,out,rt.command)
+        result['kernel_binding']=mm_platform.kernel_binding(result['kernel_identity'],args.kernel_source,args.kernel_baseline)
+        if tc_run:
+            rt.require(prior.get('kernel_binding')==result['kernel_binding'], 'Native/KD prerequisite kernel differs')
         rt.command([sys.executable,'-m','pip','check'],out/'dependencies.log',timeout=60)
-        packages={p:importlib.metadata.version(p) for p in ('miasm','future','pyparsing','pyelftools')}
-        rt.require(packages==dict(miasm='0.1.5',future='1.0.0',pyparsing='2.4.7',pyelftools='0.27'),'dependency versions differ')
+        dependencies=mm_platform.dependency_identity();packages=dependencies['packages']
         topology=rt.capture_topology([0,1,2,3,4,63])
         rt.require(topology['online_cpus']==list(range(64)) and topology['role_nodes']==[0,0,0,0,0,1],'guest topology differs')
         rt.write_json(out/'environment.json',dict(packages=packages,topology=topology,
-            python=sys.executable,cmdline=Path('/proc/cmdline').read_text(),argv=sys.argv))
+            python=sys.executable,semantic_builder=dependencies['semantic_builder'],
+            cmdline=Path('/proc/cmdline').read_text(),argv=sys.argv))
         rt.command(['make','-C',source/'tests/unit','run','PYTHON='+sys.executable,'PY_TESTS='],out/'basic.log',timeout=180)
         if tc_run:
             provider=source/'tclock_backend/tclock_rwlock_backend_km.ko'
@@ -282,10 +281,7 @@ def main():
         result.update(state='FAILED',error=repr(error))
         raise
     finally:
-        rt.write_json(out/'result.json',result)
-        if fd is not None:
-            try:logs()
-            finally:os.close(fd)
+        mm_timing.finish_logs(out,result,logs,fd)
     print(json.dumps(result))
 
 

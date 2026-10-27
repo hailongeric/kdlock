@@ -17,12 +17,18 @@ rt=timing.rt
 def main():
     p=argparse.ArgumentParser(description=__doc__);p.add_argument('--correctness',type=Path,required=True)
     p.add_argument('--timing',type=Path,required=True);p.add_argument('--output',type=Path,required=True);a=p.parse_args()
-    timing.common.guest();timing.check.idle(a.correctness.parent)
+    correctness=timing.common.load(a.correctness/'result.json')
+    preparation=timing.common.load(a.timing/'result.json')
+    timing.common.guest(correctness['boot_id']);timing.check.idle(a.correctness.parent)
+    rt.require(correctness['passed'] and correctness['drained'] and preparation['passed'] and
+               preparation['drained'] and correctness['kernel_binding']==preparation['kernel_binding'],
+               'matching Linux 7 correctness/timing prerequisites required')
     rt.require(not a.output.exists(),'new oracle evidence path required');a.output.mkdir()
     cr=a.correctness/'02-cycle-16.jsonl';tr=a.timing/'03-mmap-shared-mm-16-sampled-r0/client.jsonl'
     writer=[json.loads(line) for line in cr.read_text().splitlines()]
     measured=[json.loads(line) for line in tr.read_text().splitlines()]
-    cvalidate=lambda r:timing.check.validate(r,'cycle',16,5000)
+    cvalidate=lambda r:timing.check.validate(r,'cycle',16,5000,
+        lambda row:timing.check.sites_check.validate_witness(row,correctness['writer_sites']))
     tvalidate=lambda r:timing.validate(r,timing.spec(16,'sampled',0))
     cvalidate(writer);tvalidate(measured)
     rejected=[]
