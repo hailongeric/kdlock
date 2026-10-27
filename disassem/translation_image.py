@@ -40,7 +40,7 @@ def wrapper_context_inputs(assembly):
 
 def write_entry_dispatch(
     f, entry, block_dict, continuation_targets=None, *, body_witness=False,
-    preserve_flags=False, root_only=False,
+    preserve_flags=True, root_only=False,
 ):
     dispatch_targets = {entry} if root_only else set(block_dict)
     if not root_only:
@@ -87,6 +87,7 @@ def emit_jit_assembly(
     root_native_escape=False,
     address_guards=None,
     native_calls=None,
+    trusted_source=False,
 ):
     continuation_targets = find_resumable_call_continuations(
         block_dict, db_dict, keep_call_stack
@@ -107,7 +108,7 @@ def emit_jit_assembly(
         entry_guards.emit(f, entry)
     write_entry_dispatch(
         f, entry, block_dict, continuation_targets, body_witness=body_witness,
-        preserve_flags=native_escapes,
+        preserve_flags=True,
         root_only=root_native_escape or native_calls is not None,
     )
     budget_rips = []
@@ -125,12 +126,13 @@ def emit_jit_assembly(
 
         if assist.check_is_branch(block.lines) and label[0] == "l":
             budget_rips.append(offset)
-            if native_escapes:
-                f.write("PUSHFQ\n")
+            # Source flags can cross block edges and ordinary CALL/RET pairs.
+            # Instrumentation owns the physical stack; all source stack
+            # accesses use virtual SP and every target consumes this save.
+            f.write("PUSHFQ\n")
             f.write("DEC             Stack_BUDGET\n")
             f.write(f"JZ              kd_budget_limit_{offset:x}\n")
-            if native_escapes:
-                f.write("POPFQ\n")
+            f.write("POPFQ\n")
 
         temp_i = 0
         temp_j = 0
@@ -148,12 +150,10 @@ def emit_jit_assembly(
             if str(line) == "LEA        R13, QWORD PTR [R12 + R14]":
                 diagnostics.warn(
                     "LEA_FLAGS_REWRITE",
-                    "emit_saved_flags_mov_add" if native_escapes else "emit_mov_add",
-                    "save source flags around ADD" if native_escapes else
-                    "ADD changes flags although the original LEA does not",
+                    "emit_saved_flags_mov_add",
+                    "save source flags around ADD",
                 )
-                if native_escapes:
-                    f.write("PUSHFQ\n")
+                f.write("PUSHFQ\n")
                 temp_inst1 = mn_x86.fromstring("MOV R13, R14", loc_db=None, mode="64")
                 temp_inst2 = mn_x86.fromstring("ADD R13, R12", loc_db=None, mode="64")
                 block.lines[temp_i : temp_i + 1] = [temp_inst1, temp_inst2]
@@ -189,14 +189,15 @@ def emit_jit_assembly(
             elif native_calls is not None and target in native_calls.services:
                 f.write(native_calls.emit(line, offset, target, reg_map))
             else:
-                f.write(special_inst.translate(line, offset, db, reg_map, block_end))
+                f.write(special_inst.translate(line, offset, db, reg_map, block_end,
+                                               trusted_source=trusted_source))
             temp_i += 1
             if temp_j > 0:
                 temp_j -= 1
-                if native_escapes and temp_j == 0:
+                if temp_j == 0:
                     f.write("POPFQ\n")
         f.write("\n\n")
-    f.write(indirect_jump.make_jump_table(jump_table, preserve_flags=native_escapes))
+    f.write(indirect_jump.make_jump_table(jump_table, preserve_flags=True))
     direct_targets = set(native_calls.services) if native_calls is not None else set()
     f.write(indirect_jump.make_callee_table(
         [target for target in missing_callees if target not in direct_targets],
@@ -206,8 +207,7 @@ def emit_jit_assembly(
     # at the same untouched source block as the previous INC/TEST sequence.
     for offset in budget_rips:
         f.write(f"kd_budget_limit_{offset:x}:\n")
-        if native_escapes:
-            f.write("POPFQ\n")
+        f.write("POPFQ\n")
         f.write(make_inst("MOVABS", ["R14", hex(offset)]))
         f.write("JMP             inst_limit\n")
 
@@ -216,20 +216,21 @@ def emit_jit_assembly(
     # pretending to enumerate every unknown access or changing its admission.
     diagnostics.set_instruction(entry, "<context admission scope>")
     diagnostics.warn(
-        "CONTEXT_SCREENING_ONLY",
+        "TRUSTED_SOURCE_EMISSION" if trusted_source else "CONTEXT_SCREENING_ONLY",
         "emit_unchanged",
-        "static context screening does not validate runtime pointer targets or "
-        "concurrent memory freshness; use only audited experimental workloads",
+        ("source safety is a caller assumption; no context/value or loop admission ran"
+         if trusted_source else
+         "static context screening does not validate runtime pointer targets or "
+         "concurrent memory freshness; use only audited experimental workloads"),
         runtime_address_guard=False,
         concurrent_memory_validated=False,
     )
     diagnostics.set_instruction(entry, "<entry/branch instrumentation>")
     diagnostics.warn(
-        "NATIVE_ESCAPE_FLAGS" if native_escapes else "FLAGS_UNPRESERVED",
-        "preserve_arithmetic_flags" if native_escapes else "emit_unchanged",
-        ("marker images preserve dispatch/budget flags and require defined source flags"
-         if native_escapes else
-         "entry dispatch and branch budget may clobber live flags; liveness is unchecked"),
+        "TRANSLATION_FLAGS_PRESERVED",
+        "preserve_arithmetic_flags",
+        "generated dispatch, block budgets, return checks and LEA lowering "
+        "preserve source flags; entry and native continuation contracts are unchanged",
         budget_blocks=len(budget_rips),
         first_budget_rip=(
             f"0x{budget_rips[0]:x}" if budget_rips else "n/a"

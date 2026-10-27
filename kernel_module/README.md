@@ -1,5 +1,12 @@
 # KD kernel provider
 
+Current translation trusts kernel and module source and skips semantic safety
+admission, including loop/value and entry-input proofs. The compiler's clobber
+entry contract is assumed. Ordinary instruction lowering, leased text, exact
+CALL/RET routing and runtime lock/frame ownership remain required. String
+functions follow this same path, with no helper-specific summaries or services.
+The checked analyzer remains available as an explicit regression utility.
+
 This module implements KD spinlocks, mutexes, rwlocks and sleeping rwsems.
 Rwsem readers and ordinary writers run locally; explicit outer writers can
 delegate through mutex ABI2 after phase reservation and reader drain. It also exposes
@@ -65,7 +72,7 @@ boundaries remain separate for reading.
 | [kd_rwsem.c](kd_rwsem.c) | Sleeping APIs, ordinary cancellation/downgrade and outer-writer phase admission before the unchanged mutex queue |
 | [lock](lock) via [kd_lock.c](kd_lock.c) | Direct KD mutex routes and nested spin/mutex control CALLs |
 | [execution](execution) | Registry, wrapper preparation, frame/ledger, control/services, native and remote ACK |
-| [execution/images.inc](execution/images.inc) | Immutable mutex and ABI1 guard/service images, direct-call relocation in separate near-text storage, bound generations, stale-miss rejection and permanent delegation refusal |
+| [execution/images.inc](execution/images.inc) | Immutable mutex and ABI1 guard images, historical service/direct-call compatibility, bound generations, stale-miss rejection and permanent delegation refusal |
 | [kd_source.c](kd_source.c), [sys.c](sys.c) | Text pins, device session, capabilities, publication and retirement |
 | [kd_hotlock.c](kd_hotlock.c) | Exact-address per-type tables and approximate sampling |
 | [kd_mutex_tasks.c](kd_mutex_tasks.c) | Exact task/acquisition refs and RCU lifetime |
@@ -165,6 +172,14 @@ and acknowledgements until normal retirement. The
 performance acceptance requires separate workload measurements.
 
 ## Original string API services
+
+This section records historical provider compatibility and source-specific
+validation. The current translator selects only the scalar services `ktime_get`,
+`ktime_get_ns` and `int_sqrt`; strings undergo ordinary leased decoding,
+instruction/context admission, memory analysis and generated CALL/RET. It never
+selects these string services or the direct-call route below, even when the
+provider advertises their capability bits. Retaining those ABI interfaces does
+not validate ordinary helper translation on Linux 7.
 
 The contract introduced in version 10 uses the original [`strcmp` service](../docs/design/admission.md#original-strcmp-service)
 and [`strscpy_pad` writing service](../docs/design/admission.md#original-strscpy_pad-writing-service)

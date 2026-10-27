@@ -1,4 +1,4 @@
-"""Guest-only original API resolution and explicit destination-write effects."""
+"""Ordinary-call selection and legacy provider-only destination-write models."""
 import struct
 import unittest
 
@@ -42,34 +42,31 @@ class StrscpyServiceTests(unittest.TestCase):
             set_register(tracker, name, value)
         return tracker
 
-    def test_resolver_requires_native_caller_contract_and_writing_capability(self):
+    def test_legacy_writer_capability_cannot_select_a_string_summary(self):
         lookup = lambda name, default=0: ADDRESSES.get(name, default)
-        self.assertNotIn(0x2000, hostcall.resolve_hostcalls(lookup, string_write=True))
-        self.assertNotIn(0x2000, hostcall.resolve_hostcalls(lookup, audited_strings=True))
-        self.assertEqual(service.targets(hostcall.resolve_hostcalls(
-            lookup, string_write=True, audited_strings=True)), {0x2000})
+        for writing in (False, True):
+            for audited in (False, True):
+                resolved = hostcall.resolve_hostcalls(
+                    lookup, string_write=writing, audited_strings=audited)
+                self.assertNotIn(0x2000, resolved)
+                self.assertEqual(service.targets(resolved), set())
 
-    def test_coordinator_requires_writing_capability_and_emits_exact_service(self):
-        prefix = bytes.fromhex("488d7d90be00900000ba40000000")
-        raw = prefix + b"\xe8" + struct.pack("<i", ADDRESSES["strscpy_pad"] - 0x1000 - len(prefix) - 5)
-        raw += bytes.fromhex("4839c0c3")
-        options = {}
-        symbols = ADDRESSES | {"kd_raw_spin_lock_clobber_v1": 0x6000,
-                               "kd_raw_spin_unlock_clobber_v1": 0x7000}
-        assembly, log, status = render(raw.hex(), abi=1, kernel_symbols=symbols,
-                                      memory_reader=self.reader, string_write_capable=True,
-                                      audited_strings_capable=True, build_options=options,
-                                      return_status=True)
-        self.assertEqual(status, 0, log)
-        self.assertIn(b"KD_HOSTCALL id=5 symbol=strscpy_pad", assembly)
-        self.assertEqual(options["requirements"], service.REQUIREMENT)
-        self.assertNotIn(b"KDCS0001", assembly)
-        self.assertNotIn("CONSTANT_PATH_SPECIALIZATION", log)
-        # A strcmp-only provider cannot select a writing summary.
-        resolved = hostcall.resolve_hostcalls(
-            lambda name, default=0: ADDRESSES.get(name, default),
-            string_services=True, audited_strings=True)
-        self.assertNotIn(ADDRESSES["strscpy_pad"], resolved)
+    def test_missing_writer_is_an_ordinary_call_without_special_requirement(self):
+        for count in (0, 16, 63, 64, 65):
+            prefix = bytes.fromhex("488d7d90be00900000ba") + struct.pack("<I", count)
+            raw = prefix + b"\xe8" + struct.pack("<i", 0x2000 - 0x1000 - len(prefix) - 5)
+            raw += b"\xc3"
+            options = {}
+            assembly, log, status = render(
+                raw.hex(), abi=1, kernel_symbols=ADDRESSES | {
+                    "kd_raw_spin_lock_clobber_v1": 0x6000,
+                    "kd_raw_spin_unlock_clobber_v1": 0x7000},
+                string_write_capable=True, audited_strings_capable=True,
+                build_options=options, return_status=True)
+            self.assertEqual(status, 0, log)
+            self.assertEqual(options["requirements"], 0)
+            self.assertNotIn(b"KD_HOSTCALL id=5", assembly)
+            self.assertNotIn(b"KD_DIRECT_STRING", assembly)
 
     def test_count_destination_and_sensitive_source_are_screened(self):
         line, db = call_graph()
@@ -91,27 +88,7 @@ class StrscpyServiceTests(unittest.TestCase):
             with self.subTest(widened=register), self.assertRaises(ContextFlowLimit):
                 service.argument_rejection(line, db, tracker, target, {})
 
-    def test_audited_writer_keeps_exact_count_frame_and_effect_contract(self):
-        symbols = ADDRESSES | {"kd_raw_spin_lock_clobber_v1": 0x6000,
-                               "kd_raw_spin_unlock_clobber_v1": 0x7000}
-        for count in (63, 64, 65):
-            prefix = bytes.fromhex("488d7d90be00900000ba") + struct.pack("<I", count)
-            raw = prefix + b"\xe8" + struct.pack("<i", ADDRESSES["strscpy_pad"] - 0x1000 - len(prefix) - 5)
-            raw += bytes.fromhex("4839c0c3")
-            options = {}
-            with self.subTest(count=count):
-                assembly, log, status = render(
-                    raw.hex(), abi=1, kernel_symbols=symbols, memory_reader=self.reader,
-                    string_write_capable=True, audited_strings_capable=True,
-                    build_options=options, return_status=True)
-                self.assertEqual(status, 0 if count == 64 else 2, log)
-                if count != 64:
-                    self.assertEqual(assembly, b"")
-                    self.assertIn("exact count 64", log)
-                    continue
-                self.assertEqual(options["requirements"], service.REQUIREMENT)
-                self.assertNotIn(b"KDCS0001", assembly)
-                self.assertNotIn("CONSTANT_PATH_SPECIALIZATION", log)
+
 
     def test_writer_is_not_readonly_and_keeps_complete_destination_effects(self):
         resolved = {ADDRESSES["strscpy_pad"]: service.SPEC}

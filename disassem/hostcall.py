@@ -4,8 +4,6 @@
 import os
 import re
 from collections import namedtuple
-import strcmp_service
-import strscpy_service
 
 HostcallSpec = namedtuple("HostcallSpec", "name service_id symbol")
 
@@ -55,34 +53,36 @@ def load_hostcall_specs(path=None):
     return specs
 
 
+# Keep the provider's historical manifest/IDs readable, while allowing only
+# these scalar effects to bypass normal callee translation in current images.
+# Capability bits from an older provider never opt a string function back in.
+_SCALAR_SERVICES = frozenset({("KTIME_GET", 1, "ktime_get"),
+                              ("KTIME_GET_NS", 2, "ktime_get_ns"),
+                              ("INT_SQRT", 3, "int_sqrt")})
+
+
 def resolve_hostcalls(symbol_lookup, path=None, *, string_services=False,
                       string_write=False, audited_strings=False):
-    resolved = {}
+    """Resolve current scalar services; legacy capability kwargs have no effect.
 
+    Every other symbol follows ordinary leased-text decoding and admission.
+    Keep historical service IDs stable for existing provider/image ABI records.
+    """
+    resolved = {}
     for spec in load_hostcall_specs(path):
+        if tuple(spec) not in _SCALAR_SERVICES:
+            continue
         address = symbol_lookup(spec.symbol, 0)
-        if tuple(spec) == strcmp_service.SPEC:
-            if not string_services or not audited_strings:
-                continue
-        if tuple(spec) == strscpy_service.SPEC:
-            if not string_write or not audited_strings:
-                continue
         if address and address not in resolved:
             resolved[address] = spec
     return resolved
 
 
 def readonly_waiter_targets(resolved):
-    """Exact typed services whose handlers only replace saved RAX.
+    """Scalar services whose handlers only replace saved RAX.
 
-    These audited helpers run on the executor stack and do not write waiter
-    memory. strcmp uses its resolved original API symbol and negotiated native
-    caller contract, with ordinary pointer/context screening. No helper bytes
-    or arguments are checked by the service. Keep future services opaque. This
-    summarizes sequential effects, not memory validity or freshness.
-    See kernel_module/execution/hostcalls.inc for the matching invocations.
+    This summarizes sequential effects, not memory validity or freshness.
+    All ordinary callees retain their decoded instruction and memory effects.
     """
-    audited = {("KTIME_GET", 1, "ktime_get"),
-               ("KTIME_GET_NS", 2, "ktime_get_ns"),
-               ("INT_SQRT", 3, "int_sqrt"), strcmp_service.SPEC}
-    return {address for address, spec in resolved.items() if tuple(spec) in audited}
+    return {address for address, spec in resolved.items()
+            if tuple(spec) in _SCALAR_SERVICES}

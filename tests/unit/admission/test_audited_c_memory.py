@@ -152,18 +152,18 @@ class AuditedCMemoryTests(unittest.TestCase):
         with self.assertRaises(memory_model.AuditedScratchAccess):
             memory.load(ExprMem(ExprId("ordinary_object", 64), 64))
 
-    def test_coordinator_selects_typed_contract_without_pointer_guards(self):
-        # List-node -> original strcmp -> list-node repeats. The original
-        # virtual CALL store remains emitted; no stack exclusion is introduced.
+    def test_coordinator_does_not_classify_missing_string_call_as_readonly(self):
         raw = "488b5dc8488b75c0488b7b10e8ef0f0000488b5b08488b03c3"
+        options = {}
         assembly, log, status = render(
             raw, abi=1, kernel_symbols=SYMBOLS,
             string_services_capable=True, audited_strings_capable=True,
-            return_status=True)
+            build_options=options, return_status=True)
         self.assertEqual(status, 0, log)
-        self.assertIn(b"KD_HOSTCALL id=4 symbol=strcmp", assembly)
+        self.assertEqual(options["requirements"], 0)
+        self.assertNotIn(b"KD_HOSTCALL id=4", assembly)
+        self.assertNotIn(b"KD_DIRECT_STRING", assembly)
         self.assertRegex(assembly, rb"QWORD PTR \[R13\], R(?:14|15)")
-        self.assertNotIn("ADDRESS_GUARDED_ADMISSION", log)
 
     def memcpy_transfer(self):
         # The caller operands and learned helper are the actual xattr shape.
@@ -262,6 +262,8 @@ class AuditedCMemoryTests(unittest.TestCase):
                    "kd_raw_spin_lock_clobber_v1": 0xffffffffc0864000,
                    "kd_raw_spin_unlock_clobber_v1": 0xffffffffc0864840,
                    "__x86_return_thunk": 0xffffffff822024e0}
+        # This historical copy fixture omits the unavailable string callee.
+        # Full ordinary byte-call coverage is in test_ordinary_callee_bytes.
         # Merely resolving the copy symbol must not change its ordinary CALL,
         # full copied-memory effects or source RET dispatch.
         for copy_symbol in (False, True):
@@ -279,14 +281,14 @@ class AuditedCMemoryTests(unittest.TestCase):
                 with patch.object(translator.indirect_jump, "find", side_effect=observe_returns), \
                      patch.object(translator, "find_segment_policy_error", side_effect=observe_policy):
                     assembly, log, status = render(
-                        "", regions=self.captured_regions(), entry=0xffffffffc07961ae, abi=1,
+                        "", regions=self.captured_regions(string_call=False), entry=0xffffffffc07961ae, abi=1,
                         kernel_symbols=symbols | ({"__memcpy": 0xffffffff81ed94c0}
                                                    if copy_symbol else {}),
                         string_services_capable=True, audited_strings_capable=True,
                         return_status=True, build_options=options)
                 self.assertEqual(status, 0, log)
-                self.assertEqual(options["requirements"], 4)
-                self.assertIn(b"KD_HOSTCALL id=4 symbol=strcmp", assembly)
+                self.assertEqual(options["requirements"], 0)
+                self.assertNotIn(b"KD_HOSTCALL id=4 symbol=strcmp", assembly)
                 self.assertRegex(assembly, rb"REP\s+MOVSB")
                 self.assertTrue(any(0xffffffffc079616c in targets
                                     for table in tables for targets in table.values()))

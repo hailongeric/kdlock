@@ -1,59 +1,105 @@
 # Translator
 
-The translator reads kernel machine code while holding a source lease, which
-keeps the source modules loaded. It selects the code a JIT invocation can reach,
-checks whether that code is supported, rewrites uses of the caller's registers,
-and emits assembly and a wrapper image.
+The production translator trusts all selected kernel and module source code.
+It reads machine code under a source residency lease, decodes the reachable
+instructions, lowers their registers and control flow, and builds a wrapper
+image. It does not run context-symbol screening, memory/alias or loop-value
+analysis, constant-path proofs, or the minimal-entry input-definedness proof.
+The compiler's clobber-entry agreement is a source assumption: only IP/SP/BP
+are guaranteed by a minimal packet, and the source must supply its other live
+inputs. Trust does not add register capture or restore unsupported CPU state.
+
+The Python API defaults to `dis_assem(..., trusted_source=True)`. Explicit
+`trusted_source=False` retains the earlier checked analyzer for regression and
+comparison fixtures; it is not the production command-line path. The abandoned
+finite-edge refinement candidate is preserved with the ordinary-translation
+experiment receipts and is absent from active code.
+
 Use [the daemon](../daemon/README.md) for publication and
 [the project guide](../docs/PROJECT_GUIDE.md) for guest dependencies.
-JIT means just-in-time compilation; ABI means application binary interface.
-The [terminology guide](../docs/TERMINOLOGY.md) explains execution-state terms.
-Python 3.14 uses the [exact Miasm compatibility patch and preflight](compat/README.md);
-translator startup checks its installed bytes before semantic analysis.
+Python 3.14 requires the [pinned Miasm compatibility patch and preflight](compat/README.md).
+Startup checks those installed bytes before decoding. The
+[terminology guide](../docs/TERMINOLOGY.md) explains JIT, ABI and execution states.
 
-Under the [project roadmap](../docs/ROADMAP.md), stage 1 uses this translator to
-establish eligible delegation gains. The current stage 2 mmap adapter executes
-MM bodies locally. Broader stage 3 integration must preserve admission and source
-lifetime rules; a new benchmark target does not make arbitrary MM code eligible.
+Under the [project roadmap](../docs/ROADMAP.md), stage 1 measures delegation;
+the stage 2 mmap adapter executes unchanged MM bodies on their original tasks.
+Trusted translation does not extend that MM integration scope.
 
 | Read first | Responsibility |
 | --- | --- |
-| [disassem.py](disassem.py) |CLI, input coordination, assembly/link and diagnostics |
-| [instruction_policy.py](instruction_policy.py) | Scalar instruction, hardware-register and raw-encoding admission |
-| [native_escape.py](native_escape.py) | Reviewed instruction markers, scalar input/output proof, root-only spin scope and terminal generated paths |
-| [constant_paths.py](constant_paths.py) | Prove source branches impossible from exact register constants before ordinary admission; no runtime memory assumptions |
-| [address_guards.py](address_guards.py) | Restricted spin pointer-load checks against recorded stack writes and immutable source-site records |
-| [guard_flags.py](guard_flags.py) | Prove incoming arithmetic flags are overwritten before source code reads them at a checked spin continuation |
-| [translation_scope.py](translation_scope.py) | Decode windows, selected blocks and CALL continuations |
-| [translation_image.py](translation_image.py) | Dispatch targets and generated assembly |
-| [context_policy.py](context_policy.py), `context_symbols.py` | Backend/context screening and static ranges |
-| `context_values.py`, `context_registers.py`, `context_memory.py` | Bounded flow, register facts and sequential memory/alias model |
-| `context_guards.py`, `entry_abi.py` | Entry predicates and MINIMAL input-dependency proof |
-| `conflict.py`, `normal.py`, `special_inst.py`, `hostcall.py` | Virtual register/instruction/control lowering |
-| [strcmp_service.py](strcmp_service.py), [strscpy_service.py](strscpy_service.py) | Original kernel API resolution and separate read-only/64-byte writing effects |
-| [native_calls.py](native_calls.py) | Direct original string calls, per-invocation allowances and generated relocation directory |
+| [disassem.py](disassem.py) | Production trust selection, input coordination, assembly/link and diagnostics |
+| [translation_scope.py](translation_scope.py) | Decode windows, selected JIT episode and CALL continuations; optional checked screening |
+| [translation_image.py](translation_image.py) | Dispatch targets, flag-preserving instrumentation and generated assembly |
+| `conflict.py`, `normal.py`, `special_inst.py`, `hostcall.py` | Register, instruction, virtual-stack and control lowering |
+| [native_escape.py](native_escape.py) | Exact instruction-marker lowering and retained runtime protocol scope |
 | `device_session.py`, `memread.py` | Same-device lease, capabilities and source pinning |
+| [instruction_policy.py](instruction_policy.py), [context_policy.py](context_policy.py), `context_symbols.py` | Optional checked-mode instruction and context screening; shared CFG helpers |
+| `context_values.py`, `context_registers.py`, `context_memory.py` | Optional bounded value and memory analysis |
+| `context_guards.py`, `entry_abi.py`, [constant_paths.py](constant_paths.py), [address_guards.py](address_guards.py), [guard_flags.py](guard_flags.py) | Optional checked-mode input, branch and address proofs |
+| [strcmp_service.py](strcmp_service.py), [strscpy_service.py](strscpy_service.py), [native_calls.py](native_calls.py) | Historical service/direct-call compatibility; not selected by production translation |
 
-[Admission](../docs/design/admission.md) defines supported scope and refusal.
-[Register ABI](../docs/JIT_REGISTER_ABI.md) defines packet fields, register mapping,
-CALL tokens and COMPLETE/FULL. `solve_bug.py` contains narrow, actively called
-encoding/assembly corrections; it is not an obsolete standalone driver.
+[Translation policy](../docs/design/admission.md) separates source assumptions
+from construction and runtime checks. [Register ABI](../docs/JIT_REGISTER_ABI.md)
+defines packet fields, mapping, actual CALL words and COMPLETE/FULL.
+`solve_bug.py` contains active encoding/assembly corrections.
 
-Entry identities are legacy 0, spin clobber 1, mutex clobber 2 and rwlock writer
-clobber 3. ABI3 uses the spin backend and IP/SP/BP packet; native code acquires
-writer admission before the translated body. The body still passes the existing
-memory/context checks and releases its writer byte before spin completion.
-This admits the current RCUHT writer without translating reader-drain atomics;
-it does not resolve the general dynamic-pointer screening gap.
+Entry identities remain legacy 0, spin clobber 1, mutex clobber 2 and rwlock
+writer clobber 3. ABI3 uses the spin backend and IP/SP/BP packet. Native code
+acquires writer admission and drains readers before its translated body; the
+paired unlock releases the writer byte before spin completion. The object must
+still use one lock protocol. Trust does not create a Linux/KD mutex bridge or
+extend the nested ownership ledger.
 
-KD-only mutex translation requires exclusive KD objects and immutable images
-(capability versions 5 through 12). Checked mutex instruction markers require
-versions 6 through 12 bit 5. Checked spin address exits require versions 7 through
-12 bit 6 and image requirement bit 1; mutex instruction markers use image
-requirement bit 0. A capability is a provider's advertised execution support;
-an image requirement identifies support that its generated code needs.
+String routines, including `strcmp`, `strnlen`, `sized_strscpy`, `strscpy_pad`
+and `memcpy`, follow ordinary leased-text decoding and generated CALL/RET
+handling. A helper's prologue, memory operations, loops and return path remain
+ordinary code. No string name selects a memory summary, direct native service,
+quota or helper-specific escape. Current images retain only the scalar services
+`ktime_get`, `ktime_get_ns` and `int_sqrt`; historical string capability bits
+cannot reactivate the removed selection routes. Taskname retains its ordinary
+`KD_SPIN_DIRECT_LOCK` pair and source `strscpy_pad` use.
 
-Original string API services require versions 10 through 12 bit 9, together with bit 7 for
+Generated entry dispatch, block budgets, RET target checks and LEA-to-MOV/ADD
+lowering always preserve source arithmetic flags. Balanced saves use the
+executor's physical stack; source CALL words and source stack accesses use the
+waiter's virtual stack. This does not add captured entry flags or enlarge the
+native-continuation flags contract.
+
+Text coverage, decoder/lowering support, assembler success, return-target graph,
+image layout and provider capabilities still determine whether an image can be
+built and published. Missing bytes, unsupported representations or construction
+failures are not source-safety verdicts. Known decoder aliases require correct
+lowering; trusting their source is not permission to emit different semantics.
+Generated control flow retains actual CALL/RET operations and the return
+whitelist. Source leases, physical owners, acquisition records, unlock ACKs,
+frame retirement and normal drain remain enforced by the existing runtime.
+A NORMAL image is publication evidence, not a completed delegated body.
+
+KD-only mutex images remain immutable and require the negotiated exclusive-KD
+and immutable-image capabilities. Exact instruction markers keep their existing
+image requirements and runtime source/owner/continuation checks. Trusted mode
+does not apply the historical semantic proofs to their bodies. Marker images
+still obey the restricted root/nested protocol and disable later delegation
+when execution transfers to the original waiter. Unsupported marker encodings
+are not automatically native fallback points. See
+[the protocol details](../docs/design/admission.md#checked-instruction-exits).
+
+Install [the pinned requirements](requirements.txt) in the guest virtual
+environment. The production command is
+`python3 disassem/disassem.py PID ENTRY_HEX [LOCK_KIND] [ABI]`.
+Real-text CLI use acquires its own device lease and does not upload an image.
+Byte-fixture imports and successful assembly do not establish live kernel JIT
+correctness or performance. New trusted-mode results require their own receipts;
+the historical results below retain their original source and policy identities.
+
+## Historical checked-analysis and service evidence
+
+The following descriptions record historical checked-analysis and image/provider
+compatibility. The current translator does not select these routes, and their
+recorded validation does not validate ordinary helper translation on Linux 7.
+
+Historical original string API services require versions 10 through 12 bit 9,
+together with bit 7 for
 `strcmp` or bit 8 for `strscpy_pad`. Their image requirements remain bit 2 and
 bit 3 respectively. A service invokes the original kernel function with its
 original arguments while the generated caller retains its analyzed memory
@@ -106,39 +152,18 @@ are unchanged. See the
 [direct-call contract](../docs/design/admission.md#direct-original-helper-calls)
 and [register guide](../docs/JIT_REGISTER_ABI.md) for the complete boundaries.
 
-Linux mutex APIs, their compiler clones and the old kernel mutex bridge are
-refused. Ordinary KD return-valued or task-sensitive locking APIs remain local;
+The optional checked analyzer refuses Linux mutex APIs, their compiler clones
+and the old kernel mutex bridge. Ordinary KD return-valued or task-sensitive locking APIs remain local;
 explicit clobber entries supply delegation. See the
 [object/API contract](../docs/design/kd_only_mutex.md).
 
-Taskname uses the ordinary `KD_SPIN_DIRECT_LOCK` pair. Its `strscpy_pad` service
-executes the original helper without translating its prologue, so the call shell
-adds no helper-specific register initialization. The optional
-`KD_SPIN_DIRECT_HELPER_LOCK` remains available for other callers whose translated
-helpers save those incoming registers. The independent source constant proof
-also remains: it can exclude `strscpy()`'s impossible size-warning branch when
-the actual argument is 64, without changing the helper or permitting a reachable
-`UD2`. ABI1 bodies with learned indirect targets are not specialized; unknown
-facts and ambiguous joins retain their original branch alternatives.
-
-A restricted ABI1 address guard can check whether a pointer load overlaps earlier
-writes on the waiter's stack. A failed guard returns the original waiter to that
-exact load and disables future delegation. It requires the original source to
-overwrite arithmetic flags before reading them, because ordinary spin recovery
-does not restore them. Neither string service supplies that flags proof. Entries
-using guards or string services publish immutable images from their first such
-version onward. A body needing both constant-branch simplification and address
-guards remains refused, because simplifying the graph could hide an incoming
-flags read in the native continuation. The generic partial-CALL-alias mask
-refinement is an archived experiment, not a maintained admission rule. It tried
-to retain the known and unknown byte portions of values overlapping CALL return
-words. The maintained revision keeps conservative ordinary-CALL analysis and separate
-control storage only for the two string services. It changes no source load or
-store and does not make arbitrary pointers safe. Focused unit and live correctness
-checks passed, as recorded in the
-[version 10 development record](../bench/results/10.176.26.71/bench/taskname-xattr-native-api-20261019/DEVELOPMENT.md);
-see the [admission guide](../docs/design/admission.md#original-call-word-aliases)
-and [archived candidate 4](../bench/results/10.176.26.71/bench/taskname-xattr-native-api-20261019/DEVELOPMENT.md#archived-alias-experiment-and-next-scope).
+The former checked path combined source constant proofs, optional pointer-load
+guards and bounded memory/alias analysis. These mechanisms remain available to
+explicit checked-mode regression callers; production trusted translation does
+not invoke them. The generic partial-CALL-alias mask experiment remains archived
+in the [version 10 development record](../bench/results/10.176.26.71/bench/taskname-xattr-native-api-20261019/DEVELOPMENT.md#archived-alias-experiment-and-next-scope).
+Its results and the historical service-specific control-storage contract do not
+establish properties of the current trusted path.
 
 Version 10 candidate 6 passed all eight xattr controls and the read-only taskname
 checks with matching generated-body entries and completions. The original-string
@@ -152,7 +177,7 @@ dispatcher round, KD was slower than Linux Native and TCLock at 60 workers in
 all three measured workloads.
 The final version 11 direct bridge passed the affected unit and live checks,
 its separate KD screen and all 18 diagnostic profiles. The
-[current development record](../bench/results/10.176.26.71/bench/taskname-xattr-direct-api-20261019/DEVELOPMENT.md#candidate-3-checks)
+[historical development record](../bench/results/10.176.26.71/bench/taskname-xattr-direct-api-20261019/DEVELOPMENT.md#candidate-3-checks)
 retains the generated-wrapper checks and earlier failures. The separate
 [`05876a4` standard-grid comparison](../bench/results/10.176.26.71/bench/taskname-xattr-direct-api-20261019/README.md)
 completed all 567 sessions with validation and drain for the three API
@@ -172,28 +197,3 @@ probes also passed, but the removed string preflight is not current behavior.
 These [functional results](../bench/results/10.176.26.71/bench/taskname-xattr-20261018/DEVELOPMENT.md)
 remain tied to their source versions; the completed comparison reports the
 revised `88bb5a4` implementation separately.
-
-Install [the pinned requirements](requirements.txt) in a guest Python virtual
-environment. The translator command uses positional arguments:
-`python3 disassem/disassem.py PID ENTRY_HEX [LOCK_KIND] [ABI]`, where PID is the
-process identifier, ENTRY_HEX the hexadecimal entry address, and LOCK_KIND the
-lock backend. Real-text command-line use acquires its own device lease and does
-not by itself upload a published image. Importing helpers
-for byte fixtures does not establish actual kernel JIT evidence.
-
-The translator does not check every memory address when it is used or restore all
-processor state. Reviewed instructions can end generated execution with a
-checked marker; the waiter then executes the instruction and future delegation
-of that entry is disabled. Other unsupported state still fails static admission.
-See [the exact policy](../docs/design/admission.md#checked-instruction-exits).
-Version 12 bit 11 permits ABI1/3 root markers only with exact image requirements
-33 and a pristine physical root. Full-source checks reject services, nested and
-indirect control before trimming marker successors; generated dispatch admits
-only the original root. This does not extend ABI2 nested relay to spin/rwlock.
-Mutex images and spin entries that have published a root marker, address-check or typed
-string-service image use
-separate immutable versions. Other spin/rwlock entries retain
-in-place publication. The narrow spin checks do not close the general dynamic
-address gap or repair arbitrary processor state. Context checks are not a
-security sandbox; see
-[known limitations](../docs/TODO.md).

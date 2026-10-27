@@ -88,7 +88,7 @@ flowchart LR
 | Lock backend | Acquires the actual lock, queues waiting requests and performs the final unlock. |
 | Ticket/task record | Identifies one specific acquisition and keeps track of native execution and unlock acknowledgements. |
 | Execution frame | Records the original task, saved execution state and which locks are still held. |
-| Registry/translator | Matches an entry address to its backend and ABI, checks the code, and records whether an image is ready. |
+| Registry/translator | Matches an entry address to its backend and ABI, decodes and lowers trusted source, and records whether an image is ready. |
 | Wrapper | Runs generated code using the two-word input ABI and returns its execution state. |
 | Source session | Keeps source modules loaded during inspection and execution, until they can be retired. |
 
@@ -132,14 +132,29 @@ This uses the existing spin engine and needs no new guest-kernel interface.
 
 ## Translation and execution
 
-The translator checks the code it may emit, including memory accesses, calls and
-context-sensitive operations. It also checks any required conditions at JIT entry.
-[Admission](design/admission.md) documents these checks and their limits.
+Production translation trusts all selected kernel and module code. It skips
+semantic context screening, memory/alias and loop-value analysis, constant-path
+proofs and minimal-entry input-definedness proofs. The compiler clobber-entry
+contract supplies the assumed live inputs beyond IP/SP/BP. Explicit
+`trusted_source=False` retains the checked analyzer for regression fixtures.
+The translator still requires leased source, correct decoding/lowering, complete
+selected control flow and return routing; runtime exact ownership and retirement
+are unchanged. [Translation policy](design/admission.md) separates these
+construction/runtime obligations from source-safety assumptions.
+
+String functions are ordinary decoded callees with real generated CALL/RET,
+without helper-specific services, summaries, quotas or native bridges. Generated
+dispatch, budget checks, RET lookup and synthetic LEA lowering preserve source
+arithmetic flags; this does not add captured entry state or expand native restore.
 
 If generated code calls an ordinary function that has not been translated, the
 original waiter runs that function and the rest of the invocation natively. A
 later compilation may include the function. Known lock operations and approved
 services can instead return to JIT at a registered continuation.
+
+The following service/direct-call description is historical compatibility;
+current production translation selects none of these string routes. Its recorded
+validation does not validate the new trusted policy.
 
 Provider capability version 11 retains separately negotiated ABI1 spin services
 for the original [`strcmp`](design/admission.md#original-strcmp-service)
@@ -202,7 +217,7 @@ Mutex recompilation publishes a new immutable generation; existing mutex frames
 retain their bound generation through continuations and retirement. Ordinary
 spin/rwlock recompilation still overwrites the entry's allocated code block.
 Publishing the first ABI1 image with [checked pointer loads](design/admission.md#checked-spin-pointer-loads),
-the `strcmp` service or the `strscpy_pad` service instead allocates
+a historical `strcmp` service or `strscpy_pad` service instead allocates
 a separate immutable block. Existing spin frames retain their
 earlier descriptor and code; every later image for that entry is also immutable,
 even if it needs no guards or typed services. All versions retain their allocated
@@ -212,9 +227,11 @@ explains publication, source pins and frame leases.
 
 ## Limits and evidence
 
-KD remains experimental. Its checks do not cover all runtime pointers or
-concurrent pointer changes. Processor flags and SIMD/FPU state are not fully
-restored; ordinary spin/rwlock entries still permit in-place image replacement,
+KD remains experimental. Production trusts source memory and context behavior;
+it does not validate runtime pointers or concurrent pointer changes. Generated
+instrumentation preserves arithmetic flags, while generic native recovery and
+SIMD/FPU state are not fully restored. Ordinary spin/rwlock entries still permit
+in-place image replacement,
 and pinned waiters can block progress when there are more runnable tasks than
 available CPUs. The limited spin pointer-load checks do not establish a general
 runtime address or object-lifetime policy.

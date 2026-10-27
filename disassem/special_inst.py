@@ -184,12 +184,20 @@ def process_pop(arg, offset, reg_map):
     return ret_str
 
 
-def translate(line, offset, db, reg_map, block_end):
-    # Production admission runs before the emitter. Keep direct lowering callers
-    # from silently copying a state instruction if they omit that admission pass.
-    reason = instruction_policy.rejection(line)
-    if reason:
-        raise ValueError(reason)
+def translate(line, offset, db, reg_map, block_end, *, trusted_source=False):
+    # Trusted translation skips source-safety admission. A known decoder alias
+    # still cannot be reassembled as another instruction: that is a lowering
+    # representation error, independent of whether the source is trusted.
+    if trusted_source:
+        error = instruction_policy.segment_encoding_policy_error(
+            getattr(line, "b", b""))
+        if error:
+            raise ValueError("decoder cannot faithfully lower source encoding: " + error)
+    # Checked-mode utility callers retain their historical instruction policy.
+    if not trusted_source:
+        reason = instruction_policy.rejection(line)
+        if reason:
+            raise ValueError(reason)
     args = line.args
     name = get_inst_name(line)
     if line.name in special_instruction:

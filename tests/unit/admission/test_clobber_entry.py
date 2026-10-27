@@ -365,11 +365,14 @@ class ClobberEntryTests(unittest.TestCase):
             self.assertEqual(old.MAX_BYTES, 256)
             self.assertEqual(new.MAX_BYTES, 512)
 
-    def test_only_audited_services_keep_sequential_waiter_memory(self):
+    def test_only_scalar_services_keep_sequential_waiter_memory(self):
         specs = {i: spec for i, spec in enumerate(hostcall.load_hostcall_specs(), 1)}
-        writers = {address for address, spec in specs.items() if spec.symbol == 'strscpy_pad'}
-        self.assertEqual(len(writers), 1)
-        self.assertEqual(hostcall.readonly_waiter_targets(specs), set(specs) - writers)
+        scalar = {address for address, spec in specs.items()
+                  if (spec.name, spec.service_id, spec.symbol) in {
+                      ('KTIME_GET', 1, 'ktime_get'), ('KTIME_GET_NS', 2, 'ktime_get_ns'),
+                      ('INT_SQRT', 3, 'int_sqrt')}}
+        self.assertEqual(len(scalar), 3)
+        self.assertEqual(hostcall.readonly_waiter_targets(specs), scalar)
         specs[4] = hostcall.HostcallSpec('FUTURE', 4, 'unknown')
         self.assertNotIn(4, hostcall.readonly_waiter_targets(specs))
         for readonly in (False, True):

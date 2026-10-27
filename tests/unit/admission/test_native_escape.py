@@ -45,7 +45,7 @@ class NativeEscapeAdmissionTests(unittest.TestCase):
         _, log, status = escape("b82a000000c3", build_options=options)
         self.assertEqual(status, 0, log)
         self.assertEqual(options["requirements"], 0)
-        self.assertIn("FLAGS_UNPRESERVED", log)
+        self.assertIn("TRANSLATION_FLAGS_PRESERVED", log)
 
     def test_source_flags_and_implicit_inputs_must_be_defined(self):
         for raw, reason in (

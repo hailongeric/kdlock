@@ -43,7 +43,7 @@ class ContextSymbolsCases(ContextCaseSupport):
                     patch.object(translator, "build_jit_binary") as build,
                     self.assertRaisesRegex(ValueError, "unavailable lock symbol"),
                 ):
-                    translator.dis_assem(0, 0x1000, "spin")
+                    translator.dis_assem(0, 0x1000, "spin", trusted_source=False)
                 read.assert_not_called()
                 build.assert_not_called()
                 self.assertEqual(list(Path("asm").iterdir()), [])
@@ -391,7 +391,7 @@ class ContextSymbolsCases(ContextCaseSupport):
             os.chdir(temp)
             try:
                 with self.assertRaisesRegex(RuntimeError, "percpu unavailable"):
-                    translator.dis_assem(0, 0x1000, "spin")
+                    translator.dis_assem(0, 0x1000, "spin", trusted_source=False)
                 loader.assert_called_once_with(
                     read_memory=translator.memread.read_kernel_addr_data,
                     percpu_module_bytes=8192,
@@ -406,7 +406,7 @@ class ContextSymbolsCases(ContextCaseSupport):
                             RuntimeError, "range capability unavailable"
                         ),
                     ):
-                        translator.dis_assem(0, 0x1000, kind)
+                        translator.dis_assem(0, 0x1000, kind, trusted_source=False)
                 loader.assert_not_called()
                 read.assert_not_called()
                 self.assertEqual(list(Path("asm").iterdir()), [])
@@ -414,7 +414,7 @@ class ContextSymbolsCases(ContextCaseSupport):
                 os.chdir(previous)
 
 
-    def test_symbol_failures_are_cli_errors_not_native_only_verdicts(self):
+    def test_control_symbol_failures_are_cli_errors_not_native_only_verdicts(self):
         locks = "".join(
             f"{address:016x} T {name}\n" for name, address in TEST_LOCK_SYMBOLS.items()
         )
@@ -441,7 +441,10 @@ with (
 ):
     runpy.run_path(script, run_name='__main__')
 """
-        for contents in ("", locks, locks + "0000000000000000 T schedule\n"):
+        # The trusted CLI still needs exact lock/control routing identities.
+        # Context-sensitive symbol discovery is now checked-mode-only above.
+        incomplete_locks = "".join(locks.splitlines(keepends=True)[:-1])
+        for contents in ("", incomplete_locks):
             with self.subTest(contents=contents), tempfile.TemporaryDirectory() as temp:
                 result = subprocess.run(
                     [sys.executable, "-c", bootstrap, translator.__file__, contents],

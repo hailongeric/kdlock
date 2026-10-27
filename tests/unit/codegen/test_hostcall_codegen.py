@@ -9,7 +9,6 @@ ROOT = os.path.normpath(os.path.join(os.path.dirname(__file__), "..", "..", ".."
 sys.path.insert(0, os.path.join(ROOT, "disassem"))
 
 import hostcall
-import strcmp_service
 import strscpy_service
 
 # Missing miasm must fail this required code-generation gate, not count as PASS.
@@ -48,12 +47,16 @@ def main():
     unknown_address = 0x2000
     addresses = {spec.symbol: 0x1000 + i * 0x100 for i, spec in enumerate(specs)}
     disabled = hostcall.resolve_hostcalls(lambda symbol, _: addresses.get(symbol))
-    require(addresses["strcmp"] not in disabled, "string service bypassed negotiation")
+    require(addresses["strcmp"] not in disabled, "ordinary callee selected as a service")
     services = hostcall.resolve_hostcalls(lambda symbol, _: addresses.get(symbol),
-                                         string_services=True, audited_strings=True)
+                                         string_services=True, string_write=True, audited_strings=True)
     require(addresses["strscpy_pad"] not in services,
             "readonly string capability enabled a writing service")
-    require(len(services) == len(specs) - 1, "an enabled service was not resolved")
+    require(len(services) == 3 and services == disabled,
+            "legacy capability bits changed current scalar service selection")
+    # Legacy provider stubs remain ABI-compatible, although current translation
+    # never selects them. Exercise their encoding independently of resolution.
+    services[addresses["strcmp"]] = by_symbol["strcmp"]
     # Writer capability/effects have their own tests. Stub generation must
     # preserve the common pending CALL for ID5 without inspecting the helper.
     services[addresses["strscpy_pad"]] = hostcall.HostcallSpec(*strscpy_service.SPEC)

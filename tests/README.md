@@ -68,6 +68,13 @@ keeps historical machines separate.
 
 ## Unit checks
 
+Current translation trusts kernel and module code and decodes string helpers as
+ordinary leased text, without semantic safety or loop-value admission. The
+compiler clobber-entry contract is assumed. Checked-mode admission regressions
+explicitly select `trusted_source=False`; legacy provider string-service
+capability bits do not select a shortcut in either mode. Generated-body
+execution fixtures cover ordinary helper semantics independently of publication.
+
 ```sh
 make -C tests/unit run
 make -C tests/unit run PY_TESTS='spin/test_spin_direct.py spin/test_spin_entry.py'
@@ -87,8 +94,8 @@ check, missing dependency, crash or compile failure must not be reported as a pa
 | Continuation/frame/queue |`spin/test_spin_storage.py`, `test_spin_batch.py`, `test_spin_outer_progress.py`, `execution/test_exec_capacity.py` |
 | Wrapper, typed service and batch |`execution/test_jit_entry_scope.py`, `codegen/test_clobber_abi.py`, `test_jit_body_witness.py` |
 | Checked spin pointer loads | `admission/test_address_guards.py`, `admission/test_guard_flags.py`, `execution/test_jit_entry_scope.py`, `execution/test_mutex_images.py`; [live check](kernel/spin/address_guard/README.md) |
-| Original string helpers | `admission/test_strcmp_service.py`, `admission/test_strscpy_service.py`, `admission/test_text_regions.py`, `codegen/test_hostcall_codegen.py`, `execution/test_jit_entry_scope.py`; [live strcmp check](kernel/spin/string_service/README.md) |
-| Direct original-helper calls | `admission/test_native_calls.py`, `codegen/test_native_call_execution.py`, `execution/test_mutex_images.py`, `execution/test_jit_entry_scope.py`, `infrastructure/test_native_image.py` |
+| Ordinary string callee admission (legacy provider fixtures retained separately) | `admission/test_strcmp_service.py`, `admission/test_strscpy_service.py`, `admission/test_text_regions.py`, `codegen/test_hostcall_codegen.py`, `execution/test_jit_entry_scope.py`; [live strcmp check](kernel/spin/string_service/README.md) |
+| Legacy direct-helper ABI compatibility | `admission/test_native_calls.py`, `codegen/test_native_call_execution.py`, `execution/test_mutex_images.py`, `execution/test_jit_entry_scope.py`, `infrastructure/test_native_image.py` |
 | Completed-body observation overlay | `execution/test_bench_completion.py`; applies the real benchmark patch and checks dispatcher/batch counting |
 | Conditional instruction exit | `admission/test_native_escape.py`, `codegen/test_native_escape_codegen.py`, `execution/test_jit_entry_scope.py`, `execution/test_native_escape_restore.py`, `execution/test_mutex_images.py`; [live check](kernel/jit_escape/README.md) |
 | Mutex resources/terminal path |`mutex/test_mutex_resources.py`, `test_mutex_task_cache.py`, `test_mutex_terminal.py`, `test_mutex_outer_progress.py` |
@@ -244,7 +251,7 @@ is insufficient. The supported compatibility ranges are:
 | Checked spin pointer load | 7, 8, 9, 10, 11, 12 | 6: address guard |
 | Original `strcmp` API contract | 10, 11, 12 | 7: string services and 9: original API contract |
 | Original `strscpy_pad(..., 64)` API contract | 10, 11, 12 | 8: string writing service and 9: original API contract |
-| Direct original-helper calls | 11, 12 | 10: direct calls, plus the corresponding API bits above |
+| Legacy direct-helper ABI compatibility | 11, 12 | 10: direct calls, plus the corresponding API bits above |
 
 The writing-service capability is separate from the read-only comparison
 capability. Its focused unit checks and exact taskname workload are separate

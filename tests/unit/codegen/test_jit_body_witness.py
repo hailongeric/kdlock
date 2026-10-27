@@ -77,11 +77,7 @@ class JitBodyWitnessTests(unittest.TestCase):
         observed, _ = render("48c7c02a000000c3")
         # Witnesses belong to valid entry stubs; source blocks stay identical
         # whether observation is enabled or disabled.
-        without_stubs = re.sub(
-            rb"kd_body_entry_([0-9a-f]+):\n" + re.escape(MARKER)
-            + rb"JMP     loc_\1\n", b"", observed,
-        ).replace(b"JZ      kd_body_entry_", b"JZ      loc_")
-        self.assertEqual(without_stubs, plain)
+        self.assertEqual(observed.replace(MARKER, b""), plain)
         results = run_image(plain, [0x1000])
         self.assertEqual(results[0][0][12], 42)
         self.assertEqual(results[0][1][1], 0)
@@ -138,7 +134,7 @@ class JitBodyWitnessTests(unittest.TestCase):
         self.assertEqual(len(body), 2)
         self.assertNotIn(MARKER, body[1])
         self.assertIn(
-            b"kd_body_entry_1000:\n" + MARKER + b"JMP     loc_1000\n", body[0],
+            b"kd_dispatch_1000:\nPOPFQ\n" + MARKER + b"JMP     loc_1000\n", body[0],
         )
         stub = assembly.split(b"loc_2000:\n", 1)[1]
         self.assertNotIn(MARKER, stub)

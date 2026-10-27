@@ -15,17 +15,24 @@ adaptation is retired. The [migration record](docs/history/vm-ubuntu2604-migrati
 records OS boot, matching header packages and storage identities. The
 [Linux 7 port record](bench/results/10.176.26.71/tests/linux70-port-20261027/README.md)
 tracks the exact `linux=7.0.0-38.38` source, kernel/provider changes and each
-build and live-validation gate. All four KD families passed returned-JIT
-checks; eight Native/TCLock controls passed data and drain checks. These are
+build and live-validation gate. Eight Native/TCLock controls passed data and
+drain checks; separate KD mutex/spin probes validated native continuation. These are
 functional results, with no new performance claim. The
 [retirement record](docs/history/kernel-retirement-20261027.md) preserves the
 legacy recovery version and results. Earlier functional commands and throughput
-results retain their Linux 6.1 scope.
+results retain their Linux 6.1 scope. The current c01 basic presets require
+fresh returned-JIT and drain validation.
 
-The October 26 exploratory screen attempted all 51 runnable lock/API
+The current [workload catalog](docs/BENCHMARK_WORKLOADS.md) selects 52 lock/API
+configurations, including all ten c01/c16/post256 nano profiles. The Linux 7
+campaign uses 21 worker counts, Native/TCLock/KD and one two-second round per
+point: 3,276 planned lock/API measurements. Separate MM suites require their
+own Linux 7 readiness checks; the installed mmap backend remains disabled.
+
+The October 26 exploratory screen now retains 45 historical lock/API
 configurations and completed the three separate implemented mmap/fault workloads,
 with one timed round per point. The [lock/API tables](bench/results/10.176.26.71/bench/catalog-single-20261026/progress.md)
-retain 3,166 measurements and 47 drained KD xattr preparation failures; the
+retain 2,788 measurements and 47 drained KD xattr preparation failures; the
 [MM tables](bench/results/10.176.26.71/bench/catalog-mmap-single-20261026/README.md)
 retain another 126 measurements. Strict host timing qualification remains failed;
 these observations do not replace repeated accepted baselines.
@@ -110,13 +117,20 @@ covers c01/post64 and `api-pipebytes-query-n16` at 1–8 workers and 12–60 by 
 with three repetitions and Native/TCLock controls. The
 [performance guide](docs/PERFORMANCE.md) retains variation and regression limits.
 
-Eligible spin-delegated bodies now call the original `strcmp` and `strscpy_pad`
-inside the same generated invocation, removing repeated dispatcher transitions.
-No helper-code checks, string pre-scans or runtime destination checks are added;
-exact ownership, source lifetime and return bookkeeping remain. The KD mutex
-protocol is unchanged.
+Production translation now trusts all selected kernel and module source code.
+It skips semantic context, memory/alias, loop-value and entry-input analysis;
+the compiler clobber-entry input contract is assumed. String routines use
+ordinary leased-text decoding and generated CALL/RET, with no string-specific
+service, summary or direct native bridge. Generated dispatch, budget and return
+checks preserve arithmetic flags. Decoding/lowering correctness, source leases,
+exact ownership and frame/return bookkeeping remain required. The
+[ordinary-translation checks](bench/results/10.176.26.71/tests/ordinary-string-translation-20261027/README.md)
+record 22 passing affected unit drivers, five MM runner drivers, and a live
+read-only taskname pass with 1,600,000 correct reads, 1,592,658 returned JIT bodies
+and full drain. This is unscored functional evidence. See the
+[translation policy](docs/design/admission.md).
 
-The [`05876a4` taskname/xattr comparison](bench/results/10.176.26.71/bench/taskname-xattr-direct-api-20261019/README.md)
+The historical [`05876a4` taskname/xattr comparison](bench/results/10.176.26.71/bench/taskname-xattr-direct-api-20261019/README.md)
 contains 567 validated, drained sessions. At 60 workers, KD reaches
 4.521/2.368/0.573 Mops/s for taskname/xattr n16/xattr n128: 1.838×/4.901×/6.528×
 the preceding dispatcher implementation. All three exceed fresh Native there
@@ -159,5 +173,5 @@ are kept together in [bench/archive](bench/archive/README.md); measured outputs
 remain under machine-specific result directories.
 
 Edit source on `380G10`; build and test only in the designated recovery VM on
-`10.176.26.71`. KD's admission checks are not a security sandbox. See
+`10.176.26.71`. Trusted translation is not a security sandbox. See
 [admission](docs/design/admission.md) and [lifetimes](docs/design/lifetimes.md).

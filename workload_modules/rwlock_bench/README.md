@@ -1,5 +1,12 @@
 # Mutex, reader/writer and proc snapshot benchmark workload
 
+Current translation trusts kernel and module source and skips semantic safety
+admission, including loop/value and entry-input proofs. The compiler's clobber
+entry contract is assumed. Ordinary instruction lowering, leased text, exact
+CALL/RET routing and runtime lock/frame ownership remain required. String
+functions follow this same path, with no helper-specific summaries or services.
+The checked analyzer remains available as an explicit regression utility.
+
 `rwlock_bench.ko` exposes `/dev/kd_rwlock_bench` for the
 [comparison runner](../../bench/rwlock_compare/README.md). Build variants select
 Linux native, TCLock or KD through `RB_BACKEND` and the locking shell through
@@ -26,13 +33,13 @@ setting. RCUHT here is a globally locked hash workload, with no per-body
 allocation or RCU services; the name does not imply lock-free reader execution.
 Ordinary reader/writer cacheline selections use `RB_LINES=1` or `RB_LINES=8`.
 
-The stage 1 [nano profiles](../../bench/nano/README.md) also use this payload.
-`RB_WORKLOAD=nano RB_LINES=2` selects two logical 64-bit words in one 64-byte
-record, not two cachelines. Its writers update both words and its readers check
-agreement. The mutex arm accepts this all-writer body or `RB_WORKLOAD=cacheline`
-with `RB_LINES=1,2,4,8,16`, updating that many separately padded counters. The
-default locality nano uses 16; the other sizes support controlled critical-section
-size comparisons with the same operation loop. `RB_MUTEX_DELEGATE=1` selects public ABI2 calls;
+The ten stage 1 [nano profiles](../../bench/nano/README.md) use
+`RB_WORKLOAD=cacheline`, `RB_LINES=1` or `16` and 256 post-unlock rounds for
+mutex, rwlock and rwsem. Each selected counter is padded separately. The mutex
+arm also accepts sizes 2, 4 and 8 for explicit controlled comparisons, outside
+the current nano catalog. `RB_WORKLOAD=nano RB_LINES=2` retains the older
+two-word, one-cacheline body for historical controls; it is no longer selected
+by the nano launcher. `RB_MUTEX_DELEGATE=1` selects public ABI2 calls;
 zero selects the callable local control. All arms retain exact data and drain
 checks. The [project roadmap](../../docs/ROADMAP.md) keeps these module-object
 comparisons separate from actual-MM and final kernel replacement.
@@ -58,7 +65,15 @@ lock; a snapshot "read" does not use a shared reader lock. Post-work remains
 four arithmetic rounds by default and is recorded separately from the payload.
 
 The current KD shell uses ordinary `KD_SPIN_DIRECT_LOCK`, without helper-specific
-register setup. The API contract introduced in version 10 invokes the original kernel helper without checking
+register setup. Its string callees now use ordinary leased-text decoding,
+instruction/context admission, sequential memory tracking and generated CALL/RET.
+Helper prologues and actual return words receive the same checks as other code;
+no string-service summary, direct bridge or helper quota is selected. The source
+still supplies valid buffers and checks all result bytes after unlocking.
+
+The following service descriptions and results are historical compatibility and
+source-specific evidence, not validation of the current Linux 7 translation.
+The API contract introduced in version 10 invoked the original kernel helper without checking
 helper code, scanning the source string or checking destination bounds at
 runtime. The original caller supplies valid, stable source storage and a live,
 disjoint local destination. Translation still requires count 64 and a known
@@ -73,7 +88,9 @@ effect and actual CALL return word; it adds no helper or argument checks.
 The two-word wrapper ABI and selected KD mutex protocol remain unchanged.
 The runner records uploaded code and relocated loaded bytes outside timing.
 Focused validation is tracked [centrally](../../docs/VALIDATION.md#taskname-and-xattr-helper-validation);
-direct-route standard-grid performance remains pending.
+the [separate historical direct-route comparison](../../bench/results/10.176.26.71/bench/taskname-xattr-direct-api-20261019/README.md)
+records that implementation's completed grid. Its results do not transfer to the
+ordinary helper translation path.
 
 Version 10 candidate 6 passed read-only taskname correctness on Linux Native,
 TCLock and KD; KD recorded matching generated-body entries and completions.

@@ -11,8 +11,10 @@ The development VM uses Ubuntu 26.04.1 LTS and the new development release
 `7.0.0-38-kdlock1`. The reviewed kernel build and installation are complete.
 Its first boot exposed unsigned distro-module copies and taint 8192 before any
 project module load. Signing repair and the second boot passed with taint 0.
-The four-family KD basic functional run now passes with returned JIT bodies
-and complete drain. Live MM integration and performance remain unvalidated. The
+Earlier functional receipts remain tied to their recorded source versions.
+The new trusted-translation policy passed its read-only taskname live control
+with correct data, returned JIT bodies and drain. This does not validate other
+source paths; live MM integration and performance remain unvalidated. The
 [Linux 7 port record](../bench/results/10.176.26.71/tests/linux70-port-20261027/README.md)
 owns current source, build and validation evidence. The preceding
 [migration record](history/vm-ubuntu2604-migration-20261027.md) owns the OS upgrade;
@@ -71,7 +73,15 @@ host, recovery, synchronization and dependency procedure.
 
 The translator uses pinned dependencies and an exact Python 3.14
 [Miasm compatibility patch](../disassem/compat/README.md), with a dependency-byte
-preflight before semantic analysis. External-module wrappers receive KDIR;
+preflight before decoding. Production trusts all selected kernel and module
+code, skipping context/value, loop and minimal-entry input proofs. The compiler
+clobber-entry input agreement is assumed; the IP/SP/BP packet does not grow.
+Strings use ordinary decoded CALL/RET, with no special string service or summary.
+`trusted_source=False` retains checked analysis as an explicit Python regression
+option. Source leases, correct lowering, return routing and runtime ownership
+remain mandatory. See the [translation policy](design/admission.md) and
+[affected-check receipt](../bench/results/10.176.26.71/tests/ordinary-string-translation-20261027/README.md).
+External-module wrappers receive KDIR;
 do not globally export `KERNELRELEASE`, which can bypass their outer Makefile
 targets. Full-kernel build/install invocations require the explicit custom
 release. Keep source snapshots immutable while any build or check is active.
@@ -82,27 +92,14 @@ build, local completion, NORMAL image or host-placement pass into a performance
 result. New Linux 7 measurements must retain their own source, topology,
 configuration and mitigation identities.
 
-The complete `basic-03` run passed on this kernel with `passed=true` and
-`final_idle=true`. All cases used the 16-node resident list, one round and
-100,000 iterations per worker. The mixed reader/writer cases used 20% writes
-and four post-work rounds.
-
-| KD family | Workers | Completed operations | Returned JIT bodies |
-| --- | ---: | ---: | ---: |
-| Spinlock | 16 | 1,600,000 | 1,596,396 |
-| Public mutex | 16 | 1,600,000 | 1,333,599 |
-| Rwlock | 60 | 6,000,000 | 30,463 |
-| Rwsem | 16 | 1,600,000 | 43,067 |
-
-Each family passed correctness and drain checks; the controller accepted no
-performance score. The complete 2,161-file archive, eight workspace symlinks
-and every session hash were independently verified. `basic-01` and `basic-02`
-remain failed attempts with separate source versions and partial successes;
-they are not combined to produce the four-family result. This functional scope
-does not establish general semantic equivalence, live mmap/page-fault support,
-whole-kernel replacement or a performance gain. The
+The maintained basic presets now use c01 cacheline bodies: 16 workers for spin,
+public mutex and rwsem, and 60 for mixed rwlock. Each requires correct data,
+returned JIT bodies and complete drain. These replacement presets need fresh
+functional receipts; previous-payload results do not validate them. General
+semantic equivalence, live mmap/page-fault support, whole-kernel replacement
+and performance remain separate gates. The
 [port record](../bench/results/10.176.26.71/tests/linux70-port-20261027/README.md)
-preserves the implementation changes, earlier failures and validation boundaries.
+preserves the retained implementation and validation evidence.
 
 The separate explicit-OUTER mutex and spin native-escape probes also passed
 four phases of 160,000 operations each. Their cold delegated phases returned
@@ -139,11 +136,11 @@ new tail-latency work is deferred.
 
 | Task | Working interface and scope |
 | --- | --- |
-| Unsupported operations | Reviewed markers stop before the original operation, return execution to its waiter without replaying the prefix, and disable delegation of that entry for the source session. Mutex/rwsem use ABI2; root spin/rwlock use ABI1/3. Unknown operations still fail admission. See [continuation checks](../tests/kernel/jit_escape/README.md). |
+| Unsupported operations | Reviewed markers stop before the original operation, return execution to its waiter without replaying the prefix, and disable delegation of that entry for the source session. Mutex/rwsem use ABI2; root spin/rwlock use ABI1/3. Trusted source still needs supported decoding/lowering and valid runtime protocol state. See [continuation checks](../tests/kernel/jit_escape/README.md). |
 | Unified mutex | Direct `kd_mutex_lock/unlock` and blocking aliases use DIRECT, retaining nesting and exact unlock routing. Signal, try, I/O and callable-symbol paths execute locally on the KD object. See [API mappings](design/kd_only_mutex.md). |
 | Reader/writer locks | Readers are concurrent and local. Rwlock DIRECT writers can delegate. Use `include/kd_rwsem.h` and `struct kd_rwsem` for ordinary sleeping rwsem operations; explicit OUTER writers use `include/kd_rwsem_direct.h`. See the [lock catalog](LOCKS.md) for cancellation and downgrade limits. |
 | Real mmap and faults | The maintained integration changes the lock backend and minimal API/lifetime wrappers only. Readers stay concurrent and local; mmap, munmap, advice and page-fault bodies retain native algorithms and run on the originating task. Operation-specific body delegation is retired. See [scope and validation](../kernel_integration/mmap_lock/README.md). |
-| Nano benchmark | The resident-list payload supports spin, public mutex, rwlock and rwsem. The [basic runner](../bench/basic/run.py) runs one 16-node KD case per family: 16 workers for spin/mutex/rwsem, the established 60-worker preset for mixed rwlock. It checks data, returned JIT bodies and retirement. Comparison runners remain available; original TCLock rwsem is available for registered fixed-affinity workers; general TCLock MM remains unsupported. |
+| Nano benchmark | The [nano runner](../bench/nano/README.md) selects ten c01/c16/post256 profiles for public mutex, rwlock and rwsem. The separate [basic runner](../bench/basic/run.py) uses c01 for four-family functional checks, requiring data correctness, returned JIT bodies and retirement. Original TCLock rwsem supports registered fixed-affinity workers; general TCLock MM remains unsupported. |
 
 The rwsem's internal local mutex gate supplies physical writer exclusion after
 reader admission closes; callers must not bypass that public read/write protocol.
@@ -166,15 +163,6 @@ functional evidence and recovery boundary above.
 That workflow produced no performance score. It retained the strict 67-thread
 timing gate, exact drain and returned-JIT requirements; neither the OS migration
 nor a locally completed body turns its historical refusals into passes.
-
-The [basic-version results](../bench/results/10.176.26.71/tests/basic-version-20261022/README.md)
-record returned-body passes for all four presets and the retained 16-worker
-rwlock `NO_JIT` failure. That smaller case was correct and drained but did not
-demonstrate delegation. The 60-worker preset is functional coverage, not a fix
-or performance comparison. Its earlier follow-up order covered low-cohort
-delegation, the seven regression causes and MM wake attribution. The current
-bounded mmap proposal measures whole-cycle throughput and sampled latency;
-it does not establish those causes or replace the retained functional evidence.
 
 ## Folder ownership
 

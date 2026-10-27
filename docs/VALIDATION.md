@@ -17,13 +17,34 @@ retain favorable and adverse cases. They do not qualify the historical unrun
 three-repeat matrices, prove exact mmap1 performance, or close stage 2's
 improvement/parity gate. The receipts below retain their original outcomes.
 
+## Trusted ordinary translation
+
+The [October 27 check record](../bench/results/10.176.26.71/tests/ordinary-string-translation-20261027/README.md)
+records 22 passing affected unit drivers and five passing MM runner drivers
+(34 MM methods). The ordinary-byte fixture executes generated scan, nested
+copy/padding and flags paths; current production trusts all kernel/module source
+and uses normal decoding/CALL/RET with no string-specific shortcut. Earlier
+fixture/setup and finite-analysis failures remain failed and retained; the
+analysis candidate was superseded by the explicit trust policy.
+
+The compiler clobber-entry input contract is now assumed, not statically proved.
+Checked-analysis fixtures explicitly opt into `trusted_source=False`; their
+passes do not mean those checks ran in production. The new read-only taskname
+live control passed on 16 workers: 1,600,000 correct reads, 1,592,658 matching
+JIT entries/completions and full retirement. The final image contains ordinary
+`strnlen`/`sized_strscpy` translation, requirements 0, and zero runtime string
+hostcall/direct-helper activity. Independent after-health capture confirmed
+idle workload state on the same boot. Concurrent unscored MM kernel building
+excludes a performance claim; mutation and other live scopes remain unvalidated.
+Historical receipts below keep their original source/policy identities.
+
 ## Linux 7 functional port
 
 The [October 27 port](../bench/results/10.176.26.71/tests/linux70-port-20261027/README.md)
 uses authenticated Ubuntu `linux=7.0.0-38.38` and custom `7.0.0-38-kdlock1`.
-The final basic run completed 10.8 million correct operations across all four KD
-families, with returned JIT bodies and complete drain in each. Eight Native/TCLock
-controls completed 80,000 operations each. Separate mutex OUTER and spin checks
+Eight Native/TCLock controls completed 80,000 operations each. The maintained
+c01 basic presets require fresh data, returned-JIT and drain receipts. Separate
+mutex OUTER and spin checks
 passed original-task instruction continuation, exact effects/arithmetic flags,
 terminal delegation refusal and drain. These are focused functional checks;
 full-suite, actual-MM runtime and new performance qualification remain separate.

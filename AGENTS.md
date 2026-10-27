@@ -24,7 +24,7 @@ coverage of handwritten/generated returns remains a separate limitation.
 
 The maintained branch is `master`. Preserve the KD-only foundation selected at
 `d2a2304`: KD physical exclusion, ABI2, pinned published delegation waiters,
-immutable mutex images and fail-closed instruction admission. The current mutex
+immutable mutex images and exact source/runtime lifetime accounting. The current mutex
 keeps its 32-byte native-aligned layout, shares preallocated CPU/slot storage
 between independent OSQ and delegation memberships, and uses a 768-body NUMA
 locality boundary. At that boundary, eight or more deferred requests receive
@@ -40,6 +40,16 @@ Public unlock retains exact provider routing for every successful acquisition.
 All users of an object must follow one protocol. Whole-kernel replacement,
 RT/ww_mutex and lockdep integration remain separately unvalidated.
 
+The user explicitly selected trusted kernel and module source on October 27.
+Current translation skips semantic safety admission, context/loop-value analysis
+and entry-input proofs; the compiler clobber-entry contract is assumed. Translate
+ordinary string callees through the normal backend without named helper models.
+Keep source leases, complete decoded text, faithful lowering, actual CALL/RET
+words, exact return routing and runtime ownership/retirement checks. The checked
+analyzer remains an explicit regression utility (`trusted_source=False`), not
+the production default. Trusting source does not add missing backend support or
+validate whole-kernel replacement.
+
 1. Read source and Git status before editing. Preserve unrelated work. Maintained
    prose and comments use English. Explain protocol purpose and ordering.
 2. Source edits, Git, static inspection and read-only offline archive checks run
@@ -49,7 +59,8 @@ RT/ww_mutex and lockdep integration remain separately unvalidated.
    request. Missing dependencies, skips and compile failures are not passes.
 4. Keep exact physical owners, acquisitions, source leases, unlock ACKs and frame
    retirement. Approximate counters cannot replace ownership records. Never
-   weaken admission or remove probes to hide a reproduced failure.
+   remove ownership/lifetime probes to hide a reproduced failure. Preserve the
+   explicitly selected source-trust policy and label its evidence separately.
 5. Share existing packet/frame storage with explicit lifetime transfer; prefer
    preallocation. Avoid whole-packet copies, blanket clears or a global lock
    added only to simplify lifetime accounting. Retain required capture/restore.

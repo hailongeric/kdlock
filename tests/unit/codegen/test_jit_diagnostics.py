@@ -61,6 +61,7 @@ def render(
     audited_strings_capable=False,
     direct_strings_capable=False,
     build_options=None,
+    trusted_source=False,
 ):
     output = io.StringIO()
     resolved_symbols = TEST_LOCK_SYMBOLS | (kernel_symbols or {})
@@ -133,19 +134,30 @@ def render(
             )
         )
         build_mock = stack.enter_context(patch.object(translator, "build_jit_binary"))
-        stack.enter_context(
-            patch.object(
-                translator.context_policy,
-                "load_context_symbols",
-                return_value=symbols or {},
-            )
-        )
+        if trusted_source:
+            # Current production policy explicitly trusts source semantics.
+            # These sentinels make the execution fixtures prove that no old
+            # context/value admission or branch specialization runs silently.
+            for owner, name in (
+                (translator.context_policy, "load_context_symbols"),
+                (translator, "find_segment_policy_error"),
+                (translator.constant_paths, "specialize"),
+                (translator.entry_abi, "check_minimal_entry"),
+            ):
+                stack.enter_context(patch.object(
+                    owner, name, side_effect=AssertionError(
+                        f"trusted source must not invoke semantic admission: {name}")))
+        else:
+            stack.enter_context(patch.object(
+                translator.context_policy, "load_context_symbols",
+                return_value=symbols or {}))
         if muted:
             stack.enter_context(patch.object(diagnostics, "_emit"))
         os.chdir(temp)
         try:
             status = translator.dis_assem(
-                0, entry, lock_kind, body_witness=body_witness, abi=abi
+                0, entry, lock_kind, body_witness=body_witness, abi=abi,
+                trusted_source=trusted_source,
             )
             path = Path("asm/jit.S")
             assembly = path.read_bytes() if path.exists() else b""
@@ -217,11 +229,11 @@ class JitDiagnosticsTests(unittest.TestCase):
 
     def test_flags_summary_and_lea_diagnostic(self):
         assembly, log = render("4f8d2c344839d8750190c3")
-        self.assertEqual(log.count("reason=FLAGS_UNPRESERVED"), 1)
+        self.assertEqual(log.count("reason=TRANSLATION_FLAGS_PRESERVED"), 1)
         self.assertEqual(log.count("reason=LEA_FLAGS_REWRITE"), 1)
         self.assertIn("budget_blocks=1", log)
         self.assertIn('first_budget_rip="0x1000"', log)
-        self.assertIn('action="emit_mov_add"', log)
+        self.assertIn('action="emit_saved_flags_mov_add"', log)
         self.assertIn(b"DEC             Stack_BUDGET\n", assembly)
         self.assertIn(b"JZ              kd_budget_limit_1000\n", assembly)
         self.assertNotIn(b"TEST            Stack_BUDGET", assembly)
@@ -235,9 +247,15 @@ class JitDiagnosticsTests(unittest.TestCase):
         for raw, expected in fixtures.items():
             with self.subTest(raw=raw):
                 assembly, _ = render(raw)
-                # Normalize the intentional budget-only change back to the
-                # original spelling; all unrelated emitted bytes keep their
-                # historical oracle. Runtime countdown checks live separately.
+                # Preserve the historical byte oracle after removing only the
+                # explicit current flag saves/dispatch stubs and earlier budget
+                # change. Actual flag semantics have independent execution tests
+                # in test_ordinary_callee_bytes; this is not a current image hash.
+                assembly = re.sub(
+                    rb"kd_dispatch_([0-9a-f]+):\nPOPFQ\nJMP     loc_\1\n",
+                    b"", assembly,
+                ).replace(b"JZ      kd_dispatch_", b"JZ      loc_")
+                assembly = assembly.replace(b"PUSHFQ\n", b"").replace(b"POPFQ\n", b"")
                 assembly = assembly.replace(
                     b"MOV     Stack_BUDGET, 0x1000000\n",
                     b"MOV     Stack_BUDGET, 0\n",

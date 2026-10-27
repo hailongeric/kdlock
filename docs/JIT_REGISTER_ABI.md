@@ -39,21 +39,24 @@ ABI1 support for ordinary spin does not make old rwlock images interchangeable.
 
 A slot may contain bytes written by generated code without being valid captured
 input. While a packet is MINIMAL, C cannot treat those slots as a complete entry
-snapshot or FULL state. Admission rejects code that uses uncaptured initial bits
-in a value, address, store or branch.
+snapshot or FULL state. Production trusts all selected kernel/module code and
+assumes its compiler clobber-entry contract supplies the needed live inputs.
+It does not prove absence of uncaptured initial-bit dependencies or add capture
+for those bits. Runtime still distinguishes MINIMAL, COMPLETE and FULL exactly.
 
-At clobber controls, analysis discards old register facts except SP/BP. It retains
-facts about saved stack values only when alias analysis or entry guards prove
-them. If the analysis budget runs out, the entry is refused before execution.
+Explicit `trusted_source=False` preserves the historical input, alias and bounded
+value analyzer for regression fixtures. Its clobber facts and failure limits do
+not govern the current production path. See [translation policy](design/admission.md).
 
 The optional `KD_SPIN_DIRECT_HELPER_LOCK` uses this same ABI1 packet. At its
 source continuation it defines the already-clobbered `RBX` and `R12`–`R15` with
 five zeroing instructions before compiler reloads or helper prologues. Both hot
 local returns and delegated entry execute them; the ordinary cold path needs no
 added setup. It captures no additional registers and does not change SP/BP or
-the ordinary direct entry. Taskname selects the ordinary entry because its
-original `strscpy_pad` API service does not translate the helper prologue. The
-optional entry remains available to other callers; the two-word ABI is unchanged.
+the ordinary direct entry. Taskname uses the ordinary entry and translates its
+compiler-emitted string helper bodies normally. Production assumes the compiler
+input contract instead of proving helper-prologue dependencies. The optional
+entry remains available to other callers; the two-word ABI is unchanged.
 
 The frozen `c79d84f` implementation used helper checks. Its ordinary taskname
 shell passed the read-only functional check; the 20% mutation check was correct
@@ -85,8 +88,9 @@ cookie or named global label. The explicit outer pair remains separate.
 Addressable/function-pointer lock calls preserve the ordinary C ABI and acquire
 locally because those callers have not declared ABI2 clobbers. Callable public
 unlock still uses exact provider routing. These C declarations use the distinct
-assembler/export names `kd_mutex_api_lock/unlock`; both remain native-only
-admission boundaries, and the translator does not learn their implementations.
+assembler/export names `kd_mutex_api_lock/unlock`. These are conventional local
+APIs; the checked analyzer treats them as native-only boundaries. Trusted source
+must obey the object protocol and cannot infer a nested ledger from source trust.
 Scope guard/free helpers use these conventional functions.
 Interruptible, killable, I/O-related,
 trylock and last-reference acquisitions remain local; non-lockdep nested blocking
@@ -155,7 +159,9 @@ support mutex instruction exits and checked spin address exits. Bits 7 and 8
 identify the original `strcmp` and `strscpy_pad` APIs. Version 10 adds bit 9:
 these APIs use the native caller's argument and memory-lifetime guarantees,
 without helper instruction checks, data scans or destination-bound rechecks.
-Current string translation requires bit 9 plus the appropriate API bit.
+Historical string-service images require bit 9 plus the appropriate API bit.
+Current string translation uses ordinary decoded CALL/RET and selects no string
+service or direct-call requirement, regardless of these compatibility bits.
 Optional bit 10 permits direct original-helper calls within one wrapper
 invocation. Such images add requirement bit 4, value 16, to the API requirement:
 20 for `strcmp`, 24 for `strscpy_pad`, or 28 for both. The feature is absent if
@@ -233,8 +239,9 @@ stores; kernel code never relies on the red zone.
 
 GS lowering adds the pinned origin base. Supported current_task loads use logical
 task input. Hardware GS, current, IRQ, RCU and scheduler context are not switched;
-native services still run on the physical executor. [Admission](design/admission.md)
-sets the permitted context boundary.
+native services still run on the physical executor. Production assumes the
+source context contract; [translation policy](design/admission.md) distinguishes
+that trust from the optional checked analyzer and supported lowering.
 
 ## CALL, completion and exits
 
@@ -282,8 +289,12 @@ Entry refusal preserves MINIMAL. Generic fault, IJ-miss and budget errors are no
 arbitrary native-recovery boundaries.
 
 Services `ktime_get`, `ktime_get_ns` and `int_sqrt` have typed argument/result,
-clobber and no-waiter-memory-write contracts. Their virtual return-slot write still
-participates in alias analysis; future services do not inherit that summary.
+clobber and no-waiter-memory-write contracts. Their actual virtual return-slot
+write remains emitted. Optional checked mode also models it in alias analysis.
+
+The following string service/direct-call paragraphs describe retained historical
+ABI/provider compatibility only. Production selects neither route: string bodies
+use ordinary decoding and generated CALL/RET, without semantic memory summaries.
 
 The dispatcher route for original string APIs uses HOSTCALL exit 5 and the
 existing FULL packet. `strcmp` receives saved DI/SI and
@@ -400,15 +411,17 @@ a marker: generated code that saves current state and returns exit 8 before that
 instruction executes. The image declares requirement bit 0, and the provider must
 advertise capability version 6 through 12 with `KD_JIT_CAP_NATIVE_ESCAPE` (bit 5).
 The [instruction policy](design/admission.md#checked-instruction-exits) lists the
-exact eligible instructions and the static checks that still apply.
+exact eligible instructions, retained protocol restrictions and optional
+checked-mode source proofs. Trusted production assumes the source input contract.
 
 The marker captures the original instruction address, logical SP/BP, all current
 GPR slots and arithmetic flags. These flags describe carry, parity, auxiliary
-carry, zero, sign and overflow; their combined mask is `0x8d5`. Source analysis
-requires their values to be defined before the marker. For images with markers,
-entry dispatch, block-budget checks, indirect-target lookup and address-generation
-rewrites preserve these flags. This is a separate contract from ordinary FULL
-packets, whose FLAGS field is not generally valid.
+carry, zero, sign and overflow; their combined mask is `0x8d5`. Checked mode
+proves defined source inputs before the marker; production assumes that contract.
+Generated entry dispatch, block-budget checks, indirect-target lookup and
+LEA-to-MOV/ADD rewriting preserve arithmetic flags for all images. This does not
+make the FLAGS field of ordinary FULL packets generally valid or add captured
+entry flags.
 
 The runtime validates the image, packet, source instruction, stack bounds and
 ownership state. It tags `orig_AX` with `KD_REG_NATIVE_ESCAPE_TAG`, retains the
@@ -447,6 +460,10 @@ It is diagnostic evidence, not an ownership record. Publication, a marker count,
 a returned JIT body and complete drain remain distinct observations.
 
 ### Checked spin address exit
+
+This image contract remains available to the optional checked analyzer and
+historical images. Production trusted translation does not run address analysis
+or select these guards; the runtime compatibility contract below is unchanged.
 
 ABI1 spin images may check a restricted 64-bit `MOV` pointer load for overlap
 with recorded source-stack writes. Such images set requirement bit 1 and require

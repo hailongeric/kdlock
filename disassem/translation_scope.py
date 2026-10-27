@@ -9,8 +9,6 @@ import diagnostics
 import instruction_policy
 import normal
 import native_escape
-import strcmp_service
-import strscpy_service
 from miasm.analysis.machine import Machine
 from miasm.core.bin_stream import bin_stream_str
 from miasm.core.locationdb import LocationDB
@@ -48,8 +46,6 @@ def find_segment_policy_error(
     readonly_targets=(),
     native_escapes=False,
     address_guards=None,
-    string_targets=(),
-    writer_targets=None,
 ):
     # A guarded verdict is conditional: its complete predicates must be emitted
     # before body execution. Analysis and emission share this same collector.
@@ -94,8 +90,6 @@ def find_segment_policy_error(
             clobber_targets={address for address, (_, name) in (lock_symbols or {}).items()
                              if name.endswith("_clobber_v1")},
             readonly_targets=readonly_targets,
-            writer_targets=writer_targets,
-            audited_c_targets=set(string_targets) | set(writer_targets or {}),
             mutex_targets={
                 address
                 for address, (kind, name) in (lock_symbols or {}).items()
@@ -121,22 +115,6 @@ def find_segment_policy_error(
                     lock_symbols,
                     constants,
                     native_escapes=native_escapes,
-                )
-                if context_error:
-                    reason, symbol = context_error
-                    diagnostics.set_instruction(offset, line)
-                    return offset, f"{reason}: {symbol}" if symbol else reason
-                context_error = strcmp_service.argument_rejection(
-                    line, db_dict.get(block), constants, string_targets, symbols,
-                    lock_kind, lock_symbols,
-                )
-                if context_error:
-                    reason, symbol = context_error
-                    diagnostics.set_instruction(offset, line)
-                    return offset, f"{reason}: {symbol}" if symbol else reason
-                context_error = strscpy_service.argument_rejection(
-                    line, db_dict.get(block), constants, writer_targets or {}, symbols,
-                    lock_kind, lock_symbols,
                 )
                 if context_error:
                     reason, symbol = context_error

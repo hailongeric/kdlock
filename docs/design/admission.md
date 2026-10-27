@@ -1,19 +1,59 @@
 # Translation admission and publication
 
-Admission decides which machine code KD may translate and execute. This guide
-explains the current checks and their limits. Read the [design overview](../DESIGN.md)
-first; [tests](../../tests/README.md) records which source versions were checked.
-The [terminology guide](../TERMINOLOGY.md) defines ABI (application binary
-interface), JIT (just-in-time compilation) and the lock/lifetime terms used here.
+Production translation trusts all selected kernel and module code, as explicitly
+requested for the current work. Source safety is a caller assumption, not a
+verdict produced by the translator. Read the [design overview](../DESIGN.md)
+and [register ABI](../JIT_REGISTER_ABI.md) for the unchanged execution protocol;
+[tests](../../tests/README.md) identifies validated source versions.
+
+`dis_assem(..., trusted_source=True)` is the default, including the production
+CLI. It skips context metadata resolution and screening, instruction-safety
+admission, value/alias and loop analysis, constant-path specialization, and the
+minimal-entry input-definedness proof. The compiled clobber entry is assumed to define each live uncaptured GPR
+before it affects source behavior; only IP/SP/BP are imported. Trust does not
+capture additional registers, prove memory validity, or reproduce arbitrary
+processor state on the executor.
+
+The translator still acquires source leases, obtains complete selected text,
+decodes and lowers instructions, constructs the actual CALL/RET graph and
+return whitelist, respects the critical-section protocol, assembles the image
+and negotiates provider requirements. Unsupported decoding/lowering, missing
+source, or invalid image construction remains a translation failure; it is not
+a judgment that the source program is unsafe. Source trust cannot correct a
+decoder alias or justify changing instruction semantics. Runtime exact physical
+owners, acquisitions, continuation tokens, unlock ACKs, frame retirement and
+normal drain remain required. A NORMAL publication does not prove a returned
+JIT body.
+
+Generated dispatch, block-budget checks, return-target comparisons and the
+LEA-to-MOV/ADD rewrite always preserve arithmetic flags. Their balanced physical
+stack saves are separate from the virtual source stack and its CALL words.
+This adds no captured entry state and does not extend native-continuation
+flags restoration.
+
+Current images retain only the scalar services `ktime_get`, `ktime_get_ns`
+and `int_sqrt`. String routines such as `strcmp`, `strnlen`, `sized_strscpy`,
+`strscpy_pad` and `memcpy` use ordinary decoding and CALL/RET lowering. Their
+bodies and loops receive no special semantic analysis, summary, service quota,
+control-slot exception or direct native bridge. Historical provider capability
+bits cannot select those former string routes in a current translation.
+
+Explicit `trusted_source=False` keeps the earlier checked analyzer available
+for regression fixtures. The constant, context, memory and input proofs in
+sections 7.1–7.2 describe that optional mode and historical results, not the
+production trust policy. The finite-edge refinement candidate was superseded
+and archived with the ordinary-translation experiment; it is absent from the
+active analyzer. Historical numeric evidence below is unchanged and does not
+validate the new trusted path.
 
 ## 7. Translation And Publication
 
 Rwlock writer entries use ABI3 on the spin backend. Native writer admission and
-reader drain occur before the prepared JIT body; payload pointer traversal and
-writer-byte release still undergo the checks below. This boundary resolves the
-historical ABI1 RCUHT alias refusal without relaxing memory/context screening or
-closing the [dynamic-address gap](#721-dynamic-address-gap). Admission cancellation
-and native retry belong to [the rwlock ownership protocol](rwlock_implementation.md).
+reader drain occur before the prepared JIT body. The paired unlock releases the
+writer byte before spin completion. The historical ABI1 RCUHT alias refusal
+belonged to the checked analyzer; current trusted translation performs no such
+memory/context screening. Admission cancellation and native retry belong to
+[the rwlock ownership protocol](rwlock_implementation.md).
 
 ### 7.1 Possible JIT Episode
 
@@ -27,12 +67,11 @@ JIT. The original waiter runs that function and the rest of the invocation nativ
 Recognized lock controls, allowed hostcalls, decoded callees and indirect calls
 keep the successors that their handling requires.
 
-A block can still belong to the episode if another JIT path reaches it. Analyze
-that block using the JIT paths that reach it; do not import facts from the removed
-native-return edge. Every recompile rechecks the scope, and admission,
-lock-boundary analysis, constant propagation, code emission and entry dispatch
-must all use that same scope. Missing reachable code is a refusal, never an empty
-block assumed safe.
+A block still belongs to the episode if another JIT path reaches it. Every
+recompile recomputes this structural scope; lock boundaries, code emission and
+entry dispatch use the same selected code. The optional checked analyzer uses
+that scope too. Missing reachable code is a construction failure, never an
+empty block silently emitted as a successful translation.
 
 If a branch points into another decoder window whose bytes are already cached,
 the translator seeds that window and recomputes the graph. It splits blocks at
@@ -42,16 +81,13 @@ share the 32-expansion limit; code that still cannot be decoded is refused.
 
 #### Source branches with proven constant inputs
 
-For ABI1 spin bodies containing `UD2`, the instruction that deliberately raises
-an invalid-instruction exception, `constant_paths.py` can first prove that a
-branch cannot reach it. The taskname source passes the constant size 64
-through `strscpy_pad()` to `strscpy()`. The latter's warning for a size greater
-than `INT_MAX`, the largest signed 32-bit integer, is therefore unreachable if
-that fact survives every source path to the comparison. The original helper
-call and copy operation remain unchanged; `UD2` itself remains refused. This
-proof remains available for ordinary helper translation. The current taskname
-path instead invokes the original API through the service described below and
-does not depend on this branch transformation.
+This subsection describes optional checked mode only. Production trusted
+translation retains the source branches and does not invoke this proof.
+For ABI1 spin bodies containing `UD2`, `constant_paths.py` can prove an exact
+source branch unreachable before checked instruction admission. Historical
+`strscpy_pad` callers supplied a constant count to `strscpy`; this is not a
+claim about the different compiler-expanded Linux 7 helper graph. The current
+taskname API use is decoded and lowered normally without this specialization.
 
 The proof begins with unknown inputs at the registered root. It follows exact
 register and flag constants through reviewed instructions and direct calls,
@@ -67,7 +103,7 @@ checks and the same selected graph is emitted. The diagnostic
 `CONSTANT_PATH_SPECIALIZATION` records the changed branch addresses.
 
 These source proofs do not establish support for the complete procfs task-name
-operation. The version 10 extracted taskname caller uses the original API service
+operation. The historical version 10 extracted taskname caller used the original API service
 without helper-specific checks and passed
 [focused correctness validation](../VALIDATION.md#taskname-and-xattr-helper-validation)
 through candidate 6. The
@@ -82,8 +118,13 @@ delegation. Those historical results remain in the
 
 ### 7.2 Context And Memory Admission
 
-Some code depends on the CPU or task that runs it. KD therefore checks context
-operations across every block it will emit:
+This section and its subsections document the optional checked analyzer and
+its historical evidence. Production trusted mode skips these checks, bounded
+loop/value analyses and input-definedness proofs. Runtime operations described
+here, such as source pinning and the mutex continuation checkpoint, remain
+runtime obligations independently of that analyzer.
+
+The checked mode screens CPU/task context operations across every block it emits:
 
 - Explicit GS reads, writes and read-modify-write operations may use the pinned
   origin CPU's GS base. A GS displacement is an offset, not a linear kernel address.
@@ -130,6 +171,13 @@ against the generated whitelist. Selected text must be structurally connected
 to the checked root before value-based refinement; disconnected targets,
 indirect control, IJ history and adjusting RETs are refused. Default
 independent-root analysis remains unchanged.
+
+Generated entry dispatch, block-budget instrumentation, return-target comparisons
+and the LEA-to-MOV/ADD rewrite preserve source arithmetic flags. Balanced physical
+stack saves are separate from the virtual source stack and its actual CALL return
+words. This preserves flags within generated execution; it adds no captured entry
+state and does not extend the existing FULL/native-continuation flags contract.
+
 This does not assume callee-saved registers or untouched source memory for an
 ordinary function. The predicate/continuation contract is in
 [Historical JIT_EXECUTION](https://github.com/hailongeric/kdlock/blob/1b9191256f64785f8e844ada914356a69d4f70f0/docs/testing/entry_admission.md#5-%E5%85%A5%E5%8F%A3%E6%9D%A1%E4%BB%B6%E4%B8%8E%E5%B5%8C%E5%A5%97%E7%BB%AD%E7%82%B9).
@@ -181,10 +229,12 @@ the inline assembly, so this adds no capture or packet fields. Hot local returns
 and delegated execution use the same five instructions; ordinary cold execution
 already has valid native values. A helper's formerly uncaptured R13 save can
 then pass the existing input check; other unsafe helper effects remain refused.
-The current taskname payload uses the ordinary `KD_SPIN_DIRECT_LOCK` entry and
-the original `strscpy_pad` API service instead, without these five setup
-instructions. The optional helper entry and the selected KD mutex protocol
-are unchanged.
+Taskname uses the ordinary `KD_SPIN_DIRECT_LOCK` entry and ordinary translation
+of its compiler-emitted string helpers, without these five setup instructions.
+Under optional checked mode, helper prologues face the same input checks as other
+source code in checked mode. Production assumes the compiler clobber-entry
+contract instead of proving these dependencies. The optional helper entry and
+the selected KD mutex protocol remain unchanged.
 
 Entry predicates may prove an entire BP-relative spill lies inside the
 256-byte SP-relative checkpoint. All prior checkpoint obligations are joined
@@ -226,7 +276,7 @@ the separate 16-byte `KD_JIT_CAPS` ioctl. Translation queries its validated
 device description once before text inspection, caches only that lease's bound
 and clears it on close. Absent/unknown contracts leave the bound zero; actual I/O
 errors abort inspection. Version 1 still describes the old mutex bound but lacks
-the module range required by current translation (7.2.2). Source INFO remains
+the module range required by checked translation (7.2.2). Source INFO remains
 mandatory. This is not a mutable
 admission bit or executable generation. Guarded mutex analysis now uses the bound
 only at registered local controls whose IR matches the exact eight-byte CALL
@@ -301,7 +351,12 @@ not evidence of accepted kernel delegation. Existing return-dispatch tests also
 retain all allowed continuations for uncertain return words and verify that an
 unlisted actual target exits the JIT.
 
-The string API contract introduced in version 10 and retained in version 11 has
+The rest of this subsection describes historical string-service compatibility,
+which current translations do not select. All checked-mode string CALLs retain the
+ordinary memory and return-word rules above; the old validation below does not
+establish their admission.
+
+The string API contract introduced in version 10 and retained in version 11 had
 a separate, explicit contract for the selected caller. Through ordinary data
 accesses, the caller and its helpers do not
 inspect, retain pointers into, or mutate those services' temporary return-token
@@ -465,17 +520,18 @@ objects (`KD_JIT_CAP_MUTEX_EXCLUSIVE`, bit 4); ordinary images still accept the
 version 5 through 12 contracts. Mutex instruction-marker images require version 6 through 12
 with bit 5. Spin address-check images require version 7 through 12 with bit 6.
 ABI1/3 root instruction markers additionally require version 12 bit 11.
-The original string API summaries require version 10 through 12 bit 9 plus bit 7
+Historical original string API summaries require version 10 through 12 bit 9 plus bit 7
 for `strcmp` or bit 8 for `strscpy_pad`. Bit 9 identifies the caller-guaranteed
 memory and lifetime contract without helper-specific checks. Version 11 bit 10
 also permits [direct calls inside the wrapper](#direct-original-helper-calls).
-Without that optional bit, the original API uses the existing service dispatcher.
+Historical images without that optional bit use the existing service dispatcher.
+Current translation selects neither route, regardless of these compatibility bits.
 Version 4 remains readable by observers but
 cannot open a translation session for this object contract. It checks the build constants and the non-NULL
 `pcpu_reserved_chunk` pointer, which is read-only after init; it never dereferences
 the private chunk layout. Translation adds `[base + ALIGN(core_size, 4),
 base + ALIGN(core_size, 4) + module_bytes)` for each possible CPU. Version 1,
-unavailable or invalid capability cannot silently omit the module check: current
+unavailable or invalid capability cannot silently omit the module check: checked
 translation reports an infrastructure error before reading source text. Source
 inspection/retirement can still query older providers. Neither the ioctl number
 nor its size, guest code or wrapper arguments change.
@@ -518,7 +574,8 @@ use up to 4000-byte chunks with exact upload identity, contiguous coverage and a
 base generation. Mutex uploads publish a complete immutable descriptor; frames
 retain it through continuations and old-generation misses cannot change a newer
 image's metadata. Published versions remain in the bounded pool until teardown.
-Publishing the first address-check or string-service image also moves that ABI1
+Publishing the first address-check image, or a historical string-service image,
+also moves that ABI1
 spin entry to immutable versions; every later image for that entry remains
 immutable, even without optional checks or services. Active frames retain their
 bound image and any address-check site directory. The dispatcher-based string
@@ -529,15 +586,22 @@ Ordinary spin entries that have not made this transition and ABI3 rwlock images
 retain in-place storage. Independent locks sharing an entry address do not
 establish image lifetime through lock serialization.
 
-The scalar instruction policy refuses unknown instructions and unreviewed
-processor-state operations before emission. Sensitive raw encodings are checked
-at instruction boundaries, including selected undecodable roots. The limited
-mutex exception below emits an exit marker, never the special operation itself.
+The optional checked scalar policy screens unknown instructions and processor
+state before emission. Production trusted mode skips that screening and still
+requires correct decoding and lowering. The exact marker mechanism below emits
+a waiter exit instead of executing the selected instruction on the executor.
 See [the compatibility backport](../history/legacy_mutex_compatibility.md) for scope, capability
 negotiation and the separate owned-origin/ABI4 interfaces.
 See [daemon README](../../daemon/README.md) for CLI and diagnostics.
 
 ### Checked instruction exits
+
+The name describes the retained image/runtime marker contract. Production
+trusted mode does not run the source semantic or entry-definedness proofs
+recorded below; source and compiler guarantees are assumed. Exact marker-byte
+recognition, structural protocol restrictions, image requirements and runtime
+owner/continuation validation remain active. Historical checked-mode proofs
+and validation results do not establish the new trust policy's correctness.
 
 An instruction on a rarely taken branch need not reject an otherwise eligible
 mutex critical section before it runs. For mutex entry ABI2, the translator can
@@ -562,21 +626,19 @@ Instruction meanings and encodings follow Intel's
 The live probe relies on the documented property that RDTSC leaves arithmetic
 flags unchanged, so the native suffix can check flags set before the marker.
 
-Only exact unprefixed encodings without explicit operands qualify. The translator
-models their scalar inputs and outputs to check the original code, but never
-simulates their processor effects on the executor. An unsafe source instruction
+Only exact unprefixed encodings without explicit operands qualify. Checked
+mode models their scalar inputs and outputs; trusted mode assumes the source
+contract. Neither marker route simulates their processor effects on the executor. An unsafe source instruction
 does not become safe by running locally: this change preserves the original
 program's behavior and does not authorize new kernel operations. In particular,
 the live check uses the harmless timestamp read, not interrupt or register writes.
 
-Before emitting markers, admission still checks the full selected source graph,
-including the part that would run natively after a marker. Backend, context,
-memory-alias and captured-input checks remain active. The marker needs proven
-register inputs and source-defined arithmetic flags. A source path that cannot
-satisfy those checks remains refused. Only after proof does generated control
-flow end at each marker. Therefore an untaken eligible instruction can cease to
-be the reason for rejection, while an unsafe or undecodable suffix can still
-reject the entry.
+Optional checked mode screens the full selected source graph, including the
+native suffix, and proves required register inputs and source-defined arithmetic
+flags before emitting markers. Production trusted mode omits those source proofs
+and assumes their compiler/source contract. Both modes preserve the exact marker
+lowering and runtime continuation protocol; undecodable selected text still
+prevents construction of a complete image.
 
 Provider capability versions 6 through 12 advertise the ABI2 contract on bit 5; the image
 requires it on directory bit 0. Earlier providers cannot accept such images.
@@ -591,9 +653,9 @@ released lock, remote request or prior control transaction.
 The complete selected source must contain no hostcall service, learned or
 indirect control, nested acquisition, nonterminal unlock or combined optional
 image contract. Marker-bearing source cannot use constant-branch specialization
-or address-guard retries. Ordinary inlined callees remain subject to the full
-source proof; missing direct callees can end the generated invocation through
-the existing native CALL handback. The standard ABI3 unlock's cold native fast
+or address-guard retries. Checked mode additionally applies its full source
+proof to decoded callees; trusted mode does not. Missing direct callees can end
+the generated invocation through the existing native CALL handback. The standard ABI3 unlock's cold native fast
 branch is retained in source analysis, but reaching its helper from this
 delegated image is a runtime error: that helper cannot acknowledge the retained
 gate owner. Only the exact outer clobber unlock can complete the root.
@@ -618,6 +680,10 @@ See [register restoration](../JIT_REGISTER_ABI.md#checked-instruction-exit) and
 and ownership obligations.
 
 ### Original strcmp service
+
+Historical compatibility only: current images translate this callee normally.
+The contract and measurements in this subsection describe the earlier service
+implementation, whose provider interfaces remain available for recorded images.
 
 ABI1 spin callers can invoke the original kernel `strcmp` through a typed
 service. Here, typed means that translation knows the arguments, return value
@@ -692,7 +758,11 @@ establish the revised implementation's throughput or replace its own receipts.
 
 ### Original strscpy_pad writing service
 
-The supported API call is the original `strscpy_pad(destination, source, 64)`.
+Historical compatibility only: current images translate the compiler-emitted
+callees normally. The following effect summary, caller promise and quotas are
+not selected by current taskname translation.
+
+The historical API call is the original `strscpy_pad(destination, source, 64)`.
 It copies a string and zero-fills the unused destination bytes; when the source
 does not fit, the original API's truncation result and destination contents are
 preserved. Version 10 or 11 bit 9 selects the native API contract, together with bit 8
@@ -732,11 +802,11 @@ do not automatically receive this summary. Writing services share the limit of
 16 scalar services and resumed lock-control calls; only `strcmp` has the separate
 128-comparison allowance.
 
-The ordinary taskname shell uses `KD_SPIN_DIRECT_LOCK`, without helper-specific
+The version 10 taskname shell used `KD_SPIN_DIRECT_LOCK`, without helper-specific
 register initialization. Version 10 passed read-only taskname correctness with
 returned KD bodies through candidate 6. Its 20% mutation run disabled helper
 preparation and recorded zero JIT; it is a correctness control, not a delegation
-pass. See the [current validation record](../VALIDATION.md#taskname-and-xattr-helper-validation).
+pass. See the [historical validation record](../VALIDATION.md#taskname-and-xattr-helper-validation).
 The [completed comparison](../../bench/results/10.176.26.71/bench/taskname-xattr-native-api-20261019/README.md)
 measures read-only taskname and xattr tail searches; it does not establish
 mutation delegation. In the preceding
@@ -749,6 +819,10 @@ retains those source-specific results and earlier failures; the completed
 comparison identifies the revised `88bb5a4` version separately.
 
 ### Direct original-helper calls
+
+Historical compatibility only: current image selection never invokes this
+emitter or adds its direct-call requirement/directory. These ABI/provider details
+and measurements remain tied to the recorded older source versions.
 
 Version 11 capability bit 10 permits the generated caller to invoke original
 `strcmp` and `strscpy_pad` directly, without returning to the C service dispatcher
@@ -798,8 +872,8 @@ The wrapper preserves its register-storage pointer and source argument state
 around the original C helper. It keeps the actual source return-word store,
 reads and consumes that word once after the helper, and resumes only its allowed
 continuation. Quota bookkeeping and this return comparison preserve the
-arithmetic flags surrounding them. This does not fix the separately documented
-flag effects of general entry dispatch and block-budget instrumentation.
+arithmetic flags surrounding them. Those historical receipts predate the current
+general dispatch/block-budget flag-preservation change and do not validate it.
 
 One wrapper invocation allows 128 comparisons and 16 padding calls. On quota
 exhaustion, exit 10 captures the full packet before the pending helper executes,

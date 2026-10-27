@@ -1,5 +1,12 @@
 # Shared interfaces
 
+Current translation trusts kernel and module source and skips semantic safety
+admission, including loop/value and entry-input proofs. The compiler's clobber
+entry contract is assumed. Ordinary instruction lowering, leased text, exact
+CALL/RET routing and runtime lock/frame ownership remain required. String
+functions follow this same path, with no helper-specific summaries or services.
+The checked analyzer remains available as an explicit regression utility.
+
 These headers define the public lock APIs and the data layouts shared by C,
 assembly and the Python translator. Helpers used only inside a backend live under
 [kernel_module](../kernel_module/README.md). Payload ioctls live under
@@ -24,12 +31,12 @@ changing a typedef or a subset of lock macros is insufficient.
 | Sleeping semaphore | [kd_rwsem.h](kd_rwsem.h), [kd_rwsem_direct.h](kd_rwsem_direct.h) | Ordinary sleeping APIs and outer ABI2 writers; phase reservations and reader drain precede the unchanged KD mutex queue |
 | Frames and controls | [kd_exec.h](kd_exec.h), [kd_call.h](kd_call.h), [kd_lock.h](kd_lock.h) | Logical state, held-lock ledger, source CALL and final ACK |
 | Registry and execution | [exe.h](exe.h), [exe_info.h](exe_info.h), [kd_jit_batch.h](kd_jit_batch.h) | Backend/ABI/layout identity, readiness and distinct wrapper/C results |
-| Image lifetime | [kd_image.h](kd_image.h) | Immutable mutex images and spin images requiring address checks or string services; upload identity and generation-bound frames |
+| Image lifetime | [kd_image.h](kd_image.h) | Immutable mutex images and spin images requiring address checks or historical string services; upload identity and generation-bound frames |
 | Packet and wrapper | [kd_regs.h](kd_regs.h), [asm_head.h](asm_head.h), [wrapper.S](wrapper.S) | Layout2, virtual register backing and two-word input |
 | Heat | [kd_hotlock.h](kd_hotlock.h) | Approximate future admission, not ownership |
 | Source/device | [kd_source.h](kd_source.h), [kd_source_api.h](kd_source_api.h), [sys.h](sys.h) | Text residency, capabilities and irreversible retirement |
 | Services/context | [kd_hostcall.h](kd_hostcall.h), [kd_hostcalls.def](kd_hostcalls.def), [kd_segment.h](kd_segment.h) | Typed effects and origin GS/logical task |
-| Original kernel string APIs | [kd_hostcall.h](kd_hostcall.h) | Read-only versus 64-byte writing effects and invocation limits; argument validity follows the native caller's contract |
+| Historical string-service ABI | [kd_hostcall.h](kd_hostcall.h) | Retained provider compatibility and limits; current translation selects ordinary callees |
 
 When changing a shared layout, update the C offsets, wrapper assembly and Python
 translation together. [Register ABI](../docs/JIT_REGISTER_ABI.md) gives exact offsets
@@ -57,14 +64,17 @@ this API, without extra captures or stack saves. Other instruction, address and
 context checks remain unchanged; selecting it does not authorize arbitrary helper
 functions. Ordinary `KD_SPIN_DIRECT_LOCK` has no added instructions.
 
-Taskname uses the ordinary `KD_SPIN_DIRECT_LOCK` pair. Its
-`strscpy_pad(..., 64)` service invokes the original kernel API. The translator
-does not translate the helper prologue or need the five register initializations.
-The optional helper entry and the separate
+Taskname uses the ordinary `KD_SPIN_DIRECT_LOCK` pair and retains its
+`strscpy_pad(..., 64)` source call. Current translation decodes and checks the
+compiler-emitted helpers, including their prologues, memory effects and CALL/RET
+paths. It does not select a string-service summary or direct native bridge.
+The ordinary pair adds no helper-specific register initialization, so those
+prologues must pass the normal input-dependency proof. The optional helper entry
+and the separate
 [source constant proof](../docs/design/admission.md#source-branches-with-proven-constant-inputs)
 remain available for other translated code.
 
-The version 10 dispatcher implementation without helper-specific checks passed
+The historical version 10 dispatcher implementation without helper-specific checks passed
 [focused correctness checks](../docs/VALIDATION.md#taskname-and-xattr-helper-validation)
 through candidate 6 and completed the
 [`88bb5a4` standard-grid comparison](../bench/results/10.176.26.71/bench/taskname-xattr-native-api-20261019/README.md).
@@ -106,7 +116,7 @@ original waiter and disables delegation for that entry; it does not change the
 object's lock protocol. The source must prove its incoming arithmetic flags are
 no longer needed. Bodies that also need source constant-branch simplification
 remain refused, because a removed branch could hide a native flags read.
-Entries use immutable images from their first address-check, typed string-service
+Entries use immutable images from their first address-check, historical typed string-service
 or root instruction-marker version
 onward; ordinary spin and ABI3 rwlock entries do not all gain that lifetime
 contract. The packet and two-word wrapper stay unchanged. See the
@@ -118,7 +128,13 @@ separate contract; image requirements must be exactly 33. Root markers preserve
 the acquisition pin and owner ACK through native continuation. Nested/remote
 marker relay and reader delegation remain unsupported; ABI2 nesting is unchanged.
 
-The current provider reports capability version 12. Feature bit 9 means that
+The current provider reports capability version 12. Current translator images
+select only `ktime_get`, `ktime_get_ns` and `int_sqrt` as scalar services; all
+string callees follow ordinary leased decoding and admission. The following
+string feature bits, descriptor fields and relocation rules remain historical
+ABI/provider compatibility, not routes selected by current translation.
+
+In that historical contract, feature bit 9 means that
 original string APIs use the native caller's memory and lifetime guarantees,
 without helper-specific checks. `strcmp` also requires feature bit 7 and image
 requirement bit 2; `strscpy_pad` requires feature bit 8 and image requirement bit
