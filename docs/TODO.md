@@ -25,10 +25,46 @@ Ubuntu 26.04 / Linux 7.0 is the active adaptation platform. The
 [migration record](history/vm-ubuntu2604-migration-20261027.md) establishes OS
 boot and matching package/header identities. The separate
 [port record](../bench/results/10.176.26.71/tests/linux70-port-20261027/README.md)
-records the custom kernel boot, all four KD returned-JIT passes and Native/TCLock
-functional controls. No new performance baseline is claimed. The Linux 7 mmap adapter remains disabled
-pending actual-MM runtime validation; optional near-text direct-helper allocation
-remains unavailable with call-depth tracking. Linux 6.1 adaptation is retired, with
+records the custom kernel boot, Native/TCLock functional controls and KD
+native-continuation probes. The
+[trusted-source basic controller](../bench/results/10.176.26.71/tests/ordinary-string-translation-20261027/README.md#complete-four-family-basic-controller)
+passed all four recorded cacheline presets with correct data, returned JIT
+bodies and final drain. Those functional checks supply no performance scores.
+
+The normal `7.0.0-38-kdlock1` boot keeps the global mmap adapter disabled. The
+separate [enabled-MM image](../bench/results/10.176.26.71/tests/linux70-kdmm1-20261027/README.md),
+`7.0.0-38-kdmm1`, uses the same image and configuration for Native/KD modes.
+Fresh Native/KD correctness and preparation passed, and the
+[shared-MM campaign](../bench/results/10.176.26.71/bench/catalog-linux70-mm-shared-20261028/shared-mm/README.md)
+completed all 42 timing points with drain. Together with the separately frozen
+[84 private-MM points](../bench/results/10.176.26.71/bench/catalog-linux70-mm-trusted-20261027/README.md),
+all 126 selected MM measurements are complete. Native measured higher shared-MM
+throughput at all 21 worker counts; at 60 workers KD achieved 0.0436× Native.
+Each point has one exploratory round, so the 2.15% one-worker KD deficit has no
+repeat-variability estimate. The original KD1 mapping failure, its normal
+cleanup and the later diagnostic remain separate evidence. The MM performance
+goal is still unmet.
+
+The earlier checked-source
+[lock/API campaign](../bench/results/10.176.26.71/bench/catalog-linux70-20261027/README.md)
+retains 29 complete matrices and 1,827 timed points plus its partial failed
+taskname attempt. The separate
+[trusted-source campaign](../bench/results/10.176.26.71/bench/catalog-linux70-trusted-20261028/AUDIT.md)
+completed and audited 22 full workloads (1,386 points). Its `taskname-w20`
+attempt remains stopped with 23 valid points, one timed failure and 39 unrun
+points. The fresh
+[prepared taskname cohort](../bench/results/10.176.26.71/bench/catalog-linux70-taskname-prepared-20261028/README.md)
+completed its own 63-point matrix, with six KD returned-JIT and fifteen
+successful local `NO_JIT` points. The separate strict unscored 16-worker
+taskname check remains a `NO_JIT` failure. The
+[complete catalog index](../bench/results/10.176.26.71/bench/catalog-linux70-complete-20261028/README.md)
+now accounts for all 52 lock/API configurations (3,276 points) plus 126 MM
+points, or 3,402 selected points. That closes the selected measurement
+coverage; it does not close the MM performance goal or pool the three
+lock/API source/preparation cohorts. Earlier partial failures remain intact.
+
+Optional near-text direct-helper allocation remains unavailable with call-depth
+tracking. Linux 6.1 adaptation is retired, with
 results and one recovery version retained under the
 [retirement policy](history/kernel-retirement-20261027.md). Earlier campaign
 plans keep their outcomes and unrun coordinates without scheduling more 6.1 work.
@@ -45,8 +81,8 @@ across the [workload catalog](BENCHMARK_WORKLOADS.md), actual mmap and actual
 page faults. Substantial gains are a hypothesis; losses remain reportable.
 Reuse the validated
 [basic working version](PROJECT_GUIDE.md#basic-working-version) and retain focused
-correctness, ownership, lifetime, recovery and environment checks. The new
-`plain-scaling-v1` plan prepares 21 worker counts and 126 plain
+correctness, ownership, lifetime, recovery and environment checks. The
+historical `plain-scaling-v1` plan selected 21 worker counts and 126 plain
 Native/KD sessions, with [41 mocked passes and independent review](../bench/results/10.176.26.71/tests/mmap-scaling-plan-20261026/README.md).
 Its cases remain unrun. The earlier smaller plan used 1 and 16 workers and
 three pairs: 12 measured cases. The explicit `plain-v1` runner/report mode passed
@@ -92,10 +128,6 @@ Broader matrices, causal profiling, observer expansion and tuning remain
 separate work. All seven earlier mutex causes and qualified variance remain
 unresolved; preserved performance refusals remain failures. The historical
 checkpoints below retain their original scopes, including deferred p95 work.
-The [basic handoff](../bench/results/10.176.26.71/tests/basic-version-20261022/README.md)
-now records four returned-body presets and complete drain. Its failed
-16-worker mixed rwlock delegation check remains unresolved; the basic preset
-uses the separately validated 60-worker case without changing admission.
 The completed [receipt-I/O control](../bench/results/10.176.26.71/bench/mutex-receipt-io-20261021/README.md)
 passed 49 serial basic/affected and 2,626 inert archive checks, with one original
 warmup, exact retirement and final drain. Seventeen writes/4,874,247 logical
@@ -234,7 +266,7 @@ Known failures are still open:
 ## Delivery scope
 
 The user reopened the seven public-mutex regressions and requested subsequent
-rwlock/rwsem comparisons, real mmap/fault integration and nano/list measurements.
+rwlock/rwsem comparisons, real mmap/fault integration and nano measurements.
 The active [stage record](../bench/results/10.176.26.71/bench/mutex-regression-diagnosis-20261020/README.md)
 tracks those dependencies and results. Their prior deferred status is not a
 reason to skip the requested investigation; unsupported behavior still requires
@@ -387,60 +419,6 @@ Its planned timing remains unstarted because the original host gate refused
 68 versus 67 threads. A future attempt must retain separate boot identities and
 qualify unchanged environment/endpoint checks. No repeated organization or
 already-completed correctness is needed without changed inputs or new evidence.
-
-The
-[resident-list timing plan](../bench/results/10.176.26.71/bench/nano-list-followup-20261020/README.md)
-retains the previously selected 264 sessions at eight and 60 workers.
-`timing-1` stopped after 147 attempts: 144 spin/mutex sessions and two shared
-controls passed, then the first KD rwlock case failed the retained JIT
-requirement. The remaining 69 rwlock cases did not run in `timing-1`; their
-separate continuation is recorded below. Its 48 unstarted rwsem cases
-subsequently ran as the separate `rwsem-1` continuation. Its
-immediate host endpoint failed at 83 versus 67 QEMU threads. The independent
-250,374-check review preserves all failures, verifies evidence integrity and
-reports separate ranges/CVs; no acceptance is claimed. Its first strict preflight failed at 70 versus 67
-QEMU threads with zero measured sessions; the failure and later thread turnover
-are preserved. A fresh full 67-thread receipt and exact unchanged-plan preflight
-passed before `timing-1` started. No admission check or host setting was relaxed.
-The rwsem continuation separately passed all 48 cases with 24 exact KD
-retirements and 6,734,206 matching entries/completions. Its 71,582-check
-independent review passes evidence integrity but preserves an immediate
-86-versus-67 host-thread failure. Four of eight Native parity comparisons miss;
-maximum KD/Native spreads are 165.98%/22.91%. The prior 73-thread admission
-failure and subsequent strict 67-thread admission both remain recorded.
-All runs are idle. The failed rwlock execution requirement, host endpoint
-mismatches, variance and earlier mutex/class gaps remain open; do not weaken a
-gate or repeat a failed case for a favorable class.
-
-The [2026-10-21 diagnosis](../bench/results/10.176.26.71/bench/nano-rwlock-diagnosis-20261021/README.md)
-records the subsequent investigation. Read-only host captures bind the QEMU binary
-and show extra workers performing disk writes. Matched RAM/ext4 diagnostics
-also observe background root-disk writes, so historical timing interference
-remains unresolved. An isolated provider observation patch and fixed matched
-comparison distinguish rwlock ratio/time, lock-heat and queue-prefix refusals.
-The original 69 unstarted cases subsequently completed under the separate strict
-coverage plan: 59 successes and ten NO_JIT failures, as detailed below. Remaining
-gaps concern delegation and qualification, not missing execution. No admission
-threshold, failed record or acceptance gate is changed.
-The first fixed 12-case diagnosis completed: six eight-worker strict NO_JIT
-failures, six sixty-worker successes, 12 exact retirements and 59,561 passing
-evidence-integrity checks. Its endpoint still fails at 72 versus 67 threads.
-Queue-prefix vetoes dominate the eight-worker heat behavior, while 19,699 hot
-slowpath entries never start a combiner; the later focused extension classifies
-that refusal. The original remaining 69 cases then completed
-with 59 strict successes and ten strict NO_JIT failures, all drained. Their
-76-thread endpoint fails too. Its 12,155 evidence-integrity checks and 23 exact
-retirements pass. Missing-case coverage is closed; strict execution, host
-interference and performance acceptance remain open. A 50-field diagnostic
-extension now observes the unchanged initial combiner decisions and exact
-source-lease refusal, with separate fixed matched controls.
-That extension completed: all 10,441 ready eight-worker calls refused the
-first non-combinable follower before evaluating the source-lease condition.
-Capacity, ticket and image-readiness refusals were zero. The six eight-worker
-cases still fail NO_JIT, while all six sixty-worker cases pass. All 83,603
-integrity checks and 12 exact retirements pass; the 74-thread endpoint fails.
-This closes the later-branch diagnosis for the observed reproduction, not
-the strict execution or host-interference acceptance gaps.
 
 Keep the two-word wrapper ABI, separate backend identities, exact KD physical owners,
 exact acquisition references and final ACKs. Shared storage must survive its final

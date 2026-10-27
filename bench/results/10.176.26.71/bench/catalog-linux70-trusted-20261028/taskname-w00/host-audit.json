@@ -1,0 +1,213 @@
+{
+  "coordinates": {
+    "backends": [
+      "native",
+      "tclock",
+      "kdlock"
+    ],
+    "count": 63,
+    "execution_counts": {
+      "NATIVE": 42,
+      "NO_JIT": 3,
+      "RETURNED_JIT": 18
+    },
+    "measured": 63,
+    "repeat": 0,
+    "workers": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      12,
+      16,
+      20,
+      24,
+      28,
+      32,
+      36,
+      40,
+      44,
+      48,
+      52,
+      56,
+      60
+    ]
+  },
+  "created_utc": "2026-10-27T18:21:42.005225+00:00",
+  "endpoint_task_counts": {
+    "after": 78,
+    "before": 72
+  },
+  "files": {
+    "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/bench/catalog-linux70-trusted-20261028/taskname-w00/table.csv": "9798b607687fac88408601dbc55a116d26d69d34d925e19318348d9441f11499",
+    "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-linux70-trusted-20261028/host-reference-command.json": "f1abf252884bb5883cc2fab1d85d0a2716d93972672692e4dcad69f5f5a6675e",
+    "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-linux70-trusted-20261028/host-reference.stdout": "afca4bebf005bc667efad18e30bf5cff0be5a45027e6476be1a56f69886df9e3",
+    "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-linux70-trusted-20261028/orchestration-20261027T181209Z/current_plan.py": "98f3a9f441f4b4369a621bfa09d2fb9ff42f3897acbd3287b26ec99df0de86db",
+    "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-linux70-trusted-20261028/orchestration-20261027T181209Z/frequency_monitor.py": "77c87dbf4c41ee04540d2f6aedccc2a2eb3ae5c1fc520bc15f3d464d3c202b52",
+    "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-linux70-trusted-20261028/orchestration-20261027T181209Z/linux70.py": "2d3da87339e4927804922fc38ceac68342b6e34e6ae551a67049795d286e9e45",
+    "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-linux70-trusted-20261028/orchestration-20261027T181209Z/plan.py": "33d14bf72fa8f0e2f10f8b2535a339a9f196ca892cb80675d34e4765de4ba8f2",
+    "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-linux70-trusted-20261028/orchestration-20261027T181209Z/provenance.json": "11355de1921b392d0ddd91d855e61c712b265ce3cd777e6630aa529c0091fc14",
+    "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-linux70-trusted-20261028/orchestration-20261027T181209Z/report.py": "ab08fe55656e4acab998d5feb0b806d87c37774f43de7de4a278be8b74679af2",
+    "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-linux70-trusted-20261028/orchestration-audit/capture-host-git-46aafa19.py": "e9417457c4d33eea2a84f70af0ed2839ce5b07abbd4dd70bb84ea66fdaf9bb74",
+    "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-linux70-trusted-20261028/orchestration-audit/capture-host-provenance.json": "214fc91b0eb2ad7f0d2a73d1b6e5cf40293c9b3911110283bc7681c910e39482",
+    "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-linux70-trusted-20261028/taskname-w00-after-host-command.json": "654210173549d98613bdd0ad1d732d3df1c8c0dde50c4764c78e8972f0a38cf0",
+    "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-linux70-trusted-20261028/taskname-w00-after-host.stdout": "59138c4746482b3e7a9a31ebe4ce5084de188545ff1eafc7e3e0288c5d1753c8",
+    "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-linux70-trusted-20261028/taskname-w00-before-host-command.json": "fa11a721e958d72e869eaa71c845279658c45763077bd901a57ae9ead06c5328",
+    "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-linux70-trusted-20261028/taskname-w00-before-host.stdout": "9c691bec494c333eff3471876a0eddc3b4e8c75f6546b6bafbc8783bd123ce33",
+    "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-linux70-trusted-20261028/taskname-w00-command.json": "d3c460493e2336871dc1108bd73b912ff358b222137608d48b20a9237eb7c0d0",
+    "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-linux70-trusted-20261028/taskname-w00-frequency-command.json": "4fc1a6a8b6291524fb7c9a0b4d35dcd25a350c4c1e128c9f7415438a0e8bbef3",
+    "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-linux70-trusted-20261028/taskname-w00-frequency-stop-command.json": "82fe49feea45db93f3dc9e93213ae271cab5dcb837c6abdfe101f6a840d6375d",
+    "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-linux70-trusted-20261028/taskname-w00-frequency.jsonl": "3f21e246a8462d1fb8ebaf9cc9f743c68b5abf3c80b221bccd5bb9f53082eabc",
+    "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-linux70-trusted-20261028/taskname-w00/plan.json": "45e9fd7ac85778375af7869ac0cfa2f7475b1827ae22da7d2033acc3af378c45",
+    "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-linux70-trusted-20261028/taskname-w00/records.json": "5b5ac03ef3bc7fa18c39a7bee0f41c48d916da5d84638ed43296e0a63ad54085"
+  },
+  "frequency": {
+    "busy_mhz_range": [
+      1990.8336625514053,
+      2000.2134379860452
+    ],
+    "busy_quarter_or_more_cpu_samples": 5824,
+    "counter_pairs_replayed": 35648,
+    "fixed_policy_khz": 2000000,
+    "maximum_sample_gap_seconds": 1.012893375,
+    "no_turbo": 1,
+    "policies": 64,
+    "samples": 558,
+    "thermal_deltas": {}
+  },
+  "host_boot_id": "2b39cf56-2146-4c87-9fa5-28c66dcee12c",
+  "limitations": [
+    "Configured 2 GHz policy and sampled APERF/MPERF evidence do not prove exact effective frequency throughout every instruction.",
+    "Endpoint task rows cannot exclude intervening task lifetimes. Only literal CPU63 worker lifetimes may differ; permanent rows remain exact.",
+    "NUMA binding policies/addresses are checked; nonzero cross-node page placement is not claimed absent.",
+    "First sample deltas have no retained preceding raw counter snapshot; their arithmetic is checked but initial subtraction is not independently replayable.",
+    "One repetition supplies no repeat variability; strict timing/performance qualification remains false.",
+    "Workload data/source/binary/JIT oracle replay is covered by the separate audit.json, not rerun here."
+  ],
+  "passed": true,
+  "performance_qualified": false,
+  "qemu": {
+    "pid": 257489,
+    "start_ticks": 42969155
+  },
+  "schema": 1,
+  "scope": "Offline recorded host/frequency/coordinate checks only; no guest or host action.",
+  "script_sha256": "c841ee7f188343f5fc3af702f30ee523adc1cb23e8000cebb21db424f7cdaebc",
+  "worker_turnover": {
+    "after": {
+      "added": [
+        {
+          "affinity": [
+            63
+          ],
+          "comm": "worker",
+          "start_ticks": 151189587,
+          "tid": 652358
+        },
+        {
+          "affinity": [
+            63
+          ],
+          "comm": "worker",
+          "start_ticks": 151190097,
+          "tid": 652359
+        },
+        {
+          "affinity": [
+            63
+          ],
+          "comm": "worker",
+          "start_ticks": 151190097,
+          "tid": 652360
+        },
+        {
+          "affinity": [
+            63
+          ],
+          "comm": "worker",
+          "start_ticks": 151190610,
+          "tid": 652361
+        },
+        {
+          "affinity": [
+            63
+          ],
+          "comm": "worker",
+          "start_ticks": 151190610,
+          "tid": 652362
+        },
+        {
+          "affinity": [
+            63
+          ],
+          "comm": "worker",
+          "start_ticks": 151190610,
+          "tid": 652363
+        }
+      ],
+      "retired": []
+    },
+    "before": {
+      "added": [],
+      "retired": []
+    },
+    "before_to_after": {
+      "added": [
+        {
+          "affinity": [
+            63
+          ],
+          "comm": "worker",
+          "start_ticks": 151189587,
+          "tid": 652358
+        },
+        {
+          "affinity": [
+            63
+          ],
+          "comm": "worker",
+          "start_ticks": 151190097,
+          "tid": 652359
+        },
+        {
+          "affinity": [
+            63
+          ],
+          "comm": "worker",
+          "start_ticks": 151190097,
+          "tid": 652360
+        },
+        {
+          "affinity": [
+            63
+          ],
+          "comm": "worker",
+          "start_ticks": 151190610,
+          "tid": 652361
+        },
+        {
+          "affinity": [
+            63
+          ],
+          "comm": "worker",
+          "start_ticks": 151190610,
+          "tid": 652362
+        },
+        {
+          "affinity": [
+            63
+          ],
+          "comm": "worker",
+          "start_ticks": 151190610,
+          "tid": 652363
+        }
+      ],
+      "retired": []
+    }
+  },
+  "workload": "taskname-w00"
+}

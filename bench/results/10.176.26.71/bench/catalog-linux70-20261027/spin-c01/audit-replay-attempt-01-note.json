@@ -1,0 +1,5 @@
+{
+  "benchmark_failure_established": false,
+  "cause": "The initial audit required a KD completion counter for TCLock. The frozen TCLock runner explicitly records jit_status=NOT_APPLICABLE and jit_bodies=0 but omits the KD completion field. The corresponding table field is blank. The corrected audit accepts only this explicit non-KD schema and continues to require entry/completion evidence for every KD point.",
+  "failed_attempt_sha256": "e73c78d4ed5ea7e8e486b51edfa67abc4649de7a6f50b270c8f875e8add5dce9"
+}

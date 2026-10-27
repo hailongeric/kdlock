@@ -9,7 +9,8 @@ kernel lock replacements and evaluate application performance. The
 criteria. Current measurements support favorable nano cases but have not met the
 scoped MM performance objective; broad kernel replacement remains planned.
 
-The development VM now runs **Ubuntu 26.04.1 LTS / Linux 7.0.0-38-kdlock1**.
+The development VM uses **Ubuntu 26.04.1 LTS**, with **Linux 7.0.0-38-kdlock1**
+as its normal boot default and a separate enabled-MM image for the shared-MM campaign.
 Ubuntu 26.04 / Linux 7.0 is the active adaptation platform; further Linux 6.1
 adaptation is retired. The [migration record](docs/history/vm-ubuntu2604-migration-20261027.md)
 records OS boot, matching header packages and storage identities. The
@@ -20,14 +21,42 @@ drain checks; separate KD mutex/spin probes validated native continuation. These
 functional results, with no new performance claim. The
 [retirement record](docs/history/kernel-retirement-20261027.md) preserves the
 legacy recovery version and results. Earlier functional commands and throughput
-results retain their Linux 6.1 scope. The current c01 basic presets require
-fresh returned-JIT and drain validation.
+results retain their Linux 6.1 scope. The
+[trusted-source basic controller](bench/results/10.176.26.71/tests/ordinary-string-translation-20261027/README.md#complete-four-family-basic-controller)
+passed all four recorded cacheline presets in one run, with correct data,
+returned JIT bodies and final drain. These iteration-count checks supply no scores.
 
 The current [workload catalog](docs/BENCHMARK_WORKLOADS.md) selects 52 lock/API
 configurations, including all ten c01/c16/post256 nano profiles. The Linux 7
 campaign uses 21 worker counts, Native/TCLock/KD and one two-second round per
-point: 3,276 planned lock/API measurements. Separate MM suites require their
-own Linux 7 readiness checks; the installed mmap backend remains disabled.
+point: 3,276 planned lock/API measurements. The earlier checked-source
+[campaign](bench/results/10.176.26.71/bench/catalog-linux70-20261027/README.md)
+completed 29 matrices (1,827 timed points) and preserved a partial failed
+taskname attempt. The separate
+[trusted-source campaign](bench/results/10.176.26.71/bench/catalog-linux70-trusted-20261028/AUDIT.md)
+completed 22 full workloads (1,386 points). Its `taskname-w20` attempt remains
+stopped with 23 valid points, one timed KD failure and 39 unrun points. A fresh
+[prepared taskname cohort](bench/results/10.176.26.71/bench/catalog-linux70-taskname-prepared-20261028/README.md)
+completed its own 63-point matrix, with six KD returned-JIT points and fifteen
+successful local `NO_JIT` points. The
+[complete catalog index](bench/results/10.176.26.71/bench/catalog-linux70-complete-20261028/README.md)
+therefore covers all 52 configurations and 3,276 lock/API points across those
+three separate source/preparation cohorts. This is coverage accounting, not
+pooled performance evidence. The old partial failure and the separate failed
+strict unscored taskname check remain unchanged.
+
+All **126 selected Linux 7 MM measurements** are complete: the
+[private-MM campaign](bench/results/10.176.26.71/bench/catalog-linux70-mm-trusted-20261027/README.md)
+contains 84 independent-mm/private-fault points, and the separately frozen
+[shared-MM campaign](bench/results/10.176.26.71/bench/catalog-linux70-mm-shared-20261028/shared-mm/README.md)
+contains 42 Native/KD points. Native measured higher shared-MM throughput at
+all 21 worker counts; at 60 workers KD achieved 0.0436× Native. These are single
+exploratory rounds, including the 2.15% KD deficit at one worker; no repeat
+variability or scoped MM improvement is established. The separate
+[enabled-MM kernel checkpoint](bench/results/10.176.26.71/tests/linux70-kdmm1-20261027/README.md)
+records the same `7.0.0-38-kdmm1` image in Native/KD modes, fresh correctness and
+preparation passes, and the earlier KD1 mapping failure, cleanup and diagnostic.
+The normal `kdlock1` boot default keeps the global mmap backend disabled.
 
 The October 26 exploratory screen now retains 45 historical lock/API
 configurations and completed the three separate implemented mmap/fault workloads,
@@ -125,9 +154,10 @@ service, summary or direct native bridge. Generated dispatch, budget and return
 checks preserve arithmetic flags. Decoding/lowering correctness, source leases,
 exact ownership and frame/return bookkeeping remain required. The
 [ordinary-translation checks](bench/results/10.176.26.71/tests/ordinary-string-translation-20261027/README.md)
-record 22 passing affected unit drivers, five MM runner drivers, and a live
-read-only taskname pass with 1,600,000 correct reads, 1,592,658 returned JIT bodies
-and full drain. This is unscored functional evidence. See the
+record 22 passing affected unit drivers, five MM runner drivers, a live
+read-only taskname pass with 1,600,000 correct reads and 1,592,658 returned JIT
+bodies, and one complete four-family basic controller pass. All drained;
+these are unscored functional results. See the
 [translation policy](docs/design/admission.md).
 
 The historical [`05876a4` taskname/xattr comparison](bench/results/10.176.26.71/bench/taskname-xattr-direct-api-20261019/README.md)

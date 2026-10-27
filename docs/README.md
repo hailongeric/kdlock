@@ -9,8 +9,9 @@ Ubuntu 26.04 / Linux 7.0 is the active adaptation platform. The
 Ubuntu 26.04.1 LTS, kernel `7.0.0-38-generic`, matching headers, the approved
 snapshot purge and expansion to 132 GiB. The separate
 [Linux 7 port receipt](../bench/results/10.176.26.71/tests/linux70-port-20261027/README.md)
-records the custom `7.0.0-38-kdlock1` build, all four KD returned-JIT passes,
-Native/TCLock functional controls and remaining validation limits. The
+records the custom `7.0.0-38-kdlock1` build, Native/TCLock functional controls,
+KD native-continuation probes and remaining validation limits. Current basic
+cacheline presets require fresh validation. The
 [kernel retirement record](history/kernel-retirement-20261027.md) preserves
 the legacy recovery version and earlier results.
 

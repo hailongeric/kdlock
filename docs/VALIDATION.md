@@ -35,15 +35,29 @@ JIT entries/completions and full retirement. The final image contains ordinary
 `strnlen`/`sized_strscpy` translation, requirements 0, and zero runtime string
 hostcall/direct-helper activity. Independent after-health capture confirmed
 idle workload state on the same boot. Concurrent unscored MM kernel building
-excludes a performance claim; mutation and other live scopes remain unvalidated.
+excludes a performance claim; taskname mutation remains unvalidated.
+
+The later single `catalog-linux70-trusted-basic-20261027` controller passed all
+four cacheline presets, each with 1,600,000 correct operations: spin c01 returned
+1,597,133 JIT bodies; public mutex c01 returned 1,587,545; rwlock c01/20% writes
+returned 30,645; rwsem c16/100% writes returned 1,575,062. Entries matched
+completions in every case. The controller completed with final idle, and an
+independent same-boot health capture confirmed no project modules. Offline
+verification binds the complete 2,112-file archive and all source, binary,
+publication and session hashes. Both global evidence-writer checks remained
+unchanged; two affected metadata drivers passed 4 and 12 methods. This is
+functional validation, with no scores, actual-MM claim or transfer of the old
+failed parent controllers to PASS.
 Historical receipts below keep their original source/policy identities.
 
 ## Linux 7 functional port
 
 The [October 27 port](../bench/results/10.176.26.71/tests/linux70-port-20261027/README.md)
 uses authenticated Ubuntu `linux=7.0.0-38.38` and custom `7.0.0-38-kdlock1`.
-Eight Native/TCLock controls completed 80,000 operations each. The maintained
-c01 basic presets require fresh data, returned-JIT and drain receipts. Separate
+Eight Native/TCLock controls completed 80,000 operations each. The subsequent
+[trusted-source basic controller](../bench/results/10.176.26.71/tests/ordinary-string-translation-20261027/README.md#complete-four-family-basic-controller)
+provides fresh data, returned-JIT and drain receipts for all four recorded
+presets. Separate
 mutex OUTER and spin checks
 passed original-task instruction continuation, exact effects/arithmetic flags,
 terminal delegation refusal and drain. These are focused functional checks;
@@ -54,9 +68,52 @@ Earlier preparation refusals and corrected installation failures are retained.
 
 The [Linux 7 port record](../bench/results/10.176.26.71/tests/linux70-port-20261027/README.md)
 owns the new platform's build, focused checks and live-validation gates. The
-enabled mmap adapter has separate affected-object compilation evidence; it stays
-disabled in the first development kernel. The actual-MM assertions and timings
-below remain Linux 6.1 evidence and do not establish Linux 7 runtime behavior.
+normal `7.0.0-38-kdlock1` boot keeps the mmap adapter disabled. The separate
+[enabled-MM checkpoint](../bench/results/10.176.26.71/tests/linux70-kdmm1-20261027/README.md)
+binds the `7.0.0-38-kdmm1` image used by both Native and KD boot modes. The
+[fresh campaign phases](../bench/results/10.176.26.71/bench/catalog-linux70-mm-shared-20261028/phases.json)
+passed API/lifetime, mapping, fault and completed-fault prerequisites on each
+measurement boot, with both modes' plain preparation controls and normal drain.
+All [42 shared-MM timings](../bench/results/10.176.26.71/bench/catalog-linux70-mm-shared-20261028/shared-mm/README.md)
+then completed and drained. Native measured higher throughput at all 21 worker
+counts. The one-worker KD deficit is 2.15%, and the 60-worker KD/Native ratio is
+0.0436; one exploratory round per coordinate supplies no variability estimate.
+The earlier KD1 mapping failure, its separate cleanup and diagnostic remain
+unchanged. These results do not establish performance parity or whole-kernel
+replacement.
+
+The separately frozen [private-MM campaign](../bench/results/10.176.26.71/bench/catalog-linux70-mm-trusted-20261027/README.md)
+completed 21 independent-mm and 63 private-fault points on `kdlock1`, bringing
+selected MM coverage to 126 points across the two campaigns. Kernel and source
+identities remain separate. The earlier checked-source lock/API campaign still
+has 29 complete matrices (1,827 timings). The separate
+[trusted-source completed-subset audit](../bench/results/10.176.26.71/bench/catalog-linux70-trusted-20261028/AUDIT.md)
+passed for 22 full workloads and 1,386 points, including source/binary, data,
+publication, retirement and host checks. KD records 214 returned-JIT and 248
+successful local `NO_JIT` points. Its whole selected campaign is not an all-pass
+result: the separate `taskname-w20` attempt retains 23 valid points, one timed
+KD failure with one JIT entry and no return, and 39 unrun points. The
+[fresh prepared cohort](../bench/results/10.176.26.71/bench/catalog-linux70-taskname-prepared-20261028/README.md)
+completed its separately frozen 63-point matrix. Its source/data/JIT and
+host audits passed: all 42 control points completed, six KD points returned
+JIT bodies and fifteen completed locally, with 99,339 matched entries/returns
+across the KD timed points. Its strict unscored 16-worker functional check
+remains a `NO_JIT` failure; preparation readiness and timed acceptance, which
+continues to allow local execution, do not replace that result. No earlier
+failure is promoted to a pass.
+The completed [final health capture](../bench/results/10.176.26.71/raw/bench/catalog-linux70-taskname-prepared-20261028/selected-final-health-1.stdout)
+records an idle `7.0.0-38-kdlock1` guest on the same normal-kernel boot
+`15dc5977-59d3-4471-a196-d71f03f450ed`. This endpoint does not imply continuous
+health-log coverage.
+
+The [complete catalog index](../bench/results/10.176.26.71/bench/catalog-linux70-complete-20261028/README.md)
+accounts for 52 full lock/API matrices (29 checked, 22 trusted, one prepared;
+3,276 points) and the separate 126 MM points. These 3,402 selected observations
+establish coverage across their recorded identities, not one-source full-suite
+validation, pooled rates or strict performance qualification.
+
+The actual-MM assertions and timings below retain their Linux 6.1 identities
+and do not establish Linux 7 runtime behavior.
 
 The [IRQ/read-trylock correction](../bench/results/10.176.26.71/tests/mmap-irq-trylock-20261025/README.md)
 at `e6fc371` passed 137 Native and 161 KD assertions on actual mm objects in the

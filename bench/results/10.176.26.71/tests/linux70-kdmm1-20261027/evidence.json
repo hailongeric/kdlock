@@ -1,0 +1,1031 @@
+{
+  "boots": {
+    "kd": {
+      "backend": "KD_LOCAL",
+      "boot_id": "55696c5f-b3bb-46cd-8676-60877a4a79f1",
+      "boot_result": {
+        "bytes": 5355,
+        "path": "bench/results/10.176.26.71/raw/tests/linux70-kdmm1-20261027/kd-boot-capture/evidence/boot-kd/result.json",
+        "sha256": "279c81229b323498179329737da770cea68d1628649a5aa8b406de165758d796"
+      },
+      "bundle_files_verified": 23,
+      "bundle_manifest": {
+        "bytes": 397118,
+        "path": "bench/results/10.176.26.71/raw/tests/linux70-kdmm1-20261027/kd-boot-capture/identity/manifest.json",
+        "sha256": "39aa98e8a62d2e150064f8c6d5bfb5ae61e16b4a207b9efec80a0b9c263c6a7f"
+      },
+      "capture_manifest": {
+        "bytes": 9962,
+        "path": "bench/results/10.176.26.71/raw/tests/linux70-kdmm1-20261027/kd-boot-manifest-before.json",
+        "sha256": "000f6180f002735c715bc2a1dbac4fe92233f79ee4c1320687870f0bc73d5351"
+      },
+      "captured_files_verified": 61,
+      "normal_default_unchanged": true,
+      "one_shot_consumed": true,
+      "runtime_policy": {
+        "cmdline": "BOOT_IMAGE=/boot/vmlinuz-7.0.0-38-kdmm1 root=UUID=aa0bde06-47f6-4049-aaaf-13d052e53961 ro nokaslr nopvspin console=tty1 console=ttyS0 preempt=lazy kd_mmap=on",
+        "mmap_mode": "on",
+        "preempt": "lazy",
+        "preempt_control": "full (lazy)"
+      },
+      "status": "PASS",
+      "summary": {
+        "bytes": 969,
+        "path": "bench/results/10.176.26.71/raw/tests/linux70-kdmm1-20261027/kd-boot-capture-summary.json",
+        "sha256": "aa7585189149bb1092f2cd438d3b884c7439a51f53e2176f9d03423c38561f48"
+      },
+      "taint_before_probes": 0
+    },
+    "native": {
+      "backend": "NATIVE_CONTROL",
+      "boot_id": "a84cb9f5-bbab-457e-83ca-dcfc3bffed09",
+      "boot_result": {
+        "bytes": 5385,
+        "path": "bench/results/10.176.26.71/raw/tests/linux70-kdmm1-20261027/native-boot-capture/evidence/boot-native/result.json",
+        "sha256": "c5121f701d26ae7caceeddc2b03e43b2d62965f8cb2a6a226465a7b6141b5b4f"
+      },
+      "bundle_files_verified": 23,
+      "bundle_manifest": {
+        "bytes": 397124,
+        "path": "bench/results/10.176.26.71/raw/tests/linux70-kdmm1-20261027/native-boot-capture/identity/manifest.json",
+        "sha256": "7e1032c4b89618882bbadc128084e36c35e1ef9a4627608668b8404e71fc6649"
+      },
+      "capture_manifest": {
+        "bytes": 10002,
+        "path": "bench/results/10.176.26.71/raw/tests/linux70-kdmm1-20261027/native-boot-manifest-before.json",
+        "sha256": "1a343c7413804033506348f0a9dacda26232e475b521a0009a082d53db36a0f2"
+      },
+      "captured_files_verified": 61,
+      "normal_default_unchanged": true,
+      "one_shot_consumed": true,
+      "runtime_policy": {
+        "cmdline": "BOOT_IMAGE=/boot/vmlinuz-7.0.0-38-kdmm1 root=UUID=aa0bde06-47f6-4049-aaaf-13d052e53961 ro nokaslr nopvspin console=tty1 console=ttyS0 preempt=lazy kd_mmap=off",
+        "mmap_mode": "off",
+        "preempt": "lazy",
+        "preempt_control": "full (lazy)"
+      },
+      "status": "PASS",
+      "summary": {
+        "bytes": 836,
+        "path": "bench/results/10.176.26.71/raw/tests/linux70-kdmm1-20261027/native-boot-capture-summary.json",
+        "sha256": "1bdee8d4076fcb40ad9c285eb67a6acfad515e253e3436a18e1c34e7c676fb7a"
+      },
+      "taint_before_probes": 0
+    }
+  },
+  "build": {
+    "config_sha256": "4de7ee42b58ee852c9a786c7d0701151babeb09637d9bca9d6393c0ca2918f96",
+    "modules": 6901,
+    "preparation": {
+      "bytes": 19995,
+      "path": "bench/results/10.176.26.71/raw/tests/linux70-kdmm1-20261027/preparation-capture/evidence/preparation/result.json",
+      "sha256": "7c617940ed396fc038015372dcdf15e981d7737d268c5ce3a32d4b66fc0b7058"
+    },
+    "result": {
+      "bytes": 12450,
+      "path": "bench/results/10.176.26.71/raw/tests/linux70-kdmm1-20261027/build-capture/evidence/build-01/result.json",
+      "sha256": "60c4ce8d6efa67e67b58ef55ee7eccf225a571f1bcb6a3c3262ac5d1abd60c18"
+    },
+    "source_config_unchanged": true,
+    "status": "PASS",
+    "summary": {
+      "bytes": 4255,
+      "path": "bench/results/10.176.26.71/raw/tests/linux70-kdmm1-20261027/build-summary.json",
+      "sha256": "d4d24e0d3a916c52fc3099777b271415351f9697bbfcdb73968a928da4725dac"
+    },
+    "warning_count": 11
+  },
+  "build_id": "ac9ea2ec7f24be8b910547bdfdbfb071176677e6",
+  "installation": {
+    "cms_verified_samples": 4,
+    "diagnosis": "Only usr/lib/modprobe.d/blacklist_linux_7.0.0-38-generic.conf matched the old substring guard; actual module directories are all kdmm1.",
+    "initramfs_module_bytes_verified": 1188,
+    "installation_rebuilt": false,
+    "installed_modules": 6901,
+    "original_archive": {
+      "bytes": 498079,
+      "path": "bench/results/10.176.26.71/raw/tests/linux70-kdmm1-20261027/installation-failed-attempt.tar.gz",
+      "sha256": "64e9db38f6be130da46eee931bcb4938fe51e01faef983d2f89546031e95c7b9"
+    },
+    "original_error": "initramfs contains another release",
+    "original_receipt_replaced": false,
+    "original_result": {
+      "archive_member": "installation/result.json",
+      "bytes": 2939744,
+      "sha256": "8a0bb5cf5ee606c62cf3f6fe003661633e1d96cde206d2c4070fc88998e9927b"
+    },
+    "original_status": "FAILED_RETAINED",
+    "private_key_archived": false,
+    "protected_files_unchanged": true,
+    "signature_metadata_verified": 6827,
+    "summary": {
+      "bytes": 1651,
+      "path": "bench/results/10.176.26.71/raw/tests/linux70-kdmm1-20261027/installation-validation-summary.json",
+      "sha256": "d8afc32a2a3851db7ac40d26626b617f110dcd6743be6597f86228a23f9e51a0"
+    },
+    "unsigned_policy_exclusions": 74,
+    "validation": {
+      "bytes": 2946388,
+      "path": "bench/results/10.176.26.71/raw/tests/linux70-kdmm1-20261027/installation-validation-result.json",
+      "sha256": "2167c0726da627700c4c9fc294e7fcdf7c6047693e4d5e4dca64cbc375d7f6d4"
+    },
+    "validation_status": "PASS"
+  },
+  "kd_correctness": {
+    "api": {
+      "checks": 161,
+      "drained": true,
+      "errors": 0,
+      "preservation": {
+        "bytes": 106087,
+        "path": "bench/results/10.176.26.71/raw/bench/catalog-linux70-mm-trusted-20261027/kd-55696c5f-b3bb-46cd-8676-60877a4a79f1-api-a00/preservation.json",
+        "sha256": "f2b24f7e1f4b627633f926665176391dd66c12b5c33a25b59942eea8827997e6"
+      },
+      "result": {
+        "bytes": 9146,
+        "path": "bench/results/10.176.26.71/raw/bench/catalog-linux70-mm-trusted-20261027/kd-55696c5f-b3bb-46cd-8676-60877a4a79f1-api-a00/result.json",
+        "sha256": "275a2f0a815f988f500691420d7be253cec42053015eb8d82a680a492fefb166"
+      },
+      "status": "PASS"
+    },
+    "boot_id": "55696c5f-b3bb-46cd-8676-60877a4a79f1",
+    "completed": {
+      "status": "NOT_RUN_ORIGINAL_GENERATION_STOPPED"
+    },
+    "faults": {
+      "status": "NOT_RUN_ORIGINAL_GENERATION_STOPPED"
+    },
+    "mapping": {
+      "after_health_command": {
+        "bytes": 817,
+        "path": "bench/results/10.176.26.71/raw/bench/catalog-linux70-mm-trusted-20261027/kd-55696c5f-b3bb-46cd-8676-60877a4a79f1-mapping-a00-after-health-command.json",
+        "sha256": "f16e21de1369f792ddc9e1b1e6bca0fda890acd093f452db55f2e4373303f552"
+      },
+      "after_health_stdout": {
+        "bytes": 0,
+        "path": "bench/results/10.176.26.71/raw/bench/catalog-linux70-mm-trusted-20261027/kd-55696c5f-b3bb-46cd-8676-60877a4a79f1-mapping-a00-after-health.stdout",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "archive": {
+        "bytes": 1064469,
+        "path": "bench/results/10.176.26.71/raw/tests/linux70-kdmm1-20261027/kd-mapping-failed-attempt.tar.gz",
+        "sha256": "decf23b8d64743d185f0c3994eddf6595e119e1c623031db9eaa6003a7dc2db8"
+      },
+      "checks": 363377,
+      "client_events": {
+        "archive_member": "kd-55696c5f-b3bb-46cd-8676-60877a4a79f1-mapping-a00/02-cycle-16.jsonl",
+        "bytes": 24445,
+        "sha256": "f70f0af94e8f6c21c48020333888d3393dbd5f49aa1c080d9d93906a8fbeb005"
+      },
+      "command": {
+        "bytes": 2017,
+        "path": "bench/results/10.176.26.71/raw/bench/catalog-linux70-mm-trusted-20261027/kd-55696c5f-b3bb-46cd-8676-60877a4a79f1-mapping-a00-command.json",
+        "sha256": "cf46765e949c2c7517c11e3a11ca5d9a8dfd8fda7ab71d3e65a1ef268c01427b"
+      },
+      "completed_cycles": 80000,
+      "diagnostics": [
+        "FAIL line 298: contention_ok errno=0"
+      ],
+      "drained_at_failure": false,
+      "failed_case": "02-cycle-16",
+      "failed_predicate": "contention_ok",
+      "later_cleanup": {
+        "boot_id": "55696c5f-b3bb-46cd-8676-60877a4a79f1",
+        "files": 0,
+        "forced": false,
+        "idle": true,
+        "mm_refs": 0,
+        "module_refcount": 0,
+        "normal_unload": true,
+        "original_failed_result_changed": false,
+        "receipt": {
+          "bytes": 58662,
+          "path": "bench/results/10.176.26.71/raw/tests/linux70-kdmm1-20261027/kd-mapping-normal-cleanup.json",
+          "sha256": "6c99480f744bfd46fb69f35cb2f2a91f33f82d60e84580cfca1c6695059df37f"
+        },
+        "release_errors": 0,
+        "status": "NORMAL_UNLOAD_AND_IDLE_VERIFIED"
+      },
+      "original_controller_row": {
+        "action": "mapping",
+        "completion_confirmed": true,
+        "context": {
+          "boot_id": "55696c5f-b3bb-46cd-8676-60877a4a79f1",
+          "build": "/mnt/kdlock-builds/linux-7.0.0-38-kdmm1/build",
+          "bundle": "/root/kdlock-kernel-baselines/linux70-kdmm1-kd-20261027",
+          "mode": "kd",
+          "release": "7.0.0-38-kdmm1",
+          "snapshot": "linux70-kdmm1-native-clean-20261027",
+          "variant": "kdmm1-kd"
+        },
+        "drained": false,
+        "endpoint_checked": false,
+        "error": "JSONDecodeError('Expecting value: line 1 column 1 (char 0)')",
+        "guest_output": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-mm-trusted-20261027/kd-55696c5f-b3bb-46cd-8676-60877a4a79f1-mapping-a00",
+        "name": "kd-55696c5f-b3bb-46cd-8676-60877a4a79f1-mapping-a00",
+        "performance_accepted": false,
+        "returncode": 1,
+        "source_manifest_sha256": "9baf2598510c57eff2ba4824fed0be287abe70c90f88cd5d89e1c455781850ad",
+        "state": "STOPPED",
+        "suite": null
+      },
+      "passed": false,
+      "result": {
+        "archive_member": "kd-55696c5f-b3bb-46cd-8676-60877a4a79f1-mapping-a00/result.json",
+        "bytes": 15113,
+        "sha256": "da8bee9b9971fdb0271cbea255e7635301b7990d52ba6e5e317c5ba4454351bb"
+      },
+      "secondary_error": "The original controller decoded empty after-health output, masking the nonzero guest exit with JSONDecodeError. Its original STOPPED row remains unchanged.",
+      "status": "FAILED_RETAINED",
+      "stderr": {
+        "bytes": 1190,
+        "path": "bench/results/10.176.26.71/raw/bench/catalog-linux70-mm-trusted-20261027/kd-55696c5f-b3bb-46cd-8676-60877a4a79f1-mapping-a00.stderr",
+        "sha256": "2ed2281bb007c530a91fa7ac42e0992a346961b74fdfcde9511e10ff568e4c90"
+      },
+      "worker_errors": 0,
+      "workers_joined": 16
+    },
+    "mapping_diagnostic": {
+      "case_count": 6,
+      "checkpoint": {
+        "bytes": 11699,
+        "path": "bench/results/10.176.26.71/tests/linux70-kdmm1-mapping-diagnostic-20261027/evidence.json",
+        "sha256": "06a1731090a15eecddb37c5acc302869786452f6105f2e08c0d4f5c2033b22d9"
+      },
+      "controller_result": {
+        "bytes": 34312,
+        "path": "bench/results/10.176.26.71/raw/bench/catalog-linux70-mm-diagnostic-20261027/diagnostic-result.json",
+        "sha256": "25438c5e565bf1ddafdd2140531942c5d795acc9e646f165197138dbb9a6e7aa"
+      },
+      "drained": true,
+      "negative_mutations": 9,
+      "original_failed_result_changed": false,
+      "result": {
+        "bytes": 26294,
+        "path": "bench/results/10.176.26.71/raw/bench/catalog-linux70-mm-diagnostic-20261027/kd-55696c5f-b3bb-46cd-8676-60877a4a79f1-mapping-diagnostic-01/result.json",
+        "sha256": "5f773a0d3afb2dca386d8d2f25630f864f996180fd90733ab0ac6cd8ac9c34ad"
+      },
+      "status": "PASS_SEPARATE_DIAGNOSTIC"
+    },
+    "scope": "Original KD1 attempt only. Its mapping failure and later cleanup are unchanged; remaining checks were not run in that stopped generation. Fresh KD2 passes are recorded separately under shared_mm_timing.",
+    "status": "HISTORICAL_KD1_API_PASS_MAPPING_FAILED_DIAGNOSTIC_SEPARATE"
+  },
+  "limits": [
+    "Clean boot/backend identity is distinct from actual-MM correctness and performance.",
+    "Fresh Native2/KD2 preparation and Native3/KD2 same-boot correctness passed; all 42 shared points completed. The original KD1 mapping failure, later cleanup and separate diagnostic remain distinct outcomes.",
+    "Nineteen controller and four actual-C methods passed with the diagnostic bytes. Missing matplotlib and a 180-second binary-wheel download timeout remain failed attempts. A later one-method publication data check passed with two separately bound source changes; graphical rendering was explicitly untested.",
+    "The 84 completed private-MM points remain in their original campaign and are not repeated or imported into the new shared-only campaign.",
+    "Snapshot creation/listing is recorded; no restore drill is claimed.",
+    "Native MM bodies remain unchanged; no operation-specific body delegation is claimed.",
+    "All 126 MM points span two separate source-generation/kernel scopes; their results are not pooled.",
+    "Shared Native was higher at 21/21 matched worker counts in one exploratory round. No variance estimate, causal explanation or universal performance ordering is established.",
+    "Live BPF/IRQ/NMI validation and broader kernel replacement remain unvalidated."
+  ],
+  "linux_version_code": 458766,
+  "mm_campaign_completion": {
+    "original_private_campaign_shared_points": 0,
+    "pooled_performance_series": false,
+    "private_campaign": "catalog-linux70-mm-trusted-20261027",
+    "separate_private_points": 84,
+    "shared_campaign": "catalog-linux70-mm-shared-20261028",
+    "shared_points": 42,
+    "status": "ALL_SELECTED_POINTS_COMPLETE",
+    "total_points": 126
+  },
+  "mmap_config": "y",
+  "native2_shared_campaign": {
+    "boot_id": "1672c452-0346-4703-8215-ddb1cec50915",
+    "campaign": "catalog-linux70-mm-shared-20261028",
+    "counts": {
+      "api_checks": 137,
+      "completed_fault_completions": 64,
+      "completed_fault_entries": 64,
+      "completed_fault_returns": 64,
+      "fault_cases": 18,
+      "fault_children_joined": 16,
+      "fault_threads_joined": 16,
+      "mapping_cases": 6,
+      "mapping_negative_oracles": 9,
+      "plain_preparation_controls": [
+        1,
+        16
+      ],
+      "preparation_negative_oracles": 11
+    },
+    "drained": true,
+    "endpoint_checked": true,
+    "offline_audit": {
+      "bytes": 8025,
+      "path": "bench/results/10.176.26.71/raw/tests/linux70-kdmm1-20261027/native2-preparation-offline-audit.json",
+      "sha256": "16ca275bc3b95aa508ca032d8042253d28f0344d300c87d3bef7060721aaef3e"
+    },
+    "prepared_inputs": {
+      "bytes": 39437,
+      "path": "bench/results/10.176.26.71/raw/bench/catalog-linux70-mm-shared-20261028/native-1672c452-0346-4703-8215-ddb1cec50915-shared-preparation-a00/inputs.json",
+      "sha256": "075b1d12d21646a802c7eb04805d1d4a5ecd78c9b9f7538837523554f0980ef5"
+    },
+    "private84_imported": false,
+    "scope": "Native2 correctness and preparation only; the final42 timing points belong to shared_mm_timing.",
+    "scored_timing_points": 0,
+    "source_manifest": {
+      "bytes": 59243,
+      "path": "bench/results/10.176.26.71/raw/bench/catalog-linux70-mm-shared-20261028/source-manifest.json",
+      "sha256": "b9de6aa0bd35100498be794b515ff17756aebeb72d802242c508b71f7725e549"
+    },
+    "status": "FOUR_CORRECTNESS_AND_PREPARATION_PASS"
+  },
+  "native_correctness": [
+    {
+      "action": "api",
+      "api_checks": 137,
+      "boot_id": "a84cb9f5-bbab-457e-83ca-dcfc3bffed09",
+      "case_count": null,
+      "completed_fault_observation": null,
+      "drained": true,
+      "performance_accepted": false,
+      "preservation": {
+        "bytes": 106088,
+        "path": "bench/results/10.176.26.71/raw/bench/catalog-linux70-mm-trusted-20261027/native-a84cb9f5-bbab-457e-83ca-dcfc3bffed09-api-a00/preservation.json",
+        "sha256": "88a68f1d87d1c3f590d3736febd0d5391a4196f9fa0149694c3eae656ac10001"
+      },
+      "result": {
+        "bytes": 10332,
+        "path": "bench/results/10.176.26.71/raw/bench/catalog-linux70-mm-trusted-20261027/native-a84cb9f5-bbab-457e-83ca-dcfc3bffed09-api-a00/result.json",
+        "sha256": "67995558235ef50e64e052fc236340685c732089537315daaa84a942087537f5"
+      },
+      "status": "PASS"
+    },
+    {
+      "action": "mapping",
+      "api_checks": null,
+      "boot_id": "a84cb9f5-bbab-457e-83ca-dcfc3bffed09",
+      "case_count": 6,
+      "completed_fault_observation": null,
+      "drained": true,
+      "performance_accepted": false,
+      "preservation": {
+        "bytes": 61791,
+        "path": "bench/results/10.176.26.71/raw/bench/catalog-linux70-mm-trusted-20261027/native-a84cb9f5-bbab-457e-83ca-dcfc3bffed09-mapping-a00/preservation.json",
+        "sha256": "26d955c8e99c1da5f70212e77009f9ece6e197be658790c7250a479ab5119b8e"
+      },
+      "result": {
+        "bytes": 28540,
+        "path": "bench/results/10.176.26.71/raw/bench/catalog-linux70-mm-trusted-20261027/native-a84cb9f5-bbab-457e-83ca-dcfc3bffed09-mapping-a00/result.json",
+        "sha256": "6b906a94b76141ad0a4fb428f799319bb6b69ff0d4e883829377faa6defee11f"
+      },
+      "status": "PASS"
+    },
+    {
+      "action": "faults",
+      "api_checks": null,
+      "boot_id": "a84cb9f5-bbab-457e-83ca-dcfc3bffed09",
+      "case_count": 18,
+      "completed_fault_observation": null,
+      "drained": true,
+      "performance_accepted": false,
+      "preservation": {
+        "bytes": 34184,
+        "path": "bench/results/10.176.26.71/raw/bench/catalog-linux70-mm-trusted-20261027/native-a84cb9f5-bbab-457e-83ca-dcfc3bffed09-faults-a00/preservation.json",
+        "sha256": "4d5514b18cf35a3e9a7482381ca7ed885a6973d62e83d2f1fa6d1856bf4e9923"
+      },
+      "result": {
+        "bytes": 18431,
+        "path": "bench/results/10.176.26.71/raw/bench/catalog-linux70-mm-trusted-20261027/native-a84cb9f5-bbab-457e-83ca-dcfc3bffed09-faults-a00/result.json",
+        "sha256": "02b0713d6089aa7b5402ab10a133c6b37ae1a910cb9979e52bd376f4d6da03f5"
+      },
+      "status": "PASS"
+    },
+    {
+      "action": "completed",
+      "api_checks": null,
+      "boot_id": "a84cb9f5-bbab-457e-83ca-dcfc3bffed09",
+      "case_count": null,
+      "completed_fault_observation": {
+        "completed": 64,
+        "entries": 64,
+        "errors": 0,
+        "lock": 18379471568509110848,
+        "missed": 0,
+        "mm": 18379471568509110400,
+        "retries": 0,
+        "returns": 64,
+        "tid": 8980,
+        "use_kd": 0,
+        "write_reacquired": 1
+      },
+      "drained": true,
+      "performance_accepted": false,
+      "preservation": {
+        "bytes": 40595,
+        "path": "bench/results/10.176.26.71/raw/bench/catalog-linux70-mm-trusted-20261027/native-a84cb9f5-bbab-457e-83ca-dcfc3bffed09-completed-a00/preservation.json",
+        "sha256": "0155f55587a55ef1edfca56cc9970f89e586561dde85eb50fe6a76c32a24d667"
+      },
+      "result": {
+        "bytes": 10191,
+        "path": "bench/results/10.176.26.71/raw/bench/catalog-linux70-mm-trusted-20261027/native-a84cb9f5-bbab-457e-83ca-dcfc3bffed09-completed-a00/result.json",
+        "sha256": "94203e17c0666d5a4e1e057f9a6b599e9d10706b4d9a6c06c7cdb026ba9f9ee1"
+      },
+      "status": "PASS"
+    }
+  ],
+  "normal_default": "7.0.0-38-kdlock1",
+  "normal_return": {
+    "boot_id": "15dc5977-59d3-4471-a196-d71f03f450ed",
+    "control": {
+      "bytes": 2566,
+      "path": "bench/results/10.176.26.71/raw/tests/linux70-kdmm1-20261027/cycle-control/verify-normal/control-result.json",
+      "sha256": "8fbbec2bef14d363820db1ce6086db22f133dbc577625e0e8e7dfff640b150ca"
+    },
+    "drained": true,
+    "one_shot_consumed": true,
+    "release": "7.0.0-38-kdlock1",
+    "result": {
+      "bytes": 4789,
+      "path": "bench/results/10.176.26.71/raw/tests/linux70-kdmm1-20261027/cycle-control/verify-normal/phase-evidence/result.json",
+      "sha256": "05f9a8e44d707d6800cd0ff8b162be36ce8023c081b2ca2c761394cf30a6326c"
+    },
+    "status": "PASS",
+    "taint_before_subsequent_probes": 0
+  },
+  "paths": {
+    "build": "/mnt/kdlock-builds/linux-7.0.0-38-kdmm1/build",
+    "kd_bundle": "/root/kdlock-kernel-baselines/linux70-kdmm1-kd-20261027",
+    "native_bundle": "/root/kdlock-kernel-baselines/linux70-kdmm1-native-20261027",
+    "preparation": "/mnt/kdlock-builds/linux70-mmap-prepared-kdmm1/prepare.json",
+    "source": "/mnt/kdlock-builds/linux-7.0.0-38-kdmm1/source"
+  },
+  "performance_claim": null,
+  "recorded_utc": "2026-10-27T17:52:56.890533+00:00",
+  "recovery": {
+    "before_health": {
+      "bytes": 303,
+      "path": "bench/results/10.176.26.71/raw/tests/linux70-kdmm1-20261027/native-before-snapshot.json",
+      "sha256": "af3144fbce54bace7e48806cf4409e499879f193b57811a1158fda25ed4c8e6d"
+    },
+    "boot_id": "a84cb9f5-bbab-457e-83ca-dcfc3bffed09",
+    "clean_taint": 0,
+    "log": {
+      "bytes": 10983,
+      "path": "bench/results/10.176.26.71/raw/tests/linux70-kdmm1-20261027/native-snapshot-create.log",
+      "sha256": "837aa5a94aa850a2c7530d2da8149007e7c818e55c719ea87ccc3041946e09f6"
+    },
+    "monitor_date": "2026-10-28 00:01:50",
+    "monitor_listing": "--        linux70-kdmm1-native-clean-20261027 23.6 GiB 2026-10-28 00:01:50298:06:41.859",
+    "other_retained_tags": [
+      "linux70-kdlock1-clean-20261027",
+      "legacy-kdclobber2-20261027"
+    ],
+    "restore_exercised": false,
+    "save_seconds": 41.637862771051005,
+    "status": "SAVEVM_RETURNED_AND_LISTED_ON_ALL_DISKS",
+    "tag": "linux70-kdmm1-native-clean-20261027",
+    "vm_state": "23.6 GiB"
+  },
+  "release": "7.0.0-38-kdmm1",
+  "same_image_fields_verified": [
+    "running",
+    "build_files",
+    "source_files",
+    "installed_files",
+    "configuration"
+  ],
+  "schema": 1,
+  "separate_private_mm": {
+    "boot_id": "59172bf2-ccd2-49bd-bc1b-fea1d12056a7",
+    "kernel": "7.0.0-38-kdlock1",
+    "scope": "Separate exploratory independent-mm and private-fault measurements; not shared-mm kdmm1 validation.",
+    "strict_performance_accepted": false,
+    "suites": [
+      {
+        "completed_points": 21,
+        "suite": "independent-mmap",
+        "table": {
+          "bytes": 13127,
+          "path": "bench/results/10.176.26.71/bench/catalog-linux70-mm-trusted-20261027/independent-mmap/table.json",
+          "sha256": "a37df818950a751abe5572079ce64ff46042fffda3ff092371c0eb2ecb6ddc46"
+        }
+      },
+      {
+        "completed_points": 63,
+        "suite": "private-fault",
+        "table": {
+          "bytes": 38770,
+          "path": "bench/results/10.176.26.71/bench/catalog-linux70-mm-trusted-20261027/private-fault/table.json",
+          "sha256": "ed3805bc8c5788ad0cfc6bbe2517f17b1e3e9bf9106e026c5be055267b203944"
+        }
+      }
+    ],
+    "total_completed_points": 84
+  },
+  "shared_mm_timing": {
+    "body_delegation": false,
+    "campaign": "catalog-linux70-mm-shared-20261028",
+    "completed_points": 42,
+    "duplicate_coordinates": 0,
+    "duration_ms": 2000,
+    "exact_prepared_binary_reuse": true,
+    "matched_worker_points": 21,
+    "observed_comparison": {
+      "causality_established": false,
+      "examples": [
+        {
+          "kd_change_percent": -2.1538568006756575,
+          "kd_mops_s": 0.36501314231906856,
+          "kd_over_native": 0.9784614319932434,
+          "native_mops_s": 0.3730480634024511,
+          "native_over_kd": 1.0220126898235324,
+          "workers": 1
+        },
+        {
+          "kd_change_percent": -80.36702476148801,
+          "kd_mops_s": 0.061433190167796956,
+          "kd_over_native": 0.19632975238512002,
+          "native_mops_s": 0.3129082037820215,
+          "native_over_kd": 5.0934715082735,
+          "workers": 8
+        },
+        {
+          "kd_change_percent": -85.06893659512187,
+          "kd_mops_s": 0.044061344380772215,
+          "kd_over_native": 0.1493106340487813,
+          "native_mops_s": 0.295098501600207,
+          "native_over_kd": 6.69744661102497,
+          "workers": 16
+        },
+        {
+          "kd_change_percent": -90.3687288362598,
+          "kd_mops_s": 0.025969459319582337,
+          "kd_over_native": 0.09631271163740192,
+          "native_mops_s": 0.26963688258879215,
+          "native_over_kd": 10.382845452060366,
+          "workers": 32
+        },
+        {
+          "kd_change_percent": -95.6412096228009,
+          "kd_mops_s": 0.006731409214236795,
+          "kd_over_native": 0.043587903771990975,
+          "native_mops_s": 0.1544329649218486,
+          "native_over_kd": 22.942144803086105,
+          "workers": 60
+        }
+      ],
+      "kd_higher_points": 0,
+      "native_higher_points": 21,
+      "repeat_variance_available": false
+    },
+    "offline_audits": {
+      "kd2-measurement-offline-audit.json": {
+        "bytes": 22595,
+        "path": "bench/results/10.176.26.71/raw/tests/linux70-kdmm1-20261027/kd2-measurement-offline-audit.json",
+        "sha256": "da8ed2a626c90e7fbc05e960a5f3ab0559fcb8ca9b74775723493056bc2abb78"
+      },
+      "kd2-preparation-offline-audit.json": {
+        "bytes": 7807,
+        "path": "bench/results/10.176.26.71/raw/tests/linux70-kdmm1-20261027/kd2-preparation-offline-audit.json",
+        "sha256": "65d3c05f61503de8baf34c2300b5486bbb46104b4ef6b0335f4c33887503b1e7"
+      },
+      "native2-preparation-offline-audit.json": {
+        "bytes": 8025,
+        "path": "bench/results/10.176.26.71/raw/tests/linux70-kdmm1-20261027/native2-preparation-offline-audit.json",
+        "sha256": "16ca275bc3b95aa508ca032d8042253d28f0344d300c87d3bef7060721aaef3e"
+      },
+      "native3-correctness-offline-audit.json": {
+        "bytes": 6051,
+        "path": "bench/results/10.176.26.71/raw/tests/linux70-kdmm1-20261027/native3-correctness-offline-audit.json",
+        "sha256": "bce6c2284a90a71520389faa94ab72537e07b974a5dd9afab2f8e6aa99f4d59b"
+      },
+      "native3-measurement-offline-audit.json": {
+        "bytes": 23298,
+        "path": "bench/results/10.176.26.71/raw/tests/linux70-kdmm1-20261027/native3-measurement-offline-audit.json",
+        "sha256": "4b36b42688dde4cfa0f069888ef4e2acc92ae58375aef6dab2989b6b4a4e3995"
+      },
+      "shared-matched-comparison-offline-audit.json": {
+        "bytes": 9624,
+        "path": "bench/results/10.176.26.71/raw/tests/linux70-kdmm1-20261027/shared-matched-comparison-offline-audit.json",
+        "sha256": "40cdf537a12a5ef875a9977180de5b1de9e8c07486f5b57f9cd38ca2f0ea2cc0"
+      }
+    },
+    "performance_accepted": false,
+    "phase_index": {
+      "bytes": 282961,
+      "path": "bench/results/10.176.26.71/bench/catalog-linux70-mm-shared-20261028/phases.json",
+      "sha256": "28bdd4399494c8c3fc0c02428081154d9f9a2fccbd36d9dd3c8091fafb9ade57"
+    },
+    "phases": [
+      {
+        "action": "api",
+        "archive": {
+          "bytes": 1740259,
+          "path": "bench/results/10.176.26.71/raw/bench/catalog-linux70-mm-shared-20261028/native-1672c452-0346-4703-8215-ddb1cec50915-api-a00-archive.stdout",
+          "sha256": "a418b71e62bd82cc2b222e3caf81b4ab9decdf76d64e1d59d9ec08f54f5417cd"
+        },
+        "boot_id": "1672c452-0346-4703-8215-ddb1cec50915",
+        "drained": true,
+        "endpoint_checked": true,
+        "mode": "native",
+        "name": "native-1672c452-0346-4703-8215-ddb1cec50915-api-a00",
+        "preservation": {
+          "bytes": 106346,
+          "path": "bench/results/10.176.26.71/raw/bench/catalog-linux70-mm-shared-20261028/native-1672c452-0346-4703-8215-ddb1cec50915-api-a00/preservation.json",
+          "sha256": "4a71c58726595e68c0f97b9f35cced7ddbabcecc1fe88d6eedd68a6d77880a73"
+        },
+        "result": {
+          "bytes": 10187,
+          "path": "bench/results/10.176.26.71/raw/bench/catalog-linux70-mm-shared-20261028/native-1672c452-0346-4703-8215-ddb1cec50915-api-a00/result.json",
+          "sha256": "8665771372367570eff3e35c3346b8c2507d819e5fd11e90e6816ee154e2eb9b"
+        },
+        "state": "COMPLETE"
+      },
+      {
+        "action": "mapping",
+        "archive": {
+          "bytes": 1073033,
+          "path": "bench/results/10.176.26.71/raw/bench/catalog-linux70-mm-shared-20261028/native-1672c452-0346-4703-8215-ddb1cec50915-mapping-a00-archive.stdout",
+          "sha256": "c55cfecb04e43fba0150ae9b42814079ae72ea9bc526e34ab310698a028eb5cc"
+        },
+        "boot_id": "1672c452-0346-4703-8215-ddb1cec50915",
+        "drained": true,
+        "endpoint_checked": true,
+        "mode": "native",
+        "name": "native-1672c452-0346-4703-8215-ddb1cec50915-mapping-a00",
+        "preservation": {
+          "bytes": 61792,
+          "path": "bench/results/10.176.26.71/raw/bench/catalog-linux70-mm-shared-20261028/native-1672c452-0346-4703-8215-ddb1cec50915-mapping-a00/preservation.json",
+          "sha256": "35a07c1c469e8acacf8d6b97597a5a0ccd88123eb920cf34824f8b46886e1f9c"
+        },
+        "result": {
+          "bytes": 29264,
+          "path": "bench/results/10.176.26.71/raw/bench/catalog-linux70-mm-shared-20261028/native-1672c452-0346-4703-8215-ddb1cec50915-mapping-a00/result.json",
+          "sha256": "14db0dd54cb6dd7546b2ab9833b86016da4e2a673ca8142bf9a90f63c2e14387"
+        },
+        "state": "COMPLETE"
+      },
+      {
+        "action": "faults",
+        "archive": {
+          "bytes": 544073,
+          "path": "bench/results/10.176.26.71/raw/bench/catalog-linux70-mm-shared-20261028/native-1672c452-0346-4703-8215-ddb1cec50915-faults-a00-archive.stdout",
+          "sha256": "dc095dfcece905b508e8b3358f63b0b71a4aa8da22332c6596dbb0e8a6692738"
+        },
+        "boot_id": "1672c452-0346-4703-8215-ddb1cec50915",
+        "drained": true,
+        "endpoint_checked": true,
+        "mode": "native",
+        "name": "native-1672c452-0346-4703-8215-ddb1cec50915-faults-a00",
+        "preservation": {
+          "bytes": 34184,
+          "path": "bench/results/10.176.26.71/raw/bench/catalog-linux70-mm-shared-20261028/native-1672c452-0346-4703-8215-ddb1cec50915-faults-a00/preservation.json",
+          "sha256": "742792301b8774d50da72d94e7aa24c8689d96857b9fb6aed1dc2222bf709c0a"
+        },
+        "result": {
+          "bytes": 19156,
+          "path": "bench/results/10.176.26.71/raw/bench/catalog-linux70-mm-shared-20261028/native-1672c452-0346-4703-8215-ddb1cec50915-faults-a00/result.json",
+          "sha256": "14f1bb6af313befd63ec6ecdf22ad604bdd6f53ab61b6eee972a946564a0cbe6"
+        },
+        "state": "COMPLETE"
+      },
+      {
+        "action": "completed",
+        "archive": {
+          "bytes": 943297,
+          "path": "bench/results/10.176.26.71/raw/bench/catalog-linux70-mm-shared-20261028/native-1672c452-0346-4703-8215-ddb1cec50915-completed-a00-archive.stdout",
+          "sha256": "d6b1eadb67f827b7be35ddf72c53afa198f56aee3353ddf0dda5faaf001beeb3"
+        },
+        "boot_id": "1672c452-0346-4703-8215-ddb1cec50915",
+        "drained": true,
+        "endpoint_checked": true,
+        "mode": "native",
+        "name": "native-1672c452-0346-4703-8215-ddb1cec50915-completed-a00",
+        "preservation": {
+          "bytes": 40595,
+          "path": "bench/results/10.176.26.71/raw/bench/catalog-linux70-mm-shared-20261028/native-1672c452-0346-4703-8215-ddb1cec50915-completed-a00/preservation.json",
+          "sha256": "7cf6ab6e7f74cc4880431453d7058581c35f08367922499b4ae08735d68c1711"
+        },
+        "result": {
+          "bytes": 10916,
+          "path": "bench/results/10.176.26.71/raw/bench/catalog-linux70-mm-shared-20261028/native-1672c452-0346-4703-8215-ddb1cec50915-completed-a00/result.json",
+          "sha256": "f35305235a7d86a09f93be4dae06d30f748b15a31ccdde7d8c69271c2364d9d1"
+        },
+        "state": "COMPLETE"
+      },
+      {
+        "action": "shared-preparation",
+        "archive": {
+          "bytes": 574807,
+          "path": "bench/results/10.176.26.71/raw/bench/catalog-linux70-mm-shared-20261028/native-1672c452-0346-4703-8215-ddb1cec50915-shared-preparation-a00-archive.stdout",
+          "sha256": "3b703cbc27fcdf696651af4b560197e4be42e39579c6e1e59008f0beaf3d12ff"
+        },
+        "boot_id": "1672c452-0346-4703-8215-ddb1cec50915",
+        "drained": true,
+        "endpoint_checked": true,
+        "mode": "native",
+        "name": "native-1672c452-0346-4703-8215-ddb1cec50915-shared-preparation-a00",
+        "preservation": {
+          "bytes": 38634,
+          "path": "bench/results/10.176.26.71/raw/bench/catalog-linux70-mm-shared-20261028/native-1672c452-0346-4703-8215-ddb1cec50915-shared-preparation-a00/preservation.json",
+          "sha256": "0c63b66c80fae69feceb6860ae06a9c149e4e369c24a1890ea890d5582832646"
+        },
+        "result": {
+          "bytes": 22365,
+          "path": "bench/results/10.176.26.71/raw/bench/catalog-linux70-mm-shared-20261028/native-1672c452-0346-4703-8215-ddb1cec50915-shared-preparation-a00/result.json",
+          "sha256": "7f32f4d5f299c57e29ccde743a3871ce27a5e001830a0b5639892deb33c31118"
+        },
+        "state": "COMPLETE"
+      },
+      {
+        "action": "api",
+        "archive": {
+          "bytes": 1737285,
+          "path": "bench/results/10.176.26.71/raw/bench/catalog-linux70-mm-shared-20261028/kd-f5a6f61b-b1a0-47ed-a2a2-ff73b79a13ac-api-a00-archive.stdout",
+          "sha256": "e5bfbc73a171534de78cc9780cf63d1a6e3ae921f0df834c10360703b694e334"
+        },
+        "boot_id": "f5a6f61b-b1a0-47ed-a2a2-ff73b79a13ac",
+        "drained": true,
+        "endpoint_checked": true,
+        "mode": "kd",
+        "name": "kd-f5a6f61b-b1a0-47ed-a2a2-ff73b79a13ac-api-a00",
+        "preservation": {
+          "bytes": 106345,
+          "path": "bench/results/10.176.26.71/raw/bench/catalog-linux70-mm-shared-20261028/kd-f5a6f61b-b1a0-47ed-a2a2-ff73b79a13ac-api-a00/preservation.json",
+          "sha256": "f11bbfb101b031e8c74266077c5ddc44a444921510ae6a2c3b90c5bcbe201c12"
+        },
+        "result": {
+          "bytes": 9722,
+          "path": "bench/results/10.176.26.71/raw/bench/catalog-linux70-mm-shared-20261028/kd-f5a6f61b-b1a0-47ed-a2a2-ff73b79a13ac-api-a00/result.json",
+          "sha256": "f9ba7cf4085b51e507446450a3abafcf3052926b9fad838f526d62e38a0e7874"
+        },
+        "state": "COMPLETE"
+      },
+      {
+        "action": "mapping",
+        "archive": {
+          "bytes": 1073875,
+          "path": "bench/results/10.176.26.71/raw/bench/catalog-linux70-mm-shared-20261028/kd-f5a6f61b-b1a0-47ed-a2a2-ff73b79a13ac-mapping-a00-archive.stdout",
+          "sha256": "70d035812a08a005c99a474806487995ad073eaa427c1d43c3b5de1e5657a0ab"
+        },
+        "boot_id": "f5a6f61b-b1a0-47ed-a2a2-ff73b79a13ac",
+        "drained": true,
+        "endpoint_checked": true,
+        "mode": "kd",
+        "name": "kd-f5a6f61b-b1a0-47ed-a2a2-ff73b79a13ac-mapping-a00",
+        "preservation": {
+          "bytes": 61792,
+          "path": "bench/results/10.176.26.71/raw/bench/catalog-linux70-mm-shared-20261028/kd-f5a6f61b-b1a0-47ed-a2a2-ff73b79a13ac-mapping-a00/preservation.json",
+          "sha256": "585119325d819b88dfdde69f7376d2294d38d516925bdd940beb118cb25488d8"
+        },
+        "result": {
+          "bytes": 28916,
+          "path": "bench/results/10.176.26.71/raw/bench/catalog-linux70-mm-shared-20261028/kd-f5a6f61b-b1a0-47ed-a2a2-ff73b79a13ac-mapping-a00/result.json",
+          "sha256": "3505c3a97ea793ecdb9c9145404291e069b89eedbe73d5ccf22323978c84766d"
+        },
+        "state": "COMPLETE"
+      },
+      {
+        "action": "faults",
+        "archive": {
+          "bytes": 542949,
+          "path": "bench/results/10.176.26.71/raw/bench/catalog-linux70-mm-shared-20261028/kd-f5a6f61b-b1a0-47ed-a2a2-ff73b79a13ac-faults-a00-archive.stdout",
+          "sha256": "4fcbdae2fcdc7f536057c7f4b449088659af68219edeadf787beb38ad8473e65"
+        },
+        "boot_id": "f5a6f61b-b1a0-47ed-a2a2-ff73b79a13ac",
+        "drained": true,
+        "endpoint_checked": true,
+        "mode": "kd",
+        "name": "kd-f5a6f61b-b1a0-47ed-a2a2-ff73b79a13ac-faults-a00",
+        "preservation": {
+          "bytes": 34184,
+          "path": "bench/results/10.176.26.71/raw/bench/catalog-linux70-mm-shared-20261028/kd-f5a6f61b-b1a0-47ed-a2a2-ff73b79a13ac-faults-a00/preservation.json",
+          "sha256": "2016b1088d73c3c94dcb637bec0a5ecd50071c1b35ae650848821169008534bd"
+        },
+        "result": {
+          "bytes": 18840,
+          "path": "bench/results/10.176.26.71/raw/bench/catalog-linux70-mm-shared-20261028/kd-f5a6f61b-b1a0-47ed-a2a2-ff73b79a13ac-faults-a00/result.json",
+          "sha256": "146bd6614ecac694ddb2e6b5b33016b806e8de1ed1ca866af24c9d1d7606186b"
+        },
+        "state": "COMPLETE"
+      },
+      {
+        "action": "completed",
+        "archive": {
+          "bytes": 942489,
+          "path": "bench/results/10.176.26.71/raw/bench/catalog-linux70-mm-shared-20261028/kd-f5a6f61b-b1a0-47ed-a2a2-ff73b79a13ac-completed-a00-archive.stdout",
+          "sha256": "64787104a9112ff0006e3d334c7fef76c2637572e2e2a43723597be7f0c933c7"
+        },
+        "boot_id": "f5a6f61b-b1a0-47ed-a2a2-ff73b79a13ac",
+        "drained": true,
+        "endpoint_checked": true,
+        "mode": "kd",
+        "name": "kd-f5a6f61b-b1a0-47ed-a2a2-ff73b79a13ac-completed-a00",
+        "preservation": {
+          "bytes": 40595,
+          "path": "bench/results/10.176.26.71/raw/bench/catalog-linux70-mm-shared-20261028/kd-f5a6f61b-b1a0-47ed-a2a2-ff73b79a13ac-completed-a00/preservation.json",
+          "sha256": "e766806947f0629b867b1723b97aa6a414e388b1b9ec8d483c4baf3bed368fa1"
+        },
+        "result": {
+          "bytes": 10601,
+          "path": "bench/results/10.176.26.71/raw/bench/catalog-linux70-mm-shared-20261028/kd-f5a6f61b-b1a0-47ed-a2a2-ff73b79a13ac-completed-a00/result.json",
+          "sha256": "7de15c835b1499eaf665b43a715ea80bbf1a813eb553028d03e2e55af7242f61"
+        },
+        "state": "COMPLETE"
+      },
+      {
+        "action": "shared-preparation",
+        "archive": {
+          "bytes": 534286,
+          "path": "bench/results/10.176.26.71/raw/bench/catalog-linux70-mm-shared-20261028/kd-f5a6f61b-b1a0-47ed-a2a2-ff73b79a13ac-shared-preparation-a00-archive.stdout",
+          "sha256": "ebcb2ec9bad31ab58d2ead43aac062752b2a5563cbd92271cb0921ecac458137"
+        },
+        "boot_id": "f5a6f61b-b1a0-47ed-a2a2-ff73b79a13ac",
+        "drained": true,
+        "endpoint_checked": true,
+        "mode": "kd",
+        "name": "kd-f5a6f61b-b1a0-47ed-a2a2-ff73b79a13ac-shared-preparation-a00",
+        "preservation": {
+          "bytes": 36743,
+          "path": "bench/results/10.176.26.71/raw/bench/catalog-linux70-mm-shared-20261028/kd-f5a6f61b-b1a0-47ed-a2a2-ff73b79a13ac-shared-preparation-a00/preservation.json",
+          "sha256": "874b9b43a448c5371e6a3c6e49c2f87d3ef6d5289b02433fd696cd34715ef66e"
+        },
+        "result": {
+          "bytes": 20832,
+          "path": "bench/results/10.176.26.71/raw/bench/catalog-linux70-mm-shared-20261028/kd-f5a6f61b-b1a0-47ed-a2a2-ff73b79a13ac-shared-preparation-a00/result.json",
+          "sha256": "4e2e3ad2fa0bc93da36aaec10d98b43e065340b65cb1404ed21660c16d332bef"
+        },
+        "state": "COMPLETE"
+      },
+      {
+        "action": "shared-kd",
+        "archive": {
+          "bytes": 656219,
+          "path": "bench/results/10.176.26.71/raw/bench/catalog-linux70-mm-shared-20261028/kd-f5a6f61b-b1a0-47ed-a2a2-ff73b79a13ac-shared-kd-a00-archive.stdout",
+          "sha256": "1564cc34b8e17a97459b62579704310419fe1f361841ae543314a4fab9917f33"
+        },
+        "boot_id": "f5a6f61b-b1a0-47ed-a2a2-ff73b79a13ac",
+        "drained": true,
+        "endpoint_checked": true,
+        "mode": "kd",
+        "name": "kd-f5a6f61b-b1a0-47ed-a2a2-ff73b79a13ac-shared-kd-a00",
+        "preservation": {
+          "bytes": 75518,
+          "path": "bench/results/10.176.26.71/raw/bench/catalog-linux70-mm-shared-20261028/kd-f5a6f61b-b1a0-47ed-a2a2-ff73b79a13ac-shared-kd-a00/preservation.json",
+          "sha256": "53443463f21e47d61c16c3867e74a2b0622155e985f9621657f7719f37712b34"
+        },
+        "result": {
+          "bytes": 62289,
+          "path": "bench/results/10.176.26.71/raw/bench/catalog-linux70-mm-shared-20261028/kd-f5a6f61b-b1a0-47ed-a2a2-ff73b79a13ac-shared-kd-a00/result.json",
+          "sha256": "5bd1b795ea2cb8bd6569fe3a604bcc4709b9024c484015d572b2027a594bd724"
+        },
+        "state": "COMPLETE"
+      },
+      {
+        "action": "api",
+        "archive": {
+          "bytes": 1739503,
+          "path": "bench/results/10.176.26.71/raw/bench/catalog-linux70-mm-shared-20261028/native-ddec066b-7a80-4a75-8376-897365e8b848-api-a00-archive.stdout",
+          "sha256": "9834ead440266f0d0a4988619f498494d46ecb58fe8fb99445a8e37e3063e7c4"
+        },
+        "boot_id": "ddec066b-7a80-4a75-8376-897365e8b848",
+        "drained": true,
+        "endpoint_checked": true,
+        "mode": "native",
+        "name": "native-ddec066b-7a80-4a75-8376-897365e8b848-api-a00",
+        "preservation": {
+          "bytes": 106345,
+          "path": "bench/results/10.176.26.71/raw/bench/catalog-linux70-mm-shared-20261028/native-ddec066b-7a80-4a75-8376-897365e8b848-api-a00/preservation.json",
+          "sha256": "67a32e975493e97e8dc8d801583d088534acd35763fb083037bc08d9d2e21ec2"
+        },
+        "result": {
+          "bytes": 9752,
+          "path": "bench/results/10.176.26.71/raw/bench/catalog-linux70-mm-shared-20261028/native-ddec066b-7a80-4a75-8376-897365e8b848-api-a00/result.json",
+          "sha256": "f0d9b85aad7eb33b7b3d02a5e809d88d10da1272a084665ee3f160fba572eff9"
+        },
+        "state": "COMPLETE"
+      },
+      {
+        "action": "mapping",
+        "archive": {
+          "bytes": 1074622,
+          "path": "bench/results/10.176.26.71/raw/bench/catalog-linux70-mm-shared-20261028/native-ddec066b-7a80-4a75-8376-897365e8b848-mapping-a00-archive.stdout",
+          "sha256": "723d6cdb61b46b8b6c692d17354068f88e269cdb7dfb79fe7d290a328065f0fe"
+        },
+        "boot_id": "ddec066b-7a80-4a75-8376-897365e8b848",
+        "drained": true,
+        "endpoint_checked": true,
+        "mode": "native",
+        "name": "native-ddec066b-7a80-4a75-8376-897365e8b848-mapping-a00",
+        "preservation": {
+          "bytes": 61792,
+          "path": "bench/results/10.176.26.71/raw/bench/catalog-linux70-mm-shared-20261028/native-ddec066b-7a80-4a75-8376-897365e8b848-mapping-a00/preservation.json",
+          "sha256": "1523af8378d5614c49f1d56ccc455ecf1531cec440faf570dd8c30a41bac5b8b"
+        },
+        "result": {
+          "bytes": 29120,
+          "path": "bench/results/10.176.26.71/raw/bench/catalog-linux70-mm-shared-20261028/native-ddec066b-7a80-4a75-8376-897365e8b848-mapping-a00/result.json",
+          "sha256": "ac4428e6944984a188498a5c76641eaa0185b88ee79f1fd81a006787ff152872"
+        },
+        "state": "COMPLETE"
+      },
+      {
+        "action": "faults",
+        "archive": {
+          "bytes": 543914,
+          "path": "bench/results/10.176.26.71/raw/bench/catalog-linux70-mm-shared-20261028/native-ddec066b-7a80-4a75-8376-897365e8b848-faults-a00-archive.stdout",
+          "sha256": "b70dfbbfbd8e66a583310da70a8d70d7498ef5cffd9133d0f27a6b1d255f9f78"
+        },
+        "boot_id": "ddec066b-7a80-4a75-8376-897365e8b848",
+        "drained": true,
+        "endpoint_checked": true,
+        "mode": "native",
+        "name": "native-ddec066b-7a80-4a75-8376-897365e8b848-faults-a00",
+        "preservation": {
+          "bytes": 34184,
+          "path": "bench/results/10.176.26.71/raw/bench/catalog-linux70-mm-shared-20261028/native-ddec066b-7a80-4a75-8376-897365e8b848-faults-a00/preservation.json",
+          "sha256": "4afc9bd1883204ab3005045d823b41092150afbf57333aa6ac3699de54202059"
+        },
+        "result": {
+          "bytes": 19011,
+          "path": "bench/results/10.176.26.71/raw/bench/catalog-linux70-mm-shared-20261028/native-ddec066b-7a80-4a75-8376-897365e8b848-faults-a00/result.json",
+          "sha256": "a4e64987da7852a6884e581f08ae88f17f2129e9ddb971032f4d7880156cb285"
+        },
+        "state": "COMPLETE"
+      },
+      {
+        "action": "completed",
+        "archive": {
+          "bytes": 943137,
+          "path": "bench/results/10.176.26.71/raw/bench/catalog-linux70-mm-shared-20261028/native-ddec066b-7a80-4a75-8376-897365e8b848-completed-a00-archive.stdout",
+          "sha256": "4a659f43de42d5177b224f5daf8f176de37f7c49e74c234d23b7ca84c8992f08"
+        },
+        "boot_id": "ddec066b-7a80-4a75-8376-897365e8b848",
+        "drained": true,
+        "endpoint_checked": true,
+        "mode": "native",
+        "name": "native-ddec066b-7a80-4a75-8376-897365e8b848-completed-a00",
+        "preservation": {
+          "bytes": 40595,
+          "path": "bench/results/10.176.26.71/raw/bench/catalog-linux70-mm-shared-20261028/native-ddec066b-7a80-4a75-8376-897365e8b848-completed-a00/preservation.json",
+          "sha256": "def5c2e4ed7159fe22bad678cfc221e66572c6a39b4eeb0294de97e9d5789c8d"
+        },
+        "result": {
+          "bytes": 10771,
+          "path": "bench/results/10.176.26.71/raw/bench/catalog-linux70-mm-shared-20261028/native-ddec066b-7a80-4a75-8376-897365e8b848-completed-a00/result.json",
+          "sha256": "b7a31cd368feeb0baad69342de8ccb944035654e5306c640d4ff2a2730de92b9"
+        },
+        "state": "COMPLETE"
+      },
+      {
+        "action": "shared-native",
+        "archive": {
+          "bytes": 705495,
+          "path": "bench/results/10.176.26.71/raw/bench/catalog-linux70-mm-shared-20261028/native-ddec066b-7a80-4a75-8376-897365e8b848-shared-native-a00-archive.stdout",
+          "sha256": "d74cfc3a42bf10e2eaac29476e18b8242548d7fb7a0168e8cac657043a274ab0"
+        },
+        "boot_id": "ddec066b-7a80-4a75-8376-897365e8b848",
+        "drained": true,
+        "endpoint_checked": true,
+        "mode": "native",
+        "name": "native-ddec066b-7a80-4a75-8376-897365e8b848-shared-native-a00",
+        "preservation": {
+          "bytes": 76274,
+          "path": "bench/results/10.176.26.71/raw/bench/catalog-linux70-mm-shared-20261028/native-ddec066b-7a80-4a75-8376-897365e8b848-shared-native-a00/preservation.json",
+          "sha256": "38ba0e0e86490a3988a70a0c60897aeb730f47aefd54731b064365acfef819bb"
+        },
+        "result": {
+          "bytes": 75022,
+          "path": "bench/results/10.176.26.71/raw/bench/catalog-linux70-mm-shared-20261028/native-ddec066b-7a80-4a75-8376-897365e8b848-shared-native-a00/result.json",
+          "sha256": "36b7741767797d86da64404193280046b1a838eb3f3cebdbdb2f5a6d2e7412c0"
+        },
+        "state": "COMPLETE"
+      }
+    ],
+    "planned_points": 42,
+    "prepared_inputs": {
+      "bytes": 39437,
+      "path": "bench/results/10.176.26.71/raw/bench/catalog-linux70-mm-shared-20261028/native-ddec066b-7a80-4a75-8376-897365e8b848-shared-native-a00/inputs.json",
+      "sha256": "075b1d12d21646a802c7eb04805d1d4a5ecd78c9b9f7538837523554f0980ef5"
+    },
+    "private84_imported": false,
+    "private84_selected": false,
+    "rounds_per_point": 1,
+    "same_image_source_configuration": true,
+    "source_manifest": {
+      "bytes": 59243,
+      "path": "bench/results/10.176.26.71/raw/bench/catalog-linux70-mm-shared-20261028/source-manifest.json",
+      "sha256": "b9de6aa0bd35100498be794b515ff17756aebeb72d802242c508b71f7725e549"
+    },
+    "status": "COMPLETE_EXPLORATORY",
+    "strict_timing_qualified": false,
+    "table": {
+      "bytes": 25550,
+      "path": "bench/results/10.176.26.71/bench/catalog-linux70-mm-shared-20261028/shared-mm/table.json",
+      "sha256": "a6bba43322ee81d9afe398ce0f18746941c60e275c1c19a1bbd5bbc4a6a5ec4c"
+    },
+    "table_csv": {
+      "bytes": 15817,
+      "path": "bench/results/10.176.26.71/bench/catalog-linux70-mm-shared-20261028/shared-mm/table.csv",
+      "sha256": "01e6d3b8657619bff752668431c5caa91ead4ea550fd92e51f5dbab73dfcfcf4"
+    }
+  },
+  "source_package": "linux=7.0.0-38.38",
+  "status": "BOTH_MODES_CORRECTNESS_PASS_SHARED42_COMPLETE_ORIGINAL_FAILURE_RETAINED",
+  "upstream_version": "7.0.14"
+}

@@ -31,6 +31,299 @@
       "status": "PASS"
     }
   },
+  "basic_functional": {
+    "after_health": {
+      "idle": true,
+      "project_modules_present": false,
+      "receipt": {
+        "bytes": 537063,
+        "path": "bench/results/10.176.26.71/raw/tests/ordinary-string-translation-20261027/basic-after-health.json",
+        "sha256": "9d57babeb1bf02edc03fdd081bcc5ecbb7e25070c3b09cb555ce7e048e1d6bbc"
+      },
+      "taint": 12288
+    },
+    "archive": {
+      "bytes": 16075900,
+      "path": "bench/results/10.176.26.71/raw/tests/ordinary-string-translation-20261027/basic-functional.tar.gz",
+      "sha256": "e2afdaf8d5bc2f3dcd27fb21ff959681b977a8c457b458c61297d547f9d4ed79"
+    },
+    "archive_inventory": {
+      "bytes": 504890,
+      "path": "bench/results/10.176.26.71/raw/tests/ordinary-string-translation-20261027/basic-archive-files.json",
+      "sha256": "21a83bb063f844cfa52bf672ee5e2ca810a01d0656b2b02cfd075368bd249c94"
+    },
+    "boot_id": "59172bf2-ccd2-49bd-bc1b-fea1d12056a7",
+    "controller": {
+      "commands_exited_zero": 7,
+      "control_manifest": {
+        "archive_member": "catalog-linux70-trusted-basic-20261027/control-sha256.json",
+        "bytes": 490,
+        "sha256": "b4b1cad4bf04c3e73b609ca1254ce55aed132c27dcdbb73e0a1ce76ba8643c49"
+      },
+      "final_idle": true,
+      "mode": "FUNCTIONAL_ONLY",
+      "passed": true,
+      "performance_accepted": false,
+      "state": "COMPLETE",
+      "timing_started": false
+    },
+    "counts": {
+      "captured_source_symlinks": 8,
+      "members": 2439,
+      "regular_files": 2112
+    },
+    "execution": "Read-only offline archive verification; no archived code, tests, builds or guest actions executed",
+    "families": [
+      {
+        "binary_manifest": {
+          "archive_member": "catalog-linux70-trusted-basic-20261027/spin/binary-sha256.json",
+          "bytes": 736,
+          "sha256": "d26307a002f1a650128ca2304a92736449958c7e6a921965707802755e241317"
+        },
+        "drained": true,
+        "family": "spin",
+        "jit_completions": 1597133,
+        "jit_entries": 1597133,
+        "operations": 1600000,
+        "passed": true,
+        "performance_accepted": false,
+        "preset": "c01",
+        "retired": {
+          "frames": 0,
+          "modules": 0,
+          "state": 2,
+          "writers": 0
+        },
+        "session": {
+          "archive_member": "catalog-linux70-trusted-basic-20261027/spin/c01-t16-r00-direct-kdlock-adaptive/session.json",
+          "bytes": 8993,
+          "sha256": "3bd375732473ba7008e27fad51119c2914b59b2f609636c601f4c7c47ab62230"
+        },
+        "source_manifest": {
+          "archive_member": "catalog-linux70-trusted-basic-20261027/spin/source-sha256.json",
+          "bytes": 41146,
+          "sha256": "b6ce89c2a0362307be5cf69326ef824af85e351442b3585df7d3c9d7eaac4bb6"
+        },
+        "threads": 16,
+        "verified": {
+          "binaries": 5,
+          "kernel_bundle_files": 23,
+          "provider_prepared_files": 96,
+          "provider_production_files": 94,
+          "publications": 1,
+          "source_files": 361,
+          "unchanged_translator_files": 30
+        }
+      },
+      {
+        "binary_manifest": {
+          "archive_member": "catalog-linux70-trusted-basic-20261027/mutex/binary-sha256.json",
+          "bytes": 738,
+          "sha256": "716f2020743858b31cf0b3a32b2f7b937f93a51f0d32f0f51fc5883af03d63aa"
+        },
+        "drained": true,
+        "family": "mutex",
+        "jit_completions": 1587545,
+        "jit_entries": 1587545,
+        "operations": 1600000,
+        "passed": true,
+        "performance_accepted": false,
+        "preset": "public c01",
+        "retired": {
+          "frames": 0,
+          "modules": 0,
+          "state": 2,
+          "writers": 0
+        },
+        "session": {
+          "archive_member": "catalog-linux70-trusted-basic-20261027/mutex/c01-t16-r00-direct-kdlock-adaptive-public/session.json",
+          "bytes": 9012,
+          "sha256": "acb8eb554432dd6042c13c9324fc8e34da6dbb4a3582ed98dc7221c56872f3ec"
+        },
+        "source_manifest": {
+          "archive_member": "catalog-linux70-trusted-basic-20261027/mutex/source-sha256.json",
+          "bytes": 41146,
+          "sha256": "b6ce89c2a0362307be5cf69326ef824af85e351442b3585df7d3c9d7eaac4bb6"
+        },
+        "threads": 16,
+        "verified": {
+          "binaries": 5,
+          "kernel_bundle_files": 23,
+          "provider_prepared_files": 96,
+          "provider_production_files": 94,
+          "publications": 1,
+          "source_files": 361,
+          "unchanged_translator_files": 30
+        }
+      },
+      {
+        "binary_manifest": {
+          "archive_member": "catalog-linux70-trusted-basic-20261027/rwlock/binary-sha256.json",
+          "bytes": 783,
+          "sha256": "8115c5bac5f26887189c135de3e02e60bcc463c6432643cad23f03f66de43c27"
+        },
+        "drained": true,
+        "family": "rwlock",
+        "jit_completions": 30645,
+        "jit_entries": 30645,
+        "operations": 1600000,
+        "passed": true,
+        "performance_accepted": false,
+        "preset": "c01, 20% writes",
+        "retired": {
+          "frames": 0,
+          "modules": 0,
+          "state": 2,
+          "writers": 0
+        },
+        "session": {
+          "archive_member": "catalog-linux70-trusted-basic-20261027/rwlock/cacheline-c01-kdlock-w020-t16-r00/session.json",
+          "bytes": 14486,
+          "sha256": "643c970bc47e70814db27c3c198264458cb705729bd62e4e4eafe58a4e2a7b47"
+        },
+        "source_manifest": {
+          "archive_member": "catalog-linux70-trusted-basic-20261027/rwlock/source-sha256.json",
+          "bytes": 29710,
+          "sha256": "0e0a0aa9088b9a8b76c3ab6bfa4b89f4c65cf7023ef4881ccc688b1b3f70c943"
+        },
+        "threads": 16,
+        "verified": {
+          "binaries": 4,
+          "kernel_bundle_files": 23,
+          "provider_prepared_files": 96,
+          "provider_production_files": 94,
+          "publications": 1,
+          "source_files": 282,
+          "unchanged_translator_files": 30
+        }
+      },
+      {
+        "binary_manifest": {
+          "archive_member": "catalog-linux70-trusted-basic-20261027/rwsem/binary-sha256.json",
+          "bytes": 785,
+          "sha256": "4c44fe65957d56b7cbed1f42c770721cbb83585afc016e8ce5060f866278f871"
+        },
+        "drained": true,
+        "family": "rwsem",
+        "jit_completions": 1575062,
+        "jit_entries": 1575062,
+        "operations": 1600000,
+        "passed": true,
+        "performance_accepted": false,
+        "preset": "c16, 100% writes",
+        "retired": {
+          "frames": 0,
+          "modules": 0,
+          "state": 2,
+          "writers": 0
+        },
+        "session": {
+          "archive_member": "catalog-linux70-trusted-basic-20261027/rwsem/rwsem-cacheline-c16-kdlock-w100-t16-r00/session.json",
+          "bytes": 14646,
+          "sha256": "0f87e81675ec838afc899d8e8ee295d76951bc04463683b2ade43764e3a17a2a"
+        },
+        "source_manifest": {
+          "archive_member": "catalog-linux70-trusted-basic-20261027/rwsem/source-sha256.json",
+          "bytes": 29710,
+          "sha256": "0e0a0aa9088b9a8b76c3ab6bfa4b89f4c65cf7023ef4881ccc688b1b3f70c943"
+        },
+        "threads": 16,
+        "verified": {
+          "binaries": 4,
+          "kernel_bundle_files": 23,
+          "provider_prepared_files": 96,
+          "provider_production_files": 94,
+          "publications": 1,
+          "source_files": 282,
+          "unchanged_translator_files": 30
+        }
+      }
+    ],
+    "guard_proof": {
+      "exact_sync03_match": true,
+      "global_root_writer_checks": 2,
+      "own_output_relaxation_present": false,
+      "reviewed_delta": {
+        "bytes": 2986,
+        "path": "bench/results/10.176.26.71/raw/tests/ordinary-string-translation-20261027/sync04-reviewed-delta.json",
+        "sha256": "3f0793c2e1b762601f1232318017daf0be1611e50fb49e9fcd6f0ebb40689a72"
+      },
+      "sha256": "788d0c7e9790cb091560e5aca82a7a2b6000bfc9147aa01859f261ce90271ff8"
+    },
+    "host": {
+      "cpu_policies": 64,
+      "fixed_khz": 2000000,
+      "no_turbo": 1,
+      "pins_verified": true,
+      "receipt": {
+        "bytes": 471772,
+        "path": "bench/results/10.176.26.71/raw/tests/ordinary-string-translation-20261027/basic-host-state.json",
+        "sha256": "60eb76bb714b123a7385b63b20344f86c25ade3fa492700f2ffde5e421fe2031"
+      },
+      "snapshot_listed": true
+    },
+    "inspection_note": "Initial offline scanner assumed relative file symlinks; corrected handling verifies the eight absolute guest directory links point to source directories within this same archive. No extraction or link following occurs.",
+    "kernel": {
+      "build_files": 12,
+      "build_root": "/mnt/kdlock-builds/linux-7.0.0-38-kdlock1/build",
+      "bundle_files": 23,
+      "config": true,
+      "installed_files": 4,
+      "ok": true,
+      "running_build_id": "b61c7bef25d2068f2a05ca3c31a5714c20c4aa62",
+      "runtime_policy": {
+        "cmdline": "BOOT_IMAGE=/boot/vmlinuz-7.0.0-38-kdlock1 root=UUID=aa0bde06-47f6-4049-aaaf-13d052e53961 ro nokaslr nopvspin console=tty1 console=ttyS0",
+        "preempt": "lazy",
+        "preempt_control": "full (lazy)"
+      },
+      "runtime_policy_verified": true,
+      "schema": 2,
+      "source_files": 39,
+      "source_root": "/mnt/kdlock-builds/linux-7.0.0-38-kdlock1/source"
+    },
+    "limits": [
+      "Only the four recorded cacheline presets are validated by this controller.",
+      "Taskname has its separate earlier receipt; no taskname mutation, general kernel-code equivalence or actual-MM coverage inferred.",
+      "Runtime full build/install identities rely on retained successful guest verifier receipts; small archived bundles are hash-checked here.",
+      "Fixed-iteration correctness only; no throughput or score accepted."
+    ],
+    "metadata_checks": {
+      "methods": [
+        4,
+        12
+      ],
+      "passed_drivers": 2,
+      "receipt": {
+        "bytes": 371,
+        "path": "bench/results/10.176.26.71/raw/tests/ordinary-string-translation-20261027/controller-metadata-checks-01.log",
+        "sha256": "4e91e1eecc840031b0283650712e0d6d5fa965f778a847b97cdeac325b9a9107"
+      }
+    },
+    "offline_verification": {
+      "bytes": 10413,
+      "path": "bench/results/10.176.26.71/raw/tests/ordinary-string-translation-20261027/basic-offline-verification.json",
+      "sha256": "9f5f5fddf41f4dba44398f6e08c6c3b138c34deaad324f318d9cc95a9e64f79c"
+    },
+    "passed": true,
+    "performance_accepted": false,
+    "recovery_snapshot": "linux70-kdlock1-clean-20261027",
+    "root_result": {
+      "archive_member": "catalog-linux70-trusted-basic-20261027/result.json",
+      "bytes": 10810,
+      "sha256": "1e8cdf481e152136a34fdb7ed64f186c6fd8ca5138cfd913caaf8dc26f68f979"
+    },
+    "runner_log": {
+      "bytes": 1954,
+      "path": "bench/results/10.176.26.71/raw/tests/ordinary-string-translation-20261027/basic-functional-01.log",
+      "sha256": "72c8c440d3ed05ad68d432496e261ce2b7be78de805cd197173fd1211f5f1959"
+    },
+    "schema": 1,
+    "verifier": {
+      "bytes": 11756,
+      "path": "bench/results/10.176.26.71/raw/tests/ordinary-string-translation-20261027/verify-basic-archive.py",
+      "sha256": "4dfa83ae5218f2543edcbb7f17e5de08c70827ae69fc02098103c66fda50118e"
+    }
+  },
   "checked_analysis": "Explicit trusted_source=False regression path; not production safety screening",
   "helper_capture": {
     "bytes": 2216,
@@ -44,7 +337,7 @@
     "sha256": "6413feadada91012213b22d3b7f147364606c0f9b10edd9f33f6775651bd4730"
   },
   "limits": [
-    "Only the recorded read-only taskname live case is validated; no general kernel-code equivalence claim",
+    "Only the recorded read-only taskname case and four cacheline basic presets are live-validated; no general kernel-code equivalence claim",
     "Userspace/mocked MM fixtures do not establish live MM support",
     "Old checked-mode/service passes do not validate the new trust policy",
     "Known decoding/lowering limits remain separate from source safety assumptions"
@@ -284,7 +577,7 @@
   },
   "schema": 1,
   "source_policy": "trusted_all_kernel_and_module_code",
-  "status": "AFFECTED_CHECKS_AND_LIVE_TASKNAME_PASSED",
+  "status": "AFFECTED_CHECKS_LIVE_TASKNAME_AND_ALL_FAMILY_BASIC_PASSED",
   "superseded_analysis": {
     "manifest": {
       "bytes": 963,

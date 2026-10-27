@@ -1,0 +1,7 @@
+{
+  "prior_attempt_sha256": "276d5b70ee2c0a04f9e94656954e4dd37955283314e8dc0468531657a1a0bb1f",
+  "cause": "Audit harness expected an explicit unload returncode field, but the preserved command receipt schema records launch metadata only.",
+  "benchmark_failure_established": false,
+  "correction": "The final audit validates recorded rmmod launch identity and session/retirement completion. Its limitations explicitly distinguish those receipts from a separately recorded exit code.",
+  "replacement": "audit.json"
+}

@@ -1,0 +1,70 @@
+{
+  "archive": {
+    "regular_files": 2079,
+    "sha256": "71e90ebca3018b1296ad1360df8e594d3e128444e2179731fc053580f2e4ed0e",
+    "unmaterialized_workspace_links": 42
+  },
+  "binaries_verified": 9,
+  "coordinates": 63,
+  "created_utc": "2026-10-27T19:25:32.949127+00:00",
+  "execution_counts": {
+    "kdlock:NO_JIT": 2,
+    "kdlock:RETURNED_JIT": 19,
+    "native:NOT_APPLICABLE": 21,
+    "tclock:NOT_APPLICABLE": 21
+  },
+  "jit_completions": 17776429,
+  "jit_entries": 17776429,
+  "kernel": {
+    "build_id": "b61c7bef25d2068f2a05ca3c31a5714c20c4aa62",
+    "live_source_build_verification": "Retained schema-2 receipt; original guest files are not re-read offline.",
+    "manifest_sha256": "1d65f61df1be4ab03e358b456d67165d5c9bdc3edd50cf8f15ad651281feca17",
+    "release": "7.0.0-38-kdlock1"
+  },
+  "kernel_bundle_files_verified": 23,
+  "limitations": [
+    "Exploratory host qualification remains failed; this audit does not promote timing.",
+    "Single round per point; no repeat-based variance estimate.",
+    "Normal drain is asserted by saved session completion and corroborated by unload/retirement receipts; command receipts record launch, not a separate exit code.",
+    "Explicit NOT_APPLICABLE non-KD controls may omit KD completion counters; their blank table fields remain unobserved, not measured zeros.",
+    "No new guest observation or source/build/kernel execution occurs in this audit."
+  ],
+  "non_jit_controls_without_completion_counter": 0,
+  "oracle_replays": {
+    "frozen_API_peak_and_recorded_business_checks": 63
+  },
+  "passed": true,
+  "performance_qualified": false,
+  "plan_sha256": "ed487678dbbe22666f8648e67df29448e5077c0960b715f25899f90186230bee",
+  "records_sha256": "3f43cb624d427c36649b6193c2bd3e896ca97e7bb648119e3ad221e8e7cb9cb0",
+  "repeat": 0,
+  "scope": "Read-only source-host archive/hash/oracle/table replay; no live execution.",
+  "script_sha256": "c9d2e28e99b2093d9a8d52459b6ed9bd7509d08a51a5fe2fa07302bec7df212f",
+  "single_round": true,
+  "source_files_verified": 270,
+  "table_sha256": "849ea2e8dc47bb43539ab4afdbcbdb36b571ef6f6b1a23a0e27d02b20505acf6",
+  "worker_counts": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    12,
+    16,
+    20,
+    24,
+    28,
+    32,
+    36,
+    40,
+    44,
+    48,
+    52,
+    56,
+    60
+  ],
+  "workload": "pipebytes-query-n128"
+}

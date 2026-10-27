@@ -132,6 +132,10 @@
     {
       "path": "bench/results/10.176.26.71/raw/tests/workload-retirement-20261027/guest-review/mirror-cleanup-guest-receipt.json",
       "sha256": "773cc8ea3af2db566d7bd5be352448c177db8399ea2e6dfda1726d5cc8cad3fc"
+    },
+    {
+      "path": "bench/results/10.176.26.71/raw/tests/workload-retirement-20261027/guest-review/final-launcher-cleanup-complete.json",
+      "sha256": "f8164c2449981ab1580e5323d6d64641c8328856f6ada10a9c1f6d8f911ad885"
     }
   ],
   "last_followup": {
@@ -214,6 +218,20 @@
       "inspection_sha256": "33590d25c5759b118a64a17c9e8e60202751bc1c99c0b32792ad872b75887b68",
       "host_executor_sha256": "32478b712a45ee07232125fa2964d788a7c4f2f8ba1ebc97a54c5040f3dc261c",
       "exact_rechecks": 3
+    }
+  },
+  "final_obsolete_launcher_followup": {
+    "status": "COMPLETE",
+    "date": "2026-10-28",
+    "source_host_files": 3,
+    "guest_files": 3,
+    "qemu_host_files": 3,
+    "source_host_bytes": 5216,
+    "mirror_bytes": 10432,
+    "retained_measurements_unchanged": true,
+    "receipt": {
+      "path": "bench/results/10.176.26.71/raw/tests/workload-retirement-20261027/guest-review/final-launcher-cleanup-complete.json",
+      "sha256": "f8164c2449981ab1580e5323d6d64641c8328856f6ada10a9c1f6d8f911ad885"
     }
   }
 }

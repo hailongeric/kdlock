@@ -1,0 +1,24 @@
+{
+  "archive": {
+    "regular_files": 2560,
+    "sha256": "2f72ca8af00a7d6ae64aff3516d42c422c114751eae1e93820f7255a72f4d13f",
+    "unmaterialized_workspace_links": 42
+  },
+  "binaries_verified": 8,
+  "created_utc": "2026-10-27T11:46:56.095523+00:00",
+  "error": "ValueError('JIT evidence missing/invalid')",
+  "kernel": {
+    "build_id": "b61c7bef25d2068f2a05ca3c31a5714c20c4aa62",
+    "live_source_build_verification": "Retained schema-2 receipt; original guest files are not re-read offline.",
+    "manifest_sha256": "1d65f61df1be4ab03e358b456d67165d5c9bdc3edd50cf8f15ad651281feca17",
+    "release": "7.0.0-38-kdlock1"
+  },
+  "kernel_bundle_files_verified": 23,
+  "passed": false,
+  "performance_qualified": false,
+  "scope": "Read-only source-host archive/hash/oracle/table replay; no live execution.",
+  "script_sha256": "74975721dfd16c94f89f1f92ddb3c5cdb8c05a2394f9f9f62e28ee876b37ced3",
+  "single_round": true,
+  "source_files_verified": 361,
+  "workload": "spin-c01"
+}

@@ -1,0 +1,13 @@
+{
+  "files": {
+    "bench/catalog_single/linux70.py": "47f2e862781d8c8eccf2efcfd5395ee53de282c06a8a20fdf9f259c55d5e230e",
+    "bench/catalog_single/current_plan.py": "98f3a9f441f4b4369a621bfa09d2fb9ff42f3897acbd3287b26ec99df0de86db",
+    "bench/catalog_single/plan.py": "33d14bf72fa8f0e2f10f8b2535a339a9f196ca892cb80675d34e4765de4ba8f2",
+    "bench/catalog_single/report.py": "ab08fe55656e4acab998d5feb0b806d87c37774f43de7de4a278be8b74679af2",
+    "bench/catalog_single/frequency_monitor.py": "77c87dbf4c41ee04540d2f6aedccc2a2eb3ae5c1fc520bc15f3d464d3c202b52"
+  },
+  "translation_policy": "trusted-kernel-and-module-source",
+  "source_commit": "46aafa19d2ecf6c31e1b5964cb51428c66b398b4",
+  "source_worktree_dirty": true,
+  "scope": "Controller bytes; each workload separately freezes and hashes its actual guest inputs"
+}

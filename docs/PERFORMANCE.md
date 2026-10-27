@@ -3,21 +3,67 @@
 Linux 6.1 development is retired; the results below retain their original
 kernel and source identities. Ubuntu 26.04 / Linux 7.0 is the active platform,
 with OS readiness recorded in the [migration record](history/vm-ubuntu2604-migration-20261027.md).
-No KD compatibility or performance result has been established on it. The
+The [Linux 7 port record](../bench/results/10.176.26.71/tests/linux70-port-20261027/README.md)
+records bounded build and functional validation; no new performance result is
+implied by those checks. The
 [retirement record](history/kernel-retirement-20261027.md) preserves earlier evidence.
 
-The [October 27 full catalog at fixed 2.0 GHz](../bench/results/10.176.26.71/bench/catalog-fixedfreq-20261027/README.md)
-at source `a9aeb280` completed all 61 lock/API configurations: 3,704 valid measurements and 139 retained failed points.
+The Linux 7 MM catalog has completed all **126 selected measurements** across
+two separately frozen campaigns: [84 private-MM points](../bench/results/10.176.26.71/bench/catalog-linux70-mm-trusted-20261027/README.md)
+on `7.0.0-38-kdlock1` and [42 actual shared-MM points](../bench/results/10.176.26.71/bench/catalog-linux70-mm-shared-20261028/shared-mm/README.md)
+on the same enabled `7.0.0-38-kdmm1` image in Native/KD modes. Native measured
+higher shared-MM throughput at **all 21 worker counts**. Selected whole-run
+results, in complete mmap/munmap pairs per second, are:
+
+| Workers | Native pairs/s | KD pairs/s | KD / Native |
+| ---: | ---: | ---: | ---: |
+| 1 | 373,048 | 365,013 | 0.9785× |
+| 16 | 295,099 | 44,061 | 0.1493× |
+| 60 | 154,433 | 6,731 | 0.0436× |
+
+Each coordinate has one exploratory two-second round at a fixed 2.0 GHz host
+policy. The 2.15% one-worker deficit has no repeat-variability estimate; these
+observations do not establish statistical significance or strict performance
+qualification. They do not meet the scoped MM improvement/parity goal. MM
+bodies execute on their original task behind the local lock backend, so these
+rates do not measure JIT delegation. No profiling-based cause is established.
+The [enabled-MM checkpoint](../bench/results/10.176.26.71/tests/linux70-kdmm1-20261027/README.md)
+retains the earlier KD1 mapping failure, separate cleanup and diagnostic beside
+the fresh prerequisite and timing results.
+
+The earlier checked-source [Linux 7 lock/API campaign](../bench/results/10.176.26.71/bench/catalog-linux70-20261027/README.md)
+retains 29 complete matrices (1,827 timings) and its partial failed taskname
+attempt. The separate
+[trusted-source campaign](../bench/results/10.176.26.71/bench/catalog-linux70-trusted-20261028/AUDIT.md)
+has 22 full audited workloads (1,386 points). Its `taskname-w20` partial attempt
+retains 23 valid points, one timed KD failure without a qualifying rate and
+39 unrun points. The fresh
+[prepared taskname cohort](../bench/results/10.176.26.71/bench/catalog-linux70-taskname-prepared-20261028/README.md)
+completed all 63 points, with six KD returned-JIT points and fifteen successful
+local `NO_JIT` points. The old partial failure and the strict unscored
+16-worker taskname `NO_JIT` failure remain separate. The
+[complete catalog index](../bench/results/10.176.26.71/bench/catalog-linux70-complete-20261028/README.md)
+accounts for 52 full configurations (29 checked, 22 trusted, one prepared):
+3,276 lock/API points plus
+126 MM points, or 3,402 selected observations. This closes selected coverage
+across separate source/preparation generations; no rates are pooled and no
+single-round result supplies repeat variability.
+
+The historical [October 27 full catalog at fixed 2.0 GHz](../bench/results/10.176.26.71/bench/catalog-fixedfreq-20261027/README.md)
+at source `a9aeb280` now retains 55 lock/API configurations: 3,326 valid measurements and 139 failed points.
 The separate MM suites have 126/126 archive-audited measurements. Independent-mm mappings, private-backing faults and actual shared-mm mappings retain their separate kernel/backend identities.
 Every measured coordinate has one round. Failed preparation has no rate;
 strict host timing qualification remains failed under the authorized exploratory
 policy. Frequency telemetry and exact data/drain validation are separate
 from timing qualification. [Per-workload tables and ratios](../bench/results/10.176.26.71/bench/catalog-fixedfreq-20261027/COMPARISON.md)
 retain all workload, call-shell, source and kernel distinctions. No rates are pooled.
+The retained reports are filtered historical subsets after user-directed cleanup;
+original complete-source archive claims do not apply to redacted inputs.
 
 Xattr preparation failed at 139/168 KD coordinates, versus 47/168 in the historical catalog. These attempts retained exact drain and have no throughput. The fixed eight-worker helper cohort and returned-body prerequisite are unchanged; the reason for the increased failure incidence is not established. [Preparation evidence and limits](../bench/results/10.176.26.71/bench/catalog-fixedfreq-20261027/XATTR_PREPARATION.md).
 
-The ten active nano profiles completed **630 measurements and 630 warmups**.
+In that historical fixed-frequency catalog, the ten nano profiles completed
+**630 measurements and 630 warmups**.
 Their whole-run rates at **60 workers** are Mops/s:
 
 | Nano profile | Native | TCLock | KD | KD / Native | KD / TCLock | Returned writes |
@@ -125,8 +171,8 @@ the recovery boot and original 73 modules; external benchmark modules changed
 taint from 0 to 12288, with no kernel fault recorded.
 
 The [October 26 single-round catalog](../bench/results/10.176.26.71/bench/catalog-single-20261026/README.md)
-attempted all 51 runnable lock/API configurations on the standard 21-count grid:
-3,166 valid timed measurements and 47 drained KD xattr helper-preparation
+now retains 45 lock/API configurations on the standard 21-count grid:
+2,788 valid timed measurements and 47 drained KD xattr helper-preparation
 failures. Each point was measured at most once. Per-workload tables and charts
 retain failures and execution classes. The user authorized exploratory
 continuation after QEMU task membership changed; strict timing qualification
@@ -154,11 +200,10 @@ corrected
 `e6fc371` rwsem has focused correctness evidence and one qualified mmap
 validation pair, but no repeated current performance baseline. Actual mmap
 integration, ordinary lock microbenchmarks and explicit
-delegation remain separate comparisons. The [basic functional version](../bench/results/10.176.26.71/tests/basic-version-20261022/README.md)
-retains all four returned-body smoke passes and the separate 16-worker rwlock
-NO_JIT failure. Performance requires matched work, exact retirement, unchanged
-timing gates and repeated paired throughput observations. Preserve all existing
-measurements and refusals; the full matrix is not the default next step.
+delegation remain separate comparisons. Functional completion does not supply a
+performance comparison: retain matched work, exact retirement and the stated
+timing policy. The current single-round catalog reports individual observations
+without estimating repeat variability.
 
 The earlier smaller mmap stage selected 1 and 16 shared-mm writers and three
 plain Native/KD pairs: 12 measured sessions. Its explicit `plain-v1` runner/report
@@ -572,56 +617,6 @@ spreads are rwsem KD/Native 89.10%/227.88%, and rwlock KD/Native/TCLock
 10.72%/83.70%/43.63%. Full ranges, all misses and artifact hashes are in the
 stage report. Shared-lock latency, runtime interference and the seven separate mutex
 regressions remain unresolved; these results do not establish blanket acceptance.
-
-## Resident-list follow-up: coverage completed with strict refusals
-
-The [same-VM resident-list report](../bench/results/10.176.26.71/bench/nano-list-followup-20261020/README.md)
-retains two separate runs on validated `f48b90e` inputs. `timing-1` completed
-144 spin/mutex sessions and two shared controls, then stopped at the first KD
-rwlock case because its required complete JIT body did not execute. Its data,
-published/loaded image and exact retirement checks pass; the strict failure is
-preserved and excluded from scoring. Its remaining 69 rwlock cases subsequently
-completed in the separate diagnostic continuation described below.
-The untouched rwsem task subsequently completed all 48 sessions in `rwsem-1`,
-with 24 returned-JIT KD sessions and exact retirements.
-
-Independent reviews verify evidence integrity with 250,374 and 71,582 checks.
-Both immediate host endpoints fail the original thread-set check, at 83 and
-86 threads versus 67. Descriptive parity counts are spin 8/8 against each
-control, mutex 4/8 Native and 7/8 TCLock, and rwsem 4/8 Native. Maximum
-three-run whole-rate spreads are KD/Native/TCLock spin 5.56%/12.86%/4.09%,
-mutex 4.79%/1326.48%/35.90%, and KD/Native rwsem 165.98%/22.91%.
-All misses, ranges, sample CVs and separate plain/prefetch comparisons remain
-in the report. No blanket prefetch benefit or performance acceptance follows.
-The seven earlier mutex regressions, strict rwlock execution failures and
-family-specific latency/runtime-interference gaps remain unresolved.
-
-The [separate 2026-10-21 diagnostic stage](../bench/results/10.176.26.71/bench/nano-rwlock-diagnosis-20261021/README.md)
-binds the running QEMU executable and records extra workers with positive
-disk-write counters. Background writes also occur in its RAM control; the
-historical timing effect is still unmeasured. Provider gate counters and their
-matched overhead measurements remain separate from unchanged-binary coverage
-and performance acceptance.
-The first fixed 12-case diagnosis preserves six eight-worker NO_JIT failures
-and six sixty-worker successes. Measured diagnostic/original whole-run medians
-are 1.1010/1.00055 at eight/sixty workers, with overlapping three-run ranges;
-these are instrumentation observations, not an optimization claim.
-All 12 exact retirements and 59,561 inert evidence checks pass, while the
-72-versus-67 host endpoint fails. The separate remaining-coverage run has now
-completed all 69 cases: 59 strict successes, ten strict NO_JIT failures and a
-76-versus-67 host mismatch. Its 12,155 evidence checks pass, including 23 exact
-retirements. Eight-worker KD results lack three successful same-class repeats.
-At sixty workers, both n16 variants meet observed two-rate parity against
-both controls; both n128 variants miss it. Maximum three-repeat spreads are
-7.25% KD, 9.49% Native and 7.42% TCLock. These remain descriptive results under
-the failed endpoint. The seven mutex causal regressions remain unresolved;
-their later sampled operation-latency evidence is recorded above.
-The second admission diagnostic classifies all 10,441 ready eight-worker
-combiner attempts as first-follower non-combinable refusals. All six low-count
-sessions still fail NO_JIT; all six sixty-worker sessions pass. Its 83,603
-integrity checks and 12 exact retirements pass, with a failed 74-thread endpoint.
-Matched observed/original median ratios are 1.0591/1.0269; counter, layout,
-admission and noise effects are inseparable, so no optimization is claimed.
 
 ## Fresh 32-byte mutex comparison with Native and TCLock
 

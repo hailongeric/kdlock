@@ -146,7 +146,7 @@ Distinguish this from improvements in local lock acquisition or reader admission
    separate 1%-write and 20%-write profiles. Readers remain concurrent and local.
    Explicit writer delegation is a separate execution class from ordinary local
    acquisition. A NO_JIT reader-heavy win is not a JIT win.
-5. Check transfer to existing cacheline, resident-list and RCUHT workloads, then
+5. Check transfer to existing cacheline and RCUHT workloads, then
    the small real API cases such as seek and pipe queries. A synthetic bulk-ioctl
    loop and a syscall-per-operation workload are different experiments.
 

@@ -1,0 +1,103 @@
+{
+  "schema": 1,
+  "status": "NAMESPACE_FIX_VALIDATED_OLD_PREFLIGHT_FAILURE_RETAINED",
+  "old_campaign": "catalog-linux70-trusted-20261027",
+  "old_workload": "taskname-w00",
+  "old_status": "STOPPED",
+  "old_timed_points": 0,
+  "old_runner_launched": false,
+  "old_result_unchanged": true,
+  "diagnosis": "The case-only stop marker already existed; the monitor rejected it before workload launch.",
+  "old_stop_marker": "/tmp/kdlock-linux70-taskname-w00-stop",
+  "markers_removed": false,
+  "monitors_active_at_diagnosis": [],
+  "guest_boot_id": "15dc5977-59d3-4471-a196-d71f03f450ed",
+  "guest_release": "7.0.0-38-kdlock1",
+  "guest_idle_at_diagnosis": true,
+  "fix": "Frequency token now derives the actual RAW campaign directory and workload name. The monitor still refuses an existing stop marker; no marker is deleted. Start/stop receipts preserve actual return codes and unknown completion without killing live children.",
+  "source_files": {
+    "bench/catalog_single/linux70.py": {
+      "path": "bench/results/10.176.26.71/raw/bench/catalog-linux70-trusted-20261027/telemetry-namespace-inputs/linux70.py",
+      "sha256": "2d3da87339e4927804922fc38ceac68342b6e34e6ae551a67049795d286e9e45",
+      "bytes": 22654
+    },
+    "tests/unit/bench/test_linux70_catalog.py": {
+      "path": "bench/results/10.176.26.71/raw/bench/catalog-linux70-trusted-20261027/telemetry-namespace-inputs/test_linux70_catalog.py",
+      "sha256": "63e012cc8c2444085045d4688d9a9d6c10aea17c21bfb10e94cc394bb43718c4",
+      "bytes": 12353
+    }
+  },
+  "tests": {
+    "catalog_methods": 9,
+    "mm_controller_methods": 19,
+    "total_methods": 28,
+    "returncodes": [
+      0,
+      0
+    ],
+    "idle": true,
+    "taint": 12288,
+    "boot_id": "15dc5977-59d3-4471-a196-d71f03f450ed"
+  },
+  "new_campaign": "catalog-linux70-trusted-20261028",
+  "new_token": "catalog-linux70-trusted-20261028-taskname-w00",
+  "new_startup_confirmed": true,
+  "performance_accepted": false,
+  "receipts": {
+    "progress.json": {
+      "path": "bench/results/10.176.26.71/raw/bench/catalog-linux70-trusted-20261027/progress.json",
+      "sha256": "3c2fecf5ccf6faae14ed6c8bb8074c707c99b08256260283c4597eddf7908427",
+      "bytes": 299
+    },
+    "taskname-w00-frequency.jsonl": {
+      "path": "bench/results/10.176.26.71/raw/bench/catalog-linux70-trusted-20261027/taskname-w00-frequency.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "taskname-w00-frequency.stderr": {
+      "path": "bench/results/10.176.26.71/raw/bench/catalog-linux70-trusted-20261027/taskname-w00-frequency.stderr",
+      "sha256": "a9ac2d01f73684097a907ecfdf15649987af7bc9ba8a734bd5144212a4c92775",
+      "bytes": 89
+    },
+    "telemetry-preflight-host-collision.stdout": {
+      "path": "bench/results/10.176.26.71/raw/bench/catalog-linux70-trusted-20261027/telemetry-preflight-host-collision.stdout",
+      "sha256": "62928b08c482b7542cb067546f08acdd55c312e330addfcff1b86362daf805bc",
+      "bytes": 273
+    },
+    "telemetry-preflight-host-collision-command.json": {
+      "path": "bench/results/10.176.26.71/raw/bench/catalog-linux70-trusted-20261027/telemetry-preflight-host-collision-command.json",
+      "sha256": "657a6187a5c9193f7eb16ca6f1299afb33e3ed87f5ba79cbab0bc1d5c97c5c99",
+      "bytes": 266
+    },
+    "telemetry-preflight-guest-idle.stdout": {
+      "path": "bench/results/10.176.26.71/raw/bench/catalog-linux70-trusted-20261027/telemetry-preflight-guest-idle.stdout",
+      "sha256": "869c9ce503fb874a5a91e8d8d9ec696e1e8ca2a5d7dee00029e70afe167efbcd",
+      "bytes": 3005
+    },
+    "telemetry-preflight-guest-idle-command.json": {
+      "path": "bench/results/10.176.26.71/raw/bench/catalog-linux70-trusted-20261027/telemetry-preflight-guest-idle-command.json",
+      "sha256": "69b6f767b59994320663fc3d51c24de11603b40dbb319c4f0c1146703af294ac",
+      "bytes": 311
+    },
+    "telemetry-namespace-vm-checks.log": {
+      "path": "bench/results/10.176.26.71/raw/bench/catalog-linux70-trusted-20261027/telemetry-namespace-vm-checks.log",
+      "sha256": "dda721d0c3272ced53c9d3826b1c4b7ec8ca421ee5196bd0453bbbca55e9d987",
+      "bytes": 580
+    },
+    "telemetry-namespace-sync07.log": {
+      "path": "bench/results/10.176.26.71/raw/bench/catalog-linux70-trusted-20261027/telemetry-namespace-sync07.log",
+      "sha256": "684992cba81b1f413149e244ff13359b2decc102746f3b8a7791b5459e341a74",
+      "bytes": 50418
+    },
+    "telemetry-new-campaign-startup-snapshot.json": {
+      "path": "bench/results/10.176.26.71/raw/bench/catalog-linux70-trusted-20261027/telemetry-new-campaign-startup-snapshot.json",
+      "sha256": "0b766f2375c62c40be3ddf5bbc08addcde4a60342798ae3f8bd72e1710919663",
+      "bytes": 837
+    }
+  },
+  "limits": [
+    "Mocked orchestration tests cover namespace/resource/receipt behavior; they do not measure performance.",
+    "The old preflight attempt remains failed with zero timed coordinates.",
+    "New measurements belong only to the separate20261028 campaign; this checkpoint does not imply their completion."
+  ]
+}

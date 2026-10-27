@@ -1,0 +1,218 @@
+{
+  "archive": "nano-rwlock-locality-mixed-archive.stdout",
+  "sha256": "c324390764687ce30482f503a3c45e57bb4a221c8f5a6a5ee670c333a9a325fc",
+  "bytes": 10136032,
+  "regular_files": 2343,
+  "links": [
+    {
+      "path": "nano-rwlock-locality-mixed/cacheline-c16-kdlock-w020-t52-r00/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-20261027/nano-rwlock-locality-mixed/source/include",
+      "materialized": false
+    },
+    {
+      "path": "nano-rwlock-locality-mixed/cacheline-c16-kdlock-w020-t52-r00/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-20261027/nano-rwlock-locality-mixed/source/disassem",
+      "materialized": false
+    },
+    {
+      "path": "nano-rwlock-locality-mixed/cacheline-c16-kdlock-w020-t44-r00/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-20261027/nano-rwlock-locality-mixed/source/include",
+      "materialized": false
+    },
+    {
+      "path": "nano-rwlock-locality-mixed/cacheline-c16-kdlock-w020-t44-r00/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-20261027/nano-rwlock-locality-mixed/source/disassem",
+      "materialized": false
+    },
+    {
+      "path": "nano-rwlock-locality-mixed/cacheline-c16-kdlock-w020-t24-r00/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-20261027/nano-rwlock-locality-mixed/source/include",
+      "materialized": false
+    },
+    {
+      "path": "nano-rwlock-locality-mixed/cacheline-c16-kdlock-w020-t24-r00/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-20261027/nano-rwlock-locality-mixed/source/disassem",
+      "materialized": false
+    },
+    {
+      "path": "nano-rwlock-locality-mixed/cacheline-c16-kdlock-w020-t60-r00/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-20261027/nano-rwlock-locality-mixed/source/include",
+      "materialized": false
+    },
+    {
+      "path": "nano-rwlock-locality-mixed/cacheline-c16-kdlock-w020-t60-r00/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-20261027/nano-rwlock-locality-mixed/source/disassem",
+      "materialized": false
+    },
+    {
+      "path": "nano-rwlock-locality-mixed/cacheline-c16-kdlock-w020-t01-r00/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-20261027/nano-rwlock-locality-mixed/source/include",
+      "materialized": false
+    },
+    {
+      "path": "nano-rwlock-locality-mixed/cacheline-c16-kdlock-w020-t01-r00/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-20261027/nano-rwlock-locality-mixed/source/disassem",
+      "materialized": false
+    },
+    {
+      "path": "nano-rwlock-locality-mixed/cacheline-c16-kdlock-w020-t05-r00/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-20261027/nano-rwlock-locality-mixed/source/include",
+      "materialized": false
+    },
+    {
+      "path": "nano-rwlock-locality-mixed/cacheline-c16-kdlock-w020-t05-r00/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-20261027/nano-rwlock-locality-mixed/source/disassem",
+      "materialized": false
+    },
+    {
+      "path": "nano-rwlock-locality-mixed/cacheline-c16-kdlock-w020-t07-r00/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-20261027/nano-rwlock-locality-mixed/source/include",
+      "materialized": false
+    },
+    {
+      "path": "nano-rwlock-locality-mixed/cacheline-c16-kdlock-w020-t07-r00/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-20261027/nano-rwlock-locality-mixed/source/disassem",
+      "materialized": false
+    },
+    {
+      "path": "nano-rwlock-locality-mixed/cacheline-c16-kdlock-w020-t02-r00/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-20261027/nano-rwlock-locality-mixed/source/include",
+      "materialized": false
+    },
+    {
+      "path": "nano-rwlock-locality-mixed/cacheline-c16-kdlock-w020-t02-r00/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-20261027/nano-rwlock-locality-mixed/source/disassem",
+      "materialized": false
+    },
+    {
+      "path": "nano-rwlock-locality-mixed/cacheline-c16-kdlock-w020-t32-r00/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-20261027/nano-rwlock-locality-mixed/source/include",
+      "materialized": false
+    },
+    {
+      "path": "nano-rwlock-locality-mixed/cacheline-c16-kdlock-w020-t32-r00/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-20261027/nano-rwlock-locality-mixed/source/disassem",
+      "materialized": false
+    },
+    {
+      "path": "nano-rwlock-locality-mixed/cacheline-c16-kdlock-w020-t03-r00/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-20261027/nano-rwlock-locality-mixed/source/include",
+      "materialized": false
+    },
+    {
+      "path": "nano-rwlock-locality-mixed/cacheline-c16-kdlock-w020-t03-r00/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-20261027/nano-rwlock-locality-mixed/source/disassem",
+      "materialized": false
+    },
+    {
+      "path": "nano-rwlock-locality-mixed/cacheline-c16-kdlock-w020-t06-r00/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-20261027/nano-rwlock-locality-mixed/source/include",
+      "materialized": false
+    },
+    {
+      "path": "nano-rwlock-locality-mixed/cacheline-c16-kdlock-w020-t06-r00/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-20261027/nano-rwlock-locality-mixed/source/disassem",
+      "materialized": false
+    },
+    {
+      "path": "nano-rwlock-locality-mixed/cacheline-c16-kdlock-w020-t16-r00/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-20261027/nano-rwlock-locality-mixed/source/include",
+      "materialized": false
+    },
+    {
+      "path": "nano-rwlock-locality-mixed/cacheline-c16-kdlock-w020-t16-r00/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-20261027/nano-rwlock-locality-mixed/source/disassem",
+      "materialized": false
+    },
+    {
+      "path": "nano-rwlock-locality-mixed/cacheline-c16-kdlock-w020-t28-r00/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-20261027/nano-rwlock-locality-mixed/source/include",
+      "materialized": false
+    },
+    {
+      "path": "nano-rwlock-locality-mixed/cacheline-c16-kdlock-w020-t28-r00/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-20261027/nano-rwlock-locality-mixed/source/disassem",
+      "materialized": false
+    },
+    {
+      "path": "nano-rwlock-locality-mixed/cacheline-c16-kdlock-w020-t56-r00/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-20261027/nano-rwlock-locality-mixed/source/include",
+      "materialized": false
+    },
+    {
+      "path": "nano-rwlock-locality-mixed/cacheline-c16-kdlock-w020-t56-r00/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-20261027/nano-rwlock-locality-mixed/source/disassem",
+      "materialized": false
+    },
+    {
+      "path": "nano-rwlock-locality-mixed/cacheline-c16-kdlock-w020-t36-r00/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-20261027/nano-rwlock-locality-mixed/source/include",
+      "materialized": false
+    },
+    {
+      "path": "nano-rwlock-locality-mixed/cacheline-c16-kdlock-w020-t36-r00/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-20261027/nano-rwlock-locality-mixed/source/disassem",
+      "materialized": false
+    },
+    {
+      "path": "nano-rwlock-locality-mixed/cacheline-c16-kdlock-w020-t48-r00/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-20261027/nano-rwlock-locality-mixed/source/include",
+      "materialized": false
+    },
+    {
+      "path": "nano-rwlock-locality-mixed/cacheline-c16-kdlock-w020-t48-r00/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-20261027/nano-rwlock-locality-mixed/source/disassem",
+      "materialized": false
+    },
+    {
+      "path": "nano-rwlock-locality-mixed/cacheline-c16-kdlock-w020-t40-r00/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-20261027/nano-rwlock-locality-mixed/source/include",
+      "materialized": false
+    },
+    {
+      "path": "nano-rwlock-locality-mixed/cacheline-c16-kdlock-w020-t40-r00/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-20261027/nano-rwlock-locality-mixed/source/disassem",
+      "materialized": false
+    },
+    {
+      "path": "nano-rwlock-locality-mixed/cacheline-c16-kdlock-w020-t12-r00/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-20261027/nano-rwlock-locality-mixed/source/include",
+      "materialized": false
+    },
+    {
+      "path": "nano-rwlock-locality-mixed/cacheline-c16-kdlock-w020-t12-r00/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-20261027/nano-rwlock-locality-mixed/source/disassem",
+      "materialized": false
+    },
+    {
+      "path": "nano-rwlock-locality-mixed/cacheline-c16-kdlock-w020-t08-r00/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-20261027/nano-rwlock-locality-mixed/source/include",
+      "materialized": false
+    },
+    {
+      "path": "nano-rwlock-locality-mixed/cacheline-c16-kdlock-w020-t08-r00/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-20261027/nano-rwlock-locality-mixed/source/disassem",
+      "materialized": false
+    },
+    {
+      "path": "nano-rwlock-locality-mixed/cacheline-c16-kdlock-w020-t20-r00/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-20261027/nano-rwlock-locality-mixed/source/include",
+      "materialized": false
+    },
+    {
+      "path": "nano-rwlock-locality-mixed/cacheline-c16-kdlock-w020-t20-r00/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-20261027/nano-rwlock-locality-mixed/source/disassem",
+      "materialized": false
+    },
+    {
+      "path": "nano-rwlock-locality-mixed/cacheline-c16-kdlock-w020-t04-r00/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-20261027/nano-rwlock-locality-mixed/source/include",
+      "materialized": false
+    },
+    {
+      "path": "nano-rwlock-locality-mixed/cacheline-c16-kdlock-w020-t04-r00/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-20261027/nano-rwlock-locality-mixed/source/disassem",
+      "materialized": false
+    }
+  ]
+}

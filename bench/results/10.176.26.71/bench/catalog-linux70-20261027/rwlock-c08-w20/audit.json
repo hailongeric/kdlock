@@ -1,0 +1,70 @@
+{
+  "archive": {
+    "regular_files": 2343,
+    "sha256": "706736ab9f749c4890822b568b2362f727edb1f3d8b0deb9e9581bad2fe7c7f8",
+    "unmaterialized_workspace_links": 42
+  },
+  "binaries_verified": 7,
+  "coordinates": 63,
+  "created_utc": "2026-10-27T12:18:57.497458+00:00",
+  "execution_counts": {
+    "kdlock:NO_JIT": 8,
+    "kdlock:RETURNED_JIT": 13,
+    "native:NATIVE": 21,
+    "tclock:NATIVE": 21
+  },
+  "jit_completions": 2215004,
+  "jit_entries": 2215004,
+  "kernel": {
+    "build_id": "b61c7bef25d2068f2a05ca3c31a5714c20c4aa62",
+    "live_source_build_verification": "Retained schema-2 receipt; original guest files are not re-read offline.",
+    "manifest_sha256": "1d65f61df1be4ab03e358b456d67165d5c9bdc3edd50cf8f15ad651281feca17",
+    "release": "7.0.0-38-kdlock1"
+  },
+  "kernel_bundle_files_verified": 23,
+  "limitations": [
+    "Exploratory host qualification remains failed; this audit does not promote timing.",
+    "Single round per point; no repeat-based variance estimate.",
+    "Normal drain is asserted by saved session completion and corroborated by unload/retirement receipts; command receipts record launch, not a separate exit code.",
+    "Explicit NOT_APPLICABLE non-KD controls may omit KD completion counters; their blank table fields remain unobserved, not measured zeros.",
+    "No new guest observation or source/build/kernel execution occurs in this audit."
+  ],
+  "non_jit_controls_without_completion_counter": 0,
+  "oracle_replays": {
+    "frozen_rw_payload_mix_postwork_and_peak": 63
+  },
+  "passed": true,
+  "performance_qualified": false,
+  "plan_sha256": "89fbcb9c13a7ed22108ebada98879215a48bc38024fa8311981a214f85dba88c",
+  "records_sha256": "523c60741df96e91137d3e6031d661735116df63f9072bf76f647683da35a78f",
+  "repeat": 0,
+  "scope": "Read-only source-host archive/hash/oracle/table replay; no live execution.",
+  "script_sha256": "a0b761fad8b678a84abcea7bf8966920a8f73aae380c3630b77bdcd7e4d74b01",
+  "single_round": true,
+  "source_files_verified": 282,
+  "table_sha256": "e071869d9e7ba4c64aa2c4427775d55d49b9870295e49b5985faea275db56479",
+  "worker_counts": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    12,
+    16,
+    20,
+    24,
+    28,
+    32,
+    36,
+    40,
+    44,
+    48,
+    52,
+    56,
+    60
+  ],
+  "workload": "rwlock-c08-w20"
+}

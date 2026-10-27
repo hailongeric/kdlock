@@ -1,0 +1,218 @@
+{
+  "archive": "taskname-w00-archive.stdout",
+  "sha256": "7a03b670838e7f07167fd1dfe7c62253f99780df8897e719c6be97e5249ff2ff",
+  "bytes": 10652444,
+  "regular_files": 2721,
+  "links": [
+    {
+      "path": "taskname-w00/spin-taskname-c00-kdlock-w000-t56-r00/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-trusted-20261028/taskname-w00/source/include",
+      "materialized": false
+    },
+    {
+      "path": "taskname-w00/spin-taskname-c00-kdlock-w000-t56-r00/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-trusted-20261028/taskname-w00/source/disassem",
+      "materialized": false
+    },
+    {
+      "path": "taskname-w00/spin-taskname-c00-kdlock-w000-t52-r00/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-trusted-20261028/taskname-w00/source/include",
+      "materialized": false
+    },
+    {
+      "path": "taskname-w00/spin-taskname-c00-kdlock-w000-t52-r00/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-trusted-20261028/taskname-w00/source/disassem",
+      "materialized": false
+    },
+    {
+      "path": "taskname-w00/spin-taskname-c00-kdlock-w000-t60-r00/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-trusted-20261028/taskname-w00/source/include",
+      "materialized": false
+    },
+    {
+      "path": "taskname-w00/spin-taskname-c00-kdlock-w000-t60-r00/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-trusted-20261028/taskname-w00/source/disassem",
+      "materialized": false
+    },
+    {
+      "path": "taskname-w00/spin-taskname-c00-kdlock-w000-t16-r00/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-trusted-20261028/taskname-w00/source/include",
+      "materialized": false
+    },
+    {
+      "path": "taskname-w00/spin-taskname-c00-kdlock-w000-t16-r00/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-trusted-20261028/taskname-w00/source/disassem",
+      "materialized": false
+    },
+    {
+      "path": "taskname-w00/spin-taskname-c00-kdlock-w000-t32-r00/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-trusted-20261028/taskname-w00/source/include",
+      "materialized": false
+    },
+    {
+      "path": "taskname-w00/spin-taskname-c00-kdlock-w000-t32-r00/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-trusted-20261028/taskname-w00/source/disassem",
+      "materialized": false
+    },
+    {
+      "path": "taskname-w00/spin-taskname-c00-kdlock-w000-t20-r00/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-trusted-20261028/taskname-w00/source/include",
+      "materialized": false
+    },
+    {
+      "path": "taskname-w00/spin-taskname-c00-kdlock-w000-t20-r00/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-trusted-20261028/taskname-w00/source/disassem",
+      "materialized": false
+    },
+    {
+      "path": "taskname-w00/spin-taskname-c00-kdlock-w000-t24-r00/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-trusted-20261028/taskname-w00/source/include",
+      "materialized": false
+    },
+    {
+      "path": "taskname-w00/spin-taskname-c00-kdlock-w000-t24-r00/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-trusted-20261028/taskname-w00/source/disassem",
+      "materialized": false
+    },
+    {
+      "path": "taskname-w00/spin-taskname-c00-kdlock-w000-t06-r00/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-trusted-20261028/taskname-w00/source/include",
+      "materialized": false
+    },
+    {
+      "path": "taskname-w00/spin-taskname-c00-kdlock-w000-t06-r00/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-trusted-20261028/taskname-w00/source/disassem",
+      "materialized": false
+    },
+    {
+      "path": "taskname-w00/spin-taskname-c00-kdlock-w000-t12-r00/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-trusted-20261028/taskname-w00/source/include",
+      "materialized": false
+    },
+    {
+      "path": "taskname-w00/spin-taskname-c00-kdlock-w000-t12-r00/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-trusted-20261028/taskname-w00/source/disassem",
+      "materialized": false
+    },
+    {
+      "path": "taskname-w00/spin-taskname-c00-kdlock-w000-t05-r00/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-trusted-20261028/taskname-w00/source/include",
+      "materialized": false
+    },
+    {
+      "path": "taskname-w00/spin-taskname-c00-kdlock-w000-t05-r00/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-trusted-20261028/taskname-w00/source/disassem",
+      "materialized": false
+    },
+    {
+      "path": "taskname-w00/spin-taskname-c00-kdlock-w000-t40-r00/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-trusted-20261028/taskname-w00/source/include",
+      "materialized": false
+    },
+    {
+      "path": "taskname-w00/spin-taskname-c00-kdlock-w000-t40-r00/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-trusted-20261028/taskname-w00/source/disassem",
+      "materialized": false
+    },
+    {
+      "path": "taskname-w00/spin-taskname-c00-kdlock-w000-t08-r00/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-trusted-20261028/taskname-w00/source/include",
+      "materialized": false
+    },
+    {
+      "path": "taskname-w00/spin-taskname-c00-kdlock-w000-t08-r00/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-trusted-20261028/taskname-w00/source/disassem",
+      "materialized": false
+    },
+    {
+      "path": "taskname-w00/spin-taskname-c00-kdlock-w000-t48-r00/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-trusted-20261028/taskname-w00/source/include",
+      "materialized": false
+    },
+    {
+      "path": "taskname-w00/spin-taskname-c00-kdlock-w000-t48-r00/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-trusted-20261028/taskname-w00/source/disassem",
+      "materialized": false
+    },
+    {
+      "path": "taskname-w00/spin-taskname-c00-kdlock-w000-t07-r00/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-trusted-20261028/taskname-w00/source/include",
+      "materialized": false
+    },
+    {
+      "path": "taskname-w00/spin-taskname-c00-kdlock-w000-t07-r00/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-trusted-20261028/taskname-w00/source/disassem",
+      "materialized": false
+    },
+    {
+      "path": "taskname-w00/spin-taskname-c00-kdlock-w000-t03-r00/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-trusted-20261028/taskname-w00/source/include",
+      "materialized": false
+    },
+    {
+      "path": "taskname-w00/spin-taskname-c00-kdlock-w000-t03-r00/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-trusted-20261028/taskname-w00/source/disassem",
+      "materialized": false
+    },
+    {
+      "path": "taskname-w00/spin-taskname-c00-kdlock-w000-t28-r00/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-trusted-20261028/taskname-w00/source/include",
+      "materialized": false
+    },
+    {
+      "path": "taskname-w00/spin-taskname-c00-kdlock-w000-t28-r00/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-trusted-20261028/taskname-w00/source/disassem",
+      "materialized": false
+    },
+    {
+      "path": "taskname-w00/spin-taskname-c00-kdlock-w000-t01-r00/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-trusted-20261028/taskname-w00/source/include",
+      "materialized": false
+    },
+    {
+      "path": "taskname-w00/spin-taskname-c00-kdlock-w000-t01-r00/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-trusted-20261028/taskname-w00/source/disassem",
+      "materialized": false
+    },
+    {
+      "path": "taskname-w00/spin-taskname-c00-kdlock-w000-t36-r00/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-trusted-20261028/taskname-w00/source/include",
+      "materialized": false
+    },
+    {
+      "path": "taskname-w00/spin-taskname-c00-kdlock-w000-t36-r00/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-trusted-20261028/taskname-w00/source/disassem",
+      "materialized": false
+    },
+    {
+      "path": "taskname-w00/spin-taskname-c00-kdlock-w000-t44-r00/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-trusted-20261028/taskname-w00/source/include",
+      "materialized": false
+    },
+    {
+      "path": "taskname-w00/spin-taskname-c00-kdlock-w000-t44-r00/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-trusted-20261028/taskname-w00/source/disassem",
+      "materialized": false
+    },
+    {
+      "path": "taskname-w00/spin-taskname-c00-kdlock-w000-t02-r00/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-trusted-20261028/taskname-w00/source/include",
+      "materialized": false
+    },
+    {
+      "path": "taskname-w00/spin-taskname-c00-kdlock-w000-t02-r00/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-trusted-20261028/taskname-w00/source/disassem",
+      "materialized": false
+    },
+    {
+      "path": "taskname-w00/spin-taskname-c00-kdlock-w000-t04-r00/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-trusted-20261028/taskname-w00/source/include",
+      "materialized": false
+    },
+    {
+      "path": "taskname-w00/spin-taskname-c00-kdlock-w000-t04-r00/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-trusted-20261028/taskname-w00/source/disassem",
+      "materialized": false
+    }
+  ]
+}

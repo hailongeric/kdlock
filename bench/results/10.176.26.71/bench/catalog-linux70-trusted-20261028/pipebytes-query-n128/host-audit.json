@@ -1,0 +1,472 @@
+{
+  "coordinates": {
+    "backends": [
+      "native",
+      "tclock",
+      "kdlock"
+    ],
+    "count": 63,
+    "execution_counts": {
+      "NOT_APPLICABLE": 42,
+      "NO_JIT": 2,
+      "RETURNED_JIT": 19
+    },
+    "measured": 63,
+    "repeat": 0,
+    "workers": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      12,
+      16,
+      20,
+      24,
+      28,
+      32,
+      36,
+      40,
+      44,
+      48,
+      52,
+      56,
+      60
+    ]
+  },
+  "created_utc": "2026-10-27T19:25:32.054530+00:00",
+  "endpoint_task_counts": {
+    "after": 84,
+    "before": 84
+  },
+  "files": {
+    "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/bench/catalog-linux70-trusted-20261028/pipebytes-query-n128/table.csv": "849ea2e8dc47bb43539ab4afdbcbdb36b571ef6f6b1a23a0e27d02b20505acf6",
+    "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-linux70-trusted-20261028/host-reference-command.json": "f1abf252884bb5883cc2fab1d85d0a2716d93972672692e4dcad69f5f5a6675e",
+    "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-linux70-trusted-20261028/host-reference.stdout": "afca4bebf005bc667efad18e30bf5cff0be5a45027e6476be1a56f69886df9e3",
+    "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-linux70-trusted-20261028/orchestration-20261027T183129Z/current_plan.py": "98f3a9f441f4b4369a621bfa09d2fb9ff42f3897acbd3287b26ec99df0de86db",
+    "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-linux70-trusted-20261028/orchestration-20261027T183129Z/frequency_monitor.py": "77c87dbf4c41ee04540d2f6aedccc2a2eb3ae5c1fc520bc15f3d464d3c202b52",
+    "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-linux70-trusted-20261028/orchestration-20261027T183129Z/linux70.py": "2d3da87339e4927804922fc38ceac68342b6e34e6ae551a67049795d286e9e45",
+    "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-linux70-trusted-20261028/orchestration-20261027T183129Z/plan.py": "33d14bf72fa8f0e2f10f8b2535a339a9f196ca892cb80675d34e4765de4ba8f2",
+    "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-linux70-trusted-20261028/orchestration-20261027T183129Z/provenance.json": "11355de1921b392d0ddd91d855e61c712b265ce3cd777e6630aa529c0091fc14",
+    "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-linux70-trusted-20261028/orchestration-20261027T183129Z/report.py": "ab08fe55656e4acab998d5feb0b806d87c37774f43de7de4a278be8b74679af2",
+    "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-linux70-trusted-20261028/orchestration-audit/capture-host-git-46aafa19.py": "e9417457c4d33eea2a84f70af0ed2839ce5b07abbd4dd70bb84ea66fdaf9bb74",
+    "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-linux70-trusted-20261028/orchestration-audit/capture-host-provenance.json": "214fc91b0eb2ad7f0d2a73d1b6e5cf40293c9b3911110283bc7681c910e39482",
+    "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-linux70-trusted-20261028/pipebytes-query-n128-after-host-command.json": "e1f27f80c9efcade94bab2163a9e7b216766f6281862b1c24d8022f9fdb4b7f0",
+    "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-linux70-trusted-20261028/pipebytes-query-n128-after-host.stdout": "adc391d3844c579fb9304a83cd8539767d48779b636354fb54aab4e7c8b96340",
+    "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-linux70-trusted-20261028/pipebytes-query-n128-before-host-command.json": "5eab8dc10ce734b6a1dcfda3db8425cc7151bcfc7abdb751d6e872a3d6b63da8",
+    "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-linux70-trusted-20261028/pipebytes-query-n128-before-host.stdout": "5b8971f903fbb37c5d5a4038abcf1b8ba389a3bb648342b1b57bc5c58e71256a",
+    "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-linux70-trusted-20261028/pipebytes-query-n128-command.json": "ce63aca4d68bed4c3c1b118ace94ea72747d1527bca2e1c459dbc7d4ed195437",
+    "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-linux70-trusted-20261028/pipebytes-query-n128-frequency-command.json": "3eb7848ef021c0d1ecc11186221ea323a0204550899068099dedd561dadda400",
+    "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-linux70-trusted-20261028/pipebytes-query-n128-frequency-stop-command.json": "3caefd5ae12d191d279b9070e1ba21bebf87a866ddbbeea802ca3665977ca1e4",
+    "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-linux70-trusted-20261028/pipebytes-query-n128-frequency.jsonl": "aa5d5b46d244fd9cc320a6398130a8464eec5f05cd94b09d5b7d5d89f71aa37d",
+    "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-linux70-trusted-20261028/pipebytes-query-n128/plan.json": "ed487678dbbe22666f8648e67df29448e5077c0960b715f25899f90186230bee",
+    "/home/eric/vm/vm-shared/kdlock/bench/results/10.176.26.71/raw/bench/catalog-linux70-trusted-20261028/pipebytes-query-n128/records.json": "3f43cb624d427c36649b6193c2bd3e896ca97e7bb648119e3ad221e8e7cb9cb0"
+  },
+  "frequency": {
+    "busy_mhz_range": [
+      1991.4911522350553,
+      2000.0685057487965
+    ],
+    "busy_quarter_or_more_cpu_samples": 6400,
+    "counter_pairs_replayed": 20864,
+    "fixed_policy_khz": 2000000,
+    "maximum_sample_gap_seconds": 1.012254047,
+    "no_turbo": 1,
+    "policies": 64,
+    "samples": 327,
+    "thermal_deltas": {}
+  },
+  "host_boot_id": "2b39cf56-2146-4c87-9fa5-28c66dcee12c",
+  "limitations": [
+    "Configured 2 GHz policy and sampled APERF/MPERF evidence do not prove exact effective frequency throughout every instruction.",
+    "Endpoint task rows cannot exclude intervening task lifetimes. Only literal CPU63 worker lifetimes may differ; permanent rows remain exact.",
+    "NUMA binding policies/addresses are checked; nonzero cross-node page placement is not claimed absent.",
+    "First sample deltas have no retained preceding raw counter snapshot; their arithmetic is checked but initial subtraction is not independently replayable.",
+    "One repetition supplies no repeat variability; strict timing/performance qualification remains false.",
+    "Workload data/source/binary/JIT oracle replay is covered by the separate audit.json, not rerun here."
+  ],
+  "passed": true,
+  "performance_qualified": false,
+  "qemu": {
+    "pid": 257489,
+    "start_ticks": 42969155
+  },
+  "reviewed_stop_exception_sha256": "01c922ea123d4cf7ce2a5d56d64e5a66fdf97a4352f252f7fc843cba4f21c972",
+  "schema": 1,
+  "scope": "Offline recorded host/frequency/coordinate checks only; no guest or host action.",
+  "script_sha256": "65391e5a17906bc6dc9f10444470b3889b39c88ab8a3ded31a88a3d122332e95",
+  "worker_turnover": {
+    "after": {
+      "added": [
+        {
+          "affinity": [
+            63
+          ],
+          "comm": "worker",
+          "start_ticks": 151469790,
+          "tid": 653583
+        },
+        {
+          "affinity": [
+            63
+          ],
+          "comm": "worker",
+          "start_ticks": 151469790,
+          "tid": 653593
+        },
+        {
+          "affinity": [
+            63
+          ],
+          "comm": "worker",
+          "start_ticks": 151490273,
+          "tid": 653754
+        },
+        {
+          "affinity": [
+            63
+          ],
+          "comm": "worker",
+          "start_ticks": 151490785,
+          "tid": 653755
+        },
+        {
+          "affinity": [
+            63
+          ],
+          "comm": "worker",
+          "start_ticks": 151496107,
+          "tid": 653975
+        },
+        {
+          "affinity": [
+            63
+          ],
+          "comm": "worker",
+          "start_ticks": 151497438,
+          "tid": 653976
+        },
+        {
+          "affinity": [
+            63
+          ],
+          "comm": "worker",
+          "start_ticks": 151497438,
+          "tid": 653977
+        },
+        {
+          "affinity": [
+            63
+          ],
+          "comm": "worker",
+          "start_ticks": 151497438,
+          "tid": 653978
+        },
+        {
+          "affinity": [
+            63
+          ],
+          "comm": "worker",
+          "start_ticks": 151497438,
+          "tid": 653979
+        },
+        {
+          "affinity": [
+            63
+          ],
+          "comm": "worker",
+          "start_ticks": 151497439,
+          "tid": 653980
+        },
+        {
+          "affinity": [
+            63
+          ],
+          "comm": "worker",
+          "start_ticks": 151497439,
+          "tid": 653981
+        },
+        {
+          "affinity": [
+            63
+          ],
+          "comm": "worker",
+          "start_ticks": 151497439,
+          "tid": 653982
+        },
+        {
+          "affinity": [
+            63
+          ],
+          "comm": "worker",
+          "start_ticks": 151497439,
+          "tid": 653983
+        },
+        {
+          "affinity": [
+            63
+          ],
+          "comm": "worker",
+          "start_ticks": 151497439,
+          "tid": 653984
+        },
+        {
+          "affinity": [
+            63
+          ],
+          "comm": "worker",
+          "start_ticks": 151497439,
+          "tid": 653985
+        },
+        {
+          "affinity": [
+            63
+          ],
+          "comm": "worker",
+          "start_ticks": 151497439,
+          "tid": 653986
+        },
+        {
+          "affinity": [
+            63
+          ],
+          "comm": "worker",
+          "start_ticks": 151497439,
+          "tid": 653987
+        }
+      ],
+      "retired": [
+        {
+          "affinity": [
+            63
+          ],
+          "comm": "worker",
+          "start_ticks": 151180751,
+          "tid": 652017
+        },
+        {
+          "affinity": [
+            63
+          ],
+          "comm": "worker",
+          "start_ticks": 151180751,
+          "tid": 652018
+        },
+        {
+          "affinity": [
+            63
+          ],
+          "comm": "worker",
+          "start_ticks": 151180854,
+          "tid": 652021
+        },
+        {
+          "affinity": [
+            63
+          ],
+          "comm": "worker",
+          "start_ticks": 151180854,
+          "tid": 652022
+        },
+        {
+          "affinity": [
+            63
+          ],
+          "comm": "worker",
+          "start_ticks": 151180854,
+          "tid": 652025
+        }
+      ]
+    },
+    "before": {
+      "added": [
+        {
+          "affinity": [
+            63
+          ],
+          "comm": "worker",
+          "start_ticks": 151469790,
+          "tid": 653583
+        },
+        {
+          "affinity": [
+            63
+          ],
+          "comm": "worker",
+          "start_ticks": 151469790,
+          "tid": 653593
+        },
+        {
+          "affinity": [
+            63
+          ],
+          "comm": "worker",
+          "start_ticks": 151490273,
+          "tid": 653754
+        },
+        {
+          "affinity": [
+            63
+          ],
+          "comm": "worker",
+          "start_ticks": 151490785,
+          "tid": 653755
+        },
+        {
+          "affinity": [
+            63
+          ],
+          "comm": "worker",
+          "start_ticks": 151496107,
+          "tid": 653975
+        },
+        {
+          "affinity": [
+            63
+          ],
+          "comm": "worker",
+          "start_ticks": 151497438,
+          "tid": 653976
+        },
+        {
+          "affinity": [
+            63
+          ],
+          "comm": "worker",
+          "start_ticks": 151497438,
+          "tid": 653977
+        },
+        {
+          "affinity": [
+            63
+          ],
+          "comm": "worker",
+          "start_ticks": 151497438,
+          "tid": 653978
+        },
+        {
+          "affinity": [
+            63
+          ],
+          "comm": "worker",
+          "start_ticks": 151497438,
+          "tid": 653979
+        },
+        {
+          "affinity": [
+            63
+          ],
+          "comm": "worker",
+          "start_ticks": 151497439,
+          "tid": 653980
+        },
+        {
+          "affinity": [
+            63
+          ],
+          "comm": "worker",
+          "start_ticks": 151497439,
+          "tid": 653981
+        },
+        {
+          "affinity": [
+            63
+          ],
+          "comm": "worker",
+          "start_ticks": 151497439,
+          "tid": 653982
+        },
+        {
+          "affinity": [
+            63
+          ],
+          "comm": "worker",
+          "start_ticks": 151497439,
+          "tid": 653983
+        },
+        {
+          "affinity": [
+            63
+          ],
+          "comm": "worker",
+          "start_ticks": 151497439,
+          "tid": 653984
+        },
+        {
+          "affinity": [
+            63
+          ],
+          "comm": "worker",
+          "start_ticks": 151497439,
+          "tid": 653985
+        },
+        {
+          "affinity": [
+            63
+          ],
+          "comm": "worker",
+          "start_ticks": 151497439,
+          "tid": 653986
+        },
+        {
+          "affinity": [
+            63
+          ],
+          "comm": "worker",
+          "start_ticks": 151497439,
+          "tid": 653987
+        }
+      ],
+      "retired": [
+        {
+          "affinity": [
+            63
+          ],
+          "comm": "worker",
+          "start_ticks": 151180751,
+          "tid": 652017
+        },
+        {
+          "affinity": [
+            63
+          ],
+          "comm": "worker",
+          "start_ticks": 151180751,
+          "tid": 652018
+        },
+        {
+          "affinity": [
+            63
+          ],
+          "comm": "worker",
+          "start_ticks": 151180854,
+          "tid": 652021
+        },
+        {
+          "affinity": [
+            63
+          ],
+          "comm": "worker",
+          "start_ticks": 151180854,
+          "tid": 652022
+        },
+        {
+          "affinity": [
+            63
+          ],
+          "comm": "worker",
+          "start_ticks": 151180854,
+          "tid": 652025
+        }
+      ]
+    },
+    "before_to_after": {
+      "added": [],
+      "retired": []
+    }
+  },
+  "workload": "pipebytes-query-n128"
+}

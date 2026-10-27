@@ -1,0 +1,69 @@
+{
+  "archive": {
+    "regular_files": 1696,
+    "sha256": "b68a4eea9be1800a1f77c22522811e010b7deceea3204f838a56a63cdae974d3",
+    "unmaterialized_workspace_links": 0
+  },
+  "binaries_verified": 9,
+  "coordinates": 63,
+  "created_utc": "2026-10-27T20:05:17.429603+00:00",
+  "execution_counts": {
+    "kdlock:NO_JIT": 21,
+    "native:NOT_APPLICABLE": 21,
+    "tclock:NOT_APPLICABLE": 21
+  },
+  "jit_completions": 0,
+  "jit_entries": 0,
+  "kernel": {
+    "build_id": "b61c7bef25d2068f2a05ca3c31a5714c20c4aa62",
+    "live_source_build_verification": "Retained schema-2 receipt; original guest files are not re-read offline.",
+    "manifest_sha256": "1d65f61df1be4ab03e358b456d67165d5c9bdc3edd50cf8f15ad651281feca17",
+    "release": "7.0.0-38-kdlock1"
+  },
+  "kernel_bundle_files_verified": 23,
+  "limitations": [
+    "Exploratory host qualification remains failed; this audit does not promote timing.",
+    "Single round per point; no repeat-based variance estimate.",
+    "Normal drain is asserted by saved session completion and corroborated by unload/retirement receipts; command receipts record launch, not a separate exit code.",
+    "Explicit NOT_APPLICABLE non-KD controls may omit KD completion counters; their blank table fields remain unobserved, not measured zeros.",
+    "No new guest observation or source/build/kernel execution occurs in this audit."
+  ],
+  "non_jit_controls_without_completion_counter": 0,
+  "oracle_replays": {
+    "frozen_API_peak_and_recorded_business_checks": 63
+  },
+  "passed": true,
+  "performance_qualified": false,
+  "plan_sha256": "2331a776949cef739185eb855a701a5beb9dbff77d3f8c9f537de060f61c3c04",
+  "records_sha256": "fc7f906810d067b65d085661f82f5f49b4f654764a51d481e54a131b22ccb176",
+  "repeat": 0,
+  "scope": "Read-only source-host archive/hash/oracle/table replay; no live execution.",
+  "script_sha256": "c9d2e28e99b2093d9a8d52459b6ed9bd7509d08a51a5fe2fa07302bec7df212f",
+  "single_round": true,
+  "source_files_verified": 270,
+  "table_sha256": "194d80a174ce169adea073595df00ae5ef306339f7e92e7107044f08cbd6a110",
+  "worker_counts": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    12,
+    16,
+    20,
+    24,
+    28,
+    32,
+    36,
+    40,
+    44,
+    48,
+    52,
+    56,
+    60
+  ],
+  "workload": "xattr-tail-n16"
+}

@@ -2,8 +2,8 @@
 
 These definitions remain reference workloads after
 [Linux 6.1 retirement](history/kernel-retirement-20261027.md). Ubuntu 26.04 /
-Linux 7.0 is the active adaptation platform. KD and runner compatibility still
-require validation before matched measurements; the retained results keep
+Linux 7.0 is the active platform. Its bounded port and functional checks are
+recorded separately from matched measurements; the retained results keep
 their original kernel identities. See the
 [migration record](history/vm-ubuntu2604-migration-20261027.md) for OS readiness and
 the [Linux 7 port record](../bench/results/10.176.26.71/tests/linux70-port-20261027/README.md)
@@ -27,7 +27,7 @@ labels and measurement terms. In particular, a reader/writer spinlock (rwlock)
 waits by spinning, while a reader/writer semaphore (rwsem) can sleep while
 waiting. Just-in-time (JIT) compilation supplies code for delegated execution.
 
-The standard grid is 1–8 workers by one and 12–60 by four, three repetitions per
+The standard grid is 1–8 workers by one and 12–60 by four, one repetition per
 configuration, comparing KD, TCLock and Linux Native where supported. Rwlock and
 rwsem use 1% and 20% writes. The historically accepted `c21345b` rwsem matrix
 compares KD with Linux Native; the separate original TCLock rwsem port supports
@@ -36,25 +36,64 @@ cancellation, downgrade or mmap APIs.
 Pass the worker grid explicitly using the linked runner commands: the
 reader/writer runner's historical default and `--full-matrix` stop at 36 workers.
 Synthetic bodies run repeatedly inside one ioctl per phase; API workers issue
-syscalls individually. The active lock/API catalog has **61 configurations**:
-the 51 micro/API configurations selected for the October 26 screen plus the
-10 padded-counter nano profiles below. The original c01/c08 micro cases remain
-selected: their call shells and post-work differ from nano c01/c16/post256.
+syscalls individually. The active lock/API catalog has **52 configurations**:
+42 micro/API configurations and the 10 padded-counter nano profiles below.
+The former mutex c01/c08 and RCUHT micro cases are no longer selected. The
+mutex nano c01/c16/post256 profiles remain selected, with distinct call shells
+and post-work.
 The three separately implemented MM suites are also included when requesting
 all implemented workloads. This means benchmark coverage, not the full unit-test
-suite. At 21 worker counts and one round, the lock/API plan has 3,843 points
-and the MM suites add 126; preparation failures remain failed points, not passes.
+suite. At 21 worker counts, three backends and one round, the lock/API plan has
+3,276 points. The ordinary `kdlock1` kernel keeps the mmap backend disabled;
+actual shared-mm comparisons use the separately built `kdmm1` image in explicit
+Native and KD boot modes. Preparation failures remain failed points, not passes.
 The maintained [current command plan](../bench/catalog_single/current_plan.py)
-defines the 61 lock/API configurations; its historical `plan.py` counterpart
-continues to define the earlier 51-case screen.
-The [October 27 full catalog at fixed 2.0 GHz](../bench/results/10.176.26.71/bench/catalog-fixedfreq-20261027/README.md)
-at source `a9aeb280` completed all 61 lock/API configurations: 3,704 valid measurements and 139 retained failed points.
+defines the 52 lock/API configurations; `plan.py` supplies its 42 micro/API cases.
+The [Linux 7 lock/API campaign](../bench/results/10.176.26.71/bench/catalog-linux70-20261027/README.md)
+has 29 complete matrices (1,827 timed points) under the earlier checked-source
+translator. The subsequent trusted-source generation uses ordinary translation
+for kernel and module callees. Its
+[audited completed subset](../bench/results/10.176.26.71/bench/catalog-linux70-trusted-20261028/AUDIT.md)
+contains 22 full configurations and 1,386 points. The separate `taskname-w20`
+attempt retains 23 valid points, one timed KD failure and 39 unrun points; no
+rate is accepted for the failed point. A new
+[prepared taskname cohort](../bench/results/10.176.26.71/bench/catalog-linux70-taskname-prepared-20261028/README.md)
+completed 63 points under its own frozen preparation identity: six KD points
+returned JIT bodies and fifteen completed locally with `NO_JIT`; both control
+arms completed all 21 points. The
+[complete catalog index](../bench/results/10.176.26.71/bench/catalog-linux70-complete-20261028/README.md)
+accounts for all 52 configurations and 3,276 full-matrix points as
+29 checked-source + 22 trusted-source + one prepared configuration. The old
+partial attempts and the strict unscored 16-worker taskname `NO_JIT` failure
+remain unchanged. No rates are pooled across these generations.
+
+All **126 Linux 7 MM points** are complete: the
+[private-MM campaign](../bench/results/10.176.26.71/bench/catalog-linux70-mm-trusted-20261027/README.md)
+contains 21 independent-mm and 63 private-fault points, while the separately
+frozen [shared-MM campaign](../bench/results/10.176.26.71/bench/catalog-linux70-mm-shared-20261028/shared-mm/README.md)
+contains 42 Native/KD mmap/munmap points. Their source, kernel and boot identities
+remain separate. Combined with lock/API coverage, this accounts for **3,402
+selected points**, without combining rates or validation scopes. Native measured
+higher shared-MM throughput at all 21 worker
+counts. At 60 workers, Native/KD completed 154,433/6,731 pairs/s, respectively
+(KD 0.0436× Native). These are single exploratory rounds; even the 2.15% KD
+deficit at one worker has no repeat-variability estimate. The scoped MM
+improvement/parity goal remains unmet. The
+[enabled-MM checkpoint](../bench/results/10.176.26.71/tests/linux70-kdmm1-20261027/README.md)
+preserves the earlier KD1 contention-witness failure, normal cleanup and
+subsequent diagnostic separately from the successful fresh prerequisites and
+timings.
+
+The historical [October 27 full catalog at fixed 2.0 GHz](../bench/results/10.176.26.71/bench/catalog-fixedfreq-20261027/README.md)
+at source `a9aeb280` now retains 55 lock/API configurations: 3,326 valid measurements and 139 failed points.
 The separate MM suites have 126/126 archive-audited measurements. Independent-mm mappings, private-backing faults and actual shared-mm mappings retain their separate kernel/backend identities.
 Every measured coordinate has one round. Failed preparation has no rate;
 strict host timing qualification remains failed under the authorized exploratory
 policy. Frequency telemetry and exact data/drain validation are separate
 from timing qualification. [Per-workload tables and ratios](../bench/results/10.176.26.71/bench/catalog-fixedfreq-20261027/COMPARISON.md)
 retain all workload, call-shell, source and kernel distinctions. No rates are pooled.
+The retained reports are filtered historical subsets after user-directed cleanup;
+original complete-source archive claims do not apply to redacted inputs.
 
 In that Linux 6.1 catalog, xattr preparation failed at 139/168 KD coordinates,
 versus 47/168 in the earlier catalog. These attempts retained exact drain and
@@ -62,21 +101,23 @@ have no throughput. That campaign retained its fixed eight-worker helper cohort
 and returned-body prerequisite; the reason for the increased failure incidence
 is not established. [Preparation evidence and limits](../bench/results/10.176.26.71/bench/catalog-fixedfreq-20261027/XATTR_PREPARATION.md).
 The new Linux 7 xattr workload uses an rb-tree and local shared readers, so it
-has no helper-learning phase or eligible JIT body. Its new revision and future
-measurements must remain separate from those list/spin results.
+has no helper-learning phase or eligible JIT body. Its eight profiles completed
+in the trusted-source campaign, with all 168 KD points recording successful
+local `NO_JIT`. Those measurements remain separate from the historical
+list/spin results.
 
 The explicitly requested [single-round October 26 screen](../bench/results/10.176.26.71/bench/catalog-single-20261026/README.md)
-attempted the 51 then-selected lock/API configurations on that grid.
-It retains 3,166 valid timed observations and 47 drained KD xattr preparation
+now retains 45 lock/API configurations from that grid.
+It retains 2,788 valid timed observations and 47 drained KD xattr preparation
 failures. Its exploratory host policy and one repetition do not establish
 strict timing qualification or repeat variability. The separate
 [mmap/fault extension](../bench/results/10.176.26.71/bench/catalog-mmap-single-20261026/README.md)
 completed 126 single-round points across independent-mm mmap/munmap,
 private-backing CPU faults and actual shared-mm Native/KD mmap/munmap, keeping
-their distinct kernel and workload identities. Planned 64-node lists and generic
-actual-mmap-backend page-fault throughput remain unimplemented.
+their distinct kernel and workload identities. Generic actual-mmap-backend
+page-fault throughput remains unimplemented.
 
-The [current mutex comparison](../bench/results/10.176.26.71/bench/mutex32-native-tclock-20261020/README.md)
+The [historical mutex comparison](../bench/results/10.176.26.71/bench/mutex32-native-tclock-20261020/README.md)
 covers c01/post64, c08/post64, exclusive-update RCUHT, seek set/end, pipebytes
 n16 and pipecap n16 with fresh Native/TCLock/KD controls. Its 567 valid, drained
 sessions use three repetitions at `1 2 4 8 16 32 36 48 60` workers, a nine-point
@@ -131,7 +172,7 @@ rwlock uses local readers and direct writer pairs. Matching payload work, exact
 write totals and separate JIT entry/return evidence remain required. The earlier
 two-word `mutex`, `rwsem-read` and `rwsem-mixed` profiles are removed from the
 active launcher; their frozen sources and results remain historical evidence.
-The new selection does not fill or alter the earlier 51-configuration screen.
+The new selection does not fill gaps in the earlier historical screen.
 The user-directed promotion follows an exploratory
 [factor screen](../bench/results/10.176.26.71/bench/mutex-profile-20261026/factor-grid/README.md)
 under the earlier 256 NUMA boundary and a separate boundary experiment with
@@ -154,21 +195,23 @@ DIRECT ABI2 boundary. Callable mutex functions and signal/try/I/O acquisitions,
 `kd_write_lock()` and `kd_down_write()` execute locally. Readers of KD rwlock
 and KD rwsem also execute locally while holding shared read access.
 
-The explicit pairs below permit delegation of admitted bodies. Admission is
-the translator/runtime check that the compiled body can execute safely with
-the captured inputs and execution context. It can still refuse a body, and an
-eligible call can execute locally because of contention or admission policy.
+The explicit pairs below permit delegation of translated bodies. The current
+production translator trusts kernel and module source and bypasses semantic
+context and loop-value proofs. It still requires ordinary instruction decoding
+and lowering, exact executable source leases, and the runtime ownership and
+frame-lifetime checks. Those requirements can refuse translation; an eligible
+call can also execute locally because of contention or runtime routing.
 An image labelled `NORMAL` proves publication only. Where completion probes are
 enabled, a completed, returned JIT body proves successful delegated execution;
 entry without completion is `PARTIAL_JIT`, and no entry is `NO_JIT`. The retained
 synthetic mutex rounds cited here record entry witnesses only, so their return
-count remains unknown. New resident-list profiles also read the existing root
-completion counter. Keep these evidence classes separate in performance reports.
+count remains unknown. Current functional and nano checks separately record
+root completions. Keep these evidence classes separate in performance reports.
 
 | Workload and lock | KD API already used | Delegation decision and protected boundary |
 | --- | --- | --- |
 | c01, c08, RCUHT: spin | `KD_SPIN_DIRECT_LOCK` / `KD_SPIN_DIRECT_UNLOCK` | Exclusive counter updates and hash searches/moves are eligible. Storage is preallocated; there is no per-operation allocation or reclamation. |
-| c01, c08, RCUHT: mutex | OUTER by default; `--mutex-api public` uses literal `kd_mutex_lock/unlock` | The same bounded payloads are eligible through the selected KD mutex protocol. Caller shells remain separate measurement identities. |
+| c01, c16/post256 nano: mutex | Public `kd_mutex_lock/unlock` through ABI2 | Counter updates are eligible. The two payload sizes and any callable-local control remain separate measurement identities. |
 | c01, c08, RCUHT: rwlock | `KD_RWLOCK_DIRECT_WRITE_LOCK` / `KD_RWLOCK_DIRECT_WRITE_UNLOCK`; `kd_read_lock` / `kd_read_unlock` | Writers may delegate; shared readers stay local. |
 | c01, c08, RCUHT: rwsem | `KD_RWSEM_OUTER_WRITE_LOCK` / `KD_RWSEM_OUTER_WRITE_UNLOCK`; `kd_down_read` / `kd_up_read` | Writers may delegate after existing readers finish. Shared readers stay local. `--delegate off` uses ordinary local writers instead. |
 | `ofd` | Spin direct pair above | Eligible list search and conflict-result copy, limited to the bound file's fixed OFD locks without callbacks. |
@@ -177,7 +220,7 @@ completion counter. Keep these evidence classes separate in performance reports.
 | `seek` | Mutex outer pair above | Eligible offset checks and `f_pos` updates. Linux 7 removed `f_version`; current adapters do not emulate that retired store. File-reference acquisition/release stays outside the protected body. |
 | `utsname` | Rwlock writer pair and local read pair above | Only the fixed-size name update may delegate. User copies, permission checks, entropy mixing and notification execute on the original caller outside the lock. The current KD adapter uses a spinning rwlock, not KD rwsem. |
 | `argbounds` | Spin direct pair above | Eligible four-word copy under exclusive spin ownership. Optional mutations execute locally through the same KD physical lock. This is an extracted record, not a live process's memory map. |
-| `taskname` | `KD_SPIN_DIRECT_LOCK` / `KD_SPIN_DIRECT_UNLOCK` | Generated code calls the original `strscpy_pad(..., 64)` and models all 64 destination writes. Read-only correctness, returned-body checks and the `05876a4` standard-grid comparison are complete. The preceding version's separate 20% mutation control passed correctness with zero KD generated bodies; mutation-case delegation remains unestablished. |
+| `taskname` | `KD_SPIN_DIRECT_LOCK` / `KD_SPIN_DIRECT_UNLOCK` | Ordinary translation decodes `strscpy_pad(..., 64)`, including its `strnlen` and `sized_strscpy` callees, without string-specific models or hostcall escapes. The [read-only cohort](../bench/results/10.176.26.71/bench/catalog-linux70-trusted-20261028/taskname-w00/README.md) completed all 63 points, with 18 KD returned-JIT and three local points. The [prepared 20% mutation cohort](../bench/results/10.176.26.71/bench/catalog-linux70-taskname-prepared-20261028/taskname-w20/README.md) completed all 63 points, with six KD returned-JIT and 15 local points. The earlier partial cohort and separate strict functional NO_JIT failure remain recorded separately. |
 | Linux 7 `xattr` (`xattr-rbtree-read-v1`) | `kd_read_lock` / `kd_read_unlock` | Shared readers execute locally across the original rb-tree search, `strcmp` comparisons and value copy. Zero operations are JIT-eligible; any generated-body entry or published image is rejected. Historical Linux 6.1 list/spin delegation results remain below. |
 
 The corresponding source is in the [spin shell](../workload_modules/spin_cacheline/direct.h),
@@ -195,7 +238,7 @@ ordinary API rename, an extra private lock around only some consumers, or a
 cast from a Linux mutex to KD mutex does not implement that conversion.
 
 Eligibility in this table is a source assessment, not a fresh benchmark result.
-The current mutex comparison cited above measures all seven mutex cases at its
+The historical mutex comparison cited above measures all seven mutex cases at its
 nine worker counts; it does not validate every catalog parameter. Its KD
 synthetic evidence contains 68 entry-witnessed and 13 local sessions; its API
 evidence contains 78 returned-body and 30 local sessions. Current results and
@@ -318,10 +361,10 @@ same selected counters under one lock. The bodies contain explicit updates:
 | `c01` | Increment counter 0 | 64 bytes |
 | `c08` | Increment counters 0–7 | 512 bytes |
 
-The micro catalog retains c01 and c08 for spin, mutex, rwlock and rwsem.
+The micro catalog retains c01 and c08 for spin, rwlock and rwsem.
 The separate nano profiles use c01 and c16 with post256, as defined above.
 Select `--cachelines 1 8` in the
-[spin/mutex runner](../bench/tclock_compare/README.md). KD mutex retains exact KD
+[spin runner](../bench/tclock_compare/README.md). KD mutex retains exact KD
 physical ownership and pinned published delegation waiters; its OSQ and
 delegation queues share preallocated storage with separate links and lifetimes.
 
@@ -364,86 +407,6 @@ used four. Identical `c01` labels do not make these workload settings equivalent
 At completion, each selected counter must match the total completed increments;
 unselected counters must remain unchanged.
 
-## Resident linked-list traversal
-
-The current micro catalog selects plain `list` with **16 nodes** (1 KiB of node
-storage). A 64-node (4 KiB) case remains planned. List size 128 and the
-`list-prefetch` variants at sizes 16 and 128 are excluded from the current
-catalog. These resident traversals are separate from the ten active
-padded-counter nano profiles.
-
-The 64-node case is a planned addition, not implemented or measured yet. The
-current runners and [shared payload](../workload_modules/spin_cacheline/list_payload.h)
-accept only 16 and 128 nodes; their validation must be extended before running
-64 nodes. The frozen nano campaign and its reports retain their original
-128-node and prefetch measurements as historical evidence.
-
-The payload uses preallocated, 64-byte-aligned nodes. An immutable circular next-pointer
-permutation advances five array slots per link. Each write holds one exclusive
-lock and visits exactly N nodes, incrementing every node once. Rwlock/rwsem
-readers hold shared ownership and verify that all N values equal the first
-value. There is no allocation, link mutation, reclamation, user-memory access
-or deliberate scheduling point inside this payload.
-
-The selected `list` workload omits software read-prefetch. The retained historical
-`list-prefetch` variant adds a read-prefetch of the already loaded next pointer
-on each iteration. All compared backends compile the same variant.
-These hints target retained module storage and add no lifetime guarantee.
-They are separate from KD's provider queue-prefetch option `--spin-prefetch`.
-The traversal is bounded by N rather than by reaching a null pointer.
-
-After callers join, the snapshot checks the independent expected permutation
-before dereferencing each pointer, confirms every link and common value, and
-returns that value in slot zero with the other 15 slots zero. Its measured
-delta must equal completed operations for spin/mutex or completed writes for
-rwlock/rwsem. Reader errors, damaged links, skipped nodes, lost/duplicated
-increments and nonzero unused snapshot fields fail validation. The object and
-payload stay resident until workers, source leases, frames and ACKs drain.
-
-Spin and mutex support Native, TCLock and KD; rwlock supports all three with
-local readers. Rwsem supports Native, original TCLock and KD. KD retains its ordinary/local
-and explicit outer-writer modes; TCLock uses its original semaphore protocol
-with registered fixed-affinity task contexts.
-The public mutex example uses `--mutex-api public`. New list profiles record
-both JIT entry and matching root-completion counts; entry-only execution does
-not satisfy strict functional delegation acceptance. Workload, node count,
-prefetch mode, lock family and caller shell remain distinct report identities.
-`RETURNED_JIT` means a positive completion count; it does not require every
-entry to return through that path. Keep both counts and the completion share.
-Whole-interval counters do not establish the execution mix of the peak window.
-This is a resident-memory microbenchmark, not an mmap or page-fault workload.
-
-Before loading each backend, the runner decodes the exact compiled payload
-functions and checks the requested read-prefetch variant. After stopping the
-translator and before warmup, KD sessions compare uploaded and loaded image
-bytes under a provider reference. The saved generated-object symbols delimit
-the payload instruction interval, excluding wrapper headers and metadata from
-the prefetch check. Ordinary spin/rwlock images retain their existing mutable
-contract; this observation does not make them immutable. Publication checks
-still bracket measurement, and returned-body evidence remains separate.
-The decoder records hint opcodes and operands and proves their presence or
-absence within those bounds. It does not prove the hint's pointer provenance
-or loop placement; the shared source supplies the next-node traversal contract.
-Native/TCLock ELF checks precede module relocations and alternatives and do not
-claim to inspect their loaded text. Decoder failures retain diagnostics and fail
-preparation through the runner's normal drain and failure-reporting path.
-
-For the currently runnable selected case, spin/mutex runners use
-`--workload list --list-nodes 16` and omit `--cachelines`; the reader/writer
-runner uses `--workloads list --list-nodes 16`. Once 64-node support is
-implemented and validated, use `--list-nodes 64` for its separate case. Do not
-substitute 128 nodes for the planned 64-node case. The snapshot `lines` field
-records N for these workload IDs. No ioctl structure
-grows. Use the [standard worker grid](../bench/README.md#standard-worker-grid)
-and matched backend/setup/post-work settings for performance comparisons.
-Operation p95 latency is not sampled by these runners; inverse throughput
-must not be reported as latency. Source eligibility and tests do not establish
-a prefetch or delegation performance gain.
-The separate [seven-point mutex diagnostic](../bench/results/10.176.26.71/bench/mutex-latency-20261021/README.md)
-uses private caller copies to sample complete operations for c08, RCUHT and
-pipe queries, with plain/disabled/sampled controls. It does not add latency
-sampling to the resident-list runners or establish acquisition-only latency.
-
 ## Synthetic hash updates (`rcuht`)
 
 The table contains 1,024 buckets and 4,096 preallocated nodes, with keys drawn
@@ -456,7 +419,7 @@ destination bucket. A missing source or occupied destination ends the attempt.
 Otherwise it changes the key in place within one bucket, or unlinks and relinks
 the node across buckets. Outcome counters are local to the caller.
 
-Every spin/mutex operation is an exclusive update attempt, including misses and
+Every spin operation is an exclusive update attempt, including misses and
 conflicts. Thus “100% writes” does not imply that every operation changes the
 table. Despite the `rcuht` name, this payload performs no per-operation RCU
 reclamation or allocation.
@@ -922,7 +885,7 @@ This object is not a replacement for the real `mmap_lock`. The
 archived delegated rwsem could not be copied unchanged; the phase design
 resolves those ordering hazards while preserving the selected mutex protocol.
 
-The standard rwsem comparison uses c01, c08 and RCUHT, 1%/20% writes, three
+The historical standard rwsem comparison used c01, c08 and RCUHT, 1%/20% writes, three
 two-second repetitions, and workers 1–8 by one then 12–60 by four. With Native
 and KD this is 756 sessions. Use the [runner command](../bench/rwlock_compare/README.md)
 and retain complete-body counts, NO_JIT controls, correctness, worker progress
@@ -1122,8 +1085,10 @@ The following requirements still apply under the KD-only mutex assumption:
   callbacks, nested locks, MMU notifications and TLB operations. Logical
   `current` handling does not switch the hardware address space or reproduce
   arbitrary credentials, CPU, IRQ, RCU or scheduler context. The
-  [context admission rules](../disassem/context_symbols.py) refuse many of these
-  operations; an admitted bounded copy is not evidence for a complete MM path.
+  historical [context admission rules](../disassem/context_symbols.py) refused
+  many of these operations. Current trusted-source translation does not prove
+  that a complete MM path can be delegated; native MM bodies remain on their
+  original task.
 - **IRQ and accounting semantics.** [Explicit IRQ/BH spin interfaces](../include/kd_spin_direct.h)
   execute locally. Moving `siglock`, the stats fallback or raw accounting
   sections would need a new audited context contract. Current KD rwlock also
@@ -1158,8 +1123,8 @@ distinct source versions and do not retroactively change those outcomes. The
 preceding version 10 removed helper-specific checks. Its focused correctness and
 read-only delegation checks passed, and the
 [`88bb5a4` comparison](../bench/results/10.176.26.71/bench/taskname-xattr-native-api-20261019/README.md)
-records its completed extracted-taskname and xattr tail-query matrix. The current
-version 11 calls the original helpers directly inside generated code; its
+records its completed extracted-taskname and xattr tail-query matrix. Historical
+version 11 called the original helpers directly inside generated code; its
 [`05876a4` comparison](../bench/results/10.176.26.71/bench/taskname-xattr-direct-api-20261019/README.md)
 also completed those three cases. Neither round measures full procfs or
 end-to-end `ps` performance.

@@ -1,0 +1,218 @@
+{
+  "archive": "spin-rcuht-archive.stdout",
+  "sha256": "aa1a0048e7b57947847d6e818a5ac06dadb75db8e2974730bfeda7423edfe865",
+  "bytes": 6266694,
+  "regular_files": 2560,
+  "links": [
+    {
+      "path": "spin-rcuht/hash1024-t32-r00-direct-kdlock-adaptive/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-20261027/spin-rcuht/source/include",
+      "materialized": false
+    },
+    {
+      "path": "spin-rcuht/hash1024-t32-r00-direct-kdlock-adaptive/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-20261027/spin-rcuht/source/disassem",
+      "materialized": false
+    },
+    {
+      "path": "spin-rcuht/hash1024-t28-r00-direct-kdlock-adaptive/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-20261027/spin-rcuht/source/include",
+      "materialized": false
+    },
+    {
+      "path": "spin-rcuht/hash1024-t28-r00-direct-kdlock-adaptive/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-20261027/spin-rcuht/source/disassem",
+      "materialized": false
+    },
+    {
+      "path": "spin-rcuht/hash1024-t06-r00-direct-kdlock-adaptive/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-20261027/spin-rcuht/source/include",
+      "materialized": false
+    },
+    {
+      "path": "spin-rcuht/hash1024-t06-r00-direct-kdlock-adaptive/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-20261027/spin-rcuht/source/disassem",
+      "materialized": false
+    },
+    {
+      "path": "spin-rcuht/hash1024-t05-r00-direct-kdlock-adaptive/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-20261027/spin-rcuht/source/include",
+      "materialized": false
+    },
+    {
+      "path": "spin-rcuht/hash1024-t05-r00-direct-kdlock-adaptive/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-20261027/spin-rcuht/source/disassem",
+      "materialized": false
+    },
+    {
+      "path": "spin-rcuht/hash1024-t02-r00-direct-kdlock-adaptive/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-20261027/spin-rcuht/source/include",
+      "materialized": false
+    },
+    {
+      "path": "spin-rcuht/hash1024-t02-r00-direct-kdlock-adaptive/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-20261027/spin-rcuht/source/disassem",
+      "materialized": false
+    },
+    {
+      "path": "spin-rcuht/hash1024-t48-r00-direct-kdlock-adaptive/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-20261027/spin-rcuht/source/include",
+      "materialized": false
+    },
+    {
+      "path": "spin-rcuht/hash1024-t48-r00-direct-kdlock-adaptive/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-20261027/spin-rcuht/source/disassem",
+      "materialized": false
+    },
+    {
+      "path": "spin-rcuht/hash1024-t24-r00-direct-kdlock-adaptive/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-20261027/spin-rcuht/source/include",
+      "materialized": false
+    },
+    {
+      "path": "spin-rcuht/hash1024-t24-r00-direct-kdlock-adaptive/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-20261027/spin-rcuht/source/disassem",
+      "materialized": false
+    },
+    {
+      "path": "spin-rcuht/hash1024-t04-r00-direct-kdlock-adaptive/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-20261027/spin-rcuht/source/include",
+      "materialized": false
+    },
+    {
+      "path": "spin-rcuht/hash1024-t04-r00-direct-kdlock-adaptive/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-20261027/spin-rcuht/source/disassem",
+      "materialized": false
+    },
+    {
+      "path": "spin-rcuht/hash1024-t07-r00-direct-kdlock-adaptive/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-20261027/spin-rcuht/source/include",
+      "materialized": false
+    },
+    {
+      "path": "spin-rcuht/hash1024-t07-r00-direct-kdlock-adaptive/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-20261027/spin-rcuht/source/disassem",
+      "materialized": false
+    },
+    {
+      "path": "spin-rcuht/hash1024-t60-r00-direct-kdlock-adaptive/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-20261027/spin-rcuht/source/include",
+      "materialized": false
+    },
+    {
+      "path": "spin-rcuht/hash1024-t60-r00-direct-kdlock-adaptive/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-20261027/spin-rcuht/source/disassem",
+      "materialized": false
+    },
+    {
+      "path": "spin-rcuht/hash1024-t03-r00-direct-kdlock-adaptive/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-20261027/spin-rcuht/source/include",
+      "materialized": false
+    },
+    {
+      "path": "spin-rcuht/hash1024-t03-r00-direct-kdlock-adaptive/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-20261027/spin-rcuht/source/disassem",
+      "materialized": false
+    },
+    {
+      "path": "spin-rcuht/hash1024-t56-r00-direct-kdlock-adaptive/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-20261027/spin-rcuht/source/include",
+      "materialized": false
+    },
+    {
+      "path": "spin-rcuht/hash1024-t56-r00-direct-kdlock-adaptive/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-20261027/spin-rcuht/source/disassem",
+      "materialized": false
+    },
+    {
+      "path": "spin-rcuht/hash1024-t16-r00-direct-kdlock-adaptive/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-20261027/spin-rcuht/source/include",
+      "materialized": false
+    },
+    {
+      "path": "spin-rcuht/hash1024-t16-r00-direct-kdlock-adaptive/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-20261027/spin-rcuht/source/disassem",
+      "materialized": false
+    },
+    {
+      "path": "spin-rcuht/hash1024-t40-r00-direct-kdlock-adaptive/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-20261027/spin-rcuht/source/include",
+      "materialized": false
+    },
+    {
+      "path": "spin-rcuht/hash1024-t40-r00-direct-kdlock-adaptive/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-20261027/spin-rcuht/source/disassem",
+      "materialized": false
+    },
+    {
+      "path": "spin-rcuht/hash1024-t08-r00-direct-kdlock-adaptive/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-20261027/spin-rcuht/source/include",
+      "materialized": false
+    },
+    {
+      "path": "spin-rcuht/hash1024-t08-r00-direct-kdlock-adaptive/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-20261027/spin-rcuht/source/disassem",
+      "materialized": false
+    },
+    {
+      "path": "spin-rcuht/hash1024-t20-r00-direct-kdlock-adaptive/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-20261027/spin-rcuht/source/include",
+      "materialized": false
+    },
+    {
+      "path": "spin-rcuht/hash1024-t20-r00-direct-kdlock-adaptive/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-20261027/spin-rcuht/source/disassem",
+      "materialized": false
+    },
+    {
+      "path": "spin-rcuht/hash1024-t36-r00-direct-kdlock-adaptive/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-20261027/spin-rcuht/source/include",
+      "materialized": false
+    },
+    {
+      "path": "spin-rcuht/hash1024-t36-r00-direct-kdlock-adaptive/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-20261027/spin-rcuht/source/disassem",
+      "materialized": false
+    },
+    {
+      "path": "spin-rcuht/hash1024-t12-r00-direct-kdlock-adaptive/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-20261027/spin-rcuht/source/include",
+      "materialized": false
+    },
+    {
+      "path": "spin-rcuht/hash1024-t12-r00-direct-kdlock-adaptive/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-20261027/spin-rcuht/source/disassem",
+      "materialized": false
+    },
+    {
+      "path": "spin-rcuht/hash1024-t01-r00-direct-kdlock-adaptive/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-20261027/spin-rcuht/source/include",
+      "materialized": false
+    },
+    {
+      "path": "spin-rcuht/hash1024-t01-r00-direct-kdlock-adaptive/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-20261027/spin-rcuht/source/disassem",
+      "materialized": false
+    },
+    {
+      "path": "spin-rcuht/hash1024-t52-r00-direct-kdlock-adaptive/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-20261027/spin-rcuht/source/include",
+      "materialized": false
+    },
+    {
+      "path": "spin-rcuht/hash1024-t52-r00-direct-kdlock-adaptive/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-20261027/spin-rcuht/source/disassem",
+      "materialized": false
+    },
+    {
+      "path": "spin-rcuht/hash1024-t44-r00-direct-kdlock-adaptive/workspace/include",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-20261027/spin-rcuht/source/include",
+      "materialized": false
+    },
+    {
+      "path": "spin-rcuht/hash1024-t44-r00-direct-kdlock-adaptive/workspace/disassem",
+      "target": "/root/kdlock-evidence/10.176.26.71/bench/catalog-linux70-20261027/spin-rcuht/source/disassem",
+      "materialized": false
+    }
+  ]
+}
