@@ -21,11 +21,13 @@ indexed in [VALIDATION](VALIDATION.md).
 
 ## Current checkpoint
 
-The next adaptation target is the user-selected Ubuntu 26.04 / Linux 7.0.
-Linux 6.1 development is retired, with one legacy recovery version and the
-results retained under the [retirement policy](history/kernel-retirement-20261027.md).
-New-kernel compatibility is unvalidated. The legacy campaign plans below keep
-their recorded outcomes and unrun cases; they do not schedule further 6.1 work.
+Ubuntu 26.04 / Linux 7.0 is the active adaptation platform. The
+[migration record](history/vm-ubuntu2604-migration-20261027.md) establishes OS
+boot and matching package/header identities, while KD build, ABI/API, JIT and
+MM compatibility remain unvalidated. Linux 6.1 adaptation is retired, with
+results and one recovery version retained under the
+[retirement policy](history/kernel-retirement-20261027.md). Earlier campaign
+plans keep their outcomes and unrun coordinates without scheduling more 6.1 work.
 
 The [three-stage project roadmap](ROADMAP.md) defines the goal: micro/nano gains,
 scoped MM improvement or parity, then relevant kernel lock replacement and

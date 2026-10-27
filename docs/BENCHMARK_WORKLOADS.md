@@ -1,9 +1,11 @@
 # Benchmark workloads and critical sections
 
 These definitions remain reference workloads after
-[Linux 6.1 retirement](history/kernel-retirement-20261027.md). Future adaptation
-targets Ubuntu 26.04 / Linux 7.0 and requires fresh compatibility checks and
-matched measurements; the retained results do not establish support there.
+[Linux 6.1 retirement](history/kernel-retirement-20261027.md). Ubuntu 26.04 /
+Linux 7.0 is the active adaptation platform. KD and runner compatibility still
+require validation before matched measurements; the retained results keep
+their original kernel identities. See the
+[migration record](history/vm-ubuntu2604-migration-20261027.md) for OS readiness.
 
 This catalog defines the synthetic and system-call/application programming
 interface (syscall/API) workloads selected for

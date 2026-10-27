@@ -6,10 +6,11 @@ on integrated kernels in stage 3. Use this guide for implemented runner selectio
 the roadmap's exact mmap1 target remains a new runner/validation task.
 
 Linux 6.1 development is retired. These runners and results retain the legacy
-workload contracts; Ubuntu 26.04 / Linux 7.0 is the user-selected future
-adaptation target and has not been validated. Follow the
-[retirement record](../docs/history/kernel-retirement-20261027.md) for retained
-kernel inputs and treat existing live-run commands as legacy references.
+workload contracts. Ubuntu 26.04 / Linux 7.0 is the active adaptation platform;
+KD and runner compatibility remain unvalidated. See the
+[migration record](../docs/history/vm-ubuntu2604-migration-20261027.md) for OS
+readiness and the [retirement record](../docs/history/kernel-retirement-20261027.md)
+for historical inputs. Existing Linux 6.1 command examples are archival references.
 
 Use the maintained runner for the lock family. [The workload catalog](../docs/BENCHMARK_WORKLOADS.md)
 defines protected operations and API parameters; [performance status](../docs/PERFORMANCE.md)
@@ -18,11 +19,12 @@ summarizes the accepted version. Build and run only in the verified VM on
 The [terminology guide](../docs/TERMINOLOGY.md) defines lock names, just-in-time
 (JIT) execution, status labels and measurement terms such as post4 and Mops/s.
 
-For a short functional run, use [basic/run.py](basic/run.py) and the
-[quick-start commands](../docs/PROJECT_GUIDE.md#basic-working-version). It runs
+The historical [basic runner](basic/run.py) and
+[functional workflow](../docs/PROJECT_GUIDE.md#basic-working-version) select
 one existing resident-list case per KD family, with public mutex calls,
 concurrent local readers, returned-body checks and complete drain. It produces
-no timing acceptance or throughput score. Comparison timing rules stay unchanged.
+no timing acceptance or throughput score. Linux 7.0 runner/KD validation remains
+pending. Comparison timing rules stay unchanged.
 
 | Comparison | Entry point | Payloads |
 | --- | --- | --- |
@@ -87,23 +89,14 @@ Use 21 counts: `1 2 3 4 5 6 7 8 12 16 20 24 28 32 36 40 44 48 52 56 60`.
 Workers use the CPU prefix 0 through N−1; collector 63 is separate. The standard
 confirmatory plan uses three repetitions per configuration. Explicit single-round
 screens and the nano runner's one-round default retain their own manifests and
-cannot establish repeat variability. A plan preview for mutex c01 is:
-
-```sh
-python3 bench/tclock_compare/run_mutex.py --dry-run \
-  --backends native tclock kdlock --cachelines 1 \
-  --threads 1 2 3 4 5 6 7 8 12 16 20 24 28 32 36 40 44 48 52 56 60 \
-  --cpus 0-59 --collector-cpu 63 --repeats 3 \
-  --duration-ms 2000 --peak-window-ms 300 --peak-settle-ms 300 --sample-ms 10 \
-  --kernel-source /root/linux-6.1.159-kdclobber2 \
-  --kernel-baseline /root/kdlock-kernel-baselines/mutex-clobber2-20260919 \
-  --output /root/kdlock-evidence/10.176.26.71/bench/mutex-c01-NEW
-```
-
-Before live execution, confirm a recoverable snapshot and set the documented
-recovery variables, then omit `--dry-run` and use an outer timeout. For other
-synthetic sizes select `--cachelines 1 8`; for RCUHT use `--workload rcuht`
-and omit `--cachelines`. These choices define different workloads.
+cannot establish repeat variability. The
+[archived mutex c01 preview and execution recipe](https://github.com/hailongeric/kdlock/blob/cd6f1061ea1b3686dd6d43a7a180ab1942ea4e57/bench/README.md#standard-worker-grid)
+retain the exact Linux 6.1 source and baseline arguments. Those inputs are
+historical; substituting a new kernel path does not validate a Linux 7.0 runner
+or provider. New execution needs matched source/configuration identities, KD
+admission and a verified recovery boundary. Workload selection remains explicit:
+`--cachelines 1 8` selects synthetic sizes, while `--workload rcuht` selects a
+different workload and omits `--cachelines`.
 For [resident-list variants](../docs/BENCHMARK_WORKLOADS.md#resident-linked-list-traversal),
 the micro catalog selects plain `list` at 16 nodes. A 64-node case remains
 planned; 128 nodes and both prefetch variants are historical selections.

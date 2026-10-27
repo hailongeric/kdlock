@@ -1,13 +1,13 @@
 # VM operations
 
-Linux 6.1 development is retired. The environment and commands below describe
-the one retained legacy recovery version, `6.1.159-kdclobber2`. Future adaptation
-targets Ubuntu 26.04 / Linux 7.0; it has not been installed or validated by this
-cleanup. See the [retirement record](../history/kernel-retirement-20261027.md)
-for retained inputs, removed copies and evidence. Establish a new environment
-record before applying these recipes to the next kernel.
+The development VM runs Ubuntu 26.04.1 LTS with kernel `7.0.0-38-generic`.
+Ubuntu 26.04 / Linux 7.0 is the active adaptation platform; KD porting and
+validation remain pending. The [migration record](../history/vm-ubuntu2604-migration-20261027.md)
+binds OS, package, boot and storage identities. Linux 6.1 adaptation is retired.
+Its single recovery version and historical inputs remain under the
+[retirement record](../history/kernel-retirement-20261027.md).
 
-All builds, unit tests, live modules, daemons and benchmarks run in the recovery
+All builds, unit tests, live modules, daemons and benchmarks run in the development
 VM on `10.176.26.71`. The source host performs edits, Git, static inspection and
 read-only offline evidence checks. See [development rules](../../AGENTS.md).
 
@@ -26,14 +26,16 @@ Honor the concrete session authorization; do not ask again for authorized steps.
 | Guest source | `/root/host_fs/kdlock` |
 | VM scripts | Host `/home/eric/vm/qemu-scripts` |
 | Guest connection | `root@10.176.26.71:2222`, or host `./vm_ssh.sh` / `ssh kdlock-vm` |
-| Kernel source/build | `/root/linux-6.1.159-kdclobber2` |
-| Captured kernel bundle | `/root/kdlock-kernel-baselines/mutex-clobber2-20260919` |
-| Translation Python environment | `/root/kdlock-translation-venv-20261019` |
-| Separate plotting environment | `/root/kdlock-plot-venv-20261019` |
+| Active OS/kernel | Ubuntu 26.04.1 LTS; `7.0.0-38-generic` |
+| Kernel image/header package version | `7.0.0-38.38` |
+| Installed kernel headers | `/usr/src/linux-headers-7.0.0-38-generic` |
+| Legacy recovery source/build | `/root/linux-6.1.159-kdclobber2` |
+| Legacy captured bundle | `/root/kdlock-kernel-baselines/mutex-clobber2-20260919` |
+| Translation/plotting environments | Earlier Python environments are historical; new dependencies remain unvalidated |
 | Guest data disk | `/mnt/kdlock-builds`; 132 GiB virtual capacity after the October 27 expansion |
 | Live evidence | `/root/kdlock-evidence/10.176.26.71/{bench,tests}/<new-run>` |
 
-The recovery VM has exactly 64 vCPUs and 24 GiB RAM. Node 0 uses CPUs 0–31
+The development VM has exactly 64 vCPUs and 24 GiB RAM. Node 0 uses CPUs 0–31
 and 12 GiB; node 1 uses CPUs 32–63 and 12 GiB. Each vCPU is pinned to the same
 host CPU, with memory on the corresponding host NUMA node. QEMU service threads
 share host CPU 63. Verify actual placement and host frequency policy before timing.
@@ -87,12 +89,11 @@ hash-matched source-host copies. It freed 552,722,432 bytes on root and
 684,572,672 bytes on the data disk. This did not authorize further cleanup or
 resume the benchmark stopped by host admission.
 
-The [October 27 retirement](../history/kernel-retirement-20261027.md) removes
+The [October 27 retirement](../history/kernel-retirement-20261027.md) removed
 the obsolete project kernel installations, ancestor/MM build copies and stale
-boot-menu files after preserving their source changes and records. Only the
-`kdclobber2` project kernel remains installed; its source/build tree and captured
-bundle are retained. Benchmark evidence and the distro-managed kernel packages
-remain outside the deletion scope. The user subsequently approved the exact
+boot-menu files after preserving their source changes and records. That checkpoint
+retained the `kdclobber2` project kernel, source/build tree and captured bundle.
+Benchmark evidence and distro-managed packages were outside that deletion scope. The user subsequently approved the exact
 43 old and temporary snapshot removals. The
 [migration and storage record](../history/vm-ubuntu2604-migration-20261027.md)
 records their completed deletion, leaving only `legacy-kdclobber2-20261027`, and
@@ -101,65 +102,67 @@ remains part of the recorded history.
 
 ## Kernel identity
 
-Run in the guest:
+The verified active release is `7.0.0-38-generic`, with GNU Build ID
+`338e542e384c46228f7a378babc0f9bb2b6a5997`. The installed image and matching
+header packages have version `7.0.0-38.38`; `/lib/modules/7.0.0-38-generic/build`
+resolves to `/usr/src/linux-headers-7.0.0-38-generic`, whose recorded kernel
+release matches. The [migration receipt](../../bench/results/10.176.26.71/tests/vm-ubuntu2604-migration-20261027/README.md)
+binds the boot, package and configuration hashes.
+
+Read-only checks in the guest:
 
 ```sh
-cd /root/host_fs/kdlock
-python3 bench/spin_cacheline/kernel_identity.py \
-  --kernel-source /root/linux-6.1.159-kdclobber2 \
-  --kernel-baseline /root/kdlock-kernel-baselines/mutex-clobber2-20260919
+cat /etc/os-release
+uname -r
+dpkg-query -W linux-image-7.0.0-38-generic linux-headers-7.0.0-38-generic
+readlink -f /lib/modules/7.0.0-38-generic/build
+cat /lib/modules/7.0.0-38-generic/build/include/config/kernel.release
 ```
 
-Expected release: `6.1.159-kdclobber2`. Expected Build ID:
-`5ca28058e156f34a2c7fe91e8e0fbf92f4e51960`. The verifier checks captured source,
-configuration, build files and live identity. A mismatch requires investigation,
-not an automatic kernel update. Spin requires spin-clobber-v1; KD mutex uses its
-own object and clobber entry rather than the kernel mutex-clobber API.
+Installed headers establish a matching package interface, not a full kernel
+source/build tree or a KD port. KD source/configuration selection, clobber and
+hook contracts, JIT admission and live compatibility remain unvalidated. The
+[legacy identity procedure](https://github.com/hailongeric/kdlock/blob/cd6f1061ea1b3686dd6d43a7a180ab1942ea4e57/docs/operations/VM.md#kernel-identity)
+applies only to the retained Linux 6.1 recovery environment; it is not the
+identity gate for this boot.
 
 ## Boot policy
 
-Verify `nokaslr`, `nopvspin`, voluntary preemption, frame pointers, unchanged
-mitigations and actual CPU/NUMA placement. In the guest:
+The verified Linux 7.0 boot retained `nokaslr nopvspin console=tty1 console=ttyS0`.
+The preemption selector reported `full (lazy)`, whereas the legacy measurements
+used voluntary preemption. This upgrade does not establish equivalent kernel
+configuration, instrumentation or timing qualification. Taint was zero, no
+project modules were loaded, and no failed services were reported.
+
+Read the actual command line, selector and topology before new live work:
 
 ```sh
 cat /proc/cmdline
-dmesg | rg -F 'PV spinlocks disabled, forced by "nopvspin" parameter'
-cat /sys/devices/system/cpu/online
 cat /sys/kernel/debug/sched/preempt
+cat /sys/devices/system/cpu/online
 ```
 
-The captured [GRUB override](../../kernel_baseline/nopvspin-grub.cfg) records the
-installed policy. Matching Build ID does not prove boot arguments: a snapshot
-can restore older policy. Kernel rebuilds, boot changes and restarts are outside
-ordinary development work.
+GRUB now selects its first normal kernel entry instead of an explicit Linux 6.1
+entry. The captured [legacy GRUB override](../../kernel_baseline/nopvspin-grub.cfg)
+is provenance and must not be installed as the current boot configuration.
+Kernel rebuilds, boot changes and restarts remain outside ordinary development
+work unless the session authorizes them.
 
 ## Dependencies and checks
 
-Confirm no benchmark, daemon, project module or in-flight request before sync or
-build. Use the pinned environment and [requirements](../../disassem/requirements.txt):
+The active system reports Python 3.14.4 and GCC 15.2.0. Earlier translation and
+plotting virtual environments are historical artifacts; their old dependency
+passes do not establish compatibility with this interpreter. Establish isolated
+environments for the [translator requirements](../../disassem/requirements.txt)
+and [plotting requirements](../../bench/archive/requirements.txt), and verify
+them before future KD builds or measurements.
 
-```sh
-export PATH=/root/kdlock-translation-venv-20261019/bin:$PATH
-export LC_ALL=C
-python3 -m pip check
-make -C kernel_module KDIR=/root/linux-6.1.159-kdclobber2 W=1 UBSAN_SANITIZE=n
-make -C daemon CFLAGS='-O2 -Wall -Wextra -Werror'
-make -C tests/unit run
-```
-
-The translation environment contains the four versions pinned in
-`disassem/requirements.txt`; its `pip check` passes. The system Python has the
-same four versions but an unrelated missing `pycairo` dependency of `pygobject`.
-Use the isolated environment for current checks. Plotting uses the separate
-environment and the fixed dependency list in
-`bench/archive/requirements.txt`, so its newer `pyparsing`
-does not replace the translator's version. The former documented
-`/root/kdlock-evidence/clobber-20260918/venv` path is absent from this guest.
-
-The default unit target runs two basic C programs. Add directly affected Python
-drivers through `PY_TESTS`; full suites require explicit selection. Missing
-dependencies and skipped checks are not passes. Benchmark builds use private
-provider copies with UBSAN off by default; ordinary builds inherit kernel policy.
+The [legacy build and dependency recipe](https://github.com/hailongeric/kdlock/blob/cd6f1061ea1b3686dd6d43a7a180ab1942ea4e57/docs/operations/VM.md#dependencies-and-checks)
+retains the old KDIR and Python environment for historical reconstruction only.
+No KD module build, unit-test pass or live validation on Linux 7.0 is claimed by
+the OS upgrade. Confirm idle state and use basic plus directly affected checks
+when adapting KD. Full suites still require explicit selection; missing
+dependencies, skipped checks and compilation failures are not passes.
 
 ## Snapshots and recovery
 
@@ -172,8 +175,11 @@ approved deleting the 42 earlier snapshots and the temporary pre-cleanup
 snapshot; the [migration record](../history/vm-ubuntu2604-migration-20261027.md)
 records all 43 completed removals. The retained snapshot captures Ubuntu 22.04
 and the former 32 GiB data disk. Restoring it also restores that disk size and
-rolls back subsequent active contents, including later migration work. Recheck
-the actual snapshot list, topology and current boot identity before recovery.
+rolls back subsequent active contents, including the Ubuntu 26.04 migration.
+Recovery of the new platform has not been validated; this legacy snapshot is
+not a capture of its current state. Establish the recovery boundary before
+future live module/JIT work, and recheck the actual snapshot list, topology and
+boot identity before recovery.
 
 Use bounded SSH and monitor commands. Root-owned sockets may need sudo. Disconnect
 without sending `quit`; close only monitor clients created for the operation.

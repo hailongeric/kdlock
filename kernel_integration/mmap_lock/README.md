@@ -8,12 +8,13 @@ existing 4 KiB device mapping and private-backing fault tests retain their own
 identities; they are not measurements of mmap1. Stage 2's performance gate is open.
 
 Linux 6.1 development and its MM kernel variants are retired. This source and
-its results remain adaptation references for the user-selected Ubuntu 26.04 /
-Linux 7.0 target; compatibility has not been established. The
-[retirement record](../../docs/history/kernel-retirement-20261027.md) keeps one
-complete `kdclobber2` recovery version. Commands requiring `kdmm1` or `kdmm31`
-build copies describe historical workflows and may require reconstruction from
-retained evidence; they are not current next-run instructions.
+its results remain references for adaptation to the active Ubuntu 26.04 /
+Linux 7.0 platform. OS readiness is recorded in the
+[migration record](../../docs/history/vm-ubuntu2604-migration-20261027.md); KD and
+MM compatibility remain unvalidated. The [retirement record](../../docs/history/kernel-retirement-20261027.md)
+preserves one complete legacy recovery version. Commands requiring `kdmm1`,
+`kdmm31` or `kdclobber2` describe archived workflows and do not authorize more
+Linux 6.1 adaptation.
 
 The maintained scope is **lock implementation plus minimal API and lifetime
 wrappers**. Native mmap, munmap, advice and page-fault algorithms remain unchanged
@@ -126,25 +127,17 @@ second fault service gate, or per-mm advice/unmap opt-in in the active implement
 
 ## Validation and commands
 
-All compilation and tests run in the existing VM at `10.176.26.71`, serially.
-The source host performs edits and static review. Preserve the recovery kernel
-`6.1.159-kdclobber2`; no kernel image build, installation or boot is needed for the
-following check after an approved idle source synchronization:
+The [archived Linux 6.1 scope-check procedure](https://github.com/hailongeric/kdlock/blob/cd6f1061ea1b3686dd6d43a7a180ab1942ea4e57/kernel_integration/mmap_lock/README.md#validation-and-commands)
+retains the exact source/baseline paths and former Python environment. It compiled
+five local lock objects, checked the nine-file wrapper patch and unchanged native
+MM hashes, and ran two basic programs plus the unified mutex API driver. It did
+not load the new objects or establish actual-MM runtime behavior.
 
-```sh
-# In the guest, using a fresh evidence directory:
-cd /root/host_fs/kdlock
-/root/kdlock-translation-venv-20261019/bin/python3 \
-  tests/kernel/mmap_lock/scope.py \
-  --kernel-source /root/linux-6.1.159-kdclobber2 \
-  --kernel-baseline /root/kdlock-kernel-baselines/mutex-clobber2-20260919 \
-  --output /root/kdlock-evidence/10.176.26.71/tests/lock-only-mm-cleanup-20261024/check-1
-```
-
-This checks the nine-file wrapper patch on copies, generates and compiles only
-the five local lock objects, checks unchanged native MM source hashes, and runs
-the two basic programs plus the existing unified mutex API driver. It does not
-load the new objects or validate actual-mm runtime behavior on the recovery kernel.
+The active Ubuntu 26.04 / Linux 7.0 environment requires new source/configuration
+selection and KD/MM adaptation before those checks can establish compatibility.
+All future compilation and tests remain confined to the designated VM; the
+source host performs edits and static review. No further Linux 6.1 adaptation
+is scheduled.
 
 The separate [disabled-configuration check](../../bench/results/10.176.26.71/tests/mmap-disabled-build-20261025/README.md)
 compiles the four affected native interface objects and compares real-header

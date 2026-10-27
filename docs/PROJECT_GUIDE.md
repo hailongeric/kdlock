@@ -7,13 +7,13 @@ scoped mmap/page-fault improvement or parity, and broader kernel replacement wit
 application evaluation. This guide describes the working checkout and interfaces;
 current implementation limits are not a redefinition of that long-term goal.
 
-Linux 6.1 kernel development is retired. The user-selected next adaptation
-target is Ubuntu 26.04 / Linux 7.0, with compatibility still unvalidated. This
-guide's existing build, identity and live-run commands describe the retained
-legacy `6.1.159-kdclobber2` recovery environment. The
-[retirement record](history/kernel-retirement-20261027.md) defines the single
-retained version and cleanup scope; new-target setup must establish its own
-source/configuration and runtime evidence.
+The development VM runs Ubuntu 26.04.1 LTS with kernel `7.0.0-38-generic`.
+Ubuntu 26.04 / Linux 7.0 is the active adaptation platform; KD porting and
+validation remain pending. Linux 6.1 development is retired. The
+[migration record](history/vm-ubuntu2604-migration-20261027.md) owns current OS,
+package and boot identities; the [retirement record](history/kernel-retirement-20261027.md)
+preserves the legacy recovery inputs. The functional evidence below applies
+to the historical kernel and is not a new-kernel quick-start.
 
 The primary checkout on `380G10` is the source of truth. `master` contains the
 accepted KD-only mutex from `d2a2304`, with its legacy delegation protocol and
@@ -75,45 +75,15 @@ recheck drain after one jiffy (4 ms at HZ=250, plus possible scheduling delay).
 Mmap's killable writer path bypasses the ordinary 16,384-probe polling stage;
 see [rwsem waiting](design/rwsem_implementation.md#waiting-and-wakeups).
 
-The following basic smoke workflow retains its previously approved 90-second
-settling interval after idle synchronization and the
-[VM recovery checks](operations/VM.md). It is separate from the pending mmap
-comparison and cannot requalify a rejected timing endpoint. Capture a fresh host
-receipt on the source host:
+The [archived basic smoke workflow](https://github.com/hailongeric/kdlock/blob/cd6f1061ea1b3686dd6d43a7a180ab1942ea4e57/docs/PROJECT_GUIDE.md#basic-working-version)
+retains the exact Linux 6.1 command sequence, Python environment and recovery
+assumptions. It is historical functional evidence, not a runnable Linux 7.0
+quick-start. The new platform needs KD and runner adaptation, dependency checks
+and a verified recovery boundary before live work.
 
-```sh
-ssh -o BatchMode=yes -o ConnectTimeout=10 eric@10.176.26.71 \
-  'sudo -n python3 -' \
-  < bench/results/10.176.26.71/bench/mutex32-native-tclock-20261020/capture-host.py \
-  > /tmp/kd-basic-host.json
-scp -P 2222 /tmp/kd-basic-host.json root@10.176.26.71:/tmp/kd-basic-host.json
-```
-
-In the same recovery guest, after verifying the actual snapshot:
-
-```sh
-cd /root/host_fs/kdlock
-export PATH=/root/kdlock-translation-venv-20261019/bin:$PATH
-export LC_ALL=C PYTHONDONTWRITEBYTECODE=1
-export KDLOCK_RECOVERY_CONFIRMED=1
-export KDLOCK_SNAPSHOT_TAG=legacy-kdclobber2-20261027
-python3 bench/basic/run.py --host-state /tmp/kd-basic-host.json \
-  --output /root/kdlock-evidence/10.176.26.71/tests/basic-NEW
-```
-
-Use a new output name each time. Dependencies, both basic programs and focused
-runner guards precede the four serial cases. `--families mutex` selects one
-family; `--dry-run` prints commands without building or loading modules. Each
-child status and complete session receipt is retained. Failure stops the run;
-a deadline reports unknown drain without killing the child. Establish drain
-before later work or unload.
-
-This mode produces no performance score. Additional QEMU `worker` threads are
-recorded and allowed only on CPU 63. Original QEMU identity, task identities,
-pins, frequency policy, memory bindings, topology, isolation, recovery and
-correctness protections remain. The strict 67-thread timing gate and every
-historical refusal stay unchanged. Local-only or partial execution cannot pass
-the returned-JIT smoke requirement.
+That workflow produced no performance score. It retained the strict 67-thread
+timing gate, exact drain and returned-JIT requirements; neither the OS migration
+nor a locally completed body turns its historical refusals into passes.
 
 The [basic-version results](../bench/results/10.176.26.71/tests/basic-version-20261022/README.md)
 record returned-body passes for all four presets and the retained 16-worker
@@ -170,19 +140,21 @@ verification commands are maintained in [VM operations](operations/VM.md).
 
 ## Kernel identity
 
-For the retained legacy recovery version, use the
-[identity verifier](operations/VM.md#kernel-identity). Expected release:
-`6.1.159-kdclobber2`; Build ID `5ca28058e156f34a2c7fe91e8e0fbf92f4e51960`.
-Source, config and live identity must agree; `uname -r` alone is insufficient.
+The active development kernel is `7.0.0-38-generic`, package `7.0.0-38.38`, with
+Build ID `338e542e384c46228f7a378babc0f9bb2b6a5997`. Matching headers are installed
+at `/usr/src/linux-headers-7.0.0-38-generic`. Use
+[VM identity checks](operations/VM.md#kernel-identity) and the migration receipt;
+headers and OS boot do not establish KD compatibility or a complete kernel source
+configuration. The old `kdclobber2` identity belongs to the
+[legacy retirement record](history/kernel-retirement-20261027.md).
 
 ## Native qspinlocks in the VM
 
-The benchmark boot requires `nokaslr`, `nopvspin` and voluntary preemption.
-Check the live command line and the independent PV-spinlock boot message, as
-described in [boot verification](operations/VM.md#boot-policy). Preserve the
-recorded kernel and mitigation settings; no kernel rebuild/reboot is implied.
+The verified boot retains `nokaslr` and `nopvspin`, but the Linux 7.0 preemption
+selector reports `full (lazy)`, not the legacy voluntary setting. Record current
+configuration and runtime policy through [VM operations](operations/VM.md#boot-policy)
+before new measurements; historical results do not establish equivalence.
 
-Use [basic and affected tests](../tests/README.md) for changes, and the
-[benchmark guide](../bench/README.md) for measurements. Save evidence outside
-the checkout, with the physical host identity and frozen inputs. Confirm a
-recoverable snapshot before live module/JIT work, then verify complete drain.
+KD adaptation and directly affected checks remain future work. Save new evidence
+with its physical host, OS, kernel and source identities, and establish recovery
+before live module/JIT work. No further adaptation targets Linux 6.1.

@@ -6,11 +6,12 @@ replacement and application evaluation. This document owns concrete throughput
 campaigns and their retained status. Their outcomes test the project's hypotheses;
 a completed campaign is not automatically a completed development stage.
 
-Linux 6.1 kernel development is retired. The plans below preserve their original
-workloads, attempts and unrun coordinates; they are not a queue of further
-legacy-kernel runs. Future adaptation targets the user-selected Ubuntu 26.04 /
-Linux 7.0 and needs new compatibility and runtime validation. See the
-[retirement record](history/kernel-retirement-20261027.md) for retained inputs.
+Linux 6.1 kernel development is retired. The plans below preserve their
+original workloads, attempts and unrun coordinates; they do not schedule
+additional legacy-kernel runs. Ubuntu 26.04 / Linux 7.0 is the active adaptation
+platform recorded in the [migration record](history/vm-ubuntu2604-migration-20261027.md).
+KD porting and runtime validation must precede new measurements; the OS upgrade
+does not establish compatibility or a performance result.
 
 The measurement objective remains to quantify KD against Native across documented
 lock workloads and actual mmap/page-fault use. Report losses, local execution, class

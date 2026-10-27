@@ -1,10 +1,12 @@
 # Verification
 
-Linux 6.1 development is retired. Existing receipts and kernel-specific commands
-describe the retained legacy recovery environment. Ubuntu 26.04 / Linux 7.0 is
-the user-selected future adaptation target; its validation remains pending.
-The [retirement record](../docs/history/kernel-retirement-20261027.md) defines
-retained kernel inputs and preserves the historical evidence below.
+Ubuntu 26.04 / Linux 7.0 is the active adaptation platform. Its verified OS
+boot and installed headers are recorded in the
+[migration record](../docs/history/vm-ubuntu2604-migration-20261027.md); no KD
+build, ABI/API, JIT or live-test pass follows from that environment check.
+Linux 6.1 development is retired. Earlier receipts and kernel-specific commands
+retain their historical scope under the
+[retirement record](../docs/history/kernel-retirement-20261027.md).
 
 The [project roadmap](../docs/ROADMAP.md) defines three evidence scopes: stage 1
 lock/data/delegation checks, stage 2 actual-MM API and lifetime checks, and stage 3

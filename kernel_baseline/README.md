@@ -6,11 +6,12 @@ The captured configuration and patch are evidence, not a recommendation to use
 this historical kernel on production machines. Rebuilding/installing the guest
 kernel still requires separate approval under [development rules](../AGENTS.md).
 
-Future adaptation targets the user-selected Ubuntu 26.04 / Linux 7.0, which is
-not yet validated. The [retirement policy](../docs/history/kernel-retirement-20261027.md)
-retains results and one complete `6.1.159-kdclobber2` recovery version. The small
-manifests, configurations, patches and verifier here remain provenance and test
-inputs; they are not additional retained runnable kernel versions.
+Ubuntu 26.04 / Linux 7.0 is the active adaptation platform, whose OS identity
+is recorded in the [migration record](../docs/history/vm-ubuntu2604-migration-20261027.md).
+KD compatibility remains unvalidated. The [retirement policy](../docs/history/kernel-retirement-20261027.md)
+retains results and one complete `6.1.159-kdclobber2` recovery version. The
+small manifests, configurations, patches and verifier here remain historical
+provenance and test inputs; they do not identify the currently booted kernel.
 
 The [project roadmap](../docs/ROADMAP.md) plans scoped MM work and eventual broader
 kernel replacement. Candidate kernels for those stages need separate recorded

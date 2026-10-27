@@ -7,11 +7,12 @@ The planned upstream mmap1 comparison and actual fault-throughput driver require
 their own contracts; they cannot reuse these workload labels.
 
 This runner's Linux 6.1 MM kernels are retired. Its commands and results are
-historical references for future Ubuntu 26.04 / Linux 7.0 adaptation, which is
-not yet validated. The [retirement record](../../docs/history/kernel-retirement-20261027.md)
-defines retained evidence and the single `kdclobber2` recovery version. Old
-`kdmm31` build inputs may require reconstruction; the plans below do not
-authorize or schedule additional legacy-kernel measurements.
+historical references for adaptation to the active Ubuntu 26.04 / Linux 7.0
+platform. MM/KD compatibility remains unvalidated; OS readiness is recorded
+separately in the [migration record](../../docs/history/vm-ubuntu2604-migration-20261027.md).
+The [retirement record](../../docs/history/kernel-retirement-20261027.md) preserves
+the evidence and single legacy recovery version. No further legacy-kernel
+measurement or adaptation is scheduled.
 
 The [October 26 screen](../results/10.176.26.71/bench/catalog-mmap-single-20261026/README.md)
 completed 42 Native/KD shared-mm measurements, one per backend/count, with exact
@@ -497,40 +498,13 @@ change is included in this proposal.
 
 ## Reconstruct and build before requesting live approval
 
-Follow [VM operations](../../docs/operations/VM.md). Only source edits and static
-inspection run on 380G10; compilation and tests run in the idle recovery VM.
-Synchronize tracked files with `tools/vm/sync_to_vm.py`. Record source hashes,
-including private `.inc` files used by the collectors. The original controller
-is preserved on `archive/host-capture-control-before-audit-20261025`.
-
-The corrected build links point into vanished tmpfs. A source-only identity
-bundle cannot build compatible external modules. Use the retained base, exact
-delta and post-install module index as described in the
-[reconstruction guide](../../kernel_integration/mmap_lock/README.md#reusing-the-corrected-build).
-A fresh private reconstruction command in the guest is:
-
-```sh
-cd /root/host_fs/kdlock
-export PATH=/root/kdlock-translation-venv-20261019/bin:$PATH
-export LC_ALL=C PYTHONDONTWRITEBYTECODE=1
-KDLOCK_BUILD_DIR=/dev/shm/NEW-kdmm31-build
-python3 kernel_integration/mmap_lock/restore_build.py \
-  --delta /dev/shm/kdmm31-perf-prep-20261025-inputs/kdmm31-delta.tar.gz \
-  --output "$KDLOCK_BUILD_DIR"
-```
-
-Outputs must be new. Do not remove existing trees or evidence to rerun this.
-The preparation command builds the unchanged payload and clients, verifies
-vermagic, every imported CRC, the exact base BTF and split-BTF parsing:
-
-```sh
-python3 bench/mmap_lock/prepare.py \
-  --kernel-source "$KDLOCK_BUILD_DIR/linux" \
-  --source-manifest /dev/shm/kdmm31-perf-prep-20261025-inputs/source-manifest.json \
-  --output /root/kdlock-evidence/10.176.26.71/bench/mmap-kdmm31-prep-20261025/NEW-build
-make -C tests/unit run PYTHON=python3 \
-  PY_TESTS='bench/test_mmap_capture.py bench/test_mmap_paired.py'
-```
+The [archived reconstruction and build recipe](https://github.com/hailongeric/kdlock/blob/cd6f1061ea1b3686dd6d43a7a180ab1942ea4e57/bench/mmap_lock/README.md#reconstruct-and-build-before-requesting-live-approval)
+retains the old Python environment, kdmm31 inputs and exact preparation commands.
+It is a Linux 6.1 historical reference, not a current build or approval workflow.
+The original controller remains on
+`archive/host-capture-control-before-audit-20261025`. Linux 7.0 preparation needs
+new source/configuration identities and validated KD/MM interfaces; old source-only
+identity bundles cannot supply a compatible external-module build tree.
 
 The source manifest is `{ "commit": "...", "files": { "relative/path": "sha256", ... } }`
 for the six payload/client source files, including `control.h`. Preparation retains it and
@@ -548,12 +522,10 @@ occurred.
 The following examples retain the historical 24-case defaults. For `plain-v1`,
 select the plan at every ready step as above, use only cases 0/1 and report 12
 receipts. The controller and finish transport are shared; old receipts are not
-changed. These commands describe interfaces; run them only after the exact
-cycle and root host capture are approved and no stop condition is active.
-The October 25 admission failure does not authorize another attempt after
-waiting for quiet. Set `KDLOCK_RECOVERY_CONFIRMED=1` and
-`KDLOCK_SNAPSHOT_TAG=before-mutex-kdonly-20261017T140354Z` only after an actual
-successful snapshot listing. Flags alone are not recovery proof.
+changed. These commands preserve archived interfaces and do not schedule further Linux
+6.1 execution. Their historical `before-mutex-kdonly-20261017T140354Z` snapshot
+was deleted in the approved retirement purge. Its old recovery flags are not
+valid for current live work; follow the current migration and recovery record.
 
 On 380G10, the following captures one host state, using a new output directory:
 

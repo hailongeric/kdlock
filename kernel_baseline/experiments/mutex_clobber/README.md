@@ -9,12 +9,12 @@ The later rwlock writer identity 3 is a provider/JIT addition on this same kerne
 described in [the rwlock guide](../../../docs/design/rwlock_implementation.md); it
 does not change the captured patch or Build ID below.
 
-Linux 6.1 development is retired. Ubuntu 26.04 / Linux 7.0 is the user-selected
-future adaptation target and remains unvalidated. The
+Linux 6.1 development is retired. Ubuntu 26.04 / Linux 7.0 is the active
+adaptation platform; the [migration record](../../../docs/history/vm-ubuntu2604-migration-20261027.md)
+records OS readiness, not KD compatibility. The
 [retirement record](../../../docs/history/kernel-retirement-20261027.md) defines
-the single complete legacy version and its preserved provenance. The build and
-boot sequence below is historical reconstruction documentation, not a current
-installation workflow.
+the single legacy version and its provenance. The build and boot sequence
+below is historical reconstruction documentation only.
 
 [guest-kernel.patch](guest-kernel.patch) changes only the mutex caller macros,
 a new hook header and versioned bridges in `kernel/locking/mutex.c`. RDI carries

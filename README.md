@@ -9,13 +9,14 @@ kernel lock replacements and evaluate application performance. The
 criteria. Current measurements support favorable nano cases but have not met the
 scoped MM performance objective; broad kernel replacement remains planned.
 
-Linux 6.1 kernel development is retired. The next adaptation target is the
-user-selected **Ubuntu 26.04 / Linux 7.0**; compatibility is not yet established.
-The [retirement record](docs/history/kernel-retirement-20261027.md) defines the
-single retained legacy recovery version and result-preservation policy. The
-[basic working version](docs/PROJECT_GUIDE.md#basic-working-version) and
-[throughput campaign plan](docs/THROUGHPUT_PLAN.md) retain the legacy interfaces,
-commands and evidence; they do not establish support for the new target.
+The development VM now runs **Ubuntu 26.04.1 LTS / Linux 7.0.0-38-generic**.
+Ubuntu 26.04 / Linux 7.0 is the active adaptation platform; further Linux 6.1
+adaptation is retired. The [migration record](docs/history/vm-ubuntu2604-migration-20261027.md)
+records OS boot, matching header packages and storage identities. KD has not
+yet been ported or validated on this kernel. The
+[retirement record](docs/history/kernel-retirement-20261027.md) preserves the
+legacy recovery version and results. Earlier functional commands and throughput
+results retain their Linux 6.1 scope.
 
 The October 26 exploratory screen attempted all 51 runnable lock/API
 configurations and completed the three separate implemented mmap/fault workloads,

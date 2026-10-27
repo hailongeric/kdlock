@@ -1,5 +1,10 @@
 # VM storage and Ubuntu 26.04 migration, October 27, 2026
 
+The VM migration is complete. The active environment is **Ubuntu 26.04.1 LTS /
+Linux `7.0.0-38-generic`**. Snapshot consolidation, reviewed storage cleanup and
+the 100 GiB data-disk expansion are complete. Linux 7.0 is the adaptation target;
+KD has not yet been ported or validated on this kernel.
+
 The user explicitly authorized removal of the 43 old and temporary VM snapshots,
 retaining only `legacy-kdclobber2-20261027`, further guest storage housekeeping,
 100 GiB of additional capacity, and an upgrade to **Ubuntu 26.04 / Linux 7.0**.
@@ -19,8 +24,8 @@ KD compatibility, correctness or performance on its kernel.
 | Delete the exact 43 approved snapshots | Complete: 43 removed; monitor lists only `legacy-kdclobber2-20261027` |
 | Remove reviewed redundant guest files/directories | Complete: 50,037 files and 153 directories removed; manifests and protected inputs retained |
 | Expand the data disk from 32 to 132 GiB | Complete; device and ext4 grew online, retaining UUID and checked recovery-file hashes |
-| Upgrade Ubuntu 22.04 through 24.04 to 26.04 | Preparation; no completed release upgrade recorded yet |
-| Boot and record Linux 7.0 | Pending |
+| Upgrade Ubuntu 22.04 through 24.04 to 26.04 | Complete: Ubuntu 26.04.1 LTS |
+| Boot and record Linux 7.0 | Complete: `7.0.0-38-generic`, package `7.0.0-38.38`, taint zero |
 | Adapt and validate KD on Linux 7.0 | Separate future development; no compatibility claim |
 
 ## Snapshot boundary
@@ -127,24 +132,73 @@ diagnostics, on the unchanged legacy boot. The earlier taint was zero. These
 are observations in the maintenance interval; no isolated causal attribution
 is established. The completed storage work is not evidence of an untainted
 runtime or a performance qualification. No new KD test or benchmark pass is
-claimed, and the OS upgrade remains pending at this checkpoint.
+claimed. This storage checkpoint preceded the release upgrades.
 
 ## Release and kernel transition
 
-The supported LTS route is **Ubuntu 22.04 → 24.04 → 26.04**. Ubuntu's
+The completed LTS route was **Ubuntu 22.04 → 24.04 → 26.04**. Ubuntu's
 [26.04 release notes](https://documentation.ubuntu.com/release-notes/26.04/)
 require earlier LTS releases to reach 24.04 first. The
 [LTS change summary](https://documentation.ubuntu.com/release-notes/26.04/summary-for-lts-users/)
 identifies Linux 7.0 as the 26.04 generic kernel. Follow the official
-[server upgrade procedure](https://ubuntu.com/server/docs/how-to/software/upgrade-your-release/)
-and preserve package, boot, configuration and failure records at each stage.
+[server upgrade procedure](https://ubuntu.com/server/docs/how-to/software/upgrade-your-release/).
+At the user's request, full upgrade transcripts are not archived. Only concise
+OS/kernel identity and validation outcomes are retained for this transition;
+the earlier snapshot/storage evidence remains separate.
 
-Completion requires the guest to report Ubuntu 26.04 and a running Linux 7.0
-kernel, with exact installed package/build identity, working SSH, expected disk
-mounts and CPU/NUMA configuration, and no unexplained failed services. Record the
-actual package revision instead of inferring it from the target version. Keep
-the legacy snapshot available for recovery without making its kernel the normal
-new development target.
+The first stage completed and the guest booted **Ubuntu 24.04.5 LTS** with
+**`6.8.0-147-generic`**, Build ID
+`00a89b4c4179276e34c5b676e5e455747b3deab3`. The
+[intermediate boot identity](../../bench/results/10.176.26.71/raw/tests/vm-ubuntu2604-migration-20261027/noble-boot.json)
+records taint zero, 64 CPUs across the expected two NUMA nodes, matching kernel
+headers, working SSH/configuration checks, expected mounts and no failed
+services. This is an intermediate upgrade stage, not a KD adaptation target.
+The second stage completed, and the
+[final platform receipt](../../bench/results/10.176.26.71/tests/vm-ubuntu2604-migration-20261027/platform-receipt.json)
+binds the verification after boot and final housekeeping:
+
+| Final identity | Value |
+| --- | --- |
+| OS | Ubuntu 26.04.1 LTS |
+| Running kernel | `7.0.0-38-generic` |
+| Image and headers package version | `7.0.0-38.38` |
+| GNU Build ID | `338e542e384c46228f7a378babc0f9bb2b6a5997` |
+| Boot ID | `1b0a9749-944e-48a6-93c7-518acf9e500a` |
+| Installed matching headers | `/usr/src/linux-headers-7.0.0-38-generic` |
+| Taint / failed services | Zero / none |
+
+Package consistency, SSH configuration, mounts, headers, boot selection and
+CPU/NUMA checks passed. The guest has 64 CPUs across two nodes and the expanded
+132 GiB data device. Root/data available space was 57,117,138,944 /
+102,079,242,240 bytes after housekeeping. Source and evidence directories remain
+on their expected mounts; this is a presence/mount check, not a full content
+rehash. The three checked legacy source/build files still match their recorded
+hashes. No unchanged-old-initrd claim is made.
+
+Final host checks confirmed all 64 policies at the requested 2.0 GHz minimum =
+maximum, `performance` governor and turbo disabled. Each vCPU retains its
+same-numbered host CPU; seven auxiliary threads use CPU 63. The two 12 GiB RAM
+backends retain their host NUMA bindings. The monitor and both image files list
+only the legacy snapshot. These are configured-state checks, not effective
+frequency or strict timing qualification. The new kernel reports preemption
+`full (lazy)`, differing from legacy voluntary preemption.
+
+The first preboot checker incorrectly rejected an empty `next_entry=` GRUB
+variable. Inspection confirmed there was no pending one-shot boot; a corrected
+probe passed without changing GRUB state. The original failed check remains
+explicit as a checker false positive. Two final journal error entries were
+inspected transiently and identified as reads from the empty `fd0` floppy
+device; their text was not archived. No soft-lockup or critical-kernel diagnostic
+matched the final boot checks.
+
+Final housekeeping removed `/var/log/dist-upgrade` (15 files and three
+directories) without archiving its contents, confirmed the exact upgrader
+temporary directories absent, and emptied 38,900,578 bytes of downloaded APT
+cache. General system APT logs and journals were outside that selected cleanup.
+It also removed the temporary upgrade SSH forward and ten unused intermediate
+kernel/Python packages. Only the active 7.0 boot image and the legacy 6.1
+recovery image remain. The legacy snapshot remains recovery-only; it is not a
+snapshot of the new 7.0 environment.
 
 New KD work must review the kernel APIs, caller contracts, hook/lifetime rules
 and JIT admission against the new source/configuration. Existing Linux 6.1

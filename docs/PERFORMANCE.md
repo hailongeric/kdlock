@@ -1,9 +1,10 @@
 # Performance status
 
 Linux 6.1 development is retired; the results below retain their original
-kernel and source identities. The user-selected Ubuntu 26.04 / Linux 7.0 target
-has no compatibility or performance result yet. See the
-[retirement record](history/kernel-retirement-20261027.md).
+kernel and source identities. Ubuntu 26.04 / Linux 7.0 is the active platform,
+with OS readiness recorded in the [migration record](history/vm-ubuntu2604-migration-20261027.md).
+No KD compatibility or performance result has been established on it. The
+[retirement record](history/kernel-retirement-20261027.md) preserves earlier evidence.
 
 The [October 27 full catalog at fixed 2.0 GHz](../bench/results/10.176.26.71/bench/catalog-fixedfreq-20261027/README.md)
 at source `a9aeb280` completed all 61 lock/API configurations: 3,704 valid measurements and 139 retained failed points.

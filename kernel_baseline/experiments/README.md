@@ -5,10 +5,12 @@ They are provenance/reproduction inputs, not instructions to change the current
 kernel during ordinary provider work. [kernel_baseline](../README.md)
 and [the project guide](../../docs/PROJECT_GUIDE.md#kernel-identity) define identity checks.
 
-Linux 6.1 development is retired; Ubuntu 26.04 / Linux 7.0 is the unvalidated
-future adaptation target. The [retirement policy](../../docs/history/kernel-retirement-20261027.md)
-keeps one complete `kdclobber2` recovery version and the result evidence. The
-small patch/capture sources here remain historical provenance and ABI fixtures.
+Linux 6.1 development is retired. Ubuntu 26.04 / Linux 7.0 is the active
+adaptation platform; its OS boot is recorded in the
+[migration record](../../docs/history/vm-ubuntu2604-migration-20261027.md), while
+KD compatibility remains unvalidated. The [retirement policy](../../docs/history/kernel-retirement-20261027.md)
+keeps one legacy recovery version and all result evidence. The small patch and
+capture sources here remain historical provenance and ABI fixtures.
 
 | Directory | Release/role |
 | --- | --- |
